@@ -1,0 +1,17 @@
+{
+  "name": "monitoring",
+  "version": "1.0.0",
+  "author": "Kalmia d.o.o.",
+  "license": "UNLICENSED",
+  "description": "",
+  "devDependencies": {
+    "tsconfig": "*",
+    "eslint-config-custom-server": "*"
+  },
+  "scripts": {
+    "test": "jest",
+    "prebuild": "rimraf dist",
+    "build": "tsc",
+    "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
+  }
+}

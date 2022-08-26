@@ -1,0 +1,53 @@
+{
+  "folders": [
+    {
+      "name": "@services/access",
+      "path": "services\\access"
+    },
+    {
+      "name": "@services/monitoring",
+      "path": "services\\monitoring"
+    },
+    {
+      "name": "@modules/dev-console-api",
+      "path": "modules\\dev-console-api"
+    },
+    {
+      "name": "@apps/web",
+      "path": "apps\\web"
+    },
+    {
+      "name": "@apps/docs",
+      "path": "apps\\docs"
+    },
+    {
+      "name": "@packages/UI",
+      "path": "packages\\ui"
+    },
+    {
+      "name": "@packages/SDK",
+      "path": "packages\\at-sdk"
+    },
+    {
+      "name": "_tsconfig",
+      "path": "packages\\tsconfig"
+    },
+    {
+      "name": "_eslint-server",
+      "path": "packages\\eslint-config-custom-server"
+    },
+    {
+      "name": "_eslint-web",
+      "path": "packages\\eslint-config-custom"
+    },
+    {
+      "name": "+Root",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "editor.formatOnPaste": true,
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}
