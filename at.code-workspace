@@ -1,53 +1,41 @@
 {
   "folders": [
     {
-      "name": "@services/access",
+      "name": "🌐@services/access",
       "path": "services\\access"
     },
     {
-      "name": "@services/monitoring",
+      "name": "🌐@services/monitoring",
       "path": "services\\monitoring"
     },
     {
-      "name": "@modules/dev-console-api",
+      "name": "😎@modules/dev-console-api",
       "path": "modules\\dev-console-api"
     },
     {
-      "name": "@apps/web",
-      "path": "apps\\web"
-    },
-    {
-      "name": "@apps/docs",
-      "path": "apps\\docs"
-    },
-    {
-      "name": "@packages/UI",
-      "path": "packages\\ui"
-    },
-    {
-      "name": "@packages/SDK",
+      "name": "📦@packages/at-sdk",
       "path": "packages\\at-sdk"
     },
     {
-      "name": "_tsconfig",
+      "name": "🔨_tsconfig",
       "path": "packages\\tsconfig"
     },
     {
-      "name": "_eslint-server",
-      "path": "packages\\eslint-config-custom-server"
+      "name": "🔨_eslint",
+      "path": "packages\\eslint-config-common"
     },
     {
-      "name": "_eslint-web",
-      "path": "packages\\eslint-config-custom"
-    },
-    {
-      "name": "+Root",
+      "name": "🥕+Root",
       "path": "."
     }
   ],
   "settings": {
     "editor.formatOnPaste": true,
     "editor.formatOnSave": true,
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "[typescript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "cSpell.words": ["Authtrail"]
   }
 }

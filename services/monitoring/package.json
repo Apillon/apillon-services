@@ -4,9 +4,10 @@
   "author": "Kalmia d.o.o.",
   "license": "UNLICENSED",
   "description": "",
+  "private": true,
   "devDependencies": {
     "tsconfig": "*",
-    "eslint-config-custom-server": "*"
+    "eslint-config-common": "*"
   },
   "scripts": {
     "test": "jest",

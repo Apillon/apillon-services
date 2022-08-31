@@ -2,11 +2,32 @@
   "$schema": "https://turborepo.org/schema.json",
   "pipeline": {
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**"]
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "dist/**",
+        ".next/**"
+      ]
     },
     "lint": {
       "outputs": []
+    },
+    "deploy:dev": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        ".serverless/**"
+      ]
+    },
+    "deploy:stage": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        ".serverless/**"
+      ]
     },
     "dev": {
       "cache": false

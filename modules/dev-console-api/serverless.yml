@@ -1,0 +1,52 @@
+org: authtrailadmin
+# app: authtrail-v2
+service: at-v2-dev-console-${opt:stage, 'dev'}
+frameworkVersion: '3'
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules:
+      forceExclude:
+        - aws-sdk
+    excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
+
+# Add the serverless-webpack plugin
+plugins:
+  - serverless-webpack
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: eu-west-1
+  stage: ${opt:stage, 'dev'}
+  iam:
+    role: arn:aws:iam::018021943180:role/serverless-workers-executor
+  apiGateway:
+    minimumCompressionSize: 1024 # Enable gzip compression for responses > 1 KB
+
+# you can add packaging information here
+package:
+  patterns:
+    - '!dist/**'
+    # - '!**/*.*'
+    # - '!.turbo'
+    # - './dist/**'
+  excludeDevDependencies: true
+
+functions:
+  dev-console-api:
+    handler: ./src/lambda.handler
+    name: 'at-v2-dev-console-api-${self:provider.stage}'
+    description: API for Authtrail developer console
+    memorySize: 512
+    timeout: 30
+    events:
+      - http: # this is an API Gateway HTTP event trigger
+          path: /
+          method: ANY
+          cors: true
+      - http: # all routes get proxied to the Express router
+          path: /{proxy+}
+          method: ANY
+          cors: true

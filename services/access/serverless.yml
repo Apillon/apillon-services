@@ -1,0 +1,38 @@
+org: authtrailadmin
+# app: authtrail-v2
+service: at-v2-access-service-${opt:stage, 'dev'}
+frameworkVersion: '3'
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules:
+      forceExclude:
+        - aws-sdk
+    excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
+
+# Add the serverless-webpack plugin
+plugins:
+  - serverless-webpack
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: eu-west-1
+  stage: ${opt:stage, 'dev'}
+  iam:
+    role: arn:aws:iam::018021943180:role/serverless-workers-executor
+
+# you can add packaging information here
+package:
+  patterns:
+    - '!dist/**'
+  excludeDevDependencies: true
+
+functions:
+  access-service:
+    handler: ./src/handler.handler
+    name: 'at-v2-access-service-${self:provider.stage}'
+    description: AT Access Management Service
+    memorySize: 512
+    timeout: 30
