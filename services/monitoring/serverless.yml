@@ -1,7 +1,7 @@
 # console: true
 # org: authtrailadmin
 # app: authtrail-v2
-service: at-v2-access-service-${opt:stage, 'dev'}
+service: at-v2-monitoring-service-${opt:stage, 'dev'}
 frameworkVersion: '3'
 
 custom:
@@ -35,9 +35,9 @@ package:
   excludeDevDependencies: true
 
 functions:
-  access-service:
+  monitoring-service:
     handler: ./src/handler.handler
-    name: 'at-v2-access-service-${self:provider.stage}'
-    description: AT Access Management Service
+    name: 'at-v2-monitoring-service-${self:provider.stage}'
+    description: AT Logging & Monitoring & Alerting Service
     memorySize: 512
     timeout: 30

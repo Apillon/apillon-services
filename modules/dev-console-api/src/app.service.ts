@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import * as AT from 'at-sdk';
+import { Ams, Lmas } from 'at-sdk';
 
 @Injectable()
 export class AppService {
@@ -8,8 +8,20 @@ export class AppService {
   }
 
   async callAuthService() {
-    const resp = await AT.IsUserAuthenticated(1, 2, 'test');
+    const resp = await new Ams().IsUserAuthenticated(1, 2, 'test');
     console.log(resp);
     return resp;
+  }
+
+  async testLogging(loopsize: number) {
+    for (let i = 0; i < loopsize; i++) {
+      await new Lmas().writeLog(
+        i,
+        'TEST',
+        `Test message ${i}`,
+        'dev-console-api/AppService/testLogging',
+        'secToken',
+      );
+    }
   }
 }

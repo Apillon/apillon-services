@@ -1,5 +1,5 @@
 import * as aws from 'aws-sdk';
-import { env } from '../config/env';
+import { env } from '../../config/env';
 
 /**
  * Returns AWS secrets client.

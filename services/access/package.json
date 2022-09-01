@@ -1,6 +1,8 @@
 {
   "name": "ams",
   "version": "1.0.0",
+  "author": "Kalmia d.o.o.",
+  "license": "UNLICENSED",
   "description": "Access management service",
   "main": "index.js",
   "private": true,
@@ -13,8 +15,6 @@
     "deploy:staging": "serverless deploy --stage staging",
     "deploy:dev": "serverless deploy --stage dev"
   },
-  "author": "Kalmia d.o.o.",
-  "license": "UNLICENSED",
   "dependencies": {
     "at-sdk": "*"
   },

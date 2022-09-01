@@ -5,14 +5,17 @@
   "license": "UNLICENSED",
   "description": "",
   "private": true,
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "test": "jest",
+    "build": "tsc",
+    "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "deploy:prod": "serverless deploy --stage production",
+    "deploy:staging": "serverless deploy --stage staging",
+    "deploy:dev": "serverless deploy --stage dev"
+  },
   "devDependencies": {
     "tsconfig": "*",
     "eslint-config-common": "*"
-  },
-  "scripts": {
-    "test": "jest",
-    "prebuild": "rimraf dist",
-    "build": "tsc",
-    "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
   }
 }

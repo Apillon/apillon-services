@@ -1,4 +1,5 @@
-org: authtrailadmin
+# console: true
+# org: authtrailadmin
 # app: authtrail-v2
 service: at-v2-dev-console-${opt:stage, 'dev'}
 frameworkVersion: '3'
@@ -24,6 +25,10 @@ provider:
     role: arn:aws:iam::018021943180:role/serverless-workers-executor
   apiGateway:
     minimumCompressionSize: 1024 # Enable gzip compression for responses > 1 KB
+
+  environment:
+    AT_AMS_FUNCTION_NAME: 'at-v2-access-service-${self:provider.stage}'
+    AT_LMAS_FUNCTION_NAME: 'at-v2-monitoring-service-${self:provider.stage}'
 
 # you can add packaging information here
 package:

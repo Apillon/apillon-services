@@ -15,6 +15,10 @@
       "apiGateway": {
         "minimumCompressionSize": 1024
       },
+      "environment": {
+        "AT_AMS_FUNCTION_NAME": "at-v2-access-service-dev",
+        "AT_LMAS_FUNCTION_NAME": "at-v2-monitoring-service-dev"
+      },
       "versionFunctions": true,
       "compiledCloudFormationTemplate": {
         "AWSTemplateFormatVersion": "2010-09-09",
@@ -102,7 +106,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/at-v2-dev-console-dev/dev/1661985387792-2022-08-31T22:36:27.792Z/at-v2-dev-console-dev.zip"
+                "S3Key": "serverless/at-v2-dev-console-dev/dev/1662040525562-2022-09-01T13:55:25.562Z/at-v2-dev-console-dev.zip"
               },
               "Handler": "./src/lambda.handler",
               "Runtime": "nodejs14.x",
@@ -110,20 +114,26 @@
               "MemorySize": 512,
               "Timeout": 30,
               "Description": "API for Authtrail developer console",
+              "Environment": {
+                "Variables": {
+                  "AT_AMS_FUNCTION_NAME": "at-v2-access-service-dev",
+                  "AT_LMAS_FUNCTION_NAME": "at-v2-monitoring-service-dev"
+                }
+              },
               "Role": "arn:aws:iam::018021943180:role/serverless-workers-executor"
             },
             "DependsOn": [
               "DevDashconsoleDashapiLogGroup"
             ]
           },
-          "DevDashconsoleDashapiLambdaVersionQb8MI7nHAobX05ktMcLkgv3agflWOPo2r8zcoiwBoPg": {
+          "DevDashconsoleDashapiLambdaVersionN852zNk9fwNwGV6T7ia7anXKpD9qcmsixrfd4YPCiD4": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "DevDashconsoleDashapiLambdaFunction"
               },
-              "CodeSha256": "XPrbINQeOQyDRas2bFgwayrgBagQcryL0TrKFMJsxTA=",
+              "CodeSha256": "iS5KEe6eG+ikLqbUVzINIZqZM6gWcDZVuhoG1fQBIFo=",
               "Description": "API for Authtrail developer console"
             }
           },
@@ -343,7 +353,7 @@
               "DevDashconsoleDashapiLambdaPermissionApiGateway"
             ]
           },
-          "ApiGatewayDeployment1661985363380": {
+          "ApiGatewayDeployment1662040494194": {
             "Type": "AWS::ApiGateway::Deployment",
             "Properties": {
               "RestApiId": {
@@ -408,7 +418,7 @@
           "DevDashconsoleDashapiLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "DevDashconsoleDashapiLambdaVersionQb8MI7nHAobX05ktMcLkgv3agflWOPo2r8zcoiwBoPg"
+              "Ref": "DevDashconsoleDashapiLambdaVersionN852zNk9fwNwGV6T7ia7anXKpD9qcmsixrfd4YPCiD4"
             },
             "Export": {
               "Name": "sls-at-v2-dev-console-dev-dev-DevDashconsoleDashapiLambdaFunctionQualifiedArn"
@@ -604,13 +614,12 @@
         "memory": 512,
         "runtime": "nodejs14.x",
         "vpc": {},
-        "versionLogicalId": "DevDashconsoleDashapiLambdaVersionQb8MI7nHAobX05ktMcLkgv3agflWOPo2r8zcoiwBoPg"
+        "versionLogicalId": "DevDashconsoleDashapiLambdaVersionN852zNk9fwNwGV6T7ia7anXKpD9qcmsixrfd4YPCiD4"
       }
     },
     "configValidationMode": "warn",
     "serviceFilename": "serverless.yml",
     "initialServerlessConfig": {
-      "org": "authtrailadmin",
       "service": "at-v2-dev-console-dev",
       "frameworkVersion": "3",
       "custom": {
@@ -628,19 +637,17 @@
         ],
         "excludeDevDependencies": true,
         "artifactsS3KeyDirname": "serverless/at-v2-dev-console-dev/dev/code-artifacts",
-        "artifactDirectoryName": "serverless/at-v2-dev-console-dev/dev/1661985387792-2022-08-31T22:36:27.792Z"
+        "artifactDirectoryName": "serverless/at-v2-dev-console-dev/dev/1662040525562-2022-09-01T13:55:25.562Z"
       },
       "functions": {
         "$ref": "$[\"service\"][\"functions\"]"
       }
     },
-    "org": "authtrailadmin",
     "layers": {},
-    "isDashboardMonitoringPreconfigured": true,
-    "isDashboardAppPreconfigured": false
+    "isDashboardMonitoringPreconfigured": false
   },
   "package": {
-    "artifactDirectoryName": "serverless/at-v2-dev-console-dev/dev/1661985387792-2022-08-31T22:36:27.792Z",
+    "artifactDirectoryName": "serverless/at-v2-dev-console-dev/dev/1662040525562-2022-09-01T13:55:25.562Z",
     "artifact": ""
   }
 }

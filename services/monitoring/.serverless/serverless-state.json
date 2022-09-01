@@ -1,8 +1,8 @@
 {
   "service": {
-    "service": "at-v2-access-service-dev",
+    "service": "at-v2-monitoring-service-dev",
     "serviceObject": {
-      "name": "at-v2-access-service-dev"
+      "name": "at-v2-monitoring-service-dev"
     },
     "provider": {
       "name": "aws",
@@ -90,27 +90,27 @@
               }
             }
           },
-          "AccessDashserviceLogGroup": {
+          "MonitoringDashserviceLogGroup": {
             "Type": "AWS::Logs::LogGroup",
             "Properties": {
-              "LogGroupName": "/aws/lambda/at-v2-access-service-dev"
+              "LogGroupName": "/aws/lambda/at-v2-monitoring-service-dev"
             }
           },
-          "AccessDashserviceLambdaFunction": {
+          "MonitoringDashserviceLambdaFunction": {
             "Type": "AWS::Lambda::Function",
             "Properties": {
               "Code": {
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/at-v2-access-service-dev/dev/1662040516243-2022-09-01T13:55:16.243Z/at-v2-access-service-dev.zip"
+                "S3Key": "serverless/at-v2-monitoring-service-dev/dev/1662040516149-2022-09-01T13:55:16.149Z/at-v2-monitoring-service-dev.zip"
               },
               "Handler": "./src/handler.handler",
               "Runtime": "nodejs14.x",
-              "FunctionName": "at-v2-access-service-dev",
+              "FunctionName": "at-v2-monitoring-service-dev",
               "MemorySize": 512,
               "Timeout": 30,
-              "Description": "AT Access Management Service",
+              "Description": "AT Logging & Monitoring & Alerting Service",
               "Environment": {
                 "Variables": {
                   "AT_AMS_FUNCTION_NAME": "at-v2-access-service-dev",
@@ -120,18 +120,18 @@
               "Role": "arn:aws:iam::018021943180:role/serverless-workers-executor"
             },
             "DependsOn": [
-              "AccessDashserviceLogGroup"
+              "MonitoringDashserviceLogGroup"
             ]
           },
-          "AccessDashserviceLambdaVersion14icfAVQxJZuBQOtO0eiKFne6clrO0PJ7mwT223ouM": {
+          "MonitoringDashserviceLambdaVersionMRsMU4Tpsj7ZOgMFdyeAPWGbzpDKQ533BZ0s8h1ww": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
-                "Ref": "AccessDashserviceLambdaFunction"
+                "Ref": "MonitoringDashserviceLambdaFunction"
               },
-              "CodeSha256": "AkXG9QfkcJY8yDjp717D9ZnIbhIxGulS1x74ZtxA5+Q=",
-              "Description": "AT Access Management Service"
+              "CodeSha256": "JH41FyDsoDS0410CY4m9HUz7teylRgCxhkj7qviN99Y=",
+              "Description": "AT Logging & Monitoring & Alerting Service"
             }
           }
         },
@@ -141,16 +141,16 @@
               "Ref": "ServerlessDeploymentBucket"
             },
             "Export": {
-              "Name": "sls-at-v2-access-service-dev-dev-ServerlessDeploymentBucketName"
+              "Name": "sls-at-v2-monitoring-service-dev-dev-ServerlessDeploymentBucketName"
             }
           },
-          "AccessDashserviceLambdaFunctionQualifiedArn": {
+          "MonitoringDashserviceLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "AccessDashserviceLambdaVersion14icfAVQxJZuBQOtO0eiKFne6clrO0PJ7mwT223ouM"
+              "Ref": "MonitoringDashserviceLambdaVersionMRsMU4Tpsj7ZOgMFdyeAPWGbzpDKQ533BZ0s8h1ww"
             },
             "Export": {
-              "Name": "sls-at-v2-access-service-dev-dev-AccessDashserviceLambdaFunctionQualifiedArn"
+              "Name": "sls-at-v2-monitoring-service-dev-dev-MonitoringDashserviceLambdaFunctionQualifiedArn"
             }
           }
         }
@@ -255,26 +255,26 @@
     ],
     "pluginsData": {},
     "functions": {
-      "access-service": {
+      "monitoring-service": {
         "handler": "./src/handler.handler",
-        "name": "at-v2-access-service-dev",
-        "description": "AT Access Management Service",
+        "name": "at-v2-monitoring-service-dev",
+        "description": "AT Logging & Monitoring & Alerting Service",
         "memorySize": 512,
         "timeout": 30,
         "events": [],
         "package": {
-          "artifact": ".serverless\\at-v2-access-service-dev.zip"
+          "artifact": ".serverless\\at-v2-monitoring-service-dev.zip"
         },
         "memory": 512,
         "runtime": "nodejs14.x",
         "vpc": {},
-        "versionLogicalId": "AccessDashserviceLambdaVersion14icfAVQxJZuBQOtO0eiKFne6clrO0PJ7mwT223ouM"
+        "versionLogicalId": "MonitoringDashserviceLambdaVersionMRsMU4Tpsj7ZOgMFdyeAPWGbzpDKQ533BZ0s8h1ww"
       }
     },
     "configValidationMode": "warn",
     "serviceFilename": "serverless.yml",
     "initialServerlessConfig": {
-      "service": "at-v2-access-service-dev",
+      "service": "at-v2-monitoring-service-dev",
       "frameworkVersion": "3",
       "custom": {
         "$ref": "$[\"service\"][\"custom\"]"
@@ -290,8 +290,8 @@
           "!dist/**"
         ],
         "excludeDevDependencies": true,
-        "artifactsS3KeyDirname": "serverless/at-v2-access-service-dev/dev/code-artifacts",
-        "artifactDirectoryName": "serverless/at-v2-access-service-dev/dev/1662040516243-2022-09-01T13:55:16.243Z"
+        "artifactsS3KeyDirname": "serverless/at-v2-monitoring-service-dev/dev/code-artifacts",
+        "artifactDirectoryName": "serverless/at-v2-monitoring-service-dev/dev/1662040516149-2022-09-01T13:55:16.149Z"
       },
       "functions": {
         "$ref": "$[\"service\"][\"functions\"]"
@@ -301,7 +301,7 @@
     "isDashboardMonitoringPreconfigured": false
   },
   "package": {
-    "artifactDirectoryName": "serverless/at-v2-access-service-dev/dev/1662040516243-2022-09-01T13:55:16.243Z",
+    "artifactDirectoryName": "serverless/at-v2-monitoring-service-dev/dev/1662040516149-2022-09-01T13:55:16.149Z",
     "artifact": ""
   }
 }

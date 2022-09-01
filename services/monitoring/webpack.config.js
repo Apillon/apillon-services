@@ -21,7 +21,7 @@ module.exports = {
       // 'class-transformer': 'empty',
       // '@nestjs/microservices/microservices-module': 'empty',
       // '@nestjs/microservices': 'empty',
-      'at-sdk': path.join(__dirname, '..', '..', 'packages', 'at-sdk', 'dist')
+      // 'at-sdk': path.join(__dirname, '..', '..', 'packages', 'at-sdk', 'dist')
     }
   },
   output: {
@@ -33,10 +33,11 @@ module.exports = {
   node: {
     __dirname: true,
   },
-  externals: [nodeExternals({
-    allowlist: ['at-sdk']
-  }
-  )],
+  // externals: [nodeExternals({
+  //   allowlist: ['at-sdk']
+  // }
+  // )],
+  externals: [nodeExternals()],
   module: {
     rules: [
       // all files with a `.ts` or `.tsx` extension will be handled by `ts-loader`
