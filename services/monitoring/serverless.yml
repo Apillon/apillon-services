@@ -11,10 +11,13 @@ custom:
       forceExclude:
         - aws-sdk
     excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
+  serverless-offline:
+    httpPort: 6201
+    lambdaPort: 6202
 
-# Add the serverless-webpack plugin
 plugins:
   - serverless-webpack
+  - serverless-offline
 
 provider:
   name: aws

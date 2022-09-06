@@ -9,10 +9,14 @@
     "prebuild": "rimraf dist",
     "test": "jest",
     "build": "tsc",
+    "dev": "nodemon ./src/server.ts",
     "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "deploy:prod": "serverless deploy --stage production",
     "deploy:staging": "serverless deploy --stage staging",
     "deploy:dev": "serverless deploy --stage dev"
+  },
+  "dependencies": {
+    "at-sdk": "*"
   },
   "devDependencies": {
     "tsconfig": "*",

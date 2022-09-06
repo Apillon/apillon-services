@@ -9,10 +9,10 @@ export const handler: Handler = async (
 ) => {
   console.log(event);
 
-  return await process(event, context);
+  return await processEvent(event, context);
 };
 
-async function process(event, context: Context): Promise<any> {
+export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
     [AmsEventType.USER_LOGIN]: UserService.login,
     [AmsEventType.USER_AUTH]: UserService.isAuthenticated,

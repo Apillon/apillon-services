@@ -10,10 +10,10 @@ export const handler: Handler = async (
 ) => {
   console.log(event);
 
-  return await process(event, context);
+  return await processEvent(event, context);
 };
 
-async function process(event, context: Context): Promise<any> {
+export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
     [LmasEventType.WRITE_LOG]: Logger.writeLog,
     [LmasEventType.SEND_ALERT]: Alerting.sendAlert,

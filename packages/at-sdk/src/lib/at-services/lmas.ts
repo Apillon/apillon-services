@@ -1,6 +1,7 @@
 import * as AWS from 'aws-sdk';
-import { env, getEnvSecrets } from '../../config/env';
-import { LmasEventType } from '../../config/types';
+import { env } from '../../config/env';
+import { AppEnvironment, LmasEventType } from '../../config/types';
+import * as Net from 'net';
 
 /**
  * Logging / Monitoring / Alerting Service client
@@ -40,6 +41,10 @@ export class Lmas {
   private async callService(payload, isAsync = true) {
     // const env = await getEnvSecrets(); //should there be any???
 
+    if (env.APP_ENV === AppEnvironment.DEV) {
+      return await this.callDevService(payload, isAsync);
+    }
+
     const params: AWS.Lambda.InvocationRequest = {
       FunctionName: env.AT_LMAS_FUNCTION_NAME,
       InvocationType: isAsync ? 'Event' : 'RequestResponse',
@@ -53,6 +58,35 @@ export class Lmas {
           reject(err);
         }
         resolve(response);
+      });
+    });
+  }
+
+  private async callDevService(payload, isAsync) {
+    const devSocket = Net.connect(
+      { port: env.AT_LMAS_SOCKET_PORT, timeout: 30000 },
+      () => {
+        console.log('Connected to LMAS dev socket');
+      },
+    );
+    devSocket.on('error', (err) => {
+      console.error(err);
+      throw new Error('Socket error!');
+    });
+
+    return await new Promise((resolve, reject) => {
+      devSocket.on('data', (data) => {
+        devSocket.destroy();
+        resolve(JSON.parse(data.toString()));
+      });
+      devSocket.write(JSON.stringify(payload), (err) => {
+        devSocket.destroy();
+        if (err) {
+          reject(err);
+        }
+        if (isAsync) {
+          resolve(null);
+        }
       });
     });
   }

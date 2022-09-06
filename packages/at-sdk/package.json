@@ -2,7 +2,8 @@
   "name": "at-sdk",
   "version": "1.0.0",
   "description": "",
-  "main": "./src/index",
+  "main": "./dist/index",
+  "types": "index.d.ts",
   "author": "Kalmia d.o.o.",
   "license": "UNLICENSED",
   "scripts": {
@@ -16,6 +17,7 @@
     "tsconfig": "*"
   },
   "dependencies": {
-    "aws-sdk": "^2.1205.0"
+    "aws-sdk": "^2.1205.0",
+    "dotenv": "^16.0.2"
   }
 }

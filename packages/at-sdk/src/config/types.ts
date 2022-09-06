@@ -8,3 +8,9 @@ export enum LmasEventType {
   SEND_ALERT = 'send-alert',
   NOTIFY = 'notify',
 }
+
+export enum AppEnvironment {
+  DEV = 'development',
+  STG = 'staging',
+  PROD = 'production',
+}
