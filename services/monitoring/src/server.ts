@@ -49,7 +49,7 @@ function startDevServer() {
   });
 }
 
-if (env.APP_ENV === AppEnvironment.DEV) {
+if (env.APP_ENV === AppEnvironment.LOCAL_DEV) {
   startDevServer();
 } else {
   console.log(`LMAS: ${env.APP_ENV} - Socket server will not run.`);

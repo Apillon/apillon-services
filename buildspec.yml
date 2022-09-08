@@ -1,0 +1,24 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 16
+    commands:
+      - npm cache verify
+      - >
+        npm install -g 
+        serverless serverless-webpack
+        copy-webpack-plugin webpack webpack-node-externals
+        turbo
+  pre_build:
+    commands:
+      - printenv
+      - echo `date +%s` > timestamp
+      - echo Build started on `date`
+      - chmod +x ./bin/deploy/build-aws.sh
+  build:
+    commands:
+      - npm cache verify
+      - npm install
+      - ./bin/deploy/build-aws.sh

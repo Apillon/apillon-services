@@ -10,6 +10,8 @@ export enum LmasEventType {
 }
 
 export enum AppEnvironment {
+  LOCAL_DEV = 'local',
+  TEST = 'test',
   DEV = 'development',
   STG = 'staging',
   PROD = 'production',

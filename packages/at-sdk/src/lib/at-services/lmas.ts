@@ -41,7 +41,7 @@ export class Lmas {
   private async callService(payload, isAsync = true) {
     // const env = await getEnvSecrets(); //should there be any???
 
-    if (env.APP_ENV === AppEnvironment.DEV) {
+    if (env.APP_ENV === AppEnvironment.LOCAL_DEV) {
       return await this.callDevService(payload, isAsync);
     }
 

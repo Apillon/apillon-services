@@ -41,7 +41,7 @@ export class Ams {
   private async callService(payload) {
     const env = await getEnvSecrets();
 
-    if (env.APP_ENV === AppEnvironment.DEV) {
+    if (env.APP_ENV === AppEnvironment.LOCAL_DEV) {
       return await this.callDevService(payload);
     }
 

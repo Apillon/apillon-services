@@ -1,0 +1,25 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 16
+    commands:
+      - npm cache verify
+      - >
+        npm install -g
+        turbo
+        typescript jest ts-jest
+        supertest @nestjs/testing
+        @types/aws-lambda @types/express ts-mysql-migrate --no-save
+  pre_build:
+    commands:
+      - printenv
+      - echo `date +%s` > timestamp
+      - echo TEST started on `date`
+      - chmod +x ./bin/deploy/test-aws.sh
+  build:
+    commands:
+      - npm cache verify
+      - npm install
+      - ./bin/deploy/test-aws.sh

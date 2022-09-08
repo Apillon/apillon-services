@@ -27,9 +27,9 @@ provider:
   iam:
     role: arn:aws:iam::018021943180:role/serverless-workers-executor
 
-  environment:
-    AT_AMS_FUNCTION_NAME: 'at-v2-access-service-${self:provider.stage}'
-    AT_LMAS_FUNCTION_NAME: 'at-v2-monitoring-service-${self:provider.stage}'
+  environment: ${file(../../bin/deploy/env.yml)}
+  #   AT_AMS_FUNCTION_NAME: 'at-v2-access-service-${self:provider.stage}'
+  #   AT_LMAS_FUNCTION_NAME: 'at-v2-monitoring-service-${self:provider.stage}'
 
 # you can add packaging information here
 package:

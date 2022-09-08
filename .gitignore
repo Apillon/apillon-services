@@ -35,6 +35,8 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+env.*yml
+!env.template.yml
 
 # turbo
 .turbo
