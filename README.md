@@ -1,4 +1,4 @@
-# Authtral v2 services
+# Authtrail v2 services
 
 ## Setup
 
