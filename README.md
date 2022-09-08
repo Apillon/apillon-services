@@ -1,39 +1,57 @@
-# Turborepo starter with npm
-
-This is an official starter turborepo.
-
-## What's inside?
-
-This turborepo uses [npm](https://www.npmjs.com/) as a package manager. It includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org) app
-- `web`: another [Next.js](https://nextjs.org) app
-- `ui`: a stub React component library shared by both `web` and `docs` applications
-- `eslint-config-custom`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `tsconfig`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+# Authtral v2 services
 
 ## Setup
 
-This repository is used in the `npx create-turbo@latest` command, and selected when choosing which package manager you wish to use with your monorepo (npm).
+Environment:
+
+```ssh
+  NODE >= v16.17.0
+  NPM >= 8.4.0
+```
+
+This monorepo project is configured to run with `npm` and `turborepo` build system (<https://turborepo.org/docs>). For deployment to AWS `serverless` framework is used (<https://serverless.com/docs>)
+
+### Environment variables
+
+Local ENV variables should be stored in `.env` file inside root folder! **`.env` file must not be committed to git!**
+
+### Developing in VS Code Workspaces
+
+Run VS Code by opening `at.code-workspace` file to have workspaces setup. File should be updated if new workspaces are added to project. There could also be multiple workspace files if needed.
+
+## Development
+
+> **All `npm` commands shoud be run in folder of the repo!**
+
+### Installing packages
+
+> All installation should be done in the root folder of the repo!
+
+To install package common to all workspaces (dev dependencies):
+
+```ssh
+npm i <package> -D
+```
+
+To instal dependency to specific workspace
+
+```ssh
+npm i <package> -w=<workspace>
+```
+
+for example:
+
+```ssh
+npm i lodash -w=dev-console-api
+```
+
+more: <https://turborepo.org/docs/guides/workspaces#managing-dependencies>
 
 ### Build
 
 To build all apps and packages, run the following command:
 
 ```
-cd my-turborepo
 npm run build
 ```
 
@@ -42,34 +60,33 @@ npm run build
 To develop all apps and packages, run the following command:
 
 ```
-cd my-turborepo
 npm run dev
 ```
 
-### Remote Caching
+### Deploy
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.org/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup), then enter the following commands:
+To manually deploy changes from local to development environment on AWS use:
 
 ```
-cd my-turborepo
-npx turbo login
+npm run deploy:dev
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+Code should not be deployed to other environments from local machine. Deployment is automatically preformed on AWS Codebuild from `develop`, `stage` and `master` branches to `dev`, `staging` and `production` environment respectively.
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your turborepo:
+#### Environment variables on the cloud
 
-```
-npx turbo link
-```
+Variables are loaded from S3 on build time. See `./bin/deploy/aws-build.sh`. Before build there should be updated version of variables on S3.
 
-## Useful Links
+## Turborepo
 
-Learn more about the power of Turborepo:
+Turbo repo settings: `turbo.json`
+
+Read more about pipeline setup:
 
 - [Pipelines](https://turborepo.org/docs/core-concepts/pipelines)
+
+References to other turborepo documentation:
+
 - [Caching](https://turborepo.org/docs/core-concepts/caching)
 - [Remote Caching](https://turborepo.org/docs/core-concepts/remote-caching)
 - [Scoped Tasks](https://turborepo.org/docs/core-concepts/scopes)
