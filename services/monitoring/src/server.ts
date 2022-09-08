@@ -4,7 +4,7 @@
 
 import { AppEnvironment, env } from 'at-sdk';
 import * as Net from 'net';
-import { processEvent } from './handler';
+import { processEvent } from './main';
 
 const port = env.AT_LMAS_SOCKET_PORT;
 

@@ -1,7 +1,5 @@
 import { Callback, Context, Handler } from 'aws-lambda/handler';
-import { Logger } from './logger';
-import { LmasEventType } from 'at-sdk';
-import { Alerting } from './alerting';
+import { processEvent } from './main';
 
 export const handler: Handler = async (
   event: any,
@@ -12,12 +10,3 @@ export const handler: Handler = async (
 
   return await processEvent(event, context);
 };
-
-export async function processEvent(event, context: Context): Promise<any> {
-  const processors = {
-    [LmasEventType.WRITE_LOG]: Logger.writeLog,
-    [LmasEventType.SEND_ALERT]: Alerting.sendAlert,
-  };
-
-  return await processors[event.eventName](event, context);
-}

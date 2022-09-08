@@ -1,6 +1,6 @@
 import * as AWS from 'aws-sdk';
 import { env } from '../../config/env';
-import { AppEnvironment, LmasEventType } from '../../config/types';
+import { AppEnvironment, LmasEventType, LogType } from '../../config/types';
 import * as Net from 'net';
 
 /**
@@ -16,26 +16,29 @@ export class Lmas {
   }
 
   public async writeLog(
-    projectId: number,
-    logType: string,
-    message: string,
-    location: string,
-    securityToken: string,
+    params: {
+      projectId?: string;
+      logType?: LogType;
+      message?: string;
+      location?: string;
+    },
+    securityToken?: string,
   ) {
     const data = {
       eventName: LmasEventType.WRITE_LOG,
-      projectId,
-      logType,
-      message,
-      location,
-      securityToken,
+      projectId: null,
+      logType: LogType.MSG,
+      message: '',
+      location: null,
+      ...params,
     };
 
-    // eslint-disable-next-line sonarjs/prefer-immediate-return
-    const lmasResponse = await this.callService(data);
-    //TODO: do something with response?
+    // failsafe logging
+    console.log(JSON.stringify(data));
 
-    return lmasResponse;
+    data['securityToken'] = securityToken;
+
+    await this.callService(data);
   }
 
   private async callService(payload, isAsync = true) {

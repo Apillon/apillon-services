@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "aws-sdk": "^2.1205.0",
-    "dotenv": "^16.0.2"
+    "dotenv": "^16.0.2",
+    "mongodb": "^4.9.1"
   }
 }
