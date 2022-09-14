@@ -1,5 +1,5 @@
 {
-  "extends": "tsconfig/api.json",
+  "extends": "tsconfig/service.json",
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src"

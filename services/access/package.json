@@ -1,5 +1,5 @@
 {
-  "name": "ams",
+  "name": "at-ams",
   "version": "1.0.0",
   "author": "Kalmia d.o.o.",
   "license": "UNLICENSED",
@@ -17,7 +17,7 @@
     "deploy:dev": "serverless deploy --stage dev"
   },
   "dependencies": {
-    "at-sdk": "*"
+    "at-lib": "*"
   },
   "devDependencies": {
     "eslint-config-common": "*",

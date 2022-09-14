@@ -21,7 +21,7 @@ module.exports = {
       'class-transformer': false,
       '@nestjs/microservices/microservices-module': false,
       '@nestjs/microservices': false,
-      //'at-sdk': path.join(__dirname, '..', '..', 'packages', 'at-sdk', 'dist')
+      //'at-lib': path.join(__dirname, '..', '..', 'packages', 'at-lib', 'dist')
     }
   },
   output: {
@@ -34,7 +34,7 @@ module.exports = {
     __dirname: true,
   },
   externals: [nodeExternals({
-    allowlist: ['at-sdk']
+    allowlist: ['at-lib']
   }
   )],
   module: {

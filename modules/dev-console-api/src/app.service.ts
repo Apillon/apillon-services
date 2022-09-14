@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Ams, Lmas } from 'at-sdk';
+import { Ams, Lmas, LogType } from 'at-lib';
 
 @Injectable()
 export class AppService {
@@ -16,11 +16,13 @@ export class AppService {
   async testLogging(loopsize: number) {
     for (let i = 0; i < loopsize; i++) {
       await new Lmas().writeLog(
-        i,
-        'TEST',
-        `Test message ${i}`,
-        'dev-console-api/AppService/testLogging',
-        'secToken',
+        {
+          projectId: i.toString(),
+          logType: LogType.MSG,
+          message: `Test message ${i}`,
+          location: 'dev-console-api/AppService/testLogging',
+        },
+        'sec-token',
       );
     }
   }

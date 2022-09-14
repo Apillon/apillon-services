@@ -1,6 +1,6 @@
 import { Callback, Context, Handler } from 'aws-lambda/handler';
 import { UserService } from './user.service';
-import { AmsEventType } from 'at-sdk';
+import { AmsEventType } from 'at-lib';
 
 export const handler: Handler = async (
   event: any,
