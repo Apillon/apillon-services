@@ -2,7 +2,7 @@
  * development socket server for service
  */
 
-import { AppEnvironment, env } from 'at-sdk';
+import { AppEnvironment, env } from 'at-lib';
 import * as Net from 'net';
 import { processEvent } from './handler';
 

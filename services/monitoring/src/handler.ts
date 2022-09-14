@@ -1,5 +1,5 @@
 import middy from '@middy/core';
-import { env } from 'at-sdk';
+import { env } from 'at-lib';
 import { Callback, Context, Handler } from 'aws-lambda/handler';
 import { processEvent } from './main';
 import { MongoDbConnect } from './middleware/mongoDb';

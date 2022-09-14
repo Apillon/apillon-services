@@ -1,4 +1,4 @@
-import { Lmas, LogType } from 'at-sdk';
+import { Lmas, LogType } from 'at-lib';
 
 export class UserService {
   static async login(event, context) {

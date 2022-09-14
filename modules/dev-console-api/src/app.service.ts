@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Ams, Lmas, LogType } from 'at-sdk';
+import { Ams, Lmas, LogType } from 'at-lib';
 
 @Injectable()
 export class AppService {

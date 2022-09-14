@@ -13,8 +13,8 @@
       "path": "modules\\dev-console-api"
     },
     {
-      "name": "📦@packages/at-sdk",
-      "path": "packages\\at-sdk"
+      "name": "📦@packages/at-lib",
+      "path": "packages\\at-lib"
     },
     {
       "name": "🔨_tsconfig",

@@ -17,7 +17,7 @@
     "deploy:dev": "serverless deploy --stage dev"
   },
   "dependencies": {
-    "at-sdk": "*"
+    "at-lib": "*"
   },
   "devDependencies": {
     "eslint-config-common": "*",

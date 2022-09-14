@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@middy/core": "^2.5.7",
-    "at-sdk": "*"
+    "at-lib": "*"
   },
   "devDependencies": {
     "eslint-config-common": "*",

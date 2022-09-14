@@ -1,4 +1,4 @@
-import { Mongo } from 'at-sdk';
+import { Mongo } from 'at-lib';
 
 const instances = {};
 

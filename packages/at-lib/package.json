@@ -1,5 +1,5 @@
 {
-  "name": "at-sdk",
+  "name": "at-lib",
   "version": "1.0.0",
   "description": "",
   "main": "./dist/index",
