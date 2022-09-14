@@ -1,9 +1,10 @@
+import middy from '@middy/core';
+import { env } from 'at-lib';
 import { Callback, Context, Handler } from 'aws-lambda/handler';
-import { Logger } from './logger';
-import { LmasEventType } from 'at-sdk';
-import { Alerting } from './alerting';
+import { processEvent } from './main';
+import { MongoDbConnect } from './middleware/mongoDb';
 
-export const handler: Handler = async (
+const lambdaHandler: Handler = async (
   event: any,
   context: Context,
   _callback: Callback,
@@ -13,11 +14,11 @@ export const handler: Handler = async (
   return await processEvent(event, context);
 };
 
-export async function processEvent(event, context: Context): Promise<any> {
-  const processors = {
-    [LmasEventType.WRITE_LOG]: Logger.writeLog,
-    [LmasEventType.SEND_ALERT]: Alerting.sendAlert,
-  };
-
-  return await processors[event.eventName](event, context);
-}
+export const handler = middy(lambdaHandler);
+handler.use(
+  MongoDbConnect({
+    connectionString: env.AT_LMAS_MONGO_SRV,
+    database: env.AT_LMAS_MONGO_DATABASE,
+    autoDisconnect: true,
+  }),
+);

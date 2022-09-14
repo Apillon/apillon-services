@@ -16,3 +16,10 @@ export enum AppEnvironment {
   STG = 'staging',
   PROD = 'production',
 }
+
+export enum LogType {
+  INFO = 'INFO',
+  MSG = 'MSG',
+  WARN = 'WARNING',
+  ERROR = 'ERROR',
+}

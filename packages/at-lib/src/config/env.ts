@@ -15,36 +15,54 @@ export interface IEnv {
    * Name of the secret from secret manager
    */
   AWS_SECRETS_ID: string;
+
+  /*************************************************************
+   * AMS -Authtrail Access Management Service
+   *************************************************************/
   /**
-   * Authtrail Access Management Service function name
+   *  function name
    */
   AT_AMS_FUNCTION_NAME: string;
-  /**
-   * Authtrail Logging, Monitoring & Alerting Service function name
-   */
-  AT_LMAS_FUNCTION_NAME: string;
 
   /**
    * AMS dev server port
    */
   AT_AMS_SOCKET_PORT: number;
+
+  /************************************************************
+   * LMAS -  Authtrail Logging, Monitoring & Alerting Service
+   ************************************************************/
+  /**
+   *  function name
+   */
+  AT_LMAS_FUNCTION_NAME: string;
   /**
    * LMAS dev server port
    */
   AT_LMAS_SOCKET_PORT: number;
+  /**
+   * LMAS MongoDB connection string
+   */
+  AT_LMAS_MONGO_SRV: string;
+  AT_LMAS_MONGO_DATABASE: string;
 }
 
-dotenv.config();
+// dotenv.config();
 dotenv.config({ path: '../../.env' });
 
 export let env: IEnv = {
   APP_ENV: process.env['APP_ENV'] || AppEnvironment.STG,
   AWS_REGION: process.env['AWS_REGION'], // env var from lambda - can not be overwritten in lambda setting!
   AWS_SECRETS_ID: process.env['AWS_SECRETS_ID'] || '',
+  /** AMS */
   AT_AMS_FUNCTION_NAME: process.env['AT_AMS_FUNCTION_NAME'],
-  AT_LMAS_FUNCTION_NAME: process.env['AT_LMAS_FUNCTION_NAME'],
   AT_AMS_SOCKET_PORT: parseInt(process.env['AT_AMS_SOCKET_PORT']) || 6101,
+  /** LMAS */
+  AT_LMAS_FUNCTION_NAME: process.env['AT_LMAS_FUNCTION_NAME'],
   AT_LMAS_SOCKET_PORT: parseInt(process.env['AT_AMS_SOCKET_PORT']) || 6201,
+  AT_LMAS_MONGO_SRV: process.env['AT_LMAS_MONGO_SRV'],
+  AT_LMAS_MONGO_DATABASE:
+    process.env['AT_LMAS_MONGO_DATABASE'] || 'authtrail_logs',
 };
 
 export let isEnvReady = false;

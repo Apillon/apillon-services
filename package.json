@@ -1,5 +1,5 @@
 {
-  "name": "at2-prototype",
+  "name": "atv2-services",
   "version": "0.0.0",
   "private": true,
   "workspaces": [
@@ -8,12 +8,12 @@
     "modules/*"
   ],
   "scripts": {
-    "build": "turbo run build",
-    "build-no-cache": "turbo run build --no-cache",
-    "dev": "turbo run dev --parallel",
-    "lint": "turbo run lint",
+    "build": "npx turbo run build",
+    "build-no-cache": "npx turbo run build --no-cache",
+    "dev": "npx turbo run dev --parallel",
+    "lint": "npx turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "deploy:dev": "turbo run deploy:dev"
+    "deploy:dev": "npx turbo run deploy:dev"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.102",

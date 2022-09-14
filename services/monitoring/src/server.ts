@@ -2,9 +2,9 @@
  * development socket server for service
  */
 
-import { AppEnvironment, env } from 'at-sdk';
+import { AppEnvironment, env } from 'at-lib';
 import * as Net from 'net';
-import { processEvent } from './handler';
+import { handler } from './handler';
 
 const port = env.AT_LMAS_SOCKET_PORT;
 
@@ -17,7 +17,7 @@ function startDevServer() {
         )}`,
       );
       try {
-        const result = await processEvent(JSON.parse(chunk.toString()), null);
+        const result = await handler(JSON.parse(chunk.toString()), {} as any);
         if (result) {
           socket.write(JSON.stringify(result));
           console.log(`LMAS Socket server response: ${result.toString()}`);

@@ -5,6 +5,7 @@
   "main": "index.js",
   "files": [
     "api.json",
-    "base.json"
+    "base.json",
+    "service.json"
   ]
 }

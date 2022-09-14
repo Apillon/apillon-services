@@ -1,5 +1,5 @@
 {
-  "name": "monitoring",
+  "name": "at-lmas",
   "version": "1.0.0",
   "author": "Kalmia d.o.o.",
   "license": "UNLICENSED",
@@ -16,10 +16,11 @@
     "deploy:dev": "serverless deploy --stage dev"
   },
   "dependencies": {
-    "at-sdk": "*"
+    "@middy/core": "^2.5.7",
+    "at-lib": "*"
   },
   "devDependencies": {
-    "tsconfig": "*",
-    "eslint-config-common": "*"
+    "eslint-config-common": "*",
+    "tsconfig": "*"
   }
 }
