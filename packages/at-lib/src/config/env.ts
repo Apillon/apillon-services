@@ -7,6 +7,8 @@ export interface IEnv {
    * runtime environment
    */
   APP_ENV: string;
+  LOG_TARGET: string;
+
   /**
    * env var from lambda - current region - can not be overwritten in lambda settings!
    */
@@ -52,6 +54,7 @@ dotenv.config({ path: '../../.env' });
 
 export let env: IEnv = {
   APP_ENV: process.env['APP_ENV'] || AppEnvironment.STG,
+  LOG_TARGET: process.env['LOG_TARGET'] || 'console',
   AWS_REGION: process.env['AWS_REGION'], // env var from lambda - can not be overwritten in lambda setting!
   AWS_SECRETS_ID: process.env['AWS_SECRETS_ID'] || '',
   /** AMS */

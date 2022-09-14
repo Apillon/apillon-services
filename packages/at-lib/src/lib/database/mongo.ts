@@ -1,7 +1,7 @@
 import { Db, MongoClient } from 'mongodb';
-import { Lmas } from '../..';
 import { env } from '../../config/env';
 import { AppEnvironment, LogType } from '../../config/types';
+import { writeLog } from '../logger';
 
 /**
  * Mongodb class.
@@ -12,6 +12,7 @@ export class Mongo {
   private mongoUrl: string;
   private mongoDb: string;
   private mongoPool: number;
+  private filename = 'at-lib/lib/database/mongo.ts';
 
   /**
    * Class constructor.
@@ -39,19 +40,27 @@ export class Mongo {
           minPoolSize: 1,
           maxPoolSize: this.mongoPool,
         });
-        // if (this.client.isConnected()) {
-        //   writeLog(
-        //     LogType.INFO,
-        //     `Connected to DB: ${this.mongoUrl} | ${this.mongoDb}`,
-        //     'mongo.ts',
-        //     'connect',
-        //   );
-        // }
+
         this.db = this.client.db(this.mongoDb);
+        const res = await this.db.command({ ping: 1 });
+        console.log(res);
+        writeLog(
+          LogType.INFO,
+          `Connected to DB: ${this.mongoUrl} | ${this.mongoDb}`,
+          'mongo.ts',
+          'connect',
+        );
       }
     } catch (error) {
       // do not handle error here as it can cause infinite loop if you log to the database!!
-      console.error(`Error connecting to MongoDB: ${error.message}`);
+      // console.error(`Error connecting to MongoDB: ${error.message}`);
+      writeLog(
+        LogType.ERROR,
+        'MongoDB connection failed.',
+        this.filename,
+        'connect',
+        error,
+      );
       throw error;
     }
 

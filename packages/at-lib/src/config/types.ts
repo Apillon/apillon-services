@@ -18,6 +18,7 @@ export enum AppEnvironment {
 }
 
 export enum LogType {
+  DB = 'DB',
   INFO = 'INFO',
   MSG = 'MSG',
   WARN = 'WARNING',
