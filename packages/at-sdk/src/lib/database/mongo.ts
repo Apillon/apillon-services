@@ -50,11 +50,9 @@ export class Mongo {
         this.db = this.client.db(this.mongoDb);
       }
     } catch (error) {
-      await new Lmas().writeLog({
-        logType: LogType.ERROR,
-        message: `Error connecting to MongoDB: ${error.message}`,
-        location: 'at-sdk/lib/database/mongo.ts',
-      });
+      // do not handle error here as it can cause infinite loop if you log to the database!!
+      console.error(`Error connecting to MongoDB: ${error.message}`);
+      throw error;
     }
 
     return this;

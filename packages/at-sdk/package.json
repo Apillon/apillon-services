@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "main": "./dist/index",
-  "types": "index.d.ts",
   "author": "Kalmia d.o.o.",
   "license": "UNLICENSED",
   "scripts": {

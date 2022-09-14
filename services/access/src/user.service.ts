@@ -1,4 +1,4 @@
-import { Lmas } from 'at-sdk';
+import { Lmas, LogType } from 'at-sdk';
 
 export class UserService {
   static async login(event, context) {
@@ -11,11 +11,12 @@ export class UserService {
   static async isAuthenticated(event, context) {
     // send log to monitoring service
     await new Lmas().writeLog(
-      null,
-      'User Auth',
-      'User auth has been called!',
-      'AMS/UserService/isAuthenticated',
-      'secToken',
+      {
+        logType: LogType.INFO,
+        message: 'User auth has been called!',
+        location: 'AMS/UserService/isAuthenticated',
+      },
+      'secToken1',
     );
     return true;
   }
