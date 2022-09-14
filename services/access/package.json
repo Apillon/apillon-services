@@ -17,13 +17,14 @@
     "deploy:dev": "serverless deploy --stage dev"
   },
   "dependencies": {
+    "@middy/core": "^3.3.1",
     "at-lib": "*"
   },
   "devDependencies": {
     "eslint-config-common": "*",
+    "ts-loader": "^9.2.3",
     "tsconfig": "*",
     "webpack": "^5.41.1",
-    "webpack-node-externals": "^3.0.0",
-    "ts-loader": "^9.2.3"
+    "webpack-node-externals": "^3.0.0"
   }
 }

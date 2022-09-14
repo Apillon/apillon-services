@@ -20,14 +20,14 @@ export class Ams {
   }
 
   public async IsUserAuthenticated(
-    userId: number,
-    projectId: number,
+    user_uuid: string,
+    project_uuid: string,
     securityToken: string,
   ) {
     const data = {
       eventName: AmsEventType.USER_AUTH,
-      userId,
-      projectId,
+      user_uuid,
+      project_uuid,
       securityToken,
     };
 

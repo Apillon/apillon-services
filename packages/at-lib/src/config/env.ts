@@ -31,6 +31,16 @@ export interface IEnv {
    */
   AT_AMS_SOCKET_PORT: number;
 
+  /**
+   * AMS Database config
+   */
+
+  AT_AMS_MYSQL_HOST: string;
+  AT_AMS_MYSQL_PORT: number;
+  AT_AMS_MYSQL_DATABASE: string;
+  AT_AMS_MYSQL_USER: string;
+  AT_AMS_MYSQL_PASSWORD: string;
+
   /************************************************************
    * LMAS -  Authtrail Logging, Monitoring & Alerting Service
    ************************************************************/
@@ -73,6 +83,11 @@ export let env: IEnv = {
   /** AMS */
   AT_AMS_FUNCTION_NAME: process.env['AT_AMS_FUNCTION_NAME'],
   AT_AMS_SOCKET_PORT: parseInt(process.env['AT_AMS_SOCKET_PORT']) || 6101,
+  AT_AMS_MYSQL_HOST: process.env['AT_AMS_MYSQL_HOST'],
+  AT_AMS_MYSQL_PORT: parseInt(process.env['AT_AMS_MYSQL_PORT']) || 3306,
+  AT_AMS_MYSQL_DATABASE: process.env['AT_AMS_MYSQL_DATABASE'],
+  AT_AMS_MYSQL_USER: process.env['AT_AMS_MYSQL_USER'],
+  AT_AMS_MYSQL_PASSWORD: process.env['AT_AMS_MYSQL_PASSWORD'],
   /** LMAS */
   AT_LMAS_FUNCTION_NAME: process.env['AT_LMAS_FUNCTION_NAME'],
   AT_LMAS_SOCKET_PORT: parseInt(process.env['AT_AMS_SOCKET_PORT']) || 6201,

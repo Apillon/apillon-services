@@ -1,16 +1,17 @@
-import { Mongo } from 'at-lib';
-
+import { MySql } from 'at-lib';
 const instances = {};
 
-export function MongoDbConnect(options?: {
-  connectionString?: string;
-  database?: string;
-  poolSize?: number;
+export function MySqlConnect(options?: {
+  host: string;
+  port: number;
+  database: string;
+  user: string;
+  password: string;
   instanceName?: string;
   autoDisconnect?: boolean;
 }) {
   options = {
-    instanceName: 'mongo',
+    instanceName: 'mysql',
     autoDisconnect: false,
     ...options,
   };
@@ -19,18 +20,14 @@ export function MongoDbConnect(options?: {
     const { context } = request;
 
     if (!instances[options.instanceName]) {
-      const mongo = new Mongo(
-        options.connectionString,
-        options.database,
-        options.poolSize,
-      );
+      const mysql = new MySql(options);
 
-      await mongo.connect();
+      await mysql.connect();
       console.log(
-        `Mongo client instance ${options.instanceName} is CONNECTED to server!`,
+        `MySQL client instance ${options.instanceName} is CONNECTED to server!`,
       );
 
-      instances[options.instanceName] = mongo;
+      instances[options.instanceName] = mysql;
     }
 
     context[options.instanceName] = instances[options.instanceName];
@@ -39,9 +36,9 @@ export function MongoDbConnect(options?: {
   const after = async (_response) => {
     if (options.autoDisconnect) {
       try {
-        await (instances[options.instanceName] as Mongo).close();
+        await (instances[options.instanceName] as MySql).close();
         console.log(
-          `Mongo client instance ${options.instanceName} is DISCONNECTED from server!`,
+          `MySQL client instance ${options.instanceName} is DISCONNECTED from server!`,
         );
       } catch (err) {
         console.error(err);

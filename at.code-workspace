@@ -1,11 +1,11 @@
 {
   "folders": [
     {
-      "name": "🌐@services/access",
+      "name": "🌐@services/access [AT-AMS]",
       "path": "services\\access"
     },
     {
-      "name": "🌐@services/monitoring",
+      "name": "🌐@services/monitoring [AT-LMAS]",
       "path": "services\\monitoring"
     },
     {

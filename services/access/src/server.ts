@@ -4,7 +4,7 @@
 
 import { AppEnvironment, env } from 'at-lib';
 import * as Net from 'net';
-import { processEvent } from './handler';
+import { handler } from './handler';
 
 const port = env.AT_AMS_SOCKET_PORT;
 
@@ -17,7 +17,7 @@ function startDevServer() {
         )}`,
       );
       try {
-        const result = await processEvent(JSON.parse(chunk.toString()), null);
+        const result = await handler(JSON.parse(chunk.toString()), {} as any);
         socket.write(JSON.stringify(result));
         socket.end();
         console.log(`AMS Socket server response: ${result.toString()}`);
