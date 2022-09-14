@@ -8,7 +8,11 @@ export class AppService {
   }
 
   async callAuthService() {
-    const resp = await new Ams().IsUserAuthenticated(1, 2, 'test');
+    const resp = await new Ams().IsUserAuthenticated(
+      '492b6c65-343b-11ed-96a4-02420a000705',
+      null,
+      'secToken',
+    );
     console.log(resp);
     return resp;
   }
