@@ -47,6 +47,19 @@ export interface IEnv {
    */
   AT_LMAS_MONGO_SRV: string;
   AT_LMAS_MONGO_DATABASE: string;
+
+  /************************************************************
+   * MYSQL env variables
+   ************************************************************/
+  MYSQL_HOST: string;
+  MYSQL_PORT: number;
+  MYSQL_USER: string;
+  MYSQL_PASSWORD: string;
+
+  /************************************************************
+   * Database names
+   ************************************************************/
+  AT_DEV_CONSOLE_API_DB: string;
 }
 
 // dotenv.config();
@@ -66,6 +79,13 @@ export let env: IEnv = {
   AT_LMAS_MONGO_SRV: process.env['AT_LMAS_MONGO_SRV'],
   AT_LMAS_MONGO_DATABASE:
     process.env['AT_LMAS_MONGO_DATABASE'] || 'authtrail_logs',
+
+  MYSQL_HOST: process.env['MYSQL_HOST'],
+  MYSQL_PORT: parseInt(process.env['MYSQL_PORT']) || 3306,
+  MYSQL_USER: process.env['MYSQL_USER'],
+  MYSQL_PASSWORD: process.env['MYSQL_PASSWORD'],
+
+  AT_DEV_CONSOLE_API_DB: process.env['AT_DEV_CONSOLE_API_DB'],
 };
 
 export let isEnvReady = false;

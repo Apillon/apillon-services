@@ -23,7 +23,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "deploy:prod": "serverless deploy --stage production",
     "deploy:staging": "serverless deploy --stage staging",
-    "deploy:dev": "serverless deploy --stage dev"
+    "deploy:dev": "serverless deploy --stage dev",
+    "db-upgrade": "node -r ts-node/register ./src/scripts/db/upgrade-db"
   },
   "dependencies": {
     "@nestjs/common": "^9.0.11",

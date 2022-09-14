@@ -24,3 +24,10 @@ export enum LogType {
   WARN = 'WARNING',
   ERROR = 'ERROR',
 }
+
+export enum SqlModelStatus {
+  DRAFT = 1,
+  INCOMPLETE = 2,
+  ACTIVE = 5,
+  DELETED = 9,
+}
