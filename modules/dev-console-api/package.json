@@ -24,7 +24,8 @@
     "deploy:prod": "serverless deploy --stage production",
     "deploy:staging": "serverless deploy --stage staging",
     "deploy:dev": "serverless deploy --stage dev",
-    "db-upgrade": "node -r ts-node/register ./src/scripts/db/upgrade-db"
+    "db-upgrade": "node -r ts-node/register ./src/scripts/db/upgrade-db",
+    "db-downgrade": "node -r ts-node/register ./src/scripts/db/downgrade-db"
   },
   "dependencies": {
     "@nestjs/common": "^9.0.11",

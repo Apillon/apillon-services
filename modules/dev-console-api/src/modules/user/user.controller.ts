@@ -1,10 +1,12 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseFilters } from '@nestjs/common';
 import { Context } from '../../context';
 import { Ctx } from '../../decorators/context.decorator';
+import { HttpExceptionFilter } from '../../filters/http-exception.filter';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UserService } from './user.service';
 
 @Controller('user')
+@UseFilters(new HttpExceptionFilter())
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
@@ -15,8 +17,6 @@ export class UserController {
 
   @Post()
   async createUser(@Ctx() context: Context, @Body() body: CreateUserDto) {
-    console.log(context);
-    return true;
-    //return await this.userService.createUser(body, req.context);
+    return await this.userService.createUser(body, context);
   }
 }

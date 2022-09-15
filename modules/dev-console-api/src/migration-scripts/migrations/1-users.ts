@@ -11,10 +11,10 @@ export const upgrade = async (
     \`name\` VARCHAR(200) NULL,
     \`phone\` VARCHAR(45) NULL,
     \`status\` INT NOT NULL DEFAULT '${SqlModelStatus.ACTIVE}',
-    \`_createTime\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    \`_createUser\` INT NULL,
-    \`_updateTime\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    \`_updateUser\` INT NULL,
+    \`createTime\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    \`createUser\` INT NULL,
+    \`updateTime\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    \`updateUser\` INT NULL,
     PRIMARY KEY (\`id\`))
   `);
 };
