@@ -56,7 +56,33 @@ export enum SerializeFor {
   WORKER = 'worker',
 }
 
+//#region Codes
+
 export enum ErrorCode {
   STATUS_NOT_PRESENT = 422100,
   INVALID_STATUS = 422101,
 }
+
+export enum ErrorOrigin {
+  CORE_API = 'API',
+  AUTH_SERVICE = 'AUTH',
+}
+
+/**
+ * System Error codes - 500000.
+ */
+export enum SystemErrorCode {
+  DEFAULT_SYSTEM_ERROR = 500000,
+  UNHANDLED_SYSTEM_ERROR = 500001,
+  SQL_SYSTEM_ERROR = 500002,
+}
+
+/**
+ * Route error codes - 400000.
+ */
+export enum BadRequestErrorCode {
+  DEFAULT_ROUTE_ERROR_CODE = 400000,
+  INVALID_PATH = 400001,
+}
+
+//#endregion

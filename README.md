@@ -92,3 +92,21 @@ References to other turborepo documentation:
 - [Scoped Tasks](https://turborepo.org/docs/core-concepts/scopes)
 - [Configuration Options](https://turborepo.org/docs/reference/configuration)
 - [CLI Usage](https://turborepo.org/docs/reference/command-line-reference)
+
+## Resources
+
+All documentation is MD based and resides in project services and in docs directory.
+
+| Resource                               | Description                                                           |
+| -------------------------------------- | --------------------------------------------------------------------- |
+| [Rest API](docs/rest-API-specs.md)     | Some basic informations about request, response ...                   |
+| [DB migrations](docs/db-migrations.md) | Docs of how to perform mysql db migrations for new services & modules |
+
+## People working on the project
+
+Add yourself if you stared to work in this project.
+
+| Persons     | Role                                      |
+| ----------- | ----------------------------------------- |
+| Tine Mlakar | Infrasturcture & microservices mastermind |
+| Vinko Šmid  | Wanna be project lead                     |

@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/member-ordering */
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
+import { presenceValidator } from '@rawmodel/validators';
 import { AdvancedSQLModel, PopulateFrom, SerializeFor } from 'at-lib';
-import { DbTables } from '../../../config/types';
+import { DbTables, ValidatorErrorCode } from '../../../config/types';
 
 /**
  * User model.
@@ -31,6 +32,12 @@ export class User extends AdvancedSQLModel {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
     serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.USER_UUID_NOT_PRESENT,
+      },
+    ],
   })
   public user_uuid: string;
 

@@ -8,11 +8,11 @@ import { env, MySql } from 'at-lib';
       useFactory: async (): Promise<MySql> => {
         try {
           const mysql = new MySql({
-            host: env.MYSQL_HOST,
+            host: env.AT_DEV_CONSOLE_API_MYSQL_HOST,
             database: env.AT_DEV_CONSOLE_API_DB,
-            password: env.MYSQL_PASSWORD,
-            port: env.MYSQL_PORT,
-            user: env.MYSQL_USER,
+            password: env.AT_DEV_CONSOLE_API_MYSQL_PASSWORD,
+            port: env.AT_DEV_CONSOLE_API_MYSQL_PORT,
+            user: env.AT_DEV_CONSOLE_API_MYSQL_USER,
           });
           await mysql.connect();
           return mysql;

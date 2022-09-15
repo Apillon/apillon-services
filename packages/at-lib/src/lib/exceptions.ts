@@ -2,7 +2,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { Model } from '@rawmodel/core';
-import { LogType } from '../config/types';
+import {
+  BadRequestErrorCode,
+  ErrorOrigin,
+  LogType,
+  SystemErrorCode,
+} from '../config/types';
 import { Context } from 'vm';
 import { writeLog } from './logger';
 
@@ -16,6 +21,9 @@ export interface ErrorOptions {
 }
 
 export class CodeException extends HttpException {
+  origin: ErrorOrigin;
+  code: SystemErrorCode | BadRequestErrorCode | any;
+
   constructor(options: ErrorOptions) {
     super(
       {
@@ -45,35 +53,34 @@ export class CodeException extends HttpException {
  * Model validation error.
  */
 export class ValidationException extends HttpException {
+  modelName: string;
+  errors: any[];
+
   /**
    * Class constructor.
    * @param model Model instance.
+   * @param ValidatorErrorCode Validator error codes from service, which initializes this class
    */
-  public constructor(model: Model) {
-    // const validationErrorsStr = model.collectErrors();
-    // .map((x) => {
-    //   return JSON.stringify({
-    //     code: x.code,
-    //     message: messages[x.code],
-    //     path: x.path,
-    //   });
-    // })
-    // .join(', ');
+  public constructor(model: Model, ValidatorErrorCode?: any) {
     const validationErrors = model.collectErrors().map((x) => {
       return {
         code: x.code,
-        path: x.path,
+        property: x.path[0],
+        message: ValidatorErrorCode ? ValidatorErrorCode[x.code] : '',
       };
     });
 
     super(
       {
-        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        code: HttpStatus.UNPROCESSABLE_ENTITY,
         errors: validationErrors,
         message: 'Validation error', // workaround for errors in production
       },
       HttpStatus.UNPROCESSABLE_ENTITY,
     );
+
+    this.modelName = model.constructor.name;
+    this.errors = validationErrors;
 
     Error.captureStackTrace(this, this.constructor);
   }
