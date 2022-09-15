@@ -10,12 +10,21 @@ const rl = readline.createInterface({
 let steps = 0;
 
 const run = async () => {
-  await upgradeDatabase(env.AT_DEV_CONSOLE_API_DB, steps);
+  await upgradeDatabase(
+    env.AT_DEV_CONSOLE_API_DB,
+    env.AT_DEV_CONSOLE_API_MYSQL_HOST,
+    env.AT_DEV_CONSOLE_API_MYSQL_PORT,
+    env.AT_DEV_CONSOLE_API_MYSQL_USER,
+    env.AT_DEV_CONSOLE_API_MYSQL_PASSWORD,
+    steps,
+  );
 };
 
 rl.question(
   `You are about to upgrade database ${bgYellow(
-    black(` ${env.AT_DEV_CONSOLE_API_DB} @ ${env.MYSQL_HOST} `),
+    black(
+      ` ${env.AT_DEV_CONSOLE_API_DB} @ ${env.AT_DEV_CONSOLE_API_MYSQL_HOST} `,
+    ),
   )}.
 
 Set number of versions to upgrade ('Y' for all, '<number>' for number of versions, 'N' to exit):`,

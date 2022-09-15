@@ -9,11 +9,18 @@ const rl = readline.createInterface({
 let steps = 1;
 
 const run = async () => {
-  await downgradeDatabase(env.AT_DEV_CONSOLE_API_DB, steps);
+  await downgradeDatabase(
+    env.AT_DEV_CONSOLE_API_DB,
+    env.AT_DEV_CONSOLE_API_MYSQL_HOST,
+    env.AT_DEV_CONSOLE_API_MYSQL_PORT,
+    env.AT_DEV_CONSOLE_API_MYSQL_USER,
+    env.AT_DEV_CONSOLE_API_MYSQL_PASSWORD,
+    steps,
+  );
 };
 
 rl.question(
-  `You are about to downgrade database ${env.AT_DEV_CONSOLE_API_DB} @ ${env.MYSQL_HOST}.\n Set number of versions to downgrade (-1 for all, 0 to exit):`,
+  `You are about to downgrade database ${env.AT_DEV_CONSOLE_API_DB} @ ${env.AT_DEV_CONSOLE_API_MYSQL_HOST}.\n Set number of versions to downgrade (-1 for all, 0 to exit):`,
   (answer) => {
     steps = parseInt(answer);
     if (steps) {

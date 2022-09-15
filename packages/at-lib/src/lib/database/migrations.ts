@@ -7,10 +7,10 @@ let dbMigration: Migration = null;
 
 export async function setupDatabase(
   database: string,
-  host?: string,
-  port?: number,
-  user?: string,
-  password?: string,
+  host: string,
+  port: number,
+  user: string,
+  password: string,
 ): Promise<void> {
   if (!dbMigration) {
     await initMigrations(database, host, port, user, password);
@@ -20,11 +20,11 @@ export async function setupDatabase(
 
 export async function upgradeDatabase(
   database: string,
+  host: string,
+  port: number,
+  user: string,
+  password: string,
   steps?: number,
-  host?: string,
-  port?: number,
-  user?: string,
-  password?: string,
 ): Promise<void> {
   if (!dbMigration) {
     await initMigrations(database, host, port, user, password);
@@ -34,11 +34,11 @@ export async function upgradeDatabase(
 
 export async function downgradeDatabase(
   database: string,
+  host: string,
+  port: number,
+  user: string,
+  password: string,
   steps?: number,
-  host?: string,
-  port?: number,
-  user?: string,
-  password?: string,
 ): Promise<void> {
   if (!dbMigration) {
     await initMigrations(database, host, port, user, password);
@@ -48,10 +48,10 @@ export async function downgradeDatabase(
 
 export async function clearDatabase(
   database: string,
-  host?: string,
-  port?: number,
-  user?: string,
-  password?: string,
+  host: string,
+  port: number,
+  user: string,
+  password: string,
 ): Promise<void> {
   await rebuildDatabase(database, host, port, user, password);
 }
@@ -62,10 +62,10 @@ export async function destroyMigrations(): Promise<void> {
 
 export async function rebuildDatabase(
   database: string,
-  host?: string,
-  port?: number,
-  user?: string,
-  password?: string,
+  host: string,
+  port: number,
+  user: string,
+  password: string,
 ): Promise<void> {
   if (!dbMigration) {
     await initMigrations(database, host, port, user, password);
@@ -76,10 +76,10 @@ export async function rebuildDatabase(
 
 export async function dropDatabase(
   database: string,
-  host?: string,
-  port?: number,
-  user?: string,
-  password?: string,
+  host: string,
+  port: number,
+  user: string,
+  password: string,
 ): Promise<void> {
   if (!dbMigration) {
     await initMigrations(database, host, port, user, password);
@@ -90,16 +90,16 @@ export async function dropDatabase(
 
 async function initMigrations(
   database: string,
-  host?: string,
-  port?: number,
-  user?: string,
-  password?: string,
+  host: string,
+  port: number,
+  user: string,
+  password: string,
 ) {
   const poolConfig: ConnectionOptions = {
-    host: host ? host : env.MYSQL_HOST,
-    port: port ? port : env.MYSQL_PORT,
-    user: user ? user : env.MYSQL_USER,
-    password: password ? password : env.MYSQL_PASSWORD,
+    host: host,
+    port: port,
+    user: user,
+    password: password,
     database: database,
     // debug: true,
     connectionLimit: 1,
