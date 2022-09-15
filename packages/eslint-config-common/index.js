@@ -24,7 +24,7 @@ module.exports = {
     node: true,
     jest: true,
   },
-  ignorePatterns: ['.eslintrc.js', 'webpack.config.js'],
+  ignorePatterns: ['.eslintrc.js', 'webpack.config.js, dist/**'],
   rules: {
     semi: [2, 'always'],
     quotes: [1, 'single', { allowTemplateLiterals: true }],

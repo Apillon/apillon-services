@@ -1,4 +1,3 @@
-import * as moment from 'moment';
 import {
   red,
   yellow,
@@ -16,6 +15,7 @@ import {
 } from 'colors/safe';
 import { LogType } from '../config/types';
 import { env } from '../config/env';
+import moment from 'moment';
 
 const time_format = 'YYYY-MM-DD HH:mm:ss Z';
 

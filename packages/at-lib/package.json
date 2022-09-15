@@ -2,7 +2,12 @@
   "name": "at-lib",
   "version": "1.0.0",
   "description": "",
-  "main": "./dist/index",
+  "main": "./dist/index.js",
+  "source": "./src/index.ts",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/**"
+  ],
   "author": "Kalmia d.o.o.",
   "license": "UNLICENSED",
   "scripts": {
