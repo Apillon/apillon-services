@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post, UseFilters } from '@nestjs/common';
-import { Context } from '../../context';
+import { DevConsoleApiContext } from '../../context';
 import { Ctx } from '../../decorators/context.decorator';
 import { HttpExceptionFilter } from '../../filters/http-exception.filter';
 import { CreateUserDto } from './dtos/create-user.dto';
@@ -16,7 +16,10 @@ export class UserController {
   }
 
   @Post()
-  async createUser(@Ctx() context: Context, @Body() body: CreateUserDto) {
+  async createUser(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: CreateUserDto,
+  ) {
     return await this.userService.createUser(body, context);
   }
 }

@@ -1,10 +1,10 @@
 import { prop } from '@rawmodel/core';
-import { PopulateFrom, SerializeFor } from '../../../config/types';
-import { Context } from '../../../context';
+import { PopulateFrom, SerializeFor } from '../../config/types';
 import { PoolConnection } from 'mysql2/promise';
 import 'reflect-metadata';
 import { BaseDBModel } from './base-db.model';
 import { NotImplementedException } from '@nestjs/common';
+import { Context } from '../context';
 
 /**
  * Common model related objects.

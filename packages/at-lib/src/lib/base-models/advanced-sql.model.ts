@@ -1,12 +1,16 @@
 import { prop } from '@rawmodel/core';
 import { integerParser, dateParser } from '@rawmodel/parsers';
-import { ErrorCode, PopulateFrom, SerializeFor } from '../../../config/types';
-import { Context } from '../../../context';
+import {
+  ErrorCode,
+  PopulateFrom,
+  SerializeFor,
+  SqlModelStatus,
+} from '../../config/types';
 import { PoolConnection } from 'mysql2/promise';
 import { BaseSQLModel } from './base-sql.model';
-import { ValidationException } from 'at-lib';
-import { SqlModelStatus } from 'at-lib';
 import { presenceValidator } from '@rawmodel/validators';
+import { Context } from '../context';
+import { ValidationException } from '../exceptions';
 
 /**
  * Common model related objects.

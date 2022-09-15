@@ -1,8 +1,7 @@
 import { prop } from '@rawmodel/core';
-import { Context } from '../../../context';
-import { SerializeFor } from '../../../config/types';
+import { SerializeFor } from '../../config/types';
 import { ModelBase } from './base';
-import { DbTables } from '../../../config/types';
+import { Context } from '../context';
 
 /**
  * Common model related objects.
@@ -16,7 +15,7 @@ export abstract class BaseDBModel extends ModelBase {
   /**
    * Document's collection name.
    */
-  public abstract collectionName: DbTables;
+  public abstract collectionName: string;
 
   /**
    * Class constructor.

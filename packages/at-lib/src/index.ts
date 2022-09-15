@@ -7,3 +7,6 @@ export * from './lib/database/migrations';
 export * from './config/types';
 export * from './config/env';
 export * from './lib/exceptions';
+export * from './lib/base-models/advanced-sql.model';
+export * from './lib/base-models/base-sql.model';
+export * from './lib/context';

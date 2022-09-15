@@ -1,5 +1,5 @@
 import { Model, prop } from '@rawmodel/core';
-import { Context } from '../../../context';
+import { Context } from '../context';
 
 /**
  * Common model related objects.

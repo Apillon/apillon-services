@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/member-ordering */
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
-import { DbTables, PopulateFrom, SerializeFor } from '../../../config/types';
-import { AdvancedSQLModel } from '../../base/models/advanced-sql.model';
+import { AdvancedSQLModel, PopulateFrom, SerializeFor } from 'at-lib';
+import { DbTables } from '../../../config/types';
 
 /**
  * User model.
