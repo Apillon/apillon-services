@@ -1,5 +1,18 @@
-import { Body, Controller, Get, Post, UseFilters, UseGuards } from '@nestjs/common';
-import { Ctx, PermissionLevel, PermissionType, Validation, Permissions } from 'at-lib';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  UseFilters,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  Ctx,
+  PermissionLevel,
+  PermissionType,
+  Validation,
+  Permissions,
+} from 'at-lib';
 import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
@@ -18,12 +31,19 @@ export class UserController {
   @Post('/register')
   @Validation({ dto: CreateUserDto })
   @UseGuards(ValidationGuard)
-  async registerUser(@Ctx() context: DevConsoleApiContext, @Body() body: CreateUserDto) {
+  async registerUser(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: CreateUserDto,
+  ) {
     return await this.userService.createUser(body, context);
   }
 
   @Post('/testAuth')
-  @Permissions({ permission: 1, type: PermissionType.EXECUTE, level: PermissionLevel.OWN })
+  @Permissions({
+    permission: 1,
+    type: PermissionType.EXECUTE,
+    level: PermissionLevel.OWN,
+  })
   @UseGuards(AuthGuard)
   async test(@Ctx() context: DevConsoleApiContext, @Body() body: any) {
     return true;

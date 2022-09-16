@@ -29,7 +29,8 @@ provider:
   apiGateway:
     minimumCompressionSize: 1024 # Enable gzip compression for responses > 1 KB
 
-  environment: ${file(../../bin/deploy/env.yml)}
+  environment:
+    ${file(../../bin/deploy/env.yml)}
     # AT_AMS_FUNCTION_NAME: 'at-v2-access-service-${self:provider.stage}'
     # AT_LMAS_FUNCTION_NAME: 'at-v2-monitoring-service-${self:provider.stage}'
 

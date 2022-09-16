@@ -5,7 +5,8 @@ module.exports = {
     tsconfigRootDir: '.',
     sourceType: 'module',
   },
-  plugins: ['@typescript-eslint/eslint-plugin',
+  plugins: [
+    '@typescript-eslint/eslint-plugin',
     'sonarjs',
     'security',
     'promise',
@@ -50,14 +51,14 @@ module.exports = {
     'prettier/prettier': [
       'error',
       {
-        'printWidth': 80,
-        'singleQuote': true,
-        'trailingComma': 'all',
-        'endOfLine': 'auto',
-        'bracketSpacing': true,
+        printWidth: 80,
+        singleQuote: true,
+        trailingComma: 'all',
+        endOfLine: 'auto',
+        bracketSpacing: true,
       },
       {
-        'usePrettierrc': false,
+        usePrettierrc: false,
       },
     ],
   },

@@ -16,11 +16,17 @@ export class DevConsoleApiContext extends Context {
 
     if (tokenData && tokenData.userId) {
       if (!isNaN(Number(tokenData.userId))) {
-        const user = await new User({}, this).populateById(Number(tokenData.userId));
+        const user = await new User({}, this).populateById(
+          Number(tokenData.userId),
+        );
 
         if (user.exists()) {
           //Call AMS service
-          const resp = await new Ams().IsUserAuthenticated('492b6c65-343b-11ed-96a4-02420a000705', null, 'secToken');
+          const resp = await new Ams().IsUserAuthenticated(
+            '492b6c65-343b-11ed-96a4-02420a000705',
+            null,
+            'secToken',
+          );
           if (resp) {
             //success
             this.user = user;

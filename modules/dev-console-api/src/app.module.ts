@@ -13,7 +13,9 @@ import { UserModule } from './modules/user/user.module';
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(ContextMiddleware).forRoutes({ path: '*', method: RequestMethod.ALL });
+    consumer
+      .apply(ContextMiddleware)
+      .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer
       .apply(AuthenticateUserMiddleware)
       .exclude(
