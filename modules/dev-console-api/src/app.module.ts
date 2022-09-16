@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthenticateUserMiddleware } from './middlewares/authentication.middleware';
 import { ContextMiddleware } from './middlewares/context.middleware';
 import { MySQLModule } from './modules/database/mysql.module';
 import { UserModule } from './modules/user/user.module';
@@ -12,8 +13,18 @@ import { UserModule } from './modules/user/user.module';
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
+    consumer.apply(ContextMiddleware).forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer
-      .apply(ContextMiddleware)
+      .apply(AuthenticateUserMiddleware)
+      .exclude(
+        // App routes:
+        { path: '/', method: RequestMethod.GET },
+        { path: '/favicon.ico', method: RequestMethod.GET },
+        // Auth routes:
+        { path: 'auth/login', method: RequestMethod.POST },
+        { path: 'auth/password/reset', method: RequestMethod.PATCH },
+        { path: 'auth/password/reset/request', method: RequestMethod.PATCH },
+      )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
 }

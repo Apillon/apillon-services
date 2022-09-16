@@ -12,3 +12,4 @@ export * from './lib/base-models/base-sql.model';
 export * from './lib/context';
 export * from './lib/decorators/context.decorator';
 export * from './lib/decorators/validation.decorator';
+export * from './lib/decorators/permission.decorator';

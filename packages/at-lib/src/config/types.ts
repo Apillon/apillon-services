@@ -64,6 +64,27 @@ export enum ValidateFor {
   QUERY = 'query',
 }
 
+//#region Permissions
+
+export enum PermissionType {
+  READ = 'read',
+  WRITE = 'write',
+  EXECUTE = 'execute',
+}
+
+export enum PermissionLevel {
+  NONE = 0,
+  OWN = 1,
+  ALL = 2,
+}
+
+export enum DefaultUserRole {
+  ADMIN = 1, // System's admin
+  USER = 2, // basic user with access to platform
+}
+
+//#endregion
+
 //#region Codes
 
 export enum ErrorCode {
