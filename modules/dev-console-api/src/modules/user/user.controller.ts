@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Post, UseFilters } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseFilters, UseGuards } from '@nestjs/common';
+import { Ctx, Validation } from 'at-lib';
 import { DevConsoleApiContext } from '../../context';
-import { Ctx } from '../../decorators/context.decorator';
+import { ValidationGuard } from '../../guards/validation.guard';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UserService } from './user.service';
 
@@ -14,10 +15,9 @@ export class UserController {
   }
 
   @Post()
-  async createUser(
-    @Ctx() context: DevConsoleApiContext,
-    @Body() body: CreateUserDto,
-  ) {
+  @Validation({ dto: CreateUserDto })
+  @UseGuards(ValidationGuard)
+  async createUser(@Ctx() context: DevConsoleApiContext, @Body() body: CreateUserDto) {
     return await this.userService.createUser(body, context);
   }
 }

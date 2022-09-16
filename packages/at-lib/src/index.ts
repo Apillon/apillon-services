@@ -10,3 +10,5 @@ export * from './lib/exceptions';
 export * from './lib/base-models/advanced-sql.model';
 export * from './lib/base-models/base-sql.model';
 export * from './lib/context';
+export * from './lib/decorators/context.decorator';
+export * from './lib/decorators/validation.decorator';

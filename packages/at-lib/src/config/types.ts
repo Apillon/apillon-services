@@ -56,6 +56,14 @@ export enum SerializeFor {
   WORKER = 'worker',
 }
 
+/**
+ * DTO validation strategies.
+ */
+export enum ValidateFor {
+  BODY = 'body',
+  QUERY = 'query',
+}
+
 //#region Codes
 
 export enum ErrorCode {

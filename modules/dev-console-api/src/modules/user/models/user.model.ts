@@ -4,6 +4,7 @@ import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { AdvancedSQLModel, PopulateFrom, SerializeFor } from 'at-lib';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * User model.
@@ -38,6 +39,8 @@ export class User extends AdvancedSQLModel {
         code: ValidatorErrorCode.USER_UUID_NOT_PRESENT,
       },
     ],
+    defaultValue: uuidv4(),
+    fakeValue: uuidv4(),
   })
   public user_uuid: string;
 
