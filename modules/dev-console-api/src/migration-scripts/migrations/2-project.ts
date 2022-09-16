@@ -3,11 +3,12 @@ import { SqlModelStatus } from 'at-lib';
 
 export const upgrade = async (queryFn: (query: string, values?: any[]) => Promise<any[]>): Promise<void> => {
   await queryFn(`
-  CREATE TABLE IF NOT EXISTS \`${DbTables.USER}\` (
+  CREATE TABLE IF NOT EXISTS \`${DbTables.PROJECT}\` (
     \`id\` INT NOT NULL AUTO_INCREMENT,
-    \`user_uuid\` VARCHAR(36) NOT NULL,
-    \`name\` VARCHAR(200) NULL,
-    \`phone\` VARCHAR(45) NULL,
+    \`project_uuid\` VARCHAR(36) NOT NULL,
+    \`name\` VARCHAR(500) NULL,
+    \`shortDescription\` VARCHAR(1000) NULL,
+    \`description\` TEXT NULL,
     \`status\` INT NOT NULL DEFAULT '${SqlModelStatus.ACTIVE}',
     \`createTime\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     \`createUser\` INT NULL,
@@ -19,6 +20,6 @@ export const upgrade = async (queryFn: (query: string, values?: any[]) => Promis
 
 export const downgrade = async (queryFn: (query: string, values?: any[]) => Promise<any[]>): Promise<void> => {
   await queryFn(`
-    DROP TABLE IF EXISTS \`${DbTables.USER}\`;
+    DROP TABLE IF EXISTS \`${DbTables.PROJECT}\`;
   `);
 };

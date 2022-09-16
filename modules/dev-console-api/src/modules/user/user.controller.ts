@@ -21,11 +21,4 @@ export class UserController {
   async registerUser(@Ctx() context: DevConsoleApiContext, @Body() body: CreateUserDto) {
     return await this.userService.createUser(body, context);
   }
-
-  @Post('/testAuth')
-  @Permissions({ permission: 1, type: PermissionType.EXECUTE, level: PermissionLevel.OWN })
-  @UseGuards(AuthGuard)
-  async test(@Ctx() context: DevConsoleApiContext, @Body() body: any) {
-    return true;
-  }
 }
