@@ -1,9 +1,4 @@
-import {
-  ArgumentsHost,
-  Catch,
-  ExceptionFilter,
-  HttpStatus,
-} from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus } from '@nestjs/common';
 import { CodeException, SystemErrorCode, ValidationException } from 'at-lib';
 import { Request, Response } from 'express';
 
@@ -17,7 +12,7 @@ export class ExceptionsFilter implements ExceptionFilter {
     if (error instanceof CodeException) {
       res.status(error.getStatus()).json({
         status: error.getStatus(),
-        code: error.code,
+        code: error.getResponse()['code'],
         message: error.message,
         origin: error.origin,
         path: request.url,

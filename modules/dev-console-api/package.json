@@ -25,7 +25,9 @@
     "deploy:staging": "serverless deploy --stage staging",
     "deploy:dev": "serverless deploy --stage dev",
     "db-upgrade": "node -r ts-node/register ./src/scripts/db/upgrade-db",
-    "db-downgrade": "node -r ts-node/register ./src/scripts/db/downgrade-db"
+    "db-downgrade": "node -r ts-node/register ./src/scripts/db/downgrade-db",
+    "db-seed": "node -r ts-node/register ./src/scripts/db/seed-db",
+    "db-unseed": "node -r ts-node/register ./src/scripts/db/unseed-db"
   },
   "dependencies": {
     "@nestjs/common": "^9.0.11",
