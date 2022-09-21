@@ -6,9 +6,31 @@ import { DevConsoleApiContext } from '../../context';
 import { Project } from '../project/models/project.model';
 
 import { Service } from './models/service.model';
+import { ServicesModule } from './services.module';
 
 @Injectable()
 export class ServicesService {
+  async getService(context: DevConsoleApiContext, id: number) {
+    let service: Service = await new Service({}, { context }).populateById(id);
+    if (!service.exists()) {
+      throw new CodeException({
+        code: ResourceNotFoundErrorCode.SERVICE_DOES_NOT_EXIST,
+        status: HttpStatus.NOT_FOUND,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+
+    return service;
+  }
+
+  // // TODO: Missing context, query parameters
+  // async getServiceList(): Promise<any> {
+  //   let services = await new Service({}, {}).getList({}, {});
+  //   let res = [];
+  //   for (let project of services.items) res.push(services.serialize(SerializeForServices.LIST));
+  //   return { items: res };
+  // }
+
   async createService(context: DevConsoleApiContext, body: Service): Promise<Service> {
     return await body.insert();
   }
@@ -36,7 +58,7 @@ export class ServicesService {
     return service;
   }
 
-  async getService(context: DevConsoleApiContext, id: number) {
+  async deleteService(context: DevConsoleApiContext, id: number): Promise<Service> {
     let service: Service = await new Service({}, { context }).populateById(id);
     if (!service.exists()) {
       throw new CodeException({
@@ -46,14 +68,7 @@ export class ServicesService {
       });
     }
 
+    service.delete();
     return service;
   }
-
-  // // TODO: Missing context, query parameters
-  // async getServiceList(): Promise<any> {
-  //   let services = await new Service({}, {}).getList({}, {});
-  //   let res = [];
-  //   for (let project of services.items) res.push(services.serialize(SerializeForServices.LIST));
-  //   return { items: res };
-  // }
 }

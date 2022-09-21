@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post, Patch, Get, ParseIntPipe, UseGuards } from '@nestjs/common';
+import { Body, Controller, Param, Post, Patch, Get, ParseIntPipe, UseGuards, Delete } from '@nestjs/common';
 
 import { Ctx, PermissionLevel, PermissionType, Validation, Permissions } from 'at-lib';
 import { DevConsoleApiContext } from '../../context';
@@ -37,5 +37,12 @@ export class ServicesController {
   @UseGuards(AuthGuard)
   async updateService(@Ctx() context: DevConsoleApiContext, @Param('id', ParseIntPipe) id: number, @Body() body: any) {
     return this.serviceService.updateService(context, id, body);
+  }
+
+  @Delete('/:id')
+  @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
+  @UseGuards(AuthGuard)
+  async deleteService(@Ctx() context: DevConsoleApiContext, @Param('id', ParseIntPipe) id: number) {
+    return this.serviceService.deleteService(context, id);
   }
 }
