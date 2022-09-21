@@ -5,7 +5,7 @@ export const upgrade = async (queryFn: (query: string, values?: any[]) => Promis
   await queryFn(`
   CREATE TABLE IF NOT EXISTS \`${DbTables.SERVICE}\` (
     \`id\` INT NOT NULL AUTO_INCREMENT,
-    \`serviceType_id\` INT NOT NULL AUTO_INCREMENT,
+    \`serviceType_id\` INT NOT NULL,
     \`name\` VARCHAR(500) NULL,
     \`testNetwork\` BOOLEAN DEFAULT 0,
     \`description\` TEXT NULL,
@@ -16,7 +16,12 @@ export const upgrade = async (queryFn: (query: string, values?: any[]) => Promis
     \`createUser\` INT NULL,
     \`updateTime\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     \`updateUser\` INT NULL,
-    PRIMARY KEY (\`id\`))
+    PRIMARY KEY (\`id\`),
+    CONSTRAINT \`fk_service_serviceType\`
+        FOREIGN KEY (\`serviceType_id\`)
+        REFERENCES \`${DbTables.SERVICE_TYPE}\` (\`id\`)
+        ON DELETE CASCADE
+        ON UPDATE NO ACTION)
   `);
 };
 
