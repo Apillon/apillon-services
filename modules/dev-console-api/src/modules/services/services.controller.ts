@@ -17,7 +17,7 @@ export class ServicesController {
   @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
   @UseGuards(AuthGuard)
   async getServiceList(@Query('type') type: string) {
-    return Service.getServices(type);
+    return this.serviceService.getServiceList({ type: type, limit: 10, offset: 10 });
   }
 
   @Get('/:id')

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/member-ordering */
+import { Inject } from '@nestjs/common';
 import { prop } from '@rawmodel/core';
 import { stringParser, integerParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
@@ -10,6 +11,9 @@ import { getQueryParams, selectAndCountQuery } from '../../../lib/sql-utils';
  * Service model.
  */
 export class Service extends AdvancedSQLModel {
+  constructor(@Inject('MYSQL_DB')) {
+    super()
+  }
   collectionName = DbTables.SERVICE;
 
   /**
@@ -118,10 +122,12 @@ export class Service extends AdvancedSQLModel {
         `,
       qFilter: `
         ORDER BY ${filters.orderStr}
-        LIMIT ${filters.limit} OFFSET ${filters.offset};
+        LIMIT 10 OFFSET 0
       `,
     };
 
-    return selectAndCountQuery(this.db(), sqlQuery, params, 'bc.id');
+    // LIMIT ${filters.limit} OFFSET ${filters.offset};
+
+    return selectAndCountQuery('mysql', sqlQuery, params, 'bc.id');
   }
 }
