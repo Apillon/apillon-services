@@ -35,4 +35,25 @@ export class ServicesService {
     await service.update();
     return service;
   }
+
+  async getService(context: DevConsoleApiContext, id: number) {
+    let service: Service = await new Service({}, { context }).populateById(id);
+    if (!service.exists()) {
+      throw new CodeException({
+        code: ResourceNotFoundErrorCode.SERVICE_DOES_NOT_EXIST,
+        status: HttpStatus.NOT_FOUND,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+
+    return service;
+  }
+
+  // // TODO: Missing context, query parameters
+  // async getServiceList(): Promise<any> {
+  //   let services = await new Service({}, {}).getList({}, {});
+  //   let res = [];
+  //   for (let project of services.items) res.push(services.serialize(SerializeForServices.LIST));
+  //   return { items: res };
+  // }
 }

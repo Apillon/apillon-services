@@ -13,8 +13,15 @@ export class ServicesController {
   constructor(private readonly serviceService: ServicesService) {}
 
   @Get()
-  getHello(): string {
+  pingService(): string {
     return 'Service Hello!';
+  }
+
+  @Get('/:id')
+  @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
+  @UseGuards(AuthGuard)
+  async getService(@Ctx() context: DevConsoleApiContext, @Param('id', ParseIntPipe) id: number) {
+    return this.serviceService.getService(context, id);
   }
 
   @Post()
@@ -26,10 +33,9 @@ export class ServicesController {
   }
 
   @Patch('/:id')
-  @Permissions({})
+  @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
   @UseGuards(AuthGuard)
   async updateService(@Ctx() context: DevConsoleApiContext, @Param('id', ParseIntPipe) id: number, @Body() body: any) {
-    console.log('Body ', body);
     return this.serviceService.updateService(context, id, body);
   }
 }
