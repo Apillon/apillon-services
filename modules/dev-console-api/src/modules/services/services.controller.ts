@@ -1,8 +1,9 @@
-import { Body, Controller, Param, Post, Patch, Get, ParseIntPipe, UseGuards, Delete } from '@nestjs/common';
+import { Body, Controller, Param, Query, Post, Patch, Get, ParseIntPipe, UseGuards, Delete } from '@nestjs/common';
 
 import { Ctx, PermissionLevel, PermissionType, Validation, Permissions } from 'at-lib';
 import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
+import { getQueryParams, selectAndCountQuery } from '../../lib/sql-utils';
 
 import { ServicesService } from './services.service';
 import { Service } from './models/service.model';
@@ -13,8 +14,10 @@ export class ServicesController {
   constructor(private readonly serviceService: ServicesService) {}
 
   @Get()
-  pingService(): string {
-    return 'Service Hello!';
+  @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
+  @UseGuards(AuthGuard)
+  async getServiceList(@Query('type') type: string) {
+    return Service.getServices(type);
   }
 
   @Get('/:id')

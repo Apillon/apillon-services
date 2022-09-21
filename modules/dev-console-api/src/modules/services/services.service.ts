@@ -24,7 +24,7 @@ export class ServicesService {
   }
 
   // // TODO: Missing context, query parameters
-  // async getServiceList(): Promise<any> {
+  // async getServices(): Promise<any> {
   //   let services = await new Service({}, {}).getList({}, {});
   //   let res = [];
   //   for (let project of services.items) res.push(services.serialize(SerializeForServices.LIST));

@@ -5,6 +5,11 @@ export enum DbTables {
   SERVICE = 'service',
 }
 
+export enum ErrorCode {
+  UNEXPECTED_SYSTEM_ERROR = 400000,
+  UNHANDLED_SYSTEM_ERROR = 400001,
+}
+
 export enum ValidatorErrorCode {
   DEFAULT_VALIDATION_ERROR = 422000,
   CREATE_USER_DTO_EMAIL_NOT_VALID = 422100,
@@ -27,6 +32,33 @@ export enum ResourceNotFoundErrorCode {
   SERVICE_DOES_NOT_EXIST = 404003,
 }
 
-// export class SerializeForServices {
-//   public static LIST = 'list';
-// }
+export enum ServiceType {
+  AUTHENTICATION = 'authentication',
+}
+
+/**
+ * Types of log messages.
+ */
+export enum LogType {
+  DB = 'DB',
+  MESSAGE = 'MSG',
+  INFO = 'INF',
+  WARN = 'WRN',
+  ERROR = 'ERR',
+}
+
+/**
+ * List of possible applications run environments.
+ */
+export enum ApplicationEnv {
+  TEST = 'testing',
+  DEV = 'development',
+  PROD = 'production',
+}
+
+export enum SqlModelStatus {
+  DRAFT = 1,
+  INCOMPLETE = 2,
+  ACTIVE = 5,
+  DEACTIVATED = 9,
+}
