@@ -27,6 +27,6 @@ export enum ResourceNotFoundErrorCode {
   SERVICE_DOES_NOT_EXIST = 404003,
 }
 
-export class SerializeForServices {
-  public static LIST = 'list';
-}
+// export class SerializeForServices {
+//   public static LIST = 'list';
+// }
