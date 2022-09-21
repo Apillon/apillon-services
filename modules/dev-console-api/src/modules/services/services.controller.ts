@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Param, Post, Patch, Get, ParseIntPipe, UseGuards } from '@nestjs/common';
 
 import { Ctx, PermissionLevel, PermissionType, Validation, Permissions } from 'at-lib';
 import { DevConsoleApiContext } from '../../context';
@@ -23,5 +23,13 @@ export class ServicesController {
   @UseGuards(ValidationGuard, AuthGuard)
   async createService(@Ctx() context: DevConsoleApiContext, @Body() body: Service) {
     return await this.serviceService.createService(context, body);
+  }
+
+  @Patch('/:id')
+  @Permissions({})
+  @UseGuards(AuthGuard)
+  async updateService(@Ctx() context: DevConsoleApiContext, @Param('id', ParseIntPipe) id: number, @Body() body: any) {
+    console.log('Body ', body);
+    return this.serviceService.updateService(context, id, body);
   }
 }

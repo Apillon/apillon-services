@@ -23,6 +23,7 @@ export class ProjectController {
   @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
   @UseGuards(AuthGuard)
   async updateProject(@Ctx() context: DevConsoleApiContext, @Param('id', ParseIntPipe) id: number, @Body() body: any) {
+    console.log('Body ', body);
     return await this.projectService.updateProject(context, id, body);
   }
 }
