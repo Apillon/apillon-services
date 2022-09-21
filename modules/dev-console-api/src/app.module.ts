@@ -6,9 +6,10 @@ import { ContextMiddleware } from './middlewares/context.middleware';
 import { MySQLModule } from './modules/database/mysql.module';
 import { ProjectModule } from './modules/project/project.module';
 import { UserModule } from './modules/user/user.module';
+import { ServicesModule } from './modules/services/services.module';
 
 @Module({
-  imports: [UserModule, MySQLModule, ProjectModule],
+  imports: [UserModule, MySQLModule, ProjectModule, ServicesModule],
   controllers: [AppController],
   providers: [AppService],
 })
