@@ -91,7 +91,8 @@ export class Service extends AdvancedSQLModel {
 
     const sqlQuery = {
       qSelect: `
-        SELECT DISTINCT s.*
+        select distinct s.name as "service_name" , st.name as "service_type", 
+        s.status as status, TIMEDIFF(NOW(), s.lastStartTime) as uptime
         `,
       qFrom: `
         FROM \`${DbTables.SERVICE}\` s
