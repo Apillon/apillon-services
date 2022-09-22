@@ -66,6 +66,11 @@ export interface IEnv {
   AT_DEV_CONSOLE_API_MYSQL_USER: string;
   AT_DEV_CONSOLE_API_MYSQL_PASSWORD: string;
   AT_DEV_CONSOLE_API_DB: string;
+
+  /**
+   * Page size used in sql utils
+   */
+  DEFAULT_PAGE_SIZE: number;
 }
 
 // dotenv.config();
@@ -88,16 +93,16 @@ export let env: IEnv = {
   AT_LMAS_FUNCTION_NAME: process.env['AT_LMAS_FUNCTION_NAME'],
   AT_LMAS_SOCKET_PORT: parseInt(process.env['AT_AMS_SOCKET_PORT']) || 6201,
   AT_LMAS_MONGO_SRV: process.env['AT_LMAS_MONGO_SRV'],
-  AT_LMAS_MONGO_DATABASE:
-    process.env['AT_LMAS_MONGO_DATABASE'] || 'authtrail_logs',
+  AT_LMAS_MONGO_DATABASE: process.env['AT_LMAS_MONGO_DATABASE'] || 'authtrail_logs',
 
   AT_DEV_CONSOLE_API_MYSQL_HOST: process.env['AT_DEV_CONSOLE_API_MYSQL_HOST'],
-  AT_DEV_CONSOLE_API_MYSQL_PORT:
-    parseInt(process.env['AT_DEV_CONSOLE_API_MYSQL_PORT']) || 3306,
+  AT_DEV_CONSOLE_API_MYSQL_PORT: parseInt(process.env['AT_DEV_CONSOLE_API_MYSQL_PORT']) || 3306,
   AT_DEV_CONSOLE_API_MYSQL_USER: process.env['AT_DEV_CONSOLE_API_MYSQL_USER'],
-  AT_DEV_CONSOLE_API_MYSQL_PASSWORD:
-    process.env['AT_DEV_CONSOLE_API_MYSQL_PASSWORD'],
+  AT_DEV_CONSOLE_API_MYSQL_PASSWORD: process.env['AT_DEV_CONSOLE_API_MYSQL_PASSWORD'],
   AT_DEV_CONSOLE_API_DB: process.env['AT_DEV_CONSOLE_API_DB'],
+
+  /** SQL UTILS */
+  DEFAULT_PAGE_SIZE: parseInt(process.env['DEFAULT_PAGE_SIZE']) || 20,
 };
 
 export let isEnvReady = false;
