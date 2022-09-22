@@ -5,6 +5,7 @@ export enum DbTables {
   SERVICE = 'service',
   PROJECT_USER = 'project_user',
   FILE = 'file',
+  INSTRUCTION = 'instruction',
 }
 
 export enum ValidatorErrorCode {
@@ -19,6 +20,7 @@ export enum ValidatorErrorCode {
   FILE_CONTENT_TYPE_NOT_PRESENT = 4222008,
   FILE_VERSION_NOT_PRESENT = 4222009,
   FILE_BODY_NOT_PRESENT = 4222010,
+  INSTRUCTION_NAME_NOT_PRESENT = 422401,
 }
 
 /**
@@ -31,4 +33,5 @@ export enum ResourceNotFoundErrorCode {
   PROJECT_DOES_NOT_EXISTS = 404002,
   FILE_DOES_NOT_EXISTS = 404003,
   FILE_DOES_NOT_EXISTS_IN_BUCKET = 404004,
+  INSTRUCTION_DOES_NOT_EXIST = 404005,
 }

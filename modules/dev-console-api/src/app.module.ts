@@ -7,9 +7,10 @@ import { MySQLModule } from './modules/database/mysql.module';
 import { FileModule } from './modules/file/file.module';
 import { ProjectModule } from './modules/project/project.module';
 import { UserModule } from './modules/user/user.module';
+import { InstructionModule } from './modules/instruction/instruction.module';
 
 @Module({
-  imports: [UserModule, MySQLModule, ProjectModule, FileModule],
+  imports: [UserModule, MySQLModule, ProjectModule, FileModule, InstructionModule],
   controllers: [AppController],
   providers: [AppService],
 })
