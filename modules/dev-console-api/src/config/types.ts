@@ -5,11 +5,6 @@ export enum DbTables {
   SERVICE = 'service',
 }
 
-export enum ErrorCode {
-  UNEXPECTED_SYSTEM_ERROR = 400000,
-  UNHANDLED_SYSTEM_ERROR = 400001,
-}
-
 export enum ValidatorErrorCode {
   DEFAULT_VALIDATION_ERROR = 422000,
   CREATE_USER_DTO_EMAIL_NOT_VALID = 422100,
@@ -30,8 +25,4 @@ export enum ResourceNotFoundErrorCode {
   USER_DOES_NOT_EXISTS = 404001,
   PROJECT_DOES_NOT_EXISTS = 404002,
   SERVICE_DOES_NOT_EXIST = 404003,
-}
-
-export enum ServiceType {
-  AUTHENTICATION = 'authentication',
 }
