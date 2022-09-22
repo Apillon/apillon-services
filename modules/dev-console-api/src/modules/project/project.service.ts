@@ -1,5 +1,5 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { CodeException, ValidationException } from 'at-lib';
+import { HttpStatus, Injectable, Param } from '@nestjs/common';
+import { CodeException, Ctx, ValidationException } from 'at-lib';
 import { ResourceNotFoundErrorCode, ValidatorErrorCode } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
 import { Project } from './models/project.model';
@@ -7,6 +7,7 @@ import { Project } from './models/project.model';
 @Injectable()
 export class ProjectService {
   async createProject(context: DevConsoleApiContext, body: Project): Promise<Project> {
+    console.log('BODY ', body);
     return await body.insert();
   }
 
@@ -31,5 +32,9 @@ export class ProjectService {
 
     await project.update();
     return project;
+  }
+
+  async getUserProjects(@Ctx() context: DevConsoleApiContext) {
+    return await new Project({}).getUserProjects(context);
   }
 }

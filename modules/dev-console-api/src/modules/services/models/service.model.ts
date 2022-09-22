@@ -79,8 +79,7 @@ export class Service extends AdvancedSQLModel {
   public active: number;
 
   /**
-   * Returns ids, names and types of active services.
-   * @param conn optional connection
+   * Returns name, service type, status
    */
   public async getServices(context: DevConsoleApiContext, filter: any) {
     let params = {
@@ -91,8 +90,8 @@ export class Service extends AdvancedSQLModel {
 
     const sqlQuery = {
       qSelect: `
-        select distinct s.name as "service_name" , st.name as "service_type", 
-        s.status as status, TIMEDIFF(NOW(), s.lastStartTime) as uptime
+        SELECT DISTINCT s.name AS "service_name", st.name as "service_type", 
+        s.status AS status, TIMEDIFF(NOW(), s.lastStartTime) AS uptime
         `,
       qFrom: `
         FROM \`${DbTables.SERVICE}\` s
