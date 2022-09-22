@@ -106,7 +106,8 @@ All documentation is MD based and resides in project services and in docs direct
 
 Add yourself if you stared to work in this project.
 
-| Persons     | Role                                      |
-| ----------- | ----------------------------------------- |
-| Tine Mlakar | Infrasturcture & microservices mastermind |
-| Vinko Šmid  | Wanna be project lead                     |
+| Persons      | Role                                      |
+| ------------ | ----------------------------------------- |
+| Tine Mlakar  | Infrasturcture & microservices mastermind |
+| Vinko Šmid   | Wanna be project lead                     |
+| Luka Golinar | Developer                                 |
