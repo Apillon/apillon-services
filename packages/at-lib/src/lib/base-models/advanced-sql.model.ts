@@ -147,7 +147,7 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
       `
       SELECT * 
       FROM \`${this.collectionName}\`
-      WHERE id = @id;
+      WHERE id = @id AND status <> ${SqlModelStatus.DELETED};
       `,
       { id },
       conn,

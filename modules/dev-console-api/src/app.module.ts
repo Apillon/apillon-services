@@ -4,11 +4,12 @@ import { AppService } from './app.service';
 import { AuthenticateUserMiddleware } from './middlewares/authentication.middleware';
 import { ContextMiddleware } from './middlewares/context.middleware';
 import { MySQLModule } from './modules/database/mysql.module';
+import { FileModule } from './modules/file/file.module';
 import { ProjectModule } from './modules/project/project.module';
 import { UserModule } from './modules/user/user.module';
 
 @Module({
-  imports: [UserModule, MySQLModule, ProjectModule],
+  imports: [UserModule, MySQLModule, ProjectModule, FileModule],
   controllers: [AppController],
   providers: [AppService],
 })
