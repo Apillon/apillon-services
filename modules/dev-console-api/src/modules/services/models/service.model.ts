@@ -79,6 +79,16 @@ export class Service extends AdvancedSQLModel {
   public active: number;
 
   /**
+   * Service active / inactive
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+  })
+  public project_id: number;
+
+  /**
    * Returns name, service type, status
    */
   public async getServices(context: DevConsoleApiContext, filter: any) {

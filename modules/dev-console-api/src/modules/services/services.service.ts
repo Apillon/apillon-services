@@ -20,7 +20,7 @@ export class ServicesService {
       });
     }
 
-    return service;
+    return service.serialize();
   }
 
   async getServiceList(context: DevConsoleApiContext, filters: any) {
