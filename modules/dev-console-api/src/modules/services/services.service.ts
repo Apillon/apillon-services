@@ -64,7 +64,7 @@ export class ServicesService {
       });
     }
 
-    service.delete();
+    await service.delete();
     return service;
   }
 }

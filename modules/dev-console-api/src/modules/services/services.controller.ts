@@ -15,14 +15,14 @@ export class ServicesController {
   @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
   @UseGuards(AuthGuard)
   async getServiceList(@Ctx() context: DevConsoleApiContext, @Query('type') type: string) {
-    return this.serviceService.getServiceList(context, { type: type });
+    return await this.serviceService.getServiceList(context, { type: type });
   }
 
   @Get('/:id')
   @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
   @UseGuards(AuthGuard)
   async getService(@Ctx() context: DevConsoleApiContext, @Param('id', ParseIntPipe) id: number) {
-    return this.serviceService.getService(context, id);
+    return await this.serviceService.getService(context, id);
   }
 
   @Post()
@@ -37,13 +37,13 @@ export class ServicesController {
   @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
   @UseGuards(AuthGuard)
   async updateService(@Ctx() context: DevConsoleApiContext, @Param('id', ParseIntPipe) id: number, @Body() body: any) {
-    return this.serviceService.updateService(context, id, body);
+    return await this.serviceService.updateService(context, id, body);
   }
 
   @Delete('/:id')
   @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
   @UseGuards(AuthGuard)
   async deleteService(@Ctx() context: DevConsoleApiContext, @Param('id', ParseIntPipe) id: number) {
-    return this.serviceService.deleteService(context, id);
+    return await this.serviceService.deleteService(context, id);
   }
 }
