@@ -23,8 +23,8 @@ export class ServicesService {
     return service;
   }
 
-  async getServiceList(filters: any): Promise<{ items: Service[]; total: number }> {
-    return await new Service({}).getServices(filters);
+  async getServiceList(context: DevConsoleApiContext, filters: any) {
+    return await new Service({}).getServices(context, filters);
   }
 
   async createService(context: DevConsoleApiContext, body: Service): Promise<Service> {

@@ -35,30 +35,3 @@ export enum ResourceNotFoundErrorCode {
 export enum ServiceType {
   AUTHENTICATION = 'authentication',
 }
-
-/**
- * Types of log messages.
- */
-export enum LogType {
-  DB = 'DB',
-  MESSAGE = 'MSG',
-  INFO = 'INF',
-  WARN = 'WRN',
-  ERROR = 'ERR',
-}
-
-/**
- * List of possible applications run environments.
- */
-export enum ApplicationEnv {
-  TEST = 'testing',
-  DEV = 'development',
-  PROD = 'production',
-}
-
-export enum SqlModelStatus {
-  DRAFT = 1,
-  INCOMPLETE = 2,
-  ACTIVE = 5,
-  DEACTIVATED = 9,
-}

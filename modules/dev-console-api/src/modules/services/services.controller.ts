@@ -3,8 +3,6 @@ import { Body, Controller, Param, Query, Post, Patch, Get, ParseIntPipe, UseGuar
 import { Ctx, PermissionLevel, PermissionType, Validation, Permissions } from 'at-lib';
 import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
-import { getQueryParams, selectAndCountQuery } from '../../lib/sql-utils';
-
 import { ServicesService } from './services.service';
 import { Service } from './models/service.model';
 import { AuthGuard } from '../../guards/auth.guard';
@@ -16,8 +14,8 @@ export class ServicesController {
   @Get()
   @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
   @UseGuards(AuthGuard)
-  async getServiceList(@Query('type') type: string) {
-    return this.serviceService.getServiceList({ type: type, limit: 10, offset: 10 });
+  async getServiceList(@Ctx() context: DevConsoleApiContext, @Query('type') type: string) {
+    return this.serviceService.getServiceList(context, { type: type });
   }
 
   @Get('/:id')
