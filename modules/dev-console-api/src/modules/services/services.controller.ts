@@ -6,6 +6,7 @@ import { ValidationGuard } from '../../guards/validation.guard';
 import { ServicesService } from './services.service';
 import { Service } from './models/service.model';
 import { AuthGuard } from '../../guards/auth.guard';
+import { ServiceQueryFilter } from './dto/services-query-filter.dto';
 
 @Controller('services')
 export class ServicesController {
@@ -14,8 +15,8 @@ export class ServicesController {
   @Get()
   @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
   @UseGuards(AuthGuard)
-  async getServiceList(@Ctx() context: DevConsoleApiContext, @Query('type') type: string) {
-    return await this.serviceService.getServiceList(context, { type: type });
+  async getServiceList(@Ctx() context: DevConsoleApiContext, @Query() query: ServiceQueryFilter) {
+    return await this.serviceService.getServiceList(context, query);
   }
 
   @Get('/:id')

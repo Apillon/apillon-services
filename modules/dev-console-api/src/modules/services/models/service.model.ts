@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/member-ordering */
-import { Inject } from '@nestjs/common';
+import { Inject, UseFilters } from '@nestjs/common';
 import { prop } from '@rawmodel/core';
 import { stringParser, integerParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
@@ -9,6 +9,7 @@ import { selectAndCountQuery } from 'at-lib';
 
 import { DevConsoleApiContext } from '../../../context';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
+import { ServiceQueryFilter } from '../dto/services-query-filter.dto';
 
 /**
  * Service model.
@@ -22,7 +23,7 @@ export class Service extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    serializable: [PopulateFrom.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
     validators: [
       {
         resolver: presenceValidator(),
@@ -54,7 +55,7 @@ export class Service extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    serializable: [PopulateFrom.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
   })
   public description: string;
 
@@ -64,7 +65,7 @@ export class Service extends AdvancedSQLModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    serializable: [PopulateFrom.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
   })
   public status: number;
 
@@ -74,7 +75,7 @@ export class Service extends AdvancedSQLModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    serializable: [PopulateFrom.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
   })
   public active: number;
 
@@ -91,9 +92,11 @@ export class Service extends AdvancedSQLModel {
   /**
    * Returns name, service type, status
    */
-  public async getServices(context: DevConsoleApiContext, filter: any) {
+  public async getServices(context: DevConsoleApiContext, filter: ServiceQueryFilter) {
+    console.log('Filters ', filter);
     let params = {
       type: filter.type,
+      project_id: filter.project_id,
       offset: 0,
       limit: 10,
     };
@@ -107,7 +110,7 @@ export class Service extends AdvancedSQLModel {
         FROM \`${DbTables.SERVICE}\` s
         LEFT JOIN \`${DbTables.SERVICE_TYPE}\` st
           ON st.id = s.serviceType_id
-        WHERE st.name = '${params.type}'
+        WHERE project_id= ${params.project_id} AND st.name = '${params.type}' 
       `,
       qFilter: `
         LIMIT ${params.limit} OFFSET ${params.offset};

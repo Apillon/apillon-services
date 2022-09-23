@@ -7,7 +7,6 @@ import { Project } from './models/project.model';
 @Injectable()
 export class ProjectService {
   async createProject(context: DevConsoleApiContext, body: Project): Promise<Project> {
-    console.log('BODY ', body);
     return await body.insert();
   }
 

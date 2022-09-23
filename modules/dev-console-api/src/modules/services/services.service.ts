@@ -4,6 +4,7 @@ import { ResourceNotFoundErrorCode, ValidatorErrorCode } from '../../config/type
 
 import { DevConsoleApiContext } from '../../context';
 import { Project } from '../project/models/project.model';
+import { ServiceQueryFilter } from './dto/services-query-filter.dto';
 
 import { Service } from './models/service.model';
 import { ServicesModule } from './services.module';
@@ -20,11 +21,11 @@ export class ServicesService {
       });
     }
 
-    return service.serialize();
+    return service;
   }
 
-  async getServiceList(context: DevConsoleApiContext, filters: any) {
-    return await new Service({}).getServices(context, filters);
+  async getServiceList(context: DevConsoleApiContext, query: ServiceQueryFilter) {
+    return await new Service({}).getServices(context, query);
   }
 
   async createService(context: DevConsoleApiContext, body: Service): Promise<Service> {
