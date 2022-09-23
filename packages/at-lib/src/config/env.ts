@@ -18,6 +18,11 @@ export interface IEnv {
    */
   AWS_SECRETS_ID: string;
 
+  AWS_KEY: string;
+  AWS_BUCKET: string;
+  AWS_ENDPOINT: string;
+  AWS_SECRET: string;
+
   /*************************************************************
    * AMS -Authtrail Access Management Service
    *************************************************************/
@@ -81,6 +86,11 @@ export let env: IEnv = {
   LOG_TARGET: process.env['LOG_TARGET'] || 'console',
   AWS_REGION: process.env['AWS_REGION'], // env var from lambda - can not be overwritten in lambda setting!
   AWS_SECRETS_ID: process.env['AWS_SECRETS_ID'] || '',
+  AWS_KEY: process.env['AWS_KEY'],
+  AWS_SECRET: process.env['AWS_SECRET'],
+  AWS_BUCKET: process.env['AWS_BUCKET'],
+  AWS_ENDPOINT: process.env['AWS_ENDPOINT'],
+
   /** AMS */
   AT_AMS_FUNCTION_NAME: process.env['AT_AMS_FUNCTION_NAME'],
   AT_AMS_SOCKET_PORT: parseInt(process.env['AT_AMS_SOCKET_PORT']) || 6101,

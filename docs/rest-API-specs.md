@@ -1,6 +1,7 @@
 # REST API specifications
 
-All REST API services should have same request and response structure. To achieve that, try to write code in standard way. See dev-console-api project on how to write controllers and service functions.
+All REST API services should have same request and response structure. To achieve that, try to write code according to standards.
+See dev-console-api project on how to write controllers and service functions.
 
 ## Request
 
