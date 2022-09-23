@@ -93,7 +93,6 @@ export class Service extends AdvancedSQLModel {
    * Returns name, service type, status
    */
   public async getServices(context: DevConsoleApiContext, filter: ServiceQueryFilter) {
-    console.log('Filters ', filter);
     let params = {
       type: filter.type,
       project_id: filter.project_id,
