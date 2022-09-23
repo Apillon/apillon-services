@@ -34,6 +34,10 @@
       "dependsOn": [
         "^build"
       ]
+    },
+    "test": {
+      "outputs": [
+      ]
     }
   }
 }

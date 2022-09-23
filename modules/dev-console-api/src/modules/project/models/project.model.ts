@@ -5,6 +5,7 @@ import { presenceValidator } from '@rawmodel/validators';
 import { AdvancedSQLModel, PopulateFrom, SerializeFor } from 'at-lib';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { v4 as uuidv4 } from 'uuid';
+import { faker } from '@faker-js/faker';
 
 /**
  * Project model.
@@ -43,6 +44,7 @@ export class Project extends AdvancedSQLModel {
         code: ValidatorErrorCode.PROJECT_NAME_NOT_PRESENT,
       },
     ],
+    fakeValue: faker.word.verb(),
   })
   public name: string;
 
@@ -63,6 +65,7 @@ export class Project extends AdvancedSQLModel {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
     serializable: [SerializeFor.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    fakeValue: faker.lorem.paragraph(5),
   })
   public description: string;
 }
