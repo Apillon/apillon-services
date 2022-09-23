@@ -33,6 +33,7 @@
   },
   "packageManager": "npm@8.4.0",
   "dependencies": {
-    "aws-lambda": "^1.0.7"
+    "aws-lambda": "^1.0.7",
+    "swagger": "^0.7.5"
   }
 }

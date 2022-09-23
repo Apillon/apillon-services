@@ -71,6 +71,11 @@ export interface IEnv {
   AT_DEV_CONSOLE_API_MYSQL_USER: string;
   AT_DEV_CONSOLE_API_MYSQL_PASSWORD: string;
   AT_DEV_CONSOLE_API_DB: string;
+
+  /**
+   * Page size used in sql utils
+   */
+  DEFAULT_PAGE_SIZE: number;
 }
 
 // dotenv.config();
@@ -105,6 +110,9 @@ export let env: IEnv = {
   AT_DEV_CONSOLE_API_MYSQL_USER: process.env['AT_DEV_CONSOLE_API_MYSQL_USER'],
   AT_DEV_CONSOLE_API_MYSQL_PASSWORD: process.env['AT_DEV_CONSOLE_API_MYSQL_PASSWORD'],
   AT_DEV_CONSOLE_API_DB: process.env['AT_DEV_CONSOLE_API_DB'],
+
+  /** SQL UTILS */
+  DEFAULT_PAGE_SIZE: parseInt(process.env['DEFAULT_PAGE_SIZE']) || 20,
 };
 
 export let isEnvReady = false;
