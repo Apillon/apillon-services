@@ -8,17 +8,8 @@ import { InstructionModule } from './instruction.module';
 
 @Injectable()
 export class InstructionService {
-  async getInstruction(context: DevConsoleApiContext, id: number) {
-    let instruction: Instruction = await new Instruction({}, { context }).populateById(id);
-    if (!instruction.exists()) {
-      throw new CodeException({
-        code: ResourceNotFoundErrorCode.INSTRUCTION_DOES_NOT_EXIST,
-        status: HttpStatus.NOT_FOUND,
-        errorCodes: ResourceNotFoundErrorCode,
-      });
-    }
-
-    return instruction.serialize();
+  async getInstruction(context: DevConsoleApiContext, instruction_enum: string) {
+    return await new Instruction({}).getInstruction(context, instruction_enum);
   }
 
   async createInstruction(context: DevConsoleApiContext, body: any) {

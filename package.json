@@ -15,6 +15,7 @@
     "lint": "npx turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "deploy:dev": "npx turbo run deploy:dev"
+
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.102",

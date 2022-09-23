@@ -5,16 +5,19 @@ import { ValidationGuard } from '../../guards/validation.guard';
 
 import { InstructionService } from './instruction.service';
 import { Instruction } from './models/instruction.model';
+import { InstructionGetInstructionFilter } from './dto/instruction-query-filter.dto';
 import { AuthGuard } from '../../guards/auth.guard';
 
 @Controller('instruction')
 export class InstructionController {
   constructor(private readonly instructionService: InstructionService) {}
-  @Get()
+
+  @Get('/')
   @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
   @UseGuards(AuthGuard)
-  async getInstructionList(@Ctx() context: DevConsoleApiContext, @Query('type') type: string) {
-    return;
+  @Validation({ dto: InstructionGetInstructionFilter })
+  async getInstruction(@Ctx() context: DevConsoleApiContext, @Query('instructionEnum') instruction_enum: string) {
+    return await this.instructionService.getInstruction(context, instruction_enum);
   }
 
   @Post()

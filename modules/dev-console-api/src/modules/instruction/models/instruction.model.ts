@@ -1,7 +1,9 @@
 import { stringParser, integerParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
-import { AdvancedSQLModel, PopulateFrom, prop, SerializeFor } from 'at-lib';
+import { AdvancedSQLModel, PopulateFrom, prop, selectAndCountQuery, SerializeFor } from 'at-lib';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
+import { DevConsoleApiContext } from '../../../context';
+import { ServiceQueryFilter } from '../dto/instruction-query-filter.dto';
 
 /**
  * Instruction model.
@@ -15,7 +17,7 @@ export class Instruction extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    serializable: [SerializeFor.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
     validators: [
       {
         resolver: presenceValidator(),
@@ -31,7 +33,7 @@ export class Instruction extends AdvancedSQLModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    serializable: [SerializeFor.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
   })
   public instructionType: number;
 
@@ -41,7 +43,7 @@ export class Instruction extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    serializable: [SerializeFor.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
   })
   public htmlContent: string;
 
@@ -51,7 +53,7 @@ export class Instruction extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    serializable: [SerializeFor.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
   })
   public extendedHtmlContent: string;
 
@@ -61,7 +63,7 @@ export class Instruction extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    serializable: [SerializeFor.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
   })
   public docsUrl: string;
 
@@ -71,7 +73,7 @@ export class Instruction extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    serializable: [SerializeFor.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
   })
   public instructionEnum: string;
 
@@ -81,7 +83,24 @@ export class Instruction extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    serializable: [SerializeFor.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
   })
   public forRoute: string;
+
+  /**
+   * Returns name, service type, status
+   */
+  public async getInstruction(context: DevConsoleApiContext, instruction_enum: string) {
+    const sqlQuery = {
+      qSelect: `
+        SELECT FIRST i.*
+        `,
+      qFrom: `
+        FROM \`${DbTables.INSTRUCTION}\` s
+        WHERE instructionEnum = ${instruction_enum}
+      `,
+    };
+
+    return selectAndCountQuery(context.mysql, sqlQuery, {}, 'i.id');
+  }
 }
