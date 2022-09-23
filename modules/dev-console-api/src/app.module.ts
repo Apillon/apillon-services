@@ -8,9 +8,10 @@ import { FileModule } from './modules/file/file.module';
 import { ProjectModule } from './modules/project/project.module';
 import { UserModule } from './modules/user/user.module';
 import { InstructionModule } from './modules/instruction/instruction.module';
+import { ServicesModule } from './modules/services/services.module';
 
 @Module({
-  imports: [UserModule, MySQLModule, ProjectModule, FileModule, InstructionModule],
+  imports: [UserModule, MySQLModule, ProjectModule, FileModule, ServicesModule, InstructionModule],
   controllers: [AppController],
   providers: [AppService],
 })

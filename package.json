@@ -11,6 +11,7 @@
     "build": "npx turbo run build",
     "build-no-cache": "npx turbo run build --no-cache",
     "dev": "npx turbo run dev --parallel",
+    "test": "turbo run test",
     "lint": "npx turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "deploy:dev": "npx turbo run deploy:dev"
@@ -32,6 +33,7 @@
   },
   "packageManager": "npm@8.4.0",
   "dependencies": {
-    "aws-lambda": "^1.0.7"
+    "aws-lambda": "^1.0.7",
+    "swagger": "^0.7.5"
   }
 }
