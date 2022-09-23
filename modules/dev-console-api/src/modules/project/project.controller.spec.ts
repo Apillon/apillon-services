@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { env, MySql } from 'at-lib';
 import { DevConsoleApiContext } from '../../context';
-import { MySQLModule } from '../database/mysql.module';
 import { Project } from './models/project.model';
 import { ProjectController } from './project.controller';
 import { ProjectService } from './project.service';

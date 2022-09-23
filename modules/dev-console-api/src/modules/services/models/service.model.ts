@@ -8,7 +8,7 @@ import { selectAndCountQuery } from 'at-lib';
 
 import { DevConsoleApiContext } from '../../../context';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
-import { ServiceQueryFilter } from '../dto/services-query-filter.dto';
+import { ServiceQueryFilter } from '../dtos/services-query-filter.dto';
 
 /**
  * Service model.

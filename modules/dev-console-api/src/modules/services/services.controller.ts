@@ -1,12 +1,12 @@
 import { Body, Controller, Param, Query, Post, Patch, Get, ParseIntPipe, UseGuards, Delete } from '@nestjs/common';
 
-import { Ctx, PermissionLevel, PermissionType, Validation, Permissions } from 'at-lib';
+import { Ctx, PermissionLevel, PermissionType, Validation, Permissions, ValidateFor } from 'at-lib';
 import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { ServicesService } from './services.service';
 import { Service } from './models/service.model';
 import { AuthGuard } from '../../guards/auth.guard';
-import { ServiceQueryFilter } from './dto/services-query-filter.dto';
+import { ServiceQueryFilter } from './dtos/services-query-filter.dto';
 
 @Controller('services')
 export class ServicesController {
@@ -14,7 +14,8 @@ export class ServicesController {
 
   @Get()
   @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
-  @UseGuards(AuthGuard)
+  @Validation({ dto: ServiceQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard, AuthGuard)
   async getServiceList(@Ctx() context: DevConsoleApiContext, @Query() query: ServiceQueryFilter) {
     return await this.serviceService.getServiceList(context, query);
   }
