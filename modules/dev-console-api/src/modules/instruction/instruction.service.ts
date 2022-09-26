@@ -35,8 +35,6 @@ export class InstructionService {
       });
     }
 
-    console.log('Instructionaaaaa ', instruction.title);
-
     instruction.populate(data);
 
     try {
@@ -51,8 +49,8 @@ export class InstructionService {
     return instruction;
   }
 
-  async deleteInstruction(context: DevConsoleApiContext, instruction_enum: string) {
-    let instruction = await new Instruction({}, { context }).getInstructionByEnum(context, instruction_enum);
+  async deleteInstruction(context: DevConsoleApiContext, id: number) {
+    let instruction = await new Instruction({}, { context }).populateById(id);
     if (!instruction.exists()) {
       throw new CodeException({
         code: ResourceNotFoundErrorCode.INSTRUCTION_DOES_NOT_EXIST,
@@ -61,7 +59,7 @@ export class InstructionService {
       });
     }
 
-    instruction.delete();
+    await instruction.delete();
     return instruction;
   }
 }

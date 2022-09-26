@@ -1,5 +1,5 @@
 import { Body, Controller, Param, Query, Post, Patch, Get, ParseIntPipe, UseGuards, Delete } from '@nestjs/common';
-import { Ctx, PermissionLevel, PermissionType, Validation, Permissions } from 'at-lib';
+import { Ctx, PermissionLevel, PermissionType, Validation, Permissions, ValidateFor } from 'at-lib';
 import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 
@@ -15,7 +15,7 @@ export class InstructionController {
   @Get('/')
   @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
   @UseGuards(AuthGuard)
-  @Validation({ dto: InstructionQueryFilter })
+  @Validation({ dto: InstructionQueryFilter, validateFor: ValidateFor.QUERY })
   async getInstruction(@Ctx() context: DevConsoleApiContext, @Query('instruction_enum') instruction_enum: string) {
     return await this.instructionService.getInstruction(context, instruction_enum);
   }
@@ -30,8 +30,7 @@ export class InstructionController {
 
   @Patch('/')
   @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
-  @Validation({ dto: Instruction })
-  @UseGuards(ValidationGuard, AuthGuard)
+  @UseGuards(AuthGuard)
   async updateInstruction(
     @Ctx() context: DevConsoleApiContext,
     @Query('instruction_enum') instruction_enum: string,
@@ -40,11 +39,11 @@ export class InstructionController {
     return await this.instructionService.updateInstruction(context, instruction_enum, body);
   }
 
-  @Delete('/')
+  @Delete('/:id')
   @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
-  @UseGuards(ValidationGuard, AuthGuard)
+  @UseGuards(AuthGuard)
   @Validation({ dto: InstructionQueryFilter })
-  async deleteInstruction(@Ctx() context: DevConsoleApiContext, @Query('instruction_enum') instruction_enum: string) {
-    return await this.instructionService.deleteInstruction(context, instruction_enum);
+  async deleteInstruction(@Ctx() context: DevConsoleApiContext, @Param('id', ParseIntPipe) id: number) {
+    return await this.instructionService.deleteInstruction(context, id);
   }
 }

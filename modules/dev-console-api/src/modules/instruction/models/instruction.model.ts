@@ -11,7 +11,7 @@ export class Instruction extends AdvancedSQLModel {
   collectionName = DbTables.INSTRUCTION;
 
   /**
-   * Instruction title
+   * Instruction instruction enum
    */
   @prop({
     parser: { resolver: stringParser() },
@@ -20,9 +20,19 @@ export class Instruction extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.INSTRUCTION_NAME_NOT_PRESENT,
+        code: ValidatorErrorCode.INSTRUCTION_ENUM_NOT_PRESENT,
       },
     ],
+  })
+  public instructionEnum: string;
+
+  /**
+   * Instruction title
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [SerializeFor.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
   })
   public title: string;
 
@@ -33,6 +43,12 @@ export class Instruction extends AdvancedSQLModel {
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB],
     serializable: [SerializeFor.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.INSTRUCTION_TYPE_NOT_PRESENT,
+      },
+    ],
   })
   public instructionType: number;
 
@@ -43,6 +59,12 @@ export class Instruction extends AdvancedSQLModel {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
     serializable: [SerializeFor.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.INSTRUCTION_HTML_CONTENT_NOT_PRESENT,
+      },
+    ],
   })
   public htmlContent: string;
 
@@ -67,17 +89,7 @@ export class Instruction extends AdvancedSQLModel {
   public docsUrl: string;
 
   /**
-   * Instruction instruction enum
-   */
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
-  })
-  public instructionEnum: string;
-
-  /**
-   * Instruction instruction enum
+   * Instruction for route
    */
   @prop({
     parser: { resolver: stringParser() },
