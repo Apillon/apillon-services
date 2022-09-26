@@ -23,7 +23,7 @@ export class ServiceQueryFilter extends Model<any> {
 
   // @ApiProperty({ required: false })
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: integerParser() },
     validators: [
       {
         resolver: presenceValidator(),
@@ -31,5 +31,5 @@ export class ServiceQueryFilter extends Model<any> {
       },
     ],
   })
-  public type: string;
+  public serviceType_id: number;
 }

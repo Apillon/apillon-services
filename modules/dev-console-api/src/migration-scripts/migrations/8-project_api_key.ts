@@ -6,7 +6,7 @@ export const upgrade = async (queryFn: (query: string, values?: any[]) => Promis
   CREATE TABLE IF NOT EXISTS \`${DbTables.PROJECT_API_KEY}\` (
     \`id\` INT NOT NULL AUTO_INCREMENT,
     \`project_id\` INT NOT NULL,
-    \`key\` VARCHAR(45) NOT NULL,
+    \`key\` VARCHAR(250) NOT NULL,
     \`name\` VARCHAR(500) NULL,
     \`testNetwork\` BOOLEAN DEFAULT 0,
     \`status\` INT NOT NULL DEFAULT '${SqlModelStatus.ACTIVE}',

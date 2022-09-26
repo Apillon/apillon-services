@@ -58,7 +58,7 @@ export class Service extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [PopulateFrom.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    serializable: [SerializeFor.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
     validators: [
       {
         resolver: presenceValidator(),
@@ -74,7 +74,7 @@ export class Service extends AdvancedSQLModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    serializable: [SerializeFor.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
     validators: [
       {
         resolver: presenceValidator(),
@@ -90,19 +90,9 @@ export class Service extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [PopulateFrom.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    serializable: [SerializeFor.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
   })
   public description: string;
-
-  /**
-   * Service status
-   */
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.DB],
-    serializable: [PopulateFrom.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
-  })
-  public status: number;
 
   /**
    * Service active / inactive
@@ -110,7 +100,7 @@ export class Service extends AdvancedSQLModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [PopulateFrom.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    serializable: [SerializeFor.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
   })
   public active: number;
 
@@ -119,7 +109,7 @@ export class Service extends AdvancedSQLModel {
    */
   public async getServices(context: DevConsoleApiContext, filter: ServiceQueryFilter) {
     let params = {
-      type: filter.type,
+      serviceType_id: filter.serviceType_id,
       project_id: filter.project_id,
       offset: 0,
       limit: 10,
@@ -127,14 +117,14 @@ export class Service extends AdvancedSQLModel {
 
     const sqlQuery = {
       qSelect: `
-        SELECT DISTINCT s.name AS "service_name", st.name as "service_type", 
-        s.status AS status, TIMEDIFF(NOW(), s.lastStartTime) AS uptime
+        SELECT DISTINCT s.name, st.name as "serviceType", s.active,
+        TIMEDIFF(NOW(), s.lastStartTime) AS uptime
         `,
       qFrom: `
         FROM \`${DbTables.SERVICE}\` s
-        LEFT JOIN \`${DbTables.SERVICE_TYPE}\` st
+        INNER JOIN \`${DbTables.SERVICE_TYPE}\` st
           ON st.id = s.serviceType_id
-        WHERE project_id= ${params.project_id} AND st.name = '${params.type}' 
+        WHERE project_id= ${params.project_id} AND s.serviceType_id = ${params.serviceType_id} 
       `,
       qFilter: `
         LIMIT ${params.limit} OFFSET ${params.offset};

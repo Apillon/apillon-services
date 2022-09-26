@@ -5,6 +5,7 @@ export const upgrade = async (queryFn: (query: string, values?: any[]) => Promis
   await queryFn(`
   CREATE TABLE IF NOT EXISTS \`${DbTables.SERVICE}\` (
     \`id\` INT NOT NULL AUTO_INCREMENT,
+    \`project_id\` INT NOT NULL,
     \`service_uuid\` VARCHAR(36) NOT NULL,
     \`serviceType_id\` INT NOT NULL,
     \`name\` VARCHAR(500) NULL,
@@ -21,6 +22,11 @@ export const upgrade = async (queryFn: (query: string, values?: any[]) => Promis
     CONSTRAINT \`fk_service_serviceType\`
         FOREIGN KEY (\`serviceType_id\`)
         REFERENCES \`${DbTables.SERVICE_TYPE}\` (\`id\`)
+        ON DELETE CASCADE
+        ON UPDATE NO ACTION,
+    CONSTRAINT \`fk_service_project\`
+        FOREIGN KEY (\`project_id\`)
+        REFERENCES \`${DbTables.PROJECT}\` (\`id\`)
         ON DELETE CASCADE
         ON UPDATE NO ACTION)
   `);

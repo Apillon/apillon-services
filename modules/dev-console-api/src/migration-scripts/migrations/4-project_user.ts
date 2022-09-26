@@ -7,7 +7,6 @@ export const upgrade = async (queryFn: (query: string, values?: any[]) => Promis
     \`id\` INT NOT NULL AUTO_INCREMENT,
     \`project_id\` INT NOT NULL,
     \`user_id\` INT NOT NULL,
-    \`roleId\` INT NOT NULL,
     \`pendingInvitation\` BOOLEAN NOT NULL,
     \`status\` INT NOT NULL DEFAULT '${SqlModelStatus.ACTIVE}',
     \`createTime\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

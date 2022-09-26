@@ -20,8 +20,8 @@ export class User extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
+    serializable: [SerializeFor.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
     fakeValue: 'John Snow',
   })
   public name: string;
