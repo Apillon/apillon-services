@@ -17,6 +17,10 @@ export interface IEnv {
    * Name of the secret from secret manager
    */
   AWS_SECRETS_ID: string;
+  /**
+   * Application secret.
+   */
+  APP_SECRET: string;
 
   AWS_KEY: string;
   AWS_BUCKET: string;
@@ -90,6 +94,7 @@ export let env: IEnv = {
   AWS_SECRET: process.env['AWS_SECRET'],
   AWS_BUCKET: process.env['AWS_BUCKET'],
   AWS_ENDPOINT: process.env['AWS_ENDPOINT'],
+  APP_SECRET: process.env['APP_SECRET'] || 'notasecret',
 
   /** AMS */
   AT_AMS_FUNCTION_NAME: process.env['AT_AMS_FUNCTION_NAME'],
