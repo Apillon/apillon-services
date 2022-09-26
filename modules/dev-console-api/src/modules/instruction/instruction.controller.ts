@@ -14,8 +14,8 @@ export class InstructionController {
 
   @Get('/')
   @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
-  @UseGuards(AuthGuard)
   @Validation({ dto: InstructionQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard, AuthGuard)
   async getInstruction(@Ctx() context: DevConsoleApiContext, @Query('instruction_enum') instruction_enum: string) {
     return await this.instructionService.getInstruction(context, instruction_enum);
   }
@@ -42,7 +42,6 @@ export class InstructionController {
   @Delete('/:id')
   @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
   @UseGuards(AuthGuard)
-  @Validation({ dto: InstructionQueryFilter })
   async deleteInstruction(@Ctx() context: DevConsoleApiContext, @Param('id', ParseIntPipe) id: number) {
     return await this.instructionService.deleteInstruction(context, id);
   }
