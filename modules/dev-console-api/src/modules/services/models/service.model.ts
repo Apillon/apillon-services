@@ -10,11 +10,47 @@ import { DevConsoleApiContext } from '../../../context';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { ServiceQueryFilter } from '../dtos/services-query-filter.dto';
 
+import { v4 as uuidv4 } from 'uuid';
+
 /**
  * Service model.
  */
 export class Service extends AdvancedSQLModel {
   collectionName = DbTables.SERVICE;
+
+  /**
+   * Service's UUID
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [SerializeFor.INSERT_DB],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.SERVICE_UUID_NOT_PRESENT,
+      },
+    ],
+    defaultValue: uuidv4(),
+    fakeValue: uuidv4(),
+  })
+  public service_uuid: string;
+
+  /**
+   * Project foreign key
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [SerializeFor.INSERT_DB],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.SERVICE_PROJECT_ID_NOT_PRESENT,
+      },
+    ],
+  })
+  public project_id: number;
 
   /**
    * Service name
@@ -77,16 +113,6 @@ export class Service extends AdvancedSQLModel {
     serializable: [PopulateFrom.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
   })
   public active: number;
-
-  /**
-   * Service active / inactive
-   */
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
-  })
-  public project_id: number;
 
   /**
    * Returns name, service type, status

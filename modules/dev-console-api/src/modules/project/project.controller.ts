@@ -28,7 +28,7 @@ export class ProjectController {
 
   @Get()
   @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
-  @UseGuards(AuthGuard, ValidationGuard)
+  @UseGuards(AuthGuard)
   async getUserProjects(@Ctx() context: DevConsoleApiContext) {
     return await this.projectService.getUserProjects(context);
   }
