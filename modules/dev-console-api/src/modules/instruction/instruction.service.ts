@@ -9,7 +9,7 @@ import { InstructionModule } from './instruction.module';
 @Injectable()
 export class InstructionService {
   async getInstruction(context: DevConsoleApiContext, instruction_enum: string) {
-    return await new Instruction({}).getInstructionByEnum(context, instruction_enum);
+    return await new Instruction({}, { context }).getInstructionByEnum(context, instruction_enum);
   }
 
   async createInstruction(context: DevConsoleApiContext, body: any) {
