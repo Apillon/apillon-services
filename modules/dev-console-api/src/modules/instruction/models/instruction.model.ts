@@ -3,7 +3,6 @@ import { presenceValidator } from '@rawmodel/validators';
 import { AdvancedSQLModel, PopulateFrom, prop, selectAndCountQuery, SerializeFor } from 'at-lib';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
-import { ServiceQueryFilter } from '../dto/instruction-query-filter.dto';
 
 /**
  * Instruction model.
@@ -88,19 +87,23 @@ export class Instruction extends AdvancedSQLModel {
   public forRoute: string;
 
   /**
-   * Returns name, service type, status
+   * Returns instruction instance from instructionEnum
    */
-  public async getInstruction(context: DevConsoleApiContext, instruction_enum: string) {
-    const sqlQuery = {
-      qSelect: `
-        SELECT FIRST i.*
-        `,
-      qFrom: `
-        FROM \`${DbTables.INSTRUCTION}\` s
-        WHERE instructionEnum = ${instruction_enum}
+  public async getInstructionByEnum(context: DevConsoleApiContext, instruction_enum: string) {
+    let data = await context.mysql.paramExecute(
+      `
+        SELECT *
+        FROM \`${DbTables.INSTRUCTION}\` i
+        WHERE instructionEnum = @instruction_enum
+        LIMIT 1
       `,
-    };
+      { instruction_enum },
+    );
 
-    return selectAndCountQuery(context.mysql, sqlQuery, {}, 'i.id');
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
   }
 }

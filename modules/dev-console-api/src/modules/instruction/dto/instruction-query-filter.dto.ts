@@ -21,7 +21,7 @@ export class InstructionGetInstructionFilter extends Model<any> {
   })
   public instructionEnum: string;
 
-  // LukaGo: Currently UNUSED
+  // NOTE: Currently UNUSED
   // @ApiProperty({ required: false })
   //   @prop({
   //     parser: { resolver: stringParser() },

@@ -9,10 +9,59 @@ import { InstructionModule } from './instruction.module';
 @Injectable()
 export class InstructionService {
   async getInstruction(context: DevConsoleApiContext, instruction_enum: string) {
-    return await new Instruction({}).getInstruction(context, instruction_enum);
+    return await new Instruction({}).getInstructionByEnum(context, instruction_enum);
   }
 
   async createInstruction(context: DevConsoleApiContext, body: any) {
+    let instruction = await new Instruction({}, { context }).getInstructionByEnum(context, body.instructionEnum);
+    if (instruction.exists()) {
+      throw new CodeException({
+        code: ValidatorErrorCode.INSTRUCTION_ENUM_EXISTS,
+        status: HttpStatus.CONFLICT,
+        errorCodes: ValidatorErrorCode,
+      });
+    }
+
     return await body.insert();
+  }
+
+  async updateInstruction(context: DevConsoleApiContext, instruction_enum: string, data: any) {
+    let instruction = await new Instruction({}, { context }).getInstructionByEnum(context, instruction_enum);
+    if (!instruction.exists()) {
+      throw new CodeException({
+        code: ResourceNotFoundErrorCode.INSTRUCTION_DOES_NOT_EXIST,
+        status: HttpStatus.NOT_FOUND,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+
+    console.log('Instructionaaaaa ', instruction.title);
+
+    instruction.populate(data);
+
+    try {
+      await instruction.validate();
+    } catch (err) {
+      await instruction.handle(err);
+    }
+
+    if (!instruction.isValid()) throw new ValidationException(instruction, ValidatorErrorCode);
+
+    await instruction.update();
+    return instruction;
+  }
+
+  async deleteInstruction(context: DevConsoleApiContext, instruction_enum: string) {
+    let instruction = await new Instruction({}, { context }).getInstructionByEnum(context, instruction_enum);
+    if (!instruction.exists()) {
+      throw new CodeException({
+        code: ResourceNotFoundErrorCode.INSTRUCTION_DOES_NOT_EXIST,
+        status: HttpStatus.NOT_FOUND,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+
+    instruction.delete();
+    return instruction;
   }
 }

@@ -16,7 +16,7 @@ export class InstructionController {
   @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
   @UseGuards(AuthGuard)
   @Validation({ dto: InstructionGetInstructionFilter })
-  async getInstruction(@Ctx() context: DevConsoleApiContext, @Query('instructionEnum') instruction_enum: string) {
+  async getInstruction(@Ctx() context: DevConsoleApiContext, @Query('instruction_enum') instruction_enum: string) {
     return await this.instructionService.getInstruction(context, instruction_enum);
   }
 
@@ -26,5 +26,24 @@ export class InstructionController {
   @UseGuards(ValidationGuard, AuthGuard)
   async createInstruction(@Ctx() context: DevConsoleApiContext, @Body() body: Instruction) {
     return await this.instructionService.createInstruction(context, body);
+  }
+
+  @Patch('/')
+  @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
+  @Validation({ dto: Instruction })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async updateInstruction(
+    @Ctx() context: DevConsoleApiContext,
+    @Query('instruction_enum') instruction_enum: string,
+    @Body() body: any,
+  ) {
+    return await this.instructionService.updateInstruction(context, instruction_enum, body);
+  }
+
+  @Delete('/')
+  @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async deleteInstruction(@Ctx() context: DevConsoleApiContext, @Query('instruction_enum') instruction_enum: string) {
+    return await this.instructionService.deleteInstruction(context, instruction_enum);
   }
 }
