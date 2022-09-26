@@ -5,7 +5,7 @@ import { ValidationGuard } from '../../guards/validation.guard';
 
 import { InstructionService } from './instruction.service';
 import { Instruction } from './models/instruction.model';
-import { InstructionGetInstructionFilter } from './dto/instruction-query-filter.dto';
+import { InstructionQueryFilter } from './dto/instruction-query-filter.dto';
 import { AuthGuard } from '../../guards/auth.guard';
 
 @Controller('instruction')
@@ -15,7 +15,7 @@ export class InstructionController {
   @Get('/')
   @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
   @UseGuards(AuthGuard)
-  @Validation({ dto: InstructionGetInstructionFilter })
+  @Validation({ dto: InstructionQueryFilter })
   async getInstruction(@Ctx() context: DevConsoleApiContext, @Query('instruction_enum') instruction_enum: string) {
     return await this.instructionService.getInstruction(context, instruction_enum);
   }
@@ -43,6 +43,7 @@ export class InstructionController {
   @Delete('/')
   @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
   @UseGuards(ValidationGuard, AuthGuard)
+  @Validation({ dto: InstructionQueryFilter })
   async deleteInstruction(@Ctx() context: DevConsoleApiContext, @Query('instruction_enum') instruction_enum: string) {
     return await this.instructionService.deleteInstruction(context, instruction_enum);
   }
