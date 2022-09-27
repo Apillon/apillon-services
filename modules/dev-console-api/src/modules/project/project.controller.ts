@@ -41,27 +41,27 @@ export class ProjectController {
     return await this.projectService.getProjectUsers(context, id);
   }
 
-  @Post('/:project_id/inviteUser')
+  @Post('/:id/inviteUser')
   @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
   @Validation({ dto: ProjectUserFilter })
   @UseGuards(AuthGuard, ValidationGuard)
   async inviteUserProject(
     @Ctx() context: DevConsoleApiContext,
-    @Param('project_id', ParseIntPipe) project_id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() body: ProjectUserFilter,
   ) {
-    return await this.projectService.inviteUserProject(context, project_id, body);
+    return await this.projectService.inviteUserProject(context, id, body);
   }
 
-  @Post('/:project_id/removeUser')
+  @Post('/:id/removeUser')
   @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
   @Validation({ dto: ProjectUserFilter })
   @UseGuards(AuthGuard, ValidationGuard)
   async removeUserProject(
     @Ctx() context: DevConsoleApiContext,
-    @Param('project_id', ParseIntPipe) project_id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() body: ProjectUserFilter,
   ) {
-    return await this.projectService.removeUserProject(context, project_id, body);
+    return await this.projectService.removeUserProject(context, id, body);
   }
 }

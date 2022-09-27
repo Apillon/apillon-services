@@ -9,7 +9,7 @@ export class ProjectUser extends AdvancedSQLModel {
   collectionName = DbTables.PROJECT_USER;
 
   /**
-   * Project foreign key
+   * Project key
    */
   // TODO: Implement ForeignKey constraints / verification
   @prop({
@@ -25,7 +25,7 @@ export class ProjectUser extends AdvancedSQLModel {
   public project_id: number;
 
   /**
-   * Project foreign key
+   * User key
    */
   @prop({
     parser: { resolver: integerParser() },
@@ -81,14 +81,14 @@ export class ProjectUser extends AdvancedSQLModel {
       { project_id, user_id },
     );
 
-    return data[0].count > 1;
+    return data[0].count >= 1; // Should be always 1, no??
   }
 
   /**
    * Return projectUser for project_id
    *
    * @param project_id
-   * @returns ProjectUset array
+   * @returns project_user list
    */
   public async getProjectUsers(context: DevConsoleApiContext, project_id: number) {
     if (!project_id) {

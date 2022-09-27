@@ -53,7 +53,6 @@ export class ProjectService {
     const projectUser = new ProjectUser({}, { context });
     const isUserOnProject = await projectUser.isUserOnProject(context, project_id, data.user_id);
     if (!isUserOnProject) {
-      console.log('Is user onproject ', isUserOnProject);
       projectUser.populate({
         project_id: project_id,
         user_id: user.id,
