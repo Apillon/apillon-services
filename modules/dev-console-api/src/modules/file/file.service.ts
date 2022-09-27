@@ -80,7 +80,7 @@ export class FileService {
       throw new ValidationException(file);
     }
 
-    let s3Client: AWS_S3 = new AWS_S3();
+    const s3Client: AWS_S3 = new AWS_S3();
 
     const conn = await context.mysql.start();
 
@@ -154,7 +154,7 @@ export class FileService {
       });
     }
 
-    let s3Client: AWS_S3 = new AWS_S3();
+    const s3Client: AWS_S3 = new AWS_S3();
 
     if (!(await s3Client.exists(env.AWS_BUCKET, file.key))) {
       throw new CodeException({
