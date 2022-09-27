@@ -79,7 +79,7 @@ export class Project extends AdvancedSQLModel {
    */
 
   public async getUserProjects(context: DevConsoleApiContext) {
-    let params = {
+    const params = {
       user_id: context.user.id,
     };
 

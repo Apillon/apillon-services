@@ -3,8 +3,6 @@ import { prop } from '@rawmodel/core';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { Model } from '@rawmodel/core';
 import { presenceValidator } from '@rawmodel/validators';
-
-import { PopulateFrom } from 'at-lib';
 import { ValidatorErrorCode } from '../../../config/types';
 
 export class ServiceQueryFilter extends Model<any> {

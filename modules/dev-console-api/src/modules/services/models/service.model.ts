@@ -108,7 +108,7 @@ export class Service extends AdvancedSQLModel {
    * Returns name, service type, status
    */
   public async getServices(context: DevConsoleApiContext, filter: ServiceQueryFilter) {
-    let params = {
+    const params = {
       serviceType_id: filter.serviceType_id,
       project_id: filter.project_id,
       offset: 0,

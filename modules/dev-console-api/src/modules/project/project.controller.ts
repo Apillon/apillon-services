@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { Ctx, PermissionLevel, PermissionType, Validation, Permissions } from 'at-lib';
 import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { Project } from './models/project.model';
 import { ProjectService } from './project.service';
+import { ProjectUserFilter } from './dtos/project_user-query-filter.dto';
 
 @Controller('project')
 export class ProjectController {
@@ -31,5 +32,36 @@ export class ProjectController {
   @UseGuards(AuthGuard)
   async getUserProjects(@Ctx() context: DevConsoleApiContext) {
     return await this.projectService.getUserProjects(context);
+  }
+
+  @Get('/:id/getProjectUsers')
+  @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
+  @UseGuards(AuthGuard)
+  async getProjectUsers(@Ctx() context: DevConsoleApiContext, @Param('id', ParseIntPipe) id: number) {
+    return await this.projectService.getProjectUsers(context, id);
+  }
+
+  @Post('/:project_id/inviteUser')
+  @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
+  @Validation({ dto: ProjectUserFilter })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async inviteUserProject(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('project_id', ParseIntPipe) project_id: number,
+    @Body() body: ProjectUserFilter,
+  ) {
+    return await this.projectService.inviteUserProject(context, project_id, body);
+  }
+
+  @Post('/:project_id/removeUser')
+  @Permissions({ permission: 1, type: PermissionType.WRITE, level: PermissionLevel.OWN })
+  @Validation({ dto: ProjectUserFilter })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async removeUserProject(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('project_id', ParseIntPipe) project_id: number,
+    @Body() body: ProjectUserFilter,
+  ) {
+    return await this.projectService.removeUserProject(context, project_id, body);
   }
 }

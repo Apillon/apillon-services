@@ -102,7 +102,7 @@ export class Instruction extends AdvancedSQLModel {
    * Returns instruction instance from instructionEnum
    */
   public async getInstructionByEnum(context: DevConsoleApiContext, instruction_enum: string) {
-    let data = await context.mysql.paramExecute(
+    const data = await context.mysql.paramExecute(
       `
         SELECT *
         FROM \`${DbTables.INSTRUCTION}\` i
