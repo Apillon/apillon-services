@@ -85,6 +85,17 @@ export class Project extends AdvancedSQLModel {
   })
   public description: string;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+    ],
+  })
+  public imageFile_id: string;
+
   /**
    * Returns projects created by user
    * (TODO: returns projects which contain the given user as collaborator)
