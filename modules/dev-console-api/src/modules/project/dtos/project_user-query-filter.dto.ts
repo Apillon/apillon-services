@@ -1,6 +1,6 @@
 // import { ApiProperty } from '@babel/core';
 import { prop } from '@rawmodel/core';
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { integerParser } from '@rawmodel/parsers';
 import { Model } from '@rawmodel/core';
 import { presenceValidator } from '@rawmodel/validators';
 import { ValidatorErrorCode } from '../../../config/types';
