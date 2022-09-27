@@ -9,20 +9,8 @@ export { prop };
 /**
  * Base model.
  */
-export abstract class ModelBase extends Model<Context> {
-  /**
-   * Class constructor.
-   * @param data Input data.
-   * @param config Model configuration.
-   */
-  public constructor(data?: unknown, context?: Context) {
-    super(data, { context });
-  }
-
-  public async handle(
-    error: any,
-    { quiet }: { quiet: boolean } = { quiet: false },
-  ): Promise<this> {
+export abstract class ModelBase extends Model<any> {
+  public async handle(error: any, { quiet }: { quiet: boolean } = { quiet: false }): Promise<this> {
     try {
       await super.handle(error, { quiet });
       if (!quiet) {

@@ -5,6 +5,7 @@ import { env } from '../../config/env';
 
 let dbMigration: Migration = null;
 
+//#region DB-migration functions
 export async function setupDatabase(
   database: string,
   host: string,
@@ -87,13 +88,58 @@ export async function dropDatabase(
   await dbMigration.down(-1);
   await dbMigration.destroy();
 }
+//# endregion
 
+//#region DB-seeds functions
+
+export async function seedDatabase(
+  database: string,
+  host: string,
+  port: number,
+  user: string,
+  password: string,
+  steps?: number,
+): Promise<void> {
+  if (!dbMigration) {
+    await initMigrations(database, host, port, user, password, 'seeds', './src/migration-scripts/seeds');
+  }
+  await dbMigration.up(steps);
+}
+
+export async function unseedDatabase(
+  database: string,
+  host: string,
+  port: number,
+  user: string,
+  password: string,
+  steps?: number,
+): Promise<void> {
+  if (!dbMigration) {
+    await initMigrations(database, host, port, user, password, 'seeds', './src/migration-scripts/seeds');
+  }
+  await dbMigration.down(steps);
+}
+
+//#endregion
+
+/**
+ * Initialize Migration object
+ * @param database
+ * @param host
+ * @param port
+ * @param user
+ * @param password
+ * @param tableName defaults to "migrations". Can be anything
+ * @param migrationDirectory migration-scripts directory
+ */
 async function initMigrations(
   database: string,
   host: string,
   port: number,
   user: string,
   password: string,
+  tableName?: string,
+  migrationDirectory?: string,
 ) {
   const poolConfig: ConnectionOptions = {
     host: host,
@@ -105,10 +151,7 @@ async function initMigrations(
     connectionLimit: 1,
   };
 
-  if (
-    env.APP_ENV === AppEnvironment.TEST &&
-    !/(test|testing)/i.test(poolConfig.database)
-  ) {
+  if (env.APP_ENV === AppEnvironment.TEST && !/(test|testing)/i.test(poolConfig.database)) {
     throw new Error('!!! NOT TEST DATABASE? !!!');
   }
 
@@ -116,8 +159,8 @@ async function initMigrations(
 
   dbMigration = new Migration({
     conn: pool as unknown as MigrationConnection,
-    tableName: 'migrations',
-    dir: './src/migration-scripts/migrations',
+    tableName: tableName ? tableName : 'migrations',
+    dir: migrationDirectory ? migrationDirectory : './src/migration-scripts/migrations',
     silent: env.APP_ENV === AppEnvironment.TEST,
   });
 

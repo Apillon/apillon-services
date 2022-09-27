@@ -12,15 +12,6 @@ import { Context } from '../context';
 export { prop };
 
 export abstract class BaseSQLModel extends BaseDBModel {
-  /**
-   * Class constructor.
-   * @param data Input data.
-   * @param config Model configuration.
-   */
-  public constructor(data?: unknown, context?: Context) {
-    super(data, context);
-  }
-
   public async insert(
     strategy: SerializeFor = SerializeFor.INSERT_DB,
     conn?: PoolConnection,
@@ -44,11 +35,7 @@ export abstract class BaseSQLModel extends BaseDBModel {
           .join(', ')}
       )`;
 
-      await this.getContext().mysql.paramExecute(
-        createQuery,
-        serializedModel,
-        conn,
-      );
+      await this.getContext().mysql.paramExecute(createQuery, serializedModel, conn);
 
       if (isSingleTrans) {
         await this.getContext().mysql.commit(conn);
@@ -171,11 +158,7 @@ export abstract class BaseSQLModel extends BaseDBModel {
               .map((key) => `@${key}`)
               .join(', ')}
           )`;
-        response = await this.getContext().mysql.paramExecute(
-          createQuery,
-          insertModel,
-          conn,
-        );
+        response = await this.getContext().mysql.paramExecute(createQuery, insertModel, conn);
       }
 
       if (isSingleTrans) {
@@ -191,10 +174,7 @@ export abstract class BaseSQLModel extends BaseDBModel {
     return response;
   }
 
-  public async deleteByFields(
-    keys?: string[],
-    conn?: PoolConnection,
-  ): Promise<this> {
+  public async deleteByFields(keys?: string[], conn?: PoolConnection): Promise<this> {
     let isSingleTrans = false;
     if (!conn) {
       isSingleTrans = true;
@@ -216,11 +196,7 @@ export abstract class BaseSQLModel extends BaseDBModel {
         queryParams[key] = this[key];
       }
 
-      await this.getContext().mysql.paramExecute(
-        createQuery,
-        queryParams,
-        conn,
-      );
+      await this.getContext().mysql.paramExecute(createQuery, queryParams, conn);
 
       if (isSingleTrans) {
         await this.getContext().mysql.commit(conn);
@@ -235,11 +211,7 @@ export abstract class BaseSQLModel extends BaseDBModel {
     return this;
   }
 
-  public populateWithPrefix(
-    data: any,
-    prefix: string,
-    strategy?: PopulateFrom,
-  ) {
+  public populateWithPrefix(data: any, prefix: string, strategy?: PopulateFrom) {
     const filteredData = {};
     prefix = prefix + '__';
     for (const key of Object.keys(data)) {
@@ -269,10 +241,7 @@ export abstract class BaseSQLModel extends BaseDBModel {
     return this.getContext().mysql;
   }
 
-  public update(
-    _strategy: SerializeFor = SerializeFor.UPDATE_DB,
-    _conn?: PoolConnection,
-  ): Promise<this> {
+  public update(_strategy: SerializeFor = SerializeFor.UPDATE_DB, _conn?: PoolConnection): Promise<this> {
     throw new NotImplementedException();
   }
 
@@ -281,46 +250,25 @@ export abstract class BaseSQLModel extends BaseDBModel {
     throw new NotImplementedException();
   }
 
-  public generateSelectFields(
-    prefix = '',
-    asPrefix = '',
-    serializeStrategy = SerializeFor.SELECT_DB,
-  ) {
+  public generateSelectFields(prefix = '', asPrefix = '', serializeStrategy = SerializeFor.SELECT_DB) {
     const serialized = this.serialize(serializeStrategy);
     return (
       Object.keys(serialized)
-        .map(
-          (x) =>
-            `${prefix ? `\`${prefix}\`.` : ''}\`${x}\` as '${
-              asPrefix ? asPrefix + '__' : ''
-            }${x}'`,
-        )
+        .map((x) => `${prefix ? `\`${prefix}\`.` : ''}\`${x}\` as '${asPrefix ? asPrefix + '__' : ''}${x}'`)
         .join(',\n') || `${prefix ? `\`${prefix}\`.` : ''}*`
     );
   }
 
-  public generateSelectJSONFields(
-    prefix = '',
-    asPrefix = '',
-    serializeStrategy = SerializeFor.SELECT_DB,
-  ) {
+  public generateSelectJSONFields(prefix = '', asPrefix = '', serializeStrategy = SerializeFor.SELECT_DB) {
     const serialized = this.serialize(serializeStrategy);
     return (
       Object.keys(serialized)
-        .map(
-          (x) =>
-            `'${asPrefix ? asPrefix + '__' : ''}${x}', ${
-              prefix ? `${prefix}.` : ''
-            }${x}`,
-        )
+        .map((x) => `'${asPrefix ? asPrefix + '__' : ''}${x}', ${prefix ? `${prefix}.` : ''}${x}`)
         .join(',\n') || `${prefix ? `\`${prefix}\`.` : ''}*`
     );
   }
 
-  public generateGroupByFields(
-    prefix = '',
-    serializeStrategy = SerializeFor.SELECT_DB,
-  ) {
+  public generateGroupByFields(prefix = '', serializeStrategy = SerializeFor.SELECT_DB) {
     const serialized = this.serialize(serializeStrategy);
     return Object.keys(serialized)
       .map((x) => `${prefix ? `\`${prefix}\`.` : ''}\`${x}\``)

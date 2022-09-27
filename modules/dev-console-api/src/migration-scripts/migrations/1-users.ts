@@ -1,13 +1,11 @@
 import { DbTables } from '../../config/types';
 import { SqlModelStatus } from 'at-lib';
 
-export const upgrade = async (
-  queryFn: (query: string, values?: any[]) => Promise<any[]>,
-): Promise<void> => {
+export const upgrade = async (queryFn: (query: string, values?: any[]) => Promise<any[]>): Promise<void> => {
   await queryFn(`
   CREATE TABLE IF NOT EXISTS \`${DbTables.USER}\` (
     \`id\` INT NOT NULL AUTO_INCREMENT,
-    \`user_uuid\` VARCHAR(36) NOT NULL DEFAULT (uuid()),
+    \`user_uuid\` VARCHAR(36) NOT NULL,
     \`name\` VARCHAR(200) NULL,
     \`phone\` VARCHAR(45) NULL,
     \`status\` INT NOT NULL DEFAULT '${SqlModelStatus.ACTIVE}',
@@ -19,9 +17,7 @@ export const upgrade = async (
   `);
 };
 
-export const downgrade = async (
-  queryFn: (query: string, values?: any[]) => Promise<any[]>,
-): Promise<void> => {
+export const downgrade = async (queryFn: (query: string, values?: any[]) => Promise<any[]>): Promise<void> => {
   await queryFn(`
     DROP TABLE IF EXISTS \`${DbTables.USER}\`;
   `);

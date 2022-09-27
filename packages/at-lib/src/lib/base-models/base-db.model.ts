@@ -18,15 +18,6 @@ export abstract class BaseDBModel extends ModelBase {
   public abstract collectionName: string;
 
   /**
-   * Class constructor.
-   * @param data Input data.
-   * @param config Model configuration.
-   */
-  public constructor(data?: unknown, context?: Context) {
-    super(data, context);
-  }
-
-  /**
    * Tells if the model represents an object stored in database
    */
   public abstract exists(): boolean;

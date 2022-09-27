@@ -1,10 +1,30 @@
 # REST API specifications
 
-All REST API services should have same request and response structure. To achieve that, try to write code in standard way. See dev-console-api project on how to write controllers and service functions.
+All REST API services should have same request and response structure. To achieve that, try to write code according to standards.
+See dev-console-api project on how to write controllers and service functions.
 
 ## Request
 
+Use POST method for inserts and method executions, PATCH method for updating existing db records
+
 ## Response
+
+POST methods, which creates new db records, should responded with status and inserted data.
+
+```json
+{
+  "status": 201,
+  "data": {
+    "id": 3,
+    "status": 5,
+    "name": "Projekt 3",
+    "shortDescription": "MOj prvi projekt",
+    "description": "Tole je pa opis"
+  }
+}
+```
+
+PATCH methods should return status 200 - OK.
 
 ## Error handling
 
