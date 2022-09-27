@@ -1,20 +1,6 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  UseFilters,
-  UseGuards,
-} from '@nestjs/common';
-import {
-  Ctx,
-  PermissionLevel,
-  PermissionType,
-  Validation,
-  Permissions,
-} from 'at-lib';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Ctx, Validation } from 'at-lib';
 import { DevConsoleApiContext } from '../../context';
-import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UserService } from './user.service';

@@ -1,12 +1,6 @@
 import { stringParser, integerParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
-import {
-  AdvancedSQLModel,
-  PopulateFrom,
-  prop,
-  selectAndCountQuery,
-  SerializeFor,
-} from 'at-lib';
+import { AdvancedSQLModel, PopulateFrom, prop, SerializeFor } from 'at-lib';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
 
@@ -139,7 +133,7 @@ export class Instruction extends AdvancedSQLModel {
     context: DevConsoleApiContext,
     instruction_enum: string,
   ) {
-    let data = await context.mysql.paramExecute(
+    const data = await context.mysql.paramExecute(
       `
         SELECT *
         FROM \`${DbTables.INSTRUCTION}\` i

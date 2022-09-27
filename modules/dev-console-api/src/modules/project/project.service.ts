@@ -21,7 +21,7 @@ export class ProjectService {
     id: number,
     data: any,
   ): Promise<Project> {
-    let project: Project = await new Project({}, { context }).populateById(id);
+    const project: Project = await new Project({}, context).populateById(id);
     if (!project.exists()) {
       throw new CodeException({
         code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,

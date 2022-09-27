@@ -1,13 +1,11 @@
 // import { ApiProperty } from '@babel/core';
 import { prop } from '@rawmodel/core';
-import { integerParser, stringParser } from '@rawmodel/parsers';
-import { Model } from '@rawmodel/core';
+import { integerParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
-
-import { PopulateFrom } from 'at-lib';
 import { ValidatorErrorCode } from '../../../config/types';
+import { ModelBase } from 'at-lib/dist/lib/base-models/base';
 
-export class ServiceQueryFilter extends Model<any> {
+export class ServiceQueryFilter extends ModelBase {
   // Probably needed in the future for api docs
   // @ApiProperty({ required: true })
   @prop({

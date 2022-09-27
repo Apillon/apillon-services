@@ -13,24 +13,21 @@ export class DevConsoleApiContext extends Context {
     };
     this.user = null;
 
-    if (tokenData && tokenData.userId) {
-      if (!isNaN(Number(tokenData.userId))) {
-        const context = this;
-        const user = await new User({}, { context }).populateById(
-          Number(tokenData.userId),
-        );
+    if (tokenData && tokenData.userId && !isNaN(Number(tokenData.userId))) {
+      const user = await new User({}, this).populateById(
+        Number(tokenData.userId),
+      );
 
-        if (user.exists()) {
-          this.user = user;
-          //TODO - Call AMS service with user uuid
-          // const resp = await new Ams().IsUserAuthenticated('492b6c65-343b-11ed-96a4-02420a000705', null, 'secToken');
-          // if (resp) {
-          //   //success
-          //   this.user = user;
-          // } else {
-          //   //TODO handle ERROR
-          // }
-        }
+      if (user.exists()) {
+        this.user = user;
+        //TODO - Call AMS service with user uuid
+        // const resp = await new Ams().IsUserAuthenticated('492b6c65-343b-11ed-96a4-02420a000705', null, 'secToken');
+        // if (resp) {
+        //   //success
+        //   this.user = user;
+        // } else {
+        //   //TODO handle ERROR
+        // }
       }
     }
   }

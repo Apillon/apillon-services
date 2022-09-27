@@ -1,11 +1,6 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { PermissionPass, CodeException, PERMISSION_KEY } from 'at-lib';
+import { PermissionPass, PERMISSION_KEY } from 'at-lib';
 import { DevConsoleApiContext } from '../context';
 
 @Injectable()
@@ -19,6 +14,7 @@ export class AuthGuard implements CanActivate {
     );
 
     const context: DevConsoleApiContext = execCtx.getArgByIndex(0).context;
+    // eslint-disable-next-line sonarjs/prefer-single-boolean-return
     if (requiredPermissions.length && !context.isAuthenticated()) {
       return false;
     }
