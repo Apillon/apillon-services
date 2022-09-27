@@ -16,7 +16,9 @@ export class DevConsoleApiContext extends Context {
     if (tokenData && tokenData.userId) {
       if (!isNaN(Number(tokenData.userId))) {
         const context = this;
-        const user = await new User({}, { context }).populateById(Number(tokenData.userId));
+        const user = await new User({}, { context }).populateById(
+          Number(tokenData.userId),
+        );
 
         if (user.exists()) {
           this.user = user;

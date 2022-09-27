@@ -1,6 +1,9 @@
 import { HttpStatus, Injectable, Patch } from '@nestjs/common';
 import { CodeException, ValidationException } from 'at-lib';
-import { ResourceNotFoundErrorCode, ValidatorErrorCode } from '../../config/types';
+import {
+  ResourceNotFoundErrorCode,
+  ValidatorErrorCode,
+} from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
 import { Project } from '../project/models/project.model';
 import { Instruction } from './models/instruction.model';
@@ -8,12 +11,21 @@ import { InstructionModule } from './instruction.module';
 
 @Injectable()
 export class InstructionService {
-  async getInstruction(context: DevConsoleApiContext, instruction_enum: string) {
-    return await new Instruction({}, { context }).getInstructionByEnum(context, instruction_enum);
+  async getInstruction(
+    context: DevConsoleApiContext,
+    instruction_enum: string,
+  ) {
+    return await new Instruction({}, { context }).getInstructionByEnum(
+      context,
+      instruction_enum,
+    );
   }
 
   async createInstruction(context: DevConsoleApiContext, body: any) {
-    let instruction = await new Instruction({}, { context }).getInstructionByEnum(context, body.instructionEnum);
+    let instruction = await new Instruction(
+      {},
+      { context },
+    ).getInstructionByEnum(context, body.instructionEnum);
     if (instruction.exists()) {
       throw new CodeException({
         code: ValidatorErrorCode.INSTRUCTION_ENUM_EXISTS,
@@ -25,8 +37,15 @@ export class InstructionService {
     return await body.insert();
   }
 
-  async updateInstruction(context: DevConsoleApiContext, instruction_enum: string, data: any) {
-    let instruction = await new Instruction({}, { context }).getInstructionByEnum(context, instruction_enum);
+  async updateInstruction(
+    context: DevConsoleApiContext,
+    instruction_enum: string,
+    data: any,
+  ) {
+    let instruction = await new Instruction(
+      {},
+      { context },
+    ).getInstructionByEnum(context, instruction_enum);
     if (!instruction.exists()) {
       throw new CodeException({
         code: ResourceNotFoundErrorCode.INSTRUCTION_DOES_NOT_EXIST,
@@ -43,7 +62,8 @@ export class InstructionService {
       await instruction.handle(err);
     }
 
-    if (!instruction.isValid()) throw new ValidationException(instruction, ValidatorErrorCode);
+    if (!instruction.isValid())
+      throw new ValidationException(instruction, ValidatorErrorCode);
 
     await instruction.update();
     return instruction;

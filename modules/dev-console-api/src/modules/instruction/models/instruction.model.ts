@@ -1,6 +1,12 @@
 import { stringParser, integerParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
-import { AdvancedSQLModel, PopulateFrom, prop, selectAndCountQuery, SerializeFor } from 'at-lib';
+import {
+  AdvancedSQLModel,
+  PopulateFrom,
+  prop,
+  selectAndCountQuery,
+  SerializeFor,
+} from 'at-lib';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
 
@@ -16,7 +22,11 @@ export class Instruction extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+    ],
     validators: [
       {
         resolver: presenceValidator(),
@@ -32,7 +42,11 @@ export class Instruction extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+    ],
   })
   public title: string;
 
@@ -42,7 +56,11 @@ export class Instruction extends AdvancedSQLModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+    ],
     validators: [
       {
         resolver: presenceValidator(),
@@ -58,7 +76,11 @@ export class Instruction extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+    ],
     validators: [
       {
         resolver: presenceValidator(),
@@ -74,7 +96,11 @@ export class Instruction extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+    ],
   })
   public extendedHtmlContent: string;
 
@@ -84,7 +110,11 @@ export class Instruction extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+    ],
   })
   public docsUrl: string;
 
@@ -94,14 +124,21 @@ export class Instruction extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.PROFILE, SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+    ],
   })
   public forRoute: string;
 
   /**
    * Returns instruction instance from instructionEnum
    */
-  public async getInstructionByEnum(context: DevConsoleApiContext, instruction_enum: string) {
+  public async getInstructionByEnum(
+    context: DevConsoleApiContext,
+    instruction_enum: string,
+  ) {
     let data = await context.mysql.paramExecute(
       `
         SELECT *

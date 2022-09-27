@@ -51,7 +51,11 @@ describe('ProjectController', () => {
 
     it('should update existing Project & return it as response', async () => {
       let body = { shortDescription: 'Ma tole je nek test' };
-      let res = await controller.updateProject(context, createdProject.id, body);
+      let res = await controller.updateProject(
+        context,
+        createdProject.id,
+        body,
+      );
       expect(res.id).toBe(createdProject.id);
       expect(res.shortDescription).toBe('Ma tole je nek test');
     });

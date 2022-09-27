@@ -23,7 +23,9 @@ const run = async (stepCount: number) => {
 
 rl.question(
   `You are about to seed database ${bgYellow(
-    black(` ${env.AT_DEV_CONSOLE_API_DB} @ ${env.AT_DEV_CONSOLE_API_MYSQL_HOST} `),
+    black(
+      ` ${env.AT_DEV_CONSOLE_API_DB} @ ${env.AT_DEV_CONSOLE_API_MYSQL_HOST} `,
+    ),
   )}.
 
 Set number of versions to seed ('Y' for all, '<number>' for number of versions, 'N' to exit):`,
