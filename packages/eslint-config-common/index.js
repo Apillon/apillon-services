@@ -44,6 +44,7 @@ module.exports = {
     'promise/no-callback-in-promise': 0,
     'sonarjs/cognitive-complexity': [2, 50],
     'sonarjs/no-duplicate-string': 0,
+    'sonarjs/no-useless-catch': 1,
     '@typescript-eslint/no-unused-vars': [
       1,
       { argsIgnorePattern: '^_|^returns$|^of$|^type$' },
