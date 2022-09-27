@@ -101,7 +101,15 @@ export async function seedDatabase(
   steps?: number,
 ): Promise<void> {
   if (!dbMigration) {
-    await initMigrations(database, host, port, user, password, 'seeds', './src/migration-scripts/seeds');
+    await initMigrations(
+      database,
+      host,
+      port,
+      user,
+      password,
+      'seeds',
+      './src/migration-scripts/seeds',
+    );
   }
   await dbMigration.up(steps);
 }
@@ -115,7 +123,15 @@ export async function unseedDatabase(
   steps?: number,
 ): Promise<void> {
   if (!dbMigration) {
-    await initMigrations(database, host, port, user, password, 'seeds', './src/migration-scripts/seeds');
+    await initMigrations(
+      database,
+      host,
+      port,
+      user,
+      password,
+      'seeds',
+      './src/migration-scripts/seeds',
+    );
   }
   await dbMigration.down(steps);
 }
@@ -151,7 +167,10 @@ async function initMigrations(
     connectionLimit: 1,
   };
 
-  if (env.APP_ENV === AppEnvironment.TEST && !/(test|testing)/i.test(poolConfig.database)) {
+  if (
+    env.APP_ENV === AppEnvironment.TEST &&
+    !/(test|testing)/i.test(poolConfig.database)
+  ) {
     throw new Error('!!! NOT TEST DATABASE? !!!');
   }
 
@@ -160,7 +179,9 @@ async function initMigrations(
   dbMigration = new Migration({
     conn: pool as unknown as MigrationConnection,
     tableName: tableName ? tableName : 'migrations',
-    dir: migrationDirectory ? migrationDirectory : './src/migration-scripts/migrations',
+    dir: migrationDirectory
+      ? migrationDirectory
+      : './src/migration-scripts/migrations',
     silent: env.APP_ENV === AppEnvironment.TEST,
   });
 

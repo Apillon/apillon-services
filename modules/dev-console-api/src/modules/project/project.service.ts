@@ -1,6 +1,14 @@
-import { HttpStatus, Injectable, NotImplementedException, Param } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  NotImplementedException,
+  Param,
+} from '@nestjs/common';
 import { CodeException, Ctx, ValidationException } from 'at-lib';
-import { ResourceNotFoundErrorCode, ValidatorErrorCode } from '../../config/types';
+import {
+  ResourceNotFoundErrorCode,
+  ValidatorErrorCode,
+} from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
 import { User } from '../user/models/user.model';
 import { Project } from './models/project.model';
@@ -8,12 +16,21 @@ import { ProjectUser } from './models/project_user.model';
 
 @Injectable()
 export class ProjectService {
-  async createProject(context: DevConsoleApiContext, body: Project): Promise<Project> {
+  async createProject(
+    context: DevConsoleApiContext,
+    body: Project,
+  ): Promise<Project> {
     return await body.insert();
   }
 
-  async updateProject(context: DevConsoleApiContext, id: number, data: any): Promise<Project> {
-    const project: Project = await new Project({}, { context }).populateById(id);
+  async updateProject(
+    context: DevConsoleApiContext,
+    id: number,
+    data: any,
+  ): Promise<Project> {
+    const project: Project = await new Project({}, { context }).populateById(
+      id,
+    );
     if (!project.exists()) {
       throw new CodeException({
         code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
@@ -28,7 +45,8 @@ export class ProjectService {
       await project.validate();
     } catch (err) {
       await project.handle(err);
-      if (!project.isValid()) throw new ValidationException(project, ValidatorErrorCode);
+      if (!project.isValid())
+        throw new ValidationException(project, ValidatorErrorCode);
     }
 
     await project.update();
@@ -39,11 +57,21 @@ export class ProjectService {
     return await new Project({}).getUserProjects(context);
   }
 
-  async getProjectUsers(@Ctx() context: DevConsoleApiContext, project_id: number) {
-    return await new ProjectUser({}, { context }).getProjectUsers(context, project_id);
+  async getProjectUsers(
+    @Ctx() context: DevConsoleApiContext,
+    project_id: number,
+  ) {
+    return await new ProjectUser({}, { context }).getProjectUsers(
+      context,
+      project_id,
+    );
   }
 
-  async inviteUserProject(@Ctx() context: DevConsoleApiContext, project_id: number, data: any) {
+  async inviteUserProject(
+    @Ctx() context: DevConsoleApiContext,
+    project_id: number,
+    data: any,
+  ) {
     const user = await new User({}, { context }).populateById(data.user_id);
     if (!user.exists()) {
       // TODO: Implement
@@ -51,7 +79,11 @@ export class ProjectService {
     }
 
     const projectUser = new ProjectUser({}, { context });
-    const isUserOnProject = await projectUser.isUserOnProject(context, project_id, data.user_id);
+    const isUserOnProject = await projectUser.isUserOnProject(
+      context,
+      project_id,
+      data.user_id,
+    );
     if (!isUserOnProject) {
       projectUser.populate({
         project_id: project_id,
@@ -81,7 +113,11 @@ export class ProjectService {
     return projectUser;
   }
 
-  async removeUserProject(@Ctx() context: DevConsoleApiContext, project_id: number, data: any) {
+  async removeUserProject(
+    @Ctx() context: DevConsoleApiContext,
+    project_id: number,
+    data: any,
+  ) {
     const user_db = await new User({}, { context }).populateById(data.user_id);
     if (!user_db.exists()) {
       throw new CodeException({
@@ -92,7 +128,11 @@ export class ProjectService {
       });
     }
 
-    const projectUser = await new ProjectUser({}, { context }).getProjectUser(context, project_id, user_db.id);
+    const projectUser = await new ProjectUser({}, { context }).getProjectUser(
+      context,
+      project_id,
+      user_db.id,
+    );
     if (!projectUser.exists()) {
       throw new CodeException({
         status: HttpStatus.NOT_FOUND,

@@ -1,7 +1,10 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { CodeException, ValidationException } from 'at-lib';
+import {
+  ResourceNotFoundErrorCode,
+  ValidatorErrorCode,
+} from '../../config/types';
 
-import { ResourceNotFoundErrorCode, ValidatorErrorCode } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
 
 import { ServiceQueryFilter } from './dtos/services-query-filter.dto';
@@ -10,7 +13,9 @@ import { Service } from './models/service.model';
 @Injectable()
 export class ServicesService {
   async getService(context: DevConsoleApiContext, id: number) {
-    const service: Service = await new Service({}, { context }).populateById(id);
+    const service: Service = await new Service({}, { context }).populateById(
+      id,
+    );
     if (!service.exists()) {
       throw new CodeException({
         code: ResourceNotFoundErrorCode.SERVICE_DOES_NOT_EXIST,
@@ -22,16 +27,28 @@ export class ServicesService {
     return service;
   }
 
-  async getServiceList(context: DevConsoleApiContext, query: ServiceQueryFilter) {
+  async getServiceList(
+    context: DevConsoleApiContext,
+    query: ServiceQueryFilter,
+  ) {
     return await new Service({}).getServices(context, query);
   }
 
-  async createService(context: DevConsoleApiContext, body: Service): Promise<Service> {
+  async createService(
+    context: DevConsoleApiContext,
+    body: Service,
+  ): Promise<Service> {
     return await body.insert();
   }
 
-  async updateService(context: DevConsoleApiContext, id: number, data: any): Promise<Service> {
-    const service: Service = await new Service({}, { context }).populateById(id);
+  async updateService(
+    context: DevConsoleApiContext,
+    id: number,
+    data: any,
+  ): Promise<Service> {
+    const service: Service = await new Service({}, { context }).populateById(
+      id,
+    );
     if (!service.exists()) {
       throw new CodeException({
         code: ResourceNotFoundErrorCode.SERVICE_DOES_NOT_EXIST,
@@ -46,15 +63,21 @@ export class ServicesService {
       await service.validate();
     } catch (err) {
       await service.handle(err);
-      if (!service.isValid()) throw new ValidationException(service, ValidatorErrorCode);
+      if (!service.isValid())
+        throw new ValidationException(service, ValidatorErrorCode);
     }
 
     await service.update();
     return service;
   }
 
-  async deleteService(context: DevConsoleApiContext, id: number): Promise<Service> {
-    const service: Service = await new Service({}, { context }).populateById(id);
+  async deleteService(
+    context: DevConsoleApiContext,
+    id: number,
+  ): Promise<Service> {
+    const service: Service = await new Service({}, { context }).populateById(
+      id,
+    );
     if (!service.exists()) {
       throw new CodeException({
         code: ResourceNotFoundErrorCode.SERVICE_DOES_NOT_EXIST,

@@ -7,14 +7,18 @@ import { User } from './models/user.model';
 
 @Injectable()
 export class UserService {
-  async createUser(body: CreateUserDto, context: DevConsoleApiContext): Promise<User> {
+  async createUser(
+    body: CreateUserDto,
+    context: DevConsoleApiContext,
+  ): Promise<User> {
     const user: User = new User({}, { context }).populate({ body });
 
     try {
       await user.validate();
     } catch (err) {
       await user.handle(err);
-      if (!user.isValid()) throw new ValidationException(user, ValidatorErrorCode);
+      if (!user.isValid())
+        throw new ValidationException(user, ValidatorErrorCode);
     }
 
     await user.insert();

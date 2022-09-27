@@ -11,13 +11,22 @@ import { InstructionModule } from './modules/instruction/instruction.module';
 import { ServicesModule } from './modules/services/services.module';
 
 @Module({
-  imports: [UserModule, MySQLModule, ProjectModule, FileModule, ServicesModule, InstructionModule],
+  imports: [
+    UserModule,
+    MySQLModule,
+    ProjectModule,
+    FileModule,
+    ServicesModule,
+    InstructionModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(ContextMiddleware).forRoutes({ path: '*', method: RequestMethod.ALL });
+    consumer
+      .apply(ContextMiddleware)
+      .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer
       .apply(AuthenticateUserMiddleware)
       .exclude(

@@ -74,7 +74,12 @@ export class AWS_S3 {
    * @param body File to be uploaded.
    * @param ctx Request context.
    */
-  upload(bucket: string, source: string, body: Blob | Buffer | ReadableStream, contentType: string) {
+  upload(
+    bucket: string,
+    source: string,
+    body: Blob | Buffer | ReadableStream,
+    contentType: string,
+  ) {
     return new Promise((resolve, reject) => {
       this.s3Client.upload(
         {

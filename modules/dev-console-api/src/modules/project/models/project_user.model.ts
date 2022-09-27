@@ -49,7 +49,11 @@ export class ProjectUser extends AdvancedSQLModel {
   })
   public pendingInvitation: boolean;
 
-  public async getProjectUser(context: DevConsoleApiContext, project_id: number, user_id: number) {
+  public async getProjectUser(
+    context: DevConsoleApiContext,
+    project_id: number,
+    user_id: number,
+  ) {
     // TODO: Maybe streamline together with getProjectUsers???
     const data = await context.mysql.paramExecute(
       `
@@ -67,7 +71,11 @@ export class ProjectUser extends AdvancedSQLModel {
     }
   }
 
-  public async isUserOnProject(context: DevConsoleApiContext, project_id: number, user_id: number) {
+  public async isUserOnProject(
+    context: DevConsoleApiContext,
+    project_id: number,
+    user_id: number,
+  ) {
     if (!user_id) {
       return false;
     }
@@ -90,7 +98,10 @@ export class ProjectUser extends AdvancedSQLModel {
    * @param project_id
    * @returns project_user list
    */
-  public async getProjectUsers(context: DevConsoleApiContext, project_id: number) {
+  public async getProjectUsers(
+    context: DevConsoleApiContext,
+    project_id: number,
+  ) {
     if (!project_id) {
       return [];
     }

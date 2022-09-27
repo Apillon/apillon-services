@@ -22,7 +22,7 @@ module.exports = {
       // '@nestjs/microservices/microservices-module': 'empty',
       // '@nestjs/microservices': 'empty',
       // 'at-lib': path.join(__dirname, '..', '..', 'packages', 'at-lib', 'dist')
-    }
+    },
   },
   output: {
     libraryTarget: 'commonjs',

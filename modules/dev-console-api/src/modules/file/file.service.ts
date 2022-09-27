@@ -1,7 +1,13 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { File } from './models/file.model';
 import { DevConsoleApiContext } from '../../context';
-import { AWS_S3, CodeException, env, SystemErrorCode, ValidationException } from 'at-lib';
+import {
+  AWS_S3,
+  CodeException,
+  env,
+  SystemErrorCode,
+  ValidationException,
+} from 'at-lib';
 import { ResourceNotFoundErrorCode } from '../../config/types';
 
 @Injectable()
@@ -9,7 +15,10 @@ export class FileService {
   /**
    * Returns File by its ID. First search for it in DB, if found, make GET request to AWS bucket.
    */
-  public async getFileById(context: DevConsoleApiContext, id: number): Promise<File> {
+  public async getFileById(
+    context: DevConsoleApiContext,
+    id: number,
+  ): Promise<File> {
     const file = await new File({}, { context }).populateById(id);
     if (!file.exists()) {
       throw new CodeException({
@@ -57,7 +66,10 @@ export class FileService {
    * @param context Application context.
    * @returns File & upload URl.
    */
-  public async createFile(context: DevConsoleApiContext, file: File): Promise<File> {
+  public async createFile(
+    context: DevConsoleApiContext,
+    file: File,
+  ): Promise<File> {
     //Method can be called from app, so extra validation is required
     try {
       await file.validate();
@@ -87,7 +99,12 @@ export class FileService {
     }
 
     try {
-      await s3Client.upload(env.AWS_BUCKET, file.key, Buffer.from(file.body, 'base64'), file.contentType);
+      await s3Client.upload(
+        env.AWS_BUCKET,
+        file.key,
+        Buffer.from(file.body, 'base64'),
+        file.contentType,
+      );
     } catch (error) {
       await context.mysql.rollback(conn);
 
@@ -123,7 +140,10 @@ export class FileService {
    * @param context
    * @returns
    */
-  public async deleteFileById(context: DevConsoleApiContext, id: number): Promise<File> {
+  public async deleteFileById(
+    context: DevConsoleApiContext,
+    id: number,
+  ): Promise<File> {
     const file = await new File({}, { context }).populateById(id);
     if (!file.exists()) {
       throw new CodeException({

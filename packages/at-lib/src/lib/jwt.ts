@@ -18,7 +18,11 @@ import {
  * @param context Application context.
  */
 
-export function generateToken(type: JwtTokenType, data: any, expiration: string): string {
+export function generateToken(
+  type: JwtTokenType,
+  data: any,
+  expiration: string,
+): string {
   switch (type) {
     case JwtTokenType.USER_AUTHENTICATION:
       data = data as AuthenticationTokenData;
@@ -168,7 +172,9 @@ function parseAuthenticationToken(token: string): AuthenticationTokenData {
  * @param token JWT token.
  * @param context Application context.
  */
-function parseResetUserPasswordToken(token: string): ResetUserPasswordTokenData {
+function parseResetUserPasswordToken(
+  token: string,
+): ResetUserPasswordTokenData {
   const { email } = jwt.verify(token, env.APP_SECRET, {
     subject: JwtTokenType.USER_RESET_PASSWORD,
   }) as any;
@@ -187,9 +193,13 @@ function parseResetUserPasswordToken(token: string): ResetUserPasswordTokenData 
  * @param context Application context.
  */
 function parseResetUserEmailToken(token: string): ResetUserEmailTokenData {
-  const { email, email2, secondary, userId } = jwt.verify(token, env.APP_SECRET, {
-    subject: JwtTokenType.USER_RESET_EMAIL,
-  }) as any;
+  const { email, email2, secondary, userId } = jwt.verify(
+    token,
+    env.APP_SECRET,
+    {
+      subject: JwtTokenType.USER_RESET_EMAIL,
+    },
+  ) as any;
   if (email && userId) {
     return {
       email: email as string,
@@ -236,7 +246,9 @@ function parseMFAToken(token: string): MFAAuthenticationTokenData {
  * @param token JWT token.
  * @param context Application context.
  */
-function parseRequestUserRegisterToken(token: string): ConfirmUserEmailTokenData {
+function parseRequestUserRegisterToken(
+  token: string,
+): ConfirmUserEmailTokenData {
   const { email } = jwt.verify(token, env.APP_SECRET, {
     subject: JwtTokenType.USER_REGISTER,
   }) as any;

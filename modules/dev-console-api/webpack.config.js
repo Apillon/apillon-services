@@ -22,7 +22,7 @@ module.exports = {
       '@nestjs/microservices/microservices-module': false,
       '@nestjs/microservices': false,
       //'at-lib': path.join(__dirname, '..', '..', 'packages', 'at-lib', 'dist')
-    }
+    },
   },
   output: {
     libraryTarget: 'commonjs',
@@ -33,10 +33,11 @@ module.exports = {
   node: {
     __dirname: true,
   },
-  externals: [nodeExternals({
-    allowlist: ['at-lib']
-  }
-  )],
+  externals: [
+    nodeExternals({
+      allowlist: ['at-lib'],
+    }),
+  ],
   module: {
     rules: [
       // all files with a `.ts` or `.tsx` extension will be handled by `ts-loader`

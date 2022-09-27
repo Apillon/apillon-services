@@ -20,7 +20,11 @@ export class File extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.PROFILE, SerializeFor.ADMIN],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+    ],
     validators: [
       {
         resolver: presenceValidator(),
@@ -37,7 +41,11 @@ export class File extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.PROFILE, SerializeFor.ADMIN],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+    ],
     validators: [
       {
         resolver: presenceValidator(),
@@ -53,7 +61,11 @@ export class File extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.PROFILE, SerializeFor.ADMIN],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+    ],
     validators: [
       {
         resolver: presenceValidator(),

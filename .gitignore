@@ -44,3 +44,5 @@ env.*yml
 .webpack
 .serverless
 
+# merge originals
+*.orig
