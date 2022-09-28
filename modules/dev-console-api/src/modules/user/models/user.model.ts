@@ -4,6 +4,7 @@ import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { AdvancedSQLModel, PopulateFrom, SerializeFor } from 'at-lib';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
+import { ProjectUserInviteDto } from '../../project/dtos/project_user-invite.dto';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -59,4 +60,9 @@ export class User extends AdvancedSQLModel {
     fakeValue: '+386 41 885 885',
   })
   public phone: string;
+
+  public async getUserByEmail(data: ProjectUserInviteDto) {
+    // We just fake a user instance (user with id 1 exists)
+    return new User({ user_id: 1, email: 'somemail@mailinator.com' });
+  }
 }

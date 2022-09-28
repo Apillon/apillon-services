@@ -6,6 +6,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Delete,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -21,6 +22,7 @@ import { ValidationGuard } from '../../guards/validation.guard';
 import { Project } from './models/project.model';
 import { ProjectService } from './project.service';
 import { ProjectUserFilter } from './dtos/project_user-query-filter.dto';
+import { ProjectUserInviteDto } from './dtos/project_user-invite.dto';
 
 @Controller('project')
 export class ProjectController {
@@ -32,7 +34,7 @@ export class ProjectController {
     type: PermissionType.WRITE,
     level: PermissionLevel.OWN,
   })
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   @Validation({ dto: Project })
   @UseGuards(ValidationGuard)
   async createProject(
@@ -68,49 +70,55 @@ export class ProjectController {
     return await this.projectService.getUserProjects(context);
   }
 
-  @Get('/:id/getProjectUsers')
+  @Get('/:project_id/getProjectUsers')
+  @Permissions({
+    permission: 1,
+    type: PermissionType.WRITE,
+    level: PermissionLevel.OWN,
+  })
+  @Validation({ dto: ProjectUserFilter })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getProjectUsers(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('project_id', ParseIntPipe) project_id: number,
+  ) {
+    return await this.projectService.getProjectUsers(context, project_id);
+  }
+
+  @Post('/:project_id/inviteUser')
+  @Permissions({
+    permission: 1,
+    type: PermissionType.WRITE,
+    level: PermissionLevel.OWN,
+  })
+  @Validation({ dto: ProjectUserInviteDto })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async inviteUserProject(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('project_id', ParseIntPipe) project_id: number,
+    @Body() body: ProjectUserInviteDto,
+  ) {
+    return await this.projectService.inviteUserProject(
+      context,
+      project_id,
+      body,
+    );
+  }
+
+  @Delete('/:project_user_id/removeUser')
   @Permissions({
     permission: 1,
     type: PermissionType.WRITE,
     level: PermissionLevel.OWN,
   })
   @UseGuards(AuthGuard)
-  async getProjectUsers(
-    @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
-    return await this.projectService.getProjectUsers(context, id);
-  }
-
-  @Post('/:id/inviteUser')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
-  @Validation({ dto: ProjectUserFilter })
-  @UseGuards(AuthGuard, ValidationGuard)
-  async inviteUserProject(
-    @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
-    @Body() body: ProjectUserFilter,
-  ) {
-    return await this.projectService.inviteUserProject(context, id, body);
-  }
-
-  @Post('/:id/removeUser')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
-  @Validation({ dto: ProjectUserFilter })
-  @UseGuards(AuthGuard, ValidationGuard)
   async removeUserProject(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
-    @Body() body: ProjectUserFilter,
+    @Param('project_user_id', ParseIntPipe) project_user_id: number,
   ) {
-    return await this.projectService.removeUserProject(context, id, body);
+    return await this.projectService.removeUserProject(
+      context,
+      project_user_id,
+    );
   }
 }

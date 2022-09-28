@@ -1,11 +1,11 @@
 // import { ApiProperty } from '@babel/core';
 import { prop } from '@rawmodel/core';
 import { integerParser } from '@rawmodel/parsers';
-import { Model } from '@rawmodel/core';
+import { ModelBase } from 'at-lib/dist/lib/base-models/base';
 import { presenceValidator } from '@rawmodel/validators';
 import { ValidatorErrorCode } from '../../../config/types';
 
-export class ProjectUserFilter extends Model<any> {
+export class ProjectUserFilter extends ModelBase {
   @prop({
     parser: { resolver: integerParser() },
     validators: [
@@ -15,5 +15,5 @@ export class ProjectUserFilter extends Model<any> {
       },
     ],
   })
-  public user_id: number;
+  public project_id: number;
 }

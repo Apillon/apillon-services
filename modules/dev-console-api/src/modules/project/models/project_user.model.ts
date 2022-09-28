@@ -1,4 +1,4 @@
-import { AdvancedSQLModel, Context, PopulateFrom, SerializeFor } from 'at-lib';
+import { AdvancedSQLModel, PopulateFrom, SerializeFor } from 'at-lib';
 import { prop } from '@rawmodel/core';
 import { presenceValidator } from '@rawmodel/validators';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';

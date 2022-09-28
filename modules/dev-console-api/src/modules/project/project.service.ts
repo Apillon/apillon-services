@@ -70,7 +70,7 @@ export class ProjectService {
     project_id: number,
     data: any,
   ) {
-    const user = await new User({}, context).populateById(data.user_id);
+    const user = await new User({}, context).getUserByEmail(data.email);
     if (!user.exists()) {
       // TODO: Implement
       throw new NotImplementedException();
@@ -80,8 +80,9 @@ export class ProjectService {
     const isUserOnProject = await projectUser.isUserOnProject(
       context,
       project_id,
-      data.user_id,
+      user.id,
     );
+
     if (!isUserOnProject) {
       projectUser.populate({
         project_id: project_id,
@@ -97,7 +98,6 @@ export class ProjectService {
       if (!projectUser.isValid()) {
         throw new ValidationException(projectUser);
       }
-
       await projectUser.insert();
     } else {
       throw new CodeException({
@@ -113,11 +113,12 @@ export class ProjectService {
 
   async removeUserProject(
     @Ctx() context: DevConsoleApiContext,
-    project_id: number,
-    data: any,
+    project_user_id: number,
   ) {
-    const user_db = await new User({}, context).populateById(data.user_id);
-    if (!user_db.exists()) {
+    const project_user = await new ProjectUser({}, context).populateById(
+      project_user_id,
+    );
+    if (!project_user.exists()) {
       throw new CodeException({
         status: HttpStatus.NOT_FOUND,
         code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
@@ -126,21 +127,7 @@ export class ProjectService {
       });
     }
 
-    const projectUser = await new ProjectUser({}, context).getProjectUser(
-      context,
-      project_id,
-      user_db.id,
-    );
-    if (!projectUser.exists()) {
-      throw new CodeException({
-        status: HttpStatus.NOT_FOUND,
-        code: ResourceNotFoundErrorCode.PROJECT_USER_DOES_NOT_EXIST,
-        sourceFunction: `${this.constructor.name}/removeUserProject`,
-        context,
-      });
-    }
-
-    await projectUser.delete();
-    return projectUser;
+    await project_user.delete();
+    return project_user;
   }
 }
