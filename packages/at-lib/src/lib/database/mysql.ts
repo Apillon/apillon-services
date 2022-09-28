@@ -6,6 +6,8 @@ import { env } from '../../config/env';
 import { AppEnvironment, LogType } from '../../config/types';
 import { isPlainObject } from '../utils';
 
+export { PoolConnection } from 'mysql2/promise';
+
 /**
  * MySQL client class.
  */

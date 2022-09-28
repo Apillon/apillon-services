@@ -15,3 +15,4 @@ export * from './lib/decorators/validation.decorator';
 export * from './lib/decorators/permission.decorator';
 export * from './lib/database/sql-utils';
 export * from './lib/aws/aws-s3';
+export * from './lib/validators';

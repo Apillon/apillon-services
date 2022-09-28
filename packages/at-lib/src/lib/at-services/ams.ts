@@ -25,7 +25,7 @@ export class Ams {
     securityToken: string,
   ) {
     const data = {
-      eventName: AmsEventType.USER_AUTH,
+      eventName: AmsEventType.USER_GET_AUTH,
       user_uuid,
       project_uuid,
       securityToken,

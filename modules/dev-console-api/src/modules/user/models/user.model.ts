@@ -13,7 +13,7 @@ export class User extends AdvancedSQLModel {
   /**
    * User's table.
    */
-  collectionName = DbTables.USER;
+  tableName = DbTables.USER;
 
   /**
    * User's name (first name + last name) property definition.

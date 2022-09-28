@@ -1,6 +1,11 @@
 import * as AWS from 'aws-sdk';
 import { env } from '../../config/env';
-import { AppEnvironment, LmasEventType, LogType } from '../../config/types';
+import {
+  AppEnvironment,
+  LmasEventType,
+  LogType,
+  ServiceName,
+} from '../../config/types';
 import * as Net from 'net';
 
 /**
@@ -18,18 +23,22 @@ export class Lmas {
   public async writeLog(
     params: {
       projectId?: string;
+      userId?: string;
       logType?: LogType;
       message?: string;
       location?: string;
+      service?: string;
     },
     securityToken?: string,
   ) {
     const data = {
       eventName: LmasEventType.WRITE_LOG,
       projectId: null,
+      userId: null,
       logType: LogType.MSG,
       message: '',
       location: null,
+      service: ServiceName.GENERAL,
       ...params,
     };
 

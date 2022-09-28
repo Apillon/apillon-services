@@ -1,12 +1,29 @@
 export enum AmsEventType {
-  USER_AUTH = 'user-auth',
+  USER_REGISTER = 'user-register',
+  USER_GET_AUTH = 'user-get-auth',
   USER_LOGIN = 'user-login',
+  USER_UPDATE = 'user-update',
 }
 
 export enum LmasEventType {
   WRITE_LOG = 'write-log',
   SEND_ALERT = 'send-alert',
   NOTIFY = 'notify',
+}
+
+export enum ServiceName {
+  GENERAL = 'GENERAL',
+  AMS = 'AMS',
+  LMAS = 'LMAS',
+  DEV_CONSOLE = 'DEV_CONSOLE',
+}
+
+export enum ServiceCode {
+  GENERAL = '00',
+  LIB = '01',
+  AMS = '02',
+  LMAS = '03',
+  DEV_CONSOLE = '04',
 }
 
 export enum AppEnvironment {
@@ -42,6 +59,7 @@ export enum PopulateFrom {
   ADMIN = 'admin',
   WORKER = 'worker',
   AUTH = 'auth',
+  SERVICE = 'service',
 }
 
 /**
@@ -54,6 +72,7 @@ export enum SerializeFor {
   SELECT_DB = 'select_db',
   ADMIN = 'admin',
   WORKER = 'worker',
+  SERVICE = 'service',
 }
 
 /**
@@ -87,9 +106,30 @@ export enum DefaultUserRole {
 
 //#region Codes
 
+/**
+ * Error codes
+ * code format : HTTPCODE|MODULE_CODE|MODULE_INTERNAL_ERROR_CODE
+ *
+ * HTTP CODE = 422 for valdiation, 400 for invalid request, 500 internal error,...
+ * MODULE CODE:
+ *  0 - general
+ *  1 - at-lib
+ *  2 - ams
+ *  3 - lmas
+ *  4 - dev-api
+ *  ...
+ *  INTERNAL ERROR CODE: 000 - 999
+ *
+ **/
 export enum ErrorCode {
-  STATUS_NOT_PRESENT = 422100,
-  INVALID_STATUS = 422101,
+  STATUS_NOT_PRESENT = 4220100,
+  INVALID_STATUS = 4220101,
+  EMAIL_NOT_PRESENT = 4222100,
+  // USER_EMAIL_NOT_VALID = 4222101,
+  // USER_EMAIL_ALREADY_TAKEN = 4222102,
+  // USER_EMAIL_ALREADY_TAKEN = 4222102,
+
+  // USER_ALREADY_REGISTERED = 4002101,
 }
 
 export enum ErrorOrigin {
