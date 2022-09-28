@@ -10,6 +10,15 @@ export { prop };
  * Base model.
  */
 export abstract class ModelBase extends Model<any> {
+  /**
+   * Class constructor.
+   * @param data Input data.
+   * @param config Model configuration.
+   */
+  public constructor(data?: unknown, context?: Context) {
+    super(data, { context });
+  }
+
   public async handle(
     error: any,
     { quiet }: { quiet: boolean } = { quiet: false },

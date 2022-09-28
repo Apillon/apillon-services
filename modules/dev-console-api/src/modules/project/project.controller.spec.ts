@@ -7,7 +7,7 @@ import { ProjectService } from './project.service';
 
 describe('ProjectController', () => {
   let controller: ProjectController;
-  let context: DevConsoleApiContext = new DevConsoleApiContext();
+  const context: DevConsoleApiContext = new DevConsoleApiContext();
 
   beforeAll(async () => {
     try {
@@ -39,19 +39,20 @@ describe('ProjectController', () => {
     await context.mysql.close();
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   beforeEach(async () => {});
 
   describe('POST root', () => {
     let createdProject: Project;
     it('should create new Project & return it as response', async () => {
-      let body: Project = new Project({}, { context }).fake();
+      const body: Project = new Project({}, context).fake();
       createdProject = await controller.createProject(context, body);
       expect(createdProject.id).not.toBeNull();
     });
 
     it('should update existing Project & return it as response', async () => {
-      let body = { shortDescription: 'Ma tole je nek test' };
-      let res = await controller.updateProject(
+      const body = { shortDescription: 'Ma tole je nek test' };
+      const res = await controller.updateProject(
         context,
         createdProject.id,
         body,

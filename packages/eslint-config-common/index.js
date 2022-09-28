@@ -25,7 +25,7 @@ module.exports = {
     node: true,
     jest: true,
   },
-  ignorePatterns: ['.eslintrc.js', 'webpack.config.js, dist/**'],
+  ignorePatterns: ['.eslintrc.js', 'webpack.config.js', 'dist/*', '**/*.js'],
   rules: {
     semi: [2, 'always'],
     quotes: [1, 'single', { allowTemplateLiterals: true }],
@@ -45,6 +45,8 @@ module.exports = {
     'sonarjs/cognitive-complexity': [2, 50],
     'sonarjs/no-duplicate-string': 0,
     'sonarjs/no-useless-catch': 1,
+    'sonarjs/no-nested-template-literals': 0,
+    'sonarjs/prefer-single-boolean-return': 1,
     '@typescript-eslint/no-unused-vars': [
       1,
       { argsIgnorePattern: '^_|^returns$|^of$|^type$' },

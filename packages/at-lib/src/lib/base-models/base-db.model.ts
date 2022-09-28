@@ -1,7 +1,6 @@
 import { prop } from '@rawmodel/core';
 import { SerializeFor } from '../../config/types';
 import { ModelBase } from './base';
-import { Context } from '../context';
 
 /**
  * Common model related objects.

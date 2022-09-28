@@ -1,13 +1,11 @@
-import { HttpStatus, Injectable, Patch } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { CodeException, ValidationException } from 'at-lib';
 import {
   ResourceNotFoundErrorCode,
   ValidatorErrorCode,
 } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
-import { Project } from '../project/models/project.model';
 import { Instruction } from './models/instruction.model';
-import { InstructionModule } from './instruction.module';
 
 @Injectable()
 export class InstructionService {
@@ -15,17 +13,17 @@ export class InstructionService {
     context: DevConsoleApiContext,
     instruction_enum: string,
   ) {
-    return await new Instruction({}, { context }).getInstructionByEnum(
+    return await new Instruction({}, context).getInstructionByEnum(
       context,
       instruction_enum,
     );
   }
 
   async createInstruction(context: DevConsoleApiContext, body: any) {
-    let instruction = await new Instruction(
-      {},
-      { context },
-    ).getInstructionByEnum(context, body.instructionEnum);
+    const instruction = await new Instruction({}, context).getInstructionByEnum(
+      context,
+      body.instructionEnum,
+    );
     if (instruction.exists()) {
       throw new CodeException({
         code: ValidatorErrorCode.INSTRUCTION_ENUM_EXISTS,
@@ -42,10 +40,10 @@ export class InstructionService {
     instruction_enum: string,
     data: any,
   ) {
-    let instruction = await new Instruction(
-      {},
-      { context },
-    ).getInstructionByEnum(context, instruction_enum);
+    const instruction = await new Instruction({}, context).getInstructionByEnum(
+      context,
+      instruction_enum,
+    );
     if (!instruction.exists()) {
       throw new CodeException({
         code: ResourceNotFoundErrorCode.INSTRUCTION_DOES_NOT_EXIST,
@@ -70,7 +68,7 @@ export class InstructionService {
   }
 
   async deleteInstruction(context: DevConsoleApiContext, id: number) {
-    let instruction = await new Instruction({}, { context }).populateById(id);
+    const instruction = await new Instruction({}, context).populateById(id);
     if (!instruction.exists()) {
       throw new CodeException({
         code: ResourceNotFoundErrorCode.INSTRUCTION_DOES_NOT_EXIST,
