@@ -1,14 +1,18 @@
-import { HttpStatus, Injectable, Param } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { CodeException, Ctx, ValidationException } from 'at-lib';
 import {
   ResourceNotFoundErrorCode,
   ValidatorErrorCode,
 } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
+import { FileService } from '../file/file.service';
+import { File } from '../file/models/file.model';
 import { Project } from './models/project.model';
 
 @Injectable()
 export class ProjectService {
+  constructor(private readonly fileService: FileService) {}
+
   async createProject(
     context: DevConsoleApiContext,
     body: Project,
@@ -46,5 +50,9 @@ export class ProjectService {
 
   async getUserProjects(@Ctx() context: DevConsoleApiContext) {
     return await new Project({}).getUserProjects(context);
+  }
+
+  async updateProjectImage(@Ctx() context: DevConsoleApiContext, file: File) {
+    console.log('File ', file, this.fileService);
   }
 }

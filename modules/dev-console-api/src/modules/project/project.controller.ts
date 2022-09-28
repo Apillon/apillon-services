@@ -20,6 +20,8 @@ import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { Project } from './models/project.model';
 import { ProjectService } from './project.service';
+import { FileService } from '../file/file.service';
+import { File } from '../file/models/file.model';
 
 @Controller('project')
 export class ProjectController {
@@ -65,5 +67,21 @@ export class ProjectController {
   @UseGuards(AuthGuard)
   async getUserProjects(@Ctx() context: DevConsoleApiContext) {
     return await this.projectService.getUserProjects(context);
+  }
+
+  @Post('/:project_id/updateProjectImage')
+  @Permissions({
+    permission: 1,
+    type: PermissionType.WRITE,
+    level: PermissionLevel.OWN,
+  })
+  @Validation({ dto: File })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async updateProjectImage(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('project_id', ParseIntPipe) project_id: number,
+    @Body() body: File,
+  ) {
+    return await this.projectService.updateProjectImage(context, body);
   }
 }

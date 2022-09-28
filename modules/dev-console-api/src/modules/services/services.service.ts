@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Patch } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { CodeException, ValidationException } from 'at-lib';
 import {
   ResourceNotFoundErrorCode,
@@ -6,11 +6,9 @@ import {
 } from '../../config/types';
 
 import { DevConsoleApiContext } from '../../context';
-import { Project } from '../project/models/project.model';
 import { ServiceQueryFilter } from './dtos/services-query-filter.dto';
 
 import { Service } from './models/service.model';
-import { ServicesModule } from './services.module';
 
 @Injectable()
 export class ServicesService {
