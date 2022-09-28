@@ -1,4 +1,9 @@
-import { AdvancedSQLModel, PopulateFrom, SerializeFor } from 'at-lib';
+import {
+  AdvancedSQLModel,
+  PopulateFrom,
+  selectAndCountQuery,
+  SerializeFor,
+} from 'at-lib';
 import { prop } from '@rawmodel/core';
 import { presenceValidator } from '@rawmodel/validators';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
@@ -102,17 +107,20 @@ export class ProjectUser extends AdvancedSQLModel {
     context: DevConsoleApiContext,
     project_id: number,
   ) {
-    if (!project_id) {
-      return [];
-    }
+    const params = {
+      project_id: project_id,
+    };
 
-    return await context.mysql.paramExecute(
-      `
-        SELECT *
-        FROM ${DbTables.PROJECT_USER}
-        WHERE project_id = @project_id
-      `,
-      { project_id },
-    );
+    const sqlQuery = {
+      qSelect: `
+        SELECT pu.*
+        `,
+      qFrom: `
+        FROM ${DbTables.PROJECT_USER} pu
+        WHERE pu.project_id = ${project_id}
+        `,
+    };
+
+    return selectAndCountQuery(context.mysql, sqlQuery, params, 'pu.id');
   }
 }

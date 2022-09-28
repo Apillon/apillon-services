@@ -8,6 +8,7 @@ import {
   Post,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import {
   Ctx,
@@ -23,6 +24,7 @@ import { Project } from './models/project.model';
 import { ProjectService } from './project.service';
 import { ProjectUserFilter } from './dtos/project_user-query-filter.dto';
 import { ProjectUserInviteDto } from './dtos/project_user-invite.dto';
+import { ProjectUser } from './models/project_user.model';
 
 @Controller('project')
 export class ProjectController {
@@ -70,28 +72,28 @@ export class ProjectController {
     return await this.projectService.getUserProjects(context);
   }
 
-  @Get('/:project_id/getProjectUsers')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Get('/getProjectUsers')
+  // @Permissions({
+  //   permission: 1,
+  //   type: PermissionType.WRITE,
+  //   level: PermissionLevel.OWN,
+  // })
   @Validation({ dto: ProjectUserFilter })
   @UseGuards(AuthGuard, ValidationGuard)
   async getProjectUsers(
     @Ctx() context: DevConsoleApiContext,
-    @Param('project_id', ParseIntPipe) project_id: number,
+    @Query('project_id', ParseIntPipe) project_id: number,
   ) {
     return await this.projectService.getProjectUsers(context, project_id);
   }
 
   @Post('/:project_id/inviteUser')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
-  @Validation({ dto: ProjectUserInviteDto })
+  // @Permissions({
+  //   permission: 1,
+  //   type: PermissionType.WRITE,
+  //   level: PermissionLevel.OWN,
+  // })
+  @Validation({ dto: ProjectUser })
   @UseGuards(AuthGuard, ValidationGuard)
   async inviteUserProject(
     @Ctx() context: DevConsoleApiContext,
@@ -106,11 +108,11 @@ export class ProjectController {
   }
 
   @Delete('/:project_user_id/removeUser')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  // @Permissions({
+  //   permission: 1,
+  //   type: PermissionType.WRITE,
+  //   level: PermissionLevel.OWN,
+  // })
   @UseGuards(AuthGuard)
   async removeUserProject(
     @Ctx() context: DevConsoleApiContext,

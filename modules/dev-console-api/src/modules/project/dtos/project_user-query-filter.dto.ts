@@ -11,7 +11,7 @@ export class ProjectUserFilter extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.PROJECT_USER_USER_ID_NOT_PRESENT,
+        code: ValidatorErrorCode.PROJECT_USER_PROJECT_ID_NOT_PRESENT,
       },
     ],
   })
