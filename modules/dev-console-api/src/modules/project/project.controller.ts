@@ -34,7 +34,7 @@ export class ProjectController {
     type: PermissionType.WRITE,
     level: PermissionLevel.OWN,
   })
-  // @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard)
   @Validation({ dto: Project })
   @UseGuards(ValidationGuard)
   async createProject(
