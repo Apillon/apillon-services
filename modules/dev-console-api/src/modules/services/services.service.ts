@@ -13,9 +13,7 @@ import { Service } from './models/service.model';
 @Injectable()
 export class ServicesService {
   async getService(context: DevConsoleApiContext, id: number) {
-    const service: Service = await new Service({}, { context }).populateById(
-      id,
-    );
+    const service: Service = await new Service({}, context).populateById(id);
     if (!service.exists()) {
       throw new CodeException({
         code: ResourceNotFoundErrorCode.SERVICE_DOES_NOT_EXIST,
@@ -46,9 +44,7 @@ export class ServicesService {
     id: number,
     data: any,
   ): Promise<Service> {
-    const service: Service = await new Service({}, { context }).populateById(
-      id,
-    );
+    const service: Service = await new Service({}, context).populateById(id);
     if (!service.exists()) {
       throw new CodeException({
         code: ResourceNotFoundErrorCode.SERVICE_DOES_NOT_EXIST,
@@ -75,9 +71,7 @@ export class ServicesService {
     context: DevConsoleApiContext,
     id: number,
   ): Promise<Service> {
-    const service: Service = await new Service({}, { context }).populateById(
-      id,
-    );
+    const service: Service = await new Service({}, context).populateById(id);
     if (!service.exists()) {
       throw new CodeException({
         code: ResourceNotFoundErrorCode.SERVICE_DOES_NOT_EXIST,

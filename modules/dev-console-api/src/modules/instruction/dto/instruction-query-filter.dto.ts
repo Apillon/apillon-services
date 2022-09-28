@@ -1,13 +1,11 @@
 // import { ApiProperty } from '@babel/core';
 import { prop } from '@rawmodel/core';
-import { integerParser, stringParser } from '@rawmodel/parsers';
-import { Model } from '@rawmodel/core';
 import { presenceValidator } from '@rawmodel/validators';
-
-import { PopulateFrom } from 'at-lib';
 import { ValidatorErrorCode } from '../../../config/types';
+import { stringParser } from '@rawmodel/parsers';
+import { ModelBase } from 'at-lib/dist/lib/base-models/base';
 
-export class InstructionQueryFilter extends Model<any> {
+export class InstructionQueryFilter extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     validators: [

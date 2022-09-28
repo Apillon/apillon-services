@@ -9,7 +9,6 @@ import {
 import { PoolConnection } from 'mysql2/promise';
 import { BaseSQLModel } from './base-sql.model';
 import { presenceValidator } from '@rawmodel/validators';
-import { Context } from '../context';
 import { ValidationException } from '../exceptions';
 
 /**

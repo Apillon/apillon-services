@@ -6,7 +6,6 @@ import {
   Param,
   ParseIntPipe,
   Post,
-  Req,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -66,7 +65,7 @@ export class FileController {
   async deleteFile(
     @Ctx() context: DevConsoleApiContext,
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<File> {
-    return await this.fileService.deleteFileById(context, id);
+  ): Promise<void> {
+    await this.fileService.deleteFileById(context, id);
   }
 }

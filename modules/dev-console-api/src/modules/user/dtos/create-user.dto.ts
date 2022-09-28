@@ -1,9 +1,9 @@
-import { Model, prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { emailValidator, presenceValidator } from '@rawmodel/validators';
+import { ModelBase, prop } from 'at-lib/dist/lib/base-models/base';
 import { ValidatorErrorCode } from '../../../config/types';
 
-export class CreateUserDto extends Model<any> {
+export class CreateUserDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     validators: [

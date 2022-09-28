@@ -4,7 +4,6 @@ import { PoolConnection } from 'mysql2/promise';
 import 'reflect-metadata';
 import { BaseDBModel } from './base-db.model';
 import { NotImplementedException } from '@nestjs/common';
-import { Context } from '../context';
 
 /**
  * Common model related objects.

@@ -11,7 +11,7 @@ export class UserService {
     body: CreateUserDto,
     context: DevConsoleApiContext,
   ): Promise<User> {
-    const user: User = new User({}, { context }).populate({ body });
+    const user: User = new User({}, context).populate({ body });
 
     try {
       await user.validate();

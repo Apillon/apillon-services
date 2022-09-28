@@ -28,9 +28,7 @@ export class ProjectService {
     id: number,
     data: any,
   ): Promise<Project> {
-    const project: Project = await new Project({}, { context }).populateById(
-      id,
-    );
+    const project: Project = await new Project({}, context).populateById(id);
     if (!project.exists()) {
       throw new CodeException({
         code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
@@ -61,7 +59,7 @@ export class ProjectService {
     @Ctx() context: DevConsoleApiContext,
     project_id: number,
   ) {
-    return await new ProjectUser({}, { context }).getProjectUsers(
+    return await new ProjectUser({}, context).getProjectUsers(
       context,
       project_id,
     );
@@ -72,13 +70,13 @@ export class ProjectService {
     project_id: number,
     data: any,
   ) {
-    const user = await new User({}, { context }).populateById(data.user_id);
+    const user = await new User({}, context).populateById(data.user_id);
     if (!user.exists()) {
       // TODO: Implement
       throw new NotImplementedException();
     }
 
-    const projectUser = new ProjectUser({}, { context });
+    const projectUser = new ProjectUser({}, context);
     const isUserOnProject = await projectUser.isUserOnProject(
       context,
       project_id,
@@ -118,7 +116,7 @@ export class ProjectService {
     project_id: number,
     data: any,
   ) {
-    const user_db = await new User({}, { context }).populateById(data.user_id);
+    const user_db = await new User({}, context).populateById(data.user_id);
     if (!user_db.exists()) {
       throw new CodeException({
         status: HttpStatus.NOT_FOUND,
@@ -128,7 +126,7 @@ export class ProjectService {
       });
     }
 
-    const projectUser = await new ProjectUser({}, { context }).getProjectUser(
+    const projectUser = await new ProjectUser({}, context).getProjectUser(
       context,
       project_id,
       user_db.id,

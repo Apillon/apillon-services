@@ -2,6 +2,7 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import {
   IValidationOptions,
+  PopulateFrom,
   ValidationException,
   VALIDATION_OPTIONS_KEY,
 } from 'at-lib';
@@ -23,7 +24,7 @@ export class ValidationGuard implements CanActivate {
       const request = execCtx.switchToHttp().getRequest<IRequest>();
       const data = request[options.validateFor];
 
-      dto = new options.dto({}, request.context).populate(data);
+      dto = new options.dto({}, { context: request.context }).populate(data);
 
       try {
         await dto.validate();
