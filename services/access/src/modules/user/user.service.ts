@@ -2,7 +2,7 @@ import { Lmas, LogType } from 'at-lib';
 import { ServiceContext } from '../../context';
 
 export class UserService {
-  static async login(event, context: ServiceContext) {
+  static async login(_event, _context: ServiceContext) {
     return {
       id: 1,
       name: 'test',

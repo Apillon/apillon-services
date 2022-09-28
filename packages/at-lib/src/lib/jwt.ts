@@ -156,7 +156,7 @@ export function parseToken(type: JwtTokenType, token: string): any {
  * @param context Application context.
  */
 function parseAuthenticationToken(token: string): AuthenticationTokenData {
-  let userId = jwt.verify(token, env.APP_SECRET, {
+  const userId = jwt.verify(token, env.APP_SECRET, {
     subject: JwtTokenType.USER_AUTHENTICATION,
   }) as any;
 
@@ -231,7 +231,7 @@ function parseConfirmUserEmailToken(token: string): ConfirmUserEmailTokenData {
 }
 
 function parseMFAToken(token: string): MFAAuthenticationTokenData {
-  let userId = jwt.verify(token, env.APP_SECRET, {
+  const userId = jwt.verify(token, env.APP_SECRET, {
     subject: JwtTokenType.ADMIN_MFA_LOGIN,
   }) as any;
 

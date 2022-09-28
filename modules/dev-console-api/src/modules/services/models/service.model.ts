@@ -127,7 +127,7 @@ export class Service extends AdvancedSQLModel {
     context: DevConsoleApiContext,
     filter: ServiceQueryFilter,
   ) {
-    let params = {
+    const params = {
       serviceType_id: filter.serviceType_id,
       project_id: filter.project_id,
       offset: 0,

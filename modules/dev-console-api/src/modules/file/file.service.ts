@@ -19,7 +19,7 @@ export class FileService {
     context: DevConsoleApiContext,
     id: number,
   ): Promise<File> {
-    const file = await new File({}, { context }).populateById(id);
+    const file = await new File({}, context).populateById(id);
     if (!file.exists()) {
       throw new CodeException({
         status: HttpStatus.NOT_FOUND,
@@ -30,7 +30,7 @@ export class FileService {
       });
     }
 
-    let s3Client: AWS_S3 = new AWS_S3();
+    const s3Client: AWS_S3 = new AWS_S3();
 
     if (!(await s3Client.exists(env.AWS_BUCKET, file.key))) {
       throw new CodeException({
@@ -43,7 +43,7 @@ export class FileService {
     }
 
     try {
-      let f = await s3Client.get(env.AWS_BUCKET, file.key);
+      const f = await s3Client.get(env.AWS_BUCKET, file.key);
       file.body = f.Body.toString('base64');
     } catch (error) {
       throw new CodeException({
@@ -143,8 +143,8 @@ export class FileService {
   public async deleteFileById(
     context: DevConsoleApiContext,
     id: number,
-  ): Promise<File> {
-    const file = await new File({}, { context }).populateById(id);
+  ): Promise<void> {
+    const file = await new File({}, context).populateById(id);
     if (!file.exists()) {
       throw new CodeException({
         status: HttpStatus.NOT_FOUND,
@@ -177,7 +177,5 @@ export class FileService {
         errorMessage: error.message,
       });
     }
-
-    return;
   }
 }
