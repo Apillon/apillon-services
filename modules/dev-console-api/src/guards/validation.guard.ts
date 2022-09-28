@@ -23,7 +23,7 @@ export class ValidationGuard implements CanActivate {
       const request = execCtx.switchToHttp().getRequest<IRequest>();
       const data = request[options.validateFor];
 
-      dto = new options.dto({}, { context: request.context }).populate(data);
+      dto = new options.dto({}, request.context).populate(data);
 
       try {
         await dto.validate();
