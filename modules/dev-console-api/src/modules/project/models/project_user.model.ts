@@ -1,14 +1,10 @@
-import {
-  AdvancedSQLModel,
-  PopulateFrom,
-  selectAndCountQuery,
-  SerializeFor,
-} from 'at-lib';
+import { AdvancedSQLModel, selectAndCountQuery, SerializeFor } from 'at-lib';
 import { prop } from '@rawmodel/core';
 import { presenceValidator } from '@rawmodel/validators';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { integerParser } from '@rawmodel/parsers';
 import { DevConsoleApiContext } from '../../../context';
+import { ProjectUserFilter } from '../dtos/project_user-query-filter.dto';
 
 export class ProjectUser extends AdvancedSQLModel {
   collectionName = DbTables.PROJECT_USER;
@@ -59,7 +55,7 @@ export class ProjectUser extends AdvancedSQLModel {
     project_id: number,
     user_id: number,
   ) {
-    if (!user_id) {
+    if (!user_id || !project_id) {
       return false;
     }
 
@@ -72,7 +68,7 @@ export class ProjectUser extends AdvancedSQLModel {
       { project_id, user_id },
     );
 
-    return data[0] >= 1; // Should be always 1, no??
+    return data[0];
   }
 
   /**
@@ -83,12 +79,13 @@ export class ProjectUser extends AdvancedSQLModel {
    */
   public async getProjectUsers(
     context: DevConsoleApiContext,
-    project_id: number,
-    user_id: number,
+    filter: ProjectUserFilter,
   ) {
     const params = {
-      project_id: project_id,
-      user_id: user_id,
+      project_id: filter.project_id,
+      user_id: filter.user_id || null,
+      offset: 0,
+      limit: 20,
     };
 
     const sqlQuery = {
@@ -97,9 +94,12 @@ export class ProjectUser extends AdvancedSQLModel {
         `,
       qFrom: `
         FROM ${DbTables.PROJECT_USER} pu
-        WHERE (pu.project_id = ${project_id})
-        AND (${user_id} IS NULL OR pu.user_id = ${user_id} )
+        WHERE (pu.project_id = ${params.project_id})
+        AND (${params.user_id} IS NULL OR pu.user_id = ${params.user_id} )
         `,
+      qFilter: `
+        LIMIT ${params.limit} OFFSET ${params.offset};
+      `,
     };
 
     return selectAndCountQuery(context.mysql, sqlQuery, params, 'pu.id');

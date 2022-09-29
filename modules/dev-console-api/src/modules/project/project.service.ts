@@ -11,6 +11,7 @@ import {
 } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
 import { User } from '../user/models/user.model';
+import { ProjectUserFilter } from './dtos/project_user-query-filter.dto';
 import { Project } from './models/project.model';
 import { ProjectUser } from './models/project_user.model';
 
@@ -57,24 +58,20 @@ export class ProjectService {
 
   async getProjectUsers(
     @Ctx() context: DevConsoleApiContext,
-    project_id: number,
+    query: ProjectUserFilter,
   ) {
-    return await new ProjectUser({}, context).getProjectUsers(
-      context,
-      project_id,
-    );
+    return await new ProjectUser({}, context).getProjectUsers(context, query);
   }
 
-  async inviteUserProject(
-    @Ctx() context: DevConsoleApiContext,
-    project_id: number,
-    data: any,
-  ) {
-    const user = await new User({}, context).getUserByEmail(data.email);
-    if (!user.exists()) {
-      // TODO: Implement
-      throw new NotImplementedException();
-    }
+  async inviteUserProject(@Ctx() context: DevConsoleApiContext, data: any) {
+    // TODO: Call AMS service to fetch related user data
+    const user = new User({ id: 3, email: 'test.user3@mailinator.com' });
+    const project_id = data.project_id;
+
+    // if (!user.exists()) {
+    //   // TODO: Implement
+    //   throw new NotImplementedException();
+    // }
 
     const projectUser = new ProjectUser({}, context);
     const isUserOnProject = await projectUser.isUserOnProject(

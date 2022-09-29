@@ -16,4 +16,9 @@ export class ProjectUserFilter extends ModelBase {
     ],
   })
   public project_id: number;
+
+  @prop({
+    parser: { resolver: integerParser() },
+  })
+  public user_id: number;
 }

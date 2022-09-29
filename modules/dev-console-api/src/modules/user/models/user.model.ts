@@ -60,9 +60,4 @@ export class User extends AdvancedSQLModel {
     fakeValue: '+386 41 885 885',
   })
   public phone: string;
-
-  public async getUserByEmail(data: ProjectUserInviteDto) {
-    // We just fake a user instance (user with id 1 exists)
-    return new User({ user_id: 1, email: 'test.user@mailinator.com' });
-  }
 }
