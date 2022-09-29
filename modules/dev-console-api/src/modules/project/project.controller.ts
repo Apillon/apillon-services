@@ -73,11 +73,11 @@ export class ProjectController {
   }
 
   @Get('/getProjectUsers')
-  // @Permissions({
-  //   permission: 1,
-  //   type: PermissionType.WRITE,
-  //   level: PermissionLevel.OWN,
-  // })
+  @Permissions({
+    permission: 1,
+    type: PermissionType.WRITE,
+    level: PermissionLevel.OWN,
+  })
   @Validation({ dto: ProjectUserFilter })
   @UseGuards(AuthGuard, ValidationGuard)
   async getProjectUsers(
@@ -87,12 +87,12 @@ export class ProjectController {
     return await this.projectService.getProjectUsers(context, project_id);
   }
 
-  @Post('/:project_id/inviteUser')
-  // @Permissions({
-  //   permission: 1,
-  //   type: PermissionType.WRITE,
-  //   level: PermissionLevel.OWN,
-  // })
+  @Post('/inviteUser')
+  @Permissions({
+    permission: 1,
+    type: PermissionType.WRITE,
+    level: PermissionLevel.OWN,
+  })
   @Validation({ dto: ProjectUser })
   @UseGuards(AuthGuard, ValidationGuard)
   async inviteUserProject(
@@ -108,11 +108,11 @@ export class ProjectController {
   }
 
   @Delete('/:project_user_id/removeUser')
-  // @Permissions({
-  //   permission: 1,
-  //   type: PermissionType.WRITE,
-  //   level: PermissionLevel.OWN,
-  // })
+  @Permissions({
+    permission: 1,
+    type: PermissionType.WRITE,
+    level: PermissionLevel.OWN,
+  })
   @UseGuards(AuthGuard)
   async removeUserProject(
     @Ctx() context: DevConsoleApiContext,

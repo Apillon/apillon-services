@@ -54,28 +54,6 @@ export class ProjectUser extends AdvancedSQLModel {
   })
   public pendingInvitation: boolean;
 
-  public async getProjectUser(
-    context: DevConsoleApiContext,
-    project_id: number,
-    user_id: number,
-  ) {
-    // TODO: Maybe streamline together with getProjectUsers???
-    const data = await context.mysql.paramExecute(
-      `
-      SELECT *
-      FROM ${DbTables.PROJECT_USER}
-      WHERE project_id = @project_id AND user_id = @user_id
-      `,
-      { project_id, user_id },
-    );
-
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
-  }
-
   public async isUserOnProject(
     context: DevConsoleApiContext,
     project_id: number,
@@ -87,14 +65,14 @@ export class ProjectUser extends AdvancedSQLModel {
 
     const data = await context.mysql.paramExecute(
       `
-        SELECT COUNT(*) as 'count'
+        SELECT 1
         FROM ${DbTables.PROJECT_USER}
         WHERE project_id = @project_id AND user_id = @user_id
       `,
       { project_id, user_id },
     );
 
-    return data[0].count >= 1; // Should be always 1, no??
+    return data[0] >= 1; // Should be always 1, no??
   }
 
   /**
@@ -106,9 +84,11 @@ export class ProjectUser extends AdvancedSQLModel {
   public async getProjectUsers(
     context: DevConsoleApiContext,
     project_id: number,
+    user_id: number,
   ) {
     const params = {
       project_id: project_id,
+      user_id: user_id,
     };
 
     const sqlQuery = {
@@ -117,7 +97,8 @@ export class ProjectUser extends AdvancedSQLModel {
         `,
       qFrom: `
         FROM ${DbTables.PROJECT_USER} pu
-        WHERE pu.project_id = ${project_id}
+        WHERE (pu.project_id = ${project_id})
+        AND (${user_id} IS NULL OR pu.user_id = ${user_id} )
         `,
     };
 

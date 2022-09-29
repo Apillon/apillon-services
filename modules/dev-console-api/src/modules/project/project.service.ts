@@ -121,7 +121,7 @@ export class ProjectService {
     if (!project_user.exists()) {
       throw new CodeException({
         status: HttpStatus.NOT_FOUND,
-        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
+        code: ResourceNotFoundErrorCode.PROJECT_USER_DOES_NOT_EXIST,
         sourceFunction: `${this.constructor.name}/removeUserProject`,
         context,
       });

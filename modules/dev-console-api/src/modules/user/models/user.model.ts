@@ -63,6 +63,6 @@ export class User extends AdvancedSQLModel {
 
   public async getUserByEmail(data: ProjectUserInviteDto) {
     // We just fake a user instance (user with id 1 exists)
-    return new User({ user_id: 1, email: 'somemail@mailinator.com' });
+    return new User({ user_id: 1, email: 'test.user@mailinator.com' });
   }
 }
