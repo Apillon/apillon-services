@@ -3,17 +3,20 @@ import { emailValidator, presenceValidator } from '@rawmodel/validators';
 import {
   AdvancedSQLModel,
   Context,
+  DefaultUserRole,
   PoolConnection,
   PopulateFrom,
   prop,
   SerializeFor,
   uniqueFieldValue,
 } from 'at-lib';
-import { AmsErrorCode } from '../../config/types';
+import { AmsErrorCode, DbTables } from '../../config/types';
 import * as bcrypt from 'bcrypt';
+import { Role } from '../role/models/role.model';
+import { AuthUserRole } from '../role/models/auth-user-role.model';
 
 export class AuthUser extends AdvancedSQLModel {
-  tableName = 'authUser';
+  public readonly tableName = DbTables.AUTH_USER;
 
   /**
    * user_uuid
@@ -120,6 +123,21 @@ export class AuthUser extends AdvancedSQLModel {
   })
   public wallet: string;
 
+  /**
+   * auth user roles
+   */
+  @prop({
+    parser: { resolver: AuthUserRole, array: true },
+    populatable: [
+      PopulateFrom.SERVICE, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN, //
+      SerializeFor.SERVICE,
+    ],
+  })
+  public authUserRoles: AuthUserRole[];
+
   public constructor(data: any, context: Context) {
     super(data, context);
   }
@@ -169,5 +187,120 @@ export class AuthUser extends AdvancedSQLModel {
 
   public setPassword(password: string) {
     this.password = bcrypt.hashSync(password, 10);
+  }
+
+  public async setDefaultRole(conn: PoolConnection) {
+    await this.assignRole('', DefaultUserRole.USER, conn);
+  }
+
+  public async assignRole(
+    project_uuid: string,
+    role_id: number,
+    conn?: PoolConnection,
+  ) {
+    await this.db().paramExecute(
+      `
+      INSERT INTO ${DbTables.AUTH_USER_ROLE} 
+      (authUser_id, role_id, user_uuid, project_uuid)
+      VALUES (@authUser_id, @role_id, @user_uuid, @project_uuid)
+      `,
+      {
+        authUser_id: this.id,
+        role_id,
+        user_uuid: this.user_uuid,
+        project_uuid,
+      },
+      conn,
+    );
+    await this.populateAuthUserRoles(conn);
+    return this;
+  }
+
+  public async removeRole(
+    project_uuid: string,
+    role_id: number,
+    conn?: PoolConnection,
+  ) {
+    await this.db().paramExecute(
+      `
+      DELETE FROM ${DbTables.AUTH_USER_ROLE} 
+      WHERE authUser_id = @authUser_id
+      AND role_id = @role_id
+      AND project_uuid = @project_uuid
+      ;
+      `,
+      { authUser_id: this.id, role_id, project_uuid },
+      conn,
+    );
+    await this.populateAuthUserRoles(conn);
+    return this;
+  }
+
+  public async populateAuthUserRoles(conn?: PoolConnection) {
+    this.authUserRoles = [];
+    const res = await this.db().paramExecute(
+      `
+      SELECT
+        ${new AuthUserRole({}, this.getContext()).generateSelectFields(
+          'aur',
+          'authUserRole',
+        )},
+        ${new Role({}, this.getContext()).generateSelectFields('r', 'role')}
+        ` +
+        //${new RolePermission({}, this.getContext()).generateSelectFields(
+        //   'rp',
+        //   'rolePermission',
+        // )},
+        `
+      FROM ${DbTables.AUTH_USER_ROLE} aur
+      JOIN ${DbTables.ROLE} r
+      ON r.id = aur.role_id
+      LEFT JOIN ${DbTables.ROLE_PERMISSION} rp
+      ON rp.role_id = r.id
+      WHERE aur.authUser_id = @authUserId
+      ORDER BY r.id;
+    `,
+      { authUserId: this.id },
+      conn,
+    );
+
+    for (const r of res) {
+      let userRole = this.authUserRoles.find(
+        (x) => x.role_id === r.userRole__role_id,
+      );
+      if (!userRole) {
+        userRole = new AuthUserRole({}, this.getContext()).populateWithPrefix(
+          r,
+          'userRole',
+          PopulateFrom.DB,
+        );
+
+        userRole.role = new Role({}, this.getContext()).populateWithPrefix(
+          r,
+          'role',
+          PopulateFrom.DB,
+        );
+        this.authUserRoles = [...this.authUserRoles, userRole];
+      }
+
+      // let permission = userRole.role.rolePermissions.find(
+      //   (x) => x.permission_id == r.rolePermission__permission_id,
+      // );
+      // if (!permission) {
+      //   permission = new RolePermission(
+      //     {},
+      //     this.getContext(),
+      //   ).populateWithPrefix(r, 'rolePermission', PopulateFrom.DB);
+
+      //   if (permission.permission_id) {
+      //     userRole.role.rolePermissions = [
+      //       ...userRole.role.rolePermissions,
+      //       permission,
+      //     ];
+      //   }
+      // }
+    }
+
+    return this;
   }
 }

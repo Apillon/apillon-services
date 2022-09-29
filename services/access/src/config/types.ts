@@ -1,3 +1,13 @@
+export enum DbTables {
+  AUTH_USER = 'authUser',
+  AUTH_USER_ROLE = 'authUser_role',
+  ROLE = 'role',
+  API_KEY = 'apiKey',
+  API_KEY_ROLE = 'apiKey_role',
+  PERMISSION = 'permission',
+  ROLE_PERMISSION = 'role_permission',
+}
+
 /**
  * Error codes
  * code format : HTTPCODE|MODULE_CODE|MODULE_INTERNAL_ERROR_CODE
@@ -25,6 +35,7 @@ export enum AmsErrorCode {
   USER_PASSWORD_NOT_PRESENT = 42202105,
 
   // 400 - Bad request
+  BAD_REQUEST = 40002001,
   USER_DOES_NOT_EXISTS = 40002100,
   USER_ALREADY_REGISTERED = 40002101,
 

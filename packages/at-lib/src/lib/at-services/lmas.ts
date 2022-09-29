@@ -37,9 +37,9 @@ export class Lmas extends BaseService {
       ...params,
     };
 
-    // failsafe logging
+    // failsafe logging - without secret!!!
     console.log(JSON.stringify(data));
-
+    // safe attach secret
     data['securityToken'] = securityToken;
 
     await this.callService(data);

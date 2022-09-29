@@ -9,15 +9,26 @@ export class CreateUserDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.CREATE_USER_DTO_EMAIL_NOT_PRESENT,
+        code: ValidatorErrorCode.USER_EMAIL_NOT_PRESENT,
       },
       {
         resolver: emailValidator(),
-        code: ValidatorErrorCode.CREATE_USER_DTO_EMAIL_NOT_VALID,
+        code: ValidatorErrorCode.USER_EMAIL_NOT_VALID,
       },
     ],
   })
   public email: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.USER_PASSWORD_NOT_PRESENT,
+      },
+    ],
+  })
+  public password: string;
 
   @prop({
     parser: { resolver: stringParser() },

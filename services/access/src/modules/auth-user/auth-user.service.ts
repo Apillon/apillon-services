@@ -7,6 +7,14 @@ import { AuthUser } from './auth-user.model';
 export class AuthUserService {
   static async register(event, context: ServiceContext) {
     //
+    if (!event?.user_uuid || !event.password || !event.email) {
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.BAD_REQUEST,
+      }).writeToMonitor({
+        userId: event?.user_uuid,
+      });
+    }
     const authUser = new AuthUser({}, context);
     authUser.populate(event, PopulateFrom.SERVICE);
 
@@ -20,7 +28,8 @@ export class AuthUserService {
     try {
       await authUser.insert(SerializeFor.INSERT_DB, conn);
 
-      //TODO: assign user roles
+      await authUser.setDefaultRole(conn);
+
       await context.mysql.commit(conn);
     } catch (err) {
       await context.mysql.rollback(conn);
@@ -80,8 +89,90 @@ export class AuthUserService {
       event.user_uuid,
     );
 
-    if (authUser.exists()) {
-      return authUser.serialize(SerializeFor.SERVICE);
+    if (!authUser.exists()) {
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.USER_DOES_NOT_EXISTS,
+      }).writeToMonitor({
+        userId: event?.user_uuid,
+      });
+    }
+    return authUser.serialize(SerializeFor.SERVICE);
+  }
+
+  static async updateAuthUser(event, context: ServiceContext) {
+    // send log to monitoring service
+    await new Lmas().writeLog(
+      {
+        logType: LogType.INFO,
+        message: 'AuthUser update!',
+        location: 'AMS/UserService/updateAuthUser',
+      },
+      'secToken1',
+    );
+
+    const authUser = await new AuthUser({}, context).populateByUserUuid(
+      event.user_uuid,
+    );
+
+    if (!authUser.exists()) {
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.USER_DOES_NOT_EXISTS,
+      }).writeToMonitor({
+        userId: event?.user_uuid,
+      });
+    }
+
+    authUser.populate(event, PopulateFrom.SERVICE);
+    try {
+      await authUser.update();
+    } catch (err) {
+      throw await new AmsCodeException({
+        status: 500,
+        code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
+      }).writeToMonitor({
+        userId: event?.user_uuid,
+      });
+    }
+
+    return authUser.serialize(SerializeFor.SERVICE);
+  }
+
+  static async resetPassword(event, context: ServiceContext) {
+    if (!event?.user_uuid || !event.password) {
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.BAD_REQUEST,
+      }).writeToMonitor({
+        userId: event?.user_uuid,
+      });
+    }
+
+    const authUser = await new AuthUser({}, context).populateByUserUuid(
+      event.user_uuid,
+    );
+
+    if (!authUser.exists()) {
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.USER_DOES_NOT_EXISTS,
+      }).writeToMonitor({
+        userId: event?.user_uuid,
+      });
+    }
+
+    authUser.setPassword(event.password);
+
+    try {
+      await authUser.update();
+    } catch (err) {
+      throw await new AmsCodeException({
+        status: 500,
+        code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
+      }).writeToMonitor({
+        userId: event?.user_uuid,
+      });
     }
   }
 }

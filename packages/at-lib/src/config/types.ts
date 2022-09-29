@@ -4,6 +4,8 @@ export enum AmsEventType {
   USER_LOGIN = 'user-login',
   USER_UPDATE = 'user-update',
   USER_PASSWORD_RESET = 'user-password-reset',
+  USER_ROLE_ASSIGN = 'user-role-assign',
+  USER_ROLE_REMOVE = 'user-role-remove',
 }
 
 export enum LmasEventType {
@@ -99,6 +101,8 @@ export enum PermissionLevel {
 }
 
 export enum DefaultUserRole {
+  // values should not overlap with api key roles!!!
+
   // Admin roles
   ADMIN = 1, // System's admin
   SUPPORT = 2, // System Support user
@@ -108,7 +112,14 @@ export enum DefaultUserRole {
   PROJECT_ADMIN = 11, // Admin of current project
   PROJECT_USER = 19, // (read only) User on current project
   // auth user roles
-  USER = 90, // user with access to platform
+  USER = 99, // user with access to platform
+}
+
+export enum DefaultApiKeyRole {
+  // values should not overlap with user roles!!!
+  KEY_EXECUTE = 50,
+  KEY_WRITE = 51,
+  KEY_READ = 52,
 }
 
 //#endregion
@@ -121,24 +132,20 @@ export enum DefaultUserRole {
  *
  * HTTP CODE = 422 for valdiation, 400 for invalid request, 500 internal error,...
  * MODULE CODE:
- *  0 - general
- *  1 - at-lib
- *  2 - ams
- *  3 - lmas
- *  4 - dev-api
+ *  00 - general
+ *  01 - at-lib
+ *  02 - ams
+ *  03 - lmas
+ *  04 - dev-api
  *  ...
  *  INTERNAL ERROR CODE: 000 - 999
  *
  **/
 export enum ErrorCode {
-  STATUS_NOT_PRESENT = 4220100,
-  INVALID_STATUS = 4220101,
-  EMAIL_NOT_PRESENT = 4222100,
-  // USER_EMAIL_NOT_VALID = 4222101,
-  // USER_EMAIL_ALREADY_TAKEN = 4222102,
-  // USER_EMAIL_ALREADY_TAKEN = 4222102,
-
-  // USER_ALREADY_REGISTERED = 4002101,
+  STATUS_NOT_PRESENT = 42200100,
+  INVALID_STATUS = 42200101,
+  ERROR_WRITING_TO_DATABASE = 50000001,
+  ERROR_READING_FROM_DATABASE = 50000002,
 }
 
 export enum ErrorOrigin {

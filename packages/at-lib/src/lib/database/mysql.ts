@@ -291,46 +291,6 @@ export class MySql {
   }
 
   /**
-   * DEPRECATED METHOD - use paramExecute instead!
-   * @param query SQL query with @variables
-   * @param values values for variables
-   * @returns SQL result
-   */
-  public async paramQuery(
-    query: string,
-    values?: unknown,
-  ): Promise<Array<any>> {
-    // console.time('Param Query');
-
-    if (values) {
-      for (const key of Object.keys(values)) {
-        if (Array.isArray(values[key])) {
-          values[key] = values[key].join(',') || null;
-        }
-        // SqlString.escape prevents SQL injection!
-        const re = new RegExp(`@${key}\\b`, 'gi');
-        query = query.replace(
-          re,
-          values[key] ? SqlString.escape(values[key]) : 'NULL',
-        );
-      }
-    }
-    // console.log(query);
-    writeLog(LogType.DB, query, this.filename, 'paramQuery');
-    if (!this.db) {
-      await this.connect();
-    }
-    const conn = await this.db.getConnection();
-    await this.ensureAlive(conn);
-    const result = await conn.query(query);
-    conn.release();
-
-    // console.timeEnd( 'Param Query');
-
-    return result[0] as Array<any>;
-  }
-
-  /**
    * Function replaces sql query parameters with "@variable" notation with values from object {variable: replace_value}
    * and executes prepared statement
    * @param query SQL query

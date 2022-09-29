@@ -9,23 +9,22 @@ export class Ams extends BaseService {
   lambdaFunctionName = env.AT_AMS_FUNCTION_NAME;
   devPort = env.AT_AMS_SOCKET_PORT;
   serviceName = 'LMAS';
+  private securityToken: string;
 
   constructor() {
     super();
     this.isDefaultAsync = false;
+    this.securityToken = this.generateSecurityToken();
   }
 
-  public async getAuthUser(
-    params: {
-      user_uuid: string;
-      project_uuid: string;
-    },
-    securityToken: string,
-  ) {
+  public async getAuthUser(params: {
+    user_uuid: string;
+    project_uuid: string;
+  }) {
     const data = {
       eventName: AmsEventType.USER_GET_AUTH,
       ...params,
-      securityToken,
+      securityToken: this.securityToken,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
@@ -35,20 +34,17 @@ export class Ams extends BaseService {
     return amsResponse;
   }
 
-  public async register(
-    params: {
-      user_uuid: string;
-      email: string;
-      password: string;
-      project_uuid?: string;
-      wallet?: string;
-    },
-    securityToken: string,
-  ) {
+  public async register(params: {
+    user_uuid: string;
+    email: string;
+    password: string;
+    project_uuid?: string;
+    wallet?: string;
+  }) {
     const data = {
       eventName: AmsEventType.USER_REGISTER,
       ...params,
-      securityToken,
+      securityToken: this.securityToken,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
@@ -58,17 +54,11 @@ export class Ams extends BaseService {
     return amsResponse;
   }
 
-  public async login(
-    params: {
-      email: string;
-      password: string;
-    },
-    securityToken: string,
-  ) {
+  public async login(params: { email: string; password: string }) {
     const data = {
       eventName: AmsEventType.USER_LOGIN,
       ...params,
-      securityToken,
+      securityToken: this.securityToken,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
@@ -78,17 +68,11 @@ export class Ams extends BaseService {
     return amsResponse;
   }
 
-  public async resetPassword(
-    params: {
-      user_uuid: string;
-      password: string;
-    },
-    securityToken: string,
-  ) {
+  public async resetPassword(params: { user_uuid: string; password: string }) {
     const data = {
       eventName: AmsEventType.USER_PASSWORD_RESET,
       ...params,
-      securityToken,
+      securityToken: this.securityToken,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
@@ -98,19 +82,16 @@ export class Ams extends BaseService {
     return amsResponse;
   }
 
-  public async updateUser(
-    params: {
-      user_uuid: string;
-      status?: number;
-      email?: string;
-      wallet?: string;
-    },
-    securityToken: string,
-  ) {
+  public async updateUser(params: {
+    user_uuid: string;
+    status?: number;
+    email?: string;
+    wallet?: string;
+  }) {
     const data = {
       eventName: AmsEventType.USER_UPDATE,
       ...params,
-      securityToken,
+      securityToken: this.securityToken,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
@@ -118,5 +99,10 @@ export class Ams extends BaseService {
     //TODO: do something with AMS response?
 
     return amsResponse;
+  }
+
+  private generateSecurityToken() {
+    //TODO - generate JWT from APP secret
+    return 'SecurityToken';
   }
 }
