@@ -57,7 +57,6 @@ export class ProjectService {
     project_id: number,
     uploadedFile: File,
   ) {
-    console.log('PROJECT ID ', project_id);
     const project = await new Project({}, context).populateById(project_id);
     if (!project.exists()) {
       throw new CodeException({
