@@ -3,6 +3,7 @@ export enum AmsEventType {
   USER_GET_AUTH = 'user-get-auth',
   USER_LOGIN = 'user-login',
   USER_UPDATE = 'user-update',
+  USER_PASSWORD_RESET = 'user-password-reset',
 }
 
 export enum LmasEventType {
@@ -98,8 +99,16 @@ export enum PermissionLevel {
 }
 
 export enum DefaultUserRole {
+  // Admin roles
   ADMIN = 1, // System's admin
-  USER = 2, // basic user with access to platform
+  SUPPORT = 2, // System Support user
+  ANALYTIC = 3, // Read only system user
+  // project roles
+  PROJECT_OWNER = 10, // Owner of current project
+  PROJECT_ADMIN = 11, // Admin of current project
+  PROJECT_USER = 19, // (read only) User on current project
+  // auth user roles
+  USER = 90, // user with access to platform
 }
 
 //#endregion
@@ -236,3 +245,8 @@ export type TokenData =
   | RequestUserRegisterTokenData;
 
 //#endregion
+
+export enum RoleType {
+  USER_ROLE = 1,
+  API_KEY_ROLE = 2,
+}

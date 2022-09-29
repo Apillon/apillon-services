@@ -13,7 +13,7 @@ import { AmsErrorCode } from '../../config/types';
 import * as bcrypt from 'bcrypt';
 
 export class AuthUser extends AdvancedSQLModel {
-  tableName: string;
+  tableName = 'authUser';
 
   /**
    * user_uuid
