@@ -72,12 +72,10 @@ export class ProjectService {
     );
 
     const existingProjectImageID = project.imageFile_id;
-    console.log('PROJECT_IMAGE ==> CREATE ...', project.id);
     project.imageFile_id = createdFile.id;
     await project.update();
 
     if (existingProjectImageID) {
-      console.log('PROJECT_IMAGE ==> DELETE EXISTING', project.id);
       await this.fileService.deleteFileById(context, existingProjectImageID);
     }
 
