@@ -94,7 +94,7 @@ export class Project extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
     ],
   })
-  public imageFile_id: string;
+  public imageFile_id: number;
 
   /**
    * Returns projects created by user

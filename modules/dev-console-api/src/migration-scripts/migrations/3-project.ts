@@ -11,7 +11,7 @@ export const upgrade = async (
     \`name\` VARCHAR(500) NULL,
     \`shortDescription\` VARCHAR(1000) NULL,
     \`description\` TEXT NULL,
-    \`imageFile_id\` INT NOT NULL,
+    \`imageFile_id\` INT NULL,
     \`status\` INT NOT NULL DEFAULT '${SqlModelStatus.ACTIVE}',
     \`createTime\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     \`createUser\` INT NULL,
@@ -21,7 +21,6 @@ export const upgrade = async (
     CONSTRAINT \`fk_project_file\` 
       FOREIGN KEY (\`imageFile_id\`)
       REFERENCES \`${DbTables.FILE}\` (\`id\`) 
-      ON DELETE CASCADE 
       ON UPDATE NO ACTION
     )`);
 };

@@ -82,6 +82,10 @@ export class ProjectController {
     @Param('project_id', ParseIntPipe) project_id: number,
     @Body() body: File,
   ) {
-    return await this.projectService.updateProjectImage(context, body);
+    return await this.projectService.updateProjectImage(
+      context,
+      project_id,
+      body,
+    );
   }
 }

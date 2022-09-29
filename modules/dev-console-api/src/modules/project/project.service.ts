@@ -52,7 +52,35 @@ export class ProjectService {
     return await new Project({}).getUserProjects(context);
   }
 
-  async updateProjectImage(@Ctx() context: DevConsoleApiContext, file: File) {
-    console.log('File ', file, this.fileService);
+  async updateProjectImage(
+    @Ctx() context: DevConsoleApiContext,
+    project_id: number,
+    uploadedFile: File,
+  ) {
+    console.log('PROJECT ID ', project_id);
+    const project = await new Project({}, context).populateById(project_id);
+    if (!project.exists()) {
+      throw new CodeException({
+        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
+        status: HttpStatus.NOT_FOUND,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+    const createdFile = await this.fileService.createFile(
+      context,
+      uploadedFile,
+    );
+
+    const existingProjectImageID = project.imageFile_id;
+    console.log('PROJECT_IMAGE ==> CREATE ...', project.id);
+    project.imageFile_id = createdFile.id;
+    await project.update();
+
+    if (existingProjectImageID) {
+      console.log('PROJECT_IMAGE ==> DELETE EXISTING', project.id);
+      await this.fileService.deleteFileById(context, existingProjectImageID);
+    }
+
+    return createdFile;
   }
 }
