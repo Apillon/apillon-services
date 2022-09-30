@@ -40,7 +40,7 @@ export class ProjectController {
     level: PermissionLevel.OWN,
   })
   @UseGuards(AuthGuard)
-  @Validation({ dto: Project, populateFrom: PopulateFrom.ADMIN })
+  @Validation({ dto: Project })
   @UseGuards(ValidationGuard)
   async createProject(
     @Ctx() context: DevConsoleApiContext,

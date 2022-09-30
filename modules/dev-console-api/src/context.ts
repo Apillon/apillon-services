@@ -3,10 +3,10 @@ import { User } from './modules/user/models/user.model';
 
 export class DevConsoleApiContext extends Context {
   /**
-   * Strategies that should be used, to populate model. TODO: In authenticate, fill this!!!!
+   * Strategy that should be used, to populate model. TODO: In authenticate, fill this!!!!
    * @returns
    */
-  modelPopulationStrategies: string[] = [PopulateFrom.PROFILE];
+  populationStrategy: PopulateFrom = PopulateFrom.PROFILE;
 
   /**
    * Authenticates user based on received authentication token. Call AMS service

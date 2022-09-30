@@ -40,10 +40,10 @@ export class ResponseInterceptor implements NestInterceptor {
         }
 
         if (responseData instanceof AdvancedSQLModel) {
-          response.data = {
-            ...responseData.serialize(SerializeFor.PROFILE),
-            ...(isAdmin ? responseData.serialize(SerializeFor.ADMIN) : {}),
-          };
+          response.data =
+            isAdmin == true
+              ? responseData.serialize(SerializeFor.ADMIN)
+              : responseData.serialize(SerializeFor.PROFILE);
         } else if (Array.isArray(responseData)) {
           response.data = responseData.map((d) =>
             d instanceof AdvancedSQLModel

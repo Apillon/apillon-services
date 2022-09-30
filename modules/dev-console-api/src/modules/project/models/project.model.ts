@@ -23,11 +23,7 @@ export class Project extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-    ],
+    serializable: [SerializeFor.ADMIN, SerializeFor.INSERT_DB],
     validators: [
       {
         resolver: presenceValidator(),
@@ -44,11 +40,13 @@ export class Project extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
+      PopulateFrom.ADMIN,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
     ],
     fakeValue: faker.word.verb(),
   })
@@ -59,11 +57,13 @@ export class Project extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
+      PopulateFrom.ADMIN,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
     ],
   })
   public shortDescription: string;
@@ -73,11 +73,13 @@ export class Project extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
+      PopulateFrom.ADMIN,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
     ],
     fakeValue: faker.lorem.paragraph(5),
   })
@@ -88,8 +90,10 @@ export class Project extends AdvancedSQLModel {
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.PROFILE,
+      PopulateFrom.ADMIN,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
     ],
   })
   public imageFile_id: number;
@@ -103,10 +107,9 @@ export class Project extends AdvancedSQLModel {
     const params = {
       user_id: context.user.id,
     };
-
     const sqlQuery = {
       qSelect: `
-        SELECT p.*
+        SELECT ${this.generateSelectFields('p', '', SerializeFor.SELECT_DB)}
         `,
       qFrom: `
         FROM project p
