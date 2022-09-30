@@ -18,6 +18,7 @@ export const upgrade = async (
     \`updateTime\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     \`updateUser\` INT NULL,
     PRIMARY KEY (\`id\`),
+    UNIQUE (project_uuid),
     CONSTRAINT \`fk_project_file\` 
       FOREIGN KEY (\`imageFile_id\`)
       REFERENCES \`${DbTables.FILE}\` (\`id\`) 

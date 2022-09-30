@@ -17,6 +17,7 @@ import {
   Validation,
   Permissions,
   ValidateFor,
+  PopulateFrom,
 } from 'at-lib';
 import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
@@ -39,7 +40,7 @@ export class ProjectController {
     level: PermissionLevel.OWN,
   })
   @UseGuards(AuthGuard)
-  @Validation({ dto: Project })
+  @Validation({ dto: Project, populateFrom: PopulateFrom.ADMIN })
   @UseGuards(ValidationGuard)
   async createProject(
     @Ctx() context: DevConsoleApiContext,

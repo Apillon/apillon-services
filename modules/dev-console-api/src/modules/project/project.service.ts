@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { CodeException, Ctx, ValidationException } from 'at-lib';
+import { CodeException, Ctx, PopulateFrom, ValidationException } from 'at-lib';
 import {
   ResourceNotFoundErrorCode,
   ValidatorErrorCode,
@@ -37,7 +37,7 @@ export class ProjectService {
       });
     }
 
-    project.populate(data);
+    project.populateByStrategies(data, context.modelPopulationStrategies);
 
     try {
       await project.validate();

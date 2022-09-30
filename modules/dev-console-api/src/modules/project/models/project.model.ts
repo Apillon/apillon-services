@@ -22,8 +22,12 @@ export class Project extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+    ],
     validators: [
       {
         resolver: presenceValidator(),
@@ -40,17 +44,11 @@ export class Project extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.PROFILE,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.PROJECT_NAME_NOT_PRESENT,
-      },
     ],
     fakeValue: faker.word.verb(),
   })
@@ -61,7 +59,7 @@ export class Project extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.PROFILE,
       SerializeFor.INSERT_DB,
@@ -75,7 +73,7 @@ export class Project extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.PROFILE,
       SerializeFor.INSERT_DB,

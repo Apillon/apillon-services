@@ -27,7 +27,7 @@ export class ResponseInterceptor implements NestInterceptor {
       map(async (data) => {
         const req = context.switchToHttp().getRequest<IRequest>();
         const res = context.switchToHttp().getResponse<IRequest>();
-        const isAdmin = false; //req.context.isAuthenticated() && (await req.context.hasRole(DefaultUserRole.SUPER_ADMIN));
+        const isAdmin = true; //req.context.isAuthenticated() && (await req.context.hasRole(DefaultUserRole.SUPER_ADMIN));
 
         const response: ApiResponse = {
           status: res.statusCode,

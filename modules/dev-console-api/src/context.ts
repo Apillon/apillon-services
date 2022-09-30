@@ -1,7 +1,13 @@
-import { Ams, Context } from 'at-lib';
+import { Ams, Context, PopulateFrom } from 'at-lib';
 import { User } from './modules/user/models/user.model';
 
 export class DevConsoleApiContext extends Context {
+  /**
+   * Strategies that should be used, to populate model. TODO: In authenticate, fill this!!!!
+   * @returns
+   */
+  modelPopulationStrategies: string[] = [PopulateFrom.PROFILE];
+
   /**
    * Authenticates user based on received authentication token. Call AMS service
    * @param token Authentication token.
