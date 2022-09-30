@@ -1,11 +1,19 @@
-import { HttpStatus, Injectable, Param } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  NotImplementedException,
+  Param,
+} from '@nestjs/common';
 import { CodeException, Ctx, ValidationException } from 'at-lib';
 import {
   ResourceNotFoundErrorCode,
   ValidatorErrorCode,
 } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
+import { User } from '../user/models/user.model';
+import { ProjectUserFilter } from './dtos/project_user-query-filter.dto';
 import { Project } from './models/project.model';
+import { ProjectUser } from './models/project_user.model';
 
 @Injectable()
 export class ProjectService {
@@ -46,5 +54,77 @@ export class ProjectService {
 
   async getUserProjects(@Ctx() context: DevConsoleApiContext) {
     return await new Project({}).getUserProjects(context);
+  }
+
+  async getProjectUsers(
+    @Ctx() context: DevConsoleApiContext,
+    query: ProjectUserFilter,
+  ) {
+    return await new ProjectUser({}, context).getProjectUsers(context, query);
+  }
+
+  async inviteUserProject(@Ctx() context: DevConsoleApiContext, data: any) {
+    // TODO: Call AMS service to fetch related user data
+    const user = new User({ id: 1, email: 'test.user3@mailinator.com' });
+    const project_id = data.project_id;
+
+    // if (!user.exists()) {
+    //   // TODO: Implement
+    //   throw new NotImplementedException();
+    // }
+
+    const projectUser = new ProjectUser({}, context);
+    const isUserOnProject = await projectUser.isUserOnProject(
+      context,
+      project_id,
+      user.id,
+    );
+
+    if (!isUserOnProject) {
+      projectUser.populate({
+        project_id: project_id,
+        user_id: user.id,
+        pendingInvitation: true,
+      });
+
+      try {
+        await projectUser.validate();
+      } catch (error) {
+        await projectUser.handle(error);
+      }
+      if (!projectUser.isValid()) {
+        throw new ValidationException(projectUser);
+      }
+      await projectUser.insert();
+    } else {
+      throw new CodeException({
+        status: HttpStatus.CONFLICT,
+        code: ValidatorErrorCode.PROJECT_USER_RELATION_EXISTS,
+        sourceFunction: `${this.constructor.name}/removeUserProject`,
+        context,
+      });
+    }
+
+    return projectUser;
+  }
+
+  async removeUserProject(
+    @Ctx() context: DevConsoleApiContext,
+    project_user_id: number,
+  ) {
+    const project_user = await new ProjectUser({}, context).populateById(
+      project_user_id,
+    );
+    if (!project_user.exists()) {
+      throw new CodeException({
+        status: HttpStatus.NOT_FOUND,
+        code: ResourceNotFoundErrorCode.PROJECT_USER_DOES_NOT_EXIST,
+        sourceFunction: `${this.constructor.name}/removeUserProject`,
+        context,
+      });
+    }
+
+    await project_user.delete();
+    return project_user;
   }
 }

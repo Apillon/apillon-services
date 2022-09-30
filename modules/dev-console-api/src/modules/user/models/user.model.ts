@@ -4,6 +4,7 @@ import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { AdvancedSQLModel, PopulateFrom, SerializeFor } from 'at-lib';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
+import { ProjectUserInviteDto } from '../../project/dtos/project_user-invite.dto';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
