@@ -40,6 +40,7 @@ export function MySqlConnect(options?: {
         console.log(
           `MySQL client instance ${options.instanceName} is DISCONNECTED from server!`,
         );
+        delete instances[options.instanceName];
       } catch (err) {
         console.error(err);
         console.log(

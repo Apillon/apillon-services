@@ -3,6 +3,7 @@ import {
   Ams,
   CodeException,
   ErrorCode,
+  PopulateFrom,
   SerializeFor,
   ValidationException,
 } from 'at-lib';
@@ -17,7 +18,10 @@ export class UserService {
     body: CreateUserDto,
     context: DevConsoleApiContext,
   ): Promise<User> {
-    const user: User = new User({}, context).populate(body);
+    const user: User = new User({}, context).populate(
+      body,
+      PopulateFrom.PROFILE,
+    );
 
     try {
       await user.validate();
@@ -32,10 +36,12 @@ export class UserService {
       await user.insert(SerializeFor.INSERT_DB, conn);
       await new Ams().register({
         user_uuid: user.user_uuid,
-        email: user.email,
+        email: body.email,
         password: body.password,
       });
+      await context.mysql.commit(conn);
     } catch (err) {
+      await context.mysql.rollback(conn);
       throw new CodeException({
         code: ErrorCode.ERROR_WRITING_TO_DATABASE,
         status: HttpStatus.INTERNAL_SERVER_ERROR,

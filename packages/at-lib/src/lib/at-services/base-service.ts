@@ -19,26 +19,40 @@ export abstract class BaseService {
 
   protected async callService(payload, isAsync = this.isDefaultAsync) {
     const env = await getEnvSecrets();
+    let result;
 
     if (env.APP_ENV === AppEnvironment.LOCAL_DEV) {
-      return await this.callDevService(payload, isAsync);
+      result = await this.callDevService(payload, isAsync);
+    } else {
+      const params: AWS.Lambda.InvocationRequest = {
+        FunctionName: this.lambdaFunctionName,
+        InvocationType: isAsync ? 'Event' : 'RequestResponse',
+        Payload: JSON.stringify(payload),
+      };
+
+      result = await new Promise((resolve, reject) => {
+        this.lambda.invoke(params, (err, response) => {
+          if (err) {
+            console.error('Error invoking lambda!', err);
+            reject(err);
+          }
+          resolve(response);
+        });
+      });
+    }
+    console.log(result);
+
+    if (result?.error || !result?.success) {
+      // CodeException causes circular dependency!
+
+      // throw new CodeException({
+      //   code: ErrorCode.SERVICE_ERROR,
+      //   status: result?.status || 500,
+      // });
+      throw new Error(`Service returned an error! \n${result?.error?.message}`);
     }
 
-    const params: AWS.Lambda.InvocationRequest = {
-      FunctionName: this.lambdaFunctionName,
-      InvocationType: isAsync ? 'Event' : 'RequestResponse',
-      Payload: JSON.stringify(payload),
-    };
-
-    return await new Promise((resolve, reject) => {
-      this.lambda.invoke(params, (err, response) => {
-        if (err) {
-          console.error('Error invoking lambda!', err);
-          reject(err);
-        }
-        resolve(response);
-      });
-    });
+    return result;
   }
 
   protected async callDevService(payload, isAsync) {
@@ -48,21 +62,31 @@ export abstract class BaseService {
         console.log(`Connected to ${this.serviceName} dev socket`);
       },
     );
-    devSocket.on('error', () => {
-      throw new Error('Socket error!');
-    });
 
     return await new Promise((resolve, reject) => {
+      devSocket.on('error', () => {
+        devSocket.destroy();
+        reject('Socket error!');
+      });
+      devSocket.on('timeout', () => {
+        console.log('socket timeout');
+        devSocket.destroy();
+        reject('Socket timeout!');
+      });
+      devSocket.on('end', () => {
+        console.log(`Disconnected from ${this.serviceName} dev socket`);
+        resolve(null);
+      });
       devSocket.on('data', (data) => {
         devSocket.destroy();
         resolve(JSON.parse(data.toString()));
       });
       devSocket.write(JSON.stringify(payload), (err) => {
-        devSocket.destroy();
         if (err) {
           reject(err);
         }
         if (isAsync) {
+          devSocket.destroy();
           resolve(null);
         }
       });

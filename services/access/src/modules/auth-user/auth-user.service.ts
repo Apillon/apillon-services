@@ -126,6 +126,11 @@ export class AuthUserService {
 
     authUser.populate(event, PopulateFrom.SERVICE);
     try {
+      await authUser.validate();
+    } catch (err) {
+      throw new AmsValidationException(authUser);
+    }
+    try {
       await authUser.update();
     } catch (err) {
       throw await new AmsCodeException({
@@ -163,6 +168,11 @@ export class AuthUserService {
     }
 
     authUser.setPassword(event.password);
+    try {
+      await authUser.validate();
+    } catch (err) {
+      throw new AmsValidationException(authUser);
+    }
 
     try {
       await authUser.update();

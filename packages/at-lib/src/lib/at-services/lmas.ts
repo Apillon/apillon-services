@@ -41,7 +41,10 @@ export class Lmas extends BaseService {
     console.log(JSON.stringify(data));
     // safe attach secret
     data['securityToken'] = securityToken;
-
-    await this.callService(data);
+    try {
+      await this.callService(data);
+    } catch (err) {
+      console.error(`LMAS CALL SERVICE ERROR: ${err.message}`);
+    }
   }
 }

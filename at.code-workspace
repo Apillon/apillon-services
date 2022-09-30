@@ -43,5 +43,6 @@
       "**/.serverless": true,
       "**/.turbo": true
     }
-  }
+  },
+ 
 }

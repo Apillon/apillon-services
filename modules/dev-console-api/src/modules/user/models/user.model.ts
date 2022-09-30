@@ -56,9 +56,9 @@ export class User extends AdvancedSQLModel {
         code: ValidatorErrorCode.USER_UUID_NOT_PRESENT,
       },
     ],
-    defaultValue: uuidv4(),
+    defaultValue: () => uuidv4(),
     // emptyValue: uuidv4(),
-    fakeValue: uuidv4(),
+    fakeValue: () => uuidv4(),
   })
   public user_uuid: string;
 
@@ -79,37 +79,37 @@ export class User extends AdvancedSQLModel {
   })
   public phone: string;
 
-  /**
-   * email
-   */
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB, //
-      PopulateFrom.SERVICE,
-    ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.INSERT_DB,
-      SerializeFor.SERVICE,
-    ],
-    setter(v) {
-      return v ? v.toLowerCase().replace(' ', '') : v;
-    },
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.USER_EMAIL_NOT_PRESENT,
-      },
-      {
-        resolver: emailValidator(),
-        code: ValidatorErrorCode.USER_EMAIL_NOT_VALID,
-      },
-      {
-        resolver: uniqueFieldValue('user', 'email'),
-        code: ValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
-      },
-    ],
-  })
-  public email: string;
+  // /**
+  //  * email
+  //  */
+  // @prop({
+  //   parser: { resolver: stringParser() },
+  //   populatable: [
+  //     PopulateFrom.DB, //
+  //     PopulateFrom.SERVICE,
+  //   ],
+  //   serializable: [
+  //     SerializeFor.ADMIN,
+  //     SerializeFor.INSERT_DB,
+  //     SerializeFor.SERVICE,
+  //   ],
+  //   setter(v) {
+  //     return v ? v.toLowerCase().replace(' ', '') : v;
+  //   },
+  //   validators: [
+  //     {
+  //       resolver: presenceValidator(),
+  //       code: ValidatorErrorCode.USER_EMAIL_NOT_PRESENT,
+  //     },
+  //     {
+  //       resolver: emailValidator(),
+  //       code: ValidatorErrorCode.USER_EMAIL_NOT_VALID,
+  //     },
+  //     {
+  //       resolver: uniqueFieldValue('user', 'email'),
+  //       code: ValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
+  //     },
+  //   ],
+  // })
+  // public email: string;
 }
