@@ -29,9 +29,6 @@ export class ValidationGuard implements CanActivate {
         options.populateFrom,
       );
 
-      /*const isAdmin = false;
-      if (isAdmin == true) dto = dto.populate(data, PopulateFrom.ADMIN);*/
-
       try {
         await dto.validate();
       } catch (error) {

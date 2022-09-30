@@ -53,7 +53,7 @@ export class ProjectService {
       });
     }
 
-    project.populateByStrategies(data, context.modelPopulationStrategies);
+    project.populate(data, context.populationStrategy);
 
     try {
       await project.validate();
