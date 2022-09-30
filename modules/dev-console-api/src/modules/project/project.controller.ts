@@ -24,7 +24,6 @@ import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { Project } from './models/project.model';
 import { ProjectService } from './project.service';
-import { FileService } from '../file/file.service';
 import { File } from '../file/models/file.model';
 import { ProjectUserFilter } from './dtos/project_user-query-filter.dto';
 import { ProjectUserInviteDto } from './dtos/project_user-invite.dto';
@@ -32,6 +31,20 @@ import { ProjectUserInviteDto } from './dtos/project_user-invite.dto';
 @Controller('project')
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
+
+  @Get('/:id')
+  @Permissions({
+    permission: 1,
+    type: PermissionType.WRITE,
+    level: PermissionLevel.OWN,
+  })
+  @UseGuards(AuthGuard)
+  async getProject(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return await this.projectService.getProject(context, id);
+  }
 
   @Post()
   @Permissions({
@@ -49,6 +62,17 @@ export class ProjectController {
     return await this.projectService.createProject(context, body);
   }
 
+  @Get()
+  @Permissions({
+    permission: 1,
+    type: PermissionType.WRITE,
+    level: PermissionLevel.OWN,
+  })
+  @UseGuards(AuthGuard)
+  async getUserProjects(@Ctx() context: DevConsoleApiContext) {
+    return await this.projectService.getUserProjects(context);
+  }
+
   @Patch('/:id')
   @Permissions({
     permission: 1,
@@ -62,17 +86,6 @@ export class ProjectController {
     @Body() body: any,
   ) {
     return await this.projectService.updateProject(context, id, body);
-  }
-
-  @Get()
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
-  @UseGuards(AuthGuard)
-  async getUserProjects(@Ctx() context: DevConsoleApiContext) {
-    return await this.projectService.getUserProjects(context);
   }
 
   @Post('/:project_id/updateProjectImage')

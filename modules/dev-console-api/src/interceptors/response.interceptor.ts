@@ -49,7 +49,6 @@ export class ResponseInterceptor implements NestInterceptor {
             d instanceof AdvancedSQLModel
               ? {
                   ...d.serialize(SerializeFor.PROFILE),
-                  ...(isAdmin ? d.serialize(SerializeFor.ADMIN) : {}),
                 }
               : d,
           );
