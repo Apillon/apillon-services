@@ -13,6 +13,10 @@
       "path": "modules\\dev-console-api"
     },
     {
+      "name": "😎@modules/appilon-api",
+      "path": "modules\\appilon-api"
+    },
+    {
       "name": "📦@packages/at-lib",
       "path": "packages\\at-lib"
     },
