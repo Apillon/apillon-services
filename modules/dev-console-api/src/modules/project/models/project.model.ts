@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/member-ordering */
 import { prop } from '@rawmodel/core';
-import { stringParser } from '@rawmodel/parsers';
+import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 
 import { AdvancedSQLModel, PopulateFrom, SerializeFor } from 'at-lib';
@@ -86,7 +86,7 @@ export class Project extends AdvancedSQLModel {
   public description: string;
 
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.PROFILE,
