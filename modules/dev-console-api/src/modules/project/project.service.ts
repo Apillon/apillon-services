@@ -1,15 +1,12 @@
-import {
-  HttpStatus,
-  Injectable,
-  NotImplementedException,
-  Param,
-} from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { CodeException, Ctx, ValidationException } from 'at-lib';
 import {
   ResourceNotFoundErrorCode,
   ValidatorErrorCode,
 } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
+import { FileService } from '../file/file.service';
+import { File } from '../file/models/file.model';
 import { User } from '../user/models/user.model';
 import { ProjectUserFilter } from './dtos/project_user-query-filter.dto';
 import { Project } from './models/project.model';
@@ -17,6 +14,8 @@ import { ProjectUser } from './models/project_user.model';
 
 @Injectable()
 export class ProjectService {
+  constructor(private readonly fileService: FileService) {}
+
   async createProject(
     context: DevConsoleApiContext,
     body: Project,
@@ -126,5 +125,34 @@ export class ProjectService {
 
     await project_user.delete();
     return project_user;
+  }
+
+  async updateProjectImage(
+    @Ctx() context: DevConsoleApiContext,
+    project_id: number,
+    uploadedFile: File,
+  ) {
+    const project = await new Project({}, context).populateById(project_id);
+    if (!project.exists()) {
+      throw new CodeException({
+        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
+        status: HttpStatus.NOT_FOUND,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+    const createdFile = await this.fileService.createFile(
+      context,
+      uploadedFile,
+    );
+
+    const existingProjectImageID = project.imageFile_id;
+    project.imageFile_id = createdFile.id;
+    await project.update();
+
+    if (existingProjectImageID) {
+      await this.fileService.deleteFileById(context, existingProjectImageID);
+    }
+
+    return createdFile;
   }
 }
