@@ -68,7 +68,7 @@ export class ProjectUser extends AdvancedSQLModel {
       { project_id, user_id },
     );
 
-    return data[0] !== undefined;
+    return data.length > 0 ? true : false;
   }
 
   /**
