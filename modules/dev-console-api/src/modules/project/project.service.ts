@@ -65,7 +65,7 @@ export class ProjectService {
 
   async inviteUserProject(@Ctx() context: DevConsoleApiContext, data: any) {
     // TODO: Call AMS service to fetch related user data
-    const user = new User({ id: 3, email: 'test.user3@mailinator.com' });
+    const user = new User({ id: 1, email: 'test.user3@mailinator.com' });
     const project_id = data.project_id;
 
     // if (!user.exists()) {

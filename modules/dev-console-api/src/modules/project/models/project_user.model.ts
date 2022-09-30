@@ -54,7 +54,7 @@ export class ProjectUser extends AdvancedSQLModel {
     context: DevConsoleApiContext,
     project_id: number,
     user_id: number,
-  ) {
+  ): Promise<boolean> {
     if (!user_id || !project_id) {
       return false;
     }
@@ -68,7 +68,7 @@ export class ProjectUser extends AdvancedSQLModel {
       { project_id, user_id },
     );
 
-    return data[0];
+    return data[0] !== undefined;
   }
 
   /**
