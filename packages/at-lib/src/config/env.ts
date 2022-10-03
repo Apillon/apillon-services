@@ -133,7 +133,7 @@ export async function getEnvSecrets() {
   if (!isEnvReady) {
     await populateSecrets();
   }
-  console.log(JSON.stringify(env, null, 2));
+  // console.log(JSON.stringify(env, null, 2));
   return env;
 }
 

@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { CodeException, Ctx, PopulateFrom, ValidationException } from 'at-lib';
+import { CodeException, Ctx, ValidationException } from 'at-lib';
 import {
   ResourceNotFoundErrorCode,
   ValidatorErrorCode,
@@ -10,7 +10,7 @@ import { File } from '../file/models/file.model';
 import { User } from '../user/models/user.model';
 import { ProjectUserFilter } from './dtos/project_user-query-filter.dto';
 import { Project } from './models/project.model';
-import { ProjectUser } from './models/project_user.model';
+import { ProjectUser } from './models/project-user.model';
 
 @Injectable()
 export class ProjectService {

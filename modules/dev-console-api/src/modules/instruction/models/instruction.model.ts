@@ -8,7 +8,7 @@ import { DevConsoleApiContext } from '../../../context';
  * Instruction model.
  */
 export class Instruction extends AdvancedSQLModel {
-  collectionName = DbTables.INSTRUCTION;
+  tableName = DbTables.INSTRUCTION;
 
   /**
    * Instruction instruction enum

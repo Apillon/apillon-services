@@ -10,6 +10,7 @@ import {
 } from '../config/types';
 import { Context } from 'vm';
 import { writeLog } from './logger';
+import { Lmas } from './at-services/lmas';
 
 export interface ErrorOptions {
   code: any;
@@ -19,11 +20,13 @@ export interface ErrorOptions {
   sourceFunction?: string;
   details?: any;
   errorCodes?: any;
+  sourceModule?: string;
 }
 
 export class CodeException extends HttpException {
   origin: ErrorOrigin;
   code: SystemErrorCode | BadRequestErrorCode | any;
+  options: ErrorOptions;
 
   constructor(options: ErrorOptions) {
     super(
@@ -35,6 +38,7 @@ export class CodeException extends HttpException {
       },
       options.status,
     );
+    this.options = options;
 
     writeLog(
       LogType.MSG,
@@ -49,6 +53,24 @@ export class CodeException extends HttpException {
       options.sourceFunction || '',
       this,
     );
+  }
+
+  public async writeToMonitor(params: {
+    projectId?: string;
+    userId?: string;
+    logType?: LogType;
+  }) {
+    await new Lmas().writeLog({
+      projectId: params.projectId,
+      userId: params.userId,
+      logType: params.logType || LogType.ERROR,
+      message: this.options.errorCodes
+        ? this.options.errorCodes[this.options.code]
+        : this.options.errorMessage,
+      location: this.options.sourceFunction,
+    });
+
+    return this;
   }
 }
 

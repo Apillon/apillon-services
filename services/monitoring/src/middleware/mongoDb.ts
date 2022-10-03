@@ -43,6 +43,7 @@ export function MongoDbConnect(options?: {
         console.log(
           `Mongo client instance ${options.instanceName} is DISCONNECTED from server!`,
         );
+        delete instances[options.instanceName];
       } catch (err) {
         console.error(err);
         console.log(
