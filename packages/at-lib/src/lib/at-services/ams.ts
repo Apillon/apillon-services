@@ -8,7 +8,7 @@ import { BaseService } from './base-service';
 export class Ams extends BaseService {
   lambdaFunctionName = env.AT_AMS_FUNCTION_NAME;
   devPort = env.AT_AMS_SOCKET_PORT;
-  serviceName = 'LMAS';
+  serviceName = 'AMS';
   private securityToken: string;
 
   constructor() {
