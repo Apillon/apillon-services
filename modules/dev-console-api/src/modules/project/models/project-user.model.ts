@@ -7,7 +7,7 @@ import { DevConsoleApiContext } from '../../../context';
 import { ProjectUserFilter } from '../dtos/project_user-query-filter.dto';
 
 export class ProjectUser extends AdvancedSQLModel {
-  collectionName = DbTables.PROJECT_USER;
+  tableName = DbTables.PROJECT_USER;
 
   /**
    * Project key
