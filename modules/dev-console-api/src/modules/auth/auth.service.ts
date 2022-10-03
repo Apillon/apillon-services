@@ -5,13 +5,15 @@ import { LoginUserDto } from './dtos/login-user.dto';
 @Injectable()
 export class AuthService {
   async login(loginInfo: LoginUserDto): Promise<{ token: string }> {
-    const res = await new Ams().login({
+    const resp = await new Ams().login({
       email: loginInfo.email,
       password: loginInfo.password,
     });
 
-    if (res.status) {
-      return { token: res.data };
+    console.log('RESPONSE ', resp);
+
+    if (resp.status) {
+      return { token: resp.data };
     } else {
       console.log('Invalid login information ...');
     }
