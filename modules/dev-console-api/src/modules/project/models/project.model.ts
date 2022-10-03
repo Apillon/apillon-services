@@ -15,7 +15,7 @@ import { DevConsoleApiContext } from '../../../context';
  * Project model.
  */
 export class Project extends AdvancedSQLModel {
-  collectionName = DbTables.PROJECT;
+  tableName = DbTables.PROJECT;
 
   /**
    * Project's UUID

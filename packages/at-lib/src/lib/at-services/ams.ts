@@ -1,34 +1,30 @@
-import * as AWS from 'aws-sdk';
-import { env, getEnvSecrets } from '../../config/env';
-import { AmsEventType, AppEnvironment } from '../../config/types';
-import * as Net from 'net';
+import { env } from '../../config/env';
+import { AmsEventType } from '../../config/types';
+import { BaseService } from './base-service';
 
 /**
  * Access Management Service client
  */
-export class Ams {
-  private lambda: AWS.Lambda;
+export class Ams extends BaseService {
+  lambdaFunctionName = env.AT_AMS_FUNCTION_NAME;
+  devPort = env.AT_AMS_SOCKET_PORT;
+  serviceName = 'LMAS';
+  private securityToken: string;
+
   constructor() {
-    this.lambda = new AWS.Lambda({
-      apiVersion: '2015-03-31',
-      region: env.AWS_REGION,
-      //   endpoint:
-      //     env.APP_ENV === AppEnvironment.DEV
-      //       ? `localhost:${env.AT_LMAS_SOCKET_PORT}`
-      //       : undefined,
-    });
+    super();
+    this.isDefaultAsync = false;
+    this.securityToken = this.generateSecurityToken();
   }
 
-  public async IsUserAuthenticated(
-    user_uuid: string,
-    project_uuid: string,
-    securityToken: string,
-  ) {
+  public async getAuthUser(params: {
+    user_uuid: string;
+    project_uuid: string;
+  }) {
     const data = {
-      eventName: AmsEventType.USER_AUTH,
-      user_uuid,
-      project_uuid,
-      securityToken,
+      eventName: AmsEventType.USER_GET_AUTH,
+      ...params,
+      securityToken: this.securityToken,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
@@ -38,52 +34,75 @@ export class Ams {
     return amsResponse;
   }
 
-  private async callService(payload) {
-    const env = await getEnvSecrets();
-
-    if (env.APP_ENV === AppEnvironment.LOCAL_DEV) {
-      return await this.callDevService(payload);
-    }
-
-    const params: AWS.Lambda.InvocationRequest = {
-      FunctionName: env.AT_AMS_FUNCTION_NAME,
-      InvocationType: 'RequestResponse',
-      Payload: JSON.stringify(payload),
+  public async register(params: {
+    user_uuid: string;
+    email: string;
+    password: string;
+    project_uuid?: string;
+    wallet?: string;
+  }) {
+    const data = {
+      eventName: AmsEventType.USER_REGISTER,
+      ...params,
+      securityToken: this.securityToken,
     };
 
-    return await new Promise((resolve, reject) => {
-      this.lambda.invoke(params, (err, response) => {
-        if (err) {
-          console.error('Error invoking lambda!', err);
-          reject(err);
-        }
-        resolve(response);
-      });
-    });
+    // eslint-disable-next-line sonarjs/prefer-immediate-return
+    const amsResponse = await this.callService(data);
+    //TODO: do something with AMS response?
+
+    return amsResponse;
   }
 
-  private async callDevService(payload) {
-    const devSocket = Net.connect(
-      { port: env.AT_AMS_SOCKET_PORT, timeout: 30000 },
-      () => {
-        console.log('Connected to AMS dev socket');
-      },
-    );
-    devSocket.on('error', () => {
-      throw new Error('Socket error!');
-    });
+  public async login(params: { email: string; password: string }) {
+    const data = {
+      eventName: AmsEventType.USER_LOGIN,
+      ...params,
+      securityToken: this.securityToken,
+    };
 
-    return await new Promise((resolve, reject) => {
-      devSocket.on('data', (data) => {
-        devSocket.destroy();
-        resolve(JSON.parse(data.toString()));
-      });
-      devSocket.write(JSON.stringify(payload), (err) => {
-        if (err) {
-          devSocket.destroy();
-          reject(err);
-        }
-      });
-    });
+    // eslint-disable-next-line sonarjs/prefer-immediate-return
+    const amsResponse = await this.callService(data);
+    //TODO: do something with AMS response?
+
+    return amsResponse;
+  }
+
+  public async resetPassword(params: { user_uuid: string; password: string }) {
+    const data = {
+      eventName: AmsEventType.USER_PASSWORD_RESET,
+      ...params,
+      securityToken: this.securityToken,
+    };
+
+    // eslint-disable-next-line sonarjs/prefer-immediate-return
+    const amsResponse = await this.callService(data);
+    //TODO: do something with AMS response?
+
+    return amsResponse;
+  }
+
+  public async updateAuthUser(params: {
+    user_uuid: string;
+    status?: number;
+    email?: string;
+    wallet?: string;
+  }) {
+    const data = {
+      eventName: AmsEventType.USER_UPDATE,
+      ...params,
+      securityToken: this.securityToken,
+    };
+
+    // eslint-disable-next-line sonarjs/prefer-immediate-return
+    const amsResponse = await this.callService(data);
+    //TODO: do something with AMS response?
+
+    return amsResponse;
+  }
+
+  private generateSecurityToken() {
+    //TODO - generate JWT from APP secret
+    return 'SecurityToken';
   }
 }

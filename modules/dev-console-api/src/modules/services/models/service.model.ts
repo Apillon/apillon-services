@@ -16,7 +16,7 @@ import { v4 as uuidv4 } from 'uuid';
  * Service model.
  */
 export class Service extends AdvancedSQLModel {
-  collectionName = DbTables.SERVICE;
+  tableName = DbTables.SERVICE;
 
   /**
    * Service's UUID

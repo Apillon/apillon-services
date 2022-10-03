@@ -10,6 +10,7 @@ export const upgrade = async (
     \`user_uuid\` VARCHAR(36) NOT NULL,
     \`name\` VARCHAR(200) NULL,
     \`phone\` VARCHAR(45) NULL,
+    \`email\` VARCHAR(100) NULL,
     \`status\` INT NOT NULL DEFAULT '${SqlModelStatus.ACTIVE}',
     \`createTime\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     \`createUser\` INT NULL,

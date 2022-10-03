@@ -12,7 +12,7 @@ export class File extends AdvancedSQLModel {
   /**
    * Document's table.
    */
-  collectionName = DbTables.FILE;
+  tableName = DbTables.FILE;
 
   /**
    * Document name property definition.

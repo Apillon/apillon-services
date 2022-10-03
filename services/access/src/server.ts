@@ -20,7 +20,7 @@ function startDevServer() {
         const result = await handler(JSON.parse(chunk.toString()), {} as any);
         socket.write(JSON.stringify(result));
         socket.end();
-        console.log(`AMS Socket server response: ${result.toString()}`);
+        console.log(`AMS Socket server response: ${JSON.stringify(result)}`);
       } catch (err) {
         console.error('AMS Socket server ERROR:');
         console.error(err);

@@ -35,6 +35,14 @@
     "[typescript]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
-    "cSpell.words": ["Authtrail", "LMAS"]
-  }
+    "cSpell.words": [
+      "Authtrail",
+      "LMAS"
+    ],
+    "files.exclude": {
+      "**/.serverless": true,
+      "**/.turbo": true
+    }
+  },
+ 
 }

@@ -26,6 +26,7 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
     ],
     populatable: [PopulateFrom.DB],
   })
@@ -43,6 +44,7 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
     ],
     validators: [
       {
@@ -157,7 +159,7 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT * 
-      FROM \`${this.collectionName}\`
+      FROM \`${this.tableName}\`
       WHERE id = @id AND status <> ${SqlModelStatus.DELETED};
       `,
       { id },
@@ -180,7 +182,7 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
     }
 
     const data = await this.db().paramExecute(
-      `SELECT * FROM ${this.collectionName} WHERE name = @name`,
+      `SELECT * FROM ${this.tableName} WHERE name = @name`,
       { name },
       conn,
     );
@@ -210,7 +212,7 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
     }
     try {
       const createQuery = `
-      INSERT INTO \`${this.collectionName}\`
+      INSERT INTO \`${this.tableName}\`
       ( ${Object.keys(serializedModel)
         .map((x) => `\`${x}\``)
         .join(', ')} )
@@ -265,7 +267,7 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
 
   //   try {
   //     const query = `
-  //     REPLACE INTO \`${this.collectionName}\`
+  //     REPLACE INTO \`${this.tableName}\`
   //     ( ${Object.keys(serializedModel)
   //         .map((x) => `\`${x}\``)
   //         .join(', ')} )
@@ -314,7 +316,7 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
 
     try {
       const createQuery = `
-      UPDATE \`${this.collectionName}\`
+      UPDATE \`${this.tableName}\`
       SET
         ${Object.keys(serializedModel)
           .map((x) => `\`${x}\` = @${x}`)
@@ -412,7 +414,7 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
     }
     try {
       const createQuery = `
-      DELETE FROM \`${this.collectionName}\`
+      DELETE FROM \`${this.tableName}\`
       WHERE id = @id
       `;
 
