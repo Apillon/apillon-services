@@ -10,6 +10,7 @@ import {
 import { ValidatorErrorCode } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
 import { CreateUserDto } from './dtos/create-user.dto';
+import { LoginUserDto } from '../auth/dtos/login-user.dto';
 import { User } from './models/user.model';
 
 @Injectable()
@@ -50,5 +51,17 @@ export class UserService {
     }
 
     return user;
+  }
+
+  async loginUser(body: LoginUserDto, context: DevConsoleApiContext) {
+    let resp = null;
+    resp = await new Ams().login({
+      email: body.email,
+      password: body.password,
+    });
+
+    console.log('RESPONSE ', resp);
+
+    return resp;
   }
 }
