@@ -82,7 +82,7 @@ export class Ams extends BaseService {
     return amsResponse;
   }
 
-  public async updateUser(params: {
+  public async updateAuthUser(params: {
     user_uuid: string;
     status?: number;
     email?: string;
