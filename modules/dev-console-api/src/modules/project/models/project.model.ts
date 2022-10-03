@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/member-ordering */
 import { prop } from '@rawmodel/core';
-import { stringParser } from '@rawmodel/parsers';
+import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 
 import { AdvancedSQLModel, PopulateFrom, SerializeFor } from 'at-lib';
@@ -22,8 +22,8 @@ export class Project extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.ADMIN, SerializeFor.INSERT_DB],
     validators: [
       {
         resolver: presenceValidator(),
@@ -40,17 +40,13 @@ export class Project extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
+      PopulateFrom.ADMIN,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.PROJECT_NAME_NOT_PRESENT,
-      },
+      SerializeFor.SELECT_DB,
     ],
     fakeValue: faker.word.verb(),
   })
@@ -61,11 +57,13 @@ export class Project extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
+      PopulateFrom.ADMIN,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
     ],
   })
   public shortDescription: string;
@@ -75,15 +73,30 @@ export class Project extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
+      PopulateFrom.ADMIN,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
     ],
     fakeValue: faker.lorem.paragraph(5),
   })
   public description: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.PROFILE,
+      PopulateFrom.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
+    ],
+  })
+  public imageFile_id: number;
 
   /**
    * Returns projects created by user
@@ -94,10 +107,9 @@ export class Project extends AdvancedSQLModel {
     const params = {
       user_id: context.user.id,
     };
-
     const sqlQuery = {
       qSelect: `
-        SELECT p.*
+        SELECT ${this.generateSelectFields('p', '', SerializeFor.SELECT_DB)}
         `,
       qFrom: `
         FROM project p
