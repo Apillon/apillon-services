@@ -13,7 +13,11 @@ export class DevConsoleApiContext extends Context {
    * @param token Authentication token.
    */
   async authenticate(token: string) {
-    //const tokenData = parseToken(JwtTokenType.USER_AUTHENTICATION, token, this) as AuthenticationTokenData;
+    const tokenData = parseToken(
+      JwtTokenType.USER_AUTHENTICATION,
+      token,
+      this,
+    ) as AuthenticationTokenData;
     const tokenData = {
       userId: 1,
     };
