@@ -39,6 +39,7 @@ export interface IEnv {
    * AMS dev server port
    */
   AT_AMS_SOCKET_PORT: number;
+  AT_AMS_SOCKET_PORT_TEST: number;
 
   /**
    * AMS Database config
@@ -49,6 +50,12 @@ export interface IEnv {
   AT_AMS_MYSQL_DATABASE: string;
   AT_AMS_MYSQL_USER: string;
   AT_AMS_MYSQL_PASSWORD: string;
+
+  AT_AMS_MYSQL_HOST_TEST: string;
+  AT_AMS_MYSQL_PORT_TEST: number;
+  AT_AMS_MYSQL_DATABASE_TEST: string;
+  AT_AMS_MYSQL_USER_TEST: string;
+  AT_AMS_MYSQL_PASSWORD_TEST: string;
 
   /************************************************************
    * LMAS -  Authtrail Logging, Monitoring & Alerting Service
@@ -61,11 +68,14 @@ export interface IEnv {
    * LMAS dev server port
    */
   AT_LMAS_SOCKET_PORT: number;
+  AT_LMAS_SOCKET_PORT_TEST: number;
   /**
    * LMAS MongoDB connection string
    */
   AT_LMAS_MONGO_SRV: string;
   AT_LMAS_MONGO_DATABASE: string;
+  AT_LMAS_MONGO_SRV_TEST: string;
+  AT_LMAS_MONGO_DATABASE_TEST: string;
 
   /************************************************************
    * dev-console-api Database sconfig
@@ -74,7 +84,19 @@ export interface IEnv {
   AT_DEV_CONSOLE_API_MYSQL_PORT: number;
   AT_DEV_CONSOLE_API_MYSQL_USER: string;
   AT_DEV_CONSOLE_API_MYSQL_PASSWORD: string;
-  AT_DEV_CONSOLE_API_DB: string;
+  AT_DEV_CONSOLE_API_MYSQL_DATABASE: string;
+
+  AT_DEV_CONSOLE_API_MYSQL_HOST_TEST: string;
+  AT_DEV_CONSOLE_API_MYSQL_PORT_TEST: number;
+  AT_DEV_CONSOLE_API_MYSQL_USER_TEST: string;
+  AT_DEV_CONSOLE_API_MYSQL_PASSWORD_TEST: string;
+  AT_DEV_CONSOLE_API_MYSQL_DATABASE_TEST: string;
+
+  AT_DEV_CONSOLE_API_HOST: string;
+  AT_DEV_CONSOLE_API_PORT: number;
+
+  AT_DEV_CONSOLE_API_HOST_TEST: string;
+  AT_DEV_CONSOLE_API_PORT_TEST: number;
 
   /**
    * Page size used in sql utils
@@ -104,20 +126,57 @@ export let env: IEnv = {
   AT_AMS_MYSQL_DATABASE: process.env['AT_AMS_MYSQL_DATABASE'],
   AT_AMS_MYSQL_USER: process.env['AT_AMS_MYSQL_USER'],
   AT_AMS_MYSQL_PASSWORD: process.env['AT_AMS_MYSQL_PASSWORD'],
+
+  AT_AMS_SOCKET_PORT_TEST:
+    parseInt(process.env['AT_AMS_SOCKET_PORT_TEST']) || 7101,
+  AT_AMS_MYSQL_HOST_TEST: process.env['AT_AMS_MYSQL_HOST_TEST'],
+  AT_AMS_MYSQL_PORT_TEST:
+    parseInt(process.env['AT_AMS_MYSQL_PORT_TEST']) || 3306,
+  AT_AMS_MYSQL_DATABASE_TEST: process.env['AT_AMS_MYSQL_DATABASE_TEST'],
+  AT_AMS_MYSQL_USER_TEST: process.env['AT_AMS_MYSQL_USER_TEST'],
+  AT_AMS_MYSQL_PASSWORD_TEST: process.env['AT_AMS_MYSQL_PASSWORD_TEST'],
+
   /** LMAS */
   AT_LMAS_FUNCTION_NAME: process.env['AT_LMAS_FUNCTION_NAME'],
-  AT_LMAS_SOCKET_PORT: parseInt(process.env['AT_AMS_SOCKET_PORT']) || 6201,
+  AT_LMAS_SOCKET_PORT: parseInt(process.env['AT_LMAS_SOCKET_PORT']) || 6201,
   AT_LMAS_MONGO_SRV: process.env['AT_LMAS_MONGO_SRV'],
   AT_LMAS_MONGO_DATABASE:
     process.env['AT_LMAS_MONGO_DATABASE'] || 'authtrail_logs',
 
+  AT_LMAS_SOCKET_PORT_TEST:
+    parseInt(process.env['AT_LMAS_SOCKET_PORT_TEST']) || 7201,
+  AT_LMAS_MONGO_SRV_TEST: process.env['AT_LMAS_MONGO_SRV_TEST'],
+  AT_LMAS_MONGO_DATABASE_TEST:
+    process.env['AT_LMAS_MONGO_DATABASE_TEST'] || 'authtrail_logs_test',
+  /** DEV CONSOLE API */
   AT_DEV_CONSOLE_API_MYSQL_HOST: process.env['AT_DEV_CONSOLE_API_MYSQL_HOST'],
   AT_DEV_CONSOLE_API_MYSQL_PORT:
     parseInt(process.env['AT_DEV_CONSOLE_API_MYSQL_PORT']) || 3306,
   AT_DEV_CONSOLE_API_MYSQL_USER: process.env['AT_DEV_CONSOLE_API_MYSQL_USER'],
   AT_DEV_CONSOLE_API_MYSQL_PASSWORD:
     process.env['AT_DEV_CONSOLE_API_MYSQL_PASSWORD'],
-  AT_DEV_CONSOLE_API_DB: process.env['AT_DEV_CONSOLE_API_DB'],
+  AT_DEV_CONSOLE_API_MYSQL_DATABASE:
+    process.env['AT_DEV_CONSOLE_API_MYSQL_DATABASE'],
+
+  AT_DEV_CONSOLE_API_MYSQL_HOST_TEST:
+    process.env['AT_DEV_CONSOLE_API_MYSQL_HOST_TEST'],
+  AT_DEV_CONSOLE_API_MYSQL_PORT_TEST:
+    parseInt(process.env['AT_DEV_CONSOLE_API_MYSQL_PORT_TEST']) || 3306,
+  AT_DEV_CONSOLE_API_MYSQL_USER_TEST:
+    process.env['AT_DEV_CONSOLE_API_MYSQL_USER_TEST'],
+  AT_DEV_CONSOLE_API_MYSQL_PASSWORD_TEST:
+    process.env['AT_DEV_CONSOLE_API_MYSQL_PASSWORD_TEST'],
+  AT_DEV_CONSOLE_API_MYSQL_DATABASE_TEST:
+    process.env['AT_DEV_CONSOLE_API_MYSQL_DATABASE_TEST'],
+
+  AT_DEV_CONSOLE_API_HOST:
+    process.env['AT_DEV_CONSOLE_API_HOST'] || 'localhost',
+  AT_DEV_CONSOLE_API_PORT:
+    parseInt(process.env['AT_DEV_CONSOLE_API_PORT']) || 6001,
+  AT_DEV_CONSOLE_API_HOST_TEST:
+    process.env['AT_DEV_CONSOLE_API_HOS_TEST'] || 'localhost',
+  AT_DEV_CONSOLE_API_PORT_TEST:
+    parseInt(process.env['AT_DEV_CONSOLE_API_PORT_TEST']) || 7001,
 
   /** SQL UTILS */
   DEFAULT_PAGE_SIZE: parseInt(process.env['DEFAULT_PAGE_SIZE']) || 20,

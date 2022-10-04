@@ -6,7 +6,10 @@ import { AppEnvironment, env } from 'at-lib';
 import * as Net from 'net';
 import { handler } from './handler';
 
-const port = env.AT_LMAS_SOCKET_PORT;
+const port =
+  env.APP_ENV === AppEnvironment.TEST
+    ? env.AT_LMAS_SOCKET_PORT_TEST
+    : env.AT_LMAS_SOCKET_PORT;
 
 function startDevServer() {
   const server = Net.createServer((socket) => {
@@ -49,7 +52,11 @@ function startDevServer() {
   });
 }
 
-if (env.APP_ENV === AppEnvironment.LOCAL_DEV) {
+if (
+  [AppEnvironment.LOCAL_DEV, AppEnvironment.TEST].includes(
+    env.APP_ENV as AppEnvironment,
+  )
+) {
   startDevServer();
 } else {
   console.log(`LMAS: ${env.APP_ENV} - Socket server will not run.`);

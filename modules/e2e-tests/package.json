@@ -9,6 +9,40 @@
     "test": "jest --config ./tests/jest-e2e.json"
   },
   "dependencies": {
-    "at-lib": "*"
+    "at-lib": "*",
+    "dev-console-api": "*",
+    "at-ams": "*"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.1.1",
+    "@types/supertest": "^2.0.12",
+    "jest": "^29.1.2",
+    "supertest": "^6.3.0",
+    "ts-jest": "^29.0.3"
+  },
+  "jest": {
+    "testTimeout": 1800000,
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "json"
+    ],
+    "rootDir": "tests",
+    "testPathIgnorePatterns": [
+      "dist/*"
+    ],
+    "testRegex": ".*\\.test\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "collectCoverage": false,
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node",
+    "preset": "ts-jest",
+    "verbose": true
   }
 }

@@ -13,6 +13,10 @@
       "path": "modules\\dev-console-api"
     },
     {
+      "name": "🧪@modules/e2e-tests",
+      "path": "modules\\e2e-tests"
+    },
+    {
       "name": "📦@packages/at-lib",
       "path": "packages\\at-lib"
     },

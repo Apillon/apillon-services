@@ -21,7 +21,11 @@ export abstract class BaseService {
     const env = await getEnvSecrets();
     let result;
 
-    if (env.APP_ENV === AppEnvironment.LOCAL_DEV) {
+    if (
+      [AppEnvironment.LOCAL_DEV, AppEnvironment.TEST].includes(
+        env.APP_ENV as AppEnvironment,
+      )
+    ) {
       result = await this.callDevService(payload, isAsync);
     } else {
       const params: AWS.Lambda.InvocationRequest = {
