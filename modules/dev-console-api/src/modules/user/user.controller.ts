@@ -3,7 +3,6 @@ import { Ctx, Validation } from 'at-lib';
 import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { CreateUserDto } from './dtos/create-user.dto';
-import { LoginUserDto } from '../auth/dtos/login-user.dto';
 import { UserService } from './user.service';
 
 @Controller('user')

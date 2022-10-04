@@ -17,14 +17,12 @@ import {
   Validation,
   Permissions,
   ValidateFor,
-  PopulateFrom,
 } from 'at-lib';
 import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { Project } from './models/project.model';
 import { ProjectService } from './project.service';
-import { FileService } from '../file/file.service';
 import { File } from '../file/models/file.model';
 import { ProjectUserFilter } from './dtos/project_user-query-filter.dto';
 import { ProjectUserInviteDto } from './dtos/project_user-invite.dto';

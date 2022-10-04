@@ -1,4 +1,4 @@
-import { Ams, Context, PopulateFrom } from 'at-lib';
+import { Context, PopulateFrom } from 'at-lib';
 import { User } from './modules/user/models/user.model';
 
 export class DevConsoleApiContext extends Context {

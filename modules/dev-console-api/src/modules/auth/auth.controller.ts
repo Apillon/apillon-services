@@ -1,6 +1,7 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
-import { Validation } from 'at-lib';
+import { Ctx, Validation } from 'at-lib';
 
+import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { LoginUserDto } from './dtos/login-user.dto';
 import { AuthService } from './auth.service';
@@ -17,7 +18,10 @@ export class AuthController {
   @Post('login')
   @Validation({ dto: LoginUserDto })
   @UseGuards(ValidationGuard)
-  async login(@Body() body: LoginUserDto) {
-    return await this.authService.login(body);
+  async login(
+    @Body() body: LoginUserDto,
+    @Ctx() context: DevConsoleApiContext,
+  ) {
+    return await this.authService.login(body, context);
   }
 }

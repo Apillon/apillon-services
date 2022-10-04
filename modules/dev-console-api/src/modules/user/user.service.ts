@@ -10,8 +10,8 @@ import {
 import { ValidatorErrorCode } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
 import { CreateUserDto } from './dtos/create-user.dto';
-import { LoginUserDto } from '../auth/dtos/login-user.dto';
 import { User } from './models/user.model';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class UserService {
@@ -23,6 +23,10 @@ export class UserService {
       body,
       PopulateFrom.PROFILE,
     );
+
+    // NOTE: Default value in models does not work it seems
+    const uuid = uuidv4();
+    user.user_uuid = uuid;
 
     try {
       await user.validate();
@@ -42,6 +46,8 @@ export class UserService {
       });
       await context.mysql.commit(conn);
     } catch (err) {
+      // TODO: The context of this error is not correct. What happens if
+      //       ams fails? FE will see it as a DB write error, which is incorrect.
       await context.mysql.rollback(conn);
       throw new CodeException({
         code: ErrorCode.ERROR_WRITING_TO_DATABASE,
@@ -51,17 +57,5 @@ export class UserService {
     }
 
     return user;
-  }
-
-  async loginUser(body: LoginUserDto, context: DevConsoleApiContext) {
-    let resp = null;
-    resp = await new Ams().login({
-      email: body.email,
-      password: body.password,
-    });
-
-    console.log('RESPONSE ', resp);
-
-    return resp;
   }
 }

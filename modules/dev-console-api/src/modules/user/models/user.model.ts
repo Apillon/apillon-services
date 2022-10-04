@@ -1,16 +1,11 @@
 /* eslint-disable @typescript-eslint/member-ordering */
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
-import { emailValidator, presenceValidator } from '@rawmodel/validators';
-import {
-  AdvancedSQLModel,
-  PopulateFrom,
-  SerializeFor,
-  uniqueFieldValue,
-} from 'at-lib';
+import { presenceValidator } from '@rawmodel/validators';
+import { AdvancedSQLModel, PopulateFrom, SerializeFor } from 'at-lib';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
-import { ProjectUserInviteDto } from '../../project/dtos/project_user-invite.dto';
 import { v4 as uuidv4 } from 'uuid';
+import { DevConsoleApiContext } from '../../../context';
 
 /**
  * User model.
@@ -51,15 +46,6 @@ export class User extends AdvancedSQLModel {
       SerializeFor.INSERT_DB, //
       SerializeFor.ADMIN,
     ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.USER_UUID_NOT_PRESENT,
-      },
-    ],
-    defaultValue: () => uuidv4(),
-    // emptyValue: uuidv4(),
-    fakeValue: () => uuidv4(),
   })
   public user_uuid: string;
 
@@ -80,37 +66,58 @@ export class User extends AdvancedSQLModel {
   })
   public phone: string;
 
-  // /**
-  //  * email
-  //  */
-  // @prop({
-  //   parser: { resolver: stringParser() },
-  //   populatable: [
-  //     PopulateFrom.DB, //
-  //     PopulateFrom.SERVICE,
-  //   ],
-  //   serializable: [
-  //     SerializeFor.ADMIN,
-  //     SerializeFor.INSERT_DB,
-  //     SerializeFor.SERVICE,
-  //   ],
-  //   setter(v) {
-  //     return v ? v.toLowerCase().replace(' ', '') : v;
-  //   },
-  //   validators: [
-  //     {
-  //       resolver: presenceValidator(),
-  //       code: ValidatorErrorCode.USER_EMAIL_NOT_PRESENT,
-  //     },
-  //     {
-  //       resolver: emailValidator(),
-  //       code: ValidatorErrorCode.USER_EMAIL_NOT_VALID,
-  //     },
-  //     {
-  //       resolver: uniqueFieldValue('user', 'email'),
-  //       code: ValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
-  //     },
-  //   ],
-  // })
-  // public email: string;
+  public async populateByUUID(
+    context: DevConsoleApiContext,
+    user_uuid: string,
+  ) {
+    console.log('DATA ', user_uuid);
+    const data = await context.mysql.paramExecute(
+      `
+        SELECT *
+        FROM \`${DbTables.USER}\` u
+        WHERE u.user_uuid == @uuid
+        LIMIT 1
+      `,
+      { user_uuid },
+    );
+
+    console.log('DATA ', data);
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    }
+    return this.reset();
+  }
 }
+// /**
+//  * email
+//  */
+// @prop({
+//   parser: { resolver: stringParser() },
+//   populatable: [
+//     PopulateFrom.DB, //
+//     PopulateFrom.SERVICE,
+//   ],
+//   serializable: [
+//     SerializeFor.ADMIN,
+//     SerializeFor.INSERT_DB,
+//     SerializeFor.SERVICE,
+//   ],
+//   setter(v) {
+//     return v ? v.toLowerCase().replace(' ', '') : v;
+//   },
+//   validators: [
+//     {
+//       resolver: presenceValidator(),
+//       code: ValidatorErrorCode.USER_EMAIL_NOT_PRESENT,
+//     },
+//     {
+//       resolver: emailValidator(),
+//       code: ValidatorErrorCode.USER_EMAIL_NOT_VALID,
+//     },
+//     {
+//       resolver: uniqueFieldValue('user', 'email'),
+//       code: ValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
+//     },
+//   ],
+// })
+// public email: string;

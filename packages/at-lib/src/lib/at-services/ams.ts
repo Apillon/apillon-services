@@ -1,6 +1,8 @@
 import { env } from '../../config/env';
-import { AmsEventType } from '../../config/types';
+import { AmsEventType, JwtTokenType } from '../../config/types';
 import { BaseService } from './base-service';
+import { JwtUtils } from '../jwt-utils';
+import { ConfigurationServicePlaceholders } from 'aws-sdk/lib/config_service_placeholders';
 
 /**
  * Access Management Service client
@@ -29,9 +31,15 @@ export class Ams extends BaseService {
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
     const amsResponse = await this.callService(data);
-    //TODO: do something with AMS response?
+    const token = new JwtUtils().generateToken(
+      JwtTokenType.USER_AUTHENTICATION,
+      amsResponse,
+    );
 
-    return amsResponse;
+    return {
+      ...amsResponse,
+      token: token,
+    };
   }
 
   public async register(params: {
@@ -63,7 +71,29 @@ export class Ams extends BaseService {
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
     const amsResponse = await this.callService(data);
-    //TODO: do something with AMS response?
+
+    // Extract relevant data from amsResponse. This way we have full control
+    // of required parameters and parameter names
+    const result = {
+      userId: amsResponse.data.id,
+      status: amsResponse.data.status,
+      user_uuid: amsResponse.data.user_uuid,
+      email: amsResponse.data.email,
+      wallet: amsResponse.wallet,
+      authUserRoles: amsResponse.authUserRoles,
+    };
+
+    const token = new JwtUtils().generateToken(
+      JwtTokenType.USER_AUTHENTICATION,
+      result,
+    );
+
+    console.log('AUTH TOKEN ', token);
+
+    return {
+      ...result,
+      token: token,
+    };
 
     return amsResponse;
   }

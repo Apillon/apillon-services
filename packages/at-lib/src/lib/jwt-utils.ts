@@ -11,6 +11,7 @@ import {
   UserWelcomeTokenData,
 } from '../config/types';
 
+const DEFAULT_TOKEN_EXPIRATION = 300; // 300 seconds
 export class JwtUtils {
   /**
    * Generates JWT token based on given token type and data.
@@ -21,7 +22,7 @@ export class JwtUtils {
   public generateToken(
     type: JwtTokenType,
     data: any,
-    expiration: string,
+    expiration?: string,
   ): string {
     switch (type) {
       case JwtTokenType.USER_AUTHENTICATION:
@@ -30,9 +31,10 @@ export class JwtUtils {
         if (!data.userId) {
           return null;
         }
-        return jwt.sign({ userId: data.userId }, env.APP_SECRET, {
+
+        return jwt.sign({ ...data }, env.APP_SECRET, {
           subject: JwtTokenType.USER_AUTHENTICATION,
-          expiresIn: expiration,
+          expiresIn: expiration || DEFAULT_TOKEN_EXPIRATION,
         });
 
       case JwtTokenType.USER_RESET_PASSWORD:
