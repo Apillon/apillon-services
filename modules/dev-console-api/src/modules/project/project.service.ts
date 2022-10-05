@@ -23,6 +23,22 @@ export class ProjectService {
     return await body.insert();
   }
 
+  async getProject(
+    context: DevConsoleApiContext,
+    id: number,
+  ): Promise<Project> {
+    const project: Project = await new Project({}, context).populateById(id);
+    if (!project.exists()) {
+      throw new CodeException({
+        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
+        status: HttpStatus.NOT_FOUND,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+
+    return project;
+  }
+
   async updateProject(
     context: DevConsoleApiContext,
     id: number,
