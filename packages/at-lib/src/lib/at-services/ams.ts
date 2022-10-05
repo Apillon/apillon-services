@@ -2,8 +2,6 @@ import { env } from '../../config/env';
 import { AmsEventType, JwtTokenType } from '../../config/types';
 import { BaseService } from './base-service';
 import { JwtUtils } from '../jwt-utils';
-import { ConfigurationServicePlaceholders } from 'aws-sdk/lib/config_service_placeholders';
-import { DataPipeline } from 'aws-sdk';
 
 /**
  * Access Management Service client
