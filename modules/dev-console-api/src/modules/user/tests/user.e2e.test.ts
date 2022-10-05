@@ -1,8 +1,8 @@
-import { TestContext } from '../../helpers/context';
-import { releaseStage, setupTest, Stage } from '../../helpers/setup';
-import { createTestUser, TestUser } from '../../helpers/user';
 import * as request from 'supertest';
-import { CreateUserDto } from 'dev-console-api/src/modules/user/dtos/create-user.dto';
+import { TestContext } from '../../../../test/helpers/context';
+import { releaseStage, setupTest, Stage } from '../../../../test/helpers/setup';
+import { createTestUser, TestUser } from '../../../../test/helpers/user';
+import { CreateUserDto } from '../dtos/create-user.dto';
 
 describe('Auth tests', () => {
   let stage: Stage;

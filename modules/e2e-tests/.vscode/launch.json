@@ -13,10 +13,12 @@
         "--runInBand",
         "--config=${workspaceFolder}/package.json",
         "--detectOpenHandles",
+        "--forceExit",
         "${fileBasename}"
       ],
       "env": {
-        "LOG_TARGET": "none"
+        "LOG_TARGET": "none",
+        "APP_ENV": "test"
       },
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"

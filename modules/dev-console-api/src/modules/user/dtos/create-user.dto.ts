@@ -25,6 +25,7 @@ export class CreateUserDto extends ModelBase {
 
   @prop({
     parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE],
     validators: [
       {
         resolver: presenceValidator(),

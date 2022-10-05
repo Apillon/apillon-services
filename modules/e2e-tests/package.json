@@ -6,12 +6,13 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "test": "jest --config ./tests/jest-e2e.json"
+    "test": "cross-env APP_ENV=test LOG_TARGET=none jest --detectOpenHandles --runInBand --forceExit"
   },
   "dependencies": {
     "at-lib": "*",
     "dev-console-api": "*",
-    "at-ams": "*"
+    "at-ams": "*",
+    "at-lmas": "*"
   },
   "devDependencies": {
     "@types/jest": "^29.1.1",

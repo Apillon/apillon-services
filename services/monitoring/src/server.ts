@@ -11,7 +11,7 @@ const port =
     ? env.AT_LMAS_SOCKET_PORT_TEST
     : env.AT_LMAS_SOCKET_PORT;
 
-function startDevServer() {
+export function startDevServer() {
   const server = Net.createServer((socket) => {
     socket.on('data', async (chunk) => {
       console.log(
@@ -50,14 +50,4 @@ function startDevServer() {
       `LMAS: Socket server listening for connection requests on socket localhost:${port}`,
     );
   });
-}
-
-if (
-  [AppEnvironment.LOCAL_DEV, AppEnvironment.TEST].includes(
-    env.APP_ENV as AppEnvironment,
-  )
-) {
-  startDevServer();
-} else {
-  console.log(`LMAS: ${env.APP_ENV} - Socket server will not run.`);
 }

@@ -1,9 +1,10 @@
 import { HttpServer, INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { AppModule } from 'dev-console-api/src/app.module';
+
 import { dropTestDatabases, rebuildTestDatabases } from './migrations';
 import { AppEnvironment, env, Mongo, MySql } from 'at-lib';
 import { TestContext } from './context';
+import { AppModule } from '../../src/app.module';
 // import { startDevServer as startAmsServer } from 'at-ams/src/server';
 // import { startDevServer as startLmasServer } from 'at-lmas/src/server';
 
