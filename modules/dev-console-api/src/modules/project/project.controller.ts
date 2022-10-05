@@ -32,11 +32,11 @@ export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
   @Get('/:id')
-  // @Permissions({
-  //   permission: 1,
-  //   type: PermissionType.WRITE,
-  //   level: PermissionLevel.OWN,
-  // })
+  @Permissions({
+    permission: 1,
+    type: PermissionType.WRITE,
+    level: PermissionLevel.OWN,
+  })
   @UseGuards(AuthGuard)
   async getProject(
     @Ctx() context: DevConsoleApiContext,
