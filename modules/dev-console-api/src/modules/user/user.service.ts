@@ -24,9 +24,8 @@ export class UserService {
       PopulateFrom.PROFILE,
     );
 
-    // NOTE: Default value in models does not work it seems
-    const uuid = uuidv4();
-    user.user_uuid = uuid;
+    // NOTE: Generate uuid here. Default value does not seem to work
+    user.user_uuid = uuidv4();
 
     try {
       await user.validate();

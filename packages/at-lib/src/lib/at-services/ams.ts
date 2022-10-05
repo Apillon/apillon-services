@@ -3,6 +3,7 @@ import { AmsEventType, JwtTokenType } from '../../config/types';
 import { BaseService } from './base-service';
 import { JwtUtils } from '../jwt-utils';
 import { ConfigurationServicePlaceholders } from 'aws-sdk/lib/config_service_placeholders';
+import { DataPipeline } from 'aws-sdk';
 
 /**
  * Access Management Service client
@@ -68,30 +69,18 @@ export class Ams extends BaseService {
       ...params,
       securityToken: this.securityToken,
     };
-
     // eslint-disable-next-line sonarjs/prefer-immediate-return
     const amsResponse = await this.callService(data);
-
-    // Extract relevant data from amsResponse. This way we have full control
-    // of required parameters and parameter names
-    const result = {
-      userId: amsResponse.data.id,
-      status: amsResponse.data.status,
-      user_uuid: amsResponse.data.user_uuid,
-      email: amsResponse.data.email,
-      wallet: amsResponse.wallet,
-      authUserRoles: amsResponse.authUserRoles,
-    };
+    amsResponse.data.userId = amsResponse.data.id;
+    delete amsResponse.data['id'];
 
     const token = new JwtUtils().generateToken(
       JwtTokenType.USER_AUTHENTICATION,
-      result,
+      amsResponse.data,
     );
 
-    console.log('AUTH TOKEN ', token);
-
     return {
-      ...result,
+      ...amsResponse,
       token: token,
     };
 
@@ -110,6 +99,10 @@ export class Ams extends BaseService {
     //TODO: do something with AMS response?
 
     return amsResponse;
+  }
+
+  public async parseTokenData(token: string) {
+    return new JwtUtils().parseAuthenticationToken(token);
   }
 
   public async updateAuthUser(params: {
@@ -132,6 +125,8 @@ export class Ams extends BaseService {
   }
 
   private generateSecurityToken() {
+    // NOTE - Rename as not to be confused with JwtUtils().generateToken
+    // NOTE2 - This should probably be a util function somewhere outside this file?
     //TODO - generate JWT from APP secret
     return 'SecurityToken';
   }

@@ -1,10 +1,8 @@
 /* eslint-disable @typescript-eslint/member-ordering */
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
-import { presenceValidator } from '@rawmodel/validators';
 import { AdvancedSQLModel, PopulateFrom, SerializeFor } from 'at-lib';
-import { DbTables, ValidatorErrorCode } from '../../../config/types';
-import { v4 as uuidv4 } from 'uuid';
+import { DbTables } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
 
 /**
@@ -71,17 +69,15 @@ export class User extends AdvancedSQLModel {
     user_uuid: string,
   ) {
     console.log('DATA ', user_uuid);
+
     const data = await context.mysql.paramExecute(
       `
         SELECT *
         FROM \`${DbTables.USER}\` u
-        WHERE u.user_uuid == @uuid
-        LIMIT 1
+        WHERE u.user_uuid = @user_uuid
       `,
       { user_uuid },
     );
-
-    console.log('DATA ', data);
     if (data && data.length) {
       return this.populate(data[0], PopulateFrom.DB);
     }

@@ -20,12 +20,9 @@ export class AuthService {
         password: loginInfo.password,
       });
 
-      console.log('RESPONSE ', resp);
-      console.log('USERRRR ', resp.user_uuid);
-
       const user = await new User({}, context).populateByUUID(
         context,
-        resp.user_uuid,
+        resp.data.user_uuid,
       );
 
       if (!user.exists()) {

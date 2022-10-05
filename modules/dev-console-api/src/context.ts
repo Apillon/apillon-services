@@ -1,4 +1,4 @@
-import { Context, PopulateFrom } from 'at-lib';
+import { Ams, Context, PopulateFrom } from 'at-lib';
 import { User } from './modules/user/models/user.model';
 
 export class DevConsoleApiContext extends Context {
@@ -13,10 +13,8 @@ export class DevConsoleApiContext extends Context {
    * @param token Authentication token.
    */
   async authenticate(token: string) {
-    //const tokenData = parseToken(JwtTokenType.USER_AUTHENTICATION, token, this) as AuthenticationTokenData;
-    const tokenData = {
-      userId: 1,
-    };
+    const tokenData = await new Ams().parseTokenData(token);
+
     this.user = null;
 
     if (tokenData && tokenData.userId && !isNaN(Number(tokenData.userId))) {
@@ -26,14 +24,6 @@ export class DevConsoleApiContext extends Context {
 
       if (user.exists()) {
         this.user = user;
-        //TODO - Call AMS service with user uuid
-        // const resp = await new Ams().getAuthUser('492b6c65-343b-11ed-96a4-02420a000705', null, 'secToken');
-        // if (resp) {
-        //   //success
-        //   this.user = user;
-        // } else {
-        //   //TODO handle ERROR
-        // }
       }
     }
   }
