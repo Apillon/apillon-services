@@ -5,12 +5,6 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
-  "main": "./dist/main.js",
-  "source": "./src/main.ts",
-  "types": "./dist/main.d.ts",
-  "files": [
-    "dist/**"
-  ],
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
