@@ -11,10 +11,10 @@ build:
 	cd - && npm run build;
 
 ####### DB COMMANDS #######
-db-upgrade:
+db-upgrade-dev-console:
 	cd ${DEV_CONSOLE_API_DIR} && npm run db-upgrade; cd -;
 
-db-downgrade:
+db-downgrade-dev-console:
 	cd ${DEV_CONSOLE_API_DIR} && npm run db-downgrade; cd -;
 
 
