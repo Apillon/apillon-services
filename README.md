@@ -21,7 +21,7 @@ Run VS Code by opening `at.code-workspace` file to have workspaces setup. File s
 
 ## Development
 
-> **All `npm` commands shoud be run in folder of the repo!**
+> **All `npm` commands shoud be run in root folder of the repo!**
 
 ### Installing packages
 
@@ -57,11 +57,13 @@ npm run build
 
 ### Develop
 
-To develop all apps and packages, run the following command:
+To run all apps and packages in develop mode, run the following command:
 
 ```
 npm run dev
 ```
+
+Please see detailed instructions for debugging and testing here: [Debug & test docs](/docs/debug-and-test.md)
 
 ### Deploy
 

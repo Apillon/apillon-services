@@ -22,6 +22,12 @@ If you run this command in integrated terminal of VS Code and you have Debugger 
 
 If auto attach does not work or it's not enabled, you can attach debbugger with comand F1 -> `Debug: Attach to node process`.
 
+## Writing automated tests
+
+For current needs we will limit our automated tests to end-to-end tests. Default testing framework for this project is [Jest](https://jestjs.io/docs/en/getting-started). Test are written in `tests` directory of each module. (e.g. `./src/modules/user/tests`). File name should end with `.e2e.test.ts` (e.g. `user.e2e.test.ts`).
+
+In module test all possible flows of the module functionality should be tested against all types of users/permissions.
+
 ## Running automated tests
 
 For running tests, check if all environment variables with suffix `_TEST` are correctly set. If running locally, variables should be set in your `.env` file in root folder.
