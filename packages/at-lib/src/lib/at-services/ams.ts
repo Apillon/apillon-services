@@ -6,10 +6,14 @@ import { BaseService } from './base-service';
  * Access Management Service client
  */
 export class Ams extends BaseService {
-  lambdaFunctionName = env.AT_AMS_FUNCTION_NAME;
-  devPort = AppEnvironment.TEST
-    ? env.AT_AMS_SOCKET_PORT_TEST
-    : env.AT_AMS_SOCKET_PORT;
+  lambdaFunctionName =
+    env.APP_ENV === AppEnvironment.TEST
+      ? env.AT_AMS_FUNCTION_NAME_TEST
+      : env.AT_AMS_FUNCTION_NAME;
+  devPort =
+    env.APP_ENV === AppEnvironment.TEST
+      ? env.AT_AMS_SOCKET_PORT_TEST
+      : env.AT_AMS_SOCKET_PORT;
   serviceName = 'LMAS';
   private securityToken: string;
 

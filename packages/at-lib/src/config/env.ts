@@ -34,6 +34,7 @@ export interface IEnv {
    *  function name
    */
   AT_AMS_FUNCTION_NAME: string;
+  AT_AMS_FUNCTION_NAME_TEST: string;
 
   /**
    * AMS dev server port
@@ -64,6 +65,7 @@ export interface IEnv {
    *  function name
    */
   AT_LMAS_FUNCTION_NAME: string;
+  AT_LMAS_FUNCTION_NAME_TEST: string;
   /**
    * LMAS dev server port
    */
@@ -120,6 +122,7 @@ export let env: IEnv = {
 
   /** AMS */
   AT_AMS_FUNCTION_NAME: process.env['AT_AMS_FUNCTION_NAME'],
+  AT_AMS_FUNCTION_NAME_TEST: process.env['AT_AMS_FUNCTION_NAME_TEST'],
   AT_AMS_SOCKET_PORT: parseInt(process.env['AT_AMS_SOCKET_PORT']) || 6101,
   AT_AMS_MYSQL_HOST: process.env['AT_AMS_MYSQL_HOST'],
   AT_AMS_MYSQL_PORT: parseInt(process.env['AT_AMS_MYSQL_PORT']) || 3306,
@@ -138,6 +141,7 @@ export let env: IEnv = {
 
   /** LMAS */
   AT_LMAS_FUNCTION_NAME: process.env['AT_LMAS_FUNCTION_NAME'],
+  AT_LMAS_FUNCTION_NAME_TEST: process.env['AT_LMAS_FUNCTION_NAME_TEST'],
   AT_LMAS_SOCKET_PORT: parseInt(process.env['AT_LMAS_SOCKET_PORT']) || 6201,
   AT_LMAS_MONGO_SRV: process.env['AT_LMAS_MONGO_SRV'],
   AT_LMAS_MONGO_DATABASE:

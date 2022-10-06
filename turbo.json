@@ -36,6 +36,9 @@
       ]
     },
     "test": {
+      "dependsOn": [
+        "^build"
+      ],
       "outputs": []
     },
     "run-test-server": {
