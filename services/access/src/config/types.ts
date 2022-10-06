@@ -6,6 +6,7 @@ export enum DbTables {
   API_KEY_ROLE = 'apiKey_role',
   PERMISSION = 'permission',
   ROLE_PERMISSION = 'role_permission',
+  AUTH_TOKEN = 'auth_token',
 }
 
 /**
@@ -38,6 +39,7 @@ export enum AmsErrorCode {
   BAD_REQUEST = 40002001,
   USER_DOES_NOT_EXISTS = 40002100,
   USER_ALREADY_REGISTERED = 40002101,
+  USER_AUTH_TOKEN_NOT_EXISTS = 40002200,
 
   // 401 - Unauthorized (Not authenticated)
   USER_IS_NOT_AUTHENTICATED = 40102100,

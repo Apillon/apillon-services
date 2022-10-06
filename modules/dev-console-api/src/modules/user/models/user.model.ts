@@ -68,8 +68,6 @@ export class User extends AdvancedSQLModel {
     context: DevConsoleApiContext,
     user_uuid: string,
   ) {
-    console.log('DATA ', user_uuid);
-
     const data = await context.mysql.paramExecute(
       `
         SELECT *
