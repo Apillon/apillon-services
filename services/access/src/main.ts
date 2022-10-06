@@ -15,7 +15,8 @@ export async function processEvent(event, context: Context): Promise<any> {
     [AmsEventType.USER_ROLE_ASSIGN]: RoleService.assignUserRoleOnProject,
     [AmsEventType.USER_ROLE_REMOVE]: RoleService.removeUserRoleOnProject,
 
-    [AmsEventType.AUTH_TOKEN_GET_TOKEN]: AuthTokenService.getAuthToken,
+    [AmsEventType.AUTH_TOKEN_CREATE_UPDATE_TOKEN]:
+      AuthTokenService.createUpdateAuthToken,
   };
 
   return await processors[event.eventName](event, context);

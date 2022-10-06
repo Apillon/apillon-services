@@ -35,7 +35,17 @@ export class Ams extends BaseService {
       amsResponse,
     );
 
-    // const auth_token = new ;
+    const authTokenParams = {
+      token: token,
+    };
+
+    console.log('Executing event for auth token in DB ...');
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const authTokenData = {
+      eventName: AmsEventType.AUTH_TOKEN_CREATE_UPDATE_TOKEN,
+      ...authTokenParams,
+      securityToken: this.securityToken,
+    };
 
     return {
       ...amsResponse,

@@ -1,11 +1,12 @@
-import { AmsErrorCode, AuthTokenConfig } from '../../config/types';
+import { Lmas, LogType, PopulateFrom, SerializeFor } from 'at-lib';
+import { AmsErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
-import { AmsCodeException } from '../../lib/exceptions';
+import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
 import { AuthToken } from './auth-token.model';
 
 export class AuthTokenService {
-  static async getAuthToken(event, context: ServiceContext) {
-    if (!event?.auth_token) {
+  static async createUpdateAuthToken(event, context: ServiceContext) {
+    if (!event?.auth_token || !event?.user_uuid) {
       throw await new AmsCodeException({
         status: 400,
         code: AmsErrorCode.USER_AUTH_TOKEN_NOT_EXISTS,
@@ -14,17 +15,42 @@ export class AuthTokenService {
       });
     }
 
-    const new_token = event.auth_token;
-    const existing_token = await new AuthToken({}, context).populateByAuthToken(
-      new_token,
+    const authToken = await new AuthToken({}, context).populateByUserUuid(
+      event.user_uuid,
     );
 
-    if (existing_token.exists()) {
-      existing_token.token = new_token;
-      // TODO: Check if this is valid
-      // existing_token.expiresAt = new Date();
-    } else {
-      await new AuthToken({}, context).insert(event);
+    if (!authToken.exists()) {
+      const authToken = new AuthToken({}, context);
+      authToken.populate(event, PopulateFrom.SERVICE); // TODO: PopulateFrom???
+
+      try {
+        await authToken.validate();
+      } catch (err) {
+        throw new AmsValidationException(authToken);
+      }
+
+      const conn = await context.mysql.start();
+
+      try {
+        await authToken.insert(SerializeFor.INSERT_DB, conn);
+        await context.mysql.commit(conn);
+      } catch (err) {
+        await context.mysql.rollback(conn);
+        throw await new AmsCodeException({
+          status: 500,
+          code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
+        }).writeToMonitor({ userId: event?.user_uuid });
+      }
     }
+
+    await new Lmas().writeLog(
+      {
+        logType: LogType.INFO,
+        message: 'Updating AuthToken!',
+        userId: authToken.user_uuid,
+        location: 'AMS/AuthTokenService/createUpdateAuthToken',
+      },
+      'secToken1', // TODO: Replace
+    );
   }
 }

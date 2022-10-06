@@ -6,7 +6,7 @@ export enum AmsEventType {
   USER_PASSWORD_RESET = 'user-password-reset',
   USER_ROLE_ASSIGN = 'user-role-assign',
   USER_ROLE_REMOVE = 'user-role-remove',
-  AUTH_TOKEN_GET_TOKEN = 'auth-token-get-token',
+  AUTH_TOKEN_CREATE_UPDATE_TOKEN = 'auth-token-create-update-token',
 }
 
 export enum LmasEventType {

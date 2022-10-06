@@ -40,7 +40,7 @@ export class AuthToken extends AdvancedSQLModel {
       SerializeFor.SERVICE,
     ],
   })
-  public user_id: number;
+  public user_uuid: string;
 
   /**
    * Expires at
@@ -67,15 +67,15 @@ export class AuthToken extends AdvancedSQLModel {
   /**
    * Returns instruction instance from instructionEnum
    */
-  public async populateByAuthToken(token: string) {
+  public async populateByUserUuid(user_uuid: string) {
     const data = await this.db().paramExecute(
       `
             SELECT *
             FROM \`${DbTables.AUTH_TOKEN}\` at
-            WHERE at.token == @token
+            WHERE at.user_uuid == @user_uuid
             LIMIT 1
         `,
-      { token },
+      { user_uuid },
     );
 
     if (data && data.length) {
