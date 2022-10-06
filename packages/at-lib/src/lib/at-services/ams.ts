@@ -35,6 +35,8 @@ export class Ams extends BaseService {
       amsResponse,
     );
 
+    // const auth_token = new ;
+
     return {
       ...amsResponse,
       token: token,

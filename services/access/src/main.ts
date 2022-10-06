@@ -2,6 +2,7 @@ import { AmsEventType } from 'at-lib';
 import { Context } from 'aws-lambda/handler';
 import { AuthUserService } from './modules/auth-user/auth-user.service';
 import { RoleService } from './modules/role/role.service';
+import { AuthTokenService } from './modules/auth-token/auth-token.service';
 
 export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
@@ -13,6 +14,8 @@ export async function processEvent(event, context: Context): Promise<any> {
 
     [AmsEventType.USER_ROLE_ASSIGN]: RoleService.assignUserRoleOnProject,
     [AmsEventType.USER_ROLE_REMOVE]: RoleService.removeUserRoleOnProject,
+
+    [AmsEventType.AUTH_TOKEN_GET_TOKEN]: AuthTokenService.getAuthToken,
   };
 
   return await processors[event.eventName](event, context);

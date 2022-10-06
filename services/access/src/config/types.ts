@@ -51,3 +51,7 @@ export enum AmsErrorCode {
   ERROR_WRITING_TO_DATABASE = 50002001,
   ERROR_READING_FROM_DATABASE = 50002002,
 }
+
+export enum AuthTokenConfig {
+  EXPIRATION_DATE_HOURS = 24,
+}

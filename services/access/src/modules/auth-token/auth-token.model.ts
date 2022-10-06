@@ -56,20 +56,26 @@ export class AuthToken extends AdvancedSQLModel {
   })
   public expiresAt?: Date;
 
+  public isTokenValid(token: AuthToken) {
+    // if(token.expiresAt < expiration_date) {
+    //   return false;
+    // }
+
+    return true;
+  }
+
   /**
    * Returns instruction instance from instructionEnum
    */
-  public async populateByUserUuid(user_uuid: string) {
+  public async populateByAuthToken(token: string) {
     const data = await this.db().paramExecute(
       `
             SELECT *
             FROM \`${DbTables.AUTH_TOKEN}\` at
-            INNER JOIN \`${DbTables.AUTH_USER}\` au
-                ON at.user_id == au.user_id
-            WHERE au.user_uuid == @user_uuid
+            WHERE at.token == @token
             LIMIT 1
         `,
-      { user_uuid },
+      { token },
     );
 
     if (data && data.length) {
