@@ -80,6 +80,9 @@ export interface IEnv {
    * Page size used in sql utils
    */
   DEFAULT_PAGE_SIZE: number;
+
+  AT_STORAGE_FUNCTION_NAME: string;
+  AT_STORAGE_SOCKET_PORT: number;
 }
 
 // dotenv.config();
@@ -121,6 +124,10 @@ export let env: IEnv = {
 
   /** SQL UTILS */
   DEFAULT_PAGE_SIZE: parseInt(process.env['DEFAULT_PAGE_SIZE']) || 20,
+
+  AT_STORAGE_FUNCTION_NAME: 'at-v2-storage-service-dev',
+  AT_STORAGE_SOCKET_PORT:
+    parseInt(process.env['AT_STORAGE_SOCKET_PORT']) || 6301,
 };
 
 export let isEnvReady = false;

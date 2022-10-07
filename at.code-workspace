@@ -9,6 +9,10 @@
       "path": "services\\monitoring"
     },
     {
+      "name": "🌐@services/storage [AT-STORAGE]",
+      "path": "services\\ipfs"
+    },
+    {
       "name": "😎@modules/dev-console-api",
       "path": "modules\\dev-console-api"
     },
@@ -39,6 +43,10 @@
     "[typescript]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
-    "cSpell.words": ["Authtrail", "LMAS"]
+    "cSpell.words": [
+      "Authtrail",
+      "LMAS"
+    ],
+    "nuxt.isNuxtApp": false
   }
 }

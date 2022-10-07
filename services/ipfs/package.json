@@ -1,0 +1,28 @@
+{
+  "name": "at-storage-service",
+  "version": "1.0.0",
+  "author": "Kalmia d.o.o.",
+  "license": "UNLICENSED",
+  "description": "",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "test": "jest --passWithNoTests",
+    "build": "tsc",
+    "dev": "nodemon ./dist/server.js",
+    "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "deploy:prod": "serverless deploy --stage production",
+    "deploy:staging": "serverless deploy --stage staging",
+    "deploy:dev": "serverless deploy --stage dev"
+  },
+  "dependencies": {
+    "@middy/core": "^2.5.7",
+    "at-lib": "*",
+    "ipfs-http-client": "^58.0.1"
+  },
+  "devDependencies": {
+    "eslint-config-common": "*",
+    "tsconfig": "*"
+  }
+}

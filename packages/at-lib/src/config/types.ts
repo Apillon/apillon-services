@@ -9,6 +9,10 @@ export enum LmasEventType {
   NOTIFY = 'notify',
 }
 
+export enum StorageEventType {
+  ADD_FILE_TO_IPFS = 'add-file-to-ipfs',
+}
+
 export enum AppEnvironment {
   LOCAL_DEV = 'local',
   TEST = 'test',

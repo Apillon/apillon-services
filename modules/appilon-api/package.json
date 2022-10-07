@@ -30,18 +30,21 @@
     "db-unseed": "node -r ts-node/register ./src/scripts/db/unseed-db"
   },
   "dependencies": {
+    "@crustio/type-definitions": "^1.3.0",
     "@faker-js/faker": "^7.5.0",
     "@nestjs/common": "^9.0.11",
     "@nestjs/core": "^9.0.0",
     "@nestjs/platform-express": "^9.0.0",
+    "@polkadot/api": "^9.4.3",
+    "@polkadot/keyring": "^10.1.9",
     "@rawmodel/core": "^3.3.4",
     "@rawmodel/parsers": "^3.3.4",
     "@rawmodel/validators": "^3.3.4",
     "@types/uuid": "^8.3.4",
     "at-lib": "*",
     "aws-serverless-express": "^3.4.0",
-    "ipfs-core": "^0.16.1",
-    "ipfs-http-client": "^58.0.1",
+    "ipfs-core": "^0.14.3",
+    "ipfs-http-client": "^56.0.3",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0"
