@@ -19,12 +19,8 @@ export class AuthToken extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.SELECT_DB,
-      SerializeFor.SERVICE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
+    serializable: [SerializeFor.INSERT_DB],
   })
   public token: string;
 
@@ -33,36 +29,20 @@ export class AuthToken extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.SELECT_DB,
-      SerializeFor.SERVICE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
+    serializable: [SerializeFor.INSERT_DB],
   })
   public user_uuid: string;
 
   /**
-   * Expires at
+   * Expires in (constant)
    */
   @prop({
-    parser: { resolver: dateParser() },
-    serializable: [
-      SerializeFor.PROFILE,
-      SerializeFor.ADMIN,
-      SerializeFor.SELECT_DB,
-    ],
-    populatable: [PopulateFrom.DB],
+    parser: { resolver: stringParser() },
+    serializable: [SerializeFor.INSERT_DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
   })
-  public expiresAt?: Date;
-
-  public isTokenValid(token: AuthToken) {
-    // if(token.expiresAt < expiration_date) {
-    //   return false;
-    // }
-
-    return true;
-  }
+  public expiresIn?: string;
 
   /**
    * Returns instruction instance from instructionEnum
@@ -70,10 +50,10 @@ export class AuthToken extends AdvancedSQLModel {
   public async populateByUserUuid(user_uuid: string) {
     const data = await this.db().paramExecute(
       `
-            SELECT *
-            FROM \`${DbTables.AUTH_TOKEN}\` at
-            WHERE at.user_uuid == @user_uuid
-            LIMIT 1
+        SELECT *
+        FROM \`${DbTables.AUTH_TOKEN}\` at
+        WHERE at.user_uuid == @user_uuid
+        LIMIT 1
         `,
       { user_uuid },
     );

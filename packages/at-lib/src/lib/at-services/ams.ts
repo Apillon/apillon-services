@@ -1,7 +1,6 @@
 import { env } from '../../config/env';
-import { AmsEventType, JwtTokenType } from '../../config/types';
+import { AmsEventType } from '../../config/types';
 import { BaseService } from './base-service';
-import { JwtUtils } from '../jwt-utils';
 
 /**
  * Access Management Service client
@@ -30,6 +29,8 @@ export class Ams extends BaseService {
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
     const amsResponse = await this.callService(data);
+
+    // TODO: Move to access (login ...)
     const token = new JwtUtils().generateToken(
       JwtTokenType.USER_AUTHENTICATION,
       amsResponse,
@@ -37,6 +38,7 @@ export class Ams extends BaseService {
 
     const authTokenParams = {
       token: token,
+      user_uuid: params.user_uuid,
     };
 
     console.log('Executing event for auth token in DB ...');
@@ -109,10 +111,6 @@ export class Ams extends BaseService {
     //TODO: do something with AMS response?
 
     return amsResponse;
-  }
-
-  public async parseTokenData(token: string) {
-    return new JwtUtils().parseAuthenticationToken(token);
   }
 
   public async updateAuthUser(params: {

@@ -15,13 +15,20 @@ export class AuthTokenService {
       });
     }
 
+    // 1. getAuthUser - Check if token is valid (signed), find hash(token) and see if it's the correct
+    // user, then return the token
+    // 2. Login - genereate new token (if login ok), find active token (by subject),
+    //    set status to inactive (9), generate new token, return active token.
+    // 3. - is token is expired, log user out.
+    //    - In DB set to 1D string, which
+    //    is for us mostly
     const authToken = await new AuthToken({}, context).populateByUserUuid(
       event.user_uuid,
     );
 
     if (!authToken.exists()) {
       const authToken = new AuthToken({}, context);
-      authToken.populate(event, PopulateFrom.SERVICE); // TODO: PopulateFrom???
+      authToken.populate(event, PopulateFrom.SERVICE);
 
       try {
         await authToken.validate();
