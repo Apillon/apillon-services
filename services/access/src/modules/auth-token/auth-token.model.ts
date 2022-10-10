@@ -11,10 +11,6 @@ import { DbTables } from '../../config/types';
 export class AuthToken extends AdvancedSQLModel {
   public readonly tableName = DbTables.AUTH_TOKEN;
 
-  public constructor(data: any, context: Context) {
-    super(data, context);
-  }
-
   /**
    * Token
    */
@@ -55,6 +51,10 @@ export class AuthToken extends AdvancedSQLModel {
   })
   public tokenType: string;
 
+  public constructor(data: any, context: Context) {
+    super(data, context);
+  }
+
   /**
    * Returns auth token by uuid
    */
@@ -74,6 +74,4 @@ export class AuthToken extends AdvancedSQLModel {
     }
     return this.reset();
   }
-
-  public populateBy;
 }

@@ -22,7 +22,7 @@ export class AuthService {
 
       const user = await new User({}, context).populateByUUID(
         context,
-        resp.data.user_uuid,
+        resp.data.user.user_uuid,
       );
 
       if (!user.exists()) {
@@ -35,8 +35,7 @@ export class AuthService {
       }
 
       return {
-        user: user,
-        token: resp.token,
+        token: resp.data.token,
       };
     } catch (error) {
       throw new CodeException({

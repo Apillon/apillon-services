@@ -73,7 +73,7 @@ export class AuthUserService {
 
     if (oldToken.exists()) {
       oldToken.status = SqlModelStatus.DELETED;
-      await oldToken.update();
+      await oldToken.update(SerializeFor.UPDATE_DB);
     }
 
     // Generate a new token with type USER_AUTH
@@ -84,13 +84,14 @@ export class AuthUserService {
 
     // Create new token in the database
     const authToken = new AuthToken({}, context);
-
-    authToken.populate({
+    const tokenData = {
       token: token,
       user_uuid: authUser.user_uuid,
       tokenType: JwtTokenType.USER_AUTHENTICATION,
       expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
-    });
+    };
+
+    authToken.populate({ ...tokenData }, PopulateFrom.SERVICE);
 
     try {
       await authToken.validate();
@@ -123,8 +124,8 @@ export class AuthUserService {
     );
 
     return {
-      user: authUser.serialize(SerializeFor.SERVICE),
-      token: authToken.serialize(SerializeFor.SERVICE),
+      user: { user_uuid: authUser.user_uuid },
+      token: authToken.token,
     };
   }
 
