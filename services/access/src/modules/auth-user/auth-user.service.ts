@@ -29,7 +29,6 @@ export class AuthUserService {
     const conn = await context.mysql.start();
     try {
       await authUser.insert(SerializeFor.INSERT_DB, conn);
-
       await authUser.setDefaultRole(conn);
 
       await context.mysql.commit(conn);
@@ -66,30 +65,49 @@ export class AuthUserService {
     }
 
     // Find old token
-    const oldTokenDB = await new AuthToken().populateByUserAndType(
+    const oldToken = await new AuthToken().populateByUserAndType(
       authUser.user_uuid,
       JwtTokenType.USER_AUTHENTICATION,
     );
 
-    // TODO: Should be set as a constant
-    // now delete old token
-    oldTokenDB.populate({ status: SqlModelStatus.DELETED });
-    await oldTokenDB.update();
+    if (oldToken.exists()) {
+      oldToken.populate({ status: SqlModelStatus.DELETED });
+      await oldToken.update();
+    }
 
     // Generate a new token with type USER_AUTH
-    const authToken = new Jwt().generateToken(
+    const token = new Jwt().generateToken(
       JwtTokenType.USER_AUTHENTICATION,
       event,
     );
 
     // Create new token in the database
-    const authTokenDB = new AuthToken();
-    authTokenDB.populate({
-      token: authToken,
+    const authToken = new AuthToken();
+    authToken.populate({
+      token: token,
       user_uuid: authUser.user_uuid,
       type: JwtTokenType.USER_AUTHENTICATION,
     });
-    await authTokenDB.insert();
+
+    try {
+      await authToken.validate();
+    } catch (err) {
+      throw new AmsValidationException(authToken);
+    }
+
+    const conn = await context.mysql.start();
+
+    try {
+      await authToken.insert(SerializeFor.INSERT_DB, conn);
+
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+      throw await new AmsCodeException({
+        status: 500,
+        code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
+      }).writeToMonitor({ userId: authUser?.user_uuid });
+    }
 
     await new Lmas().writeLog(
       {
@@ -103,7 +121,7 @@ export class AuthUserService {
 
     return {
       user: authUser.serialize(SerializeFor.SERVICE),
-      token: authTokenDB.serialize(SerializeFor.SERVICE),
+      token: authToken.serialize(SerializeFor.SERVICE),
     };
   }
 

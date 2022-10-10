@@ -1,9 +1,8 @@
 import { AmsErrorCode } from '../../config/types';
-import { ServiceContext } from '../../context';
 import { AmsCodeException } from '../../lib/exceptions';
 
 export class AuthTokenService {
-  static async createUpdateAuthToken(event, context: ServiceContext) {
+  static async createUpdateAuthToken(event) {
     if (!event?.auth_token || !event?.user_uuid) {
       throw await new AmsCodeException({
         status: 400,
