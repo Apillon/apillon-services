@@ -12,7 +12,7 @@ let steps = 0;
 
 const run = async (stepCount: number) => {
   await seedDatabase(
-    env.AT_DEV_CONSOLE_API_DB,
+    env.AT_DEV_CONSOLE_API_MYSQL_DATABASE,
     env.AT_DEV_CONSOLE_API_MYSQL_HOST,
     env.AT_DEV_CONSOLE_API_MYSQL_PORT,
     env.AT_DEV_CONSOLE_API_MYSQL_USER,
@@ -24,7 +24,7 @@ const run = async (stepCount: number) => {
 rl.question(
   `You are about to seed database ${bgYellow(
     black(
-      ` ${env.AT_DEV_CONSOLE_API_DB} @ ${env.AT_DEV_CONSOLE_API_MYSQL_HOST} `,
+      ` ${env.AT_DEV_CONSOLE_API_MYSQL_DATABASE} @ ${env.AT_DEV_CONSOLE_API_MYSQL_HOST} `,
     ),
   )}.
 

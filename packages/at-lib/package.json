@@ -12,8 +12,9 @@
   "license": "UNLICENSED",
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "tsc",
-    "test": "jest --passWithNoTests",
+    "build": "tsc --declarationMap",
+    "dev": "tsc -w --declarationMap",
+    "test:unit": "jest --passWithNoTests",
     "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
   },
   "devDependencies": {

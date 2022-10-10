@@ -1,96 +1,61 @@
-import * as AWS from 'aws-sdk';
 import { env } from '../../config/env';
-import { AppEnvironment, LmasEventType, LogType } from '../../config/types';
-import * as Net from 'net';
+import {
+  AppEnvironment,
+  LmasEventType,
+  LogType,
+  ServiceName,
+} from '../../config/types';
+import { BaseService } from './base-service';
 
 /**
  * Logging / Monitoring / Alerting Service client
  */
-export class Lmas {
-  private lambda = null;
+export class Lmas extends BaseService {
+  lambdaFunctionName =
+    env.APP_ENV === AppEnvironment.TEST
+      ? env.AT_LMAS_FUNCTION_NAME_TEST
+      : env.AT_LMAS_FUNCTION_NAME;
+  devPort =
+    env.APP_ENV === AppEnvironment.TEST
+      ? env.AT_LMAS_SOCKET_PORT_TEST
+      : env.AT_LMAS_SOCKET_PORT;
+  serviceName = 'LMAS';
+
   constructor() {
-    this.lambda = new AWS.Lambda({
-      apiVersion: '2015-03-31',
-      region: env.AWS_REGION,
-    });
+    super();
+    this.isDefaultAsync = true;
   }
 
   public async writeLog(
     params: {
       projectId?: string;
+      userId?: string;
       logType?: LogType;
       message?: string;
       location?: string;
+      service?: string;
     },
     securityToken?: string,
   ) {
     const data = {
       eventName: LmasEventType.WRITE_LOG,
       projectId: null,
+      userId: null,
       logType: LogType.MSG,
       message: '',
       location: null,
+      service: ServiceName.GENERAL,
       ...params,
     };
 
-    // failsafe logging
+    // failsafe logging - without secret!!!
     console.log(JSON.stringify(data));
-
+    // safe attach secret
     data['securityToken'] = securityToken;
-
-    await this.callService(data);
-  }
-
-  private async callService(payload, isAsync = true) {
-    // const env = await getEnvSecrets(); //should there be any???
-
-    if (env.APP_ENV === AppEnvironment.LOCAL_DEV) {
-      return await this.callDevService(payload, isAsync);
+    try {
+      await this.callService(data);
+    } catch (err) {
+      console.error(`LMAS CALL SERVICE ERROR: ${err.message}`);
     }
-
-    const params: AWS.Lambda.InvocationRequest = {
-      FunctionName: env.AT_LMAS_FUNCTION_NAME,
-      InvocationType: isAsync ? 'Event' : 'RequestResponse',
-      Payload: JSON.stringify(payload),
-    };
-
-    return await new Promise((resolve, reject) => {
-      this.lambda.invoke(params, (err, response) => {
-        if (err) {
-          console.error('Error invoking lambda!', err);
-          reject(err);
-        }
-        resolve(response);
-      });
-    });
-  }
-
-  private async callDevService(payload, isAsync) {
-    const devSocket = Net.connect(
-      { port: env.AT_LMAS_SOCKET_PORT, timeout: 30000 },
-      () => {
-        console.log('Connected to LMAS dev socket');
-      },
-    );
-    devSocket.on('error', (err) => {
-      console.error(err);
-      throw new Error('Socket error!');
-    });
-
-    return await new Promise((resolve, reject) => {
-      devSocket.on('data', (data) => {
-        devSocket.destroy();
-        resolve(JSON.parse(data.toString()));
-      });
-      devSocket.write(JSON.stringify(payload), (err) => {
-        devSocket.destroy();
-        if (err) {
-          reject(err);
-        }
-        if (isAsync) {
-          resolve(null);
-        }
-      });
-    });
   }
 }

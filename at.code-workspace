@@ -47,6 +47,9 @@
       "Authtrail",
       "LMAS"
     ],
-    "nuxt.isNuxtApp": false
-  }
+    "files.exclude": {
+      "**/.serverless": true,
+      "**/.turbo": true
+    }
+  },
 }

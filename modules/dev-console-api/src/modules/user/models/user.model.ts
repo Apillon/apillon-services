@@ -1,9 +1,15 @@
 /* eslint-disable @typescript-eslint/member-ordering */
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
-import { presenceValidator } from '@rawmodel/validators';
-import { AdvancedSQLModel, PopulateFrom, SerializeFor } from 'at-lib';
+import { emailValidator, presenceValidator } from '@rawmodel/validators';
+import {
+  AdvancedSQLModel,
+  PopulateFrom,
+  SerializeFor,
+  uniqueFieldValue,
+} from 'at-lib';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
+import { ProjectUserInviteDto } from '../../project/dtos/project_user-invite.dto';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -13,14 +19,17 @@ export class User extends AdvancedSQLModel {
   /**
    * User's table.
    */
-  collectionName = DbTables.USER;
+  tableName = DbTables.USER;
 
   /**
    * User's name (first name + last name) property definition.
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
+    populatable: [
+      PopulateFrom.DB, //
+      PopulateFrom.PROFILE,
+    ],
     serializable: [
       SerializeFor.PROFILE,
       SerializeFor.INSERT_DB,
@@ -35,16 +44,22 @@ export class User extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    populatable: [
+      PopulateFrom.DB, //
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB, //
+      SerializeFor.ADMIN,
+    ],
     validators: [
       {
         resolver: presenceValidator(),
         code: ValidatorErrorCode.USER_UUID_NOT_PRESENT,
       },
     ],
-    defaultValue: uuidv4(),
-    fakeValue: uuidv4(),
+    defaultValue: () => uuidv4(),
+    // emptyValue: uuidv4(),
+    fakeValue: () => uuidv4(),
   })
   public user_uuid: string;
 
@@ -53,10 +68,49 @@ export class User extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    populatable: [
+      PopulateFrom.DB, //
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB, //
+      SerializeFor.UPDATE_DB,
+    ],
 
     fakeValue: '+386 41 885 885',
   })
   public phone: string;
+
+  // /**
+  //  * email
+  //  */
+  // @prop({
+  //   parser: { resolver: stringParser() },
+  //   populatable: [
+  //     PopulateFrom.DB, //
+  //     PopulateFrom.SERVICE,
+  //   ],
+  //   serializable: [
+  //     SerializeFor.ADMIN,
+  //     SerializeFor.INSERT_DB,
+  //     SerializeFor.SERVICE,
+  //   ],
+  //   setter(v) {
+  //     return v ? v.toLowerCase().replace(' ', '') : v;
+  //   },
+  //   validators: [
+  //     {
+  //       resolver: presenceValidator(),
+  //       code: ValidatorErrorCode.USER_EMAIL_NOT_PRESENT,
+  //     },
+  //     {
+  //       resolver: emailValidator(),
+  //       code: ValidatorErrorCode.USER_EMAIL_NOT_VALID,
+  //     },
+  //     {
+  //       resolver: uniqueFieldValue('user', 'email'),
+  //       code: ValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
+  //     },
+  //   ],
+  // })
+  // public email: string;
 }

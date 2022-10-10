@@ -10,7 +10,7 @@ let steps = 1;
 
 const run = async (stepCount: number) => {
   await unseedDatabase(
-    env.AT_DEV_CONSOLE_API_DB,
+    env.AT_DEV_CONSOLE_API_MYSQL_DATABASE,
     env.AT_DEV_CONSOLE_API_MYSQL_HOST,
     env.AT_DEV_CONSOLE_API_MYSQL_PORT,
     env.AT_DEV_CONSOLE_API_MYSQL_USER,
@@ -20,7 +20,7 @@ const run = async (stepCount: number) => {
 };
 
 rl.question(
-  `You are about to un seed database ${env.AT_DEV_CONSOLE_API_DB} @ ${env.AT_DEV_CONSOLE_API_MYSQL_HOST}.\n Set number of versions to unseed (-1 for all, 0 to exit):`,
+  `You are about to un seed database ${env.AT_DEV_CONSOLE_API_MYSQL_DATABASE} @ ${env.AT_DEV_CONSOLE_API_MYSQL_HOST}.\n Set number of versions to unseed (-1 for all, 0 to exit):`,
   (answer) => {
     steps = parseInt(answer, 10);
     if (steps) {

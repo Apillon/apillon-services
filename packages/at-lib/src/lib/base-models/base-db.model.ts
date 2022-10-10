@@ -14,7 +14,7 @@ export abstract class BaseDBModel extends ModelBase {
   /**
    * Document's collection name.
    */
-  public abstract collectionName: string;
+  public abstract tableName: string;
 
   /**
    * Tells if the model represents an object stored in database

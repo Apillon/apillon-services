@@ -4,6 +4,7 @@ import { PoolConnection } from 'mysql2/promise';
 import 'reflect-metadata';
 import { BaseDBModel } from './base-db.model';
 import { NotImplementedException } from '@nestjs/common';
+import { MySql } from '../database/mysql';
 
 /**
  * Common model related objects.
@@ -24,7 +25,7 @@ export abstract class BaseSQLModel extends BaseDBModel {
     }
     try {
       const createQuery = `
-      INSERT ${ignore ? 'IGNORE' : ''} INTO \`${this.collectionName}\`
+      INSERT ${ignore ? 'IGNORE' : ''} INTO \`${this.tableName}\`
       ( ${Object.keys(serializedModel)
         .map((x) => `\`${x}\``)
         .join(', ')} )
@@ -64,7 +65,7 @@ export abstract class BaseSQLModel extends BaseDBModel {
 
   //   try {
   //     const query = `
-  //     REPLACE INTO \`${this.collectionName}\`
+  //     REPLACE INTO \`${this.tableName}\`
   //     ( ${Object.keys(serializedModel)
   //         .map((x) => `\`${x}\``)
   //         .join(', ')} )
@@ -128,7 +129,7 @@ export abstract class BaseSQLModel extends BaseDBModel {
     try {
       if (Object.keys(updateModel).length) {
         const createQuery = `
-          INSERT INTO \`${this.collectionName}\`
+          INSERT INTO \`${this.tableName}\`
           ( ${Object.keys(insertModel)
             .map((x) => `\`${x}\``)
             .join(', ')} )
@@ -152,7 +153,7 @@ export abstract class BaseSQLModel extends BaseDBModel {
         );
       } else {
         const createQuery = `
-          INSERT IGNORE INTO \`${this.collectionName}\`
+          INSERT IGNORE INTO \`${this.tableName}\`
           ( ${Object.keys(insertModel)
             .map((x) => `\`${x}\``)
             .join(', ')} )
@@ -192,7 +193,7 @@ export abstract class BaseSQLModel extends BaseDBModel {
     }
     try {
       let createQuery = `
-      DELETE FROM \`${this.collectionName}\`
+      DELETE FROM \`${this.tableName}\`
       WHERE ${keys[0]} = @${keys[0]}
       `;
 
@@ -255,8 +256,8 @@ export abstract class BaseSQLModel extends BaseDBModel {
     return super.populate(mappedObj, strategy);
   }
 
-  protected db() {
-    return this.getContext().mysql;
+  protected db(): MySql {
+    return this.getContext().mysql as MySql;
   }
 
   public update(

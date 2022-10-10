@@ -177,5 +177,8 @@ export class FileService {
         errorMessage: error.message,
       });
     }
+
+    // Now delete the file in our database as well
+    await file.delete();
   }
 }
