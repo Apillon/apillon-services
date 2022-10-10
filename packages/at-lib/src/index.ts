@@ -16,4 +16,3 @@ export * from './lib/decorators/permission.decorator';
 export * from './lib/database/sql-utils';
 export * from './lib/aws/aws-s3';
 export * from './lib/validators';
-export * from './lib/jwt-utils';

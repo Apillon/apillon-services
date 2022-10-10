@@ -30,28 +30,11 @@ export class Ams extends BaseService {
     // eslint-disable-next-line sonarjs/prefer-immediate-return
     const amsResponse = await this.callService(data);
 
-    // TODO: Move to access (login ...)
-    const token = new JwtUtils().generateToken(
-      JwtTokenType.USER_AUTHENTICATION,
-      amsResponse,
-    );
-
-    const authTokenParams = {
-      token: token,
-      user_uuid: params.user_uuid,
-    };
-
     console.log('Executing event for auth token in DB ...');
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const authTokenData = {
-      eventName: AmsEventType.AUTH_TOKEN_CREATE_UPDATE_TOKEN,
-      ...authTokenParams,
-      securityToken: this.securityToken,
-    };
 
     return {
       ...amsResponse,
-      token: token,
     };
   }
 
@@ -86,14 +69,14 @@ export class Ams extends BaseService {
     amsResponse.data.userId = amsResponse.data.id;
     delete amsResponse.data['id'];
 
-    const token = new JwtUtils().generateToken(
-      JwtTokenType.USER_AUTHENTICATION,
-      amsResponse.data,
-    );
+    // const token = new JwtUtils().generateToken(
+    //   JwtTokenType.USER_AUTHENTICATION,
+    //   amsResponse.data,
+    // );
 
     return {
       ...amsResponse,
-      token: token,
+      // token: token,
     };
 
     return amsResponse;

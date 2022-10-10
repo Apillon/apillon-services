@@ -1,8 +1,10 @@
 import { Lmas, LogType, PopulateFrom, SerializeFor } from 'at-lib';
-import { AmsErrorCode } from '../../config/types';
+import { AmsErrorCode, JwtTokenType, SqlModelStatus } from '../../config/types';
 import { ServiceContext } from '../../context';
 import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
 import { AuthUser } from './auth-user.model';
+import { AuthToken } from '../auth-token/auth-token.model';
+import { JwtUtils as Jwt } from '../../utils/jwt';
 
 export class AuthUserService {
   static async register(event, context: ServiceContext) {
@@ -62,6 +64,33 @@ export class AuthUserService {
         code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
       }).writeToMonitor({ userId: authUser?.user_uuid });
     }
+
+    // Find old token
+    const oldTokenDB = await new AuthToken().populateByUserAndType(
+      authUser.user_uuid,
+      JwtTokenType.USER_AUTHENTICATION,
+    );
+
+    // TODO: Should be set as a constant
+    // now delete old token
+    oldTokenDB.populate({ status: SqlModelStatus.DELETED });
+    await oldTokenDB.update();
+
+    // Generate a new token with type USER_AUTH
+    const authToken = new Jwt().generateToken(
+      JwtTokenType.USER_AUTHENTICATION,
+      event,
+    );
+
+    // Create new token in the database
+    const authTokenDB = new AuthToken();
+    authTokenDB.populate({
+      token: authToken,
+      user_uuid: authUser.user_uuid,
+      type: JwtTokenType.USER_AUTHENTICATION,
+    });
+    await authTokenDB.insert();
+
     await new Lmas().writeLog(
       {
         logType: LogType.INFO,
@@ -71,7 +100,11 @@ export class AuthUserService {
       },
       'secToken1',
     );
-    return authUser.serialize(SerializeFor.SERVICE);
+
+    return {
+      user: authUser.serialize(SerializeFor.SERVICE),
+      token: authTokenDB.serialize(SerializeFor.SERVICE),
+    };
   }
 
   static async getAuthUser(event, context: ServiceContext) {
@@ -97,6 +130,7 @@ export class AuthUserService {
         userId: event?.user_uuid,
       });
     }
+
     return authUser.serialize(SerializeFor.SERVICE);
   }
 

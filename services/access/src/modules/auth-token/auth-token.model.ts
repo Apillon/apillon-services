@@ -1,19 +1,10 @@
-import { dateParser, stringParser } from '@rawmodel/parsers';
-import {
-  AdvancedSQLModel,
-  Context,
-  PopulateFrom,
-  prop,
-  SerializeFor,
-} from 'at-lib';
+import { stringParser } from '@rawmodel/parsers';
+import { AdvancedSQLModel, PopulateFrom, prop, SerializeFor } from 'at-lib';
 import { DbTables } from '../../config/types';
 
 export class AuthToken extends AdvancedSQLModel {
   public readonly tableName = DbTables.AUTH_TOKEN;
 
-  public constructor(data: any, context: Context) {
-    super(data, context);
-  }
   /**
    * Token
    */
@@ -45,17 +36,17 @@ export class AuthToken extends AdvancedSQLModel {
   public expiresIn?: string;
 
   /**
-   * Returns instruction instance from instructionEnum
+   * Returns auth token by uuid
    */
-  public async populateByUserUuid(user_uuid: string) {
+  public async populateByUserAndType(user_uuid: string, tokenType: string) {
     const data = await this.db().paramExecute(
       `
         SELECT *
         FROM \`${DbTables.AUTH_TOKEN}\` at
-        WHERE at.user_uuid == @user_uuid
+        WHERE at.user_uuid = @user_uuid AND at.tokenType = @tokenType
         LIMIT 1
         `,
-      { user_uuid },
+      { user_uuid, tokenType },
     );
 
     if (data && data.length) {
@@ -63,4 +54,6 @@ export class AuthToken extends AdvancedSQLModel {
     }
     return this.reset();
   }
+
+  public populateBy;
 }

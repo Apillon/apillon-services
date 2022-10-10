@@ -1,8 +1,6 @@
-import { Lmas, LogType, PopulateFrom, SerializeFor } from 'at-lib';
 import { AmsErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
-import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
-import { AuthToken } from './auth-token.model';
+import { AmsCodeException } from '../../lib/exceptions';
 
 export class AuthTokenService {
   static async createUpdateAuthToken(event, context: ServiceContext) {
@@ -22,42 +20,42 @@ export class AuthTokenService {
     // 3. - is token is expired, log user out.
     //    - In DB set to 1D string, which
     //    is for us mostly
-    const authToken = await new AuthToken({}, context).populateByUserUuid(
-      event.user_uuid,
-    );
+    //   const authToken = await new AuthToken({}, context).populateByUserUuid(
+    //     event.user_uuid,
+    //   );
 
-    if (!authToken.exists()) {
-      const authToken = new AuthToken({}, context);
-      authToken.populate(event, PopulateFrom.SERVICE);
+    //   if (!authToken.exists()) {
+    //     const authToken = new AuthToken({}, context);
+    //     authToken.populate(event, PopulateFrom.SERVICE);
 
-      try {
-        await authToken.validate();
-      } catch (err) {
-        throw new AmsValidationException(authToken);
-      }
+    //     try {
+    //       await authToken.validate();
+    //     } catch (err) {
+    //       throw new AmsValidationException(authToken);
+    //     }
 
-      const conn = await context.mysql.start();
+    //     const conn = await context.mysql.start();
 
-      try {
-        await authToken.insert(SerializeFor.INSERT_DB, conn);
-        await context.mysql.commit(conn);
-      } catch (err) {
-        await context.mysql.rollback(conn);
-        throw await new AmsCodeException({
-          status: 500,
-          code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
-        }).writeToMonitor({ userId: event?.user_uuid });
-      }
-    }
+    //     try {
+    //       await authToken.insert(SerializeFor.INSERT_DB, conn);
+    //       await context.mysql.commit(conn);
+    //     } catch (err) {
+    //       await context.mysql.rollback(conn);
+    //       throw await new AmsCodeException({
+    //         status: 500,
+    //         code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
+    //       }).writeToMonitor({ userId: event?.user_uuid });
+    //     }
+    //   }
 
-    await new Lmas().writeLog(
-      {
-        logType: LogType.INFO,
-        message: 'Updating AuthToken!',
-        userId: authToken.user_uuid,
-        location: 'AMS/AuthTokenService/createUpdateAuthToken',
-      },
-      'secToken1', // TODO: Replace
-    );
+    //   await new Lmas().writeLog(
+    //     {
+    //       logType: LogType.INFO,
+    //       message: 'Updating AuthToken!',
+    //       userId: authToken.user_uuid,
+    //       location: 'AMS/AuthTokenService/createUpdateAuthToken',
+    //     },
+    //     'secToken1', // TODO: Replace
+    //   );
   }
 }
