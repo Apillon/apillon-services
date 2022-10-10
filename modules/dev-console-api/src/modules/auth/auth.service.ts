@@ -20,13 +20,14 @@ export class AuthService {
         password: loginInfo.password,
       });
 
+      console.log('RESPONSE ', resp.data);
+
       const user = await new User({}, context).populateByUUID(
         context,
         resp.data.user.user_uuid,
       );
 
       if (!user.exists()) {
-        // TODO: This is actually a critical error on AMS???
         throw new CodeException({
           code: ResourceNotFoundErrorCode.USER_DOES_NOT_EXISTS,
           status: HttpStatus.NOT_FOUND,

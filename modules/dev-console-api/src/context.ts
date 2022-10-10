@@ -1,4 +1,4 @@
-import { Context, PopulateFrom } from 'at-lib';
+import { Context, PopulateFrom, Ams } from 'at-lib';
 import { User } from './modules/user/models/user.model';
 
 export class DevConsoleApiContext extends Context {
@@ -13,11 +13,11 @@ export class DevConsoleApiContext extends Context {
    * @param token Authentication token.
    */
   async authenticate(token: string) {
-    const tokenData = {
-      userId: 1,
-    };
-    this.user = null;
+    const tokenData = new Ams().getAuthUser({ token: token });
 
+    console.log('TOKEN DATA ', tokenData);
+
+    this.user = null;
     if (tokenData && tokenData.userId && !isNaN(Number(tokenData.userId))) {
       const user = await new User({}, this).populateById(
         Number(tokenData.userId),

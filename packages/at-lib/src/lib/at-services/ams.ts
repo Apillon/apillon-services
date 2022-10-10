@@ -17,10 +17,7 @@ export class Ams extends BaseService {
     this.securityToken = this.generateSecurityToken();
   }
 
-  public async getAuthUser(params: {
-    user_uuid: string;
-    project_uuid: string;
-  }) {
+  public async getAuthUser(params: { token: string }) {
     const data = {
       eventName: AmsEventType.USER_GET_AUTH,
       ...params,
@@ -29,9 +26,6 @@ export class Ams extends BaseService {
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
     const amsResponse = await this.callService(data);
-
-    console.log('Executing event for auth token in DB ...');
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
     return {
       ...amsResponse,
@@ -64,14 +58,13 @@ export class Ams extends BaseService {
       ...params,
       securityToken: this.securityToken,
     };
+
     // eslint-disable-next-line sonarjs/prefer-immediate-return
     const amsResponse = await this.callService(data);
 
     return {
       ...amsResponse,
     };
-
-    return amsResponse;
   }
 
   public async resetPassword(params: { user_uuid: string; password: string }) {
