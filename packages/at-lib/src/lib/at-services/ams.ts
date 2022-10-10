@@ -66,17 +66,9 @@ export class Ams extends BaseService {
     };
     // eslint-disable-next-line sonarjs/prefer-immediate-return
     const amsResponse = await this.callService(data);
-    amsResponse.data.userId = amsResponse.data.id;
-    delete amsResponse.data['id'];
-
-    // const token = new JwtUtils().generateToken(
-    //   JwtTokenType.USER_AUTHENTICATION,
-    //   amsResponse.data,
-    // );
 
     return {
       ...amsResponse,
-      // token: token,
     };
 
     return amsResponse;

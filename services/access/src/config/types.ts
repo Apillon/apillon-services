@@ -6,7 +6,7 @@ export enum DbTables {
   API_KEY_ROLE = 'apiKey_role',
   PERMISSION = 'permission',
   ROLE_PERMISSION = 'role_permission',
-  AUTH_TOKEN = 'auth_token',
+  AUTH_TOKEN = 'authToken',
 }
 
 /**
@@ -34,6 +34,7 @@ export enum AmsErrorCode {
   USER_UUID_NOT_PRESENT = 42202103,
   USER_UUID_ALREADY_EXISTS = 42202104,
   USER_PASSWORD_NOT_PRESENT = 42202105,
+  USER_AUTH_TOKEN_NOT_PRESENT = 42202106,
 
   // 400 - Bad request
   BAD_REQUEST = 40002001,
@@ -72,7 +73,7 @@ export enum JwtTokenType {
  * Authentication token data interface.
  */
 export interface AuthenticationTokenData {
-  userId: number | string;
+  id: number | string;
   email: string;
   wallet: string;
   user_uuid: number | string;
@@ -136,7 +137,7 @@ export type TokenData =
   | RequestUserRegisterTokenData;
 
 export enum TokenExpiresInStr {
-  EXPIRES_IN_STR = '1D', // Set to one day - for internal usage mostly
+  EXPIRES_IN_1_DAY = '1D', // Set to one day - for internal usage mostly
 }
 //#endregion
 

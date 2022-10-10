@@ -5,6 +5,7 @@ import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
 import { AuthUser } from './auth-user.model';
 import { AuthToken } from '../auth-token/auth-token.model';
 import { JwtUtils as Jwt } from '../../utils/jwt';
+import { TokenExpiresInStr } from '../../config/types';
 
 export class AuthUserService {
   static async register(event, context: ServiceContext) {
@@ -65,28 +66,30 @@ export class AuthUserService {
     }
 
     // Find old token
-    const oldToken = await new AuthToken().populateByUserAndType(
+    const oldToken = await new AuthToken({}, context).populateByUserAndType(
       authUser.user_uuid,
       JwtTokenType.USER_AUTHENTICATION,
     );
 
     if (oldToken.exists()) {
-      oldToken.populate({ status: SqlModelStatus.DELETED });
+      oldToken.status = SqlModelStatus.DELETED;
       await oldToken.update();
     }
 
     // Generate a new token with type USER_AUTH
     const token = new Jwt().generateToken(
       JwtTokenType.USER_AUTHENTICATION,
-      event,
+      authUser,
     );
 
     // Create new token in the database
-    const authToken = new AuthToken();
+    const authToken = new AuthToken({}, context);
+
     authToken.populate({
       token: token,
       user_uuid: authUser.user_uuid,
-      type: JwtTokenType.USER_AUTHENTICATION,
+      tokenType: JwtTokenType.USER_AUTHENTICATION,
+      expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
     });
 
     try {
@@ -136,6 +139,24 @@ export class AuthUserService {
     //   'secToken1',
     // );
 
+    if (!event.user_uuid) {
+      throw await new AmsCodeException({
+        status: 422,
+        code: AmsErrorCode.USER_UUID_NOT_PRESENT,
+      }).writeToMonitor({
+        userId: event?.user_uuid,
+      });
+    }
+
+    if (!event.auth_token) {
+      throw await new AmsCodeException({
+        status: 422,
+        code: AmsErrorCode.USER_AUTH_TOKEN_NOT_PRESENT,
+      }).writeToMonitor({
+        userId: event?.user_uuid,
+      });
+    }
+
     const authUser = await new AuthUser({}, context).populateByUserUuid(
       event.user_uuid,
     );
@@ -149,7 +170,25 @@ export class AuthUserService {
       });
     }
 
-    return authUser.serialize(SerializeFor.SERVICE);
+    // Find old token
+    const authToken = await new AuthToken({}, context).populateByUserAndType(
+      authUser.user_uuid,
+      JwtTokenType.USER_AUTHENTICATION,
+    );
+
+    if (!authToken.exists()) {
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.USER_AUTH_TOKEN_NOT_EXISTS,
+      }).writeToMonitor({
+        userId: event?.user_uuid,
+      });
+    }
+
+    return {
+      user: authUser.serialize(SerializeFor.SERVICE),
+      token: authToken.token,
+    };
   }
 
   static async updateAuthUser(event, context: ServiceContext) {

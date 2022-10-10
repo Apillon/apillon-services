@@ -1,9 +1,19 @@
 import { stringParser } from '@rawmodel/parsers';
-import { AdvancedSQLModel, PopulateFrom, prop, SerializeFor } from 'at-lib';
+import {
+  AdvancedSQLModel,
+  Context,
+  PopulateFrom,
+  prop,
+  SerializeFor,
+} from 'at-lib';
 import { DbTables } from '../../config/types';
 
 export class AuthToken extends AdvancedSQLModel {
   public readonly tableName = DbTables.AUTH_TOKEN;
+
+  public constructor(data: any, context: Context) {
+    super(data, context);
+  }
 
   /**
    * Token
@@ -34,6 +44,16 @@ export class AuthToken extends AdvancedSQLModel {
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
   })
   public expiresIn?: string;
+
+  /**
+   * Expires in (constant)
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    serializable: [SerializeFor.INSERT_DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
+  })
+  public tokenType: string;
 
   /**
    * Returns auth token by uuid

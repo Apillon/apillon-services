@@ -30,7 +30,7 @@ export class JwtUtils {
       case JwtTokenType.USER_AUTHENTICATION:
         data = data as AuthenticationTokenData;
 
-        if (!data.userId) {
+        if (!data.id) {
           return null;
         }
 
