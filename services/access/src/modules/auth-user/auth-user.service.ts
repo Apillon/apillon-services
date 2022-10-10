@@ -41,6 +41,41 @@ export class AuthUserService {
       }).writeToMonitor({ userId: authUser?.user_uuid });
     }
 
+    // Generate a new token with type USER_AUTH
+    const token = new Jwt().generateToken(
+      JwtTokenType.USER_AUTHENTICATION,
+      authUser,
+    );
+
+    // Create new token in the database
+    const authToken = new AuthToken({}, context);
+    const tokenData = {
+      token: token,
+      user_uuid: authUser.user_uuid,
+      tokenType: JwtTokenType.USER_AUTHENTICATION,
+      expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
+    };
+
+    authToken.populate({ ...tokenData }, PopulateFrom.SERVICE);
+
+    try {
+      await authToken.validate();
+    } catch (err) {
+      throw new AmsValidationException(authToken);
+    }
+
+    try {
+      await authToken.insert(SerializeFor.INSERT_DB, conn);
+
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+      throw await new AmsCodeException({
+        status: 500,
+        code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
+      }).writeToMonitor({ userId: authUser?.user_uuid });
+    }
+
     await new Lmas().writeLog(
       {
         logType: LogType.INFO,
@@ -140,16 +175,7 @@ export class AuthUserService {
     //   'secToken1',
     // );
 
-    if (!event.user_uuid) {
-      throw await new AmsCodeException({
-        status: 422,
-        code: AmsErrorCode.USER_UUID_NOT_PRESENT,
-      }).writeToMonitor({
-        userId: event?.user_uuid,
-      });
-    }
-
-    if (!event.auth_token) {
+    if (!event.token) {
       throw await new AmsCodeException({
         status: 422,
         code: AmsErrorCode.USER_AUTH_TOKEN_NOT_PRESENT,
@@ -158,8 +184,10 @@ export class AuthUserService {
       });
     }
 
+    const tokenData = new Jwt().parseAuthenticationToken(event.token);
+
     const authUser = await new AuthUser({}, context).populateByUserUuid(
-      event.user_uuid,
+      tokenData.user_uuid,
     );
 
     if (!authUser.exists()) {
@@ -173,34 +201,21 @@ export class AuthUserService {
 
     // Find old token
     const authToken = await new AuthToken({}, context).populateByUserAndType(
-      authUser.user_uuid,
+      tokenData.user_uuid,
       JwtTokenType.USER_AUTHENTICATION,
     );
 
-    // if (!authToken.exists()) {
-    //   throw await new AmsCodeException({
-    //     status: 400,
-    //     code: AmsErrorCode.USER_AUTH_TOKEN_NOT_EXISTS,
-    //   }).writeToMonitor({
-    //     userId: event?.user_uuid,
-    //   });
-    // }
-
-    // const tokenData = new Jwt().parseAuthenticationToken(event.token);
-
-    // console.log('TOKEN DATA ', tokenData);
-
-    // if (!tokenData || tokenData.user_uuid != authUser.user_uuid) {
-    //   throw await new AmsCodeException({
-    //     status: 403,
-    //     code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
-    //   }).writeToMonitor({
-    //     userId: event?.user_uuid,
-    //   });
-    // }
+    if (!authToken.exists()) {
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.USER_AUTH_TOKEN_NOT_EXISTS,
+      }).writeToMonitor({
+        userId: event?.user_uuid,
+      });
+    }
 
     return {
-      ...{},
+      ...tokenData,
     };
   }
 
@@ -288,5 +303,46 @@ export class AuthUserService {
         userId: event?.user_uuid,
       });
     }
+  }
+
+  static async _create_auth_token(user, context: ServiceContext) {
+    // Generate a new token with type USER_AUTH
+    const token = new Jwt().generateToken(
+      JwtTokenType.USER_AUTHENTICATION,
+      user,
+    );
+
+    // Create new token in the database
+    const authToken = new AuthToken({}, context);
+    const tokenData = {
+      token: token,
+      user_uuid: user.user_uuid,
+      tokenType: JwtTokenType.USER_AUTHENTICATION,
+      expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
+    };
+
+    authToken.populate({ ...tokenData }, PopulateFrom.SERVICE);
+
+    try {
+      await authToken.validate();
+    } catch (err) {
+      throw new AmsValidationException(authToken);
+    }
+
+    const conn = await context.mysql.start();
+
+    try {
+      await authToken.insert(SerializeFor.INSERT_DB, conn);
+
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+      throw await new AmsCodeException({
+        status: 500,
+        code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
+      }).writeToMonitor({ userId: user?.user_uuid });
+    }
+
+    return authToken;
   }
 }

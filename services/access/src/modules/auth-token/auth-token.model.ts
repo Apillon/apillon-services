@@ -63,7 +63,9 @@ export class AuthToken extends AdvancedSQLModel {
       `
         SELECT *
         FROM \`${DbTables.AUTH_TOKEN}\` at
-        WHERE at.user_uuid = @user_uuid AND at.tokenType = @tokenType
+        WHERE at.user_uuid = @user_uuid 
+          AND at.tokenType = @tokenType
+          AND at.status = 5
         LIMIT 1
         `,
       { user_uuid, tokenType },

@@ -1,3 +1,4 @@
+import { ConfigurationServicePlaceholders } from 'aws-sdk/lib/config_service_placeholders';
 import { env } from '../../config/env';
 import { AmsEventType } from '../../config/types';
 import { BaseService } from './base-service';

@@ -13,19 +13,22 @@ export class DevConsoleApiContext extends Context {
    * @param token Authentication token.
    */
   async authenticate(token: string) {
-    const tokenData = new Ams().getAuthUser({ token: token });
+    const tokenData = await new Ams().getAuthUser({ token: token });
 
-    console.log('TOKEN DATA ', tokenData);
+    console.log('TOKEN DATA ', tokenData.data.user_uuid);
 
     this.user = null;
-    if (tokenData && tokenData.userId && !isNaN(Number(tokenData.userId))) {
-      const user = await new User({}, this).populateById(
-        Number(tokenData.userId),
+    if (tokenData && tokenData.data.user_uuid) {
+      const user = await new User({}, this).populateByUUID(
+        this,
+        tokenData.data.user_uuid,
       );
 
       if (user.exists()) {
         this.user = user;
       }
     }
+
+    console.log('LOGGED AS ... ', this.user.user_uuid);
   }
 }

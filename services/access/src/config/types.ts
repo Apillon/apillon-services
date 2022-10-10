@@ -76,7 +76,7 @@ export interface AuthenticationTokenData {
   id: number | string;
   email: string;
   wallet: string;
-  user_uuid: number | string;
+  user_uuid: string;
   authUserRoles: string;
   status: number;
 }
