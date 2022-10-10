@@ -4,6 +4,7 @@
 
 import { AppEnvironment, env } from 'at-lib';
 import * as Net from 'net';
+import { handler } from './handler';
 
 const port = env.AT_STORAGE_SOCKET_PORT;
 
@@ -16,11 +17,11 @@ function startDevServer() {
         )}`,
       );
       try {
-        /*const result = await handler(JSON.parse(chunk.toString()), {} as any);
+        const result = await handler(JSON.parse(chunk.toString()), {} as any);
         if (result) {
           socket.write(JSON.stringify(result));
           console.log(`IPFS Socket server response: ${result.toString()}`);
-        }*/
+        }
         socket.end();
         console.log(`IPFS Socket server finished with no response.`);
       } catch (err) {

@@ -43,7 +43,6 @@
     "@types/uuid": "^8.3.4",
     "at-lib": "*",
     "aws-serverless-express": "^3.4.0",
-    "ipfs-core": "^0.14.3",
     "ipfs-http-client": "^56.0.3",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",

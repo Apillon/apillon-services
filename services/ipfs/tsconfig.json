@@ -1,19 +1,9 @@
 {
+  "extends": "tsconfig/service.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src",
-    "target": "es2020",
-    "lib": [
-      "es2020", "DOM"
-    ],
-    "module": "NodeNext", // (A)
-    "moduleResolution": "Node", // (B)
-    "sourceMap": true,
-    // Needed for CommonJS modules
-    "allowSyntheticDefaultImports": true, // (C)
-    //
-    "declaration": true,
+    "rootDir": "./src"
   },
-  "include": ["./src/**/*.ts", "**/*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules", "dist"]
 }
