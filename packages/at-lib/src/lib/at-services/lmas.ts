@@ -1,13 +1,24 @@
 import { env } from '../../config/env';
-import { LmasEventType, LogType, ServiceName } from '../../config/types';
+import {
+  AppEnvironment,
+  LmasEventType,
+  LogType,
+  ServiceName,
+} from '../../config/types';
 import { BaseService } from './base-service';
 
 /**
  * Logging / Monitoring / Alerting Service client
  */
 export class Lmas extends BaseService {
-  lambdaFunctionName = env.AT_LMAS_FUNCTION_NAME;
-  devPort = env.AT_LMAS_SOCKET_PORT;
+  lambdaFunctionName =
+    env.APP_ENV === AppEnvironment.TEST
+      ? env.AT_LMAS_FUNCTION_NAME_TEST
+      : env.AT_LMAS_FUNCTION_NAME;
+  devPort =
+    env.APP_ENV === AppEnvironment.TEST
+      ? env.AT_LMAS_SOCKET_PORT_TEST
+      : env.AT_LMAS_SOCKET_PORT;
   serviceName = 'LMAS';
 
   constructor() {

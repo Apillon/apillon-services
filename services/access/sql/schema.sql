@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS `apiKey` (
   `updateTime` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `updateUser` INT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE INDEX `key_UNIQUE` (`key` ASC) VISIBLE);
+  UNIQUE INDEX `key_UNIQUE` (`apiKey` ASC) VISIBLE);
 
 
 -- -----------------------------------------------------

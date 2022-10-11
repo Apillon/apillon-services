@@ -14,7 +14,7 @@
     "prebuild": "rimraf dist",
     "build": "tsc --declarationMap",
     "dev": "tsc -w --declarationMap",
-    "test": "jest --passWithNoTests",
+    "test:unit": "jest --passWithNoTests",
     "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
   },
   "devDependencies": {
