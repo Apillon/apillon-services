@@ -304,45 +304,4 @@ export class AuthUserService {
       });
     }
   }
-
-  static async _create_auth_token(user, context: ServiceContext) {
-    // Generate a new token with type USER_AUTH
-    const token = new Jwt().generateToken(
-      JwtTokenType.USER_AUTHENTICATION,
-      user,
-    );
-
-    // Create new token in the database
-    const authToken = new AuthToken({}, context);
-    const tokenData = {
-      token: token,
-      user_uuid: user.user_uuid,
-      tokenType: JwtTokenType.USER_AUTHENTICATION,
-      expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
-    };
-
-    authToken.populate({ ...tokenData }, PopulateFrom.SERVICE);
-
-    try {
-      await authToken.validate();
-    } catch (err) {
-      throw new AmsValidationException(authToken);
-    }
-
-    const conn = await context.mysql.start();
-
-    try {
-      await authToken.insert(SerializeFor.INSERT_DB, conn);
-
-      await context.mysql.commit(conn);
-    } catch (err) {
-      await context.mysql.rollback(conn);
-      throw await new AmsCodeException({
-        status: 500,
-        code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
-      }).writeToMonitor({ userId: user?.user_uuid });
-    }
-
-    return authToken;
-  }
 }
