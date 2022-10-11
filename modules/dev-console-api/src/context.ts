@@ -15,8 +15,6 @@ export class DevConsoleApiContext extends Context {
   async authenticate(token: string) {
     const tokenData = await new Ams().getAuthUser({ token: token });
 
-    console.log('TOKEN DATA ', tokenData.data.user_uuid);
-
     this.user = null;
     if (tokenData && tokenData.data.user_uuid) {
       const user = await new User({}, this).populateByUUID(
@@ -26,9 +24,9 @@ export class DevConsoleApiContext extends Context {
 
       if (user.exists()) {
         this.user = user;
+      } else {
+        // TODO: Trigger some exception to FR?
       }
     }
-
-    console.log('LOGGED AS ... ', this.user.user_uuid);
   }
 }
