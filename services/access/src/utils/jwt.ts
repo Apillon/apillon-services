@@ -160,12 +160,12 @@ export class JwtUtils {
    * @param context Application context.
    */
   public parseAuthenticationToken(token: string): AuthenticationTokenData {
-    const userId = jwt.verify(token, env.APP_SECRET, {
+    const userData = jwt.verify(token, env.APP_SECRET, {
       subject: JwtTokenType.USER_AUTHENTICATION,
     }) as any;
 
-    if (userId) {
-      return { ...userId };
+    if (userData) {
+      return { ...userData };
     } else {
       return null;
     }
