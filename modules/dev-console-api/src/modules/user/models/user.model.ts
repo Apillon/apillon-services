@@ -93,36 +93,3 @@ export class User extends AdvancedSQLModel {
     return this.reset();
   }
 }
-// /**
-//  * email
-//  */
-// @prop({
-//   parser: { resolver: stringParser() },
-//   populatable: [
-//     PopulateFrom.DB, //
-//     PopulateFrom.SERVICE,
-//   ],
-//   serializable: [
-//     SerializeFor.ADMIN,
-//     SerializeFor.INSERT_DB,
-//     SerializeFor.SERVICE,
-//   ],
-//   setter(v) {
-//     return v ? v.toLowerCase().replace(' ', '') : v;
-//   },
-//   validators: [
-//     {
-//       resolver: presenceValidator(),
-//       code: ValidatorErrorCode.USER_EMAIL_NOT_PRESENT,
-//     },
-//     {
-//       resolver: emailValidator(),
-//       code: ValidatorErrorCode.USER_EMAIL_NOT_VALID,
-//     },
-//     {
-//       resolver: uniqueFieldValue('user', 'email'),
-//       code: ValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
-//     },
-//   ],
-// })
-// public email: string;

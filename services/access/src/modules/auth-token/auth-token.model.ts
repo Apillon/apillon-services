@@ -2,6 +2,7 @@ import { stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
   Context,
+  PoolConnection,
   PopulateFrom,
   presenceValidator,
   prop,
@@ -51,12 +52,14 @@ export class AuthToken extends AdvancedSQLModel {
     parser: { resolver: stringParser() },
     serializable: [SerializeFor.INSERT_DB],
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: AmsErrorCode.USER_AUTH_TOKEN_EXPIRES_IN_NOT_PRESENT,
-      },
-    ],
+    // TODO: Check what happens if token == null OR token == undefined
+    // Uncomment block if needed
+    // validators: [
+    //   {
+    //     resolver: presenceValidator(),
+    //     code: AmsErrorCode.USER_AUTH_TOKEN_EXPIRES_IN_NOT_PRESENT,
+    //   },
+    // ],
   })
   public expiresIn?: string;
 
@@ -83,7 +86,11 @@ export class AuthToken extends AdvancedSQLModel {
   /**
    * Returns auth token by uuid
    */
-  public async populateByUserAndType(user_uuid: string, tokenType: string) {
+  public async populateByUserAndType(
+    user_uuid: string,
+    tokenType: string,
+    conn?: PoolConnection,
+  ) {
     const data = await this.db().paramExecute(
       `
         SELECT *
@@ -94,6 +101,7 @@ export class AuthToken extends AdvancedSQLModel {
         LIMIT 1
         `,
       { user_uuid, tokenType },
+      conn,
     );
 
     if (data && data.length) {

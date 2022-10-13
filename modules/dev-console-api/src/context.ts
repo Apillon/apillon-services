@@ -24,8 +24,6 @@ export class DevConsoleApiContext extends Context {
 
       if (user.exists()) {
         this.user = user;
-      } else {
-        this.user = null;
       }
     }
   }

@@ -52,6 +52,7 @@ export class AuthUserService {
       try {
         await authToken.validate();
       } catch (err) {
+        console.log('Exception occured when validating auth token - ', err);
         throw new AmsValidationException(authToken);
       }
 
@@ -79,6 +80,9 @@ export class AuthUserService {
   }
 
   static async login(event, context: ServiceContext) {
+    // Start connection to database at the beginning of the function
+    const conn = await context.mysql.start();
+
     const authUser = await new AuthUser({}, context).populateByEmail(
       event.email,
     );
@@ -87,17 +91,6 @@ export class AuthUserService {
         status: 401,
         code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
       }).writeToMonitor({ userId: authUser?.user_uuid });
-    }
-
-    // Find old token
-    const oldToken = await new AuthToken({}, context).populateByUserAndType(
-      authUser.user_uuid,
-      JwtTokenType.USER_AUTHENTICATION,
-    );
-
-    if (oldToken.exists()) {
-      oldToken.status = SqlModelStatus.DELETED;
-      await oldToken.update(SerializeFor.UPDATE_DB);
     }
 
     // Generate a new token with type USER_AUTH
@@ -123,9 +116,19 @@ export class AuthUserService {
       throw new AmsValidationException(authToken);
     }
 
-    const conn = await context.mysql.start();
-
     try {
+      // Find old token
+      const oldToken = await new AuthToken({}, context).populateByUserAndType(
+        authUser.user_uuid,
+        JwtTokenType.USER_AUTHENTICATION,
+        conn,
+      );
+
+      if (oldToken.exists()) {
+        oldToken.status = SqlModelStatus.DELETED;
+        await oldToken.update(SerializeFor.UPDATE_DB, conn);
+      }
+
       await authToken.insert(SerializeFor.INSERT_DB, conn);
 
       await context.mysql.commit(conn);

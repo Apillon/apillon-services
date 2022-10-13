@@ -139,7 +139,7 @@ export type TokenData =
   | RequestUserRegisterTokenData;
 
 export enum TokenExpiresInStr {
-  EXPIRES_IN_1_DAY = '1D', // Set to one day - for internal usage mostly
+  EXPIRES_IN_1_DAY = '1d', // Set to one day - for internal usage mostly
 }
 //#endregion
 
