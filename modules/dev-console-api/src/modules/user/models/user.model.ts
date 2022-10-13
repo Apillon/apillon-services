@@ -1,16 +1,14 @@
 /* eslint-disable @typescript-eslint/member-ordering */
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
-import { emailValidator, presenceValidator } from '@rawmodel/validators';
 import {
   AdvancedSQLModel,
   PopulateFrom,
+  presenceValidator,
   SerializeFor,
-  uniqueFieldValue,
 } from 'at-lib';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
-import { ProjectUserInviteDto } from '../../project/dtos/project_user-invite.dto';
-import { v4 as uuidv4 } from 'uuid';
+import { DevConsoleApiContext } from '../../../context';
 
 /**
  * User model.
@@ -57,9 +55,6 @@ export class User extends AdvancedSQLModel {
         code: ValidatorErrorCode.USER_UUID_NOT_PRESENT,
       },
     ],
-    defaultValue: () => uuidv4(),
-    // emptyValue: uuidv4(),
-    fakeValue: () => uuidv4(),
   })
   public user_uuid: string;
 
@@ -80,37 +75,21 @@ export class User extends AdvancedSQLModel {
   })
   public phone: string;
 
-  // /**
-  //  * email
-  //  */
-  // @prop({
-  //   parser: { resolver: stringParser() },
-  //   populatable: [
-  //     PopulateFrom.DB, //
-  //     PopulateFrom.SERVICE,
-  //   ],
-  //   serializable: [
-  //     SerializeFor.ADMIN,
-  //     SerializeFor.INSERT_DB,
-  //     SerializeFor.SERVICE,
-  //   ],
-  //   setter(v) {
-  //     return v ? v.toLowerCase().replace(' ', '') : v;
-  //   },
-  //   validators: [
-  //     {
-  //       resolver: presenceValidator(),
-  //       code: ValidatorErrorCode.USER_EMAIL_NOT_PRESENT,
-  //     },
-  //     {
-  //       resolver: emailValidator(),
-  //       code: ValidatorErrorCode.USER_EMAIL_NOT_VALID,
-  //     },
-  //     {
-  //       resolver: uniqueFieldValue('user', 'email'),
-  //       code: ValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
-  //     },
-  //   ],
-  // })
-  // public email: string;
+  public async populateByUUID(
+    context: DevConsoleApiContext,
+    user_uuid: string,
+  ) {
+    const data = await context.mysql.paramExecute(
+      `
+        SELECT *
+        FROM \`${DbTables.USER}\` u
+        WHERE u.user_uuid = @user_uuid
+      `,
+      { user_uuid },
+    );
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    }
+    return this.reset();
+  }
 }

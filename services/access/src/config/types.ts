@@ -6,6 +6,7 @@ export enum DbTables {
   API_KEY_ROLE = 'apiKey_role',
   PERMISSION = 'permission',
   ROLE_PERMISSION = 'role_permission',
+  AUTH_TOKEN = 'authToken',
 }
 
 /**
@@ -33,11 +34,15 @@ export enum AmsErrorCode {
   USER_UUID_NOT_PRESENT = 42202103,
   USER_UUID_ALREADY_EXISTS = 42202104,
   USER_PASSWORD_NOT_PRESENT = 42202105,
+  USER_AUTH_TOKEN_NOT_PRESENT = 42202106,
+  USER_AUTH_TOKEN_EXPIRES_IN_NOT_PRESENT = 42202107,
+  USER_AUTH_TOKEN_TYPE_NOT_PRESENT = 42202108,
 
   // 400 - Bad request
   BAD_REQUEST = 40002001,
   USER_DOES_NOT_EXISTS = 40002100,
   USER_ALREADY_REGISTERED = 40002101,
+  USER_AUTH_TOKEN_NOT_EXISTS = 40002200,
 
   // 401 - Unauthorized (Not authenticated)
   USER_IS_NOT_AUTHENTICATED = 40102100,
@@ -49,3 +54,101 @@ export enum AmsErrorCode {
   ERROR_WRITING_TO_DATABASE = 50002001,
   ERROR_READING_FROM_DATABASE = 50002002,
 }
+
+//#region JWT Token types
+
+/**
+ * JWT Token signing types.
+ */
+export enum JwtTokenType {
+  USER_AUTHENTICATION = 'USER_AUTHENTICATION',
+  USER_TEMP_LOGIN = 'USER_TEMP_LOGIN',
+  USER_RESET_PASSWORD = 'USER_RESET_PASSWORD',
+  USER_RESET_EMAIL = 'USER_RESET_EMAIL',
+  USER_CONFIRM_EMAIL = 'USER_CONFIRM_EMAIL',
+  ADMIN_MFA_LOGIN = 'ADMIN_MFA_LOGIN',
+  USER_REGISTER = 'USER_REGISTER',
+  USER_WELCOME = 'USER_WELCOME',
+}
+
+/**
+ * Authentication token data interface.
+ */
+export interface AuthenticationTokenData {
+  id: number | string;
+  email: string;
+  wallet: string;
+  user_uuid: string;
+  authUserRoles: string;
+  status: number;
+}
+
+/**
+ * Reset user's password token data interface.
+ */
+export interface ResetUserPasswordTokenData {
+  email: string;
+}
+
+/**
+ * Reset user's email token data interface.
+ */
+export interface ResetUserEmailTokenData {
+  userId: number;
+  email: string;
+  email2: string;
+  secondary: boolean;
+}
+
+/**
+ * Confirm user's email token data interface.
+ */
+export interface ConfirmUserEmailTokenData {
+  email: string;
+}
+
+/**
+ * Confirm user's email token data interface.
+ */
+export interface MFAAuthenticationTokenData {
+  userId: number;
+}
+/**
+ * Register user token data interface.
+ */
+export interface RequestUserRegisterTokenData {
+  email: string;
+}
+
+/**
+ * Welcome email token data interface
+ */
+export interface UserWelcomeTokenData {
+  user_id: number;
+}
+
+/**
+ * Token data definition.
+ */
+export type TokenData =
+  | UserWelcomeTokenData
+  | AuthenticationTokenData
+  | ResetUserPasswordTokenData
+  | ResetUserEmailTokenData
+  | MFAAuthenticationTokenData
+  | RequestUserRegisterTokenData;
+
+export enum TokenExpiresInStr {
+  EXPIRES_IN_1_DAY = '1d', // Set to one day - for internal usage mostly
+}
+//#endregion
+
+//#region SQL stuff - TODO: Should be streamlined? This is part of the SQL lib, not access
+export enum SqlModelStatus {
+  DRAFT = 1,
+  INCOMPLETE = 2,
+  ACTIVE = 5,
+  DELETED = 9,
+}
+
+//#endregion

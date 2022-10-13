@@ -145,8 +145,8 @@ export class Instruction extends AdvancedSQLModel {
 
     if (data && data.length) {
       return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
     }
+
+    return this.reset();
   }
 }

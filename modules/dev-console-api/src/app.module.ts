@@ -9,6 +9,7 @@ import { ProjectModule } from './modules/project/project.module';
 import { UserModule } from './modules/user/user.module';
 import { InstructionModule } from './modules/instruction/instruction.module';
 import { ServicesModule } from './modules/services/services.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ServicesModule } from './modules/services/services.module';
     FileModule,
     ServicesModule,
     InstructionModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

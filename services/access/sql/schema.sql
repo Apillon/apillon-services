@@ -153,6 +153,21 @@ CREATE TABLE IF NOT EXISTS `apiKey_role` (
     ON DELETE CASCADE
     ON UPDATE NO ACTION);
 
+-- -----------------------------------------------------
+-- Table `authToken`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `authToken` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `token` TEXT NOT NULL,
+  `user_uuid` VARCHAR(36) NOT NULL,
+  `tokenType` VARCHAR(30) NOT NULL,
+  `expiresIn` VARCHAR(5) NOT NULL DEFAULT '1d',
+  `status` INT NULL,
+  `createTime` DATETIME NULL,
+  `createUser` INT NULL,
+  `updateTime` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updateUser` INT NULL,
+  PRIMARY KEY (`id`));
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;

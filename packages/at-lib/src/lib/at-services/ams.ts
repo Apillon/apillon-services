@@ -14,7 +14,7 @@ export class Ams extends BaseService {
     env.APP_ENV === AppEnvironment.TEST
       ? env.AT_AMS_SOCKET_PORT_TEST
       : env.AT_AMS_SOCKET_PORT;
-  serviceName = 'LMAS';
+  serviceName = 'AMS';
   private securityToken: string;
 
   constructor() {
@@ -23,10 +23,7 @@ export class Ams extends BaseService {
     this.securityToken = this.generateSecurityToken();
   }
 
-  public async getAuthUser(params: {
-    user_uuid: string;
-    project_uuid: string;
-  }) {
+  public async getAuthUser(params: { token: string }) {
     const data = {
       eventName: AmsEventType.USER_GET_AUTH,
       ...params,
@@ -35,9 +32,10 @@ export class Ams extends BaseService {
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
     const amsResponse = await this.callService(data);
-    //TODO: do something with AMS response?
 
-    return amsResponse;
+    return {
+      ...amsResponse,
+    };
   }
 
   public async register(params: {
@@ -69,9 +67,10 @@ export class Ams extends BaseService {
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
     const amsResponse = await this.callService(data);
-    //TODO: do something with AMS response?
 
-    return amsResponse;
+    return {
+      ...amsResponse,
+    };
   }
 
   public async resetPassword(params: { user_uuid: string; password: string }) {
@@ -108,6 +107,8 @@ export class Ams extends BaseService {
   }
 
   private generateSecurityToken() {
+    // NOTE - Rename as not to be confused with JwtUtils().generateToken
+    // NOTE2 - This should probably be a util function somewhere outside this file?
     //TODO - generate JWT from APP secret
     return 'SecurityToken';
   }

@@ -9,8 +9,7 @@ export class AppService {
 
   async callAuthService() {
     const resp = await new Ams().getAuthUser({
-      user_uuid: '492b6c65-343b-11ed-96a4-02420a000705',
-      project_uuid: '',
+      token: 'Tralala',
     });
     console.log(resp);
     return resp;

@@ -6,6 +6,7 @@ export enum AmsEventType {
   USER_PASSWORD_RESET = 'user-password-reset',
   USER_ROLE_ASSIGN = 'user-role-assign',
   USER_ROLE_REMOVE = 'user-role-remove',
+  AUTH_TOKEN_CREATE_UPDATE_TOKEN = 'auth-token-create-update-token',
 }
 
 export enum LmasEventType {
@@ -171,86 +172,6 @@ export enum BadRequestErrorCode {
   DEFAULT_ROUTE_ERROR_CODE = 400000,
   INVALID_PATH = 400001,
 }
-
-//#endregion
-
-//#region JWT Token types
-
-/**
- * JWT Token signing types.
- */
-export enum JwtTokenType {
-  USER_AUTHENTICATION = 'USER_AUTHENTICATION',
-  USER_TEMP_LOGIN = 'USER_TEMP_LOGIN',
-  USER_RESET_PASSWORD = 'USER_RESET_PASSWORD',
-  USER_RESET_EMAIL = 'USER_RESET_EMAIL',
-  USER_CONFIRM_EMAIL = 'USER_CONFIRM_EMAIL',
-  ADMIN_MFA_LOGIN = 'ADMIN_MFA_LOGIN',
-  USER_REGISTER = 'USER_REGISTER',
-  USER_WELCOME = 'USER_WELCOME',
-}
-
-/**
- * Authentication token data interface.
- */
-export interface AuthenticationTokenData {
-  userId: number | string;
-}
-
-/**
- * Reset user's password token data interface.
- */
-export interface ResetUserPasswordTokenData {
-  email: string;
-}
-
-/**
- * Reset user's email token data interface.
- */
-export interface ResetUserEmailTokenData {
-  userId: number;
-  email: string;
-  email2: string;
-  secondary: boolean;
-}
-
-/**
- * Confirm user's email token data interface.
- */
-export interface ConfirmUserEmailTokenData {
-  email: string;
-}
-
-/**
- * Confirm user's email token data interface.
- */
-export interface MFAAuthenticationTokenData {
-  userId: number;
-}
-/**
- * Register user token data interface.
- */
-export interface RequestUserRegisterTokenData {
-  email: string;
-}
-
-/**
- * Welcome email token data interface
- */
-export interface UserWelcomeTokenData {
-  user_id: number;
-}
-
-/**
- * Token data definition.
- */
-export type TokenData =
-  | UserWelcomeTokenData
-  | AuthenticationTokenData
-  | ResetUserPasswordTokenData
-  | ResetUserEmailTokenData
-  | MFAAuthenticationTokenData
-  | RequestUserRegisterTokenData;
 
 //#endregion
 
