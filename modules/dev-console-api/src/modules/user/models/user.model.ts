@@ -1,8 +1,13 @@
 /* eslint-disable @typescript-eslint/member-ordering */
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
-import { AdvancedSQLModel, PopulateFrom, SerializeFor } from 'at-lib';
-import { DbTables } from '../../../config/types';
+import {
+  AdvancedSQLModel,
+  PopulateFrom,
+  presenceValidator,
+  SerializeFor,
+} from 'at-lib';
+import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
 
 /**
@@ -43,6 +48,12 @@ export class User extends AdvancedSQLModel {
     serializable: [
       SerializeFor.INSERT_DB, //
       SerializeFor.ADMIN,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.USER_UUID_NOT_PRESENT,
+      },
     ],
   })
   public user_uuid: string;

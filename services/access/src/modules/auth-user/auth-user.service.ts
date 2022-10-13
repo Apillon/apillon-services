@@ -32,41 +32,30 @@ export class AuthUserService {
       await authUser.insert(SerializeFor.INSERT_DB, conn);
       await authUser.setDefaultRole(conn);
 
-      await context.mysql.commit(conn);
-    } catch (err) {
-      await context.mysql.rollback(conn);
-      throw await new AmsCodeException({
-        status: 500,
-        code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
-      }).writeToMonitor({ userId: authUser?.user_uuid });
-    }
+      // Generate a new token with type USER_AUTH
+      const token = new Jwt().generateToken(
+        JwtTokenType.USER_AUTHENTICATION,
+        authUser,
+      );
 
-    // Generate a new token with type USER_AUTH
-    const token = new Jwt().generateToken(
-      JwtTokenType.USER_AUTHENTICATION,
-      authUser,
-    );
+      // Create new token in the database
+      const authToken = new AuthToken({}, context);
+      const tokenData = {
+        token: token,
+        user_uuid: authUser.user_uuid,
+        tokenType: JwtTokenType.USER_AUTHENTICATION,
+        expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
+      };
 
-    // Create new token in the database
-    const authToken = new AuthToken({}, context);
-    const tokenData = {
-      token: token,
-      user_uuid: authUser.user_uuid,
-      tokenType: JwtTokenType.USER_AUTHENTICATION,
-      expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
-    };
+      authToken.populate({ ...tokenData }, PopulateFrom.SERVICE);
 
-    authToken.populate({ ...tokenData }, PopulateFrom.SERVICE);
+      try {
+        await authToken.validate();
+      } catch (err) {
+        throw new AmsValidationException(authToken);
+      }
 
-    try {
-      await authToken.validate();
-    } catch (err) {
-      throw new AmsValidationException(authToken);
-    }
-
-    try {
       await authToken.insert(SerializeFor.INSERT_DB, conn);
-
       await context.mysql.commit(conn);
     } catch (err) {
       await context.mysql.rollback(conn);

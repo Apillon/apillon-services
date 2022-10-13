@@ -3,10 +3,11 @@ import {
   AdvancedSQLModel,
   Context,
   PopulateFrom,
+  presenceValidator,
   prop,
   SerializeFor,
 } from 'at-lib';
-import { DbTables } from '../../config/types';
+import { AmsErrorCode, DbTables } from '../../config/types';
 
 export class AuthToken extends AdvancedSQLModel {
   public readonly tableName = DbTables.AUTH_TOKEN;
@@ -18,6 +19,12 @@ export class AuthToken extends AdvancedSQLModel {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
     serializable: [SerializeFor.INSERT_DB],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: AmsErrorCode.USER_AUTH_TOKEN_NOT_PRESENT,
+      },
+    ],
   })
   public token: string;
 
@@ -28,6 +35,12 @@ export class AuthToken extends AdvancedSQLModel {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
     serializable: [SerializeFor.INSERT_DB],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: AmsErrorCode.USER_UUID_NOT_PRESENT,
+      },
+    ],
   })
   public user_uuid: string;
 
@@ -38,6 +51,12 @@ export class AuthToken extends AdvancedSQLModel {
     parser: { resolver: stringParser() },
     serializable: [SerializeFor.INSERT_DB],
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: AmsErrorCode.USER_AUTH_TOKEN_EXPIRES_IN_NOT_PRESENT,
+      },
+    ],
   })
   public expiresIn?: string;
 
@@ -48,6 +67,12 @@ export class AuthToken extends AdvancedSQLModel {
     parser: { resolver: stringParser() },
     serializable: [SerializeFor.INSERT_DB],
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: AmsErrorCode.USER_AUTH_TOKEN_TYPE_NOT_PRESENT,
+      },
+    ],
   })
   public tokenType: string;
 
