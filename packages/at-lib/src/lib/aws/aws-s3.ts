@@ -125,6 +125,29 @@ export class AWS_S3 {
   }
 
   /**
+   * Retrieves S3 directory.
+   * @param source File source path.
+   * @param ctx Request context.
+   */
+  listBucket(bucket: string): Promise<aws.S3.ListObjectsOutput> {
+    return new Promise((resolve, reject) => {
+      this.s3Client.listObjects(
+        {
+          Bucket: bucket,
+        },
+        (err, data) => {
+          if (err) {
+            console.error(err);
+            reject(err);
+          } else {
+            resolve(data);
+          }
+        },
+      );
+    });
+  }
+
+  /**
    * Removes S3 file.
    * @param source File source path.
    * @param ctx Request context.

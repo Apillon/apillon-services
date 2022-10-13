@@ -1,6 +1,6 @@
 import { Context } from 'at-lib';
 
-export class DevSDKApiContext extends Context {
+export class ApillonApiContext extends Context {
   /**
    * Authenticates user based on received authentication token. Call AMS service
    * @param token Authentication token.

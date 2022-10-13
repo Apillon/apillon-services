@@ -106,7 +106,10 @@ export interface IEnv {
   DEFAULT_PAGE_SIZE: number;
 
   AT_STORAGE_FUNCTION_NAME: string;
+  AT_STORAGE_FUNCTION_NAME_TEST: string;
   AT_STORAGE_SOCKET_PORT: number;
+  AT_STORAGE_SOCKET_PORT_TEST: number;
+  AT_STORAGE_CRUST_SEED_PHRASE: string;
 }
 
 // dotenv.config();
@@ -188,9 +191,14 @@ export let env: IEnv = {
   /** SQL UTILS */
   DEFAULT_PAGE_SIZE: parseInt(process.env['DEFAULT_PAGE_SIZE']) || 20,
 
-  AT_STORAGE_FUNCTION_NAME: 'at-v2-storage-service-dev',
+  /**STORAGE microservice */
+  AT_STORAGE_FUNCTION_NAME: 'AT_STORAGE_FUNCTION_NAME',
+  AT_STORAGE_FUNCTION_NAME_TEST: 'AT_STORAGE_FUNCTION_NAME_TEST',
   AT_STORAGE_SOCKET_PORT:
     parseInt(process.env['AT_STORAGE_SOCKET_PORT']) || 6301,
+  AT_STORAGE_SOCKET_PORT_TEST:
+    parseInt(process.env['AT_STORAGE_SOCKET_PORT_TEST']) || 7301,
+  AT_STORAGE_CRUST_SEED_PHRASE: process.env['AT_STORAGE_CRUST_SEED_PHRASE'],
 };
 
 export let isEnvReady = false;

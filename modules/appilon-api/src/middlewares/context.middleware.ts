@@ -1,10 +1,10 @@
-import { DevSDKApiContext } from '../context';
+import { ApillonApiContext } from '../context';
 import { Inject, Injectable, NestMiddleware } from '@nestjs/common';
 import type { Request } from 'express';
 import { MySql } from 'at-lib';
 
 export interface IRequest extends Request {
-  context: DevSDKApiContext;
+  context: ApillonApiContext;
   query: { [key: string]: undefined | string };
 }
 
@@ -19,7 +19,7 @@ export class ContextMiddleware implements NestMiddleware {
   ) {}
 
   use(req: IRequest, res, next) {
-    req.context = new DevSDKApiContext();
+    req.context = new ApillonApiContext();
     next();
   }
 }

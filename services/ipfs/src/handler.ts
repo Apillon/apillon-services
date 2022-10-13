@@ -1,6 +1,6 @@
 import middy from '@middy/core';
 import { Callback, Context, Handler } from 'aws-lambda/handler';
-import { processEvent } from './main.js';
+import { processEvent } from './main';
 
 const lambdaHandler: Handler = async (
   event: any,

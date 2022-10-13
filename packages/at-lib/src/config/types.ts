@@ -16,6 +16,10 @@ export enum LmasEventType {
 
 export enum StorageEventType {
   ADD_FILE_TO_IPFS = 'add-file-to-ipfs',
+  ADD_FILE_TO_IPFS_FROM_S3 = 'add-file-to-ipfs-from-s3',
+  GET_OBJECT_FROM_IPFS = 'get-object-from-ipfs',
+  LIST_IPFS_DIRECTORY = 'list-ipfs-directory',
+  PLACE_STORAGE_ORDER_TO_CRUST = 'place-storage-order-to-crust',
 }
 
 export enum ServiceName {
@@ -31,6 +35,8 @@ export enum ServiceCode {
   AMS = '02',
   LMAS = '03',
   DEV_CONSOLE = '04',
+  APILLON_API = '05',
+  STORAGE = '06',
 }
 
 export enum AppEnvironment {
@@ -141,6 +147,8 @@ export enum DefaultApiKeyRole {
  *  02 - ams
  *  03 - lmas
  *  04 - dev-api
+ *  05 - apillon-api
+ *  06 - storage
  *  ...
  *  INTERNAL ERROR CODE: 000 - 999
  *

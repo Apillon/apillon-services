@@ -1,34 +1,149 @@
+import { AWS_S3, CodeException, env, SystemErrorCode } from 'at-lib';
+import { S3ArtifactLocation } from 'aws-lambda';
 import { CID, create } from 'ipfs-http-client';
+import { ResourceNotFoundErrorCode } from '../config/types';
+import { CrustService } from './crust.service';
 
 export class IPFSService {
-  static async uploadFilesToIPFS(): Promise<CID[]> {
-    // connect to a different API
-    const client = create({ url: 'http://127.0.0.1:5001/api/v0' });
+  static async createIPFSClient() {
+    //Local IPFS node
+    //return create({ url: 'http://127.0.0.1:5001/api/v0' });
+
+    //CRUST Gateway
+    return await CrustService.createIPFSClient();
+  }
+
+  static async uploadFilesToIPFS(params: { files: any[] }): Promise<any> {
+    //Get IPFS client
+    const client = await IPFSService.createIPFSClient();
+
+    for (const file of params.files) {
+      // call Core API methods
+      file.content = Buffer.from(file.content, 'base64');
+      //console.log('file, added to IPFS', file.content);
+
+      const filesOnIPFS = await client.add(file);
+      file.cidV0 = filesOnIPFS.cid.toV0().toString();
+      file.cidV1 = filesOnIPFS.cid.toV1().toString();
+    }
+
+    return { success: true, data: params.files };
+  }
+
+  static async uploadDirectoryToIPFS(): Promise<any> {
+    //Get IPFS client
+    const client = await IPFSService.createIPFSClient();
 
     //Methods, that are available in client instance: https://github.com/ipfs/js-ipfs/blob/master/docs/core-api/FILES.md
 
     // call Core API methods
     const filesOnIPFS = await client.addAll([
       {
-        path: 'myDirectory/helloWorld2.txt',
-        content: 'Hello world 2!',
+        path: 'parentDirectory/subDir1/hello.txt',
+        content: 'Hello world!',
       },
       {
-        path: 'myDirectory/bonjornoWorld.txt',
-        content: 'Hello world 2!',
+        path: 'parentDirectory/subDir2/aloha.txt',
+        content: 'Example content - this could be anything (string, Blob...)',
       },
       {
-        path: 'myDirectory/dubar dan world.txt',
-        content: 'Hello world 2!',
+        path: 'parentDirectory/readme.md',
+        content: 'This is content of readme.md',
       },
     ]);
 
-    let res: CID[] = [];
+    const res: CID[] = [];
     for await (const file of filesOnIPFS) {
       console.log(file);
       res.push(file.cid);
     }
 
+    const ipnsVal = await client.name.publish(
+      'QmdWsuHuHaW7YeenSNimy6d1osA8dwVEnALxHq7PKTEXa5',
+    );
+    console.info(ipnsVal);
+
+    //Mutable API
+    //await client.files.mkdir('/nek direktorij');
+
+    /*await client.files.write(
+      '/nek direktorij/test3.txt',
+      'Hello world ponedeljek!',
+      {
+        create: true,
+      },
+    );*/
+
+    //console.info(client.files.ls('/nek direktorij'));
+
     return res;
+  }
+
+  static async uploadFilesToIPFSFromS3(event, context): Promise<any> {
+    //Get IPFS client
+    const client = await IPFSService.createIPFSClient();
+
+    //Get File from S3
+    const s3Client: AWS_S3 = new AWS_S3();
+
+    if (!(await s3Client.exists(env.AWS_BUCKET, event.fileKey))) {
+      throw new CodeException({
+        status: 404,
+        code: ResourceNotFoundErrorCode.FILE_DOES_NOT_EXISTS_IN_BUCKET,
+        sourceFunction: `${this.constructor.name}/uploadFilesToIPFSFromS3`,
+        context,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+
+    const file = await s3Client.get(env.AWS_BUCKET, event.fileKey);
+    console.info('FILE METADATA', file.Metadata);
+    const filesOnIPFS = await client.add({
+      path: '',
+      content: file.Body as any,
+    });
+
+    const res = {
+      cidV0: filesOnIPFS.cid.toV0().toString(),
+      cidV1: filesOnIPFS.cid.toV1().toString(),
+      size: filesOnIPFS.size,
+    };
+
+    return { success: true, data: res };
+  }
+
+  static async getFileFromIPFS(params: { cid: string }) {
+    //Get IPFS client
+    const client = await IPFSService.createIPFSClient();
+
+    const file = await client.get(params.cid);
+
+    const res = [];
+
+    for await (const f of file) {
+      res.push(f);
+    }
+
+    return { success: true, data: res };
+  }
+
+  static async listIPFSDirectory(param: any) {
+    console.log(param);
+    //Get IPFS client
+    const client = await IPFSService.createIPFSClient();
+
+    const ls = await client.ls(param.cid);
+
+    const filesInDirectory = [];
+    for await (const f of ls) {
+      console.info(f);
+      filesInDirectory.push({
+        cidV0: f.cid.toV0().toString(),
+        cidV1: f.cid.toV1().toString(),
+        ...f,
+      });
+    }
+
+    return { success: true, data: filesInDirectory };
   }
 }

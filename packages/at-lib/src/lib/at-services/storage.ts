@@ -1,77 +1,49 @@
-import * as AWS from 'aws-sdk';
 import { env } from '../../config/env';
-import { AppEnvironment, LogType, StorageEventType } from '../../config/types';
-import * as Net from 'net';
+import { AppEnvironment, StorageEventType } from '../../config/types';
+import { BaseService } from './base-service';
 
 /**
  * Logging / Monitoring / Alerting Service client
  */
-export class Storage {
-  private lambda = null;
+export class Storage extends BaseService {
+  lambdaFunctionName =
+    env.APP_ENV === AppEnvironment.TEST
+      ? env.AT_STORAGE_FUNCTION_NAME_TEST
+      : env.AT_STORAGE_FUNCTION_NAME;
+  devPort =
+    env.APP_ENV === AppEnvironment.TEST
+      ? env.AT_STORAGE_SOCKET_PORT_TEST
+      : env.AT_STORAGE_SOCKET_PORT;
+  serviceName = 'LMAS';
+  private securityToken: string;
+
   constructor() {
-    this.lambda = new AWS.Lambda({
-      apiVersion: '2015-03-31',
-      region: env.AWS_REGION,
-    });
+    super();
+    this.isDefaultAsync = false;
   }
 
-  public async addFileToIPFS() {
+  public async addFileToIPFS(params: { data: any }) {
     const data = {
       eventName: StorageEventType.ADD_FILE_TO_IPFS,
+      ...params,
     };
     await this.callService(data);
   }
 
-  private async callService(payload, isAsync = true) {
-    // const env = await getEnvSecrets(); //should there be any???
-
-    if (env.APP_ENV === AppEnvironment.LOCAL_DEV) {
-      return await this.callDevService(payload, isAsync);
-    }
-
-    const params: AWS.Lambda.InvocationRequest = {
-      FunctionName: env.AT_STORAGE_FUNCTION_NAME,
-      InvocationType: isAsync ? 'Event' : 'RequestResponse',
-      Payload: JSON.stringify(payload),
+  public async getObjectFromIPFS(params: { cid: string }) {
+    const data = {
+      eventName: StorageEventType.GET_OBJECT_FROM_IPFS,
+      ...params,
     };
-
-    return await new Promise((resolve, reject) => {
-      this.lambda.invoke(params, (err, response) => {
-        if (err) {
-          console.error('Error invoking lambda!', err);
-          reject(err);
-        }
-        resolve(response);
-      });
-    });
+    await this.callService(data);
   }
 
-  private async callDevService(payload, isAsync) {
-    const devSocket = Net.connect(
-      { port: env.AT_STORAGE_SOCKET_PORT, timeout: 30000 },
-      () => {
-        console.log('Connected to STORAGE dev socket');
-      },
-    );
-    devSocket.on('error', (err) => {
-      console.error(err);
-      throw new Error('Socket error!');
-    });
-
-    return await new Promise((resolve, reject) => {
-      devSocket.on('data', (data) => {
-        devSocket.destroy();
-        resolve(JSON.parse(data.toString()));
-      });
-      devSocket.write(JSON.stringify(payload), (err) => {
-        devSocket.destroy();
-        if (err) {
-          reject(err);
-        }
-        if (isAsync) {
-          resolve(null);
-        }
-      });
-    });
+  public async listIPFSDirectory(params: { cid: string }) {
+    const data = {
+      eventName: StorageEventType.LIST_IPFS_DIRECTORY,
+      cid: params.cid,
+    };
+    console.info(data);
+    await this.callService(data);
   }
 }
