@@ -9,7 +9,6 @@ import { TokenExpiresInStr } from '../../config/types';
 
 export class AuthUserService {
   static async register(event, context: ServiceContext) {
-    //
     if (!event?.user_uuid || !event.password || !event.email) {
       throw await new AmsCodeException({
         status: 400,
@@ -22,12 +21,14 @@ export class AuthUserService {
     authUser.populate(event, PopulateFrom.SERVICE);
 
     authUser.setPassword(event.password);
+    const conn = await context.mysql.start();
+
     try {
       await authUser.validate();
     } catch (err) {
       throw new AmsValidationException(authUser);
     }
-    const conn = await context.mysql.start();
+
     try {
       await authUser.insert(SerializeFor.INSERT_DB, conn);
       await authUser.setDefaultRole(conn);
@@ -93,6 +94,29 @@ export class AuthUserService {
       }).writeToMonitor({ userId: authUser?.user_uuid });
     }
 
+    // Generate a new token with type USER_AUTH
+    const token = new Jwt().generateToken(
+      JwtTokenType.USER_AUTHENTICATION,
+      authUser,
+    );
+
+    // Create new token in the database
+    const authToken = new AuthToken({}, context);
+    const tokenData = {
+      token: token,
+      user_uuid: authUser.user_uuid,
+      tokenType: JwtTokenType.USER_AUTHENTICATION,
+      expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
+    };
+
+    authToken.populate({ ...tokenData }, PopulateFrom.SERVICE);
+
+    try {
+      await authToken.validate();
+    } catch (err) {
+      throw new AmsValidationException(authToken);
+    }
+
     try {
       // Find old token
       const oldToken = await new AuthToken({}, context).populateByUserAndType(
@@ -104,29 +128,6 @@ export class AuthUserService {
       if (oldToken.exists()) {
         oldToken.status = SqlModelStatus.DELETED;
         await oldToken.update(SerializeFor.UPDATE_DB, conn);
-      }
-
-      // Generate a new token with type USER_AUTH
-      const token = new Jwt().generateToken(
-        JwtTokenType.USER_AUTHENTICATION,
-        authUser,
-      );
-
-      // Create new token in the database
-      const authToken = new AuthToken({}, context);
-      const tokenData = {
-        token: token,
-        user_uuid: authUser.user_uuid,
-        tokenType: JwtTokenType.USER_AUTHENTICATION,
-        expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
-      };
-
-      authToken.populate({ ...tokenData }, PopulateFrom.SERVICE);
-
-      try {
-        await authToken.validate();
-      } catch (err) {
-        throw new AmsValidationException(authToken);
       }
 
       await authToken.insert(SerializeFor.INSERT_DB, conn);

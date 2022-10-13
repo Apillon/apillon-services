@@ -9,6 +9,7 @@ import {
   MFAAuthenticationTokenData,
   RequestUserRegisterTokenData,
   UserWelcomeTokenData,
+  TokenExpiresInStr,
 } from '../config/types';
 
 export class JwtUtils {
@@ -34,7 +35,7 @@ export class JwtUtils {
 
         return jwt.sign({ ...data }, env.APP_SECRET, {
           subject: JwtTokenType.USER_AUTHENTICATION,
-          expiresIn: expiration,
+          expiresIn: expiration || TokenExpiresInStr.EXPIRES_IN_1_DAY,
         });
 
       case JwtTokenType.USER_RESET_PASSWORD:

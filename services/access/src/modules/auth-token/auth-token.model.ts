@@ -61,7 +61,7 @@ export class AuthToken extends AdvancedSQLModel {
     //   },
     // ],
   })
-  public expiresIn?: string;
+  public expiresIn: string;
 
   /**
    * Expires in (constant)

@@ -161,7 +161,7 @@ CREATE TABLE IF NOT EXISTS `authToken` (
   `token` TEXT NOT NULL,
   `user_uuid` VARCHAR(36) NOT NULL,
   `tokenType` VARCHAR(30) NOT NULL,
-  `expiresIn` VARCHAR(5) NOT NULL DEFAULT '1D',
+  `expiresIn` VARCHAR(5) NOT NULL DEFAULT '1d',
   `status` INT NULL,
   `createTime` DATETIME NULL,
   `createUser` INT NULL,
