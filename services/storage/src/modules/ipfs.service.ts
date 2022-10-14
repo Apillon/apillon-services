@@ -1,5 +1,4 @@
 import { AWS_S3, CodeException, env, SystemErrorCode } from 'at-lib';
-import { S3ArtifactLocation } from 'aws-lambda';
 import { CID, create } from 'ipfs-http-client';
 import { ResourceNotFoundErrorCode } from '../config/types';
 import { CrustService } from './crust.service';
@@ -11,6 +10,9 @@ export class IPFSService {
 
     //CRUST Gateway
     return await CrustService.createIPFSClient();
+
+    //Kalmia IPFS Gateway
+    //return create({ url: 'https://ipfs.apillon.io/api/v0/ ' });
   }
 
   static async uploadFilesToIPFS(params: { files: any[] }): Promise<any> {
@@ -103,10 +105,14 @@ export class IPFSService {
       content: file.Body as any,
     });
 
+    //const key = await client.key.gen('myTestPage');
+    //const ipnsRes = await client.name.publish(filesOnIPFS.cid);
+
     const res = {
       cidV0: filesOnIPFS.cid.toV0().toString(),
       cidV1: filesOnIPFS.cid.toV1().toString(),
       size: filesOnIPFS.size,
+      //ipnsRes: ipnsRes,
     };
 
     return { success: true, data: res };

@@ -2,6 +2,7 @@ import { StorageEventType } from 'at-lib';
 import { Context } from 'aws-lambda/handler';
 import { CrustService } from './modules/crust.service';
 import { IPFSService } from './modules/ipfs.service';
+import { StorageService } from './modules/storage.service';
 
 export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
@@ -12,6 +13,8 @@ export async function processEvent(event, context: Context): Promise<any> {
       IPFSService.uploadFilesToIPFSFromS3,
     [StorageEventType.PLACE_STORAGE_ORDER_TO_CRUST]:
       CrustService.placeStorageOrderToCRUST,
+    [StorageEventType.REQUEST_S3_SIGNED_URL_FOR_UPLOAD]:
+      StorageService.generateS3SignedUrlForUpload,
   };
 
   return await processors[event.eventName](event, context);

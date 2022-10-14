@@ -17,12 +17,14 @@ export class AWS_S3 {
           region: env.AWS_REGION,
           endpoint: env.AWS_ENDPOINT,
           s3ForcePathStyle: true,
+          signatureVersion: 'v4',
         });
       } else {
         this.s3Client = new aws.S3({
           accessKeyId: env.AWS_KEY,
           secretAccessKey: env.AWS_SECRET,
           region: env.AWS_REGION,
+          signatureVersion: 'v4',
         });
       }
     } catch (err) {
@@ -134,6 +136,31 @@ export class AWS_S3 {
       this.s3Client.listObjects(
         {
           Bucket: bucket,
+        },
+        (err, data) => {
+          if (err) {
+            console.error(err);
+            reject(err);
+          } else {
+            resolve(data);
+          }
+        },
+      );
+    });
+  }
+
+  /**
+   * Generate signed upload link
+   * @param source File source path.
+   * @param ctx Request context.
+   */
+  generateSignedUploadURL(bucket: string, key: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      this.s3Client.getSignedUrl(
+        'putObject',
+        {
+          Bucket: bucket,
+          Key: key,
         },
         (err, data) => {
           if (err) {

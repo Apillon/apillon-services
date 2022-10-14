@@ -18,9 +18,16 @@ export class StorageMicroservice extends BaseService {
     this.isDefaultAsync = false;
   }
 
-  public async addFileToIPFS(params: { files: any[] }) {
+  public async requestS3SignedURLForUpload(params: {
+    session_uuid: string;
+    bucket_uuid: string;
+    directory_uuid?: string;
+    path?: string;
+    fileName: string;
+    contentType: string;
+  }) {
     const data = {
-      eventName: StorageEventType.ADD_FILE_TO_IPFS,
+      eventName: StorageEventType.REQUEST_S3_SIGNED_URL_FOR_UPLOAD,
       ...params,
     };
     return await this.callService(data);
@@ -29,6 +36,14 @@ export class StorageMicroservice extends BaseService {
   public async addFileToIPFSFromS3(params: { fileKey: string }) {
     const data = {
       eventName: StorageEventType.ADD_FILE_TO_IPFS_FROM_S3,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
+  public async addFileToIPFS(params: { files: any[] }) {
+    const data = {
+      eventName: StorageEventType.ADD_FILE_TO_IPFS,
       ...params,
     };
     return await this.callService(data);

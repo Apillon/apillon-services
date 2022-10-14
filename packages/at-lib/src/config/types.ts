@@ -21,6 +21,7 @@ export enum StorageEventType {
   GET_OBJECT_FROM_IPFS = 'get-object-from-ipfs',
   LIST_IPFS_DIRECTORY = 'list-ipfs-directory',
   PLACE_STORAGE_ORDER_TO_CRUST = 'place-storage-order-to-crust',
+  REQUEST_S3_SIGNED_URL_FOR_UPLOAD = 'request-s3-signed-url-for-upload',
 }
 
 export enum ServiceName {

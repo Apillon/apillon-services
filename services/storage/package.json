@@ -23,6 +23,7 @@
     "@polkadot/api": "^9.5.1",
     "@polkadot/keyring": "^10.1.9",
     "@polkadot/util": "^10.1.10",
+    "@types/uuid": "^8.3.4",
     "at-lib": "*",
     "ipfs-http-client": "^56.0.3"
   },

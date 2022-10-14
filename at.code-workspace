@@ -10,15 +10,15 @@
     },
     {
       "name": "🌐@services/storage [AT-STORAGE]",
-      "path": "services\\ipfs"
+      "path": "services\\storage"
     },
     {
       "name": "😎@modules/dev-console-api",
       "path": "modules\\dev-console-api"
     },
     {
-      "name": "😎@modules/appilon-api",
-      "path": "modules\\appilon-api"
+      "name": "😎@modules/apillon-api",
+      "path": "modules\\apillon-api"
     },
     {
       "name": "📦@packages/at-lib",
@@ -50,6 +50,7 @@
     "files.exclude": {
       "**/.serverless": true,
       "**/.turbo": true
-    }
+    },
+    "nuxt.isNuxtApp": false
   },
 }

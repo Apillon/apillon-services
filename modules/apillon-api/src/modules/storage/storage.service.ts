@@ -5,6 +5,7 @@ import { create } from 'ipfs-http-client';
 import { ApillonApiContext } from '../../context';
 import { UploadFilesToIPFSDto } from './dtos/upload-files-to-IPFS';
 import { StorageMicroservice } from './microservice/storage.microservice';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class StorageService {
@@ -149,6 +150,18 @@ export class StorageService {
   ): Promise<any> {
     // call microservice
     return await new StorageMicroservice().addFileToIPFS({ files: data.files });
+  }
+
+  async requestS3SignedURLForUpload(
+    ctx: ApillonApiContext,
+    data: any,
+  ): Promise<any> {
+    return await new StorageMicroservice().requestS3SignedURLForUpload({
+      session_uuid: uuidv4(),
+      bucket_uuid: uuidv4(),
+      contentType: data.contentType,
+      fileName: data.fileName,
+    });
   }
 
   async uploadFilesToIPFSFromS3(

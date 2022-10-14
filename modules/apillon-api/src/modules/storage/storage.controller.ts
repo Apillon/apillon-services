@@ -35,6 +35,11 @@ export class StorageController {
     return await this.storageService.uploadFilesToIPFS(context, data);
   }
 
+  @Post('/requestURLForUpload')
+  async requestS3URLForUpload(@Ctx() context: ApillonApiContext, @Body() body) {
+    return await this.storageService.requestS3SignedURLForUpload(context, body);
+  }
+
   @Post('/fromS3')
   async uploadFilesToIPFSFromS3(
     @Ctx() context: ApillonApiContext,
