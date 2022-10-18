@@ -113,7 +113,8 @@ export interface IEnv {
   AT_STORAGE_SOCKET_PORT: number;
   AT_STORAGE_SOCKET_PORT_TEST: number;
   AT_STORAGE_CRUST_SEED_PHRASE: string;
-  AWS_IPFS_QUEUE_BUCKET;
+  AT_STORAGE_AWS_IPFS_QUEUE_BUCKET: string;
+  AT_STORAGE_IPFS_GATEWAY: string;
 
   AT_STORAGE_MYSQL_HOST: string;
   AT_STORAGE_MYSQL_PORT: number;
@@ -215,7 +216,10 @@ export let env: IEnv = {
   AT_STORAGE_SOCKET_PORT_TEST:
     parseInt(process.env['AT_STORAGE_SOCKET_PORT_TEST']) || 7301,
   AT_STORAGE_CRUST_SEED_PHRASE: process.env['AT_STORAGE_CRUST_SEED_PHRASE'],
-  AWS_IPFS_QUEUE_BUCKET: process.env['AWS_IPFS_QUEUE_BUCKET'] || 'ipfs-queue',
+  AT_STORAGE_AWS_IPFS_QUEUE_BUCKET:
+    process.env['AT_STORAGE_AWS_IPFS_QUEUE_BUCKET'] || 'ipfs-queue',
+  AT_STORAGE_IPFS_GATEWAY:
+    process.env['AT_STORAGE_IPFS_GATEWAY'] || 'ipfs-queue',
 
   /**STORAGE microservice - TEST DB */
   AT_STORAGE_MYSQL_HOST: process.env['AT_STORAGE_MYSQL_HOST'],

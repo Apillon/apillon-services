@@ -1,6 +1,6 @@
-import { env } from '../../config/env';
-import { AmsEventType, AppEnvironment } from '../../config/types';
-import { BaseService } from './base-service';
+import { env } from '../../../config/env';
+import { AmsEventType, AppEnvironment } from '../../../config/types';
+import { BaseService } from '../base-service';
 
 /**
  * Access Management Service client

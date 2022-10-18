@@ -1,5 +1,5 @@
-export * from './lib/at-services/ams';
-export * from './lib/at-services/lmas';
+export * from './lib/at-services/ams/ams';
+export * from './lib/at-services/lmas/lmas';
 export * from './lib/aws/aws-secrets';
 export * from './lib/database/mongo';
 export * from './lib/database/mysql';
