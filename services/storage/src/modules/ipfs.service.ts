@@ -1,6 +1,7 @@
 import { AWS_S3, CodeException, env, SystemErrorCode } from 'at-lib';
 import { CID, create } from 'ipfs-http-client';
-import { ResourceNotFoundErrorCode } from '../config/types';
+import { StorageErrorCode } from '../config/types';
+import { StorageCodeException } from '../lib/exceptions';
 import { CrustService } from './crust.service';
 
 export class IPFSService {
@@ -25,12 +26,11 @@ export class IPFSService {
         event.fileKey,
       ))
     ) {
-      throw new CodeException({
+      throw new StorageCodeException({
         status: 404,
-        code: ResourceNotFoundErrorCode.FILE_DOES_NOT_EXISTS_IN_BUCKET,
+        code: StorageErrorCode.FILE_DOES_NOT_EXISTS_IN_BUCKET,
         sourceFunction: `${this.constructor.name}/uploadFilesToIPFSFromS3`,
         context,
-        errorCodes: ResourceNotFoundErrorCode,
       });
     }
 

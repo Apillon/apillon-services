@@ -8,6 +8,6 @@ export class BucketService {
     //TODO: Check limits, if project actually exists ...
 
     //Call Storage microservice, to create bucket
-    await new StorageMicroservice().createBucket(body);
+    return (await new StorageMicroservice().createBucket(body)).data;
   }
 }

@@ -10,7 +10,7 @@ import {
 } from '../config/types';
 import { Context } from 'vm';
 import { writeLog } from './logger';
-import { Lmas } from './at-services/lmas';
+import { Lmas } from './at-services/lmas/lmas';
 
 export interface ErrorOptions {
   code: any;

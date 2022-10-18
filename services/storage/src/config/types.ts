@@ -9,20 +9,11 @@ export enum DbTables {
   FILE = 'file',
 }
 
-/**
- * Validation error codes - 42206000.
- */
-export enum ValidatorErrorCode {
+export enum StorageErrorCode {
   DEFAULT_VALIDATION_ERROR = 42206000,
   BUCKET_PROJECT_UUID_NOT_PRESENT = 42206001,
   BUCKET_STORAGE_PLAN_ID_NOT_PRESENT = 42206002,
   BUCKET_NAME_NOT_PRESENT = 42206003,
-}
-
-/**
- * Resource not found error codes - 40406000.
- */
-export enum ResourceNotFoundErrorCode {
   DEFAULT_RESOURCE_NOT_FOUND_ERROR = 40406000,
   FILE_DOES_NOT_EXISTS_IN_BUCKET = 40406001,
 }

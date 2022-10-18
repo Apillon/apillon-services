@@ -22,7 +22,7 @@ export class StorageMicroservice extends BaseService {
   public async createBucket(params: CreateBucketDto) {
     const data = {
       eventName: StorageEventType.CREATE_BUCKET,
-      ...params,
+      bucket: params,
     };
     return await this.callService(data);
   }

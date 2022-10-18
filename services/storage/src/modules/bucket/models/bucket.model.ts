@@ -7,7 +7,7 @@ import {
   prop,
   SerializeFor,
 } from 'at-lib';
-import { DbTables, ValidatorErrorCode } from '../../../config/types';
+import { DbTables, StorageErrorCode } from '../../../config/types';
 
 export class Bucket extends AdvancedSQLModel {
   public readonly tableName = DbTables.BUCKET;
@@ -18,19 +18,16 @@ export class Bucket extends AdvancedSQLModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB, //
-      PopulateFrom.SERVICE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.ADMIN,
-      SerializeFor.INSERT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
     ],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.BUCKET_PROJECT_UUID_NOT_PRESENT,
+        code: StorageErrorCode.BUCKET_PROJECT_UUID_NOT_PRESENT,
       },
     ],
   })
@@ -38,19 +35,17 @@ export class Bucket extends AdvancedSQLModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB, //
-      PopulateFrom.SERVICE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
-      SerializeFor.INSERT_DB, //
-      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
     ],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.BUCKET_NAME_NOT_PRESENT,
+        code: StorageErrorCode.BUCKET_NAME_NOT_PRESENT,
       },
     ],
   })
@@ -58,14 +53,12 @@ export class Bucket extends AdvancedSQLModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB, //
-      PopulateFrom.SERVICE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
-      SerializeFor.INSERT_DB, //
-      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
     ],
     validators: [],
   })
@@ -73,13 +66,12 @@ export class Bucket extends AdvancedSQLModel {
 
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB, //
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
-      SerializeFor.INSERT_DB, //
-      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
     ],
     validators: [],
   })
@@ -87,13 +79,12 @@ export class Bucket extends AdvancedSQLModel {
 
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB, //
-    ],
+    populatable: [PopulateFrom.DB],
     serializable: [
-      SerializeFor.INSERT_DB, //
-      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
     ],
     validators: [],
   })

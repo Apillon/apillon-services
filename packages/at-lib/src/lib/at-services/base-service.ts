@@ -2,6 +2,7 @@ import { env, getEnvSecrets } from '../../config/env';
 import { AppEnvironment } from '../../config/types';
 import * as Net from 'net';
 import AWS from 'aws-sdk';
+import { CodeException, ValidationException } from '../exceptions';
 
 export abstract class BaseService {
   private lambda: AWS.Lambda;
@@ -49,11 +50,18 @@ export abstract class BaseService {
     if (!isAsync && (result?.error || !result?.success)) {
       // CodeException causes circular dependency!
 
-      // throw new CodeException({
-      //   code: ErrorCode.SERVICE_ERROR,
-      //   status: result?.status || 500,
-      // });
-      throw new Error(`Service returned an error! \n${result?.error?.message}`);
+      if (result?.status == 422) {
+        //Validation errors returned from microservice
+        throw {
+          status: 422,
+          errors: result?.error.errors,
+        };
+      }
+      throw {
+        status: 500,
+        message: result?.error?.message,
+        code: result?.error?.errorCode,
+      };
     }
 
     return result;
