@@ -9,7 +9,6 @@ import { ProjectModule } from './modules/project/project.module';
 import { UserModule } from './modules/user/user.module';
 import { InstructionModule } from './modules/instruction/instruction.module';
 import { ServicesModule } from './modules/services/services.module';
-import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -19,7 +18,6 @@ import { AuthModule } from './modules/auth/auth.module';
     FileModule,
     ServicesModule,
     InstructionModule,
-    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
@@ -36,9 +34,9 @@ export class AppModule {
         { path: '/', method: RequestMethod.GET },
         { path: '/favicon.ico', method: RequestMethod.GET },
         // Auth routes:
-        { path: 'auth/login', method: RequestMethod.POST },
-        { path: 'auth/password/reset', method: RequestMethod.PATCH },
-        { path: 'auth/password/reset/request', method: RequestMethod.PATCH },
+        { path: 'user/login', method: RequestMethod.POST },
+        { path: 'user/password/reset', method: RequestMethod.PATCH },
+        { path: 'user/password/reset/request', method: RequestMethod.PATCH },
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }

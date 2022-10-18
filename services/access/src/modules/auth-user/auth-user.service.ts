@@ -1,10 +1,18 @@
-import { Lmas, LogType, PopulateFrom, SerializeFor } from 'at-lib';
-import { AmsErrorCode, JwtTokenType, SqlModelStatus } from '../../config/types';
+import {
+  generateJwtToken,
+  JwtTokenType,
+  Lmas,
+  LogType,
+  parseJwtToken,
+  PopulateFrom,
+  SerializeFor,
+} from 'at-lib';
+import { AmsErrorCode, SqlModelStatus } from '../../config/types';
 import { ServiceContext } from '../../context';
 import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
 import { AuthUser } from './auth-user.model';
 import { AuthToken } from '../auth-token/auth-token.model';
-import { JwtUtils as Jwt } from '../../utils/jwt';
+
 import { TokenExpiresInStr } from '../../config/types';
 
 export class AuthUserService {
@@ -34,7 +42,7 @@ export class AuthUserService {
       await authUser.setDefaultRole(conn);
 
       // Generate a new token with type USER_AUTH
-      const token = new Jwt().generateToken(
+      authUser.token = generateJwtToken(
         JwtTokenType.USER_AUTHENTICATION,
         authUser,
       );
@@ -42,7 +50,7 @@ export class AuthUserService {
       // Create new token in the database
       const authToken = new AuthToken({}, context);
       const tokenData = {
-        token: token,
+        token: authUser.token,
         user_uuid: authUser.user_uuid,
         tokenType: JwtTokenType.USER_AUTHENTICATION,
         expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
@@ -53,7 +61,7 @@ export class AuthUserService {
       try {
         await authToken.validate();
       } catch (err) {
-        console.log('Exception occured when validating auth token - ', err);
+        console.log('Exception occurred when validating auth token - ', err);
         throw new AmsValidationException(authToken);
       }
 
@@ -95,10 +103,7 @@ export class AuthUserService {
     }
 
     // Generate a new token with type USER_AUTH
-    const token = new Jwt().generateToken(
-      JwtTokenType.USER_AUTHENTICATION,
-      authUser,
-    );
+    const token = generateJwtToken(JwtTokenType.USER_AUTHENTICATION, authUser);
 
     // Create new token in the database
     const authToken = new AuthToken({}, context);
@@ -177,8 +182,19 @@ export class AuthUserService {
       });
     }
 
-    const tokenData = new Jwt().parseAuthenticationToken(event.token);
+    const tokenData = parseJwtToken(
+      JwtTokenType.USER_AUTHENTICATION,
+      event.token,
+    );
 
+    if (!tokenData.user_uuid) {
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.USER_AUTH_TOKEN_IS_INVALID,
+      }).writeToMonitor({
+        userId: event?.user_uuid,
+      });
+    }
     const authUser = await new AuthUser({}, context).populateByUserUuid(
       tokenData.user_uuid,
     );

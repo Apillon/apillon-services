@@ -173,9 +173,27 @@ export enum BadRequestErrorCode {
   INVALID_PATH = 400001,
 }
 
+/**
+ * Route error codes - 401000.
+ */
+export enum UnauthorizedErrorCodes {
+  UNAUTHORIZED = 401000,
+  INVALID_TOKEN = 401000,
+}
+
 //#endregion
 
 export enum RoleType {
   USER_ROLE = 1,
   API_KEY_ROLE = 2,
+}
+
+/**
+ * JWT Token signing types.
+ */
+export enum JwtTokenType {
+  USER_AUTHENTICATION = 'USER_AUTHENTICATION',
+  USER_RESET_PASSWORD = 'USER_RESET_PASSWORD',
+  USER_RESET_EMAIL = 'USER_RESET_EMAIL',
+  USER_CONFIRM_EMAIL = 'USER_CONFIRM_EMAIL',
 }

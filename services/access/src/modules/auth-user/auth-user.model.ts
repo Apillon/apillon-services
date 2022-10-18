@@ -138,6 +138,21 @@ export class AuthUser extends AdvancedSQLModel {
   })
   public authUserRoles: AuthUserRole[];
 
+  /**
+   * auth user token
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.SERVICE, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN, //
+      SerializeFor.SERVICE,
+    ],
+  })
+  public token: string;
+
   public constructor(data: any, context: Context) {
     super(data, context);
   }
