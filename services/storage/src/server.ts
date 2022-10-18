@@ -15,7 +15,7 @@ export function startDevServer() {
   const server = Net.createServer((socket) => {
     socket.on('data', async (chunk) => {
       console.log(
-        `IPFS Socket server request: ${JSON.stringify(
+        `STORAGE Socket server request: ${JSON.stringify(
           JSON.parse(chunk.toString()),
         )}`,
       );
@@ -23,12 +23,12 @@ export function startDevServer() {
         const result = await handler(JSON.parse(chunk.toString()), {} as any);
         if (result) {
           socket.write(JSON.stringify(result));
-          console.log(`IPFS Socket server response: ${result.toString()}`);
+          console.log(`STORAGE Socket server response: ${result.toString()}`);
         }
         socket.end();
-        console.log(`IPFS Socket server finished with no response.`);
+        console.log(`STORAGE Socket server finished with no response.`);
       } catch (err) {
-        console.error('IPFS Socket server ERROR:');
+        console.error('STORAGE Socket server ERROR:');
         console.error(err);
         socket.end();
       }
@@ -36,18 +36,18 @@ export function startDevServer() {
     // When the client requests to end the TCP connection with the server, the server
     // ends the connection.
     socket.on('end', function () {
-      console.log('IPFS: Closing connection with the client');
+      console.log('STORAGE: Closing connection with the client');
     });
 
     // ERROR
     socket.on('error', function (err) {
-      console.log(`IPFS: Error: ${err}`);
+      console.log(`STORAGE: Error: ${err}`);
     });
   });
 
   server.listen(port, () => {
     console.log(
-      `IPFS: Socket server listening for connection requests on socket localhost:${port}`,
+      `STORAGE: Socket server listening for connection requests on socket localhost:${port}`,
     );
   });
 }

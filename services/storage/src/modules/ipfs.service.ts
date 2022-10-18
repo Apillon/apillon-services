@@ -9,10 +9,10 @@ export class IPFSService {
     //return create({ url: 'http://127.0.0.1:5001/api/v0' });
 
     //CRUST Gateway
-    return await CrustService.createIPFSClient();
+    //return await CrustService.createIPFSClient();
 
     //Kalmia IPFS Gateway
-    //return create({ url: 'https://ipfs.apillon.io/api/v0/ ' });
+    return create({ url: 'https://ipfs.apillon.io:5001/api/v0' });
   }
 
   static async uploadFilesToIPFS(params: { files: any[] }): Promise<any> {
@@ -29,7 +29,7 @@ export class IPFSService {
       file.cidV1 = filesOnIPFS.cid.toV1().toString();
     }
 
-    return { success: true, data: params.files };
+    return params.files;
   }
 
   static async uploadDirectoryToIPFS(): Promise<any> {
@@ -88,7 +88,7 @@ export class IPFSService {
     //Get File from S3
     const s3Client: AWS_S3 = new AWS_S3();
 
-    if (!(await s3Client.exists(env.AWS_BUCKET, event.fileKey))) {
+    if (!(await s3Client.exists(env.AWS_IPFS_QUEUE_BUCKET, event.fileKey))) {
       throw new CodeException({
         status: 404,
         code: ResourceNotFoundErrorCode.FILE_DOES_NOT_EXISTS_IN_BUCKET,
@@ -98,7 +98,7 @@ export class IPFSService {
       });
     }
 
-    const file = await s3Client.get(env.AWS_BUCKET, event.fileKey);
+    const file = await s3Client.get(env.AWS_IPFS_QUEUE_BUCKET, event.fileKey);
     console.info('FILE METADATA', file.Metadata);
     const filesOnIPFS = await client.add({
       path: '',
@@ -108,14 +108,12 @@ export class IPFSService {
     //const key = await client.key.gen('myTestPage');
     //const ipnsRes = await client.name.publish(filesOnIPFS.cid);
 
-    const res = {
+    return {
       cidV0: filesOnIPFS.cid.toV0().toString(),
       cidV1: filesOnIPFS.cid.toV1().toString(),
       size: filesOnIPFS.size,
       //ipnsRes: ipnsRes,
     };
-
-    return { success: true, data: res };
   }
 
   static async getFileFromIPFS(params: { cid: string }) {
@@ -130,7 +128,7 @@ export class IPFSService {
       res.push(f);
     }
 
-    return { success: true, data: res };
+    return res;
   }
 
   static async listIPFSDirectory(param: any) {
@@ -150,6 +148,6 @@ export class IPFSService {
       });
     }
 
-    return { success: true, data: filesInDirectory };
+    return filesInDirectory;
   }
 }

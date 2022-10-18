@@ -22,6 +22,10 @@ export enum StorageEventType {
   LIST_IPFS_DIRECTORY = 'list-ipfs-directory',
   PLACE_STORAGE_ORDER_TO_CRUST = 'place-storage-order-to-crust',
   REQUEST_S3_SIGNED_URL_FOR_UPLOAD = 'request-s3-signed-url-for-upload',
+  CREATE_BUCKET = 'create-bucket',
+  UPDATE_BUCKET = 'update-bucket',
+  DELETE_BUCKET = 'delete-bucket',
+  GET_BUCKET = 'get-bucket',
 }
 
 export enum ServiceName {
@@ -184,6 +188,13 @@ export enum SystemErrorCode {
 export enum BadRequestErrorCode {
   DEFAULT_ROUTE_ERROR_CODE = 400000,
   INVALID_PATH = 400001,
+}
+
+export enum ValidatorErrorCode {
+  DEFAULT_VALIDATOR_ERROR_CODE = 42200000,
+  BUCKET_PROJECT_UUID_NOT_PRESENT = 42200001,
+  BUCKET_STORAGE_PLAN_ID_NOT_PRESENT = 42200002,
+  BUCKET_NAME_NOT_PRESENT = 42200003,
 }
 
 //#endregion

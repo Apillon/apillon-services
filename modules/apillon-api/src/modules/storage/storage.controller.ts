@@ -48,10 +48,6 @@ export class StorageController {
     return await this.storageService.uploadFilesToIPFSFromS3(context, body);
   }
 
-  @Post('/test')
-  async test() {
-    return await this.storageService.testuploadFileToIPFS();
-  }
   /*
   @Post()
   async uploadFileToIPFS() {

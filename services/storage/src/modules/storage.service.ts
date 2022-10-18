@@ -1,5 +1,4 @@
 import { AWS_S3 } from 'at-lib';
-import { v4 as uuidv4 } from 'uuid';
 
 export class StorageService {
   static async generateS3SignedUrlForUpload(params: {
@@ -18,6 +17,6 @@ export class StorageService {
       params.fileName,
     );
 
-    return { success: true, data: { signedUrlForUpload: signedURLForUpload } };
+    return { signedUrlForUpload: signedURLForUpload };
   }
 }

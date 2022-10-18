@@ -10,7 +10,13 @@ export class AWS_S3 {
 
   constructor() {
     try {
-      if (env.APP_ENV == AppEnvironment.LOCAL_DEV) {
+      this.s3Client = new aws.S3({
+        accessKeyId: env.AWS_KEY,
+        secretAccessKey: env.AWS_SECRET,
+        region: env.AWS_REGION,
+        signatureVersion: 'v4',
+      });
+      /*if (env.APP_ENV == AppEnvironment.LOCAL_DEV) {
         this.s3Client = new aws.S3({
           accessKeyId: env.AWS_KEY,
           secretAccessKey: env.AWS_SECRET,
@@ -20,13 +26,8 @@ export class AWS_S3 {
           signatureVersion: 'v4',
         });
       } else {
-        this.s3Client = new aws.S3({
-          accessKeyId: env.AWS_KEY,
-          secretAccessKey: env.AWS_SECRET,
-          region: env.AWS_REGION,
-          signatureVersion: 'v4',
-        });
-      }
+        
+      }*/
     } catch (err) {
       console.error(
         'error creating AWS S3 client',
@@ -53,6 +54,7 @@ export class AWS_S3 {
    */
   exists(bucket: string, source: string) {
     return new Promise((resolve, reject) => {
+      console.info(bucket, source);
       this.s3Client.headObject(
         {
           Bucket: bucket,
@@ -60,7 +62,7 @@ export class AWS_S3 {
         },
         (err, data) => {
           if (err) {
-            console.error(err);
+            console.error('headObject error', err);
             resolve(false);
           } else {
             resolve(true);

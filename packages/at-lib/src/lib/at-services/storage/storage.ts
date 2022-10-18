@@ -1,5 +1,7 @@
-import { AppEnvironment, env, StorageEventType } from 'at-lib';
-import { BaseService } from 'at-lib/dist/lib/at-services/base-service';
+import { env } from '../../../config/env';
+import { AppEnvironment, StorageEventType } from '../../../config/types';
+import { BaseService } from '../base-service';
+import { CreateBucketDto } from './dtos/create-bucket.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -11,11 +13,18 @@ export class StorageMicroservice extends BaseService {
       ? env.AT_STORAGE_SOCKET_PORT_TEST
       : env.AT_STORAGE_SOCKET_PORT;
   serviceName = 'LMAS';
-  private securityToken: string;
 
   constructor() {
     super();
     this.isDefaultAsync = false;
+  }
+
+  public async createBucket(params: CreateBucketDto) {
+    const data = {
+      eventName: StorageEventType.CREATE_BUCKET,
+      ...params,
+    };
+    return await this.callService(data);
   }
 
   public async requestS3SignedURLForUpload(params: {
