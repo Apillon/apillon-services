@@ -106,6 +106,21 @@ export class Ams extends BaseService {
     return amsResponse;
   }
 
+  public async emailExists(email: string) {
+    const data = {
+      eventName: AmsEventType.USER_EMAIL_EXISTS,
+      email,
+      securityToken: this.securityToken,
+    };
+
+    // eslint-disable-next-line sonarjs/prefer-immediate-return
+    const amsResponse = await this.callService(data);
+
+    return {
+      ...amsResponse,
+    };
+  }
+
   private generateSecurityToken() {
     // NOTE - Rename as not to be confused with JwtUtils().generateToken
     // NOTE2 - This should probably be a util function somewhere outside this file?

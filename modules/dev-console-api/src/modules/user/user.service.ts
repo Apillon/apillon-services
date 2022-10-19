@@ -60,6 +60,16 @@ export class UserService {
   async validateEmail(emailVal: ValidateEmailDto): Promise<any> {
     const email = emailVal.email;
 
+    const res = await new Ams().emailExists(email);
+
+    if (res.data.result === true) {
+      throw new CodeException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        code: ValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
+        errorCodes: ValidatorErrorCode,
+      });
+    }
+
     const token = generateJwtToken(JwtTokenType.USER_CONFIRM_EMAIL, {
       email,
     });

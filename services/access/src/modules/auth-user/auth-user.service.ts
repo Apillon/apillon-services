@@ -103,12 +103,14 @@ export class AuthUserService {
     }
 
     // Generate a new token with type USER_AUTH
-    const token = generateJwtToken(JwtTokenType.USER_AUTHENTICATION, authUser);
+    authUser.token = generateJwtToken(JwtTokenType.USER_AUTHENTICATION, {
+      user_uuid: authUser.user_uuid,
+    });
 
     // Create new token in the database
     const authToken = new AuthToken({}, context);
     const tokenData = {
-      token: token,
+      token: authUser.token,
       user_uuid: authUser.user_uuid,
       tokenType: JwtTokenType.USER_AUTHENTICATION,
       expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
@@ -156,10 +158,7 @@ export class AuthUserService {
       'secToken1',
     );
 
-    return {
-      user: { user_uuid: authUser.user_uuid },
-      token: authToken.token,
-    };
+    return authUser.serialize(SerializeFor.SERVICE);
   }
 
   static async getAuthUser(event, context: ServiceContext) {
@@ -312,5 +311,22 @@ export class AuthUserService {
         userId: event?.user_uuid,
       });
     }
+  }
+
+  static async emailExists(event, context: ServiceContext) {
+    if (!event?.email) {
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.BAD_REQUEST,
+      }).writeToMonitor({
+        userId: event?.user_uuid,
+      });
+    }
+
+    const authUser = await new AuthUser({}, context).populateByEmail(
+      event.email,
+    );
+
+    return { result: authUser.exists() };
   }
 }

@@ -7,6 +7,7 @@ export enum AmsEventType {
   USER_ROLE_ASSIGN = 'user-role-assign',
   USER_ROLE_REMOVE = 'user-role-remove',
   AUTH_TOKEN_CREATE_UPDATE_TOKEN = 'auth-token-create-update-token',
+  USER_EMAIL_EXISTS = 'user-email-exists',
 }
 
 export enum LmasEventType {
@@ -169,7 +170,7 @@ export enum SystemErrorCode {
  * Route error codes - 400000.
  */
 export enum BadRequestErrorCode {
-  DEFAULT_ROUTE_ERROR_CODE = 400000,
+  BAD_REQUEST = 400000,
   INVALID_PATH = 400001,
 }
 

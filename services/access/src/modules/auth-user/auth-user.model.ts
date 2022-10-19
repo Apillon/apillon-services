@@ -187,7 +187,9 @@ export class AuthUser extends AdvancedSQLModel {
 
     if (res.length) {
       //TODO: populate roles
-      return this.populate(res[0], PopulateFrom.DB);
+      this.populate(res[0], PopulateFrom.DB);
+      await this.populateAuthUserRoles(conn);
+      return this;
     }
     return this.reset();
   }
