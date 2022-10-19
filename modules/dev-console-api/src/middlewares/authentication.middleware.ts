@@ -20,7 +20,9 @@ export class AuthenticateUserMiddleware implements NestMiddleware {
       const token = (req.get(AUTHORIZATION_HEADER) || '')
         .split(' ')
         .reverse()[0];
-      await context.authenticate(token);
+      if (token) {
+        await context.authenticate(token);
+      }
     }
 
     next();

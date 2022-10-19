@@ -3,24 +3,102 @@ import {
   Ams,
   CodeException,
   ErrorCode,
+  generateJwtToken,
+  JwtTokenType,
+  parseJwtToken,
   PopulateFrom,
   SerializeFor,
+  SMTPsendTemplate,
+  UnauthorizedErrorCodes,
   ValidationException,
 } from 'at-lib';
 import { ValidatorErrorCode } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
-import { CreateUserDto } from './dtos/create-user.dto';
 import { User } from './models/user.model';
 import { v4 as uuidv4 } from 'uuid';
+import { RegisterUserDto } from './dtos/register-user.dto';
+import { LoginUserDto } from './dtos/login-user.dto';
+import { ValidateEmailDto } from './dtos/valdiate-email.dto';
 
 @Injectable()
 export class UserService {
-  async createUser(
-    body: CreateUserDto,
+  async login(
+    loginInfo: LoginUserDto,
     context: DevConsoleApiContext,
-  ): Promise<User> {
+  ): Promise<any> {
+    try {
+      const resp = await new Ams().login({
+        email: loginInfo.email,
+        password: loginInfo.password,
+      });
+
+      const user = await new User({}, context).populateByUUID(
+        context,
+        resp.data.user.user_uuid,
+      );
+
+      if (!user.exists()) {
+        throw new CodeException({
+          status: HttpStatus.UNAUTHORIZED,
+          code: ValidatorErrorCode.USER_INVALID_LOGIN,
+          errorCodes: ValidatorErrorCode,
+        });
+      }
+
+      return {
+        token: resp.data.token,
+      };
+    } catch (error) {
+      throw new CodeException({
+        status: HttpStatus.UNAUTHORIZED,
+        code: ValidatorErrorCode.USER_INVALID_LOGIN,
+        errorCodes: ValidatorErrorCode,
+      });
+    }
+  }
+
+  async validateEmail(emailVal: ValidateEmailDto): Promise<any> {
+    const email = emailVal.email;
+
+    const res = await new Ams().emailExists(email);
+
+    if (res.data.result === true) {
+      throw new CodeException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        code: ValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
+        errorCodes: ValidatorErrorCode,
+      });
+    }
+
+    const token = generateJwtToken(JwtTokenType.USER_CONFIRM_EMAIL, {
+      email,
+    });
+
+    await SMTPsendTemplate([email], 'Welcome to Apillon!', 'welcome', {
+      token,
+    });
+  }
+
+  async registerUser(
+    data: RegisterUserDto,
+    context: DevConsoleApiContext,
+  ): Promise<any> {
+    const { token, password } = data;
+
+    const tokenData = parseJwtToken(JwtTokenType.USER_CONFIRM_EMAIL, token);
+
+    if (!tokenData?.email) {
+      throw new CodeException({
+        status: HttpStatus.UNAUTHORIZED,
+        code: UnauthorizedErrorCodes.INVALID_TOKEN,
+        errorCodes: UnauthorizedErrorCodes,
+      });
+    }
+
+    const email = tokenData.email;
+
     const user: User = new User({}, context).populate(
-      body,
+      { email, password },
       PopulateFrom.PROFILE,
     );
 
@@ -36,12 +114,13 @@ export class UserService {
     }
 
     const conn = await context.mysql.start();
+    let amsResponse;
     try {
       await user.insert(SerializeFor.INSERT_DB, conn);
-      await new Ams().register({
+      amsResponse = await new Ams().register({
         user_uuid: user.user_uuid,
-        email: body.email,
-        password: body.password,
+        email,
+        password,
       });
       await context.mysql.commit(conn);
     } catch (err) {
@@ -55,6 +134,9 @@ export class UserService {
       });
     }
 
-    return user;
+    return {
+      ...user.serialize(SerializeFor.PROFILE),
+      token: amsResponse.data.token,
+    };
   }
 }

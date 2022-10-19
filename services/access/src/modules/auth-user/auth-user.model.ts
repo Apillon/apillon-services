@@ -138,6 +138,21 @@ export class AuthUser extends AdvancedSQLModel {
   })
   public authUserRoles: AuthUserRole[];
 
+  /**
+   * auth user token
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.SERVICE, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN, //
+      SerializeFor.SERVICE,
+    ],
+  })
+  public token: string;
+
   public constructor(data: any, context: Context) {
     super(data, context);
   }
@@ -172,7 +187,9 @@ export class AuthUser extends AdvancedSQLModel {
 
     if (res.length) {
       //TODO: populate roles
-      return this.populate(res[0], PopulateFrom.DB);
+      this.populate(res[0], PopulateFrom.DB);
+      await this.populateAuthUserRoles(conn);
+      return this;
     }
     return this.reset();
   }

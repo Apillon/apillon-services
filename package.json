@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.102",
+    "copyfiles": "^2.4.1",
     "cross-env": "^7.0.3",
     "eslint-config-common": "*",
     "nodemon": "^2.0.19",
