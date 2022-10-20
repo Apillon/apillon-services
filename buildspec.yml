@@ -9,7 +9,9 @@ phases:
       - >
         npm install -g 
         serverless serverless-webpack
-        copy-webpack-plugin webpack webpack-node-externals
+        copy-webpack-plugin
+        webpack webpack-node-externals
+        copyfiles
         turbo
   pre_build:
     commands:
@@ -20,5 +22,5 @@ phases:
   build:
     commands:
       - npm cache verify
-      - npm install
+      #- npm install
       - ./bin/deploy/build-aws.sh
