@@ -2,8 +2,8 @@
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
-import { ModelBase } from 'at-lib/dist/lib/base-models/base';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
+import { ModelBase } from '../../../base-models/base';
 
 export class BucketQueryFilter extends ModelBase {
   @prop({

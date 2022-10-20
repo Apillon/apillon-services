@@ -208,7 +208,6 @@ export enum UnauthorizedErrorCodes {
   INVALID_TOKEN = 401000,
 }
 
-
 //#endregion
 
 export enum RoleType {

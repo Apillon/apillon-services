@@ -56,6 +56,7 @@ export class Bucket extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -80,6 +81,7 @@ export class Bucket extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [],
   })
@@ -94,6 +96,7 @@ export class Bucket extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [],
   })
@@ -108,6 +111,7 @@ export class Bucket extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [],
   })
@@ -121,11 +125,11 @@ export class Bucket extends AdvancedSQLModel {
 
     const sqlQuery = {
       qSelect: `
-        ${this.generateSelectFields('b', '')}
+        SELECT ${this.generateSelectFields('b', '')}
         `,
       qFrom: `
         FROM \`${DbTables.BUCKET}\` b
-        WHERE (@search IS NULL OR b.name LIKE CONCAT('%', @search, '%')
+        WHERE (@search IS null OR b.name LIKE CONCAT('%', @search, '%'))
       `,
     };
 
