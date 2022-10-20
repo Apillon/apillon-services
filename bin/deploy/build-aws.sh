@@ -14,14 +14,14 @@ cat ./bin/deploy/env/env.yml
 
 # prepare the environemnt
 cd packages/at-lib/
-npm i
+npm install --omit=dev
 npm run build
 cd ../../modules/dev-console-api/
-npm link at-lib ../../packages/at-lib
+npm link ../../packages/at-lib --omit=dev
 cd ../../services/access/
-npm link at-lib ../../packages/at-lib
+npm link ../../packages/at-lib --omit=dev
 cd ../../services/monitoring/
-npm link at-lib ../../packages/at-lib
+npm link ../../packages/at-lib --omit=dev
 cd ../..
 
 if [ "$ENV" == "staging" ]
