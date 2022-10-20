@@ -12,7 +12,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "tsc --declarationMap && copyfiles -f ./src/lib/mailing/templates/*.html",
+    "build": "tsc --declarationMap && copyfiles -f ./src/lib/mailing/templates/*.html ./dist/lib/mailing/templates",
     "dev": "copyfiles -f ./src/lib/mailing/templates/*.html ./dist/lib/mailing/templates && tsc -w --declarationMap",
     "test:unit": "jest --passWithNoTests",
     "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix"

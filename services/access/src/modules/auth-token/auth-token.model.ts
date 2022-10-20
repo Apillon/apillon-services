@@ -7,6 +7,7 @@ import {
   presenceValidator,
   prop,
   SerializeFor,
+  SqlModelStatus,
 } from 'at-lib';
 import { AmsErrorCode, DbTables } from '../../config/types';
 
@@ -97,7 +98,7 @@ export class AuthToken extends AdvancedSQLModel {
         FROM \`${DbTables.AUTH_TOKEN}\` at
         WHERE at.user_uuid = @user_uuid 
           AND at.tokenType = @tokenType
-          AND at.status = 5
+          AND at.status = ${SqlModelStatus.ACTIVE}
         LIMIT 1
         `,
       { user_uuid, tokenType },

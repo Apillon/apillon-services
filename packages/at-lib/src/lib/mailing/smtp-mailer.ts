@@ -76,7 +76,7 @@ export async function SMTPsendTemplate(
 
     console.log(`Template not found: ${templateName}!`);
     // return false;
-    throw new Error(`Template not found: ${templateName}!`);
+    throw new Error(`Template not found: ${templateName} !`);
   }
 
   templateData = {
