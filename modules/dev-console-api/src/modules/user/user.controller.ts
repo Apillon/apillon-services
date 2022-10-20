@@ -4,7 +4,7 @@ import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { LoginUserDto } from './dtos/login-user.dto';
 import { RegisterUserDto } from './dtos/register-user.dto';
-import { ValidateEmailDto } from './dtos/valdiate-email.dto';
+import { ValidateEmailDto } from './dtos/validate-email.dto';
 import { UserService } from './user.service';
 
 @Controller('user')

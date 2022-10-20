@@ -18,7 +18,7 @@ import { User } from './models/user.model';
 import { v4 as uuidv4 } from 'uuid';
 import { RegisterUserDto } from './dtos/register-user.dto';
 import { LoginUserDto } from './dtos/login-user.dto';
-import { ValidateEmailDto } from './dtos/valdiate-email.dto';
+import { ValidateEmailDto } from './dtos/validate-email.dto';
 
 @Injectable()
 export class UserService {
@@ -46,6 +46,7 @@ export class UserService {
       }
 
       return {
+        ...user.serialize(SerializeFor.PROFILE),
         token: resp.data.token,
       };
     } catch (error) {

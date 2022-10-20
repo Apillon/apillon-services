@@ -17,8 +17,6 @@ export class RegisterUserDto extends ModelBase {
   })
   public token: string;
 
-  public email: string;
-
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
