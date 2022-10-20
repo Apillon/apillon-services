@@ -15,12 +15,15 @@ module.exports = {
     symlinks: false,
     cacheWithContext: false,
     alias: {
-      // '@nestjs/websockets/socket-module': 'empty',
-      // 'cache-manager': 'empty',
-      // 'class-validator': 'empty',
-      // 'class-transformer': 'empty',
-      // '@nestjs/microservices/microservices-module': 'empty',
-      // '@nestjs/microservices': 'empty',
+      alias: {
+        '@nestjs/websockets/socket-module': false,
+        'cache-manager': false,
+        'class-validator': false,
+        'class-transformer': false,
+        '@nestjs/microservices/microservices-module': false,
+        '@nestjs/microservices': false,
+        //'at-lib': path.join(__dirname, '..', '..', 'packages', 'at-lib', 'dist')
+      },
       // 'at-lib': path.join(__dirname, '..', '..', 'packages', 'at-lib', 'dist')
     },
   },
@@ -33,11 +36,11 @@ module.exports = {
   node: {
     __dirname: true,
   },
-  // externals: [nodeExternals({
-  //   allowlist: ['at-lib']
-  // }
-  // )],
-  externals: [nodeExternals()],
+  externals: [nodeExternals({
+    allowlist: ['at-lib']
+  }
+  )],
+  // externals: [nodeExternals()],
   module: {
     rules: [
       // all files with a `.ts` or `.tsx` extension will be handled by `ts-loader`

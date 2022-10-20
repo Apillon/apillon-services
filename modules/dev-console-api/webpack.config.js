@@ -21,6 +21,7 @@ module.exports = {
       'class-transformer': false,
       '@nestjs/microservices/microservices-module': false,
       '@nestjs/microservices': false,
+      '@nestjs/platform-express': false,
       //'at-lib': path.join(__dirname, '..', '..', 'packages', 'at-lib', 'dist')
     },
   },

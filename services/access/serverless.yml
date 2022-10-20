@@ -5,19 +5,20 @@ service: at-v2-access-service-${opt:stage, 'dev'}
 frameworkVersion: '3'
 
 custom:
-  webpack:
-    webpackConfig: ./webpack.config.js
-    includeModules:
-      forceExclude:
-        - aws-sdk
-    excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
+  # webpack:
+  #   webpackConfig: ./webpack.config.js
+  #   includeModules:
+  #     forceExclude:
+  #       - aws-sdk
+  #   excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
   serverless-offline:
     httpPort: 6101
     lambdaPort: 6102
 
 plugins:
-  - serverless-webpack
+  # - serverless-webpack
   - serverless-offline
+  - serverless-plugin-typescript
 
 provider:
   name: aws

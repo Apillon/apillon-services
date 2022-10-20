@@ -15,6 +15,7 @@ build
 
 # builds
 dist/
+.build/
 
 #temp files
 tsconfig.tsbuildinfo
