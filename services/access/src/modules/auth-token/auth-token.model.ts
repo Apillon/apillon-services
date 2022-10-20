@@ -14,7 +14,7 @@ export class AuthToken extends AdvancedSQLModel {
   public readonly tableName = DbTables.AUTH_TOKEN;
 
   /**
-   * Token
+   * Token hash
    */
   @prop({
     parser: { resolver: stringParser() },
@@ -27,7 +27,7 @@ export class AuthToken extends AdvancedSQLModel {
       },
     ],
   })
-  public token: string;
+  public tokenHash: string;
 
   /**
    * AuthUser ID

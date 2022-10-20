@@ -9,8 +9,8 @@ echo $ENV
 
 echo "Reading ENV from:"
 echo $S3_CONFIG
-aws s3 cp ${S3_CONFIG} ./bin/deploy/env.yml
-cat ./bin/deploy/env.yml
+aws s3 cp ${S3_CONFIG} ./bin/deploy/env/env.yml
+cat ./bin/deploy/env/env.yml
 
 if [ "$ENV" == "staging" ]
 then

@@ -12,12 +12,13 @@
   "license": "UNLICENSED",
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "tsc --declarationMap",
-    "dev": "tsc -w --declarationMap",
+    "build": "tsc --declarationMap && copyfiles -f ./src/lib/mailing/templates/*.html",
+    "dev": "copyfiles -f ./src/lib/mailing/templates/*.html ./dist/lib/mailing/templates && tsc -w --declarationMap",
     "test:unit": "jest --passWithNoTests",
     "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^8.5.9",
     "eslint-config-common": "*",
     "tsconfig": "*"
   },
@@ -25,10 +26,12 @@
     "aws-sdk": "^2.1205.0",
     "colors": "^1.4.0",
     "dotenv": "^16.0.2",
+    "handlebar": "^1.0.0",
     "jsonwebtoken": "^8.5.1",
     "moment": "^2.29.4",
     "mongodb": "^4.9.1",
     "mysql2": "^2.3.3",
+    "nodemailer": "^6.8.0",
     "sqlstring": "^2.3.3",
     "ts-mysql-migrate": "^1.0.2"
   }

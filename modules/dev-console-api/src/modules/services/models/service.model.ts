@@ -10,7 +10,7 @@ import { DevConsoleApiContext } from '../../../context';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { ServiceQueryFilter } from '../dtos/services-query-filter.dto';
 
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidV4 } from 'uuid';
 
 /**
  * Service model.
@@ -31,8 +31,8 @@ export class Service extends AdvancedSQLModel {
         code: ValidatorErrorCode.SERVICE_UUID_NOT_PRESENT,
       },
     ],
-    defaultValue: uuidv4(),
-    fakeValue: uuidv4(),
+    defaultValue: uuidV4(),
+    fakeValue: uuidV4(),
   })
   public service_uuid: string;
 

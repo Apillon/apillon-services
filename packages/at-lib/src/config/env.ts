@@ -6,6 +6,7 @@ export interface IEnv {
   /**
    * runtime environment
    */
+  APP_URL: string;
   APP_ENV: string;
   LOG_TARGET: string;
 
@@ -80,7 +81,7 @@ export interface IEnv {
   AT_LMAS_MONGO_DATABASE_TEST: string;
 
   /************************************************************
-   * dev-console-api Database sconfig
+   * dev-console-api Database config
    ************************************************************/
   AT_DEV_CONSOLE_API_MYSQL_HOST: string;
   AT_DEV_CONSOLE_API_MYSQL_PORT: number;
@@ -127,12 +128,23 @@ export interface IEnv {
   AT_STORAGE_MYSQL_USER_TEST: string;
   AT_STORAGE_MYSQL_PASSWORD_TEST: string;
   AT_STORAGE_MYSQL_DATABASE_TEST: string;
+  /** MAILING */
+  MAIL_TEMPLATE_PATH: string;
+  SMTP_HOST: string;
+  SMTP_PORT: number;
+  SMTP_USE_SSL: boolean;
+  SMTP_USERNAME: string;
+  SMTP_PASSWORD: string;
+  SMTP_NAME_FROM: string;
+  SMTP_EMAIL_FROM: string;
+  ADMIN_EMAILS: string;
 }
 
 // dotenv.config();
 dotenv.config({ path: '../../.env' });
 
 export let env: IEnv = {
+  APP_URL: process.env['APP_URL'] || 'https://app.apillon.io',
   APP_ENV: process.env['APP_ENV'] || AppEnvironment.STG,
   LOG_TARGET: process.env['LOG_TARGET'] || 'console',
   AWS_REGION: process.env['AWS_REGION'], // env var from lambda - can not be overwritten in lambda setting!
@@ -235,6 +247,16 @@ export let env: IEnv = {
   AT_STORAGE_MYSQL_USER_TEST: process.env['AT_STORAGE_MYSQL_USER_TEST'],
   AT_STORAGE_MYSQL_PASSWORD_TEST: process.env['AT_STORAGE_MYSQL_PASSWORD_TEST'],
   AT_STORAGE_MYSQL_DATABASE_TEST: process.env['AT_STORAGE_MYSQL_DATABASE_TEST'],
+  /** MAILING */
+  MAIL_TEMPLATE_PATH: process.env['MAIL_TEMPLATE_PATH'] || '',
+  SMTP_HOST: process.env['SMTP_HOST'],
+  SMTP_PORT: parseInt(process.env['SMTP_PORT']),
+  SMTP_USE_SSL: process.env['SMTP_USE_SSL'] !== 'false',
+  SMTP_USERNAME: process.env['SMTP_USERNAME'],
+  SMTP_PASSWORD: process.env['SMTP_PASSWORD'],
+  SMTP_NAME_FROM: process.env['SMTP_NAME_FROM'] || 'Apillon.io',
+  SMTP_EMAIL_FROM: process.env['SMTP_EMAIL_FROM'] || 'info@apillon.io',
+  ADMIN_EMAILS: process.env['ADMIN_EMAILS'] || 'info@apillon.io',
 };
 
 export let isEnvReady = false;
