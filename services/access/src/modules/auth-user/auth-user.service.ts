@@ -14,6 +14,7 @@ import { AuthUser } from './auth-user.model';
 import { AuthToken } from '../auth-token/auth-token.model';
 
 import { TokenExpiresInStr } from '../../config/types';
+import * as bcrypt from 'bcrypt';
 
 export class AuthUserService {
   static async register(event, context: ServiceContext) {
@@ -50,7 +51,7 @@ export class AuthUserService {
       // Create new token in the database
       const authToken = new AuthToken({}, context);
       const tokenData = {
-        token: authUser.token,
+        tokenHash: bcrypt.hashSync(authUser.token, 10),
         user_uuid: authUser.user_uuid,
         tokenType: JwtTokenType.USER_AUTHENTICATION,
         expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
@@ -110,7 +111,7 @@ export class AuthUserService {
     // Create new token in the database
     const authToken = new AuthToken({}, context);
     const tokenData = {
-      token: authUser.token,
+      tokenHash: bcrypt.hashSync(authUser.token, 10),
       user_uuid: authUser.user_uuid,
       tokenType: JwtTokenType.USER_AUTHENTICATION,
       expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
@@ -213,10 +214,13 @@ export class AuthUserService {
       JwtTokenType.USER_AUTHENTICATION,
     );
 
-    if (!authToken.exists()) {
+    if (
+      !authToken.exists() ||
+      !bcrypt.compareSync(event.token, authToken.tokenHash)
+    ) {
       throw await new AmsCodeException({
-        status: 400,
-        code: AmsErrorCode.USER_AUTH_TOKEN_NOT_EXISTS,
+        status: 401,
+        code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
       }).writeToMonitor({
         userId: event?.user_uuid,
       });

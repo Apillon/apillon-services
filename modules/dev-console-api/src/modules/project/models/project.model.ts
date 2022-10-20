@@ -6,7 +6,7 @@ import { presenceValidator } from '@rawmodel/validators';
 import { AdvancedSQLModel, PopulateFrom, SerializeFor } from 'at-lib';
 import { selectAndCountQuery } from 'at-lib';
 
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidV4 } from 'uuid';
 import { faker } from '@faker-js/faker';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
@@ -30,8 +30,8 @@ export class Project extends AdvancedSQLModel {
         code: ValidatorErrorCode.PROJECT_UUID_NOT_PRESENT,
       },
     ],
-    defaultValue: uuidv4(),
-    fakeValue: uuidv4(),
+    defaultValue: uuidV4(),
+    fakeValue: uuidV4(),
   })
   public project_uuid: string;
 

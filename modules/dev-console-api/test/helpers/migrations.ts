@@ -143,7 +143,7 @@ async function initAmsTestMigrations() {
   dbAmsMigration = new Migration({
     conn: pool as unknown as MigrationConnection,
     tableName: 'migrations',
-    dir: './/test/ams-migrations/migrations',
+    dir: '../../services/access/src/migration-scripts/migrations',
     silent: env.APP_ENV === AppEnvironment.TEST,
   });
 
@@ -201,7 +201,7 @@ async function initAmsTestSeed() {
   dbAmsSeed = new Migration({
     conn: pool as unknown as MigrationConnection,
     tableName: 'seeds',
-    dir: './/test/ams-migrations/seeds',
+    dir: '../../services/access/src/migration-scripts/seeds',
     silent: env.APP_ENV === AppEnvironment.TEST,
   });
 

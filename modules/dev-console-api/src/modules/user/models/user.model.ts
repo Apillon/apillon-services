@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/member-ordering */
+import { faker } from '@faker-js/faker';
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import {
@@ -30,10 +31,11 @@ export class User extends AdvancedSQLModel {
     ],
     serializable: [
       SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
     ],
-    fakeValue: 'John Snow',
+    fakeValue: () => faker.name.fullName(),
   })
   public name: string;
 
@@ -48,6 +50,7 @@ export class User extends AdvancedSQLModel {
     serializable: [
       SerializeFor.INSERT_DB, //
       SerializeFor.ADMIN,
+      SerializeFor.PROFILE,
     ],
     validators: [
       {

@@ -2,6 +2,7 @@ import { User } from 'dev-console-api/src/modules/user/models/user.model';
 import { AuthUser } from 'at-ams/src/modules/auth-user/auth-user.model';
 import { TestContext } from './context';
 import { DefaultUserRole, SqlModelStatus } from 'at-lib';
+import { v4 as uuidV4 } from 'uuid';
 
 export interface TestUser {
   user: User;
@@ -18,6 +19,7 @@ export async function createTestUser(
   project_uuid = '',
 ): Promise<TestUser> {
   const user = new User({}, consoleCtx).fake();
+  user.user_uuid = uuidV4();
   user.status = status;
   await user.insert();
 

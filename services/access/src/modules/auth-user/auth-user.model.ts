@@ -8,6 +8,7 @@ import {
   PopulateFrom,
   prop,
   SerializeFor,
+  SqlModelStatus,
   uniqueFieldValue,
 } from 'at-lib';
 import { AmsErrorCode, DbTables } from '../../config/types';
@@ -162,8 +163,9 @@ export class AuthUser extends AdvancedSQLModel {
       `
       SELECT * FROM authUser
       WHERE user_uuid = @user_uuid
+      AND status = @status
     `,
-      { user_uuid },
+      { user_uuid, status: SqlModelStatus.ACTIVE },
       conn,
     );
 

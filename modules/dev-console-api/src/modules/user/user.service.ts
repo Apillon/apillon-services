@@ -15,7 +15,7 @@ import {
 import { ValidatorErrorCode } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
 import { User } from './models/user.model';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidV4 } from 'uuid';
 import { RegisterUserDto } from './dtos/register-user.dto';
 import { LoginUserDto } from './dtos/login-user.dto';
 import { ValidateEmailDto } from './dtos/validate-email.dto';
@@ -34,7 +34,7 @@ export class UserService {
 
       const user = await new User({}, context).populateByUUID(
         context,
-        resp.data.user.user_uuid,
+        resp.data.user_uuid,
       );
 
       if (!user.exists()) {
@@ -104,7 +104,7 @@ export class UserService {
     );
 
     // NOTE: Generate uuid here. Default value does not seem to work
-    user.user_uuid = uuidv4();
+    user.user_uuid = uuidV4();
 
     try {
       await user.validate();
