@@ -14,7 +14,7 @@ export class StorageController {
     @Ctx() context: ApillonApiContext,
     @Query('cid') cid: string,
   ) {
-    return await this.storageService.getFileOrDirectory(cid);
+    return await this.storageService.getFileOrDirectory(context, cid);
   }
 
   @Get('/listFileOrDirectory')
@@ -22,7 +22,7 @@ export class StorageController {
     @Ctx() context: ApillonApiContext,
     @Query('cid') cid: string,
   ) {
-    return await this.storageService.listDirectory(cid);
+    return await this.storageService.listDirectory(context, cid);
   }
 
   @Post()

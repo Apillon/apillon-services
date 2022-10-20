@@ -13,14 +13,16 @@ export class StorageService {
     data: UploadFilesToIPFSDto,
   ): Promise<any> {
     // call microservice
-    return await new StorageMicroservice().addFileToIPFS({ files: data.files });
+    return await new StorageMicroservice(ctx).addFileToIPFS({
+      files: data.files,
+    });
   }
 
   async requestS3SignedURLForUpload(
     ctx: ApillonApiContext,
     data: any,
   ): Promise<any> {
-    return await new StorageMicroservice().requestS3SignedURLForUpload({
+    return await new StorageMicroservice(ctx).requestS3SignedURLForUpload({
       session_uuid: uuidv4(),
       bucket_uuid: uuidv4(),
       contentType: data.contentType,
@@ -33,29 +35,34 @@ export class StorageService {
     data: any,
   ): Promise<any> {
     // call microservice
-    const res = await new StorageMicroservice().addFileToIPFSFromS3({
+    const res = await new StorageMicroservice(ctx).addFileToIPFSFromS3({
       fileKey: data.fileKey,
     });
 
     if (res.success) {
       console.log('FIle successfully pushed to IPFS. Placing storage order...');
-      const placeStorageRequestResponse =
-        await new StorageMicroservice().placeStorageOrderToCRUST({
-          cid: res.data.cidV0,
-          size: res.data.size,
-        });
+      const placeStorageRequestResponse = await new StorageMicroservice(
+        ctx,
+      ).placeStorageOrderToCRUST({
+        cid: res.data.cidV0,
+        size: res.data.size,
+      });
 
       res.crustResponse = placeStorageRequestResponse;
       return res;
     }
   }
 
-  async getFileOrDirectory(cid: string) {
-    return await new StorageMicroservice().getObjectFromIPFS({ cid: cid });
+  async getFileOrDirectory(ctx: ApillonApiContext, cid: string) {
+    return await new StorageMicroservice(ctx).getObjectFromIPFS({
+      cid: cid,
+    });
   }
 
-  async listDirectory(cid: string) {
-    return await new StorageMicroservice().listIPFSDirectory({ cid: cid });
+  async listDirectory(ctx: ApillonApiContext, cid: string) {
+    return await new StorageMicroservice(ctx).listIPFSDirectory({
+      cid: cid,
+    });
   }
 
   //#endregion

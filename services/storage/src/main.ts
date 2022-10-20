@@ -17,6 +17,9 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.REQUEST_S3_SIGNED_URL_FOR_UPLOAD]:
       StorageService.generateS3SignedUrlForUpload,
     [StorageEventType.CREATE_BUCKET]: BucketService.createBucket,
+    [StorageEventType.UPDATE_BUCKET]: BucketService.updateBucket,
+    [StorageEventType.DELETE_BUCKET]: BucketService.deleteBucket,
+    [StorageEventType.LIST_BUCKETS]: BucketService.listBuckets,
   };
 
   return await processors[event.eventName](event, context);

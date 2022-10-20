@@ -26,6 +26,7 @@ export enum StorageEventType {
   UPDATE_BUCKET = 'update-bucket',
   DELETE_BUCKET = 'delete-bucket',
   GET_BUCKET = 'get-bucket',
+  LIST_BUCKETS = 'list-buckets',
 }
 
 export enum ServiceName {

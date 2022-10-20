@@ -5,6 +5,7 @@ import { processEvent } from './main';
 import { ErrorHandler } from './middleware/error';
 import { MySqlConnect } from './middleware/mysql';
 import { ResponseFormat } from './middleware/response';
+import { FillUser } from './middleware/user';
 
 const lambdaHandler: Handler = async (
   event: any,
@@ -43,5 +44,6 @@ handler
       autoDisconnect: true,
     }),
   )
+  .use(FillUser())
   .use(ResponseFormat())
   .use(ErrorHandler());

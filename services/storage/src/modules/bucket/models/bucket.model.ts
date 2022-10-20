@@ -2,12 +2,15 @@ import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   AdvancedSQLModel,
+  BucketQueryFilter,
   Context,
   PopulateFrom,
   prop,
+  selectAndCountQuery,
   SerializeFor,
 } from 'at-lib';
 import { DbTables, StorageErrorCode } from '../../../config/types';
+import { ServiceContext } from '../../../context';
 
 export class Bucket extends AdvancedSQLModel {
   public readonly tableName = DbTables.BUCKET;
@@ -18,8 +21,14 @@ export class Bucket extends AdvancedSQLModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
     serializable: [
+      SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
@@ -35,10 +44,16 @@ export class Bucket extends AdvancedSQLModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
     ],
@@ -53,10 +68,16 @@ export class Bucket extends AdvancedSQLModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
     ],
@@ -70,6 +91,7 @@ export class Bucket extends AdvancedSQLModel {
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
     ],
@@ -83,10 +105,30 @@ export class Bucket extends AdvancedSQLModel {
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
     ],
     validators: [],
   })
   public size: number;
+
+  public async getList(context: ServiceContext, query: BucketQueryFilter) {
+    const params = {
+      project_uuid: query.project_uuid,
+      search: query.search,
+    };
+
+    const sqlQuery = {
+      qSelect: `
+        ${this.generateSelectFields('b', '')}
+        `,
+      qFrom: `
+        FROM \`${DbTables.BUCKET}\` b
+        WHERE (@search IS NULL OR b.name LIKE CONCAT('%', @search, '%')
+      `,
+    };
+
+    return selectAndCountQuery(context.mysql, sqlQuery, params, 'b.id');
+  }
 }

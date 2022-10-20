@@ -17,4 +17,5 @@ export * from './lib/database/sql-utils';
 export * from './lib/aws/aws-s3';
 export * from './lib/at-services/storage/storage';
 export * from './lib/at-services/storage/dtos/create-bucket.dto';
+export * from './lib/at-services/storage/dtos/bucket-query-filter.dto';
 export * from './lib/validators';

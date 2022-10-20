@@ -1,10 +1,23 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  BucketQueryFilter,
   CreateBucketDto,
   Ctx,
   PermissionLevel,
   Permissions,
   PermissionType,
+  ValidateFor,
   Validation,
 } from 'at-lib';
 import { DevConsoleApiContext } from '../../context';
@@ -15,6 +28,21 @@ import { BucketService } from './bucket.service';
 @Controller('bucket')
 export class BucketController {
   constructor(private bucketService: BucketService) {}
+
+  @Get()
+  @Permissions({
+    permission: 1,
+    type: PermissionType.WRITE,
+    level: PermissionLevel.OWN,
+  })
+  @Validation({ dto: BucketQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async getBucketList(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: BucketQueryFilter,
+  ) {
+    return await this.bucketService.getBucketList(context, query);
+  }
 
   @Post()
   @Permissions({
@@ -30,5 +58,34 @@ export class BucketController {
     @Body() body: CreateBucketDto,
   ) {
     return await this.bucketService.createBucket(context, body);
+  }
+
+  @Patch('/:id')
+  @Permissions({
+    permission: 1,
+    type: PermissionType.WRITE,
+    level: PermissionLevel.OWN,
+  })
+  @UseGuards(AuthGuard)
+  async updateBucket(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: any,
+  ) {
+    return await this.bucketService.updateBucket(context, id, body);
+  }
+
+  @Delete('/:id')
+  @Permissions({
+    permission: 1,
+    type: PermissionType.WRITE,
+    level: PermissionLevel.OWN,
+  })
+  @UseGuards(AuthGuard)
+  async removeUserProject(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return await this.bucketService.deleteBucket(context, id);
   }
 }
