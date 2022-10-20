@@ -3,7 +3,6 @@ import { PopulateFrom, SerializeFor } from '../../config/types';
 import { PoolConnection } from 'mysql2/promise';
 import 'reflect-metadata';
 import { BaseDBModel } from './base-db.model';
-import { NotImplementedException } from '@nestjs/common';
 import { MySql } from '../database/mysql';
 
 /**
@@ -264,12 +263,12 @@ export abstract class BaseSQLModel extends BaseDBModel {
     _strategy: SerializeFor = SerializeFor.UPDATE_DB,
     _conn?: PoolConnection,
   ): Promise<this> {
-    throw new NotImplementedException();
+    throw new Error('Not implemented');
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public delete(_conn?: PoolConnection): Promise<this> {
-    throw new NotImplementedException();
+    throw new Error('Not implemented');
   }
 
   public generateSelectFields(
