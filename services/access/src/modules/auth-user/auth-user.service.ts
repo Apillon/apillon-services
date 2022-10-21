@@ -14,7 +14,7 @@ import { AuthUser } from './auth-user.model';
 import { AuthToken } from '../auth-token/auth-token.model';
 
 import { TokenExpiresInStr } from '../../config/types';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 export class AuthUserService {
   static async register(event, context: ServiceContext) {

@@ -1,7 +1,7 @@
 import { prop } from '@rawmodel/core';
 import { PopulateFrom, SerializeFor } from '../../config/types';
 import { PoolConnection } from 'mysql2/promise';
-import 'reflect-metadata';
+// import 'reflect-metadata';
 import { BaseDBModel } from './base-db.model';
 import { MySql } from '../database/mysql';
 

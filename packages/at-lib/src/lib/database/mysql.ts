@@ -1,6 +1,5 @@
 import * as mysql from 'mysql2/promise';
 import { PoolConnection } from 'mysql2/promise';
-import * as SqlString from 'sqlstring';
 import { writeLog } from './../logger';
 import { env } from '../../config/env';
 import { AppEnvironment, LogType } from '../../config/types';

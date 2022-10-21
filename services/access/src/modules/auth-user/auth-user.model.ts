@@ -12,7 +12,7 @@ import {
   uniqueFieldValue,
 } from 'at-lib';
 import { AmsErrorCode, DbTables } from '../../config/types';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { Role } from '../role/models/role.model';
 import { AuthUserRole } from '../role/models/auth-user-role.model';
 

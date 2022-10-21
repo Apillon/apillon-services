@@ -8,9 +8,14 @@ custom:
   webpack:
     webpackConfig: ./webpack.config.js
     includeModules:
+      modeModulesRelativeDir: '../../'
       forceExclude:
         - aws-sdk
-    excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
+      forceInclude: 
+        - follow-redirects
+    packagerOptions:
+      lockFile: '../../package-lock.json'
+    excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*|**/test/**/|**/*\.spec\.ts|**/*\.spec\.js'
   serverless-offline:
     httpPort: 6001
     lambdaPort: 6002
@@ -19,9 +24,9 @@ custom:
  
 
 plugins:
-  # - serverless-webpack
+  - serverless-webpack
   - serverless-offline
-  - serverless-plugin-typescript
+  # - serverless-plugin-typescript
 
 provider:
   name: aws

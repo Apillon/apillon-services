@@ -28,10 +28,10 @@
     "@rawmodel/validators": "^3.3.4",
     "at-lib": "*",
     "aws-lambda": "^1.0.7",
-    "bcrypt": "^5.0.1"
+    "bcryptjs": "^2.4.3"
   },
   "devDependencies": {
-    "@types/bcrypt": "^5.0.0",
+    "@types/bcryptjs": "^2.4.2",
     "eslint-config-common": "*",
     "ts-loader": "^9.2.3",
     "tsconfig": "*",
