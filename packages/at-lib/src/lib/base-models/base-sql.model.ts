@@ -248,8 +248,8 @@ export abstract class BaseSQLModel extends BaseDBModel {
     for (const key of Object.keys(this.__props)) {
       if (data.hasOwnProperty(key)) {
         mappedObj[key] = data[key];
-      } else if (data.hasOwnProperty(getFieldName(this, key))) {
-        mappedObj[key] = data[getFieldName(this, key)];
+        // } else if (data.hasOwnProperty(getFieldName(this, key))) {
+        //   mappedObj[key] = data[getFieldName(this, key)];
       }
     }
     return super.populate(mappedObj, strategy);
@@ -318,11 +318,11 @@ export abstract class BaseSQLModel extends BaseDBModel {
   }
 }
 
-const fieldNameMetadataKey = Symbol('fieldName');
-export function fieldName(name: string): any {
-  return Reflect.metadata(fieldNameMetadataKey, name);
-}
+// const fieldNameMetadataKey = Symbol('fieldName');
+// export function fieldName(name: string): any {
+//   return Reflect.metadata(fieldNameMetadataKey, name);
+// }
 
-export function getFieldName(target: any, propertyKey: string): any {
-  return Reflect.getMetadata(fieldNameMetadataKey, target, propertyKey);
-}
+// export function getFieldName(target: any, propertyKey: string): any {
+//   return Reflect.getMetadata(fieldNameMetadataKey, target, propertyKey);
+// }
