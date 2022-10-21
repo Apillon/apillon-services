@@ -18,7 +18,8 @@
   },
   "dependencies": {
     "@middy/core": "^2.5.7",
-    "at-lib": "*"
+    "at-lib": "*",
+    "aws-lambda": "^1.0.7"
   },
   "devDependencies": {
     "eslint-config-common": "*",
