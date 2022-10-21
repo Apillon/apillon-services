@@ -1,7 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import {
   Ams,
-  CodeException,
   ErrorCode,
   generateJwtToken,
   JwtTokenType,
@@ -10,7 +9,6 @@ import {
   SerializeFor,
   SMTPsendTemplate,
   UnauthorizedErrorCodes,
-  ValidationException,
 } from 'at-lib';
 import {
   ResourceNotFoundErrorCode,
@@ -22,6 +20,7 @@ import { v4 as uuidV4 } from 'uuid';
 import { RegisterUserDto } from './dtos/register-user.dto';
 import { LoginUserDto } from './dtos/login-user.dto';
 import { ValidateEmailDto } from './dtos/validate-email.dto';
+import { CodeException, ValidationException } from 'at-lib';
 
 @Injectable()
 export class UserService {

@@ -10,14 +10,10 @@ import {
   UseGuards,
   Query,
 } from '@nestjs/common';
-import {
-  Ctx,
-  PermissionLevel,
-  PermissionType,
-  Validation,
-  Permissions,
-  ValidateFor,
-} from 'at-lib';
+import { Ctx } from '../../decorators/context.decorator';
+import { Validation } from '../../decorators/validation.decorator';
+import { Permissions } from '../../decorators/permission.decorator';
+import { PermissionLevel, PermissionType, ValidateFor } from 'at-lib';
 import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';

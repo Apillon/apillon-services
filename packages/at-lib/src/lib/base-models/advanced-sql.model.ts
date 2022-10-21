@@ -9,7 +9,6 @@ import {
 import { PoolConnection } from 'mysql2/promise';
 import { BaseSQLModel } from './base-sql.model';
 import { presenceValidator } from '@rawmodel/validators';
-import { ValidationException } from '../exceptions';
 
 /**
  * Common model related objects.
@@ -127,16 +126,16 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
     return this.status !== SqlModelStatus.DELETED;
   }
 
-  public async create(conn?: PoolConnection) {
-    try {
-      await this.validate();
-    } catch (err) {
-      await this.handle(err);
-      throw new ValidationException(this);
-    }
+  // public async create(conn?: PoolConnection) {
+  //   try {
+  //     await this.validate();
+  //   } catch (err) {
+  //     await this.handle(err);
+  //     throw new ValidationException(this);
+  //   }
 
-    return await this.insert(SerializeFor.INSERT_DB, conn);
-  }
+  //   return await this.insert(SerializeFor.INSERT_DB, conn);
+  // }
 
   /**
    * Populates model fields by loading the document with the provided id from the database.

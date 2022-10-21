@@ -3,9 +3,10 @@ import { File } from './models/file.model';
 import { DevConsoleApiContext } from '../../context';
 import {
   AWS_S3,
-  CodeException,
   env,
+  SerializeFor,
   SystemErrorCode,
+  CodeException,
   ValidationException,
 } from 'at-lib';
 import { ResourceNotFoundErrorCode } from '../../config/types';
@@ -85,7 +86,7 @@ export class FileService {
     const conn = await context.mysql.start();
 
     try {
-      await file.create(conn);
+      await file.insert(SerializeFor.INSERT_DB, conn);
     } catch (error) {
       await context.mysql.rollback(conn);
 
