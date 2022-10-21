@@ -33,11 +33,11 @@ module.exports = {
   node: {
     __dirname: true,
   },
-  // externals: [nodeExternals({
-  //   allowlist: ['at-lib']
-  // }
-  // )],
-  externals: [nodeExternals()],
+  externals: [nodeExternals({
+    allowlist: ['at-lib']
+  }
+  )],
+  // externals: [nodeExternals()],
   module: {
     rules: [
       // all files with a `.ts` or `.tsx` extension will be handled by `ts-loader`

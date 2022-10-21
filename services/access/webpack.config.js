@@ -16,12 +16,12 @@ module.exports = {
     cacheWithContext: false,
     alias: {
       alias: {
-        '@nestjs/websockets/socket-module': false,
-        'cache-manager': false,
-        'class-validator': false,
-        'class-transformer': false,
-        '@nestjs/microservices/microservices-module': false,
-        '@nestjs/microservices': false,
+        // '@nestjs/websockets/socket-module': false,
+        // 'cache-manager': false,
+        // 'class-validator': false,
+        // 'class-transformer': false,
+        // '@nestjs/microservices/microservices-module': false,
+        // '@nestjs/microservices': false,
         //'at-lib': path.join(__dirname, '..', '..', 'packages', 'at-lib', 'dist')
       },
       // 'at-lib': path.join(__dirname, '..', '..', 'packages', 'at-lib', 'dist')
