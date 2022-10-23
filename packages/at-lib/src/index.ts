@@ -21,3 +21,4 @@ export * from './lib/at-services/storage/dtos/bucket-query-filter.dto';
 export * from './lib/validators';
 export * from './lib/utils';
 export * from './lib/mailing/smtp-mailer';
+export * from './lib/at-services/storage/dtos/create-directory.dto';

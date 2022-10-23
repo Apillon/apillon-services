@@ -43,8 +43,6 @@ export class BucketService {
     event: { id: number; data: any },
     context: ServiceContext,
   ): Promise<any> {
-    console.info('UpdateBucket context', context);
-
     const b: Bucket = await new Bucket({}, context).populateById(event.id);
 
     if (!b.exists()) {
@@ -53,9 +51,6 @@ export class BucketService {
         status: 404,
       });
     }
-
-    console.info('Update bucket data: ', event.data);
-
     b.populate(event.data, PopulateFrom.PROFILE);
 
     try {

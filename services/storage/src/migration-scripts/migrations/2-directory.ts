@@ -11,7 +11,7 @@ export async function upgrade(
   \`bucket_id\` INT NOT NULL,
   \`CID\` VARCHAR(255) NULL,
   \`name\` VARCHAR(255) NOT NULL,
-  \`description\` VARCHAR(1000) NOT NULL,
+  \`description\` VARCHAR(1000) NULL,
   \`status\` INT NULL,
   \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
   \`createUser\` INT NULL,

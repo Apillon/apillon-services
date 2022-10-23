@@ -10,6 +10,7 @@ import { UserModule } from './modules/user/user.module';
 import { InstructionModule } from './modules/instruction/instruction.module';
 import { ServicesModule } from './modules/services/services.module';
 import { BucketModule } from './modules/bucket/bucket.module';
+import { DirectoryModule } from './modules/directory/directory.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { BucketModule } from './modules/bucket/bucket.module';
     ServicesModule,
     InstructionModule,
     BucketModule,
+    DirectoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

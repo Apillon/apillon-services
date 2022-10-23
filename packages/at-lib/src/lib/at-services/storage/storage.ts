@@ -4,6 +4,7 @@ import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { BucketQueryFilter } from './dtos/bucket-query-filter.dto';
 import { CreateBucketDto } from './dtos/create-bucket.dto';
+import { CreateDirectoryDto } from './dtos/create-directory.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -62,6 +63,36 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  //#endregion
+
+  //#region Directory CRUD
+
+  public async createDirectory(params: CreateDirectoryDto) {
+    const data = {
+      eventName: StorageEventType.CREATE_DIRECTORY,
+      user: this.user,
+      body: params,
+    };
+    return await this.callService(data);
+  }
+
+  public async updateDirectory(params: { id: number; data: any }) {
+    const data = {
+      eventName: StorageEventType.UPDATE_DIRECTROY,
+      user: this.user,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
+  public async deleteDirectory(params: { id: number }) {
+    const data = {
+      eventName: StorageEventType.DELETE_DIRECTORY,
+      user: this.user,
+      ...params,
+    };
+    return await this.callService(data);
+  }
   //#endregion
 
   public async requestS3SignedURLForUpload(params: {

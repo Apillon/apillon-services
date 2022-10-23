@@ -12,6 +12,7 @@ export class StorageCodeException extends CodeException {
     options = {
       sourceModule: ServiceName.AMS,
       errorCodes: StorageErrorCode,
+      errorMessage: options.errorMessage || StorageErrorCode[options.code],
       ...options,
     };
     super(options);

@@ -59,7 +59,7 @@ export abstract class BaseService {
       }
       throw {
         status: 500,
-        message: result?.error?.message,
+        message: result?.error?.message || result?.error.errorMessage,
         code: result?.error?.errorCode,
       };
     }

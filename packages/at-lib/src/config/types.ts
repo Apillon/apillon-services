@@ -28,6 +28,11 @@ export enum StorageEventType {
   DELETE_BUCKET = 'delete-bucket',
   GET_BUCKET = 'get-bucket',
   LIST_BUCKETS = 'list-buckets',
+  LIST_BUCKET_CONTENT = 'list-bucket-content',
+  CREATE_DIRECTORY = 'create-directory',
+  UPDATE_DIRECTROY = 'update-directory',
+  DELETE_DIRECTORY = 'delete-directory',
+  LIST_DIRECTORY_CONTENT = 'list-directory-content',
 }
 
 export enum ServiceName {
@@ -198,6 +203,8 @@ export enum ValidatorErrorCode {
   BUCKET_PROJECT_UUID_NOT_PRESENT = 42200001,
   BUCKET_STORAGE_PLAN_ID_NOT_PRESENT = 42200002,
   BUCKET_NAME_NOT_PRESENT = 42200003,
+  DIRECTORY_BUCKET_ID_NOT_PRESENT = 42200004,
+  DIRECTORY_NAME_NOT_PRESENT = 42200005,
 }
 
 /**
