@@ -8,13 +8,11 @@ phases:
       - npm cache verify
       - >
         npm install -g
-        copyfiles
-        turbo
-      - >
-        npm install
         serverless serverless-webpack serverless-plugin-typescript
         copy-webpack-plugin
-        webpack webpack-node-external
+        webpack webpack-node-externals
+        copyfiles
+        turbo
   pre_build:
     commands:
       - printenv
