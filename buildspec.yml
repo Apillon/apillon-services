@@ -22,5 +22,5 @@ phases:
   build:
     commands:
       - npm cache verify
-      #- npm install
+      - npm install
       - ./bin/deploy/build-aws.sh
