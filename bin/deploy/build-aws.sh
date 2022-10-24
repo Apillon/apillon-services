@@ -18,10 +18,13 @@ npm install --omit=dev
 npm run build
 cd ../../modules/dev-console-api/
 npm link ../../packages/at-lib --omit=dev
+npm i serverless-webpack
 cd ../../services/access/
 npm link ../../packages/at-lib --omit=dev
+npm i serverless-webpack
 cd ../../services/monitoring/
 npm link ../../packages/at-lib --omit=dev
+npm i serverless-webpack
 cd ../..
 
 if [ "$ENV" == "staging" ]
