@@ -8,7 +8,7 @@ phases:
       - npm cache verify
       - >
         npm install -g
-        serverless serverless-webpack serverless-plugin-typescript
+        serverless serverless-webpack
         copy-webpack-plugin
         webpack webpack-node-externals
         copyfiles
