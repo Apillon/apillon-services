@@ -153,6 +153,7 @@ export class AWS_S3 {
 
   /**
    * Generate signed upload link
+   * AWS s3. Docs for putObject: https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
    * @param source File source path.
    * @param ctx Request context.
    */

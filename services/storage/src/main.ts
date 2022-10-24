@@ -4,7 +4,7 @@ import { BucketService } from './modules/bucket/bucket.service';
 import { CrustService } from './modules/crust.service';
 import { DirectoryService } from './modules/directory/directory.service';
 import { IPFSService } from './modules/ipfs.service';
-import { StorageService } from './modules/storage.service';
+import { StorageService } from './modules/storage/storage.service';
 
 export async function processEvent(event, context: Context): Promise<any> {
   const processors = {

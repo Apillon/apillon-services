@@ -22,3 +22,4 @@ export * from './lib/validators';
 export * from './lib/utils';
 export * from './lib/mailing/smtp-mailer';
 export * from './lib/at-services/storage/dtos/create-directory.dto';
+export * from './lib/at-services/storage/dtos/create-s3-signed-url-for-upload.dto';

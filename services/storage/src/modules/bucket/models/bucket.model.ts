@@ -8,9 +8,11 @@ import {
   prop,
   selectAndCountQuery,
   SerializeFor,
+  SqlModelStatus,
 } from 'at-lib';
 import { DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
+import { v4 as uuidV4 } from 'uuid';
 
 export class Bucket extends AdvancedSQLModel {
   public readonly tableName = DbTables.BUCKET;
@@ -18,6 +20,27 @@ export class Bucket extends AdvancedSQLModel {
   public constructor(data: any, context: Context) {
     super(data, context);
   }
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+    defaultValue: uuidV4(),
+    fakeValue: uuidV4(),
+  })
+  public bucket_uuid: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -117,6 +140,27 @@ export class Bucket extends AdvancedSQLModel {
   })
   public size: number;
 
+  public async populateByUUID(uuid: string): Promise<this> {
+    if (!uuid) {
+      throw new Error('uuid should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE bucket_uuid = @uuid AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { uuid },
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
+
   public async getList(context: ServiceContext, query: BucketQueryFilter) {
     const params = {
       project_uuid: query.project_uuid,
@@ -130,6 +174,7 @@ export class Bucket extends AdvancedSQLModel {
       qFrom: `
         FROM \`${DbTables.BUCKET}\` b
         WHERE (@search IS null OR b.name LIKE CONCAT('%', @search, '%'))
+        AND status <> ${SqlModelStatus.DELETED}
       `,
     };
 

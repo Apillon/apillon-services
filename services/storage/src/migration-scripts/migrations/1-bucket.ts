@@ -6,6 +6,7 @@ export async function upgrade(
   await queryFn(`
     CREATE TABLE IF NOT EXISTS \`${DbTables.BUCKET}\` (
   \`id\` INT NOT NULL AUTO_INCREMENT,
+  \`bucket_uuid\` VARCHAR(36) NOT NULL,
   \`project_uuid\` VARCHAR(36) NOT NULL,
   \`name\` VARCHAR(255) NOT NULL,
   \`description\` VARCHAR(1000) NULL,

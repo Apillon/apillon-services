@@ -5,6 +5,7 @@ import { BaseService } from '../base-service';
 import { BucketQueryFilter } from './dtos/bucket-query-filter.dto';
 import { CreateBucketDto } from './dtos/create-bucket.dto';
 import { CreateDirectoryDto } from './dtos/create-directory.dto';
+import { CreateS3SignedUrlForUploadDto } from './dtos/create-s3-signed-url-for-upload.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -95,20 +96,20 @@ export class StorageMicroservice extends BaseService {
   }
   //#endregion
 
-  public async requestS3SignedURLForUpload(params: {
-    session_uuid: string;
-    bucket_uuid: string;
-    directory_uuid?: string;
-    path?: string;
-    fileName: string;
-    contentType: string;
-  }) {
+  //#region upload files to S3, IPFS & pin to crust
+
+  public async requestS3SignedURLForUpload(
+    params: CreateS3SignedUrlForUploadDto,
+  ) {
     const data = {
       eventName: StorageEventType.REQUEST_S3_SIGNED_URL_FOR_UPLOAD,
-      ...params,
+      user: this.user,
+      body: params,
     };
     return await this.callService(data);
   }
+
+  //#endregion
 
   public async addFileToIPFSFromS3(params: { fileKey: string }) {
     const data = {
