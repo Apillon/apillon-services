@@ -7,12 +7,14 @@ phases:
     commands:
       - npm cache verify
       - >
+        npm install -g
+        copyfiles
+        turbo
+      - >
         npm install
         serverless serverless-webpack serverless-plugin-typescript
         copy-webpack-plugin
-        webpack webpack-node-externals
-        copyfiles
-        turbo
+        webpack webpack-node-external
   pre_build:
     commands:
       - printenv
