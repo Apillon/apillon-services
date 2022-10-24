@@ -7,7 +7,7 @@ phases:
     commands:
       - npm cache verify
       - >
-        npm install -g
+        npm install --location=global
         serverless serverless-webpack
         copy-webpack-plugin
         webpack webpack-node-externals
