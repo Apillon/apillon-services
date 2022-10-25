@@ -18,7 +18,7 @@ npm install --omit=dev
 npm run build
 cd ../../modules/dev-console-api/
 npm link ../../packages/at-lib --omit=dev
-# npm i serverless-webpack copy-webpack-plugin webpack webpack-node-externals
+npm i serverless-webpack copy-webpack-plugin webpack webpack-node-externals ts-loader
 
 
 if [ "$ENV" == "staging" ]
@@ -40,7 +40,7 @@ fi
 
 cd ../../services/access/
 npm link ../../packages/at-lib --omit=dev
-# npm i serverless-webpack copy-webpack-plugin webpack webpack-node-externals
+npm i serverless-webpack copy-webpack-plugin webpack webpack-node-externals ts-loader
 if [ "$ENV" == "staging" ]
 then
 
@@ -59,7 +59,7 @@ then
 fi
 cd ../../services/monitoring/
 npm link ../../packages/at-lib --omit=dev
-# npm i serverless-webpack copy-webpack-plugin webpack webpack-node-externals
+npm i serverless-webpack copy-webpack-plugin webpack webpack-node-externals ts-loader
 if [ "$ENV" == "staging" ]
 then
 
