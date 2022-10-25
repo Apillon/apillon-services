@@ -91,10 +91,11 @@ export class UserService {
       email,
     });
 
-    await new Mailing().sendMail({
+    return await new Mailing().sendMail({
       emails: [email],
       subject: 'Welcome to Apillon!',
       template: 'welcome',
+      data: { token },
     });
   }
 
