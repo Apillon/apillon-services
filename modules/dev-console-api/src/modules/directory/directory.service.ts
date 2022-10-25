@@ -1,9 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { CreateDirectoryDto, StorageMicroservice } from 'at-lib';
+import {
+  CreateDirectoryDto,
+  DirectoryContentQueryFilter,
+  StorageMicroservice,
+} from 'at-lib';
 import { DevConsoleApiContext } from '../../context';
 
 @Injectable()
 export class DirectoryService {
+  async listDirectoryContent(
+    context: DevConsoleApiContext,
+    query: DirectoryContentQueryFilter,
+  ) {
+    return (await new StorageMicroservice(context).listDirectoryContent(query))
+      .data;
+  }
   async createDirectory(
     context: DevConsoleApiContext,
     body: CreateDirectoryDto,

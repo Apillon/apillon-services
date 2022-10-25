@@ -4,6 +4,7 @@ import {
   AdvancedSQLModel,
   BucketQueryFilter,
   Context,
+  getQueryParams,
   PopulateFrom,
   prop,
   selectAndCountQuery,
@@ -161,20 +162,31 @@ export class Bucket extends AdvancedSQLModel {
     }
   }
 
-  public async getList(context: ServiceContext, query: BucketQueryFilter) {
-    const params = {
-      project_uuid: query.project_uuid,
-      search: query.search,
+  public async getList(context: ServiceContext, filter: BucketQueryFilter) {
+    // Map url query with sql fields.
+    const fieldMap = {
+      id: 'b.id',
     };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'b',
+      fieldMap,
+      filter.serialize(),
+    );
 
     const sqlQuery = {
       qSelect: `
-        SELECT ${this.generateSelectFields('b', '')}
+        SELECT ${this.generateSelectFields('b', '')}, b.updateTime
         `,
       qFrom: `
         FROM \`${DbTables.BUCKET}\` b
-        WHERE (@search IS null OR b.name LIKE CONCAT('%', @search, '%'))
+        WHERE b.project_uuid = @project_uuid
+        AND (@search IS null OR b.name LIKE CONCAT('%', @search, '%'))
         AND status <> ${SqlModelStatus.DELETED}
+      `,
+      qFilter: `
+        ORDER BY ${filters.orderStr}
+        LIMIT ${filters.limit} OFFSET ${filters.offset};
       `,
     };
 

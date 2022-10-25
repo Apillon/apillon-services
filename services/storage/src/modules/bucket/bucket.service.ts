@@ -17,7 +17,10 @@ export class BucketService {
     event: { query: BucketQueryFilter },
     context: ServiceContext,
   ) {
-    return await new Bucket({}, context).getList(context, event.query);
+    return await new Bucket({}, context).getList(
+      context,
+      new BucketQueryFilter(event.query),
+    );
   }
 
   static async createBucket(

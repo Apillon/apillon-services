@@ -1,4 +1,9 @@
-import { CreateDirectoryDto, PopulateFrom, SerializeFor } from 'at-lib';
+import {
+  CreateDirectoryDto,
+  DirectoryContentQueryFilter,
+  PopulateFrom,
+  SerializeFor,
+} from 'at-lib';
 import { StorageErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
 import {
@@ -8,12 +13,15 @@ import {
 import { Directory } from './models/directory.model';
 
 export class DirectoryService {
-  /*static async listBuckets(
-    event: { query: BucketQueryFilter },
+  static async listDirectoryContent(
+    event: { query: DirectoryContentQueryFilter },
     context: ServiceContext,
   ) {
-    return await new Bucket({}, context).getList(context, event.query);
-  }*/
+    return await new Directory({}, context).getDirectoryContent(
+      context,
+      new DirectoryContentQueryFilter(event.query, context),
+    );
+  }
 
   static async createDirectory(
     event: { body: CreateDirectoryDto },

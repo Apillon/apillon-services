@@ -2,13 +2,21 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   Param,
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
-import { CreateDirectoryDto, PermissionLevel, PermissionType } from 'at-lib';
+import {
+  CreateDirectoryDto,
+  DirectoryContentQueryFilter,
+  PermissionLevel,
+  PermissionType,
+  ValidateFor,
+} from 'at-lib';
 import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
@@ -64,5 +72,23 @@ export class DirectoryController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     return await this.directoryService.deleteDirectory(context, id);
+  }
+
+  @Get('/listDirectoryContent')
+  @Permissions({
+    permission: 1,
+    type: PermissionType.WRITE,
+    level: PermissionLevel.OWN,
+  })
+  @Validation({
+    dto: DirectoryContentQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async getBucketList(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: DirectoryContentQueryFilter,
+  ) {
+    return await this.directoryService.listDirectoryContent(context, query);
   }
 }

@@ -3,6 +3,7 @@ import { presenceValidator } from '@rawmodel/validators';
 import {
   AdvancedSQLModel,
   Context,
+  DirectoryContentQueryFilter,
   getQueryParams,
   PopulateFrom,
   prop,
@@ -185,44 +186,52 @@ export class Directory extends AdvancedSQLModel {
    * @param parentDirectory_id
    * @returns
    */
-  public async getDirectoryContent(bucket_id: number, directory_id?: number) {
-    // if (!bucket_id) {
-    //   throw new Error('bucket_id should not be null');
-    // }
-    // directory_id = directory_id ? directory_id : null;
-    // const { params, filters } = getQueryParams(
-    //   filter.getDefaultValues(),
-    //   'pd',
-    //   fieldMap,
-    //   filter.serialize(),
-    // );
-    // /*return await this.getContext().mysql.paramExecute(
-    //   `
-    //   SELECT d.name, d.CID, d.createTime, d.updateTime
-    //   FROM \`${DbTables.DIRECTORY}\` d
-    //   WHERE d.bucket_id = @bucket_id
-    //   AND IFNULL(@directory_id, -1) = IFNULL(directory_id, -1)
-    //   AND status <> ${SqlModelStatus.DELETED}
-    //   UNION ALL
-    //   SELECT d.name, d.CID, d.createTime, d.updateTime
-    //   FROM \`${DbTables.FILE}\` f
-    //   WHERE d.bucket_id = @bucket_id
-    //   AND IFNULL(@directory_id, -1) = IFNULL(directory_id, -1)
-    //   AND status <> ${SqlModelStatus.DELETED}
-    //   `,
-    //   { bucket_id, directory_id },
-    // );*/
-    // const qSelects = [
-    //   {
-    //     qSelect: `
-    //     SELECT d.name, d.CID, d.createTime, d.updateTime
-    //     `,
-    //     qFrom: `
-    //     FROM \`${DbTables.DIRECTORY}\` d
-    //   `,
-    //   },
-    // ];
-    // return unionSelectAndCountQuery(context.mysql, { qSelects: qSelects });
+  public async getDirectoryContent(
+    context: ServiceContext,
+    filter: DirectoryContentQueryFilter,
+  ) {
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'pd',
+      {},
+      filter.serialize(),
+    );
+
+    const qSelects = [
+      {
+        qSelect: `
+        SELECT 'directory' as type, d.id, d.name, d.CID, d.createTime, d.updateTime, NULL as contentType, NULL as size
+        `,
+        qFrom: `
+        FROM \`${DbTables.DIRECTORY}\` d
+        INNER JOIN \`${DbTables.BUCKET}\` b ON d.bucket_id = b.id
+        WHERE b.bucket_uuid = @bucket_uuid
+        AND (IFNULL(@directory_id, -1) = IFNULL(d.parentDirectory_id, -1))
+        AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))
+      `,
+      },
+      {
+        qSelect: `
+        SELECT 'file' as type, d.id, d.name, d.CID, d.createTime, d.updateTime, d.contentType as contentType, d.size as size
+        `,
+        qFrom: `
+        FROM \`${DbTables.FILE}\` d
+        INNER JOIN \`${DbTables.BUCKET}\` b ON d.bucket_id = b.id
+        WHERE b.bucket_uuid = @bucket_uuid
+        AND (IFNULL(@directory_id, -1) = IFNULL(d.directory_id, -1))
+        AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))
+      `,
+      },
+    ];
+    return unionSelectAndCountQuery(
+      context.mysql,
+      {
+        qSelects: qSelects,
+        qFilter: `LIMIT ${filters.limit} OFFSET ${filters.offset};`,
+      },
+      params,
+      'd.name',
+    );
   }
 
   /*public async getList(context: ServiceContext, query: BucketQueryFilter) {

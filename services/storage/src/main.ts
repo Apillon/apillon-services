@@ -26,6 +26,8 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.CREATE_DIRECTORY]: DirectoryService.createDirectory,
     [StorageEventType.UPDATE_DIRECTROY]: DirectoryService.updateDirectory,
     [StorageEventType.DELETE_DIRECTORY]: DirectoryService.deleteDirectory,
+    [StorageEventType.LIST_DIRECTORY_CONTENT]:
+      DirectoryService.listDirectoryContent,
   };
 
   return await processors[event.eventName](event, context);
