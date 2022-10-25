@@ -135,7 +135,7 @@ export class AWS_S3 {
    */
   listBucket(bucket: string): Promise<aws.S3.ListObjectsOutput> {
     return new Promise((resolve, reject) => {
-      this.s3Client.listObjects(
+      this.s3Client.listObjectsV2(
         {
           Bucket: bucket,
         },

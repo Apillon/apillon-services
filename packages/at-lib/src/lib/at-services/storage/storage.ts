@@ -109,6 +109,15 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async endFileUploadSessionAndExecuteSyncToIPFS(session_uuid: string) {
+    const data = {
+      eventName: StorageEventType.END_FILE_UPLOAD_SESSION,
+      user: this.user,
+      session_uuid: session_uuid,
+    };
+    return await this.callService(data);
+  }
+
   //#endregion
 
   public async addFileToIPFSFromS3(params: { fileKey: string }) {

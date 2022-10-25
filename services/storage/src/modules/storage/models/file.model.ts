@@ -1,65 +1,20 @@
-import { integerParser, stringParser } from '@rawmodel/parsers';
+/* eslint-disable @typescript-eslint/member-ordering */
+import { prop } from '@rawmodel/core';
+import { stringParser, integerParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   AdvancedSQLModel,
-  Context,
   PopulateFrom,
-  prop,
   SerializeFor,
   SqlModelStatus,
 } from 'at-lib';
-import { v4 as uuidV4 } from 'uuid';
 import { DbTables, StorageErrorCode } from '../../../config/types';
-import { ServiceContext } from '../../../context';
 
-export class Directory extends AdvancedSQLModel {
-  public readonly tableName = DbTables.DIRECTORY;
-
-  public constructor(data: any, context: Context) {
-    super(data, context);
-  }
+export class File extends AdvancedSQLModel {
+  tableName = DbTables.FILE;
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
-    validators: [],
-    defaultValue: uuidV4(),
-    fakeValue: uuidV4(),
-  })
-  public directory_uuid: string;
-
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
-    validators: [],
-  })
-  public parentDirectory_id: string;
-
-  @prop({
-    parser: { resolver: integerParser() },
     populatable: [
       PopulateFrom.DB,
       PopulateFrom.SERVICE,
@@ -75,27 +30,9 @@ export class Directory extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.DIRECTORY_BUCKET_ID_NOT_PRESENT,
+        code: StorageErrorCode.FILE_CID_NOT_PRESENT,
       },
     ],
-  })
-  public bucket_id: number;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
-    validators: [],
   })
   public CID: string;
 
@@ -108,17 +45,15 @@ export class Directory extends AdvancedSQLModel {
       PopulateFrom.PROFILE,
     ],
     serializable: [
-      SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.DIRECTORY_NAME_NOT_PRESENT,
+        code: StorageErrorCode.FILE_NAME_NOT_PRESENT,
       },
     ],
   })
@@ -133,58 +68,102 @@ export class Directory extends AdvancedSQLModel {
       PopulateFrom.PROFILE,
     ],
     serializable: [
-      SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: StorageErrorCode.FILE_CONTENT_TYPE_NOT_PRESENT,
+      },
+    ],
+  })
+  public contentType: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: StorageErrorCode.FILE_BUCKET_ID_NOT_PRESENT,
+      },
+    ],
+  })
+  public bucket_id: number;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
     ],
     validators: [],
   })
-  public description: string;
+  public directory_id: number;
 
-  public async populateDirectoriesInBucket(
-    bucket_id: number,
-    context: ServiceContext,
-  ): Promise<this[]> {
-    if (!bucket_id) {
-      throw new Error('bucket_id should not be null');
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public size: number;
+
+  public async populateByNameAndDirectory(
+    name: string,
+    directory_id: number,
+  ): Promise<this> {
+    if (!name) {
+      throw new Error('name should not be null');
     }
 
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT * 
       FROM \`${this.tableName}\`
-      WHERE bucket_id = @bucket_id AND status <> ${SqlModelStatus.DELETED};
+      WHERE name = @name 
+      AND ((@directory_id IS NULL AND directory_id IS NULL) OR @directory_id = directory_id)
+      AND status <> ${SqlModelStatus.DELETED};
       `,
-      { bucket_id },
+      { name, directory_id },
     );
-    const res = [];
+
     if (data && data.length) {
-      for (const d of data)
-        res.push(new Directory({}, context).populate(d, PopulateFrom.DB));
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
     }
-
-    return res;
   }
-
-  /*public async getList(context: ServiceContext, query: BucketQueryFilter) {
-    const params = {
-      project_uuid: query.project_uuid,
-      search: query.search,
-    };
-
-    const sqlQuery = {
-      qSelect: `
-        SELECT ${this.generateSelectFields('b', '')}
-        `,
-      qFrom: `
-        FROM \`${DbTables.BUCKET}\` b
-        WHERE (@search IS null OR b.name LIKE CONCAT('%', @search, '%'))
-      `,
-    };
-
-    return selectAndCountQuery(context.mysql, sqlQuery, params, 'b.id');
-  }*/
 }

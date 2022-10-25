@@ -13,6 +13,7 @@ export async function upgrade(
   \`s3FileKey\` VARCHAR(255) NOT NULL,
   \`fileName\` VARCHAR(255) NOT NULL,
   \`contentType\` VARCHAR(100) NOT NULL,
+  \`fileStatus\` INT NOT NULL,
   \`status\` INT NULL,
   \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
   \`createUser\` INT NULL,

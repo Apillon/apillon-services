@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common';
 import {
   CreateS3SignedUrlForUploadDto,
   Ctx,
@@ -30,5 +30,22 @@ export class StorageController {
     @Body() body: CreateS3SignedUrlForUploadDto,
   ) {
     return await this.storageService.createS3SignedUrlForUpload(context, body);
+  }
+
+  @Post('/endFileUploadSession/:session_uuid')
+  @Permissions({
+    permission: 1,
+    type: PermissionType.WRITE,
+    level: PermissionLevel.OWN,
+  })
+  @UseGuards(AuthGuard)
+  async endFileUploadSession(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('session_uuid') session_uuid: string,
+  ) {
+    return await this.storageService.endFileUploadSession(
+      context,
+      session_uuid,
+    );
   }
 }

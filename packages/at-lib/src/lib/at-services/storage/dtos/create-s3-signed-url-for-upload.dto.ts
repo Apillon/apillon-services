@@ -1,5 +1,4 @@
 import { ModelBase, prop } from '../../../base-models/base';
-import { faker } from '@faker-js/faker';
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
@@ -47,12 +46,7 @@ export class CreateS3SignedUrlForUploadDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.PATH_NOT_PRESENT,
-      },
-    ],
+    validators: [],
   })
   public path: string;
 

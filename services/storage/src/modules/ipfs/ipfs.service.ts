@@ -1,8 +1,8 @@
-import { AWS_S3, CodeException, env, SystemErrorCode } from 'at-lib';
+import { AWS_S3, env } from 'at-lib';
 import { CID, create } from 'ipfs-http-client';
-import { StorageErrorCode } from '../config/types';
-import { StorageCodeException } from '../lib/exceptions';
-import { CrustService } from './crust.service';
+import { StorageErrorCode } from '../../config/types';
+import { StorageCodeException } from '../../lib/exceptions';
+import { CrustService } from '../crust/crust.service';
 
 export class IPFSService {
   static async createIPFSClient() {
@@ -10,10 +10,20 @@ export class IPFSService {
     //return await CrustService.createIPFSClient();
 
     //Kalmia IPFS Gateway
+    if (!env.AT_STORAGE_IPFS_GATEWAY)
+      throw new StorageCodeException({
+        status: 500,
+        code: StorageErrorCode.AT_STORAGE_IPFS_GATEWAY_NOT_SET,
+        sourceFunction: `${this.constructor.name}/createIPFSClient`,
+      });
+
     return create({ url: env.AT_STORAGE_IPFS_GATEWAY });
   }
 
-  static async uploadFilesToIPFSFromS3(event, context): Promise<any> {
+  static async uploadFilesToIPFSFromS3(
+    event: { fileKey: string },
+    context,
+  ): Promise<{ CID: CID; cidV0: string; cidV1: string; size: number }> {
     //Get IPFS client
     const client = await IPFSService.createIPFSClient();
 
@@ -48,6 +58,7 @@ export class IPFSService {
     //const ipnsRes = await client.name.publish(filesOnIPFS.cid);
 
     return {
+      CID: filesOnIPFS.cid,
       cidV0: filesOnIPFS.cid.toV0().toString(),
       cidV1: filesOnIPFS.cid.toV1().toString(),
       size: filesOnIPFS.size,

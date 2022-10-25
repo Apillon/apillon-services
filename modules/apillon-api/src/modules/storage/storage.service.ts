@@ -18,18 +18,6 @@ export class StorageService {
     });
   }
 
-  async requestS3SignedURLForUpload(
-    ctx: ApillonApiContext,
-    data: any,
-  ): Promise<any> {
-    return await new StorageMicroservice(ctx).requestS3SignedURLForUpload({
-      session_uuid: uuidv4(),
-      bucket_uuid: uuidv4(),
-      contentType: data.contentType,
-      fileName: data.fileName,
-    });
-  }
-
   async uploadFilesToIPFSFromS3(
     ctx: ApillonApiContext,
     data: any,

@@ -27,7 +27,7 @@ export class CreateDirectoryDto extends ModelBase {
       },
     ],
   })
-  public bucket_id: string;
+  public bucket_id: number;
 
   @prop({
     parser: { resolver: stringParser() },

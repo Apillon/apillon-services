@@ -229,9 +229,8 @@ export let env: IEnv = {
     parseInt(process.env['AT_STORAGE_SOCKET_PORT_TEST']) || 7301,
   AT_STORAGE_CRUST_SEED_PHRASE: process.env['AT_STORAGE_CRUST_SEED_PHRASE'],
   AT_STORAGE_AWS_IPFS_QUEUE_BUCKET:
-    process.env['AT_STORAGE_AWS_IPFS_QUEUE_BUCKET'] || 'ipfs-queue',
-  AT_STORAGE_IPFS_GATEWAY:
-    process.env['AT_STORAGE_IPFS_GATEWAY'] || 'ipfs-queue',
+    process.env['AT_STORAGE_AWS_IPFS_QUEUE_BUCKET'],
+  AT_STORAGE_IPFS_GATEWAY: process.env['AT_STORAGE_IPFS_GATEWAY'],
 
   /**STORAGE microservice - TEST DB */
   AT_STORAGE_MYSQL_HOST: process.env['AT_STORAGE_MYSQL_HOST'],

@@ -1,9 +1,9 @@
 import { StorageEventType } from 'at-lib';
 import { Context } from 'aws-lambda/handler';
 import { BucketService } from './modules/bucket/bucket.service';
-import { CrustService } from './modules/crust.service';
+import { CrustService } from './modules/crust/crust.service';
 import { DirectoryService } from './modules/directory/directory.service';
-import { IPFSService } from './modules/ipfs.service';
+import { IPFSService } from './modules/ipfs/ipfs.service';
 import { StorageService } from './modules/storage/storage.service';
 
 export async function processEvent(event, context: Context): Promise<any> {
@@ -17,6 +17,8 @@ export async function processEvent(event, context: Context): Promise<any> {
       CrustService.placeStorageOrderToCRUST,
     [StorageEventType.REQUEST_S3_SIGNED_URL_FOR_UPLOAD]:
       StorageService.generateS3SignedUrlForUpload,
+    [StorageEventType.END_FILE_UPLOAD_SESSION]:
+      StorageService.endFileUploadSessionAndExecuteSyncToIPFS,
     [StorageEventType.CREATE_BUCKET]: BucketService.createBucket,
     [StorageEventType.UPDATE_BUCKET]: BucketService.updateBucket,
     [StorageEventType.DELETE_BUCKET]: BucketService.deleteBucket,

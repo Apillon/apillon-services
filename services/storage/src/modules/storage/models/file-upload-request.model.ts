@@ -6,8 +6,10 @@ import {
   presenceValidator,
   prop,
   SerializeFor,
+  SqlModelStatus,
 } from 'at-lib';
 import { DbTables, StorageErrorCode } from '../../../config/types';
+import { ServiceContext } from '../../../context';
 
 export class FileUploadRequest extends AdvancedSQLModel {
   public readonly tableName = DbTables.FILE_UPLOAD_REQUEST;
@@ -166,4 +168,59 @@ export class FileUploadRequest extends AdvancedSQLModel {
     ],
   })
   public contentType: string;
+
+  /**
+   * 1 = signed url for upload, generated
+   * 2 = transfered to IPFS
+   * 100 = error transfering to IPFS
+   * 101 = file does not exists on S3
+   * */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+    defaultValue: 1,
+    fakeValue: 1,
+  })
+  public fileStatus: number;
+
+  public async populateFileUploadRequestsInSession(
+    session_id: number,
+    context: ServiceContext,
+  ): Promise<this[]> {
+    if (!session_id) {
+      throw new Error('session_id should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE session_id = @session_id 
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { session_id },
+    );
+    const res = [];
+    if (data && data.length) {
+      for (const d of data)
+        res.push(
+          new FileUploadRequest({}, context).populate(d, PopulateFrom.DB),
+        );
+    }
+
+    return res;
+  }
 }
