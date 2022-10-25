@@ -80,4 +80,13 @@ export class BucketService {
     await b.delete();
     return b.serialize(SerializeFor.PROFILE);
   }
+
+  static async listBucketContent(
+    event: { bucket_id: number; directory_id: number },
+    context: ServiceContext,
+  ) {
+    //if directory_id is not set, list bucket content on root path
+    if (!event.directory_id) {
+    }
+  }
 }

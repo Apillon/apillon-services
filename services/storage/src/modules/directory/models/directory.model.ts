@@ -3,10 +3,12 @@ import { presenceValidator } from '@rawmodel/validators';
 import {
   AdvancedSQLModel,
   Context,
+  getQueryParams,
   PopulateFrom,
   prop,
   SerializeFor,
   SqlModelStatus,
+  unionSelectAndCountQuery,
 } from 'at-lib';
 import { v4 as uuidV4 } from 'uuid';
 import { DbTables, StorageErrorCode } from '../../../config/types';
@@ -71,6 +73,7 @@ export class Directory extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -94,6 +97,7 @@ export class Directory extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [],
   })
@@ -144,6 +148,12 @@ export class Directory extends AdvancedSQLModel {
   })
   public description: string;
 
+  /**
+   * Return array of Directories, that are in bucket
+   * @param bucket_id
+   * @param context
+   * @returns
+   */
   public async populateDirectoriesInBucket(
     bucket_id: number,
     context: ServiceContext,
@@ -167,6 +177,52 @@ export class Directory extends AdvancedSQLModel {
     }
 
     return res;
+  }
+
+  /**
+   * Return array of objects (directories) and files, that are in bucket and in specific parent directory
+   * @param bucket_id
+   * @param parentDirectory_id
+   * @returns
+   */
+  public async getDirectoryContent(bucket_id: number, directory_id?: number) {
+    // if (!bucket_id) {
+    //   throw new Error('bucket_id should not be null');
+    // }
+    // directory_id = directory_id ? directory_id : null;
+    // const { params, filters } = getQueryParams(
+    //   filter.getDefaultValues(),
+    //   'pd',
+    //   fieldMap,
+    //   filter.serialize(),
+    // );
+    // /*return await this.getContext().mysql.paramExecute(
+    //   `
+    //   SELECT d.name, d.CID, d.createTime, d.updateTime
+    //   FROM \`${DbTables.DIRECTORY}\` d
+    //   WHERE d.bucket_id = @bucket_id
+    //   AND IFNULL(@directory_id, -1) = IFNULL(directory_id, -1)
+    //   AND status <> ${SqlModelStatus.DELETED}
+    //   UNION ALL
+    //   SELECT d.name, d.CID, d.createTime, d.updateTime
+    //   FROM \`${DbTables.FILE}\` f
+    //   WHERE d.bucket_id = @bucket_id
+    //   AND IFNULL(@directory_id, -1) = IFNULL(directory_id, -1)
+    //   AND status <> ${SqlModelStatus.DELETED}
+    //   `,
+    //   { bucket_id, directory_id },
+    // );*/
+    // const qSelects = [
+    //   {
+    //     qSelect: `
+    //     SELECT d.name, d.CID, d.createTime, d.updateTime
+    //     `,
+    //     qFrom: `
+    //     FROM \`${DbTables.DIRECTORY}\` d
+    //   `,
+    //   },
+    // ];
+    // return unionSelectAndCountQuery(context.mysql, { qSelects: qSelects });
   }
 
   /*public async getList(context: ServiceContext, query: BucketQueryFilter) {

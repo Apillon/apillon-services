@@ -23,3 +23,4 @@ export * from './lib/at-services/storage/dtos/create-directory.dto';
 export * from './lib/at-services/storage/dtos/create-s3-signed-url-for-upload.dto';
 export * from './lib/exceptions/exceptions';
 export * from './lib/exceptions/http-exception';
+export * from './lib/base-models/base-query-filter.model';

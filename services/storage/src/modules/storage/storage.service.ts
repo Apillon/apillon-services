@@ -6,7 +6,6 @@ import {
 import { ServiceContext } from '../../context';
 import { StorageCodeException } from '../../lib/exceptions';
 import { Bucket } from '../bucket/models/bucket.model';
-import { CrustService } from '../crust/crust.service';
 import { DirectoryService } from '../directory/directory.service';
 import { Directory } from '../directory/models/directory.model';
 import { IPFSService } from '../ipfs/ipfs.service';

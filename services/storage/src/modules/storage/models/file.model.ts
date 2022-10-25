@@ -143,11 +143,13 @@ export class File extends AdvancedSQLModel {
 
   public async populateByNameAndDirectory(
     name: string,
-    directory_id: number,
+    directory_id?: number,
   ): Promise<this> {
     if (!name) {
       throw new Error('name should not be null');
     }
+
+    directory_id = directory_id ? directory_id : null;
 
     const data = await this.getContext().mysql.paramExecute(
       `

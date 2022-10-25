@@ -3,13 +3,12 @@ import { prop } from '@rawmodel/core';
 import { integerParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { ValidatorErrorCode } from '../../../config/types';
-import { ModelBase } from 'at-lib/dist/lib/base-models/base';
+import { BaseQueryFilter, PopulateFrom } from 'at-lib';
 
-export class ServiceQueryFilter extends ModelBase {
-  // Probably needed in the future for api docs
-  // @ApiProperty({ required: true })
+export class ServiceQueryFilter extends BaseQueryFilter {
   @prop({
     parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
@@ -19,9 +18,9 @@ export class ServiceQueryFilter extends ModelBase {
   })
   public project_id: number;
 
-  // @ApiProperty({ required: false })
   @prop({
     parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
