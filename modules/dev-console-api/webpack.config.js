@@ -73,7 +73,10 @@ module.exports = {
   plugins: [
     new CopyPlugin({
       patterns: [
-        { from: './../../packages/at-lib/dist/lib/mailing/templates/*.html' }
+        {
+          from: './../../packages/at-lib/dist/lib/mailing/templates/*.html',
+          to: './../../packages/at-lib/dist/lib/mailing/templates/'
+        }
         // { from: './src/templates/mail/*.html' },
         // { from: './src/templates/pdf/*.html' },
         // { from: './src/locales/*.json' },
