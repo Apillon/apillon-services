@@ -33,7 +33,7 @@ export class StorageService {
         { session_uuid: event.body.session_uuid },
         context,
       );
-      await session.create();
+      await session.insert();
     }
 
     //get bucket
@@ -61,7 +61,7 @@ export class StorageService {
       s3FileKey: s3FileKey,
     });
 
-    await fur.create();
+    await fur.insert();
 
     const s3Client: AWS_S3 = new AWS_S3();
     const signedURLForUpload = await s3Client.generateSignedUploadURL(
@@ -207,7 +207,7 @@ export class StorageService {
               directory_id: currDirectory?.id,
               size: ipfsRes.size,
             })
-            .create();
+            .insert();
         }
 
         //now the file has CID, exists in IPFS node and is pinned to CRUST

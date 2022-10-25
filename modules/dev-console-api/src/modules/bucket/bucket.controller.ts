@@ -13,17 +13,17 @@ import {
 import {
   BucketQueryFilter,
   CreateBucketDto,
-  Ctx,
   PermissionLevel,
-  Permissions,
   PermissionType,
   ValidateFor,
-  Validation,
 } from 'at-lib';
 import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { BucketService } from './bucket.service';
+import { Validation } from '../../decorators/validation.decorator';
+import { Ctx } from '../../decorators/context.decorator';
+import { Permissions } from '../../decorators/permission.decorator';
 
 @Controller('bucket')
 export class BucketController {
