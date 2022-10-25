@@ -8,13 +8,10 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import {
-  Ctx,
-  PermissionLevel,
-  PermissionType,
-  Validation,
-  Permissions,
-} from 'at-lib';
+import { PermissionLevel, PermissionType } from 'at-lib';
+import { Ctx } from '../../decorators/context.decorator';
+import { Validation } from '../../decorators/validation.decorator';
+import { Permissions } from '../../decorators/permission.decorator';
 import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';

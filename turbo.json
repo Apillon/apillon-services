@@ -41,7 +41,7 @@
       ],
       "outputs": []
     },
-    "run-test-server": {
+    "test-server": {
       "cache": false
     }
   }

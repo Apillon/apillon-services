@@ -1,4 +1,4 @@
-import middy from '@middy/core';
+import * as middy from '@middy/core';
 import { AppEnvironment, env } from 'at-lib';
 import { Callback, Context, Handler } from 'aws-lambda/handler';
 import { processEvent } from './main';
@@ -16,7 +16,7 @@ const lambdaHandler: Handler = async (
   return await processEvent(event, context);
 };
 
-export const handler = middy(lambdaHandler);
+export const handler = middy.default(lambdaHandler);
 handler
   .use(
     MongoDbConnect({

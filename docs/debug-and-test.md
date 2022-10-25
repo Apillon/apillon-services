@@ -58,7 +58,7 @@ AT_DEV_CONSOLE_API_MYSQL_PASSWORD_TEST:
 For testing APIs, all the microservices should run their test socket servers (or test lambdas on cloud). To start test servers locally, first run
 
 ```ssh
-npm run run-test-server
+npm run test-server
 ```
 
 > You can (auto) attach debugger to services to debug the code.

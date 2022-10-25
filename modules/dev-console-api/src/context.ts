@@ -13,9 +13,13 @@ export class DevConsoleApiContext extends Context {
    * @param token Authentication token.
    */
   async authenticate(token: string) {
+    this.user = null;
+    if (!token) {
+      return;
+    }
+
     const userData = await new Ams().getAuthUser({ token: token });
 
-    this.user = null;
     if (userData && userData.data.user_uuid) {
       const user = await new User({}, this).populateByUUID(
         this,

@@ -1,5 +1,4 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { CodeException, Ctx, ValidationException } from 'at-lib';
 import {
   ResourceNotFoundErrorCode,
   ValidatorErrorCode,
@@ -11,6 +10,7 @@ import { User } from '../user/models/user.model';
 import { ProjectUserFilter } from './dtos/project_user-query-filter.dto';
 import { Project } from './models/project.model';
 import { ProjectUser } from './models/project-user.model';
+import { CodeException, ValidationException } from 'at-lib';
 
 @Injectable()
 export class ProjectService {
@@ -67,18 +67,18 @@ export class ProjectService {
     return project;
   }
 
-  async getUserProjects(@Ctx() context: DevConsoleApiContext) {
+  async getUserProjects(context: DevConsoleApiContext) {
     return await new Project({}).getUserProjects(context);
   }
 
   async getProjectUsers(
-    @Ctx() context: DevConsoleApiContext,
+    context: DevConsoleApiContext,
     query: ProjectUserFilter,
   ) {
     return await new ProjectUser({}, context).getProjectUsers(context, query);
   }
 
-  async inviteUserProject(@Ctx() context: DevConsoleApiContext, data: any) {
+  async inviteUserProject(context: DevConsoleApiContext, data: any) {
     // TODO: Call AMS service to fetch related user data
     const user = new User({ id: 1, email: 'test.user3@mailinator.com' });
     const project_id = data.project_id;
@@ -124,7 +124,7 @@ export class ProjectService {
   }
 
   async removeUserProject(
-    @Ctx() context: DevConsoleApiContext,
+    context: DevConsoleApiContext,
     project_user_id: number,
   ) {
     const project_user = await new ProjectUser({}, context).populateById(
@@ -144,7 +144,7 @@ export class ProjectService {
   }
 
   async updateProjectImage(
-    @Ctx() context: DevConsoleApiContext,
+    context: DevConsoleApiContext,
     project_id: number,
     uploadedFile: File,
   ) {

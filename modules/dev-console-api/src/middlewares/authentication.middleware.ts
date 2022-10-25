@@ -12,7 +12,7 @@ const AUTHORIZATION_HEADER = 'Authorization';
  */
 @Injectable()
 export class AuthenticateUserMiddleware implements NestMiddleware {
-  async use(req: IRequest, res, next) {
+  async use(req, res, next) {
     const excluded = ['/', '/auth/login', '/user/register'];
 
     if (!excluded.includes(req.originalUrl)) {

@@ -12,10 +12,10 @@
     "build-no-cache": "npx turbo run build --no-cache",
     "dev": "npx turbo run dev --parallel",
     "test": "turbo run test",
-    "run-test-server": "npx turbo run run-test-server",
+    "test-server": "npx turbo run test-server",
     "lint": "npx turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "deploy:dev": "npx turbo run deploy:dev"
+    "deploy:dev": "npx turbo run deploy:dev -vvv --force --continue=false"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.102",
@@ -24,7 +24,6 @@
     "eslint-config-common": "*",
     "nodemon": "^2.0.19",
     "prettier": "latest",
-    "serverless-offline": "^10.0.0",
     "serverless-webpack": "^5.9.1",
     "ts-node": "^10.9.1",
     "turbo": "latest"
@@ -33,8 +32,5 @@
     "npm": ">=7.0.0",
     "node": ">=14.0.0"
   },
-  "packageManager": "npm@8.4.0",
-  "dependencies": {
-    "aws-lambda": "^1.0.7"
-  }
+  "packageManager": "npm@8.4.0"
 }

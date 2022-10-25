@@ -1,9 +1,5 @@
 import { SetMetadata } from '@nestjs/common';
-import {
-  DefaultUserRole,
-  PermissionLevel,
-  PermissionType,
-} from '../../config/types';
+import { DefaultUserRole, PermissionLevel, PermissionType } from 'at-lib';
 
 export interface PermissionPass {
   permission?: number;

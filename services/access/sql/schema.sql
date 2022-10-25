@@ -169,7 +169,7 @@ CREATE TABLE IF NOT EXISTS `authToken` (
   `updateUser` INT NULL,
   PRIMARY KEY (`id`),
   INDEX `authToken_uuid_idx` (`user_uuid` ASC),
-  INDEX `authToken_token_idx` (`token` ASC)
+  INDEX `authToken_tokenType_idx` (`tokenType` ASC)
   );
 
 SET SQL_MODE=@OLD_SQL_MODE;

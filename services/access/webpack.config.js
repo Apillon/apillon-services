@@ -2,7 +2,7 @@
 const path = require('path');
 const slsw = require('serverless-webpack');
 const nodeExternals = require('webpack-node-externals');
-const CopyPlugin = require('copy-webpack-plugin');
+// const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   context: __dirname,
@@ -14,15 +14,26 @@ module.exports = {
     extensions: ['.mjs', '.json', '.ts', '.js'],
     symlinks: false,
     cacheWithContext: false,
+
     alias: {
-      // '@nestjs/websockets/socket-module': 'empty',
-      // 'cache-manager': 'empty',
-      // 'class-validator': 'empty',
-      // 'class-transformer': 'empty',
-      // '@nestjs/microservices/microservices-module': 'empty',
-      // '@nestjs/microservices': 'empty',
-      // 'at-lib': path.join(__dirname, '..', '..', 'packages', 'at-lib', 'dist')
+      'bson-ext': false,
+      'kerberos': false,
+      // '@mongodb-js/zstd': false,
+      'snappy': false,
+      'snappy/package.json': false,
+      'aws4': false,
+      'mongodb-client-encryption': false,
+      'cardinal': false,
+      // '@nestjs/websockets/socket-module': false,
+      // 'cache-manager': false,
+      // 'class-validator': false,
+      // 'class-transformer': false,
+      // '@nestjs/microservices/microservices-module': false,
+      // '@nestjs/microservices': false,
+      //'at-lib': path.join(__dirname, '..', '..', 'packages', 'at-lib', 'dist')
     },
+
+
   },
   output: {
     libraryTarget: 'commonjs',
@@ -33,11 +44,11 @@ module.exports = {
   node: {
     __dirname: true,
   },
-  // externals: [nodeExternals({
-  //   allowlist: ['at-lib']
-  // }
-  // )],
-  externals: [nodeExternals()],
+  externals: [nodeExternals({
+    allowlist: ['at-lib']
+  }
+  )],
+  // externals: [nodeExternals()],
   module: {
     rules: [
       // all files with a `.ts` or `.tsx` extension will be handled by `ts-loader`

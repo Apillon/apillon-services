@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { Context } from 'aws-lambda';
 import { createServer, proxy, Response } from 'aws-serverless-express';
-import express from 'express';
+import * as express from 'express';
 
 import { Server } from 'http';
 import { AppModule } from './app.module';

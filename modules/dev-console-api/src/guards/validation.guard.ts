@@ -1,11 +1,13 @@
+/* eslint-disable sonarjs/no-useless-catch */
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { ValidatorErrorCode } from '../config/types';
+import { ValidationException } from 'at-lib';
 import {
   IValidationOptions,
-  ValidationException,
   VALIDATION_OPTIONS_KEY,
-} from 'at-lib';
-import { ValidatorErrorCode } from '../config/types';
+} from '../decorators/validation.decorator';
+
 import { IRequest } from '../middlewares/context.middleware';
 
 @Injectable()

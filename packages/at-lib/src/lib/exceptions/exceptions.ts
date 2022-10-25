@@ -1,21 +1,18 @@
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { HttpException, HttpStatus } from '@nestjs/common';
 import { Model } from '@rawmodel/core';
 import {
   BadRequestErrorCode,
   ErrorOrigin,
   LogType,
   SystemErrorCode,
-} from '../config/types';
-import { Context } from 'vm';
-import { writeLog } from './logger';
-import { Lmas } from './at-services/lmas/lmas';
+} from '../../config/types';
+import { Lmas } from '../at-services/lmas/lmas';
+import { writeLog } from '../logger';
+import { HttpException } from './http-exception';
 
 export interface ErrorOptions {
   code: any;
-  status: HttpStatus;
-  context?: Context;
+  status: number;
+  context?: any;
   errorMessage?: string;
   sourceFunction?: string;
   details?: any;
@@ -97,11 +94,11 @@ export class ValidationException extends HttpException {
 
     super(
       {
-        code: HttpStatus.UNPROCESSABLE_ENTITY,
+        code: 422,
         errors: validationErrors,
         message: 'Validation error', // workaround for errors in production
       },
-      HttpStatus.UNPROCESSABLE_ENTITY,
+      422,
     );
 
     this.modelName = model.constructor.name;

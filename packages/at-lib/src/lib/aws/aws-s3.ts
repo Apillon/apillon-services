@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable sonarjs/no-identical-functions */
 import * as aws from 'aws-sdk';
-import { HeadObjectOutput } from 'aws-sdk/clients/s3';
 import { env } from '../../config/env';
 import { AppEnvironment } from '../../config/types';
 

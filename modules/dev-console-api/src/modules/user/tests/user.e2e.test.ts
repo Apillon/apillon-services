@@ -1,6 +1,5 @@
 import { generateJwtToken, JwtTokenType } from 'at-lib';
 import * as request from 'supertest';
-import { TestContext } from '../../../../test/helpers/context';
 import { releaseStage, setupTest, Stage } from '../../../../test/helpers/setup';
 import { createTestUser, TestUser } from '../../../../test/helpers/user';
 
@@ -70,5 +69,46 @@ describe('Auth tests', () => {
     expect(response.body.token).toBeTruthy();
 
     newUserData.authToken = response.body.token;
+  });
+
+  test('User should not be able to login with wrong password', async () => {
+    const response = await request(stage.http).post('/user/login').send({
+      email: newUserData.email,
+      password: newUserData.password.toLowerCase(),
+    });
+    expect(response.status).toBe(401);
+  });
+
+  test('User should not be able to login with wrong email', async () => {
+    const response = await request(stage.http)
+      .post('/user/login')
+      .send({
+        email: newUserData.email + 'x',
+        password: newUserData.password,
+      });
+    expect(response.status).toBe(401);
+  });
+
+  test('User should be able to authenticate with token', async () => {
+    const response = await request(stage.http)
+      .get('/user/me')
+      .set('Authorization', `Bearer ${newUserData.authToken}`);
+    expect(response.status).toBe(200);
+    expect(response.body.id).toBeTruthy();
+  });
+
+  test('User should NOT be able to authenticate with old token', async () => {
+    const oldToken = newUserData.authToken;
+
+    const response1 = await request(stage.http).post('/user/login').send({
+      email: newUserData.email,
+      password: newUserData.password,
+    });
+    expect(response1.status).toBe(201);
+
+    const response = await request(stage.http)
+      .get('/user/me')
+      .set('Authorization', `Bearer ${oldToken}`);
+    expect(response.status).toBe(401);
   });
 });
