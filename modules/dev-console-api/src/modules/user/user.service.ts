@@ -4,10 +4,10 @@ import {
   ErrorCode,
   generateJwtToken,
   JwtTokenType,
+  Mailing,
   parseJwtToken,
   PopulateFrom,
   SerializeFor,
-  SMTPsendTemplate,
   UnauthorizedErrorCodes,
 } from 'at-lib';
 import {
@@ -91,8 +91,10 @@ export class UserService {
       email,
     });
 
-    await SMTPsendTemplate([email], 'Welcome to Apillon!', 'welcome', {
-      token,
+    await new Mailing().sendMail({
+      emails: [email],
+      subject: 'Welcome to Apillon!',
+      template: 'welcome',
     });
   }
 

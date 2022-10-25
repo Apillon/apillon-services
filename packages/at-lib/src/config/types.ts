@@ -16,11 +16,16 @@ export enum LmasEventType {
   NOTIFY = 'notify',
 }
 
+export enum MailEventType {
+  SEND_MAIL = 'send-mail',
+}
+
 export enum ServiceName {
   GENERAL = 'GENERAL',
   AMS = 'AMS',
   LMAS = 'LMAS',
   DEV_CONSOLE = 'DEV_CONSOLE',
+  MAIL = 'MAIL',
 }
 
 export enum ServiceCode {

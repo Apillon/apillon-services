@@ -81,6 +81,33 @@ export interface IEnv {
   AT_LMAS_MONGO_DATABASE_TEST: string;
 
   /************************************************************
+   * MAIL - mailing service
+   ************************************************************/
+
+  /**
+   *  function name
+   */
+  AT_MAIL_FUNCTION_NAME: string;
+  AT_MAIL_FUNCTION_NAME_TEST: string;
+  /**
+   * LMAS dev server port
+   */
+  AT_MAIL_SOCKET_PORT: number;
+  AT_MAIL_SOCKET_PORT_TEST: number;
+  /**/
+
+  /** MAILING */
+  MAIL_TEMPLATE_PATH: string;
+  SMTP_HOST: string;
+  SMTP_PORT: number;
+  SMTP_USE_SSL: boolean;
+  SMTP_USERNAME: string;
+  SMTP_PASSWORD: string;
+  SMTP_NAME_FROM: string;
+  SMTP_EMAIL_FROM: string;
+  ADMIN_EMAILS: string;
+
+  /************************************************************
    * dev-console-api Database config
    ************************************************************/
   AT_DEV_CONSOLE_API_MYSQL_HOST: string;
@@ -105,17 +132,6 @@ export interface IEnv {
    * Page size used in sql utils
    */
   DEFAULT_PAGE_SIZE: number;
-
-  /** MAILING */
-  MAIL_TEMPLATE_PATH: string;
-  SMTP_HOST: string;
-  SMTP_PORT: number;
-  SMTP_USE_SSL: boolean;
-  SMTP_USERNAME: string;
-  SMTP_PASSWORD: string;
-  SMTP_NAME_FROM: string;
-  SMTP_EMAIL_FROM: string;
-  ADMIN_EMAILS: string;
 }
 
 // dotenv.config();
@@ -200,6 +216,14 @@ export let env: IEnv = {
   DEFAULT_PAGE_SIZE: parseInt(process.env['DEFAULT_PAGE_SIZE']) || 20,
 
   /** MAILING */
+  AT_MAIL_FUNCTION_NAME: process.env['AT_MAIL_FUNCTION_NAME'],
+  AT_MAIL_FUNCTION_NAME_TEST: process.env['AT_MAIL_FUNCTION_NAME_TEST'],
+
+  AT_MAIL_SOCKET_PORT:
+    parseInt(process.env['AT_MAIL_SOCKET_PORT_TEST']) || 6301,
+  AT_MAIL_SOCKET_PORT_TEST:
+    parseInt(process.env['AT_MAIL_SOCKET_PORT_TEST']) || 7301,
+
   MAIL_TEMPLATE_PATH: process.env['MAIL_TEMPLATE_PATH'] || '',
   SMTP_HOST: process.env['SMTP_HOST'],
   SMTP_PORT: parseInt(process.env['SMTP_PORT']),

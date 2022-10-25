@@ -1,7 +1,7 @@
 # console: true
 # org: authtrailadmin
 # app: authtrail-v2
-service: at-v2-access-service-${opt:stage, 'dev'}
+service: at-v2-mailing-service-${opt:stage, 'dev'}
 frameworkVersion: '3'
 
 custom:
@@ -27,10 +27,9 @@ provider:
   iam:
     role: arn:aws:iam::018021943180:role/serverless-workers-executor
 
-  environment:
-    ${file(../../bin/deploy/env/env.yml)}
-    # AT_AMS_FUNCTION_NAME: 'at-v2-access-service-${self:provider.stage}'
-    # AT_LMAS_FUNCTION_NAME: 'at-v2-monitoring-service-${self:provider.stage}'
+  environment: ${file(../../bin/deploy/env/env.yml)}
+  #   AT_AMS_FUNCTION_NAME: 'at-v2-access-service-${self:provider.stage}'
+  #   AT_LMAS_FUNCTION_NAME: 'at-v2-mailing-service-${self:provider.stage}'
 
 # you can add packaging information here
 package:
@@ -39,9 +38,9 @@ package:
   excludeDevDependencies: true
 
 functions:
-  access-service:
+  mailing-service:
     handler: ./src/handler.handler
-    name: 'at-v2-access-service-${self:provider.stage}'
-    description: AT Access Management Service
+    name: 'at-v2-mailing-service-${self:provider.stage}'
+    description: AT Logging & mailing & Alerting Service
     memorySize: 512
     timeout: 30

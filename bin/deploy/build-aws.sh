@@ -76,4 +76,24 @@ then
   npm run deploy:prod
 
 fi
+
+cd ../../services/mailing/
+npm link ../../packages/at-lib --omit=dev
+npm i serverless-webpack copy-webpack-plugin webpack webpack-node-externals ts-loader
+if [ "$ENV" == "staging" ]
+then
+
+  npm run deploy:staging
+
+elif [ "$ENV" == "development" ]
+then
+
+  npm run deploy:dev
+
+elif [ "$ENV" == "production" ]
+then
+
+  npm run deploy:prod
+
+fi
 # cd ../..

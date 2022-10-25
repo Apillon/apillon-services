@@ -9,6 +9,10 @@
       "path": "services\\monitoring"
     },
     {
+      "name": "🌐@services/mailing [AT-MAIL]",
+      "path": "services\\mailing"
+    },
+    {
       "name": "😎@modules/dev-console-api",
       "path": "modules\\dev-console-api"
     },

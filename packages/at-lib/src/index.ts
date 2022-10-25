@@ -1,5 +1,6 @@
 export * from './lib/at-services/ams';
 export * from './lib/at-services/lmas';
+export * from './lib/at-services/mailing';
 export * from './lib/aws/aws-secrets';
 export * from './lib/database/mongo';
 export * from './lib/database/mysql';
@@ -15,6 +16,5 @@ export * from './lib/database/sql-utils';
 export * from './lib/aws/aws-s3';
 export * from './lib/validators';
 export * from './lib/utils';
-export * from './lib/mailing/smtp-mailer';
 export * from './lib/exceptions/exceptions';
 export * from './lib/exceptions/http-exception';
