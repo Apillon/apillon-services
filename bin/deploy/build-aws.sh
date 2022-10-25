@@ -19,13 +19,7 @@ npm run build
 cd ../../modules/dev-console-api/
 npm link ../../packages/at-lib --omit=dev
 npm i serverless-webpack copy-webpack-plugin webpack webpack-node-externals
-# cd ../../services/access/
-# npm link ../../packages/at-lib --omit=dev
-# npm i serverless-webpack copy-webpack-plugin webpack webpack-node-externals
-# cd ../../services/monitoring/
-# npm link ../../packages/at-lib --omit=dev
-# npm i serverless-webpack copy-webpack-plugin webpack webpack-node-externals
-# cd ../..
+
 
 if [ "$ENV" == "staging" ]
 then
@@ -43,3 +37,43 @@ then
   npm run deploy:prod
 
 fi
+
+cd ../../services/access/
+npm link ../../packages/at-lib --omit=dev
+npm i serverless-webpack copy-webpack-plugin webpack webpack-node-externals
+if [ "$ENV" == "staging" ]
+then
+
+  npm run deploy:staging
+
+elif [ "$ENV" == "development" ]
+then
+
+  npm run deploy:dev
+
+elif [ "$ENV" == "production" ]
+then
+
+  npm run deploy:prod
+
+fi
+cd ../../services/monitoring/
+npm link ../../packages/at-lib --omit=dev
+npm i serverless-webpack copy-webpack-plugin webpack webpack-node-externals
+if [ "$ENV" == "staging" ]
+then
+
+  npm run deploy:staging
+
+elif [ "$ENV" == "development" ]
+then
+
+  npm run deploy:dev
+
+elif [ "$ENV" == "production" ]
+then
+
+  npm run deploy:prod
+
+fi
+# cd ../..
