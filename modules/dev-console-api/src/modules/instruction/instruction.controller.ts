@@ -37,11 +37,11 @@ export class InstructionController {
   @UseGuards(ValidationGuard, AuthGuard)
   async getInstruction(
     @Ctx() context: DevConsoleApiContext,
-    @Query('instruction_enum') instruction_enum: string,
+    @Query('instructionEnum') instructionEnum: string,
   ) {
     return await this.instructionService.getInstruction(
       context,
-      instruction_enum,
+      instructionEnum,
     );
   }
 
