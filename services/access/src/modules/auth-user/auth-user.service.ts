@@ -86,7 +86,9 @@ export class AuthUserService {
       'secToken1',
     );
 
-    return authUser.serialize(SerializeFor.SERVICE);
+    const res = authUser.serialize(SerializeFor.SERVICE);
+    console.log(res);
+    return res;
   }
 
   static async login(event, context: ServiceContext) {
