@@ -1,6 +1,3 @@
-import { LogType } from '../../config/types';
-import { Lmas } from '../at-services/lmas';
-
 export class HttpException extends Error {
   public response: any;
   public status: number;

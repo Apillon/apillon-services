@@ -22,13 +22,13 @@ export interface ErrorOptions {
 
 export class CodeException extends HttpException {
   origin: ErrorOrigin;
-  code: SystemErrorCode | BadRequestErrorCode | any;
+  statusCode: SystemErrorCode | BadRequestErrorCode | any;
   options: ErrorOptions;
 
   constructor(options: ErrorOptions) {
     super(
       {
-        code: options.code,
+        statusCode: options.code,
         message: options.errorCodes
           ? options.errorCodes[options.code]
           : options.errorMessage,
@@ -86,7 +86,7 @@ export class ValidationException extends HttpException {
   public constructor(model: Model, ValidatorErrorCode?: any) {
     const validationErrors = model.collectErrors().map((x) => {
       return {
-        code: x.code,
+        statusCode: x.code,
         property: x.path[0],
         message: ValidatorErrorCode ? ValidatorErrorCode[x.code] : '',
       };
@@ -94,7 +94,7 @@ export class ValidationException extends HttpException {
 
     super(
       {
-        code: 422,
+        statusCode: 422,
         errors: validationErrors,
         message: 'Validation error', // workaround for errors in production
       },
