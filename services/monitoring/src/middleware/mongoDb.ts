@@ -34,6 +34,9 @@ export function MongoDbConnect(options?: {
     }
 
     context[options.instanceName] = instances[options.instanceName];
+    console.log(
+      `Mongo client instance ${options.instanceName} is already connected!`,
+    );
   };
 
   const after = async (_response) => {
