@@ -8,5 +8,6 @@ export class Logger {
       ts: new Date(),
     };
     await context.mongo.db.collection('logs').insertOne(event);
+    return event;
   }
 }
