@@ -3,7 +3,12 @@ import { prop } from '@rawmodel/core';
 import { stringParser, integerParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 
-import { AdvancedSQLModel, PopulateFrom, SerializeFor } from 'at-lib';
+import {
+  AdvancedSQLModel,
+  getQueryParams,
+  PopulateFrom,
+  SerializeFor,
+} from 'at-lib';
 import { selectAndCountQuery } from 'at-lib';
 
 import { DevConsoleApiContext } from '../../../context';
@@ -41,7 +46,7 @@ export class Service extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.INSERT_DB],
     validators: [
       {
@@ -57,11 +62,13 @@ export class Service extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -77,11 +84,13 @@ export class Service extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -97,11 +106,13 @@ export class Service extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
     ],
   })
   public description: string;
@@ -111,11 +122,13 @@ export class Service extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
     ],
   })
   public active: number;
@@ -127,12 +140,16 @@ export class Service extends AdvancedSQLModel {
     context: DevConsoleApiContext,
     filter: ServiceQueryFilter,
   ) {
-    const params = {
-      serviceType_id: filter.serviceType_id,
-      project_id: filter.project_id,
-      offset: 0,
-      limit: 10,
+    // Map url query with sql fields.
+    const fieldMap = {
+      id: 's.id',
     };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      's',
+      fieldMap,
+      filter.serialize(),
+    );
 
     const sqlQuery = {
       qSelect: `
@@ -146,7 +163,8 @@ export class Service extends AdvancedSQLModel {
         WHERE project_id= ${params.project_id} AND s.serviceType_id = ${params.serviceType_id} 
       `,
       qFilter: `
-        LIMIT ${params.limit} OFFSET ${params.offset};
+        ORDER BY ${filters.orderStr}
+        LIMIT ${filters.limit} OFFSET ${filters.offset};
       `,
     };
 

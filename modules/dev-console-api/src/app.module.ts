@@ -9,6 +9,9 @@ import { ProjectModule } from './modules/project/project.module';
 import { UserModule } from './modules/user/user.module';
 import { InstructionModule } from './modules/instruction/instruction.module';
 import { ServicesModule } from './modules/services/services.module';
+import { BucketModule } from './modules/bucket/bucket.module';
+import { DirectoryModule } from './modules/directory/directory.module';
+import { StorageModule } from './modules/storage/storage.module';
 
 @Module({
   imports: [
@@ -18,6 +21,9 @@ import { ServicesModule } from './modules/services/services.module';
     FileModule,
     ServicesModule,
     InstructionModule,
+    BucketModule,
+    DirectoryModule,
+    StorageModule,
   ],
   controllers: [AppController],
   providers: [AppService],

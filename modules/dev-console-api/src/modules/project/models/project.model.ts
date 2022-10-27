@@ -22,7 +22,7 @@ export class Project extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
+    populatable: [PopulateFrom.DB],
     serializable: [SerializeFor.ADMIN, SerializeFor.INSERT_DB],
     validators: [
       {

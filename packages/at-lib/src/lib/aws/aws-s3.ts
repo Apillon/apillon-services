@@ -9,21 +9,24 @@ export class AWS_S3 {
 
   constructor() {
     try {
-      if (env.APP_ENV == AppEnvironment.LOCAL_DEV) {
+      this.s3Client = new aws.S3({
+        accessKeyId: env.AWS_KEY,
+        secretAccessKey: env.AWS_SECRET,
+        region: env.AWS_REGION,
+        signatureVersion: 'v4',
+      });
+      /*if (env.APP_ENV == AppEnvironment.LOCAL_DEV) {
         this.s3Client = new aws.S3({
           accessKeyId: env.AWS_KEY,
           secretAccessKey: env.AWS_SECRET,
           region: env.AWS_REGION,
           endpoint: env.AWS_ENDPOINT,
           s3ForcePathStyle: true,
+          signatureVersion: 'v4',
         });
       } else {
-        this.s3Client = new aws.S3({
-          accessKeyId: env.AWS_KEY,
-          secretAccessKey: env.AWS_SECRET,
-          region: env.AWS_REGION,
-        });
-      }
+        
+      }*/
     } catch (err) {
       console.error(
         'error creating AWS S3 client',
@@ -50,6 +53,7 @@ export class AWS_S3 {
    */
   exists(bucket: string, source: string) {
     return new Promise((resolve, reject) => {
+      console.info(bucket, source);
       this.s3Client.headObject(
         {
           Bucket: bucket,
@@ -57,7 +61,7 @@ export class AWS_S3 {
         },
         (err, data) => {
           if (err) {
-            console.error(err);
+            console.error('headObject error', err);
             resolve(false);
           } else {
             resolve(true);
@@ -110,6 +114,55 @@ export class AWS_S3 {
         {
           Bucket: bucket,
           Key: source,
+        },
+        (err, data) => {
+          if (err) {
+            console.error(err);
+            reject(err);
+          } else {
+            resolve(data);
+          }
+        },
+      );
+    });
+  }
+
+  /**
+   * Retrieves S3 directory.
+   * @param source File source path.
+   * @param ctx Request context.
+   */
+  listBucket(bucket: string): Promise<aws.S3.ListObjectsOutput> {
+    return new Promise((resolve, reject) => {
+      this.s3Client.listObjectsV2(
+        {
+          Bucket: bucket,
+        },
+        (err, data) => {
+          if (err) {
+            console.error(err);
+            reject(err);
+          } else {
+            resolve(data);
+          }
+        },
+      );
+    });
+  }
+
+  /**
+   * Generate signed upload link
+   * AWS s3. Docs for putObject: https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
+   * @param source File source path.
+   * @param ctx Request context.
+   */
+  generateSignedUploadURL(bucket: string, key: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      this.s3Client.getSignedUrl(
+        'putObject',
+        {
+          Bucket: bucket,
+          Key: key,
         },
         (err, data) => {
           if (err) {

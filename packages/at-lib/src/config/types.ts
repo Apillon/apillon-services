@@ -16,6 +16,26 @@ export enum LmasEventType {
   NOTIFY = 'notify',
 }
 
+export enum StorageEventType {
+  ADD_FILE_TO_IPFS = 'add-file-to-ipfs',
+  ADD_FILE_TO_IPFS_FROM_S3 = 'add-file-to-ipfs-from-s3',
+  GET_OBJECT_FROM_IPFS = 'get-object-from-ipfs',
+  LIST_IPFS_DIRECTORY = 'list-ipfs-directory',
+  PLACE_STORAGE_ORDER_TO_CRUST = 'place-storage-order-to-crust',
+  REQUEST_S3_SIGNED_URL_FOR_UPLOAD = 'request-s3-signed-url-for-upload',
+  END_FILE_UPLOAD_SESSION = 'end-file-upload-session',
+  CREATE_BUCKET = 'create-bucket',
+  UPDATE_BUCKET = 'update-bucket',
+  DELETE_BUCKET = 'delete-bucket',
+  GET_BUCKET = 'get-bucket',
+  LIST_BUCKETS = 'list-buckets',
+  LIST_BUCKET_CONTENT = 'list-bucket-content',
+  CREATE_DIRECTORY = 'create-directory',
+  UPDATE_DIRECTROY = 'update-directory',
+  DELETE_DIRECTORY = 'delete-directory',
+  LIST_DIRECTORY_CONTENT = 'list-directory-content',
+}
+
 export enum MailEventType {
   SEND_MAIL = 'send-mail',
 }
@@ -34,6 +54,8 @@ export enum ServiceCode {
   AMS = '02',
   LMAS = '03',
   DEV_CONSOLE = '04',
+  APILLON_API = '05',
+  STORAGE = '06',
 }
 
 export enum AppEnvironment {
@@ -144,6 +166,8 @@ export enum DefaultApiKeyRole {
  *  02 - ams
  *  03 - lmas
  *  04 - dev-api
+ *  05 - apillon-api
+ *  06 - storage
  *  ...
  *  INTERNAL ERROR CODE: 000 - 999
  *
@@ -169,14 +193,30 @@ export enum SystemErrorCode {
   UNHANDLED_SYSTEM_ERROR = 500001,
   SQL_SYSTEM_ERROR = 500002,
   AWS_SYSTEM_ERROR = 500003,
+  MICROSERVICE_SYSTEM_ERROR = 500004,
 }
 
 /**
- * Route error codes - 400000.
+ * Bad request error codes - 400000.
  */
 export enum BadRequestErrorCode {
   BAD_REQUEST = 400000,
   INVALID_PATH = 400001,
+}
+
+export enum ValidatorErrorCode {
+  DEFAULT_VALIDATOR_ERROR_CODE = 42200000,
+  BUCKET_PROJECT_UUID_NOT_PRESENT = 42200001,
+  BUCKET_STORAGE_PLAN_ID_NOT_PRESENT = 42200002,
+  BUCKET_NAME_NOT_PRESENT = 42200003,
+  DIRECTORY_BUCKET_ID_NOT_PRESENT = 42200004,
+  DIRECTORY_NAME_NOT_PRESENT = 42200005,
+  BUCKET_UUID_NOT_PRESENT = 42200006,
+  PATH_NOT_PRESENT = 42200007,
+  FILE_NAME_NOT_PRESENT = 42200008,
+  CONTENT_TYPE_NOT_PRESENT = 42200009,
+  SESSION_UUID_NOT_PRESENT = 42200010,
+  BUCKET_TYPE_NOT_PRESENT = 42200011,
 }
 
 /**

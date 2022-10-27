@@ -5,7 +5,7 @@ import {
   LogType,
   SystemErrorCode,
 } from '../../config/types';
-import { Lmas } from '../at-services/lmas';
+import { Lmas } from '../at-services/lmas/lmas';
 import { writeLog } from '../logger';
 import { HttpException } from './http-exception';
 

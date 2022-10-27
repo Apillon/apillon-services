@@ -1,11 +1,11 @@
-import { env } from '../../config/env';
+import { env } from '../../../config/env';
 import {
   AppEnvironment,
   LmasEventType,
   LogType,
   ServiceName,
-} from '../../config/types';
-import { BaseService } from './base-service';
+} from '../../../config/types';
+import { BaseService } from '../base-service';
 
 /**
  * Logging / Monitoring / Alerting Service client
