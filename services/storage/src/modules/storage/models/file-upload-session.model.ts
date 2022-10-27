@@ -3,11 +3,12 @@ import {
   AdvancedSQLModel,
   Context,
   PopulateFrom,
+  presenceValidator,
   prop,
   SerializeFor,
   SqlModelStatus,
 } from 'at-lib';
-import { DbTables } from '../../../config/types';
+import { DbTables, StorageErrorCode } from '../../../config/types';
 
 export class FileUploadSession extends AdvancedSQLModel {
   public readonly tableName = DbTables.FILE_UPLOAD_SESSION;
@@ -33,6 +34,29 @@ export class FileUploadSession extends AdvancedSQLModel {
     validators: [],
   })
   public session_uuid: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: StorageErrorCode.FILE_UPLOAD_SESSION_BUCKET_ID_NOT_PRESENT,
+      },
+    ],
+  })
+  public bucket_id: number;
 
   @prop({
     parser: { resolver: integerParser() },

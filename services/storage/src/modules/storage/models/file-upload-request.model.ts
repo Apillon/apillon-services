@@ -257,4 +257,25 @@ export class FileUploadRequest extends AdvancedSQLModel {
 
     return res;
   }
+
+  public async populateByS3FileKey(s3FileKey: string): Promise<this> {
+    if (!s3FileKey) {
+      throw new Error('s3FileKey should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE s3FileKey = @s3FileKey AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { s3FileKey },
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
 }
