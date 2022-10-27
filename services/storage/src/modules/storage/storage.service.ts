@@ -113,13 +113,10 @@ export class StorageService {
     );
 
     if (bucket.bucketType == BucketType.HOSTING) {
-      const ipfsRes = await IPFSService.uploadFilesToIPFSFromS3(
-        {
-          fileUploadRequests: files,
-          wrapWithDirectory: true,
-        },
-        context,
-      );
+      const ipfsRes = await IPFSService.uploadFilesToIPFSFromS3({
+        fileUploadRequests: files,
+        wrapWithDirectory: true,
+      });
 
       /*await CrustService.placeStorageOrderToCRUST({
           cid: ipfsRes.CID,

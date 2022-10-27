@@ -1,5 +1,3 @@
-import { ServiceCode } from 'at-lib';
-
 export enum DbTables {
   FILE_UPLOAD_SESSION = 'file_upload_session',
   FILE_UPLOAD_REQUEST = 'file_upload_request',

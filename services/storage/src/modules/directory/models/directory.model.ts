@@ -11,7 +11,6 @@ import {
   SqlModelStatus,
   unionSelectAndCountQuery,
 } from 'at-lib';
-import { v4 as uuidV4 } from 'uuid';
 import { DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
 

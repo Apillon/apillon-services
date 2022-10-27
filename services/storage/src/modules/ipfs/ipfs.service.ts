@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-non-literal-fs-filename */
 import { AWS_S3, env } from 'at-lib';
 import { CID, create } from 'ipfs-http-client';
 import {
@@ -5,7 +6,6 @@ import {
   StorageErrorCode,
 } from '../../config/types';
 import { StorageCodeException } from '../../lib/exceptions';
-import { CrustService } from '../crust/crust.service';
 import { FileUploadRequest } from '../storage/models/file-upload-request.model';
 
 export class IPFSService {
@@ -70,13 +70,10 @@ export class IPFSService {
     };
   }
 
-  static async uploadFilesToIPFSFromS3(
-    event: {
-      fileUploadRequests: FileUploadRequest[];
-      wrapWithDirectory: boolean;
-    },
-    context,
-  ): Promise<{
+  static async uploadFilesToIPFSFromS3(event: {
+    fileUploadRequests: FileUploadRequest[];
+    wrapWithDirectory: boolean;
+  }): Promise<{
     parentDirCID: CID;
     ipfsDirectories: { path: string; cid: CID }[];
   }> {

@@ -13,7 +13,6 @@ import {
 } from 'at-lib';
 import { DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
-import { v4 as uuidV4 } from 'uuid';
 
 export class Bucket extends AdvancedSQLModel {
   public readonly tableName = DbTables.BUCKET;
