@@ -18,6 +18,7 @@ export async function upgrade(
   \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   \`updateUser\` INT NULL,
   PRIMARY KEY (\`id\`),
+  UNIQUE (directory_uuid),
   CONSTRAINT \`fk_directory_bucket\`
         FOREIGN KEY (\`bucket_id\`)
         REFERENCES \`${DbTables.BUCKET}\` (\`id\`)

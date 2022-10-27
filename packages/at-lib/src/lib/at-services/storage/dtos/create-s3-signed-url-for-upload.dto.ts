@@ -46,6 +46,13 @@ export class CreateS3SignedUrlForUploadDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    setter(value: string) {
+      if (value && value.length > 0) {
+        value = value.replace(/^\/+/g, '');
+        value += value.endsWith('/') ? '' : '/';
+      }
+      return value;
+    },
     validators: [],
   })
   public path: string;

@@ -12,7 +12,7 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.GET_OBJECT_FROM_IPFS]: IPFSService.getFileFromIPFS,
     [StorageEventType.LIST_IPFS_DIRECTORY]: IPFSService.listIPFSDirectory,
     [StorageEventType.ADD_FILE_TO_IPFS_FROM_S3]:
-      IPFSService.uploadFilesToIPFSFromS3,
+      IPFSService.uploadFileToIPFSFromS3,
     [StorageEventType.PLACE_STORAGE_ORDER_TO_CRUST]:
       CrustService.placeStorageOrderToCRUST,
     [StorageEventType.REQUEST_S3_SIGNED_URL_FOR_UPLOAD]:

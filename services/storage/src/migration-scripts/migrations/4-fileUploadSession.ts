@@ -13,7 +13,8 @@ export async function upgrade(
   \`createUser\` INT NULL,
   \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   \`updateUser\` INT NULL,
-  PRIMARY KEY (\`id\`)
+  PRIMARY KEY (\`id\`),
+  UNIQUE (session_uuid)
   );
   `);
 }

@@ -11,6 +11,7 @@ import {
   StorageValidationException,
 } from '../../lib/exceptions';
 import { Bucket } from './models/bucket.model';
+import { v4 as uuidV4 } from 'uuid';
 
 export class BucketService {
   static async listBuckets(
@@ -27,7 +28,10 @@ export class BucketService {
     event: { body: CreateBucketDto },
     context: ServiceContext,
   ): Promise<any> {
-    const b: Bucket = new Bucket(event.body, context);
+    const b: Bucket = new Bucket(
+      { ...event.body, bucket_uuid: uuidV4() },
+      context,
+    );
     //set default bucket size
     b.maxSize = 5242880;
 

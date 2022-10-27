@@ -1,6 +1,6 @@
 import { ModelBase, prop } from '../../../base-models/base';
 import { faker } from '@faker-js/faker';
-import { stringParser } from '@rawmodel/parsers';
+import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   PopulateFrom,
@@ -21,6 +21,19 @@ export class CreateBucketDto extends ModelBase {
     ],
   })
   public project_uuid: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.BUCKET_TYPE_NOT_PRESENT,
+      },
+    ],
+  })
+  public bucketType: number;
 
   @prop({
     parser: { resolver: stringParser() },

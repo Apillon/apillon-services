@@ -1,5 +1,7 @@
 import { AWS_S3, CreateS3SignedUrlForUploadDto, env } from 'at-lib';
+import { CID } from 'ipfs-http-client';
 import {
+  BucketType,
   FileUploadRequestFileStatus,
   StorageErrorCode,
 } from '../../config/types';
@@ -48,7 +50,7 @@ export class StorageService {
     }
 
     const s3FileKey = `${bucket.id}/${session.session_uuid}/${
-      (event.body.path ? event.body.path + '/' : '') + event.body.fileName
+      (event.body.path ? event.body.path : '') + event.body.fileName
     }`;
 
     const fur: FileUploadRequest = new FileUploadRequest(
@@ -79,7 +81,6 @@ export class StorageService {
     const session = await new FileUploadSession({}, context).populateByUUID(
       event.session_uuid,
     );
-
     if (!session.exists()) {
       throw new StorageCodeException({
         code: StorageErrorCode.FILE_UPLOAD_SESSION_NOT_FOUND,
@@ -106,18 +107,79 @@ export class StorageService {
       });
     }
 
-    //get directories & files in bucket
-    const directories = await new Directory(
-      {},
-      context,
-    ).populateDirectoriesInBucket(files[0].bucket_id, context);
+    //get bucket
+    const bucket = await new Bucket({}, context).populateById(
+      files[0].bucket_id,
+    );
 
-    if (!event.createDirectoryInIPFS) {
+    if (bucket.bucketType == BucketType.HOSTING) {
+      const ipfsRes = await IPFSService.uploadFilesToIPFSFromS3(
+        {
+          fileUploadRequests: files,
+          wrapWithDirectory: true,
+        },
+        context,
+      );
+
+      /*await CrustService.placeStorageOrderToCRUST({
+          cid: ipfsRes.CID,
+          size: ipfsRes.size,
+        });*/
+
+      //Clear bucket content - directories and files
+      await bucket.clearBucketContent();
+
+      //Create new directories & files
+      const directories = [];
+      for (const file of files) {
+        const fileDirectory = await StorageService.generateDirectoriesFromPath(
+          context,
+          directories,
+          file,
+          ipfsRes.ipfsDirectories,
+        );
+
+        //Create new file
+        await new File({}, context)
+          .populate({
+            CID: file.CID.toV0().toString(),
+            name: file.fileName,
+            contentType: file.contentType,
+            bucket_id: file.bucket_id,
+            directory_id: fileDirectory?.id,
+            size: file.size,
+          })
+          .insert();
+
+        //now the file has CID, exists in IPFS node and is pinned to CRUST
+        //update file-upload-request status
+        file.fileStatus =
+          FileUploadRequestFileStatus.UPLOADED_TO_IPFS_AND_CRUST;
+        //await file.update();
+      }
+
+      //publish IPNS
+      const ipns = await IPFSService.publishToIPNS(
+        ipfsRes.parentDirCID.toV0().toString(),
+        bucket.bucket_uuid,
+      );
+
+      //Update bucket CID & IPNS
+      bucket.CID = ipfsRes.parentDirCID.toV0().toString();
+      bucket.IPNS = ipns.value;
+      await bucket.update();
+    } else {
+      //get directories in bucket
+      const directories = await new Directory(
+        {},
+        context,
+      ).populateDirectoriesInBucket(files[0].bucket_id, context);
+
       //loop through files to sync each one of it to IPFS
       for (const file of files) {
         let ipfsRes = undefined;
         try {
-          ipfsRes = await IPFSService.uploadFilesToIPFSFromS3(
+          ipfsRes = await IPFSService.uploadFileToIPFSFromS3(
             { fileKey: file.s3FileKey },
             context,
           );
@@ -138,52 +200,17 @@ export class StorageService {
           size: ipfsRes.size,
         });*/
 
-        let currDirectory = undefined;
-        //create or update directory & file in microservice database
-        if (file.path) {
-          const splittedPath: string[] = file.path.split('/');
-
-          //Get or create directory
-          for (let i = 0; i < splittedPath.length; i++) {
-            const currChildDirectories =
-              i == 0
-                ? directories.filter((x) => x.parentDirectory_id == undefined)
-                : directories.filter(
-                    (x) => x.parentDirectory_id == currDirectory.id,
-                  );
-
-            currDirectory = currChildDirectories.find(
-              (x) => x.name == splittedPath[i],
-            );
-
-            if (!currDirectory) {
-              //create new directory
-              const newDirectory: Directory = new Directory(
-                {},
-                context,
-              ).populate({
-                parentDirectory_id: currDirectory?.id,
-                bucket_id: file.bucket_id,
-                name: splittedPath[i],
-              });
-
-              currDirectory = await DirectoryService.createDirectory(
-                {
-                  body: newDirectory,
-                },
-                context,
-              );
-              //Add new directory to list of all directories
-              directories.push(currDirectory);
-            }
-          }
-        }
+        const fileDirectory = await StorageService.generateDirectoriesFromPath(
+          context,
+          directories,
+          file,
+        );
 
         //check if file already exists
         const existingFile = await new File(
           {},
           context,
-        ).populateByNameAndDirectory(file.fileName, currDirectory?.id);
+        ).populateByNameAndDirectory(file.fileName, fileDirectory?.id);
 
         if (existingFile.exists()) {
           //Update existing file
@@ -203,7 +230,7 @@ export class StorageService {
               name: file.fileName,
               contentType: file.contentType,
               bucket_id: file.bucket_id,
-              directory_id: currDirectory?.id,
+              directory_id: fileDirectory?.id,
               size: ipfsRes.size,
             })
             .insert();
@@ -222,5 +249,58 @@ export class StorageService {
     await session.update();
 
     return true;
+  }
+
+  static async generateDirectoriesFromPath(
+    context: ServiceContext,
+    directories: Directory[],
+    fur: FileUploadRequest,
+    ipfsDirectories?: { path: string; cid: CID }[],
+  ) {
+    if (fur.path) {
+      const splittedPath: string[] = fur.path.split('/').filter((x) => x != '');
+      let currDirectory = undefined;
+
+      //Get or create directory
+      for (let i = 0; i < splittedPath.length; i++) {
+        const currChildDirectories =
+          i == 0
+            ? directories.filter((x) => x.parentDirectory_id == undefined)
+            : directories.filter(
+                (x) => x.parentDirectory_id == currDirectory.id,
+              );
+
+        const existingDirectory = currChildDirectories.find(
+          (x) => x.name == splittedPath[i],
+        );
+
+        if (!existingDirectory) {
+          //create new directory
+          const newDirectory: Directory = new Directory({}, context).populate({
+            parentDirectory_id: currDirectory?.id,
+            bucket_id: fur.bucket_id,
+            name: splittedPath[i],
+          });
+
+          //search, if directory with that path, was created on IPFS
+          const ipfsDirectory = ipfsDirectories.find(
+            (x) => x.path == splittedPath.slice(0, i + 1).join('/'),
+          );
+          if (ipfsDirectory)
+            newDirectory.CID = ipfsDirectory.cid.toV0().toString();
+
+          currDirectory = await DirectoryService.createDirectory(
+            {
+              body: newDirectory,
+            },
+            context,
+          );
+          //Add new directory to list of all directories
+          directories.push(currDirectory);
+        } else currDirectory = existingDirectory;
+      }
+      return currDirectory;
+    }
+    return undefined;
   }
 }

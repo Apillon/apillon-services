@@ -37,8 +37,6 @@ export class Directory extends AdvancedSQLModel {
       SerializeFor.PROFILE,
     ],
     validators: [],
-    defaultValue: uuidV4(),
-    fakeValue: uuidV4(),
   })
   public directory_uuid: string;
 

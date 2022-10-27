@@ -8,6 +8,7 @@ import {
   SerializeFor,
   SqlModelStatus,
 } from 'at-lib';
+import { CID } from 'ipfs-http-client';
 import { DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
 
@@ -195,6 +196,39 @@ export class FileUploadRequest extends AdvancedSQLModel {
     fakeValue: 1,
   })
   public fileStatus: number;
+
+  /*Additional properties - not stored in db ****************************************************************************** */
+
+  @prop({
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public CID: CID;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public size: number;
 
   public async populateFileUploadRequestsInSession(
     session_id: number,

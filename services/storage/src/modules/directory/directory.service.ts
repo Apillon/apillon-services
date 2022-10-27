@@ -11,6 +11,7 @@ import {
   StorageValidationException,
 } from '../../lib/exceptions';
 import { Directory } from './models/directory.model';
+import { v4 as uuidV4 } from 'uuid';
 
 export class DirectoryService {
   static async listDirectoryContent(
@@ -27,7 +28,10 @@ export class DirectoryService {
     event: { body: CreateDirectoryDto },
     context: ServiceContext,
   ): Promise<any> {
-    const d: Directory = new Directory(event.body, context);
+    const d: Directory = new Directory(
+      { ...event.body, directory_uuid: uuidV4() },
+      context,
+    );
 
     try {
       await d.validate();

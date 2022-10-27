@@ -38,8 +38,6 @@ export class Bucket extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
     ],
     validators: [],
-    defaultValue: uuidV4(),
-    fakeValue: uuidV4(),
   })
   public bucket_uuid: string;
 
@@ -65,6 +63,31 @@ export class Bucket extends AdvancedSQLModel {
     ],
   })
   public project_uuid: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: StorageErrorCode.BUCKET_TYPE_NOT_PRESENT,
+      },
+    ],
+  })
+  public bucketType: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -141,6 +164,46 @@ export class Bucket extends AdvancedSQLModel {
   })
   public size: number;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+  })
+  public CID: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+  })
+  public IPNS: string;
+
   public async populateByUUID(uuid: string): Promise<this> {
     if (!uuid) {
       throw new Error('uuid should not be null');
@@ -191,5 +254,25 @@ export class Bucket extends AdvancedSQLModel {
     };
 
     return selectAndCountQuery(context.mysql, sqlQuery, params, 'b.id');
+  }
+
+  public async clearBucketContent() {
+    await this.getContext().mysql.paramExecute(
+      `
+      DELETE
+      FROM \`${DbTables.DIRECTORY}\`
+      WHERE bucket_id = @bucket_id AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { bucket_id: this.id },
+    );
+
+    await this.getContext().mysql.paramExecute(
+      `
+      DELETE
+      FROM \`${DbTables.FILE}\`
+      WHERE bucket_id = @bucket_id AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { bucket_id: this.id },
+    );
   }
 }
