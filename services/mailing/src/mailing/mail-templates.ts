@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as handlebars from 'handlebars';
-import { env } from '../..';
+import { env } from 'at-lib';
 
 export class MailTemplates {
   /**

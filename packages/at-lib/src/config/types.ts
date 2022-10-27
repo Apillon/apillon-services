@@ -36,11 +36,16 @@ export enum StorageEventType {
   LIST_DIRECTORY_CONTENT = 'list-directory-content',
 }
 
+export enum MailEventType {
+  SEND_MAIL = 'send-mail',
+}
+
 export enum ServiceName {
   GENERAL = 'GENERAL',
   AMS = 'AMS',
   LMAS = 'LMAS',
   DEV_CONSOLE = 'DEV_CONSOLE',
+  MAIL = 'MAIL',
 }
 
 export enum ServiceCode {

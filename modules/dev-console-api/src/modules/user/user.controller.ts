@@ -36,7 +36,7 @@ export class UserController {
   @Validation({ dto: ValidateEmailDto })
   @UseGuards(ValidationGuard)
   async validateEmail(@Body() body: ValidateEmailDto) {
-    await this.userService.validateEmail(body);
+    return await this.userService.validateEmail(body);
   }
 
   @Post('register')

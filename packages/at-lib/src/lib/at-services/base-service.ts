@@ -2,6 +2,7 @@ import { env, getEnvSecrets } from '../../config/env';
 import { AppEnvironment } from '../../config/types';
 import * as Net from 'net';
 import * as AWS from 'aws-sdk';
+import { safeJsonParse } from '../utils';
 
 export abstract class BaseService {
   private lambda: AWS.Lambda;
@@ -40,7 +41,7 @@ export abstract class BaseService {
             console.error('Error invoking lambda!', err);
             reject(err);
           }
-          resolve(JSON.parse(response.Payload.toString()));
+          resolve(safeJsonParse(response.Payload.toString()));
         });
       });
     }

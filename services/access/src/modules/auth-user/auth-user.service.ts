@@ -43,10 +43,9 @@ export class AuthUserService {
       await authUser.setDefaultRole(conn);
 
       // Generate a new token with type USER_AUTH
-      authUser.token = generateJwtToken(
-        JwtTokenType.USER_AUTHENTICATION,
-        authUser,
-      );
+      authUser.token = generateJwtToken(JwtTokenType.USER_AUTHENTICATION, {
+        user_uuid: authUser.user_uuid,
+      });
 
       // Create new token in the database
       const authToken = new AuthToken({}, context);
@@ -86,7 +85,9 @@ export class AuthUserService {
       'secToken1',
     );
 
-    return authUser.serialize(SerializeFor.SERVICE);
+    const res = authUser.serialize(SerializeFor.SERVICE);
+    console.log(res);
+    return res;
   }
 
   static async login(event, context: ServiceContext) {
@@ -226,9 +227,9 @@ export class AuthUserService {
       });
     }
 
-    return {
-      ...tokenData,
-    };
+    authUser.token = event.token;
+
+    return authUser.serialize(SerializeFor.SERVICE);
   }
 
   static async updateAuthUser(event, context: ServiceContext) {

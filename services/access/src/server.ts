@@ -12,6 +12,7 @@ const port =
     : env.AT_AMS_SOCKET_PORT;
 
 export function startDevServer() {
+  console.log('starting Dev socket server...');
   const server = Net.createServer((socket) => {
     socket.on('data', async (chunk) => {
       console.log(

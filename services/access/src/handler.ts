@@ -13,7 +13,10 @@ export const lambdaHandler: Handler = async (
 ) => {
   console.log(event);
 
-  return await processEvent(event, context);
+  const res = await processEvent(event, context);
+  console.log('LAMBDA RESPONSE');
+  console.log(res);
+  return res;
 };
 
 export const handler = middy.default(lambdaHandler);

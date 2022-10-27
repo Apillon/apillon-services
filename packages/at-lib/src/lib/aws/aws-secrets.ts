@@ -1,5 +1,6 @@
 import * as aws from 'aws-sdk';
 import { env } from '../../config/env';
+import { safeJsonParse } from '../utils';
 
 /**
  * Returns AWS secrets client.
@@ -20,7 +21,7 @@ export async function getSecrets(): Promise<any> {
           reject(err);
         } else {
           if ('SecretString' in data) {
-            resolve(JSON.parse(data.SecretString));
+            resolve(safeJsonParse(data.SecretString));
           } else {
             const buff = Buffer.from(data.SecretBinary as string, 'base64');
             resolve(buff.toString('ascii'));

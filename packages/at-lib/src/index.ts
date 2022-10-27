@@ -1,5 +1,6 @@
 export * from './lib/at-services/ams/ams';
 export * from './lib/at-services/lmas/lmas';
+export * from './lib/at-services/mailing';
 export * from './lib/aws/aws-secrets';
 export * from './lib/database/mongo';
 export * from './lib/database/mysql';
@@ -18,7 +19,6 @@ export * from './lib/at-services/storage/dtos/create-bucket.dto';
 export * from './lib/at-services/storage/dtos/bucket-query-filter.dto';
 export * from './lib/validators';
 export * from './lib/utils';
-export * from './lib/mailing/smtp-mailer';
 export * from './lib/at-services/storage/dtos/create-directory.dto';
 export * from './lib/at-services/storage/dtos/create-s3-signed-url-for-upload.dto';
 export * from './lib/exceptions/exceptions';
