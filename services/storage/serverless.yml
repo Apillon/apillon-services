@@ -1,0 +1,46 @@
+# console: true
+# org: authtrailadmin
+# app: authtrail-v2
+service: at-v2-storage-service-${opt:stage, 'dev'}
+frameworkVersion: '3'
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules:
+      forceExclude:
+        - aws-sdk
+    excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
+  serverless-offline:
+    httpPort: 6301
+    lambdaPort: 6302
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: eu-west-1
+  stage: ${opt:stage, 'dev'}
+  iam:
+    role: arn:aws:iam::018021943180:role/serverless-workers-executor
+
+  environment: ${file(../../bin/deploy/env.yml)}
+  #   AT_AMS_FUNCTION_NAME: 'at-v2-access-service-${self:provider.stage}'
+  #   AT_LMAS_FUNCTION_NAME: 'at-v2-storage-service-${self:provider.stage}'
+
+# you can add packaging information here
+package:
+  patterns:
+    - '!dist/**'
+  excludeDevDependencies: true
+
+functions:
+  storage-service:
+    handler: ./src/handler.handler
+    name: 'at-v2-ipfs-service-${self:provider.stage}'
+    description: AT Logging & storage & Alerting Service
+    memorySize: 512
+    timeout: 30

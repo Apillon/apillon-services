@@ -9,12 +9,20 @@
       "path": "services\\monitoring"
     },
     {
+      "name": "🌐@services/storage [AT-STORAGE]",
+      "path": "services\\storage"
+    },
+    {
       "name": "🌐@services/mailing [AT-MAIL]",
       "path": "services\\mailing"
     },
     {
       "name": "😎@modules/dev-console-api",
       "path": "modules\\dev-console-api"
+    },
+    {
+      "name": "😎@modules/apillon-api",
+      "path": "modules\\apillon-api"
     },
     {
       "name": "📦@packages/at-lib",
@@ -47,6 +55,7 @@
     "files.exclude": {
       "**/.serverless": true,
       "**/.turbo": true
-    }
+    },
+    "nuxt.isNuxtApp": false
   },
 }

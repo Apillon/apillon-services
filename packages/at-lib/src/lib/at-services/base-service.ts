@@ -50,11 +50,18 @@ export abstract class BaseService {
     if (!isAsync && (result?.error || !result?.success)) {
       // CodeException causes circular dependency!
 
-      // throw new CodeException({
-      //   code: ErrorCode.SERVICE_ERROR,
-      //   status: result?.status || 500,
-      // });
-      throw new Error(`Service returned an error! \n${result?.error?.message}`);
+      if (result?.status == 422) {
+        //Validation errors returned from microservice
+        throw {
+          status: 422,
+          errors: result?.error.errors,
+        };
+      }
+      throw {
+        status: 500,
+        message: result?.error?.message || result?.error.errorMessage,
+        code: result?.error?.errorCode,
+      };
     }
 
     return result;
@@ -62,7 +69,7 @@ export abstract class BaseService {
 
   protected async callDevService(payload, isAsync) {
     const devSocket = Net.connect(
-      { port: this.devPort, timeout: 30000 },
+      { port: this.devPort, timeout: 300000 },
       () => {
         console.log(`Connected to ${this.serviceName} dev socket`);
       },

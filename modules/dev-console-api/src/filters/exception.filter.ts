@@ -25,13 +25,24 @@ export class ExceptionsFilter implements ExceptionFilter {
         model: error?.modelName || undefined,
       });
     } else {
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-        status: HttpStatus.INTERNAL_SERVER_ERROR,
-        code: error?.code || SystemErrorCode.UNHANDLED_SYSTEM_ERROR,
-        message: error?.message,
-        path: request?.url,
-        timestamp: new Date().toISOString(),
-      });
+      if (error.status == 422) {
+        //Validation errors recieved from microservice - handled in at-lib base-service
+        res.status(HttpStatus.UNPROCESSABLE_ENTITY).json({
+          code: error?.code || SystemErrorCode.MICROSERVICE_SYSTEM_ERROR,
+          message: error?.message,
+          errors: error?.errors,
+          path: request?.url,
+          timestamp: new Date().toISOString(),
+        });
+      } else {
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          code: error?.code || SystemErrorCode.UNHANDLED_SYSTEM_ERROR,
+          message: error?.message,
+          path: request?.url,
+          timestamp: new Date().toISOString(),
+        });
+      }
     }
 
     // if (error instanceof CodeException) {

@@ -132,6 +132,29 @@ export interface IEnv {
    * Page size used in sql utils
    */
   DEFAULT_PAGE_SIZE: number;
+
+  /************************************************************
+   * AT-STORAGE config
+   ************************************************************/
+  AT_STORAGE_FUNCTION_NAME: string;
+  AT_STORAGE_FUNCTION_NAME_TEST: string;
+  AT_STORAGE_SOCKET_PORT: number;
+  AT_STORAGE_SOCKET_PORT_TEST: number;
+  AT_STORAGE_CRUST_SEED_PHRASE: string;
+  AT_STORAGE_AWS_IPFS_QUEUE_BUCKET: string;
+  AT_STORAGE_IPFS_GATEWAY: string;
+
+  AT_STORAGE_MYSQL_HOST: string;
+  AT_STORAGE_MYSQL_PORT: number;
+  AT_STORAGE_MYSQL_USER: string;
+  AT_STORAGE_MYSQL_PASSWORD: string;
+  AT_STORAGE_MYSQL_DATABASE: string;
+
+  AT_STORAGE_MYSQL_HOST_TEST: string;
+  AT_STORAGE_MYSQL_PORT_TEST: number;
+  AT_STORAGE_MYSQL_USER_TEST: string;
+  AT_STORAGE_MYSQL_PASSWORD_TEST: string;
+  AT_STORAGE_MYSQL_DATABASE_TEST: string;
 }
 
 // dotenv.config();
@@ -181,8 +204,7 @@ export let env: IEnv = {
   AT_LMAS_MONGO_SRV_TEST: process.env['AT_LMAS_MONGO_SRV_TEST'],
   AT_LMAS_MONGO_DATABASE_TEST:
     process.env['AT_LMAS_MONGO_DATABASE_TEST'] || 'authtrail_logs_test',
-
-  /** DEV CONSOLE API */
+  /** DEV CONSOLE API DB conn*/
   AT_DEV_CONSOLE_API_MYSQL_HOST: process.env['AT_DEV_CONSOLE_API_MYSQL_HOST'],
   AT_DEV_CONSOLE_API_MYSQL_PORT:
     parseInt(process.env['AT_DEV_CONSOLE_API_MYSQL_PORT']) || 3306,
@@ -191,7 +213,7 @@ export let env: IEnv = {
     process.env['AT_DEV_CONSOLE_API_MYSQL_PASSWORD'],
   AT_DEV_CONSOLE_API_MYSQL_DATABASE:
     process.env['AT_DEV_CONSOLE_API_MYSQL_DATABASE'],
-
+  /** DEV CONSOLE API TEST DB conn*/
   AT_DEV_CONSOLE_API_MYSQL_HOST_TEST:
     process.env['AT_DEV_CONSOLE_API_MYSQL_HOST_TEST'],
   AT_DEV_CONSOLE_API_MYSQL_PORT_TEST:
@@ -215,14 +237,40 @@ export let env: IEnv = {
   /** SQL UTILS */
   DEFAULT_PAGE_SIZE: parseInt(process.env['DEFAULT_PAGE_SIZE']) || 20,
 
+  /**STORAGE microservice */
+  AT_STORAGE_FUNCTION_NAME: process.env['AT_STORAGE_FUNCTION_NAME'],
+  AT_STORAGE_FUNCTION_NAME_TEST: process.env['AT_STORAGE_FUNCTION_NAME_TEST'],
+  AT_STORAGE_SOCKET_PORT:
+    parseInt(process.env['AT_STORAGE_SOCKET_PORT']) || 6301,
+  AT_STORAGE_SOCKET_PORT_TEST:
+    parseInt(process.env['AT_STORAGE_SOCKET_PORT_TEST']) || 7301,
+  AT_STORAGE_CRUST_SEED_PHRASE: process.env['AT_STORAGE_CRUST_SEED_PHRASE'],
+  AT_STORAGE_AWS_IPFS_QUEUE_BUCKET:
+    process.env['AT_STORAGE_AWS_IPFS_QUEUE_BUCKET'],
+  AT_STORAGE_IPFS_GATEWAY: process.env['AT_STORAGE_IPFS_GATEWAY'],
+
+  /**STORAGE microservice - TEST DB */
+  AT_STORAGE_MYSQL_HOST: process.env['AT_STORAGE_MYSQL_HOST'],
+  AT_STORAGE_MYSQL_PORT: parseInt(process.env['AT_STORAGE_MYSQL_PORT']) || 3306,
+  AT_STORAGE_MYSQL_USER: process.env['AT_STORAGE_MYSQL_USER'],
+  AT_STORAGE_MYSQL_PASSWORD: process.env['AT_STORAGE_MYSQL_PASSWORD'],
+  AT_STORAGE_MYSQL_DATABASE: process.env['AT_STORAGE_MYSQL_DATABASE'],
+
+  /**STORAGE microservice - TEST DB */
+  AT_STORAGE_MYSQL_HOST_TEST: process.env['AT_STORAGE_MYSQL_HOST_TEST'],
+  AT_STORAGE_MYSQL_PORT_TEST:
+    parseInt(process.env['AT_STORAGE_MYSQL_PORT_TEST']) || 3306,
+  AT_STORAGE_MYSQL_USER_TEST: process.env['AT_STORAGE_MYSQL_USER_TEST'],
+  AT_STORAGE_MYSQL_PASSWORD_TEST: process.env['AT_STORAGE_MYSQL_PASSWORD_TEST'],
+  AT_STORAGE_MYSQL_DATABASE_TEST: process.env['AT_STORAGE_MYSQL_DATABASE_TEST'],
   /** MAILING */
   AT_MAIL_FUNCTION_NAME: process.env['AT_MAIL_FUNCTION_NAME'],
   AT_MAIL_FUNCTION_NAME_TEST: process.env['AT_MAIL_FUNCTION_NAME_TEST'],
 
   AT_MAIL_SOCKET_PORT:
-    parseInt(process.env['AT_MAIL_SOCKET_PORT_TEST']) || 6301,
+    parseInt(process.env['AT_MAIL_SOCKET_PORT_TEST']) || 6401,
   AT_MAIL_SOCKET_PORT_TEST:
-    parseInt(process.env['AT_MAIL_SOCKET_PORT_TEST']) || 7301,
+    parseInt(process.env['AT_MAIL_SOCKET_PORT_TEST']) || 7401,
 
   MAIL_TEMPLATE_PATH: process.env['MAIL_TEMPLATE_PATH'] || '',
   SMTP_HOST: process.env['SMTP_HOST'],
