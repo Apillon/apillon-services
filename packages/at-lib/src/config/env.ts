@@ -268,9 +268,9 @@ export let env: IEnv = {
   AT_MAIL_FUNCTION_NAME_TEST: process.env['AT_MAIL_FUNCTION_NAME_TEST'],
 
   AT_MAIL_SOCKET_PORT:
-    parseInt(process.env['AT_MAIL_SOCKET_PORT_TEST']) || 6301,
+    parseInt(process.env['AT_MAIL_SOCKET_PORT_TEST']) || 6401,
   AT_MAIL_SOCKET_PORT_TEST:
-    parseInt(process.env['AT_MAIL_SOCKET_PORT_TEST']) || 7301,
+    parseInt(process.env['AT_MAIL_SOCKET_PORT_TEST']) || 7401,
 
   MAIL_TEMPLATE_PATH: process.env['MAIL_TEMPLATE_PATH'] || '',
   SMTP_HOST: process.env['SMTP_HOST'],
