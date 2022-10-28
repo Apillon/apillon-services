@@ -69,6 +69,24 @@ export class File extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
     ],
+    validators: [],
+  })
+  public s3FileKey: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
     validators: [
       {
         resolver: presenceValidator(),

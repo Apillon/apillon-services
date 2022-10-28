@@ -159,6 +159,7 @@ export class StorageService {
           .populate({
             file_uuid: file.file_uuid,
             CID: file.CID.toV0().toString(),
+            s3FileKey: file.s3FileKey,
             name: file.fileName,
             contentType: file.contentType,
             bucket_id: file.bucket_id,
@@ -232,6 +233,7 @@ export class StorageService {
           //Update existing file
           existingFile.populate({
             CID: ipfsRes.cidV0,
+            s3FileKey: file.s3FileKey,
             name: file.fileName,
             contentType: file.contentType,
             size: ipfsRes.size,
@@ -244,6 +246,7 @@ export class StorageService {
             .populate({
               file_uuid: file.file_uuid,
               CID: ipfsRes.cidV0,
+              s3FileKey: file.s3FileKey,
               name: file.fileName,
               contentType: file.contentType,
               bucket_id: file.bucket_id,
