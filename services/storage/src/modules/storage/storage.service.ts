@@ -14,6 +14,7 @@ import { IPFSService } from '../ipfs/ipfs.service';
 import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
+import { v4 as uuidV4 } from 'uuid';
 
 export class StorageService {
   static async generateS3SignedUrlForUpload(
@@ -66,6 +67,7 @@ export class StorageService {
 
     if (!fur.exists()) {
       fur = new FileUploadRequest(event.body, context).populate({
+        file_uuid: uuidV4(),
         session_id: session?.id,
         bucket_id: bucket.id,
         s3FileKey: s3FileKey,
@@ -155,6 +157,7 @@ export class StorageService {
         //Create new file
         await new File({}, context)
           .populate({
+            file_uuid: file.file_uuid,
             CID: file.CID.toV0().toString(),
             name: file.fileName,
             contentType: file.contentType,
@@ -239,6 +242,7 @@ export class StorageService {
           //Create new file
           await new File({}, context)
             .populate({
+              file_uuid: file.file_uuid,
               CID: ipfsRes.cidV0,
               name: file.fileName,
               contentType: file.contentType,

@@ -96,6 +96,25 @@ export class FileUploadRequest extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+  })
+  public file_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
     ],
     validators: [],
   })

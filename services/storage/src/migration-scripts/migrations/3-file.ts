@@ -6,6 +6,7 @@ export async function upgrade(
   await queryFn(`
     CREATE TABLE IF NOT EXISTS \`${DbTables.FILE}\` (
   \`id\` INT NOT NULL AUTO_INCREMENT,
+  \`file_uuid\` VARCHAR(36) NOT NULL,
   \`CID\` VARCHAR(255) NULL,
   \`name\` VARCHAR(255) NOT NULL,
   \`contentType\` VARCHAR(100) NOT NULL,
@@ -18,6 +19,7 @@ export async function upgrade(
   \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   \`updateUser\` INT NULL,
   PRIMARY KEY (\`id\`),
+  UNIQUE (file_uuid),
   CONSTRAINT \`fk_file_directory\`
         FOREIGN KEY (\`directory_id\`)
         REFERENCES \`${DbTables.DIRECTORY}\` (\`id\`)
