@@ -12,8 +12,8 @@
   "license": "UNLICENSED",
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "tsc --declarationMap && copyfiles -f ./src/lib/mailing/templates/*.html ./dist/lib/mailing/templates",
-    "dev": "copyfiles -f ./src/lib/mailing/templates/*.html ./dist/lib/mailing/templates && tsc -w --declarationMap --preserveWatchOutput",
+    "build": "tsc --declarationMap",
+    "dev": "tsc -w --declarationMap --preserveWatchOutput",
     "test:unit": "jest --passWithNoTests",
     "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
   },
@@ -23,6 +23,10 @@
     "tsconfig": "*"
   },
   "dependencies": {
+    "@faker-js/faker": "^7.6.0",
+    "@rawmodel/core": "^3.3.4",
+    "@rawmodel/parsers": "^3.3.4",
+    "@rawmodel/validators": "^3.3.4",
     "aws-sdk": "^2.1205.0",
     "colors": "^1.4.0",
     "dotenv": "^16.0.2",
@@ -34,9 +38,6 @@
     "mysql2": "^2.3.3",
     "nodemailer": "^6.8.0",
     "sqlstring": "^2.3.3",
-    "ts-mysql-migrate": "^1.0.2",
-    "@rawmodel/core": "^3.3.4",
-    "@rawmodel/parsers": "^3.3.4",
-    "@rawmodel/validators": "^3.3.4"
+    "ts-mysql-migrate": "^1.0.2"
   }
 }

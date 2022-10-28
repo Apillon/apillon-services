@@ -21,9 +21,9 @@ module.exports = {
       'snappy': false,
       'snappy/package.json': false,
       'aws4': false,
-      'mongodb-client-encryption': false,
+      // 'mongodb-client-encryption': false,
       'cardinal': false,
-      'at-lib': path.join(__dirname, '..', '..', 'packages', 'at-lib')
+      // 'at-lib': path.join(__dirname, '..', '..', 'packages', 'at-lib')
     },
   },
   output: {
@@ -36,10 +36,10 @@ module.exports = {
     __dirname: true,
   },
   externals: [
-    nodeExternals()
-    // nodeExternals({
-    //   allowlist: ['at-lib'],
-    // }),
+    // nodeExternals()
+    nodeExternals({
+      allowlist: ['at-lib'],
+    }),
   ],
   module: {
     rules: [

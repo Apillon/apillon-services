@@ -15,5 +15,7 @@ cd ../../services/access/
 rm node_modules -r
 cd ../../services/monitoring/
 rm node_modules -r
+cd ../../services/storage/
+rm node_modules -r
 cd ../..
 
