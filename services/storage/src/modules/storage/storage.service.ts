@@ -1,7 +1,13 @@
-import { AWS_S3, CreateS3SignedUrlForUploadDto, env } from 'at-lib';
+import {
+  AWS_S3,
+  CreateS3SignedUrlForUploadDto,
+  env,
+  SerializeFor,
+} from 'at-lib';
 import { CID } from 'ipfs-http-client';
 import {
   BucketType,
+  FileStatus,
   FileUploadRequestFileStatus,
   StorageErrorCode,
 } from '../../config/types';
@@ -15,6 +21,7 @@ import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
 import { v4 as uuidV4 } from 'uuid';
+import { CrustService } from '../crust/crust.service';
 
 export class StorageService {
   static async generateS3SignedUrlForUpload(
@@ -85,7 +92,7 @@ export class StorageService {
       s3FileKey,
     );
 
-    return { signedUrlForUpload: signedURLForUpload };
+    return { signedUrlForUpload: signedURLForUpload, file_uuid: fur.file_uuid };
   }
 
   static async endFileUploadSessionAndExecuteSyncToIPFS(
@@ -322,5 +329,72 @@ export class StorageService {
       return currDirectory;
     }
     return undefined;
+  }
+
+  static async getFileDetails(
+    event: { cid?: string; file_uuid?: string },
+    context: ServiceContext,
+  ) {
+    let file: File = undefined;
+    let fileStatus: FileStatus = undefined;
+    if (event.cid) file = await new File({}, context).populateByCID(event.cid);
+    else if (event.file_uuid)
+      file = await new File({}, context).populateByUUID(event.file_uuid);
+    else {
+      throw new StorageCodeException({
+        code: StorageErrorCode.DEFAULT_RESOURCE_NOT_FOUND_ERROR,
+        status: 404,
+      });
+    }
+
+    if (!file.exists()) {
+      //try to load and return file data from file-upload-request
+      if (event.file_uuid) {
+        const fur: FileUploadRequest = await new FileUploadRequest(
+          {},
+          context,
+        ).populateByUUID(event.file_uuid);
+
+        if (fur.exists()) {
+          //check if file uploaded to S3
+          const s3Client: AWS_S3 = new AWS_S3();
+          if (
+            await s3Client.exists(
+              env.AT_STORAGE_AWS_IPFS_QUEUE_BUCKET,
+              fur.s3FileKey,
+            )
+          )
+            fileStatus = FileStatus.UPLOADED_TO_S3;
+          else fileStatus = FileStatus.REQUEST_FOR_UPLOAD_GENERATED;
+
+          return {
+            fileStatus: fileStatus,
+            file: fur.serialize(SerializeFor.PROFILE),
+            crustStatus: undefined,
+          };
+        }
+      }
+
+      throw new StorageCodeException({
+        code: StorageErrorCode.FILE_DOES_NOT_EXISTS,
+        status: 404,
+      });
+    }
+
+    fileStatus = FileStatus.UPLOADED_TO_IPFS;
+    //File exists on IPFS and probably on CRUST- get status from CRUST
+    let crustOrderStatus = undefined;
+    if (file.CID) {
+      crustOrderStatus = await CrustService.getOrderStatus({
+        cid: file.CID,
+      });
+      fileStatus = FileStatus.PINNED_TO_CRUST;
+    }
+
+    return {
+      fileStatus: fileStatus,
+      file: file.serialize(SerializeFor.PROFILE),
+      crustStatus: crustOrderStatus,
+    };
   }
 }

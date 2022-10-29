@@ -1,8 +1,18 @@
-import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import {
   CreateS3SignedUrlForUploadDto,
+  FileDetailsQueryFilter,
   PermissionLevel,
   PermissionType,
+  ValidateFor,
 } from 'at-lib';
 import { Ctx } from '../../decorators/context.decorator';
 import { Permissions } from '../../decorators/permission.decorator';
@@ -47,5 +57,20 @@ export class StorageController {
       context,
       session_uuid,
     );
+  }
+
+  @Get('/fileDetails')
+  @Permissions({
+    permission: 1,
+    type: PermissionType.WRITE,
+    level: PermissionLevel.OWN,
+  })
+  @Validation({ dto: FileDetailsQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async getBucketList(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: FileDetailsQueryFilter,
+  ) {
+    return await this.storageService.getFileDetails(context, query);
   }
 }

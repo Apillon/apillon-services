@@ -34,6 +34,7 @@ export enum StorageErrorCode {
   BUCKET_NOT_FOUND = 40406002,
   DIRECTORY_NOT_FOUND = 40406003,
   FILE_UPLOAD_SESSION_NOT_FOUND = 40406004,
+  FILE_DOES_NOT_EXISTS = 40406005,
   //500
   AT_STORAGE_IPFS_GATEWAY_NOT_SET = 50006001,
 }
@@ -49,4 +50,11 @@ export enum FileUploadRequestFileStatus {
 export enum BucketType {
   STORAGE = 1,
   HOSTING = 2,
+}
+
+export enum FileStatus {
+  REQUEST_FOR_UPLOAD_GENERATED = 1,
+  UPLOADED_TO_S3 = 2,
+  UPLOADED_TO_IPFS = 3,
+  PINNED_TO_CRUST = 4,
 }

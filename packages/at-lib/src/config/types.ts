@@ -34,6 +34,7 @@ export enum StorageEventType {
   UPDATE_DIRECTROY = 'update-directory',
   DELETE_DIRECTORY = 'delete-directory',
   LIST_DIRECTORY_CONTENT = 'list-directory-content',
+  GET_FILE_DETAILS = 'get-file-details',
 }
 
 export enum MailEventType {
@@ -200,8 +201,9 @@ export enum SystemErrorCode {
  * Bad request error codes - 400000.
  */
 export enum BadRequestErrorCode {
-  BAD_REQUEST = 400000,
-  INVALID_PATH = 400001,
+  BAD_REQUEST = 40000000,
+  INVALID_PATH = 40000001,
+  INVALID_QUERY_PARAMETERS = 40000002,
 }
 
 export enum ValidatorErrorCode {

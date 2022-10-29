@@ -31,7 +31,6 @@ export class FileUploadRequest extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
     ],
     validators: [
       {
@@ -77,7 +76,6 @@ export class FileUploadRequest extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
     ],
     validators: [],
   })
@@ -224,11 +222,7 @@ export class FileUploadRequest extends AdvancedSQLModel {
       PopulateFrom.ADMIN,
       PopulateFrom.PROFILE,
     ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
+    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
     validators: [],
   })
   public CID: CID;
@@ -240,11 +234,7 @@ export class FileUploadRequest extends AdvancedSQLModel {
       PopulateFrom.ADMIN,
       PopulateFrom.PROFILE,
     ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
+    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
     validators: [],
   })
   public size: number;
@@ -289,6 +279,27 @@ export class FileUploadRequest extends AdvancedSQLModel {
       WHERE s3FileKey = @s3FileKey AND status <> ${SqlModelStatus.DELETED};
       `,
       { s3FileKey },
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
+
+  public async populateByUUID(file_uuid: string): Promise<this> {
+    if (!file_uuid) {
+      throw new Error('file_uuid should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE file_uuid = @file_uuid AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { file_uuid },
     );
 
     if (data && data.length) {

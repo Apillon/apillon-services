@@ -11,6 +11,7 @@ import { CreateBucketDto } from './dtos/create-bucket.dto';
 import { CreateDirectoryDto } from './dtos/create-directory.dto';
 import { CreateS3SignedUrlForUploadDto } from './dtos/create-s3-signed-url-for-upload.dto';
 import { DirectoryContentQueryFilter } from './dtos/directory-content-query-filter.dto';
+import { FileDetailsQueryFilter } from './dtos/file-details-query-filter.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -128,6 +129,20 @@ export class StorageMicroservice extends BaseService {
       eventName: StorageEventType.END_FILE_UPLOAD_SESSION,
       user: this.user.serialize(),
       session_uuid: session_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  //#endregion
+
+  //#region file
+
+  public async getFileDetails(params: FileDetailsQueryFilter) {
+    const data = {
+      eventName: StorageEventType.GET_FILE_DETAILS,
+      user: this.user.serialize(),
+      file_uuid: params.file_uuid,
+      cid: params.cid,
     };
     return await this.callService(data);
   }

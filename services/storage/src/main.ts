@@ -28,6 +28,7 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.DELETE_DIRECTORY]: DirectoryService.deleteDirectory,
     [StorageEventType.LIST_DIRECTORY_CONTENT]:
       DirectoryService.listDirectoryContent,
+    [StorageEventType.GET_FILE_DETAILS]: StorageService.getFileDetails,
   };
 
   return await processors[event.eventName](event, context);
