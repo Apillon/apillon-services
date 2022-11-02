@@ -10,6 +10,7 @@ import {
   ForbiddenErrorCodes,
   PopulateFrom,
   SerializeFor,
+  SqlModelStatus,
 } from 'at-lib';
 import { selectAndCountQuery } from 'at-lib';
 
@@ -132,7 +133,6 @@ export class Project extends AdvancedSQLModel {
         [
           DefaultUserRole.PROJECT_ADMIN,
           DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.PROJECT_USER,
           DefaultUserRole.ADMIN,
         ],
         this.project_uuid,
@@ -143,6 +143,27 @@ export class Project extends AdvancedSQLModel {
         status: HttpStatus.FORBIDDEN,
         errorMessage: 'Insufficient permissins',
       });
+    }
+  }
+
+  public async populateByUUID(uuid: string): Promise<this> {
+    if (!uuid) {
+      throw new Error('uuid should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE project_uuid = @uuid AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { uuid },
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
     }
   }
 

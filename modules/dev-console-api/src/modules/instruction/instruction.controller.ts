@@ -10,7 +10,12 @@ import {
   UseGuards,
   Delete,
 } from '@nestjs/common';
-import { PermissionLevel, PermissionType, ValidateFor } from 'at-lib';
+import {
+  DefaultUserRole,
+  PermissionLevel,
+  PermissionType,
+  ValidateFor,
+} from 'at-lib';
 import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 
@@ -28,11 +33,7 @@ export class InstructionController {
   constructor(private readonly instructionService: InstructionService) {}
 
   @Get('/')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions({ role: DefaultUserRole.USER })
   @Validation({ dto: InstructionQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
   async getInstruction(
@@ -46,11 +47,7 @@ export class InstructionController {
   }
 
   @Post()
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions({ role: DefaultUserRole.ADMIN })
   @Validation({ dto: Instruction })
   @UseGuards(ValidationGuard, AuthGuard)
   async createInstruction(
@@ -61,11 +58,7 @@ export class InstructionController {
   }
 
   @Patch('/')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions({ role: DefaultUserRole.ADMIN })
   @UseGuards(AuthGuard)
   async updateInstruction(
     @Ctx() context: DevConsoleApiContext,
@@ -80,11 +73,7 @@ export class InstructionController {
   }
 
   @Delete('/:id')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions({ role: DefaultUserRole.ADMIN })
   @UseGuards(AuthGuard)
   async deleteInstruction(
     @Ctx() context: DevConsoleApiContext,

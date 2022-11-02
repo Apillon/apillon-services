@@ -3,7 +3,10 @@ import { presenceValidator } from '@rawmodel/validators';
 import {
   AdvancedSQLModel,
   BucketQueryFilter,
+  CodeException,
   Context,
+  DefaultUserRole,
+  ForbiddenErrorCodes,
   getQueryParams,
   PopulateFrom,
   prop,
@@ -203,6 +206,45 @@ export class Bucket extends AdvancedSQLModel {
   })
   public IPNS: string;
 
+  public canAccess(context: ServiceContext) {
+    if (
+      !context.hasRoleOnProject(
+        [
+          DefaultUserRole.PROJECT_OWNER,
+          DefaultUserRole.PROJECT_ADMIN,
+          DefaultUserRole.PROJECT_USER,
+          DefaultUserRole.ADMIN,
+        ],
+        this.project_uuid,
+      )
+    ) {
+      throw new CodeException({
+        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: 403,
+        errorMessage: 'Insufficient permissins',
+      });
+    }
+  }
+
+  public canModify(context: ServiceContext) {
+    if (
+      !context.hasRoleOnProject(
+        [
+          DefaultUserRole.PROJECT_ADMIN,
+          DefaultUserRole.PROJECT_OWNER,
+          DefaultUserRole.ADMIN,
+        ],
+        this.project_uuid,
+      )
+    ) {
+      throw new CodeException({
+        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: 403,
+        errorMessage: 'Insufficient permissins',
+      });
+    }
+  }
+
   public async populateByUUID(uuid: string): Promise<this> {
     if (!uuid) {
       throw new Error('uuid should not be null');
@@ -225,6 +267,7 @@ export class Bucket extends AdvancedSQLModel {
   }
 
   public async getList(context: ServiceContext, filter: BucketQueryFilter) {
+    this.canAccess(context);
     // Map url query with sql fields.
     const fieldMap = {
       id: 'b.id',

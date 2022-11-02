@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import {
   CreateDirectoryDto,
+  DefaultUserRole,
   DirectoryContentQueryFilter,
   PermissionLevel,
   PermissionType,
@@ -30,11 +31,10 @@ export class DirectoryController {
   constructor(private directoryService: DirectoryService) {}
 
   @Post()
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
   @UseGuards(AuthGuard)
   @Validation({ dto: CreateDirectoryDto })
   @UseGuards(ValidationGuard)
@@ -46,11 +46,10 @@ export class DirectoryController {
   }
 
   @Patch('/:id')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
   @UseGuards(AuthGuard)
   async updateDirectory(
     @Ctx() context: DevConsoleApiContext,
@@ -61,11 +60,10 @@ export class DirectoryController {
   }
 
   @Delete('/:id')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
   @UseGuards(AuthGuard)
   async removeUserProject(
     @Ctx() context: DevConsoleApiContext,
@@ -75,11 +73,11 @@ export class DirectoryController {
   }
 
   @Get('/listDirectoryContent')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
   @Validation({
     dto: DirectoryContentQueryFilter,
     validateFor: ValidateFor.QUERY,

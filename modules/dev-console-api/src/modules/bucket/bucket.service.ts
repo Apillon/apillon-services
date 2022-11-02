@@ -1,10 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import {
   CreateBucketDto,
   StorageMicroservice,
   BucketQueryFilter,
+  CodeException,
 } from 'at-lib';
+import { ResourceNotFoundErrorCode } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
+import { Project } from '../project/models/project.model';
 
 @Injectable()
 export class BucketService {
@@ -13,7 +16,18 @@ export class BucketService {
   }
 
   async createBucket(context: DevConsoleApiContext, body: CreateBucketDto) {
-    //TODO: Check limits, if project actually exists ...
+    const project: Project = await new Project({}, context).populateByUUID(
+      body.project_uuid,
+    );
+    if (!project.exists()) {
+      throw new CodeException({
+        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
+        status: HttpStatus.NOT_FOUND,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+
+    project.canModify(context);
 
     //Call Storage microservice, to create bucket
     return (await new StorageMicroservice(context).createBucket(body)).data;
