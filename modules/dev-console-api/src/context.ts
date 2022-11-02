@@ -28,6 +28,7 @@ export class DevConsoleApiContext extends Context {
 
       if (user.exists()) {
         this.user = user;
+        this.user.authUser = userData.data;
       }
     }
   }

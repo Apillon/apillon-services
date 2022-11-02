@@ -169,10 +169,10 @@ export class AuthUser extends AdvancedSQLModel {
       conn,
     );
 
-    //TODO: populate roles
-
     if (res.length) {
-      return this.populate(res[0], PopulateFrom.DB);
+      this.populate(res[0], PopulateFrom.DB);
+      await this.populateAuthUserRoles(conn);
+      return this;
     }
     return this.reset();
   }
@@ -188,7 +188,6 @@ export class AuthUser extends AdvancedSQLModel {
     );
 
     if (res.length) {
-      //TODO: populate roles
       this.populate(res[0], PopulateFrom.DB);
       await this.populateAuthUserRoles(conn);
       return this;
@@ -290,7 +289,7 @@ export class AuthUser extends AdvancedSQLModel {
       if (!userRole) {
         userRole = new AuthUserRole({}, this.getContext()).populateWithPrefix(
           r,
-          'userRole',
+          'authUserRole',
           PopulateFrom.DB,
         );
 

@@ -4,10 +4,12 @@ import { integerParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { ValidatorErrorCode } from '../../../config/types';
 import { ModelBase } from 'at-lib/dist/lib/base-models/base';
+import { PopulateFrom } from 'at-lib';
 
 export class ProjectUserInviteDto extends ModelBase {
   @prop({
     parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
@@ -19,6 +21,7 @@ export class ProjectUserInviteDto extends ModelBase {
 
   @prop({
     parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),

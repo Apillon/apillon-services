@@ -1,5 +1,9 @@
 import { env } from '../../../config/env';
-import { AmsEventType, AppEnvironment } from '../../../config/types';
+import {
+  AmsEventType,
+  AppEnvironment,
+  DefaultUserRole,
+} from '../../../config/types';
 import { BaseService } from '../base-service';
 
 /**
@@ -121,10 +125,41 @@ export class Ams extends BaseService {
     };
   }
 
+  public async getAuthUserByEmail(email: string) {
+    const data = {
+      eventName: AmsEventType.GET_AUTH_USER_BY_EMAIL,
+      email,
+      securityToken: this.securityToken,
+    };
+
+    // eslint-disable-next-line sonarjs/prefer-immediate-return
+    const amsResponse = await this.callService(data);
+
+    return {
+      ...amsResponse,
+    };
+  }
+
   private generateSecurityToken() {
     // NOTE - Rename as not to be confused with JwtUtils().generateToken
     // NOTE2 - This should probably be a util function somewhere outside this file?
     //TODO - generate JWT from APP secret
     return 'SecurityToken';
+  }
+
+  public async assignUserRoleOnProject(params: {
+    user: any;
+    user_uuid: string;
+    project_uuid: string;
+    role_id: DefaultUserRole;
+  }) {
+    const data = {
+      ...params,
+      eventName: AmsEventType.USER_ROLE_ASSIGN,
+      user: params.user.serialize(),
+      securityToken: this.securityToken,
+    };
+
+    return await this.callService(data);
   }
 }

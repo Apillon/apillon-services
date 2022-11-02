@@ -334,4 +334,23 @@ export class AuthUserService {
 
     return { result: authUser.exists() };
   }
+
+  static async getAuthUserByEmail(event, context: ServiceContext) {
+    if (!event?.email) {
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.BAD_REQUEST,
+      }).writeToMonitor({
+        userId: event?.user_uuid,
+      });
+    }
+
+    const authUser = await new AuthUser({}, context).populateByEmail(
+      event.email,
+    );
+
+    if (!authUser.exists()) return undefined;
+
+    return authUser.serialize(SerializeFor.SERVICE);
+  }
 }

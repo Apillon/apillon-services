@@ -3,13 +3,21 @@ import { prop } from '@rawmodel/core';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 
-import { AdvancedSQLModel, PopulateFrom, SerializeFor } from 'at-lib';
+import {
+  AdvancedSQLModel,
+  CodeException,
+  DefaultUserRole,
+  ForbiddenErrorCodes,
+  PopulateFrom,
+  SerializeFor,
+} from 'at-lib';
 import { selectAndCountQuery } from 'at-lib';
 
 import { v4 as uuidV4 } from 'uuid';
 import { faker } from '@faker-js/faker';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
+import { HttpStatus } from '@nestjs/common';
 
 /**
  * Project model.
@@ -43,7 +51,7 @@ export class Project extends AdvancedSQLModel {
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
-      PopulateFrom.ADMIN,
+      SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
@@ -60,7 +68,7 @@ export class Project extends AdvancedSQLModel {
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
-      PopulateFrom.ADMIN,
+      SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
@@ -76,7 +84,7 @@ export class Project extends AdvancedSQLModel {
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
-      PopulateFrom.ADMIN,
+      SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
@@ -90,13 +98,53 @@ export class Project extends AdvancedSQLModel {
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.PROFILE,
-      PopulateFrom.ADMIN,
+      SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
     ],
   })
   public imageFile_id: number;
+
+  public canAccess(context: DevConsoleApiContext) {
+    if (
+      !context.hasRoleOnProject(
+        [
+          DefaultUserRole.PROJECT_OWNER,
+          DefaultUserRole.PROJECT_ADMIN,
+          DefaultUserRole.PROJECT_USER,
+          DefaultUserRole.ADMIN,
+        ],
+        this.project_uuid,
+      )
+    ) {
+      throw new CodeException({
+        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: HttpStatus.FORBIDDEN,
+        errorMessage: 'Insufficient permissins',
+      });
+    }
+  }
+
+  public canModify(context: DevConsoleApiContext) {
+    if (
+      !context.hasRoleOnProject(
+        [
+          DefaultUserRole.PROJECT_ADMIN,
+          DefaultUserRole.PROJECT_OWNER,
+          DefaultUserRole.PROJECT_USER,
+          DefaultUserRole.ADMIN,
+        ],
+        this.project_uuid,
+      )
+    ) {
+      throw new CodeException({
+        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: HttpStatus.FORBIDDEN,
+        errorMessage: 'Insufficient permissins',
+      });
+    }
+  }
 
   /**
    * Returns projects created by user

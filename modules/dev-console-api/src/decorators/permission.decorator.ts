@@ -5,7 +5,7 @@ export interface PermissionPass {
   permission?: number;
   type?: PermissionType;
   level?: PermissionLevel;
-  role?: DefaultUserRole;
+  role?: DefaultUserRole | DefaultUserRole[];
 }
 
 export const PERMISSION_KEY = 'permissions';

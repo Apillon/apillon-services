@@ -13,7 +13,12 @@ import {
 import { Ctx } from '../../decorators/context.decorator';
 import { Validation } from '../../decorators/validation.decorator';
 import { Permissions } from '../../decorators/permission.decorator';
-import { PermissionLevel, PermissionType, ValidateFor } from 'at-lib';
+import {
+  DefaultUserRole,
+  PermissionLevel,
+  PermissionType,
+  ValidateFor,
+} from 'at-lib';
 import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
@@ -27,12 +32,13 @@ import { ProjectUserInviteDto } from './dtos/project_user-invite.dto';
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
-  @Get('/:id')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Get('/getProject/:id')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+    { role: DefaultUserRole.ADMIN },
+  )
   @UseGuards(AuthGuard)
   async getProject(
     @Ctx() context: DevConsoleApiContext,
@@ -42,11 +48,7 @@ export class ProjectController {
   }
 
   @Post()
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions({ role: DefaultUserRole.USER }, { role: DefaultUserRole.ADMIN })
   @UseGuards(AuthGuard)
   @Validation({ dto: Project })
   @UseGuards(ValidationGuard)
@@ -57,23 +59,23 @@ export class ProjectController {
     return await this.projectService.createProject(context, body);
   }
 
-  @Get()
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Get('/getUserProjects')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+    { role: DefaultUserRole.ADMIN },
+  )
   @UseGuards(AuthGuard)
   async getUserProjects(@Ctx() context: DevConsoleApiContext) {
     return await this.projectService.getUserProjects(context);
   }
 
-  @Patch('/:id')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Patch('/updateProject/:id')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
   @UseGuards(AuthGuard)
   async updateProject(
     @Ctx() context: DevConsoleApiContext,
@@ -84,11 +86,10 @@ export class ProjectController {
   }
 
   @Post('/:project_id/updateProjectImage')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
   @Validation({ dto: File })
   @UseGuards(AuthGuard, ValidationGuard)
   async updateProjectImage(
@@ -104,11 +105,11 @@ export class ProjectController {
   }
 
   @Get('/getProjectUsers')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
   @Validation({ dto: ProjectUserFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(AuthGuard, ValidationGuard)
   async getProjectUsers(
@@ -119,11 +120,10 @@ export class ProjectController {
   }
 
   @Post('/inviteUser')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
   @Validation({ dto: ProjectUserInviteDto })
   @UseGuards(AuthGuard, ValidationGuard)
   async inviteUserProject(
@@ -134,11 +134,10 @@ export class ProjectController {
   }
 
   @Delete('/:project_user_id/removeUser')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
   @UseGuards(AuthGuard)
   async removeUserProject(
     @Ctx() context: DevConsoleApiContext,

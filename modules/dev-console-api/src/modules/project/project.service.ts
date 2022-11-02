@@ -1,4 +1,8 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  NotImplementedException,
+} from '@nestjs/common';
 import {
   ResourceNotFoundErrorCode,
   ValidatorErrorCode,
@@ -10,7 +14,14 @@ import { User } from '../user/models/user.model';
 import { ProjectUserFilter } from './dtos/project_user-query-filter.dto';
 import { Project } from './models/project.model';
 import { ProjectUser } from './models/project-user.model';
-import { CodeException, ValidationException } from 'at-lib';
+import {
+  Ams,
+  CodeException,
+  DefaultUserRole,
+  PopulateFrom,
+  ValidationException,
+} from 'at-lib';
+import { ProjectUserInviteDto } from './dtos/project_user-invite.dto';
 
 @Injectable()
 export class ProjectService {
@@ -20,7 +31,24 @@ export class ProjectService {
     context: DevConsoleApiContext,
     body: Project,
   ): Promise<Project> {
-    return await body.insert();
+    const project: Project = await body.insert();
+    const projectUser: ProjectUser = new ProjectUser({}, context).populate({
+      project_id: project.id,
+      user_id: context.user.id,
+      pendingInvitation: false,
+    });
+    await projectUser.insert();
+
+    //assign user role on project
+    const params: any = {
+      user: context.user,
+      user_uuid: context.user.user_uuid,
+      project_uuid: project.project_uuid,
+      role_id: DefaultUserRole.PROJECT_OWNER,
+    };
+    await new Ams().assignUserRoleOnProject(params);
+
+    return project;
   }
 
   async getProject(
@@ -35,6 +63,8 @@ export class ProjectService {
         errorCodes: ResourceNotFoundErrorCode,
       });
     }
+
+    project.canAccess(context);
 
     return project;
   }
@@ -53,7 +83,10 @@ export class ProjectService {
       });
     }
 
-    project.populate(data, context.populationStrategy);
+    //Check permissions for specific DB record
+    project.canModify(context);
+
+    project.populate(data, PopulateFrom.PROFILE);
 
     try {
       await project.validate();
@@ -78,14 +111,32 @@ export class ProjectService {
     return await new ProjectUser({}, context).getProjectUsers(context, query);
   }
 
-  async inviteUserProject(context: DevConsoleApiContext, data: any) {
-    // TODO: Call AMS service to fetch related user data
+  async inviteUserProject(
+    context: DevConsoleApiContext,
+    data: ProjectUserInviteDto,
+  ) {
+    const project: Project = await new Project({}, context).populateById(
+      data.project_id,
+    );
+    if (!project.exists()) {
+      throw new CodeException({
+        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
+        status: HttpStatus.NOT_FOUND,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+    project.canModify(context);
+
+    const authUser = await new Ams().getAuthUserByEmail(data.email);
+
+    throw new NotImplementedException();
+
     const user = new User({ id: 1, email: 'test.user3@mailinator.com' });
     const project_id = data.project_id;
 
     // if (!user.exists()) {
     //   // TODO: Implement
-    //   throw new NotImplementedException();
+    //
     // }
 
     const projectUser = new ProjectUser({}, context);
@@ -156,6 +207,7 @@ export class ProjectService {
         errorCodes: ResourceNotFoundErrorCode,
       });
     }
+    project.canModify(context);
     const createdFile = await this.fileService.createFile(
       context,
       uploadedFile,
