@@ -15,13 +15,21 @@ module.exports = {
     symlinks: false,
     cacheWithContext: false,
     alias: {
-      // '@nestjs/websockets/socket-module': 'empty',
-      // 'cache-manager': 'empty',
-      // 'class-validator': 'empty',
-      // 'class-transformer': 'empty',
-      // '@nestjs/microservices/microservices-module': 'empty',
-      // '@nestjs/microservices': 'empty',
-      // 'at-lib': path.join(__dirname, '..', '..', 'packages', 'at-lib', 'dist')
+      'bson-ext': false,
+      'kerberos': false,
+      // '@mongodb-js/zstd': false,
+      'snappy': false,
+      'snappy/package.json': false,
+      'aws4': false,
+      'mongodb-client-encryption': false,
+      'cardinal': false,
+      // '@nestjs/websockets/socket-module': false,
+      // 'cache-manager': false,
+      // 'class-validator': false,
+      // 'class-transformer': false,
+      // '@nestjs/microservices/microservices-module': false,
+      // '@nestjs/microservices': false,
+      //'at-lib': path.join(__dirname, '..', '..', 'packages', 'at-lib', 'dist')
     },
   },
   output: {
@@ -33,11 +41,11 @@ module.exports = {
   node: {
     __dirname: true,
   },
-  // externals: [nodeExternals({
-  //   allowlist: ['at-lib']
-  // }
-  // )],
-  externals: [nodeExternals()],
+  externals: [nodeExternals({
+    allowlist: ['at-lib']
+  }
+  )],
+  // externals: [nodeExternals()],
   module: {
     rules: [
       // all files with a `.ts` or `.tsx` extension will be handled by `ts-loader`

@@ -16,15 +16,17 @@ export function MongoDbConnect(options?: {
   };
 
   const before = async (request) => {
+    console.log(`Starting MongoDB middleware...`);
+    console.log(`Params: ${JSON.stringify(options, null, 2)}`);
     const { context } = request;
 
     if (!instances[options.instanceName]) {
       const mongo = new Mongo(
         options.connectionString,
         options.database,
-        options.poolSize,
+        options.poolSize || 10,
       );
-
+      console.log(`Connecting to MongoDB...`);
       await mongo.connect();
       console.log(
         `Mongo client instance ${options.instanceName} is CONNECTED to server!`,
