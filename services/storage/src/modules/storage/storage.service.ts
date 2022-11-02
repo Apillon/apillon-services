@@ -1,7 +1,13 @@
-import { AWS_S3, CreateS3SignedUrlForUploadDto, env } from 'at-lib';
+import {
+  AWS_S3,
+  CreateS3SignedUrlForUploadDto,
+  env,
+  SerializeFor,
+} from 'at-lib';
 import { CID } from 'ipfs-http-client';
 import {
   BucketType,
+  FileStatus,
   FileUploadRequestFileStatus,
   StorageErrorCode,
 } from '../../config/types';
@@ -14,6 +20,8 @@ import { IPFSService } from '../ipfs/ipfs.service';
 import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
+import { v4 as uuidV4 } from 'uuid';
+import { CrustService } from '../crust/crust.service';
 
 export class StorageService {
   static async generateS3SignedUrlForUpload(
@@ -21,21 +29,6 @@ export class StorageService {
     context: ServiceContext,
   ): Promise<any> {
     //First create fileUploadSession & fileUploadRequest records in DB, then generate S3 signed url for upload
-    let session: FileUploadSession = undefined;
-
-    //Get existing or create new fileUploadSession
-    session = await new FileUploadSession({}, context).populateByUUID(
-      event.body.session_uuid,
-    );
-
-    if (!session.exists()) {
-      //create new session
-      session = new FileUploadSession(
-        { session_uuid: event.body.session_uuid },
-        context,
-      );
-      await session.insert();
-    }
 
     //get bucket
     const bucket: Bucket = await new Bucket({}, context).populateByUUID(
@@ -49,20 +42,49 @@ export class StorageService {
       });
     }
 
+    //Get existing or create new fileUploadSession
+    let session: FileUploadSession = undefined;
+    session = await new FileUploadSession({}, context).populateByUUID(
+      event.body.session_uuid,
+    );
+
+    if (!session.exists()) {
+      //create new session
+      session = new FileUploadSession(
+        { session_uuid: event.body.session_uuid, bucket_id: bucket.id },
+        context,
+      );
+      await session.insert();
+    } else if (session.bucket_id != bucket.id) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.SESSION_UUID_BELONGS_TO_OTHER_BUCKET,
+        status: 404,
+      });
+    }
+
     const s3FileKey = `${bucket.id}/${session.session_uuid}/${
       (event.body.path ? event.body.path : '') + event.body.fileName
     }`;
 
-    const fur: FileUploadRequest = new FileUploadRequest(
-      event.body,
+    //check if fileUploadRequest with that key already exists
+    let fur: FileUploadRequest = await new FileUploadRequest(
+      {},
       context,
-    ).populate({
-      session_id: session?.id,
-      bucket_id: bucket.id,
-      s3FileKey: s3FileKey,
-    });
+    ).populateByS3FileKey(s3FileKey);
 
-    await fur.insert();
+    if (!fur.exists()) {
+      fur = new FileUploadRequest(event.body, context).populate({
+        file_uuid: uuidV4(),
+        session_id: session?.id,
+        bucket_id: bucket.id,
+        s3FileKey: s3FileKey,
+      });
+
+      await fur.insert();
+    } else {
+      //Only update time & user is updated
+      await fur.update();
+    }
 
     const s3Client: AWS_S3 = new AWS_S3();
     const signedURLForUpload = await s3Client.generateSignedUploadURL(
@@ -70,7 +92,7 @@ export class StorageService {
       s3FileKey,
     );
 
-    return { signedUrlForUpload: signedURLForUpload };
+    return { signedUrlForUpload: signedURLForUpload, file_uuid: fur.file_uuid };
   }
 
   static async endFileUploadSessionAndExecuteSyncToIPFS(
@@ -88,7 +110,7 @@ export class StorageService {
       });
     }
 
-    //Get files in session (fileStatus must be of status 1)
+    //Get files in session (fileStatus must be ofst atus 1)
     const files = (
       await new FileUploadRequest(
         {},
@@ -96,8 +118,7 @@ export class StorageService {
       ).populateFileUploadRequestsInSession(session.id, context)
     ).filter(
       (x) =>
-        x.fileStatus ==
-        FileUploadRequestFileStatus.SIGNED_URL_FOR_UPLOAD_GENERATED,
+        x.fileStatus != FileUploadRequestFileStatus.UPLOADED_TO_IPFS_AND_CRUST,
     );
 
     if (files.length == 0) {
@@ -109,7 +130,7 @@ export class StorageService {
 
     //get bucket
     const bucket = await new Bucket({}, context).populateById(
-      files[0].bucket_id,
+      session.bucket_id,
     );
 
     if (bucket.bucketType == BucketType.HOSTING) {
@@ -128,7 +149,11 @@ export class StorageService {
 
       //Create new directories & files
       const directories = [];
-      for (const file of files) {
+      for (const file of files.filter(
+        (x) =>
+          x.fileStatus ==
+          FileUploadRequestFileStatus.SIGNED_URL_FOR_UPLOAD_GENERATED,
+      )) {
         const fileDirectory = await StorageService.generateDirectoriesFromPath(
           context,
           directories,
@@ -139,7 +164,9 @@ export class StorageService {
         //Create new file
         await new File({}, context)
           .populate({
+            file_uuid: file.file_uuid,
             CID: file.CID.toV0().toString(),
+            s3FileKey: file.s3FileKey,
             name: file.fileName,
             contentType: file.contentType,
             bucket_id: file.bucket_id,
@@ -163,7 +190,7 @@ export class StorageService {
 
       //Update bucket CID & IPNS
       bucket.CID = ipfsRes.parentDirCID.toV0().toString();
-      bucket.IPNS = ipns.value;
+      bucket.IPNS = ipns.name;
       await bucket.update();
     } else {
       //get directories in bucket
@@ -213,6 +240,7 @@ export class StorageService {
           //Update existing file
           existingFile.populate({
             CID: ipfsRes.cidV0,
+            s3FileKey: file.s3FileKey,
             name: file.fileName,
             contentType: file.contentType,
             size: ipfsRes.size,
@@ -223,7 +251,9 @@ export class StorageService {
           //Create new file
           await new File({}, context)
             .populate({
+              file_uuid: file.file_uuid,
               CID: ipfsRes.cidV0,
+              s3FileKey: file.s3FileKey,
               name: file.fileName,
               contentType: file.contentType,
               bucket_id: file.bucket_id,
@@ -299,5 +329,72 @@ export class StorageService {
       return currDirectory;
     }
     return undefined;
+  }
+
+  static async getFileDetails(
+    event: { cid?: string; file_uuid?: string },
+    context: ServiceContext,
+  ) {
+    let file: File = undefined;
+    let fileStatus: FileStatus = undefined;
+    if (event.cid) file = await new File({}, context).populateByCID(event.cid);
+    else if (event.file_uuid)
+      file = await new File({}, context).populateByUUID(event.file_uuid);
+    else {
+      throw new StorageCodeException({
+        code: StorageErrorCode.DEFAULT_RESOURCE_NOT_FOUND_ERROR,
+        status: 404,
+      });
+    }
+
+    if (!file.exists()) {
+      //try to load and return file data from file-upload-request
+      if (event.file_uuid) {
+        const fur: FileUploadRequest = await new FileUploadRequest(
+          {},
+          context,
+        ).populateByUUID(event.file_uuid);
+
+        if (fur.exists()) {
+          //check if file uploaded to S3
+          const s3Client: AWS_S3 = new AWS_S3();
+          if (
+            await s3Client.exists(
+              env.AT_STORAGE_AWS_IPFS_QUEUE_BUCKET,
+              fur.s3FileKey,
+            )
+          )
+            fileStatus = FileStatus.UPLOADED_TO_S3;
+          else fileStatus = FileStatus.REQUEST_FOR_UPLOAD_GENERATED;
+
+          return {
+            fileStatus: fileStatus,
+            file: fur.serialize(SerializeFor.PROFILE),
+            crustStatus: undefined,
+          };
+        }
+      }
+
+      throw new StorageCodeException({
+        code: StorageErrorCode.FILE_DOES_NOT_EXISTS,
+        status: 404,
+      });
+    }
+
+    fileStatus = FileStatus.UPLOADED_TO_IPFS;
+    //File exists on IPFS and probably on CRUST- get status from CRUST
+    let crustOrderStatus = undefined;
+    if (file.CID) {
+      crustOrderStatus = await CrustService.getOrderStatus({
+        cid: file.CID,
+      });
+      fileStatus = FileStatus.PINNED_TO_CRUST;
+    }
+
+    return {
+      fileStatus: fileStatus,
+      file: file.serialize(SerializeFor.PROFILE),
+      crustStatus: crustOrderStatus,
+    };
   }
 }

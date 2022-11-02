@@ -26,6 +26,25 @@ export class File extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+  })
+  public file_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
     ],
     validators: [
       {
@@ -35,6 +54,24 @@ export class File extends AdvancedSQLModel {
     ],
   })
   public CID: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public s3FileKey: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -160,6 +197,48 @@ export class File extends AdvancedSQLModel {
       AND status <> ${SqlModelStatus.DELETED};
       `,
       { name, directory_id },
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
+
+  public async populateByCID(cid: string): Promise<this> {
+    if (!cid) {
+      throw new Error('cid should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE cid = @cid AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { cid },
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
+
+  public async populateByUUID(file_uuid: string): Promise<this> {
+    if (!file_uuid) {
+      throw new Error('file_uuid should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE file_uuid = @file_uuid AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { file_uuid },
     );
 
     if (data && data.length) {

@@ -1,7 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { CreateS3SignedUrlForUploadDto, StorageMicroservice } from 'at-lib';
+import { HttpStatus, Injectable } from '@nestjs/common';
+import {
+  BadRequestErrorCode,
+  CodeException,
+  CreateS3SignedUrlForUploadDto,
+  FileDetailsQueryFilter,
+  StorageMicroservice,
+} from 'at-lib';
 import { DevConsoleApiContext } from '../../context';
-
 @Injectable()
 export class StorageService {
   async endFileUploadSession(
@@ -21,5 +26,20 @@ export class StorageService {
     return (
       await new StorageMicroservice(context).requestS3SignedURLForUpload(body)
     ).data;
+  }
+
+  async getFileDetails(
+    context: DevConsoleApiContext,
+    query: FileDetailsQueryFilter,
+  ) {
+    if (!query.file_uuid && !query.cid) {
+      throw new CodeException({
+        code: BadRequestErrorCode.INVALID_QUERY_PARAMETERS,
+        status: HttpStatus.BAD_REQUEST,
+        errorCodes: BadRequestErrorCode,
+      });
+    }
+
+    return (await new StorageMicroservice(context).getFileDetails(query)).data;
   }
 }

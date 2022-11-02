@@ -9,6 +9,7 @@ export async function upgrade(
   \`session_id\` INT NOT NULL,
   \`bucket_id\` INT NOT NULL,
   \`directory_uuid\` VARCHAR(36) NULL,
+  \`file_uuid\` VARCHAR(36) NOT NULL,
   \`path\` VARCHAR(500) NULL,
   \`s3FileKey\` VARCHAR(255) NOT NULL,
   \`fileName\` VARCHAR(255) NOT NULL,

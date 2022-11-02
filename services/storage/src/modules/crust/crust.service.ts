@@ -78,4 +78,15 @@ export class CrustService {
       });
     });
   }
+
+  static async getOrderStatus(params: { cid: string }) {
+    // Pin dist directory on Crust
+    const api = new ApiPromise({
+      provider: new WsProvider('wss://rpc.crust.network'),
+      typesBundle: typesBundleForPolkadot,
+    });
+
+    await api.isReadyOrError;
+    return await api.query.market.filesV2(params.cid);
+  }
 }
