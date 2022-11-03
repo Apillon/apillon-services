@@ -141,7 +141,7 @@ export enum DefaultUserRole {
   // project roles
   PROJECT_OWNER = 10, // Owner of current project
   PROJECT_ADMIN = 11, // Admin of current project
-  PROJECT_USER = 19, // (read only) User on current project
+  PROJECT_USER = 12, // (read only) User on current project
   // auth user roles
   USER = 99, // user with access to platform
 }

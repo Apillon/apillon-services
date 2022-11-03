@@ -349,8 +349,6 @@ export class AuthUserService {
       event.email,
     );
 
-    if (!authUser.exists()) return undefined;
-
     return authUser.serialize(SerializeFor.SERVICE);
   }
 }

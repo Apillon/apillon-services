@@ -32,7 +32,11 @@ export class Project extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.ADMIN, SerializeFor.INSERT_DB],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.SELECT_DB,
+    ],
     validators: [
       {
         resolver: presenceValidator(),
@@ -168,8 +172,7 @@ export class Project extends AdvancedSQLModel {
   }
 
   /**
-   * Returns projects created by user
-   * (TODO: returns projects which contain the given user as collaborator)
+   * Returns all user projects
    */
 
   public async getUserProjects(context: DevConsoleApiContext) {
@@ -181,8 +184,9 @@ export class Project extends AdvancedSQLModel {
         SELECT ${this.generateSelectFields('p', '', SerializeFor.SELECT_DB)}
         `,
       qFrom: `
-        FROM project p
-        WHERE p.createUser = ${params.user_id}
+        FROM ${DbTables.PROJECT} p
+        INNER JOIN ${DbTables.PROJECT_USER} pu ON pu.project_id = p.id
+        WHERE pu.user_id = ${params.user_id}
         `,
     };
 

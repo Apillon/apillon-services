@@ -8,7 +8,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { PermissionLevel, PermissionType } from 'at-lib';
+import { DefaultUserRole, PermissionLevel, PermissionType } from 'at-lib';
 import { Ctx } from '../../decorators/context.decorator';
 import { Validation } from '../../decorators/validation.decorator';
 import { Permissions } from '../../decorators/permission.decorator';
@@ -23,11 +23,7 @@ export class FileController {
   constructor(private fileService: FileService) {}
 
   @Get(':id')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.READ,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard)
   async getFile(
     @Ctx() context: DevConsoleApiContext,
@@ -37,11 +33,7 @@ export class FileController {
   }
 
   @Post()
-  @Permissions({
-    permission: 1,
-    type: PermissionType.EXECUTE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard)
   @Validation({ dto: File })
   @UseGuards(ValidationGuard)
@@ -53,11 +45,7 @@ export class FileController {
   }
 
   @Delete(':id')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.EXECUTE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard)
   async deleteFile(
     @Ctx() context: DevConsoleApiContext,

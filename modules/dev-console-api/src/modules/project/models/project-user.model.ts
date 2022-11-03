@@ -59,20 +59,6 @@ export class ProjectUser extends AdvancedSQLModel {
   })
   public user_id: number;
 
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [
-      SerializeFor.PROFILE,
-      SerializeFor.ADMIN,
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.SELECT_DB,
-    ],
-    validators: [],
-  })
-  public pendingInvitation: boolean;
-
   public async isUserOnProject(
     context: DevConsoleApiContext,
     project_id: number,

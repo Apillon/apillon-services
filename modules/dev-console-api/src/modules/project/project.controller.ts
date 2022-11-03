@@ -1,32 +1,27 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
   Patch,
   Post,
-  Delete,
-  UseGuards,
   Query,
+  UseGuards,
 } from '@nestjs/common';
-import { Ctx } from '../../decorators/context.decorator';
-import { Validation } from '../../decorators/validation.decorator';
-import { Permissions } from '../../decorators/permission.decorator';
-import {
-  DefaultUserRole,
-  PermissionLevel,
-  PermissionType,
-  ValidateFor,
-} from 'at-lib';
+import { DefaultUserRole, ValidateFor } from 'at-lib';
 import { DevConsoleApiContext } from '../../context';
+import { Ctx } from '../../decorators/context.decorator';
+import { Permissions } from '../../decorators/permission.decorator';
+import { Validation } from '../../decorators/validation.decorator';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
+import { File } from '../file/models/file.model';
+import { ProjectUserInviteDto } from './dtos/project_user-invite.dto';
+import { ProjectUserFilter } from './dtos/project_user-query-filter.dto';
 import { Project } from './models/project.model';
 import { ProjectService } from './project.service';
-import { File } from '../file/models/file.model';
-import { ProjectUserFilter } from './dtos/project_user-query-filter.dto';
-import { ProjectUserInviteDto } from './dtos/project_user-invite.dto';
 
 @Controller('project')
 export class ProjectController {
@@ -60,12 +55,7 @@ export class ProjectController {
   }
 
   @Get('/getUserProjects')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-    { role: DefaultUserRole.ADMIN },
-  )
+  @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard)
   async getUserProjects(@Ctx() context: DevConsoleApiContext) {
     return await this.projectService.getUserProjects(context);

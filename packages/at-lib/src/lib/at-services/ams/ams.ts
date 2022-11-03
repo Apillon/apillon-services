@@ -156,7 +156,7 @@ export class Ams extends BaseService {
     const data = {
       ...params,
       eventName: AmsEventType.USER_ROLE_ASSIGN,
-      user: params.user.serialize(),
+      user: params.user ? params.user.serialize() : undefined,
       securityToken: this.securityToken,
     };
 
