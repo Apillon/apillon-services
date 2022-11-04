@@ -4,11 +4,15 @@ import { stringParser, integerParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   AdvancedSQLModel,
+  CodeException,
+  DefaultUserRole,
+  ForbiddenErrorCodes,
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
 } from 'at-lib';
 import { DbTables, StorageErrorCode } from '../../../config/types';
+import { ServiceContext } from '../../../context';
 
 export class File extends AdvancedSQLModel {
   tableName = DbTables.FILE;
@@ -120,6 +124,29 @@ export class File extends AdvancedSQLModel {
   public contentType: string;
 
   @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: StorageErrorCode.FILE_PROJECT_UUID_NOT_PRESENT,
+      },
+    ],
+  })
+  public project_uuid: string;
+
+  @prop({
     parser: { resolver: integerParser() },
     populatable: [
       PopulateFrom.DB,
@@ -177,6 +204,45 @@ export class File extends AdvancedSQLModel {
     validators: [],
   })
   public size: number;
+
+  public canAccess(context: ServiceContext) {
+    if (
+      !context.hasRoleOnProject(
+        [
+          DefaultUserRole.PROJECT_OWNER,
+          DefaultUserRole.PROJECT_ADMIN,
+          DefaultUserRole.PROJECT_USER,
+          DefaultUserRole.ADMIN,
+        ],
+        this.project_uuid,
+      )
+    ) {
+      throw new CodeException({
+        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: 403,
+        errorMessage: 'Insufficient permissins',
+      });
+    }
+  }
+
+  public canModify(context: ServiceContext) {
+    if (
+      !context.hasRoleOnProject(
+        [
+          DefaultUserRole.PROJECT_ADMIN,
+          DefaultUserRole.PROJECT_OWNER,
+          DefaultUserRole.ADMIN,
+        ],
+        this.project_uuid,
+      )
+    ) {
+      throw new CodeException({
+        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: 403,
+        errorMessage: 'Insufficient permissins',
+      });
+    }
+  }
 
   public async populateByNameAndDirectory(
     name: string,
