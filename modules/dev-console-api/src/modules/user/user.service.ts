@@ -1,29 +1,34 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import {
   Ams,
+  CodeException,
   ErrorCode,
   generateJwtToken,
   JwtTokenType,
+  LogType,
   Mailing,
   parseJwtToken,
-  PopulateFrom,
   SerializeFor,
   UnauthorizedErrorCodes,
+  ValidationException,
+  writeLog,
 } from 'at-lib';
+import { v4 as uuidV4 } from 'uuid';
 import {
   ResourceNotFoundErrorCode,
   ValidatorErrorCode,
 } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
-import { User } from './models/user.model';
-import { v4 as uuidV4 } from 'uuid';
-import { RegisterUserDto } from './dtos/register-user.dto';
+import { ProjectService } from '../project/project.service';
 import { LoginUserDto } from './dtos/login-user.dto';
+import { RegisterUserDto } from './dtos/register-user.dto';
 import { ValidateEmailDto } from './dtos/validate-email.dto';
-import { CodeException, ValidationException } from 'at-lib';
+import { User } from './models/user.model';
 
 @Injectable()
 export class UserService {
+  constructor(private readonly projectService: ProjectService) {}
+
   async getUserProfile(context: DevConsoleApiContext) {
     const user = await new User({}, context).populateById(context.user.id);
 
@@ -117,13 +122,10 @@ export class UserService {
 
     const email = tokenData.email;
 
-    const user: User = new User({}, context).populate(
-      { email, password },
-      PopulateFrom.PROFILE,
-    );
-
-    // NOTE: Generate uuid here. Default value does not seem to work
-    user.user_uuid = uuidV4();
+    const user: User = new User({}, context).populate({
+      user_uuid: uuidV4(),
+      email: tokenData.email,
+    });
 
     try {
       await user.validate();
@@ -143,6 +145,27 @@ export class UserService {
         password,
       });
       await context.mysql.commit(conn);
+
+      //User has been registered - check if pending invitations for project exists
+      //This is done outside transaction as it is not crucial operation - admin is able to reinvite user to project
+      try {
+        if (tokenData.hasPendingInvitation) {
+          await this.projectService.resolveProjectUserPendingInvitations(
+            context,
+            email,
+            user.id,
+            user.user_uuid,
+          );
+        }
+      } catch (err) {
+        writeLog(
+          LogType.MSG,
+          'Error resolving project user pending invitations',
+          'user.service.ts',
+          'register',
+          err,
+        );
+      }
     } catch (err) {
       // TODO: The context of this error is not correct. What happens if
       //       ams fails? FE will see it as a DB write error, which is incorrect.

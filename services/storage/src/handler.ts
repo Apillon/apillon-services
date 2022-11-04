@@ -2,10 +2,10 @@ import middy from '@middy/core';
 import { AppEnvironment, env } from 'at-lib';
 import { Callback, Context, Handler } from 'aws-lambda/handler';
 import { processEvent } from './main';
+import { InitializeContextAndFillUser } from './middleware/context-and-user';
 import { ErrorHandler } from './middleware/error';
 import { MySqlConnect } from './middleware/mysql';
 import { ResponseFormat } from './middleware/response';
-import { FillUser } from './middleware/user';
 
 const lambdaHandler: Handler = async (
   event: any,
@@ -44,6 +44,6 @@ handler
       autoDisconnect: true,
     }),
   )
-  .use(FillUser())
+  .use(InitializeContextAndFillUser())
   .use(ResponseFormat())
   .use(ErrorHandler());

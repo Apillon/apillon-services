@@ -11,6 +11,7 @@ export async function processEvent(event, context: Context): Promise<any> {
     [AmsEventType.USER_UPDATE]: AuthUserService.updateAuthUser,
     [AmsEventType.USER_PASSWORD_RESET]: AuthUserService.resetPassword,
     [AmsEventType.USER_EMAIL_EXISTS]: AuthUserService.emailExists,
+    [AmsEventType.GET_AUTH_USER_BY_EMAIL]: AuthUserService.getAuthUserByEmail,
 
     [AmsEventType.USER_ROLE_ASSIGN]: RoleService.assignUserRoleOnProject,
     [AmsEventType.USER_ROLE_REMOVE]: RoleService.removeUserRoleOnProject,

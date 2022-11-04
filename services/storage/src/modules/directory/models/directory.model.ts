@@ -2,8 +2,11 @@ import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   AdvancedSQLModel,
+  CodeException,
   Context,
+  DefaultUserRole,
   DirectoryContentQueryFilter,
+  ForbiddenErrorCodes,
   getQueryParams,
   PopulateFrom,
   prop,
@@ -57,6 +60,29 @@ export class Directory extends AdvancedSQLModel {
     validators: [],
   })
   public parentDirectory_id: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: StorageErrorCode.BUCKET_PROJECT_UUID_NOT_PRESENT,
+      },
+    ],
+  })
+  public project_uuid: string;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -145,6 +171,45 @@ export class Directory extends AdvancedSQLModel {
     validators: [],
   })
   public description: string;
+
+  public canAccess(context: ServiceContext) {
+    if (
+      !context.hasRoleOnProject(
+        [
+          DefaultUserRole.PROJECT_OWNER,
+          DefaultUserRole.PROJECT_ADMIN,
+          DefaultUserRole.PROJECT_USER,
+          DefaultUserRole.ADMIN,
+        ],
+        this.project_uuid,
+      )
+    ) {
+      throw new CodeException({
+        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: 403,
+        errorMessage: 'Insufficient permissins',
+      });
+    }
+  }
+
+  public canModify(context: ServiceContext) {
+    if (
+      !context.hasRoleOnProject(
+        [
+          DefaultUserRole.PROJECT_ADMIN,
+          DefaultUserRole.PROJECT_OWNER,
+          DefaultUserRole.ADMIN,
+        ],
+        this.project_uuid,
+      )
+    ) {
+      throw new CodeException({
+        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: 403,
+        errorMessage: 'Insufficient permissins',
+      });
+    }
+  }
 
   /**
    * Return array of Directories, that are in bucket

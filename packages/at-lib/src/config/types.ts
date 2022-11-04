@@ -8,6 +8,7 @@ export enum AmsEventType {
   USER_ROLE_REMOVE = 'user-role-remove',
   AUTH_TOKEN_CREATE_UPDATE_TOKEN = 'auth-token-create-update-token',
   USER_EMAIL_EXISTS = 'user-email-exists',
+  GET_AUTH_USER_BY_EMAIL = 'get-auth-user-by-email',
 }
 
 export enum LmasEventType {
@@ -140,7 +141,7 @@ export enum DefaultUserRole {
   // project roles
   PROJECT_OWNER = 10, // Owner of current project
   PROJECT_ADMIN = 11, // Admin of current project
-  PROJECT_USER = 19, // (read only) User on current project
+  PROJECT_USER = 12, // (read only) User on current project
   // auth user roles
   USER = 99, // user with access to platform
 }
@@ -222,11 +223,15 @@ export enum ValidatorErrorCode {
 }
 
 /**
- * Route error codes - 401000.
+ * Unauthorized error codes - 401000.
  */
 export enum UnauthorizedErrorCodes {
-  UNAUTHORIZED = 401000,
-  INVALID_TOKEN = 401000,
+  UNAUTHORIZED = 40100000,
+  INVALID_TOKEN = 40100000,
+}
+
+export enum ForbiddenErrorCodes {
+  FORBIDDEN = 40300000,
 }
 
 //#endregion

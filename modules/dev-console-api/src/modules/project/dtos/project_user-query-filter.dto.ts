@@ -1,13 +1,14 @@
 // import { ApiProperty } from '@babel/core';
 import { prop } from '@rawmodel/core';
 import { integerParser } from '@rawmodel/parsers';
-import { ModelBase } from 'at-lib/dist/lib/base-models/base';
 import { presenceValidator } from '@rawmodel/validators';
 import { ValidatorErrorCode } from '../../../config/types';
+import { BaseQueryFilter, PopulateFrom } from 'at-lib';
 
-export class ProjectUserFilter extends ModelBase {
+export class ProjectUserFilter extends BaseQueryFilter {
   @prop({
     parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
@@ -16,9 +17,4 @@ export class ProjectUserFilter extends ModelBase {
     ],
   })
   public project_id: number;
-
-  @prop({
-    parser: { resolver: integerParser() },
-  })
-  public user_id: number;
 }

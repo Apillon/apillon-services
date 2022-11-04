@@ -41,6 +41,7 @@ export class StorageService {
         status: 404,
       });
     }
+    bucket.canAccess(context);
 
     //Get existing or create new fileUploadSession
     let session: FileUploadSession = undefined;
@@ -51,7 +52,11 @@ export class StorageService {
     if (!session.exists()) {
       //create new session
       session = new FileUploadSession(
-        { session_uuid: event.body.session_uuid, bucket_id: bucket.id },
+        {
+          session_uuid: event.body.session_uuid,
+          bucket_id: bucket.id,
+          project_uuid: bucket.project_uuid,
+        },
         context,
       );
       await session.insert();
@@ -110,6 +115,12 @@ export class StorageService {
       });
     }
 
+    //get bucket
+    const bucket = await new Bucket({}, context).populateById(
+      session.bucket_id,
+    );
+    bucket.canAccess(context);
+
     //Get files in session (fileStatus must be ofst atus 1)
     const files = (
       await new FileUploadRequest(
@@ -127,11 +138,6 @@ export class StorageService {
         status: 404,
       });
     }
-
-    //get bucket
-    const bucket = await new Bucket({}, context).populateById(
-      session.bucket_id,
-    );
 
     if (bucket.bucketType == BucketType.HOSTING) {
       const ipfsRes = await IPFSService.uploadFilesToIPFSFromS3({
@@ -170,6 +176,7 @@ export class StorageService {
             name: file.fileName,
             contentType: file.contentType,
             bucket_id: file.bucket_id,
+            project_uuid: bucket.project_uuid,
             directory_id: fileDirectory?.id,
             size: file.size,
           })
@@ -256,6 +263,7 @@ export class StorageService {
               s3FileKey: file.s3FileKey,
               name: file.fileName,
               contentType: file.contentType,
+              project_uuid: bucket.project_uuid,
               bucket_id: file.bucket_id,
               directory_id: fileDirectory?.id,
               size: ipfsRes.size,
@@ -381,6 +389,7 @@ export class StorageService {
       });
     }
 
+    file.canAccess(context);
     fileStatus = FileStatus.UPLOADED_TO_IPFS;
     //File exists on IPFS and probably on CRUST- get status from CRUST
     let crustOrderStatus = undefined;

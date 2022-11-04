@@ -8,6 +8,7 @@ export async function upgrade(
   \`id\` INT NOT NULL AUTO_INCREMENT,
   \`directory_uuid\` VARCHAR(36) NOT NULL,
   \`parentDirectory_id\` INT NULL,
+  \`project_uuid\` VARCHAR(36) NOT NULL,
   \`bucket_id\` INT NOT NULL,
   \`CID\` VARCHAR(255) NULL,
   \`name\` VARCHAR(255) NOT NULL,

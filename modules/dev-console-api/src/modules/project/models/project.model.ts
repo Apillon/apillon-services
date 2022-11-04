@@ -3,13 +3,22 @@ import { prop } from '@rawmodel/core';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 
-import { AdvancedSQLModel, PopulateFrom, SerializeFor } from 'at-lib';
+import {
+  AdvancedSQLModel,
+  CodeException,
+  DefaultUserRole,
+  ForbiddenErrorCodes,
+  PopulateFrom,
+  SerializeFor,
+  SqlModelStatus,
+} from 'at-lib';
 import { selectAndCountQuery } from 'at-lib';
 
 import { v4 as uuidV4 } from 'uuid';
 import { faker } from '@faker-js/faker';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
+import { HttpStatus } from '@nestjs/common';
 
 /**
  * Project model.
@@ -23,7 +32,11 @@ export class Project extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.ADMIN, SerializeFor.INSERT_DB],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.SELECT_DB,
+    ],
     validators: [
       {
         resolver: presenceValidator(),
@@ -43,7 +56,7 @@ export class Project extends AdvancedSQLModel {
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
-      PopulateFrom.ADMIN,
+      SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
@@ -60,7 +73,7 @@ export class Project extends AdvancedSQLModel {
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
-      PopulateFrom.ADMIN,
+      SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
@@ -76,7 +89,7 @@ export class Project extends AdvancedSQLModel {
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
-      PopulateFrom.ADMIN,
+      SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
@@ -90,7 +103,7 @@ export class Project extends AdvancedSQLModel {
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.PROFILE,
-      PopulateFrom.ADMIN,
+      SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
@@ -98,9 +111,68 @@ export class Project extends AdvancedSQLModel {
   })
   public imageFile_id: number;
 
+  public canAccess(context: DevConsoleApiContext) {
+    if (
+      !context.hasRoleOnProject(
+        [
+          DefaultUserRole.PROJECT_OWNER,
+          DefaultUserRole.PROJECT_ADMIN,
+          DefaultUserRole.PROJECT_USER,
+          DefaultUserRole.ADMIN,
+        ],
+        this.project_uuid,
+      )
+    ) {
+      throw new CodeException({
+        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: HttpStatus.FORBIDDEN,
+        errorMessage: 'Insufficient permissins',
+      });
+    }
+  }
+
+  public canModify(context: DevConsoleApiContext) {
+    if (
+      !context.hasRoleOnProject(
+        [
+          DefaultUserRole.PROJECT_ADMIN,
+          DefaultUserRole.PROJECT_OWNER,
+          DefaultUserRole.ADMIN,
+        ],
+        this.project_uuid,
+      )
+    ) {
+      throw new CodeException({
+        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: HttpStatus.FORBIDDEN,
+        errorMessage: 'Insufficient permissins',
+      });
+    }
+  }
+
+  public async populateByUUID(uuid: string): Promise<this> {
+    if (!uuid) {
+      throw new Error('uuid should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE project_uuid = @uuid AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { uuid },
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
+
   /**
-   * Returns projects created by user
-   * (TODO: returns projects which contain the given user as collaborator)
+   * Returns all user projects
    */
 
   public async getUserProjects(context: DevConsoleApiContext) {
@@ -112,8 +184,9 @@ export class Project extends AdvancedSQLModel {
         SELECT ${this.generateSelectFields('p', '', SerializeFor.SELECT_DB)}
         `,
       qFrom: `
-        FROM project p
-        WHERE p.createUser = ${params.user_id}
+        FROM ${DbTables.PROJECT} p
+        INNER JOIN ${DbTables.PROJECT_USER} pu ON pu.project_id = p.id
+        WHERE pu.user_id = ${params.user_id}
         `,
     };
 

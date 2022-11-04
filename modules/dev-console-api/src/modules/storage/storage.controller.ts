@@ -9,29 +9,28 @@ import {
 } from '@nestjs/common';
 import {
   CreateS3SignedUrlForUploadDto,
+  DefaultUserRole,
   FileDetailsQueryFilter,
-  PermissionLevel,
-  PermissionType,
   ValidateFor,
 } from 'at-lib';
+import { DevConsoleApiContext } from '../../context';
 import { Ctx } from '../../decorators/context.decorator';
 import { Permissions } from '../../decorators/permission.decorator';
-import { DevConsoleApiContext } from '../../context';
+import { Validation } from '../../decorators/validation.decorator';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { StorageService } from './storage.service';
-import { Validation } from '../../decorators/validation.decorator';
 
 @Controller('storage')
 export class StorageController {
   constructor(private storageService: StorageService) {}
 
   @Post('/createSignedUrlForUpload')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
   @UseGuards(AuthGuard)
   @Validation({ dto: CreateS3SignedUrlForUploadDto })
   @UseGuards(ValidationGuard)
@@ -43,11 +42,11 @@ export class StorageController {
   }
 
   @Post('/endFileUploadSession/:session_uuid')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
   @UseGuards(AuthGuard)
   async endFileUploadSession(
     @Ctx() context: DevConsoleApiContext,
@@ -60,11 +59,11 @@ export class StorageController {
   }
 
   @Get('/fileDetails')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
   @Validation({ dto: FileDetailsQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
   async getBucketList(

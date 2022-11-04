@@ -18,10 +18,10 @@ export class BucketService {
     event: { query: BucketQueryFilter },
     context: ServiceContext,
   ) {
-    return await new Bucket({}, context).getList(
+    return await new Bucket(
+      { project_uuid: event.query.project_uuid },
       context,
-      new BucketQueryFilter(event.query),
-    );
+    ).getList(context, new BucketQueryFilter(event.query));
   }
 
   static async createBucket(
@@ -58,6 +58,8 @@ export class BucketService {
         status: 404,
       });
     }
+    b.canModify(context);
+
     b.populate(event.data, PopulateFrom.PROFILE);
 
     try {
@@ -84,16 +86,9 @@ export class BucketService {
       });
     }
 
+    b.canModify(context);
+
     await b.delete();
     return b.serialize(SerializeFor.PROFILE);
-  }
-
-  static async listBucketContent(
-    event: { bucket_id: number; directory_id: number },
-    context: ServiceContext,
-  ) {
-    //if directory_id is not set, list bucket content on root path
-    if (!event.directory_id) {
-    }
   }
 }

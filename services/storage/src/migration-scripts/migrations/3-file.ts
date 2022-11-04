@@ -11,6 +11,7 @@ export async function upgrade(
   \`s3FileKey\` VARCHAR(255) NULL,
   \`name\` VARCHAR(255) NOT NULL,
   \`contentType\` VARCHAR(100) NOT NULL,
+  \`project_uuid\` VARCHAR(36) NOT NULL,
   \`bucket_id\` INT NOT NULL,
   \`directory_id\` INT NULL,
   \`size\` INT NOT NULL,

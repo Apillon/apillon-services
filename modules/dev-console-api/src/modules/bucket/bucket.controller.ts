@@ -13,28 +13,27 @@ import {
 import {
   BucketQueryFilter,
   CreateBucketDto,
-  PermissionLevel,
-  PermissionType,
+  DefaultUserRole,
   ValidateFor,
 } from 'at-lib';
 import { DevConsoleApiContext } from '../../context';
+import { Ctx } from '../../decorators/context.decorator';
+import { Permissions } from '../../decorators/permission.decorator';
+import { Validation } from '../../decorators/validation.decorator';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { BucketService } from './bucket.service';
-import { Validation } from '../../decorators/validation.decorator';
-import { Ctx } from '../../decorators/context.decorator';
-import { Permissions } from '../../decorators/permission.decorator';
 
 @Controller('bucket')
 export class BucketController {
   constructor(private bucketService: BucketService) {}
 
   @Get()
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
   @Validation({ dto: BucketQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
   async getBucketList(
@@ -45,11 +44,10 @@ export class BucketController {
   }
 
   @Post()
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
   @UseGuards(AuthGuard)
   @Validation({ dto: CreateBucketDto })
   @UseGuards(ValidationGuard)
@@ -61,11 +59,10 @@ export class BucketController {
   }
 
   @Patch('/:id')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
   @UseGuards(AuthGuard)
   async updateBucket(
     @Ctx() context: DevConsoleApiContext,
@@ -76,11 +73,10 @@ export class BucketController {
   }
 
   @Delete('/:id')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
   @UseGuards(AuthGuard)
   async removeUserProject(
     @Ctx() context: DevConsoleApiContext,

@@ -21,25 +21,6 @@ export class User extends AdvancedSQLModel {
   tableName = DbTables.USER;
 
   /**
-   * User's name (first name + last name) property definition.
-   */
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB, //
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.PROFILE,
-      SerializeFor.ADMIN,
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-    ],
-    fakeValue: () => faker.name.fullName(),
-  })
-  public name: string;
-
-  /**
    * User's UUID used for synchronization with microservices
    */
   @prop({
@@ -61,6 +42,40 @@ export class User extends AdvancedSQLModel {
   })
   public user_uuid: string;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB, //
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+    ],
+  })
+  public email: string;
+
+  /**
+   * User's name (first name + last name) property definition.
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB, //
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+    ],
+    fakeValue: () => faker.name.fullName(),
+  })
+  public name: string;
+
   /**
    * Phone number
    */
@@ -77,6 +92,14 @@ export class User extends AdvancedSQLModel {
     fakeValue: '+386 41 885 885',
   })
   public phone: string;
+
+  /**
+   * Auth user - info property used to pass to microservices - othervise serialization removes this object
+   */
+  @prop({
+    serializable: [SerializeFor.SERVICE],
+  })
+  public authUser: any;
 
   public async populateByUUID(
     context: DevConsoleApiContext,
