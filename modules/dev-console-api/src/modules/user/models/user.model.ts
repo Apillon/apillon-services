@@ -93,6 +93,14 @@ export class User extends AdvancedSQLModel {
   })
   public phone: string;
 
+  /**
+   * Auth user - info property used to pass to microservices - othervise serialization removes this object
+   */
+  @prop({
+    serializable: [SerializeFor.SERVICE],
+  })
+  public authUser: any;
+
   public async populateByUUID(
     context: DevConsoleApiContext,
     user_uuid: string,

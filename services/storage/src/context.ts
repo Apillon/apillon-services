@@ -1,5 +1,5 @@
 import { Context, MySql } from 'at-lib';
 
-export interface ServiceContext extends Context {
+export class ServiceContext extends Context {
   mysql: MySql;
 }

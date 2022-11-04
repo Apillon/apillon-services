@@ -53,7 +53,7 @@ export class DirectoryService {
     b.canModify(context);
 
     const d: Directory = new Directory(
-      { ...event.body, directory_uuid: uuidV4() },
+      { ...event.body, directory_uuid: uuidV4(), project_uuid: b.project_uuid },
       context,
     );
 

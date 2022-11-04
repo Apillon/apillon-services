@@ -18,10 +18,10 @@ export class BucketService {
     event: { query: BucketQueryFilter },
     context: ServiceContext,
   ) {
-    return await new Bucket({}, context).getList(
+    return await new Bucket(
+      { project_uuid: event.query.project_uuid },
       context,
-      new BucketQueryFilter(event.query),
-    );
+    ).getList(context, new BucketQueryFilter(event.query));
   }
 
   static async createBucket(

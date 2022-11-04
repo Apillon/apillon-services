@@ -263,7 +263,7 @@ export class StorageService {
               s3FileKey: file.s3FileKey,
               name: file.fileName,
               contentType: file.contentType,
-              project_uuid: bucket.bucket_uuid,
+              project_uuid: bucket.project_uuid,
               bucket_id: file.bucket_id,
               directory_id: fileDirectory?.id,
               size: ipfsRes.size,
