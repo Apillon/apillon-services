@@ -22,6 +22,7 @@ import { File } from '../file/models/file.model';
 import { User } from '../user/models/user.model';
 import { ProjectUserInviteDto } from './dtos/project_user-invite.dto';
 import { ProjectUserFilter } from './dtos/project_user-query-filter.dto';
+import { ProjectUserUpdateRoleDto } from './dtos/project_user-update-role.dto';
 import { ProjectUserPendingInvitation } from './models/project-user-pending-invitation.model';
 import { ProjectUser } from './models/project-user.model';
 import { Project } from './models/project.model';
@@ -277,6 +278,77 @@ export class ProjectService {
 
       await invitation.delete();
     }
+  }
+
+  async updateUserRoleOnProject(
+    context: DevConsoleApiContext,
+    project_user_id: number,
+    body: ProjectUserUpdateRoleDto,
+  ) {
+    const project_user = await new ProjectUser({}, context).populateById(
+      project_user_id,
+    );
+    if (!project_user.exists()) {
+      throw new CodeException({
+        status: HttpStatus.NOT_FOUND,
+        code: ResourceNotFoundErrorCode.PROJECT_USER_DOES_NOT_EXIST,
+        sourceFunction: `${this.constructor.name}/updateUserRoleOnProject`,
+        context,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+
+    if (project_user.role_id == DefaultUserRole.PROJECT_OWNER) {
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: BadRequestErrorCode.CANNOT_MODIFY_PROJECT_OWNER,
+        sourceFunction: `${this.constructor.name}/updateUserRoleOnProject`,
+        context,
+        errorCodes: BadRequestErrorCode,
+      });
+    }
+    const project: Project = await new Project({}, context).populateById(
+      project_user.project_id,
+    );
+    project.canModify(context);
+
+    //Check if role is different
+    if (project_user.role_id == body.role_id) {
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: BadRequestErrorCode.ROLE_ON_PROJECT_ALREADY_ASSIGNED,
+        sourceFunction: `${this.constructor.name}/updateUserRoleOnProject`,
+        context,
+        errorCodes: BadRequestErrorCode,
+      });
+    }
+
+    const userToChange: User = await new User({}, context).populateById(
+      project_user.user_id,
+    );
+
+    //ams - add new permission to user
+    let params: any = {
+      user: context.user,
+      user_uuid: userToChange.user_uuid,
+      project_uuid: project.project_uuid,
+      role_id: body.role_id,
+    };
+    await new Ams().assignUserRoleOnProject(params);
+
+    //ams - remove previous role
+    params = {
+      user: context.user,
+      user_uuid: userToChange.user_uuid,
+      project_uuid: project.project_uuid,
+      role_id: project_user.role_id,
+    };
+    await new Ams().removeUserRoleOnProject(params);
+
+    project_user.populate({ role_id: body.role_id });
+    await project_user.update();
+
+    return project_user;
   }
 
   async removeUserProject(

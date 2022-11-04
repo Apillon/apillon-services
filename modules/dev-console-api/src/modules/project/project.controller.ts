@@ -20,6 +20,7 @@ import { ValidationGuard } from '../../guards/validation.guard';
 import { File } from '../file/models/file.model';
 import { ProjectUserInviteDto } from './dtos/project_user-invite.dto';
 import { ProjectUserFilter } from './dtos/project_user-query-filter.dto';
+import { ProjectUserUpdateRoleDto } from './dtos/project_user-update-role.dto';
 import { Project } from './models/project.model';
 import { ProjectService } from './project.service';
 
@@ -121,6 +122,25 @@ export class ProjectController {
     @Body() body: ProjectUserInviteDto,
   ) {
     return await this.projectService.inviteUserProject(context, body);
+  }
+
+  @Patch('/updateUserRoleOnProject/:project_user_id')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @Validation({ dto: ProjectUserUpdateRoleDto })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async updateUserRoleOnProject(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('project_user_id', ParseIntPipe) project_user_id: number,
+    @Body() body: ProjectUserUpdateRoleDto,
+  ) {
+    return await this.projectService.updateUserRoleOnProject(
+      context,
+      project_user_id,
+      body,
+    );
   }
 
   @Delete('/removeUser/:project_user_id')
