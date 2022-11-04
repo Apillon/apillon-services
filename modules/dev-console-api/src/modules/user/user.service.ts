@@ -122,10 +122,10 @@ export class UserService {
 
     const email = tokenData.email;
 
-    const user: User = new User({}, context);
-
-    // NOTE: Generate uuid here. Default value does not seem to work
-    user.user_uuid = uuidV4();
+    const user: User = new User({}, context).populate({
+      user_uuid: uuidV4(),
+      email: tokenData.email,
+    });
 
     try {
       await user.validate();

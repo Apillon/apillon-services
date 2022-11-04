@@ -72,3 +72,11 @@ export enum ConflictErrorCode {
   DEFAULT_CONFLICT_ERROR = 40904000,
   USER_ALREADY_ON_PROJECT = 40904001,
 }
+
+/**
+ * Bad request error codes - 40004000.
+ */
+export enum BadRequestErrorCode {
+  DEFAULT_BAD_REQUEST_ERROR = 40004000,
+  CANNOT_MODIFY_PROJECT_OWNER = 40004001,
+}

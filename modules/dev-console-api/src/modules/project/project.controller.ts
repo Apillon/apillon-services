@@ -123,7 +123,7 @@ export class ProjectController {
     return await this.projectService.inviteUserProject(context, body);
   }
 
-  @Delete('/:project_user_id/removeUser')
+  @Delete('/removeUser/:project_user_id')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },

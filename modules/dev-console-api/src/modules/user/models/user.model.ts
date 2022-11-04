@@ -21,25 +21,6 @@ export class User extends AdvancedSQLModel {
   tableName = DbTables.USER;
 
   /**
-   * User's name (first name + last name) property definition.
-   */
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB, //
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.PROFILE,
-      SerializeFor.ADMIN,
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-    ],
-    fakeValue: () => faker.name.fullName(),
-  })
-  public name: string;
-
-  /**
    * User's UUID used for synchronization with microservices
    */
   @prop({
@@ -60,6 +41,40 @@ export class User extends AdvancedSQLModel {
     ],
   })
   public user_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB, //
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+    ],
+  })
+  public email: string;
+
+  /**
+   * User's name (first name + last name) property definition.
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB, //
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+    ],
+    fakeValue: () => faker.name.fullName(),
+  })
+  public name: string;
 
   /**
    * Phone number

@@ -162,4 +162,22 @@ export class Ams extends BaseService {
 
     return await this.callService(data);
   }
+
+  public async removeUserRoleOnProject(params: {
+    user: any;
+    user_uuid: string;
+    project_uuid: string;
+    role_id: DefaultUserRole;
+  }) {
+    const data = {
+      ...params,
+      eventName: AmsEventType.USER_ROLE_REMOVE,
+      user: params.user.serialize(),
+      securityToken: this.securityToken,
+    };
+
+    return await this.callService(data);
+  }
+
+  USER_ROLE_REMOVE;
 }

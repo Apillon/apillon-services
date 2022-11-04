@@ -2,7 +2,6 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import {
   Ams,
   CodeException,
-  Context,
   DefaultUserRole,
   generateJwtToken,
   JwtTokenType,
@@ -12,6 +11,7 @@ import {
   ValidationException,
 } from 'at-lib';
 import {
+  BadRequestErrorCode,
   ConflictErrorCode,
   ResourceNotFoundErrorCode,
   ValidatorErrorCode,
@@ -22,9 +22,9 @@ import { File } from '../file/models/file.model';
 import { User } from '../user/models/user.model';
 import { ProjectUserInviteDto } from './dtos/project_user-invite.dto';
 import { ProjectUserFilter } from './dtos/project_user-query-filter.dto';
+import { ProjectUserPendingInvitation } from './models/project-user-pending-invitation.model';
 import { ProjectUser } from './models/project-user.model';
 import { Project } from './models/project.model';
-import { ProjectUserPendingInvitation } from './models/project-user-pending-invitation.model';
 
 @Injectable()
 export class ProjectService {
@@ -34,24 +34,32 @@ export class ProjectService {
     context: DevConsoleApiContext,
     body: Project,
   ): Promise<Project> {
-    const project: Project = await body.insert();
-    const projectUser: ProjectUser = new ProjectUser({}, context).populate({
-      project_id: project.id,
-      user_id: context.user.id,
-      pendingInvitation: false,
-    });
-    await projectUser.insert();
+    const conn = await context.mysql.start();
 
-    //assign user role on project
-    const params: any = {
-      user: context.user,
-      user_uuid: context.user.user_uuid,
-      project_uuid: project.project_uuid,
-      role_id: DefaultUserRole.PROJECT_OWNER,
-    };
-    await new Ams().assignUserRoleOnProject(params);
+    try {
+      const project: Project = await body.insert(SerializeFor.INSERT_DB, conn);
+      const projectUser: ProjectUser = new ProjectUser({}, context).populate({
+        project_id: project.id,
+        user_id: context.user.id,
+        pendingInvitation: false,
+        role_id: DefaultUserRole.PROJECT_OWNER,
+      });
+      await projectUser.insert(SerializeFor.INSERT_DB, conn);
 
-    return project;
+      //assign user role on project
+      const params: any = {
+        user: context.user,
+        user_uuid: context.user.user_uuid,
+        project_uuid: project.project_uuid,
+        role_id: DefaultUserRole.PROJECT_OWNER,
+      };
+      await new Ams().assignUserRoleOnProject(params);
+      await context.mysql.commit(conn);
+      return project;
+    } catch (err) {
+      await context.mysql.rollback(conn);
+      throw err;
+    }
   }
 
   async getProject(
@@ -161,6 +169,7 @@ export class ProjectService {
           .populate({
             project_id: project.id,
             user_id: user.id,
+            role_id: data.role_id,
           })
           .insert(SerializeFor.INSERT_DB, conn);
 
@@ -283,11 +292,49 @@ export class ProjectService {
         code: ResourceNotFoundErrorCode.PROJECT_USER_DOES_NOT_EXIST,
         sourceFunction: `${this.constructor.name}/removeUserProject`,
         context,
+        errorCodes: ResourceNotFoundErrorCode,
       });
     }
 
-    await project_user.delete();
-    return project_user;
+    if (project_user.role_id == DefaultUserRole.PROJECT_OWNER) {
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: BadRequestErrorCode.CANNOT_MODIFY_PROJECT_OWNER,
+        sourceFunction: `${this.constructor.name}/removeUserProject`,
+        context,
+        errorCodes: BadRequestErrorCode,
+      });
+    }
+
+    const project: Project = await new Project({}, context).populateById(
+      project_user.project_id,
+    );
+    project.canModify(context);
+
+    const removedUser: User = await new User({}, context).populateById(
+      project_user.user_id,
+    );
+
+    const conn = await context.mysql.start();
+    try {
+      await project_user.delete(conn);
+
+      //ams - remove user permission on project
+      const params: any = {
+        user: context.user,
+        user_uuid: removedUser.user_uuid,
+        project_uuid: project.project_uuid,
+        role_id: project_user.role_id,
+      };
+      await new Ams().removeUserRoleOnProject(params);
+
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+      throw err;
+    }
+
+    return true;
   }
 
   async updateProjectImage(
