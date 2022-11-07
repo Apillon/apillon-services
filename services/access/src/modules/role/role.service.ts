@@ -1,4 +1,4 @@
-import { SerializeFor } from 'at-lib';
+import { SerializeFor } from '@apillon/lib';
 import { AmsErrorCode } from '../../config/types';
 import { AmsCodeException } from '../../lib/exceptions';
 import { AuthUser } from '../auth-user/auth-user.model';

@@ -4,7 +4,7 @@ import {
   StorageMicroservice,
   BucketQueryFilter,
   CodeException,
-} from 'at-lib';
+} from '@apillon/lib';
 import { ResourceNotFoundErrorCode } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
 import { Project } from '../project/models/project.model';

@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { PopulateFrom, ValidationException } from 'at-lib';
+import { PopulateFrom, ValidationException } from '@apillon/lib';
 import {
   IValidationOptions,
   VALIDATION_OPTIONS_KEY,

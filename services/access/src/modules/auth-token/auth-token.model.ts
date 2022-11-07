@@ -8,7 +8,7 @@ import {
   prop,
   SerializeFor,
   SqlModelStatus,
-} from 'at-lib';
+} from '@apillon/lib';
 import { AmsErrorCode, DbTables } from '../../config/types';
 
 export class AuthToken extends AdvancedSQLModel {

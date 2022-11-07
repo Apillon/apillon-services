@@ -1,4 +1,4 @@
-import { AppEnvironment, env } from 'at-lib';
+import { AppEnvironment, env } from '@apillon/lib';
 import { startDevServer } from '../../server';
 
 if (

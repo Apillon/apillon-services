@@ -13,7 +13,7 @@ export { PoolConnection } from 'mysql2/promise';
 export class MySql {
   public db: mysql.Pool;
 
-  private filename = 'at-lib/lib/database/mysql.ts';
+  private filename = '@apillon/lib/lib/database/mysql.ts';
   private host: string;
   private port: number;
   private database: string;

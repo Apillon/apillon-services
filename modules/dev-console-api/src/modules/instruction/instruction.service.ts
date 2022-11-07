@@ -5,7 +5,7 @@ import {
 } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
 import { Instruction } from './models/instruction.model';
-import { CodeException, ValidationException } from 'at-lib';
+import { CodeException, ValidationException } from '@apillon/lib';
 
 @Injectable()
 export class InstructionService {

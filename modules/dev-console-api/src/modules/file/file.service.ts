@@ -8,7 +8,7 @@ import {
   SystemErrorCode,
   CodeException,
   ValidationException,
-} from 'at-lib';
+} from '@apillon/lib';
 import { ResourceNotFoundErrorCode } from '../../config/types';
 
 @Injectable()

@@ -1,7 +1,7 @@
 // import { ApiProperty } from '@babel/core';
 import { prop } from '@rawmodel/core';
 import { presenceValidator } from '@rawmodel/validators';
-import { ModelBase } from 'at-lib/dist/lib/base-models/base';
+import { ModelBase } from '@apillon/lib/dist/lib/base-models/base';
 import { ValidatorErrorCode } from '../../../config/types';
 import { UploadFileToIPFSDto } from './upload-file-to-IPFS.dto';
 

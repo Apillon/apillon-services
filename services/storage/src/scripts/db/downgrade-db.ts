@@ -1,5 +1,5 @@
 import * as readline from 'readline';
-import { env, downgradeDatabase } from 'at-lib';
+import { env, downgradeDatabase } from '@apillon/lib';
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -10,17 +10,17 @@ let steps = 1;
 
 const run = async () => {
   await downgradeDatabase(
-    env.AT_STORAGE_MYSQL_DATABASE,
-    env.AT_STORAGE_MYSQL_HOST,
-    env.AT_STORAGE_MYSQL_PORT,
-    env.AT_STORAGE_MYSQL_USER,
-    env.AT_STORAGE_MYSQL_PASSWORD,
+    env.STORAGE_MYSQL_DATABASE,
+    env.STORAGE_MYSQL_HOST,
+    env.STORAGE_MYSQL_PORT,
+    env.STORAGE_MYSQL_USER,
+    env.STORAGE_MYSQL_PASSWORD,
     steps,
   );
 };
 
 rl.question(
-  `You are about to downgrade database ${env.AT_STORAGE_MYSQL_DATABASE} @ ${env.AT_STORAGE_MYSQL_HOST}.\n Set number of versions to downgrade (-1 for all, 0 to exit):`,
+  `You are about to downgrade database ${env.STORAGE_MYSQL_DATABASE} @ ${env.STORAGE_MYSQL_HOST}.\n Set number of versions to downgrade (-1 for all, 0 to exit):`,
   (answer) => {
     steps = parseInt(answer);
     if (steps) {

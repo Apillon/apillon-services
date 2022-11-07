@@ -1,4 +1,4 @@
-import { AmsEventType } from 'at-lib';
+import { AmsEventType } from '@apillon/lib';
 import { Context } from 'aws-lambda/handler';
 import { AuthUserService } from './modules/auth-user/auth-user.service';
 import { RoleService } from './modules/role/role.service';

@@ -2,7 +2,7 @@
 import { prop } from '@rawmodel/core';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
-import { ModelBase } from 'at-lib/dist/lib/base-models/base';
+import { ModelBase } from '@apillon/lib/dist/lib/base-models/base';
 import { ValidatorErrorCode } from '../../../config/types';
 
 export class UploadFileToIPFSDto extends ModelBase {

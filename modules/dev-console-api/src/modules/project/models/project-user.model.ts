@@ -5,7 +5,7 @@ import {
   PopulateFrom,
   selectAndCountQuery,
   SerializeFor,
-} from 'at-lib';
+} from '@apillon/lib';
 import { prop } from '@rawmodel/core';
 import { presenceValidator } from '@rawmodel/validators';
 import {

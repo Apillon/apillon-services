@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { AppEnvironment, env, MySql } from 'at-lib';
+import { AppEnvironment, env, MySql } from '@apillon/lib';
 
 @Module({
   providers: [
@@ -9,18 +9,18 @@ import { AppEnvironment, env, MySql } from 'at-lib';
         const config =
           env.APP_ENV === AppEnvironment.TEST
             ? {
-                host: env.AT_DEV_CONSOLE_API_MYSQL_HOST_TEST,
-                database: env.AT_DEV_CONSOLE_API_MYSQL_DATABASE_TEST,
-                password: env.AT_DEV_CONSOLE_API_MYSQL_PASSWORD_TEST,
-                port: env.AT_DEV_CONSOLE_API_MYSQL_PORT_TEST,
-                user: env.AT_DEV_CONSOLE_API_MYSQL_USER_TEST,
+                host: env.DEV_CONSOLE_API_MYSQL_HOST_TEST,
+                database: env.DEV_CONSOLE_API_MYSQL_DATABASE_TEST,
+                password: env.DEV_CONSOLE_API_MYSQL_PASSWORD_TEST,
+                port: env.DEV_CONSOLE_API_MYSQL_PORT_TEST,
+                user: env.DEV_CONSOLE_API_MYSQL_USER_TEST,
               }
             : {
-                host: env.AT_DEV_CONSOLE_API_MYSQL_HOST,
-                database: env.AT_DEV_CONSOLE_API_MYSQL_DATABASE,
-                password: env.AT_DEV_CONSOLE_API_MYSQL_PASSWORD,
-                port: env.AT_DEV_CONSOLE_API_MYSQL_PORT,
-                user: env.AT_DEV_CONSOLE_API_MYSQL_USER,
+                host: env.DEV_CONSOLE_API_MYSQL_HOST,
+                database: env.DEV_CONSOLE_API_MYSQL_DATABASE,
+                password: env.DEV_CONSOLE_API_MYSQL_PASSWORD,
+                port: env.DEV_CONSOLE_API_MYSQL_PORT,
+                user: env.DEV_CONSOLE_API_MYSQL_USER,
               };
 
         try {

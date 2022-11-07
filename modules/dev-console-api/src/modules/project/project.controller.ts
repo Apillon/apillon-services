@@ -10,7 +10,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { DefaultUserRole, ValidateFor } from 'at-lib';
+import { DefaultUserRole, ValidateFor } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { Ctx } from '../../decorators/context.decorator';
 import { Permissions } from '../../decorators/permission.decorator';

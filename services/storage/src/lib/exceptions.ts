@@ -4,7 +4,7 @@ import {
   ErrorOptions,
   ServiceName,
   ValidationException,
-} from 'at-lib';
+} from '@apillon/lib';
 import { StorageErrorCode } from '../config/types';
 
 export class StorageCodeException extends CodeException {

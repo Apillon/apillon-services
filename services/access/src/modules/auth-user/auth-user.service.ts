@@ -6,7 +6,7 @@ import {
   parseJwtToken,
   PopulateFrom,
   SerializeFor,
-} from 'at-lib';
+} from '@apillon/lib';
 import { AmsErrorCode, SqlModelStatus } from '../../config/types';
 import { ServiceContext } from '../../context';
 import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';

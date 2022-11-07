@@ -6,7 +6,7 @@ import {
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
-} from 'at-lib';
+} from '@apillon/lib';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 
 export class ProjectUserPendingInvitation extends AdvancedSQLModel {

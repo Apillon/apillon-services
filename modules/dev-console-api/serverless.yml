@@ -1,6 +1,6 @@
 # console: true
-# org: authtrailadmin
-# app: authtrail-v2
+# org: apillonadmin
+# app: apillon-v2
 service: at-v2-dev-console-${opt:stage, 'dev'}
 frameworkVersion: '3'
 
@@ -36,8 +36,8 @@ provider:
 
   environment:
     ${file(../../bin/deploy/env/env.yml)}
-    # AT_AMS_FUNCTION_NAME: 'at-v2-access-service-${self:provider.stage}'
-    # AT_LMAS_FUNCTION_NAME: 'at-v2-monitoring-service-${self:provider.stage}'
+    # ACCESS_FUNCTION_NAME: 'at-v2-access-service-${self:provider.stage}'
+    # MONITORING_FUNCTION_NAME: 'at-v2-monitoring-service-${self:provider.stage}'
 
 # you can add packaging information here
 package:
@@ -52,7 +52,7 @@ functions:
   dev-console-api:
     handler: ./src/lambda.handler
     name: 'at-v2-dev-console-api-${self:provider.stage}'
-    description: API for Authtrail developer console
+    description: API for Apillon developer console
     memorySize: 512
     timeout: 30
     events:

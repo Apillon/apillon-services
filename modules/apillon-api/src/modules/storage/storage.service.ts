@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { StorageMicroservice } from 'at-lib';
+import { StorageMicroservice } from '@apillon/lib';
 import { v4 as uuidv4 } from 'uuid';
 import { ApillonApiContext } from '../../context';
 import { UploadFilesToIPFSDto } from './dtos/upload-files-to-IPFS';

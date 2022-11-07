@@ -11,8 +11,8 @@ import {
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
-} from 'at-lib';
-import { selectAndCountQuery } from 'at-lib';
+} from '@apillon/lib';
+import { selectAndCountQuery } from '@apillon/lib';
 
 import { v4 as uuidV4 } from 'uuid';
 import { faker } from '@faker-js/faker';

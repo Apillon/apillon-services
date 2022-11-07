@@ -7,7 +7,7 @@ import { CID, create } from 'ipfs-http-client';
 export class CrustService {
   static async createIPFSClient() {
     console.log('creating IPFS client...');
-    const seed = process.env.AT_STORAGE_CRUST_SEED_PHRASE;
+    const seed = process.env.STORAGE_CRUST_SEED_PHRASE;
     if (!seed) {
       throw new Error('seed phrase not found');
     }
@@ -54,7 +54,7 @@ export class CrustService {
     const tx = api.tx.market.placeStorageOrder(fileCid, fileSize, tips, memo);
 
     // Load seeds(account)
-    const seeds = process.env.AT_STORAGE_CRUST_SEED_PHRASE;
+    const seeds = process.env.STORAGE_CRUST_SEED_PHRASE;
     const kr = new Keyring({ type: 'sr25519' });
     const krp = kr.addFromUri(seeds);
 

@@ -1,4 +1,4 @@
-import { MySql } from 'at-lib';
+import { MySql } from '@apillon/lib';
 const instances = {};
 
 export function MySqlConnect(options?: {

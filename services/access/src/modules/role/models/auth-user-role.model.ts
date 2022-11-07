@@ -1,5 +1,5 @@
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import { BaseSQLModel, PopulateFrom, prop, SerializeFor } from 'at-lib';
+import { BaseSQLModel, PopulateFrom, prop, SerializeFor } from '@apillon/lib';
 import { DbTables } from '../../../config/types';
 import { Role } from './role.model';
 

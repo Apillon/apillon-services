@@ -3,8 +3,8 @@ import { prop } from '@rawmodel/core';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { ValidatorErrorCode } from '../../../config/types';
-import { ModelBase } from 'at-lib/dist/lib/base-models/base';
-import { DefaultUserRole, PopulateFrom } from 'at-lib';
+import { ModelBase } from '@apillon/lib/dist/lib/base-models/base';
+import { DefaultUserRole, PopulateFrom } from '@apillon/lib';
 import { projectUserRolesValidator } from '../validators/project-user-role.validator';
 
 export class ProjectUserUpdateRoleDto extends ModelBase {

@@ -10,7 +10,7 @@ import {
   SerializeFor,
   SqlModelStatus,
   uniqueFieldValue,
-} from 'at-lib';
+} from '@apillon/lib';
 import { AmsErrorCode, DbTables } from '../../config/types';
 import * as bcrypt from 'bcryptjs';
 import { Role } from '../role/models/role.model';

@@ -1,6 +1,6 @@
 import { Migration, MigrationConnection } from 'ts-mysql-migrate';
 import { ConnectionOptions, createPool } from 'mysql2';
-import { AppEnvironment, env } from 'at-lib';
+import { AppEnvironment, env } from '@apillon/lib';
 
 let dbConsoleMigration: Migration = null;
 let dbAmsMigration: Migration = null;
@@ -96,11 +96,11 @@ async function initDevConsoleTestMigrations() {
   env.APP_ENV = AppEnvironment.TEST;
 
   const poolConfig: ConnectionOptions = {
-    host: env.AT_DEV_CONSOLE_API_MYSQL_HOST_TEST,
-    database: env.AT_DEV_CONSOLE_API_MYSQL_DATABASE_TEST,
-    password: env.AT_DEV_CONSOLE_API_MYSQL_PASSWORD_TEST,
-    port: env.AT_DEV_CONSOLE_API_MYSQL_PORT_TEST,
-    user: env.AT_DEV_CONSOLE_API_MYSQL_USER_TEST,
+    host: env.DEV_CONSOLE_API_MYSQL_HOST_TEST,
+    database: env.DEV_CONSOLE_API_MYSQL_DATABASE_TEST,
+    password: env.DEV_CONSOLE_API_MYSQL_PASSWORD_TEST,
+    port: env.DEV_CONSOLE_API_MYSQL_PORT_TEST,
+    user: env.DEV_CONSOLE_API_MYSQL_USER_TEST,
     // debug: true,
     connectionLimit: 1,
   };
@@ -125,11 +125,11 @@ async function initAmsTestMigrations() {
   env.APP_ENV = AppEnvironment.TEST;
 
   const poolConfig: ConnectionOptions = {
-    host: env.AT_AMS_MYSQL_HOST_TEST,
-    database: env.AT_AMS_MYSQL_DATABASE_TEST,
-    password: env.AT_AMS_MYSQL_PASSWORD_TEST,
-    port: env.AT_AMS_MYSQL_PORT_TEST,
-    user: env.AT_AMS_MYSQL_USER_TEST,
+    host: env.ACCESS_MYSQL_HOST_TEST,
+    database: env.ACCESS_MYSQL_DATABASE_TEST,
+    password: env.ACCESS_MYSQL_PASSWORD_TEST,
+    port: env.ACCESS_MYSQL_PORT_TEST,
+    user: env.ACCESS_MYSQL_USER_TEST,
     // debug: true,
     connectionLimit: 1,
   };
@@ -154,11 +154,11 @@ async function initDevConsoleTestSeed() {
   env.APP_ENV = AppEnvironment.TEST;
 
   const poolConfig: ConnectionOptions = {
-    host: env.AT_DEV_CONSOLE_API_MYSQL_HOST_TEST,
-    database: env.AT_DEV_CONSOLE_API_MYSQL_DATABASE_TEST,
-    password: env.AT_DEV_CONSOLE_API_MYSQL_PASSWORD_TEST,
-    port: env.AT_DEV_CONSOLE_API_MYSQL_PORT_TEST,
-    user: env.AT_DEV_CONSOLE_API_MYSQL_USER_TEST,
+    host: env.DEV_CONSOLE_API_MYSQL_HOST_TEST,
+    database: env.DEV_CONSOLE_API_MYSQL_DATABASE_TEST,
+    password: env.DEV_CONSOLE_API_MYSQL_PASSWORD_TEST,
+    port: env.DEV_CONSOLE_API_MYSQL_PORT_TEST,
+    user: env.DEV_CONSOLE_API_MYSQL_USER_TEST,
     // debug: true,
     connectionLimit: 1,
   };
@@ -183,11 +183,11 @@ async function initAmsTestSeed() {
   env.APP_ENV = AppEnvironment.TEST;
 
   const poolConfig: ConnectionOptions = {
-    host: env.AT_AMS_MYSQL_HOST_TEST,
-    database: env.AT_AMS_MYSQL_DATABASE_TEST,
-    password: env.AT_AMS_MYSQL_PASSWORD_TEST,
-    port: env.AT_AMS_MYSQL_PORT_TEST,
-    user: env.AT_AMS_MYSQL_USER_TEST,
+    host: env.ACCESS_MYSQL_HOST_TEST,
+    database: env.ACCESS_MYSQL_DATABASE_TEST,
+    password: env.ACCESS_MYSQL_PASSWORD_TEST,
+    port: env.ACCESS_MYSQL_PORT_TEST,
+    user: env.ACCESS_MYSQL_USER_TEST,
     // debug: true,
     connectionLimit: 1,
   };

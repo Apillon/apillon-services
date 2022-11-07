@@ -1,5 +1,5 @@
 import { Logger } from './logger';
-import { LmasEventType } from 'at-lib';
+import { LmasEventType } from '@apillon/lib';
 import { Alerting } from './alerting';
 import { Context } from 'aws-lambda/handler';
 

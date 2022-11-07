@@ -15,7 +15,7 @@ import {
   CreateBucketDto,
   DefaultUserRole,
   ValidateFor,
-} from 'at-lib';
+} from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { Ctx } from '../../decorators/context.decorator';
 import { Permissions } from '../../decorators/permission.decorator';

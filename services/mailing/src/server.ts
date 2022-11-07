@@ -2,14 +2,14 @@
  * development socket server for service
  */
 
-import { AppEnvironment, env } from 'at-lib';
+import { AppEnvironment, env } from '@apillon/lib';
 import * as Net from 'net';
 import { handler } from './handler';
 
 const port =
   env.APP_ENV === AppEnvironment.TEST
-    ? env.AT_MAIL_SOCKET_PORT_TEST
-    : env.AT_MAIL_SOCKET_PORT;
+    ? env.MAIL_SOCKET_PORT_TEST
+    : env.MAIL_SOCKET_PORT;
 
 export function startDevServer() {
   const server = Net.createServer((socket) => {

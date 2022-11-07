@@ -1,4 +1,4 @@
-import { generateJwtToken, JwtTokenType } from 'at-lib';
+import { generateJwtToken, JwtTokenType } from '@apillon/lib';
 import * as request from 'supertest';
 import { releaseStage, setupTest, Stage } from '../../../../test/helpers/setup';
 import { createTestUser, TestUser } from '../../../../test/helpers/user';

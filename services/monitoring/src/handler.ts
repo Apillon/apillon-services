@@ -1,5 +1,5 @@
 import * as middy from '@middy/core';
-import { AppEnvironment, env } from 'at-lib';
+import { AppEnvironment, env } from '@apillon/lib';
 import { Callback, Context, Handler } from 'aws-lambda/handler';
 import { processEvent } from './main';
 import { ErrorHandler } from './middleware/error';
@@ -22,12 +22,12 @@ handler
     MongoDbConnect({
       connectionString:
         env.APP_ENV === AppEnvironment.TEST
-          ? env.AT_LMAS_MONGO_SRV_TEST
-          : env.AT_LMAS_MONGO_SRV,
+          ? env.MONITORING_MONGO_SRV_TEST
+          : env.MONITORING_MONGO_SRV,
       database:
         env.APP_ENV === AppEnvironment.TEST
-          ? env.AT_LMAS_MONGO_DATABASE_TEST
-          : env.AT_LMAS_MONGO_DATABASE,
+          ? env.MONITORING_MONGO_DATABASE_TEST
+          : env.MONITORING_MONGO_DATABASE,
       autoDisconnect: true,
     }),
   )

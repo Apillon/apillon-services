@@ -10,7 +10,7 @@ import {
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
-} from 'at-lib';
+} from '@apillon/lib';
 import { DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
 

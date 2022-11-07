@@ -13,12 +13,12 @@ import { BaseService } from '../base-service';
 export class Lmas extends BaseService {
   lambdaFunctionName =
     env.APP_ENV === AppEnvironment.TEST
-      ? env.AT_LMAS_FUNCTION_NAME_TEST
-      : env.AT_LMAS_FUNCTION_NAME;
+      ? env.MONITORING_FUNCTION_NAME_TEST
+      : env.MONITORING_FUNCTION_NAME;
   devPort =
     env.APP_ENV === AppEnvironment.TEST
-      ? env.AT_LMAS_SOCKET_PORT_TEST
-      : env.AT_LMAS_SOCKET_PORT;
+      ? env.MONITORING_SOCKET_PORT_TEST
+      : env.MONITORING_SOCKET_PORT;
   serviceName = 'LMAS';
 
   constructor() {

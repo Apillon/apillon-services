@@ -8,8 +8,8 @@ import {
   getQueryParams,
   PopulateFrom,
   SerializeFor,
-} from 'at-lib';
-import { selectAndCountQuery } from 'at-lib';
+} from '@apillon/lib';
+import { selectAndCountQuery } from '@apillon/lib';
 
 import { DevConsoleApiContext } from '../../../context';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';

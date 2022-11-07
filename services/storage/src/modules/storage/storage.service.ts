@@ -3,7 +3,7 @@ import {
   CreateS3SignedUrlForUploadDto,
   env,
   SerializeFor,
-} from 'at-lib';
+} from '@apillon/lib';
 import { CID } from 'ipfs-http-client';
 import {
   BucketType,
@@ -93,7 +93,7 @@ export class StorageService {
 
     const s3Client: AWS_S3 = new AWS_S3();
     const signedURLForUpload = await s3Client.generateSignedUploadURL(
-      env.AT_STORAGE_AWS_IPFS_QUEUE_BUCKET,
+      env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
       s3FileKey,
     );
 
@@ -368,7 +368,7 @@ export class StorageService {
           const s3Client: AWS_S3 = new AWS_S3();
           if (
             await s3Client.exists(
-              env.AT_STORAGE_AWS_IPFS_QUEUE_BUCKET,
+              env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
               fur.s3FileKey,
             )
           )

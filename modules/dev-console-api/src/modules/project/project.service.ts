@@ -9,7 +9,7 @@ import {
   PopulateFrom,
   SerializeFor,
   ValidationException,
-} from 'at-lib';
+} from '@apillon/lib';
 import {
   BadRequestErrorCode,
   ConflictErrorCode,

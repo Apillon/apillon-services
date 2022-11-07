@@ -2,7 +2,7 @@
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
-import { AdvancedSQLModel, PopulateFrom, SerializeFor } from 'at-lib';
+import { AdvancedSQLModel, PopulateFrom, SerializeFor } from '@apillon/lib';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 
 /**

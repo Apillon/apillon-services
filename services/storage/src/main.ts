@@ -1,4 +1,4 @@
-import { StorageEventType } from 'at-lib';
+import { StorageEventType } from '@apillon/lib';
 import { Context } from 'aws-lambda/handler';
 import { BucketService } from './modules/bucket/bucket.service';
 import { CrustService } from './modules/crust/crust.service';

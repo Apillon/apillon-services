@@ -1,6 +1,6 @@
 import { Context } from 'aws-lambda/handler';
 import { Mailer } from './mailer';
-import { MailEventType } from 'at-lib';
+import { MailEventType } from '@apillon/lib';
 
 export async function processEvent(event, context: Context): Promise<any> {
   const processors = {

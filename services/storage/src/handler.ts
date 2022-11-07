@@ -1,5 +1,5 @@
 import middy from '@middy/core';
-import { AppEnvironment, env } from 'at-lib';
+import { AppEnvironment, env } from '@apillon/lib';
 import { Callback, Context, Handler } from 'aws-lambda/handler';
 import { processEvent } from './main';
 import { InitializeContextAndFillUser } from './middleware/context-and-user';
@@ -23,24 +23,24 @@ handler
     MySqlConnect({
       host:
         env.APP_ENV === AppEnvironment.TEST
-          ? env.AT_STORAGE_MYSQL_HOST_TEST
-          : env.AT_STORAGE_MYSQL_HOST,
+          ? env.STORAGE_MYSQL_HOST_TEST
+          : env.STORAGE_MYSQL_HOST,
       port:
         env.APP_ENV === AppEnvironment.TEST
-          ? env.AT_STORAGE_MYSQL_PORT_TEST
-          : env.AT_STORAGE_MYSQL_PORT,
+          ? env.STORAGE_MYSQL_PORT_TEST
+          : env.STORAGE_MYSQL_PORT,
       database:
         env.APP_ENV === AppEnvironment.TEST
-          ? env.AT_STORAGE_MYSQL_DATABASE_TEST
-          : env.AT_STORAGE_MYSQL_DATABASE,
+          ? env.STORAGE_MYSQL_DATABASE_TEST
+          : env.STORAGE_MYSQL_DATABASE,
       user:
         env.APP_ENV === AppEnvironment.TEST
-          ? env.AT_STORAGE_MYSQL_USER_TEST
-          : env.AT_STORAGE_MYSQL_USER,
+          ? env.STORAGE_MYSQL_USER_TEST
+          : env.STORAGE_MYSQL_USER,
       password:
         env.APP_ENV === AppEnvironment.TEST
-          ? env.AT_STORAGE_MYSQL_PASSWORD_TEST
-          : env.AT_STORAGE_MYSQL_PASSWORD,
+          ? env.STORAGE_MYSQL_PASSWORD_TEST
+          : env.STORAGE_MYSQL_PASSWORD,
       autoDisconnect: true,
     }),
   )

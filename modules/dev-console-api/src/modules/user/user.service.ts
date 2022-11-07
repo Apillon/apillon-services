@@ -12,7 +12,7 @@ import {
   UnauthorizedErrorCodes,
   ValidationException,
   writeLog,
-} from 'at-lib';
+} from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
 import {
   ResourceNotFoundErrorCode,

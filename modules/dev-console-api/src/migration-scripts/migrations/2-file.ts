@@ -1,4 +1,4 @@
-import { SqlModelStatus } from 'at-lib';
+import { SqlModelStatus } from '@apillon/lib';
 import { DbTables } from '../../config/types';
 
 export const upgrade = async (

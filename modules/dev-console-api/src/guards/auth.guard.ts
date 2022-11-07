@@ -9,7 +9,7 @@ import {
   CodeException,
   ForbiddenErrorCodes,
   UnauthorizedErrorCodes,
-} from 'at-lib';
+} from '@apillon/lib';
 
 import { DevConsoleApiContext } from '../context';
 import {

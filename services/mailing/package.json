@@ -1,5 +1,5 @@
 {
-  "name": "at-mail",
+  "name": "@apillon/mailing",
   "version": "1.0.0",
   "author": "Kalmia d.o.o.",
   "license": "UNLICENSED",
@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@middy/core": "^2.5.7",
-    "at-lib": "*",
+    "@apillon/lib": "*",
     "aws-lambda": "^1.0.7",
     "nodemailer": "^6.8.0"
   },

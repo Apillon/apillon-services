@@ -8,7 +8,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { DefaultUserRole, PermissionLevel, PermissionType } from 'at-lib';
+import { DefaultUserRole, PermissionLevel, PermissionType } from '@apillon/lib';
 import { Ctx } from '../../decorators/context.decorator';
 import { Validation } from '../../decorators/validation.decorator';
 import { Permissions } from '../../decorators/permission.decorator';

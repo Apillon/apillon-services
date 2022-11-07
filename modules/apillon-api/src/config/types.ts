@@ -1,4 +1,4 @@
-import { ServiceCode } from 'at-lib';
+import { ServiceCode } from '@apillon/lib';
 
 export enum DbTables {}
 

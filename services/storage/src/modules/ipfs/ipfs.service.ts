@@ -1,5 +1,5 @@
 /* eslint-disable security/detect-non-literal-fs-filename */
-import { AWS_S3, env } from 'at-lib';
+import { AWS_S3, env } from '@apillon/lib';
 import { CID, create } from 'ipfs-http-client';
 import {
   FileUploadRequestFileStatus,
@@ -14,14 +14,14 @@ export class IPFSService {
     //return await CrustService.createIPFSClient();
 
     //Kalmia IPFS Gateway
-    if (!env.AT_STORAGE_IPFS_GATEWAY)
+    if (!env.STORAGE_IPFS_GATEWAY)
       throw new StorageCodeException({
         status: 500,
-        code: StorageErrorCode.AT_STORAGE_IPFS_GATEWAY_NOT_SET,
+        code: StorageErrorCode.STORAGE_IPFS_GATEWAY_NOT_SET,
         sourceFunction: `${this.constructor.name}/createIPFSClient`,
       });
 
-    return create({ url: env.AT_STORAGE_IPFS_GATEWAY });
+    return create({ url: env.STORAGE_IPFS_GATEWAY });
   }
 
   static async uploadFileToIPFSFromS3(
@@ -35,10 +35,7 @@ export class IPFSService {
     const s3Client: AWS_S3 = new AWS_S3();
 
     if (
-      !(await s3Client.exists(
-        env.AT_STORAGE_AWS_IPFS_QUEUE_BUCKET,
-        event.fileKey,
-      ))
+      !(await s3Client.exists(env.STORAGE_AWS_IPFS_QUEUE_BUCKET, event.fileKey))
     ) {
       throw new StorageCodeException({
         status: 404,
@@ -49,7 +46,7 @@ export class IPFSService {
     }
 
     const file = await s3Client.get(
-      env.AT_STORAGE_AWS_IPFS_QUEUE_BUCKET,
+      env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
       event.fileKey,
     );
 
@@ -88,7 +85,7 @@ export class IPFSService {
     for (const fileUploadReq of event.fileUploadRequests) {
       if (
         !(await s3Client.exists(
-          env.AT_STORAGE_AWS_IPFS_QUEUE_BUCKET,
+          env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
           fileUploadReq.s3FileKey,
         ))
       ) {
@@ -98,7 +95,7 @@ export class IPFSService {
       }
 
       const file = await s3Client.get(
-        env.AT_STORAGE_AWS_IPFS_QUEUE_BUCKET,
+        env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
         fileUploadReq.s3FileKey,
       );
 

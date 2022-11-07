@@ -2,7 +2,7 @@ import { HttpServer, INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { dropTestDatabases, rebuildTestDatabases } from './migrations';
-import { AppEnvironment, env, Mongo, MySql } from 'at-lib';
+import { AppEnvironment, env, Mongo, MySql } from '@apillon/lib';
 import { TestContext } from './context';
 import { AppModule } from '../../src/app.module';
 // import { startDevServer as startAmsServer } from 'at-ams/src/server';
@@ -32,9 +32,9 @@ export async function setupTest(): Promise<Stage> {
 
   env.APP_ENV = AppEnvironment.TEST;
 
-  env.AT_DEV_CONSOLE_API_MYSQL_HOST = null; // safety
-  env.AT_AMS_MYSQL_HOST = null; // safety
-  env.AT_LMAS_MONGO_SRV = null; // safety
+  env.DEV_CONSOLE_API_MYSQL_HOST = null; // safety
+  env.ACCESS_MYSQL_HOST = null; // safety
+  env.MONITORING_MONGO_SRV = null; // safety
 
   try {
     await rebuildTestDatabases();
@@ -45,16 +45,16 @@ export async function setupTest(): Promise<Stage> {
     app = moduleFixture.createNestApplication();
     await app.init();
     await app.listen(
-      env.AT_DEV_CONSOLE_API_PORT_TEST,
-      env.AT_DEV_CONSOLE_API_HOST_TEST,
+      env.DEV_CONSOLE_API_PORT_TEST,
+      env.DEV_CONSOLE_API_HOST_TEST,
     );
     http = app.getHttpServer();
     const config = {
-      host: env.AT_DEV_CONSOLE_API_MYSQL_HOST_TEST,
-      database: env.AT_DEV_CONSOLE_API_MYSQL_DATABASE_TEST,
-      password: env.AT_DEV_CONSOLE_API_MYSQL_PASSWORD_TEST,
-      port: env.AT_DEV_CONSOLE_API_MYSQL_PORT_TEST,
-      user: env.AT_DEV_CONSOLE_API_MYSQL_USER_TEST,
+      host: env.DEV_CONSOLE_API_MYSQL_HOST_TEST,
+      database: env.DEV_CONSOLE_API_MYSQL_DATABASE_TEST,
+      password: env.DEV_CONSOLE_API_MYSQL_PASSWORD_TEST,
+      port: env.DEV_CONSOLE_API_MYSQL_PORT_TEST,
+      user: env.DEV_CONSOLE_API_MYSQL_USER_TEST,
     };
 
     const devConsoleSql = new MySql(config);
@@ -63,11 +63,11 @@ export async function setupTest(): Promise<Stage> {
     devConsoleContext.mysql = devConsoleSql;
 
     const config2 = {
-      host: env.AT_AMS_MYSQL_HOST_TEST,
-      database: env.AT_AMS_MYSQL_DATABASE_TEST,
-      password: env.AT_AMS_MYSQL_PASSWORD_TEST,
-      port: env.AT_AMS_MYSQL_PORT_TEST,
-      user: env.AT_AMS_MYSQL_USER_TEST,
+      host: env.ACCESS_MYSQL_HOST_TEST,
+      database: env.ACCESS_MYSQL_DATABASE_TEST,
+      password: env.ACCESS_MYSQL_PASSWORD_TEST,
+      port: env.ACCESS_MYSQL_PORT_TEST,
+      user: env.ACCESS_MYSQL_USER_TEST,
     };
 
     const amsSql = new MySql(config2);
@@ -77,8 +77,8 @@ export async function setupTest(): Promise<Stage> {
     amsContext.mysql = amsSql;
 
     const lmasMongo = new Mongo(
-      env.AT_LMAS_MONGO_SRV_TEST,
-      env.AT_LMAS_MONGO_DATABASE_TEST,
+      env.MONITORING_MONGO_SRV_TEST,
+      env.MONITORING_MONGO_DATABASE_TEST,
       10,
     );
 

@@ -4,7 +4,7 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import { AdvancedSQLModel, SerializeFor } from 'at-lib';
+import { AdvancedSQLModel, SerializeFor } from '@apillon/lib';
 import { map, Observable } from 'rxjs';
 import { IRequest } from '../middlewares/context.middleware';
 

@@ -1,4 +1,4 @@
-import { env, unseedDatabase } from 'at-lib';
+import { env, unseedDatabase } from '@apillon/lib';
 import * as readline from 'readline';
 
 const rl = readline.createInterface({
@@ -10,17 +10,17 @@ let steps = 1;
 
 const run = async (stepCount: number) => {
   await unseedDatabase(
-    env.AT_STORAGE_MYSQL_DATABASE,
-    env.AT_STORAGE_MYSQL_HOST,
-    env.AT_STORAGE_MYSQL_PORT,
-    env.AT_STORAGE_MYSQL_USER,
-    env.AT_STORAGE_MYSQL_PASSWORD,
+    env.STORAGE_MYSQL_DATABASE,
+    env.STORAGE_MYSQL_HOST,
+    env.STORAGE_MYSQL_PORT,
+    env.STORAGE_MYSQL_USER,
+    env.STORAGE_MYSQL_PASSWORD,
     stepCount,
   );
 };
 
 rl.question(
-  `You are about to un seed database ${env.AT_STORAGE_MYSQL_DATABASE} @ ${env.AT_STORAGE_MYSQL_HOST}.\n Set number of versions to unseed (-1 for all, 0 to exit):`,
+  `You are about to un seed database ${env.STORAGE_MYSQL_DATABASE} @ ${env.STORAGE_MYSQL_HOST}.\n Set number of versions to unseed (-1 for all, 0 to exit):`,
   (answer) => {
     steps = parseInt(answer, 10);
     if (steps) {

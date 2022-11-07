@@ -1,5 +1,5 @@
 {
-  "name": "apillon-api",
+  "name": "@apillon/api",
   "version": "0.0.1",
   "description": "",
   "author": "",
@@ -41,7 +41,7 @@
     "@rawmodel/parsers": "^3.3.4",
     "@rawmodel/validators": "^3.3.4",
     "@types/uuid": "^8.3.4",
-    "at-lib": "*",
+    "@apillon/lib": "*",
     "aws-serverless-express": "^3.4.0",
     "ipfs-http-client": "^56.0.3",
     "reflect-metadata": "^0.1.13",

@@ -1,7 +1,7 @@
 import { stringParser } from '@rawmodel/parsers';
 import { emailValidator, presenceValidator } from '@rawmodel/validators';
-import { PopulateFrom } from 'at-lib';
-import { ModelBase, prop } from 'at-lib/dist/lib/base-models/base';
+import { PopulateFrom } from '@apillon/lib';
+import { ModelBase, prop } from '@apillon/lib/dist/lib/base-models/base';
 import { ValidatorErrorCode } from '../../../config/types';
 
 export class LoginUserDto extends ModelBase {

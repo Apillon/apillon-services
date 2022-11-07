@@ -1,5 +1,5 @@
 import { SetMetadata } from '@nestjs/common';
-import { ModelBase, PopulateFrom, ValidateFor } from 'at-lib';
+import { ModelBase, PopulateFrom, ValidateFor } from '@apillon/lib';
 
 /**
  * Validation options definition.

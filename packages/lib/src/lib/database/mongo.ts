@@ -12,7 +12,7 @@ export class Mongo {
   private mongoUrl: string;
   private mongoDb: string;
   private mongoPool: number;
-  private filename = 'at-lib/lib/database/mongo.ts';
+  private filename = '@apillon/lib/lib/database/mongo.ts';
 
   /**
    * Class constructor.

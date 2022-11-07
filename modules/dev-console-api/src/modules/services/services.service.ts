@@ -7,7 +7,7 @@ import {
 import { DevConsoleApiContext } from '../../context';
 import { ServiceQueryFilter } from './dtos/services-query-filter.dto';
 import { Service } from './models/service.model';
-import { CodeException, ValidationException } from 'at-lib';
+import { CodeException, ValidationException } from '@apillon/lib';
 
 @Injectable()
 export class ServicesService {

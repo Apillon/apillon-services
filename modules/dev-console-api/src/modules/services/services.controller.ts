@@ -11,7 +11,7 @@ import {
   Delete,
 } from '@nestjs/common';
 
-import { PermissionLevel, PermissionType, ValidateFor } from 'at-lib';
+import { PermissionLevel, PermissionType, ValidateFor } from '@apillon/lib';
 import { Ctx } from '../../decorators/context.decorator';
 import { Validation } from '../../decorators/validation.decorator';
 import { Permissions } from '../../decorators/permission.decorator';

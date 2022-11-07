@@ -1,19 +1,19 @@
 {
   "folders": [
     {
-      "name": "🌐@services/access [AT-AMS]",
+      "name": "🌐@services/access [@apillon/access]",
       "path": "services\\access"
     },
     {
-      "name": "🌐@services/monitoring [AT-LMAS]",
+      "name": "🌐@services/monitoring [@apillon/monitoring]",
       "path": "services\\monitoring"
     },
     {
-      "name": "🌐@services/storage [AT-STORAGE]",
+      "name": "🌐@services/storage [@apillon/storage]",
       "path": "services\\storage"
     },
     {
-      "name": "🌐@services/mailing [AT-MAIL]",
+      "name": "🌐@services/mailing [@apillon/mailing]",
       "path": "services\\mailing"
     },
     {
@@ -25,8 +25,8 @@
       "path": "modules\\apillon-api"
     },
     {
-      "name": "📦@packages/at-lib",
-      "path": "packages\\at-lib"
+      "name": "📦@packages/lib",
+      "path": "packages\\lib"
     },
     {
       "name": "🔨_tsconfig",

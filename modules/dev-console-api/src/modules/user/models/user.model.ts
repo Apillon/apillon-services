@@ -7,7 +7,7 @@ import {
   PopulateFrom,
   presenceValidator,
   SerializeFor,
-} from 'at-lib';
+} from '@apillon/lib';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
 

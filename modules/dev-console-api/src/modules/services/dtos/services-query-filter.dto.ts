@@ -3,7 +3,7 @@ import { prop } from '@rawmodel/core';
 import { integerParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { ValidatorErrorCode } from '../../../config/types';
-import { BaseQueryFilter, PopulateFrom } from 'at-lib';
+import { BaseQueryFilter, PopulateFrom } from '@apillon/lib';
 
 export class ServiceQueryFilter extends BaseQueryFilter {
   @prop({

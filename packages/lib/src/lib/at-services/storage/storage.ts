@@ -16,12 +16,12 @@ import { FileDetailsQueryFilter } from './dtos/file-details-query-filter.dto';
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
     env.APP_ENV === AppEnvironment.TEST
-      ? env.AT_STORAGE_FUNCTION_NAME_TEST
-      : env.AT_STORAGE_FUNCTION_NAME;
+      ? env.STORAGE_FUNCTION_NAME_TEST
+      : env.STORAGE_FUNCTION_NAME;
   devPort =
     env.APP_ENV === AppEnvironment.TEST
-      ? env.AT_STORAGE_SOCKET_PORT_TEST
-      : env.AT_STORAGE_SOCKET_PORT;
+      ? env.STORAGE_SOCKET_PORT_TEST
+      : env.STORAGE_SOCKET_PORT;
   serviceName = 'LMAS';
 
   user: any;

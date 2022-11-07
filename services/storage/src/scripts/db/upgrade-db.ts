@@ -1,6 +1,6 @@
 import * as readline from 'readline';
 import { bgYellow, black } from 'colors/safe';
-import { env, upgradeDatabase } from 'at-lib';
+import { env, upgradeDatabase } from '@apillon/lib';
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -11,18 +11,18 @@ let steps = 0;
 
 const run = async () => {
   await upgradeDatabase(
-    env.AT_STORAGE_MYSQL_DATABASE,
-    env.AT_STORAGE_MYSQL_HOST,
-    env.AT_STORAGE_MYSQL_PORT,
-    env.AT_STORAGE_MYSQL_USER,
-    env.AT_STORAGE_MYSQL_PASSWORD,
+    env.STORAGE_MYSQL_DATABASE,
+    env.STORAGE_MYSQL_HOST,
+    env.STORAGE_MYSQL_PORT,
+    env.STORAGE_MYSQL_USER,
+    env.STORAGE_MYSQL_PASSWORD,
     steps,
   );
 };
 
 rl.question(
   `You are about to upgrade database ${bgYellow(
-    black(` ${env.AT_STORAGE_MYSQL_DATABASE} @ ${env.AT_STORAGE_MYSQL_HOST} `),
+    black(` ${env.STORAGE_MYSQL_DATABASE} @ ${env.STORAGE_MYSQL_HOST} `),
   )}.
 
 Set number of versions to upgrade ('Y' for all, '<number>' for number of versions, 'N' to exit):`,

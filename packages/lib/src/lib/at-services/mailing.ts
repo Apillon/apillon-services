@@ -8,12 +8,12 @@ import { BaseService } from './base-service';
 export class Mailing extends BaseService {
   lambdaFunctionName =
     env.APP_ENV === AppEnvironment.TEST
-      ? env.AT_MAIL_FUNCTION_NAME_TEST
-      : env.AT_MAIL_FUNCTION_NAME;
+      ? env.MAIL_FUNCTION_NAME_TEST
+      : env.MAIL_FUNCTION_NAME;
   devPort =
     env.APP_ENV === AppEnvironment.TEST
-      ? env.AT_MAIL_SOCKET_PORT_TEST
-      : env.AT_MAIL_SOCKET_PORT;
+      ? env.MAIL_SOCKET_PORT_TEST
+      : env.MAIL_SOCKET_PORT;
   serviceName = 'MAIL';
   private securityToken: string;
 

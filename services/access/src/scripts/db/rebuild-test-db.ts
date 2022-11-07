@@ -1,19 +1,19 @@
-import { env, rebuildDatabase, seedDatabase } from 'at-lib';
+import { env, rebuildDatabase, seedDatabase } from '@apillon/lib';
 
 const run = async () => {
   await await rebuildDatabase(
-    env.AT_AMS_MYSQL_DATABASE_TEST,
-    env.AT_AMS_MYSQL_HOST_TEST,
-    env.AT_AMS_MYSQL_PORT_TEST,
-    env.AT_AMS_MYSQL_USER_TEST,
-    env.AT_AMS_MYSQL_PASSWORD_TEST,
+    env.ACCESS_MYSQL_DATABASE_TEST,
+    env.ACCESS_MYSQL_HOST_TEST,
+    env.ACCESS_MYSQL_PORT_TEST,
+    env.ACCESS_MYSQL_USER_TEST,
+    env.ACCESS_MYSQL_PASSWORD_TEST,
   );
   await seedDatabase(
-    env.AT_AMS_MYSQL_DATABASE_TEST,
-    env.AT_AMS_MYSQL_HOST_TEST,
-    env.AT_AMS_MYSQL_PORT_TEST,
-    env.AT_AMS_MYSQL_USER_TEST,
-    env.AT_AMS_MYSQL_PASSWORD_TEST,
+    env.ACCESS_MYSQL_DATABASE_TEST,
+    env.ACCESS_MYSQL_HOST_TEST,
+    env.ACCESS_MYSQL_PORT_TEST,
+    env.ACCESS_MYSQL_USER_TEST,
+    env.ACCESS_MYSQL_PASSWORD_TEST,
   );
 };
 

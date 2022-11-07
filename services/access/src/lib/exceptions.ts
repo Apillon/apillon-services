@@ -4,7 +4,7 @@ import {
   ErrorOptions,
   ServiceName,
   ValidationException,
-} from 'at-lib';
+} from '@apillon/lib';
 import { AmsErrorCode } from '../config/types';
 
 export class AmsCodeException extends CodeException {

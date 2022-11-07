@@ -1,5 +1,10 @@
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import { AdvancedSQLModel, PopulateFrom, prop, SerializeFor } from 'at-lib';
+import {
+  AdvancedSQLModel,
+  PopulateFrom,
+  prop,
+  SerializeFor,
+} from '@apillon/lib';
 import { DbTables } from '../../../config/types';
 
 export class Role extends AdvancedSQLModel {

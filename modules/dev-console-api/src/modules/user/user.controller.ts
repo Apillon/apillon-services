@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { DefaultUserRole } from 'at-lib';
+import { DefaultUserRole } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { Ctx } from '../../decorators/context.decorator';
 import { Validation } from '../../decorators/validation.decorator';

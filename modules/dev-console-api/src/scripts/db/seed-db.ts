@@ -1,7 +1,7 @@
 import * as readline from 'readline';
 import { bgYellow, black } from 'colors/safe';
-import { env } from 'at-lib';
-import { seedDatabase } from 'at-lib';
+import { env } from '@apillon/lib';
+import { seedDatabase } from '@apillon/lib';
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -12,11 +12,11 @@ let steps = 0;
 
 const run = async (stepCount: number) => {
   await seedDatabase(
-    env.AT_DEV_CONSOLE_API_MYSQL_DATABASE,
-    env.AT_DEV_CONSOLE_API_MYSQL_HOST,
-    env.AT_DEV_CONSOLE_API_MYSQL_PORT,
-    env.AT_DEV_CONSOLE_API_MYSQL_USER,
-    env.AT_DEV_CONSOLE_API_MYSQL_PASSWORD,
+    env.DEV_CONSOLE_API_MYSQL_DATABASE,
+    env.DEV_CONSOLE_API_MYSQL_HOST,
+    env.DEV_CONSOLE_API_MYSQL_PORT,
+    env.DEV_CONSOLE_API_MYSQL_USER,
+    env.DEV_CONSOLE_API_MYSQL_PASSWORD,
     stepCount,
   );
 };
@@ -24,7 +24,7 @@ const run = async (stepCount: number) => {
 rl.question(
   `You are about to seed database ${bgYellow(
     black(
-      ` ${env.AT_DEV_CONSOLE_API_MYSQL_DATABASE} @ ${env.AT_DEV_CONSOLE_API_MYSQL_HOST} `,
+      ` ${env.DEV_CONSOLE_API_MYSQL_DATABASE} @ ${env.DEV_CONSOLE_API_MYSQL_HOST} `,
     ),
   )}.
 

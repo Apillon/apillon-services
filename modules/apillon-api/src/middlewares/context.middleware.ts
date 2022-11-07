@@ -1,7 +1,7 @@
 import { ApillonApiContext } from '../context';
 import { Inject, Injectable, NestMiddleware } from '@nestjs/common';
 import type { Request } from 'express';
-import { MySql } from 'at-lib';
+import { MySql } from '@apillon/lib';
 
 export interface IRequest extends Request {
   context: ApillonApiContext;

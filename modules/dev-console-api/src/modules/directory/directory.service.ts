@@ -3,7 +3,7 @@ import {
   CreateDirectoryDto,
   DirectoryContentQueryFilter,
   StorageMicroservice,
-} from 'at-lib';
+} from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 
 @Injectable()

@@ -4,7 +4,11 @@ import {
   ExceptionFilter,
   HttpStatus,
 } from '@nestjs/common';
-import { CodeException, SystemErrorCode, ValidationException } from 'at-lib';
+import {
+  CodeException,
+  SystemErrorCode,
+  ValidationException,
+} from '@apillon/lib';
 import { Request, Response } from 'express';
 
 @Catch()
@@ -33,7 +37,7 @@ export class ExceptionsFilter implements ExceptionFilter {
       });
     } else {
       if (error.status == 422) {
-        //Validation errors recieved from microservice - handled in at-lib base-service
+        //Validation errors recieved from microservice - handled in @apillon/lib base-service
         res.status(HttpStatus.UNPROCESSABLE_ENTITY).json({
           code: error.code || SystemErrorCode.MICROSERVICE_SYSTEM_ERROR,
           message: error.message,

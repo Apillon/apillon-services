@@ -2,7 +2,7 @@ import * as nodemailer from 'nodemailer';
 import { Options, MailOptions } from 'nodemailer/lib/smtp-transport';
 import { MailTemplates } from './mail-templates';
 import { Attachment } from 'nodemailer/lib/mailer';
-import { env } from 'at-lib';
+import { env } from '@apillon/lib';
 
 /**
  * Send email via SMTP server

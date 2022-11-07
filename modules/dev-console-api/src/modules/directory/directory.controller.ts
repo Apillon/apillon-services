@@ -17,7 +17,7 @@ import {
   PermissionLevel,
   PermissionType,
   ValidateFor,
-} from 'at-lib';
+} from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';

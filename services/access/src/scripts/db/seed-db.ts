@@ -1,7 +1,7 @@
 import * as readline from 'readline';
 import { bgYellow, black } from 'colors/safe';
-import { env } from 'at-lib';
-import { seedDatabase } from 'at-lib';
+import { env } from '@apillon/lib';
+import { seedDatabase } from '@apillon/lib';
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -12,18 +12,18 @@ let steps = 0;
 
 const run = async (stepCount: number) => {
   await seedDatabase(
-    env.AT_AMS_MYSQL_DATABASE,
-    env.AT_AMS_MYSQL_HOST,
-    env.AT_AMS_MYSQL_PORT,
-    env.AT_AMS_MYSQL_USER,
-    env.AT_AMS_MYSQL_PASSWORD,
+    env.ACCESS_MYSQL_DATABASE,
+    env.ACCESS_MYSQL_HOST,
+    env.ACCESS_MYSQL_PORT,
+    env.ACCESS_MYSQL_USER,
+    env.ACCESS_MYSQL_PASSWORD,
     stepCount,
   );
 };
 
 rl.question(
   `You are about to seed database ${bgYellow(
-    black(` ${env.AT_AMS_MYSQL_DATABASE} @ ${env.AT_AMS_MYSQL_HOST} `),
+    black(` ${env.ACCESS_MYSQL_DATABASE} @ ${env.ACCESS_MYSQL_HOST} `),
   )}.
 
 Set number of versions to seed ('Y' for all, '<number>' for number of versions, 'N' to exit):`,

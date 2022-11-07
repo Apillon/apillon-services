@@ -16,7 +16,7 @@ export enum DbTables {
  * HTTP CODE = 422 for valdiation, 400 for invalid request, 500 internal error,...
  * MODULE CODE:
  *  00 - general
- *  01 - at-lib
+ *  01 - @apillon/lib
  *  02 - AMS      <----
  *  03 - lmas
  *  04 - dev-api

@@ -1,4 +1,4 @@
-import { DefaultUserRole, ModelBase } from 'at-lib';
+import { DefaultUserRole, ModelBase } from '@apillon/lib';
 
 /**
  * Validate Role_id

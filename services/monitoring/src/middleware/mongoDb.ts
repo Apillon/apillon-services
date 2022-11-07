@@ -1,4 +1,4 @@
-import { Mongo } from 'at-lib';
+import { Mongo } from '@apillon/lib';
 
 const instances = {};
 

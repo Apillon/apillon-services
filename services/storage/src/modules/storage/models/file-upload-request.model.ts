@@ -7,7 +7,7 @@ import {
   prop,
   SerializeFor,
   SqlModelStatus,
-} from 'at-lib';
+} from '@apillon/lib';
 import { CID } from 'ipfs-http-client';
 import { DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';

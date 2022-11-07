@@ -1,5 +1,5 @@
 import { DbTables } from '../../config/types';
-import { SqlModelStatus } from 'at-lib';
+import { SqlModelStatus } from '@apillon/lib';
 
 export const upgrade = async (
   queryFn: (query: string, values?: any[]) => Promise<any[]>,

@@ -1,4 +1,4 @@
-import { Context } from 'at-lib';
+import { Context } from '@apillon/lib';
 
 export class ApillonApiContext extends Context {
   /**

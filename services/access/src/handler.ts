@@ -1,5 +1,5 @@
 import * as middy from '@middy/core';
-import { AppEnvironment, env } from 'at-lib';
+import { AppEnvironment, env } from '@apillon/lib';
 import { Callback, Context, Handler } from 'aws-lambda/handler';
 import { processEvent } from './main';
 import { ErrorHandler } from './middleware/error';
@@ -25,24 +25,24 @@ handler
     MySqlConnect({
       host:
         env.APP_ENV === AppEnvironment.TEST
-          ? env.AT_AMS_MYSQL_HOST_TEST
-          : env.AT_AMS_MYSQL_HOST,
+          ? env.ACCESS_MYSQL_HOST_TEST
+          : env.ACCESS_MYSQL_HOST,
       port:
         env.APP_ENV === AppEnvironment.TEST
-          ? env.AT_AMS_MYSQL_PORT_TEST
-          : env.AT_AMS_MYSQL_PORT,
+          ? env.ACCESS_MYSQL_PORT_TEST
+          : env.ACCESS_MYSQL_PORT,
       database:
         env.APP_ENV === AppEnvironment.TEST
-          ? env.AT_AMS_MYSQL_DATABASE_TEST
-          : env.AT_AMS_MYSQL_DATABASE,
+          ? env.ACCESS_MYSQL_DATABASE_TEST
+          : env.ACCESS_MYSQL_DATABASE,
       user:
         env.APP_ENV === AppEnvironment.TEST
-          ? env.AT_AMS_MYSQL_USER_TEST
-          : env.AT_AMS_MYSQL_USER,
+          ? env.ACCESS_MYSQL_USER_TEST
+          : env.ACCESS_MYSQL_USER,
       password:
         env.APP_ENV === AppEnvironment.TEST
-          ? env.AT_AMS_MYSQL_PASSWORD_TEST
-          : env.AT_AMS_MYSQL_PASSWORD,
+          ? env.ACCESS_MYSQL_PASSWORD_TEST
+          : env.ACCESS_MYSQL_PASSWORD,
       autoDisconnect: true,
     }),
   )

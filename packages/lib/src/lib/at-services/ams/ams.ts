@@ -12,12 +12,12 @@ import { BaseService } from '../base-service';
 export class Ams extends BaseService {
   lambdaFunctionName =
     env.APP_ENV === AppEnvironment.TEST
-      ? env.AT_AMS_FUNCTION_NAME_TEST
-      : env.AT_AMS_FUNCTION_NAME;
+      ? env.ACCESS_FUNCTION_NAME_TEST
+      : env.ACCESS_FUNCTION_NAME;
   devPort =
     env.APP_ENV === AppEnvironment.TEST
-      ? env.AT_AMS_SOCKET_PORT_TEST
-      : env.AT_AMS_SOCKET_PORT;
+      ? env.ACCESS_SOCKET_PORT_TEST
+      : env.ACCESS_SOCKET_PORT;
   serviceName = 'AMS';
   private securityToken: string;
 

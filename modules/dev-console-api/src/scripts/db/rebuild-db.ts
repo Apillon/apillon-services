@@ -1,4 +1,4 @@
-import { env, rebuildDatabase, seedDatabase } from 'at-lib';
+import { env, rebuildDatabase, seedDatabase } from '@apillon/lib';
 import * as readline from 'readline';
 
 const rl = readline.createInterface({
@@ -8,24 +8,24 @@ const rl = readline.createInterface({
 
 const run = async () => {
   await rebuildDatabase(
-    env.AT_DEV_CONSOLE_API_MYSQL_DATABASE,
-    env.AT_DEV_CONSOLE_API_MYSQL_HOST,
-    env.AT_DEV_CONSOLE_API_MYSQL_PORT,
-    env.AT_DEV_CONSOLE_API_MYSQL_USER,
-    env.AT_DEV_CONSOLE_API_MYSQL_PASSWORD,
+    env.DEV_CONSOLE_API_MYSQL_DATABASE,
+    env.DEV_CONSOLE_API_MYSQL_HOST,
+    env.DEV_CONSOLE_API_MYSQL_PORT,
+    env.DEV_CONSOLE_API_MYSQL_USER,
+    env.DEV_CONSOLE_API_MYSQL_PASSWORD,
   );
 
   await seedDatabase(
-    env.AT_DEV_CONSOLE_API_MYSQL_DATABASE,
-    env.AT_DEV_CONSOLE_API_MYSQL_HOST,
-    env.AT_DEV_CONSOLE_API_MYSQL_PORT,
-    env.AT_DEV_CONSOLE_API_MYSQL_USER,
-    env.AT_DEV_CONSOLE_API_MYSQL_PASSWORD,
+    env.DEV_CONSOLE_API_MYSQL_DATABASE,
+    env.DEV_CONSOLE_API_MYSQL_HOST,
+    env.DEV_CONSOLE_API_MYSQL_PORT,
+    env.DEV_CONSOLE_API_MYSQL_USER,
+    env.DEV_CONSOLE_API_MYSQL_PASSWORD,
   );
 };
 
 rl.question(
-  `You are about to reset database ${env.AT_DEV_CONSOLE_API_MYSQL_DATABASE} @ ${env.AT_DEV_CONSOLE_API_MYSQL_HOST}.\n Are you sure? (Yes/No):`,
+  `You are about to reset database ${env.DEV_CONSOLE_API_MYSQL_DATABASE} @ ${env.DEV_CONSOLE_API_MYSQL_HOST}.\n Are you sure? (Yes/No):`,
   (answer) => {
     if (answer.toLowerCase() === 'yes') {
       console.log('Rebuilding database ...');

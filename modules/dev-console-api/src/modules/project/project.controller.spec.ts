@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { env, MySql } from 'at-lib';
+import { env, MySql } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { Project } from './models/project.model';
 import { ProjectController } from './project.controller';
@@ -12,11 +12,11 @@ describe('ProjectController', () => {
   beforeAll(async () => {
     try {
       const mysql = new MySql({
-        host: env.AT_DEV_CONSOLE_API_MYSQL_HOST,
-        database: env.AT_DEV_CONSOLE_API_MYSQL_DATABASE,
-        password: env.AT_DEV_CONSOLE_API_MYSQL_PASSWORD,
-        port: env.AT_DEV_CONSOLE_API_MYSQL_PORT,
-        user: env.AT_DEV_CONSOLE_API_MYSQL_USER,
+        host: env.DEV_CONSOLE_API_MYSQL_HOST,
+        database: env.DEV_CONSOLE_API_MYSQL_DATABASE,
+        password: env.DEV_CONSOLE_API_MYSQL_PASSWORD,
+        port: env.DEV_CONSOLE_API_MYSQL_PORT,
+        user: env.DEV_CONSOLE_API_MYSQL_USER,
       });
       await mysql.connect();
 
