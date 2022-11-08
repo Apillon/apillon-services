@@ -1,0 +1,18 @@
+{
+    "projectName": "apillon-monitoring-dev",
+    "filterGroups": [
+        [
+            {
+                "pattern": "PUSH",
+                "type": "EVENT",
+                "excludeMatchedPattern": false
+            },
+            {
+                "pattern": "refs/heads/develop$",
+                "type": "HEAD_REF",
+                "excludeMatchedPattern": false
+            }
+        ]
+    ],
+    "buildType": "BUILD"
+}
