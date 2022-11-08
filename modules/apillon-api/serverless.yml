@@ -1,7 +1,7 @@
 # console: true
 # org: apillonadmin
 # app: apillon-v2
-service: at-v2-dev-sdk-${opt:stage, 'dev'}
+service: apillon-api-${opt:stage, 'dev'}
 frameworkVersion: '3'
 
 custom:
@@ -31,8 +31,8 @@ provider:
 
   environment:
     ${file(../../bin/deploy/env.yml)}
-    # ACCESS_FUNCTION_NAME: 'at-v2-access-service-${self:provider.stage}'
-    # MONITORING_FUNCTION_NAME: 'at-v2-monitoring-service-${self:provider.stage}'
+    # ACCESS_FUNCTION_NAME: 'apillon-access-service-${self:provider.stage}'
+    # MONITORING_FUNCTION_NAME: 'apillon-monitoring-service-${self:provider.stage}'
 
 # you can add packaging information here
 package:
@@ -46,7 +46,7 @@ package:
 functions:
   appilon-api:
     handler: ./src/lambda.handler
-    name: 'at-v2-appilon-api-${self:provider.stage}'
+    name: 'apillon-api-${self:provider.stage}'
     description: API for Apillon SDK libraries
     memorySize: 512
     timeout: 30
