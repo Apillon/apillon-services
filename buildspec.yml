@@ -19,9 +19,10 @@ phases:
       - printenv
       - echo `date +%s` > timestamp
       - echo Build started on `date`
-      - chmod +x ./bin/deploy/build-aws.sh
+      # - chmod +x ./bin/deploy/build-aws.sh
+      - chmod +x ./bin/deploy/build-single-service.sh
   build:
     commands:
-      - npm cache verify
-      - npm install
-      - ./bin/deploy/build-aws.sh
+      # - npm cache verify
+      # - npm install
+      - ./bin/deploy/build-single-service.sh
