@@ -19,7 +19,8 @@ import {
 import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { DirectoryService } from './directory.service';
-import { Ctx, Permissions, Validation, AuthGuard } from '@apillon/modules-lib';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
+import { AuthGuard } from '../../guards/auth.guard';
 
 @Controller('directory')
 export class DirectoryController {

@@ -11,10 +11,7 @@ import {
   ForbiddenErrorCodes,
   UnauthorizedErrorCodes,
 } from '@apillon/lib';
-import {
-  PermissionPass,
-  PERMISSION_KEY,
-} from '../decorators/permission.decorator';
+import { PermissionPass, PERMISSION_KEY } from '@apillon/modules-lib';
 
 @Injectable()
 export class AuthGuard implements CanActivate {

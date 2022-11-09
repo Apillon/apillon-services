@@ -12,12 +12,13 @@ import {
 } from '@nestjs/common';
 
 import { PermissionLevel, PermissionType, ValidateFor } from '@apillon/lib';
-import { Ctx, Permissions, Validation, AuthGuard } from '@apillon/modules-lib';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { ServicesService } from './services.service';
 import { Service } from './models/service.model';
 import { ServiceQueryFilter } from './dtos/services-query-filter.dto';
+import { AuthGuard } from '../../guards/auth.guard';
 
 @Controller('services')
 export class ServicesController {

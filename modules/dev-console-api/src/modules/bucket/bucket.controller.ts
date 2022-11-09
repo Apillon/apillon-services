@@ -17,9 +17,10 @@ import {
   ValidateFor,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
-import { Ctx, Permissions, Validation, AuthGuard } from '@apillon/modules-lib';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { BucketService } from './bucket.service';
+import { AuthGuard } from '../../guards/auth.guard';
 
 @Controller('bucket')
 export class BucketController {

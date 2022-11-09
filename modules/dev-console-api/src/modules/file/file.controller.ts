@@ -1,5 +1,5 @@
 import { DefaultUserRole } from '@apillon/lib';
-import { AuthGuard, Ctx, Permissions, Validation } from '@apillon/modules-lib';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
@@ -11,6 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
+import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { FileService } from './file.service';
 import { File } from './models/file.model';

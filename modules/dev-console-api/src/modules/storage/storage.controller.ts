@@ -14,9 +14,10 @@ import {
   ValidateFor,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
-import { Ctx, Permissions, Validation, AuthGuard } from '@apillon/modules-lib';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { StorageService } from './storage.service';
+import { AuthGuard } from '../../guards/auth.guard';
 
 @Controller('storage')
 export class StorageController {

@@ -13,10 +13,11 @@ import {
 } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
-import { Ctx, Permissions, Validation, AuthGuard } from '@apillon/modules-lib';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { InstructionQueryFilter } from './dto/instruction-query-filter.dto';
 import { InstructionService } from './instruction.service';
 import { Instruction } from './models/instruction.model';
+import { AuthGuard } from '../../guards/auth.guard';
 
 @Controller('instruction')
 export class InstructionController {

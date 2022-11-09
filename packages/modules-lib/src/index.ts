@@ -5,4 +5,3 @@ export * from './lib/decorators/validation.decorator';
 export * from './lib/interfaces/i-request';
 export * from './lib/interceptors/response.interceptor';
 export * from './lib/middlewares/authentication.middleware';
-export * from './lib/guards/auth.guard';
