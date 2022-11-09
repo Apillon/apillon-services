@@ -1,31 +1,22 @@
+import { DefaultUserRole, ValidateFor } from '@apillon/lib';
 import {
   Body,
   Controller,
-  Param,
-  Query,
-  Post,
-  Patch,
-  Get,
-  ParseIntPipe,
-  UseGuards,
   Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
-import {
-  DefaultUserRole,
-  PermissionLevel,
-  PermissionType,
-  ValidateFor,
-} from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
-
-import { Ctx } from '../../decorators/context.decorator';
-import { Validation } from '../../decorators/validation.decorator';
-import { Permissions } from '../../decorators/permission.decorator';
-
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
+import { InstructionQueryFilter } from './dto/instruction-query-filter.dto';
 import { InstructionService } from './instruction.service';
 import { Instruction } from './models/instruction.model';
-import { InstructionQueryFilter } from './dto/instruction-query-filter.dto';
 import { AuthGuard } from '../../guards/auth.guard';
 
 @Controller('instruction')

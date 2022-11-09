@@ -1,22 +1,10 @@
-import { Injectable } from '@nestjs/common';
 import { StorageMicroservice } from '@apillon/lib';
-import { v4 as uuidv4 } from 'uuid';
+import { Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
-import { UploadFilesToIPFSDto } from './dtos/upload-files-to-IPFS';
 
 @Injectable()
 export class StorageService {
   //#region storage microservice calls
-
-  async uploadFilesToIPFS(
-    ctx: ApillonApiContext,
-    data: UploadFilesToIPFSDto,
-  ): Promise<any> {
-    // call microservice
-    return await new StorageMicroservice(ctx).addFileToIPFS({
-      files: data.files,
-    });
-  }
 
   async uploadFilesToIPFSFromS3(
     ctx: ApillonApiContext,

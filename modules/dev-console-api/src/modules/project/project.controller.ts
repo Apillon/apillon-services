@@ -12,10 +12,7 @@ import {
 } from '@nestjs/common';
 import { DefaultUserRole, ValidateFor } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
-import { Ctx } from '../../decorators/context.decorator';
-import { Permissions } from '../../decorators/permission.decorator';
-import { Validation } from '../../decorators/validation.decorator';
-import { AuthGuard } from '../../guards/auth.guard';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { File } from '../file/models/file.model';
 import { ProjectUserInviteDto } from './dtos/project_user-invite.dto';
@@ -23,6 +20,7 @@ import { ProjectUserFilter } from './dtos/project_user-query-filter.dto';
 import { ProjectUserUpdateRoleDto } from './dtos/project_user-update-role.dto';
 import { Project } from './models/project.model';
 import { ProjectService } from './project.service';
+import { AuthGuard } from '../../guards/auth.guard';
 
 @Controller('project')
 export class ProjectController {

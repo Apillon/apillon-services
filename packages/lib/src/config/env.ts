@@ -155,6 +155,24 @@ export interface IEnv {
   STORAGE_MYSQL_USER_TEST: string;
   STORAGE_MYSQL_PASSWORD_TEST: string;
   STORAGE_MYSQL_DATABASE_TEST: string;
+
+  /************************************************************
+   * Apillon API config
+   ************************************************************/
+  APILLON_API_HOST: string;
+  APILLON_API_PORT: number;
+
+  APILLON_API_HOST_TEST: string;
+  APILLON_API_PORT_TEST: number;
+
+  /************************************************************
+   * Apillon Authroization API config
+   ************************************************************/
+  APILLON_AUTHORIZATION_API_HOST: string;
+  APILLON_AUTHORIZATION_API_PORT: number;
+
+  APILLON_AUTHORIZATION_API_HOST_TEST: string;
+  APILLON_AUTHORIZATION_API_PORT_TEST: number;
 }
 
 // dotenv.config();
@@ -274,6 +292,22 @@ export let env: IEnv = {
   SMTP_NAME_FROM: process.env['SMTP_NAME_FROM'] || 'Apillon.io',
   SMTP_EMAIL_FROM: process.env['SMTP_EMAIL_FROM'] || 'info@apillon.io',
   ADMIN_EMAILS: process.env['ADMIN_EMAILS'] || 'info@apillon.io',
+
+  /** APILLON API */
+  APILLON_API_HOST: process.env['APILLON_API_HOST'] || 'localhost',
+  APILLON_API_PORT: parseInt(process.env['APILLON_API_PORT']) || 6002,
+  APILLON_API_HOST_TEST: process.env['APILLON_API_HOST_TEST'] || 'localhost',
+  APILLON_API_PORT_TEST: parseInt(process.env['APILLON_API_PORT_TEST']) || 7002,
+
+  /** APILLON AUTHROIZATION API */
+  APILLON_AUTHORIZATION_API_HOST:
+    process.env['APILLON_AUTHORIZATION_API_HOST'] || 'localhost',
+  APILLON_AUTHORIZATION_API_PORT:
+    parseInt(process.env['APILLON_AUTHORIZATION_API_PORT']) || 6003,
+  APILLON_AUTHORIZATION_API_HOST_TEST:
+    process.env['APILLON_AUTHORIZATION_API_HOST_TEST'] || 'localhost',
+  APILLON_AUTHORIZATION_API_PORT_TEST:
+    parseInt(process.env['APILLON_AUTHORIZATION_API_PORT_TEST']) || 7003,
 };
 
 export let isEnvReady = false;

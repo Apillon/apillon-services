@@ -1,8 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { env } from '@apillon/lib';
 import { AppModule } from './app.module';
-import { ExceptionsFilter } from './filters/exception.filter';
-import { ResponseInterceptor } from './interceptors/response.interceptor';
+import { ExceptionsFilter, ResponseInterceptor } from '@apillon/modules-lib';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });

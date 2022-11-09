@@ -14,12 +14,10 @@ import {
   ValidateFor,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
-import { Ctx } from '../../decorators/context.decorator';
-import { Permissions } from '../../decorators/permission.decorator';
-import { Validation } from '../../decorators/validation.decorator';
-import { AuthGuard } from '../../guards/auth.guard';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { StorageService } from './storage.service';
+import { AuthGuard } from '../../guards/auth.guard';
 
 @Controller('storage')
 export class StorageController {

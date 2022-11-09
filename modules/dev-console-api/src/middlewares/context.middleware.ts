@@ -1,12 +1,7 @@
 import { DevConsoleApiContext } from '../context';
 import { Inject, Injectable, NestMiddleware } from '@nestjs/common';
-import type { Request } from 'express';
 import { MySql } from '@apillon/lib';
-
-export interface IRequest extends Request {
-  context: DevConsoleApiContext;
-  query: { [key: string]: undefined | string };
-}
+import { IRequest } from '@apillon/modules-lib';
 
 /**
  * Returns a middleware which creates a context.

@@ -9,14 +9,4 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
-
-  @Get('/test')
-  async getUserAuth(): Promise<any> {
-    return await this.appService.callAuthService();
-  }
-
-  @Get('/test-logging')
-  async testLogging(@Query() query: any): Promise<any> {
-    return await this.appService.testLogging(query?.count || 10);
-  }
 }

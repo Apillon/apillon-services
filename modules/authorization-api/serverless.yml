@@ -1,0 +1,61 @@
+# console: true
+# org: apillonadmin
+# app: apillon-v2
+service: apillon-api-${opt:stage, 'dev'}
+frameworkVersion: '3'
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules:
+      forceExclude:
+        - aws-sdk
+    excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
+  serverless-offline:
+    httpPort: 6001
+    lambdaPort: 6002
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: eu-west-1
+  stage: ${opt:stage, 'dev'}
+  iam:
+    role: arn:aws:iam::018021943180:role/serverless-workers-executor
+  apiGateway:
+    minimumCompressionSize: 1024 # Enable gzip compression for responses > 1 KB
+
+  environment:
+    ${file(../../bin/deploy/env.yml)}
+    # ACCESS_FUNCTION_NAME: 'apillon-access-service-${self:provider.stage}'
+    # MONITORING_FUNCTION_NAME: 'apillon-monitoring-service-${self:provider.stage}'
+
+# you can add packaging information here
+package:
+  patterns:
+    - '!dist/**'
+    # - '!**/*.*'
+    # - '!.turbo'
+    # - './dist/**'
+  excludeDevDependencies: true
+
+functions:
+  appilon-api:
+    handler: ./src/lambda.handler
+    name: 'apillon-api-${self:provider.stage}'
+    description: API for Apillon SDK libraries
+    memorySize: 512
+    timeout: 30
+    events:
+      - http: # this is an API Gateway HTTP event trigger
+          path: /
+          method: ANY
+          cors: true
+      - http: # all routes get proxied to the Express router
+          path: /{proxy+}
+          method: ANY
+          cors: true

@@ -61,6 +61,12 @@ export class Project extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
     ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.PROJECT_NAME_NOT_PRESENT,
+      },
+    ],
     fakeValue: faker.word.verb(),
   })
   public name: string;
