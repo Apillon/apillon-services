@@ -36,7 +36,7 @@ npm link @apillon/lib --omit=dev
 if [ "$MODULES_LIB" == "true" ]
 then
   npm link @apillon/lib @apillon/modules-lib --omit=dev
-elif
+else
   npm link @apillon/lib --omit=dev
 fi
 npm i serverless-webpack copy-webpack-plugin webpack webpack-node-externals ts-loader
