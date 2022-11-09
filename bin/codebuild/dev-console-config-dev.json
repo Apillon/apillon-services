@@ -20,6 +20,11 @@
         "type": "PLAINTEXT",
         "name": "SERVICE_PATH",
         "value": "modules/dev-console-api/"
+      },
+      {
+        "type": "PLAINTEXT",
+        "name": "MODULES_LIB",
+        "value": "true"
       }
     ],
     "type": "LINUX_CONTAINER"

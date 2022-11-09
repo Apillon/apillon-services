@@ -35,7 +35,7 @@ module.exports = {
   },
   externals: [
     nodeExternals({
-      allowlist: ['@apillon/lib'],
+      allowlist: ['@apillon/lib', '@apillon/modules-lib'],
     }),
   ],
   module: {
