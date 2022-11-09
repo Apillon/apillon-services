@@ -1,6 +1,6 @@
+import { Ctx } from '@apillon/modules-lib';
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
-import { Ctx } from '../../decorators/context.decorator';
 import { StorageService } from './storage.service';
 
 @Controller('storage')

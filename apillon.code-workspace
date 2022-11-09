@@ -25,6 +25,10 @@
       "path": "modules\\apillon-api"
     },
     {
+      "name": "😎@modules/authorization-api",
+      "path": "modules\\authorization-api"
+    },
+    {
       "name": "📦@packages/lib",
       "path": "packages\\lib"
     },

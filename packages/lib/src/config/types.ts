@@ -170,6 +170,7 @@ export enum DefaultApiKeyRole {
  *  04 - dev-api
  *  05 - apillon-api
  *  06 - storage
+ *  07 - authorization-api
  *  ...
  *  INTERNAL ERROR CODE: 000 - 999
  *
