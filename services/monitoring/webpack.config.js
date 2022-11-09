@@ -23,7 +23,7 @@ module.exports = {
       'aws4': false,
       // 'mongodb-client-encryption': false,
       'cardinal': false,
-      // '@apillon/lib': path.join(__dirname, '..', '..', 'packages', '@apillon/lib')
+      // '@apillon/lib': path.join(__dirname, '..', '..', 'packages', 'lib')
     },
   },
   output: {

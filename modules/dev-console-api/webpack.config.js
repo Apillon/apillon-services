@@ -32,7 +32,7 @@ module.exports = {
       'aws4': false,
       'mongodb-client-encryption': false,
       'cardinal': false,
-      '@apillon/lib': path.join(__dirname, '..', '..', 'packages', '@apillon/lib')
+      // '@apillon/lib': path.join(__dirname, '..', '..', 'packages', 'lib')
     },
   },
   output: {
@@ -45,10 +45,10 @@ module.exports = {
     __dirname: true,
   },
   externals: [
-    nodeExternals()
-    // nodeExternals({
-    //   allowlist: ['@apillon/lib'],
-    // }),
+    // nodeExternals()
+    nodeExternals({
+      allowlist: ['@apillon/lib'],
+    }),
   ],
   module: {
     rules: [
