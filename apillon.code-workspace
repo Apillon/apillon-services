@@ -29,6 +29,10 @@
       "path": "packages\\lib"
     },
     {
+      "name": "📦@packages/modules-lib",
+      "path": "packages\\modules-lib"
+    },
+    {
       "name": "🔨_tsconfig",
       "path": "packages\\tsconfig"
     },

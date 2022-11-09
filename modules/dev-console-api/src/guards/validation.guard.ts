@@ -6,9 +6,9 @@ import { ValidationException } from '@apillon/lib';
 import {
   IValidationOptions,
   VALIDATION_OPTIONS_KEY,
-} from '../decorators/validation.decorator';
+} from '@apillon/modules-lib';
 
-import { IRequest } from '../middlewares/context.middleware';
+import { IRequest } from '@apillon/modules-lib';
 
 @Injectable()
 export class ValidationGuard implements CanActivate {

@@ -3,12 +3,12 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ValidatorErrorCode } from '../config/types';
 import { ValidationException } from '@apillon/lib';
+
+import { IRequest } from '../middlewares/context.middleware';
 import {
   IValidationOptions,
   VALIDATION_OPTIONS_KEY,
-} from '../decorators/validation.decorator';
-
-import { IRequest } from '../middlewares/context.middleware';
+} from '@apillon/modules-lib';
 
 @Injectable()
 export class ValidationGuard implements CanActivate {

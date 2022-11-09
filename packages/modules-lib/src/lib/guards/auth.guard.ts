@@ -7,11 +7,10 @@ import {
 import { Reflector } from '@nestjs/core';
 import {
   CodeException,
+  Context,
   ForbiddenErrorCodes,
   UnauthorizedErrorCodes,
 } from '@apillon/lib';
-
-import { DevConsoleApiContext } from '../context';
 import {
   PermissionPass,
   PERMISSION_KEY,
@@ -27,7 +26,7 @@ export class AuthGuard implements CanActivate {
       [execCtx.getHandler(), execCtx.getClass()],
     );
 
-    const context: DevConsoleApiContext = execCtx.getArgByIndex(0).context;
+    const context: Context = execCtx.getArgByIndex(0).context;
     // eslint-disable-next-line sonarjs/prefer-single-boolean-return
     if (!context.isAuthenticated()) {
       throw new CodeException({

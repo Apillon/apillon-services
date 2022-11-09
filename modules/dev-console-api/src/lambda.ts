@@ -6,8 +6,7 @@ import * as express from 'express';
 
 import { Server } from 'http';
 import { AppModule } from './app.module';
-import { ExceptionsFilter } from './filters/exception.filter';
-import { ResponseInterceptor } from './interceptors/response.interceptor';
+import { ExceptionsFilter, ResponseInterceptor } from '@apillon/modules-lib';
 
 export async function bootstrap() {
   const expressApp = express();

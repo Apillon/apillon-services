@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { AdvancedSQLModel, SerializeFor } from '@apillon/lib';
 import { map, Observable } from 'rxjs';
-import { IRequest } from '../middlewares/context.middleware';
+import { IRequest } from '../interfaces/i-request';
 
 /**
  * API response type definition.
