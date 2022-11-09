@@ -1,5 +1,6 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
-import { IRequest } from './context.middleware';
+
+const AUTHORIZATION_HEADER = 'Authorization';
 
 /**
  * Authenticates user or returns error if that is not possible.
@@ -10,10 +11,12 @@ import { IRequest } from './context.middleware';
  */
 @Injectable()
 export class AuthenticateUserMiddleware implements NestMiddleware {
-  async use(req: IRequest, res, next) {
+  async use(req, res, next) {
     const { context } = req;
-    const token = (req.get('authorization') || '').split(' ').reverse()[0];
-    await context.authenticate(token);
+    const token = (req.get(AUTHORIZATION_HEADER) || '').split(' ').reverse()[0];
+    if (token) {
+      await context.authenticate(token);
+    }
 
     next();
   }

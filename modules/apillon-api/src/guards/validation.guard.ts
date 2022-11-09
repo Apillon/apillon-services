@@ -1,11 +1,13 @@
+/* eslint-disable sonarjs/no-useless-catch */
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { PopulateFrom, ValidationException } from '@apillon/lib';
+import { ValidatorErrorCode } from '../config/types';
+import { ValidationException } from '@apillon/lib';
 import {
   IValidationOptions,
   VALIDATION_OPTIONS_KEY,
 } from '../decorators/validation.decorator';
-import { ValidatorErrorCode } from '../config/types';
+
 import { IRequest } from '../middlewares/context.middleware';
 
 @Injectable()
@@ -23,7 +25,10 @@ export class ValidationGuard implements CanActivate {
       const request = execCtx.switchToHttp().getRequest<IRequest>();
       const data = request[options.validateFor];
 
-      dto = new options.dto({}, { context: request.context }).populate(data);
+      dto = new options.dto({}, request.context).populate(
+        data,
+        options.populateFrom,
+      );
 
       try {
         await dto.validate();

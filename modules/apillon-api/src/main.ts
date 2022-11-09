@@ -12,4 +12,4 @@ async function bootstrap() {
 
   console.log('Listening on 6002');
 }
-bootstrap();
+bootstrap().catch((err) => console.error(err.message));

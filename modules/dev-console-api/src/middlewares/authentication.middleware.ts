@@ -1,5 +1,4 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
-import { IRequest } from './context.middleware';
 
 const AUTHORIZATION_HEADER = 'Authorization';
 
@@ -13,16 +12,10 @@ const AUTHORIZATION_HEADER = 'Authorization';
 @Injectable()
 export class AuthenticateUserMiddleware implements NestMiddleware {
   async use(req, res, next) {
-    const excluded = ['/', '/auth/login', '/user/register'];
-
-    if (!excluded.includes(req.originalUrl)) {
-      const { context } = req;
-      const token = (req.get(AUTHORIZATION_HEADER) || '')
-        .split(' ')
-        .reverse()[0];
-      if (token) {
-        await context.authenticate(token);
-      }
+    const { context } = req;
+    const token = (req.get(AUTHORIZATION_HEADER) || '').split(' ').reverse()[0];
+    if (token) {
+      await context.authenticate(token);
     }
 
     next();

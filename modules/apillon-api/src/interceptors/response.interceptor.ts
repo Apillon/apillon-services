@@ -25,9 +25,9 @@ export class ResponseInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
       map(async (data) => {
-        const req = context.switchToHttp().getRequest<IRequest>();
-        const res = context.switchToHttp().getResponse<IRequest>();
-        const isAdmin = false; //req.context.isAuthenticated() && (await req.context.hasRole(DefaultUserRole.SUPER_ADMIN));
+        // const req = context.switchToHttp().getRequest<IRequest>();
+        const res = context.switchToHttp().getResponse<IRequest>() as any;
+        const isAdmin = true; //req.context.isAuthenticated() && (await req.context.hasRole(DefaultUserRole.SUPER_ADMIN));
 
         const response: ApiResponse = {
           status: res.statusCode,
@@ -40,10 +40,9 @@ export class ResponseInterceptor implements NestInterceptor {
         }
 
         if (responseData instanceof AdvancedSQLModel) {
-          response.data = {
-            ...responseData.serialize(SerializeFor.PROFILE),
-            ...(isAdmin ? responseData.serialize(SerializeFor.ADMIN) : {}),
-          };
+          response.data = isAdmin
+            ? responseData.serialize(SerializeFor.ADMIN)
+            : responseData.serialize(SerializeFor.PROFILE);
         } else if (Array.isArray(responseData)) {
           response.data = responseData.map((d) =>
             d instanceof AdvancedSQLModel
