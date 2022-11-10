@@ -9,6 +9,9 @@ export enum AmsEventType {
   AUTH_TOKEN_CREATE_UPDATE_TOKEN = 'auth-token-create-update-token',
   USER_EMAIL_EXISTS = 'user-email-exists',
   GET_AUTH_USER_BY_EMAIL = 'get-auth-user-by-email',
+  CREATE_API_KEY = 'create-api-key',
+  DELETE_API_KEY = 'delete-api-key',
+  LIST_API_KEYS = 'list-api-keys',
 }
 
 export enum LmasEventType {
@@ -170,6 +173,7 @@ export enum DefaultApiKeyRole {
  *  04 - dev-api
  *  05 - apillon-api
  *  06 - storage
+ *  07 - authorization-api
  *  ...
  *  INTERNAL ERROR CODE: 000 - 999
  *
@@ -220,6 +224,7 @@ export enum ValidatorErrorCode {
   CONTENT_TYPE_NOT_PRESENT = 42200009,
   SESSION_UUID_NOT_PRESENT = 42200010,
   BUCKET_TYPE_NOT_PRESENT = 42200011,
+  CREATE_API_KEY_PROJECT_UUID_NOT_PRESENT = 42200012,
 }
 
 /**

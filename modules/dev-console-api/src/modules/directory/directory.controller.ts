@@ -14,19 +14,15 @@ import {
   CreateDirectoryDto,
   DefaultUserRole,
   DirectoryContentQueryFilter,
-  PermissionLevel,
-  PermissionType,
   ValidateFor,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
-import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { DirectoryService } from './directory.service';
-import { Validation } from '../../decorators/validation.decorator';
-import { Ctx } from '../../decorators/context.decorator';
-import { Permissions } from '../../decorators/permission.decorator';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
+import { AuthGuard } from '../../guards/auth.guard';
 
-@Controller('directory')
+@Controller('directories')
 export class DirectoryController {
   constructor(private directoryService: DirectoryService) {}
 
@@ -45,7 +41,7 @@ export class DirectoryController {
     return await this.directoryService.createDirectory(context, body);
   }
 
-  @Patch('/:id')
+  @Patch(':id')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -59,7 +55,7 @@ export class DirectoryController {
     return await this.directoryService.updateDirectory(context, id, body);
   }
 
-  @Delete('/:id')
+  @Delete(':id')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -72,7 +68,7 @@ export class DirectoryController {
     return await this.directoryService.deleteDirectory(context, id);
   }
 
-  @Get('/listDirectoryContent')
+  @Get('directory-content')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },

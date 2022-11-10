@@ -1,38 +1,29 @@
+import { DefaultUserRole, ValidateFor } from '@apillon/lib';
 import {
   Body,
   Controller,
-  Param,
-  Query,
-  Post,
-  Patch,
-  Get,
-  ParseIntPipe,
-  UseGuards,
   Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
-import {
-  DefaultUserRole,
-  PermissionLevel,
-  PermissionType,
-  ValidateFor,
-} from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
-
-import { Ctx } from '../../decorators/context.decorator';
-import { Validation } from '../../decorators/validation.decorator';
-import { Permissions } from '../../decorators/permission.decorator';
-
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
+import { InstructionQueryFilter } from './dto/instruction-query-filter.dto';
 import { InstructionService } from './instruction.service';
 import { Instruction } from './models/instruction.model';
-import { InstructionQueryFilter } from './dto/instruction-query-filter.dto';
 import { AuthGuard } from '../../guards/auth.guard';
 
-@Controller('instruction')
+@Controller('instructions')
 export class InstructionController {
   constructor(private readonly instructionService: InstructionService) {}
 
-  @Get('/')
+  @Get()
   @Permissions({ role: DefaultUserRole.USER })
   @Validation({ dto: InstructionQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
@@ -57,17 +48,17 @@ export class InstructionController {
     return await this.instructionService.createInstruction(context, body);
   }
 
-  @Patch('/')
+  @Patch('/:instructionEnum')
   @Permissions({ role: DefaultUserRole.ADMIN })
   @UseGuards(AuthGuard)
   async updateInstruction(
     @Ctx() context: DevConsoleApiContext,
-    @Query('instruction_enum') instruction_enum: string,
+    @Query('instructionEnum') instructionEnum: string,
     @Body() body: any,
   ) {
     return await this.instructionService.updateInstruction(
       context,
-      instruction_enum,
+      instructionEnum,
       body,
     );
   }

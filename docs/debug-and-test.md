@@ -35,8 +35,8 @@ For running tests, check if all environment variables with suffix `_TEST` are co
 ```yml
 # TEST config
 
-ACCESS_FUNCTION_NAME_TEST: at-v2-access-service-test
-MONITORING_FUNCTION_NAME_TEST: at-v2-monitoring-service-test
+ACCESS_FUNCTION_NAME_TEST: apillon-access-service-test
+MONITORING_FUNCTION_NAME_TEST: apillon-monitoring-service-test
 
 MONITORING_MONGO_SRV_TEST: 
 

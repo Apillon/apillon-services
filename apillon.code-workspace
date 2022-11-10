@@ -25,8 +25,16 @@
       "path": "modules\\apillon-api"
     },
     {
+      "name": "😎@modules/authorization-api",
+      "path": "modules\\authorization-api"
+    },
+    {
       "name": "📦@packages/lib",
       "path": "packages\\lib"
+    },
+    {
+      "name": "📦@packages/modules-lib",
+      "path": "packages\\modules-lib"
     },
     {
       "name": "🔨_tsconfig",

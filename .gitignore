@@ -47,3 +47,5 @@ env.*yml
 
 # merge originals
 *.orig
+
+tmp/

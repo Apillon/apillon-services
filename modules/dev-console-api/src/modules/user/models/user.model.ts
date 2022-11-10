@@ -85,7 +85,9 @@ export class User extends AdvancedSQLModel {
       PopulateFrom.DB, //
     ],
     serializable: [
-      SerializeFor.INSERT_DB, //
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
     ],
 

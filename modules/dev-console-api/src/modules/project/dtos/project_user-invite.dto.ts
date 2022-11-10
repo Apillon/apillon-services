@@ -9,18 +9,6 @@ import { projectUserRolesValidator } from '../validators/project-user-role.valid
 
 export class ProjectUserInviteDto extends ModelBase {
   @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.PROJECT_USER_PROJECT_ID_NOT_PRESENT,
-      },
-    ],
-  })
-  public project_id: number;
-
-  @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [

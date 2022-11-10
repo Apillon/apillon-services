@@ -1,17 +1,15 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { DefaultUserRole } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
-import { Ctx } from '../../decorators/context.decorator';
-import { Validation } from '../../decorators/validation.decorator';
-import { Permissions } from '../../decorators/permission.decorator';
-import { AuthGuard } from '../../guards/auth.guard';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { LoginUserDto } from './dtos/login-user.dto';
 import { RegisterUserDto } from './dtos/register-user.dto';
 import { ValidateEmailDto } from './dtos/validate-email.dto';
 import { UserService } from './user.service';
+import { AuthGuard } from '../../guards/auth.guard';
 
-@Controller('user')
+@Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

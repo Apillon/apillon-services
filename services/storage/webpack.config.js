@@ -29,7 +29,7 @@ module.exports = {
       // 'class-transformer': false,
       // '@nestjs/microservices/microservices-module': false,
       // '@nestjs/microservices': false,
-      //'@apillon/lib': path.join(__dirname, '..', '..', 'packages', '@apillon/lib', 'dist')
+      //'@apillon/lib': path.join(__dirname, '..', '..', 'packages', 'lib', 'dist')
     },
   },
   output: {

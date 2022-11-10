@@ -1,7 +1,7 @@
 # console: true
 # org: apillonadmin
 # app: apillon-v2
-service: at-v2-storage-service-${opt:stage, 'dev'}
+service: apillon-storage-service-${opt:stage, 'dev'}
 frameworkVersion: '3'
 
 custom:
@@ -29,8 +29,8 @@ provider:
 
   environment:
     ${file(../../bin/deploy/env/env.yml)}
-    # ACCESS_FUNCTION_NAME: 'at-v2-storage-service-${self:provider.stage}'
-    # MONITORING_FUNCTION_NAME: 'at-v2-monitoring-service-${self:provider.stage}'
+    # ACCESS_FUNCTION_NAME: 'apillon-storage-service-${self:provider.stage}'
+    # MONITORING_FUNCTION_NAME: 'apillon-monitoring-service-${self:provider.stage}'
 
 # you can add packaging information here
 package:
@@ -41,7 +41,7 @@ package:
 functions:
   storage-service:
     handler: ./src/handler.handler
-    name: 'at-v2-storage-service-${self:provider.stage}'
+    name: 'apillon-storage-service-${self:provider.stage}'
     description: AT storage Management Service
     memorySize: 512
     timeout: 30

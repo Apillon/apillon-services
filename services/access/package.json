@@ -24,11 +24,12 @@
     "db-rebuild-test": "node -r ts-node/register ./src/scripts/db/rebuild-test-db"
   },
   "dependencies": {
+    "@apillon/lib": "*",
     "@middy/core": "^3.3.1",
     "@rawmodel/core": "^3.3.4",
     "@rawmodel/parsers": "^3.3.4",
     "@rawmodel/validators": "^3.3.4",
-    "@apillon/lib": "*",
+    "@types/uuid": "^8.3.4",
     "aws-lambda": "^1.0.7",
     "bcryptjs": "^2.4.3"
   },

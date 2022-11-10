@@ -1,15 +1,10 @@
-import { ServiceCode } from '@apillon/lib';
-
 export enum DbTables {}
 
 /**
- * Validation error codes - 422000.
+ * Validation error codes - 42205000.
  */
 export enum ValidatorErrorCode {
   DEFAULT_VALIDATION_ERROR = 42205000,
-  FILE_PATH_NOT_PRESENT = 42205001,
-  FILE_CONTENT_NOT_PRESENT = 42205002,
-  FILES_NOT_PRESENT = 42205003,
 }
 
 /**

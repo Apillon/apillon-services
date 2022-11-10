@@ -107,10 +107,11 @@ export class ProjectUser extends AdvancedSQLModel {
    */
   public async getProjectUsers(
     context: DevConsoleApiContext,
+    projectId: number,
     filter: ProjectUserFilter,
   ) {
     const project: Project = await new Project({}, context).populateById(
-      filter.project_id,
+      projectId,
     );
     if (!project.exists()) {
       throw new CodeException({
@@ -126,7 +127,7 @@ export class ProjectUser extends AdvancedSQLModel {
       id: 'pu.id',
     };
     const { params, filters } = getQueryParams(
-      filter.getDefaultValues(),
+      { ...filter.getDefaultValues(), project_id: projectId },
       'pu',
       fieldMap,
       filter.serialize(),

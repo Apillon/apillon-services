@@ -1,5 +1,6 @@
 import { AmsEventType } from '@apillon/lib';
 import { Context } from 'aws-lambda/handler';
+import { ApiKeyService } from './modules/api-key/api-key.service';
 import { AuthUserService } from './modules/auth-user/auth-user.service';
 import { RoleService } from './modules/role/role.service';
 
@@ -15,6 +16,9 @@ export async function processEvent(event, context: Context): Promise<any> {
 
     [AmsEventType.USER_ROLE_ASSIGN]: RoleService.assignUserRoleOnProject,
     [AmsEventType.USER_ROLE_REMOVE]: RoleService.removeUserRoleOnProject,
+
+    [AmsEventType.CREATE_API_KEY]: ApiKeyService.createApiKey,
+    [AmsEventType.DELETE_API_KEY]: ApiKeyService.deleteApiKey,
   };
 
   return await processors[event.eventName](event, context);

@@ -19,7 +19,7 @@ export class Mailing extends BaseService {
 
   constructor() {
     super();
-    this.isDefaultAsync = false;
+    this.isDefaultAsync = true;
     this.securityToken = this.generateSecurityToken();
   }
 

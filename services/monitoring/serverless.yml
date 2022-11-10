@@ -1,7 +1,7 @@
 # console: true
 # org: apillonadmin
 # app: apillon-v2
-service: at-v2-monitoring-service-${opt:stage, 'dev'}
+service: apillon-monitoring-service-${opt:stage, 'dev'}
 frameworkVersion: '3'
 
 custom:
@@ -28,8 +28,8 @@ provider:
     role: arn:aws:iam::018021943180:role/serverless-workers-executor
 
   environment: ${file(../../bin/deploy/env/env.yml)}
-  #   ACCESS_FUNCTION_NAME: 'at-v2-access-service-${self:provider.stage}'
-  #   MONITORING_FUNCTION_NAME: 'at-v2-monitoring-service-${self:provider.stage}'
+  #   ACCESS_FUNCTION_NAME: 'apillon-access-service-${self:provider.stage}'
+  #   MONITORING_FUNCTION_NAME: 'apillon-monitoring-service-${self:provider.stage}'
 
 # you can add packaging information here
 package:
@@ -40,7 +40,7 @@ package:
 functions:
   monitoring-service:
     handler: ./src/handler.handler
-    name: 'at-v2-monitoring-service-${self:provider.stage}'
+    name: 'apillon-monitoring-service-${self:provider.stage}'
     description: AT Logging & Monitoring & Alerting Service
     memorySize: 512
     timeout: 30

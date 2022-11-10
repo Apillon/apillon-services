@@ -96,12 +96,14 @@ export class UserService {
       email,
     });
 
-    return await new Mailing().sendMail({
+    await new Mailing().sendMail({
       emails: [email],
       subject: 'Welcome to Apillon!',
       template: 'welcome',
       data: { token },
     });
+
+    return res;
   }
 
   async registerUser(

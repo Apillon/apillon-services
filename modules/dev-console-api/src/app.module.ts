@@ -1,7 +1,6 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthenticateUserMiddleware } from './middlewares/authentication.middleware';
 import { ContextMiddleware } from './middlewares/context.middleware';
 import { MySQLModule } from './modules/database/mysql.module';
 import { FileModule } from './modules/file/file.module';
@@ -12,6 +11,8 @@ import { ServicesModule } from './modules/services/services.module';
 import { BucketModule } from './modules/bucket/bucket.module';
 import { DirectoryModule } from './modules/directory/directory.module';
 import { StorageModule } from './modules/storage/storage.module';
+import { AuthenticateUserMiddleware } from '@apillon/modules-lib';
+import { ApiKeyModule } from './modules/api-key/api-key.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { StorageModule } from './modules/storage/storage.module';
     BucketModule,
     DirectoryModule,
     StorageModule,
+    ApiKeyModule,
   ],
   controllers: [AppController],
   providers: [AppService],

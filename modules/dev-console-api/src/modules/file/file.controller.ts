@@ -1,3 +1,5 @@
+import { DefaultUserRole } from '@apillon/lib';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
@@ -8,17 +10,13 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { DefaultUserRole, PermissionLevel, PermissionType } from '@apillon/lib';
-import { Ctx } from '../../decorators/context.decorator';
-import { Validation } from '../../decorators/validation.decorator';
-import { Permissions } from '../../decorators/permission.decorator';
 import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { FileService } from './file.service';
 import { File } from './models/file.model';
 
-@Controller('file')
+@Controller('files')
 export class FileController {
   constructor(private fileService: FileService) {}
 
