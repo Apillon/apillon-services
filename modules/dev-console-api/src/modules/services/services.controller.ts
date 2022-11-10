@@ -11,7 +11,12 @@ import {
   Delete,
 } from '@nestjs/common';
 
-import { PermissionLevel, PermissionType, ValidateFor } from '@apillon/lib';
+import {
+  DefaultUserRole,
+  PermissionLevel,
+  PermissionType,
+  ValidateFor,
+} from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
@@ -25,11 +30,12 @@ export class ServicesController {
   constructor(private readonly serviceService: ServicesService) {}
 
   @Get()
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+    { role: DefaultUserRole.ADMIN },
+  )
   @Validation({ dto: ServiceQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
   async getServiceList(
@@ -40,11 +46,12 @@ export class ServicesController {
   }
 
   @Get('/:id')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+    { role: DefaultUserRole.ADMIN },
+  )
   @UseGuards(AuthGuard)
   async getService(
     @Ctx() context: DevConsoleApiContext,
@@ -54,11 +61,10 @@ export class ServicesController {
   }
 
   @Post()
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
   @Validation({ dto: Service })
   @UseGuards(ValidationGuard, AuthGuard)
   async createService(
@@ -69,11 +75,10 @@ export class ServicesController {
   }
 
   @Patch('/:id')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
   @UseGuards(AuthGuard)
   async updateService(
     @Ctx() context: DevConsoleApiContext,
@@ -84,11 +89,10 @@ export class ServicesController {
   }
 
   @Delete('/:id')
-  @Permissions({
-    permission: 1,
-    type: PermissionType.WRITE,
-    level: PermissionLevel.OWN,
-  })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
   @UseGuards(AuthGuard)
   async deleteService(
     @Ctx() context: DevConsoleApiContext,
