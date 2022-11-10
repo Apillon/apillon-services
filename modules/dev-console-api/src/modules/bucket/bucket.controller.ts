@@ -22,7 +22,7 @@ import { ValidationGuard } from '../../guards/validation.guard';
 import { BucketService } from './bucket.service';
 import { AuthGuard } from '../../guards/auth.guard';
 
-@Controller('bucket')
+@Controller('buckets')
 export class BucketController {
   constructor(private bucketService: BucketService) {}
 
@@ -56,7 +56,7 @@ export class BucketController {
     return await this.bucketService.createBucket(context, body);
   }
 
-  @Patch('/:id')
+  @Patch(':id')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -70,7 +70,7 @@ export class BucketController {
     return await this.bucketService.updateBucket(context, id, body);
   }
 
-  @Delete('/:id')
+  @Delete(':id')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },

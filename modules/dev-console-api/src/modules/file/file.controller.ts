@@ -16,7 +16,7 @@ import { ValidationGuard } from '../../guards/validation.guard';
 import { FileService } from './file.service';
 import { File } from './models/file.model';
 
-@Controller('file')
+@Controller('files')
 export class FileController {
   constructor(private fileService: FileService) {}
 

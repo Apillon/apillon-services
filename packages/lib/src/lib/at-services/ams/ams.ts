@@ -4,7 +4,9 @@ import {
   AppEnvironment,
   DefaultUserRole,
 } from '../../../config/types';
+import { Context } from '../../context';
 import { BaseService } from '../base-service';
+import { CreateApiKeyDto } from './dtos/create-api-key.dto';
 
 /**
  * Access Management Service client
@@ -21,10 +23,13 @@ export class Ams extends BaseService {
   serviceName = 'AMS';
   private securityToken: string;
 
-  constructor() {
+  user: any;
+
+  constructor(context?: Context) {
     super();
     this.isDefaultAsync = false;
     this.securityToken = this.generateSecurityToken();
+    if (context) this.user = context.user;
   }
 
   public async getAuthUser(params: { token: string }) {
@@ -179,5 +184,25 @@ export class Ams extends BaseService {
     return await this.callService(data);
   }
 
-  USER_ROLE_REMOVE;
+  //#region API-key functions
+
+  public async createApiKey(params: CreateApiKeyDto) {
+    const data = {
+      eventName: AmsEventType.CREATE_API_KEY,
+      user: this.user.serialize(),
+      body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async deleteApiKey(params: { id: number }) {
+    const data = {
+      eventName: AmsEventType.DELETE_API_KEY,
+      user: this.user.serialize(),
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
+  //#endregion
 }

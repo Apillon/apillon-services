@@ -22,7 +22,7 @@ import { DirectoryService } from './directory.service';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { AuthGuard } from '../../guards/auth.guard';
 
-@Controller('directory')
+@Controller('directories')
 export class DirectoryController {
   constructor(private directoryService: DirectoryService) {}
 
@@ -41,7 +41,7 @@ export class DirectoryController {
     return await this.directoryService.createDirectory(context, body);
   }
 
-  @Patch('/:id')
+  @Patch(':id')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -55,7 +55,7 @@ export class DirectoryController {
     return await this.directoryService.updateDirectory(context, id, body);
   }
 
-  @Delete('/:id')
+  @Delete(':id')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -68,7 +68,7 @@ export class DirectoryController {
     return await this.directoryService.deleteDirectory(context, id);
   }
 
-  @Get('/listDirectoryContent')
+  @Get('directory-content')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },

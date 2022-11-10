@@ -23,7 +23,7 @@ import { AuthGuard } from '../../guards/auth.guard';
 export class StorageController {
   constructor(private storageService: StorageService) {}
 
-  @Post('/createSignedUrlForUpload')
+  @Post('file-upload-request')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -39,7 +39,7 @@ export class StorageController {
     return await this.storageService.createS3SignedUrlForUpload(context, body);
   }
 
-  @Post('/endFileUploadSession/:session_uuid')
+  @Post('file-upload-session/:session_uuid/end')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -56,7 +56,7 @@ export class StorageController {
     );
   }
 
-  @Get('/fileDetails')
+  @Get('file-details')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },

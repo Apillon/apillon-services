@@ -9,7 +9,7 @@ import { ValidateEmailDto } from './dtos/validate-email.dto';
 import { UserService } from './user.service';
 import { AuthGuard } from '../../guards/auth.guard';
 
-@Controller('user')
+@Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

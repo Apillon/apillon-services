@@ -19,11 +19,11 @@ import { InstructionService } from './instruction.service';
 import { Instruction } from './models/instruction.model';
 import { AuthGuard } from '../../guards/auth.guard';
 
-@Controller('instruction')
+@Controller('instructions')
 export class InstructionController {
   constructor(private readonly instructionService: InstructionService) {}
 
-  @Get('/')
+  @Get()
   @Permissions({ role: DefaultUserRole.USER })
   @Validation({ dto: InstructionQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
@@ -48,17 +48,17 @@ export class InstructionController {
     return await this.instructionService.createInstruction(context, body);
   }
 
-  @Patch('/')
+  @Patch('/:instructionEnum')
   @Permissions({ role: DefaultUserRole.ADMIN })
   @UseGuards(AuthGuard)
   async updateInstruction(
     @Ctx() context: DevConsoleApiContext,
-    @Query('instruction_enum') instruction_enum: string,
+    @Query('instructionEnum') instructionEnum: string,
     @Body() body: any,
   ) {
     return await this.instructionService.updateInstruction(
       context,
-      instruction_enum,
+      instructionEnum,
       body,
     );
   }

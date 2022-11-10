@@ -118,17 +118,23 @@ export class ProjectService {
 
   async getProjectUsers(
     context: DevConsoleApiContext,
+    projectId: number,
     query: ProjectUserFilter,
   ) {
-    return await new ProjectUser({}, context).getProjectUsers(context, query);
+    return await new ProjectUser({}, context).getProjectUsers(
+      context,
+      projectId,
+      query,
+    );
   }
 
   async inviteUserProject(
     context: DevConsoleApiContext,
+    projectId: number,
     data: ProjectUserInviteDto,
   ) {
     const project: Project = await new Project({}, context).populateById(
-      data.project_id,
+      projectId,
     );
     if (!project.exists()) {
       throw new CodeException({
@@ -151,7 +157,7 @@ export class ProjectService {
       if (
         await new ProjectUser({}, context).isUserOnProject(
           context,
-          data.project_id,
+          projectId,
           user.id,
         )
       ) {

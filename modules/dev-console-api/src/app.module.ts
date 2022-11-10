@@ -12,6 +12,7 @@ import { BucketModule } from './modules/bucket/bucket.module';
 import { DirectoryModule } from './modules/directory/directory.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { AuthenticateUserMiddleware } from '@apillon/modules-lib';
+import { ApiKeyModule } from './modules/api-key/api-key.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { AuthenticateUserMiddleware } from '@apillon/modules-lib';
     BucketModule,
     DirectoryModule,
     StorageModule,
+    ApiKeyModule,
   ],
   controllers: [AppController],
   providers: [AppService],
