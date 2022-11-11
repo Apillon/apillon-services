@@ -15,8 +15,6 @@ import { DevConsoleApiContext } from '../../../context';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { ServiceQueryFilter } from '../dtos/services-query-filter.dto';
 
-import { v4 as uuidV4 } from 'uuid';
-
 /**
  * Service model.
  */
@@ -29,15 +27,13 @@ export class Service extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.SERVICE_UUID_NOT_PRESENT,
-      },
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
     ],
-    defaultValue: uuidV4(),
-    fakeValue: uuidV4(),
+    validators: [],
   })
   public service_uuid: string;
 

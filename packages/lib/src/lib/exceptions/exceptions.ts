@@ -4,6 +4,7 @@ import {
   ErrorOrigin,
   LogType,
   SystemErrorCode,
+  ValidatorErrorCode,
 } from '../../config/types';
 import { Lmas } from '../at-services/lmas/lmas';
 import { writeLog } from '../logger';
@@ -81,14 +82,16 @@ export class ValidationException extends HttpException {
   /**
    * Class constructor.
    * @param model Model instance.
-   * @param ValidatorErrorCode Validator error codes from service, which initializes this class
+   * @param errorCodes Validator error codes from service, which initializes this class
    */
-  public constructor(model: Model, ValidatorErrorCode?: any) {
+  public constructor(model: Model, errorCodes?: any) {
     const validationErrors = model.collectErrors().map((x) => {
       return {
         statusCode: x.code,
         property: x.path[0],
-        message: ValidatorErrorCode ? ValidatorErrorCode[x.code] : '',
+        message: errorCodes
+          ? { ...errorCodes, ...ValidatorErrorCode }[x.code]
+          : ValidatorErrorCode[x.code] || '',
       };
     });
 

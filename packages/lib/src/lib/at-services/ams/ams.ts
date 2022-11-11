@@ -6,6 +6,7 @@ import {
 } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
+import { ApiKeyQueryFilter } from './dtos/api-key-query-filter.dto';
 import { CreateApiKeyDto } from './dtos/create-api-key.dto';
 
 /**
@@ -185,6 +186,15 @@ export class Ams extends BaseService {
   }
 
   //#region API-key functions
+
+  public async listApiKeys(params: ApiKeyQueryFilter) {
+    const data = {
+      eventName: AmsEventType.LIST_API_KEYS,
+      user: this.user.serialize(),
+      query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
 
   public async createApiKey(params: CreateApiKeyDto) {
     const data = {

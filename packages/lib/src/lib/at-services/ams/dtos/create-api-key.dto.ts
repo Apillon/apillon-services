@@ -6,6 +6,7 @@ import {
   ValidatorErrorCode,
 } from '../../../../config/types';
 import { ModelBase, prop } from '../../../base-models/base';
+import { ApiKeyRoleBaseDto } from './api-key-role-base.dto';
 
 export class CreateApiKeyDto extends ModelBase {
   @prop({
@@ -28,4 +29,12 @@ export class CreateApiKeyDto extends ModelBase {
     validators: [],
   })
   public name: string;
+
+  @prop({
+    parser: { resolver: ApiKeyRoleBaseDto, array: true },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+  })
+  public roles: ApiKeyRoleBaseDto[];
 }

@@ -19,6 +19,7 @@ export async function processEvent(event, context: Context): Promise<any> {
 
     [AmsEventType.CREATE_API_KEY]: ApiKeyService.createApiKey,
     [AmsEventType.DELETE_API_KEY]: ApiKeyService.deleteApiKey,
+    [AmsEventType.LIST_API_KEYS]: ApiKeyService.listApiKeys,
   };
 
   return await processors[event.eventName](event, context);

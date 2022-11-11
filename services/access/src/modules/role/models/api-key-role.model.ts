@@ -1,31 +1,28 @@
-import { stringParser } from '@rawmodel/parsers';
-import { presenceValidator } from '@rawmodel/validators';
 import {
   AdvancedSQLModel,
   CodeException,
   Context,
   DefaultUserRole,
   ForbiddenErrorCodes,
-  getQueryParams,
   PopulateFrom,
   prop,
-  selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
-  ApiKeyQueryFilter,
 } from '@apillon/lib';
-import { DbTables, AmsErrorCode } from '../../../config/types';
+import { integerParser, stringParser } from '@rawmodel/parsers';
+import { presenceValidator } from '@rawmodel/validators';
+import { AmsErrorCode, DbTables } from '../../../config/types';
 import { ServiceContext } from '../../../context';
 
-export class ApiKey extends AdvancedSQLModel {
-  public readonly tableName = DbTables.API_KEY;
+export class ApiKeyRole extends AdvancedSQLModel {
+  public readonly tableName = DbTables.API_KEY_ROLE;
 
   public constructor(data: any, context: Context) {
     super(data, context);
   }
 
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: integerParser() },
     populatable: [
       PopulateFrom.DB,
       PopulateFrom.SERVICE,
@@ -42,24 +39,35 @@ export class ApiKey extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: AmsErrorCode.API_KEY_NOT_PRESENT,
+        code: AmsErrorCode.API_KEY_ROLE_API_KEY_ID_NOT_PRESENT,
       },
     ],
   })
-  public apiKey: string;
+  public apiKey_id: number;
 
   @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB],
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
     validators: [
       {
         resolver: presenceValidator(),
-        code: AmsErrorCode.API_KEY_SECRET_NOT_PRESENT,
+        code: AmsErrorCode.API_KEY_ROLE_ROLE_ID_NOT_PRESENT,
       },
     ],
   })
-  public apiKeySecret: string;
+  public role_id: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -78,7 +86,7 @@ export class ApiKey extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: AmsErrorCode.API_KEY_PROJECT_UUID_NOT_PRESENT,
+        code: AmsErrorCode.API_KEY_ROLE_PROJECT_UUID_NOT_PRESENT,
       },
     ],
   })
@@ -94,15 +102,18 @@ export class ApiKey extends AdvancedSQLModel {
     ],
     serializable: [
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
     ],
-    validators: [],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: AmsErrorCode.API_KEY_ROLE_SERVICE_UUID_NOT_PRESENT,
+      },
+    ],
   })
-  public name: string;
+  public service_uuid: string;
 
   public canAccess(context: ServiceContext) {
     if (
@@ -143,35 +154,25 @@ export class ApiKey extends AdvancedSQLModel {
     }
   }
 
-  public async getList(context: ServiceContext, filter: ApiKeyQueryFilter) {
-    this.canAccess(context);
-    // Map url query with sql fields.
-    const fieldMap = {
-      id: 'ak.id',
-    };
-    const { params, filters } = getQueryParams(
-      filter.getDefaultValues(),
-      'ak',
-      fieldMap,
-      filter.serialize(),
+  public async roleAlreadyAssigned(): Promise<boolean> {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE apiKey_id = @apiKey_id
+      AND role_id = @role_id
+      AND service_uuid = @service_uuid
+      AND project_uuid = @project_uuid
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      {
+        apiKey_id: this.apiKey_id,
+        role_id: this.role_id,
+        service_uuid: this.service_uuid,
+        project_uuid: this.project_uuid,
+      },
     );
 
-    const sqlQuery = {
-      qSelect: `
-        SELECT ${this.generateSelectFields('ak', '')}, ak.updateTime
-        `,
-      qFrom: `
-        FROM \`${DbTables.API_KEY}\` ak
-        WHERE ak.project_uuid = @project_uuid
-        AND (@search IS null OR ak.name LIKE CONCAT('%', @search, '%'))
-        AND status <> ${SqlModelStatus.DELETED}
-      `,
-      qFilter: `
-        ORDER BY ${filters.orderStr}
-        LIMIT ${filters.limit} OFFSET ${filters.offset};
-      `,
-    };
-
-    return selectAndCountQuery(context.mysql, sqlQuery, params, 'ak.id');
+    return !!(data && data.length);
   }
 }

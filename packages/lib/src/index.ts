@@ -27,3 +27,5 @@ export * from './lib/base-models/base-query-filter.model';
 export * from './lib/at-services/storage/dtos/directory-content-query-filter.dto';
 export * from './lib/at-services/storage/dtos/file-details-query-filter.dto';
 export * from './lib/at-services/ams/dtos/create-api-key.dto';
+export * from './lib/at-services/ams/dtos/api-key-query-filter.dto';
+export * from './lib/at-services/ams/dtos/api-key-role.dto';

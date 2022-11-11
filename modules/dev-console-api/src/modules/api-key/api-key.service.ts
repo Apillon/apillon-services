@@ -1,4 +1,9 @@
-import { Ams, CodeException, CreateApiKeyDto } from '@apillon/lib';
+import {
+  Ams,
+  ApiKeyQueryFilter,
+  CodeException,
+  CreateApiKeyDto,
+} from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ResourceNotFoundErrorCode } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
@@ -6,6 +11,10 @@ import { Project } from '../project/models/project.model';
 
 @Injectable()
 export class ApiKeyService {
+  async getApiKeyList(context: DevConsoleApiContext, query: ApiKeyQueryFilter) {
+    return (await new Ams(context).listApiKeys(query)).data;
+  }
+
   async createApiKey(context: DevConsoleApiContext, body: CreateApiKeyDto) {
     const project: Project = await new Project({}, context).populateByUUID(
       body.project_uuid,
@@ -20,7 +29,10 @@ export class ApiKeyService {
 
     project.canModify(context);
 
-    //Call Storage microservice, to create bucket
     return (await new Ams(context).createApiKey(body)).data;
+  }
+
+  async deleteApiKey(context: DevConsoleApiContext, id: number) {
+    return (await new Ams(context).deleteApiKey({ id: id })).data;
   }
 }

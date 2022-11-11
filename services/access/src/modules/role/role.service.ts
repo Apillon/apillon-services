@@ -1,7 +1,9 @@
-import { SerializeFor } from '@apillon/lib';
+import { ApiKeyRoleDto, SerializeFor } from '@apillon/lib';
 import { AmsErrorCode } from '../../config/types';
-import { AmsCodeException } from '../../lib/exceptions';
+import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
+import { ApiKey } from '../api-key/models/api-key.model';
 import { AuthUser } from '../auth-user/auth-user.model';
+import { ApiKeyRole } from './models/api-key-role.model';
 
 export class RoleService {
   static async assignUserRoleOnProject(event, context) {
@@ -62,5 +64,37 @@ export class RoleService {
     await authUser.removeRole(event.project_uuid, event.role_id);
 
     return authUser.serialize(SerializeFor.SERVICE);
+  }
+
+  static async assignRoleToApiKey(event: { body: ApiKeyRoleDto }, context) {
+    const key: ApiKey = await new ApiKey({}, context).populateById(
+      event.body.apiKey_id,
+    );
+
+    if (!key.exists()) {
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.USER_DOES_NOT_EXISTS,
+      }).writeToMonitor({
+        userId: context?.user?.user_uuid,
+        projectId: event?.body?.project_uuid,
+      });
+    }
+
+    key.canModify(context);
+
+    const keyRole: ApiKeyRole = new ApiKeyRole(event.body, context);
+
+    try {
+      await keyRole.validate();
+    } catch (err) {
+      await keyRole.handle(err);
+      if (!keyRole.isValid()) throw new AmsValidationException(keyRole);
+    }
+
+    //Check if role already assigned
+    if (!(await keyRole.roleAlreadyAssigned())) await keyRole.insert();
+
+    return keyRole.serialize(SerializeFor.SERVICE);
   }
 }
