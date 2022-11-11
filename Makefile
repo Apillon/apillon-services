@@ -7,7 +7,7 @@ run:
 	npm run dev;
 
 build:
-	cd ${AT_LIB_DIR} && npm run build && \
+	npm run build && \
 	cd - && npm run build;
 
 ####### DB COMMANDS #######
