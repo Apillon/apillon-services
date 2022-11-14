@@ -71,7 +71,6 @@ export class ServicesController {
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
   )
   @UseGuards(AuthGuard)
   async updateService(
@@ -86,7 +85,6 @@ export class ServicesController {
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
   )
   @UseGuards(AuthGuard)
   async deleteService(
