@@ -1,9 +1,11 @@
 import {
   Ams,
   ApiKeyQueryFilter,
+  ApiKeyRoleDto,
   CodeException,
   CreateApiKeyDto,
 } from '@apillon/lib';
+import { ApiKeyRoleBaseDto } from '@apillon/lib/dist/lib/at-services/ams/dtos/api-key-role-base.dto';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ResourceNotFoundErrorCode } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
@@ -34,5 +36,13 @@ export class ApiKeyService {
 
   async deleteApiKey(context: DevConsoleApiContext, id: number) {
     return (await new Ams(context).deleteApiKey({ id: id })).data;
+  }
+
+  async assignRoleToApiKey(context: DevConsoleApiContext, body: ApiKeyRoleDto) {
+    return (await new Ams(context).assignRoleToApiKey(body)).data;
+  }
+
+  async removeApiKeyRole(context: DevConsoleApiContext, body: ApiKeyRoleDto) {
+    return (await new Ams(context).removeApiKeyRole(body)).data;
   }
 }

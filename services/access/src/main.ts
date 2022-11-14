@@ -20,6 +20,9 @@ export async function processEvent(event, context: Context): Promise<any> {
     [AmsEventType.CREATE_API_KEY]: ApiKeyService.createApiKey,
     [AmsEventType.DELETE_API_KEY]: ApiKeyService.deleteApiKey,
     [AmsEventType.LIST_API_KEYS]: ApiKeyService.listApiKeys,
+
+    [AmsEventType.API_KEY_ROLE_ASSIGN]: RoleService.assignRoleToApiKey,
+    [AmsEventType.API_KEY_ROLE_REMOVE]: RoleService.removeApiKeyRole,
   };
 
   return await processors[event.eventName](event, context);

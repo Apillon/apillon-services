@@ -24,7 +24,7 @@ export class ApiKeyRoleBaseDto extends ModelBase {
       },
       {
         resolver: apiKeyRolesValidator(),
-        code: ValidatorErrorCode.API_KEY_ROLE_ROLE_ID_NOT_PRESENT,
+        code: ValidatorErrorCode.API_KEY_ROLE_ROLE_ID_NOT_VALID,
       },
     ],
   })

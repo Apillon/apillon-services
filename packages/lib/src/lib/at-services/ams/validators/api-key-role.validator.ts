@@ -1,4 +1,5 @@
-import { DefaultApiKeyRole, ModelBase } from '@apillon/lib';
+import { DefaultApiKeyRole } from '../../../../config/types';
+import { ModelBase } from '../../../base-models/base';
 
 /**
  * Validate Role_id

@@ -97,4 +97,26 @@ export class RoleService {
 
     return keyRole.serialize(SerializeFor.SERVICE);
   }
+
+  static async removeApiKeyRole(event: { body: ApiKeyRoleDto }, context) {
+    const key: ApiKey = await new ApiKey({}, context).populateById(
+      event.body.apiKey_id,
+    );
+
+    if (!key.exists()) {
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.USER_DOES_NOT_EXISTS,
+      }).writeToMonitor({
+        userId: context?.user?.user_uuid,
+        projectId: event?.body?.project_uuid,
+      });
+    }
+
+    key.canModify(context);
+
+    await new ApiKeyRole({}, context).deleteApiKeyRole(event.body);
+
+    return true;
+  }
 }

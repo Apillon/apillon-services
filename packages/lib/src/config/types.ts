@@ -12,6 +12,8 @@ export enum AmsEventType {
   CREATE_API_KEY = 'create-api-key',
   DELETE_API_KEY = 'delete-api-key',
   LIST_API_KEYS = 'list-api-keys',
+  API_KEY_ROLE_ASSIGN = 'api-key-role-assign',
+  API_KEY_ROLE_REMOVE = 'api-key-role-remove',
 }
 
 export enum LmasEventType {
