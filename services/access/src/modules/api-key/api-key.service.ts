@@ -1,12 +1,29 @@
-import { CreateApiKeyDto, SerializeFor } from '@apillon/lib';
+import {
+  ApiKeyQueryFilter,
+  CreateApiKeyDto,
+  generatePassword,
+  SerializeFor,
+} from '@apillon/lib';
 import { ServiceContext } from '../../context';
 import { ApiKey } from './models/api-key.model';
 import { v4 as uuidV4 } from 'uuid';
 import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
 import * as bcrypt from 'bcryptjs';
 import { AmsErrorCode } from '../../config/types';
+import { ApiKeyRole } from '../role/models/api-key-role.model';
 
 export class ApiKeyService {
+  //#region Api-key CRUD
+  static async listApiKeys(
+    event: { query: ApiKeyQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new ApiKey(
+      { project_uuid: event.query.project_uuid },
+      context,
+    ).getList(context, new ApiKeyQueryFilter(event.query));
+  }
+
   static async createApiKey(
     event: { body: CreateApiKeyDto },
     context: ServiceContext,
@@ -16,7 +33,7 @@ export class ApiKeyService {
       context,
     );
 
-    const apiKeySecret = ApiKeyService.generatePassword();
+    const apiKeySecret = generatePassword(12);
     key.apiKeySecret = bcrypt.hashSync(apiKeySecret);
 
     try {
@@ -26,22 +43,38 @@ export class ApiKeyService {
       if (!key.isValid()) throw new AmsValidationException(key);
     }
 
-    await key.insert();
+    const conn = await context.mysql.start();
+
+    try {
+      await key.insert(SerializeFor.INSERT_DB, conn);
+
+      //Assign api key roles
+      if (event.body.roles) {
+        for (const kr of event.body.roles) {
+          const akr: ApiKeyRole = new ApiKeyRole(kr, context).populate({
+            apiKey_id: key.id,
+          });
+          try {
+            await akr.validate();
+          } catch (err) {
+            await akr.handle(err);
+
+            if (!akr.isValid()) throw new AmsValidationException(akr);
+          }
+
+          await akr.insert(SerializeFor.INSERT_DB, conn);
+        }
+      }
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+      throw err;
+    }
+
     return {
       ...key.serialize(SerializeFor.PROFILE),
       apiKeySecret: apiKeySecret,
     };
-  }
-
-  static generatePassword() {
-    const length = 12;
-    const charset =
-      '@#$&*0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$&*0123456789abcdefghijklmnopqrstuvwxyz';
-    let password = '';
-    for (let i = 0, n = charset.length; i < length; ++i) {
-      password += charset.charAt(Math.floor(Math.random() * n));
-    }
-    return password;
   }
 
   static async deleteApiKey(
@@ -62,4 +95,5 @@ export class ApiKeyService {
     await key.markDeleted();
     return true;
   }
+  //#endregion
 }

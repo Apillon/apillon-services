@@ -93,3 +93,13 @@ export function generateJwtToken(subject: string, data: any, expiresIn = '1d') {
 export function parseJwtToken(subject: string, token: string) {
   return verify(token, env.APP_SECRET, { subject }) as any;
 }
+
+export function generatePassword(length: number) {
+  const charset =
+    '@#$&*0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$&*0123456789abcdefghijklmnopqrstuvwxyz';
+  let password = '';
+  for (let i = 0, n = charset.length; i < length; ++i) {
+    password += charset.charAt(Math.floor(Math.random() * n));
+  }
+  return password;
+}

@@ -46,7 +46,7 @@ export class ExceptionsFilter implements ExceptionFilter {
           timestamp: new Date().toISOString(),
         });
       } else {
-        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        res.status(error.status || HttpStatus.INTERNAL_SERVER_ERROR).json({
           code: error.code || SystemErrorCode.UNHANDLED_SYSTEM_ERROR,
           message: error.message,
           path: request.url,

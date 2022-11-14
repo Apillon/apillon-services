@@ -8,6 +8,7 @@ import { DevConsoleApiContext } from '../../context';
 import { ServiceQueryFilter } from './dtos/services-query-filter.dto';
 import { Service } from './models/service.model';
 import { CodeException, ValidationException } from '@apillon/lib';
+import { v4 as uuidV4 } from 'uuid';
 
 @Injectable()
 export class ServicesService {
@@ -35,7 +36,8 @@ export class ServicesService {
     context: DevConsoleApiContext,
     body: Service,
   ): Promise<Service> {
-    return await body.insert();
+    //TODO: Check if service of such type in that project already exists
+    return await body.populate({ service_uuid: uuidV4() }).insert();
   }
 
   async updateService(

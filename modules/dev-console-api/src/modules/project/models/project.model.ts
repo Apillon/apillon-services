@@ -37,14 +37,7 @@ export class Project extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.SELECT_DB,
     ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.PROJECT_UUID_NOT_PRESENT,
-      },
-    ],
-    defaultValue: uuidV4(),
-    fakeValue: uuidV4(),
+    validators: [],
   })
   public project_uuid: string;
 

@@ -6,6 +6,8 @@ import {
 } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
+import { ApiKeyQueryFilter } from './dtos/api-key-query-filter.dto';
+import { ApiKeyRoleDto } from './dtos/api-key-role.dto';
 import { CreateApiKeyDto } from './dtos/create-api-key.dto';
 
 /**
@@ -186,6 +188,15 @@ export class Ams extends BaseService {
 
   //#region API-key functions
 
+  public async listApiKeys(params: ApiKeyQueryFilter) {
+    const data = {
+      eventName: AmsEventType.LIST_API_KEYS,
+      user: this.user.serialize(),
+      query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
   public async createApiKey(params: CreateApiKeyDto) {
     const data = {
       eventName: AmsEventType.CREATE_API_KEY,
@@ -200,6 +211,24 @@ export class Ams extends BaseService {
       eventName: AmsEventType.DELETE_API_KEY,
       user: this.user.serialize(),
       ...params,
+    };
+    return await this.callService(data);
+  }
+
+  public async assignRoleToApiKey(body: ApiKeyRoleDto) {
+    const data = {
+      eventName: AmsEventType.API_KEY_ROLE_ASSIGN,
+      user: this.user.serialize(),
+      body: body.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async removeApiKeyRole(body: ApiKeyRoleDto) {
+    const data = {
+      eventName: AmsEventType.API_KEY_ROLE_REMOVE,
+      user: this.user.serialize(),
+      body: body.serialize(),
     };
     return await this.callService(data);
   }
