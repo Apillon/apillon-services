@@ -5,18 +5,25 @@ import {
 } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
 import { Instruction } from './models/instruction.model';
-import { CodeException, ValidationException } from '@apillon/lib';
+import { CodeException, SerializeFor, ValidationException } from '@apillon/lib';
 
 @Injectable()
 export class InstructionService {
-  async getInstruction(
-    context: DevConsoleApiContext,
-    instruction_enum: string,
-  ) {
-    return await new Instruction({}, context).getInstructionByEnum(
+  async getInstruction(context: DevConsoleApiContext, instructionEnum: string) {
+    const instruction = await new Instruction({}, context).getInstructionByEnum(
       context,
-      instruction_enum,
+      instructionEnum,
     );
+
+    if (!instruction.exists()) {
+      throw new CodeException({
+        status: HttpStatus.UNAUTHORIZED,
+        code: ValidatorErrorCode.INSTRUCTION_ENUM_EXISTS,
+        errorCodes: ValidatorErrorCode,
+      });
+    }
+
+    return instruction.serialize(SerializeFor.PROFILE);
   }
 
   async createInstruction(context: DevConsoleApiContext, body: any) {
@@ -37,12 +44,12 @@ export class InstructionService {
 
   async updateInstruction(
     context: DevConsoleApiContext,
-    instruction_enum: string,
+    instructionEnum: string,
     data: any,
   ) {
     const instruction = await new Instruction({}, context).getInstructionByEnum(
       context,
-      instruction_enum,
+      instructionEnum,
     );
     if (!instruction.exists()) {
       throw new CodeException({

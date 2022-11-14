@@ -136,16 +136,16 @@ export class Instruction extends AdvancedSQLModel {
    */
   public async getInstructionByEnum(
     context: DevConsoleApiContext,
-    instruction_enum: string,
+    instructionEnum: string,
   ) {
     const data = await context.mysql.paramExecute(
       `
         SELECT *
         FROM \`${DbTables.INSTRUCTION}\` i
-        WHERE instructionEnum = @instruction_enum
+        WHERE instructionEnum = @instructionEnum
         LIMIT 1
       `,
-      { instruction_enum },
+      { instructionEnum },
     );
 
     if (data && data.length) {
