@@ -5,7 +5,6 @@ import {
   CodeException,
   CreateApiKeyDto,
 } from '@apillon/lib';
-import { ApiKeyRoleBaseDto } from '@apillon/lib/dist/lib/at-services/ams/dtos/api-key-role-base.dto';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ResourceNotFoundErrorCode } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
