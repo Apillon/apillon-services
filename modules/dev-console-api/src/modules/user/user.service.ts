@@ -24,6 +24,8 @@ import { LoginUserDto } from './dtos/login-user.dto';
 import { RegisterUserDto } from './dtos/register-user.dto';
 import { ValidateEmailDto } from './dtos/validate-email.dto';
 import { User } from './models/user.model';
+import { UpdateUserDto } from './dtos/update-user.dto';
+import { ResetPasswordDto } from './dtos/reset-password.dto';
 
 @Injectable()
 export class UserService {
@@ -183,5 +185,91 @@ export class UserService {
       ...user.serialize(SerializeFor.PROFILE),
       token: amsResponse.data.token,
     };
+  }
+
+  async passwordResetRequest(body: ValidateEmailDto) {
+    const res = await new Ams().emailExists(body.email);
+
+    if (!res.data.result) {
+      throw new CodeException({
+        status: HttpStatus.NOT_FOUND,
+        code: ResourceNotFoundErrorCode.USER_EMAIL_NOT_EXISTS,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+
+    const token = generateJwtToken(JwtTokenType.USER_RESET_PASSWORD, {
+      email: body.email,
+    });
+
+    await new Mailing().sendMail({
+      emails: [body.email],
+      subject: 'Apillon password reset',
+      template: 'resetPassword',
+      data: { token },
+    });
+
+    return true;
+  }
+
+  async resetPassword(body: ResetPasswordDto) {
+    const tokenData = parseJwtToken(
+      JwtTokenType.USER_RESET_PASSWORD,
+      body.token,
+    );
+
+    if (!tokenData?.email) {
+      throw new CodeException({
+        status: HttpStatus.UNAUTHORIZED,
+        code: UnauthorizedErrorCodes.INVALID_TOKEN,
+        errorCodes: UnauthorizedErrorCodes,
+      });
+    }
+
+    await new Ams().resetPassword({
+      email: tokenData.email,
+      password: body.password,
+    });
+
+    return true;
+  }
+
+  async updateUserProfile(context: DevConsoleApiContext, body: UpdateUserDto) {
+    const user = await new User({}, context).populateById(context.user.id);
+
+    if (!user.exists) {
+      throw new CodeException({
+        status: HttpStatus.UNAUTHORIZED,
+        code: ResourceNotFoundErrorCode.USER_DOES_NOT_EXISTS,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+
+    user.populate(body);
+    try {
+      await user.validate();
+    } catch (err) {
+      await user.handle(err);
+      if (!user.isValid())
+        throw new ValidationException(user, ValidatorErrorCode);
+    }
+
+    const conn = await context.mysql.start();
+
+    try {
+      await user.update(SerializeFor.UPDATE_DB, conn);
+      //Call access MS to update auth user
+      await new Ams().updateAuthUser({
+        user_uuid: context.user.user_uuid,
+        wallet: body.wallet,
+      });
+
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+      throw err;
+    }
+
+    return user.serialize(SerializeFor.PROFILE);
   }
 }

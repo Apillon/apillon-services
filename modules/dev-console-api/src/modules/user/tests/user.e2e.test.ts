@@ -26,7 +26,7 @@ describe('Auth tests', () => {
   test('User should be able to register', async () => {
     const email = newUserData.email;
     const response = await request(stage.http)
-      .post('/user/validate-email')
+      .post('/users/validate-email')
       .send({ email });
     expect(response.status).toBe(201);
 
@@ -34,14 +34,14 @@ describe('Auth tests', () => {
     const password = newUserData.password;
 
     const response2 = await request(stage.http)
-      .post('/user/register')
+      .post('/users/register')
       .send({ token, password });
     expect(response2.status).toBe(201);
-    expect(response2.body.token).toBeTruthy();
-    expect(response2.body.user_uuid).toBeTruthy();
+    expect(response2.body.data.token).toBeTruthy();
+    expect(response2.body.data.user_uuid).toBeTruthy();
 
-    newUserData.authToken = response2.body.token;
-    newUserData.user_uuid = response2.body.user_uuid;
+    newUserData.authToken = response2.body.data.token;
+    newUserData.user_uuid = response2.body.data.user_uuid;
 
     const sqlRes1 = await stage.devConsoleSql.paramExecute(
       `SELECT * from user WHERE user_uuid = @uuid`,
@@ -49,7 +49,7 @@ describe('Auth tests', () => {
     );
 
     expect(sqlRes1.length).toBe(1);
-    expect(sqlRes1[0].id).toBe(response2.body.id);
+    expect(sqlRes1[0].id).toBe(response2.body.data.id);
 
     const sqlRes2 = await stage.amsSql.paramExecute(
       `SELECT * from authUser WHERE user_uuid = @uuid`,
@@ -61,18 +61,18 @@ describe('Auth tests', () => {
   });
 
   test('User should be able to login', async () => {
-    const response = await request(stage.http).post('/user/login').send({
+    const response = await request(stage.http).post('/users/login').send({
       email: newUserData.email,
       password: newUserData.password,
     });
     expect(response.status).toBe(201);
-    expect(response.body.token).toBeTruthy();
+    expect(response.body.data.token).toBeTruthy();
 
-    newUserData.authToken = response.body.token;
+    newUserData.authToken = response.body.data.token;
   });
 
   test('User should not be able to login with wrong password', async () => {
-    const response = await request(stage.http).post('/user/login').send({
+    const response = await request(stage.http).post('/users/login').send({
       email: newUserData.email,
       password: newUserData.password.toLowerCase(),
     });
@@ -81,7 +81,7 @@ describe('Auth tests', () => {
 
   test('User should not be able to login with wrong email', async () => {
     const response = await request(stage.http)
-      .post('/user/login')
+      .post('/users/login')
       .send({
         email: newUserData.email + 'x',
         password: newUserData.password,
@@ -91,24 +91,69 @@ describe('Auth tests', () => {
 
   test('User should be able to authenticate with token', async () => {
     const response = await request(stage.http)
-      .get('/user/me')
+      .get('/users/me')
       .set('Authorization', `Bearer ${newUserData.authToken}`);
     expect(response.status).toBe(200);
-    expect(response.body.id).toBeTruthy();
+    expect(response.body.data.id).toBeTruthy();
   });
 
   test('User should NOT be able to authenticate with old token', async () => {
     const oldToken = newUserData.authToken;
 
-    const response1 = await request(stage.http).post('/user/login').send({
+    const response1 = await request(stage.http).post('/users/login').send({
       email: newUserData.email,
       password: newUserData.password,
     });
     expect(response1.status).toBe(201);
+    newUserData.authToken = response1.body.data.token;
 
     const response = await request(stage.http)
-      .get('/user/me')
+      .get('/users/me')
       .set('Authorization', `Bearer ${oldToken}`);
     expect(response.status).toBe(401);
+  });
+
+  test('User should be able to update profile', async () => {
+    const response = await request(stage.http)
+      .patch('/users/me')
+      .send({
+        name: 'My name',
+      })
+      .set('Authorization', `Bearer ${newUserData.authToken}`);
+    expect(response.status).toBe(200);
+    expect(response.body.data.name).toBe('My name');
+  });
+
+  test('User should be able to request password reset', async () => {
+    const response = await request(stage.http)
+      .post('/users/password-reset-request')
+      .send({
+        email: newUserData.email,
+      });
+    expect(response.status).toBe(200);
+  });
+
+  test('User should be able to reset password & login with new password', async () => {
+    const token = generateJwtToken(JwtTokenType.USER_RESET_PASSWORD, {
+      email: newUserData.email,
+    });
+
+    const response = await request(stage.http)
+      .post('/users/password-reset')
+      .send({
+        token: token,
+        password: 'MyNewPassword01!',
+      });
+    expect(response.status).toBe(200);
+
+    const response2 = await request(stage.http).post('/users/login').send({
+      email: newUserData.email,
+      password: 'MyNewPassword01!',
+    });
+    expect(response2.status).toBe(201);
+    expect(response2.body.data.token).toBeTruthy();
+
+    newUserData.authToken = response2.body.data.token;
+    newUserData.password = 'MyNewPassword01!';
   });
 });
