@@ -5,14 +5,11 @@ export function InitializeContextAndFillUser() {
     //Event contains data, which is sent from API to microservice.
     //APIs should add user, that is making request, to the params.
     //This middleware fills context user
-    const { context } = request;
-    context.user = request.event.user;
 
     const newContext: ServiceContext = new ServiceContext();
-    newContext.mysql = context.mysql;
-    newContext.user = context.user;
+    newContext.user = request.user;
 
-    request.context = newContext;
+    request.serviceContext = newContext;
   };
 
   return { before };
