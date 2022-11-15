@@ -5,6 +5,8 @@ export enum DbTables {}
  */
 export enum ValidatorErrorCode {
   DEFAULT_VALIDATION_ERROR = 42207000,
+  // This is the same as the error codes from the console-api
+  USER_EMAIL_ALREADY_TAKEN = 42204105,
 }
 
 /**

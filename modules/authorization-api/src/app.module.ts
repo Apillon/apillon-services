@@ -3,9 +3,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ContextMiddleware } from './middlewares/context.middleware';
 import { MySQLModule } from './modules/database/mysql.module';
+import { VerificationModule } from './modules/verfication/verification.module';
 
 @Module({
-  imports: [MySQLModule],
+  imports: [MySQLModule, VerificationModule],
   controllers: [AppController],
   providers: [AppService],
 })
