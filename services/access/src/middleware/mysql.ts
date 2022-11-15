@@ -17,7 +17,7 @@ export function MySqlConnect(options?: {
   };
 
   const before = async (request) => {
-    const { context } = request;
+    const { serviceContext } = request;
 
     if (!instances[options.instanceName]) {
       const mysql = new MySql(options);
@@ -30,7 +30,7 @@ export function MySqlConnect(options?: {
       instances[options.instanceName] = mysql;
     }
 
-    context[options.instanceName] = instances[options.instanceName];
+    serviceContext[options.instanceName] = instances[options.instanceName];
   };
 
   const after = async (_response) => {

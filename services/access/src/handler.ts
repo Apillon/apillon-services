@@ -9,12 +9,12 @@ import { InitializeContextAndFillUser } from './middleware/context-and-user';
 
 export const lambdaHandler: Handler = async (
   event: any,
-  context: Context,
+  _context: Context,
   _callback: Callback,
 ) => {
   console.log(event);
 
-  const res = await processEvent(event, context);
+  const res = await processEvent(event, event.serviceContext);
   console.log('LAMBDA RESPONSE');
   console.log(res);
   return res;
@@ -22,6 +22,7 @@ export const lambdaHandler: Handler = async (
 
 export const handler = middy.default(lambdaHandler);
 handler
+  .use(InitializeContextAndFillUser())
   .use(
     MySqlConnect({
       host:
@@ -47,6 +48,5 @@ handler
       autoDisconnect: true,
     }),
   )
-  .use(InitializeContextAndFillUser())
   .use(ResponseFormat())
   .use(ErrorHandler());
