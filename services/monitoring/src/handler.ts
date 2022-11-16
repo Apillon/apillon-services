@@ -1,5 +1,4 @@
 import * as middy from '@middy/core';
-import { AppEnvironment, env } from '@apillon/lib';
 import { Callback, Context, Handler } from 'aws-lambda/handler';
 import { processEvent } from './main';
 import { ErrorHandler } from './middleware/error';
@@ -17,19 +16,7 @@ const lambdaHandler: Handler = async (
 };
 
 export const handler = middy.default(lambdaHandler);
-handler
-  .use(
-    MongoDbConnect({
-      connectionString:
-        env.APP_ENV === AppEnvironment.TEST
-          ? env.MONITORING_MONGO_SRV_TEST
-          : env.MONITORING_MONGO_SRV,
-      database:
-        env.APP_ENV === AppEnvironment.TEST
-          ? env.MONITORING_MONGO_DATABASE_TEST
-          : env.MONITORING_MONGO_DATABASE,
-      autoDisconnect: true,
-    }),
-  )
+handler //
+  .use(MongoDbConnect())
   .use(ResponseFormat())
   .use(ErrorHandler());

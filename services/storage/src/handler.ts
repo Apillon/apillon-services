@@ -1,6 +1,5 @@
 import middy from '@middy/core';
-import { AppEnvironment, env } from '@apillon/lib';
-import { Callback, Context, Handler } from 'aws-lambda/handler';
+import { Callback, Handler } from 'aws-lambda/handler';
 import { processEvent } from './main';
 import { InitializeContextAndFillUser } from './middleware/context-and-user';
 import { ErrorHandler } from './middleware/error';
@@ -9,41 +8,17 @@ import { ResponseFormat } from './middleware/response';
 
 const lambdaHandler: Handler = async (
   event: any,
-  context: Context,
+  context: any,
   _callback: Callback,
 ) => {
   console.log(event);
 
-  return await processEvent(event, context);
+  return await processEvent(event, context.serviceContext);
 };
 
 export const handler = middy(lambdaHandler);
 handler
-  .use(
-    MySqlConnect({
-      host:
-        env.APP_ENV === AppEnvironment.TEST
-          ? env.STORAGE_MYSQL_HOST_TEST
-          : env.STORAGE_MYSQL_HOST,
-      port:
-        env.APP_ENV === AppEnvironment.TEST
-          ? env.STORAGE_MYSQL_PORT_TEST
-          : env.STORAGE_MYSQL_PORT,
-      database:
-        env.APP_ENV === AppEnvironment.TEST
-          ? env.STORAGE_MYSQL_DATABASE_TEST
-          : env.STORAGE_MYSQL_DATABASE,
-      user:
-        env.APP_ENV === AppEnvironment.TEST
-          ? env.STORAGE_MYSQL_USER_TEST
-          : env.STORAGE_MYSQL_USER,
-      password:
-        env.APP_ENV === AppEnvironment.TEST
-          ? env.STORAGE_MYSQL_PASSWORD_TEST
-          : env.STORAGE_MYSQL_PASSWORD,
-      autoDisconnect: true,
-    }),
-  )
   .use(InitializeContextAndFillUser())
+  .use(MySqlConnect())
   .use(ResponseFormat())
   .use(ErrorHandler());
