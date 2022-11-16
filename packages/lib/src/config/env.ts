@@ -168,15 +168,12 @@ export interface IEnv {
   /************************************************************
    * Apillon Authroization API config
    ************************************************************/
-  APILLON_AUTHORIZATION_API_HOST: string;
-  APILLON_AUTHORIZATION_API_PORT: number;
+  AUTH_API_HOST: string;
+  AUTH_API_PORT: number;
 
-  APILLON_AUTHORIZATION_API_HOST_TEST: string;
-  APILLON_AUTHORIZATION_API_PORT_TEST: number;
+  AUTH_API_HOST_TEST: string;
+  AUTH_API_PORT_TEST: number;
 
-  /************************************************************
-   * Authorization API config
-   ************************************************************/
   AUTH_API_MYSQL_HOST: string;
   AUTH_API_MYSQL_PORT: number;
   AUTH_API_MYSQL_USER: string;
@@ -316,14 +313,10 @@ export let env: IEnv = {
   APILLON_API_PORT_TEST: parseInt(process.env['APILLON_API_PORT_TEST']) || 7002,
 
   /** APILLON AUTHROIZATION API */
-  APILLON_AUTHORIZATION_API_HOST:
-    process.env['APILLON_AUTHORIZATION_API_HOST'] || 'localhost',
-  APILLON_AUTHORIZATION_API_PORT:
-    parseInt(process.env['APILLON_AUTHORIZATION_API_PORT']) || 6003,
-  APILLON_AUTHORIZATION_API_HOST_TEST:
-    process.env['APILLON_AUTHORIZATION_API_HOST_TEST'] || 'localhost',
-  APILLON_AUTHORIZATION_API_PORT_TEST:
-    parseInt(process.env['APILLON_AUTHORIZATION_API_PORT_TEST']) || 7003,
+  AUTH_API_HOST: process.env['AUTH_API_HOST'] || 'localhost',
+  AUTH_API_PORT: parseInt(process.env['AUTH_API_PORT']) || 6003,
+  AUTH_API_HOST_TEST: process.env['AUTH_API_HOST_TEST'] || 'localhost',
+  AUTH_API_PORT_TEST: parseInt(process.env['AUTH_API_PORT_TEST']) || 7003,
 };
 
 export let isEnvReady = false;

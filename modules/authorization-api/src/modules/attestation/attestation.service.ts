@@ -7,7 +7,9 @@ import {
   Ams,
   writeLog,
   LogType,
+  env,
 } from '@apillon/lib';
+import { Request } from 'express';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthorizationApiContext } from '../../context';
 import { AttestationEmailDto } from './dto/attestation-email.dto';
@@ -66,9 +68,9 @@ export class AttestationService {
     });
 
     const email_context = {
-      verification_link: 'This is a link.',
-      token: token,
+      verification_link: `${env.AUTH_API_HOST}/verify/${token}`,
     };
+    console.log('Base request ');
 
     await new Mailing().sendMail({
       emails: [email],
@@ -76,6 +78,15 @@ export class AttestationService {
       template: 'identityVerificationEmail',
       data: { ...email_context },
     });
+
+    return HttpStatus.OK;
+  }
+
+  async verifyIdentityEmail(
+    context: AuthorizationApiContext,
+    token: string,
+  ): Promise<any> {
+    console.log('Verification identify email');
 
     return HttpStatus.OK;
   }

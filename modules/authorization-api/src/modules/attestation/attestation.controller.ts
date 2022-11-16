@@ -1,5 +1,5 @@
 import { Ctx, Validation } from '@apillon/modules-lib';
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { AuthorizationApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { AttestationService } from './attestation.service';
@@ -9,10 +9,10 @@ import { AttestationEmailDto } from './dto/attestation-email.dto';
 export class AttestationController {
   constructor(private attestationService: AttestationService) {}
 
-  @Post('verify-email')
+  @Post('start')
   @Validation({ dto: AttestationEmailDto })
   @UseGuards(ValidationGuard)
-  async verificationEmail(
+  async attestationStart(
     @Ctx() context: AuthorizationApiContext,
     @Body() body: AttestationEmailDto,
   ) {
@@ -20,5 +20,15 @@ export class AttestationController {
       context,
       body,
     );
+  }
+
+  @Get('verify/:token')
+  @Validation({ dto: AttestationEmailDto })
+  @UseGuards(ValidationGuard)
+  async verifyIdentityEmail(
+    @Ctx() context: AuthorizationApiContext,
+    @Param('token') token: string,
+  ) {
+    return await this.attestationService.verifyIdentityEmail(context, token);
   }
 }
