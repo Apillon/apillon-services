@@ -5,7 +5,6 @@ export class AuthorizationApiContext extends Context {
    * Authenticates user based on received authentication token. Call AMS service
    * @param token Authentication token.
    */
-  populationStrategy: PopulateFrom = PopulateFrom.PROFILE;
 
   async authenticate(token: string) {
     //TODO
