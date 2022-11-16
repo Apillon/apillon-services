@@ -1,4 +1,4 @@
-import { stringParser } from '@rawmodel/parsers';
+import { booleanParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   AdvancedSQLModel,
@@ -16,6 +16,7 @@ import {
 } from '@apillon/lib';
 import { DbTables, AmsErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
+import { ApiKeyRole } from '../../role/models/api-key-role.model';
 
 export class ApiKey extends AdvancedSQLModel {
   public readonly tableName = DbTables.API_KEY;
@@ -103,6 +104,43 @@ export class ApiKey extends AdvancedSQLModel {
     validators: [],
   })
   public name: string;
+
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+    defaultValue: false,
+    fakeValue: false,
+  })
+  public testNetwork: boolean;
+
+  /**
+   * apiKey roles
+   */
+  @prop({
+    parser: { resolver: ApiKeyRole, array: true },
+    populatable: [
+      PopulateFrom.SERVICE, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN, //
+      SerializeFor.SERVICE,
+    ],
+  })
+  public apiKeyRoles: ApiKeyRole[];
 
   public canAccess(context: ServiceContext) {
     if (

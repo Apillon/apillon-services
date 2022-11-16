@@ -83,6 +83,7 @@ export class ApiKeyRole extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -106,6 +107,7 @@ export class ApiKeyRole extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -115,6 +117,30 @@ export class ApiKeyRole extends AdvancedSQLModel {
     ],
   })
   public service_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: AmsErrorCode.API_KEY_ROLE_SERVICE_TYPE_ID_NOT_PRESENT,
+      },
+    ],
+  })
+  public serviceType_id: number;
 
   public canAccess(context: ServiceContext) {
     if (
@@ -199,6 +225,26 @@ export class ApiKeyRole extends AdvancedSQLModel {
       return this.populate(data[0], PopulateFrom.DB);
     } else {
       return this.reset();
+    }
+  }
+
+  public async getApiKeyRoles(apiKey_id: number) {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT akr.apiKey_id, akr.role_id, akr.serviceType_id, akr.project_uuid, akr.service_uuid
+      FROM \`${this.tableName}\` akr
+      WHERE apiKey_id = @apiKey_id
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      {
+        apiKey_id: apiKey_id,
+      },
+    );
+
+    if (data && data.length) {
+      return data;
+    } else {
+      return [];
     }
   }
 }

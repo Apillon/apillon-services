@@ -233,5 +233,14 @@ export class Ams extends BaseService {
     return await this.callService(data);
   }
 
+  public async getApiKeyRoles(params: { apiKey_id: number }) {
+    const data = {
+      eventName: AmsEventType.GET_API_KEY_ROLES,
+      user: this.user.serialize(),
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
   //#endregion
 }

@@ -74,7 +74,7 @@ export class RoleService {
     if (!key.exists()) {
       throw await new AmsCodeException({
         status: 400,
-        code: AmsErrorCode.USER_DOES_NOT_EXISTS,
+        code: AmsErrorCode.API_KEY_NOT_FOUND,
       }).writeToMonitor({
         userId: context?.user?.user_uuid,
         projectId: event?.body?.project_uuid,
@@ -106,7 +106,7 @@ export class RoleService {
     if (!key.exists()) {
       throw await new AmsCodeException({
         status: 400,
-        code: AmsErrorCode.USER_DOES_NOT_EXISTS,
+        code: AmsErrorCode.API_KEY_NOT_FOUND,
       }).writeToMonitor({
         userId: context?.user?.user_uuid,
         projectId: event?.body?.project_uuid,
@@ -118,5 +118,24 @@ export class RoleService {
     await new ApiKeyRole({}, context).deleteApiKeyRole(event.body);
 
     return true;
+  }
+
+  static async getApiKeyRoles(event: { apiKey_id: number }, context) {
+    const key: ApiKey = await new ApiKey({}, context).populateById(
+      event.apiKey_id,
+    );
+
+    if (!key.exists()) {
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.API_KEY_NOT_FOUND,
+      }).writeToMonitor({
+        userId: context?.user?.user_uuid,
+      });
+    }
+
+    key.canAccess(context);
+
+    return await new ApiKeyRole({}, context).getApiKeyRoles(event.apiKey_id);
   }
 }

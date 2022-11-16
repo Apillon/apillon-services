@@ -21,12 +21,7 @@ export class ServiceQueryFilter extends BaseQueryFilter {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.SERVICE_TYPE_NOT_PRESENT,
-      },
-    ],
+    validators: [],
   })
   public serviceType_id: number;
 }

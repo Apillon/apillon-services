@@ -8,6 +8,7 @@ import {
   getQueryParams,
   PopulateFrom,
   SerializeFor,
+  SqlModelStatus,
 } from '@apillon/lib';
 import { selectAndCountQuery } from '@apillon/lib';
 
@@ -32,6 +33,7 @@ export class Service extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
       SerializeFor.PROFILE,
       SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
     ],
     validators: [],
   })
@@ -129,6 +131,27 @@ export class Service extends AdvancedSQLModel {
   })
   public active: number;
 
+  public async populateByUUID(uuid: string): Promise<this> {
+    if (!uuid) {
+      throw new Error('uuid should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE service_uuid = @uuid AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { uuid },
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
+
   /**
    * Returns name, service type, status
    */
@@ -149,14 +172,18 @@ export class Service extends AdvancedSQLModel {
 
     const sqlQuery = {
       qSelect: `
-        SELECT DISTINCT s.name, st.name as "serviceType", s.active,
-        TIMEDIFF(NOW(), s.lastStartTime) AS uptime
+        SELECT ${this.generateSelectFields(
+          's',
+          '',
+          SerializeFor.SELECT_DB,
+        )}, st.name as "serviceType"
         `,
       qFrom: `
         FROM \`${DbTables.SERVICE}\` s
         INNER JOIN \`${DbTables.SERVICE_TYPE}\` st
           ON st.id = s.serviceType_id
-        WHERE project_id= ${params.project_id} AND s.serviceType_id = ${params.serviceType_id} 
+        WHERE project_id= @project_id
+        AND (@serviceType_id IS NULL OR  s.serviceType_id = @serviceType_id )
       `,
       qFilter: `
         ORDER BY ${filters.orderStr}
