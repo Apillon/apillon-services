@@ -1,4 +1,5 @@
 DEV_CONSOLE_API_DIR="./modules/dev-console-api/"
+AUTH_API_DIR="./modules/authorization-api"
 AT_LIB_DIR="./packages/at-lib"
 DOCKER_COMPOSE="docker-compose.yml"
 
@@ -16,6 +17,12 @@ db-upgrade-dev-console:
 
 db-downgrade-dev-console:
 	cd ${DEV_CONSOLE_API_DIR} && npm run db-downgrade; cd -;
+
+db-upgrade-auth-api:
+	cd ${AUTH_API_DIR} && npm run db-upgrade; cd -;
+
+db-downgrade-auth-api:
+	cd ${AUTH_API_DIR} && npm run db-downgrade; cd -;
 
 
 ####### MISC #######

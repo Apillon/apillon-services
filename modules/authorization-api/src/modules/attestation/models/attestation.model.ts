@@ -17,26 +17,6 @@ export class Attestation extends AdvancedSQLModel {
   tableName = DbTables.ATTESTATION;
 
   /**
-   * Attestation state as defined in types
-   */
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.PROFILE,
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.ATTESTATION_STATE_NOT_PRESENT,
-      },
-    ],
-  })
-  public state: string;
-
-  /**
    * TODO: Attestation user email -> Review!
    */
   @prop({
@@ -55,6 +35,26 @@ export class Attestation extends AdvancedSQLModel {
     ],
   })
   public email: string;
+
+  /**
+   * Attestation state as defined in types
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.PROFILE,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.ATTESTATION_STATE_NOT_PRESENT,
+      },
+    ],
+  })
+  public state: string;
 
   public async populateByUserEmail(
     context: AuthorizationApiContext,

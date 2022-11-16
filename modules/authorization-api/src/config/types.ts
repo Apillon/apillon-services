@@ -24,6 +24,7 @@ export enum DbTables {
 }
 
 export enum AttestationState {
+  PENDING = 'pending',
   IN_PROGRESS = 'in_progress',
   DONE = 'done',
   REJECTED = 'rejected',

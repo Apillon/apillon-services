@@ -173,6 +173,15 @@ export interface IEnv {
 
   APILLON_AUTHORIZATION_API_HOST_TEST: string;
   APILLON_AUTHORIZATION_API_PORT_TEST: number;
+
+  /************************************************************
+   * Authorization API config
+   ************************************************************/
+  AUTH_API_MYSQL_HOST: string;
+  AUTH_API_MYSQL_PORT: number;
+  AUTH_API_MYSQL_USER: string;
+  AUTH_API_MYSQL_PASSWORD: string;
+  AUTH_API_MYSQL_DATABASE: string;
 }
 
 // dotenv.config();
@@ -241,6 +250,13 @@ export let env: IEnv = {
     process.env['DEV_CONSOLE_API_MYSQL_PASSWORD_TEST'],
   DEV_CONSOLE_API_MYSQL_DATABASE_TEST:
     process.env['DEV_CONSOLE_API_MYSQL_DATABASE_TEST'],
+
+  /** AUTHORIZATION API DEV DB conn */
+  AUTH_API_MYSQL_HOST: process.env['AUTH_API_MYSQL_HOST'],
+  AUTH_API_MYSQL_PORT: parseInt(process.env['AUTH_API_MYSQL_PORT']) || 3306,
+  AUTH_API_MYSQL_USER: process.env['AUTH_API_MYSQL_USER'],
+  AUTH_API_MYSQL_PASSWORD: process.env['AUTH_API_MYSQL_PASSWORD'],
+  AUTH_API_MYSQL_DATABASE: process.env['AUTH_API_MYSQL_DATABASE'],
 
   DEV_CONSOLE_API_HOST: process.env['DEV_CONSOLE_API_HOST'] || 'localhost',
   DEV_CONSOLE_API_PORT: parseInt(process.env['DEV_CONSOLE_API_PORT']) || 6001,

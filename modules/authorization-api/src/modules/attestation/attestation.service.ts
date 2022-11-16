@@ -8,7 +8,7 @@ import {
   writeLog,
   LogType,
 } from '@apillon/lib';
-import { Controller, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthorizationApiContext } from '../../context';
 import { AttestationEmailDto } from './dto/attestation-email.dto';
 import { Attestation } from './models/attestation.model';
