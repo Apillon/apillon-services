@@ -28,7 +28,7 @@ export function MySqlConnect(instanceName = 'mysql', autoDisconnect = true) {
           : env.STORAGE_MYSQL_PASSWORD,
     };
 
-    const { serviceContext } = request;
+    const { context } = request;
 
     if (!instances[instanceName]) {
       const mysql = new MySql(options);
@@ -41,7 +41,7 @@ export function MySqlConnect(instanceName = 'mysql', autoDisconnect = true) {
       instances[instanceName] = mysql;
     }
 
-    serviceContext[instanceName] = instances[instanceName];
+    context.serviceContext[instanceName] = instances[instanceName];
   };
 
   const after = async (_response) => {

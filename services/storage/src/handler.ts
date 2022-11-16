@@ -1,5 +1,5 @@
 import middy from '@middy/core';
-import { Callback, Context, Handler } from 'aws-lambda/handler';
+import { Callback, Handler } from 'aws-lambda/handler';
 import { processEvent } from './main';
 import { InitializeContextAndFillUser } from './middleware/context-and-user';
 import { ErrorHandler } from './middleware/error';
@@ -8,12 +8,12 @@ import { ResponseFormat } from './middleware/response';
 
 const lambdaHandler: Handler = async (
   event: any,
-  context: Context,
+  context: any,
   _callback: Callback,
 ) => {
   console.log(event);
 
-  return await processEvent(event, context);
+  return await processEvent(event, context.serviceContext);
 };
 
 export const handler = middy(lambdaHandler);
