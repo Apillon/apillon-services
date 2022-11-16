@@ -71,6 +71,8 @@ export class Attestation extends AdvancedSQLModel {
     if (data && data.length) {
       return this.populate(data[0], PopulateFrom.DB);
     }
+
+    return this.reset();
   }
 
   /**

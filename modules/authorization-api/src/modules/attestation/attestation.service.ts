@@ -29,7 +29,10 @@ export class AttestationService {
       email,
     );
 
-    if (attestation_db.exists()) {
+    if (
+      attestation_db.exists() &&
+      attestation_db.state != AttestationState.PENDING
+    ) {
       throw new CodeException({
         status: HttpStatus.UNPROCESSABLE_ENTITY,
         code: ValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,

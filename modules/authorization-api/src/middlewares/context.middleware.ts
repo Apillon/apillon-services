@@ -20,6 +20,7 @@ export class ContextMiddleware implements NestMiddleware {
 
   use(req: IRequest, res, next) {
     req.context = new AuthorizationApiContext();
+    req.context.setMySql(this.mysql);
     next();
   }
 }
