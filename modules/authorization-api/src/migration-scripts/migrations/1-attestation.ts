@@ -8,7 +8,7 @@ export const upgrade = async (
   CREATE TABLE IF NOT EXISTS \`${DbTables.ATTESTATION}\` (
     \`id\` INT NOT NULL AUTO_INCREMENT,
     \`email\` VARCHAR(100) NOT NULL,
-    \`state\` VARCHAR(25) NOT FULL DEFAULT '${AttestationState.PENDING}',
+    \`state\` VARCHAR(25) NOT NULL DEFAULT '${AttestationState.PENDING}',
     \`status\` INT NOT NULL DEFAULT '${SqlModelStatus.ACTIVE}',
     \`createTime\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     \`createUser\` INT NULL,
