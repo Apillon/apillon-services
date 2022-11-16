@@ -1,5 +1,5 @@
 {
-  "name": "apillon-monitoring-staging",
+  "name": "apillon-app-staging",
   "environment": {
     "computeType": "BUILD_GENERAL1_SMALL",
     "imagePullCredentialsType": "CODEBUILD",
@@ -13,13 +13,13 @@
       },
       {
         "type": "PLAINTEXT",
-        "name": "S3_CONFIG",
-        "value": "s3://apillon-services-config/env.staging.yml"
+        "name": "S3_BUCKET",
+        "value": "s3://app-staging.apillon.io"
       },
       {
         "type": "PLAINTEXT",
-        "name": "SERVICE_PATH",
-        "value": "services/monitoring/"
+        "name": "CLOUDFRONT_ID",
+        "value": "E1B1JK4NVJK9IP"
       }
     ],
     "type": "LINUX_CONTAINER"
@@ -38,7 +38,7 @@
     "gitSubmodulesConfig": {
       "fetchSubmodules": false
     },
-    "location": "https://TineMlakar@bitbucket.org/kalmiadevs/apillon-services.git",
+    "location": "https://TineMlakar@bitbucket.org/kalmiadevs/apillon-app.git",
     "gitCloneDepth": 1,
     "type": "BITBUCKET",
     "reportBuildStatus": false
@@ -53,7 +53,7 @@
     "cloudWatchLogs": {
       "status": "ENABLED",
       "groupName": "codebuild",
-      "streamName": "apillon-services-staging"
+      "streamName": "apillon-app-staging"
     }
   },
   "encryptionKey": "arn:aws:kms:eu-west-1:018021943180:alias/aws/s3"

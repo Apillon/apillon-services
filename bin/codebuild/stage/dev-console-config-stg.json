@@ -14,7 +14,7 @@
       {
         "type": "PLAINTEXT",
         "name": "S3_CONFIG",
-        "value": "s3://apillon-services-config/env.dev.yml"
+        "value": "s3://apillon-services-config/env.staging.yml"
       },
       {
         "type": "PLAINTEXT",
@@ -37,7 +37,7 @@
   "cache": {
     "type": "NO_CACHE"
   },
-  "sourceVersion": "develop",
+  "sourceVersion": "stage",
   "source": {
     "insecureSsl": false,
     "gitSubmodulesConfig": {
