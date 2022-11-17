@@ -15,6 +15,7 @@ import { selectAndCountQuery } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../../context';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { ServiceQueryFilter } from '../dtos/services-query-filter.dto';
+import { faker } from '@faker-js/faker';
 
 /**
  * Service model.
@@ -74,6 +75,7 @@ export class Service extends AdvancedSQLModel {
         code: ValidatorErrorCode.SERVICE_NAME_NOT_PRESENT,
       },
     ],
+    fakeValue: faker.word.verb(),
   })
   public name: string;
 
@@ -96,6 +98,7 @@ export class Service extends AdvancedSQLModel {
         code: ValidatorErrorCode.SERVICE_TYPE_NOT_PRESENT,
       },
     ],
+    fakeValue: 1,
   })
   public serviceType_id: number;
 

@@ -1,6 +1,6 @@
 import {
   AdvancedSQLModel,
-  ApiKeyRoleDto,
+  ApiKeyRoleBaseDto,
   CodeException,
   Context,
   DefaultUserRole,
@@ -119,7 +119,7 @@ export class ApiKeyRole extends AdvancedSQLModel {
   public service_uuid: string;
 
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: integerParser() },
     populatable: [
       PopulateFrom.DB,
       PopulateFrom.SERVICE,
@@ -203,7 +203,10 @@ export class ApiKeyRole extends AdvancedSQLModel {
     return !!(data && data.length);
   }
 
-  public async deleteApiKeyRole(apiKeyRole: ApiKeyRoleDto): Promise<this> {
+  public async deleteApiKeyRole(
+    apiKey_id: number,
+    apiKeyRole: ApiKeyRoleBaseDto,
+  ): Promise<this> {
     const data = await this.getContext().mysql.paramExecute(
       `
       DELETE
@@ -214,7 +217,7 @@ export class ApiKeyRole extends AdvancedSQLModel {
       AND project_uuid = @project_uuid;
       `,
       {
-        apiKey_id: apiKeyRole.apiKey_id,
+        apiKey_id: apiKey_id,
         role_id: apiKeyRole.role_id,
         service_uuid: apiKeyRole.service_uuid,
         project_uuid: apiKeyRole.project_uuid,

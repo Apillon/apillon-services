@@ -1,7 +1,7 @@
 import {
   Ams,
   ApiKeyQueryFilter,
-  ApiKeyRoleDto,
+  ApiKeyRoleBaseDto,
   CodeException,
   CreateApiKeyDto,
 } from '@apillon/lib';
@@ -57,7 +57,11 @@ export class ApiKeyService {
     return (await new Ams(context).deleteApiKey({ id: id })).data;
   }
 
-  async assignRoleToApiKey(context: DevConsoleApiContext, body: ApiKeyRoleDto) {
+  async assignRoleToApiKey(
+    context: DevConsoleApiContext,
+    apiKey_id: number,
+    body: ApiKeyRoleBaseDto,
+  ) {
     //Check project
     const project: Project = await new Project({}, context).populateByUUID(
       body.project_uuid,
@@ -84,11 +88,15 @@ export class ApiKeyService {
     }
     body.serviceType_id = service.serviceType_id;
 
-    return (await new Ams(context).assignRoleToApiKey(body)).data;
+    return (await new Ams(context).assignRoleToApiKey(apiKey_id, body)).data;
   }
 
-  async removeApiKeyRole(context: DevConsoleApiContext, body: ApiKeyRoleDto) {
-    return (await new Ams(context).removeApiKeyRole(body)).data;
+  async removeApiKeyRole(
+    context: DevConsoleApiContext,
+    apiKey_id: number,
+    body: ApiKeyRoleBaseDto,
+  ) {
+    return (await new Ams(context).removeApiKeyRole(apiKey_id, body)).data;
   }
 
   async getApiKeyRoles(context: DevConsoleApiContext, id: number) {

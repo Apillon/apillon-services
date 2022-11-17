@@ -1,6 +1,6 @@
 import {
   ApiKeyQueryFilter,
-  ApiKeyRoleDto,
+  ApiKeyRoleBaseDto,
   CreateApiKeyDto,
   DefaultUserRole,
   ValidateFor,
@@ -26,34 +26,36 @@ import { ApiKeyService } from './api-key.service';
 export class ApiKeyController {
   constructor(private apiKeyService: ApiKeyService) {}
 
-  @Post('api-key-role')
+  @Post(':id/role')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
   @UseGuards(AuthGuard)
-  @Validation({ dto: ApiKeyRoleDto })
+  @Validation({ dto: ApiKeyRoleBaseDto })
   @UseGuards(ValidationGuard)
   async assignRoleToApiKey(
     @Ctx() context: DevConsoleApiContext,
-    @Body() body: ApiKeyRoleDto,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: ApiKeyRoleBaseDto,
   ) {
-    return await this.apiKeyService.assignRoleToApiKey(context, body);
+    return await this.apiKeyService.assignRoleToApiKey(context, id, body);
   }
 
-  @Delete('api-key-role')
+  @Delete(':id/role')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
   @UseGuards(AuthGuard)
-  @Validation({ dto: ApiKeyRoleDto })
+  @Validation({ dto: ApiKeyRoleBaseDto })
   @UseGuards(ValidationGuard)
   async removeApiKeyRole(
     @Ctx() context: DevConsoleApiContext,
-    @Body() body: ApiKeyRoleDto,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: ApiKeyRoleBaseDto,
   ) {
-    return await this.apiKeyService.removeApiKeyRole(context, body);
+    return await this.apiKeyService.removeApiKeyRole(context, id, body);
   }
 
   @Get(':id/roles')

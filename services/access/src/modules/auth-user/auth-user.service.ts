@@ -7,14 +7,13 @@ import {
   PopulateFrom,
   SerializeFor,
 } from '@apillon/lib';
-import { AmsErrorCode, SqlModelStatus } from '../../config/types';
+import { AmsErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
 import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
-import { AuthUser } from './auth-user.model';
 import { AuthToken } from '../auth-token/auth-token.model';
+import { AuthUser } from './auth-user.model';
 
 import { TokenExpiresInStr } from '../../config/types';
-import * as bcrypt from 'bcryptjs';
 import { CryptoHash } from '../../lib/hash-with-crypto';
 
 export class AuthUserService {
@@ -27,6 +26,16 @@ export class AuthUserService {
         userId: event?.user_uuid,
       });
     }
+    //check if email already exists - user cannot register twice
+    const checkEmailRes = await AuthUserService.emailExists(event, context);
+
+    if (checkEmailRes.result === true) {
+      throw new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.USER_ALREADY_REGISTERED,
+      });
+    }
+
     const authUser = new AuthUser({}, context);
     authUser.populate(event, PopulateFrom.SERVICE);
 
@@ -92,9 +101,6 @@ export class AuthUserService {
   }
 
   static async login(event, context: ServiceContext) {
-    // Start connection to database at the beginning of the function
-    const conn = await context.mysql.start();
-
     const authUser = await new AuthUser({}, context).populateByEmail(
       event.email,
     );
@@ -105,51 +111,7 @@ export class AuthUserService {
       }).writeToMonitor({ userId: authUser?.user_uuid });
     }
 
-    // Generate a new token with type USER_AUTH
-    authUser.token = generateJwtToken(JwtTokenType.USER_AUTHENTICATION, {
-      user_uuid: authUser.user_uuid,
-    });
-
-    // Create new token in the database
-    const authToken = new AuthToken({}, context);
-    const tokenData = {
-      tokenHash: await CryptoHash.hash(authUser.token),
-      user_uuid: authUser.user_uuid,
-      tokenType: JwtTokenType.USER_AUTHENTICATION,
-      expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
-    };
-
-    authToken.populate(tokenData, PopulateFrom.SERVICE);
-
-    try {
-      await authToken.validate();
-    } catch (err) {
-      throw new AmsValidationException(authToken);
-    }
-
-    try {
-      // Find old token
-      const oldToken = await new AuthToken({}, context).populateByUserAndType(
-        authUser.user_uuid,
-        JwtTokenType.USER_AUTHENTICATION,
-        conn,
-      );
-
-      if (oldToken.exists()) {
-        oldToken.status = SqlModelStatus.DELETED;
-        await oldToken.update(SerializeFor.UPDATE_DB, conn);
-      }
-
-      await authToken.insert(SerializeFor.INSERT_DB, conn);
-
-      await context.mysql.commit(conn);
-    } catch (err) {
-      await context.mysql.rollback(conn);
-      throw await new AmsCodeException({
-        status: 500,
-        code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
-      }).writeToMonitor({ userId: authUser?.user_uuid });
-    }
+    await authUser.loginUser();
 
     await new Lmas().writeLog(
       {

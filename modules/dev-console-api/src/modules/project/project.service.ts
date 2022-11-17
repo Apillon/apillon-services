@@ -26,6 +26,7 @@ import { ProjectUserUpdateRoleDto } from './dtos/project_user-update-role.dto';
 import { ProjectUserPendingInvitation } from './models/project-user-pending-invitation.model';
 import { ProjectUser } from './models/project-user.model';
 import { Project } from './models/project.model';
+import { v4 as uuidV4 } from 'uuid';
 
 @Injectable()
 export class ProjectService {
@@ -38,7 +39,9 @@ export class ProjectService {
     const conn = await context.mysql.start();
 
     try {
-      const project: Project = await body.insert(SerializeFor.INSERT_DB, conn);
+      const project: Project = await body
+        .populate({ project_uuid: uuidV4() })
+        .insert(SerializeFor.INSERT_DB, conn);
       const projectUser: ProjectUser = new ProjectUser({}, context).populate({
         project_id: project.id,
         user_id: context.user.id,

@@ -174,11 +174,7 @@ export class UserService {
       // TODO: The context of this error is not correct. What happens if
       //       ams fails? FE will see it as a DB write error, which is incorrect.
       await context.mysql.rollback(conn);
-      throw new CodeException({
-        code: ErrorCode.ERROR_WRITING_TO_DATABASE,
-        status: HttpStatus.INTERNAL_SERVER_ERROR,
-        errorCodes: ErrorCode,
-      });
+      throw err;
     }
 
     return {
