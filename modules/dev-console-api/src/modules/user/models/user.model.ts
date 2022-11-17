@@ -120,4 +120,19 @@ export class User extends AdvancedSQLModel {
     }
     return this.reset();
   }
+
+  public async populateByEmail(context: DevConsoleApiContext, email: string) {
+    const data = await context.mysql.paramExecute(
+      `
+        SELECT *
+        FROM \`${DbTables.USER}\` u
+        WHERE u.email = @email
+      `,
+      { email },
+    );
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    }
+    return this.reset();
+  }
 }

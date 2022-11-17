@@ -5,6 +5,7 @@ import { dropTestDatabases, rebuildTestDatabases } from './migrations';
 import { AppEnvironment, env, Mongo, MySql } from '@apillon/lib';
 import { TestContext } from './context';
 import { AppModule } from '../../src/app.module';
+import { ExceptionsFilter, ResponseInterceptor } from '@apillon/modules-lib';
 // import { startDevServer as startAmsServer } from 'at-ams/src/server';
 // import { startDevServer as startLmasServer } from 'at-lmas/src/server';
 
@@ -43,7 +44,11 @@ export async function setupTest(): Promise<Stage> {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.useGlobalFilters(new ExceptionsFilter());
+    app.useGlobalInterceptors(new ResponseInterceptor());
+
     await app.init();
+
     await app.listen(
       env.DEV_CONSOLE_API_PORT_TEST,
       env.DEV_CONSOLE_API_HOST_TEST,

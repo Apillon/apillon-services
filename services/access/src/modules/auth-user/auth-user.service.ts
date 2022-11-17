@@ -15,6 +15,7 @@ import { AuthToken } from '../auth-token/auth-token.model';
 
 import { TokenExpiresInStr } from '../../config/types';
 import * as bcrypt from 'bcryptjs';
+import { CryptoHash } from '../../lib/hash-with-crypto';
 
 export class AuthUserService {
   static async register(event, context: ServiceContext) {
@@ -50,7 +51,7 @@ export class AuthUserService {
       // Create new token in the database
       const authToken = new AuthToken({}, context);
       const tokenData = {
-        tokenHash: bcrypt.hashSync(authUser.token, 10),
+        tokenHash: await CryptoHash.hash(authUser.token),
         user_uuid: authUser.user_uuid,
         tokenType: JwtTokenType.USER_AUTHENTICATION,
         expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
@@ -112,13 +113,13 @@ export class AuthUserService {
     // Create new token in the database
     const authToken = new AuthToken({}, context);
     const tokenData = {
-      tokenHash: bcrypt.hashSync(authUser.token, 10),
+      tokenHash: await CryptoHash.hash(authUser.token),
       user_uuid: authUser.user_uuid,
       tokenType: JwtTokenType.USER_AUTHENTICATION,
       expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
     };
 
-    authToken.populate({ ...tokenData }, PopulateFrom.SERVICE);
+    authToken.populate(tokenData, PopulateFrom.SERVICE);
 
     try {
       await authToken.validate();
@@ -217,7 +218,7 @@ export class AuthUserService {
 
     if (
       !authToken.exists() ||
-      !bcrypt.compareSync(event.token, authToken.tokenHash)
+      !(await CryptoHash.verify(event.token, authToken.tokenHash))
     ) {
       throw await new AmsCodeException({
         status: 401,
@@ -277,26 +278,22 @@ export class AuthUserService {
   }
 
   static async resetPassword(event, context: ServiceContext) {
-    if (!event?.user_uuid || !event.password) {
+    if (!event?.email || !event.password) {
       throw await new AmsCodeException({
         status: 400,
         code: AmsErrorCode.BAD_REQUEST,
-      }).writeToMonitor({
-        userId: event?.user_uuid,
-      });
+      }).writeToMonitor({});
     }
 
-    const authUser = await new AuthUser({}, context).populateByUserUuid(
-      event.user_uuid,
+    const authUser = await new AuthUser({}, context).populateByEmail(
+      event.email,
     );
 
     if (!authUser.exists()) {
       throw await new AmsCodeException({
         status: 400,
         code: AmsErrorCode.USER_DOES_NOT_EXISTS,
-      }).writeToMonitor({
-        userId: event?.user_uuid,
-      });
+      }).writeToMonitor({});
     }
 
     authUser.setPassword(event.password);
@@ -312,10 +309,10 @@ export class AuthUserService {
       throw await new AmsCodeException({
         status: 500,
         code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
-      }).writeToMonitor({
-        userId: event?.user_uuid,
-      });
+      }).writeToMonitor({});
     }
+
+    return true;
   }
 
   static async emailExists(event, context: ServiceContext) {

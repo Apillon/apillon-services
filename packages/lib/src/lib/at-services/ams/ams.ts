@@ -84,7 +84,7 @@ export class Ams extends BaseService {
     };
   }
 
-  public async resetPassword(params: { user_uuid: string; password: string }) {
+  public async resetPassword(params: { email: string; password: string }) {
     const data = {
       eventName: AmsEventType.USER_PASSWORD_RESET,
       ...params,
