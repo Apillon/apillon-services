@@ -1,8 +1,14 @@
 import { MySql } from './database/mysql';
+import { v4 as uuid } from 'uuid';
 
 export class Context {
   public mysql: MySql;
   public user: any;
+  public requestId: string;
+
+  constructor() {
+    this.requestId = uuid();
+  }
 
   /**
    * Tells if current user is authenticated.

@@ -29,3 +29,4 @@ export * from './lib/at-services/storage/dtos/file-details-query-filter.dto';
 export * from './lib/at-services/ams/dtos/create-api-key.dto';
 export * from './lib/at-services/ams/dtos/api-key-query-filter.dto';
 export * from './lib/at-services/ams/dtos/api-key-role.dto';
+export * from './lib/at-services/lmas/dtos/request-log.dto';

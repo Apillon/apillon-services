@@ -6,6 +6,7 @@ import {
   ServiceName,
 } from '../../../config/types';
 import { BaseService } from '../base-service';
+import { RequestLogDto } from './dtos/request-log.dto';
 
 /**
  * Logging / Monitoring / Alerting Service client
@@ -46,6 +47,23 @@ export class Lmas extends BaseService {
       location: null,
       service: ServiceName.GENERAL,
       ...params,
+    };
+
+    // failsafe logging - without secret!!!
+    console.log(JSON.stringify(data));
+    // safe attach secret
+    data['securityToken'] = securityToken;
+    try {
+      await this.callService(data);
+    } catch (err) {
+      console.error(`LMAS CALL SERVICE ERROR: ${err.message}`);
+    }
+  }
+
+  public async writeRequestLog(log: RequestLogDto, securityToken?: string) {
+    const data = {
+      eventName: LmasEventType.WRITE_REQUEST_LOG,
+      log,
     };
 
     // failsafe logging - without secret!!!
