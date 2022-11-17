@@ -80,4 +80,20 @@ export class Context {
     }
     return false;
   }
+
+  /**
+   * Checks if api key has role for specific service type (auth, storage...)
+   * @param role
+   * @param serviceType
+   * @returns
+   */
+  public hasApiKeyRoleForServiceType(role: number, serviceType: number) {
+    if (this.apiKey) {
+      //Check API roles
+      return !!this.apiKey.apiKeyRoles?.find(
+        (x) => x.role_id == role && x.serviceType_id == serviceType,
+      );
+    }
+    return false;
+  }
 }

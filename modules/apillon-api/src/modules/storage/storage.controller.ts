@@ -1,9 +1,9 @@
 import {
+  AttachedServiceType,
   CreateS3SignedUrlForUploadDto,
   DefaultApiKeyRole,
-  DefaultUserRole,
 } from '@apillon/lib';
-import { Ctx, Validation, Permissions } from '@apillon/modules-lib';
+import { Ctx, Validation, ApiKeyPermissions } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
@@ -23,7 +23,10 @@ export class StorageController {
   constructor(private storageService: StorageService) {}
 
   @Post('file-upload-request')
-  @Permissions({ role: DefaultApiKeyRole.KEY_EXECUTE })
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_EXECUTE,
+    serviceType: AttachedServiceType.STORAGE,
+  })
   @UseGuards(AuthGuard)
   @Validation({ dto: CreateS3SignedUrlForUploadDto })
   @UseGuards(ValidationGuard, AuthGuard)
@@ -35,7 +38,10 @@ export class StorageController {
   }
 
   @Get('/file-details/cid/:cid')
-  @Permissions({ role: DefaultApiKeyRole.KEY_READ })
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_READ,
+    serviceType: AttachedServiceType.STORAGE,
+  })
   @UseGuards(AuthGuard)
   async getFileDetailsByCID(
     @Ctx() context: ApillonApiContext,

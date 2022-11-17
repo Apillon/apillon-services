@@ -93,6 +93,14 @@ export enum SqlModelStatus {
 }
 
 /**
+ * Types of services in dev-console-api
+ */
+export enum AttachedServiceType {
+  AUTHORIZATION = 1,
+  STORAGE = 2,
+}
+
+/**
  * Model population strategies.
  */
 export enum PopulateFrom {
