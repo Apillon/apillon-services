@@ -13,23 +13,9 @@ export class InstructionQueryFilter extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.INSTRUCTION_ENUM_NOT_PRESENT,
+        code: ValidatorErrorCode.INSTRUCTION_FORROUTE_NOT_PRESENT,
       },
     ],
   })
-  public instructionEnum: string;
-
-  // NOTE: Currently UNUSED
-  // @ApiProperty({ required: false })
-  //   @prop({
-  //     parser: { resolver: stringParser() },
-  //     validators: [
-  //       {
-  //         resolver: presenceValidator(),
-  //         code: ValidatorErrorCode.INSTRUCTION_FORROUTE_NOT_PRESENT,
-  //       },
-  //     ],
-  //   })
-  //   public forRoute: string;
-  // }
+  public forRoute: string;
 }

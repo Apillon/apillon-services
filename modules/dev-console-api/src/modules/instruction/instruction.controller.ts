@@ -27,6 +27,16 @@ export class InstructionController {
   @Permissions({ role: DefaultUserRole.USER })
   @Validation({ dto: InstructionQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
+  async getInstructions(
+    @Ctx() context: DevConsoleApiContext,
+    @Query('forRoute') forRoute: string,
+  ) {
+    return await this.instructionService.getInstructions(context, forRoute);
+  }
+
+  @Get(':instructionEnum')
+  @Permissions({ role: DefaultUserRole.USER })
+  @UseGuards(ValidationGuard, AuthGuard)
   async getInstruction(
     @Ctx() context: DevConsoleApiContext,
     @Query('instructionEnum') instructionEnum: string,
@@ -48,7 +58,7 @@ export class InstructionController {
     return await this.instructionService.createInstruction(context, body);
   }
 
-  @Patch('/:instructionEnum')
+  @Patch(':instructionEnum')
   @Permissions({ role: DefaultUserRole.ADMIN })
   @UseGuards(AuthGuard)
   async updateInstruction(
@@ -63,7 +73,7 @@ export class InstructionController {
     );
   }
 
-  @Delete('/:id')
+  @Delete(':id')
   @Permissions({ role: DefaultUserRole.ADMIN })
   @UseGuards(AuthGuard)
   async deleteInstruction(

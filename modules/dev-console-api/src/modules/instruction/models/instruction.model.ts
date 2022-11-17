@@ -4,6 +4,7 @@ import {
   AdvancedSQLModel,
   PopulateFrom,
   prop,
+  selectAndCountQuery,
   SerializeFor,
 } from '@apillon/lib';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
@@ -153,5 +154,41 @@ export class Instruction extends AdvancedSQLModel {
     }
 
     return this.reset();
+  }
+
+  /**
+   * Returns instructions filtered by route
+   */
+  public async getInstructions(
+    context: DevConsoleApiContext,
+    forRoute: string,
+  ) {
+    /** Routes with all subparts */
+    const routeParts = forRoute.split('-');
+    const routes = routeParts.map((_, key) => {
+      return routeParts.slice(0, key + 1).join('-');
+    });
+
+    const params = {
+      forRoute: `'${routes.join(`','`)}'`,
+      offset: 0,
+      limit: 10,
+    };
+
+    const sqlQuery = {
+      qSelect: `
+        SELECT *
+        `,
+      qFrom: `
+        FROM \`${DbTables.INSTRUCTION}\` 
+        WHERE  forRoute IN (${params.forRoute})
+      `,
+      qFilter: `
+        ORDER BY CHAR_LENGTH(forRoute) DESC, instructionType
+        LIMIT ${params.limit} OFFSET ${params.offset};
+      `,
+    };
+
+    return selectAndCountQuery(context.mysql, sqlQuery, params, 'id');
   }
 }

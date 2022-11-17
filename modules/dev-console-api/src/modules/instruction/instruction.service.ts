@@ -9,6 +9,13 @@ import { CodeException, SerializeFor, ValidationException } from '@apillon/lib';
 
 @Injectable()
 export class InstructionService {
+  async getInstructions(context: DevConsoleApiContext, forRoute: string) {
+    return await new Instruction({}, context).getInstructions(
+      context,
+      forRoute,
+    );
+  }
+
   async getInstruction(context: DevConsoleApiContext, instructionEnum: string) {
     const instruction = await new Instruction({}, context).getInstructionByEnum(
       context,

@@ -82,3 +82,12 @@ export enum BadRequestErrorCode {
   CANNOT_MODIFY_PROJECT_OWNER = 40004001,
   ROLE_ON_PROJECT_ALREADY_ASSIGNED = 40004002,
 }
+
+/**
+ * Instruction Type Enum { Helper, Video, Q&A }
+ */
+export enum InstructionType {
+  HELPER = 10,
+  VIDEO = 20,
+  QA = 30,
+}
