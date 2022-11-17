@@ -17,6 +17,7 @@ import {
 import { DbTables, AmsErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
 import { ApiKeyRole } from '../../role/models/api-key-role.model';
+import * as bcrypt from 'bcryptjs';
 
 export class ApiKey extends AdvancedSQLModel {
   public readonly tableName = DbTables.API_KEY;
@@ -178,6 +179,56 @@ export class ApiKey extends AdvancedSQLModel {
         status: 403,
         errorMessage: 'Insufficient permissins',
       });
+    }
+  }
+
+  public verifyApiKeySecret(apiKeySecret: string) {
+    return (
+      typeof apiKeySecret === 'string' &&
+      apiKeySecret.length > 0 &&
+      bcrypt.compareSync(apiKeySecret, this.apiKeySecret)
+    );
+  }
+
+  public async populateByApiKey(apiKey: string): Promise<this> {
+    if (!apiKey) {
+      throw new Error('apiKey should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE apiKey = @apiKey AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { apiKey },
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
+
+  public async populateApiKeyRoles(): Promise<this> {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${DbTables.API_KEY_ROLE}\`
+      WHERE apiKey_id = @id AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { id: this.id },
+    );
+
+    if (data && data.length) {
+      this.apiKeyRoles = [];
+      for (const apiKeyRole of data) {
+        this.apiKeyRoles.push(new ApiKeyRole(apiKeyRole, this.getContext()));
+      }
+      return this;
+    } else {
+      return this;
     }
   }
 

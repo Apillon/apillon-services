@@ -5,7 +5,6 @@ import {
   DefaultUserRole,
   ValidateFor,
 } from '@apillon/lib';
-import { ApiKeyRoleBaseDto } from '@apillon/lib/dist/lib/at-services/ams/dtos/api-key-role-base.dto';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,

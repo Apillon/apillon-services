@@ -12,6 +12,7 @@ export class AmsCodeException extends CodeException {
     options = {
       sourceModule: ServiceName.AMS,
       errorCodes: AmsErrorCode,
+      errorMessage: options.errorMessage || AmsErrorCode[options.code],
       ...options,
     };
     super(options);

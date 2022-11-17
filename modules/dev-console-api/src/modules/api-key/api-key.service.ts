@@ -58,6 +58,32 @@ export class ApiKeyService {
   }
 
   async assignRoleToApiKey(context: DevConsoleApiContext, body: ApiKeyRoleDto) {
+    //Check project
+    const project: Project = await new Project({}, context).populateByUUID(
+      body.project_uuid,
+    );
+    if (!project.exists()) {
+      throw new CodeException({
+        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
+        status: HttpStatus.NOT_FOUND,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+    project.canModify(context);
+    //check service
+    const service: Service = await new Service({}, context).populateByUUID(
+      body.service_uuid,
+    );
+
+    if (!service.exists()) {
+      throw new CodeException({
+        code: ResourceNotFoundErrorCode.SERVICE_DOES_NOT_EXIST,
+        status: HttpStatus.NOT_FOUND,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+    body.serviceType_id = service.serviceType_id;
+
     return (await new Ams(context).assignRoleToApiKey(body)).data;
   }
 

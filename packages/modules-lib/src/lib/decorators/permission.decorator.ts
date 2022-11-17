@@ -1,11 +1,16 @@
 import { SetMetadata } from '@nestjs/common';
-import { DefaultUserRole, PermissionLevel, PermissionType } from '@apillon/lib';
+import {
+  DefaultApiKeyRole,
+  DefaultUserRole,
+  PermissionLevel,
+  PermissionType,
+} from '@apillon/lib';
 
 export interface PermissionPass {
   permission?: number;
   type?: PermissionType;
   level?: PermissionLevel;
-  role?: DefaultUserRole | DefaultUserRole[];
+  role?: DefaultUserRole | DefaultUserRole[] | DefaultApiKeyRole;
 }
 
 export const PERMISSION_KEY = 'permissions';

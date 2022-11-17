@@ -58,6 +58,7 @@ export enum AmsErrorCode {
 
   // 403 - Forbidden
   USER_IS_NOT_AUTHORIZED = 40302100,
+  INVALID_API_KEY = 40302001,
 
   // 404 - Not found
   API_KEY_NOT_FOUND = 40402001,

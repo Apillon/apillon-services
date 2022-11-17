@@ -188,6 +188,16 @@ export class Ams extends BaseService {
 
   //#region API-key functions
 
+  public async getApiKey(params: { apiKey: string; apiKeySecret: string }) {
+    const data = {
+      eventName: AmsEventType.GET_API_KEY,
+      ...params,
+      securityToken: this.securityToken,
+    };
+
+    return await this.callService(data);
+  }
+
   public async listApiKeys(params: ApiKeyQueryFilter) {
     const data = {
       eventName: AmsEventType.LIST_API_KEYS,
