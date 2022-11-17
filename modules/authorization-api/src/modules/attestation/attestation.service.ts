@@ -1,5 +1,4 @@
 import {
-  JwtTokenType,
   Mailing,
   generateJwtToken,
   CodeException,
@@ -8,13 +7,19 @@ import {
   writeLog,
   LogType,
   env,
+  parseJwtToken,
+  ErrorCode,
 } from '@apillon/lib';
-import { Request } from 'express';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthorizationApiContext } from '../../context';
 import { AttestationEmailDto } from './dto/attestation-email.dto';
 import { Attestation } from './models/attestation.model';
-import { AttestationState, ValidatorErrorCode } from '../../config/types';
+import {
+  AttestationState,
+  JwtTokenType,
+  ModuleValidatorErrorCode,
+} from '../../config/types';
+import { AuthResponseContext } from 'aws-lambda';
 
 @Injectable()
 export class AttestationService {
@@ -31,18 +36,17 @@ export class AttestationService {
       email,
     );
 
-    if (
-      attestation_db.exists() &&
-      attestation_db.state != AttestationState.PENDING
-    ) {
-      throw new CodeException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        code: ValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
-        errorCodes: ValidatorErrorCode,
-      });
-    }
+    // if (
+    //   attestation_db.exists()
+    // ) {
+    //   throw new CodeException({
+    //     status: HttpStatus.UNPROCESSABLE_ENTITY,
+    //     code: ModuleValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
+    //     errorCodes: ModuleValidatorErrorCode,
+    //   });
+    // }
 
-    const attestation: Attestation = new Attestation({}, context).populate({
+    const attestation = new Attestation({}, context).populate({
       context: context,
       email: email,
     });
@@ -63,14 +67,13 @@ export class AttestationService {
       );
     }
 
-    const token = generateJwtToken(JwtTokenType.USER_CONFIRM_EMAIL, {
+    const token = generateJwtToken(JwtTokenType.ATTEST_EMAIL_VERIFICATION, {
       email,
     });
 
     const email_context = {
-      verification_link: `${env.AUTH_API_HOST}/verify/${token}`,
+      verification_link: `http://${env.AUTH_API_HOST}:${env.AUTH_API_PORT}/attestation/verify/${token}`,
     };
-    console.log('Base request ');
 
     await new Mailing().sendMail({
       emails: [email],
@@ -86,8 +89,48 @@ export class AttestationService {
     context: AuthorizationApiContext,
     token: string,
   ): Promise<any> {
-    console.log('Verification identify email');
+    const tokenData = parseJwtToken(
+      JwtTokenType.ATTEST_EMAIL_VERIFICATION,
+      token,
+    );
+    const attestation = await new Attestation({}, context).populateByUserEmail(
+      context,
+      tokenData.email,
+    );
+
+    if (
+      !attestation.exists() ||
+      attestation.state != AttestationState.IN_PROGRESS
+    ) {
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: ModuleValidatorErrorCode.ATTEST_INVALID_STATE,
+        errorCodes: ModuleValidatorErrorCode,
+      });
+    }
+
+    attestation.state = AttestationState.VERIFIED;
+    await attestation.update();
 
     return HttpStatus.OK;
+  }
+
+  async getUserAttestationState(
+    context: AuthorizationApiContext,
+    email: string,
+  ): Promise<any> {
+    const attestation = await new Attestation({}, context).populateByUserEmail(
+      context,
+      email,
+    );
+
+    if (!attestation.exists()) {
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: ModuleValidatorErrorCode.ATTEST_INVALID_REQUEST,
+        errorCodes: ModuleValidatorErrorCode,
+      });
+    }
+    return { state: attestation.state };
   }
 }

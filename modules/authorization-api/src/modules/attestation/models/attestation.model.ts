@@ -7,7 +7,7 @@ import {
   SerializeFor,
 } from '@apillon/lib';
 import { stringParser } from '@rawmodel/parsers';
-import { ValidatorErrorCode, DbTables } from '../../../config/types';
+import { ModuleValidatorErrorCode, DbTables } from '../../../config/types';
 import { AuthorizationApiContext } from '../../../context';
 
 export class Attestation extends AdvancedSQLModel {
@@ -23,14 +23,16 @@ export class Attestation extends AdvancedSQLModel {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
     serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.ADMIN,
       SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.ATTESTATION_STATE_NOT_PRESENT,
+        code: ModuleValidatorErrorCode.ATTEST_EMAIL_NOT_PRESENT,
       },
     ],
   })
@@ -43,14 +45,16 @@ export class Attestation extends AdvancedSQLModel {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
     serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.ADMIN,
       SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.ATTESTATION_STATE_NOT_PRESENT,
+        code: ModuleValidatorErrorCode.ATTEST_STATE_NOT_PRESENT,
       },
     ],
   })

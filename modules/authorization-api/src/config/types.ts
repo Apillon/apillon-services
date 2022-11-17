@@ -3,13 +3,17 @@ export enum DbTables {}
 /**
  * Validation error codes - 42207000.
  */
-export enum ValidatorErrorCode {
+export enum ModuleValidatorErrorCode {
   DEFAULT_VALIDATION_ERROR = 42207000,
   // This is the same as the error codes from the console-api
   USER_EMAIL_ALREADY_TAKEN = 42207001,
   USER_EMAIL_NOT_PRESENT = 42207002,
   USER_EMAIL_NOT_VALID = 42207003,
-  ATTESTATION_STATE_NOT_PRESENT = 42207004,
+  ATTEST_EMAIL_NOT_PRESENT = 42207004,
+  ATTEST_STATE_NOT_PRESENT = 42207005,
+  ATTEST_INVALID_VERIFICATION_TOKEN = 42207006,
+  ATTEST_INVALID_STATE = 42207007,
+  ATTEST_INVALID_REQUEST = 42207008,
 }
 
 /**
@@ -24,8 +28,17 @@ export enum DbTables {
 }
 
 export enum AttestationState {
-  PENDING = 'pending',
-  IN_PROGRESS = 'in_progress',
-  DONE = 'done',
+  VERIFIED = 'identity-verified',
+  IN_PROGRESS = 'in-progress',
+  ATTESTED = 'attested',
+  PENDING_VERIFICATION = 'pending-verification',
   REJECTED = 'rejected',
+  REVOKED = 'revoked',
+}
+
+/**
+ * JWT Token signing types.
+ */
+export enum JwtTokenType {
+  ATTEST_EMAIL_VERIFICATION = 'ATTESTATION_EMAIL_VERIFICATION',
 }

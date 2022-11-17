@@ -2,7 +2,7 @@ import { ModelBase, PopulateFrom } from '@apillon/lib';
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator, emailValidator } from '@rawmodel/validators';
-import { ValidatorErrorCode } from '../../../config/types';
+import { ModuleValidatorErrorCode } from '../../../config/types';
 
 export class AttestationEmailDto extends ModelBase {
   @prop({
@@ -11,11 +11,11 @@ export class AttestationEmailDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.USER_EMAIL_NOT_PRESENT,
+        code: ModuleValidatorErrorCode.USER_EMAIL_NOT_PRESENT,
       },
       {
         resolver: emailValidator(),
-        code: ValidatorErrorCode.USER_EMAIL_NOT_VALID,
+        code: ModuleValidatorErrorCode.USER_EMAIL_NOT_VALID,
       },
     ],
   })
