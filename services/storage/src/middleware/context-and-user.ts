@@ -6,13 +6,11 @@ export function InitializeContextAndFillUser() {
     //APIs should add user, that is making request, to the params.
     //This middleware fills context user
     const { context } = request;
-    context.user = request.event.user;
 
     const newContext: ServiceContext = new ServiceContext();
-    newContext.mysql = context.mysql;
-    newContext.user = context.user;
+    newContext.user = request.event.user;
 
-    request.context = newContext;
+    context.serviceContext = newContext;
   };
 
   return { before };

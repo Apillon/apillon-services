@@ -1,8 +1,8 @@
-import { User } from 'dev-console-api/src/modules/user/models/user.model';
-import { AuthUser } from 'at-ams/src/modules/auth-user/auth-user.model';
+import { AuthUser } from '@apillon/access/src/modules/auth-user/auth-user.model';
 import { TestContext } from './context';
 import { DefaultUserRole, SqlModelStatus } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
+import { User } from '../../src/modules/user/models/user.model';
 
 export interface TestUser {
   user: User;
