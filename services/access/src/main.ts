@@ -1,10 +1,14 @@
 import { AmsEventType } from '@apillon/lib';
-import { Context } from 'aws-lambda/handler';
+import { ServiceContext } from './context';
+
 import { ApiKeyService } from './modules/api-key/api-key.service';
 import { AuthUserService } from './modules/auth-user/auth-user.service';
 import { RoleService } from './modules/role/role.service';
 
-export async function processEvent(event, context: Context): Promise<any> {
+export async function processEvent(
+  event,
+  context: ServiceContext,
+): Promise<any> {
   const processors = {
     [AmsEventType.USER_REGISTER]: AuthUserService.register,
     [AmsEventType.USER_LOGIN]: AuthUserService.login,

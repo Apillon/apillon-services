@@ -195,7 +195,7 @@ export class ProjectService {
         await new Mailing().sendMail({
           emails: [data.email],
           subject: 'New project in Apillon.io',
-          template: 'userAddedToProject',
+          template: 'user-added-to-project',
           data: { projectName: project.name },
         });
 
@@ -237,7 +237,7 @@ export class ProjectService {
         await new Mailing().sendMail({
           emails: [data.email],
           subject: 'You have been invited to project in Apillon.io',
-          template: 'newUserAddedToProject',
+          template: 'new-user-added-to-project',
           data: { projectName: project.name, token: token },
         });
 

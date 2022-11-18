@@ -15,4 +15,6 @@ const lambdaHandler: Handler = async (
 };
 
 export const handler = middy.default(lambdaHandler);
-handler.use(ResponseFormat()).use(ErrorHandler());
+handler //
+  .use(ResponseFormat())
+  .use(ErrorHandler());

@@ -201,7 +201,7 @@ export class UserService {
     await new Mailing().sendMail({
       emails: [body.email],
       subject: 'Apillon password reset',
-      template: 'resetPassword',
+      template: 'reset-password',
       data: { token },
     });
 
