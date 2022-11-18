@@ -16,6 +16,7 @@ import {
   createRequestLogMiddleware,
 } from '@apillon/modules-lib';
 import { ApiKeyModule } from './modules/api-key/api-key.module';
+import { env } from '@apillon/lib';
 
 @Module({
   imports: [
@@ -51,7 +52,7 @@ export class AppModule {
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer
-      .apply(createRequestLogMiddleware('dev-console-api'))
+      .apply(createRequestLogMiddleware(`dev-console-api (${env.APP_ENV})`))
       .exclude(
         { path: '*', method: RequestMethod.HEAD },
         { path: '*', method: RequestMethod.OPTIONS },
