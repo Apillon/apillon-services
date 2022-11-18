@@ -1,4 +1,4 @@
-import { ApiKeyRoleDto, SerializeFor } from '@apillon/lib';
+import { ApiKeyRoleBaseDto, SerializeFor } from '@apillon/lib';
 import { AmsErrorCode } from '../../config/types';
 import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
 import { ApiKey } from '../api-key/models/api-key.model';
@@ -66,15 +66,18 @@ export class RoleService {
     return authUser.serialize(SerializeFor.SERVICE);
   }
 
-  static async assignRoleToApiKey(event: { body: ApiKeyRoleDto }, context) {
+  static async assignRoleToApiKey(
+    event: { apiKey_id: number; body: ApiKeyRoleBaseDto },
+    context,
+  ) {
     const key: ApiKey = await new ApiKey({}, context).populateById(
-      event.body.apiKey_id,
+      event.apiKey_id,
     );
 
     if (!key.exists()) {
       throw await new AmsCodeException({
         status: 400,
-        code: AmsErrorCode.USER_DOES_NOT_EXISTS,
+        code: AmsErrorCode.API_KEY_NOT_FOUND,
       }).writeToMonitor({
         userId: context?.user?.user_uuid,
         projectId: event?.body?.project_uuid,
@@ -83,7 +86,10 @@ export class RoleService {
 
     key.canModify(context);
 
-    const keyRole: ApiKeyRole = new ApiKeyRole(event.body, context);
+    const keyRole: ApiKeyRole = new ApiKeyRole(
+      { apiKey_id: event.apiKey_id, ...event.body },
+      context,
+    );
 
     try {
       await keyRole.validate();
@@ -98,15 +104,18 @@ export class RoleService {
     return keyRole.serialize(SerializeFor.SERVICE);
   }
 
-  static async removeApiKeyRole(event: { body: ApiKeyRoleDto }, context) {
+  static async removeApiKeyRole(
+    event: { apiKey_id: number; body: ApiKeyRoleBaseDto },
+    context,
+  ) {
     const key: ApiKey = await new ApiKey({}, context).populateById(
-      event.body.apiKey_id,
+      event.apiKey_id,
     );
 
     if (!key.exists()) {
       throw await new AmsCodeException({
         status: 400,
-        code: AmsErrorCode.USER_DOES_NOT_EXISTS,
+        code: AmsErrorCode.API_KEY_NOT_FOUND,
       }).writeToMonitor({
         userId: context?.user?.user_uuid,
         projectId: event?.body?.project_uuid,
@@ -115,8 +124,30 @@ export class RoleService {
 
     key.canModify(context);
 
-    await new ApiKeyRole({}, context).deleteApiKeyRole(event.body);
+    await new ApiKeyRole({}, context).deleteApiKeyRole(
+      event.apiKey_id,
+      event.body,
+    );
 
     return true;
+  }
+
+  static async getApiKeyRoles(event: { apiKey_id: number }, context) {
+    const key: ApiKey = await new ApiKey({}, context).populateById(
+      event.apiKey_id,
+    );
+
+    if (!key.exists()) {
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.API_KEY_NOT_FOUND,
+      }).writeToMonitor({
+        userId: context?.user?.user_uuid,
+      });
+    }
+
+    key.canAccess(context);
+
+    return await new ApiKeyRole({}, context).getApiKeyRoles(event.apiKey_id);
   }
 }

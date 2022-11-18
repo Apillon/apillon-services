@@ -6,6 +6,7 @@ import { Context } from 'aws-lambda/handler';
 export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
     [LmasEventType.WRITE_LOG]: Logger.writeLog,
+    [LmasEventType.WRITE_REQUEST_LOG]: Logger.writeRequestLog,
     [LmasEventType.SEND_ALERT]: Alerting.sendAlert,
   };
 

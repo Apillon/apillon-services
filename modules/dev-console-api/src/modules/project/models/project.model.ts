@@ -9,16 +9,15 @@ import {
   DefaultUserRole,
   ForbiddenErrorCodes,
   PopulateFrom,
+  selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
-import { selectAndCountQuery } from '@apillon/lib';
 
-import { v4 as uuidV4 } from 'uuid';
 import { faker } from '@faker-js/faker';
+import { HttpStatus } from '@nestjs/common';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
-import { HttpStatus } from '@nestjs/common';
 
 /**
  * Project model.

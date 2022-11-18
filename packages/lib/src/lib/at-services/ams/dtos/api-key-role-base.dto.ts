@@ -55,4 +55,12 @@ export class ApiKeyRoleBaseDto extends ModelBase {
     ],
   })
   public service_uuid: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+  })
+  public serviceType_id: number;
 }

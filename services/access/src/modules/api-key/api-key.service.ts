@@ -13,6 +13,26 @@ import { AmsErrorCode } from '../../config/types';
 import { ApiKeyRole } from '../role/models/api-key-role.model';
 
 export class ApiKeyService {
+  static async getApiKey(
+    event: { apiKey: string; apiKeySecret: string },
+    context: ServiceContext,
+  ) {
+    const apiKey: ApiKey = await new ApiKey({}, context).populateByApiKey(
+      event.apiKey,
+    );
+
+    if (!apiKey.exists() || !apiKey.verifyApiKeySecret(event.apiKeySecret)) {
+      throw await new AmsCodeException({
+        status: 403,
+        code: AmsErrorCode.INVALID_API_KEY,
+      }).writeToMonitor({});
+    }
+
+    await apiKey.populateApiKeyRoles();
+
+    return apiKey;
+  }
+
   //#region Api-key CRUD
   static async listApiKeys(
     event: { query: ApiKeyQueryFilter },

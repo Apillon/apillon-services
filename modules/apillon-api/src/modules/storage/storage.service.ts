@@ -1,9 +1,30 @@
-import { StorageMicroservice } from '@apillon/lib';
+import {
+  CreateS3SignedUrlForUploadDto,
+  FileDetailsQueryFilter,
+  StorageMicroservice,
+} from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
 
 @Injectable()
 export class StorageService {
+  async createS3SignedUrlForUpload(
+    context: ApillonApiContext,
+    body: CreateS3SignedUrlForUploadDto,
+  ) {
+    return (
+      await new StorageMicroservice(context).requestS3SignedURLForUpload(body)
+    ).data;
+  }
+
+  async getFileDetails(context: ApillonApiContext, cid: string) {
+    const filter: FileDetailsQueryFilter = new FileDetailsQueryFilter(
+      { cid: cid },
+      context,
+    );
+    return (await new StorageMicroservice(context).getFileDetails(filter)).data;
+  }
+
   //#region storage microservice calls
 
   async uploadFilesToIPFSFromS3(
