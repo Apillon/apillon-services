@@ -118,7 +118,7 @@ export class StorageMicroservice extends BaseService {
   ) {
     const data = {
       eventName: StorageEventType.REQUEST_S3_SIGNED_URL_FOR_UPLOAD,
-      user: this.user.serialize(),
+      user: this.user?.serialize(),
       body: params.serialize(),
     };
     return await this.callService(data);
@@ -140,7 +140,7 @@ export class StorageMicroservice extends BaseService {
   public async getFileDetails(params: FileDetailsQueryFilter) {
     const data = {
       eventName: StorageEventType.GET_FILE_DETAILS,
-      user: this.user.serialize(),
+      user: this.user?.serialize(),
       file_uuid: params.file_uuid,
       cid: params.cid,
     };

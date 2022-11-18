@@ -10,7 +10,7 @@ import { StorageErrorCode } from '../config/types';
 export class StorageCodeException extends CodeException {
   constructor(options: ErrorOptions) {
     options = {
-      sourceModule: ServiceName.AMS,
+      sourceModule: ServiceName.STORAGE,
       errorCodes: StorageErrorCode,
       errorMessage: options.errorMessage || StorageErrorCode[options.code],
       ...options,

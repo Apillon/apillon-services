@@ -33,13 +33,12 @@ export async function createTestUser(
     await authUser.assignRole(project_uuid, role);
   }
 
-  // todo
-  const token = 'todo!';
+  await authUser.loginUser();
 
   return {
     user,
     authUser,
-    token,
+    token: authUser.token,
     password,
   };
 }

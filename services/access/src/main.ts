@@ -24,9 +24,11 @@ export async function processEvent(
     [AmsEventType.CREATE_API_KEY]: ApiKeyService.createApiKey,
     [AmsEventType.DELETE_API_KEY]: ApiKeyService.deleteApiKey,
     [AmsEventType.LIST_API_KEYS]: ApiKeyService.listApiKeys,
+    [AmsEventType.GET_API_KEY]: ApiKeyService.getApiKey,
 
     [AmsEventType.API_KEY_ROLE_ASSIGN]: RoleService.assignRoleToApiKey,
     [AmsEventType.API_KEY_ROLE_REMOVE]: RoleService.removeApiKeyRole,
+    [AmsEventType.GET_API_KEY_ROLES]: RoleService.getApiKeyRoles,
   };
 
   return await processors[event.eventName](event, context);
