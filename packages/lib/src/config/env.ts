@@ -179,6 +179,13 @@ export interface IEnv {
   AUTH_API_MYSQL_USER: string;
   AUTH_API_MYSQL_PASSWORD: string;
   AUTH_API_MYSQL_DATABASE: string;
+
+  /************************************************************
+   * Kilt config
+   ************************************************************/
+  KILT_NETWORK: string;
+  KILT_ATTESTER_MNEMONIC: string;
+  KILT_DERIVATION_ALGORITHM: string;
 }
 
 // dotenv.config();
@@ -248,13 +255,6 @@ export let env: IEnv = {
   DEV_CONSOLE_API_MYSQL_DATABASE_TEST:
     process.env['DEV_CONSOLE_API_MYSQL_DATABASE_TEST'],
 
-  /** AUTHORIZATION API DEV DB conn */
-  AUTH_API_MYSQL_HOST: process.env['AUTH_API_MYSQL_HOST'],
-  AUTH_API_MYSQL_PORT: parseInt(process.env['AUTH_API_MYSQL_PORT']) || 3306,
-  AUTH_API_MYSQL_USER: process.env['AUTH_API_MYSQL_USER'],
-  AUTH_API_MYSQL_PASSWORD: process.env['AUTH_API_MYSQL_PASSWORD'],
-  AUTH_API_MYSQL_DATABASE: process.env['AUTH_API_MYSQL_DATABASE'],
-
   DEV_CONSOLE_API_HOST: process.env['DEV_CONSOLE_API_HOST'] || 'localhost',
   DEV_CONSOLE_API_PORT: parseInt(process.env['DEV_CONSOLE_API_PORT']) || 6001,
   DEV_CONSOLE_API_HOST_TEST:
@@ -317,6 +317,23 @@ export let env: IEnv = {
   AUTH_API_PORT: parseInt(process.env['AUTH_API_PORT']) || 6003,
   AUTH_API_HOST_TEST: process.env['AUTH_API_HOST_TEST'] || 'localhost',
   AUTH_API_PORT_TEST: parseInt(process.env['AUTH_API_PORT_TEST']) || 7003,
+
+  /** AUTHORIZATION API DEV DB conn */
+  AUTH_API_MYSQL_HOST: process.env['AUTH_API_MYSQL_HOST'],
+  AUTH_API_MYSQL_PORT: parseInt(process.env['AUTH_API_MYSQL_PORT']) || 3306,
+  AUTH_API_MYSQL_USER: process.env['AUTH_API_MYSQL_USER'],
+  AUTH_API_MYSQL_PASSWORD: process.env['AUTH_API_MYSQL_PASSWORD'],
+  AUTH_API_MYSQL_DATABASE: process.env['AUTH_API_MYSQL_DATABASE'],
+
+  /** KILT */
+  KILT_NETWORK:
+    process.env['KILT_NETWORK'] ||
+    'wss://peregrine.kilt.io/parachain-public-ws',
+  KILT_ATTESTER_MNEMONIC: process.env['KILT_ATTESTER_MNEMONIC'] || '',
+  // TODO: Unused -> Left here because we might introduce it later as configurable algorithm
+  // because it depends where you use this mnemonic
+  KILT_DERIVATION_ALGORITHM:
+    process.env['KILT_DERIVATION_ALGORITHM'] || 'sr25519',
 };
 
 export let isEnvReady = false;

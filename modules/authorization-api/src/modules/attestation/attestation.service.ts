@@ -3,12 +3,10 @@ import {
   generateJwtToken,
   CodeException,
   SerializeFor,
-  Ams,
   writeLog,
   LogType,
-  env,
   parseJwtToken,
-  ErrorCode,
+  env,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthorizationApiContext } from '../../context';
@@ -19,7 +17,13 @@ import {
   JwtTokenType,
   ModuleValidatorErrorCode,
 } from '../../config/types';
-import { AuthResponseContext } from 'aws-lambda';
+import { AttestationMnemonicDto } from './dto/attestation-mnemonic';
+import {
+  generateAccount,
+  generateKeypairs,
+  getOrCreateFullDid,
+} from '../../lib/kilt/utils';
+import { KiltKeyringPair } from '@kiltprotocol/types';
 
 @Injectable()
 export class AttestationService {
@@ -36,6 +40,7 @@ export class AttestationService {
       email,
     );
 
+    // TODO: Handle
     // if (
     //   attestation_db.exists()
     // ) {
@@ -132,5 +137,23 @@ export class AttestationService {
       });
     }
     return { state: attestation.state };
+  }
+
+  async generateFullDid(
+    context: AuthorizationApiContext,
+    body: AttestationMnemonicDto,
+  ) {
+    const endUserMnemonic = body.mnemonic;
+    console.log('Received mnemonic ', endUserMnemonic);
+
+    const attesterAccount = (await generateAccount(
+      env.KILT_ATTESTER_MNEMONIC,
+    )) as KiltKeyringPair;
+    const attesterKeyPairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
+    const didDocument = await getOrCreateFullDid(
+      attesterAccount,
+      attesterKeyPairs,
+    );
+    return { did: didDocument };
   }
 }

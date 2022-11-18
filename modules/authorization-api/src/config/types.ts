@@ -14,6 +14,7 @@ export enum ModuleValidatorErrorCode {
   ATTEST_INVALID_VERIFICATION_TOKEN = 42207006,
   ATTEST_INVALID_STATE = 42207007,
   ATTEST_INVALID_REQUEST = 42207008,
+  ATTEST_MNEMONIC_NOT_PRESENT = 42207009,
 }
 
 /**
@@ -41,4 +42,43 @@ export enum AttestationState {
  */
 export enum JwtTokenType {
   ATTEST_EMAIL_VERIFICATION = 'ATTESTATION_EMAIL_VERIFICATION',
+}
+
+import {
+  KiltKeyringPair,
+  VerificationKeyRelationship,
+  DidUri,
+  NewDidEncryptionKey,
+} from '@kiltprotocol/types';
+
+export interface Presentation {
+  claim: any;
+  legitimations: any;
+  claimHashes: any;
+  claimNonceMap: any;
+  rootHash: any;
+  delegationId: any;
+  claimerSignature: {};
+}
+
+export interface Keypairs {
+  authentication: KiltKeyringPair;
+  encryption: NewDidEncryptionKey;
+  assertion: KiltKeyringPair;
+  delegation: KiltKeyringPair;
+}
+
+export interface SignRequestData {
+  /**
+   * Data to be signed.
+   */
+  data: Uint8Array;
+  /**
+   * The did key relationship to be used.
+   */
+  keyRelationship: VerificationKeyRelationship;
+  /**
+   * The DID to be used for signing.
+   */
+  did: DidUri;
 }
