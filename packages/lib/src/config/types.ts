@@ -14,6 +14,8 @@ export enum AmsEventType {
   LIST_API_KEYS = 'list-api-keys',
   API_KEY_ROLE_ASSIGN = 'api-key-role-assign',
   API_KEY_ROLE_REMOVE = 'api-key-role-remove',
+  GET_API_KEY_ROLES = 'get-api-key-roles',
+  GET_API_KEY = 'get-api-key',
 }
 
 export enum LmasEventType {
@@ -53,6 +55,8 @@ export enum ServiceName {
   LMAS = 'LMAS',
   DEV_CONSOLE = 'DEV_CONSOLE',
   MAIL = 'MAIL',
+  STORAGE = 'STORAGE',
+  APILLON_API = 'APILLON_API',
 }
 
 export enum ServiceCode {
@@ -86,6 +90,14 @@ export enum SqlModelStatus {
   INCOMPLETE = 2,
   ACTIVE = 5,
   DELETED = 9,
+}
+
+/**
+ * Types of services in dev-console-api
+ */
+export enum AttachedServiceType {
+  AUTHORIZATION = 1,
+  STORAGE = 2,
 }
 
 /**
@@ -211,6 +223,7 @@ export enum BadRequestErrorCode {
   BAD_REQUEST = 40000000,
   INVALID_PATH = 40000001,
   INVALID_QUERY_PARAMETERS = 40000002,
+  MISSING_AUTHORIZATION_HEADER = 40000003,
 }
 
 export enum ValidatorErrorCode {
