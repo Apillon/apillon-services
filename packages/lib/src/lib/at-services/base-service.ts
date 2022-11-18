@@ -10,17 +10,29 @@ export abstract class BaseService {
   abstract lambdaFunctionName: string;
   abstract devPort: number;
   abstract serviceName: string;
+  protected securityToken: string;
 
   constructor() {
     this.lambda = new AWS.Lambda({
       apiVersion: '2015-03-31',
       region: env.AWS_REGION,
     });
+    this.securityToken = this.generateSecurityToken();
+  }
+
+  private generateSecurityToken() {
+    //TODO - generate JWT from APP secret
+    return 'SecurityToken';
   }
 
   protected async callService(payload, isAsync = this.isDefaultAsync) {
     const env = await getEnvSecrets();
     let result;
+
+    payload = {
+      securityToken: this.securityToken,
+      ...payload,
+    };
 
     if (
       [AppEnvironment.LOCAL_DEV, AppEnvironment.TEST].includes(

@@ -16,7 +16,7 @@ export class BucketQueryFilter extends BaseQueryFilter {
       },
     ],
   })
-  public project_uuid: number;
+  public project_uuid: string;
 
   @prop({
     parser: { resolver: stringParser() },
