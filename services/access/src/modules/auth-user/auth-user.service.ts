@@ -76,15 +76,12 @@ export class AuthUserService {
       }).writeToMonitor({ userId: authUser?.user_uuid });
     }
 
-    await new Lmas().writeLog(
-      {
-        logType: LogType.INFO,
-        message: 'New User Registration!',
-        userId: authUser.user_uuid,
-        location: 'AMS/UserService/register',
-      },
-      'secToken1',
-    );
+    await new Lmas().writeLog({
+      logType: LogType.INFO,
+      message: 'New User Registration!',
+      userId: authUser.user_uuid,
+      location: 'AMS/UserService/register',
+    });
 
     const res = authUser.serialize(SerializeFor.SERVICE);
     console.log(res);
@@ -151,15 +148,12 @@ export class AuthUserService {
       }).writeToMonitor({ userId: authUser?.user_uuid });
     }
 
-    await new Lmas().writeLog(
-      {
-        logType: LogType.INFO,
-        message: 'User login',
-        location: 'AMS/UserService/login',
-        userId: authUser.user_uuid,
-      },
-      'secToken1',
-    );
+    await new Lmas().writeLog({
+      logType: LogType.INFO,
+      message: 'User login',
+      location: 'AMS/UserService/login',
+      userId: authUser.user_uuid,
+    });
 
     return authUser.serialize(SerializeFor.SERVICE);
   }
@@ -235,14 +229,11 @@ export class AuthUserService {
 
   static async updateAuthUser(event, context: ServiceContext) {
     // send log to monitoring service
-    await new Lmas().writeLog(
-      {
-        logType: LogType.INFO,
-        message: 'AuthUser update!',
-        location: 'AMS/UserService/updateAuthUser',
-      },
-      'secToken1',
-    );
+    await new Lmas().writeLog({
+      logType: LogType.INFO,
+      message: 'AuthUser update!',
+      location: 'AMS/UserService/updateAuthUser',
+    });
 
     const authUser = await new AuthUser({}, context).populateByUserUuid(
       event.user_uuid,

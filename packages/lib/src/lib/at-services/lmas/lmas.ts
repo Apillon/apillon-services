@@ -27,17 +27,14 @@ export class Lmas extends BaseService {
     this.isDefaultAsync = true;
   }
 
-  public async writeLog(
-    params: {
-      projectId?: string;
-      userId?: string;
-      logType?: LogType;
-      message?: string;
-      location?: string;
-      service?: string;
-    },
-    securityToken?: string,
-  ) {
+  public async writeLog(params: {
+    projectId?: string;
+    userId?: string;
+    logType?: LogType;
+    message?: string;
+    location?: string;
+    service?: string;
+  }) {
     const data = {
       eventName: LmasEventType.WRITE_LOG,
       projectId: null,
@@ -49,31 +46,27 @@ export class Lmas extends BaseService {
       ...params,
     };
 
-    // failsafe logging - without secret!!!
     console.log(JSON.stringify(data));
-    // safe attach secret
-    data['securityToken'] = securityToken;
+
     try {
       await this.callService(data);
     } catch (err) {
-      console.error(`LMAS CALL SERVICE ERROR: ${err.message}`);
+      console.error(`LMAS writeLog CALL SERVICE ERROR: ${err.message}`);
     }
   }
 
-  public async writeRequestLog(log: RequestLogDto, securityToken?: string) {
+  public async writeRequestLog(log: RequestLogDto) {
     const data = {
       eventName: LmasEventType.WRITE_REQUEST_LOG,
-      log,
+      log: log.serialize(),
     };
 
-    // failsafe logging - without secret!!!
-    console.log(JSON.stringify(data));
-    // safe attach secret
-    data['securityToken'] = securityToken;
+    // console.log(JSON.stringify(data));
+
     try {
       await this.callService(data);
     } catch (err) {
-      console.error(`LMAS CALL SERVICE ERROR: ${err.message}`);
+      console.error(`LMAS writeRequestLog CALL SERVICE ERROR: ${err.message}`);
     }
   }
 }

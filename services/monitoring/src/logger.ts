@@ -1,4 +1,3 @@
-import { RequestLogDto } from '@apillon/lib';
 import { ServiceContext } from './context';
 
 export class Logger {
@@ -14,9 +13,8 @@ export class Logger {
 
   static async writeRequestLog(event, context: ServiceContext) {
     // console.log(`LOGGER: ${event?.message || JSON.stringify(event)}`);
-    const log: RequestLogDto = event.log;
     event = {
-      ...log.serialize(),
+      ...event.log,
       ts: new Date(),
     };
     await context.mongo.db.collection('request_logs').insertOne(event);

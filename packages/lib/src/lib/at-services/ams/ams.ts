@@ -23,22 +23,21 @@ export class Ams extends BaseService {
       ? env.ACCESS_SOCKET_PORT_TEST
       : env.ACCESS_SOCKET_PORT;
   serviceName = 'AMS';
-  private securityToken: string;
 
   user: any;
 
   constructor(context?: Context) {
     super();
     this.isDefaultAsync = false;
-    this.securityToken = this.generateSecurityToken();
-    if (context) this.user = context.user;
+    if (context) {
+      this.user = context.user;
+    }
   }
 
   public async getAuthUser(params: { token: string }) {
     const data = {
       eventName: AmsEventType.USER_GET_AUTH,
       ...params,
-      securityToken: this.securityToken,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
@@ -59,7 +58,6 @@ export class Ams extends BaseService {
     const data = {
       eventName: AmsEventType.USER_REGISTER,
       ...params,
-      securityToken: this.securityToken,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
@@ -73,7 +71,6 @@ export class Ams extends BaseService {
     const data = {
       eventName: AmsEventType.USER_LOGIN,
       ...params,
-      securityToken: this.securityToken,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
@@ -88,7 +85,6 @@ export class Ams extends BaseService {
     const data = {
       eventName: AmsEventType.USER_PASSWORD_RESET,
       ...params,
-      securityToken: this.securityToken,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
@@ -107,7 +103,6 @@ export class Ams extends BaseService {
     const data = {
       eventName: AmsEventType.USER_UPDATE,
       ...params,
-      securityToken: this.securityToken,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
@@ -121,7 +116,6 @@ export class Ams extends BaseService {
     const data = {
       eventName: AmsEventType.USER_EMAIL_EXISTS,
       email,
-      securityToken: this.securityToken,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
@@ -136,7 +130,6 @@ export class Ams extends BaseService {
     const data = {
       eventName: AmsEventType.GET_AUTH_USER_BY_EMAIL,
       email,
-      securityToken: this.securityToken,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
@@ -145,13 +138,6 @@ export class Ams extends BaseService {
     return {
       ...amsResponse,
     };
-  }
-
-  private generateSecurityToken() {
-    // NOTE - Rename as not to be confused with JwtUtils().generateToken
-    // NOTE2 - This should probably be a util function somewhere outside this file?
-    //TODO - generate JWT from APP secret
-    return 'SecurityToken';
   }
 
   public async assignUserRoleOnProject(params: {
@@ -164,7 +150,6 @@ export class Ams extends BaseService {
       ...params,
       eventName: AmsEventType.USER_ROLE_ASSIGN,
       user: params.user ? params.user.serialize() : undefined,
-      securityToken: this.securityToken,
     };
 
     return await this.callService(data);
@@ -180,7 +165,6 @@ export class Ams extends BaseService {
       ...params,
       eventName: AmsEventType.USER_ROLE_REMOVE,
       user: params.user.serialize(),
-      securityToken: this.securityToken,
     };
 
     return await this.callService(data);

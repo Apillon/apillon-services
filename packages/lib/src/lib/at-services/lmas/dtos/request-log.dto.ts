@@ -18,6 +18,17 @@ export class RequestLogDto extends ModelBase {
   public requestId: string;
 
   /**
+   * API name
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.ADMIN],
+    fakeValue: uuid(),
+  })
+  public apiName: string;
+
+  /**
    * Host name
    */
   @prop({
