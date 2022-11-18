@@ -17,13 +17,16 @@ import {
   JwtTokenType,
   ModuleValidatorErrorCode,
 } from '../../config/types';
-import { AttestationMnemonicDto } from './dto/attestation-mnemonic';
+import { AttestationMnemonicDto } from './dto/attestation-mnemonic.dto';
 import {
   generateAccount,
   generateKeypairs,
+  getCtypeSchema,
   getOrCreateFullDid,
 } from '../../lib/kilt/utils';
 import { KiltKeyringPair } from '@kiltprotocol/types';
+import { Claim, CType } from '@kiltprotocol/sdk-js';
+import { AttestationClaimDto } from './dto/attestation-claim.dto';
 
 @Injectable()
 export class AttestationService {
@@ -155,5 +158,35 @@ export class AttestationService {
       attesterKeyPairs,
     );
     return { did: didDocument };
+  }
+
+  async attestClaim(
+    context: AuthorizationApiContext,
+    body: AttestationClaimDto,
+  ) {
+    console.log('Attesting claims ...');
+    const authContents = {};
+    const authCtype = getCtypeSchema();
+
+    const authClaim = Claim.fromCTypeAndClaimContents(
+      authCType,
+      authContents,
+      claimerDidUri,
+    );
+  }
+
+  async fetchRequiredCTypes(context: AuthorizationApiContext) {
+    console.log('Should fetch required CTypes ...');
+
+    // const authCType = getCtypeSchema();
+    // try {
+    //   await CType.verifyStored(authCType);
+    //   console.log('Ctype is already stored on chain ...');
+
+    //   throw 'CType is now present on chain ...';
+    // } catch (err) {
+    //   console.log('Error ', err);
+    // }
+    return;
   }
 }

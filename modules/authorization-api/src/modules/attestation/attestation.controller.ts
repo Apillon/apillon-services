@@ -13,7 +13,8 @@ import { AuthorizationApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { AttestationService } from './attestation.service';
 import { AttestationEmailDto } from './dto/attestation-email.dto';
-import { AttestationMnemonicDto } from './dto/attestation-mnemonic';
+import { AttestationClaimDto } from './dto/attestation-claim.dto';
+import { AttestationMnemonicDto } from './dto/attestation-mnemonic.dto';
 import { AttestationTokenDto } from './dto/attestation-token.dto';
 
 @Controller('attestation')
@@ -41,6 +42,16 @@ export class AttestationController {
     @Body() body: AttestationMnemonicDto,
   ) {
     return await this.attestationService.generateFullDid(context, body);
+  }
+
+  @Post('attest-claim')
+  @Validation({ dto: AttestationMnemonicDto })
+  @UseGuards(ValidationGuard)
+  async attestationAttestClaim(
+    @Ctx() context: AuthorizationApiContext,
+    @Body() body: AttestationClaimDto,
+  ) {
+    return await this.attestationService.attestClaim(context, body);
   }
 
   @Get('verify/:token')

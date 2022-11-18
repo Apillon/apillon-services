@@ -12,6 +12,8 @@ import {
   KiltKeyringPair,
   Utils,
   connect,
+  ICType,
+  CType,
   //   ConfigService,
   //   Blockchain,
   //   ICType,
@@ -118,6 +120,17 @@ export async function getOrCreateFullDid(
   }
 
   return document;
+}
+
+export function getCtypeSchema(): ICType {
+  return CType.fromProperties('Authorization', {
+    email: {
+      type: 'string',
+    },
+    username: {
+      type: 'string',
+    },
+  });
 }
 
 // export async function createFullDid(
