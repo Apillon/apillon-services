@@ -5,6 +5,7 @@ import {
   PopulateFrom,
   selectAndCountQuery,
   SerializeFor,
+  unionSelectAndCountQuery,
 } from '@apillon/lib';
 import { prop } from '@rawmodel/core';
 import { presenceValidator } from '@rawmodel/validators';
@@ -30,7 +31,6 @@ export class ProjectUser extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
-      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -122,32 +122,42 @@ export class ProjectUser extends AdvancedSQLModel {
     }
     project.canAccess(context);
 
-    // Map url query with sql fields.
-    const fieldMap = {
-      id: 'pu.id',
-    };
     const { params, filters } = getQueryParams(
       { ...filter.getDefaultValues(), project_id: projectId },
       'pu',
-      fieldMap,
+      {},
       filter.serialize(),
     );
 
-    const sqlQuery = {
-      qSelect: `
-        SELECT ${this.generateSelectFields('pu')}, u.name, u.phone, u.email
+    const qSelects = [
+      {
+        qSelect: `
+        SELECT pu.id, pu.status, pu.user_id, pu.role_id, u.name, u.phone, u.email, false as pendingInvitation
         `,
-      qFrom: `
+        qFrom: `
         FROM ${DbTables.PROJECT_USER} pu
         INNER JOIN ${DbTables.USER} u ON u.id = pu.user_id
-        WHERE (pu.project_id = ${params.project_id})
-        `,
-      qFilter: `
-        ORDER BY ${filters.orderStr}
-        LIMIT ${filters.limit} OFFSET ${filters.offset};
+        WHERE (pu.project_id = @project_id)
       `,
-    };
-
-    return selectAndCountQuery(context.mysql, sqlQuery, params, 'pu.id');
+      },
+      {
+        qSelect: `
+        SELECT pu.id as id, pu.status, null as user_id, pu.role_id, null as name, null as phone, pu.email, true as pendingInvitation
+        `,
+        qFrom: `
+        FROM ${DbTables.PROJECT_USER_PENDING_INVITATION} pu
+        WHERE (pu.project_id = @project_id)
+      `,
+      },
+    ];
+    return unionSelectAndCountQuery(
+      context.mysql,
+      {
+        qSelects: qSelects,
+        qFilter: `LIMIT ${filters.limit} OFFSET ${filters.offset};`,
+      },
+      params,
+      'email',
+    );
   }
 }

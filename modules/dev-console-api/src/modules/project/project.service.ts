@@ -175,7 +175,7 @@ export class ProjectService {
 
       try {
         //Add user to project and assign role to him in AMS
-        await new ProjectUser({}, context)
+        const pu = await new ProjectUser({}, context)
           .populate({
             project_id: project.id,
             user_id: user.id,
@@ -200,6 +200,7 @@ export class ProjectService {
         });
 
         await context.mysql.commit(conn);
+        return pu;
       } catch (err) {
         await context.mysql.rollback(conn);
         throw err;

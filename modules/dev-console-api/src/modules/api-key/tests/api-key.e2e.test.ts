@@ -20,11 +20,7 @@ describe('API key tests', () => {
   beforeAll(async () => {
     stage = await setupTest();
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testProject = await createTestProject(
-      testUser,
-      stage.devConsoleContext,
-      stage.amsContext,
-    );
+    testProject = await createTestProject(testUser, stage.devConsoleContext);
     testProjectService = await createTestProjectService(
       stage.devConsoleContext,
       testProject,
