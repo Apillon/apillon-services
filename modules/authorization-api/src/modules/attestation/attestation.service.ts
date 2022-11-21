@@ -153,10 +153,12 @@ export class AttestationService {
       env.KILT_ATTESTER_MNEMONIC,
     )) as KiltKeyringPair;
     const attesterKeyPairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
+
     const didDocument = await getOrCreateFullDid(
       attesterAccount,
       attesterKeyPairs,
     );
+
     return { did: didDocument };
   }
 
@@ -165,28 +167,21 @@ export class AttestationService {
     body: AttestationClaimDto,
   ) {
     console.log('Attesting claims ...');
-    const authContents = {};
     const authCType = getCtypeSchema();
 
-    const authClaim = Claim.fromCTypeAndClaimContents(
-      authCType,
-      authContents,
-      claimerDidUri,
-    );
+    console.log('Created claims ... ', authCType);
+
+    // const authClaim = Claim.fromCTypeAndClaimContents(
+    //   authCType,
+    //   authContents,
+    //   claimerDidUri,
+    // );
+
+    return;
   }
 
   async fetchRequiredCTypes(context: AuthorizationApiContext) {
     console.log('Should fetch required CTypes ...');
-
-    // const authCType = getCtypeSchema();
-    // try {
-    //   await CType.verifyStored(authCType);
-    //   console.log('Ctype is already stored on chain ...');
-
-    //   throw 'CType is now present on chain ...';
-    // } catch (err) {
-    //   console.log('Error ', err);
-    // }
     return;
   }
 }

@@ -41,7 +41,7 @@ export async function generateMnemonic() {
 
 export async function generateAccount(mnemonic: string): Promise<KeyringPair> {
   return Utils.Crypto.makeKeypairFromSeed(
-    mnemonicToMiniSecret(env.KILT_ATTESTER_MNEMONIC),
+    mnemonicToMiniSecret(mnemonic),
     'sr25519',
   );
 }
@@ -74,6 +74,8 @@ export async function getOrCreateFullDid(
   account: KiltKeyringPair,
   keypairs: Keypairs,
 ): Promise<DidDocument> {
+  // TODO: Will probably be expanded in the future with a dedicated module
+  // with getters and setters for specifics about did creation ....
   console.log('Connecting to Kilt network ...');
   await connect(env.KILT_NETWORK);
   const api = ConfigService.get('api');
@@ -123,69 +125,13 @@ export async function getOrCreateFullDid(
 }
 
 export function getCtypeSchema(): ICType {
-  return CType.fromProperties('Authorization', {
-    email: {
-      type: 'string',
-    },
-    username: {
+  // TODO: These are the official CTypes create by Kilt
+  return CType.fromProperties('Email', {
+    Email: {
       type: 'string',
     },
   });
 }
-
-// export async function createFullDid(
-//   account: KiltKeyringPair,
-//   mnemonic: string
-// ): Promise<DidDocument> {
-//   const api = ConfigService.get('api');
-
-//   const { authentication, encryption, assertion, delegation } = generateKeypairs(mnemonic);
-//   // Get tx that will create the DID on chain and DID-URI that can be used to resolve the DID Document.
-
-//   const didDoc = await Did.resolve(Did.getFullDidUriFromKey(authentication));
-
-//   if (didDoc && didDoc.document) {
-//     return didDoc.document;
-//   }
-
-//   const fullDidCreationTx = await Did.getStoreTx(
-//     {
-//       authentication: [authentication],
-//       keyAgreement: [encryption],
-//       assertionMethod: [assertion],
-//       capabilityDelegation: [delegation],
-//     },
-//     account.address,
-//     async ({ data }) => ({
-//       signature: authentication.sign(data),
-//       keyType: authentication.type,
-//     })
-//   );
-
-//   await Blockchain.signAndSubmitTx(fullDidCreationTx, account);
-
-//   const didUri = Did.getFullDidUriFromKey(authentication);
-//   const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
-//   const { document } = Did.linkedInfoFromChain(encodedFullDid);
-
-//   if (!document) {
-//     throw 'Full DID was not successfully created.';
-//   }
-
-//   return document;
-// }
-
-// // TODO: Let's use existing CType structures - find on github of Kilt
-// export function getCtypeSchema(): ICType {
-//   return CType.fromProperties('Authorization', {
-//     email: {
-//       type: 'string',
-//     },
-//     username: {
-//       type: 'string',
-//     },
-//   });
-// }
 
 // export function getChallenge(): string {
 //   return Utils.UUID.generate();
