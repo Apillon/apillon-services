@@ -1,3 +1,4 @@
+import { DefaultUserRole, SqlModelStatus } from '@apillon/lib';
 import { BucketType } from '@apillon/storage/src/config/types';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
 import * as request from 'supertest';
@@ -12,6 +13,7 @@ describe('Storage bucket tests', () => {
 
   let testUser: TestUser;
   let testUser2: TestUser;
+  let testUser3: TestUser;
 
   let testProject: Project;
   let testProject2: Project;
@@ -66,6 +68,18 @@ describe('Storage bucket tests', () => {
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(422);
+    });
+
+    test('User should NOT create bucket in ANOTHER user project', async () => {
+      const response = await request(stage.http)
+        .post(`/buckets`)
+        .send({
+          project_uuid: testProject2.project_uuid,
+          name: 'Bucket changed name',
+          bucketType: BucketType.HOSTING,
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(403);
     });
 
     test('User should be able to create new bucket', async () => {
@@ -141,6 +155,73 @@ describe('Storage bucket tests', () => {
         stage.storageContext,
       ).populateByUUID(testBucket.bucket_uuid);
       expect(b.exists()).toBe(false);
+    });
+  });
+
+  describe('Bucket access tests', () => {
+    beforeAll(async () => {
+      //Insert new user with access to testProject as PROJECT_USER - can view, cannot modify
+      testUser3 = await createTestUser(
+        stage.devConsoleContext,
+        stage.amsContext,
+        DefaultUserRole.PROJECT_USER,
+        SqlModelStatus.ACTIVE,
+        testProject.project_uuid,
+      );
+    });
+
+    test('User with role "ProjectUser" should be able to get bucket list', async () => {
+      const response = await request(stage.http)
+        .get(`/buckets?project_uuid=${testProject.project_uuid}`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.items.length).toBe(1);
+      expect(response.body.data.items[0]?.id).toBeTruthy();
+      expect(response.body.data.items[0]?.bucket_uuid).toBeTruthy();
+      expect(response.body.data.items[0]?.bucketType).toBeTruthy();
+      expect(response.body.data.items[0]?.maxSize).toBeTruthy();
+    });
+
+    test('User with role "ProjectUser" should NOT be able to create new bucket', async () => {
+      const response = await request(stage.http)
+        .post(`/buckets`)
+        .send({
+          project_uuid: testProject.project_uuid,
+          name: 'My test bucket 2',
+          bucketType: 1,
+        })
+        .set('Authorization', `Bearer ${testUser3.token}`);
+      expect(response.status).toBe(403);
+    });
+
+    test('User with role "ProjectUser" should NOT be able to update bucket', async () => {
+      const response = await request(stage.http)
+        .patch(`/buckets/${testBucket.id}`)
+        .send({
+          name: 'Bucket changed name',
+          bucketType: BucketType.HOSTING,
+        })
+        .set('Authorization', `Bearer ${testUser3.token}`);
+      expect(response.status).toBe(403);
+    });
+
+    test('User with role "ProjectUser" should NOT be able to delete bucket', async () => {
+      const tmpBucket = await createTestBucket(
+        testUser,
+        stage.storageContext,
+        testProject,
+      );
+
+      const response = await request(stage.http)
+        .delete(`/buckets/${tmpBucket.id}`)
+        .set('Authorization', `Bearer ${testUser3.token}`);
+      expect(response.status).toBe(403);
+
+      const b: Bucket = await new Bucket(
+        {},
+        stage.storageContext,
+      ).populateByUUID(tmpBucket.bucket_uuid);
+      expect(b.exists()).toBe(true);
     });
   });
 });
