@@ -1,8 +1,4 @@
-import {
-  AttachedServiceType,
-  DefaultUserRole,
-  SqlModelStatus,
-} from '@apillon/lib';
+import { AttachedServiceType } from '@apillon/lib';
 import * as request from 'supertest';
 import { createTestProject } from '../../../../test/helpers/project';
 import { createTestProjectService } from '../../../../test/helpers/service';
@@ -11,7 +7,7 @@ import { createTestUser, TestUser } from '../../../../test/helpers/user';
 import { Project } from '../../project/models/project.model';
 import { Service } from '../models/service.model';
 
-describe('Project tests', () => {
+describe('Project services tests', () => {
   let stage: Stage;
 
   let testUser: TestUser;
@@ -107,6 +103,34 @@ describe('Project tests', () => {
       expect(response.body.data.serviceType_id).toBe(
         AttachedServiceType.STORAGE,
       );
+    });
+
+    test('User should be able to update service', async () => {
+      const response = await request(stage.http)
+        .patch(`/services/${testProjectService.id}`)
+        .send({
+          name: 'spremenjeno ime',
+          active: false,
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.id).toBeTruthy();
+      expect(response.body.data.name).toBe('spremenjeno ime');
+      expect(response.body.data.active).toBeFalsy();
+    });
+
+    test('User should NOT be able to delete ANOTHER USER service', async () => {
+      const response = await request(stage.http)
+        .delete(`/services/${testProjectService.id}`)
+        .set('Authorization', `Bearer ${testUser2.token}`);
+      expect(response.status).toBe(403);
+    });
+
+    test('User should be able to delete service', async () => {
+      const response = await request(stage.http)
+        .delete(`/services/${testProjectService.id}`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
     });
   });
 });
