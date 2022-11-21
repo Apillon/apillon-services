@@ -166,7 +166,7 @@ export class AttestationService {
   ) {
     console.log('Attesting claims ...');
     const authContents = {};
-    const authCtype = getCtypeSchema();
+    const authCType = getCtypeSchema();
 
     const authClaim = Claim.fromCTypeAndClaimContents(
       authCType,
