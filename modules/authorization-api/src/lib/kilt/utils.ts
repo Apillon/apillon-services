@@ -4,42 +4,26 @@ import {
   ConfigService,
   Did,
   DidDocument,
-  //   ChainHelpers,
-  //   Did,
-  //   CType,
-  //   Utils,
   KeyringPair,
   KiltKeyringPair,
   Utils,
   connect,
   ICType,
   CType,
-  //   ConfigService,
-  //   Blockchain,
-  //   ICType,
-  //   DidDocument,
-  //   SignCallback,
+  Claim,
+  Attestation,
+  Credential,
 } from '@kiltprotocol/sdk-js';
 import { mnemonicGenerate, mnemonicToMiniSecret } from '@polkadot/util-crypto';
 import { Keypairs } from '../../config/types';
-
-// export const resolveOn = ChainHelpers.Blockchain.IS_FINALIZED;
-// export type KeyToolSignCallback = (didDocument: DidDocument) => SignCallback;
-
-// export async function isCtypeOnChain(ctype: ICType): Promise<boolean> {
-//   try {
-//     await CType.verifyStored(ctype);
-//     return true;
-//   } catch {
-//     return false;
-//   }
-// }
 
 export async function generateMnemonic() {
   return mnemonicGenerate();
 }
 
-export async function generateAccount(mnemonic: string): Promise<KeyringPair> {
+export async function extractAccFromMnemonic(
+  mnemonic: string,
+): Promise<KeyringPair> {
   return Utils.Crypto.makeKeypairFromSeed(
     mnemonicToMiniSecret(mnemonic),
     'sr25519',
@@ -122,6 +106,33 @@ export async function getOrCreateFullDid(
   }
 
   return document;
+}
+
+export function setupCredsProposition(
+  // TODO: Change to correct types
+  email: string,
+  attesterDidUri: any,
+  claimerDidUri: any,
+) {
+  const authCType = getCtypeSchema();
+  const authContents = {
+    Email: email,
+  };
+
+  const authClaim = Claim.fromCTypeAndClaimContents(
+    authCType,
+    authContents,
+    claimerDidUri,
+  );
+
+  const authCredential = Credential.fromClaim(authClaim);
+  return {
+    creds: authCredential,
+    credsProposition: Attestation.fromCredentialAndDid(
+      authCredential,
+      attesterDidUri,
+    ),
+  };
 }
 
 export function getCtypeSchema(): ICType {

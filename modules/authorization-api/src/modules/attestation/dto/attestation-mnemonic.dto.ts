@@ -1,7 +1,6 @@
 import { ModelBase, PopulateFrom, presenceValidator } from '@apillon/lib';
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
-import { emailValidator } from '@rawmodel/validators';
 import { ModuleValidatorErrorCode } from '../../../config/types';
 
 export class AttestationMnemonicDto extends ModelBase {

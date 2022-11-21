@@ -19,14 +19,14 @@ import {
 } from '../../config/types';
 import { AttestationMnemonicDto } from './dto/attestation-mnemonic.dto';
 import {
-  generateAccount,
+  extractAccFromMnemonic,
   generateKeypairs,
-  getCtypeSchema,
+  setupCredsProposition,
   getOrCreateFullDid,
 } from '../../lib/kilt/utils';
-import { KiltKeyringPair } from '@kiltprotocol/types';
-import { Claim, CType } from '@kiltprotocol/sdk-js';
-import { AttestationClaimDto } from './dto/attestation-claim.dto';
+import { ICredential, KiltKeyringPair } from '@kiltprotocol/types';
+import { Blockchain, ConfigService, Did } from '@kiltprotocol/sdk-js';
+import { AttestationCreateDto } from './dto/attestation-create.dto';
 
 @Injectable()
 export class AttestationService {
@@ -37,16 +37,14 @@ export class AttestationService {
     // What does this mean?
 
     const email = body.email;
-    // TODO: How do we check for existing users
-    const attestation_db = await new Attestation().populateByUserEmail(
-      context,
-      email,
-    );
+    // // TODO: How do we check for existing users
+    // const attestation_db = await new Attestation().populateByUserEmail(
+    //   context,
+    //   email,
+    // );
 
-    // TODO: Handle
-    // if (
-    //   attestation_db.exists()
-    // ) {
+    // // TODO: Handle
+    // if (attestation_db.exists()) {
     //   throw new CodeException({
     //     status: HttpStatus.UNPROCESSABLE_ENTITY,
     //     code: ModuleValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
@@ -68,7 +66,7 @@ export class AttestationService {
       await context.mysql.commit(conn);
     } catch (err) {
       writeLog(
-        LogType.MSG,
+        LogType.ERROR,
         `Error creating attestation state for user with email ${email}'`,
         'attestation.service.ts',
         'sendVerificationEmail',
@@ -139,6 +137,7 @@ export class AttestationService {
         errorCodes: ModuleValidatorErrorCode,
       });
     }
+
     return { state: attestation.state };
   }
 
@@ -146,10 +145,11 @@ export class AttestationService {
     context: AuthorizationApiContext,
     body: AttestationMnemonicDto,
   ) {
+    // TODO: MOVE TO FRONTEND
     const endUserMnemonic = body.mnemonic;
     console.log('Received mnemonic ', endUserMnemonic);
 
-    const attesterAccount = (await generateAccount(
+    const attesterAccount = (await extractAccFromMnemonic(
       env.KILT_ATTESTER_MNEMONIC,
     )) as KiltKeyringPair;
     const attesterKeyPairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
@@ -159,29 +159,71 @@ export class AttestationService {
       attesterKeyPairs,
     );
 
-    return { did: didDocument };
+    return { did: JSON.stringify(didDocument), didUri: didDocument.uri };
   }
 
-  async attestClaim(
+  async attestCreate(
     context: AuthorizationApiContext,
-    body: AttestationClaimDto,
+    body: AttestationCreateDto,
   ) {
-    console.log('Attesting claims ...');
-    const authCType = getCtypeSchema();
+    const api = ConfigService.get('api');
+    const claimerEmail = body.email;
+    const claimerDidUri = body.didUri;
 
-    console.log('Created claims ... ', authCType);
+    const attesterAccount = (await extractAccFromMnemonic(
+      env.KILT_ATTESTER_MNEMONIC,
+    )) as KiltKeyringPair;
+    const attesterKeyPairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
 
-    // const authClaim = Claim.fromCTypeAndClaimContents(
-    //   authCType,
-    //   authContents,
-    //   claimerDidUri,
-    // );
+    const attesterDidDoc = await getOrCreateFullDid(
+      attesterAccount,
+      attesterKeyPairs,
+    );
+    const attesterDidUri = attesterDidDoc.uri;
 
-    return;
-  }
+    const { creds, credsProposition } = setupCredsProposition(
+      claimerEmail,
+      attesterDidUri,
+      claimerDidUri,
+    );
 
-  async fetchRequiredCTypes(context: AuthorizationApiContext) {
-    console.log('Should fetch required CTypes ...');
-    return;
+    const auth = api.tx.attestation.add(
+      credsProposition.claimHash,
+      credsProposition.cTypeHash,
+      null,
+    );
+    const authTx = await Did.authorizeTx(
+      attesterDidUri,
+      auth,
+      async ({ data }) => ({
+        signature: attesterKeyPairs.assertion.sign(data),
+        keyType: attesterKeyPairs.assertion.type,
+      }),
+      attesterAccount.address,
+    );
+
+    writeLog(
+      LogType.MSG,
+      `'ATTESTATION => create authorization attestation...'`,
+      'attestation.service.ts',
+      'attestClaim',
+    );
+    console.log('ATTESTATION => create authorization attestation...');
+
+    await Blockchain.signAndSubmitTx(authTx, attesterAccount);
+    const emailAttested = Boolean(
+      await api.query.attestation.attestations(creds.rootHash),
+    );
+
+    writeLog(
+      LogType.MSG,
+      `ATTESTATION ${claimerEmail} attested => ${emailAttested}`,
+      'attestation.service.ts',
+      'attestClaim',
+    );
+
+    const presentation: ICredential = JSON.parse(JSON.stringify(creds));
+
+    return { presentation: presentation };
   }
 }
