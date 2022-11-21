@@ -103,6 +103,13 @@ describe('Project services tests', () => {
       expect(response.body.data.serviceType_id).toBe(
         AttachedServiceType.STORAGE,
       );
+
+      const s: Service = await new Service(
+        {},
+        stage.devConsoleContext,
+      ).populateById(response.body.data.id);
+
+      expect(s.exists()).toBeTruthy();
     });
 
     test('User should be able to update service', async () => {
@@ -117,6 +124,15 @@ describe('Project services tests', () => {
       expect(response.body.data.id).toBeTruthy();
       expect(response.body.data.name).toBe('spremenjeno ime');
       expect(response.body.data.active).toBeFalsy();
+
+      const s: Service = await new Service(
+        {},
+        stage.devConsoleContext,
+      ).populateById(response.body.data.id);
+
+      expect(s.exists()).toBeTruthy();
+      expect(s.name).toBe('spremenjeno ime');
+      expect(s.active).toBeFalsy();
     });
 
     test('User should NOT be able to delete ANOTHER USER service', async () => {
@@ -131,6 +147,13 @@ describe('Project services tests', () => {
         .delete(`/services/${testProjectService.id}`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
+
+      const s: Service = await new Service(
+        {},
+        stage.devConsoleContext,
+      ).populateById(testProjectService.id);
+
+      expect(s.exists()).toBeFalsy();
     });
   });
 });

@@ -158,11 +158,7 @@ export class ProjectService {
 
       //check if user already on project
       if (
-        await new ProjectUser({}, context).isUserOnProject(
-          context,
-          projectId,
-          user.id,
-        )
+        await new ProjectUser({}, context).isUserOnProject(projectId, user.id)
       ) {
         throw new CodeException({
           code: ConflictErrorCode.USER_ALREADY_ON_PROJECT,

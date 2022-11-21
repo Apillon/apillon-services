@@ -6,6 +6,8 @@ import { releaseStage, setupTest, Stage } from '../../../../test/helpers/setup';
 import { createTestUser, TestUser } from '../../../../test/helpers/user';
 import { Project } from '../../project/models/project.model';
 import { Service } from '../../services/models/service.model';
+import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
+import { ApiKeyRole } from '@apillon/access/src/modules/role/models/api-key-role.model';
 
 describe('API key tests', () => {
   let stage: Stage;
@@ -45,6 +47,15 @@ describe('API key tests', () => {
     expect(response.body.data.apiKey).toBeTruthy();
     expect(response.body.data.apiKeySecret).toBeTruthy();
 
+    const ap: ApiKey = await new ApiKey({}, stage.amsContext).populateById(
+      response.body.data.id,
+    );
+
+    expect(ap.exists()).toBeTruthy();
+    expect(ap.name).toBe('My test API key');
+    expect(ap.apiKey).toBe(response.body.data.apiKey);
+    expect(ap.verifyApiKeySecret(response.body.data.apiKeySecret)).toBeTruthy();
+
     apiKey = response.body.data;
   });
 
@@ -68,6 +79,23 @@ describe('API key tests', () => {
     expect(response.body.data.id).toBeTruthy();
     expect(response.body.data.apiKey).toBeTruthy();
     expect(response.body.data.apiKeySecret).toBeTruthy();
+
+    const ap: ApiKey = await new ApiKey({}, stage.amsContext).populateById(
+      response.body.data.id,
+    );
+
+    expect(ap.exists()).toBeTruthy();
+    //Check APIkey roles
+    const apr: ApiKeyRole = await new ApiKeyRole({}, stage.amsContext).populate(
+      {
+        apiKey_id: response.body.data.id,
+        service_uuid: testProjectService.service_uuid,
+        project_uuid: testProject.project_uuid,
+      },
+    );
+
+    expect(await apr.hasRole(51)).toBe(true);
+    expect(await apr.hasRole(52)).toBe(false);
   });
 
   test('User should be able to get list of api keys', async () => {
@@ -94,7 +122,14 @@ describe('API key tests', () => {
       testProjectService.serviceType_id,
     );
 
-    apiKey = response.body.data;
+    const apr: ApiKeyRole = await new ApiKeyRole({}, stage.amsContext).populate(
+      {
+        apiKey_id: response.body.data.id,
+        service_uuid: testProjectService.service_uuid,
+        project_uuid: testProject.project_uuid,
+      },
+    );
+    expect(await apr.hasRole(51)).toBe(true);
   });
 
   test('User should be able to get api key roles', async () => {
@@ -110,6 +145,11 @@ describe('API key tests', () => {
       .delete(`/api-keys/${apiKey.id}`)
       .set('Authorization', `Bearer ${testUser.token}`);
     expect(response.status).toBe(200);
+
+    const ap: ApiKey = await new ApiKey({}, stage.amsContext).populateById(
+      apiKey.id,
+    );
+    expect(ap.exists()).toBeFalsy();
   });
 
   test('User should recieve 404 error when key does not exists', async () => {

@@ -78,8 +78,31 @@ export class ProjectUser extends AdvancedSQLModel {
   })
   public role_id: number;
 
+  public async populateByProjectAndUser(
+    project_id: number,
+    user_id: number,
+  ): Promise<this> {
+    if (!user_id || !project_id) {
+      return this.reset();
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+        SELECT *
+        FROM ${this.tableName}
+        WHERE project_id = @project_id AND user_id = @user_id
+      `,
+      { project_id, user_id },
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
+
   public async isUserOnProject(
-    context: DevConsoleApiContext,
     project_id: number,
     user_id: number,
   ): Promise<boolean> {
@@ -87,7 +110,7 @@ export class ProjectUser extends AdvancedSQLModel {
       return false;
     }
 
-    const data = await context.mysql.paramExecute(
+    const data = await this.getContext().mysql.paramExecute(
       `
         SELECT 1
         FROM ${DbTables.PROJECT_USER}

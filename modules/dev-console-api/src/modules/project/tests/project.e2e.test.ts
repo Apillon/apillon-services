@@ -4,6 +4,9 @@ import { createTestProject } from '../../../../test/helpers/project';
 import { releaseStage, setupTest, Stage } from '../../../../test/helpers/setup';
 import { createTestUser, TestUser } from '../../../../test/helpers/user';
 import { Project } from '../../project/models/project.model';
+import { User } from '../../user/models/user.model';
+import { ProjectUserPendingInvitation } from '../models/project-user-pending-invitation.model';
+import { ProjectUser } from '../models/project-user.model';
 
 describe('Project tests', () => {
   let stage: Stage;
@@ -71,6 +74,12 @@ describe('Project tests', () => {
       expect(response.body.data.project_uuid).toBeTruthy();
       expect(response.body.data.name).toBeTruthy();
       expect(response.body.data.description).toBeTruthy();
+
+      const p: Project = await new Project(
+        {},
+        stage.devConsoleContext,
+      ).populateById(response.body.data.id);
+      expect(p.exists()).toBe(true);
     });
 
     test('User should NOT be able to create new project if required body data is not present', async () => {
@@ -92,6 +101,13 @@ describe('Project tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.name).toBe('Spremenjen naziv projekta');
+
+      const p: Project = await new Project(
+        {},
+        stage.devConsoleContext,
+      ).populateById(response.body.data.id);
+      expect(p.exists()).toBe(true);
+      expect(p.name).toBe('Spremenjen naziv projekta');
     });
 
     test('User should NOT be able to update ANOTHER user project', async () => {
@@ -136,6 +152,13 @@ describe('Project tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
 
+      const userOnProject = await new ProjectUser(
+        {},
+        stage.devConsoleContext,
+      ).isUserOnProject(testProject.id, testUser2.user.id);
+
+      expect(userOnProject).toBe(true);
+
       addedProjectUser = response.body.data;
     });
 
@@ -148,6 +171,17 @@ describe('Project tests', () => {
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
+
+      const pu: ProjectUserPendingInvitation =
+        await new ProjectUserPendingInvitation(
+          {},
+          stage.devConsoleContext,
+        ).populateByEmailAndProject(
+          testProject.id,
+          'nek-testni-mail-123@gmail.com',
+        );
+
+      expect(pu.exists()).toBeTruthy();
     });
 
     test('User should be able to change user role on project', async () => {
@@ -158,6 +192,14 @@ describe('Project tests', () => {
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
+
+      const pu = await new ProjectUser(
+        {},
+        stage.devConsoleContext,
+      ).populateByProjectAndUser(testProject.id, testUser2.user.id);
+
+      expect(pu.exists()).toBeTruthy();
+      expect(pu.role_id).toBe(DefaultUserRole.PROJECT_ADMIN);
     });
 
     test('User should be able to remove another user from project', async () => {
@@ -165,6 +207,13 @@ describe('Project tests', () => {
         .delete(`/projects/user/${addedProjectUser.id}`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
+
+      const pu = await new ProjectUser(
+        {},
+        stage.devConsoleContext,
+      ).populateByProjectAndUser(testProject.id, testUser2.user.id);
+
+      expect(pu.exists()).toBeFalsy();
     });
   });
 
