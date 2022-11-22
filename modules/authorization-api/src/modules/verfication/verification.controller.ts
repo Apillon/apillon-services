@@ -1,16 +1,29 @@
-import { Ctx } from '@apillon/modules-lib';
+import { Ctx, Validation } from '@apillon/modules-lib';
 import {
+  Body,
   Controller,
   Get,
   Param,
   ParseIntPipe,
+  Post,
   UseGuards,
 } from '@nestjs/common';
 import { VerificationService } from './verification.service';
 import { AuthorizationApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
+import { VerificationIdentityDto } from './dto/verify-identity.dto';
 
 @Controller('verification')
 export class VerificationController {
   constructor(private verificationService: VerificationService) {}
+
+  @Post('verify-identity')
+  @Validation({ dto: VerificationIdentityDto })
+  @UseGuards(ValidationGuard)
+  async verifyIdentity(
+    @Ctx() context: AuthorizationApiContext,
+    @Body() body: VerificationIdentityDto,
+  ) {
+    return await this.verificationService.verifyIdentity(context, body);
+  }
 }

@@ -143,7 +143,3 @@ export function getCtypeSchema(): ICType {
     },
   });
 }
-
-// export function getChallenge(): string {
-//   return Utils.UUID.generate();
-// }

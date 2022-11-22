@@ -1,5 +1,8 @@
 export enum DbTables {}
 
+// TODO: Move to a cache system or a database (preferably cache)
+export const challenge = '123456789';
+
 /**
  * Validation error codes - 42207000.
  */
@@ -16,6 +19,9 @@ export enum ModuleValidatorErrorCode {
   ATTEST_INVALID_REQUEST = 42207008,
   ATTEST_MNEMONIC_NOT_PRESENT = 42207009,
   ATTEST_DID_URI_NOT_PRESENT = 42207010,
+  VERIFICATION_IDENTITY_NOT_PRESENT = 42207011,
+  VERIFICATION_CHALLENGE_NOT_PRESENT = 42207012,
+  VERIFICATION_INVALID_CHALLENGE = 42207013,
 }
 
 /**

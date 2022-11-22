@@ -208,7 +208,6 @@ export class AttestationService {
       'attestation.service.ts',
       'attestClaim',
     );
-    console.log('ATTESTATION => create authorization attestation...');
 
     await Blockchain.signAndSubmitTx(authTx, attesterAccount);
     const emailAttested = Boolean(
