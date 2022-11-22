@@ -54,6 +54,7 @@ export class User extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
     ],
+    fakeValue: () => faker.internet.email(),
   })
   public email: string;
 

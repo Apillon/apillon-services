@@ -1,16 +1,13 @@
-import { AuthUser } from '@apillon/access/src/modules/auth-user/auth-user.model';
-import { TestContext } from './context';
-import { DefaultUserRole, SqlModelStatus } from '@apillon/lib';
+import { DefaultUserRole } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
-import { User } from '../../src/modules/user/models/user.model';
-import { Project } from '../../src/modules/project/models/project.model';
 import { ProjectUser } from '../../src/modules/project/models/project-user.model';
+import { Project } from '../../src/modules/project/models/project.model';
+import { TestContext } from './context';
 import { TestUser } from './user';
 
 export async function createTestProject(
   user: TestUser,
   consoleCtx: TestContext,
-  amsCtx: TestContext,
 ): Promise<Project> {
   const project = new Project({}, consoleCtx)
     .fake()

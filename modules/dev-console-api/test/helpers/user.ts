@@ -26,6 +26,7 @@ export async function createTestUser(
   const password = 'randomPassword231321';
   const authUser = new AuthUser({}, amsCtx).fake();
   authUser.user_uuid = user.user_uuid;
+  authUser.email = user.email;
   authUser.setPassword(password);
   await authUser.insert();
   await authUser.setDefaultRole(null);

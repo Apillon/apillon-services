@@ -99,7 +99,7 @@ export class RoleService {
     }
 
     //Check if role already assigned
-    if (!(await keyRole.roleAlreadyAssigned())) await keyRole.insert();
+    if (!(await keyRole.hasRole(keyRole.role_id))) await keyRole.insert();
 
     return keyRole.serialize(SerializeFor.SERVICE);
   }

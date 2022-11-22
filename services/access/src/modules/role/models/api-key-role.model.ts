@@ -181,7 +181,7 @@ export class ApiKeyRole extends AdvancedSQLModel {
     }
   }
 
-  public async roleAlreadyAssigned(): Promise<boolean> {
+  public async hasRole(role_id): Promise<boolean> {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT * 
@@ -194,7 +194,7 @@ export class ApiKeyRole extends AdvancedSQLModel {
       `,
       {
         apiKey_id: this.apiKey_id,
-        role_id: this.role_id,
+        role_id: role_id,
         service_uuid: this.service_uuid,
         project_uuid: this.project_uuid,
       },
