@@ -2,7 +2,7 @@ import * as nodemailer from 'nodemailer';
 import { Options, MailOptions } from 'nodemailer/lib/smtp-transport';
 import { MailTemplates } from './mail-templates';
 import { Attachment } from 'nodemailer/lib/mailer';
-import { env } from '@apillon/lib';
+import { env, getEnvSecrets } from '@apillon/lib';
 
 /**
  * Send email via SMTP server
@@ -12,6 +12,7 @@ import { env } from '@apillon/lib';
  * @returns {Promise<boolean>}
  */
 export async function SMTPsend(mail: MailOptions): Promise<boolean> {
+  await getEnvSecrets();
   const transportOptions = {
     pool: true,
     host: env.SMTP_HOST,
