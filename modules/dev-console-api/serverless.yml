@@ -33,6 +33,13 @@ provider:
     role: arn:aws:iam::018021943180:role/serverless-workers-executor
   apiGateway:
     minimumCompressionSize: 1024 # Enable gzip compression for responses > 1 KB
+  vpc:
+    securityGroupIds:
+      - sg-091bc1ce7424a7921
+    subnetIds:
+      - subnet-0bea6dd0c2a5ecc61
+      - subnet-085447b898128fc92
+      - subnet-0ed148d48e931f5fa
 
   environment:
     ${file(../../bin/deploy/env/env.yml)}
