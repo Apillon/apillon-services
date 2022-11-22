@@ -59,7 +59,7 @@ export class Project extends AdvancedSQLModel {
         code: ValidatorErrorCode.PROJECT_NAME_NOT_PRESENT,
       },
     ],
-    fakeValue: faker.word.verb(),
+    fakeValue: () => faker.word.verb(),
   })
   public name: string;
 
@@ -92,7 +92,7 @@ export class Project extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue: faker.lorem.paragraph(5),
+    fakeValue: () => faker.lorem.paragraph(5),
   })
   public description: string;
 

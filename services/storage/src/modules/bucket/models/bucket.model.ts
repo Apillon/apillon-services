@@ -14,8 +14,9 @@ import {
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
-import { DbTables, StorageErrorCode } from '../../../config/types';
+import { BucketType, DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
+import { v4 as uuidV4 } from 'uuid';
 
 export class Bucket extends AdvancedSQLModel {
   public readonly tableName = DbTables.BUCKET;
@@ -40,6 +41,7 @@ export class Bucket extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
     ],
     validators: [],
+    fakeValue: () => uuidV4(),
   })
   public bucket_uuid: string;
 
@@ -88,6 +90,7 @@ export class Bucket extends AdvancedSQLModel {
         code: StorageErrorCode.BUCKET_TYPE_NOT_PRESENT,
       },
     ],
+    fakeValue: BucketType.STORAGE,
   })
   public bucketType: number;
 
@@ -148,6 +151,7 @@ export class Bucket extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
     ],
     validators: [],
+    fakeValue: 5242880,
   })
   public maxSize: number;
 

@@ -9,6 +9,7 @@ import { ServiceQueryFilter } from './dtos/services-query-filter.dto';
 import { Service } from './models/service.model';
 import { CodeException, ValidationException } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
+import { Project } from '../project/models/project.model';
 
 @Injectable()
 export class ServicesService {
@@ -21,6 +22,7 @@ export class ServicesService {
         errorCodes: ResourceNotFoundErrorCode,
       });
     }
+    await service.canAccess(context);
 
     return service;
   }
@@ -36,7 +38,19 @@ export class ServicesService {
     context: DevConsoleApiContext,
     body: Service,
   ): Promise<Service> {
-    //TODO: Check if service of such type in that project already exists
+    //Check if project exists & user has required role on it
+    const project: Project = await new Project({}, context).populateById(
+      body.project_id,
+    );
+    if (!project.exists()) {
+      throw new CodeException({
+        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
+        status: HttpStatus.NOT_FOUND,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+    project.canModify(context);
+
     return await body.populate({ service_uuid: uuidV4() }).insert();
   }
 
@@ -53,6 +67,7 @@ export class ServicesService {
         errorCodes: ResourceNotFoundErrorCode,
       });
     }
+    await service.canModify(context);
 
     service.populate(data);
 
@@ -80,8 +95,9 @@ export class ServicesService {
         errorCodes: ResourceNotFoundErrorCode,
       });
     }
+    await service.canModify(context);
 
-    await service.delete();
+    await service.markDeleted();
     return service;
   }
 }

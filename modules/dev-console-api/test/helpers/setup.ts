@@ -25,6 +25,8 @@ export interface Stage {
   amsSql: MySql;
   lmasMongo: Mongo;
   devConsoleSql: MySql;
+  storageContext: TestContext;
+  storageSql: MySql;
 }
 
 export async function setupTest(): Promise<Stage> {
@@ -90,6 +92,21 @@ export async function setupTest(): Promise<Stage> {
     const lmasContext = new TestContext();
     lmasContext.mongo = lmasMongo;
 
+    //Storage MS context
+    const config3 = {
+      host: env.STORAGE_MYSQL_HOST_TEST,
+      database: env.STORAGE_MYSQL_DATABASE_TEST,
+      password: env.STORAGE_MYSQL_PASSWORD_TEST,
+      port: env.STORAGE_MYSQL_PORT_TEST,
+      user: env.STORAGE_MYSQL_USER_TEST,
+    };
+
+    const storageSql = new MySql(config3);
+    await storageSql.connect();
+
+    const storageContext = new TestContext();
+    storageContext.mysql = storageSql;
+
     // startAmsServer();
     // startLmasServer();
 
@@ -102,6 +119,8 @@ export async function setupTest(): Promise<Stage> {
       devConsoleSql,
       amsSql,
       lmasMongo,
+      storageContext,
+      storageSql,
     };
   } catch (e) {
     console.error(e);

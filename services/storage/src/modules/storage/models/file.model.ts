@@ -13,6 +13,7 @@ import {
 } from '@apillon/lib';
 import { DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
+import { v4 as uuidV4 } from 'uuid';
 
 export class File extends AdvancedSQLModel {
   tableName = DbTables.FILE;
@@ -33,6 +34,7 @@ export class File extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
     ],
     validators: [],
+    fakeValue: () => uuidV4(),
   })
   public file_uuid: string;
 
