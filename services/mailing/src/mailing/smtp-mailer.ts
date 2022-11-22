@@ -95,6 +95,7 @@ export async function SMTPsendTemplate(
     attachments: attachments || [],
   };
 
+  await getEnvSecrets();
   const transporter = nodemailer.createTransport({
     pool: true,
     host: env.SMTP_HOST,
@@ -133,6 +134,7 @@ export async function SMTPsendTemplate(
  * @returns {Promise<boolean>}
  */
 export async function SMTPverify(): Promise<boolean> {
+  await getEnvSecrets();
   const transporter = nodemailer.createTransport({
     pool: true,
     host: env.SMTP_HOST,
