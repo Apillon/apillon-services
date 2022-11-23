@@ -13,6 +13,7 @@ import {
   Claim,
   Attestation,
   Credential,
+  SubmittableExtrinsic,
 } from '@kiltprotocol/sdk-js';
 import { mnemonicGenerate, mnemonicToMiniSecret } from '@polkadot/util-crypto';
 import { Keypairs } from '../../config/types';
@@ -54,37 +55,15 @@ export function generateKeypairs(mnemonic: string) {
   };
 }
 
-export async function getOrCreateFullDid(
-  account: KiltKeyringPair,
-  keypairs: Keypairs,
-): Promise<DidDocument> {
+export async function submitDidCreateTx(
+  submitter: KiltKeyringPair,
+  tx: string,
+) {
   // TODO: Will probably be expanded in the future with a dedicated module
   // with getters and setters for specifics about did creation ....
   console.log('Connecting to Kilt network ...');
   await connect(env.KILT_NETWORK);
   const api = ConfigService.get('api');
-  const { authentication, encryption, assertion, delegation } = keypairs;
-  const didDoc = await Did.resolve(Did.getFullDidUriFromKey(authentication));
-
-  if (didDoc && didDoc.document) {
-    return didDoc.document;
-  }
-
-  // TODO: Each operation in BC should also trigger a notification about:
-  // caller, balance, etc etc
-  const fullDidCreationTx = await Did.getStoreTx(
-    {
-      authentication: [authentication],
-      keyAgreement: [encryption],
-      assertionMethod: [assertion],
-      capabilityDelegation: [delegation],
-    },
-    account.address,
-    async ({ data }) => ({
-      signature: authentication.sign(data),
-      keyType: authentication.type,
-    }),
-  );
 
   // TODO: Add params, modifiy, change log structure etc etc
   writeLog(
@@ -95,17 +74,16 @@ export async function getOrCreateFullDid(
   );
 
   console.log('Submitting DID creation tx ...');
-  await Blockchain.signAndSubmitTx(fullDidCreationTx, account);
+  // await Blockchain.signAndSubmitTx(tx, submitter);
+  // const didUri = Did.getFullDidUriFromKey(authentication);
+  // const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
+  // const { document } = Did.linkedInfoFromChain(encodedFullDid);
 
-  const didUri = Did.getFullDidUriFromKey(authentication);
-  const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
-  const { document } = Did.linkedInfoFromChain(encodedFullDid);
+  // if (!document) {
+  //   throw 'Full DID was not successfully created.';
+  // }
 
-  if (!document) {
-    throw 'Full DID was not successfully created.';
-  }
-
-  return document;
+  // return document;
 }
 
 export function setupCredsProposition(

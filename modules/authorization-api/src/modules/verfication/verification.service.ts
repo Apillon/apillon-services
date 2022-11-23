@@ -19,21 +19,20 @@ export class VerificationService {
   ): Promise<any> {
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
-    const presentation = body.presentation as ICredentialPresentation;
 
-    console.log(presentation);
-    console.log('Presentation type ', typeof presentation);
+    // console.log(presentation);
+    // console.log('Presentation type ', typeof presentation);
 
-    try {
-      await Credential.verifyPresentation(presentation, { challenge });
-      const attestationInfo = Attestation.fromChain(
-        await api.query.attestation.attestations(presentation.rootHash),
-        presentation.rootHash,
-      );
-      return { identityVerified: !attestationInfo.revoked };
-    } catch (error) {
-      console.log(error);
-      return { identityVerified: false };
-    }
+    // try {
+    //   await Credential.verifyPresentation(presentation, { challenge });
+    //   const attestationInfo = Attestation.fromChain(
+    //     await api.query.attestation.attestations(presentation.rootHash),
+    //     presentation.rootHash,
+    //   );
+    //   return { identityVerified: !attestationInfo.revoked };
+    // } catch (error) {
+    //   console.log(error);
+    //   return { identityVerified: false };
+    // }
   }
 }

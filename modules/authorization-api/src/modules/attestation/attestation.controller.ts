@@ -14,7 +14,7 @@ import { ValidationGuard } from '../../guards/validation.guard';
 import { AttestationService } from './attestation.service';
 import { AttestationEmailDto } from './dto/attestation-email.dto';
 import { AttestationCreateDto } from './dto/attestation-create.dto';
-import { AttestationMnemonicDto } from './dto/attestation-mnemonic.dto';
+import { AttestationMnemonicDto } from './dto/attestation-submittable.dto';
 import { AttestationTokenDto } from './dto/attestation-token.dto';
 
 @Controller('attestation')

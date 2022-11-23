@@ -17,7 +17,6 @@ import {
   JwtTokenType,
   ModuleValidatorErrorCode,
 } from '../../config/types';
-import { AttestationMnemonicDto } from './dto/attestation-mnemonic.dto';
 import {
   extractAccFromMnemonic,
   generateKeypairs,
@@ -27,6 +26,7 @@ import {
 import { ICredential, KiltKeyringPair } from '@kiltprotocol/types';
 import { Blockchain, ConfigService, Did } from '@kiltprotocol/sdk-js';
 import { AttestationCreateDto } from './dto/attestation-create.dto';
+import { AttestSubmitDidCreateTxDto } from './dto/attestation-submittable-tx.dto';
 
 @Injectable()
 export class AttestationService {
@@ -143,11 +143,10 @@ export class AttestationService {
 
   async generateFullDid(
     context: AuthorizationApiContext,
-    body: AttestationMnemonicDto,
+    body: AttestSubmitDidCreateTxDto,
   ) {
     // TODO: MOVE TO FRONTEND
-    const endUserMnemonic = body.mnemonic;
-    console.log('Received mnemonic ', endUserMnemonic);
+    const didCreateTx = body.did_create_tx;
 
     const attesterAccount = (await extractAccFromMnemonic(
       env.KILT_ATTESTER_MNEMONIC,
