@@ -22,6 +22,8 @@ import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
 import { v4 as uuidV4 } from 'uuid';
 import { CrustService } from '../crust/crust.service';
+import { sendToWorkerQueue } from '@apillon/workers-lib';
+import { WorkerName } from '../../workers/worker-executor';
 
 export class StorageService {
   static async generateS3SignedUrlForUpload(
@@ -120,6 +122,19 @@ export class StorageService {
       session.bucket_id,
     );
     bucket.canAccess(context);
+
+    //send message to SQS
+    await sendToWorkerQueue(
+      env.STORAGE_AWS_WORKER_SQS_URL,
+      WorkerName.SYNC_TO_IPFS_WORKER,
+      [
+        {
+          session_uuid: session.session_uuid,
+        },
+      ],
+      null,
+      null,
+    );
 
     //Get files in session (fileStatus must be ofst atus 1)
     const files = (

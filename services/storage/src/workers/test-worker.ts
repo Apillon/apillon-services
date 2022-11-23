@@ -1,6 +1,5 @@
 import { ServerlessWorker, WorkerDefinition, Job } from '@apillon/workers-lib';
-import { Context } from '@apillon/lib';
-import { NotImplementedException } from '@nestjs/common';
+import { CodeException, Context } from '@apillon/lib';
 
 export class TestWorker extends ServerlessWorker {
   private context: Context;
@@ -37,6 +36,6 @@ export class TestWorker extends ServerlessWorker {
     this.logFn('Test worker event - update definition COMPLETE');
   }
   public onAutoRemove(): Promise<void> {
-    throw new NotImplementedException();
+    throw new CodeException({ code: 500, status: 500 });
   }
 }

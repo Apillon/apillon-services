@@ -25,6 +25,7 @@ aws.config.update({
 export enum WorkerName {
   TEST_WORKER = 'TestWorker',
   SCHEDULER = 'scheduler',
+  SYNC_TO_IPFS_WORKER = 'SyncToIpfsWorker',
 }
 
 export async function handler(event: any) {

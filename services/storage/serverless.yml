@@ -42,6 +42,6 @@ functions:
   storage-service:
     handler: ./src/handler.handler
     name: 'apillon-storage-service-${self:provider.stage}'
-    description: AT storage Management Service
+    description: Apillon storage Service
     memorySize: 512
     timeout: 30
