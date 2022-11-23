@@ -14,17 +14,17 @@ module.exports = {
     extensions: ['.mjs', '.json', '.ts', '.js'],
     symlinks: false,
     cacheWithContext: false,
-    // alias: {
-    //   'bson-ext': false,
-    //   'kerberos': false,
-    //   // '@mongodb-js/zstd': false,
-    //   'snappy': false,
-    //   'snappy/package.json': false,
-    //   'aws4': false,
-    //   // 'mongodb-client-encryption': false,
-    //   'cardinal': false,
-    //   // '@apillon/lib': path.join(__dirname, '..', '..', 'packages', 'lib')
-    // },
+    alias: {
+      'bson-ext': false,
+      'kerberos': false,
+      // '@mongodb-js/zstd': false,
+      'snappy': false,
+      'snappy/package.json': false,
+      'aws4': false,
+      // 'mongodb-client-encryption': false,
+      'cardinal': false,
+      // '@apillon/lib': path.join(__dirname, '..', '..', 'packages', 'lib')
+    },
   },
   output: {
     libraryTarget: 'commonjs',
