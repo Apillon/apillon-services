@@ -50,6 +50,10 @@ export enum MailEventType {
   SEND_MAIL = 'send-mail',
 }
 
+export enum ConfigEventType {
+  GET_QUOTA = 'get-quota',
+}
+
 export enum ServiceName {
   GENERAL = 'GENERAL',
   AMS = 'AMS',
@@ -68,6 +72,10 @@ export enum ServiceCode {
   DEV_CONSOLE = '04',
   APILLON_API = '05',
   STORAGE = '06',
+  MOD_LIB = '07',
+  MAIL = '08',
+  AUTH = '09',
+  CONFIG = '10',
 }
 
 export enum AppEnvironment {
