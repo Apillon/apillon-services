@@ -7,7 +7,7 @@ import {
   WorkerLogStatus,
 } from '@apillon/workers-lib';
 import { Scheduler } from './scheduler';
-import { MySql } from '@apillon/lib';
+import { AppEnvironment, MySql } from '@apillon/lib';
 
 import { Context, env } from '@apillon/lib';
 import { TestWorker } from './test-worker';
@@ -24,19 +24,42 @@ aws.config.update({
 
 export enum WorkerName {
   TEST_WORKER = 'TestWorker',
+  SCHEDULER = 'scheduler',
 }
 
 export async function handler(event: any) {
-  // global['mysql'].connect();
-  /*const mysql = new MySql(env);
+  const options = {
+    host:
+      env.APP_ENV === AppEnvironment.TEST
+        ? env.STORAGE_MYSQL_HOST_TEST
+        : env.STORAGE_MYSQL_HOST,
+    port:
+      env.APP_ENV === AppEnvironment.TEST
+        ? env.STORAGE_MYSQL_PORT_TEST
+        : env.STORAGE_MYSQL_PORT,
+    database:
+      env.APP_ENV === AppEnvironment.TEST
+        ? env.STORAGE_MYSQL_DATABASE_TEST
+        : env.STORAGE_MYSQL_DATABASE,
+    user:
+      env.APP_ENV === AppEnvironment.TEST
+        ? env.STORAGE_MYSQL_USER_TEST
+        : env.STORAGE_MYSQL_USER,
+    password:
+      env.APP_ENV === AppEnvironment.TEST
+        ? env.STORAGE_MYSQL_PASSWORD_TEST
+        : env.STORAGE_MYSQL_PASSWORD,
+  };
+
+  const mysql = new MySql(options);
   await mysql.connect();
-  const context = new Context(env);
-  context.setMySql(mysql);*/
+  const context = new Context();
+  context.setMySql(mysql);
 
   const serviceDef = {
     type: ServiceDefinitionType.LAMBDA,
     config: { region: env.AWS_REGION },
-    params: { FunctionName: env.AWS_WORKER_LAMBDA_NAME },
+    params: { FunctionName: env.STORAGE_AWS_WORKER_LAMBDA_NAME },
   };
 
   // console.log(`EVENT: ${JSON.stringify(event)}`);
@@ -47,11 +70,11 @@ export async function handler(event: any) {
     } else {
       await handleLambdaEvent(event, context, serviceDef);
     }
-    await context.close();
+    await context.mysql.close();
   } catch (e) {
     console.error('ERROR HANDLING LAMBDA!');
     console.error(e.message);
-    await context.close();
+    await context.mysql.close();
     throw e;
   }
 }
@@ -76,14 +99,6 @@ export async function handleLambdaEvent(
     );
   } else {
     workerDefinition = new WorkerDefinition(serviceDef, WorkerName.SCHEDULER);
-  }
-
-  if (
-    [WorkerName.SYNC_OLD_API, WorkerName.SYNC_DELETED].includes(
-      event.workerName,
-    )
-  ) {
-    await context.connectToMongo();
   }
 
   // eslint-disable-next-line sonarjs/no-small-switch
@@ -121,15 +136,6 @@ export async function handleSqsMessages(
   context: Context,
   serviceDef: ServiceDefinition,
 ) {
-  const jobWithMongo = event.Records.filter((j: any) =>
-    [WorkerName.SYNC_OLD_API, WorkerName.SYNC_DELETED].includes(
-      j?.messageAttributes?.workerName?.stringValue,
-    ),
-  );
-  if (jobWithMongo.length) {
-    await context.connectToMongo();
-  }
-
   for (const message of event.Records) {
     let parameters: any;
     if (message?.messageAttributes?.parameters?.stringValue) {
