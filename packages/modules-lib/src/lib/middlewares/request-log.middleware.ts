@@ -56,6 +56,9 @@ export function createRequestLogMiddleware(
               null,
           });
           await new Lmas().writeRequestLog(request);
+          console.log(`HEADERS: ${JSON.stringify(req.headers)}`);
+          console.log(`REQ: ${JSON.stringify(req)}`);
+          console.log(`CONTEXT: ${JSON.stringify(context)}`);
         } catch (error) {
           console.log('error:', error);
         }
