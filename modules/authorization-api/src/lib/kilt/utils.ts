@@ -22,9 +22,7 @@ export async function generateMnemonic() {
   return mnemonicGenerate();
 }
 
-export async function extractAccFromMnemonic(
-  mnemonic: string,
-): Promise<KeyringPair> {
+export async function generateAccount(mnemonic: string): Promise<KeyringPair> {
   return Utils.Crypto.makeKeypairFromSeed(
     mnemonicToMiniSecret(mnemonic),
     'sr25519',
@@ -32,7 +30,7 @@ export async function extractAccFromMnemonic(
 }
 
 export function generateKeypairs(mnemonic: string) {
-  // TODO: Derivations matter! Must use same algorithm as the one
+  // Derivations matter! Must use same algorithm as the one
   // stored on the chain
   const authentication = Utils.Crypto.makeKeypairFromSeed(
     mnemonicToMiniSecret(mnemonic),
@@ -56,16 +54,24 @@ export function generateKeypairs(mnemonic: string) {
 }
 
 export async function submitDidCreateTx(
-  submitter: KiltKeyringPair,
-  tx: string,
-) {
+  extrinsic: SubmittableExtrinsic,
+): Promise<Boolean> {
   // TODO: Will probably be expanded in the future with a dedicated module
   // with getters and setters for specifics about did creation ....
   console.log('Connecting to Kilt network ...');
   await connect(env.KILT_NETWORK);
-  const api = ConfigService.get('api');
 
-  // TODO: Add params, modifiy, change log structure etc etc
+  const attesterAccount = (await generateAccount(
+    env.KILT_ATTESTER_MNEMONIC,
+  )) as KiltKeyringPair;
+
+  try {
+    await Blockchain.signAndSubmitTx(extrinsic, attesterAccount);
+  } catch (error) {
+    console.log(error);
+  }
+
+  // TODO: Make a better system
   writeLog(
     LogType.MSG,
     `KILT TX CREATE ==> FULL_DID_CREATION`,
@@ -73,51 +79,41 @@ export async function submitDidCreateTx(
     'sendVerificationEmail',
   );
 
-  console.log('Submitting DID creation tx ...');
-  // await Blockchain.signAndSubmitTx(tx, submitter);
-  // const didUri = Did.getFullDidUriFromKey(authentication);
-  // const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
-  // const { document } = Did.linkedInfoFromChain(encodedFullDid);
-
-  // if (!document) {
-  //   throw 'Full DID was not successfully created.';
-  // }
-
-  // return document;
+  return true;
 }
 
-export function setupCredsProposition(
-  // TODO: Change to correct types
-  email: string,
-  attesterDidUri: any,
-  claimerDidUri: any,
-) {
-  const authCType = getCtypeSchema();
-  const authContents = {
-    Email: email,
-  };
+// export function setupCredsProposition(
+//   // TODO: Change to correct types
+//   email: string,
+//   attesterDidUri: any,
+//   claimerDidUri: any,
+// ) {
+//   const authCType = getCtypeSchema();
+//   const authContents = {
+//     Email: email,
+//   };
 
-  const authClaim = Claim.fromCTypeAndClaimContents(
-    authCType,
-    authContents,
-    claimerDidUri,
-  );
+//   const authClaim = Claim.fromCTypeAndClaimContents(
+//     authCType,
+//     authContents,
+//     claimerDidUri,
+//   );
 
-  const authCredential = Credential.fromClaim(authClaim);
-  return {
-    creds: authCredential,
-    credsProposition: Attestation.fromCredentialAndDid(
-      authCredential,
-      attesterDidUri,
-    ),
-  };
-}
+//   const authCredential = Credential.fromClaim(authClaim);
+//   return {
+//     creds: authCredential,
+//     credsProposition: Attestation.fromCredentialAndDid(
+//       authCredential,
+//       attesterDidUri,
+//     ),
+//   };
+// }
 
-export function getCtypeSchema(): ICType {
-  // TODO: These are the official CTypes create by Kilt
-  return CType.fromProperties('Email', {
-    Email: {
-      type: 'string',
-    },
-  });
-}
+// export function getCtypeSchema(): ICType {
+//   // TODO: These are the official CTypes create by Kilt
+//   return CType.fromProperties('Email', {
+//     Email: {
+//       type: 'string',
+//     },
+//   });
+// }

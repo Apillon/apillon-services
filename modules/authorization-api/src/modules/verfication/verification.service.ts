@@ -5,6 +5,7 @@ import {
   connect,
   ICredentialPresentation,
 } from '@kiltprotocol/sdk-js';
+import { u8aToHex } from '@polkadot/util';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthorizationApiContext } from '../../context';
 import { VerificationIdentityDto } from './dto/verify-identity.dto';

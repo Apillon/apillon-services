@@ -18,15 +18,20 @@ import {
   ModuleValidatorErrorCode,
 } from '../../config/types';
 import {
-  extractAccFromMnemonic,
   generateKeypairs,
-  setupCredsProposition,
-  getOrCreateFullDid,
+  generateAccount,
+  submitDidCreateTx,
 } from '../../lib/kilt/utils';
-import { ICredential, KiltKeyringPair } from '@kiltprotocol/types';
-import { Blockchain, ConfigService, Did } from '@kiltprotocol/sdk-js';
+import {
+  ICredential,
+  KiltKeyringPair,
+  SubmittableExtrinsic,
+} from '@kiltprotocol/types';
+import { ConfigService, connect, Utils } from '@kiltprotocol/sdk-js';
 import { AttestationCreateDto } from './dto/attestation-create.dto';
-import { AttestSubmitDidCreateTxDto } from './dto/attestation-submittable-tx.dto';
+import { AttestDidCreateExtrinsicDto } from './dto/attestation-submittable-tx.dto';
+import { EncryptedAsymmetricString } from '@kiltprotocol/utils/lib/cjs/Crypto';
+import { stringToU8a, u8aToString } from '@polkadot/util';
 
 @Injectable()
 export class AttestationService {
@@ -143,85 +148,94 @@ export class AttestationService {
 
   async generateFullDid(
     context: AuthorizationApiContext,
-    body: AttestSubmitDidCreateTxDto,
+    body: AttestDidCreateExtrinsicDto,
   ) {
-    // TODO: MOVE TO FRONTEND
-    const didCreateTx = body.did_create_tx;
+    const encodeData = JSON.parse(body.did_submit_call);
+    const userPubkey = body.userPublicKey;
 
-    const attesterAccount = (await extractAccFromMnemonic(
-      env.KILT_ATTESTER_MNEMONIC,
-    )) as KiltKeyringPair;
-    const attesterKeyPairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
+    const attesterKeyPairs = generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
 
-    const didDocument = await getOrCreateFullDid(
-      attesterAccount,
-      attesterKeyPairs,
-    );
+    const decodedData = Utils.Crypto.decryptAsymmetric(
+      { box: encodeData.box, nonce: encodeData.nonce },
+      userPubkey,
+      attesterKeyPairs.encryption.secretKey,
+    ) as Uint8Array;
 
-    return { did: JSON.stringify(didDocument), didUri: didDocument.uri };
+    // const extrinsic: SubmittableExtrinsic = ;
+    const x = JSON.parse(u8aToString(decodedData)).did_create_tx.base;
+    const extrinsic = x.base as SubmittableExtrinsic;
+    console.log(x.signAsync);
+
+    extrinsic.signAsync = x.signAsync;
+    const success = await submitDidCreateTx(extrinsic);
+    // const tx = didCreateTx;
+
+    return { didUri: 'Yohohohohho', success: true };
   }
 
   async attestCreate(
     context: AuthorizationApiContext,
     body: AttestationCreateDto,
   ) {
-    const api = ConfigService.get('api');
-    const claimerEmail = body.email;
-    const claimerDidUri = body.didUri;
+    connect(env.KILT_NETWORK);
+    //    const api = ConfigService.get('api');
+    // const claimerEmail = body.email;
+    // const claimerDidUri = body.didUri;
 
-    const attesterAccount = (await extractAccFromMnemonic(
+    const attesterAccount = (await generateAccount(
       env.KILT_ATTESTER_MNEMONIC,
     )) as KiltKeyringPair;
     const attesterKeyPairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
 
-    const attesterDidDoc = await getOrCreateFullDid(
-      attesterAccount,
-      attesterKeyPairs,
-    );
-    const attesterDidUri = attesterDidDoc.uri;
+    console.log('ATTESTEDR PUB KEY ', attesterKeyPairs.encryption.publicKey);
 
-    const { creds, credsProposition } = setupCredsProposition(
-      claimerEmail,
-      attesterDidUri,
-      claimerDidUri,
-    );
+    // const attesterDidDoc = await getOrCreateFullDid(
+    //   attesterAccount,
+    //   attesterKeyPairs,
+    // );
+    // const attesterDidUri = attesterDidDoc.uri;
 
-    const auth = api.tx.attestation.add(
-      credsProposition.claimHash,
-      credsProposition.cTypeHash,
-      null,
-    );
-    const authTx = await Did.authorizeTx(
-      attesterDidUri,
-      auth,
-      async ({ data }) => ({
-        signature: attesterKeyPairs.assertion.sign(data),
-        keyType: attesterKeyPairs.assertion.type,
-      }),
-      attesterAccount.address,
-    );
+    // const { creds, credsProposition } = setupCredsProposition(
+    //   claimerEmail,
+    //   attesterDidUri,
+    //   claimerDidUri,
+    // );
 
-    writeLog(
-      LogType.MSG,
-      `'ATTESTATION => create authorization attestation...'`,
-      'attestation.service.ts',
-      'attestClaim',
-    );
+    // const auth = api.tx.attestation.add(
+    //   credsProposition.claimHash,
+    //   credsProposition.cTypeHash,
+    //   null,
+    // );
+    // const authTx = await Did.authorizeTx(
+    //   attesterDidUri,
+    //   auth,
+    //   async ({ data }) => ({
+    //     signature: attesterKeyPairs.assertion.sign(data),
+    //     keyType: attesterKeyPairs.assertion.type,
+    //   }),
+    //   attesterAccount.address,
+    // );
 
-    await Blockchain.signAndSubmitTx(authTx, attesterAccount);
-    const emailAttested = Boolean(
-      await api.query.attestation.attestations(creds.rootHash),
-    );
+    // writeLog(
+    //   LogType.MSG,
+    //   `'ATTESTATION => create authorization attestation...'`,
+    //   'attestation.service.ts',
+    //   'attestClaim',
+    // );
 
-    writeLog(
-      LogType.MSG,
-      `ATTESTATION ${claimerEmail} attested => ${emailAttested}`,
-      'attestation.service.ts',
-      'attestClaim',
-    );
+    // await Blockchain.signAndSubmitTx(authTx, attesterAccount);
+    // const emailAttested = Boolean(
+    //   await api.query.attestation.attestations(creds.rootHash),
+    // );
 
-    const presentation: ICredential = JSON.parse(JSON.stringify(creds));
+    // writeLog(
+    //   LogType.MSG,
+    //   `ATTESTATION ${claimerEmail} attested => ${emailAttested}`,
+    //   'attestation.service.ts',
+    //   'attestClaim',
+    // );
 
+    const presentation: ICredential = JSON.parse(JSON.stringify({}));
     return { presentation: presentation };
   }
 }

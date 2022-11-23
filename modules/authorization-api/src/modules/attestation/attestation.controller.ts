@@ -14,8 +14,8 @@ import { ValidationGuard } from '../../guards/validation.guard';
 import { AttestationService } from './attestation.service';
 import { AttestationEmailDto } from './dto/attestation-email.dto';
 import { AttestationCreateDto } from './dto/attestation-create.dto';
-import { AttestationMnemonicDto } from './dto/attestation-submittable.dto';
 import { AttestationTokenDto } from './dto/attestation-token.dto';
+import { AttestDidCreateExtrinsicDto } from './dto/attestation-submittable-tx.dto';
 
 @Controller('attestation')
 export class AttestationController {
@@ -35,11 +35,11 @@ export class AttestationController {
   }
 
   @Post('create-did')
-  @Validation({ dto: AttestationMnemonicDto })
+  @Validation({ dto: AttestDidCreateExtrinsicDto })
   @UseGuards(ValidationGuard)
   async attestationGenerateDid(
     @Ctx() context: AuthorizationApiContext,
-    @Body() body: AttestationMnemonicDto,
+    @Body() body: AttestDidCreateExtrinsicDto,
   ) {
     return await this.attestationService.generateFullDid(context, body);
   }
