@@ -30,8 +30,11 @@ export function createRequestLogMiddleware(
             host: req.hostname || '',
             ip:
               req.ip ||
+              req.sourceIp ||
               req.headers['X-Real-Ip'] ||
               req.headers['X-Forwarded-For'] ||
+              req.http?.sourceIp ||
+              req.identity?.sourceIp ||
               null,
             status: res.statusCode || 0,
             method: req.method || 'NONE',
@@ -43,10 +46,14 @@ export function createRequestLogMiddleware(
                 : '',
             origin:
               req.headers && req.headers['origin'] ? req.headers['origin'] : '',
-            body: JSON.stringify(bodyMap || []), // Don't log body because of its size.
+            body: JSON.stringify(bodyMap || []),
             responseTime: Date.now() - startTime,
             createTime: new Date(),
-            user_id: context?.user?.id || null,
+            user_id:
+              context?.user?.user_uuid ||
+              context?.user?.id ||
+              context?.user?.uuid ||
+              null,
           });
           await new Lmas().writeRequestLog(request);
         } catch (error) {
