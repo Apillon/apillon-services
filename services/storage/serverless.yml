@@ -54,7 +54,7 @@ functions:
     timeout: 30
   storage-service-worker:
     handler: ./src/workers/worker-executor.handler
-    name: storage-service-worker-${self:provider.stage}
+    name: apillon-storage-service-worker-${self:provider.stage}
     description: Serverless workers for Apillon storage microservice
     memorySize: 512
     timeout: 900

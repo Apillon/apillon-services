@@ -65,7 +65,7 @@ export async function handler(event: any) {
     params: { FunctionName: env.STORAGE_AWS_WORKER_LAMBDA_NAME },
   };
 
-  // console.log(`EVENT: ${JSON.stringify(event)}`);
+  console.info(`EVENT: ${JSON.stringify(event)}`);
 
   try {
     if (event.Records) {
@@ -139,6 +139,7 @@ export async function handleSqsMessages(
   context: Context,
   serviceDef: ServiceDefinition,
 ) {
+  console.info('handle sqs message. event.Records: ', event.Records);
   for (const message of event.Records) {
     let parameters: any;
     if (message?.messageAttributes?.parameters?.stringValue) {
@@ -165,7 +166,9 @@ export async function handleSqsMessages(
           workerDefinition,
           context,
           QueueWorkerType.EXECUTOR,
-        );
+        ).run({
+          executeArg: message?.body,
+        });
         break;
       }
       default:

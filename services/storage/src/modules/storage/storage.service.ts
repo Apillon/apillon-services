@@ -136,6 +136,8 @@ export class StorageService {
       null,
     );
 
+    return true;
+
     //Get files in session (fileStatus must be ofst atus 1)
     const files = (
       await new FileUploadRequest(
