@@ -31,7 +31,21 @@ import { ConfigService, connect, Utils } from '@kiltprotocol/sdk-js';
 import { AttestationCreateDto } from './dto/attestation-create.dto';
 import { AttestDidCreateExtrinsicDto } from './dto/attestation-submittable-tx.dto';
 import { EncryptedAsymmetricString } from '@kiltprotocol/utils/lib/cjs/Crypto';
-import { stringToU8a, u8aToString } from '@polkadot/util';
+import {
+  stringToU8a,
+  u8aToString,
+  stringToHex,
+  hexToU8a,
+} from '@polkadot/util';
+import { encode } from 'punycode';
+
+export type EncodedVerificationKey =
+  | { sr25519: Uint8Array }
+  | { ed25519: Uint8Array }
+  | { ecdsa: Uint8Array };
+export type EncodedEncryptionKey = { x25519: Uint8Array };
+export type EncodedKey = EncodedVerificationKey | EncodedEncryptionKey;
+export type EncodedSignature = EncodedVerificationKey;
 
 @Injectable()
 export class AttestationService {
@@ -150,27 +164,33 @@ export class AttestationService {
     context: AuthorizationApiContext,
     body: AttestDidCreateExtrinsicDto,
   ) {
-    const encodeData = JSON.parse(body.did_submit_call);
-    const userPubkey = body.userPublicKey;
+    await connect(env.KILT_NETWORK);
+    const api = ConfigService.get('api');
+    const encodedData = JSON.parse(JSON.stringify(body.did_create_call));
 
     const attesterKeyPairs = generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
-
     const decodedData = Utils.Crypto.decryptAsymmetric(
-      { box: encodeData.box, nonce: encodeData.nonce },
-      userPubkey,
+      {
+        box: hexToU8a(encodedData.box),
+        nonce: hexToU8a(encodedData.nonce),
+      },
+      hexToU8a(body.decryptionKey),
       attesterKeyPairs.encryption.secretKey,
     ) as Uint8Array;
 
-    // const extrinsic: SubmittableExtrinsic = ;
-    const x = JSON.parse(u8aToString(decodedData)).did_create_tx.base;
-    const extrinsic = x.base as SubmittableExtrinsic;
-    console.log(x.signAsync);
+    const extrinsicType = JSON.parse(u8aToString(decodedData));
 
-    extrinsic.signAsync = x.signAsync;
-    const success = await submitDidCreateTx(extrinsic);
-    // const tx = didCreateTx;
+    console.log(
+      typeof extrinsicType.extrinsicData,
+      typeof extrinsicType.extrinsicSignature,
+    );
 
-    return { didUri: 'Yohohohohho', success: true };
+    const fullDidCreationTx = api.tx.did.create(
+      extrinsicType.extrinsicData as Uint8Array,
+      extrinsicType.extrinsicSignature as Uint8Array,
+    );
+    const success = await submitDidCreateTx(fullDidCreationTx);
+    return { success: success };
   }
 
   async attestCreate(

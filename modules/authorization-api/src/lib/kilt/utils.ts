@@ -55,7 +55,7 @@ export function generateKeypairs(mnemonic: string) {
 
 export async function submitDidCreateTx(
   extrinsic: SubmittableExtrinsic,
-): Promise<Boolean> {
+): Promise<boolean> {
   // TODO: Will probably be expanded in the future with a dedicated module
   // with getters and setters for specifics about did creation ....
   console.log('Connecting to Kilt network ...');
@@ -69,14 +69,20 @@ export async function submitDidCreateTx(
     await Blockchain.signAndSubmitTx(extrinsic, attesterAccount);
   } catch (error) {
     console.log(error);
+    // writeLog(
+    //   LogType.ERROR,
+    //   `KILT :: DID CREATION FAILED`,
+    //   'attestation.service.ts',
+    //   'submitDidCreateTx',
+    // );
+    return false;
   }
 
-  // TODO: Make a better system
   writeLog(
     LogType.MSG,
-    `KILT TX CREATE ==> FULL_DID_CREATION`,
+    `KILT TX :: DID CREATION SUCCESSFULL`,
     'attestation.service.ts',
-    'sendVerificationEmail',
+    'submitDidCreateTx',
   );
 
   return true;

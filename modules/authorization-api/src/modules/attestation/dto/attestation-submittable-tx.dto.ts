@@ -9,31 +9,31 @@ export class AttestDidCreateExtrinsicDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
     validators: [
-      // {
-      //   resolver: presenceValidator(),
-      //   code: ModuleValidatorErrorCode.ATTEST_EXTRINSIC_NOT_PRESENT,
-      // },
+      {
+        resolver: presenceValidator(),
+        code: ModuleValidatorErrorCode.ATTEST_DID_CREATE_EXT_NOT_PRESENT,
+      },
       // {
       //   resolver: extrinsicValidator(),
       //   code: ModuleValidatorErrorCode.ATTEST_TX_INVALID_EXTRINSIC,
       // },
     ],
   })
-  public did_submit_call: string;
+  public did_create_call: string;
 
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
     validators: [
-      // {
-      //   resolver: presenceValidator(),
-      //   code: ModuleValidatorErrorCode.ATTEST_EXTRINSIC_NOT_PRESENT,
-      // },
+      {
+        resolver: presenceValidator(),
+        code: ModuleValidatorErrorCode.ATTEST_DID_CREATE_EXT_NOT_PRESENT,
+      },
       // {
       //   resolver: extrinsicValidator(),
       //   code: ModuleValidatorErrorCode.ATTEST_TX_INVALID_EXTRINSIC,
       // },
     ],
   })
-  public userPublicKey: string;
+  public decryptionKey: string;
 }

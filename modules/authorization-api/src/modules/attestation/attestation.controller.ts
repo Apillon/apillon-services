@@ -35,8 +35,8 @@ export class AttestationController {
   }
 
   @Post('create-did')
-  @Validation({ dto: AttestDidCreateExtrinsicDto })
-  @UseGuards(ValidationGuard)
+  // @Validation({ dto: AttestDidCreateExtrinsicDto })
+  // @UseGuards(ValidationGuard)
   async attestationGenerateDid(
     @Ctx() context: AuthorizationApiContext,
     @Body() body: AttestDidCreateExtrinsicDto,
