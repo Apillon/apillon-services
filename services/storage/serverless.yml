@@ -45,3 +45,17 @@ functions:
     description: Apillon storage Service
     memorySize: 512
     timeout: 30
+  storage-service-worker:
+    handler: ./src/workers/worker-executor.handler
+    name: storage-service-worker-${self:provider.stage}
+    description: Serverless workers for Apillon storage microservice
+    memorySize: 512
+    timeout: 900
+    reservedConcurrency: 30
+    environment:
+      AWS_WORKER_LAMBDA_NAME: ${self:functions.storage-service-worker.name}
+    events:
+      - sqs:
+          arn: arn:aws:sqs:eu-west-1:018021943180:storage-service-queue-dev #${env:WORKER_SQS_ARN}
+          batchSize: 4
+          maximumBatchingWindow: 5

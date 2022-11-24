@@ -319,7 +319,7 @@ export let env: IEnv = {
   /**
    * AWS SQS url for worker communications
    */
-  STORAGE_AWS_WORKER_SQS_URL: process.env['AWS_WORKER_SQS_URL'],
+  STORAGE_AWS_WORKER_SQS_URL: process.env['STORAGE_AWS_WORKER_SQS_URL'],
   STORAGE_AWS_WORKER_LAMBDA_NAME: process.env['STORAGE_AWS_WORKER_LAMBDA_NAME'],
 };
 

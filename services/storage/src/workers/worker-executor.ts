@@ -5,12 +5,14 @@ import {
   ServiceDefinition,
   writeWorkerLog,
   WorkerLogStatus,
+  QueueWorkerType,
 } from '@apillon/workers-lib';
 import { Scheduler } from './scheduler';
 import { AppEnvironment, MySql } from '@apillon/lib';
 
 import { Context, env } from '@apillon/lib';
 import { TestWorker } from './test-worker';
+import { SyncToIPFSWorker } from './s3-to-ipfs-sync-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -158,6 +160,14 @@ export async function handleSqsMessages(
 
     // eslint-disable-next-line sonarjs/no-small-switch
     switch (message?.messageAttributes?.workerName?.stringValue) {
+      case WorkerName.SYNC_TO_IPFS_WORKER: {
+        await new SyncToIPFSWorker(
+          workerDefinition,
+          context,
+          QueueWorkerType.EXECUTOR,
+        );
+        break;
+      }
       default:
         console.log(
           `ERROR - INVALID WORKER NAME: ${message?.messageAttributes?.workerName}`,

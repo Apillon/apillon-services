@@ -39,5 +39,8 @@
   "devDependencies": {
     "eslint-config-common": "*",
     "tsconfig": "*"
+  },
+  "overrides": {
+    "ipfs-utils": "9.0.6"
   }
 }
