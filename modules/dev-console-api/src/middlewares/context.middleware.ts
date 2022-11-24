@@ -14,7 +14,14 @@ export class ContextMiddleware implements NestMiddleware {
   ) {}
 
   use(req: IRequest, res, next) {
-    req.context = new DevConsoleApiContext();
+    let requestId = null;
+    try {
+      requestId = JSON.parse(
+        decodeURI(req.headers['x-apigateway-context'] as string),
+      )?.awsRequestId;
+    } catch (err) {}
+
+    req.context = new DevConsoleApiContext(requestId);
     req.context.setMySql(this.mysql);
     next();
   }
