@@ -18,6 +18,15 @@ export function createRequestLogMiddleware(
       const startTime = Date.now();
       const end = res.end;
       const context = req.context;
+      const requestId = context?.requestId || '';
+      let gatewayEvent = null as any;
+
+      try {
+        gatewayEvent = JSON.parse(
+          decodeURI(req.headers['x-apigateway-event'] as string),
+        );
+      } catch (err) {}
+
       res.end = async function (...args) {
         try {
           const argsArray = Array.prototype.slice.apply(args);
@@ -26,39 +35,35 @@ export function createRequestLogMiddleware(
           const request = new RequestLogDto({}, context);
           request.populate({
             apiName,
-            requestId: context?.requestId || '',
-            host: req.hostname || '',
+            requestId,
+            host: req.hostname || null,
             ip:
               req.ip ||
-              req.sourceIp ||
-              req.headers['X-Real-Ip'] ||
-              req.headers['X-Forwarded-For'] ||
-              req.http?.sourceIp ||
-              req.identity?.sourceIp ||
+              gatewayEvent?.requestContext?.identity?.sourceIp ||
+              req.headers['x-forwarded-for']?.split(',')[0] ||
               null,
+            country: req.headers['cloudfront-viewer-country'] || null,
             status: res.statusCode || 0,
             method: req.method || 'NONE',
-            url: req.originalUrl || '',
-            endpoint: req.originalUrl.split(/[?#]/)[0] || '',
+            url: req.originalUrl || null,
+            endpoint: req.originalUrl.split(/[?#]/)[0] || null,
             userAgent:
               req.headers && req.headers['user-agent']
                 ? req.headers['user-agent']
-                : '',
-            origin:
-              req.headers && req.headers['origin'] ? req.headers['origin'] : '',
+                : null,
+            origin: req.headers?.origin || null,
+            referer: req.headers?.referer || null,
             body: JSON.stringify(bodyMap || []),
             responseTime: Date.now() - startTime,
             createTime: new Date(),
-            user_id:
+            user_uuid:
               context?.user?.user_uuid ||
               context?.user?.id ||
               context?.user?.uuid ||
               null,
           });
           await new Lmas().writeRequestLog(request);
-          console.log(`HEADERS: ${JSON.stringify(req.headers)}`);
-          console.log(`REQ: ${JSON.stringify(req)}`);
-          console.log(`CONTEXT: ${JSON.stringify(context)}`);
+          // console.log(`HEADERS: ${JSON.stringify(req.headers)}`);
         } catch (error) {
           console.log('error:', error);
         }
