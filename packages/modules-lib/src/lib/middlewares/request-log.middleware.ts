@@ -18,6 +18,8 @@ export function createRequestLogMiddleware(
       const startTime = Date.now();
       const end = res.end;
       const context = req.context;
+      const requestId = context?.requestId || '';
+
       res.end = async function (...args) {
         try {
           const argsArray = Array.prototype.slice.apply(args);
@@ -26,15 +28,13 @@ export function createRequestLogMiddleware(
           const request = new RequestLogDto({}, context);
           request.populate({
             apiName,
-            requestId: context?.requestId || '',
+            requestId,
             host: req.hostname || '',
             ip:
               req.ip ||
-              req.sourceIp ||
+              req.headers['x-forwarded-for']?.split(',')[0] ||
               req.headers['X-Real-Ip'] ||
-              req.headers['X-Forwarded-For'] ||
-              req.http?.sourceIp ||
-              req.identity?.sourceIp ||
+              req.headers['X-Forwarded-For']?.split(',')[0] ||
               null,
             status: res.statusCode || 0,
             method: req.method || 'NONE',
@@ -57,7 +57,6 @@ export function createRequestLogMiddleware(
           });
           await new Lmas().writeRequestLog(request);
           console.log(`HEADERS: ${JSON.stringify(req.headers)}`);
-          console.log(`REQ: ${JSON.stringify(req)}`);
           console.log(`CONTEXT: ${JSON.stringify(context)}`);
         } catch (error) {
           console.log('error:', error);
