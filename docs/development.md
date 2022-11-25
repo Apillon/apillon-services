@@ -11,9 +11,9 @@
 | 04   | DEV-API | Developer Console API                    | @apillon/dev-console-api | /modules/dev-console-api/ |
 | 05   | AP-API  | Apillon Service API                      | @apillon/apillon-api     | /modules/apillon-api/     |
 | 06   | IPFS    | IPFS Storage Service                     | @apillon/storage         | /services/storage/        |
-| 07   | MOD-LIB | Module Code Library                      | @apillon/modules-lib     | /packages/modules-lib/    |
+| 07   | AUTH    | Authentication API                       | @apillon/auth-api        | /modules/auth/            |
 | 08   | MAIL    | Mailing Service                          | @apillon/mailing         | /services/mailing/        |
-| 09   | AUTH    | Authentication API                       | @apillon/auth-api        | /modules/auth/            |
+| 09   | MOD-LIB | Module Code Library                      | @apillon/modules-lib     | /packages/modules-lib/    |
 | 10   | SCS     | System Configuration Service             | @apillon/config          | /services/config          |
 
 ## Error codes

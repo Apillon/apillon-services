@@ -27,6 +27,38 @@ export class Quota extends AdvancedSQLModel {
   public name: string;
 
   /**
+   * quota group
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public group: string;
+
+  /**
+   * quota description
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public description: string;
+
+  /**
    * quota type
    */
   @prop({
@@ -41,4 +73,20 @@ export class Quota extends AdvancedSQLModel {
     ],
   })
   public limitType: number;
+
+  /**
+   * limit
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public limit: number;
 }

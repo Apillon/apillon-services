@@ -1,27 +1,32 @@
 // import { ApiProperty } from '@babel/core';
 import { prop } from '@rawmodel/core';
-import { stringParser } from '@rawmodel/parsers';
+import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
-import { BaseQueryFilter } from '../../../base-models/base-query-filter.model';
+import { ModelBase } from '../../../base-models/base';
 
-export class ApiKeyQueryFilter extends BaseQueryFilter {
+export class GetQuotaDto extends ModelBase {
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.PROJECT_UUID_QUERY_PARAM_NOT_PRESENT,
+        code: ValidatorErrorCode.QUOTA_ID_NOT_PRESENT,
       },
     ],
+  })
+  public quota_id: number;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
   })
   public project_uuid: string;
 
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [],
   })
-  public search: string;
+  public object_uuid: string;
 }

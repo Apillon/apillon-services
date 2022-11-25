@@ -50,7 +50,7 @@ export enum MailEventType {
   SEND_MAIL = 'send-mail',
 }
 
-export enum ConfigEventType {
+export enum ScsEventType {
   GET_QUOTA = 'get-quota',
 }
 
@@ -255,6 +255,7 @@ export enum ValidatorErrorCode {
   API_KEY_ROLE_PROJECT_UUID_NOT_PRESENT = 42200016,
   API_KEY_ROLE_SERVICE_UUID_NOT_PRESENT = 42200017,
   API_KEY_ROLE_ROLE_ID_NOT_VALID = 42200018,
+  QUOTA_ID_NOT_PRESENT = 42200019,
 }
 
 /**
