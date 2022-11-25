@@ -14,7 +14,7 @@ export class CreateDirectoryDto extends ModelBase {
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [],
   })
-  public parentDirectory_id: string;
+  public parentDirectory_id: number;
 
   @prop({
     parser: { resolver: integerParser() },

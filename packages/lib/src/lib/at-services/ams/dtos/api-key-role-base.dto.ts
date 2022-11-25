@@ -28,7 +28,7 @@ export class ApiKeyRoleBaseDto extends ModelBase {
       },
     ],
   })
-  public role_id: string;
+  public role_id: number;
 
   @prop({
     parser: { resolver: stringParser() },
