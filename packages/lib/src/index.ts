@@ -32,3 +32,4 @@ export * from './lib/at-services/ams/dtos/api-key-role.dto';
 export * from './lib/at-services/ams/dtos/api-key-role-base.dto';
 export * from './lib/at-services/lmas/dtos/request-log.dto';
 export * from './lib/parsers';
+export * from './lib/at-services/storage/dtos/end-file-upload-session.dto';

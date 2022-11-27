@@ -3,6 +3,7 @@ import {
   BadRequestErrorCode,
   CodeException,
   CreateS3SignedUrlForUploadDto,
+  EndFileUploadSessionDto,
   FileDetailsQueryFilter,
   StorageMicroservice,
 } from '@apillon/lib';
@@ -12,11 +13,12 @@ export class StorageService {
   async endFileUploadSession(
     context: DevConsoleApiContext,
     session_uuid: string,
+    body: EndFileUploadSessionDto,
   ) {
     return (
       await new StorageMicroservice(
         context,
-      ).endFileUploadSessionAndExecuteSyncToIPFS(session_uuid)
+      ).endFileUploadSessionAndExecuteSyncToIPFS(session_uuid, body)
     ).data;
   }
   async createS3SignedUrlForUpload(

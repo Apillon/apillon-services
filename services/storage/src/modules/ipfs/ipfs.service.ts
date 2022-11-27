@@ -82,6 +82,7 @@ export class IPFSService {
   }): Promise<{
     parentDirCID: CID;
     ipfsDirectories: { path: string; cid: CID }[];
+    size: number;
   }> {
     //Get IPFS client
     const client = await IPFSService.createIPFSClient();
@@ -142,6 +143,7 @@ export class IPFSService {
     return {
       parentDirCID: baseDirectoryOnIPFS?.cid,
       ipfsDirectories: ipfsDirectories,
+      size: baseDirectoryOnIPFS?.size,
     };
   }
 
