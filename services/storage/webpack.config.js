@@ -42,7 +42,7 @@ module.exports = {
     __dirname: true,
   },
   externals: [nodeExternals({
-    allowlist: ['@apillon/lib']
+    allowlist: ['@apillon/lib', '@apillon/workers-lib']
   }
   )],
   // externals: [nodeExternals()],

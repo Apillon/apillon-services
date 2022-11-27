@@ -10,6 +10,7 @@ import {
 import {
   CreateS3SignedUrlForUploadDto,
   DefaultUserRole,
+  EndFileUploadSessionDto,
   FileDetailsQueryFilter,
   ValidateFor,
 } from '@apillon/lib';
@@ -46,13 +47,17 @@ export class StorageController {
     { role: DefaultUserRole.PROJECT_USER },
   )
   @UseGuards(AuthGuard)
+  @Validation({ dto: EndFileUploadSessionDto })
+  @UseGuards(ValidationGuard)
   async endFileUploadSession(
     @Ctx() context: DevConsoleApiContext,
     @Param('session_uuid') session_uuid: string,
+    @Body() body: EndFileUploadSessionDto,
   ) {
     return await this.storageService.endFileUploadSession(
       context,
       session_uuid,
+      body,
     );
   }
 

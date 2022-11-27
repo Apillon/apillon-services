@@ -1,41 +1,9 @@
 import { typesBundleForPolkadot } from '@crustio/type-definitions';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Keyring } from '@polkadot/keyring';
-import { u8aToHex } from '@polkadot/util';
-import { CID, create } from 'ipfs-http-client';
+import { CID } from 'ipfs-http-client';
 
 export class CrustService {
-  static async createIPFSClient() {
-    console.log('creating IPFS client...');
-    const seed = process.env.STORAGE_CRUST_SEED_PHRASE;
-    if (!seed) {
-      throw new Error('seed phrase not found');
-    }
-
-    // 1.2 get a keypair
-    const keyring = new Keyring();
-    const pair = keyring.addFromUri(seed);
-
-    // 1.3 get the signature of the addr
-    const sigRaw = pair.sign(pair.address);
-    const sig = u8aToHex(sigRaw);
-
-    // 1.4 compile the sig to autHeader
-    const authHeaderRaw = `sub-${pair.address}:${sig}`;
-    const authHeader = Buffer.from(authHeaderRaw).toString('base64');
-
-    const ipfs = create({
-      url: `https://crustipfs.xyz/api/v0`,
-      headers: {
-        authorization: `Basic ${authHeader}`,
-      },
-    });
-
-    console.log('IPFS client created...');
-
-    return ipfs;
-  }
-
   static async placeStorageOrderToCRUST(params: { cid: CID; size: number }) {
     // Pin dist directory on Crust
     const api = new ApiPromise({

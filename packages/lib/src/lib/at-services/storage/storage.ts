@@ -11,6 +11,7 @@ import { CreateBucketDto } from './dtos/create-bucket.dto';
 import { CreateDirectoryDto } from './dtos/create-directory.dto';
 import { CreateS3SignedUrlForUploadDto } from './dtos/create-s3-signed-url-for-upload.dto';
 import { DirectoryContentQueryFilter } from './dtos/directory-content-query-filter.dto';
+import { EndFileUploadSessionDto } from './dtos/end-file-upload-session.dto';
 import { FileDetailsQueryFilter } from './dtos/file-details-query-filter.dto';
 
 export class StorageMicroservice extends BaseService {
@@ -124,11 +125,15 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async endFileUploadSessionAndExecuteSyncToIPFS(session_uuid: string) {
+  public async endFileUploadSessionAndExecuteSyncToIPFS(
+    session_uuid: string,
+    params: EndFileUploadSessionDto,
+  ) {
     const data = {
       eventName: StorageEventType.END_FILE_UPLOAD_SESSION,
       user: this.user.serialize(),
       session_uuid: session_uuid,
+      body: params.serialize(),
     };
     return await this.callService(data);
   }
