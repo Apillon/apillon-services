@@ -69,12 +69,12 @@ export async function submitDidCreateTx(
     await Blockchain.signAndSubmitTx(extrinsic, attesterAccount);
   } catch (error) {
     console.log(error);
-    // writeLog(
-    //   LogType.ERROR,
-    //   `KILT :: DID CREATION FAILED`,
-    //   'attestation.service.ts',
-    //   'submitDidCreateTx',
-    // );
+    writeLog(
+      LogType.ERROR,
+      `KILT :: DID CREATION FAILED`,
+      'attestation.service.ts',
+      'submitDidCreateTx',
+    );
     return false;
   }
 
@@ -88,38 +88,52 @@ export async function submitDidCreateTx(
   return true;
 }
 
-// export function setupCredsProposition(
-//   // TODO: Change to correct types
-//   email: string,
-//   attesterDidUri: any,
-//   claimerDidUri: any,
-// ) {
-//   const authCType = getCtypeSchema();
-//   const authContents = {
-//     Email: email,
-//   };
+export function createProposition(
+  // TODO: Change to correct types
+  email: string,
+  attesterDidUri: any,
+  claimerDidUri: any,
+) {
+  const authCType = getCtypeSchema();
+  const authContents = {
+    Email: email,
+  };
 
-//   const authClaim = Claim.fromCTypeAndClaimContents(
-//     authCType,
-//     authContents,
-//     claimerDidUri,
-//   );
+  const authClaim = Claim.fromCTypeAndClaimContents(
+    authCType,
+    authContents,
+    claimerDidUri,
+  );
 
-//   const authCredential = Credential.fromClaim(authClaim);
-//   return {
-//     creds: authCredential,
-//     credsProposition: Attestation.fromCredentialAndDid(
-//       authCredential,
-//       attesterDidUri,
-//     ),
-//   };
-// }
+  const authCredential = Credential.fromClaim(authClaim);
 
-// export function getCtypeSchema(): ICType {
-//   // TODO: These are the official CTypes create by Kilt
-//   return CType.fromProperties('Email', {
-//     Email: {
-//       type: 'string',
-//     },
-//   });
-// }
+  return {
+    creds: authCredential,
+    credsProposition: Attestation.fromCredentialAndDid(
+      authCredential,
+      attesterDidUri,
+    ),
+  };
+}
+
+export async function getFullDidDocument(keypairs: Keypairs) {
+  const api = ConfigService.get('api');
+  const didUri = Did.getFullDidUriFromKey(keypairs.authentication);
+  const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
+  const { document } = Did.linkedInfoFromChain(encodedFullDid);
+
+  if (!document) {
+    throw 'Full DID was not successfully created.';
+  }
+
+  return document;
+}
+
+export function getCtypeSchema(): ICType {
+  // TODO: These are the official CTypes create by Kilt
+  return CType.fromProperties('Email', {
+    Email: {
+      type: 'string',
+    },
+  });
+}
