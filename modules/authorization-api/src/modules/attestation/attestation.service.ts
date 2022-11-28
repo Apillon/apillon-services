@@ -17,35 +17,17 @@ import {
   JwtTokenType,
   ModuleValidatorErrorCode,
 } from '../../config/types';
+import { generateKeypairs, generateAccount } from '../../lib/kilt/utils';
+import { ICredential, KiltKeyringPair } from '@kiltprotocol/types';
 import {
-  generateKeypairs,
-  generateAccount,
-  submitDidCreateTx,
-} from '../../lib/kilt/utils';
-import {
-  ICredential,
-  KiltKeyringPair,
-  SubmittableExtrinsic,
-} from '@kiltprotocol/types';
-import { ConfigService, connect, Utils } from '@kiltprotocol/sdk-js';
+  Blockchain,
+  ConfigService,
+  connect,
+  Utils,
+} from '@kiltprotocol/sdk-js';
 import { AttestationCreateDto } from './dto/attestation-create.dto';
 import { AttestDidCreateExtrinsicDto } from './dto/attestation-submittable-tx.dto';
-import { EncryptedAsymmetricString } from '@kiltprotocol/utils/lib/cjs/Crypto';
-import {
-  stringToU8a,
-  u8aToString,
-  stringToHex,
-  hexToU8a,
-} from '@polkadot/util';
-import { encode } from 'punycode';
-
-export type EncodedVerificationKey =
-  | { sr25519: Uint8Array }
-  | { ed25519: Uint8Array }
-  | { ecdsa: Uint8Array };
-export type EncodedEncryptionKey = { x25519: Uint8Array };
-export type EncodedKey = EncodedVerificationKey | EncodedEncryptionKey;
-export type EncodedSignature = EncodedVerificationKey;
+import { u8aToHex, hexToU8a } from '@polkadot/util';
 
 @Injectable()
 export class AttestationService {
@@ -160,36 +142,41 @@ export class AttestationService {
     return { state: attestation.state };
   }
 
-  async generateFullDid(
-    context: AuthorizationApiContext,
-    body: AttestDidCreateExtrinsicDto,
-  ) {
+  async generateFullDid(context: AuthorizationApiContext, body: any) {
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
-    const encodedData = JSON.parse(JSON.stringify(body.did_create_call));
-
+    const decryptionKey = body.senderPubKey;
     const attesterKeyPairs = generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
-    const decodedData = Utils.Crypto.decryptAsymmetric(
+    const attesterAccount = (await generateAccount(
+      env.KILT_ATTESTER_MNEMONIC,
+    )) as KiltKeyringPair;
+
+    const decrypted = Utils.Crypto.decryptAsymmetricAsStr(
       {
-        box: hexToU8a(encodedData.box),
-        nonce: hexToU8a(encodedData.nonce),
+        box: hexToU8a(body.payload.message),
+        nonce: hexToU8a(body.payload.nonce),
       },
-      hexToU8a(body.decryptionKey),
-      attesterKeyPairs.encryption.secretKey,
-    ) as Uint8Array;
-
-    const extrinsicType = JSON.parse(u8aToString(decodedData));
-
-    console.log(
-      typeof extrinsicType.extrinsicData,
-      typeof extrinsicType.extrinsicSignature,
+      decryptionKey,
+      u8aToHex(attesterKeyPairs.encryption.secretKey),
     );
 
-    const fullDidCreationTx = api.tx.did.create(
-      extrinsicType.extrinsicData as Uint8Array,
-      extrinsicType.extrinsicSignature as Uint8Array,
-    );
-    const success = await submitDidCreateTx(fullDidCreationTx);
+    let success = false;
+    if (decrypted !== false) {
+      const payload = JSON.parse(decrypted);
+      const data = hexToU8a(payload.data);
+      const signature = hexToU8a(payload.signature);
+
+      try {
+        const fullDidCreationTx = await api.tx.did.create(data, {
+          sr25519: signature,
+        });
+        await Blockchain.signAndSubmitTx(fullDidCreationTx, attesterAccount);
+        success = true;
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
     return { success: success };
   }
 
@@ -207,7 +194,7 @@ export class AttestationService {
     )) as KiltKeyringPair;
     const attesterKeyPairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
 
-    console.log('ATTESTEDR PUB KEY ', attesterKeyPairs.encryption.publicKey);
+    console.log('ATTESTER PUB KEY ', attesterKeyPairs.encryption.publicKey);
 
     // const attesterDidDoc = await getOrCreateFullDid(
     //   attesterAccount,

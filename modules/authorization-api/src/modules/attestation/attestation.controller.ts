@@ -39,7 +39,7 @@ export class AttestationController {
   // @UseGuards(ValidationGuard)
   async attestationGenerateDid(
     @Ctx() context: AuthorizationApiContext,
-    @Body() body: AttestDidCreateExtrinsicDto,
+    @Body() body: any,
   ) {
     return await this.attestationService.generateFullDid(context, body);
   }
