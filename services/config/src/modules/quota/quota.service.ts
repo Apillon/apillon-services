@@ -29,6 +29,7 @@ export class QuotaService {
         ON o2.quota_id = q.id
         AND o2.status = 5
       WHERE q.status = 5
+      AND q.id = @quote_id
       GROUP BY q.id
     `);
   }
