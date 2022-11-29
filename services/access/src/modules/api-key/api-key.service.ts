@@ -5,6 +5,7 @@ import {
   Lmas,
   LogType,
   SerializeFor,
+  ServiceName,
 } from '@apillon/lib';
 import { ServiceContext } from '../../context';
 import { ApiKey } from './models/api-key.model';
@@ -27,7 +28,9 @@ export class ApiKeyService {
       throw await new AmsCodeException({
         status: 403,
         code: AmsErrorCode.INVALID_API_KEY,
-      }).writeToMonitor({});
+      }).writeToMonitor({
+        user_uuid: context?.user?.user_uuid,
+      });
     }
 
     await apiKey.populateApiKeyRoles();
@@ -94,11 +97,12 @@ export class ApiKeyService {
     }
 
     await new Lmas().writeLog({
-      projectId: key.project_uuid,
+      project_uuid: key.project_uuid,
       logType: LogType.INFO,
       message: 'New api key created!',
-      userId: context.user.id,
+      user_uuid: context.user.user_uuid,
       location: 'AMS/ApiKeyService/createApiKey',
+      service: ServiceName.AMS,
     });
 
     return {
@@ -125,11 +129,12 @@ export class ApiKeyService {
     await key.markDeleted();
 
     await new Lmas().writeLog({
-      projectId: key.project_uuid,
+      project_uuid: key.project_uuid,
       logType: LogType.INFO,
       message: 'Api key deleted!',
-      userId: context.user.id,
+      user_uuid: context.user.user_uuid,
       location: 'AMS/ApiKeyService/deleteApiKey',
+      service: ServiceName.AMS,
     });
 
     return true;

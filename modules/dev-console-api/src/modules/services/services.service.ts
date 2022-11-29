@@ -60,10 +60,10 @@ export class ServicesService {
     const service = await body.populate({ service_uuid: uuidV4() }).insert();
 
     await new Lmas().writeLog({
-      projectId: project.project_uuid,
+      context: context,
+      project_uuid: project.project_uuid,
       logType: LogType.INFO,
       message: 'New project service created',
-      userId: context.user.id,
       location: 'DEV-CONSOLE-API/ServicesService/createService',
       service: ServiceName.DEV_CONSOLE,
     });

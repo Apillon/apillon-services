@@ -48,10 +48,10 @@ export class BucketService {
     await b.insert();
 
     await new Lmas().writeLog({
-      projectId: event.body.project_uuid,
+      context,
+      project_uuid: event.body.project_uuid,
       logType: LogType.INFO,
       message: 'New bucket created',
-      userId: context.user.id,
       location: 'BucketService/createBucket',
       service: ServiceName.STORAGE,
     });

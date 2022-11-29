@@ -84,6 +84,7 @@ export enum LogType {
   MSG = 'MSG',
   WARN = 'WARNING',
   ERROR = 'ERROR',
+  COST = 'COST',
 }
 
 export enum SqlModelStatus {

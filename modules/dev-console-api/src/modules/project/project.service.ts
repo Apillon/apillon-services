@@ -64,10 +64,10 @@ export class ProjectService {
       await context.mysql.commit(conn);
 
       await new Lmas().writeLog({
-        projectId: project.project_uuid,
+        context: context,
+        project_uuid: project.project_uuid,
         logType: LogType.INFO,
         message: 'New project created',
-        userId: context.user.id,
         location: 'DEV-CONSOLE-API/ProjectService/createProject',
         service: ServiceName.DEV_CONSOLE,
       });

@@ -79,10 +79,27 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
     }
 
     if (bucket.bucketType == BucketType.HOSTING) {
-      const ipfsRes = await IPFSService.uploadFilesToIPFSFromS3({
-        fileUploadRequests: files,
-        wrapWithDirectory: true,
-      });
+      let ipfsRes = undefined;
+      try {
+        ipfsRes = await IPFSService.uploadFilesToIPFSFromS3({
+          fileUploadRequests: files,
+          wrapWithDirectory: true,
+        });
+      } catch (err) {
+        await new Lmas().writeLog({
+          context: this.context,
+          project_uuid: bucket.project_uuid,
+          logType: LogType.ERROR,
+          message: 'Error uploading files to IPFS',
+          location: `${this.constructor.name}/runExecutor`,
+          service: ServiceName.STORAGE,
+          data: {
+            session: session.serialize(),
+            files: files.map((x) => x.serialize()),
+          },
+        });
+        throw err;
+      }
 
       try {
         await CrustService.placeStorageOrderToCRUST({
@@ -90,15 +107,17 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
           size: ipfsRes.size,
         });
         await new Lmas().writeLog({
-          projectId: bucket.project_uuid,
-          logType: LogType.INFO,
+          context: this.context,
+          project_uuid: bucket.project_uuid,
+          logType: LogType.COST,
           message: 'Success placing storage order to CRUST',
           location: `${this.constructor.name}/runExecutor`,
           service: ServiceName.STORAGE,
         });
       } catch (err) {
         await new Lmas().writeLog({
-          projectId: bucket.project_uuid,
+          context: this.context,
+          project_uuid: bucket.project_uuid,
           logType: LogType.ERROR,
           message: 'Error at placing storage order to CRUST',
           location: `${this.constructor.name}/runExecutor`,
@@ -165,6 +184,19 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         await bucket.update(SerializeFor.UPDATE_DB, conn);
 
         await this.context.mysql.commit(conn);
+
+        await new Lmas().writeLog({
+          context: this.context,
+          project_uuid: bucket.project_uuid,
+          logType: LogType.COST,
+          message: 'Hosting bucket content changed',
+          location: `${this.constructor.name}/runExecutor`,
+          service: ServiceName.STORAGE,
+          data: {
+            bucket_uuid: bucket.bucket_uuid,
+            bucketSize: bucket.size,
+          },
+        });
       } catch (err) {
         await this.context.mysql.rollback(conn);
         throw err;
@@ -197,6 +229,18 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
             await file.update();
             continue;
           } else {
+            await new Lmas().writeLog({
+              context: this.context,
+              project_uuid: bucket.project_uuid,
+              logType: LogType.ERROR,
+              message: 'Error uploading file to IPFS',
+              location: `${this.constructor.name}/runExecutor`,
+              service: ServiceName.STORAGE,
+              data: {
+                session: session.serialize(),
+                file: file.serialize(),
+              },
+            });
             throw err;
           }
         }
@@ -208,9 +252,18 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
             cid: ipfsRes.CID,
             size: ipfsRes.size,
           });
+          await new Lmas().writeLog({
+            context: this.context,
+            project_uuid: bucket.project_uuid,
+            logType: LogType.COST,
+            message: 'Success placing storage order to CRUST',
+            location: `${this.constructor.name}/runExecutor`,
+            service: ServiceName.STORAGE,
+          });
         } catch (err) {
           await new Lmas().writeLog({
-            projectId: bucket.project_uuid,
+            context: this.context,
+            project_uuid: bucket.project_uuid,
             logType: LogType.ERROR,
             message: 'Error at placing storage order to CRUST',
             location: `${this.constructor.name}/runExecutor`,
@@ -270,6 +323,20 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
       //update bucket size
       bucket.size = bucket.size ? bucket.size + tmpSize : tmpSize;
       await bucket.update();
+
+      await new Lmas().writeLog({
+        context: this.context,
+        project_uuid: bucket.project_uuid,
+        logType: LogType.COST,
+        message: 'Storage bucket size increased',
+        location: `${this.constructor.name}/runExecutor`,
+        service: ServiceName.STORAGE,
+        data: {
+          bucket_uuid: bucket.bucket_uuid,
+          size: tmpSize,
+          bucketSize: bucket.size,
+        },
+      });
     }
 
     //update session status
