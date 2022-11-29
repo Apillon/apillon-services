@@ -15,13 +15,16 @@ import { AttestationService } from './attestation.service';
 import { AttestationEmailDto } from './dto/attestation-email.dto';
 import { AttestationCreateDto } from './dto/attestation-create.dto';
 import { AttestationTokenDto } from './dto/attestation-token.dto';
-import { AttestDidCreateExtrinsicDto } from './dto/attestation-submittable-tx.dto';
+import { DidCreateDto } from './dto/attestation-did-create.dto';
 
 @Controller('attestation')
 export class AttestationController {
   constructor(private attestationService: AttestationService) {}
 
   @Post('start')
+  // TODO: Possibly split logic -> Attestation start is not really part of the
+  // attestation module, is it? It's more of a sessions / state handler of
+  // the authentication module
   @Validation({ dto: AttestationEmailDto })
   @UseGuards(ValidationGuard)
   async attestationStart(
@@ -35,8 +38,8 @@ export class AttestationController {
   }
 
   @Post('create-did')
-  // @Validation({ dto: AttestDidCreateExtrinsicDto })
-  // @UseGuards(ValidationGuard)
+  @Validation({ dto: DidCreateDto })
+  @UseGuards(ValidationGuard)
   async attestationGenerateDid(
     @Ctx() context: AuthorizationApiContext,
     @Body() body: any,
@@ -44,14 +47,14 @@ export class AttestationController {
     return await this.attestationService.generateFullDid(context, body);
   }
 
-  @Post('attest-claim')
+  @Post('attest-email')
   @Validation({ dto: AttestationCreateDto })
   @UseGuards(ValidationGuard)
   async attestationAttestClaim(
     @Ctx() context: AuthorizationApiContext,
     @Body() body: AttestationCreateDto,
   ) {
-    return await this.attestationService.attestCreate(context, body);
+    return await this.attestationService.createAttestation(context, body);
   }
 
   @Get('verify/:token')

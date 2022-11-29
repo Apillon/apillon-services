@@ -3,7 +3,6 @@ import {
   Blockchain,
   ConfigService,
   Did,
-  DidDocument,
   KeyringPair,
   KiltKeyringPair,
   Utils,
@@ -29,7 +28,7 @@ export async function generateAccount(mnemonic: string): Promise<KeyringPair> {
   );
 }
 
-export function generateKeypairs(mnemonic: string) {
+export async function generateKeypairs(mnemonic: string) {
   // Derivations matter! Must use same algorithm as the one
   // stored on the chain
   const authentication = Utils.Crypto.makeKeypairFromSeed(
@@ -51,6 +50,19 @@ export function generateKeypairs(mnemonic: string) {
     assertion,
     delegation,
   };
+}
+
+export async function getFullDidDocument(keypairs: Keypairs) {
+  const api = ConfigService.get('api');
+  const didUri = Did.getFullDidUriFromKey(keypairs.authentication);
+  const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
+  const { document } = Did.linkedInfoFromChain(encodedFullDid);
+
+  if (!document) {
+    console.error('Full DID was not successfully created.');
+  }
+
+  return document;
 }
 
 export async function submitDidCreateTx(
@@ -88,7 +100,7 @@ export async function submitDidCreateTx(
   return true;
 }
 
-export function createProposition(
+export function prepareAttestation(
   // TODO: Change to correct types
   email: string,
   attesterDidUri: any,
@@ -108,25 +120,12 @@ export function createProposition(
   const authCredential = Credential.fromClaim(authClaim);
 
   return {
-    creds: authCredential,
-    credsProposition: Attestation.fromCredentialAndDid(
+    attestObject: Attestation.fromCredentialAndDid(
       authCredential,
       attesterDidUri,
     ),
+    credential: authCredential,
   };
-}
-
-export async function getFullDidDocument(keypairs: Keypairs) {
-  const api = ConfigService.get('api');
-  const didUri = Did.getFullDidUriFromKey(keypairs.authentication);
-  const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
-  const { document } = Did.linkedInfoFromChain(encodedFullDid);
-
-  if (!document) {
-    throw 'Full DID was not successfully created.';
-  }
-
-  return document;
 }
 
 export function getCtypeSchema(): ICType {

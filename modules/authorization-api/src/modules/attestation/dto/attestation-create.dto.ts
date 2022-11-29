@@ -10,10 +10,10 @@ export class AttestationCreateDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
     validators: [
-      {
-        resolver: presenceValidator(),
-        code: ModuleValidatorErrorCode.ATTEST_DID_URI_NOT_PRESENT,
-      },
+      // {
+      //   resolver: presenceValidator(),
+      //   code: ModuleValidatorErrorCode.ATTEST_DID_URI_NOT_PRESENT,
+      // },
     ],
   })
   public didUri: string;
@@ -22,14 +22,14 @@ export class AttestationCreateDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
     validators: [
-      {
-        resolver: presenceValidator(),
-        code: ModuleValidatorErrorCode.USER_EMAIL_NOT_PRESENT,
-      },
-      {
-        resolver: emailValidator(),
-        code: ModuleValidatorErrorCode.USER_EMAIL_NOT_VALID,
-      },
+      // {
+      //   resolver: presenceValidator(),
+      //   code: ModuleValidatorErrorCode.USER_EMAIL_NOT_PRESENT,
+      // },
+      // {
+      //   resolver: emailValidator(),
+      //   code: ModuleValidatorErrorCode.USER_EMAIL_NOT_VALID,
+      // },
     ],
   })
   public email: string;

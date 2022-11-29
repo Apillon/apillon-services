@@ -20,10 +20,10 @@ import {
 import {
   generateKeypairs,
   generateAccount,
+  prepareAttestation,
   getFullDidDocument,
-  createProposition,
 } from '../../lib/kilt/utils';
-import { ICredential, KiltKeyringPair } from '@kiltprotocol/types';
+import { KiltKeyringPair } from '@kiltprotocol/types';
 import {
   Blockchain,
   ConfigService,
@@ -32,7 +32,6 @@ import {
   Utils,
 } from '@kiltprotocol/sdk-js';
 import { AttestationCreateDto } from './dto/attestation-create.dto';
-import { AttestDidCreateExtrinsicDto } from './dto/attestation-submittable-tx.dto';
 import { u8aToHex, hexToU8a } from '@polkadot/util';
 
 @Injectable()
@@ -152,7 +151,7 @@ export class AttestationService {
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
     const decryptionKey = body.senderPubKey;
-    const attesterKeyPairs = generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
+    const attesterKeyPairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
     const attesterAccount = (await generateAccount(
       env.KILT_ATTESTER_MNEMONIC,
     )) as KiltKeyringPair;
@@ -186,14 +185,15 @@ export class AttestationService {
     return { success: success };
   }
 
-  async attestCreate(
+  async createAttestation(
     context: AuthorizationApiContext,
     body: AttestationCreateDto,
   ) {
+    console.log('Starting attestation ...');
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
     const claimerEmail = body.email;
-    const claimerDidUri = body.didUri;
+    const claimerDidUri = 'did:kilt:' + body.didUri;
 
     const attesterAccount = (await generateAccount(
       env.KILT_ATTESTER_MNEMONIC,
@@ -202,21 +202,21 @@ export class AttestationService {
     const attesterDidDoc = await getFullDidDocument(attesterKeyPairs);
     const attesterDidUri = attesterDidDoc.uri;
 
-    const { creds, credsProposition } = createProposition(
+    const { attestObject, credential } = prepareAttestation(
       claimerEmail,
       attesterDidUri,
       claimerDidUri,
     );
 
-    const auth = api.tx.attestation.add(
-      credsProposition.claimHash,
-      credsProposition.cTypeHash,
+    const emailClaim = api.tx.attestation.add(
+      attestObject.claimHash,
+      attestObject.cTypeHash,
       null,
     );
 
-    const authTx = await Did.authorizeTx(
+    const emailClaimTx = await Did.authorizeTx(
       attesterDidUri,
-      auth,
+      emailClaim,
       async ({ data }) => ({
         signature: attesterKeyPairs.assertion.sign(data),
         keyType: attesterKeyPairs.assertion.type,
@@ -225,9 +225,10 @@ export class AttestationService {
     );
 
     try {
-      await Blockchain.signAndSubmitTx(authTx, attesterAccount);
+      console.log('Submitting attestation tx ...');
+      await Blockchain.signAndSubmitTx(emailClaimTx, attesterAccount);
       const emailAttested = Boolean(
-        await api.query.attestation.attestations(creds.rootHash),
+        await api.query.attestation.attestations(credential.rootHash),
       );
 
       writeLog(
@@ -236,6 +237,13 @@ export class AttestationService {
         'attestation.service.ts',
         'attestClaim',
       );
+
+      console.log('Sending attestation infomation ...');
+
+      return {
+        success: emailAttested,
+        presentation: JSON.stringify(credential),
+      };
     } catch (error) {
       console.error(error);
       writeLog(
@@ -245,7 +253,6 @@ export class AttestationService {
         'attestClaim',
       );
     }
-    const presentation: ICredential = JSON.parse(JSON.stringify({}));
-    return { presentation: presentation };
+    return { success: false };
   }
 }
