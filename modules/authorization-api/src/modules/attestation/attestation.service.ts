@@ -22,6 +22,7 @@ import {
   generateAccount,
   prepareAttestation,
   getFullDidDocument,
+  getNextNonce,
 } from '../../lib/kilt/utils';
 import { KiltKeyringPair } from '@kiltprotocol/types';
 import {
@@ -33,6 +34,7 @@ import {
 } from '@kiltprotocol/sdk-js';
 import { AttestationCreateDto } from './dto/attestation-create.dto';
 import { u8aToHex, hexToU8a } from '@polkadot/util';
+import { BN } from '@polkadot/util/bn/bn';
 
 @Injectable()
 export class AttestationService {
@@ -214,6 +216,10 @@ export class AttestationService {
       null,
     );
 
+    // TODO: This is a really naiive way to enable concurrency. It does not
+    // solve problems with propagation at all
+    // TODO2: This does not work at the moment...
+    const nextNonceBN = new BN(await getNextNonce(attesterDidUri));
     const emailClaimTx = await Did.authorizeTx(
       attesterDidUri,
       emailClaim,
@@ -222,10 +228,11 @@ export class AttestationService {
         keyType: attesterKeyPairs.assertion.type,
       }),
       attesterAccount.address,
+      { txCounter: nextNonceBN },
     );
 
     try {
-      console.log('Submitting attestation tx ...');
+      console.log('Submitting attestation TX ...');
       await Blockchain.signAndSubmitTx(emailClaimTx, attesterAccount);
       const emailAttested = Boolean(
         await api.query.attestation.attestations(credential.rootHash),
@@ -237,8 +244,6 @@ export class AttestationService {
         'attestation.service.ts',
         'attestClaim',
       );
-
-      console.log('Sending attestation infomation ...');
 
       return {
         success: emailAttested,

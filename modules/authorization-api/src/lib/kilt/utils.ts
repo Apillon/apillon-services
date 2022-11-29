@@ -13,6 +13,7 @@ import {
   Attestation,
   Credential,
   SubmittableExtrinsic,
+  DidUri,
 } from '@kiltprotocol/sdk-js';
 import { mnemonicGenerate, mnemonicToMiniSecret } from '@polkadot/util-crypto';
 import { Keypairs } from '../../config/types';
@@ -135,4 +136,13 @@ export function getCtypeSchema(): ICType {
       type: 'string',
     },
   });
+}
+
+export async function getNextNonce(didUri: DidUri) {
+  const api = ConfigService.get('api');
+  const queried = await api.query.did.did(Did.toChain(didUri));
+  const currentNonce = parseInt(
+    Did.documentFromChain(queried).lastTxCounter.toString(),
+  );
+  return currentNonce + 1;
 }
