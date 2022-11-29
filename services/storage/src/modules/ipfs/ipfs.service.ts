@@ -20,11 +20,12 @@ export class IPFSService {
         code: StorageErrorCode.STORAGE_IPFS_GATEWAY_NOT_SET,
         sourceFunction: `${this.constructor.name}/createIPFSClient`,
       });
-    console.info(`Creating IPFS HTTP client on: ${env.STORAGE_IPFS_GATEWAY}`);
-    const ipfsClient = await create({ url: env.STORAGE_IPFS_GATEWAY });
+    console.info('Connection to IPFS gateway: ', env.STORAGE_IPFS_GATEWAY);
 
-    console.info(`IPFS Client successfuly created...`);
-    return ipfsClient;
+    let ipfsGatewayURL = env.STORAGE_IPFS_GATEWAY;
+    if (ipfsGatewayURL.endsWith('/'))
+      ipfsGatewayURL = ipfsGatewayURL.slice(0, -1);
+    return await create({ url: ipfsGatewayURL });
   }
 
   static async uploadFileToIPFSFromS3(

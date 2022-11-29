@@ -1,4 +1,11 @@
-import { Context, env, SerializeFor } from '@apillon/lib';
+import {
+  Context,
+  env,
+  Lmas,
+  LogType,
+  SerializeFor,
+  ServiceName,
+} from '@apillon/lib';
 import {
   BaseQueueWorker,
   QueueWorkerType,
@@ -77,10 +84,28 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         wrapWithDirectory: true,
       });
 
-      await CrustService.placeStorageOrderToCRUST({
-        cid: ipfsRes.parentDirCID,
-        size: ipfsRes.size,
-      });
+      try {
+        await CrustService.placeStorageOrderToCRUST({
+          cid: ipfsRes.parentDirCID,
+          size: ipfsRes.size,
+        });
+        await new Lmas().writeLog({
+          projectId: bucket.project_uuid,
+          logType: LogType.INFO,
+          message: 'Success placing storage order to CRUST',
+          location: `${this.constructor.name}/runExecutor`,
+          service: ServiceName.STORAGE,
+        });
+      } catch (err) {
+        await new Lmas().writeLog({
+          projectId: bucket.project_uuid,
+          logType: LogType.ERROR,
+          message: 'Error at placing storage order to CRUST',
+          location: `${this.constructor.name}/runExecutor`,
+          service: ServiceName.STORAGE,
+        });
+        throw err;
+      }
 
       const conn = await this.context.mysql.start();
 
@@ -171,15 +196,28 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
               FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3;
             await file.update();
             continue;
-          } else throw err;
+          } else {
+            throw err;
+          }
         }
 
         tmpSize += ipfsRes.size;
 
-        await CrustService.placeStorageOrderToCRUST({
-          cid: ipfsRes.CID,
-          size: ipfsRes.size,
-        });
+        try {
+          await CrustService.placeStorageOrderToCRUST({
+            cid: ipfsRes.CID,
+            size: ipfsRes.size,
+          });
+        } catch (err) {
+          await new Lmas().writeLog({
+            projectId: bucket.project_uuid,
+            logType: LogType.ERROR,
+            message: 'Error at placing storage order to CRUST',
+            location: `${this.constructor.name}/runExecutor`,
+            service: ServiceName.STORAGE,
+          });
+          throw err;
+        }
 
         const fileDirectory = await StorageService.generateDirectoriesFromPath(
           this.context,

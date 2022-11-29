@@ -34,6 +34,7 @@ export class Lmas extends BaseService {
     message?: string;
     location?: string;
     service?: string;
+    data?: any;
   }) {
     const data = {
       eventName: LmasEventType.WRITE_LOG,

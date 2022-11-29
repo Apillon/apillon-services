@@ -42,6 +42,7 @@ export enum StorageErrorCode {
   FILE_DOES_NOT_EXISTS = 40406005,
   //500
   STORAGE_IPFS_GATEWAY_NOT_SET = 50006001,
+  STORAGE_CRUST_SEED_NOT_SET = 50006002,
 }
 
 export enum FileUploadRequestFileStatus {

@@ -5,9 +5,12 @@ import {
   DefaultUserRole,
   generateJwtToken,
   JwtTokenType,
+  Lmas,
+  LogType,
   Mailing,
   PopulateFrom,
   SerializeFor,
+  ServiceName,
   ValidationException,
 } from '@apillon/lib';
 import {
@@ -59,6 +62,16 @@ export class ProjectService {
       };
       await new Ams().assignUserRoleOnProject(params);
       await context.mysql.commit(conn);
+
+      await new Lmas().writeLog({
+        projectId: project.project_uuid,
+        logType: LogType.INFO,
+        message: 'New project created',
+        userId: context.user.id,
+        location: 'DEV-CONSOLE-API/ProjectService/createProject',
+        service: ServiceName.DEV_CONSOLE,
+      });
+
       return project;
     } catch (err) {
       await context.mysql.rollback(conn);

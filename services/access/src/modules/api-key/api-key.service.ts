@@ -2,6 +2,8 @@ import {
   ApiKeyQueryFilter,
   CreateApiKeyDto,
   generatePassword,
+  Lmas,
+  LogType,
   SerializeFor,
 } from '@apillon/lib';
 import { ServiceContext } from '../../context';
@@ -91,6 +93,14 @@ export class ApiKeyService {
       throw err;
     }
 
+    await new Lmas().writeLog({
+      projectId: key.project_uuid,
+      logType: LogType.INFO,
+      message: 'New api key created!',
+      userId: context.user.id,
+      location: 'AMS/ApiKeyService/createApiKey',
+    });
+
     return {
       ...key.serialize(SerializeFor.PROFILE),
       apiKeySecret: apiKeySecret,
@@ -113,6 +123,15 @@ export class ApiKeyService {
     key.canModify(context);
 
     await key.markDeleted();
+
+    await new Lmas().writeLog({
+      projectId: key.project_uuid,
+      logType: LogType.INFO,
+      message: 'Api key deleted!',
+      userId: context.user.id,
+      location: 'AMS/ApiKeyService/deleteApiKey',
+    });
+
     return true;
   }
   //#endregion
