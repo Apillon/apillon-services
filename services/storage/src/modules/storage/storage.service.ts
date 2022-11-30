@@ -73,6 +73,11 @@ export class StorageService {
         code: StorageErrorCode.SESSION_UUID_BELONGS_TO_OTHER_BUCKET,
         status: 404,
       });
+    } else if (session.sessionStatus == 2) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.FILE_UPLOAD_SESSION_ALREADY_TRANSFERED,
+        status: 404,
+      });
     }
 
     const s3FileKey = `${bucket.id}/${session.session_uuid}/${
@@ -105,7 +110,11 @@ export class StorageService {
       s3FileKey,
     );
 
-    return { signedUrlForUpload: signedURLForUpload, file_uuid: fur.file_uuid };
+    return {
+      signedUrlForUpload: signedURLForUpload,
+      file_uuid: fur.file_uuid,
+      fileUploadRequestId: fur.id,
+    };
   }
 
   static async endFileUploadSession(
@@ -140,7 +149,7 @@ export class StorageService {
     }
 
     if (
-      event.body.direct_sync &&
+      event.body.directSync &&
       (env.APP_ENV == AppEnvironment.LOCAL_DEV ||
         env.APP_ENV == AppEnvironment.TEST)
     ) {
@@ -222,7 +231,7 @@ export class StorageService {
           });
 
           //search, if directory with that path, was created on IPFS
-          const ipfsDirectory = ipfsDirectories.find(
+          const ipfsDirectory = ipfsDirectories?.find(
             (x) => x.path == splittedPath.slice(0, i + 1).join('/'),
           );
           if (ipfsDirectory)

@@ -77,7 +77,7 @@ export class CreateS3SignedUrlForUploadDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.FILE_NAME_NOT_PRESENT,
+        code: ValidatorErrorCode.FILE_CONTENT_TYPE_NOT_PRESENT,
       },
     ],
   })

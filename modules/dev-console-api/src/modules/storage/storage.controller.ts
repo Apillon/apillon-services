@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   Param,
   Post,
   Query,
@@ -49,6 +50,7 @@ export class StorageController {
   @UseGuards(AuthGuard)
   @Validation({ dto: EndFileUploadSessionDto })
   @UseGuards(ValidationGuard)
+  @HttpCode(200)
   async endFileUploadSession(
     @Ctx() context: DevConsoleApiContext,
     @Param('session_uuid') session_uuid: string,
