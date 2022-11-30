@@ -254,7 +254,7 @@ export class ProjectService {
           template: 'new-user-added-to-project',
           data: {
             projectName: project.name,
-            actionUrl: `${env.APP_URL}/register?token=${token}`,
+            actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}`,
           },
         });
 

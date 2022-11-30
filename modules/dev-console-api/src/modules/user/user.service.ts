@@ -106,7 +106,7 @@ export class UserService {
       emails: [email],
       template: 'welcome',
       data: {
-        actionUrl: `${env.APP_URL}/register?token=${token}`,
+        actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}`,
       },
     });
 
