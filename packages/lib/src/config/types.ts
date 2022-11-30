@@ -48,6 +48,7 @@ export enum StorageEventType {
 
 export enum MailEventType {
   SEND_MAIL = 'send-mail',
+  SEND_CUSTOM_MAIL = 'send-custom-mail',
 }
 
 export enum ServiceName {
