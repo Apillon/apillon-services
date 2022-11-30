@@ -97,6 +97,7 @@ export class ApiKeyService {
     }
 
     await new Lmas().writeLog({
+      context,
       project_uuid: key.project_uuid,
       logType: LogType.INFO,
       message: 'New api key created!',
@@ -129,6 +130,7 @@ export class ApiKeyService {
     await key.markDeleted();
 
     await new Lmas().writeLog({
+      context,
       project_uuid: key.project_uuid,
       logType: LogType.INFO,
       message: 'Api key deleted!',

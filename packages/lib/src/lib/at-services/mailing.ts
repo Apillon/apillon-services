@@ -1,5 +1,6 @@
 import { env } from '../../config/env';
 import { AppEnvironment, MailEventType } from '../../config/types';
+import { Context } from '../context';
 import { BaseService } from './base-service';
 
 /**
@@ -16,8 +17,8 @@ export class Mailing extends BaseService {
       : env.MAIL_SOCKET_PORT;
   serviceName = 'MAIL';
 
-  constructor() {
-    super();
+  constructor(context: Context) {
+    super(context);
     this.isDefaultAsync = true;
   }
 

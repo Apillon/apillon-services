@@ -188,7 +188,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         await new Lmas().writeLog({
           context: this.context,
           project_uuid: bucket.project_uuid,
-          logType: LogType.COST,
+          logType: LogType.INFO,
           message: 'Hosting bucket content changed',
           location: `${this.constructor.name}/runExecutor`,
           service: ServiceName.STORAGE,
@@ -327,7 +327,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
       await new Lmas().writeLog({
         context: this.context,
         project_uuid: bucket.project_uuid,
-        logType: LogType.COST,
+        logType: LogType.INFO,
         message: 'Storage bucket size increased',
         location: `${this.constructor.name}/runExecutor`,
         service: ServiceName.STORAGE,

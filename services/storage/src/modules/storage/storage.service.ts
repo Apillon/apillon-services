@@ -1,11 +1,15 @@
 import {
   AppEnvironment,
   AWS_S3,
+  CodeException,
   CreateS3SignedUrlForUploadDto,
   EndFileUploadSessionDto,
   env,
+  Lmas,
+  LogType,
   PoolConnection,
   SerializeFor,
+  ServiceName,
 } from '@apillon/lib';
 import {
   QueueWorkerType,
@@ -104,11 +108,35 @@ export class StorageService {
       await fur.update();
     }
 
-    const s3Client: AWS_S3 = new AWS_S3();
-    const signedURLForUpload = await s3Client.generateSignedUploadURL(
-      env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-      s3FileKey,
-    );
+    let signedURLForUpload = undefined;
+    try {
+      const s3Client: AWS_S3 = new AWS_S3();
+      signedURLForUpload = await s3Client.generateSignedUploadURL(
+        env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+        s3FileKey,
+      );
+    } catch (err) {
+      throw await new StorageCodeException({
+        code: StorageErrorCode.ERROR_AT_GENERATE_S3_SIGNED_URL,
+        status: 500,
+      }).writeToMonitor({
+        context,
+        project_uuid: bucket.project_uuid,
+        service: ServiceName.STORAGE,
+        data: {
+          fileUploadRequest: fur,
+        },
+      });
+    }
+
+    await new Lmas().writeLog({
+      context: context,
+      project_uuid: bucket.project_uuid,
+      logType: LogType.INFO,
+      message: 'Generate file-request-log and S3 signed url - success',
+      location: `${this.constructor.name}/runExecutor`,
+      service: ServiceName.STORAGE,
+    });
 
     return {
       signedUrlForUpload: signedURLForUpload,

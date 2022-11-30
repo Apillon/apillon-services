@@ -55,8 +55,11 @@ export class UserController {
   @Post('validate-email')
   @Validation({ dto: ValidateEmailDto })
   @UseGuards(ValidationGuard)
-  async validateEmail(@Body() body: ValidateEmailDto) {
-    return await this.userService.validateEmail(body);
+  async validateEmail(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: ValidateEmailDto,
+  ) {
+    return await this.userService.validateEmail(context, body);
   }
 
   @Post('register')
@@ -73,15 +76,21 @@ export class UserController {
   @HttpCode(200)
   @Validation({ dto: ValidateEmailDto })
   @UseGuards(ValidationGuard)
-  async passwordResetRequest(@Body() body: ValidateEmailDto) {
-    return await this.userService.passwordResetRequest(body);
+  async passwordResetRequest(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: ValidateEmailDto,
+  ) {
+    return await this.userService.passwordResetRequest(context, body);
   }
 
   @Post('password-reset')
   @HttpCode(200)
   @Validation({ dto: ResetPasswordDto })
   @UseGuards(ValidationGuard)
-  async resetPassword(@Body() body: ResetPasswordDto) {
-    return await this.userService.resetPassword(body);
+  async resetPassword(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: ResetPasswordDto,
+  ) {
+    return await this.userService.resetPassword(context, body);
   }
 }

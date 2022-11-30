@@ -104,4 +104,8 @@ export class BucketService {
     await b.delete();
     return b.serialize(SerializeFor.PROFILE);
   }
+
+  //#region bucket webhook functions
+
+  //#region
 }

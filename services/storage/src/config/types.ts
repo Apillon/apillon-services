@@ -5,6 +5,7 @@ export enum DbTables {
   BUCKET = 'bucket',
   DIRECTORY = 'directory',
   FILE = 'file',
+  BUCKET_WEBHOOK = 'bucket_webhook',
 }
 
 export enum StorageErrorCode {
@@ -43,6 +44,7 @@ export enum StorageErrorCode {
   //500
   STORAGE_IPFS_GATEWAY_NOT_SET = 50006001,
   STORAGE_CRUST_SEED_NOT_SET = 50006002,
+  ERROR_AT_GENERATE_S3_SIGNED_URL = 50006003,
 }
 
 export enum FileUploadRequestFileStatus {

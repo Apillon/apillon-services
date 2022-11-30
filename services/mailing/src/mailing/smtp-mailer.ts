@@ -2,7 +2,8 @@ import * as nodemailer from 'nodemailer';
 import { Options, MailOptions } from 'nodemailer/lib/smtp-transport';
 import { MailTemplates } from './mail-templates';
 import { Attachment } from 'nodemailer/lib/mailer';
-import { env, getEnvSecrets } from '@apillon/lib';
+import { env, getEnvSecrets, Lmas, LogType, ServiceName } from '@apillon/lib';
+import { ServiceContext } from '../context';
 
 /**
  * Send email via SMTP server
@@ -59,6 +60,7 @@ export async function SMTPsend(mail: MailOptions): Promise<boolean> {
  * @returns {Promise<boolean>}
  */
 export async function SMTPsendTemplate(
+  context: ServiceContext,
   mailAddresses: string[],
   subject: string,
   templateName: string,
@@ -69,11 +71,14 @@ export async function SMTPsendTemplate(
   const template = MailTemplates.getTemplate(templateName);
 
   if (!template) {
-    // await new Lmas().writeLog({
-    //   logType: LogType.ERROR,
-    //   location: 'lib/mailing/smtp-mailer',
-    //   message: `SMTPsendTemplate request - Template not found: ${templateName}!`,
-    // });
+    await new Lmas().writeLog({
+      context,
+      logType: LogType.ERROR,
+      location: 'lib/mailing/smtp-mailer',
+      service: ServiceName.MAIL,
+      message:
+        'SMTPsendTemplate request - Template not found: ${templateName}!',
+    });
 
     console.log(`Template not found: ${templateName}!`);
     // return false;
@@ -110,18 +115,43 @@ export async function SMTPsendTemplate(
     const res = await transporter.sendMail(mail);
 
     if (res.accepted && res.accepted.length) {
+      await new Lmas().writeLog({
+        context,
+        logType: LogType.INFO,
+        location: 'lib/mailing/smtp-mailer',
+        service: ServiceName.MAIL,
+        message: 'SMTPsendTemplate request - success',
+        data: mail,
+      });
       return true;
     } else {
       console.log('SMTP send failed! Response: ', res);
+      await new Lmas().writeLog({
+        context,
+        logType: LogType.ERROR,
+        location: 'lib/mailing/smtp-mailer',
+        service: ServiceName.MAIL,
+        message: 'SMTPsendTemplate request - failed',
+        data: {
+          res: res,
+          mail: mail,
+        },
+      });
       return false;
     }
   } catch (err) {
     console.error(err);
-    // await new Lmas().writeLog({
-    //   logType: LogType.ERROR,
-    //   location: 'lib/mailing/smtp-mailer',
-    //   message: 'SMTPsendTemplate request - error: ' + err,
-    // });
+    await new Lmas().writeLog({
+      context,
+      logType: LogType.ERROR,
+      location: 'lib/mailing/smtp-mailer',
+      service: ServiceName.MAIL,
+      message: 'SMTPsendTemplate request - error' + err,
+      data: {
+        error: err,
+        mail: mail,
+      },
+    });
     throw err;
   }
 }

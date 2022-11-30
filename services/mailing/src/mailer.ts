@@ -5,6 +5,7 @@ export class Mailer {
     //TODO handle attachments
 
     return await SMTPsendTemplate(
+      context,
       event.emails,
       event.subject,
       event.template,
