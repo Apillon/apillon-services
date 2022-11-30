@@ -20,8 +20,12 @@ export class IPFSService {
         code: StorageErrorCode.STORAGE_IPFS_GATEWAY_NOT_SET,
         sourceFunction: `${this.constructor.name}/createIPFSClient`,
       });
+    console.info('Connection to IPFS gateway: ', env.STORAGE_IPFS_GATEWAY);
 
-    return create({ url: env.STORAGE_IPFS_GATEWAY });
+    let ipfsGatewayURL = env.STORAGE_IPFS_GATEWAY;
+    if (ipfsGatewayURL.endsWith('/'))
+      ipfsGatewayURL = ipfsGatewayURL.slice(0, -1);
+    return await create({ url: ipfsGatewayURL });
   }
 
   static async uploadFileToIPFSFromS3(
@@ -33,6 +37,8 @@ export class IPFSService {
 
     //Get File from S3
     const s3Client: AWS_S3 = new AWS_S3();
+
+    console.info(`Get file from AWS s3`);
 
     if (
       !(await s3Client.exists(env.STORAGE_AWS_IPFS_QUEUE_BUCKET, event.fileKey))
@@ -50,10 +56,14 @@ export class IPFSService {
       event.fileKey,
     );
 
+    console.info(`File recieved, pushing to IPFS...`);
+
     const filesOnIPFS = await client.add({
       path: '',
       content: file.Body as any,
     });
+
+    console.info(`File added to IPFS...uploadFileToIPFSFromS3 success.`);
 
     //const key = await client.key.gen('myTestPage');
     //const ipnsRes = await client.name.publish(filesOnIPFS.cid);
@@ -73,6 +83,7 @@ export class IPFSService {
   }): Promise<{
     parentDirCID: CID;
     ipfsDirectories: { path: string; cid: CID }[];
+    size: number;
   }> {
     //Get IPFS client
     const client = await IPFSService.createIPFSClient();
@@ -133,6 +144,7 @@ export class IPFSService {
     return {
       parentDirCID: baseDirectoryOnIPFS?.cid,
       ipfsDirectories: ipfsDirectories,
+      size: baseDirectoryOnIPFS?.size,
     };
   }
 

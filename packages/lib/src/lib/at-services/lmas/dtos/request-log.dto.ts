@@ -44,6 +44,36 @@ export class RequestLogDto extends ModelBase {
   public host: string;
 
   /**
+   * Origin
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+    ],
+    fakeValue: 'localhost',
+  })
+  public origin: string;
+
+  /**
+   * referer
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+    ],
+    fakeValue: 'localhost',
+  })
+  public referer: string;
+
+  /**
    * IP address.
    */
   @prop({
@@ -57,6 +87,21 @@ export class RequestLogDto extends ModelBase {
     fakeValue: '127.0.0.1',
   })
   public ip: string;
+
+  /**
+   * Country
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+    ],
+    fakeValue: 'SI',
+  })
+  public country: string;
 
   /**
    * Http response status (200).

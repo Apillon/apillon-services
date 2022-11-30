@@ -1,6 +1,6 @@
 // import { ApiProperty } from '@babel/core';
 import { prop } from '@rawmodel/core';
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { BaseQueryFilter } from '../../../base-models/base-query-filter.model';
@@ -19,7 +19,7 @@ export class DirectoryContentQueryFilter extends BaseQueryFilter {
   public bucket_uuid: string;
 
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
   })

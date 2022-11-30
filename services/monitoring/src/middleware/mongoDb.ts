@@ -2,7 +2,10 @@ import { AppEnvironment, env, getEnvSecrets, Mongo } from '@apillon/lib';
 
 const instances = {};
 
-export function MongoDbConnect(instanceName = 'mongo', autoDisconnect = true) {
+export function MongoDbConnect(
+  instanceName = 'mongo',
+  autoDisconnect = env.APP_ENV == AppEnvironment.LOCAL_DEV ? false : true,
+) {
   const before = async (request) => {
     await getEnvSecrets();
 

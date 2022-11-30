@@ -8,6 +8,7 @@ import {
   DefaultUserRole,
   ForbiddenErrorCodes,
   getQueryParams,
+  PoolConnection,
   PopulateFrom,
   prop,
   selectAndCountQuery,
@@ -302,23 +303,25 @@ export class Bucket extends AdvancedSQLModel {
     return selectAndCountQuery(context.mysql, sqlQuery, params, 'b.id');
   }
 
-  public async clearBucketContent() {
-    await this.getContext().mysql.paramExecute(
+  public async clearBucketContent(context: Context, conn: PoolConnection) {
+    await context.mysql.paramExecute(
       `
       DELETE
       FROM \`${DbTables.DIRECTORY}\`
       WHERE bucket_id = @bucket_id AND status <> ${SqlModelStatus.DELETED};
       `,
       { bucket_id: this.id },
+      conn,
     );
 
-    await this.getContext().mysql.paramExecute(
+    await context.mysql.paramExecute(
       `
       DELETE
       FROM \`${DbTables.FILE}\`
       WHERE bucket_id = @bucket_id AND status <> ${SqlModelStatus.DELETED};
       `,
       { bucket_id: this.id },
+      conn,
     );
   }
 }
