@@ -36,6 +36,6 @@ export class MailTemplates {
         return null;
       }
     }
-    return this.templates[templateName];
+    return this.templates[templateName] as HandlebarsTemplateDelegate<any>;
   }
 }
