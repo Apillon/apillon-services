@@ -200,7 +200,7 @@ export let env: IEnv = {
   /** AMS */
   ACCESS_FUNCTION_NAME: process.env['ACCESS_FUNCTION_NAME'],
   ACCESS_FUNCTION_NAME_TEST: process.env['ACCESS_FUNCTION_NAME_TEST'],
-  ACCESS_SOCKET_PORT: parseInt(process.env['ACCESS_SOCKET_PORT']) || 6102,
+  ACCESS_SOCKET_PORT: parseInt(process.env['ACCESS_SOCKET_PORT']) || 6101,
   ACCESS_MYSQL_HOST: process.env['ACCESS_MYSQL_HOST'],
   ACCESS_MYSQL_PORT: parseInt(process.env['ACCESS_MYSQL_PORT']) || 3306,
   ACCESS_MYSQL_DATABASE: process.env['ACCESS_MYSQL_DATABASE'],
@@ -270,7 +270,7 @@ export let env: IEnv = {
   STORAGE_AWS_IPFS_QUEUE_BUCKET: process.env['STORAGE_AWS_IPFS_QUEUE_BUCKET'],
   STORAGE_IPFS_GATEWAY: process.env['STORAGE_IPFS_GATEWAY'],
 
-  /**STORAGE microservice - TEST DB */
+  /**STORAGE microservice */
   STORAGE_MYSQL_HOST: process.env['STORAGE_MYSQL_HOST'],
   STORAGE_MYSQL_PORT: parseInt(process.env['STORAGE_MYSQL_PORT']) || 3306,
   STORAGE_MYSQL_USER: process.env['STORAGE_MYSQL_USER'],
