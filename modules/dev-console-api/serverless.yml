@@ -1,37 +1,50 @@
 # console: true
-# org: authtrailadmin
-# app: authtrail-v2
-service: at-v2-dev-console-${opt:stage, 'dev'}
+# org: apillonadmin
+# app: apillon-v2
+service: apillon-dev-console-${opt:stage, 'dev'}
 frameworkVersion: '3'
 
 custom:
   webpack:
     webpackConfig: ./webpack.config.js
     includeModules:
+      modeModulesRelativeDir: '../../'
       forceExclude:
         - aws-sdk
-    excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
-  serverless-offline:
-    httpPort: 6001
-    lambdaPort: 6002
+      forceInclude: 
+        - follow-redirects
+    packagerOptions:
+      lockFile: '../../package-lock.json'
+    excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*|**/test/**/|**/*\.spec\.ts|**/*\.spec\.js'
+  # serverlessPluginTypescript:
+  #   tsConfigFileLocation: './tsconfig.build.json'
+ 
 
 plugins:
   - serverless-webpack
-  - serverless-offline
+  # - serverless-plugin-typescript
 
 provider:
   name: aws
-  runtime: nodejs14.x
+  runtime: nodejs16.x
   region: eu-west-1
   stage: ${opt:stage, 'dev'}
   iam:
     role: arn:aws:iam::018021943180:role/serverless-workers-executor
   apiGateway:
     minimumCompressionSize: 1024 # Enable gzip compression for responses > 1 KB
+  vpc:
+    securityGroupIds:
+      - sg-091bc1ce7424a7921
+    subnetIds:
+      - subnet-0bea6dd0c2a5ecc61
+      - subnet-085447b898128fc92
+      - subnet-0ed148d48e931f5fa
 
-  environment: ${file(../../bin/deploy/env.yml)}
-    # AT_AMS_FUNCTION_NAME: 'at-v2-access-service-${self:provider.stage}'
-    # AT_LMAS_FUNCTION_NAME: 'at-v2-monitoring-service-${self:provider.stage}'
+  environment:
+    ${file(../../bin/deploy/env/env.yml)}
+    # ACCESS_FUNCTION_NAME: 'apillon-access-service-${self:provider.stage}'
+    # MONITORING_FUNCTION_NAME: 'apillon-monitoring-service-${self:provider.stage}'
 
 # you can add packaging information here
 package:
@@ -45,8 +58,8 @@ package:
 functions:
   dev-console-api:
     handler: ./src/lambda.handler
-    name: 'at-v2-dev-console-api-${self:provider.stage}'
-    description: API for Authtrail developer console
+    name: 'apillon-dev-console-api-${self:provider.stage}'
+    description: API for Apillon developer console
     memorySize: 512
     timeout: 30
     events:

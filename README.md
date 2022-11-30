@@ -1,4 +1,4 @@
-# Authtrail v2 services
+# Apillon services
 
 ## Setup
 
@@ -21,7 +21,7 @@ Run VS Code by opening `at.code-workspace` file to have workspaces setup. File s
 
 ## Development
 
-> **All `npm` commands shoud be run in folder of the repo!**
+> **All `npm` commands shoud be run in root folder of the repo!**
 
 ### Installing packages
 
@@ -57,11 +57,13 @@ npm run build
 
 ### Develop
 
-To develop all apps and packages, run the following command:
+To run all apps and packages in develop mode, run the following command:
 
 ```
 npm run dev
 ```
+
+Please see detailed instructions for debugging and testing here: [Debug & test docs](/docs/debug-and-test.md)
 
 ### Deploy
 
@@ -92,3 +94,22 @@ References to other turborepo documentation:
 - [Scoped Tasks](https://turborepo.org/docs/core-concepts/scopes)
 - [Configuration Options](https://turborepo.org/docs/reference/configuration)
 - [CLI Usage](https://turborepo.org/docs/reference/command-line-reference)
+
+## Resources
+
+All documentation is MD based and resides in project services and in docs directory.
+
+| Resource                               | Description                                                           |
+| -------------------------------------- | --------------------------------------------------------------------- |
+| [Rest API](docs/rest-API-specs.md)     | Some basic informations about request, response ...                   |
+| [DB migrations](docs/db-migrations.md) | Docs of how to perform mysql db migrations for new services & modules |
+
+## People working on the project
+
+Add yourself if you stared to work in this project.
+
+| Persons      | Role                                      |
+| ------------ | ----------------------------------------- |
+| Tine Mlakar  | Infrasturcture & microservices mastermind |
+| Vinko Šmid   | Wanna be project lead                     |
+| Luka Golinar | Developer                                 |

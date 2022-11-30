@@ -2,13 +2,17 @@
  * development socket server for service
  */
 
-import { AppEnvironment, env } from 'at-lib';
+import { AppEnvironment, env } from '@apillon/lib';
 import * as Net from 'net';
-import { processEvent } from './handler';
+import { handler } from './handler';
 
-const port = env.AT_AMS_SOCKET_PORT;
+const port =
+  env.APP_ENV === AppEnvironment.TEST
+    ? env.ACCESS_SOCKET_PORT_TEST
+    : env.ACCESS_SOCKET_PORT;
 
-function startDevServer() {
+export function startDevServer() {
+  console.log('starting Dev socket server...');
   const server = Net.createServer((socket) => {
     socket.on('data', async (chunk) => {
       console.log(
@@ -17,10 +21,10 @@ function startDevServer() {
         )}`,
       );
       try {
-        const result = await processEvent(JSON.parse(chunk.toString()), null);
+        const result = await handler(JSON.parse(chunk.toString()), {} as any);
         socket.write(JSON.stringify(result));
         socket.end();
-        console.log(`AMS Socket server response: ${result.toString()}`);
+        console.log(`AMS Socket server response: ${JSON.stringify(result)}`);
       } catch (err) {
         console.error('AMS Socket server ERROR:');
         console.error(err);
@@ -44,10 +48,4 @@ function startDevServer() {
       `AMS: Socket server listening for connection requests on socket localhost:${port}`,
     );
   });
-}
-
-if (env.APP_ENV === AppEnvironment.LOCAL_DEV) {
-  startDevServer();
-} else {
-  console.log(`AMS: ${env.APP_ENV} - Socket server will not run.`);
 }

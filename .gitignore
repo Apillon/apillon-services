@@ -15,6 +15,7 @@ build
 
 # builds
 dist/
+.build/
 
 #temp files
 tsconfig.tsbuildinfo
@@ -44,3 +45,7 @@ env.*yml
 .webpack
 .serverless
 
+# merge originals
+*.orig
+
+tmp/

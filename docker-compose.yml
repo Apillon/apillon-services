@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  s3:
+    image: minio/minio
+    command: server /data --address ":9010" --console-address ":9011"
+    env_file: 
+      - .env
+    ports:
+      - "9010:9010"
+      - "9011:9011"

@@ -5,7 +5,8 @@ module.exports = {
     tsconfigRootDir: '.',
     sourceType: 'module',
   },
-  plugins: ['@typescript-eslint/eslint-plugin',
+  plugins: [
+    '@typescript-eslint/eslint-plugin',
     'sonarjs',
     'security',
     'promise',
@@ -24,7 +25,7 @@ module.exports = {
     node: true,
     jest: true,
   },
-  ignorePatterns: ['.eslintrc.js', 'webpack.config.js'],
+  ignorePatterns: ['.eslintrc.js', 'webpack.config.js', 'dist/*', '**/*.js'],
   rules: {
     semi: [2, 'always'],
     quotes: [1, 'single', { allowTemplateLiterals: true }],
@@ -43,6 +44,9 @@ module.exports = {
     'promise/no-callback-in-promise': 0,
     'sonarjs/cognitive-complexity': [2, 50],
     'sonarjs/no-duplicate-string': 0,
+    'sonarjs/no-useless-catch': 1,
+    'sonarjs/no-nested-template-literals': 0,
+    'sonarjs/prefer-single-boolean-return': 1,
     '@typescript-eslint/no-unused-vars': [
       1,
       { argsIgnorePattern: '^_|^returns$|^of$|^type$' },
@@ -50,14 +54,14 @@ module.exports = {
     'prettier/prettier': [
       'error',
       {
-        'printWidth': 80,
-        'singleQuote': true,
-        'trailingComma': 'all',
-        'endOfLine': 'auto',
-        'bracketSpacing': true,
+        printWidth: 80,
+        singleQuote: true,
+        trailingComma: 'all',
+        endOfLine: 'auto',
+        bracketSpacing: true,
       },
       {
-        'usePrettierrc': false,
+        usePrettierrc: false,
       },
     ],
   },

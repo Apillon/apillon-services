@@ -1,0 +1,69 @@
+{
+  "folders": [
+    {
+      "name": "🌐@services/access [@apillon/access]",
+      "path": "services\\access"
+    },
+    {
+      "name": "🌐@services/monitoring [@apillon/monitoring]",
+      "path": "services\\monitoring"
+    },
+    {
+      "name": "🌐@services/storage [@apillon/storage]",
+      "path": "services\\storage"
+    },
+    {
+      "name": "🌐@services/mailing [@apillon/mailing]",
+      "path": "services\\mailing"
+    },
+    {
+      "name": "😎@modules/dev-console-api",
+      "path": "modules\\dev-console-api"
+    },
+    {
+      "name": "😎@modules/apillon-api",
+      "path": "modules\\apillon-api"
+    },
+    {
+      "name": "😎@modules/authorization-api",
+      "path": "modules\\authorization-api"
+    },
+    {
+      "name": "📦@packages/lib",
+      "path": "packages\\lib"
+    },
+    {
+      "name": "📦@packages/modules-lib",
+      "path": "packages\\modules-lib"
+    },
+    {
+      "name": "🔨_tsconfig",
+      "path": "packages\\tsconfig"
+    },
+    {
+      "name": "🔨_eslint",
+      "path": "packages\\eslint-config-common"
+    },
+    {
+      "name": "🥕+Root",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "editor.formatOnPaste": true,
+    "editor.formatOnSave": true,
+    "[typescript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "cSpell.words": [
+      "Apillon",
+      "Authtrail",
+      "LMAS"
+    ],
+    "files.exclude": {
+      "**/.serverless": true,
+      "**/.turbo": true
+    },
+    "nuxt.isNuxtApp": false
+  },
+}

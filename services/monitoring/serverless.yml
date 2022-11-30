@@ -1,35 +1,43 @@
 # console: true
-# org: authtrailadmin
-# app: authtrail-v2
-service: at-v2-monitoring-service-${opt:stage, 'dev'}
+# org: apillonadmin
+# app: apillon-v2
+service: apillon-monitoring-service-${opt:stage, 'dev'}
 frameworkVersion: '3'
 
 custom:
   webpack:
     webpackConfig: ./webpack.config.js
     includeModules:
+      modeModulesRelativeDir: '../../'
       forceExclude:
         - aws-sdk
+    packagerOptions:
+      lockFile: '../../package-lock.json'
     excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
-  serverless-offline:
-    httpPort: 6201
-    lambdaPort: 6202
 
 plugins:
   - serverless-webpack
-  - serverless-offline
+  # - serverless-plugin-typescript
 
 provider:
   name: aws
-  runtime: nodejs14.x
+  runtime: nodejs16.x
   region: eu-west-1
   stage: ${opt:stage, 'dev'}
   iam:
     role: arn:aws:iam::018021943180:role/serverless-workers-executor
+  vpc:
+    securityGroupIds:
+      - sg-091bc1ce7424a7921
+    subnetIds:
+      - subnet-0bea6dd0c2a5ecc61
+      - subnet-085447b898128fc92
+      - subnet-0ed148d48e931f5fa
 
-  environment: ${file(../../bin/deploy/env.yml)}
-  #   AT_AMS_FUNCTION_NAME: 'at-v2-access-service-${self:provider.stage}'
-  #   AT_LMAS_FUNCTION_NAME: 'at-v2-monitoring-service-${self:provider.stage}'
+  environment: ${file(../../bin/deploy/env/env.yml)}
+  #   ACCESS_FUNCTION_NAME: 'apillon-access-service-${self:provider.stage}'
+  #   MONITORING_FUNCTION_NAME: 'apillon-monitoring-service-${self:provider.stage}'
+  
 
 # you can add packaging information here
 package:
@@ -40,7 +48,7 @@ package:
 functions:
   monitoring-service:
     handler: ./src/handler.handler
-    name: 'at-v2-monitoring-service-${self:provider.stage}'
+    name: 'apillon-monitoring-service-${self:provider.stage}'
     description: AT Logging & Monitoring & Alerting Service
     memorySize: 512
     timeout: 30

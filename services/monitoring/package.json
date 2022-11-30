@@ -1,5 +1,5 @@
 {
-  "name": "at-lmas",
+  "name": "@apillon/monitoring",
   "version": "1.0.0",
   "author": "Kalmia d.o.o.",
   "license": "UNLICENSED",
@@ -7,20 +7,25 @@
   "private": true,
   "scripts": {
     "prebuild": "rimraf dist",
-    "test": "jest",
+    "test-service": "jest --passWithNoTests",
+    "test-server": "cross-env APP_ENV=test nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60002",
     "build": "tsc",
-    "dev": "nodemon ./src/server.ts",
+    "dev": "nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60002",
     "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "deploy:prod": "serverless deploy --stage production",
     "deploy:staging": "serverless deploy --stage staging",
     "deploy:dev": "serverless deploy --stage dev"
   },
   "dependencies": {
-    "@middy/core": "^2.5.7",
-    "at-lib": "*"
+    "@middy/core": "^3.3.1",
+    "@apillon/lib": "*",
+    "aws-lambda": "^1.0.7"
   },
   "devDependencies": {
     "eslint-config-common": "*",
-    "tsconfig": "*"
+    "tsconfig": "*",
+    "ts-loader": "^9.2.3",
+    "webpack": "^5.41.1",
+    "webpack-node-externals": "^3.0.0"
   }
 }

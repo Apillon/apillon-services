@@ -1,5 +1,5 @@
 {
-  "name": "atv2-services",
+  "name": "apillon-services",
   "version": "0.0.0",
   "private": true,
   "workspaces": [
@@ -8,20 +8,22 @@
     "modules/*"
   ],
   "scripts": {
-    "build": "npx turbo run build",
+    "build": "npx turbo run build --filter=!@apillon/api --filter=!@apillon/authorization-api",
     "build-no-cache": "npx turbo run build --no-cache",
-    "dev": "npx turbo run dev --parallel",
+    "dev": "npx turbo run dev --parallel --filter=!@apillon/api --filter=!@apillon/authorization-api",
+    "test": "turbo run test",
+    "test-server": "npx turbo run test-server",
     "lint": "npx turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "deploy:dev": "npx turbo run deploy:dev"
+    "deploy:dev": "npx turbo run deploy:dev -vvv --force --continue=false --filter=!@apillon/api --filter=!@apillon/authorization-api"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.102",
+    "@types/aws-lambda": "^8.10.108",
+    "copyfiles": "^2.4.1",
     "cross-env": "^7.0.3",
     "eslint-config-common": "*",
     "nodemon": "^2.0.19",
     "prettier": "latest",
-    "serverless-offline": "^10.0.0",
     "serverless-webpack": "^5.9.1",
     "ts-node": "^10.9.1",
     "turbo": "latest"
@@ -30,8 +32,5 @@
     "npm": ">=7.0.0",
     "node": ">=14.0.0"
   },
-  "packageManager": "npm@8.4.0",
-  "dependencies": {
-    "aws-lambda": "^1.0.7"
-  }
+  "packageManager": "npm@8.4.0"
 }

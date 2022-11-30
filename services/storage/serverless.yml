@@ -1,0 +1,54 @@
+# console: true
+# org: apillonadmin
+# app: apillon-v2
+service: apillon-storage-service-${opt:stage, 'dev'}
+frameworkVersion: '3'
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules:
+      modeModulesRelativeDir: '../../'
+      forceExclude:
+        - aws-sdk
+    packagerOptions:
+      lockFile: '../../package-lock.json'
+    excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
+
+plugins:
+  - serverless-webpack
+  # - serverless-plugin-typescript
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  region: eu-west-1
+  stage: ${opt:stage, 'dev'}
+  iam:
+    role: arn:aws:iam::018021943180:role/serverless-workers-executor
+  vpc:
+    securityGroupIds:
+      - sg-091bc1ce7424a7921
+    subnetIds:
+      - subnet-0bea6dd0c2a5ecc61
+      - subnet-085447b898128fc92
+      - subnet-0ed148d48e931f5fa
+
+  environment:
+    ${file(../../bin/deploy/env/env.yml)}
+    # ACCESS_FUNCTION_NAME: 'apillon-storage-service-${self:provider.stage}'
+    # MONITORING_FUNCTION_NAME: 'apillon-monitoring-service-${self:provider.stage}'
+
+# you can add packaging information here
+package:
+  patterns:
+    - '!dist/**'
+  excludeDevDependencies: true
+
+functions:
+  storage-service:
+    handler: ./src/handler.handler
+    name: 'apillon-storage-service-${self:provider.stage}'
+    description: AT storage Management Service
+    memorySize: 512
+    timeout: 30

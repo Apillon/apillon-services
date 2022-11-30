@@ -7,18 +7,22 @@ phases:
     commands:
       - npm cache verify
       - >
-        npm install -g 
+        npm install --location=global
         serverless serverless-webpack
-        copy-webpack-plugin webpack webpack-node-externals
+        copy-webpack-plugin
+        webpack webpack-node-externals
+        ts-loader
+        copyfiles
         turbo
   pre_build:
     commands:
       - printenv
       - echo `date +%s` > timestamp
       - echo Build started on `date`
-      - chmod +x ./bin/deploy/build-aws.sh
+      # - chmod +x ./bin/deploy/build-aws.sh
+      - chmod +x ./bin/deploy/build-single-service.sh
   build:
     commands:
-      - npm cache verify
-      - npm install
-      - ./bin/deploy/build-aws.sh
+      # - npm cache verify
+      # - npm install
+      - ./bin/deploy/build-single-service.sh

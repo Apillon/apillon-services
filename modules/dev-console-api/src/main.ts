@@ -1,9 +1,17 @@
 import { NestFactory } from '@nestjs/core';
+import { env } from '@apillon/lib';
 import { AppModule } from './app.module';
+import { ExceptionsFilter, ResponseInterceptor } from '@apillon/modules-lib';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
-  await app.listen(6001);
-  console.log('Listening on 6001');
+  app.useGlobalFilters(new ExceptionsFilter());
+  app.useGlobalInterceptors(new ResponseInterceptor());
+
+  await app.listen(env.DEV_CONSOLE_API_PORT, env.DEV_CONSOLE_API_HOST);
+
+  console.log(
+    `Listening on ${env.DEV_CONSOLE_API_HOST}:${env.DEV_CONSOLE_API_PORT}`,
+  );
 }
-bootstrap();
+bootstrap().catch((err) => console.error(err.message));

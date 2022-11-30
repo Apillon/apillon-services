@@ -1,52 +1,58 @@
-import { Mongo } from 'at-lib';
+import { AppEnvironment, env, getEnvSecrets, Mongo } from '@apillon/lib';
 
 const instances = {};
 
-export function MongoDbConnect(options?: {
-  connectionString?: string;
-  database?: string;
-  poolSize?: number;
-  instanceName?: string;
-  autoDisconnect?: boolean;
-}) {
-  options = {
-    instanceName: 'mongo',
-    autoDisconnect: false,
-    ...options,
-  };
-
+export function MongoDbConnect(instanceName = 'mongo', autoDisconnect = true) {
   const before = async (request) => {
+    await getEnvSecrets();
+
+    const options = {
+      connectionString:
+        env.APP_ENV === AppEnvironment.TEST
+          ? env.MONITORING_MONGO_SRV_TEST
+          : env.MONITORING_MONGO_SRV,
+      database:
+        env.APP_ENV === AppEnvironment.TEST
+          ? env.MONITORING_MONGO_DATABASE_TEST
+          : env.MONITORING_MONGO_DATABASE,
+      poolSize: 10,
+    };
+
+    console.log(`Starting MongoDB middleware...`);
+    console.log(`Params: ${JSON.stringify(options, null, 2)}`);
     const { context } = request;
 
-    if (!instances['instanceName']) {
+    if (!instances[instanceName]) {
       const mongo = new Mongo(
         options.connectionString,
         options.database,
-        options.poolSize,
+        options.poolSize || 10,
       );
-
+      console.log(`Connecting to MongoDB...`);
       await mongo.connect();
       console.log(
-        `Mongo client instance ${options.instanceName} is CONNECTED to server!`,
+        `Mongo client instance ${instanceName} is CONNECTED to server!`,
       );
 
-      instances[options.instanceName] = mongo;
+      instances[instanceName] = mongo;
     }
 
-    context[options.instanceName] = instances[options.instanceName];
+    context[instanceName] = instances[instanceName];
+    console.log(`Mongo client instance ${instanceName} is already connected!`);
   };
 
   const after = async (_response) => {
-    if (options.autoDisconnect) {
+    if (autoDisconnect) {
       try {
-        await (instances[options.instanceName] as Mongo).close();
+        await (instances[instanceName] as Mongo).close();
         console.log(
-          `Mongo client instance ${options.instanceName} is DISCONNECTED from server!`,
+          `Mongo client instance ${instanceName} is DISCONNECTED from server!`,
         );
+        delete instances[instanceName];
       } catch (err) {
         console.error(err);
         console.log(
-          `ERROR: Instance ${options.instanceName} could not disconnect from server!`,
+          `ERROR: Instance ${instanceName} could not disconnect from server!`,
         );
       }
     }
