@@ -5,6 +5,7 @@ import {
   LogType,
   ServiceName,
 } from '../../../config/types';
+import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { RequestLogDto } from './dtos/request-log.dto';
 
@@ -28,22 +29,31 @@ export class Lmas extends BaseService {
   }
 
   public async writeLog(params: {
-    projectId?: string;
-    userId?: string;
+    context?: Context;
+    /**
+     * Nullable if context is present - user is by default taken from context
+     */
+    user_uuid?: string;
+    project_uuid?: string;
     logType?: LogType;
     message?: string;
     location?: string;
     service?: string;
+    data?: any;
   }) {
     const data = {
+      requestId: params.context?.requestId || null,
       eventName: LmasEventType.WRITE_LOG,
-      projectId: null,
-      userId: null,
-      logType: LogType.MSG,
-      message: '',
-      location: null,
-      service: ServiceName.GENERAL,
-      ...params,
+      project_uuid: params.project_uuid || null,
+      user_uuid:
+        (params.user_uuid
+          ? params.user_uuid
+          : params.context?.user?.user_uuid) || null,
+      logType: params.logType || LogType.MSG,
+      message: params.message || '',
+      location: params.location || null,
+      service: params.service || ServiceName.GENERAL,
+      data: params.data || null,
     };
 
     console.log(JSON.stringify(data));

@@ -7,6 +7,7 @@ import {
   ValidatorErrorCode,
 } from '../../config/types';
 import { Lmas } from '../at-services/lmas/lmas';
+import { Context } from '../context';
 import { writeLog } from '../logger';
 import { HttpException } from './http-exception';
 
@@ -54,18 +55,26 @@ export class CodeException extends HttpException {
   }
 
   public async writeToMonitor(params: {
-    projectId?: string;
-    userId?: string;
+    context?: Context;
+    project_uuid?: string;
+    user_uuid?: string;
     logType?: LogType;
+    service?: string;
+    data?: any;
   }) {
     await new Lmas().writeLog({
-      projectId: params.projectId,
-      userId: params.userId,
+      context: params.context,
+      project_uuid: params.project_uuid,
+      user_uuid: params.user_uuid
+        ? params.user_uuid
+        : params.context?.user?.user_uuid,
       logType: params.logType || LogType.ERROR,
       message: this.options.errorCodes
         ? this.options.errorCodes[this.options.code]
         : this.options.errorMessage,
       location: this.options.sourceFunction,
+      service: params.service,
+      data: params.data,
     });
 
     return this;

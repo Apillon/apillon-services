@@ -1,8 +1,11 @@
 import {
   BucketQueryFilter,
   CreateBucketDto,
+  Lmas,
+  LogType,
   PopulateFrom,
   SerializeFor,
+  ServiceName,
 } from '@apillon/lib';
 import { StorageErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
@@ -43,6 +46,16 @@ export class BucketService {
     }
 
     await b.insert();
+
+    await new Lmas().writeLog({
+      context,
+      project_uuid: event.body.project_uuid,
+      logType: LogType.INFO,
+      message: 'New bucket created',
+      location: 'BucketService/createBucket',
+      service: ServiceName.STORAGE,
+    });
+
     return b.serialize(SerializeFor.PROFILE);
   }
 

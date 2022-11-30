@@ -9,5 +9,5 @@ export class EndFileUploadSessionDto extends ModelBase {
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [],
   })
-  public direct_sync: boolean;
+  public directSync: boolean;
 }

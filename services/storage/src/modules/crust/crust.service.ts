@@ -1,7 +1,10 @@
+import { AppEnvironment, env, Lmas } from '@apillon/lib';
 import { typesBundleForPolkadot } from '@crustio/type-definitions';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Keyring } from '@polkadot/keyring';
 import { CID } from 'ipfs-http-client';
+import { StorageErrorCode } from '../../config/types';
+import { StorageCodeException } from '../../lib/exceptions';
 
 export class CrustService {
   static async placeStorageOrderToCRUST(params: { cid: CID; size: number }) {
@@ -21,8 +24,19 @@ export class CrustService {
 
     const tx = api.tx.market.placeStorageOrder(fileCid, fileSize, tips, memo);
 
-    // Load seeds(account)
-    const seeds = process.env.STORAGE_CRUST_SEED_PHRASE;
+    //Load seeds(account)
+    if (!env.STORAGE_CRUST_SEED_PHRASE)
+      throw new StorageCodeException({
+        status: 500,
+        code: StorageErrorCode.STORAGE_CRUST_SEED_NOT_SET,
+        sourceFunction: `${this.constructor.name}/placeStorageOrderToCRUST`,
+      });
+
+    const seeds =
+      env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+      env.APP_ENV == AppEnvironment.TEST
+        ? env.STORAGE_CRUST_SEED_PHRASE_TEST
+        : env.STORAGE_CRUST_SEED_PHRASE;
     const kr = new Keyring({ type: 'sr25519' });
     const krp = kr.addFromUri(seeds);
 
