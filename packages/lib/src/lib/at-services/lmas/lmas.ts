@@ -45,10 +45,7 @@ export class Lmas extends BaseService {
       requestId: params.context?.requestId || null,
       eventName: LmasEventType.WRITE_LOG,
       project_uuid: params.project_uuid || null,
-      user_uuid:
-        (params.user_uuid
-          ? params.user_uuid
-          : params.context?.user?.user_uuid) || null,
+      user_uuid: params?.user_uuid || params?.context?.user?.user_uuid || null,
       logType: params.logType || LogType.MSG,
       message: params.message || '',
       location: params.location || null,

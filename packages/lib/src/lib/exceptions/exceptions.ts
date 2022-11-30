@@ -65,9 +65,7 @@ export class CodeException extends HttpException {
     await new Lmas().writeLog({
       context: params.context,
       project_uuid: params.project_uuid,
-      user_uuid: params.user_uuid
-        ? params.user_uuid
-        : params.context?.user?.user_uuid,
+      user_uuid: params.user_uuid || params.context?.user?.user_uuid || null,
       logType: params.logType || LogType.ERROR,
       message: this.options.errorCodes
         ? this.options.errorCodes[this.options.code]
