@@ -12,8 +12,9 @@ export class RoleService {
         status: 400,
         code: AmsErrorCode.BAD_REQUEST,
       }).writeToMonitor({
-        userId: event?.user_uuid,
-        projectId: event?.project_uuid,
+        context,
+        project_uuid: event?.project_uuid,
+        data: event,
       });
     }
 
@@ -26,8 +27,9 @@ export class RoleService {
         status: 400,
         code: AmsErrorCode.USER_DOES_NOT_EXISTS,
       }).writeToMonitor({
-        userId: event?.user_uuid,
-        projectId: event?.project_uuid,
+        context,
+        project_uuid: event?.project_uuid,
+        data: event,
       });
     }
 
@@ -42,8 +44,9 @@ export class RoleService {
         status: 400,
         code: AmsErrorCode.BAD_REQUEST,
       }).writeToMonitor({
-        userId: event?.user_uuid,
-        projectId: event?.project_uuid,
+        context,
+        project_uuid: event?.project_uuid,
+        data: event,
       });
     }
 
@@ -56,8 +59,9 @@ export class RoleService {
         status: 400,
         code: AmsErrorCode.USER_DOES_NOT_EXISTS,
       }).writeToMonitor({
-        userId: event?.user_uuid,
-        projectId: event?.project_uuid,
+        context,
+        project_uuid: event?.project_uuid,
+        data: event,
       });
     }
 
@@ -79,8 +83,8 @@ export class RoleService {
         status: 400,
         code: AmsErrorCode.API_KEY_NOT_FOUND,
       }).writeToMonitor({
-        userId: context?.user?.user_uuid,
-        projectId: event?.body?.project_uuid,
+        context,
+        data: event,
       });
     }
 
@@ -117,8 +121,8 @@ export class RoleService {
         status: 400,
         code: AmsErrorCode.API_KEY_NOT_FOUND,
       }).writeToMonitor({
-        userId: context?.user?.user_uuid,
-        projectId: event?.body?.project_uuid,
+        context,
+        data: event,
       });
     }
 
@@ -142,7 +146,8 @@ export class RoleService {
         status: 400,
         code: AmsErrorCode.API_KEY_NOT_FOUND,
       }).writeToMonitor({
-        userId: context?.user?.user_uuid,
+        context,
+        data: event,
       });
     }
 

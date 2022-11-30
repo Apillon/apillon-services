@@ -24,14 +24,9 @@ export class Ams extends BaseService {
       : env.ACCESS_SOCKET_PORT;
   serviceName = 'AMS';
 
-  user: any;
-
-  constructor(context?: Context) {
-    super();
+  constructor(context: Context) {
+    super(context);
     this.isDefaultAsync = false;
-    if (context) {
-      this.user = context.user;
-    }
   }
 
   public async getAuthUser(params: { token: string }) {
@@ -185,7 +180,6 @@ export class Ams extends BaseService {
   public async listApiKeys(params: ApiKeyQueryFilter) {
     const data = {
       eventName: AmsEventType.LIST_API_KEYS,
-      user: this.user.serialize(),
       query: params.serialize(),
     };
     return await this.callService(data);
@@ -194,7 +188,6 @@ export class Ams extends BaseService {
   public async createApiKey(params: CreateApiKeyDto) {
     const data = {
       eventName: AmsEventType.CREATE_API_KEY,
-      user: this.user.serialize(),
       body: params.serialize(),
     };
     return await this.callService(data);
@@ -203,7 +196,6 @@ export class Ams extends BaseService {
   public async deleteApiKey(params: { id: number }) {
     const data = {
       eventName: AmsEventType.DELETE_API_KEY,
-      user: this.user.serialize(),
       ...params,
     };
     return await this.callService(data);
@@ -212,7 +204,6 @@ export class Ams extends BaseService {
   public async assignRoleToApiKey(apiKey_id: number, body: ApiKeyRoleBaseDto) {
     const data = {
       eventName: AmsEventType.API_KEY_ROLE_ASSIGN,
-      user: this.user.serialize(),
       body: body.serialize(),
       apiKey_id,
     };
@@ -222,7 +213,6 @@ export class Ams extends BaseService {
   public async removeApiKeyRole(apiKey_id: number, body: ApiKeyRoleBaseDto) {
     const data = {
       eventName: AmsEventType.API_KEY_ROLE_REMOVE,
-      user: this.user.serialize(),
       body: body.serialize(),
       apiKey_id,
     };
@@ -232,7 +222,6 @@ export class Ams extends BaseService {
   public async getApiKeyRoles(params: { apiKey_id: number }) {
     const data = {
       eventName: AmsEventType.GET_API_KEY_ROLES,
-      user: this.user.serialize(),
       ...params,
     };
     return await this.callService(data);

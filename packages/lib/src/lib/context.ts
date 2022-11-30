@@ -6,8 +6,9 @@ export class Context {
   public user: any;
   public requestId: string;
   public apiKey: any;
-  constructor() {
-    this.requestId = uuid();
+
+  constructor(reqId: string = null) {
+    this.requestId = reqId || uuid();
   }
 
   /**

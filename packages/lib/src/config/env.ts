@@ -141,6 +141,7 @@ export interface IEnv {
   STORAGE_SOCKET_PORT: number;
   STORAGE_SOCKET_PORT_TEST: number;
   STORAGE_CRUST_SEED_PHRASE: string;
+  STORAGE_CRUST_SEED_PHRASE_TEST: string;
   STORAGE_AWS_IPFS_QUEUE_BUCKET: string;
   STORAGE_IPFS_GATEWAY: string;
 
@@ -173,6 +174,12 @@ export interface IEnv {
 
   APILLON_AUTHORIZATION_API_HOST_TEST: string;
   APILLON_AUTHORIZATION_API_PORT_TEST: number;
+
+  /************************************************************
+   * Apillon Serverless workers config - STORAGE MS
+   ************************************************************/
+  STORAGE_AWS_WORKER_SQS_URL: string;
+  STORAGE_AWS_WORKER_LAMBDA_NAME;
 }
 
 // dotenv.config();
@@ -259,6 +266,7 @@ export let env: IEnv = {
   STORAGE_SOCKET_PORT_TEST:
     parseInt(process.env['STORAGE_SOCKET_PORT_TEST']) || 7301,
   STORAGE_CRUST_SEED_PHRASE: process.env['STORAGE_CRUST_SEED_PHRASE'],
+  STORAGE_CRUST_SEED_PHRASE_TEST: process.env['STORAGE_CRUST_SEED_PHRASE_TEST'],
   STORAGE_AWS_IPFS_QUEUE_BUCKET: process.env['STORAGE_AWS_IPFS_QUEUE_BUCKET'],
   STORAGE_IPFS_GATEWAY: process.env['STORAGE_IPFS_GATEWAY'],
 
@@ -308,6 +316,13 @@ export let env: IEnv = {
     process.env['APILLON_AUTHORIZATION_API_HOST_TEST'] || 'localhost',
   APILLON_AUTHORIZATION_API_PORT_TEST:
     parseInt(process.env['APILLON_AUTHORIZATION_API_PORT_TEST']) || 7003,
+
+  /**Apillon Serverless workers config*/
+  /**
+   * AWS SQS url for worker communications
+   */
+  STORAGE_AWS_WORKER_SQS_URL: process.env['STORAGE_AWS_WORKER_SQS_URL'],
+  STORAGE_AWS_WORKER_LAMBDA_NAME: process.env['STORAGE_AWS_WORKER_LAMBDA_NAME'],
 };
 
 export let isEnvReady = false;

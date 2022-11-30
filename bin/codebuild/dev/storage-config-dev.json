@@ -20,6 +20,16 @@
         "type": "PLAINTEXT",
         "name": "SERVICE_PATH",
         "value": "services/storage/"
+      },
+      {
+        "type": "PLAINTEXT",
+        "name": "WORKERS_LIB",
+        "value": "true"
+      },
+      {
+        "type": "PLAINTEXT",
+        "name": "WORKER_SQS_ARN",
+        "value": "arn:aws:sqs:eu-west-1:018021943180:apillon-storage-queue-dev"
       }
     ],
     "type": "LINUX_CONTAINER"

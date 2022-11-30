@@ -7,7 +7,13 @@ import {
 import { DevConsoleApiContext } from '../../context';
 import { ServiceQueryFilter } from './dtos/services-query-filter.dto';
 import { Service } from './models/service.model';
-import { CodeException, ValidationException } from '@apillon/lib';
+import {
+  CodeException,
+  Lmas,
+  LogType,
+  ServiceName,
+  ValidationException,
+} from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
 import { Project } from '../project/models/project.model';
 
@@ -51,7 +57,18 @@ export class ServicesService {
     }
     project.canModify(context);
 
-    return await body.populate({ service_uuid: uuidV4() }).insert();
+    const service = await body.populate({ service_uuid: uuidV4() }).insert();
+
+    await new Lmas().writeLog({
+      context: context,
+      project_uuid: project.project_uuid,
+      logType: LogType.INFO,
+      message: 'New project service created',
+      location: 'DEV-CONSOLE-API/ServicesService/createService',
+      service: ServiceName.DEV_CONSOLE,
+    });
+
+    return service;
   }
 
   async updateService(

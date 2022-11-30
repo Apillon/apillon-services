@@ -20,5 +20,5 @@ export class ApiKeyRoleDto extends ApiKeyRoleBaseDto {
       },
     ],
   })
-  public apiKey_id: string;
+  public apiKey_id: number;
 }

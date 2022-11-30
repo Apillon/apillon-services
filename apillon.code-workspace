@@ -37,6 +37,10 @@
       "path": "packages\\modules-lib"
     },
     {
+      "name": "📦@packages/workers-lib",
+      "path": "packages\\workers-lib"
+    },
+    {
       "name": "🔨_tsconfig",
       "path": "packages\\tsconfig"
     },
