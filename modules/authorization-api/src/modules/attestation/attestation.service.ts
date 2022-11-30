@@ -195,7 +195,7 @@ export class AttestationService {
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
     const claimerEmail = body.email;
-    const claimerDidUri = 'did:kilt:' + body.didUri;
+    const claimerDidUri = body.didUri;
 
     const attesterAccount = (await generateAccount(
       env.KILT_ATTESTER_MNEMONIC,
