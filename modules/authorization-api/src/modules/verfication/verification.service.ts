@@ -3,7 +3,7 @@ import {
   Attestation,
   ConfigService,
   connect,
-  ICredentialPresentation,
+  Credential,
 } from '@kiltprotocol/sdk-js';
 import { Injectable } from '@nestjs/common';
 import { AuthorizationApiContext } from '../../context';
@@ -18,19 +18,22 @@ export class VerificationService {
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
 
-    // console.log(presentation);
-    // console.log('Presentation type ', typeof presentation);
+    const presentation = JSON.parse(body.presentation);
+    console.log('PRESENTATION ', presentation);
 
-    // try {
-    //   await Credential.verifyPresentation(presentation, { challenge });
-    //   const attestationInfo = Attestation.fromChain(
-    //     await api.query.attestation.attestations(presentation.rootHash),
-    //     presentation.rootHash,
-    //   );
-    //   return { identityVerified: !attestationInfo.revoked };
-    // } catch (error) {
-    //   console.log(error);
-    //   return { identityVerified: false };
-    // }
+    try {
+      await Credential.verifyPresentation(presentation, {
+        challenge:
+          '0x3ce56bb25ea3b603f968c302578e77e28d3d7ba3c7a8c45d6ebd3f410da766e1',
+      });
+      const attestationInfo = Attestation.fromChain(
+        await api.query.attestation.attestations(presentation.rootHash),
+        presentation.rootHash,
+      );
+      return { verified: !attestationInfo.revoked };
+    } catch (error) {
+      console.log(error);
+      return { verified: false };
+    }
   }
 }

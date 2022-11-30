@@ -8,8 +8,7 @@ run:
 	npm run dev;
 
 build:
-	npm run build && \
-	cd - && npm run build;
+	npm run build
 
 ####### DB COMMANDS #######
 db-upgrade-dev-console:

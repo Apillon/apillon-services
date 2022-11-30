@@ -217,7 +217,7 @@ export class AttestationService {
     );
 
     // TODO: This is a really naiive way to enable concurrency. It does not
-    // solve problems with propagation at all
+    // solve problems with propagation at all - not sure if relevant in Kilt
     // TODO2: This does not work at the moment...
     const nextNonceBN = new BN(await getNextNonce(attesterDidUri));
     const emailClaimTx = await Did.authorizeTx(
@@ -242,11 +242,12 @@ export class AttestationService {
         LogType.MSG,
         `ATTESTATION ${claimerEmail} attested => ${emailAttested}`,
         'attestation.service.ts',
-        'attestClaim',
+        'createAttestation',
       );
 
       return {
-        success: emailAttested,
+        success: true,
+        attested: emailAttested,
         presentation: JSON.stringify(credential),
       };
     } catch (error) {
@@ -255,9 +256,9 @@ export class AttestationService {
         LogType.MSG,
         `ATTESTATION ${claimerEmail} attested => FAILED`,
         'attestation.service.ts',
-        'attestClaim',
+        'createAttestation',
       );
     }
-    return { success: false };
+    return { success: false, attested: false };
   }
 }

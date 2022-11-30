@@ -23,7 +23,7 @@ export class AttestationController {
 
   @Post('start')
   // TODO: Possibly split logic -> Attestation start is not really part of the
-  // attestation module, is it? It's more of a sessions / state handler of
+  // attestation module, is it? It's more of a session / state handler of
   // the authentication module
   @Validation({ dto: AttestationEmailDto })
   @UseGuards(ValidationGuard)
