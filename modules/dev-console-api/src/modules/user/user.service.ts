@@ -3,7 +3,7 @@ import {
   Ams,
   CodeException,
   Context,
-  ErrorCode,
+  env,
   generateJwtToken,
   JwtTokenType,
   LogType,
@@ -104,9 +104,10 @@ export class UserService {
 
     await new Mailing(context).sendMail({
       emails: [email],
-      subject: 'Welcome to Apillon!',
       template: 'welcome',
-      data: { token },
+      data: {
+        actionUrl: `${env.APP_URL}/register?token=${token}`,
+      },
     });
 
     return res;
@@ -204,9 +205,11 @@ export class UserService {
 
     await new Mailing(context).sendMail({
       emails: [body.email],
-      subject: 'Apillon password reset',
+      // subject: 'Apillon password reset',
       template: 'reset-password',
-      data: { token },
+      data: {
+        actionUrl: `${env.APP_URL}/register/reset-password/?token=${token}`,
+      },
     });
 
     return true;

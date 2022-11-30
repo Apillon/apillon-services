@@ -3,6 +3,7 @@ import {
   Ams,
   CodeException,
   DefaultUserRole,
+  env,
   generateJwtToken,
   JwtTokenType,
   Lmas,
@@ -203,9 +204,12 @@ export class ProjectService {
         //send email
         await new Mailing(context).sendMail({
           emails: [data.email],
-          subject: 'New project in Apillon.io',
+          // subject: 'New project in Apillon.io',
           template: 'user-added-to-project',
-          data: { projectName: project.name },
+          data: {
+            actionUrl: `${env.APP_URL}`,
+            projectName: project.name,
+          },
         });
 
         await context.mysql.commit(conn);
@@ -246,9 +250,12 @@ export class ProjectService {
         //send email
         await new Mailing(context).sendMail({
           emails: [data.email],
-          subject: 'You have been invited to project in Apillon.io',
+          // subject: 'You have been invited to project in Apillon.io',
           template: 'new-user-added-to-project',
-          data: { projectName: project.name, token: token },
+          data: {
+            projectName: project.name,
+            actionUrl: `${env.APP_URL}/register?token=${token}`,
+          },
         });
 
         await context.mysql.commit(conn);

@@ -24,13 +24,32 @@ export class Mailing extends BaseService {
 
   public async sendMail(params: {
     emails: string[];
-    subject: string;
     template: string;
     data?: any;
   }) {
     //TODO: dtos for params
     const data = {
       eventName: MailEventType.SEND_MAIL,
+      ...params,
+    };
+
+    // eslint-disable-next-line sonarjs/prefer-immediate-return
+    const mailResponse = await this.callService(data);
+
+    return {
+      ...mailResponse,
+    };
+  }
+
+  public async sendCustomMail(params: {
+    emails: string[];
+    subject: string;
+    template: string;
+    data?: any;
+  }) {
+    //TODO: dtos for params
+    const data = {
+      eventName: MailEventType.SEND_CUSTOM_MAIL,
       ...params,
     };
 
