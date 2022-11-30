@@ -1,5 +1,5 @@
 {
-  "name": "apillon-storage-dev",
+  "name": "apillon-app-production",
   "environment": {
     "computeType": "BUILD_GENERAL1_SMALL",
     "imagePullCredentialsType": "CODEBUILD",
@@ -9,27 +9,17 @@
       {
         "type": "PLAINTEXT",
         "name": "ENV",
-        "value": "development"
+        "value": "production"
       },
       {
         "type": "PLAINTEXT",
-        "name": "S3_CONFIG",
-        "value": "s3://apillon-services-config/env.dev.yml"
+        "name": "S3_BUCKET",
+        "value": "s3://app.apillon.io"
       },
       {
         "type": "PLAINTEXT",
-        "name": "SERVICE_PATH",
-        "value": "services/storage/"
-      },
-      {
-        "type": "PLAINTEXT",
-        "name": "WORKERS_LIB",
-        "value": "true"
-      },
-      {
-        "type": "PLAINTEXT",
-        "name": "WORKER_SQS_ARN",
-        "value": "arn:aws:sqs:eu-west-1:018021943180:apillon-storage-queue-dev"
+        "name": "CLOUDFRONT_ID",
+        "value": "EBR43NQ8DLD0S"
       }
     ],
     "type": "LINUX_CONTAINER"
@@ -42,13 +32,13 @@
   "cache": {
     "type": "NO_CACHE"
   },
-  "sourceVersion": "develop",
+  "sourceVersion": "master",
   "source": {
     "insecureSsl": false,
     "gitSubmodulesConfig": {
       "fetchSubmodules": false
     },
-    "location": "https://TineMlakar@bitbucket.org/kalmiadevs/apillon-services.git",
+    "location": "https://TineMlakar@bitbucket.org/kalmiadevs/apillon-app.git",
     "gitCloneDepth": 1,
     "type": "BITBUCKET",
     "reportBuildStatus": false
@@ -63,7 +53,7 @@
     "cloudWatchLogs": {
       "status": "ENABLED",
       "groupName": "codebuild",
-      "streamName": "apillon-services-dev"
+      "streamName": "apillon-app-production"
     }
   },
   "encryptionKey": "arn:aws:kms:eu-west-1:018021943180:alias/aws/s3"

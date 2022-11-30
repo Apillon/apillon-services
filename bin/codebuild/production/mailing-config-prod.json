@@ -1,5 +1,5 @@
 {
-  "name": "apillon-storage-dev",
+  "name": "apillon-mailing-production",
   "environment": {
     "computeType": "BUILD_GENERAL1_SMALL",
     "imagePullCredentialsType": "CODEBUILD",
@@ -9,27 +9,17 @@
       {
         "type": "PLAINTEXT",
         "name": "ENV",
-        "value": "development"
+        "value": "production"
       },
       {
         "type": "PLAINTEXT",
         "name": "S3_CONFIG",
-        "value": "s3://apillon-services-config/env.dev.yml"
+        "value": "s3://apillon-services-config/env.prod.yml"
       },
       {
         "type": "PLAINTEXT",
         "name": "SERVICE_PATH",
-        "value": "services/storage/"
-      },
-      {
-        "type": "PLAINTEXT",
-        "name": "WORKERS_LIB",
-        "value": "true"
-      },
-      {
-        "type": "PLAINTEXT",
-        "name": "WORKER_SQS_ARN",
-        "value": "arn:aws:sqs:eu-west-1:018021943180:apillon-storage-queue-dev"
+        "value": "services/mailing/"
       }
     ],
     "type": "LINUX_CONTAINER"
@@ -42,7 +32,7 @@
   "cache": {
     "type": "NO_CACHE"
   },
-  "sourceVersion": "develop",
+  "sourceVersion": "master",
   "source": {
     "insecureSsl": false,
     "gitSubmodulesConfig": {
@@ -63,7 +53,7 @@
     "cloudWatchLogs": {
       "status": "ENABLED",
       "groupName": "codebuild",
-      "streamName": "apillon-services-dev"
+      "streamName": "apillon-services-production"
     }
   },
   "encryptionKey": "arn:aws:kms:eu-west-1:018021943180:alias/aws/s3"
