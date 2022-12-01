@@ -1,6 +1,7 @@
 import {
   BucketQueryFilter,
   CreateBucketDto,
+  CreateBucketWebhookDto,
   Lmas,
   LogType,
   PopulateFrom,
@@ -15,6 +16,7 @@ import {
 } from '../../lib/exceptions';
 import { Bucket } from './models/bucket.model';
 import { v4 as uuidV4 } from 'uuid';
+import { BucketWebhook } from './models/bucket-webhook.model';
 
 export class BucketService {
   static async listBuckets(
@@ -54,6 +56,7 @@ export class BucketService {
       message: 'New bucket created',
       location: 'BucketService/createBucket',
       service: ServiceName.STORAGE,
+      data: b.serialize(),
     });
 
     return b.serialize(SerializeFor.PROFILE);
@@ -106,6 +109,128 @@ export class BucketService {
   }
 
   //#region bucket webhook functions
+
+  static async getBucketWebhook(
+    event: { bucket_id: number },
+    context: ServiceContext,
+  ): Promise<any> {
+    const webhook: BucketWebhook = await new BucketWebhook(
+      {},
+      context,
+    ).populateByBucketId(event.bucket_id);
+
+    if (!webhook.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.BUCKET_WEBHOOK_NOT_FOUND,
+        status: 404,
+      });
+    }
+    await webhook.canAccess(context);
+
+    return webhook.serialize(SerializeFor.PROFILE);
+  }
+
+  static async createBucketWebhook(
+    event: { body: CreateBucketWebhookDto },
+    context: ServiceContext,
+  ): Promise<any> {
+    const b: Bucket = await new Bucket({}, context).populateById(
+      event.body.bucket_id,
+    );
+
+    if (!b.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.BUCKET_NOT_FOUND,
+        status: 404,
+      });
+    }
+
+    b.canModify(context);
+
+    const webhook: BucketWebhook = new BucketWebhook(event.body, context);
+    try {
+      await webhook.validate();
+    } catch (err) {
+      await webhook.handle(err);
+      if (!webhook.isValid()) throw new StorageValidationException(webhook);
+    }
+
+    //Check if webhook for this bucket already exists
+    if (
+      (await new BucketWebhook({}, context).populateByBucketId(b.id)).exists()
+    ) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.WEBHOOK_ALREADY_EXISTS_FOR_PROJECT,
+        status: 409,
+      });
+    }
+
+    await webhook.insert();
+
+    await new Lmas().writeLog({
+      context,
+      project_uuid: b.project_uuid,
+      logType: LogType.INFO,
+      message: 'New bucket webhook created',
+      location: 'BucketService/createBucket',
+      service: ServiceName.STORAGE,
+      data: {
+        bucket_uuid: b.bucket_uuid,
+      },
+    });
+
+    return webhook.serialize(SerializeFor.PROFILE);
+  }
+
+  static async updateBucketWebhook(
+    event: { id: number; data: any },
+    context: ServiceContext,
+  ): Promise<any> {
+    const webhook: BucketWebhook = await new BucketWebhook(
+      {},
+      context,
+    ).populateById(event.id);
+
+    if (!webhook.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.BUCKET_WEBHOOK_NOT_FOUND,
+        status: 404,
+      });
+    }
+    await webhook.canModify(context);
+
+    webhook.populate(event.data);
+    try {
+      await webhook.validate();
+    } catch (err) {
+      await webhook.handle(err);
+      if (!webhook.isValid()) throw new StorageValidationException(webhook);
+    }
+
+    await webhook.update();
+    return webhook.serialize(SerializeFor.PROFILE);
+  }
+
+  static async deleteBucketWebhook(
+    event: { id: number },
+    context: ServiceContext,
+  ): Promise<any> {
+    const webhook: BucketWebhook = await new BucketWebhook(
+      {},
+      context,
+    ).populateById(event.id);
+
+    if (!webhook.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.BUCKET_WEBHOOK_NOT_FOUND,
+        status: 404,
+      });
+    }
+    await webhook.canModify(context);
+
+    await webhook.delete();
+    return webhook.serialize(SerializeFor.PROFILE);
+  }
 
   //#region
 }
