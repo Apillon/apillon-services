@@ -10,7 +10,7 @@ export async function upgrade(
       \`project_uuid\` VARCHAR(36) NULL,
       \`object_uuid\` VARCHAR(36) NULL,
       \`description\` VARCHAR(3000) NULL,
-      \`limit\` INT NULL,
+      \`value\` INT NULL,
       \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
       \`createUser\` VARCHAR(36) NULL,
       \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

@@ -72,10 +72,10 @@ export class Quota extends AdvancedSQLModel {
       SerializeFor.SERVICE,
     ],
   })
-  public limitType: number;
+  public valueType: number;
 
   /**
-   * limit
+   * value
    */
   @prop({
     parser: { resolver: integerParser() },
@@ -88,5 +88,5 @@ export class Quota extends AdvancedSQLModel {
       SerializeFor.SERVICE,
     ],
   })
-  public limit: number;
+  public value: number;
 }
