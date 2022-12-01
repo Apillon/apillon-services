@@ -19,7 +19,6 @@ export class VerificationService {
     const api = ConfigService.get('api');
 
     const presentation = JSON.parse(body.presentation);
-    console.log('PRESENTATION ', presentation);
 
     try {
       await Credential.verifyPresentation(presentation, {
@@ -30,6 +29,7 @@ export class VerificationService {
         await api.query.attestation.attestations(presentation.rootHash),
         presentation.rootHash,
       );
+
       return { verified: !attestationInfo.revoked };
     } catch (error) {
       console.log(error);

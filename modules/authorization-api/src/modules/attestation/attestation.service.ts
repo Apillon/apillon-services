@@ -153,6 +153,7 @@ export class AttestationService {
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
     const decryptionKey = body.senderPubKey;
+
     const attesterKeyPairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
     const attesterAccount = (await generateAccount(
       env.KILT_ATTESTER_MNEMONIC,
@@ -202,6 +203,7 @@ export class AttestationService {
     )) as KiltKeyringPair;
     const attesterKeyPairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
     const attesterDidDoc = await getFullDidDocument(attesterKeyPairs);
+
     const attesterDidUri = attesterDidDoc.uri;
 
     const { attestObject, credential } = prepareAttestation(
@@ -248,7 +250,13 @@ export class AttestationService {
       return {
         success: true,
         attested: emailAttested,
-        presentation: JSON.stringify(credential),
+        presentation: JSON.stringify({
+          ...credential,
+          claimerSignature: {
+            keyType: 'sr25519',
+            keyUri: body.didUri,
+          },
+        }),
       };
     } catch (error) {
       console.error(error);

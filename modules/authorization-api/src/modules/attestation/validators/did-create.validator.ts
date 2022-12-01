@@ -6,14 +6,10 @@ import { ModelBase } from '@apillon/lib';
  */
 export function didCreatePayloadValidator() {
   return async function (this: ModelBase, payload: any): Promise<boolean> {
-    // I don't like this style, but linter is giving me shit
-    if (payload.message === undefined) {
-      return false;
-    } else if (payload.nonce === undefined) {
-      return false;
-    } else {
-      return true;
-    }
+    // Linter is complaining here, but .. I like this
+    if (payload.message === undefined) return false;
+    if (payload.nonce === undefined) return false;
+    return true;
   };
 }
 
