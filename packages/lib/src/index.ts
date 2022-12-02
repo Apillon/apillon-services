@@ -33,3 +33,5 @@ export * from './lib/at-services/ams/dtos/api-key-role-base.dto';
 export * from './lib/at-services/lmas/dtos/request-log.dto';
 export * from './lib/parsers';
 export * from './lib/at-services/storage/dtos/end-file-upload-session.dto';
+export * from './lib/at-services/config/scs';
+export * from './lib/at-services/config/dtos/get-quota.dto';

@@ -17,6 +17,10 @@
       "path": "services\\mailing"
     },
     {
+      "name": "🌐@services/config [@apillon/config]",
+      "path": "services\\config"
+    },
+    {
       "name": "😎@modules/dev-console-api",
       "path": "modules\\dev-console-api"
     },

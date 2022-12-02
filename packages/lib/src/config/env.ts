@@ -180,6 +180,37 @@ export interface IEnv {
    ************************************************************/
   STORAGE_AWS_WORKER_SQS_URL: string;
   STORAGE_AWS_WORKER_LAMBDA_NAME;
+
+  /*************************************************************
+   * SCS - Apillon System Configuration Service
+   *************************************************************/
+  /**
+   *  function name
+   */
+  CONFIG_FUNCTION_NAME: string;
+  CONFIG_FUNCTION_NAME_TEST: string;
+
+  /**
+   * SCS dev server port
+   */
+  CONFIG_SOCKET_PORT: number;
+  CONFIG_SOCKET_PORT_TEST: number;
+
+  /**
+   * SCS Database config
+   */
+
+  CONFIG_MYSQL_HOST: string;
+  CONFIG_MYSQL_PORT: number;
+  CONFIG_MYSQL_DATABASE: string;
+  CONFIG_MYSQL_USER: string;
+  CONFIG_MYSQL_PASSWORD: string;
+
+  CONFIG_MYSQL_HOST_TEST: string;
+  CONFIG_MYSQL_PORT_TEST: number;
+  CONFIG_MYSQL_DATABASE_TEST: string;
+  CONFIG_MYSQL_USER_TEST: string;
+  CONFIG_MYSQL_PASSWORD_TEST: string;
 }
 
 // dotenv.config();
@@ -323,6 +354,25 @@ export let env: IEnv = {
    */
   STORAGE_AWS_WORKER_SQS_URL: process.env['STORAGE_AWS_WORKER_SQS_URL'],
   STORAGE_AWS_WORKER_LAMBDA_NAME: process.env['STORAGE_AWS_WORKER_LAMBDA_NAME'],
+
+  /** SCS */
+  CONFIG_FUNCTION_NAME: process.env['CONFIG_FUNCTION_NAME'],
+  CONFIG_FUNCTION_NAME_TEST: process.env['CONFIG_FUNCTION_NAME_TEST'],
+  CONFIG_SOCKET_PORT: parseInt(process.env['CONFIG_SOCKET_PORT']) || 6501,
+  CONFIG_MYSQL_HOST: process.env['CONFIG_MYSQL_HOST'],
+  CONFIG_MYSQL_PORT: parseInt(process.env['CONFIG_MYSQL_PORT']) || 3306,
+  CONFIG_MYSQL_DATABASE: process.env['CONFIG_MYSQL_DATABASE'],
+  CONFIG_MYSQL_USER: process.env['CONFIG_MYSQL_USER'],
+  CONFIG_MYSQL_PASSWORD: process.env['CONFIG_MYSQL_PASSWORD'],
+
+  CONFIG_SOCKET_PORT_TEST:
+    parseInt(process.env['CONFIG_SOCKET_PORT_TEST']) || 7501,
+  CONFIG_MYSQL_HOST_TEST: process.env['CONFIG_MYSQL_HOST_TEST'],
+  CONFIG_MYSQL_PORT_TEST:
+    parseInt(process.env['CONFIG_MYSQL_PORT_TEST']) || 3306,
+  CONFIG_MYSQL_DATABASE_TEST: process.env['CONFIG_MYSQL_DATABASE_TEST'],
+  CONFIG_MYSQL_USER_TEST: process.env['CONFIG_MYSQL_USER_TEST'],
+  CONFIG_MYSQL_PASSWORD_TEST: process.env['CONFIG_MYSQL_PASSWORD_TEST'],
 };
 
 export let isEnvReady = false;

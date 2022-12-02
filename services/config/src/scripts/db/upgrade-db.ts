@@ -11,20 +11,18 @@ let steps = 0;
 
 const run = async () => {
   await upgradeDatabase(
-    env.DEV_CONSOLE_API_MYSQL_DATABASE,
-    env.DEV_CONSOLE_API_MYSQL_HOST,
-    env.DEV_CONSOLE_API_MYSQL_PORT,
-    env.DEV_CONSOLE_API_MYSQL_USER,
-    env.DEV_CONSOLE_API_MYSQL_PASSWORD,
+    env.CONFIG_MYSQL_DATABASE,
+    env.CONFIG_MYSQL_HOST,
+    env.CONFIG_MYSQL_PORT,
+    env.CONFIG_MYSQL_USER,
+    env.CONFIG_MYSQL_PASSWORD,
     steps,
   );
 };
 
 rl.question(
   `You are about to upgrade database ${bgYellow(
-    black(
-      ` ${env.DEV_CONSOLE_API_MYSQL_DATABASE} @ ${env.DEV_CONSOLE_API_MYSQL_HOST} `,
-    ),
+    black(` ${env.CONFIG_MYSQL_DATABASE} @ ${env.CONFIG_MYSQL_HOST} `),
   )}.
 
 Set number of versions to upgrade ('Y' for all, '<number>' for number of versions, 'N' to exit):`,

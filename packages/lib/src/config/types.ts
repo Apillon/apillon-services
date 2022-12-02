@@ -51,6 +51,10 @@ export enum MailEventType {
   SEND_CUSTOM_MAIL = 'send-custom-mail',
 }
 
+export enum ScsEventType {
+  GET_QUOTA = 'get-quota',
+}
+
 export enum ServiceName {
   GENERAL = 'GENERAL',
   AMS = 'AMS',
@@ -69,6 +73,10 @@ export enum ServiceCode {
   DEV_CONSOLE = '04',
   APILLON_API = '05',
   STORAGE = '06',
+  MOD_LIB = '07',
+  MAIL = '08',
+  AUTH = '09',
+  CONFIG = '10',
 }
 
 export enum AppEnvironment {
@@ -249,6 +257,7 @@ export enum ValidatorErrorCode {
   API_KEY_ROLE_PROJECT_UUID_NOT_PRESENT = 42200016,
   API_KEY_ROLE_SERVICE_UUID_NOT_PRESENT = 42200017,
   API_KEY_ROLE_ROLE_ID_NOT_VALID = 42200018,
+  QUOTA_ID_NOT_PRESENT = 42200019,
 }
 
 /**
@@ -278,4 +287,18 @@ export enum JwtTokenType {
   USER_RESET_PASSWORD = 'USER_RESET_PASSWORD',
   USER_RESET_EMAIL = 'USER_RESET_EMAIL',
   USER_CONFIRM_EMAIL = 'USER_CONFIRM_EMAIL',
+}
+
+/**
+ * Quota codes
+ * Must equal quote.id field in database!
+ */
+export enum QuotaCode {
+  MAX_PROJECT_COUNT = 1,
+  MAX_USERS_ON_PROJECT = 2,
+  MAX_API_KEYS = 3,
+  MAX_HOSTING_BUCKETS = 4,
+  MAX_FILE_BUCKETS = 5,
+  MAX_BUCKET_SIZE = 6,
+  MAX_ATTESTED_USERS = 7,
 }
