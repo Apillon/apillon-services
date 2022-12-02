@@ -15,7 +15,8 @@ export class QuotaService {
      * - different types of value (1-max, 2-min, 3-boolean)
      **/
 
-    return await context.mysql.paramExecute(`
+    return await context.mysql.paramExecute(
+      `
       SELECT q.id,
         q.groupName, q.name, q.description,
         CASE WHEN q.valueType = 2 
@@ -45,8 +46,10 @@ export class QuotaService {
         ON o2.quota_id = q.id
         AND o2.status = ${SqlModelStatus.ACTIVE}
       WHERE q.status = ${SqlModelStatus.ACTIVE}
-      AND q.id = @quote_id
+      AND q.id = @quota_id
       GROUP BY q.id
-    `);
+    `,
+      { quota_id: data.quota_id },
+    );
   }
 }

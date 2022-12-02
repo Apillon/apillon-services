@@ -2,7 +2,6 @@ import { env } from '../../../config/env';
 import { AppEnvironment, ScsEventType } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
-import { GetQuotaDto } from './dtos/get-quota.dto';
 
 /**
  * System config Service client
@@ -18,23 +17,21 @@ export class Scs extends BaseService {
       : env.CONFIG_SOCKET_PORT;
   serviceName = 'SCS';
 
-  user: any;
-
   constructor(context?: Context) {
-    super();
+    super(context);
     this.isDefaultAsync = false;
-    if (context) {
-      this.user = context.user;
-    }
   }
 
-  public async getQuota(params: GetQuotaDto) {
+  public async getQuota(params: {
+    quota_id: number;
+    project_uuid?: string;
+    object_uuid?: string;
+  }) {
     const data = {
       eventName: ScsEventType.GET_QUOTA,
-      ...params.serialize(),
+      ...params,
     };
 
-    // eslint-disable-next-line sonarjs/prefer-immediate-return
     const scsResponse = await this.callService(data);
 
     return {

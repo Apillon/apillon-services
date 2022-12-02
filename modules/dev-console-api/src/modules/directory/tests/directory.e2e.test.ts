@@ -1,5 +1,4 @@
 import { DefaultUserRole, SqlModelStatus } from '@apillon/lib';
-import { BucketType } from '@apillon/storage/src/config/types';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
 import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
 import * as request from 'supertest';

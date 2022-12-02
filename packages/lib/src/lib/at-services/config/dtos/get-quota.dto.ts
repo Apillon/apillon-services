@@ -2,7 +2,11 @@
 import { prop } from '@rawmodel/core';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
-import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
+import {
+  PopulateFrom,
+  QuotaCode,
+  ValidatorErrorCode,
+} from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
 
 export class GetQuotaDto extends ModelBase {
@@ -16,7 +20,7 @@ export class GetQuotaDto extends ModelBase {
       },
     ],
   })
-  public quota_id: number;
+  public quota_id: QuotaCode | number;
 
   @prop({
     parser: { resolver: stringParser() },
