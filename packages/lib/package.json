@@ -28,6 +28,7 @@
     "@rawmodel/parsers": "^3.3.4",
     "@rawmodel/validators": "^3.3.4",
     "aws-sdk": "^2.1205.0",
+    "axios": "^1.2.0",
     "colors": "^1.4.0",
     "dotenv": "^16.0.2",
     "handlebars": "^4.7.7",

@@ -80,6 +80,13 @@ export interface IEnv {
   MONITORING_MONGO_SRV_TEST: string;
   MONITORING_MONGO_DATABASE_TEST: string;
 
+  /**
+   * SLACK ALERTS
+   */
+  MONITORING_SLACK_TOKEN: string;
+  MONITORING_SLACK_CHANNEL: string;
+  MONITORING_SLACK_WEBHOOK: string;
+
   /************************************************************
    * MAIL - mailing service
    ************************************************************/
@@ -261,6 +268,11 @@ export let env: IEnv = {
   MONITORING_MONGO_SRV_TEST: process.env['MONITORING_MONGO_SRV_TEST'],
   MONITORING_MONGO_DATABASE_TEST:
     process.env['MONITORING_MONGO_DATABASE_TEST'] || 'apillon_logs_test',
+
+  MONITORING_SLACK_TOKEN: process.env['MONITORING_SLACK_TOKEN'],
+  MONITORING_SLACK_CHANNEL:
+    process.env['MONITORING_SLACK_CHANNEL'] || '#alerts',
+  MONITORING_SLACK_WEBHOOK: process.env['MONITORING_SLACK_WEBHOOK'],
   /** DEV CONSOLE API DB conn*/
   DEV_CONSOLE_API_MYSQL_HOST: process.env['DEV_CONSOLE_API_MYSQL_HOST'],
   DEV_CONSOLE_API_MYSQL_PORT:

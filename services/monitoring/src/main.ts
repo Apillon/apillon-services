@@ -8,6 +8,7 @@ export async function processEvent(event, context: Context): Promise<any> {
     [LmasEventType.WRITE_LOG]: Logger.writeLog,
     [LmasEventType.WRITE_REQUEST_LOG]: Logger.writeRequestLog,
     [LmasEventType.SEND_ALERT]: Alerting.sendAlert,
+    [LmasEventType.SEND_ADMIN_ALERT]: Alerting.sendAdminAlert,
   };
 
   return await processors[event.eventName](event, context);

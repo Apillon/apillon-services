@@ -76,4 +76,19 @@ export class Lmas extends BaseService {
       console.error(`LMAS writeRequestLog CALL SERVICE ERROR: ${err.message}`);
     }
   }
+
+  public async sendAdminAlert(message: string) {
+    const data = {
+      eventName: LmasEventType.SEND_ADMIN_ALERT,
+      message,
+    };
+
+    // console.log(JSON.stringify(data));
+
+    try {
+      await this.callService(data);
+    } catch (err) {
+      console.error(`LMAS sendAdminAlert CALL SERVICE ERROR: ${err.message}`);
+    }
+  }
 }

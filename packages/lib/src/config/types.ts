@@ -22,6 +22,7 @@ export enum LmasEventType {
   WRITE_LOG = 'write-log',
   WRITE_REQUEST_LOG = 'write-request-log',
   SEND_ALERT = 'send-alert',
+  SEND_ADMIN_ALERT = 'send-admin-alert',
   NOTIFY = 'notify',
 }
 
