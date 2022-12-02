@@ -32,11 +32,11 @@
     "db-rebuild-test": "node -r ts-node/register ./src/scripts/db/rebuild-test-db"
   },
   "dependencies": {
+    "@nestjs/platform-express": "^8.4.7",
     "@faker-js/faker": "^7.5.0",
     "@nestjs/common": "^8.4.7",
     "@nestjs/config": "^2.1.0",
     "@nestjs/core": "^8.4.7",
-    "@nestjs/platform-express": "^8.4.7",
     "@rawmodel/core": "^3.3.4",
     "@rawmodel/parsers": "^3.3.4",
     "@rawmodel/validators": "^3.3.4",

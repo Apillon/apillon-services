@@ -3,6 +3,7 @@ import { AppEnvironment } from '../../config/types';
 import * as Net from 'net';
 import * as AWS from 'aws-sdk';
 import { safeJsonParse } from '../utils';
+import { Context } from '../context';
 
 export abstract class BaseService {
   private lambda: AWS.Lambda;
@@ -11,13 +12,17 @@ export abstract class BaseService {
   abstract devPort: number;
   abstract serviceName: string;
   protected securityToken: string;
+  private requestId: string;
+  private user: any;
 
-  constructor() {
+  constructor(context?: Context) {
     this.lambda = new AWS.Lambda({
       apiVersion: '2015-03-31',
       region: env.AWS_REGION,
     });
     this.securityToken = this.generateSecurityToken();
+    this.requestId = context?.requestId;
+    this.user = context?.user;
   }
 
   private generateSecurityToken() {
@@ -31,6 +36,8 @@ export abstract class BaseService {
 
     payload = {
       securityToken: this.securityToken,
+      requestId: this.requestId,
+      user: this.user?.serialize(),
       ...payload,
     };
 

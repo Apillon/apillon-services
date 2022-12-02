@@ -5,9 +5,13 @@ export enum DbTables {
   BUCKET = 'bucket',
   DIRECTORY = 'directory',
   FILE = 'file',
+  BUCKET_WEBHOOK = 'bucket_webhook',
 }
 
 export enum StorageErrorCode {
+  //400
+  DEFAULT_BAD_REQUEST_EROR = 40006000,
+  FILE_UPLOAD_SESSION_ALREADY_TRANSFERED = 40006001,
   //422
   DEFAULT_VALIDATION_ERROR = 42206000,
   BUCKET_PROJECT_UUID_NOT_PRESENT = 42206001,
@@ -39,6 +43,8 @@ export enum StorageErrorCode {
   FILE_DOES_NOT_EXISTS = 40406005,
   //500
   STORAGE_IPFS_GATEWAY_NOT_SET = 50006001,
+  STORAGE_CRUST_SEED_NOT_SET = 50006002,
+  ERROR_AT_GENERATE_S3_SIGNED_URL = 50006003,
 }
 
 export enum FileUploadRequestFileStatus {

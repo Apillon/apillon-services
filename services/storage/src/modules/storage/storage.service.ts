@@ -1,27 +1,39 @@
 import {
+  AppEnvironment,
   AWS_S3,
+  CodeException,
   CreateS3SignedUrlForUploadDto,
+  EndFileUploadSessionDto,
   env,
+  Lmas,
+  LogType,
+  PoolConnection,
   SerializeFor,
+  ServiceName,
 } from '@apillon/lib';
-import { CID } from 'ipfs-http-client';
 import {
-  BucketType,
-  FileStatus,
-  FileUploadRequestFileStatus,
-  StorageErrorCode,
-} from '../../config/types';
+  QueueWorkerType,
+  sendToWorkerQueue,
+  ServiceDefinition,
+  ServiceDefinitionType,
+  WorkerDefinition,
+} from '@apillon/workers-lib';
+import { CID } from 'ipfs-http-client';
+import { v4 as uuidV4 } from 'uuid';
+import { FileStatus, StorageErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
-import { StorageCodeException } from '../../lib/exceptions';
+import {
+  StorageCodeException,
+  StorageValidationException,
+} from '../../lib/exceptions';
+import { SyncToIPFSWorker } from '../../workers/s3-to-ipfs-sync-worker';
+import { WorkerName } from '../../workers/worker-executor';
 import { Bucket } from '../bucket/models/bucket.model';
-import { DirectoryService } from '../directory/directory.service';
+import { CrustService } from '../crust/crust.service';
 import { Directory } from '../directory/models/directory.model';
-import { IPFSService } from '../ipfs/ipfs.service';
 import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
-import { v4 as uuidV4 } from 'uuid';
-import { CrustService } from '../crust/crust.service';
 
 export class StorageService {
   static async generateS3SignedUrlForUpload(
@@ -65,6 +77,11 @@ export class StorageService {
         code: StorageErrorCode.SESSION_UUID_BELONGS_TO_OTHER_BUCKET,
         status: 404,
       });
+    } else if (session.sessionStatus == 2) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.FILE_UPLOAD_SESSION_ALREADY_TRANSFERED,
+        status: 404,
+      });
     }
 
     const s3FileKey = `${bucket.id}/${session.session_uuid}/${
@@ -91,17 +108,48 @@ export class StorageService {
       await fur.update();
     }
 
-    const s3Client: AWS_S3 = new AWS_S3();
-    const signedURLForUpload = await s3Client.generateSignedUploadURL(
-      env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-      s3FileKey,
-    );
+    let signedURLForUpload = undefined;
+    try {
+      const s3Client: AWS_S3 = new AWS_S3();
+      signedURLForUpload = await s3Client.generateSignedUploadURL(
+        env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+        s3FileKey,
+      );
+    } catch (err) {
+      throw await new StorageCodeException({
+        code: StorageErrorCode.ERROR_AT_GENERATE_S3_SIGNED_URL,
+        status: 500,
+      }).writeToMonitor({
+        context,
+        project_uuid: bucket.project_uuid,
+        service: ServiceName.STORAGE,
+        data: {
+          fileUploadRequest: fur,
+        },
+      });
+    }
 
-    return { signedUrlForUpload: signedURLForUpload, file_uuid: fur.file_uuid };
+    await new Lmas().writeLog({
+      context: context,
+      project_uuid: bucket.project_uuid,
+      logType: LogType.INFO,
+      message: 'Generate file-request-log and S3 signed url - success',
+      location: `${this.constructor.name}/runExecutor`,
+      service: ServiceName.STORAGE,
+    });
+
+    return {
+      signedUrlForUpload: signedURLForUpload,
+      file_uuid: fur.file_uuid,
+      fileUploadRequestId: fur.id,
+    };
   }
 
-  static async endFileUploadSessionAndExecuteSyncToIPFS(
-    event: { session_uuid: string; createDirectoryInIPFS: boolean },
+  static async endFileUploadSession(
+    event: {
+      session_uuid: string;
+      body: EndFileUploadSessionDto;
+    },
     context: ServiceContext,
   ): Promise<any> {
     //Get session
@@ -121,176 +169,67 @@ export class StorageService {
     );
     bucket.canAccess(context);
 
-    //Get files in session (fileStatus must be ofst atus 1)
-    const files = (
-      await new FileUploadRequest(
-        {},
-        context,
-      ).populateFileUploadRequestsInSession(session.id, context)
-    ).filter(
-      (x) =>
-        x.fileStatus != FileUploadRequestFileStatus.UPLOADED_TO_IPFS_AND_CRUST,
-    );
-
-    if (files.length == 0) {
+    if (session.sessionStatus != 1) {
       throw new StorageCodeException({
-        code: StorageErrorCode.NO_FILES_FOR_TRANSFER_TO_IPFS,
-        status: 404,
+        code: StorageErrorCode.FILE_UPLOAD_SESSION_ALREADY_TRANSFERED,
+        status: 400,
       });
     }
 
-    if (bucket.bucketType == BucketType.HOSTING) {
-      const ipfsRes = await IPFSService.uploadFilesToIPFSFromS3({
-        fileUploadRequests: files,
-        wrapWithDirectory: true,
-      });
-
-      /*await CrustService.placeStorageOrderToCRUST({
-          cid: ipfsRes.CID,
-          size: ipfsRes.size,
-        });*/
-
-      //Clear bucket content - directories and files
-      await bucket.clearBucketContent();
-
-      //Create new directories & files
-      const directories = [];
-      for (const file of files.filter(
-        (x) =>
-          x.fileStatus ==
-          FileUploadRequestFileStatus.SIGNED_URL_FOR_UPLOAD_GENERATED,
-      )) {
-        const fileDirectory = await StorageService.generateDirectoriesFromPath(
-          context,
-          directories,
-          file,
-          ipfsRes.ipfsDirectories,
-        );
-
-        //Create new file
-        await new File({}, context)
-          .populate({
-            file_uuid: file.file_uuid,
-            CID: file.CID.toV0().toString(),
-            s3FileKey: file.s3FileKey,
-            name: file.fileName,
-            contentType: file.contentType,
-            bucket_id: file.bucket_id,
-            project_uuid: bucket.project_uuid,
-            directory_id: fileDirectory?.id,
-            size: file.size,
-          })
-          .insert();
-
-        //now the file has CID, exists in IPFS node and is pinned to CRUST
-        //update file-upload-request status
-        file.fileStatus =
-          FileUploadRequestFileStatus.UPLOADED_TO_IPFS_AND_CRUST;
-        //await file.update();
-      }
-
-      //publish IPNS
-      const ipns = await IPFSService.publishToIPNS(
-        ipfsRes.parentDirCID.toV0().toString(),
-        bucket.bucket_uuid,
+    if (
+      event.body.directSync &&
+      (env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+        env.APP_ENV == AppEnvironment.TEST)
+    ) {
+      //Directly calls worker, to sync files to IPFS & CRUST - USED ONLY FOR DEVELOPMENT!!
+      const serviceDef: ServiceDefinition = {
+        type: ServiceDefinitionType.SQS,
+        config: { region: 'test' },
+        params: { FunctionName: 'test' },
+      };
+      const parameters = {
+        session_uuid: session.session_uuid,
+      };
+      const wd = new WorkerDefinition(
+        serviceDef,
+        WorkerName.SYNC_TO_IPFS_WORKER,
+        { parameters },
       );
 
-      //Update bucket CID & IPNS
-      bucket.CID = ipfsRes.parentDirCID.toV0().toString();
-      bucket.IPNS = ipns.name;
-      await bucket.update();
-    } else {
-      //get directories in bucket
-      const directories = await new Directory(
-        {},
+      const worker = new SyncToIPFSWorker(
+        wd,
         context,
-      ).populateDirectoriesInBucket(files[0].bucket_id, context);
-
-      //loop through files to sync each one of it to IPFS
-      for (const file of files) {
-        let ipfsRes = undefined;
-        try {
-          ipfsRes = await IPFSService.uploadFileToIPFSFromS3(
-            { fileKey: file.s3FileKey },
-            context,
-          );
-        } catch (err) {
-          if (
-            err?.options?.code ==
-            StorageErrorCode.FILE_DOES_NOT_EXISTS_IN_BUCKET
-          ) {
-            file.fileStatus =
-              FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3;
-            await file.update();
-            continue;
-          } else throw err;
-        }
-
-        /*await CrustService.placeStorageOrderToCRUST({
-          cid: ipfsRes.CID,
-          size: ipfsRes.size,
-        });*/
-
-        const fileDirectory = await StorageService.generateDirectoriesFromPath(
-          context,
-          directories,
-          file,
-        );
-
-        //check if file already exists
-        const existingFile = await new File(
-          {},
-          context,
-        ).populateByNameAndDirectory(file.fileName, fileDirectory?.id);
-
-        if (existingFile.exists()) {
-          //Update existing file
-          existingFile.populate({
-            CID: ipfsRes.cidV0,
-            s3FileKey: file.s3FileKey,
-            name: file.fileName,
-            contentType: file.contentType,
-            size: ipfsRes.size,
-          });
-
-          await existingFile.update();
-        } else {
-          //Create new file
-          await new File({}, context)
-            .populate({
-              file_uuid: file.file_uuid,
-              CID: ipfsRes.cidV0,
-              s3FileKey: file.s3FileKey,
-              name: file.fileName,
-              contentType: file.contentType,
-              project_uuid: bucket.project_uuid,
-              bucket_id: file.bucket_id,
-              directory_id: fileDirectory?.id,
-              size: ipfsRes.size,
-            })
-            .insert();
-        }
-
-        //now the file has CID, exists in IPFS node and is pinned to CRUST
-        //update file-upload-request status
-        file.fileStatus =
-          FileUploadRequestFileStatus.UPLOADED_TO_IPFS_AND_CRUST;
-        await file.update();
-      }
+        QueueWorkerType.EXECUTOR,
+      );
+      await worker.runExecutor({ session_uuid: session.session_uuid });
+    } else {
+      //send message to SQS
+      await sendToWorkerQueue(
+        env.STORAGE_AWS_WORKER_SQS_URL,
+        WorkerName.SYNC_TO_IPFS_WORKER,
+        [
+          {
+            session_uuid: session.session_uuid,
+          },
+        ],
+        null,
+        null,
+      );
     }
-
-    //update session status
-    session.sessionStatus = 2;
-    await session.update();
 
     return true;
   }
 
+  /**
+   * From string path generates directories with hiearhical structure
+   */
   static async generateDirectoriesFromPath(
     context: ServiceContext,
     directories: Directory[],
     fur: FileUploadRequest,
+    bucket: Bucket,
     ipfsDirectories?: { path: string; cid: CID }[],
+    conn?: PoolConnection,
   ) {
     if (fur.path) {
       const splittedPath: string[] = fur.path.split('/').filter((x) => x != '');
@@ -312,24 +251,33 @@ export class StorageService {
         if (!existingDirectory) {
           //create new directory
           const newDirectory: Directory = new Directory({}, context).populate({
-            parentDirectory_id: currDirectory?.id,
+            directory_uuid: uuidV4(),
+            project_uuid: bucket.project_uuid,
             bucket_id: fur.bucket_id,
+            parentDirectory_id: currDirectory?.id,
             name: splittedPath[i],
           });
 
           //search, if directory with that path, was created on IPFS
-          const ipfsDirectory = ipfsDirectories.find(
+          const ipfsDirectory = ipfsDirectories?.find(
             (x) => x.path == splittedPath.slice(0, i + 1).join('/'),
           );
           if (ipfsDirectory)
             newDirectory.CID = ipfsDirectory.cid.toV0().toString();
 
-          currDirectory = await DirectoryService.createDirectory(
-            {
-              body: newDirectory,
-            },
-            context,
+          try {
+            await newDirectory.validate();
+          } catch (err) {
+            await newDirectory.handle(err);
+            if (!newDirectory.isValid())
+              throw new StorageValidationException(newDirectory);
+          }
+
+          currDirectory = await newDirectory.insert(
+            SerializeFor.INSERT_DB,
+            conn,
           );
+
           //Add new directory to list of all directories
           directories.push(currDirectory);
         } else currDirectory = existingDirectory;

@@ -141,6 +141,7 @@ export interface IEnv {
   STORAGE_SOCKET_PORT: number;
   STORAGE_SOCKET_PORT_TEST: number;
   STORAGE_CRUST_SEED_PHRASE: string;
+  STORAGE_CRUST_SEED_PHRASE_TEST: string;
   STORAGE_AWS_IPFS_QUEUE_BUCKET: string;
   STORAGE_IPFS_GATEWAY: string;
 
@@ -173,6 +174,12 @@ export interface IEnv {
 
   APILLON_AUTHORIZATION_API_HOST_TEST: string;
   APILLON_AUTHORIZATION_API_PORT_TEST: number;
+
+  /************************************************************
+   * Apillon Serverless workers config - STORAGE MS
+   ************************************************************/
+  STORAGE_AWS_WORKER_SQS_URL: string;
+  STORAGE_AWS_WORKER_LAMBDA_NAME;
 
   /*************************************************************
    * SCS - Apillon System Configuration Service
@@ -224,7 +231,7 @@ export let env: IEnv = {
   /** AMS */
   ACCESS_FUNCTION_NAME: process.env['ACCESS_FUNCTION_NAME'],
   ACCESS_FUNCTION_NAME_TEST: process.env['ACCESS_FUNCTION_NAME_TEST'],
-  ACCESS_SOCKET_PORT: parseInt(process.env['ACCESS_SOCKET_PORT']) || 6102,
+  ACCESS_SOCKET_PORT: parseInt(process.env['ACCESS_SOCKET_PORT']) || 6101,
   ACCESS_MYSQL_HOST: process.env['ACCESS_MYSQL_HOST'],
   ACCESS_MYSQL_PORT: parseInt(process.env['ACCESS_MYSQL_PORT']) || 3306,
   ACCESS_MYSQL_DATABASE: process.env['ACCESS_MYSQL_DATABASE'],
@@ -290,10 +297,11 @@ export let env: IEnv = {
   STORAGE_SOCKET_PORT_TEST:
     parseInt(process.env['STORAGE_SOCKET_PORT_TEST']) || 7301,
   STORAGE_CRUST_SEED_PHRASE: process.env['STORAGE_CRUST_SEED_PHRASE'],
+  STORAGE_CRUST_SEED_PHRASE_TEST: process.env['STORAGE_CRUST_SEED_PHRASE_TEST'],
   STORAGE_AWS_IPFS_QUEUE_BUCKET: process.env['STORAGE_AWS_IPFS_QUEUE_BUCKET'],
   STORAGE_IPFS_GATEWAY: process.env['STORAGE_IPFS_GATEWAY'],
 
-  /**STORAGE microservice - TEST DB */
+  /**STORAGE microservice */
   STORAGE_MYSQL_HOST: process.env['STORAGE_MYSQL_HOST'],
   STORAGE_MYSQL_PORT: parseInt(process.env['STORAGE_MYSQL_PORT']) || 3306,
   STORAGE_MYSQL_USER: process.env['STORAGE_MYSQL_USER'],
@@ -339,6 +347,13 @@ export let env: IEnv = {
     process.env['APILLON_AUTHORIZATION_API_HOST_TEST'] || 'localhost',
   APILLON_AUTHORIZATION_API_PORT_TEST:
     parseInt(process.env['APILLON_AUTHORIZATION_API_PORT_TEST']) || 7003,
+
+  /**Apillon Serverless workers config*/
+  /**
+   * AWS SQS url for worker communications
+   */
+  STORAGE_AWS_WORKER_SQS_URL: process.env['STORAGE_AWS_WORKER_SQS_URL'],
+  STORAGE_AWS_WORKER_LAMBDA_NAME: process.env['STORAGE_AWS_WORKER_LAMBDA_NAME'],
 
   /** SCS */
   CONFIG_FUNCTION_NAME: process.env['CONFIG_FUNCTION_NAME'],

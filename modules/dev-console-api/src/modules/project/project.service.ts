@@ -3,11 +3,15 @@ import {
   Ams,
   CodeException,
   DefaultUserRole,
+  env,
   generateJwtToken,
   JwtTokenType,
+  Lmas,
+  LogType,
   Mailing,
   PopulateFrom,
   SerializeFor,
+  ServiceName,
   ValidationException,
 } from '@apillon/lib';
 import {
@@ -57,8 +61,18 @@ export class ProjectService {
         project_uuid: project.project_uuid,
         role_id: DefaultUserRole.PROJECT_OWNER,
       };
-      await new Ams().assignUserRoleOnProject(params);
+      await new Ams(context).assignUserRoleOnProject(params);
       await context.mysql.commit(conn);
+
+      await new Lmas().writeLog({
+        context: context,
+        project_uuid: project.project_uuid,
+        logType: LogType.INFO,
+        message: 'New project created',
+        location: 'DEV-CONSOLE-API/ProjectService/createProject',
+        service: ServiceName.DEV_CONSOLE,
+      });
+
       return project;
     } catch (err) {
       await context.mysql.rollback(conn);
@@ -148,7 +162,7 @@ export class ProjectService {
     }
     project.canModify(context);
 
-    const authUser = await new Ams().getAuthUserByEmail(data.email);
+    const authUser = await new Ams(context).getAuthUserByEmail(data.email);
     if (authUser.data?.user_uuid) {
       //User exists - send mail with notification, that user has been added to project
       const user = await new User({}, context).populateByUUID(
@@ -185,14 +199,17 @@ export class ProjectService {
           project_uuid: project.project_uuid,
           role_id: data.role_id,
         };
-        await new Ams().assignUserRoleOnProject(params);
+        await new Ams(context).assignUserRoleOnProject(params);
 
         //send email
-        await new Mailing().sendMail({
+        await new Mailing(context).sendMail({
           emails: [data.email],
-          subject: 'New project in Apillon.io',
+          // subject: 'New project in Apillon.io',
           template: 'user-added-to-project',
-          data: { projectName: project.name },
+          data: {
+            actionUrl: `${env.APP_URL}`,
+            projectName: project.name,
+          },
         });
 
         await context.mysql.commit(conn);
@@ -231,11 +248,14 @@ export class ProjectService {
         });
 
         //send email
-        await new Mailing().sendMail({
+        await new Mailing(context).sendMail({
           emails: [data.email],
-          subject: 'You have been invited to project in Apillon.io',
+          // subject: 'You have been invited to project in Apillon.io',
           template: 'new-user-added-to-project',
-          data: { projectName: project.name, token: token },
+          data: {
+            projectName: project.name,
+            actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}`,
+          },
         });
 
         await context.mysql.commit(conn);
@@ -280,7 +300,7 @@ export class ProjectService {
         project_uuid: project.project_uuid,
         role_id: invitation.role_id,
       };
-      await new Ams().assignUserRoleOnProject(params);
+      await new Ams(context).assignUserRoleOnProject(params);
 
       await invitation.delete();
     }
@@ -340,7 +360,7 @@ export class ProjectService {
       project_uuid: project.project_uuid,
       role_id: body.role_id,
     };
-    await new Ams().assignUserRoleOnProject(params);
+    await new Ams(context).assignUserRoleOnProject(params);
 
     //ams - remove previous role
     params = {
@@ -349,7 +369,7 @@ export class ProjectService {
       project_uuid: project.project_uuid,
       role_id: project_user.role_id,
     };
-    await new Ams().removeUserRoleOnProject(params);
+    await new Ams(context).removeUserRoleOnProject(params);
 
     project_user.populate({ role_id: body.role_id });
     await project_user.update();
@@ -404,7 +424,7 @@ export class ProjectService {
         project_uuid: project.project_uuid,
         role_id: project_user.role_id,
       };
-      await new Ams().removeUserRoleOnProject(params);
+      await new Ams(context).removeUserRoleOnProject(params);
 
       await context.mysql.commit(conn);
     } catch (err) {

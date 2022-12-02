@@ -8,9 +8,9 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "test-service": "jest --passWithNoTests",
-    "test-server": "cross-env APP_ENV=test nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60003",
+    "test-server": "cross-env APP_ENV=test nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60004",
     "build": "tsc",
-    "dev": "nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60003",
+    "dev": "nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60004",
     "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "deploy:prod": "serverless deploy --stage production",
     "deploy:staging": "serverless deploy --stage staging",
@@ -23,6 +23,8 @@
     "db-rebuild-test": "node -r ts-node/register ./src/scripts/db/rebuild-test-db"
   },
   "dependencies": {
+    "@apillon/lib": "*",
+    "@apillon/workers-lib": "*",
     "@crustio/crust-pin": "^1.0.0",
     "@crustio/type-definitions": "^1.3.0",
     "@middy/core": "^2.5.7",
@@ -30,12 +32,15 @@
     "@polkadot/keyring": "^10.1.9",
     "@polkadot/util": "^10.1.10",
     "@types/uuid": "^8.3.4",
-    "@apillon/lib": "*",
     "aws-lambda": "^1.0.7",
+    "electron": "^21.3.0",
     "ipfs-http-client": "^56.0.3"
   },
   "devDependencies": {
     "eslint-config-common": "*",
     "tsconfig": "*"
+  },
+  "overrides": {
+    "ipfs-utils": "9.0.6"
   }
 }

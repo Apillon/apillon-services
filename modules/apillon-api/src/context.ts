@@ -5,7 +5,7 @@ export class ApillonApiContext extends Context {
    * Validate API key and fill context apiKey property
    */
   async authenticate(apiKey: string, apiKeySecret: string) {
-    const apiKeyData = await new Ams().getApiKey({
+    const apiKeyData = await new Ams(this).getApiKey({
       apiKey: apiKey,
       apiKeySecret: apiKeySecret,
     });

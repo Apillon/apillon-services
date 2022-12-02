@@ -2,7 +2,8 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import {
   Ams,
   CodeException,
-  ErrorCode,
+  Context,
+  env,
   generateJwtToken,
   JwtTokenType,
   LogType,
@@ -50,7 +51,7 @@ export class UserService {
     context: DevConsoleApiContext,
   ): Promise<any> {
     try {
-      const resp = await new Ams().login({
+      const resp = await new Ams(context).login({
         email: loginInfo.email,
         password: loginInfo.password,
       });
@@ -81,10 +82,13 @@ export class UserService {
     }
   }
 
-  async validateEmail(emailVal: ValidateEmailDto): Promise<any> {
+  async validateEmail(
+    context: Context,
+    emailVal: ValidateEmailDto,
+  ): Promise<any> {
     const email = emailVal.email;
 
-    const res = await new Ams().emailExists(email);
+    const res = await new Ams(context).emailExists(email);
 
     if (res.data.result === true) {
       throw new CodeException({
@@ -98,11 +102,12 @@ export class UserService {
       email,
     });
 
-    await new Mailing().sendMail({
+    await new Mailing(context).sendMail({
       emails: [email],
-      subject: 'Welcome to Apillon!',
       template: 'welcome',
-      data: { token },
+      data: {
+        actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}`,
+      },
     });
 
     return res;
@@ -143,7 +148,7 @@ export class UserService {
     let amsResponse;
     try {
       await user.insert(SerializeFor.INSERT_DB, conn);
-      amsResponse = await new Ams().register({
+      amsResponse = await new Ams(context).register({
         user_uuid: user.user_uuid,
         email,
         password,
@@ -183,8 +188,8 @@ export class UserService {
     };
   }
 
-  async passwordResetRequest(body: ValidateEmailDto) {
-    const res = await new Ams().emailExists(body.email);
+  async passwordResetRequest(context: Context, body: ValidateEmailDto) {
+    const res = await new Ams(context).emailExists(body.email);
 
     if (!res.data.result) {
       throw new CodeException({
@@ -198,17 +203,19 @@ export class UserService {
       email: body.email,
     });
 
-    await new Mailing().sendMail({
+    await new Mailing(context).sendMail({
       emails: [body.email],
-      subject: 'Apillon password reset',
+      // subject: 'Apillon password reset',
       template: 'reset-password',
-      data: { token },
+      data: {
+        actionUrl: `${env.APP_URL}/register/reset-password/?token=${token}`,
+      },
     });
 
     return true;
   }
 
-  async resetPassword(body: ResetPasswordDto) {
+  async resetPassword(context: Context, body: ResetPasswordDto) {
     const tokenData = parseJwtToken(
       JwtTokenType.USER_RESET_PASSWORD,
       body.token,
@@ -222,7 +229,7 @@ export class UserService {
       });
     }
 
-    await new Ams().resetPassword({
+    await new Ams(context).resetPassword({
       email: tokenData.email,
       password: body.password,
     });
@@ -255,7 +262,7 @@ export class UserService {
     try {
       await user.update(SerializeFor.UPDATE_DB, conn);
       //Call access MS to update auth user
-      await new Ams().updateAuthUser({
+      await new Ams(context).updateAuthUser({
         user_uuid: context.user.user_uuid,
         wallet: body.wallet,
       });

@@ -48,6 +48,7 @@ export enum StorageEventType {
 
 export enum MailEventType {
   SEND_MAIL = 'send-mail',
+  SEND_CUSTOM_MAIL = 'send-custom-mail',
 }
 
 export enum ScsEventType {
@@ -92,6 +93,7 @@ export enum LogType {
   MSG = 'MSG',
   WARN = 'WARNING',
   ERROR = 'ERROR',
+  COST = 'COST',
 }
 
 export enum SqlModelStatus {
@@ -245,7 +247,7 @@ export enum ValidatorErrorCode {
   BUCKET_UUID_NOT_PRESENT = 42200006,
   PATH_NOT_PRESENT = 42200007,
   FILE_NAME_NOT_PRESENT = 42200008,
-  CONTENT_TYPE_NOT_PRESENT = 42200009,
+  FILE_CONTENT_TYPE_NOT_PRESENT = 42200009,
   SESSION_UUID_NOT_PRESENT = 42200010,
   BUCKET_TYPE_NOT_PRESENT = 42200011,
   CREATE_API_KEY_PROJECT_UUID_NOT_PRESENT = 42200012,
