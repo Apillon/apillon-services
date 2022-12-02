@@ -10,7 +10,7 @@ import {
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthorizationApiContext } from '../../context';
-import { AttestationEmailDto } from './dto/attestation-email.dto';
+import { AttestationEmailDto } from './dtos/attestation-email.dto';
 import { Attestation } from './models/attestation.model';
 import {
   AttestationState,
@@ -32,7 +32,7 @@ import {
   Did,
   Utils,
 } from '@kiltprotocol/sdk-js';
-import { AttestationCreateDto } from './dto/attestation-create.dto';
+import { AttestationCreateDto } from './dtos/attestation-create.dto';
 import { u8aToHex, hexToU8a } from '@polkadot/util';
 import { BN } from '@polkadot/util/bn/bn';
 
