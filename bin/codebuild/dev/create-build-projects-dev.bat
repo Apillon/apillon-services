@@ -13,3 +13,6 @@ aws codebuild create-webhook --cli-input-json file://storage-webhook-dev.json
 aws codebuild create-project --cli-input-json file://mailing-config-dev.json
 aws codebuild create-webhook --cli-input-json file://mailing-webhook-dev.json
 
+aws codebuild create-project --cli-input-json file://config-config-dev.json
+aws codebuild create-webhook --cli-input-json file://config-webhook-dev.json
+
