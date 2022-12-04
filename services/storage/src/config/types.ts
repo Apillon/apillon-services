@@ -71,3 +71,8 @@ export enum FileStatus {
   UPLOADED_TO_IPFS = 3,
   PINNED_TO_CRUST = 4,
 }
+
+export enum BucketWebhookAuthMethod {
+  BASIC = 'basic',
+  TOKEN = 'bearer-token',
+}

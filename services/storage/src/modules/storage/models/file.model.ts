@@ -207,6 +207,26 @@ export class File extends AdvancedSQLModel {
   })
   public size: number;
 
+  /*
+  INFO PROPERTIES
+  */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public downloadLink: string;
+
   public canAccess(context: ServiceContext) {
     if (
       !context.hasRoleOnProject(

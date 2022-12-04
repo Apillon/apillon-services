@@ -14,7 +14,7 @@ import { releaseStage, setupTest, Stage } from '../../../../test/helpers/setup';
 import { createTestUser, TestUser } from '../../../../test/helpers/user';
 import { Project } from '../../project/models/project.model';
 import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
-import { BadRequestErrorCode } from '@apillon/lib';
+import { BadRequestErrorCode, env } from '@apillon/lib';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const fs = require('fs');
@@ -164,6 +164,13 @@ describe('Storage tests', () => {
         ).populateByUUID(testSession_uuid);
 
         expect(session.sessionStatus).toBe(2);
+      });
+
+      test('User should be able to download uploaded file from apillon ipfs gateway', async () => {
+        const response = await request(
+          env.STORAGE_IPFS_PROVIDER + testFile.CID,
+        ).get('');
+        expect(response.status).toBe(200);
       });
     });
 
