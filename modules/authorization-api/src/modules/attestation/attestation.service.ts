@@ -42,23 +42,21 @@ export class AttestationService {
     context: AuthorizationApiContext,
     body: AttestationEmailDto,
   ): Promise<any> {
-    // What does this mean?
-
     const email = body.email;
-    // // TODO: How do we check for existing users
-    // const attestation_db = await new Attestation().populateByUserEmail(
-    //   context,
-    //   email,
-    // );
+    // TODO: How do we check for existing users
+    const attestation_db = await new Attestation().populateByUserEmail(
+      context,
+      email,
+    );
 
-    // // TODO: Handle
-    // if (attestation_db.exists()) {
-    //   throw new CodeException({
-    //     status: HttpStatus.UNPROCESSABLE_ENTITY,
-    //     code: ModuleValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
-    //     errorCodes: ModuleValidatorErrorCode,
-    //   });
-    // }
+    // TODO: Handle
+    if (attestation_db.exists()) {
+      throw new CodeException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        code: ModuleValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
+        errorCodes: ModuleValidatorErrorCode,
+      });
+    }
 
     const attestation = new Attestation({}, context).populate({
       context: context,
@@ -66,19 +64,23 @@ export class AttestationService {
     });
 
     // Lock email to attestation object
-    attestation.state = AttestationState.IN_PROGRESS;
+    attestation.populate({
+      state: AttestationState.IN_PROGRESS,
+    });
 
+    const conn = await context.mysql.start();
     try {
-      const conn = await context.mysql.start();
       await attestation.insert(SerializeFor.INSERT_DB, conn);
       await context.mysql.commit(conn);
     } catch (err) {
+      await context.mysql.rollback(conn);
       writeLog(
         LogType.ERROR,
         `Error creating attestation state for user with email ${email}'`,
         'attestation.service.ts',
         'sendVerificationEmail',
       );
+      throw err;
     }
 
     const token = generateJwtToken(JwtTokenType.ATTEST_EMAIL_VERIFICATION, {
@@ -117,8 +119,8 @@ export class AttestationService {
       attestation.state != AttestationState.IN_PROGRESS
     ) {
       throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
-        code: ModuleValidatorErrorCode.ATTEST_INVALID_STATE,
+        status: HttpStatus.NOT_FOUND,
+        code: ModuleValidatorErrorCode.ATTEST_DOES_NOT_EXIST,
         errorCodes: ModuleValidatorErrorCode,
       });
     }
@@ -140,8 +142,8 @@ export class AttestationService {
 
     if (!attestation.exists()) {
       throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
-        code: ModuleValidatorErrorCode.ATTEST_INVALID_REQUEST,
+        status: HttpStatus.NOT_FOUND,
+        code: ModuleValidatorErrorCode.ATTEST_DOES_NOT_EXIST,
         errorCodes: ModuleValidatorErrorCode,
       });
     }
@@ -149,7 +151,7 @@ export class AttestationService {
     return { state: attestation.state };
   }
 
-  async generateFullDid(context: AuthorizationApiContext, body: any) {
+  async generateAndSubmitFullDid(context: AuthorizationApiContext, body: any) {
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
     const decryptionKey = body.senderPubKey;

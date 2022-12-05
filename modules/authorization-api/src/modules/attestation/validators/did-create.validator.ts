@@ -17,7 +17,7 @@ export function didCreatePayloadValidator() {
  * Validate did create sender key
  * @returns boolean
  */
-export function didCreateSenderValidator() {
+export function didCreateSenderKeyValidator() {
   return async function (this: ModelBase, senderKey: string): Promise<boolean> {
     // This is better, no?
     if (typeof senderKey != 'string') return false;

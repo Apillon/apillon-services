@@ -3,7 +3,7 @@ import { prop } from '@rawmodel/core';
 import { ModuleValidatorErrorCode } from '../../../config/types';
 import {
   didCreatePayloadValidator,
-  didCreateSenderValidator,
+  didCreateSenderKeyValidator,
 } from '../validators/did-create.validator';
 
 // const body = {
@@ -37,7 +37,7 @@ export class DidCreateDto extends ModelBase {
         code: ModuleValidatorErrorCode.DID_CREATE_SENDER_KEY_NOT_PRESENT,
       },
       {
-        resolver: didCreateSenderValidator(),
+        resolver: didCreateSenderKeyValidator(),
         code: ModuleValidatorErrorCode.DID_CREATE_INVALID_REQUEST,
       },
     ],

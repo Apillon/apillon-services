@@ -37,17 +37,20 @@ export class AttestationController {
     );
   }
 
-  @Post('create-did')
+  @Post('did')
   @Validation({ dto: DidCreateDto })
   @UseGuards(ValidationGuard)
   async attestationGenerateDid(
     @Ctx() context: AuthorizationApiContext,
     @Body() body: any,
   ) {
-    return await this.attestationService.generateFullDid(context, body);
+    return await this.attestationService.generateAndSubmitFullDid(
+      context,
+      body,
+    );
   }
 
-  @Post('attest-email')
+  @Post('attest/email')
   @Validation({ dto: AttestationCreateDto })
   @UseGuards(ValidationGuard)
   async attestationAttestClaim(
@@ -67,7 +70,7 @@ export class AttestationController {
     return await this.attestationService.verifyIdentityEmail(context, token);
   }
 
-  @Get('attest-state')
+  @Get('attest/state')
   @Validation({ dto: AttestationEmailDto, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard)
   async attestationGetIdentityState(
