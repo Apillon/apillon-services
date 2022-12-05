@@ -17,6 +17,10 @@
       "path": "services\\mailing"
     },
     {
+      "name": "🌐@services/config [@apillon/config]",
+      "path": "services\\config"
+    },
+    {
       "name": "😎@modules/dev-console-api",
       "path": "modules\\dev-console-api"
     },
@@ -35,6 +39,10 @@
     {
       "name": "📦@packages/modules-lib",
       "path": "packages\\modules-lib"
+    },
+    {
+      "name": "📦@packages/workers-lib",
+      "path": "packages\\workers-lib"
     },
     {
       "name": "🔨_tsconfig",

@@ -18,7 +18,7 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.REQUEST_S3_SIGNED_URL_FOR_UPLOAD]:
       StorageService.generateS3SignedUrlForUpload,
     [StorageEventType.END_FILE_UPLOAD_SESSION]:
-      StorageService.endFileUploadSessionAndExecuteSyncToIPFS,
+      StorageService.endFileUploadSession,
     [StorageEventType.CREATE_BUCKET]: BucketService.createBucket,
     [StorageEventType.UPDATE_BUCKET]: BucketService.updateBucket,
     [StorageEventType.DELETE_BUCKET]: BucketService.deleteBucket,

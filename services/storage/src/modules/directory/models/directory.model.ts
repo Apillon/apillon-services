@@ -16,6 +16,7 @@ import {
 } from '@apillon/lib';
 import { DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
+import { v4 as uuidV4 } from 'uuid';
 
 export class Directory extends AdvancedSQLModel {
   public readonly tableName = DbTables.DIRECTORY;
@@ -39,6 +40,7 @@ export class Directory extends AdvancedSQLModel {
       SerializeFor.PROFILE,
     ],
     validators: [],
+    fakeValue: () => uuidV4(),
   })
   public directory_uuid: string;
 
@@ -118,6 +120,7 @@ export class Directory extends AdvancedSQLModel {
     ],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,

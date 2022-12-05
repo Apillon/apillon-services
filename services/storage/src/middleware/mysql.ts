@@ -1,50 +1,61 @@
-import { MySql } from '@apillon/lib';
+import { AppEnvironment, env, getEnvSecrets, MySql } from '@apillon/lib';
 const instances = {};
 
-export function MySqlConnect(options?: {
-  host: string;
-  port: number;
-  database: string;
-  user: string;
-  password: string;
-  instanceName?: string;
-  autoDisconnect?: boolean;
-}) {
-  options = {
-    instanceName: 'mysql',
-    autoDisconnect: false,
-    ...options,
-  };
-
+export function MySqlConnect(instanceName = 'mysql', autoDisconnect = true) {
   const before = async (request) => {
+    await getEnvSecrets();
+
+    const options = {
+      host:
+        env.APP_ENV === AppEnvironment.TEST
+          ? env.STORAGE_MYSQL_HOST_TEST
+          : env.STORAGE_MYSQL_HOST,
+      port:
+        env.APP_ENV === AppEnvironment.TEST
+          ? env.STORAGE_MYSQL_PORT_TEST
+          : env.STORAGE_MYSQL_PORT,
+      database:
+        env.APP_ENV === AppEnvironment.TEST
+          ? env.STORAGE_MYSQL_DATABASE_TEST
+          : env.STORAGE_MYSQL_DATABASE,
+      user:
+        env.APP_ENV === AppEnvironment.TEST
+          ? env.STORAGE_MYSQL_USER_TEST
+          : env.STORAGE_MYSQL_USER,
+      password:
+        env.APP_ENV === AppEnvironment.TEST
+          ? env.STORAGE_MYSQL_PASSWORD_TEST
+          : env.STORAGE_MYSQL_PASSWORD,
+    };
+
     const { context } = request;
 
-    if (!instances[options.instanceName]) {
+    if (!instances[instanceName]) {
       const mysql = new MySql(options);
 
       await mysql.connect();
       console.log(
-        `MySQL client instance ${options.instanceName} is CONNECTED to server!`,
+        `MySQL client instance ${instanceName} is CONNECTED to server!`,
       );
 
-      instances[options.instanceName] = mysql;
+      instances[instanceName] = mysql;
     }
 
-    context[options.instanceName] = instances[options.instanceName];
+    context.serviceContext[instanceName] = instances[instanceName];
   };
 
   const after = async (_response) => {
-    if (options.autoDisconnect) {
+    if (autoDisconnect) {
       try {
-        await (instances[options.instanceName] as MySql).close();
+        await (instances[instanceName] as MySql).close();
         console.log(
-          `MySQL client instance ${options.instanceName} is DISCONNECTED from server!`,
+          `MySQL client instance ${instanceName} is DISCONNECTED from server!`,
         );
-        delete instances[options.instanceName];
+        delete instances[instanceName];
       } catch (err) {
         console.error(err);
         console.log(
-          `ERROR: Instance ${options.instanceName} could not disconnect from server!`,
+          `ERROR: Instance ${instanceName} could not disconnect from server!`,
         );
       }
     }

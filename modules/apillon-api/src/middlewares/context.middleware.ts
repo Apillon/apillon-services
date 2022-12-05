@@ -19,7 +19,13 @@ export class ContextMiddleware implements NestMiddleware {
   ) {}
 
   use(req: IRequest, res, next) {
-    req.context = new ApillonApiContext();
+    let requestId = null;
+    try {
+      requestId = JSON.parse(
+        decodeURI(req.headers['x-apigateway-context'] as string),
+      )?.awsRequestId;
+    } catch (err) {}
+    req.context = new ApillonApiContext(requestId);
     next();
   }
 }

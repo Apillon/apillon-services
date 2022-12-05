@@ -1,8 +1,8 @@
-import { User } from 'dev-console-api/src/modules/user/models/user.model';
-import { AuthUser } from 'at-ams/src/modules/auth-user/auth-user.model';
+import { AuthUser } from '@apillon/access/src/modules/auth-user/auth-user.model';
 import { TestContext } from './context';
 import { DefaultUserRole, SqlModelStatus } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
+import { User } from '../../src/modules/user/models/user.model';
 
 export interface TestUser {
   user: User;
@@ -26,6 +26,7 @@ export async function createTestUser(
   const password = 'randomPassword231321';
   const authUser = new AuthUser({}, amsCtx).fake();
   authUser.user_uuid = user.user_uuid;
+  authUser.email = user.email;
   authUser.setPassword(password);
   await authUser.insert();
   await authUser.setDefaultRole(null);
@@ -33,13 +34,12 @@ export async function createTestUser(
     await authUser.assignRole(project_uuid, role);
   }
 
-  // todo
-  const token = 'todo!';
+  await authUser.loginUser();
 
   return {
     user,
     authUser,
-    token,
+    token: authUser.token,
     password,
   };
 }

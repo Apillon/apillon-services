@@ -1,4 +1,9 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
+import {
+  BadRequestErrorCode,
+  CodeException,
+  UnauthorizedErrorCodes,
+} from '@apillon/lib';
+import { HttpStatus, Injectable, NestMiddleware } from '@nestjs/common';
 
 const AUTHORIZATION_HEADER = 'Authorization';
 
@@ -10,13 +15,31 @@ const AUTHORIZATION_HEADER = 'Authorization';
  * @param next Express next function
  */
 @Injectable()
-export class AuthenticateUserMiddleware implements NestMiddleware {
+export class AuthenticateApiKeyMiddleware implements NestMiddleware {
   async use(req, res, next) {
     const { context } = req;
-    const token = (req.get(AUTHORIZATION_HEADER) || '').split(' ').reverse()[0];
-    if (token) {
-      await context.authenticate(token);
+
+    // check for basic auth header
+    if (
+      !req.headers.authorization ||
+      req.headers.authorization.indexOf('Basic ') === -1
+    ) {
+      throw new CodeException({
+        code: BadRequestErrorCode.MISSING_AUTHORIZATION_HEADER,
+        status: HttpStatus.BAD_REQUEST,
+        errorMessage: 'Missing Authorization header',
+      });
     }
+
+    // Parse basic credentials
+    const base64Credentials = req.headers.authorization.split(' ')[1];
+    const credentials = Buffer.from(base64Credentials, 'base64').toString(
+      'ascii',
+    );
+    const [apiKey, apiKeySecret] = credentials.split(':');
+
+    if (apiKey && apiKeySecret)
+      await context.authenticate(apiKey, apiKeySecret);
 
     next();
   }

@@ -9,16 +9,15 @@ import {
   DefaultUserRole,
   ForbiddenErrorCodes,
   PopulateFrom,
+  selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
-import { selectAndCountQuery } from '@apillon/lib';
 
-import { v4 as uuidV4 } from 'uuid';
 import { faker } from '@faker-js/faker';
+import { HttpStatus } from '@nestjs/common';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
-import { HttpStatus } from '@nestjs/common';
 
 /**
  * Project model.
@@ -37,14 +36,7 @@ export class Project extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.SELECT_DB,
     ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.PROJECT_UUID_NOT_PRESENT,
-      },
-    ],
-    defaultValue: uuidV4(),
-    fakeValue: uuidV4(),
+    validators: [],
   })
   public project_uuid: string;
 
@@ -67,7 +59,7 @@ export class Project extends AdvancedSQLModel {
         code: ValidatorErrorCode.PROJECT_NAME_NOT_PRESENT,
       },
     ],
-    fakeValue: faker.word.verb(),
+    fakeValue: () => faker.word.verb(),
   })
   public name: string;
 
@@ -100,7 +92,7 @@ export class Project extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue: faker.lorem.paragraph(5),
+    fakeValue: () => faker.lorem.paragraph(5),
   })
   public description: string;
 

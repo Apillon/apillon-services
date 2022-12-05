@@ -3,6 +3,7 @@ import { AppEnvironment } from '../../config/types';
 import * as Net from 'net';
 import * as AWS from 'aws-sdk';
 import { safeJsonParse } from '../utils';
+import { Context } from '../context';
 
 export abstract class BaseService {
   private lambda: AWS.Lambda;
@@ -10,17 +11,35 @@ export abstract class BaseService {
   abstract lambdaFunctionName: string;
   abstract devPort: number;
   abstract serviceName: string;
+  protected securityToken: string;
+  private requestId: string;
+  private user: any;
 
-  constructor() {
+  constructor(context?: Context) {
     this.lambda = new AWS.Lambda({
       apiVersion: '2015-03-31',
       region: env.AWS_REGION,
     });
+    this.securityToken = this.generateSecurityToken();
+    this.requestId = context?.requestId;
+    this.user = context?.user;
+  }
+
+  private generateSecurityToken() {
+    //TODO - generate JWT from APP secret
+    return 'SecurityToken';
   }
 
   protected async callService(payload, isAsync = this.isDefaultAsync) {
     const env = await getEnvSecrets();
     let result;
+
+    payload = {
+      securityToken: this.securityToken,
+      requestId: this.requestId,
+      user: this.user?.serialize(),
+      ...payload,
+    };
 
     if (
       [AppEnvironment.LOCAL_DEV, AppEnvironment.TEST].includes(
@@ -58,7 +77,7 @@ export abstract class BaseService {
         };
       }
       throw {
-        status: 500,
+        status: result?.status || 500,
         message: result?.error?.message || result?.error.errorMessage,
         code: result?.error?.errorCode,
       };

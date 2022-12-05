@@ -5,6 +5,7 @@ import {
   PopulateFrom,
   selectAndCountQuery,
   SerializeFor,
+  unionSelectAndCountQuery,
 } from '@apillon/lib';
 import { prop } from '@rawmodel/core';
 import { presenceValidator } from '@rawmodel/validators';
@@ -30,7 +31,6 @@ export class ProjectUser extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
-      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -78,8 +78,31 @@ export class ProjectUser extends AdvancedSQLModel {
   })
   public role_id: number;
 
+  public async populateByProjectAndUser(
+    project_id: number,
+    user_id: number,
+  ): Promise<this> {
+    if (!user_id || !project_id) {
+      return this.reset();
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+        SELECT *
+        FROM ${this.tableName}
+        WHERE project_id = @project_id AND user_id = @user_id
+      `,
+      { project_id, user_id },
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
+
   public async isUserOnProject(
-    context: DevConsoleApiContext,
     project_id: number,
     user_id: number,
   ): Promise<boolean> {
@@ -87,7 +110,7 @@ export class ProjectUser extends AdvancedSQLModel {
       return false;
     }
 
-    const data = await context.mysql.paramExecute(
+    const data = await this.getContext().mysql.paramExecute(
       `
         SELECT 1
         FROM ${DbTables.PROJECT_USER}
@@ -122,32 +145,42 @@ export class ProjectUser extends AdvancedSQLModel {
     }
     project.canAccess(context);
 
-    // Map url query with sql fields.
-    const fieldMap = {
-      id: 'pu.id',
-    };
     const { params, filters } = getQueryParams(
       { ...filter.getDefaultValues(), project_id: projectId },
       'pu',
-      fieldMap,
+      {},
       filter.serialize(),
     );
 
-    const sqlQuery = {
-      qSelect: `
-        SELECT ${this.generateSelectFields('pu')}, u.name, u.phone, u.email
+    const qSelects = [
+      {
+        qSelect: `
+        SELECT pu.id, pu.status, pu.user_id, pu.role_id, u.name, u.phone, u.email, false as pendingInvitation
         `,
-      qFrom: `
+        qFrom: `
         FROM ${DbTables.PROJECT_USER} pu
         INNER JOIN ${DbTables.USER} u ON u.id = pu.user_id
-        WHERE (pu.project_id = ${params.project_id})
-        `,
-      qFilter: `
-        ORDER BY ${filters.orderStr}
-        LIMIT ${filters.limit} OFFSET ${filters.offset};
+        WHERE (pu.project_id = @project_id)
       `,
-    };
-
-    return selectAndCountQuery(context.mysql, sqlQuery, params, 'pu.id');
+      },
+      {
+        qSelect: `
+        SELECT pu.id as id, pu.status, null as user_id, pu.role_id, null as name, null as phone, pu.email, true as pendingInvitation
+        `,
+        qFrom: `
+        FROM ${DbTables.PROJECT_USER_PENDING_INVITATION} pu
+        WHERE (pu.project_id = @project_id)
+      `,
+      },
+    ];
+    return unionSelectAndCountQuery(
+      context.mysql,
+      {
+        qSelects: qSelects,
+        qFilter: `LIMIT ${filters.limit} OFFSET ${filters.offset};`,
+      },
+      params,
+      'email',
+    );
   }
 }

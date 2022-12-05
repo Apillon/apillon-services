@@ -1,3 +1,5 @@
+import { AmsCodeException } from '../lib/exceptions';
+
 export function ErrorHandler() {
   const onError = (request) => {
     console.log('ON ERROR MIDLLEWARE');
@@ -6,7 +8,14 @@ export function ErrorHandler() {
       success: false,
       status: request?.error?.status || 500,
       data: null,
-      error: request?.error,
+      error:
+        request?.error instanceof AmsCodeException
+          ? {
+              message: request?.error?.options.errorMessage,
+              errorCode: request?.error?.options.code,
+            }
+          : request?.error,
+      code: request?.error?.options?.code || request?.code,
     };
   };
   return {

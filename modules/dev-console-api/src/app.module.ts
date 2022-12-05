@@ -11,8 +11,12 @@ import { ServicesModule } from './modules/services/services.module';
 import { BucketModule } from './modules/bucket/bucket.module';
 import { DirectoryModule } from './modules/directory/directory.module';
 import { StorageModule } from './modules/storage/storage.module';
-import { AuthenticateUserMiddleware } from '@apillon/modules-lib';
+import {
+  AuthenticateUserMiddleware,
+  createRequestLogMiddleware,
+} from '@apillon/modules-lib';
 import { ApiKeyModule } from './modules/api-key/api-key.module';
+import { env } from '@apillon/lib';
 
 @Module({
   imports: [
@@ -45,6 +49,13 @@ export class AppModule {
         { path: 'user/login', method: RequestMethod.POST },
         { path: 'user/password/reset', method: RequestMethod.PATCH },
         { path: 'user/password/reset/request', method: RequestMethod.PATCH },
+      )
+      .forRoutes({ path: '*', method: RequestMethod.ALL });
+    consumer
+      .apply(createRequestLogMiddleware(`dev-console-api (${env.APP_ENV})`))
+      .exclude(
+        { path: '*', method: RequestMethod.HEAD },
+        { path: '*', method: RequestMethod.OPTIONS },
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }

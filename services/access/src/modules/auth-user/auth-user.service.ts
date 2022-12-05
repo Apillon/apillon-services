@@ -6,15 +6,16 @@ import {
   parseJwtToken,
   PopulateFrom,
   SerializeFor,
+  ServiceName,
 } from '@apillon/lib';
-import { AmsErrorCode, SqlModelStatus } from '../../config/types';
+import { AmsErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
 import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
-import { AuthUser } from './auth-user.model';
 import { AuthToken } from '../auth-token/auth-token.model';
+import { AuthUser } from './auth-user.model';
 
 import { TokenExpiresInStr } from '../../config/types';
-import * as bcrypt from 'bcryptjs';
+import { CryptoHash } from '../../lib/hash-with-crypto';
 
 export class AuthUserService {
   static async register(event, context: ServiceContext) {
@@ -23,9 +24,21 @@ export class AuthUserService {
         status: 400,
         code: AmsErrorCode.BAD_REQUEST,
       }).writeToMonitor({
-        userId: event?.user_uuid,
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
       });
     }
+    //check if email already exists - user cannot register twice
+    const checkEmailRes = await AuthUserService.emailExists(event, context);
+
+    if (checkEmailRes.result === true) {
+      throw new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.USER_ALREADY_REGISTERED,
+      });
+    }
+
     const authUser = new AuthUser({}, context);
     authUser.populate(event, PopulateFrom.SERVICE);
 
@@ -50,7 +63,7 @@ export class AuthUserService {
       // Create new token in the database
       const authToken = new AuthToken({}, context);
       const tokenData = {
-        tokenHash: bcrypt.hashSync(authUser.token, 10),
+        tokenHash: await CryptoHash.hash(authUser.token),
         user_uuid: authUser.user_uuid,
         tokenType: JwtTokenType.USER_AUTHENTICATION,
         expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
@@ -72,18 +85,17 @@ export class AuthUserService {
       throw await new AmsCodeException({
         status: 500,
         code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
-      }).writeToMonitor({ userId: authUser?.user_uuid });
+      }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
     }
 
-    await new Lmas().writeLog(
-      {
-        logType: LogType.INFO,
-        message: 'New User Registration!',
-        userId: authUser.user_uuid,
-        location: 'AMS/UserService/register',
-      },
-      'secToken1',
-    );
+    await new Lmas().writeLog({
+      context,
+      logType: LogType.INFO,
+      message: 'New User Registration!',
+      user_uuid: authUser.user_uuid,
+      location: 'AMS/UserService/register',
+      service: ServiceName.AMS,
+    });
 
     const res = authUser.serialize(SerializeFor.SERVICE);
     console.log(res);
@@ -91,9 +103,6 @@ export class AuthUserService {
   }
 
   static async login(event, context: ServiceContext) {
-    // Start connection to database at the beginning of the function
-    const conn = await context.mysql.start();
-
     const authUser = await new AuthUser({}, context).populateByEmail(
       event.email,
     );
@@ -101,64 +110,19 @@ export class AuthUserService {
       throw await new AmsCodeException({
         status: 401,
         code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
-      }).writeToMonitor({ userId: authUser?.user_uuid });
+      }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
     }
 
-    // Generate a new token with type USER_AUTH
-    authUser.token = generateJwtToken(JwtTokenType.USER_AUTHENTICATION, {
+    await authUser.loginUser();
+
+    await new Lmas().writeLog({
+      context,
+      logType: LogType.INFO,
+      message: 'User login',
+      location: 'AMS/UserService/login',
       user_uuid: authUser.user_uuid,
+      service: ServiceName.AMS,
     });
-
-    // Create new token in the database
-    const authToken = new AuthToken({}, context);
-    const tokenData = {
-      tokenHash: bcrypt.hashSync(authUser.token, 10),
-      user_uuid: authUser.user_uuid,
-      tokenType: JwtTokenType.USER_AUTHENTICATION,
-      expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
-    };
-
-    authToken.populate({ ...tokenData }, PopulateFrom.SERVICE);
-
-    try {
-      await authToken.validate();
-    } catch (err) {
-      throw new AmsValidationException(authToken);
-    }
-
-    try {
-      // Find old token
-      const oldToken = await new AuthToken({}, context).populateByUserAndType(
-        authUser.user_uuid,
-        JwtTokenType.USER_AUTHENTICATION,
-        conn,
-      );
-
-      if (oldToken.exists()) {
-        oldToken.status = SqlModelStatus.DELETED;
-        await oldToken.update(SerializeFor.UPDATE_DB, conn);
-      }
-
-      await authToken.insert(SerializeFor.INSERT_DB, conn);
-
-      await context.mysql.commit(conn);
-    } catch (err) {
-      await context.mysql.rollback(conn);
-      throw await new AmsCodeException({
-        status: 500,
-        code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
-      }).writeToMonitor({ userId: authUser?.user_uuid });
-    }
-
-    await new Lmas().writeLog(
-      {
-        logType: LogType.INFO,
-        message: 'User login',
-        location: 'AMS/UserService/login',
-        userId: authUser.user_uuid,
-      },
-      'secToken1',
-    );
 
     return authUser.serialize(SerializeFor.SERVICE);
   }
@@ -179,7 +143,9 @@ export class AuthUserService {
         status: 422,
         code: AmsErrorCode.USER_AUTH_TOKEN_NOT_PRESENT,
       }).writeToMonitor({
-        userId: event?.user_uuid,
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
       });
     }
 
@@ -193,7 +159,9 @@ export class AuthUserService {
         status: 400,
         code: AmsErrorCode.USER_AUTH_TOKEN_IS_INVALID,
       }).writeToMonitor({
-        userId: event?.user_uuid,
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
       });
     }
     const authUser = await new AuthUser({}, context).populateByUserUuid(
@@ -205,7 +173,9 @@ export class AuthUserService {
         status: 400,
         code: AmsErrorCode.USER_DOES_NOT_EXISTS,
       }).writeToMonitor({
-        userId: event?.user_uuid,
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
       });
     }
 
@@ -217,13 +187,15 @@ export class AuthUserService {
 
     if (
       !authToken.exists() ||
-      !bcrypt.compareSync(event.token, authToken.tokenHash)
+      !(await CryptoHash.verify(event.token, authToken.tokenHash))
     ) {
       throw await new AmsCodeException({
         status: 401,
         code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
       }).writeToMonitor({
-        userId: event?.user_uuid,
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
       });
     }
 
@@ -233,16 +205,6 @@ export class AuthUserService {
   }
 
   static async updateAuthUser(event, context: ServiceContext) {
-    // send log to monitoring service
-    await new Lmas().writeLog(
-      {
-        logType: LogType.INFO,
-        message: 'AuthUser update!',
-        location: 'AMS/UserService/updateAuthUser',
-      },
-      'secToken1',
-    );
-
     const authUser = await new AuthUser({}, context).populateByUserUuid(
       event.user_uuid,
     );
@@ -252,7 +214,9 @@ export class AuthUserService {
         status: 400,
         code: AmsErrorCode.USER_DOES_NOT_EXISTS,
       }).writeToMonitor({
-        userId: event?.user_uuid,
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
       });
     }
 
@@ -269,34 +233,41 @@ export class AuthUserService {
         status: 500,
         code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
       }).writeToMonitor({
-        userId: event?.user_uuid,
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
       });
     }
+
+    // send log to monitoring service
+    await new Lmas().writeLog({
+      context,
+      logType: LogType.INFO,
+      message: 'AuthUser updated!',
+      location: 'AMS/UserService/updateAuthUser',
+      service: ServiceName.AMS,
+    });
 
     return authUser.serialize(SerializeFor.SERVICE);
   }
 
   static async resetPassword(event, context: ServiceContext) {
-    if (!event?.user_uuid || !event.password) {
+    if (!event?.email || !event.password) {
       throw await new AmsCodeException({
         status: 400,
         code: AmsErrorCode.BAD_REQUEST,
-      }).writeToMonitor({
-        userId: event?.user_uuid,
-      });
+      }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
     }
 
-    const authUser = await new AuthUser({}, context).populateByUserUuid(
-      event.user_uuid,
+    const authUser = await new AuthUser({}, context).populateByEmail(
+      event.email,
     );
 
     if (!authUser.exists()) {
       throw await new AmsCodeException({
         status: 400,
         code: AmsErrorCode.USER_DOES_NOT_EXISTS,
-      }).writeToMonitor({
-        userId: event?.user_uuid,
-      });
+      }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
     }
 
     authUser.setPassword(event.password);
@@ -312,10 +283,10 @@ export class AuthUserService {
       throw await new AmsCodeException({
         status: 500,
         code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
-      }).writeToMonitor({
-        userId: event?.user_uuid,
-      });
+      }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
     }
+
+    return true;
   }
 
   static async emailExists(event, context: ServiceContext) {
@@ -324,7 +295,9 @@ export class AuthUserService {
         status: 400,
         code: AmsErrorCode.BAD_REQUEST,
       }).writeToMonitor({
-        userId: event?.user_uuid,
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
       });
     }
 
@@ -341,7 +314,9 @@ export class AuthUserService {
         status: 400,
         code: AmsErrorCode.BAD_REQUEST,
       }).writeToMonitor({
-        userId: event?.user_uuid,
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
       });
     }
 

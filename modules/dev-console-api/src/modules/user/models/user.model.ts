@@ -54,6 +54,7 @@ export class User extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
     ],
+    fakeValue: () => faker.internet.email(),
   })
   public email: string;
 
@@ -114,6 +115,21 @@ export class User extends AdvancedSQLModel {
         WHERE u.user_uuid = @user_uuid
       `,
       { user_uuid },
+    );
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    }
+    return this.reset();
+  }
+
+  public async populateByEmail(context: DevConsoleApiContext, email: string) {
+    const data = await context.mysql.paramExecute(
+      `
+        SELECT *
+        FROM \`${DbTables.USER}\` u
+        WHERE u.email = @email
+      `,
+      { email },
     );
     if (data && data.length) {
       return this.populate(data[0], PopulateFrom.DB);

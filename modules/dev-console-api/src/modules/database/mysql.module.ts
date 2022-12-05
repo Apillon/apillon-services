@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
-import { AppEnvironment, env, MySql } from '@apillon/lib';
+import { AppEnvironment, env, getEnvSecrets, MySql } from '@apillon/lib';
 
 @Module({
   providers: [
     {
       provide: 'MYSQL_DB',
       useFactory: async (): Promise<MySql> => {
+        await getEnvSecrets();
         const config =
           env.APP_ENV === AppEnvironment.TEST
             ? {

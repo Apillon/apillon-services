@@ -4,8 +4,10 @@ import {
   ErrorOrigin,
   LogType,
   SystemErrorCode,
+  ValidatorErrorCode,
 } from '../../config/types';
 import { Lmas } from '../at-services/lmas/lmas';
+import { Context } from '../context';
 import { writeLog } from '../logger';
 import { HttpException } from './http-exception';
 
@@ -53,18 +55,24 @@ export class CodeException extends HttpException {
   }
 
   public async writeToMonitor(params: {
-    projectId?: string;
-    userId?: string;
+    context?: Context;
+    project_uuid?: string;
+    user_uuid?: string;
     logType?: LogType;
+    service?: string;
+    data?: any;
   }) {
     await new Lmas().writeLog({
-      projectId: params.projectId,
-      userId: params.userId,
+      context: params.context,
+      project_uuid: params.project_uuid,
+      user_uuid: params.user_uuid || params.context?.user?.user_uuid || null,
       logType: params.logType || LogType.ERROR,
       message: this.options.errorCodes
         ? this.options.errorCodes[this.options.code]
         : this.options.errorMessage,
       location: this.options.sourceFunction,
+      service: params.service,
+      data: params.data,
     });
 
     return this;
@@ -81,14 +89,16 @@ export class ValidationException extends HttpException {
   /**
    * Class constructor.
    * @param model Model instance.
-   * @param ValidatorErrorCode Validator error codes from service, which initializes this class
+   * @param errorCodes Validator error codes from service, which initializes this class
    */
-  public constructor(model: Model, ValidatorErrorCode?: any) {
+  public constructor(model: Model, errorCodes?: any) {
     const validationErrors = model.collectErrors().map((x) => {
       return {
         statusCode: x.code,
         property: x.path[0],
-        message: ValidatorErrorCode ? ValidatorErrorCode[x.code] : '',
+        message: errorCodes
+          ? { ...errorCodes, ...ValidatorErrorCode }[x.code]
+          : ValidatorErrorCode[x.code] || '',
       };
     });
 

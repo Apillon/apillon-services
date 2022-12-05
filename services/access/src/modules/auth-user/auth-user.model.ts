@@ -4,6 +4,8 @@ import {
   AdvancedSQLModel,
   Context,
   DefaultUserRole,
+  generateJwtToken,
+  JwtTokenType,
   PoolConnection,
   PopulateFrom,
   prop,
@@ -11,10 +13,13 @@ import {
   SqlModelStatus,
   uniqueFieldValue,
 } from '@apillon/lib';
-import { AmsErrorCode, DbTables } from '../../config/types';
+import { AmsErrorCode, DbTables, TokenExpiresInStr } from '../../config/types';
 import * as bcrypt from 'bcryptjs';
 import { Role } from '../role/models/role.model';
 import { AuthUserRole } from '../role/models/auth-user-role.model';
+import { AuthToken } from '../auth-token/auth-token.model';
+import { CryptoHash } from '../../lib/hash-with-crypto';
+import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
 
 export class AuthUser extends AdvancedSQLModel {
   public readonly tableName = DbTables.AUTH_USER;
@@ -193,6 +198,59 @@ export class AuthUser extends AdvancedSQLModel {
       return this;
     }
     return this.reset();
+  }
+
+  public async loginUser() {
+    const context = this.getContext();
+
+    // Start connection to database at the beginning of the function
+    const conn = await context.mysql.start();
+
+    // Generate a new token with type USER_AUTH
+    this.token = generateJwtToken(JwtTokenType.USER_AUTHENTICATION, {
+      user_uuid: this.user_uuid,
+    });
+
+    // Create new token in the database
+    const authToken = new AuthToken({}, context);
+    const tokenData = {
+      tokenHash: await CryptoHash.hash(this.token),
+      user_uuid: this.user_uuid,
+      tokenType: JwtTokenType.USER_AUTHENTICATION,
+      expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
+    };
+
+    authToken.populate(tokenData, PopulateFrom.SERVICE);
+
+    try {
+      await authToken.validate();
+    } catch (err) {
+      throw new AmsValidationException(authToken);
+    }
+
+    try {
+      // Find old token
+      const oldToken = await new AuthToken({}, context).populateByUserAndType(
+        this.user_uuid,
+        JwtTokenType.USER_AUTHENTICATION,
+        conn,
+      );
+
+      if (oldToken.exists()) {
+        oldToken.status = SqlModelStatus.DELETED;
+        await oldToken.update(SerializeFor.UPDATE_DB, conn);
+      }
+
+      await authToken.insert(SerializeFor.INSERT_DB, conn);
+
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+      throw await new AmsCodeException({
+        status: 500,
+        code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
+      }).writeToMonitor({ user_uuid: this.user_uuid });
+    }
   }
 
   public verifyPassword(password: string) {

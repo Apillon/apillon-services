@@ -1,11 +1,21 @@
-import { Context } from '@apillon/lib';
+import { Ams, Context } from '@apillon/lib';
 
 export class ApillonApiContext extends Context {
   /**
-   * Authenticates user based on received authentication token. Call AMS service
-   * @param token Authentication token.
+   * Validate API key and fill context apiKey property
    */
-  async authenticate(token: string) {
-    //TODO
+  async authenticate(apiKey: string, apiKeySecret: string) {
+    const apiKeyData = await new Ams(this).getApiKey({
+      apiKey: apiKey,
+      apiKeySecret: apiKeySecret,
+    });
+
+    if (apiKeyData && apiKeyData.data.id) {
+      this.apiKey = apiKeyData.data;
+    }
+  }
+
+  isApiKeyValid() {
+    return this.apiKey && this.apiKey?.id;
   }
 }

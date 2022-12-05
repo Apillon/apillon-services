@@ -12,10 +12,15 @@ export enum AmsEventType {
   CREATE_API_KEY = 'create-api-key',
   DELETE_API_KEY = 'delete-api-key',
   LIST_API_KEYS = 'list-api-keys',
+  API_KEY_ROLE_ASSIGN = 'api-key-role-assign',
+  API_KEY_ROLE_REMOVE = 'api-key-role-remove',
+  GET_API_KEY_ROLES = 'get-api-key-roles',
+  GET_API_KEY = 'get-api-key',
 }
 
 export enum LmasEventType {
   WRITE_LOG = 'write-log',
+  WRITE_REQUEST_LOG = 'write-request-log',
   SEND_ALERT = 'send-alert',
   NOTIFY = 'notify',
 }
@@ -43,6 +48,11 @@ export enum StorageEventType {
 
 export enum MailEventType {
   SEND_MAIL = 'send-mail',
+  SEND_CUSTOM_MAIL = 'send-custom-mail',
+}
+
+export enum ScsEventType {
+  GET_QUOTA = 'get-quota',
 }
 
 export enum ServiceName {
@@ -51,6 +61,8 @@ export enum ServiceName {
   LMAS = 'LMAS',
   DEV_CONSOLE = 'DEV_CONSOLE',
   MAIL = 'MAIL',
+  STORAGE = 'STORAGE',
+  APILLON_API = 'APILLON_API',
 }
 
 export enum ServiceCode {
@@ -61,6 +73,10 @@ export enum ServiceCode {
   DEV_CONSOLE = '04',
   APILLON_API = '05',
   STORAGE = '06',
+  MOD_LIB = '07',
+  MAIL = '08',
+  AUTH = '09',
+  CONFIG = '10',
 }
 
 export enum AppEnvironment {
@@ -77,6 +93,7 @@ export enum LogType {
   MSG = 'MSG',
   WARN = 'WARNING',
   ERROR = 'ERROR',
+  COST = 'COST',
 }
 
 export enum SqlModelStatus {
@@ -84,6 +101,14 @@ export enum SqlModelStatus {
   INCOMPLETE = 2,
   ACTIVE = 5,
   DELETED = 9,
+}
+
+/**
+ * Types of services in dev-console-api
+ */
+export enum AttachedServiceType {
+  AUTHORIZATION = 1,
+  STORAGE = 2,
 }
 
 /**
@@ -209,6 +234,7 @@ export enum BadRequestErrorCode {
   BAD_REQUEST = 40000000,
   INVALID_PATH = 40000001,
   INVALID_QUERY_PARAMETERS = 40000002,
+  MISSING_AUTHORIZATION_HEADER = 40000003,
 }
 
 export enum ValidatorErrorCode {
@@ -221,10 +247,17 @@ export enum ValidatorErrorCode {
   BUCKET_UUID_NOT_PRESENT = 42200006,
   PATH_NOT_PRESENT = 42200007,
   FILE_NAME_NOT_PRESENT = 42200008,
-  CONTENT_TYPE_NOT_PRESENT = 42200009,
+  FILE_CONTENT_TYPE_NOT_PRESENT = 42200009,
   SESSION_UUID_NOT_PRESENT = 42200010,
   BUCKET_TYPE_NOT_PRESENT = 42200011,
   CREATE_API_KEY_PROJECT_UUID_NOT_PRESENT = 42200012,
+  PROJECT_UUID_QUERY_PARAM_NOT_PRESENT = 42200013,
+  API_KEY_ROLE_API_KEY_ID_NOT_PRESENT = 42200014,
+  API_KEY_ROLE_ROLE_ID_NOT_PRESENT = 42200015,
+  API_KEY_ROLE_PROJECT_UUID_NOT_PRESENT = 42200016,
+  API_KEY_ROLE_SERVICE_UUID_NOT_PRESENT = 42200017,
+  API_KEY_ROLE_ROLE_ID_NOT_VALID = 42200018,
+  QUOTA_ID_NOT_PRESENT = 42200019,
 }
 
 /**
@@ -254,4 +287,18 @@ export enum JwtTokenType {
   USER_RESET_PASSWORD = 'USER_RESET_PASSWORD',
   USER_RESET_EMAIL = 'USER_RESET_EMAIL',
   USER_CONFIRM_EMAIL = 'USER_CONFIRM_EMAIL',
+}
+
+/**
+ * Quota codes
+ * Must equal quote.id field in database!
+ */
+export enum QuotaCode {
+  MAX_PROJECT_COUNT = 1,
+  MAX_USERS_ON_PROJECT = 2,
+  MAX_API_KEYS = 3,
+  MAX_HOSTING_BUCKETS = 4,
+  MAX_FILE_BUCKETS = 5,
+  MAX_BUCKET_SIZE = 6,
+  MAX_ATTESTED_USERS = 7,
 }

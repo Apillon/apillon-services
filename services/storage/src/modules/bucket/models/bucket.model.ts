@@ -8,14 +8,16 @@ import {
   DefaultUserRole,
   ForbiddenErrorCodes,
   getQueryParams,
+  PoolConnection,
   PopulateFrom,
   prop,
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
-import { DbTables, StorageErrorCode } from '../../../config/types';
+import { BucketType, DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
+import { v4 as uuidV4 } from 'uuid';
 
 export class Bucket extends AdvancedSQLModel {
   public readonly tableName = DbTables.BUCKET;
@@ -40,6 +42,7 @@ export class Bucket extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
     ],
     validators: [],
+    fakeValue: () => uuidV4(),
   })
   public bucket_uuid: string;
 
@@ -88,6 +91,7 @@ export class Bucket extends AdvancedSQLModel {
         code: StorageErrorCode.BUCKET_TYPE_NOT_PRESENT,
       },
     ],
+    fakeValue: BucketType.STORAGE,
   })
   public bucketType: number;
 
@@ -148,6 +152,7 @@ export class Bucket extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
     ],
     validators: [],
+    fakeValue: 5242880,
   })
   public maxSize: number;
 
@@ -298,23 +303,25 @@ export class Bucket extends AdvancedSQLModel {
     return selectAndCountQuery(context.mysql, sqlQuery, params, 'b.id');
   }
 
-  public async clearBucketContent() {
-    await this.getContext().mysql.paramExecute(
+  public async clearBucketContent(context: Context, conn: PoolConnection) {
+    await context.mysql.paramExecute(
       `
       DELETE
       FROM \`${DbTables.DIRECTORY}\`
       WHERE bucket_id = @bucket_id AND status <> ${SqlModelStatus.DELETED};
       `,
       { bucket_id: this.id },
+      conn,
     );
 
-    await this.getContext().mysql.paramExecute(
+    await context.mysql.paramExecute(
       `
       DELETE
       FROM \`${DbTables.FILE}\`
       WHERE bucket_id = @bucket_id AND status <> ${SqlModelStatus.DELETED};
       `,
       { bucket_id: this.id },
+      conn,
     );
   }
 }

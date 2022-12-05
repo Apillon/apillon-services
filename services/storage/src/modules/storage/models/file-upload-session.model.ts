@@ -62,6 +62,9 @@ export class FileUploadSession extends AdvancedSQLModel {
   })
   public bucket_id: number;
 
+  /**
+   * 1=session opened for upload, 2=session closed & transfered to IPFS
+   */
   @prop({
     parser: { resolver: integerParser() },
     populatable: [
