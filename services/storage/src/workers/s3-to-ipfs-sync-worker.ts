@@ -287,7 +287,11 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         const existingFile = await new File(
           {},
           this.context,
-        ).populateByNameAndDirectory(file.fileName, fileDirectory?.id);
+        ).populateByNameAndDirectory(
+          bucket.id,
+          file.fileName,
+          fileDirectory?.id,
+        );
 
         if (existingFile.exists()) {
           //Update existing file
