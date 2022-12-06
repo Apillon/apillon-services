@@ -10,7 +10,7 @@
   "scripts": {
     "build": "npx turbo run build --filter=!@apillon/api --filter=!@apillon/authorization-api",
     "build-no-cache": "npx turbo run build --no-cache",
-    "dev": "npx turbo run dev --parallel --filter=!@apillon/api --filter=!@apillon/authorization-api",
+    "dev": "npx turbo run dev --parallel --filter=!@apillon/api",
     "test": "turbo run test",
     "test-server": "npx turbo run test-server",
     "lint": "npx turbo run lint",
