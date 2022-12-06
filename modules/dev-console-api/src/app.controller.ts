@@ -1,4 +1,4 @@
-import { Lmas } from '@apillon/lib';
+import { Lmas, ServiceName } from '@apillon/lib';
 import { Controller, Get, Query } from '@nestjs/common';
 import { AppService } from './app.service';
 
@@ -8,7 +8,16 @@ export class AppController {
 
   @Get()
   async getHello() {
-    await new Lmas().sendAdminAlert('This is a test message');
     return this.appService.getHello();
+  }
+
+  @Get('say-hi-to-apillon-admins')
+  async sayHiToApillonAdmins() {
+    await new Lmas().sendAdminAlert(
+      ':wave: Hello from the other side!',
+      ServiceName.DEV_CONSOLE,
+      'message',
+    );
+    return '👋';
   }
 }

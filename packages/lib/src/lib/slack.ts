@@ -1,19 +1,84 @@
-import axios from 'axios';
 import { env } from '../config/env';
+import { WebClient, LogLevel } from '@slack/web-api';
 
-export async function postToSlack(message: string, serviceName: string) {
-  try {
-    const data = {
-      text: `[${env.APP_ENV}][${serviceName}]\n${message}`,
-      channel: env.MONITORING_SLACK_CHANNEL,
-      username: 'Apillon bot',
-    };
+export class Slack {
+  private client: WebClient;
+  constructor() {
+    this.client = new WebClient(env.SLACK_TOKEN, {
+      logLevel: LogLevel.WARN,
+    });
+  }
 
-    const res = await axios.post(env.MONITORING_SLACK_WEBHOOK, data);
+  async findChannel(chanelName) {
+    let conversationId;
+    try {
+      // Call the conversations.list method using the built-in WebClient
+      const result = await this.client.conversations.list({
+        token: env.SLACK_TOKEN,
+      });
 
-    if (res.status !== 200) {
-      throw new Error(`Invalid response status: ${res?.status}`);
+      for (const channel of result.channels) {
+        if (channel.name === chanelName) {
+          conversationId = channel.id;
+
+          // Print result
+          // console.log('Found conversation ID: ' + conversationId);
+          return conversationId;
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      throw error;
     }
+  }
+
+  // Post a message to a channel your app is in using ID and message text
+  async publishMessage(channelId: string, text: string) {
+    try {
+      // Call the chat.postMessage method using the built-in WebClient
+      const result = await this.client.chat.postMessage({
+        token: env.SLACK_TOKEN,
+        channel: channelId,
+        blocks: [{ type: 'section', text: { type: 'mrkdwn', text } }],
+        text: text,
+        // You could also use a blocks[] array to send richer content
+      });
+
+      // Print result, which includes information about the message (like TS)
+      // console.log(result);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+}
+
+export async function postToSlack(
+  message: string,
+  serviceName: string,
+  level: 'message' | 'warning' | 'alert' = 'message',
+) {
+  const severityText = {
+    message: {
+      emojis: ':loudspeaker:',
+      target: '@here',
+    },
+    warning: {
+      emojis: ':zap::warning::zap:',
+      target: '@here',
+    },
+    alert: {
+      emojis: ':bangbang::rotating_light::bangbang:',
+      target: '@channel',
+    },
+  };
+
+  const slack = new Slack();
+  try {
+    const channelId = await slack.findChannel(env.SLACK_CHANNEL);
+    await slack.publishMessage(
+      channelId,
+      `${severityText[level].emojis}\n*(${env.APP_ENV}) [${serviceName}]*\n\n${message}\n\n${severityText[level].target}`,
+    );
   } catch (err) {
     console.log('Failed to post to Slack :', err);
   }

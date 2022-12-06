@@ -13,7 +13,7 @@ export class Alerting {
 
     await context.mongo.db.collection('admin-alert').insertOne(event);
 
-    await postToSlack(event.message, 'LMAS');
+    await postToSlack(event.message, event.serviceName, event.level);
 
     // TODO: send email ?
 
