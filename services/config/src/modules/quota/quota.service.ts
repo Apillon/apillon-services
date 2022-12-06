@@ -1,5 +1,8 @@
 import { GetQuotaDto, SqlModelStatus } from '@apillon/lib';
+import { ConfigErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
+import { ScsCodeException } from '../../lib/exceptions';
+import { Quota } from './models/quota.model';
 
 export class QuotaService {
   static async getQuota(data: GetQuotaDto, context: ServiceContext) {
@@ -15,7 +18,7 @@ export class QuotaService {
      * - different types of value (1-max, 2-min, 3-boolean)
      **/
 
-    return await context.mysql.paramExecute(
+    const res = await context.mysql.paramExecute(
       `
       SELECT q.id,
         q.groupName, q.name, q.description,
@@ -48,8 +51,18 @@ export class QuotaService {
       WHERE q.status = ${SqlModelStatus.ACTIVE}
       AND q.id = @quota_id
       GROUP BY q.id
+      
     `,
       { quota_id: data.quota_id },
     );
+
+    if (!res.length) {
+      throw new ScsCodeException({
+        status: 404,
+        code: ConfigErrorCode.QUOTA_NOT_FOUND,
+      });
+    }
+
+    return res[0];
   }
 }
