@@ -2,15 +2,16 @@ import {
   AttachedServiceType,
   CreateS3SignedUrlForUploadDto,
   DefaultApiKeyRole,
+  EndFileUploadSessionDto,
 } from '@apillon/lib';
-import { Ctx, Validation, ApiKeyPermissions } from '@apillon/modules-lib';
+import { ApiKeyPermissions, Ctx, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
   Get,
+  HttpCode,
   Param,
   Post,
-  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
@@ -37,6 +38,27 @@ export class StorageController {
     return await this.storageService.createS3SignedUrlForUpload(context, body);
   }
 
+  @Post('file-upload-session/:session_uuid/end')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_EXECUTE,
+    serviceType: AttachedServiceType.STORAGE,
+  })
+  @UseGuards(AuthGuard)
+  @Validation({ dto: EndFileUploadSessionDto })
+  @UseGuards(ValidationGuard)
+  @HttpCode(200)
+  async endFileUploadSession(
+    @Ctx() context: ApillonApiContext,
+    @Param('session_uuid') session_uuid: string,
+    @Body() body: EndFileUploadSessionDto,
+  ) {
+    return await this.storageService.endFileUploadSession(
+      context,
+      session_uuid,
+      body,
+    );
+  }
+
   @Get('/file-details/cid/:cid')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_READ,
@@ -47,30 +69,19 @@ export class StorageController {
     @Ctx() context: ApillonApiContext,
     @Param('cid') cid: string,
   ) {
-    return await this.storageService.getFileDetails(context, cid);
+    return await this.storageService.getFileDetailsByCID(context, cid);
   }
 
-  @Get('/fileOrDirectory')
-  async getFileOrDirectory(
+  @Get('/file-details/file_uuid/:file_uuid')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_READ,
+    serviceType: AttachedServiceType.STORAGE,
+  })
+  @UseGuards(AuthGuard)
+  async getFileDetailsByFileUUID(
     @Ctx() context: ApillonApiContext,
-    @Query('cid') cid: string,
+    @Param('file_uuid') file_uuid: string,
   ) {
-    return await this.storageService.getFileOrDirectory(context, cid);
-  }
-
-  @Get('/listFileOrDirectory')
-  async listFileOrDirectory(
-    @Ctx() context: ApillonApiContext,
-    @Query('cid') cid: string,
-  ) {
-    return await this.storageService.listDirectory(context, cid);
-  }
-
-  @Post('/fromS3')
-  async uploadFilesToIPFSFromS3(
-    @Ctx() context: ApillonApiContext,
-    @Body() body,
-  ) {
-    return await this.storageService.uploadFilesToIPFSFromS3(context, body);
+    return await this.storageService.getFileDetailsByCID(context, file_uuid);
   }
 }

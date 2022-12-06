@@ -122,6 +122,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
           message: 'Error at placing storage order to CRUST',
           location: `${this.constructor.name}/runExecutor`,
           service: ServiceName.STORAGE,
+          data: err,
         });
         throw err;
       }

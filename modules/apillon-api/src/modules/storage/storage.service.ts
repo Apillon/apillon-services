@@ -1,5 +1,6 @@
 import {
   CreateS3SignedUrlForUploadDto,
+  EndFileUploadSessionDto,
   FileDetailsQueryFilter,
   StorageMicroservice,
 } from '@apillon/lib';
@@ -17,7 +18,19 @@ export class StorageService {
     ).data;
   }
 
-  async getFileDetails(context: ApillonApiContext, cid: string) {
+  async endFileUploadSession(
+    context: ApillonApiContext,
+    session_uuid: string,
+    body: EndFileUploadSessionDto,
+  ) {
+    return (
+      await new StorageMicroservice(
+        context,
+      ).endFileUploadSessionAndExecuteSyncToIPFS(session_uuid, body)
+    ).data;
+  }
+
+  async getFileDetailsByCID(context: ApillonApiContext, cid: string) {
     const filter: FileDetailsQueryFilter = new FileDetailsQueryFilter(
       { cid: cid },
       context,
@@ -25,42 +38,14 @@ export class StorageService {
     return (await new StorageMicroservice(context).getFileDetails(filter)).data;
   }
 
-  //#region storage microservice calls
-
-  async uploadFilesToIPFSFromS3(
-    ctx: ApillonApiContext,
-    data: any,
-  ): Promise<any> {
-    // call microservice
-    const res = await new StorageMicroservice(ctx).addFileToIPFSFromS3({
-      fileKey: data.fileKey,
-    });
-
-    if (res.success) {
-      console.log('FIle successfully pushed to IPFS. Placing storage order...');
-      const placeStorageRequestResponse = await new StorageMicroservice(
-        ctx,
-      ).placeStorageOrderToCRUST({
-        cid: res.data.cidV0,
-        size: res.data.size,
-      });
-
-      res.crustResponse = placeStorageRequestResponse;
-      return res;
-    }
+  async getFileDetailsByFileUUID(
+    context: ApillonApiContext,
+    file_uuid: string,
+  ) {
+    const filter: FileDetailsQueryFilter = new FileDetailsQueryFilter(
+      { file_uuid: file_uuid },
+      context,
+    );
+    return (await new StorageMicroservice(context).getFileDetails(filter)).data;
   }
-
-  async getFileOrDirectory(ctx: ApillonApiContext, cid: string) {
-    return await new StorageMicroservice(ctx).getObjectFromIPFS({
-      cid: cid,
-    });
-  }
-
-  async listDirectory(ctx: ApillonApiContext, cid: string) {
-    return await new StorageMicroservice(ctx).listIPFSDirectory({
-      cid: cid,
-    });
-  }
-
-  //#endregion
 }
