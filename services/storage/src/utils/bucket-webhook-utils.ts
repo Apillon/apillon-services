@@ -20,9 +20,11 @@ export async function sendTransferredFilesToBucketWebhook(
   ).populateByBucketId(bucket.id);
 
   if (bucketWebhook.exists() && files.length > 0) {
+    let config = {};
+    let body = {};
     try {
       //assemble body and send request to url
-      const body = {
+      body = {
         session_uuid: session.session_uuid,
         files: files.map((x) => {
           return {
@@ -31,8 +33,6 @@ export async function sendTransferredFilesToBucketWebhook(
           };
         }),
       };
-
-      let config = {};
 
       if (bucketWebhook.authMethod == BucketWebhookAuthMethod.BASIC) {
         config = {
@@ -47,19 +47,6 @@ export async function sendTransferredFilesToBucketWebhook(
         };
       }
 
-      await new Lmas().writeLog({
-        context: context,
-        project_uuid: bucket.project_uuid,
-        logType: LogType.INFO,
-        message: 'Sending trasferred files to bucket webhook - start',
-        location: `Storage/sendTransferredFilesToBucketWebhook`,
-        service: ServiceName.STORAGE,
-        data: {
-          config: config,
-          body: body,
-        },
-      });
-
       await axios.post(bucketWebhook.url, body, config);
       await new Lmas().writeLog({
         context: context,
@@ -68,6 +55,10 @@ export async function sendTransferredFilesToBucketWebhook(
         message: 'Sending trasferred files to bucket webhook - success',
         location: `Storage/sendTransferredFilesToBucketWebhook`,
         service: ServiceName.STORAGE,
+        data: {
+          config: config,
+          body: body,
+        },
       });
     } catch (err) {
       await new Lmas().writeLog({
@@ -77,7 +68,11 @@ export async function sendTransferredFilesToBucketWebhook(
         message: `Sending trasferred files to bucket webhook - error`,
         location: `Storage/sendTransferredFilesToBucketWebhook`,
         service: ServiceName.STORAGE,
-        data: err,
+        data: {
+          error: err,
+          config: config,
+          body: body,
+        },
       });
     }
   }
