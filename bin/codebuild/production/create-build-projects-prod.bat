@@ -13,6 +13,9 @@ aws codebuild create-project --cli-input-json file://storage-config-prod.json --
 aws codebuild create-project --cli-input-json file://mailing-config-prod.json --profile authtrail
 @REM @REM aws codebuild create-webhook --cli-input-json file://mailing-webhook-prod.json --profile authtrail
 
+aws codebuild create-project --cli-input-json file://config-config-prod.json --profile authtrail
+@REM @REM aws codebuild create-webhook --cli-input-json file://config-webhook-prod.json --profile authtrail
+
 
 @REM FRONTEND:
 aws codebuild create-project --cli-input-json file://apillon-app-config-prod.json --profile authtrail
