@@ -22,10 +22,11 @@ import { Bucket } from '../modules/bucket/models/bucket.model';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
-import { StorageService } from '../modules/storage/storage.service';
 import { File } from '../modules/storage/models/file.model';
 import { Directory } from '../modules/directory/models/directory.model';
 import { CrustService } from '../modules/crust/crust.service';
+import { generateDirectoriesFromPath } from '../utils/generate-directories-from-path';
+import { sendTransferredFilesToBucketWebhook } from '../utils/bucket-webhook-utils';
 
 export class SyncToIPFSWorker extends BaseQueueWorker {
   public constructor(
@@ -77,6 +78,8 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         status: 404,
       });
     }
+
+    const transferedFiles = [];
 
     if (bucket.bucketType == BucketType.HOSTING) {
       let ipfsRes = undefined;
@@ -139,18 +142,17 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
             x.fileStatus ==
             FileUploadRequestFileStatus.SIGNED_URL_FOR_UPLOAD_GENERATED,
         )) {
-          const fileDirectory =
-            await StorageService.generateDirectoriesFromPath(
-              this.context,
-              directories,
-              file,
-              bucket,
-              ipfsRes.ipfsDirectories,
-              conn,
-            );
+          const fileDirectory = await generateDirectoriesFromPath(
+            this.context,
+            directories,
+            file,
+            bucket,
+            ipfsRes.ipfsDirectories,
+            conn,
+          );
 
           //Create new file
-          await new File({}, this.context)
+          const tmpF = await new File({}, this.context)
             .populate({
               file_uuid: file.file_uuid,
               CID: file.CID.toV0().toString(),
@@ -169,6 +171,8 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
           file.fileStatus =
             FileUploadRequestFileStatus.UPLOADED_TO_IPFS_AND_CRUST;
           await file.update(SerializeFor.UPDATE_DB, conn);
+
+          transferedFiles.push(tmpF);
         }
 
         //publish IPNS
@@ -272,7 +276,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
           throw err;
         }
 
-        const fileDirectory = await StorageService.generateDirectoriesFromPath(
+        const fileDirectory = await generateDirectoriesFromPath(
           this.context,
           directories,
           file,
@@ -283,7 +287,11 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         const existingFile = await new File(
           {},
           this.context,
-        ).populateByNameAndDirectory(file.fileName, fileDirectory?.id);
+        ).populateByNameAndDirectory(
+          bucket.id,
+          file.fileName,
+          fileDirectory?.id,
+        );
 
         if (existingFile.exists()) {
           //Update existing file
@@ -296,9 +304,10 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
           });
 
           await existingFile.update();
+          transferedFiles.push(existingFile);
         } else {
           //Create new file
-          await new File({}, this.context)
+          const tmpF = await new File({}, this.context)
             .populate({
               file_uuid: file.file_uuid,
               CID: ipfsRes.cidV0,
@@ -311,6 +320,8 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
               size: ipfsRes.size,
             })
             .insert();
+
+          transferedFiles.push(tmpF);
         }
 
         //now the file has CID, exists in IPFS node and is pinned to CRUST
@@ -342,6 +353,14 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
     //update session status
     session.sessionStatus = 2;
     await session.update();
+
+    //if webhook is set for this bucket, SEND POST request with transferred data
+    await sendTransferredFilesToBucketWebhook(
+      this.context,
+      bucket,
+      session,
+      transferedFiles,
+    );
 
     await this.writeLogToDb(
       WorkerLogStatus.INFO,

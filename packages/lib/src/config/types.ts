@@ -44,6 +44,10 @@ export enum StorageEventType {
   DELETE_DIRECTORY = 'delete-directory',
   LIST_DIRECTORY_CONTENT = 'list-directory-content',
   GET_FILE_DETAILS = 'get-file-details',
+  BUCKET_WEBHOOK_GET = 'get-bucket-webhook',
+  BUCKET_WEBHOOK_CREATE = 'create-bucket-webhook',
+  BUCKET_WEBHOOK_UPDATE = 'update-bucket-webhook',
+  BUCKET_WEBHOOK_DELETE = 'delete-bucket-webhook',
 }
 
 export enum MailEventType {
@@ -135,6 +139,7 @@ export enum SerializeFor {
   ADMIN = 'admin',
   WORKER = 'worker',
   SERVICE = 'service',
+  LOGGER = 'logger',
 }
 
 /**
@@ -257,7 +262,9 @@ export enum ValidatorErrorCode {
   API_KEY_ROLE_PROJECT_UUID_NOT_PRESENT = 42200016,
   API_KEY_ROLE_SERVICE_UUID_NOT_PRESENT = 42200017,
   API_KEY_ROLE_ROLE_ID_NOT_VALID = 42200018,
-  QUOTA_ID_NOT_PRESENT = 42200019,
+  BUCKET_WEBHOOK_BUCKET_ID_NOT_PRESENT = 42200019,
+  BUCKET_WEBHOOK_URL_NOT_PRESENT = 42200020,
+  QUOTA_ID_NOT_PRESENT = 42200021,
 }
 
 /**

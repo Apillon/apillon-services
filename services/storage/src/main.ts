@@ -19,9 +19,11 @@ export async function processEvent(event, context: Context): Promise<any> {
       StorageService.generateS3SignedUrlForUpload,
     [StorageEventType.END_FILE_UPLOAD_SESSION]:
       StorageService.endFileUploadSession,
+
     [StorageEventType.CREATE_BUCKET]: BucketService.createBucket,
     [StorageEventType.UPDATE_BUCKET]: BucketService.updateBucket,
     [StorageEventType.DELETE_BUCKET]: BucketService.deleteBucket,
+
     [StorageEventType.LIST_BUCKETS]: BucketService.listBuckets,
     [StorageEventType.CREATE_DIRECTORY]: DirectoryService.createDirectory,
     [StorageEventType.UPDATE_DIRECTROY]: DirectoryService.updateDirectory,
@@ -29,6 +31,11 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.LIST_DIRECTORY_CONTENT]:
       DirectoryService.listDirectoryContent,
     [StorageEventType.GET_FILE_DETAILS]: StorageService.getFileDetails,
+
+    [StorageEventType.BUCKET_WEBHOOK_GET]: BucketService.getBucketWebhook,
+    [StorageEventType.BUCKET_WEBHOOK_CREATE]: BucketService.createBucketWebhook,
+    [StorageEventType.BUCKET_WEBHOOK_UPDATE]: BucketService.updateBucketWebhook,
+    [StorageEventType.BUCKET_WEBHOOK_DELETE]: BucketService.deleteBucketWebhook,
   };
 
   return await processors[event.eventName](event, context);

@@ -207,6 +207,26 @@ export class File extends AdvancedSQLModel {
   })
   public size: number;
 
+  /*
+  INFO PROPERTIES
+  */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public downloadLink: string;
+
   public canAccess(context: ServiceContext) {
     if (
       !context.hasRoleOnProject(
@@ -247,6 +267,7 @@ export class File extends AdvancedSQLModel {
   }
 
   public async populateByNameAndDirectory(
+    bucket_id: number,
     name: string,
     directory_id?: number,
   ): Promise<this> {
@@ -260,11 +281,13 @@ export class File extends AdvancedSQLModel {
       `
       SELECT * 
       FROM \`${this.tableName}\`
-      WHERE name = @name 
+      WHERE 
+      bucket_id = @bucket_id
+      AND name = @name 
       AND ((@directory_id IS NULL AND directory_id IS NULL) OR @directory_id = directory_id)
       AND status <> ${SqlModelStatus.DELETED};
       `,
-      { name, directory_id },
+      { bucket_id, name, directory_id },
     );
 
     if (data && data.length) {
