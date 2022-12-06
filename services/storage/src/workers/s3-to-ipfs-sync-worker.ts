@@ -60,7 +60,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
       session.bucket_id,
     );
 
-    //Get files in session (fileStatus must be of status 1)
+    // Get files in session (fileStatus must be of status 1)
     const files = (
       await new FileUploadRequest(
         {},

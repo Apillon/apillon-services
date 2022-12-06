@@ -44,19 +44,19 @@ export class AttestationService {
   ): Promise<any> {
     const email = body.email;
     // TODO: How do we check for existing users
-    const attestation_db = await new Attestation().populateByUserEmail(
-      context,
-      email,
-    );
+    // const attestation_db = await new Attestation().populateByUserEmail(
+    //   context,
+    //   email,
+    // );
 
-    // TODO: Handle
-    if (attestation_db.exists()) {
-      throw new CodeException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        code: ModuleValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
-        errorCodes: ModuleValidatorErrorCode,
-      });
-    }
+    // // TODO: Handle
+    // if (attestation_db.exists()) {
+    //   throw new CodeException({
+    //     status: HttpStatus.UNPROCESSABLE_ENTITY,
+    //     code: ModuleValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
+    //     errorCodes: ModuleValidatorErrorCode,
+    //   });
+    // }
 
     const attestation = new Attestation({}, context).populate({
       context: context,
@@ -91,7 +91,7 @@ export class AttestationService {
       verification_link: `http://${env.AUTH_API_HOST}:${env.AUTH_API_PORT}/attestation/verify/${token}`,
     };
 
-    await new Mailing().sendMail({
+    await new Mailing(context).sendCustomMail({
       emails: [email],
       subject: 'Identify verification',
       template: 'identityVerificationEmail',
@@ -177,13 +177,13 @@ export class AttestationService {
       const signature = hexToU8a(payload.signature);
 
       try {
-        const fullDidCreationTx = await api.tx.did.create(data, {
+        const fullDidCreationTx = api.tx.did.create(data, {
           sr25519: signature,
         });
         await Blockchain.signAndSubmitTx(fullDidCreationTx, attesterAccount);
         success = true;
       } catch (error) {
-        console.error(error);
+        // TODO: Handle properly
       }
     }
 

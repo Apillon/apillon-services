@@ -50,7 +50,7 @@ export class ServicesService {
     );
     if (!project.exists()) {
       throw new CodeException({
-        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
+        cod pe: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
         status: HttpStatus.NOT_FOUND,
         errorCodes: ResourceNotFoundErrorCode,
       });

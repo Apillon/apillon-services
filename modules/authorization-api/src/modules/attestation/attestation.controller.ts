@@ -70,7 +70,7 @@ export class AttestationController {
     return await this.attestationService.verifyIdentityEmail(context, token);
   }
 
-  @Get('attest/state')
+  @Get('state')
   @Validation({ dto: AttestationEmailDto, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard)
   async attestationGetIdentityState(

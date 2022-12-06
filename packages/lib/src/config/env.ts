@@ -188,6 +188,9 @@ export interface IEnv {
   KILT_ATTESTER_MNEMONIC: string;
   KILT_DERIVATION_ALGORITHM: string;
 
+  KILT_AWS_WORKER_SQS_URL: string;
+  KILT_AWS_WORKER_LAMBDA_NAME: string;
+
   /************************************************************
    * Apillon Serverless workers config - STORAGE MS
    ************************************************************/
@@ -373,6 +376,8 @@ export let env: IEnv = {
   // because it depends where you use this mnemonic
   KILT_DERIVATION_ALGORITHM:
     process.env['KILT_DERIVATION_ALGORITHM'] || 'sr25519',
+  KILT_AWS_WORKER_SQS_URL: process.env['KILT_AWS_WORKER_SQS_URL'] || '',
+  KILT_AWS_WORKER_LAMBDA_NAME: process.env['KILT_AWS_WORKER_LAMBDA_NAME'] || '',
 
   /**Apillon Serverless workers config*/
   /**
