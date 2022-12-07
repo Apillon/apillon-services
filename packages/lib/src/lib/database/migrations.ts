@@ -4,6 +4,7 @@ import { AppEnvironment } from '../../config/types';
 import { env } from '../../config/env';
 
 let dbMigration: Migration = null;
+let seedMigration: Migration = null;
 
 //#region DB-migration functions
 export async function setupDatabase(
@@ -100,18 +101,10 @@ export async function seedDatabase(
   password: string,
   steps?: number,
 ): Promise<void> {
-  if (!dbMigration) {
-    await initMigrations(
-      database,
-      host,
-      port,
-      user,
-      password,
-      'seeds',
-      './src/migration-scripts/seeds',
-    );
+  if (!seedMigration) {
+    await initMigrations(database, host, port, user, password);
   }
-  await dbMigration.up(steps);
+  await seedMigration.up(steps);
 }
 
 export async function unseedDatabase(
@@ -122,18 +115,10 @@ export async function unseedDatabase(
   password: string,
   steps?: number,
 ): Promise<void> {
-  if (!dbMigration) {
-    await initMigrations(
-      database,
-      host,
-      port,
-      user,
-      password,
-      'seeds',
-      './src/migration-scripts/seeds',
-    );
+  if (!seedMigration) {
+    await initMigrations(database, host, port, user, password);
   }
-  await dbMigration.down(steps);
+  await seedMigration.down(steps);
 }
 
 //#endregion
@@ -183,7 +168,17 @@ async function initMigrations(
       ? migrationDirectory
       : './src/migration-scripts/migrations',
     silent: env.APP_ENV === AppEnvironment.TEST,
+    // silent: false,
+  });
+
+  seedMigration = new Migration({
+    conn: pool as unknown as MigrationConnection,
+    tableName: tableName ? tableName : 'seeds',
+    dir: './src/migration-scripts/seeds',
+    silent: env.APP_ENV === AppEnvironment.TEST,
+    // silent: false,
   });
 
   await dbMigration.initialize();
+  await seedMigration.initialize();
 }
