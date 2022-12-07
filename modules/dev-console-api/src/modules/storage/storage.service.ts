@@ -1,12 +1,10 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
 import {
-  BadRequestErrorCode,
-  CodeException,
   CreateS3SignedUrlForUploadDto,
   EndFileUploadSessionDto,
   FileDetailsQueryFilter,
   StorageMicroservice,
 } from '@apillon/lib';
+import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 @Injectable()
 export class StorageService {
@@ -34,14 +32,6 @@ export class StorageService {
     context: DevConsoleApiContext,
     query: FileDetailsQueryFilter,
   ) {
-    if (!query.file_uuid && !query.cid) {
-      throw new CodeException({
-        code: BadRequestErrorCode.INVALID_QUERY_PARAMETERS,
-        status: HttpStatus.BAD_REQUEST,
-        errorCodes: BadRequestErrorCode,
-      });
-    }
-
     return (await new StorageMicroservice(context).getFileDetails(query)).data;
   }
 }

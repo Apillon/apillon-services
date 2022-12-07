@@ -12,12 +12,7 @@ export class CreateS3SignedUrlForUploadDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.BUCKET_UUID_NOT_PRESENT,
-      },
-    ],
+    validators: [],
   })
   public bucket_uuid: string;
 
@@ -25,12 +20,7 @@ export class CreateS3SignedUrlForUploadDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.SESSION_UUID_NOT_PRESENT,
-      },
-    ],
+    validators: [],
   })
   public session_uuid: string;
 

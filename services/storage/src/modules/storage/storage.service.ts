@@ -288,14 +288,13 @@ export class StorageService {
   }
 
   static async getFileDetails(
-    event: { cid?: string; file_uuid?: string },
+    event: { CIDOrUUID: string },
     context: ServiceContext,
   ) {
     let file: File = undefined;
     let fileStatus: FileStatus = undefined;
-    if (event.cid) file = await new File({}, context).populateByCID(event.cid);
-    else if (event.file_uuid)
-      file = await new File({}, context).populateByUUID(event.file_uuid);
+    if (event.CIDOrUUID)
+      file = await new File({}, context).populateByCIDorUUID(event.CIDOrUUID);
     else {
       throw new StorageCodeException({
         code: StorageErrorCode.DEFAULT_RESOURCE_NOT_FOUND_ERROR,
@@ -305,30 +304,28 @@ export class StorageService {
 
     if (!file.exists()) {
       //try to load and return file data from file-upload-request
-      if (event.file_uuid) {
-        const fur: FileUploadRequest = await new FileUploadRequest(
-          {},
-          context,
-        ).populateByUUID(event.file_uuid);
+      const fur: FileUploadRequest = await new FileUploadRequest(
+        {},
+        context,
+      ).populateByUUID(event.CIDOrUUID);
 
-        if (fur.exists()) {
-          //check if file uploaded to S3
-          const s3Client: AWS_S3 = new AWS_S3();
-          if (
-            await s3Client.exists(
-              env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-              fur.s3FileKey,
-            )
+      if (fur.exists()) {
+        //check if file uploaded to S3
+        const s3Client: AWS_S3 = new AWS_S3();
+        if (
+          await s3Client.exists(
+            env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+            fur.s3FileKey,
           )
-            fileStatus = FileStatus.UPLOADED_TO_S3;
-          else fileStatus = FileStatus.REQUEST_FOR_UPLOAD_GENERATED;
+        )
+          fileStatus = FileStatus.UPLOADED_TO_S3;
+        else fileStatus = FileStatus.REQUEST_FOR_UPLOAD_GENERATED;
 
-          return {
-            fileStatus: fileStatus,
-            file: fur.serialize(SerializeFor.PROFILE),
-            crustStatus: undefined,
-          };
-        }
+        return {
+          fileStatus: fileStatus,
+          file: fur.serialize(SerializeFor.PROFILE),
+          crustStatus: undefined,
+        };
       }
 
       throw new StorageCodeException({

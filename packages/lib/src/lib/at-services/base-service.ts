@@ -14,6 +14,7 @@ export abstract class BaseService {
   protected securityToken: string;
   private requestId: string;
   private user: any;
+  private apiKey: any;
 
   constructor(context?: Context) {
     this.lambda = new AWS.Lambda({
@@ -23,6 +24,7 @@ export abstract class BaseService {
     this.securityToken = this.generateSecurityToken();
     this.requestId = context?.requestId;
     this.user = context?.user;
+    this.apiKey = context?.apiKey;
   }
 
   private generateSecurityToken() {
@@ -38,6 +40,7 @@ export abstract class BaseService {
       securityToken: this.securityToken,
       requestId: this.requestId,
       user: this.user?.serialize(),
+      apiKey: this.apiKey,
       ...payload,
     };
 

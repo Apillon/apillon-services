@@ -1,8 +1,11 @@
 import {
+  ApillonApiDirectoryContentQueryFilter,
   CreateS3SignedUrlForUploadDto,
+  DirectoryContentQueryFilter,
   EndFileUploadSessionDto,
   FileDetailsQueryFilter,
   StorageMicroservice,
+  ValidationException,
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
@@ -11,8 +14,13 @@ import { ApillonApiContext } from '../../context';
 export class StorageService {
   async createS3SignedUrlForUpload(
     context: ApillonApiContext,
+    bucket_uuid: string,
+    session_uuid: string,
     body: CreateS3SignedUrlForUploadDto,
   ) {
+    body.bucket_uuid = bucket_uuid;
+    body.session_uuid = session_uuid;
+
     return (
       await new StorageMicroservice(context).requestS3SignedURLForUpload(body)
     ).data;
@@ -20,6 +28,7 @@ export class StorageService {
 
   async endFileUploadSession(
     context: ApillonApiContext,
+    bucket_uuid: string,
     session_uuid: string,
     body: EndFileUploadSessionDto,
   ) {
@@ -30,22 +39,32 @@ export class StorageService {
     ).data;
   }
 
-  async getFileDetailsByCID(context: ApillonApiContext, cid: string) {
+  async getFileDetails(
+    context: ApillonApiContext,
+    bucket_uuid: string,
+    cidOrUUID: string,
+  ) {
     const filter: FileDetailsQueryFilter = new FileDetailsQueryFilter(
-      { cid: cid },
+      { bucket_uuid: bucket_uuid, CIDOrUUID: cidOrUUID },
       context,
     );
     return (await new StorageMicroservice(context).getFileDetails(filter)).data;
   }
 
-  async getFileDetailsByFileUUID(
+  async listContent(
     context: ApillonApiContext,
-    file_uuid: string,
+    bucket_uuid: string,
+    query: ApillonApiDirectoryContentQueryFilter,
   ) {
-    const filter: FileDetailsQueryFilter = new FileDetailsQueryFilter(
-      { file_uuid: file_uuid },
-      context,
-    );
-    return (await new StorageMicroservice(context).getFileDetails(filter)).data;
+    query.bucket_uuid = bucket_uuid;
+
+    try {
+      await query.validate();
+    } catch (err) {
+      await query.handle(err);
+      if (!query.isValid()) throw new ValidationException(query);
+    }
+    return (await new StorageMicroservice(context).listDirectoryContent(query))
+      .data;
   }
 }

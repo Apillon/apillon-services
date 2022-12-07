@@ -1,8 +1,11 @@
 import {
+  ApillonApiDirectoryContentQueryFilter,
   AttachedServiceType,
   CreateS3SignedUrlForUploadDto,
   DefaultApiKeyRole,
+  DirectoryContentQueryFilter,
   EndFileUploadSessionDto,
+  ValidateFor,
 } from '@apillon/lib';
 import { ApiKeyPermissions, Ctx, Validation } from '@apillon/modules-lib';
 import {
@@ -12,6 +15,7 @@ import {
   HttpCode,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
@@ -23,7 +27,7 @@ import { StorageService } from './storage.service';
 export class StorageController {
   constructor(private storageService: StorageService) {}
 
-  @Post('file-upload-request')
+  @Post(':bucket_uuid/file-upload/:session_uuid')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_EXECUTE,
     serviceType: AttachedServiceType.STORAGE,
@@ -33,12 +37,20 @@ export class StorageController {
   @UseGuards(ValidationGuard, AuthGuard)
   async createS3SignedUrlForUpload(
     @Ctx() context: ApillonApiContext,
-    @Body() body: CreateS3SignedUrlForUploadDto,
+    @Param('bucket_uuid') bucket_uuid: string,
+    @Param('session_uuid') session_uuid: string,
+    @Body()
+    body: CreateS3SignedUrlForUploadDto,
   ) {
-    return await this.storageService.createS3SignedUrlForUpload(context, body);
+    return await this.storageService.createS3SignedUrlForUpload(
+      context,
+      bucket_uuid,
+      session_uuid,
+      body,
+    );
   }
 
-  @Post('file-upload-session/:session_uuid/end')
+  @Post(':bucket_uuid/file-upload/:session_uuid/end')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_EXECUTE,
     serviceType: AttachedServiceType.STORAGE,
@@ -49,17 +61,19 @@ export class StorageController {
   @HttpCode(200)
   async endFileUploadSession(
     @Ctx() context: ApillonApiContext,
+    @Param('bucket_uuid') bucket_uuid: string,
     @Param('session_uuid') session_uuid: string,
     @Body() body: EndFileUploadSessionDto,
   ) {
     return await this.storageService.endFileUploadSession(
       context,
+      bucket_uuid,
       session_uuid,
       body,
     );
   }
 
-  @Get('/file-details/cid/:cid')
+  @Get(':bucket_uuid/file/:cidOrUUID/detail')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_READ,
     serviceType: AttachedServiceType.STORAGE,
@@ -67,21 +81,32 @@ export class StorageController {
   @UseGuards(AuthGuard)
   async getFileDetailsByCID(
     @Ctx() context: ApillonApiContext,
-    @Param('cid') cid: string,
+    @Param('bucket_uuid') bucket_uuid: string,
+    @Param('cidOrUUID') cidOrUUID: string,
   ) {
-    return await this.storageService.getFileDetailsByCID(context, cid);
+    return await this.storageService.getFileDetails(
+      context,
+      bucket_uuid,
+      cidOrUUID,
+    );
   }
 
-  @Get('/file-details/file_uuid/:file_uuid')
+  @Get(':bucket_uuid/content')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_READ,
     serviceType: AttachedServiceType.STORAGE,
   })
   @UseGuards(AuthGuard)
-  async getFileDetailsByFileUUID(
+  @Validation({
+    dto: ApillonApiDirectoryContentQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(ValidationGuard)
+  async listContent(
     @Ctx() context: ApillonApiContext,
-    @Param('file_uuid') file_uuid: string,
+    @Param('bucket_uuid') bucket_uuid: string,
+    @Query() query: ApillonApiDirectoryContentQueryFilter,
   ) {
-    return await this.storageService.getFileDetailsByCID(context, file_uuid);
+    return await this.storageService.listContent(context, bucket_uuid, query);
   }
 }

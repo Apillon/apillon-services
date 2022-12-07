@@ -170,7 +170,7 @@ describe('Storage tests', () => {
     describe('File details tests', () => {
       test('User should be able to get file details by file_uuid', async () => {
         const response = await request(stage.http)
-          .get(`/storage/file-details?file_uuid=${testFile.file_uuid}`)
+          .get(`/storage/file-details?CIDOrUUID=${testFile.file_uuid}`)
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(200);
 
@@ -186,7 +186,7 @@ describe('Storage tests', () => {
 
       test('User should be able to get file details by CID', async () => {
         const response = await request(stage.http)
-          .get(`/storage/file-details?cid=${testFile.CID}`)
+          .get(`/storage/file-details?CIDOrUUID=${testFile.CID}`)
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(200);
 
@@ -202,7 +202,7 @@ describe('Storage tests', () => {
 
       test('User should NOT be able to get ANOTHER USER file details', async () => {
         const response = await request(stage.http)
-          .get(`/storage/file-details?cid=${testFile.CID}`)
+          .get(`/storage/file-details?CIDOrUUID=${testFile.CID}`)
           .set('Authorization', `Bearer ${testUser2.token}`);
         expect(response.status).toBe(403);
       });
@@ -211,10 +211,7 @@ describe('Storage tests', () => {
         const response = await request(stage.http)
           .get(`/storage/file-details`)
           .set('Authorization', `Bearer ${testUser.token}`);
-        expect(response.status).toBe(400);
-        expect(response.body.message).toBe(
-          BadRequestErrorCode[BadRequestErrorCode.INVALID_QUERY_PARAMETERS],
-        );
+        expect(response.status).toBe(422);
       });
     });
 

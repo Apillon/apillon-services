@@ -274,8 +274,8 @@ export class File extends AdvancedSQLModel {
     }
   }
 
-  public async populateByCID(cid: string): Promise<this> {
-    if (!cid) {
+  public async populateByCIDorUUID(search: string): Promise<this> {
+    if (!search) {
       throw new Error('cid should not be null');
     }
 
@@ -283,9 +283,10 @@ export class File extends AdvancedSQLModel {
       `
       SELECT * 
       FROM \`${this.tableName}\`
-      WHERE cid = @cid AND status <> ${SqlModelStatus.DELETED};
+      WHERE (cid = @search OR file_uuid = @search)
+      AND status <> ${SqlModelStatus.DELETED};
       `,
-      { cid },
+      { search },
     );
 
     if (data && data.length) {

@@ -132,8 +132,7 @@ export class StorageMicroservice extends BaseService {
   public async getFileDetails(params: FileDetailsQueryFilter) {
     const data = {
       eventName: StorageEventType.GET_FILE_DETAILS,
-      file_uuid: params.file_uuid,
-      cid: params.cid,
+      ...params.serialize(),
     };
     return await this.callService(data);
   }
