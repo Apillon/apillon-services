@@ -37,27 +37,14 @@ export class AttestationController {
     );
   }
 
-  @Post('did')
-  @Validation({ dto: DidCreateDto })
-  @UseGuards(ValidationGuard)
+  @Post('identity')
+  // @Validation({ dto: DidCreateDto })
+  // @UseGuards(ValidationGuard)
   async attestationGenerateDid(
     @Ctx() context: AuthorizationApiContext,
     @Body() body: any,
   ) {
-    return await this.attestationService.generateAndSubmitFullDid(
-      context,
-      body,
-    );
-  }
-
-  @Post('attest/email')
-  @Validation({ dto: AttestationCreateDto })
-  @UseGuards(ValidationGuard)
-  async attestationAttestClaim(
-    @Ctx() context: AuthorizationApiContext,
-    @Body() body: AttestationCreateDto,
-  ) {
-    return await this.attestationService.createAttestation(context, body);
+    return await this.attestationService.generateIdentity(context, body);
   }
 
   @Get('verify/:token')
@@ -81,5 +68,17 @@ export class AttestationController {
       context,
       email,
     );
+  }
+
+  @Post('dev/create-did')
+  // TODO: This is a dev handler!!! Create guards that prevent use of this if in
+  // production ...
+  // @Validation({ dto: DidCreateDto })
+  // @UseGuards(ValidationGuard)
+  async attestationGenerateDevDid(
+    @Ctx() context: AuthorizationApiContext,
+    @Body() body: any,
+  ) {
+    return await this.attestationService.generateDIDDocumentDEV(context, body);
   }
 }

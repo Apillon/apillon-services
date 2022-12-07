@@ -30,6 +30,8 @@ export class VerificationService {
         presentation.rootHash,
       );
 
+      console.log('Attestation info ', attestationInfo);
+
       return { verified: !attestationInfo.revoked };
     } catch (error) {
       console.log(error);

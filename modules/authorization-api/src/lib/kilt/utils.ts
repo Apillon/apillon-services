@@ -54,6 +54,7 @@ export async function generateKeypairs(mnemonic: string) {
 }
 
 export async function getFullDidDocument(keypairs: Keypairs) {
+  await connect(env.KILT_NETWORK);
   const api = ConfigService.get('api');
   const didUri = Did.getFullDidUriFromKey(keypairs.authentication);
   const encodedFullDid = await api.call.did.query(Did.toChain(didUri));

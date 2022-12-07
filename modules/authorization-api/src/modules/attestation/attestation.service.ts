@@ -7,6 +7,7 @@ import {
   LogType,
   parseJwtToken,
   env,
+  AppEnvironment,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthorizationApiContext } from '../../context';
@@ -35,6 +36,7 @@ import {
 import { AttestationCreateDto } from './dtos/attestation-create.dto';
 import { u8aToHex, hexToU8a } from '@polkadot/util';
 import { BN } from '@polkadot/util/bn/bn';
+import { appendFile } from 'fs';
 
 @Injectable()
 export class AttestationService {
@@ -151,22 +153,37 @@ export class AttestationService {
     return { state: attestation.state };
   }
 
-  async generateAndSubmitFullDid(context: AuthorizationApiContext, body: any) {
+  async generateIdentity(context: AuthorizationApiContext, body: any) {
+    // Input parametersa
+    const did_create_op = body.did_create_op;
+    const claimerEmail = body.email;
+    const claimerDidUri = body.didUri;
+
+    // Init Kilt essentials
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
-    const decryptionKey = body.senderPubKey;
 
+    // Generate (retrieve) attester did data
     const attesterKeyPairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
     const attesterAccount = (await generateAccount(
       env.KILT_ATTESTER_MNEMONIC,
     )) as KiltKeyringPair;
+    // DID
+    const attesterDidDoc = await getFullDidDocument(attesterKeyPairs);
+    const attesterDidUri = attesterDidDoc.uri;
 
+    console.log(
+      'ATTESTER PUB KEY ',
+      u8aToHex(attesterKeyPairs.encryption.publicKey),
+    );
+
+    // Decrypt incoming payload -> DID creation TX generated on FE
     const decrypted = Utils.Crypto.decryptAsymmetricAsStr(
       {
-        box: hexToU8a(body.payload.message),
-        nonce: hexToU8a(body.payload.nonce),
+        box: hexToU8a(did_create_op.payload.message),
+        nonce: hexToU8a(did_create_op.payload.nonce),
       },
-      decryptionKey,
+      did_create_op.senderPubKey,
       u8aToHex(attesterKeyPairs.encryption.secretKey),
     );
 
@@ -176,38 +193,19 @@ export class AttestationService {
       const data = hexToU8a(payload.data);
       const signature = hexToU8a(payload.signature);
 
+      // Create DID create type and submit tx to Kilt BC
       try {
         const fullDidCreationTx = api.tx.did.create(data, {
           sr25519: signature,
         });
+        console.log('Submitting did creation TX to BC...');
         await Blockchain.signAndSubmitTx(fullDidCreationTx, attesterAccount);
-        success = true;
       } catch (error) {
-        // TODO: Handle properly
+        console.log('Error occured - ', error);
       }
     }
 
-    return { success: success };
-  }
-
-  async createAttestation(
-    context: AuthorizationApiContext,
-    body: AttestationCreateDto,
-  ) {
-    console.log('Starting attestation ...');
-    await connect(env.KILT_NETWORK);
-    const api = ConfigService.get('api');
-    const claimerEmail = body.email;
-    const claimerDidUri = body.didUri;
-
-    const attesterAccount = (await generateAccount(
-      env.KILT_ATTESTER_MNEMONIC,
-    )) as KiltKeyringPair;
-    const attesterKeyPairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
-    const attesterDidDoc = await getFullDidDocument(attesterKeyPairs);
-
-    const attesterDidUri = attesterDidDoc.uri;
-
+    // Prepare attestation object with claimer data
     const { attestObject, credential } = prepareAttestation(
       claimerEmail,
       attesterDidUri,
@@ -220,10 +218,9 @@ export class AttestationService {
       null,
     );
 
-    // TODO: This is a really naiive way to enable concurrency. It does not
-    // solve problems with propagation at all - not sure if relevant in Kilt
-    // TODO2: This does not work at the moment...
+    // TODO: This does not work at the moment...
     const nextNonceBN = new BN(await getNextNonce(attesterDidUri));
+    // Prepare claim tx
     const emailClaimTx = await Did.authorizeTx(
       attesterDidUri,
       emailClaim,
@@ -236,7 +233,7 @@ export class AttestationService {
     );
 
     try {
-      console.log('Submitting attestation TX ...');
+      console.log('Submitting attestation TX to BC...');
       await Blockchain.signAndSubmitTx(emailClaimTx, attesterAccount);
       const emailAttested = Boolean(
         await api.query.attestation.attestations(credential.rootHash),
@@ -252,7 +249,7 @@ export class AttestationService {
       return {
         success: true,
         attested: emailAttested,
-        presentation: JSON.stringify({
+        credential: JSON.stringify({
           ...credential,
           claimerSignature: {
             keyType: 'sr25519',
@@ -269,6 +266,56 @@ export class AttestationService {
         'createAttestation',
       );
     }
-    return { success: false, attested: false };
+
+    return { success: success };
+  }
+
+  async generateDIDDocumentDEV(context: AuthorizationApiContext, body: any) {
+    if (
+      env.APP_ENV != AppEnvironment.TEST &&
+      env.APP_ENV != AppEnvironment.DEV &&
+      env.APP_ENV != AppEnvironment.LOCAL_DEV
+    ) {
+      throw 'Invalid environment!';
+    }
+
+    await connect(env.KILT_NETWORK);
+    const api = ConfigService.get('api');
+
+    const { authentication, encryption, assertion, delegation } =
+      await generateKeypairs(body.mnemonic);
+    const didDoc = await Did.resolve(Did.getFullDidUriFromKey(authentication));
+    const attesterAccount = (await generateAccount(
+      env.KILT_ATTESTER_MNEMONIC,
+    )) as KiltKeyringPair;
+
+    if (didDoc && didDoc.document) {
+      return didDoc.document;
+    }
+
+    const fullDidCreationTx = await Did.getStoreTx(
+      {
+        authentication: [authentication],
+        keyAgreement: [encryption],
+        assertionMethod: [assertion],
+        capabilityDelegation: [delegation],
+      },
+      attesterAccount.address,
+      async ({ data }) => ({
+        signature: authentication.sign(data),
+        keyType: authentication.type,
+      }),
+    );
+    await Blockchain.signAndSubmitTx(fullDidCreationTx, attesterAccount);
+
+    const didUri = Did.getFullDidUriFromKey(authentication);
+    const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
+    const { document } = Did.linkedInfoFromChain(encodedFullDid);
+
+    if (!document) {
+      throw 'Full DID was not successfully created.';
+    }
+
+    return document;
   }
 }
