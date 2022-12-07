@@ -10,6 +10,10 @@ const lambdaHandler: Handler = async (
   context: Context,
   _callback: Callback,
 ) => {
+  //TODO: handle security token and remove it form event.
+
+  // remove security token
+  delete event.securityToken;
   console.log(event);
 
   return await processEvent(event, context);

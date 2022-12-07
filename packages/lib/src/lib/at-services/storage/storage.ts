@@ -7,6 +7,7 @@ import {
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { BucketQueryFilter } from './dtos/bucket-query-filter.dto';
+import { CreateBucketWebhookDto } from './dtos/create-bucket-webhook.dto';
 import { CreateBucketDto } from './dtos/create-bucket.dto';
 import { CreateDirectoryDto } from './dtos/create-directory.dto';
 import { CreateS3SignedUrlForUploadDto } from './dtos/create-s3-signed-url-for-upload.dto';
@@ -134,6 +135,42 @@ export class StorageMicroservice extends BaseService {
       eventName: StorageEventType.GET_FILE_DETAILS,
       file_uuid: params.file_uuid,
       cid: params.cid,
+    };
+    return await this.callService(data);
+  }
+
+  //#endregion
+
+  //#region bucket webhook
+
+  public async getBucketWebhook(bucket_id: number) {
+    const data = {
+      eventName: StorageEventType.BUCKET_WEBHOOK_GET,
+      bucket_id: bucket_id,
+    };
+    return await this.callService(data);
+  }
+
+  public async createBucketWebhook(params: CreateBucketWebhookDto) {
+    const data = {
+      eventName: StorageEventType.BUCKET_WEBHOOK_CREATE,
+      body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async updateBucketWebhook(params: { id: number; data: any }) {
+    const data = {
+      eventName: StorageEventType.BUCKET_WEBHOOK_UPDATE,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
+  public async deleteBucketWebhook(params: { id: number }) {
+    const data = {
+      eventName: StorageEventType.BUCKET_WEBHOOK_DELETE,
+      ...params,
     };
     return await this.callService(data);
   }

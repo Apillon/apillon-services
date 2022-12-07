@@ -13,6 +13,7 @@ import {
 import {
   BucketQueryFilter,
   CreateBucketDto,
+  CreateBucketWebhookDto,
   DefaultUserRole,
   ValidateFor,
 } from '@apillon/lib';
@@ -25,6 +26,77 @@ import { AuthGuard } from '../../guards/auth.guard';
 @Controller('buckets')
 export class BucketController {
   constructor(private bucketService: BucketService) {}
+
+  @Get(':bucket_id/webhook')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @UseGuards(AuthGuard)
+  async getBucketWebhook(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('bucket_id', ParseIntPipe) bucket_id: number,
+  ) {
+    return await this.bucketService.getBucketWebhook(context, bucket_id);
+  }
+
+  @Post(':bucket_id/webhook')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @UseGuards(AuthGuard)
+  @Validation({ dto: CreateBucketWebhookDto })
+  @UseGuards(ValidationGuard)
+  async createBucketWebhook(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('bucket_id', ParseIntPipe) bucket_id: number,
+    @Body() body: CreateBucketWebhookDto,
+  ) {
+    return await this.bucketService.createBucketWebhook(
+      context,
+      bucket_id,
+      body,
+    );
+  }
+
+  @Patch(':bucket_id/webhook/:id')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @UseGuards(AuthGuard)
+  @Validation({ dto: CreateBucketWebhookDto })
+  @UseGuards(ValidationGuard)
+  async updateBucketWebhook(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('bucket_id', ParseIntPipe) bucket_id: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: CreateBucketWebhookDto,
+  ) {
+    return await this.bucketService.updateBucketWebhook(
+      context,
+      bucket_id,
+      id,
+      body,
+    );
+  }
+
+  @Delete(':bucket_id/webhook/:id')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async deleteBucketWebhook(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return await this.bucketService.deleteBucketWebhook(context, id);
+  }
 
   @Get()
   @Permissions(

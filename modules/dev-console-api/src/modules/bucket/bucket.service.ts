@@ -4,6 +4,7 @@ import {
   StorageMicroservice,
   BucketQueryFilter,
   CodeException,
+  CreateBucketWebhookDto,
 } from '@apillon/lib';
 import { ResourceNotFoundErrorCode } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
@@ -46,4 +47,44 @@ export class BucketService {
     return (await new StorageMicroservice(context).deleteBucket({ id: id }))
       .data;
   }
+
+  //#region bucket webhook
+
+  async getBucketWebhook(context: DevConsoleApiContext, bucket_id: number) {
+    return (await new StorageMicroservice(context).getBucketWebhook(bucket_id))
+      .data;
+  }
+
+  async createBucketWebhook(
+    context: DevConsoleApiContext,
+    bucket_id: number,
+    body: CreateBucketWebhookDto,
+  ) {
+    body.populate({ bucket_id: bucket_id });
+    return (await new StorageMicroservice(context).createBucketWebhook(body))
+      .data;
+  }
+
+  async updateBucketWebhook(
+    context: DevConsoleApiContext,
+    bucket_id: number,
+    id: number,
+    body: any,
+  ) {
+    body.bucket_id = bucket_id;
+    return (
+      await new StorageMicroservice(context).updateBucketWebhook({
+        id: id,
+        data: body,
+      })
+    ).data;
+  }
+
+  async deleteBucketWebhook(context: DevConsoleApiContext, id: number) {
+    return (
+      await new StorageMicroservice(context).deleteBucketWebhook({ id: id })
+    ).data;
+  }
+
+  //#endregion
 }
