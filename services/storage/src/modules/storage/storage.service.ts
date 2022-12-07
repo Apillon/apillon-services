@@ -1,13 +1,11 @@
 import {
   AppEnvironment,
   AWS_S3,
-  CodeException,
   CreateS3SignedUrlForUploadDto,
   EndFileUploadSessionDto,
   env,
   Lmas,
   LogType,
-  PoolConnection,
   SerializeFor,
   ServiceName,
 } from '@apillon/lib';
@@ -18,19 +16,14 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { CID } from 'ipfs-http-client';
 import { v4 as uuidV4 } from 'uuid';
 import { FileStatus, StorageErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
-import {
-  StorageCodeException,
-  StorageValidationException,
-} from '../../lib/exceptions';
+import { StorageCodeException } from '../../lib/exceptions';
 import { SyncToIPFSWorker } from '../../workers/s3-to-ipfs-sync-worker';
 import { WorkerName } from '../../workers/worker-executor';
 import { Bucket } from '../bucket/models/bucket.model';
 import { CrustService } from '../crust/crust.service';
-import { Directory } from '../directory/models/directory.model';
 import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
@@ -220,73 +213,6 @@ export class StorageService {
     return true;
   }
 
-  /**
-   * From string path generates directories with hiearhical structure
-   */
-  static async generateDirectoriesFromPath(
-    context: ServiceContext,
-    directories: Directory[],
-    fur: FileUploadRequest,
-    bucket: Bucket,
-    ipfsDirectories?: { path: string; cid: CID }[],
-    conn?: PoolConnection,
-  ) {
-    if (fur.path) {
-      const splittedPath: string[] = fur.path.split('/').filter((x) => x != '');
-      let currDirectory = undefined;
-
-      //Get or create directory
-      for (let i = 0; i < splittedPath.length; i++) {
-        const currChildDirectories =
-          i == 0
-            ? directories.filter((x) => x.parentDirectory_id == undefined)
-            : directories.filter(
-                (x) => x.parentDirectory_id == currDirectory.id,
-              );
-
-        const existingDirectory = currChildDirectories.find(
-          (x) => x.name == splittedPath[i],
-        );
-
-        if (!existingDirectory) {
-          //create new directory
-          const newDirectory: Directory = new Directory({}, context).populate({
-            directory_uuid: uuidV4(),
-            project_uuid: bucket.project_uuid,
-            bucket_id: fur.bucket_id,
-            parentDirectory_id: currDirectory?.id,
-            name: splittedPath[i],
-          });
-
-          //search, if directory with that path, was created on IPFS
-          const ipfsDirectory = ipfsDirectories?.find(
-            (x) => x.path == splittedPath.slice(0, i + 1).join('/'),
-          );
-          if (ipfsDirectory)
-            newDirectory.CID = ipfsDirectory.cid.toV0().toString();
-
-          try {
-            await newDirectory.validate();
-          } catch (err) {
-            await newDirectory.handle(err);
-            if (!newDirectory.isValid())
-              throw new StorageValidationException(newDirectory);
-          }
-
-          currDirectory = await newDirectory.insert(
-            SerializeFor.INSERT_DB,
-            conn,
-          );
-
-          //Add new directory to list of all directories
-          directories.push(currDirectory);
-        } else currDirectory = existingDirectory;
-      }
-      return currDirectory;
-    }
-    return undefined;
-  }
-
   static async getFileDetails(
     event: { CIDOrUUID: string },
     context: ServiceContext,
@@ -343,6 +269,7 @@ export class StorageService {
         cid: file.CID,
       });
       fileStatus = FileStatus.PINNED_TO_CRUST;
+      file.downloadLink = env.STORAGE_IPFS_PROVIDER + file.CID;
     }
 
     return {

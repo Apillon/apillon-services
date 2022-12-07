@@ -1,5 +1,22 @@
+import { postToSlack } from './lib/slack';
+
 export class Alerting {
-  static sendAlert(event, _context) {
+  static async sendAlert(event, context) {
     console.log(`SENDING ALERT:${JSON.stringify(event)}`);
+
+    await context.mongo.db.collection('alert').insertOne(event);
+    return event;
+  }
+
+  static async sendAdminAlert(event, context) {
+    console.log(`SENDING ADMIN ALERT:${JSON.stringify(event)}`);
+
+    await context.mongo.db.collection('admin-alert').insertOne(event);
+
+    await postToSlack(event.message, event.serviceName, event.level);
+
+    // TODO: send email ?
+
+    return event;
   }
 }

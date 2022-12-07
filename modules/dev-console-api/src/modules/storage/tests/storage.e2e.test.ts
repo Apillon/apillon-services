@@ -8,13 +8,16 @@ import {
 } from '@apillon/storage/src/config/types';
 import * as request from 'supertest';
 import { v4 as uuidV4 } from 'uuid';
-import { createTestBucket } from '../../../../test/helpers/bucket';
+import {
+  createTestBucket,
+  createTestBucketWebhook,
+} from '../../../../test/helpers/bucket';
 import { createTestProject } from '../../../../test/helpers/project';
 import { releaseStage, setupTest, Stage } from '../../../../test/helpers/setup';
 import { createTestUser, TestUser } from '../../../../test/helpers/user';
 import { Project } from '../../project/models/project.model';
 import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
-import { BadRequestErrorCode } from '@apillon/lib';
+import { BadRequestErrorCode, env } from '@apillon/lib';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const fs = require('fs');
@@ -165,6 +168,13 @@ describe('Storage tests', () => {
 
         expect(session.sessionStatus).toBe(2);
       });
+
+      test('User should be able to download uploaded file from apillon ipfs gateway', async () => {
+        const response = await request(
+          env.STORAGE_IPFS_PROVIDER + testFile.CID,
+        ).get('');
+        expect(response.status).toBe(200);
+      });
     });
 
     describe('File details tests', () => {
@@ -298,6 +308,59 @@ describe('Storage tests', () => {
         );
         expect(subdirectory).toBeTruthy();
         expect(subdirectory.parentDirectory_id).toBe(mySecondTestDirectory.id);
+      });
+    });
+
+    describe('Tests to upload file to bucket, which has specified webhook', () => {
+      let testBucketWithWebhook;
+      const testSession2_uuid = uuidV4();
+      beforeAll(async () => {
+        testBucketWithWebhook = await createTestBucket(
+          testUser,
+          stage.storageContext,
+          testProject,
+        );
+
+        await createTestBucketWebhook(
+          stage.storageContext,
+          testBucketWithWebhook,
+        );
+      });
+      test('User should be able to upload file to bucket which has webhook set up', async () => {
+        let response = await request(stage.http)
+          .post(`/storage/file-upload-request`)
+          .send({
+            bucket_uuid: testBucketWithWebhook.bucket_uuid,
+            session_uuid: testSession2_uuid,
+            fileName: 'myTestFile.txt',
+            contentType: 'text/plain',
+          })
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(201);
+        expect(response.body.data.signedUrlForUpload).toBeTruthy();
+        expect(response.body.data.file_uuid).toBeTruthy();
+        const file_uuid = response.body.data.file_uuid;
+
+        const testFileContent = fs.readFileSync('test/assets/test.txt');
+        response = await request(response.body.data.signedUrlForUpload)
+          .put(``)
+          .send(testFileContent);
+        expect(response.status).toBe(200);
+
+        response = await request(stage.http)
+          .post(`/storage/file-upload-session/${testSession2_uuid}/end`)
+          .send({
+            directSync: true,
+          })
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(200);
+
+        const file: File = await new File(
+          {},
+          stage.storageContext,
+        ).populateByUUID(file_uuid);
+
+        expect(file.exists()).toBeTruthy();
       });
     });
   });
