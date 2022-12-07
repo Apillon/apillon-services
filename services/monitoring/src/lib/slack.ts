@@ -1,11 +1,11 @@
-import { env, ServiceName } from '@apillon/lib';
+import { env } from '@apillon/lib';
 import { WebClient, LogLevel } from '@slack/web-api';
 
 export class Slack {
   private client: WebClient;
   constructor() {
     this.client = new WebClient(env.SLACK_TOKEN, {
-      logLevel: LogLevel.WARN,
+      logLevel: LogLevel.DEBUG,
     });
   }
 
@@ -27,7 +27,9 @@ export class Slack {
         }
       }
     } catch (error) {
-      console.error(error);
+      console.error('FIND CHANNEL:', error);
+      console.log('token:', env.SLACK_TOKEN);
+      console.log('channel:', env.SLACK_CHANNEL);
       throw error;
     }
   }
@@ -47,7 +49,10 @@ export class Slack {
       // Print result, which includes information about the message (like TS)
       // console.log(result);
     } catch (error) {
-      console.error(error);
+      console.error('PUBLISH MESSAGE:', error);
+      console.log('token:', env.SLACK_TOKEN);
+      console.log('channel:', env.SLACK_CHANNEL);
+      throw error;
     }
   }
 }
