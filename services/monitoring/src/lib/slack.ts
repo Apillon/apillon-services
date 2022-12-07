@@ -60,7 +60,7 @@ export async function postToSlack(
   const severityText = {
     message: {
       emojis: ':loudspeaker:',
-      target: '@here',
+      target: '',
       intro: `Message from ${serviceName} (${env.APP_ENV})`,
     },
     warning: {
