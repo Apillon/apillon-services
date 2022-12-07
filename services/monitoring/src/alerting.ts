@@ -1,4 +1,4 @@
-import { postToSlack } from '@apillon/lib';
+import { postToSlack } from './lib/slack';
 
 export class Alerting {
   static async sendAlert(event, context) {

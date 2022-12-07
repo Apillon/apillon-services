@@ -1,4 +1,4 @@
-import { env } from '../config/env';
+import { env, ServiceName } from '@apillon/lib';
 import { WebClient, LogLevel } from '@slack/web-api';
 
 export class Slack {
@@ -61,14 +61,17 @@ export async function postToSlack(
     message: {
       emojis: ':loudspeaker:',
       target: '@here',
+      intro: `Message from ${serviceName} (${env.APP_ENV})`,
     },
     warning: {
       emojis: ':zap::warning::zap:',
       target: '@here',
+      intro: `WARNING from ${serviceName} (${env.APP_ENV})`,
     },
     alert: {
       emojis: ':bangbang::rotating_light::bangbang:',
       target: '@channel',
+      intro: `ALERT from ${serviceName} (${env.APP_ENV})`,
     },
   };
 
@@ -77,7 +80,7 @@ export async function postToSlack(
     const channelId = await slack.findChannel(env.SLACK_CHANNEL);
     await slack.publishMessage(
       channelId,
-      `${severityText[level].emojis}\n*(${env.APP_ENV}) [${serviceName}]*\n\n${message}\n\n${severityText[level].target}`,
+      `${severityText[level].emojis}\n*${severityText[level].intro}:*\n\n${message}\n\n${severityText[level].target}`,
     );
   } catch (err) {
     console.log('Failed to post to Slack :', err);
