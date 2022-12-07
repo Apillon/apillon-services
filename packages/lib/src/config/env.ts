@@ -269,8 +269,8 @@ export let env: IEnv = {
   MONITORING_MONGO_DATABASE_TEST:
     process.env['MONITORING_MONGO_DATABASE_TEST'] || 'apillon_logs_test',
 
-  SLACK_TOKEN: process.env['MONITORING_SLACK_TOKEN'],
-  SLACK_CHANNEL: process.env['MONITORING_SLACK_CHANNEL'] || 'alerts',
+  SLACK_TOKEN: process.env['SLACK_TOKEN'],
+  SLACK_CHANNEL: process.env['SLACK_CHANNEL'] || 'monitoring',
   /** DEV CONSOLE API DB conn*/
   DEV_CONSOLE_API_MYSQL_HOST: process.env['DEV_CONSOLE_API_MYSQL_HOST'],
   DEV_CONSOLE_API_MYSQL_PORT:
