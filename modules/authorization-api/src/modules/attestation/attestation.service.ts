@@ -16,7 +16,7 @@ import { Attestation } from './models/attestation.model';
 import {
   AttestationState,
   JwtTokenType,
-  ModuleValidatorErrorCode,
+  AuthorizationErrorCode,
 } from '../../config/types';
 import { generateKeypairs, generateAccount } from '../../lib/kilt/utils';
 import { KiltKeyringPair } from '@kiltprotocol/types';
@@ -30,7 +30,7 @@ import {
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { WorkerName } from '../../workers/worker-executor';
-import { KiltWorker } from '../../workers/kilt.worker';
+import { AuthroizationWorker } from '../../workers/authorization.worker';
 
 @Injectable()
 export class AttestationService {
@@ -116,8 +116,8 @@ export class AttestationService {
     ) {
       throw new CodeException({
         status: HttpStatus.NOT_FOUND,
-        code: ModuleValidatorErrorCode.ATTEST_DOES_NOT_EXIST,
-        errorCodes: ModuleValidatorErrorCode,
+        code: AuthorizationErrorCode.ATTEST_DOES_NOT_EXIST,
+        errorCodes: AuthorizationErrorCode,
       });
     }
 
@@ -139,8 +139,8 @@ export class AttestationService {
     if (!attestation.exists()) {
       throw new CodeException({
         status: HttpStatus.NOT_FOUND,
-        code: ModuleValidatorErrorCode.ATTEST_DOES_NOT_EXIST,
-        errorCodes: ModuleValidatorErrorCode,
+        code: AuthorizationErrorCode.ATTEST_DOES_NOT_EXIST,
+        errorCodes: AuthorizationErrorCode,
       });
     }
 
@@ -155,7 +155,7 @@ export class AttestationService {
 
     if (
       env.APP_ENV == AppEnvironment.LOCAL_DEV ||
-      env.APP_ENV == AppEnvironment.TEST ||
+      env.APP_ENV == AppEnvironment.TEST
     ) {
       console.log('Starting DEV authrization worker ...');
 
@@ -166,11 +166,19 @@ export class AttestationService {
         params: { FunctionName: 'test' },
       };
 
-      const wd = new WorkerDefinition(serviceDef, WorkerName.KILT_WORKER, {
-        parameters,
-      });
+      const wd = new WorkerDefinition(
+        serviceDef,
+        WorkerName.AUTHORIZATION_WORKER,
+        {
+          parameters,
+        },
+      );
 
-      const worker = new KiltWorker(wd, context, QueueWorkerType.EXECUTOR);
+      const worker = new AuthroizationWorker(
+        wd,
+        context,
+        QueueWorkerType.EXECUTOR,
+      );
       await worker.runExecutor(parameters);
     } else {
       //send message to SQS
@@ -189,7 +197,6 @@ export class AttestationService {
   async generateDIDDocumentDEV(context: AuthorizationApiContext, body: any) {
     if (
       env.APP_ENV != AppEnvironment.TEST &&
-      env.APP_ENV != AppEnvironment.DEV &&
       env.APP_ENV != AppEnvironment.LOCAL_DEV
     ) {
       throw 'Invalid request!';

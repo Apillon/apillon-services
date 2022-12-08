@@ -11,7 +11,7 @@ import { AppEnvironment, MySql } from '@apillon/lib';
 
 import { Context, env } from '@apillon/lib';
 import { TestWorker } from './test-worker';
-import { KiltWorker } from './kilt.worker';
+import { AuthroizationWorker } from './authorization.worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
