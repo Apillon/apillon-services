@@ -14,6 +14,7 @@ export const challenge = '123456789';
  * Validation error codes - 42207000.
  */
 export enum AuthorizationErrorCode {
+  // TODO: Review correct code order (in the end)
   DEFAULT_VALIDATION_ERROR = 42207000,
   // This is the same as the error codes from the console-api
   USER_EMAIL_ALREADY_TAKEN = 422070001,

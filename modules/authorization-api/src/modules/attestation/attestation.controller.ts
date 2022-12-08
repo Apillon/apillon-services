@@ -69,6 +69,16 @@ export class AttestationController {
     );
   }
 
+  @Get('credential')
+  // @Validation({ dto: AttestationEmailDto, validateFor: ValidateFor.QUERY })
+  // @UseGuards(ValidationGuard)
+  async attestationGetUserCredential(
+    @Ctx() context: AuthorizationApiContext,
+    @Query('email') email: string,
+  ) {
+    return await this.attestationService.getUserCredential(context, email);
+  }
+
   @Post('dev/create-did')
   // TODO: This is a dev handler!!! Create guards that prevent use of this if in
   // production ...

@@ -1,4 +1,11 @@
-import { Context, env, LogType, writeLog } from '@apillon/lib';
+import {
+  CodeException,
+  Context,
+  env,
+  LogType,
+  SerializeFor,
+  writeLog,
+} from '@apillon/lib';
 import {
   BaseQueueWorker,
   QueueWorkerType,
@@ -22,6 +29,9 @@ import {
 
 import { u8aToHex, hexToU8a } from '@polkadot/util';
 import { BN } from '@polkadot/util/bn/bn';
+import { Attestation } from '../modules/attestation/models/attestation.model';
+import { AttestationState, AuthorizationErrorCode } from '../config/types';
+import { HttpStatus } from '@nestjs/common';
 
 export class AuthorizationWorker extends BaseQueueWorker {
   // TODO: Handle errors and edge cases properly
@@ -56,6 +66,23 @@ export class AuthorizationWorker extends BaseQueueWorker {
     // DID
     const attesterDidDoc = await getFullDidDocument(attesterKeyPairs);
     const attesterDidUri = attesterDidDoc.uri;
+
+    // Check if correct attestation + state exists -> IN_PROGRESS
+    const attestation = new Attestation({}, this.context).populate({
+      context: this.context,
+      email: claimerEmail,
+    });
+
+    // if (
+    //   !attestation.exists() ||
+    //   attestation.state != AttestationState.VERIFIED
+    // ) {
+    //   throw new CodeException({
+    //     status: HttpStatus.BAD_REQUEST,
+    //     code: AuthorizationErrorCode.ATTEST_INVALID_STATE,
+    //     errorCodes: AuthorizationErrorCode,
+    //   });
+    // }
 
     // Init Kilt essentials
     await connect(env.KILT_NETWORK);
@@ -129,17 +156,35 @@ export class AuthorizationWorker extends BaseQueueWorker {
         'createAttestation',
       );
 
-      return {
-        success: true,
-        attested: emailAttested,
-        credential: JSON.stringify({
-          ...credential,
-          claimerSignature: {
-            keyType: 'sr25519',
-            keyUri: claimerDidUri,
-          },
-        }),
-      };
+      const claimerCredentialObj = JSON.stringify({
+        ...credential,
+        claimerSignature: {
+          keyType: 'sr25519',
+          keyUri: claimerDidUri,
+        },
+      });
+
+      attestation.populate({
+        state: AttestationState.ATTESTED,
+        credential: claimerCredentialObj,
+      });
+
+      const conn = await this.context.mysql.start();
+      try {
+        await attestation.insert(SerializeFor.INSERT_DB, conn);
+        await this.context.mysql.commit(conn);
+      } catch (err) {
+        await this.context.mysql.rollback(conn);
+        writeLog(
+          LogType.ERROR,
+          `Error creating attestation state for user with email ${claimerEmail}'`,
+          'attestation.service.ts',
+          'sendVerificationEmail',
+        );
+        throw err;
+      }
+
+      return true;
     } catch (error) {
       console.error(error);
       writeLog(
@@ -150,6 +195,6 @@ export class AuthorizationWorker extends BaseQueueWorker {
       );
     }
 
-    return null;
+    return false;
   }
 }

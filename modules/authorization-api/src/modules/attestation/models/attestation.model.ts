@@ -52,6 +52,28 @@ export class Attestation extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
     ],
     validators: [
+      // {
+      //   resolver: presenceValidator(),
+      //   code: AuthorizationErrorCode.ATTEST_STATE_NOT_PRESENT,
+      // },
+    ],
+  })
+  public credential: string;
+
+  /**
+   * Attestation state as defined in types
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [
       {
         resolver: presenceValidator(),
         code: AuthorizationErrorCode.ATTEST_STATE_NOT_PRESENT,

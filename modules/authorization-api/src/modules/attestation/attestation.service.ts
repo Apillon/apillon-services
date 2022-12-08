@@ -194,7 +194,28 @@ export class AttestationService {
     return { success: true };
   }
 
+  async getUserCredential(context: AuthorizationApiContext, body: any) {
+    const attestation = await new Attestation({}, context).populateByUserEmail(
+      context,
+      body.email,
+    );
+
+    if (!attestation.exists()) {
+      throw new CodeException({
+        status: HttpStatus.NOT_FOUND,
+        code: AuthorizationErrorCode.ATTEST_DOES_NOT_EXIST,
+        errorCodes: AuthorizationErrorCode,
+      });
+    }
+
+    return { credential: attestation.credential };
+  }
+
   async generateDIDDocumentDEV(context: AuthorizationApiContext, body: any) {
+    // Used to issue did documents to test accounts -> Since the peregrine faucet
+    // only allows 100PILT token per account, we need a new one everytime funds
+    // are depleted ...
+    // NOTE: Use this function to generate a testnet DID
     if (
       env.APP_ENV != AppEnvironment.TEST &&
       env.APP_ENV != AppEnvironment.LOCAL_DEV
