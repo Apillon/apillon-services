@@ -24,6 +24,7 @@ import { SyncToIPFSWorker } from '../../workers/s3-to-ipfs-sync-worker';
 import { WorkerName } from '../../workers/worker-executor';
 import { Bucket } from '../bucket/models/bucket.model';
 import { CrustService } from '../crust/crust.service';
+import { Directory } from '../directory/models/directory.model';
 import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
@@ -75,6 +76,22 @@ export class StorageService {
         code: StorageErrorCode.FILE_UPLOAD_SESSION_ALREADY_TRANSFERED,
         status: 404,
       });
+    }
+
+    //check directory if directory_uuid is present in body
+    if (event.body.directory_uuid) {
+      const dir: Directory = await new Directory({}, context).populateByUUID(
+        event.body.directory_uuid,
+      );
+      if (!dir.exists()) {
+        throw new StorageCodeException({
+          code: StorageErrorCode.DIRECTORY_NOT_FOUND,
+          status: 404,
+        });
+      }
+
+      await dir.populateFullPath();
+      event.body.path = dir.fullPath;
     }
 
     const s3FileKey = `${bucket.id}/${session.session_uuid}/${
@@ -259,11 +276,10 @@ export class StorageService {
     file.canAccess(context);
     fileStatus = FileStatus.UPLOADED_TO_IPFS;
     //File exists on IPFS and probably on CRUST- get status from CRUST
-    let crustOrderStatus = undefined;
     if (file.CID) {
-      crustOrderStatus = await CrustService.getOrderStatus({
+      /*crustOrderStatus = await CrustService.getOrderStatus({
         cid: file.CID,
-      });
+      });*/
       fileStatus = FileStatus.PINNED_TO_CRUST;
       file.downloadLink = env.STORAGE_IPFS_PROVIDER + file.CID;
     }
@@ -271,7 +287,6 @@ export class StorageService {
     return {
       fileStatus: fileStatus,
       file: file.serialize(SerializeFor.PROFILE),
-      crustStatus: crustOrderStatus,
     };
   }
 

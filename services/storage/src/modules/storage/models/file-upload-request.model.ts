@@ -114,6 +114,13 @@ export class FileUploadRequest extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
     ],
+    setter(value: string) {
+      if (value && value.length > 0) {
+        value = value.replace(/^\/+/g, '');
+        value += value.endsWith('/') ? '' : '/';
+      }
+      return value;
+    },
     validators: [],
   })
   public path: string;

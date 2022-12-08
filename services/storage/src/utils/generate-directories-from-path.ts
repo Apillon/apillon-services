@@ -5,22 +5,37 @@ import { Bucket } from '../modules/bucket/models/bucket.model';
 import { Directory } from '../modules/directory/models/directory.model';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
 import { v4 as uuidV4 } from 'uuid';
-import { StorageValidationException } from '../lib/exceptions';
+import {
+  StorageCodeException,
+  StorageValidationException,
+} from '../lib/exceptions';
+import { StorageErrorCode } from '../config/types';
 
 /**
- * From string path generates directories with hiearhical structure
+ * From fur(File upload request).path generate directories with hiearhical structure, or return existing directory if fur.directory_uuid is specified
  */
-export async function generateDirectoriesFromPath(
+export async function generateDirectoriesForFUR(
   context: ServiceContext,
   directories: Directory[],
   fur: FileUploadRequest,
   bucket: Bucket,
   ipfsDirectories?: { path: string; cid: CID }[],
   conn?: PoolConnection,
-) {
-  if (fur.path) {
+): Promise<Directory> {
+  if (fur.directory_uuid) {
+    const d: Directory = await new Directory({}, context).populateByUUID(
+      fur.directory_uuid,
+    );
+    if (!d.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.DIRECTORY_NOT_FOUND,
+        status: 404,
+      });
+    }
+    return d;
+  } else if (fur.path) {
     const splittedPath: string[] = fur.path.split('/').filter((x) => x != '');
-    let currDirectory = undefined;
+    let currDirectory: Directory = undefined;
 
     //Get or create directory
     for (let i = 0; i < splittedPath.length; i++) {

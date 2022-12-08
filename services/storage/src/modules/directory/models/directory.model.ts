@@ -61,7 +61,7 @@ export class Directory extends AdvancedSQLModel {
     ],
     validators: [],
   })
-  public parentDirectory_id: string;
+  public parentDirectory_id: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -175,6 +175,26 @@ export class Directory extends AdvancedSQLModel {
   })
   public description: string;
 
+  /*************************************************************
+   * INFO Properties
+   *************************************************************/
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public fullPath: string;
+
   public canAccess(context: ServiceContext) {
     if (
       !context.hasRoleOnProject(
@@ -211,6 +231,27 @@ export class Directory extends AdvancedSQLModel {
         status: 403,
         errorMessage: 'Insufficient permissins',
       });
+    }
+  }
+
+  public async populateByUUID(uuid: string): Promise<this> {
+    if (!uuid) {
+      throw new Error('uuid should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE directory_uuid = @uuid AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { uuid },
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
     }
   }
 
@@ -265,7 +306,7 @@ export class Directory extends AdvancedSQLModel {
     const qSelects = [
       {
         qSelect: `
-        SELECT 'directory' as type, d.id, d.name, d.CID, d.createTime, d.updateTime, NULL as contentType, NULL as size
+        SELECT 'directory' as type, d.id, d.name, d.CID, d.createTime, d.updateTime, NULL as contentType, NULL as size, d.parentDirectory_id as parentDirectoryId, NULL as file_uuid
         `,
         qFrom: `
         FROM \`${DbTables.DIRECTORY}\` d
@@ -278,7 +319,7 @@ export class Directory extends AdvancedSQLModel {
       },
       {
         qSelect: `
-        SELECT 'file' as type, d.id, d.name, d.CID, d.createTime, d.updateTime, d.contentType as contentType, d.size as size
+        SELECT 'file' as type, d.id, d.name, d.CID, d.createTime, d.updateTime, d.contentType as contentType, d.size as size, d.directory_id as parentDirectoryId, d.file_uuid as file_uuid
         `,
         qFrom: `
         FROM \`${DbTables.FILE}\` d
@@ -299,6 +340,21 @@ export class Directory extends AdvancedSQLModel {
       params,
       'd.name',
     );
+  }
+
+  public async populateFullPath(): Promise<this> {
+    this.fullPath = this.name;
+    if (!this.parentDirectory_id) {
+      return;
+    } else {
+      let tmpDir: Directory = undefined;
+      do {
+        tmpDir = await new Directory({}, this.getContext()).populateById(
+          tmpDir ? tmpDir.parentDirectory_id : this.parentDirectory_id,
+        );
+        this.fullPath = tmpDir.name + '/' + this.fullPath;
+      } while (tmpDir?.parentDirectory_id);
+    }
   }
 
   /*public async getList(context: ServiceContext, query: BucketQueryFilter) {

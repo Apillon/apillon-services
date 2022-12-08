@@ -25,7 +25,7 @@ import { FileUploadSession } from '../modules/storage/models/file-upload-session
 import { File } from '../modules/storage/models/file.model';
 import { Directory } from '../modules/directory/models/directory.model';
 import { CrustService } from '../modules/crust/crust.service';
-import { generateDirectoriesFromPath } from '../utils/generate-directories-from-path';
+import { generateDirectoriesForFUR } from '../utils/generate-directories-from-path';
 import { sendTransferredFilesToBucketWebhook } from '../utils/bucket-webhook-utils';
 
 export class SyncToIPFSWorker extends BaseQueueWorker {
@@ -143,7 +143,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
             x.fileStatus ==
             FileUploadRequestFileStatus.SIGNED_URL_FOR_UPLOAD_GENERATED,
         )) {
-          const fileDirectory = await generateDirectoriesFromPath(
+          const fileDirectory = await generateDirectoriesForFUR(
             this.context,
             directories,
             file,
@@ -277,7 +277,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
           throw err;
         }
 
-        const fileDirectory = await generateDirectoriesFromPath(
+        const fileDirectory = await generateDirectoriesForFUR(
           this.context,
           directories,
           file,
