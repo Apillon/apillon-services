@@ -31,6 +31,7 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.LIST_DIRECTORY_CONTENT]:
       DirectoryService.listDirectoryContent,
     [StorageEventType.GET_FILE_DETAILS]: StorageService.getFileDetails,
+    [StorageEventType.FILE_DELETE]: StorageService.deleteFile,
 
     [StorageEventType.BUCKET_WEBHOOK_GET]: BucketService.getBucketWebhook,
     [StorageEventType.BUCKET_WEBHOOK_CREATE]: BucketService.createBucketWebhook,

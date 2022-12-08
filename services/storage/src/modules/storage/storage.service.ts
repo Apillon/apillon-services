@@ -278,4 +278,36 @@ export class StorageService {
       crustStatus: crustOrderStatus,
     };
   }
+
+  static async deleteFile(
+    event: { id: number },
+    context: ServiceContext,
+  ): Promise<any> {
+    const f: File = await new File({}, context).populateById(event.id);
+
+    if (!f.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.DIRECTORY_NOT_FOUND,
+        status: 404,
+      });
+    }
+    f.canModify(context);
+
+    await f.markDeleted();
+
+    //Also delete file-upload-request
+    const fur: FileUploadRequest = await new FileUploadRequest(
+      {},
+      context,
+    ).populateByUUID(f.file_uuid);
+
+    if (fur.exists()) {
+      await fur.markDeleted();
+    }
+
+    //TODO: We should probably delete file from our IPFS node.
+    //But for now, this will be OK, because http-ipfs-client doesn't have method for delete
+
+    return f.serialize(SerializeFor.PROFILE);
+  }
 }

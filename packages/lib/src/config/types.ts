@@ -45,6 +45,7 @@ export enum StorageEventType {
   DELETE_DIRECTORY = 'delete-directory',
   LIST_DIRECTORY_CONTENT = 'list-directory-content',
   GET_FILE_DETAILS = 'get-file-details',
+  FILE_DELETE = 'delete-file',
   BUCKET_WEBHOOK_GET = 'get-bucket-webhook',
   BUCKET_WEBHOOK_CREATE = 'create-bucket-webhook',
   BUCKET_WEBHOOK_UPDATE = 'update-bucket-webhook',

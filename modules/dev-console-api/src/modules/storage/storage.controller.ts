@@ -25,7 +25,7 @@ import { AuthGuard } from '../../guards/auth.guard';
 export class StorageController {
   constructor(private storageService: StorageService) {}
 
-  @Post('file-upload-request')
+  @Post(':bucket_uuid/file-upload/:session_uuid')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -33,15 +33,23 @@ export class StorageController {
   )
   @UseGuards(AuthGuard)
   @Validation({ dto: CreateS3SignedUrlForUploadDto })
-  @UseGuards(ValidationGuard)
+  @UseGuards(ValidationGuard, AuthGuard)
   async createS3SignedUrlForUpload(
     @Ctx() context: DevConsoleApiContext,
-    @Body() body: CreateS3SignedUrlForUploadDto,
+    @Param('bucket_uuid') bucket_uuid: string,
+    @Param('session_uuid') session_uuid: string,
+    @Body()
+    body: CreateS3SignedUrlForUploadDto,
   ) {
-    return await this.storageService.createS3SignedUrlForUpload(context, body);
+    return await this.storageService.createS3SignedUrlForUpload(
+      context,
+      bucket_uuid,
+      session_uuid,
+      body,
+    );
   }
 
-  @Post('file-upload-session/:session_uuid/end')
+  @Post(':bucket_uuid/file-upload/:session_uuid/end')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -53,28 +61,34 @@ export class StorageController {
   @HttpCode(200)
   async endFileUploadSession(
     @Ctx() context: DevConsoleApiContext,
+    @Param('bucket_uuid') bucket_uuid: string,
     @Param('session_uuid') session_uuid: string,
     @Body() body: EndFileUploadSessionDto,
   ) {
     return await this.storageService.endFileUploadSession(
       context,
+      bucket_uuid,
       session_uuid,
       body,
     );
   }
 
-  @Get('file-details')
+  @Get(':bucket_uuid/file/:cidOrUUID/detail')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
     { role: DefaultUserRole.PROJECT_USER },
   )
-  @Validation({ dto: FileDetailsQueryFilter, validateFor: ValidateFor.QUERY })
-  @UseGuards(ValidationGuard, AuthGuard)
-  async getBucketList(
+  @UseGuards(AuthGuard)
+  async getFileDetailsByCID(
     @Ctx() context: DevConsoleApiContext,
-    @Query() query: FileDetailsQueryFilter,
+    @Param('bucket_uuid') bucket_uuid: string,
+    @Param('cidOrUUID') cidOrUUID: string,
   ) {
-    return await this.storageService.getFileDetails(context, query);
+    return await this.storageService.getFileDetails(
+      context,
+      bucket_uuid,
+      cidOrUUID,
+    );
   }
 }
