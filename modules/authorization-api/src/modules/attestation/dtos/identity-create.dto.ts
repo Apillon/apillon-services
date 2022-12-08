@@ -1,7 +1,7 @@
 import { ModelBase, PopulateFrom, presenceValidator } from '@apillon/lib';
 import { prop } from '@rawmodel/core';
 import { emailValidator } from '@rawmodel/validators';
-import { ModuleValidatorErrorCode } from '../../../config/types';
+import { AuthorizationErrorCode } from '../../../config/types';
 import {
   didCreateCreateOpValidator,
   didUriValidator,
@@ -24,11 +24,11 @@ export class IdentityCreateDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ModuleValidatorErrorCode.IDENTITY_CREATE_DID_CREATE_OP_NOT_PRESENT,
+        code: AuthorizationErrorCode.IDENTITY_CREATE_DID_CREATE_OP_NOT_PRESENT,
       },
       {
         resolver: didCreateCreateOpValidator(),
-        code: ModuleValidatorErrorCode.IDENTITY_CREATE_INVALID_REQUEST,
+        code: AuthorizationErrorCode.IDENTITY_CREATE_INVALID_REQUEST,
       },
     ],
   })
@@ -39,11 +39,11 @@ export class IdentityCreateDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ModuleValidatorErrorCode.USER_EMAIL_NOT_PRESENT,
+        code: AuthorizationErrorCode.USER_EMAIL_NOT_PRESENT,
       },
       {
         resolver: emailValidator(),
-        code: ModuleValidatorErrorCode.USER_EMAIL_NOT_VALID,
+        code: AuthorizationErrorCode.USER_EMAIL_NOT_VALID,
       },
     ],
   })
@@ -54,11 +54,11 @@ export class IdentityCreateDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ModuleValidatorErrorCode.DID_URI_NOT_PRESENT,
+        code: AuthorizationErrorCode.DID_URI_NOT_PRESENT,
       },
       {
         resolver: didUriValidator(),
-        code: ModuleValidatorErrorCode.DID_URI_INVALID,
+        code: AuthorizationErrorCode.DID_URI_INVALID,
       },
     ],
   })

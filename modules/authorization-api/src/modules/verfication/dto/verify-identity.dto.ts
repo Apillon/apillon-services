@@ -2,7 +2,7 @@ import { ModelBase, PopulateFrom } from '@apillon/lib';
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
-import { ModuleValidatorErrorCode } from '../../../config/types';
+import { AuthorizationErrorCode } from '../../../config/types';
 
 export class VerificationIdentityDto extends ModelBase {
   @prop({
@@ -11,7 +11,7 @@ export class VerificationIdentityDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ModuleValidatorErrorCode.VERIFICATION_IDENTITY_NOT_PRESENT,
+        code: AuthorizationErrorCode.VERIFICATION_IDENTITY_NOT_PRESENT,
       },
     ],
   })

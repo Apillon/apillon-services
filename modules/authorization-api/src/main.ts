@@ -2,6 +2,9 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ExceptionsFilter, ResponseInterceptor } from '@apillon/modules-lib';
 import { env } from '@apillon/lib';
+import { Context } from 'aws-lambda/handler';
+import { AttestationService } from './modules/attestation/attestation.service';
+import { IdentityEventType } from './config/types';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
@@ -12,4 +15,15 @@ async function bootstrap() {
 
   console.log(`Listening on ${env.AUTH_API_PORT}:${env.AUTH_API_HOST}`);
 }
+
 bootstrap().catch((err) => console.error(err.message));
+
+// Worker event processor
+export async function processEvent(event, context: Context): Promise<any> {
+  const processors = {
+    [IdentityEventType.CREATE_DECENTRALIZED_IDENTITY]: new AttestationService()
+      .generateIdentity,
+  };
+
+  return await processors[event.eventName](event, context);
+}

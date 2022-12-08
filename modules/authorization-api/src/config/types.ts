@@ -1,3 +1,10 @@
+import {
+  KiltKeyringPair,
+  VerificationKeyRelationship,
+  DidUri,
+  NewDidEncryptionKey,
+} from '@kiltprotocol/types';
+
 export enum DbTables {}
 
 // TODO: Move to a cache system or a database (preferably cache)
@@ -6,7 +13,7 @@ export const challenge = '123456789';
 /**
  * Validation error codes - 42207000.
  */
-export enum ModuleValidatorErrorCode {
+export enum AuthorizationErrorCode {
   DEFAULT_VALIDATION_ERROR = 42207000,
   // This is the same as the error codes from the console-api
   USER_EMAIL_ALREADY_TAKEN = 422070001,
@@ -57,13 +64,13 @@ export enum JwtTokenType {
   ATTEST_EMAIL_VERIFICATION = 'ATTESTATION_EMAIL_VERIFICATION',
 }
 
-import {
-  KiltKeyringPair,
-  VerificationKeyRelationship,
-  DidUri,
-  NewDidEncryptionKey,
-} from '@kiltprotocol/types';
+export enum IdentityEventType {
+  CREATE_DECENTRALIZED_IDENTITY = 'create-decentralized-identity',
+}
 
+/************************************************************
+ * Kilt types
+ ************************************************************/
 export interface Presentation {
   claim: any;
   legitimations: any;

@@ -16,25 +16,21 @@ import { Attestation } from './models/attestation.model';
 import {
   AttestationState,
   JwtTokenType,
-  ModuleValidatorErrorCode,
+  AuthorizationErrorCode,
 } from '../../config/types';
-import {
-  generateKeypairs,
-  generateAccount,
-  prepareAttestation,
-  getFullDidDocument,
-  getNextNonce,
-} from '../../lib/kilt/utils';
+import { generateKeypairs, generateAccount } from '../../lib/kilt/utils';
 import { KiltKeyringPair } from '@kiltprotocol/types';
+import { Blockchain, ConfigService, connect, Did } from '@kiltprotocol/sdk-js';
+
 import {
-  Blockchain,
-  ConfigService,
-  connect,
-  Did,
-  Utils,
-} from '@kiltprotocol/sdk-js';
-import { u8aToHex, hexToU8a } from '@polkadot/util';
-import { BN } from '@polkadot/util/bn/bn';
+  QueueWorkerType,
+  sendToWorkerQueue,
+  ServiceDefinition,
+  ServiceDefinitionType,
+  WorkerDefinition,
+} from '@apillon/workers-lib';
+import { WorkerName } from '../../workers/worker-executor';
+import { AuthorizationWorker } from '../../workers/authorization.worker';
 
 @Injectable()
 export class AttestationService {
@@ -120,8 +116,8 @@ export class AttestationService {
     ) {
       throw new CodeException({
         status: HttpStatus.NOT_FOUND,
-        code: ModuleValidatorErrorCode.ATTEST_DOES_NOT_EXIST,
-        errorCodes: ModuleValidatorErrorCode,
+        code: AuthorizationErrorCode.ATTEST_DOES_NOT_EXIST,
+        errorCodes: AuthorizationErrorCode,
       });
     }
 
@@ -143,8 +139,8 @@ export class AttestationService {
     if (!attestation.exists()) {
       throw new CodeException({
         status: HttpStatus.NOT_FOUND,
-        code: ModuleValidatorErrorCode.ATTEST_DOES_NOT_EXIST,
-        errorCodes: ModuleValidatorErrorCode,
+        code: AuthorizationErrorCode.ATTEST_DOES_NOT_EXIST,
+        errorCodes: AuthorizationErrorCode,
       });
     }
 
@@ -152,126 +148,55 @@ export class AttestationService {
   }
 
   async generateIdentity(context: AuthorizationApiContext, body: any) {
-    // Input parametersa
-    const did_create_op = body.did_create_op;
-    const claimerEmail = body.email;
-    const claimerDidUri = body.didUri;
+    // Worker input parameters
+    const parameters = {
+      ...body,
+    };
 
-    // Init Kilt essentials
-    await connect(env.KILT_NETWORK);
-    const api = ConfigService.get('api');
+    if (
+      env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+      env.APP_ENV == AppEnvironment.TEST
+    ) {
+      console.log('Starting DEV authrization worker ...');
 
-    // Generate (retrieve) attester did data
-    const attesterKeyPairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
-    const attesterAccount = (await generateAccount(
-      env.KILT_ATTESTER_MNEMONIC,
-    )) as KiltKeyringPair;
-    // DID
-    const attesterDidDoc = await getFullDidDocument(attesterKeyPairs);
-    const attesterDidUri = attesterDidDoc.uri;
-
-    console.log(
-      'ATTESTER PUB KEY ',
-      u8aToHex(attesterKeyPairs.encryption.publicKey),
-    );
-
-    // Decrypt incoming payload -> DID creation TX generated on FE
-    const decrypted = Utils.Crypto.decryptAsymmetricAsStr(
-      {
-        box: hexToU8a(did_create_op.payload.message),
-        nonce: hexToU8a(did_create_op.payload.nonce),
-      },
-      did_create_op.senderPubKey,
-      u8aToHex(attesterKeyPairs.encryption.secretKey),
-    );
-
-    let success = false;
-    if (decrypted !== false) {
-      const payload = JSON.parse(decrypted);
-      const data = hexToU8a(payload.data);
-      const signature = hexToU8a(payload.signature);
-
-      // Create DID create type and submit tx to Kilt BC
-      try {
-        const fullDidCreationTx = api.tx.did.create(data, {
-          sr25519: signature,
-        });
-        console.log('Submitting did creation TX to BC...');
-        await Blockchain.signAndSubmitTx(fullDidCreationTx, attesterAccount);
-      } catch (error) {
-        console.log('Error occured - ', error);
-      }
-    }
-
-    // Prepare attestation object with claimer data
-    const { attestObject, credential } = prepareAttestation(
-      claimerEmail,
-      attesterDidUri,
-      claimerDidUri,
-    );
-
-    const emailClaim = api.tx.attestation.add(
-      attestObject.claimHash,
-      attestObject.cTypeHash,
-      null,
-    );
-
-    // TODO: This does not work at the moment...
-    const nextNonceBN = new BN(await getNextNonce(attesterDidUri));
-    // Prepare claim tx
-    const emailClaimTx = await Did.authorizeTx(
-      attesterDidUri,
-      emailClaim,
-      async ({ data }) => ({
-        signature: attesterKeyPairs.assertion.sign(data),
-        keyType: attesterKeyPairs.assertion.type,
-      }),
-      attesterAccount.address,
-      { txCounter: nextNonceBN },
-    );
-
-    try {
-      console.log('Submitting attestation TX to BC...');
-      await Blockchain.signAndSubmitTx(emailClaimTx, attesterAccount);
-      const emailAttested = Boolean(
-        await api.query.attestation.attestations(credential.rootHash),
-      );
-
-      writeLog(
-        LogType.MSG,
-        `ATTESTATION ${claimerEmail} attested => ${emailAttested}`,
-        'attestation.service.ts',
-        'createAttestation',
-      );
-
-      return {
-        success: true,
-        attested: emailAttested,
-        credential: JSON.stringify({
-          ...credential,
-          claimerSignature: {
-            keyType: 'sr25519',
-            keyUri: body.didUri,
-          },
-        }),
+      // Directly calls Kilt worker -> USED ONLY FOR DEVELOPMENT!!
+      const serviceDef: ServiceDefinition = {
+        type: ServiceDefinitionType.SQS,
+        config: { region: 'test' },
+        params: { FunctionName: 'test' },
       };
-    } catch (error) {
-      console.error(error);
-      writeLog(
-        LogType.MSG,
-        `ATTESTATION ${claimerEmail} attested => FAILED`,
-        'attestation.service.ts',
-        'createAttestation',
+
+      const wd = new WorkerDefinition(
+        serviceDef,
+        WorkerName.AUTHORIZATION_WORKER,
+        {
+          parameters,
+        },
+      );
+
+      const worker = new AuthorizationWorker(
+        wd,
+        context,
+        QueueWorkerType.EXECUTOR,
+      );
+      await worker.runExecutor(parameters);
+    } else {
+      //send message to SQS
+      await sendToWorkerQueue(
+        env.AUTHORIZATION_AWS_WORKER_SQS_URL,
+        WorkerName.AUTHORIZATION_WORKER,
+        [...parameters],
+        null,
+        null,
       );
     }
 
-    return { success: success };
+    return { success: true };
   }
 
   async generateDIDDocumentDEV(context: AuthorizationApiContext, body: any) {
     if (
       env.APP_ENV != AppEnvironment.TEST &&
-      env.APP_ENV != AppEnvironment.DEV &&
       env.APP_ENV != AppEnvironment.LOCAL_DEV
     ) {
       throw 'Invalid request!';
