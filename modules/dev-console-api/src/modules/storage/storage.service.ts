@@ -44,4 +44,8 @@ export class StorageService {
     );
     return (await new StorageMicroservice(context).getFileDetails(filter)).data;
   }
+
+  async deleteFile(context: DevConsoleApiContext, id: string) {
+    return (await new StorageMicroservice(context).deleteFile({ id })).data;
+  }
 }

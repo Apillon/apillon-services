@@ -138,6 +138,14 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async deleteFile(params: { id: string }) {
+    const data = {
+      eventName: StorageEventType.FILE_DELETE,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
   //#endregion
 
   //#region bucket webhook

@@ -280,16 +280,19 @@ export class StorageService {
   }
 
   static async deleteFile(
-    event: { id: number },
+    event: { id: string },
     context: ServiceContext,
   ): Promise<any> {
-    const f: File = await new File({}, context).populateById(event.id);
+    let f: File = await new File({}, context).populateById(event.id);
 
     if (!f.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.DIRECTORY_NOT_FOUND,
-        status: 404,
-      });
+      f = await new File({}, context).populateByCIDorUUID(event.id);
+      if (!f.exists()) {
+        throw new StorageCodeException({
+          code: StorageErrorCode.FILE_NOT_FOUND,
+          status: 404,
+        });
+      }
     }
     f.canModify(context);
 

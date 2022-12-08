@@ -273,6 +273,7 @@ export class Directory extends AdvancedSQLModel {
         WHERE b.bucket_uuid = @bucket_uuid
         AND (IFNULL(@directory_id, -1) = IFNULL(d.parentDirectory_id, -1))
         AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))
+        AND d.status <> ${SqlModelStatus.DELETED}
       `,
       },
       {
@@ -285,6 +286,7 @@ export class Directory extends AdvancedSQLModel {
         WHERE b.bucket_uuid = @bucket_uuid
         AND (IFNULL(@directory_id, -1) = IFNULL(d.directory_id, -1))
         AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))
+        AND d.status <> ${SqlModelStatus.DELETED}
       `,
       },
     ];

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Param,
@@ -90,5 +91,18 @@ export class StorageController {
       bucket_uuid,
       cidOrUUID,
     );
+  }
+
+  @Delete(':bucket_uuid/file/:id')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async deleteFile(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id') id: string,
+  ) {
+    return await this.storageService.deleteFile(context, id);
   }
 }
