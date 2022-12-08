@@ -20,6 +20,6 @@ export async function downgrade(
 ): Promise<void> {
   await queryFn(`
     DELETE FROM quota
-    WHERE id IN (1,2);
+    WHERE id <= 7;
   `);
 }

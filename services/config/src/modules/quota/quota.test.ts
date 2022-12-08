@@ -11,6 +11,16 @@ describe('Quota unit test', () => {
 
   let defaultQuotas;
 
+  /**
+   * TODO: Write tests
+   * - default quotas
+   * - custom override per project
+   * - custom override per object
+   * - subscription override
+   * - expired subscription
+   * - different types of value (1-max, 2-min, 3-boolean)
+   **/
+
   beforeAll(async () => {
     stage = await setupTest();
 
@@ -25,13 +35,35 @@ describe('Quota unit test', () => {
       (2, 5, 'Basic', 'Basic subscription package', 0),
       (3, 5, 'Extra', 'Super subscription package', 0)
     `);
+
+    // setup overrides
+    await stage.db.paramExecute(`
+    INSERT INTO override (status, quota_id, project_uuid, value)
+    VALUES 
+      (
+        5,
+        1,
+        ${project2_uuid},
+        ${defaultQuotas.find((x) => x.id == 1).value + 10}
+      )
+    `);
   });
 
   afterAll(async () => {
     await releaseStage(stage);
   });
 
-  test('Should get default quotas project', async () => {
+  /**
+   * TODO: Write tests
+   * - default quotas
+   * - custom override per project
+   * - custom override per object
+   * - subscription override
+   * - expired subscription
+   * - different types of value (1-max, 2-min, 3-boolean)
+   **/
+
+  test('Should get default quota for project', async () => {
     const input = new GetQuotaDto({
       quota_id: 1,
       project_uuid: project1_uuid,
@@ -40,7 +72,20 @@ describe('Quota unit test', () => {
     const quota = await QuotaService.getQuota(input, stage.context);
 
     expect(quota.value).toBe(
-      defaultQuotas.find((x) => x.id === input.quota_id).value,
+      defaultQuotas.find((x) => x.id == input.quota_id).value,
+    );
+  });
+
+  test('Should get override quota for specific project', async () => {
+    const input = new GetQuotaDto({
+      quota_id: 1,
+      project_uuid: project2_uuid,
+    });
+
+    const quota = await QuotaService.getQuota(input, stage.context);
+
+    expect(quota.value).toBe(
+      defaultQuotas.find((x) => x.id == input.quota_id).value + 10,
     );
   });
 });

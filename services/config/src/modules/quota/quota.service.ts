@@ -8,16 +8,6 @@ export class QuotaService {
   static async getQuota(data: GetQuotaDto, context: ServiceContext) {
     console.log(data, context);
 
-    /**
-     * TODO: Write tests
-     * - default quotas
-     * - custom override per project
-     * - custom override per object
-     * - subscription override
-     * - expired subscription
-     * - different types of value (1-max, 2-min, 3-boolean)
-     **/
-
     const res = await context.mysql.paramExecute(
       `
       SELECT q.id,

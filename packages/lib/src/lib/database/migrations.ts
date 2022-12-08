@@ -83,11 +83,13 @@ export async function dropDatabase(
   user: string,
   password: string,
 ): Promise<void> {
-  if (!dbMigration) {
+  if (!dbMigration || !seedMigration) {
     await initMigrations(database, host, port, user, password);
   }
+  await seedMigration.down(-1);
   await dbMigration.down(-1);
   await dbMigration.destroy();
+  // await seedMigration.destroy();
 }
 //# endregion
 

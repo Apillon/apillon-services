@@ -5,6 +5,7 @@ import {
   MySql,
   rebuildDatabase,
   seedDatabase,
+  unseedDatabase,
 } from '@apillon/lib';
 import { ServiceContext } from '../src/context';
 
@@ -73,6 +74,7 @@ export const releaseStage = async (stage: Stage): Promise<void> => {
   if (!stage) {
     throw new Error('Error - stage does not exist');
   }
+
   await dropDatabase(
     env.CONFIG_MYSQL_DATABASE_TEST,
     env.CONFIG_MYSQL_HOST_TEST,
