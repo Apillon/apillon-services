@@ -11,7 +11,7 @@ import { AppEnvironment, MySql } from '@apillon/lib';
 
 import { Context, env } from '@apillon/lib';
 import { TestWorker } from './test-worker';
-import { AuthroizationWorker } from './authorization.worker';
+import { AuthorizationWorker } from './authorization.worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -26,7 +26,7 @@ aws.config.update({
 export enum WorkerName {
   TEST_WORKER = 'TestWorker',
   SCHEDULER = 'scheduler',
-  AUTHORIZATION_WORKER = 'AuthroizationWorker',
+  AUTHORIZATION_WORKER = 'AuthorizationWorker',
 }
 
 export async function handler(event: any) {
@@ -157,7 +157,7 @@ export async function handleSqsMessages(
     // eslint-disable-next-line sonarjs/no-small-switch
     switch (message?.messageAttributes?.workerName?.stringValue) {
       case WorkerName.AUTHORIZATION_WORKER: {
-        await new AuthroizationWorker(
+        await new AuthorizationWorker(
           workerDefinition,
           context,
           QueueWorkerType.EXECUTOR,

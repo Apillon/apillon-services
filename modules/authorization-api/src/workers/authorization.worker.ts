@@ -23,7 +23,7 @@ import {
 import { u8aToHex, hexToU8a } from '@polkadot/util';
 import { BN } from '@polkadot/util/bn/bn';
 
-export class AuthroizationWorker extends BaseQueueWorker {
+export class AuthorizationWorker extends BaseQueueWorker {
   // TODO: Handle errors and edge cases properly
   public constructor(
     workerDefinition: WorkerDefinition,
@@ -43,7 +43,7 @@ export class AuthroizationWorker extends BaseQueueWorker {
   }
 
   public async runExecutor(data: any): Promise<any> {
-    // Input parametersa
+    // Input parameters
     const did_create_op = data.did_create_op;
     const claimerEmail = data.email;
     const claimerDidUri = data.didUri;

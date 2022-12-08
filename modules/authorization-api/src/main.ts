@@ -21,8 +21,8 @@ bootstrap().catch((err) => console.error(err.message));
 // Worker event processor
 export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
-    [IdentityEventType.CREATE_DECENTRALIZED_IDENTITY]:
-      AttestationService.generateIdentity,
+    [IdentityEventType.CREATE_DECENTRALIZED_IDENTITY]: new AttestationService()
+      .generateIdentity,
   };
 
   return await processors[event.eventName](event, context);

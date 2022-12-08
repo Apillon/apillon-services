@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/no-useless-catch */
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ModuleValidatorErrorCode } from '../config/types';
+import { AuthorizationErrorCode } from '../config/types';
 import { ValidationException } from '@apillon/lib';
 
 import { IRequest } from '../middlewares/context.middleware';
@@ -37,7 +37,7 @@ export class ValidationGuard implements CanActivate {
       }
 
       if (!dto.isValid()) {
-        throw new ValidationException(dto, ModuleValidatorErrorCode);
+        throw new ValidationException(dto, AuthorizationErrorCode);
       }
 
       request[options.validateFor] = dto;

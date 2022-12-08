@@ -7,7 +7,7 @@ import {
   SerializeFor,
 } from '@apillon/lib';
 import { stringParser } from '@rawmodel/parsers';
-import { ModuleValidatorErrorCode, DbTables } from '../../../config/types';
+import { AuthorizationErrorCode, DbTables } from '../../../config/types';
 import { AuthorizationApiContext } from '../../../context';
 
 export class Attestation extends AdvancedSQLModel {
@@ -32,7 +32,7 @@ export class Attestation extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ModuleValidatorErrorCode.ATTEST_EMAIL_NOT_PRESENT,
+        code: AuthorizationErrorCode.ATTEST_EMAIL_NOT_PRESENT,
       },
     ],
   })
@@ -54,7 +54,7 @@ export class Attestation extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ModuleValidatorErrorCode.ATTEST_STATE_NOT_PRESENT,
+        code: AuthorizationErrorCode.ATTEST_STATE_NOT_PRESENT,
       },
     ],
   })

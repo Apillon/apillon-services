@@ -30,7 +30,7 @@ import {
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { WorkerName } from '../../workers/worker-executor';
-import { AuthroizationWorker } from '../../workers/authorization.worker';
+import { AuthorizationWorker } from '../../workers/authorization.worker';
 
 @Injectable()
 export class AttestationService {
@@ -147,7 +147,7 @@ export class AttestationService {
     return { state: attestation.state };
   }
 
-  static async generateIdentity(context: AuthorizationApiContext, body: any) {
+  async generateIdentity(context: AuthorizationApiContext, body: any) {
     // Worker input parameters
     const parameters = {
       ...body,
@@ -174,7 +174,7 @@ export class AttestationService {
         },
       );
 
-      const worker = new AuthroizationWorker(
+      const worker = new AuthorizationWorker(
         wd,
         context,
         QueueWorkerType.EXECUTOR,
