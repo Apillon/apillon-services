@@ -5,13 +5,19 @@ import {
   BucketQueryFilter,
   CodeException,
   CreateBucketWebhookDto,
+  AttachedServiceType,
 } from '@apillon/lib';
 import { ResourceNotFoundErrorCode } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
 import { Project } from '../project/models/project.model';
+import { Service } from '../services/models/service.model';
+import { ServiceQueryFilter } from '../services/dtos/services-query-filter.dto';
+import { ServicesService } from '../services/services.service';
 
 @Injectable()
 export class BucketService {
+  constructor(private readonly serviceService: ServicesService) {}
+
   async getBucketList(context: DevConsoleApiContext, query: BucketQueryFilter) {
     return (await new StorageMicroservice(context).listBuckets(query)).data;
   }
@@ -29,6 +35,26 @@ export class BucketService {
     }
 
     project.canModify(context);
+
+    //Check if storage service for this project already exists
+    const query: ServiceQueryFilter = new ServiceQueryFilter(
+      {},
+      context,
+    ).populate({
+      project_id: project.id,
+      serviceType_id: AttachedServiceType.STORAGE,
+    });
+    const storageServices = await new Service({}).getServices(context, query);
+    if (storageServices.total == 0) {
+      //Create storage service - "Attach"
+      const storageService: Service = new Service({}, context).populate({
+        project_id: project.id,
+        name: 'Storage service',
+        serviceType_id: AttachedServiceType.STORAGE,
+      });
+
+      await this.serviceService.createService(context, storageService);
+    }
 
     //Call Storage microservice, to create bucket
     return (await new StorageMicroservice(context).createBucket(body)).data;

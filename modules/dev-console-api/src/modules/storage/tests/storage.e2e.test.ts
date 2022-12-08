@@ -198,8 +198,6 @@ describe('Storage tests', () => {
         expect(response.body.data.file.s3FileKey).toBeTruthy();
         expect(response.body.data.file.name).toBe(testFile.name);
         expect(response.body.data.file.size).toBeGreaterThan(0);
-
-        expect(response.body.data.crustStatus).toBeTruthy();
       });
 
       test('User should be able to get file details by CID', async () => {
@@ -214,8 +212,6 @@ describe('Storage tests', () => {
         expect(response.body.data.file.s3FileKey).toBeTruthy();
         expect(response.body.data.file.name).toBe(testFile.name);
         expect(response.body.data.file.size).toBeGreaterThan(0);
-
-        expect(response.body.data.crustStatus).toBeTruthy();
       });
 
       test('User should NOT be able to get ANOTHER USER file details', async () => {
