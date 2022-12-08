@@ -1,17 +1,22 @@
 import { ModelBase, PopulateFrom, presenceValidator } from '@apillon/lib';
 import { prop } from '@rawmodel/core';
+import { emailValidator } from '@rawmodel/validators';
 import { ModuleValidatorErrorCode } from '../../../config/types';
 import {
-  didCreatePayloadValidator,
-  didCreateSenderKeyValidator,
+  didCreateCreateOpValidator,
+  didUriValidator,
 } from '../validators/did-create.validator';
 
 // const body = {
-//   payload: {
+//   did_create_op: {
+//    payload: {
 //     message: u8aToHex(encryptedData.box),
 //     nonce: u8aToHex(encryptedData.nonce),
+//    },
+//    senderPubKey: u8aToHex(keypair.publicKey),
 //   },
-//   senderPubKey: u8aToHex(keypair.publicKey),
+//   claimerEmail: string,
+//   didUri: string,
 // };
 export class DidCreateDto extends ModelBase {
   @prop({
@@ -19,28 +24,43 @@ export class DidCreateDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ModuleValidatorErrorCode.DID_CREATE_PAYLOAD_NOT_PRESENT,
+        code: ModuleValidatorErrorCode.IDENTITY_CREATE_DID_CREATE_OP_NOT_PRESENT,
       },
       {
-        resolver: didCreatePayloadValidator(),
-        code: ModuleValidatorErrorCode.DID_CREATE_INVALID_REQUEST,
+        resolver: didCreateCreateOpValidator(),
+        code: ModuleValidatorErrorCode.IDENTITY_CREATE_INVALID_REQUEST,
       },
     ],
   })
-  public payload: object;
+  public did_create_op: object;
 
   @prop({
     populatable: [PopulateFrom.PROFILE],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ModuleValidatorErrorCode.DID_CREATE_SENDER_KEY_NOT_PRESENT,
+        code: ModuleValidatorErrorCode.USER_EMAIL_NOT_PRESENT,
       },
       {
-        resolver: didCreateSenderKeyValidator(),
-        code: ModuleValidatorErrorCode.DID_CREATE_INVALID_REQUEST,
+        resolver: emailValidator(),
+        code: ModuleValidatorErrorCode.USER_EMAIL_NOT_VALID,
       },
     ],
   })
-  public senderPubKey: string;
+  public email: string;
+
+  @prop({
+    populatable: [PopulateFrom.PROFILE],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ModuleValidatorErrorCode.DID_URI_NOT_PRESENT,
+      },
+      {
+        resolver: didUriValidator(),
+        code: ModuleValidatorErrorCode.DID_URI_INVALID,
+      },
+    ],
+  })
+  public didUri: string;
 }

@@ -4,23 +4,27 @@ import { ModelBase } from '@apillon/lib';
  * Validate did create payload
  * @returns boolean
  */
-export function didCreatePayloadValidator() {
-  return async function (this: ModelBase, payload: any): Promise<boolean> {
+export function didCreateCreateOpValidator() {
+  return async function (
+    this: ModelBase,
+    did_create_op: any,
+  ): Promise<boolean> {
     // Linter is complaining here, but .. I like this
-    if (payload.message === undefined) return false;
-    if (payload.nonce === undefined) return false;
+    if (did_create_op.payload.message === undefined) return false;
+    if (did_create_op.payload.nonce === undefined) return false;
+    if (did_create_op.ssenderPubKey === undefined) return false;
     return true;
   };
 }
 
 /**
- * Validate did create sender key
+ * Validate did uri -> did:kilt:uri
  * @returns boolean
  */
-export function didCreateSenderKeyValidator() {
-  return async function (this: ModelBase, senderKey: string): Promise<boolean> {
-    // This is better, no?
-    if (typeof senderKey != 'string') return false;
+export function didUriValidator() {
+  return async function (this: ModelBase, didUri: any): Promise<boolean> {
+    // Linter is complaining here, but .. I like this
+    if (!didUri.includes('did:kilt:')) return false;
     return true;
   };
 }

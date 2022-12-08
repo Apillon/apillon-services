@@ -276,7 +276,7 @@ export class AttestationService {
       env.APP_ENV != AppEnvironment.DEV &&
       env.APP_ENV != AppEnvironment.LOCAL_DEV
     ) {
-      throw 'Invalid environment!';
+      throw 'Invalid request!';
     }
 
     await connect(env.KILT_NETWORK);
@@ -290,6 +290,7 @@ export class AttestationService {
     )) as KiltKeyringPair;
 
     if (didDoc && didDoc.document) {
+      console.log('DID already on chain. Nothing to do ...');
       return didDoc.document;
     }
 
