@@ -157,7 +157,7 @@ export class AttestationService {
       env.APP_ENV == AppEnvironment.LOCAL_DEV ||
       env.APP_ENV == AppEnvironment.TEST ||
     ) {
-      console.log('Starting DEV kilt worker ...');
+      console.log('Starting DEV authrization worker ...');
 
       // Directly calls Kilt worker -> USED ONLY FOR DEVELOPMENT!!
       const serviceDef: ServiceDefinition = {
@@ -175,8 +175,8 @@ export class AttestationService {
     } else {
       //send message to SQS
       await sendToWorkerQueue(
-        env.KILT_AWS_WORKER_SQS_URL,
-        WorkerName.KILT_WORKER,
+        env.AUTHORIZATION_AWS_WORKER_SQS_URL,
+        WorkerName.AUTHORIZATION_WORKER,
         [...parameters],
         null,
         null,

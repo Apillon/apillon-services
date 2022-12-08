@@ -23,14 +23,19 @@ import {
 import { u8aToHex, hexToU8a } from '@polkadot/util';
 import { BN } from '@polkadot/util/bn/bn';
 
-export class KiltWorker extends BaseQueueWorker {
+export class AuthroizationWorker extends BaseQueueWorker {
   // TODO: Handle errors and edge cases properly
   public constructor(
     workerDefinition: WorkerDefinition,
     context: Context,
     type: QueueWorkerType,
   ) {
-    super(workerDefinition, context, type, env.KILT_AWS_WORKER_SQS_URL);
+    super(
+      workerDefinition,
+      context,
+      type,
+      env.AUTHORIZATION_AWS_WORKER_SQS_URL,
+    );
   }
 
   public async runPlanner(): Promise<any[]> {
