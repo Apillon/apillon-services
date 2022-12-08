@@ -14,7 +14,7 @@ import { ValidationGuard } from '../../guards/validation.guard';
 import { AttestationService } from './attestation.service';
 import { AttestationEmailDto } from './dtos/attestation-email.dto';
 import { AttestationTokenDto } from './dtos/attestation-token.dto';
-import { DidCreateDto } from './dtos/attestation-did-create.dto';
+import { IdentityCreateDto } from './dtos/identity-create.dto';
 
 @Controller('attestation')
 export class AttestationController {
@@ -37,7 +37,7 @@ export class AttestationController {
   }
 
   @Post('identity')
-  @Validation({ dto: DidCreateDto })
+  @Validation({ dto: IdentityCreateDto })
   @UseGuards(ValidationGuard)
   async attestationGenerateDid(
     @Ctx() context: AuthorizationApiContext,

@@ -18,7 +18,7 @@ import {
 //   claimerEmail: string,
 //   didUri: string,
 // };
-export class DidCreateDto extends ModelBase {
+export class IdentityCreateDto extends ModelBase {
   @prop({
     populatable: [PopulateFrom.PROFILE],
     validators: [

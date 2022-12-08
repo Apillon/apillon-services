@@ -33,10 +33,8 @@ import {
   Did,
   Utils,
 } from '@kiltprotocol/sdk-js';
-import { AttestationCreateDto } from './dtos/attestation-create.dto';
 import { u8aToHex, hexToU8a } from '@polkadot/util';
 import { BN } from '@polkadot/util/bn/bn';
-import { appendFile } from 'fs';
 
 @Injectable()
 export class AttestationService {
