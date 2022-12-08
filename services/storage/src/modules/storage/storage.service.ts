@@ -213,14 +213,10 @@ export class StorageService {
     return true;
   }
 
-  static async getFileDetails(
-    event: { CIDOrUUID: string },
-    context: ServiceContext,
-  ) {
+  static async getFileDetails(event: { id: string }, context: ServiceContext) {
     let file: File = undefined;
     let fileStatus: FileStatus = undefined;
-    if (event.CIDOrUUID)
-      file = await new File({}, context).populateByCIDorUUID(event.CIDOrUUID);
+    if (event.id) file = await new File({}, context).populateById(event.id);
     else {
       throw new StorageCodeException({
         code: StorageErrorCode.DEFAULT_RESOURCE_NOT_FOUND_ERROR,
@@ -233,7 +229,7 @@ export class StorageService {
       const fur: FileUploadRequest = await new FileUploadRequest(
         {},
         context,
-      ).populateByUUID(event.CIDOrUUID);
+      ).populateByUUID(event.id);
 
       if (fur.exists()) {
         //check if file uploaded to S3
@@ -283,16 +279,13 @@ export class StorageService {
     event: { id: string },
     context: ServiceContext,
   ): Promise<any> {
-    let f: File = await new File({}, context).populateById(event.id);
+    const f: File = await new File({}, context).populateById(event.id);
 
     if (!f.exists()) {
-      f = await new File({}, context).populateByCIDorUUID(event.id);
-      if (!f.exists()) {
-        throw new StorageCodeException({
-          code: StorageErrorCode.FILE_NOT_FOUND,
-          status: 404,
-        });
-      }
+      throw new StorageCodeException({
+        code: StorageErrorCode.FILE_NOT_FOUND,
+        status: 404,
+      });
     }
     f.canModify(context);
 

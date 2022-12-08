@@ -27,5 +27,5 @@ export class FileDetailsQueryFilter extends ModelBase {
       },
     ],
   })
-  public CIDOrUUID: string;
+  public id: string;
 }

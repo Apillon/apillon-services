@@ -3,7 +3,6 @@ import {
   AttachedServiceType,
   CreateS3SignedUrlForUploadDto,
   DefaultApiKeyRole,
-  DirectoryContentQueryFilter,
   EndFileUploadSessionDto,
   ValidateFor,
 } from '@apillon/lib';
@@ -73,7 +72,7 @@ export class StorageController {
     );
   }
 
-  @Get(':bucket_uuid/file/:cidOrUUID/detail')
+  @Get(':bucket_uuid/file/:id/detail')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_READ,
     serviceType: AttachedServiceType.STORAGE,
@@ -82,13 +81,9 @@ export class StorageController {
   async getFileDetailsByCID(
     @Ctx() context: ApillonApiContext,
     @Param('bucket_uuid') bucket_uuid: string,
-    @Param('cidOrUUID') cidOrUUID: string,
+    @Param('id') id: string,
   ) {
-    return await this.storageService.getFileDetails(
-      context,
-      bucket_uuid,
-      cidOrUUID,
-    );
+    return await this.storageService.getFileDetails(context, bucket_uuid, id);
   }
 
   @Get(':bucket_uuid/content')

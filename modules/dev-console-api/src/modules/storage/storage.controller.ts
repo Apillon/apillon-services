@@ -1,4 +1,10 @@
 import {
+  CreateS3SignedUrlForUploadDto,
+  DefaultUserRole,
+  EndFileUploadSessionDto,
+} from '@apillon/lib';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
+import {
   Body,
   Controller,
   Delete,
@@ -6,21 +12,12 @@ import {
   HttpCode,
   Param,
   Post,
-  Query,
   UseGuards,
 } from '@nestjs/common';
-import {
-  CreateS3SignedUrlForUploadDto,
-  DefaultUserRole,
-  EndFileUploadSessionDto,
-  FileDetailsQueryFilter,
-  ValidateFor,
-} from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
-import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
+import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { StorageService } from './storage.service';
-import { AuthGuard } from '../../guards/auth.guard';
 
 @Controller('storage')
 export class StorageController {
@@ -74,7 +71,7 @@ export class StorageController {
     );
   }
 
-  @Get(':bucket_uuid/file/:cidOrUUID/detail')
+  @Get(':bucket_uuid/file/:id/detail')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -84,13 +81,9 @@ export class StorageController {
   async getFileDetailsByCID(
     @Ctx() context: DevConsoleApiContext,
     @Param('bucket_uuid') bucket_uuid: string,
-    @Param('cidOrUUID') cidOrUUID: string,
+    @Param('id') id: string,
   ) {
-    return await this.storageService.getFileDetails(
-      context,
-      bucket_uuid,
-      cidOrUUID,
-    );
+    return await this.storageService.getFileDetails(context, bucket_uuid, id);
   }
 
   @Delete(':bucket_uuid/file/:id')

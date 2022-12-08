@@ -297,19 +297,19 @@ export class File extends AdvancedSQLModel {
     }
   }
 
-  public async populateByCIDorUUID(search: string): Promise<this> {
-    if (!search) {
-      throw new Error('cid should not be null');
+  public async populateById(id: string): Promise<this> {
+    if (!id) {
+      throw new Error('id should not be null');
     }
 
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT * 
       FROM \`${this.tableName}\`
-      WHERE (cid = @search OR file_uuid = @search)
+      WHERE (id = @id OR cid = @id OR file_uuid = @id)
       AND status <> ${SqlModelStatus.DELETED};
       `,
-      { search },
+      { id },
     );
 
     if (data && data.length) {

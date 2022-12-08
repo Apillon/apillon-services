@@ -42,10 +42,10 @@ export class StorageService {
   async getFileDetails(
     context: ApillonApiContext,
     bucket_uuid: string,
-    cidOrUUID: string,
+    id: string,
   ) {
     const filter: FileDetailsQueryFilter = new FileDetailsQueryFilter(
-      { bucket_uuid: bucket_uuid, CIDOrUUID: cidOrUUID },
+      { bucket_uuid: bucket_uuid, id: id },
       context,
     );
     return (await new StorageMicroservice(context).getFileDetails(filter)).data;
