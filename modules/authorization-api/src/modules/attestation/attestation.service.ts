@@ -156,7 +156,6 @@ export class AttestationService {
     if (
       env.APP_ENV == AppEnvironment.LOCAL_DEV ||
       env.APP_ENV == AppEnvironment.TEST ||
-      env.APP_ENV == AppEnvironment.DEV
     ) {
       console.log('Starting DEV kilt worker ...');
 
