@@ -2,7 +2,6 @@ import { GetQuotaDto, SqlModelStatus } from '@apillon/lib';
 import { ConfigErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
 import { ScsCodeException } from '../../lib/exceptions';
-import { Quota } from './models/quota.model';
 
 export class QuotaService {
   static async getQuota(data: GetQuotaDto, context: ServiceContext) {
@@ -43,7 +42,11 @@ export class QuotaService {
       GROUP BY q.id
       
     `,
-      { quota_id: data.quota_id },
+      {
+        quota_id: data.quota_id,
+        project_uuid: data.project_uuid || null,
+        object_uuid: data.object_uuid || null,
+      },
     );
 
     if (!res.length) {

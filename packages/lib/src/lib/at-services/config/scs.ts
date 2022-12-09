@@ -2,6 +2,7 @@ import { env } from '../../../config/env';
 import { AppEnvironment, ScsEventType } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
+import { QuotaDto } from './dtos/quota.dto';
 
 /**
  * System config Service client
@@ -26,7 +27,7 @@ export class Scs extends BaseService {
     quota_id: number;
     project_uuid?: string;
     object_uuid?: string;
-  }) {
+  }): Promise<QuotaDto> {
     const data = {
       eventName: ScsEventType.GET_QUOTA,
       ...params,
@@ -34,8 +35,8 @@ export class Scs extends BaseService {
 
     const scsResponse = await this.callService(data);
 
-    return {
+    return new QuotaDto().populate({
       ...scsResponse,
-    };
+    });
   }
 }
