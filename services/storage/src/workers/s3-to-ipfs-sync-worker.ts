@@ -1,4 +1,5 @@
 import {
+  AWS_S3,
   Context,
   env,
   Lmas,
@@ -42,35 +43,64 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
   }
   public async runExecutor(data: any): Promise<any> {
     const session_uuid = data?.session_uuid;
+    let files = [];
+    let bucket: Bucket = undefined;
+    let session: FileUploadSession = undefined;
 
-    //Get session
-    const session = await new FileUploadSession(
-      {},
-      this.context,
-    ).populateByUUID(session_uuid);
+    if (session_uuid) {
+      //Get session
+      session = await new FileUploadSession({}, this.context).populateByUUID(
+        session_uuid,
+      );
 
-    if (!session.exists()) {
+      if (!session.exists()) {
+        throw new StorageCodeException({
+          code: StorageErrorCode.FILE_UPLOAD_SESSION_NOT_FOUND,
+          status: 404,
+        });
+      }
+      //get bucket
+      bucket = await new Bucket({}, this.context).populateById(
+        session.bucket_id,
+      );
+
+      //Get files in session (fileStatus must be of status 1)
+      files = (
+        await new FileUploadRequest(
+          {},
+          this.context,
+        ).populateFileUploadRequestsInSession(session.id, this.context)
+      ).filter(
+        (x) => x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED,
+      );
+    }
+    //Check if message from s3
+    else if (data.Records && data.Records.length > 0) {
+      for (const record of data.Records) {
+        const tmpFur = await new FileUploadRequest(
+          {},
+          this.context,
+        ).populateByS3FileKey(record.s3.object.key);
+
+        if (tmpFur.exists()) {
+          if (bucket == undefined) {
+            //get bucket
+            bucket = await new Bucket({}, this.context).populateById(
+              tmpFur.bucket_id,
+            );
+          }
+          files.push(tmpFur);
+        }
+      }
+      //Get bucket
+    } else {
       throw new StorageCodeException({
-        code: StorageErrorCode.FILE_UPLOAD_SESSION_NOT_FOUND,
-        status: 404,
+        code: StorageErrorCode.INVALID_BODY_FOR_WORKER,
+        status: 500,
       });
     }
 
-    //get bucket
-    const bucket = await new Bucket({}, this.context).populateById(
-      session.bucket_id,
-    );
-
-    //Get files in session (fileStatus must be of status 1)
-    const files = (
-      await new FileUploadRequest(
-        {},
-        this.context,
-      ).populateFileUploadRequestsInSession(session.id, this.context)
-    ).filter(
-      (x) =>
-        x.fileStatus != FileUploadRequestFileStatus.UPLOADED_TO_IPFS_AND_CRUST,
-    );
+    //get max bucket size quota and check if bucket is at max size
 
     if (files.length == 0) {
       throw new StorageCodeException({
@@ -97,7 +127,6 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
           location: `${this.constructor.name}/runExecutor`,
           service: ServiceName.STORAGE,
           data: {
-            session: session.serialize(),
             files: files.map((x) => x.serialize()),
           },
         });
@@ -169,8 +198,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
 
           //now the file has CID, exists in IPFS node and is pinned to CRUST
           //update file-upload-request status
-          file.fileStatus =
-            FileUploadRequestFileStatus.UPLOADED_TO_IPFS_AND_CRUST;
+          file.fileStatus = FileUploadRequestFileStatus.UPLOADED_TO_IPFS;
           await file.update(SerializeFor.UPDATE_DB, conn);
 
           transferedFiles.push(tmpF);
@@ -217,7 +245,9 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
       let tmpSize = 0;
 
       //loop through files to sync each one of it to IPFS
-      for (const file of files) {
+      for (const file of files.filter(
+        (x) => x.fileStatus != FileUploadRequestFileStatus.PINNED_TO_CRUST,
+      )) {
         let ipfsRes = undefined;
         try {
           ipfsRes = await IPFSService.uploadFileToIPFSFromS3(
@@ -234,6 +264,10 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
             await file.update();
             continue;
           } else {
+            file.fileStatus =
+              FileUploadRequestFileStatus.ERROR_UPLOADING_TO_IPFS;
+            await file.update();
+
             await new Lmas().writeLog({
               context: this.context,
               project_uuid: bucket.project_uuid,
@@ -242,15 +276,12 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
               location: `${this.constructor.name}/runExecutor`,
               service: ServiceName.STORAGE,
               data: {
-                session: session.serialize(),
                 file: file.serialize(),
               },
             });
             throw err;
           }
         }
-
-        tmpSize += ipfsRes.size;
 
         try {
           await CrustService.placeStorageOrderToCRUST({
@@ -265,7 +296,13 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
             location: `${this.constructor.name}/runExecutor`,
             service: ServiceName.STORAGE,
           });
+
+          file.fileStatus = FileUploadRequestFileStatus.PINNED_TO_CRUST;
+          await file.update();
         } catch (err) {
+          file.fileStatus = FileUploadRequestFileStatus.ERROR_PINING_TO_CRUST;
+          await file.update();
+
           await new Lmas().writeLog({
             context: this.context,
             project_uuid: bucket.project_uuid,
@@ -327,13 +364,22 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
 
         //now the file has CID, exists in IPFS node and is pinned to CRUST
         //update file-upload-request status
-        file.fileStatus =
-          FileUploadRequestFileStatus.UPLOADED_TO_IPFS_AND_CRUST;
+        file.fileStatus = FileUploadRequestFileStatus.UPLOAD_COMPLETED;
         await file.update();
+
+        tmpSize += ipfsRes.size;
+        bucket.size = bucket.size ? bucket.size + ipfsRes.size : ipfsRes.size;
+        //Check if bucket max size reached - if yes, break loop
+
+        //delete file from s3
+        const s3Client: AWS_S3 = new AWS_S3();
+        await s3Client.remove(
+          env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+          file.s3FileKey,
+        );
       }
 
       //update bucket size
-      bucket.size = bucket.size ? bucket.size + tmpSize : tmpSize;
       await bucket.update();
 
       await new Lmas().writeLog({
@@ -352,20 +398,21 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
     }
 
     //update session status
-    session.sessionStatus = 2;
-    await session.update();
+    if (session) {
+      session.sessionStatus = 2;
+      await session.update();
+    }
 
     //if webhook is set for this bucket, SEND POST request with transferred data
     await sendTransferredFilesToBucketWebhook(
       this.context,
       bucket,
-      session,
       transferedFiles,
     );
 
     await this.writeLogToDb(
       WorkerLogStatus.INFO,
-      `SyncToIPFS worker for session: ${session_uuid} has been completed!`,
+      `SyncToIPFS worker has been completed!`,
     );
 
     return true;

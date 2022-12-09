@@ -39,7 +39,7 @@ export abstract class BaseService {
     payload = {
       securityToken: this.securityToken,
       requestId: this.requestId,
-      user: this.user?.serialize(),
+      user: this.user,
       apiKey: this.apiKey,
       ...payload,
     };

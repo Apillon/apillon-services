@@ -65,15 +65,11 @@ export class IPFSService {
 
     console.info(`File added to IPFS...uploadFileToIPFSFromS3 success.`);
 
-    //const key = await client.key.gen('myTestPage');
-    //const ipnsRes = await client.name.publish(filesOnIPFS.cid);
-
     return {
       CID: filesOnIPFS.cid,
       cidV0: filesOnIPFS.cid.toV0().toString(),
       cidV1: filesOnIPFS.cid.toV1().toString(),
       size: filesOnIPFS.size,
-      //ipnsRes: ipnsRes,
     };
   }
 

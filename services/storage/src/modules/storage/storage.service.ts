@@ -6,6 +6,8 @@ import {
   env,
   Lmas,
   LogType,
+  QuotaCode,
+  Scs,
   SerializeFor,
   ServiceName,
 } from '@apillon/lib';
@@ -17,13 +19,12 @@ import {
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { v4 as uuidV4 } from 'uuid';
-import { FileStatus, StorageErrorCode } from '../../config/types';
+import { BucketType, FileStatus, StorageErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
 import { StorageCodeException } from '../../lib/exceptions';
 import { SyncToIPFSWorker } from '../../workers/s3-to-ipfs-sync-worker';
 import { WorkerName } from '../../workers/worker-executor';
 import { Bucket } from '../bucket/models/bucket.model';
-import { CrustService } from '../crust/crust.service';
 import { Directory } from '../directory/models/directory.model';
 import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
@@ -48,6 +49,22 @@ export class StorageService {
       });
     }
     bucket.canAccess(context);
+
+    //get max size quota for Bucket and compare it with current bucket size
+    const maxBucketSizeQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_BUCKET_SIZE,
+      object_uuid: bucket.bucket_uuid,
+    });
+    if (
+      maxBucketSizeQuota &&
+      maxBucketSizeQuota.value &&
+      bucket.size > maxBucketSizeQuota.value
+    ) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.MAX_BUCKET_SIZE_REACHED,
+        status: 400,
+      });
+    }
 
     //Get existing or create new fileUploadSession
     let session: FileUploadSession = undefined;
@@ -78,7 +95,7 @@ export class StorageService {
       });
     }
 
-    //check directory if directory_uuid is present in body
+    //check directory if directory_uuid is present in body and fill its full path property
     if (event.body.directory_uuid) {
       const dir: Directory = await new Directory({}, context).populateByUUID(
         event.body.directory_uuid,
@@ -89,14 +106,13 @@ export class StorageService {
           status: 404,
         });
       }
-
       await dir.populateFullPath();
       event.body.path = dir.fullPath;
     }
 
-    const s3FileKey = `${bucket.id}/${session.session_uuid}/${
-      (event.body.path ? event.body.path : '') + event.body.fileName
-    }`;
+    const s3FileKey = `${BucketType[bucket.bucketType]}/${bucket.id}/${
+      session.session_uuid
+    }/${(event.body.path ? event.body.path : '') + event.body.fileName}`;
 
     //check if fileUploadRequest with that key already exists
     let fur: FileUploadRequest = await new FileUploadRequest(
@@ -114,7 +130,7 @@ export class StorageService {
 
       await fur.insert();
     } else {
-      //Only update time & user is updated
+      //Update existing File upload request
       await fur.update();
     }
 

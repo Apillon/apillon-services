@@ -195,8 +195,11 @@ export class FileUploadRequest extends AdvancedSQLModel {
   public contentType: string;
 
   /**
-   * 1 = signed url for upload, generated
-   * 2 = transfered to IPFS
+   * 1 = signed url for upload generated
+   * 2 = uploaded to S3
+   * 3 = transfered to IPFS
+   * 4 = pinned to CRUST
+   * 5 = upload completed
    * 100 = error transfering to IPFS
    * 101 = file does not exists on S3
    * */
