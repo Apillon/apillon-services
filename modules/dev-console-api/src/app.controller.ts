@@ -1,4 +1,4 @@
-import { Lmas, Scs, ServiceName } from '@apillon/lib';
+import { Lmas, ServiceName } from '@apillon/lib';
 import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
 
@@ -8,8 +8,6 @@ export class AppController {
 
   @Get()
   async getHello() {
-    const q = await new Scs().getQuota({ quota_id: 1 });
-    console.log(q);
     return this.appService.getHello();
   }
 
