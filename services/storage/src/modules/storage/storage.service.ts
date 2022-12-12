@@ -67,32 +67,35 @@ export class StorageService {
     }
 
     //Get existing or create new fileUploadSession
-    let session: FileUploadSession = undefined;
-    session = await new FileUploadSession({}, context).populateByUUID(
-      event.body.session_uuid,
-    );
-
-    if (!session.exists()) {
-      //create new session
-      session = new FileUploadSession(
-        {
-          session_uuid: event.body.session_uuid,
-          bucket_id: bucket.id,
-          project_uuid: bucket.project_uuid,
-        },
-        context,
+    let session: FileUploadSession;
+    if (event.body.session_uuid) {
+      session = undefined;
+      session = await new FileUploadSession({}, context).populateByUUID(
+        event.body.session_uuid,
       );
-      await session.insert();
-    } else if (session.bucket_id != bucket.id) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.SESSION_UUID_BELONGS_TO_OTHER_BUCKET,
-        status: 404,
-      });
-    } else if (session.sessionStatus == 2) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.FILE_UPLOAD_SESSION_ALREADY_TRANSFERED,
-        status: 404,
-      });
+
+      if (!session.exists()) {
+        //create new session
+        session = new FileUploadSession(
+          {
+            session_uuid: event.body.session_uuid,
+            bucket_id: bucket.id,
+            project_uuid: bucket.project_uuid,
+          },
+          context,
+        );
+        await session.insert();
+      } else if (session.bucket_id != bucket.id) {
+        throw new StorageCodeException({
+          code: StorageErrorCode.SESSION_UUID_BELONGS_TO_OTHER_BUCKET,
+          status: 404,
+        });
+      } else if (session.sessionStatus == 2) {
+        throw new StorageCodeException({
+          code: StorageErrorCode.FILE_UPLOAD_SESSION_ALREADY_TRANSFERED,
+          status: 404,
+        });
+      }
     }
 
     //check directory if directory_uuid is present in body and fill its full path property
@@ -110,8 +113,9 @@ export class StorageService {
       event.body.path = dir.fullPath;
     }
 
-    const s3FileKey = `${BucketType[bucket.bucketType]}/${bucket.id}/${
-      session.session_uuid
+    //NOTE - session uuid is added to s3File key
+    const s3FileKey = `${BucketType[bucket.bucketType]}/${bucket.id}${
+      session?.session_uuid ? '/' + session.session_uuid : ''
     }/${(event.body.path ? event.body.path : '') + event.body.fileName}`;
 
     //check if fileUploadRequest with that key already exists
@@ -244,6 +248,96 @@ export class StorageService {
     }
 
     return true;
+  }
+
+  /**
+   * This function is used only for development & testing purposes. In othher envirinments, s3 sends this message to queuq automatically, when file is uploaded
+   * @param event
+   * @param context
+   * @returns
+   */
+  static async endFileUpload(
+    event: {
+      file_uuid: string;
+    },
+    context: ServiceContext,
+  ): Promise<any> {
+    //Get file upload request
+    const fur = await new FileUploadRequest({}, context).populateByUUID(
+      event.file_uuid,
+    );
+    if (!fur.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.FILE_UPLOAD_REQUEST_NOT_FOUND,
+        status: 404,
+      });
+    }
+
+    //get bucket
+    const bucket = await new Bucket({}, context).populateById(fur.bucket_id);
+    bucket.canAccess(context);
+
+    const msg = {
+      Records: [
+        {
+          eventVersion: '2.1',
+          eventSource: 'aws:s3',
+          awsRegion: 'eu-west-1',
+          eventTime: '2022-12-12T07:15:18.165Z',
+          eventName: 'ObjectCreated:Put',
+          userIdentity: { principalId: 'AWS:AIDAQIMRRA6GKZX7GJVNU' },
+          requestParameters: { sourceIPAddress: '89.212.22.116' },
+          responseElements: {
+            'x-amz-request-id': 'D3KVZ7C5RRZPJ2SR',
+            'x-amz-id-2':
+              'vPrPgHDXn7A17ce6P+XdUZG2WJufvOJoalcS5vvPzEPKDtm5LZSFN3TjuNrRa3hv72sJICDfSGtM3gpXLilE1EMDl3qUINUA',
+          },
+          s3: {
+            s3SchemaVersion: '1.0',
+            configurationId: 'File uploaded to storage directory',
+            bucket: {
+              name: 'sync-to-ipfs-queue',
+              ownerIdentity: { principalId: 'A22UA2G16O19KV' },
+              arn: 'arn:aws:s3:::sync-to-ipfs-queue',
+            },
+            object: {
+              key: fur.s3FileKey,
+              size: fur.size,
+              eTag: 'efea4f1606e3d37048388cc4bebacea6',
+              sequencer: '006396D50624FE22EB',
+            },
+          },
+        },
+      ],
+    };
+
+    if (
+      env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+      env.APP_ENV == AppEnvironment.TEST
+    ) {
+      //Directly calls worker, to sync file to IPFS & CRUST - USED ONLY FOR DEVELOPMENT!!
+      const serviceDef: ServiceDefinition = {
+        type: ServiceDefinitionType.SQS,
+        config: { region: 'test' },
+        params: { FunctionName: 'test' },
+      };
+      const parameters = msg;
+      const wd = new WorkerDefinition(
+        serviceDef,
+        WorkerName.SYNC_TO_IPFS_WORKER,
+        { parameters },
+      );
+
+      const worker = new SyncToIPFSWorker(
+        wd,
+        context,
+        QueueWorkerType.EXECUTOR,
+      );
+      await worker.runExecutor(msg);
+
+      return true;
+    }
+    return false;
   }
 
   static async getFileDetails(event: { id: string }, context: ServiceContext) {

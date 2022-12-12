@@ -126,6 +126,14 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async syncFileToIPFS(file_uuid: string) {
+    const data = {
+      eventName: StorageEventType.END_FILE_UPLOAD,
+      file_uuid: file_uuid,
+    };
+    return await this.callService(data);
+  }
+
   //#endregion
 
   //#region file

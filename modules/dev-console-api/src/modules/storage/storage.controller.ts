@@ -23,7 +23,7 @@ import { StorageService } from './storage.service';
 export class StorageController {
   constructor(private storageService: StorageService) {}
 
-  @Post(':bucket_uuid/file-upload/:session_uuid')
+  @Post(':bucket_uuid/file-upload')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -42,7 +42,6 @@ export class StorageController {
     return await this.storageService.createS3SignedUrlForUpload(
       context,
       bucket_uuid,
-      session_uuid,
       body,
     );
   }
@@ -69,6 +68,21 @@ export class StorageController {
       session_uuid,
       body,
     );
+  }
+
+  @Post(':bucket_uuid/file/:file_uuid/sync-to-ipfs')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @UseGuards(AuthGuard)
+  async syncFileToIPFS(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('bucket_uuid') bucket_uuid: string,
+    @Param('file_uuid') id: string,
+  ) {
+    return await this.storageService.syncFileToIPFS(context, id);
   }
 
   @Get(':bucket_uuid/file/:id/detail')

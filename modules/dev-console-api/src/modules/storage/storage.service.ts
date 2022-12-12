@@ -23,14 +23,17 @@ export class StorageService {
   async createS3SignedUrlForUpload(
     context: DevConsoleApiContext,
     bucket_uuid: string,
-    session_uuid: string,
     body: CreateS3SignedUrlForUploadDto,
   ) {
     body.bucket_uuid = bucket_uuid;
-    body.session_uuid = session_uuid;
     return (
       await new StorageMicroservice(context).requestS3SignedURLForUpload(body)
     ).data;
+  }
+
+  async syncFileToIPFS(context: DevConsoleApiContext, file_uuid: string) {
+    return (await new StorageMicroservice(context).syncFileToIPFS(file_uuid))
+      .data;
   }
 
   async getFileDetails(

@@ -34,6 +34,7 @@ export enum StorageEventType {
   PLACE_STORAGE_ORDER_TO_CRUST = 'place-storage-order-to-crust',
   REQUEST_S3_SIGNED_URL_FOR_UPLOAD = 'request-s3-signed-url-for-upload',
   END_FILE_UPLOAD_SESSION = 'end-file-upload-session',
+  END_FILE_UPLOAD = 'end-file-upload',
   CREATE_BUCKET = 'create-bucket',
   UPDATE_BUCKET = 'update-bucket',
   DELETE_BUCKET = 'delete-bucket',

@@ -42,6 +42,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
     return [];
   }
   public async runExecutor(data: any): Promise<any> {
+    console.info('RUN EXECUTOR. data: ', data);
     const session_uuid = data?.session_uuid;
     let files = [];
     let bucket: Bucket = undefined;
@@ -82,7 +83,10 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
           this.context,
         ).populateByS3FileKey(record.s3.object.key);
 
-        if (tmpFur.exists()) {
+        if (
+          tmpFur.exists() &&
+          tmpFur.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED
+        ) {
           if (bucket == undefined) {
             //get bucket
             bucket = await new Bucket({}, this.context).populateById(

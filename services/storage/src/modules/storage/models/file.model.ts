@@ -306,7 +306,7 @@ export class File extends AdvancedSQLModel {
       `
       SELECT * 
       FROM \`${this.tableName}\`
-      WHERE (id = @id OR cid = @id OR file_uuid = @id)
+      WHERE (id LIKE @id OR cid LIKE @id OR file_uuid LIKE @id)
       AND status <> ${SqlModelStatus.DELETED};
       `,
       { id },

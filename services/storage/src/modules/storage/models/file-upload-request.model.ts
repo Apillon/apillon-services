@@ -32,12 +32,7 @@ export class FileUploadRequest extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
     ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: StorageErrorCode.FILE_UPLOAD_REQUEST_S3_SESSION_ID_NOT_PRESENT,
-      },
-    ],
+    validators: [],
   })
   public session_id: number;
 
