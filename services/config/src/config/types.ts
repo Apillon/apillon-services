@@ -27,6 +27,7 @@ export enum ConfigErrorCode {
 
   // 404 - Not found
   API_KEY_NOT_FOUND = 40410001,
+  QUOTA_NOT_FOUND = 404010002,
 
   // 500 - Internal Error
   ERROR_WRITING_TO_DATABASE = 50010001,
