@@ -70,8 +70,8 @@ export class AttestationController {
   }
 
   @Get('credential')
-  // @Validation({ dto: AttestationEmailDto, validateFor: ValidateFor.QUERY })
-  // @UseGuards(ValidationGuard)
+  @Validation({ dto: AttestationEmailDto, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard)
   async attestationGetUserCredential(
     @Ctx() context: AuthorizationApiContext,
     @Query('email') email: string,

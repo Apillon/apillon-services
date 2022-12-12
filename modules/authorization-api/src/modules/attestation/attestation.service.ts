@@ -179,7 +179,7 @@ export class AttestationService {
         context,
         QueueWorkerType.EXECUTOR,
       );
-      await worker.runExecutor(parameters);
+      // await worker.runExecutor(parameters);
     } else {
       //send message to SQS
       await sendToWorkerQueue(
@@ -194,13 +194,16 @@ export class AttestationService {
     return { success: true };
   }
 
-  async getUserCredential(context: AuthorizationApiContext, body: any) {
+  async getUserCredential(context: AuthorizationApiContext, email: any) {
     const attestation = await new Attestation({}, context).populateByUserEmail(
       context,
-      body.email,
+      email,
     );
 
-    if (!attestation.exists()) {
+    if (
+      !attestation.exists() ||
+      attestation.state != AttestationState.ATTESTED
+    ) {
       throw new CodeException({
         status: HttpStatus.NOT_FOUND,
         code: AuthorizationErrorCode.ATTEST_DOES_NOT_EXIST,

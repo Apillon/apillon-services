@@ -148,13 +148,13 @@ export class AuthorizationWorker extends BaseQueueWorker {
         'createAttestation',
       );
 
-      const claimerCredentialObj = JSON.stringify({
+      const claimerCredentialObj = {
         ...credential,
         claimerSignature: {
           keyType: 'sr25519',
           keyUri: claimerDidUri,
         },
-      });
+      };
 
       attestation.populate({
         state: AttestationState.ATTESTED,
