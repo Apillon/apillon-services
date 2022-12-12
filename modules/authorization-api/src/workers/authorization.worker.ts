@@ -1,11 +1,4 @@
-import {
-  CodeException,
-  Context,
-  env,
-  LogType,
-  SerializeFor,
-  writeLog,
-} from '@apillon/lib';
+import { Context, env, LogType, SerializeFor, writeLog } from '@apillon/lib';
 import {
   BaseQueueWorker,
   QueueWorkerType,
@@ -30,8 +23,7 @@ import {
 import { u8aToHex, hexToU8a } from '@polkadot/util';
 import { BN } from '@polkadot/util/bn/bn';
 import { Attestation } from '../modules/attestation/models/attestation.model';
-import { AttestationState, AuthorizationErrorCode } from '../config/types';
-import { HttpStatus } from '@nestjs/common';
+import { AttestationState } from '../config/types';
 
 export class AuthorizationWorker extends BaseQueueWorker {
   // TODO: Handle errors and edge cases properly
@@ -111,7 +103,7 @@ export class AuthorizationWorker extends BaseQueueWorker {
         console.log('Submitting did creation TX to BC...');
         await Blockchain.signAndSubmitTx(fullDidCreationTx, attesterAccount);
       } catch (error) {
-        console.log('Error occured - ', error);
+        console.error('Error occured - ', error);
       }
     }
 

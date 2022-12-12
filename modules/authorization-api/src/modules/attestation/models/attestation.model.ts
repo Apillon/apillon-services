@@ -95,7 +95,8 @@ export class Attestation extends AdvancedSQLModel {
       { email },
     );
     if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
+      // To return the last one - only in DEV!!!!!!
+      return this.populate(data[data.length - 1], PopulateFrom.DB);
     }
 
     return this.reset();

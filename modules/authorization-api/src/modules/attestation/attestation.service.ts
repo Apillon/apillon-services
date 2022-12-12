@@ -157,7 +157,7 @@ export class AttestationService {
       env.APP_ENV == AppEnvironment.LOCAL_DEV ||
       env.APP_ENV == AppEnvironment.TEST
     ) {
-      console.log('Starting DEV authrization worker ...');
+      console.log('Starting DEV authorization worker ...');
 
       // Directly calls Kilt worker -> USED ONLY FOR DEVELOPMENT!!
       const serviceDef: ServiceDefinition = {
