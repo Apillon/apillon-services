@@ -30,7 +30,7 @@
     "db-unseed": "node -r ts-node/register ./src/scripts/db/unseed-db"
   },
   "dependencies": {
-    "@kiltprotocol/sdk-js": "0.29.0",
+    "@kiltprotocol/sdk-js": "0.30.0",
     "@kiltprotocol/types": "0.29.0",
     "@polkadot/util-crypto": "^10.1.9",
     "@faker-js/faker": "^7.5.0",

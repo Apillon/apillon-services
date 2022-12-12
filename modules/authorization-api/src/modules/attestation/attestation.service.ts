@@ -179,7 +179,7 @@ export class AttestationService {
         context,
         QueueWorkerType.EXECUTOR,
       );
-      // await worker.runExecutor(parameters);
+      await worker.runExecutor(parameters);
     } else {
       //send message to SQS
       await sendToWorkerQueue(
