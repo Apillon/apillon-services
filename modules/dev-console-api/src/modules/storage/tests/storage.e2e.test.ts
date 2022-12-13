@@ -59,9 +59,7 @@ describe('Storage tests', () => {
     describe('Single file tests', () => {
       test('User should be able to recieve S3 signed URL, used to upload file to S3', async () => {
         const response = await request(stage.http)
-          .post(
-            `/storage/${testBucket.bucket_uuid}/file-upload/${testSession_uuid}`,
-          )
+          .post(`/storage/${testBucket.bucket_uuid}/file-upload`)
           .send({
             fileName: 'myTestFile.txt',
             contentType: 'text/plain',
@@ -77,15 +75,6 @@ describe('Storage tests', () => {
         ).populateById(response.body.data.fileUploadRequestId);
         expect(fur.exists()).toBeTruthy();
 
-        const session: FileUploadSession = await new FileUploadSession(
-          {},
-          stage.storageContext,
-        ).populateById(fur.session_id);
-
-        expect(session.exists()).toBeTruthy();
-        expect(session.session_uuid).toBe(testSession_uuid);
-        expect(session.sessionStatus).toBe(1);
-
         testS3SignedUrl = response.body.data.signedUrlForUpload;
         testS3FileUUID = response.body.data.file_uuid;
       });
@@ -100,9 +89,7 @@ describe('Storage tests', () => {
 
       test('User should recieve 422 error if missing required data', async () => {
         const response = await request(stage.http)
-          .post(
-            `/storage/${testBucket.bucket_uuid}/file-upload/${testSession_uuid}`,
-          )
+          .post(`/storage/${testBucket.bucket_uuid}/file-upload`)
           .send({})
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(422);
@@ -123,9 +110,7 @@ describe('Storage tests', () => {
 
       test('User should NOT be able to recieve S3 signed URL for ANOTHER USER project', async () => {
         const response = await request(stage.http)
-          .post(
-            `/storage/${testBucket.bucket_uuid}/file-upload/${testSession_uuid}`,
-          )
+          .post(`/storage/${testBucket.bucket_uuid}/file-upload`)
           .send({
             fileName: 'myTestFile.txt',
             contentType: 'text/plain',
@@ -134,26 +119,11 @@ describe('Storage tests', () => {
         expect(response.status).toBe(403);
       });
 
-      test('User should NOT be able to start transfer of ANOTHER PROJECT SESSION', async () => {
+      test('Worker should transfer file from S3 to IPFS&CRUST', async () => {
         const response = await request(stage.http)
           .post(
-            `/storage/${testBucket.bucket_uuid}/file-upload/${testSession_uuid}/end`,
+            `/storage/${testBucket.bucket_uuid}/file/${testS3FileUUID}/sync-to-ipfs`,
           )
-          .send({
-            directSync: true,
-          })
-          .set('Authorization', `Bearer ${testUser2.token}`);
-        expect(response.status).toBe(403);
-      });
-
-      test('User should be able to start transfer all files in session to IPFS', async () => {
-        const response = await request(stage.http)
-          .post(
-            `/storage/${testBucket.bucket_uuid}/file-upload/${testSession_uuid}/end`,
-          )
-          .send({
-            directSync: true,
-          })
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(200);
 
@@ -165,14 +135,6 @@ describe('Storage tests', () => {
         expect(testFile.name).toBe('myTestFile.txt');
         expect(testFile.contentType).toBe('text/plain');
         expect(testFile.CID).toBeTruthy();
-
-        //check session
-        const session: FileUploadSession = await new FileUploadSession(
-          {},
-          stage.storageContext,
-        ).populateByUUID(testSession_uuid);
-
-        expect(session.sessionStatus).toBe(2);
       });
 
       test('User should be able to download uploaded file from apillon ipfs gateway', async () => {
