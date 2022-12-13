@@ -14,6 +14,7 @@ import { CreateS3SignedUrlForUploadDto } from './dtos/create-s3-signed-url-for-u
 import { DirectoryContentQueryFilter } from './dtos/directory-content-query-filter.dto';
 import { EndFileUploadSessionDto } from './dtos/end-file-upload-session.dto';
 import { FileDetailsQueryFilter } from './dtos/file-details-query-filter.dto';
+import { FileUploadsQueryFilter } from './dtos/file-uploads-query-filter.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -130,6 +131,14 @@ export class StorageMicroservice extends BaseService {
     const data = {
       eventName: StorageEventType.END_FILE_UPLOAD,
       file_uuid: file_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async listFileUploads(params: FileUploadsQueryFilter) {
+    const data = {
+      eventName: StorageEventType.LIST_FILE_UPLOAD,
+      query: params.serialize(),
     };
     return await this.callService(data);
   }

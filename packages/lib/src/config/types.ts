@@ -51,6 +51,7 @@ export enum StorageEventType {
   BUCKET_WEBHOOK_CREATE = 'create-bucket-webhook',
   BUCKET_WEBHOOK_UPDATE = 'update-bucket-webhook',
   BUCKET_WEBHOOK_DELETE = 'delete-bucket-webhook',
+  LIST_FILE_UPLOAD = 'list-file-upload',
 }
 
 export enum MailEventType {

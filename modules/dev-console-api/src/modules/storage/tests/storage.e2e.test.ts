@@ -1,6 +1,7 @@
 import { env } from '@apillon/lib';
 import {
   FileStatus,
+  FileUploadRequestFileStatus,
   StorageErrorCode,
 } from '@apillon/storage/src/config/types';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
@@ -319,6 +320,85 @@ describe('Storage tests', () => {
         ).populateByUUID(file_uuid);
 
         expect(file.exists()).toBeTruthy();
+      });
+    });
+
+    describe('Tests for file-upload listing', () => {
+      let testBucket2;
+      let fur1: FileUploadRequest;
+      let fur2: FileUploadRequest;
+      beforeAll(async () => {
+        testBucket2 = await createTestBucket(
+          testUser,
+          stage.storageContext,
+          testProject,
+        );
+        //Insert some fake file-upload-requests
+
+        fur1 = await new FileUploadRequest({}, stage.storageContext)
+          .populate({
+            bucket_id: testBucket2.id,
+            file_uuid: uuidV4(),
+            fileName: 'file1.txt',
+            contentType: 'text/plain',
+            s3FileKey: 's3url/file1.txt',
+            fileStatus:
+              FileUploadRequestFileStatus.SIGNED_URL_FOR_UPLOAD_GENERATED,
+          })
+          .insert();
+
+        fur2 = await new FileUploadRequest({}, stage.storageContext)
+          .populate({
+            bucket_id: testBucket2.id,
+            file_uuid: uuidV4(),
+            fileName: 'file2.txt',
+            contentType: 'text/plain',
+            s3FileKey: 's3url/file2.txt',
+            fileStatus: FileUploadRequestFileStatus.UPLOAD_COMPLETED,
+          })
+          .insert();
+      });
+      test('User should be able to get list of file uploads', async () => {
+        const response = await request(stage.http)
+          .get(`/storage/${testBucket2.bucket_uuid}/file-uploads`)
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(200);
+        expect(response.body.data.items.length).toBe(2);
+        expect(response.body.data.total).toBe(2);
+        expect(response.body.data.items[0].file_uuid).toBeTruthy();
+        expect(response.body.data.items[0].fileName).toBeTruthy();
+        expect(response.body.data.items[0].contentType).toBeTruthy();
+        expect(response.body.data.items[0].fileStatus).toBeTruthy();
+      });
+
+      test('User should be able to get list of file uploads - filtered by search', async () => {
+        const response = await request(stage.http)
+          .get(
+            `/storage/${testBucket2.bucket_uuid}/file-uploads?search=${fur1.fileName}`,
+          )
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(200);
+        expect(response.body.data.items.length).toBe(1);
+        expect(response.body.data.items[0].fileName).toBe(fur1.fileName);
+      });
+
+      test('User should be able to get list of file uploads - filtered by fileStatus', async () => {
+        const response = await request(stage.http)
+          .get(
+            `/storage/${testBucket2.bucket_uuid}/file-uploads?fileStatus=${FileUploadRequestFileStatus.UPLOAD_COMPLETED}`,
+          )
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(200);
+        expect(response.body.data.items.length).toBe(1);
+        expect(response.body.data.items[0].fileName).toBe(fur2.fileName);
+        expect(response.body.data.items[0].fileStatus).toBe(fur2.fileStatus);
+      });
+
+      test('User should NOT be able to get list of ANOTHER USER file uploads', async () => {
+        const response = await request(stage.http)
+          .get(`/storage/${testBucket2.bucket_uuid}/file-uploads`)
+          .set('Authorization', `Bearer ${testUser2.token}`);
+        expect(response.status).toBe(403);
       });
     });
   });

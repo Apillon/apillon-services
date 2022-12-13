@@ -1,3 +1,5 @@
+import { FileUploadsQueryFilter } from '@apillon/lib';
+import { ValidateFor } from '@apillon/lib';
 import {
   CreateS3SignedUrlForUploadDto,
   DefaultUserRole,
@@ -12,6 +14,7 @@ import {
   HttpCode,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
@@ -22,6 +25,27 @@ import { StorageService } from './storage.service';
 @Controller('storage')
 export class StorageController {
   constructor(private storageService: StorageService) {}
+
+  @Get(':bucket_uuid/file-uploads')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @UseGuards(AuthGuard)
+  @Validation({ dto: FileUploadsQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async listFileUploads(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('bucket_uuid') bucket_uuid: string,
+    @Query() query: FileUploadsQueryFilter,
+  ) {
+    return await this.storageService.listFileUploads(
+      context,
+      bucket_uuid,
+      query,
+    );
+  }
 
   @Post(':bucket_uuid/file-upload')
   @Permissions(

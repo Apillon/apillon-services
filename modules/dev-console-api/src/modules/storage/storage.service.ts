@@ -2,12 +2,22 @@ import {
   CreateS3SignedUrlForUploadDto,
   EndFileUploadSessionDto,
   FileDetailsQueryFilter,
+  FileUploadsQueryFilter,
   StorageMicroservice,
 } from '@apillon/lib';
+import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 @Injectable()
 export class StorageService {
+  async listFileUploads(
+    context: DevConsoleApiContext,
+    bucket_uuid: string,
+    query: FileUploadsQueryFilter,
+  ) {
+    query.bucket_uuid = bucket_uuid;
+    return (await new StorageMicroservice(context).listFileUploads(query)).data;
+  }
   async endFileUploadSession(
     context: DevConsoleApiContext,
     bucket_uuid: string,

@@ -1,16 +1,24 @@
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
+  CodeException,
   Context,
+  DefaultUserRole,
+  FileUploadsQueryFilter,
+  ForbiddenErrorCodes,
+  getQueryParams,
   PopulateFrom,
   presenceValidator,
   prop,
+  selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
 import { CID } from 'ipfs-http-client';
 import { DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
+import { Bucket } from '../../bucket/models/bucket.model';
+import { StorageCodeException } from '../../../lib/exceptions';
 
 export class FileUploadRequest extends AdvancedSQLModel {
   public readonly tableName = DbTables.FILE_UPLOAD_REQUEST;
@@ -108,6 +116,7 @@ export class FileUploadRequest extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     setter(value: string) {
       if (value && value.length > 0) {
@@ -156,6 +165,7 @@ export class FileUploadRequest extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -179,6 +189,7 @@ export class FileUploadRequest extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -212,6 +223,7 @@ export class FileUploadRequest extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [],
     defaultValue: 1,
@@ -312,5 +324,53 @@ export class FileUploadRequest extends AdvancedSQLModel {
     } else {
       return this.reset();
     }
+  }
+
+  public async getList(
+    context: ServiceContext,
+    filter: FileUploadsQueryFilter,
+  ) {
+    const bucket: Bucket = await new Bucket({}, context).populateByUUID(
+      filter.bucket_uuid,
+    );
+    if (!bucket.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.BUCKET_NOT_FOUND,
+        status: 404,
+      });
+    }
+    bucket.canAccess(context);
+
+    // Map url query with sql fields.
+    const fieldMap = {
+      id: 'fr.id',
+    };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'fr',
+      fieldMap,
+      filter.serialize(),
+    );
+
+    const sqlQuery = {
+      qSelect: `
+        SELECT ${this.generateSelectFields('fr', '')}, f.CID
+        `,
+      qFrom: `
+        FROM \`${DbTables.FILE_UPLOAD_REQUEST}\` fr
+        INNER JOIN \`${DbTables.BUCKET}\` b ON fr.bucket_id = b.id
+        LEFT JOIN \`${DbTables.FILE}\` f ON f.file_uuid = fr.file_uuid
+        WHERE b.bucket_uuid = @bucket_uuid
+        AND (@search IS null OR fr.fileName LIKE CONCAT('%', @search, '%'))
+        AND (@fileStatus IS NULL OR fr.fileStatus = @fileStatus)
+        AND fr.status <> ${SqlModelStatus.DELETED}
+      `,
+      qFilter: `
+        ORDER BY ${filters.orderStr ? filters.orderStr : 'fr.createTime DESC'}
+        LIMIT ${filters.limit} OFFSET ${filters.offset};
+      `,
+    };
+
+    return selectAndCountQuery(context.mysql, sqlQuery, params, 'fr.id');
   }
 }

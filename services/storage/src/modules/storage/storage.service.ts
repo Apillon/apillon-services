@@ -1,9 +1,11 @@
 import {
   AppEnvironment,
   AWS_S3,
+  BucketQueryFilter,
   CreateS3SignedUrlForUploadDto,
   EndFileUploadSessionDto,
   env,
+  FileUploadsQueryFilter,
   Lmas,
   LogType,
   QuotaCode,
@@ -31,6 +33,8 @@ import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
 
 export class StorageService {
+  //#region file-upload functions
+
   static async generateS3SignedUrlForUpload(
     event: { body: CreateS3SignedUrlForUploadDto },
     context: ServiceContext,
@@ -340,6 +344,20 @@ export class StorageService {
     return false;
   }
 
+  static async listFileUploads(
+    event: { query: FileUploadsQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new FileUploadRequest({}, context).getList(
+      context,
+      new FileUploadsQueryFilter(event.query),
+    );
+  }
+
+  //#endregion
+
+  //#region file functions
+
   static async getFileDetails(event: { id: string }, context: ServiceContext) {
     let file: File = undefined;
     let fileStatus: FileStatus = undefined;
@@ -431,4 +449,6 @@ export class StorageService {
 
     return f.serialize(SerializeFor.PROFILE);
   }
+
+  //#endregion
 }
