@@ -1,5 +1,5 @@
 import { Lmas, ServiceName } from '@apillon/lib';
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
 
 @Controller()
