@@ -77,6 +77,7 @@ export class StorageController {
     { role: DefaultUserRole.PROJECT_USER },
   )
   @UseGuards(AuthGuard)
+  @HttpCode(200)
   async syncFileToIPFS(
     @Ctx() context: DevConsoleApiContext,
     @Param('bucket_uuid') bucket_uuid: string,

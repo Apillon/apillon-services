@@ -138,6 +138,7 @@ describe('Storage tests', () => {
       });
 
       test('User should be able to download uploaded file from apillon ipfs gateway', async () => {
+        expect(testFile).toBeTruthy();
         const response = await request(
           env.STORAGE_IPFS_PROVIDER + testFile.CID,
         ).get('');
@@ -192,10 +193,9 @@ describe('Storage tests', () => {
 
         //Upload 2 files, each into its own directory
         let response = await request(stage.http)
-          .post(
-            `/storage/${testBucket.bucket_uuid}/file-upload/${testSession_uuid}`,
-          )
+          .post(`/storage/${testBucket.bucket_uuid}/file-upload`)
           .send({
+            session_uuid: testSession_uuid,
             fileName: 'myTestFile2.txt',
             contentType: 'text/plain',
             path: 'myTestDirectory',
@@ -212,10 +212,9 @@ describe('Storage tests', () => {
         expect(response.status).toBe(200);
 
         response = await request(stage.http)
-          .post(
-            `/storage/${testBucket.bucket_uuid}/file-upload/${testSession_uuid}`,
-          )
+          .post(`/storage/${testBucket.bucket_uuid}/file-upload`)
           .send({
+            session_uuid: testSession_uuid,
             fileName: 'myTestFile3.txt',
             contentType: 'text/plain',
             path: 'mySecondTestDirectory/subdirectory',
@@ -276,7 +275,6 @@ describe('Storage tests', () => {
 
     describe('Tests to upload file to bucket, which has specified webhook', () => {
       let testBucketWithWebhook;
-      const testSession2_uuid = uuidV4();
       beforeAll(async () => {
         testBucketWithWebhook = await createTestBucket(
           testUser,
@@ -291,9 +289,7 @@ describe('Storage tests', () => {
       });
       test('User should be able to upload file to bucket which has webhook set up', async () => {
         let response = await request(stage.http)
-          .post(
-            `/storage/${testBucketWithWebhook.bucket_uuid}/file-upload/${testSession2_uuid}`,
-          )
+          .post(`/storage/${testBucketWithWebhook.bucket_uuid}/file-upload`)
           .send({
             fileName: 'myTestFile.txt',
             contentType: 'text/plain',
@@ -312,11 +308,8 @@ describe('Storage tests', () => {
 
         response = await request(stage.http)
           .post(
-            `/storage/${testBucketWithWebhook.bucket_uuid}/file-upload/${testSession2_uuid}/end`,
+            `/storage/${testBucketWithWebhook.bucket_uuid}/file/${file_uuid}/sync-to-ipfs`,
           )
-          .send({
-            directSync: true,
-          })
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(200);
 
