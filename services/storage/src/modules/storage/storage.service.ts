@@ -57,12 +57,13 @@ export class StorageService {
     //get max size quota for Bucket and compare it with current bucket size
     const maxBucketSizeQuota = await new Scs(context).getQuota({
       quota_id: QuotaCode.MAX_BUCKET_SIZE,
+      project_uuid: bucket.project_uuid,
       object_uuid: bucket.bucket_uuid,
     });
     if (
       maxBucketSizeQuota &&
       maxBucketSizeQuota.value &&
-      bucket.size > maxBucketSizeQuota.value
+      bucket.size > maxBucketSizeQuota.value * 1073741824 //quota is in GB - size is in bytes
     ) {
       throw new StorageCodeException({
         code: StorageErrorCode.MAX_BUCKET_SIZE_REACHED,

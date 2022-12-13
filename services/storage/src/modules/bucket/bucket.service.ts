@@ -37,8 +37,8 @@ export class BucketService {
       { ...event.body, bucket_uuid: uuidV4() },
       context,
     );
-    //set default bucket size
-    b.maxSize = 5242880;
+    //set default bucket size in bytes - NOTE this is not used in application. Max size is set in config MS
+    b.maxSize = 5368709120;
 
     try {
       await b.validate();

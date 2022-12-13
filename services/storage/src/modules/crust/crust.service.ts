@@ -47,7 +47,10 @@ export class CrustService {
         console.log(`💸  Tx status: ${status.type}, nonce: ${tx.nonce}`);
         if (status.isInBlock) {
           events.forEach(({ event }) => {
-            if (event.method === 'ExtrinsicSuccess') {
+            if (
+              event.method === 'ExtrinsicSuccess' ||
+              event.method === 'Finalized'
+            ) {
               console.log(`✅  Place storage order success!`);
               // Kill api connection - otherwise process won't exit
               void api.disconnect();

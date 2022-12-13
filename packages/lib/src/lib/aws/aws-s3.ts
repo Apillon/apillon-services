@@ -128,6 +128,34 @@ export class AWS_S3 {
   }
 
   /**
+   *  Lists up to 1000 files for specific prefix
+   * @param bucket s3 bucket
+   * @param prefix Limits the response to keys that begin with the specified prefix.
+   * @returns
+   */
+  listFiles(
+    bucket: string,
+    prefix: string,
+  ): Promise<aws.S3.ListObjectsV2Output> {
+    return new Promise((resolve, reject) => {
+      this.s3Client.listObjectsV2(
+        {
+          Bucket: bucket,
+          Prefix: prefix,
+        },
+        (err, data) => {
+          if (err) {
+            console.error(err);
+            reject(err);
+          } else {
+            resolve(data);
+          }
+        },
+      );
+    });
+  }
+
+  /**
    * Retrieves S3 directory.
    * @param source File source path.
    * @param ctx Request context.
