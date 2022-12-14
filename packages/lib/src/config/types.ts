@@ -60,6 +60,10 @@ export enum ScsEventType {
   GET_QUOTA = 'get-quota',
 }
 
+export enum ReferralEventType {
+  CREATE_REFERRAL = 'create-referral',
+}
+
 export enum ServiceName {
   GENERAL = 'GENERAL',
   AMS = 'AMS',
@@ -68,6 +72,7 @@ export enum ServiceName {
   MAIL = 'MAIL',
   STORAGE = 'STORAGE',
   APILLON_API = 'APILLON_API',
+  REFERRAL = 'REFERRAL',
 }
 
 export enum ServiceCode {

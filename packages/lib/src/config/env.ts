@@ -218,6 +218,26 @@ export interface IEnv {
   CONFIG_MYSQL_DATABASE_TEST: string;
   CONFIG_MYSQL_USER_TEST: string;
   CONFIG_MYSQL_PASSWORD_TEST: string;
+
+  /************************************************************
+   * REFERRAL config
+   ************************************************************/
+  REFERRAL_FUNCTION_NAME: string;
+  REFERRAL_FUNCTION_NAME_TEST: string;
+  REFERRAL_SOCKET_PORT: number;
+  REFERRAL_SOCKET_PORT_TEST: number;
+
+  REFERRAL_MYSQL_HOST: string;
+  REFERRAL_MYSQL_PORT: number;
+  REFERRAL_MYSQL_USER: string;
+  REFERRAL_MYSQL_PASSWORD: string;
+  REFERRAL_MYSQL_DATABASE: string;
+
+  REFERRAL_MYSQL_HOST_TEST: string;
+  REFERRAL_MYSQL_PORT_TEST: number;
+  REFERRAL_MYSQL_USER_TEST: string;
+  REFERRAL_MYSQL_PASSWORD_TEST: string;
+  REFERRAL_MYSQL_DATABASE_TEST: string;
 }
 
 // dotenv.config();
@@ -384,6 +404,28 @@ export let env: IEnv = {
   CONFIG_MYSQL_DATABASE_TEST: process.env['CONFIG_MYSQL_DATABASE_TEST'],
   CONFIG_MYSQL_USER_TEST: process.env['CONFIG_MYSQL_USER_TEST'],
   CONFIG_MYSQL_PASSWORD_TEST: process.env['CONFIG_MYSQL_PASSWORD_TEST'],
+
+  /**REFERRAL microservice */
+  REFERRAL_FUNCTION_NAME: process.env['REFERRAL_FUNCTION_NAME'],
+  REFERRAL_FUNCTION_NAME_TEST: process.env['REFERRAL_FUNCTION_NAME_TEST'],
+  REFERRAL_SOCKET_PORT: parseInt(process.env['REFERRAL_SOCKET_PORT']) || 6601,
+  REFERRAL_SOCKET_PORT_TEST:
+    parseInt(process.env['REFERRAL_SOCKET_PORT_TEST']) || 7301,
+
+  /**REFERRAL microservice */
+  REFERRAL_MYSQL_HOST: process.env['REFERRAL_MYSQL_HOST'],
+  REFERRAL_MYSQL_PORT: parseInt(process.env['REFERRAL_MYSQL_PORT']) || 3306,
+  REFERRAL_MYSQL_USER: process.env['REFERRAL_MYSQL_USER'],
+  REFERRAL_MYSQL_PASSWORD: process.env['REFERRAL_MYSQL_PASSWORD'],
+  REFERRAL_MYSQL_DATABASE: process.env['REFERRAL_MYSQL_DATABASE'],
+
+  /**REFERRAL microservice - TEST DB */
+  REFERRAL_MYSQL_HOST_TEST: process.env['REFERRAL_MYSQL_HOST_TEST'],
+  REFERRAL_MYSQL_PORT_TEST:
+    parseInt(process.env['REFERRAL_MYSQL_PORT_TEST']) || 3306,
+  REFERRAL_MYSQL_USER_TEST: process.env['REFERRAL_MYSQL_USER_TEST'],
+  REFERRAL_MYSQL_PASSWORD_TEST: process.env['REFERRAL_MYSQL_PASSWORD_TEST'],
+  REFERRAL_MYSQL_DATABASE_TEST: process.env['REFERRAL_MYSQL_DATABASE_TEST'],
 };
 
 export let isEnvReady = false;
