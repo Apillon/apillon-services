@@ -28,6 +28,7 @@ import { SyncToIPFSWorker } from '../../workers/s3-to-ipfs-sync-worker';
 import { WorkerName } from '../../workers/worker-executor';
 import { Bucket } from '../bucket/models/bucket.model';
 import { Directory } from '../directory/models/directory.model';
+import { IPFSService } from '../ipfs/ipfs.service';
 import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
@@ -424,7 +425,6 @@ export class StorageService {
     context: ServiceContext,
   ): Promise<any> {
     const f: File = await new File({}, context).populateById(event.id);
-
     if (!f.exists()) {
       throw new StorageCodeException({
         code: StorageErrorCode.FILE_NOT_FOUND,
@@ -433,20 +433,33 @@ export class StorageService {
     }
     f.canModify(context);
 
-    await f.markDeleted();
+    const conn = await context.mysql.start();
 
-    //Also delete file-upload-request
-    const fur: FileUploadRequest = await new FileUploadRequest(
-      {},
-      context,
-    ).populateByUUID(f.file_uuid);
+    try {
+      await f.markDeleted(conn);
 
-    if (fur.exists()) {
-      await fur.markDeleted();
+      //Also delete file-upload-request
+      const fur: FileUploadRequest = await new FileUploadRequest(
+        {},
+        context,
+      ).populateByUUID(f.file_uuid);
+
+      if (fur.exists()) {
+        await fur.markDeleted(conn);
+      }
+
+      if (f.CID) await IPFSService.unpinFile(f.CID);
+
+      const bucket: Bucket = await new Bucket({}, context).populateById(
+        f.bucket_id,
+      );
+      bucket.size -= f.size;
+      await bucket.update(SerializeFor.UPDATE_DB, conn);
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+      throw err;
     }
-
-    //TODO: We should probably delete file from our IPFS node.
-    //But for now, this will be OK, because http-ipfs-client doesn't have method for delete
 
     return f.serialize(SerializeFor.PROFILE);
   }

@@ -183,7 +183,6 @@ export class IPFSService {
   }
 
   static async listIPFSDirectory(param: any) {
-    console.log(param);
     //Get IPFS client
     const client = await IPFSService.createIPFSClient();
 
@@ -200,6 +199,24 @@ export class IPFSService {
     }
 
     return filesInDirectory;
+  }
+
+  /**
+   * Unpin file from IPFS node - file will eventually be deleted from this node
+   * @param cid
+   * @returns
+   */
+  static async unpinFile(cid: string) {
+    try {
+      //Get IPFS client
+      const client = await IPFSService.createIPFSClient();
+      await client.pin.rm(cid);
+    } catch (err) {
+      console.error('Error unpinning file', cid, err);
+      return false;
+    }
+
+    return true;
   }
 
   //#region OBSOLETE
