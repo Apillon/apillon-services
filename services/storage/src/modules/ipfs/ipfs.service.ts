@@ -59,7 +59,6 @@ export class IPFSService {
     console.info(`File recieved, pushing to IPFS...`);
 
     const filesOnIPFS = await client.add({
-      path: '',
       content: file.Body as any,
     });
 
