@@ -59,7 +59,6 @@ export class StorageController {
   async createS3SignedUrlForUpload(
     @Ctx() context: DevConsoleApiContext,
     @Param('bucket_uuid') bucket_uuid: string,
-    @Param('session_uuid') session_uuid: string,
     @Body()
     body: CreateS3SignedUrlForUploadDto,
   ) {
@@ -104,7 +103,6 @@ export class StorageController {
   @HttpCode(200)
   async syncFileToIPFS(
     @Ctx() context: DevConsoleApiContext,
-    @Param('bucket_uuid') bucket_uuid: string,
     @Param('file_uuid') id: string,
   ) {
     return await this.storageService.syncFileToIPFS(context, id);

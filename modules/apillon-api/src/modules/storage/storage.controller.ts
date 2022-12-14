@@ -10,6 +10,7 @@ import { ApiKeyPermissions, Ctx, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Param,
@@ -26,7 +27,7 @@ import { StorageService } from './storage.service';
 export class StorageController {
   constructor(private storageService: StorageService) {}
 
-  @Post(':bucket_uuid/file-upload/:session_uuid')
+  @Post(':bucket_uuid/file-upload')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_EXECUTE,
     serviceType: AttachedServiceType.STORAGE,
@@ -37,14 +38,12 @@ export class StorageController {
   async createS3SignedUrlForUpload(
     @Ctx() context: ApillonApiContext,
     @Param('bucket_uuid') bucket_uuid: string,
-    @Param('session_uuid') session_uuid: string,
     @Body()
     body: CreateS3SignedUrlForUploadDto,
   ) {
     return await this.storageService.createS3SignedUrlForUpload(
       context,
       bucket_uuid,
-      session_uuid,
       body,
     );
   }
@@ -72,6 +71,21 @@ export class StorageController {
     );
   }
 
+  //TODO - this endpoint and service function (storageService.syncFileToIPFS) should be deleted before production release
+  @Post(':bucket_uuid/file/:file_uuid/sync-to-ipfs')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_EXECUTE,
+    serviceType: AttachedServiceType.STORAGE,
+  })
+  @UseGuards(AuthGuard)
+  @HttpCode(200)
+  async syncFileToIPFS(
+    @Ctx() context: ApillonApiContext,
+    @Param('file_uuid') id: string,
+  ) {
+    return await this.storageService.syncFileToIPFS(context, id);
+  }
+
   @Get(':bucket_uuid/file/:id/detail')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_READ,
@@ -84,6 +98,16 @@ export class StorageController {
     @Param('id') id: string,
   ) {
     return await this.storageService.getFileDetails(context, bucket_uuid, id);
+  }
+
+  @Delete(':bucket_uuid/file/:id')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_WRITE,
+    serviceType: AttachedServiceType.STORAGE,
+  })
+  @UseGuards(AuthGuard)
+  async deleteFile(@Ctx() context: ApillonApiContext, @Param('id') id: string) {
+    return await this.storageService.deleteFile(context, id);
   }
 
   @Get(':bucket_uuid/content')

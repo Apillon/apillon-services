@@ -1,7 +1,6 @@
 import {
   ApillonApiDirectoryContentQueryFilter,
   CreateS3SignedUrlForUploadDto,
-  DirectoryContentQueryFilter,
   EndFileUploadSessionDto,
   FileDetailsQueryFilter,
   StorageMicroservice,
@@ -15,11 +14,9 @@ export class StorageService {
   async createS3SignedUrlForUpload(
     context: ApillonApiContext,
     bucket_uuid: string,
-    session_uuid: string,
     body: CreateS3SignedUrlForUploadDto,
   ) {
     body.bucket_uuid = bucket_uuid;
-    body.session_uuid = session_uuid;
 
     return (
       await new StorageMicroservice(context).requestS3SignedURLForUpload(body)
@@ -39,6 +36,14 @@ export class StorageService {
     ).data;
   }
 
+  /**
+   * Only for testing purposes
+   */
+  async syncFileToIPFS(context: ApillonApiContext, file_uuid: string) {
+    return (await new StorageMicroservice(context).syncFileToIPFS(file_uuid))
+      .data;
+  }
+
   async getFileDetails(
     context: ApillonApiContext,
     bucket_uuid: string,
@@ -49,6 +54,10 @@ export class StorageService {
       context,
     );
     return (await new StorageMicroservice(context).getFileDetails(filter)).data;
+  }
+
+  async deleteFile(context: ApillonApiContext, id: string) {
+    return (await new StorageMicroservice(context).deleteFile({ id })).data;
   }
 
   async listContent(
