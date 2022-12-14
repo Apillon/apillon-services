@@ -1,5 +1,8 @@
 import { DefaultUserRole, SqlModelStatus } from '@apillon/lib';
-import { BucketType } from '@apillon/storage/src/config/types';
+import {
+  BucketType,
+  StorageErrorCode,
+} from '@apillon/storage/src/config/types';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
 import * as request from 'supertest';
 import { createTestBucket } from '../../../../test/helpers/bucket';
@@ -49,7 +52,6 @@ describe('Storage bucket tests', () => {
       expect(response.body.data.items[0]?.id).toBeTruthy();
       expect(response.body.data.items[0]?.bucket_uuid).toBeTruthy();
       expect(response.body.data.items[0]?.bucketType).toBeTruthy();
-      expect(response.body.data.items[0]?.maxSize).toBeTruthy();
     });
 
     test('User should NOT be able to get ANOTHER USER bucket list', async () => {
@@ -57,6 +59,29 @@ describe('Storage bucket tests', () => {
         .get(`/buckets?project_uuid=${testProject2.project_uuid}`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(403);
+    });
+
+    test('User should be able to get bucket by id', async () => {
+      const response = await request(stage.http)
+        .get(`/buckets/${testBucket.id}`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.bucket_uuid).toBeTruthy();
+      expect(response.body.data.project_uuid).toBeTruthy();
+      expect(response.body.data.bucketType).toBeTruthy();
+      expect(response.body.data.name).toBeTruthy();
+      expect(response.body.data.maxSize).toBeTruthy();
+    });
+
+    test('User should recieve 404 if bucket does not exists', async () => {
+      const response = await request(stage.http)
+        .get(`/buckets/555`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(404);
+      expect(response.body.code).toBe(StorageErrorCode.BUCKET_NOT_FOUND);
+      expect(response.body.message).toBe(
+        StorageErrorCode[StorageErrorCode.BUCKET_NOT_FOUND],
+      );
     });
 
     test('User should recieve 422 if invalid body', async () => {
@@ -179,7 +204,6 @@ describe('Storage bucket tests', () => {
       expect(response.body.data.items[0]?.id).toBeTruthy();
       expect(response.body.data.items[0]?.bucket_uuid).toBeTruthy();
       expect(response.body.data.items[0]?.bucketType).toBeTruthy();
-      expect(response.body.data.items[0]?.maxSize).toBeTruthy();
     });
 
     test('User with role "ProjectUser" should NOT be able to create new bucket', async () => {

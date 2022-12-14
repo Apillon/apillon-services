@@ -227,4 +227,28 @@ export class AWS_S3 {
       );
     });
   }
+
+  /**
+   * Removes up to 1000 S3 files.
+   * @param source File source path.
+   * @param ctx Request context.
+   */
+  removeFiles(bucket: string, keys: { Key: string }[]) {
+    return new Promise((resolve, reject) => {
+      this.s3Client.deleteObjects(
+        {
+          Bucket: bucket,
+          Delete: { Objects: keys },
+        },
+        (err) => {
+          if (err) {
+            console.error(err);
+            reject(false);
+          } else {
+            resolve(true);
+          }
+        },
+      );
+    });
+  }
 }

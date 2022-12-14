@@ -6,12 +6,14 @@ import {
   SerializeFor,
   ServiceName,
 } from '@apillon/lib';
+import { S3ArtifactLocation } from 'aws-lambda';
 import {
   BucketType,
   FileUploadRequestFileStatus,
   StorageErrorCode,
 } from '../config/types';
 import { StorageCodeException } from '../lib/exceptions';
+import { Bucket } from '../modules/bucket/models/bucket.model';
 import { CrustService } from '../modules/crust/crust.service';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
@@ -29,30 +31,44 @@ import { generateDirectoriesForFUR } from '../utils/generate-directories-from-pa
 export async function hostingBucketSyncFilesToIPFS(
   context,
   location,
-  bucket,
+  bucket: Bucket,
   maxBucketSize,
   session: FileUploadSession,
   files: any[],
 ) {
   const transferedFiles = [];
 
-  //Check if size of files is greater than allowed bucket size
-  //S3 client
+  //Check if size of files is greater than allowed bucket size.
   const s3Client: AWS_S3 = new AWS_S3();
-  const s3FileList = await s3Client.listFiles(
-    env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-    `${BucketType[bucket.bucketType]}/${bucket.id}${session?.session_uuid}`,
-  );
-  if (s3FileList.KeyCount == 0) {
+  /**
+   * Array of s3FileLists - actually array of array (chunks of 1000 files)
+   */
+  const s3FileLists: any[] = [];
+  let s3FileList: any = undefined;
+  do {
+    s3FileList = await s3Client.listFiles(
+      env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+      `${BucketType[bucket.bucketType]}/${bucket.id}/${session?.session_uuid}`,
+    );
+    if (s3FileList.KeyCount > 0) s3FileLists.push(s3FileList);
+  } while (s3FileList.KeyCount == 1000);
+
+  if (s3FileLists.length == 0) {
     throw new StorageCodeException({
       code: StorageErrorCode.NO_FILES_ON_S3_FOR_TRANSFER,
       status: 404,
     });
   }
-  const sizeOfFilesOnS3 = s3FileList.Contents.reduce(
-    (size, x) => size + x.Size,
-    0,
-  );
+
+  let sizeOfFilesOnS3 = 0;
+  for (const tmpS3FileList of s3FileLists) {
+    const tmpSize = tmpS3FileList.Contents.reduce(
+      (size, x) => size + x.Size,
+      0,
+    );
+    sizeOfFilesOnS3 += tmpSize;
+  }
+
   if (sizeOfFilesOnS3 > maxBucketSize) {
     //TODO - define flow. What happens in that case - user should be notified
     throw new StorageCodeException({
@@ -113,6 +129,7 @@ export async function hostingBucketSyncFilesToIPFS(
   try {
     //Clear bucket content - directories and files
     await bucket.clearBucketContent(context, conn);
+    bucket.size = 0;
 
     //Create new directories & files
     const directories = [];
@@ -150,6 +167,8 @@ export async function hostingBucketSyncFilesToIPFS(
       file.fileStatus = FileUploadRequestFileStatus.UPLOADED_TO_IPFS;
       await file.update(SerializeFor.UPDATE_DB, conn);
 
+      bucket.size += file.size;
+
       transferedFiles.push(tmpF);
     }
 
@@ -162,10 +181,19 @@ export async function hostingBucketSyncFilesToIPFS(
     //Update bucket CID & IPNS & Size
     bucket.CID = ipfsRes.parentDirCID.toV0().toString();
     bucket.IPNS = ipns.name;
-    bucket.size = bucket.size ? bucket.size + ipfsRes.size : ipfsRes.size;
     await bucket.update(SerializeFor.UPDATE_DB, conn);
 
     await context.mysql.commit(conn);
+
+    //Delete files from S3
+    for (const tmpS3FileList of s3FileLists) {
+      await s3Client.removeFiles(
+        env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+        tmpS3FileList.Contents.map((x) => {
+          return { Key: x.Key };
+        }),
+      );
+    }
 
     await new Lmas().writeLog({
       context: context,

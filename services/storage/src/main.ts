@@ -22,11 +22,12 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.END_FILE_UPLOAD]: StorageService.endFileUpload,
     [StorageEventType.LIST_FILE_UPLOAD]: StorageService.listFileUploads,
 
+    [StorageEventType.LIST_BUCKETS]: BucketService.listBuckets,
+    [StorageEventType.GET_BUCKET]: BucketService.getBucket,
     [StorageEventType.CREATE_BUCKET]: BucketService.createBucket,
     [StorageEventType.UPDATE_BUCKET]: BucketService.updateBucket,
     [StorageEventType.DELETE_BUCKET]: BucketService.deleteBucket,
 
-    [StorageEventType.LIST_BUCKETS]: BucketService.listBuckets,
     [StorageEventType.CREATE_DIRECTORY]: DirectoryService.createDirectory,
     [StorageEventType.UPDATE_DIRECTROY]: DirectoryService.updateDirectory,
     [StorageEventType.DELETE_DIRECTORY]: DirectoryService.deleteDirectory,

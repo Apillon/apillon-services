@@ -22,6 +22,10 @@ export class BucketService {
     return (await new StorageMicroservice(context).listBuckets(query)).data;
   }
 
+  async getBucket(context: DevConsoleApiContext, id: number) {
+    return (await new StorageMicroservice(context).getBucket(id)).data;
+  }
+
   async createBucket(context: DevConsoleApiContext, body: CreateBucketDto) {
     const project: Project = await new Project({}, context).populateByUUID(
       body.project_uuid,
