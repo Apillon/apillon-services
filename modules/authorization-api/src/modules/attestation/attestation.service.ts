@@ -32,8 +32,6 @@ import {
 import { WorkerName } from '../../workers/worker-executor';
 import { AuthorizationWorker } from '../../workers/authorization.worker';
 import { u8aToHex } from '@polkadot/util';
-import { SlowBuffer } from 'buffer';
-// import { u8aToHex } from '@polkadot/util';
 
 @Injectable()
 export class AttestationService {
@@ -42,17 +40,17 @@ export class AttestationService {
     body: AttestationEmailDto,
   ): Promise<any> {
     const email = body.email;
-    // const attestation_db = await new Attestation().populateByUserEmail(
-    //   context,
-    //   email,
-    // );
+    const attestation_db = await new Attestation().populateByUserEmail(
+      context,
+      email,
+    );
 
-    // if (
-    //   attestation_db.exists() &&
-    //   attestation_db.state == AttestationState.ATTESTED
-    // ) {
-    //   return { success: false, message: 'Email already attested' };
-    // }
+    if (
+      attestation_db.exists() &&
+      attestation_db.state == AttestationState.ATTESTED
+    ) {
+      return { success: false, message: 'Email already attested' };
+    }
 
     const attestation = new Attestation({}, context).populate({
       context: context,
@@ -151,7 +149,9 @@ export class AttestationService {
   async generateIdentity(context: AuthorizationApiContext, body: any) {
     // Worker input parameters
     const parameters = {
-      ...body,
+      did_create_op: body.did_create_op,
+      email: body.email,
+      didUri: body.didUri,
     };
 
     const tokenData = parseJwtToken(
@@ -199,7 +199,7 @@ export class AttestationService {
       await sendToWorkerQueue(
         env.AUTHORIZATION_AWS_WORKER_SQS_URL,
         WorkerName.AUTHORIZATION_WORKER,
-        [...parameters],
+        [parameters],
         null,
         null,
       );

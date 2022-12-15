@@ -1,4 +1,11 @@
-import { Context, env, LogType, SerializeFor, writeLog } from '@apillon/lib';
+import {
+  CodeException,
+  env,
+  LogType,
+  SerializeFor,
+  writeLog,
+  Context,
+} from '@apillon/lib';
 import {
   BaseQueueWorker,
   QueueWorkerType,
@@ -23,13 +30,17 @@ import {
 import { u8aToHex, hexToU8a } from '@polkadot/util';
 import { BN } from '@polkadot/util/bn/bn';
 import { Attestation } from '../modules/attestation/models/attestation.model';
-import { AttestationState } from '../config/types';
+import { AttestationState, AuthorizationErrorCode } from '../config/types';
+import { HttpStatus } from '@nestjs/common';
+import { AuthorizationApiContext } from '../context';
 
 export class AuthorizationWorker extends BaseQueueWorker {
+  context: AuthorizationApiContext;
+
   // TODO: Handle errors and edge cases properly
   public constructor(
     workerDefinition: WorkerDefinition,
-    context: Context,
+    context: AuthorizationApiContext,
     type: QueueWorkerType,
   ) {
     super(
@@ -38,17 +49,19 @@ export class AuthorizationWorker extends BaseQueueWorker {
       type,
       env.AUTHORIZATION_AWS_WORKER_SQS_URL,
     );
+
+    this.context = context;
   }
 
   public async runPlanner(): Promise<any[]> {
     return [];
   }
 
-  public async runExecutor(data: any): Promise<any> {
+  public async runExecutor(parameters: any): Promise<any> {
     // Input parameters
-    const did_create_op = data.did_create_op;
-    const claimerEmail = data.email;
-    const claimerDidUri = data.didUri;
+    const did_create_op = parameters.did_create_op;
+    const claimerEmail = parameters.email;
+    const claimerDidUri = parameters.didUri;
 
     // Generate (retrieve) attester did data
     const attesterKeyPairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
@@ -60,21 +73,22 @@ export class AuthorizationWorker extends BaseQueueWorker {
     const attesterDidUri = attesterDidDoc.uri;
 
     // Check if correct attestation + state exists -> IN_PROGRESS
-    const attestation = new Attestation({}, this.context).populate({
-      context: this.context,
-      email: claimerEmail,
-    });
+    const attestation = await new Attestation(
+      {},
+      this.context,
+    ).populateByUserEmail(this.context, claimerEmail);
 
-    // if (
-    //   !attestation.exists() ||
-    //   attestation.state != AttestationState.VERIFIED
-    // ) {
-    //   throw new CodeException({
-    //     status: HttpStatus.BAD_REQUEST,
-    //     code: AuthorizationErrorCode.ATTEST_INVALID_STATE,
-    //     errorCodes: AuthorizationErrorCode,
-    //   });
-    // }
+    console.log('ATTESTATION ', attestation.state);
+    if (
+      !attestation.exists() ||
+      attestation.state != AttestationState.IN_PROGRESS
+    ) {
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: AuthorizationErrorCode.ATTEST_INVALID_STATE,
+        errorCodes: AuthorizationErrorCode,
+      });
+    }
 
     // Init Kilt essentials
     await connect(env.KILT_NETWORK);
