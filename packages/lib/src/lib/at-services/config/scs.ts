@@ -1,5 +1,9 @@
 import { env } from '../../../config/env';
-import { AppEnvironment, ScsEventType } from '../../../config/types';
+import {
+  AppEnvironment,
+  PopulateFrom,
+  ScsEventType,
+} from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { QuotaDto } from './dtos/quota.dto';
@@ -35,8 +39,6 @@ export class Scs extends BaseService {
 
     const scsResponse = await this.callService(data);
 
-    return new QuotaDto().populate({
-      ...scsResponse,
-    });
+    return new QuotaDto().populate(scsResponse.data);
   }
 }

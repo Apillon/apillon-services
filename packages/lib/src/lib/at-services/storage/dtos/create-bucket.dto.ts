@@ -7,6 +7,7 @@ import {
   SerializeFor,
   ValidatorErrorCode,
 } from '../../../../config/types';
+import { enumInclusionValidator } from '../../../validators';
 
 export class CreateBucketDto extends ModelBase {
   @prop({

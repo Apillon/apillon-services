@@ -6,6 +6,7 @@ import {
   CodeException,
   Context,
   DefaultUserRole,
+  enumInclusionValidator,
   ForbiddenErrorCodes,
   getQueryParams,
   PoolConnection,
@@ -90,6 +91,10 @@ export class Bucket extends AdvancedSQLModel {
         resolver: presenceValidator(),
         code: StorageErrorCode.BUCKET_TYPE_NOT_PRESENT,
       },
+      {
+        resolver: enumInclusionValidator(BucketType, false),
+        code: StorageErrorCode.BUCKET_TYPE_NOT_VALID,
+      },
     ],
     fakeValue: BucketType.STORAGE,
   })
@@ -149,7 +154,6 @@ export class Bucket extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
     ],
     validators: [],
     fakeValue: 5242880,
@@ -226,7 +230,7 @@ export class Bucket extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: 403,
-        errorMessage: 'Insufficient permissins',
+        errorMessage: 'Insufficient permissions to modify this record',
       });
     }
   }
@@ -245,7 +249,7 @@ export class Bucket extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: 403,
-        errorMessage: 'Insufficient permissins',
+        errorMessage: 'Insufficient permissions to access to this record',
       });
     }
   }

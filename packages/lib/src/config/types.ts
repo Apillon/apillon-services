@@ -34,6 +34,7 @@ export enum StorageEventType {
   PLACE_STORAGE_ORDER_TO_CRUST = 'place-storage-order-to-crust',
   REQUEST_S3_SIGNED_URL_FOR_UPLOAD = 'request-s3-signed-url-for-upload',
   END_FILE_UPLOAD_SESSION = 'end-file-upload-session',
+  END_FILE_UPLOAD = 'end-file-upload',
   CREATE_BUCKET = 'create-bucket',
   UPDATE_BUCKET = 'update-bucket',
   DELETE_BUCKET = 'delete-bucket',
@@ -45,10 +46,12 @@ export enum StorageEventType {
   DELETE_DIRECTORY = 'delete-directory',
   LIST_DIRECTORY_CONTENT = 'list-directory-content',
   GET_FILE_DETAILS = 'get-file-details',
+  FILE_DELETE = 'delete-file',
   BUCKET_WEBHOOK_GET = 'get-bucket-webhook',
   BUCKET_WEBHOOK_CREATE = 'create-bucket-webhook',
   BUCKET_WEBHOOK_UPDATE = 'update-bucket-webhook',
   BUCKET_WEBHOOK_DELETE = 'delete-bucket-webhook',
+  LIST_FILE_UPLOAD = 'list-file-upload',
 }
 
 export enum MailEventType {
