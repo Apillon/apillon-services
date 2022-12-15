@@ -171,6 +171,8 @@ export interface IEnv {
    ************************************************************/
   AUTH_API_HOST: string;
   AUTH_API_PORT: number;
+  AUTH_API_HOST_FE: string;
+  AUTH_API_PORT_FE: number;
 
   AUTH_API_HOST_TEST: string;
   AUTH_API_PORT_TEST: number;
@@ -361,6 +363,8 @@ export let env: IEnv = {
   /** APILLON AUTHROIZATION API */
   AUTH_API_HOST: process.env['AUTH_API_HOST'] || 'localhost',
   AUTH_API_PORT: parseInt(process.env['AUTH_API_PORT']) || 6003,
+  AUTH_API_HOST_FE: process.env['AUTH_API_HOST_FE'] || 'localhost',
+  AUTH_API_PORT_FE: parseInt(process.env['AUTH_API_PORT_FE']) || 5173,
   AUTH_API_HOST_TEST: process.env['AUTH_API_HOST_TEST'] || 'localhost',
   AUTH_API_PORT_TEST: parseInt(process.env['AUTH_API_PORT_TEST']) || 7003,
 

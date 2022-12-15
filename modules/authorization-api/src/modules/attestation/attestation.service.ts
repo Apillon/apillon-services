@@ -31,6 +31,8 @@ import {
 } from '@apillon/workers-lib';
 import { WorkerName } from '../../workers/worker-executor';
 import { AuthorizationWorker } from '../../workers/authorization.worker';
+import { u8aToHex } from '@polkadot/util';
+// import { u8aToHex } from '@polkadot/util';
 
 @Injectable()
 export class AttestationService {
@@ -39,19 +41,16 @@ export class AttestationService {
     body: AttestationEmailDto,
   ): Promise<any> {
     const email = body.email;
-    // TODO: How do we check for existing users
     // const attestation_db = await new Attestation().populateByUserEmail(
     //   context,
     //   email,
     // );
 
-    // // TODO: Handle
-    // if (attestation_db.exists()) {
-    //   throw new CodeException({
-    //     status: HttpStatus.UNPROCESSABLE_ENTITY,
-    //     code: ModuleValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
-    //     errorCodes: ModuleValidatorErrorCode,
-    //   });
+    // if (
+    //   attestation_db.exists() &&
+    //   attestation_db.state == AttestationState.ATTESTED
+    // ) {
+    //   return { success: false, message: 'Email already attested' };
     // }
 
     const attestation = new Attestation({}, context).populate({
@@ -59,9 +58,14 @@ export class AttestationService {
       email: email,
     });
 
+    const token = generateJwtToken(JwtTokenType.ATTEST_EMAIL_VERIFICATION, {
+      email,
+    });
+
     // Lock email to attestation object
     attestation.populate({
       state: AttestationState.IN_PROGRESS,
+      token: token,
     });
 
     const conn = await context.mysql.start();
@@ -79,12 +83,8 @@ export class AttestationService {
       throw err;
     }
 
-    const token = generateJwtToken(JwtTokenType.ATTEST_EMAIL_VERIFICATION, {
-      email,
-    });
-
     const email_context = {
-      verification_link: `http://${env.AUTH_API_HOST}:${env.AUTH_API_PORT}/attestation/verify/${token}`,
+      verification_link: `http://${env.AUTH_API_HOST_FE}:${env.AUTH_API_PORT_FE}/attestation/?token=${token}`,
     };
 
     await new Mailing(context).sendCustomMail({
@@ -94,7 +94,7 @@ export class AttestationService {
       data: { ...email_context },
     });
 
-    return HttpStatus.OK;
+    return { success: true };
   }
 
   async verifyIdentityEmail(
@@ -124,7 +124,7 @@ export class AttestationService {
     attestation.state = AttestationState.VERIFIED;
     await attestation.update();
 
-    return HttpStatus.OK;
+    return { message: 'OK' };
   }
 
   async getUserAttestationState(
@@ -231,10 +231,19 @@ export class AttestationService {
 
     const { authentication, encryption, assertion, delegation } =
       await generateKeypairs(body.mnemonic);
-    const didDoc = await Did.resolve(Did.getFullDidUriFromKey(authentication));
     const attesterAccount = (await generateAccount(
       env.KILT_ATTESTER_MNEMONIC,
     )) as KiltKeyringPair;
+
+    if (body.initial) {
+      return attesterAccount.address;
+    }
+
+    if (body.encryption_key) {
+      return u8aToHex(encryption.publicKey);
+    }
+
+    const didDoc = await Did.resolve(Did.getFullDidUriFromKey(authentication));
 
     if (didDoc && didDoc.document) {
       console.log('DID already on chain. Nothing to do ...');

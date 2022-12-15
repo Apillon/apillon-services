@@ -105,6 +105,9 @@ export class AuthorizationWorker extends BaseQueueWorker {
       } catch (error) {
         console.error('Error occured - ', error);
       }
+    } else {
+      // TODO: Handle
+      throw 'Decryption failed ...';
     }
 
     // Prepare attestation object with claimer data

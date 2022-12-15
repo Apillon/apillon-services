@@ -39,7 +39,7 @@ export class Attestation extends AdvancedSQLModel {
   public email: string;
 
   /**
-   * Attestation state as defined in types
+   * Attestation credential
    */
   @prop({
     parser: { resolver: stringParser() },
@@ -51,14 +51,26 @@ export class Attestation extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
     ],
-    validators: [
-      // {
-      //   resolver: presenceValidator(),
-      //   code: AuthorizationErrorCode.ATTEST_STATE_NOT_PRESENT,
-      // },
-    ],
+    validators: [],
   })
   public credential: string;
+
+  /**
+   * Attestation credential
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+  })
+  public token: string;
 
   /**
    * Attestation state as defined in types
