@@ -63,4 +63,15 @@ export class IdentityCreateDto extends ModelBase {
     ],
   })
   public didUri: string;
+
+  @prop({
+    populatable: [PopulateFrom.PROFILE],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: AuthorizationErrorCode.ATTEST_VERIFICATION_TOKEN_NOT_PRESENT,
+      },
+    ],
+  })
+  public token: string;
 }

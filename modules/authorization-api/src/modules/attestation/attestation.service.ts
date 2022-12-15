@@ -32,6 +32,7 @@ import {
 import { WorkerName } from '../../workers/worker-executor';
 import { AuthorizationWorker } from '../../workers/authorization.worker';
 import { u8aToHex } from '@polkadot/util';
+import { SlowBuffer } from 'buffer';
 // import { u8aToHex } from '@polkadot/util';
 
 @Injectable()
@@ -152,6 +153,19 @@ export class AttestationService {
     const parameters = {
       ...body,
     };
+
+    const tokenData = parseJwtToken(
+      JwtTokenType.ATTEST_EMAIL_VERIFICATION,
+      body.token,
+    );
+
+    if (tokenData.email != body.email) {
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: AuthorizationErrorCode.ATTEST_INVALID_VERIFICATION_TOKEN,
+        errorCodes: AuthorizationErrorCode,
+      });
+    }
 
     if (
       env.APP_ENV == AppEnvironment.LOCAL_DEV ||
