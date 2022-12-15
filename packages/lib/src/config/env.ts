@@ -218,6 +218,11 @@ export interface IEnv {
   CONFIG_MYSQL_DATABASE_TEST: string;
   CONFIG_MYSQL_USER_TEST: string;
   CONFIG_MYSQL_PASSWORD_TEST: string;
+
+  /**
+   * hCAPTCHA
+   */
+  CAPTCHA_SECRET: string;
 }
 
 // dotenv.config();
@@ -384,6 +389,9 @@ export let env: IEnv = {
   CONFIG_MYSQL_DATABASE_TEST: process.env['CONFIG_MYSQL_DATABASE_TEST'],
   CONFIG_MYSQL_USER_TEST: process.env['CONFIG_MYSQL_USER_TEST'],
   CONFIG_MYSQL_PASSWORD_TEST: process.env['CONFIG_MYSQL_PASSWORD_TEST'],
+
+  /** CAPTCHA */
+  CAPTCHA_SECRET: process.env['CAPTCHA_SECRET'] || '',
 };
 
 export let isEnvReady = false;
