@@ -35,8 +35,6 @@ export class Scs extends BaseService {
 
     const scsResponse = await this.callService(data);
 
-    return new QuotaDto().populate({
-      ...scsResponse,
-    });
+    return new QuotaDto().populate(scsResponse.data);
   }
 }

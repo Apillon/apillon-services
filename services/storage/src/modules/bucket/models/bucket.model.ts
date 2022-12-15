@@ -324,4 +324,25 @@ export class Bucket extends AdvancedSQLModel {
       conn,
     );
   }
+
+  /**
+   * Function to get count of active bucket inside project and for specific bucket type
+   * @param project_uuid
+   * @param bucketType
+   * @returns
+   */
+  public async getNumOfBuckets() {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT COUNT(*) as numOfBuckets
+      FROM \`${this.tableName}\`
+      WHERE project_uuid = @project_uuid 
+      AND bucketType = @bucketType
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { project_uuid: this.project_uuid, bucketType: this.bucketType },
+    );
+
+    return data[0].numOfBuckets;
+  }
 }

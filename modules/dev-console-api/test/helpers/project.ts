@@ -1,4 +1,5 @@
-import { DefaultUserRole } from '@apillon/lib';
+import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
+import { DefaultUserRole, generatePassword } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
 import { ProjectUser } from '../../src/modules/project/models/project-user.model';
 import { Project } from '../../src/modules/project/models/project.model';
@@ -30,4 +31,20 @@ export async function createTestProject(
   );
 
   return project;
+}
+
+export async function createTestApiKey(
+  amsContext: TestContext,
+  project_uuid: string,
+) {
+  const apiKeySecret = generatePassword(12);
+  const key: ApiKey = new ApiKey({}, amsContext).populate({
+    apiKey: uuidV4(),
+    apiKeySecret: apiKeySecret,
+    project_uuid: project_uuid,
+  });
+
+  await key.insert();
+
+  return key;
 }

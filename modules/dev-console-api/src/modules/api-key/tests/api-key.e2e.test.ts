@@ -1,6 +1,9 @@
 import { AmsErrorCode } from '@apillon/access/src/config/types';
 import * as request from 'supertest';
-import { createTestProject } from '../../../../test/helpers/project';
+import {
+  createTestApiKey,
+  createTestProject,
+} from '../../../../test/helpers/project';
 import { createTestProjectService } from '../../../../test/helpers/service';
 import { releaseStage, setupTest, Stage } from '../../../../test/helpers/setup';
 import { createTestUser, TestUser } from '../../../../test/helpers/user';
@@ -161,5 +164,40 @@ describe('API key tests', () => {
     expect(response.body.message).toBe(
       AmsErrorCode[AmsErrorCode.API_KEY_NOT_FOUND],
     );
+  });
+
+  describe('API key quotas tests', () => {
+    let quotaTestsUser: TestUser = undefined;
+    let quotaTestProject: Project = undefined;
+
+    beforeAll(async () => {
+      quotaTestsUser = await createTestUser(
+        stage.devConsoleContext,
+        stage.amsContext,
+      );
+      quotaTestProject = await createTestProject(
+        quotaTestsUser,
+        stage.devConsoleContext,
+      );
+      //add 20 api keys to quotaTestProject - max api keys on project quota reached
+      for (let i = 0; i < 20; i++) {
+        await createTestApiKey(stage.amsContext, quotaTestProject.project_uuid);
+      }
+    });
+
+    test('User should recieve status 400 when max api keys quota is reached', async () => {
+      const response = await request(stage.http)
+        .post('/api-keys')
+        .send({
+          project_uuid: quotaTestProject.project_uuid,
+          name: 'My test API key',
+          testNetwork: false,
+        })
+        .set('Authorization', `Bearer ${quotaTestsUser.token}`);
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        AmsErrorCode[AmsErrorCode.MAX_API_KEY_QUOTA_REACHED],
+      );
+    });
   });
 });

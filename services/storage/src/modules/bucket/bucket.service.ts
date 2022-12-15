@@ -5,10 +5,12 @@ import {
   Lmas,
   LogType,
   PopulateFrom,
+  QuotaCode,
+  Scs,
   SerializeFor,
   ServiceName,
 } from '@apillon/lib';
-import { StorageErrorCode } from '../../config/types';
+import { BucketType, StorageErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
 import {
   StorageCodeException,
@@ -47,6 +49,27 @@ export class BucketService {
       if (!b.isValid()) throw new StorageValidationException(b);
     }
 
+    //check max bucket quota
+    const numOfBuckets = await b.getNumOfBuckets();
+    const maxBucketsQuota = await new Scs(context).getQuota({
+      quota_id:
+        b.bucketType == BucketType.STORAGE
+          ? QuotaCode.MAX_FILE_BUCKETS
+          : QuotaCode.MAX_HOSTING_BUCKETS,
+      project_uuid: b.project_uuid,
+    });
+    if (
+      maxBucketsQuota &&
+      maxBucketsQuota.value &&
+      numOfBuckets >= maxBucketsQuota.value
+    ) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.MAX_BUCKETS_REACHED,
+        status: 400,
+      });
+    }
+
+    //Insert
     await b.insert();
 
     await new Lmas().writeLog({

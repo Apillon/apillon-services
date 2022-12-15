@@ -190,4 +190,42 @@ export class Project extends AdvancedSQLModel {
 
     return selectAndCountQuery(context.mysql, sqlQuery, params, 'p.id');
   }
+
+  public async getNumOfUserProjects() {
+    const context = await this.getContext();
+    const data = await context.mysql.paramExecute(
+      `
+      SELECT COUNT(*) as numOfProjects
+      FROM \`${this.tableName}\`
+      WHERE createUser = @user_id
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { user_id: context.user.id },
+    );
+
+    return data[0].numOfProjects;
+  }
+
+  public async getNumOfUsersOnProjects() {
+    const context = await this.getContext();
+    const data = await context.mysql.paramExecute(
+      `
+      select sum(project_users.numOfUsers) as numOfUsersOnProject
+      from (
+        SELECT count(*) as numOfUsers 
+        from \`${DbTables.PROJECT_USER}\`
+        WHERE project_id = @project_id
+        AND status <> ${SqlModelStatus.DELETED}
+          union all
+        select count(*) as numOfUsers 
+        from \`${DbTables.PROJECT_USER_PENDING_INVITATION}\`
+        WHERE project_id = @project_id
+        AND status <> ${SqlModelStatus.DELETED}
+      ) project_users
+      `,
+      { project_id: this.id },
+    );
+
+    return data[0].numOfUsersOnProject;
+  }
 }
