@@ -27,6 +27,7 @@ import { ValidateEmailDto } from './dtos/validate-email.dto';
 import { User } from './models/user.model';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
+import { verifyCaptcha } from '@apillon/modules-lib';
 
 @Injectable()
 export class UserService {
@@ -86,11 +87,36 @@ export class UserService {
     context: Context,
     emailVal: ValidateEmailDto,
   ): Promise<any> {
-    const email = emailVal.email;
+    const { email, captcha } = emailVal;
+    let emailResult;
+    let captchaResult;
+    // console.log(captcha);
 
-    const res = await new Ams(context).emailExists(email);
+    const promises = [];
+    promises.push(
+      new Ams(context)
+        .emailExists(email)
+        .then((response) => (emailResult = response)),
+    );
+    if (env.CAPTCHA_SECRET) {
+      promises.push(
+        verifyCaptcha(captcha.token, env.CAPTCHA_SECRET).then(
+          (response) => (captchaResult = response),
+        ),
+      );
+    }
 
-    if (res.data.result === true) {
+    await Promise.all(promises);
+
+    if (env.CAPTCHA_SECRET && !captchaResult) {
+      throw new CodeException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        code: ValidatorErrorCode.CAPTCHA_CHALLENGE_INVALID,
+        errorCodes: ValidatorErrorCode,
+      });
+    }
+
+    if (emailResult.data.result === true) {
       throw new CodeException({
         status: HttpStatus.UNPROCESSABLE_ENTITY,
         code: ValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
@@ -110,7 +136,7 @@ export class UserService {
       },
     });
 
-    return res;
+    return emailResult;
   }
 
   async registerUser(
