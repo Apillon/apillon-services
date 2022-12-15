@@ -59,21 +59,16 @@ export class IPFSService {
     console.info(`File recieved, pushing to IPFS...`);
 
     const filesOnIPFS = await client.add({
-      path: '',
       content: file.Body as any,
     });
 
     console.info(`File added to IPFS...uploadFileToIPFSFromS3 success.`);
-
-    //const key = await client.key.gen('myTestPage');
-    //const ipnsRes = await client.name.publish(filesOnIPFS.cid);
 
     return {
       CID: filesOnIPFS.cid,
       cidV0: filesOnIPFS.cid.toV0().toString(),
       cidV1: filesOnIPFS.cid.toV1().toString(),
       size: filesOnIPFS.size,
-      //ipnsRes: ipnsRes,
     };
   }
 
@@ -187,7 +182,6 @@ export class IPFSService {
   }
 
   static async listIPFSDirectory(param: any) {
-    console.log(param);
     //Get IPFS client
     const client = await IPFSService.createIPFSClient();
 
@@ -204,6 +198,24 @@ export class IPFSService {
     }
 
     return filesInDirectory;
+  }
+
+  /**
+   * Unpin file from IPFS node - file will eventually be deleted from this node
+   * @param cid
+   * @returns
+   */
+  static async unpinFile(cid: string) {
+    try {
+      //Get IPFS client
+      const client = await IPFSService.createIPFSClient();
+      await client.pin.rm(cid);
+    } catch (err) {
+      console.error('Error unpinning file', cid, err);
+      return false;
+    }
+
+    return true;
   }
 
   //#region OBSOLETE

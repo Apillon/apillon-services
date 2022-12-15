@@ -1,5 +1,9 @@
 import { env } from '../../../config/env';
-import { AppEnvironment, ScsEventType } from '../../../config/types';
+import {
+  AppEnvironment,
+  PopulateFrom,
+  ScsEventType,
+} from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { QuotaDto } from './dtos/quota.dto';

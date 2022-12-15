@@ -10,7 +10,6 @@ import { Lmas, LogType, ServiceName } from '@apillon/lib';
 export async function sendTransferredFilesToBucketWebhook(
   context: ServiceContext,
   bucket: Bucket,
-  session: FileUploadSession,
   files: File[],
 ) {
   //Check if webhook is set in this bucket
@@ -25,7 +24,6 @@ export async function sendTransferredFilesToBucketWebhook(
     try {
       //assemble body and send request to url
       body = {
-        session_uuid: session.session_uuid,
         files: files.map((x) => {
           return {
             file_uuid: x.file_uuid,

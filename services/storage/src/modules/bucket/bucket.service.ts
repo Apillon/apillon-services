@@ -31,6 +31,29 @@ export class BucketService {
     ).getList(context, new BucketQueryFilter(event.query));
   }
 
+  static async getBucket(event: { id: number }, context: ServiceContext) {
+    const b = await new Bucket({}, context).populateById(event.id);
+    if (!b.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.BUCKET_NOT_FOUND,
+        status: 404,
+      });
+    }
+    b.canAccess(context);
+
+    //get bucket max size quota from config service
+    const maxBucketSizeQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_BUCKET_SIZE,
+      project_uuid: b.project_uuid,
+      object_uuid: b.bucket_uuid,
+    });
+    if (maxBucketSizeQuota && maxBucketSizeQuota.value) {
+      b.maxSize = maxBucketSizeQuota.value * 1073741824; //quota is in GB - convert to bytes
+    }
+
+    return b.serialize(SerializeFor.PROFILE);
+  }
+
   static async createBucket(
     event: { body: CreateBucketDto },
     context: ServiceContext,
@@ -39,8 +62,8 @@ export class BucketService {
       { ...event.body, bucket_uuid: uuidV4() },
       context,
     );
-    //set default bucket size
-    b.maxSize = 5242880;
+    //set default bucket size in bytes - NOTE this is not used in application. Max size is set in config MS
+    b.maxSize = 5368709120;
 
     try {
       await b.validate();

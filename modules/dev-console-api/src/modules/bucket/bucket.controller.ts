@@ -113,6 +113,20 @@ export class BucketController {
     return await this.bucketService.getBucketList(context, query);
   }
 
+  @Get(':id')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @UseGuards(AuthGuard)
+  async getBucket(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return await this.bucketService.getBucket(context, id);
+  }
+
   @Post()
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
