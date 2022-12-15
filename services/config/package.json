@@ -16,6 +16,7 @@
     "deploy:prod": "serverless deploy --stage production",
     "deploy:staging": "serverless deploy --stage staging",
     "deploy:dev": "serverless deploy --stage dev",
+    "deploy:test": "serverless deploy --stage test",
     "db-upgrade": "node -r ts-node/register ./src/scripts/db/upgrade-db",
     "db-downgrade": "node -r ts-node/register ./src/scripts/db/downgrade-db",
     "db-seed": "node -r ts-node/register ./src/scripts/db/seed-db",

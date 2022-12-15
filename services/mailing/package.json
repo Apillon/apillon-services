@@ -14,7 +14,8 @@
     "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "deploy:prod": "serverless deploy --stage production",
     "deploy:staging": "serverless deploy --stage staging",
-    "deploy:dev": "serverless deploy --stage dev"
+    "deploy:dev": "serverless deploy --stage dev",
+    "deploy:test": "serverless deploy --stage test"
   },
   "dependencies": {
     "@middy/core": "^2.5.7",
