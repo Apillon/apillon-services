@@ -196,11 +196,12 @@ export class Project extends AdvancedSQLModel {
     const data = await context.mysql.paramExecute(
       `
       SELECT COUNT(*) as numOfProjects
-      FROM \`${this.tableName}\`
-      WHERE createUser = @user_id
+      FROM \`${DbTables.PROJECT_USER}\`
+      WHERE user_id = @user_id
+      AND role_id = @role_id
       AND status <> ${SqlModelStatus.DELETED};
       `,
-      { user_id: context.user.id },
+      { user_id: context.user.id, role_id: DefaultUserRole.PROJECT_OWNER },
     );
 
     return data[0].numOfProjects;

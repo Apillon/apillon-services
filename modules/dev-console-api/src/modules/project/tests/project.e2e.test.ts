@@ -265,8 +265,8 @@ describe('Project tests', () => {
         quotaTestsUser,
         stage.devConsoleContext,
       );
-      //add 20 users to quotaTestProject - max users on project quota reached
-      for (let i = 0; i < 20; i++) {
+      //add 10 users to quotaTestProject - max users on project quota reached
+      for (let i = 0; i < 10; i++) {
         await createTestUser(
           stage.devConsoleContext,
           stage.amsContext,
@@ -303,7 +303,7 @@ describe('Project tests', () => {
           email: 'nekTestniMail@gmail.com',
           role_id: DefaultUserRole.PROJECT_USER,
         })
-        .set('Authorization', `Bearer ${testUser.token}`);
+        .set('Authorization', `Bearer ${quotaTestsUser.token}`);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
         BadRequestErrorCode[
