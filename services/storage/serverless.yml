@@ -63,6 +63,6 @@ functions:
       AWS_WORKER_LAMBDA_NAME: ${self:functions.storage-service-worker.name}
     events:
       - sqs:
-          arn: ${env:WORKER_SQS_ARN} #arn:aws:sqs:eu-west-1:018021943180:storage-service-queue-dev 
+          arn: ${env:WORKER_SQS_ARN} #arn:aws:sqs:eu-west-1:018021943180:apillon-storage-queue-dev 
           batchSize: 4
           maximumBatchingWindow: 5
