@@ -1,3 +1,4 @@
+import { BucketWebhook } from '@apillon/storage/src/modules/bucket/models/bucket-webhook.model';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
 import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';
@@ -18,6 +19,19 @@ export async function createTestBucket(
   await bucket.insert();
 
   return bucket;
+}
+
+export async function createTestBucketWebhook(
+  storageCtx: TestContext,
+  bucket: Bucket,
+) {
+  const webhook: BucketWebhook = new BucketWebhook({}, storageCtx).populate({
+    bucket_id: bucket.id,
+    url: 'https://eob0hpm13hsj7sk.m.pipedream.net',
+  });
+
+  await webhook.insert();
+  return webhook;
 }
 
 export async function createTestBucketDirectory(

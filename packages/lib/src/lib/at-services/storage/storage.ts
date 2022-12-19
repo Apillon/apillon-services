@@ -7,12 +7,14 @@ import {
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { BucketQueryFilter } from './dtos/bucket-query-filter.dto';
+import { CreateBucketWebhookDto } from './dtos/create-bucket-webhook.dto';
 import { CreateBucketDto } from './dtos/create-bucket.dto';
 import { CreateDirectoryDto } from './dtos/create-directory.dto';
 import { CreateS3SignedUrlForUploadDto } from './dtos/create-s3-signed-url-for-upload.dto';
 import { DirectoryContentQueryFilter } from './dtos/directory-content-query-filter.dto';
 import { EndFileUploadSessionDto } from './dtos/end-file-upload-session.dto';
 import { FileDetailsQueryFilter } from './dtos/file-details-query-filter.dto';
+import { FileUploadsQueryFilter } from './dtos/file-uploads-query-filter.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -36,6 +38,14 @@ export class StorageMicroservice extends BaseService {
     const data = {
       eventName: StorageEventType.LIST_BUCKETS,
       query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async getBucket(id: number) {
+    const data = {
+      eventName: StorageEventType.GET_BUCKET,
+      id: id,
     };
     return await this.callService(data);
   }
@@ -125,6 +135,22 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async syncFileToIPFS(file_uuid: string) {
+    const data = {
+      eventName: StorageEventType.END_FILE_UPLOAD,
+      file_uuid: file_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async listFileUploads(params: FileUploadsQueryFilter) {
+    const data = {
+      eventName: StorageEventType.LIST_FILE_UPLOAD,
+      query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
   //#endregion
 
   //#region file
@@ -132,8 +158,51 @@ export class StorageMicroservice extends BaseService {
   public async getFileDetails(params: FileDetailsQueryFilter) {
     const data = {
       eventName: StorageEventType.GET_FILE_DETAILS,
-      file_uuid: params.file_uuid,
-      cid: params.cid,
+      ...params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async deleteFile(params: { id: string }) {
+    const data = {
+      eventName: StorageEventType.FILE_DELETE,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
+  //#endregion
+
+  //#region bucket webhook
+
+  public async getBucketWebhook(bucket_id: number) {
+    const data = {
+      eventName: StorageEventType.BUCKET_WEBHOOK_GET,
+      bucket_id: bucket_id,
+    };
+    return await this.callService(data);
+  }
+
+  public async createBucketWebhook(params: CreateBucketWebhookDto) {
+    const data = {
+      eventName: StorageEventType.BUCKET_WEBHOOK_CREATE,
+      body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async updateBucketWebhook(params: { id: number; data: any }) {
+    const data = {
+      eventName: StorageEventType.BUCKET_WEBHOOK_UPDATE,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
+  public async deleteBucketWebhook(params: { id: number }) {
+    const data = {
+      eventName: StorageEventType.BUCKET_WEBHOOK_DELETE,
+      ...params,
     };
     return await this.callService(data);
   }

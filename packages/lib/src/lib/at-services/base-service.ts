@@ -14,6 +14,7 @@ export abstract class BaseService {
   protected securityToken: string;
   private requestId: string;
   private user: any;
+  private apiKey: any;
 
   constructor(context?: Context) {
     this.lambda = new AWS.Lambda({
@@ -23,6 +24,7 @@ export abstract class BaseService {
     this.securityToken = this.generateSecurityToken();
     this.requestId = context?.requestId;
     this.user = context?.user;
+    this.apiKey = context?.apiKey;
   }
 
   private generateSecurityToken() {
@@ -37,7 +39,8 @@ export abstract class BaseService {
     payload = {
       securityToken: this.securityToken,
       requestId: this.requestId,
-      user: this.user?.serialize(),
+      user: this.user,
+      apiKey: this.apiKey,
       ...payload,
     };
 
@@ -64,7 +67,7 @@ export abstract class BaseService {
         });
       });
     }
-    console.log(result);
+    //console.log(result);
 
     if (!isAsync && (result?.error || !result?.success)) {
       // CodeException causes circular dependency!
@@ -90,7 +93,7 @@ export abstract class BaseService {
     const devSocket = Net.connect(
       { port: this.devPort, timeout: 300000 },
       () => {
-        console.log(`Connected to ${this.serviceName} dev socket`);
+        //console.log(`Connected to ${this.serviceName} dev socket`);
       },
     );
 
@@ -105,7 +108,7 @@ export abstract class BaseService {
         reject('Socket timeout!');
       });
       devSocket.on('end', () => {
-        console.log(`Disconnected from ${this.serviceName} dev socket`);
+        //console.log(`Disconnected from ${this.serviceName} dev socket`);
         resolve(null);
       });
       devSocket.on('data', (data) => {
