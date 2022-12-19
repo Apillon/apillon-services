@@ -12,9 +12,10 @@ import {
 import {
   CodeException,
   env,
+  Lmas,
   LogType,
   SerializeFor,
-  writeLog,
+  ServiceName,
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
@@ -30,7 +31,11 @@ import {
 } from '../lib/kilt';
 import { AuthorizationApiContext } from '../context';
 import { Attestation } from '../modules/attestation/models/attestation.model';
-import { AttestationState, AuthorizationErrorCode } from '../config/types';
+import {
+  AttestationState,
+  AuthorizationErrorCode,
+  KILT_DERIVATION_SIGN_ALGORITHM,
+} from '../config/types';
 
 export class AuthorizationWorker extends BaseQueueWorker {
   context: AuthorizationApiContext;
@@ -112,15 +117,34 @@ export class AuthorizationWorker extends BaseQueueWorker {
         const fullDidCreationTx = api.tx.did.create(data, {
           sr25519: signature,
         });
-        console.log('Submitting DID create TX ...');
+
+        await new Lmas().writeLog({
+          logType: LogType.INFO,
+          message: `Submitting DID create TX ...'`,
+          location: 'AUTHORIZATION-API/attestation/authorization.worker',
+          service: ServiceName.AUTHORIZATION,
+        });
 
         await Blockchain.signAndSubmitTx(fullDidCreationTx, attesterAccount);
       } catch (error) {
-        // TODO: Handle
+        await new Lmas().writeLog({
+          logType: LogType.ERROR,
+          message: error,
+          location: 'AUTHORIZATION-API/attestation/authorization.worker',
+          service: ServiceName.AUTHORIZATION,
+        });
+
+        throw new Error(error);
       }
     } else {
-      // TODO: Handle
-      throw 'Decryption failed ...';
+      await new Lmas().writeLog({
+        logType: LogType.ERROR,
+        message: 'Decryption failed',
+        location: 'AUTHORIZATION-API/attestation/authorization.worker',
+        service: ServiceName.AUTHORIZATION,
+      });
+
+      throw new Error('Decryption failed.');
     }
 
     // Prepare attestation instance and credential structure
@@ -150,23 +174,29 @@ export class AuthorizationWorker extends BaseQueueWorker {
     );
 
     try {
-      console.log('Submitting attestation create TX ...');
+      await new Lmas().writeLog({
+        logType: LogType.INFO,
+        message: `Submitting DID create TX ...'`,
+        location: 'AUTHORIZATION-API/attestation/authorization.worker',
+        service: ServiceName.AUTHORIZATION,
+      });
+
       await Blockchain.signAndSubmitTx(emailClaimTx, attesterAccount);
       const emailAttested = Boolean(
         await api.query.attestation.attestations(credential.rootHash),
       );
 
-      writeLog(
-        LogType.MSG,
-        `ATTESTATION ${claimerEmail} attested => ${emailAttested}`,
-        'attestation.service.ts',
-        'createAttestation',
-      );
+      await new Lmas().writeLog({
+        logType: LogType.INFO,
+        message: `ATTESTATION ${claimerEmail} attested => ${emailAttested}`,
+        location: 'AUTHORIZATION-API/attestation/authorization.worker',
+        service: ServiceName.AUTHORIZATION,
+      });
 
       const claimerCredential = {
         ...credential,
         claimerSignature: {
-          keyType: 'sr25519',
+          keyType: KILT_DERIVATION_SIGN_ALGORITHM,
           keyUri: claimerDidUri,
         },
       };
@@ -180,25 +210,26 @@ export class AuthorizationWorker extends BaseQueueWorker {
       try {
         await attestationDb.insert(SerializeFor.INSERT_DB, conn);
         await this.context.mysql.commit(conn);
-      } catch (err) {
+      } catch (error) {
         await this.context.mysql.rollback(conn);
-        writeLog(
-          LogType.ERROR,
-          `Error creating attestation state for user with email ${claimerEmail}'`,
-          'attestation.service.ts',
-          'sendVerificationEmail',
-        );
-        throw err;
+        await new Lmas().writeLog({
+          logType: LogType.ERROR,
+          message: `Error creating attestation state for user with email ${claimerEmail}'`,
+          location: 'AUTHORIZATION-API/attestation/authorization.worker',
+          service: ServiceName.AUTHORIZATION,
+        });
+        throw new Error(error);
       }
 
       return true;
     } catch (error) {
-      writeLog(
-        LogType.MSG,
-        `ATTESTATION ${claimerEmail} attested => FAILED`,
-        'attestation.service.ts',
-        'createAttestation',
-      );
+      await new Lmas().writeLog({
+        logType: LogType.ERROR,
+        message: `ATTESTATION ${claimerEmail} attested => FAILED`,
+        location: 'AUTHORIZATION-API/attestation/authorization.worker',
+        service: ServiceName.AUTHORIZATION,
+      });
+      throw new Error(error);
     }
 
     return false;

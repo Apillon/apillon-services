@@ -17,7 +17,7 @@ export class Attestation extends AdvancedSQLModel {
   tableName = DbTables.ATTESTATION;
 
   /**
-   * TODO: Attestation user email -> Review!
+   * Attestation email
    */
   @prop({
     parser: { resolver: stringParser() },
@@ -68,7 +68,12 @@ export class Attestation extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
     ],
-    validators: [],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: AuthorizationErrorCode.ATTEST_TOKEN_NOT_PRESENT,
+      },
+    ],
   })
   public token: string;
 

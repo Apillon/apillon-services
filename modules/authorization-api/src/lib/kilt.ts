@@ -133,7 +133,7 @@ export function createAttestationRequest(
 }
 
 export function getCtypeSchema(): ICType {
-  // TODO: These are the official CTypes create by Kilt
+  // NOTE: These are official CTypes created by Kilt
   return CType.fromProperties('Email', {
     Email: {
       type: 'string',

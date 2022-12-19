@@ -10,7 +10,7 @@ import { AuthorizationErrorCode } from '../config/types';
 export class AuthorizationCodeException extends CodeException {
   constructor(options: ErrorOptions) {
     options = {
-      sourceModule: ServiceName.STORAGE,
+      sourceModule: ServiceName.AUTHORIZATION,
       errorCodes: AuthorizationErrorCode,
       errorMessage:
         options.errorMessage || AuthorizationErrorCode[options.code],

@@ -1,7 +1,5 @@
 export function ResponseFormat() {
   const after = (request) => {
-    // console.log('RESPONSE FORMAT MIDDLEWARE');
-    // console.log(request);
     if (request.response) {
       request.response = {
         success: true,
@@ -16,7 +14,6 @@ export function ResponseFormat() {
         error: request?.error,
       };
     }
-    // console.log(request);
   };
 
   return { after };

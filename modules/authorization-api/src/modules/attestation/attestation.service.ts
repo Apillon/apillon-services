@@ -8,6 +8,8 @@ import {
   parseJwtToken,
   env,
   AppEnvironment,
+  Lmas,
+  ServiceName,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthorizationApiContext } from '../../context';
@@ -73,13 +75,14 @@ export class AttestationService {
       await context.mysql.commit(conn);
     } catch (err) {
       await context.mysql.rollback(conn);
-      writeLog(
-        LogType.ERROR,
-        `Error creating attestation state for user with email ${email}'`,
-        'attestation.service.ts',
-        'sendVerificationEmail',
-      );
-      throw err;
+      await new Lmas().writeLog({
+        context: context,
+        logType: LogType.ERROR,
+        message: `Error creating attestation state for user with email ${email}'`,
+        location: 'AUTHORIZATION-API/attestation/sendVerificationEmail',
+        service: ServiceName.AUTHORIZATION,
+      });
+      throw new Error(err);
     }
 
     const email_context = {
@@ -96,36 +99,6 @@ export class AttestationService {
     return { success: true };
   }
 
-  async verifyIdentityEmail(
-    context: AuthorizationApiContext,
-    token: string,
-  ): Promise<any> {
-    const tokenData = parseJwtToken(
-      JwtTokenType.ATTEST_EMAIL_VERIFICATION,
-      token,
-    );
-    const attestation = await new Attestation({}, context).populateByUserEmail(
-      context,
-      tokenData.email,
-    );
-
-    if (
-      !attestation.exists() ||
-      attestation.state != AttestationState.IN_PROGRESS
-    ) {
-      throw new CodeException({
-        status: HttpStatus.NOT_FOUND,
-        code: AuthorizationErrorCode.ATTEST_DOES_NOT_EXIST,
-        errorCodes: AuthorizationErrorCode,
-      });
-    }
-
-    attestation.state = AttestationState.VERIFIED;
-    await attestation.update();
-
-    return { message: 'OK' };
-  }
-
   async getUserAttestationState(
     context: AuthorizationApiContext,
     email: string,
@@ -136,8 +109,11 @@ export class AttestationService {
     );
 
     if (!attestation.exists()) {
+      // Bad request because this resource is not present in our db - this
+      // request should NEVER happen - it's not a resource addressing
+      // problem, but a flow error
       throw new CodeException({
-        status: HttpStatus.NOT_FOUND,
+        status: HttpStatus.BAD_REQUEST,
         code: AuthorizationErrorCode.ATTEST_DOES_NOT_EXIST,
         errorCodes: AuthorizationErrorCode,
       });

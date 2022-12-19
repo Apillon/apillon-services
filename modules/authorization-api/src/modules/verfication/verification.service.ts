@@ -1,4 +1,4 @@
-import { env } from '@apillon/lib';
+import { env, Lmas, LogType, ServiceName } from '@apillon/lib';
 import {
   Attestation,
   ConfigService,
@@ -21,23 +21,33 @@ export class VerificationService {
     const presentation = JSON.parse(body.presentation);
 
     try {
-      console.log(
-        await Credential.verifyPresentation(presentation, {
-          challenge:
-            '0x3ce56bb25ea3b603f968c302578e77e28d3d7ba3c7a8c45d6ebd3f410da766e1',
-        }),
-      );
+      await Credential.verifyPresentation(presentation, {
+        challenge:
+          '0x3ce56bb25ea3b603f968c302578e77e28d3d7ba3c7a8c45d6ebd3f410da766e1',
+      });
 
       const attestationInfo = Attestation.fromChain(
         await api.query.attestation.attestations(presentation.rootHash),
         presentation.rootHash,
       );
 
-      console.log('Attestation info ', attestationInfo);
+      await new Lmas().writeLog({
+        context: context,
+        logType: LogType.INFO,
+        message: 'Verification successfull',
+        location: 'AUTHORIZATION-API/verification/verifyIdentity',
+        service: ServiceName.AUTHORIZATION,
+      });
 
       return { verified: !attestationInfo.revoked };
     } catch (error) {
-      console.log(error);
+      await new Lmas().writeLog({
+        context: context,
+        logType: LogType.ERROR,
+        message: 'Verification failed - ' + error,
+        location: 'AUTHORIZATION-API/verification/verifyIdentity',
+        service: ServiceName.AUTHORIZATION,
+      });
       return { verified: false };
     }
   }
