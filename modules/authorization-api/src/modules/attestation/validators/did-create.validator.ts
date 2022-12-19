@@ -12,7 +12,7 @@ export function didCreateCreateOpValidator() {
     // Linter is complaining here, but .. I like this
     if (did_create_op.payload.message === undefined) return false;
     if (did_create_op.payload.nonce === undefined) return false;
-    if (did_create_op.senderPubKey === undefined) return false;
+    if (did_create_op.senderPubkey === undefined) return false;
     return true;
   };
 }

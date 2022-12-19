@@ -18,7 +18,7 @@ import {
   JwtTokenType,
   AuthorizationErrorCode,
 } from '../../config/types';
-import { generateKeypairs, generateAccount } from '../../lib/kilt/utils';
+import { generateKeypairs, generateAccount } from '../../lib/kilt';
 import { KiltKeyringPair } from '@kiltprotocol/types';
 import { Blockchain, ConfigService, connect, Did } from '@kiltprotocol/sdk-js';
 

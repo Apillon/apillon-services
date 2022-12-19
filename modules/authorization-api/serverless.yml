@@ -53,14 +53,14 @@ package:
 functions:
   storage-service:
     handler: ./src/handler.handler
-    name: 'apillon-authorization-service-${self:provider.stage}'
+    name: 'apillon-authentication-service-${self:provider.stage}'
     description: Apillon Authorization Service
     memorySize: 512
     timeout: 30
   storage-service-worker:
     handler: ./src/workers/worker-executor.handler
-    name: apillon-authorization-service-worker-${self:provider.stage}
-    description: Serverless workers for Apillon Authorization service
+    name: apillon-authentication-service-worker-${self:provider.stage}
+    description: Serverless workers for Apillon authentication service
     memorySize: 512
     timeout: 900
     reservedConcurrency: 30
@@ -68,6 +68,6 @@ functions:
       AWS_WORKER_LAMBDA_NAME: ${self:functions.storage-service-worker.name}
     events:
       - sqs:
-          arn: ${env:WORKER_SQS_ARN} #arn:aws:sqs:eu-west-1:018021943180/apillon-authorization-queue-dev
+          arn: ${env:WORKER_SQS_ARN} #arn:aws:sqs:eu-west-1:018021943180/apillon-authentication-queue-dev
           batchSize: 4
           maximumBatchingWindow: 5

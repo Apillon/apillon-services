@@ -8,7 +8,14 @@ import {
 export enum DbTables {}
 
 // TODO: Move to a cache system or a database (preferably cache)
+// NOTE: In next sprint
 export const challenge = '123456789';
+
+export const KILT_DERIVATION_SIGN_ALGORITHM = 'sr25519';
+export enum EclipticDerivationPaths {
+  ATTESTATION = '//attestation',
+  DELEGATION = '//delegation',
+}
 
 /**
  * Validation error codes - 42207000.

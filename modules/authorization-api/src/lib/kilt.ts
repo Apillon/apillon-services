@@ -1,3 +1,4 @@
+import { mnemonicGenerate, mnemonicToMiniSecret } from '@polkadot/util-crypto';
 import { LogType, writeLog, env } from '@apillon/lib';
 import {
   Blockchain,
@@ -15,8 +16,11 @@ import {
   SubmittableExtrinsic,
   DidUri,
 } from '@kiltprotocol/sdk-js';
-import { mnemonicGenerate, mnemonicToMiniSecret } from '@polkadot/util-crypto';
-import { Keypairs } from '../../config/types';
+import {
+  Keypairs,
+  KILT_DERIVATION_SIGN_ALGORITHM,
+  EclipticDerivationPaths,
+} from '../config/types';
 
 export async function generateMnemonic() {
   return mnemonicGenerate();
@@ -25,7 +29,7 @@ export async function generateMnemonic() {
 export async function generateAccount(mnemonic: string): Promise<KeyringPair> {
   return Utils.Crypto.makeKeypairFromSeed(
     mnemonicToMiniSecret(mnemonic),
-    'sr25519',
+    KILT_DERIVATION_SIGN_ALGORITHM,
   );
 }
 
@@ -34,16 +38,18 @@ export async function generateKeypairs(mnemonic: string) {
   // stored on the chain
   const authentication = Utils.Crypto.makeKeypairFromSeed(
     mnemonicToMiniSecret(mnemonic),
-    'sr25519',
+    KILT_DERIVATION_SIGN_ALGORITHM,
   );
   const encryption = Utils.Crypto.makeEncryptionKeypairFromSeed(
     mnemonicToMiniSecret(mnemonic),
   );
 
-  const assertion = authentication.derive('//attestation', {
-    type: 'sr25519',
+  const assertion = authentication.derive(EclipticDerivationPaths.ATTESTATION, {
+    type: KILT_DERIVATION_SIGN_ALGORITHM,
   }) as KiltKeyringPair;
-  const delegation = authentication.derive('//delegation') as KiltKeyringPair;
+  const delegation = authentication.derive(
+    EclipticDerivationPaths.DELEGATION,
+  ) as KiltKeyringPair;
 
   return {
     authentication,
@@ -70,8 +76,6 @@ export async function getFullDidDocument(keypairs: Keypairs) {
 export async function submitDidCreateTx(
   extrinsic: SubmittableExtrinsic,
 ): Promise<boolean> {
-  // TODO: Will probably be expanded in the future with a dedicated module
-  // with getters and setters for specifics about did creation ....
   console.log('Connecting to Kilt network ...');
   await connect(env.KILT_NETWORK);
 
@@ -82,7 +86,6 @@ export async function submitDidCreateTx(
   try {
     await Blockchain.signAndSubmitTx(extrinsic, attesterAccount);
   } catch (error) {
-    console.log(error);
     writeLog(
       LogType.ERROR,
       `KILT :: DID CREATION FAILED`,
@@ -102,11 +105,10 @@ export async function submitDidCreateTx(
   return true;
 }
 
-export function prepareAttestation(
-  // TODO: Change to correct types
+export function createAttestationRequest(
   email: string,
-  attesterDidUri: any,
-  claimerDidUri: any,
+  attesterDidUri: DidUri,
+  claimerDidUri: DidUri,
 ) {
   const authCType = getCtypeSchema();
   const authContents = {
@@ -122,7 +124,7 @@ export function prepareAttestation(
   const authCredential = Credential.fromClaim(authClaim);
 
   return {
-    attestObject: Attestation.fromCredentialAndDid(
+    attestationInstance: Attestation.fromCredentialAndDid(
       authCredential,
       attesterDidUri,
     ),

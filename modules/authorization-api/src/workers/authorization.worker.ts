@@ -1,16 +1,6 @@
-import {
-  CodeException,
-  env,
-  LogType,
-  SerializeFor,
-  writeLog,
-  Context,
-} from '@apillon/lib';
-import {
-  BaseQueueWorker,
-  QueueWorkerType,
-  WorkerDefinition,
-} from '@apillon/workers-lib';
+import { HttpStatus } from '@nestjs/common';
+import { u8aToHex, hexToU8a } from '@polkadot/util';
+import { BN } from '@polkadot/util/bn/bn';
 import {
   connect,
   ConfigService,
@@ -20,19 +10,27 @@ import {
   Did,
 } from '@kiltprotocol/sdk-js';
 import {
+  CodeException,
+  env,
+  LogType,
+  SerializeFor,
+  writeLog,
+} from '@apillon/lib';
+import {
+  BaseQueueWorker,
+  QueueWorkerType,
+  WorkerDefinition,
+} from '@apillon/workers-lib';
+import {
   generateAccount,
   generateKeypairs,
   getFullDidDocument,
   getNextNonce,
-  prepareAttestation,
-} from '../lib/kilt/utils';
-
-import { u8aToHex, hexToU8a } from '@polkadot/util';
-import { BN } from '@polkadot/util/bn/bn';
+  createAttestationRequest,
+} from '../lib/kilt';
+import { AuthorizationApiContext } from '../context';
 import { Attestation } from '../modules/attestation/models/attestation.model';
 import { AttestationState, AuthorizationErrorCode } from '../config/types';
-import { HttpStatus } from '@nestjs/common';
-import { AuthorizationApiContext } from '../context';
 
 export class AuthorizationWorker extends BaseQueueWorker {
   context: AuthorizationApiContext;
@@ -64,24 +62,24 @@ export class AuthorizationWorker extends BaseQueueWorker {
     const claimerDidUri = parameters.didUri;
 
     // Generate (retrieve) attester did data
-    const attesterKeyPairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
+    const attesterKeypairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
     const attesterAccount = (await generateAccount(
       env.KILT_ATTESTER_MNEMONIC,
     )) as KiltKeyringPair;
+
     // DID
-    const attesterDidDoc = await getFullDidDocument(attesterKeyPairs);
+    const attesterDidDoc = await getFullDidDocument(attesterKeypairs);
     const attesterDidUri = attesterDidDoc.uri;
 
     // Check if correct attestation + state exists -> IN_PROGRESS
-    const attestation = await new Attestation(
+    const attestationDb = await new Attestation(
       {},
       this.context,
     ).populateByUserEmail(this.context, claimerEmail);
 
-    console.log('ATTESTATION ', attestation.state);
     if (
-      !attestation.exists() ||
-      attestation.state != AttestationState.IN_PROGRESS
+      !attestationDb.exists() ||
+      attestationDb.state != AttestationState.IN_PROGRESS
     ) {
       throw new CodeException({
         status: HttpStatus.BAD_REQUEST,
@@ -101,7 +99,7 @@ export class AuthorizationWorker extends BaseQueueWorker {
         nonce: hexToU8a(did_create_op.payload.nonce),
       },
       did_create_op.senderPubKey,
-      u8aToHex(attesterKeyPairs.encryption.secretKey),
+      u8aToHex(attesterKeypairs.encryption.secretKey),
     );
 
     if (decrypted !== false) {
@@ -114,45 +112,45 @@ export class AuthorizationWorker extends BaseQueueWorker {
         const fullDidCreationTx = api.tx.did.create(data, {
           sr25519: signature,
         });
-        console.log('Submitting did creation TX to BC...');
+        console.log('Submitting DID create TX ...');
+
         await Blockchain.signAndSubmitTx(fullDidCreationTx, attesterAccount);
       } catch (error) {
-        console.error('Error occured - ', error);
+        // TODO: Handle
       }
     } else {
       // TODO: Handle
       throw 'Decryption failed ...';
     }
 
-    // Prepare attestation object with claimer data
-    const { attestObject, credential } = prepareAttestation(
+    // Prepare attestation instance and credential structure
+    const { attestationInstance, credential } = createAttestationRequest(
       claimerEmail,
       attesterDidUri,
       claimerDidUri,
     );
 
-    const emailClaim = api.tx.attestation.add(
-      attestObject.claimHash,
-      attestObject.cTypeHash,
+    const attestation = api.tx.attestation.add(
+      attestationInstance.claimHash,
+      attestationInstance.cTypeHash,
       null,
     );
 
-    // TODO: This does not work at the moment...
     const nextNonceBN = new BN(await getNextNonce(attesterDidUri));
-    // Prepare claim tx
+    // Prepare claim TX
     const emailClaimTx = await Did.authorizeTx(
       attesterDidUri,
-      emailClaim,
+      attestation,
       async ({ data }) => ({
-        signature: attesterKeyPairs.assertion.sign(data),
-        keyType: attesterKeyPairs.assertion.type,
+        signature: attesterKeypairs.assertion.sign(data),
+        keyType: attesterKeypairs.assertion.type,
       }),
       attesterAccount.address,
       { txCounter: nextNonceBN },
     );
 
     try {
-      console.log('Submitting attestation TX to BC...');
+      console.log('Submitting attestation create TX ...');
       await Blockchain.signAndSubmitTx(emailClaimTx, attesterAccount);
       const emailAttested = Boolean(
         await api.query.attestation.attestations(credential.rootHash),
@@ -165,7 +163,7 @@ export class AuthorizationWorker extends BaseQueueWorker {
         'createAttestation',
       );
 
-      const claimerCredentialObj = {
+      const claimerCredential = {
         ...credential,
         claimerSignature: {
           keyType: 'sr25519',
@@ -173,14 +171,14 @@ export class AuthorizationWorker extends BaseQueueWorker {
         },
       };
 
-      attestation.populate({
+      attestationDb.populate({
         state: AttestationState.ATTESTED,
-        credential: claimerCredentialObj,
+        credential: claimerCredential,
       });
 
       const conn = await this.context.mysql.start();
       try {
-        await attestation.insert(SerializeFor.INSERT_DB, conn);
+        await attestationDb.insert(SerializeFor.INSERT_DB, conn);
         await this.context.mysql.commit(conn);
       } catch (err) {
         await this.context.mysql.rollback(conn);
@@ -195,7 +193,6 @@ export class AuthorizationWorker extends BaseQueueWorker {
 
       return true;
     } catch (error) {
-      console.error(error);
       writeLog(
         LogType.MSG,
         `ATTESTATION ${claimerEmail} attested => FAILED`,
