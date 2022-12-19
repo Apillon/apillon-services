@@ -21,4 +21,17 @@ export class ReferralService {
     await r.insert();
     return r.serialize(SerializeFor.PROFILE);
   }
+
+  static async getReferral(context: ServiceContext): Promise<any> {
+    const r: Referral = await new Referral({}, context).populateByUserId(
+      context?.user?.id,
+    );
+
+    if (!r.exists()) {
+      // create referral
+      await this.createReferral(context);
+    }
+
+    return r.serialize(SerializeFor.PROFILE);
+  }
 }
