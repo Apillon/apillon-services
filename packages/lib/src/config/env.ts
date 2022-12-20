@@ -208,6 +208,7 @@ export interface IEnv {
    * Apillon Serverless workers config - STORAGE MS
    ************************************************************/
   STORAGE_AWS_WORKER_SQS_URL: string;
+  STORAGE_AWS_WORKER_SQS_ARN: string;
   STORAGE_AWS_WORKER_LAMBDA_NAME;
 
   /*************************************************************
@@ -410,6 +411,7 @@ export let env: IEnv = {
    * AWS SQS url for worker communications
    */
   STORAGE_AWS_WORKER_SQS_URL: process.env['STORAGE_AWS_WORKER_SQS_URL'],
+  STORAGE_AWS_WORKER_SQS_ARN: process.env['STORAGE_AWS_WORKER_SQS_ARN'],
   STORAGE_AWS_WORKER_LAMBDA_NAME: process.env['STORAGE_AWS_WORKER_LAMBDA_NAME'],
 
   /** SCS */
