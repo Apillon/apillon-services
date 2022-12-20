@@ -2,55 +2,55 @@
   "folders": [
     {
       "name": "🌐@services/access [@apillon/access]",
-      "path": "services\\access"
+      "path": "services/access"
     },
     {
       "name": "🌐@services/monitoring [@apillon/monitoring]",
-      "path": "services\\monitoring"
+      "path": "services/monitoring"
     },
     {
       "name": "🌐@services/storage [@apillon/storage]",
-      "path": "services\\storage"
+      "path": "services/storage"
     },
     {
       "name": "🌐@services/mailing [@apillon/mailing]",
-      "path": "services\\mailing"
+      "path": "services/mailing"
     },
     {
       "name": "🌐@services/config [@apillon/config]",
-      "path": "services\\config"
+      "path": "services/config"
     },
     {
       "name": "😎@modules/dev-console-api",
-      "path": "modules\\dev-console-api"
+      "path": "modules/dev-console-api"
     },
     {
       "name": "😎@modules/apillon-api",
-      "path": "modules\\apillon-api"
+      "path": "modules/apillon-api"
     },
     {
       "name": "😎@modules/authorization-api",
-      "path": "modules\\authorization-api"
+      "path": "modules/authorization-api"
     },
     {
       "name": "📦@packages/lib",
-      "path": "packages\\lib"
+      "path": "packages/lib"
     },
     {
       "name": "📦@packages/modules-lib",
-      "path": "packages\\modules-lib"
+      "path": "packages/modules-lib"
     },
     {
       "name": "📦@packages/workers-lib",
-      "path": "packages\\workers-lib"
+      "path": "packages/workers-lib"
     },
     {
       "name": "🔨_tsconfig",
-      "path": "packages\\tsconfig"
+      "path": "packages/tsconfig"
     },
     {
       "name": "🔨_eslint",
-      "path": "packages\\eslint-config-common"
+      "path": "packages/eslint-config-common"
     },
     {
       "name": "🥕+Root",
