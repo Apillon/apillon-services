@@ -1,15 +1,33 @@
-import { SerializeFor } from '@apillon/lib';
+import { CreateReferralDto, SerializeFor } from '@apillon/lib';
 import { ServiceContext } from '../../context';
-import { ReferralValidationException } from '../../lib/exceptions';
-import { Referral } from './models/referral.model';
-import { v4 as uuidV4 } from 'uuid';
+import {
+  ReferralCodeException,
+  ReferralValidationException,
+} from '../../lib/exceptions';
+import { Player } from './models/player.model';
+import { ReferralErrorCode } from '../../config/types';
+import { HttpStatusCode } from 'axios';
 
 export class ReferralService {
-  static async createReferral(context: ServiceContext): Promise<any> {
-    const r: Referral = new Referral(
-      { user_id: context.user.id, referral_code: uuidV4() },
-      context,
+  static async createReferralPlayer(
+    event: { body: CreateReferralDto },
+    context: ServiceContext,
+  ): Promise<any> {
+    const r: Player = await new Player({}, context).populateByUserUuid(
+      context.user.user_uuid,
     );
+
+    if (!r.exists()) {
+      r.populate({
+        user_id: context.user.user_uuid,
+        referral_code: await r.generateCode(),
+        referral_id: event.body.referral_id,
+      });
+    }
+
+    if (!r.termsAccepted && event.body.termsAccepted) {
+      r.termsAccepted = new Date();
+    }
 
     try {
       await r.validate();
@@ -22,14 +40,23 @@ export class ReferralService {
     return r.serialize(SerializeFor.PROFILE);
   }
 
-  static async getReferral(context: ServiceContext): Promise<any> {
-    const r: Referral = await new Referral({}, context).populateByUserId(
-      context?.user?.id,
+  static async getReferralPlayer(context: ServiceContext): Promise<any> {
+    const userId = context?.user?.id;
+    if (!userId) {
+      throw new ReferralCodeException({
+        code: ReferralErrorCode.DEFAULT_BAD_REQUEST_EROR,
+        status: HttpStatusCode.BadRequest,
+      });
+    }
+    const r: Player = await new Player({}, context).populateByUserUuid(
+      context?.user?.user_uuid,
     );
 
     if (!r.exists()) {
-      // create referral
-      await this.createReferral(context);
+      throw new ReferralCodeException({
+        code: ReferralErrorCode.DEFAULT_BAD_REQUEST_EROR,
+        status: HttpStatusCode.BadRequest,
+      });
     }
 
     return r.serialize(SerializeFor.PROFILE);

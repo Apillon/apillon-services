@@ -1,11 +1,10 @@
 export enum DbTables {
-  REFERRAL = 'referral',
-  REFERRAL_REFERRED = 'referral_referred',
-  REFERRAL_TASK = 'referral_task',
-  REFERRAL_REFERRAL_TASK = 'referral_referral_task',
-  REFERRAL_REWARD = 'referral_reward',
-  REFERRAL_REFERRAL_REWARD = 'referral_referral_reward',
-  REFERRAL_TRANSACTION = 'referral_transaction',
+  PLAYER = 'player',
+  TASK = 'task',
+  REALIZATION = 'realization',
+  PRODUCT = 'product',
+  ORDER = 'order',
+  TRANSACTION = 'transaction',
 }
 
 export enum ReferralErrorCode {
