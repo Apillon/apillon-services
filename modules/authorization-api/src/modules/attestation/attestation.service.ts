@@ -3,7 +3,6 @@ import {
   generateJwtToken,
   CodeException,
   SerializeFor,
-  writeLog,
   LogType,
   parseJwtToken,
   env,
@@ -42,22 +41,23 @@ export class AttestationService {
     body: AttestationEmailDto,
   ): Promise<any> {
     const email = body.email;
-    const attestation_db = await new Attestation().populateByUserEmail(
+    let attestation = await new Attestation().populateByUserEmail(
       context,
       email,
     );
 
-    if (
-      attestation_db.exists() &&
-      attestation_db.state == AttestationState.ATTESTED
-    ) {
-      return { success: false, message: 'Email already attested' };
+    if (attestation.exists()) {
+      // If email was already attested -> deny process
+      if (attestation.state == AttestationState.ATTESTED) {
+        return { success: false, message: 'Email already attested' };
+      }
+    } else {
+      // If attestation does not exist, create a new entry
+      attestation = new Attestation({}, context).populate({
+        context: context,
+        email: email,
+      });
     }
-
-    const attestation = new Attestation({}, context).populate({
-      context: context,
-      email: email,
-    });
 
     const token = generateJwtToken(JwtTokenType.ATTEST_EMAIL_VERIFICATION, {
       email,
@@ -69,12 +69,10 @@ export class AttestationService {
       token: token,
     });
 
-    const conn = await context.mysql.start();
     try {
-      await attestation.insert(SerializeFor.INSERT_DB, conn);
-      await context.mysql.commit(conn);
+      // TODO: Does not work with contraints
+      await attestation.update(SerializeFor.INSERT_DB);
     } catch (err) {
-      await context.mysql.rollback(conn);
       await new Lmas().writeLog({
         context: context,
         logType: LogType.ERROR,
@@ -85,15 +83,12 @@ export class AttestationService {
       throw new Error(err);
     }
 
-    const email_context = {
-      verification_link: `http://${env.AUTH_API_HOST_FE}:${env.AUTH_API_PORT_FE}/attestation/?token=${token}`,
-    };
-
-    await new Mailing(context).sendCustomMail({
+    await new Mailing(context).sendMail({
       emails: [email],
-      subject: 'Identify verification',
-      template: 'identityVerificationEmail',
-      data: { ...email_context },
+      template: 'verify-identity',
+      data: {
+        actionUrl: `${env.AUTH_APP_URL}/attestation/?token=${token}`,
+      },
     });
 
     return { success: true };
@@ -142,6 +137,29 @@ export class AttestationService {
         errorCodes: AuthorizationErrorCode,
       });
     }
+
+    // Check if correct attestation + state exists -> IN_PROGRESS
+    const attestation = await new Attestation({}, context).populateByUserEmail(
+      context,
+      body.email,
+    );
+
+    if (
+      !attestation.exists() ||
+      attestation.state != AttestationState.IN_PROGRESS
+    ) {
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: AuthorizationErrorCode.ATTEST_INVALID_STATE,
+        errorCodes: AuthorizationErrorCode,
+      });
+    }
+
+    attestation.populate({
+      state: AttestationState.IDENTITY_VERIFIED,
+    });
+
+    await attestation.update();
 
     if (
       env.APP_ENV == AppEnvironment.LOCAL_DEV ||

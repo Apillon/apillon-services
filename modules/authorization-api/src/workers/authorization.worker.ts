@@ -1,4 +1,3 @@
-import { HttpStatus } from '@nestjs/common';
 import { u8aToHex, hexToU8a } from '@polkadot/util';
 import { BN } from '@polkadot/util/bn/bn';
 import {
@@ -9,14 +8,7 @@ import {
   Blockchain,
   Did,
 } from '@kiltprotocol/sdk-js';
-import {
-  CodeException,
-  env,
-  Lmas,
-  LogType,
-  SerializeFor,
-  ServiceName,
-} from '@apillon/lib';
+import { env, Lmas, LogType, ServiceName } from '@apillon/lib';
 import {
   BaseQueueWorker,
   QueueWorkerType,
@@ -33,7 +25,6 @@ import { AuthorizationApiContext } from '../context';
 import { Attestation } from '../modules/attestation/models/attestation.model';
 import {
   AttestationState,
-  AuthorizationErrorCode,
   KILT_DERIVATION_SIGN_ALGORITHM,
 } from '../config/types';
 
@@ -76,23 +67,6 @@ export class AuthorizationWorker extends BaseQueueWorker {
     const attesterDidDoc = await getFullDidDocument(attesterKeypairs);
     const attesterDidUri = attesterDidDoc.uri;
 
-    // Check if correct attestation + state exists -> IN_PROGRESS
-    const attestationDb = await new Attestation(
-      {},
-      this.context,
-    ).populateByUserEmail(this.context, claimerEmail);
-
-    if (
-      !attestationDb.exists() ||
-      attestationDb.state != AttestationState.IN_PROGRESS
-    ) {
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
-        code: AuthorizationErrorCode.ATTEST_INVALID_STATE,
-        errorCodes: AuthorizationErrorCode,
-      });
-    }
-
     // Init Kilt essentials
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
@@ -107,7 +81,7 @@ export class AuthorizationWorker extends BaseQueueWorker {
       u8aToHex(attesterKeypairs.encryption.secretKey),
     );
 
-    if (decrypted !== false) {
+    if (decrypted) {
       const payload = JSON.parse(decrypted);
       const data = hexToU8a(payload.data);
       const signature = hexToU8a(payload.signature);
@@ -201,26 +175,18 @@ export class AuthorizationWorker extends BaseQueueWorker {
         },
       };
 
-      attestationDb.populate({
+      // Check if correct attestation + state exists -> IN_PROGRESS
+      const attestation = await new Attestation(
+        {},
+        this.context,
+      ).populateByUserEmail(this.context, claimerEmail);
+
+      attestation.populate({
         state: AttestationState.ATTESTED,
         credential: claimerCredential,
       });
 
-      const conn = await this.context.mysql.start();
-      try {
-        await attestationDb.insert(SerializeFor.INSERT_DB, conn);
-        await this.context.mysql.commit(conn);
-      } catch (error) {
-        await this.context.mysql.rollback(conn);
-        await new Lmas().writeLog({
-          logType: LogType.ERROR,
-          message: `Error creating attestation state for user with email ${claimerEmail}'`,
-          location: 'AUTHORIZATION-API/attestation/authorization.worker',
-          service: ServiceName.AUTHORIZATION,
-        });
-        throw new Error(error);
-      }
-
+      await attestation.update();
       return true;
     } catch (error) {
       await new Lmas().writeLog({
@@ -229,9 +195,6 @@ export class AuthorizationWorker extends BaseQueueWorker {
         location: 'AUTHORIZATION-API/attestation/authorization.worker',
         service: ServiceName.AUTHORIZATION,
       });
-      throw new Error(error);
     }
-
-    return false;
   }
 }

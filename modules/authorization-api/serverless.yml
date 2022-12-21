@@ -51,13 +51,13 @@ package:
   excludeDevDependencies: true
 
 functions:
-  storage-service:
+  authentication-service:
     handler: ./src/handler.handler
     name: 'apillon-authentication-service-${self:provider.stage}'
     description: Apillon Authorization Service
     memorySize: 512
     timeout: 30
-  storage-service-worker:
+  authentication-service-worker:
     handler: ./src/workers/worker-executor.handler
     name: apillon-authentication-service-worker-${self:provider.stage}
     description: Serverless workers for Apillon authentication service
@@ -65,7 +65,7 @@ functions:
     timeout: 900
     reservedConcurrency: 30
     environment:
-      AWS_WORKER_LAMBDA_NAME: ${self:functions.storage-service-worker.name}
+      AWS_WORKER_LAMBDA_NAME: ${self:functions.authentication-service-worker.name}
     events:
       - sqs:
           arn: ${env:WORKER_SQS_ARN} #arn:aws:sqs:eu-west-1:018021943180/apillon-authentication-queue-dev

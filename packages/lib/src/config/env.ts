@@ -174,21 +174,29 @@ export interface IEnv {
   APILLON_API_PORT_TEST: number;
 
   /************************************************************
-   * Apillon Authroization API config
+   * Apillon Authentication API config
    ************************************************************/
+  // MAIN
   AUTH_API_HOST: string;
   AUTH_API_PORT: number;
-  AUTH_API_HOST_FE: string;
-  AUTH_API_PORT_FE: number;
 
-  AUTH_API_HOST_TEST: string;
-  AUTH_API_PORT_TEST: number;
+  AUTH_APP_URL: string;
 
   AUTH_API_MYSQL_HOST: string;
   AUTH_API_MYSQL_PORT: number;
   AUTH_API_MYSQL_USER: string;
   AUTH_API_MYSQL_PASSWORD: string;
   AUTH_API_MYSQL_DATABASE: string;
+
+  // TEST
+  AUTH_API_HOST_TEST: string;
+  AUTH_API_PORT_TEST: number;
+  AUTH_APP_URL_TEST: string;
+  AUTH_API_MYSQL_HOST_TEST: string;
+  AUTH_API_MYSQL_PORT_TEST: number;
+  AUTH_API_MYSQL_USER_TEST: string;
+  AUTH_API_MYSQL_PASSWORD_TEST: string;
+  AUTH_API_MYSQL_DATABASE_TEST: string;
 
   /************************************************************
    * Kilt config
@@ -354,6 +362,7 @@ export let env: IEnv = {
   STORAGE_MYSQL_USER_TEST: process.env['STORAGE_MYSQL_USER_TEST'],
   STORAGE_MYSQL_PASSWORD_TEST: process.env['STORAGE_MYSQL_PASSWORD_TEST'],
   STORAGE_MYSQL_DATABASE_TEST: process.env['STORAGE_MYSQL_DATABASE_TEST'],
+
   /** MAILING */
   MAIL_FUNCTION_NAME: process.env['MAIL_FUNCTION_NAME'],
   MAIL_FUNCTION_NAME_TEST: process.env['MAIL_FUNCTION_NAME_TEST'],
@@ -371,19 +380,21 @@ export let env: IEnv = {
   SMTP_EMAIL_FROM: process.env['SMTP_EMAIL_FROM'] || 'info@apillon.io',
   ADMIN_EMAILS: process.env['ADMIN_EMAILS'] || 'info@apillon.io',
 
-  /** APILLON API */
+  /** --- SECTION: APILLON API --- */
   APILLON_API_HOST: process.env['APILLON_API_HOST'] || 'localhost',
   APILLON_API_PORT: parseInt(process.env['APILLON_API_PORT']) || 6002,
   APILLON_API_HOST_TEST: process.env['APILLON_API_HOST_TEST'] || 'localhost',
   APILLON_API_PORT_TEST: parseInt(process.env['APILLON_API_PORT_TEST']) || 7002,
 
-  /** APILLON AUTHROIZATION API */
+  /** --- SECTION: APILLON AUTHORIZATION API --- */
   AUTH_API_HOST: process.env['AUTH_API_HOST'] || 'localhost',
   AUTH_API_PORT: parseInt(process.env['AUTH_API_PORT']) || 6003,
-  AUTH_API_HOST_FE: process.env['AUTH_API_HOST_FE'] || 'localhost',
-  AUTH_API_PORT_FE: parseInt(process.env['AUTH_API_PORT_FE']) || 5173,
   AUTH_API_HOST_TEST: process.env['AUTH_API_HOST_TEST'] || 'localhost',
   AUTH_API_PORT_TEST: parseInt(process.env['AUTH_API_PORT_TEST']) || 7003,
+  // Frontend app
+  AUTH_APP_URL: process.env['AUTH_APP_URL'] || 'http://localhost:5173',
+  AUTH_APP_URL_TEST:
+    process.env['AUTH_APP_URL_TEST'] || 'http://localhost:5173',
 
   /** AUTHORIZATION API DEV DB conn */
   AUTH_API_MYSQL_HOST: process.env['AUTH_API_MYSQL_HOST'],
@@ -391,6 +402,12 @@ export let env: IEnv = {
   AUTH_API_MYSQL_USER: process.env['AUTH_API_MYSQL_USER'],
   AUTH_API_MYSQL_PASSWORD: process.env['AUTH_API_MYSQL_PASSWORD'],
   AUTH_API_MYSQL_DATABASE: process.env['AUTH_API_MYSQL_DATABASE'],
+  AUTH_API_MYSQL_HOST_TEST: process.env['AUTH_API_MYSQL_HOST_TEST'],
+  AUTH_API_MYSQL_PORT_TEST:
+    parseInt(process.env['AUTH_API_MYSQL_PORT_TEST']) || 3306,
+  AUTH_API_MYSQL_USER_TEST: process.env['AUTH_API_MYSQL_USER_TEST'],
+  AUTH_API_MYSQL_PASSWORD_TEST: process.env['AUTH_API_MYSQL_PASSWORD_TEST'],
+  AUTH_API_MYSQL_DATABASE_TEST: process.env['AUTH_API_MYSQL_DATABASE_TEST'],
 
   /** KILT */
   KILT_NETWORK:

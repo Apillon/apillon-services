@@ -1,13 +1,12 @@
 import { HttpServer, INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
-import { dropTestDatabases, rebuildTestDatabases } from './migrations';
 import { AppEnvironment, env, Mongo, MySql } from '@apillon/lib';
+import { ExceptionsFilter, ResponseInterceptor } from '@apillon/modules-lib';
+
+import { dropTestDatabases, rebuildTestDatabases } from './migrations';
 import { TestContext } from './context';
 import { AppModule } from '../../src/app.module';
-import { ExceptionsFilter, ResponseInterceptor } from '@apillon/modules-lib';
-// import { startDevServer as startAmsServer } from 'at-ams/src/server';
-// import { startDevServer as startLmasServer } from 'at-lmas/src/server';
 
 /**
  * Testing stage definition.
@@ -17,16 +16,16 @@ export interface DatabaseState {
 }
 
 export interface Stage {
-  amsContext: TestContext;
-  lmasContext: TestContext;
-  devConsoleContext: TestContext;
   app: INestApplication;
   http: HttpServer;
-  amsSql: MySql;
-  lmasMongo: Mongo;
-  devConsoleSql: MySql;
-  storageContext: TestContext;
-  storageSql: MySql;
+  amsContext?: TestContext;
+  lmasContext?: TestContext;
+  devConsoleApiContext: TestContext;
+  amsSql?: MySql;
+  lmasMongo?: Mongo;
+  devConsoleApiSql?: MySql;
+  storageContext?: TestContext;
+  storageSql?: MySql;
 }
 
 export async function setupTest(): Promise<Stage> {
@@ -44,88 +43,48 @@ export async function setupTest(): Promise<Stage> {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
-
     app = moduleFixture.createNestApplication();
     app.useGlobalFilters(new ExceptionsFilter());
     app.useGlobalInterceptors(new ResponseInterceptor());
 
     await app.init();
-
     await app.listen(
       env.DEV_CONSOLE_API_PORT_TEST,
-      // For some reason, this causes to bind only a ipv6
+      // For some reason, this causes to bind only a ipv6 address
       // env.DEV_CONSOLE_API_HOST_TEST,
     );
+
     http = app.getHttpServer();
-    const config = {
+    const devConsoleApiConfig = {
       host: env.DEV_CONSOLE_API_MYSQL_HOST_TEST,
       database: env.DEV_CONSOLE_API_MYSQL_DATABASE_TEST,
       password: env.DEV_CONSOLE_API_MYSQL_PASSWORD_TEST,
       port: env.DEV_CONSOLE_API_MYSQL_PORT_TEST,
       user: env.DEV_CONSOLE_API_MYSQL_USER_TEST,
     };
+    const devConsoleApiSql = new MySql(devConsoleApiConfig);
+    await devConsoleApiSql.connect();
 
-    const devConsoleSql = new MySql(config);
-    await devConsoleSql.connect();
-    const devConsoleContext = new TestContext();
-    devConsoleContext.mysql = devConsoleSql;
+    const devConsoleApiContext = new TestContext();
+    devConsoleApiContext.mysql = devConsoleApiSql;
 
-    const config2 = {
-      host: env.ACCESS_MYSQL_HOST_TEST,
-      database: env.ACCESS_MYSQL_DATABASE_TEST,
-      password: env.ACCESS_MYSQL_PASSWORD_TEST,
-      port: env.ACCESS_MYSQL_PORT_TEST,
-      user: env.ACCESS_MYSQL_USER_TEST,
-    };
+    // const lmasMongo = new Mongo(
+    //   env.MONITORING_MONGO_SRV_TEST,
+    //   env.MONITORING_MONGO_DATABASE_TEST,
+    //   10,
+    // );
 
-    const amsSql = new MySql(config2);
-    await amsSql.connect();
-
-    const amsContext = new TestContext();
-    amsContext.mysql = amsSql;
-
-    const lmasMongo = new Mongo(
-      env.MONITORING_MONGO_SRV_TEST,
-      env.MONITORING_MONGO_DATABASE_TEST,
-      10,
-    );
-
-    const lmasContext = new TestContext();
-    lmasContext.mongo = lmasMongo;
-
-    //Storage MS context
-    const config3 = {
-      host: env.STORAGE_MYSQL_HOST_TEST,
-      database: env.STORAGE_MYSQL_DATABASE_TEST,
-      password: env.STORAGE_MYSQL_PASSWORD_TEST,
-      port: env.STORAGE_MYSQL_PORT_TEST,
-      user: env.STORAGE_MYSQL_USER_TEST,
-    };
-
-    const storageSql = new MySql(config3);
-    await storageSql.connect();
-
-    const storageContext = new TestContext();
-    storageContext.mysql = storageSql;
-
-    // startAmsServer();
-    // startLmasServer();
+    // const lmasContext = new TestContext();
+    // lmasContext.mongo = lmasMongo;
 
     return {
-      devConsoleContext,
-      amsContext,
-      lmasContext,
       app,
+      devConsoleApiContext,
+      devConsoleApiSql,
       http,
-      devConsoleSql,
-      amsSql,
-      lmasMongo,
-      storageContext,
-      storageSql,
     };
-  } catch (e) {
-    console.error(e);
-    throw new Error('Unable to set up env');
+  } catch (error) {
+    throw `Unable to set up env - ${error}`;
   }
 }
 
@@ -139,9 +98,9 @@ export const releaseStage = async (stage: Stage): Promise<void> => {
     throw new Error('Error - stage does not exist');
   }
   await dropTestDatabases();
-  if (stage.devConsoleSql) {
+  if (stage.devConsoleApiSql) {
     try {
-      await stage.devConsoleSql.close();
+      await stage.devConsoleApiSql.close();
     } catch (error) {
       throw new Error('Error when releasing DevConsole stage: ' + error);
     }

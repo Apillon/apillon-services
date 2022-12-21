@@ -112,8 +112,7 @@ export class Attestation extends AdvancedSQLModel {
       { email },
     );
     if (data && data.length) {
-      // To return the last one - only in DEV!!!!!!
-      return this.populate(data[data.length - 1], PopulateFrom.DB);
+      return this.populate(data[0], PopulateFrom.DB);
     }
 
     return this.reset();
@@ -122,20 +121,18 @@ export class Attestation extends AdvancedSQLModel {
   /**
    * Returns all attestations, filtered by specific state
    */
-  public async getAttestationsByState(
+  public async listAttestationsByState(
     context: AuthorizationApiContext,
     state: string,
   ) {
-    const params = {
-      state: state,
-    };
+    const params = { state };
     const sqlQuery = {
       qSelect: `
         SELECT ${this.generateSelectFields('a', '', SerializeFor.SELECT_DB)}
         `,
       qFrom: `
         FROM ${DbTables.ATTESTATION} a
-        WHERE a.state = ${params.state}
+        WHERE a.state = @state
         `,
     };
 

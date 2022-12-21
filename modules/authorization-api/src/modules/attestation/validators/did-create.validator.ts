@@ -9,11 +9,11 @@ export function didCreateCreateOpValidator() {
     this: ModelBase,
     did_create_op: any,
   ): Promise<boolean> {
-    // Linter is complaining here, but .. I like this
-    if (did_create_op.payload.message === undefined) return false;
-    if (did_create_op.payload.nonce === undefined) return false;
-    if (did_create_op.senderPubkey === undefined) return false;
-    return true;
+    return did_create_op.payload.message === undefined ||
+      did_create_op.payload.nonce === undefined ||
+      did_create_op.senderPubkey === undefined
+      ? false
+      : true;
   };
 }
 
@@ -23,8 +23,6 @@ export function didCreateCreateOpValidator() {
  */
 export function didUriValidator() {
   return async function (this: ModelBase, didUri: any): Promise<boolean> {
-    // Linter is complaining here, but .. I like this
-    if (!didUri.includes('did:kilt:')) return false;
-    return true;
+    return didUri.startswith('did:kilt:') ? true : false;
   };
 }
