@@ -1,4 +1,4 @@
-import { DefaultUserRole, SqlModelStatus } from '@apillon/lib';
+import { DefaultUserRole, QuotaCode, SqlModelStatus } from '@apillon/lib';
 import * as request from 'supertest';
 import { createTestProject } from '../../../../test/helpers/project';
 import { releaseStage, setupTest, Stage } from '../../../../test/helpers/setup';
@@ -22,6 +22,19 @@ describe('Project tests', () => {
     stage = await setupTest();
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
+
+    await stage.configContext.mysql.paramExecute(`
+    INSERT INTO override (status, quota_id, project_uuid,  object_uuid, package_id, value)
+    VALUES 
+      (
+        5,
+        ${QuotaCode.MAX_PROJECT_COUNT},
+        null,
+        '${testUser.user.user_uuid}', 
+        null,
+        '20'
+      )
+    `);
 
     testProject = await createTestProject(testUser, stage.devConsoleContext);
     testProject2 = await createTestProject(testUser2, stage.devConsoleContext);

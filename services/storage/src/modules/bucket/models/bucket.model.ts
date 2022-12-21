@@ -172,8 +172,25 @@ export class Bucket extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
     ],
     validators: [],
+    defaultValue: 0,
   })
   public size: number;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+    defaultValue: 0,
+  })
+  public uploadedSize: number;
 
   @prop({
     parser: { resolver: stringParser() },

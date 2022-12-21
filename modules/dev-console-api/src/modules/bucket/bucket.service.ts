@@ -6,6 +6,7 @@ import {
   CodeException,
   CreateBucketWebhookDto,
   AttachedServiceType,
+  BucketQuotaReachedQueryFilter,
 } from '@apillon/lib';
 import { ResourceNotFoundErrorCode } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
@@ -24,6 +25,14 @@ export class BucketService {
 
   async getBucket(context: DevConsoleApiContext, id: number) {
     return (await new StorageMicroservice(context).getBucket(id)).data;
+  }
+
+  async isMaxBucketQuotaReached(
+    context: DevConsoleApiContext,
+    query: BucketQuotaReachedQueryFilter,
+  ) {
+    return (await new StorageMicroservice(context).maxBucketQuotaReached(query))
+      .data.maxBucketsQuotaReached;
   }
 
   async createBucket(context: DevConsoleApiContext, body: CreateBucketDto) {

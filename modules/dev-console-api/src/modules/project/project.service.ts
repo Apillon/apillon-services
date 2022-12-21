@@ -43,15 +43,7 @@ export class ProjectService {
     body: Project,
   ): Promise<Project> {
     //Check max project quota
-    const numOfProjects = await body.getNumOfUserProjects();
-    const maxProjectsQuota = await new Scs(context).getQuota({
-      quota_id: QuotaCode.MAX_PROJECT_COUNT,
-    });
-    if (
-      maxProjectsQuota &&
-      maxProjectsQuota.value &&
-      numOfProjects >= maxProjectsQuota.value
-    ) {
+    if (await this.isProjectsQuotaReached(context)) {
       throw new CodeException({
         code: BadRequestErrorCode.MAX_NUMBER_OF_PROJECTS_REACHED,
         status: HttpStatus.BAD_REQUEST,
@@ -97,6 +89,19 @@ export class ProjectService {
       await context.mysql.rollback(conn);
       throw err;
     }
+  }
+
+  async isProjectsQuotaReached(context: DevConsoleApiContext) {
+    const numOfProjects = await new Project({}, context).getNumOfUserProjects();
+    const maxProjectsQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_PROJECT_COUNT,
+      object_uuid: context.user.user_uuid,
+    });
+    return !!(
+      maxProjectsQuota &&
+      maxProjectsQuota.value &&
+      numOfProjects >= maxProjectsQuota.value
+    );
   }
 
   async getProject(
