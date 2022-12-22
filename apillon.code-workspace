@@ -29,8 +29,8 @@
       "path": "modules\\apillon-api"
     },
     {
-      "name": "😎@modules/authorization-api",
-      "path": "modules\\authorization-api"
+      "name": "😎@modules/authentication-api",
+      "path": "modules\\authentication-api"
     },
     {
       "name": "📦@packages/lib",

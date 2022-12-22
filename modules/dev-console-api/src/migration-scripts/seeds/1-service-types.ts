@@ -8,7 +8,7 @@ export async function upgrade(
     INSERT IGNORE INTO \`${DbTables.SERVICE_TYPE}\`
       (id, name, description, active)
     VALUES
-      (${AttachedServiceType.AUTHORIZATION}, 'Authorization', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum.', 1),
+      (${AttachedServiceType.AUTHENTICATION}, 'Authentication', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum.', 1),
       (${AttachedServiceType.STORAGE}, 'Storage', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum.', 0)
       ;
   `);
