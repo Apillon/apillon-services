@@ -28,27 +28,6 @@ describe('Storage bucket tests', () => {
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
 
-    await stage.configContext.mysql.paramExecute(`
-    INSERT INTO override (status, quota_id, project_uuid,  object_uuid, package_id, value)
-    VALUES 
-      (
-        5,
-        ${QuotaCode.MAX_FILE_BUCKETS},
-        null,
-        '${testUser.user.user_uuid}', 
-        null,
-        '5'
-      ),
-      (
-        5,
-        ${QuotaCode.MAX_HOSTING_BUCKETS},
-        null,
-        '${testUser.user.user_uuid}', 
-        null,
-        '5'
-      )
-    `);
-
     testProject = await createTestProject(testUser, stage.devConsoleContext);
     testProject2 = await createTestProject(testUser2, stage.devConsoleContext);
 
@@ -57,6 +36,27 @@ describe('Storage bucket tests', () => {
       stage.storageContext,
       testProject,
     );
+
+    await stage.configContext.mysql.paramExecute(`
+    INSERT INTO override (status, quota_id, project_uuid,  object_uuid, package_id, value)
+    VALUES 
+      (
+        5,
+        ${QuotaCode.MAX_FILE_BUCKETS},
+        '${testProject.project_uuid}',
+        null, 
+        null,
+        '5'
+      ),
+      (
+        5,
+        ${QuotaCode.MAX_HOSTING_BUCKETS},
+        '${testProject.project_uuid}',
+        null, 
+        null,
+        '5'
+      )
+    `);
   });
 
   afterAll(async () => {

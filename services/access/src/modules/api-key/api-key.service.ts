@@ -72,14 +72,14 @@ export class ApiKeyService {
 
     //check max api keys quota
     const numOfApiKeys = await key.getNumOfApiKeysInProject();
-    const maxBucketsQuota = await new Scs(context).getQuota({
+    const maxApiKeysQuota = await new Scs(context).getQuota({
       quota_id: QuotaCode.MAX_API_KEYS,
       project_uuid: key.project_uuid,
     });
     if (
-      maxBucketsQuota &&
-      maxBucketsQuota.value &&
-      numOfApiKeys >= maxBucketsQuota.value
+      maxApiKeysQuota &&
+      maxApiKeysQuota.value &&
+      numOfApiKeys >= maxApiKeysQuota.value
     ) {
       throw new AmsCodeException({
         code: AmsErrorCode.MAX_API_KEY_QUOTA_REACHED,
