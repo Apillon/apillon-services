@@ -11,6 +11,9 @@ import {
   SqlModelStatus,
 } from '@apillon/lib';
 import { DbTables, ReferralErrorCode } from '../../../config/types';
+import { Task, TaskType } from './task.model';
+import { Realization } from './realization.model';
+import { faker } from '@faker-js/faker';
 
 export class Player extends AdvancedSQLModel {
   public readonly tableName = DbTables.PLAYER;
@@ -20,7 +23,7 @@ export class Player extends AdvancedSQLModel {
   }
 
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: stringParser() },
     populatable: [
       PopulateFrom.DB,
       PopulateFrom.SERVICE,
@@ -41,7 +44,32 @@ export class Player extends AdvancedSQLModel {
       },
     ],
   })
-  public user_uuid: number;
+  public user_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ReferralErrorCode.DEFAULT_VALIDATION_ERROR,
+      },
+    ],
+    fakeValue: () => faker.random.alphaNumeric(5),
+  })
+  public refCode: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -59,17 +87,12 @@ export class Player extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ReferralErrorCode.DEFAULT_VALIDATION_ERROR,
-      },
-    ],
+    validators: [],
   })
-  public refCode: string;
+  public twitter_id: string;
 
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: stringParser() },
     populatable: [
       PopulateFrom.DB,
       PopulateFrom.SERVICE,
@@ -78,6 +101,7 @@ export class Player extends AdvancedSQLModel {
     ],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
@@ -85,7 +109,7 @@ export class Player extends AdvancedSQLModel {
     ],
     validators: [],
   })
-  public twitter_id: number;
+  public github_id: string;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -97,25 +121,7 @@ export class Player extends AdvancedSQLModel {
     ],
     serializable: [
       SerializeFor.INSERT_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-    ],
-    validators: [],
-  })
-  public github_id: number;
-
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
@@ -135,6 +141,7 @@ export class Player extends AdvancedSQLModel {
     ],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
@@ -154,6 +161,7 @@ export class Player extends AdvancedSQLModel {
     ],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
@@ -162,6 +170,13 @@ export class Player extends AdvancedSQLModel {
     validators: [],
   })
   public termsAccepted: Date;
+
+  @prop({
+    populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE],
+    serializable: [SerializeFor.ADMIN, SerializeFor.PROFILE],
+    validators: [],
+  })
+  public tasks: any;
 
   /**
    * Populates model fields by loading the document with the provided user id from the database.
@@ -184,6 +199,37 @@ export class Player extends AdvancedSQLModel {
       WHERE user_uuid = @user_uuid AND status <> ${SqlModelStatus.DELETED};
       `,
       { user_uuid },
+      conn,
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
+
+  /**
+   * Populates model fields by loading the document with the provided user id from the database.
+   * @param user_id Referr's user ID.
+   */
+  public async populateByTwitterId(
+    id: number | string,
+    conn?: PoolConnection,
+  ): Promise<this> {
+    if (!id) {
+      throw new Error('Twitter id should not be null');
+    }
+
+    this.reset();
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${DbTables.PLAYER}\`
+      WHERE twitter_id = @id AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { id },
       conn,
     );
 
@@ -227,13 +273,43 @@ export class Player extends AdvancedSQLModel {
     }
   }
 
+  public async populateTasks() {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT 
+      ${new Task({}, null).generateSelectFields('t')},
+      JSON_ARRAYAGG(
+        JSON_OBJECT(${new Realization({}, null).generateSelectJSONFields('r')})
+      ) as realizations
+      FROM \`${DbTables.TASK}\` t
+      LEFT JOIN \`${DbTables.REALIZATION}\`r
+        ON r.player_id = @player_id
+        AND r.task_id = t.id
+        AND r.status = ${SqlModelStatus.ACTIVE}
+      `,
+      { id: this.id },
+    );
+
+    if (data.length) {
+      this.tasks = data;
+    }
+    return data;
+  }
+
+  public async confirmRefer(player_id: number) {
+    const task = await new Task({}, this.getContext()).getTaskByType(
+      TaskType.REFERRAL,
+    );
+
+    await task.confirmTask(player_id);
+  }
+
   public async generateCode() {
     const characters =
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
     let result = '';
-    let exists = false;
-    while (exists) {
+    while (!result.length) {
       const charactersLength = characters.length;
       // generate 5 length code
       for (let i = 0; i < 5; i++) {
@@ -245,29 +321,11 @@ export class Player extends AdvancedSQLModel {
         result,
         true,
       );
-      if (!r.exists()) {
-        exists = false;
+      if (r.exists()) {
+        result = '';
       }
     }
 
     return result;
   }
-  /*public async getList(context: ServiceContext, query: BucketQueryFilter) {
-    const params = {
-      project_uuid: query.project_uuid,
-      search: query.search,
-    };
-
-    const sqlQuery = {
-      qSelect: `
-        SELECT ${this.generateSelectFields('b', '')}
-        `,
-      qFrom: `
-        FROM \`${DbTables.BUCKET}\` b
-        WHERE (@search IS null OR b.name LIKE CONCAT('%', @search, '%'))
-      `,
-    };
-
-    return selectAndCountQuery(context.mysql, sqlQuery, params, 'b.id');
-  }*/
 }

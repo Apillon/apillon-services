@@ -3,12 +3,14 @@ import {
   Ams,
   CodeException,
   Context,
+  CreateReferralDto,
   env,
   generateJwtToken,
   JwtTokenType,
   LogType,
   Mailing,
   parseJwtToken,
+  ReferralMicroservice,
   SerializeFor,
   UnauthorizedErrorCodes,
   ValidationException,
@@ -153,6 +155,15 @@ export class UserService {
         email,
         password,
       });
+
+      const referralBody = new CreateReferralDto(
+        { refCode: data?.refCode, user_uuid: user.user_uuid },
+        context,
+      );
+
+      // Create referral player - is inactive until accepts terms
+      await new ReferralMicroservice(context).createReferral(referralBody);
+
       await context.mysql.commit(conn);
 
       //User has been registered - check if pending invitations for project exists

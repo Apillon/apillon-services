@@ -12,6 +12,7 @@ export async function upgrade(
       \`price\` INT NOT NULL,
       \`stock\` INT NULL,
       \`maxOrderCount\` INT NULL,
+      \`attributes\` JSON NULL,
       \`available_from\` DATETIME NULL,
       \`available_to\` DATETIME NULL,
       \`status\` INT NOT NULL,

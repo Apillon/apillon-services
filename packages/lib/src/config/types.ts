@@ -62,6 +62,8 @@ export enum ScsEventType {
 
 export enum ReferralEventType {
   CREATE_REFERRAL = 'create-referral',
+  GET_REFERRAL = 'get-referral',
+  GET_TASKS = 'get-tasks',
 }
 
 export enum ServiceName {
@@ -271,6 +273,10 @@ export enum ValidatorErrorCode {
   BUCKET_WEBHOOK_BUCKET_ID_NOT_PRESENT = 42200019,
   BUCKET_WEBHOOK_URL_NOT_PRESENT = 42200020,
   QUOTA_ID_NOT_PRESENT = 42200021,
+  TASK_ID_NOT_PRESENT = 42200022,
+  GITHUB_CODE_NOT_PRESENT = 42200023,
+  USER_OAUTH_TOKEN_NOT_PRESENT = 42200024,
+  USER_OAUTH_VERIFIER_NOT_PRESENT = 42200025,
 }
 
 /**

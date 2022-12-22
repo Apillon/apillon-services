@@ -23,7 +23,11 @@ export function startDevServer() {
         const result = await handler(JSON.parse(chunk.toString()), {} as any);
         if (result) {
           socket.write(JSON.stringify(result));
-          console.log(`REFERRAL Socket server response: ${result.toString()}`);
+          console.log(
+            `REFERRAL Socket server response: ${JSON.stringify(
+              result.toString(),
+            )}`,
+          );
         }
         socket.end();
         console.log(`REFERRAL Socket server finished with no response.`);

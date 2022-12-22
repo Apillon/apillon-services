@@ -27,6 +27,8 @@ export interface Stage {
   devConsoleSql: MySql;
   storageContext: TestContext;
   storageSql: MySql;
+  referralContext: TestContext;
+  referralSql: MySql;
 }
 
 export async function setupTest(): Promise<Stage> {
@@ -110,6 +112,23 @@ export async function setupTest(): Promise<Stage> {
     // startAmsServer();
     // startLmasServer();
 
+    lmasContext.mongo = lmasMongo;
+
+    //Referral MS context
+    const config4 = {
+      host: env.REFERRAL_MYSQL_HOST_TEST,
+      database: env.REFERRAL_MYSQL_DATABASE_TEST,
+      password: env.REFERRAL_MYSQL_PASSWORD_TEST,
+      port: env.REFERRAL_MYSQL_PORT_TEST,
+      user: env.REFERRAL_MYSQL_USER_TEST,
+    };
+
+    const referralSql = new MySql(config4);
+    await referralSql.connect();
+
+    const referralContext = new TestContext();
+    referralContext.mysql = referralSql;
+
     return {
       devConsoleContext,
       amsContext,
@@ -121,6 +140,8 @@ export async function setupTest(): Promise<Stage> {
       lmasMongo,
       storageContext,
       storageSql,
+      referralContext,
+      referralSql,
     };
   } catch (e) {
     console.error(e);

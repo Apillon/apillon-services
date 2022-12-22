@@ -1,9 +1,9 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
-import { CreateBucketWebhookDto, DefaultUserRole } from '@apillon/lib';
+import { CreateReferralDto, DefaultUserRole } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { ReferralService } from './referral.service';
-import { Ctx, Permissions } from '@apillon/modules-lib';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { AuthGuard } from '../../guards/auth.guard';
 
 @Controller('referral')
@@ -17,9 +17,10 @@ export class ReferralController {
   )
   @UseGuards(AuthGuard)
   @UseGuards(ValidationGuard)
+  @Validation({ dto: CreateReferralDto })
   async createReferral(
     @Ctx() context: DevConsoleApiContext,
-    @Body() body: CreateBucketWebhookDto,
+    @Body() body: CreateReferralDto,
   ) {
     return await this.referralService.createReferral(context, body);
   }

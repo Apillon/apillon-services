@@ -38,3 +38,5 @@ export * from './lib/at-services/config/scs';
 export * from './lib/at-services/config/dtos/get-quota.dto';
 export * from './lib/at-services/referral/referral';
 export * from './lib/at-services/referral/dtos/create-referral.dto';
+export * from './lib/at-services/referral/dtos/github-oauth.dto';
+export * from './lib/at-services/referral/dtos/user-oAuth.dto';

@@ -13,7 +13,7 @@ export class ReferralMicroservice extends BaseService {
     env.APP_ENV === AppEnvironment.TEST
       ? env.REFERRAL_SOCKET_PORT_TEST
       : env.REFERRAL_SOCKET_PORT;
-  serviceName = 'LMAS';
+  serviceName = 'REFERRAL';
 
   constructor(context: Context) {
     super(context);

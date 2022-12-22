@@ -8,5 +8,5 @@ if (
 ) {
   startDevServer();
 } else {
-  console.log(`LMAS: ${env.APP_ENV} - Socket server will not run.`);
+  console.log(`REFERRAL: ${env.APP_ENV} - Socket server will not run.`);
 }

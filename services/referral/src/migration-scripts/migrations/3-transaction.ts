@@ -16,7 +16,7 @@ export async function upgrade(
       \`createUser\` INT NULL,
       \`updateUser\` INT NULL,
       PRIMARY KEY (\`id\`),
-      CONSTRAINT \`fk_referral_transation_player\`
+      CONSTRAINT \`fk_transation_player\`
         FOREIGN KEY (\`player_id\`)
         REFERENCES \`${DbTables.PLAYER}\` (\`id\`)
         ON DELETE CASCADE
