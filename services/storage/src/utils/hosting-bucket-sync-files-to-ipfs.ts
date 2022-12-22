@@ -168,6 +168,7 @@ export async function hostingBucketSyncFilesToIPFS(
       await file.update(SerializeFor.UPDATE_DB, conn);
 
       bucket.size += file.size;
+      bucket.uploadedSize += file.size;
 
       transferedFiles.push(tmpF);
     }
@@ -205,6 +206,7 @@ export async function hostingBucketSyncFilesToIPFS(
       data: {
         bucket_uuid: bucket.bucket_uuid,
         bucketSize: bucket.size,
+        bucketUploadedSize: bucket.uploadedSize,
       },
     });
   } catch (err) {

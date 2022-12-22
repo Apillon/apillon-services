@@ -1,4 +1,4 @@
-import { DefaultUserRole, SqlModelStatus } from '@apillon/lib';
+import { DefaultUserRole, QuotaCode, SqlModelStatus } from '@apillon/lib';
 import {
   BucketType,
   StorageErrorCode,
@@ -36,6 +36,27 @@ describe('Storage bucket tests', () => {
       stage.storageContext,
       testProject,
     );
+
+    await stage.configContext.mysql.paramExecute(`
+    INSERT INTO override (status, quota_id, project_uuid,  object_uuid, package_id, value)
+    VALUES 
+      (
+        5,
+        ${QuotaCode.MAX_FILE_BUCKETS},
+        '${testProject.project_uuid}',
+        null, 
+        null,
+        '5'
+      ),
+      (
+        5,
+        ${QuotaCode.MAX_HOSTING_BUCKETS},
+        '${testProject.project_uuid}',
+        null, 
+        null,
+        '5'
+      )
+    `);
   });
 
   afterAll(async () => {
@@ -246,6 +267,59 @@ describe('Storage bucket tests', () => {
         stage.storageContext,
       ).populateByUUID(tmpBucket.bucket_uuid);
       expect(b.exists()).toBe(true);
+    });
+  });
+
+  describe('Bucket quotas tests', () => {
+    let quotaTestsUser: TestUser = undefined;
+    let quotaTestProject: Project = undefined;
+
+    beforeAll(async () => {
+      quotaTestsUser = await createTestUser(
+        stage.devConsoleContext,
+        stage.amsContext,
+      );
+      quotaTestProject = await createTestProject(
+        quotaTestsUser,
+        stage.devConsoleContext,
+      );
+      //create 10 buckets - max api keys on project quota reached
+      for (let i = 0; i < 10; i++) {
+        await createTestBucket(
+          quotaTestsUser,
+          stage.storageContext,
+          quotaTestProject,
+          BucketType.STORAGE,
+        );
+      }
+    });
+
+    test('User should recieve status 400 when max buckets quota is reached', async () => {
+      const response = await request(stage.http)
+        .post(`/buckets`)
+        .send({
+          project_uuid: quotaTestProject.project_uuid,
+          name: 'My test bucket',
+          bucketType: 1,
+        })
+        .set('Authorization', `Bearer ${quotaTestsUser.token}`);
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        StorageErrorCode[StorageErrorCode.MAX_BUCKETS_REACHED],
+      );
+    });
+
+    test('User should be able to create hosting bucket even though storage bucket quota si reached', async () => {
+      const response = await request(stage.http)
+        .post(`/buckets`)
+        .send({
+          project_uuid: quotaTestProject.project_uuid,
+          name: 'My test bucket',
+          bucketType: BucketType.HOSTING,
+        })
+        .set('Authorization', `Bearer ${quotaTestsUser.token}`);
+      expect(response.status).toBe(201);
+      expect(response.body.data.id).toBeTruthy();
     });
   });
 });

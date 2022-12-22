@@ -1,8 +1,9 @@
-import { DefaultUserRole, SqlModelStatus } from '@apillon/lib';
+import { DefaultUserRole, QuotaCode, SqlModelStatus } from '@apillon/lib';
 import * as request from 'supertest';
 import { createTestProject } from '../../../../test/helpers/project';
 import { releaseStage, setupTest, Stage } from '../../../../test/helpers/setup';
 import { createTestUser, TestUser } from '../../../../test/helpers/user';
+import { BadRequestErrorCode } from '../../../config/types';
 import { Project } from '../../project/models/project.model';
 import { ProjectUserPendingInvitation } from '../models/project-user-pending-invitation.model';
 import { ProjectUser } from '../models/project-user.model';
@@ -21,6 +22,19 @@ describe('Project tests', () => {
     stage = await setupTest();
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
+
+    await stage.configContext.mysql.paramExecute(`
+    INSERT INTO override (status, quota_id, project_uuid,  object_uuid, package_id, value)
+    VALUES 
+      (
+        5,
+        ${QuotaCode.MAX_PROJECT_COUNT},
+        null,
+        '${testUser.user.user_uuid}', 
+        null,
+        '20'
+      )
+    `);
 
     testProject = await createTestProject(testUser, stage.devConsoleContext);
     testProject2 = await createTestProject(testUser2, stage.devConsoleContext);
@@ -58,6 +72,14 @@ describe('Project tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(403);
       expect(response.body?.data?.id).toBeFalsy();
+    });
+
+    test('User should be able to check if project-quota is reached', async () => {
+      const response = await request(stage.http)
+        .get(`/projects/qouta-reached`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data).toBe(false);
     });
 
     test('User should be able to create new project', async () => {
@@ -248,6 +270,75 @@ describe('Project tests', () => {
         })
         .set('Authorization', `Bearer ${testUser3.token}`);
       expect(response2.status).toBe(403);
+    });
+  });
+
+  describe('Project quotas tests', () => {
+    let quotaTestsUser: TestUser = undefined;
+    let quotaTestProject: Project = undefined;
+
+    beforeAll(async () => {
+      quotaTestsUser = await createTestUser(
+        stage.devConsoleContext,
+        stage.amsContext,
+      );
+      quotaTestProject = await createTestProject(
+        quotaTestsUser,
+        stage.devConsoleContext,
+      );
+      //add 10 users to quotaTestProject - max users on project quota reached
+      for (let i = 0; i < 10; i++) {
+        await createTestUser(
+          stage.devConsoleContext,
+          stage.amsContext,
+          DefaultUserRole.PROJECT_USER,
+          SqlModelStatus.ACTIVE,
+          quotaTestProject.project_uuid,
+        );
+      }
+
+      //create 10 test projects - so max project quota is reached
+      for (let i = 0; i < 10; i++) {
+        await createTestProject(quotaTestsUser, stage.devConsoleContext);
+      }
+    });
+
+    test('User should be able to check if project-quota is reached', async () => {
+      const response = await request(stage.http)
+        .get(`/projects/qouta-reached`)
+        .set('Authorization', `Bearer ${quotaTestsUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data).toBe(true);
+    });
+
+    test('User should recieve status 400 when max project quota is reached', async () => {
+      const response = await request(stage.http)
+        .post(`/projects`)
+        .send({
+          name: 'Moj testni projekt',
+          description: 'Testni opis',
+        })
+        .set('Authorization', `Bearer ${quotaTestsUser.token}`);
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        BadRequestErrorCode[BadRequestErrorCode.MAX_NUMBER_OF_PROJECTS_REACHED],
+      );
+    });
+
+    test('User should recieve status 400, when max users on project quota is reached, ', async () => {
+      const response = await request(stage.http)
+        .post(`/projects/${quotaTestProject.id}/invite-user`)
+        .send({
+          email: 'nekTestniMail@gmail.com',
+          role_id: DefaultUserRole.PROJECT_USER,
+        })
+        .set('Authorization', `Bearer ${quotaTestsUser.token}`);
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        BadRequestErrorCode[
+          BadRequestErrorCode.MAX_NUMBER_OF_USERS_ON_PROJECT_REACHED
+        ],
+      );
     });
   });
 });

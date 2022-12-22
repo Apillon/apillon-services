@@ -1,5 +1,6 @@
 import { AWS_S3, env, Lmas, LogType, ServiceName } from '@apillon/lib';
 import { FileUploadRequestFileStatus, StorageErrorCode } from '../config/types';
+import { Bucket } from '../modules/bucket/models/bucket.model';
 import { CrustService } from '../modules/crust/crust.service';
 import { Directory } from '../modules/directory/models/directory.model';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
@@ -16,7 +17,7 @@ import { generateDirectoriesForFUR } from '../utils/generate-directories-from-pa
 export async function storageBucketSyncFilesToIPFS(
   context,
   location,
-  bucket,
+  bucket: Bucket,
   maxBucketSize,
   files: any[],
 ) {
@@ -35,7 +36,7 @@ export async function storageBucketSyncFilesToIPFS(
   for (const file of files.filter(
     (x) => x.fileStatus != FileUploadRequestFileStatus.PINNED_TO_CRUST,
   )) {
-    if (bucket.size >= maxBucketSize) {
+    if (bucket.uploadedSize >= maxBucketSize) {
       //max size was reached - mark files that will not be transfered to IPFS
       file.fileStatus = FileUploadRequestFileStatus.ERROR_BUCKET_FULL;
       await file.update();
@@ -159,6 +160,7 @@ export async function storageBucketSyncFilesToIPFS(
     await file.update();
 
     tmpSize += ipfsRes.size;
+    bucket.uploadedSize += ipfsRes.size;
     bucket.size = bucket.size ? bucket.size + ipfsRes.size : ipfsRes.size;
 
     //delete file from s3
@@ -177,6 +179,7 @@ export async function storageBucketSyncFilesToIPFS(
         data: {
           bucket_uuid: bucket.bucket_uuid,
           bucketSize: bucket.size,
+          bucketUploadedSize: bucket.uploadedSize,
         },
       });
     }
@@ -196,6 +199,7 @@ export async function storageBucketSyncFilesToIPFS(
       bucket_uuid: bucket.bucket_uuid,
       size: tmpSize,
       bucketSize: bucket.size,
+      bucketUploadedSize: bucket.uploadedSize,
     },
   });
 

@@ -172,8 +172,25 @@ export class Bucket extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
     ],
     validators: [],
+    defaultValue: 0,
   })
   public size: number;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+    defaultValue: 0,
+  })
+  public uploadedSize: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -327,5 +344,26 @@ export class Bucket extends AdvancedSQLModel {
       { bucket_id: this.id },
       conn,
     );
+  }
+
+  /**
+   * Function to get count of active bucket inside project and for specific bucket type
+   * @param project_uuid
+   * @param bucketType
+   * @returns
+   */
+  public async getNumOfBuckets() {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT COUNT(*) as numOfBuckets
+      FROM \`${this.tableName}\`
+      WHERE project_uuid = @project_uuid 
+      AND bucketType = @bucketType
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { project_uuid: this.project_uuid, bucketType: this.bucketType },
+    );
+
+    return data[0].numOfBuckets;
   }
 }

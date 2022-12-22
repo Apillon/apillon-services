@@ -3,6 +3,8 @@ import { TestContext } from './context';
 import { DefaultUserRole, SqlModelStatus } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
 import { User } from '../../src/modules/user/models/user.model';
+import { ProjectUser } from '../../src/modules/project/models/project-user.model';
+import { Project } from '../../src/modules/project/models/project.model';
 
 export interface TestUser {
   user: User;
@@ -31,6 +33,18 @@ export async function createTestUser(
   await authUser.insert();
   await authUser.setDefaultRole(null);
   if (project_uuid && role) {
+    const project: Project = await new Project({}, consoleCtx).populateByUUID(
+      project_uuid,
+    );
+
+    const projectUser: ProjectUser = new ProjectUser({}, consoleCtx).populate({
+      project_id: project.id,
+      user_id: user.id,
+      pendingInvitation: false,
+      role_id: role,
+    });
+    await projectUser.insert();
+
     await authUser.assignRole(project_uuid, role);
   }
 
