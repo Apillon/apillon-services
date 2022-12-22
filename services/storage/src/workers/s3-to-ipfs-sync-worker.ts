@@ -70,7 +70,9 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         const tmpFur = await new FileUploadRequest(
           {},
           this.context,
-        ).populateByS3FileKey(decodeURI(record.s3.object.key));
+        ).populateByS3FileKey(
+          decodeURIComponent(record.s3.object.key).replace(/\+/g, ' '),
+        );
 
         if (
           tmpFur.exists() &&

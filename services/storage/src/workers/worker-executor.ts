@@ -1,18 +1,17 @@
-import * as aws from 'aws-sdk';
+import { AppEnvironment, MySql } from '@apillon/lib';
 import {
+  QueueWorkerType,
+  ServiceDefinition,
   ServiceDefinitionType,
   WorkerDefinition,
-  ServiceDefinition,
-  writeWorkerLog,
   WorkerLogStatus,
-  QueueWorkerType,
+  writeWorkerLog,
 } from '@apillon/workers-lib';
-import { Scheduler } from './scheduler';
-import { AppEnvironment, MySql } from '@apillon/lib';
+import * as aws from 'aws-sdk';
 
 import { Context, env } from '@apillon/lib';
-import { TestWorker } from './test-worker';
 import { SyncToIPFSWorker } from './s3-to-ipfs-sync-worker';
+import { TestWorker } from './test-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);

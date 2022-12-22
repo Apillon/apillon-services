@@ -1,11 +1,7 @@
-import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
-  CodeException,
   Context,
-  DefaultUserRole,
   FileUploadsQueryFilter,
-  ForbiddenErrorCodes,
   getQueryParams,
   PopulateFrom,
   presenceValidator,
@@ -14,11 +10,12 @@ import {
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
+import { integerParser, stringParser } from '@rawmodel/parsers';
 import { CID } from 'ipfs-http-client';
 import { DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
-import { Bucket } from '../../bucket/models/bucket.model';
 import { StorageCodeException } from '../../../lib/exceptions';
+import { Bucket } from '../../bucket/models/bucket.model';
 
 export class FileUploadRequest extends AdvancedSQLModel {
   public readonly tableName = DbTables.FILE_UPLOAD_REQUEST;
