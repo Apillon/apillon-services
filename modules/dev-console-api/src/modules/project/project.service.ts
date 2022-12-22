@@ -98,9 +98,7 @@ export class ProjectService {
       object_uuid: context.user.user_uuid,
     });
     return !!(
-      maxProjectsQuota &&
-      maxProjectsQuota.value &&
-      numOfProjects >= maxProjectsQuota.value
+      maxProjectsQuota?.value && numOfProjects >= maxProjectsQuota?.value
     );
   }
 
@@ -193,9 +191,8 @@ export class ProjectService {
       project_uuid: project.project_uuid,
     });
     if (
-      maxUsersOnProjectQuota &&
-      maxUsersOnProjectQuota.value &&
-      numOfUsersOnProject >= maxUsersOnProjectQuota.value
+      maxUsersOnProjectQuota?.value &&
+      numOfUsersOnProject >= maxUsersOnProjectQuota?.value
     ) {
       throw new CodeException({
         code: BadRequestErrorCode.MAX_NUMBER_OF_USERS_ON_PROJECT_REACHED,

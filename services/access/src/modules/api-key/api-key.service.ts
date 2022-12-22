@@ -76,11 +76,7 @@ export class ApiKeyService {
       quota_id: QuotaCode.MAX_API_KEYS,
       project_uuid: key.project_uuid,
     });
-    if (
-      maxApiKeysQuota &&
-      maxApiKeysQuota.value &&
-      numOfApiKeys >= maxApiKeysQuota.value
-    ) {
+    if (maxApiKeysQuota?.value && numOfApiKeys >= maxApiKeysQuota?.value) {
       throw new AmsCodeException({
         code: AmsErrorCode.MAX_API_KEY_QUOTA_REACHED,
         status: 400,

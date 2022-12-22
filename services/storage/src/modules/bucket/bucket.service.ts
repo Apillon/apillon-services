@@ -48,7 +48,7 @@ export class BucketService {
       project_uuid: b.project_uuid,
       object_uuid: b.bucket_uuid,
     });
-    if (maxBucketSizeQuota && maxBucketSizeQuota.value) {
+    if (maxBucketSizeQuota?.value) {
       b.maxSize = maxBucketSizeQuota.value * 1073741824; //quota is in GB - convert to bytes
     }
 
@@ -183,9 +183,7 @@ export class BucketService {
     });
     return {
       maxBucketsQuotaReached: !!(
-        maxBucketsQuota &&
-        maxBucketsQuota.value &&
-        numOfBuckets >= maxBucketsQuota.value
+        maxBucketsQuota?.value && numOfBuckets >= maxBucketsQuota?.value
       ),
     };
   }

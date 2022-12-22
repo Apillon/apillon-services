@@ -9,7 +9,7 @@ describe('Auth tests', () => {
 
   let testUser: TestUser;
   const newUserData = {
-    email: 'tine+test@kalmia.si',
+    email: 'dev+test@apillon.io',
     password: 'MyPassword01!',
     authToken: null,
     user_uuid: null,
