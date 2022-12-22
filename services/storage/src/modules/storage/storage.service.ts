@@ -187,7 +187,7 @@ export class StorageService {
     },
     context: ServiceContext,
   ): Promise<any> {
-    //Get session
+    // Get session
     const session = await new FileUploadSession({}, context).populateByUUID(
       event.session_uuid,
     );
