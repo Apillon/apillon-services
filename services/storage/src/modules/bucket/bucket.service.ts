@@ -159,7 +159,8 @@ export class BucketService {
     event: { query: BucketQuotaReachedQueryFilter },
     context: ServiceContext,
   ): Promise<any> {
-    //Validation - call can be from other services or from this service
+    event.query = new BucketQuotaReachedQueryFilter(event.query, context);
+    //Validation - call can be from other services or from this service - so validate that required fields are present
     try {
       await event.query.validate();
     } catch (err) {

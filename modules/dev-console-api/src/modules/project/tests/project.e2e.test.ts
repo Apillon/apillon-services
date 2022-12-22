@@ -74,6 +74,14 @@ describe('Project tests', () => {
       expect(response.body?.data?.id).toBeFalsy();
     });
 
+    test('User should be able to check if project-quota is reached', async () => {
+      const response = await request(stage.http)
+        .get(`/projects/qouta-reached`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data).toBe(false);
+    });
+
     test('User should be able to create new project', async () => {
       const response = await request(stage.http)
         .post(`/projects`)
@@ -293,6 +301,14 @@ describe('Project tests', () => {
       for (let i = 0; i < 10; i++) {
         await createTestProject(quotaTestsUser, stage.devConsoleContext);
       }
+    });
+
+    test('User should be able to check if project-quota is reached', async () => {
+      const response = await request(stage.http)
+        .get(`/projects/qouta-reached`)
+        .set('Authorization', `Bearer ${quotaTestsUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data).toBe(true);
     });
 
     test('User should recieve status 400 when max project quota is reached', async () => {
