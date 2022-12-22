@@ -150,7 +150,7 @@ export class AuthorizationWorker extends BaseQueueWorker {
     try {
       await new Lmas().writeLog({
         logType: LogType.INFO,
-        message: `Submitting DID create TX ...'`,
+        message: `Submitting attestation TX ...'`,
         location: 'AUTHORIZATION-API/attestation/authorization.worker',
         service: ServiceName.AUTHORIZATION,
       });
@@ -162,10 +162,17 @@ export class AuthorizationWorker extends BaseQueueWorker {
 
       await new Lmas().writeLog({
         logType: LogType.INFO,
-        message: `ATTESTATION ${claimerEmail} attested => ${emailAttested}`,
+        message:
+          `Email ${claimerEmail} attestation => ` + emailAttested
+            ? 'SUCCESS'
+            : 'FALSE',
         location: 'AUTHORIZATION-API/attestation/authorization.worker',
         service: ServiceName.AUTHORIZATION,
       });
+
+      if (!emailAttested) {
+        return false;
+      }
 
       const claimerCredential = {
         ...credential,
@@ -191,7 +198,7 @@ export class AuthorizationWorker extends BaseQueueWorker {
     } catch (error) {
       await new Lmas().writeLog({
         logType: LogType.ERROR,
-        message: `ATTESTATION ${claimerEmail} attested => FAILED`,
+        message: `Email ${claimerEmail} attestation => ERROR`,
         location: 'AUTHORIZATION-API/attestation/authorization.worker',
         service: ServiceName.AUTHORIZATION,
       });

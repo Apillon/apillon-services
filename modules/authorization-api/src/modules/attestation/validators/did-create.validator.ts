@@ -11,7 +11,7 @@ export function didCreateCreateOpValidator() {
   ): Promise<boolean> {
     return did_create_op.payload.message === undefined ||
       did_create_op.payload.nonce === undefined ||
-      did_create_op.senderPubkey === undefined
+      did_create_op.senderPubKey === undefined
       ? false
       : true;
   };

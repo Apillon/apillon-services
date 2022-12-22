@@ -41,7 +41,7 @@ export class AttestationService {
     body: AttestationEmailDto,
   ): Promise<any> {
     const email = body.email;
-    let attestation = await new Attestation().populateByUserEmail(
+    let attestation = await new Attestation({}, context).populateByUserEmail(
       context,
       email,
     );
@@ -80,14 +80,14 @@ export class AttestationService {
         location: 'AUTHORIZATION-API/attestation/sendVerificationEmail',
         service: ServiceName.AUTHORIZATION,
       });
-      throw new Error(err);
+      throw err;
     }
 
     await new Mailing(context).sendMail({
       emails: [email],
       template: 'verify-identity',
       data: {
-        actionUrl: `${env.AUTH_APP_URL}/attestation/?token=${token}`,
+        actionUrl: `${env.AUTH_APP_URL}/attestation/?token=${token}&email=${email}`,
       },
     });
 
@@ -238,24 +238,22 @@ export class AttestationService {
     const api = ConfigService.get('api');
 
     const { authentication, encryption, assertion, delegation } =
-      await generateKeypairs(body.mnemonic);
+      await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
     const attesterAccount = (await generateAccount(
       env.KILT_ATTESTER_MNEMONIC,
     )) as KiltKeyringPair;
 
     if (body.initial) {
-      return attesterAccount.address;
-    }
-
-    if (body.encryption_key) {
-      return u8aToHex(encryption.publicKey);
+      return {
+        address: attesterAccount.address,
+        pubkey: u8aToHex(encryption.publicKey),
+      };
     }
 
     const didDoc = await Did.resolve(Did.getFullDidUriFromKey(authentication));
 
     if (didDoc && didDoc.document) {
       console.log('DID already on chain. Nothing to do ...');
-      return didDoc.document;
     }
 
     const fullDidCreationTx = await Did.getStoreTx(
@@ -278,9 +276,13 @@ export class AttestationService {
     const { document } = Did.linkedInfoFromChain(encodedFullDid);
 
     if (!document) {
+      // DEV - no trigger to LMAS
       throw 'Full DID was not successfully created.';
     }
 
-    return document;
+    return {
+      address: attesterAccount.address,
+      pubkey: u8aToHex(encryption.publicKey),
+    };
   }
 }

@@ -1,5 +1,5 @@
 import { mnemonicGenerate, mnemonicToMiniSecret } from '@polkadot/util-crypto';
-import { LogType, writeLog, env } from '@apillon/lib';
+import { LogType, writeLog, env, ServiceName, Lmas } from '@apillon/lib';
 import {
   Blockchain,
   ConfigService,
@@ -67,7 +67,15 @@ export async function getFullDidDocument(keypairs: Keypairs) {
   const { document } = Did.linkedInfoFromChain(encodedFullDid);
 
   if (!document) {
-    console.error('Full DID was not successfully created.');
+    await new Lmas().writeLog({
+      logType: LogType.INFO,
+      // This is not an error!! getFullDidDocument is used to query document state
+      message: `KILT => DID DOCUMENT DOES NOT EXIST`,
+      location: 'AUTHORIZATION-API/attestation/attestation.service.ts',
+      service: ServiceName.AUTHORIZATION,
+    });
+
+    return null;
   }
 
   return document;
@@ -76,7 +84,6 @@ export async function getFullDidDocument(keypairs: Keypairs) {
 export async function submitDidCreateTx(
   extrinsic: SubmittableExtrinsic,
 ): Promise<boolean> {
-  console.log('Connecting to Kilt network ...');
   await connect(env.KILT_NETWORK);
 
   const attesterAccount = (await generateAccount(
@@ -86,21 +93,21 @@ export async function submitDidCreateTx(
   try {
     await Blockchain.signAndSubmitTx(extrinsic, attesterAccount);
   } catch (error) {
-    writeLog(
-      LogType.ERROR,
-      `KILT :: DID CREATION FAILED`,
-      'attestation.service.ts',
-      'submitDidCreateTx',
-    );
+    await new Lmas().writeLog({
+      logType: LogType.ERROR,
+      message: `KILT => DID CREATION FAILED`,
+      location: 'AUTHORIZATION-API/attestation/attestation.service.ts',
+      service: ServiceName.AUTHORIZATION,
+    });
     return false;
   }
 
-  writeLog(
-    LogType.MSG,
-    `KILT TX :: DID CREATION SUCCESSFULL`,
-    'attestation.service.ts',
-    'submitDidCreateTx',
-  );
+  await new Lmas().writeLog({
+    logType: LogType.INFO,
+    message: `KILT => DID CREATION SUCCESSFULL`,
+    location: 'AUTHORIZATION-API/attestation/attestation.service.ts',
+    service: ServiceName.AUTHORIZATION,
+  });
 
   return true;
 }

@@ -4,6 +4,7 @@ import {
   ConfigService,
   connect,
   Credential,
+  IAttestation,
 } from '@kiltprotocol/sdk-js';
 import { Injectable } from '@nestjs/common';
 import { AuthorizationApiContext } from '../../context';
@@ -17,8 +18,8 @@ export class VerificationService {
   ): Promise<any> {
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
-
     const presentation = JSON.parse(body.presentation);
+    let attestation: IAttestation;
 
     try {
       await Credential.verifyPresentation(presentation, {
@@ -26,7 +27,7 @@ export class VerificationService {
           '0x3ce56bb25ea3b603f968c302578e77e28d3d7ba3c7a8c45d6ebd3f410da766e1',
       });
 
-      const attestationInfo = Attestation.fromChain(
+      attestation = Attestation.fromChain(
         await api.query.attestation.attestations(presentation.rootHash),
         presentation.rootHash,
       );
@@ -34,21 +35,23 @@ export class VerificationService {
       await new Lmas().writeLog({
         context: context,
         logType: LogType.INFO,
-        message: 'Verification successfull',
+        message: 'VERIFICATION SUCCESSFUL',
         location: 'AUTHORIZATION-API/verification/verifyIdentity',
         service: ServiceName.AUTHORIZATION,
       });
-
-      return { verified: !attestationInfo.revoked };
     } catch (error) {
       await new Lmas().writeLog({
         context: context,
         logType: LogType.ERROR,
-        message: 'Verification failed - ' + error,
+        message: 'VERIFICATION FAILED:' + error,
         location: 'AUTHORIZATION-API/verification/verifyIdentity',
         service: ServiceName.AUTHORIZATION,
       });
-      return { verified: false };
+      return { verified: false, error: error.message };
     }
+
+    return attestation.revoked
+      ? { verified: false, error: 'Credential was revoked!' }
+      : { verified: true };
   }
 }
