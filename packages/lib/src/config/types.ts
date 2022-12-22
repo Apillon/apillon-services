@@ -72,7 +72,7 @@ export enum ServiceName {
   MAIL = 'MAIL',
   STORAGE = 'STORAGE',
   APILLON_API = 'APILLON_API',
-  AUTHORIZATION = 'AUTHORIZATION',
+  AUTHENTICATION_API = 'AUTHENTICATION_API',
 }
 
 export enum ServiceCode {
@@ -117,7 +117,7 @@ export enum SqlModelStatus {
  * Types of services in dev-console-api
  */
 export enum AttachedServiceType {
-  AUTHORIZATION = 1,
+  AUTHENTICATION = 1,
   STORAGE = 2,
 }
 
@@ -209,7 +209,7 @@ export enum DefaultApiKeyRole {
  *  04 - dev-api
  *  05 - apillon-api
  *  06 - storage
- *  07 - authorization-api
+ *  07 - authentication-api
  *  ...
  *  INTERNAL ERROR CODE: 000 - 999
  *
