@@ -70,7 +70,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         const tmpFur = await new FileUploadRequest(
           {},
           this.context,
-        ).populateByS3FileKey(record.s3.object.key);
+        ).populateByS3FileKey(decodeURI(record.s3.object.key));
 
         if (
           tmpFur.exists() &&
@@ -107,7 +107,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
       project_uuid: bucket.project_uuid,
       object_uuid: bucket.bucket_uuid,
     });
-    if (maxBucketSizeQuota && maxBucketSizeQuota.value) {
+    if (maxBucketSizeQuota?.value) {
       maxBucketSize = maxBucketSizeQuota.value * 1073741824; //quota is in GB - convert to bytes
     }
 

@@ -10,6 +10,8 @@ import {
   LogType,
   Mailing,
   PopulateFrom,
+  QuotaCode,
+  Scs,
   SerializeFor,
   ServiceName,
   ValidationException,
@@ -40,6 +42,15 @@ export class ProjectService {
     context: DevConsoleApiContext,
     body: Project,
   ): Promise<Project> {
+    //Check max project quota
+    if (await this.isProjectsQuotaReached(context)) {
+      throw new CodeException({
+        code: BadRequestErrorCode.MAX_NUMBER_OF_PROJECTS_REACHED,
+        status: HttpStatus.BAD_REQUEST,
+        errorCodes: BadRequestErrorCode,
+      });
+    }
+
     const conn = await context.mysql.start();
 
     try {
@@ -78,6 +89,17 @@ export class ProjectService {
       await context.mysql.rollback(conn);
       throw err;
     }
+  }
+
+  async isProjectsQuotaReached(context: DevConsoleApiContext) {
+    const numOfProjects = await new Project({}, context).getNumOfUserProjects();
+    const maxProjectsQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_PROJECT_COUNT,
+      object_uuid: context.user.user_uuid,
+    });
+    return !!(
+      maxProjectsQuota?.value && numOfProjects >= maxProjectsQuota?.value
+    );
   }
 
   async getProject(
@@ -162,6 +184,23 @@ export class ProjectService {
     }
     project.canModify(context);
 
+    //Check max users on project quota
+    const numOfUsersOnProject = await project.getNumOfUsersOnProjects();
+    const maxUsersOnProjectQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_USERS_ON_PROJECT,
+      project_uuid: project.project_uuid,
+    });
+    if (
+      maxUsersOnProjectQuota?.value &&
+      numOfUsersOnProject >= maxUsersOnProjectQuota?.value
+    ) {
+      throw new CodeException({
+        code: BadRequestErrorCode.MAX_NUMBER_OF_USERS_ON_PROJECT_REACHED,
+        status: HttpStatus.BAD_REQUEST,
+        errorCodes: BadRequestErrorCode,
+      });
+    }
+    //Invite user to project
     const authUser = await new Ams(context).getAuthUserByEmail(data.email);
     if (authUser.data?.user_uuid) {
       //User exists - send mail with notification, that user has been added to project

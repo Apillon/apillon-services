@@ -6,6 +6,7 @@ import {
 } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
+import { BucketQuotaReachedQueryFilter } from './dtos/bucket-qouta-reached-query-filter.dto';
 import { BucketQueryFilter } from './dtos/bucket-query-filter.dto';
 import { CreateBucketWebhookDto } from './dtos/create-bucket-webhook.dto';
 import { CreateBucketDto } from './dtos/create-bucket.dto';
@@ -70,6 +71,14 @@ export class StorageMicroservice extends BaseService {
     const data = {
       eventName: StorageEventType.DELETE_BUCKET,
       ...params,
+    };
+    return await this.callService(data);
+  }
+
+  public async maxBucketQuotaReached(params: BucketQuotaReachedQueryFilter) {
+    const data = {
+      eventName: StorageEventType.MAX_BUCKETS_QUOTA_REACHED,
+      query: params.serialize(),
     };
     return await this.callService(data);
   }

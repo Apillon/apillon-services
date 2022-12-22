@@ -263,4 +263,22 @@ export class ApiKey extends AdvancedSQLModel {
 
     return selectAndCountQuery(context.mysql, sqlQuery, params, 'ak.id');
   }
+
+  /**
+   *
+   * @returns number of api key in project
+   */
+  public async getNumOfApiKeysInProject() {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT COUNT(*) as numOfApiKeys
+      FROM \`${this.tableName}\`
+      WHERE project_uuid = @project_uuid 
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { project_uuid: this.project_uuid },
+    );
+
+    return data[0].numOfApiKeys;
+  }
 }

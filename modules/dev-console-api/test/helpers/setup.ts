@@ -27,6 +27,8 @@ export interface Stage {
   devConsoleSql: MySql;
   storageContext: TestContext;
   storageSql: MySql;
+  configContext: TestContext;
+  configSql: MySql;
 }
 
 export async function setupTest(): Promise<Stage> {
@@ -108,6 +110,21 @@ export async function setupTest(): Promise<Stage> {
     const storageContext = new TestContext();
     storageContext.mysql = storageSql;
 
+    //Config MS context
+    const config4 = {
+      host: env.CONFIG_MYSQL_HOST_TEST,
+      database: env.CONFIG_MYSQL_DATABASE_TEST,
+      password: env.CONFIG_MYSQL_PASSWORD_TEST,
+      port: env.CONFIG_MYSQL_PORT_TEST,
+      user: env.CONFIG_MYSQL_USER_TEST,
+    };
+
+    const configSql = new MySql(config4);
+    await configSql.connect();
+
+    const configContext = new TestContext();
+    configContext.mysql = configSql;
+
     // startAmsServer();
     // startLmasServer();
 
@@ -122,6 +139,8 @@ export async function setupTest(): Promise<Stage> {
       lmasMongo,
       storageContext,
       storageSql,
+      configContext,
+      configSql,
     };
   } catch (e) {
     console.error(e);
@@ -158,6 +177,22 @@ export const releaseStage = async (stage: Stage): Promise<void> => {
       await stage.lmasMongo.close();
     } catch (error) {
       throw new Error('Error when releasing LMAS Mongo stage: ' + error);
+    }
+  }
+
+  if (stage.storageSql) {
+    try {
+      await stage.storageSql.close();
+    } catch (error) {
+      throw new Error('Error when releasing Storage stage: ' + error);
+    }
+  }
+
+  if (stage.configSql) {
+    try {
+      await stage.configSql.close();
+    } catch (error) {
+      throw new Error('Error when releasing Config stage: ' + error);
     }
   }
 
