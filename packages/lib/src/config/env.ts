@@ -174,13 +174,43 @@ export interface IEnv {
   APILLON_API_PORT_TEST: number;
 
   /************************************************************
-   * Apillon Authroization API config
+   * Apillon Authentication API config
    ************************************************************/
-  APILLON_AUTHORIZATION_API_HOST: string;
-  APILLON_AUTHORIZATION_API_PORT: number;
+  // MAIN
+  AUTH_API_HOST: string;
+  AUTH_API_PORT: number;
 
-  APILLON_AUTHORIZATION_API_HOST_TEST: string;
-  APILLON_AUTHORIZATION_API_PORT_TEST: number;
+  AUTH_APP_URL: string;
+
+  AUTH_API_MYSQL_HOST: string;
+  AUTH_API_MYSQL_PORT: number;
+  AUTH_API_MYSQL_USER: string;
+  AUTH_API_MYSQL_PASSWORD: string;
+  AUTH_API_MYSQL_DATABASE: string;
+
+  // TEST
+  AUTH_API_HOST_TEST: string;
+  AUTH_API_PORT_TEST: number;
+  AUTH_APP_URL_TEST: string;
+  AUTH_API_MYSQL_HOST_TEST: string;
+  AUTH_API_MYSQL_PORT_TEST: number;
+  AUTH_API_MYSQL_USER_TEST: string;
+  AUTH_API_MYSQL_PASSWORD_TEST: string;
+  AUTH_API_MYSQL_DATABASE_TEST: string;
+
+  /************************************************************
+   * Kilt config
+   ************************************************************/
+  KILT_NETWORK: string;
+  KILT_ATTESTER_MNEMONIC: string;
+  KILT_DERIVATION_ALGORITHM: string;
+
+  /************************************************************
+   * Authorization config (Uses Kilt module)
+   ************************************************************/
+
+  AUTHORIZATION_AWS_WORKER_SQS_URL: string;
+  AUTHORIZATION_AWS_WORKER_LAMBDA_NAME: string;
 
   /************************************************************
    * Apillon Serverless workers config - STORAGE MS
@@ -332,6 +362,7 @@ export let env: IEnv = {
   STORAGE_MYSQL_USER_TEST: process.env['STORAGE_MYSQL_USER_TEST'],
   STORAGE_MYSQL_PASSWORD_TEST: process.env['STORAGE_MYSQL_PASSWORD_TEST'],
   STORAGE_MYSQL_DATABASE_TEST: process.env['STORAGE_MYSQL_DATABASE_TEST'],
+
   /** MAILING */
   MAIL_FUNCTION_NAME: process.env['MAIL_FUNCTION_NAME'],
   MAIL_FUNCTION_NAME_TEST: process.env['MAIL_FUNCTION_NAME_TEST'],
@@ -349,21 +380,48 @@ export let env: IEnv = {
   SMTP_EMAIL_FROM: process.env['SMTP_EMAIL_FROM'] || 'info@apillon.io',
   ADMIN_EMAILS: process.env['ADMIN_EMAILS'] || 'info@apillon.io',
 
-  /** APILLON API */
+  /** --- SECTION: APILLON API --- */
   APILLON_API_HOST: process.env['APILLON_API_HOST'] || 'localhost',
   APILLON_API_PORT: parseInt(process.env['APILLON_API_PORT']) || 6002,
   APILLON_API_HOST_TEST: process.env['APILLON_API_HOST_TEST'] || 'localhost',
   APILLON_API_PORT_TEST: parseInt(process.env['APILLON_API_PORT_TEST']) || 7002,
 
-  /** APILLON AUTHROIZATION API */
-  APILLON_AUTHORIZATION_API_HOST:
-    process.env['APILLON_AUTHORIZATION_API_HOST'] || 'localhost',
-  APILLON_AUTHORIZATION_API_PORT:
-    parseInt(process.env['APILLON_AUTHORIZATION_API_PORT']) || 6003,
-  APILLON_AUTHORIZATION_API_HOST_TEST:
-    process.env['APILLON_AUTHORIZATION_API_HOST_TEST'] || 'localhost',
-  APILLON_AUTHORIZATION_API_PORT_TEST:
-    parseInt(process.env['APILLON_AUTHORIZATION_API_PORT_TEST']) || 7003,
+  /** --- SECTION: APILLON AUTHORIZATION API --- */
+  AUTH_API_HOST: process.env['AUTH_API_HOST'] || 'localhost',
+  AUTH_API_PORT: parseInt(process.env['AUTH_API_PORT']) || 6003,
+  AUTH_API_HOST_TEST: process.env['AUTH_API_HOST_TEST'] || 'localhost',
+  AUTH_API_PORT_TEST: parseInt(process.env['AUTH_API_PORT_TEST']) || 7003,
+  // Frontend app
+  AUTH_APP_URL: process.env['AUTH_APP_URL'] || 'http://localhost:5173',
+  AUTH_APP_URL_TEST:
+    process.env['AUTH_APP_URL_TEST'] || 'http://localhost:5173',
+
+  /** AUTHORIZATION API DEV DB conn */
+  AUTH_API_MYSQL_HOST: process.env['AUTH_API_MYSQL_HOST'],
+  AUTH_API_MYSQL_PORT: parseInt(process.env['AUTH_API_MYSQL_PORT']) || 3306,
+  AUTH_API_MYSQL_USER: process.env['AUTH_API_MYSQL_USER'],
+  AUTH_API_MYSQL_PASSWORD: process.env['AUTH_API_MYSQL_PASSWORD'],
+  AUTH_API_MYSQL_DATABASE: process.env['AUTH_API_MYSQL_DATABASE'],
+  AUTH_API_MYSQL_HOST_TEST: process.env['AUTH_API_MYSQL_HOST_TEST'],
+  AUTH_API_MYSQL_PORT_TEST:
+    parseInt(process.env['AUTH_API_MYSQL_PORT_TEST']) || 3306,
+  AUTH_API_MYSQL_USER_TEST: process.env['AUTH_API_MYSQL_USER_TEST'],
+  AUTH_API_MYSQL_PASSWORD_TEST: process.env['AUTH_API_MYSQL_PASSWORD_TEST'],
+  AUTH_API_MYSQL_DATABASE_TEST: process.env['AUTH_API_MYSQL_DATABASE_TEST'],
+
+  /** KILT */
+  KILT_NETWORK:
+    process.env['KILT_NETWORK'] ||
+    'wss://peregrine.kilt.io/parachain-public-ws',
+  KILT_ATTESTER_MNEMONIC: process.env['KILT_ATTESTER_MNEMONIC'] || '',
+  // TODO: Unused -> Left here because we might introduce it later as configurable algorithm
+  // because it depends where you use this mnemonic
+  KILT_DERIVATION_ALGORITHM:
+    process.env['KILT_DERIVATION_ALGORITHM'] || 'sr25519',
+  AUTHORIZATION_AWS_WORKER_SQS_URL:
+    process.env['AUTHORIZATION_AWS_WORKER_SQS_URL'] || '',
+  AUTHORIZATION_AWS_WORKER_LAMBDA_NAME:
+    process.env['AUTHORIZATION_AWS_WORKER_LAMBDA_NAME'] || '',
 
   /**Apillon Serverless workers config*/
   /**

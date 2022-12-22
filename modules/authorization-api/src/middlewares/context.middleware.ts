@@ -10,8 +10,7 @@ export interface IRequest extends Request {
 
 /**
  * Returns a middleware which creates a context.
- */
-@Injectable()
+ */ @Injectable()
 export class ContextMiddleware implements NestMiddleware {
   constructor(
     @Inject('MYSQL_DB')
@@ -19,7 +18,15 @@ export class ContextMiddleware implements NestMiddleware {
   ) {}
 
   use(req: IRequest, res, next) {
-    req.context = new AuthorizationApiContext();
+    let requestId = null;
+    try {
+      requestId = JSON.parse(
+        decodeURI(req.headers['x-apigateway-context'] as string),
+      )?.awsRequestId;
+    } catch (err) {}
+
+    req.context = new AuthorizationApiContext(requestId);
+    req.context.setMySql(this.mysql);
     next();
   }
 }

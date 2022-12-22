@@ -72,6 +72,7 @@ export enum ServiceName {
   MAIL = 'MAIL',
   STORAGE = 'STORAGE',
   APILLON_API = 'APILLON_API',
+  AUTHORIZATION = 'AUTHORIZATION',
 }
 
 export enum ServiceCode {
