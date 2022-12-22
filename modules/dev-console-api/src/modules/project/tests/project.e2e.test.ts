@@ -4,7 +4,6 @@ import { createTestProject } from '../../../../test/helpers/project';
 import { releaseStage, setupTest, Stage } from '../../../../test/helpers/setup';
 import { createTestUser, TestUser } from '../../../../test/helpers/user';
 import { Project } from '../../project/models/project.model';
-import { User } from '../../user/models/user.model';
 import { ProjectUserPendingInvitation } from '../models/project-user-pending-invitation.model';
 import { ProjectUser } from '../models/project-user.model';
 

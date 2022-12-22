@@ -45,6 +45,10 @@
       "path": "packages\\workers-lib"
     },
     {
+      "name": "📦@packages/tests-lib",
+      "path": "packages\\tests-lib"
+    },
+    {
       "name": "🔨_tsconfig",
       "path": "packages\\tsconfig"
     },

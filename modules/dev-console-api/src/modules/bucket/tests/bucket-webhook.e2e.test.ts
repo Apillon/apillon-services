@@ -7,10 +7,7 @@ import {
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
 import { BucketWebhook } from '@apillon/storage/src/modules/bucket/models/bucket-webhook.model';
 import * as request from 'supertest';
-import {
-  createTestBucket,
-  createTestBucketWebhook,
-} from '../../../../test/helpers/bucket';
+import { createTestBucket, createTestBucketWebhook } from '@apillon/tests-lib';
 import { createTestProject } from '../../../../test/helpers/project';
 import { releaseStage, setupTest, Stage } from '../../../../test/helpers/setup';
 import { createTestUser, TestUser } from '../../../../test/helpers/user';

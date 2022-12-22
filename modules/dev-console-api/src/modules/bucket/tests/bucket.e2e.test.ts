@@ -5,7 +5,7 @@ import {
 } from '@apillon/storage/src/config/types';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
 import * as request from 'supertest';
-import { createTestBucket } from '../../../../test/helpers/bucket';
+import { createTestBucket } from '@apillon/tests-lib';
 import { createTestProject } from '../../../../test/helpers/project';
 import { releaseStage, setupTest, Stage } from '../../../../test/helpers/setup';
 import { createTestUser, TestUser } from '../../../../test/helpers/user';
