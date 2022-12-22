@@ -206,11 +206,11 @@ export interface IEnv {
   KILT_DERIVATION_ALGORITHM: string;
 
   /************************************************************
-   * Authorization config (Uses Kilt module)
+   * Authentication config (Uses Kilt module)
    ************************************************************/
 
-  AUTHORIZATION_AWS_WORKER_SQS_URL: string;
-  AUTHORIZATION_AWS_WORKER_LAMBDA_NAME: string;
+  AUTHENTICATION_AWS_WORKER_SQS_URL: string;
+  AUTHENTICATION_AWS_WORKER_LAMBDA_NAME: string;
 
   /************************************************************
    * Apillon Serverless workers config - STORAGE MS
@@ -386,7 +386,7 @@ export let env: IEnv = {
   APILLON_API_HOST_TEST: process.env['APILLON_API_HOST_TEST'] || 'localhost',
   APILLON_API_PORT_TEST: parseInt(process.env['APILLON_API_PORT_TEST']) || 7002,
 
-  /** --- SECTION: APILLON AUTHORIZATION API --- */
+  /** --- SECTION: APILLON AUTHENTICATION API --- */
   AUTH_API_HOST: process.env['AUTH_API_HOST'] || 'localhost',
   AUTH_API_PORT: parseInt(process.env['AUTH_API_PORT']) || 6003,
   AUTH_API_HOST_TEST: process.env['AUTH_API_HOST_TEST'] || 'localhost',
@@ -396,7 +396,7 @@ export let env: IEnv = {
   AUTH_APP_URL_TEST:
     process.env['AUTH_APP_URL_TEST'] || 'http://localhost:5173',
 
-  /** AUTHORIZATION API DEV DB conn */
+  /** AUTHENTICATION API DEV DB conn */
   AUTH_API_MYSQL_HOST: process.env['AUTH_API_MYSQL_HOST'],
   AUTH_API_MYSQL_PORT: parseInt(process.env['AUTH_API_MYSQL_PORT']) || 3306,
   AUTH_API_MYSQL_USER: process.env['AUTH_API_MYSQL_USER'],
@@ -418,10 +418,10 @@ export let env: IEnv = {
   // because it depends where you use this mnemonic
   KILT_DERIVATION_ALGORITHM:
     process.env['KILT_DERIVATION_ALGORITHM'] || 'sr25519',
-  AUTHORIZATION_AWS_WORKER_SQS_URL:
-    process.env['AUTHORIZATION_AWS_WORKER_SQS_URL'] || '',
-  AUTHORIZATION_AWS_WORKER_LAMBDA_NAME:
-    process.env['AUTHORIZATION_AWS_WORKER_LAMBDA_NAME'] || '',
+  AUTHENTICATION_AWS_WORKER_SQS_URL:
+    process.env['AUTHENTICATION_AWS_WORKER_SQS_URL'] || '',
+  AUTHENTICATION_AWS_WORKER_LAMBDA_NAME:
+    process.env['AUTHENTICATION_AWS_WORKER_LAMBDA_NAME'] || '',
 
   /**Apillon Serverless workers config*/
   /**

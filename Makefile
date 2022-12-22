@@ -1,5 +1,5 @@
 DEV_CONSOLE_API_DIR="./modules/dev-console-api/"
-AUTH_API_DIR="./modules/authorization-api"
+AUTH_API_DIR="./modules/authentication-api"
 AT_LIB_DIR="./packages/at-lib"
 DOCKER_COMPOSE="docker-compose.yml"
 
