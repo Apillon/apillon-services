@@ -3,7 +3,7 @@ import { BucketWebhook } from '@apillon/storage/src/modules/bucket/models/bucket
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
 import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';
-import { Project } from '../../src/modules/project/models/project.model';
+import { Project } from '@apillon/dev-console-api/src/modules/project/models/project.model';
 import { TestContext } from './context';
 import { TestUser } from './user';
 

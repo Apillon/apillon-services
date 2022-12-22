@@ -1,12 +1,17 @@
-import { DefaultUserRole, QuotaCode, SqlModelStatus } from '@apillon/lib';
+import { DefaultUserRole, env, QuotaCode, SqlModelStatus } from '@apillon/lib';
 import * as request from 'supertest';
-import { createTestProject } from '../../../../test/helpers/project';
-import { releaseStage, setupTest, Stage } from '../../../../test/helpers/setup';
-import { createTestUser, TestUser } from '../../../../test/helpers/user';
+import {
+  createTestProject,
+  createTestUser,
+  TestUser,
+} from '@apillon/tests-lib';
+import { releaseStage, Stage } from '@apillon/tests-lib';
 import { BadRequestErrorCode } from '../../../config/types';
 import { Project } from '../../project/models/project.model';
 import { ProjectUserPendingInvitation } from '../models/project-user-pending-invitation.model';
 import { ProjectUser } from '../models/project-user.model';
+import { AppModule } from '../../../app.module';
+import { setupTest } from '../../../../test/helpers/setup';
 
 describe('Project tests', () => {
   let stage: Stage;

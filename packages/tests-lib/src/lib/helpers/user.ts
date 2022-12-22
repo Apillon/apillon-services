@@ -2,9 +2,9 @@ import { AuthUser } from '@apillon/access/src/modules/auth-user/auth-user.model'
 import { TestContext } from './context';
 import { DefaultUserRole, SqlModelStatus } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
-import { User } from '../../src/modules/user/models/user.model';
-import { ProjectUser } from '../../src/modules/project/models/project-user.model';
-import { Project } from '../../src/modules/project/models/project.model';
+import { User } from '@apillon/dev-console-api/src/modules/user/models/user.model';
+import { ProjectUser } from '@apillon/dev-console-api/src/modules/project/models/project-user.model';
+import { Project } from '@apillon/dev-console-api/src/modules/project/models/project.model';
 
 export interface TestUser {
   user: User;

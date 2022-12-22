@@ -1,8 +1,8 @@
 import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
 import { DefaultUserRole, generatePassword } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
-import { ProjectUser } from '../../src/modules/project/models/project-user.model';
-import { Project } from '../../src/modules/project/models/project.model';
+import { ProjectUser } from '@apillon/dev-console-api/src/modules/project/models/project-user.model';
+import { Project } from '@apillon/dev-console-api/src/modules/project/models/project.model';
 import { TestContext } from './context';
 import { TestUser } from './user';
 

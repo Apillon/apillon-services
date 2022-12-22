@@ -7,18 +7,20 @@ import {
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
 import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
 import { FileUploadRequest } from '@apillon/storage/src/modules/storage/models/file-upload-request.model';
-import { FileUploadSession } from '@apillon/storage/src/modules/storage/models/file-upload-session.model';
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';
-import * as request from 'supertest';
-import { v4 as uuidV4 } from 'uuid';
 import {
   createTestBucket,
   createTestBucketWebhook,
-} from '../../../../test/helpers/bucket';
-import { createTestProject } from '../../../../test/helpers/project';
-import { releaseStage, setupTest, Stage } from '../../../../test/helpers/setup';
-import { createTestUser, TestUser } from '../../../../test/helpers/user';
+  createTestProject,
+  createTestUser,
+  TestUser,
+} from '@apillon/tests-lib';
+import * as request from 'supertest';
+import { v4 as uuidV4 } from 'uuid';
+import { releaseStage, Stage } from '@apillon/tests-lib';
 import { Project } from '../../project/models/project.model';
+import { AppModule } from '../../../app.module';
+import { setupTest } from '../../../../test/helpers/setup';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const fs = require('fs');

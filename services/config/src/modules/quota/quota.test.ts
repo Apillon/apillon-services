@@ -26,7 +26,11 @@ describe('Quota unit test', () => {
    **/
 
   beforeAll(async () => {
-    stage = await setupTest();
+    stage = await setupTest(
+      AppModule,
+      env.DEV_CONSOLE_API_PORT_TEST,
+      env.DEV_CONSOLE_API_HOST_TEST,
+    );
 
     // get defaults
     defaultQuotas = await stage.db.paramExecute(`SELECT * FROM quota`);

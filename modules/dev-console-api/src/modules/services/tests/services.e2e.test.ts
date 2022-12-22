@@ -1,11 +1,16 @@
-import { AttachedServiceType } from '@apillon/lib';
+import { AttachedServiceType, env } from '@apillon/lib';
 import * as request from 'supertest';
-import { createTestProject } from '../../../../test/helpers/project';
-import { createTestProjectService } from '../../../../test/helpers/service';
-import { releaseStage, setupTest, Stage } from '../../../../test/helpers/setup';
-import { createTestUser, TestUser } from '../../../../test/helpers/user';
+import {
+  createTestProject,
+  createTestProjectService,
+  createTestUser,
+  TestUser,
+} from '@apillon/tests-lib';
+import { releaseStage, Stage } from '@apillon/tests-lib';
 import { Project } from '../../project/models/project.model';
 import { Service } from '../models/service.model';
+import { AppModule } from '../../../app.module';
+import { setupTest } from '../../../../test/helpers/setup';
 
 describe('Project services tests', () => {
   let stage: Stage;

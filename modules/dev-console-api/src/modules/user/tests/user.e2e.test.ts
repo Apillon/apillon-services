@@ -1,8 +1,10 @@
-import { generateJwtToken, JwtTokenType } from '@apillon/lib';
+import { env, generateJwtToken, JwtTokenType } from '@apillon/lib';
 import * as request from 'supertest';
-import { releaseStage, setupTest, Stage } from '../../../../test/helpers/setup';
-import { createTestUser, TestUser } from '../../../../test/helpers/user';
+import { releaseStage, Stage } from '@apillon/tests-lib';
+import { createTestUser, TestUser } from '@apillon/tests-lib';
 import { ValidateEmailDto } from '../dtos/validate-email.dto';
+import { AppModule } from '../../../app.module';
+import { setupTest } from '../../../../test/helpers/setup';
 
 describe('Auth tests', () => {
   let stage: Stage;
