@@ -23,6 +23,7 @@
     "tsconfig": "*"
   },
   "dependencies": {
-    "@apillon/lib": "*"
+    "@apillon/lib": "*",
+    "@nestjs/common": "^8.4.7"
   }
 }

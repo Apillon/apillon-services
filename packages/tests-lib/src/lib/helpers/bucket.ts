@@ -1,3 +1,4 @@
+import { BucketType } from '@apillon/storage/src/config/types';
 import { BucketWebhook } from '@apillon/storage/src/modules/bucket/models/bucket-webhook.model';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
 import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
@@ -10,10 +11,12 @@ export async function createTestBucket(
   user: TestUser,
   storageCtx: TestContext,
   project: Project,
+  bucketType?: BucketType,
 ): Promise<Bucket> {
   const bucket: Bucket = new Bucket({}, storageCtx).fake().populate({
     project_uuid: project.project_uuid,
     name: 'My bucket',
+    bucketType: bucketType || BucketType.STORAGE,
   });
 
   await bucket.insert();

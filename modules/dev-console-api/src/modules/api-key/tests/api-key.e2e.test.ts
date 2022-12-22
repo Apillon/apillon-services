@@ -3,14 +3,19 @@ import * as request from 'supertest';
 import {
   createTestApiKey,
   createTestProject,
-} from '../../../../test/helpers/project';
-import { createTestProjectService } from '../../../../test/helpers/service';
-import { releaseStage, setupTest, Stage } from '../../../../test/helpers/setup';
-import { createTestUser, TestUser } from '../../../../test/helpers/user';
+  createTestProjectService,
+  createTestUser,
+  TestUser,
+  releaseStage,
+  Stage,
+} from '@apillon/tests-lib';
 import { Project } from '../../project/models/project.model';
 import { Service } from '../../services/models/service.model';
 import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
 import { ApiKeyRole } from '@apillon/access/src/modules/role/models/api-key-role.model';
+import { AppModule } from '../../../app.module';
+import { env } from '@apillon/lib';
+import { setupTest } from '../../../../test/helpers/setup';
 
 describe('API key tests', () => {
   let stage: Stage;
