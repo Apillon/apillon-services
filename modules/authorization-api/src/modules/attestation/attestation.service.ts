@@ -18,6 +18,7 @@ import {
   AttestationState,
   JwtTokenType,
   AuthorizationErrorCode,
+  AuthAppErrors,
 } from '../../config/types';
 import { generateKeypairs, generateAccount } from '../../lib/kilt';
 import { KiltKeyringPair } from '@kiltprotocol/types';
@@ -33,6 +34,9 @@ import {
 import { WorkerName } from '../../workers/worker-executor';
 import { AuthorizationWorker } from '../../workers/authorization.worker';
 import { u8aToHex } from '@polkadot/util';
+import { IdentityCreateDto } from './dtos/identity-create.dto';
+
+const aae = AuthAppErrors;
 
 @Injectable()
 export class AttestationService {
@@ -41,6 +45,10 @@ export class AttestationService {
     body: AttestationEmailDto,
   ): Promise<any> {
     const email = body.email;
+    const token = generateJwtToken(JwtTokenType.ATTEST_EMAIL_VERIFICATION, {
+      email,
+    });
+
     let attestation = await new Attestation({}, context).populateByUserEmail(
       context,
       email,
@@ -49,29 +57,29 @@ export class AttestationService {
     if (attestation.exists()) {
       // If email was already attested -> deny process
       if (attestation.state == AttestationState.ATTESTED) {
-        return { success: false, message: 'Email already attested' };
+        return { success: false, message: aae.EMAIL_ALREADY_EXIST };
       }
     } else {
       // If attestation does not exist, create a new entry
-      attestation = new Attestation({}, context).populate({
-        context: context,
-        email: email,
-      });
+      attestation = new Attestation({}, context);
     }
-
-    const token = generateJwtToken(JwtTokenType.ATTEST_EMAIL_VERIFICATION, {
-      email,
-    });
 
     // Lock email to attestation object
     attestation.populate({
+      context: context,
+      email: email,
       state: AttestationState.IN_PROGRESS,
       token: token,
     });
 
     try {
-      // TODO: Does not work with contraints
-      await attestation.update(SerializeFor.INSERT_DB);
+      if (!attestation.exists()) {
+        // CREATE NEW
+        await attestation.insert(SerializeFor.INSERT_DB);
+      } else {
+        // UPDATE EXISTING
+        await attestation.update(SerializeFor.INSERT_DB);
+      }
     } catch (err) {
       await new Lmas().writeLog({
         context: context,
@@ -117,7 +125,10 @@ export class AttestationService {
     return { state: attestation.state };
   }
 
-  async generateIdentity(context: AuthorizationApiContext, body: any) {
+  async generateIdentity(
+    context: AuthorizationApiContext,
+    body: IdentityCreateDto,
+  ) {
     // Worker input parameters
     const parameters = {
       did_create_op: body.did_create_op,
@@ -202,7 +213,7 @@ export class AttestationService {
     return { success: true };
   }
 
-  async getUserCredential(context: AuthorizationApiContext, email: any) {
+  async getUserCredential(context: AuthorizationApiContext, email: string) {
     const attestation = await new Attestation({}, context).populateByUserEmail(
       context,
       email,

@@ -106,3 +106,7 @@ export interface SignRequestData {
    */
   did: DidUri;
 }
+
+export enum AuthAppErrors {
+  EMAIL_ALREADY_EXIST = 'Email already attested',
+}

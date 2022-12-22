@@ -136,7 +136,6 @@ async function initAuthApiTestMigrations() {
   };
 
   if (!/(test|testing)/i.test(poolAuthApi.database)) {
-    console.log('HERE3');
     throw new Error('!!! NOT TEST DATABASE? !!!');
   }
 
@@ -166,7 +165,6 @@ async function initConfigTestSeed() {
   };
 
   if (!/(test|testing)/i.test(poolConfig.database)) {
-    console.log('HERE1');
     throw new Error('!!! NOT TEST DATABASE? !!!');
   }
 
@@ -196,7 +194,6 @@ async function initAuthApiTestSeed() {
   };
 
   if (!/(test|testing)/i.test(poolAuthApi.database)) {
-    console.log('HERE2');
     throw new Error('!!! NOT TEST DATABASE? !!!');
   }
 

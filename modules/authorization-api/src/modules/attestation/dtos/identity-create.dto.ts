@@ -1,5 +1,6 @@
 import { ModelBase, PopulateFrom, presenceValidator } from '@apillon/lib';
 import { prop } from '@rawmodel/core';
+import { stringParser } from '@rawmodel/parsers';
 import { emailValidator } from '@rawmodel/validators';
 import { AuthorizationErrorCode } from '../../../config/types';
 import {
@@ -20,6 +21,7 @@ import {
 // };
 export class IdentityCreateDto extends ModelBase {
   @prop({
+    // TODO: parser -> This is an object, so do we really need to parse anything?
     populatable: [PopulateFrom.PROFILE],
     validators: [
       {
@@ -35,6 +37,7 @@ export class IdentityCreateDto extends ModelBase {
   public did_create_op: object;
 
   @prop({
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
     validators: [
       {
@@ -50,6 +53,7 @@ export class IdentityCreateDto extends ModelBase {
   public email: string;
 
   @prop({
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
     validators: [
       {
@@ -65,6 +69,7 @@ export class IdentityCreateDto extends ModelBase {
   public didUri: string;
 
   @prop({
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
     validators: [
       {
