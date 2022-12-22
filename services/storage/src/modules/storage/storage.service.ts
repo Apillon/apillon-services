@@ -62,12 +62,11 @@ export class StorageService {
       object_uuid: bucket.bucket_uuid,
     });
     if (
-      maxBucketSizeQuota &&
-      maxBucketSizeQuota.value &&
-      bucket.size > maxBucketSizeQuota.value * 1073741824 //quota is in GB - size is in bytes
+      maxBucketSizeQuota?.value &&
+      bucket.uploadedSize > maxBucketSizeQuota?.value * 1073741824 //quota is in GB - size is in bytes
     ) {
       throw new StorageCodeException({
-        code: StorageErrorCode.MAX_BUCKET_SIZE_REACHED,
+        code: StorageErrorCode.MAX_UPLOADED_TO_BUCKET_SIZE_REACHED,
         status: 400,
       });
     }

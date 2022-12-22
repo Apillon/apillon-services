@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import {
   BucketQueryFilter,
+  BucketQuotaReachedQueryFilter,
   CreateBucketDto,
   CreateBucketWebhookDto,
   DefaultUserRole,
@@ -96,6 +97,20 @@ export class BucketController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     return await this.bucketService.deleteBucketWebhook(context, id);
+  }
+
+  @Get('quota-reached')
+  @Permissions({ role: DefaultUserRole.USER })
+  @Validation({
+    dto: BucketQuotaReachedQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async isMaxBucketQuotaReached(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: BucketQuotaReachedQueryFilter,
+  ) {
+    return await this.bucketService.isMaxBucketQuotaReached(context, query);
   }
 
   @Get()

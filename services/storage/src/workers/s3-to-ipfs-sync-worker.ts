@@ -107,7 +107,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
       project_uuid: bucket.project_uuid,
       object_uuid: bucket.bucket_uuid,
     });
-    if (maxBucketSizeQuota && maxBucketSizeQuota.value) {
+    if (maxBucketSizeQuota?.value) {
       maxBucketSize = maxBucketSizeQuota.value * 1073741824; //quota is in GB - convert to bytes
     }
 
