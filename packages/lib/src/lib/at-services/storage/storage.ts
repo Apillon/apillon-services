@@ -6,6 +6,7 @@ import {
 } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
+import { BucketQuotaReachedQueryFilter } from './dtos/bucket-qouta-reached-query-filter.dto';
 import { BucketQueryFilter } from './dtos/bucket-query-filter.dto';
 import { CreateBucketWebhookDto } from './dtos/create-bucket-webhook.dto';
 import { CreateBucketDto } from './dtos/create-bucket.dto';
@@ -14,6 +15,7 @@ import { CreateS3SignedUrlForUploadDto } from './dtos/create-s3-signed-url-for-u
 import { DirectoryContentQueryFilter } from './dtos/directory-content-query-filter.dto';
 import { EndFileUploadSessionDto } from './dtos/end-file-upload-session.dto';
 import { FileDetailsQueryFilter } from './dtos/file-details-query-filter.dto';
+import { FileUploadsQueryFilter } from './dtos/file-uploads-query-filter.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -41,6 +43,14 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async getBucket(id: number) {
+    const data = {
+      eventName: StorageEventType.GET_BUCKET,
+      id: id,
+    };
+    return await this.callService(data);
+  }
+
   public async createBucket(params: CreateBucketDto) {
     const data = {
       eventName: StorageEventType.CREATE_BUCKET,
@@ -61,6 +71,14 @@ export class StorageMicroservice extends BaseService {
     const data = {
       eventName: StorageEventType.DELETE_BUCKET,
       ...params,
+    };
+    return await this.callService(data);
+  }
+
+  public async maxBucketQuotaReached(params: BucketQuotaReachedQueryFilter) {
+    const data = {
+      eventName: StorageEventType.MAX_BUCKETS_QUOTA_REACHED,
+      query: params.serialize(),
     };
     return await this.callService(data);
   }
@@ -126,6 +144,22 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async syncFileToIPFS(file_uuid: string) {
+    const data = {
+      eventName: StorageEventType.END_FILE_UPLOAD,
+      file_uuid: file_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async listFileUploads(params: FileUploadsQueryFilter) {
+    const data = {
+      eventName: StorageEventType.LIST_FILE_UPLOAD,
+      query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
   //#endregion
 
   //#region file
@@ -133,8 +167,15 @@ export class StorageMicroservice extends BaseService {
   public async getFileDetails(params: FileDetailsQueryFilter) {
     const data = {
       eventName: StorageEventType.GET_FILE_DETAILS,
-      file_uuid: params.file_uuid,
-      cid: params.cid,
+      ...params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async deleteFile(params: { id: string }) {
+    const data = {
+      eventName: StorageEventType.FILE_DELETE,
+      ...params,
     };
     return await this.callService(data);
   }

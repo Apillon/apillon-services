@@ -6,11 +6,14 @@ import {
   CodeException,
   Context,
   DefaultUserRole,
+  enumInclusionValidator,
   ForbiddenErrorCodes,
   getQueryParams,
   PoolConnection,
   PopulateFrom,
   prop,
+  QuotaCode,
+  Scs,
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
@@ -90,6 +93,10 @@ export class Bucket extends AdvancedSQLModel {
         resolver: presenceValidator(),
         code: StorageErrorCode.BUCKET_TYPE_NOT_PRESENT,
       },
+      {
+        resolver: enumInclusionValidator(BucketType, false),
+        code: StorageErrorCode.BUCKET_TYPE_NOT_VALID,
+      },
     ],
     fakeValue: BucketType.STORAGE,
   })
@@ -149,7 +156,6 @@ export class Bucket extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
     ],
     validators: [],
     fakeValue: 5242880,
@@ -168,8 +174,25 @@ export class Bucket extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
     ],
     validators: [],
+    defaultValue: 0,
   })
   public size: number;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+    defaultValue: 0,
+  })
+  public uploadedSize: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -226,7 +249,7 @@ export class Bucket extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: 403,
-        errorMessage: 'Insufficient permissins',
+        errorMessage: 'Insufficient permissions to modify this record',
       });
     }
   }
@@ -245,7 +268,7 @@ export class Bucket extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: 403,
-        errorMessage: 'Insufficient permissins',
+        errorMessage: 'Insufficient permissions to access to this record',
       });
     }
   }
@@ -300,7 +323,25 @@ export class Bucket extends AdvancedSQLModel {
       `,
     };
 
-    return selectAndCountQuery(context.mysql, sqlQuery, params, 'b.id');
+    const list = await selectAndCountQuery(
+      context.mysql,
+      sqlQuery,
+      params,
+      'b.id',
+    );
+
+    for (const b of list.items) {
+      const maxBucketSizeQuota = await new Scs(context).getQuota({
+        quota_id: QuotaCode.MAX_BUCKET_SIZE,
+        project_uuid: filter.project_uuid,
+        object_uuid: b.bucket_uuid,
+      });
+
+      if (maxBucketSizeQuota?.value)
+        b.maxSize = Number(maxBucketSizeQuota?.value) * 1073741824;
+    }
+
+    return list;
   }
 
   public async clearBucketContent(context: Context, conn: PoolConnection) {
@@ -323,5 +364,26 @@ export class Bucket extends AdvancedSQLModel {
       { bucket_id: this.id },
       conn,
     );
+  }
+
+  /**
+   * Function to get count of active bucket inside project and for specific bucket type
+   * @param project_uuid
+   * @param bucketType
+   * @returns
+   */
+  public async getNumOfBuckets() {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT COUNT(*) as numOfBuckets
+      FROM \`${this.tableName}\`
+      WHERE project_uuid = @project_uuid 
+      AND bucketType = @bucketType
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { project_uuid: this.project_uuid, bucketType: this.bucketType },
+    );
+
+    return data[0].numOfBuckets;
   }
 }

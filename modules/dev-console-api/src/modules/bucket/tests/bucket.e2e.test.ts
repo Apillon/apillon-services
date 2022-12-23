@@ -1,12 +1,20 @@
-import { DefaultUserRole, SqlModelStatus } from '@apillon/lib';
-import { BucketType } from '@apillon/storage/src/config/types';
+import { DefaultUserRole, env, QuotaCode, SqlModelStatus } from '@apillon/lib';
+import {
+  BucketType,
+  StorageErrorCode,
+} from '@apillon/storage/src/config/types';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
 import * as request from 'supertest';
-import { createTestBucket } from '../../../../test/helpers/bucket';
-import { createTestProject } from '../../../../test/helpers/project';
-import { releaseStage, setupTest, Stage } from '../../../../test/helpers/setup';
-import { createTestUser, TestUser } from '../../../../test/helpers/user';
+import {
+  createTestBucket,
+  createTestProject,
+  createTestUser,
+  TestUser,
+} from '@apillon/tests-lib';
+import { releaseStage, Stage } from '@apillon/tests-lib';
 import { Project } from '../../project/models/project.model';
+import { AppModule } from '../../../app.module';
+import { setupTest } from '../../../../test/helpers/setup';
 
 describe('Storage bucket tests', () => {
   let stage: Stage;
@@ -33,6 +41,27 @@ describe('Storage bucket tests', () => {
       stage.storageContext,
       testProject,
     );
+
+    await stage.configContext.mysql.paramExecute(`
+    INSERT INTO override (status, quota_id, project_uuid,  object_uuid, package_id, value)
+    VALUES 
+      (
+        5,
+        ${QuotaCode.MAX_FILE_BUCKETS},
+        '${testProject.project_uuid}',
+        null, 
+        null,
+        '5'
+      ),
+      (
+        5,
+        ${QuotaCode.MAX_HOSTING_BUCKETS},
+        '${testProject.project_uuid}',
+        null, 
+        null,
+        '5'
+      )
+    `);
   });
 
   afterAll(async () => {
@@ -49,7 +78,6 @@ describe('Storage bucket tests', () => {
       expect(response.body.data.items[0]?.id).toBeTruthy();
       expect(response.body.data.items[0]?.bucket_uuid).toBeTruthy();
       expect(response.body.data.items[0]?.bucketType).toBeTruthy();
-      expect(response.body.data.items[0]?.maxSize).toBeTruthy();
     });
 
     test('User should NOT be able to get ANOTHER USER bucket list', async () => {
@@ -57,6 +85,29 @@ describe('Storage bucket tests', () => {
         .get(`/buckets?project_uuid=${testProject2.project_uuid}`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(403);
+    });
+
+    test('User should be able to get bucket by id', async () => {
+      const response = await request(stage.http)
+        .get(`/buckets/${testBucket.id}`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.bucket_uuid).toBeTruthy();
+      expect(response.body.data.project_uuid).toBeTruthy();
+      expect(response.body.data.bucketType).toBeTruthy();
+      expect(response.body.data.name).toBeTruthy();
+      expect(response.body.data.maxSize).toBeTruthy();
+    });
+
+    test('User should recieve 404 if bucket does not exists', async () => {
+      const response = await request(stage.http)
+        .get(`/buckets/555`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(404);
+      expect(response.body.code).toBe(StorageErrorCode.BUCKET_NOT_FOUND);
+      expect(response.body.message).toBe(
+        StorageErrorCode[StorageErrorCode.BUCKET_NOT_FOUND],
+      );
     });
 
     test('User should recieve 422 if invalid body', async () => {
@@ -179,7 +230,6 @@ describe('Storage bucket tests', () => {
       expect(response.body.data.items[0]?.id).toBeTruthy();
       expect(response.body.data.items[0]?.bucket_uuid).toBeTruthy();
       expect(response.body.data.items[0]?.bucketType).toBeTruthy();
-      expect(response.body.data.items[0]?.maxSize).toBeTruthy();
     });
 
     test('User with role "ProjectUser" should NOT be able to create new bucket', async () => {
@@ -222,6 +272,59 @@ describe('Storage bucket tests', () => {
         stage.storageContext,
       ).populateByUUID(tmpBucket.bucket_uuid);
       expect(b.exists()).toBe(true);
+    });
+  });
+
+  describe('Bucket quotas tests', () => {
+    let quotaTestsUser: TestUser = undefined;
+    let quotaTestProject: Project = undefined;
+
+    beforeAll(async () => {
+      quotaTestsUser = await createTestUser(
+        stage.devConsoleContext,
+        stage.amsContext,
+      );
+      quotaTestProject = await createTestProject(
+        quotaTestsUser,
+        stage.devConsoleContext,
+      );
+      //create 10 buckets - max api keys on project quota reached
+      for (let i = 0; i < 10; i++) {
+        await createTestBucket(
+          quotaTestsUser,
+          stage.storageContext,
+          quotaTestProject,
+          BucketType.STORAGE,
+        );
+      }
+    });
+
+    test('User should recieve status 400 when max buckets quota is reached', async () => {
+      const response = await request(stage.http)
+        .post(`/buckets`)
+        .send({
+          project_uuid: quotaTestProject.project_uuid,
+          name: 'My test bucket',
+          bucketType: 1,
+        })
+        .set('Authorization', `Bearer ${quotaTestsUser.token}`);
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        StorageErrorCode[StorageErrorCode.MAX_BUCKETS_REACHED],
+      );
+    });
+
+    test('User should be able to create hosting bucket even though storage bucket quota si reached', async () => {
+      const response = await request(stage.http)
+        .post(`/buckets`)
+        .send({
+          project_uuid: quotaTestProject.project_uuid,
+          name: 'My test bucket',
+          bucketType: BucketType.HOSTING,
+        })
+        .set('Authorization', `Bearer ${quotaTestsUser.token}`);
+      expect(response.status).toBe(201);
+      expect(response.body.data.id).toBeTruthy();
     });
   });
 });

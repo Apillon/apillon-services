@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import {
   BucketQueryFilter,
+  BucketQuotaReachedQueryFilter,
   CreateBucketDto,
   CreateBucketWebhookDto,
   DefaultUserRole,
@@ -98,6 +99,20 @@ export class BucketController {
     return await this.bucketService.deleteBucketWebhook(context, id);
   }
 
+  @Get('quota-reached')
+  @Permissions({ role: DefaultUserRole.USER })
+  @Validation({
+    dto: BucketQuotaReachedQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async isMaxBucketQuotaReached(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: BucketQuotaReachedQueryFilter,
+  ) {
+    return await this.bucketService.isMaxBucketQuotaReached(context, query);
+  }
+
   @Get()
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
@@ -111,6 +126,20 @@ export class BucketController {
     @Query() query: BucketQueryFilter,
   ) {
     return await this.bucketService.getBucketList(context, query);
+  }
+
+  @Get(':id')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @UseGuards(AuthGuard)
+  async getBucket(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return await this.bucketService.getBucket(context, id);
   }
 
   @Post()

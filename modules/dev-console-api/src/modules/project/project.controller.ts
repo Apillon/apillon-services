@@ -33,6 +33,13 @@ export class ProjectController {
     return await this.projectService.getUserProjects(context);
   }
 
+  @Get('qouta-reached')
+  @Permissions({ role: DefaultUserRole.USER })
+  @UseGuards(AuthGuard)
+  async isProjectsQuotaReached(@Ctx() context: DevConsoleApiContext) {
+    return await this.projectService.isProjectsQuotaReached(context);
+  }
+
   @Post(':id/image')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },

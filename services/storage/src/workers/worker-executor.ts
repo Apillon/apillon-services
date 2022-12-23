@@ -1,18 +1,17 @@
-import * as aws from 'aws-sdk';
+import { AppEnvironment, MySql } from '@apillon/lib';
 import {
+  QueueWorkerType,
+  ServiceDefinition,
   ServiceDefinitionType,
   WorkerDefinition,
-  ServiceDefinition,
-  writeWorkerLog,
   WorkerLogStatus,
-  QueueWorkerType,
+  writeWorkerLog,
 } from '@apillon/workers-lib';
-import { Scheduler } from './scheduler';
-import { AppEnvironment, MySql } from '@apillon/lib';
+import * as aws from 'aws-sdk';
 
 import { Context, env } from '@apillon/lib';
-import { TestWorker } from './test-worker';
 import { SyncToIPFSWorker } from './s3-to-ipfs-sync-worker';
+import { TestWorker } from './test-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -153,14 +152,26 @@ export async function handleSqsMessages(
       id = parseInt(message?.messageAttributes?.jobId?.stringValue);
     }
 
-    const workerDefinition = new WorkerDefinition(
-      serviceDef,
-      message?.messageAttributes?.workerName?.stringValue,
-      { id, parameters },
-    );
+    let workerName = message?.messageAttributes?.workerName?.stringValue;
+    if (!workerName) {
+      //Worker name is not present in messageAttributes
+      console.info('worker name not present in message.messageAttributes');
+      if (message?.eventSourceARN == env.STORAGE_AWS_WORKER_SQS_ARN) {
+        //Special cases: Sqs message can be sent from s3 - check if eventSourceARN is present in message
+        workerName = WorkerName.SYNC_TO_IPFS_WORKER;
+      }
+    }
+
+    console.info('worker name', workerName);
+    console.info('STORAGE_AWS_WORKER_SQS_ARN', env.STORAGE_AWS_WORKER_SQS_ARN);
+
+    const workerDefinition = new WorkerDefinition(serviceDef, workerName, {
+      id,
+      parameters,
+    });
 
     // eslint-disable-next-line sonarjs/no-small-switch
-    switch (message?.messageAttributes?.workerName?.stringValue) {
+    switch (workerName) {
       case WorkerName.SYNC_TO_IPFS_WORKER: {
         await new SyncToIPFSWorker(
           workerDefinition,

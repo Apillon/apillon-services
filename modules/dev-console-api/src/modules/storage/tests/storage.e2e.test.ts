@@ -1,23 +1,26 @@
-import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
-import { FileUploadRequest } from '@apillon/storage/src/modules/storage/models/file-upload-request.model';
-import { FileUploadSession } from '@apillon/storage/src/modules/storage/models/file-upload-session.model';
-import { File } from '@apillon/storage/src/modules/storage/models/file.model';
+import { env } from '@apillon/lib';
 import {
   FileStatus,
+  FileUploadRequestFileStatus,
   StorageErrorCode,
 } from '@apillon/storage/src/config/types';
-import * as request from 'supertest';
-import { v4 as uuidV4 } from 'uuid';
+import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
+import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
+import { FileUploadRequest } from '@apillon/storage/src/modules/storage/models/file-upload-request.model';
+import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 import {
   createTestBucket,
   createTestBucketWebhook,
-} from '../../../../test/helpers/bucket';
-import { createTestProject } from '../../../../test/helpers/project';
-import { releaseStage, setupTest, Stage } from '../../../../test/helpers/setup';
-import { createTestUser, TestUser } from '../../../../test/helpers/user';
+  createTestProject,
+  createTestUser,
+  TestUser,
+} from '@apillon/tests-lib';
+import * as request from 'supertest';
+import { v4 as uuidV4 } from 'uuid';
+import { releaseStage, Stage } from '@apillon/tests-lib';
 import { Project } from '../../project/models/project.model';
-import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
-import { BadRequestErrorCode, env } from '@apillon/lib';
+import { AppModule } from '../../../app.module';
+import { setupTest } from '../../../../test/helpers/setup';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const fs = require('fs');
@@ -59,10 +62,8 @@ describe('Storage tests', () => {
     describe('Single file tests', () => {
       test('User should be able to recieve S3 signed URL, used to upload file to S3', async () => {
         const response = await request(stage.http)
-          .post(`/storage/file-upload-request`)
+          .post(`/storage/${testBucket.bucket_uuid}/file-upload`)
           .send({
-            bucket_uuid: testBucket.bucket_uuid,
-            session_uuid: testSession_uuid,
             fileName: 'myTestFile.txt',
             contentType: 'text/plain',
           })
@@ -76,15 +77,6 @@ describe('Storage tests', () => {
           stage.storageContext,
         ).populateById(response.body.data.fileUploadRequestId);
         expect(fur.exists()).toBeTruthy();
-
-        const session: FileUploadSession = await new FileUploadSession(
-          {},
-          stage.storageContext,
-        ).populateById(fur.session_id);
-
-        expect(session.exists()).toBeTruthy();
-        expect(session.session_uuid).toBe(testSession_uuid);
-        expect(session.sessionStatus).toBe(1);
 
         testS3SignedUrl = response.body.data.signedUrlForUpload;
         testS3FileUUID = response.body.data.file_uuid;
@@ -100,7 +92,7 @@ describe('Storage tests', () => {
 
       test('User should recieve 422 error if missing required data', async () => {
         const response = await request(stage.http)
-          .post(`/storage/file-upload-request`)
+          .post(`/storage/${testBucket.bucket_uuid}/file-upload`)
           .send({})
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(422);
@@ -121,10 +113,8 @@ describe('Storage tests', () => {
 
       test('User should NOT be able to recieve S3 signed URL for ANOTHER USER project', async () => {
         const response = await request(stage.http)
-          .post(`/storage/file-upload-request`)
+          .post(`/storage/${testBucket.bucket_uuid}/file-upload`)
           .send({
-            bucket_uuid: testBucket.bucket_uuid,
-            session_uuid: testSession_uuid,
             fileName: 'myTestFile.txt',
             contentType: 'text/plain',
           })
@@ -132,22 +122,11 @@ describe('Storage tests', () => {
         expect(response.status).toBe(403);
       });
 
-      test('User should NOT be able to start transfer of ANOTHER PROJECT SESSION', async () => {
+      test('Worker should transfer file from S3 to IPFS&CRUST', async () => {
         const response = await request(stage.http)
-          .post(`/storage/file-upload-session/${testSession_uuid}/end`)
-          .send({
-            directSync: true,
-          })
-          .set('Authorization', `Bearer ${testUser2.token}`);
-        expect(response.status).toBe(403);
-      });
-
-      test('User should be able to start transfer all files in session to IPFS', async () => {
-        const response = await request(stage.http)
-          .post(`/storage/file-upload-session/${testSession_uuid}/end`)
-          .send({
-            directSync: true,
-          })
+          .post(
+            `/storage/${testBucket.bucket_uuid}/file/${testS3FileUUID}/sync-to-ipfs`,
+          )
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(200);
 
@@ -159,17 +138,10 @@ describe('Storage tests', () => {
         expect(testFile.name).toBe('myTestFile.txt');
         expect(testFile.contentType).toBe('text/plain');
         expect(testFile.CID).toBeTruthy();
-
-        //check session
-        const session: FileUploadSession = await new FileUploadSession(
-          {},
-          stage.storageContext,
-        ).populateByUUID(testSession_uuid);
-
-        expect(session.sessionStatus).toBe(2);
       });
 
       test('User should be able to download uploaded file from apillon ipfs gateway', async () => {
+        expect(testFile).toBeTruthy();
         const response = await request(
           env.STORAGE_IPFS_PROVIDER + testFile.CID,
         ).get('');
@@ -180,7 +152,9 @@ describe('Storage tests', () => {
     describe('File details tests', () => {
       test('User should be able to get file details by file_uuid', async () => {
         const response = await request(stage.http)
-          .get(`/storage/file-details?file_uuid=${testFile.file_uuid}`)
+          .get(
+            `/storage/${testBucket.bucket_uuid}/file/${testFile.file_uuid}/detail`,
+          )
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(200);
 
@@ -190,13 +164,11 @@ describe('Storage tests', () => {
         expect(response.body.data.file.s3FileKey).toBeTruthy();
         expect(response.body.data.file.name).toBe(testFile.name);
         expect(response.body.data.file.size).toBeGreaterThan(0);
-
-        expect(response.body.data.crustStatus).toBeTruthy();
       });
 
       test('User should be able to get file details by CID', async () => {
         const response = await request(stage.http)
-          .get(`/storage/file-details?cid=${testFile.CID}`)
+          .get(`/storage/${testBucket.bucket_uuid}/file/${testFile.CID}/detail`)
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(200);
 
@@ -206,25 +178,15 @@ describe('Storage tests', () => {
         expect(response.body.data.file.s3FileKey).toBeTruthy();
         expect(response.body.data.file.name).toBe(testFile.name);
         expect(response.body.data.file.size).toBeGreaterThan(0);
-
-        expect(response.body.data.crustStatus).toBeTruthy();
       });
 
       test('User should NOT be able to get ANOTHER USER file details', async () => {
         const response = await request(stage.http)
-          .get(`/storage/file-details?cid=${testFile.CID}`)
+          .get(
+            `/storage/${testBucket.bucket_uuid}/file/${testFile.file_uuid}/detail`,
+          )
           .set('Authorization', `Bearer ${testUser2.token}`);
         expect(response.status).toBe(403);
-      });
-
-      test('User should recieve bad request, if neither CID nor file_uuid were added to query parameters', async () => {
-        const response = await request(stage.http)
-          .get(`/storage/file-details`)
-          .set('Authorization', `Bearer ${testUser.token}`);
-        expect(response.status).toBe(400);
-        expect(response.body.message).toBe(
-          BadRequestErrorCode[BadRequestErrorCode.INVALID_QUERY_PARAMETERS],
-        );
       });
     });
 
@@ -234,9 +196,8 @@ describe('Storage tests', () => {
 
         //Upload 2 files, each into its own directory
         let response = await request(stage.http)
-          .post(`/storage/file-upload-request`)
+          .post(`/storage/${testBucket.bucket_uuid}/file-upload`)
           .send({
-            bucket_uuid: testBucket.bucket_uuid,
             session_uuid: testSession_uuid,
             fileName: 'myTestFile2.txt',
             contentType: 'text/plain',
@@ -254,9 +215,8 @@ describe('Storage tests', () => {
         expect(response.status).toBe(200);
 
         response = await request(stage.http)
-          .post(`/storage/file-upload-request`)
+          .post(`/storage/${testBucket.bucket_uuid}/file-upload`)
           .send({
-            bucket_uuid: testBucket.bucket_uuid,
             session_uuid: testSession_uuid,
             fileName: 'myTestFile3.txt',
             contentType: 'text/plain',
@@ -273,7 +233,9 @@ describe('Storage tests', () => {
         expect(response.status).toBe(200);
         // trigger sync to IPFS
         response = await request(stage.http)
-          .post(`/storage/file-upload-session/${testSession_uuid}/end`)
+          .post(
+            `/storage/${testBucket.bucket_uuid}/file-upload/${testSession_uuid}/end`,
+          )
           .send({
             directSync: true,
           })
@@ -316,7 +278,6 @@ describe('Storage tests', () => {
 
     describe('Tests to upload file to bucket, which has specified webhook', () => {
       let testBucketWithWebhook;
-      const testSession2_uuid = uuidV4();
       beforeAll(async () => {
         testBucketWithWebhook = await createTestBucket(
           testUser,
@@ -331,10 +292,8 @@ describe('Storage tests', () => {
       });
       test('User should be able to upload file to bucket which has webhook set up', async () => {
         let response = await request(stage.http)
-          .post(`/storage/file-upload-request`)
+          .post(`/storage/${testBucketWithWebhook.bucket_uuid}/file-upload`)
           .send({
-            bucket_uuid: testBucketWithWebhook.bucket_uuid,
-            session_uuid: testSession2_uuid,
             fileName: 'myTestFile.txt',
             contentType: 'text/plain',
           })
@@ -351,10 +310,9 @@ describe('Storage tests', () => {
         expect(response.status).toBe(200);
 
         response = await request(stage.http)
-          .post(`/storage/file-upload-session/${testSession2_uuid}/end`)
-          .send({
-            directSync: true,
-          })
+          .post(
+            `/storage/${testBucketWithWebhook.bucket_uuid}/file/${file_uuid}/sync-to-ipfs`,
+          )
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(200);
 
@@ -364,6 +322,85 @@ describe('Storage tests', () => {
         ).populateByUUID(file_uuid);
 
         expect(file.exists()).toBeTruthy();
+      });
+    });
+
+    describe('Tests for file-upload listing', () => {
+      let testBucket2;
+      let fur1: FileUploadRequest;
+      let fur2: FileUploadRequest;
+      beforeAll(async () => {
+        testBucket2 = await createTestBucket(
+          testUser,
+          stage.storageContext,
+          testProject,
+        );
+        //Insert some fake file-upload-requests
+
+        fur1 = await new FileUploadRequest({}, stage.storageContext)
+          .populate({
+            bucket_id: testBucket2.id,
+            file_uuid: uuidV4(),
+            fileName: 'file1.txt',
+            contentType: 'text/plain',
+            s3FileKey: 's3url/file1.txt',
+            fileStatus:
+              FileUploadRequestFileStatus.SIGNED_URL_FOR_UPLOAD_GENERATED,
+          })
+          .insert();
+
+        fur2 = await new FileUploadRequest({}, stage.storageContext)
+          .populate({
+            bucket_id: testBucket2.id,
+            file_uuid: uuidV4(),
+            fileName: 'file2.txt',
+            contentType: 'text/plain',
+            s3FileKey: 's3url/file2.txt',
+            fileStatus: FileUploadRequestFileStatus.UPLOAD_COMPLETED,
+          })
+          .insert();
+      });
+      test('User should be able to get list of file uploads', async () => {
+        const response = await request(stage.http)
+          .get(`/storage/${testBucket2.bucket_uuid}/file-uploads`)
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(200);
+        expect(response.body.data.items.length).toBe(2);
+        expect(response.body.data.total).toBe(2);
+        expect(response.body.data.items[0].file_uuid).toBeTruthy();
+        expect(response.body.data.items[0].fileName).toBeTruthy();
+        expect(response.body.data.items[0].contentType).toBeTruthy();
+        expect(response.body.data.items[0].fileStatus).toBeTruthy();
+      });
+
+      test('User should be able to get list of file uploads - filtered by search', async () => {
+        const response = await request(stage.http)
+          .get(
+            `/storage/${testBucket2.bucket_uuid}/file-uploads?search=${fur1.fileName}`,
+          )
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(200);
+        expect(response.body.data.items.length).toBe(1);
+        expect(response.body.data.items[0].fileName).toBe(fur1.fileName);
+      });
+
+      test('User should be able to get list of file uploads - filtered by fileStatus', async () => {
+        const response = await request(stage.http)
+          .get(
+            `/storage/${testBucket2.bucket_uuid}/file-uploads?fileStatus=${FileUploadRequestFileStatus.UPLOAD_COMPLETED}`,
+          )
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(200);
+        expect(response.body.data.items.length).toBe(1);
+        expect(response.body.data.items[0].fileName).toBe(fur2.fileName);
+        expect(response.body.data.items[0].fileStatus).toBe(fur2.fileStatus);
+      });
+
+      test('User should NOT be able to get list of ANOTHER USER file uploads', async () => {
+        const response = await request(stage.http)
+          .get(`/storage/${testBucket2.bucket_uuid}/file-uploads`)
+          .set('Authorization', `Bearer ${testUser2.token}`);
+        expect(response.status).toBe(403);
       });
     });
   });

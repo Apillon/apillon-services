@@ -1,14 +1,17 @@
 import {
   BucketQueryFilter,
+  BucketQuotaReachedQueryFilter,
   CreateBucketDto,
   CreateBucketWebhookDto,
   Lmas,
   LogType,
   PopulateFrom,
+  QuotaCode,
+  Scs,
   SerializeFor,
   ServiceName,
 } from '@apillon/lib';
-import { StorageErrorCode } from '../../config/types';
+import { BucketType, StorageErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
 import {
   StorageCodeException,
@@ -29,6 +32,29 @@ export class BucketService {
     ).getList(context, new BucketQueryFilter(event.query));
   }
 
+  static async getBucket(event: { id: number }, context: ServiceContext) {
+    const b = await new Bucket({}, context).populateById(event.id);
+    if (!b.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.BUCKET_NOT_FOUND,
+        status: 404,
+      });
+    }
+    b.canAccess(context);
+
+    //get bucket max size quota from config service
+    const maxBucketSizeQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_BUCKET_SIZE,
+      project_uuid: b.project_uuid,
+      object_uuid: b.bucket_uuid,
+    });
+    if (maxBucketSizeQuota?.value) {
+      b.maxSize = maxBucketSizeQuota.value * 1073741824; //quota is in GB - convert to bytes
+    }
+
+    return b.serialize(SerializeFor.PROFILE);
+  }
+
   static async createBucket(
     event: { body: CreateBucketDto },
     context: ServiceContext,
@@ -37,8 +63,8 @@ export class BucketService {
       { ...event.body, bucket_uuid: uuidV4() },
       context,
     );
-    //set default bucket size
-    b.maxSize = 5242880;
+    //set default bucket size in bytes - NOTE this is not used in application. Max size is set in config MS
+    b.maxSize = 5368709120;
 
     try {
       await b.validate();
@@ -47,6 +73,27 @@ export class BucketService {
       if (!b.isValid()) throw new StorageValidationException(b);
     }
 
+    //check max bucket quota
+    if (
+      (
+        await BucketService.maxBucketsQuotaReached(
+          {
+            query: new BucketQuotaReachedQueryFilter().populate({
+              bucketType: b.bucketType,
+              project_uuid: b.project_uuid,
+            }),
+          },
+          context,
+        )
+      ).maxBucketsQuotaReached
+    ) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.MAX_BUCKETS_REACHED,
+        status: 400,
+      });
+    }
+
+    //Insert
     await b.insert();
 
     await new Lmas().writeLog({
@@ -106,6 +153,39 @@ export class BucketService {
 
     await b.delete();
     return b.serialize(SerializeFor.PROFILE);
+  }
+
+  static async maxBucketsQuotaReached(
+    event: { query: BucketQuotaReachedQueryFilter },
+    context: ServiceContext,
+  ): Promise<any> {
+    event.query = new BucketQuotaReachedQueryFilter(event.query, context);
+    //Validation - call can be from other services or from this service - so validate that required fields are present
+    try {
+      await event.query.validate();
+    } catch (err) {
+      await event.query.handle(err);
+      if (!event.query.isValid())
+        throw new StorageValidationException(event.query);
+    }
+
+    const numOfBuckets = await new Bucket(
+      event.query,
+      context,
+    ).getNumOfBuckets();
+    const maxBucketsQuota = await new Scs(context).getQuota({
+      quota_id:
+        event.query.bucketType == BucketType.STORAGE
+          ? QuotaCode.MAX_FILE_BUCKETS
+          : QuotaCode.MAX_HOSTING_BUCKETS,
+      project_uuid: event.query.project_uuid,
+      object_uuid: context.user.user_uuid,
+    });
+    return {
+      maxBucketsQuotaReached: !!(
+        maxBucketsQuota?.value && numOfBuckets >= maxBucketsQuota?.value
+      ),
+    };
   }
 
   //#region bucket webhook functions

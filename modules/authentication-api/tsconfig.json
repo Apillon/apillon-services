@@ -1,0 +1,16 @@
+{
+  "extends": "tsconfig/api.json",
+  "compilerOptions": {
+    "outDir": "./dist"
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "test/**/*.ts",
+    "src/modules/verfication"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ],
+}
