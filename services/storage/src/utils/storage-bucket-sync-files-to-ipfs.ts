@@ -90,6 +90,9 @@ export async function storageBucketSyncFilesToIPFS(
         message: 'Success placing storage order to CRUST',
         location: location,
         service: ServiceName.STORAGE,
+        data: {
+          file: file.serialize(),
+        },
       });
 
       file.fileStatus = FileUploadRequestFileStatus.PINNED_TO_CRUST;
@@ -105,53 +108,73 @@ export async function storageBucketSyncFilesToIPFS(
         message: 'Error at placing storage order to CRUST',
         location: location,
         service: ServiceName.STORAGE,
+        data: {
+          file: file.serialize(),
+        },
       });
       throw err;
     }
 
-    const fileDirectory = await generateDirectoriesForFUR(
-      context,
-      directories,
-      file,
-      bucket,
-    );
+    try {
+      const fileDirectory = await generateDirectoriesForFUR(
+        context,
+        directories,
+        file,
+        bucket,
+      );
 
-    //check if file already exists
-    const existingFile = await new File({}, context).populateByNameAndDirectory(
-      bucket.id,
-      file.fileName,
-      fileDirectory?.id,
-    );
+      //check if file already exists
+      const existingFile = await new File(
+        {},
+        context,
+      ).populateByNameAndDirectory(bucket.id, file.fileName, fileDirectory?.id);
 
-    if (existingFile.exists()) {
-      //Update existing file
-      existingFile.populate({
-        CID: ipfsRes.cidV0,
-        s3FileKey: file.s3FileKey,
-        name: file.fileName,
-        contentType: file.contentType,
-        size: ipfsRes.size,
-      });
-
-      await existingFile.update();
-      transferedFiles.push(existingFile);
-    } else {
-      //Create new file
-      const tmpF = await new File({}, context)
-        .populate({
-          file_uuid: file.file_uuid,
+      if (existingFile.exists()) {
+        //Update existing file
+        existingFile.populate({
           CID: ipfsRes.cidV0,
           s3FileKey: file.s3FileKey,
           name: file.fileName,
           contentType: file.contentType,
-          project_uuid: bucket.project_uuid,
-          bucket_id: file.bucket_id,
-          directory_id: fileDirectory?.id,
           size: ipfsRes.size,
-        })
-        .insert();
+        });
 
-      transferedFiles.push(tmpF);
+        await existingFile.update();
+        transferedFiles.push(existingFile);
+      } else {
+        //Create new file
+        const tmpF = await new File({}, context)
+          .populate({
+            file_uuid: file.file_uuid,
+            CID: ipfsRes.cidV0,
+            s3FileKey: file.s3FileKey,
+            name: file.fileName,
+            contentType: file.contentType,
+            project_uuid: bucket.project_uuid,
+            bucket_id: file.bucket_id,
+            directory_id: fileDirectory?.id,
+            size: ipfsRes.size,
+          })
+          .insert();
+
+        transferedFiles.push(tmpF);
+      }
+    } catch (err) {
+      file.fileStatus = FileUploadRequestFileStatus.ERROR_CREATING_FILE_OBJECT;
+      await file.update();
+
+      await new Lmas().writeLog({
+        context: context,
+        project_uuid: bucket.project_uuid,
+        logType: LogType.ERROR,
+        message: 'Error creating directory or file',
+        location: location,
+        service: ServiceName.STORAGE,
+        data: {
+          file: file.serialize(),
+        },
+      });
+      throw err;
     }
 
     //now the file has CID, exists in IPFS node and is pinned to CRUST
@@ -173,7 +196,7 @@ export async function storageBucketSyncFilesToIPFS(
         context: context,
         project_uuid: bucket.project_uuid,
         logType: LogType.INFO,
-        message: 'MAX Storage bucket size reqched',
+        message: 'MAX Storage bucket size reached',
         location: location,
         service: ServiceName.STORAGE,
         data: {

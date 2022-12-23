@@ -84,7 +84,16 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
               tmpFur.bucket_id,
             );
           }
+          //Update file-upload-request status
+          tmpFur.fileStatus = FileUploadRequestFileStatus.UPLOADED_TO_S3;
+          await tmpFur.update();
+          //Push to files, that will be processed
           files.push(tmpFur);
+        } else {
+          //Update file-upload-request status
+          tmpFur.fileStatus =
+            FileUploadRequestFileStatus.ERROR_FILE_UPLOAD_REQUEST_DOES_NOT_EXISTS;
+          await tmpFur.update();
         }
       }
       //Get bucket
