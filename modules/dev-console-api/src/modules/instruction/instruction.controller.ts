@@ -36,10 +36,11 @@ export class InstructionController {
 
   @Get(':instructionEnum')
   @Permissions({ role: DefaultUserRole.USER })
+  @Validation({ dto: InstructionQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
   async getInstruction(
     @Ctx() context: DevConsoleApiContext,
-    @Query('instructionEnum') instructionEnum: string,
+    @Param('instructionEnum') instructionEnum: string,
   ) {
     return await this.instructionService.getInstruction(
       context,

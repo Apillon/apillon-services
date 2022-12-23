@@ -10,12 +10,7 @@ export class InstructionQueryFilter extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.INSTRUCTION_FORROUTE_NOT_PRESENT,
-      },
-    ],
+    validators: [],
   })
   public forRoute: string;
 }

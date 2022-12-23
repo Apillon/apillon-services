@@ -161,8 +161,12 @@ export class Instruction extends AdvancedSQLModel {
    */
   public async getInstructions(
     context: DevConsoleApiContext,
-    forRoute: string,
+    forRoute?: string,
   ) {
+    if (!forRoute) {
+      return this.getAllInstructions(context);
+    }
+
     /** Routes with all subparts */
     const routeParts = forRoute.split('-');
     const routes = routeParts.map((_, key) => {
@@ -185,6 +189,30 @@ export class Instruction extends AdvancedSQLModel {
       `,
       qFilter: `
         ORDER BY CHAR_LENGTH(forRoute) DESC, instructionType
+        LIMIT ${params.limit} OFFSET ${params.offset};
+      `,
+    };
+
+    return selectAndCountQuery(context.mysql, sqlQuery, params, 'id');
+  }
+
+  /**
+   * Returns instructions filtered by route
+   */
+  public async getAllInstructions(context: DevConsoleApiContext) {
+    const params = {
+      offset: 0,
+      limit: 10,
+    };
+
+    const sqlQuery = {
+      qSelect: `
+        SELECT *
+        `,
+      qFrom: `
+        FROM \`${DbTables.INSTRUCTION}\` 
+      `,
+      qFilter: `
         LIMIT ${params.limit} OFFSET ${params.offset};
       `,
     };
