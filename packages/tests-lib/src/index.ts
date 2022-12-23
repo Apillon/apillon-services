@@ -3,6 +3,7 @@ export * from './lib/helpers/context';
 export * from './lib/helpers/project';
 export * from './lib/helpers/service';
 export * from './lib/helpers/user';
+export * from './lib/helpers/referral';
 export * from './lib/helpers/migrations';
 export * from './lib/helpers/setup-context-and-sql';
 export * from './lib/interfaces/database-state.interface';

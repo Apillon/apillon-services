@@ -4,6 +4,7 @@ import {
   GithubOauthDto,
   SerializeFor,
   SqlModelStatus,
+  TwitterOauthDto,
 } from '@apillon/lib';
 import { ServiceContext } from '../../context';
 import {
@@ -12,15 +13,18 @@ import {
 } from '../../lib/exceptions';
 import { Player } from './models/player.model';
 import { ReferralErrorCode } from '../../config/types';
-import axios, { HttpStatusCode } from 'axios';
-import { Task } from './models/task.model';
+import { HttpStatus } from '@nestjs/common';
+import axios from 'axios';
+import { Task, TaskType } from './models/task.model';
+import { OauthTokenPair } from '../oauth/models/oauth-token-pairs';
+import { Twitter } from '../../lib/twitter';
 
 export class ReferralService {
   static async createReferral(
     event: { body: CreateReferralDto },
     context: ServiceContext,
   ): Promise<any> {
-    const user_uuid = event.body?.user_uuid || context?.user?.user_uuid;
+    const user_uuid = context?.user?.user_uuid || event.body?.user_uuid;
     const player: Player = await new Player({}, context).populateByUserUuid(
       user_uuid,
     );
@@ -38,7 +42,7 @@ export class ReferralService {
       player.populate({
         user_uuid: user_uuid,
         refCode: code,
-        referral_id: referrer?.id,
+        referrer_id: referrer?.id,
         status: SqlModelStatus.INCOMPLETE,
       });
     }
@@ -63,7 +67,7 @@ export class ReferralService {
     return player.serialize(SerializeFor.PROFILE);
   }
 
-  static async getReferral(context: ServiceContext): Promise<any> {
+  static async getReferral(_event: any, context: ServiceContext): Promise<any> {
     const player: Player = await new Player({}, context).populateByUserUuid(
       context?.user?.user_uuid,
     );
@@ -72,7 +76,7 @@ export class ReferralService {
     if (!player.id || player.status === SqlModelStatus.DELETED) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.DEFAULT_BAD_REQUEST_EROR,
-        status: HttpStatusCode.BadRequest,
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
       });
     }
 
@@ -80,7 +84,7 @@ export class ReferralService {
     if (!player.termsAccepted || player.status === SqlModelStatus.INCOMPLETE) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.DEFAULT_BAD_REQUEST_EROR,
-        status: HttpStatusCode.BadRequest,
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
       });
     }
 
@@ -89,7 +93,98 @@ export class ReferralService {
     return player.serialize(SerializeFor.PROFILE);
   }
 
-  static async connectGithub(
+  static async getTwitterAuthenticationLink(
+    _event: any,
+    context: ServiceContext,
+  ) {
+    const twitter = new Twitter();
+    try {
+      const res = await twitter.getTwitterAuthenticationLink(
+        'http://localhost:3000/',
+        context,
+      );
+      console.log('twitterdata', res);
+      return res;
+    } catch (error) {
+      console.log('twittererror', error);
+    }
+  }
+
+  static async getTweets(_event: any, _context: ServiceContext) {
+    const twitter = new Twitter();
+    return await twitter.getTweets();
+  }
+
+  /**
+   * Link the twitter account to the user (Auth user). The oAuth credentials must received be from the authenticate (/oauth/twitter/authenticate).
+   */
+  public async linkTwitter(
+    event: { body: TwitterOauthDto },
+    context: ServiceContext,
+  ) {
+    const oAuthData = event.body;
+    const twitter = new Twitter();
+
+    const task: Task = await new Task({}, context).populateByType(
+      TaskType.TWITTER_CONNECT,
+    );
+
+    // check if unlinked before linking
+    const player = await new Player({}, context).populateByUserUuid(
+      context.user.user_uiid,
+    );
+    const pair = await new OauthTokenPair({}, context).populateByToken(
+      oAuthData.oauth_token,
+    );
+    const loggedTokens = await twitter.getTwitterLoginCredentials(
+      oAuthData,
+      pair.oauth_secret,
+    );
+    // const allTwitterData = await this.getAccountDetails(loggedTokens);
+
+    if (!loggedTokens) {
+      throw new ReferralCodeException({
+        code: ReferralErrorCode.OAUTH_PROFILE_CREDENTIALS_INVALID,
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        context: context,
+        sourceFunction: `${this.constructor.name}/oauth`,
+      });
+    }
+
+    // check if oauth with the same account id exists
+    const existingOauth = await new Player({}, context).populateByTwitterId(
+      loggedTokens.userId,
+    );
+
+    if (existingOauth.exists()) {
+      throw new ReferralCodeException({
+        code: ReferralErrorCode.OAUTH_USER_ID_ALREADY_PRESENT,
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        context: context,
+        sourceFunction: `${this.constructor.name}/oauth`,
+      });
+    }
+
+    player.twitter_id = loggedTokens.userId;
+    // allTwitterData.userName
+    try {
+      await player.validate();
+    } catch (err) {
+      await player.handle(err);
+      throw new ReferralValidationException(player);
+    }
+    await player.update();
+    // Complete twitter task if present
+    if (task.exists()) {
+      await task.confirmTask(player.id);
+    }
+    return player.serialize(SerializeFor.PROFILE);
+  }
+
+  /**
+   * Link the Github account to the user (Auth user).
+   */
+  public async linkGithub(
     event: { body: GithubOauthDto },
     context: ServiceContext,
   ): Promise<any> {
@@ -99,19 +194,13 @@ export class ReferralService {
     if (!player.exists()) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.DEFAULT_BAD_REQUEST_EROR,
-        status: HttpStatusCode.BadRequest,
+        status: HttpStatus.BAD_REQUEST,
       });
     }
 
-    const task: Task = await new Task({}, context).populateById(
-      event.body.task_id,
+    const task: Task = await new Task({}, context).populateByType(
+      TaskType.GITHUB_CONNECT,
     );
-    if (!task.exists()) {
-      throw new ReferralCodeException({
-        code: ReferralErrorCode.DEFAULT_BAD_REQUEST_EROR,
-        status: HttpStatusCode.BadRequest,
-      });
-    }
 
     // get user access token
     // FE gets the code by calling https://github.com/login/oauth/authorize?client_id=#
@@ -129,7 +218,17 @@ export class ReferralService {
 
       if (gitUser?.data?.id) {
         player.github_id = gitUser?.data?.id;
+        try {
+          await player.validate();
+        } catch (err) {
+          await player.handle(err);
+          throw new ReferralValidationException(player);
+        }
         await player.update();
+        // Complete github task if present
+        if (task.exists()) {
+          await task.confirmTask(player.id);
+        }
         await task.confirmTask(player.id);
         // If player was referred, reward the referrer
         if (player.referrer_id) {
@@ -141,10 +240,16 @@ export class ReferralService {
           }
         }
       } else {
-        // error
+        throw new ReferralCodeException({
+          status: 500,
+          code: ReferralErrorCode.DEFAULT_BAD_REQUEST_EROR, // getting github user
+        });
       }
     } else {
-      // error
+      throw await new ReferralCodeException({
+        status: 500,
+        code: ReferralErrorCode.DEFAULT_BAD_REQUEST_EROR, // getting access token
+      });
     }
 
     return player.serialize(SerializeFor.PROFILE);

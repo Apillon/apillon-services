@@ -41,4 +41,4 @@ export * from './lib/at-services/storage/dtos/bucket-qouta-reached-query-filter.
 export * from './lib/at-services/referral/referral';
 export * from './lib/at-services/referral/dtos/create-referral.dto';
 export * from './lib/at-services/referral/dtos/github-oauth.dto';
-export * from './lib/at-services/referral/dtos/user-oAuth.dto';
+export * from './lib/at-services/referral/dtos/twitter-oauth.dto';

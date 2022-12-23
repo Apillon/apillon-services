@@ -29,4 +29,28 @@ export class ReferralMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
+
+  public async getReferral() {
+    const data = {
+      eventName: ReferralEventType.GET_REFERRAL,
+      body: {},
+    };
+    return await this.callService(data);
+  }
+
+  public async getTweets() {
+    const data = {
+      eventName: ReferralEventType.GET_TWEETS,
+      body: {},
+    };
+    return await this.callService(data);
+  }
+
+  public async getTwitterAuthenticationLink() {
+    const data = {
+      eventName: ReferralEventType.GET_TWITTER_LINK,
+      body: {},
+    };
+    return await this.callService(data);
+  }
 }

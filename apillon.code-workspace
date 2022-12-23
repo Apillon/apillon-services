@@ -71,15 +71,18 @@
     "[typescript]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
-    "cSpell.words": [
-      "Apillon",
-      "Authtrail",
-      "LMAS"
-    ],
+    "cSpell.words": ["Apillon", "Authtrail", "LMAS"],
     "files.exclude": {
+      "**/.git": true,
+      "**/.svn": true,
+      "**/.hg": true,
+      "**/CVS": true,
+      "**/.DS_Store": true,
+      "**/Thumbs.db": true,
       "**/.serverless": true,
-      "**/.turbo": true
+      "**/.turbo": true,
+      "**/node_modules": true
     },
     "nuxt.isNuxtApp": false
-  },
+  }
 }

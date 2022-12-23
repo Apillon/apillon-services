@@ -278,16 +278,22 @@ export class Player extends AdvancedSQLModel {
       `
       SELECT 
       ${new Task({}, null).generateSelectFields('t')},
-      JSON_ARRAYAGG(
-        JSON_OBJECT(${new Realization({}, null).generateSelectJSONFields('r')})
+      IF(r.id IS NOT NULL,
+        JSON_ARRAYAGG(
+          JSON_OBJECT(${new Realization({}, null).generateSelectJSONFields(
+            'r',
+          )})
+        ), 
+        JSON_ARRAY()
       ) as realizations
       FROM \`${DbTables.TASK}\` t
-      LEFT JOIN \`${DbTables.REALIZATION}\`r
+      LEFT JOIN \`${DbTables.REALIZATION}\` r
         ON r.player_id = @player_id
         AND r.task_id = t.id
         AND r.status = ${SqlModelStatus.ACTIVE}
+      GROUP BY t.id
       `,
-      { id: this.id },
+      { player_id: this.id },
     );
 
     if (data.length) {
@@ -297,7 +303,7 @@ export class Player extends AdvancedSQLModel {
   }
 
   public async confirmRefer(player_id: number) {
-    const task = await new Task({}, this.getContext()).getTaskByType(
+    const task = await new Task({}, this.getContext()).populateByType(
       TaskType.REFERRAL,
     );
 

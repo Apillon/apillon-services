@@ -15,20 +15,7 @@ export class GithubOauthDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.TASK_ID_NOT_PRESENT,
-      },
-    ],
-  })
-  public task_id: number;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.GITHUB_CODE_NOT_PRESENT,
+        code: ValidatorErrorCode.USER_OAUTH_TOKEN_NOT_PRESENT,
       },
     ],
   })

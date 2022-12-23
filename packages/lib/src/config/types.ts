@@ -67,7 +67,10 @@ export enum ScsEventType {
 export enum ReferralEventType {
   CREATE_REFERRAL = 'create-referral',
   GET_REFERRAL = 'get-referral',
-  GET_TASKS = 'get-tasks',
+  CONNECT_GITHUB = 'connect-githhub',
+  CONNECT_TWITTER = 'connect-twitter',
+  GET_TWEETS = 'get-tweets',
+  GET_TWITTER_LINK = 'get-twitter-link',
 }
 
 export enum ServiceName {
@@ -281,7 +284,6 @@ export enum ValidatorErrorCode {
   PROJECT_UUID_NOT_PRESENT_IN_QUERY = 42200022,
   BUCKET_TYPE_NOT_PRESENT_IN_QUERY = 42200023,
   TASK_ID_NOT_PRESENT = 42200024,
-  GITHUB_CODE_NOT_PRESENT = 42200025,
   USER_OAUTH_TOKEN_NOT_PRESENT = 42200026,
   USER_OAUTH_VERIFIER_NOT_PRESENT = 42200027,
 }

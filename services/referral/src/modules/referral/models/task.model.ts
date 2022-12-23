@@ -15,12 +15,13 @@ import { DbTables, ReferralErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
 import { Realization } from './realization.model';
 import { ReferralValidationException } from '../../../lib/exceptions';
+import { faker } from '@faker-js/faker';
 
 export enum TaskType {
   REFERRAL = 1,
   TWITTER_CONNECT = 2,
   GITHUB_CONNECT = 3,
-  TWITTER_SHARE = 4,
+  TWITTER_RETWEET = 4,
 }
 
 export class Task extends AdvancedSQLModel {
@@ -70,6 +71,7 @@ export class Task extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    fakeValue: () => faker.random.word(),
   })
   public name: string;
 
@@ -89,6 +91,7 @@ export class Task extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    fakeValue: () => faker.random.words(6),
   })
   public description: string;
 
@@ -107,6 +110,8 @@ export class Task extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    defaultValue: 1,
+    fakeValue: 1,
     validators: [
       {
         resolver: presenceValidator(),
@@ -131,6 +136,8 @@ export class Task extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    defaultValue: 1,
+    fakeValue: 1,
     validators: [],
   })
   public maxCompleted: number;
@@ -150,6 +157,7 @@ export class Task extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    fakeValue: new Date(),
     validators: [],
   })
   public activeFrom: Date;
@@ -169,6 +177,7 @@ export class Task extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    fakeValue: faker.date.future(1),
     validators: [],
   })
   public activeTo: Date;
@@ -192,7 +201,7 @@ export class Task extends AdvancedSQLModel {
   })
   public data: any;
 
-  public async getTaskByType(
+  public async populateByType(
     type: TaskType,
     conn?: PoolConnection,
   ): Promise<this> {
