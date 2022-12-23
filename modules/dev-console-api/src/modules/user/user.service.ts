@@ -1,8 +1,10 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import {
   Ams,
+  AppEnvironment,
   CodeException,
-  ErrorCode,
+  Context,
+  env,
   generateJwtToken,
   JwtTokenType,
   LogType,
@@ -26,6 +28,7 @@ import { ValidateEmailDto } from './dtos/validate-email.dto';
 import { User } from './models/user.model';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
+import { verifyCaptcha } from '@apillon/modules-lib';
 
 @Injectable()
 export class UserService {
@@ -50,7 +53,7 @@ export class UserService {
     context: DevConsoleApiContext,
   ): Promise<any> {
     try {
-      const resp = await new Ams().login({
+      const resp = await new Ams(context).login({
         email: loginInfo.email,
         password: loginInfo.password,
       });
@@ -81,12 +84,44 @@ export class UserService {
     }
   }
 
-  async validateEmail(emailVal: ValidateEmailDto): Promise<any> {
-    const email = emailVal.email;
+  async validateEmail(
+    context: Context,
+    emailVal: ValidateEmailDto,
+  ): Promise<any> {
+    const { email, captcha } = emailVal;
+    let emailResult;
+    let captchaResult;
+    // console.log(captcha);
 
-    const res = await new Ams().emailExists(email);
+    const promises = [];
+    promises.push(
+      new Ams(context)
+        .emailExists(email)
+        .then((response) => (emailResult = response)),
+    );
+    if (env.CAPTCHA_SECRET && env.APP_ENV !== AppEnvironment.TEST) {
+      promises.push(
+        verifyCaptcha(captcha?.token, env.CAPTCHA_SECRET).then(
+          (response) => (captchaResult = response),
+        ),
+      );
+    }
 
-    if (res.data.result === true) {
+    await Promise.all(promises);
+
+    if (
+      env.CAPTCHA_SECRET &&
+      env.APP_ENV !== AppEnvironment.TEST &&
+      !captchaResult
+    ) {
+      throw new CodeException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        code: ValidatorErrorCode.CAPTCHA_CHALLENGE_INVALID,
+        errorCodes: ValidatorErrorCode,
+      });
+    }
+
+    if (emailResult.data.result === true) {
       throw new CodeException({
         status: HttpStatus.UNPROCESSABLE_ENTITY,
         code: ValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
@@ -98,14 +133,15 @@ export class UserService {
       email,
     });
 
-    await new Mailing().sendMail({
+    await new Mailing(context).sendMail({
       emails: [email],
-      subject: 'Welcome to Apillon!',
       template: 'welcome',
-      data: { token },
+      data: {
+        actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}`,
+      },
     });
 
-    return res;
+    return emailResult;
   }
 
   async registerUser(
@@ -143,7 +179,7 @@ export class UserService {
     let amsResponse;
     try {
       await user.insert(SerializeFor.INSERT_DB, conn);
-      amsResponse = await new Ams().register({
+      amsResponse = await new Ams(context).register({
         user_uuid: user.user_uuid,
         email,
         password,
@@ -174,11 +210,7 @@ export class UserService {
       // TODO: The context of this error is not correct. What happens if
       //       ams fails? FE will see it as a DB write error, which is incorrect.
       await context.mysql.rollback(conn);
-      throw new CodeException({
-        code: ErrorCode.ERROR_WRITING_TO_DATABASE,
-        status: HttpStatus.INTERNAL_SERVER_ERROR,
-        errorCodes: ErrorCode,
-      });
+      throw err;
     }
 
     return {
@@ -187,8 +219,8 @@ export class UserService {
     };
   }
 
-  async passwordResetRequest(body: ValidateEmailDto) {
-    const res = await new Ams().emailExists(body.email);
+  async passwordResetRequest(context: Context, body: ValidateEmailDto) {
+    const res = await new Ams(context).emailExists(body.email);
 
     if (!res.data.result) {
       throw new CodeException({
@@ -202,17 +234,19 @@ export class UserService {
       email: body.email,
     });
 
-    await new Mailing().sendMail({
+    await new Mailing(context).sendMail({
       emails: [body.email],
-      subject: 'Apillon password reset',
-      template: 'resetPassword',
-      data: { token },
+      // subject: 'Apillon password reset',
+      template: 'reset-password',
+      data: {
+        actionUrl: `${env.APP_URL}/register/reset-password/?token=${token}`,
+      },
     });
 
     return true;
   }
 
-  async resetPassword(body: ResetPasswordDto) {
+  async resetPassword(context: Context, body: ResetPasswordDto) {
     const tokenData = parseJwtToken(
       JwtTokenType.USER_RESET_PASSWORD,
       body.token,
@@ -226,7 +260,7 @@ export class UserService {
       });
     }
 
-    await new Ams().resetPassword({
+    await new Ams(context).resetPassword({
       email: tokenData.email,
       password: body.password,
     });
@@ -259,7 +293,7 @@ export class UserService {
     try {
       await user.update(SerializeFor.UPDATE_DB, conn);
       //Call access MS to update auth user
-      await new Ams().updateAuthUser({
+      await new Ams(context).updateAuthUser({
         user_uuid: context.user.user_uuid,
         wallet: body.wallet,
       });

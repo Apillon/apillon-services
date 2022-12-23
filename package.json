@@ -8,14 +8,15 @@
     "modules/*"
   ],
   "scripts": {
-    "build": "npx turbo run build --filter=!@apillon/api --filter=!@apillon/authorization-api",
+    "build": "npx turbo run build",
     "build-no-cache": "npx turbo run build --no-cache",
-    "dev": "npx turbo run dev --parallel --filter=!@apillon/api --filter=!@apillon/authorization-api",
+    "dev": "npx turbo run dev --parallel --filter=!@apillon/api",
     "test": "turbo run test",
     "test-server": "npx turbo run test-server",
     "lint": "npx turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "deploy:dev": "npx turbo run deploy:dev -vvv --force --continue=false --filter=!@apillon/api --filter=!@apillon/authorization-api"
+    "deploy:dev": "npx turbo run deploy:dev -vvv --force --continue=false --filter=!@apillon/api --filter=!@apillon/authorization-api",
+    "watch-libs": "npx turbo run dev --filter=@apillon/lib --filter=@apillon/modules-lib"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.108",
@@ -27,6 +28,9 @@
     "serverless-webpack": "^5.9.1",
     "ts-node": "^10.9.1",
     "turbo": "latest"
+  },
+  "overrides": {
+    "ipfs-utils": "9.0.6"
   },
   "engines": {
     "npm": ">=7.0.0",

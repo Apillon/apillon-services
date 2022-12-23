@@ -1,45 +1,79 @@
-import { StorageMicroservice } from '@apillon/lib';
+import {
+  ApillonApiDirectoryContentQueryFilter,
+  CreateS3SignedUrlForUploadDto,
+  EndFileUploadSessionDto,
+  FileDetailsQueryFilter,
+  StorageMicroservice,
+  ValidationException,
+} from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
 
 @Injectable()
 export class StorageService {
-  //#region storage microservice calls
+  async createS3SignedUrlForUpload(
+    context: ApillonApiContext,
+    bucket_uuid: string,
+    body: CreateS3SignedUrlForUploadDto,
+  ) {
+    body.bucket_uuid = bucket_uuid;
 
-  async uploadFilesToIPFSFromS3(
-    ctx: ApillonApiContext,
-    data: any,
-  ): Promise<any> {
-    // call microservice
-    const res = await new StorageMicroservice(ctx).addFileToIPFSFromS3({
-      fileKey: data.fileKey,
-    });
+    return (
+      await new StorageMicroservice(context).requestS3SignedURLForUpload(body)
+    ).data;
+  }
 
-    if (res.success) {
-      console.log('FIle successfully pushed to IPFS. Placing storage order...');
-      const placeStorageRequestResponse = await new StorageMicroservice(
-        ctx,
-      ).placeStorageOrderToCRUST({
-        cid: res.data.cidV0,
-        size: res.data.size,
-      });
+  async endFileUploadSession(
+    context: ApillonApiContext,
+    bucket_uuid: string,
+    session_uuid: string,
+    body: EndFileUploadSessionDto,
+  ) {
+    return (
+      await new StorageMicroservice(
+        context,
+      ).endFileUploadSessionAndExecuteSyncToIPFS(session_uuid, body)
+    ).data;
+  }
 
-      res.crustResponse = placeStorageRequestResponse;
-      return res;
+  /**
+   * Only for testing purposes
+   */
+  async syncFileToIPFS(context: ApillonApiContext, file_uuid: string) {
+    return (await new StorageMicroservice(context).syncFileToIPFS(file_uuid))
+      .data;
+  }
+
+  async getFileDetails(
+    context: ApillonApiContext,
+    bucket_uuid: string,
+    id: string,
+  ) {
+    const filter: FileDetailsQueryFilter = new FileDetailsQueryFilter(
+      { bucket_uuid: bucket_uuid, id: id },
+      context,
+    );
+    return (await new StorageMicroservice(context).getFileDetails(filter)).data;
+  }
+
+  async deleteFile(context: ApillonApiContext, id: string) {
+    return (await new StorageMicroservice(context).deleteFile({ id })).data;
+  }
+
+  async listContent(
+    context: ApillonApiContext,
+    bucket_uuid: string,
+    query: ApillonApiDirectoryContentQueryFilter,
+  ) {
+    query.bucket_uuid = bucket_uuid;
+
+    try {
+      await query.validate();
+    } catch (err) {
+      await query.handle(err);
+      if (!query.isValid()) throw new ValidationException(query);
     }
+    return (await new StorageMicroservice(context).listDirectoryContent(query))
+      .data;
   }
-
-  async getFileOrDirectory(ctx: ApillonApiContext, cid: string) {
-    return await new StorageMicroservice(ctx).getObjectFromIPFS({
-      cid: cid,
-    });
-  }
-
-  async listDirectory(ctx: ApillonApiContext, cid: string) {
-    return await new StorageMicroservice(ctx).listIPFSDirectory({
-      cid: cid,
-    });
-  }
-
-  //#endregion
 }

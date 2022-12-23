@@ -29,6 +29,15 @@ then
   cd ../../
 fi
 
+if [ "$WORKERS_LIB" == "true" ]
+then
+  cd packages/workers-lib/
+  npm install --omit=dev
+  npm run build
+  npm link
+  cd ../../
+fi
+
 echo "Building service:"
 echo $SERVICE_PATH
 cd ${SERVICE_PATH}

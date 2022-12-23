@@ -1,4 +1,4 @@
-import { stringParser } from '@rawmodel/parsers';
+import { booleanParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   AdvancedSQLModel,
@@ -16,6 +16,8 @@ import {
 } from '@apillon/lib';
 import { DbTables, AmsErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
+import { ApiKeyRole } from '../../role/models/api-key-role.model';
+import * as bcrypt from 'bcryptjs';
 
 export class ApiKey extends AdvancedSQLModel {
   public readonly tableName = DbTables.API_KEY;
@@ -104,6 +106,43 @@ export class ApiKey extends AdvancedSQLModel {
   })
   public name: string;
 
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+    defaultValue: false,
+    fakeValue: false,
+  })
+  public testNetwork: boolean;
+
+  /**
+   * apiKey roles
+   */
+  @prop({
+    parser: { resolver: ApiKeyRole, array: true },
+    populatable: [
+      PopulateFrom.SERVICE, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN, //
+      SerializeFor.SERVICE,
+    ],
+  })
+  public apiKeyRoles: ApiKeyRole[];
+
   public canAccess(context: ServiceContext) {
     if (
       !context.hasRoleOnProject(
@@ -143,6 +182,56 @@ export class ApiKey extends AdvancedSQLModel {
     }
   }
 
+  public verifyApiKeySecret(apiKeySecret: string) {
+    return (
+      typeof apiKeySecret === 'string' &&
+      apiKeySecret.length > 0 &&
+      bcrypt.compareSync(apiKeySecret, this.apiKeySecret)
+    );
+  }
+
+  public async populateByApiKey(apiKey: string): Promise<this> {
+    if (!apiKey) {
+      throw new Error('apiKey should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE apiKey = @apiKey AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { apiKey },
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
+
+  public async populateApiKeyRoles(): Promise<this> {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${DbTables.API_KEY_ROLE}\`
+      WHERE apiKey_id = @id AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { id: this.id },
+    );
+
+    if (data && data.length) {
+      this.apiKeyRoles = [];
+      for (const apiKeyRole of data) {
+        this.apiKeyRoles.push(new ApiKeyRole(apiKeyRole, this.getContext()));
+      }
+      return this;
+    } else {
+      return this;
+    }
+  }
+
   public async getList(context: ServiceContext, filter: ApiKeyQueryFilter) {
     this.canAccess(context);
     // Map url query with sql fields.
@@ -173,5 +262,23 @@ export class ApiKey extends AdvancedSQLModel {
     };
 
     return selectAndCountQuery(context.mysql, sqlQuery, params, 'ak.id');
+  }
+
+  /**
+   *
+   * @returns number of api key in project
+   */
+  public async getNumOfApiKeysInProject() {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT COUNT(*) as numOfApiKeys
+      FROM \`${this.tableName}\`
+      WHERE project_uuid = @project_uuid 
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { project_uuid: this.project_uuid },
+    );
+
+    return data[0].numOfApiKeys;
   }
 }

@@ -8,6 +8,7 @@ export function InitializeContextAndFillUser() {
     const { context } = request;
     const serviceContext: ServiceContext = new ServiceContext();
     serviceContext.user = request.event.user;
+    serviceContext.requestId = request.event.requestId || context.requestId;
 
     context.serviceContext = serviceContext;
   };

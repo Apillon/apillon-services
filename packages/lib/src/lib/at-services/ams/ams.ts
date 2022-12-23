@@ -7,7 +7,7 @@ import {
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { ApiKeyQueryFilter } from './dtos/api-key-query-filter.dto';
-import { ApiKeyRoleDto } from './dtos/api-key-role.dto';
+import { ApiKeyRoleBaseDto } from './dtos/api-key-role-base.dto';
 import { CreateApiKeyDto } from './dtos/create-api-key.dto';
 
 /**
@@ -23,22 +23,16 @@ export class Ams extends BaseService {
       ? env.ACCESS_SOCKET_PORT_TEST
       : env.ACCESS_SOCKET_PORT;
   serviceName = 'AMS';
-  private securityToken: string;
 
-  user: any;
-
-  constructor(context?: Context) {
-    super();
+  constructor(context: Context) {
+    super(context);
     this.isDefaultAsync = false;
-    this.securityToken = this.generateSecurityToken();
-    if (context) this.user = context.user;
   }
 
   public async getAuthUser(params: { token: string }) {
     const data = {
       eventName: AmsEventType.USER_GET_AUTH,
       ...params,
-      securityToken: this.securityToken,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
@@ -59,7 +53,6 @@ export class Ams extends BaseService {
     const data = {
       eventName: AmsEventType.USER_REGISTER,
       ...params,
-      securityToken: this.securityToken,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
@@ -73,7 +66,6 @@ export class Ams extends BaseService {
     const data = {
       eventName: AmsEventType.USER_LOGIN,
       ...params,
-      securityToken: this.securityToken,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
@@ -88,7 +80,6 @@ export class Ams extends BaseService {
     const data = {
       eventName: AmsEventType.USER_PASSWORD_RESET,
       ...params,
-      securityToken: this.securityToken,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
@@ -107,7 +98,6 @@ export class Ams extends BaseService {
     const data = {
       eventName: AmsEventType.USER_UPDATE,
       ...params,
-      securityToken: this.securityToken,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
@@ -121,7 +111,6 @@ export class Ams extends BaseService {
     const data = {
       eventName: AmsEventType.USER_EMAIL_EXISTS,
       email,
-      securityToken: this.securityToken,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
@@ -136,7 +125,6 @@ export class Ams extends BaseService {
     const data = {
       eventName: AmsEventType.GET_AUTH_USER_BY_EMAIL,
       email,
-      securityToken: this.securityToken,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
@@ -145,13 +133,6 @@ export class Ams extends BaseService {
     return {
       ...amsResponse,
     };
-  }
-
-  private generateSecurityToken() {
-    // NOTE - Rename as not to be confused with JwtUtils().generateToken
-    // NOTE2 - This should probably be a util function somewhere outside this file?
-    //TODO - generate JWT from APP secret
-    return 'SecurityToken';
   }
 
   public async assignUserRoleOnProject(params: {
@@ -164,7 +145,6 @@ export class Ams extends BaseService {
       ...params,
       eventName: AmsEventType.USER_ROLE_ASSIGN,
       user: params.user ? params.user.serialize() : undefined,
-      securityToken: this.securityToken,
     };
 
     return await this.callService(data);
@@ -180,7 +160,6 @@ export class Ams extends BaseService {
       ...params,
       eventName: AmsEventType.USER_ROLE_REMOVE,
       user: params.user.serialize(),
-      securityToken: this.securityToken,
     };
 
     return await this.callService(data);
@@ -188,10 +167,19 @@ export class Ams extends BaseService {
 
   //#region API-key functions
 
+  public async getApiKey(params: { apiKey: string; apiKeySecret: string }) {
+    const data = {
+      eventName: AmsEventType.GET_API_KEY,
+      ...params,
+      securityToken: this.securityToken,
+    };
+
+    return await this.callService(data);
+  }
+
   public async listApiKeys(params: ApiKeyQueryFilter) {
     const data = {
       eventName: AmsEventType.LIST_API_KEYS,
-      user: this.user.serialize(),
       query: params.serialize(),
     };
     return await this.callService(data);
@@ -200,7 +188,6 @@ export class Ams extends BaseService {
   public async createApiKey(params: CreateApiKeyDto) {
     const data = {
       eventName: AmsEventType.CREATE_API_KEY,
-      user: this.user.serialize(),
       body: params.serialize(),
     };
     return await this.callService(data);
@@ -209,26 +196,33 @@ export class Ams extends BaseService {
   public async deleteApiKey(params: { id: number }) {
     const data = {
       eventName: AmsEventType.DELETE_API_KEY,
-      user: this.user.serialize(),
       ...params,
     };
     return await this.callService(data);
   }
 
-  public async assignRoleToApiKey(body: ApiKeyRoleDto) {
+  public async assignRoleToApiKey(apiKey_id: number, body: ApiKeyRoleBaseDto) {
     const data = {
       eventName: AmsEventType.API_KEY_ROLE_ASSIGN,
-      user: this.user.serialize(),
       body: body.serialize(),
+      apiKey_id,
     };
     return await this.callService(data);
   }
 
-  public async removeApiKeyRole(body: ApiKeyRoleDto) {
+  public async removeApiKeyRole(apiKey_id: number, body: ApiKeyRoleBaseDto) {
     const data = {
       eventName: AmsEventType.API_KEY_ROLE_REMOVE,
-      user: this.user.serialize(),
       body: body.serialize(),
+      apiKey_id,
+    };
+    return await this.callService(data);
+  }
+
+  public async getApiKeyRoles(params: { apiKey_id: number }) {
+    const data = {
+      eventName: AmsEventType.GET_API_KEY_ROLES,
+      ...params,
     };
     return await this.callService(data);
   }

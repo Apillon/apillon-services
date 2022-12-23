@@ -1,3 +1,4 @@
+import { AttachedServiceType } from '@apillon/lib';
 import { DbTables } from '../../config/types';
 
 export async function upgrade(
@@ -7,9 +8,8 @@ export async function upgrade(
     INSERT IGNORE INTO \`${DbTables.SERVICE_TYPE}\`
       (id, name, description, active)
     VALUES
-      (1, 'Authentication', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum.', 1),
-      (2, 'Storage', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum.', 0),
-      (3, 'Computing', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum.', 0)
+      (${AttachedServiceType.AUTHENTICATION}, 'Authentication', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum.', 1),
+      (${AttachedServiceType.STORAGE}, 'Storage', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum.', 0)
       ;
   `);
 }

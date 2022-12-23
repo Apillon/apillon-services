@@ -13,6 +13,7 @@ import {
 } from '@apillon/lib';
 import { DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
+import { v4 as uuidV4 } from 'uuid';
 
 export class File extends AdvancedSQLModel {
   tableName = DbTables.FILE;
@@ -33,6 +34,7 @@ export class File extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
     ],
     validators: [],
+    fakeValue: () => uuidV4(),
   })
   public file_uuid: string;
 
@@ -205,6 +207,26 @@ export class File extends AdvancedSQLModel {
   })
   public size: number;
 
+  /*
+  INFO PROPERTIES
+  */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public downloadLink: string;
+
   public canAccess(context: ServiceContext) {
     if (
       !context.hasRoleOnProject(
@@ -245,6 +267,7 @@ export class File extends AdvancedSQLModel {
   }
 
   public async populateByNameAndDirectory(
+    bucket_id: number,
     name: string,
     directory_id?: number,
   ): Promise<this> {
@@ -258,11 +281,13 @@ export class File extends AdvancedSQLModel {
       `
       SELECT * 
       FROM \`${this.tableName}\`
-      WHERE name = @name 
+      WHERE 
+      bucket_id = @bucket_id
+      AND name = @name 
       AND ((@directory_id IS NULL AND directory_id IS NULL) OR @directory_id = directory_id)
       AND status <> ${SqlModelStatus.DELETED};
       `,
-      { name, directory_id },
+      { bucket_id, name, directory_id },
     );
 
     if (data && data.length) {
@@ -272,18 +297,19 @@ export class File extends AdvancedSQLModel {
     }
   }
 
-  public async populateByCID(cid: string): Promise<this> {
-    if (!cid) {
-      throw new Error('cid should not be null');
+  public async populateById(id: string): Promise<this> {
+    if (!id) {
+      throw new Error('id should not be null');
     }
 
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT * 
       FROM \`${this.tableName}\`
-      WHERE cid = @cid AND status <> ${SqlModelStatus.DELETED};
+      WHERE (id LIKE @id OR cid LIKE @id OR file_uuid LIKE @id)
+      AND status <> ${SqlModelStatus.DELETED};
       `,
-      { cid },
+      { id },
     );
 
     if (data && data.length) {

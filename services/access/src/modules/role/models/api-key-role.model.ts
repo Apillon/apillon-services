@@ -1,6 +1,6 @@
 import {
   AdvancedSQLModel,
-  ApiKeyRoleDto,
+  ApiKeyRoleBaseDto,
   CodeException,
   Context,
   DefaultUserRole,
@@ -83,6 +83,7 @@ export class ApiKeyRole extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -106,6 +107,7 @@ export class ApiKeyRole extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -115,6 +117,30 @@ export class ApiKeyRole extends AdvancedSQLModel {
     ],
   })
   public service_uuid: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: AmsErrorCode.API_KEY_ROLE_SERVICE_TYPE_ID_NOT_PRESENT,
+      },
+    ],
+  })
+  public serviceType_id: number;
 
   public canAccess(context: ServiceContext) {
     if (
@@ -155,7 +181,7 @@ export class ApiKeyRole extends AdvancedSQLModel {
     }
   }
 
-  public async roleAlreadyAssigned(): Promise<boolean> {
+  public async hasRole(role_id): Promise<boolean> {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT * 
@@ -168,7 +194,7 @@ export class ApiKeyRole extends AdvancedSQLModel {
       `,
       {
         apiKey_id: this.apiKey_id,
-        role_id: this.role_id,
+        role_id: role_id,
         service_uuid: this.service_uuid,
         project_uuid: this.project_uuid,
       },
@@ -177,7 +203,10 @@ export class ApiKeyRole extends AdvancedSQLModel {
     return !!(data && data.length);
   }
 
-  public async deleteApiKeyRole(apiKeyRole: ApiKeyRoleDto): Promise<this> {
+  public async deleteApiKeyRole(
+    apiKey_id: number,
+    apiKeyRole: ApiKeyRoleBaseDto,
+  ): Promise<this> {
     const data = await this.getContext().mysql.paramExecute(
       `
       DELETE
@@ -188,7 +217,7 @@ export class ApiKeyRole extends AdvancedSQLModel {
       AND project_uuid = @project_uuid;
       `,
       {
-        apiKey_id: apiKeyRole.apiKey_id,
+        apiKey_id: apiKey_id,
         role_id: apiKeyRole.role_id,
         service_uuid: apiKeyRole.service_uuid,
         project_uuid: apiKeyRole.project_uuid,
@@ -199,6 +228,26 @@ export class ApiKeyRole extends AdvancedSQLModel {
       return this.populate(data[0], PopulateFrom.DB);
     } else {
       return this.reset();
+    }
+  }
+
+  public async getApiKeyRoles(apiKey_id: number) {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT akr.apiKey_id, akr.role_id, akr.serviceType_id, akr.project_uuid, akr.service_uuid
+      FROM \`${this.tableName}\` akr
+      WHERE apiKey_id = @apiKey_id
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      {
+        apiKey_id: apiKey_id,
+      },
+    );
+
+    if (data && data.length) {
+      return data;
+    } else {
+      return [];
     }
   }
 }

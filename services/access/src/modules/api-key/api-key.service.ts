@@ -2,7 +2,12 @@ import {
   ApiKeyQueryFilter,
   CreateApiKeyDto,
   generatePassword,
+  Lmas,
+  LogType,
+  QuotaCode,
+  Scs,
   SerializeFor,
+  ServiceName,
 } from '@apillon/lib';
 import { ServiceContext } from '../../context';
 import { ApiKey } from './models/api-key.model';
@@ -13,6 +18,28 @@ import { AmsErrorCode } from '../../config/types';
 import { ApiKeyRole } from '../role/models/api-key-role.model';
 
 export class ApiKeyService {
+  static async getApiKey(
+    event: { apiKey: string; apiKeySecret: string },
+    context: ServiceContext,
+  ) {
+    const apiKey: ApiKey = await new ApiKey({}, context).populateByApiKey(
+      event.apiKey,
+    );
+
+    if (!apiKey.exists() || !apiKey.verifyApiKeySecret(event.apiKeySecret)) {
+      throw await new AmsCodeException({
+        status: 403,
+        code: AmsErrorCode.INVALID_API_KEY,
+      }).writeToMonitor({
+        user_uuid: context?.user?.user_uuid,
+      });
+    }
+
+    await apiKey.populateApiKeyRoles();
+
+    return apiKey;
+  }
+
   //#region Api-key CRUD
   static async listApiKeys(
     event: { query: ApiKeyQueryFilter },
@@ -43,6 +70,20 @@ export class ApiKeyService {
       if (!key.isValid()) throw new AmsValidationException(key);
     }
 
+    //check max api keys quota
+    const numOfApiKeys = await key.getNumOfApiKeysInProject();
+    const maxApiKeysQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_API_KEYS,
+      project_uuid: key.project_uuid,
+    });
+    if (maxApiKeysQuota?.value && numOfApiKeys >= maxApiKeysQuota?.value) {
+      throw new AmsCodeException({
+        code: AmsErrorCode.MAX_API_KEY_QUOTA_REACHED,
+        status: 400,
+      });
+    }
+
+    //Create new api key
     const conn = await context.mysql.start();
 
     try {
@@ -71,6 +112,16 @@ export class ApiKeyService {
       throw err;
     }
 
+    await new Lmas().writeLog({
+      context,
+      project_uuid: key.project_uuid,
+      logType: LogType.INFO,
+      message: 'New api key created!',
+      user_uuid: context.user.user_uuid,
+      location: 'AMS/ApiKeyService/createApiKey',
+      service: ServiceName.AMS,
+    });
+
     return {
       ...key.serialize(SerializeFor.PROFILE),
       apiKeySecret: apiKeySecret,
@@ -93,6 +144,17 @@ export class ApiKeyService {
     key.canModify(context);
 
     await key.markDeleted();
+
+    await new Lmas().writeLog({
+      context,
+      project_uuid: key.project_uuid,
+      logType: LogType.INFO,
+      message: 'Api key deleted!',
+      user_uuid: context.user.user_uuid,
+      location: 'AMS/ApiKeyService/deleteApiKey',
+      service: ServiceName.AMS,
+    });
+
     return true;
   }
   //#endregion

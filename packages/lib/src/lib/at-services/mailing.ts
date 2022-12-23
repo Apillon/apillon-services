@@ -1,5 +1,6 @@
 import { env } from '../../config/env';
 import { AppEnvironment, MailEventType } from '../../config/types';
+import { Context } from '../context';
 import { BaseService } from './base-service';
 
 /**
@@ -15,17 +16,14 @@ export class Mailing extends BaseService {
       ? env.MAIL_SOCKET_PORT_TEST
       : env.MAIL_SOCKET_PORT;
   serviceName = 'MAIL';
-  private securityToken: string;
 
-  constructor() {
-    super();
+  constructor(context: Context) {
+    super(context);
     this.isDefaultAsync = true;
-    this.securityToken = this.generateSecurityToken();
   }
 
   public async sendMail(params: {
     emails: string[];
-    subject: string;
     template: string;
     data?: any;
   }) {
@@ -33,7 +31,6 @@ export class Mailing extends BaseService {
     const data = {
       eventName: MailEventType.SEND_MAIL,
       ...params,
-      securityToken: this.securityToken,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
@@ -44,10 +41,23 @@ export class Mailing extends BaseService {
     };
   }
 
-  private generateSecurityToken() {
-    // NOTE - Rename as not to be confused with JwtUtils().generateToken
-    // NOTE2 - This should probably be a util function somewhere outside this file?
-    //TODO - generate JWT from APP secret
-    return 'SecurityToken';
+  public async sendCustomMail(params: {
+    emails: string[];
+    subject: string;
+    template: string;
+    data?: any;
+  }) {
+    //TODO: dtos for params
+    const data = {
+      eventName: MailEventType.SEND_CUSTOM_MAIL,
+      ...params,
+    };
+
+    // eslint-disable-next-line sonarjs/prefer-immediate-return
+    const mailResponse = await this.callService(data);
+
+    return {
+      ...mailResponse,
+    };
   }
 }

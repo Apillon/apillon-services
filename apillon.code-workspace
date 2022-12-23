@@ -17,6 +17,10 @@
       "path": "services\\mailing"
     },
     {
+      "name": "🌐@services/config [@apillon/config]",
+      "path": "services\\config"
+    },
+    {
       "name": "😎@modules/dev-console-api",
       "path": "modules\\dev-console-api"
     },
@@ -25,8 +29,8 @@
       "path": "modules\\apillon-api"
     },
     {
-      "name": "😎@modules/authorization-api",
-      "path": "modules\\authorization-api"
+      "name": "😎@modules/authentication-api",
+      "path": "modules\\authentication-api"
     },
     {
       "name": "📦@packages/lib",
@@ -35,6 +39,14 @@
     {
       "name": "📦@packages/modules-lib",
       "path": "packages\\modules-lib"
+    },
+    {
+      "name": "📦@packages/workers-lib",
+      "path": "packages\\workers-lib"
+    },
+    {
+      "name": "📦@packages/tests-lib",
+      "path": "packages\\tests-lib"
     },
     {
       "name": "🔨_tsconfig",

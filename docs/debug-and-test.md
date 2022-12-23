@@ -2,7 +2,7 @@
 
 ## Debuging
 
-The easiest way to debug the whole set of microservices in VS Code is to enable `Debug:Auto Attach` to `smart` or to mannualy attach debugger on runnig services.
+The easiest way to debug the whole set of microservices in VS Code is to enable `Debug:Auto Attach` to `smart` or to manually attach debugger on running services.
 
 ### Set up debugger auto attach
 
@@ -20,7 +20,7 @@ This will run NPM dev script in all workspaces.
 
 If you run this command in integrated terminal of VS Code and you have Debugger auto attach enabled, breakpoints in editor should be bind to the processes and you can debug all services at the same time.
 
-If auto attach does not work or it's not enabled, you can attach debbugger with comand F1 -> `Debug: Attach to node process`.
+If auto attach does not work or it's not enabled, you can attach debugger with command F1 -> `Debug: Attach to node process`.
 
 ## Writing automated tests
 

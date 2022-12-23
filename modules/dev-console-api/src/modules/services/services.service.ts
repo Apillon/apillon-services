@@ -7,8 +7,15 @@ import {
 import { DevConsoleApiContext } from '../../context';
 import { ServiceQueryFilter } from './dtos/services-query-filter.dto';
 import { Service } from './models/service.model';
-import { CodeException, ValidationException } from '@apillon/lib';
+import {
+  CodeException,
+  Lmas,
+  LogType,
+  ServiceName,
+  ValidationException,
+} from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
+import { Project } from '../project/models/project.model';
 
 @Injectable()
 export class ServicesService {
@@ -21,6 +28,7 @@ export class ServicesService {
         errorCodes: ResourceNotFoundErrorCode,
       });
     }
+    await service.canAccess(context);
 
     return service;
   }
@@ -36,8 +44,31 @@ export class ServicesService {
     context: DevConsoleApiContext,
     body: Service,
   ): Promise<Service> {
-    //TODO: Check if service of such type in that project already exists
-    return await body.populate({ service_uuid: uuidV4() }).insert();
+    //Check if project exists & user has required role on it
+    const project: Project = await new Project({}, context).populateById(
+      body.project_id,
+    );
+    if (!project.exists()) {
+      throw new CodeException({
+        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
+        status: HttpStatus.NOT_FOUND,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+    project.canModify(context);
+
+    const service = await body.populate({ service_uuid: uuidV4() }).insert();
+
+    await new Lmas().writeLog({
+      context: context,
+      project_uuid: project.project_uuid,
+      logType: LogType.INFO,
+      message: 'New project service created',
+      location: 'DEV-CONSOLE-API/ServicesService/createService',
+      service: ServiceName.DEV_CONSOLE,
+    });
+
+    return service;
   }
 
   async updateService(
@@ -53,6 +84,7 @@ export class ServicesService {
         errorCodes: ResourceNotFoundErrorCode,
       });
     }
+    await service.canModify(context);
 
     service.populate(data);
 
@@ -80,8 +112,9 @@ export class ServicesService {
         errorCodes: ResourceNotFoundErrorCode,
       });
     }
+    await service.canModify(context);
 
-    await service.delete();
+    await service.markDeleted();
     return service;
   }
 }

@@ -1,29 +1,41 @@
 import {
+  AppEnvironment,
   AWS_S3,
+  BucketQueryFilter,
   CreateS3SignedUrlForUploadDto,
+  EndFileUploadSessionDto,
   env,
+  FileUploadsQueryFilter,
+  Lmas,
+  LogType,
+  QuotaCode,
+  Scs,
   SerializeFor,
+  ServiceName,
 } from '@apillon/lib';
-import { CID } from 'ipfs-http-client';
 import {
-  BucketType,
-  FileStatus,
-  FileUploadRequestFileStatus,
-  StorageErrorCode,
-} from '../../config/types';
+  QueueWorkerType,
+  sendToWorkerQueue,
+  ServiceDefinition,
+  ServiceDefinitionType,
+  WorkerDefinition,
+} from '@apillon/workers-lib';
+import { v4 as uuidV4 } from 'uuid';
+import { BucketType, FileStatus, StorageErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
 import { StorageCodeException } from '../../lib/exceptions';
+import { SyncToIPFSWorker } from '../../workers/s3-to-ipfs-sync-worker';
+import { WorkerName } from '../../workers/worker-executor';
 import { Bucket } from '../bucket/models/bucket.model';
-import { DirectoryService } from '../directory/directory.service';
 import { Directory } from '../directory/models/directory.model';
 import { IPFSService } from '../ipfs/ipfs.service';
 import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
-import { v4 as uuidV4 } from 'uuid';
-import { CrustService } from '../crust/crust.service';
 
 export class StorageService {
+  //#region file-upload functions
+
   static async generateS3SignedUrlForUpload(
     event: { body: CreateS3SignedUrlForUploadDto },
     context: ServiceContext,
@@ -43,33 +55,73 @@ export class StorageService {
     }
     bucket.canAccess(context);
 
-    //Get existing or create new fileUploadSession
-    let session: FileUploadSession = undefined;
-    session = await new FileUploadSession({}, context).populateByUUID(
-      event.body.session_uuid,
-    );
-
-    if (!session.exists()) {
-      //create new session
-      session = new FileUploadSession(
-        {
-          session_uuid: event.body.session_uuid,
-          bucket_id: bucket.id,
-          project_uuid: bucket.project_uuid,
-        },
-        context,
-      );
-      await session.insert();
-    } else if (session.bucket_id != bucket.id) {
+    //get max size quota for Bucket and compare it with current bucket size
+    const maxBucketSizeQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_BUCKET_SIZE,
+      project_uuid: bucket.project_uuid,
+      object_uuid: bucket.bucket_uuid,
+    });
+    if (
+      maxBucketSizeQuota?.value &&
+      bucket.uploadedSize > maxBucketSizeQuota?.value * 1073741824 //quota is in GB - size is in bytes
+    ) {
       throw new StorageCodeException({
-        code: StorageErrorCode.SESSION_UUID_BELONGS_TO_OTHER_BUCKET,
-        status: 404,
+        code: StorageErrorCode.MAX_UPLOADED_TO_BUCKET_SIZE_REACHED,
+        status: 400,
       });
     }
 
-    const s3FileKey = `${bucket.id}/${session.session_uuid}/${
-      (event.body.path ? event.body.path : '') + event.body.fileName
-    }`;
+    //Get existing or create new fileUploadSession
+    let session: FileUploadSession;
+    if (event.body.session_uuid) {
+      session = undefined;
+      session = await new FileUploadSession({}, context).populateByUUID(
+        event.body.session_uuid,
+      );
+
+      if (!session.exists()) {
+        //create new session
+        session = new FileUploadSession(
+          {
+            session_uuid: event.body.session_uuid,
+            bucket_id: bucket.id,
+            project_uuid: bucket.project_uuid,
+          },
+          context,
+        );
+        await session.insert();
+      } else if (session.bucket_id != bucket.id) {
+        throw new StorageCodeException({
+          code: StorageErrorCode.SESSION_UUID_BELONGS_TO_OTHER_BUCKET,
+          status: 404,
+        });
+      } else if (session.sessionStatus == 2) {
+        throw new StorageCodeException({
+          code: StorageErrorCode.FILE_UPLOAD_SESSION_ALREADY_TRANSFERED,
+          status: 404,
+        });
+      }
+    }
+
+    //check directory if directory_uuid is present in body and fill its full path property
+    if (event.body.directory_uuid) {
+      const dir: Directory = await new Directory({}, context).populateByUUID(
+        event.body.directory_uuid,
+      );
+      if (!dir.exists()) {
+        throw new StorageCodeException({
+          code: StorageErrorCode.DIRECTORY_NOT_FOUND,
+          status: 404,
+        });
+      }
+      await dir.populateFullPath();
+      event.body.path = dir.fullPath;
+    }
+
+    //NOTE - session uuid is added to s3File key
+    const s3FileKey = `${BucketType[bucket.bucketType]}/${bucket.id}${
+      session?.session_uuid ? '/' + session.session_uuid : ''
+    }/${(event.body.path ? event.body.path : '') + event.body.fileName}`;
 
     //check if fileUploadRequest with that key already exists
     let fur: FileUploadRequest = await new FileUploadRequest(
@@ -87,24 +139,55 @@ export class StorageService {
 
       await fur.insert();
     } else {
-      //Only update time & user is updated
+      //Update existing File upload request
       await fur.update();
     }
 
-    const s3Client: AWS_S3 = new AWS_S3();
-    const signedURLForUpload = await s3Client.generateSignedUploadURL(
-      env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-      s3FileKey,
-    );
+    let signedURLForUpload = undefined;
+    try {
+      const s3Client: AWS_S3 = new AWS_S3();
+      signedURLForUpload = await s3Client.generateSignedUploadURL(
+        env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+        s3FileKey,
+      );
+    } catch (err) {
+      throw await new StorageCodeException({
+        code: StorageErrorCode.ERROR_AT_GENERATE_S3_SIGNED_URL,
+        status: 500,
+      }).writeToMonitor({
+        context,
+        project_uuid: bucket.project_uuid,
+        service: ServiceName.STORAGE,
+        data: {
+          fileUploadRequest: fur,
+        },
+      });
+    }
 
-    return { signedUrlForUpload: signedURLForUpload, file_uuid: fur.file_uuid };
+    await new Lmas().writeLog({
+      context: context,
+      project_uuid: bucket.project_uuid,
+      logType: LogType.INFO,
+      message: 'Generate file-request-log and S3 signed url - success',
+      location: `${this.constructor.name}/runExecutor`,
+      service: ServiceName.STORAGE,
+    });
+
+    return {
+      signedUrlForUpload: signedURLForUpload,
+      file_uuid: fur.file_uuid,
+      fileUploadRequestId: fur.id,
+    };
   }
 
-  static async endFileUploadSessionAndExecuteSyncToIPFS(
-    event: { session_uuid: string; createDirectoryInIPFS: boolean },
+  static async endFileUploadSession(
+    event: {
+      session_uuid: string;
+      body: EndFileUploadSessionDto;
+    },
     context: ServiceContext,
   ): Promise<any> {
-    //Get session
+    // Get session
     const session = await new FileUploadSession({}, context).populateByUUID(
       event.session_uuid,
     );
@@ -121,233 +204,165 @@ export class StorageService {
     );
     bucket.canAccess(context);
 
-    //Get files in session (fileStatus must be ofst atus 1)
-    const files = (
-      await new FileUploadRequest(
-        {},
-        context,
-      ).populateFileUploadRequestsInSession(session.id, context)
-    ).filter(
-      (x) =>
-        x.fileStatus != FileUploadRequestFileStatus.UPLOADED_TO_IPFS_AND_CRUST,
-    );
-
-    if (files.length == 0) {
+    if (session.sessionStatus != 1) {
       throw new StorageCodeException({
-        code: StorageErrorCode.NO_FILES_FOR_TRANSFER_TO_IPFS,
-        status: 404,
+        code: StorageErrorCode.FILE_UPLOAD_SESSION_ALREADY_TRANSFERED,
+        status: 400,
       });
     }
 
-    if (bucket.bucketType == BucketType.HOSTING) {
-      const ipfsRes = await IPFSService.uploadFilesToIPFSFromS3({
-        fileUploadRequests: files,
-        wrapWithDirectory: true,
-      });
-
-      /*await CrustService.placeStorageOrderToCRUST({
-          cid: ipfsRes.CID,
-          size: ipfsRes.size,
-        });*/
-
-      //Clear bucket content - directories and files
-      await bucket.clearBucketContent();
-
-      //Create new directories & files
-      const directories = [];
-      for (const file of files.filter(
-        (x) =>
-          x.fileStatus ==
-          FileUploadRequestFileStatus.SIGNED_URL_FOR_UPLOAD_GENERATED,
-      )) {
-        const fileDirectory = await StorageService.generateDirectoriesFromPath(
-          context,
-          directories,
-          file,
-          ipfsRes.ipfsDirectories,
-        );
-
-        //Create new file
-        await new File({}, context)
-          .populate({
-            file_uuid: file.file_uuid,
-            CID: file.CID.toV0().toString(),
-            s3FileKey: file.s3FileKey,
-            name: file.fileName,
-            contentType: file.contentType,
-            bucket_id: file.bucket_id,
-            project_uuid: bucket.project_uuid,
-            directory_id: fileDirectory?.id,
-            size: file.size,
-          })
-          .insert();
-
-        //now the file has CID, exists in IPFS node and is pinned to CRUST
-        //update file-upload-request status
-        file.fileStatus =
-          FileUploadRequestFileStatus.UPLOADED_TO_IPFS_AND_CRUST;
-        //await file.update();
-      }
-
-      //publish IPNS
-      const ipns = await IPFSService.publishToIPNS(
-        ipfsRes.parentDirCID.toV0().toString(),
-        bucket.bucket_uuid,
+    if (
+      event.body.directSync &&
+      (env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+        env.APP_ENV == AppEnvironment.TEST)
+    ) {
+      //Directly calls worker, to sync files to IPFS & CRUST - USED ONLY FOR DEVELOPMENT!!
+      const serviceDef: ServiceDefinition = {
+        type: ServiceDefinitionType.SQS,
+        config: { region: 'test' },
+        params: { FunctionName: 'test' },
+      };
+      const parameters = {
+        session_uuid: session.session_uuid,
+      };
+      const wd = new WorkerDefinition(
+        serviceDef,
+        WorkerName.SYNC_TO_IPFS_WORKER,
+        { parameters },
       );
 
-      //Update bucket CID & IPNS
-      bucket.CID = ipfsRes.parentDirCID.toV0().toString();
-      bucket.IPNS = ipns.name;
-      await bucket.update();
-    } else {
-      //get directories in bucket
-      const directories = await new Directory(
-        {},
+      const worker = new SyncToIPFSWorker(
+        wd,
         context,
-      ).populateDirectoriesInBucket(files[0].bucket_id, context);
-
-      //loop through files to sync each one of it to IPFS
-      for (const file of files) {
-        let ipfsRes = undefined;
-        try {
-          ipfsRes = await IPFSService.uploadFileToIPFSFromS3(
-            { fileKey: file.s3FileKey },
-            context,
-          );
-        } catch (err) {
-          if (
-            err?.options?.code ==
-            StorageErrorCode.FILE_DOES_NOT_EXISTS_IN_BUCKET
-          ) {
-            file.fileStatus =
-              FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3;
-            await file.update();
-            continue;
-          } else throw err;
-        }
-
-        /*await CrustService.placeStorageOrderToCRUST({
-          cid: ipfsRes.CID,
-          size: ipfsRes.size,
-        });*/
-
-        const fileDirectory = await StorageService.generateDirectoriesFromPath(
-          context,
-          directories,
-          file,
-        );
-
-        //check if file already exists
-        const existingFile = await new File(
-          {},
-          context,
-        ).populateByNameAndDirectory(file.fileName, fileDirectory?.id);
-
-        if (existingFile.exists()) {
-          //Update existing file
-          existingFile.populate({
-            CID: ipfsRes.cidV0,
-            s3FileKey: file.s3FileKey,
-            name: file.fileName,
-            contentType: file.contentType,
-            size: ipfsRes.size,
-          });
-
-          await existingFile.update();
-        } else {
-          //Create new file
-          await new File({}, context)
-            .populate({
-              file_uuid: file.file_uuid,
-              CID: ipfsRes.cidV0,
-              s3FileKey: file.s3FileKey,
-              name: file.fileName,
-              contentType: file.contentType,
-              project_uuid: bucket.project_uuid,
-              bucket_id: file.bucket_id,
-              directory_id: fileDirectory?.id,
-              size: ipfsRes.size,
-            })
-            .insert();
-        }
-
-        //now the file has CID, exists in IPFS node and is pinned to CRUST
-        //update file-upload-request status
-        file.fileStatus =
-          FileUploadRequestFileStatus.UPLOADED_TO_IPFS_AND_CRUST;
-        await file.update();
-      }
+        QueueWorkerType.EXECUTOR,
+      );
+      await worker.runExecutor({ session_uuid: session.session_uuid });
+    } else {
+      //send message to SQS
+      await sendToWorkerQueue(
+        env.STORAGE_AWS_WORKER_SQS_URL,
+        WorkerName.SYNC_TO_IPFS_WORKER,
+        [
+          {
+            session_uuid: session.session_uuid,
+          },
+        ],
+        null,
+        null,
+      );
     }
-
-    //update session status
-    session.sessionStatus = 2;
-    await session.update();
 
     return true;
   }
 
-  static async generateDirectoriesFromPath(
+  /**
+   * This function is used only for development & testing purposes. In othher envirinments, s3 sends this message to queuq automatically, when file is uploaded
+   * @param event
+   * @param context
+   * @returns
+   */
+  static async endFileUpload(
+    event: {
+      file_uuid: string;
+    },
     context: ServiceContext,
-    directories: Directory[],
-    fur: FileUploadRequest,
-    ipfsDirectories?: { path: string; cid: CID }[],
-  ) {
-    if (fur.path) {
-      const splittedPath: string[] = fur.path.split('/').filter((x) => x != '');
-      let currDirectory = undefined;
-
-      //Get or create directory
-      for (let i = 0; i < splittedPath.length; i++) {
-        const currChildDirectories =
-          i == 0
-            ? directories.filter((x) => x.parentDirectory_id == undefined)
-            : directories.filter(
-                (x) => x.parentDirectory_id == currDirectory.id,
-              );
-
-        const existingDirectory = currChildDirectories.find(
-          (x) => x.name == splittedPath[i],
-        );
-
-        if (!existingDirectory) {
-          //create new directory
-          const newDirectory: Directory = new Directory({}, context).populate({
-            parentDirectory_id: currDirectory?.id,
-            bucket_id: fur.bucket_id,
-            name: splittedPath[i],
-          });
-
-          //search, if directory with that path, was created on IPFS
-          const ipfsDirectory = ipfsDirectories.find(
-            (x) => x.path == splittedPath.slice(0, i + 1).join('/'),
-          );
-          if (ipfsDirectory)
-            newDirectory.CID = ipfsDirectory.cid.toV0().toString();
-
-          currDirectory = await DirectoryService.createDirectory(
-            {
-              body: newDirectory,
-            },
-            context,
-          );
-          //Add new directory to list of all directories
-          directories.push(currDirectory);
-        } else currDirectory = existingDirectory;
-      }
-      return currDirectory;
+  ): Promise<any> {
+    //Get file upload request
+    const fur = await new FileUploadRequest({}, context).populateByUUID(
+      event.file_uuid,
+    );
+    if (!fur.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.FILE_UPLOAD_REQUEST_NOT_FOUND,
+        status: 404,
+      });
     }
-    return undefined;
+
+    //get bucket
+    const bucket = await new Bucket({}, context).populateById(fur.bucket_id);
+    bucket.canAccess(context);
+
+    const msg = {
+      Records: [
+        {
+          eventVersion: '2.1',
+          eventSource: 'aws:s3',
+          awsRegion: 'eu-west-1',
+          eventTime: '2022-12-12T07:15:18.165Z',
+          eventName: 'ObjectCreated:Put',
+          userIdentity: { principalId: 'AWS:AIDAQIMRRA6GKZX7GJVNU' },
+          requestParameters: { sourceIPAddress: '89.212.22.116' },
+          responseElements: {
+            'x-amz-request-id': 'D3KVZ7C5RRZPJ2SR',
+            'x-amz-id-2':
+              'vPrPgHDXn7A17ce6P+XdUZG2WJufvOJoalcS5vvPzEPKDtm5LZSFN3TjuNrRa3hv72sJICDfSGtM3gpXLilE1EMDl3qUINUA',
+          },
+          s3: {
+            s3SchemaVersion: '1.0',
+            configurationId: 'File uploaded to storage directory',
+            bucket: {
+              name: 'sync-to-ipfs-queue',
+              ownerIdentity: { principalId: 'A22UA2G16O19KV' },
+              arn: 'arn:aws:s3:::sync-to-ipfs-queue',
+            },
+            object: {
+              key: fur.s3FileKey,
+              size: fur.size,
+              eTag: 'efea4f1606e3d37048388cc4bebacea6',
+              sequencer: '006396D50624FE22EB',
+            },
+          },
+        },
+      ],
+    };
+
+    if (
+      env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+      env.APP_ENV == AppEnvironment.TEST
+    ) {
+      //Directly calls worker, to sync file to IPFS & CRUST - USED ONLY FOR DEVELOPMENT!!
+      const serviceDef: ServiceDefinition = {
+        type: ServiceDefinitionType.SQS,
+        config: { region: 'test' },
+        params: { FunctionName: 'test' },
+      };
+      const parameters = msg;
+      const wd = new WorkerDefinition(
+        serviceDef,
+        WorkerName.SYNC_TO_IPFS_WORKER,
+        { parameters },
+      );
+
+      const worker = new SyncToIPFSWorker(
+        wd,
+        context,
+        QueueWorkerType.EXECUTOR,
+      );
+      await worker.runExecutor(msg);
+
+      return true;
+    }
+    return false;
   }
 
-  static async getFileDetails(
-    event: { cid?: string; file_uuid?: string },
+  static async listFileUploads(
+    event: { query: FileUploadsQueryFilter },
     context: ServiceContext,
   ) {
+    return await new FileUploadRequest({}, context).getList(
+      context,
+      new FileUploadsQueryFilter(event.query),
+    );
+  }
+
+  //#endregion
+
+  //#region file functions
+
+  static async getFileDetails(event: { id: string }, context: ServiceContext) {
     let file: File = undefined;
     let fileStatus: FileStatus = undefined;
-    if (event.cid) file = await new File({}, context).populateByCID(event.cid);
-    else if (event.file_uuid)
-      file = await new File({}, context).populateByUUID(event.file_uuid);
+    if (event.id) file = await new File({}, context).populateById(event.id);
     else {
       throw new StorageCodeException({
         code: StorageErrorCode.DEFAULT_RESOURCE_NOT_FOUND_ERROR,
@@ -357,30 +372,28 @@ export class StorageService {
 
     if (!file.exists()) {
       //try to load and return file data from file-upload-request
-      if (event.file_uuid) {
-        const fur: FileUploadRequest = await new FileUploadRequest(
-          {},
-          context,
-        ).populateByUUID(event.file_uuid);
+      const fur: FileUploadRequest = await new FileUploadRequest(
+        {},
+        context,
+      ).populateByUUID(event.id);
 
-        if (fur.exists()) {
-          //check if file uploaded to S3
-          const s3Client: AWS_S3 = new AWS_S3();
-          if (
-            await s3Client.exists(
-              env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-              fur.s3FileKey,
-            )
+      if (fur.exists()) {
+        //check if file uploaded to S3
+        const s3Client: AWS_S3 = new AWS_S3();
+        if (
+          await s3Client.exists(
+            env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+            fur.s3FileKey,
           )
-            fileStatus = FileStatus.UPLOADED_TO_S3;
-          else fileStatus = FileStatus.REQUEST_FOR_UPLOAD_GENERATED;
+        )
+          fileStatus = FileStatus.UPLOADED_TO_S3;
+        else fileStatus = FileStatus.REQUEST_FOR_UPLOAD_GENERATED;
 
-          return {
-            fileStatus: fileStatus,
-            file: fur.serialize(SerializeFor.PROFILE),
-            crustStatus: undefined,
-          };
-        }
+        return {
+          fileStatus: fileStatus,
+          file: fur.serialize(SerializeFor.PROFILE),
+          crustStatus: undefined,
+        };
       }
 
       throw new StorageCodeException({
@@ -392,18 +405,63 @@ export class StorageService {
     file.canAccess(context);
     fileStatus = FileStatus.UPLOADED_TO_IPFS;
     //File exists on IPFS and probably on CRUST- get status from CRUST
-    let crustOrderStatus = undefined;
     if (file.CID) {
-      crustOrderStatus = await CrustService.getOrderStatus({
+      /*crustOrderStatus = await CrustService.getOrderStatus({
         cid: file.CID,
-      });
+      });*/
       fileStatus = FileStatus.PINNED_TO_CRUST;
+      file.downloadLink = env.STORAGE_IPFS_PROVIDER + file.CID;
     }
 
     return {
       fileStatus: fileStatus,
       file: file.serialize(SerializeFor.PROFILE),
-      crustStatus: crustOrderStatus,
     };
   }
+
+  static async deleteFile(
+    event: { id: string },
+    context: ServiceContext,
+  ): Promise<any> {
+    const f: File = await new File({}, context).populateById(event.id);
+    if (!f.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.FILE_NOT_FOUND,
+        status: 404,
+      });
+    }
+    f.canModify(context);
+
+    const conn = await context.mysql.start();
+
+    try {
+      await f.markDeleted(conn);
+
+      //Also delete file-upload-request
+      const fur: FileUploadRequest = await new FileUploadRequest(
+        {},
+        context,
+      ).populateByUUID(f.file_uuid);
+
+      if (fur.exists()) {
+        await fur.markDeleted(conn);
+      }
+
+      if (f.CID) await IPFSService.unpinFile(f.CID);
+
+      const bucket: Bucket = await new Bucket({}, context).populateById(
+        f.bucket_id,
+      );
+      bucket.size -= f.size;
+      await bucket.update(SerializeFor.UPDATE_DB, conn);
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+      throw err;
+    }
+
+    return f.serialize(SerializeFor.PROFILE);
+  }
+
+  //#endregion
 }

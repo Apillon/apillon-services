@@ -14,11 +14,15 @@ export enum AmsEventType {
   LIST_API_KEYS = 'list-api-keys',
   API_KEY_ROLE_ASSIGN = 'api-key-role-assign',
   API_KEY_ROLE_REMOVE = 'api-key-role-remove',
+  GET_API_KEY_ROLES = 'get-api-key-roles',
+  GET_API_KEY = 'get-api-key',
 }
 
 export enum LmasEventType {
   WRITE_LOG = 'write-log',
+  WRITE_REQUEST_LOG = 'write-request-log',
   SEND_ALERT = 'send-alert',
+  SEND_ADMIN_ALERT = 'send-admin-alert',
   NOTIFY = 'notify',
 }
 
@@ -30,6 +34,7 @@ export enum StorageEventType {
   PLACE_STORAGE_ORDER_TO_CRUST = 'place-storage-order-to-crust',
   REQUEST_S3_SIGNED_URL_FOR_UPLOAD = 'request-s3-signed-url-for-upload',
   END_FILE_UPLOAD_SESSION = 'end-file-upload-session',
+  END_FILE_UPLOAD = 'end-file-upload',
   CREATE_BUCKET = 'create-bucket',
   UPDATE_BUCKET = 'update-bucket',
   DELETE_BUCKET = 'delete-bucket',
@@ -41,10 +46,22 @@ export enum StorageEventType {
   DELETE_DIRECTORY = 'delete-directory',
   LIST_DIRECTORY_CONTENT = 'list-directory-content',
   GET_FILE_DETAILS = 'get-file-details',
+  FILE_DELETE = 'delete-file',
+  BUCKET_WEBHOOK_GET = 'get-bucket-webhook',
+  BUCKET_WEBHOOK_CREATE = 'create-bucket-webhook',
+  BUCKET_WEBHOOK_UPDATE = 'update-bucket-webhook',
+  BUCKET_WEBHOOK_DELETE = 'delete-bucket-webhook',
+  LIST_FILE_UPLOAD = 'list-file-upload',
+  MAX_BUCKETS_QUOTA_REACHED = 'max-buckets-quota-reached',
 }
 
 export enum MailEventType {
   SEND_MAIL = 'send-mail',
+  SEND_CUSTOM_MAIL = 'send-custom-mail',
+}
+
+export enum ScsEventType {
+  GET_QUOTA = 'get-quota',
 }
 
 export enum ServiceName {
@@ -53,6 +70,9 @@ export enum ServiceName {
   LMAS = 'LMAS',
   DEV_CONSOLE = 'DEV_CONSOLE',
   MAIL = 'MAIL',
+  STORAGE = 'STORAGE',
+  APILLON_API = 'APILLON_API',
+  AUTHENTICATION_API = 'AUTHENTICATION_API',
 }
 
 export enum ServiceCode {
@@ -63,6 +83,10 @@ export enum ServiceCode {
   DEV_CONSOLE = '04',
   APILLON_API = '05',
   STORAGE = '06',
+  MOD_LIB = '07',
+  MAIL = '08',
+  AUTH = '09',
+  CONFIG = '10',
 }
 
 export enum AppEnvironment {
@@ -79,6 +103,7 @@ export enum LogType {
   MSG = 'MSG',
   WARN = 'WARNING',
   ERROR = 'ERROR',
+  COST = 'COST',
 }
 
 export enum SqlModelStatus {
@@ -86,6 +111,14 @@ export enum SqlModelStatus {
   INCOMPLETE = 2,
   ACTIVE = 5,
   DELETED = 9,
+}
+
+/**
+ * Types of services in dev-console-api
+ */
+export enum AttachedServiceType {
+  AUTHENTICATION = 1,
+  STORAGE = 2,
 }
 
 /**
@@ -112,6 +145,7 @@ export enum SerializeFor {
   ADMIN = 'admin',
   WORKER = 'worker',
   SERVICE = 'service',
+  LOGGER = 'logger',
 }
 
 /**
@@ -175,7 +209,7 @@ export enum DefaultApiKeyRole {
  *  04 - dev-api
  *  05 - apillon-api
  *  06 - storage
- *  07 - authorization-api
+ *  07 - authentication-api
  *  ...
  *  INTERNAL ERROR CODE: 000 - 999
  *
@@ -211,6 +245,7 @@ export enum BadRequestErrorCode {
   BAD_REQUEST = 40000000,
   INVALID_PATH = 40000001,
   INVALID_QUERY_PARAMETERS = 40000002,
+  MISSING_AUTHORIZATION_HEADER = 40000003,
 }
 
 export enum ValidatorErrorCode {
@@ -223,7 +258,7 @@ export enum ValidatorErrorCode {
   BUCKET_UUID_NOT_PRESENT = 42200006,
   PATH_NOT_PRESENT = 42200007,
   FILE_NAME_NOT_PRESENT = 42200008,
-  CONTENT_TYPE_NOT_PRESENT = 42200009,
+  FILE_CONTENT_TYPE_NOT_PRESENT = 42200009,
   SESSION_UUID_NOT_PRESENT = 42200010,
   BUCKET_TYPE_NOT_PRESENT = 42200011,
   CREATE_API_KEY_PROJECT_UUID_NOT_PRESENT = 42200012,
@@ -233,6 +268,11 @@ export enum ValidatorErrorCode {
   API_KEY_ROLE_PROJECT_UUID_NOT_PRESENT = 42200016,
   API_KEY_ROLE_SERVICE_UUID_NOT_PRESENT = 42200017,
   API_KEY_ROLE_ROLE_ID_NOT_VALID = 42200018,
+  BUCKET_WEBHOOK_BUCKET_ID_NOT_PRESENT = 42200019,
+  BUCKET_WEBHOOK_URL_NOT_PRESENT = 42200020,
+  QUOTA_ID_NOT_PRESENT = 42200021,
+  PROJECT_UUID_NOT_PRESENT_IN_QUERY = 42200022,
+  BUCKET_TYPE_NOT_PRESENT_IN_QUERY = 42200023,
 }
 
 /**
@@ -262,4 +302,18 @@ export enum JwtTokenType {
   USER_RESET_PASSWORD = 'USER_RESET_PASSWORD',
   USER_RESET_EMAIL = 'USER_RESET_EMAIL',
   USER_CONFIRM_EMAIL = 'USER_CONFIRM_EMAIL',
+}
+
+/**
+ * Quota codes
+ * Must equal quote.id field in database!
+ */
+export enum QuotaCode {
+  MAX_PROJECT_COUNT = 1,
+  MAX_USERS_ON_PROJECT = 2,
+  MAX_API_KEYS = 3,
+  MAX_HOSTING_BUCKETS = 4,
+  MAX_FILE_BUCKETS = 5,
+  MAX_BUCKET_SIZE = 6,
+  MAX_ATTESTED_USERS = 7,
 }

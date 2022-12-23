@@ -26,6 +26,13 @@ provider:
   stage: ${opt:stage, 'dev'}
   iam:
     role: arn:aws:iam::018021943180:role/serverless-workers-executor
+  vpc:
+    securityGroupIds:
+      - sg-091bc1ce7424a7921
+    subnetIds:
+      - subnet-0bea6dd0c2a5ecc61
+      - subnet-085447b898128fc92
+      - subnet-0ed148d48e931f5fa
 
   environment:
     ${file(../../bin/deploy/env/env.yml)}
@@ -42,6 +49,20 @@ functions:
   storage-service:
     handler: ./src/handler.handler
     name: 'apillon-storage-service-${self:provider.stage}'
-    description: AT storage Management Service
+    description: Apillon storage Service
     memorySize: 512
     timeout: 30
+  storage-service-worker:
+    handler: ./src/workers/worker-executor.handler
+    name: apillon-storage-service-worker-${self:provider.stage}
+    description: Serverless workers for Apillon storage microservice
+    memorySize: 512
+    timeout: 900
+    reservedConcurrency: 30
+    environment:
+      AWS_WORKER_LAMBDA_NAME: ${self:functions.storage-service-worker.name}
+    events:
+      - sqs:
+          arn: ${env:WORKER_SQS_ARN} #arn:aws:sqs:eu-west-1:018021943180:apillon-storage-queue-dev 
+          batchSize: 4
+          maximumBatchingWindow: 5

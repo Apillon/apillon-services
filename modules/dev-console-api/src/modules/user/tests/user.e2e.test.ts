@@ -1,14 +1,17 @@
-import { generateJwtToken, JwtTokenType } from '@apillon/lib';
+import { env, generateJwtToken, JwtTokenType } from '@apillon/lib';
 import * as request from 'supertest';
-import { releaseStage, setupTest, Stage } from '../../../../test/helpers/setup';
-import { createTestUser, TestUser } from '../../../../test/helpers/user';
+import { releaseStage, Stage } from '@apillon/tests-lib';
+import { createTestUser, TestUser } from '@apillon/tests-lib';
+import { ValidateEmailDto } from '../dtos/validate-email.dto';
+import { AppModule } from '../../../app.module';
+import { setupTest } from '../../../../test/helpers/setup';
 
 describe('Auth tests', () => {
   let stage: Stage;
 
   let testUser: TestUser;
   const newUserData = {
-    email: 'tine+test@kalmia.si',
+    email: 'dev+test@apillon.io',
     password: 'MyPassword01!',
     authToken: null,
     user_uuid: null,
@@ -24,13 +27,18 @@ describe('Auth tests', () => {
   });
 
   test('User should be able to register', async () => {
-    const email = newUserData.email;
+    const input = new ValidateEmailDto({
+      email: newUserData.email,
+      captcha: { token: 'test' },
+    });
     const response = await request(stage.http)
       .post('/users/validate-email')
-      .send({ email });
+      .send(input);
     expect(response.status).toBe(201);
 
-    const token = generateJwtToken(JwtTokenType.USER_CONFIRM_EMAIL, { email });
+    const token = generateJwtToken(JwtTokenType.USER_CONFIRM_EMAIL, {
+      email: input.email,
+    });
     const password = newUserData.password;
 
     const response2 = await request(stage.http)
@@ -57,7 +65,7 @@ describe('Auth tests', () => {
     );
 
     expect(sqlRes2.length).toBe(1);
-    expect(sqlRes2[0].email).toBe(email);
+    expect(sqlRes2[0].email).toBe(input.email);
   });
 
   test('User should be able to login', async () => {

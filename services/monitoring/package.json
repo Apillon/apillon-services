@@ -17,14 +17,15 @@
     "deploy:dev": "serverless deploy --stage dev"
   },
   "dependencies": {
-    "@middy/core": "^3.3.1",
     "@apillon/lib": "*",
+    "@middy/core": "^3.3.1",
+    "@slack/web-api": "^6.8.0",
     "aws-lambda": "^1.0.7"
   },
   "devDependencies": {
     "eslint-config-common": "*",
-    "tsconfig": "*",
     "ts-loader": "^9.2.3",
+    "tsconfig": "*",
     "webpack": "^5.41.1",
     "webpack-node-externals": "^3.0.0"
   }

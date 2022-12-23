@@ -3,6 +3,7 @@ import { AppEnvironment } from '../../config/types';
 import * as Net from 'net';
 import * as AWS from 'aws-sdk';
 import { safeJsonParse } from '../utils';
+import { Context } from '../context';
 
 export abstract class BaseService {
   private lambda: AWS.Lambda;
@@ -10,17 +11,38 @@ export abstract class BaseService {
   abstract lambdaFunctionName: string;
   abstract devPort: number;
   abstract serviceName: string;
+  protected securityToken: string;
+  private requestId: string;
+  private user: any;
+  private apiKey: any;
 
-  constructor() {
+  constructor(context?: Context) {
     this.lambda = new AWS.Lambda({
       apiVersion: '2015-03-31',
       region: env.AWS_REGION,
     });
+    this.securityToken = this.generateSecurityToken();
+    this.requestId = context?.requestId;
+    this.user = context?.user;
+    this.apiKey = context?.apiKey;
+  }
+
+  private generateSecurityToken() {
+    //TODO - generate JWT from APP secret
+    return 'SecurityToken';
   }
 
   protected async callService(payload, isAsync = this.isDefaultAsync) {
     const env = await getEnvSecrets();
     let result;
+
+    payload = {
+      securityToken: this.securityToken,
+      requestId: this.requestId,
+      user: this.user,
+      apiKey: this.apiKey,
+      ...payload,
+    };
 
     if (
       [AppEnvironment.LOCAL_DEV, AppEnvironment.TEST].includes(
@@ -45,7 +67,7 @@ export abstract class BaseService {
         });
       });
     }
-    console.log(result);
+    //console.log(result);
 
     if (!isAsync && (result?.error || !result?.success)) {
       // CodeException causes circular dependency!
@@ -71,7 +93,7 @@ export abstract class BaseService {
     const devSocket = Net.connect(
       { port: this.devPort, timeout: 300000 },
       () => {
-        console.log(`Connected to ${this.serviceName} dev socket`);
+        //console.log(`Connected to ${this.serviceName} dev socket`);
       },
     );
 
@@ -86,7 +108,7 @@ export abstract class BaseService {
         reject('Socket timeout!');
       });
       devSocket.on('end', () => {
-        console.log(`Disconnected from ${this.serviceName} dev socket`);
+        //console.log(`Disconnected from ${this.serviceName} dev socket`);
         resolve(null);
       });
       devSocket.on('data', (data) => {
