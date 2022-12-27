@@ -374,6 +374,7 @@ export class StorageService {
       ).populateByUUID(event.id);
 
       if (fur.exists()) {
+        await fur.canAccess(context);
         //check if file uploaded to S3
         const s3Client: AWS_S3 = new AWS_S3();
         if (

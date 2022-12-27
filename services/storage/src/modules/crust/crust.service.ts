@@ -78,6 +78,8 @@ export class CrustService {
     });
 
     await api.isReadyOrError;
-    return await api.query.market.filesV2(params.cid);
+    const crustFileStatus = await api.query.market.filesV2(params.cid);
+    await api.disconnect();
+    return crustFileStatus;
   }
 }

@@ -92,7 +92,7 @@ export class StorageController {
     serviceType: AttachedServiceType.STORAGE,
   })
   @UseGuards(AuthGuard)
-  async getFileDetailsByCID(
+  async getFileDetails(
     @Ctx() context: ApillonApiContext,
     @Param('bucket_uuid') bucket_uuid: string,
     @Param('id') id: string,
