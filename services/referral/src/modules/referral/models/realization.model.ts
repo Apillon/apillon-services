@@ -89,30 +89,6 @@ export class Realization extends AdvancedSQLModel {
       },
     ],
   })
-  public transaction_id: number;
-
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ReferralErrorCode.DEFAULT_VALIDATION_ERROR,
-      },
-    ],
-  })
   public reward: number;
 
   @prop({
@@ -137,6 +113,7 @@ export class Realization extends AdvancedSQLModel {
   public async populateByTaskIdAndPlayerId(
     task_id: number,
     player_id: number,
+    data: any = null,
     showDeleted = false,
     conn?: PoolConnection,
   ): Promise<Realization[]> {
@@ -146,26 +123,27 @@ export class Realization extends AdvancedSQLModel {
 
     this.reset();
 
-    const data = await this.getContext().mysql.paramExecute(
+    const res = await this.getContext().mysql.paramExecute(
       `
       SELECT * 
-      FROM \`${DbTables.PLAYER}\`
+      FROM \`${DbTables.REALIZATION}\`
       WHERE task_id = @task_id 
       AND player_id = @player_id 
+      AND (@data IS NULL OR data <> @data)
       ${showDeleted ? '' : `AND status <> ${SqlModelStatus.DELETED}`};
       `,
-      { task_id, player_id, showDeleted },
+      { task_id, player_id, showDeleted, data },
       conn,
     );
 
-    if (data && data.length) {
+    if (res && res.length) {
       const arr = [] as Realization[];
-      for (const r of data) {
+      for (const r of res) {
         arr.push(
           new Realization({}, this.getContext()).populate(r, PopulateFrom.DB),
         );
       }
-      this.populate(data[0], PopulateFrom.DB);
+      this.populate(res[0], PopulateFrom.DB);
       return arr;
     } else {
       this.reset();

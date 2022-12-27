@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { ReferralMicroservice, CreateReferralDto } from '@apillon/lib';
+import {
+  ReferralMicroservice,
+  CreateReferralDto,
+  ConfirmRetweetDto,
+} from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 
 @Injectable()
@@ -12,13 +16,17 @@ export class ReferralService {
     return (await new ReferralMicroservice(context).getReferral()).data;
   }
 
-  async getTweets(context: DevConsoleApiContext) {
-    return (await new ReferralMicroservice(context).getTweets()).data;
-  }
-
   async getTwitterAuthenticationLink(context: DevConsoleApiContext) {
     return (
       await new ReferralMicroservice(context).getTwitterAuthenticationLink()
     ).data;
+  }
+
+  async getTweets(context: DevConsoleApiContext) {
+    return (await new ReferralMicroservice(context).getTweets()).data;
+  }
+
+  async confirmRetweet(context: DevConsoleApiContext, body: ConfirmRetweetDto) {
+    return (await new ReferralMicroservice(context).confirmRetweet(body)).data;
   }
 }

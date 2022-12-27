@@ -1,5 +1,9 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { CreateReferralDto, DefaultUserRole } from '@apillon/lib';
+import {
+  ConfirmRetweetDto,
+  CreateReferralDto,
+  DefaultUserRole,
+} from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { ReferralService } from './referral.service';
@@ -28,17 +32,28 @@ export class ReferralController {
     return await this.referralService.getReferral(context);
   }
 
-  @Get('tweets')
+  @Get('twitter/authenticate')
+  @Permissions({ role: DefaultUserRole.USER })
+  @UseGuards(AuthGuard)
+  async getTwitterAuthenticationLink(@Ctx() context: DevConsoleApiContext) {
+    return await this.referralService.getTwitterAuthenticationLink(context);
+  }
+
+  @Get('twitter/tweets')
   @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard)
   async getTweets(@Ctx() context: DevConsoleApiContext) {
     return await this.referralService.getTweets(context);
   }
 
-  @Get('twitter/authenticate')
+  @Post('twitter/confirm')
   @Permissions({ role: DefaultUserRole.USER })
-  @UseGuards(AuthGuard)
-  async getTwitterAuthenticationLink(@Ctx() context: DevConsoleApiContext) {
-    return await this.referralService.getTwitterAuthenticationLink(context);
+  @UseGuards(AuthGuard, ValidationGuard)
+  @Validation({ dto: ConfirmRetweetDto })
+  async confirmRetweet(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: ConfirmRetweetDto,
+  ) {
+    return await this.referralService.confirmRetweet(context, body);
   }
 }

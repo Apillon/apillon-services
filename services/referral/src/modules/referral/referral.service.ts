@@ -5,6 +5,8 @@ import {
   SerializeFor,
   SqlModelStatus,
   TwitterOauthDto,
+  ConfirmRetweetDto,
+  AppEnvironment,
 } from '@apillon/lib';
 import { ServiceContext } from '../../context';
 import {
@@ -93,30 +95,63 @@ export class ReferralService {
     return player.serialize(SerializeFor.PROFILE);
   }
 
+  /**
+   * Returns link used to get oAuth creds for twitter.
+   */
   static async getTwitterAuthenticationLink(
     _event: any,
     context: ServiceContext,
   ) {
     const twitter = new Twitter();
-    try {
-      const res = await twitter.getTwitterAuthenticationLink(
-        'http://localhost:3000/',
-        context,
-      );
-      console.log('twitterdata', res);
-      return res;
-    } catch (error) {
-      console.log('twittererror', error);
-    }
-  }
-
-  static async getTweets(_event: any, _context: ServiceContext) {
-    const twitter = new Twitter();
-    return await twitter.getTweets();
+    return await twitter.getTwitterAuthenticationLink(
+      'http://localhost:3000/',
+      context,
+    );
   }
 
   /**
-   * Link the twitter account to the user (Auth user). The oAuth credentials must received be from the authenticate (/oauth/twitter/authenticate).
+   * Returns last 4 tweets from Apillon twitter.
+   */
+  static async getTweets(_event: any, _context: ServiceContext) {
+    const twitter = new Twitter();
+    return await twitter.getLatestTweets();
+  }
+
+  /**
+   * Confirm user retweet
+   */
+  static async confirmRetweet(
+    event: { body: ConfirmRetweetDto },
+    context: ServiceContext,
+  ) {
+    const twitter = new Twitter();
+    const tweetId = event.body.tweet_id;
+    const user_uuid = context.user.user_uuid;
+    const player = await new Player({}, context).populateByUserUuid(user_uuid);
+    if (!player.exists()) {
+      return;
+    }
+    const tweetData = (await twitter.getLatestTweets()) as any;
+    console.log('retweetdata', tweetData);
+    if (env.APP_ENV !== AppEnvironment.TEST && !tweetData.includes(tweetId)) {
+      return { error: 'test' };
+      // Invalid twitter
+    }
+    const retweetData = (await twitter.getRetweets(tweetId)) as any;
+    const retweeted = retweetData.data.some(
+      (x: any) => x.id === player.twitter_id,
+    );
+    if (retweeted) {
+      const task = await new Task({}, context).populateByType(
+        TaskType.TWITTER_RETWEET,
+      );
+      await task.confirmTask(player.id, { tweet_id: tweetId });
+    }
+    return { retweeted };
+  }
+
+  /**
+   * Link the twitter account to the user (Auth user). The oAuth credentials must received be from the authenticate (getTwitterAuthenticationLink()).
    */
   public async linkTwitter(
     event: { body: TwitterOauthDto },
@@ -131,7 +166,7 @@ export class ReferralService {
 
     // check if unlinked before linking
     const player = await new Player({}, context).populateByUserUuid(
-      context.user.user_uiid,
+      context.user.user_uuid,
     );
     const pair = await new OauthTokenPair({}, context).populateByToken(
       oAuthData.oauth_token,

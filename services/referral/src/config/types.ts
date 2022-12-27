@@ -24,3 +24,8 @@ export enum ReferralErrorCode {
   //409
   //500
 }
+
+export enum TransactionDirection {
+  DEPOSIT = 1,
+  WITHDRAW = 2,
+}

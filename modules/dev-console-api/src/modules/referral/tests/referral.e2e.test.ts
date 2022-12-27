@@ -1,4 +1,5 @@
 import { generateJwtToken, JwtTokenType } from '@apillon/lib';
+import { DbTables } from '@apillon/referral/src/config/types';
 import { Player } from '@apillon/referral/src/modules/referral/models/player.model';
 import {
   createTestUser,
@@ -91,16 +92,43 @@ describe('Storage directory tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.tasks).toHaveLength(4);
+    });
+  });
 
-      const response2 = await request(stage.http)
-        .get(`/referral/tweets`)
-        .set('Authorization', `Bearer ${testUser.token}`);
-      expect(response2.status).toBe(200);
-
-      const response3 = await request(stage.http)
+  describe('Twitter', () => {
+    test('User should be able to get twitter authentication link', async () => {
+      const response = await request(stage.http)
         .get(`/referral/twitter/authenticate`)
         .set('Authorization', `Bearer ${testUser.token}`);
-      expect(response3.status).toBe(200);
+      expect(response.status).toBe(200);
+      expect(response.body.data.url).toBeTruthy();
+    });
+
+    test('User should be able to get latest tweets', async () => {
+      const response = await request(stage.http)
+        .get(`/referral/twitter/tweets`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data).toHaveLength(4);
+    });
+
+    test('Confirm user retweet', async () => {
+      await stage.referralSql.paramExecute(
+        `
+        UPDATE ${DbTables.PLAYER}
+        SET twitter_id = @twitter_id
+        WHERE user_uuid = @uuid
+      `,
+        {
+          twitter_id: '1529013336754507778',
+          uuid: testUser.user.user_uuid,
+        },
+      );
+      const response = await request(stage.http)
+        .post(`/referral/twitter/confirm`)
+        .send({ tweet_id: '1600474958685409280' })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(201);
     });
   });
 });

@@ -2,6 +2,7 @@ import { env } from '../../../config/env';
 import { AppEnvironment, ReferralEventType } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
+import { ConfirmRetweetDto } from './dtos/confirm-retweet.dto';
 import { CreateReferralDto } from './dtos/create-referral.dto';
 
 export class ReferralMicroservice extends BaseService {
@@ -38,6 +39,14 @@ export class ReferralMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async getTwitterAuthenticationLink() {
+    const data = {
+      eventName: ReferralEventType.GET_TWITTER_LINK,
+      body: {},
+    };
+    return await this.callService(data);
+  }
+
   public async getTweets() {
     const data = {
       eventName: ReferralEventType.GET_TWEETS,
@@ -46,10 +55,10 @@ export class ReferralMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async getTwitterAuthenticationLink() {
+  public async confirmRetweet(params: ConfirmRetweetDto) {
     const data = {
-      eventName: ReferralEventType.GET_TWITTER_LINK,
-      body: {},
+      eventName: ReferralEventType.CONFIRM_RETWEET,
+      body: params.serialize(),
     };
     return await this.callService(data);
   }

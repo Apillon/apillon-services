@@ -42,3 +42,4 @@ export * from './lib/at-services/referral/referral';
 export * from './lib/at-services/referral/dtos/create-referral.dto';
 export * from './lib/at-services/referral/dtos/github-oauth.dto';
 export * from './lib/at-services/referral/dtos/twitter-oauth.dto';
+export * from './lib/at-services/referral/dtos/confirm-retweet.dto';

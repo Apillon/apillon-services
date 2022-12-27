@@ -36,14 +36,6 @@ export class OauthService {
   //   return user.serialize(SerializeFor.PROFILE);
   // }
 
-  static async getTweets(_event: any, _context: ServiceContext) {
-    const twitter = new Twitter();
-    twitter.getTwitterApi();
-    const res = await twitter.twitterApi.v2.userTimeline('1603025732598374403');
-    console.log(res);
-    return res;
-  }
-
   /**
    * Link the twitter account to the user (Auth user). The oAuth credentials must received be from the authenticate (/oauth/twitter/authenticate).
    */
@@ -60,7 +52,7 @@ export class OauthService {
 
     // check if unlinked before linking
     const player = await new Player({}, context).populateByUserUuid(
-      context.user.user_uiid,
+      context.user.user_uuid,
     );
     const pair = await new OauthTokenPair({}, context).populateByToken(
       oAuthData.oauth_token,

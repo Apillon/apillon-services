@@ -11,7 +11,11 @@ import {
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
-import { DbTables, ReferralErrorCode } from '../../../config/types';
+import {
+  DbTables,
+  ReferralErrorCode,
+  TransactionDirection,
+} from '../../../config/types';
 import { ServiceContext } from '../../../context';
 import { Realization } from './realization.model';
 import { ReferralValidationException } from '../../../lib/exceptions';
@@ -250,7 +254,7 @@ export class Task extends AdvancedSQLModel {
     const existingR = await new Realization(
       {},
       this.getContext(),
-    ).populateByTaskIdAndPlayerId(this.id, player_id);
+    ).populateByTaskIdAndPlayerId(this.id, player_id, data);
 
     if (existingR.length >= this.maxCompleted) {
       // already completed
@@ -258,6 +262,9 @@ export class Task extends AdvancedSQLModel {
 
     const realization = new Realization({}, this.getContext()).populate({
       data,
+      task_id: this.id,
+      reward: this.reward,
+      player_id,
     });
 
     try {
@@ -269,5 +276,15 @@ export class Task extends AdvancedSQLModel {
     }
 
     await realization.insert();
+
+    await this.db().paramExecute(
+      `
+	          INSERT INTO ${DbTables.TRANSACTION}
+	            (player_id, direction, amount, realization_id, status)
+	          VALUES 
+              (@player_id, ${TransactionDirection.DEPOSIT}, @reward ,@realization_id, ${SqlModelStatus.ACTIVE})
+	        `,
+      { player_id, reward: this.reward, realization_id: realization?.id },
+    );
   }
 }

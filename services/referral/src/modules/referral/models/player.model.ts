@@ -291,7 +291,7 @@ export class Player extends AdvancedSQLModel {
         ON r.player_id = @player_id
         AND r.task_id = t.id
         AND r.status = ${SqlModelStatus.ACTIVE}
-      GROUP BY t.id
+      GROUP BY t.id, r.id
       `,
       { player_id: this.id },
     );

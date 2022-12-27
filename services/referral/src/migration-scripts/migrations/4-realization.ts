@@ -8,7 +8,6 @@ export async function upgrade(
       \`id\` INT NOT NULL AUTO_INCREMENT,
       \`task_id\` INT NOT NULL,
       \`player_id\` INT NOT NULL,
-      \`transaction_id\` INT NOT NULL,
       \`reward\` INT NOT NULL,
       \`data\` JSON NULL,
       \`status\` INT NOT NULL,
@@ -25,11 +24,6 @@ export async function upgrade(
       CONSTRAINT \`fk_realization_player\`
         FOREIGN KEY (\`player_id\`)
         REFERENCES \`${DbTables.PLAYER}\` (\`id\`)
-        ON DELETE CASCADE
-        ON UPDATE NO ACTION,
-      CONSTRAINT \`fk_realization_transaction\`
-        FOREIGN KEY (\`transaction_id\`)
-        REFERENCES \`${DbTables.TRANSACTION}\` (\`id\`)
         ON DELETE CASCADE
         ON UPDATE NO ACTION
     );

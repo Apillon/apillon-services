@@ -69,8 +69,9 @@ export enum ReferralEventType {
   GET_REFERRAL = 'get-referral',
   CONNECT_GITHUB = 'connect-githhub',
   CONNECT_TWITTER = 'connect-twitter',
-  GET_TWEETS = 'get-tweets',
   GET_TWITTER_LINK = 'get-twitter-link',
+  GET_TWEETS = 'get-tweets',
+  CONFIRM_RETWEET = 'confirm-retweet',
 }
 
 export enum ServiceName {
@@ -286,6 +287,7 @@ export enum ValidatorErrorCode {
   TASK_ID_NOT_PRESENT = 42200024,
   USER_OAUTH_TOKEN_NOT_PRESENT = 42200026,
   USER_OAUTH_VERIFIER_NOT_PRESENT = 42200027,
+  TWEET_ID_NOT_PRESENT = 42200028,
 }
 
 /**

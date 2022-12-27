@@ -94,17 +94,34 @@ export class Twitter {
     }
   }
 
-  public async getTweets() {
+  public async getLatestTweets() {
     this.getTwitterApi(true);
     try {
-      const data = await this.twitterApi.v2.userTimeline(
-        '1390645543823712256',
+      // exclude replies seems to still return threads, so we need to filter those out by hand.
+      const data = (await this.twitterApi.v2.userTimeline(
+        env.TWITTER_USER_ID, // Apillon user ID
         {
           exclude: 'replies',
+          'tweet.fields': 'in_reply_to_user_id',
+          max_results: 30,
         },
+      )) as any;
+      const array = data?._realData?.data.filter(
+        (x) => !x?.in_reply_to_user_id,
       );
-      console.log('tweetsdata', data);
-      return data;
+      return array.slice(0, 4).map((x: any) => x.id);
+    } catch (err) {
+      this.throwErrorCode(
+        ReferralErrorCode.OAUTH_APP_DENIED_OR_SESSION_EXPIRED,
+        null,
+      );
+    }
+  }
+
+  public async getRetweets(tweetId: string) {
+    this.getTwitterApi(true);
+    try {
+      return await this.twitterApi.v2.tweetRetweetedBy(tweetId);
     } catch (err) {
       this.throwErrorCode(
         ReferralErrorCode.OAUTH_APP_DENIED_OR_SESSION_EXPIRED,
@@ -114,19 +131,15 @@ export class Twitter {
   }
 
   public getTwitterApi(bearer = false): TwitterApi {
-    if (!this.twitterApi) {
-      if (bearer) {
-        this.twitterApi = new TwitterApi(
-          'AAAAAAAAAAAAAAAAAAAAABv8kgEAAAAAQ126IMQPuyNOIjE4FCQXLLXiunw%3DF2Z18fBfTT5doRWBoBp3MMc0FmiCzfoO7ydJd9V7u1MreVw6Sj',
-        );
-      } else {
-        this.twitterApi = new TwitterApi({
-          appKey: env.TWITTER_CONSUMER_TOKEN,
-          appSecret: env.TWITTER_CONSUMER_SECRET,
-        });
-      }
-      return this.twitterApi;
+    if (bearer) {
+      this.twitterApi = new TwitterApi(env.TWITTER_BEARER_TOKEN);
+    } else {
+      this.twitterApi = new TwitterApi({
+        appKey: env.TWITTER_CONSUMER_TOKEN,
+        appSecret: env.TWITTER_CONSUMER_SECRET,
+      });
     }
+    return this.twitterApi;
   }
 
   private createTwitterClient(extras?: any): TwitterApi {
