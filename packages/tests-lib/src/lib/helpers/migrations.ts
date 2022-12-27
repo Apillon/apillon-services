@@ -163,7 +163,7 @@ async function initDevConsoleTestMigrations() {
   dbConsoleMigration = new Migration({
     conn: pool as unknown as MigrationConnection,
     tableName: 'migrations',
-    dir: './/src/migration-scripts/migrations',
+    dir: '../../modules/dev-console-api/src/migration-scripts/migrations',
     silent: env.APP_ENV === AppEnvironment.TEST,
   });
 
@@ -221,7 +221,7 @@ async function initDevConsoleTestSeed() {
   dbConsoleSeed = new Migration({
     conn: pool as unknown as MigrationConnection,
     tableName: 'seeds',
-    dir: './/src/migration-scripts/seeds',
+    dir: '../../modules/dev-console-api/src/migration-scripts/seeds',
     silent: env.APP_ENV === AppEnvironment.TEST,
   });
 

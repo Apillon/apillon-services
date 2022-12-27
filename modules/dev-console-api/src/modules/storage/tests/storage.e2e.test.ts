@@ -84,8 +84,9 @@ describe('Storage tests', () => {
 
       test('User should be able to upload file to s3 via signed URL', async () => {
         expect(testS3SignedUrl).toBeTruthy();
-        const file = fs.readFileSync('test/assets/test.txt');
-        const response = await request(testS3SignedUrl).put(``).send(file);
+        const response = await request(testS3SignedUrl)
+          .put(``)
+          .send(new Date().toString());
 
         expect(response.status).toBe(200);
       });
@@ -208,10 +209,9 @@ describe('Storage tests', () => {
         const file1_uuid = response.body.data.file_uuid;
         const file1_signedUrlForUpload = response.body.data.signedUrlForUpload;
 
-        const testFileContent = fs.readFileSync('test/assets/test.txt');
         response = await request(file1_signedUrlForUpload)
           .put(``)
-          .send(testFileContent);
+          .send(new Date().toString() + 'File 1');
         expect(response.status).toBe(200);
 
         response = await request(stage.http)
@@ -229,7 +229,7 @@ describe('Storage tests', () => {
 
         response = await request(file2_signedUrlForUpload)
           .put(``)
-          .send(testFileContent);
+          .send(new Date().toString() + 'File 2');
         expect(response.status).toBe(200);
         // trigger sync to IPFS
         response = await request(stage.http)
@@ -303,7 +303,7 @@ describe('Storage tests', () => {
         expect(response.body.data.file_uuid).toBeTruthy();
         const file_uuid = response.body.data.file_uuid;
 
-        const testFileContent = fs.readFileSync('test/assets/test.txt');
+        const testFileContent = new Date().toString();
         response = await request(response.body.data.signedUrlForUpload)
           .put(``)
           .send(testFileContent);

@@ -157,7 +157,7 @@ export class ApiKeyRole extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: 403,
-        errorMessage: 'Insufficient permissins',
+        errorMessage: 'Insufficient permissions to access this record',
       });
     }
   }
@@ -176,7 +176,7 @@ export class ApiKeyRole extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: 403,
-        errorMessage: 'Insufficient permissins',
+        errorMessage: 'Insufficient permissions to modify this record',
       });
     }
   }
@@ -201,34 +201,6 @@ export class ApiKeyRole extends AdvancedSQLModel {
     );
 
     return !!(data && data.length);
-  }
-
-  public async deleteApiKeyRole(
-    apiKey_id: number,
-    apiKeyRole: ApiKeyRoleBaseDto,
-  ): Promise<this> {
-    const data = await this.getContext().mysql.paramExecute(
-      `
-      DELETE
-      FROM \`${this.tableName}\`
-      WHERE apiKey_id = @apiKey_id
-      AND role_id = @role_id
-      AND service_uuid = @service_uuid
-      AND project_uuid = @project_uuid;
-      `,
-      {
-        apiKey_id: apiKey_id,
-        role_id: apiKeyRole.role_id,
-        service_uuid: apiKeyRole.service_uuid,
-        project_uuid: apiKeyRole.project_uuid,
-      },
-    );
-
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
   }
 
   public async getApiKeyRoles(apiKey_id: number) {
