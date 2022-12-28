@@ -6,6 +6,7 @@ import {
   Context,
   DefaultUserRole,
   DirectoryContentQueryFilter,
+  env,
   ForbiddenErrorCodes,
   getQueryParams,
   PopulateFrom,
@@ -210,7 +211,7 @@ export class Directory extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: 403,
-        errorMessage: 'Insufficient permissins',
+        errorMessage: 'Insufficient permissions to access this record',
       });
     }
   }
@@ -229,7 +230,7 @@ export class Directory extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: 403,
-        errorMessage: 'Insufficient permissins',
+        errorMessage: 'Insufficient permissions to modify this record',
       });
     }
   }
@@ -306,7 +307,7 @@ export class Directory extends AdvancedSQLModel {
     const qSelects = [
       {
         qSelect: `
-        SELECT 'directory' as type, d.id, d.name, d.CID, d.createTime, d.updateTime, NULL as contentType, NULL as size, d.parentDirectory_id as parentDirectoryId, NULL as file_uuid
+        SELECT 'directory' as type, d.id, d.name, d.CID, d.createTime, d.updateTime, NULL as contentType, NULL as size, d.parentDirectory_id as parentDirectoryId, NULL as file_uuid, NULL as link
         `,
         qFrom: `
         FROM \`${DbTables.DIRECTORY}\` d
@@ -319,7 +320,7 @@ export class Directory extends AdvancedSQLModel {
       },
       {
         qSelect: `
-        SELECT 'file' as type, d.id, d.name, d.CID, d.createTime, d.updateTime, d.contentType as contentType, d.size as size, d.directory_id as parentDirectoryId, d.file_uuid as file_uuid
+        SELECT 'file' as type, d.id, d.name, d.CID, d.createTime, d.updateTime, d.contentType as contentType, d.size as size, d.directory_id as parentDirectoryId, d.file_uuid as file_uuid, CONCAT("${env.STORAGE_IPFS_PROVIDER}", d.CID)
         `,
         qFrom: `
         FROM \`${DbTables.FILE}\` d

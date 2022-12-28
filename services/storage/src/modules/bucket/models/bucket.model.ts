@@ -249,7 +249,7 @@ export class Bucket extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: 403,
-        errorMessage: 'Insufficient permissions to modify this record',
+        errorMessage: 'Insufficient permissions to access this record',
       });
     }
   }
@@ -268,7 +268,7 @@ export class Bucket extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: 403,
-        errorMessage: 'Insufficient permissions to access to this record',
+        errorMessage: 'Insufficient permissions to modify this record',
       });
     }
   }

@@ -81,3 +81,20 @@ export async function createTestBucketDirectory(
 
   return directory;
 }
+
+export async function createTestBucketFile(
+  storageCtx: TestContext,
+  bucket: Bucket,
+) {
+  const f: File = await new File({}, storageCtx).fake().populate({
+    name: 'myTestFile.txt',
+    contentType: 'text/plain',
+    project_uuid: bucket.project_uuid,
+    bucket_id: bucket.id,
+    size: 500,
+  });
+
+  await f.insert();
+
+  return f;
+}

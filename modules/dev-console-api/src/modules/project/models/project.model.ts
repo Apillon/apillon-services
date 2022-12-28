@@ -138,7 +138,7 @@ export class Project extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: HttpStatus.FORBIDDEN,
-        errorMessage: 'Insufficient permissins',
+        errorMessage: 'Insufficient permissions to access this record',
       });
     }
   }
@@ -157,7 +157,7 @@ export class Project extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: HttpStatus.FORBIDDEN,
-        errorMessage: 'Insufficient permissins',
+        errorMessage: 'Insufficient permissions to modify this record',
       });
     }
   }

@@ -27,7 +27,7 @@ import { StorageService } from './storage.service';
 export class StorageController {
   constructor(private storageService: StorageService) {}
 
-  @Post(':bucket_uuid/file-upload')
+  @Post(':bucket_uuid/upload')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_EXECUTE,
     serviceType: AttachedServiceType.STORAGE,
@@ -71,28 +71,13 @@ export class StorageController {
     );
   }
 
-  //TODO - this endpoint and service function (storageService.syncFileToIPFS) should be deleted before production release
-  @Post(':bucket_uuid/file/:file_uuid/sync-to-ipfs')
-  @ApiKeyPermissions({
-    role: DefaultApiKeyRole.KEY_EXECUTE,
-    serviceType: AttachedServiceType.STORAGE,
-  })
-  @UseGuards(AuthGuard)
-  @HttpCode(200)
-  async syncFileToIPFS(
-    @Ctx() context: ApillonApiContext,
-    @Param('file_uuid') id: string,
-  ) {
-    return await this.storageService.syncFileToIPFS(context, id);
-  }
-
   @Get(':bucket_uuid/file/:id/detail')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_READ,
     serviceType: AttachedServiceType.STORAGE,
   })
   @UseGuards(AuthGuard)
-  async getFileDetailsByCID(
+  async getFileDetails(
     @Ctx() context: ApillonApiContext,
     @Param('bucket_uuid') bucket_uuid: string,
     @Param('id') id: string,

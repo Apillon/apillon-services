@@ -37,10 +37,7 @@ export async function setupTest(): Promise<Stage> {
 
     await app.init();
 
-    await app.listen(
-      env.DEV_CONSOLE_API_PORT_TEST,
-      env.DEV_CONSOLE_API_HOST_TEST,
-    );
+    await app.listen(env.APILLON_API_PORT_TEST, env.APILLON_API_HOST_TEST);
     http = app.getHttpServer();
 
     const stage: Stage = await setupTestContextAndSql();
