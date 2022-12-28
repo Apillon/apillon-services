@@ -28,9 +28,6 @@ import {
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const fs = require('fs');
-
 describe('Storage tests', () => {
   let stage: Stage;
 
@@ -145,7 +142,7 @@ describe('Storage tests', () => {
     describe('Single file tests', () => {
       test('Application (through Apillon API) should be able to recieve S3 signed URL, used to upload file to S3', async () => {
         const response = await request(stage.http)
-          .post(`/storage/${testBucket.bucket_uuid}/file-upload`)
+          .post(`/storage/${testBucket.bucket_uuid}/upload`)
           .send({
             fileName: 'myTestFile.txt',
             contentType: 'text/plain',
@@ -197,7 +194,7 @@ describe('Storage tests', () => {
 
       test('Application should recieve 422 error if missing required data', async () => {
         const response = await request(stage.http)
-          .post(`/storage/${testBucket.bucket_uuid}/file-upload`)
+          .post(`/storage/${testBucket.bucket_uuid}/upload`)
           .send({})
           .set(
             'Authorization',
@@ -223,7 +220,7 @@ describe('Storage tests', () => {
 
       test('Application should NOT be able to recieve S3 signed URL for ANOTHER USER project', async () => {
         const response = await request(stage.http)
-          .post(`/storage/${testBucket.bucket_uuid}/file-upload`)
+          .post(`/storage/${testBucket.bucket_uuid}/upload`)
           .send({
             fileName: 'myTestFile.txt',
             contentType: 'text/plain',
@@ -267,7 +264,6 @@ describe('Storage tests', () => {
         expect(response.body.data.fileStatus).toBe(FileStatus.PINNED_TO_CRUST);
         expect(response.body.data.file.file_uuid).toBe(testFile.file_uuid);
         expect(response.body.data.file.CID).toBe(testFile.CID);
-        expect(response.body.data.file.s3FileKey).toBeTruthy();
         expect(response.body.data.file.name).toBe(testFile.name);
         expect(response.body.data.file.size).toBeGreaterThan(0);
       });
@@ -286,7 +282,6 @@ describe('Storage tests', () => {
         expect(response.body.data.fileStatus).toBe(FileStatus.PINNED_TO_CRUST);
         expect(response.body.data.file.file_uuid).toBe(testFile.file_uuid);
         expect(response.body.data.file.CID).toBe(testFile.CID);
-        expect(response.body.data.file.s3FileKey).toBeTruthy();
         expect(response.body.data.file.name).toBe(testFile.name);
         expect(response.body.data.file.size).toBeGreaterThan(0);
       });

@@ -162,7 +162,6 @@ describe('Storage tests', () => {
         expect(response.body.data.fileStatus).toBe(FileStatus.PINNED_TO_CRUST);
         expect(response.body.data.file.file_uuid).toBe(testFile.file_uuid);
         expect(response.body.data.file.CID).toBe(testFile.CID);
-        expect(response.body.data.file.s3FileKey).toBeTruthy();
         expect(response.body.data.file.name).toBe(testFile.name);
         expect(response.body.data.file.size).toBeGreaterThan(0);
       });
@@ -176,7 +175,6 @@ describe('Storage tests', () => {
         expect(response.body.data.fileStatus).toBe(FileStatus.PINNED_TO_CRUST);
         expect(response.body.data.file.file_uuid).toBe(testFile.file_uuid);
         expect(response.body.data.file.CID).toBe(testFile.CID);
-        expect(response.body.data.file.s3FileKey).toBeTruthy();
         expect(response.body.data.file.name).toBe(testFile.name);
         expect(response.body.data.file.size).toBeGreaterThan(0);
       });

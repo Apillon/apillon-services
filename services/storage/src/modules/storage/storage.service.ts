@@ -1,7 +1,6 @@
 import {
   AppEnvironment,
   AWS_S3,
-  BucketQueryFilter,
   CreateS3SignedUrlForUploadDto,
   EndFileUploadSessionDto,
   env,
@@ -403,9 +402,6 @@ export class StorageService {
     fileStatus = FileStatus.UPLOADED_TO_IPFS;
     //File exists on IPFS and probably on CRUST- get status from CRUST
     if (file.CID) {
-      /*crustOrderStatus = await CrustService.getOrderStatus({
-        cid: file.CID,
-      });*/
       fileStatus = FileStatus.PINNED_TO_CRUST;
       file.downloadLink = env.STORAGE_IPFS_PROVIDER + file.CID;
     }

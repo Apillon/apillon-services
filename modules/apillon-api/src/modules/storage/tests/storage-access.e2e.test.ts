@@ -22,9 +22,6 @@ import {
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const fs = require('fs');
-
 describe('Storage access (api keys, api keys permissions, ...) tests', () => {
   let stage: Stage;
 

@@ -73,7 +73,6 @@ export class File extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
     ],
     validators: [],
   })
@@ -137,7 +136,6 @@ export class File extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
     ],
     validators: [
       {
@@ -160,7 +158,6 @@ export class File extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
     ],
     validators: [
       {
@@ -183,7 +180,6 @@ export class File extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
     ],
     validators: [],
   })
