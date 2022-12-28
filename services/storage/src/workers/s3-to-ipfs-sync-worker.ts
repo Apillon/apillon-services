@@ -31,7 +31,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
     return [];
   }
   public async runExecutor(data: any): Promise<any> {
-    console.info('RUN EXECUTOR. data: ', data);
+    console.info('RUN EXECUTOR (SyncToIPFSWorker). data: ', data);
     const session_uuid = data?.session_uuid;
     let files = [];
     let bucket: Bucket = undefined;
