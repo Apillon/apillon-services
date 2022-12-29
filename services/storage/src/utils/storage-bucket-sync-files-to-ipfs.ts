@@ -54,7 +54,7 @@ export async function storageBucketSyncFilesToIPFS(
 
   //loop through files to sync each one of it to IPFS
   for (const file of files.filter(
-    (x) => x.fileStatus != FileUploadRequestFileStatus.PINNED_TO_CRUST,
+    (x) => x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED,
   )) {
     if (bucket.uploadedSize >= maxBucketSize) {
       //max size was reached - mark files that will not be transfered to IPFS
@@ -63,6 +63,7 @@ export async function storageBucketSyncFilesToIPFS(
       //delete file from s3
       const s3Client: AWS_S3 = new AWS_S3();
       await s3Client.remove(env.STORAGE_AWS_IPFS_QUEUE_BUCKET, file.s3FileKey);
+      continue;
     }
 
     let ipfsRes = undefined;
@@ -162,7 +163,7 @@ export async function storageBucketSyncFilesToIPFS(
       throw err;
     }
 
-    //now the file has CID, exists in IPFS node and is pinned to CRUST
+    //now the file has CID, exists in IPFS node and in bucket
     //update file-upload-request status
     file.fileStatus = FileUploadRequestFileStatus.UPLOAD_COMPLETED;
     await file.update();
@@ -175,7 +176,8 @@ export async function storageBucketSyncFilesToIPFS(
     const s3Client: AWS_S3 = new AWS_S3();
     await s3Client.remove(env.STORAGE_AWS_IPFS_QUEUE_BUCKET, file.s3FileKey);
 
-    //Check if bucket max size reached. Write message to monitoring - all following files will not be transfered to IPFS. Their status will update to error and they will be deleted from S3.
+    //Check if bucket max size reached. Write message to monitoring -
+    //all following files will not be transfered to IPFS. Their status will update to error and they will be deleted from S3.
     if (bucket.size >= maxBucketSize) {
       await new Lmas().writeLog({
         context: context,

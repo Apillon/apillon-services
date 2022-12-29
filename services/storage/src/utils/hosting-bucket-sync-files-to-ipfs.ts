@@ -100,14 +100,6 @@ export async function hostingBucketSyncFilesToIPFS(
     throw err;
   }
 
-  //Place storage order for parent CID to CRUST
-  await pinFileToCRUST(
-    context,
-    bucket.bucket_uuid,
-    ipfsRes.parentDirCID,
-    ipfsRes.size,
-  );
-
   const conn = await context.mysql.start();
 
   try {
@@ -147,9 +139,9 @@ export async function hostingBucketSyncFilesToIPFS(
         })
         .insert(SerializeFor.INSERT_DB, conn);
 
-      //now the file has CID, exists in IPFS node and is pinned to CRUST
+      //now the file has CID and exists in IPFS node
       //update file-upload-request status
-      file.fileStatus = FileUploadRequestFileStatus.UPLOADED_TO_IPFS;
+      file.fileStatus = FileUploadRequestFileStatus.UPLOAD_COMPLETED;
       await file.update(SerializeFor.UPDATE_DB, conn);
 
       bucket.size += file.size;
@@ -198,6 +190,14 @@ export async function hostingBucketSyncFilesToIPFS(
     await context.mysql.rollback(conn);
     throw err;
   }
+
+  //Place storage order for parent CID to CRUST
+  await pinFileToCRUST(
+    context,
+    bucket.bucket_uuid,
+    ipfsRes.parentDirCID,
+    ipfsRes.size,
+  );
 
   return transferedFiles;
 }
