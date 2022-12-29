@@ -94,7 +94,7 @@ export class ValidationException extends HttpException {
   public constructor(model: Model, errorCodes?: any) {
     const validationErrors = model.collectErrors().map((x) => {
       return {
-        statusCode: x.code,
+        code: x.code,
         property: x.path[0],
         message: errorCodes
           ? { ...errorCodes, ...ValidatorErrorCode }[x.code]
@@ -104,7 +104,7 @@ export class ValidationException extends HttpException {
 
     super(
       {
-        statusCode: 422,
+        code: 422,
         errors: validationErrors,
         message: 'Validation error', // workaround for errors in production
       },

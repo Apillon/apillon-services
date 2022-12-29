@@ -40,6 +40,13 @@ export class AuthenticateApiKeyMiddleware implements NestMiddleware {
 
     if (apiKey && apiKeySecret)
       await context.authenticate(apiKey, apiKeySecret);
+    else {
+      throw new CodeException({
+        code: BadRequestErrorCode.INVALID_AUTHORIZATION_HEADER,
+        status: HttpStatus.BAD_REQUEST,
+        errorMessage: 'Malformed Authorization header',
+      });
+    }
 
     next();
   }
