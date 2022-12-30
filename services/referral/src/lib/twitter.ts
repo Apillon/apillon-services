@@ -152,15 +152,12 @@ export class Twitter {
 
   private async getTwitterAccountDetails(loggedTokens: LoginResult) {
     try {
-      const { data } = await loggedTokens.client.v2.me({
-        'user.fields': ['profile_image_url'],
-      });
+      const { data } = await loggedTokens.client.v2.me();
       return {
         id: data.id,
         id_str: data.id.toString(),
         name: data.name,
         userName: data.username,
-        image: data.profile_image_url,
       };
     } catch (err) {
       this.throwErrorCode(

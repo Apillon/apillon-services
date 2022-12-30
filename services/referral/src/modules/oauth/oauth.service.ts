@@ -39,7 +39,7 @@ export class OauthService {
   /**
    * Link the twitter account to the user (Auth user). The oAuth credentials must received be from the authenticate (/oauth/twitter/authenticate).
    */
-  public async linkTwitter(
+  static async linkTwitter(
     event: { body: TwitterOauthDto },
     context: ServiceContext,
   ) {
@@ -50,10 +50,15 @@ export class OauthService {
       TaskType.TWITTER_CONNECT,
     );
 
-    // check if unlinked before linking
     const player = await new Player({}, context).populateByUserUuid(
       context.user.user_uuid,
     );
+    if (!player.exists()) {
+      throw new ReferralCodeException({
+        code: ReferralErrorCode.PLAYER_DOES_NOT_EXISTS,
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
     const pair = await new OauthTokenPair({}, context).populateByToken(
       oAuthData.oauth_token,
     );
@@ -99,13 +104,14 @@ export class OauthService {
     if (task.exists()) {
       await task.confirmTask(player.id);
     }
+    await player.populateSubmodels();
     return player.serialize(SerializeFor.PROFILE);
   }
 
   /**
    * Link the Github account to the user (Auth user).
    */
-  public async linkGithub(
+  static async linkGithub(
     event: { body: GithubOauthDto },
     context: ServiceContext,
   ): Promise<any> {
@@ -114,8 +120,8 @@ export class OauthService {
     );
     if (!player.exists()) {
       throw new ReferralCodeException({
-        code: ReferralErrorCode.DEFAULT_BAD_REQUEST_EROR,
-        status: HttpStatus.BAD_REQUEST,
+        code: ReferralErrorCode.PLAYER_DOES_NOT_EXISTS,
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
       });
     }
 
@@ -127,6 +133,12 @@ export class OauthService {
     // FE gets the code by calling https://github.com/login/oauth/authorize?client_id=#
     const res = await axios.post(
       `https://github.com/login/oauth/access_token?client_id=${env.GITHUB_CLIENT_ID}&client_secret=${env.GITHUB_CLIENT_SECRET}&code=${event.body.code}`,
+      {},
+      {
+        headers: {
+          Accept: 'application/json',
+        },
+      },
     );
 
     if (res?.data?.access_token) {
@@ -148,9 +160,8 @@ export class OauthService {
         await player.update();
         // Complete github task if present
         if (task.exists()) {
-          await task.confirmTask(player.id);
+          await task.confirmTask(player.id, { id: player.github_id });
         }
-        await task.confirmTask(player.id);
         // If player was referred, reward the referrer
         if (player.referrer_id) {
           const referrer = await new Player({}, context).populateById(
@@ -162,17 +173,18 @@ export class OauthService {
         }
       } else {
         throw new ReferralCodeException({
-          status: 500,
-          code: ReferralErrorCode.DEFAULT_BAD_REQUEST_EROR, // getting github user
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          code: ReferralErrorCode.OAUTH_APP_DENIED_OR_SESSION_EXPIRED, // getting github user
         });
       }
     } else {
       throw await new ReferralCodeException({
-        status: 500,
-        code: ReferralErrorCode.DEFAULT_BAD_REQUEST_EROR, // getting access token
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        code: ReferralErrorCode.OAUTH_APP_DENIED_OR_SESSION_EXPIRED, // getting access token
       });
     }
 
+    await player.populateSubmodels();
     return player.serialize(SerializeFor.PROFILE);
   }
 }

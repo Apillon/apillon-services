@@ -4,6 +4,8 @@ import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { ConfirmRetweetDto } from './dtos/confirm-retweet.dto';
 import { CreateReferralDto } from './dtos/create-referral.dto';
+import { GithubOauthDto } from './dtos/github-oauth.dto';
+import { TwitterOauthDto } from './dtos/twitter-oauth.dto';
 
 export class ReferralMicroservice extends BaseService {
   lambdaFunctionName =
@@ -35,6 +37,22 @@ export class ReferralMicroservice extends BaseService {
     const data = {
       eventName: ReferralEventType.GET_REFERRAL,
       body: {},
+    };
+    return await this.callService(data);
+  }
+
+  public async linkGithub(params: GithubOauthDto) {
+    const data = {
+      eventName: ReferralEventType.CONNECT_GITHUB,
+      body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async linkTwitter(params: TwitterOauthDto) {
+    const data = {
+      eventName: ReferralEventType.CONNECT_TWITTER,
+      body: params.serialize(),
     };
     return await this.callService(data);
   }

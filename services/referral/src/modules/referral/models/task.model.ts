@@ -18,7 +18,11 @@ import {
 } from '../../../config/types';
 import { ServiceContext } from '../../../context';
 import { Realization } from './realization.model';
-import { ReferralValidationException } from '../../../lib/exceptions';
+import {
+  ReferralCodeException,
+  ReferralValidationException,
+} from '../../../lib/exceptions';
+import { HttpStatus } from '@nestjs/common';
 import { faker } from '@faker-js/faker';
 
 export enum TaskType {
@@ -246,18 +250,32 @@ export class Task extends AdvancedSQLModel {
     return selectAndCountQuery(context.mysql, sqlQuery, params, 't.id');
   }
 
-  public async confirmTask(player_id: number, data?: any) {
+  public async confirmTask(
+    player_id: number,
+    data?: any,
+    filterByData = false,
+  ) {
     if (!this.exists()) {
-      //
+      throw new ReferralCodeException({
+        code: ReferralErrorCode.TASK_DOES_NOT_EXISTS,
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+      });
     }
 
     const existingR = await new Realization(
       {},
       this.getContext(),
-    ).populateByTaskIdAndPlayerId(this.id, player_id, data);
+    ).populateByTaskIdAndPlayerId(
+      this.id,
+      player_id,
+      filterByData ? data : null,
+    );
 
     if (existingR.length >= this.maxCompleted) {
-      // already completed
+      throw new ReferralCodeException({
+        code: ReferralErrorCode.TASK_ALREADY_COMPLETED,
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+      });
     }
 
     const realization = new Realization({}, this.getContext()).populate({

@@ -178,6 +178,14 @@ export class Player extends AdvancedSQLModel {
   })
   public tasks: any;
 
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE],
+    serializable: [SerializeFor.ADMIN, SerializeFor.PROFILE],
+    validators: [],
+  })
+  public balance: number;
+
   /**
    * Populates model fields by loading the document with the provided user id from the database.
    * @param user_id Referr's user ID.
@@ -203,10 +211,19 @@ export class Player extends AdvancedSQLModel {
     );
 
     if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
+      this.populate(data[0], PopulateFrom.DB);
+      return this;
     } else {
       return this.reset();
     }
+  }
+
+  public async populateSubmodels() {
+    if (this.exists()) {
+      await this.populateTasks();
+      await this.getBalance();
+    }
+    return this;
   }
 
   /**
@@ -302,12 +319,32 @@ export class Player extends AdvancedSQLModel {
     return data;
   }
 
-  public async confirmRefer(player_id: number) {
+  public async getBalance() {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT 
+        player_id,
+        balance
+      FROM \`${DbTables.BALANCE}\` b
+      WHERE b.player_id = @player_id
+      `,
+      { player_id: this.id },
+    );
+
+    if (data.length) {
+      this.balance = data[0].balance;
+    } else {
+      this.balance = 0;
+    }
+    return this.balance;
+  }
+
+  public async confirmRefer(referred_id: number) {
     const task = await new Task({}, this.getContext()).populateByType(
       TaskType.REFERRAL,
     );
 
-    await task.confirmTask(player_id);
+    await task.confirmTask(this.id, { referred_id }, true);
   }
 
   public async generateCode() {

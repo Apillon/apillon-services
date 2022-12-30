@@ -3,6 +3,8 @@ import {
   ConfirmRetweetDto,
   CreateReferralDto,
   DefaultUserRole,
+  GithubOauthDto,
+  TwitterOauthDto,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
@@ -30,6 +32,28 @@ export class ReferralController {
   @UseGuards(AuthGuard)
   async getReferral(@Ctx() context: DevConsoleApiContext) {
     return await this.referralService.getReferral(context);
+  }
+
+  @Post('github/link')
+  @Permissions({ role: DefaultUserRole.USER })
+  @UseGuards(AuthGuard, ValidationGuard)
+  @Validation({ dto: GithubOauthDto })
+  async linkGithub(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: GithubOauthDto,
+  ) {
+    return await this.referralService.linkGithub(context, body);
+  }
+
+  @Post('twitter/link')
+  @Permissions({ role: DefaultUserRole.USER })
+  @UseGuards(AuthGuard, ValidationGuard)
+  @Validation({ dto: TwitterOauthDto })
+  async linkTwitter(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: TwitterOauthDto,
+  ) {
+    return await this.referralService.linkTwitter(context, body);
   }
 
   @Get('twitter/authenticate')

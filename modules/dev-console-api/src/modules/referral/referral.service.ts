@@ -3,6 +3,8 @@ import {
   ReferralMicroservice,
   CreateReferralDto,
   ConfirmRetweetDto,
+  GithubOauthDto,
+  TwitterOauthDto,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 
@@ -14,6 +16,14 @@ export class ReferralService {
 
   async getReferral(context: DevConsoleApiContext) {
     return (await new ReferralMicroservice(context).getReferral()).data;
+  }
+
+  async linkGithub(context: DevConsoleApiContext, body: GithubOauthDto) {
+    return (await new ReferralMicroservice(context).linkGithub(body)).data;
+  }
+
+  async linkTwitter(context: DevConsoleApiContext, body: TwitterOauthDto) {
+    return (await new ReferralMicroservice(context).linkTwitter(body)).data;
   }
 
   async getTwitterAuthenticationLink(context: DevConsoleApiContext) {
