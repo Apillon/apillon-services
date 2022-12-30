@@ -155,7 +155,7 @@ async function initDevConsoleTestMigrations() {
   };
 
   if (!/(test|testing)/i.test(poolConfig.database)) {
-    throw new Error('!!! NOT TEST DATABASE? !!!');
+    throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
   }
 
   const pool = createPool(poolConfig);
@@ -184,7 +184,7 @@ async function initAmsTestMigrations() {
   };
 
   if (!/(test|testing)/i.test(poolConfig.database)) {
-    throw new Error('!!! NOT TEST DATABASE? !!!');
+    throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
   }
 
   const pool = createPool(poolConfig);
@@ -213,7 +213,7 @@ async function initDevConsoleTestSeed() {
   };
 
   if (!/(test|testing)/i.test(poolConfig.database)) {
-    throw new Error('!!! NOT TEST DATABASE? !!!');
+    throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
   }
 
   const pool = createPool(poolConfig);
@@ -242,7 +242,7 @@ async function initStorageTestMigrations() {
   };
 
   if (!/(test|testing)/i.test(poolConfig.database)) {
-    throw new Error('!!! NOT TEST DATABASE? !!!');
+    throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
   }
 
   const pool = createPool(poolConfig);
@@ -271,7 +271,7 @@ async function initConfigTestMigrations() {
   };
 
   if (!/(test|testing)/i.test(poolConfig.database)) {
-    throw new Error('!!! NOT TEST DATABASE? !!!');
+    throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
   }
 
   const pool = createPool(poolConfig);
@@ -300,7 +300,7 @@ async function initAmsTestSeed() {
   };
 
   if (!/(test|testing)/i.test(poolConfig.database)) {
-    throw new Error('!!! NOT TEST DATABASE? !!!');
+    throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
   }
 
   const pool = createPool(poolConfig);
@@ -329,7 +329,7 @@ async function initConfigTestSeed() {
   };
 
   if (!/(test|testing)/i.test(poolConfig.database)) {
-    throw new Error('!!! NOT TEST DATABASE? !!!');
+    throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
   }
 
   const pool = createPool(poolConfig);

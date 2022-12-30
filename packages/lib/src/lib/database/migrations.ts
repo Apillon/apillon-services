@@ -158,7 +158,7 @@ async function initMigrations(
     env.APP_ENV === AppEnvironment.TEST &&
     !/(test|testing)/i.test(poolConfig.database)
   ) {
-    throw new Error('!!! NOT TEST DATABASE? !!!');
+    throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
   }
 
   const pool = createPool(poolConfig);
