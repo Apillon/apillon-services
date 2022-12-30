@@ -9,7 +9,7 @@ echo $S3_CONFIG
 aws s3 cp ${S3_CONFIG} ./.env
 cat ./.env
 
-APP_ENV="testing"
+APP_ENV="test"
 
 
 # test turbo
