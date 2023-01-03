@@ -199,12 +199,12 @@ async function initAuthApiTestSeed() {
 
   const pool = createPool(poolAuthApi);
 
-  dbAuthApiMigrationSeed = new Migration({
-    conn: pool as unknown as MigrationConnection,
-    tableName: 'seeds',
-    dir: '../../services/config/src/migration-scripts/seeds',
-    silent: env.APP_ENV === AppEnvironment.TEST,
-  });
+  //   dbAuthApiMigrationSeed = new Migration({
+  //     conn: pool as unknown as MigrationConnection,
+  //     tableName: 'seeds',
+  //     dir: '../../services/config/src/migration-scripts/seeds',
+  //     silent: env.APP_ENV === AppEnvironment.TEST,
+  //   });
 
-  await dbAuthApiMigrationSeed.initialize();
+  //   await dbAuthApiMigrationSeed.initialize();
 }
