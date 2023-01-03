@@ -1,10 +1,11 @@
 import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
-import { DefaultUserRole, generatePassword } from '@apillon/lib';
+import { DefaultUserRole, generatePassword, SerializeFor } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
 import { ProjectUser } from '@apillon/dev-console-api/src/modules/project/models/project-user.model';
 import { Project } from '@apillon/dev-console-api/src/modules/project/models/project.model';
 import { TestContext } from './context';
 import { TestUser } from './user';
+import * as bcrypt from 'bcryptjs';
 
 export async function createTestProject(
   user: TestUser,
@@ -36,15 +37,18 @@ export async function createTestProject(
 export async function createTestApiKey(
   amsContext: TestContext,
   project_uuid: string,
-) {
+): Promise<ApiKey> {
   const apiKeySecret = generatePassword(12);
+
   const key: ApiKey = new ApiKey({}, amsContext).populate({
     apiKey: uuidV4(),
-    apiKeySecret: apiKeySecret,
+    apiKeySecret: bcrypt.hashSync(apiKeySecret),
     project_uuid: project_uuid,
   });
 
   await key.insert();
+
+  key.apiKeySecret = apiKeySecret;
 
   return key;
 }

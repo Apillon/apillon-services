@@ -109,6 +109,20 @@ export class Project extends AdvancedSQLModel {
   })
   public imageFile_id: number;
 
+  /*******************************************
+   * INFO properties
+   ***************************************/
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+  })
+  public myRole_id_onProject: number;
+
+  /*******************************************
+   * Methods
+   ********************************************/
+
   public canAccess(context: DevConsoleApiContext) {
     if (
       !context.hasRoleOnProject(
@@ -124,7 +138,7 @@ export class Project extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: HttpStatus.FORBIDDEN,
-        errorMessage: 'Insufficient permissins',
+        errorMessage: 'Insufficient permissions to access this record',
       });
     }
   }
@@ -143,7 +157,7 @@ export class Project extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: HttpStatus.FORBIDDEN,
-        errorMessage: 'Insufficient permissins',
+        errorMessage: 'Insufficient permissions to modify this record',
       });
     }
   }
@@ -228,5 +242,12 @@ export class Project extends AdvancedSQLModel {
     );
 
     return data[0].numOfUsersOnProject;
+  }
+
+  public async populateMyRoleOnProject(context: DevConsoleApiContext) {
+    const roleOnProject = context.user.authUser.authUserRoles.find(
+      (x) => x.project_uuid == this.project_uuid,
+    );
+    this.myRole_id_onProject = roleOnProject?.role.id;
   }
 }

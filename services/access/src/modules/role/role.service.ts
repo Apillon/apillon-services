@@ -90,22 +90,7 @@ export class RoleService {
 
     key.canModify(context);
 
-    const keyRole: ApiKeyRole = new ApiKeyRole(
-      { apiKey_id: event.apiKey_id, ...event.body },
-      context,
-    );
-
-    try {
-      await keyRole.validate();
-    } catch (err) {
-      await keyRole.handle(err);
-      if (!keyRole.isValid()) throw new AmsValidationException(keyRole);
-    }
-
-    //Check if role already assigned
-    if (!(await keyRole.hasRole(keyRole.role_id))) await keyRole.insert();
-
-    return keyRole.serialize(SerializeFor.SERVICE);
+    return await key.assignRole(event.body);
   }
 
   static async removeApiKeyRole(
@@ -128,12 +113,7 @@ export class RoleService {
 
     key.canModify(context);
 
-    await new ApiKeyRole({}, context).deleteApiKeyRole(
-      event.apiKey_id,
-      event.body,
-    );
-
-    return true;
+    return await key.removeRole(event.body);
   }
 
   static async getApiKeyRoles(event: { apiKey_id: number }, context) {

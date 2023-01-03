@@ -1,7 +1,6 @@
 import { ServiceContext } from '../context';
 import { BucketWebhook } from '../modules/bucket/models/bucket-webhook.model';
 import { Bucket } from '../modules/bucket/models/bucket.model';
-import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
 import { File } from '../modules/storage/models/file.model';
 import axios from 'axios';
 import { BucketWebhookAuthMethod } from '../config/types';

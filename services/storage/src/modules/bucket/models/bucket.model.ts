@@ -12,6 +12,8 @@ import {
   PoolConnection,
   PopulateFrom,
   prop,
+  QuotaCode,
+  Scs,
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
@@ -247,7 +249,7 @@ export class Bucket extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: 403,
-        errorMessage: 'Insufficient permissions to modify this record',
+        errorMessage: 'Insufficient permissions to access this record',
       });
     }
   }
@@ -266,7 +268,7 @@ export class Bucket extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: 403,
-        errorMessage: 'Insufficient permissions to access to this record',
+        errorMessage: 'Insufficient permissions to modify this record',
       });
     }
   }
@@ -321,7 +323,25 @@ export class Bucket extends AdvancedSQLModel {
       `,
     };
 
-    return selectAndCountQuery(context.mysql, sqlQuery, params, 'b.id');
+    const list = await selectAndCountQuery(
+      context.mysql,
+      sqlQuery,
+      params,
+      'b.id',
+    );
+
+    for (const b of list.items) {
+      const maxBucketSizeQuota = await new Scs(context).getQuota({
+        quota_id: QuotaCode.MAX_BUCKET_SIZE,
+        project_uuid: filter.project_uuid,
+        object_uuid: b.bucket_uuid,
+      });
+
+      if (maxBucketSizeQuota?.value)
+        b.maxSize = Number(maxBucketSizeQuota?.value) * 1073741824;
+    }
+
+    return list;
   }
 
   public async clearBucketContent(context: Context, conn: PoolConnection) {

@@ -28,8 +28,9 @@ export class ApiKeyService {
 
     if (!apiKey.exists() || !apiKey.verifyApiKeySecret(event.apiKeySecret)) {
       throw await new AmsCodeException({
-        status: 403,
+        status: 401,
         code: AmsErrorCode.INVALID_API_KEY,
+        errorMessage: 'Invalid API key',
       }).writeToMonitor({
         user_uuid: context?.user?.user_uuid,
       });
