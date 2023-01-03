@@ -31,7 +31,7 @@ export class ResponseInterceptor implements NestInterceptor {
         const isAdmin = true; //req.context.isAuthenticated() && (await req.context.hasRole(DefaultUserRole.SUPER_ADMIN));
 
         const response: ApiResponse = {
-          id: req.context.requestId,
+          id: req?.context?.requestId,
           status: res.statusCode,
         };
 

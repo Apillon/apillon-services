@@ -20,7 +20,7 @@ export class ExceptionsFilter implements ExceptionFilter {
 
     if (error instanceof CodeException) {
       res.status(error.getStatus()).json({
-        id: request.context.requestId,
+        id: request?.context?.requestId,
         status: error.getStatus(),
         code: error.getResponse()['code'],
         message: error.message,
@@ -30,7 +30,7 @@ export class ExceptionsFilter implements ExceptionFilter {
       });
     } else if (error instanceof ValidationException) {
       res.status(error.getStatus()).json({
-        id: request.context.requestId,
+        id: request?.context?.requestId,
         status: error.getStatus(),
         model: error.modelName,
         errors: error.errors,
@@ -41,7 +41,7 @@ export class ExceptionsFilter implements ExceptionFilter {
       if (error.status == 422) {
         //Validation errors recieved from microservice - handled in @apillon/lib base-service
         res.status(HttpStatus.UNPROCESSABLE_ENTITY).json({
-          id: request.context.requestId,
+          id: request?.context?.requestId,
           code: error.code || SystemErrorCode.MICROSERVICE_SYSTEM_ERROR,
           message: error.message,
           errors: error.errors,
@@ -50,7 +50,7 @@ export class ExceptionsFilter implements ExceptionFilter {
         });
       } else {
         res.status(error.status || HttpStatus.INTERNAL_SERVER_ERROR).json({
-          id: request.context.requestId,
+          id: request?.context?.requestId,
           code: error.code || SystemErrorCode.UNHANDLED_SYSTEM_ERROR,
           message: error.message,
           path: request.url,
