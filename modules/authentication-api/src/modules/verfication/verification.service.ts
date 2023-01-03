@@ -43,7 +43,7 @@ export class VerificationService {
       await new Lmas().writeLog({
         context: context,
         logType: LogType.ERROR,
-        message: 'VERIFICATION FAILED:' + error,
+        message: 'VERIFICATION FAILED - ' + error,
         location: 'AUTHENTICATION-API/verification/verifyIdentity',
         service: ServiceName.AUTHENTICATION_API,
       });

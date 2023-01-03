@@ -20,7 +20,7 @@ build:
 install:
 	npm install
 
-reinstall: clean install
+rebuild: clean install build
 
 clean:
 	echo ${NC}Removing root${BGreen}node_modules${NC} ; \

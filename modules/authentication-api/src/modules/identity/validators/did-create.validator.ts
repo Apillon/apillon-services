@@ -1,5 +1,9 @@
 import { ModelBase } from '@apillon/lib';
 
+// NOTE:
+// The following checks could be performed in a
+// more elegant style, but we want to be excplicit
+
 /**
  * Validate did create payload
  * @returns boolean

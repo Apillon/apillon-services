@@ -76,6 +76,7 @@ export enum IdentityEventType {
  * Kilt types
  ************************************************************/
 export interface Presentation {
+  // TODO: REVIREW
   claim: any;
   legitimations: any;
   claimHashes: any;
