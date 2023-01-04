@@ -15,4 +15,5 @@ APP_ENV="test"
 # test turbo
 npm run build
 
-npm run test
+# npm run test
+npx turbo run test --continue --concurrency=1 ${RUN_PARAMS}
