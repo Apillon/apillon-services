@@ -54,6 +54,9 @@ export class IdentityService {
       email,
     );
 
+    console.error(identity.email);
+    console.error(identity.state);
+
     if (identity.exists()) {
       // If email was already attested -> deny process
       if (identity.state == IdentityState.ATTESTED) {

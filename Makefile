@@ -14,6 +14,9 @@ PACKAGES = lib modules-lib tests-lib workers-lib
 run-dev:
 	npm run dev;
 
+run-test-server:
+	npm run test-server;
+
 build:
 	npm run build;
 
