@@ -19,11 +19,7 @@ import * as request from 'supertest';
 import { v4 as uuidV4 } from 'uuid';
 import { releaseStage, Stage } from '@apillon/tests-lib';
 import { Project } from '../../project/models/project.model';
-import { AppModule } from '../../../app.module';
 import { setupTest } from '../../../../test/helpers/setup';
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const fs = require('fs');
 
 describe('Storage tests', () => {
   let stage: Stage;

@@ -13,8 +13,6 @@ import { Project } from '../../project/models/project.model';
 import { Service } from '../../services/models/service.model';
 import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
 import { ApiKeyRole } from '@apillon/access/src/modules/role/models/api-key-role.model';
-import { AppModule } from '../../../app.module';
-import { env } from '@apillon/lib';
 import { setupTest } from '../../../../test/helpers/setup';
 
 describe('API key tests', () => {
