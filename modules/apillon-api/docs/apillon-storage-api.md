@@ -1,12 +1,14 @@
 # Apillon STORAGE API
 
+It is highly recomended, to first read [Apillon API](apillon-api.md) general docs, as they explain basic infrastructure, authentication and request-response system.
+
 Apillon integrates multiple Polkadot parachains and offers them in unified way, as modules that can be used in developer console and through Apillon APIs.\
 One of those parachains is [CRUST](https://crust.network/). \
 Apillon STORAGE is WEB3 oriented storage, based on AWS S3(as cache to optimize upload of large files), [IPFS](https://ipfs.tech/) and CRUST.
 
 ## Storage bucket
 
-Bucket is a virtual container which holds directories and files in hiearhical structure. Each directory can contain multiple subdirectories and multiple files, and so on and so forth for each subdirectory.
+Bucket is a virtual container which holds directories and files in hiearhical structure. Each directory can contain multiple subdirectories and multiple files, and so on and so forth for each subdirectory.\
 To use Apillon STORAGE APIs, the developer must first create a bucket in Apillon developer console.
 
 ## File upload process through Apillon storage API
@@ -24,9 +26,9 @@ To use Apillon STORAGE APIs, the developer must first create a bucket in Apillon
 
 #### URL parameters
 
-| Name         | Description                                                  |
-| ------------ | ------------------------------------------------------------ |
-| :bucket_uuid | Unique key of bucket. Key is displayed in developer console. |
+| Name        | Description                                                  |
+| ----------- | ------------------------------------------------------------ |
+| bucket_uuid | Unique key of bucket. Key is displayed in developer console. |
 
 #### Body fields
 
@@ -35,6 +37,9 @@ To use Apillon STORAGE APIs, the developer must first create a bucket in Apillon
 | fileName    | A `string` representing full name (name and extension) of file, that you want to upload                                            | `true`   |
 | contentType | A `string` representing file [MIME type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types) | `true`   |
 | path        | A `string` representing path to file. Path should not contain file name.                                                           | `false`  |
+
+`path` field, can be used, to place file in virtual directories inside bucket. If directories does not yet exists, they will be automatically generated. \
+For example `images/icons`, creates `images` directory in bucket and `icons` directory inside it. File will then be created in `icons` directory.
 
 #### Possible errors
 
@@ -48,11 +53,11 @@ To use Apillon STORAGE APIs, the developer must first create a bucket in Apillon
 
 #### Response fields
 
-| Field               | Description                                                                     |
-| ------------------- | ------------------------------------------------------------------------------- |
-| signedUrlForUpload  | `string`AWS S3 signed URL for file upload                                       |
-| file_uuid           | `string`File uniqie identifier. This UUID can be used to query file status, ... |
-| fileUploadRequestId | `integer`Internal ID of file upload request.                                    |
+| Field               | Description                                                                      |
+| ------------------- | -------------------------------------------------------------------------------- |
+| signedUrlForUpload  | `string` AWS S3 signed URL for file upload                                       |
+| file_uuid           | `string` File uniqie identifier. This UUID can be used to query file status, ... |
+| fileUploadRequestId | `integer` Apillon internal ID of file upload request.                            |
 
 #### Request cURL example
 
