@@ -187,15 +187,20 @@ export class UserService {
         password,
       });
 
+      await context.mysql.commit(conn);
+
       const referralBody = new CreateReferralDto(
-        { refCode: data?.refCode, user_uuid: user.user_uuid },
+        {
+          refCode: data?.refCode,
+        },
         context,
       );
 
       // Create referral player - is inactive until accepts terms
-      await new ReferralMicroservice(context).createReferral(referralBody);
-
-      await context.mysql.commit(conn);
+      await new ReferralMicroservice({
+        ...context,
+        user,
+      } as any).createReferral(referralBody);
 
       //User has been registered - check if pending invitations for project exists
       //This is done outside transaction as it is not crucial operation - admin is able to reinvite user to project

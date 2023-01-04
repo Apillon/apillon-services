@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import {
   ConfirmRetweetDto,
   CreateReferralDto,
@@ -59,8 +59,14 @@ export class ReferralController {
   @Get('twitter/authenticate')
   @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard)
-  async getTwitterAuthenticationLink(@Ctx() context: DevConsoleApiContext) {
-    return await this.referralService.getTwitterAuthenticationLink(context);
+  async getTwitterAuthenticationLink(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('url') url: string,
+  ) {
+    return await this.referralService.getTwitterAuthenticationLink(
+      context,
+      url,
+    );
   }
 
   @Get('twitter/tweets')

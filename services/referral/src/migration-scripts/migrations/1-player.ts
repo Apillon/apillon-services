@@ -7,6 +7,7 @@ export async function upgrade(
     CREATE TABLE IF NOT EXISTS \`${DbTables.PLAYER}\` (
       \`id\` INT NOT NULL AUTO_INCREMENT,
       \`user_uuid\` VARCHAR(36) NOT NULL,
+      \`user_email\` VARCHAR(100) NOT NULL,
       \`refCode\` VARCHAR(45) NOT NULL,
       \`shippingInfo\` JSON NULL,
       \`referrer_id\` INT NULL,

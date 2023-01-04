@@ -264,6 +264,7 @@ export interface IEnv {
   TWITTER_CONSUMER_SECRET: string;
   TWITTER_BEARER_TOKEN: string;
   TWITTER_USER_ID: string;
+  OUATH_CALLBACK_URL: string;
 
   REFERRAL_MYSQL_HOST: string;
   REFERRAL_MYSQL_PORT: number;
@@ -489,6 +490,7 @@ export let env: IEnv = {
   TWITTER_CONSUMER_SECRET: process.env['TWITTER_CONSUMER_SECRET'],
   TWITTER_BEARER_TOKEN: process.env['TWITTER_BEARER_TOKEN'],
   TWITTER_USER_ID: process.env['TWITTER_USER_ID'],
+  OUATH_CALLBACK_URL: process.env['OUATH_CALLBACK_URL'],
 
   /**REFERRAL microservice */
   REFERRAL_MYSQL_HOST: process.env['REFERRAL_MYSQL_HOST'],

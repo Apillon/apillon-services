@@ -67,6 +67,30 @@ export class Player extends AdvancedSQLModel {
         code: ReferralErrorCode.DEFAULT_VALIDATION_ERROR,
       },
     ],
+  })
+  public user_email: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ReferralErrorCode.DEFAULT_VALIDATION_ERROR,
+      },
+    ],
     fakeValue: () => faker.random.alphaNumeric(5),
   })
   public refCode: string;
@@ -186,6 +210,13 @@ export class Player extends AdvancedSQLModel {
   })
   public balance: number;
 
+  @prop({
+    populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE],
+    serializable: [SerializeFor.ADMIN, SerializeFor.PROFILE],
+    validators: [],
+  })
+  public referrals: any;
+
   /**
    * Populates model fields by loading the document with the provided user id from the database.
    * @param user_id Referr's user ID.
@@ -222,6 +253,7 @@ export class Player extends AdvancedSQLModel {
     if (this.exists()) {
       await this.populateTasks();
       await this.getBalance();
+      await this.getReferredUsers();
     }
     return this;
   }
@@ -345,6 +377,31 @@ export class Player extends AdvancedSQLModel {
     );
 
     await task.confirmTask(this.id, { referred_id }, true);
+  }
+
+  public async getReferredUsers() {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT 
+        ref.user_email,
+        IF(ref.github_id,1,0) has_github,
+        ref.createTime as joined
+      FROM \`${DbTables.PLAYER}\` p
+      LEFT JOIN \`${DbTables.PLAYER}\` ref
+      ON ref.referrer_id = p.id
+      WHERE p.id = @player_id
+      AND ref.id IS NOT NULL
+      GROUP BY p.id, ref.id;
+      `,
+      { player_id: this.id },
+    );
+
+    if (data.length) {
+      this.referrals = data;
+    } else {
+      this.referrals = [];
+    }
+    return this.referrals;
   }
 
   public async generateCode() {

@@ -129,6 +129,7 @@ describe('Storage directory tests', () => {
         .send({ tweet_id: '1600474958685409280' })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
+      expect(response.body.data.player.balance).toBe(1);
     });
   });
 });

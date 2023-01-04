@@ -57,10 +57,10 @@ export class ReferralMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async getTwitterAuthenticationLink() {
+  public async getTwitterAuthenticationLink(url: string) {
     const data = {
       eventName: ReferralEventType.GET_TWITTER_LINK,
-      body: {},
+      url,
     };
     return await this.callService(data);
   }

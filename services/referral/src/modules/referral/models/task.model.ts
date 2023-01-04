@@ -271,7 +271,10 @@ export class Task extends AdvancedSQLModel {
       filterByData ? data : null,
     );
 
-    if (existingR.length >= this.maxCompleted) {
+    if (
+      (this.maxCompleted && existingR.length >= this.maxCompleted) ||
+      (filterByData && existingR.length)
+    ) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.TASK_ALREADY_COMPLETED,
         status: HttpStatus.UNPROCESSABLE_ENTITY,

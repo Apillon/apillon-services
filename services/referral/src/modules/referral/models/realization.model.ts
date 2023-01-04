@@ -123,18 +123,29 @@ export class Realization extends AdvancedSQLModel {
 
     this.reset();
 
+    let dataFilter = '';
+    if (data) {
+      const keys = Object.keys(data);
+      for (const key of keys) {
+        dataFilter += ` AND (JSON_VALUE(data, '$.${key}') = ${data[key]})`;
+      }
+    }
+
+    console.log('dataFilter', dataFilter);
+
     const res = await this.getContext().mysql.paramExecute(
       `
       SELECT * 
       FROM \`${DbTables.REALIZATION}\`
       WHERE task_id = @task_id 
       AND player_id = @player_id 
-      AND (@data IS NULL OR data <> @data)
+      ${dataFilter}
       ${showDeleted ? '' : `AND status <> ${SqlModelStatus.DELETED}`};
       `,
       { task_id, player_id, showDeleted, data },
       conn,
     );
+    console.log('dataFilter2', res);
 
     if (res && res.length) {
       const arr = [] as Realization[];

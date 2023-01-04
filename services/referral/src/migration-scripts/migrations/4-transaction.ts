@@ -20,6 +20,11 @@ export async function upgrade(
         FOREIGN KEY (\`player_id\`)
         REFERENCES \`${DbTables.PLAYER}\` (\`id\`)
         ON DELETE CASCADE
+        ON UPDATE NO ACTION,
+      CONSTRAINT \`fk_transaction_realization\`
+        FOREIGN KEY (\`realization_id\`)
+        REFERENCES \`${DbTables.REALIZATION}\` (\`id\`)
+        ON DELETE CASCADE
         ON UPDATE NO ACTION
     );`,
   );

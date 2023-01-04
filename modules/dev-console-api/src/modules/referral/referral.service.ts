@@ -26,9 +26,12 @@ export class ReferralService {
     return (await new ReferralMicroservice(context).linkTwitter(body)).data;
   }
 
-  async getTwitterAuthenticationLink(context: DevConsoleApiContext) {
+  async getTwitterAuthenticationLink(
+    context: DevConsoleApiContext,
+    url: string,
+  ) {
     return (
-      await new ReferralMicroservice(context).getTwitterAuthenticationLink()
+      await new ReferralMicroservice(context).getTwitterAuthenticationLink(url)
     ).data;
   }
 

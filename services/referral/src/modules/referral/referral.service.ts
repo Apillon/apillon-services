@@ -22,7 +22,8 @@ export class ReferralService {
     event: { body: CreateReferralDto },
     context: ServiceContext,
   ): Promise<any> {
-    const user_uuid = context?.user?.user_uuid || event.body?.user_uuid;
+    const user_uuid = context?.user?.user_uuid;
+    const user_email = context?.user?.email;
     const player: Player = await new Player({}, context).populateByUserUuid(
       user_uuid,
     );
@@ -38,15 +39,19 @@ export class ReferralService {
     if (!player.exists()) {
       const code = await player.generateCode();
       player.populate({
-        user_uuid: user_uuid,
+        user_uuid,
+        user_email,
         refCode: code,
         referrer_id: referrer?.id,
         status: SqlModelStatus.INCOMPLETE,
       });
     }
 
-    if (!player.termsAccepted && event.body.termsAccepted) {
-      player.termsAccepted = new Date();
+    if (
+      (!player.termsAccepted || player.status === SqlModelStatus.INCOMPLETE) &&
+      event.body.termsAccepted
+    ) {
+      player.termsAccepted = player.termsAccepted || new Date();
       player.status = SqlModelStatus.ACTIVE;
     }
 
@@ -62,6 +67,7 @@ export class ReferralService {
     } else {
       await player.insert();
     }
+    await player.populateSubmodels();
     return player.serialize(SerializeFor.PROFILE);
   }
 
@@ -95,12 +101,13 @@ export class ReferralService {
    * Returns link used to get oAuth creds for twitter.
    */
   static async getTwitterAuthenticationLink(
-    _event: any,
+    event: { url: string },
     context: ServiceContext,
   ) {
     const twitter = new Twitter();
+    console.log('twitauth', event?.url || env.OUATH_CALLBACK_URL);
     return await twitter.getTwitterAuthenticationLink(
-      'http://localhost:3000/',
+      event?.url || env.OUATH_CALLBACK_URL,
       context,
     );
   }
@@ -142,7 +149,7 @@ export class ReferralService {
       const task = await new Task({}, context).populateByType(
         TaskType.TWITTER_RETWEET,
       );
-      await task.confirmTask(player.id, { tweet_id: tweetId });
+      await task.confirmTask(player.id, { tweet_id: tweetId }, true);
     }
 
     await player.populateSubmodels();
