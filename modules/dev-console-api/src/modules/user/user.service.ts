@@ -1,6 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import {
   Ams,
+  AppEnvironment,
   CodeException,
   Context,
   env,
@@ -98,9 +99,9 @@ export class UserService {
         .emailExists(email)
         .then((response) => (emailResult = response)),
     );
-    if (env.CAPTCHA_SECRET) {
+    if (env.CAPTCHA_SECRET && env.APP_ENV !== AppEnvironment.TEST) {
       promises.push(
-        verifyCaptcha(captcha.token, env.CAPTCHA_SECRET).then(
+        verifyCaptcha(captcha?.token, env.CAPTCHA_SECRET).then(
           (response) => (captchaResult = response),
         ),
       );
@@ -108,7 +109,11 @@ export class UserService {
 
     await Promise.all(promises);
 
-    if (env.CAPTCHA_SECRET && !captchaResult) {
+    if (
+      env.CAPTCHA_SECRET &&
+      env.APP_ENV !== AppEnvironment.TEST &&
+      !captchaResult
+    ) {
       throw new CodeException({
         status: HttpStatus.UNPROCESSABLE_ENTITY,
         code: ValidatorErrorCode.CAPTCHA_CHALLENGE_INVALID,
