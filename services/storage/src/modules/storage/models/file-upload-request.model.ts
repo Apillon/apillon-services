@@ -1,4 +1,3 @@
-import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
   CodeException,
@@ -14,11 +13,12 @@ import {
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
+import { integerParser, stringParser } from '@rawmodel/parsers';
 import { CID } from 'ipfs-http-client';
 import { DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
-import { Bucket } from '../../bucket/models/bucket.model';
 import { StorageCodeException } from '../../../lib/exceptions';
+import { Bucket } from '../../bucket/models/bucket.model';
 
 export class FileUploadRequest extends AdvancedSQLModel {
   public readonly tableName = DbTables.FILE_UPLOAD_REQUEST;
@@ -255,6 +255,59 @@ export class FileUploadRequest extends AdvancedSQLModel {
     validators: [],
   })
   public size: number;
+
+  /**
+   * ASYNC canAccess function
+   * @param context
+   */
+  public async canAccess(context: ServiceContext) {
+    const bucket: Bucket = await new Bucket({}, context).populateById(
+      this.bucket_id,
+    );
+    if (
+      !context.hasRoleOnProject(
+        [
+          DefaultUserRole.PROJECT_OWNER,
+          DefaultUserRole.PROJECT_ADMIN,
+          DefaultUserRole.PROJECT_USER,
+          DefaultUserRole.ADMIN,
+        ],
+        bucket.project_uuid,
+      )
+    ) {
+      throw new CodeException({
+        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: 403,
+        errorMessage: 'Insufficient permissions to access this record',
+      });
+    }
+  }
+
+  /**
+   * ASYNC canModify function
+   * @param context
+   */
+  public async canModify(context: ServiceContext) {
+    const bucket: Bucket = await new Bucket({}, context).populateById(
+      this.bucket_id,
+    );
+    if (
+      !context.hasRoleOnProject(
+        [
+          DefaultUserRole.PROJECT_ADMIN,
+          DefaultUserRole.PROJECT_OWNER,
+          DefaultUserRole.ADMIN,
+        ],
+        bucket.project_uuid,
+      )
+    ) {
+      throw new CodeException({
+        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: 403,
+        errorMessage: 'Insufficient permissions to modify this record',
+      });
+    }
+  }
 
   public async populateFileUploadRequestsInSession(
     session_id: number,

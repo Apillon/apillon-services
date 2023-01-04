@@ -4,6 +4,8 @@ import {
   generatePassword,
   Lmas,
   LogType,
+  QuotaCode,
+  Scs,
   SerializeFor,
   ServiceName,
 } from '@apillon/lib';
@@ -26,8 +28,9 @@ export class ApiKeyService {
 
     if (!apiKey.exists() || !apiKey.verifyApiKeySecret(event.apiKeySecret)) {
       throw await new AmsCodeException({
-        status: 403,
+        status: 401,
         code: AmsErrorCode.INVALID_API_KEY,
+        errorMessage: 'Invalid API key',
       }).writeToMonitor({
         user_uuid: context?.user?.user_uuid,
       });
@@ -68,6 +71,20 @@ export class ApiKeyService {
       if (!key.isValid()) throw new AmsValidationException(key);
     }
 
+    //check max api keys quota
+    const numOfApiKeys = await key.getNumOfApiKeysInProject();
+    const maxApiKeysQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_API_KEYS,
+      project_uuid: key.project_uuid,
+    });
+    if (maxApiKeysQuota?.value && numOfApiKeys >= maxApiKeysQuota?.value) {
+      throw new AmsCodeException({
+        code: AmsErrorCode.MAX_API_KEY_QUOTA_REACHED,
+        status: 400,
+      });
+    }
+
+    //Create new api key
     const conn = await context.mysql.start();
 
     try {

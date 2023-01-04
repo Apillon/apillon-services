@@ -29,8 +29,8 @@
       "path": "modules/apillon-api"
     },
     {
-      "name": "😎@modules/authorization-api",
-      "path": "modules/authorization-api"
+      "name": "😎@modules/authentication-api",
+      "path": "modules/authentication-api"
     },
     {
       "name": "📦@packages/lib",
@@ -43,6 +43,10 @@
     {
       "name": "📦@packages/workers-lib",
       "path": "packages/workers-lib"
+    },
+    {
+      "name": "📦@packages/tests-lib",
+      "path": "packages/tests-lib"
     },
     {
       "name": "🔨_tsconfig",

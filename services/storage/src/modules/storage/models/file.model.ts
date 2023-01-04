@@ -11,7 +11,7 @@ import {
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
-import { DbTables, StorageErrorCode } from '../../../config/types';
+import { DbTables, FileStatus, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
 import { v4 as uuidV4 } from 'uuid';
 
@@ -73,7 +73,6 @@ export class File extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
     ],
     validators: [],
   })
@@ -137,7 +136,6 @@ export class File extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
     ],
     validators: [
       {
@@ -160,7 +158,6 @@ export class File extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
     ],
     validators: [
       {
@@ -183,7 +180,6 @@ export class File extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
     ],
     validators: [],
   })
@@ -206,6 +202,27 @@ export class File extends AdvancedSQLModel {
     validators: [],
   })
   public size: number;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+    fakeValue: FileStatus.PINNED_TO_CRUST,
+  })
+  public fileStatus: number;
 
   /*
   INFO PROPERTIES
@@ -242,7 +259,7 @@ export class File extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: 403,
-        errorMessage: 'Insufficient permissins',
+        errorMessage: 'Insufficient permissions to access this record',
       });
     }
   }
@@ -261,7 +278,7 @@ export class File extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: 403,
-        errorMessage: 'Insufficient permissins',
+        errorMessage: 'Insufficient permissions to modify this record',
       });
     }
   }

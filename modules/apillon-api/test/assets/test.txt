@@ -1,0 +1,1 @@
+testni dokument za storage.e2e.ts

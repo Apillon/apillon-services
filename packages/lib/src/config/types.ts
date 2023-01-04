@@ -52,6 +52,7 @@ export enum StorageEventType {
   BUCKET_WEBHOOK_UPDATE = 'update-bucket-webhook',
   BUCKET_WEBHOOK_DELETE = 'delete-bucket-webhook',
   LIST_FILE_UPLOAD = 'list-file-upload',
+  MAX_BUCKETS_QUOTA_REACHED = 'max-buckets-quota-reached',
 }
 
 export enum MailEventType {
@@ -71,6 +72,7 @@ export enum ServiceName {
   MAIL = 'MAIL',
   STORAGE = 'STORAGE',
   APILLON_API = 'APILLON_API',
+  AUTHENTICATION_API = 'AUTHENTICATION_API',
 }
 
 export enum ServiceCode {
@@ -115,7 +117,7 @@ export enum SqlModelStatus {
  * Types of services in dev-console-api
  */
 export enum AttachedServiceType {
-  AUTHORIZATION = 1,
+  AUTHENTICATION = 1,
   STORAGE = 2,
 }
 
@@ -207,7 +209,7 @@ export enum DefaultApiKeyRole {
  *  04 - dev-api
  *  05 - apillon-api
  *  06 - storage
- *  07 - authorization-api
+ *  07 - authentication-api
  *  ...
  *  INTERNAL ERROR CODE: 000 - 999
  *
@@ -269,6 +271,8 @@ export enum ValidatorErrorCode {
   BUCKET_WEBHOOK_BUCKET_ID_NOT_PRESENT = 42200019,
   BUCKET_WEBHOOK_URL_NOT_PRESENT = 42200020,
   QUOTA_ID_NOT_PRESENT = 42200021,
+  PROJECT_UUID_NOT_PRESENT_IN_QUERY = 42200022,
+  BUCKET_TYPE_NOT_PRESENT_IN_QUERY = 42200023,
 }
 
 /**

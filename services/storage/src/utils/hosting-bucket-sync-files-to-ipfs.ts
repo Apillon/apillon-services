@@ -9,6 +9,7 @@ import {
 import { S3ArtifactLocation } from 'aws-lambda';
 import {
   BucketType,
+  FileStatus,
   FileUploadRequestFileStatus,
   StorageErrorCode,
 } from '../config/types';
@@ -19,6 +20,7 @@ import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
 import { File } from '../modules/storage/models/file.model';
 import { generateDirectoriesForFUR } from '../utils/generate-directories-from-path';
+import { pinFileToCRUST } from './pin-file-to-crust';
 
 /**
  * Transfers files from s3 to IPFS & pins them to CRUST
@@ -98,32 +100,6 @@ export async function hostingBucketSyncFilesToIPFS(
     throw err;
   }
 
-  try {
-    await CrustService.placeStorageOrderToCRUST({
-      cid: ipfsRes.parentDirCID,
-      size: ipfsRes.size,
-    });
-    await new Lmas().writeLog({
-      context: context,
-      project_uuid: bucket.project_uuid,
-      logType: LogType.COST,
-      message: 'Success placing storage order to CRUST',
-      location: location,
-      service: ServiceName.STORAGE,
-    });
-  } catch (err) {
-    await new Lmas().writeLog({
-      context: context,
-      project_uuid: bucket.project_uuid,
-      logType: LogType.ERROR,
-      message: 'Error at placing storage order to CRUST',
-      location: location,
-      service: ServiceName.STORAGE,
-      data: err,
-    });
-    throw err;
-  }
-
   const conn = await context.mysql.start();
 
   try {
@@ -159,15 +135,17 @@ export async function hostingBucketSyncFilesToIPFS(
           project_uuid: bucket.project_uuid,
           directory_id: fileDirectory?.id,
           size: file.size,
+          fileStatus: FileStatus.UPLOADED_TO_IPFS,
         })
         .insert(SerializeFor.INSERT_DB, conn);
 
-      //now the file has CID, exists in IPFS node and is pinned to CRUST
+      //now the file has CID and exists in IPFS node
       //update file-upload-request status
-      file.fileStatus = FileUploadRequestFileStatus.UPLOADED_TO_IPFS;
+      file.fileStatus = FileUploadRequestFileStatus.UPLOAD_COMPLETED;
       await file.update(SerializeFor.UPDATE_DB, conn);
 
       bucket.size += file.size;
+      bucket.uploadedSize += file.size;
 
       transferedFiles.push(tmpF);
     }
@@ -205,12 +183,21 @@ export async function hostingBucketSyncFilesToIPFS(
       data: {
         bucket_uuid: bucket.bucket_uuid,
         bucketSize: bucket.size,
+        bucketUploadedSize: bucket.uploadedSize,
       },
     });
   } catch (err) {
     await context.mysql.rollback(conn);
     throw err;
   }
+
+  //Place storage order for parent CID to CRUST
+  await pinFileToCRUST(
+    context,
+    bucket.bucket_uuid,
+    ipfsRes.parentDirCID,
+    ipfsRes.size,
+  );
 
   return transferedFiles;
 }

@@ -7,18 +7,20 @@ import {
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
 import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
 import { FileUploadRequest } from '@apillon/storage/src/modules/storage/models/file-upload-request.model';
-import { FileUploadSession } from '@apillon/storage/src/modules/storage/models/file-upload-session.model';
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';
-import * as request from 'supertest';
-import { v4 as uuidV4 } from 'uuid';
 import {
   createTestBucket,
   createTestBucketWebhook,
-} from '../../../../test/helpers/bucket';
-import { createTestProject } from '../../../../test/helpers/project';
-import { releaseStage, setupTest, Stage } from '../../../../test/helpers/setup';
-import { createTestUser, TestUser } from '../../../../test/helpers/user';
+  createTestProject,
+  createTestUser,
+  TestUser,
+} from '@apillon/tests-lib';
+import * as request from 'supertest';
+import { v4 as uuidV4 } from 'uuid';
+import { releaseStage, Stage } from '@apillon/tests-lib';
 import { Project } from '../../project/models/project.model';
+import { AppModule } from '../../../app.module';
+import { setupTest } from '../../../../test/helpers/setup';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const fs = require('fs');
@@ -82,8 +84,9 @@ describe('Storage tests', () => {
 
       test('User should be able to upload file to s3 via signed URL', async () => {
         expect(testS3SignedUrl).toBeTruthy();
-        const file = fs.readFileSync('test/assets/test.txt');
-        const response = await request(testS3SignedUrl).put(``).send(file);
+        const response = await request(testS3SignedUrl)
+          .put(``)
+          .send(new Date().toString());
 
         expect(response.status).toBe(200);
       });
@@ -159,7 +162,6 @@ describe('Storage tests', () => {
         expect(response.body.data.fileStatus).toBe(FileStatus.PINNED_TO_CRUST);
         expect(response.body.data.file.file_uuid).toBe(testFile.file_uuid);
         expect(response.body.data.file.CID).toBe(testFile.CID);
-        expect(response.body.data.file.s3FileKey).toBeTruthy();
         expect(response.body.data.file.name).toBe(testFile.name);
         expect(response.body.data.file.size).toBeGreaterThan(0);
       });
@@ -173,7 +175,6 @@ describe('Storage tests', () => {
         expect(response.body.data.fileStatus).toBe(FileStatus.PINNED_TO_CRUST);
         expect(response.body.data.file.file_uuid).toBe(testFile.file_uuid);
         expect(response.body.data.file.CID).toBe(testFile.CID);
-        expect(response.body.data.file.s3FileKey).toBeTruthy();
         expect(response.body.data.file.name).toBe(testFile.name);
         expect(response.body.data.file.size).toBeGreaterThan(0);
       });
@@ -206,10 +207,9 @@ describe('Storage tests', () => {
         const file1_uuid = response.body.data.file_uuid;
         const file1_signedUrlForUpload = response.body.data.signedUrlForUpload;
 
-        const testFileContent = fs.readFileSync('test/assets/test.txt');
         response = await request(file1_signedUrlForUpload)
           .put(``)
-          .send(testFileContent);
+          .send(new Date().toString() + 'File 1');
         expect(response.status).toBe(200);
 
         response = await request(stage.http)
@@ -227,7 +227,7 @@ describe('Storage tests', () => {
 
         response = await request(file2_signedUrlForUpload)
           .put(``)
-          .send(testFileContent);
+          .send(new Date().toString() + 'File 2');
         expect(response.status).toBe(200);
         // trigger sync to IPFS
         response = await request(stage.http)
@@ -301,7 +301,7 @@ describe('Storage tests', () => {
         expect(response.body.data.file_uuid).toBeTruthy();
         const file_uuid = response.body.data.file_uuid;
 
-        const testFileContent = fs.readFileSync('test/assets/test.txt');
+        const testFileContent = new Date().toString();
         response = await request(response.body.data.signedUrlForUpload)
           .put(``)
           .send(testFileContent);

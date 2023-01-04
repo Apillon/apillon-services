@@ -31,7 +31,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
     return [];
   }
   public async runExecutor(data: any): Promise<any> {
-    console.info('RUN EXECUTOR. data: ', data);
+    console.info('RUN EXECUTOR (SyncToIPFSWorker). data: ', data);
     const session_uuid = data?.session_uuid;
     let files = [];
     let bucket: Bucket = undefined;
@@ -70,7 +70,9 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         const tmpFur = await new FileUploadRequest(
           {},
           this.context,
-        ).populateByS3FileKey(record.s3.object.key);
+        ).populateByS3FileKey(
+          decodeURIComponent(record.s3.object.key).replace(/\+/g, ' '),
+        );
 
         if (
           tmpFur.exists() &&
@@ -82,7 +84,16 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
               tmpFur.bucket_id,
             );
           }
+          //Update file-upload-request status
+          tmpFur.fileStatus = FileUploadRequestFileStatus.UPLOADED_TO_S3;
+          await tmpFur.update();
+          //Push to files, that will be processed
           files.push(tmpFur);
+        } else {
+          //Update file-upload-request status
+          tmpFur.fileStatus =
+            FileUploadRequestFileStatus.ERROR_FILE_UPLOAD_REQUEST_DOES_NOT_EXISTS;
+          await tmpFur.update();
         }
       }
       //Get bucket
@@ -107,7 +118,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
       project_uuid: bucket.project_uuid,
       object_uuid: bucket.bucket_uuid,
     });
-    if (maxBucketSizeQuota && maxBucketSizeQuota.value) {
+    if (maxBucketSizeQuota?.value) {
       maxBucketSize = maxBucketSizeQuota.value * 1073741824; //quota is in GB - convert to bytes
     }
 
