@@ -14,7 +14,7 @@ Api keys could be generated in developer console (https://app.apillon.io/dashboa
 
 ### Authentication errors
 
-Every request goes through authentication middleware where following errors can occour: \
+Every request goes through authentication middleware where following errors can occour:
 | Status | Message | Description
 |-|-|-
 |400|Missing Authorization header|Request is missing Authorization header
@@ -34,7 +34,7 @@ Basically there are three types of permission, that could be assigned to API key
 
 Those permission could be assigned to API key for every attached service (storage (CRUST), authentication(KILT), ...)
 
-If request is made with API key, which lacks permission for called endpoint, following error can occour: \
+If request is made with API key, which lacks permission for called endpoint, following errors can occour:
 | Status | Message | Description
 |-|-|-
 |403|Insufficient permissins - missing `permission name` permission|API key lacks required permission for called service
@@ -44,7 +44,7 @@ If request is made with API key, which lacks permission for called endpoint, fol
 
 Every response has a unique ID which helps identifying potential problems. It also includes a status code that can help identifying the cause of a potential problem.
 
-Query requests through `GET` method can return status codes `200`, `400`, `401`, `403` or `500`. Mutations through `POST`, `PUT` and `DELETE` can return also codes `201` and `422`. Invalid routes return status code `404`.
+Query requests through `GET` method can return status codes `200`, `400`, `401`, `403` or `500`. Mutations through `POST`, `PUT` and `DELETE` can also return codes `201` and `422`. Invalid routes return status code `404`.
 
 - **200**: Success.
 - **201**: Successfully created.
@@ -75,7 +75,7 @@ This is general error with below fields:
 | Field | Description
 |-|-
 | id | Request unique ID
-| code | Apillon API internal error code, to make iz easier to find the cause of the error
+| code | Apillon API internal error code, which points to the exact position in the system
 | message | Message, describing the error
 | path | Endpoint, which threw the error
 | timestamp | The date when error occurred
@@ -92,7 +92,7 @@ This is general error with below fields:
 
 ### Validation exception
 
-Unprocessable entity `422 Error status ` includes a `errors` key, which holds a list of error objects.\
+Unprocessable entity `422 Error status ` include an `errors` key, which hold a list of error objects.\
 Mostly this error occures, when request body is not valid (invalid or missing keys).
 
 Fields in validation exception:

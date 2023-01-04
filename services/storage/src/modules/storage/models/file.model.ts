@@ -216,7 +216,6 @@ export class File extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
     validators: [],

@@ -79,7 +79,7 @@ export class DirectoryController {
     validateFor: ValidateFor.QUERY,
   })
   @UseGuards(ValidationGuard, AuthGuard)
-  async getBucketList(
+  async getDirectoryContent(
     @Ctx() context: DevConsoleApiContext,
     @Query() query: DirectoryContentQueryFilter,
   ) {
