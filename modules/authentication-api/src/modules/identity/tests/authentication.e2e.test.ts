@@ -6,11 +6,55 @@ import { generateJwtToken, SerializeFor } from '@apillon/lib';
 import { Identity } from '../models/identity.model';
 import { AuthenticationApiContext } from '../../../context';
 import * as mock from './mock';
+import { Utils } from '@kiltprotocol/sdk-js';
+import { generateKeypairs } from '../../../lib/kilt';
+import { u8aToHex } from '@polkadot/util';
+
+const setupDidCreateMock = async () => {
+  const identityMock = mock.CREATE_IDENTITY_MOCK;
+  const didMock = identityMock.did_create_op_data;
+  const { encryption } = await generateKeypairs(identityMock.mnemonic);
+
+  const did_create_call = {
+    data: didMock.encoded_data,
+    signature: didMock.encoded_data,
+  };
+
+  const encryptedData = Utils.Crypto.encryptAsymmetric(
+    JSON.stringify(did_create_call),
+    mock.APILLON_ACC_ENCRYPT_KEY,
+    u8aToHex(encryption.secretKey),
+  );
+
+  const did_create_op = {
+    payload: {
+      message: u8aToHex(encryptedData.box),
+      nonce: u8aToHex(encryptedData.nonce),
+    },
+    senderPubKey: u8aToHex(encryption.publicKey),
+  };
+
+  const bodyMock = {
+    email: identityMock.email,
+    didUri: identityMock.did_uri,
+    did_create_op: did_create_op,
+    token: generateJwtToken(JwtTokenType.IDENTITY_EMAIL_VERIFICATION, {
+      email: identityMock.email,
+    }),
+  };
+
+  return {
+    did_create_call: did_create_call,
+    encrypted_data: encryptedData,
+    did_create_op: did_create_op,
+    body_mock: bodyMock,
+  };
+};
 
 describe('Authentication tests', () => {
   let stage: Stage;
   let context: AuthenticationApiContext;
-  jest.setTimeout(6000 * 10); // Set timeout to 1 minute
+  jest.setTimeout(100000); // Set timeout to 100 seconds
 
   // CONTROL PARAMETERS
   const controlMailInvalid = 'INVALIDMAIL';
@@ -209,24 +253,20 @@ describe('Authentication tests', () => {
     });
 
     describe('Test identity generate endpoint', () => {
-      // input parameters combinations (did_create_op, email, didUri), token data combinations
-      test('Email combinations', async () => {
-        const testEmail = 'test@mailinator.com';
-        const token = generateJwtToken(
-          JwtTokenType.IDENTITY_EMAIL_VERIFICATION,
-          {
-            testEmail,
-          },
-        );
+      const identityMock = mock.CREATE_IDENTITY_MOCK;
+      const testEmailAttested = 'attested@mailinator.com';
 
-        // So we make sure the object is commited to the database right away
+      beforeAll(async () => {
+        const testEmail = identityMock.email;
+
+        // IDENTITY 1 - IN_PROGRESS
         const identity = new Identity({}, context);
         identity.populate({
           context: context,
           email: testEmail,
           state: IdentityState.IN_PROGRESS,
-          token: token,
-          credential: { props: 'I am a credential lalala' },
+          token: identityMock.verification_token,
+          credential: {},
           status: 5,
         });
         await identity.insert(SerializeFor.INSERT_DB);
@@ -244,6 +284,255 @@ describe('Authentication tests', () => {
           .get(`/identity/state?email=${testEmail}`)
           .send();
         expect(resp.status).toBe(200);
+
+        const data = JSON.parse(resp.text).data;
+        expect(data.state).toEqual('in-progress');
+
+        // IDENTITY 2 - ATTESTED
+        const identityAttested = new Identity({}, context);
+        identityAttested.populate({
+          context: context,
+          email: 'attested@mailinator.com',
+          state: IdentityState.ATTESTED,
+          token: identityMock.verification_token,
+          credential: {},
+          status: 5,
+        });
+        await identityAttested.insert(SerializeFor.INSERT_DB);
+
+        const identityAttestedDb = await new Identity(
+          {},
+          context,
+        ).populateByUserEmail(context, testEmailAttested);
+
+        expect(identityAttestedDb).not.toBeUndefined();
+        expect(identityAttestedDb.email).toEqual(testEmailAttested);
+        expect(identityAttestedDb.state).toEqual(IdentityState.ATTESTED);
+
+        const resp1 = await request(stage.http)
+          .get(`/identity/state?email=${testEmailAttested}`)
+          .send();
+        expect(resp1.status).toBe(200);
+
+        const data1 = JSON.parse(resp1.text).data;
+        expect(data1.state).toEqual('attested');
+      });
+
+      test('Input -> Verification token combinations', async () => {
+        const mockData = await setupDidCreateMock();
+        // This makes a deep-copy: propsB = { ...propsA } (shallow: propsB = PropsA)
+        const controlRequestBody = { ...mockData.body_mock };
+
+        // INVALID TOKEN
+        controlRequestBody.token = 'INVALID_TOKEN';
+        const resp1 = await request(stage.http)
+          .post('/identity/generate')
+          .send({
+            ...controlRequestBody,
+          });
+
+        expect(JSON.parse(resp1.text).message).toEqual(
+          'IDENTITY_INVALID_VERIFICATION_TOKEN',
+        );
+        expect(resp1.status).toBe(400);
+
+        // EMPTY TOKEN
+        controlRequestBody.token = null;
+        const resp2 = await request(stage.http)
+          .post('/identity/generate')
+          .send({
+            ...controlRequestBody,
+          });
+
+        expect(JSON.parse(resp2.text).message).toEqual(
+          'IDENTITY_INVALID_VERIFICATION_TOKEN',
+        );
+        expect(resp2.status).toBe(400);
+
+        // EXPIRED TOKEN
+        controlRequestBody.token = generateJwtToken(
+          JwtTokenType.IDENTITY_EMAIL_VERIFICATION,
+          {
+            email: identityMock.email,
+          },
+          '0', // valid 0 miliseconds
+        );
+
+        const resp3 = await request(stage.http)
+          .post('/identity/generate')
+          .send({
+            ...controlRequestBody,
+          });
+
+        expect(JSON.parse(resp3.text).message).toEqual(
+          'IDENTITY_INVALID_VERIFICATION_TOKEN',
+        );
+        expect(resp3.status).toBe(400);
+
+        // NOTE: VALID TOKEN, but we set identity to attested, since
+        // we don't want to go through the whole process -> Identity state
+        // check is performed after token validation
+        controlRequestBody.token = generateJwtToken(
+          JwtTokenType.IDENTITY_EMAIL_VERIFICATION,
+          {
+            email: testEmailAttested,
+          },
+        );
+        controlRequestBody.email = testEmailAttested;
+
+        const resp4 = await request(stage.http)
+          .post('/identity/generate')
+          .send({
+            ...controlRequestBody,
+          });
+
+        expect(JSON.parse(resp4.text).message).toEqual(
+          'IDENTITY_INVALID_STATE',
+        );
+        expect(resp4.status).toBe(400);
+      });
+
+      test('Input -> didCreateCreateOp combinations', async () => {
+        const mockData = await setupDidCreateMock();
+        const controlRequestBody = { ...mockData.body_mock };
+
+        // controlRequestBody.did_create_op = null;
+        // const resp1 = await request(stage.http)
+        //   .post('/identity/generate')
+        //   .send({
+        //     ...controlRequestBody,
+        //   });
+
+        // expect(resp1.status).toBe(422);
+        // const data1 = JSON.parse(resp1.text);
+        // expect(data1.errors.length).toEqual(1);
+        // const error1 = data1.errors[0];
+
+        // expect(error1.message).toEqual(
+        //   'IDENTITY_CREATE_DID_CREATE_OP_NOT_PRESENT',
+        // );
+        // expect(error1.property).toEqual('did_create_op');
+        // expect(error1.statusCode).toEqual(422070112);
+
+        const controlRequestBody2 = { ...mockData.body_mock };
+        controlRequestBody2.did_create_op.payload.nonce = null;
+        const resp2 = await request(stage.http)
+          .post('/identity/generate')
+          .send({
+            ...controlRequestBody2,
+          });
+
+        expect(resp2.status).toBe(422);
+        const data2 = JSON.parse(resp2.text);
+        expect(data2.errors.length).toEqual(1);
+        const error2 = data2.errors[0];
+
+        expect(error2.message).toEqual('IDENTITY_CREATE_INVALID_REQUEST');
+        expect(error2.property).toEqual('did_create_op');
+        expect(error2.statusCode).toEqual(422070111);
+      });
+
+      test('Input -> DidUri combinations', async () => {
+        const mockData = await setupDidCreateMock();
+        const controlRequestBody = { ...mockData.body_mock };
+
+        // EMPTY DIDURI
+        controlRequestBody.didUri = null;
+        const resp = await request(stage.http)
+          .post('/identity/generate')
+          .send({
+            ...controlRequestBody,
+          });
+
+        expect(resp.status).toBe(422);
+        const data = JSON.parse(resp.text);
+        expect(data.errors.length).toEqual(1);
+        const error = data.errors[0];
+
+        expect(error.message).toEqual('DID_URI_NOT_PRESENT');
+        expect(error.property).toEqual('didUri');
+        expect(error.statusCode).toEqual(422070200);
+
+        throw controlRequestBody;
+
+        // // INVALID DIDURI
+        // controlRequestBody.didUri = '';
+        // const resp1 = await request(stage.http)
+        //   .post('/identity/generate')
+        //   .send({
+        //     ...controlRequestBody,
+        //   });
+
+        // expect(resp1.status).toBe(422);
+        // const data1 = JSON.parse(resp1.text);
+        // expect(data1.errors.length).toEqual(1);
+        // const error1 = data1.errors[0];
+
+        // expect(error1.message).toEqual('DID_URI_INVALID');
+        // expect(error1.property).toEqual('didUri');
+        // expect(error1.statusCode).toEqual(422070200);
+      });
+
+      // input parameters combinations (did_create_op, email, didUri), token data combinations
+      test('Input -> Email combinations', async () => {
+        const mockData = await setupDidCreateMock();
+        const controlRequestBody = { ...mockData.body_mock };
+
+        // INVALID EMAIL
+        controlRequestBody.email = controlMailInvalid;
+        const resp1 = await request(stage.http)
+          .post('/identity/generate')
+          .send({
+            ...controlRequestBody,
+          });
+
+        expect(JSON.parse(resp1.text).message).toEqual(
+          'IDENTITY_VERIFICATION_FAILED',
+        );
+        expect(resp1.status).toBe(400);
+
+        // EMPTY EMAIL
+        controlRequestBody.email = '';
+        const resp2 = await request(stage.http)
+          .post('/identity/generate')
+          .send({
+            ...controlRequestBody,
+          });
+
+        expect(JSON.parse(resp2.text).message).toEqual(
+          'IDENTITY_VERIFICATION_FAILED',
+        );
+        expect(resp1.status).toBe(400);
+
+        // ATTESTED EMAIL
+        controlRequestBody.email = testEmailAttested;
+        // Generate a new token with the correct data
+        controlRequestBody.token = generateJwtToken(
+          JwtTokenType.IDENTITY_EMAIL_VERIFICATION,
+          {
+            email: testEmailAttested,
+          },
+        );
+
+        const resp3 = await request(stage.http)
+          .post('/identity/generate')
+          .send({
+            ...controlRequestBody,
+          });
+
+        expect(JSON.parse(resp3.text).message).toEqual(
+          'IDENTITY_INVALID_STATE',
+        );
+        expect(resp3.status).toBe(400);
+
+        // VALID EMAIL
+        const resp = await request(stage.http)
+          .post('/identity/generate')
+          .send({
+            ...mockData.body_mock,
+          });
+
+        expect(resp.status).toBe(201);
       });
     });
   });

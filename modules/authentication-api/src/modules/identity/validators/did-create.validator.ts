@@ -13,9 +13,9 @@ export function didCreateCreateOpValidator() {
     this: ModelBase,
     did_create_op: any,
   ): Promise<boolean> {
-    return did_create_op.payload.message === undefined ||
-      did_create_op.payload.nonce === undefined ||
-      did_create_op.senderPubKey === undefined
+    return did_create_op?.payload?.message === undefined ||
+      did_create_op?.payload?.nonce === undefined ||
+      did_create_op?.senderPubKey === undefined
       ? false
       : true;
   };
@@ -27,6 +27,6 @@ export function didCreateCreateOpValidator() {
  */
 export function didUriValidator() {
   return async function (this: ModelBase, didUri: any): Promise<boolean> {
-    return didUri.startswith('did:kilt:') ? true : false;
+    return didUri.startsWith('did:kilt:') ? true : false;
   };
 }

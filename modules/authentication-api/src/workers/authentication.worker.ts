@@ -98,24 +98,35 @@ export class AuthenticationWorker extends BaseQueueWorker {
 
         await Blockchain.signAndSubmitTx(fullDidCreationTx, attesterAccount);
       } catch (error) {
-        await new Lmas().writeLog({
-          logType: LogType.ERROR,
-          message: error,
-          location: 'Authentication-API/identity/authentication.worker',
-          service: ServiceName.AUTHENTICATION_API,
-        });
+        if (error.method == 'DidAlreadyPresent') {
+          // If DID present on chain, signAndSubmitTx will throw an error
+          await new Lmas().writeLog({
+            logType: LogType.INFO, //!! This is not an error !!
+            message: `${error.method}: ${error.docs[0]}`,
+            location: 'Authentication-API/identity/authentication.worker',
+            service: ServiceName.AUTHENTICATION_API,
+          });
+        } else {
+          await new Lmas().writeLog({
+            logType: LogType.ERROR,
+            message: error,
+            location: 'Authentication-API/identity/authentication.worker',
+            service: ServiceName.AUTHENTICATION_API,
+          });
 
-        throw new Error(error);
+          throw new Error(error);
+        }
       }
     } else {
+      const errMsg = 'Decryption failed ...';
       await new Lmas().writeLog({
         logType: LogType.ERROR,
-        message: 'Decryption failed',
+        message: errMsg,
         location: 'AUTHENTICATION-API/identity/authentication.worker',
         service: ServiceName.AUTHENTICATION_API,
       });
 
-      throw new Error('Decryption failed.');
+      throw new Error(errMsg);
     }
 
     // Prepare identity instance and credential structure

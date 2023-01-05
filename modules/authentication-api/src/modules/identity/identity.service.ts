@@ -54,9 +54,6 @@ export class IdentityService {
       email,
     );
 
-    console.error(identity.email);
-    console.error(identity.state);
-
     if (identity.exists()) {
       // If email was already attested -> deny process
       if (identity.state == IdentityState.ATTESTED) {
@@ -139,15 +136,24 @@ export class IdentityService {
       didUri: body.didUri,
     };
 
-    const tokenData = parseJwtToken(
-      JwtTokenType.IDENTITY_EMAIL_VERIFICATION,
-      body.token,
-    );
+    let tokenData: any;
+    try {
+      tokenData = parseJwtToken(
+        JwtTokenType.IDENTITY_EMAIL_VERIFICATION,
+        body.token,
+      );
+    } catch (error) {
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: AuthenticationErrorCode.IDENTITY_INVALID_VERIFICATION_TOKEN,
+        errorCodes: AuthenticationErrorCode,
+      });
+    }
 
     if (tokenData.email != body.email) {
       throw new CodeException({
         status: HttpStatus.BAD_REQUEST,
-        code: AuthenticationErrorCode.IDENTITY_INVALID_VERIFICATION_TOKEN,
+        code: AuthenticationErrorCode.IDENTITY_VERIFICATION_FAILED,
         errorCodes: AuthenticationErrorCode,
       });
     }
@@ -158,7 +164,15 @@ export class IdentityService {
       body.email,
     );
 
-    if (!identity.exists() || identity.state != IdentityState.IN_PROGRESS) {
+    if (
+      !identity.exists() ||
+      (identity.state != IdentityState.IN_PROGRESS &&
+        identity.state != IdentityState.IDENTITY_VERIFIED)
+    ) {
+      // IDENTITY_VERIFIED just means that the process was broken before
+      // the entity was successfully attested --> See a few lines below
+      // This is done so we have better control of the process and for
+      // analytical purposes
       throw new CodeException({
         status: HttpStatus.BAD_REQUEST,
         code: AuthenticationErrorCode.IDENTITY_INVALID_STATE,
