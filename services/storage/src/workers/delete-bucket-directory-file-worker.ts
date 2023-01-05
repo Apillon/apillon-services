@@ -1,4 +1,4 @@
-import { Context, SqlModelStatus } from '@apillon/lib';
+import { AppEnvironment, Context, env, SqlModelStatus } from '@apillon/lib';
 import { Job, ServerlessWorker, WorkerDefinition } from '@apillon/workers-lib';
 import { DbTables } from '../config/types';
 import { deleteBucket } from '../utils/delete-bucket';
@@ -40,9 +40,13 @@ export class DeleteBucketDirectoryFileWorker extends ServerlessWorker {
 
   public async onUpdateWorkerDefinition(): Promise<void> {
     // this.logFn(`DeleteBucketDirectoryFileWorker - update definition: ${this.workerDefinition}`);
-    await new Job({}, this.context).updateWorkerDefinition(
-      this.workerDefinition,
-    );
+    if (
+      env.APP_ENV != AppEnvironment.LOCAL_DEV &&
+      env.APP_ENV != AppEnvironment.TEST
+    )
+      await new Job({}, this.context).updateWorkerDefinition(
+        this.workerDefinition,
+      );
     // this.logFn('DeleteBucketDirectoryFileWorker - update definition COMPLETE');
   }
 

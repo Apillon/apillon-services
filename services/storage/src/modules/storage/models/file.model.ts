@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/member-ordering */
 import { prop } from '@rawmodel/core';
-import { stringParser, integerParser } from '@rawmodel/parsers';
+import { stringParser, integerParser, dateParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   AdvancedSQLModel,
   CodeException,
   DefaultUserRole,
   ForbiddenErrorCodes,
+  PoolConnection,
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
@@ -224,6 +225,16 @@ export class File extends AdvancedSQLModel {
   })
   public fileStatus: number;
 
+  /**
+   * Time when file status was set to 8 - MARKED_FOR_DELETION
+   */
+  @prop({
+    parser: { resolver: dateParser() },
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    populatable: [PopulateFrom.DB],
+  })
+  public markedForDeletionTime?: Date;
+
   /*
   INFO PROPERTIES
   */
@@ -281,6 +292,24 @@ export class File extends AdvancedSQLModel {
         errorMessage: 'Insufficient permissions to modify this record',
       });
     }
+  }
+
+  /**
+   * Marks record in the database for deletion.
+   */
+  public async markForDeletion(conn?: PoolConnection): Promise<this> {
+    this.updateUser = this.getContext()?.user?.id;
+
+    this.status = SqlModelStatus.MARKED_FOR_DELETION;
+    this.markedForDeletionTime = new Date();
+
+    try {
+      await this.update(SerializeFor.UPDATE_DB, conn);
+    } catch (err) {
+      this.reset();
+      throw err;
+    }
+    return this;
   }
 
   public async populateByNameAndDirectory(

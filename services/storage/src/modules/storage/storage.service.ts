@@ -255,7 +255,7 @@ export class StorageService {
   }
 
   /**
-   * This function is used only for development & testing purposes. In othher envirinments, s3 sends this message to queuq automatically, when file is uploaded
+   * This function is used only for development & testing purposes. In other envirinments, s3 sends this message to queuq automatically, when file is uploaded
    * @param event
    * @param context
    * @returns

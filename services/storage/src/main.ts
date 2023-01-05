@@ -26,7 +26,7 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.GET_BUCKET]: BucketService.getBucket,
     [StorageEventType.CREATE_BUCKET]: BucketService.createBucket,
     [StorageEventType.UPDATE_BUCKET]: BucketService.updateBucket,
-    [StorageEventType.DELETE_BUCKET]: BucketService.deleteBucket,
+    [StorageEventType.DELETE_BUCKET]: BucketService.markBucketForDeletion,
     [StorageEventType.MAX_BUCKETS_QUOTA_REACHED]:
       BucketService.maxBucketsQuotaReached,
 

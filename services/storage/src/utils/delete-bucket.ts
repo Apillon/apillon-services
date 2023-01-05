@@ -7,7 +7,7 @@ export async function deleteBucket(context: Context, bucket_id: number) {
   const b: Bucket = await new Bucket({}, context).populateById(bucket_id);
 
   //Get all files in bucket, unpin them from IPFS
-  const filesInBucket = await this.context.mysql.paramExecute(
+  const filesInBucket = await context.mysql.paramExecute(
     `
       SELECT * 
       FROM \`${DbTables.FILE}\`
@@ -21,7 +21,7 @@ export async function deleteBucket(context: Context, bucket_id: number) {
     if (file.CID) await IPFSService.unpinFile(file.CID);
   }
 
-  await this.context.mysql.paramExecute(
+  await context.mysql.paramExecute(
     `
       UPDATE \`${DbTables.FILE}\`
       SET status = ${SqlModelStatus.DELETED}

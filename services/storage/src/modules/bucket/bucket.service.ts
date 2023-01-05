@@ -12,15 +12,15 @@ import {
   ServiceName,
   SqlModelStatus,
 } from '@apillon/lib';
+import { v4 as uuidV4 } from 'uuid';
 import { BucketType, StorageErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
 import {
   StorageCodeException,
   StorageValidationException,
 } from '../../lib/exceptions';
-import { Bucket } from './models/bucket.model';
-import { v4 as uuidV4 } from 'uuid';
 import { BucketWebhook } from './models/bucket-webhook.model';
+import { Bucket } from './models/bucket.model';
 
 export class BucketService {
   static async listBuckets(
@@ -137,7 +137,7 @@ export class BucketService {
     return b.serialize(SerializeFor.PROFILE);
   }
 
-  static async deleteBucket(
+  static async markBucketForDeletion(
     event: { id: number },
     context: ServiceContext,
   ): Promise<any> {

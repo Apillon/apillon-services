@@ -5,17 +5,17 @@ export async function upgrade(
 ): Promise<void> {
   await queryFn(`
     ALTER TABLE \`${DbTables.BUCKET}\`
-    ADD COLUMN \`markedForDeletion\` DATETIME NULL;
+    ADD COLUMN \`markedForDeletionTime\` DATETIME NULL;
     `);
 
   await queryFn(`
     ALTER TABLE \`${DbTables.DIRECTORY}\`
-    ADD COLUMN \`markedForDeletion\` DATETIME NULL;
+    ADD COLUMN \`markedForDeletionTime\` DATETIME NULL;
     `);
 
   await queryFn(`
     ALTER TABLE \`${DbTables.FILE}\`
-    ADD COLUMN \`markedForDeletion\` DATETIME NULL;
+    ADD COLUMN \`markedForDeletionTime\` DATETIME NULL;
     `);
 }
 
@@ -23,14 +23,14 @@ export async function downgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-        ALTER TABLE \`${DbTables.BUCKET}\` DROP COLUMN markedForDeletion;
+        ALTER TABLE \`${DbTables.BUCKET}\` DROP COLUMN markedForDeletionTime;
     `);
 
   await queryFn(`
-        ALTER TABLE \`${DbTables.DIRECTORY}\` DROP COLUMN markedForDeletion;
+        ALTER TABLE \`${DbTables.DIRECTORY}\` DROP COLUMN markedForDeletionTime;
     `);
 
   await queryFn(`
-        ALTER TABLE \`${DbTables.FILE}\` DROP COLUMN markedForDeletion;
+        ALTER TABLE \`${DbTables.FILE}\` DROP COLUMN markedForDeletionTime;
     `);
 }

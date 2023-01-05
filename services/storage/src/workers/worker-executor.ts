@@ -30,6 +30,7 @@ export enum WorkerName {
   SCHEDULER = 'scheduler',
   SYNC_TO_IPFS_WORKER = 'SyncToIpfsWorker',
   PIN_TO_CRUST_WORKER = 'PinToCrustWorker',
+  DELETE_BUCKET_DIRECTORY_FILE_WORKER = 'DeleteBucketDirectoryFileWorker',
 }
 
 export async function handler(event: any) {
