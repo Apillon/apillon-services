@@ -57,11 +57,11 @@ export class Task extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ReferralErrorCode.DEFAULT_VALIDATION_ERROR,
+        code: ReferralErrorCode.TASK_TYPE_NOT_PRESENT,
       },
     ],
   })
-  public type: number;
+  public type: TaskType;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -123,7 +123,7 @@ export class Task extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ReferralErrorCode.DEFAULT_VALIDATION_ERROR,
+        code: ReferralErrorCode.REWARD_NOT_PRESENT,
       },
     ],
   })

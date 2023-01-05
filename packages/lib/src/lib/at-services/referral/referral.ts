@@ -5,6 +5,8 @@ import { BaseService } from '../base-service';
 import { ConfirmRetweetDto } from './dtos/confirm-retweet.dto';
 import { CreateReferralDto } from './dtos/create-referral.dto';
 import { GithubOauthDto } from './dtos/github-oauth.dto';
+import { ProductOrderDto } from './dtos/product-order.dto';
+import { ProductQueryFilter } from './dtos/product-query-filter.dto';
 import { TwitterOauthDto } from './dtos/twitter-oauth.dto';
 
 export class ReferralMicroservice extends BaseService {
@@ -37,6 +39,22 @@ export class ReferralMicroservice extends BaseService {
     const data = {
       eventName: ReferralEventType.GET_REFERRAL,
       body: {},
+    };
+    return await this.callService(data);
+  }
+
+  public async getProducts(params: ProductQueryFilter) {
+    const data = {
+      eventName: ReferralEventType.GET_PRODUCTS,
+      query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async orderProduct(params: ProductOrderDto) {
+    const data = {
+      eventName: ReferralEventType.ORDER_PRODUCT,
+      body: params.serialize(),
     };
     return await this.callService(data);
   }

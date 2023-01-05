@@ -5,13 +5,16 @@ export async function upgrade(
 ): Promise<void> {
   await queryFn(`
     CREATE VIEW \`${DbTables.BALANCE}\` AS
-      SELECT \`player_id\`, SUM(\`value\`) as \`balance\` FROM (
+      SELECT \`player_id\`, IFNULL(SUM(\`value\`), 0) as \`balance\`, IFNULL(SUM(\`deposit\`), 0) AS \`all_time\` FROM (
         SELECT
-        CASE
-          WHEN \`direction\` = 1 THEN \`amount\`
-          WHEN \`direction\` = 2 THEN - \`amount\`
-          ELSE 0
-        END AS \`value\`, \`player_id\` FROM \`${DbTables.TRANSACTION}\`
+          CASE
+            WHEN \`direction\` = 1 THEN \`amount\`
+            WHEN \`direction\` = 2 THEN - \`amount\`
+            ELSE 0
+          END AS \`value\`, 
+          IF(\`direction\` = 1, \`amount\`, 0) AS \`deposit\`, 
+          \`player_id\` 
+        FROM \`${DbTables.TRANSACTION}\`
         WHERE status <= 5
       ) t
       GROUP BY \`player_id\`

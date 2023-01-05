@@ -1,10 +1,13 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import {
+  ProductQueryFilter,
   ConfirmRetweetDto,
   CreateReferralDto,
   DefaultUserRole,
   GithubOauthDto,
+  ProductOrderDto,
   TwitterOauthDto,
+  ValidateFor,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
@@ -34,6 +37,31 @@ export class ReferralController {
     return await this.referralService.getReferral(context);
   }
 
+  @Get('products')
+  @Permissions({ role: DefaultUserRole.USER })
+  @UseGuards(AuthGuard, ValidationGuard)
+  @Validation({
+    dto: ProductQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  async getProducts(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: ProductQueryFilter,
+  ) {
+    return await this.referralService.getProducts(context, query);
+  }
+
+  @Post('product')
+  @Permissions({ role: DefaultUserRole.USER })
+  @UseGuards(AuthGuard, ValidationGuard)
+  @Validation({ dto: ProductOrderDto })
+  async orderProduct(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: ProductOrderDto,
+  ) {
+    return await this.referralService.orderProduct(context, body);
+  }
+
   @Post('github/link')
   @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard, ValidationGuard)
@@ -61,11 +89,11 @@ export class ReferralController {
   @UseGuards(AuthGuard)
   async getTwitterAuthenticationLink(
     @Ctx() context: DevConsoleApiContext,
-    @Param('url') url: string,
+    @Query() query,
   ) {
     return await this.referralService.getTwitterAuthenticationLink(
       context,
-      url,
+      query?.url,
     );
   }
 

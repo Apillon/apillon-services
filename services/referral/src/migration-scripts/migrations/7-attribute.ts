@@ -8,7 +8,6 @@ export async function upgrade(
       \`id\` INT NOT NULL AUTO_INCREMENT,
       \`product_id\` INT NOT NULL,
       \`inputType\` INT NULL,
-      \`maxOrderCount\` INT NULL,
       \`options\` JSON NULL,
       \`name\` VARCHAR(45) NULL,
       \`description\` VARCHAR(3000) NULL,

@@ -40,7 +40,7 @@ export class Player extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ReferralErrorCode.DEFAULT_VALIDATION_ERROR,
+        code: ReferralErrorCode.USER_UUID_NOT_PRESENT,
       },
     ],
   })
@@ -64,7 +64,7 @@ export class Player extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ReferralErrorCode.DEFAULT_VALIDATION_ERROR,
+        code: ReferralErrorCode.USER_EMAIL_NOT_PRESENT,
       },
     ],
   })
@@ -88,7 +88,7 @@ export class Player extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ReferralErrorCode.DEFAULT_VALIDATION_ERROR,
+        code: ReferralErrorCode.REFERRAL_CODE_NOT_PRESENT,
       },
     ],
     fakeValue: () => faker.random.alphaNumeric(5),
@@ -371,19 +371,17 @@ export class Player extends AdvancedSQLModel {
     return this.balance;
   }
 
-  public async confirmRefer(referred_id: number) {
-    const task = await new Task({}, this.getContext()).populateByType(
-      TaskType.REFERRAL,
-    );
-
-    await task.confirmTask(this.id, { referred_id }, true);
-  }
-
   public async getReferredUsers() {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT 
-        ref.user_email,
+        CONCAT(
+          LEFT(SUBSTRING_INDEX(ref.user_email,'@',1),1),
+          REPEAT('*',(CHAR_LENGTH(SUBSTRING_INDEX(ref.user_email,'@',1))-2)),
+          RIGHT(SUBSTRING_INDEX(ref.user_email,'@',1),1),
+          '@',
+          SUBSTRING_INDEX(ref.user_email,'@',-1)
+        ) as name,
         IF(ref.github_id,1,0) has_github,
         ref.createTime as joined
       FROM \`${DbTables.PLAYER}\` p
@@ -402,6 +400,14 @@ export class Player extends AdvancedSQLModel {
       this.referrals = [];
     }
     return this.referrals;
+  }
+
+  public async confirmRefer(referred_id: number) {
+    const task = await new Task({}, this.getContext()).populateByType(
+      TaskType.REFERRAL,
+    );
+
+    await task.confirmTask(this.id, { referred_id }, true);
   }
 
   public async generateCode() {

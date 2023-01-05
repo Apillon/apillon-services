@@ -1,5 +1,8 @@
 import { generateJwtToken, JwtTokenType } from '@apillon/lib';
-import { DbTables } from '@apillon/referral/src/config/types';
+import {
+  DbTables,
+  TransactionDirection,
+} from '@apillon/referral/src/config/types';
 import { Player } from '@apillon/referral/src/modules/referral/models/player.model';
 import {
   createTestUser,
@@ -7,6 +10,7 @@ import {
   Stage,
   TestUser,
   createTestReferralTasks,
+  createTestReferralProduct,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
@@ -18,6 +22,7 @@ describe('Storage directory tests', () => {
   let testUser2: TestUser;
 
   let tasks: any;
+  let product: any;
 
   let refCode: string;
   let playerId: string;
@@ -34,6 +39,7 @@ describe('Storage directory tests', () => {
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
     tasks = await createTestReferralTasks(stage.referralContext);
+    product = await createTestReferralProduct(stage.referralContext);
   });
 
   afterAll(async () => {
@@ -131,5 +137,54 @@ describe('Storage directory tests', () => {
       expect(response.status).toBe(201);
       expect(response.body.data.player.balance).toBe(1);
     });
+  });
+
+  describe('Shop', () => {
+    test('User should be able to get products', async () => {
+      const response = await request(stage.http)
+        .get(`/referral/products`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.items).toHaveLength(1);
+    });
+    test('User should not be able to order product with insufficient balance', async () => {
+      const response = await request(stage.http)
+        .post(`/referral/product`)
+        .send({ id: product.id })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(422);
+    });
+    test('User should be able to order product with sufficient balance', async () => {
+      await stage.referralSql.paramExecute(
+        `
+        INSERT INTO ${DbTables.TRANSACTION} (player_id, direction, amount, status)
+        VALUES (@player_id, ${TransactionDirection.DEPOSIT}, 14, 5)
+      `,
+        {
+          player_id: playerId,
+        },
+      );
+      const response = await request(stage.http)
+        .post(`/referral/product`)
+        .send({ id: product.id })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(201);
+    });
+  });
+  test('User should be not able to order limited product multiple times', async () => {
+    await stage.referralSql.paramExecute(
+      `
+      INSERT INTO ${DbTables.TRANSACTION} (player_id, direction, amount, status)
+      VALUES (@player_id, ${TransactionDirection.DEPOSIT}, 14, 5)
+    `,
+      {
+        player_id: playerId,
+      },
+    );
+    const response = await request(stage.http)
+      .post(`/referral/product`)
+      .send({ id: product.id })
+      .set('Authorization', `Bearer ${testUser.token}`);
+    expect(response.status).toBe(422);
   });
 });

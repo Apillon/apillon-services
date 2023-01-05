@@ -37,7 +37,7 @@ export class Realization extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ReferralErrorCode.DEFAULT_VALIDATION_ERROR,
+        code: ReferralErrorCode.TASK_ID_NOT_PRESENT,
       },
     ],
   })
@@ -56,12 +56,11 @@ export class Realization extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ReferralErrorCode.DEFAULT_VALIDATION_ERROR,
+        code: ReferralErrorCode.PLAYER_ID_NOT_PRESENT,
       },
     ],
   })
@@ -85,7 +84,7 @@ export class Realization extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ReferralErrorCode.DEFAULT_VALIDATION_ERROR,
+        code: ReferralErrorCode.REWARD_NOT_PRESENT,
       },
     ],
   })
@@ -131,8 +130,6 @@ export class Realization extends AdvancedSQLModel {
       }
     }
 
-    console.log('dataFilter', dataFilter);
-
     const res = await this.getContext().mysql.paramExecute(
       `
       SELECT * 
@@ -145,7 +142,6 @@ export class Realization extends AdvancedSQLModel {
       { task_id, player_id, showDeleted, data },
       conn,
     );
-    console.log('dataFilter2', res);
 
     if (res && res.length) {
       const arr = [] as Realization[];

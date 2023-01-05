@@ -5,6 +5,8 @@ import {
   SqlModelStatus,
   ConfirmRetweetDto,
   AppEnvironment,
+  ProductQueryFilter,
+  ProductOrderDto,
 } from '@apillon/lib';
 import { ServiceContext } from '../../context';
 import {
@@ -16,6 +18,7 @@ import { ReferralErrorCode } from '../../config/types';
 import { HttpStatus } from '@nestjs/common';
 import { Task, TaskType } from './models/task.model';
 import { Twitter } from '../../lib/twitter';
+import { Product } from './models/product.model';
 
 export class ReferralService {
   static async createReferral(
@@ -97,6 +100,31 @@ export class ReferralService {
     return player.serialize(SerializeFor.PROFILE);
   }
 
+  static async getProducts(
+    event: { query: ProductQueryFilter },
+    context: ServiceContext,
+  ): Promise<any> {
+    return await new Product({}, context).getList(
+      context,
+      new ProductQueryFilter(event.query),
+    );
+  }
+
+  static async orderProduct(
+    event: { body: ProductOrderDto },
+    context: ServiceContext,
+  ): Promise<any> {
+    const player: Player = await new Player({}, context).populateByUserUuid(
+      context.user.user_uuid,
+    );
+    const product = await new Product({}, context).populateById(event.body.id);
+
+    await product.order(player.id, event.body.info);
+
+    await player.populateSubmodels();
+    return player;
+  }
+
   /**
    * Returns link used to get oAuth creds for twitter.
    */
@@ -105,7 +133,6 @@ export class ReferralService {
     context: ServiceContext,
   ) {
     const twitter = new Twitter();
-    console.log('twitauth', event?.url || env.OUATH_CALLBACK_URL);
     return await twitter.getTwitterAuthenticationLink(
       event?.url || env.OUATH_CALLBACK_URL,
       context,

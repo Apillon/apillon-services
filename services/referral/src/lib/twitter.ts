@@ -207,11 +207,9 @@ export class Twitter {
     // Get the saved oauth_token_secret from session
 
     if (!oauth_token || !oauth_verifier || !oauth_secret) {
-      throw new UnauthorizedException(
-        ReferralErrorCode[
-          ReferralErrorCode.OAUTH_APP_DENIED_OR_SESSION_EXPIRED
-        ],
-        functionName,
+      this.throwErrorCode(
+        ReferralErrorCode.OAUTH_APP_DENIED_OR_SESSION_EXPIRED,
+        null,
       );
     }
 
@@ -224,11 +222,9 @@ export class Twitter {
     try {
       return await client.login(oauth_verifier);
     } catch (e) {
-      throw new UnauthorizedException(
-        ReferralErrorCode[
-          ReferralErrorCode.OAUTH_INVALID_VERIFIER_OR_ACCESS_TOKENS
-        ],
-        functionName,
+      this.throwErrorCode(
+        ReferralErrorCode.OAUTH_INVALID_VERIFIER_OR_ACCESS_TOKENS,
+        null,
       );
     }
   }
