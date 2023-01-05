@@ -24,6 +24,8 @@
   },
   "dependencies": {
     "@apillon/lib": "*",
+    "@aws-sdk/client-lambda": "^3.241.0",
+    "@aws-sdk/client-sqs": "^3.241.0",
     "@faker-js/faker": "^7.6.0",
     "@nestjs/common": "^9.0.11",
     "@nestjs/core": "^9.0.0",

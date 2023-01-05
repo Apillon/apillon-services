@@ -1,5 +1,5 @@
 import * as middy from '@middy/core';
-import { Callback, Context, Handler } from 'aws-lambda/handler';
+import type { Callback, Context, Handler } from 'aws-lambda/handler';
 import { processEvent } from './main';
 import { ErrorHandler } from './middleware/error';
 import { MongoDbConnect } from './middleware/mongoDb';

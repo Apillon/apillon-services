@@ -1,4 +1,7 @@
-import * as aws from 'aws-sdk';
+import {
+  GetSecretValueCommand,
+  SecretsManagerClient,
+} from '@aws-sdk/client-secrets-manager';
 import { env } from '../../config/env';
 import { safeJsonParse } from '../utils';
 
@@ -7,27 +10,18 @@ import { safeJsonParse } from '../utils';
  * Permission will be checked against execution role (of lambda)
  */
 function createClient() {
-  return new aws.SecretsManager({
+  return new SecretsManagerClient({
     region: env.AWS_REGION,
   });
+  // return new aws.SecretsManager({
+  //   region: env.AWS_REGION,
+  // });
 }
 
 export async function getSecrets(): Promise<any> {
-  return new Promise((resolve, reject) => {
-    createClient().getSecretValue(
-      { SecretId: env.AWS_SECRETS_ID },
-      (err, data) => {
-        if (err) {
-          reject(err);
-        } else {
-          if ('SecretString' in data) {
-            resolve(safeJsonParse(data.SecretString));
-          } else {
-            const buff = Buffer.from(data.SecretBinary as string, 'base64');
-            resolve(buff.toString('ascii'));
-          }
-        }
-      },
-    );
+  const command = new GetSecretValueCommand({
+    SecretId: env.AWS_SECRETS_ID,
   });
+  const response = await createClient().send(command);
+  return safeJsonParse(response.SecretString);
 }

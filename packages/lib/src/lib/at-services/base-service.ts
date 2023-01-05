@@ -1,12 +1,12 @@
 import { env, getEnvSecrets } from '../../config/env';
 import { AppEnvironment } from '../../config/types';
 import * as Net from 'net';
-import * as AWS from 'aws-sdk';
+import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 import { safeJsonParse } from '../utils';
 import { Context } from '../context';
 
 export abstract class BaseService {
-  private lambda: AWS.Lambda;
+  private lambda: LambdaClient;
   protected isDefaultAsync = false;
   abstract lambdaFunctionName: string;
   abstract devPort: number;
@@ -17,8 +17,11 @@ export abstract class BaseService {
   private apiKey: any;
 
   constructor(context?: Context) {
-    this.lambda = new AWS.Lambda({
-      apiVersion: '2015-03-31',
+    this.lambda = new LambdaClient({
+      credentials: {
+        accessKeyId: env.AWS_KEY,
+        secretAccessKey: env.AWS_SECRET,
+      },
       region: env.AWS_REGION,
     });
     this.securityToken = this.generateSecurityToken();
@@ -51,25 +54,39 @@ export abstract class BaseService {
     ) {
       result = await this.callDevService(payload, isAsync);
     } else {
-      const params: AWS.Lambda.InvocationRequest = {
+      const command = new InvokeCommand({
         FunctionName: this.lambdaFunctionName,
         InvocationType: isAsync ? 'Event' : 'RequestResponse',
-        Payload: JSON.stringify(payload),
-      };
-
-      result = await new Promise((resolve, reject) => {
-        this.lambda.invoke(params, (err, response) => {
-          if (err) {
-            console.error('Error invoking lambda!', err);
-            reject(err);
-          }
-          resolve(safeJsonParse(response.Payload.toString()));
-        });
+        Payload: payload,
       });
-    }
-    //console.log(result);
 
-    if (!isAsync && (result?.error || !result?.success)) {
+      try {
+        result = safeJsonParse(
+          (await this.lambda.send(command)).Payload.toString(),
+        );
+      } catch (err) {
+        console.error('Error invoking lambda!', err);
+      }
+
+      // const params: InvocationRequest = {
+      //   FunctionName: this.lambdaFunctionName,
+      //   InvocationType: isAsync ? 'Event' : 'RequestResponse',
+      //   Payload: JSON.stringify(payload),
+      // };
+
+      // result = await new Promise((resolve, reject) => {
+      //   this.lambda.invoke(params, (err, response) => {
+      //     if (err) {
+      //       console.error('Error invoking lambda!', err);
+      //       reject(err);
+      //     }
+      //     resolve(safeJsonParse(response.Payload.toString()));
+      //   });
+      // });
+    }
+    console.log(result);
+
+    if (!isAsync && (result?.FunctionError || !result?.success)) {
       // CodeException causes circular dependency!
 
       if (result?.status == 422) {

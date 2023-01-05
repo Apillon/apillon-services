@@ -6,7 +6,6 @@ import {
   SerializeFor,
   ServiceName,
 } from '@apillon/lib';
-import { S3ArtifactLocation } from 'aws-lambda';
 import {
   BucketType,
   FileStatus,
@@ -15,7 +14,6 @@ import {
 } from '../config/types';
 import { StorageCodeException } from '../lib/exceptions';
 import { Bucket } from '../modules/bucket/models/bucket.model';
-import { CrustService } from '../modules/crust/crust.service';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
 import { File } from '../modules/storage/models/file.model';

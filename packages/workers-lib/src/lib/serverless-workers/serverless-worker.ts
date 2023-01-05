@@ -1,5 +1,8 @@
-import { MySql } from '@apillon/lib';
-import * as AWS from 'aws-sdk';
+import { env, MySql } from '@apillon/lib';
+import { InvokeCommand, LambdaClient } from '@aws-sdk/client-lambda';
+import type { InvokeCommandInput } from '@aws-sdk/client-lambda';
+import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
+import type { SendMessageCommandInput } from '@aws-sdk/client-sqs';
 import { PoolConnection } from 'mysql2/promise';
 import { DbTables } from '../../config/types';
 import { ServiceDefinitionType } from './interfaces';
@@ -58,52 +61,73 @@ export abstract class ServerlessWorker {
     for (const def of workersDefinitions) {
       const serviceDefinition = def.serviceDefinition;
       if (serviceDefinition.type == ServiceDefinitionType.SQS) {
-        const sqs = new AWS.SQS(serviceDefinition.config);
+        // const sqs = new AWS.SQS(serviceDefinition.config);
+        const sqs = new SQSClient({
+          ...serviceDefinition.config,
+          credentials: {
+            accessKeyId: env.AWS_KEY,
+            secretAccessKey: env.AWS_SECRET,
+          },
+          region: env.AWS_REGION,
+        });
 
-        const params = {
-          ...(serviceDefinition.params as AWS.SQS.Types.SendMessageRequest),
+        const params: SendMessageCommandInput = {
+          ...(serviceDefinition.params as SendMessageCommandInput),
           MessageBody: JSON.stringify(def),
         };
+        const command = new SendMessageCommand(params);
 
         promises.push(
-          new Promise((resolve, reject) => {
-            sqs.sendMessage(params, (err, data) => {
-              if (err) {
-                this.logFn('Error sending SQS message', err);
-                reject(err);
-              }
-              if (data) {
-                // this.logFn(`Message sent to SQS: ${data ? data : ''}`);
-              }
-              // ATM always resolve
-              resolve(data);
-            });
-          }),
+          sqs.send(command),
+          // new Promise((resolve, reject) => {
+          //   sqs.sendMessage(params, (err, data) => {
+          //     if (err) {
+          //       this.logFn('Error sending SQS message', err);
+          //       reject(err);
+          //     }
+          //     if (data) {
+          //       // this.logFn(`Message sent to SQS: ${data ? data : ''}`);
+          //     }
+          //     // ATM always resolve
+          //     resolve(data);
+          //   });
+          // }),
         );
       }
       if (serviceDefinition.type == ServiceDefinitionType.LAMBDA) {
-        const lambda = new AWS.Lambda(serviceDefinition.config);
+        // const lambda = new AWS.Lambda(serviceDefinition.config);
+        const lambda = new LambdaClient({
+          ...serviceDefinition.config,
+          credentials: {
+            accessKeyId: env.AWS_KEY,
+            secretAccessKey: env.AWS_SECRET,
+          },
+          region: env.AWS_REGION,
+        });
 
-        const params = {
-          ...(serviceDefinition.params as AWS.Lambda.Types.InvocationRequest),
+        const params: InvokeCommandInput = {
+          ...(serviceDefinition.params as InvokeCommandInput),
           InvocationType: 'Event',
-          Payload: JSON.stringify(def),
+          Payload: JSON.parse(JSON.stringify(def)),
         };
 
+        const command = new InvokeCommand(params);
+
         promises.push(
-          new Promise((resolve, reject) => {
-            lambda.invoke(params, (err, data) => {
-              if (err) {
-                this.logFn('Error invoking Lambda', err);
-                reject(err);
-              }
-              if (data) {
-                // this.logFn(`Lambda invoked: ${data ? JSON.stringify(data) : ''}`);
-              }
-              // ATM always resolve
-              resolve(data);
-            });
-          }),
+          lambda.send(command),
+          // new Promise((resolve, reject) => {
+          //   lambda.invoke(params, (err, data) => {
+          //     if (err) {
+          //       this.logFn('Error invoking Lambda', err);
+          //       reject(err);
+          //     }
+          //     if (data) {
+          //       // this.logFn(`Lambda invoked: ${data ? JSON.stringify(data) : ''}`);
+          //     }
+          //     // ATM always resolve
+          //     resolve(data);
+          //   });
+          // }),
         );
       }
     }

@@ -7,7 +7,6 @@ import {
   WorkerLogStatus,
   writeWorkerLog,
 } from '@apillon/workers-lib';
-import * as aws from 'aws-sdk';
 
 import { Context, env } from '@apillon/lib';
 import { SyncToIPFSWorker } from './s3-to-ipfs-sync-worker';
@@ -16,13 +15,6 @@ import { PinToCRUSTWorker } from './pin-to-crust-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
-
-// Init AWS config with provided credentials.
-aws.config.update({
-  region: env.AWS_REGION,
-  accessKeyId: env.AWS_KEY,
-  secretAccessKey: env.AWS_SECRET,
-});
 
 export enum WorkerName {
   TEST_WORKER = 'TestWorker',

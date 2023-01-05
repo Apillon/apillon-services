@@ -1,12 +1,14 @@
 import { env } from '@apillon/lib';
-import * as aws from 'aws-sdk';
+import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
+import type { SendMessageCommandInput } from '@aws-sdk/client-sqs';
 
 export function createSqsClient() {
-  return new aws.SQS({
-    accessKeyId: env.AWS_KEY,
-    secretAccessKey: env.AWS_SECRET,
+  return new SQSClient({
+    credentials: {
+      accessKeyId: env.AWS_KEY,
+      secretAccessKey: env.AWS_SECRET,
+    },
     region: env.AWS_REGION,
-    apiVersion: '2012-11-05',
   });
 }
 
@@ -16,13 +18,13 @@ export async function sendToWorkerQueue(
   msgData: Array<any>,
   id: number,
   parameters: any[] = null,
-): Promise<void> {
+): Promise<{ errCount: number; errMsgs: string[] }> {
   const sqs = createSqsClient();
   let errCount = 0;
   const errMsgs = [];
   const promises = [];
   for (const msg of msgData) {
-    const message = {
+    const message: SendMessageCommandInput = {
       // Remove DelaySeconds parameter and value for FIFO queues
       //  DelaySeconds: 10,
       MessageAttributes: {
@@ -53,23 +55,14 @@ export async function sendToWorkerQueue(
     if (!parameters) {
       delete message.MessageAttributes.parameters;
     }
-    promises.push(
-      new Promise<void>((resolve, reject) => {
-        sqs.sendMessage(message, (err, data) => {
-          if (err) {
-            console.log('sendToWorkerQueue: Error sending SQS message!', err);
-            errCount++;
-            errMsgs.push(err.message);
-            reject(err);
-          }
-          if (data) {
-            // console.log(`sendToWorkerQueue: Sending SQS message result: ${JSON.stringify(data)}`);
-            // console.log('sendToWorkerQueue: Sending SQS message successful');
-          }
-          resolve();
-        });
-      }),
-    );
+    const command = new SendMessageCommand(message);
+    const promise = sqs.send(command).catch((err) => {
+      console.log('sendToWorkerQueue: Error sending SQS message!', err);
+      errCount++;
+      errMsgs.push(err.message);
+    });
+
+    promises.push(promise);
   }
   await Promise.all(promises);
   if (errCount) {
@@ -79,4 +72,5 @@ export async function sendToWorkerQueue(
       JSON.stringify(errMsgs),
     );
   }
+  return { errCount, errMsgs };
 }

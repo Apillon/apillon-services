@@ -1,32 +1,35 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable sonarjs/no-identical-functions */
-import * as aws from 'aws-sdk';
+import {
+  S3Client,
+  PutObjectCommand,
+  HeadObjectCommand,
+  GetObjectCommand,
+  ListObjectsCommand,
+  DeleteObjectCommand,
+  DeleteObjectsCommand,
+} from '@aws-sdk/client-s3';
+import type {
+  GetObjectOutput,
+  ListObjectsOutput,
+  PutObjectOutput,
+  DeleteObjectOutput,
+  DeleteObjectsOutput,
+} from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { env } from '../../config/env';
-import { AppEnvironment } from '../../config/types';
+import { consumers, Readable } from 'stream';
 
 export class AWS_S3 {
-  private s3Client: aws.S3;
+  private s3Client: S3Client;
 
   constructor() {
     try {
-      this.s3Client = new aws.S3({
-        accessKeyId: env.AWS_KEY,
-        secretAccessKey: env.AWS_SECRET,
-        region: env.AWS_REGION,
-        signatureVersion: 'v4',
-      });
-      /*if (env.APP_ENV == AppEnvironment.LOCAL_DEV) {
-        this.s3Client = new aws.S3({
+      this.s3Client = new S3Client({
+        credentials: {
           accessKeyId: env.AWS_KEY,
           secretAccessKey: env.AWS_SECRET,
-          region: env.AWS_REGION,
-          endpoint: env.AWS_ENDPOINT,
-          s3ForcePathStyle: true,
-          signatureVersion: 'v4',
-        });
-      } else {
-        
-      }*/
+        },
+        region: env.AWS_REGION,
+      });
     } catch (err) {
       console.error(
         'error creating AWS S3 client',
@@ -51,24 +54,15 @@ export class AWS_S3 {
    * @param source
    * @returns
    */
-  exists(bucket: string, source: string) {
-    return new Promise((resolve, reject) => {
-      console.info(bucket, source);
-      this.s3Client.headObject(
-        {
-          Bucket: bucket,
-          Key: source,
-        },
-        (err, data) => {
-          if (err) {
-            console.error('headObject error', err);
-            resolve(false);
-          } else {
-            resolve(true);
-          }
-        },
-      );
-    });
+  async exists(bucket: string, source: string): Promise<boolean> {
+    const command = new HeadObjectCommand({ Bucket: bucket, Key: source });
+    try {
+      await this.s3Client.send(command);
+    } catch (err) {
+      console.error('headObject error', err);
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -77,30 +71,19 @@ export class AWS_S3 {
    * @param body File to be uploaded.
    * @param ctx Request context.
    */
-  upload(
+  async upload(
     bucket: string,
     source: string,
     body: Blob | Buffer | ReadableStream,
     contentType: string,
-  ) {
-    return new Promise((resolve, reject) => {
-      this.s3Client.upload(
-        {
-          Bucket: bucket,
-          Key: source,
-          Body: body,
-          ContentType: contentType,
-        },
-        (err, data) => {
-          if (err) {
-            console.error(err);
-            reject(err);
-          } else {
-            resolve(data);
-          }
-        },
-      );
+  ): Promise<PutObjectOutput> {
+    const command = new PutObjectCommand({
+      Bucket: bucket,
+      Key: source,
+      Body: body,
+      ContentType: contentType,
     });
+    return await this.s3Client.send(command);
   }
 
   /**
@@ -108,23 +91,23 @@ export class AWS_S3 {
    * @param source File source path.
    * @param ctx Request context.
    */
-  get(bucket: string, source: string): Promise<aws.S3.GetObjectOutput> {
-    return new Promise((resolve, reject) => {
-      this.s3Client.getObject(
-        {
-          Bucket: bucket,
-          Key: source,
-        },
-        (err, data) => {
-          if (err) {
-            console.error(err);
-            reject(err);
-          } else {
-            resolve(data);
-          }
-        },
-      );
+  async get(bucket: string, source: string): Promise<GetObjectOutput> {
+    const command = new GetObjectCommand({
+      Bucket: bucket,
+      Key: source,
     });
+    return await this.s3Client.send(command);
+  }
+
+  /**
+   * Reads file stream and returns body as string
+   * @param bucket S3 bucket
+   * @param source File source path
+   * @returns string
+   */
+  async read(bucket: string, source: string): Promise<string> {
+    const resp = await this.get(bucket, source);
+    return consumers.text(resp.Body as Readable);
   }
 
   /**
@@ -133,26 +116,12 @@ export class AWS_S3 {
    * @param prefix Limits the response to keys that begin with the specified prefix.
    * @returns
    */
-  listFiles(
-    bucket: string,
-    prefix: string,
-  ): Promise<aws.S3.ListObjectsV2Output> {
-    return new Promise((resolve, reject) => {
-      this.s3Client.listObjectsV2(
-        {
-          Bucket: bucket,
-          Prefix: prefix,
-        },
-        (err, data) => {
-          if (err) {
-            console.error(err);
-            reject(err);
-          } else {
-            resolve(data);
-          }
-        },
-      );
+  async listFiles(bucket: string, prefix: string): Promise<ListObjectsOutput> {
+    const command = new ListObjectsCommand({
+      Bucket: bucket,
+      Prefix: prefix,
     });
+    return await this.s3Client.send(command);
   }
 
   /**
@@ -160,22 +129,11 @@ export class AWS_S3 {
    * @param source File source path.
    * @param ctx Request context.
    */
-  listBucket(bucket: string): Promise<aws.S3.ListObjectsOutput> {
-    return new Promise((resolve, reject) => {
-      this.s3Client.listObjectsV2(
-        {
-          Bucket: bucket,
-        },
-        (err, data) => {
-          if (err) {
-            console.error(err);
-            reject(err);
-          } else {
-            resolve(data);
-          }
-        },
-      );
+  async listBucket(bucket: string): Promise<ListObjectsOutput> {
+    const command = new ListObjectsCommand({
+      Bucket: bucket,
     });
+    return await this.s3Client.send(command);
   }
 
   /**
@@ -184,24 +142,12 @@ export class AWS_S3 {
    * @param source File source path.
    * @param ctx Request context.
    */
-  generateSignedUploadURL(bucket: string, key: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      this.s3Client.getSignedUrl(
-        'putObject',
-        {
-          Bucket: bucket,
-          Key: key,
-        },
-        (err, data) => {
-          if (err) {
-            console.error(err);
-            reject(err);
-          } else {
-            resolve(data);
-          }
-        },
-      );
+  async generateSignedUploadURL(bucket: string, key: string): Promise<string> {
+    const command = new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
     });
+    return await getSignedUrl(this.s3Client, command);
   }
 
   /**
@@ -209,23 +155,12 @@ export class AWS_S3 {
    * @param source File source path.
    * @param ctx Request context.
    */
-  remove(bucket: string, source: string) {
-    return new Promise((resolve, reject) => {
-      this.s3Client.deleteObject(
-        {
-          Bucket: bucket,
-          Key: source,
-        },
-        (err, data) => {
-          if (err) {
-            console.error(err);
-            reject(false);
-          } else {
-            resolve(true);
-          }
-        },
-      );
+  async remove(bucket: string, source: string): Promise<DeleteObjectOutput> {
+    const command = new DeleteObjectCommand({
+      Bucket: bucket,
+      Key: source,
     });
+    return await this.s3Client.send(command);
   }
 
   /**
@@ -233,22 +168,14 @@ export class AWS_S3 {
    * @param source File source path.
    * @param ctx Request context.
    */
-  removeFiles(bucket: string, keys: { Key: string }[]) {
-    return new Promise((resolve, reject) => {
-      this.s3Client.deleteObjects(
-        {
-          Bucket: bucket,
-          Delete: { Objects: keys },
-        },
-        (err) => {
-          if (err) {
-            console.error(err);
-            reject(false);
-          } else {
-            resolve(true);
-          }
-        },
-      );
+  async removeFiles(
+    bucket: string,
+    keys: { Key: string }[],
+  ): Promise<DeleteObjectsOutput> {
+    const command = new DeleteObjectsCommand({
+      Bucket: bucket,
+      Delete: { Objects: keys },
     });
+    return await this.s3Client.send(command);
   }
 }
