@@ -113,7 +113,7 @@ export class DirectoryService {
     }
     d.canModify(context);
 
-    await d.delete();
+    await d.markForDeletion();
     return d.serialize(SerializeFor.PROFILE);
   }
 }

@@ -428,7 +428,7 @@ export class StorageService {
     const conn = await context.mysql.start();
 
     try {
-      await f.markDeleted(conn);
+      await f.markForDeletion(conn);
 
       //Also delete file-upload-request
       const fur: FileUploadRequest = await new FileUploadRequest(

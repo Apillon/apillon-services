@@ -13,6 +13,7 @@ import { Context, env } from '@apillon/lib';
 import { SyncToIPFSWorker } from './s3-to-ipfs-sync-worker';
 import { TestWorker } from './test-worker';
 import { PinToCRUSTWorker } from './pin-to-crust-worker';
+import { Scheduler } from './scheduler';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -110,6 +111,10 @@ export async function handleLambdaEvent(
     case WorkerName.TEST_WORKER:
       const testLambda = new TestWorker(workerDefinition, context);
       await testLambda.run();
+      break;
+    case WorkerName.SCHEDULER:
+      const scheduler = new Scheduler(serviceDef, context);
+      await scheduler.run();
       break;
     default:
       console.log(

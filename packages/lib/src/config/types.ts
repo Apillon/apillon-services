@@ -110,6 +110,7 @@ export enum SqlModelStatus {
   DRAFT = 1,
   INCOMPLETE = 2,
   ACTIVE = 5,
+  MARKED_FOR_DELETION = 8,
   DELETED = 9,
 }
 

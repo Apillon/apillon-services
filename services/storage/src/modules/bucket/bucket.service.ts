@@ -10,6 +10,7 @@ import {
   Scs,
   SerializeFor,
   ServiceName,
+  SqlModelStatus,
 } from '@apillon/lib';
 import { BucketType, StorageErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
@@ -147,11 +148,39 @@ export class BucketService {
         code: StorageErrorCode.BUCKET_NOT_FOUND,
         status: 404,
       });
+    } else if (b.status == SqlModelStatus.MARKED_FOR_DELETION) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.BUCKET_ALREADY_MARKED_FOR_DELETION,
+        status: 400,
+      });
     }
-
     b.canModify(context);
 
-    await b.delete();
+    await b.markForDeletion();
+    return b.serialize(SerializeFor.PROFILE);
+  }
+
+  static async cancelBucketDeletion(
+    event: { id: number },
+    context: ServiceContext,
+  ): Promise<any> {
+    const b: Bucket = await new Bucket({}, context).populateById(event.id);
+
+    if (!b.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.BUCKET_NOT_FOUND,
+        status: 404,
+      });
+    } else if (b.status != SqlModelStatus.MARKED_FOR_DELETION) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.BUCKET_NOT_MARKED_FOR_DELETION,
+        status: 400,
+      });
+    }
+    b.canModify(context);
+
+    b.status = SqlModelStatus.ACTIVE;
+    await b.update();
     return b.serialize(SerializeFor.PROFILE);
   }
 
