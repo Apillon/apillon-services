@@ -15,10 +15,8 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return "Hello World from authorization API!"', () => {
-      expect(appController.getHello()).toBe(
-        'Hello World from authorization API!',
-      );
+    it('should return "Hello World from auth API!"', () => {
+      expect(appController.getHello()).toBe('Hello World from auth API!');
     });
   });
 });
