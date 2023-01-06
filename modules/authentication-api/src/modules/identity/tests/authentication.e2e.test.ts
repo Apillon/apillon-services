@@ -9,6 +9,7 @@ import * as mock from './mock';
 import { Utils } from '@kiltprotocol/sdk-js';
 import { generateKeypairs } from '../../../lib/kilt';
 import { u8aToHex } from '@polkadot/util';
+import exp from 'constants';
 
 const setupDidCreateMock = async () => {
   const identityMock = mock.CREATE_IDENTITY_MOCK;
@@ -652,6 +653,17 @@ describe('Authentication tests', () => {
           });
         expect(resp5.status).toEqual(201);
       });
+    });
+  });
+
+  describe('VERFICATION', () => {
+    test('Correct credential structure', async () => {
+      expect(true).toEqual(false);
+    });
+  });
+  describe('MISC', () => {
+    test('Correct credential structure', async () => {
+      expect(true).toEqual(false);
     });
   });
 });
