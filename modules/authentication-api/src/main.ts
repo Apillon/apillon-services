@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ExceptionsFilter, ResponseInterceptor } from '@apillon/modules-lib';
 import { env } from '@apillon/lib';
-import { Context } from 'aws-lambda/handler';
+import type { Context } from 'aws-lambda/handler';
 import { IdentityService } from './modules/identity/identity.service';
 import { IdentityEventType } from './config/types';
 

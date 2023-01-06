@@ -45,8 +45,7 @@ export class FileService {
     }
 
     try {
-      const f = await s3Client.get(env.AWS_BUCKET, file.key);
-      file.body = f.Body.toString('base64');
+      file.body = await s3Client.read(env.AWS_BUCKET, file.key);
     } catch (error) {
       throw new CodeException({
         code: SystemErrorCode.AWS_SYSTEM_ERROR,
