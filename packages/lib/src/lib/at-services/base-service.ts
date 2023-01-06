@@ -69,22 +69,6 @@ export abstract class BaseService {
       } catch (err) {
         console.error('Error invoking lambda!', err);
       }
-
-      // const params: InvocationRequest = {
-      //   FunctionName: this.lambdaFunctionName,
-      //   InvocationType: isAsync ? 'Event' : 'RequestResponse',
-      //   Payload: JSON.stringify(payload),
-      // };
-
-      // result = await new Promise((resolve, reject) => {
-      //   this.lambda.invoke(params, (err, response) => {
-      //     if (err) {
-      //       console.error('Error invoking lambda!', err);
-      //       reject(err);
-      //     }
-      //     resolve(safeJsonParse(response.Payload.toString()));
-      //   });
-      // });
     }
     console.log(result);
 
