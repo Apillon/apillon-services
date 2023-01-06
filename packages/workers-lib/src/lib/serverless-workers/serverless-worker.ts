@@ -108,7 +108,7 @@ export abstract class ServerlessWorker {
         const params: InvokeCommandInput = {
           ...(serviceDefinition.params as InvokeCommandInput),
           InvocationType: 'Event',
-          Payload: JSON.parse(JSON.stringify(def)),
+          Payload: Buffer.from(JSON.stringify(def)),
         };
 
         const command = new InvokeCommand(params);

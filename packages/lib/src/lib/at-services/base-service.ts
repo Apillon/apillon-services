@@ -59,7 +59,7 @@ export abstract class BaseService {
       const command = new InvokeCommand({
         FunctionName: this.lambdaFunctionName,
         InvocationType: isAsync ? 'Event' : 'RequestResponse',
-        Payload: payload,
+        Payload: Buffer.from(JSON.stringify(payload)),
       });
 
       try {
