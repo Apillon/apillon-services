@@ -1,4 +1,4 @@
-import { DefaultUserRole, env, QuotaCode, SqlModelStatus } from '@apillon/lib';
+import { DefaultUserRole, QuotaCode, SqlModelStatus } from '@apillon/lib';
 import * as request from 'supertest';
 import {
   createTestProject,
@@ -10,7 +10,6 @@ import { BadRequestErrorCode } from '../../../config/types';
 import { Project } from '../../project/models/project.model';
 import { ProjectUserPendingInvitation } from '../models/project-user-pending-invitation.model';
 import { ProjectUser } from '../models/project-user.model';
-import { AppModule } from '../../../app.module';
 import { setupTest } from '../../../../test/helpers/setup';
 
 describe('Project tests', () => {

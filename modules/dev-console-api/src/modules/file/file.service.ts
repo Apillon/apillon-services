@@ -33,6 +33,7 @@ export class FileService {
 
     const s3Client: AWS_S3 = new AWS_S3();
 
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
     if (!(await s3Client.exists(env.AWS_BUCKET, file.key))) {
       throw new CodeException({
         status: HttpStatus.NOT_FOUND,
@@ -157,6 +158,7 @@ export class FileService {
 
     const s3Client: AWS_S3 = new AWS_S3();
 
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
     if (!(await s3Client.exists(env.AWS_BUCKET, file.key))) {
       throw new CodeException({
         status: HttpStatus.NOT_FOUND,

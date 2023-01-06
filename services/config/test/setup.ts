@@ -5,7 +5,6 @@ import {
   MySql,
   rebuildDatabase,
   seedDatabase,
-  unseedDatabase,
 } from '@apillon/lib';
 import { ServiceContext } from '../src/context';
 
