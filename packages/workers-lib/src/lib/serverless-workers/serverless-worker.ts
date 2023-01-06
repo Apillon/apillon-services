@@ -64,10 +64,10 @@ export abstract class ServerlessWorker {
         // const sqs = new AWS.SQS(serviceDefinition.config);
         const sqs = new SQSClient({
           ...serviceDefinition.config,
-          credentials: {
-            accessKeyId: env.AWS_KEY,
-            secretAccessKey: env.AWS_SECRET,
-          },
+          // credentials: {
+          //   accessKeyId: env.AWS_KEY,
+          //   secretAccessKey: env.AWS_SECRET,
+          // },
           region: env.AWS_REGION,
         });
 
@@ -98,10 +98,10 @@ export abstract class ServerlessWorker {
         // const lambda = new AWS.Lambda(serviceDefinition.config);
         const lambda = new LambdaClient({
           ...serviceDefinition.config,
-          credentials: {
-            accessKeyId: env.AWS_KEY,
-            secretAccessKey: env.AWS_SECRET,
-          },
+          // credentials: {
+          //   accessKeyId: env.AWS_KEY,
+          //   secretAccessKey: env.AWS_SECRET,
+          // },
           region: env.AWS_REGION,
         });
 

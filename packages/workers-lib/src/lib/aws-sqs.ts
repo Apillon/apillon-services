@@ -4,10 +4,10 @@ import type { SendMessageCommandInput } from '@aws-sdk/client-sqs';
 
 export function createSqsClient() {
   return new SQSClient({
-    credentials: {
-      accessKeyId: env.AWS_KEY,
-      secretAccessKey: env.AWS_SECRET,
-    },
+    // credentials: {
+    //   accessKeyId: env.AWS_KEY,
+    //   secretAccessKey: env.AWS_SECRET,
+    // },
     region: env.AWS_REGION,
   });
 }

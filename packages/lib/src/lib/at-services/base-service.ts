@@ -18,10 +18,10 @@ export abstract class BaseService {
 
   constructor(context?: Context) {
     this.lambda = new LambdaClient({
-      credentials: {
-        accessKeyId: env.AWS_KEY,
-        secretAccessKey: env.AWS_SECRET,
-      },
+      // credentials: {
+      //   accessKeyId: env.AWS_KEY,
+      //   secretAccessKey: env.AWS_SECRET,
+      // },
       region: env.AWS_REGION,
     });
     this.securityToken = this.generateSecurityToken();

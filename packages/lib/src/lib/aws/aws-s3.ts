@@ -24,10 +24,10 @@ export class AWS_S3 {
   constructor() {
     try {
       this.s3Client = new S3Client({
-        credentials: {
-          accessKeyId: env.AWS_KEY,
-          secretAccessKey: env.AWS_SECRET,
-        },
+        // credentials: {
+        //   accessKeyId: env.AWS_KEY,
+        //   secretAccessKey: env.AWS_SECRET,
+        // },
         region: env.AWS_REGION,
       });
     } catch (err) {
@@ -35,8 +35,8 @@ export class AWS_S3 {
         'error creating AWS S3 client',
         {
           params: {
-            key: env.AWS_KEY,
-            secret: env.AWS_SECRET,
+            // key: env.AWS_KEY,
+            // secret: env.AWS_SECRET,
             reg: env.AWS_REGION,
             endpoint: env.AWS_ENDPOINT,
             env: env.APP_ENV,
