@@ -71,7 +71,7 @@ export class OauthService {
     if (!loggedTokens) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.OAUTH_PROFILE_CREDENTIALS_INVALID,
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        status: HttpStatus.BAD_REQUEST,
         context: context,
         sourceFunction: `${this.constructor.name}/oauth`,
       });
@@ -85,7 +85,7 @@ export class OauthService {
     if (existingOauth.exists()) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.OAUTH_USER_ID_ALREADY_PRESENT,
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        status: HttpStatus.BAD_REQUEST,
         context: context,
         sourceFunction: `${this.constructor.name}/oauth`,
       });
@@ -111,7 +111,7 @@ export class OauthService {
     } catch (error) {
       await context.mysql.rollback(conn);
       throw new ReferralCodeException({
-        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        status: HttpStatus.BAD_REQUEST,
         code: ReferralErrorCode.ERROR_LINKING_TWITTER,
       });
     }
@@ -132,7 +132,7 @@ export class OauthService {
     if (!player.exists()) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.PLAYER_DOES_NOT_EXISTS,
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        status: HttpStatus.BAD_REQUEST,
       });
     }
 
@@ -169,7 +169,7 @@ export class OauthService {
         if (existingOauth.exists()) {
           throw new ReferralCodeException({
             code: ReferralErrorCode.OAUTH_USER_ID_ALREADY_PRESENT,
-            status: HttpStatus.UNPROCESSABLE_ENTITY,
+            status: HttpStatus.BAD_REQUEST,
             context: context,
             sourceFunction: `${this.constructor.name}/oauth`,
           });
@@ -213,13 +213,13 @@ export class OauthService {
         }
       } else {
         throw new ReferralCodeException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          status: HttpStatus.BAD_REQUEST,
           code: ReferralErrorCode.OAUTH_APP_DENIED_OR_SESSION_EXPIRED, // getting github user
         });
       }
     } else {
       throw await new ReferralCodeException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        status: HttpStatus.BAD_REQUEST,
         code: ReferralErrorCode.OAUTH_APP_DENIED_OR_SESSION_EXPIRED, // getting access token
       });
     }

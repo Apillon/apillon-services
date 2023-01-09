@@ -169,21 +169,21 @@ export class Product extends AdvancedSQLModel {
     if (!this.exists()) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.PLAYER_DOES_NOT_EXISTS,
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        status: HttpStatus.BAD_REQUEST,
       });
     }
 
     if (!this.stock) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.PRODUCT_OUT_OF_STOCK,
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        status: HttpStatus.BAD_REQUEST,
       });
     }
 
     if (await this.alreadyOrdered(player_id)) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.MAX_ORDER_REACHED,
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        status: HttpStatus.BAD_REQUEST,
       });
     }
 
@@ -203,7 +203,7 @@ export class Product extends AdvancedSQLModel {
       if (!balance || balance.length < 1 || balance[0].balance < this.price) {
         throw new ReferralCodeException({
           code: ReferralErrorCode.INSUFFICIENT_BALANCE,
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          status: HttpStatus.BAD_REQUEST,
         });
       }
 
@@ -232,7 +232,7 @@ export class Product extends AdvancedSQLModel {
       } else {
         throw new ReferralCodeException({
           code: ReferralErrorCode.TRANSACTION_FAILED,
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
         });
       }
 

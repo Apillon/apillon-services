@@ -259,7 +259,7 @@ export class Task extends AdvancedSQLModel {
     if (!this.exists()) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.TASK_DOES_NOT_EXISTS,
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        status: HttpStatus.BAD_REQUEST,
       });
     }
 
@@ -281,7 +281,7 @@ export class Task extends AdvancedSQLModel {
     ) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.TASK_ALREADY_COMPLETED,
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        status: HttpStatus.BAD_REQUEST,
       });
     }
 

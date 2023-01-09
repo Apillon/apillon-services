@@ -83,7 +83,7 @@ export class ReferralService {
     if (!player.id || player.status === SqlModelStatus.DELETED) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.PLAYER_DOES_NOT_EXISTS,
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        status: HttpStatus.BAD_REQUEST,
       });
     }
 
@@ -91,7 +91,7 @@ export class ReferralService {
     if (!player.termsAccepted || player.status === SqlModelStatus.INCOMPLETE) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.MISSING_TERMS_ACCEPTANCE,
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        status: HttpStatus.BAD_REQUEST,
       });
     }
 
@@ -191,7 +191,7 @@ export class ReferralService {
     if (env.APP_ENV !== AppEnvironment.TEST && !tweetData.includes(tweetId)) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.INVALID_TWEET,
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        status: HttpStatus.BAD_REQUEST,
       });
     }
     const retweetData = (await twitter.getRetweets(tweetId)) as any;

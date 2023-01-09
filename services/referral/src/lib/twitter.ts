@@ -232,7 +232,7 @@ export class Twitter {
   private throwErrorCode(code: ReferralErrorCode, context: Context) {
     throw new ReferralCodeException({
       code: code,
-      status: HttpStatus.UNPROCESSABLE_ENTITY,
+      status: HttpStatus.BAD_REQUEST,
       context: context,
       sourceFunction: `${this.constructor.name}/oauth`,
     });
