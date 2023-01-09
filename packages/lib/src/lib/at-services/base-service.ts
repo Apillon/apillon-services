@@ -47,7 +47,9 @@ export abstract class BaseService {
     if (
       [AppEnvironment.LOCAL_DEV, AppEnvironment.TEST].includes(
         env.APP_ENV as AppEnvironment,
-      )
+      ) &&
+      !process.env.LAMBDA_TASK_ROOT &&
+      !process.env.CODEBUILD_CI
     ) {
       result = await this.callDevService(payload, isAsync);
     } else {

@@ -40,8 +40,7 @@ export async function setupTest(): Promise<Stage> {
 
     await app.listen(
       env.DEV_CONSOLE_API_PORT_TEST,
-      // For some reason, this causes to bind only a ipv6
-      // env.DEV_CONSOLE_API_HOST_TEST,
+      env.DEV_CONSOLE_API_HOST_TEST,
     );
     http = app.getHttpServer();
 

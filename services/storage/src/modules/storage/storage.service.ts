@@ -1,7 +1,6 @@
 import {
   AppEnvironment,
   AWS_S3,
-  BucketQueryFilter,
   CreateS3SignedUrlForUploadDto,
   EndFileUploadSessionDto,
   env,
@@ -267,59 +266,55 @@ export class StorageService {
     },
     context: ServiceContext,
   ): Promise<any> {
-    //Get file upload request
-    const fur = await new FileUploadRequest({}, context).populateByUUID(
-      event.file_uuid,
-    );
-    if (!fur.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.FILE_UPLOAD_REQUEST_NOT_FOUND,
-        status: 404,
-      });
-    }
-
-    //get bucket
-    const bucket = await new Bucket({}, context).populateById(fur.bucket_id);
-    bucket.canAccess(context);
-
-    const msg = {
-      Records: [
-        {
-          eventVersion: '2.1',
-          eventSource: 'aws:s3',
-          awsRegion: 'eu-west-1',
-          eventTime: '2022-12-12T07:15:18.165Z',
-          eventName: 'ObjectCreated:Put',
-          userIdentity: { principalId: 'AWS:AIDAQIMRRA6GKZX7GJVNU' },
-          requestParameters: { sourceIPAddress: '89.212.22.116' },
-          responseElements: {
-            'x-amz-request-id': 'D3KVZ7C5RRZPJ2SR',
-            'x-amz-id-2':
-              'vPrPgHDXn7A17ce6P+XdUZG2WJufvOJoalcS5vvPzEPKDtm5LZSFN3TjuNrRa3hv72sJICDfSGtM3gpXLilE1EMDl3qUINUA',
-          },
-          s3: {
-            s3SchemaVersion: '1.0',
-            configurationId: 'File uploaded to storage directory',
-            bucket: {
-              name: 'sync-to-ipfs-queue',
-              ownerIdentity: { principalId: 'A22UA2G16O19KV' },
-              arn: 'arn:aws:s3:::sync-to-ipfs-queue',
-            },
-            object: {
-              key: fur.s3FileKey,
-              size: fur.size,
-              eTag: 'efea4f1606e3d37048388cc4bebacea6',
-              sequencer: '006396D50624FE22EB',
-            },
-          },
-        },
-      ],
-    };
-
     if (
       env.APP_ENV == AppEnvironment.LOCAL_DEV ||
       env.APP_ENV == AppEnvironment.TEST
     ) {
+      //Get file upload request
+      const fur = await new FileUploadRequest({}, context).populateByUUID(
+        event.file_uuid,
+      );
+      if (!fur.exists()) {
+        throw new StorageCodeException({
+          code: StorageErrorCode.FILE_UPLOAD_REQUEST_NOT_FOUND,
+          status: 404,
+        });
+      }
+
+      const msg = {
+        Records: [
+          {
+            eventVersion: '2.1',
+            eventSource: 'aws:s3',
+            awsRegion: 'eu-west-1',
+            eventTime: '2022-12-12T07:15:18.165Z',
+            eventName: 'ObjectCreated:Put',
+            userIdentity: { principalId: 'AWS:AIDAQIMRRA6GKZX7GJVNU' },
+            requestParameters: { sourceIPAddress: '89.212.22.116' },
+            responseElements: {
+              'x-amz-request-id': 'D3KVZ7C5RRZPJ2SR',
+              'x-amz-id-2':
+                'vPrPgHDXn7A17ce6P+XdUZG2WJufvOJoalcS5vvPzEPKDtm5LZSFN3TjuNrRa3hv72sJICDfSGtM3gpXLilE1EMDl3qUINUA',
+            },
+            s3: {
+              s3SchemaVersion: '1.0',
+              configurationId: 'File uploaded to storage directory',
+              bucket: {
+                name: 'sync-to-ipfs-queue',
+                ownerIdentity: { principalId: 'A22UA2G16O19KV' },
+                arn: 'arn:aws:s3:::sync-to-ipfs-queue',
+              },
+              object: {
+                key: fur.s3FileKey,
+                size: fur.size,
+                eTag: 'efea4f1606e3d37048388cc4bebacea6',
+                sequencer: '006396D50624FE22EB',
+              },
+            },
+          },
+        ],
+      };
+
       //Directly calls worker, to sync file to IPFS & CRUST - USED ONLY FOR DEVELOPMENT!!
       const serviceDef: ServiceDefinition = {
         type: ServiceDefinitionType.SQS,
@@ -378,6 +373,7 @@ export class StorageService {
       ).populateByUUID(event.id);
 
       if (fur.exists()) {
+        await fur.canAccess(context);
         //check if file uploaded to S3
         const s3Client: AWS_S3 = new AWS_S3();
         if (
@@ -406,9 +402,6 @@ export class StorageService {
     fileStatus = FileStatus.UPLOADED_TO_IPFS;
     //File exists on IPFS and probably on CRUST- get status from CRUST
     if (file.CID) {
-      /*crustOrderStatus = await CrustService.getOrderStatus({
-        cid: file.CID,
-      });*/
       fileStatus = FileStatus.PINNED_TO_CRUST;
       file.downloadLink = env.STORAGE_IPFS_PROVIDER + file.CID;
     }

@@ -167,7 +167,7 @@ async function initDevConsoleTestMigrations() {
   };
 
   if (!/(test|testing)/i.test(poolConfig.database)) {
-    throw new Error('!!! NOT TEST DATABASE? !!!');
+    throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
   }
 
   const pool = createPool(poolConfig);
@@ -175,7 +175,7 @@ async function initDevConsoleTestMigrations() {
   dbConsoleMigration = new Migration({
     conn: pool as unknown as MigrationConnection,
     tableName: 'migrations',
-    dir: './/src/migration-scripts/migrations',
+    dir: '../../modules/dev-console-api/src/migration-scripts/migrations',
     silent: env.APP_ENV === AppEnvironment.TEST,
   });
 
@@ -196,7 +196,7 @@ async function initAmsTestMigrations() {
   };
 
   if (!/(test|testing)/i.test(poolConfig.database)) {
-    throw new Error('!!! NOT TEST DATABASE? !!!');
+    throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
   }
 
   const pool = createPool(poolConfig);
@@ -225,7 +225,7 @@ async function initDevConsoleTestSeed() {
   };
 
   if (!/(test|testing)/i.test(poolConfig.database)) {
-    throw new Error('!!! NOT TEST DATABASE? !!!');
+    throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
   }
 
   const pool = createPool(poolConfig);
@@ -233,7 +233,7 @@ async function initDevConsoleTestSeed() {
   dbConsoleSeed = new Migration({
     conn: pool as unknown as MigrationConnection,
     tableName: 'seeds',
-    dir: './/src/migration-scripts/seeds',
+    dir: '../../modules/dev-console-api/src/migration-scripts/seeds',
     silent: env.APP_ENV === AppEnvironment.TEST,
   });
 
@@ -254,7 +254,7 @@ async function initStorageTestMigrations() {
   };
 
   if (!/(test|testing)/i.test(poolConfig.database)) {
-    throw new Error('!!! NOT TEST DATABASE? !!!');
+    throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
   }
 
   const pool = createPool(poolConfig);
@@ -283,7 +283,7 @@ async function initConfigTestMigrations() {
   };
 
   if (!/(test|testing)/i.test(poolConfig.database)) {
-    throw new Error('!!! NOT TEST DATABASE? !!!');
+    throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
   }
 
   const pool = createPool(poolConfig);
@@ -341,7 +341,7 @@ async function initAmsTestSeed() {
   };
 
   if (!/(test|testing)/i.test(poolConfig.database)) {
-    throw new Error('!!! NOT TEST DATABASE? !!!');
+    throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
   }
 
   const pool = createPool(poolConfig);
@@ -370,7 +370,7 @@ async function initConfigTestSeed() {
   };
 
   if (!/(test|testing)/i.test(poolConfig.database)) {
-    throw new Error('!!! NOT TEST DATABASE? !!!');
+    throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
   }
 
   const pool = createPool(poolConfig);

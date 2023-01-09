@@ -12,6 +12,7 @@ import * as aws from 'aws-sdk';
 import { Context, env } from '@apillon/lib';
 import { SyncToIPFSWorker } from './s3-to-ipfs-sync-worker';
 import { TestWorker } from './test-worker';
+import { PinToCRUSTWorker } from './pin-to-crust-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -27,6 +28,7 @@ export enum WorkerName {
   TEST_WORKER = 'TestWorker',
   SCHEDULER = 'scheduler',
   SYNC_TO_IPFS_WORKER = 'SyncToIpfsWorker',
+  PIN_TO_CRUST_WORKER = 'PinToCrustWorker',
 }
 
 export async function handler(event: any) {
@@ -174,6 +176,16 @@ export async function handleSqsMessages(
     switch (workerName) {
       case WorkerName.SYNC_TO_IPFS_WORKER: {
         await new SyncToIPFSWorker(
+          workerDefinition,
+          context,
+          QueueWorkerType.EXECUTOR,
+        ).run({
+          executeArg: message?.body,
+        });
+        break;
+      }
+      case WorkerName.PIN_TO_CRUST_WORKER: {
+        await new PinToCRUSTWorker(
           workerDefinition,
           context,
           QueueWorkerType.EXECUTOR,

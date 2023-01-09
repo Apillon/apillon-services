@@ -74,7 +74,7 @@ export function safeJsonParse(inputString: string, defaultResult = null) {
   try {
     defaultResult = JSON.parse(inputString);
   } catch (err) {
-    console.warn('JSON parse failed and was handled by default value.');
+    // console.warn('JSON parse failed and was handled by default value.');
   }
   return defaultResult;
 }

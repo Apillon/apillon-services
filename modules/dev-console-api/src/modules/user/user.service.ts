@@ -229,6 +229,27 @@ export class UserService {
       throw err;
     }
 
+    //User has been registered - check if pending invitations for project exists
+    //This is done outside transaction as it is not crucial operation - admin is able to reinvite user to project
+    try {
+      if (tokenData.hasPendingInvitation) {
+        await this.projectService.resolveProjectUserPendingInvitations(
+          context,
+          email,
+          user.id,
+          user.user_uuid,
+        );
+      }
+    } catch (err) {
+      writeLog(
+        LogType.MSG,
+        'Error resolving project user pending invitations',
+        'user.service.ts',
+        'register',
+        err,
+      );
+    }
+
     return {
       ...user.serialize(SerializeFor.PROFILE),
       token: amsResponse.data.token,
