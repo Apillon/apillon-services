@@ -151,7 +151,7 @@ describe('Referral tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(422);
     });
-    test('User should be able to order product with sufficient balance', async () => {
+    test('User should be able to order product with sufficient balance once', async () => {
       await stage.referralSql.paramExecute(
         `
         INSERT INTO ${DbTables.TRANSACTION} (player_id, direction, amount, status)
@@ -166,9 +166,7 @@ describe('Referral tests', () => {
         .send({ id: product.id })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
-    });
 
-    test('User should be not able to order limited product multiple times', async () => {
       await stage.referralSql.paramExecute(
         `
       INSERT INTO ${DbTables.TRANSACTION} (player_id, direction, amount, status)
@@ -178,11 +176,13 @@ describe('Referral tests', () => {
           player_id: playerId,
         },
       );
-      const response = await request(stage.http)
+
+      // Should not be able to order twice
+      const response2 = await request(stage.http)
         .post(`/referral/product`)
         .send({ id: product.id })
         .set('Authorization', `Bearer ${testUser.token}`);
-      expect(response.status).toBe(422);
+      expect(response2.status).toBe(422);
     });
   });
 });

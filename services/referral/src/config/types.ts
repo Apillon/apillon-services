@@ -41,6 +41,8 @@ export enum ReferralErrorCode {
   DEFAULT_RESOURCE_NOT_FOUND_ERROR = 40407000,
   //409
   //500
+  ERROR_LINKING_GITHUB = 50007001,
+  ERROR_LINKING_TWITTER = 50007002,
 }
 
 export enum TransactionDirection {

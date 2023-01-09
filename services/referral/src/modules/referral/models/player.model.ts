@@ -260,7 +260,7 @@ export class Player extends AdvancedSQLModel {
 
   /**
    * Populates model fields by loading the document with the provided user id from the database.
-   * @param user_id Referr's user ID.
+   * @param id Player's Twitter ID.
    */
   public async populateByTwitterId(
     id: number | string,
@@ -277,6 +277,37 @@ export class Player extends AdvancedSQLModel {
       SELECT * 
       FROM \`${DbTables.PLAYER}\`
       WHERE twitter_id = @id AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { id },
+      conn,
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
+
+  /**
+   * Populates model fields by loading the document with the provided user id from the database.
+   * @param id Player's Github ID.
+   */
+  public async populateByGithubId(
+    id: number | string,
+    conn?: PoolConnection,
+  ): Promise<this> {
+    if (!id) {
+      throw new Error('Github id should not be null');
+    }
+
+    this.reset();
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${DbTables.PLAYER}\`
+      WHERE github_id = @id AND status <> ${SqlModelStatus.DELETED};
       `,
       { id },
       conn,
@@ -402,12 +433,13 @@ export class Player extends AdvancedSQLModel {
     return this.referrals;
   }
 
-  public async confirmRefer(referred_id: number) {
+  public async confirmRefer(referred_id: number, conn?: PoolConnection) {
     const task = await new Task({}, this.getContext()).populateByType(
       TaskType.REFERRAL,
+      conn,
     );
 
-    await task.confirmTask(this.id, { referred_id }, true);
+    await task.confirmTask(this.id, { referred_id }, true, conn);
   }
 
   public async generateCode() {

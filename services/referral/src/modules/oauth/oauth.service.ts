@@ -93,16 +93,27 @@ export class OauthService {
 
     player.twitter_id = loggedTokens.userId;
     // allTwitterData.userName
+
+    const conn = await context.mysql.start();
     try {
-      await player.validate();
-    } catch (err) {
-      await player.handle(err);
-      throw new ReferralValidationException(player);
-    }
-    await player.update();
-    // Complete twitter task if present
-    if (task.exists()) {
-      await task.confirmTask(player.id);
+      try {
+        await player.validate();
+      } catch (err) {
+        await player.handle(err);
+        throw new ReferralValidationException(player);
+      }
+      await player.update(SerializeFor.UPDATE_DB, conn);
+      // Complete twitter task if present
+      if (task.exists()) {
+        await task.confirmTask(player.id, null, false, conn);
+      }
+      await context.mysql.commit(conn);
+    } catch (error) {
+      await context.mysql.rollback(conn);
+      throw new ReferralCodeException({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        code: ReferralErrorCode.ERROR_LINKING_TWITTER,
+      });
     }
     await player.populateSubmodels();
     return player.serialize(SerializeFor.PROFILE);
@@ -150,26 +161,55 @@ export class OauthService {
       });
 
       if (gitUser?.data?.id) {
-        player.github_id = gitUser?.data?.id;
+        // check if oauth with the same account id exists
+        const existingOauth = await new Player({}, context).populateByGithubId(
+          gitUser?.data?.id,
+        );
+
+        if (existingOauth.exists()) {
+          throw new ReferralCodeException({
+            code: ReferralErrorCode.OAUTH_USER_ID_ALREADY_PRESENT,
+            status: HttpStatus.UNPROCESSABLE_ENTITY,
+            context: context,
+            sourceFunction: `${this.constructor.name}/oauth`,
+          });
+        }
+
+        const conn = await context.mysql.start();
         try {
-          await player.validate();
-        } catch (err) {
-          await player.handle(err);
-          throw new ReferralValidationException(player);
-        }
-        await player.update();
-        // Complete github task if present
-        if (task.exists()) {
-          await task.confirmTask(player.id, { id: player.github_id });
-        }
-        // If player was referred, reward the referrer
-        if (player.referrer_id) {
-          const referrer = await new Player({}, context).populateById(
-            player.referrer_id,
-          );
-          if (referrer.exists()) {
-            await referrer.confirmRefer(player.id);
+          player.github_id = gitUser?.data?.id;
+          try {
+            await player.validate();
+          } catch (err) {
+            await player.handle(err);
+            throw new ReferralValidationException(player);
           }
+          await player.update(SerializeFor.UPDATE_DB, conn);
+          // Complete github task if present
+          if (task.exists()) {
+            await task.confirmTask(
+              player.id,
+              { id: player.github_id },
+              false,
+              conn,
+            );
+          }
+          // If player was referred, reward the referrer
+          if (player.referrer_id) {
+            const referrer = await new Player({}, context).populateById(
+              player.referrer_id,
+            );
+            if (referrer.exists()) {
+              await referrer.confirmRefer(player.id, conn);
+            }
+          }
+          await context.mysql.commit(conn);
+        } catch (error) {
+          await context.mysql.rollback(conn);
+          throw new ReferralCodeException({
+            status: HttpStatus.INTERNAL_SERVER_ERROR,
+            code: ReferralErrorCode.ERROR_LINKING_GITHUB,
+          });
         }
       } else {
         throw new ReferralCodeException({

@@ -254,6 +254,7 @@ export class Task extends AdvancedSQLModel {
     player_id: number,
     data?: any,
     filterByData = false,
+    conn?: PoolConnection,
   ) {
     if (!this.exists()) {
       throw new ReferralCodeException({
@@ -269,8 +270,11 @@ export class Task extends AdvancedSQLModel {
       this.id,
       player_id,
       filterByData ? data : null,
+      false,
+      conn,
     );
 
+    // task has reached limit of realizations || task already has realization with the same data
     if (
       (this.maxCompleted && existingR.length >= this.maxCompleted) ||
       (filterByData && existingR.length)
@@ -296,16 +300,17 @@ export class Task extends AdvancedSQLModel {
         throw new ReferralValidationException(realization);
     }
 
-    await realization.insert();
+    await realization.insert(SerializeFor.INSERT_DB, conn);
 
     await this.db().paramExecute(
       `
-	          INSERT INTO ${DbTables.TRANSACTION}
-	            (player_id, direction, amount, realization_id, status)
-	          VALUES 
-              (@player_id, ${TransactionDirection.DEPOSIT}, @reward ,@realization_id, ${SqlModelStatus.ACTIVE})
-	        `,
+        INSERT INTO ${DbTables.TRANSACTION}
+          (player_id, direction, amount, realization_id, status)
+        VALUES 
+          (@player_id, ${TransactionDirection.DEPOSIT}, @reward ,@realization_id, ${SqlModelStatus.ACTIVE})
+      `,
       { player_id, reward: this.reward, realization_id: realization?.id },
+      conn,
     );
   }
 }
