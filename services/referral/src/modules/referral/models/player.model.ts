@@ -408,7 +408,7 @@ export class Player extends AdvancedSQLModel {
       SELECT 
         CONCAT(
           LEFT(SUBSTRING_INDEX(ref.user_email,'@',1),1),
-          REPEAT('*',(CHAR_LENGTH(SUBSTRING_INDEX(ref.user_email,'@',1))-2)),
+          REPEAT('*', 4),
           RIGHT(SUBSTRING_INDEX(ref.user_email,'@',1),1),
           '@',
           SUBSTRING_INDEX(ref.user_email,'@',-1)

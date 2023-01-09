@@ -14,7 +14,7 @@ import {
   ReferralValidationException,
 } from '../../lib/exceptions';
 import { Player } from './models/player.model';
-import { ReferralErrorCode } from '../../config/types';
+import { DbTables, ReferralErrorCode } from '../../config/types';
 import { HttpStatus } from '@nestjs/common';
 import { Task, TaskType } from './models/task.model';
 import { Twitter } from '../../lib/twitter';
@@ -142,9 +142,35 @@ export class ReferralService {
   /**
    * Returns last 4 tweets from Apillon twitter.
    */
-  static async getTweets(_event: any, _context: ServiceContext) {
+  static async getTweets(_event: any, context: ServiceContext) {
     const twitter = new Twitter();
-    return await twitter.getLatestTweets();
+    const tweets = await twitter.getLatestTweets();
+    const player = await new Player({}, context).populateByUserUuid(
+      context.user?.user_uuid,
+    );
+    if (player.exists()) {
+      // Check if user has confirmed retweet for any tweet
+      const data = await context.mysql.paramExecute(
+        `
+        SELECT JSON_VALUE(r.data, '$.tweet_id') as tweet 
+        FROM \`${DbTables.REALIZATION}\` r
+        JOIN \`${DbTables.TASK}\` t
+        ON t.id = r.task_id
+        WHERE t.type = ${TaskType.TWITTER_RETWEET}
+        AND r.status = ${SqlModelStatus.ACTIVE}
+        AND r.player_id = @playerId
+        AND JSON_VALUE(r.data, '$.tweet_id') IN (${tweets.join(',')})
+        `,
+        { playerId: player.id },
+      );
+      const retweets = data.map((x) => x.tweet);
+      return tweets.map((x) => {
+        return { id: x, retweeted: retweets.includes(x) };
+      });
+    }
+    return tweets.map((x) => {
+      return { id: x, retweeted: false };
+    });
   }
 
   /**
