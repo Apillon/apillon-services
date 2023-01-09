@@ -1,5 +1,5 @@
 import { mnemonicGenerate, mnemonicToMiniSecret } from '@polkadot/util-crypto';
-import { LogType, writeLog, env, ServiceName, Lmas } from '@apillon/lib';
+import { LogType, env, ServiceName, Lmas } from '@apillon/lib';
 import {
   Blockchain,
   ConfigService,
