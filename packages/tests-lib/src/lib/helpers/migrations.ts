@@ -7,6 +7,7 @@ let dbAmsMigration: Migration = null;
 let dbConsoleSeed: Migration = null;
 let dbAmsSeed: Migration = null;
 let dbStorageMigration: Migration = null;
+let dbStorageSeed: Migration = null;
 let dbConfigMigration: Migration = null;
 let dbConfigSeed: Migration = null;
 
@@ -37,6 +38,9 @@ async function initSeeds() {
   if (!dbAmsSeed) {
     await initAmsTestSeed();
   }
+  if (!dbStorageSeed) {
+    await initStorageTestSeed();
+  }
   if (!dbConfigSeed) {
     await initConfigTestSeed();
   }
@@ -66,7 +70,12 @@ export async function downgradeTestDatabases(): Promise<void> {
 
 export async function seedTestDatabases(): Promise<void> {
   await initSeeds();
-  await Promise.all([dbAmsSeed.up(), dbConsoleSeed.up(), dbConfigSeed.up()]);
+  await Promise.all([
+    dbAmsSeed.up(),
+    dbConsoleSeed.up(),
+    dbStorageSeed.up(),
+    dbConfigSeed.up(),
+  ]);
   await destroyTestSeeds();
 }
 
@@ -75,6 +84,7 @@ export async function unseedTestDatabases(): Promise<void> {
   await Promise.all([
     dbAmsSeed.down(-1),
     dbConsoleSeed.down(-1),
+    dbStorageSeed.down(-1),
     dbConfigSeed.down(-1),
   ]);
   await destroyTestSeeds();
@@ -109,12 +119,16 @@ export async function destroyTestSeeds(): Promise<void> {
   if (dbAmsSeed) {
     promises.push(dbAmsSeed.destroy());
   }
+  if (dbStorageSeed) {
+    promises.push(dbStorageSeed.destroy());
+  }
   if (dbConfigSeed) {
     promises.push(dbConfigSeed.destroy());
   }
   await Promise.all(promises);
   dbConsoleSeed = null;
   dbAmsSeed = null;
+  dbStorageSeed = null;
   dbConfigSeed = null;
 }
 
@@ -131,14 +145,17 @@ export async function rebuildTestDatabases(): Promise<void> {
   await Promise.all([
     dbAmsSeed.reset(),
     dbConsoleSeed.reset(),
+    dbStorageSeed.reset(),
     dbConfigSeed.reset(),
   ]);
   await destroyTestSeeds();
 }
 
 export async function dropTestDatabases(): Promise<void> {
+  await unseedTestDatabases();
   await downgradeTestDatabases();
   await destroyTestMigrations();
+  await destroyTestSeeds();
 }
 
 async function initDevConsoleTestMigrations() {
@@ -255,6 +272,35 @@ async function initStorageTestMigrations() {
   });
 
   await dbStorageMigration.initialize();
+}
+
+async function initStorageTestSeed() {
+  env.APP_ENV = AppEnvironment.TEST;
+
+  const poolConfig: ConnectionOptions = {
+    host: env.STORAGE_MYSQL_HOST_TEST,
+    database: env.STORAGE_MYSQL_DATABASE_TEST,
+    password: env.STORAGE_MYSQL_PASSWORD_TEST,
+    port: env.STORAGE_MYSQL_PORT_TEST,
+    user: env.STORAGE_MYSQL_USER_TEST,
+    // debug: true,
+    connectionLimit: 1,
+  };
+
+  if (!/(test|testing)/i.test(poolConfig.database)) {
+    throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
+  }
+
+  const pool = createPool(poolConfig);
+
+  dbStorageMigration = new Migration({
+    conn: pool as unknown as MigrationConnection,
+    tableName: 'seeds',
+    dir: '../../services/storage/src/migration-scripts/seeds',
+    silent: env.APP_ENV === AppEnvironment.TEST,
+  });
+
+  await dbStorageSeed.initialize();
 }
 
 async function initConfigTestMigrations() {
