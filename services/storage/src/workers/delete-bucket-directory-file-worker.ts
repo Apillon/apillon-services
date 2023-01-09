@@ -16,12 +16,12 @@ export class DeleteBucketDirectoryFileWorker extends ServerlessWorker {
   public async execute(data?: any): Promise<any> {
     this.logFn(`DeleteBucketDirectoryFileWorker - execute BEGIN: ${data}`);
 
-    //Get buckets that are marked for deletion more than 90 days (3 months)
+    //Get buckets that are marked for deletion more than x days (3 months = default)
     const bucketsToDelete = await this.context.mysql.paramExecute(
       `
       SELECT * 
       FROM \`${DbTables.BUCKET}\`
-      WHERE status = ${SqlModelStatus.MARKED_FOR_DELETION} AND markedForDeletionTime < (NOW() - INTERVAL 90 DAY);
+      WHERE status = ${SqlModelStatus.MARKED_FOR_DELETION} AND markedForDeletionTime < (NOW() - INTERVAL ${env.STORAGE_DELETE_AFTER_INTERVAR} DAY);
       `,
     );
 

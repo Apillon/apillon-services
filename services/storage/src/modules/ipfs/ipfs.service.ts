@@ -210,12 +210,58 @@ export class IPFSService {
       //Get IPFS client
       const client = await IPFSService.createIPFSClient();
       await client.pin.rm(cid);
+      console.info('File sucessfully unpined', cid);
     } catch (err) {
       console.error('Error unpinning file', cid, err);
       return false;
     }
 
     return true;
+  }
+
+  /**
+   * Lists through pinned items on IPFS and checks if give CID is pinned.
+   * @param cid
+   * @returns true, if CID is pinned on IPFS
+   */
+  static async isCIDPinned(cid: string) {
+    if (!cid) return false;
+    //Get IPFS client
+    const client = await IPFSService.createIPFSClient();
+    try {
+      const lsRes = await client.pin.ls({ paths: [CID.parse(cid)] });
+      for await (const {} of lsRes) {
+        return true;
+      }
+    } catch (err) {
+      if (err.message && err.message.includes('is not pinned')) return false;
+      throw err;
+    }
+    return false;
+  }
+
+  /**
+   * Function, used for testing purposes. To upload fake file to IPFS
+   * @param params file path and file content
+   * @returns cidv0 & cidV1
+   */
+  static async addFileToIPFS(params: {
+    path: string;
+    content: any;
+  }): Promise<{ cidV0: string; cidV1: string }> {
+    //Get IPFS client
+    const client = await IPFSService.createIPFSClient();
+
+    //Add to IPFS
+    const fileOnIPFS = await client.add({
+      path: params.path,
+      content: params.content,
+    });
+
+    return {
+      cidV0: fileOnIPFS.cid.toV0().toString(),
+      cidV1: fileOnIPFS.cid.toV1().toString(),
+    };
   }
 
   //#region OBSOLETE

@@ -13,6 +13,7 @@ import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model'
 import * as request from 'supertest';
 import {
   createTestBucket,
+  createTestBucketFile,
   createTestProject,
   createTestUser,
   TestUser,
@@ -21,6 +22,8 @@ import { releaseStage, Stage } from '@apillon/tests-lib';
 import { Project } from '../../project/models/project.model';
 import { setupTest } from '../../../../test/helpers/setup';
 import { executeDeleteBucketDirectoryFileWorker } from '@apillon/storage/src/scripts/serverless-workers/execute-delete-bucket-dir-file-worker';
+import { File } from '../../file/models/file.model';
+import { IPFSService } from '@apillon/storage/src/modules/ipfs/ipfs.service';
 
 describe('Storage bucket tests', () => {
   let stage: Stage;
@@ -335,7 +338,7 @@ describe('Storage bucket tests', () => {
       expect(b.status).toBe(SqlModelStatus.MARKED_FOR_DELETION);
     });
 
-    test('Storage delete worker should NOT delete bucket if bucket is not long enough is status 8 (marked for delete)', async () => {
+    test('Storage delete worker should NOT delete bucket if bucket is not long enough in status 8 (marked for delete)', async () => {
       await executeDeleteBucketDirectoryFileWorker(stage.storageContext);
       const b: Bucket = await new Bucket(
         {},
@@ -344,7 +347,7 @@ describe('Storage bucket tests', () => {
       expect(b.status).toBe(SqlModelStatus.MARKED_FOR_DELETION);
     });
 
-    test('Storage delete worker should delete bucket if bucket is long enough is status 8 (marked for delete)', async () => {
+    test('Storage delete worker should delete bucket if bucket is long enough in status 8 (marked for delete)', async () => {
       let b: Bucket = await new Bucket({}, stage.storageContext).populateByUUID(
         testBucket.bucket_uuid,
       );
@@ -358,9 +361,52 @@ describe('Storage bucket tests', () => {
       b = await new Bucket({}, stage.storageContext).populateByUUID(
         testBucket.bucket_uuid,
       );
-      console.info('banane na koncu', b.serialize(SerializeFor.PROFILE));
-
       expect(b.exists()).toBeFalsy();
+    });
+
+    test('Storage delete worker should delete bucket and all files in it', async () => {
+      //Prepare new test bucket and add some files to it
+      const deleteBucketTestBucket = await createTestBucket(
+        testUser,
+        stage.storageContext,
+        testProject,
+      );
+
+      const deleteBucketTestFile1 = await createTestBucketFile(
+        stage.storageContext,
+        deleteBucketTestBucket,
+        'testingDelete.txt',
+        'text/plain',
+        true,
+      );
+
+      expect(
+        await IPFSService.isCIDPinned(deleteBucketTestFile1.CID),
+      ).toBeTruthy();
+
+      //Mark bucket for deletion
+      await deleteBucketTestBucket.markForDeletion();
+      deleteBucketTestBucket.markedForDeletionTime = new Date();
+      deleteBucketTestBucket.markedForDeletionTime.setFullYear(
+        deleteBucketTestBucket.markedForDeletionTime.getFullYear() - 1,
+      );
+      await deleteBucketTestBucket.update();
+
+      //Run worker and check if bucket was deleted
+      await executeDeleteBucketDirectoryFileWorker(stage.storageContext);
+      const b = await new Bucket({}, stage.storageContext).populateByUUID(
+        deleteBucketTestBucket.bucket_uuid,
+      );
+      expect(b.exists()).toBeFalsy();
+
+      //Check if files were deleted and unpined
+      const f: File = await new File({}, stage.storageContext).populateById(
+        deleteBucketTestFile1.id,
+      );
+      expect(f.exists()).toBeFalsy();
+      expect(
+        await IPFSService.isCIDPinned(deleteBucketTestFile1.CID),
+      ).toBeFalsy();
     });
   });
 });

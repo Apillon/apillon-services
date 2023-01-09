@@ -6,6 +6,7 @@ import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 import { Project } from '@apillon/dev-console-api/src/modules/project/models/project.model';
 import { TestContext } from './context';
 import { TestUser } from './user';
+import { IPFSService } from '@apillon/storage/src/modules/ipfs/ipfs.service';
 
 export async function createTestBucket(
   user: TestUser,
@@ -85,13 +86,27 @@ export async function createTestBucketDirectory(
 export async function createTestBucketFile(
   storageCtx: TestContext,
   bucket: Bucket,
+  fileName = 'myTestFile.txt',
+  contentType = 'text/plain',
+  addToIPFS = false,
 ) {
+  let cid = undefined;
+  if (addToIPFS) {
+    //Add fake file to IPFS
+    const deleteBucketTestFIle1CID = await IPFSService.addFileToIPFS({
+      path: fileName,
+      content: new Date().toLocaleDateString(),
+    });
+    cid = deleteBucketTestFIle1CID.cidV0;
+  }
+
   const f: File = await new File({}, storageCtx).fake().populate({
-    name: 'myTestFile.txt',
-    contentType: 'text/plain',
+    name: fileName,
+    contentType: contentType,
     project_uuid: bucket.project_uuid,
     bucket_id: bucket.id,
     size: 500,
+    CID: cid,
   });
 
   await f.insert();

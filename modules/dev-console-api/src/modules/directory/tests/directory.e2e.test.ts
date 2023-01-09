@@ -11,7 +11,6 @@ import {
 import * as request from 'supertest';
 import { releaseStage, Stage } from '@apillon/tests-lib';
 import { Project } from '../../project/models/project.model';
-import { AppModule } from '../../../app.module';
 import { setupTest } from '../../../../test/helpers/setup';
 
 describe('Storage directory tests', () => {
@@ -22,7 +21,6 @@ describe('Storage directory tests', () => {
   let testUser3: TestUser;
 
   let testProject: Project;
-  let testProject2: Project;
 
   let testBucket: Bucket;
   let testDirectory: Directory;
@@ -34,7 +32,6 @@ describe('Storage directory tests', () => {
     testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
 
     testProject = await createTestProject(testUser, stage.devConsoleContext);
-    testProject2 = await createTestProject(testUser2, stage.devConsoleContext);
 
     testBucket = await createTestBucket(
       testUser,
