@@ -211,6 +211,14 @@ export class Player extends AdvancedSQLModel {
   public balance: number;
 
   @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE],
+    serializable: [SerializeFor.ADMIN, SerializeFor.PROFILE],
+    validators: [],
+  })
+  public balance_all: number;
+
+  @prop({
     populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE],
     serializable: [SerializeFor.ADMIN, SerializeFor.PROFILE],
     validators: [],
@@ -365,7 +373,7 @@ export class Player extends AdvancedSQLModel {
           )})
         ), 
         JSON_ARRAY()
-      ) as realizations
+      ) AS realizations
       FROM \`${DbTables.TASK}\` t
       LEFT JOIN \`${DbTables.REALIZATION}\` r
         ON r.player_id = @player_id
@@ -387,7 +395,8 @@ export class Player extends AdvancedSQLModel {
       `
       SELECT 
         player_id,
-        balance
+        balance,
+        all_time
       FROM \`${DbTables.BALANCE}\` b
       WHERE b.player_id = @player_id
       `,
@@ -396,8 +405,10 @@ export class Player extends AdvancedSQLModel {
 
     if (data.length) {
       this.balance = data[0].balance;
+      this.balance_all = data[0].all_time;
     } else {
       this.balance = 0;
+      this.balance_all = 0;
     }
     return this.balance;
   }
@@ -412,9 +423,9 @@ export class Player extends AdvancedSQLModel {
           RIGHT(SUBSTRING_INDEX(ref.user_email,'@',1),1),
           '@',
           SUBSTRING_INDEX(ref.user_email,'@',-1)
-        ) as name,
+        ) AS name,
         IF(ref.github_id,1,0) has_github,
-        ref.createTime as joined
+        ref.createTime AS joined
       FROM \`${DbTables.PLAYER}\` p
       LEFT JOIN \`${DbTables.PLAYER}\` ref
       ON ref.referrer_id = p.id
