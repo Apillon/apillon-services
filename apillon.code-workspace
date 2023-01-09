@@ -66,7 +66,7 @@
     }
   ],
   "settings": {
-    "editor.formatOnPaste": true,
+    "editor.formatOnPaste": false,
     "editor.formatOnSave": true,
     "[typescript]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode"
@@ -81,7 +81,7 @@
       "**/Thumbs.db": true,
       "**/.serverless": true,
       "**/.turbo": true,
-      "**/node_modules": true
+      "**/node_modules": false
     },
     "nuxt.isNuxtApp": false
   }

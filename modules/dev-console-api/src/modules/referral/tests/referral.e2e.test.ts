@@ -15,13 +15,11 @@ import {
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
 
-describe('Storage directory tests', () => {
+describe('Referral tests', () => {
   let stage: Stage;
 
   let testUser: TestUser;
-  let testUser2: TestUser;
 
-  let tasks: any;
   let product: any;
 
   let refCode: string;
@@ -37,8 +35,7 @@ describe('Storage directory tests', () => {
   beforeAll(async () => {
     stage = await setupTest();
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    tasks = await createTestReferralTasks(stage.referralContext);
+    await createTestReferralTasks(stage.referralContext);
     product = await createTestReferralProduct(stage.referralContext);
   });
 
@@ -126,13 +123,13 @@ describe('Storage directory tests', () => {
         WHERE user_uuid = @uuid
       `,
         {
-          twitter_id: '1529013336754507778',
+          twitter_id: '1529013336754507778', // Kalmia twitter
           uuid: testUser.user.user_uuid,
         },
       );
       const response = await request(stage.http)
         .post(`/referral/twitter/confirm`)
-        .send({ tweet_id: '1600474958685409280' })
+        .send({ tweet_id: '1600474958685409280' }) // tweet that Kalmia account retweeted
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
       expect(response.body.data.player.balance).toBe(1);
@@ -170,21 +167,22 @@ describe('Storage directory tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
     });
-  });
-  test('User should be not able to order limited product multiple times', async () => {
-    await stage.referralSql.paramExecute(
-      `
+
+    test('User should be not able to order limited product multiple times', async () => {
+      await stage.referralSql.paramExecute(
+        `
       INSERT INTO ${DbTables.TRANSACTION} (player_id, direction, amount, status)
       VALUES (@player_id, ${TransactionDirection.DEPOSIT}, 14, 5)
     `,
-      {
-        player_id: playerId,
-      },
-    );
-    const response = await request(stage.http)
-      .post(`/referral/product`)
-      .send({ id: product.id })
-      .set('Authorization', `Bearer ${testUser.token}`);
-    expect(response.status).toBe(422);
+        {
+          player_id: playerId,
+        },
+      );
+      const response = await request(stage.http)
+        .post(`/referral/product`)
+        .send({ id: product.id })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(422);
+    });
   });
 });
