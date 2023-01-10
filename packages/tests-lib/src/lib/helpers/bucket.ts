@@ -8,17 +8,20 @@ import { TestContext } from './context';
 import { TestUser } from './user';
 import { IPFSService } from '@apillon/storage/src/modules/ipfs/ipfs.service';
 import { v4 as uuidV4 } from 'uuid';
+import { SqlModelStatus } from '@apillon/lib';
 
 export async function createTestBucket(
   user: TestUser,
   storageCtx: TestContext,
   project: Project,
   bucketType?: BucketType,
+  status = SqlModelStatus.ACTIVE,
 ): Promise<Bucket> {
   const bucket: Bucket = new Bucket({}, storageCtx).fake().populate({
     project_uuid: project.project_uuid,
     name: 'My bucket',
     bucketType: bucketType || BucketType.STORAGE,
+    status,
   });
 
   await bucket.insert();
@@ -47,6 +50,7 @@ export async function createTestBucketDirectory(
   parentDirectoryId?: number,
   name?: string,
   description?: string,
+  status = SqlModelStatus.ACTIVE,
 ): Promise<Directory> {
   const directory: Directory = new Directory({}, storageCtx).fake().populate({
     project_uuid: project.project_uuid,
@@ -54,6 +58,7 @@ export async function createTestBucketDirectory(
     bucket_id: bucket.id,
     name,
     description,
+    status,
   });
 
   await directory.insert();
@@ -91,6 +96,7 @@ export async function createTestBucketFile(
   contentType = 'text/plain',
   addToIPFS = false,
   directory_id?: number,
+  status = SqlModelStatus.ACTIVE,
 ) {
   let cid = undefined;
   if (addToIPFS) {
@@ -110,6 +116,7 @@ export async function createTestBucketFile(
     size: 500,
     CID: cid,
     directory_id: directory_id,
+    status,
   });
 
   await f.insert();

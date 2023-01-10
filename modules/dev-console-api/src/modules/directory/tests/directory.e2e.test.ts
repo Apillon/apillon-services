@@ -250,6 +250,33 @@ describe('Storage directory tests', () => {
       expect(d.status).toBe(SqlModelStatus.MARKED_FOR_DELETION);
     });
 
+    test('User should be able to cancel directory deletion', async () => {
+      const testDirectoryToCancelDeletion = await createTestBucketDirectory(
+        stage.storageContext,
+        testProject,
+        testBucket,
+        true,
+        undefined,
+        'My directory to delete',
+        undefined,
+        SqlModelStatus.MARKED_FOR_DELETION,
+      );
+
+      const response = await request(stage.http)
+        .patch(
+          `/directories/${testDirectoryToCancelDeletion.id}/cancel-deletion`,
+        )
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+
+      const d: Directory = await new Directory(
+        {},
+        stage.storageContext,
+      ).populateById(testDirectoryToCancelDeletion.id);
+      expect(d.exists()).toBeTruthy();
+      expect(d.status).toBe(SqlModelStatus.ACTIVE);
+    });
+
     test('Storage delete worker should NOT delete directory if directory is not long enough in status 8 (marked for delete)', async () => {
       await executeDeleteBucketDirectoryFileWorker(stage.storageContext);
       const d: Directory = await new Directory(

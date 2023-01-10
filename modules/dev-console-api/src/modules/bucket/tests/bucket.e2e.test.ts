@@ -339,6 +339,26 @@ describe('Storage bucket tests', () => {
       expect(b.status).toBe(SqlModelStatus.MARKED_FOR_DELETION);
     });
 
+    test('User should be able to unmark bucket for deletion', async () => {
+      const testBucketToCancelDeletion = await createTestBucket(
+        testUser,
+        stage.storageContext,
+        testProject,
+        BucketType.STORAGE,
+        SqlModelStatus.MARKED_FOR_DELETION,
+      );
+      const response = await request(stage.http)
+        .patch(`/buckets/${testBucketToCancelDeletion.id}/cancel-deletion`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+
+      const b: Bucket = await new Bucket(
+        {},
+        stage.storageContext,
+      ).populateByUUID(testBucketToCancelDeletion.bucket_uuid);
+      expect(b.status).toBe(SqlModelStatus.ACTIVE);
+    });
+
     test('Storage delete worker should NOT delete bucket if bucket is not long enough in status 8 (marked for delete)', async () => {
       await executeDeleteBucketDirectoryFileWorker(stage.storageContext);
       const b: Bucket = await new Bucket(

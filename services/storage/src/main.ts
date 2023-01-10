@@ -27,16 +27,22 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.CREATE_BUCKET]: BucketService.createBucket,
     [StorageEventType.UPDATE_BUCKET]: BucketService.updateBucket,
     [StorageEventType.DELETE_BUCKET]: BucketService.markBucketForDeletion,
+    [StorageEventType.CANCEL_DELETE_BUCKET]:
+      BucketService.unmarkBucketForDeletion,
     [StorageEventType.MAX_BUCKETS_QUOTA_REACHED]:
       BucketService.maxBucketsQuotaReached,
 
     [StorageEventType.CREATE_DIRECTORY]: DirectoryService.createDirectory,
     [StorageEventType.UPDATE_DIRECTROY]: DirectoryService.updateDirectory,
-    [StorageEventType.DELETE_DIRECTORY]: DirectoryService.deleteDirectory,
+    [StorageEventType.DELETE_DIRECTORY]:
+      DirectoryService.markDirectoryForDeletion,
+    [StorageEventType.CANCEL_DELETE_DIRECTORY]:
+      DirectoryService.unmarkDirectoryForDeletion,
     [StorageEventType.LIST_DIRECTORY_CONTENT]:
       DirectoryService.listDirectoryContent,
     [StorageEventType.GET_FILE_DETAILS]: StorageService.getFileDetails,
-    [StorageEventType.FILE_DELETE]: StorageService.deleteFile,
+    [StorageEventType.FILE_DELETE]: StorageService.markFileForDeletion,
+    [StorageEventType.CANCEL_FILE_DELETE]: StorageService.unmarkFileForDeletion,
 
     [StorageEventType.BUCKET_WEBHOOK_GET]: BucketService.getBucketWebhook,
     [StorageEventType.BUCKET_WEBHOOK_CREATE]: BucketService.createBucketWebhook,

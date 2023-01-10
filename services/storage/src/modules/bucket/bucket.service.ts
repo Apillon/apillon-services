@@ -160,7 +160,7 @@ export class BucketService {
     return b.serialize(SerializeFor.PROFILE);
   }
 
-  static async cancelBucketDeletion(
+  static async unmarkBucketForDeletion(
     event: { id: number },
     context: ServiceContext,
   ): Promise<any> {

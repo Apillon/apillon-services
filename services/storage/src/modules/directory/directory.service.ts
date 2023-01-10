@@ -3,6 +3,7 @@ import {
   DirectoryContentQueryFilter,
   PopulateFrom,
   SerializeFor,
+  SqlModelStatus,
 } from '@apillon/lib';
 import { StorageErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
@@ -97,7 +98,7 @@ export class DirectoryService {
     return d.serialize(SerializeFor.PROFILE);
   }
 
-  static async deleteDirectory(
+  static async markDirectoryForDeletion(
     event: { id: number },
     context: ServiceContext,
   ): Promise<any> {
@@ -110,10 +111,42 @@ export class DirectoryService {
         code: StorageErrorCode.DIRECTORY_NOT_FOUND,
         status: 404,
       });
+    } else if (d.status == SqlModelStatus.MARKED_FOR_DELETION) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.DIRECTORY_ALREADY_MARKED_FOR_DELETION,
+        status: 400,
+      });
     }
     d.canModify(context);
 
     await d.markForDeletion();
+    return d.serialize(SerializeFor.PROFILE);
+  }
+
+  static async unmarkDirectoryForDeletion(
+    event: { id: number },
+    context: ServiceContext,
+  ): Promise<any> {
+    const d: Directory = await new Directory({}, context).populateById(
+      event.id,
+    );
+
+    if (!d.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.DIRECTORY_NOT_FOUND,
+        status: 404,
+      });
+    } else if (d.status != SqlModelStatus.MARKED_FOR_DELETION) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.DIRECTORY_NOT_MARKED_FOR_DELETION,
+        status: 400,
+      });
+    }
+    d.canModify(context);
+
+    d.status = SqlModelStatus.ACTIVE;
+
+    await d.update();
     return d.serialize(SerializeFor.PROFILE);
   }
 }

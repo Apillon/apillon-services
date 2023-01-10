@@ -336,7 +336,7 @@ export class Directory extends AdvancedSQLModel {
     const qSelects = [
       {
         qSelect: `
-        SELECT 'directory' as type, d.id, d.name, d.CID, d.createTime, d.updateTime, NULL as contentType, NULL as size, d.parentDirectory_id as parentDirectoryId, NULL as file_uuid, NULL as link
+        SELECT 'directory' as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime, NULL as contentType, NULL as size, d.parentDirectory_id as parentDirectoryId, NULL as file_uuid, NULL as link
         `,
         qFrom: `
         FROM \`${DbTables.DIRECTORY}\` d
@@ -344,12 +344,14 @@ export class Directory extends AdvancedSQLModel {
         WHERE b.bucket_uuid = @bucket_uuid
         AND (IFNULL(@directory_id, -1) = IFNULL(d.parentDirectory_id, -1))
         AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))
-        AND d.status <> ${SqlModelStatus.DELETED}
+        AND ( d.status = ${SqlModelStatus.ACTIVE} OR 
+          ( @markedForDeletion = 1 AND d.status = ${SqlModelStatus.MARKED_FOR_DELETION})
+        )
       `,
       },
       {
         qSelect: `
-        SELECT 'file' as type, d.id, d.name, d.CID, d.createTime, d.updateTime, d.contentType as contentType, d.size as size, d.directory_id as parentDirectoryId, d.file_uuid as file_uuid, CONCAT("${env.STORAGE_IPFS_PROVIDER}", d.CID)
+        SELECT 'file' as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime, d.contentType as contentType, d.size as size, d.directory_id as parentDirectoryId, d.file_uuid as file_uuid, CONCAT("${env.STORAGE_IPFS_PROVIDER}", d.CID)
         `,
         qFrom: `
         FROM \`${DbTables.FILE}\` d
@@ -357,7 +359,9 @@ export class Directory extends AdvancedSQLModel {
         WHERE b.bucket_uuid = @bucket_uuid
         AND (IFNULL(@directory_id, -1) = IFNULL(d.directory_id, -1))
         AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))
-        AND d.status <> ${SqlModelStatus.DELETED}
+        AND ( d.status = ${SqlModelStatus.ACTIVE} OR 
+          ( @markedForDeletion = 1 AND d.status = ${SqlModelStatus.MARKED_FOR_DELETION})
+        )
       `,
       },
     ];
