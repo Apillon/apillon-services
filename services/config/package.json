@@ -8,7 +8,7 @@
   "private": true,
   "scripts": {
     "prebuild": "rimraf dist",
-    "test-service": "cross-env APP_ENV=testing LOG_TARGET=none jest --detectOpenHandles --runInBand --forceExit",
+    "test": "cross-env APP_ENV=test LOG_TARGET=none jest --detectOpenHandles --runInBand --forceExit",
     "test-server": "cross-env APP_ENV=test nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60006",
     "build": "tsc --project tsconfig.build.json",
     "dev": "nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60006",
@@ -16,6 +16,7 @@
     "deploy:prod": "serverless deploy --stage production",
     "deploy:staging": "serverless deploy --stage staging",
     "deploy:dev": "serverless deploy --stage dev",
+    "deploy:test": "serverless deploy --stage test",
     "db-upgrade": "node -r ts-node/register ./src/scripts/db/upgrade-db",
     "db-downgrade": "node -r ts-node/register ./src/scripts/db/downgrade-db",
     "db-seed": "node -r ts-node/register ./src/scripts/db/seed-db",

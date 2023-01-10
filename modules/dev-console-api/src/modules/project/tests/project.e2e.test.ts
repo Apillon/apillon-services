@@ -1,4 +1,4 @@
-import { DefaultUserRole, env, QuotaCode, SqlModelStatus } from '@apillon/lib';
+import { DefaultUserRole, QuotaCode, SqlModelStatus } from '@apillon/lib';
 import * as request from 'supertest';
 import {
   createTestProject,
