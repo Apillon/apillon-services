@@ -5,7 +5,6 @@ import {
   FileUploadsQueryFilter,
   StorageMicroservice,
 } from '@apillon/lib';
-import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 @Injectable()

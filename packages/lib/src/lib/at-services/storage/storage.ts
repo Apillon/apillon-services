@@ -1,9 +1,5 @@
 import { env } from '../../../config/env';
-import {
-  AppEnvironment,
-  SerializeFor,
-  StorageEventType,
-} from '../../../config/types';
+import { AppEnvironment, StorageEventType } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { BucketQuotaReachedQueryFilter } from './dtos/bucket-qouta-reached-query-filter.dto';

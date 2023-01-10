@@ -24,9 +24,6 @@ import { setupTest } from '../../../../test/helpers/setup';
 import { executeDeleteBucketDirectoryFileWorker } from '@apillon/storage/src/scripts/serverless-workers/execute-delete-bucket-dir-file-worker';
 import { IPFSService } from '@apillon/storage/src/modules/ipfs/ipfs.service';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const fs = require('fs');
-
 describe('Storage tests', () => {
   let stage: Stage;
 

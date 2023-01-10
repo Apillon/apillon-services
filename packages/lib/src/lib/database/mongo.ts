@@ -26,7 +26,7 @@ export class Mongo {
       env.APP_ENV === AppEnvironment.TEST &&
       !/(test|testing)/i.test(this.mongoDb)
     ) {
-      throw new Error('!!! NOT TEST DATABASE? !!!');
+      throw new Error(`!!! ${this.mongoDb} NOT TEST DATABASE? !!!`);
     }
   }
 

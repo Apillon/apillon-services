@@ -49,7 +49,7 @@ export class MySql {
           env.APP_ENV === AppEnvironment.TEST &&
           !/(test|testing)/i.test(this.database)
         ) {
-          throw new Error('!!! NOT TEST DATABASE? !!!');
+          throw new Error(`!!! ${this.database} NOT TEST DATABASE? !!!`);
         }
 
         // test connection

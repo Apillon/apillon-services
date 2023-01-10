@@ -15,7 +15,6 @@ import {
 import * as request from 'supertest';
 import { releaseStage, Stage } from '@apillon/tests-lib';
 import { Project } from '../../project/models/project.model';
-import { AppModule } from '../../../app.module';
 import { setupTest } from '../../../../test/helpers/setup';
 
 describe('Storage bucket tests', () => {
