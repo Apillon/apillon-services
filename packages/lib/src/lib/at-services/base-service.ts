@@ -63,9 +63,8 @@ export abstract class BaseService {
       });
 
       try {
-        result = safeJsonParse(
-          (await this.lambda.send(command)).Payload.toString(),
-        );
+        const { Payload } = await this.lambda.send(command);
+        result = safeJsonParse(Buffer.from(Payload).toString());
       } catch (err) {
         console.error('Error invoking lambda!', err);
       }
