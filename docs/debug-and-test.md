@@ -28,7 +28,7 @@ For current needs we will limit our automated tests to end-to-end tests. Default
 
 In module test all possible flows of the module functionality should be tested against all types of users/permissions.
 
-## Running automated tests
+## Running automated tests locally
 
 For running tests, check if all environment variables with suffix `_TEST` are correctly set. If running locally, variables should be set in your `.env` file in root folder.
 
@@ -95,3 +95,13 @@ Go to debugger tab and find appropriate options from the configuration dropdown 
 * `Jest Test Current File` - will run test only for currently open test file.
 
 > Debugger will be automatically attached.
+
+## Running automatic tests on AWS cloud
+
+On AWS CoePipeline there is `apillon-services-run-test` pipeline that includes three stages:
+
+1. Source: Downloads source from git (`test` branch).
+2. Build: Runs Codebuild project for each microservice(lambda) on test environment - Deploys test lambdas
+3. RunTests: Runs codebuild project `apillon-run-tests` - runs predefined command (most of the time to run all tests)
+
+### Setup codebuild projects
