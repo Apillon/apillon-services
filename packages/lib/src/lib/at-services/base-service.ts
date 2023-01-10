@@ -83,7 +83,10 @@ export abstract class BaseService {
       }
       throw {
         status: result?.status || 500,
-        message: result?.error?.message || result?.error.errorMessage,
+        message:
+          result?.error?.message ||
+          result?.error?.errorMessage ||
+          `Error after calling lambda ${this.lambdaFunctionName}`,
         code: result?.error?.errorCode,
       };
     }
