@@ -22,7 +22,7 @@ import { releaseStage, Stage } from '@apillon/tests-lib';
 import { Project } from '../../project/models/project.model';
 import { setupTest } from '../../../../test/helpers/setup';
 import { executeDeleteBucketDirectoryFileWorker } from '@apillon/storage/src/scripts/serverless-workers/execute-delete-bucket-dir-file-worker';
-import { File } from '../../file/models/file.model';
+import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 import { IPFSService } from '@apillon/storage/src/modules/ipfs/ipfs.service';
 
 describe('Storage bucket tests', () => {
@@ -323,6 +323,7 @@ describe('Storage bucket tests', () => {
         stage.storageContext,
       ).populateByUUID(testBucket.bucket_uuid);
       expect(b.exists()).toBeTruthy();
+      expect(b.status).toBe(SqlModelStatus.ACTIVE);
     });
 
     test('User should be able to mark bucket for deletion', async () => {

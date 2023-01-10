@@ -1,4 +1,4 @@
-import { env } from '@apillon/lib';
+import { env, SqlModelStatus } from '@apillon/lib';
 import {
   FileStatus,
   FileUploadRequestFileStatus,
@@ -10,6 +10,7 @@ import { FileUploadRequest } from '@apillon/storage/src/modules/storage/models/f
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 import {
   createTestBucket,
+  createTestBucketFile,
   createTestBucketWebhook,
   createTestProject,
   createTestUser,
@@ -19,8 +20,9 @@ import * as request from 'supertest';
 import { v4 as uuidV4 } from 'uuid';
 import { releaseStage, Stage } from '@apillon/tests-lib';
 import { Project } from '../../project/models/project.model';
-import { AppModule } from '../../../app.module';
 import { setupTest } from '../../../../test/helpers/setup';
+import { executeDeleteBucketDirectoryFileWorker } from '@apillon/storage/src/scripts/serverless-workers/execute-delete-bucket-dir-file-worker';
+import { IPFSService } from '@apillon/storage/src/modules/ipfs/ipfs.service';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const fs = require('fs');
@@ -86,7 +88,7 @@ describe('Storage tests', () => {
         expect(testS3SignedUrl).toBeTruthy();
         const response = await request(testS3SignedUrl)
           .put(``)
-          .send(new Date().toString());
+          .send(new Date().toString() + uuidV4());
 
         expect(response.status).toBe(200);
       });
@@ -301,7 +303,7 @@ describe('Storage tests', () => {
         expect(response.body.data.file_uuid).toBeTruthy();
         const file_uuid = response.body.data.file_uuid;
 
-        const testFileContent = new Date().toString();
+        const testFileContent = uuidV4();
         response = await request(response.body.data.signedUrlForUpload)
           .put(``)
           .send(testFileContent);
@@ -399,6 +401,103 @@ describe('Storage tests', () => {
           .get(`/storage/${testBucket2.bucket_uuid}/file-uploads`)
           .set('Authorization', `Bearer ${testUser2.token}`);
         expect(response.status).toBe(403);
+      });
+    });
+    describe('Delete file tests', () => {
+      let bucketForDeleteTests: Bucket = undefined;
+      let deleteBucketTestFile1: File = undefined;
+      let testFile2: File = undefined;
+      beforeAll(async () => {
+        bucketForDeleteTests = await createTestBucket(
+          testUser,
+          stage.storageContext,
+          testProject,
+        );
+
+        deleteBucketTestFile1 = await createTestBucketFile(
+          stage.storageContext,
+          bucketForDeleteTests,
+          'delete file test.txt',
+          'text/plain',
+          true,
+        );
+
+        testFile2 = await createTestBucketFile(
+          stage.storageContext,
+          bucketForDeleteTests,
+          'This file should not be deleted.txt',
+          'text/plain',
+          true,
+        );
+      });
+
+      test('User should NOT be able to delete ANOTHER USER file', async () => {
+        const response = await request(stage.http)
+          .delete(
+            `/storage/${bucketForDeleteTests.bucket_uuid}/file/${deleteBucketTestFile1.id}`,
+          )
+          .set('Authorization', `Bearer ${testUser2.token}`);
+        expect(response.status).toBe(403);
+
+        const f: File = await new File({}, stage.storageContext).populateById(
+          deleteBucketTestFile1.id,
+        );
+        expect(f.exists()).toBeTruthy();
+      });
+
+      test('User should be able to mark file for deletion', async () => {
+        const response = await request(stage.http)
+          .delete(
+            `/storage/${bucketForDeleteTests.bucket_uuid}/file/${deleteBucketTestFile1.id}`,
+          )
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(200);
+
+        const f: File = await new File({}, stage.storageContext).populateById(
+          deleteBucketTestFile1.id,
+        );
+        expect(f.status).toBe(SqlModelStatus.MARKED_FOR_DELETION);
+      });
+
+      test('Storage delete worker should NOT delete file if file is not long enough in status 8 (marked for delete)', async () => {
+        await executeDeleteBucketDirectoryFileWorker(stage.storageContext);
+        const f: File = await new File({}, stage.storageContext).populateById(
+          deleteBucketTestFile1.id,
+        );
+        expect(f.status).toBe(SqlModelStatus.MARKED_FOR_DELETION);
+      });
+
+      test('Storage delete worker should delete file if file is long enough in status 8 (marked for delete)', async () => {
+        let f: File = await new File({}, stage.storageContext).populateById(
+          deleteBucketTestFile1.id,
+        );
+        f.markedForDeletionTime = new Date();
+        f.markedForDeletionTime.setFullYear(
+          f.markedForDeletionTime.getFullYear() - 1,
+        );
+        await f.update();
+
+        await executeDeleteBucketDirectoryFileWorker(stage.storageContext);
+        f = await new File({}, stage.storageContext).populateById(
+          deleteBucketTestFile1.id,
+        );
+        expect(f.exists()).toBeFalsy();
+        expect(
+          await IPFSService.isCIDPinned(deleteBucketTestFile1.CID),
+        ).toBeFalsy();
+
+        //Check if bucket size was decreased
+        const tmpB: Bucket = await new Bucket(
+          {},
+          stage.storageContext,
+        ).populateById(bucketForDeleteTests.id);
+
+        expect(tmpB.size).toBeLessThan(bucketForDeleteTests.size);
+
+        //Check that other files were not affected / deleted
+        f = await new File({}, stage.storageContext).populateById(testFile2.id);
+        expect(f.exists()).toBeTruthy();
+        expect(await IPFSService.isCIDPinned(testFile2.CID)).toBeTruthy();
       });
     });
   });
