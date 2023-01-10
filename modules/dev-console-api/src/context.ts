@@ -18,13 +18,7 @@ export class DevConsoleApiContext extends Context {
       return;
     }
 
-    let userData;
-    try {
-      userData = await new Ams(this).getAuthUser({ token: token });
-    } catch (err) {
-      console.error(err);
-      throw err;
-    }
+    const userData = await new Ams(this).getAuthUser({ token: token });
 
     if (userData && userData.data.user_uuid) {
       const user = await new User({}, this).populateByUUID(

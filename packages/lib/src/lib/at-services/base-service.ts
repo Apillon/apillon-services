@@ -70,11 +70,6 @@ export abstract class BaseService {
       }
     }
     console.log(result);
-    // console.log(isAsync);
-    // console.log(result?.FunctionError);
-    // console.log(result?.success);
-    // console.log(result?.FunctionError || !result?.success);
-    // console.log(!isAsync && (result?.FunctionError || !result?.success));
 
     if (!isAsync && (result?.FunctionError || !result?.success)) {
       // CodeException causes circular dependency!
