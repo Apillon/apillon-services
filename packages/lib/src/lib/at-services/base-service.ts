@@ -70,11 +70,11 @@ export abstract class BaseService {
       }
     }
     console.log(result);
-    console.log(isAsync);
-    console.log(result?.FunctionError);
-    console.log(result?.success);
-    console.log(result?.FunctionError || !result?.success);
-    console.log(!isAsync && (result?.FunctionError || !result?.success));
+    // console.log(isAsync);
+    // console.log(result?.FunctionError);
+    // console.log(result?.success);
+    // console.log(result?.FunctionError || !result?.success);
+    // console.log(!isAsync && (result?.FunctionError || !result?.success));
 
     if (!isAsync && (result?.FunctionError || !result?.success)) {
       // CodeException causes circular dependency!
@@ -100,10 +100,11 @@ export abstract class BaseService {
   }
 
   protected async callDevService(payload, isAsync) {
+    console.log(`Connecting to DEV server...`);
     const devSocket = Net.connect(
       { port: this.devPort, timeout: 300000 },
       () => {
-        //console.log(`Connected to ${this.serviceName} dev socket`);
+        console.log(`Connected to ${this.serviceName} dev socket`);
       },
     );
 
@@ -118,7 +119,7 @@ export abstract class BaseService {
         reject('Socket timeout!');
       });
       devSocket.on('end', () => {
-        //console.log(`Disconnected from ${this.serviceName} dev socket`);
+        console.log(`Disconnected from ${this.serviceName} dev socket`);
         resolve(null);
       });
       devSocket.on('data', (data) => {
