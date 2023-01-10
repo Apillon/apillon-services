@@ -104,4 +104,36 @@ On AWS CoePipeline there is `apillon-services-run-test` pipeline that includes t
 2. Build: Runs Codebuild project for each microservice(lambda) on test environment - Deploys test lambdas
 3. RunTests: Runs codebuild project `apillon-run-tests` - runs predefined command (most of the time to run all tests)
 
+To run tests on AWS use `Release change` in the pipeline.
+
+> Later it could be set, that test runs automatically on push to `test` branch.
+
 ### Setup codebuild projects
+
+For every microservice used in tests, there should be build project with test env variables. Any new build projects should be added to pipeline.
+
+`apillon-run-tests` project can be modified with ENV variable `RUN_COMMAND`. (see source @ `/bin/deploy/test-aws.sh`)
+
+Default command should be
+
+```sh
+npm run test
+```
+
+but can be changed to run specific tests or scripts, for example
+
+```sh
+npx turbo run test:logging --filter=@apillon/dev-console-api
+```
+
+**Note that when running tests on multiple workspaces with turborepo CLI, you must ensure that tests do not run parallel!**
+
+To run tests one by one use `--concurrency=1`.
+
+To continue on failed test use `--continue`.
+
+Example:
+
+```sh
+npx turbo run test:logging --concurrency=1 --continue
+```
