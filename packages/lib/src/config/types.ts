@@ -106,6 +106,14 @@ export enum LogType {
   COST = 'COST',
 }
 
+export enum LogLevel {
+  DB_ONLY = 'db',
+  NO_DB = 'no-db',
+  DEBUG = 'debug',
+  WARN = 'warning',
+  ERROR_ONLY = 'error',
+}
+
 export enum SqlModelStatus {
   DRAFT = 1,
   INCOMPLETE = 2,
