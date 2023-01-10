@@ -11,7 +11,7 @@ import { generateKeypairs } from '../../../lib/kilt';
 import { u8aToHex } from '@polkadot/util';
 import { setupDidCreateMock } from './utils';
 
-describe('IDENTITY GENERATION', () => {
+describe('IDENTITY', () => {
   let stage: Stage;
   let context: AuthenticationApiContext;
   jest.setTimeout(100000); // Set timeout to 100 seconds
