@@ -9,7 +9,7 @@ export const CREATE_IDENTITY_MOCK = {
   mnemonic:
     'radar laundry matter way sweet arrive hundred behind tribe phrase cave rely',
   mnemonic_control:
-    'monkey cabin jungle tissue chronic design syrup trophy tomorrow monitor add craft',
+    'dune stomach month decline dance weird all fatal couch sleep thunder bread',
   did_uri: 'did:kilt:4stciB2y3ZXMDsYxwEDi1U8KnKywaRftsBj5y5dFTvy8ScNC',
   email: 'luka.golinar@kalmia.si',
   did_create_op_data: {

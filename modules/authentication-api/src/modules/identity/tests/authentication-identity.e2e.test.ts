@@ -10,7 +10,6 @@ import { Utils } from '@kiltprotocol/sdk-js';
 import { generateKeypairs } from '../../../lib/kilt';
 import { u8aToHex } from '@polkadot/util';
 import { setupDidCreateMock } from './utils';
-import { Body } from '@nestjs/common';
 
 describe('IDENTITY GENERATION', () => {
   let stage: Stage;
@@ -305,7 +304,6 @@ describe('IDENTITY GENERATION', () => {
       const mockData = await setupDidCreateMock();
       const controlRequestBody = { ...mockData.body_mock };
 
-      // EXPIRED TOKEN
       controlRequestBody.token = generateJwtToken(
         JwtTokenType.IDENTITY_EMAIL_VERIFICATION,
         {

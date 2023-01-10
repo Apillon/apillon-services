@@ -38,14 +38,14 @@ export async function generateKeypairs(mnemonic: string) {
   // stored on the chain
   const authentication = Utils.Crypto.makeKeypairFromSeed(
     mnemonicToMiniSecret(mnemonic),
-    KILT_DERIVATION_SIGN_ALGORITHM,
+    'sr25519',
   );
   const encryption = Utils.Crypto.makeEncryptionKeypairFromSeed(
     mnemonicToMiniSecret(mnemonic),
   );
 
   const assertion = authentication.derive(EclipticDerivationPaths.ATTESTATION, {
-    type: KILT_DERIVATION_SIGN_ALGORITHM,
+    type: 'sr25519',
   }) as KiltKeyringPair;
   const delegation = authentication.derive(
     EclipticDerivationPaths.DELEGATION,

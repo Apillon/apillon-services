@@ -47,7 +47,10 @@ export class VerificationService {
         location: 'AUTHENTICATION-API/verification/verifyIdentity',
         service: ServiceName.AUTHENTICATION_API,
       });
-      return { verified: false, error: error.message };
+      return {
+        verified: false,
+        error: error.message.replace(/['"]+/g, ''),
+      };
     }
 
     return attestation.revoked

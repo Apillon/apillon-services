@@ -1,5 +1,14 @@
 import { JwtTokenType } from '../../../config/types';
-import { Utils } from '@kiltprotocol/sdk-js';
+import {
+  ConfigService,
+  connect,
+  Did,
+  ICredential,
+  ICredentialPresentation,
+  SignCallback,
+  Utils,
+  Credential,
+} from '@kiltprotocol/sdk-js';
 import { generateJwtToken } from '@apillon/lib';
 import { generateKeypairs } from '../../../lib/kilt';
 import * as mock from './mock-data';
@@ -46,3 +55,35 @@ export const setupDidCreateMock = async () => {
     body_mock: bodyMock,
   };
 };
+
+export async function getDidDocument(mnemonic: string) {
+  await connect(mock.KILT_NETWORK);
+  const api = ConfigService.get('api');
+
+  const { authentication } = await generateKeypairs(mnemonic);
+
+  const didUri = Did.getFullDidUriFromKey(authentication);
+
+  const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
+  const { document } = Did.linkedInfoFromChain(encodedFullDid);
+
+  if (!document) {
+    console.error('Full DID was not successfully created.');
+    return '';
+  }
+
+  return document;
+}
+
+export async function createPresentation(
+  credential: ICredential,
+  signCallback: SignCallback,
+  challenge?: string,
+): Promise<ICredentialPresentation> {
+  // Create the presentation from credential, DID and challenge
+  return Credential.createPresentation({
+    credential,
+    signCallback,
+    challenge,
+  });
+}

@@ -27,6 +27,8 @@ export function didCreateCreateOpValidator() {
  */
 export function didUriValidator() {
   return async function (this: ModelBase, didUri: any): Promise<boolean> {
-    return didUri.startsWith('did:kilt:') ? true : false;
+    return didUri == undefined || !didUri.startsWith('did:kilt:')
+      ? false
+      : true;
   };
 }

@@ -20,7 +20,11 @@ import {
   AuthenticationErrorCode,
   AuthAppErrors,
 } from '../../config/types';
-import { generateKeypairs, generateAccount } from '../../lib/kilt';
+import {
+  generateKeypairs,
+  generateAccount,
+  generateMnemonic,
+} from '../../lib/kilt';
 import { KiltKeyringPair } from '@kiltprotocol/types';
 import { Blockchain, ConfigService, connect, Did } from '@kiltprotocol/sdk-js';
 
@@ -258,16 +262,17 @@ export class IdentityService {
 
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
-
+    console.log('MNEMONIC ', await generateMnemonic());
     const { authentication, encryption, assertion, delegation } =
-      await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
+      await generateKeypairs(body.mnemonic);
+    const acc = (await generateAccount(body.mnemonic)) as KiltKeyringPair;
     const attesterAccount = (await generateAccount(
       env.KILT_ATTESTER_MNEMONIC,
     )) as KiltKeyringPair;
 
     if (body.initial) {
       return {
-        address: attesterAccount.address,
+        address: acc.address,
         pubkey: u8aToHex(encryption.publicKey),
       };
     }
@@ -276,6 +281,9 @@ export class IdentityService {
 
     if (didDoc && didDoc.document) {
       console.log('DID already on chain. Nothing to do ...');
+      console.log(didDoc.document.uri);
+      console.log(env.KILT_NETWORK);
+      console.log('');
     }
 
     const fullDidCreationTx = await Did.getStoreTx(
