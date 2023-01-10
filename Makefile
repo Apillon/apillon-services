@@ -14,8 +14,13 @@ PACKAGES = lib modules-lib tests-lib workers-lib
 run-dev:
 	npm run dev;
 
+run-tests-env: run-test-db run-test-server
+
 run-test-server:
 	npm run test-server;
+
+run-test-db:
+	docker-compose -f docker-compose-TEST.yml down -v; docker-compose -f docker-compose-TEST.yml up -d;
 
 build:
 	npm run build;
@@ -26,7 +31,7 @@ install:
 rebuild: clean install build
 
 clean:
-	echo ${NC}Removing root${BGreen}node_modules${NC} ; \
+	echo "Removing ${BGreen}node_modules${NC} in ${BRED}root.${NC}; \
 	rm -rf node_modules; \
 
 	for file in $(MODULES); do \
