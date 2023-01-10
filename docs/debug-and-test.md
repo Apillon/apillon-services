@@ -137,3 +137,7 @@ Example:
 ```sh
 npx turbo run test:logging --concurrency=1 --continue
 ```
+
+### Test databases
+
+Ensure that test databases are empty before running tests, otherwise tests could fail. Only empty tables for seeds can be present.
