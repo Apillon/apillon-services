@@ -22,7 +22,7 @@ export class StorageMicroservice extends BaseService {
     env.APP_ENV === AppEnvironment.TEST
       ? env.STORAGE_SOCKET_PORT_TEST
       : env.STORAGE_SOCKET_PORT;
-  serviceName = 'LMAS';
+  serviceName = 'STORAGE';
 
   constructor(context: Context) {
     super(context);
