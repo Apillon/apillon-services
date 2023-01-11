@@ -53,7 +53,9 @@ export async function deleteDirectory(
   );
 
   for (const file of filesInDirectory) {
-    if (file.CID) await IPFSService.unpinFile(file.CID);
+    if (file.CID) {
+      await IPFSService.unpinFile(file.CID);
+    }
     sizeOfDeletedFiles += file.size;
   }
 

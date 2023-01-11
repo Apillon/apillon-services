@@ -28,7 +28,6 @@ import { SyncToIPFSWorker } from '../../workers/s3-to-ipfs-sync-worker';
 import { WorkerName } from '../../workers/worker-executor';
 import { Bucket } from '../bucket/models/bucket.model';
 import { Directory } from '../directory/models/directory.model';
-import { IPFSService } from '../ipfs/ipfs.service';
 import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
@@ -261,7 +260,8 @@ export class StorageService {
   }
 
   /**
-   * This function is used only for development & testing purposes. In other envirinments, s3 sends this message to queuq automatically, when file is uploaded
+   * This function is used only for development & testing purposes.
+   * In other envirinments, s3 sends this message to queuq automatically, when file is uploaded
    * @param event
    * @param context
    * @returns

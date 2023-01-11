@@ -33,7 +33,8 @@ export class DeleteBucketDirectoryFileWorker extends ServerlessWorker {
       `
       SELECT * 
       FROM \`${DbTables.BUCKET}\`
-      WHERE status = ${SqlModelStatus.MARKED_FOR_DELETION} AND markedForDeletionTime < (NOW() - INTERVAL ${env.STORAGE_DELETE_AFTER_INTERVAR} DAY);
+      WHERE status = ${SqlModelStatus.MARKED_FOR_DELETION} 
+      AND markedForDeletionTime < (NOW() - INTERVAL ${env.STORAGE_DELETE_AFTER_INTERVAL} DAY);
       `,
     );
 
@@ -75,7 +76,8 @@ export class DeleteBucketDirectoryFileWorker extends ServerlessWorker {
       `
       SELECT * 
       FROM \`${DbTables.DIRECTORY}\`
-      WHERE status = ${SqlModelStatus.MARKED_FOR_DELETION} AND markedForDeletionTime < (NOW() - INTERVAL ${env.STORAGE_DELETE_AFTER_INTERVAR} DAY);
+      WHERE status = ${SqlModelStatus.MARKED_FOR_DELETION} 
+      AND markedForDeletionTime < (NOW() - INTERVAL ${env.STORAGE_DELETE_AFTER_INTERVAL} DAY);
       `,
     );
 
@@ -92,6 +94,20 @@ export class DeleteBucketDirectoryFileWorker extends ServerlessWorker {
         b.size -= delRes.sizeOfDeletedFiles;
         await b.update(SerializeFor.UPDATE_DB, conn);
         await this.context.mysql.commit(conn);
+
+        await new Lmas().writeLog({
+          context: this.context,
+          project_uuid: b.project_uuid,
+          logType: LogType.INFO,
+          message: 'Storage bucket size decreased',
+          location: 'DeleteBucketDirectoryFileWorker.execute',
+          service: ServiceName.STORAGE,
+          data: {
+            bucket_uuid: b.bucket_uuid,
+            size: delRes.sizeOfDeletedFiles,
+            bucketSize: b.size,
+          },
+        });
       } catch (err) {
         await this.context.mysql.rollback(conn);
         await new Lmas().writeLog({
@@ -113,7 +129,8 @@ export class DeleteBucketDirectoryFileWorker extends ServerlessWorker {
       `
       SELECT * 
       FROM \`${DbTables.FILE}\`
-      WHERE status = ${SqlModelStatus.MARKED_FOR_DELETION} AND markedForDeletionTime < (NOW() - INTERVAL ${env.STORAGE_DELETE_AFTER_INTERVAR} DAY);
+      WHERE status = ${SqlModelStatus.MARKED_FOR_DELETION} 
+      AND markedForDeletionTime < (NOW() - INTERVAL ${env.STORAGE_DELETE_AFTER_INTERVAL} DAY);
       `,
     );
 
@@ -144,19 +161,31 @@ export class DeleteBucketDirectoryFileWorker extends ServerlessWorker {
       `
       UPDATE \`${DbTables.FILE}\`
       SET status = ${SqlModelStatus.DELETED}
-      WHERE status = ${SqlModelStatus.MARKED_FOR_DELETION} AND markedForDeletionTime < (NOW() - INTERVAL ${env.STORAGE_DELETE_AFTER_INTERVAR} DAY);
+      WHERE status = ${SqlModelStatus.MARKED_FOR_DELETION} 
+      AND markedForDeletionTime < (NOW() - INTERVAL ${env.STORAGE_DELETE_AFTER_INTERVAL} DAY);
       `,
     );
     //Decrease buckets size
     for (const bucket_id in decreasedSizeByBucket) {
-      await this.context.mysql.paramExecute(
-        `
-      UPDATE \`${DbTables.BUCKET}\`
-      SET size = (size - ${decreasedSizeByBucket[bucket_id]})
-      WHERE id = @bucket_id
-      `,
-        { bucket_id },
+      const b: Bucket = await new Bucket({}, this.context).populateById(
+        +bucket_id,
       );
+      b.size -= decreasedSizeByBucket[bucket_id];
+      await b.update();
+
+      await new Lmas().writeLog({
+        context: this.context,
+        project_uuid: b.project_uuid,
+        logType: LogType.INFO,
+        message: 'Storage bucket size decreased',
+        location: 'DeleteBucketDirectoryFileWorker.execute',
+        service: ServiceName.STORAGE,
+        data: {
+          bucket_uuid: b.bucket_uuid,
+          size: decreasedSizeByBucket[bucket_id],
+          bucketSize: b.size,
+        },
+      });
     }
   }
 

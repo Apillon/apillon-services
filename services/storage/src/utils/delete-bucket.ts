@@ -29,7 +29,9 @@ export async function deleteBucket(
   );
 
   for (const file of filesInBucket) {
-    if (file.CID) await IPFSService.unpinFile(file.CID);
+    if (file.CID) {
+      await IPFSService.unpinFile(file.CID);
+    }
   }
 
   //Delete files

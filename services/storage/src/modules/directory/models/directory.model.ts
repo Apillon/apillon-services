@@ -336,7 +336,9 @@ export class Directory extends AdvancedSQLModel {
     const qSelects = [
       {
         qSelect: `
-        SELECT 'directory' as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime, NULL as contentType, NULL as size, d.parentDirectory_id as parentDirectoryId, NULL as file_uuid, NULL as link
+        SELECT 'directory' as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime, 
+        NULL as contentType, NULL as size, d.parentDirectory_id as parentDirectoryId, 
+        NULL as file_uuid, NULL as link
         `,
         qFrom: `
         FROM \`${DbTables.DIRECTORY}\` d
@@ -351,7 +353,9 @@ export class Directory extends AdvancedSQLModel {
       },
       {
         qSelect: `
-        SELECT 'file' as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime, d.contentType as contentType, d.size as size, d.directory_id as parentDirectoryId, d.file_uuid as file_uuid, CONCAT("${env.STORAGE_IPFS_PROVIDER}", d.CID)
+        SELECT 'file' as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime, 
+        d.contentType as contentType, d.size as size, d.directory_id as parentDirectoryId, 
+        d.file_uuid as file_uuid, CONCAT("${env.STORAGE_IPFS_PROVIDER}", d.CID)
         `,
         qFrom: `
         FROM \`${DbTables.FILE}\` d
@@ -390,23 +394,4 @@ export class Directory extends AdvancedSQLModel {
       } while (tmpDir?.parentDirectory_id);
     }
   }
-
-  /*public async getList(context: ServiceContext, query: BucketQueryFilter) {
-    const params = {
-      project_uuid: query.project_uuid,
-      search: query.search,
-    };
-
-    const sqlQuery = {
-      qSelect: `
-        SELECT ${this.generateSelectFields('b', '')}
-        `,
-      qFrom: `
-        FROM \`${DbTables.BUCKET}\` b
-        WHERE (@search IS null OR b.name LIKE CONCAT('%', @search, '%'))
-      `,
-    };
-
-    return selectAndCountQuery(context.mysql, sqlQuery, params, 'b.id');
-  }*/
 }
