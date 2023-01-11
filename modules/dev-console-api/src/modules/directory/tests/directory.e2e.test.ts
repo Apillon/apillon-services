@@ -22,6 +22,7 @@ describe('Storage directory tests', () => {
   let testUser3: TestUser;
 
   let testProject: Project;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let testProject2: Project;
 
   let testBucket: Bucket;

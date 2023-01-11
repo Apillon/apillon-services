@@ -6,3 +6,6 @@ aws sqs create-queue --queue-name apillon-storage-queue-staging --attributes fil
 
 aws sqs create-queue --queue-name apillon-storage-queue-production-dlq --attributes file://production/storage-queue-production-dlq.json  --region eu-west-1
 aws sqs create-queue --queue-name apillon-storage-queue-production --attributes file://production/storage-queue-production.json  --region eu-west-1
+
+aws sqs create-queue --queue-name apillon-storage-queue-test-dlq --attributes file://test/storage-queue-test-dlq.json --region eu-west-1
+aws sqs create-queue --queue-name apillon-storage-queue-test --attributes file://test/storage-queue-test.json  --region eu-west-1

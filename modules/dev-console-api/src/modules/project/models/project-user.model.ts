@@ -3,7 +3,6 @@ import {
   CodeException,
   getQueryParams,
   PopulateFrom,
-  selectAndCountQuery,
   SerializeFor,
   unionSelectAndCountQuery,
 } from '@apillon/lib';
