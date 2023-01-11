@@ -27,17 +27,17 @@ export class ReferralMicroservice extends BaseService {
 
   //#region Referral CRUD
 
-  public async createReferral(params: CreateReferralDto) {
+  public async createPlayer(params: CreateReferralDto) {
     const data = {
-      eventName: ReferralEventType.CREATE_REFERRAL,
+      eventName: ReferralEventType.CREATE_PLAYER,
       body: params.serialize(),
     };
     return await this.callService(data);
   }
 
-  public async getReferral() {
+  public async getPlayer() {
     const data = {
-      eventName: ReferralEventType.GET_REFERRAL,
+      eventName: ReferralEventType.GET_PLAYER,
       body: {},
     };
     return await this.callService(data);

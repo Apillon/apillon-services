@@ -12,12 +12,12 @@ import { DevConsoleApiContext } from '../../context';
 
 @Injectable()
 export class ReferralService {
-  async createReferral(context: DevConsoleApiContext, body: CreateReferralDto) {
-    return (await new ReferralMicroservice(context).createReferral(body)).data;
+  async createPlayer(context: DevConsoleApiContext, body: CreateReferralDto) {
+    return (await new ReferralMicroservice(context).createPlayer(body)).data;
   }
 
-  async getReferral(context: DevConsoleApiContext) {
-    return (await new ReferralMicroservice(context).getReferral()).data;
+  async getPlayer(context: DevConsoleApiContext) {
+    return (await new ReferralMicroservice(context).getPlayer()).data;
   }
 
   async getProducts(context: DevConsoleApiContext, query: ProductQueryFilter) {

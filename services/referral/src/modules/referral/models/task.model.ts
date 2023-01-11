@@ -7,7 +7,6 @@ import {
   PoolConnection,
   PopulateFrom,
   prop,
-  selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
@@ -16,7 +15,6 @@ import {
   ReferralErrorCode,
   TransactionDirection,
 } from '../../../config/types';
-import { ServiceContext } from '../../../context';
 import { Realization } from './realization.model';
 import {
   ReferralCodeException,
@@ -235,21 +233,6 @@ export class Task extends AdvancedSQLModel {
     }
   }
 
-  public async getList(context: ServiceContext) {
-    const params = {};
-
-    const sqlQuery = {
-      qSelect: `
-        SELECT ${this.generateSelectFields('t', '')}
-        `,
-      qFrom: `
-        FROM \`${DbTables.TASK}\` t
-      `,
-    };
-
-    return selectAndCountQuery(context.mysql, sqlQuery, params, 't.id');
-  }
-
   public async confirmTask(
     player_id: number,
     data?: any,
@@ -266,7 +249,7 @@ export class Task extends AdvancedSQLModel {
     const existingR = await new Realization(
       {},
       this.getContext(),
-    ).populateByTaskIdAndPlayerId(
+    ).getRealizationsByTaskIdAndPlayerId(
       this.id,
       player_id,
       filterByData ? data : null,

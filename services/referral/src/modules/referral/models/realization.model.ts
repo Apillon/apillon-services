@@ -109,7 +109,7 @@ export class Realization extends AdvancedSQLModel {
   })
   public data: any;
 
-  public async populateByTaskIdAndPlayerId(
+  public async getRealizationsByTaskIdAndPlayerId(
     task_id: number,
     player_id: number,
     data: any = null,
@@ -150,7 +150,6 @@ export class Realization extends AdvancedSQLModel {
           new Realization({}, this.getContext()).populate(r, PopulateFrom.DB),
         );
       }
-      this.populate(res[0], PopulateFrom.DB);
       return arr;
     } else {
       this.reset();

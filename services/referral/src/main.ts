@@ -5,8 +5,8 @@ import { OauthService } from './modules/oauth/oauth.service';
 
 export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
-    [ReferralEventType.CREATE_REFERRAL]: ReferralService.createReferral,
-    [ReferralEventType.GET_REFERRAL]: ReferralService.getReferral,
+    [ReferralEventType.CREATE_PLAYER]: ReferralService.createPlayer,
+    [ReferralEventType.GET_PLAYER]: ReferralService.getPlayer,
     [ReferralEventType.GET_PRODUCTS]: ReferralService.getProducts,
     [ReferralEventType.ORDER_PRODUCT]: ReferralService.orderProduct,
     [ReferralEventType.CONNECT_GITHUB]: OauthService.linkGithub,

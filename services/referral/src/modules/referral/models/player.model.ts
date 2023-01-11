@@ -68,7 +68,7 @@ export class Player extends AdvancedSQLModel {
       },
     ],
   })
-  public user_email: string;
+  public userEmail: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -418,20 +418,17 @@ export class Player extends AdvancedSQLModel {
       `
       SELECT 
         CONCAT(
-          LEFT(SUBSTRING_INDEX(ref.user_email,'@',1),1),
+          LEFT(SUBSTRING_INDEX(ref.userEmail,'@',1),1),
           REPEAT('*', 4),
-          RIGHT(SUBSTRING_INDEX(ref.user_email,'@',1),1),
+          RIGHT(SUBSTRING_INDEX(ref.userEmail,'@',1),1),
           '@',
-          SUBSTRING_INDEX(ref.user_email,'@',-1)
+          SUBSTRING_INDEX(ref.userEmail,'@',-1)
         ) AS name,
         IF(ref.github_id,1,0) has_github,
         ref.createTime AS joined
-      FROM \`${DbTables.PLAYER}\` p
-      LEFT JOIN \`${DbTables.PLAYER}\` ref
-      ON ref.referrer_id = p.id
-      WHERE p.id = @player_id
-      AND ref.id IS NOT NULL
-      GROUP BY p.id, ref.id;
+      FROM \`${DbTables.PLAYER}\` ref
+      WHERE ref.referrer_id = @player_id
+      GROUP BY ref.id;
       `,
       { player_id: this.id },
     );

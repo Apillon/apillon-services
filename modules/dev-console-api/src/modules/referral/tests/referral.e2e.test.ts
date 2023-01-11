@@ -86,7 +86,7 @@ describe('Referral tests', () => {
       const response = await request(stage.http)
         .get(`/referral`)
         .set('Authorization', `Bearer ${newUserData.authToken}`);
-      expect(response.status).toBe(422);
+      expect(response.status).toBe(400);
     });
 
     test('User should be able to get referral if he accepted terms', async () => {
@@ -149,7 +149,7 @@ describe('Referral tests', () => {
         .post(`/referral/product`)
         .send({ id: product.id })
         .set('Authorization', `Bearer ${testUser.token}`);
-      expect(response.status).toBe(422);
+      expect(response.status).toBe(400);
     });
     test('User should be able to order product with sufficient balance once', async () => {
       await stage.referralSql.paramExecute(
@@ -182,7 +182,7 @@ describe('Referral tests', () => {
         .post(`/referral/product`)
         .send({ id: product.id })
         .set('Authorization', `Bearer ${testUser.token}`);
-      expect(response2.status).toBe(422);
+      expect(response2.status).toBe(400);
     });
   });
 });

@@ -65,8 +65,8 @@ export enum ScsEventType {
 }
 
 export enum ReferralEventType {
-  CREATE_REFERRAL = 'create-referral',
-  GET_REFERRAL = 'get-referral',
+  CREATE_PLAYER = 'create-referral',
+  GET_PLAYER = 'get-referral',
   GET_PRODUCTS = 'get-products',
   ORDER_PRODUCT = 'order-product',
   CONNECT_GITHUB = 'connect-githhub',
@@ -100,6 +100,7 @@ export enum ServiceCode {
   MAIL = '08',
   AUTH = '09',
   CONFIG = '10',
+  REFERRAL = '11',
 }
 
 export enum AppEnvironment {

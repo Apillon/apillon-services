@@ -187,6 +187,15 @@ export class UserService {
         password,
       });
 
+      await context.mysql.commit(conn);
+    } catch (err) {
+      // TODO: The context of this error is not correct. What happens if
+      //       ams fails? FE will see it as a DB write error, which is incorrect.
+      await context.mysql.rollback(conn);
+      throw err;
+    }
+    try {
+      // Create referral player - is inactive until accepts terms
       const referralBody = new CreateReferralDto(
         {
           refCode: data?.refCode,
@@ -194,18 +203,20 @@ export class UserService {
         context,
       );
 
-      // Create referral player - is inactive until accepts terms
       await new ReferralMicroservice({
         ...context,
         user,
-      } as any).createReferral(referralBody);
-
-      await context.mysql.commit(conn);
+      } as any).createPlayer(referralBody);
     } catch (err) {
-      // TODO: The context of this error is not correct. What happens if
-      //       ams fails? FE will see it as a DB write error, which is incorrect.
-      await context.mysql.rollback(conn);
-      throw err;
+      writeLog(
+        LogType.MSG,
+        `Error creating referral player${
+          data?.refCode ? ', refCode: ' + data?.refCode : ''
+        }`,
+        'user.service.ts',
+        'register',
+        err,
+      );
     }
 
     //User has been registered - check if pending invitations for project exists

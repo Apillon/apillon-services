@@ -21,12 +21,12 @@ import { Twitter } from '../../lib/twitter';
 import { Product } from './models/product.model';
 
 export class ReferralService {
-  static async createReferral(
+  static async createPlayer(
     event: { body: CreateReferralDto },
     context: ServiceContext,
   ): Promise<any> {
     const user_uuid = context?.user?.user_uuid;
-    const user_email = context?.user?.email;
+    const userEmail = context?.user?.email;
     const player: Player = await new Player({}, context).populateByUserUuid(
       user_uuid,
     );
@@ -43,7 +43,7 @@ export class ReferralService {
       const code = await player.generateCode();
       player.populate({
         user_uuid,
-        user_email,
+        userEmail,
         refCode: code,
         referrer_id: referrer?.id,
         status: SqlModelStatus.INCOMPLETE,
@@ -74,13 +74,13 @@ export class ReferralService {
     return player.serialize(SerializeFor.PROFILE);
   }
 
-  static async getReferral(_event: any, context: ServiceContext): Promise<any> {
+  static async getPlayer(_event: any, context: ServiceContext): Promise<any> {
     const player: Player = await new Player({}, context).populateByUserUuid(
       context?.user?.user_uuid,
     );
 
     // Player does not exist
-    if (!player.id || player.status === SqlModelStatus.DELETED) {
+    if (!player.exists()) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.PLAYER_DOES_NOT_EXISTS,
         status: HttpStatus.BAD_REQUEST,
@@ -117,6 +117,15 @@ export class ReferralService {
     const player: Player = await new Player({}, context).populateByUserUuid(
       context.user.user_uuid,
     );
+
+    // Player does not exist
+    if (!player.exists()) {
+      throw new ReferralCodeException({
+        code: ReferralErrorCode.PLAYER_DOES_NOT_EXISTS,
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+
     const product = await new Product({}, context).populateById(event.body.id);
 
     await product.order(player.id, event.body.info);
@@ -185,8 +194,12 @@ export class ReferralService {
     const user_uuid = context.user.user_uuid;
     const player = await new Player({}, context).populateByUserUuid(user_uuid);
     if (!player.exists()) {
-      return;
+      throw new ReferralCodeException({
+        code: ReferralErrorCode.PLAYER_DOES_NOT_EXISTS,
+        status: HttpStatus.BAD_REQUEST,
+      });
     }
+
     const tweetData = (await twitter.getLatestTweets()) as any;
     if (env.APP_ENV !== AppEnvironment.TEST && !tweetData.includes(tweetId)) {
       throw new ReferralCodeException({

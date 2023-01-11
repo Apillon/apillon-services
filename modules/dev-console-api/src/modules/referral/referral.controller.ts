@@ -23,18 +23,18 @@ export class ReferralController {
   @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard, ValidationGuard)
   @Validation({ dto: CreateReferralDto })
-  async createReferral(
+  async createPlayer(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateReferralDto,
   ) {
-    return await this.referralService.createReferral(context, body);
+    return await this.referralService.createPlayer(context, body);
   }
 
   @Get()
   @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard)
-  async getReferral(@Ctx() context: DevConsoleApiContext) {
-    return await this.referralService.getReferral(context);
+  async getPlayer(@Ctx() context: DevConsoleApiContext) {
+    return await this.referralService.getPlayer(context);
   }
 
   @Get('products')

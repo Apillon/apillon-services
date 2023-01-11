@@ -3,7 +3,10 @@
 import {
   env,
   GithubOauthDto,
+  Lmas,
+  LogType,
   SerializeFor,
+  ServiceName,
   TwitterOauthDto,
 } from '@apillon/lib';
 import { Injectable, HttpStatus } from '@nestjs/common';
@@ -94,20 +97,28 @@ export class OauthService {
     player.twitter_id = loggedTokens.userId;
     // allTwitterData.userName
 
+    try {
+      await player.validate();
+    } catch (err) {
+      await player.handle(err);
+      throw new ReferralValidationException(player);
+    }
+
     const conn = await context.mysql.start();
     try {
-      try {
-        await player.validate();
-      } catch (err) {
-        await player.handle(err);
-        throw new ReferralValidationException(player);
-      }
       await player.update(SerializeFor.UPDATE_DB, conn);
       // Complete twitter task if present
       if (task.exists()) {
         await task.confirmTask(player.id, null, false, conn);
       }
       await context.mysql.commit(conn);
+      await new Lmas().writeLog({
+        context,
+        logType: LogType.INFO,
+        message: 'Twitter connected!',
+        location: 'Referral/OauthService/linkTwitter',
+        service: ServiceName.REFERRAL,
+      });
     } catch (error) {
       await context.mysql.rollback(conn);
       throw new ReferralCodeException({
@@ -175,9 +186,9 @@ export class OauthService {
           });
         }
 
+        player.github_id = gitUser?.data?.id;
         const conn = await context.mysql.start();
         try {
-          player.github_id = gitUser?.data?.id;
           try {
             await player.validate();
           } catch (err) {
@@ -204,6 +215,13 @@ export class OauthService {
             }
           }
           await context.mysql.commit(conn);
+          await new Lmas().writeLog({
+            context,
+            logType: LogType.INFO,
+            message: 'Github connected!',
+            location: 'Referral/OauthService/linkGithub',
+            service: ServiceName.REFERRAL,
+          });
         } catch (error) {
           await context.mysql.rollback(conn);
           throw new ReferralCodeException({
