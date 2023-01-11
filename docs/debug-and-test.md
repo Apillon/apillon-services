@@ -98,7 +98,9 @@ Go to debugger tab and find appropriate options from the configuration dropdown 
 
 ## Running automatic tests on AWS cloud
 
-On AWS CoePipeline there is `apillon-services-run-test` pipeline that includes three stages:
+### Running in pipeline (recommended)
+
+On AWS CodePipeline there is `apillon-services-run-test` pipeline that includes three stages:
 
 1. Source: Downloads source from git (`test` branch).
 2. Build: Runs Codebuild project for each microservice(lambda) on test environment - Deploys test lambdas
@@ -107,6 +109,10 @@ On AWS CoePipeline there is `apillon-services-run-test` pipeline that includes t
 To run tests on AWS use `Release change` in the pipeline.
 
 > Later it could be set, that test runs automatically on push to `test` branch.
+
+### Running in codebuild (faster in some cases)
+
+You can also run test by only running the `apillon-run-test` codebuild project. In that case, you should make sure that test lambdas are deployed with correct code. If not sure, you should run test in pipeline, or you can run CodeBuild project for specific test lambda. Benefits of running tests in codebuild is that you don't have to wait for lambda deployment and you can easily override build parameters, for exmaple `RUN_COMMAND` or source branch.
 
 ### Setup codebuild projects
 
@@ -140,4 +146,4 @@ npx turbo run test:logging --concurrency=1 --continue
 
 ### Test databases
 
-Ensure that test databases are empty before running tests, otherwise tests could fail. Only empty tables for seeds can be present.
+Ensure that test databases are empty before running tests, otherwise tests could fail. Only empty tables for migrations and seeds can be present.
