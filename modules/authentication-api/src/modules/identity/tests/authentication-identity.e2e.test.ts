@@ -109,11 +109,8 @@ describe('IDENTITY', () => {
       const resp = await request(stage.http).post('/identity/start').send({
         email: testEmail,
       });
-      expect(resp.status).toBe(201);
-
-      const data = resp.body;
-      expect(data.data.success).toBeFalsy();
-      expect(data.data.message).toEqual('Email already attested');
+      expect(resp.status).toBe(400);
+      expect(resp.body.message).toEqual('IDENTITY_EMAIL_IS_ALREADY_ATTESTED');
     });
   });
 

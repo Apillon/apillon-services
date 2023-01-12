@@ -59,8 +59,8 @@ export class IdentityService {
       if (identity.state == IdentityState.ATTESTED) {
         throw new CodeException({
           status: HttpStatus.BAD_REQUEST,
-          code: aae.EMAIL_ALREADY_ATTESTED,
-          errorCodes: aae,
+          code: AuthenticationErrorCode.IDENTITY_EMAIL_IS_ALREADY_ATTESTED,
+          errorCodes: AuthenticationErrorCode,
         });
       }
     } else {
