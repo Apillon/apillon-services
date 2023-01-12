@@ -149,5 +149,34 @@ describe('VERFICATION', () => {
         `The DID ${invalidDidDoc.uri} doesnt match the DID Documents URI ${validDidDoc.uri}`,
       );
     });
+
+    test('Test verification successfull', async () => {
+      const credential = mock.CREATE_IDENTITY_MOCK.credential;
+      const iCredential = credential as ICredential;
+      const { authentication } = await generateKeypairs(
+        mock.CREATE_IDENTITY_MOCK.mnemonic,
+      );
+      const didDoc = (await getDidDocument(
+        mock.CREATE_IDENTITY_MOCK.mnemonic,
+      )) as DidDocument;
+
+      const presentation = await createPresentation(
+        iCredential,
+        async ({ data }) =>
+          ({
+            signature: authentication.sign(data),
+            keyType: authentication.type,
+            keyUri: `${didDoc?.uri}${didDoc?.authentication[0].id}`,
+          } as SignResponseData),
+        challenge,
+      );
+
+      const resp = await request(stage.http).post('/verification/verify').send({
+        presentation: presentation,
+      });
+      expect(resp.status).toBe(201);
+      const response = resp.body.data;
+      expect(response.verified).toBeTruthy();
+    });
   });
 });
