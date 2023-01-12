@@ -20,15 +20,15 @@ To use Apillon STORAGE APIs, the developer must first create a bucket in Apillon
 
 ## Routes
 
-### [private] POST /storage/:bucket_uuid/upload
+### [private] POST /storage/:bucketUuid/upload
 
 > API which creates file upload request and returns [AWS S3 signed URL](https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html) for file upload.
 
 #### URL parameters
 
-| Name        | Description                                                  |
-| ----------- | ------------------------------------------------------------ |
-| bucket_uuid | Unique key of bucket. Key is displayed in developer console. |
+| Name       | Description                                                  |
+| ---------- | ------------------------------------------------------------ |
+| bucketUuid | Unique key of bucket. Key is displayed in developer console. |
 
 #### Body fields
 
@@ -56,7 +56,7 @@ For example `images/icons`, creates `images` directory in bucket and `icons` dir
 | Field               | Description                                                                      |
 | ------------------- | -------------------------------------------------------------------------------- |
 | signedUrlForUpload  | `string` AWS S3 signed URL for file upload                                       |
-| file_uuid           | `string` File uniqie identifier. This UUID can be used to query file status, ... |
+| fileUuid            | `string` File uniqie identifier. This UUID can be used to query file status, ... |
 | fileUploadRequestId | `integer` Apillon internal ID of file upload request.                            |
 
 #### Request cURL example
@@ -79,7 +79,7 @@ curl --location --request POST "http://localhost:6002/storage/cee9f151-a371-495b
     "status": 201,
     "data": {
         "signedUrlForUpload": "https://sync-to-ipfs-queue.s3.eu-west-1.amazonaws.com/STORAGE/11/my%20test%20file.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAQIMRRA6GJRL57L7G%2F20230104%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Date=20230104T101419Z&X-Amz-Expires=900&X-Amz-Signature=e1be26c5863d845d5ec5477ac4e7aabafd6901060b3515d23d36c71360255259&X-Amz-SignedHeaders=host",
-        "file_uuid": "18bdb4ef-4b9d-4bd4-9e5f-0bc7744b4376",
+        "fileUuid": "18bdb4ef-4b9d-4bd4-9e5f-0bc7744b4376",
         "fileUploadRequestId": 70
     }
 }
@@ -107,26 +107,26 @@ curl --location --request PUT "https://sync-to-ipfs-queue.s3.eu-west-1.amazonaws
 --header "Content-Type: text/plain" \
 --data-binary "@full path to file"
 
-### [private] GET /storage/:bucket_uuid/content
+### [private] GET /storage/:bucketUuid/content
 
 > Gets directories and files in bucket. Items are paginated and can be filtered and ordered through query parameters.
 
 #### URL parameters
 
-| Name         | Description                                                  |
-| ------------ | ------------------------------------------------------------ |
-| :bucket_uuid | Unique key of bucket. Key is displayed in developer console. |
+| Name        | Description                                                  |
+| ----------- | ------------------------------------------------------------ |
+| :bucketUuid | Unique key of bucket. Key is displayed in developer console. |
 
 #### Query parameters
 
-| Name          | Description                                                                           |
-| ------------- | ------------------------------------------------------------------------------------- |
-| :search       | Parameter to filter files by file name                                                |
-| :directory_id | Get files inside specific directory.                                                  |
-| :page         | Files are paginated by default. This parameter is used to get files in specific page  |
-| :limit        | Number of files on page (default: 20)                                                 |
-| :orderBy      | One or multiple properties, separated by comma, used to order data                    |
-| :desc         | `Boolean` values, mapped to the index of the `orderBy` parameter. Defaults to `false` |
+| Name         | Description                                                                           |
+| ------------ | ------------------------------------------------------------------------------------- |
+| :search      | Parameter to filter files by file name                                                |
+| :directoryId | Get files inside specific directory.                                                  |
+| :page        | Files are paginated by default. This parameter is used to get files in specific page  |
+| :limit       | Number of files on page (default: 20)                                                 |
+| :orderBy     | One or multiple properties, separated by comma, used to order data                    |
+| :desc        | `Boolean` values, mapped to the index of the `orderBy` parameter. Defaults to `false` |
 
 #### Possible errors
 
@@ -151,7 +151,7 @@ Properties of each item:
 | contentType       | `string` Representing item content type (Mime type)                         |
 | size              | `integer` Representing item size in bytes                                   |
 | parentDirectoryId | `integer` Representing ID of directory in which this file is located        |
-| file_uuid         | `string` Representing file unique identifier                                |
+| fileUuid          | `string` Representing file unique identifier                                |
 | CID               | `string` File content identifier - label used to point to material in IPFS  |
 | link              | `string` File link on Apillon IPFS gateway                                  |
 
@@ -185,7 +185,7 @@ curl --location --request GET "http://localhost:6002/storage/cee9f151-a371-495b-
                 "contentType": "text/plain",
                 "size": 11,
                 "parentDirectoryId": null,
-                "file_uuid": "c187b832-9ee7-4852-b755-0d6aadb4167b",
+                "fileUuid": "c187b832-9ee7-4852-b755-0d6aadb4167b",
                 "CID": "QmUL7wDowvNk3y7KeEYFAATmz43727FwXKhBJJrqQu813a",
                 "link": "https://ipfs.apillon.io/ipfs/QmUL7wDowvNk3y7KeEYFAATmz43727FwXKhBJJrqQu813a"
             }
@@ -195,16 +195,16 @@ curl --location --request GET "http://localhost:6002/storage/cee9f151-a371-495b-
 }
 ```
 
-### [private] GET /storage/:bucket_uuid/file/:id/detail
+### [private] GET /storage/:bucketUuid/file/:id/detail
 
 > Gets details of specific file inside bucket
 
 #### URL parameters
 
-| Name         | Description                                                  |
-| ------------ | ------------------------------------------------------------ |
-| :bucket_uuid | Unique key of bucket. Key is displayed in developer console. |
-| :id          | File internal ID, UUID or CID                                |
+| Name        | Description                                                  |
+| ----------- | ------------------------------------------------------------ |
+| :bucketUuid | Unique key of bucket. Key is displayed in developer console. |
+| :id         | File internal ID, UUID or CID                                |
 
 #### Possible errors
 
@@ -233,7 +233,7 @@ Response `data` property contains two properties: `fileStatus` and `file`. File 
 | ------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
 | id                                                                       | `integer` Apillon internal file ID                                         |
 | status                                                                   | `integer` Apillon internal file status                                     |
-| file_uuid                                                                | `string` File unique identifier                                            |
+| fileUuid                                                                 | `string` File unique identifier                                            |
 | name                                                                     | `string` File name                                                         |
 | contentType                                                              | `string` File content type (Mime type)                                     |
 | [CID](https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid) | `string` File content identifier - label used to point to material in IPFS |
@@ -258,7 +258,7 @@ curl --location --request GET "http://localhost:6002/storage/cee9f151-a371-495b-
         "file": {
             "id": 44,
             "status": 5,
-            "file_uuid": "e6be1ae3-1b57-47e5-a30c-d9c7772c9739",
+            "fileUuid": "e6be1ae3-1b57-47e5-a30c-d9c7772c9739",
             "CID": "QmUL7wDowvNk3y7KeEYFAATmz43727FwXKhBJJrqQu813a",
             "name": "apillon api file 1.txt",
             "contentType": "text/plain",
@@ -270,16 +270,16 @@ curl --location --request GET "http://localhost:6002/storage/cee9f151-a371-495b-
 }
 ```
 
-### [private] DELETE /storage/:bucket_uuid/file/:id
+### [private] DELETE /storage/:bucketUuid/file/:id
 
-> Delete file inside bucket, by `id`, `file_uuid` or `CID`
+> Delete file inside bucket, by `id`, `fileUuid` or `CID`
 
 #### URL parameters
 
-| Name         | Description                                                  |
-| ------------ | ------------------------------------------------------------ |
-| :bucket_uuid | Unique key of bucket. Key is displayed in developer console. |
-| :id          | File internal ID, UUID or CID                                |
+| Name        | Description                                                  |
+| ----------- | ------------------------------------------------------------ |
+| :bucketUuid | Unique key of bucket. Key is displayed in developer console. |
+| :id         | File internal ID, UUID or CID                                |
 
 #### Possible errors
 
