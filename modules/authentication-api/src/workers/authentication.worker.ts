@@ -8,7 +8,7 @@ import {
   Blockchain,
   Did,
 } from '@kiltprotocol/sdk-js';
-import { env, Lmas, LogType, ServiceName } from '@apillon/lib';
+import { CodeException, env, Lmas, LogType, ServiceName } from '@apillon/lib';
 import {
   BaseQueueWorker,
   QueueWorkerType,
@@ -23,7 +23,12 @@ import {
 } from '../lib/kilt';
 import { AuthenticationApiContext } from '../context';
 import { Identity } from '../modules/identity/models/identity.model';
-import { IdentityState, KILT_DERIVATION_SIGN_ALGORITHM } from '../config/types';
+import {
+  AuthenticationErrorCode,
+  IdentityState,
+  KILT_DERIVATION_SIGN_ALGORITHM,
+} from '../config/types';
+import { HttpStatus } from '@nestjs/common';
 
 export class AuthenticationWorker extends BaseQueueWorker {
   context: AuthenticationApiContext;
@@ -68,15 +73,30 @@ export class AuthenticationWorker extends BaseQueueWorker {
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
 
-    // Decrypt incoming payload -> DID creation TX generated on FE
-    const decrypted = Utils.Crypto.decryptAsymmetricAsStr(
-      {
-        box: hexToU8a(did_create_op.payload.message),
-        nonce: hexToU8a(did_create_op.payload.nonce),
-      },
-      did_create_op.senderPubKey,
-      u8aToHex(attesterKeypairs.encryption.secretKey),
-    );
+    let decrypted: any;
+    try {
+      // Decrypt incoming payload -> DID creation TX generated on FE
+      decrypted = Utils.Crypto.decryptAsymmetricAsStr(
+        {
+          box: hexToU8a(did_create_op.payload.message),
+          nonce: hexToU8a(did_create_op.payload.nonce),
+        },
+        did_create_op.senderPubKey,
+        u8aToHex(attesterKeypairs.encryption.secretKey),
+      );
+    } catch (error) {
+      await new Lmas().writeLog({
+        logType: LogType.ERROR,
+        location: 'Authentication-API/identity/authentication.worker',
+        service: ServiceName.AUTHENTICATION_API,
+        data: error,
+      });
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
+        errorCodes: AuthenticationErrorCode,
+      });
+    }
 
     if (decrypted) {
       const payload = JSON.parse(decrypted);
@@ -98,24 +118,32 @@ export class AuthenticationWorker extends BaseQueueWorker {
 
         await Blockchain.signAndSubmitTx(fullDidCreationTx, attesterAccount);
       } catch (error) {
-        await new Lmas().writeLog({
-          logType: LogType.ERROR,
-          message: error,
-          location: 'Authentication-API/identity/authentication.worker',
-          service: ServiceName.AUTHENTICATION_API,
-        });
+        if (error.method == 'DidAlreadyPresent') {
+          // If DID present on chain, signAndSubmitTx will throw an error
+          await new Lmas().writeLog({
+            logType: LogType.INFO, //!! This is not an error !!
+            message: `${error.method}: ${error.docs[0]}`,
+            location: 'Authentication-API/identity/authentication.worker',
+            service: ServiceName.AUTHENTICATION_API,
+            data: error,
+          });
+        } else {
+          await new Lmas().writeLog({
+            logType: LogType.ERROR,
+            location: 'Authentication-API/identity/authentication.worker',
+            service: ServiceName.AUTHENTICATION_API,
+            data: error,
+          });
 
-        throw new Error(error);
+          throw error;
+        }
       }
     } else {
-      await new Lmas().writeLog({
-        logType: LogType.ERROR,
-        message: 'Decryption failed',
-        location: 'AUTHENTICATION-API/identity/authentication.worker',
-        service: ServiceName.AUTHENTICATION_API,
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
+        errorCodes: AuthenticationErrorCode,
       });
-
-      throw new Error('Decryption failed.');
     }
 
     // Prepare identity instance and credential structure
@@ -145,13 +173,6 @@ export class AuthenticationWorker extends BaseQueueWorker {
     );
 
     try {
-      await new Lmas().writeLog({
-        logType: LogType.INFO,
-        message: `Propagating attestation TX to KILT BC ...`,
-        location: 'AUTHENTICATION-API/identity/authentication.worker',
-        service: ServiceName.AUTHENTICATION_API,
-      });
-
       await Blockchain.signAndSubmitTx(emailClaimTx, attesterAccount);
       const emailAttested = Boolean(
         await api.query.attestation.attestations(credential.rootHash),
@@ -198,6 +219,7 @@ export class AuthenticationWorker extends BaseQueueWorker {
         message: `Email ${claimerEmail} identity => ERROR`,
         location: 'AUTHENTICATION-API/identity/authentication.worker',
         service: ServiceName.AUTHENTICATION_API,
+        data: error,
       });
     }
   }
