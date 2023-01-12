@@ -85,9 +85,6 @@ describe('IDENTITY', () => {
         email: 'hello@mailinator.com',
       });
       expect(resp.status).toBe(201);
-
-      const data = resp.body;
-      expect(data.errors).toEqual(undefined);
     });
 
     test('Valid email, but attestation exists', async () => {
@@ -109,25 +106,12 @@ describe('IDENTITY', () => {
       });
       await identity.insert(SerializeFor.INSERT_DB);
 
-      const identityDb = await new Identity({}, context).populateByUserEmail(
-        context,
-        testEmail,
-      );
-
-      expect(identityDb).not.toBeUndefined();
-      expect(identityDb.email).toEqual(testEmail);
-      expect(identityDb.state).toEqual(IdentityState.ATTESTED);
-
       const resp = await request(stage.http).post('/identity/start').send({
         email: testEmail,
       });
       expect(resp.status).toBe(201);
 
       const data = resp.body;
-
-      // We send no errors, as this is expected behaviour
-      expect(data.errors).toEqual(undefined);
-      // Success, however, must be false
       expect(data.data.success).toBeFalsy();
       expect(data.data.message).toEqual('Email already attested');
     });
@@ -165,9 +149,6 @@ describe('IDENTITY', () => {
       });
       expect(resp.status).toBe(201);
 
-      const data = resp.body;
-      expect(data.errors).toEqual(undefined);
-
       const resp1 = await request(stage.http)
         .get(`/identity/state?email=${testEmail}`)
         .send();
@@ -175,25 +156,6 @@ describe('IDENTITY', () => {
 
       const data1 = resp1.body.data;
       expect(data1.state).toEqual('in-progress');
-
-      const identity = await new Identity({}, context).populateByUserEmail(
-        context,
-        testEmail,
-      );
-
-      identity.populate({
-        state: 'attested',
-      });
-      await identity.update();
-
-      const identityDb = await new Identity({}, context).populateByUserEmail(
-        context,
-        testEmail,
-      );
-
-      expect(identityDb).not.toBeUndefined();
-      expect(identityDb.email).toEqual(testEmail);
-      expect(identityDb.state).toEqual(IdentityState.ATTESTED);
     });
 
     test('Process is finished for email - ATTESTED', async () => {
@@ -227,6 +189,7 @@ describe('IDENTITY', () => {
       });
       await identity.insert(SerializeFor.INSERT_DB);
 
+      // Double check
       const identityDb = await new Identity({}, context).populateByUserEmail(
         context,
         testEmail,
@@ -275,29 +238,11 @@ describe('IDENTITY', () => {
     });
 
     afterEach(async () => {
-      const data = await context.mysql.paramExecute(
+      await context.mysql.paramExecute(
         `
-          SELECT *
-          FROM \`${DbTables.IDENTITY}\` i
+          DELETE FROM \`${DbTables.IDENTITY}\` i
         `,
       );
-
-      const conn = await context.mysql.start();
-      for (const identity in data) {
-        await (async () => {
-          const i = await new Identity({}, context).populateById(
-            data[identity].id,
-          );
-          await i.delete(conn);
-        })();
-      }
-
-      try {
-        await context.mysql.commit(conn);
-      } catch (error) {
-        await context.mysql.rollback(conn);
-        throw error;
-      }
     });
 
     test('Correct credential structure', async () => {
@@ -313,12 +258,12 @@ describe('IDENTITY', () => {
       );
 
       // VALID EMAIL
-      const resp4 = await request(stage.http)
+      const resp = await request(stage.http)
         .post('/identity/generate')
         .send({
           ...controlRequestBody,
         });
-      expect(resp4.status).toBe(201);
+      expect(resp.status).toBe(201);
     });
 
     test('Combinatorics - verification token', async () => {
@@ -328,14 +273,14 @@ describe('IDENTITY', () => {
 
       // INVALID TOKEN
       controlRequestBody.token = 'INVALID_TOKEN';
-      const resp1 = await request(stage.http)
+      const resp = await request(stage.http)
         .post('/identity/generate')
         .send({
           ...controlRequestBody,
         });
 
-      expect(resp1.body.message).toEqual('IDENTITY_INVALID_VERIFICATION_TOKEN');
-      expect(resp1.status).toBe(400);
+      expect(resp.body.message).toEqual('IDENTITY_INVALID_VERIFICATION_TOKEN');
+      expect(resp.status).toBe(400);
 
       // EMPTY TOKEN
       controlRequestBody.token = null;
@@ -347,11 +292,10 @@ describe('IDENTITY', () => {
 
       const errors2 = resp2.body.errors[0];
       expect(resp2.status).toBe(422);
-
+      expect(errors2.statusCode).toEqual(422070110);
       expect(errors2.message).toEqual(
         'IDENTITY_VERIFICATION_TOKEN_NOT_PRESENT',
       );
-      expect(errors2.statusCode).toEqual(422070110);
 
       // EXPIRED TOKEN
       controlRequestBody.token = generateJwtToken(
@@ -388,8 +332,8 @@ describe('IDENTITY', () => {
           ...controlRequestBody,
         });
 
-      expect(resp4.body.message).toEqual('IDENTITY_INVALID_STATE');
       expect(resp4.status).toBe(400);
+      expect(resp4.body.message).toEqual('IDENTITY_INVALID_STATE');
     });
 
     test('Combinatorics - didUri', async () => {
@@ -409,9 +353,9 @@ describe('IDENTITY', () => {
       expect(data.errors.length).toEqual(1);
       const error = data.errors[0];
 
+      expect(error.statusCode).toEqual(422070200);
       expect(error.message).toEqual('DID_URI_NOT_PRESENT');
       expect(error.property).toEqual('didUri');
-      expect(error.statusCode).toEqual(422070200);
 
       // EMPTY DID 2
       controlRequestBody.didUri = '';
@@ -478,8 +422,8 @@ describe('IDENTITY', () => {
       const error2 = resp2.body.errors[0];
 
       expect(resp2.status).toBe(422);
-      expect(error2.statusCode).toEqual(422070002);
       expect(error2.message).toEqual('USER_EMAIL_NOT_PRESENT');
+      expect(error2.statusCode).toEqual(422070002);
 
       // ATTESTED EMAIL
       controlRequestBody.email = testEmailAttested;

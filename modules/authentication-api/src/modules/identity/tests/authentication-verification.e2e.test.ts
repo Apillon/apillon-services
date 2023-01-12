@@ -43,7 +43,7 @@ describe('VERFICATION', () => {
       '1d',
     );
 
-    // IDENTITY 2 - ATTESTED
+    // IDENTITY 1 - ATTESTED
     const identityAttested = new Identity({}, context);
     identityAttested.populate({
       context: context,
@@ -74,29 +74,11 @@ describe('VERFICATION', () => {
   });
 
   afterEach(async () => {
-    const data = await context.mysql.paramExecute(
+    await context.mysql.paramExecute(
       `
-          SELECT *
-          FROM \`${DbTables.IDENTITY}\` i
-        `,
+        DELETE FROM \`${DbTables.IDENTITY}\` i
+      `,
     );
-
-    const conn = await context.mysql.start();
-    for (const identity in data) {
-      await (async () => {
-        const i = await new Identity({}, context).populateById(
-          data[identity].id,
-        );
-        await i.delete(conn);
-      })();
-    }
-
-    try {
-      await context.mysql.commit(conn);
-    } catch (error) {
-      await context.mysql.rollback(conn);
-      throw error;
-    }
   });
 
   describe('VERIFICATION', () => {
