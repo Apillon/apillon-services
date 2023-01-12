@@ -40,6 +40,7 @@ export enum AuthenticationErrorCode {
   IDENTITY_CREATE_DID_CREATE_OP_NOT_PRESENT = 422070112,
   IDENTITY_CREATE_SENDER_KEY_NOT_PRESENT = 422070113,
   IDENTITY_EMAIL_IS_ALREADY_ATTESTED = 422070114,
+  IDENTITY_CAPTCHA_INVALID = 422070115,
   DID_URI_NOT_PRESENT = 422070200,
   DID_URI_INVALID = 422070201,
   VERIFICATION_IDENTITY_NOT_PRESENT = 422070300,
@@ -108,8 +109,4 @@ export interface SignRequestData {
    * The DID to be used for signing.
    */
   did: DidUri;
-}
-
-export enum AuthAppErrors {
-  EMAIL_ALREADY_ATTESTED = 'Email already attested',
 }

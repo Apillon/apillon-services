@@ -18,7 +18,6 @@ import {
   IdentityState,
   JwtTokenType,
   AuthenticationErrorCode,
-  AuthAppErrors,
 } from '../../config/types';
 import { generateKeypairs, generateAccount } from '../../lib/kilt';
 import { KiltKeyringPair } from '@kiltprotocol/types';
@@ -35,8 +34,7 @@ import { WorkerName } from '../../workers/worker-executor';
 import { AuthenticationWorker } from '../../workers/authentication.worker';
 import { u8aToHex } from '@polkadot/util';
 import { IdentityCreateDto } from './dtos/identity-create.dto';
-
-const aae = AuthAppErrors;
+import { verifyCaptcha } from '@apillon/modules-lib';
 
 @Injectable()
 export class IdentityService {
@@ -48,6 +46,25 @@ export class IdentityService {
     const token = generateJwtToken(JwtTokenType.IDENTITY_EMAIL_VERIFICATION, {
       email,
     });
+    let captchaResult;
+
+    if (env.CAPTCHA_SECRET && env.APP_ENV !== AppEnvironment.TEST) {
+      await verifyCaptcha(body.captcha?.token, env.CAPTCHA_SECRET).then(
+        (response) => (captchaResult = response),
+      );
+    }
+
+    if (
+      env.CAPTCHA_SECRET &&
+      env.APP_ENV !== AppEnvironment.TEST &&
+      !captchaResult
+    ) {
+      throw new CodeException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        code: AuthenticationErrorCode.IDENTITY_CAPTCHA_INVALID,
+        errorCodes: AuthenticationErrorCode,
+      });
+    }
 
     let identity = await new Identity({}, context).populateByUserEmail(
       context,
@@ -61,6 +78,7 @@ export class IdentityService {
           status: HttpStatus.BAD_REQUEST,
           code: AuthenticationErrorCode.IDENTITY_EMAIL_IS_ALREADY_ATTESTED,
           errorCodes: AuthenticationErrorCode,
+          errorMessage: 'Email is already attested',
         });
       }
     } else {
@@ -266,9 +284,6 @@ export class IdentityService {
     const { authentication, encryption, assertion, delegation } =
       await generateKeypairs(body.mnemonic);
     const acc = (await generateAccount(body.mnemonic)) as KiltKeyringPair;
-    const attesterAccount = (await generateAccount(
-      env.KILT_ATTESTER_MNEMONIC,
-    )) as KiltKeyringPair;
 
     if (body.initial) {
       return {
@@ -276,6 +291,9 @@ export class IdentityService {
         pubkey: u8aToHex(encryption.publicKey),
       };
     }
+    const attesterAccount = (await generateAccount(
+      env.KILT_ATTESTER_MNEMONIC,
+    )) as KiltKeyringPair;
 
     const didDoc = await Did.resolve(Did.getFullDidUriFromKey(authentication));
 
