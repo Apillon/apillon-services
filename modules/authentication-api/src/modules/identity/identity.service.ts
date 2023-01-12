@@ -20,11 +20,7 @@ import {
   AuthenticationErrorCode,
   AuthAppErrors,
 } from '../../config/types';
-import {
-  generateKeypairs,
-  generateAccount,
-  generateMnemonic,
-} from '../../lib/kilt';
+import { generateKeypairs, generateAccount } from '../../lib/kilt';
 import { KiltKeyringPair } from '@kiltprotocol/types';
 import { Blockchain, ConfigService, connect, Did } from '@kiltprotocol/sdk-js';
 
@@ -61,7 +57,11 @@ export class IdentityService {
     if (identity.exists()) {
       // If email was already attested -> deny process
       if (identity.state == IdentityState.ATTESTED) {
-        return { success: false, message: aae.EMAIL_ALREADY_EXIST };
+        throw new CodeException({
+          status: HttpStatus.BAD_REQUEST,
+          code: aae.EMAIL_ALREADY_ATTESTED,
+          errorCodes: aae,
+        });
       }
     } else {
       // If identity does not exist, create a new entry
@@ -91,6 +91,7 @@ export class IdentityService {
         message: `Error creating identity state for user with email ${email}'`,
         location: 'Authentication-API/identity/sendVerificationEmail',
         service: ServiceName.AUTHENTICATION_API,
+        data: err,
       });
       throw err;
     }
@@ -262,7 +263,6 @@ export class IdentityService {
 
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
-    console.log('MNEMONIC ', await generateMnemonic());
     const { authentication, encryption, assertion, delegation } =
       await generateKeypairs(body.mnemonic);
     const acc = (await generateAccount(body.mnemonic)) as KiltKeyringPair;
@@ -280,10 +280,6 @@ export class IdentityService {
     const didDoc = await Did.resolve(Did.getFullDidUriFromKey(authentication));
 
     if (didDoc && didDoc.document) {
-      console.log('DID already on chain. Nothing to do ...');
-      console.log(didDoc.document.uri);
-      console.log(env.KILT_NETWORK);
-      console.log('');
     }
 
     const fullDidCreationTx = await Did.getStoreTx(

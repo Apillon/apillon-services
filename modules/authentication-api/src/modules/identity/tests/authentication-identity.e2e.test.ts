@@ -472,8 +472,8 @@ describe('IDENTITY', () => {
           ...controlRequestBody2,
         });
 
-      expect(resp2.body.message).toEqual('bad nonce size');
-      expect(resp2.status).toEqual(500);
+      expect(resp2.status).toEqual(400);
+      expect(resp2.body.message).toEqual('IDENTITY_INVALID_REQUEST');
 
       // 3. DID_CREATE_OP payload message is null
       const controlRequestBody3 = {
@@ -486,8 +486,8 @@ describe('IDENTITY', () => {
           ...controlRequestBody3,
         });
 
-      expect(resp3.body.message).toEqual('bad nonce size');
-      expect(resp3.status).toEqual(500);
+      expect(resp3.status).toEqual(400);
+      expect(resp3.body.message).toEqual('IDENTITY_INVALID_REQUEST');
 
       // 4. DID_CREATE_OP invalid encryption
       const controlRequestBody4 = { ...mockData };
@@ -528,8 +528,8 @@ describe('IDENTITY', () => {
         .send({
           ...params,
         });
-      expect(resp4.body.message).toEqual('Decryption failed ...');
-      expect(resp4.status).toEqual(500);
+      expect(resp4.status).toEqual(400);
+      expect(resp3.body.message).toEqual('IDENTITY_INVALID_REQUEST');
 
       const encryptedData2 = Utils.Crypto.encryptAsymmetric(
         JSON.stringify(didCreateCall),

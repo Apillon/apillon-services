@@ -110,5 +110,5 @@ export interface SignRequestData {
 }
 
 export enum AuthAppErrors {
-  EMAIL_ALREADY_EXIST = 'Email already attested',
+  EMAIL_ALREADY_ATTESTED = 'Email already attested',
 }
