@@ -61,11 +61,13 @@ export class CrustService {
               const [dispatchError] = event.data;
               const errorInfo = dispatchError.toString();
               console.log(`Place storage order failed: ${errorInfo}`);
+              void api.disconnect();
               reject(errorInfo);
             }
           });
         }
       }).catch((e) => {
+        void api.disconnect();
         reject(e);
       });
     });

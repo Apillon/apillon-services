@@ -11,6 +11,7 @@ import {
   Scs,
   SerializeFor,
   ServiceName,
+  SqlModelStatus,
 } from '@apillon/lib';
 import {
   QueueWorkerType,
@@ -27,7 +28,6 @@ import { SyncToIPFSWorker } from '../../workers/s3-to-ipfs-sync-worker';
 import { WorkerName } from '../../workers/worker-executor';
 import { Bucket } from '../bucket/models/bucket.model';
 import { Directory } from '../directory/models/directory.model';
-import { IPFSService } from '../ipfs/ipfs.service';
 import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
@@ -51,6 +51,11 @@ export class StorageService {
         code: StorageErrorCode.BUCKET_NOT_FOUND,
         status: 404,
       });
+    } else if (bucket.status == SqlModelStatus.MARKED_FOR_DELETION) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.BUCKET_IS_MARKED_FOR_DELETION,
+        status: 404,
+      });
     }
     bucket.canAccess(context);
 
@@ -62,7 +67,7 @@ export class StorageService {
     });
     if (
       maxBucketSizeQuota?.value &&
-      bucket.uploadedSize > maxBucketSizeQuota?.value * 1073741824 //quota is in GB - size is in bytes
+      bucket.size > maxBucketSizeQuota?.value * 1073741824 //quota is in GB - size is in bytes
     ) {
       throw new StorageCodeException({
         code: StorageErrorCode.MAX_UPLOADED_TO_BUCKET_SIZE_REACHED,
@@ -255,7 +260,8 @@ export class StorageService {
   }
 
   /**
-   * This function is used only for development & testing purposes. In othher envirinments, s3 sends this message to queuq automatically, when file is uploaded
+   * This function is used only for development & testing purposes.
+   * In other envirinments, s3 sends this message to queuq automatically, when file is uploaded
    * @param event
    * @param context
    * @returns
@@ -412,7 +418,7 @@ export class StorageService {
     };
   }
 
-  static async deleteFile(
+  static async markFileForDeletion(
     event: { id: string },
     context: ServiceContext,
   ): Promise<any> {
@@ -422,36 +428,40 @@ export class StorageService {
         code: StorageErrorCode.FILE_NOT_FOUND,
         status: 404,
       });
+    } else if (f.status == SqlModelStatus.MARKED_FOR_DELETION) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.FILE_ALREADY_MARKED_FOR_DELETION,
+        status: 400,
+      });
     }
     f.canModify(context);
 
-    const conn = await context.mysql.start();
+    await f.markForDeletion();
 
-    try {
-      await f.markDeleted(conn);
+    return f.serialize(SerializeFor.PROFILE);
+  }
 
-      //Also delete file-upload-request
-      const fur: FileUploadRequest = await new FileUploadRequest(
-        {},
-        context,
-      ).populateByUUID(f.file_uuid);
-
-      if (fur.exists()) {
-        await fur.markDeleted(conn);
-      }
-
-      if (f.CID) await IPFSService.unpinFile(f.CID);
-
-      const bucket: Bucket = await new Bucket({}, context).populateById(
-        f.bucket_id,
-      );
-      bucket.size -= f.size;
-      await bucket.update(SerializeFor.UPDATE_DB, conn);
-      await context.mysql.commit(conn);
-    } catch (err) {
-      await context.mysql.rollback(conn);
-      throw err;
+  static async unmarkFileForDeletion(
+    event: { id: string },
+    context: ServiceContext,
+  ): Promise<any> {
+    const f: File = await new File({}, context).populateById(event.id);
+    if (!f.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.FILE_NOT_FOUND,
+        status: 404,
+      });
+    } else if (f.status != SqlModelStatus.MARKED_FOR_DELETION) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.FILE_NOT_MARKED_FOR_DELETION,
+        status: 400,
+      });
     }
+    f.canModify(context);
+
+    f.status = SqlModelStatus.ACTIVE;
+
+    await f.update();
 
     return f.serialize(SerializeFor.PROFILE);
   }

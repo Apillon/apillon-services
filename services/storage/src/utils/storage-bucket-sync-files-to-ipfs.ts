@@ -56,7 +56,7 @@ export async function storageBucketSyncFilesToIPFS(
   for (const file of files.filter(
     (x) => x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED,
   )) {
-    if (bucket.uploadedSize >= maxBucketSize) {
+    if (bucket.size >= maxBucketSize) {
       //max size was reached - mark files that will not be transfered to IPFS
       file.fileStatus = FileUploadRequestFileStatus.ERROR_BUCKET_FULL;
       await file.update();

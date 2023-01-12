@@ -93,6 +93,7 @@ export async function hostingBucketSyncFilesToIPFS(
       service: ServiceName.STORAGE,
       data: {
         files: files.map((x) => x.serialize()),
+        error: err,
       },
     });
     throw err;

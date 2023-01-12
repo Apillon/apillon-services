@@ -13,6 +13,7 @@ import {
   Get,
   HttpCode,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -127,6 +128,7 @@ export class StorageController {
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
   )
   @UseGuards(AuthGuard)
   async deleteFile(
@@ -134,5 +136,19 @@ export class StorageController {
     @Param('id') id: string,
   ) {
     return await this.storageService.deleteFile(context, id);
+  }
+
+  @Patch(':bucket_uuid/file/:id/cancel-deletion')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @UseGuards(AuthGuard)
+  async cancelFileDeletion(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id') id: string,
+  ) {
+    return await this.storageService.cancelFileDeletion(context, id);
   }
 }

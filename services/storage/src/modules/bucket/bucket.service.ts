@@ -10,16 +10,17 @@ import {
   Scs,
   SerializeFor,
   ServiceName,
+  SqlModelStatus,
 } from '@apillon/lib';
+import { v4 as uuidV4 } from 'uuid';
 import { BucketType, StorageErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
 import {
   StorageCodeException,
   StorageValidationException,
 } from '../../lib/exceptions';
-import { Bucket } from './models/bucket.model';
-import { v4 as uuidV4 } from 'uuid';
 import { BucketWebhook } from './models/bucket-webhook.model';
+import { Bucket } from './models/bucket.model';
 
 export class BucketService {
   static async listBuckets(
@@ -136,7 +137,7 @@ export class BucketService {
     return b.serialize(SerializeFor.PROFILE);
   }
 
-  static async deleteBucket(
+  static async markBucketForDeletion(
     event: { id: number },
     context: ServiceContext,
   ): Promise<any> {
@@ -147,11 +148,39 @@ export class BucketService {
         code: StorageErrorCode.BUCKET_NOT_FOUND,
         status: 404,
       });
+    } else if (b.status == SqlModelStatus.MARKED_FOR_DELETION) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.BUCKET_ALREADY_MARKED_FOR_DELETION,
+        status: 400,
+      });
     }
-
     b.canModify(context);
 
-    await b.delete();
+    await b.markForDeletion();
+    return b.serialize(SerializeFor.PROFILE);
+  }
+
+  static async unmarkBucketForDeletion(
+    event: { id: number },
+    context: ServiceContext,
+  ): Promise<any> {
+    const b: Bucket = await new Bucket({}, context).populateById(event.id);
+
+    if (!b.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.BUCKET_NOT_FOUND,
+        status: 404,
+      });
+    } else if (b.status != SqlModelStatus.MARKED_FOR_DELETION) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.BUCKET_NOT_MARKED_FOR_DELETION,
+        status: 400,
+      });
+    }
+    b.canModify(context);
+
+    b.status = SqlModelStatus.ACTIVE;
+    await b.update();
     return b.serialize(SerializeFor.PROFILE);
   }
 
