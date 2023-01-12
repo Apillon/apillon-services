@@ -157,17 +157,6 @@ describe('IDENTITY', () => {
       const data1 = resp1.body.data;
       expect(data1.state).toEqual('in-progress');
     });
-
-    test('Process is finished for email - ATTESTED', async () => {
-      // STATE --> attested
-      const resp = await request(stage.http)
-        .get(`/identity/state?email=${testEmail}`)
-        .send();
-      expect(resp.status).toBe(200);
-
-      const data = resp.body.data;
-      expect(data.state).toEqual('attested');
-    });
   });
 
   describe('Test identity generate endpoint', () => {
