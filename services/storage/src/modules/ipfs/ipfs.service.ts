@@ -7,6 +7,7 @@ import {
 } from '../../config/types';
 import { StorageCodeException } from '../../lib/exceptions';
 import { FileUploadRequest } from '../storage/models/file-upload-request.model';
+import { uploadFilesToIPFSRes } from './interfaces/upload-files-to-ipfs-res.interface';
 
 export class IPFSService {
   static async createIPFSClient() {
@@ -75,11 +76,7 @@ export class IPFSService {
   static async uploadFilesToIPFSFromS3(event: {
     fileUploadRequests: FileUploadRequest[];
     wrapWithDirectory: boolean;
-  }): Promise<{
-    parentDirCID: CID;
-    ipfsDirectories: { path: string; cid: CID }[];
-    size: number;
-  }> {
+  }): Promise<uploadFilesToIPFSRes> {
     //Get IPFS client
     const client = await IPFSService.createIPFSClient();
 

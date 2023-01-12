@@ -228,6 +228,8 @@ export class StorageService {
       };
       const parameters = {
         session_uuid: session.session_uuid,
+        wrapWithDirectory: event.body.wrapWithDirectory,
+        wrappingDirectoryPath: event.body.directoryPath,
       };
       const wd = new WorkerDefinition(
         serviceDef,
@@ -240,7 +242,11 @@ export class StorageService {
         context,
         QueueWorkerType.EXECUTOR,
       );
-      await worker.runExecutor({ session_uuid: session.session_uuid });
+      await worker.runExecutor({
+        session_uuid: session.session_uuid,
+        wrapWithDirectory: event.body.wrapWithDirectory,
+        wrappingDirectoryName: event.body.directoryPath,
+      });
     } else {
       //send message to SQS
       await sendToWorkerQueue(
@@ -249,6 +255,8 @@ export class StorageService {
         [
           {
             session_uuid: session.session_uuid,
+            wrapWithDirectory: event.body.wrapWithDirectory,
+            wrappingDirectoryName: event.body.directoryPath,
           },
         ],
         null,

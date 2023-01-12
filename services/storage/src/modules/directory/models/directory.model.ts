@@ -338,7 +338,7 @@ export class Directory extends AdvancedSQLModel {
         qSelect: `
         SELECT 'directory' as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime, 
         NULL as contentType, NULL as size, d.parentDirectory_id as parentDirectoryId, 
-        NULL as file_uuid, NULL as link
+        NULL as file_uuid, IF(d.CID IS NULL, NULL, CONCAT("${env.STORAGE_IPFS_PROVIDER}", d.CID)) as link
         `,
         qFrom: `
         FROM \`${DbTables.DIRECTORY}\` d

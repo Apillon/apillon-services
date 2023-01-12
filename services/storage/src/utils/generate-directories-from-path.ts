@@ -34,7 +34,28 @@ export async function generateDirectoriesForFUR(
     }
     return d;
   } else if (fur.path) {
-    const splittedPath: string[] = fur.path.split('/').filter((x) => x != '');
+    return generateDirectoriesFromPath(
+      context,
+      directories,
+      fur.path,
+      bucket,
+      ipfsDirectories,
+      conn,
+    );
+  }
+  return undefined;
+}
+
+export async function generateDirectoriesFromPath(
+  context: ServiceContext,
+  directories: Directory[],
+  path: string,
+  bucket: Bucket,
+  ipfsDirectories?: { path: string; cid: CID }[],
+  conn?: PoolConnection,
+): Promise<Directory> {
+  if (path) {
+    const splittedPath: string[] = path.split('/').filter((x) => x != '');
     let currDirectory: Directory = undefined;
 
     //Get or create directory
@@ -53,7 +74,7 @@ export async function generateDirectoriesForFUR(
         const newDirectory: Directory = new Directory({}, context).populate({
           directory_uuid: uuidV4(),
           project_uuid: bucket.project_uuid,
-          bucket_id: fur.bucket_id,
+          bucket_id: bucket.id,
           parentDirectory_id: currDirectory?.id,
           name: splittedPath[i],
         });
@@ -81,5 +102,6 @@ export async function generateDirectoriesForFUR(
     }
     return currDirectory;
   }
+
   return undefined;
 }

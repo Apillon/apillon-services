@@ -140,6 +140,9 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         bucket,
         maxBucketSize,
         files,
+        session,
+        data?.wrapWithDirectory,
+        data?.wrappingDirectoryName,
       );
     }
 
