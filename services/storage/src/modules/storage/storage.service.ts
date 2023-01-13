@@ -122,10 +122,15 @@ export class StorageService {
       event.body.path = dir.fullPath;
     }
 
-    //NOTE - session uuid is added to s3File key
-    const s3FileKey = `${BucketType[bucket.bucketType]}/${bucket.id}${
-      session?.session_uuid ? '/' + session.session_uuid : ''
-    }/${(event.body.path ? event.body.path : '') + event.body.fileName}`;
+    //NOTE - session uuid is added to s3File key.
+    /*File key structure:
+     * Bucket type(STORAGE, STORAGE_sessions, HOSTING)/bucket id/session uuid if present/path/filename
+     */
+    const s3FileKey = `${BucketType[bucket.bucketType]}${
+      session?.session_uuid ? '_sessions' : ''
+    }/${bucket.id}${session?.session_uuid ? '/' + session.session_uuid : ''}/${
+      (event.body.path ? event.body.path : '') + event.body.fileName
+    }`;
 
     //check if fileUploadRequest with that key already exists
     let fur: FileUploadRequest = await new FileUploadRequest(
@@ -228,6 +233,8 @@ export class StorageService {
       };
       const parameters = {
         session_uuid: session.session_uuid,
+        wrapWithDirectory: event.body.wrapWithDirectory,
+        wrappingDirectoryPath: event.body.directoryPath,
       };
       const wd = new WorkerDefinition(
         serviceDef,
@@ -240,7 +247,11 @@ export class StorageService {
         context,
         QueueWorkerType.EXECUTOR,
       );
-      await worker.runExecutor({ session_uuid: session.session_uuid });
+      await worker.runExecutor({
+        session_uuid: session.session_uuid,
+        wrapWithDirectory: event.body.wrapWithDirectory,
+        wrappingDirectoryName: event.body.directoryPath,
+      });
     } else {
       //send message to SQS
       await sendToWorkerQueue(
@@ -249,6 +260,8 @@ export class StorageService {
         [
           {
             session_uuid: session.session_uuid,
+            wrapWithDirectory: event.body.wrapWithDirectory,
+            wrappingDirectoryName: event.body.directoryPath,
           },
         ],
         null,
@@ -409,7 +422,7 @@ export class StorageService {
     //File exists on IPFS and probably on CRUST- get status from CRUST
     if (file.CID) {
       fileStatus = FileStatus.PINNED_TO_CRUST;
-      file.downloadLink = env.STORAGE_IPFS_PROVIDER + file.CID;
+      file.downloadLink = env.STORAGE_IPFS_GATEWAY + file.CID;
     }
 
     return {
