@@ -15,15 +15,15 @@ export class IPFSService {
     //return await CrustService.createIPFSClient();
 
     //Kalmia IPFS Gateway
-    if (!env.STORAGE_IPFS_GATEWAY)
+    if (!env.STORAGE_IPFS_API)
       throw new StorageCodeException({
         status: 500,
-        code: StorageErrorCode.STORAGE_IPFS_GATEWAY_NOT_SET,
+        code: StorageErrorCode.STORAGE_IPFS_API_NOT_SET,
         sourceFunction: `${this.constructor.name}/createIPFSClient`,
       });
-    console.info('Connection to IPFS gateway: ', env.STORAGE_IPFS_GATEWAY);
+    console.info('Connection to IPFS gateway: ', env.STORAGE_IPFS_API);
 
-    let ipfsGatewayURL = env.STORAGE_IPFS_GATEWAY;
+    let ipfsGatewayURL = env.STORAGE_IPFS_API;
     if (ipfsGatewayURL.endsWith('/'))
       ipfsGatewayURL = ipfsGatewayURL.slice(0, -1);
     return await create({ url: ipfsGatewayURL });

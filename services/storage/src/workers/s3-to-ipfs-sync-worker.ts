@@ -14,9 +14,9 @@ import { StorageCodeException } from '../lib/exceptions';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
-import { sendTransferredFilesToBucketWebhook } from '../utils/bucket-webhook-utils';
-import { hostingBucketSyncFilesToIPFS } from '../utils/hosting-bucket-sync-files-to-ipfs';
-import { storageBucketSyncFilesToIPFS } from '../utils/storage-bucket-sync-files-to-ipfs';
+import { sendTransferredFilesToBucketWebhook } from '../lib/bucket-webhook';
+import { hostingBucketSyncFilesToIPFS } from '../lib/hosting-bucket-sync-files-to-ipfs';
+import { storageBucketSyncFilesToIPFS } from '../lib/storage-bucket-sync-files-to-ipfs';
 
 export class SyncToIPFSWorker extends BaseQueueWorker {
   public constructor(

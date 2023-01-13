@@ -17,7 +17,9 @@ export async function getSizeOfFilesInSessionOnS3(
   do {
     s3FileList = await s3Client.listFiles(
       env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-      `${BucketType[bucket.bucketType]}/${bucket.id}/${session?.session_uuid}`,
+      `${BucketType[bucket.bucketType]}${
+        session?.session_uuid ? '_sessions' : ''
+      }/${bucket.id}/${session?.session_uuid}`,
     );
     if (s3FileList.Contents.length > 0) s3FileLists.push(s3FileList);
   } while (s3FileList.Contents.length == 1000);

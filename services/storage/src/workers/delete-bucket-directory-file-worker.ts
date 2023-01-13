@@ -12,8 +12,8 @@ import { Job, ServerlessWorker, WorkerDefinition } from '@apillon/workers-lib';
 import { DbTables } from '../config/types';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
-import { deleteBucket } from '../utils/delete-bucket';
-import { deleteDirectory } from '../utils/delete-directory';
+import { deleteBucket } from '../lib/delete-bucket';
+import { deleteDirectory } from '../lib/delete-directory';
 
 export class DeleteBucketDirectoryFileWorker extends ServerlessWorker {
   private context: Context;

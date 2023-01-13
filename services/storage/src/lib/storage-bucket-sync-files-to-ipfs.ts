@@ -1,4 +1,11 @@
-import { AWS_S3, env, Lmas, LogType, ServiceName } from '@apillon/lib';
+import {
+  AWS_S3,
+  env,
+  Lmas,
+  LogType,
+  ServiceName,
+  writeLog,
+} from '@apillon/lib';
 import {
   FileStatus,
   FileUploadRequestFileStatus,
@@ -15,7 +22,7 @@ import { File } from '../modules/storage/models/file.model';
 import {
   generateDirectoriesForFUR,
   generateDirectoriesFromPath,
-} from '../utils/generate-directories-from-path';
+} from '../lib/generate-directories-from-path';
 import { pinFileToCRUST } from './pin-file-to-crust';
 import { getSizeOfFilesInSessionOnS3 } from './size-of-files';
 
@@ -104,7 +111,9 @@ export async function storageBucketSyncFilesToIPFS(
     }
 
     for (const file of files.filter(
-      (x) => x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED,
+      (x) =>
+        x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED &&
+        x.fileStatus != FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3,
     )) {
       try {
         if (wrappingDirectoryPath) {
@@ -164,10 +173,6 @@ export async function storageBucketSyncFilesToIPFS(
           transferedFiles.push(tmpF);
         }
       } catch (err) {
-        file.fileStatus =
-          FileUploadRequestFileStatus.ERROR_CREATING_FILE_OBJECT;
-        await file.update();
-
         await new Lmas().writeLog({
           context: context,
           project_uuid: bucket.project_uuid,
@@ -179,6 +184,20 @@ export async function storageBucketSyncFilesToIPFS(
             file: file.serialize(),
           },
         });
+        try {
+          file.fileStatus =
+            FileUploadRequestFileStatus.ERROR_CREATING_FILE_OBJECT;
+          await file.update();
+        } catch (err2) {
+          writeLog(
+            LogType.ERROR,
+            'Error updating fileUploadRequest status to ERROR_CREATING_FILE_OBJECT',
+            'storage-bucket-sync-files-to-ipfsRes.ts',
+            'storageBucketSyncFilesToIPFS',
+            err2,
+          );
+        }
+
         throw err;
       }
 
@@ -307,10 +326,6 @@ export async function storageBucketSyncFilesToIPFS(
           transferedFiles.push(tmpF);
         }
       } catch (err) {
-        file.fileStatus =
-          FileUploadRequestFileStatus.ERROR_CREATING_FILE_OBJECT;
-        await file.update();
-
         await new Lmas().writeLog({
           context: context,
           project_uuid: bucket.project_uuid,
@@ -322,6 +337,21 @@ export async function storageBucketSyncFilesToIPFS(
             file: file.serialize(),
           },
         });
+
+        try {
+          file.fileStatus =
+            FileUploadRequestFileStatus.ERROR_CREATING_FILE_OBJECT;
+          await file.update();
+        } catch (err2) {
+          writeLog(
+            LogType.ERROR,
+            'Error updating fileUploadRequest status to ERROR_CREATING_FILE_OBJECT',
+            'storage-bucket-sync-files-to-ipfsRes.ts',
+            'storageBucketSyncFilesToIPFS',
+            err2,
+          );
+        }
+
         throw err;
       }
 
@@ -357,9 +387,11 @@ export async function storageBucketSyncFilesToIPFS(
       }
     }
 
-    console.info(
-      'Sending files to PinToCRUST worker... Num of files: ',
-      transferedFiles.length,
+    writeLog(
+      LogType.INFO,
+      `Sending files to PinToCRUST worker... Num of files: `,
+      'storage-bucket-sync-files-to-ipfsRes.ts',
+      'storageBucketSyncFilesToIPFS',
     );
     try {
       for (const transferedFile of transferedFiles) {
@@ -371,7 +403,13 @@ export async function storageBucketSyncFilesToIPFS(
         );
       }
     } catch (err) {
-      console.error(err);
+      writeLog(
+        LogType.ERROR,
+        `Error sending files to PinToCRUST worker. `,
+        'storage-bucket-sync-files-to-ipfsRes.ts',
+        'storageBucketSyncFilesToIPFS',
+        err,
+      );
     }
   }
 
@@ -393,7 +431,12 @@ export async function storageBucketSyncFilesToIPFS(
     },
   });
 
-  console.info('storageBucketSyncFilesToIPFS completed!');
+  writeLog(
+    LogType.INFO,
+    `storageBucketSyncFilesToIPFS completed! `,
+    'storage-bucket-sync-files-to-ipfsRes.ts',
+    'storageBucketSyncFilesToIPFS',
+  );
 
   return transferedFiles;
 }

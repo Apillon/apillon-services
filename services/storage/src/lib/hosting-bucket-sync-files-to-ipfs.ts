@@ -16,7 +16,7 @@ import { Bucket } from '../modules/bucket/models/bucket.model';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
 import { File } from '../modules/storage/models/file.model';
-import { generateDirectoriesForFUR } from '../utils/generate-directories-from-path';
+import { generateDirectoriesForFUR } from './generate-directories-from-path';
 import { pinFileToCRUST } from './pin-file-to-crust';
 import { getSizeOfFilesInSessionOnS3 } from './size-of-files';
 
