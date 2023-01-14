@@ -7,8 +7,8 @@ import { dropTestDatabases } from './migrations';
 
 export async function setupTestContextAndSql(): Promise<Stage> {
   try {
-    //Dev-console-api context & mysql
-    const config = {
+    /********************** DEV-CONSOLE APP **************************/
+    const configDevConsole = {
       host: env.DEV_CONSOLE_API_MYSQL_HOST_TEST,
       database: env.DEV_CONSOLE_API_MYSQL_DATABASE_TEST,
       password: env.DEV_CONSOLE_API_MYSQL_PASSWORD_TEST,
@@ -16,13 +16,13 @@ export async function setupTestContextAndSql(): Promise<Stage> {
       user: env.DEV_CONSOLE_API_MYSQL_USER_TEST,
     };
 
-    const devConsoleSql = new MySql(config);
+    const devConsoleSql = new MySql(configDevConsole);
     await devConsoleSql.connect();
     const devConsoleContext = new TestContext();
     devConsoleContext.mysql = devConsoleSql;
 
-    //AMS MS context
-    const config2 = {
+    /********************** AMS MS **************************/
+    const accessConfig = {
       host: env.ACCESS_MYSQL_HOST_TEST,
       database: env.ACCESS_MYSQL_DATABASE_TEST,
       password: env.ACCESS_MYSQL_PASSWORD_TEST,
@@ -30,7 +30,7 @@ export async function setupTestContextAndSql(): Promise<Stage> {
       user: env.ACCESS_MYSQL_USER_TEST,
     };
 
-    const amsSql = new MySql(config2);
+    const amsSql = new MySql(accessConfig);
     await amsSql.connect();
 
     const amsContext = new TestContext();
@@ -45,8 +45,8 @@ export async function setupTestContextAndSql(): Promise<Stage> {
     const lmasContext = new TestContext();
     lmasContext.mongo = lmasMongo;
 
-    //Storage MS context
-    const config3 = {
+    /********************** STORAGE MS **************************/
+    const configStorageApp = {
       host: env.STORAGE_MYSQL_HOST_TEST,
       database: env.STORAGE_MYSQL_DATABASE_TEST,
       password: env.STORAGE_MYSQL_PASSWORD_TEST,
@@ -54,14 +54,14 @@ export async function setupTestContextAndSql(): Promise<Stage> {
       user: env.STORAGE_MYSQL_USER_TEST,
     };
 
-    const storageSql = new MySql(config3);
+    const storageSql = new MySql(configStorageApp);
     await storageSql.connect();
 
     const storageContext = new TestContext();
     storageContext.mysql = storageSql;
 
-    //Config MS context
-    const config4 = {
+    /********************** CONFIGURATION MS **************************/
+    const configConfigMS = {
       host: env.CONFIG_MYSQL_HOST_TEST,
       database: env.CONFIG_MYSQL_DATABASE_TEST,
       password: env.CONFIG_MYSQL_PASSWORD_TEST,
@@ -69,11 +69,26 @@ export async function setupTestContextAndSql(): Promise<Stage> {
       user: env.CONFIG_MYSQL_USER_TEST,
     };
 
-    const configSql = new MySql(config4);
+    const configSql = new MySql(configConfigMS);
     await configSql.connect();
 
     const configContext = new TestContext();
     configContext.mysql = configSql;
+
+    /********************** AUTHENTICATION APP **************************/
+    const authApiConfig = {
+      host: env.AUTH_API_MYSQL_HOST_TEST,
+      database: env.AUTH_API_MYSQL_DATABASE_TEST,
+      password: env.AUTH_API_MYSQL_PASSWORD_TEST,
+      port: env.AUTH_API_MYSQL_PORT_TEST,
+      user: env.AUTH_API_MYSQL_USER_TEST,
+    };
+
+    const authApiSql = new MySql(authApiConfig);
+    await authApiSql.connect();
+
+    const authApiContext = new TestContext();
+    authApiContext.mysql = authApiSql;
 
     // startAmsServer();
     // startLmasServer();
@@ -91,6 +106,8 @@ export async function setupTestContextAndSql(): Promise<Stage> {
       storageSql,
       configContext,
       configSql,
+      authApiContext,
+      authApiSql,
     };
   } catch (e) {
     console.error(e);

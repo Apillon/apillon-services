@@ -13,7 +13,7 @@ import {
   white,
   bgWhite,
 } from 'colors/safe';
-import { LogType } from '../config/types';
+import { LogLevel, LogType } from '../config/types';
 import { env } from '../config/env';
 import moment from 'moment';
 
@@ -26,6 +26,32 @@ export function writeLog(
   functionSource = '',
   error?: Error,
 ): void {
+  const levelFilter = {
+    [LogLevel.DB_ONLY]: () => {
+      return [LogType.DB, LogType.WARN, LogType.ERROR].includes(type);
+    },
+    [LogLevel.NO_DB]: () => {
+      return type !== LogType.DB;
+    },
+    [LogLevel.ERROR_ONLY]: () => {
+      return type === LogType.ERROR;
+    },
+    [LogLevel.WARN]: () => {
+      return [LogType.WARN, LogType.ERROR].includes(type);
+    },
+    [LogLevel.DEBUG]: () => {
+      return true;
+    },
+  };
+
+  try {
+    if (!levelFilter[env.LOG_LEVEL]()) {
+      return;
+    }
+  } catch (err) {
+    // invalid log filter
+  }
+
   if (env.LOG_TARGET == 'color') {
     logInColor(type, message, fileSource, functionSource, error);
   } else if (env.LOG_TARGET == 'console') {
@@ -98,16 +124,22 @@ function logInConsole(
   }`;
 
   if (type === LogType.ERROR) {
-    console.error(`[${type}][${moment().format(time_format)}]:`);
-    console.error(message);
-    console.error(`[${fileSource}/${functionSource}]`);
+    console.error(
+      `[${type}][${moment().format(
+        time_format,
+      )}]:\n${message}\n[${fileSource}/${functionSource}]`,
+    );
   } else if (type === LogType.MSG) {
-    console.warn(`[${type}][${moment().format(time_format)}]:`);
-    console.warn(message);
-    console.warn(`[${fileSource}/${functionSource}]`);
+    console.warn(
+      `[${type}][${moment().format(
+        time_format,
+      )}]:\n${message}\n[${fileSource}/${functionSource}]`,
+    );
   } else {
-    console.log(`[${type}][${moment().format(time_format)}]:`);
-    console.log(message);
-    console.log(`[${fileSource}/${functionSource}]`);
+    console.log(
+      `[${type}][${moment().format(
+        time_format,
+      )}]:\n${message}\n[${fileSource}/${functionSource}]`,
+    );
   }
 }

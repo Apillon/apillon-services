@@ -1,7 +1,6 @@
 import { mnemonicGenerate, mnemonicToMiniSecret } from '@polkadot/util-crypto';
-import { LogType, writeLog, env, ServiceName, Lmas } from '@apillon/lib';
+import { LogType, env, ServiceName, Lmas } from '@apillon/lib';
 import {
-  Blockchain,
   ConfigService,
   Did,
   KeyringPair,
@@ -13,7 +12,6 @@ import {
   Claim,
   Attestation,
   Credential,
-  SubmittableExtrinsic,
   DidUri,
 } from '@kiltprotocol/sdk-js';
 import {
@@ -38,14 +36,14 @@ export async function generateKeypairs(mnemonic: string) {
   // stored on the chain
   const authentication = Utils.Crypto.makeKeypairFromSeed(
     mnemonicToMiniSecret(mnemonic),
-    KILT_DERIVATION_SIGN_ALGORITHM,
+    'sr25519',
   );
   const encryption = Utils.Crypto.makeEncryptionKeypairFromSeed(
     mnemonicToMiniSecret(mnemonic),
   );
 
   const assertion = authentication.derive(EclipticDerivationPaths.ATTESTATION, {
-    type: KILT_DERIVATION_SIGN_ALGORITHM,
+    type: 'sr25519',
   }) as KiltKeyringPair;
   const delegation = authentication.derive(
     EclipticDerivationPaths.DELEGATION,
@@ -71,7 +69,7 @@ export async function getFullDidDocument(keypairs: Keypairs) {
       logType: LogType.INFO,
       // This is not an error!! getFullDidDocument is used to query document state
       message: `KILT => DID DOCUMENT DOES NOT EXIST`,
-      location: 'AUTHENTICATION-API/attestation/attestation.service.ts',
+      location: 'AUTHENTICATION-API/identity/identity.service.ts',
       service: ServiceName.AUTHENTICATION_API,
     });
 
@@ -79,37 +77,6 @@ export async function getFullDidDocument(keypairs: Keypairs) {
   }
 
   return document;
-}
-
-export async function submitDidCreateTx(
-  extrinsic: SubmittableExtrinsic,
-): Promise<boolean> {
-  await connect(env.KILT_NETWORK);
-
-  const attesterAccount = (await generateAccount(
-    env.KILT_ATTESTER_MNEMONIC,
-  )) as KiltKeyringPair;
-
-  try {
-    await Blockchain.signAndSubmitTx(extrinsic, attesterAccount);
-  } catch (error) {
-    await new Lmas().writeLog({
-      logType: LogType.ERROR,
-      message: `KILT => DID CREATION FAILED`,
-      location: 'AUTHENTICATION-API/attestation/attestation.service.ts',
-      service: ServiceName.AUTHENTICATION_API,
-    });
-    return false;
-  }
-
-  await new Lmas().writeLog({
-    logType: LogType.INFO,
-    message: `KILT => DID CREATION SUCCESSFULL`,
-    location: 'AUTHENTICATION-API/attestation/attestation.service.ts',
-    service: ServiceName.AUTHENTICATION_API,
-  });
-
-  return true;
 }
 
 export function createAttestationRequest(

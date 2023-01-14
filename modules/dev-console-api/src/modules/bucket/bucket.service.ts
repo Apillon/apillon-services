@@ -87,6 +87,12 @@ export class BucketService {
       .data;
   }
 
+  async cancelBucketDeletion(context: DevConsoleApiContext, id: number) {
+    return (
+      await new StorageMicroservice(context).cancelBucketDeletion({ id: id })
+    ).data;
+  }
+
   //#region bucket webhook
 
   async getBucketWebhook(context: DevConsoleApiContext, bucket_id: number) {

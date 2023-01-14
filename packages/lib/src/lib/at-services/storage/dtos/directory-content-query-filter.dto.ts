@@ -1,6 +1,6 @@
 // import { ApiProperty } from '@babel/core';
 import { prop } from '@rawmodel/core';
-import { stringParser } from '@rawmodel/parsers';
+import { booleanParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   PopulateFrom,
@@ -35,6 +35,13 @@ export class DirectoryContentQueryFilter extends BaseQueryFilter {
     validators: [],
   })
   public search: string;
+
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [],
+  })
+  public markedForDeletion: boolean;
 }
 
 export class ApillonApiDirectoryContentQueryFilter extends BaseQueryFilter {
@@ -52,4 +59,11 @@ export class ApillonApiDirectoryContentQueryFilter extends BaseQueryFilter {
     validators: [],
   })
   public search: string;
+
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [],
+  })
+  public markedForDeletion: boolean;
 }

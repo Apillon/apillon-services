@@ -30,6 +30,7 @@ export class DirectoryController {
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
   )
   @UseGuards(AuthGuard)
   @Validation({ dto: CreateDirectoryDto })
@@ -45,6 +46,7 @@ export class DirectoryController {
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
   )
   @UseGuards(AuthGuard)
   async updateDirectory(
@@ -55,13 +57,28 @@ export class DirectoryController {
     return await this.directoryService.updateDirectory(context, id, body);
   }
 
+  @Patch(':id/cancel-deletion')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @UseGuards(AuthGuard)
+  async cancelDirectoryDeletion(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return await this.directoryService.cancelDirectoryDeletion(context, id);
+  }
+
   @Delete(':id')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
   )
   @UseGuards(AuthGuard)
-  async removeUserProject(
+  async deleteDirectory(
     @Ctx() context: DevConsoleApiContext,
     @Param('id', ParseIntPipe) id: number,
   ) {

@@ -57,7 +57,11 @@ export class IdentityService {
     if (identity.exists()) {
       // If email was already attested -> deny process
       if (identity.state == IdentityState.ATTESTED) {
-        return { success: false, message: aae.EMAIL_ALREADY_EXIST };
+        throw new CodeException({
+          status: HttpStatus.BAD_REQUEST,
+          code: AuthenticationErrorCode.IDENTITY_EMAIL_IS_ALREADY_ATTESTED,
+          errorCodes: AuthenticationErrorCode,
+        });
       }
     } else {
       // If identity does not exist, create a new entry
@@ -87,6 +91,7 @@ export class IdentityService {
         message: `Error creating identity state for user with email ${email}'`,
         location: 'Authentication-API/identity/sendVerificationEmail',
         service: ServiceName.AUTHENTICATION_API,
+        data: err,
       });
       throw err;
     }
@@ -136,15 +141,24 @@ export class IdentityService {
       didUri: body.didUri,
     };
 
-    const tokenData = parseJwtToken(
-      JwtTokenType.IDENTITY_EMAIL_VERIFICATION,
-      body.token,
-    );
+    let tokenData: any;
+    try {
+      tokenData = parseJwtToken(
+        JwtTokenType.IDENTITY_EMAIL_VERIFICATION,
+        body.token,
+      );
+    } catch (error) {
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: AuthenticationErrorCode.IDENTITY_INVALID_VERIFICATION_TOKEN,
+        errorCodes: AuthenticationErrorCode,
+      });
+    }
 
     if (tokenData.email != body.email) {
       throw new CodeException({
         status: HttpStatus.BAD_REQUEST,
-        code: AuthenticationErrorCode.IDENTITY_INVALID_VERIFICATION_TOKEN,
+        code: AuthenticationErrorCode.IDENTITY_VERIFICATION_FAILED,
         errorCodes: AuthenticationErrorCode,
       });
     }
@@ -155,7 +169,15 @@ export class IdentityService {
       body.email,
     );
 
-    if (!identity.exists() || identity.state != IdentityState.IN_PROGRESS) {
+    if (
+      !identity.exists() ||
+      (identity.state != IdentityState.IN_PROGRESS &&
+        identity.state != IdentityState.IDENTITY_VERIFIED)
+    ) {
+      // IDENTITY_VERIFIED just means that the process was broken before
+      // the entity was successfully attested --> See a few lines below
+      // This is done so we have better control of the process and for
+      // analytical purposes
       throw new CodeException({
         status: HttpStatus.BAD_REQUEST,
         code: AuthenticationErrorCode.IDENTITY_INVALID_STATE,
@@ -241,16 +263,16 @@ export class IdentityService {
 
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
-
     const { authentication, encryption, assertion, delegation } =
-      await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
+      await generateKeypairs(body.mnemonic);
+    const acc = (await generateAccount(body.mnemonic)) as KiltKeyringPair;
     const attesterAccount = (await generateAccount(
       env.KILT_ATTESTER_MNEMONIC,
     )) as KiltKeyringPair;
 
     if (body.initial) {
       return {
-        address: attesterAccount.address,
+        address: acc.address,
         pubkey: u8aToHex(encryption.publicKey),
       };
     }
@@ -258,7 +280,6 @@ export class IdentityService {
     const didDoc = await Did.resolve(Did.getFullDidUriFromKey(authentication));
 
     if (didDoc && didDoc.document) {
-      console.log('DID already on chain. Nothing to do ...');
     }
 
     const fullDidCreationTx = await Did.getStoreTx(

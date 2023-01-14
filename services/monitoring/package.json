@@ -20,8 +20,7 @@
   "dependencies": {
     "@apillon/lib": "*",
     "@middy/core": "^3.3.1",
-    "@slack/web-api": "^6.8.0",
-    "aws-lambda": "^1.0.7"
+    "@slack/web-api": "^6.8.0"
   },
   "devDependencies": {
     "eslint-config-common": "*",

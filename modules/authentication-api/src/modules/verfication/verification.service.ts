@@ -40,14 +40,10 @@ export class VerificationService {
         service: ServiceName.AUTHENTICATION_API,
       });
     } catch (error) {
-      await new Lmas().writeLog({
-        context: context,
-        logType: LogType.ERROR,
-        message: 'VERIFICATION FAILED:' + error,
-        location: 'AUTHENTICATION-API/verification/verifyIdentity',
-        service: ServiceName.AUTHENTICATION_API,
-      });
-      return { verified: false, error: error.message };
+      return {
+        verified: false,
+        error: error.message.replace(/['"]+/g, ''),
+      };
     }
 
     return attestation.revoked

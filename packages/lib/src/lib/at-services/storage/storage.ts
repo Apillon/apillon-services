@@ -22,7 +22,7 @@ export class StorageMicroservice extends BaseService {
     env.APP_ENV === AppEnvironment.TEST
       ? env.STORAGE_SOCKET_PORT_TEST
       : env.STORAGE_SOCKET_PORT;
-  serviceName = 'LMAS';
+  serviceName = 'STORAGE';
 
   constructor(context: Context) {
     super(context);
@@ -71,6 +71,14 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async cancelBucketDeletion(params: { id: number }) {
+    const data = {
+      eventName: StorageEventType.CANCEL_DELETE_BUCKET,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
   public async maxBucketQuotaReached(params: BucketQuotaReachedQueryFilter) {
     const data = {
       eventName: StorageEventType.MAX_BUCKETS_QUOTA_REACHED,
@@ -102,6 +110,14 @@ export class StorageMicroservice extends BaseService {
   public async deleteDirectory(params: { id: number }) {
     const data = {
       eventName: StorageEventType.DELETE_DIRECTORY,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
+  public async cancelDirectoryDeletion(params: { id: number }) {
+    const data = {
+      eventName: StorageEventType.CANCEL_DELETE_DIRECTORY,
       ...params,
     };
     return await this.callService(data);
@@ -171,6 +187,14 @@ export class StorageMicroservice extends BaseService {
   public async deleteFile(params: { id: string }) {
     const data = {
       eventName: StorageEventType.FILE_DELETE,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
+  public async cancelFileDeletion(params: { id: string }) {
+    const data = {
+      eventName: StorageEventType.CANCEL_FILE_DELETE,
       ...params,
     };
     return await this.callService(data);
