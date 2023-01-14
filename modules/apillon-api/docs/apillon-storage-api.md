@@ -43,13 +43,14 @@ For example `images/icons`, creates `images` directory in bucket and `icons` dir
 
 #### Possible errors
 
-| Code     | Description                                                                         |
-| -------- | ----------------------------------------------------------------------------------- |
-| 40406002 | Bucket does not exists.                                                             |
-| 42200008 | Request body is missing `fileName` field                                            |
-| 42200009 | Request body is missing `contentType` field                                         |
-| 40006002 | Size of all files that were uploaded to bucket, has reached `MAX BUCKET SIZE` limit |
-| 50006003 | Internal error - Apillon was unable to generate S3 signed URL                       |
+| Code     | Description                                                                   |
+| -------- | ----------------------------------------------------------------------------- |
+| 40406002 | Bucket does not exists.                                                       |
+| 42200008 | Request body is missing `fileName` field                                      |
+| 42200009 | Request body is missing `contentType` field                                   |
+| 40006002 | Bucket has reached max size limit                                             |
+| 40406009 | Bucket is marked for deletion. It is no longer possible to upload files to it |
+| 50006003 | Internal error - Apillon was unable to generate S3 signed URL                 |
 
 #### Response fields
 
@@ -272,7 +273,8 @@ curl --location --request GET "http://localhost:6002/storage/cee9f151-a371-495b-
 
 ### [private] DELETE /storage/:bucketUuid/file/:id
 
-> Delete file inside bucket, by `id`, `fileUuid` or `CID`
+> Mark file inside bucket for deletion, by `id`, `fileUuid` or `CID`. File will be completly deleted from Apillon system and APillon IPFS node after 3 months.
+> If file is marked for deletion, it is not getting renewed on CRUST.
 
 #### URL parameters
 
@@ -283,6 +285,38 @@ curl --location --request GET "http://localhost:6002/storage/cee9f151-a371-495b-
 
 #### Possible errors
 
-| Code     | Description           |
-| -------- | --------------------- |
-| 40406005 | File does not exists. |
+| Code     | Description                         |
+| -------- | ----------------------------------- |
+| 40406005 | File does not exists.               |
+| 40006009 | File is already marked for deletion |
+
+#### Response fields
+
+Response of delete function is record, that is being marked for deletion.
+Returned fields are same as fields, that are returned in [GET file details API](#file-metadata).
+
+#### Request cURL example
+
+```
+curl --location --request DELETE "http://localhost:6002/storage/c04ced63-61c8-480c-b9ee-598e8c5da167/file/50" \
+--header "Authorization: Basic MTJhMTVmNmYtMzc3NC00MTVjLWE0MzMtYWZlYjA5OWY3NjM4OjAxVE1IVjVIKlZoSg=="
+```
+
+#### Response example
+
+```JSON
+{
+    "id": "bc92ff8d-05f2-4380-bb13-75a1b6b7f388",
+    "status": 200,
+    "data": {
+        "id": 50,
+        "status": 8,
+        "fileUuid": "e98536e5-4109-4f35-8e92-eef2a26898d7",
+        "CID": "QmNqQKFq7xqQz76aGTihW8UJvRmat52i3rSKjDMmDpHmVi",
+        "name": "aaa.txt",
+        "contentType": "text/plain",
+        "size": 11,
+        "downloadLink": null
+    }
+}
+```

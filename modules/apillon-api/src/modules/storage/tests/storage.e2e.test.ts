@@ -6,6 +6,7 @@ import {
   AttachedServiceType,
   DefaultApiKeyRole,
   env,
+  SqlModelStatus,
 } from '@apillon/lib';
 import {
   FileStatus,
@@ -369,7 +370,8 @@ describe('Storage tests', () => {
         testFile = await new File({}, stage.storageContext).populateByUUID(
           testS3FileUUID,
         );
-        expect(testFile.exists()).toBeFalsy();
+        expect(testFile.exists()).toBeTruthy();
+        expect(testFile.status).toBe(SqlModelStatus.MARKED_FOR_DELETION);
       });
     });
   });
