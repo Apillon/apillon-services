@@ -1,4 +1,4 @@
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { integerParser, stringParser, dateParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   AdvancedSQLModel,
@@ -234,6 +234,16 @@ export class Bucket extends AdvancedSQLModel {
   })
   public IPNS: string;
 
+  /**
+   * Time when bucket was set to status 8 - MARKED_FOR_DELETION
+   */
+  @prop({
+    parser: { resolver: dateParser() },
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    populatable: [PopulateFrom.DB],
+  })
+  public markedForDeletionTime?: Date;
+
   public canAccess(context: ServiceContext) {
     if (
       !context.hasRoleOnProject(
@@ -249,7 +259,7 @@ export class Bucket extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: 403,
-        errorMessage: 'Insufficient permissions to modify this record',
+        errorMessage: 'Insufficient permissions to access this record',
       });
     }
   }
@@ -268,7 +278,7 @@ export class Bucket extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: 403,
-        errorMessage: 'Insufficient permissions to access to this record',
+        errorMessage: 'Insufficient permissions to modify this record',
       });
     }
   }
@@ -294,6 +304,24 @@ export class Bucket extends AdvancedSQLModel {
     }
   }
 
+  /**
+   * Marks bucket in the database for deletion.
+   */
+  public async markForDeletion(conn?: PoolConnection): Promise<this> {
+    this.updateUser = this.getContext()?.user?.id;
+
+    this.status = SqlModelStatus.MARKED_FOR_DELETION;
+    this.markedForDeletionTime = new Date();
+
+    try {
+      await this.update(SerializeFor.UPDATE_DB, conn);
+    } catch (err) {
+      this.reset();
+      throw err;
+    }
+    return this;
+  }
+
   public async getList(context: ServiceContext, filter: BucketQueryFilter) {
     this.canAccess(context);
     // Map url query with sql fields.
@@ -315,7 +343,9 @@ export class Bucket extends AdvancedSQLModel {
         FROM \`${DbTables.BUCKET}\` b
         WHERE b.project_uuid = @project_uuid
         AND (@search IS null OR b.name LIKE CONCAT('%', @search, '%'))
-        AND status <> ${SqlModelStatus.DELETED}
+        AND ( status = ${SqlModelStatus.ACTIVE} OR 
+          ( @markedForDeletion = 1 AND status = ${SqlModelStatus.MARKED_FOR_DELETION})
+        )
       `,
       qFilter: `
         ORDER BY ${filters.orderStr}

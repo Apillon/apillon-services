@@ -6,19 +6,19 @@ import {
   SerializeFor,
   ServiceName,
 } from '@apillon/lib';
-import { S3ArtifactLocation } from 'aws-lambda';
 import {
-  BucketType,
+  FileStatus,
   FileUploadRequestFileStatus,
   StorageErrorCode,
 } from '../config/types';
 import { StorageCodeException } from '../lib/exceptions';
 import { Bucket } from '../modules/bucket/models/bucket.model';
-import { CrustService } from '../modules/crust/crust.service';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
 import { File } from '../modules/storage/models/file.model';
-import { generateDirectoriesForFUR } from '../utils/generate-directories-from-path';
+import { generateDirectoriesForFUR } from './generate-directories-from-path';
+import { pinFileToCRUST } from './pin-file-to-crust';
+import { getSizeOfFilesInSessionOnS3 } from './size-of-files';
 
 /**
  * Transfers files from s3 to IPFS & pins them to CRUST
@@ -40,36 +40,9 @@ export async function hostingBucketSyncFilesToIPFS(
 
   //Check if size of files is greater than allowed bucket size.
   const s3Client: AWS_S3 = new AWS_S3();
-  /**
-   * Array of s3FileLists - actually array of array (chunks of 1000 files)
-   */
-  const s3FileLists: any[] = [];
-  let s3FileList: any = undefined;
-  do {
-    s3FileList = await s3Client.listFiles(
-      env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-      `${BucketType[bucket.bucketType]}/${bucket.id}/${session?.session_uuid}`,
-    );
-    if (s3FileList.KeyCount > 0) s3FileLists.push(s3FileList);
-  } while (s3FileList.KeyCount == 1000);
+  const filesOnS3 = await getSizeOfFilesInSessionOnS3(bucket, session);
 
-  if (s3FileLists.length == 0) {
-    throw new StorageCodeException({
-      code: StorageErrorCode.NO_FILES_ON_S3_FOR_TRANSFER,
-      status: 404,
-    });
-  }
-
-  let sizeOfFilesOnS3 = 0;
-  for (const tmpS3FileList of s3FileLists) {
-    const tmpSize = tmpS3FileList.Contents.reduce(
-      (size, x) => size + x.Size,
-      0,
-    );
-    sizeOfFilesOnS3 += tmpSize;
-  }
-
-  if (sizeOfFilesOnS3 > maxBucketSize) {
+  if (filesOnS3.size > maxBucketSize) {
     //TODO - define flow. What happens in that case - user should be notified
     throw new StorageCodeException({
       code: StorageErrorCode.NOT_ENOUGH_SPACE_IN_BUCKET,
@@ -93,33 +66,8 @@ export async function hostingBucketSyncFilesToIPFS(
       service: ServiceName.STORAGE,
       data: {
         files: files.map((x) => x.serialize()),
+        error: err,
       },
-    });
-    throw err;
-  }
-
-  try {
-    await CrustService.placeStorageOrderToCRUST({
-      cid: ipfsRes.parentDirCID,
-      size: ipfsRes.size,
-    });
-    await new Lmas().writeLog({
-      context: context,
-      project_uuid: bucket.project_uuid,
-      logType: LogType.COST,
-      message: 'Success placing storage order to CRUST',
-      location: location,
-      service: ServiceName.STORAGE,
-    });
-  } catch (err) {
-    await new Lmas().writeLog({
-      context: context,
-      project_uuid: bucket.project_uuid,
-      logType: LogType.ERROR,
-      message: 'Error at placing storage order to CRUST',
-      location: location,
-      service: ServiceName.STORAGE,
-      data: err,
     });
     throw err;
   }
@@ -159,12 +107,13 @@ export async function hostingBucketSyncFilesToIPFS(
           project_uuid: bucket.project_uuid,
           directory_id: fileDirectory?.id,
           size: file.size,
+          fileStatus: FileStatus.UPLOADED_TO_IPFS,
         })
         .insert(SerializeFor.INSERT_DB, conn);
 
-      //now the file has CID, exists in IPFS node and is pinned to CRUST
+      //now the file has CID and exists in IPFS node
       //update file-upload-request status
-      file.fileStatus = FileUploadRequestFileStatus.UPLOADED_TO_IPFS;
+      file.fileStatus = FileUploadRequestFileStatus.UPLOAD_COMPLETED;
       await file.update(SerializeFor.UPDATE_DB, conn);
 
       bucket.size += file.size;
@@ -187,7 +136,7 @@ export async function hostingBucketSyncFilesToIPFS(
     await context.mysql.commit(conn);
 
     //Delete files from S3
-    for (const tmpS3FileList of s3FileLists) {
+    for (const tmpS3FileList of filesOnS3.s3Keys) {
       await s3Client.removeFiles(
         env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
         tmpS3FileList.Contents.map((x) => {
@@ -213,6 +162,14 @@ export async function hostingBucketSyncFilesToIPFS(
     await context.mysql.rollback(conn);
     throw err;
   }
+
+  //Place storage order for parent CID to CRUST
+  await pinFileToCRUST(
+    context,
+    bucket.bucket_uuid,
+    ipfsRes.parentDirCID,
+    ipfsRes.size,
+  );
 
   return transferedFiles;
 }

@@ -1,4 +1,12 @@
-import { Context, env, QuotaCode, Scs } from '@apillon/lib';
+import {
+  Context,
+  env,
+  Lmas,
+  LogType,
+  QuotaCode,
+  Scs,
+  ServiceName,
+} from '@apillon/lib';
 import {
   BaseQueueWorker,
   QueueWorkerType,
@@ -14,9 +22,9 @@ import { StorageCodeException } from '../lib/exceptions';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
-import { sendTransferredFilesToBucketWebhook } from '../utils/bucket-webhook-utils';
-import { hostingBucketSyncFilesToIPFS } from '../utils/hosting-bucket-sync-files-to-ipfs';
-import { storageBucketSyncFilesToIPFS } from '../utils/storage-bucket-sync-files-to-ipfs';
+import { sendTransferredFilesToBucketWebhook } from '../lib/bucket-webhook';
+import { hostingBucketSyncFilesToIPFS } from '../lib/hosting-bucket-sync-files-to-ipfs';
+import { storageBucketSyncFilesToIPFS } from '../lib/storage-bucket-sync-files-to-ipfs';
 
 export class SyncToIPFSWorker extends BaseQueueWorker {
   public constructor(
@@ -31,7 +39,17 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
     return [];
   }
   public async runExecutor(data: any): Promise<any> {
-    console.info('RUN EXECUTOR. data: ', data);
+    console.info('RUN EXECUTOR (SyncToIPFSWorker). data: ', data);
+
+    await new Lmas().writeLog({
+      context: this.context,
+      logType: LogType.INFO,
+      message: 'Sync to IPFS worker started',
+      location: `${this.constructor.name}/runExecutor`,
+      service: ServiceName.STORAGE,
+      data: data,
+    });
+
     const session_uuid = data?.session_uuid;
     let files = [];
     let bucket: Bucket = undefined;
@@ -84,7 +102,16 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
               tmpFur.bucket_id,
             );
           }
+          //Update file-upload-request status
+          tmpFur.fileStatus = FileUploadRequestFileStatus.UPLOADED_TO_S3;
+          await tmpFur.update();
+          //Push to files, that will be processed
           files.push(tmpFur);
+        } else {
+          //Update file-upload-request status
+          tmpFur.fileStatus =
+            FileUploadRequestFileStatus.ERROR_FILE_UPLOAD_REQUEST_DOES_NOT_EXISTS;
+          await tmpFur.update();
         }
       }
       //Get bucket
@@ -131,6 +158,9 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         bucket,
         maxBucketSize,
         files,
+        session,
+        data?.wrapWithDirectory,
+        data?.wrappingDirectoryName,
       );
     }
 
@@ -147,6 +177,17 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
       transferedFiles,
     );
 
+    await new Lmas().writeLog({
+      context: this.context,
+      logType: LogType.INFO,
+      message: 'Sync to IPFS worker completed',
+      location: `${this.constructor.name}/runExecutor`,
+      service: ServiceName.STORAGE,
+      data: {
+        transferedFiles: transferedFiles,
+        data,
+      },
+    });
     await this.writeLogToDb(
       WorkerLogStatus.INFO,
       `SyncToIPFS worker has been completed!`,

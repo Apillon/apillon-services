@@ -1,4 +1,4 @@
-import { env } from '@apillon/lib';
+import { env, SqlModelStatus } from '@apillon/lib';
 import {
   FileStatus,
   FileUploadRequestFileStatus,
@@ -10,6 +10,7 @@ import { FileUploadRequest } from '@apillon/storage/src/modules/storage/models/f
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 import {
   createTestBucket,
+  createTestBucketFile,
   createTestBucketWebhook,
   createTestProject,
   createTestUser,
@@ -19,11 +20,9 @@ import * as request from 'supertest';
 import { v4 as uuidV4 } from 'uuid';
 import { releaseStage, Stage } from '@apillon/tests-lib';
 import { Project } from '../../project/models/project.model';
-import { AppModule } from '../../../app.module';
 import { setupTest } from '../../../../test/helpers/setup';
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const fs = require('fs');
+import { executeDeleteBucketDirectoryFileWorker } from '@apillon/storage/src/scripts/serverless-workers/execute-delete-bucket-dir-file-worker';
+import { IPFSService } from '@apillon/storage/src/modules/ipfs/ipfs.service';
 
 describe('Storage tests', () => {
   let stage: Stage;
@@ -84,8 +83,9 @@ describe('Storage tests', () => {
 
       test('User should be able to upload file to s3 via signed URL', async () => {
         expect(testS3SignedUrl).toBeTruthy();
-        const file = fs.readFileSync('test/assets/test.txt');
-        const response = await request(testS3SignedUrl).put(``).send(file);
+        const response = await request(testS3SignedUrl)
+          .put(``)
+          .send(new Date().toString() + uuidV4());
 
         expect(response.status).toBe(200);
       });
@@ -143,7 +143,7 @@ describe('Storage tests', () => {
       test('User should be able to download uploaded file from apillon ipfs gateway', async () => {
         expect(testFile).toBeTruthy();
         const response = await request(
-          env.STORAGE_IPFS_PROVIDER + testFile.CID,
+          env.STORAGE_IPFS_GATEWAY + testFile.CID,
         ).get('');
         expect(response.status).toBe(200);
       });
@@ -161,7 +161,6 @@ describe('Storage tests', () => {
         expect(response.body.data.fileStatus).toBe(FileStatus.PINNED_TO_CRUST);
         expect(response.body.data.file.file_uuid).toBe(testFile.file_uuid);
         expect(response.body.data.file.CID).toBe(testFile.CID);
-        expect(response.body.data.file.s3FileKey).toBeTruthy();
         expect(response.body.data.file.name).toBe(testFile.name);
         expect(response.body.data.file.size).toBeGreaterThan(0);
       });
@@ -175,7 +174,6 @@ describe('Storage tests', () => {
         expect(response.body.data.fileStatus).toBe(FileStatus.PINNED_TO_CRUST);
         expect(response.body.data.file.file_uuid).toBe(testFile.file_uuid);
         expect(response.body.data.file.CID).toBe(testFile.CID);
-        expect(response.body.data.file.s3FileKey).toBeTruthy();
         expect(response.body.data.file.name).toBe(testFile.name);
         expect(response.body.data.file.size).toBeGreaterThan(0);
       });
@@ -191,7 +189,7 @@ describe('Storage tests', () => {
     });
 
     describe('Multiple files in directories tests', () => {
-      test('User should be able to recieve multiple S3 signed URLs, and upload multiple files to S3 bucket', async () => {
+      test('User should be able to upload multiple files to Apillon storage using session', async () => {
         testSession_uuid = uuidV4();
 
         //Upload 2 files, each into its own directory
@@ -208,10 +206,9 @@ describe('Storage tests', () => {
         const file1_uuid = response.body.data.file_uuid;
         const file1_signedUrlForUpload = response.body.data.signedUrlForUpload;
 
-        const testFileContent = fs.readFileSync('test/assets/test.txt');
         response = await request(file1_signedUrlForUpload)
           .put(``)
-          .send(testFileContent);
+          .send(new Date().toString() + 'File 1');
         expect(response.status).toBe(200);
 
         response = await request(stage.http)
@@ -229,7 +226,7 @@ describe('Storage tests', () => {
 
         response = await request(file2_signedUrlForUpload)
           .put(``)
-          .send(testFileContent);
+          .send(new Date().toString() + 'File 2');
         expect(response.status).toBe(200);
         // trigger sync to IPFS
         response = await request(stage.http)
@@ -254,7 +251,7 @@ describe('Storage tests', () => {
         );
         expect(file.exists()).toBeTruthy();
 
-        //Check if directories and files were created
+        //Check if directories exists and are in correct hiearchy
         const dirs: Directory[] = await new Directory(
           {},
           stage.storageContext,
@@ -273,6 +270,100 @@ describe('Storage tests', () => {
         );
         expect(subdirectory).toBeTruthy();
         expect(subdirectory.parentDirectory_id).toBe(mySecondTestDirectory.id);
+      });
+    });
+
+    describe('Wrap files into IPFS directory tests', () => {
+      test('User should be able to upload multiple files to Apillon storage using session, and wrap those files into directory on IPFS', async () => {
+        testSession_uuid = uuidV4();
+
+        //Upload 2 files, each into its own directory
+        let response = await request(stage.http)
+          .post(`/storage/${testBucket.bucket_uuid}/file-upload`)
+          .send({
+            session_uuid: testSession_uuid,
+            fileName: 'index.html',
+            contentType: 'text/html',
+            path: '',
+          })
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(201);
+        const file1_uuid = response.body.data.file_uuid;
+        const file1_signedUrlForUpload = response.body.data.signedUrlForUpload;
+
+        response = await request(file1_signedUrlForUpload)
+          .put(``)
+          .send(
+            '<h1>My page on IPFS</h1><p>Curr date: ' +
+              new Date().toString() +
+              '</p>',
+          );
+        expect(response.status).toBe(200);
+
+        response = await request(stage.http)
+          .post(`/storage/${testBucket.bucket_uuid}/file-upload`)
+          .send({
+            session_uuid: testSession_uuid,
+            fileName: 'styles.css',
+            contentType: 'text/css',
+            path: 'styles',
+          })
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(201);
+        const file2_uuid = response.body.data.file_uuid;
+        const file2_signedUrlForUpload = response.body.data.signedUrlForUpload;
+
+        response = await request(file2_signedUrlForUpload)
+          .put(``)
+          .send('h1{font-size: 50px;}');
+        expect(response.status).toBe(200);
+        // trigger sync to IPFS
+        response = await request(stage.http)
+          .post(
+            `/storage/${testBucket.bucket_uuid}/file-upload/${testSession_uuid}/end`,
+          )
+          .send({
+            directSync: true,
+            wrapWithDirectory: true,
+            directoryPath: 'my test page',
+          })
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(200);
+
+        //Check if index.html file exists
+        const indexFile: File = await new File(
+          {},
+          stage.storageContext,
+        ).populateByUUID(file1_uuid);
+
+        expect(indexFile.exists()).toBeTruthy();
+        expect(indexFile.CID).toBeTruthy();
+        expect(indexFile.directory_id).toBeTruthy();
+
+        //Check if styles.css file exists
+        const cssFile = await new File({}, stage.storageContext).populateByUUID(
+          file2_uuid,
+        );
+        expect(cssFile.exists()).toBeTruthy();
+        expect(cssFile.CID).toBeTruthy();
+        expect(cssFile.directory_id).toBeTruthy();
+
+        //Check directories
+        const dirs: Directory[] = await new Directory(
+          {},
+          stage.storageContext,
+        ).populateDirectoriesInBucket(testBucket.id, stage.storageContext);
+
+        const wrappingDir: Directory = dirs.find(
+          (x) => x.name == 'my test page',
+        );
+        expect(wrappingDir?.CID).toBeTruthy();
+        expect(wrappingDir?.id).toBe(indexFile.directory_id);
+
+        const cssDir: Directory = dirs.find((x) => x.name == 'styles');
+        expect(cssDir).toBeTruthy();
+        expect(cssDir.parentDirectory_id).toBe(wrappingDir.id);
+        expect(cssDir.id).toBe(cssFile.directory_id);
       });
     });
 
@@ -303,7 +394,7 @@ describe('Storage tests', () => {
         expect(response.body.data.file_uuid).toBeTruthy();
         const file_uuid = response.body.data.file_uuid;
 
-        const testFileContent = fs.readFileSync('test/assets/test.txt');
+        const testFileContent = uuidV4();
         response = await request(response.body.data.signedUrlForUpload)
           .put(``)
           .send(testFileContent);
@@ -401,6 +492,126 @@ describe('Storage tests', () => {
           .get(`/storage/${testBucket2.bucket_uuid}/file-uploads`)
           .set('Authorization', `Bearer ${testUser2.token}`);
         expect(response.status).toBe(403);
+      });
+    });
+    describe('Delete file tests', () => {
+      let bucketForDeleteTests: Bucket = undefined;
+      let deleteBucketTestFile1: File = undefined;
+      let testFile2: File = undefined;
+      beforeAll(async () => {
+        bucketForDeleteTests = await createTestBucket(
+          testUser,
+          stage.storageContext,
+          testProject,
+        );
+
+        deleteBucketTestFile1 = await createTestBucketFile(
+          stage.storageContext,
+          bucketForDeleteTests,
+          'delete file test.txt',
+          'text/plain',
+          true,
+        );
+
+        testFile2 = await createTestBucketFile(
+          stage.storageContext,
+          bucketForDeleteTests,
+          'This file should not be deleted.txt',
+          'text/plain',
+          true,
+        );
+      });
+
+      test('User should NOT be able to delete ANOTHER USER file', async () => {
+        const response = await request(stage.http)
+          .delete(
+            `/storage/${bucketForDeleteTests.bucket_uuid}/file/${deleteBucketTestFile1.id}`,
+          )
+          .set('Authorization', `Bearer ${testUser2.token}`);
+        expect(response.status).toBe(403);
+
+        const f: File = await new File({}, stage.storageContext).populateById(
+          deleteBucketTestFile1.id,
+        );
+        expect(f.exists()).toBeTruthy();
+      });
+
+      test('User should be able to mark file for deletion', async () => {
+        const response = await request(stage.http)
+          .delete(
+            `/storage/${bucketForDeleteTests.bucket_uuid}/file/${deleteBucketTestFile1.id}`,
+          )
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(200);
+
+        const f: File = await new File({}, stage.storageContext).populateById(
+          deleteBucketTestFile1.id,
+        );
+        expect(f.status).toBe(SqlModelStatus.MARKED_FOR_DELETION);
+      });
+
+      test('User should be able to unmark file for deletion', async () => {
+        const testFileToCancelDeletion = await createTestBucketFile(
+          stage.storageContext,
+          bucketForDeleteTests,
+          'delete file test.txt',
+          'text/plain',
+          true,
+          undefined,
+          SqlModelStatus.MARKED_FOR_DELETION,
+        );
+        const response = await request(stage.http)
+          .patch(
+            `/storage/${bucketForDeleteTests.bucket_uuid}/file/${testFileToCancelDeletion.id}/cancel-deletion`,
+          )
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(200);
+
+        const f: File = await new File({}, stage.storageContext).populateById(
+          testFileToCancelDeletion.id,
+        );
+        expect(f.status).toBe(SqlModelStatus.ACTIVE);
+      });
+
+      test('Storage delete worker should NOT delete file if file is not long enough in status 8 (marked for delete)', async () => {
+        await executeDeleteBucketDirectoryFileWorker(stage.storageContext);
+        const f: File = await new File({}, stage.storageContext).populateById(
+          deleteBucketTestFile1.id,
+        );
+        expect(f.status).toBe(SqlModelStatus.MARKED_FOR_DELETION);
+      });
+
+      test('Storage delete worker should delete file if file is long enough in status 8 (marked for delete)', async () => {
+        let f: File = await new File({}, stage.storageContext).populateById(
+          deleteBucketTestFile1.id,
+        );
+        f.markedForDeletionTime = new Date();
+        f.markedForDeletionTime.setFullYear(
+          f.markedForDeletionTime.getFullYear() - 1,
+        );
+        await f.update();
+
+        await executeDeleteBucketDirectoryFileWorker(stage.storageContext);
+        f = await new File({}, stage.storageContext).populateById(
+          deleteBucketTestFile1.id,
+        );
+        expect(f.exists()).toBeFalsy();
+        expect(
+          await IPFSService.isCIDPinned(deleteBucketTestFile1.CID),
+        ).toBeFalsy();
+
+        //Check if bucket size was decreased
+        const tmpB: Bucket = await new Bucket(
+          {},
+          stage.storageContext,
+        ).populateById(bucketForDeleteTests.id);
+
+        expect(tmpB.size).toBeLessThan(bucketForDeleteTests.size);
+
+        //Check that other files were not affected / deleted
+        f = await new File({}, stage.storageContext).populateById(testFile2.id);
+        expect(f.exists()).toBeTruthy();
+        expect(await IPFSService.isCIDPinned(testFile2.CID)).toBeTruthy();
       });
     });
   });

@@ -1,9 +1,5 @@
 import { env } from '../../../config/env';
-import {
-  AppEnvironment,
-  SerializeFor,
-  StorageEventType,
-} from '../../../config/types';
+import { AppEnvironment, StorageEventType } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { BucketQuotaReachedQueryFilter } from './dtos/bucket-qouta-reached-query-filter.dto';
@@ -26,7 +22,7 @@ export class StorageMicroservice extends BaseService {
     env.APP_ENV === AppEnvironment.TEST
       ? env.STORAGE_SOCKET_PORT_TEST
       : env.STORAGE_SOCKET_PORT;
-  serviceName = 'LMAS';
+  serviceName = 'STORAGE';
 
   constructor(context: Context) {
     super(context);
@@ -75,6 +71,14 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async cancelBucketDeletion(params: { id: number }) {
+    const data = {
+      eventName: StorageEventType.CANCEL_DELETE_BUCKET,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
   public async maxBucketQuotaReached(params: BucketQuotaReachedQueryFilter) {
     const data = {
       eventName: StorageEventType.MAX_BUCKETS_QUOTA_REACHED,
@@ -106,6 +110,14 @@ export class StorageMicroservice extends BaseService {
   public async deleteDirectory(params: { id: number }) {
     const data = {
       eventName: StorageEventType.DELETE_DIRECTORY,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
+  public async cancelDirectoryDeletion(params: { id: number }) {
+    const data = {
+      eventName: StorageEventType.CANCEL_DELETE_DIRECTORY,
       ...params,
     };
     return await this.callService(data);
@@ -180,6 +192,14 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async cancelFileDeletion(params: { id: string }) {
+    const data = {
+      eventName: StorageEventType.CANCEL_FILE_DELETE,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
   //#endregion
 
   //#region bucket webhook
@@ -217,46 +237,4 @@ export class StorageMicroservice extends BaseService {
   }
 
   //#endregion
-
-  public async addFileToIPFSFromS3(params: { fileKey: string }) {
-    const data = {
-      eventName: StorageEventType.ADD_FILE_TO_IPFS_FROM_S3,
-      ...params,
-    };
-    return await this.callService(data);
-  }
-
-  public async addFileToIPFS(params: { files: any[] }) {
-    const data = {
-      eventName: StorageEventType.ADD_FILE_TO_IPFS,
-      ...params,
-    };
-    return await this.callService(data);
-  }
-
-  public async getObjectFromIPFS(params: { cid: string }) {
-    const data = {
-      eventName: StorageEventType.GET_OBJECT_FROM_IPFS,
-      ...params,
-    };
-    return await this.callService(data);
-  }
-
-  public async listIPFSDirectory(params: { cid: string }) {
-    const data = {
-      eventName: StorageEventType.LIST_IPFS_DIRECTORY,
-      ...params,
-    };
-    console.info(data);
-    return await this.callService(data);
-  }
-
-  public async placeStorageOrderToCRUST(params: { cid: string; size: number }) {
-    const data = {
-      eventName: StorageEventType.PLACE_STORAGE_ORDER_TO_CRUST,
-      ...params,
-    };
-    console.info(data);
-    return await this.callService(data);
-  }
 }

@@ -33,6 +33,7 @@ export class FileService {
 
     const s3Client: AWS_S3 = new AWS_S3();
 
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
     if (!(await s3Client.exists(env.AWS_BUCKET, file.key))) {
       throw new CodeException({
         status: HttpStatus.NOT_FOUND,
@@ -44,8 +45,7 @@ export class FileService {
     }
 
     try {
-      const f = await s3Client.get(env.AWS_BUCKET, file.key);
-      file.body = f.Body.toString('base64');
+      file.body = await s3Client.read(env.AWS_BUCKET, file.key);
     } catch (error) {
       throw new CodeException({
         code: SystemErrorCode.AWS_SYSTEM_ERROR,
@@ -157,6 +157,7 @@ export class FileService {
 
     const s3Client: AWS_S3 = new AWS_S3();
 
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
     if (!(await s3Client.exists(env.AWS_BUCKET, file.key))) {
       throw new CodeException({
         status: HttpStatus.NOT_FOUND,

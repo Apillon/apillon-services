@@ -5,7 +5,6 @@ import {
   FileUploadsQueryFilter,
   StorageMicroservice,
 } from '@apillon/lib';
-import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 @Injectable()
@@ -60,5 +59,10 @@ export class StorageService {
 
   async deleteFile(context: DevConsoleApiContext, id: string) {
     return (await new StorageMicroservice(context).deleteFile({ id })).data;
+  }
+
+  async cancelFileDeletion(context: DevConsoleApiContext, id: string) {
+    return (await new StorageMicroservice(context).cancelFileDeletion({ id }))
+      .data;
   }
 }

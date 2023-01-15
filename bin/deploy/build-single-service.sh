@@ -59,4 +59,7 @@ then
 elif [ "$ENV" == "production" ]
 then
   npm run deploy:prod
+elif [ "$ENV" == "test" ]
+then
+  npm run deploy:test
 fi

@@ -27,26 +27,24 @@ export enum LmasEventType {
 }
 
 export enum StorageEventType {
-  ADD_FILE_TO_IPFS = 'add-file-to-ipfs',
-  ADD_FILE_TO_IPFS_FROM_S3 = 'add-file-to-ipfs-from-s3',
-  GET_OBJECT_FROM_IPFS = 'get-object-from-ipfs',
-  LIST_IPFS_DIRECTORY = 'list-ipfs-directory',
-  PLACE_STORAGE_ORDER_TO_CRUST = 'place-storage-order-to-crust',
   REQUEST_S3_SIGNED_URL_FOR_UPLOAD = 'request-s3-signed-url-for-upload',
   END_FILE_UPLOAD_SESSION = 'end-file-upload-session',
   END_FILE_UPLOAD = 'end-file-upload',
   CREATE_BUCKET = 'create-bucket',
   UPDATE_BUCKET = 'update-bucket',
   DELETE_BUCKET = 'delete-bucket',
+  CANCEL_DELETE_BUCKET = 'delete-bucket-cancel',
   GET_BUCKET = 'get-bucket',
   LIST_BUCKETS = 'list-buckets',
   LIST_BUCKET_CONTENT = 'list-bucket-content',
   CREATE_DIRECTORY = 'create-directory',
   UPDATE_DIRECTROY = 'update-directory',
   DELETE_DIRECTORY = 'delete-directory',
+  CANCEL_DELETE_DIRECTORY = 'cancel-delete-directory',
   LIST_DIRECTORY_CONTENT = 'list-directory-content',
   GET_FILE_DETAILS = 'get-file-details',
   FILE_DELETE = 'delete-file',
+  CANCEL_FILE_DELETE = 'cancel-delete-file',
   BUCKET_WEBHOOK_GET = 'get-bucket-webhook',
   BUCKET_WEBHOOK_CREATE = 'create-bucket-webhook',
   BUCKET_WEBHOOK_UPDATE = 'update-bucket-webhook',
@@ -106,10 +104,19 @@ export enum LogType {
   COST = 'COST',
 }
 
+export enum LogLevel {
+  DB_ONLY = 'db',
+  NO_DB = 'no-db',
+  DEBUG = 'debug',
+  WARN = 'warning',
+  ERROR_ONLY = 'error',
+}
+
 export enum SqlModelStatus {
   DRAFT = 1,
   INCOMPLETE = 2,
   ACTIVE = 5,
+  MARKED_FOR_DELETION = 8,
   DELETED = 9,
 }
 

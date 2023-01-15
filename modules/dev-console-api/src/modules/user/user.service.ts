@@ -185,32 +185,32 @@ export class UserService {
         password,
       });
       await context.mysql.commit(conn);
-
-      //User has been registered - check if pending invitations for project exists
-      //This is done outside transaction as it is not crucial operation - admin is able to reinvite user to project
-      try {
-        if (tokenData.hasPendingInvitation) {
-          await this.projectService.resolveProjectUserPendingInvitations(
-            context,
-            email,
-            user.id,
-            user.user_uuid,
-          );
-        }
-      } catch (err) {
-        writeLog(
-          LogType.MSG,
-          'Error resolving project user pending invitations',
-          'user.service.ts',
-          'register',
-          err,
-        );
-      }
     } catch (err) {
       // TODO: The context of this error is not correct. What happens if
       //       ams fails? FE will see it as a DB write error, which is incorrect.
       await context.mysql.rollback(conn);
       throw err;
+    }
+
+    //User has been registered - check if pending invitations for project exists
+    //This is done outside transaction as it is not crucial operation - admin is able to reinvite user to project
+    try {
+      if (tokenData.hasPendingInvitation) {
+        await this.projectService.resolveProjectUserPendingInvitations(
+          context,
+          email,
+          user.id,
+          user.user_uuid,
+        );
+      }
+    } catch (err) {
+      writeLog(
+        LogType.MSG,
+        'Error resolving project user pending invitations',
+        'user.service.ts',
+        'register',
+        err,
+      );
     }
 
     return {

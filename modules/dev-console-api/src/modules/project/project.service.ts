@@ -117,6 +117,9 @@ export class ProjectService {
 
     project.canAccess(context);
 
+    //Populate user role on this project
+    await project.populateMyRoleOnProject(context);
+
     return project;
   }
 

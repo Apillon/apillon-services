@@ -1,7 +1,10 @@
 import {
   AdvancedSQLModel,
+  CodeException,
   Context,
+  DefaultUserRole,
   FileUploadsQueryFilter,
+  ForbiddenErrorCodes,
   getQueryParams,
   PopulateFrom,
   presenceValidator,
@@ -252,6 +255,59 @@ export class FileUploadRequest extends AdvancedSQLModel {
     validators: [],
   })
   public size: number;
+
+  /**
+   * ASYNC canAccess function
+   * @param context
+   */
+  public async canAccess(context: ServiceContext) {
+    const bucket: Bucket = await new Bucket({}, context).populateById(
+      this.bucket_id,
+    );
+    if (
+      !context.hasRoleOnProject(
+        [
+          DefaultUserRole.PROJECT_OWNER,
+          DefaultUserRole.PROJECT_ADMIN,
+          DefaultUserRole.PROJECT_USER,
+          DefaultUserRole.ADMIN,
+        ],
+        bucket.project_uuid,
+      )
+    ) {
+      throw new CodeException({
+        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: 403,
+        errorMessage: 'Insufficient permissions to access this record',
+      });
+    }
+  }
+
+  /**
+   * ASYNC canModify function
+   * @param context
+   */
+  public async canModify(context: ServiceContext) {
+    const bucket: Bucket = await new Bucket({}, context).populateById(
+      this.bucket_id,
+    );
+    if (
+      !context.hasRoleOnProject(
+        [
+          DefaultUserRole.PROJECT_ADMIN,
+          DefaultUserRole.PROJECT_OWNER,
+          DefaultUserRole.ADMIN,
+        ],
+        bucket.project_uuid,
+      )
+    ) {
+      throw new CodeException({
+        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: 403,
+        errorMessage: 'Insufficient permissions to modify this record',
+      });
+    }
+  }
 
   public async populateFileUploadRequestsInSession(
     session_id: number,

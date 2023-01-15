@@ -14,13 +14,13 @@
     "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "deploy:prod": "serverless deploy --stage production",
     "deploy:staging": "serverless deploy --stage staging",
-    "deploy:dev": "serverless deploy --stage dev"
+    "deploy:dev": "serverless deploy --stage dev",
+    "deploy:test": "serverless deploy --stage test"
   },
   "dependencies": {
     "@apillon/lib": "*",
     "@middy/core": "^3.3.1",
-    "@slack/web-api": "^6.8.0",
-    "aws-lambda": "^1.0.7"
+    "@slack/web-api": "^6.8.0"
   },
   "devDependencies": {
     "eslint-config-common": "*",
