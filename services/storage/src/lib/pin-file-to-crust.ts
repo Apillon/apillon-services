@@ -38,11 +38,11 @@ export async function pinFileToCRUST(context, bucket_uuid, CID, size) {
     );
 
     const worker = new PinToCRUSTWorker(wd, context, QueueWorkerType.EXECUTOR);
-    // await worker.runExecutor({
-    //   bucket_uuid: bucket_uuid,
-    //   CID: CID,
-    //   size: size,
-    // });
+    await worker.runExecutor({
+      bucket_uuid: bucket_uuid,
+      CID: CID,
+      size: size,
+    });
   } else {
     //send message to SQS - worker will PIN files to CRUST
     await sendToWorkerQueue(
