@@ -45,10 +45,11 @@ npm link @apillon/lib --omit=dev
 if [ "$MODULES_LIB" == "true" ]
 then
   npm link @apillon/modules-lib --omit=dev
+fi
 if [ "$WORKERS_LIB" == "true" ]
 then
   npm link @apillon/workers-lib --omit=dev
-
+fi
 npm i serverless-webpack copy-webpack-plugin webpack webpack-node-externals ts-loader
 
 if [ "$ENV" == "staging" ]
