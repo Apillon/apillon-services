@@ -44,10 +44,11 @@ cd ${SERVICE_PATH}
 npm link @apillon/lib --omit=dev
 if [ "$MODULES_LIB" == "true" ]
 then
-  npm link @apillon/lib @apillon/modules-lib --omit=dev
-else
-  npm link @apillon/lib --omit=dev
-fi
+  npm link @apillon/modules-lib --omit=dev
+if [ "$WORKERS_LIB" == "true" ]
+then
+  npm link @apillon/workers-lib --omit=dev
+
 npm i serverless-webpack copy-webpack-plugin webpack webpack-node-externals ts-loader
 
 if [ "$ENV" == "staging" ]

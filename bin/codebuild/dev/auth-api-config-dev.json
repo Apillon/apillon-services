@@ -29,7 +29,7 @@
       {
         "type": "PLAINTEXT",
         "name": "SERVICE_PATH",
-        "value": "services/authentication-api/"
+        "value": "modules/authentication-api/"
       }
     ],
     "type": "LINUX_CONTAINER"

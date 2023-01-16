@@ -19,7 +19,7 @@
       {
         "type": "PLAINTEXT",
         "name": "SERVICE_PATH",
-        "value": "services/apillon-api/"
+        "value": "modules/apillon-api/"
       },
       {
         "type": "PLAINTEXT",
