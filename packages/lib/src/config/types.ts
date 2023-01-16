@@ -99,6 +99,10 @@ export enum ReferralEventType {
   CONFIRM_RETWEET = 'confirm-retweet',
 }
 
+export enum NftsEventType {
+  HELLO = 'hello',
+}
+
 export enum ServiceName {
   GENERAL = 'GENERAL',
   AMS = 'AMS',
@@ -109,6 +113,7 @@ export enum ServiceName {
   APILLON_API = 'APILLON_API',
   AUTHENTICATION_API = 'AUTHENTICATION_API',
   REFERRAL = 'REFERRAL',
+  NFTS = 'NFTS',
 }
 
 export enum ServiceCode {
@@ -124,6 +129,7 @@ export enum ServiceCode {
   AUTH = '09',
   CONFIG = '10',
   REFERRAL = '11',
+  NFTS = '12',
 }
 
 export enum AppEnvironment {
