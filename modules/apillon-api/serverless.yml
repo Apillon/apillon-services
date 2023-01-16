@@ -17,7 +17,7 @@ custom:
 
 plugins:
   - serverless-webpack
-  - serverless-offline
+  # - serverless-offline
 
 provider:
   name: aws
