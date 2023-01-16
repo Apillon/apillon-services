@@ -21,6 +21,10 @@
       "path": "services/config"
     },
     {
+      "name": "🌐@services/nfts [@apillon/nfts]",
+      "path": "services/nfts"
+    },
+    {
       "name": "😎@modules/dev-console-api",
       "path": "modules/dev-console-api"
     },

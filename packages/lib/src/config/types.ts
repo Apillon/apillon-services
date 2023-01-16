@@ -62,6 +62,10 @@ export enum ScsEventType {
   GET_QUOTA = 'get-quota',
 }
 
+export enum NftsEventType {
+  HELLO = 'hello',
+}
+
 export enum ServiceName {
   GENERAL = 'GENERAL',
   AMS = 'AMS',
@@ -71,6 +75,7 @@ export enum ServiceName {
   STORAGE = 'STORAGE',
   APILLON_API = 'APILLON_API',
   AUTHENTICATION_API = 'AUTHENTICATION_API',
+  NFTS = 'NFTS',
 }
 
 export enum ServiceCode {
@@ -85,6 +90,7 @@ export enum ServiceCode {
   MAIL = '08',
   AUTH = '09',
   CONFIG = '10',
+  NFTS = '12',
 }
 
 export enum AppEnvironment {
