@@ -1,5 +1,5 @@
 {
-  "name": "auth-api-dev",
+  "name": "apillon-auth-api-dev",
   "environment": {
     "computeType": "BUILD_GENERAL1_SMALL",
     "imagePullCredentialsType": "CODEBUILD",
