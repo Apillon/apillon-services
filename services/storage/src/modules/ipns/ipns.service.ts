@@ -14,6 +14,7 @@ import {
   StorageCodeException,
   StorageValidationException,
 } from '../../lib/exceptions';
+import { Bucket } from '../bucket/models/bucket.model';
 import { IPFSService } from '../ipfs/ipfs.service';
 import { Ipns } from './models/ipns.model';
 
@@ -32,7 +33,18 @@ export class IpnsService {
     event: { body: CreateIpnsDto },
     context: ServiceContext,
   ): Promise<any> {
+    const b: Bucket = await new Bucket({}, context).populateById(
+      event.body.bucket_id,
+    );
+    if (!b.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.BUCKET_NOT_FOUND,
+        status: 404,
+      });
+    }
+
     const ipns: Ipns = new Ipns(event.body, context);
+    ipns.populate({ project_uuid: b.project_uuid });
     try {
       await ipns.validate();
     } catch (err) {
@@ -44,16 +56,19 @@ export class IpnsService {
       //Insert
       await ipns.insert(SerializeFor.INSERT_DB, conn);
 
-      //If cid is specified, assign IPNS to it
-      await IpnsService.assignCidToIpns(
-        {
-          ipns_id: ipns.id,
-          cid: event.body.cid,
-          ipns: ipns,
-          conn: conn,
-        },
-        context,
-      );
+      //If cid is specified, publish ipns to point to cid - other nodes will be able to resolve it
+      if (event.body.cid) {
+        await IpnsService.publishIpns(
+          {
+            ipns_id: ipns.id,
+            cid: event.body.cid,
+            ipns: ipns,
+            conn: conn,
+          },
+          context,
+        );
+      }
+
       await context.mysql.commit(conn);
     } catch (err) {
       await context.mysql.rollback(conn);
@@ -80,7 +95,12 @@ export class IpnsService {
     return ipns.serialize(SerializeFor.PROFILE);
   }
 
-  static async assignCidToIpns(
+  /**
+   * Publish IPNS record, to point to CID
+   * @param event
+   * @param context
+   */
+  static async publishIpns(
     event: { ipns_id: number; cid: string; ipns?: Ipns; conn?: PoolConnection },
     context: ServiceContext,
   ) {

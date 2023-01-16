@@ -55,7 +55,7 @@ export enum StorageEventType {
   IPNS_CREATE = 'create-ipns',
   IPNS_UPDATE = 'update-ipns',
   IPNS_DELETE = 'delete-ipns',
-  IPNS_ASSIGN_TO_CID = 'assign-ipns-to-cid',
+  IPNS_PUBLISH = 'publish-ipns',
 }
 
 export enum MailEventType {
@@ -290,6 +290,8 @@ export enum ValidatorErrorCode {
   IPNS_NAME_NOT_PRESENT = 42200026,
   IPNS_IPNS_NAME_NOT_PRESENT = 42200027,
   IPNS_IPNS_VALUE_NOT_PRESENT = 42200028,
+  PUBLISH_IPNS_IPNS_ID_NOT_PRESENT = 42200029,
+  PUBLISH_IPNS_CID_NOT_PRESENT = 42200030,
 }
 
 /**

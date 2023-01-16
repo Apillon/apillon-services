@@ -12,12 +12,7 @@ export class CreateIpnsDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.IPNS_PROJECT_UUID_NOT_PRESENT,
-      },
-    ],
+    validators: [],
   })
   public project_uuid: string;
 
@@ -25,12 +20,7 @@ export class CreateIpnsDto extends ModelBase {
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.IPNS_BUCKET_ID_NOT_PRESENT,
-      },
-    ],
+    validators: [],
   })
   public bucket_id: number;
 

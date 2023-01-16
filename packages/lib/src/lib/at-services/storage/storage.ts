@@ -7,11 +7,14 @@ import { BucketQueryFilter } from './dtos/bucket-query-filter.dto';
 import { CreateBucketWebhookDto } from './dtos/create-bucket-webhook.dto';
 import { CreateBucketDto } from './dtos/create-bucket.dto';
 import { CreateDirectoryDto } from './dtos/create-directory.dto';
+import { CreateIpnsDto } from './dtos/create-ipns.dto';
 import { CreateS3SignedUrlForUploadDto } from './dtos/create-s3-signed-url-for-upload.dto';
 import { DirectoryContentQueryFilter } from './dtos/directory-content-query-filter.dto';
 import { EndFileUploadSessionDto } from './dtos/end-file-upload-session.dto';
 import { FileDetailsQueryFilter } from './dtos/file-details-query-filter.dto';
 import { FileUploadsQueryFilter } from './dtos/file-uploads-query-filter.dto';
+import { IpnsQueryFilter } from './dtos/ipns-query-filter.dto';
+import { PublishIpnsDto } from './dtos/publish-ipns.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -231,6 +234,50 @@ export class StorageMicroservice extends BaseService {
   public async deleteBucketWebhook(params: { id: number }) {
     const data = {
       eventName: StorageEventType.BUCKET_WEBHOOK_DELETE,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
+  //#endregion
+
+  //#region ipns
+
+  public async listIpnses(params: IpnsQueryFilter) {
+    const data = {
+      eventName: StorageEventType.IPNS_LIST,
+      query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async createIpns(params: CreateIpnsDto) {
+    const data = {
+      eventName: StorageEventType.IPNS_CREATE,
+      body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async publishIpns(params: PublishIpnsDto) {
+    const data = {
+      eventName: StorageEventType.IPNS_PUBLISH,
+      body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async updateIpns(params: { id: number; data: any }) {
+    const data = {
+      eventName: StorageEventType.IPNS_UPDATE,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
+  public async deleteIpns(params: { id: number }) {
+    const data = {
+      eventName: StorageEventType.IPNS_DELETE,
       ...params,
     };
     return await this.callService(data);

@@ -45,7 +45,7 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.IPNS_CREATE]: IpnsService.createIpns,
     [StorageEventType.IPNS_UPDATE]: IpnsService.updateIpns,
     [StorageEventType.IPNS_DELETE]: IpnsService.deleteIpns,
-    [StorageEventType.IPNS_ASSIGN_TO_CID]: IpnsService.assignCidToIpns,
+    [StorageEventType.IPNS_PUBLISH]: IpnsService.publishIpns,
   };
 
   return await processors[event.eventName](event, context);

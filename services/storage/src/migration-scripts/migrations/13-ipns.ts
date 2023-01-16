@@ -10,9 +10,9 @@ export async function upgrade(
   \`bucket_id\` INT NOT NULL,
   \`name\` VARCHAR(255) NOT NULL,
   \`description\` VARCHAR(1000) NULL,
-  \`ipnsName\` VARCHAR(255) NOT NULL,
-  \`ipnsValue\` VARCHAR(255) NOT NULL,
-  \`cid\` VARCHAR(255) NOT NULL,
+  \`ipnsName\` VARCHAR(255) NULL,
+  \`ipnsValue\` VARCHAR(255) NULL,
+  \`cid\` VARCHAR(255) NULL,
   \`status\` INT NULL,
   \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
   \`createUser\` INT NULL,
@@ -20,7 +20,7 @@ export async function upgrade(
   \`updateUser\` INT NULL,
   PRIMARY KEY (\`id\`),
   UNIQUE KEY \`ipns_unique_key\` (\`project_uuid\`,\`name\`)
-  `);
+  )`);
 }
 
 export async function downgrade(
