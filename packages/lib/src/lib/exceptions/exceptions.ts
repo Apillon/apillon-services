@@ -3,6 +3,7 @@ import {
   BadRequestErrorCode,
   ErrorOrigin,
   LogType,
+  ServiceName,
   SystemErrorCode,
   ValidatorErrorCode,
 } from '../../config/types';
@@ -63,7 +64,7 @@ export class CodeException extends HttpException {
     data?: any;
   }) {
     await new Lmas().writeLog({
-      context: params.context,
+      context: params.context || this.options.context,
       project_uuid: params.project_uuid,
       user_uuid: params.user_uuid || params.context?.user?.user_uuid || null,
       logType: params.logType || LogType.ERROR,
@@ -71,8 +72,8 @@ export class CodeException extends HttpException {
         ? this.options.errorCodes[this.options.code]
         : this.options.errorMessage,
       location: this.options.sourceFunction,
-      service: params.service,
-      data: params.data,
+      service: params.service || ServiceName.STORAGE,
+      data: params.data || this.options.details,
     });
 
     return this;
