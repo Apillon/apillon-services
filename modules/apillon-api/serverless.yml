@@ -37,7 +37,7 @@ provider:
       - subnet-0ed148d48e931f5fa
 
   environment:
-    ${file(../../bin/deploy/env.yml)}
+    ${file(../../bin/deploy/env/env.yml)}
     # ACCESS_FUNCTION_NAME: 'apillon-access-service-${self:provider.stage}'
     # MONITORING_FUNCTION_NAME: 'apillon-monitoring-service-${self:provider.stage}'
 
