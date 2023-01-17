@@ -10,7 +10,7 @@ custom:
     includeModules:
       forceExclude:
         - aws-sdk
-    excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
+    excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*|/test/**/*'
   serverless-offline:
     httpPort: 6001
     lambdaPort: 6002
