@@ -25,7 +25,7 @@ module.exports = {
       // '@nestjs/platform-express': false,
       'bson-ext': false,
       kerberos: false,
-      // '@mongodb-js/zstd': false,
+      '@mongodb-js/zstd': false,
       snappy: false,
       'snappy/package.json': false,
       aws4: false,
