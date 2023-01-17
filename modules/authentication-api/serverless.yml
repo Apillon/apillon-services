@@ -57,6 +57,15 @@ functions:
     description: Apillon Authentication API
     memorySize: 512
     timeout: 30
+    events:
+      - http: # this is an API Gateway HTTP event trigger
+          path: /
+          method: ANY
+          cors: true
+      - http: # all routes get proxied to the Express router
+          path: /{proxy+}
+          method: ANY
+          cors: true
   auth-worker:
     handler: ./src/workers/worker-executor.handler
     name: apillon-auth-worker-${self:provider.stage}
