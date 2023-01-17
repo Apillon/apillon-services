@@ -6,13 +6,6 @@ import { BaseQueryFilter } from '../../../base-models/base-query-filter.model';
 
 export class IpnsQueryFilter extends BaseQueryFilter {
   @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [],
-  })
-  public project_uuid: string;
-
-  @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],

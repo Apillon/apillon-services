@@ -23,10 +23,10 @@ export class IpnsService {
     event: { query: IpnsQueryFilter },
     context: ServiceContext,
   ) {
-    return await new Ipns(
-      { project_uuid: event.query.project_uuid },
+    return await new Ipns({}, context).getList(
       context,
-    ).getList(context, new IpnsQueryFilter(event.query));
+      new IpnsQueryFilter(event.query),
+    );
   }
 
   static async createIpns(
@@ -125,6 +125,8 @@ export class IpnsService {
     ipns.ipnsValue = publishedIpns.value;
 
     await ipns.update(SerializeFor.UPDATE_DB, event.conn);
+
+    return ipns.serialize(SerializeFor.PROFILE);
   }
 
   static async updateIpns(

@@ -1,5 +1,12 @@
 /* eslint-disable security/detect-non-literal-fs-filename */
-import { AWS_S3, env, Lmas, LogType, ServiceName } from '@apillon/lib';
+import {
+  AWS_S3,
+  env,
+  Lmas,
+  LogType,
+  ServiceName,
+  writeLog,
+} from '@apillon/lib';
 import { CID, create } from 'ipfs-http-client';
 import {
   FileUploadRequestFileStatus,
@@ -21,7 +28,12 @@ export class IPFSService {
         code: StorageErrorCode.STORAGE_IPFS_API_NOT_SET,
         sourceFunction: `${this.constructor.name}/createIPFSClient`,
       });
-    console.info('Connection to IPFS gateway: ', env.STORAGE_IPFS_API);
+    writeLog(
+      LogType.INFO,
+      `Connection to IPFS gateway: ${env.STORAGE_IPFS_API}`,
+      'ipfs.service.ts',
+      'createIPFSClient',
+    );
 
     let ipfsGatewayURL = env.STORAGE_IPFS_API;
     if (ipfsGatewayURL.endsWith('/'))
@@ -38,8 +50,6 @@ export class IPFSService {
 
     //Get File from S3
     const s3Client: AWS_S3 = new AWS_S3();
-
-    console.info(`Get file from AWS s3`);
 
     if (
       !(await s3Client.exists(
@@ -60,13 +70,9 @@ export class IPFSService {
       event.fileUploadRequest.s3FileKey,
     );
 
-    console.info(`File recieved, pushing to IPFS...`);
-
     const filesOnIPFS = await client.add({
       content: file.Body as any,
     });
-
-    console.info(`File added to IPFS...uploadFileToIPFSFromS3 success.`);
 
     //Write log to LMAS
     await new Lmas().writeLog({
@@ -184,7 +190,13 @@ export class IPFSService {
     try {
       key = (await client.key.list()).filter((x) => x.name == ipfsKey);
     } catch (err) {
-      console.error(err);
+      writeLog(
+        LogType.ERROR,
+        `Error publishing to IPNS. Cid: ${cid}, Key: ${ipfsKey}`,
+        'ipfs.service.ts',
+        'createIPFSClient',
+        err,
+      );
     }
 
     if (!key) key = await client.key.gen(ipfsKey);

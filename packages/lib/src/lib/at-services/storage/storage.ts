@@ -262,7 +262,7 @@ export class StorageMicroservice extends BaseService {
   public async publishIpns(params: PublishIpnsDto) {
     const data = {
       eventName: StorageEventType.IPNS_PUBLISH,
-      body: params.serialize(),
+      ...params.serialize(),
     };
     return await this.callService(data);
   }

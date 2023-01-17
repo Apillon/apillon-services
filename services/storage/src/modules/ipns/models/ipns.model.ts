@@ -3,6 +3,7 @@ import {
   CodeException,
   Context,
   DefaultUserRole,
+  env,
   ForbiddenErrorCodes,
   getQueryParams,
   IpnsQueryFilter,
@@ -16,6 +17,8 @@ import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
+import { StorageCodeException } from '../../../lib/exceptions';
+import { Bucket } from '../../bucket/models/bucket.model';
 
 export class Ipns extends AdvancedSQLModel {
   public readonly tableName = DbTables.IPNS;
@@ -194,6 +197,17 @@ export class Ipns extends AdvancedSQLModel {
   }
 
   public async getList(context: ServiceContext, filter: IpnsQueryFilter) {
+    const b: Bucket = await new Bucket({}, context).populateById(
+      filter.bucket_id,
+    );
+    if (!b.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.BUCKET_NOT_FOUND,
+        status: 404,
+      });
+    }
+    this.project_uuid = b.project_uuid;
+
     this.canAccess(context);
     // Map url query with sql fields.
     const fieldMap = {
@@ -208,13 +222,18 @@ export class Ipns extends AdvancedSQLModel {
 
     const sqlQuery = {
       qSelect: `
-        SELECT ${this.generateSelectFields('i', '')}, i.updateTime
+        SELECT ${this.generateSelectFields('i', '')},
+        IF(i.ipnsName IS NULL, NULL, CONCAT("${env.STORAGE_IPFS_GATEWAY.replace(
+          '/ipfs/',
+          '/ipns/',
+        )}", i.ipnsName)) as link,
+        i.updateTime
         `,
       qFrom: `
         FROM \`${DbTables.IPNS}\` i
         WHERE i.project_uuid = @project_uuid
         AND (@search IS null OR i.name LIKE CONCAT('%', @search, '%'))
-        AND ( status = ${SqlModelStatus.ACTIVE} )
+        AND status = ${SqlModelStatus.ACTIVE}
       `,
       qFilter: `
         ORDER BY ${filters.orderStr}
@@ -222,6 +241,11 @@ export class Ipns extends AdvancedSQLModel {
       `,
     };
 
-    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'i.id');
+    return await selectAndCountQuery(
+      context.mysql,
+      sqlQuery,
+      { ...params, project_uuid: this.project_uuid },
+      'i.id',
+    );
   }
 }

@@ -40,3 +40,4 @@ export * from './lib/at-services/storage/dtos/file-uploads-query-filter.dto';
 export * from './lib/at-services/storage/dtos/bucket-qouta-reached-query-filter.dto';
 export * from './lib/at-services/storage/dtos/create-ipns.dto';
 export * from './lib/at-services/storage/dtos/ipns-query-filter.dto';
+export * from './lib/at-services/storage/dtos/publish-ipns.dto';
