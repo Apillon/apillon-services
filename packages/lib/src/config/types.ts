@@ -1,3 +1,14 @@
+export enum Chain {
+  KUSAMA = 1,
+  POLKADOT = 2,
+  CRUST = 3,
+  KILT = 4,
+  MOONBEAM = 5,
+  PHALA = 6,
+}
+
+export enum BlockchainEventType {}
+
 export enum AmsEventType {
   USER_REGISTER = 'user-register',
   USER_GET_AUTH = 'user-get-auth',

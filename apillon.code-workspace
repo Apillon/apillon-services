@@ -21,6 +21,10 @@
       "path": "services/config"
     },
     {
+      "name": "🌐@services/blockchain [@apillon/blockchain]",
+      "path": "services/blockchain"
+    },
+    {
       "name": "😎@modules/dev-console-api",
       "path": "modules/dev-console-api"
     },
@@ -67,15 +71,11 @@
     "[typescript]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
-    "cSpell.words": [
-      "Apillon",
-      "Authtrail",
-      "LMAS"
-    ],
+    "cSpell.words": ["Apillon", "Authtrail", "LMAS"],
     "files.exclude": {
       "**/.serverless": true,
       "**/.turbo": true
     },
     "nuxt.isNuxtApp": false
-  },
+  }
 }
