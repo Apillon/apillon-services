@@ -94,6 +94,7 @@ export class Ipns extends AdvancedSQLModel {
         code: StorageErrorCode.IPNS_NAME_NOT_PRESENT,
       },
     ],
+    fakeValue: 'My fake IPNS',
   })
   public name: string;
 
@@ -114,6 +115,7 @@ export class Ipns extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
     ],
     validators: [],
+    fakeValue: 'Ipns record description',
   })
   public description: string;
 

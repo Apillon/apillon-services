@@ -53,13 +53,18 @@ async function initSeeds() {
 
 export async function upgradeTestDatabases(): Promise<void> {
   await initMigrations();
-  await Promise.all([
-    dbAmsMigration.up(),
-    dbConsoleMigration.up(),
-    dbStorageMigration.up(),
-    dbConfigMigration.up(),
-    dbAuthApiMigration.up(),
-  ]);
+  try {
+    await Promise.all([
+      dbAmsMigration.up(),
+      dbConsoleMigration.up(),
+      dbStorageMigration.up(),
+      dbConfigMigration.up(),
+      dbAuthApiMigration.up(),
+    ]);
+  } catch (err) {
+    console.error('error at migrations.up()', err);
+    throw err;
+  }
   await destroyTestMigrations();
 }
 
@@ -77,12 +82,17 @@ export async function downgradeTestDatabases(): Promise<void> {
 
 export async function seedTestDatabases(): Promise<void> {
   await initSeeds();
-  await Promise.all([
-    dbAmsSeed.up(),
-    dbConsoleSeed.up(),
-    // dbStorageSeed.up(),
-    dbConfigSeed.up(),
-  ]);
+  try {
+    await Promise.all([
+      dbAmsSeed.up(),
+      dbConsoleSeed.up(),
+      // dbStorageSeed.up(),
+      dbConfigSeed.up(),
+    ]);
+  } catch (err) {
+    console.error('error at seeds.up()', err);
+    throw err;
+  }
   await destroyTestSeeds();
 }
 
@@ -144,22 +154,34 @@ export async function destroyTestSeeds(): Promise<void> {
 }
 
 export async function rebuildTestDatabases(): Promise<void> {
+  console.info('initMigrations start....');
   await initMigrations();
-  await Promise.all([
-    dbAmsMigration.reset(),
-    dbConsoleMigration.reset(),
-    dbStorageMigration.reset(),
-    dbConfigMigration.reset(),
-    dbAuthApiMigration.reset(),
-  ]);
+  console.info('initMigrations success');
+  try {
+    await Promise.all([
+      dbAmsMigration.reset(),
+      dbConsoleMigration.reset(),
+      dbStorageMigration.reset(),
+      dbConfigMigration.reset(),
+      dbAuthApiMigration.reset(),
+    ]);
+  } catch (err) {
+    console.error('error at migrations.reset()', err);
+    throw err;
+  }
   await destroyTestMigrations();
   await initSeeds();
-  await Promise.all([
-    dbAmsSeed.reset(),
-    dbConsoleSeed.reset(),
-    // dbStorageSeed.reset(),
-    dbConfigSeed.reset(),
-  ]);
+  try {
+    await Promise.all([
+      dbAmsSeed.reset(),
+      dbConsoleSeed.reset(),
+      // dbStorageSeed.reset(),
+      dbConfigSeed.reset(),
+    ]);
+  } catch (err) {
+    console.error('error at seed.reset()', err);
+    throw err;
+  }
   await destroyTestSeeds();
 }
 
@@ -171,119 +193,139 @@ export async function dropTestDatabases(): Promise<void> {
 }
 
 async function initDevConsoleTestMigrations() {
-  env.APP_ENV = AppEnvironment.TEST;
+  try {
+    env.APP_ENV = AppEnvironment.TEST;
 
-  const poolConfig: ConnectionOptions = {
-    host: env.DEV_CONSOLE_API_MYSQL_HOST_TEST,
-    database: env.DEV_CONSOLE_API_MYSQL_DATABASE_TEST,
-    password: env.DEV_CONSOLE_API_MYSQL_PASSWORD_TEST,
-    port: env.DEV_CONSOLE_API_MYSQL_PORT_TEST,
-    user: env.DEV_CONSOLE_API_MYSQL_USER_TEST,
-    // debug: true,
-    connectionLimit: 1,
-  };
+    const poolConfig: ConnectionOptions = {
+      host: env.DEV_CONSOLE_API_MYSQL_HOST_TEST,
+      database: env.DEV_CONSOLE_API_MYSQL_DATABASE_TEST,
+      password: env.DEV_CONSOLE_API_MYSQL_PASSWORD_TEST,
+      port: env.DEV_CONSOLE_API_MYSQL_PORT_TEST,
+      user: env.DEV_CONSOLE_API_MYSQL_USER_TEST,
+      // debug: true,
+      connectionLimit: 1,
+    };
 
-  if (!/(test|testing)/i.test(poolConfig.database)) {
-    throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
+    if (!/(test|testing)/i.test(poolConfig.database)) {
+      throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
+    }
+
+    const pool = createPool(poolConfig);
+
+    dbConsoleMigration = new Migration({
+      conn: pool as unknown as MigrationConnection,
+      tableName: 'migrations',
+      dir: '../../modules/dev-console-api/src/migration-scripts/migrations',
+      silent: env.APP_ENV === AppEnvironment.TEST,
+    });
+
+    await dbConsoleMigration.initialize();
+  } catch (err) {
+    console.error('Error at initDevConsoleTestMigrations', err);
+    throw err;
   }
-
-  const pool = createPool(poolConfig);
-
-  dbConsoleMigration = new Migration({
-    conn: pool as unknown as MigrationConnection,
-    tableName: 'migrations',
-    dir: '../../modules/dev-console-api/src/migration-scripts/migrations',
-    silent: env.APP_ENV === AppEnvironment.TEST,
-  });
-
-  await dbConsoleMigration.initialize();
 }
 
 async function initAmsTestMigrations() {
-  env.APP_ENV = AppEnvironment.TEST;
+  try {
+    env.APP_ENV = AppEnvironment.TEST;
 
-  const poolConfig: ConnectionOptions = {
-    host: env.ACCESS_MYSQL_HOST_TEST,
-    database: env.ACCESS_MYSQL_DATABASE_TEST,
-    password: env.ACCESS_MYSQL_PASSWORD_TEST,
-    port: env.ACCESS_MYSQL_PORT_TEST,
-    user: env.ACCESS_MYSQL_USER_TEST,
-    // debug: true,
-    connectionLimit: 1,
-  };
+    const poolConfig: ConnectionOptions = {
+      host: env.ACCESS_MYSQL_HOST_TEST,
+      database: env.ACCESS_MYSQL_DATABASE_TEST,
+      password: env.ACCESS_MYSQL_PASSWORD_TEST,
+      port: env.ACCESS_MYSQL_PORT_TEST,
+      user: env.ACCESS_MYSQL_USER_TEST,
+      // debug: true,
+      connectionLimit: 1,
+    };
 
-  if (!/(test|testing)/i.test(poolConfig.database)) {
-    throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
+    if (!/(test|testing)/i.test(poolConfig.database)) {
+      throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
+    }
+
+    const pool = createPool(poolConfig);
+
+    dbAmsMigration = new Migration({
+      conn: pool as unknown as MigrationConnection,
+      tableName: 'migrations',
+      dir: '../../services/access/src/migration-scripts/migrations',
+      silent: env.APP_ENV === AppEnvironment.TEST,
+    });
+
+    await dbAmsMigration.initialize();
+  } catch (err) {
+    console.error('Error at initAmsTestMigrations', err);
+    throw err;
   }
-
-  const pool = createPool(poolConfig);
-
-  dbAmsMigration = new Migration({
-    conn: pool as unknown as MigrationConnection,
-    tableName: 'migrations',
-    dir: '../../services/access/src/migration-scripts/migrations',
-    silent: env.APP_ENV === AppEnvironment.TEST,
-  });
-
-  await dbAmsMigration.initialize();
 }
 
 async function initDevConsoleTestSeed() {
-  env.APP_ENV = AppEnvironment.TEST;
+  try {
+    env.APP_ENV = AppEnvironment.TEST;
 
-  const poolConfig: ConnectionOptions = {
-    host: env.DEV_CONSOLE_API_MYSQL_HOST_TEST,
-    database: env.DEV_CONSOLE_API_MYSQL_DATABASE_TEST,
-    password: env.DEV_CONSOLE_API_MYSQL_PASSWORD_TEST,
-    port: env.DEV_CONSOLE_API_MYSQL_PORT_TEST,
-    user: env.DEV_CONSOLE_API_MYSQL_USER_TEST,
-    // debug: true,
-    connectionLimit: 1,
-  };
+    const poolConfig: ConnectionOptions = {
+      host: env.DEV_CONSOLE_API_MYSQL_HOST_TEST,
+      database: env.DEV_CONSOLE_API_MYSQL_DATABASE_TEST,
+      password: env.DEV_CONSOLE_API_MYSQL_PASSWORD_TEST,
+      port: env.DEV_CONSOLE_API_MYSQL_PORT_TEST,
+      user: env.DEV_CONSOLE_API_MYSQL_USER_TEST,
+      // debug: true,
+      connectionLimit: 1,
+    };
 
-  if (!/(test|testing)/i.test(poolConfig.database)) {
-    throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
+    if (!/(test|testing)/i.test(poolConfig.database)) {
+      throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
+    }
+
+    const pool = createPool(poolConfig);
+
+    dbConsoleSeed = new Migration({
+      conn: pool as unknown as MigrationConnection,
+      tableName: 'seeds',
+      dir: '../../modules/dev-console-api/src/migration-scripts/seeds',
+      silent: env.APP_ENV === AppEnvironment.TEST,
+    });
+
+    await dbConsoleSeed.initialize();
+  } catch (err) {
+    console.error('Error at initDevConsoleTestSeed', err);
+    throw err;
   }
-
-  const pool = createPool(poolConfig);
-
-  dbConsoleSeed = new Migration({
-    conn: pool as unknown as MigrationConnection,
-    tableName: 'seeds',
-    dir: '../../modules/dev-console-api/src/migration-scripts/seeds',
-    silent: env.APP_ENV === AppEnvironment.TEST,
-  });
-
-  await dbConsoleSeed.initialize();
 }
 
 async function initStorageTestMigrations() {
-  env.APP_ENV = AppEnvironment.TEST;
+  try {
+    env.APP_ENV = AppEnvironment.TEST;
 
-  const poolConfig: ConnectionOptions = {
-    host: env.STORAGE_MYSQL_HOST_TEST,
-    database: env.STORAGE_MYSQL_DATABASE_TEST,
-    password: env.STORAGE_MYSQL_PASSWORD_TEST,
-    port: env.STORAGE_MYSQL_PORT_TEST,
-    user: env.STORAGE_MYSQL_USER_TEST,
-    // debug: true,
-    connectionLimit: 1,
-  };
+    const poolConfig: ConnectionOptions = {
+      host: env.STORAGE_MYSQL_HOST_TEST,
+      database: env.STORAGE_MYSQL_DATABASE_TEST,
+      password: env.STORAGE_MYSQL_PASSWORD_TEST,
+      port: env.STORAGE_MYSQL_PORT_TEST,
+      user: env.STORAGE_MYSQL_USER_TEST,
+      // debug: true,
+      connectionLimit: 1,
+    };
 
-  if (!/(test|testing)/i.test(poolConfig.database)) {
-    throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
+    if (!/(test|testing)/i.test(poolConfig.database)) {
+      throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
+    }
+
+    const pool = createPool(poolConfig);
+
+    dbStorageMigration = new Migration({
+      conn: pool as unknown as MigrationConnection,
+      tableName: 'migrations',
+      dir: '../../services/storage/src/migration-scripts/migrations',
+      silent: env.APP_ENV === AppEnvironment.TEST,
+    });
+
+    await dbStorageMigration.initialize();
+  } catch (err) {
+    console.error('Error at initStorageTestMigrations', err);
+    throw err;
   }
-
-  const pool = createPool(poolConfig);
-
-  dbStorageMigration = new Migration({
-    conn: pool as unknown as MigrationConnection,
-    tableName: 'migrations',
-    dir: '../../services/storage/src/migration-scripts/migrations',
-    silent: env.APP_ENV === AppEnvironment.TEST,
-  });
-
-  await dbStorageMigration.initialize();
 }
 
 // async function initStorageTestSeed() {
@@ -316,117 +358,137 @@ async function initStorageTestMigrations() {
 // }
 
 async function initConfigTestMigrations() {
-  env.APP_ENV = AppEnvironment.TEST;
+  try {
+    env.APP_ENV = AppEnvironment.TEST;
 
-  const poolConfig: ConnectionOptions = {
-    host: env.CONFIG_MYSQL_HOST_TEST,
-    database: env.CONFIG_MYSQL_DATABASE_TEST,
-    password: env.CONFIG_MYSQL_PASSWORD_TEST,
-    port: env.CONFIG_MYSQL_PORT_TEST,
-    user: env.CONFIG_MYSQL_USER_TEST,
-    // debug: true,
-    connectionLimit: 1,
-  };
+    const poolConfig: ConnectionOptions = {
+      host: env.CONFIG_MYSQL_HOST_TEST,
+      database: env.CONFIG_MYSQL_DATABASE_TEST,
+      password: env.CONFIG_MYSQL_PASSWORD_TEST,
+      port: env.CONFIG_MYSQL_PORT_TEST,
+      user: env.CONFIG_MYSQL_USER_TEST,
+      // debug: true,
+      connectionLimit: 1,
+    };
 
-  if (!/(test|testing)/i.test(poolConfig.database)) {
-    throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
+    if (!/(test|testing)/i.test(poolConfig.database)) {
+      throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
+    }
+
+    const pool = createPool(poolConfig);
+
+    dbConfigMigration = new Migration({
+      conn: pool as unknown as MigrationConnection,
+      tableName: 'migrations',
+      dir: '../../services/config/src/migration-scripts/migrations',
+      silent: env.APP_ENV === AppEnvironment.TEST,
+    });
+
+    await dbConfigMigration.initialize();
+  } catch (err) {
+    console.error('Error at initConfigTestMigrations', err);
+    throw err;
   }
-
-  const pool = createPool(poolConfig);
-
-  dbConfigMigration = new Migration({
-    conn: pool as unknown as MigrationConnection,
-    tableName: 'migrations',
-    dir: '../../services/config/src/migration-scripts/migrations',
-    silent: env.APP_ENV === AppEnvironment.TEST,
-  });
-
-  await dbConfigMigration.initialize();
 }
 
 async function initAmsTestSeed() {
-  env.APP_ENV = AppEnvironment.TEST;
+  try {
+    env.APP_ENV = AppEnvironment.TEST;
 
-  const poolConfig: ConnectionOptions = {
-    host: env.ACCESS_MYSQL_HOST_TEST,
-    database: env.ACCESS_MYSQL_DATABASE_TEST,
-    password: env.ACCESS_MYSQL_PASSWORD_TEST,
-    port: env.ACCESS_MYSQL_PORT_TEST,
-    user: env.ACCESS_MYSQL_USER_TEST,
-    // debug: true,
-    connectionLimit: 1,
-  };
+    const poolConfig: ConnectionOptions = {
+      host: env.ACCESS_MYSQL_HOST_TEST,
+      database: env.ACCESS_MYSQL_DATABASE_TEST,
+      password: env.ACCESS_MYSQL_PASSWORD_TEST,
+      port: env.ACCESS_MYSQL_PORT_TEST,
+      user: env.ACCESS_MYSQL_USER_TEST,
+      // debug: true,
+      connectionLimit: 1,
+    };
 
-  if (!/(test|testing)/i.test(poolConfig.database)) {
-    throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
+    if (!/(test|testing)/i.test(poolConfig.database)) {
+      throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
+    }
+
+    const pool = createPool(poolConfig);
+
+    dbAmsSeed = new Migration({
+      conn: pool as unknown as MigrationConnection,
+      tableName: 'seeds',
+      dir: '../../services/access/src/migration-scripts/seeds',
+      silent: env.APP_ENV === AppEnvironment.TEST,
+    });
+
+    await dbAmsSeed.initialize();
+  } catch (err) {
+    console.error('Error at initConfigTestSeed', err);
+    throw err;
   }
-
-  const pool = createPool(poolConfig);
-
-  dbAmsSeed = new Migration({
-    conn: pool as unknown as MigrationConnection,
-    tableName: 'seeds',
-    dir: '../../services/access/src/migration-scripts/seeds',
-    silent: env.APP_ENV === AppEnvironment.TEST,
-  });
-
-  await dbAmsSeed.initialize();
 }
 
 async function initConfigTestSeed() {
-  env.APP_ENV = AppEnvironment.TEST;
+  try {
+    env.APP_ENV = AppEnvironment.TEST;
 
-  const poolConfig: ConnectionOptions = {
-    host: env.CONFIG_MYSQL_HOST_TEST,
-    database: env.CONFIG_MYSQL_DATABASE_TEST,
-    password: env.CONFIG_MYSQL_PASSWORD_TEST,
-    port: env.CONFIG_MYSQL_PORT_TEST,
-    user: env.CONFIG_MYSQL_USER_TEST,
-    // debug: true,
-    connectionLimit: 1,
-  };
+    const poolConfig: ConnectionOptions = {
+      host: env.CONFIG_MYSQL_HOST_TEST,
+      database: env.CONFIG_MYSQL_DATABASE_TEST,
+      password: env.CONFIG_MYSQL_PASSWORD_TEST,
+      port: env.CONFIG_MYSQL_PORT_TEST,
+      user: env.CONFIG_MYSQL_USER_TEST,
+      // debug: true,
+      connectionLimit: 1,
+    };
 
-  if (!/(test|testing)/i.test(poolConfig.database)) {
-    throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
+    if (!/(test|testing)/i.test(poolConfig.database)) {
+      throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
+    }
+
+    const pool = createPool(poolConfig);
+
+    dbConfigSeed = new Migration({
+      conn: pool as unknown as MigrationConnection,
+      tableName: 'seeds',
+      dir: '../../services/config/src/migration-scripts/seeds',
+      silent: env.APP_ENV === AppEnvironment.TEST,
+    });
+
+    await dbConfigSeed.initialize();
+  } catch (err) {
+    console.error('Error at initConfigTestSeed', err);
+    throw err;
   }
-
-  const pool = createPool(poolConfig);
-
-  dbConfigSeed = new Migration({
-    conn: pool as unknown as MigrationConnection,
-    tableName: 'seeds',
-    dir: '../../services/config/src/migration-scripts/seeds',
-    silent: env.APP_ENV === AppEnvironment.TEST,
-  });
-
-  await dbConfigSeed.initialize();
 }
 
 async function initAuthApiTestMigrations() {
-  env.APP_ENV = AppEnvironment.TEST;
+  try {
+    env.APP_ENV = AppEnvironment.TEST;
 
-  const poolAuthApi: ConnectionOptions = {
-    host: env.AUTH_API_MYSQL_HOST_TEST,
-    database: env.AUTH_API_MYSQL_DATABASE_TEST,
-    password: env.AUTH_API_MYSQL_PASSWORD_TEST,
-    port: env.AUTH_API_MYSQL_PORT_TEST,
-    user: env.AUTH_API_MYSQL_USER_TEST,
-    // debug: true,
-    connectionLimit: 1,
-  };
+    const poolAuthApi: ConnectionOptions = {
+      host: env.AUTH_API_MYSQL_HOST_TEST,
+      database: env.AUTH_API_MYSQL_DATABASE_TEST,
+      password: env.AUTH_API_MYSQL_PASSWORD_TEST,
+      port: env.AUTH_API_MYSQL_PORT_TEST,
+      user: env.AUTH_API_MYSQL_USER_TEST,
+      // debug: true,
+      connectionLimit: 1,
+    };
 
-  if (!/(test|testing)/i.test(poolAuthApi.database)) {
-    throw new Error('!!! NOT TEST DATABASE? !!!');
+    if (!/(test|testing)/i.test(poolAuthApi.database)) {
+      throw new Error('!!! NOT TEST DATABASE? !!!');
+    }
+
+    const pool = createPool(poolAuthApi);
+
+    dbAuthApiMigration = new Migration({
+      conn: pool as unknown as MigrationConnection,
+      tableName: 'migrations',
+      dir: '../../modules/authentication-api/src/migration-scripts/migrations/',
+      silent: env.APP_ENV === AppEnvironment.TEST,
+    });
+
+    await dbAuthApiMigration.initialize();
+  } catch (err) {
+    console.error('Error at initAuthApiTestMigrations', err);
+    throw err;
   }
-
-  const pool = createPool(poolAuthApi);
-
-  dbAuthApiMigration = new Migration({
-    conn: pool as unknown as MigrationConnection,
-    tableName: 'migrations',
-    dir: '../../modules/authentication-api/src/migration-scripts/migrations/',
-    silent: env.APP_ENV === AppEnvironment.TEST,
-  });
-
-  await dbAuthApiMigration.initialize();
 }
