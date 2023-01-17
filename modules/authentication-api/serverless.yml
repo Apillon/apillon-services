@@ -52,7 +52,7 @@ package:
 
 functions:
   auth-api:
-    handler: ./src/handler.handler
+    handler: ./src/lambda.handler
     name: 'apillon-auth-api-${self:provider.stage}'
     description: Apillon Authentication API
     memorySize: 512
