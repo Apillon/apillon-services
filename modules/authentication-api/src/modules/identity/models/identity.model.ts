@@ -131,7 +131,7 @@ export class Identity extends AdvancedSQLModel {
         SELECT ${this.generateSelectFields('i', '', SerializeFor.SELECT_DB)}
         `,
       qFrom: `
-        FROM ${DbTables.IDENTITY} a
+        FROM ${DbTables.IDENTITY} i
         WHERE i.state = @state
         `,
     };

@@ -10,6 +10,7 @@ let dbStorageMigration: Migration = null;
 // let dbStorageSeed: Migration = null;
 let dbConfigMigration: Migration = null;
 let dbConfigSeed: Migration = null;
+let dbAuthApiMigration: Migration = null;
 
 export async function setupTestDatabase(): Promise<void> {
   await upgradeTestDatabases();
@@ -28,6 +29,10 @@ async function initMigrations() {
 
   if (!dbConfigMigration) {
     await initConfigTestMigrations();
+  }
+
+  if (!dbAuthApiMigration) {
+    await initAuthApiTestMigrations();
   }
 }
 
@@ -53,6 +58,7 @@ export async function upgradeTestDatabases(): Promise<void> {
     dbConsoleMigration.up(),
     dbStorageMigration.up(),
     dbConfigMigration.up(),
+    dbAuthApiMigration.up(),
   ]);
   await destroyTestMigrations();
 }
@@ -64,6 +70,7 @@ export async function downgradeTestDatabases(): Promise<void> {
     dbConsoleMigration.down(-1),
     dbStorageMigration.down(-1),
     dbConfigMigration.down(-1),
+    dbAuthApiMigration.down(-1),
   ]);
   await destroyTestMigrations();
 }
@@ -104,11 +111,15 @@ export async function destroyTestMigrations(): Promise<void> {
   if (dbConfigMigration) {
     promises.push(dbConfigMigration.destroy());
   }
+  if (dbAuthApiMigration) {
+    promises.push(dbAuthApiMigration.destroy());
+  }
   await Promise.all(promises);
   dbConsoleMigration = null;
   dbAmsMigration = null;
   dbStorageMigration = null;
   dbConfigMigration = null;
+  dbAuthApiMigration = null;
 }
 
 export async function destroyTestSeeds(): Promise<void> {
@@ -139,6 +150,7 @@ export async function rebuildTestDatabases(): Promise<void> {
     dbConsoleMigration.reset(),
     dbStorageMigration.reset(),
     dbConfigMigration.reset(),
+    dbAuthApiMigration.reset(),
   ]);
   await destroyTestMigrations();
   await initSeeds();
@@ -388,4 +400,33 @@ async function initConfigTestSeed() {
   });
 
   await dbConfigSeed.initialize();
+}
+
+async function initAuthApiTestMigrations() {
+  env.APP_ENV = AppEnvironment.TEST;
+
+  const poolAuthApi: ConnectionOptions = {
+    host: env.AUTH_API_MYSQL_HOST_TEST,
+    database: env.AUTH_API_MYSQL_DATABASE_TEST,
+    password: env.AUTH_API_MYSQL_PASSWORD_TEST,
+    port: env.AUTH_API_MYSQL_PORT_TEST,
+    user: env.AUTH_API_MYSQL_USER_TEST,
+    // debug: true,
+    connectionLimit: 1,
+  };
+
+  if (!/(test|testing)/i.test(poolAuthApi.database)) {
+    throw new Error('!!! NOT TEST DATABASE? !!!');
+  }
+
+  const pool = createPool(poolAuthApi);
+
+  dbAuthApiMigration = new Migration({
+    conn: pool as unknown as MigrationConnection,
+    tableName: 'migrations',
+    dir: '../../modules/authentication-api/src/migration-scripts/migrations/',
+    silent: env.APP_ENV === AppEnvironment.TEST,
+  });
+
+  await dbAuthApiMigration.initialize();
 }

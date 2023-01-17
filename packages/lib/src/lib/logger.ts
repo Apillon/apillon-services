@@ -96,18 +96,18 @@ function logInColor(
       bgColor = bgBlack;
       color = white;
   }
-  console.log(
-    bgColor(black(`[${type}]`)),
-    gray(`[${moment().format(time_format)}]:`),
-    color(
-      `${
-        typeof message == 'string' ? message : JSON.stringify(message, null, 2)
-      }${message && error && error.message ? ', ' : ''}${
-        error ? `${error.message}` || '' : ''
-      }`,
-    ),
-    gray(`[${fileSource}/${functionSource}]`),
-  );
+  // console.log(
+  //   bgColor(black(`[${type}]`)),
+  //   gray(`[${moment().format(time_format)}]:`),
+  //   color(
+  //     `${
+  //       typeof message == 'string' ? message : JSON.stringify(message, null, 2)
+  //     }${message && error && error.message ? ', ' : ''}${
+  //       error ? `${error.message}` || '' : ''
+  //     }`,
+  //   ),
+  //   gray(`[${fileSource}/${functionSource}]`),
+  // );
 }
 
 function logInConsole(
