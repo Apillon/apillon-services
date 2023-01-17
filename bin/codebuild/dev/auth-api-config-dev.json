@@ -34,7 +34,7 @@
       {
         "type": "PLAINTEXT",
         "name": "WORKER_SQS_ARN",
-        "value": "arn:aws:sqs:eu-west-1:018021943180:apillon-authentication-queue-dev"
+        "value": "arn:aws:sqs:eu-west-1:018021943180:apillon-auth-queue-dev"
       }
     ],
     "type": "LINUX_CONTAINER"
