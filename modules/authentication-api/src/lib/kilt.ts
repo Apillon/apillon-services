@@ -60,15 +60,6 @@ export async function generateKeypairs(mnemonic: string) {
   };
 }
 
-export function getDidEncryptionKey({
-  keyAgreement, // encryptionKey
-}: DidDocument): DidEncryptionKey {
-  if (!keyAgreement || !keyAgreement[0]) {
-    throw new Error('encryptionKey is not defined somehow');
-  }
-  return keyAgreement[0];
-}
-
 export async function getFullDidDocument(keypairs: Keypairs) {
   await connect(env.KILT_NETWORK);
   const api = ConfigService.get('api');
