@@ -2,6 +2,7 @@ import { env } from '../../../config/env';
 import { AppEnvironment, NftsEventType } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
+import { DeployNftContractDto } from './dtos/deploy-nft-contract.dto';
 
 export class NftsMicroservice extends BaseService {
   lambdaFunctionName =
@@ -22,6 +23,14 @@ export class NftsMicroservice extends BaseService {
   public async getHello() {
     const data = {
       eventName: NftsEventType.HELLO,
+    };
+    return await this.callService(data);
+  }
+
+  public async deployNftContract(params: DeployNftContractDto) {
+    const data = {
+      eventName: NftsEventType.DEPLOY_NFT,
+      body: params.serialize(),
     };
     return await this.callService(data);
   }
