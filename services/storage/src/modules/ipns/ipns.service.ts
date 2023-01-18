@@ -42,6 +42,7 @@ export class IpnsService {
         status: 404,
       });
     }
+    b.canModify(context);
 
     const ipns: Ipns = new Ipns(event.body, context);
     ipns.populate({ project_uuid: b.project_uuid });

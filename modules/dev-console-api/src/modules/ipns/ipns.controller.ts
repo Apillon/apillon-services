@@ -11,6 +11,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   ParseIntPipe,
   Patch,
@@ -88,6 +89,7 @@ export class IpnsController {
   }
 
   @Post(':id/publish')
+  @HttpCode(200)
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
