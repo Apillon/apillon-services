@@ -13,8 +13,6 @@ import {
   Attestation,
   Credential,
   DidUri,
-  DidDocument,
-  DidEncryptionKey,
 } from '@kiltprotocol/sdk-js';
 import {
   Keypairs,
