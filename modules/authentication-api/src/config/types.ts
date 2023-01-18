@@ -68,6 +68,7 @@ export enum IdentityState {
  */
 export enum JwtTokenType {
   IDENTITY_EMAIL_VERIFICATION = 'IDENTITY_EMAIL_VERIFICATION',
+  IDENTITY_RESTORE_VERIFICATION = 'IDENTITY_RESTORE_VERIFICATION',
 }
 
 export enum IdentityEventType {
