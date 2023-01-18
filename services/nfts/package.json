@@ -26,7 +26,8 @@
   "dependencies": {
     "@apillon/lib": "*",
     "@middy/core": "^2.5.7",
-    "@types/uuid": "^8.3.4"
+    "@types/uuid": "^8.3.4",
+    "ethers": "^5.7.2"
   },
   "devDependencies": {
     "eslint-config-common": "*",

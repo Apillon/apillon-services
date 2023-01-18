@@ -5,6 +5,7 @@ import { NftsService } from './modules/nfts/nfts.service';
 export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
     [NftsEventType.HELLO]: NftsService.getHello,
+    [NftsEventType.DEPLOY_NFT]: NftsService.deployNftContract,
   };
 
   return await processors[event.eventName](event, context);
