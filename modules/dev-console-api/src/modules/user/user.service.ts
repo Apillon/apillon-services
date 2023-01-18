@@ -105,6 +105,12 @@ export class UserService {
           (response) => (captchaResult = response),
         ),
       );
+    } else {
+      throw new CodeException({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        code: ValidatorErrorCode.CAPTCHA_NOT_PRESENT,
+        errorCodes: ValidatorErrorCode,
+      });
     }
 
     await Promise.all(promises);

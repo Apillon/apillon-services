@@ -52,6 +52,12 @@ export class IdentityService {
       await verifyCaptcha(body.captcha?.token, env.CAPTCHA_SECRET).then(
         (response) => (captchaResult = response),
       );
+    } else {
+      throw new CodeException({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        code: AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_PRESENT,
+        errorCodes: AuthenticationErrorCode,
+      });
     }
 
     if (
