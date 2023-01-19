@@ -27,11 +27,6 @@ export enum LmasEventType {
 }
 
 export enum StorageEventType {
-  ADD_FILE_TO_IPFS = 'add-file-to-ipfs',
-  ADD_FILE_TO_IPFS_FROM_S3 = 'add-file-to-ipfs-from-s3',
-  GET_OBJECT_FROM_IPFS = 'get-object-from-ipfs',
-  LIST_IPFS_DIRECTORY = 'list-ipfs-directory',
-  PLACE_STORAGE_ORDER_TO_CRUST = 'place-storage-order-to-crust',
   REQUEST_S3_SIGNED_URL_FOR_UPLOAD = 'request-s3-signed-url-for-upload',
   END_FILE_UPLOAD_SESSION = 'end-file-upload-session',
   END_FILE_UPLOAD = 'end-file-upload',

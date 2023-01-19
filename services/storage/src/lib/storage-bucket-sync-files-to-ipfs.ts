@@ -182,6 +182,7 @@ export async function storageBucketSyncFilesToIPFS(
           service: ServiceName.STORAGE,
           data: {
             file: file.serialize(),
+            error: err,
           },
         });
         try {
@@ -245,7 +246,7 @@ export async function storageBucketSyncFilesToIPFS(
       let ipfsRes = undefined;
       try {
         ipfsRes = await IPFSService.uploadFileToIPFSFromS3(
-          { fileKey: file.s3FileKey },
+          { fileUploadRequest: file },
           context,
         );
       } catch (err) {
@@ -269,6 +270,7 @@ export async function storageBucketSyncFilesToIPFS(
             service: ServiceName.STORAGE,
             data: {
               file: file.serialize(),
+              error: err,
             },
           });
           throw err;
@@ -335,6 +337,7 @@ export async function storageBucketSyncFilesToIPFS(
           service: ServiceName.STORAGE,
           data: {
             file: file.serialize(),
+            error: err,
           },
         });
 
@@ -427,7 +430,7 @@ export async function storageBucketSyncFilesToIPFS(
       bucket_uuid: bucket.bucket_uuid,
       size: tmpSize,
       bucketSize: bucket.size,
-      bucketUploadedSize: bucket.uploadedSize,
+      totalUploadedToBucket: bucket.uploadedSize,
     },
   });
 
