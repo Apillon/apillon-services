@@ -6,6 +6,8 @@ Apillon integrates multiple Polkadot parachains and offers them in unified way, 
 One of those parachains is [CRUST](https://crust.network/). \
 Apillon STORAGE is WEB3 oriented storage, based on AWS S3(as cache to optimize upload of large files), [IPFS](https://ipfs.tech/) and CRUST.
 
+In all cURL examples, parameters with colon as prefix, should be changed with real values.
+
 ## Storage bucket
 
 Bucket is a virtual container which holds directories and files in hiearhical structure. Each directory can contain multiple subdirectories and multiple files, and so on and so forth for each subdirectory.\
@@ -63,11 +65,11 @@ For example `images/icons`, creates `images` directory in bucket and `icons` dir
 #### Request cURL example
 
 ```
-curl --location --request POST "http://localhost:6002/storage/cee9f151-a371-495b-acd2-4362fbb87780/upload" \
---header "Authorization: Basic MTJhMTVmNmYtMzc3NC00MTVjLWE0MzMtYWZlYjA5OWY3NjM4OjAxVE1IVjVIKlZoSg==" \
+curl --location --request POST "https://api-dev.apillon.io/storage/:bucketUuid/upload" \
+--header "Authorization: Basic :credentials" \
 --header "Content-Type: application/json" \
 --data-raw "{
-    \"fileName\": \"my test file.txt\",
+    \"fileName\": \"My file.txt\",
     \"contentType\": \"text/plain\"
 }"
 ```
@@ -106,7 +108,7 @@ Example with `content-type` header and file from disk.
 
 curl --location --request PUT "https://sync-to-ipfs-queue.s3.eu-west-1.amazonaws.com/STORAGE/11/my%20test%20file.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAQIMRRA6GJRL57L7G%2F20230104%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Date=20230104T101419Z&X-Amz-Expires=900&X-Amz-Signature=e1be26c5863d845d5ec5477ac4e7aabafd6901060b3515d23d36c71360255259&X-Amz-SignedHeaders=host" \
 --header "Content-Type: text/plain" \
---data-binary "@full path to file"
+--data-binary ":full path to file"
 
 ### [private] GET /storage/:bucketUuid/content
 
@@ -161,38 +163,43 @@ Properties of each item:
 Basic request, to get items in bucket root directory.
 
 ```
-curl --location --request GET "http://localhost:6002/storage/cee9f151-a371-495b-acd2-4362fbb87780/content" \
---header "Authorization: Basic MTJhMTVmNmYtMzc3NC00MTVjLWE0MzMtYWZlYjA5OWY3NjM4OjAxVE1IVjVIKlZoSg=="
+curl --location --request GET "https://api-dev.apillon.io/storage/:bucketUuid/content" \
+--header "Authorization: Basic :credentials"
 ```
 
 Request, with additional query parameters
-curl --location --request GET "http://localhost:6002/storage/cee9f151-a371-495b-acd2-4362fbb87780/content?orderBy=name&desc=false&limit=5&page=1" \
---header "Authorization: Basic MTJhMTVmNmYtMzc3NC00MTVjLWE0MzMtYWZlYjA5OWY3NjM4OjAxVE1IVjVIKlZoSg=="
+curl --location --request GET "https://api-dev.apillon.io/storage/:bucketUuid/content?orderBy=name&desc=false&limit=5&page=1" \
+--header "Authorization: Basic :credentials"
 
 #### Request response example
 
 ```JSON
 {
-    "id": "a1cedd2a-e172-4604-a5a3-27f9e0e6a74a",
+    {
+    "id": "c8c50b3b-91ff-42c7-b0af-f866ce23f18a",
     "status": 200,
     "data": {
         "items": [
+            ...
             {
                 "type": "file",
-                "id": 41,
-                "name": "123.txt",
-                "createTime": "2022-12-14T13:50:43.000Z",
-                "updateTime": "2022-12-14T13:50:43.000Z",
+                "id": 397,
+                "status": 5,
+                "name": "My file.txt",
+                "CID": "QmcG9r6Rdw9ZdJ4imGBWc6mi5VzWHQfkcLDMe2aP74eb42",
+                "createTime": "2023-01-19T10:10:01.000Z",
+                "updateTime": "2023-01-19T10:10:31.000Z",
                 "contentType": "text/plain",
-                "size": 11,
+                "size": 68,
                 "parentDirectoryId": null,
-                "fileUuid": "c187b832-9ee7-4852-b755-0d6aadb4167b",
-                "CID": "QmUL7wDowvNk3y7KeEYFAATmz43727FwXKhBJJrqQu813a",
-                "link": "https://ipfs.apillon.io/ipfs/QmUL7wDowvNk3y7KeEYFAATmz43727FwXKhBJJrqQu813a"
+                "file_uuid": "0a775bfa-a0d0-4e0b-9a1e-e909e426bd11",
+                "link": "https://ipfs.apillon.io/ipfs/QmcG9r6Rdw9ZdJ4imGBWc6mi5VzWHQfkcLDMe2aP74eb42"
             }
+            ...
         ],
-        "total": 18
+        "total": 10
     }
+}
 }
 ```
 
@@ -219,12 +226,12 @@ Response `data` property contains two properties: `fileStatus` and `file`. File 
 
 ##### File statuses
 
-| Number | Description                                          |
-| ------ | ---------------------------------------------------- |
-| 1      | Request for upload to Apillon storage was generated. |
-| 2      | File uploaded to Apillon cache (AWS S3).             |
-| 3      | File transfered to IPFS node                         |
-| 4      | File is pinned to CRUST                              |
+| Number | Description                                               |
+| ------ | --------------------------------------------------------- |
+| 1      | Request for upload to Apillon storage was generated.      |
+| 2      | File uploaded to Apillon cache (AWS S3).                  |
+| 3      | File transfered to IPFS node                              |
+| 4      | File is replicated to different IPFS nodes, through CRUST |
 
 ##### File metadata
 
@@ -244,8 +251,8 @@ Response `data` property contains two properties: `fileStatus` and `file`. File 
 #### Request cURL example
 
 ```
-curl --location --request GET "http://localhost:6002/storage/cee9f151-a371-495b-acd2-4362fbb780/file/44/detail" \
---header "Authorization: Basic MTJhMTVmNmYtMzc3NC00MTVjLWE0MzMtYWZlYjA5OWY3NjM4OjAxVE1IVjVIKlZoSg=="
+curl --location --request GET "https://api-dev.apillon.io/storage/:bucketUuid/file/:id/detail" \
+--header "Authorization: Basic :credentials"
 ```
 
 #### Request response example
@@ -257,15 +264,15 @@ curl --location --request GET "http://localhost:6002/storage/cee9f151-a371-495b-
     "data": {
         "fileStatus": 4,
         "file": {
-            "id": 44,
+            "id": 397,
             "status": 5,
-            "fileUuid": "e6be1ae3-1b57-47e5-a30c-d9c7772c9739",
-            "CID": "QmUL7wDowvNk3y7KeEYFAATmz43727FwXKhBJJrqQu813a",
-            "name": "apillon api file 1.txt",
+            "file_uuid": "0a775bfa-a0d0-4e0b-9a1e-e909e426bd11",
+            "CID": "QmcG9r6Rdw9ZdJ4imGBWc6mi5VzWHQfkcLDMe2aP74eb42",
+            "name": "My file.txt",
             "contentType": "text/plain",
-            "size": 11,
+            "size": 68,
             "fileStatus": 4,
-            "downloadLink": "https://ipfs.apillon.io/ipfs/QmUL7wDowvNk3y7KeEYFAATmz43727FwXKhBJJrqQu813a"
+            "downloadLink": "https://ipfs.apillon.io/ipfs/QmcG9r6Rdw9ZdJ4imGBWc6mi5VzWHQfkcLDMe2aP74eb42"
         }
     }
 }
@@ -298,8 +305,9 @@ Returned fields are same as fields, that are returned in [GET file details API](
 #### Request cURL example
 
 ```
-curl --location --request DELETE "http://localhost:6002/storage/c04ced63-61c8-480c-b9ee-598e8c5da167/file/50" \
---header "Authorization: Basic MTJhMTVmNmYtMzc3NC00MTVjLWE0MzMtYWZlYjA5OWY3NjM4OjAxVE1IVjVIKlZoSg=="
+curl --location --request DELETE "https://api-dev.apillon.io/storage/:bucketUuid/file/:id" \
+--header "Authorization: Basic :credentials" \
+--data-raw ""
 ```
 
 #### Response example
@@ -309,14 +317,16 @@ curl --location --request DELETE "http://localhost:6002/storage/c04ced63-61c8-48
     "id": "bc92ff8d-05f2-4380-bb13-75a1b6b7f388",
     "status": 200,
     "data": {
-        "id": 50,
+        "id": 397,
         "status": 8,
-        "fileUuid": "e98536e5-4109-4f35-8e92-eef2a26898d7",
-        "CID": "QmNqQKFq7xqQz76aGTihW8UJvRmat52i3rSKjDMmDpHmVi",
-        "name": "aaa.txt",
+        "file_uuid": "0a775bfa-a0d0-4e0b-9a1e-e909e426bd11",
+        "CID": "QmcG9r6Rdw9ZdJ4imGBWc6mi5VzWHQfkcLDMe2aP74eb42",
+        "name": "My file.txt",
         "contentType": "text/plain",
-        "size": 11,
-        "downloadLink": null
+        "size": 68,
+        "fileStatus": 4,
     }
 }
 ```
+
+Note, that `status` property of file is 8. This means, that the file is marked for deletion and will be deleted after a certain period.
