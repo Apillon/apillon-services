@@ -339,6 +339,20 @@ describe('Storage bucket tests', () => {
       expect(b.status).toBe(SqlModelStatus.MARKED_FOR_DELETION);
     });
 
+    test('User should be able to get TRASHED bucket list', async () => {
+      const response = await request(stage.http)
+        .get(
+          `/buckets?project_uuid=${testProject.project_uuid}&status=${SqlModelStatus.MARKED_FOR_DELETION}`,
+        )
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.items.length).toBe(1);
+      expect(response.body.data.items[0]?.id).toBe(testBucket.id);
+      expect(response.body.data.items[0]?.status).toBe(
+        SqlModelStatus.MARKED_FOR_DELETION,
+      );
+    });
+
     test('User should be able to unmark bucket for deletion', async () => {
       const testBucketToCancelDeletion = await createTestBucket(
         testUser,

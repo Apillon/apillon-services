@@ -6,15 +6,21 @@ import {
   AdvancedSQLModel,
   CodeException,
   DefaultUserRole,
+  env,
   ForbiddenErrorCodes,
+  getQueryParams,
   PoolConnection,
   PopulateFrom,
+  selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
+  TrashedFilesQueryFilter,
 } from '@apillon/lib';
 import { DbTables, FileStatus, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
 import { v4 as uuidV4 } from 'uuid';
+import { Bucket } from '../../bucket/models/bucket.model';
+import { StorageCodeException } from '../../../lib/exceptions';
 
 export class File extends AdvancedSQLModel {
   tableName = DbTables.FILE;
@@ -384,5 +390,55 @@ export class File extends AdvancedSQLModel {
     } else {
       return this.reset();
     }
+  }
+
+  public async getMarkedForDeletionList(
+    context: ServiceContext,
+    filter: TrashedFilesQueryFilter,
+  ) {
+    const b: Bucket = await new Bucket({}, context).populateByUUID(
+      filter.bucket_uuid,
+    );
+    if (!b.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.BUCKET_NOT_FOUND,
+        status: 404,
+      });
+    }
+    b.canAccess(context);
+
+    // Map url query with sql fields.
+    const fieldMap = {
+      id: 'b.id',
+    };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'b',
+      fieldMap,
+      filter.serialize(),
+    );
+
+    const sqlQuery = {
+      qSelect: `
+        SELECT 'file' as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime, 
+        d.contentType as contentType, d.size as size, d.directory_id as parentDirectoryId, 
+        d.file_uuid as file_uuid, CONCAT("${env.STORAGE_IPFS_GATEWAY}", d.CID)
+        `,
+      qFrom: `
+        FROM \`${DbTables.FILE}\` d
+        INNER JOIN \`${DbTables.BUCKET}\` b ON d.bucket_id = b.id
+        WHERE b.bucket_uuid = @bucket_uuid
+        AND (IFNULL(@directory_id, -1) = IFNULL(d.directory_id, -1))
+        AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))
+        AND ( d.status = ${SqlModelStatus.ACTIVE} OR 
+          ( @markedForDeletion = 1 AND d.status = ${SqlModelStatus.MARKED_FOR_DELETION})
+        )`,
+      qFilter: `
+        ORDER BY ${filters.orderStr}
+        LIMIT ${filters.limit} OFFSET ${filters.offset};
+      `,
+    };
+
+    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'b.id');
   }
 }

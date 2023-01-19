@@ -12,6 +12,7 @@ import { DirectoryContentQueryFilter } from './dtos/directory-content-query-filt
 import { EndFileUploadSessionDto } from './dtos/end-file-upload-session.dto';
 import { FileDetailsQueryFilter } from './dtos/file-details-query-filter.dto';
 import { FileUploadsQueryFilter } from './dtos/file-uploads-query-filter.dto';
+import { TrashedFilesQueryFilter } from './dtos/trashed-files-query-filter.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -179,6 +180,14 @@ export class StorageMicroservice extends BaseService {
   public async getFileDetails(params: FileDetailsQueryFilter) {
     const data = {
       eventName: StorageEventType.GET_FILE_DETAILS,
+      ...params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async listFilesMarkedForDeletion(params: TrashedFilesQueryFilter) {
+    const data = {
+      eventName: StorageEventType.LIST_MARKED_FOR_DELETION_FILES,
       ...params.serialize(),
     };
     return await this.callService(data);
