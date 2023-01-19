@@ -67,8 +67,7 @@ export enum IdentityState {
  * JWT Token signing types.
  */
 export enum JwtTokenType {
-  IDENTITY_EMAIL_VERIFICATION = 'IDENTITY_EMAIL_VERIFICATION',
-  IDENTITY_RESTORE_VERIFICATION = 'IDENTITY_RESTORE_VERIFICATION',
+  IDENTITY_ATTESTATION_PROCESS = 'IDENTITY_EMAIL_VERIFICATION',
 }
 
 export enum IdentityEventType {
@@ -112,5 +111,5 @@ export interface SignRequestData {
 }
 
 export enum AuthAppErrors {
-  EMAIL_ALREADY_ATTESTED = 'Email already attested',
+  IDENTITY_EMAIL_IS_ALREADY_ATTESTED = 'Email already attested',
 }

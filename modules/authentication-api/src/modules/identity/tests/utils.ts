@@ -42,7 +42,7 @@ export const setupDidCreateMock = async () => {
     email: identityMock.email,
     didUri: identityMock.did_uri,
     did_create_op: did_create_op,
-    token: generateJwtToken(JwtTokenType.IDENTITY_EMAIL_VERIFICATION, {
+    token: generateJwtToken(JwtTokenType.IDENTITY_ATTESTATION_PROCESS, {
       email: identityMock.email,
     }),
   };

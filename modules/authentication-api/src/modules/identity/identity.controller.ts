@@ -3,10 +3,11 @@ import { Ctx, Validation } from '@apillon/modules-lib';
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthenticationApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
-import { JwtGuard } from '../../guards/jwt.guard';
+import { AuthGuard } from '../../guards/auth.guard';
 import { IdentityService } from './identity.service';
 import { AttestationEmailDto } from './dtos/identity-email.dto';
 import { IdentityCreateDto } from './dtos/identity-create.dto';
+import { JwtTokenType } from '../../config/types';
 
 @Controller('identity')
 export class IdentityController {
@@ -27,7 +28,10 @@ export class IdentityController {
 
   @Post('generate')
   @Validation({ dto: IdentityCreateDto })
-  @UseGuards(ValidationGuard)
+  @UseGuards(
+    ValidationGuard,
+    AuthGuard(JwtTokenType.IDENTITY_ATTESTATION_PROCESS),
+  )
   async attestationGenerateDid(
     @Ctx() context: AuthenticationApiContext,
     @Body() body: any,
@@ -47,7 +51,10 @@ export class IdentityController {
 
   @Get('credential')
   @Validation({ dto: AttestationEmailDto, validateFor: ValidateFor.QUERY })
-  @UseGuards(JwtGuard, ValidationGuard)
+  @UseGuards(
+    ValidationGuard,
+    AuthGuard(JwtTokenType.IDENTITY_ATTESTATION_PROCESS),
+  )
   async attestationGetUserCredential(
     @Ctx() context: AuthenticationApiContext,
     @Query('email') email: string,

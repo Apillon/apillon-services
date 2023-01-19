@@ -20,4 +20,10 @@ export class AttestationEmailDto extends ModelBase {
     ],
   })
   public email: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE],
+  })
+  public token: string;
 }

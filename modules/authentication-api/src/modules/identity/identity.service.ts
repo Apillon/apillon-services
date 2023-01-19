@@ -36,8 +36,6 @@ import { AuthenticationWorker } from '../../workers/authentication.worker';
 import { u8aToHex } from '@polkadot/util';
 import { IdentityCreateDto } from './dtos/identity-create.dto';
 
-const aae = AuthAppErrors;
-
 @Injectable()
 export class IdentityService {
   async startUserIdentityGenProcess(
@@ -45,7 +43,7 @@ export class IdentityService {
     body: AttestationEmailDto,
   ): Promise<any> {
     const email = body.email;
-    const token = generateJwtToken(JwtTokenType.IDENTITY_EMAIL_VERIFICATION, {
+    const token = generateJwtToken(JwtTokenType.IDENTITY_ATTESTATION_PROCESS, {
       email,
     });
 
@@ -57,10 +55,12 @@ export class IdentityService {
     if (identity.exists()) {
       // If email was already attested -> deny process
       if (identity.state == IdentityState.ATTESTED) {
+        // TODO: Double check this with Vinko
+        // I want to send an actual error message to FE -> AuthAppErrors.IDENTITY_EMAIL_IS_ALREADY_ATTESTED
         throw new CodeException({
           status: HttpStatus.BAD_REQUEST,
           code: AuthenticationErrorCode.IDENTITY_EMAIL_IS_ALREADY_ATTESTED,
-          errorCodes: AuthenticationErrorCode,
+          errorMessage: AuthAppErrors.IDENTITY_EMAIL_IS_ALREADY_ATTESTED,
         });
       }
     } else {
@@ -140,28 +140,6 @@ export class IdentityService {
       email: body.email,
       didUri: body.didUri,
     };
-
-    let tokenData: any;
-    try {
-      tokenData = parseJwtToken(
-        JwtTokenType.IDENTITY_EMAIL_VERIFICATION,
-        body.token,
-      );
-    } catch (error) {
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
-        code: AuthenticationErrorCode.IDENTITY_INVALID_VERIFICATION_TOKEN,
-        errorCodes: AuthenticationErrorCode,
-      });
-    }
-
-    if (tokenData.email != body.email) {
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
-        code: AuthenticationErrorCode.IDENTITY_VERIFICATION_FAILED,
-        errorCodes: AuthenticationErrorCode,
-      });
-    }
 
     // Check if correct identity + state exists -> IN_PROGRESS
     const identity = await new Identity({}, context).populateByUserEmail(
