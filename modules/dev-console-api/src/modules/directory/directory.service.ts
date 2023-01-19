@@ -31,6 +31,12 @@ export class DirectoryService {
     ).data;
   }
 
+  async cancelDirectoryDeletion(context: DevConsoleApiContext, id: number) {
+    return (
+      await new StorageMicroservice(context).cancelDirectoryDeletion({ id: id })
+    ).data;
+  }
+
   async deleteDirectory(context: DevConsoleApiContext, id: number) {
     return (await new StorageMicroservice(context).deleteDirectory({ id: id }))
       .data;

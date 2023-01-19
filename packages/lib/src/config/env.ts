@@ -9,6 +9,7 @@ export interface IEnv {
   APP_URL: string;
   APP_ENV: string;
   LOG_TARGET: string;
+  LOG_LEVEL: string;
 
   /**
    * env var from lambda - current region - can not be overwritten in lambda settings!
@@ -149,8 +150,9 @@ export interface IEnv {
   STORAGE_CRUST_SEED_PHRASE: string;
   STORAGE_CRUST_SEED_PHRASE_TEST: string;
   STORAGE_AWS_IPFS_QUEUE_BUCKET: string;
+  STORAGE_IPFS_API: string;
   STORAGE_IPFS_GATEWAY: string;
-  STORAGE_IPFS_PROVIDER: string;
+  STORAGE_DELETE_AFTER_INTERVAL: number;
 
   STORAGE_MYSQL_HOST: string;
   STORAGE_MYSQL_PORT: number;
@@ -291,6 +293,7 @@ export let env: IEnv = {
   APP_URL: process.env['APP_URL'] || 'https://app.apillon.io',
   APP_ENV: process.env['APP_ENV'] || AppEnvironment.STG,
   LOG_TARGET: process.env['LOG_TARGET'] || 'console',
+  LOG_LEVEL: process.env['LOG_LEVEL'] || 'no-db',
   AWS_REGION: process.env['AWS_REGION'], // env var from lambda - can not be overwritten in lambda setting!
   AWS_SECRETS_ID: process.env['AWS_SECRETS_ID'] || '',
   AWS_KEY: process.env['AWS_KEY'],
@@ -373,8 +376,10 @@ export let env: IEnv = {
   STORAGE_CRUST_SEED_PHRASE: process.env['STORAGE_CRUST_SEED_PHRASE'],
   STORAGE_CRUST_SEED_PHRASE_TEST: process.env['STORAGE_CRUST_SEED_PHRASE_TEST'],
   STORAGE_AWS_IPFS_QUEUE_BUCKET: process.env['STORAGE_AWS_IPFS_QUEUE_BUCKET'],
+  STORAGE_IPFS_API: process.env['STORAGE_IPFS_API'],
   STORAGE_IPFS_GATEWAY: process.env['STORAGE_IPFS_GATEWAY'],
-  STORAGE_IPFS_PROVIDER: process.env['STORAGE_IPFS_PROVIDER'],
+  STORAGE_DELETE_AFTER_INTERVAL:
+    parseInt(process.env['STORAGE_DELETE_AFTER_INTERVAL']) || 90,
 
   /**STORAGE microservice */
   STORAGE_MYSQL_HOST: process.env['STORAGE_MYSQL_HOST'],

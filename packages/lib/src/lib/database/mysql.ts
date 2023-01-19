@@ -75,6 +75,7 @@ export class MySql {
           'connect',
           err,
         );
+        throw err;
       }
     } else {
       // test connection
@@ -84,7 +85,7 @@ export class MySql {
         throw new Error('Connection unsuccessful!');
       }
       conn.release();
-      writeLog(LogType.INFO, 'Already connected to DB!', 'mysql.ts', 'connect');
+      writeLog(LogType.DB, 'Already connected to DB!', 'mysql.ts', 'connect');
     }
     return this;
   }
@@ -374,7 +375,7 @@ export class MySql {
       conn.release();
       const diff = process.hrtime(time);
       writeLog(
-        LogType.INFO,
+        LogType.DB,
         `SQL ${queryId} Execution time: ${diff[0]} ${diff[1] / 1000000}`,
       );
     } else {
@@ -390,7 +391,7 @@ export class MySql {
       const diff = process.hrtime(time);
       // console.log('SQL %d Execution time: %ds %dms', queryId, diff[0], diff[1] / 1000000);
       writeLog(
-        LogType.INFO,
+        LogType.DB,
         `SQL ${queryId} Execution time: ${diff[0]} ${diff[1] / 1000000}`,
       );
     }

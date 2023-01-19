@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import { Context } from 'aws-lambda';
+import type { Context } from 'aws-lambda';
 import { createServer, proxy, Response } from 'aws-serverless-express';
 import * as express from 'express';
 

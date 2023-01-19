@@ -1,4 +1,4 @@
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { integerParser, stringParser, dateParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   AdvancedSQLModel,
@@ -9,6 +9,7 @@ import {
   env,
   ForbiddenErrorCodes,
   getQueryParams,
+  PoolConnection,
   PopulateFrom,
   prop,
   SerializeFor,
@@ -176,6 +177,16 @@ export class Directory extends AdvancedSQLModel {
   })
   public description: string;
 
+  /**
+   * Time when directory status was set to 8 - MARKED_FOR_DELETION
+   */
+  @prop({
+    parser: { resolver: dateParser() },
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    populatable: [PopulateFrom.DB],
+  })
+  public markedForDeletionTime?: Date;
+
   /*************************************************************
    * INFO Properties
    *************************************************************/
@@ -233,6 +244,24 @@ export class Directory extends AdvancedSQLModel {
         errorMessage: 'Insufficient permissions to modify this record',
       });
     }
+  }
+
+  /**
+   * Marks record in the database for deletion.
+   */
+  public async markForDeletion(conn?: PoolConnection): Promise<this> {
+    this.updateUser = this.getContext()?.user?.id;
+
+    this.status = SqlModelStatus.MARKED_FOR_DELETION;
+    this.markedForDeletionTime = new Date();
+
+    try {
+      await this.update(SerializeFor.UPDATE_DB, conn);
+    } catch (err) {
+      this.reset();
+      throw err;
+    }
+    return this;
   }
 
   public async populateByUUID(uuid: string): Promise<this> {
@@ -307,7 +336,9 @@ export class Directory extends AdvancedSQLModel {
     const qSelects = [
       {
         qSelect: `
-        SELECT 'directory' as type, d.id, d.name, d.CID, d.createTime, d.updateTime, NULL as contentType, NULL as size, d.parentDirectory_id as parentDirectoryId, NULL as file_uuid, NULL as link
+        SELECT 'directory' as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime, 
+        NULL as contentType, NULL as size, d.parentDirectory_id as parentDirectoryId, 
+        NULL as file_uuid, IF(d.CID IS NULL, NULL, CONCAT("${env.STORAGE_IPFS_GATEWAY}", d.CID)) as link
         `,
         qFrom: `
         FROM \`${DbTables.DIRECTORY}\` d
@@ -315,12 +346,16 @@ export class Directory extends AdvancedSQLModel {
         WHERE b.bucket_uuid = @bucket_uuid
         AND (IFNULL(@directory_id, -1) = IFNULL(d.parentDirectory_id, -1))
         AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))
-        AND d.status <> ${SqlModelStatus.DELETED}
+        AND ( d.status = ${SqlModelStatus.ACTIVE} OR 
+          ( @markedForDeletion = 1 AND d.status = ${SqlModelStatus.MARKED_FOR_DELETION})
+        )
       `,
       },
       {
         qSelect: `
-        SELECT 'file' as type, d.id, d.name, d.CID, d.createTime, d.updateTime, d.contentType as contentType, d.size as size, d.directory_id as parentDirectoryId, d.file_uuid as file_uuid, CONCAT("${env.STORAGE_IPFS_PROVIDER}", d.CID)
+        SELECT 'file' as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime, 
+        d.contentType as contentType, d.size as size, d.directory_id as parentDirectoryId, 
+        d.file_uuid as file_uuid, CONCAT("${env.STORAGE_IPFS_GATEWAY}", d.CID)
         `,
         qFrom: `
         FROM \`${DbTables.FILE}\` d
@@ -328,7 +363,9 @@ export class Directory extends AdvancedSQLModel {
         WHERE b.bucket_uuid = @bucket_uuid
         AND (IFNULL(@directory_id, -1) = IFNULL(d.directory_id, -1))
         AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))
-        AND d.status <> ${SqlModelStatus.DELETED}
+        AND ( d.status = ${SqlModelStatus.ACTIVE} OR 
+          ( @markedForDeletion = 1 AND d.status = ${SqlModelStatus.MARKED_FOR_DELETION})
+        )
       `,
       },
     ];
@@ -357,23 +394,4 @@ export class Directory extends AdvancedSQLModel {
       } while (tmpDir?.parentDirectory_id);
     }
   }
-
-  /*public async getList(context: ServiceContext, query: BucketQueryFilter) {
-    const params = {
-      project_uuid: query.project_uuid,
-      search: query.search,
-    };
-
-    const sqlQuery = {
-      qSelect: `
-        SELECT ${this.generateSelectFields('b', '')}
-        `,
-      qFrom: `
-        FROM \`${DbTables.BUCKET}\` b
-        WHERE (@search IS null OR b.name LIKE CONCAT('%', @search, '%'))
-      `,
-    };
-
-    return selectAndCountQuery(context.mysql, sqlQuery, params, 'b.id');
-  }*/
 }

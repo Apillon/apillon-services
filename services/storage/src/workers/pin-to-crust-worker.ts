@@ -62,7 +62,10 @@ export class PinToCRUSTWorker extends BaseQueueWorker {
         message: 'Error at placing storage order to CRUST',
         location: `${this.constructor.name}/runExecutor`,
         service: ServiceName.STORAGE,
-        data: data,
+        data: {
+          data,
+          err,
+        },
       });
       throw err;
     }

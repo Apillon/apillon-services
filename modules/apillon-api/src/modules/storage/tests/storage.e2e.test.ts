@@ -240,7 +240,7 @@ describe('Storage tests', () => {
       test('Application should be able to download uploaded file from apillon ipfs gateway', async () => {
         expect(testFile).toBeTruthy();
         const response = await request(
-          env.STORAGE_IPFS_PROVIDER + testFile.CID,
+          env.STORAGE_IPFS_GATEWAY + testFile.CID,
         ).get('');
         expect(response.status).toBe(200);
         expect(response.text).toBe(testFileContent);

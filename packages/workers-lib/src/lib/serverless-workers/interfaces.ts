@@ -1,3 +1,12 @@
+import type {
+  InvokeCommandInput,
+  LambdaClientConfig,
+} from '@aws-sdk/client-lambda';
+import type {
+  SendMessageCommandInput,
+  SQSClientConfig,
+} from '@aws-sdk/client-sqs';
+
 export enum ServiceDefinitionType {
   LAMBDA,
   SQS,
@@ -5,10 +14,8 @@ export enum ServiceDefinitionType {
 
 export interface ServiceDefinition {
   type: ServiceDefinitionType;
-  config:
-    | AWS.SQS.Types.ClientConfiguration
-    | AWS.Lambda.Types.ClientConfiguration;
-  params: AWS.SQS.Types.SendMessageRequest | AWS.Lambda.Types.InvocationRequest;
+  config: SQSClientConfig | LambdaClientConfig;
+  params: SendMessageCommandInput | InvokeCommandInput;
   // functionName: string;
 }
 
