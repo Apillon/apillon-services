@@ -10,7 +10,9 @@ export async function processEvent(event, context: Context): Promise<any> {
     [ReferralEventType.GET_PRODUCTS]: ReferralService.getProducts,
     [ReferralEventType.ORDER_PRODUCT]: ReferralService.orderProduct,
     [ReferralEventType.CONNECT_GITHUB]: OauthService.linkGithub,
+    [ReferralEventType.DISCONNECT_GITHUB]: OauthService.unlinkGithub,
     [ReferralEventType.CONNECT_TWITTER]: OauthService.linkTwitter,
+    [ReferralEventType.DISCONNECT_TWITTER]: OauthService.unlinkTwitter,
     [ReferralEventType.GET_TWITTER_LINK]:
       ReferralService.getTwitterAuthenticationLink,
     [ReferralEventType.GET_TWEETS]: ReferralService.getTweets,
