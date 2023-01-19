@@ -93,7 +93,7 @@ export class ReferralController {
 
   @Post('twitter/unlink')
   @Permissions({ role: DefaultUserRole.USER })
-  @UseGuards()
+  @UseGuards(AuthGuard)
   async unlinkTwitter(@Ctx() context: DevConsoleApiContext) {
     return await this.referralService.unlinkTwitter(context);
   }

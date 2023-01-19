@@ -134,6 +134,14 @@ describe('Referral tests', () => {
       expect(response.status).toBe(201);
       expect(response.body.data.player.balance).toBe(1);
     });
+
+    test('Unlink Twitter', async () => {
+      const response = await request(stage.http)
+        .post(`/referral/twitter/unlink`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(201);
+      expect(response.body.data.twitter_id).toBe(null);
+    });
   });
 
   describe('Shop', () => {

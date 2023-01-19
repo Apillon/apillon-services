@@ -24,7 +24,7 @@ import { OauthTokenPair } from './models/oauth-token-pairs';
 
 @Injectable()
 export class OauthService {
-  static async unlinkTwitter(context: ServiceContext) {
+  static async unlinkTwitter(_event: any, context: ServiceContext) {
     const player = await new Player({}, context).populateByUserUuid(
       context.user.user_uuid,
     );
@@ -48,7 +48,7 @@ export class OauthService {
 
     return player.serialize(SerializeFor.PROFILE);
   }
-  static async unlinkGithub(context: ServiceContext) {
+  static async unlinkGithub(_event: any, context: ServiceContext) {
     const player = await new Player({}, context).populateByUserUuid(
       context.user.user_uuid,
     );
