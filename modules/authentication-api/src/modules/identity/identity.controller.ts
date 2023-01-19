@@ -3,8 +3,9 @@ import { Ctx, Validation } from '@apillon/modules-lib';
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthenticationApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
+import { JwtGuard } from '../../guards/jwt.guard';
 import { IdentityService } from './identity.service';
-import { AttestationEmailDto } from './dtos/attestation-email.dto';
+import { AttestationEmailDto } from './dtos/identity-email.dto';
 import { IdentityCreateDto } from './dtos/identity-create.dto';
 
 @Controller('identity')
@@ -46,7 +47,7 @@ export class IdentityController {
 
   @Get('credential')
   @Validation({ dto: AttestationEmailDto, validateFor: ValidateFor.QUERY })
-  @UseGuards(ValidationGuard)
+  @UseGuards(JwtGuard, ValidationGuard)
   async attestationGetUserCredential(
     @Ctx() context: AuthenticationApiContext,
     @Query('email') email: string,

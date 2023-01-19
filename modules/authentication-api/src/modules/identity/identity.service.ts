@@ -12,7 +12,7 @@ import {
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthenticationApiContext } from '../../context';
-import { AttestationEmailDto } from './dtos/attestation-email.dto';
+import { AttestationEmailDto } from './dtos/identity-email.dto';
 import { Identity } from './models/identity.model';
 import {
   IdentityState,
@@ -233,28 +233,6 @@ export class IdentityService {
   }
 
   async getUserCredential(context: AuthenticationApiContext, email: string) {
-    let tokenData: any;
-    try {
-      tokenData = parseJwtToken(
-        JwtTokenType.IDENTITY_EMAIL_VERIFICATION,
-        body.token,
-      );
-    } catch (error) {
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
-        code: AuthenticationErrorCode.IDENTITY_INVALID_VERIFICATION_TOKEN,
-        errorCodes: AuthenticationErrorCode,
-      });
-    }
-
-    if (tokenData.email != body.email) {
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
-        code: AuthenticationErrorCode.IDENTITY_VERIFICATION_FAILED,
-        errorCodes: AuthenticationErrorCode,
-      });
-    }
-
     const identity = await new Identity({}, context).populateByUserEmail(
       context,
       email,
