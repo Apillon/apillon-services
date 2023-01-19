@@ -24,20 +24,54 @@ import { OauthTokenPair } from './models/oauth-token-pairs';
 
 @Injectable()
 export class OauthService {
-  // public async unlink(context: Context) {
-  //   await this.baseOauthService.unlink(context, OauthTokenTypes.TWITTER);
-  //   const user = await new User().populateById(context.user.id);
-  //   user.profile_image = null;
-  //   try {
-  //     await user.validate();
-  //   } catch (err) {
-  //     await user.handle(err);
-  //     throw new ReferralValidationException(user);
-  //   }
-  //   await user.update();
+  public async unlinkTwitter(context: ServiceContext) {
+    const player = await new Player({}, context).populateByUserUuid(
+      context.user.user_uuid,
+    );
 
-  //   return user.serialize(SerializeFor.PROFILE);
-  // }
+    player.twitter_id = null;
+    player.twitter_name = null;
+    try {
+      await player.validate();
+    } catch (err) {
+      await player.handle(err);
+      throw new ReferralValidationException(player);
+    }
+    await player.update();
+    await new Lmas().writeLog({
+      context,
+      logType: LogType.INFO,
+      message: 'Twitter disconnected!',
+      location: 'Referral/OauthService/unlinkTwitter',
+      service: ServiceName.REFERRAL,
+    });
+
+    return player.serialize(SerializeFor.PROFILE);
+  }
+  public async unlinkGithub(context: ServiceContext) {
+    const player = await new Player({}, context).populateByUserUuid(
+      context.user.user_uuid,
+    );
+
+    player.github_id = null;
+    player.github_name = null;
+    try {
+      await player.validate();
+    } catch (err) {
+      await player.handle(err);
+      throw new ReferralValidationException(player);
+    }
+    await player.update();
+    await new Lmas().writeLog({
+      context,
+      logType: LogType.INFO,
+      message: 'Github disconnected!',
+      location: 'Referral/OauthService/unlinkGithub',
+      service: ServiceName.REFERRAL,
+    });
+
+    return player.serialize(SerializeFor.PROFILE);
+  }
 
   /**
    * Link the twitter account to the user (Auth user). The oAuth credentials must received be from the authenticate (/oauth/twitter/authenticate).
@@ -95,6 +129,7 @@ export class OauthService {
     }
 
     player.twitter_id = loggedTokens.userId;
+    player.twitter_name = loggedTokens.screenName;
     // allTwitterData.userName
 
     try {
@@ -109,7 +144,16 @@ export class OauthService {
       await player.update(SerializeFor.UPDATE_DB, conn);
       // Complete twitter task if present
       if (task.exists()) {
-        await task.confirmTask(player.id, null, false, conn);
+        try {
+          await task.confirmTask(
+            player.id,
+            { id: player.twitter_id },
+            false,
+            conn,
+          );
+        } catch (error) {
+          console.log(error);
+        }
       }
       await context.mysql.commit(conn);
       await new Lmas().writeLog({
@@ -187,6 +231,7 @@ export class OauthService {
         }
 
         player.github_id = gitUser?.data?.id;
+        player.github_name = gitUser?.data?.login;
         const conn = await context.mysql.start();
         try {
           try {
@@ -198,12 +243,16 @@ export class OauthService {
           await player.update(SerializeFor.UPDATE_DB, conn);
           // Complete github task if present
           if (task.exists()) {
-            await task.confirmTask(
-              player.id,
-              { id: player.github_id },
-              false,
-              conn,
-            );
+            try {
+              await task.confirmTask(
+                player.id,
+                { id: player.github_id },
+                false,
+                conn,
+              );
+            } catch (error) {
+              console.log(error);
+            }
           }
           // If player was referred, reward the referrer
           if (player.referrer_id) {

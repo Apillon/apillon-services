@@ -244,6 +244,7 @@ export class Product extends AdvancedSQLModel {
       }
       await order.insert(SerializeFor.INSERT_DB, conn);
       await this.getContext().mysql.commit(conn);
+      return order;
     } catch (e) {
       await this.getContext().mysql.rollback(conn);
       throw e;

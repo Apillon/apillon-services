@@ -7,6 +7,8 @@ import {
   AppEnvironment,
   ProductQueryFilter,
   ProductOrderDto,
+  writeLog,
+  LogType,
 } from '@apillon/lib';
 import { ServiceContext } from '../../context';
 import {
@@ -128,7 +130,26 @@ export class ReferralService {
 
     const product = await new Product({}, context).populateById(event.body.id);
 
-    await product.order(player.id, event.body.info);
+    const order = await product.order(player.id, event.body.info);
+
+    if (order.info) {
+      player.shippingInfo = order.info;
+      try {
+        await player.validate();
+      } catch (err) {
+        await player.handle(err);
+        if (!player.isValid()) {
+          writeLog(
+            LogType.ERROR,
+            `Error updating player shipping info`,
+            'referral.service.ts',
+            'orderProduct',
+            err,
+          );
+        }
+      }
+      await player.update();
+    }
 
     await player.populateSubmodels();
     return player;

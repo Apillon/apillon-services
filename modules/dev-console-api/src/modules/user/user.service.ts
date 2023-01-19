@@ -90,7 +90,7 @@ export class UserService {
     context: Context,
     emailVal: ValidateEmailDto,
   ): Promise<any> {
-    const { email, captcha } = emailVal;
+    const { email, captcha, refCode } = emailVal;
     let emailResult;
     let captchaResult;
     // console.log(captcha);
@@ -139,7 +139,9 @@ export class UserService {
       emails: [email],
       template: 'welcome',
       data: {
-        actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}`,
+        actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}${
+          refCode ? '&REF=' + refCode : ''
+        }`,
       },
     });
 
