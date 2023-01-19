@@ -273,7 +273,11 @@ export class Product extends AdvancedSQLModel {
             )})
           ), 
           JSON_ARRAY()
-        ) as attributes
+        ) as attributes,
+        (
+          SELECT SUM(o.volume) FROM \`${DbTables.ORDER}\` o
+          WHERE o.product_id = pr.id
+        ) as orderCount
         `,
       qFrom: `
         FROM \`${DbTables.PRODUCT}\` pr

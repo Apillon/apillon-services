@@ -75,8 +75,7 @@ export class ReferralController {
 
   @Post('github/unlink')
   @Permissions({ role: DefaultUserRole.USER })
-  @UseGuards(AuthGuard, ValidationGuard)
-  @Validation({ dto: GithubOauthDto })
+  @UseGuards(AuthGuard)
   async unlinkGithub(@Ctx() context: DevConsoleApiContext) {
     return await this.referralService.unlinkGithub(context);
   }
@@ -94,8 +93,7 @@ export class ReferralController {
 
   @Post('twitter/unlink')
   @Permissions({ role: DefaultUserRole.USER })
-  @UseGuards(AuthGuard, ValidationGuard)
-  @Validation({ dto: TwitterOauthDto })
+  @UseGuards()
   async unlinkTwitter(@Ctx() context: DevConsoleApiContext) {
     return await this.referralService.unlinkTwitter(context);
   }
