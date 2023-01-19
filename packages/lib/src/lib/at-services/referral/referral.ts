@@ -67,10 +67,26 @@ export class ReferralMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async unlinkGithub() {
+    const data = {
+      eventName: ReferralEventType.DISCONNECT_GITHUB,
+      body: {},
+    };
+    return await this.callService(data);
+  }
+
   public async linkTwitter(params: TwitterOauthDto) {
     const data = {
       eventName: ReferralEventType.CONNECT_TWITTER,
       body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async unlinkTwitter() {
+    const data = {
+      eventName: ReferralEventType.DISCONNECT_TWITTER,
+      body: {},
     };
     return await this.callService(data);
   }

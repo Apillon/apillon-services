@@ -73,6 +73,14 @@ export class ReferralController {
     return await this.referralService.linkGithub(context, body);
   }
 
+  @Post('github/unlink')
+  @Permissions({ role: DefaultUserRole.USER })
+  @UseGuards(AuthGuard, ValidationGuard)
+  @Validation({ dto: GithubOauthDto })
+  async unlinkGithub(@Ctx() context: DevConsoleApiContext) {
+    return await this.referralService.unlinkGithub(context);
+  }
+
   @Post('twitter/link')
   @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard, ValidationGuard)
@@ -82,6 +90,14 @@ export class ReferralController {
     @Body() body: TwitterOauthDto,
   ) {
     return await this.referralService.linkTwitter(context, body);
+  }
+
+  @Post('twitter/unlink')
+  @Permissions({ role: DefaultUserRole.USER })
+  @UseGuards(AuthGuard, ValidationGuard)
+  @Validation({ dto: TwitterOauthDto })
+  async unlinkTwitter(@Ctx() context: DevConsoleApiContext) {
+    return await this.referralService.unlinkTwitter(context);
   }
 
   @Get('twitter/authenticate')
