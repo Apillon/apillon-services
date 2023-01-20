@@ -332,6 +332,7 @@ export class IdentityService {
         keyType: authentication.type,
       }),
     );
+<<<<<<< Updated upstream
     await Blockchain.signAndSubmitTx(fullDidCreationTx, attesterAccount);
 
     const didUri = Did.getFullDidUriFromKey(authentication);
@@ -341,6 +342,184 @@ export class IdentityService {
     if (!document) {
       // DEV - no trigger to LMAS
       throw 'Full DID was not successfully created.';
+=======
+
+    while (balance < 3) {
+      const reqTestTokens = `https://faucet-backend.peregrine.kilt.io/faucet/drop`;
+      await (async () => {
+        axios
+          .post(reqTestTokens, { address: account.address })
+          .then((resp: any) => {
+            console.log('Response ', resp.status);
+          })
+          .catch((error: any) => {
+            return {
+              error: `Error when requesting token from peregrine faucet: ${error}`,
+            };
+          });
+      })();
+
+      balance = parseInt(
+        (await api.query.system.account(account.address)).data.free.toString(),
+      );
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      console.log(`Balance: ${balance}`);
+    }
+
+    let didUri: DidUri;
+    let wellKnownDidconfig;
+    let didDoc = await Did.resolve(Did.getFullDidUriFromKey(authentication));
+    if (!didDoc || !didDoc.document) {
+      const fullDidCreationTx = await Did.getStoreTx(
+        {
+          authentication: [authentication],
+          keyAgreement: [encryption],
+          assertionMethod: [assertion],
+          capabilityDelegation: [delegation],
+        },
+        account.address,
+        async ({ data }) => ({
+          signature: authentication.sign(data),
+          keyType: authentication.type,
+        }),
+      );
+
+      console.log('Submitting document create TX to bc ...');
+      await Blockchain.signAndSubmitTx(fullDidCreationTx, account);
+
+      didUri = Did.getFullDidUriFromKey(authentication);
+      const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
+      const { document } = Did.linkedInfoFromChain(encodedFullDid);
+
+      if (!document) {
+        // DEV - no trigger to LMAS
+        throw 'Full DID was not successfully created.';
+      }
+
+      didDoc = await Did.resolve(Did.getFullDidUriFromKey(authentication));
+    }
+
+    if (body.domain_linkage) {
+      const domainLinkage = body.domain_linkage;
+      if (!domainLinkage.origin) {
+        return { error: 'domain_linkage: Origin must be provided!!' };
+      }
+
+      console.log(`Creating domain linkage for ${domainLinkage.origin}`);
+
+      const domainLinkageCType = getCtypeSchema(
+        ApillonSupportedCTypes.DOMAIN_LINKAGE,
+      );
+      const claimContents: IClaimContents = {
+        id: didUri,
+        origin: domainLinkage.origin,
+      };
+
+      const claim = Claim.fromCTypeAndClaimContents(
+        domainLinkageCType,
+        claimContents,
+        didUri,
+      );
+      const domainLinkageCredential = Credential.fromClaim(
+        claim,
+      ) as ICredential;
+
+      const { cTypeHash, claimHash } = Attestation.fromCredentialAndDid(
+        domainLinkageCredential,
+        didUri,
+      );
+      const dLAttestTx = api.tx.attestation.add(claimHash, cTypeHash, null);
+
+      console.log('Submitting domain linkage attestation to BC ...');
+      // We authorize the call using the attestation key of the Dapps DID.
+      const submitDLAttestTx = await Did.authorizeTx(
+        didUri,
+        dLAttestTx,
+        async ({ data }) => ({
+          signature: assertion.sign(data),
+          keyType: assertion.type,
+        }),
+        account.address,
+      );
+
+      // Since DIDs can not hold any balance, we pay for the transaction using our blockchain account
+      const result = await Blockchain.signAndSubmitTx(
+        submitDLAttestTx,
+        account,
+      );
+
+      if (result.isError) {
+        throw 'Attestation failed';
+      } else {
+        console.log('Attestation successful');
+      }
+
+      const challenge =
+        '0x3ce56bb25ea3b603f968c302578e77e28d3d7ba3c7a8c45d6ebd3f410da766e1';
+      const domainLinkagePresentation = await Credential.createPresentation({
+        credential: domainLinkageCredential,
+        signCallback: async ({ data }) =>
+          ({
+            signature: authentication.sign(data),
+            keyType: authentication.type,
+            keyUri: `${didUri}${didDoc.document?.authentication[0].id}`,
+          } as SignResponseData),
+        challenge,
+      });
+
+      const credentialSubject = {
+        ...domainLinkagePresentation.claim.contents,
+        rootHash: domainLinkagePresentation.rootHash,
+      };
+
+      const encodedAttestationDetails =
+        await api.query.attestation.attestations(
+          domainLinkagePresentation.rootHash,
+        );
+
+      const issuer = Attestation.fromChain(
+        encodedAttestationDetails,
+        domainLinkagePresentation.claim.cTypeHash,
+      ).owner;
+
+      const issuanceDate = new Date().toISOString();
+
+      const signature = domainLinkagePresentation.claimerSignature;
+      if (!signature) {
+        throw new Error('Signature is required.');
+      }
+
+      const proof = {
+        type: 'ApillonSelfSigned2023',
+        proofPurpose: 'assertionMethod',
+        verificationMethod: signature.keyUri,
+        signature: signature.signature,
+        challenge: signature.challenge,
+      };
+
+      wellKnownDidconfig = {
+        '@context':
+          'https://identity.foundation/.well-known/did-configuration/v1',
+        linked_dids: [
+          {
+            '@context': [
+              'https://www.w3.org/2018/credentials/v1',
+              'https://identity.foundation/.well-known/did-configuration/v1',
+            ],
+            issuer,
+            issuanceDate,
+            type: [
+              'VerifiableCredential',
+              'DomainLinkageCredential',
+              'ApillonCredential2023',
+            ],
+            credentialSubject,
+            proof,
+          },
+        ],
+      };
+>>>>>>> Stashed changes
     }
 
     return {
