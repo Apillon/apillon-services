@@ -8,6 +8,7 @@ import { IdentityService } from './identity.service';
 import { AttestationEmailDto } from './dtos/identity-email.dto';
 import { IdentityCreateDto } from './dtos/identity-create.dto';
 import { JwtTokenType } from '../../config/types';
+import { DevEnvGuard } from '../../guards/dev-env.guard';
 
 @Controller('identity')
 export class IdentityController {
@@ -63,10 +64,8 @@ export class IdentityController {
   }
 
   @Post('dev/create-did')
-  // NOTE: This is a dev handler!!! Create guards that prevent use of this if in
-  // production ...
-  // @Validation({ dto: DidCreateDto })
-  // @UseGuards(ValidationGuard)
+  // NOTE: If this is used in production, there will be blood!!!
+  @UseGuards(DevEnvGuard)
   async attestationGenerateDevDid(
     @Ctx() context: AuthenticationApiContext,
     @Body() body: any,

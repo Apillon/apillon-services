@@ -4,7 +4,6 @@ import {
   CodeException,
   SerializeFor,
   LogType,
-  parseJwtToken,
   env,
   AppEnvironment,
   Lmas,
@@ -232,13 +231,6 @@ export class IdentityService {
     // only allows 100PILT token per account, we need a new one everytime funds
     // are depleted ...
     // NOTE: Use this function to generate a testnet DID
-    if (
-      env.APP_ENV != AppEnvironment.TEST &&
-      env.APP_ENV != AppEnvironment.LOCAL_DEV
-    ) {
-      throw 'Invalid request!';
-    }
-
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
     const { authentication, encryption, assertion, delegation } =
