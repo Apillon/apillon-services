@@ -10,17 +10,17 @@ let steps = 1;
 
 const run = async () => {
   await downgradeDatabase(
-    env.ACCESS_MYSQL_DATABASE,
-    env.ACCESS_MYSQL_HOST,
-    env.ACCESS_MYSQL_PORT,
-    env.ACCESS_MYSQL_USER,
-    env.ACCESS_MYSQL_PASSWORD,
+    env.BLOCKCHAIN_MYSQL_DATABASE,
+    env.BLOCKCHAIN_MYSQL_HOST,
+    env.BLOCKCHAIN_MYSQL_PORT,
+    env.BLOCKCHAIN_MYSQL_USER,
+    env.BLOCKCHAIN_MYSQL_PASSWORD,
     steps,
   );
 };
 
 rl.question(
-  `You are about to downgrade database ${env.ACCESS_MYSQL_DATABASE} @ ${env.ACCESS_MYSQL_HOST}.\n Set number of versions to downgrade (-1 for all, 0 to exit):`,
+  `You are about to downgrade database ${env.BLOCKCHAIN_MYSQL_DATABASE} @ ${env.BLOCKCHAIN_MYSQL_HOST}.\n Set number of versions to downgrade (-1 for all, 0 to exit):`,
   (answer) => {
     steps = parseInt(answer);
     if (steps) {

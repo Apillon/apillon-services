@@ -8,23 +8,23 @@ const rl = readline.createInterface({
 
 const run = async () => {
   await rebuildDatabase(
-    env.ACCESS_MYSQL_DATABASE,
-    env.ACCESS_MYSQL_HOST,
-    env.ACCESS_MYSQL_PORT,
-    env.ACCESS_MYSQL_USER,
-    env.ACCESS_MYSQL_PASSWORD,
+    env.BLOCKCHAIN_MYSQL_DATABASE,
+    env.BLOCKCHAIN_MYSQL_HOST,
+    env.BLOCKCHAIN_MYSQL_PORT,
+    env.BLOCKCHAIN_MYSQL_USER,
+    env.BLOCKCHAIN_MYSQL_PASSWORD,
   );
   await seedDatabase(
-    env.ACCESS_MYSQL_DATABASE,
-    env.ACCESS_MYSQL_HOST,
-    env.ACCESS_MYSQL_PORT,
-    env.ACCESS_MYSQL_USER,
-    env.ACCESS_MYSQL_PASSWORD,
+    env.BLOCKCHAIN_MYSQL_DATABASE,
+    env.BLOCKCHAIN_MYSQL_HOST,
+    env.BLOCKCHAIN_MYSQL_PORT,
+    env.BLOCKCHAIN_MYSQL_USER,
+    env.BLOCKCHAIN_MYSQL_PASSWORD,
   );
 };
 
 rl.question(
-  `You are about to reset database ${env.ACCESS_MYSQL_DATABASE} @ ${env.ACCESS_MYSQL_HOST}.\n Are you sure? (Yes/No):`,
+  `You are about to reset database ${env.BLOCKCHAIN_MYSQL_DATABASE} @ ${env.BLOCKCHAIN_MYSQL_HOST}.\n Are you sure? (Yes/No):`,
   (answer) => {
     if (answer.toLowerCase() === 'yes') {
       console.log('Rebuilding database ...');

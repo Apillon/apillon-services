@@ -8,15 +8,15 @@ import { handler } from './handler';
 
 const port =
   env.APP_ENV === AppEnvironment.TEST
-    ? env.ACCESS_SOCKET_PORT_TEST
-    : env.ACCESS_SOCKET_PORT;
+    ? env.BLOCKCHAIN_SOCKET_PORT_TEST
+    : env.BLOCKCHAIN_SOCKET_PORT;
 
 export function startDevServer() {
   console.log('starting Dev socket server...');
   const server = Net.createServer((socket) => {
     socket.on('data', async (chunk) => {
       console.log(
-        `AMS Socket server request: ${JSON.stringify(
+        `Blockchain Socket server request: ${JSON.stringify(
           JSON.parse(chunk.toString()),
         )}`,
       );
@@ -24,9 +24,11 @@ export function startDevServer() {
         const result = await handler(JSON.parse(chunk.toString()), {} as any);
         socket.write(JSON.stringify(result));
         socket.end();
-        console.log(`AMS Socket server response: ${JSON.stringify(result)}`);
+        console.log(
+          `Blockchain Socket server response: ${JSON.stringify(result)}`,
+        );
       } catch (err) {
-        console.error('AMS Socket server ERROR:');
+        console.error('Blockchain Socket server ERROR:');
         console.error(err);
         socket.end();
       }
@@ -34,18 +36,18 @@ export function startDevServer() {
     // When the client requests to end the TCP connection with the server, the server
     // ends the connection.
     socket.on('end', function () {
-      console.log('AMS: Closing connection with the client');
+      console.log('Blockchain: Closing connection with the client');
     });
 
     // ERROR
     socket.on('error', function (err) {
-      console.log(`AMS: Error: ${err}`);
+      console.log(`Blockchain: Error: ${err}`);
     });
   });
 
   server.listen(port, () => {
     console.log(
-      `AMS: Socket server listening for connection requests on socket localhost:${port}`,
+      `Blockchain: Socket server listening for connection requests on socket localhost:${port}`,
     );
   });
 }

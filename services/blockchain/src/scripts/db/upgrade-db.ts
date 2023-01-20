@@ -11,18 +11,18 @@ let steps = 0;
 
 const run = async () => {
   await upgradeDatabase(
-    env.ACCESS_MYSQL_DATABASE,
-    env.ACCESS_MYSQL_HOST,
-    env.ACCESS_MYSQL_PORT,
-    env.ACCESS_MYSQL_USER,
-    env.ACCESS_MYSQL_PASSWORD,
+    env.BLOCKCHAIN_MYSQL_DATABASE,
+    env.BLOCKCHAIN_MYSQL_HOST,
+    env.BLOCKCHAIN_MYSQL_PORT,
+    env.BLOCKCHAIN_MYSQL_USER,
+    env.BLOCKCHAIN_MYSQL_PASSWORD,
     steps,
   );
 };
 
 rl.question(
   `You are about to upgrade database ${bgYellow(
-    black(` ${env.ACCESS_MYSQL_DATABASE} @ ${env.ACCESS_MYSQL_HOST} `),
+    black(` ${env.BLOCKCHAIN_MYSQL_DATABASE} @ ${env.BLOCKCHAIN_MYSQL_HOST} `),
   )}.
 
 Set number of versions to upgrade ('Y' for all, '<number>' for number of versions, 'N' to exit):`,
