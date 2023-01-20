@@ -134,7 +134,6 @@ export class AuthenticationWorker extends BaseQueueWorker {
             service: ServiceName.AUTHENTICATION_API,
             data: error,
           });
-
           throw error;
         }
       }

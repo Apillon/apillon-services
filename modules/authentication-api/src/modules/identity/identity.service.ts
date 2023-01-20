@@ -20,7 +20,7 @@ import {
   AuthAppErrors,
 } from '../../config/types';
 import { generateKeypairs, generateAccount } from '../../lib/kilt';
-import { KiltKeyringPair } from '@kiltprotocol/types';
+import { DidUri, KiltKeyringPair } from '@kiltprotocol/types';
 import { Blockchain, ConfigService, connect, Did } from '@kiltprotocol/sdk-js';
 
 import {
@@ -34,10 +34,11 @@ import { WorkerName } from '../../workers/worker-executor';
 import { AuthenticationWorker } from '../../workers/authentication.worker';
 import { u8aToHex } from '@polkadot/util';
 import { IdentityCreateDto } from './dtos/identity-create.dto';
+import { IdentityDidRevokeDto } from './dtos/identity-did-revoke.dto';
 
 @Injectable()
 export class IdentityService {
-  async startUserIdentityGenProcess(
+  async startUserIdentityProcess(
     context: AuthenticationApiContext,
     body: AttestationEmailDto,
   ): Promise<any> {
@@ -106,7 +107,7 @@ export class IdentityService {
     return { success: true };
   }
 
-  async getUserIdentityGenState(
+  async getIdentityGenProcessState(
     context: AuthenticationApiContext,
     email: string,
   ): Promise<any> {
@@ -209,7 +210,73 @@ export class IdentityService {
     return { success: true };
   }
 
-  async getUserCredential(context: AuthenticationApiContext, email: string) {
+  async revokeIdentity(
+    context: AuthenticationApiContext,
+    body: IdentityDidRevokeDto,
+  ) {
+    const identity = await new Identity({}, context).populateByUserEmail(
+      context,
+      body.email,
+    );
+
+    if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
+      throw new CodeException({
+        status: HttpStatus.NOT_FOUND,
+        code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
+        errorCodes: AuthenticationErrorCode,
+      });
+    }
+
+    await connect(env.KILT_NETWORK);
+    const api = ConfigService.get('api');
+    const attesterKeypairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
+    const attesterAccount = (await generateAccount(
+      env.KILT_ATTESTER_MNEMONIC,
+    )) as KiltKeyringPair;
+
+    const didUri = body.didUri as DidUri;
+    const did = Did.toChain(didUri);
+    const endpointsCountForDid = await api.query.did.didEndpointsCount(did);
+    const didDeletionExtrinsic = api.tx.did.delete(endpointsCountForDid);
+
+    const didSignedDeletionExtrinsic = await Did.authorizeTx(
+      didUri,
+      didDeletionExtrinsic,
+      async ({ data }) => ({
+        signature: attesterKeypairs.assertion.sign(data),
+        keyType: attesterKeypairs.assertion.type,
+      }),
+      attesterAccount.address,
+    );
+
+    try {
+      await new Lmas().writeLog({
+        logType: LogType.INFO,
+        message: `Propagating DID delete TX to KILT BC ...`,
+        location: 'AUTHENTICATION-API/identity/',
+        service: ServiceName.AUTHENTICATION_API,
+      });
+      await Blockchain.signAndSubmitTx(
+        didSignedDeletionExtrinsic,
+        attesterAccount,
+      );
+    } catch (error) {
+      await new Lmas().writeLog({
+        logType: LogType.ERROR,
+        location: 'Authentication-API/identity/authentication.worker',
+        service: ServiceName.AUTHENTICATION_API,
+        data: error,
+      });
+      throw error;
+    }
+
+    return { success: true };
+  }
+
+  async getUserIdentityCredential(
+    context: AuthenticationApiContext,
+    email: string,
+  ) {
     const identity = await new Identity({}, context).populateByUserEmail(
       context,
       email,

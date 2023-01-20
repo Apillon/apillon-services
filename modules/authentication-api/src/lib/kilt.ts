@@ -19,6 +19,7 @@ import {
   KILT_DERIVATION_SIGN_ALGORITHM,
   EclipticDerivationPaths,
 } from '../config/types';
+import { Key } from 'readline';
 
 export async function generateMnemonic() {
   return mnemonicGenerate();
@@ -77,6 +78,30 @@ export async function getFullDidDocument(keypairs: Keypairs) {
   }
 
   return document;
+}
+
+export async function revokeDidDocument(
+  keypairs: Keypairs,
+  didUri: DidUri,
+): Promise<boolean> {
+  await connect(env.KILT_NETWORK);
+  const api = ConfigService.get('api');
+  const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
+  const { document } = Did.linkedInfoFromChain(encodedFullDid);
+
+  if (!document) {
+    await new Lmas().writeLog({
+      logType: LogType.INFO,
+      // This is not an error!! getFullDidDocument is used to query document state
+      message: `KILT => DID DOCUMENT DOES NOT EXIST`,
+      location: 'AUTHENTICATION-API/identity/identity.service.ts',
+      service: ServiceName.AUTHENTICATION_API,
+    });
+
+    return false;
+  }
+
+  return true;
 }
 
 export function createAttestationRequest(

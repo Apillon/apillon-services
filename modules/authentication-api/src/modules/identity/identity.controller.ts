@@ -9,58 +9,66 @@ import { AttestationEmailDto } from './dtos/identity-email.dto';
 import { IdentityCreateDto } from './dtos/identity-create.dto';
 import { JwtTokenType } from '../../config/types';
 import { DevEnvGuard } from '../../guards/dev-env.guard';
+import { IdentityDidRevokeDto } from './dtos/identity-did-revoke.dto';
 
 @Controller('identity')
 export class IdentityController {
   constructor(private identityService: IdentityService) {}
 
-  @Post('start')
+  @Post('generate/start-process')
   @Validation({ dto: AttestationEmailDto })
   @UseGuards(ValidationGuard)
-  async identityGenStart(
+  async identityProcessStart(
     @Ctx() context: AuthenticationApiContext,
     @Body() body: AttestationEmailDto,
   ) {
-    return await this.identityService.startUserIdentityGenProcess(
-      context,
-      body,
-    );
+    return await this.identityService.startUserIdentityProcess(context, body);
   }
 
-  @Post('generate')
+  @Post('generate/identity')
   @Validation({ dto: IdentityCreateDto })
   @UseGuards(
     ValidationGuard,
     AuthGuard(JwtTokenType.IDENTITY_ATTESTATION_PROCESS),
   )
-  async attestationGenerateDid(
+  async attestationGenerateIdentity(
     @Ctx() context: AuthenticationApiContext,
     @Body() body: any,
   ) {
     return await this.identityService.generateIdentity(context, body);
   }
 
-  @Get('state')
+  @Get('query/process-state')
   @Validation({ dto: AttestationEmailDto, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard)
   async attestationGetIdentityState(
     @Ctx() context: AuthenticationApiContext,
     @Query('email') email: string,
   ) {
-    return await this.identityService.getUserIdentityGenState(context, email);
+    return await this.identityService.getIdentityGenProcessState(
+      context,
+      email,
+    );
   }
 
-  @Get('credential')
+  @Get('query/credential')
   @Validation({ dto: AttestationEmailDto, validateFor: ValidateFor.QUERY })
-  @UseGuards(
-    ValidationGuard,
-    AuthGuard(JwtTokenType.IDENTITY_ATTESTATION_PROCESS),
-  )
-  async attestationGetUserCredential(
+  @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.IDENTITY_PROCESS))
+  async identityGetUserCredential(
     @Ctx() context: AuthenticationApiContext,
     @Query('email') email: string,
   ) {
-    return await this.identityService.getUserCredential(context, email);
+    return await this.identityService.getUserIdentityCredential(context, email);
+  }
+
+  @Post('did/revoke')
+  @Validation({ dto: IdentityDidRevokeDto, validateFor: ValidateFor.QUERY })
+  // @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.IDENTITY_PROCESS))
+  async identityRevoke(
+    @Ctx() context: AuthenticationApiContext,
+    @Body() body: any,
+  ) {
+    return await this.identityService.revokeIdentity(context, body);
   }
 
   @Post('dev/create-did')

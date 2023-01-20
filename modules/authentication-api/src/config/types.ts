@@ -67,7 +67,7 @@ export enum IdentityState {
  * JWT Token signing types.
  */
 export enum JwtTokenType {
-  IDENTITY_ATTESTATION_PROCESS = 'IDENTITY_EMAIL_VERIFICATION',
+  IDENTITY_PROCESS = 'IDENTITY_PROCESS',
 }
 
 export enum IdentityEventType {
