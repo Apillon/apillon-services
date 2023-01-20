@@ -1,4 +1,4 @@
-import { Contract, ethers } from 'ethers';
+import { Contract, ethers, UnsignedTransaction } from 'ethers';
 import { PayableNft } from '../../lib/contracts/payable-mint-nft';
 
 export class NftsService {
@@ -23,11 +23,25 @@ export class NftsService {
 
     const nftContract = new Contract(PayableNft.abi, PayableNft.bytecode);
 
-    const transaction = nftContract.deploy(
-      params.nftName,
-      params.nftSymbol,
-      params.maxSupply,
-      params.mintPrice,
+    const unsignedContractTx: UnsignedTransaction =
+      await nftContract.getDeployTransaction([
+        params.nftSymbol,
+        params.nftName,
+        params.maxSupply,
+        params.mintPrice,
+      ]);
+
+    // Gas price limit could be database property limit if needed
+    //     gasLimit?: BigNumberish;
+    //     gasPrice?: BigNumberish;
+    //     maxPriorityFeePerGas?: BigNumberish;
+    //     maxFeePerGas?: BigNumberish;
+    console.log(
+      `Current gas prices and limits on moonbeam: 
+        gasLimit=${unsignedContractTx.gasLimit}, 
+        gasPrice=${unsignedContractTx.gasPrice}, 
+        maxPriorityFeePerGas=${unsignedContractTx.maxPriorityFeePerGas}
+        maxFeePerGas=${unsignedContractTx.maxFeePerGas}`,
     );
   }
 }
