@@ -27,10 +27,7 @@ export class IdentityController {
 
   @Post('generate/identity')
   @Validation({ dto: IdentityCreateDto })
-  @UseGuards(
-    ValidationGuard,
-    AuthGuard(JwtTokenType.IDENTITY_ATTESTATION_PROCESS),
-  )
+  @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.IDENTITY_PROCESS))
   async attestationGenerateIdentity(
     @Ctx() context: AuthenticationApiContext,
     @Body() body: any,
@@ -78,6 +75,6 @@ export class IdentityController {
     @Ctx() context: AuthenticationApiContext,
     @Body() body: any,
   ) {
-    return await this.identityService.generateDIDDocumentDEV(context, body);
+    return await this.identityService.generateDevResources(context, body);
   }
 }

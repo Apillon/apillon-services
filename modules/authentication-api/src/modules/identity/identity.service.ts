@@ -4,24 +4,42 @@ import {
   CodeException,
   SerializeFor,
   LogType,
+  parseJwtToken,
   env,
   AppEnvironment,
   Lmas,
   ServiceName,
 } from '@apillon/lib';
+import axios from 'axios';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthenticationApiContext } from '../../context';
-import { AttestationEmailDto } from './dtos/identity-email.dto';
+import { AttestationEmailDto } from './dtos/attestation-email.dto';
 import { Identity } from './models/identity.model';
 import {
   IdentityState,
   JwtTokenType,
   AuthenticationErrorCode,
-  AuthAppErrors,
+  ApillonSupportedCTypes,
 } from '../../config/types';
-import { generateKeypairs, generateAccount } from '../../lib/kilt';
-import { DidUri, KiltKeyringPair } from '@kiltprotocol/types';
-import { Blockchain, ConfigService, connect, Did } from '@kiltprotocol/sdk-js';
+import {
+  generateKeypairs,
+  generateAccount,
+  generateMnemonic,
+  getCtypeSchema,
+} from '../../lib/kilt';
+import { ICredential, KiltKeyringPair } from '@kiltprotocol/types';
+import {
+  Blockchain,
+  Claim,
+  ConfigService,
+  connect,
+  Did,
+  DidUri,
+  IClaimContents,
+  Credential,
+  Attestation,
+  SignResponseData,
+} from '@kiltprotocol/sdk-js';
 
 import {
   QueueWorkerType,
@@ -43,7 +61,7 @@ export class IdentityService {
     body: AttestationEmailDto,
   ): Promise<any> {
     const email = body.email;
-    const token = generateJwtToken(JwtTokenType.IDENTITY_ATTESTATION_PROCESS, {
+    const token = generateJwtToken(JwtTokenType.IDENTITY_EMAIL_VERIFICATION, {
       email,
     });
 
@@ -55,12 +73,10 @@ export class IdentityService {
     if (identity.exists()) {
       // If email was already attested -> deny process
       if (identity.state == IdentityState.ATTESTED) {
-        // TODO: Double check this with Vinko
-        // I want to send an actual error message to FE -> AuthAppErrors.IDENTITY_EMAIL_IS_ALREADY_ATTESTED
         throw new CodeException({
           status: HttpStatus.BAD_REQUEST,
           code: AuthenticationErrorCode.IDENTITY_EMAIL_IS_ALREADY_ATTESTED,
-          errorMessage: AuthAppErrors.IDENTITY_EMAIL_IS_ALREADY_ATTESTED,
+          errorCodes: AuthenticationErrorCode,
         });
       }
     } else {
@@ -141,6 +157,25 @@ export class IdentityService {
       didUri: body.didUri,
     };
 
+    let tokenData: any;
+    try {
+      tokenData = parseJwtToken(JwtTokenType.IDENTITY_PROCESS, body.token);
+    } catch (error) {
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: AuthenticationErrorCode.IDENTITY_INVALID_VERIFICATION_TOKEN,
+        errorCodes: AuthenticationErrorCode,
+      });
+    }
+
+    if (tokenData.email != body.email) {
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: AuthenticationErrorCode.IDENTITY_VERIFICATION_FAILED,
+        errorCodes: AuthenticationErrorCode,
+      });
+    }
+
     // Check if correct identity + state exists -> IN_PROGRESS
     const identity = await new Identity({}, context).populateByUserEmail(
       context,
@@ -210,6 +245,26 @@ export class IdentityService {
     return { success: true };
   }
 
+  async getUserIdentityCredential(
+    context: AuthenticationApiContext,
+    email: string,
+  ) {
+    const identity = await new Identity({}, context).populateByUserEmail(
+      context,
+      email,
+    );
+
+    if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
+      throw new CodeException({
+        status: HttpStatus.NOT_FOUND,
+        code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
+        errorCodes: AuthenticationErrorCode,
+      });
+    }
+
+    return { credential: identity.credential };
+  }
+
   async revokeIdentity(
     context: AuthenticationApiContext,
     body: IdentityDidRevokeDto,
@@ -273,76 +328,33 @@ export class IdentityService {
     return { success: true };
   }
 
-  async getUserIdentityCredential(
-    context: AuthenticationApiContext,
-    email: string,
-  ) {
-    const identity = await new Identity({}, context).populateByUserEmail(
-      context,
-      email,
-    );
-
-    if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
-      throw new CodeException({
-        status: HttpStatus.NOT_FOUND,
-        code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
-        errorCodes: AuthenticationErrorCode,
-      });
-    }
-
-    return { credential: identity.credential };
-  }
-
-  async generateDIDDocumentDEV(context: AuthenticationApiContext, body: any) {
+  async generateDevResources(context: AuthenticationApiContext, body: any) {
     // Used to issue did documents to test accounts -> Since the peregrine faucet
     // only allows 100PILT token per account, we need a new one everytime funds
     // are depleted ...
     // NOTE: Use this function to generate a testnet DID
+    if (
+      env.APP_ENV != AppEnvironment.TEST &&
+      env.APP_ENV != AppEnvironment.LOCAL_DEV
+    ) {
+      throw 'Invalid request!';
+    }
+
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
+
+    // Generate mnemonic
+    const mnemonic = generateMnemonic();
+    // generate keypairs
     const { authentication, encryption, assertion, delegation } =
-      await generateKeypairs(body.mnemonic);
-    const acc = (await generateAccount(body.mnemonic)) as KiltKeyringPair;
-    const attesterAccount = (await generateAccount(
-      env.KILT_ATTESTER_MNEMONIC,
-    )) as KiltKeyringPair;
+      await generateKeypairs(mnemonic);
+    // generate account
+    const account = (await generateAccount(mnemonic)) as KiltKeyringPair;
 
-    if (body.initial) {
-      return {
-        address: acc.address,
-        pubkey: u8aToHex(encryption.publicKey),
-      };
-    }
-
-    const didDoc = await Did.resolve(Did.getFullDidUriFromKey(authentication));
-
-    if (didDoc && didDoc.document) {
-    }
-
-    const fullDidCreationTx = await Did.getStoreTx(
-      {
-        authentication: [authentication],
-        keyAgreement: [encryption],
-        assertionMethod: [assertion],
-        capabilityDelegation: [delegation],
-      },
-      attesterAccount.address,
-      async ({ data }) => ({
-        signature: authentication.sign(data),
-        keyType: authentication.type,
-      }),
+    // First check if we have the required balance
+    let balance = parseInt(
+      (await api.query.system.account(account.address)).data.free.toString(),
     );
-<<<<<<< Updated upstream
-    await Blockchain.signAndSubmitTx(fullDidCreationTx, attesterAccount);
-
-    const didUri = Did.getFullDidUriFromKey(authentication);
-    const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
-    const { document } = Did.linkedInfoFromChain(encodedFullDid);
-
-    if (!document) {
-      // DEV - no trigger to LMAS
-      throw 'Full DID was not successfully created.';
-=======
 
     while (balance < 3) {
       const reqTestTokens = `https://faucet-backend.peregrine.kilt.io/faucet/drop`;
@@ -358,7 +370,6 @@ export class IdentityService {
             };
           });
       })();
-
       balance = parseInt(
         (await api.query.system.account(account.address)).data.free.toString(),
       );
@@ -368,7 +379,7 @@ export class IdentityService {
     }
 
     let didUri: DidUri;
-    let wellKnownDidconfig;
+    let wellKnownDidconfig: any;
     let didDoc = await Did.resolve(Did.getFullDidUriFromKey(authentication));
     if (!didDoc || !didDoc.document) {
       const fullDidCreationTx = await Did.getStoreTx(
@@ -519,12 +530,13 @@ export class IdentityService {
           },
         ],
       };
->>>>>>> Stashed changes
     }
 
     return {
-      address: attesterAccount.address,
+      mnemonic: mnemonic,
+      address: account.address,
       pubkey: u8aToHex(encryption.publicKey),
+      wellKnownDidconfig: wellKnownDidconfig,
     };
   }
 }

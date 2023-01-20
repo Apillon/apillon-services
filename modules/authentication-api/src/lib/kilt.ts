@@ -18,10 +18,11 @@ import {
   Keypairs,
   KILT_DERIVATION_SIGN_ALGORITHM,
   EclipticDerivationPaths,
+  ApillonSupportedCTypes,
 } from '../config/types';
 import { Key } from 'readline';
 
-export async function generateMnemonic() {
+export function generateMnemonic() {
   return mnemonicGenerate();
 }
 
@@ -109,14 +110,14 @@ export function createAttestationRequest(
   attesterDidUri: DidUri,
   claimerDidUri: DidUri,
 ) {
-  const authCType = getCtypeSchema();
-  const authContents = {
+  const emailCType = getCtypeSchema(ApillonSupportedCTypes.EMAIL);
+  const emailContents = {
     Email: email,
   };
 
   const authClaim = Claim.fromCTypeAndClaimContents(
-    authCType,
-    authContents,
+    emailCType,
+    emailContents,
     claimerDidUri,
   );
 
@@ -131,13 +132,40 @@ export function createAttestationRequest(
   };
 }
 
-export function getCtypeSchema(): ICType {
+export function getCtypeSchema(ctype: string): ICType {
   // NOTE: These are official CTypes created by Kilt
-  return CType.fromProperties('Email', {
-    Email: {
-      type: 'string',
-    },
-  });
+  switch (ctype) {
+    case ApillonSupportedCTypes.EMAIL: {
+      return CType.fromProperties('Email', {
+        Email: {
+          type: 'string',
+        },
+      });
+    }
+    case ApillonSupportedCTypes.DOMAIN_LINKAGE: {
+      // From https://github.com/KILTprotocol/ctype-index/blob/main/ctypes/0x9d271c790775ee831352291f01c5d04c7979713a5896dcf5e81708184cc5c643/ctype.json
+      const domainLinkage: ICType = {
+        $id: 'kilt:ctype:0x9d271c790775ee831352291f01c5d04c7979713a5896dcf5e81708184cc5c643',
+        $schema: 'http://kilt-protocol.org/draft-01/ctype#',
+        title: 'Domain Linkage Credential',
+        properties: {
+          id: {
+            type: 'string',
+          },
+          origin: {
+            type: 'string',
+          },
+        },
+        type: 'object',
+      };
+
+      return domainLinkage;
+    }
+
+    default: {
+      throw `Invalid CType: ${ctype}`;
+    }
+  }
 }
 
 export async function getNextNonce(didUri: DidUri) {

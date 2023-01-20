@@ -6,6 +6,8 @@ import {
   ListObjectsCommand,
   DeleteObjectCommand,
   DeleteObjectsCommand,
+  ListObjectsV2Output,
+  ListObjectsV2Command,
 } from '@aws-sdk/client-s3';
 import type {
   GetObjectOutput,
@@ -114,12 +116,18 @@ export class AWS_S3 {
    *  Lists up to 1000 files for specific prefix
    * @param bucket s3 bucket
    * @param prefix Limits the response to keys that begin with the specified prefix.
+   * @param startAfter StartAfter is where you want Amazon S3 to start listing from. Amazon S3 starts listing after this specified key. StartAfter can be any key in the bucket.
    * @returns
    */
-  async listFiles(bucket: string, prefix: string): Promise<ListObjectsOutput> {
-    const command = new ListObjectsCommand({
+  async listFiles(
+    bucket: string,
+    prefix: string,
+    startAfter?: string,
+  ): Promise<ListObjectsV2Output> {
+    const command = new ListObjectsV2Command({
       Bucket: bucket,
       Prefix: prefix,
+      StartAfter: startAfter,
     });
     return await this.s3Client.send(command);
   }

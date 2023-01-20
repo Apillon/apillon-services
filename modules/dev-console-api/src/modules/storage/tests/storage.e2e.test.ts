@@ -143,7 +143,7 @@ describe('Storage tests', () => {
       test('User should be able to download uploaded file from apillon ipfs gateway', async () => {
         expect(testFile).toBeTruthy();
         const response = await request(
-          env.STORAGE_IPFS_PROVIDER + testFile.CID,
+          env.STORAGE_IPFS_GATEWAY + testFile.CID,
         ).get('');
         expect(response.status).toBe(200);
       });
@@ -189,7 +189,7 @@ describe('Storage tests', () => {
     });
 
     describe('Multiple files in directories tests', () => {
-      test('User should be able to recieve multiple S3 signed URLs, and upload multiple files to S3 bucket', async () => {
+      test('User should be able to upload multiple files to Apillon storage using session', async () => {
         testSession_uuid = uuidV4();
 
         //Upload 2 files, each into its own directory
@@ -251,7 +251,7 @@ describe('Storage tests', () => {
         );
         expect(file.exists()).toBeTruthy();
 
-        //Check if directories and files were created
+        //Check if directories exists and are in correct hiearchy
         const dirs: Directory[] = await new Directory(
           {},
           stage.storageContext,
@@ -270,6 +270,100 @@ describe('Storage tests', () => {
         );
         expect(subdirectory).toBeTruthy();
         expect(subdirectory.parentDirectory_id).toBe(mySecondTestDirectory.id);
+      });
+    });
+
+    describe('Wrap files into IPFS directory tests', () => {
+      test('User should be able to upload multiple files to Apillon storage using session, and wrap those files into directory on IPFS', async () => {
+        testSession_uuid = uuidV4();
+
+        //Upload 2 files, each into its own directory
+        let response = await request(stage.http)
+          .post(`/storage/${testBucket.bucket_uuid}/file-upload`)
+          .send({
+            session_uuid: testSession_uuid,
+            fileName: 'index.html',
+            contentType: 'text/html',
+            path: '',
+          })
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(201);
+        const file1_uuid = response.body.data.file_uuid;
+        const file1_signedUrlForUpload = response.body.data.signedUrlForUpload;
+
+        response = await request(file1_signedUrlForUpload)
+          .put(``)
+          .send(
+            '<h1>My page on IPFS</h1><p>Curr date: ' +
+              new Date().toString() +
+              '</p>',
+          );
+        expect(response.status).toBe(200);
+
+        response = await request(stage.http)
+          .post(`/storage/${testBucket.bucket_uuid}/file-upload`)
+          .send({
+            session_uuid: testSession_uuid,
+            fileName: 'styles.css',
+            contentType: 'text/css',
+            path: 'styles',
+          })
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(201);
+        const file2_uuid = response.body.data.file_uuid;
+        const file2_signedUrlForUpload = response.body.data.signedUrlForUpload;
+
+        response = await request(file2_signedUrlForUpload)
+          .put(``)
+          .send('h1{font-size: 50px;}');
+        expect(response.status).toBe(200);
+        // trigger sync to IPFS
+        response = await request(stage.http)
+          .post(
+            `/storage/${testBucket.bucket_uuid}/file-upload/${testSession_uuid}/end`,
+          )
+          .send({
+            directSync: true,
+            wrapWithDirectory: true,
+            directoryPath: 'my test page',
+          })
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(200);
+
+        //Check if index.html file exists
+        const indexFile: File = await new File(
+          {},
+          stage.storageContext,
+        ).populateByUUID(file1_uuid);
+
+        expect(indexFile.exists()).toBeTruthy();
+        expect(indexFile.CID).toBeTruthy();
+        expect(indexFile.directory_id).toBeTruthy();
+
+        //Check if styles.css file exists
+        const cssFile = await new File({}, stage.storageContext).populateByUUID(
+          file2_uuid,
+        );
+        expect(cssFile.exists()).toBeTruthy();
+        expect(cssFile.CID).toBeTruthy();
+        expect(cssFile.directory_id).toBeTruthy();
+
+        //Check directories
+        const dirs: Directory[] = await new Directory(
+          {},
+          stage.storageContext,
+        ).populateDirectoriesInBucket(testBucket.id, stage.storageContext);
+
+        const wrappingDir: Directory = dirs.find(
+          (x) => x.name == 'my test page',
+        );
+        expect(wrappingDir?.CID).toBeTruthy();
+        expect(wrappingDir?.id).toBe(indexFile.directory_id);
+
+        const cssDir: Directory = dirs.find((x) => x.name == 'styles');
+        expect(cssDir).toBeTruthy();
+        expect(cssDir.parentDirectory_id).toBe(wrappingDir.id);
+        expect(cssDir.id).toBe(cssFile.directory_id);
       });
     });
 
