@@ -484,9 +484,9 @@ export class StorageService {
     event: { query: TrashedFilesQueryFilter },
     context: ServiceContext,
   ) {
-    return await new File({}, context).getList(
+    return await new File({}, context).getMarkedForDeletionList(
       context,
-      new TrashedFilesQueryFilter(event.query),
+      new TrashedFilesQueryFilter(event.query, context),
     );
   }
 

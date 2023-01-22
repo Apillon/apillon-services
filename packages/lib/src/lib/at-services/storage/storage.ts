@@ -187,8 +187,8 @@ export class StorageMicroservice extends BaseService {
 
   public async listFilesMarkedForDeletion(params: TrashedFilesQueryFilter) {
     const data = {
-      eventName: StorageEventType.LIST_MARKED_FOR_DELETION_FILES,
-      ...params.serialize(),
+      eventName: StorageEventType.LIST_FILES_MARKED_FOR_DELETION,
+      query: params.serialize(),
     };
     return await this.callService(data);
   }

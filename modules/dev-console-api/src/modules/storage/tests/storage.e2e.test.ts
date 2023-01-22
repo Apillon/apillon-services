@@ -550,6 +550,15 @@ describe('Storage tests', () => {
         expect(f.status).toBe(SqlModelStatus.MARKED_FOR_DELETION);
       });
 
+      test('User should be able to list files, that are marked for deletion', async () => {
+        const response = await request(stage.http)
+          .get(`/storage/${bucketForDeleteTests.bucket_uuid}/trashed-files`)
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(200);
+        expect(response.body.data.items.length).toBe(1);
+        expect(response.body.data.items[0].id).toBe(deleteBucketTestFile1.id);
+      });
+
       test('User should be able to unmark file for deletion', async () => {
         const testFileToCancelDeletion = await createTestBucketFile(
           stage.storageContext,

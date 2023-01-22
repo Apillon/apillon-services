@@ -60,8 +60,10 @@ export class StorageService {
 
   async listFilesMarkedForDeletion(
     context: DevConsoleApiContext,
+    bucket_uuid: string,
     query: TrashedFilesQueryFilter,
   ) {
+    query.populate({ bucket_uuid });
     return (
       await new StorageMicroservice(context).listFilesMarkedForDeletion(query)
     ).data;

@@ -409,36 +409,36 @@ export class File extends AdvancedSQLModel {
 
     // Map url query with sql fields.
     const fieldMap = {
-      id: 'b.id',
+      id: 'f.id',
     };
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
-      'b',
+      'f',
       fieldMap,
       filter.serialize(),
     );
 
     const sqlQuery = {
       qSelect: `
-        SELECT 'file' as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime, 
-        d.contentType as contentType, d.size as size, d.directory_id as parentDirectoryId, 
-        d.file_uuid as file_uuid, CONCAT("${env.STORAGE_IPFS_GATEWAY}", d.CID)
+        SELECT 'file' as type, f.id, f.status, f.name, f.CID, f.createTime, f.updateTime, 
+        f.contentType as contentType, f.size as size, f.directory_id as parentDirectoryId, 
+        f.file_uuid as file_uuid, CONCAT("${env.STORAGE_IPFS_GATEWAY}", f.CID) as link
         `,
       qFrom: `
-        FROM \`${DbTables.FILE}\` d
-        INNER JOIN \`${DbTables.BUCKET}\` b ON d.bucket_id = b.id
+        FROM \`${DbTables.FILE}\` f
+        INNER JOIN \`${DbTables.BUCKET}\` b ON f.bucket_id = b.id
         WHERE b.bucket_uuid = @bucket_uuid
-        AND (IFNULL(@directory_id, -1) = IFNULL(d.directory_id, -1))
-        AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))
-        AND ( d.status = ${SqlModelStatus.ACTIVE} OR 
-          ( @markedForDeletion = 1 AND d.status = ${SqlModelStatus.MARKED_FOR_DELETION})
-        )`,
+        AND (@search IS null OR f.name LIKE CONCAT('%', @search, '%'))
+        AND f.status = ${SqlModelStatus.MARKED_FOR_DELETION}
+        `,
       qFilter: `
-        ORDER BY ${filters.orderStr}
+        ORDER BY ${
+          filters.orderStr ? filters.orderStr : 'f.markedForDeletionTime DESC'
+        }
         LIMIT ${filters.limit} OFFSET ${filters.offset};
       `,
     };
 
-    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'b.id');
+    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'f.id');
   }
 }

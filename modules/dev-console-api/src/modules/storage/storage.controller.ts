@@ -134,9 +134,14 @@ export class StorageController {
   @UseGuards(ValidationGuard, AuthGuard)
   async listFilesMarkedForDeletion(
     @Ctx() context: DevConsoleApiContext,
+    @Param('bucket_uuid') bucket_uuid: string,
     @Query() query: TrashedFilesQueryFilter,
   ) {
-    return await this.storageService.listFilesMarkedForDeletion(context, query);
+    return await this.storageService.listFilesMarkedForDeletion(
+      context,
+      bucket_uuid,
+      query,
+    );
   }
 
   @Delete(':bucket_uuid/file/:id')

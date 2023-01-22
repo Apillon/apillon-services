@@ -51,7 +51,7 @@ export enum StorageEventType {
   BUCKET_WEBHOOK_DELETE = 'delete-bucket-webhook',
   LIST_FILE_UPLOAD = 'list-file-upload',
   MAX_BUCKETS_QUOTA_REACHED = 'max-buckets-quota-reached',
-  LIST_MARKED_FOR_DELETION_FILES = 'list-marked-for-deletion-files',
+  LIST_FILES_MARKED_FOR_DELETION = 'list-files-marked-for-deletion',
 }
 
 export enum MailEventType {
