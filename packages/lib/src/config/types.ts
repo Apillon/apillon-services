@@ -166,7 +166,6 @@ export enum SerializeFor {
 export enum ValidateFor {
   BODY = 'body',
   QUERY = 'query',
-  DONT_VALIDATE = 'dont-validate',
 }
 
 //#region Permissions
