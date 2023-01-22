@@ -7,17 +7,12 @@ import {
 } from '../../../../config/types';
 import { ModelBase, prop } from '../../../base-models/base';
 
-export class CreateBucketDto extends ModelBase {
+export class CreateIpnsDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.BUCKET_PROJECT_UUID_NOT_PRESENT,
-      },
-    ],
+    validators: [],
   })
   public project_uuid: string;
 
@@ -25,14 +20,9 @@ export class CreateBucketDto extends ModelBase {
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.BUCKET_TYPE_NOT_PRESENT,
-      },
-    ],
+    validators: [],
   })
-  public bucketType: number;
+  public bucket_id: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -41,7 +31,7 @@ export class CreateBucketDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.BUCKET_NAME_NOT_PRESENT,
+        code: ValidatorErrorCode.IPNS_NAME_NOT_PRESENT,
       },
     ],
   })
@@ -54,4 +44,12 @@ export class CreateBucketDto extends ModelBase {
     validators: [],
   })
   public description: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+  })
+  public cid: string;
 }
