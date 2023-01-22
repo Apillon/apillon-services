@@ -52,6 +52,11 @@ export enum StorageEventType {
   LIST_FILE_UPLOAD = 'list-file-upload',
   MAX_BUCKETS_QUOTA_REACHED = 'max-buckets-quota-reached',
   LIST_FILES_MARKED_FOR_DELETION = 'list-files-marked-for-deletion',
+  IPNS_LIST = 'list-ipns',
+  IPNS_CREATE = 'create-ipns',
+  IPNS_UPDATE = 'update-ipns',
+  IPNS_DELETE = 'delete-ipns',
+  IPNS_PUBLISH = 'publish-ipns',
 }
 
 export enum MailEventType {
@@ -281,6 +286,13 @@ export enum ValidatorErrorCode {
   QUOTA_ID_NOT_PRESENT = 42200021,
   PROJECT_UUID_NOT_PRESENT_IN_QUERY = 42200022,
   BUCKET_TYPE_NOT_PRESENT_IN_QUERY = 42200023,
+  IPNS_PROJECT_UUID_NOT_PRESENT = 42200024,
+  IPNS_BUCKET_ID_NOT_PRESENT = 42200025,
+  IPNS_NAME_NOT_PRESENT = 42200026,
+  IPNS_IPNS_NAME_NOT_PRESENT = 42200027,
+  IPNS_IPNS_VALUE_NOT_PRESENT = 42200028,
+  PUBLISH_IPNS_IPNS_ID_NOT_PRESENT = 42200029,
+  PUBLISH_IPNS_CID_NOT_PRESENT = 42200030,
 }
 
 /**

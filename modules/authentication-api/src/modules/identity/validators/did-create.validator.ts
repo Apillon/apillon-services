@@ -2,7 +2,7 @@ import { ModelBase } from '@apillon/lib';
 
 // NOTE:
 // The following checks could be performed in a
-// more elegant style, but we want to be excplicit
+// more elegant style, but we want to be explicit
 
 /**
  * Validate did create payload

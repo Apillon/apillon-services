@@ -8,6 +8,7 @@ export interface IValidationOptions {
   dto: typeof ModelBase;
   validateFor?: ValidateFor;
   populateFrom?: PopulateFrom;
+  skipValidation?: boolean;
 }
 
 /**

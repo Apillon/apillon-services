@@ -113,3 +113,8 @@ export interface SignRequestData {
 export enum AuthAppErrors {
   EMAIL_ALREADY_ATTESTED = 'Email already attested',
 }
+
+export enum ApillonSupportedCTypes {
+  EMAIL = 'EMAIL',
+  DOMAIN_LINKAGE = 'DOMAIN_LINKAGE',
+}
