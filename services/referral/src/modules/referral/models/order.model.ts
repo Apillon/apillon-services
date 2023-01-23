@@ -2,6 +2,8 @@ import { integerParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
   Context,
+  enumInclusionValidator,
+  ErrorCode,
   JSONParser,
   PopulateFrom,
   prop,
@@ -9,6 +11,11 @@ import {
 } from '@apillon/lib';
 import { DbTables } from '../../../config/types';
 
+export enum OrderStatus {
+  PENDING = 1,
+  COMPLETED = 5,
+  DELETED = 9,
+}
 export class Order extends AdvancedSQLModel {
   public readonly tableName = DbTables.ORDER;
 
@@ -138,4 +145,31 @@ export class Order extends AdvancedSQLModel {
     ],
   })
   public info: any;
+
+  /**
+   * status
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+    ],
+    validators: [
+      {
+        resolver: enumInclusionValidator(OrderStatus, false),
+        code: ErrorCode.STATUS_NOT_PRESENT,
+      },
+    ],
+    defaultValue: OrderStatus.PENDING,
+    fakeValue() {
+      return OrderStatus.PENDING;
+    },
+  })
+  public status?: OrderStatus;
 }

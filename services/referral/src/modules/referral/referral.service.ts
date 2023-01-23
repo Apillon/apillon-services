@@ -147,6 +147,7 @@ export class ReferralService {
       player.shippingInfo = order.info;
       try {
         await player.validate();
+        await player.update();
       } catch (err) {
         await player.handle(err);
         if (!player.isValid()) {
@@ -159,7 +160,6 @@ export class ReferralService {
           );
         }
       }
-      await player.update();
     }
 
     await player.populateSubmodels();

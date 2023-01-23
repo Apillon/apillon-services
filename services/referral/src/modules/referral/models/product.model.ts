@@ -17,7 +17,7 @@ import {
   TransactionDirection,
 } from '../../../config/types';
 import { ServiceContext } from '../../../context';
-import { Order } from './order.model';
+import { Order, OrderStatus } from './order.model';
 import {
   ReferralCodeException,
   ReferralValidationException,
@@ -157,7 +157,7 @@ export class Product extends AdvancedSQLModel {
       FROM \`${DbTables.ORDER}\` o
       WHERE o.product_id = @product_id
       AND o.player_id = @player_id
-      AND o.status = ${SqlModelStatus.ACTIVE}
+      AND o.status <> ${OrderStatus.DELETED}
       `,
       { product_id: this.id, player_id },
     );
