@@ -67,6 +67,20 @@ export enum ScsEventType {
   GET_QUOTA = 'get-quota',
 }
 
+export enum ReferralEventType {
+  CREATE_PLAYER = 'create-referral',
+  GET_PLAYER = 'get-referral',
+  GET_PRODUCTS = 'get-products',
+  ORDER_PRODUCT = 'order-product',
+  CONNECT_GITHUB = 'connect-githhub',
+  DISCONNECT_GITHUB = 'disconnect-githhub',
+  CONNECT_TWITTER = 'connect-twitter',
+  DISCONNECT_TWITTER = 'disconnect-twitter',
+  GET_TWITTER_LINK = 'get-twitter-link',
+  GET_TWEETS = 'get-tweets',
+  CONFIRM_RETWEET = 'confirm-retweet',
+}
+
 export enum ServiceName {
   GENERAL = 'GENERAL',
   AMS = 'AMS',
@@ -76,6 +90,7 @@ export enum ServiceName {
   STORAGE = 'STORAGE',
   APILLON_API = 'APILLON_API',
   AUTHENTICATION_API = 'AUTHENTICATION_API',
+  REFERRAL = 'REFERRAL',
 }
 
 export enum ServiceCode {
@@ -90,6 +105,7 @@ export enum ServiceCode {
   MAIL = '08',
   AUTH = '09',
   CONFIG = '10',
+  REFERRAL = '11',
 }
 
 export enum AppEnvironment {
@@ -292,6 +308,11 @@ export enum ValidatorErrorCode {
   IPNS_IPNS_VALUE_NOT_PRESENT = 42200028,
   PUBLISH_IPNS_IPNS_ID_NOT_PRESENT = 42200029,
   PUBLISH_IPNS_CID_NOT_PRESENT = 42200030,
+  TASK_ID_NOT_PRESENT = 42200031,
+  USER_OAUTH_TOKEN_NOT_PRESENT = 42200032,
+  USER_OAUTH_VERIFIER_NOT_PRESENT = 42200033,
+  TWEET_ID_NOT_PRESENT = 42200034,
+  PRODUCT_ID_NOT_PRESENT = 42200035,
 }
 
 /**

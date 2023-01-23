@@ -11,6 +11,7 @@ let dbStorageMigration: Migration = null;
 let dbConfigMigration: Migration = null;
 let dbConfigSeed: Migration = null;
 let dbAuthApiMigration: Migration = null;
+let dbReferralMigration: Migration = null;
 
 export async function setupTestDatabase(): Promise<void> {
   await upgradeTestDatabases();
@@ -33,6 +34,10 @@ async function initMigrations() {
 
   if (!dbAuthApiMigration) {
     await initAuthApiTestMigrations();
+  }
+
+  if (!dbReferralMigration) {
+    await initReferralTestMigrations();
   }
 }
 
@@ -60,11 +65,13 @@ export async function upgradeTestDatabases(): Promise<void> {
       dbStorageMigration.up(),
       dbConfigMigration.up(),
       dbAuthApiMigration.up(),
+      dbReferralMigration.up(),
     ]);
   } catch (err) {
     console.error('error at migrations.up()', err);
     throw err;
   }
+    
   await destroyTestMigrations();
 }
 
@@ -76,6 +83,7 @@ export async function downgradeTestDatabases(): Promise<void> {
     dbStorageMigration.down(-1),
     dbConfigMigration.down(-1),
     dbAuthApiMigration.down(-1),
+    dbReferralMigration.down(-1),
   ]);
   await destroyTestMigrations();
 }
@@ -124,12 +132,16 @@ export async function destroyTestMigrations(): Promise<void> {
   if (dbAuthApiMigration) {
     promises.push(dbAuthApiMigration.destroy());
   }
+  if (dbReferralMigration) {
+    promises.push(dbReferralMigration.destroy());
+  }
   await Promise.all(promises);
   dbConsoleMigration = null;
   dbAmsMigration = null;
   dbStorageMigration = null;
   dbConfigMigration = null;
   dbAuthApiMigration = null;
+  dbReferralMigration = null;
 }
 
 export async function destroyTestSeeds(): Promise<void> {
@@ -164,6 +176,7 @@ export async function rebuildTestDatabases(): Promise<void> {
       dbStorageMigration.reset(),
       dbConfigMigration.reset(),
       dbAuthApiMigration.reset(),
+      dbReferralMigration.reset(),
     ]);
   } catch (err) {
     console.error('error at migrations.reset()', err);
@@ -389,6 +402,35 @@ async function initConfigTestMigrations() {
     console.error('Error at initConfigTestMigrations', err);
     throw err;
   }
+}
+
+async function initReferralTestMigrations() {
+  env.APP_ENV = AppEnvironment.TEST;
+
+  const poolReferral: ConnectionOptions = {
+    host: env.REFERRAL_MYSQL_HOST_TEST,
+    database: env.REFERRAL_MYSQL_DATABASE_TEST,
+    password: env.REFERRAL_MYSQL_PASSWORD_TEST,
+    port: env.REFERRAL_MYSQL_PORT_TEST,
+    user: env.REFERRAL_MYSQL_USER_TEST,
+    // debug: true,
+    connectionLimit: 1,
+  };
+
+  if (!/(test|testing)/i.test(poolReferral.database)) {
+    throw new Error('!!! NOT TEST DATABASE? !!!');
+  }
+
+  const pool = createPool(poolReferral);
+
+  dbReferralMigration = new Migration({
+    conn: pool as unknown as MigrationConnection,
+    tableName: 'migrations',
+    dir: '../../services/referral/src/migration-scripts/migrations',
+    silent: env.APP_ENV === AppEnvironment.TEST,
+  });
+
+  await dbReferralMigration.initialize();
 }
 
 async function initAmsTestSeed() {
