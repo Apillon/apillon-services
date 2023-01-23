@@ -40,6 +40,25 @@ export function generateTemplateData(key: string, data: any) {
       </p>
       `,
     },
+    'restore-credential': {
+      subject: 'Apillon credential restore!',
+      title: 'Dear Apillon User',
+      text: `
+      <p>
+        We have received your request to restore your authentication credential
+      </p>
+      `,
+      actionUrl: data.actionUrl,
+      actionText: 'Restore your credential',
+      text2: `
+      <p>
+        If you need additional assistance, or you received this email in error, please contact <a href="mailto:info@apillon.io">info@apillon.io</a>.
+        <br/><br/><br/>
+        Cheers,<br/>
+        The Apillon team
+      </p>
+      `,
+    },
     'reset-password': {
       subject: 'Apillon password reset!',
       title: 'Dear Apillon User',

@@ -10,6 +10,7 @@ import { IdentityCreateDto } from './dtos/identity-create.dto';
 import { JwtTokenType } from '../../config/types';
 import { DevEnvGuard } from '../../guards/dev-env.guard';
 import { IdentityDidRevokeDto } from './dtos/identity-did-revoke.dto';
+import { CredentialRestoreDto } from './dtos/identity-credential-restore.dto';
 
 @Controller('identity')
 export class IdentityController {
@@ -59,7 +60,7 @@ export class IdentityController {
   }
 
   @Get('credential/restore')
-  @Validation({ dto: AttestationEmailDto, validateFor: ValidateFor.QUERY })
+  @Validation({ dto: CredentialRestoreDto, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard)
   async identityRestoreCredential(
     @Ctx() context: AuthenticationApiContext,

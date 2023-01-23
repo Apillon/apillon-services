@@ -124,6 +124,19 @@ export class IdentityService {
   }
 
   async restoreCredential(context: AuthenticationApiContext, email: string) {
+    const identity = await new Identity({}, context).populateByUserEmail(
+      context,
+      email,
+    );
+
+    if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
+      throw new CodeException({
+        status: HttpStatus.NOT_FOUND,
+        code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
+        errorCodes: AuthenticationErrorCode,
+      });
+    }
+
     const token = generateJwtToken(JwtTokenType.IDENTITY_PROCESS, {
       email,
     });
@@ -139,7 +152,7 @@ export class IdentityService {
       emails: [email],
       template: 'restore-credential',
       data: {
-        actionUrl: `${env.AUTH_APP_URL}/identity/?token=${token}&email=${email}`,
+        actionUrl: `${env.AUTH_APP_URL}/identity/?token=${token}&email=${email}&restore=true`,
       },
     });
   }
@@ -530,6 +543,7 @@ export class IdentityService {
         challenge: signature.challenge,
       };
 
+      // TODO: Maybe move to config
       wellKnownDidconfig = {
         '@context':
           'https://identity.foundation/.well-known/did-configuration/v1',
