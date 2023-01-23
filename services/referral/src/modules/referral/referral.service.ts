@@ -135,11 +135,9 @@ export class ReferralService {
     const order = await product.order(player.id, event.body.info);
 
     await new Lmas().sendAdminAlert(
-      `
-      New order for product: ${product.name}!\n
-      Volume: ${order.volume}\n
-      Cost: ${order.totalCost}\n
-      Info: ${JSON.stringify(order.info)}
+      `New order for product: ${product.name}!
+      Volume: ${order.volume}
+      Info: ${JSON.stringify(order.info, null, 2)}
       `,
       ServiceName.REFERRAL,
       'message',

@@ -171,7 +171,16 @@ describe('Referral tests', () => {
       );
       const response = await request(stage.http)
         .post(`/referral/product`)
-        .send({ id: product.id })
+        .send({
+          id: product.id,
+          info: {
+            firstName: 'Test',
+            lastName: 'Testić',
+            street: 'Kapucinski trg 7',
+            postalCode: 4220,
+            country: 'Slovenia',
+          },
+        })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
 
