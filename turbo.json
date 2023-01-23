@@ -41,6 +41,12 @@
       ],
       "outputs": []
     },
+    "test:logging": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": []
+    },
     "test-server": {
       "cache": false
     }

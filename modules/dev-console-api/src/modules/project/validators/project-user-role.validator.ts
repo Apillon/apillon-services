@@ -6,6 +6,10 @@ import { DefaultUserRole, ModelBase } from '@apillon/lib';
  */
 export function projectUserRolesValidator() {
   return async function (this: ModelBase, value: any): Promise<boolean> {
-    return !!DefaultUserRole[value];
+    return (
+      !!DefaultUserRole[value] &&
+      (value == DefaultUserRole.PROJECT_ADMIN ||
+        value == DefaultUserRole.PROJECT_USER)
+    );
   };
 }

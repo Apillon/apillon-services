@@ -1,0 +1,60 @@
+{
+  "name": "apillon-config-test",
+  "environment": {
+    "computeType": "BUILD_GENERAL1_SMALL",
+    "imagePullCredentialsType": "CODEBUILD",
+    "privilegedMode": false,
+    "image": "aws/codebuild/amazonlinux2-x86_64-standard:4.0",
+    "environmentVariables": [
+      {
+        "type": "PLAINTEXT",
+        "name": "ENV",
+        "value": "test"
+      },
+      {
+        "type": "PLAINTEXT",
+        "name": "S3_CONFIG",
+        "value": "s3://apillon-services-config/env.test.yml"
+      },
+      {
+        "type": "PLAINTEXT",
+        "name": "SERVICE_PATH",
+        "value": "services/config/"
+      }
+    ],
+    "type": "LINUX_CONTAINER"
+  },
+  "timeoutInMinutes": 60,
+  "serviceRole": "arn:aws:iam::018021943180:role/atv2-deployer",
+  "artifacts": {
+    "type": "NO_ARTIFACTS"
+  },
+  "cache": {
+    "type": "NO_CACHE"
+  },
+  "sourceVersion": "test",
+  "source": {
+    "insecureSsl": false,
+    "gitSubmodulesConfig": {
+      "fetchSubmodules": false
+    },
+    "location": "https://TineMlakar@bitbucket.org/kalmiadevs/apillon-services.git",
+    "gitCloneDepth": 1,
+    "type": "BITBUCKET",
+    "reportBuildStatus": false
+  },
+  "badgeEnabled": true,
+  "queuedTimeoutInMinutes": 480,
+  "logsConfig": {
+    "s3Logs": {
+      "status": "DISABLED",
+      "encryptionDisabled": false
+    },
+    "cloudWatchLogs": {
+      "status": "ENABLED",
+      "groupName": "codebuild",
+      "streamName": "apillon-services-test"
+    }
+  },
+  "encryptionKey": "arn:aws:kms:eu-west-1:018021943180:alias/aws/s3"
+}

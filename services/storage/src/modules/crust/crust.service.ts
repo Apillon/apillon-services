@@ -45,17 +45,29 @@ export class CrustService {
     return new Promise((resolve, reject) => {
       tx.signAndSend(krp, ({ events = [], status }) => {
         console.log(`💸  Tx status: ${status.type}, nonce: ${tx.nonce}`);
+        console.log(`is in block: `, status.isInBlock);
         if (status.isInBlock) {
-          events.forEach(({ event: { method } }) => {
-            if (method === 'ExtrinsicSuccess') {
+          events.forEach(({ event }) => {
+            if (
+              event.method === 'ExtrinsicSuccess' ||
+              event.method === 'Finalized'
+            ) {
               console.log(`✅  Place storage order success!`);
               // Kill api connection - otherwise process won't exit
               void api.disconnect();
               resolve({ success: true });
+            } else if (event.method === 'ExtrinsicFailed') {
+              // extract the data for this event
+              const [dispatchError] = event.data;
+              const errorInfo = dispatchError.toString();
+              console.log(`Place storage order failed: ${errorInfo}`);
+              void api.disconnect();
+              reject(errorInfo);
             }
           });
         }
       }).catch((e) => {
+        void api.disconnect();
         reject(e);
       });
     });
@@ -69,6 +81,8 @@ export class CrustService {
     });
 
     await api.isReadyOrError;
-    return await api.query.market.filesV2(params.cid);
+    const crustFileStatus = await api.query.market.filesV2(params.cid);
+    await api.disconnect();
+    return crustFileStatus;
   }
 }

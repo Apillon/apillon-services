@@ -1,17 +1,18 @@
 /* eslint-disable @typescript-eslint/member-ordering */
 import { prop } from '@rawmodel/core';
-import { stringParser, integerParser } from '@rawmodel/parsers';
+import { stringParser, integerParser, dateParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   AdvancedSQLModel,
   CodeException,
   DefaultUserRole,
   ForbiddenErrorCodes,
+  PoolConnection,
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
-import { DbTables, StorageErrorCode } from '../../../config/types';
+import { DbTables, FileStatus, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
 import { v4 as uuidV4 } from 'uuid';
 
@@ -73,7 +74,6 @@ export class File extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
     ],
     validators: [],
   })
@@ -137,7 +137,6 @@ export class File extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
     ],
     validators: [
       {
@@ -160,7 +159,6 @@ export class File extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
     ],
     validators: [
       {
@@ -183,7 +181,6 @@ export class File extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
     ],
     validators: [],
   })
@@ -207,6 +204,57 @@ export class File extends AdvancedSQLModel {
   })
   public size: number;
 
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+    fakeValue: FileStatus.PINNED_TO_CRUST,
+  })
+  public fileStatus: number;
+
+  /**
+   * Time when file status was set to 8 - MARKED_FOR_DELETION
+   */
+  @prop({
+    parser: { resolver: dateParser() },
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    populatable: [PopulateFrom.DB],
+  })
+  public markedForDeletionTime?: Date;
+
+  /*
+  INFO PROPERTIES
+  */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public downloadLink: string;
+
   public canAccess(context: ServiceContext) {
     if (
       !context.hasRoleOnProject(
@@ -222,7 +270,7 @@ export class File extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: 403,
-        errorMessage: 'Insufficient permissins',
+        errorMessage: 'Insufficient permissions to access this record',
       });
     }
   }
@@ -241,12 +289,31 @@ export class File extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: 403,
-        errorMessage: 'Insufficient permissins',
+        errorMessage: 'Insufficient permissions to modify this record',
       });
     }
   }
 
+  /**
+   * Marks record in the database for deletion.
+   */
+  public async markForDeletion(conn?: PoolConnection): Promise<this> {
+    this.updateUser = this.getContext()?.user?.id;
+
+    this.status = SqlModelStatus.MARKED_FOR_DELETION;
+    this.markedForDeletionTime = new Date();
+
+    try {
+      await this.update(SerializeFor.UPDATE_DB, conn);
+    } catch (err) {
+      this.reset();
+      throw err;
+    }
+    return this;
+  }
+
   public async populateByNameAndDirectory(
+    bucket_id: number,
     name: string,
     directory_id?: number,
   ): Promise<this> {
@@ -260,11 +327,13 @@ export class File extends AdvancedSQLModel {
       `
       SELECT * 
       FROM \`${this.tableName}\`
-      WHERE name = @name 
+      WHERE 
+      bucket_id = @bucket_id
+      AND name = @name 
       AND ((@directory_id IS NULL AND directory_id IS NULL) OR @directory_id = directory_id)
       AND status <> ${SqlModelStatus.DELETED};
       `,
-      { name, directory_id },
+      { bucket_id, name, directory_id },
     );
 
     if (data && data.length) {
@@ -274,18 +343,19 @@ export class File extends AdvancedSQLModel {
     }
   }
 
-  public async populateByCID(cid: string): Promise<this> {
-    if (!cid) {
-      throw new Error('cid should not be null');
+  public async populateById(id: string | number): Promise<this> {
+    if (!id) {
+      throw new Error('id should not be null');
     }
 
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT * 
       FROM \`${this.tableName}\`
-      WHERE cid = @cid AND status <> ${SqlModelStatus.DELETED};
+      WHERE (id LIKE @id OR cid LIKE @id OR file_uuid LIKE @id)
+      AND status <> ${SqlModelStatus.DELETED};
       `,
-      { cid },
+      { id },
     );
 
     if (data && data.length) {

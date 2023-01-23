@@ -4,15 +4,35 @@ import {
   StorageMicroservice,
   BucketQueryFilter,
   CodeException,
+  CreateBucketWebhookDto,
+  AttachedServiceType,
+  BucketQuotaReachedQueryFilter,
 } from '@apillon/lib';
 import { ResourceNotFoundErrorCode } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
 import { Project } from '../project/models/project.model';
+import { Service } from '../services/models/service.model';
+import { ServiceQueryFilter } from '../services/dtos/services-query-filter.dto';
+import { ServicesService } from '../services/services.service';
 
 @Injectable()
 export class BucketService {
+  constructor(private readonly serviceService: ServicesService) {}
+
   async getBucketList(context: DevConsoleApiContext, query: BucketQueryFilter) {
     return (await new StorageMicroservice(context).listBuckets(query)).data;
+  }
+
+  async getBucket(context: DevConsoleApiContext, id: number) {
+    return (await new StorageMicroservice(context).getBucket(id)).data;
+  }
+
+  async isMaxBucketQuotaReached(
+    context: DevConsoleApiContext,
+    query: BucketQuotaReachedQueryFilter,
+  ) {
+    return (await new StorageMicroservice(context).maxBucketQuotaReached(query))
+      .data.maxBucketsQuotaReached;
   }
 
   async createBucket(context: DevConsoleApiContext, body: CreateBucketDto) {
@@ -28,6 +48,26 @@ export class BucketService {
     }
 
     project.canModify(context);
+
+    //Check if storage service for this project already exists
+    const query: ServiceQueryFilter = new ServiceQueryFilter(
+      {},
+      context,
+    ).populate({
+      project_id: project.id,
+      serviceType_id: AttachedServiceType.STORAGE,
+    });
+    const storageServices = await new Service({}).getServices(context, query);
+    if (storageServices.total == 0) {
+      //Create storage service - "Attach"
+      const storageService: Service = new Service({}, context).populate({
+        project_id: project.id,
+        name: 'Storage service',
+        serviceType_id: AttachedServiceType.STORAGE,
+      });
+
+      await this.serviceService.createService(context, storageService);
+    }
 
     //Call Storage microservice, to create bucket
     return (await new StorageMicroservice(context).createBucket(body)).data;
@@ -46,4 +86,50 @@ export class BucketService {
     return (await new StorageMicroservice(context).deleteBucket({ id: id }))
       .data;
   }
+
+  async cancelBucketDeletion(context: DevConsoleApiContext, id: number) {
+    return (
+      await new StorageMicroservice(context).cancelBucketDeletion({ id: id })
+    ).data;
+  }
+
+  //#region bucket webhook
+
+  async getBucketWebhook(context: DevConsoleApiContext, bucket_id: number) {
+    return (await new StorageMicroservice(context).getBucketWebhook(bucket_id))
+      .data;
+  }
+
+  async createBucketWebhook(
+    context: DevConsoleApiContext,
+    bucket_id: number,
+    body: CreateBucketWebhookDto,
+  ) {
+    body.populate({ bucket_id: bucket_id });
+    return (await new StorageMicroservice(context).createBucketWebhook(body))
+      .data;
+  }
+
+  async updateBucketWebhook(
+    context: DevConsoleApiContext,
+    bucket_id: number,
+    id: number,
+    body: any,
+  ) {
+    body.bucket_id = bucket_id;
+    return (
+      await new StorageMicroservice(context).updateBucketWebhook({
+        id: id,
+        data: body,
+      })
+    ).data;
+  }
+
+  async deleteBucketWebhook(context: DevConsoleApiContext, id: number) {
+    return (
+      await new StorageMicroservice(context).deleteBucketWebhook({ id: id })
+    ).data;
+  }
+
+  //#endregion
 }

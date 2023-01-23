@@ -1,18 +1,14 @@
-import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
-  CodeException,
   Context,
-  DefaultUserRole,
-  ForbiddenErrorCodes,
   PopulateFrom,
   presenceValidator,
   prop,
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
+import { integerParser, stringParser } from '@rawmodel/parsers';
 import { DbTables, StorageErrorCode } from '../../../config/types';
-import { ServiceContext } from '../../../context';
 
 export class FileUploadSession extends AdvancedSQLModel {
   public readonly tableName = DbTables.FILE_UPLOAD_SESSION;

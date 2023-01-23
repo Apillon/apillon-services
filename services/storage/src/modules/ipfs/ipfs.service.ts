@@ -1,5 +1,12 @@
 /* eslint-disable security/detect-non-literal-fs-filename */
-import { AWS_S3, env } from '@apillon/lib';
+import {
+  AWS_S3,
+  env,
+  Lmas,
+  LogType,
+  ServiceName,
+  writeLog,
+} from '@apillon/lib';
 import { CID, create } from 'ipfs-http-client';
 import {
   FileUploadRequestFileStatus,
@@ -7,6 +14,7 @@ import {
 } from '../../config/types';
 import { StorageCodeException } from '../../lib/exceptions';
 import { FileUploadRequest } from '../storage/models/file-upload-request.model';
+import { uploadFilesToIPFSRes } from './interfaces/upload-files-to-ipfs-res.interface';
 
 export class IPFSService {
   static async createIPFSClient() {
@@ -14,22 +22,27 @@ export class IPFSService {
     //return await CrustService.createIPFSClient();
 
     //Kalmia IPFS Gateway
-    if (!env.STORAGE_IPFS_GATEWAY)
+    if (!env.STORAGE_IPFS_API)
       throw new StorageCodeException({
         status: 500,
-        code: StorageErrorCode.STORAGE_IPFS_GATEWAY_NOT_SET,
+        code: StorageErrorCode.STORAGE_IPFS_API_NOT_SET,
         sourceFunction: `${this.constructor.name}/createIPFSClient`,
       });
-    console.info('Connection to IPFS gateway: ', env.STORAGE_IPFS_GATEWAY);
+    writeLog(
+      LogType.INFO,
+      `Connection to IPFS gateway: ${env.STORAGE_IPFS_API}`,
+      'ipfs.service.ts',
+      'createIPFSClient',
+    );
 
-    let ipfsGatewayURL = env.STORAGE_IPFS_GATEWAY;
+    let ipfsGatewayURL = env.STORAGE_IPFS_API;
     if (ipfsGatewayURL.endsWith('/'))
       ipfsGatewayURL = ipfsGatewayURL.slice(0, -1);
     return await create({ url: ipfsGatewayURL });
   }
 
   static async uploadFileToIPFSFromS3(
-    event: { fileKey: string },
+    event: { fileUploadRequest: FileUploadRequest },
     context,
   ): Promise<{ CID: CID; cidV0: string; cidV1: string; size: number }> {
     //Get IPFS client
@@ -38,10 +51,11 @@ export class IPFSService {
     //Get File from S3
     const s3Client: AWS_S3 = new AWS_S3();
 
-    console.info(`Get file from AWS s3`);
-
     if (
-      !(await s3Client.exists(env.STORAGE_AWS_IPFS_QUEUE_BUCKET, event.fileKey))
+      !(await s3Client.exists(
+        env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+        event.fileUploadRequest.s3FileKey,
+      ))
     ) {
       throw new StorageCodeException({
         status: 404,
@@ -53,38 +67,37 @@ export class IPFSService {
 
     const file = await s3Client.get(
       env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-      event.fileKey,
+      event.fileUploadRequest.s3FileKey,
     );
 
-    console.info(`File recieved, pushing to IPFS...`);
-
     const filesOnIPFS = await client.add({
-      path: '',
       content: file.Body as any,
     });
 
-    console.info(`File added to IPFS...uploadFileToIPFSFromS3 success.`);
-
-    //const key = await client.key.gen('myTestPage');
-    //const ipnsRes = await client.name.publish(filesOnIPFS.cid);
+    //Write log to LMAS
+    await new Lmas().writeLog({
+      logType: LogType.INFO,
+      message: 'File uploaded to IPFS',
+      location: 'IPFSService.uploadFilesToIPFSFromS3',
+      service: ServiceName.STORAGE,
+      data: {
+        fileUploadRequest: event.fileUploadRequest,
+        ipfsResponse: filesOnIPFS,
+      },
+    });
 
     return {
       CID: filesOnIPFS.cid,
       cidV0: filesOnIPFS.cid.toV0().toString(),
       cidV1: filesOnIPFS.cid.toV1().toString(),
       size: filesOnIPFS.size,
-      //ipnsRes: ipnsRes,
     };
   }
 
   static async uploadFilesToIPFSFromS3(event: {
     fileUploadRequests: FileUploadRequest[];
     wrapWithDirectory: boolean;
-  }): Promise<{
-    parentDirCID: CID;
-    ipfsDirectories: { path: string; cid: CID }[];
-    size: number;
-  }> {
+  }): Promise<uploadFilesToIPFSRes> {
     //Get IPFS client
     const client = await IPFSService.createIPFSClient();
 
@@ -141,6 +154,19 @@ export class IPFSService {
         ipfsDirectories.push({ path: file.path, cid: file.cid });
       }
     }
+
+    //Write log to LMAS
+    await new Lmas().writeLog({
+      logType: LogType.INFO,
+      message: 'Files uploaded to IPFS',
+      location: 'IPFSService.uploadFilesToIPFSFromS3',
+      service: ServiceName.STORAGE,
+      data: {
+        fileUploadRequests: event.fileUploadRequests,
+        ipfsResponse: filesOnIPFS,
+      },
+    });
+
     return {
       parentDirCID: baseDirectoryOnIPFS?.cid,
       ipfsDirectories: ipfsDirectories,
@@ -164,7 +190,13 @@ export class IPFSService {
     try {
       key = (await client.key.list()).filter((x) => x.name == ipfsKey);
     } catch (err) {
-      console.error(err);
+      writeLog(
+        LogType.ERROR,
+        `Error publishing to IPNS. Cid: ${cid}, Key: ${ipfsKey}`,
+        'ipfs.service.ts',
+        'createIPFSClient',
+        err,
+      );
     }
 
     if (!key) key = await client.key.gen(ipfsKey);
@@ -187,7 +219,6 @@ export class IPFSService {
   }
 
   static async listIPFSDirectory(param: any) {
-    console.log(param);
     //Get IPFS client
     const client = await IPFSService.createIPFSClient();
 
@@ -206,60 +237,67 @@ export class IPFSService {
     return filesInDirectory;
   }
 
-  //#region OBSOLETE
+  /**
+   * Unpin file from IPFS node - file will eventually be deleted from this node
+   * @param cid
+   * @returns
+   */
+  static async unpinFile(cid: string) {
+    try {
+      //Get IPFS client
+      const client = await IPFSService.createIPFSClient();
+      await client.pin.rm(cid);
+      console.info('File sucessfully unpined', cid);
+    } catch (err) {
+      console.error('Error unpinning file', cid, err);
+      return false;
+    }
 
-  static async uploadFilesToIPFS(params: { files: any[] }): Promise<any> {
+    return true;
+  }
+
+  /**
+   * Lists through pinned items on IPFS and checks if give CID is pinned.
+   * @param cid
+   * @returns true, if CID is pinned on IPFS
+   */
+  static async isCIDPinned(cid: string) {
+    if (!cid) return false;
+    //Get IPFS client
+    const client = await IPFSService.createIPFSClient();
+    try {
+      const lsRes = await client.pin.ls({ paths: [CID.parse(cid)] });
+      for await (const {} of lsRes) {
+        return true;
+      }
+    } catch (err) {
+      if (err.message && err.message.includes('is not pinned')) return false;
+      throw err;
+    }
+    return false;
+  }
+
+  /**
+   * Function, used for testing purposes. To upload fake file to IPFS
+   * @param params file path and file content
+   * @returns cidv0 & cidV1
+   */
+  static async addFileToIPFS(params: {
+    path: string;
+    content: any;
+  }): Promise<{ cidV0: string; cidV1: string }> {
     //Get IPFS client
     const client = await IPFSService.createIPFSClient();
 
-    for (const file of params.files) {
-      // call Core API methods
-      file.content = Buffer.from(file.content, 'base64');
-      //console.log('file, added to IPFS', file.content);
+    //Add to IPFS
+    const fileOnIPFS = await client.add({
+      path: params.path,
+      content: params.content,
+    });
 
-      const filesOnIPFS = await client.add(file);
-      file.cidV0 = filesOnIPFS.cid.toV0().toString();
-      file.cidV1 = filesOnIPFS.cid.toV1().toString();
-    }
-
-    return params.files;
+    return {
+      cidV0: fileOnIPFS.cid.toV0().toString(),
+      cidV1: fileOnIPFS.cid.toV1().toString(),
+    };
   }
-
-  static async uploadDirectoryToIPFS(): Promise<any> {
-    //Get IPFS client
-    const client = await IPFSService.createIPFSClient();
-
-    //Methods, that are available in client instance: https://github.com/ipfs/js-ipfs/blob/master/docs/core-api/FILES.md
-
-    // call Core API methods
-    const filesOnIPFS = await client.addAll([
-      {
-        path: 'parentDirectory/subDir1/hello.txt',
-        content: 'Hello world!',
-      },
-      {
-        path: 'parentDirectory/subDir2/aloha.txt',
-        content: 'Example content - this could be anything (string, Blob...)',
-      },
-      {
-        path: 'parentDirectory/readme.md',
-        content: 'This is content of readme.md',
-      },
-    ]);
-
-    const res: CID[] = [];
-    for await (const file of filesOnIPFS) {
-      console.log(file);
-      res.push(file.cid);
-    }
-
-    const ipnsVal = await client.name.publish(
-      'QmdWsuHuHaW7YeenSNimy6d1osA8dwVEnALxHq7PKTEXa5',
-    );
-    console.info(ipnsVal);
-
-    return res;
-  }
-
-  //#endregion
 }

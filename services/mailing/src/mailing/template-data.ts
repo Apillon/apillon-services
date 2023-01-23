@@ -19,6 +19,27 @@ export function generateTemplateData(key: string, data: any) {
       </p>
       `,
     },
+    'verify-identity': {
+      subject: 'Verify your identity!',
+      title: 'Welcome to Apillon, please verify your identity!',
+      text: `
+      <p>
+       We're excited that you recognized the value of Web3 building and what Apillon brings to the table.
+      </p>
+      `,
+      actionUrl: data.actionUrl,
+      actionText:
+        'Complete the registration by creating a decentralized identity',
+      text2: `
+      <p>
+        This process also creates a decentralized identity.
+        If you need additional assistance, or you received this email in error, please contact <a href="mailto:info@apillon.io">info@apillon.io</a>.
+        <br/><br/><br/>
+        Cheers,<br/>
+        The Apillon team
+      </p>
+      `,
+    },
     'reset-password': {
       subject: 'Apillon password reset!',
       title: 'Dear Apillon User',

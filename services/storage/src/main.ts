@@ -1,34 +1,51 @@
 import { StorageEventType } from '@apillon/lib';
-import { Context } from 'aws-lambda/handler';
+import type { Context } from 'aws-lambda/handler';
 import { BucketService } from './modules/bucket/bucket.service';
-import { CrustService } from './modules/crust/crust.service';
 import { DirectoryService } from './modules/directory/directory.service';
-import { IPFSService } from './modules/ipfs/ipfs.service';
+import { IpnsService } from './modules/ipns/ipns.service';
 import { StorageService } from './modules/storage/storage.service';
 
 export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
-    [StorageEventType.ADD_FILE_TO_IPFS]: IPFSService.uploadFilesToIPFS,
-    [StorageEventType.GET_OBJECT_FROM_IPFS]: IPFSService.getFileFromIPFS,
-    [StorageEventType.LIST_IPFS_DIRECTORY]: IPFSService.listIPFSDirectory,
-    [StorageEventType.ADD_FILE_TO_IPFS_FROM_S3]:
-      IPFSService.uploadFileToIPFSFromS3,
-    [StorageEventType.PLACE_STORAGE_ORDER_TO_CRUST]:
-      CrustService.placeStorageOrderToCRUST,
     [StorageEventType.REQUEST_S3_SIGNED_URL_FOR_UPLOAD]:
       StorageService.generateS3SignedUrlForUpload,
     [StorageEventType.END_FILE_UPLOAD_SESSION]:
       StorageService.endFileUploadSession,
+    [StorageEventType.END_FILE_UPLOAD]: StorageService.endFileUpload,
+    [StorageEventType.LIST_FILE_UPLOAD]: StorageService.listFileUploads,
+
+    [StorageEventType.LIST_BUCKETS]: BucketService.listBuckets,
+    [StorageEventType.GET_BUCKET]: BucketService.getBucket,
     [StorageEventType.CREATE_BUCKET]: BucketService.createBucket,
     [StorageEventType.UPDATE_BUCKET]: BucketService.updateBucket,
-    [StorageEventType.DELETE_BUCKET]: BucketService.deleteBucket,
-    [StorageEventType.LIST_BUCKETS]: BucketService.listBuckets,
+    [StorageEventType.DELETE_BUCKET]: BucketService.markBucketForDeletion,
+    [StorageEventType.CANCEL_DELETE_BUCKET]:
+      BucketService.unmarkBucketForDeletion,
+    [StorageEventType.MAX_BUCKETS_QUOTA_REACHED]:
+      BucketService.maxBucketsQuotaReached,
+
     [StorageEventType.CREATE_DIRECTORY]: DirectoryService.createDirectory,
     [StorageEventType.UPDATE_DIRECTROY]: DirectoryService.updateDirectory,
-    [StorageEventType.DELETE_DIRECTORY]: DirectoryService.deleteDirectory,
+    [StorageEventType.DELETE_DIRECTORY]:
+      DirectoryService.markDirectoryForDeletion,
+    [StorageEventType.CANCEL_DELETE_DIRECTORY]:
+      DirectoryService.unmarkDirectoryForDeletion,
     [StorageEventType.LIST_DIRECTORY_CONTENT]:
       DirectoryService.listDirectoryContent,
     [StorageEventType.GET_FILE_DETAILS]: StorageService.getFileDetails,
+    [StorageEventType.FILE_DELETE]: StorageService.markFileForDeletion,
+    [StorageEventType.CANCEL_FILE_DELETE]: StorageService.unmarkFileForDeletion,
+
+    [StorageEventType.BUCKET_WEBHOOK_GET]: BucketService.getBucketWebhook,
+    [StorageEventType.BUCKET_WEBHOOK_CREATE]: BucketService.createBucketWebhook,
+    [StorageEventType.BUCKET_WEBHOOK_UPDATE]: BucketService.updateBucketWebhook,
+    [StorageEventType.BUCKET_WEBHOOK_DELETE]: BucketService.deleteBucketWebhook,
+
+    [StorageEventType.IPNS_LIST]: IpnsService.listIpns,
+    [StorageEventType.IPNS_CREATE]: IpnsService.createIpns,
+    [StorageEventType.IPNS_UPDATE]: IpnsService.updateIpns,
+    [StorageEventType.IPNS_DELETE]: IpnsService.deleteIpns,
+    [StorageEventType.IPNS_PUBLISH]: IpnsService.publishIpns,
   };
 
   return await processors[event.eventName](event, context);
