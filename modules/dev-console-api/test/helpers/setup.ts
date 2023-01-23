@@ -27,6 +27,12 @@ export async function setupTest(): Promise<Stage> {
 
   try {
     await rebuildTestDatabases();
+  } catch (err) {
+    console.error(err);
+    throw new Error('rebuildTestDatabases failed');
+  }
+
+  try {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
