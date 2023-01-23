@@ -9,6 +9,8 @@ import {
   ProductOrderDto,
   writeLog,
   LogType,
+  Lmas,
+  ServiceName,
 } from '@apillon/lib';
 import { ServiceContext } from '../../context';
 import {
@@ -131,6 +133,17 @@ export class ReferralService {
     const product = await new Product({}, context).populateById(event.body.id);
 
     const order = await product.order(player.id, event.body.info);
+
+    await new Lmas().sendAdminAlert(
+      `
+      New order for product: ${product.name}!\n
+      Volume: ${order.volume}\n
+      Cost: ${order.totalCost}\n
+      Info: ${JSON.stringify(order.info)}
+      `,
+      ServiceName.REFERRAL,
+      'message',
+    );
 
     if (order.info) {
       player.shippingInfo = order.info;
