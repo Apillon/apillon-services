@@ -1,5 +1,4 @@
 import { ModelBase, PopulateFrom } from '@apillon/lib';
-import { DidUri } from '@kiltprotocol/types';
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator, emailValidator } from '@rawmodel/validators';

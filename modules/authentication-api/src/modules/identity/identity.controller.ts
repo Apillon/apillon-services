@@ -35,7 +35,7 @@ export class IdentityController {
     return await this.identityService.generateIdentity(context, body);
   }
 
-  @Get('query/process-state')
+  @Get('generate/query/state')
   @Validation({ dto: AttestationEmailDto, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard)
   async attestationGetIdentityState(
@@ -48,7 +48,7 @@ export class IdentityController {
     );
   }
 
-  @Get('query/credential')
+  @Get('credential/query')
   @Validation({ dto: AttestationEmailDto, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.IDENTITY_PROCESS))
   async identityGetUserCredential(
@@ -58,9 +58,19 @@ export class IdentityController {
     return await this.identityService.getUserIdentityCredential(context, email);
   }
 
+  @Get('credential/restore')
+  @Validation({ dto: AttestationEmailDto, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard)
+  async identityRestoreCredential(
+    @Ctx() context: AuthenticationApiContext,
+    @Query('email') email: string,
+  ) {
+    return await this.identityService.restoreCredential(context, email);
+  }
+
   @Post('did/revoke')
   @Validation({ dto: IdentityDidRevokeDto, validateFor: ValidateFor.QUERY })
-  // @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.IDENTITY_PROCESS))
+  @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.IDENTITY_PROCESS))
   async identityRevoke(
     @Ctx() context: AuthenticationApiContext,
     @Body() body: any,

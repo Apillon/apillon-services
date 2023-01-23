@@ -13,7 +13,7 @@ import {
 import axios from 'axios';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthenticationApiContext } from '../../context';
-import { AttestationEmailDto } from './dtos/attestation-email.dto';
+import { AttestationEmailDto } from './dtos/identity-email.dto';
 import { Identity } from './models/identity.model';
 import {
   IdentityState,
@@ -121,6 +121,27 @@ export class IdentityService {
     });
 
     return { success: true };
+  }
+
+  async restoreCredential(context: AuthenticationApiContext, email: string) {
+    const token = generateJwtToken(JwtTokenType.IDENTITY_PROCESS, {
+      email,
+    });
+
+    await new Lmas().writeLog({
+      logType: LogType.INFO,
+      message: `Sending restore credential email to ${email}`,
+      location: 'AUTHENTICATION-API/identity/',
+      service: ServiceName.AUTHENTICATION_API,
+    });
+
+    await new Mailing(context).sendMail({
+      emails: [email],
+      template: 'restore-credential',
+      data: {
+        actionUrl: `${env.AUTH_APP_URL}/identity/?token=${token}&email=${email}`,
+      },
+    });
   }
 
   async getIdentityGenProcessState(
