@@ -61,7 +61,7 @@ export class IdentityService {
     body: AttestationEmailDto,
   ): Promise<any> {
     const email = body.email;
-    const token = generateJwtToken(JwtTokenType.IDENTITY_EMAIL_VERIFICATION, {
+    const token = generateJwtToken(JwtTokenType.IDENTITY_PROCESS, {
       email,
     });
 
