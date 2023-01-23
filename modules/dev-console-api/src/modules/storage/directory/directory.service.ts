@@ -4,7 +4,7 @@ import {
   DirectoryContentQueryFilter,
   StorageMicroservice,
 } from '@apillon/lib';
-import { DevConsoleApiContext } from '../../context';
+import { DevConsoleApiContext } from '../../../context';
 
 @Injectable()
 export class DirectoryService {

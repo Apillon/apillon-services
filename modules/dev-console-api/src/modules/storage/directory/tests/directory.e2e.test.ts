@@ -11,8 +11,8 @@ import {
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
 import { releaseStage, Stage } from '@apillon/tests-lib';
-import { Project } from '../../project/models/project.model';
-import { setupTest } from '../../../../test/helpers/setup';
+import { Project } from '../../../project/models/project.model';
+import { setupTest } from '../../../../../test/helpers/setup';
 import { executeDeleteBucketDirectoryFileWorker } from '@apillon/storage/src/scripts/serverless-workers/execute-delete-bucket-dir-file-worker';
 import { IPFSService } from '@apillon/storage/src/modules/ipfs/ipfs.service';
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';

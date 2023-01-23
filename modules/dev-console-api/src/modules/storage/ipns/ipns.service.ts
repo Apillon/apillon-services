@@ -7,7 +7,7 @@ import {
   ValidatorErrorCode,
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
-import { DevConsoleApiContext } from '../../context';
+import { DevConsoleApiContext } from '../../../context';
 
 @Injectable()
 export class IpnsService {

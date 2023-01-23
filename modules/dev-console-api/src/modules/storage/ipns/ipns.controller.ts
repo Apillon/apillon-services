@@ -19,9 +19,9 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { DevConsoleApiContext } from '../../context';
-import { AuthGuard } from '../../guards/auth.guard';
-import { ValidationGuard } from '../../guards/validation.guard';
+import { DevConsoleApiContext } from '../../../context';
+import { AuthGuard } from '../../../guards/auth.guard';
+import { ValidationGuard } from '../../../guards/validation.guard';
 import { IpnsService } from './ipns.service';
 
 @Controller('buckets/:bucket_id/ipns')
