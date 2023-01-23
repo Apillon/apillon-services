@@ -2,11 +2,7 @@
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
-import {
-  BadRequestErrorCode,
-  ErrorCode,
-  PopulateFrom,
-} from '../../../../config/types';
+import { BadRequestErrorCode, PopulateFrom } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
 
 export class FileDetailsQueryFilter extends ModelBase {

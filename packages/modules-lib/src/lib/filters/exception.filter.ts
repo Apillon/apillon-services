@@ -18,6 +18,16 @@ export class ExceptionsFilter implements ExceptionFilter {
     const res = exceptionCtx.getResponse<Response>();
     const request = exceptionCtx.getRequest<Request>();
 
+    // NOTE: Should use writeLog
+    // writeLog(
+    //   LogType.ERROR,
+    //   'Error occured',
+    //   'exception.filter.ts',
+    //   'ExceptionsFilter',
+    //   error,
+    // );
+    console.error(error);
+
     if (error instanceof CodeException) {
       res.status(error.getStatus()).json({
         status: error.getStatus(),

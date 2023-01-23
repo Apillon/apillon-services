@@ -30,14 +30,16 @@ export class ValidationGuard implements CanActivate {
         options.populateFrom,
       );
 
-      try {
-        await dto.validate();
-      } catch (error) {
-        await dto.handle(error);
-      }
+      if (!options.skipValidation) {
+        try {
+          await dto.validate();
+        } catch (error) {
+          await dto.handle(error);
+        }
 
-      if (!dto.isValid()) {
-        throw new ValidationException(dto, ValidatorErrorCode);
+        if (!dto.isValid()) {
+          throw new ValidationException(dto, ValidatorErrorCode);
+        }
       }
 
       request[options.validateFor] = dto;

@@ -21,6 +21,10 @@
       "path": "services/config"
     },
     {
+      "name": "🌐@services/referral [@apillon/referral]",
+      "path": "services\\referral"
+    },
+    {
       "name": "😎@modules/dev-console-api",
       "path": "modules/dev-console-api"
     },
@@ -62,20 +66,23 @@
     }
   ],
   "settings": {
-    "editor.formatOnPaste": true,
+    "editor.formatOnPaste": false,
     "editor.formatOnSave": true,
     "[typescript]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
-    "cSpell.words": [
-      "Apillon",
-      "Authtrail",
-      "LMAS"
-    ],
+    "cSpell.words": ["Apillon", "Authtrail", "LMAS"],
     "files.exclude": {
+      "**/.git": true,
+      "**/.svn": true,
+      "**/.hg": true,
+      "**/CVS": true,
+      "**/.DS_Store": true,
+      "**/Thumbs.db": true,
       "**/.serverless": true,
-      "**/.turbo": true
+      "**/.turbo": true,
+      "**/node_modules": false
     },
     "nuxt.isNuxtApp": false
-  },
+  }
 }
