@@ -22,4 +22,6 @@ aws codebuild create-webhook --cli-input-json file://apillon-api-webhook-dev.jso
 aws codebuild create-project --cli-input-json file://auth-api-config-dev.json
 aws codebuild create-webhook --cli-input-json file://auth-api-webhook-dev.json
 
+aws codebuild create-project --cli-input-json file://referral-config-dev.json
+aws codebuild create-webhook --cli-input-json file://referral-webhook-dev.json
 

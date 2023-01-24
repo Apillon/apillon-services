@@ -19,7 +19,6 @@ import {
 } from '../../lib/exceptions';
 import { Player } from './models/player.model';
 import { DbTables, ReferralErrorCode } from '../../config/types';
-import { HttpStatus } from '@nestjs/common';
 import { Task, TaskType } from './models/task.model';
 import { Twitter } from '../../lib/twitter';
 import { Product } from './models/product.model';
@@ -87,7 +86,7 @@ export class ReferralService {
     if (!player.exists()) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.PLAYER_DOES_NOT_EXISTS,
-        status: HttpStatus.BAD_REQUEST,
+        status: 400,
       });
     }
 
@@ -95,7 +94,7 @@ export class ReferralService {
     if (!player.termsAccepted || player.status === SqlModelStatus.INCOMPLETE) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.MISSING_TERMS_ACCEPTANCE,
-        status: HttpStatus.BAD_REQUEST,
+        status: 400,
       });
     }
 
@@ -126,7 +125,7 @@ export class ReferralService {
     if (!player.exists()) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.PLAYER_DOES_NOT_EXISTS,
-        status: HttpStatus.BAD_REQUEST,
+        status: 400,
       });
     }
 
@@ -228,7 +227,7 @@ export class ReferralService {
     if (!player.exists()) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.PLAYER_DOES_NOT_EXISTS,
-        status: HttpStatus.BAD_REQUEST,
+        status: 400,
       });
     }
 
@@ -236,7 +235,7 @@ export class ReferralService {
     if (env.APP_ENV !== AppEnvironment.TEST && !tweetData.includes(tweetId)) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.INVALID_TWEET,
-        status: HttpStatus.BAD_REQUEST,
+        status: 400,
       });
     }
     const retweetData = (await twitter.getRetweets(tweetId)) as any;
