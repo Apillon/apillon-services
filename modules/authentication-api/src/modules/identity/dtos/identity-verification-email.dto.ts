@@ -4,7 +4,7 @@ import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator, emailValidator } from '@rawmodel/validators';
 import { AuthenticationErrorCode } from '../../../config/types';
 
-export class CredentialRestoreDto extends ModelBase {
+export class VerificationEmailDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
@@ -20,4 +20,16 @@ export class CredentialRestoreDto extends ModelBase {
     ],
   })
   public email: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: AuthenticationErrorCode.USER_EMAIL_NOT_PRESENT,
+      },
+    ],
+  })
+  public type: string;
 }

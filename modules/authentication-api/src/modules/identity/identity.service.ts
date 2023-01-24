@@ -4,7 +4,6 @@ import {
   CodeException,
   SerializeFor,
   LogType,
-  parseJwtToken,
   env,
   AppEnvironment,
   Lmas,
@@ -13,13 +12,13 @@ import {
 import axios from 'axios';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthenticationApiContext } from '../../context';
-import { AttestationEmailDto } from './dtos/identity-email.dto';
 import { Identity } from './models/identity.model';
 import {
   IdentityState,
   JwtTokenType,
   AuthenticationErrorCode,
   ApillonSupportedCTypes,
+  EmailType,
 } from '../../config/types';
 import {
   generateKeypairs,
@@ -53,15 +52,16 @@ import { AuthenticationWorker } from '../../workers/authentication.worker';
 import { u8aToHex } from '@polkadot/util';
 import { IdentityCreateDto } from './dtos/identity-create.dto';
 import { IdentityDidRevokeDto } from './dtos/identity-did-revoke.dto';
+import { VerificationEmailDto } from './dtos/identity-verification-email.dto';
 
 @Injectable()
 export class IdentityService {
-  async startUserIdentityProcess(
+  async sendVerificationEmail(
     context: AuthenticationApiContext,
-    body: AttestationEmailDto,
+    body: VerificationEmailDto,
   ): Promise<any> {
     const email = body.email;
-    const token = generateJwtToken(JwtTokenType.IDENTITY_PROCESS, {
+    const token = generateJwtToken(JwtTokenType.IDENTITY_VERIFICATION, {
       email,
     });
 
@@ -70,66 +70,56 @@ export class IdentityService {
       email,
     );
 
-    if (identity.exists()) {
-      // If email was already attested -> deny process
-      if (identity.state == IdentityState.ATTESTED) {
-        throw new CodeException({
-          status: HttpStatus.BAD_REQUEST,
-          code: AuthenticationErrorCode.IDENTITY_EMAIL_IS_ALREADY_ATTESTED,
-          errorCodes: AuthenticationErrorCode,
-        });
-      }
-    } else {
-      // If identity does not exist, create a new entry
-      identity = new Identity({}, context);
-    }
+    if (body.type == EmailType.IDENTITY_GENERATE) {
+      // This is the start process of the identity generation, so we need
+      // to do some extra stuff before we can start the process
 
-    // Lock email to identity object
-    identity.populate({
-      context: context,
-      email: email,
-      state: IdentityState.IN_PROGRESS,
-      token: token,
-    });
-
-    try {
-      if (!identity.exists()) {
-        // CREATE NEW
-        await identity.insert(SerializeFor.INSERT_DB);
+      if (identity.exists()) {
+        // If email was already attested -> deny process
+        if (identity.state == IdentityState.ATTESTED) {
+          throw new CodeException({
+            status: HttpStatus.BAD_REQUEST,
+            code: AuthenticationErrorCode.IDENTITY_EMAIL_IS_ALREADY_ATTESTED,
+            errorCodes: AuthenticationErrorCode,
+          });
+        }
       } else {
-        // UPDATE EXISTING
-        await identity.update(SerializeFor.INSERT_DB);
+        // If identity does not exist, create a new entry
+        identity = new Identity({}, context);
       }
-    } catch (err) {
-      await new Lmas().writeLog({
+
+      // Lock email to identity object
+      identity.populate({
         context: context,
-        logType: LogType.ERROR,
-        message: `Error creating identity state for user with email ${email}'`,
-        location: 'Authentication-API/identity/sendVerificationEmail',
-        service: ServiceName.AUTHENTICATION_API,
-        data: err,
+        email: email,
+        state: IdentityState.IN_PROGRESS,
+        token: token,
       });
-      throw err;
-    }
 
-    await new Mailing(context).sendMail({
-      emails: [email],
-      template: 'verify-identity',
-      data: {
-        actionUrl: `${env.AUTH_APP_URL}/identity/?token=${token}&email=${email}`,
-      },
-    });
-
-    return { success: true };
-  }
-
-  async restoreCredential(context: AuthenticationApiContext, email: string) {
-    const identity = await new Identity({}, context).populateByUserEmail(
-      context,
-      email,
-    );
-
-    if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
+      try {
+        if (!identity.exists()) {
+          // CREATE NEW
+          await identity.insert(SerializeFor.INSERT_DB);
+        } else {
+          // UPDATE EXISTING
+          await identity.update(SerializeFor.INSERT_DB);
+        }
+      } catch (err) {
+        await new Lmas().writeLog({
+          context: context,
+          logType: LogType.ERROR,
+          message: `Error creating identity state for user with email ${email}'`,
+          location: 'Authentication-API/identity/sendVerificationEmail',
+          service: ServiceName.AUTHENTICATION_API,
+          data: err,
+        });
+        throw err;
+      }
+    } else if (
+      body.type == EmailType.CREDENTIAL_RESTORE ||
+      (body.type == EmailType.DID_REVOKE &&
+        (!identity.exists() || identity.state != IdentityState.ATTESTED))
+    ) {
       throw new CodeException({
         status: HttpStatus.NOT_FOUND,
         code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
@@ -137,24 +127,22 @@ export class IdentityService {
       });
     }
 
-    const token = generateJwtToken(JwtTokenType.IDENTITY_PROCESS, {
-      email,
-    });
-
     await new Lmas().writeLog({
       logType: LogType.INFO,
-      message: `Sending restore credential email to ${email}`,
+      message: `Sending verification email to ${email}`,
       location: 'AUTHENTICATION-API/identity/',
       service: ServiceName.AUTHENTICATION_API,
     });
 
     await new Mailing(context).sendMail({
       emails: [email],
-      template: 'restore-credential',
+      template: 'verify-identity',
       data: {
-        actionUrl: `${env.AUTH_APP_URL}/identity/?token=${token}&email=${email}&restore=true`,
+        actionUrl: `${env.AUTH_APP_URL}/identity/?token=${token}&email=${email}type=${body.type}`,
       },
     });
+
+    return { success: true };
   }
 
   async getIdentityGenProcessState(
@@ -190,25 +178,6 @@ export class IdentityService {
       email: body.email,
       didUri: body.didUri,
     };
-
-    let tokenData: any;
-    try {
-      tokenData = parseJwtToken(JwtTokenType.IDENTITY_PROCESS, body.token);
-    } catch (error) {
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
-        code: AuthenticationErrorCode.IDENTITY_INVALID_VERIFICATION_TOKEN,
-        errorCodes: AuthenticationErrorCode,
-      });
-    }
-
-    if (tokenData.email != body.email) {
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
-        code: AuthenticationErrorCode.IDENTITY_VERIFICATION_FAILED,
-        errorCodes: AuthenticationErrorCode,
-      });
-    }
 
     // Check if correct identity + state exists -> IN_PROGRESS
     const identity = await new Identity({}, context).populateByUserEmail(

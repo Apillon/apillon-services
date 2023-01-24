@@ -90,7 +90,7 @@ describe('IDENTITY', () => {
     test('Valid email, but attestation exists', async () => {
       // SUBCASE 5: 1. VALID EMAIL, 2. ATTESTATION EXISTS
       const testEmail = 'test3@mailinator.com';
-      const token = generateJwtToken(JwtTokenType.IDENTITY_PROCESS, {
+      const token = generateJwtToken(JwtTokenType.IDENTITY_VERIFICATION, {
         testEmail,
       });
 
@@ -236,7 +236,7 @@ describe('IDENTITY', () => {
       const controlRequestBody = { ...mockData.body_mock };
 
       controlRequestBody.token = generateJwtToken(
-        JwtTokenType.IDENTITY_PROCESS,
+        JwtTokenType.IDENTITY_VERIFICATION,
         {
           email: identityMock.email,
         },
@@ -285,7 +285,7 @@ describe('IDENTITY', () => {
 
       // EXPIRED TOKEN
       controlRequestBody.token = generateJwtToken(
-        JwtTokenType.IDENTITY_PROCESS,
+        JwtTokenType.IDENTITY_VERIFICATION,
         {
           email: identityMock.email,
         },
@@ -305,7 +305,7 @@ describe('IDENTITY', () => {
       // we don't want to go through the whole process -> Identity state
       // check is performed after token validation
       controlRequestBody.token = generateJwtToken(
-        JwtTokenType.IDENTITY_PROCESS,
+        JwtTokenType.IDENTITY_VERIFICATION,
         {
           email: testEmailAttested,
         },
@@ -415,7 +415,7 @@ describe('IDENTITY', () => {
       controlRequestBody.email = testEmailAttested;
       // Generate a new token with the correct data
       controlRequestBody.token = generateJwtToken(
-        JwtTokenType.IDENTITY_PROCESS,
+        JwtTokenType.IDENTITY_VERIFICATION,
         {
           email: testEmailAttested,
         },
@@ -515,7 +515,7 @@ describe('IDENTITY', () => {
         did_create_op: invalid_did_create_op,
         email: mock.CREATE_IDENTITY_MOCK.email,
         didUri: mock.CREATE_IDENTITY_MOCK.did_uri,
-        token: generateJwtToken(JwtTokenType.IDENTITY_PROCESS, {
+        token: generateJwtToken(JwtTokenType.IDENTITY_VERIFICATION, {
           email: mock.CREATE_IDENTITY_MOCK.email,
         }),
       };

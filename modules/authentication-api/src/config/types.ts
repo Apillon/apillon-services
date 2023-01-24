@@ -67,11 +67,17 @@ export enum IdentityState {
  * JWT Token signing types.
  */
 export enum JwtTokenType {
-  IDENTITY_PROCESS = 'IDENTITY_PROCESS',
+  IDENTITY_VERIFICATION = 'identity-verification',
 }
 
 export enum IdentityEventType {
   CREATE_DECENTRALIZED_IDENTITY = 'create-decentralized-identity',
+}
+
+export enum EmailType {
+  IDENTITY_GENERATE = 'identity-generate',
+  CREDENTIAL_RESTORE = 'credential-restore',
+  DID_REVOKE = 'did-revoke',
 }
 
 /************************************************************
