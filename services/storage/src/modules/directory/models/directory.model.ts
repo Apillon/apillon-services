@@ -328,7 +328,7 @@ export class Directory extends AdvancedSQLModel {
   ) {
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
-      'pd',
+      '',
       {},
       filter.serialize(),
     );
@@ -355,7 +355,7 @@ export class Directory extends AdvancedSQLModel {
         qSelect: `
         SELECT 'file' as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime, 
         d.contentType as contentType, d.size as size, d.directory_id as parentDirectoryId, 
-        d.file_uuid as file_uuid, CONCAT("${env.STORAGE_IPFS_GATEWAY}", d.CID)
+        d.file_uuid as file_uuid, CONCAT("${env.STORAGE_IPFS_GATEWAY}", d.CID) as link
         `,
         qFrom: `
         FROM \`${DbTables.FILE}\` d
@@ -373,7 +373,7 @@ export class Directory extends AdvancedSQLModel {
       context.mysql,
       {
         qSelects: qSelects,
-        qFilter: `LIMIT ${filters.limit} OFFSET ${filters.offset};`,
+        qFilter: `ORDER BY ${filters.orderStr} LIMIT ${filters.limit} OFFSET ${filters.offset};`,
       },
       params,
       'd.name',

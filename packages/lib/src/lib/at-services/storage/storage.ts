@@ -13,6 +13,7 @@ import { DirectoryContentQueryFilter } from './dtos/directory-content-query-filt
 import { EndFileUploadSessionDto } from './dtos/end-file-upload-session.dto';
 import { FileDetailsQueryFilter } from './dtos/file-details-query-filter.dto';
 import { FileUploadsQueryFilter } from './dtos/file-uploads-query-filter.dto';
+import { TrashedFilesQueryFilter } from './dtos/trashed-files-query-filter.dto';
 import { IpnsQueryFilter } from './dtos/ipns-query-filter.dto';
 import { PublishIpnsDto } from './dtos/publish-ipns.dto';
 
@@ -183,6 +184,14 @@ export class StorageMicroservice extends BaseService {
     const data = {
       eventName: StorageEventType.GET_FILE_DETAILS,
       ...params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async listFilesMarkedForDeletion(params: TrashedFilesQueryFilter) {
+    const data = {
+      eventName: StorageEventType.LIST_FILES_MARKED_FOR_DELETION,
+      query: params.serialize(),
     };
     return await this.callService(data);
   }

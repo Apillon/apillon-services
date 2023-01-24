@@ -12,6 +12,7 @@ import {
   SerializeFor,
   ServiceName,
   SqlModelStatus,
+  TrashedFilesQueryFilter,
 } from '@apillon/lib';
 import {
   QueueWorkerType,
@@ -71,7 +72,7 @@ export class StorageService {
       bucket.size > maxBucketSizeQuota?.value * 1073741824 //quota is in GB - size is in bytes
     ) {
       throw new StorageCodeException({
-        code: StorageErrorCode.MAX_UPLOADED_TO_BUCKET_SIZE_REACHED,
+        code: StorageErrorCode.MAX_BUCKET_SIZE_REACHED,
         status: 400,
       });
     }
@@ -484,6 +485,16 @@ export class StorageService {
     await f.update();
 
     return f.serialize(SerializeFor.PROFILE);
+  }
+
+  static async listFilesMarkedForDeletion(
+    event: { query: TrashedFilesQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new File({}, context).getMarkedForDeletionList(
+      context,
+      new TrashedFilesQueryFilter(event.query, context),
+    );
   }
 
   //#endregion

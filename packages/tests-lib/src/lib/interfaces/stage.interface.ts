@@ -17,4 +17,6 @@ export interface Stage {
   configSql: MySql;
   authApiContext: TestContext;
   authApiSql: MySql;
+  referralContext: TestContext;
+  referralSql: MySql;
 }
