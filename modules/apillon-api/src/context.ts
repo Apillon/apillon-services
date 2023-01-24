@@ -1,4 +1,10 @@
-import { Ams, Context } from '@apillon/lib';
+import {
+  Ams,
+  CodeException,
+  Context,
+  UnauthorizedErrorCodes,
+} from '@apillon/lib';
+import { HttpStatus } from '@nestjs/common';
 
 export class ApillonApiContext extends Context {
   /**
@@ -12,6 +18,12 @@ export class ApillonApiContext extends Context {
 
     if (apiKeyData && apiKeyData.data.id) {
       this.apiKey = apiKeyData.data;
+    } else {
+      throw new CodeException({
+        code: UnauthorizedErrorCodes.UNAUTHORIZED,
+        status: HttpStatus.UNAUTHORIZED,
+        errorMessage: 'Invalid Authorization header credentials',
+      });
     }
   }
 

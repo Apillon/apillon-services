@@ -6,7 +6,8 @@ import {
 } from '@nestjs/common';
 import { AdvancedSQLModel, SerializeFor } from '@apillon/lib';
 import { map, Observable } from 'rxjs';
-import { IRequest } from '../interfaces/i-request';
+import { IRequest } from '@apillon/modules-lib';
+import { keysToCamel } from '../utils/snake-to-camel-case-keys';
 
 /**
  * API response type definition.
@@ -22,7 +23,7 @@ export interface ApiResponse {
  * Response interceptor used for formatting every response from the API.
  */
 @Injectable()
-export class ResponseInterceptor implements NestInterceptor {
+export class ApillonApiResponseInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
       map(async (data) => {
@@ -57,6 +58,8 @@ export class ResponseInterceptor implements NestInterceptor {
         } else {
           response.data = responseData;
         }
+
+        response.data = keysToCamel(response.data);
 
         return response;
       }),
