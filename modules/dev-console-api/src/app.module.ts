@@ -18,6 +18,7 @@ import {
 import { ApiKeyModule } from './modules/api-key/api-key.module';
 import { env } from '@apillon/lib';
 import { IpnsModule } from './modules/storage/ipns/ipns.module';
+import { ReferralModule } from './modules/referral/referral.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { IpnsModule } from './modules/storage/ipns/ipns.module';
     StorageModule,
     ApiKeyModule,
     IpnsModule,
+    ReferralModule,
   ],
   controllers: [AppController],
   providers: [AppService],

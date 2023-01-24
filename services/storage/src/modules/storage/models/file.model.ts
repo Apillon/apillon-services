@@ -223,7 +223,6 @@ export class File extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
     validators: [],
@@ -252,11 +251,7 @@ export class File extends AdvancedSQLModel {
       PopulateFrom.ADMIN,
       PopulateFrom.PROFILE,
     ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
+    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
     validators: [],
   })
   public downloadLink: string;

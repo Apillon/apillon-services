@@ -328,7 +328,7 @@ export class Directory extends AdvancedSQLModel {
   ) {
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
-      'pd',
+      '',
       {},
       filter.serialize(),
     );
@@ -373,7 +373,7 @@ export class Directory extends AdvancedSQLModel {
       context.mysql,
       {
         qSelects: qSelects,
-        qFilter: `LIMIT ${filters.limit} OFFSET ${filters.offset};`,
+        qFilter: `ORDER BY ${filters.orderStr} LIMIT ${filters.limit} OFFSET ${filters.offset};`,
       },
       params,
       'd.name',

@@ -100,13 +100,12 @@ describe('Storage tests', () => {
         expect(response.body.errors.length).toBeGreaterThan(0);
         expect(
           response.body.errors.filter(
-            (x) => x.statusCode == StorageErrorCode.FILE_NAME_NOT_PRESENT,
+            (x) => x.code == StorageErrorCode.FILE_NAME_NOT_PRESENT,
           ),
         ).toBeTruthy();
         expect(
           response.body.errors.filter(
-            (x) =>
-              x.statusCode == StorageErrorCode.BUCKET_PROJECT_UUID_NOT_PRESENT,
+            (x) => x.code == StorageErrorCode.BUCKET_PROJECT_UUID_NOT_PRESENT,
           ),
         ).toBeTruthy();
       });

@@ -23,6 +23,7 @@ export async function setupTest(): Promise<Stage> {
   env.ACCESS_MYSQL_HOST = null; // safety
   env.STORAGE_MYSQL_HOST = null; // safety
   env.CONFIG_MYSQL_HOST = null; // safety
+  env.REFERRAL_MYSQL_HOST = null; // safety
 
   try {
     await rebuildTestDatabases();
