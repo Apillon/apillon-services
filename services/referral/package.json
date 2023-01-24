@@ -24,18 +24,17 @@
   },
   "dependencies": {
     "@apillon/lib": "*",
-    "@apillon/workers-lib": "*",
     "@middy/core": "^2.5.7",
-    "@types/uuid": "^8.3.4",
     "aws-lambda": "^1.0.7",
     "axios": "^1.2.0",
-    "twitter-api-v2": "^1.12.10"
+    "@faker-js/faker": "^7.5.0",
+    "twitter-api-v2": "^1.12.10",
+    "@rawmodel/core": "^3.3.4",
+    "@rawmodel/parsers": "^3.3.4",
+    "@rawmodel/validators": "^3.3.4"
   },
   "devDependencies": {
     "eslint-config-common": "*",
     "tsconfig": "*"
-  },
-  "overrides": {
-    "ipfs-utils": "9.0.6"
   }
 }

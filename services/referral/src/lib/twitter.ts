@@ -1,7 +1,6 @@
 import { Context, env, TwitterOauthDto } from '@apillon/lib';
 import { LoginResult, TwitterApi } from 'twitter-api-v2';
 import { ReferralErrorCode } from '../config/types';
-import { HttpStatus, UnauthorizedException } from '@nestjs/common';
 import { OauthTokenPair } from '../modules/oauth/models/oauth-token-pairs';
 import {
   ReferralCodeException,
@@ -195,10 +194,11 @@ export class Twitter {
   ): Promise<LoginResult> {
     const functionName = `${this.constructor.name}/getLoginCredentials`;
     if (!oauth_secret) {
-      throw new UnauthorizedException(
-        ReferralErrorCode[ReferralErrorCode.OAUTH_SECRET_MISSING],
-        functionName,
-      );
+      throw new ReferralCodeException({
+        code: ReferralErrorCode[ReferralErrorCode.OAUTH_SECRET_MISSING],
+        sourceFunction: functionName,
+        status: 401,
+      });
     }
 
     // Extract tokens from query string
@@ -232,7 +232,7 @@ export class Twitter {
   private throwErrorCode(code: ReferralErrorCode, context: Context) {
     throw new ReferralCodeException({
       code: code,
-      status: HttpStatus.BAD_REQUEST,
+      status: 400,
       context: context,
       sourceFunction: `${this.constructor.name}/oauth`,
     });

@@ -20,7 +20,7 @@ import {
   ReferralCodeException,
   ReferralValidationException,
 } from '../../../lib/exceptions';
-import { HttpStatus } from '@nestjs/common';
+
 import { faker } from '@faker-js/faker';
 
 export enum TaskType {
@@ -242,7 +242,7 @@ export class Task extends AdvancedSQLModel {
     if (!this.exists()) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.TASK_DOES_NOT_EXISTS,
-        status: HttpStatus.BAD_REQUEST,
+        status: 400,
       });
     }
 
@@ -264,7 +264,7 @@ export class Task extends AdvancedSQLModel {
     ) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.TASK_ALREADY_COMPLETED,
-        status: HttpStatus.BAD_REQUEST,
+        status: 400,
       });
     }
 

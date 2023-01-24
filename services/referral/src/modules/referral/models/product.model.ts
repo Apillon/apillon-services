@@ -10,7 +10,6 @@ import {
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
-import { HttpStatus } from '@nestjs/common';
 import {
   DbTables,
   ReferralErrorCode,
@@ -169,21 +168,21 @@ export class Product extends AdvancedSQLModel {
     if (!this.exists()) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.PLAYER_DOES_NOT_EXISTS,
-        status: HttpStatus.BAD_REQUEST,
+        status: 400,
       });
     }
 
     if (!this.stock) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.PRODUCT_OUT_OF_STOCK,
-        status: HttpStatus.BAD_REQUEST,
+        status: 400,
       });
     }
 
     if (await this.alreadyOrdered(player_id)) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.MAX_ORDER_REACHED,
-        status: HttpStatus.BAD_REQUEST,
+        status: 400,
       });
     }
 
@@ -203,7 +202,7 @@ export class Product extends AdvancedSQLModel {
       if (!balance || balance.length < 1 || balance[0].balance < this.price) {
         throw new ReferralCodeException({
           code: ReferralErrorCode.INSUFFICIENT_BALANCE,
-          status: HttpStatus.BAD_REQUEST,
+          status: 400,
         });
       }
 
@@ -232,7 +231,7 @@ export class Product extends AdvancedSQLModel {
       } else {
         throw new ReferralCodeException({
           code: ReferralErrorCode.TRANSACTION_FAILED,
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          status: 500,
         });
       }
 

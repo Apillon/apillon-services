@@ -1,5 +1,5 @@
 import { ReferralEventType } from '@apillon/lib';
-import { Context } from 'aws-lambda/handler';
+import type { Context } from 'aws-lambda/handler';
 import { ReferralService } from './modules/referral/referral.service';
 import { OauthService } from './modules/oauth/oauth.service';
 
