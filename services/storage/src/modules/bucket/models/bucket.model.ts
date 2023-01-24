@@ -158,7 +158,8 @@ export class Bucket extends AdvancedSQLModel {
       SerializeFor.PROFILE,
     ],
     validators: [],
-    fakeValue: 5242880,
+    fakeValue: 5368709120,
+    defaultValue: 5368709120,
   })
   public maxSize: number;
 

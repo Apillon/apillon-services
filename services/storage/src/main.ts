@@ -2,6 +2,7 @@ import { StorageEventType } from '@apillon/lib';
 import type { Context } from 'aws-lambda/handler';
 import { BucketService } from './modules/bucket/bucket.service';
 import { DirectoryService } from './modules/directory/directory.service';
+import { HostingService } from './modules/hosting/hosting.service';
 import { IpnsService } from './modules/ipns/ipns.service';
 import { StorageService } from './modules/storage/storage.service';
 
@@ -48,6 +49,11 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.IPNS_UPDATE]: IpnsService.updateIpns,
     [StorageEventType.IPNS_DELETE]: IpnsService.deleteIpns,
     [StorageEventType.IPNS_PUBLISH]: IpnsService.publishIpns,
+
+    [StorageEventType.WEB_PAGE_LIST]: HostingService.listWebPages,
+    [StorageEventType.WEB_PAGE_GET]: HostingService.getWebPage,
+    [StorageEventType.WEB_PAGE_CREATE]: HostingService.createWebPage,
+    [StorageEventType.WEB_PAGE_UPDATE]: HostingService.updateWebPage,
   };
 
   return await processors[event.eventName](event, context);

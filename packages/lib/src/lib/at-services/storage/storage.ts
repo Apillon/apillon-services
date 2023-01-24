@@ -16,6 +16,8 @@ import { FileUploadsQueryFilter } from './dtos/file-uploads-query-filter.dto';
 import { TrashedFilesQueryFilter } from './dtos/trashed-files-query-filter.dto';
 import { IpnsQueryFilter } from './dtos/ipns-query-filter.dto';
 import { PublishIpnsDto } from './dtos/publish-ipns.dto';
+import { WebPageQueryFilter } from './dtos/web-page-query-filter.dto';
+import { CreateWebPageDto } from './dtos/create-web-page.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -292,5 +294,39 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  //#endregion
+
+  //#region web pages
+
+  public async listWebPages(params: WebPageQueryFilter) {
+    const data = {
+      eventName: StorageEventType.WEB_PAGE_LIST,
+      query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async getWebPage(id: number) {
+    const data = {
+      eventName: StorageEventType.WEB_PAGE_GET,
+      id: id,
+    };
+    return await this.callService(data);
+  }
+
+  public async createWebPage(params: CreateWebPageDto) {
+    const data = {
+      eventName: StorageEventType.WEB_PAGE_CREATE,
+      body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+  public async updateWebPage(params: { id: number; data: any }) {
+    const data = {
+      eventName: StorageEventType.WEB_PAGE_UPDATE,
+      ...params,
+    };
+    return await this.callService(data);
+  }
   //#endregion
 }

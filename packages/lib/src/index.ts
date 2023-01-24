@@ -49,3 +49,5 @@ export * from './lib/at-services/referral/dtos/twitter-oauth.dto';
 export * from './lib/at-services/referral/dtos/confirm-retweet.dto';
 export * from './lib/at-services/referral/dtos/product-order.dto';
 export * from './lib/at-services/referral/dtos/product-query-filter.dto';
+export * from './lib/at-services/storage/dtos/web-page-query-filter.dto';
+export * from './lib/at-services/storage/dtos/create-web-page.dto';
