@@ -1,5 +1,5 @@
 import { ModelBase, prop } from '../../../base-models/base';
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { floatParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   PopulateFrom,
@@ -48,7 +48,6 @@ export class DeployNftContractDto extends ModelBase {
   public maxSupply: number;
 
   @prop({
-    parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
