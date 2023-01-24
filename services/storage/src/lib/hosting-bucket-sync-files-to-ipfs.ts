@@ -18,7 +18,7 @@ import { FileUploadSession } from '../modules/storage/models/file-upload-session
 import { File } from '../modules/storage/models/file.model';
 import { generateDirectoriesForFUR } from './generate-directories-from-path';
 import { pinFileToCRUST } from './pin-file-to-crust';
-import { getSizeOfFilesInSessionOnS3 } from './size-of-files';
+import { getSessionFilesOnS3 } from './file-upload-session-s3-files';
 
 /**
  * Transfers files from s3 to IPFS & pins them to CRUST
@@ -40,7 +40,7 @@ export async function hostingBucketSyncFilesToIPFS(
 
   //Check if size of files is greater than allowed bucket size.
   const s3Client: AWS_S3 = new AWS_S3();
-  const filesOnS3 = await getSizeOfFilesInSessionOnS3(bucket, session);
+  const filesOnS3 = await getSessionFilesOnS3(bucket, session);
 
   if (filesOnS3.size > maxBucketSize) {
     //TODO - define flow. What happens in that case - user should be notified
@@ -136,14 +136,14 @@ export async function hostingBucketSyncFilesToIPFS(
     await context.mysql.commit(conn);
 
     //Delete files from S3
-    for (const tmpS3FileList of filesOnS3.s3Keys) {
+    /*for (const tmpS3FileList of filesOnS3.files) {
       await s3Client.removeFiles(
         env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
         tmpS3FileList.Contents.map((x) => {
           return { Key: x.Key };
         }),
       );
-    }
+    }*/
 
     await new Lmas().writeLog({
       context: context,

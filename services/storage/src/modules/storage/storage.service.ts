@@ -24,6 +24,7 @@ import { v4 as uuidV4 } from 'uuid';
 import { BucketType, FileStatus, StorageErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
 import { StorageCodeException } from '../../lib/exceptions';
+import { hostingBucketProcessSessionFiles } from '../../lib/hosting-bucket-process-session-files';
 import { SyncToIPFSWorker } from '../../workers/s3-to-ipfs-sync-worker';
 import { WorkerName } from '../../workers/worker-executor';
 import { Bucket } from '../bucket/models/bucket.model';
@@ -220,53 +221,59 @@ export class StorageService {
       });
     }
 
-    if (
-      event.body.directSync &&
-      (env.APP_ENV == AppEnvironment.LOCAL_DEV ||
-        env.APP_ENV == AppEnvironment.TEST)
-    ) {
-      //Directly calls worker, to sync files to IPFS & CRUST - USED ONLY FOR DEVELOPMENT!!
-      const serviceDef: ServiceDefinition = {
-        type: ServiceDefinitionType.SQS,
-        config: { region: 'test' },
-        params: { FunctionName: 'test' },
-      };
-      const parameters = {
-        session_uuid: session.session_uuid,
-        wrapWithDirectory: event.body.wrapWithDirectory,
-        wrappingDirectoryPath: event.body.directoryPath,
-      };
-      const wd = new WorkerDefinition(
-        serviceDef,
-        WorkerName.SYNC_TO_IPFS_WORKER,
-        { parameters },
-      );
-
-      const worker = new SyncToIPFSWorker(
-        wd,
-        context,
-        QueueWorkerType.EXECUTOR,
-      );
-      await worker.runExecutor({
-        session_uuid: session.session_uuid,
-        wrapWithDirectory: event.body.wrapWithDirectory,
-        wrappingDirectoryName: event.body.directoryPath,
-      });
-    } else {
-      //send message to SQS
-      await sendToWorkerQueue(
-        env.STORAGE_AWS_WORKER_SQS_URL,
-        WorkerName.SYNC_TO_IPFS_WORKER,
-        [
+    if (bucket.bucketType == BucketType.STORAGE) {
+      if (
+        event.body.directSync &&
+        (env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+          env.APP_ENV == AppEnvironment.TEST)
+      ) {
+        //Directly calls worker, to sync files to IPFS & CRUST - USED ONLY FOR DEVELOPMENT!!
+        const serviceDef: ServiceDefinition = {
+          type: ServiceDefinitionType.SQS,
+          config: { region: 'test' },
+          params: { FunctionName: 'test' },
+        };
+        const parameters = {
+          session_uuid: session.session_uuid,
+          wrapWithDirectory: event.body.wrapWithDirectory,
+          wrappingDirectoryPath: event.body.directoryPath,
+        };
+        const wd = new WorkerDefinition(
+          serviceDef,
+          WorkerName.SYNC_TO_IPFS_WORKER,
           {
-            session_uuid: session.session_uuid,
-            wrapWithDirectory: event.body.wrapWithDirectory,
-            wrappingDirectoryName: event.body.directoryPath,
+            parameters,
           },
-        ],
-        null,
-        null,
-      );
+        );
+
+        const worker = new SyncToIPFSWorker(
+          wd,
+          context,
+          QueueWorkerType.EXECUTOR,
+        );
+        await worker.runExecutor({
+          session_uuid: session.session_uuid,
+          wrapWithDirectory: event.body.wrapWithDirectory,
+          wrappingDirectoryName: event.body.directoryPath,
+        });
+      } else {
+        //send message to SQS
+        await sendToWorkerQueue(
+          env.STORAGE_AWS_WORKER_SQS_URL,
+          WorkerName.SYNC_TO_IPFS_WORKER,
+          [
+            {
+              session_uuid: session.session_uuid,
+              wrapWithDirectory: event.body.wrapWithDirectory,
+              wrappingDirectoryName: event.body.directoryPath,
+            },
+          ],
+          null,
+          null,
+        );
+      }
+    } else if (bucket.bucketType == BucketType.HOSTING) {
+      await hostingBucketProcessSessionFiles(context, bucket, session);
     }
 
     return true;

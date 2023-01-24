@@ -7,6 +7,7 @@ export enum DbTables {
   FILE = 'file',
   BUCKET_WEBHOOK = 'bucket_webhook',
   IPNS = 'ipns',
+  WEB_PAGE = 'web_page',
 }
 
 export enum StorageErrorCode {
