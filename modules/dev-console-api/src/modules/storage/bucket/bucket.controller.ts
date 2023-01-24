@@ -18,11 +18,11 @@ import {
   DefaultUserRole,
   ValidateFor,
 } from '@apillon/lib';
-import { DevConsoleApiContext } from '../../context';
+import { DevConsoleApiContext } from '../../../context';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
-import { ValidationGuard } from '../../guards/validation.guard';
+import { ValidationGuard } from '../../../guards/validation.guard';
 import { BucketService } from './bucket.service';
-import { AuthGuard } from '../../guards/auth.guard';
+import { AuthGuard } from '../../../guards/auth.guard';
 
 @Controller('buckets')
 export class BucketController {

@@ -1,6 +1,6 @@
 // import { ApiProperty } from '@babel/core';
 import { prop } from '@rawmodel/core';
-import { booleanParser, stringParser } from '@rawmodel/parsers';
+import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { BaseQueryFilter } from '../../../base-models/base-query-filter.model';
@@ -26,9 +26,9 @@ export class BucketQueryFilter extends BaseQueryFilter {
   public search: string;
 
   @prop({
-    parser: { resolver: booleanParser() },
+    parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
   })
-  public markedForDeletion: boolean;
+  public status: number;
 }

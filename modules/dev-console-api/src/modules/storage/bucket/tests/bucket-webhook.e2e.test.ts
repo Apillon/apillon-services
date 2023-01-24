@@ -1,4 +1,4 @@
-import { DefaultUserRole, env, SqlModelStatus } from '@apillon/lib';
+import { DefaultUserRole, SqlModelStatus } from '@apillon/lib';
 import {
   BucketWebhookAuthMethod,
   StorageErrorCode,
@@ -14,8 +14,8 @@ import {
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
 import { releaseStage, Stage } from '@apillon/tests-lib';
-import { Project } from '../../project/models/project.model';
-import { setupTest } from '../../../../test/helpers/setup';
+import { Project } from '../../../project/models/project.model';
+import { setupTest } from '../../../../../test/helpers/setup';
 
 describe('Storage bucket tests', () => {
   let stage: Stage;

@@ -51,6 +51,7 @@ export enum StorageEventType {
   BUCKET_WEBHOOK_DELETE = 'delete-bucket-webhook',
   LIST_FILE_UPLOAD = 'list-file-upload',
   MAX_BUCKETS_QUOTA_REACHED = 'max-buckets-quota-reached',
+  LIST_FILES_MARKED_FOR_DELETION = 'list-files-marked-for-deletion',
   IPNS_LIST = 'list-ipns',
   IPNS_CREATE = 'create-ipns',
   IPNS_UPDATE = 'update-ipns',

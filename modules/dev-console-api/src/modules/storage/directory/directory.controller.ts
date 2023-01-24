@@ -16,11 +16,11 @@ import {
   DirectoryContentQueryFilter,
   ValidateFor,
 } from '@apillon/lib';
-import { DevConsoleApiContext } from '../../context';
-import { ValidationGuard } from '../../guards/validation.guard';
+import { DevConsoleApiContext } from '../../../context';
+import { ValidationGuard } from '../../../guards/validation.guard';
 import { DirectoryService } from './directory.service';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
-import { AuthGuard } from '../../guards/auth.guard';
+import { AuthGuard } from '../../../guards/auth.guard';
 
 @Controller('directories')
 export class DirectoryController {

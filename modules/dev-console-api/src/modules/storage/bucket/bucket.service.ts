@@ -8,12 +8,12 @@ import {
   AttachedServiceType,
   BucketQuotaReachedQueryFilter,
 } from '@apillon/lib';
-import { ResourceNotFoundErrorCode } from '../../config/types';
-import { DevConsoleApiContext } from '../../context';
-import { Project } from '../project/models/project.model';
-import { Service } from '../services/models/service.model';
-import { ServiceQueryFilter } from '../services/dtos/services-query-filter.dto';
-import { ServicesService } from '../services/services.service';
+import { ResourceNotFoundErrorCode } from '../../../config/types';
+import { DevConsoleApiContext } from '../../../context';
+import { Project } from '../../project/models/project.model';
+import { Service } from '../../services/models/service.model';
+import { ServiceQueryFilter } from '../../services/dtos/services-query-filter.dto';
+import { ServicesService } from '../../services/services.service';
 
 @Injectable()
 export class BucketService {

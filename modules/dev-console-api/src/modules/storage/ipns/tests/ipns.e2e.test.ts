@@ -11,8 +11,8 @@ import {
   TestUser,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
-import { setupTest } from '../../../../test/helpers/setup';
-import { Project } from '../../project/models/project.model';
+import { setupTest } from '../../../../../test/helpers/setup';
+import { Project } from '../../../project/models/project.model';
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 import { env } from '@apillon/lib';
 
