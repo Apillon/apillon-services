@@ -208,6 +208,7 @@ export class AuthenticationWorker extends BaseQueueWorker {
       identity.populate({
         state: IdentityState.ATTESTED,
         credential: claimerCredential,
+        didUri: parameters.didUri, // TODO: Maybe better to get from document
       });
 
       await identity.update();

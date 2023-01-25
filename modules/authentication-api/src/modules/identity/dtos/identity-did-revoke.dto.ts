@@ -25,22 +25,6 @@ export class IdentityDidRevokeDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: AuthenticationErrorCode.DID_URI_NOT_PRESENT,
-      },
-      {
-        resolver: didUriValidator(),
-        code: AuthenticationErrorCode.DID_URI_INVALID,
-      },
-    ],
-  })
-  public didUri: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE],
   })
   public token: string;
 }
