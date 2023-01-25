@@ -1,4 +1,12 @@
-import { mnemonicGenerate, mnemonicToMiniSecret } from '@polkadot/util-crypto';
+import {
+  blake2AsU8a,
+  keyExtractPath,
+  keyFromPath,
+  mnemonicGenerate,
+  mnemonicToMiniSecret,
+  naclBoxPairFromSecret,
+  sr25519PairFromSeed,
+} from '@polkadot/util-crypto';
 import { LogType, env, ServiceName, Lmas } from '@apillon/lib';
 import {
   ConfigService,
@@ -13,6 +21,7 @@ import {
   Attestation,
   Credential,
   DidUri,
+  NewDidEncryptionKey,
 } from '@kiltprotocol/sdk-js';
 import {
   Keypairs,
@@ -20,7 +29,7 @@ import {
   EclipticDerivationPaths,
   ApillonSupportedCTypes,
 } from '../config/types';
-import { Key } from 'readline';
+import { Keypair } from '@polkadot/util-crypto/types';
 
 export function generateMnemonic() {
   return mnemonicGenerate();
@@ -31,6 +40,43 @@ export async function generateAccount(mnemonic: string): Promise<KeyringPair> {
     mnemonicToMiniSecret(mnemonic),
     KILT_DERIVATION_SIGN_ALGORITHM,
   );
+}
+
+export async function getAccount(mnemonic: string) {
+  const signingKeyPairType = 'sr25519';
+  const keyring = new Utils.Keyring({
+    ss58Format: 38,
+    type: signingKeyPairType,
+  });
+  return keyring.addFromMnemonic(mnemonic);
+}
+
+export async function getKeypairs(mnemonic: string): Promise<Keypairs> {
+  const account = await getAccount(mnemonic);
+  const authentication = {
+    ...account.derive('//did//0'),
+    type: 'sr25519',
+  } as KiltKeyringPair;
+
+  const assertion = {
+    ...account.derive('//did//assertion//0'),
+    type: 'sr25519',
+  } as KiltKeyringPair;
+  const keyAgreement: NewDidEncryptionKey & Keypair = (function () {
+    const secretKeyPair = sr25519PairFromSeed(mnemonicToMiniSecret(mnemonic));
+    const { path } = keyExtractPath('//did//keyAgreement//0');
+    const { secretKey } = keyFromPath(secretKeyPair, path, 'sr25519');
+    return {
+      ...naclBoxPairFromSecret(blake2AsU8a(secretKey)),
+      type: 'x25519',
+    };
+  })();
+
+  return {
+    authentication,
+    assertion,
+    keyAgreement,
+  };
 }
 
 export async function generateKeypairs(mnemonic: string) {

@@ -16,10 +16,10 @@ import {
 } from '@apillon/workers-lib';
 import {
   generateAccount,
-  generateKeypairs,
   getFullDidDocument,
   getNextNonce,
   createAttestationRequest,
+  getKeypairs,
 } from '../lib/kilt';
 import { AuthenticationApiContext } from '../context';
 import { Identity } from '../modules/identity/models/identity.model';
@@ -60,7 +60,7 @@ export class AuthenticationWorker extends BaseQueueWorker {
     const claimerDidUri = parameters.didUri;
 
     // Generate (retrieve) attester did data
-    const attesterKeypairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
+    const attesterKeypairs = await getKeypairs(env.KILT_ATTESTER_MNEMONIC);
     const attesterAccount = (await generateAccount(
       env.KILT_ATTESTER_MNEMONIC,
     )) as KiltKeyringPair;
@@ -82,7 +82,7 @@ export class AuthenticationWorker extends BaseQueueWorker {
           nonce: hexToU8a(did_create_op.payload.nonce),
         },
         did_create_op.senderPubKey,
-        u8aToHex(attesterKeypairs.encryption.secretKey),
+        u8aToHex(attesterKeypairs.keyAgreement.secretKey),
       );
     } catch (error) {
       await new Lmas().writeLog({

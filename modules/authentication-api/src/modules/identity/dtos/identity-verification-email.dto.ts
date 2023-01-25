@@ -27,7 +27,7 @@ export class VerificationEmailDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: AuthenticationErrorCode.USER_EMAIL_NOT_PRESENT,
+        code: AuthenticationErrorCode.IDENTITY_VERIFICATION_EMAIL_TYPE_NOT_PRESENT,
       },
     ],
   })

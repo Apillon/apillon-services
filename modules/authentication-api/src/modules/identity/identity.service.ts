@@ -25,6 +25,8 @@ import {
   generateAccount,
   generateMnemonic,
   getCtypeSchema,
+  getKeypairs,
+  getAccount,
 } from '../../lib/kilt';
 import { ICredential, KiltKeyringPair } from '@kiltprotocol/types';
 import {
@@ -49,10 +51,11 @@ import {
 } from '@apillon/workers-lib';
 import { WorkerName } from '../../workers/worker-executor';
 import { AuthenticationWorker } from '../../workers/authentication.worker';
-import { u8aToHex } from '@polkadot/util';
 import { IdentityCreateDto } from './dtos/identity-create.dto';
 import { IdentityDidRevokeDto } from './dtos/identity-did-revoke.dto';
 import { VerificationEmailDto } from './dtos/identity-verification-email.dto';
+
+import { u8aToHex } from '@polkadot/util';
 
 @Injectable()
 export class IdentityService {
@@ -116,9 +119,9 @@ export class IdentityService {
         throw err;
       }
     } else if (
-      body.type == EmailType.CREDENTIAL_RESTORE ||
-      (body.type == EmailType.DID_REVOKE &&
-        (!identity.exists() || identity.state != IdentityState.ATTESTED))
+      (body.type == EmailType.CREDENTIAL_RESTORE ||
+        body.type == EmailType.DID_REVOKE) &&
+      (!identity.exists() || identity.state != IdentityState.ATTESTED)
     ) {
       throw new CodeException({
         status: HttpStatus.NOT_FOUND,
@@ -138,7 +141,7 @@ export class IdentityService {
       emails: [email],
       template: 'verify-identity',
       data: {
-        actionUrl: `${env.AUTH_APP_URL}/identity/?token=${token}&email=${email}type=${body.type}`,
+        actionUrl: `${env.AUTH_APP_URL}/identity/?token=${token}&email=${email}&type=${body.type}`,
       },
     });
 
@@ -346,13 +349,22 @@ export class IdentityService {
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
 
+    console.log('Received body ', body);
     // Generate mnemonic
-    const mnemonic = generateMnemonic();
+    let mnemonic;
+    if (body.mnemonic) {
+      mnemonic = body.mnemonic;
+    } else {
+      mnemonic = generateMnemonic();
+    }
+
     // generate keypairs
-    const { authentication, encryption, assertion, delegation } =
-      await generateKeypairs(mnemonic);
+    const { authentication, assertion, keyAgreement } = await getKeypairs(
+      mnemonic,
+    );
+
     // generate account
-    const account = (await generateAccount(mnemonic)) as KiltKeyringPair;
+    const account = (await getAccount(mnemonic)) as KiltKeyringPair;
 
     // First check if we have the required balance
     let balance = parseInt(
@@ -381,16 +393,15 @@ export class IdentityService {
       console.log(`Balance: ${balance}`);
     }
 
-    let didUri: DidUri;
+    let didUri: DidUri = Did.getFullDidUriFromKey(authentication);
     let wellKnownDidconfig: any;
     let didDoc = await Did.resolve(Did.getFullDidUriFromKey(authentication));
     if (!didDoc || !didDoc.document) {
       const fullDidCreationTx = await Did.getStoreTx(
         {
           authentication: [authentication],
-          keyAgreement: [encryption],
+          keyAgreement: [keyAgreement],
           assertionMethod: [assertion],
-          capabilityDelegation: [delegation],
         },
         account.address,
         async ({ data }) => ({
@@ -399,10 +410,9 @@ export class IdentityService {
         }),
       );
 
-      console.log('Submitting document create TX to bc ...');
+      console.log('Submitting document create TX to BC ...');
       await Blockchain.signAndSubmitTx(fullDidCreationTx, account);
 
-      didUri = Did.getFullDidUriFromKey(authentication);
       const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
       const { document } = Did.linkedInfoFromChain(encodedFullDid);
 
@@ -410,17 +420,16 @@ export class IdentityService {
         // DEV - no trigger to LMAS
         throw 'Full DID was not successfully created.';
       }
-
-      didDoc = await Did.resolve(Did.getFullDidUriFromKey(authentication));
     }
+
+    didDoc = await Did.resolve(Did.getFullDidUriFromKey(authentication));
+    const didResolveResult = await Did.resolve(didUri);
 
     if (body.domain_linkage) {
       const domainLinkage = body.domain_linkage;
       if (!domainLinkage.origin) {
         return { error: 'domain_linkage: Origin must be provided!!' };
       }
-
-      console.log(`Creating domain linkage for ${domainLinkage.origin}`);
 
       const domainLinkageCType = getCtypeSchema(
         ApillonSupportedCTypes.DOMAIN_LINKAGE,
@@ -446,7 +455,7 @@ export class IdentityService {
       const dLAttestTx = api.tx.attestation.add(claimHash, cTypeHash, null);
 
       console.log('Submitting domain linkage attestation to BC ...');
-      // We authorize the call using the attestation key of the Dapps DID.
+      // We authorize the call using the attestation key of the Dapps DID
       const submitDLAttestTx = await Did.authorizeTx(
         didUri,
         dLAttestTx,
@@ -471,13 +480,15 @@ export class IdentityService {
 
       const challenge =
         '0x3ce56bb25ea3b603f968c302578e77e28d3d7ba3c7a8c45d6ebd3f410da766e1';
+      const assertionMethodKeyId =
+        didResolveResult.document.assertionMethod[0].id;
       const domainLinkagePresentation = await Credential.createPresentation({
         credential: domainLinkageCredential,
         signCallback: async ({ data }) =>
           ({
-            signature: authentication.sign(data),
-            keyType: authentication.type,
-            keyUri: `${didUri}${didDoc.document?.authentication[0].id}`,
+            signature: assertion.sign(data),
+            keyType: assertion.type,
+            keyUri: `${didUri}${assertionMethodKeyId}`,
           } as SignResponseData),
         challenge,
       });
@@ -539,7 +550,7 @@ export class IdentityService {
     return {
       mnemonic: mnemonic,
       address: account.address,
-      pubkey: u8aToHex(encryption.publicKey),
+      // pubkey: u8aToHex(encryption.publicKey),
       wellKnownDidconfig: wellKnownDidconfig,
     };
   }

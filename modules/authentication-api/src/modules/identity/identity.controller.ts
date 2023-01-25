@@ -59,8 +59,8 @@ export class IdentityController {
     return await this.identityService.revokeIdentity(context, body);
   }
 
-  @Get('verification/email')
-  @Validation({ dto: VerificationEmailDto, validateFor: ValidateFor.QUERY })
+  @Post('verification/email')
+  @Validation({ dto: VerificationEmailDto })
   @UseGuards(ValidationGuard)
   async identityRestoreCredential(
     @Ctx() context: AuthenticationApiContext,

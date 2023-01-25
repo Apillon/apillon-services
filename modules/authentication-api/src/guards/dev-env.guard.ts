@@ -9,8 +9,8 @@ export class DevEnvGuard implements CanActivate {
 
   public async canActivate(execCtx: ExecutionContext): Promise<boolean> {
     return (
-      env.APP_ENV != AppEnvironment.TEST &&
-      env.APP_ENV != AppEnvironment.LOCAL_DEV
+      env.APP_ENV == AppEnvironment.TEST ||
+      env.APP_ENV == AppEnvironment.LOCAL_DEV
     );
   }
 }

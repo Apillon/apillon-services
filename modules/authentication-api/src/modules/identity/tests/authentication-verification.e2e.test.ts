@@ -36,7 +36,7 @@ describe('VERFICATION', () => {
     const testEmail = mock.CREATE_IDENTITY_MOCK.email;
 
     const token = generateJwtToken(
-      JwtTokenType.IDENTITY_PROCESS,
+      JwtTokenType.IDENTITY_VERIFICATION,
       {
         email: testEmail,
       },
