@@ -54,6 +54,7 @@ import { AuthenticationWorker } from '../../workers/authentication.worker';
 import { IdentityCreateDto } from './dtos/identity-create.dto';
 import { IdentityDidRevokeDto } from './dtos/identity-did-revoke.dto';
 import { VerificationEmailDto } from './dtos/identity-verification-email.dto';
+
 import { u8aToHex } from '@polkadot/util';
 
 @Injectable()
@@ -293,7 +294,7 @@ export class IdentityService {
       env.KILT_ATTESTER_MNEMONIC,
     )) as KiltKeyringPair;
 
-    const didUri = body.didUri as DidUri;
+    const didUri = identity.didUri as DidUri;
     const did = Did.toChain(didUri);
     const endpointsCountForDid = await api.query.did.didEndpointsCount(did);
     const didDeletionExtrinsic = api.tx.did.delete(endpointsCountForDid);
@@ -364,6 +365,8 @@ export class IdentityService {
     // generate account
     const account = (await getAccount(mnemonic)) as KiltKeyringPair;
 
+    return { pubkey: u8aToHex(keyAgreement.publicKey) };
+
     // First check if we have the required balance
     let balance = parseInt(
       (await api.query.system.account(account.address)).data.free.toString(),
@@ -391,7 +394,7 @@ export class IdentityService {
       console.log(`Balance: ${balance}`);
     }
 
-    let didUri: DidUri = Did.getFullDidUriFromKey(authentication);
+    const didUri: DidUri = Did.getFullDidUriFromKey(authentication);
     let wellKnownDidconfig: any;
     let didDoc = await Did.resolve(Did.getFullDidUriFromKey(authentication));
     if (!didDoc || !didDoc.document) {

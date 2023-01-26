@@ -51,7 +51,7 @@ export class IdentityController {
   }
 
   @Post('did/revoke')
-  @Validation({ dto: IdentityDidRevokeDto, validateFor: ValidateFor.QUERY })
+  @Validation({ dto: IdentityDidRevokeDto })
   @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.IDENTITY_VERIFICATION))
   async identityRevoke(
     @Ctx() context: AuthenticationApiContext,

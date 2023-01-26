@@ -29,13 +29,20 @@ export class CaptchaGuard implements CanActivate {
       let captchaResult;
 
       if (env.CAPTCHA_SECRET && env.APP_ENV !== AppEnvironment.TEST) {
+        if (!data.captcha) {
+          throw new CodeException({
+            status: HttpStatus.INTERNAL_SERVER_ERROR,
+            code: AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_PRESENT,
+            errorCodes: AuthenticationErrorCode,
+          });
+        }
         await verifyCaptcha(data.captcha?.token, env.CAPTCHA_SECRET).then(
           (response) => (captchaResult = response),
         );
       } else {
         throw new CodeException({
           status: HttpStatus.INTERNAL_SERVER_ERROR,
-          code: AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_PRESENT,
+          code: AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_CONFIGURED,
           errorCodes: AuthenticationErrorCode,
         });
       }

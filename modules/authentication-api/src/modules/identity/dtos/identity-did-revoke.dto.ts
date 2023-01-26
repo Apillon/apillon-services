@@ -3,7 +3,6 @@ import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator, emailValidator } from '@rawmodel/validators';
 import { AuthenticationErrorCode } from '../../../config/types';
-import { didUriValidator } from '../validators/did-create.validator';
 
 export class IdentityDidRevokeDto extends ModelBase {
   @prop({

@@ -39,7 +39,7 @@ export class Identity extends AdvancedSQLModel {
   public email: string;
 
   /**
-   * Identity didAddress
+   * Identity didUri
    */
   @prop({
     parser: { resolver: stringParser() },
@@ -52,7 +52,7 @@ export class Identity extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
     ],
   })
-  public didAddress: string;
+  public didUri: string;
 
   /**
    * Identity credential

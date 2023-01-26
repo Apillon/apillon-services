@@ -20,6 +20,7 @@ import {
   getNextNonce,
   createAttestationRequest,
   getKeypairs,
+  getAccount,
 } from '../lib/kilt';
 import { AuthenticationApiContext } from '../context';
 import { Identity } from '../modules/identity/models/identity.model';
@@ -61,7 +62,7 @@ export class AuthenticationWorker extends BaseQueueWorker {
 
     // Generate (retrieve) attester did data
     const attesterKeypairs = await getKeypairs(env.KILT_ATTESTER_MNEMONIC);
-    const attesterAccount = (await generateAccount(
+    const attesterAccount = (await getAccount(
       env.KILT_ATTESTER_MNEMONIC,
     )) as KiltKeyringPair;
 
