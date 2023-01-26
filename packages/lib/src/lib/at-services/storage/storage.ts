@@ -18,6 +18,7 @@ import { IpnsQueryFilter } from './dtos/ipns-query-filter.dto';
 import { PublishIpnsDto } from './dtos/publish-ipns.dto';
 import { WebPageQueryFilter } from './dtos/web-page-query-filter.dto';
 import { CreateWebPageDto } from './dtos/create-web-page.dto';
+import { DeployWebPageDto } from './dtos/deploy-web-page.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -325,6 +326,14 @@ export class StorageMicroservice extends BaseService {
     const data = {
       eventName: StorageEventType.WEB_PAGE_UPDATE,
       ...params,
+    };
+    return await this.callService(data);
+  }
+
+  public async deployWebPage(params: DeployWebPageDto) {
+    const data = {
+      eventName: StorageEventType.WEB_PAGE_DEPLOY,
+      body: params.serialize(),
     };
     return await this.callService(data);
   }

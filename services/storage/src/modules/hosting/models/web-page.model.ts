@@ -16,6 +16,7 @@ import {
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
+import { Bucket } from '../../bucket/models/bucket.model';
 
 export class WebPage extends AdvancedSQLModel {
   public readonly tableName = DbTables.WEB_PAGE;
@@ -184,6 +185,54 @@ export class WebPage extends AdvancedSQLModel {
   })
   public domain: string;
 
+  /***************************************************
+   * Info properties
+   *****************************************************/
+  @prop({
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public bucket: Bucket;
+
+  @prop({
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public stagingBucket: Bucket;
+
+  @prop({
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public productionBucket: Bucket;
+
   public canAccess(context: ServiceContext) {
     if (
       !context.hasRoleOnProject(
@@ -273,5 +322,24 @@ export class WebPage extends AdvancedSQLModel {
     };
 
     return await selectAndCountQuery(context.mysql, sqlQuery, params, 'wp.id');
+  }
+
+  public async populateBuckets() {
+    if (this.bucket_id) {
+      this.bucket = await new Bucket({}, this.getContext()).populateById(
+        this.bucket_id,
+      );
+    }
+    if (this.stagingBucket_id) {
+      this.stagingBucket = await new Bucket({}, this.getContext()).populateById(
+        this.stagingBucket_id,
+      );
+    }
+    if (this.productionBucket_id) {
+      this.productionBucket = await new Bucket(
+        {},
+        this.getContext(),
+      ).populateById(this.productionBucket_id);
+    }
   }
 }

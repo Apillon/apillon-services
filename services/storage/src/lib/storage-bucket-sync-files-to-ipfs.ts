@@ -79,7 +79,7 @@ export async function storageBucketSyncFilesToIPFS(
 
     let ipfsRes: uploadFilesToIPFSRes = undefined;
     try {
-      ipfsRes = await IPFSService.uploadFilesToIPFSFromS3({
+      ipfsRes = await IPFSService.uploadFURsToIPFSFromS3({
         fileUploadRequests: files,
         wrapWithDirectory: wrapWithDirectory,
       });
@@ -245,7 +245,7 @@ export async function storageBucketSyncFilesToIPFS(
 
       let ipfsRes = undefined;
       try {
-        ipfsRes = await IPFSService.uploadFileToIPFSFromS3(
+        ipfsRes = await IPFSService.uploadFURToIPFSFromS3(
           { fileUploadRequest: file },
           context,
         );

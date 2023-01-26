@@ -15,6 +15,7 @@ import {
 import { StorageCodeException } from '../../lib/exceptions';
 import { FileUploadRequest } from '../storage/models/file-upload-request.model';
 import { uploadFilesToIPFSRes } from './interfaces/upload-files-to-ipfs-res.interface';
+import { File } from '../storage/models/file.model';
 
 export class IPFSService {
   static async createIPFSClient() {
@@ -41,7 +42,7 @@ export class IPFSService {
     return await create({ url: ipfsGatewayURL });
   }
 
-  static async uploadFileToIPFSFromS3(
+  static async uploadFURToIPFSFromS3(
     event: { fileUploadRequest: FileUploadRequest },
     context,
   ): Promise<{ CID: CID; cidV0: string; cidV1: string; size: number }> {
@@ -78,7 +79,7 @@ export class IPFSService {
     await new Lmas().writeLog({
       logType: LogType.INFO,
       message: 'File uploaded to IPFS',
-      location: 'IPFSService.uploadFilesToIPFSFromS3',
+      location: 'IPFSService.uploadFURsToIPFSFromS3',
       service: ServiceName.STORAGE,
       data: {
         fileUploadRequest: event.fileUploadRequest,
@@ -94,7 +95,13 @@ export class IPFSService {
     };
   }
 
-  static async uploadFilesToIPFSFromS3(event: {
+  /**
+   * Process file upload request, get each one from s3 and assemble array of files, that will bi added to IPFS.
+   * File upload request statuses, are updated
+   * @param event
+   * @returns
+   */
+  static async uploadFURsToIPFSFromS3(event: {
     fileUploadRequests: FileUploadRequest[];
     wrapWithDirectory: boolean;
   }): Promise<uploadFilesToIPFSRes> {
@@ -164,6 +171,93 @@ export class IPFSService {
       data: {
         fileUploadRequests: event.fileUploadRequests,
         ipfsResponse: filesOnIPFS,
+      },
+    });
+
+    return {
+      parentDirCID: baseDirectoryOnIPFS?.cid,
+      ipfsDirectories: ipfsDirectories,
+      size: baseDirectoryOnIPFS?.size,
+    };
+  }
+
+  /**
+   * Upload files (FIle records already exists in bucket), to IPFS. Loop, get from s3, and pusth to IPFS.
+   * On success, update file CID.
+   * @param event
+   * @returns
+   */
+  static async uploadFilesToIPFSFromS3(event: {
+    files: File[];
+    wrapWithDirectory: boolean;
+  }): Promise<uploadFilesToIPFSRes> {
+    //Get IPFS client
+    const client = await IPFSService.createIPFSClient();
+
+    //S3 client
+    const s3Client: AWS_S3 = new AWS_S3();
+
+    const filesForIPFS = [];
+
+    for (const file of event.files) {
+      if (
+        !(await s3Client.exists(
+          env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+          file.s3FileKey,
+        ))
+      ) {
+        continue;
+      }
+
+      const fileOnS3 = await s3Client.get(
+        env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+        file.s3FileKey,
+      );
+
+      filesForIPFS.push({
+        path: (file.path || '') + file.name,
+        content: fileOnS3.Body as any,
+      });
+    }
+
+    /**Wrapping directory CID*/
+    let baseDirectoryOnIPFS = undefined;
+    /**Directories on IPFS - each dir on IPFS gets CID */
+    const ipfsDirectories = [];
+    const objectOnIPFS = await client.addAll(filesForIPFS, {
+      wrapWithDirectory: event.wrapWithDirectory,
+    });
+
+    /**Loop through IPFS result and set CID property in files */
+    for await (const objectOnIpfs of objectOnIPFS) {
+      if (objectOnIpfs.path === '') {
+        baseDirectoryOnIPFS = objectOnIpfs;
+        continue;
+      }
+      //Map IPFS result to files and directories
+      const file: File = event.files.find(
+        (x) => (x.path || '') + x.name == objectOnIpfs.path,
+      );
+      if (file) {
+        file.CID = objectOnIpfs.cid.toV0().toString();
+        file.size = objectOnIpfs.size;
+      } else {
+        ipfsDirectories.push({
+          path: objectOnIpfs.path,
+          cid: objectOnIpfs.cid,
+        });
+      }
+    }
+
+    //Write log to LMAS
+    await new Lmas().writeLog({
+      logType: LogType.INFO,
+      message: 'Files uploaded to IPFS',
+      location: 'IPFSService.uploadFilesToIPFSFromS3',
+      service: ServiceName.STORAGE,
+      data: {
+        files: event.files,
+        ipfsResponse: objectOnIPFS,
       },
     });
 
@@ -299,5 +393,21 @@ export class IPFSService {
       cidV0: fileOnIPFS.cid.toV0().toString(),
       cidV1: fileOnIPFS.cid.toV1().toString(),
     };
+  }
+
+  static async getCIDSize(cid: string) {
+    //Get IPFS client
+    const client = await IPFSService.createIPFSClient();
+
+    const ls = await client.ls(cid);
+
+    for await (const f of ls) {
+      console.info(f);
+      if (f.cid.toV0().toString() == cid) {
+        return f.size;
+      }
+    }
+
+    return 0;
   }
 }

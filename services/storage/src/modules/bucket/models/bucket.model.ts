@@ -343,6 +343,7 @@ export class Bucket extends AdvancedSQLModel {
       qFrom: `
         FROM \`${DbTables.BUCKET}\` b
         WHERE b.project_uuid = @project_uuid
+        AND b.bucketType = @bucketType
         AND (@search IS null OR b.name LIKE CONCAT('%', @search, '%'))
         AND IFNULL(@status, ${SqlModelStatus.ACTIVE}) = status
       `,

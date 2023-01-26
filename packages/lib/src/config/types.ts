@@ -61,6 +61,7 @@ export enum StorageEventType {
   WEB_PAGE_CREATE = 'create-web-page',
   WEB_PAGE_UPDATE = 'update-web-page',
   WEB_PAGE_GET = 'get-web-page',
+  WEB_PAGE_DEPLOY = 'deploy-web-page',
 }
 
 export enum MailEventType {
@@ -321,6 +322,8 @@ export enum ValidatorErrorCode {
   PRODUCT_ID_NOT_PRESENT = 42200035,
   WEB_PAGE_PROJECT_UUID_NOT_PRESENT = 42200036,
   WEB_PAGE_NAME_NOT_PRESENT = 42200037,
+  DEPLOY_WEB_PAGE_ID_NOT_PRESENT = 42200038,
+  DEPLOY_ENVIRONMENT_NOT_PRESENT = 42200039,
 }
 
 /**

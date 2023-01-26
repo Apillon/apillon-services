@@ -8,6 +8,7 @@ export enum DbTables {
   BUCKET_WEBHOOK = 'bucket_webhook',
   IPNS = 'ipns',
   WEB_PAGE = 'web_page',
+  DEPLOYMENT = 'deployment',
 }
 
 export enum StorageErrorCode {
@@ -61,6 +62,9 @@ export enum StorageErrorCode {
   WEB_PAGE_STAGING_BUCKET_ID_NOT_PRESENT = 42206032,
   WEB_PAGE_PRODUCTION_BUCKET_ID_NOT_PRESENT = 42206033,
   WEB_PAGE_NAME_NOT_PRESENT = 42206034,
+  DEPLOYMENT_BUCKET_ID_NOT_PRESENT = 42206035,
+  DEPLOYMENT_WEB_PAGE_ID_NOT_PRESENT = 42206036,
+  DEPLOYMENT_ENVIRONMENT_NOT_PRESENT = 42206037,
 
   //404
   DEFAULT_RESOURCE_NOT_FOUND_ERROR = 40406000,
@@ -83,6 +87,7 @@ export enum StorageErrorCode {
   INVALID_BODY_FOR_WORKER = 50006004,
   INVALID_DATA_PASSED_TO_WORKER = 50006005,
   ERROR_CREATING_IPNS_RECORD = 50006006,
+  INVALID_PARAMETERS_FOR_DEPLOYMENT_WORKER = 50006007,
 }
 
 export enum FileUploadRequestFileStatus {
@@ -114,4 +119,9 @@ export enum FileStatus {
 export enum BucketWebhookAuthMethod {
   BASIC = 'basic',
   TOKEN = 'bearer-token',
+}
+
+export enum DeploymentEnvironment {
+  STAGING = 1,
+  PRODUCTION = 2,
 }

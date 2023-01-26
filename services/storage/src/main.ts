@@ -54,6 +54,7 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.WEB_PAGE_GET]: HostingService.getWebPage,
     [StorageEventType.WEB_PAGE_CREATE]: HostingService.createWebPage,
     [StorageEventType.WEB_PAGE_UPDATE]: HostingService.updateWebPage,
+    [StorageEventType.WEB_PAGE_DEPLOY]: HostingService.deployWebPage,
   };
 
   return await processors[event.eventName](event, context);

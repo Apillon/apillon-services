@@ -1,6 +1,7 @@
 import {
   CreateWebPageDto,
   DefaultUserRole,
+  DeployWebPageDto,
   ValidateFor,
   WebPageQueryFilter,
 } from '@apillon/lib';
@@ -82,5 +83,22 @@ export class HostingController {
     @Body() body: any,
   ) {
     return await this.hostingService.updateWebPage(context, id, body);
+  }
+
+  @Post('web-pages/:id/deploy')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @UseGuards(AuthGuard)
+  @Validation({ dto: DeployWebPageDto, skipValidation: true })
+  @UseGuards(ValidationGuard)
+  async deployWebPage(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: DeployWebPageDto,
+  ) {
+    return await this.hostingService.deployWebPage(context, id, body);
   }
 }

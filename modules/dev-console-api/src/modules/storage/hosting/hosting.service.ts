@@ -1,7 +1,10 @@
 import {
   CodeException,
   CreateWebPageDto,
+  DeployWebPageDto,
   StorageMicroservice,
+  ValidationException,
+  ValidatorErrorCode,
   WebPageQueryFilter,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
@@ -43,5 +46,22 @@ export class HostingService {
         data: body,
       })
     ).data;
+  }
+
+  async deployWebPage(
+    context: DevConsoleApiContext,
+    id: number,
+    body: DeployWebPageDto,
+  ) {
+    body.populate({ webPage_id: id });
+    try {
+      await body.validate();
+    } catch (err) {
+      await body.handle(err);
+      if (!body.isValid())
+        throw new ValidationException(body, ValidatorErrorCode);
+    }
+
+    return (await new StorageMicroservice(context).deployWebPage(body)).data;
   }
 }

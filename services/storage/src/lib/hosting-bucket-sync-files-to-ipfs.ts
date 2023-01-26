@@ -52,7 +52,7 @@ export async function hostingBucketSyncFilesToIPFS(
 
   let ipfsRes = undefined;
   try {
-    ipfsRes = await IPFSService.uploadFilesToIPFSFromS3({
+    ipfsRes = await IPFSService.uploadFURsToIPFSFromS3({
       fileUploadRequests: files,
       wrapWithDirectory: true,
     });
