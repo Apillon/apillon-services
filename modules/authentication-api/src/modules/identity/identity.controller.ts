@@ -11,6 +11,7 @@ import { JwtTokenType } from '../../config/types';
 import { DevEnvGuard } from '../../guards/dev-env.guard';
 import { IdentityDidRevokeDto } from './dtos/identity-did-revoke.dto';
 import { VerificationEmailDto } from './dtos/identity-verification-email.dto';
+import { CaptchaGuard } from '../../guards/captcha.guard';
 
 @Controller('identity')
 export class IdentityController {
@@ -61,8 +62,8 @@ export class IdentityController {
 
   @Post('verification/email')
   @Validation({ dto: VerificationEmailDto })
-  @UseGuards(ValidationGuard)
-  async identityRestoreCredential(
+  @UseGuards(ValidationGuard, CaptchaGuard)
+  async identityVerification(
     @Ctx() context: AuthenticationApiContext,
     @Body() body: any,
   ) {
