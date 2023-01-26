@@ -15,7 +15,6 @@ import {
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import {
-  generateAccount,
   getFullDidDocument,
   getNextNonce,
   createAttestationRequest,
