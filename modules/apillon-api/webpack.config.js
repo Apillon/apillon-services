@@ -15,13 +15,23 @@ module.exports = {
     symlinks: false,
     cacheWithContext: false,
     alias: {
+      '@nestjs/websockets': false,
       '@nestjs/websockets/socket-module': false,
       'cache-manager': false,
       'class-validator': false,
       'class-transformer': false,
       '@nestjs/microservices/microservices-module': false,
       '@nestjs/microservices': false,
-      //'@apillon/lib': path.join(__dirname, '..', '..', 'packages', 'lib', 'dist')
+      // '@nestjs/platform-express': false,
+      'bson-ext': false,
+      kerberos: false,
+      '@mongodb-js/zstd': false,
+      snappy: false,
+      'snappy/package.json': false,
+      aws4: false,
+      'mongodb-client-encryption': false,
+      cardinal: false,
+      // '@apillon/lib': path.join(__dirname, '..', '..', 'packages', 'lib')
     },
   },
   output: {

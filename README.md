@@ -99,17 +99,23 @@ References to other turborepo documentation:
 
 All documentation is MD based and resides in project services and in docs directory.
 
-| Resource                               | Description                                                           |
-| -------------------------------------- | --------------------------------------------------------------------- |
-| [Rest API](docs/rest-API-specs.md)     | Some basic information about request, response ...                   |
-| [DB migrations](docs/db-migrations.md) | Docs of how to perform mysql db migrations for new services & modules |
+| Resource                                        | Description                                                           |
+| ----------------------------------------------- | --------------------------------------------------------------------- |
+| [Development](docs/development.md)              | Basic guide to programming apillon services                           |
+| [Rest API](docs/rest-API-specs.md)              | Some basic information about request, response ...                    |
+| [DB migrations](docs/db-migrations.md)          | Docs of how to perform mysql db migrations for new services & modules |
+| [Debugging and testing](docs/debig-and-test.md) | How to debug services and how execute e2e tests                       |
+| [Deployment](docs/deployment.md)                | Service deployment to AWS                                             |
 
 ## People working on the project
 
 Add yourself if you stared to work in this project.
 
-| Persons      | Role                                      |
-| ------------ | ----------------------------------------- |
-| Tine Mlakar  | Infrastructure & microservices mastermind |
-| Vinko Šmid   | Wanna be project lead                     |
-| Luka Golinar | Developer                                 |
+| Persons       | Role                                      |
+| ------------- | ----------------------------------------- |
+| Tine Mlakar   | Infrastructure & microservices mastermind |
+| Vinko Šmid    | Project lead                              |
+| Tadej Vengust | CTO                                       |
+| Luka Golinar  | Developer                                 |
+| Bor Drnovšček | Developer                                 |
+| Matic Kolar   | Apillon developer                         |

@@ -27,4 +27,10 @@ export class ValidateEmailDto extends ModelBase {
     validators: [],
   })
   public captcha: { eKey: string; token: string };
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE],
+  })
+  public refCode: string;
 }

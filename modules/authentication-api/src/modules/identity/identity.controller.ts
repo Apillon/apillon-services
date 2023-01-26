@@ -63,6 +63,6 @@ export class IdentityController {
     @Ctx() context: AuthenticationApiContext,
     @Body() body: any,
   ) {
-    return await this.identityService.generateDIDDocumentDEV(context, body);
+    return await this.identityService.generateDevResources(context, body);
   }
 }

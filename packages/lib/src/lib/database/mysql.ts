@@ -75,6 +75,7 @@ export class MySql {
           'connect',
           err,
         );
+        throw err;
       }
     } else {
       // test connection

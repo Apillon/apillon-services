@@ -8,6 +8,7 @@ import {
 import { HttpServer, INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
+import { ApillonApiResponseInterceptor } from '../../src/interceptors/response.interceptor';
 
 /**
  * Setup test environment. Rebuild BD, run test app and create test stage object
@@ -33,7 +34,7 @@ export async function setupTest(): Promise<Stage> {
 
     app = moduleFixture.createNestApplication();
     app.useGlobalFilters(new ExceptionsFilter());
-    app.useGlobalInterceptors(new ResponseInterceptor());
+    app.useGlobalInterceptors(new ApillonApiResponseInterceptor());
 
     await app.init();
 

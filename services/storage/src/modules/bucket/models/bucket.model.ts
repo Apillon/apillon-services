@@ -343,9 +343,7 @@ export class Bucket extends AdvancedSQLModel {
         FROM \`${DbTables.BUCKET}\` b
         WHERE b.project_uuid = @project_uuid
         AND (@search IS null OR b.name LIKE CONCAT('%', @search, '%'))
-        AND ( status = ${SqlModelStatus.ACTIVE} OR 
-          ( @markedForDeletion = 1 AND status = ${SqlModelStatus.MARKED_FOR_DELETION})
-        )
+        AND IFNULL(@status, ${SqlModelStatus.ACTIVE}) = status
       `,
       qFilter: `
         ORDER BY ${filters.orderStr}

@@ -115,8 +115,6 @@ export class FileUploadRequest extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
     ],
     setter(value: string) {
       if (value && value.length > 0) {
@@ -141,7 +139,6 @@ export class FileUploadRequest extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
     ],
     validators: [
       {
@@ -222,7 +219,6 @@ export class FileUploadRequest extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
     validators: [],

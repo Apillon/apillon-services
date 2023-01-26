@@ -31,7 +31,7 @@ install:
 rebuild: clean install build
 
 clean:
-	echo ${NC}Removing${BGreen}node_modules${NC}in${BRED}root${NC} ; \
+	echo Removing ${BGreen}node_modules${NC}in${BRED}root${NC}; \
 	rm -rf node_modules; \
 
 	for file in $(MODULES); do \

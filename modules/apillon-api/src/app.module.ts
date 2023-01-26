@@ -20,6 +20,7 @@ export class AppModule {
       .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer
       .apply(AuthenticateApiKeyMiddleware)
+      .exclude({ path: '/', method: RequestMethod.ALL })
       .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer
       .apply(createRequestLogMiddleware(`apillon-api (${env.APP_ENV})`))

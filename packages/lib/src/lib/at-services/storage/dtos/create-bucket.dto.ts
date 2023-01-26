@@ -1,5 +1,3 @@
-import { ModelBase, prop } from '../../../base-models/base';
-import { faker } from '@faker-js/faker';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
@@ -7,7 +5,7 @@ import {
   SerializeFor,
   ValidatorErrorCode,
 } from '../../../../config/types';
-import { enumInclusionValidator } from '../../../validators';
+import { ModelBase, prop } from '../../../base-models/base';
 
 export class CreateBucketDto extends ModelBase {
   @prop({
