@@ -54,8 +54,8 @@ import { AuthenticationWorker } from '../../workers/authentication.worker';
 import { IdentityCreateDto } from './dtos/identity-create.dto';
 import { IdentityDidRevokeDto } from './dtos/identity-did-revoke.dto';
 import { VerificationEmailDto } from './dtos/identity-verification-email.dto';
-
 import { u8aToHex } from '@polkadot/util';
+import { verifyCaptcha } from '@apillon/modules-lib';
 
 @Injectable()
 export class IdentityService {
@@ -67,6 +67,31 @@ export class IdentityService {
     const token = generateJwtToken(JwtTokenType.IDENTITY_VERIFICATION, {
       email,
     });
+    let captchaResult;
+
+    if (env.CAPTCHA_SECRET && env.APP_ENV !== AppEnvironment.TEST) {
+      await verifyCaptcha(body.captcha?.token, env.CAPTCHA_SECRET).then(
+        (response) => (captchaResult = response),
+      );
+    } else {
+      throw new CodeException({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        code: AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_PRESENT,
+        errorCodes: AuthenticationErrorCode,
+      });
+    }
+
+    if (
+      env.CAPTCHA_SECRET &&
+      env.APP_ENV !== AppEnvironment.TEST &&
+      !captchaResult
+    ) {
+      throw new CodeException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        code: AuthenticationErrorCode.IDENTITY_CAPTCHA_INVALID,
+        errorCodes: AuthenticationErrorCode,
+      });
+    }
 
     let identity = await new Identity({}, context).populateByUserEmail(
       context,
@@ -76,7 +101,6 @@ export class IdentityService {
     if (body.type == EmailType.IDENTITY_GENERATE) {
       // This is the start process of the identity generation, so we need
       // to do some extra stuff before we can start the process
-
       if (identity.exists()) {
         // If email was already attested -> deny process
         if (identity.state == IdentityState.ATTESTED) {
@@ -546,6 +570,9 @@ export class IdentityService {
         ],
       };
     }
+    const attesterAccount = (await generateAccount(
+      env.KILT_ATTESTER_MNEMONIC,
+    )) as KiltKeyringPair;
 
     return {
       mnemonic: mnemonic,

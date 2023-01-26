@@ -1,4 +1,4 @@
-import { FileUploadsQueryFilter } from '@apillon/lib';
+import { FileUploadsQueryFilter, TrashedFilesQueryFilter } from '@apillon/lib';
 import { ValidateFor } from '@apillon/lib';
 import {
   CreateS3SignedUrlForUploadDto,
@@ -122,6 +122,26 @@ export class StorageController {
     @Param('id') id: string,
   ) {
     return await this.storageService.getFileDetails(context, bucket_uuid, id);
+  }
+
+  @Get(':bucket_uuid/trashed-files')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @Validation({ dto: TrashedFilesQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async listFilesMarkedForDeletion(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('bucket_uuid') bucket_uuid: string,
+    @Query() query: TrashedFilesQueryFilter,
+  ) {
+    return await this.storageService.listFilesMarkedForDeletion(
+      context,
+      bucket_uuid,
+      query,
+    );
   }
 
   @Delete(':bucket_uuid/file/:id')
