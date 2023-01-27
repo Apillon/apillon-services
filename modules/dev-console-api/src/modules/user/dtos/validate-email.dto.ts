@@ -20,6 +20,7 @@ export class ValidateEmailDto extends ModelBase {
     ],
   })
   public email: string;
+
   @prop({
     parser: { resolver: JSONParser() },
     populatable: [PopulateFrom.PROFILE],
