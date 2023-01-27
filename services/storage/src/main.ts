@@ -24,17 +24,17 @@ export async function processEvent(event, context: Context): Promise<any> {
       BucketService.unmarkBucketForDeletion,
     [StorageEventType.MAX_BUCKETS_QUOTA_REACHED]:
       BucketService.maxBucketsQuotaReached,
+    [StorageEventType.BUCKET_CLEAR_CONTENT]: HostingService.clearBucketContent,
 
     [StorageEventType.CREATE_DIRECTORY]: DirectoryService.createDirectory,
     [StorageEventType.UPDATE_DIRECTROY]: DirectoryService.updateDirectory,
-    [StorageEventType.DELETE_DIRECTORY]:
-      DirectoryService.markDirectoryForDeletion,
+    [StorageEventType.DELETE_DIRECTORY]: DirectoryService.deleteDirectory,
     [StorageEventType.CANCEL_DELETE_DIRECTORY]:
       DirectoryService.unmarkDirectoryForDeletion,
     [StorageEventType.LIST_DIRECTORY_CONTENT]:
       DirectoryService.listDirectoryContent,
     [StorageEventType.GET_FILE_DETAILS]: StorageService.getFileDetails,
-    [StorageEventType.FILE_DELETE]: StorageService.markFileForDeletion,
+    [StorageEventType.FILE_DELETE]: StorageService.deleteFile,
     [StorageEventType.CANCEL_FILE_DELETE]: StorageService.unmarkFileForDeletion,
     [StorageEventType.LIST_FILES_MARKED_FOR_DELETION]:
       StorageService.listFilesMarkedForDeletion,
@@ -55,6 +55,7 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.WEB_PAGE_CREATE]: HostingService.createWebPage,
     [StorageEventType.WEB_PAGE_UPDATE]: HostingService.updateWebPage,
     [StorageEventType.WEB_PAGE_DEPLOY]: HostingService.deployWebPage,
+    [StorageEventType.WEB_PAGE_LIST_DOMAINS]: HostingService.listDomains,
   };
 
   return await processors[event.eventName](event, context);

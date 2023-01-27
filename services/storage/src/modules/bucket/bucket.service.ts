@@ -19,6 +19,7 @@ import {
   StorageCodeException,
   StorageValidationException,
 } from '../../lib/exceptions';
+import { HostingService } from '../hosting/hosting.service';
 import { BucketWebhook } from './models/bucket-webhook.model';
 import { Bucket } from './models/bucket.model';
 
@@ -182,6 +183,30 @@ export class BucketService {
     b.status = SqlModelStatus.ACTIVE;
     await b.update();
     return b.serialize(SerializeFor.PROFILE);
+  }
+
+  static async clearBucketContent(
+    event: { id: number },
+    context: ServiceContext,
+  ): Promise<any> {
+    const b: Bucket = await new Bucket({}, context).populateById(event.id);
+
+    if (!b.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.BUCKET_NOT_FOUND,
+        status: 404,
+      });
+    }
+    b.canAccess(context);
+
+    if (b.bucketType == BucketType.HOSTING) {
+      return await HostingService.clearBucketContent({ bucket: b }, context);
+    } else {
+      throw new StorageCodeException({
+        code: StorageErrorCode.CANNOT_CLEAR_STORAGE_BUCKET,
+        status: 400,
+      });
+    }
   }
 
   static async maxBucketsQuotaReached(

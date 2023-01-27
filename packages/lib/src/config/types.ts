@@ -62,6 +62,8 @@ export enum StorageEventType {
   WEB_PAGE_UPDATE = 'update-web-page',
   WEB_PAGE_GET = 'get-web-page',
   WEB_PAGE_DEPLOY = 'deploy-web-page',
+  WEB_PAGE_LIST_DOMAINS = 'list-web-page-domains',
+  BUCKET_CLEAR_CONTENT = 'clear-bucket-content',
 }
 
 export enum MailEventType {

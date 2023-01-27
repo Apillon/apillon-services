@@ -196,4 +196,18 @@ export class BucketController {
   ) {
     return await this.bucketService.deleteBucket(context, id);
   }
+
+  @Delete(':id/content')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @UseGuards(AuthGuard)
+  async clearBucketContent(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return await this.bucketService.clearBucketContent(context, id);
+  }
 }

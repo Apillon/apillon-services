@@ -1,5 +1,6 @@
 import {
   AppEnvironment,
+  AWS_S3,
   CreateWebPageDto,
   DeployWebPageDto,
   env,
@@ -11,6 +12,7 @@ import {
   SerializeFor,
   ServiceName,
   WebPageQueryFilter,
+  writeLog,
 } from '@apillon/lib';
 import {
   QueueWorkerType,
@@ -35,6 +37,10 @@ import { WorkerName } from '../../workers/worker-executor';
 import { Bucket } from '../bucket/models/bucket.model';
 import { Deployment } from './models/deployment.model';
 import { WebPage } from './models/web-page.model';
+import { File } from '../storage/models/file.model';
+import { FileUploadRequest } from '../storage/models/file-upload-request.model';
+import { Directory } from '../directory/models/directory.model';
+import { deleteDirectory } from '../../lib/delete-directory';
 
 export class HostingService {
   //#region web page CRUD
@@ -46,6 +52,10 @@ export class HostingService {
       { project_uuid: event.query.project_uuid },
       context,
     ).getList(context, new WebPageQueryFilter(event.query));
+  }
+
+  static async listDomains(event: any, context: ServiceContext) {
+    return await new WebPage({}, context).listDomains(context);
   }
 
   static async getWebPage(event: { id: number }, context: ServiceContext) {
@@ -308,6 +318,134 @@ export class HostingService {
     }
 
     return d.serialize(SerializeFor.PROFILE);
+  }
+
+  //#endregion
+
+  //#region delete hosting bucket content
+
+  static async deleteFile(
+    event: { file: File },
+    context: ServiceContext,
+  ): Promise<any> {
+    //If file has CID, it is most likely in staging or production bucket. Such files cannot be modified.
+    if (event.file.CID && event.file.fileStatus > 2) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.CANNOT_DELETE_FILES_IN_STG_OR_PROD_BUCKET,
+        status: 400,
+      });
+    }
+
+    const conn = await context.mysql.start();
+
+    try {
+      await event.file.markDeleted(conn);
+
+      //Delete file from S3
+      const s3Client: AWS_S3 = new AWS_S3();
+      await s3Client.remove(
+        env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+        event.file.s3FileKey,
+      );
+
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+    }
+
+    try {
+      //Also delete FUR
+      const fur: FileUploadRequest = await new FileUploadRequest(
+        {},
+        context,
+      ).populateByUUID(event.file.file_uuid);
+      if (fur.exists()) {
+        await fur.markDeleted();
+      }
+    } catch (err) {
+      writeLog(
+        LogType.ERROR,
+        'Error deleting file upload request',
+        'hosting.service.ts',
+        'deleteFile',
+        err,
+      );
+    }
+    return event.file.serialize(SerializeFor.PROFILE);
+  }
+
+  static async deleteDirectory(
+    event: { directory: Directory },
+    context: ServiceContext,
+  ): Promise<any> {
+    const conn = await context.mysql.start();
+
+    try {
+      const deleteDirRes = await deleteDirectory(
+        context,
+        event.directory.id,
+        conn,
+      );
+      const s3Client: AWS_S3 = new AWS_S3();
+
+      await s3Client.removeFiles(
+        env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+        deleteDirRes.deletedFiles.map((x) => {
+          return { Key: x.s3FileKey };
+        }),
+      );
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+      writeLog(
+        LogType.ERROR,
+        'Error deleting directory',
+        'hosting.service.ts',
+        'deleteDirectory',
+        err,
+      );
+      throw err;
+    }
+
+    return event.directory.serialize(SerializeFor.PROFILE);
+  }
+
+  static async clearBucketContent(
+    event: { bucket: Bucket },
+    context: ServiceContext,
+  ): Promise<any> {
+    const bucketFiles: File[] = await new File(
+      {},
+      context,
+    ).populateFilesInBucket(event.bucket.id, context);
+
+    const conn = await context.mysql.start();
+    try {
+      await event.bucket.clearBucketContent(context, conn);
+
+      const s3Client: AWS_S3 = new AWS_S3();
+      await s3Client.removeFiles(
+        env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+        bucketFiles.map((x) => {
+          return { Key: x.s3FileKey };
+        }),
+      );
+
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+      writeLog(
+        LogType.ERROR,
+        'Error deleting bucket content',
+        'hosting.service.ts',
+        'deleteBucketContent',
+        err,
+      );
+
+      throw err;
+    }
+
+    return event.bucket.serialize(SerializeFor.PROFILE);
   }
 
   //#endregion

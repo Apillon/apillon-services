@@ -13,13 +13,14 @@ export async function deleteDirectory(
   context: Context,
   directory_id: number,
   conn: PoolConnection,
-): Promise<{ sizeOfDeletedFiles: number }> {
+): Promise<{ sizeOfDeletedFiles: number; deletedFiles: any[] }> {
   const d: Directory = await new Directory({}, context).populateById(
     directory_id,
     conn,
   );
 
   let sizeOfDeletedFiles = 0;
+  const deletedFiles: any[] = [];
 
   //Get all subdirectories and recursive call delete of sub directories
   const subDirectories = await context.mysql.paramExecute(
@@ -57,6 +58,7 @@ export async function deleteDirectory(
       await IPFSService.unpinFile(file.CID);
     }
     sizeOfDeletedFiles += file.size;
+    deletedFiles.push(file);
   }
 
   await context.mysql.paramExecute(
@@ -72,5 +74,5 @@ export async function deleteDirectory(
 
   await d.markDeleted(conn);
 
-  return { sizeOfDeletedFiles };
+  return { sizeOfDeletedFiles, deletedFiles };
 }

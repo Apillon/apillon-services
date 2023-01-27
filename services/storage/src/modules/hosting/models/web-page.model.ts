@@ -14,7 +14,11 @@ import {
   WebPageQueryFilter,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import { DbTables, StorageErrorCode } from '../../../config/types';
+import {
+  DbTables,
+  DeploymentEnvironment,
+  StorageErrorCode,
+} from '../../../config/types';
 import { ServiceContext } from '../../../context';
 import { Bucket } from '../../bucket/models/bucket.model';
 
@@ -341,5 +345,17 @@ export class WebPage extends AdvancedSQLModel {
         this.getContext(),
       ).populateById(this.productionBucket_id);
     }
+  }
+
+  public async listDomains(context: ServiceContext) {
+    return await context.mysql.paramExecute(
+      `
+        SELECT domain
+        FROM \`${this.tableName}\`
+        WHERE domain IS NOT NULL
+        AND status <> ${SqlModelStatus.DELETED};
+        `,
+      {},
+    );
   }
 }

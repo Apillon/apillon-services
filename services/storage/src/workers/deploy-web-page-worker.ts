@@ -19,6 +19,7 @@ import {
 } from '../config/types';
 import { StorageCodeException } from '../lib/exceptions';
 import { generateDirectoriesFromPath } from '../lib/generate-directories-from-path';
+import { pinFileToCRUST } from '../lib/pin-file-to-crust';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { Directory } from '../modules/directory/models/directory.model';
 import { Deployment } from '../modules/hosting/models/deployment.model';
@@ -101,6 +102,7 @@ export class DeployWebPageWorker extends BaseQueueWorker {
 
     //Add files to IPFS
     let ipfsRes: uploadFilesToIPFSRes = undefined;
+    let cidSize: number = undefined;
     if (deployment.environment == DeploymentEnvironment.STAGING) {
       ipfsRes = await IPFSService.uploadFilesToIPFSFromS3({
         files: sourceFiles,
@@ -112,14 +114,24 @@ export class DeployWebPageWorker extends BaseQueueWorker {
       //Update bucket CID & Size
       targetBucket.size += ipfsRes.size;
       targetBucket.uploadedSize += ipfsRes.size;
+
+      deployment.size = ipfsRes.size;
+      cidSize = ipfsRes.size;
     } else if (deployment.environment == DeploymentEnvironment.PRODUCTION) {
       //Update bucket CID & size
       targetBucket.CID = sourceBucket.CID;
 
-      //TODO: Get CID size
-      /*const cidSize = await IPFSService.getCIDSize(targetBucket.CID);
-      targetBucket.size += cidSize;
-      targetBucket.uploadedSize += cidSize;*/
+      //Get CID size
+      //Find deployment from preview to staging, to find CID size
+      const stagingDeployment = await new Deployment(
+        {},
+        this.context,
+      ).populateDeploymentByCid(targetBucket.CID);
+      if (stagingDeployment.exists() && stagingDeployment.size) {
+        targetBucket.size += stagingDeployment.size;
+        targetBucket.uploadedSize += stagingDeployment.size;
+        cidSize = stagingDeployment.size;
+      }
     }
     //publish IPNS and update target bucket
     const ipns = await IPFSService.publishToIPNS(
@@ -177,6 +189,14 @@ export class DeployWebPageWorker extends BaseQueueWorker {
             await dir.update(SerializeFor.UPDATE_DB, conn);
           }
         }
+
+        //pin CID to CRUST
+        /*await pinFileToCRUST(
+          this.context,
+          targetBucket.bucket_uuid,
+          targetBucket.CID,
+          cidSize,
+        );*/
       }
 
       //Update deployment - finished

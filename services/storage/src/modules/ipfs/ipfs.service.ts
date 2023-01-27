@@ -1,6 +1,7 @@
 /* eslint-disable security/detect-non-literal-fs-filename */
 import {
   AWS_S3,
+  CodeException,
   env,
   Lmas,
   LogType,
@@ -281,6 +282,7 @@ export class IPFSService {
     //Get IPFS client
     const client = await IPFSService.createIPFSClient();
     let key = undefined;
+    console.info(await client.key.list());
     try {
       key = (await client.key.list()).filter((x) => x.name == ipfsKey);
     } catch (err) {
@@ -293,7 +295,17 @@ export class IPFSService {
       );
     }
 
-    if (!key) key = await client.key.gen(ipfsKey);
+    if (!key || key.length == 0)
+      key = await client.key.gen(ipfsKey, {
+        type: 'rsa',
+        size: 2048,
+      });
+    if (!key || key.length == 0) {
+      throw new CodeException({
+        status: 500,
+        code: StorageErrorCode.FAILED_TO_GENERATE_IPFS_KEYPAIR,
+      });
+    }
     return await client.name.publish(cid, { key: key.id });
   }
 

@@ -5,6 +5,7 @@ import {
   presenceValidator,
   prop,
   SerializeFor,
+  SqlModelStatus,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { DbTables, StorageErrorCode } from '../../../config/types';
@@ -127,4 +128,45 @@ export class Deployment extends AdvancedSQLModel {
     validators: [],
   })
   public cid: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+  })
+  public size: number;
+
+  public async populateDeploymentByCid(cid: string): Promise<this> {
+    if (!cid) {
+      throw new Error('uuid should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE cid = @cid 
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { cid },
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
 }

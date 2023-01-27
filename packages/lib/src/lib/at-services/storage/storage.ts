@@ -86,6 +86,14 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async clearBucketContent(params: { id: number }) {
+    const data = {
+      eventName: StorageEventType.BUCKET_CLEAR_CONTENT,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
   public async maxBucketQuotaReached(params: BucketQuotaReachedQueryFilter) {
     const data = {
       eventName: StorageEventType.MAX_BUCKETS_QUOTA_REACHED,
@@ -334,6 +342,13 @@ export class StorageMicroservice extends BaseService {
     const data = {
       eventName: StorageEventType.WEB_PAGE_DEPLOY,
       body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async listDomains() {
+    const data = {
+      eventName: StorageEventType.WEB_PAGE_LIST_DOMAINS,
     };
     return await this.callService(data);
   }

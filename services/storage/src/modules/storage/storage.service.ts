@@ -30,6 +30,7 @@ import { SyncToIPFSWorker } from '../../workers/s3-to-ipfs-sync-worker';
 import { WorkerName } from '../../workers/worker-executor';
 import { Bucket } from '../bucket/models/bucket.model';
 import { Directory } from '../directory/models/directory.model';
+import { HostingService } from '../hosting/hosting.service';
 import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
@@ -439,7 +440,7 @@ export class StorageService {
     };
   }
 
-  static async markFileForDeletion(
+  static async deleteFile(
     event: { id: string },
     context: ServiceContext,
   ): Promise<any> {
@@ -457,9 +458,16 @@ export class StorageService {
     }
     f.canModify(context);
 
-    await f.markForDeletion();
-
-    return f.serialize(SerializeFor.PROFILE);
+    //check bucket
+    const b: Bucket = await new Bucket({}, context).populateById(f.bucket_id);
+    if (b.bucketType == BucketType.STORAGE) {
+      await f.markForDeletion();
+      return f.serialize(SerializeFor.PROFILE);
+    } else if (b.bucketType == BucketType.HOSTING) {
+      return await HostingService.deleteFile({ file: f }, context);
+    } else {
+      return false;
+    }
   }
 
   static async unmarkFileForDeletion(

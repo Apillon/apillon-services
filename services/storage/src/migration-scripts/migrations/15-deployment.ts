@@ -11,6 +11,7 @@ export async function upgrade(
   \`environment\` INT NOT NULL,
   \`deploymentStatus\` INT NOT NULL,
   \`cid\` VARCHAR(255) NULL,
+  \`size\` BIGINT NULL,
   \`status\` INT NULL,
   \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
   \`createUser\` INT NULL,
@@ -24,6 +25,6 @@ export async function downgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    DROP TABLE IF EXISTS \`${DbTables.WEB_PAGE}\`;
+    DROP TABLE IF EXISTS \`${DbTables.DEPLOYMENT}\`;
   `);
 }
