@@ -12,6 +12,7 @@
     "build-no-cache": "npx turbo run build --no-cache",
     "dev": "npx turbo run dev --parallel --filter=!@apillon/authentication-api",
     "test": "npx turbo run test --concurrency=1 --continue --filter=!@apillon/authentication-api",
+    "test:blockchain": "npx turbo run test --concurrency=1 --continue --filter=@apillon/blockchain",
     "test-server": "npx turbo run test-server",
     "lint": "npx turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",

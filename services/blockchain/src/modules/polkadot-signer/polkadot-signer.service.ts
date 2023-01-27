@@ -6,7 +6,7 @@ import { mnemonicGenerate, mnemonicToMiniSecret } from '@polkadot/util-crypto';
 
 export class PolkadotSignerService {
   static async signTransaction(_event: any, context: ServiceContext) {
-    const api = await ApiPromise.create();
+    // const api = await ApiPromise.create();
     const keyring = new Keyring({ type: 'sr25519' });
     const mnemonic = mnemonicGenerate();
     const mnemonicMini = mnemonicToMiniSecret(mnemonic);
