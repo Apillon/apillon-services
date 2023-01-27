@@ -211,7 +211,10 @@ export enum DefaultUserRole {
   PROJECT_ADMIN = 11, // Admin of current project
   PROJECT_USER = 12, // (read only) User on current project
   // auth user roles
-  USER = 99, // user with access to platform
+  INTERNAL_TEST_USER = 90, //user with access to new unpublished features
+  EXTERNAL_TEST_USER = 91, //user with access to features ready for external testers
+  BETA_USER = 92, //user with access to closed beta features
+  USER = 99, // user with access to platform (published features)
 }
 
 export enum DefaultApiKeyRole {
