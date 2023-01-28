@@ -1,4 +1,12 @@
-import { mnemonicGenerate, mnemonicToMiniSecret } from '@polkadot/util-crypto';
+import {
+  blake2AsU8a,
+  keyExtractPath,
+  keyFromPath,
+  mnemonicGenerate,
+  mnemonicToMiniSecret,
+  naclBoxPairFromSecret,
+  sr25519PairFromSeed,
+} from '@polkadot/util-crypto';
 import { LogType, env, ServiceName, Lmas } from '@apillon/lib';
 import {
   ConfigService,
@@ -13,6 +21,7 @@ import {
   Attestation,
   Credential,
   DidUri,
+  NewDidEncryptionKey,
 } from '@kiltprotocol/sdk-js';
 import {
   Keypairs,
@@ -20,6 +29,8 @@ import {
   EclipticDerivationPaths,
   ApillonSupportedCTypes,
 } from '../config/types';
+import { Keypair } from '@polkadot/util-crypto/types';
+import { assert } from 'console';
 
 export function generateMnemonic() {
   return mnemonicGenerate();
@@ -37,7 +48,7 @@ export async function generateKeypairs(mnemonic: string) {
   // stored on the chain
   const authentication = Utils.Crypto.makeKeypairFromSeed(
     mnemonicToMiniSecret(mnemonic),
-    'sr25519',
+    { type: 'sr25519' },
   );
   const encryption = Utils.Crypto.makeEncryptionKeypairFromSeed(
     mnemonicToMiniSecret(mnemonic),
@@ -55,6 +66,54 @@ export async function generateKeypairs(mnemonic: string) {
     encryption,
     assertion,
     delegation,
+  };
+}
+
+// This function basically creates a keyring from a mnemonic
+export function generateAccountV2(mnemonic: string) {
+  const signingKeyPairType = 'sr25519';
+  const keyring = new Utils.Keyring({
+    ss58Format: 38,
+    type: signingKeyPairType,
+  });
+  return keyring.addFromMnemonic(mnemonic);
+}
+
+export async function generateKeypairsV2(mnemonic: string): Promise<Keypairs> {
+  const account = generateAccountV2(mnemonic);
+  // Authenticate presentations
+  const authentication = {
+    ...account.derive('//did//0'),
+    type: 'sr25519',
+  } as KiltKeyringPair;
+
+  // Key used to attest transacations
+  const assertion = {
+    ...account.derive('//did//assertion//0'),
+    type: 'sr25519',
+  } as KiltKeyringPair;
+  // Key used for authority delgation
+  const delegation = {
+    ...account.derive('//did//delegation//0'),
+    type: 'sr25519',
+  } as KiltKeyringPair;
+
+  // Used to encrypt and decrypt messages
+  const keyAgreement: NewDidEncryptionKey & Keypair = (function () {
+    const secretKeyPair = sr25519PairFromSeed(mnemonicToMiniSecret(mnemonic));
+    const { path } = keyExtractPath('//did//keyAgreement//0');
+    const { secretKey } = keyFromPath(secretKeyPair, path, 'sr25519');
+    return {
+      ...naclBoxPairFromSecret(blake2AsU8a(secretKey)),
+      type: 'x25519',
+    };
+  })();
+
+  return {
+    authentication: authentication,
+    keyAgreement: keyAgreement,
+    assertion: assertion,
+    delegation: delegation,
   };
 }
 

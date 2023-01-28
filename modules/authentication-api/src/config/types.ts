@@ -90,7 +90,7 @@ export interface Presentation {
 
 export interface Keypairs {
   authentication: KiltKeyringPair;
-  encryption: NewDidEncryptionKey;
+  keyAgreement: NewDidEncryptionKey;
   assertion: KiltKeyringPair;
   delegation: KiltKeyringPair;
 }
