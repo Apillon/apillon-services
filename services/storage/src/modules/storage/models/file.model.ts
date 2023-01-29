@@ -21,6 +21,7 @@ import { ServiceContext } from '../../../context';
 import { v4 as uuidV4 } from 'uuid';
 import { Bucket } from '../../bucket/models/bucket.model';
 import { StorageCodeException } from '../../../lib/exceptions';
+import { Directory } from '../../directory/models/directory.model';
 
 export class File extends AdvancedSQLModel {
   tableName = DbTables.FILE;
@@ -240,9 +241,9 @@ export class File extends AdvancedSQLModel {
   })
   public markedForDeletionTime?: Date;
 
-  /*
+  /************************************************************************
   INFO PROPERTIES
-  */
+  ********************************************************************************/
   @prop({
     parser: { resolver: stringParser() },
     populatable: [
@@ -255,6 +256,25 @@ export class File extends AdvancedSQLModel {
     validators: [],
   })
   public downloadLink: string;
+
+  /**
+   * Path without name
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public path: string;
 
   public canAccess(context: ServiceContext) {
     if (
@@ -435,5 +455,52 @@ export class File extends AdvancedSQLModel {
     };
 
     return await selectAndCountQuery(context.mysql, sqlQuery, params, 'f.id');
+  }
+
+  /**
+   * Return array of Files, that are in bucket
+   * @param bucket_id
+   * @param context
+   * @returns
+   */
+  public async populateFilesInBucket(
+    bucket_id: number,
+    context: ServiceContext,
+  ): Promise<this[]> {
+    if (!bucket_id) {
+      throw new Error('bucket_id should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE bucket_id = @bucket_id AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { bucket_id },
+    );
+    const res = [];
+    if (data && data.length) {
+      for (const d of data)
+        res.push(new File({}, context).populate(d, PopulateFrom.DB));
+    }
+
+    return res;
+  }
+
+  public populatePath(directories: Directory[]) {
+    this.path = '';
+    if (!this.directory_id) {
+      return;
+    } else {
+      let tmpDir: Directory = undefined;
+      do {
+        tmpDir = directories.find(
+          (x) =>
+            x.id == (tmpDir ? tmpDir.parentDirectory_id : this.directory_id),
+        );
+        this.path = tmpDir.name + '/' + this.path;
+      } while (tmpDir?.parentDirectory_id);
+    }
   }
 }

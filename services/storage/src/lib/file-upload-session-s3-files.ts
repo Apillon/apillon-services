@@ -4,10 +4,16 @@ import { StorageCodeException } from '../lib/exceptions';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
 
-export async function getSizeOfFilesInSessionOnS3(
+/**
+ *
+ * @param bucket
+ * @param session
+ * @returns size of files and array of files with properties: (https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/clients/client-s3/modules/_object.html)
+ */
+export async function getSessionFilesOnS3(
   bucket: Bucket,
   session: FileUploadSession,
-) {
+): Promise<{ size: number; files: any[] }> {
   const s3Client: AWS_S3 = new AWS_S3();
   /**
    * Array of s3FileLists - actually array of array (chunks of 1000 files)
@@ -32,13 +38,15 @@ export async function getSizeOfFilesInSessionOnS3(
   }
 
   let sizeOfFilesOnS3 = 0;
+  const files: any[] = [];
   for (const tmpS3FileList of s3FileLists) {
     const tmpSize = tmpS3FileList.Contents.reduce(
       (size, x) => size + x.Size,
       0,
     );
     sizeOfFilesOnS3 += tmpSize;
+    files.push(...tmpS3FileList.Contents);
   }
 
-  return { size: sizeOfFilesOnS3, s3Keys: s3FileList };
+  return { size: sizeOfFilesOnS3, files: files };
 }

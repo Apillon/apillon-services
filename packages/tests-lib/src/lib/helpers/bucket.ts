@@ -48,7 +48,7 @@ export async function createTestBucketDirectory(
   bucket: Bucket,
   addFiles: boolean,
   parentDirectoryId?: number,
-  name?: string,
+  name = 'test directory',
   description?: string,
   status = SqlModelStatus.ACTIVE,
 ): Promise<Directory> {
