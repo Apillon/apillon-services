@@ -154,6 +154,11 @@ export class BucketService {
         code: StorageErrorCode.BUCKET_ALREADY_MARKED_FOR_DELETION,
         status: 400,
       });
+    } else if (b.bucketType == BucketType.HOSTING) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.CANNOT_DELETE_HOSTING_BUCKET,
+        status: 400,
+      });
     }
     b.canModify(context);
 

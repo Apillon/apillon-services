@@ -377,8 +377,8 @@ export class Bucket extends AdvancedSQLModel {
   public async clearBucketContent(context: Context, conn: PoolConnection) {
     await context.mysql.paramExecute(
       `
-      DELETE
-      FROM \`${DbTables.DIRECTORY}\`
+      UPDATE \`${DbTables.DIRECTORY}\`
+      SET status = ${SqlModelStatus.DELETED}
       WHERE bucket_id = @bucket_id AND status <> ${SqlModelStatus.DELETED};
       `,
       { bucket_id: this.id },
@@ -387,8 +387,8 @@ export class Bucket extends AdvancedSQLModel {
 
     await context.mysql.paramExecute(
       `
-      DELETE
-      FROM \`${DbTables.FILE}\`
+      UPDATE \`${DbTables.FILE}\`
+      SET status = ${SqlModelStatus.DELETED} 
       WHERE bucket_id = @bucket_id AND status <> ${SqlModelStatus.DELETED};
       `,
       { bucket_id: this.id },
