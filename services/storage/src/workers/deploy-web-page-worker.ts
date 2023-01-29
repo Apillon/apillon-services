@@ -191,12 +191,12 @@ export class DeployWebPageWorker extends BaseQueueWorker {
         }
 
         //pin CID to CRUST
-        /*await pinFileToCRUST(
+        await pinFileToCRUST(
           this.context,
           targetBucket.bucket_uuid,
           targetBucket.CID,
           cidSize,
-        );*/
+        );
       }
 
       //Update deployment - finished

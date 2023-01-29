@@ -14,11 +14,7 @@ import {
   WebPageQueryFilter,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import {
-  DbTables,
-  DeploymentEnvironment,
-  StorageErrorCode,
-} from '../../../config/types';
+import { DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
 import { Bucket } from '../../bucket/models/bucket.model';
 

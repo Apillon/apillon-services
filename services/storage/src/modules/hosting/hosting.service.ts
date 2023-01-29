@@ -159,6 +159,9 @@ export class HostingService {
         bucket_id: bucket.id,
         stagingBucket_id: stagingBucket.id,
         productionBucket_id: productionBucket.id,
+        bucket: bucket,
+        stagingBucket: stagingBucket,
+        productionBucket: productionBucket,
       });
       //Insert web page record
       await webPage.insert(SerializeFor.INSERT_DB, conn);
@@ -342,11 +345,13 @@ export class HostingService {
       await event.file.markDeleted(conn);
 
       //Delete file from S3
-      const s3Client: AWS_S3 = new AWS_S3();
-      await s3Client.remove(
-        env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-        event.file.s3FileKey,
-      );
+      if (event.file.s3FileKey) {
+        const s3Client: AWS_S3 = new AWS_S3();
+        await s3Client.remove(
+          env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+          event.file.s3FileKey,
+        );
+      }
 
       await context.mysql.commit(conn);
     } catch (err) {
@@ -388,12 +393,17 @@ export class HostingService {
       );
       const s3Client: AWS_S3 = new AWS_S3();
 
-      await s3Client.removeFiles(
-        env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-        deleteDirRes.deletedFiles.map((x) => {
-          return { Key: x.s3FileKey };
-        }),
-      );
+      if (deleteDirRes.deletedFiles.filter((x) => x.s3FileKey).length > 0) {
+        await s3Client.removeFiles(
+          env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+          deleteDirRes.deletedFiles
+            .filter((x) => x.s3FileKey)
+            .map((x) => {
+              return { Key: x.s3FileKey };
+            }),
+        );
+      }
+
       await context.mysql.commit(conn);
     } catch (err) {
       await context.mysql.rollback(conn);
@@ -423,13 +433,17 @@ export class HostingService {
     try {
       await event.bucket.clearBucketContent(context, conn);
 
-      const s3Client: AWS_S3 = new AWS_S3();
-      await s3Client.removeFiles(
-        env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-        bucketFiles.map((x) => {
-          return { Key: x.s3FileKey };
-        }),
-      );
+      if (bucketFiles.filter((x) => x.s3FileKey).length > 0) {
+        const s3Client: AWS_S3 = new AWS_S3();
+        await s3Client.removeFiles(
+          env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+          bucketFiles
+            .filter((x) => x.s3FileKey)
+            .map((x) => {
+              return { Key: x.s3FileKey };
+            }),
+        );
+      }
 
       await context.mysql.commit(conn);
     } catch (err) {
