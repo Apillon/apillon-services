@@ -137,3 +137,11 @@ export enum DeploymentStatus {
   SUCCESSFUL = 10,
   FAILED = 100,
 }
+
+/**
+ * Type of object inside bucket
+ */
+export enum ObjectType {
+  DIRECTORY = 1,
+  FILE = 2,
+}

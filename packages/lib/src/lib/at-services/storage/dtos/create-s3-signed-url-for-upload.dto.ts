@@ -64,12 +64,7 @@ export class CreateS3SignedUrlForUploadDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.FILE_CONTENT_TYPE_NOT_PRESENT,
-      },
-    ],
+    validators: [],
   })
   public contentType: string;
 }

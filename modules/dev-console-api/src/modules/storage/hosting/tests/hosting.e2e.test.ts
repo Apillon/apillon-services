@@ -377,6 +377,28 @@ describe('Hosting tests', () => {
       );
       expect(dirsInBucket.length).toBe(1);
     });
+
+    test('User should be able to list deployments', async () => {
+      const response = await request(stage.http)
+        .get(`/storage/hosting/web-pages/${testWebPage.id}/deployments`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.items.length).toBeGreaterThan(0);
+      expect(response.body.items[0].deploymentStatus).toBe(10);
+      expect(response.body.items[0].cid).toBeTruthy();
+      expect(response.body.items[0].number).toBeTruthy();
+      expect(response.body.items[0].size).toBeTruthy();
+    });
+
+    test('User should be able to list deployments with filter', async () => {
+      const response = await request(stage.http)
+        .get(
+          `/storage/hosting/web-pages/${testWebPage.id}/deployments?environment=1`,
+        )
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.items.length).toBe(1);
+    });
   });
 
   describe('Delete files, directories from preview bucket, or clear whole bucket content', () => {
