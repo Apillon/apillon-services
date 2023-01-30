@@ -18,8 +18,8 @@ import {
   getFullDidDocument,
   getNextNonce,
   createAttestationRequest,
-  getKeypairs,
-  getAccount,
+  generateKeypairsV2,
+  generateAccountV2,
 } from '../lib/kilt';
 import { AuthenticationApiContext } from '../context';
 import { Identity } from '../modules/identity/models/identity.model';
@@ -60,8 +60,10 @@ export class AuthenticationWorker extends BaseQueueWorker {
     const claimerDidUri = parameters.didUri;
 
     // Generate (retrieve) attester did data
-    const attesterKeypairs = await getKeypairs(env.KILT_ATTESTER_MNEMONIC);
-    const attesterAccount = (await getAccount(
+    const attesterKeypairs = await generateKeypairsV2(
+      env.KILT_ATTESTER_MNEMONIC,
+    );
+    const attesterAccount = (await generateAccountV2(
       env.KILT_ATTESTER_MNEMONIC,
     )) as KiltKeyringPair;
 

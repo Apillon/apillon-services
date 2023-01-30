@@ -17,29 +17,21 @@ import {
   IdentityState,
   JwtTokenType,
   AuthenticationErrorCode,
-  ApillonSupportedCTypes,
-  EmailType,
+  AuthApiEmailType,
 } from '../../config/types';
 import {
-  generateKeypairs,
   generateAccount,
   generateMnemonic,
-  getCtypeSchema,
-  getKeypairs,
-  getAccount,
+  generateKeypairsV2,
+  generateAccountV2,
 } from '../../lib/kilt';
-import { ICredential, KiltKeyringPair } from '@kiltprotocol/types';
+import { KiltKeyringPair } from '@kiltprotocol/types';
 import {
   Blockchain,
-  Claim,
   ConfigService,
   connect,
   Did,
   DidUri,
-  IClaimContents,
-  Credential,
-  Attestation,
-  SignResponseData,
 } from '@kiltprotocol/sdk-js';
 
 import {
@@ -73,7 +65,8 @@ export class IdentityService {
       email,
     );
 
-    if (body.type == EmailType.IDENTITY_GENERATE) {
+    const verificationEmailType = body.type;
+    if (verificationEmailType == AuthApiEmailType.GENERATE_IDENTITY) {
       // This is the start process of the identity generation, so we need
       // to do some extra stuff before we can start the process
       if (identity.exists()) {
@@ -118,8 +111,8 @@ export class IdentityService {
         throw err;
       }
     } else if (
-      (body.type == EmailType.CREDENTIAL_RESTORE ||
-        body.type == EmailType.DID_REVOKE) &&
+      (verificationEmailType == AuthApiEmailType.RESTORE_CREDENTIAL ||
+        verificationEmailType == AuthApiEmailType.REVOKE_DID) &&
       (!identity.exists() || identity.state != IdentityState.ATTESTED)
     ) {
       throw new CodeException({
@@ -138,9 +131,9 @@ export class IdentityService {
 
     await new Mailing(context).sendMail({
       emails: [email],
-      template: 'verify-identity',
+      template: verificationEmailType,
       data: {
-        actionUrl: `${env.AUTH_APP_URL}/identity/?token=${token}&email=${email}&type=${body.type}`,
+        actionUrl: `${env.AUTH_APP_URL}/identity/?token=${token}&email=${email}&type=${verificationEmailType}`,
       },
     });
 
@@ -289,41 +282,38 @@ export class IdentityService {
 
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
-    const attesterKeypairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
-    const attesterAccount = (await generateAccount(
+    // This is the attester account, used elsewhere in the code
+    const depositPayerAccount = (await generateAccountV2(
       env.KILT_ATTESTER_MNEMONIC,
     )) as KiltKeyringPair;
 
-    const didUri = identity.didUri as DidUri;
-    const did = Did.toChain(didUri);
-    const endpointsCountForDid = await api.query.did.didEndpointsCount(did);
-    const didDeletionExtrinsic = api.tx.did.delete(endpointsCountForDid);
+    const identifier = Did.toChain(identity.didUri as DidUri);
 
-    const didSignedDeletionExtrinsic = await Did.authorizeTx(
-      didUri,
-      didDeletionExtrinsic,
-      async ({ data }) => ({
-        signature: attesterKeypairs.assertion.sign(data),
-        keyType: attesterKeypairs.assertion.type,
-      }),
-      attesterAccount.address,
+    console.log('IDENTIFIER ', identifier);
+
+    const endpointsCountForDid = await api.query.did.didEndpointsCount(
+      identifier,
+    );
+    const depositClaimExtrinsic = api.tx.did.reclaimDeposit(
+      identifier,
+      endpointsCountForDid,
     );
 
     try {
       await new Lmas().writeLog({
         logType: LogType.INFO,
         message: `Propagating DID delete TX to KILT BC ...`,
-        location: 'AUTHENTICATION-API/identity/',
+        location: 'AUTHENTICATION-API/identity/identity-revoke',
         service: ServiceName.AUTHENTICATION_API,
       });
       await Blockchain.signAndSubmitTx(
-        didSignedDeletionExtrinsic,
-        attesterAccount,
+        depositClaimExtrinsic,
+        depositPayerAccount,
       );
     } catch (error) {
       await new Lmas().writeLog({
         logType: LogType.ERROR,
-        location: 'Authentication-API/identity/authentication.worker',
+        location: 'Authentication-API/identity/identity-revoke',
         service: ServiceName.AUTHENTICATION_API,
         data: error,
       });
@@ -358,201 +348,204 @@ export class IdentityService {
     }
 
     // generate keypairs
-    const { authentication, assertion, keyAgreement } = await getKeypairs(
-      mnemonic,
-    );
-
+    const { authentication, assertion, keyAgreement } =
+      await generateKeypairsV2(mnemonic);
     // generate account
-    const account = (await getAccount(mnemonic)) as KiltKeyringPair;
-
-    return { pubkey: u8aToHex(keyAgreement.publicKey) };
+    const account = (await generateAccount(mnemonic)) as KiltKeyringPair;
 
     // First check if we have the required balance
     let balance = parseInt(
       (await api.query.system.account(account.address)).data.free.toString(),
     );
 
-    while (balance < 3) {
-      const reqTestTokens = `https://faucet-backend.peregrine.kilt.io/faucet/drop`;
-      await (async () => {
-        axios
-          .post(reqTestTokens, { address: account.address })
-          .then((resp: any) => {
-            console.log('Response ', resp.status);
-          })
-          .catch((error: any) => {
-            return {
-              error: `Error when requesting token from peregrine faucet: ${error}`,
-            };
-          });
-      })();
-      balance = parseInt(
-        (await api.query.system.account(account.address)).data.free.toString(),
-      );
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      console.log(`Balance: ${balance}`);
-    }
-
-    const didUri: DidUri = Did.getFullDidUriFromKey(authentication);
-    let wellKnownDidconfig: any;
-    let didDoc = await Did.resolve(Did.getFullDidUriFromKey(authentication));
-    if (!didDoc || !didDoc.document) {
-      const fullDidCreationTx = await Did.getStoreTx(
-        {
-          authentication: [authentication],
-          keyAgreement: [keyAgreement],
-          assertionMethod: [assertion],
-        },
-        account.address,
-        async ({ data }) => ({
-          signature: authentication.sign(data),
-          keyType: authentication.type,
-        }),
-      );
-
-      console.log('Submitting document create TX to BC ...');
-      await Blockchain.signAndSubmitTx(fullDidCreationTx, account);
-
-      const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
-      const { document } = Did.linkedInfoFromChain(encodedFullDid);
-
-      if (!document) {
-        // DEV - no trigger to LMAS
-        throw 'Full DID was not successfully created.';
-      }
-    }
-
-    didDoc = await Did.resolve(Did.getFullDidUriFromKey(authentication));
-    const didResolveResult = await Did.resolve(didUri);
-
-    if (body.domain_linkage) {
-      const domainLinkage = body.domain_linkage;
-      if (!domainLinkage.origin) {
-        return { error: 'domain_linkage: Origin must be provided!!' };
-      }
-
-      const domainLinkageCType = getCtypeSchema(
-        ApillonSupportedCTypes.DOMAIN_LINKAGE,
-      );
-      const claimContents: IClaimContents = {
-        id: didUri,
-        origin: domainLinkage.origin,
-      };
-
-      const claim = Claim.fromCTypeAndClaimContents(
-        domainLinkageCType,
-        claimContents,
-        didUri,
-      );
-      const domainLinkageCredential = Credential.fromClaim(
-        claim,
-      ) as ICredential;
-
-      const { cTypeHash, claimHash } = Attestation.fromCredentialAndDid(
-        domainLinkageCredential,
-        didUri,
-      );
-      const dLAttestTx = api.tx.attestation.add(claimHash, cTypeHash, null);
-
-      console.log('Submitting domain linkage attestation to BC ...');
-      // We authorize the call using the attestation key of the Dapps DID
-      const submitDLAttestTx = await Did.authorizeTx(
-        didUri,
-        dLAttestTx,
-        async ({ data }) => ({
-          signature: assertion.sign(data),
-          keyType: assertion.type,
-        }),
-        account.address,
-      );
-
-      // Since DIDs can not hold any balance, we pay for the transaction using our blockchain account
-      const result = await Blockchain.signAndSubmitTx(
-        submitDLAttestTx,
-        account,
-      );
-
-      if (result.isError) {
-        throw 'Attestation failed';
-      } else {
-        console.log('Attestation successful');
-      }
-
-      const challenge =
-        '0x3ce56bb25ea3b603f968c302578e77e28d3d7ba3c7a8c45d6ebd3f410da766e1';
-      const assertionMethodKeyId =
-        didResolveResult.document.assertionMethod[0].id;
-      const domainLinkagePresentation = await Credential.createPresentation({
-        credential: domainLinkageCredential,
-        signCallback: async ({ data }) =>
-          ({
-            signature: assertion.sign(data),
-            keyType: assertion.type,
-            keyUri: `${didUri}${assertionMethodKeyId}`,
-          } as SignResponseData),
-        challenge,
-      });
-
-      const credentialSubject = {
-        ...domainLinkagePresentation.claim.contents,
-        rootHash: domainLinkagePresentation.rootHash,
-      };
-
-      const encodedAttestationDetails =
-        await api.query.attestation.attestations(
-          domainLinkagePresentation.rootHash,
-        );
-
-      const issuer = Attestation.fromChain(
-        encodedAttestationDetails,
-        domainLinkagePresentation.claim.cTypeHash,
-      ).owner;
-
-      const issuanceDate = new Date().toISOString();
-
-      const signature = domainLinkagePresentation.claimerSignature;
-      if (!signature) {
-        throw new Error('Signature is required.');
-      }
-
-      const proof = {
-        type: 'ApillonSelfSigned2023',
-        proofPurpose: 'assertionMethod',
-        verificationMethod: signature.keyUri,
-        signature: signature.signature,
-        challenge: signature.challenge,
-      };
-
-      // TODO: Maybe move to config
-      wellKnownDidconfig = {
-        '@context':
-          'https://identity.foundation/.well-known/did-configuration/v1',
-        linked_dids: [
-          {
-            '@context': [
-              'https://www.w3.org/2018/credentials/v1',
-              'https://identity.foundation/.well-known/did-configuration/v1',
-            ],
-            issuer,
-            issuanceDate,
-            type: [
-              'VerifiableCredential',
-              'DomainLinkageCredential',
-              'ApillonCredential2023',
-            ],
-            credentialSubject,
-            proof,
-          },
-        ],
-      };
-    }
-
     return {
-      mnemonic: mnemonic,
-      address: account.address,
-      // pubkey: u8aToHex(encryption.publicKey),
-      wellKnownDidconfig: wellKnownDidconfig,
+      account_address: account.address,
+      address: Did.getFullDidUriFromKey(authentication),
+      encryption: u8aToHex(keyAgreement.publicKey),
     };
+
+    // while (balance < 3) {
+    //   const reqTestTokens = `https://faucet-backend.peregrine.kilt.io/faucet/drop`;
+    //   await (async () => {
+    //     axios
+    //       .post(reqTestTokens, { address: account.address })
+    //       .then((resp: any) => {
+    //         console.log('Response ', resp.status);
+    //       })
+    //       .catch((error: any) => {
+    //         return {
+    //           error: `Error when requesting token from peregrine faucet: ${error}`,
+    //         };
+    //       });
+    //   })();
+    //   balance = parseInt(
+    //     (await api.query.system.account(account.address)).data.free.toString(),
+    //   );
+    //   await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    //   console.log(`Balance: ${balance}`);
+    // }
+
+    // const didUri: DidUri = Did.getFullDidUriFromKey(authentication);
+    // let wellKnownDidconfig: any;
+
+    // let didDoc = await Did.resolve(Did.getFullDidUriFromKey(authentication));
+    // if (!didDoc || !didDoc.document) {
+    //   const fullDidCreationTx = await Did.getStoreTx(
+    //     {
+    //       authentication: [authentication],
+    //       keyAgreement: [keyAgreement],
+    //       assertionMethod: [assertion],
+    //     },
+    //     account.address,
+    //     async ({ data }) => ({
+    //       signature: authentication.sign(data),
+    //       keyType: authentication.type,
+    //     }),
+    //   );
+
+    //   console.log('Submitting document create TX to BC ...');
+    //   await Blockchain.signAndSubmitTx(fullDidCreationTx, account);
+
+    //   const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
+    //   const { document } = Did.linkedInfoFromChain(encodedFullDid);
+
+    //   if (!document) {
+    //     // DEV - no trigger to LMAS
+    //     throw 'Full DID was not successfully created.';
+    //   }
+    // }
+
+    // didDoc = await Did.resolve(Did.getFullDidUriFromKey(authentication));
+    // const didResolveResult = await Did.resolve(didUri);
+
+    // if (body.domain_linkage) {
+    //   const domainLinkage = body.domain_linkage;
+    //   if (!domainLinkage.origin) {
+    //     return { error: 'domain_linkage: Origin must be provided!!' };
+    //   }
+
+    //   const domainLinkageCType = getCtypeSchema(
+    //     ApillonSupportedCTypes.DOMAIN_LINKAGE,
+    //   );
+    //   const claimContents: IClaimContents = {
+    //     id: didUri,
+    //     origin: domainLinkage.origin,
+    //   };
+
+    //   const claim = Claim.fromCTypeAndClaimContents(
+    //     domainLinkageCType,
+    //     claimContents,
+    //     didUri,
+    //   );
+    //   const domainLinkageCredential = Credential.fromClaim(
+    //     claim,
+    //   ) as ICredential;
+
+    //   const { cTypeHash, claimHash } = Attestation.fromCredentialAndDid(
+    //     domainLinkageCredential,
+    //     didUri,
+    //   );
+    //   const dLAttestTx = api.tx.attestation.add(claimHash, cTypeHash, null);
+
+    //   console.log('Submitting domain linkage attestation to BC ...');
+    //   // We authorize the call using the attestation key of the Dapps DID
+    //   const submitDLAttestTx = await Did.authorizeTx(
+    //     didUri,
+    //     dLAttestTx,
+    //     async ({ data }) => ({
+    //       signature: assertion.sign(data),
+    //       keyType: assertion.type,
+    //     }),
+    //     account.address,
+    //   );
+
+    //   // Since DIDs can not hold any balance, we pay for the transaction using our blockchain account
+    //   const result = await Blockchain.signAndSubmitTx(
+    //     submitDLAttestTx,
+    //     account,
+    //   );
+
+    //   if (result.isError) {
+    //     throw 'Attestation failed';
+    //   } else {
+    //     console.log('Attestation successful');
+    //   }
+
+    //   const challenge =
+    //     '0x3ce56bb25ea3b603f968c302578e77e28d3d7ba3c7a8c45d6ebd3f410da766e1';
+    //   const assertionMethodKeyId =
+    //     didResolveResult.document.assertionMethod[0].id;
+    //   const domainLinkagePresentation = await Credential.createPresentation({
+    //     credential: domainLinkageCredential,
+    //     signCallback: async ({ data }) =>
+    //       ({
+    //         signature: assertion.sign(data),
+    //         keyType: assertion.type,
+    //         keyUri: `${didUri}${assertionMethodKeyId}`,
+    //       } as SignResponseData),
+    //     challenge,
+    //   });
+
+    //   const credentialSubject = {
+    //     ...domainLinkagePresentation.claim.contents,
+    //     rootHash: domainLinkagePresentation.rootHash,
+    //   };
+
+    //   const encodedAttestationDetails =
+    //     await api.query.attestation.attestations(
+    //       domainLinkagePresentation.rootHash,
+    //     );
+
+    //   const issuer = Attestation.fromChain(
+    //     encodedAttestationDetails,
+    //     domainLinkagePresentation.claim.cTypeHash,
+    //   ).owner;
+
+    //   const issuanceDate = new Date().toISOString();
+
+    //   const signature = domainLinkagePresentation.claimerSignature;
+    //   if (!signature) {
+    //     throw new Error('Signature is required.');
+    //   }
+
+    //   const proof = {
+    //     type: 'ApillonSelfSigned2023',
+    //     proofPurpose: 'assertionMethod',
+    //     verificationMethod: signature.keyUri,
+    //     signature: signature.signature,
+    //     challenge: signature.challenge,
+    //   };
+
+    //   // TODO: Maybe move to config
+    //   wellKnownDidconfig = {
+    //     '@context':
+    //       'https://identity.foundation/.well-known/did-configuration/v1',
+    //     linked_dids: [
+    //       {
+    //         '@context': [
+    //           'https://www.w3.org/2018/credentials/v1',
+    //           'https://identity.foundation/.well-known/did-configuration/v1',
+    //         ],
+    //         issuer,
+    //         issuanceDate,
+    //         type: [
+    //           'VerifiableCredential',
+    //           'DomainLinkageCredential',
+    //           'ApillonCredential2023',
+    //         ],
+    //         credentialSubject,
+    //         proof,
+    //       },
+    //     ],
+    //   };
+    // }
+
+    // return {
+    //   mnemonic: mnemonic,
+    //   address: account.address,
+    //   // pubkey: u8aToHex(encryption.publicKey),
+    //   wellKnownDidconfig: wellKnownDidconfig,
+    // };
   }
 }

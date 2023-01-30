@@ -489,14 +489,14 @@ describe('IDENTITY', () => {
       // 4. DID_CREATE_OP invalid encryption
       const controlRequestBody4 = { ...mockData };
       const didCreateCall = controlRequestBody4.did_create_call;
-      const { encryption } = await generateKeypairs(
+      const { keyAgreement } = await generateKeypairs(
         mock.CREATE_IDENTITY_MOCK.mnemonic_control,
       );
 
       const encryptedData = Utils.Crypto.encryptAsymmetric(
         JSON.stringify(didCreateCall),
         mock.APILLON_ACC_ENCRYPT_KEY,
-        u8aToHex(encryption.secretKey),
+        u8aToHex(keyAgreement.secretKey),
       );
 
       const invalid_did_create_op = {

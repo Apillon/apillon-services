@@ -79,10 +79,10 @@ export enum IdentityEventType {
   CREATE_DECENTRALIZED_IDENTITY = 'create-decentralized-identity',
 }
 
-export enum EmailType {
-  IDENTITY_GENERATE = 'identity-generate',
-  CREDENTIAL_RESTORE = 'credential-restore',
-  DID_REVOKE = 'did-revoke',
+export enum AuthApiEmailType {
+  GENERATE_IDENTITY = 'generate-identity',
+  RESTORE_CREDENTIAL = 'restore-credential',
+  REVOKE_DID = 'revoke-did',
 }
 
 /************************************************************

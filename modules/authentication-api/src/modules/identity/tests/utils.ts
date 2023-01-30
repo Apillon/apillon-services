@@ -17,7 +17,7 @@ import { u8aToHex } from '@polkadot/util';
 export const setupDidCreateMock = async () => {
   const identityMock = mock.CREATE_IDENTITY_MOCK;
   const didMock = identityMock.did_create_op_data;
-  const { encryption } = await generateKeypairs(identityMock.mnemonic);
+  const { keyAgreement } = await generateKeypairs(identityMock.mnemonic);
 
   const did_create_call = {
     data: didMock.encoded_data,
@@ -27,7 +27,7 @@ export const setupDidCreateMock = async () => {
   const encryptedData = Utils.Crypto.encryptAsymmetric(
     JSON.stringify(did_create_call),
     mock.APILLON_ACC_ENCRYPT_KEY,
-    u8aToHex(encryption.secretKey),
+    u8aToHex(keyAgreement.secretKey),
   );
 
   const did_create_op = {
@@ -35,7 +35,7 @@ export const setupDidCreateMock = async () => {
       message: u8aToHex(encryptedData.box),
       nonce: u8aToHex(encryptedData.nonce),
     },
-    senderPubKey: u8aToHex(encryption.publicKey),
+    senderPubKey: u8aToHex(keyAgreement.publicKey),
   };
 
   const bodyMock = {
@@ -51,7 +51,7 @@ export const setupDidCreateMock = async () => {
     did_create_call: did_create_call,
     encrypted_data: encryptedData,
     did_create_op: did_create_op,
-    claimer_encryption_key: encryption,
+    claimer_encryption_key: keyAgreement,
     body_mock: bodyMock,
   };
 };

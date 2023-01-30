@@ -19,7 +19,7 @@ export function generateTemplateData(key: string, data: any) {
       </p>
       `,
     },
-    'verify-identity': {
+    'generate-identity': {
       subject: 'Verify your identity!',
       title: 'Welcome to Apillon, please verify your identity!',
       text: `
@@ -50,6 +50,25 @@ export function generateTemplateData(key: string, data: any) {
       `,
       actionUrl: data.actionUrl,
       actionText: 'Restore your credential',
+      text2: `
+      <p>
+        If you need additional assistance, or you received this email in error, please contact <a href="mailto:info@apillon.io">info@apillon.io</a>.
+        <br/><br/><br/>
+        Cheers,<br/>
+        The Apillon team
+      </p>
+      `,
+    },
+    'revoke-did': {
+      subject: 'Apillon Identity Revoke!',
+      title: 'Dear Apillon User',
+      text: `
+      <p>
+        We have received your request for identity revokation.
+      </p>
+      `,
+      actionUrl: data.actionUrl,
+      actionText: 'Revoke decentralized identity',
       text2: `
       <p>
         If you need additional assistance, or you received this email in error, please contact <a href="mailto:info@apillon.io">info@apillon.io</a>.

@@ -42,7 +42,7 @@ export async function generateAccount(mnemonic: string): Promise<KeyringPair> {
   );
 }
 
-export async function getAccount(mnemonic: string) {
+export async function generateAccountV2(mnemonic: string) {
   const signingKeyPairType = 'sr25519';
   const keyring = new Utils.Keyring({
     ss58Format: 38,
@@ -51,8 +51,8 @@ export async function getAccount(mnemonic: string) {
   return keyring.addFromMnemonic(mnemonic);
 }
 
-export async function getKeypairs(mnemonic: string): Promise<Keypairs> {
-  const account = await getAccount(mnemonic);
+export async function generateKeypairsV2(mnemonic: string): Promise<Keypairs> {
+  const account = await generateAccountV2(mnemonic);
   const authentication = {
     ...account.derive('//did//0'),
     type: 'sr25519',
@@ -86,7 +86,7 @@ export async function generateKeypairs(mnemonic: string) {
     mnemonicToMiniSecret(mnemonic),
     'sr25519',
   );
-  const encryption = Utils.Crypto.makeEncryptionKeypairFromSeed(
+  const keyAgreement = Utils.Crypto.makeEncryptionKeypairFromSeed(
     mnemonicToMiniSecret(mnemonic),
   );
 
@@ -99,7 +99,7 @@ export async function generateKeypairs(mnemonic: string) {
 
   return {
     authentication,
-    encryption,
+    keyAgreement,
     assertion,
     delegation,
   };
