@@ -3,10 +3,7 @@ import { randomUUID } from 'crypto';
 
 @Injectable()
 export class SporranService {
-  async getSessionValues(
-    context: AuthenticationApiContext,
-    body: AttestationEmailDto,
-  ): Promise<any> {
+  async getSessionValues(context: AuthenticationApiContext): Promise<any> {
     const challenge = randomUUID();
     return {
       challenge: challenge,
@@ -15,7 +12,7 @@ export class SporranService {
 
   async verifySession(
     context: AuthenticationApiContext,
-    body: AttestationEmailDto,
+    body: any,
   ): Promise<any> {
     const challenge = randomUUID();
     return true;
