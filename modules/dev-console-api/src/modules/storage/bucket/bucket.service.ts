@@ -93,6 +93,12 @@ export class BucketService {
     ).data;
   }
 
+  async clearBucketContent(context: DevConsoleApiContext, id: number) {
+    return (
+      await new StorageMicroservice(context).clearBucketContent({ id: id })
+    ).data;
+  }
+
   //#region bucket webhook
 
   async getBucketWebhook(context: DevConsoleApiContext, bucket_id: number) {

@@ -19,6 +19,7 @@ import {
 import { DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
 import { v4 as uuidV4 } from 'uuid';
+import { File } from '../../storage/models/file.model';
 
 export class Directory extends AdvancedSQLModel {
   public readonly tableName = DbTables.DIRECTORY;
@@ -207,6 +208,21 @@ export class Directory extends AdvancedSQLModel {
   })
   public fullPath: string;
 
+  @prop({
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public files: File;
+
   public canAccess(context: ServiceContext) {
     if (
       !context.hasRoleOnProject(
@@ -380,16 +396,25 @@ export class Directory extends AdvancedSQLModel {
     );
   }
 
-  public async populateFullPath(): Promise<this> {
+  public async populateFullPath(directories?: Directory[]): Promise<this> {
     this.fullPath = this.name;
     if (!this.parentDirectory_id) {
       return;
     } else {
       let tmpDir: Directory = undefined;
       do {
-        tmpDir = await new Directory({}, this.getContext()).populateById(
-          tmpDir ? tmpDir.parentDirectory_id : this.parentDirectory_id,
-        );
+        if (directories) {
+          tmpDir = directories.find(
+            (x) =>
+              x.id ==
+              (tmpDir ? tmpDir.parentDirectory_id : this.parentDirectory_id),
+          );
+        } else {
+          tmpDir = await new Directory({}, this.getContext()).populateById(
+            tmpDir ? tmpDir.parentDirectory_id : this.parentDirectory_id,
+          );
+        }
+
         this.fullPath = tmpDir.name + '/' + this.fullPath;
       } while (tmpDir?.parentDirectory_id);
     }
