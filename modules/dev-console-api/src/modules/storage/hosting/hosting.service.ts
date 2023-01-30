@@ -7,6 +7,7 @@ import {
   ValidationException,
   ValidatorErrorCode,
   WebPageQueryFilter,
+  WebPagesQuotaReachedQueryFilter,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ResourceNotFoundErrorCode } from '../../../config/types';
@@ -47,6 +48,15 @@ export class HostingService {
         data: body,
       })
     ).data;
+  }
+
+  async isWebPagesQuotaReached(
+    context: DevConsoleApiContext,
+    query: WebPagesQuotaReachedQueryFilter,
+  ) {
+    return (
+      await new StorageMicroservice(context).maxWebPagesQuotaReached(query)
+    ).data.maxWebPagesQuotaReached;
   }
 
   async deployWebPage(

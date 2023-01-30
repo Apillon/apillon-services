@@ -53,3 +53,4 @@ export * from './lib/at-services/storage/dtos/web-page-query-filter.dto';
 export * from './lib/at-services/storage/dtos/create-web-page.dto';
 export * from './lib/at-services/storage/dtos/deploy-web-page.dto';
 export * from './lib/at-services/storage/dtos/deployment-query-filter.dto';
+export * from './lib/at-services/storage/dtos/web-pages-quota-reached-query-filter.dto';

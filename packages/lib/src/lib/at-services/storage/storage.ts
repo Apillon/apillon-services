@@ -20,6 +20,7 @@ import { WebPageQueryFilter } from './dtos/web-page-query-filter.dto';
 import { CreateWebPageDto } from './dtos/create-web-page.dto';
 import { DeployWebPageDto } from './dtos/deploy-web-page.dto';
 import { DeploymentQueryFilter } from './dtos/deployment-query-filter.dto';
+import { WebPagesQuotaReachedQueryFilter } from './dtos/web-pages-quota-reached-query-filter.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -335,6 +336,16 @@ export class StorageMicroservice extends BaseService {
     const data = {
       eventName: StorageEventType.WEB_PAGE_UPDATE,
       ...params,
+    };
+    return await this.callService(data);
+  }
+
+  public async maxWebPagesQuotaReached(
+    params: WebPagesQuotaReachedQueryFilter,
+  ) {
+    const data = {
+      eventName: StorageEventType.WEB_PAGE_QUOTA_REACHED,
+      query: params.serialize(),
     };
     return await this.callService(data);
   }

@@ -5,6 +5,7 @@ import {
   DeployWebPageDto,
   ValidateFor,
   WebPageQueryFilter,
+  WebPagesQuotaReachedQueryFilter,
 } from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
@@ -42,6 +43,20 @@ export class HostingController {
     @Query() query: WebPageQueryFilter,
   ) {
     return await this.hostingService.listWebPages(context, query);
+  }
+
+  @Get('web-pages/quota-reached')
+  @Permissions({ role: DefaultUserRole.USER })
+  @Validation({
+    dto: WebPagesQuotaReachedQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async isWebPagesQuotaReached(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: WebPagesQuotaReachedQueryFilter,
+  ) {
+    return await this.hostingService.isWebPagesQuotaReached(context, query);
   }
 
   @Get('web-pages/:id')

@@ -13,6 +13,7 @@ import {
   SerializeFor,
   ServiceName,
   WebPageQueryFilter,
+  WebPagesQuotaReachedQueryFilter,
   writeLog,
 } from '@apillon/lib';
 import {
@@ -226,6 +227,25 @@ export class HostingService {
 
     await webPage.update();
     return webPage.serialize(SerializeFor.PROFILE);
+  }
+
+  static async maxWebPagesQuotaReached(
+    event: { query: WebPagesQuotaReachedQueryFilter },
+    context: ServiceContext,
+  ) {
+    const webPage: WebPage = new WebPage(
+      { project_uuid: event.query.project_uuid },
+      context,
+    );
+
+    const numOfWebPages = await webPage.getNumOfWebPages();
+    const maxWebPagesQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_WEB_PAGES,
+      project_uuid: webPage.project_uuid,
+      object_uuid: context.user.user_uuid,
+    });
+
+    return { maxWebPagesQuotaReached: numOfWebPages >= maxWebPagesQuota.value };
   }
 
   //#endregion
