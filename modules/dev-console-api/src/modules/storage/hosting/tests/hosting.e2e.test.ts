@@ -383,11 +383,11 @@ describe('Hosting tests', () => {
         .get(`/storage/hosting/web-pages/${testWebPage.id}/deployments`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.items.length).toBeGreaterThan(0);
-      expect(response.body.items[0].deploymentStatus).toBe(10);
-      expect(response.body.items[0].cid).toBeTruthy();
-      expect(response.body.items[0].number).toBeTruthy();
-      expect(response.body.items[0].size).toBeTruthy();
+      expect(response.body.data.items.length).toBeGreaterThan(0);
+      expect(response.body.data.items[0].deploymentStatus).toBe(10);
+      expect(response.body.data.items[0].cid).toBeTruthy();
+      expect(response.body.data.items[0].number).toBeTruthy();
+      expect(response.body.data.items[0].size).toBeTruthy();
     });
 
     test('User should be able to list deployments with filter', async () => {
@@ -397,7 +397,7 @@ describe('Hosting tests', () => {
         )
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.items.length).toBe(1);
+      expect(response.body.data.items.length).toBe(1);
     });
   });
 
