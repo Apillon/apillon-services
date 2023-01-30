@@ -4,6 +4,9 @@ import {
   DidUri,
   NewDidEncryptionKey,
 } from '@kiltprotocol/types';
+import { IPublicKeyRecord, Proof } from '@kiltprotocol/vc-export';
+
+export declare const APILLON_SELF_SIGNED_PROOF_TYPE = 'KILTSelfSigned2020';
 
 export enum DbTables {
   IDENTITY = 'identity',
@@ -88,13 +91,6 @@ export interface Presentation {
   claimerSignature: unknown;
 }
 
-export interface Keypairs {
-  authentication: KiltKeyringPair;
-  keyAgreement: NewDidEncryptionKey;
-  assertion: KiltKeyringPair;
-  delegation: KiltKeyringPair;
-}
-
 export interface SignRequestData {
   /**
    * Data to be signed.
@@ -110,6 +106,13 @@ export interface SignRequestData {
   did: DidUri;
 }
 
+export interface Keypairs {
+  authentication: KiltKeyringPair;
+  keyAgreement: NewDidEncryptionKey;
+  assertion: KiltKeyringPair;
+  delegation: KiltKeyringPair;
+}
+
 export enum AuthAppErrors {
   EMAIL_ALREADY_ATTESTED = 'Email already attested',
 }
@@ -117,4 +120,16 @@ export enum AuthAppErrors {
 export enum ApillonSupportedCTypes {
   EMAIL = 'EMAIL',
   DOMAIN_LINKAGE = 'DOMAIN_LINKAGE',
+}
+
+export const KILT_CREDENTIAL_IRI_PREFIX = 'kilt:cred:';
+
+export const APILLON_VERIFIABLECREDENTIAL_TYPE = 'ApillonCredential2023';
+export const DEFAULT_VERIFIABLECREDENTIAL_TYPE = 'VerifiableCredential';
+export interface ApillonSelfSignedProof extends Proof {
+  type: typeof APILLON_SELF_SIGNED_PROOF_TYPE;
+  proofPurpose: 'assertionMethod';
+  verificationMethod: IPublicKeyRecord['id'] | IPublicKeyRecord;
+  signature: string;
+  challenge?: string;
 }

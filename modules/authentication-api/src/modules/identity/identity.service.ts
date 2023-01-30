@@ -20,6 +20,10 @@ import {
   JwtTokenType,
   AuthenticationErrorCode,
   ApillonSupportedCTypes,
+  APILLON_SELF_SIGNED_PROOF_TYPE,
+  ApillonSelfSignedProof,
+  DEFAULT_VERIFIABLECREDENTIAL_TYPE,
+  APILLON_VERIFIABLECREDENTIAL_TYPE,
 } from '../../config/types';
 import {
   generateKeypairs,
@@ -29,11 +33,16 @@ import {
   generateKeypairsV2,
   generateAccountV2,
   getFullDidDocument,
+  createCompleteFullDid,
+  assertionSigner,
+  createPresentation,
+  toCredentialIRI,
 } from '../../lib/kilt';
 import {
   DidResourceUri,
   ICredential,
   KiltKeyringPair,
+  SignExtrinsicCallback,
 } from '@kiltprotocol/types';
 import {
   Blockchain,
@@ -48,6 +57,7 @@ import {
   SignResponseData,
   Utils,
 } from '@kiltprotocol/sdk-js';
+import * as validUrl from 'valid-url';
 
 import {
   QueueWorkerType,
@@ -61,8 +71,7 @@ import { WorkerName } from '../../workers/worker-executor';
 import { AuthenticationWorker } from '../../workers/authentication.worker';
 import { u8aToHex, hexToU8a } from '@polkadot/util';
 import { IdentityCreateDto } from './dtos/identity-create.dto';
-import { assert } from 'console';
-import { generate } from 'rxjs';
+import { SelfSignedProof } from '@kiltprotocol/vc-export';
 
 @Injectable()
 export class IdentityService {
@@ -289,9 +298,10 @@ export class IdentityService {
 
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
+    let wellKnownDidconfig;
+    let mnemonic;
 
     // Generate mnemonic
-    let mnemonic;
     if (body.mnemonic) {
       mnemonic = body.mnemonic;
     } else {
@@ -299,11 +309,15 @@ export class IdentityService {
     }
 
     // generate keypairs
-    const { authentication, encryption, assertion, delegation } =
-      await generateKeypairsV2(mnemonic);
+    const {
+      authentication,
+      keyAgreement,
+      assertionMethod,
+      capabilityDelegation,
+    } = await generateKeypairsV2(mnemonic);
 
     // generate account
-    const account = generateAccountV2(mnemonic);
+    const account = generateAccountV2(mnemonic) as KiltKeyringPair;
 
     // First check if we have the required balance
     let balance = parseInt(
@@ -337,169 +351,129 @@ export class IdentityService {
       }
     }
 
-    const fullDidCreationTx = await Did.getStoreTx(
+    const document = await createCompleteFullDid(
+      account,
       {
-        authentication: [authentication],
-        keyAgreement: [encryption],
-        assertionMethod: [assertion],
-        capabilityDelegation: [delegation],
+        authentication: authentication,
+        keyAgreement: keyAgreement,
+        assertionMethod: assertionMethod,
+        capabilityDelegation: capabilityDelegation,
       },
-      account.address,
-      async ({ data }) => ({
+      (async ({ data }) => ({
         signature: authentication.sign(data),
         keyType: authentication.type,
-      }),
+      })) as SignExtrinsicCallback,
     );
 
-    console.log('Submitting document create TX to bc ...');
-    await Blockchain.signAndSubmitTx(fullDidCreationTx, account);
+    if (body.domain_linkage) {
+      const domainLinkage = body.domain_linkage;
+      let origin = domainLinkage.origin;
 
-    const didUri = Did.getFullDidUriFromKey(authentication);
-    const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
-    const { document } = Did.linkedInfoFromChain(encodedFullDid);
+      if (!origin) {
+        return { error: 'domain_linkage: Origin must be provided!!' };
+      }
 
-    if (!document) {
-      // DEV - no trigger to LMAS
-      throw 'Full DID was not successfully created.';
+      console.log(`Creating domain linkage for ${origin}`);
+      if (!validUrl.isUri(origin)) {
+        throw new Error('The origin is not a valid url');
+      }
+
+      const domainClaimContents = {
+        origin,
+      };
+
+      const claim = Claim.fromCTypeAndClaimContents(
+        getCtypeSchema(ApillonSupportedCTypes.DOMAIN_LINKAGE),
+        domainClaimContents,
+        document.uri,
+      );
+
+      const credential = Credential.fromClaim(claim);
+
+      const assertionKey = document.assertionMethod?.[0];
+
+      if (!assertionKey) {
+        throw new Error(
+          'Full DID doesnt have assertion key: Please add assertion key',
+        );
+      }
+
+      const domainLinkageCredential = await createPresentation(
+        credential,
+        await assertionSigner({
+          assertion: assertionMethod,
+          didDocument: document,
+        }),
+      );
+
+      const claimContents = domainLinkageCredential.claim.contents;
+      if (!domainLinkageCredential.claim.owner && !claimContents.origin) {
+        throw new Error('Claim do not content an owner or origin');
+      }
+
+      Did.validateUri(credential.claim.owner);
+      const didUri = credential.claim.owner;
+      if (typeof claimContents.origin !== 'string') {
+        throw new Error('claim contents id is not a string');
+      } else if (!validUrl.isUri(claimContents.origin)) {
+        throw new Error('The claim contents origin is not a valid url');
+      } else {
+        origin = claimContents.origin;
+      }
+
+      const credentialSubject = {
+        id: didUri,
+        origin: 'localhost',
+        rootHash: domainLinkageCredential.rootHash,
+      };
+
+      const issuanceDate = new Date().toISOString();
+      const { claimerSignature, rootHash } = domainLinkageCredential;
+      const id = toCredentialIRI(credential.rootHash);
+
+      await Did.verifyDidSignature({
+        expectedVerificationMethod: 'assertionMethod',
+        signature: hexToU8a(claimerSignature.signature),
+        keyUri: claimerSignature.keyUri,
+        message: Utils.Crypto.coToUInt8(rootHash),
+      });
+
+      // add self-signed proof
+      const proof: ApillonSelfSignedProof = {
+        type: APILLON_SELF_SIGNED_PROOF_TYPE,
+        proofPurpose: 'assertionMethod',
+        verificationMethod: claimerSignature.keyUri,
+        signature: claimerSignature.signature,
+        challenge: claimerSignature.challenge,
+      };
+
+      wellKnownDidconfig = {
+        '@context':
+          'https://identity.foundation/.well-known/did-configuration/v1',
+        linked_dids: [
+          {
+            '@context': [
+              'https://www.w3.org/2018/credentials/v1',
+              'https://identity.foundation/.well-known/did-configuration/v1',
+            ],
+            issuer: didUri,
+            issuanceDate,
+            type: [
+              DEFAULT_VERIFIABLECREDENTIAL_TYPE,
+              'DomainLinkageCredential',
+              'KiltCredential2020',
+            ],
+            credentialSubject,
+            proof,
+          },
+        ],
+      };
     }
-
-    // let didUri: DidUri;
-    // let wellKnownDidconfig;
-    // let didDoc = await Did.resolve(Did.);
-    // if (!didDoc || !didDoc.document) {
-
-    // }
-
-    // if (body.domain_linkage) {
-    //   const domainLinkage = body.domain_linkage;
-    //   if (!domainLinkage.origin) {
-    //     return { error: 'domain_linkage: Origin must be provided!!' };
-    //   }
-
-    //   console.log(`Creating domain linkage for ${domainLinkage.origin}`);
-
-    //   const domainLinkageCType = getCtypeSchema(
-    //     ApillonSupportedCTypes.DOMAIN_LINKAGE,
-    //   );
-
-    //   console.error('DID URI ', didUri);
-
-    //   const claimContents: IClaimContents = {
-    //     id: didUri,
-    //     origin: domainLinkage.origin,
-    //   };
-
-    //   const claim = Claim.fromCTypeAndClaimContents(
-    //     domainLinkageCType,
-    //     claimContents,
-    //     didUri,
-    //   );
-    //   const domainLinkageCredential = Credential.fromClaim(
-    //     claim,
-    //   ) as ICredential;
-
-    //   const { cTypeHash, claimHash } = Attestation.fromCredentialAndDid(
-    //     domainLinkageCredential,
-    //     didUri,
-    //   );
-
-    //   const dLAttestTx = api.tx.attestation.add(claimHash, cTypeHash, null);
-
-    //   console.log('Submitting domain linkage attestation to BC ...');
-    //   // We authorize the call using the attestation key of the Dapps DID.
-    //   const submitDLAttestTx = await Did.authorizeTx(
-    //     didUri,
-    //     dLAttestTx,
-    //     async ({ data }) => ({
-    //       signature: assertion.sign(data),
-    //       keyType: assertion.type,
-    //     }),
-    //     account.address,
-    //   );
-
-    //   // Since DIDs can not hold any balance, we pay for the transaction using our blockchain account
-    //   const result = await Blockchain.signAndSubmitTx(
-    //     submitDLAttestTx,
-    //     account,
-    //   );
-
-    //   if (result.isError) {
-    //     throw 'Attestation failed';
-    //   } else {
-    //     console.log('Attestation successful');
-    //   }
-
-    //   const challenge =
-    //     '0x3ce56bb25ea3b603f968c302578e77e28d3d7ba3c7a8c45d6ebd3f410da766e1';
-    //   const domainLinkagePresentation = await Credential.createPresentation({
-    //     credential: domainLinkageCredential,
-    //     signCallback: async ({ data }) =>
-    //       ({
-    //         signature: assertion.sign(data),
-    //         keyType: assertion.type,
-    //         keyUri: `${didUri}${didDoc.document?.assertionMethod[0].id}`,
-    //       } as SignResponseData),
-    //     challenge,
-    //   });
-
-    //   const credentialSubject = {
-    //     ...domainLinkagePresentation.claim.contents,
-    //     rootHash: domainLinkagePresentation.rootHash,
-    //   };
-
-    //   const encodedAttestationDetails =
-    //     await api.query.attestation.attestations(
-    //       domainLinkagePresentation.rootHash,
-    //     );
-
-    //   const issuer = Attestation.fromChain(
-    //     encodedAttestationDetails,
-    //     domainLinkagePresentation.claim.cTypeHash,
-    //   ).owner;
-
-    //   const issuanceDate = new Date().toISOString();
-
-    //   const signature = domainLinkagePresentation.claimerSignature;
-    //   if (!signature) {
-    //     throw new Error('Signature is required.');
-    //   }
-
-    //   const proof = {
-    //     type: 'ApillonSelfSigned2023',
-    //     proofPurpose: 'assertionMethod',
-    //     verificationMethod: signature.keyUri,
-    //     signature: signature.signature,
-    //     challenge: signature.challenge,
-    //   };
-
-    //   wellKnownDidconfig = {
-    //     '@context':
-    //       'https://identity.foundation/.well-known/did-configuration/v1',
-    //     linked_dids: [
-    //       {
-    //         '@context': [
-    //           'https://www.w3.org/2018/credentials/v1',
-    //           'https://identity.foundation/.well-known/did-configuration/v1',
-    //         ],
-    //         issuer,
-    //         issuanceDate,
-    //         type: [
-    //           'VerifiableCredential',
-    //           'DomainLinkageCredential',
-    //           'ApillonCredential2023',
-    //         ],
-    //         credentialSubject,
-    //         proof,
-    //       },
-    //     ],
-    //   };
-    //   await Did.verifyDidSignature({
-    //     expectedVerificationMethod: 'assertionMethod',
-    //     signature: hexToU8a(wellKnownDidconfig.proof.signature),
-    //     keyUri: wellKnownDidconfig.proof.verificationMethod as DidResourceUri,
-    //     message: Utils.Crypto.coToUInt8(domainLinkageCredential.rootHash),
-    //   });
-    // }
-    return { success: true };
+    return {
+      account: account.address,
+      didUri: document.uri,
+      didConfiguration: wellKnownDidconfig,
+      mnemonic: mnemonic,
+    };
   }
 }

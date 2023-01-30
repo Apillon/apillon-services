@@ -5,8 +5,10 @@ import {
   mnemonicGenerate,
   mnemonicToMiniSecret,
   naclBoxPairFromSecret,
+  randomAsHex,
   sr25519PairFromSeed,
 } from '@polkadot/util-crypto';
+import { isHex } from '@polkadot/util';
 import { LogType, env, ServiceName, Lmas } from '@apillon/lib';
 import {
   ConfigService,
@@ -22,15 +24,19 @@ import {
   Credential,
   DidUri,
   NewDidEncryptionKey,
+  SignCallback,
+  DidDocument,
+  SignExtrinsicCallback,
+  ICredential,
+  ICredentialPresentation,
 } from '@kiltprotocol/sdk-js';
 import {
-  Keypairs,
   KILT_DERIVATION_SIGN_ALGORITHM,
   EclipticDerivationPaths,
   ApillonSupportedCTypes,
+  KILT_CREDENTIAL_IRI_PREFIX,
 } from '../config/types';
 import { Keypair } from '@polkadot/util-crypto/types';
-import { assert } from 'console';
 
 export function generateMnemonic() {
   return mnemonicGenerate();
@@ -48,7 +54,7 @@ export async function generateKeypairs(mnemonic: string) {
   // stored on the chain
   const authentication = Utils.Crypto.makeKeypairFromSeed(
     mnemonicToMiniSecret(mnemonic),
-    { type: 'sr25519' },
+    'sr25519',
   );
   const encryption = Utils.Crypto.makeEncryptionKeypairFromSeed(
     mnemonicToMiniSecret(mnemonic),
@@ -79,7 +85,7 @@ export function generateAccountV2(mnemonic: string) {
   return keyring.addFromMnemonic(mnemonic);
 }
 
-export async function generateKeypairsV2(mnemonic: string): Promise<Keypairs> {
+export async function generateKeypairsV2(mnemonic: string) {
   const account = generateAccountV2(mnemonic);
   // Authenticate presentations
   const authentication = {
@@ -88,12 +94,12 @@ export async function generateKeypairsV2(mnemonic: string): Promise<Keypairs> {
   } as KiltKeyringPair;
 
   // Key used to attest transacations
-  const assertion = {
+  const assertionMethod = {
     ...account.derive('//did//assertion//0'),
     type: 'sr25519',
   } as KiltKeyringPair;
   // Key used for authority delgation
-  const delegation = {
+  const capabilityDelegation = {
     ...account.derive('//did//delegation//0'),
     type: 'sr25519',
   } as KiltKeyringPair;
@@ -112,12 +118,12 @@ export async function generateKeypairsV2(mnemonic: string): Promise<Keypairs> {
   return {
     authentication: authentication,
     keyAgreement: keyAgreement,
-    assertion: assertion,
-    delegation: delegation,
+    assertionMethod: assertionMethod,
+    capabilityDelegation: capabilityDelegation,
   };
 }
 
-export async function getFullDidDocument(keypairs: Keypairs) {
+export async function getFullDidDocument(keypairs: any) {
   await connect(env.KILT_NETWORK);
   const api = ConfigService.get('api');
   const didUri = Did.getFullDidUriFromKey(keypairs.authentication);
@@ -178,24 +184,12 @@ export function getCtypeSchema(ctype: string): ICType {
     }
     case ApillonSupportedCTypes.DOMAIN_LINKAGE: {
       // From https://github.com/KILTprotocol/ctype-index/blob/main/ctypes/0x9d271c790775ee831352291f01c5d04c7979713a5896dcf5e81708184cc5c643/ctype.json
-      const domainLinkage: ICType = {
-        $id: 'kilt:ctype:0x9d271c790775ee831352291f01c5d04c7979713a5896dcf5e81708184cc5c643',
-        $schema: 'http://kilt-protocol.org/draft-01/ctype#',
-        title: 'Domain Linkage Credential',
-        properties: {
-          id: {
-            type: 'string',
-          },
-          origin: {
-            type: 'string',
-          },
+      return CType.fromProperties('Domain Linkage Credential', {
+        origin: {
+          type: 'string',
         },
-        type: 'object',
-      };
-
-      return domainLinkage;
+      });
     }
-
     default: {
       throw `Invalid CType: ${ctype}`;
     }
@@ -209,4 +203,107 @@ export async function getNextNonce(didUri: DidUri) {
     Did.documentFromChain(queried).lastTxCounter.toString(),
   );
   return currentNonce + 1;
+}
+
+import * as Kilt from '@kiltprotocol/sdk-js';
+
+export async function createCompleteFullDid(
+  submitterAccount: Kilt.KiltKeyringPair,
+  {
+    authentication,
+    keyAgreement,
+    assertionMethod,
+    capabilityDelegation,
+  }: {
+    authentication: Kilt.NewDidVerificationKey;
+    keyAgreement: Kilt.NewDidEncryptionKey;
+    assertionMethod: Kilt.NewDidVerificationKey;
+    capabilityDelegation: Kilt.NewDidVerificationKey;
+  },
+  signCallback: Kilt.SignExtrinsicCallback,
+): Promise<Kilt.DidDocument> {
+  const api = Kilt.ConfigService.get('api');
+
+  const fullDidCreationTx = await Kilt.Did.getStoreTx(
+    {
+      authentication: [authentication],
+      keyAgreement: [keyAgreement],
+      assertionMethod: [assertionMethod],
+      capabilityDelegation: [capabilityDelegation],
+      // Example service.
+      service: [],
+    },
+    submitterAccount.address,
+    signCallback,
+  );
+
+  try {
+    console.log('Submitting document create TX to bc ...');
+    await Kilt.Blockchain.signAndSubmitTx(fullDidCreationTx, submitterAccount);
+  } catch (error) {
+    console.error(error);
+  }
+
+  // The new information is fetched from the blockchain and returned.
+  const fullDid = Kilt.Did.getFullDidUriFromKey(authentication);
+  const encodedUpdatedDidDetails = await api.call.did.query(
+    Kilt.Did.toChain(fullDid),
+  );
+  return Kilt.Did.linkedInfoFromChain(encodedUpdatedDidDetails).document;
+}
+
+export async function authenticationSigner({
+  authentication,
+}: {
+  authentication: KiltKeyringPair;
+}): Promise<SignExtrinsicCallback> {
+  if (!authentication) throw new Error('no authentication key');
+
+  return async ({ data }) => ({
+    signature: authentication.sign(data),
+    keyType: authentication.type,
+  });
+}
+
+export async function assertionSigner({
+  assertion,
+  didDocument,
+}: {
+  assertion: KiltKeyringPair;
+  didDocument: DidDocument;
+}): Promise<SignCallback> {
+  const { assertionMethod } = didDocument;
+  if (!assertionMethod) throw new Error('no assertionMethod key');
+
+  return async ({ data }) => ({
+    signature: assertion.sign(data),
+    keyType: assertion.type,
+    keyUri: `${didDocument.uri}${assertionMethod[0].id}`,
+  });
+}
+
+export async function createPresentation(
+  credential: ICredential,
+  signCallback: SignCallback,
+  challenge?: string,
+): Promise<ICredentialPresentation> {
+  // Create the presentation from credential, DID and challenge
+  return Credential.createPresentation({
+    credential,
+    signCallback,
+    challenge,
+  });
+}
+
+export function randomChallenge() {
+  return randomAsHex(16);
+}
+
+export function toCredentialIRI(rootHash: string): string {
+  if (rootHash.startsWith(KILT_CREDENTIAL_IRI_PREFIX)) {
+    return rootHash;
+  }
+  if (!isHex(rootHash))
+    throw new Error('Root hash is not a base16 / hex encoded string)');
+  return KILT_CREDENTIAL_IRI_PREFIX + rootHash;
 }
