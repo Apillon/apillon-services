@@ -23,38 +23,24 @@ import {
   APILLON_SELF_SIGNED_PROOF_TYPE,
   ApillonSelfSignedProof,
   DEFAULT_VERIFIABLECREDENTIAL_TYPE,
-  APILLON_VERIFIABLECREDENTIAL_TYPE,
 } from '../../config/types';
 import {
-  generateKeypairs,
-  generateAccount,
   generateMnemonic,
   getCtypeSchema,
   generateKeypairsV2,
   generateAccountV2,
-  getFullDidDocument,
   createCompleteFullDid,
   assertionSigner,
   createPresentation,
   toCredentialIRI,
 } from '../../lib/kilt';
+import { KiltKeyringPair, SignExtrinsicCallback } from '@kiltprotocol/types';
 import {
-  DidResourceUri,
-  ICredential,
-  KiltKeyringPair,
-  SignExtrinsicCallback,
-} from '@kiltprotocol/types';
-import {
-  Blockchain,
   Claim,
   ConfigService,
   connect,
   Did,
-  DidUri,
-  IClaimContents,
   Credential,
-  Attestation,
-  SignResponseData,
   Utils,
 } from '@kiltprotocol/sdk-js';
 import * as validUrl from 'valid-url';
@@ -65,13 +51,11 @@ import {
   ServiceDefinition,
   ServiceDefinitionType,
   WorkerDefinition,
-  WorkerScheduler,
 } from '@apillon/workers-lib';
 import { WorkerName } from '../../workers/worker-executor';
 import { AuthenticationWorker } from '../../workers/authentication.worker';
-import { u8aToHex, hexToU8a } from '@polkadot/util';
+import { hexToU8a } from '@polkadot/util';
 import { IdentityCreateDto } from './dtos/identity-create.dto';
-import { SelfSignedProof } from '@kiltprotocol/vc-export';
 
 @Injectable()
 export class IdentityService {
@@ -469,6 +453,9 @@ export class IdentityService {
         ],
       };
     }
+
+    console.error(document.uri);
+
     return {
       account: account.address,
       didUri: document.uri,
