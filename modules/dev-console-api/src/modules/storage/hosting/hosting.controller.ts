@@ -1,6 +1,7 @@
 import {
   CreateWebPageDto,
   DefaultUserRole,
+  DeploymentQueryFilter,
   DeployWebPageDto,
   ValidateFor,
   WebPageQueryFilter,
@@ -103,5 +104,43 @@ export class HostingController {
     @Body() body: DeployWebPageDto,
   ) {
     return await this.hostingService.deployWebPage(context, id, body);
+  }
+
+  @Get('web-pages/:webPage_id/deployments')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @Validation({
+    dto: DeploymentQueryFilter,
+    validateFor: ValidateFor.QUERY,
+    skipValidation: true,
+  })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async listDeployments(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('webPage_id', ParseIntPipe) webPage_id: number,
+    @Query() query: DeploymentQueryFilter,
+  ) {
+    return await this.hostingService.listDeployments(
+      context,
+      webPage_id,
+      query,
+    );
+  }
+
+  @Get('web-pages/:webPage_id/deployments/:id')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @UseGuards(AuthGuard)
+  async getDeployment(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return await this.hostingService.getDeployment(context, id);
   }
 }

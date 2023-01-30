@@ -1,6 +1,7 @@
 import {
   CodeException,
   CreateWebPageDto,
+  DeploymentQueryFilter,
   DeployWebPageDto,
   StorageMicroservice,
   ValidationException,
@@ -61,7 +62,27 @@ export class HostingService {
       if (!body.isValid())
         throw new ValidationException(body, ValidatorErrorCode);
     }
-
     return (await new StorageMicroservice(context).deployWebPage(body)).data;
+  }
+
+  async listDeployments(
+    context: DevConsoleApiContext,
+    webPage_id: number,
+    query: DeploymentQueryFilter,
+  ) {
+    query.webPage_id = webPage_id;
+    try {
+      await query.validate();
+    } catch (err) {
+      await query.handle(err);
+      if (!query.isValid())
+        throw new ValidationException(query, ValidatorErrorCode);
+    }
+
+    return (await new StorageMicroservice(context).listDeployments(query)).data;
+  }
+
+  async getDeployment(context: DevConsoleApiContext, id: number) {
+    return (await new StorageMicroservice(context).getDeployment(id)).data;
   }
 }

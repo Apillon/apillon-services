@@ -81,6 +81,7 @@ export enum StorageErrorCode {
   FILE_UPLOAD_REQUEST_NOT_FOUND = 40406008,
   IPNS_RECORD_NOT_FOUND = 40406009,
   WEB_PAGE_NOT_FOUND = 40406010,
+  DEPLOYMENT_NOT_FOUND = 40406011,
   //409
   WEBHOOK_ALREADY_EXISTS_FOR_PROJECT = 40906001,
   //500
@@ -128,4 +129,11 @@ export enum BucketWebhookAuthMethod {
 export enum DeploymentEnvironment {
   STAGING = 1,
   PRODUCTION = 2,
+}
+
+export enum DeploymentStatus {
+  INITIATED = 0,
+  IN_PROGRESS = 1,
+  SUCCESSFUL = 10,
+  FAILED = 100,
 }
