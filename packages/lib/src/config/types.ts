@@ -57,6 +57,13 @@ export enum StorageEventType {
   IPNS_UPDATE = 'update-ipns',
   IPNS_DELETE = 'delete-ipns',
   IPNS_PUBLISH = 'publish-ipns',
+  WEB_PAGE_LIST = 'list-web-pages',
+  WEB_PAGE_CREATE = 'create-web-page',
+  WEB_PAGE_UPDATE = 'update-web-page',
+  WEB_PAGE_GET = 'get-web-page',
+  WEB_PAGE_DEPLOY = 'deploy-web-page',
+  WEB_PAGE_LIST_DOMAINS = 'list-web-page-domains',
+  BUCKET_CLEAR_CONTENT = 'clear-bucket-content',
 }
 
 export enum MailEventType {
@@ -318,6 +325,10 @@ export enum ValidatorErrorCode {
   USER_OAUTH_VERIFIER_NOT_PRESENT = 42200033,
   TWEET_ID_NOT_PRESENT = 42200034,
   PRODUCT_ID_NOT_PRESENT = 42200035,
+  WEB_PAGE_PROJECT_UUID_NOT_PRESENT = 42200036,
+  WEB_PAGE_NAME_NOT_PRESENT = 42200037,
+  DEPLOY_WEB_PAGE_ID_NOT_PRESENT = 42200038,
+  DEPLOY_ENVIRONMENT_NOT_PRESENT = 42200039,
 }
 
 /**
@@ -361,4 +372,5 @@ export enum QuotaCode {
   MAX_FILE_BUCKETS = 5,
   MAX_BUCKET_SIZE = 6,
   MAX_ATTESTED_USERS = 7,
+  MAX_WEB_PAGES = 8,
 }

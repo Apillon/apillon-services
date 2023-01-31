@@ -5,14 +5,14 @@ import { presenceValidator } from '@rawmodel/validators';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { BaseQueryFilter } from '../../../base-models/base-query-filter.model';
 
-export class BucketQueryFilter extends BaseQueryFilter {
+export class WebPageQueryFilter extends BaseQueryFilter {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.BUCKET_PROJECT_UUID_NOT_PRESENT,
+        code: ValidatorErrorCode.PROJECT_UUID_NOT_PRESENT_IN_QUERY,
       },
     ],
   })
@@ -31,12 +31,4 @@ export class BucketQueryFilter extends BaseQueryFilter {
     validators: [],
   })
   public status: number;
-
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [],
-    defaultValue: 1,
-  })
-  public bucketType: number;
 }

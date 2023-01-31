@@ -158,7 +158,8 @@ export class Bucket extends AdvancedSQLModel {
       SerializeFor.PROFILE,
     ],
     validators: [],
-    fakeValue: 5242880,
+    fakeValue: 5368709120,
+    defaultValue: 5368709120,
   })
   public maxSize: number;
 
@@ -342,6 +343,7 @@ export class Bucket extends AdvancedSQLModel {
       qFrom: `
         FROM \`${DbTables.BUCKET}\` b
         WHERE b.project_uuid = @project_uuid
+        AND b.bucketType = @bucketType
         AND (@search IS null OR b.name LIKE CONCAT('%', @search, '%'))
         AND IFNULL(@status, ${SqlModelStatus.ACTIVE}) = status
       `,
@@ -375,8 +377,8 @@ export class Bucket extends AdvancedSQLModel {
   public async clearBucketContent(context: Context, conn: PoolConnection) {
     await context.mysql.paramExecute(
       `
-      DELETE
-      FROM \`${DbTables.DIRECTORY}\`
+      UPDATE \`${DbTables.DIRECTORY}\`
+      SET status = ${SqlModelStatus.DELETED}
       WHERE bucket_id = @bucket_id AND status <> ${SqlModelStatus.DELETED};
       `,
       { bucket_id: this.id },
@@ -385,8 +387,8 @@ export class Bucket extends AdvancedSQLModel {
 
     await context.mysql.paramExecute(
       `
-      DELETE
-      FROM \`${DbTables.FILE}\`
+      UPDATE \`${DbTables.FILE}\`
+      SET status = ${SqlModelStatus.DELETED} 
       WHERE bucket_id = @bucket_id AND status <> ${SqlModelStatus.DELETED};
       `,
       { bucket_id: this.id },
