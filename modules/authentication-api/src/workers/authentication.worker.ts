@@ -18,22 +18,21 @@ import {
   getFullDidDocument,
   getNextNonce,
   createAttestationRequest,
-  generateKeypairsV2,
-  generateAccountV2,
+  generateKeypairs,
+  generateAccount,
 } from '../lib/kilt';
 import { AuthenticationApiContext } from '../context';
 import { Identity } from '../modules/identity/models/identity.model';
 import {
   AuthenticationErrorCode,
   IdentityState,
-  KILT_DERIVATION_SIGN_ALGORITHM,
+  KiltSignAlgorithm,
 } from '../config/types';
 import { HttpStatus } from '@nestjs/common';
 
 export class AuthenticationWorker extends BaseQueueWorker {
   context: AuthenticationApiContext;
 
-  // TODO: Handle errors and edge cases properly
   public constructor(
     workerDefinition: WorkerDefinition,
     context: AuthenticationApiContext,
@@ -60,10 +59,8 @@ export class AuthenticationWorker extends BaseQueueWorker {
     const claimerDidUri = parameters.didUri;
 
     // Generate (retrieve) attester did data
-    const attesterKeypairs = await generateKeypairsV2(
-      env.KILT_ATTESTER_MNEMONIC,
-    );
-    const attesterAccount = (await generateAccountV2(
+    const attesterKeypairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
+    const attesterAccount = (await generateAccount(
       env.KILT_ATTESTER_MNEMONIC,
     )) as KiltKeyringPair;
 
@@ -196,7 +193,7 @@ export class AuthenticationWorker extends BaseQueueWorker {
       const claimerCredential = {
         ...credential,
         claimerSignature: {
-          keyType: KILT_DERIVATION_SIGN_ALGORITHM,
+          keyType: KiltSignAlgorithm.SR25519,
           keyUri: claimerDidUri,
         },
       };
@@ -210,7 +207,7 @@ export class AuthenticationWorker extends BaseQueueWorker {
       identity.populate({
         state: IdentityState.ATTESTED,
         credential: claimerCredential,
-        didUri: parameters.didUri, // TODO: Maybe better to get from document
+        didUri: parameters.didUri,
       });
 
       await identity.update();

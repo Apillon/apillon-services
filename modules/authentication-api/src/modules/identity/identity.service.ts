@@ -21,10 +21,9 @@ import {
   ApillonSupportedCTypes,
 } from '../../config/types';
 import {
-  generateAccount,
   generateMnemonic,
-  generateKeypairsV2,
-  generateAccountV2,
+  generateKeypairs,
+  generateAccount,
   getCtypeSchema,
 } from '../../lib/kilt';
 import {
@@ -43,7 +42,6 @@ import {
   DidUri,
   Credential,
 } from '@kiltprotocol/sdk-js';
-
 import {
   QueueWorkerType,
   sendToWorkerQueue,
@@ -291,7 +289,7 @@ export class IdentityService {
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
     // This is the attester account, used elsewhere in the code
-    const depositPayerAccount = (await generateAccountV2(
+    const depositPayerAccount = (await generateAccount(
       env.KILT_ATTESTER_MNEMONIC,
     )) as KiltKeyringPair;
 
@@ -354,8 +352,9 @@ export class IdentityService {
     }
 
     // generate keypairs
-    const { authentication, assertion, keyAgreement } =
-      await generateKeypairsV2(mnemonic);
+    const { authentication, assertion, keyAgreement } = await generateKeypairs(
+      mnemonic,
+    );
     // generate account
     const account = (await generateAccount(mnemonic)) as KiltKeyringPair;
 

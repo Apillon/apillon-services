@@ -10,10 +10,16 @@ export enum DbTables {
   IDENTITY = 'identity',
 }
 
-export const KILT_DERIVATION_SIGN_ALGORITHM = 'sr25519';
-export enum EclipticDerivationPaths {
-  ATTESTATION = '//attestation',
-  DELEGATION = '//delegation',
+export const enum KiltSignAlgorithm {
+  SR25519 = 'sr25519',
+  ED25519 = 'ed25519',
+  X25519 = 'x25519',
+}
+export enum KiltDerivationPaths {
+  AUTHENTICATION = '//did//0',
+  ASSERTION = '//did//assertion//0', // Attestation
+  CAPABILITY_DELEGATION = '//did//delegation//0',
+  KEY_AGREEMENT = '//did//keyAgreement//0',
 }
 
 /**
