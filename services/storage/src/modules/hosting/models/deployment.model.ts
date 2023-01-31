@@ -214,7 +214,8 @@ export class Deployment extends AdvancedSQLModel {
       SELECT * 
       FROM \`${this.tableName}\`
       WHERE cid = @cid 
-      AND status <> ${SqlModelStatus.DELETED};
+      AND status <> ${SqlModelStatus.DELETED}
+      LIMIT 1;
       `,
       { cid },
     );
@@ -241,7 +242,8 @@ export class Deployment extends AdvancedSQLModel {
       WHERE webPage_id = @webPage_id 
       AND environment = @environment
       AND status <> ${SqlModelStatus.DELETED}
-      ORDER BY number DESC;
+      ORDER BY number DESC
+      LIMIT 1;
       `,
       { webPage_id, environment },
     );
