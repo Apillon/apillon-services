@@ -1,3 +1,5 @@
+import { Chain } from '@apillon/lib';
+import { Context } from '@apillon/lib';
 import {
   AppEnvironment,
   dropDatabase,
@@ -6,7 +8,10 @@ import {
   rebuildDatabase,
   seedDatabase,
 } from '@apillon/lib';
+import Keyring from '@polkadot/keyring';
+import { mnemonicGenerate } from '@polkadot/util-crypto';
 import { ServiceContext } from '../src/context';
+import { Wallet } from '../src/modules/polkadot-signer/models/wallet';
 
 /**
  * Testing stage definition.
@@ -61,6 +66,27 @@ export async function setupTest(): Promise<Stage> {
   } catch (e) {
     console.error(e);
     throw new Error('Unable to set up env');
+  }
+}
+
+export async function generateWallets(
+  amount: number,
+  type: Chain,
+  context: Context,
+) {
+  const keyring = new Keyring();
+  for (let i = 0; i < amount; i++) {
+    const mnemonic = mnemonicGenerate();
+    const pair = keyring.createFromUri(mnemonic);
+    const wallet = new Wallet(
+      {
+        chain: type,
+        seed: mnemonic,
+        address: pair.address,
+      },
+      context,
+    );
+    await wallet.insert();
   }
 }
 

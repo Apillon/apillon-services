@@ -7,7 +7,7 @@ export async function upgrade(
     CREATE TABLE IF NOT EXISTS \`${DbTables.ENDPOINT}\` (
     \`id\` INT NOT NULL AUTO_INCREMENT,
     \`status\` INT NULL,
-    \`url\` VARCHAR(36) NOT NULL,
+    \`url\` VARCHAR(50) NOT NULL,
     \`chain\` INT NOT NULL,
     \`priority\` INT NULL,
     \`type\` INT NULL,

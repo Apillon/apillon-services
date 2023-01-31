@@ -1,4 +1,4 @@
-import { AmsCodeException } from '../lib/exceptions';
+import { BlockchainCodeException } from '../lib/exceptions';
 
 export function ErrorHandler() {
   const onError = (request) => {
@@ -9,7 +9,7 @@ export function ErrorHandler() {
       status: request?.error?.status || 500,
       data: null,
       error:
-        request?.error instanceof AmsCodeException
+        request?.error instanceof BlockchainCodeException
           ? {
               message: request?.error?.options.errorMessage,
               errorCode: request?.error?.options.code,

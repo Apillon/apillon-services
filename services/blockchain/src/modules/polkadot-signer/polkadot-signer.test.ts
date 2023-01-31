@@ -1,4 +1,10 @@
-import { releaseStage, setupTest, Stage } from '../../../test/setup';
+import { Chain } from '@apillon/lib';
+import {
+  generateWallets,
+  releaseStage,
+  setupTest,
+  Stage,
+} from '../../../test/setup';
 import { PolkadotSignerService } from './polkadot-signer.service';
 
 describe('Polkadot signer unit test', () => {
@@ -6,6 +12,7 @@ describe('Polkadot signer unit test', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
+    await generateWallets(1, Chain.CRUST, stage.context);
   });
 
   afterAll(async () => {

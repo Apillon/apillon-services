@@ -5,22 +5,22 @@ import {
   ServiceName,
   ValidationException,
 } from '@apillon/lib';
-import { AmsErrorCode } from '../config/types';
+import { BlockchainErrorCode } from '../config/types';
 
-export class AmsCodeException extends CodeException {
+export class BlockchainCodeException extends CodeException {
   constructor(options: ErrorOptions) {
     options = {
       sourceModule: ServiceName.AMS,
-      errorCodes: AmsErrorCode,
-      errorMessage: options.errorMessage || AmsErrorCode[options.code],
+      errorCodes: BlockchainErrorCode,
+      errorMessage: options.errorMessage || BlockchainErrorCode[options.code],
       ...options,
     };
     super(options);
   }
 }
 
-export class AmsValidationException extends ValidationException {
+export class BlockchainValidationException extends ValidationException {
   constructor(model: Model) {
-    super(model, AmsErrorCode);
+    super(model, BlockchainErrorCode);
   }
 }

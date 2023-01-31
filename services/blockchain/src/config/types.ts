@@ -20,10 +20,13 @@ export enum DbTables {
  *  INTERNAL ERROR CODE: 000 - 999
  *
  **/
-export enum AmsErrorCode {
+export enum BlockchainErrorCode {
   // 422 - Unprocessable entry
   STATUS_NOT_PRESENT = 42211000,
   INVALID_STATUS = 42211001,
+  WALLET_INVALID_CHAIN = 42211002,
+  WALLET_ADDRESS_NOT_PRESENT = 42211003,
+  WALLET_SEED_NOT_PRESENT = 42211004,
 
   // 400 - Bad request
   BAD_REQUEST = 40011001,
