@@ -48,7 +48,27 @@ export enum AuthenticationErrorCode {
   VERIFICATION_IDENTITY_NOT_PRESENT = 422070300,
   VERIFICATION_CHALLENGE_NOT_PRESENT = 422070301,
   VERIFICATION_INVALID_CHALLENGE = 422070302,
+  SPORRAN_INVALID_REQUEST = 422070401,
+  SPORRAN_ENCRYPTED_KEY_ID_NOT_PRESENT = 422070402,
+  SPORRAN_ENCRYPTED_CHALLENGE_NOT_PRESENT = 422070403,
+  SPORRAN_NONCE_NOT_PRESENT = 422070404,
+  SPORRAN_SESSIONID_NOT_PRESENT = 422070405,
 }
+
+// Well known did domain linkage Ctype required props
+export const KILT_CREDENTIAL_IRI_PREFIX = 'kilt:cred:';
+export const APILLON_VERIFIABLECREDENTIAL_TYPE = 'ApillonCredential2023';
+export const DEFAULT_VERIFIABLECREDENTIAL_TYPE = 'VerifiableCredential';
+export interface ApillonSelfSignedProof extends Proof {
+  type: typeof APILLON_SELF_SIGNED_PROOF_TYPE;
+  proofPurpose: 'assertionMethod';
+  verificationMethod: IPublicKeyRecord['id'] | IPublicKeyRecord;
+  signature: string;
+  challenge?: string;
+}
+
+// Sporran specifics
+export const APILLON_DAPP_NAME = 'ApillonDApp';
 
 /**
  * Resource not found error codes - 40407000.
@@ -71,6 +91,8 @@ export enum IdentityState {
  */
 export enum JwtTokenType {
   IDENTITY_EMAIL_VERIFICATION = 'IDENTITY_EMAIL_VERIFICATION',
+  // Used to initialize the session with the sporran browser extension
+  SPORRAN_SESSION = 'SPORRAN_SESSION',
 }
 
 export enum IdentityEventType {
@@ -120,16 +142,4 @@ export enum AuthAppErrors {
 export enum ApillonSupportedCTypes {
   EMAIL = 'EMAIL',
   DOMAIN_LINKAGE = 'DOMAIN_LINKAGE',
-}
-
-export const KILT_CREDENTIAL_IRI_PREFIX = 'kilt:cred:';
-
-export const APILLON_VERIFIABLECREDENTIAL_TYPE = 'ApillonCredential2023';
-export const DEFAULT_VERIFIABLECREDENTIAL_TYPE = 'VerifiableCredential';
-export interface ApillonSelfSignedProof extends Proof {
-  type: typeof APILLON_SELF_SIGNED_PROOF_TYPE;
-  proofPurpose: 'assertionMethod';
-  verificationMethod: IPublicKeyRecord['id'] | IPublicKeyRecord;
-  signature: string;
-  challenge?: string;
 }

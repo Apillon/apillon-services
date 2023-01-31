@@ -7,9 +7,10 @@ import { ContextMiddleware } from './middlewares/context.middleware';
 import { IdentityModule } from './modules/identity/identity.module';
 import { MySQLModule } from './modules/database/mysql.module';
 import { VerificationModule } from './modules/verfication/verification.module';
+import { SporranModule } from './modules/sporran/sporran.module';
 
 @Module({
-  imports: [MySQLModule, VerificationModule, IdentityModule],
+  imports: [MySQLModule, VerificationModule, IdentityModule, SporranModule],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -23,6 +23,7 @@ import {
   APILLON_SELF_SIGNED_PROOF_TYPE,
   ApillonSelfSignedProof,
   DEFAULT_VERIFIABLECREDENTIAL_TYPE,
+  APILLON_VERIFIABLECREDENTIAL_TYPE,
 } from '../../config/types';
 import {
   generateMnemonic,
@@ -54,7 +55,7 @@ import {
 } from '@apillon/workers-lib';
 import { WorkerName } from '../../workers/worker-executor';
 import { AuthenticationWorker } from '../../workers/authentication.worker';
-import { hexToU8a } from '@polkadot/util';
+import { hexToU8a, u8aToHex } from '@polkadot/util';
 import { IdentityCreateDto } from './dtos/identity-create.dto';
 
 @Injectable()
@@ -407,7 +408,7 @@ export class IdentityService {
 
       const credentialSubject = {
         id: didUri,
-        origin: 'localhost',
+        origin: 'http://localhost:5173',
         rootHash: domainLinkageCredential.rootHash,
       };
 
@@ -445,7 +446,7 @@ export class IdentityService {
             type: [
               DEFAULT_VERIFIABLECREDENTIAL_TYPE,
               'DomainLinkageCredential',
-              'KiltCredential2020',
+              APILLON_VERIFIABLECREDENTIAL_TYPE,
             ],
             credentialSubject,
             proof,
@@ -454,13 +455,12 @@ export class IdentityService {
       };
     }
 
-    console.error(document.uri);
-
     return {
       account: account.address,
       didUri: document.uri,
       didConfiguration: wellKnownDidconfig,
       mnemonic: mnemonic,
+      encryptionPubKey: u8aToHex(keyAgreement.publicKey),
     };
   }
 }
