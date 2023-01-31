@@ -237,7 +237,7 @@ describe('Hosting tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
       file1_uuid = response.body.data.file_uuid;
-      const file1_signedUrlForUpload = response.body.data.signedUrlForUpload;
+      const file1_signedUrlForUpload = response.body.data.url;
 
       response = await request(file1_signedUrlForUpload)
         .put(``)
@@ -256,7 +256,7 @@ describe('Hosting tests', () => {
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       file2_uuid = response.body.data.file_uuid;
-      const file2_signedUrlForUpload = response.body.data.signedUrlForUpload;
+      const file2_signedUrlForUpload = response.body.data.url;
 
       response = await request(file2_signedUrlForUpload)
         .put(``)
