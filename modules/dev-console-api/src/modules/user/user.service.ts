@@ -47,6 +47,8 @@ export class UserService {
       });
     }
 
+    user.userRoles = context.user.userRoles;
+
     return user.serialize(SerializeFor.PROFILE);
   }
 
@@ -61,7 +63,6 @@ export class UserService {
       });
 
       const user = await new User({}, context).populateByUUID(
-        context,
         resp.data.user_uuid,
       );
 
@@ -107,6 +108,12 @@ export class UserService {
           (response) => (captchaResult = response),
         ),
       );
+    } else {
+      throw new CodeException({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        code: ValidatorErrorCode.CAPTCHA_NOT_PRESENT,
+        errorCodes: ValidatorErrorCode,
+      });
     }
 
     await Promise.all(promises);

@@ -6,9 +6,11 @@ import {
   AttachedServiceType,
   DefaultApiKeyRole,
   env,
+  SqlModelStatus,
 } from '@apillon/lib';
 import {
   FileStatus,
+  ObjectType,
   StorageErrorCode,
 } from '@apillon/storage/src/config/types';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
@@ -155,7 +157,7 @@ describe('Storage tests', () => {
           );
         expect(response.status).toBe(201);
         expect(response.body.data.signedUrlForUpload).toBeTruthy();
-        expect(response.body.data.file_uuid).toBeTruthy();
+        expect(response.body.data.fileUuid).toBeTruthy();
 
         const fur: FileUploadRequest = await new FileUploadRequest(
           {},
@@ -164,7 +166,7 @@ describe('Storage tests', () => {
         expect(fur.exists()).toBeTruthy();
 
         testS3SignedUrl = response.body.data.signedUrlForUpload;
-        testS3FileUUID = response.body.data.file_uuid;
+        testS3FileUUID = response.body.data.fileUuid;
       });
 
       test('Application should be able to upload file to s3 via signed URL', async () => {
@@ -207,13 +209,12 @@ describe('Storage tests', () => {
         expect(response.body.errors.length).toBeGreaterThan(0);
         expect(
           response.body.errors.filter(
-            (x) => x.statusCode == StorageErrorCode.FILE_NAME_NOT_PRESENT,
+            (x) => x.code == StorageErrorCode.FILE_NAME_NOT_PRESENT,
           ),
         ).toBeTruthy();
         expect(
           response.body.errors.filter(
-            (x) =>
-              x.statusCode == StorageErrorCode.BUCKET_PROJECT_UUID_NOT_PRESENT,
+            (x) => x.code == StorageErrorCode.BUCKET_PROJECT_UUID_NOT_PRESENT,
           ),
         ).toBeTruthy();
       });
@@ -262,7 +263,7 @@ describe('Storage tests', () => {
         expect(response.status).toBe(200);
 
         expect(response.body.data.fileStatus).toBe(FileStatus.PINNED_TO_CRUST);
-        expect(response.body.data.file.file_uuid).toBe(testFile.file_uuid);
+        expect(response.body.data.file.fileUuid).toBe(testFile.file_uuid);
         expect(response.body.data.file.CID).toBe(testFile.CID);
         expect(response.body.data.file.name).toBe(testFile.name);
         expect(response.body.data.file.size).toBeGreaterThan(0);
@@ -280,7 +281,7 @@ describe('Storage tests', () => {
         expect(response.status).toBe(200);
 
         expect(response.body.data.fileStatus).toBe(FileStatus.PINNED_TO_CRUST);
-        expect(response.body.data.file.file_uuid).toBe(testFile.file_uuid);
+        expect(response.body.data.file.fileUuid).toBe(testFile.file_uuid);
         expect(response.body.data.file.CID).toBe(testFile.CID);
         expect(response.body.data.file.name).toBe(testFile.name);
         expect(response.body.data.file.size).toBeGreaterThan(0);
@@ -316,9 +317,9 @@ describe('Storage tests', () => {
 
         expect(response.body.data.total).toBe(1);
         expect(response.body.data.items.length).toBe(1);
-        expect(response.body.data.items[0].type).toBe('file');
+        expect(response.body.data.items[0].type).toBe(ObjectType.FILE);
         expect(response.body.data.items[0].CID).toBeTruthy();
-        expect(response.body.data.items[0].file_uuid).toBeTruthy();
+        expect(response.body.data.items[0].fileUuid).toBeTruthy();
         expect(response.body.data.items[0].name).toBeTruthy();
         expect(response.body.data.items[0].id).toBeTruthy();
       });
@@ -369,7 +370,8 @@ describe('Storage tests', () => {
         testFile = await new File({}, stage.storageContext).populateByUUID(
           testS3FileUUID,
         );
-        expect(testFile.exists()).toBeFalsy();
+        expect(testFile.exists()).toBeTruthy();
+        expect(testFile.status).toBe(SqlModelStatus.MARKED_FOR_DELETION);
       });
     });
   });

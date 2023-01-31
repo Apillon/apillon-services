@@ -208,7 +208,6 @@ export class ProjectService {
     if (authUser.data?.user_uuid) {
       //User exists - send mail with notification, that user has been added to project
       const user = await new User({}, context).populateByUUID(
-        context,
         authUser.data?.user_uuid,
       );
 

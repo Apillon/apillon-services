@@ -6,7 +6,7 @@ import {
   WorkerLogStatus,
   QueueWorkerType,
 } from '@apillon/workers-lib';
-import { AppEnvironment, MySql } from '@apillon/lib';
+import { AppEnvironment, getEnvSecrets, MySql } from '@apillon/lib';
 
 import { Context, env } from '@apillon/lib';
 import { TestWorker } from './test-worker';
@@ -22,6 +22,8 @@ export enum WorkerName {
 }
 
 export async function handler(event: any) {
+  await getEnvSecrets();
+
   const options = {
     host:
       env.APP_ENV === AppEnvironment.TEST

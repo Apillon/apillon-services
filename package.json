@@ -8,9 +8,10 @@
     "modules/*"
   ],
   "scripts": {
-    "build": "npx turbo run build --filter=!@apillon/authentication-api",
+    "build": "npx turbo run build",
     "build-no-cache": "npx turbo run build --no-cache",
     "dev": "npx turbo run dev --parallel",
+    "dev-min": "npx turbo run dev --parallel --filter=!@apillon/authentication-api --filter=!@apillon/api --filter=!@apillon/referral --filter=!@apillon/monitoring --filter=!@apillon/mailing -filter=!@apillon/workers-lib",
     "test": "npx turbo run test --concurrency=1 --continue --filter=!@apillon/authentication-api",
     "test-server": "npx turbo run test-server",
     "lint": "npx turbo run lint",

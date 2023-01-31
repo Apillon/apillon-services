@@ -13,8 +13,14 @@ import { DirectoryContentQueryFilter } from './dtos/directory-content-query-filt
 import { EndFileUploadSessionDto } from './dtos/end-file-upload-session.dto';
 import { FileDetailsQueryFilter } from './dtos/file-details-query-filter.dto';
 import { FileUploadsQueryFilter } from './dtos/file-uploads-query-filter.dto';
+import { TrashedFilesQueryFilter } from './dtos/trashed-files-query-filter.dto';
 import { IpnsQueryFilter } from './dtos/ipns-query-filter.dto';
 import { PublishIpnsDto } from './dtos/publish-ipns.dto';
+import { WebPageQueryFilter } from './dtos/web-page-query-filter.dto';
+import { CreateWebPageDto } from './dtos/create-web-page.dto';
+import { DeployWebPageDto } from './dtos/deploy-web-page.dto';
+import { DeploymentQueryFilter } from './dtos/deployment-query-filter.dto';
+import { WebPagesQuotaReachedQueryFilter } from './dtos/web-pages-quota-reached-query-filter.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -77,6 +83,14 @@ export class StorageMicroservice extends BaseService {
   public async cancelBucketDeletion(params: { id: number }) {
     const data = {
       eventName: StorageEventType.CANCEL_DELETE_BUCKET,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
+  public async clearBucketContent(params: { id: number }) {
+    const data = {
+      eventName: StorageEventType.BUCKET_CLEAR_CONTENT,
       ...params,
     };
     return await this.callService(data);
@@ -187,6 +201,14 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async listFilesMarkedForDeletion(params: TrashedFilesQueryFilter) {
+    const data = {
+      eventName: StorageEventType.LIST_FILES_MARKED_FOR_DELETION,
+      query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
   public async deleteFile(params: { id: string }) {
     const data = {
       eventName: StorageEventType.FILE_DELETE,
@@ -279,6 +301,82 @@ export class StorageMicroservice extends BaseService {
     const data = {
       eventName: StorageEventType.IPNS_DELETE,
       ...params,
+    };
+    return await this.callService(data);
+  }
+
+  //#endregion
+
+  //#region web pages, deployment
+
+  public async listWebPages(params: WebPageQueryFilter) {
+    const data = {
+      eventName: StorageEventType.WEB_PAGE_LIST,
+      query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async getWebPage(id: number) {
+    const data = {
+      eventName: StorageEventType.WEB_PAGE_GET,
+      id: id,
+    };
+    return await this.callService(data);
+  }
+
+  public async createWebPage(params: CreateWebPageDto) {
+    const data = {
+      eventName: StorageEventType.WEB_PAGE_CREATE,
+      body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+  public async updateWebPage(params: { id: number; data: any }) {
+    const data = {
+      eventName: StorageEventType.WEB_PAGE_UPDATE,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
+  public async maxWebPagesQuotaReached(
+    params: WebPagesQuotaReachedQueryFilter,
+  ) {
+    const data = {
+      eventName: StorageEventType.WEB_PAGE_QUOTA_REACHED,
+      query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async deployWebPage(params: DeployWebPageDto) {
+    const data = {
+      eventName: StorageEventType.WEB_PAGE_DEPLOY,
+      body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async listDomains() {
+    const data = {
+      eventName: StorageEventType.WEB_PAGE_LIST_DOMAINS,
+    };
+    return await this.callService(data);
+  }
+
+  public async listDeployments(params: DeploymentQueryFilter) {
+    const data = {
+      eventName: StorageEventType.DEPLOYMENT_LIST,
+      query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async getDeployment(id: number) {
+    const data = {
+      eventName: StorageEventType.DEPLOYMENT_GET,
+      id: id,
     };
     return await this.callService(data);
   }

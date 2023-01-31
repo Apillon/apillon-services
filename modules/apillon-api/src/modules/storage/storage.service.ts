@@ -1,6 +1,8 @@
 import {
+  ApillonApiCreateS3SignedUrlForUploadDto,
   ApillonApiDirectoryContentQueryFilter,
   CreateS3SignedUrlForUploadDto,
+  DirectoryContentQueryFilter,
   EndFileUploadSessionDto,
   FileDetailsQueryFilter,
   StorageMicroservice,
@@ -14,12 +16,17 @@ export class StorageService {
   async createS3SignedUrlForUpload(
     context: ApillonApiContext,
     bucket_uuid: string,
-    body: CreateS3SignedUrlForUploadDto,
+    body: ApillonApiCreateS3SignedUrlForUploadDto,
   ) {
-    body.bucket_uuid = bucket_uuid;
-
     return (
-      await new StorageMicroservice(context).requestS3SignedURLForUpload(body)
+      await new StorageMicroservice(context).requestS3SignedURLForUpload(
+        new CreateS3SignedUrlForUploadDto().populate({
+          ...body.serialize(),
+          bucket_uuid: bucket_uuid,
+          session_uuid: body.sessionUuid,
+          directory_uuid: body.directoryUuid,
+        }),
+      )
     ).data;
   }
 
@@ -65,15 +72,20 @@ export class StorageService {
     bucket_uuid: string,
     query: ApillonApiDirectoryContentQueryFilter,
   ) {
-    query.bucket_uuid = bucket_uuid;
-
     try {
       await query.validate();
     } catch (err) {
       await query.handle(err);
       if (!query.isValid()) throw new ValidationException(query);
     }
-    return (await new StorageMicroservice(context).listDirectoryContent(query))
-      .data;
+    return (
+      await new StorageMicroservice(context).listDirectoryContent(
+        new DirectoryContentQueryFilter().populate({
+          ...query.serialize(),
+          bucket_uuid: bucket_uuid,
+          directory_id: query.directoryId,
+        }),
+      )
+    ).data;
   }
 }

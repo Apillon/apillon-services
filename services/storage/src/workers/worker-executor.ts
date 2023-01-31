@@ -1,4 +1,4 @@
-import { AppEnvironment, MySql } from '@apillon/lib';
+import { AppEnvironment, getEnvSecrets, MySql } from '@apillon/lib';
 import {
   QueueWorkerType,
   ServiceDefinition,
@@ -13,6 +13,8 @@ import { SyncToIPFSWorker } from './s3-to-ipfs-sync-worker';
 import { TestWorker } from './test-worker';
 import { PinToCRUSTWorker } from './pin-to-crust-worker';
 import { Scheduler } from './scheduler';
+import { DeployWebPageWorker } from './deploy-web-page-worker';
+import { DeleteBucketDirectoryFileWorker } from './delete-bucket-directory-file-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -23,9 +25,12 @@ export enum WorkerName {
   SYNC_TO_IPFS_WORKER = 'SyncToIpfsWorker',
   PIN_TO_CRUST_WORKER = 'PinToCrustWorker',
   DELETE_BUCKET_DIRECTORY_FILE_WORKER = 'DeleteBucketDirectoryFileWorker',
+  DEPLOY_WEB_PAGE_WORKER = 'DeployWebPageWorker',
 }
 
 export async function handler(event: any) {
+  await getEnvSecrets();
+
   const options = {
     host:
       env.APP_ENV === AppEnvironment.TEST
@@ -109,6 +114,13 @@ export async function handleLambdaEvent(
       const scheduler = new Scheduler(serviceDef, context);
       await scheduler.run();
       break;
+    case WorkerName.DELETE_BUCKET_DIRECTORY_FILE_WORKER:
+      const workerForDeletion = new DeleteBucketDirectoryFileWorker(
+        workerDefinition,
+        context,
+      );
+      await workerForDeletion.run();
+      break;
     default:
       console.log(
         `ERROR - INVALID WORKER NAME: ${workerDefinition.workerName}`,
@@ -184,6 +196,16 @@ export async function handleSqsMessages(
       }
       case WorkerName.PIN_TO_CRUST_WORKER: {
         await new PinToCRUSTWorker(
+          workerDefinition,
+          context,
+          QueueWorkerType.EXECUTOR,
+        ).run({
+          executeArg: message?.body,
+        });
+        break;
+      }
+      case WorkerName.DEPLOY_WEB_PAGE_WORKER: {
+        await new DeployWebPageWorker(
           workerDefinition,
           context,
           QueueWorkerType.EXECUTOR,

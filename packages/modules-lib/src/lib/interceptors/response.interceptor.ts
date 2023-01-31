@@ -12,6 +12,7 @@ import { IRequest } from '../interfaces/i-request';
  * API response type definition.
  */
 export interface ApiResponse {
+  id: string;
   status: number;
   data?: any;
   meta?: any;
@@ -25,11 +26,12 @@ export class ResponseInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
       map(async (data) => {
-        // const req = context.switchToHttp().getRequest<IRequest>();
+        const req = context.switchToHttp().getRequest<IRequest>();
         const res = context.switchToHttp().getResponse<IRequest>() as any;
         const isAdmin = true; //req.context.isAuthenticated() && (await req.context.hasRole(DefaultUserRole.SUPER_ADMIN));
 
         const response: ApiResponse = {
+          id: req?.context?.requestId,
           status: res.statusCode,
         };
 

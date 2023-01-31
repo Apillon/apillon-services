@@ -1,4 +1,4 @@
-import { ModelBase, PopulateFrom } from '@apillon/lib';
+import { JSONParser, ModelBase, PopulateFrom } from '@apillon/lib';
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator, emailValidator } from '@rawmodel/validators';
@@ -20,4 +20,11 @@ export class AttestationEmailDto extends ModelBase {
     ],
   })
   public email: string;
+
+  @prop({
+    parser: { resolver: JSONParser() },
+    populatable: [PopulateFrom.PROFILE],
+    validators: [],
+  })
+  public captcha: { eKey: string; token: string };
 }

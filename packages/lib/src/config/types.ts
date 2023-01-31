@@ -51,11 +51,22 @@ export enum StorageEventType {
   BUCKET_WEBHOOK_DELETE = 'delete-bucket-webhook',
   LIST_FILE_UPLOAD = 'list-file-upload',
   MAX_BUCKETS_QUOTA_REACHED = 'max-buckets-quota-reached',
+  LIST_FILES_MARKED_FOR_DELETION = 'list-files-marked-for-deletion',
   IPNS_LIST = 'list-ipns',
   IPNS_CREATE = 'create-ipns',
   IPNS_UPDATE = 'update-ipns',
   IPNS_DELETE = 'delete-ipns',
   IPNS_PUBLISH = 'publish-ipns',
+  WEB_PAGE_LIST = 'list-web-pages',
+  WEB_PAGE_CREATE = 'create-web-page',
+  WEB_PAGE_UPDATE = 'update-web-page',
+  WEB_PAGE_GET = 'get-web-page',
+  WEB_PAGE_DEPLOY = 'deploy-web-page',
+  WEB_PAGE_LIST_DOMAINS = 'list-web-page-domains',
+  WEB_PAGE_QUOTA_REACHED = 'web-pages-quota-reached',
+  BUCKET_CLEAR_CONTENT = 'clear-bucket-content',
+  DEPLOYMENT_GET = 'get-deployment',
+  DEPLOYMENT_LIST = 'list-deployment',
 }
 
 export enum MailEventType {
@@ -210,7 +221,10 @@ export enum DefaultUserRole {
   PROJECT_ADMIN = 11, // Admin of current project
   PROJECT_USER = 12, // (read only) User on current project
   // auth user roles
-  USER = 99, // user with access to platform
+  INTERNAL_TEST_USER = 90, //user with access to new unpublished features
+  EXTERNAL_TEST_USER = 91, //user with access to features ready for external testers
+  BETA_USER = 92, //user with access to closed beta features
+  USER = 99, // user with access to platform (published features)
 }
 
 export enum DefaultApiKeyRole {
@@ -274,6 +288,7 @@ export enum BadRequestErrorCode {
   INVALID_PATH = 40000001,
   INVALID_QUERY_PARAMETERS = 40000002,
   MISSING_AUTHORIZATION_HEADER = 40000003,
+  INVALID_AUTHORIZATION_HEADER = 40000004,
 }
 
 export enum ValidatorErrorCode {
@@ -313,6 +328,10 @@ export enum ValidatorErrorCode {
   USER_OAUTH_VERIFIER_NOT_PRESENT = 42200033,
   TWEET_ID_NOT_PRESENT = 42200034,
   PRODUCT_ID_NOT_PRESENT = 42200035,
+  WEB_PAGE_PROJECT_UUID_NOT_PRESENT = 42200036,
+  WEB_PAGE_NAME_NOT_PRESENT = 42200037,
+  DEPLOY_WEB_PAGE_ID_NOT_PRESENT = 42200038,
+  DEPLOY_ENVIRONMENT_NOT_PRESENT = 42200039,
 }
 
 /**
@@ -356,4 +375,5 @@ export enum QuotaCode {
   MAX_FILE_BUCKETS = 5,
   MAX_BUCKET_SIZE = 6,
   MAX_ATTESTED_USERS = 7,
+  MAX_WEB_PAGES = 8,
 }
