@@ -1,4 +1,4 @@
-import { AppEnvironment, env, Lmas } from '@apillon/lib';
+import { AppEnvironment, env } from '@apillon/lib';
 import { typesBundleForPolkadot } from '@crustio/type-definitions';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Keyring } from '@polkadot/keyring';
@@ -46,26 +46,31 @@ export class CrustService {
       tx.signAndSend(krp, ({ events = [], status }) => {
         console.log(`💸  Tx status: ${status.type}, nonce: ${tx.nonce}`);
         console.log(`is in block: `, status.isInBlock);
-        if (status.isInBlock) {
-          events.forEach(({ event }) => {
-            if (
-              event.method === 'ExtrinsicSuccess' ||
-              event.method === 'Finalized'
-            ) {
+        events.forEach(({ event }) => {
+          console.log('event.method:', event.method);
+          console.log('event.data', event.data);
+          if (
+            event.method === 'ExtrinsicSuccess' ||
+            event.method === 'Finalized'
+          ) {
+            if (status.isInBlock) {
               console.log(`✅  Place storage order success!`);
               // Kill api connection - otherwise process won't exit
               void api.disconnect();
               resolve({ success: true });
-            } else if (event.method === 'ExtrinsicFailed') {
-              // extract the data for this event
-              const [dispatchError] = event.data;
-              const errorInfo = dispatchError.toString();
-              console.log(`Place storage order failed: ${errorInfo}`);
+            } else {
               void api.disconnect();
-              reject(errorInfo);
+              reject(event.data);
             }
-          });
-        }
+          } else if (event.method === 'ExtrinsicFailed') {
+            // extract the data for this event
+            const [dispatchError] = event.data;
+            const errorInfo = dispatchError.toString();
+            console.log(`Place storage order failed: ${errorInfo}`);
+            void api.disconnect();
+            reject(errorInfo);
+          }
+        });
       }).catch((e) => {
         void api.disconnect();
         reject(e);
