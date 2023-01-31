@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { AuthenticationApiContext } from '../../../context';
 
 @Injectable()
 export class SporranService {

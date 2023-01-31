@@ -8,6 +8,7 @@ import {
   randomAsHex,
   sr25519PairFromSeed,
 } from '@polkadot/util-crypto';
+import { Keypair } from '@polkadot/util-crypto/types';
 import { isHex } from '@polkadot/util';
 import { LogType, env, ServiceName, Lmas } from '@apillon/lib';
 import {
@@ -36,7 +37,6 @@ import {
   ApillonSupportedCTypes,
   KILT_CREDENTIAL_IRI_PREFIX,
 } from '../config/types';
-import { Keypair } from '@polkadot/util-crypto/types';
 
 export function generateMnemonic() {
   return mnemonicGenerate();
