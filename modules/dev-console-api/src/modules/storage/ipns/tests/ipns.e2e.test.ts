@@ -80,9 +80,7 @@ describe('Ipns tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(422);
       expect(response.body.errors.length).toBe(1);
-      expect(
-        response.body.errors.find((x) => x.statusCode == 42200026),
-      ).toBeTruthy();
+      expect(response.body.errors.find((x) => x.code == 42200026)).toBeTruthy();
     });
 
     test('User should NOT be able to create IPNS record for ANOTHER bucket', async () => {

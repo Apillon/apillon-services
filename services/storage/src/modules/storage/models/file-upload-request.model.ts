@@ -188,12 +188,7 @@ export class FileUploadRequest extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: StorageErrorCode.FILE_UPLOAD_REQUEST_S3_FILE_CONTENT_TYPE_NOT_PRESENT,
-      },
-    ],
+    validators: [],
   })
   public contentType: string;
 

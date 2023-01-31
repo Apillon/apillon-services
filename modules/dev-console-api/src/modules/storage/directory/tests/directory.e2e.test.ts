@@ -1,21 +1,23 @@
 import { DefaultUserRole, env, SqlModelStatus } from '@apillon/lib';
+import { ObjectType } from '@apillon/storage/src/config/types';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
 import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
+import { IPFSService } from '@apillon/storage/src/modules/ipfs/ipfs.service';
+import { File } from '@apillon/storage/src/modules/storage/models/file.model';
+import { executeDeleteBucketDirectoryFileWorker } from '@apillon/storage/src/scripts/serverless-workers/execute-delete-bucket-dir-file-worker';
 import {
   createTestBucket,
   createTestBucketDirectory,
   createTestBucketFile,
   createTestProject,
   createTestUser,
+  releaseStage,
+  Stage,
   TestUser,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
-import { releaseStage, Stage } from '@apillon/tests-lib';
-import { Project } from '../../../project/models/project.model';
 import { setupTest } from '../../../../../test/helpers/setup';
-import { executeDeleteBucketDirectoryFileWorker } from '@apillon/storage/src/scripts/serverless-workers/execute-delete-bucket-dir-file-worker';
-import { IPFSService } from '@apillon/storage/src/modules/ipfs/ipfs.service';
-import { File } from '@apillon/storage/src/modules/storage/models/file.model';
+import { Project } from '../../../project/models/project.model';
 
 describe('Storage directory tests', () => {
   let stage: Stage;
@@ -79,7 +81,7 @@ describe('Storage directory tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBe(1);
-      expect(response.body.data.items[0]?.type).toBe('directory');
+      expect(response.body.data.items[0]?.type).toBe(ObjectType.DIRECTORY);
       expect(response.body.data.items[0]?.name).toBe(testDirectory.name);
     });
 
@@ -91,7 +93,7 @@ describe('Storage directory tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBe(3);
-      expect(response.body.data.items[0]?.type).toBe('file');
+      expect(response.body.data.items[0]?.type).toBe(ObjectType.FILE);
       expect(response.body.data.items[0]?.name).toBeTruthy();
       expect(response.body.data.items[0]?.contentType).toBeTruthy();
       expect(response.body.data.items[0]?.size).toBeTruthy();
@@ -202,7 +204,7 @@ describe('Storage directory tests', () => {
         .set('Authorization', `Bearer ${testUser3.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBe(2);
-      expect(response.body.data.items[0]?.type).toBe('file');
+      expect(response.body.data.items[0]?.type).toBe(ObjectType.FILE);
     });
 
     //TODO ! can user with role "ProjectUser" create/update/delete directory

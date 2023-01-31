@@ -19,6 +19,8 @@ import { PublishIpnsDto } from './dtos/publish-ipns.dto';
 import { WebPageQueryFilter } from './dtos/web-page-query-filter.dto';
 import { CreateWebPageDto } from './dtos/create-web-page.dto';
 import { DeployWebPageDto } from './dtos/deploy-web-page.dto';
+import { DeploymentQueryFilter } from './dtos/deployment-query-filter.dto';
+import { WebPagesQuotaReachedQueryFilter } from './dtos/web-pages-quota-reached-query-filter.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -305,7 +307,7 @@ export class StorageMicroservice extends BaseService {
 
   //#endregion
 
-  //#region web pages
+  //#region web pages, deployment
 
   public async listWebPages(params: WebPageQueryFilter) {
     const data = {
@@ -338,6 +340,16 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async maxWebPagesQuotaReached(
+    params: WebPagesQuotaReachedQueryFilter,
+  ) {
+    const data = {
+      eventName: StorageEventType.WEB_PAGE_QUOTA_REACHED,
+      query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
   public async deployWebPage(params: DeployWebPageDto) {
     const data = {
       eventName: StorageEventType.WEB_PAGE_DEPLOY,
@@ -352,5 +364,22 @@ export class StorageMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
+
+  public async listDeployments(params: DeploymentQueryFilter) {
+    const data = {
+      eventName: StorageEventType.DEPLOYMENT_LIST,
+      query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async getDeployment(id: number) {
+    const data = {
+      eventName: StorageEventType.DEPLOYMENT_GET,
+      id: id,
+    };
+    return await this.callService(data);
+  }
+
   //#endregion
 }

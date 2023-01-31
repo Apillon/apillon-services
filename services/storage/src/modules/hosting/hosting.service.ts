@@ -2,6 +2,7 @@ import {
   AppEnvironment,
   AWS_S3,
   CreateWebPageDto,
+  DeploymentQueryFilter,
   DeployWebPageDto,
   env,
   Lmas,
@@ -12,6 +13,7 @@ import {
   SerializeFor,
   ServiceName,
   WebPageQueryFilter,
+  WebPagesQuotaReachedQueryFilter,
   writeLog,
 } from '@apillon/lib';
 import {
@@ -28,6 +30,7 @@ import {
   StorageErrorCode,
 } from '../../config/types';
 import { ServiceContext } from '../../context';
+import { deleteDirectory } from '../../lib/delete-directory';
 import {
   StorageCodeException,
   StorageValidationException,
@@ -35,12 +38,11 @@ import {
 import { DeployWebPageWorker } from '../../workers/deploy-web-page-worker';
 import { WorkerName } from '../../workers/worker-executor';
 import { Bucket } from '../bucket/models/bucket.model';
+import { Directory } from '../directory/models/directory.model';
+import { FileUploadRequest } from '../storage/models/file-upload-request.model';
+import { File } from '../storage/models/file.model';
 import { Deployment } from './models/deployment.model';
 import { WebPage } from './models/web-page.model';
-import { File } from '../storage/models/file.model';
-import { FileUploadRequest } from '../storage/models/file-upload-request.model';
-import { Directory } from '../directory/models/directory.model';
-import { deleteDirectory } from '../../lib/delete-directory';
 
 export class HostingService {
   //#region web page CRUD
@@ -227,6 +229,25 @@ export class HostingService {
     return webPage.serialize(SerializeFor.PROFILE);
   }
 
+  static async maxWebPagesQuotaReached(
+    event: { query: WebPagesQuotaReachedQueryFilter },
+    context: ServiceContext,
+  ) {
+    const webPage: WebPage = new WebPage(
+      { project_uuid: event.query.project_uuid },
+      context,
+    );
+
+    const numOfWebPages = await webPage.getNumOfWebPages();
+    const maxWebPagesQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_WEB_PAGES,
+      project_uuid: webPage.project_uuid,
+      object_uuid: context.user.user_uuid,
+    });
+
+    return { maxWebPagesQuotaReached: numOfWebPages >= maxWebPagesQuota.value };
+  }
+
   //#endregion
 
   //#region deploy web page
@@ -255,6 +276,12 @@ export class HostingService {
 
     //TODO check if there are files in bucket
 
+    //Get previous deployment record
+    const prevDeployment: Deployment = await new Deployment(
+      {},
+      context,
+    ).populateLastDeployment(webPage.id, event.body.environment);
+
     //Create deployment record
     const d: Deployment = new Deployment({}, context).populate({
       webPage_id: webPage.id,
@@ -263,6 +290,7 @@ export class HostingService {
           ? webPage.stagingBucket_id
           : webPage.productionBucket_id,
       environment: event.body.environment,
+      number: prevDeployment ? prevDeployment.number + 1 : 1,
     });
 
     try {
@@ -321,6 +349,37 @@ export class HostingService {
     }
 
     return d.serialize(SerializeFor.PROFILE);
+  }
+
+  //#endregion
+
+  //#region get, list deployments
+
+  static async getDeployment(event: { id: number }, context: ServiceContext) {
+    const deployment: Deployment = await new Deployment(
+      {},
+      context,
+    ).populateById(event.id);
+
+    if (!deployment.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.DEPLOYMENT_NOT_FOUND,
+        status: 404,
+      });
+    }
+    await deployment.canAccess(context);
+
+    return deployment.serialize(SerializeFor.PROFILE);
+  }
+
+  static async listDeployments(
+    event: { query: DeploymentQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new Deployment(
+      { webPage_id: event.query.webPage_id },
+      context,
+    ).getList(context, new DeploymentQueryFilter(event.query));
   }
 
   //#endregion

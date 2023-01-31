@@ -1,11 +1,13 @@
 import {
   CodeException,
   CreateWebPageDto,
+  DeploymentQueryFilter,
   DeployWebPageDto,
   StorageMicroservice,
   ValidationException,
   ValidatorErrorCode,
   WebPageQueryFilter,
+  WebPagesQuotaReachedQueryFilter,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ResourceNotFoundErrorCode } from '../../../config/types';
@@ -48,6 +50,15 @@ export class HostingService {
     ).data;
   }
 
+  async isWebPagesQuotaReached(
+    context: DevConsoleApiContext,
+    query: WebPagesQuotaReachedQueryFilter,
+  ) {
+    return (
+      await new StorageMicroservice(context).maxWebPagesQuotaReached(query)
+    ).data.maxWebPagesQuotaReached;
+  }
+
   async deployWebPage(
     context: DevConsoleApiContext,
     id: number,
@@ -61,7 +72,27 @@ export class HostingService {
       if (!body.isValid())
         throw new ValidationException(body, ValidatorErrorCode);
     }
-
     return (await new StorageMicroservice(context).deployWebPage(body)).data;
+  }
+
+  async listDeployments(
+    context: DevConsoleApiContext,
+    webPage_id: number,
+    query: DeploymentQueryFilter,
+  ) {
+    query.webPage_id = webPage_id;
+    try {
+      await query.validate();
+    } catch (err) {
+      await query.handle(err);
+      if (!query.isValid())
+        throw new ValidationException(query, ValidatorErrorCode);
+    }
+
+    return (await new StorageMicroservice(context).listDeployments(query)).data;
+  }
+
+  async getDeployment(context: DevConsoleApiContext, id: number) {
+    return (await new StorageMicroservice(context).getDeployment(id)).data;
   }
 }

@@ -10,6 +10,7 @@ import {
 } from '@apillon/lib';
 import {
   FileStatus,
+  ObjectType,
   StorageErrorCode,
 } from '@apillon/storage/src/config/types';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
@@ -208,13 +209,12 @@ describe('Storage tests', () => {
         expect(response.body.errors.length).toBeGreaterThan(0);
         expect(
           response.body.errors.filter(
-            (x) => x.statusCode == StorageErrorCode.FILE_NAME_NOT_PRESENT,
+            (x) => x.code == StorageErrorCode.FILE_NAME_NOT_PRESENT,
           ),
         ).toBeTruthy();
         expect(
           response.body.errors.filter(
-            (x) =>
-              x.statusCode == StorageErrorCode.BUCKET_PROJECT_UUID_NOT_PRESENT,
+            (x) => x.code == StorageErrorCode.BUCKET_PROJECT_UUID_NOT_PRESENT,
           ),
         ).toBeTruthy();
       });
@@ -317,7 +317,7 @@ describe('Storage tests', () => {
 
         expect(response.body.data.total).toBe(1);
         expect(response.body.data.items.length).toBe(1);
-        expect(response.body.data.items[0].type).toBe('file');
+        expect(response.body.data.items[0].type).toBe(ObjectType.FILE);
         expect(response.body.data.items[0].CID).toBeTruthy();
         expect(response.body.data.items[0].fileUuid).toBeTruthy();
         expect(response.body.data.items[0].name).toBeTruthy();
