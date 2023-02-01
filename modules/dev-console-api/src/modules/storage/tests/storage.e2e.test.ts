@@ -68,7 +68,7 @@ describe('Storage tests', () => {
           })
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(201);
-        expect(response.body.data.signedUrlForUpload).toBeTruthy();
+        expect(response.body.data.url).toBeTruthy();
         expect(response.body.data.file_uuid).toBeTruthy();
 
         const fur: FileUploadRequest = await new FileUploadRequest(
@@ -77,7 +77,7 @@ describe('Storage tests', () => {
         ).populateById(response.body.data.fileUploadRequestId);
         expect(fur.exists()).toBeTruthy();
 
-        testS3SignedUrl = response.body.data.signedUrlForUpload;
+        testS3SignedUrl = response.body.data.url;
         testS3FileUUID = response.body.data.file_uuid;
       });
 
@@ -203,7 +203,7 @@ describe('Storage tests', () => {
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(201);
         const file1_uuid = response.body.data.file_uuid;
-        const file1_signedUrlForUpload = response.body.data.signedUrlForUpload;
+        const file1_signedUrlForUpload = response.body.data.url;
 
         response = await request(file1_signedUrlForUpload)
           .put(``)
@@ -221,7 +221,7 @@ describe('Storage tests', () => {
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(201);
         const file2_uuid = response.body.data.file_uuid;
-        const file2_signedUrlForUpload = response.body.data.signedUrlForUpload;
+        const file2_signedUrlForUpload = response.body.data.url;
 
         response = await request(file2_signedUrlForUpload)
           .put(``)
@@ -288,7 +288,7 @@ describe('Storage tests', () => {
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(201);
         const file1_uuid = response.body.data.file_uuid;
-        const file1_signedUrlForUpload = response.body.data.signedUrlForUpload;
+        const file1_signedUrlForUpload = response.body.data.url;
 
         response = await request(file1_signedUrlForUpload)
           .put(``)
@@ -310,7 +310,7 @@ describe('Storage tests', () => {
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(201);
         const file2_uuid = response.body.data.file_uuid;
-        const file2_signedUrlForUpload = response.body.data.signedUrlForUpload;
+        const file2_signedUrlForUpload = response.body.data.url;
 
         response = await request(file2_signedUrlForUpload)
           .put(``)
@@ -389,12 +389,12 @@ describe('Storage tests', () => {
           })
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(201);
-        expect(response.body.data.signedUrlForUpload).toBeTruthy();
+        expect(response.body.data.url).toBeTruthy();
         expect(response.body.data.file_uuid).toBeTruthy();
         const file_uuid = response.body.data.file_uuid;
 
         const testFileContent = uuidV4();
-        response = await request(response.body.data.signedUrlForUpload)
+        response = await request(response.body.data.url)
           .put(``)
           .send(testFileContent);
         expect(response.status).toBe(200);

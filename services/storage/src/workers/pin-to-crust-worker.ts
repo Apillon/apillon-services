@@ -28,6 +28,7 @@ export class PinToCRUSTWorker extends BaseQueueWorker {
     const CID = data?.CID;
     const size = data?.size;
     const bucket_uuid = data?.bucket_uuid;
+    const isDirectory = data?.isDirectory;
 
     if (!CID || !size || !bucket_uuid)
       throw new StorageCodeException({
@@ -44,6 +45,7 @@ export class PinToCRUSTWorker extends BaseQueueWorker {
       await CrustService.placeStorageOrderToCRUST({
         cid: CID,
         size: size,
+        isDirectory: isDirectory,
       });
       await new Lmas().writeLog({
         context: this.context,

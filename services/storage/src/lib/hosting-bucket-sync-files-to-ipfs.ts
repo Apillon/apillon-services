@@ -169,6 +169,7 @@ export async function hostingBucketSyncFilesToIPFS(
     bucket.bucket_uuid,
     ipfsRes.parentDirCID,
     ipfsRes.size,
+    true,
   );
 
   return transferedFiles;
