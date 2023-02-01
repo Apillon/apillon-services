@@ -49,11 +49,13 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
+import { u8aToHex } from '@polkadot/util';
 import { WorkerName } from '../../workers/worker-executor';
-import { AuthenticationWorker } from '../../workers/authentication.worker';
+import { IdentityGenerateWorker } from '../../workers/generate-identity.worker';
 import { IdentityCreateDto } from './dtos/identity-create.dto';
 import { IdentityDidRevokeDto } from './dtos/identity-did-revoke.dto';
 import { VerificationEmailDto } from './dtos/identity-verification-email.dto';
+import { IdentityRevokeWorker } from '../../workers/revoke-identity.worker';
 
 @Injectable()
 export class IdentityService {
@@ -212,7 +214,7 @@ export class IdentityService {
       env.APP_ENV == AppEnvironment.LOCAL_DEV ||
       env.APP_ENV == AppEnvironment.TEST
     ) {
-      console.log('Starting DEV Authentication worker ...');
+      console.log('Starting DEV IdentityGenerateWorker worker ...');
 
       // Directly calls Kilt worker -> USED ONLY FOR DEVELOPMENT!!
       const serviceDef: ServiceDefinition = {
@@ -223,13 +225,13 @@ export class IdentityService {
 
       const wd = new WorkerDefinition(
         serviceDef,
-        WorkerName.AUTHENTICATION_WORKER,
+        WorkerName.IDENTITY_GENERATE_WORKER,
         {
           parameters,
         },
       );
 
-      const worker = new AuthenticationWorker(
+      const worker = new IdentityGenerateWorker(
         wd,
         context,
         QueueWorkerType.EXECUTOR,
@@ -238,8 +240,8 @@ export class IdentityService {
     } else {
       //send message to SQS
       await sendToWorkerQueue(
-        env.AUTHENTICATION_AWS_WORKER_SQS_URL,
-        WorkerName.AUTHENTICATION_WORKER,
+        env.AUTH_AWS_WORKER_SQS_URL,
+        WorkerName.IDENTITY_GENERATE_WORKER,
         [parameters],
         null,
         null,
@@ -273,6 +275,10 @@ export class IdentityService {
     context: AuthenticationApiContext,
     body: IdentityDidRevokeDto,
   ) {
+    const parameters = {
+      emai: body.email,
+    };
+
     const identity = await new Identity({}, context).populateByUserEmail(
       context,
       body.email,
@@ -286,42 +292,42 @@ export class IdentityService {
       });
     }
 
-    await connect(env.KILT_NETWORK);
-    const api = ConfigService.get('api');
-    // This is the attester account, used elsewhere in the code
-    const depositPayerAccount = (await generateAccount(
-      env.KILT_ATTESTER_MNEMONIC,
-    )) as KiltKeyringPair;
+    if (
+      env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+      env.APP_ENV == AppEnvironment.TEST
+    ) {
+      console.log('Starting DEV IdentityRevokeWorker worker ...');
 
-    const identifier = Did.toChain(identity.didUri as DidUri);
+      // Directly calls Kilt worker -> USED ONLY FOR DEVELOPMENT!!
+      const serviceDef: ServiceDefinition = {
+        type: ServiceDefinitionType.SQS,
+        config: { region: 'test' },
+        params: { FunctionName: 'test' },
+      };
 
-    const endpointsCountForDid = await api.query.did.didEndpointsCount(
-      identifier,
-    );
-    const depositClaimExtrinsic = api.tx.did.reclaimDeposit(
-      identifier,
-      endpointsCountForDid,
-    );
-
-    try {
-      await new Lmas().writeLog({
-        logType: LogType.INFO,
-        message: `Propagating DID delete TX to KILT BC ...`,
-        location: 'AUTHENTICATION-API/identity/identity-revoke',
-        service: ServiceName.AUTHENTICATION_API,
-      });
-      await Blockchain.signAndSubmitTx(
-        depositClaimExtrinsic,
-        depositPayerAccount,
+      const wd = new WorkerDefinition(
+        serviceDef,
+        WorkerName.IDENTITY_REVOKE_WORKER,
+        {
+          parameters,
+        },
       );
-    } catch (error) {
-      await new Lmas().writeLog({
-        logType: LogType.ERROR,
-        location: 'Authentication-API/identity/identity-revoke',
-        service: ServiceName.AUTHENTICATION_API,
-        data: error,
-      });
-      throw error;
+
+      const worker = new IdentityRevokeWorker(
+        wd,
+        context,
+        QueueWorkerType.EXECUTOR,
+      );
+      await worker.runExecutor(parameters);
+    } else {
+      //send message to SQS
+      await sendToWorkerQueue(
+        env.AUTH_AWS_WORKER_SQS_URL,
+        WorkerName.IDENTITY_REVOKE_WORKER,
+        [parameters],
+        null,
+        null,
+      );
     }
 
     return { success: true };
@@ -342,7 +348,6 @@ export class IdentityService {
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
 
-    console.log('Received body ', body);
     // Generate mnemonic
     let mnemonic;
     if (body.mnemonic) {
@@ -543,7 +548,7 @@ export class IdentityService {
     return {
       mnemonic: mnemonic,
       address: account.address,
-      // pubkey: u8aToHex(encryption.publicKey),
+      pubkey: u8aToHex(keyAgreement.publicKey),
       wellKnownDidconfig: wellKnownDidconfig,
     };
   }
