@@ -11,8 +11,7 @@ import {
 import { DbTables, ReferralErrorCode } from '../../../config/types';
 
 export enum AttributeType {
-  INFO = 1,
-  SIZE = 2,
+  SIZE = 1,
 }
 
 export class Attribute extends AdvancedSQLModel {
