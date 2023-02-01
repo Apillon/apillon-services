@@ -74,7 +74,7 @@ export class HostingService {
     webPage.canAccess(context);
 
     //Get buckets
-    await webPage.populateBuckets();
+    await webPage.populateBucketsAndLink();
 
     return webPage.serialize(SerializeFor.PROFILE);
   }
