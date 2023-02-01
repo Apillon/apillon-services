@@ -22,33 +22,74 @@ export enum LmasEventType {
   WRITE_LOG = 'write-log',
   WRITE_REQUEST_LOG = 'write-request-log',
   SEND_ALERT = 'send-alert',
+  SEND_ADMIN_ALERT = 'send-admin-alert',
   NOTIFY = 'notify',
 }
 
 export enum StorageEventType {
-  ADD_FILE_TO_IPFS = 'add-file-to-ipfs',
-  ADD_FILE_TO_IPFS_FROM_S3 = 'add-file-to-ipfs-from-s3',
-  GET_OBJECT_FROM_IPFS = 'get-object-from-ipfs',
-  LIST_IPFS_DIRECTORY = 'list-ipfs-directory',
-  PLACE_STORAGE_ORDER_TO_CRUST = 'place-storage-order-to-crust',
   REQUEST_S3_SIGNED_URL_FOR_UPLOAD = 'request-s3-signed-url-for-upload',
   END_FILE_UPLOAD_SESSION = 'end-file-upload-session',
+  END_FILE_UPLOAD = 'end-file-upload',
   CREATE_BUCKET = 'create-bucket',
   UPDATE_BUCKET = 'update-bucket',
   DELETE_BUCKET = 'delete-bucket',
+  CANCEL_DELETE_BUCKET = 'delete-bucket-cancel',
   GET_BUCKET = 'get-bucket',
   LIST_BUCKETS = 'list-buckets',
   LIST_BUCKET_CONTENT = 'list-bucket-content',
   CREATE_DIRECTORY = 'create-directory',
   UPDATE_DIRECTROY = 'update-directory',
   DELETE_DIRECTORY = 'delete-directory',
+  CANCEL_DELETE_DIRECTORY = 'cancel-delete-directory',
   LIST_DIRECTORY_CONTENT = 'list-directory-content',
   GET_FILE_DETAILS = 'get-file-details',
+  FILE_DELETE = 'delete-file',
+  CANCEL_FILE_DELETE = 'cancel-delete-file',
+  BUCKET_WEBHOOK_GET = 'get-bucket-webhook',
+  BUCKET_WEBHOOK_CREATE = 'create-bucket-webhook',
+  BUCKET_WEBHOOK_UPDATE = 'update-bucket-webhook',
+  BUCKET_WEBHOOK_DELETE = 'delete-bucket-webhook',
+  LIST_FILE_UPLOAD = 'list-file-upload',
+  MAX_BUCKETS_QUOTA_REACHED = 'max-buckets-quota-reached',
+  LIST_FILES_MARKED_FOR_DELETION = 'list-files-marked-for-deletion',
+  IPNS_LIST = 'list-ipns',
+  IPNS_CREATE = 'create-ipns',
+  IPNS_UPDATE = 'update-ipns',
+  IPNS_DELETE = 'delete-ipns',
+  IPNS_PUBLISH = 'publish-ipns',
+  WEB_PAGE_LIST = 'list-web-pages',
+  WEB_PAGE_CREATE = 'create-web-page',
+  WEB_PAGE_UPDATE = 'update-web-page',
+  WEB_PAGE_GET = 'get-web-page',
+  WEB_PAGE_DEPLOY = 'deploy-web-page',
+  WEB_PAGE_LIST_DOMAINS = 'list-web-page-domains',
+  WEB_PAGE_QUOTA_REACHED = 'web-pages-quota-reached',
+  BUCKET_CLEAR_CONTENT = 'clear-bucket-content',
+  DEPLOYMENT_GET = 'get-deployment',
+  DEPLOYMENT_LIST = 'list-deployment',
 }
 
 export enum MailEventType {
   SEND_MAIL = 'send-mail',
   SEND_CUSTOM_MAIL = 'send-custom-mail',
+}
+
+export enum ScsEventType {
+  GET_QUOTA = 'get-quota',
+}
+
+export enum ReferralEventType {
+  CREATE_PLAYER = 'create-referral',
+  GET_PLAYER = 'get-referral',
+  GET_PRODUCTS = 'get-products',
+  ORDER_PRODUCT = 'order-product',
+  CONNECT_GITHUB = 'connect-githhub',
+  DISCONNECT_GITHUB = 'disconnect-githhub',
+  CONNECT_TWITTER = 'connect-twitter',
+  DISCONNECT_TWITTER = 'disconnect-twitter',
+  GET_TWITTER_LINK = 'get-twitter-link',
+  GET_TWEETS = 'get-tweets',
+  CONFIRM_RETWEET = 'confirm-retweet',
 }
 
 export enum ServiceName {
@@ -59,6 +100,8 @@ export enum ServiceName {
   MAIL = 'MAIL',
   STORAGE = 'STORAGE',
   APILLON_API = 'APILLON_API',
+  AUTHENTICATION_API = 'AUTHENTICATION_API',
+  REFERRAL = 'REFERRAL',
 }
 
 export enum ServiceCode {
@@ -69,6 +112,11 @@ export enum ServiceCode {
   DEV_CONSOLE = '04',
   APILLON_API = '05',
   STORAGE = '06',
+  MOD_LIB = '07',
+  MAIL = '08',
+  AUTH = '09',
+  CONFIG = '10',
+  REFERRAL = '11',
 }
 
 export enum AppEnvironment {
@@ -88,10 +136,19 @@ export enum LogType {
   COST = 'COST',
 }
 
+export enum LogLevel {
+  DB_ONLY = 'db',
+  NO_DB = 'no-db',
+  DEBUG = 'debug',
+  WARN = 'warning',
+  ERROR_ONLY = 'error',
+}
+
 export enum SqlModelStatus {
   DRAFT = 1,
   INCOMPLETE = 2,
   ACTIVE = 5,
+  MARKED_FOR_DELETION = 8,
   DELETED = 9,
 }
 
@@ -99,7 +156,7 @@ export enum SqlModelStatus {
  * Types of services in dev-console-api
  */
 export enum AttachedServiceType {
-  AUTHORIZATION = 1,
+  AUTHENTICATION = 1,
   STORAGE = 2,
 }
 
@@ -127,6 +184,7 @@ export enum SerializeFor {
   ADMIN = 'admin',
   WORKER = 'worker',
   SERVICE = 'service',
+  LOGGER = 'logger',
 }
 
 /**
@@ -163,7 +221,10 @@ export enum DefaultUserRole {
   PROJECT_ADMIN = 11, // Admin of current project
   PROJECT_USER = 12, // (read only) User on current project
   // auth user roles
-  USER = 99, // user with access to platform
+  INTERNAL_TEST_USER = 90, //user with access to new unpublished features
+  EXTERNAL_TEST_USER = 91, //user with access to features ready for external testers
+  BETA_USER = 92, //user with access to closed beta features
+  USER = 99, // user with access to platform (published features)
 }
 
 export enum DefaultApiKeyRole {
@@ -190,7 +251,7 @@ export enum DefaultApiKeyRole {
  *  04 - dev-api
  *  05 - apillon-api
  *  06 - storage
- *  07 - authorization-api
+ *  07 - authentication-api
  *  ...
  *  INTERNAL ERROR CODE: 000 - 999
  *
@@ -227,6 +288,7 @@ export enum BadRequestErrorCode {
   INVALID_PATH = 40000001,
   INVALID_QUERY_PARAMETERS = 40000002,
   MISSING_AUTHORIZATION_HEADER = 40000003,
+  INVALID_AUTHORIZATION_HEADER = 40000004,
 }
 
 export enum ValidatorErrorCode {
@@ -249,6 +311,27 @@ export enum ValidatorErrorCode {
   API_KEY_ROLE_PROJECT_UUID_NOT_PRESENT = 42200016,
   API_KEY_ROLE_SERVICE_UUID_NOT_PRESENT = 42200017,
   API_KEY_ROLE_ROLE_ID_NOT_VALID = 42200018,
+  BUCKET_WEBHOOK_BUCKET_ID_NOT_PRESENT = 42200019,
+  BUCKET_WEBHOOK_URL_NOT_PRESENT = 42200020,
+  QUOTA_ID_NOT_PRESENT = 42200021,
+  PROJECT_UUID_NOT_PRESENT_IN_QUERY = 42200022,
+  BUCKET_TYPE_NOT_PRESENT_IN_QUERY = 42200023,
+  IPNS_PROJECT_UUID_NOT_PRESENT = 42200024,
+  IPNS_BUCKET_ID_NOT_PRESENT = 42200025,
+  IPNS_NAME_NOT_PRESENT = 42200026,
+  IPNS_IPNS_NAME_NOT_PRESENT = 42200027,
+  IPNS_IPNS_VALUE_NOT_PRESENT = 42200028,
+  PUBLISH_IPNS_IPNS_ID_NOT_PRESENT = 42200029,
+  PUBLISH_IPNS_CID_NOT_PRESENT = 42200030,
+  TASK_ID_NOT_PRESENT = 42200031,
+  USER_OAUTH_TOKEN_NOT_PRESENT = 42200032,
+  USER_OAUTH_VERIFIER_NOT_PRESENT = 42200033,
+  TWEET_ID_NOT_PRESENT = 42200034,
+  PRODUCT_ID_NOT_PRESENT = 42200035,
+  WEB_PAGE_PROJECT_UUID_NOT_PRESENT = 42200036,
+  WEB_PAGE_NAME_NOT_PRESENT = 42200037,
+  DEPLOY_WEB_PAGE_ID_NOT_PRESENT = 42200038,
+  DEPLOY_ENVIRONMENT_NOT_PRESENT = 42200039,
 }
 
 /**
@@ -278,4 +361,19 @@ export enum JwtTokenType {
   USER_RESET_PASSWORD = 'USER_RESET_PASSWORD',
   USER_RESET_EMAIL = 'USER_RESET_EMAIL',
   USER_CONFIRM_EMAIL = 'USER_CONFIRM_EMAIL',
+}
+
+/**
+ * Quota codes
+ * Must equal quote.id field in database!
+ */
+export enum QuotaCode {
+  MAX_PROJECT_COUNT = 1,
+  MAX_USERS_ON_PROJECT = 2,
+  MAX_API_KEYS = 3,
+  MAX_HOSTING_BUCKETS = 4,
+  MAX_FILE_BUCKETS = 5,
+  MAX_BUCKET_SIZE = 6,
+  MAX_ATTESTED_USERS = 7,
+  MAX_WEB_PAGES = 8,
 }

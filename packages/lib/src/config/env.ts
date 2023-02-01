@@ -9,6 +9,7 @@ export interface IEnv {
   APP_URL: string;
   APP_ENV: string;
   LOG_TARGET: string;
+  LOG_LEVEL: string;
 
   /**
    * env var from lambda - current region - can not be overwritten in lambda settings!
@@ -80,6 +81,12 @@ export interface IEnv {
   MONITORING_MONGO_SRV_TEST: string;
   MONITORING_MONGO_DATABASE_TEST: string;
 
+  /**
+   * SLACK ALERTS
+   */
+  SLACK_TOKEN: string;
+  SLACK_CHANNEL: string;
+
   /************************************************************
    * MAIL - mailing service
    ************************************************************/
@@ -143,7 +150,9 @@ export interface IEnv {
   STORAGE_CRUST_SEED_PHRASE: string;
   STORAGE_CRUST_SEED_PHRASE_TEST: string;
   STORAGE_AWS_IPFS_QUEUE_BUCKET: string;
+  STORAGE_IPFS_API: string;
   STORAGE_IPFS_GATEWAY: string;
+  STORAGE_DELETE_AFTER_INTERVAL: number;
 
   STORAGE_MYSQL_HOST: string;
   STORAGE_MYSQL_PORT: number;
@@ -167,19 +176,114 @@ export interface IEnv {
   APILLON_API_PORT_TEST: number;
 
   /************************************************************
-   * Apillon Authroization API config
+   * Apillon Authentication API config
    ************************************************************/
-  APILLON_AUTHORIZATION_API_HOST: string;
-  APILLON_AUTHORIZATION_API_PORT: number;
+  // MAIN
+  AUTH_API_HOST: string;
+  AUTH_API_PORT: number;
 
-  APILLON_AUTHORIZATION_API_HOST_TEST: string;
-  APILLON_AUTHORIZATION_API_PORT_TEST: number;
+  AUTH_APP_URL: string;
+
+  AUTH_API_MYSQL_HOST: string;
+  AUTH_API_MYSQL_PORT: number;
+  AUTH_API_MYSQL_USER: string;
+  AUTH_API_MYSQL_PASSWORD: string;
+  AUTH_API_MYSQL_DATABASE: string;
+
+  // TEST
+  AUTH_API_HOST_TEST: string;
+  AUTH_API_PORT_TEST: number;
+  AUTH_APP_URL_TEST: string;
+  AUTH_API_MYSQL_HOST_TEST: string;
+  AUTH_API_MYSQL_PORT_TEST: number;
+  AUTH_API_MYSQL_USER_TEST: string;
+  AUTH_API_MYSQL_PASSWORD_TEST: string;
+  AUTH_API_MYSQL_DATABASE_TEST: string;
+
+  /************************************************************
+   * Kilt config
+   ************************************************************/
+  KILT_NETWORK: string;
+  KILT_ATTESTER_MNEMONIC: string;
+  KILT_DERIVATION_ALGORITHM: string;
+
+  /************************************************************
+   * Authentication config (Uses Kilt module)
+   ************************************************************/
+
+  AUTHENTICATION_AWS_WORKER_SQS_URL: string;
+  AUTHENTICATION_AWS_WORKER_LAMBDA_NAME: string;
 
   /************************************************************
    * Apillon Serverless workers config - STORAGE MS
    ************************************************************/
   STORAGE_AWS_WORKER_SQS_URL: string;
+  STORAGE_AWS_WORKER_SQS_ARN: string;
   STORAGE_AWS_WORKER_LAMBDA_NAME;
+
+  /*************************************************************
+   * SCS - Apillon System Configuration Service
+   *************************************************************/
+  /**
+   *  function name
+   */
+  CONFIG_FUNCTION_NAME: string;
+  CONFIG_FUNCTION_NAME_TEST: string;
+
+  /**
+   * SCS dev server port
+   */
+  CONFIG_SOCKET_PORT: number;
+  CONFIG_SOCKET_PORT_TEST: number;
+
+  /**
+   * SCS Database config
+   */
+
+  CONFIG_MYSQL_HOST: string;
+  CONFIG_MYSQL_PORT: number;
+  CONFIG_MYSQL_DATABASE: string;
+  CONFIG_MYSQL_USER: string;
+  CONFIG_MYSQL_PASSWORD: string;
+
+  CONFIG_MYSQL_HOST_TEST: string;
+  CONFIG_MYSQL_PORT_TEST: number;
+  CONFIG_MYSQL_DATABASE_TEST: string;
+  CONFIG_MYSQL_USER_TEST: string;
+  CONFIG_MYSQL_PASSWORD_TEST: string;
+
+  /************************************************************
+   * REFERRAL config
+   ************************************************************/
+  REFERRAL_FUNCTION_NAME: string;
+  REFERRAL_FUNCTION_NAME_TEST: string;
+  REFERRAL_SOCKET_PORT: number;
+  REFERRAL_SOCKET_PORT_TEST: number;
+
+  GITHUB_CLIENT_ID: string;
+  GITHUB_CLIENT_SECRET: string;
+  TWITTER_CONSUMER_TOKEN: string;
+  TWITTER_CONSUMER_SECRET: string;
+  TWITTER_BEARER_TOKEN: string;
+  TWITTER_USER_ID: string;
+  OUATH_CALLBACK_URL: string;
+
+  REFERRAL_MYSQL_HOST: string;
+  REFERRAL_MYSQL_PORT: number;
+  REFERRAL_MYSQL_USER: string;
+  REFERRAL_MYSQL_PASSWORD: string;
+  REFERRAL_MYSQL_DATABASE: string;
+
+  REFERRAL_MYSQL_HOST_TEST: string;
+  REFERRAL_MYSQL_PORT_TEST: number;
+  REFERRAL_MYSQL_USER_TEST: string;
+  REFERRAL_MYSQL_PASSWORD_TEST: string;
+  REFERRAL_MYSQL_DATABASE_TEST: string;
+
+  /**
+   * hCAPTCHA
+   */
+  CAPTCHA_SECRET: string;
 }
 
 // dotenv.config();
@@ -189,6 +293,7 @@ export let env: IEnv = {
   APP_URL: process.env['APP_URL'] || 'https://app.apillon.io',
   APP_ENV: process.env['APP_ENV'] || AppEnvironment.STG,
   LOG_TARGET: process.env['LOG_TARGET'] || 'console',
+  LOG_LEVEL: process.env['LOG_LEVEL'] || 'no-db',
   AWS_REGION: process.env['AWS_REGION'], // env var from lambda - can not be overwritten in lambda setting!
   AWS_SECRETS_ID: process.env['AWS_SECRETS_ID'] || '',
   AWS_KEY: process.env['AWS_KEY'],
@@ -230,6 +335,9 @@ export let env: IEnv = {
   MONITORING_MONGO_SRV_TEST: process.env['MONITORING_MONGO_SRV_TEST'],
   MONITORING_MONGO_DATABASE_TEST:
     process.env['MONITORING_MONGO_DATABASE_TEST'] || 'apillon_logs_test',
+
+  SLACK_TOKEN: process.env['SLACK_TOKEN'],
+  SLACK_CHANNEL: process.env['SLACK_CHANNEL'] || 'monitoring',
   /** DEV CONSOLE API DB conn*/
   DEV_CONSOLE_API_MYSQL_HOST: process.env['DEV_CONSOLE_API_MYSQL_HOST'],
   DEV_CONSOLE_API_MYSQL_PORT:
@@ -268,7 +376,10 @@ export let env: IEnv = {
   STORAGE_CRUST_SEED_PHRASE: process.env['STORAGE_CRUST_SEED_PHRASE'],
   STORAGE_CRUST_SEED_PHRASE_TEST: process.env['STORAGE_CRUST_SEED_PHRASE_TEST'],
   STORAGE_AWS_IPFS_QUEUE_BUCKET: process.env['STORAGE_AWS_IPFS_QUEUE_BUCKET'],
+  STORAGE_IPFS_API: process.env['STORAGE_IPFS_API'],
   STORAGE_IPFS_GATEWAY: process.env['STORAGE_IPFS_GATEWAY'],
+  STORAGE_DELETE_AFTER_INTERVAL:
+    parseInt(process.env['STORAGE_DELETE_AFTER_INTERVAL']) || 90,
 
   /**STORAGE microservice */
   STORAGE_MYSQL_HOST: process.env['STORAGE_MYSQL_HOST'],
@@ -284,6 +395,7 @@ export let env: IEnv = {
   STORAGE_MYSQL_USER_TEST: process.env['STORAGE_MYSQL_USER_TEST'],
   STORAGE_MYSQL_PASSWORD_TEST: process.env['STORAGE_MYSQL_PASSWORD_TEST'],
   STORAGE_MYSQL_DATABASE_TEST: process.env['STORAGE_MYSQL_DATABASE_TEST'],
+
   /** MAILING */
   MAIL_FUNCTION_NAME: process.env['MAIL_FUNCTION_NAME'],
   MAIL_FUNCTION_NAME_TEST: process.env['MAIL_FUNCTION_NAME_TEST'],
@@ -301,28 +413,107 @@ export let env: IEnv = {
   SMTP_EMAIL_FROM: process.env['SMTP_EMAIL_FROM'] || 'info@apillon.io',
   ADMIN_EMAILS: process.env['ADMIN_EMAILS'] || 'info@apillon.io',
 
-  /** APILLON API */
+  /** --- SECTION: APILLON API --- */
   APILLON_API_HOST: process.env['APILLON_API_HOST'] || 'localhost',
   APILLON_API_PORT: parseInt(process.env['APILLON_API_PORT']) || 6002,
   APILLON_API_HOST_TEST: process.env['APILLON_API_HOST_TEST'] || 'localhost',
   APILLON_API_PORT_TEST: parseInt(process.env['APILLON_API_PORT_TEST']) || 7002,
 
-  /** APILLON AUTHROIZATION API */
-  APILLON_AUTHORIZATION_API_HOST:
-    process.env['APILLON_AUTHORIZATION_API_HOST'] || 'localhost',
-  APILLON_AUTHORIZATION_API_PORT:
-    parseInt(process.env['APILLON_AUTHORIZATION_API_PORT']) || 6003,
-  APILLON_AUTHORIZATION_API_HOST_TEST:
-    process.env['APILLON_AUTHORIZATION_API_HOST_TEST'] || 'localhost',
-  APILLON_AUTHORIZATION_API_PORT_TEST:
-    parseInt(process.env['APILLON_AUTHORIZATION_API_PORT_TEST']) || 7003,
+  /** --- SECTION: APILLON AUTHENTICATION API --- */
+  AUTH_API_HOST: process.env['AUTH_API_HOST'] || 'localhost',
+  AUTH_API_PORT: parseInt(process.env['AUTH_API_PORT']) || 6003,
+  AUTH_API_HOST_TEST: process.env['AUTH_API_HOST_TEST'] || 'localhost',
+  AUTH_API_PORT_TEST: parseInt(process.env['AUTH_API_PORT_TEST']) || 7003,
+  // Frontend app
+  AUTH_APP_URL: process.env['AUTH_APP_URL'] || 'http://localhost:5173',
+  AUTH_APP_URL_TEST:
+    process.env['AUTH_APP_URL_TEST'] || 'http://localhost:5173',
+
+  /** AUTHENTICATION API DEV DB conn */
+  AUTH_API_MYSQL_HOST: process.env['AUTH_API_MYSQL_HOST'],
+  AUTH_API_MYSQL_PORT: parseInt(process.env['AUTH_API_MYSQL_PORT']) || 3306,
+  AUTH_API_MYSQL_USER: process.env['AUTH_API_MYSQL_USER'],
+  AUTH_API_MYSQL_PASSWORD: process.env['AUTH_API_MYSQL_PASSWORD'],
+  AUTH_API_MYSQL_DATABASE: process.env['AUTH_API_MYSQL_DATABASE'],
+  AUTH_API_MYSQL_HOST_TEST: process.env['AUTH_API_MYSQL_HOST_TEST'],
+  AUTH_API_MYSQL_PORT_TEST:
+    parseInt(process.env['AUTH_API_MYSQL_PORT_TEST']) || 3306,
+  AUTH_API_MYSQL_USER_TEST: process.env['AUTH_API_MYSQL_USER_TEST'],
+  AUTH_API_MYSQL_PASSWORD_TEST: process.env['AUTH_API_MYSQL_PASSWORD_TEST'],
+  AUTH_API_MYSQL_DATABASE_TEST: process.env['AUTH_API_MYSQL_DATABASE_TEST'],
+
+  /** KILT */
+  KILT_NETWORK:
+    process.env['KILT_NETWORK'] ||
+    'wss://peregrine.kilt.io/parachain-public-ws',
+  KILT_ATTESTER_MNEMONIC: process.env['KILT_ATTESTER_MNEMONIC'] || '',
+  // TODO: Unused -> Left here because we might introduce it later as configurable algorithm
+  // because it depends where you use this mnemonic
+  KILT_DERIVATION_ALGORITHM:
+    process.env['KILT_DERIVATION_ALGORITHM'] || 'sr25519',
+  AUTHENTICATION_AWS_WORKER_SQS_URL:
+    process.env['AUTHENTICATION_AWS_WORKER_SQS_URL'] || '',
+  AUTHENTICATION_AWS_WORKER_LAMBDA_NAME:
+    process.env['AUTHENTICATION_AWS_WORKER_LAMBDA_NAME'] || '',
 
   /**Apillon Serverless workers config*/
   /**
    * AWS SQS url for worker communications
    */
   STORAGE_AWS_WORKER_SQS_URL: process.env['STORAGE_AWS_WORKER_SQS_URL'],
+  STORAGE_AWS_WORKER_SQS_ARN: process.env['STORAGE_AWS_WORKER_SQS_ARN'],
   STORAGE_AWS_WORKER_LAMBDA_NAME: process.env['STORAGE_AWS_WORKER_LAMBDA_NAME'],
+
+  /** SCS */
+  CONFIG_FUNCTION_NAME: process.env['CONFIG_FUNCTION_NAME'],
+  CONFIG_FUNCTION_NAME_TEST: process.env['CONFIG_FUNCTION_NAME_TEST'],
+  CONFIG_SOCKET_PORT: parseInt(process.env['CONFIG_SOCKET_PORT']) || 6501,
+  CONFIG_MYSQL_HOST: process.env['CONFIG_MYSQL_HOST'],
+  CONFIG_MYSQL_PORT: parseInt(process.env['CONFIG_MYSQL_PORT']) || 3306,
+  CONFIG_MYSQL_DATABASE: process.env['CONFIG_MYSQL_DATABASE'],
+  CONFIG_MYSQL_USER: process.env['CONFIG_MYSQL_USER'],
+  CONFIG_MYSQL_PASSWORD: process.env['CONFIG_MYSQL_PASSWORD'],
+
+  CONFIG_SOCKET_PORT_TEST:
+    parseInt(process.env['CONFIG_SOCKET_PORT_TEST']) || 7501,
+  CONFIG_MYSQL_HOST_TEST: process.env['CONFIG_MYSQL_HOST_TEST'],
+  CONFIG_MYSQL_PORT_TEST:
+    parseInt(process.env['CONFIG_MYSQL_PORT_TEST']) || 3306,
+  CONFIG_MYSQL_DATABASE_TEST: process.env['CONFIG_MYSQL_DATABASE_TEST'],
+  CONFIG_MYSQL_USER_TEST: process.env['CONFIG_MYSQL_USER_TEST'],
+  CONFIG_MYSQL_PASSWORD_TEST: process.env['CONFIG_MYSQL_PASSWORD_TEST'],
+
+  /**REFERRAL microservice */
+  REFERRAL_FUNCTION_NAME: process.env['REFERRAL_FUNCTION_NAME'],
+  REFERRAL_FUNCTION_NAME_TEST: process.env['REFERRAL_FUNCTION_NAME_TEST'],
+  REFERRAL_SOCKET_PORT: parseInt(process.env['REFERRAL_SOCKET_PORT']) || 6601,
+  REFERRAL_SOCKET_PORT_TEST:
+    parseInt(process.env['REFERRAL_SOCKET_PORT_TEST']) || 7601,
+  GITHUB_CLIENT_ID: process.env['GITHUB_CLIENT_ID'],
+  GITHUB_CLIENT_SECRET: process.env['GITHUB_CLIENT_SECRET'],
+  TWITTER_CONSUMER_TOKEN: process.env['TWITTER_CONSUMER_TOKEN'],
+  TWITTER_CONSUMER_SECRET: process.env['TWITTER_CONSUMER_SECRET'],
+  TWITTER_BEARER_TOKEN: process.env['TWITTER_BEARER_TOKEN'],
+  TWITTER_USER_ID: process.env['TWITTER_USER_ID'],
+  OUATH_CALLBACK_URL: process.env['OUATH_CALLBACK_URL'],
+
+  /**REFERRAL microservice */
+  REFERRAL_MYSQL_HOST: process.env['REFERRAL_MYSQL_HOST'],
+  REFERRAL_MYSQL_PORT: parseInt(process.env['REFERRAL_MYSQL_PORT']) || 3306,
+  REFERRAL_MYSQL_USER: process.env['REFERRAL_MYSQL_USER'],
+  REFERRAL_MYSQL_PASSWORD: process.env['REFERRAL_MYSQL_PASSWORD'],
+  REFERRAL_MYSQL_DATABASE: process.env['REFERRAL_MYSQL_DATABASE'],
+
+  /**REFERRAL microservice - TEST DB */
+  REFERRAL_MYSQL_HOST_TEST: process.env['REFERRAL_MYSQL_HOST_TEST'],
+  REFERRAL_MYSQL_PORT_TEST:
+    parseInt(process.env['REFERRAL_MYSQL_PORT_TEST']) || 3306,
+  REFERRAL_MYSQL_USER_TEST: process.env['REFERRAL_MYSQL_USER_TEST'],
+  REFERRAL_MYSQL_PASSWORD_TEST: process.env['REFERRAL_MYSQL_PASSWORD_TEST'],
+  REFERRAL_MYSQL_DATABASE_TEST: process.env['REFERRAL_MYSQL_DATABASE_TEST'],
+
+  /** CAPTCHA */
+  CAPTCHA_SECRET: process.env['CAPTCHA_SECRET'] || '',
 };
 
 export let isEnvReady = false;

@@ -21,7 +21,7 @@ Run VS Code by opening `at.code-workspace` file to have workspaces setup. File s
 
 ## Development
 
-> **All `npm` commands shoud be run in root folder of the repo!**
+> **All `npm` commands should be run in root folder of the repo!**
 
 ### Installing packages
 
@@ -51,7 +51,7 @@ more: <https://turborepo.org/docs/guides/workspaces#managing-dependencies>
 
 To build all apps and packages, run the following command:
 
-```
+```sh
 npm run build
 ```
 
@@ -59,7 +59,7 @@ npm run build
 
 To run all apps and packages in develop mode, run the following command:
 
-```
+```sh
 npm run dev
 ```
 
@@ -69,7 +69,7 @@ Please see detailed instructions for debugging and testing here: [Debug & test d
 
 To manually deploy changes from local to development environment on AWS use:
 
-```
+```sh
 npm run deploy:dev
 ```
 
@@ -99,17 +99,23 @@ References to other turborepo documentation:
 
 All documentation is MD based and resides in project services and in docs directory.
 
-| Resource                               | Description                                                           |
-| -------------------------------------- | --------------------------------------------------------------------- |
-| [Rest API](docs/rest-API-specs.md)     | Some basic informations about request, response ...                   |
-| [DB migrations](docs/db-migrations.md) | Docs of how to perform mysql db migrations for new services & modules |
+| Resource                                        | Description                                                           |
+| ----------------------------------------------- | --------------------------------------------------------------------- |
+| [Development](docs/development.md)              | Basic guide to programming apillon services                           |
+| [Rest API](docs/rest-API-specs.md)              | Some basic information about request, response ...                    |
+| [DB migrations](docs/db-migrations.md)          | Docs of how to perform mysql db migrations for new services & modules |
+| [Debugging and testing](docs/debig-and-test.md) | How to debug services and how execute e2e tests                       |
+| [Deployment](docs/deployment.md)                | Service deployment to AWS                                             |
 
 ## People working on the project
 
 Add yourself if you stared to work in this project.
 
-| Persons      | Role                                      |
-| ------------ | ----------------------------------------- |
-| Tine Mlakar  | Infrasturcture & microservices mastermind |
-| Vinko Šmid   | Wanna be project lead                     |
-| Luka Golinar | Developer                                 |
+| Persons       | Role                                      |
+| ------------- | ----------------------------------------- |
+| Tine Mlakar   | Infrastructure & microservices mastermind |
+| Vinko Šmid    | Project lead                              |
+| Tadej Vengust | CTO                                       |
+| Luka Golinar  | Developer                                 |
+| Bor Drnovšček | Developer                                 |
+| Matic Kolar   | Apillon developer                         |

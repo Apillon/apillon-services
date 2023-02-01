@@ -1,13 +1,18 @@
 import {
+  ApillonApiCreateS3SignedUrlForUploadDto,
+  ApillonApiDirectoryContentQueryFilter,
   AttachedServiceType,
-  CreateS3SignedUrlForUploadDto,
   DefaultApiKeyRole,
+  EndFileUploadSessionDto,
+  ValidateFor,
 } from '@apillon/lib';
-import { Ctx, Validation, ApiKeyPermissions } from '@apillon/modules-lib';
+import { ApiKeyPermissions, Ctx, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   Param,
   Post,
   Query,
@@ -22,55 +27,90 @@ import { StorageService } from './storage.service';
 export class StorageController {
   constructor(private storageService: StorageService) {}
 
-  @Post('file-upload-request')
+  @Post(':bucketUuid/upload')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_EXECUTE,
     serviceType: AttachedServiceType.STORAGE,
   })
   @UseGuards(AuthGuard)
-  @Validation({ dto: CreateS3SignedUrlForUploadDto })
+  @Validation({ dto: ApillonApiCreateS3SignedUrlForUploadDto })
   @UseGuards(ValidationGuard, AuthGuard)
   async createS3SignedUrlForUpload(
     @Ctx() context: ApillonApiContext,
-    @Body() body: CreateS3SignedUrlForUploadDto,
+    @Param('bucketUuid') bucket_uuid: string,
+    @Body()
+    body: ApillonApiCreateS3SignedUrlForUploadDto,
   ) {
-    return await this.storageService.createS3SignedUrlForUpload(context, body);
+    return await this.storageService.createS3SignedUrlForUpload(
+      context,
+      bucket_uuid,
+      body,
+    );
   }
 
-  @Get('/file-details/cid/:cid')
+  @Post(':bucketUuid/file-upload/:sessionUuid/end')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_EXECUTE,
+    serviceType: AttachedServiceType.STORAGE,
+  })
+  @UseGuards(AuthGuard)
+  @Validation({ dto: EndFileUploadSessionDto })
+  @UseGuards(ValidationGuard)
+  @HttpCode(200)
+  async endFileUploadSession(
+    @Ctx() context: ApillonApiContext,
+    @Param('bucketUuid') bucket_uuid: string,
+    @Param('sessionUuid') session_uuid: string,
+    @Body() body: EndFileUploadSessionDto,
+  ) {
+    return await this.storageService.endFileUploadSession(
+      context,
+      bucket_uuid,
+      session_uuid,
+      body,
+    );
+  }
+
+  @Get(':bucketUuid/file/:id/detail')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_READ,
     serviceType: AttachedServiceType.STORAGE,
   })
   @UseGuards(AuthGuard)
-  async getFileDetailsByCID(
+  async getFileDetails(
     @Ctx() context: ApillonApiContext,
-    @Param('cid') cid: string,
+    @Param('bucketUuid') bucket_uuid: string,
+    @Param('id') id: string,
   ) {
-    return await this.storageService.getFileDetails(context, cid);
+    return await this.storageService.getFileDetails(context, bucket_uuid, id);
   }
 
-  @Get('/fileOrDirectory')
-  async getFileOrDirectory(
-    @Ctx() context: ApillonApiContext,
-    @Query('cid') cid: string,
-  ) {
-    return await this.storageService.getFileOrDirectory(context, cid);
+  @Delete(':bucketUuid/file/:id')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_WRITE,
+    serviceType: AttachedServiceType.STORAGE,
+  })
+  @UseGuards(AuthGuard)
+  async deleteFile(@Ctx() context: ApillonApiContext, @Param('id') id: string) {
+    return await this.storageService.deleteFile(context, id);
   }
 
-  @Get('/listFileOrDirectory')
-  async listFileOrDirectory(
+  @Get(':bucketUuid/content')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_READ,
+    serviceType: AttachedServiceType.STORAGE,
+  })
+  @UseGuards(AuthGuard)
+  @Validation({
+    dto: ApillonApiDirectoryContentQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(ValidationGuard)
+  async listContent(
     @Ctx() context: ApillonApiContext,
-    @Query('cid') cid: string,
+    @Param('bucketUuid') bucket_uuid: string,
+    @Query() query: ApillonApiDirectoryContentQueryFilter,
   ) {
-    return await this.storageService.listDirectory(context, cid);
-  }
-
-  @Post('/fromS3')
-  async uploadFilesToIPFSFromS3(
-    @Ctx() context: ApillonApiContext,
-    @Body() body,
-  ) {
-    return await this.storageService.uploadFilesToIPFSFromS3(context, body);
+    return await this.storageService.listContent(context, bucket_uuid, query);
   }
 }

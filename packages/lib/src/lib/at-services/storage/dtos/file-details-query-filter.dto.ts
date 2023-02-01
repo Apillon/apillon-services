@@ -1,7 +1,8 @@
 // import { ApiProperty } from '@babel/core';
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
-import { PopulateFrom } from '../../../../config/types';
+import { presenceValidator } from '@rawmodel/validators';
+import { BadRequestErrorCode, PopulateFrom } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
 
 export class FileDetailsQueryFilter extends ModelBase {
@@ -10,12 +11,17 @@ export class FileDetailsQueryFilter extends ModelBase {
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
   })
-  public file_uuid: string;
+  public bucket_uuid: string;
 
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: BadRequestErrorCode.INVALID_QUERY_PARAMETERS,
+      },
+    ],
   })
-  public cid: string;
+  public id: string;
 }

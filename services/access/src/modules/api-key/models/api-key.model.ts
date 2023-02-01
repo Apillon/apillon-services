@@ -13,11 +13,13 @@ import {
   SerializeFor,
   SqlModelStatus,
   ApiKeyQueryFilter,
+  ApiKeyRoleBaseDto,
 } from '@apillon/lib';
 import { DbTables, AmsErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
 import { ApiKeyRole } from '../../role/models/api-key-role.model';
 import * as bcrypt from 'bcryptjs';
+import { AmsValidationException } from '../../../lib/exceptions';
 
 export class ApiKey extends AdvancedSQLModel {
   public readonly tableName = DbTables.API_KEY;
@@ -60,6 +62,7 @@ export class ApiKey extends AdvancedSQLModel {
         code: AmsErrorCode.API_KEY_SECRET_NOT_PRESENT,
       },
     ],
+    fakeValue: '123456789',
   })
   public apiKeySecret: string;
 
@@ -158,7 +161,7 @@ export class ApiKey extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: 403,
-        errorMessage: 'Insufficient permissins',
+        errorMessage: 'Insufficient permissions to access this record',
       });
     }
   }
@@ -177,7 +180,7 @@ export class ApiKey extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: 403,
-        errorMessage: 'Insufficient permissins',
+        errorMessage: 'Insufficient permissions to modify this record',
       });
     }
   }
@@ -188,6 +191,46 @@ export class ApiKey extends AdvancedSQLModel {
       apiKeySecret.length > 0 &&
       bcrypt.compareSync(apiKeySecret, this.apiKeySecret)
     );
+  }
+
+  public async assignRole(body: ApiKeyRoleBaseDto) {
+    const keyRole: ApiKeyRole = new ApiKeyRole(
+      { apiKey_id: this.id, ...body },
+      this.getContext(),
+    );
+
+    try {
+      await keyRole.validate();
+    } catch (err) {
+      await keyRole.handle(err);
+      if (!keyRole.isValid()) throw new AmsValidationException(keyRole);
+    }
+
+    //Check if role already assigned
+    if (!(await keyRole.hasRole(keyRole.role_id))) await keyRole.insert();
+
+    return keyRole.serialize(SerializeFor.SERVICE);
+  }
+
+  public async removeRole(apiKeyRole: ApiKeyRoleBaseDto): Promise<boolean> {
+    await this.getContext().mysql.paramExecute(
+      `
+      DELETE
+      FROM \`${DbTables.API_KEY_ROLE}\`
+      WHERE apiKey_id = @apiKey_id
+      AND role_id = @role_id
+      AND service_uuid = @service_uuid
+      AND project_uuid = @project_uuid;
+      `,
+      {
+        apiKey_id: this.id,
+        role_id: apiKeyRole.role_id,
+        service_uuid: apiKeyRole.service_uuid,
+        project_uuid: apiKeyRole.project_uuid,
+      },
+    );
+
+    return true;
   }
 
   public async populateByApiKey(apiKey: string): Promise<this> {
@@ -262,5 +305,23 @@ export class ApiKey extends AdvancedSQLModel {
     };
 
     return selectAndCountQuery(context.mysql, sqlQuery, params, 'ak.id');
+  }
+
+  /**
+   *
+   * @returns number of api key in project
+   */
+  public async getNumOfApiKeysInProject() {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT COUNT(*) as numOfApiKeys
+      FROM \`${this.tableName}\`
+      WHERE project_uuid = @project_uuid 
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { project_uuid: this.project_uuid },
+    );
+
+    return data[0].numOfApiKeys;
   }
 }

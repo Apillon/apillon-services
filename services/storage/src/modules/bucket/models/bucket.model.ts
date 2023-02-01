@@ -1,4 +1,4 @@
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { integerParser, stringParser, dateParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   AdvancedSQLModel,
@@ -6,11 +6,14 @@ import {
   CodeException,
   Context,
   DefaultUserRole,
+  enumInclusionValidator,
   ForbiddenErrorCodes,
   getQueryParams,
   PoolConnection,
   PopulateFrom,
   prop,
+  QuotaCode,
+  Scs,
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
@@ -90,6 +93,10 @@ export class Bucket extends AdvancedSQLModel {
         resolver: presenceValidator(),
         code: StorageErrorCode.BUCKET_TYPE_NOT_PRESENT,
       },
+      {
+        resolver: enumInclusionValidator(BucketType, false),
+        code: StorageErrorCode.BUCKET_TYPE_NOT_VALID,
+      },
     ],
     fakeValue: BucketType.STORAGE,
   })
@@ -149,10 +156,10 @@ export class Bucket extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
     ],
     validators: [],
-    fakeValue: 5242880,
+    fakeValue: 5368709120,
+    defaultValue: 5368709120,
   })
   public maxSize: number;
 
@@ -168,8 +175,25 @@ export class Bucket extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
     ],
     validators: [],
+    defaultValue: 0,
   })
   public size: number;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+    defaultValue: 0,
+  })
+  public uploadedSize: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -211,6 +235,16 @@ export class Bucket extends AdvancedSQLModel {
   })
   public IPNS: string;
 
+  /**
+   * Time when bucket was set to status 8 - MARKED_FOR_DELETION
+   */
+  @prop({
+    parser: { resolver: dateParser() },
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    populatable: [PopulateFrom.DB],
+  })
+  public markedForDeletionTime?: Date;
+
   public canAccess(context: ServiceContext) {
     if (
       !context.hasRoleOnProject(
@@ -226,7 +260,7 @@ export class Bucket extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: 403,
-        errorMessage: 'Insufficient permissins',
+        errorMessage: 'Insufficient permissions to access this record',
       });
     }
   }
@@ -245,7 +279,7 @@ export class Bucket extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: 403,
-        errorMessage: 'Insufficient permissins',
+        errorMessage: 'Insufficient permissions to modify this record',
       });
     }
   }
@@ -271,6 +305,24 @@ export class Bucket extends AdvancedSQLModel {
     }
   }
 
+  /**
+   * Marks bucket in the database for deletion.
+   */
+  public async markForDeletion(conn?: PoolConnection): Promise<this> {
+    this.updateUser = this.getContext()?.user?.id;
+
+    this.status = SqlModelStatus.MARKED_FOR_DELETION;
+    this.markedForDeletionTime = new Date();
+
+    try {
+      await this.update(SerializeFor.UPDATE_DB, conn);
+    } catch (err) {
+      this.reset();
+      throw err;
+    }
+    return this;
+  }
+
   public async getList(context: ServiceContext, filter: BucketQueryFilter) {
     this.canAccess(context);
     // Map url query with sql fields.
@@ -291,8 +343,9 @@ export class Bucket extends AdvancedSQLModel {
       qFrom: `
         FROM \`${DbTables.BUCKET}\` b
         WHERE b.project_uuid = @project_uuid
+        AND b.bucketType = @bucketType
         AND (@search IS null OR b.name LIKE CONCAT('%', @search, '%'))
-        AND status <> ${SqlModelStatus.DELETED}
+        AND IFNULL(@status, ${SqlModelStatus.ACTIVE}) = status
       `,
       qFilter: `
         ORDER BY ${filters.orderStr}
@@ -300,14 +353,32 @@ export class Bucket extends AdvancedSQLModel {
       `,
     };
 
-    return selectAndCountQuery(context.mysql, sqlQuery, params, 'b.id');
+    const list = await selectAndCountQuery(
+      context.mysql,
+      sqlQuery,
+      params,
+      'b.id',
+    );
+
+    for (const b of list.items) {
+      const maxBucketSizeQuota = await new Scs(context).getQuota({
+        quota_id: QuotaCode.MAX_BUCKET_SIZE,
+        project_uuid: filter.project_uuid,
+        object_uuid: b.bucket_uuid,
+      });
+
+      if (maxBucketSizeQuota?.value)
+        b.maxSize = Number(maxBucketSizeQuota?.value) * 1073741824;
+    }
+
+    return list;
   }
 
   public async clearBucketContent(context: Context, conn: PoolConnection) {
     await context.mysql.paramExecute(
       `
-      DELETE
-      FROM \`${DbTables.DIRECTORY}\`
+      UPDATE \`${DbTables.DIRECTORY}\`
+      SET status = ${SqlModelStatus.DELETED}
       WHERE bucket_id = @bucket_id AND status <> ${SqlModelStatus.DELETED};
       `,
       { bucket_id: this.id },
@@ -316,12 +387,33 @@ export class Bucket extends AdvancedSQLModel {
 
     await context.mysql.paramExecute(
       `
-      DELETE
-      FROM \`${DbTables.FILE}\`
+      UPDATE \`${DbTables.FILE}\`
+      SET status = ${SqlModelStatus.DELETED} 
       WHERE bucket_id = @bucket_id AND status <> ${SqlModelStatus.DELETED};
       `,
       { bucket_id: this.id },
       conn,
     );
+  }
+
+  /**
+   * Function to get count of active bucket inside project and for specific bucket type
+   * @param project_uuid
+   * @param bucketType
+   * @returns
+   */
+  public async getNumOfBuckets() {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT COUNT(*) as numOfBuckets
+      FROM \`${this.tableName}\`
+      WHERE project_uuid = @project_uuid 
+      AND bucketType = @bucketType
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { project_uuid: this.project_uuid, bucketType: this.bucketType },
+    );
+
+    return data[0].numOfBuckets;
   }
 }

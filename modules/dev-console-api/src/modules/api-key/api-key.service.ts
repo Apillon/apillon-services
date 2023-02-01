@@ -6,7 +6,10 @@ import {
   CreateApiKeyDto,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { ResourceNotFoundErrorCode } from '../../config/types';
+import {
+  ResourceNotFoundErrorCode,
+  ValidatorErrorCode,
+} from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
 import { Project } from '../project/models/project.model';
 import { Service } from '../services/models/service.model';
@@ -43,6 +46,16 @@ export class ApiKeyService {
             code: ResourceNotFoundErrorCode.SERVICE_DOES_NOT_EXIST,
             status: HttpStatus.NOT_FOUND,
             errorCodes: ResourceNotFoundErrorCode,
+          });
+        }
+
+        await service.canAccess(context);
+
+        if (service.project_id != project.id) {
+          throw new CodeException({
+            code: ValidatorErrorCode.SERVICE_NOT_IN_THIS_PROJECT,
+            status: HttpStatus.UNPROCESSABLE_ENTITY,
+            errorCodes: ValidatorErrorCode,
           });
         }
 

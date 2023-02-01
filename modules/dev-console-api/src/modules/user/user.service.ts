@@ -1,14 +1,17 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import {
   Ams,
+  AppEnvironment,
   CodeException,
   Context,
+  CreateReferralDto,
   env,
   generateJwtToken,
   JwtTokenType,
   LogType,
   Mailing,
   parseJwtToken,
+  ReferralMicroservice,
   SerializeFor,
   UnauthorizedErrorCodes,
   ValidationException,
@@ -27,6 +30,7 @@ import { ValidateEmailDto } from './dtos/validate-email.dto';
 import { User } from './models/user.model';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
+import { verifyCaptcha } from '@apillon/modules-lib';
 
 @Injectable()
 export class UserService {
@@ -43,6 +47,8 @@ export class UserService {
       });
     }
 
+    user.userRoles = context.user.userRoles;
+
     return user.serialize(SerializeFor.PROFILE);
   }
 
@@ -57,7 +63,6 @@ export class UserService {
       });
 
       const user = await new User({}, context).populateByUUID(
-        context,
         resp.data.user_uuid,
       );
 
@@ -86,11 +91,46 @@ export class UserService {
     context: Context,
     emailVal: ValidateEmailDto,
   ): Promise<any> {
-    const email = emailVal.email;
+    const { email, captcha, refCode } = emailVal;
+    let emailResult;
+    let captchaResult;
+    // console.log(captcha);
 
-    const res = await new Ams(context).emailExists(email);
+    const promises = [];
+    promises.push(
+      new Ams(context)
+        .emailExists(email)
+        .then((response) => (emailResult = response)),
+    );
+    if (env.CAPTCHA_SECRET && env.APP_ENV !== AppEnvironment.TEST) {
+      promises.push(
+        verifyCaptcha(captcha?.token, env.CAPTCHA_SECRET).then(
+          (response) => (captchaResult = response),
+        ),
+      );
+    } else {
+      throw new CodeException({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        code: ValidatorErrorCode.CAPTCHA_NOT_PRESENT,
+        errorCodes: ValidatorErrorCode,
+      });
+    }
 
-    if (res.data.result === true) {
+    await Promise.all(promises);
+
+    if (
+      env.CAPTCHA_SECRET &&
+      env.APP_ENV !== AppEnvironment.TEST &&
+      !captchaResult
+    ) {
+      throw new CodeException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        code: ValidatorErrorCode.CAPTCHA_CHALLENGE_INVALID,
+        errorCodes: ValidatorErrorCode,
+      });
+    }
+
+    if (emailResult.data.result === true) {
       throw new CodeException({
         status: HttpStatus.UNPROCESSABLE_ENTITY,
         code: ValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
@@ -106,11 +146,13 @@ export class UserService {
       emails: [email],
       template: 'welcome',
       data: {
-        actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}`,
+        actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}${
+          refCode ? '&REF=' + refCode : ''
+        }`,
       },
     });
 
-    return res;
+    return emailResult;
   }
 
   async registerUser(
@@ -153,33 +195,58 @@ export class UserService {
         email,
         password,
       });
-      await context.mysql.commit(conn);
 
-      //User has been registered - check if pending invitations for project exists
-      //This is done outside transaction as it is not crucial operation - admin is able to reinvite user to project
-      try {
-        if (tokenData.hasPendingInvitation) {
-          await this.projectService.resolveProjectUserPendingInvitations(
-            context,
-            email,
-            user.id,
-            user.user_uuid,
-          );
-        }
-      } catch (err) {
-        writeLog(
-          LogType.MSG,
-          'Error resolving project user pending invitations',
-          'user.service.ts',
-          'register',
-          err,
-        );
-      }
+      await context.mysql.commit(conn);
     } catch (err) {
       // TODO: The context of this error is not correct. What happens if
       //       ams fails? FE will see it as a DB write error, which is incorrect.
       await context.mysql.rollback(conn);
       throw err;
+    }
+    try {
+      // Create referral player - is inactive until accepts terms
+      const referralBody = new CreateReferralDto(
+        {
+          refCode: data?.refCode,
+        },
+        context,
+      );
+
+      await new ReferralMicroservice({
+        ...context,
+        user,
+      } as any).createPlayer(referralBody);
+    } catch (err) {
+      writeLog(
+        LogType.MSG,
+        `Error creating referral player${
+          data?.refCode ? ', refCode: ' + data?.refCode : ''
+        }`,
+        'user.service.ts',
+        'register',
+        err,
+      );
+    }
+
+    //User has been registered - check if pending invitations for project exists
+    //This is done outside transaction as it is not crucial operation - admin is able to reinvite user to project
+    try {
+      if (tokenData.hasPendingInvitation) {
+        await this.projectService.resolveProjectUserPendingInvitations(
+          context,
+          email,
+          user.id,
+          user.user_uuid,
+        );
+      }
+    } catch (err) {
+      writeLog(
+        LogType.MSG,
+        'Error resolving project user pending invitations',
+        'user.service.ts',
+        'register',
+        err,
+      );
     }
 
     return {

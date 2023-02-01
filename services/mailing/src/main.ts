@@ -1,4 +1,4 @@
-import { Context } from 'aws-lambda/handler';
+import type { Context } from 'aws-lambda/handler';
 import { Mailer } from './mailer';
 import { MailEventType } from '@apillon/lib';
 

@@ -1,8 +1,8 @@
-import { Context, env } from '@apillon/lib';
-import * as aws from 'aws-sdk';
+import { Context } from '@apillon/lib';
 import { ServerlessWorker, WorkerDefinition } from '.';
 import { DbTables, WorkerLogStatus, QueueWorkerType } from '../../config/types';
 import { Job } from '../../modules/job/job.model';
+import { sendToWorkerQueue } from '../aws-sqs';
 import { writeWorkerLog } from '../logger';
 
 export abstract class BaseQueueWorker extends ServerlessWorker {
@@ -49,57 +49,14 @@ export abstract class BaseQueueWorker extends ServerlessWorker {
         WorkerLogStatus.INFO,
         `Sending ${msgData.length} messages to queue!`,
       );
-      const sqs = new aws.SQS({ apiVersion: '2012-11-05' });
-      let errCount = 0;
-      const errMsgs = [];
-      const promises = [];
-      for (const msg of msgData) {
-        const message = {
-          // Remove DelaySeconds parameter and value for FIFO queues
-          //  DelaySeconds: 10,
-          MessageAttributes: {
-            workerName: {
-              DataType: 'String',
-              StringValue: this.workerName,
-            },
-            ...(this.workerDefinition.id
-              ? {
-                  jobId: {
-                    DataType: 'Number',
-                    StringValue: this.workerDefinition.id.toString(),
-                  },
-                }
-              : {}),
-            parameters: {
-              DataType: 'String.json',
-              StringValue: JSON.stringify(this.workerDefinition.parameters),
-            },
-          },
-          MessageBody: JSON.stringify(
-            typeof msg.serialize == 'function' ? msg.serialize() : msg,
-          ),
-          // MessageDeduplicationId: 'TheWhistler',  // Required for FIFO queues
-          // MessageGroupId: 'Group1',  // Required for FIFO queues
-          QueueUrl: this.workerQueueUrl,
-        };
-        promises.push(
-          new Promise<void>((resolve, reject) => {
-            sqs.sendMessage(message, (err, data) => {
-              if (err) {
-                this.logFn('QueueWorker: Error sending SQS message!', err);
-                errCount++;
-                errMsgs.push(err.message);
-                reject(err);
-              }
-              if (data) {
-                // this.logFn(`QueueWorker: Sending SQS message result: ${JSON.stringify(data)}`);
-              }
-              resolve();
-            });
-          }),
-        );
-      }
-      await Promise.all(promises);
+
+      const { errCount, errMsgs } = await sendToWorkerQueue(
+        this.workerQueueUrl,
+        this.workerName,
+        msgData,
+        this.workerDefinition.id,
+        this.workerDefinition.parameters,
+      );
       if (errCount) {
         await this.writeLogToDb(
           WorkerLogStatus.ERROR,

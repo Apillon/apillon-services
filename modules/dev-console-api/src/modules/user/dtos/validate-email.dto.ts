@@ -1,6 +1,6 @@
 import { stringParser } from '@rawmodel/parsers';
 import { emailValidator, presenceValidator } from '@rawmodel/validators';
-import { PopulateFrom } from '@apillon/lib';
+import { JSONParser, PopulateFrom } from '@apillon/lib';
 import { ModelBase, prop } from '@apillon/lib/dist/lib/base-models/base';
 import { ValidatorErrorCode } from '../../../config/types';
 
@@ -20,4 +20,17 @@ export class ValidateEmailDto extends ModelBase {
     ],
   })
   public email: string;
+
+  @prop({
+    parser: { resolver: JSONParser() },
+    populatable: [PopulateFrom.PROFILE],
+    validators: [],
+  })
+  public captcha: { eKey: string; token: string };
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE],
+  })
+  public refCode: string;
 }

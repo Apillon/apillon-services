@@ -1,5 +1,6 @@
 import {
   CodeException,
+  DefaultApiKeyRole,
   ForbiddenErrorCodes,
   UnauthorizedErrorCodes,
 } from '@apillon/lib';
@@ -29,13 +30,7 @@ export class AuthGuard implements CanActivate {
 
     const context: ApillonApiContext = execCtx.getArgByIndex(0).context;
     // eslint-disable-next-line sonarjs/prefer-single-boolean-return
-    if (!context.isApiKeyValid()) {
-      throw new CodeException({
-        code: UnauthorizedErrorCodes.UNAUTHORIZED,
-        status: HttpStatus.UNAUTHORIZED,
-        errorMessage: 'Missing or invalid Authorization header',
-      });
-    } else if (requiredPermissions.length > 0) {
+    if (requiredPermissions.length > 0) {
       for (const requiredPerm of requiredPermissions) {
         if (
           requiredPerm.role &&
@@ -47,10 +42,13 @@ export class AuthGuard implements CanActivate {
           return true;
         }
       }
+
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: HttpStatus.FORBIDDEN,
-        errorMessage: 'Insufficient permissins',
+        errorMessage: `Insufficient permissins - missing ${
+          DefaultApiKeyRole[requiredPermissions[0].role]
+        } permission`,
       });
     }
     return true;

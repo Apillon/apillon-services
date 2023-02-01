@@ -1,4 +1,4 @@
-import { AppEnvironment, env, Lmas } from '@apillon/lib';
+import { AppEnvironment, env } from '@apillon/lib';
 import { typesBundleForPolkadot } from '@crustio/type-definitions';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Keyring } from '@polkadot/keyring';
@@ -7,7 +7,11 @@ import { StorageErrorCode } from '../../config/types';
 import { StorageCodeException } from '../../lib/exceptions';
 
 export class CrustService {
-  static async placeStorageOrderToCRUST(params: { cid: CID; size: number }) {
+  static async placeStorageOrderToCRUST(params: {
+    cid: CID;
+    size: number;
+    isDirectory: boolean;
+  }) {
     // Pin dist directory on Crust
     const api = new ApiPromise({
       provider: new WsProvider('wss://rpc.crust.network'),
@@ -18,7 +22,7 @@ export class CrustService {
     const fileCid = params.cid; // IPFS CID, take `Qm123` as example
     const fileSize = params.size; // Let's say 2 gb(in byte)
     const tips = 0;
-    const memo = '';
+    const memo = params.isDirectory ? 'folder' : '';
 
     await api.isReady;
 
@@ -45,17 +49,34 @@ export class CrustService {
     return new Promise((resolve, reject) => {
       tx.signAndSend(krp, ({ events = [], status }) => {
         console.log(`💸  Tx status: ${status.type}, nonce: ${tx.nonce}`);
-        if (status.isInBlock) {
-          events.forEach(({ event: { method } }) => {
-            if (method === 'ExtrinsicSuccess') {
+        console.log(`is in block: `, status.isInBlock);
+        events.forEach(({ event }) => {
+          console.log('event.method:', event.method);
+          console.log('event.data', event.data);
+          if (
+            event.method === 'ExtrinsicSuccess' ||
+            event.method === 'Finalized'
+          ) {
+            if (status.isInBlock) {
               console.log(`✅  Place storage order success!`);
               // Kill api connection - otherwise process won't exit
               void api.disconnect();
               resolve({ success: true });
+            } else {
+              void api.disconnect();
+              reject(event.data);
             }
-          });
-        }
+          } else if (event.method === 'ExtrinsicFailed') {
+            // extract the data for this event
+            const [dispatchError] = event.data;
+            const errorInfo = dispatchError.toString();
+            console.log(`Place storage order failed: ${errorInfo}`);
+            void api.disconnect();
+            reject(errorInfo);
+          }
+        });
       }).catch((e) => {
+        void api.disconnect();
         reject(e);
       });
     });
@@ -69,6 +90,8 @@ export class CrustService {
     });
 
     await api.isReadyOrError;
-    return await api.query.market.filesV2(params.cid);
+    const crustFileStatus = await api.query.market.filesV2(params.cid);
+    await api.disconnect();
+    return crustFileStatus;
   }
 }

@@ -1,0 +1,12 @@
+{
+  "extends": "tsconfig/service.json",
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "test/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

@@ -1,4 +1,4 @@
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { integerParser, stringParser, dateParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   AdvancedSQLModel,
@@ -6,17 +6,20 @@ import {
   Context,
   DefaultUserRole,
   DirectoryContentQueryFilter,
+  env,
   ForbiddenErrorCodes,
   getQueryParams,
+  PoolConnection,
   PopulateFrom,
   prop,
   SerializeFor,
   SqlModelStatus,
   unionSelectAndCountQuery,
 } from '@apillon/lib';
-import { DbTables, StorageErrorCode } from '../../../config/types';
+import { DbTables, ObjectType, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
 import { v4 as uuidV4 } from 'uuid';
+import { File } from '../../storage/models/file.model';
 
 export class Directory extends AdvancedSQLModel {
   public readonly tableName = DbTables.DIRECTORY;
@@ -61,7 +64,7 @@ export class Directory extends AdvancedSQLModel {
     ],
     validators: [],
   })
-  public parentDirectory_id: string;
+  public parentDirectory_id: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -175,6 +178,51 @@ export class Directory extends AdvancedSQLModel {
   })
   public description: string;
 
+  /**
+   * Time when directory status was set to 8 - MARKED_FOR_DELETION
+   */
+  @prop({
+    parser: { resolver: dateParser() },
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    populatable: [PopulateFrom.DB],
+  })
+  public markedForDeletionTime?: Date;
+
+  /*************************************************************
+   * INFO Properties
+   *************************************************************/
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public fullPath: string;
+
+  @prop({
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public files: File;
+
   public canAccess(context: ServiceContext) {
     if (
       !context.hasRoleOnProject(
@@ -190,7 +238,7 @@ export class Directory extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: 403,
-        errorMessage: 'Insufficient permissins',
+        errorMessage: 'Insufficient permissions to access this record',
       });
     }
   }
@@ -209,8 +257,47 @@ export class Directory extends AdvancedSQLModel {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: 403,
-        errorMessage: 'Insufficient permissins',
+        errorMessage: 'Insufficient permissions to modify this record',
       });
+    }
+  }
+
+  /**
+   * Marks record in the database for deletion.
+   */
+  public async markForDeletion(conn?: PoolConnection): Promise<this> {
+    this.updateUser = this.getContext()?.user?.id;
+
+    this.status = SqlModelStatus.MARKED_FOR_DELETION;
+    this.markedForDeletionTime = new Date();
+
+    try {
+      await this.update(SerializeFor.UPDATE_DB, conn);
+    } catch (err) {
+      this.reset();
+      throw err;
+    }
+    return this;
+  }
+
+  public async populateByUUID(uuid: string): Promise<this> {
+    if (!uuid) {
+      throw new Error('uuid should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE directory_uuid = @uuid AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { uuid },
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
     }
   }
 
@@ -257,7 +344,7 @@ export class Directory extends AdvancedSQLModel {
   ) {
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
-      'pd',
+      '',
       {},
       filter.serialize(),
     );
@@ -265,7 +352,9 @@ export class Directory extends AdvancedSQLModel {
     const qSelects = [
       {
         qSelect: `
-        SELECT 'directory' as type, d.id, d.name, d.CID, d.createTime, d.updateTime, NULL as contentType, NULL as size
+        SELECT ${ObjectType.DIRECTORY} as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime, 
+        NULL as contentType, NULL as size, d.parentDirectory_id as parentDirectoryId, 
+        NULL as file_uuid, IF(d.CID IS NULL, NULL, CONCAT("${env.STORAGE_IPFS_GATEWAY}", d.CID)) as link
         `,
         qFrom: `
         FROM \`${DbTables.DIRECTORY}\` d
@@ -273,11 +362,16 @@ export class Directory extends AdvancedSQLModel {
         WHERE b.bucket_uuid = @bucket_uuid
         AND (IFNULL(@directory_id, -1) = IFNULL(d.parentDirectory_id, -1))
         AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))
+        AND ( d.status = ${SqlModelStatus.ACTIVE} OR 
+          ( @markedForDeletion = 1 AND d.status = ${SqlModelStatus.MARKED_FOR_DELETION})
+        )
       `,
       },
       {
         qSelect: `
-        SELECT 'file' as type, d.id, d.name, d.CID, d.createTime, d.updateTime, d.contentType as contentType, d.size as size
+        SELECT ${ObjectType.FILE} as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime, 
+        d.contentType as contentType, d.size as size, d.directory_id as parentDirectoryId, 
+        d.file_uuid as file_uuid, CONCAT("${env.STORAGE_IPFS_GATEWAY}", d.CID) as link
         `,
         qFrom: `
         FROM \`${DbTables.FILE}\` d
@@ -285,6 +379,9 @@ export class Directory extends AdvancedSQLModel {
         WHERE b.bucket_uuid = @bucket_uuid
         AND (IFNULL(@directory_id, -1) = IFNULL(d.directory_id, -1))
         AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))
+        AND ( d.status = ${SqlModelStatus.ACTIVE} OR 
+          ( @markedForDeletion = 1 AND d.status = ${SqlModelStatus.MARKED_FOR_DELETION})
+        )
       `,
       },
     ];
@@ -292,29 +389,34 @@ export class Directory extends AdvancedSQLModel {
       context.mysql,
       {
         qSelects: qSelects,
-        qFilter: `LIMIT ${filters.limit} OFFSET ${filters.offset};`,
+        qFilter: `ORDER BY ${filters.orderStr} LIMIT ${filters.limit} OFFSET ${filters.offset};`,
       },
       params,
       'd.name',
     );
   }
 
-  /*public async getList(context: ServiceContext, query: BucketQueryFilter) {
-    const params = {
-      project_uuid: query.project_uuid,
-      search: query.search,
-    };
+  public async populateFullPath(directories?: Directory[]): Promise<this> {
+    this.fullPath = this.name;
+    if (!this.parentDirectory_id) {
+      return;
+    } else {
+      let tmpDir: Directory = undefined;
+      do {
+        if (directories) {
+          tmpDir = directories.find(
+            (x) =>
+              x.id ==
+              (tmpDir ? tmpDir.parentDirectory_id : this.parentDirectory_id),
+          );
+        } else {
+          tmpDir = await new Directory({}, this.getContext()).populateById(
+            tmpDir ? tmpDir.parentDirectory_id : this.parentDirectory_id,
+          );
+        }
 
-    const sqlQuery = {
-      qSelect: `
-        SELECT ${this.generateSelectFields('b', '')}
-        `,
-      qFrom: `
-        FROM \`${DbTables.BUCKET}\` b
-        WHERE (@search IS null OR b.name LIKE CONCAT('%', @search, '%'))
-      `,
-    };
-
-    return selectAndCountQuery(context.mysql, sqlQuery, params, 'b.id');
-  }*/
+        this.fullPath = tmpDir.name + '/' + this.fullPath;
+      } while (tmpDir?.parentDirectory_id);
+    }
+  }
 }
