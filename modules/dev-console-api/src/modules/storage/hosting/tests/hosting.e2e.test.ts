@@ -26,7 +26,6 @@ describe('Hosting tests', () => {
 
   let testUser: TestUser;
   let testUser2: TestUser;
-  let testUser3: TestUser;
 
   let testProject: Project;
   let testProject2: Project;
@@ -485,6 +484,58 @@ describe('Hosting tests', () => {
         .delete(`/buckets/${testWebPage.bucket.id}/content`)
         .set('Authorization', `Bearer ${testUser2.token}`);
       expect(response.status).toBe(403);
+    });
+  });
+  describe('Webpage quota tests', () => {
+    beforeAll(async () => {
+      //Insert dummy web pages
+      for (let i = 0; i < 10; i++) {
+        const webPageBucket = await createTestBucket(
+          testUser,
+          stage.storageContext,
+          testProject2,
+          BucketType.HOSTING,
+        );
+        const webPageStagingBucket = await createTestBucket(
+          testUser,
+          stage.storageContext,
+          testProject2,
+          BucketType.HOSTING,
+        );
+        const webPageProductionBucket = await createTestBucket(
+          testUser,
+          stage.storageContext,
+          testProject2,
+          BucketType.HOSTING,
+        );
+        await new WebPage({}, stage.storageContext)
+          .populate({
+            project_uuid: testProject2.project_uuid,
+            bucket_id: webPageBucket.id,
+            stagingBucket_id: webPageStagingBucket.id,
+            productionBucket_id: webPageProductionBucket.id,
+            name: 'Test web page' + i.toString(),
+            domain: 'https://hosting-e2e-tests.si',
+            bucket: webPageBucket,
+            stagingBucket: webPageStagingBucket,
+            productionBucket: webPageProductionBucket,
+          })
+          .insert();
+      }
+    });
+    test('User should recieve status 400 when max webpages quota is reached', async () => {
+      const response = await request(stage.http)
+        .post(`/storage/hosting/web-page`)
+        .send({
+          project_uuid: testProject2.project_uuid,
+          name: 'My test web page',
+          domain: 'https://www.my-test-page.si',
+        })
+        .set('Authorization', `Bearer ${testUser2.token}`);
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        StorageErrorCode[StorageErrorCode.MAX_WEB_PAGES_REACHED],
+      );
     });
   });
 });
