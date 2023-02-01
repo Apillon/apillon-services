@@ -199,6 +199,7 @@ export class DeployWebPageWorker extends BaseQueueWorker {
             targetBucket.bucket_uuid,
             targetBucket.CID,
             cidSize,
+            true,
           );
         }
 

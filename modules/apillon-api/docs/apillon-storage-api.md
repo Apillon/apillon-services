@@ -58,7 +58,7 @@ For example `images/icons`, creates `images` directory in bucket and `icons` dir
 
 | Field               | Description                                                                      |
 | ------------------- | -------------------------------------------------------------------------------- |
-| signedUrlForUpload  | `string` AWS S3 signed URL for file upload                                       |
+| url                 | `string` AWS S3 signed URL for file upload                                       |
 | fileUuid            | `string` File uniqie identifier. This UUID can be used to query file status, ... |
 | fileUploadRequestId | `integer` Apillon internal ID of file upload request.                            |
 
@@ -81,7 +81,7 @@ curl --location --request POST "https://api-dev.apillon.io/storage/:bucketUuid/u
     "id": "aea7f4e9-6dbb-4075-a76c-f6cc6c47c331",
     "status": 201,
     "data": {
-        "signedUrlForUpload": "https://sync-to-ipfs-queue.s3.eu-west-1.amazonaws.com/STORAGE/11/my%20test%20file.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAQIMRRA6GJRL57L7G%2F20230104%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Date=20230104T101419Z&X-Amz-Expires=900&X-Amz-Signature=e1be26c5863d845d5ec5477ac4e7aabafd6901060b3515d23d36c71360255259&X-Amz-SignedHeaders=host",
+        "url": "https://sync-to-ipfs-queue.s3.eu-west-1.amazonaws.com/STORAGE/11/my%20test%20file.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAQIMRRA6GJRL57L7G%2F20230104%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Date=20230104T101419Z&X-Amz-Expires=900&X-Amz-Signature=e1be26c5863d845d5ec5477ac4e7aabafd6901060b3515d23d36c71360255259&X-Amz-SignedHeaders=host",
         "fileUuid": "18bdb4ef-4b9d-4bd4-9e5f-0bc7744b4376",
         "fileUploadRequestId": 70
     }

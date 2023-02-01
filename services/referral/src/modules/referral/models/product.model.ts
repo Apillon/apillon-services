@@ -265,7 +265,7 @@ export class Product extends AdvancedSQLModel {
     const sqlQuery = {
       qSelect: `
         SELECT ${this.generateSelectFields('pr', '')},
-        IF(a.id IS NOT NULL,
+        IF(MAX(a.id) IS NOT NULL,
           JSON_ARRAYAGG(
             JSON_OBJECT(${new Attribute({}, null).generateSelectJSONFields(
               'a',
@@ -291,7 +291,7 @@ export class Product extends AdvancedSQLModel {
       `,
       qGroup: `
         GROUP BY
-          pr.id, a.id
+          pr.id
       `,
     };
 

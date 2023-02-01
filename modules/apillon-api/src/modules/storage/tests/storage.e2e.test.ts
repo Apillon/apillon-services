@@ -156,7 +156,7 @@ describe('Storage tests', () => {
             ).toString('base64')}`,
           );
         expect(response.status).toBe(201);
-        expect(response.body.data.signedUrlForUpload).toBeTruthy();
+        expect(response.body.data.url).toBeTruthy();
         expect(response.body.data.fileUuid).toBeTruthy();
 
         const fur: FileUploadRequest = await new FileUploadRequest(
@@ -165,7 +165,7 @@ describe('Storage tests', () => {
         ).populateById(response.body.data.fileUploadRequestId);
         expect(fur.exists()).toBeTruthy();
 
-        testS3SignedUrl = response.body.data.signedUrlForUpload;
+        testS3SignedUrl = response.body.data.url;
         testS3FileUUID = response.body.data.fileUuid;
       });
 
