@@ -224,6 +224,7 @@ export async function storageBucketSyncFilesToIPFS(
       bucket.bucket_uuid,
       ipfsRes.parentDirCID,
       ipfsRes.size,
+      true,
     );
   } else {
     //loop through files to sync each one of it to IPFS
@@ -403,6 +404,7 @@ export async function storageBucketSyncFilesToIPFS(
           bucket.bucket_uuid,
           transferedFile.CID,
           transferedFile.size,
+          false,
         );
       }
     } catch (err) {

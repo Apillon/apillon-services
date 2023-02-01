@@ -115,5 +115,9 @@ export async function hostingBucketProcessSessionFiles(
     await fur.update();
   }
 
+  //update session
+  session.sessionStatus = 2;
+  await session.update();
+
   return true;
 }

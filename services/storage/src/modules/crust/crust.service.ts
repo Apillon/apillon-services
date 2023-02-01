@@ -7,7 +7,11 @@ import { StorageErrorCode } from '../../config/types';
 import { StorageCodeException } from '../../lib/exceptions';
 
 export class CrustService {
-  static async placeStorageOrderToCRUST(params: { cid: CID; size: number }) {
+  static async placeStorageOrderToCRUST(params: {
+    cid: CID;
+    size: number;
+    isDirectory: boolean;
+  }) {
     // Pin dist directory on Crust
     const api = new ApiPromise({
       provider: new WsProvider('wss://rpc.crust.network'),
@@ -18,7 +22,7 @@ export class CrustService {
     const fileCid = params.cid; // IPFS CID, take `Qm123` as example
     const fileSize = params.size; // Let's say 2 gb(in byte)
     const tips = 0;
-    const memo = '';
+    const memo = params.isDirectory ? 'folder' : '';
 
     await api.isReady;
 
