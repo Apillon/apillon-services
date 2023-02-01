@@ -16,6 +16,17 @@ export class SporranRequestCredentialDto extends ModelBase {
       },
     ],
   })
-  // This is actually a jwt token, but we call it sessionId
   public encryptionKeyUri: DidUri;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: AuthenticationErrorCode.SPORRAN_SESSIONID_NOT_PRESENT,
+      },
+    ],
+  })
+  public sessionId: string;
 }

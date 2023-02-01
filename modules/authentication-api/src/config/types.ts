@@ -54,6 +54,8 @@ export enum AuthenticationErrorCode {
   SPORRAN_NONCE_NOT_PRESENT = 422070404,
   SPORRAN_SESSIONID_NOT_PRESENT = 422070405,
   SPORRAN_VERIFIER_DID_DOES_NOT_EXIST = 422070406,
+  // Sporran verifier key-agreement does not exit
+  SPORRAN_VERIFIER_KA_DOES_NOT_EXIST = 422070407,
 }
 
 // Well known did domain linkage Ctype required props

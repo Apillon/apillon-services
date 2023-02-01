@@ -23,7 +23,11 @@ import {
   Utils,
   Message,
 } from '@kiltprotocol/sdk-js';
-import { generateKeypairsV2, randomChallenge } from '../../lib/kilt';
+import {
+  encryptionSigner,
+  generateKeypairsV2,
+  randomChallenge,
+} from '../../lib/kilt';
 import { JwtTokenType } from '../../config/types';
 import { SporranSessionVerifyDto } from './dtos/sporran-session.dto';
 import { DidUri } from '@kiltprotocol/types';
@@ -148,7 +152,17 @@ export class SporranService {
   async requestCredential(
     context: AuthenticationApiContext,
     encryptionKeyUri: DidUri,
+    sessionId: string,
   ) {
+    try {
+      parseJwtToken(JwtTokenType.SPORRAN_SESSION, sessionId);
+    } catch (error) {
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: AuthenticationErrorCode.IDENTITY_INVALID_VERIFICATION_TOKEN,
+        errorCodes: AuthenticationErrorCode,
+      });
+    }
     // This is just the light did generated for the sporran session - not the actual claimer did uri
     const { did: claimerSessionDidUri } = Did.parse(encryptionKeyUri as DidUri);
     const requestChallenge = randomChallenge(24);
@@ -166,12 +180,17 @@ export class SporranService {
         errorCodes: AuthenticationErrorCode,
       });
     }
+
     const verifierEncryptionKey = verifierDidDoc.keyAgreement?.[0];
     if (!verifierEncryptionKey) {
-      throw new Error('The verifier DID must have a key agreement key');
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: AuthenticationErrorCode.SPORRAN_VERIFIER_KA_DOES_NOT_EXIST,
+        errorCodes: AuthenticationErrorCode,
+      });
     }
 
-    // We need to contruct a message request for the sporran extension
+    // We need to construct a message request for the sporran extension
     const message = Message.fromBody(
       {
         content: {
@@ -194,8 +213,10 @@ export class SporranService {
 
     const encryptedMessage = await Message.encrypt(
       message,
-      encryptCallback,
-      verifierEncryptionKey,
+      encryptionSigner,
+      encryptionKeyUri as DidResourceUri,
     );
+
+    return { encryptedMessage: encryptedMessage };
   }
 }

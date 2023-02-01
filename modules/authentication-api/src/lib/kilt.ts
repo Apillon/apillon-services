@@ -39,6 +39,7 @@ import {
   ApillonSupportedCTypes,
   KILT_CREDENTIAL_IRI_PREFIX,
 } from '../config/types';
+import { DidResourceUri, EncryptResponseData } from '@kiltprotocol/types';
 
 export function generateMnemonic() {
   return mnemonicGenerate();
@@ -253,6 +254,7 @@ export async function createCompleteFullDid(
 }
 
 // SECTION - Sign callbacks
+// Various sign callbacks used in Kilt operations
 export async function authenticationSigner({
   authentication,
 }: {
@@ -285,23 +287,24 @@ export async function assertionSigner({
 
 export async function encryptionSigner({
   data,
-  claimerPublicKey,
-  encryptionSecretKey,
-}): Promise<SignCallback> {
+  peerPublicKey,
+  // Did URI
+  did,
+}): Promise<EncryptResponseData> {
+  // Apillon credentials
+  const { keyAgreement } = await generateKeypairsV2(env.KILT_ATTESTER_MNEMONIC);
+
   const { box, nonce } = Utils.Crypto.encryptAsymmetric(
     data,
-    claimerPublicKey,
-    encryptionSecretKey,
+    peerPublicKey,
+    keyAgreement.secretKey,
   );
-
   return {
     data: box,
     nonce,
-    keyUri: `${verifierDidDoc.uri}${verifierEncryptionKey.id}`,
+    keyUri: `${did}${keyAgreement[0].id}` as DidResourceUri,
   };
 }
-// Create a callback that uses the DID encryption key to encrypt the message.
-const encryptCallback: EncryptCallback = async ({ data, peerPublicKey }) => {};
 // ENDSECTION
 
 export async function createPresentation(

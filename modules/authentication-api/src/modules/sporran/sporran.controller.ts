@@ -8,6 +8,9 @@ import { SporranRequestCredentialDto } from './dtos/sporran-request-credential.d
 import { SporranSessionVerifyDto } from './dtos/sporran-session.dto';
 import { SporranService } from './sporran.service';
 
+// NOTE: Messages are a way of communcation with the Sporran extension,
+// once the session has been established
+
 @Controller('sporran')
 export class SporranController {
   constructor(private sporranService: SporranService) {}
@@ -29,7 +32,7 @@ export class SporranController {
     return await this.sporranService.verifySession(context, body);
   }
 
-  @Get('request-credential')
+  @Get('message/request-credential')
   @Validation({
     dto: SporranRequestCredentialDto,
     validateFor: ValidateFor.QUERY,
@@ -38,11 +41,13 @@ export class SporranController {
   async sporranRequestCredential(
     @Ctx() context: AuthenticationApiContext,
     @Query() encryptionKeyUri: DidUri,
+    @Query() sessionId: string,
   ) {
     // Requests credential presentation from the visitor of the d-app
     return await this.sporranService.requestCredential(
       context,
       encryptionKeyUri,
+      sessionId,
     );
   }
 }
