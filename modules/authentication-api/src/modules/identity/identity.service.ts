@@ -8,6 +8,7 @@ import {
   AppEnvironment,
   Lmas,
   ServiceName,
+  ValidationException,
 } from '@apillon/lib';
 import axios from 'axios';
 import { HttpStatus, Injectable } from '@nestjs/common';
@@ -93,7 +94,6 @@ export class IdentityService {
 
       // Lock email to identity object
       identity.populate({
-        context: context,
         email: email,
         state: IdentityState.IN_PROGRESS,
         token: token,
@@ -276,7 +276,7 @@ export class IdentityService {
     body: IdentityDidRevokeDto,
   ) {
     const parameters = {
-      emai: body.email,
+      email: body.email,
     };
 
     const identity = await new Identity({}, context).populateByUserEmail(
@@ -329,6 +329,9 @@ export class IdentityService {
         null,
       );
     }
+
+    identity.state = IdentityState.REVOKED;
+    await identity.update();
 
     return { success: true };
   }

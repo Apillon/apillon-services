@@ -23,14 +23,18 @@ import { generateAccount } from '../lib/kilt';
 import { Identity } from '../modules/identity/models/identity.model';
 import { AuthenticationErrorCode, IdentityState } from '../config/types';
 import { HttpStatus } from '@nestjs/common';
+import { AuthenticationApiContext } from '../context';
 
 export class IdentityRevokeWorker extends BaseQueueWorker {
+  context: AuthenticationApiContext;
+
   public constructor(
     workerDefinition: WorkerDefinition,
-    context: Context,
+    context: AuthenticationApiContext,
     type: QueueWorkerType,
   ) {
     super(workerDefinition, context, type, env.AUTH_AWS_WORKER_SQS_URL);
+    this.context = context;
   }
 
   public async runPlanner(): Promise<any[]> {
