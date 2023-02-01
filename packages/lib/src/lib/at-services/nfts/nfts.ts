@@ -1,3 +1,4 @@
+import { add } from 'lodash';
 import { env } from '../../../config/env';
 import { AppEnvironment, NftsEventType } from '../../../config/types';
 import { Context } from '../../context';
@@ -31,6 +32,15 @@ export class NftsMicroservice extends BaseService {
     const data = {
       eventName: NftsEventType.DEPLOY_NFT,
       body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async transferNftOwnership(collection_uuid: string, address: string) {
+    const data = {
+      eventName: NftsEventType.TRANSFER_OWNERSHIP,
+      collection_uuid: collection_uuid,
+      address: address,
     };
     return await this.callService(data);
   }
