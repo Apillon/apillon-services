@@ -30,6 +30,8 @@ import {
   SignExtrinsicCallback,
   ICredential,
   ICredentialPresentation,
+  Blockchain,
+  NewDidVerificationKey,
 } from '@kiltprotocol/sdk-js';
 import {
   KILT_DERIVATION_SIGN_ALGORITHM,
@@ -205,26 +207,24 @@ export async function getNextNonce(didUri: DidUri) {
   return currentNonce + 1;
 }
 
-import * as Kilt from '@kiltprotocol/sdk-js';
-
 export async function createCompleteFullDid(
-  submitterAccount: Kilt.KiltKeyringPair,
+  submitterAccount: KiltKeyringPair,
   {
     authentication,
     keyAgreement,
     assertionMethod,
     capabilityDelegation,
   }: {
-    authentication: Kilt.NewDidVerificationKey;
-    keyAgreement: Kilt.NewDidEncryptionKey;
-    assertionMethod: Kilt.NewDidVerificationKey;
-    capabilityDelegation: Kilt.NewDidVerificationKey;
+    authentication: NewDidVerificationKey;
+    keyAgreement: NewDidEncryptionKey;
+    assertionMethod: NewDidVerificationKey;
+    capabilityDelegation: NewDidVerificationKey;
   },
-  signCallback: Kilt.SignExtrinsicCallback,
-): Promise<Kilt.DidDocument> {
-  const api = Kilt.ConfigService.get('api');
+  signCallback: SignExtrinsicCallback,
+): Promise<DidDocument> {
+  const api = ConfigService.get('api');
 
-  const fullDidCreationTx = await Kilt.Did.getStoreTx(
+  const fullDidCreationTx = await Did.getStoreTx(
     {
       authentication: [authentication],
       keyAgreement: [keyAgreement],
@@ -239,19 +239,20 @@ export async function createCompleteFullDid(
 
   try {
     console.log('Submitting document create TX to bc ...');
-    await Kilt.Blockchain.signAndSubmitTx(fullDidCreationTx, submitterAccount);
+    await Blockchain.signAndSubmitTx(fullDidCreationTx, submitterAccount);
   } catch (error) {
     console.error(error);
   }
 
   // The new information is fetched from the blockchain and returned.
-  const fullDid = Kilt.Did.getFullDidUriFromKey(authentication);
+  const fullDid = Did.getFullDidUriFromKey(authentication);
   const encodedUpdatedDidDetails = await api.call.did.query(
-    Kilt.Did.toChain(fullDid),
+    Did.toChain(fullDid),
   );
-  return Kilt.Did.linkedInfoFromChain(encodedUpdatedDidDetails).document;
+  return Did.linkedInfoFromChain(encodedUpdatedDidDetails).document;
 }
 
+// SECTION - Sign callbacks
 export async function authenticationSigner({
   authentication,
 }: {
@@ -282,6 +283,27 @@ export async function assertionSigner({
   });
 }
 
+export async function encryptionSigner({
+  data,
+  claimerPublicKey,
+  encryptionSecretKey,
+}): Promise<SignCallback> {
+  const { box, nonce } = Utils.Crypto.encryptAsymmetric(
+    data,
+    claimerPublicKey,
+    encryptionSecretKey,
+  );
+
+  return {
+    data: box,
+    nonce,
+    keyUri: `${verifierDidDoc.uri}${verifierEncryptionKey.id}`,
+  };
+}
+// Create a callback that uses the DID encryption key to encrypt the message.
+const encryptCallback: EncryptCallback = async ({ data, peerPublicKey }) => {};
+// ENDSECTION
+
 export async function createPresentation(
   credential: ICredential,
   signCallback: SignCallback,
@@ -295,8 +317,8 @@ export async function createPresentation(
   });
 }
 
-export function randomChallenge() {
-  return randomAsHex(16);
+export function randomChallenge(size = 16) {
+  return randomAsHex(size);
 }
 
 export function toCredentialIRI(rootHash: string): string {
