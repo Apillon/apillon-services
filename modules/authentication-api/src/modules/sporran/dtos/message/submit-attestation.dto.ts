@@ -11,6 +11,18 @@ export class SubmitAttestationDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
+        code: AuthenticationErrorCode.USER_EMAIL_NOT_PRESENT,
+      },
+    ],
+  })
+  public email: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE],
+    validators: [
+      {
+        resolver: presenceValidator(),
         code: AuthenticationErrorCode.SPORRAN_ENCRYPTED_KEY_URI_NOT_PRESENT,
       },
     ],

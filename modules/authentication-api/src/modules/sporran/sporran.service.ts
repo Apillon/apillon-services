@@ -13,6 +13,7 @@ import { AuthenticationApiContext } from '../../context';
 import {
   APILLON_DAPP_NAME,
   AuthenticationErrorCode,
+  IdentityState,
   SporranMessageType,
 } from '../../config/types';
 import {
@@ -22,17 +23,16 @@ import {
   DidResourceUri,
   Utils,
   Message,
+  ICredential,
 } from '@kiltprotocol/sdk-js';
-import {
-  encryptionSigner,
-  generateKeypairsV2,
-  randomChallenge,
-} from '../../lib/kilt';
+import { encryptionSigner, generateKeypairsV2 } from '../../lib/kilt';
 import { JwtTokenType } from '../../config/types';
 import { SporranSessionVerifyDto } from './dtos/sporran-session.dto';
 import { DidUri } from '@kiltprotocol/types';
 import { SubmitAttestationDto } from './dtos/message/submit-attestation.dto';
 import { RequestCredentialDto } from './dtos/message/request-credential.dto';
+import { prepareSignResources } from './sporran-utils';
+import { Identity } from '../identity/models/identity.model';
 
 @Injectable()
 export class SporranService {
@@ -155,28 +155,49 @@ export class SporranService {
     context: AuthenticationApiContext,
     body: SubmitAttestationDto,
   ) {
-    const encryptKeyUri = `${body.encryptionKeyUri}#encryption`;
-    const { did: claimerSessionDidUri } = Did.parse(encryptKeyUri as DidUri);
+    await connect(env.KILT_NETWORK);
 
-    // export interface IAttestation {
-    //   claimHash: ICredential['rootHash'];
-    //   cTypeHash: CTypeHash;
-    //   owner: DidUri;
-    //   delegationId: IDelegationNode['id'] | null;
-    //   revoked: boolean;
-    // }
+    const {
+      verifierDidUri: verifierDidUri,
+      encryptKeyUri: encryptKeyUri,
+      claimerSessionDidUri: claimerSessionDidUri,
+      requestChallenge: requestChallenge,
+    } = await prepareSignResources(body.encryptionKeyUri);
 
-    // We need to construct a message request for the sporran extension
-    let message;
-    // = Message.fromBody();
-    // {
-    //   content: {
-    //     challenge: context.requestChallenge,
-    //   },
-    //   type: SporranMessageType.SUBMIT_ATTESTATION,
-    // },
-    // context.verifierDidUri,
-    // claimerSessionDidUri as DidUri,
+    const identity = await new Identity({}, context).populateByUserEmail(
+      context,
+      body.email,
+    );
+
+    if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
+        errorCodes: AuthenticationErrorCode,
+      });
+    }
+
+    const credential: ICredential = {
+      ...JSON.parse(identity.credential),
+    };
+
+    const message = Message.fromBody(
+      {
+        content: {
+          attestation: {
+            claimHash: credential.rootHash,
+            cTypeHash: credential.claim.cTypeHash,
+            owner: credential.claim.owner,
+            delegationId: credential.delegationId,
+            revoked: false,
+          },
+          challenge: requestChallenge,
+        },
+        type: SporranMessageType.SUBMIT_ATTESTATION,
+      },
+      verifierDidUri,
+      claimerSessionDidUri as DidUri,
+    );
 
     const encryptedMessage = await Message.encrypt(
       message,
@@ -191,31 +212,12 @@ export class SporranService {
     context: AuthenticationApiContext,
     body: RequestCredentialDto,
   ) {
-    // This is just the light did generated for the sporran session - not the actual claimer did uri
-    const keyType = 'encryption';
-    const encryptKeyUri = `${body.encryptionKeyUri}#${keyType}`;
-    const { did: claimerSessionDidUri } = Did.parse(encryptKeyUri as DidUri);
-    const { authentication } = await generateKeypairsV2(
-      env.KILT_ATTESTER_MNEMONIC,
-    );
-    const verifierDidUri = Did.getFullDidUriFromKey(authentication);
-    const { document } = await Did.resolve(verifierDidUri);
-    if (!document) {
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
-        code: AuthenticationErrorCode.SPORRAN_VERIFIER_DID_DOES_NOT_EXIST,
-        errorCodes: AuthenticationErrorCode,
-      });
-    }
-
-    const verifierEncryptionKey = document.keyAgreement?.[0];
-    if (!verifierEncryptionKey) {
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
-        code: AuthenticationErrorCode.SPORRAN_VERIFIER_KA_DOES_NOT_EXIST,
-        errorCodes: AuthenticationErrorCode,
-      });
-    }
+    const {
+      verifierDidUri: verifierDidUri,
+      encryptKeyUri: encryptKeyUri,
+      claimerSessionDidUri: claimerSessionDidUri,
+      requestChallenge: requestChallenge,
+    } = await prepareSignResources(body.encryptionKeyUri);
 
     // We need to construct a message request for the sporran extension
     const message = Message.fromBody(
@@ -230,7 +232,7 @@ export class SporranService {
               requiredProperties: ['Email'],
             },
           ],
-          challenge: randomChallenge(24),
+          challenge: requestChallenge,
         },
         type: SporranMessageType.REQUEST_CREDENTIAL,
       },
