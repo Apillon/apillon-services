@@ -30,7 +30,8 @@
     "db-seed": "node -r ts-node/register ./src/scripts/db/seed-db",
     "db-unseed": "node -r ts-node/register ./src/scripts/db/unseed-db",
     "db-rebuild": "node -r ts-node/register ./src/scripts/db/rebuild-db",
-    "db-rebuild-test": "node -r ts-node/register ./src/scripts/db/rebuild-test-db"
+    "db-rebuild-test": "node -r ts-node/register ./src/scripts/db/rebuild-test-db",
+    "db-upgrade:ci": "node -r ts-node/register ./src/scripts/db/upgrade-db --F && node -r ts-node/register ./src/scripts/db/seed-db --F "
   },
   "dependencies": {
     "@apillon/lib": "*",

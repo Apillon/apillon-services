@@ -136,6 +136,7 @@ export class ReferralService {
     await new Lmas().sendAdminAlert(
       `New order for product: ${product.name}!
       Volume: ${order.volume}
+      Stock remaining: ${product.stock}
       Info: ${JSON.stringify(order.info, null, 2)}
       `,
       ServiceName.REFERRAL,

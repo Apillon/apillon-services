@@ -10,6 +10,7 @@ import {
 } from '@apillon/lib';
 import {
   FileStatus,
+  ObjectType,
   StorageErrorCode,
 } from '@apillon/storage/src/config/types';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
@@ -155,7 +156,7 @@ describe('Storage tests', () => {
             ).toString('base64')}`,
           );
         expect(response.status).toBe(201);
-        expect(response.body.data.signedUrlForUpload).toBeTruthy();
+        expect(response.body.data.url).toBeTruthy();
         expect(response.body.data.fileUuid).toBeTruthy();
 
         const fur: FileUploadRequest = await new FileUploadRequest(
@@ -164,7 +165,7 @@ describe('Storage tests', () => {
         ).populateById(response.body.data.fileUploadRequestId);
         expect(fur.exists()).toBeTruthy();
 
-        testS3SignedUrl = response.body.data.signedUrlForUpload;
+        testS3SignedUrl = response.body.data.url;
         testS3FileUUID = response.body.data.fileUuid;
       });
 
@@ -208,13 +209,12 @@ describe('Storage tests', () => {
         expect(response.body.errors.length).toBeGreaterThan(0);
         expect(
           response.body.errors.filter(
-            (x) => x.statusCode == StorageErrorCode.FILE_NAME_NOT_PRESENT,
+            (x) => x.code == StorageErrorCode.FILE_NAME_NOT_PRESENT,
           ),
         ).toBeTruthy();
         expect(
           response.body.errors.filter(
-            (x) =>
-              x.statusCode == StorageErrorCode.BUCKET_PROJECT_UUID_NOT_PRESENT,
+            (x) => x.code == StorageErrorCode.BUCKET_PROJECT_UUID_NOT_PRESENT,
           ),
         ).toBeTruthy();
       });
@@ -317,7 +317,7 @@ describe('Storage tests', () => {
 
         expect(response.body.data.total).toBe(1);
         expect(response.body.data.items.length).toBe(1);
-        expect(response.body.data.items[0].type).toBe('file');
+        expect(response.body.data.items[0].type).toBe(ObjectType.FILE);
         expect(response.body.data.items[0].CID).toBeTruthy();
         expect(response.body.data.items[0].fileUuid).toBeTruthy();
         expect(response.body.data.items[0].name).toBeTruthy();

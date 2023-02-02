@@ -186,7 +186,7 @@ export class StorageService {
     });
 
     return {
-      signedUrlForUpload: signedURLForUpload,
+      url: signedURLForUpload,
       file_uuid: fur.file_uuid,
       fileUploadRequestId: fur.id,
     };

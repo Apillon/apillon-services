@@ -189,7 +189,7 @@ export class Product extends AdvancedSQLModel {
     const conn = await this.getContext().mysql.start();
 
     try {
-      const balance = await await this.db().paramExecute(
+      const balance = await this.db().paramExecute(
         `
         SELECT balance FROM ${DbTables.BALANCE}
         WHERE player_id = @player_id
@@ -242,6 +242,17 @@ export class Product extends AdvancedSQLModel {
         throw new ReferralValidationException(order);
       }
       await order.insert(SerializeFor.INSERT_DB, conn);
+
+      this.stock -= 1;
+
+      try {
+        await this.validate();
+      } catch (err) {
+        await this.handle(err);
+        throw new ReferralValidationException(this);
+      }
+      await this.update(SerializeFor.UPDATE_DB, conn);
+
       await this.getContext().mysql.commit(conn);
       return order;
     } catch (e) {
@@ -265,7 +276,7 @@ export class Product extends AdvancedSQLModel {
     const sqlQuery = {
       qSelect: `
         SELECT ${this.generateSelectFields('pr', '')},
-        IF(a.id IS NOT NULL,
+        IF(MAX(a.id) IS NOT NULL,
           JSON_ARRAYAGG(
             JSON_OBJECT(${new Attribute({}, null).generateSelectJSONFields(
               'a',
@@ -291,7 +302,7 @@ export class Product extends AdvancedSQLModel {
       `,
       qGroup: `
         GROUP BY
-          pr.id, a.id
+          pr.id
       `,
     };
 

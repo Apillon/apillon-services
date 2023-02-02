@@ -119,7 +119,7 @@ describe('Storage bucket tests', () => {
         .post(`/buckets`)
         .send({
           name: 'Bucket changed name',
-          bucketType: BucketType.HOSTING,
+          bucketType: BucketType.STORAGE,
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(422);
@@ -131,7 +131,7 @@ describe('Storage bucket tests', () => {
         .send({
           project_uuid: testProject2.project_uuid,
           name: 'Bucket changed name',
-          bucketType: BucketType.HOSTING,
+          bucketType: BucketType.STORAGE,
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(403);
@@ -170,12 +170,10 @@ describe('Storage bucket tests', () => {
         .patch(`/buckets/${testBucket.id}`)
         .send({
           name: 'Bucket changed name',
-          bucketType: BucketType.HOSTING,
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.id).toBeTruthy();
-      expect(response.body.data.name).toBe('Bucket changed name');
       expect(response.body.data.name).toBe('Bucket changed name');
 
       const b: Bucket = await new Bucket(
@@ -183,7 +181,6 @@ describe('Storage bucket tests', () => {
         stage.storageContext,
       ).populateByUUID(testBucket.bucket_uuid);
       expect(b.name).toBe('Bucket changed name');
-      expect(b.bucketType).toBe(BucketType.HOSTING);
     });
   });
 
@@ -202,7 +199,7 @@ describe('Storage bucket tests', () => {
     test('User with role "ProjectUser" should be able to get bucket list', async () => {
       const response = await request(stage.http)
         .get(`/buckets?project_uuid=${testProject.project_uuid}`)
-        .set('Authorization', `Bearer ${testUser.token}`);
+        .set('Authorization', `Bearer ${testUser3.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBe(2);
       expect(response.body.data.items[0]?.id).toBeTruthy();

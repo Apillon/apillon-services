@@ -1,4 +1,10 @@
-import { AppEnvironment, MySql, Context, env } from '@apillon/lib';
+import {
+  AppEnvironment,
+  MySql,
+  Context,
+  env,
+  getEnvSecrets,
+} from '@apillon/lib';
 import {
   ServiceDefinitionType,
   WorkerDefinition,
@@ -7,6 +13,7 @@ import {
   WorkerLogStatus,
   QueueWorkerType,
 } from '@apillon/workers-lib';
+
 import { TestWorker } from './test-worker';
 import { IdentityRevokeWorker } from './revoke-identity.worker';
 import { IdentityGenerateWorker } from './generate-identity.worker';
@@ -23,6 +30,8 @@ export enum WorkerName {
 }
 
 export async function handler(event: any) {
+  await getEnvSecrets();
+
   const options = {
     host:
       env.APP_ENV === AppEnvironment.TEST

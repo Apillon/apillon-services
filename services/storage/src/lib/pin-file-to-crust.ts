@@ -14,7 +14,13 @@ import { WorkerName } from '../workers/worker-executor';
  * @param context
  * @param CID
  */
-export async function pinFileToCRUST(context, bucket_uuid, CID, size) {
+export async function pinFileToCRUST(
+  context,
+  bucket_uuid,
+  CID,
+  size,
+  isDirectory,
+) {
   if (
     env.APP_ENV == AppEnvironment.LOCAL_DEV ||
     env.APP_ENV == AppEnvironment.TEST
@@ -29,6 +35,7 @@ export async function pinFileToCRUST(context, bucket_uuid, CID, size) {
       bucket_uuid: bucket_uuid,
       CID: CID,
       size: size,
+      isDirectory: isDirectory,
     };
 
     const wd = new WorkerDefinition(
@@ -42,6 +49,7 @@ export async function pinFileToCRUST(context, bucket_uuid, CID, size) {
       bucket_uuid: bucket_uuid,
       CID: CID,
       size: size,
+      isDirectory: isDirectory,
     });
   } else {
     //send message to SQS - worker will PIN files to CRUST

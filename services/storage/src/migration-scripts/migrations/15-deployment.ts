@@ -12,6 +12,7 @@ export async function upgrade(
   \`deploymentStatus\` INT NOT NULL,
   \`cid\` VARCHAR(255) NULL,
   \`size\` BIGINT NULL,
+  \`number\` BIGINT NULL,
   \`status\` INT NULL,
   \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
   \`createUser\` INT NULL,

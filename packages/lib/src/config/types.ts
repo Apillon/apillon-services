@@ -63,7 +63,10 @@ export enum StorageEventType {
   WEB_PAGE_GET = 'get-web-page',
   WEB_PAGE_DEPLOY = 'deploy-web-page',
   WEB_PAGE_LIST_DOMAINS = 'list-web-page-domains',
+  WEB_PAGE_QUOTA_REACHED = 'web-pages-quota-reached',
   BUCKET_CLEAR_CONTENT = 'clear-bucket-content',
+  DEPLOYMENT_GET = 'get-deployment',
+  DEPLOYMENT_LIST = 'list-deployment',
 }
 
 export enum MailEventType {
@@ -218,7 +221,10 @@ export enum DefaultUserRole {
   PROJECT_ADMIN = 11, // Admin of current project
   PROJECT_USER = 12, // (read only) User on current project
   // auth user roles
-  USER = 99, // user with access to platform
+  INTERNAL_TEST_USER = 90, //user with access to new unpublished features
+  EXTERNAL_TEST_USER = 91, //user with access to features ready for external testers
+  BETA_USER = 92, //user with access to closed beta features
+  USER = 99, // user with access to platform (published features)
 }
 
 export enum DefaultApiKeyRole {

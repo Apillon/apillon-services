@@ -237,7 +237,7 @@ describe('Hosting tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
       file1_uuid = response.body.data.file_uuid;
-      const file1_signedUrlForUpload = response.body.data.signedUrlForUpload;
+      const file1_signedUrlForUpload = response.body.data.url;
 
       response = await request(file1_signedUrlForUpload)
         .put(``)
@@ -256,7 +256,7 @@ describe('Hosting tests', () => {
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       file2_uuid = response.body.data.file_uuid;
-      const file2_signedUrlForUpload = response.body.data.signedUrlForUpload;
+      const file2_signedUrlForUpload = response.body.data.url;
 
       response = await request(file2_signedUrlForUpload)
         .put(``)
@@ -376,6 +376,28 @@ describe('Hosting tests', () => {
         stage.storageContext,
       );
       expect(dirsInBucket.length).toBe(1);
+    });
+
+    test('User should be able to list deployments', async () => {
+      const response = await request(stage.http)
+        .get(`/storage/hosting/web-pages/${testWebPage.id}/deployments`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.items.length).toBeGreaterThan(0);
+      expect(response.body.data.items[0].deploymentStatus).toBe(10);
+      expect(response.body.data.items[0].cid).toBeTruthy();
+      expect(response.body.data.items[0].number).toBeTruthy();
+      expect(response.body.data.items[0].size).toBeTruthy();
+    });
+
+    test('User should be able to list deployments with filter', async () => {
+      const response = await request(stage.http)
+        .get(
+          `/storage/hosting/web-pages/${testWebPage.id}/deployments?environment=1`,
+        )
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.items.length).toBe(1);
     });
   });
 
