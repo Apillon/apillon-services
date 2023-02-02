@@ -1,11 +1,10 @@
 import { ModelBase, PopulateFrom } from '@apillon/lib';
-import { DidUri } from '@kiltprotocol/types';
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
-import { AuthenticationErrorCode } from '../../../config/types';
+import { AuthenticationErrorCode } from '../../../../config/types';
 
-export class SporranRequestCredentialDto extends ModelBase {
+export class SubmitAttestationDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
@@ -16,7 +15,7 @@ export class SporranRequestCredentialDto extends ModelBase {
       },
     ],
   })
-  public encryptionKeyUri: DidUri;
+  public encryptionKeyUri: string;
 
   @prop({
     parser: { resolver: stringParser() },

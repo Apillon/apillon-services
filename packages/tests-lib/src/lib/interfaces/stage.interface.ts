@@ -15,6 +15,5 @@ export interface Stage {
   storageSql: MySql;
   configContext: TestContext;
   configSql: MySql;
-  authApiContext: TestContext;
   authApiSql: MySql;
 }

@@ -10,7 +10,7 @@ import {
 } from '@polkadot/util-crypto';
 import { Keypair } from '@polkadot/util-crypto/types';
 import { isHex } from '@polkadot/util';
-import { LogType, env, ServiceName, Lmas } from '@apillon/lib';
+import { LogType, env, ServiceName, Lmas, CodeException } from '@apillon/lib';
 import {
   ConfigService,
   Did,
@@ -38,8 +38,10 @@ import {
   EclipticDerivationPaths,
   ApillonSupportedCTypes,
   KILT_CREDENTIAL_IRI_PREFIX,
+  AuthenticationErrorCode,
 } from '../config/types';
 import { DidResourceUri, EncryptResponseData } from '@kiltprotocol/types';
+import { HttpStatus } from '@nestjs/common';
 
 export function generateMnemonic() {
   return mnemonicGenerate();
@@ -289,20 +291,34 @@ export async function encryptionSigner({
   data,
   peerPublicKey,
   // Did URI
+  // NOTE: I think encyption signer (EncryptRequestData) needs this did,
+  // but we don't use it in the function body actually
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   did,
 }): Promise<EncryptResponseData> {
   // Apillon credentials
-  const { keyAgreement } = await generateKeypairsV2(env.KILT_ATTESTER_MNEMONIC);
+  const keyPairs = await generateKeypairsV2(env.KILT_ATTESTER_MNEMONIC);
+
+  const verifierDidDoc = await getFullDidDocument(keyPairs);
+  const verifierEncryptionKey = verifierDidDoc.keyAgreement?.[0];
+  if (!verifierEncryptionKey) {
+    throw new CodeException({
+      status: HttpStatus.BAD_REQUEST,
+      code: AuthenticationErrorCode.SPORRAN_VERIFIER_KA_DOES_NOT_EXIST,
+      errorCodes: AuthenticationErrorCode,
+    });
+  }
 
   const { box, nonce } = Utils.Crypto.encryptAsymmetric(
     data,
     peerPublicKey,
-    keyAgreement.secretKey,
+    keyPairs.keyAgreement.secretKey,
   );
+
   return {
     data: box,
     nonce,
-    keyUri: `${did}${keyAgreement[0].id}` as DidResourceUri,
+    keyUri: `${verifierDidDoc.uri}${verifierEncryptionKey.id}`,
   };
 }
 // ENDSECTION

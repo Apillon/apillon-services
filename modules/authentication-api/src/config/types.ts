@@ -148,5 +148,6 @@ export enum ApillonSupportedCTypes {
 }
 
 export enum SporranMessageType {
+  SUBMIT_ATTESTATION = 'submit-attestation',
   REQUEST_CREDENTIAL = 'request-credential',
 }

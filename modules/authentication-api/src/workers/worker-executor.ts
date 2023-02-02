@@ -8,9 +8,10 @@ import {
 } from '@apillon/workers-lib';
 import { AppEnvironment, MySql } from '@apillon/lib';
 
-import { Context, env } from '@apillon/lib';
+import { env } from '@apillon/lib';
 import { TestWorker } from './test-worker';
 import { AuthenticationWorker } from './authentication.worker';
+import { AuthenticationApiContext } from '../context';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -47,7 +48,7 @@ export async function handler(event: any) {
 
   const mysql = new MySql(options);
   await mysql.connect();
-  const context = new Context();
+  const context = new AuthenticationApiContext();
   context.setMySql(mysql);
 
   const serviceDef = {
@@ -81,7 +82,7 @@ export async function handler(event: any) {
  */
 export async function handleLambdaEvent(
   event: any,
-  context: Context,
+  context: AuthenticationApiContext,
   serviceDef: ServiceDefinition,
 ) {
   let workerDefinition;
@@ -123,7 +124,7 @@ export async function handleLambdaEvent(
  */
 export async function handleSqsMessages(
   event: any,
-  context: Context,
+  context: AuthenticationApiContext,
   serviceDef: ServiceDefinition,
 ) {
   console.info('handle sqs message. event.Records: ', event.Records);

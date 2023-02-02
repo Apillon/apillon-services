@@ -4,7 +4,7 @@ import { setupTest } from '../../../../test/helpers/setup';
 import { DbTables, IdentityState, JwtTokenType } from '../../../config/types';
 import { generateJwtToken, SerializeFor } from '@apillon/lib';
 import { Identity } from '../models/identity.model';
-import { AuthenticationApiContext } from '../../../context';
+import { AuthenticationApiContextTest } from '../../../context';
 import * as mock from './mock-data';
 import { Utils } from '@kiltprotocol/sdk-js';
 import { generateKeypairs } from '../../../lib/kilt';
@@ -13,7 +13,7 @@ import { setupDidCreateMock } from './utils';
 
 describe('IDENTITY', () => {
   let stage: Stage;
-  let context: AuthenticationApiContext;
+  let context: AuthenticationApiContextTest;
   jest.setTimeout(100000); // Set timeout to 100 seconds
 
   // CONTROL PARAMETERS
@@ -23,7 +23,7 @@ describe('IDENTITY', () => {
   beforeAll(async () => {
     console.log('Setup stage ...');
     stage = await setupTest();
-    context = stage.authApiContext;
+    context = new AuthenticationApiContextTest();
   });
 
   afterAll(async () => {
@@ -97,7 +97,6 @@ describe('IDENTITY', () => {
       // So we make sure the object is commited to the database right away
       const identity = new Identity({}, context);
       identity.populate({
-        context: context,
         email: testEmail,
         state: IdentityState.ATTESTED,
         token: token,

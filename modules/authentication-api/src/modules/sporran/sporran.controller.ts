@@ -1,10 +1,10 @@
 import { ValidateFor } from '@apillon/lib';
 import { Ctx, Validation } from '@apillon/modules-lib';
-import { DidUri } from '@kiltprotocol/types';
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { AuthenticationApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
-import { SporranRequestCredentialDto } from './dtos/sporran-request-credential.dto';
+import { RequestCredentialDto } from './dtos/message/request-credential.dto';
+import { SubmitAttestationDto } from './dtos/message/submit-attestation.dto';
 import { SporranSessionVerifyDto } from './dtos/sporran-session.dto';
 import { SporranService } from './sporran.service';
 
@@ -32,22 +32,30 @@ export class SporranController {
     return await this.sporranService.verifySession(context, body);
   }
 
-  @Get('message/request-credential')
+  @Post('message/request-credential')
   @Validation({
-    dto: SporranRequestCredentialDto,
-    validateFor: ValidateFor.QUERY,
+    dto: RequestCredentialDto,
   })
   @UseGuards(ValidationGuard)
   async sporranRequestCredential(
     @Ctx() context: AuthenticationApiContext,
-    @Query() encryptionKeyUri: DidUri,
-    @Query() sessionId: string,
+    @Body() body: RequestCredentialDto,
   ) {
-    // Requests credential presentation from the visitor of the d-app
-    return await this.sporranService.requestCredential(
-      context,
-      encryptionKeyUri,
-      sessionId,
-    );
+    // Creates a request-credential message, which requests a credential presentation
+    // from sporran
+    return await this.sporranService.requestCredential(context, body);
+  }
+
+  @Post('message/submit-attestation')
+  @Validation({
+    dto: SubmitAttestationDto,
+  })
+  @UseGuards(ValidationGuard)
+  async sporranSubmitAttestation(
+    @Ctx() context: AuthenticationApiContext,
+    @Body() body: SubmitAttestationDto,
+  ) {
+    // Creates a submit-attestation message, which injects a crednetial into Sporran
+    return await this.sporranService.submitAttestation(context, body);
   }
 }

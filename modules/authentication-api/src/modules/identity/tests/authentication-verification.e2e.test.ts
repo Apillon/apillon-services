@@ -3,7 +3,7 @@ import { generateJwtToken, SerializeFor } from '@apillon/lib';
 import { releaseStage, Stage } from '@apillon/tests-lib';
 import { setupTest } from '../../../../test/helpers/setup';
 import { DbTables, IdentityState, JwtTokenType } from '../../../config/types';
-import { AuthenticationApiContext } from '../../../context';
+import { AuthenticationApiContextTest } from '../../../context';
 import { Identity } from '../models/identity.model';
 import * as mock from './mock-data';
 import {
@@ -16,14 +16,14 @@ import { getDidDocument, createPresentation } from './utils';
 
 describe('VERFICATION', () => {
   let stage: Stage;
-  let context: AuthenticationApiContext;
+  let context: AuthenticationApiContextTest;
   const challenge =
     '0x3ce56bb25ea3b603f968c302578e77e28d3d7ba3c7a8c45d6ebd3f410da766e1';
 
   beforeAll(async () => {
     console.log('Setup stage ...');
     stage = await setupTest();
-    context = stage.authApiContext;
+    context = new AuthenticationApiContextTest();
     jest.setTimeout(10000); // Set timeout to 10 seconds
   });
 
