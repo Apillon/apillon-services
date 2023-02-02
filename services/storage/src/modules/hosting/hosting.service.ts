@@ -274,7 +274,18 @@ export class HostingService {
     }
     webPage.canModify(context);
 
-    //TODO check if there are files in bucket
+    //Check if there are files in source bucket
+    const sourceBucket: Bucket = await new Bucket({}, context).populateById(
+      event.body.environment == DeploymentEnvironment.STAGING
+        ? webPage.bucket_id
+        : webPage.stagingBucket_id,
+    );
+    if (!(await sourceBucket.containsFiles())) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.NO_FILES_TO_DEPLOY,
+        status: 400,
+      });
+    }
 
     //Get previous deployment record
     const prevDeployment: Deployment = await new Deployment(

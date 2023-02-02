@@ -365,18 +365,22 @@ export class WebPage extends AdvancedSQLModel {
       this.stagingBucket = await new Bucket({}, this.getContext()).populateById(
         this.stagingBucket_id,
       );
-      this.ipnsStagingLink =
-        env.STORAGE_IPFS_GATEWAY.replace('/ipfs/', '/ipns/') +
-        this.stagingBucket.IPNS;
+      if (this.stagingBucket.IPNS) {
+        this.ipnsStagingLink =
+          env.STORAGE_IPFS_GATEWAY.replace('/ipfs/', '/ipns/') +
+          this.stagingBucket.IPNS;
+      }
     }
     if (this.productionBucket_id) {
       this.productionBucket = await new Bucket(
         {},
         this.getContext(),
       ).populateById(this.productionBucket_id);
-      this.ipnsProductionLink =
-        env.STORAGE_IPFS_GATEWAY.replace('/ipfs/', '/ipns/') +
-        this.productionBucket.IPNS;
+      if (this.productionBucket.IPNS) {
+        this.ipnsProductionLink =
+          env.STORAGE_IPFS_GATEWAY.replace('/ipfs/', '/ipns/') +
+          this.productionBucket.IPNS;
+      }
     }
   }
 
