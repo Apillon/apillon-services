@@ -61,6 +61,7 @@ export class File extends AdvancedSQLModel {
     ],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
@@ -84,6 +85,7 @@ export class File extends AdvancedSQLModel {
     ],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
     ],

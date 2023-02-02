@@ -280,7 +280,7 @@ export class Deployment extends AdvancedSQLModel {
         AND (@environment IS NULL OR d.environment = @environment)
       `,
       qFilter: `
-        ORDER BY ${filters.orderStr}
+        ORDER BY ${filters.orderStr ? filters.orderStr : 'd.updateTime DESC'}
         LIMIT ${filters.limit} OFFSET ${filters.offset};
       `,
     };

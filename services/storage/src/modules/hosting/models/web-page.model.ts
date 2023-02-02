@@ -3,6 +3,7 @@ import {
   CodeException,
   Context,
   DefaultUserRole,
+  env,
   ForbiddenErrorCodes,
   getQueryParams,
   PopulateFrom,
@@ -201,6 +202,36 @@ export class WebPage extends AdvancedSQLModel {
     ],
     validators: [],
   })
+  public ipnsStagingLink: string;
+
+  @prop({
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public ipnsProductionLink: string;
+
+  @prop({
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
   public bucket: Bucket;
 
   @prop({
@@ -324,7 +355,7 @@ export class WebPage extends AdvancedSQLModel {
     return await selectAndCountQuery(context.mysql, sqlQuery, params, 'wp.id');
   }
 
-  public async populateBuckets() {
+  public async populateBucketsAndLink() {
     if (this.bucket_id) {
       this.bucket = await new Bucket({}, this.getContext()).populateById(
         this.bucket_id,
@@ -334,22 +365,34 @@ export class WebPage extends AdvancedSQLModel {
       this.stagingBucket = await new Bucket({}, this.getContext()).populateById(
         this.stagingBucket_id,
       );
+      if (this.stagingBucket.IPNS) {
+        this.ipnsStagingLink =
+          env.STORAGE_IPFS_GATEWAY.replace('/ipfs/', '/ipns/') +
+          this.stagingBucket.IPNS;
+      }
     }
     if (this.productionBucket_id) {
       this.productionBucket = await new Bucket(
         {},
         this.getContext(),
       ).populateById(this.productionBucket_id);
+      if (this.productionBucket.IPNS) {
+        this.ipnsProductionLink =
+          env.STORAGE_IPFS_GATEWAY.replace('/ipfs/', '/ipns/') +
+          this.productionBucket.IPNS;
+      }
     }
   }
 
   public async listDomains(context: ServiceContext) {
     return await context.mysql.paramExecute(
       `
-        SELECT domain
-        FROM \`${this.tableName}\`
-        WHERE domain IS NOT NULL
-        AND status <> ${SqlModelStatus.DELETED};
+        SELECT wp.domain
+        FROM \`${this.tableName}\` wp
+        JOIN \`${DbTables.BUCKET}\` b ON b.id = wp.productionBucket_id
+        WHERE wp.domain IS NOT NULL
+        AND b.CID IS NOT NULL
+        AND wp.status <> ${SqlModelStatus.DELETED};
         `,
       {},
     );

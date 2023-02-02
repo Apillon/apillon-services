@@ -74,7 +74,7 @@ export class HostingService {
     webPage.canAccess(context);
 
     //Get buckets
-    await webPage.populateBuckets();
+    await webPage.populateBucketsAndLink();
 
     return webPage.serialize(SerializeFor.PROFILE);
   }
@@ -274,13 +274,46 @@ export class HostingService {
     }
     webPage.canModify(context);
 
-    //TODO check if there are files in bucket
+    //Check if there are files in source bucket
+    const sourceBucket: Bucket = await new Bucket({}, context).populateById(
+      event.body.environment == DeploymentEnvironment.STAGING
+        ? webPage.bucket_id
+        : webPage.stagingBucket_id,
+    );
+    if (!(await sourceBucket.containsFiles())) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.NO_FILES_TO_DEPLOY,
+        status: 400,
+      });
+    }
 
     //Get previous deployment record
-    const prevDeployment: Deployment = await new Deployment(
+    const lastStagingDeployment: Deployment = await new Deployment(
       {},
       context,
-    ).populateLastDeployment(webPage.id, event.body.environment);
+    ).populateLastDeployment(webPage.id, DeploymentEnvironment.STAGING);
+
+    const lastProductionDeployment: Deployment = await new Deployment(
+      {},
+      context,
+    ).populateLastDeployment(webPage.id, DeploymentEnvironment.PRODUCTION);
+
+    let deploymentNumber = 1;
+    if (event.body.environment == DeploymentEnvironment.STAGING) {
+      if (lastStagingDeployment.exists()) {
+        deploymentNumber = lastStagingDeployment.number + 1;
+      }
+    } else if (event.body.environment == DeploymentEnvironment.PRODUCTION) {
+      if (lastStagingDeployment.cid == lastProductionDeployment.cid) {
+        throw new StorageCodeException({
+          code: StorageErrorCode.NO_CHANGES_TO_DEPLOY,
+          status: 400,
+        });
+      }
+      if (lastProductionDeployment.exists()) {
+        deploymentNumber = lastProductionDeployment.number + 1;
+      }
+    }
 
     //Create deployment record
     const d: Deployment = new Deployment({}, context).populate({
@@ -290,7 +323,7 @@ export class HostingService {
           ? webPage.stagingBucket_id
           : webPage.productionBucket_id,
       environment: event.body.environment,
-      number: prevDeployment ? prevDeployment.number + 1 : 1,
+      number: deploymentNumber,
     });
 
     try {

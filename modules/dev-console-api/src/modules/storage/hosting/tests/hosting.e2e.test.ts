@@ -26,7 +26,6 @@ describe('Hosting tests', () => {
 
   let testUser: TestUser;
   let testUser2: TestUser;
-  let testUser3: TestUser;
 
   let testProject: Project;
   let testProject2: Project;
@@ -346,7 +345,7 @@ describe('Hosting tests', () => {
       expect(dirsInBucket.length).toBe(1);
     });
 
-    test('User should be able to deploy web page multiple times', async () => {
+    test('User should NOT be able to deploy web page to production if no changes were made', async () => {
       const response = await request(stage.http)
         .post(`/storage/hosting/web-pages/${testWebPage.id}/deploy`)
         .send({
@@ -354,28 +353,10 @@ describe('Hosting tests', () => {
           directDeploy: true,
         })
         .set('Authorization', `Bearer ${testUser.token}`);
-      expect(response.status).toBe(200);
-
-      //check if files were created in production bucket and have CID
-      const filesInBucket = await new File(
-        {},
-        stage.storageContext,
-      ).populateFilesInBucket(
-        testWebPage.productionBucket_id,
-        stage.storageContext,
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        StorageErrorCode[StorageErrorCode.NO_CHANGES_TO_DEPLOY],
       );
-      expect(filesInBucket.length).toBe(2);
-      expect(filesInBucket[0].CID).toBeTruthy();
-
-      //check if directory was created
-      const dirsInBucket = await new Directory(
-        {},
-        stage.storageContext,
-      ).populateDirectoriesInBucket(
-        testWebPage.productionBucket_id,
-        stage.storageContext,
-      );
-      expect(dirsInBucket.length).toBe(1);
     });
 
     test('User should be able to list deployments', async () => {
@@ -485,6 +466,58 @@ describe('Hosting tests', () => {
         .delete(`/buckets/${testWebPage.bucket.id}/content`)
         .set('Authorization', `Bearer ${testUser2.token}`);
       expect(response.status).toBe(403);
+    });
+  });
+  describe('Webpage quota tests', () => {
+    beforeAll(async () => {
+      //Insert dummy web pages
+      for (let i = 0; i < 10; i++) {
+        const webPageBucket = await createTestBucket(
+          testUser,
+          stage.storageContext,
+          testProject2,
+          BucketType.HOSTING,
+        );
+        const webPageStagingBucket = await createTestBucket(
+          testUser,
+          stage.storageContext,
+          testProject2,
+          BucketType.HOSTING,
+        );
+        const webPageProductionBucket = await createTestBucket(
+          testUser,
+          stage.storageContext,
+          testProject2,
+          BucketType.HOSTING,
+        );
+        await new WebPage({}, stage.storageContext)
+          .populate({
+            project_uuid: testProject2.project_uuid,
+            bucket_id: webPageBucket.id,
+            stagingBucket_id: webPageStagingBucket.id,
+            productionBucket_id: webPageProductionBucket.id,
+            name: 'Test web page' + i.toString(),
+            domain: 'https://hosting-e2e-tests.si',
+            bucket: webPageBucket,
+            stagingBucket: webPageStagingBucket,
+            productionBucket: webPageProductionBucket,
+          })
+          .insert();
+      }
+    });
+    test('User should recieve status 400 when max webpages quota is reached', async () => {
+      const response = await request(stage.http)
+        .post(`/storage/hosting/web-page`)
+        .send({
+          project_uuid: testProject2.project_uuid,
+          name: 'My test web page',
+          domain: 'https://www.my-test-page.si',
+        })
+        .set('Authorization', `Bearer ${testUser2.token}`);
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        StorageErrorCode[StorageErrorCode.MAX_WEB_PAGES_REACHED],
+      );
     });
   });
 });

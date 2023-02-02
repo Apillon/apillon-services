@@ -282,9 +282,10 @@ export class IPFSService {
     //Get IPFS client
     const client = await IPFSService.createIPFSClient();
     let key = undefined;
+    let existingKeys = undefined;
     console.info(await client.key.list());
     try {
-      key = (await client.key.list()).filter((x) => x.name == ipfsKey);
+      existingKeys = (await client.key.list()).filter((x) => x.name == ipfsKey);
     } catch (err) {
       writeLog(
         LogType.ERROR,
@@ -295,17 +296,24 @@ export class IPFSService {
       );
     }
 
-    if (!key || key.length == 0)
+    //Generate new key or use existing
+    if (!existingKeys || existingKeys.length == 0)
       key = await client.key.gen(ipfsKey, {
         type: 'rsa',
         size: 2048,
       });
+    else {
+      key = existingKeys[0];
+    }
+    //Check key
     if (!key || key.length == 0) {
       throw new CodeException({
         status: 500,
         code: StorageErrorCode.FAILED_TO_GENERATE_IPFS_KEYPAIR,
       });
+    } else {
     }
+    //Publish CID to IPNS
     return await client.name.publish(cid, { key: key.id });
   }
 

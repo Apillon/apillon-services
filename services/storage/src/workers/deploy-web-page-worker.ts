@@ -133,6 +133,7 @@ export class DeployWebPageWorker extends BaseQueueWorker {
         if (stagingDeployment.exists() && stagingDeployment.size) {
           targetBucket.size += stagingDeployment.size;
           targetBucket.uploadedSize += stagingDeployment.size;
+          deployment.size = stagingDeployment.size;
           cidSize = stagingDeployment.size;
         }
       }
