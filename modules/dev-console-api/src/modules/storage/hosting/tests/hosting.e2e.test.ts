@@ -345,7 +345,7 @@ describe('Hosting tests', () => {
       expect(dirsInBucket.length).toBe(1);
     });
 
-    test('User should be able to deploy web page multiple times', async () => {
+    test('User should NOT be able to deploy web page to production if no changes were made', async () => {
       const response = await request(stage.http)
         .post(`/storage/hosting/web-pages/${testWebPage.id}/deploy`)
         .send({
@@ -353,28 +353,10 @@ describe('Hosting tests', () => {
           directDeploy: true,
         })
         .set('Authorization', `Bearer ${testUser.token}`);
-      expect(response.status).toBe(200);
-
-      //check if files were created in production bucket and have CID
-      const filesInBucket = await new File(
-        {},
-        stage.storageContext,
-      ).populateFilesInBucket(
-        testWebPage.productionBucket_id,
-        stage.storageContext,
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        StorageErrorCode[StorageErrorCode.NO_CHANGES_TO_DEPLOY],
       );
-      expect(filesInBucket.length).toBe(2);
-      expect(filesInBucket[0].CID).toBeTruthy();
-
-      //check if directory was created
-      const dirsInBucket = await new Directory(
-        {},
-        stage.storageContext,
-      ).populateDirectoriesInBucket(
-        testWebPage.productionBucket_id,
-        stage.storageContext,
-      );
-      expect(dirsInBucket.length).toBe(1);
     });
 
     test('User should be able to list deployments', async () => {
