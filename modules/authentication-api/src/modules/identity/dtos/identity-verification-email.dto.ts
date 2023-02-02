@@ -4,7 +4,7 @@ import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator, emailValidator } from '@rawmodel/validators';
 import { AuthenticationErrorCode } from '../../../config/types';
 
-export class AttestationEmailDto extends ModelBase {
+export class VerificationEmailDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
@@ -22,9 +22,20 @@ export class AttestationEmailDto extends ModelBase {
   public email: string;
 
   @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: AuthenticationErrorCode.IDENTITY_VERIFICATION_EMAIL_TYPE_NOT_PRESENT,
+      },
+    ],
+  })
+  public type: string;
+
+  @prop({
     parser: { resolver: JSONParser() },
     populatable: [PopulateFrom.PROFILE],
-    validators: [],
   })
   public captcha: { eKey: string; token: string };
 }

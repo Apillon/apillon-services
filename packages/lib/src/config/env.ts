@@ -211,8 +211,8 @@ export interface IEnv {
    * Authentication config (Uses Kilt module)
    ************************************************************/
 
-  AUTHENTICATION_AWS_WORKER_SQS_URL: string;
-  AUTHENTICATION_AWS_WORKER_LAMBDA_NAME: string;
+  AUTH_AWS_WORKER_SQS_URL: string;
+  AUTH_AWS_WORKER_LAMBDA_NAME: string;
 
   /************************************************************
    * Apillon Serverless workers config - STORAGE MS
@@ -451,10 +451,8 @@ export let env: IEnv = {
   // because it depends where you use this mnemonic
   KILT_DERIVATION_ALGORITHM:
     process.env['KILT_DERIVATION_ALGORITHM'] || 'sr25519',
-  AUTHENTICATION_AWS_WORKER_SQS_URL:
-    process.env['AUTHENTICATION_AWS_WORKER_SQS_URL'] || '',
-  AUTHENTICATION_AWS_WORKER_LAMBDA_NAME:
-    process.env['AUTHENTICATION_AWS_WORKER_LAMBDA_NAME'] || '',
+  AUTH_AWS_WORKER_SQS_URL: process.env['AUTH_AWS_WORKER_SQS_URL'] || '',
+  AUTH_AWS_WORKER_LAMBDA_NAME: process.env['AUTH_AWS_WORKER_LAMBDA_NAME'] || '',
 
   /**Apillon Serverless workers config*/
   /**
