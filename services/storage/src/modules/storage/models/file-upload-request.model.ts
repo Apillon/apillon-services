@@ -115,8 +115,6 @@ export class FileUploadRequest extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
     ],
     setter(value: string) {
       if (value && value.length > 0) {
@@ -141,7 +139,6 @@ export class FileUploadRequest extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
     ],
     validators: [
       {
@@ -191,12 +188,7 @@ export class FileUploadRequest extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: StorageErrorCode.FILE_UPLOAD_REQUEST_S3_FILE_CONTENT_TYPE_NOT_PRESENT,
-      },
-    ],
+    validators: [],
   })
   public contentType: string;
 
@@ -222,7 +214,6 @@ export class FileUploadRequest extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
     validators: [],

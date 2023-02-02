@@ -1,7 +1,7 @@
 # console: true
 # org: apillonadmin
 # app: apillon-v2
-service: apillon-api-${opt:stage, 'dev'}
+service: apillon-auth-api-${opt:stage, 'dev'}
 frameworkVersion: '3'
 
 custom:
@@ -37,7 +37,7 @@ provider:
       - subnet-0ed148d48e931f5fa
 
   environment:
-    ${file(../../bin/deploy/env.yml)}
+    ${file(../../bin/deploy/env/env.yml)}
     # ACCESS_FUNCTION_NAME: 'apillon-access-service-${self:provider.stage}'
     # MONITORING_FUNCTION_NAME: 'apillon-monitoring-service-${self:provider.stage}'
 
@@ -51,23 +51,32 @@ package:
   excludeDevDependencies: true
 
 functions:
-  authentication-service:
-    handler: ./src/handler.handler
-    name: 'apillon-authentication-service-${self:provider.stage}'
-    description: Apillon Authentication Service
+  auth-api:
+    handler: ./src/lambda.handler
+    name: 'apillon-auth-api-${self:provider.stage}'
+    description: Apillon Authentication API
     memorySize: 512
     timeout: 30
-  authentication-service-worker:
+    events:
+      - http: # this is an API Gateway HTTP event trigger
+          path: /
+          method: ANY
+          cors: true
+      - http: # all routes get proxied to the Express router
+          path: /{proxy+}
+          method: ANY
+          cors: true
+  auth-worker:
     handler: ./src/workers/worker-executor.handler
-    name: apillon-authentication-service-worker-${self:provider.stage}
+    name: apillon-auth-worker-${self:provider.stage}
     description: Serverless workers for Apillon authentication service
     memorySize: 512
     timeout: 900
     reservedConcurrency: 30
     environment:
-      AWS_WORKER_LAMBDA_NAME: ${self:functions.authentication-service-worker.name}
+      AWS_WORKER_LAMBDA_NAME: ${self:functions.auth-worker.name}
     events:
       - sqs:
-          arn: ${env:WORKER_SQS_ARN} #arn:aws:sqs:eu-west-1:018021943180/apillon-authentication-queue-dev
+          arn: ${env:WORKER_SQS_ARN} #arn:aws:sqs:eu-west-1:018021943180/apillon-auth-queue-dev
           batchSize: 4
           maximumBatchingWindow: 5

@@ -1,4 +1,11 @@
 import {
+  AppEnvironment,
+  MySql,
+  Context,
+  env,
+  getEnvSecrets,
+} from '@apillon/lib';
+import {
   ServiceDefinitionType,
   WorkerDefinition,
   ServiceDefinition,
@@ -6,12 +13,13 @@ import {
   WorkerLogStatus,
   QueueWorkerType,
 } from '@apillon/workers-lib';
-import { AppEnvironment, MySql } from '@apillon/lib';
 
-import { env } from '@apillon/lib';
 import { TestWorker } from './test-worker';
-import { AuthenticationWorker } from './authentication.worker';
 import { AuthenticationApiContext } from '../context';
+import { IdentityGenerateWorker } from './generate-identity.worker';
+import { IdentityRevokeWorker } from './revoke-identity.worker';
+
+import { Scheduler } from './scheduler';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -19,10 +27,13 @@ import { AuthenticationApiContext } from '../context';
 export enum WorkerName {
   TEST_WORKER = 'TestWorker',
   SCHEDULER = 'scheduler',
-  AUTHENTICATION_WORKER = 'AuthenticationWorker',
+  IDENTITY_GENERATE_WORKER = 'IdentityGenerateWorker',
+  IDENTITY_REVOKE_WORKER = 'IdentityRevokeWorker',
 }
 
 export async function handler(event: any) {
+  await getEnvSecrets();
+
   const options = {
     host:
       env.APP_ENV === AppEnvironment.TEST
@@ -54,7 +65,7 @@ export async function handler(event: any) {
   const serviceDef = {
     type: ServiceDefinitionType.LAMBDA,
     config: { region: env.AWS_REGION },
-    params: { FunctionName: env.AUTHENTICATION_AWS_WORKER_LAMBDA_NAME },
+    params: { FunctionName: env.AUTH_AWS_WORKER_LAMBDA_NAME },
   };
 
   console.info(`EVENT: ${JSON.stringify(event)}`);
@@ -101,6 +112,10 @@ export async function handleLambdaEvent(
     case WorkerName.TEST_WORKER:
       const testLambda = new TestWorker(workerDefinition, context);
       await testLambda.run();
+      break;
+    case WorkerName.SCHEDULER:
+      const scheduler = new Scheduler(serviceDef, context);
+      await scheduler.run();
       break;
     default:
       console.log(
@@ -149,8 +164,18 @@ export async function handleSqsMessages(
 
     // eslint-disable-next-line sonarjs/no-small-switch
     switch (message?.messageAttributes?.workerName?.stringValue) {
-      case WorkerName.AUTHENTICATION_WORKER: {
-        await new AuthenticationWorker(
+      case WorkerName.IDENTITY_GENERATE_WORKER: {
+        await new IdentityGenerateWorker(
+          workerDefinition,
+          context,
+          QueueWorkerType.EXECUTOR,
+        ).run({
+          executeArg: message?.body,
+        });
+        break;
+      }
+      case WorkerName.IDENTITY_REVOKE_WORKER: {
+        await new IdentityRevokeWorker(
           workerDefinition,
           context,
           QueueWorkerType.EXECUTOR,

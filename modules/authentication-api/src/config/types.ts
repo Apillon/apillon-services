@@ -5,17 +5,22 @@ import {
   NewDidEncryptionKey,
 } from '@kiltprotocol/types';
 import { IPublicKeyRecord, Proof } from '@kiltprotocol/vc-export';
-
-export declare const APILLON_SELF_SIGNED_PROOF_TYPE = 'KILTSelfSigned2020';
+import { Keypair } from '@polkadot/util-crypto/types';
 
 export enum DbTables {
   IDENTITY = 'identity',
 }
 
-export const KILT_DERIVATION_SIGN_ALGORITHM = 'sr25519';
-export enum EclipticDerivationPaths {
-  ATTESTATION = '//attestation',
-  DELEGATION = '//delegation',
+export const enum KiltSignAlgorithm {
+  SR25519 = 'sr25519',
+  ED25519 = 'ed25519',
+  X25519 = 'x25519',
+}
+export enum KiltDerivationPaths {
+  AUTHENTICATION = '//did//0',
+  ASSERTION = '//did//assertion//0', // Attestation
+  CAPABILITY_DELEGATION = '//did//delegation//0',
+  KEY_AGREEMENT = '//did//keyAgreement//0',
 }
 
 /**
@@ -43,6 +48,10 @@ export enum AuthenticationErrorCode {
   IDENTITY_CREATE_DID_CREATE_OP_NOT_PRESENT = 422070112,
   IDENTITY_CREATE_SENDER_KEY_NOT_PRESENT = 422070113,
   IDENTITY_EMAIL_IS_ALREADY_ATTESTED = 422070114,
+  IDENTITY_VERIFICATION_EMAIL_TYPE_NOT_PRESENT = 422070115,
+  IDENTITY_CAPTCHA_NOT_CONFIGURED = 422070116,
+  IDENTITY_CAPTCHA_INVALID = 422070117,
+  IDENTITY_CAPTCHA_NOT_PRESENT = 422070118,
   DID_URI_NOT_PRESENT = 422070200,
   DID_URI_INVALID = 422070201,
   VERIFICATION_IDENTITY_NOT_PRESENT = 422070300,
@@ -62,6 +71,7 @@ export enum AuthenticationErrorCode {
 export const KILT_CREDENTIAL_IRI_PREFIX = 'kilt:cred:';
 export const APILLON_VERIFIABLECREDENTIAL_TYPE = 'ApillonCredential2023';
 export const DEFAULT_VERIFIABLECREDENTIAL_TYPE = 'VerifiableCredential';
+export declare const APILLON_SELF_SIGNED_PROOF_TYPE = 'ApillonSelfSigned2020';
 export interface ApillonSelfSignedProof extends Proof {
   type: typeof APILLON_SELF_SIGNED_PROOF_TYPE;
   proofPurpose: 'assertionMethod';
@@ -93,13 +103,18 @@ export enum IdentityState {
  * JWT Token signing types.
  */
 export enum JwtTokenType {
-  IDENTITY_EMAIL_VERIFICATION = 'IDENTITY_EMAIL_VERIFICATION',
-  // Used to initialize the session with the sporran browser extension
   SPORRAN_SESSION = 'SPORRAN_SESSION',
+  IDENTITY_VERIFICATION = 'identity-verification',
 }
 
 export enum IdentityEventType {
   CREATE_DECENTRALIZED_IDENTITY = 'create-decentralized-identity',
+}
+
+export enum AuthApiEmailType {
+  GENERATE_IDENTITY = 'generate-identity',
+  RESTORE_CREDENTIAL = 'restore-credential',
+  REVOKE_DID = 'revoke-did',
 }
 
 /************************************************************
@@ -139,7 +154,7 @@ export interface Keypairs {
 }
 
 export enum AuthAppErrors {
-  EMAIL_ALREADY_ATTESTED = 'Email already attested',
+  IDENTITY_EMAIL_IS_ALREADY_ATTESTED = 'Email already attested',
 }
 
 export enum ApillonSupportedCTypes {

@@ -8,13 +8,11 @@ import {
   randomAsHex,
   sr25519PairFromSeed,
 } from '@polkadot/util-crypto';
-import { Keypair } from '@polkadot/util-crypto/types';
 import { isHex } from '@polkadot/util';
 import { LogType, env, ServiceName, Lmas, CodeException } from '@apillon/lib';
 import {
   ConfigService,
   Did,
-  KeyringPair,
   KiltKeyringPair,
   Utils,
   connect,
@@ -34,54 +32,20 @@ import {
   NewDidVerificationKey,
 } from '@kiltprotocol/sdk-js';
 import {
-  KILT_DERIVATION_SIGN_ALGORITHM,
-  EclipticDerivationPaths,
   ApillonSupportedCTypes,
   KILT_CREDENTIAL_IRI_PREFIX,
   AuthenticationErrorCode,
 } from '../config/types';
-import { DidResourceUri, EncryptResponseData } from '@kiltprotocol/types';
+import { EncryptResponseData } from '@kiltprotocol/types';
 import { HttpStatus } from '@nestjs/common';
+import { Keypair } from '@polkadot/util-crypto/types';
 
 export function generateMnemonic() {
   return mnemonicGenerate();
 }
 
-export async function generateAccount(mnemonic: string): Promise<KeyringPair> {
-  return Utils.Crypto.makeKeypairFromSeed(
-    mnemonicToMiniSecret(mnemonic),
-    KILT_DERIVATION_SIGN_ALGORITHM,
-  );
-}
-
-export async function generateKeypairs(mnemonic: string) {
-  // Derivations matter! Must use same algorithm as the one
-  // stored on the chain
-  const authentication = Utils.Crypto.makeKeypairFromSeed(
-    mnemonicToMiniSecret(mnemonic),
-    'sr25519',
-  );
-  const encryption = Utils.Crypto.makeEncryptionKeypairFromSeed(
-    mnemonicToMiniSecret(mnemonic),
-  );
-
-  const assertion = authentication.derive(EclipticDerivationPaths.ATTESTATION, {
-    type: 'sr25519',
-  }) as KiltKeyringPair;
-  const delegation = authentication.derive(
-    EclipticDerivationPaths.DELEGATION,
-  ) as KiltKeyringPair;
-
-  return {
-    authentication,
-    encryption,
-    assertion,
-    delegation,
-  };
-}
-
 // This function basically creates a keyring from a mnemonic
-export function generateAccountV2(mnemonic: string) {
+export function generateAccount(mnemonic: string) {
   const signingKeyPairType = 'sr25519';
   const keyring = new Utils.Keyring({
     ss58Format: 38,
@@ -90,8 +54,8 @@ export function generateAccountV2(mnemonic: string) {
   return keyring.addFromMnemonic(mnemonic);
 }
 
-export async function generateKeypairsV2(mnemonic: string) {
-  const account = generateAccountV2(mnemonic);
+export async function generateKeypairs(mnemonic: string) {
+  const account = generateAccount(mnemonic);
   // Authenticate presentations
   const authentication = {
     ...account.derive('//did//0'),
@@ -297,7 +261,7 @@ export async function encryptionSigner({
   did,
 }): Promise<EncryptResponseData> {
   // Apillon credentials
-  const keyPairs = await generateKeypairsV2(env.KILT_ATTESTER_MNEMONIC);
+  const keyPairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
 
   const verifierDidDoc = await getFullDidDocument(keyPairs);
   const verifierEncryptionKey = verifierDidDoc.keyAgreement?.[0];

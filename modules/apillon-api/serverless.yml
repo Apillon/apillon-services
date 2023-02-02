@@ -10,14 +10,14 @@ custom:
     includeModules:
       forceExclude:
         - aws-sdk
-    excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
+    excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*|/test/**/*'
   serverless-offline:
     httpPort: 6001
     lambdaPort: 6002
 
 plugins:
   - serverless-webpack
-  - serverless-offline
+  # - serverless-offline
 
 provider:
   name: aws
@@ -37,7 +37,7 @@ provider:
       - subnet-0ed148d48e931f5fa
 
   environment:
-    ${file(../../bin/deploy/env.yml)}
+    ${file(../../bin/deploy/env/env.yml)}
     # ACCESS_FUNCTION_NAME: 'apillon-access-service-${self:provider.stage}'
     # MONITORING_FUNCTION_NAME: 'apillon-monitoring-service-${self:provider.stage}'
 

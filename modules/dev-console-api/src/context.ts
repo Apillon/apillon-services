@@ -22,13 +22,16 @@ export class DevConsoleApiContext extends Context {
 
     if (userData && userData.data.user_uuid) {
       const user = await new User({}, this).populateByUUID(
-        this,
         userData.data.user_uuid,
       );
 
       if (user.exists()) {
+        user.authUser = userData.data;
+        user.userRoles =
+          user.authUser?.authUserRoles
+            ?.filter((x) => !x.project_uuid)
+            ?.map((x) => x.role_id) || [];
         this.user = user;
-        this.user.authUser = userData.data;
       }
     }
   }

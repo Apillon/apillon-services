@@ -1,10 +1,7 @@
-import { HttpStatus, Inject, Injectable, NestMiddleware } from '@nestjs/common';
+import { Inject, Injectable, NestMiddleware } from '@nestjs/common';
 import type { Request } from 'express';
-import { CodeException, env, MySql } from '@apillon/lib';
+import { MySql } from '@apillon/lib';
 import { AuthenticationApiContext } from '../context';
-import { generateKeypairsV2, randomChallenge } from '../lib/kilt';
-import { Did } from '@kiltprotocol/sdk-js';
-import { AuthenticationErrorCode } from '../config/types';
 
 export interface IRequest extends Request {
   context: AuthenticationApiContext;

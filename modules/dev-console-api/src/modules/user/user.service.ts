@@ -4,12 +4,14 @@ import {
   AppEnvironment,
   CodeException,
   Context,
+  CreateReferralDto,
   env,
   generateJwtToken,
   JwtTokenType,
   LogType,
   Mailing,
   parseJwtToken,
+  ReferralMicroservice,
   SerializeFor,
   UnauthorizedErrorCodes,
   ValidationException,
@@ -45,6 +47,8 @@ export class UserService {
       });
     }
 
+    user.userRoles = context.user.userRoles;
+
     return user.serialize(SerializeFor.PROFILE);
   }
 
@@ -59,7 +63,6 @@ export class UserService {
       });
 
       const user = await new User({}, context).populateByUUID(
-        context,
         resp.data.user_uuid,
       );
 
@@ -88,7 +91,7 @@ export class UserService {
     context: Context,
     emailVal: ValidateEmailDto,
   ): Promise<any> {
-    const { email, captcha } = emailVal;
+    const { email, captcha, refCode } = emailVal;
     let emailResult;
     let captchaResult;
     // console.log(captcha);
@@ -105,6 +108,12 @@ export class UserService {
           (response) => (captchaResult = response),
         ),
       );
+    } else {
+      throw new CodeException({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        code: ValidatorErrorCode.CAPTCHA_NOT_PRESENT,
+        errorCodes: ValidatorErrorCode,
+      });
     }
 
     await Promise.all(promises);
@@ -137,7 +146,9 @@ export class UserService {
       emails: [email],
       template: 'welcome',
       data: {
-        actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}`,
+        actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}${
+          refCode ? '&REF=' + refCode : ''
+        }`,
       },
     });
 
@@ -184,12 +195,37 @@ export class UserService {
         email,
         password,
       });
+
       await context.mysql.commit(conn);
     } catch (err) {
       // TODO: The context of this error is not correct. What happens if
       //       ams fails? FE will see it as a DB write error, which is incorrect.
       await context.mysql.rollback(conn);
       throw err;
+    }
+    try {
+      // Create referral player - is inactive until accepts terms
+      const referralBody = new CreateReferralDto(
+        {
+          refCode: data?.refCode,
+        },
+        context,
+      );
+
+      await new ReferralMicroservice({
+        ...context,
+        user,
+      } as any).createPlayer(referralBody);
+    } catch (err) {
+      writeLog(
+        LogType.MSG,
+        `Error creating referral player${
+          data?.refCode ? ', refCode: ' + data?.refCode : ''
+        }`,
+        'user.service.ts',
+        'register',
+        err,
+      );
     }
 
     //User has been registered - check if pending invitations for project exists

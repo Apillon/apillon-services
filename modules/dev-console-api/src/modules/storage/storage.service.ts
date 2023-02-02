@@ -4,6 +4,7 @@ import {
   FileDetailsQueryFilter,
   FileUploadsQueryFilter,
   StorageMicroservice,
+  TrashedFilesQueryFilter,
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
@@ -55,6 +56,17 @@ export class StorageService {
       context,
     );
     return (await new StorageMicroservice(context).getFileDetails(filter)).data;
+  }
+
+  async listFilesMarkedForDeletion(
+    context: DevConsoleApiContext,
+    bucket_uuid: string,
+    query: TrashedFilesQueryFilter,
+  ) {
+    query.populate({ bucket_uuid });
+    return (
+      await new StorageMicroservice(context).listFilesMarkedForDeletion(query)
+    ).data;
   }
 
   async deleteFile(context: DevConsoleApiContext, id: string) {

@@ -2,7 +2,11 @@
 import { prop } from '@rawmodel/core';
 import { booleanParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
-import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
+import {
+  PopulateFrom,
+  SerializeFor,
+  ValidatorErrorCode,
+} from '../../../../config/types';
 import { BaseQueryFilter } from '../../../base-models/base-query-filter.model';
 
 export class DirectoryContentQueryFilter extends BaseQueryFilter {
@@ -46,18 +50,12 @@ export class ApillonApiDirectoryContentQueryFilter extends BaseQueryFilter {
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
   })
-  public bucket_uuid: string;
+  public directoryId: number;
 
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [],
-  })
-  public directory_id: number;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.SERVICE],
     validators: [],
   })
   public search: string;

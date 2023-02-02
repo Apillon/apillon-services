@@ -1,5 +1,13 @@
 /* eslint-disable security/detect-non-literal-fs-filename */
-import { AWS_S3, env } from '@apillon/lib';
+import {
+  AWS_S3,
+  CodeException,
+  env,
+  Lmas,
+  LogType,
+  ServiceName,
+  writeLog,
+} from '@apillon/lib';
 import { CID, create } from 'ipfs-http-client';
 import {
   FileUploadRequestFileStatus,
@@ -7,6 +15,8 @@ import {
 } from '../../config/types';
 import { StorageCodeException } from '../../lib/exceptions';
 import { FileUploadRequest } from '../storage/models/file-upload-request.model';
+import { uploadFilesToIPFSRes } from './interfaces/upload-files-to-ipfs-res.interface';
+import { File } from '../storage/models/file.model';
 
 export class IPFSService {
   static async createIPFSClient() {
@@ -14,22 +24,27 @@ export class IPFSService {
     //return await CrustService.createIPFSClient();
 
     //Kalmia IPFS Gateway
-    if (!env.STORAGE_IPFS_GATEWAY)
+    if (!env.STORAGE_IPFS_API)
       throw new StorageCodeException({
         status: 500,
-        code: StorageErrorCode.STORAGE_IPFS_GATEWAY_NOT_SET,
+        code: StorageErrorCode.STORAGE_IPFS_API_NOT_SET,
         sourceFunction: `${this.constructor.name}/createIPFSClient`,
       });
-    console.info('Connection to IPFS gateway: ', env.STORAGE_IPFS_GATEWAY);
+    writeLog(
+      LogType.INFO,
+      `Connection to IPFS gateway: ${env.STORAGE_IPFS_API}`,
+      'ipfs.service.ts',
+      'createIPFSClient',
+    );
 
-    let ipfsGatewayURL = env.STORAGE_IPFS_GATEWAY;
+    let ipfsGatewayURL = env.STORAGE_IPFS_API;
     if (ipfsGatewayURL.endsWith('/'))
       ipfsGatewayURL = ipfsGatewayURL.slice(0, -1);
     return await create({ url: ipfsGatewayURL });
   }
 
-  static async uploadFileToIPFSFromS3(
-    event: { fileKey: string },
+  static async uploadFURToIPFSFromS3(
+    event: { fileUploadRequest: FileUploadRequest },
     context,
   ): Promise<{ CID: CID; cidV0: string; cidV1: string; size: number }> {
     //Get IPFS client
@@ -38,10 +53,11 @@ export class IPFSService {
     //Get File from S3
     const s3Client: AWS_S3 = new AWS_S3();
 
-    console.info(`Get file from AWS s3`);
-
     if (
-      !(await s3Client.exists(env.STORAGE_AWS_IPFS_QUEUE_BUCKET, event.fileKey))
+      !(await s3Client.exists(
+        env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+        event.fileUploadRequest.s3FileKey,
+      ))
     ) {
       throw new StorageCodeException({
         status: 404,
@@ -53,16 +69,24 @@ export class IPFSService {
 
     const file = await s3Client.get(
       env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-      event.fileKey,
+      event.fileUploadRequest.s3FileKey,
     );
-
-    console.info(`File recieved, pushing to IPFS...`);
 
     const filesOnIPFS = await client.add({
       content: file.Body as any,
     });
 
-    console.info(`File added to IPFS...uploadFileToIPFSFromS3 success.`);
+    //Write log to LMAS
+    await new Lmas().writeLog({
+      logType: LogType.INFO,
+      message: 'File uploaded to IPFS',
+      location: 'IPFSService.uploadFURsToIPFSFromS3',
+      service: ServiceName.STORAGE,
+      data: {
+        fileUploadRequest: event.fileUploadRequest,
+        ipfsResponse: filesOnIPFS,
+      },
+    });
 
     return {
       CID: filesOnIPFS.cid,
@@ -72,14 +96,16 @@ export class IPFSService {
     };
   }
 
-  static async uploadFilesToIPFSFromS3(event: {
+  /**
+   * Process file upload request, get each one from s3 and assemble array of files, that will bi added to IPFS.
+   * File upload request statuses, are updated
+   * @param event
+   * @returns
+   */
+  static async uploadFURsToIPFSFromS3(event: {
     fileUploadRequests: FileUploadRequest[];
     wrapWithDirectory: boolean;
-  }): Promise<{
-    parentDirCID: CID;
-    ipfsDirectories: { path: string; cid: CID }[];
-    size: number;
-  }> {
+  }): Promise<uploadFilesToIPFSRes> {
     //Get IPFS client
     const client = await IPFSService.createIPFSClient();
 
@@ -136,6 +162,106 @@ export class IPFSService {
         ipfsDirectories.push({ path: file.path, cid: file.cid });
       }
     }
+
+    //Write log to LMAS
+    await new Lmas().writeLog({
+      logType: LogType.INFO,
+      message: 'Files uploaded to IPFS',
+      location: 'IPFSService.uploadFilesToIPFSFromS3',
+      service: ServiceName.STORAGE,
+      data: {
+        fileUploadRequests: event.fileUploadRequests,
+        ipfsResponse: filesOnIPFS,
+      },
+    });
+
+    return {
+      parentDirCID: baseDirectoryOnIPFS?.cid,
+      ipfsDirectories: ipfsDirectories,
+      size: baseDirectoryOnIPFS?.size,
+    };
+  }
+
+  /**
+   * Upload files (FIle records already exists in bucket), to IPFS. Loop, get from s3, and pusth to IPFS.
+   * On success, update file CID.
+   * @param event
+   * @returns
+   */
+  static async uploadFilesToIPFSFromS3(event: {
+    files: File[];
+    wrapWithDirectory: boolean;
+  }): Promise<uploadFilesToIPFSRes> {
+    //Get IPFS client
+    const client = await IPFSService.createIPFSClient();
+
+    //S3 client
+    const s3Client: AWS_S3 = new AWS_S3();
+
+    const filesForIPFS = [];
+
+    for (const file of event.files) {
+      if (
+        !(await s3Client.exists(
+          env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+          file.s3FileKey,
+        ))
+      ) {
+        continue;
+      }
+
+      const fileOnS3 = await s3Client.get(
+        env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+        file.s3FileKey,
+      );
+
+      filesForIPFS.push({
+        path: (file.path || '') + file.name,
+        content: fileOnS3.Body as any,
+      });
+    }
+
+    /**Wrapping directory CID*/
+    let baseDirectoryOnIPFS = undefined;
+    /**Directories on IPFS - each dir on IPFS gets CID */
+    const ipfsDirectories = [];
+    const objectOnIPFS = await client.addAll(filesForIPFS, {
+      wrapWithDirectory: event.wrapWithDirectory,
+    });
+
+    /**Loop through IPFS result and set CID property in files */
+    for await (const objectOnIpfs of objectOnIPFS) {
+      if (objectOnIpfs.path === '') {
+        baseDirectoryOnIPFS = objectOnIpfs;
+        continue;
+      }
+      //Map IPFS result to files and directories
+      const file: File = event.files.find(
+        (x) => (x.path || '') + x.name == objectOnIpfs.path,
+      );
+      if (file) {
+        file.CID = objectOnIpfs.cid.toV0().toString();
+        file.size = objectOnIpfs.size;
+      } else {
+        ipfsDirectories.push({
+          path: objectOnIpfs.path,
+          cid: objectOnIpfs.cid,
+        });
+      }
+    }
+
+    //Write log to LMAS
+    await new Lmas().writeLog({
+      logType: LogType.INFO,
+      message: 'Files uploaded to IPFS',
+      location: 'IPFSService.uploadFilesToIPFSFromS3',
+      service: ServiceName.STORAGE,
+      data: {
+        files: event.files,
+        ipfsResponse: objectOnIPFS,
+      },
+    });
+
     return {
       parentDirCID: baseDirectoryOnIPFS?.cid,
       ipfsDirectories: ipfsDirectories,
@@ -156,13 +282,30 @@ export class IPFSService {
     //Get IPFS client
     const client = await IPFSService.createIPFSClient();
     let key = undefined;
+    console.info(await client.key.list());
     try {
       key = (await client.key.list()).filter((x) => x.name == ipfsKey);
     } catch (err) {
-      console.error(err);
+      writeLog(
+        LogType.ERROR,
+        `Error publishing to IPNS. Cid: ${cid}, Key: ${ipfsKey}`,
+        'ipfs.service.ts',
+        'createIPFSClient',
+        err,
+      );
     }
 
-    if (!key) key = await client.key.gen(ipfsKey);
+    if (!key || key.length == 0)
+      key = await client.key.gen(ipfsKey, {
+        type: 'rsa',
+        size: 2048,
+      });
+    if (!key || key.length == 0) {
+      throw new CodeException({
+        status: 500,
+        code: StorageErrorCode.FAILED_TO_GENERATE_IPFS_KEYPAIR,
+      });
+    }
     return await client.name.publish(cid, { key: key.id });
   }
 
@@ -264,60 +407,19 @@ export class IPFSService {
     };
   }
 
-  //#region OBSOLETE
-
-  static async uploadFilesToIPFS(params: { files: any[] }): Promise<any> {
+  static async getCIDSize(cid: string) {
     //Get IPFS client
     const client = await IPFSService.createIPFSClient();
 
-    for (const file of params.files) {
-      // call Core API methods
-      file.content = Buffer.from(file.content, 'base64');
-      //console.log('file, added to IPFS', file.content);
+    const ls = await client.ls(cid);
 
-      const filesOnIPFS = await client.add(file);
-      file.cidV0 = filesOnIPFS.cid.toV0().toString();
-      file.cidV1 = filesOnIPFS.cid.toV1().toString();
+    for await (const f of ls) {
+      console.info(f);
+      if (f.cid.toV0().toString() == cid) {
+        return f.size;
+      }
     }
 
-    return params.files;
+    return 0;
   }
-
-  static async uploadDirectoryToIPFS(): Promise<any> {
-    //Get IPFS client
-    const client = await IPFSService.createIPFSClient();
-
-    //Methods, that are available in client instance: https://github.com/ipfs/js-ipfs/blob/master/docs/core-api/FILES.md
-
-    // call Core API methods
-    const filesOnIPFS = await client.addAll([
-      {
-        path: 'parentDirectory/subDir1/hello.txt',
-        content: 'Hello world!',
-      },
-      {
-        path: 'parentDirectory/subDir2/aloha.txt',
-        content: 'Example content - this could be anything (string, Blob...)',
-      },
-      {
-        path: 'parentDirectory/readme.md',
-        content: 'This is content of readme.md',
-      },
-    ]);
-
-    const res: CID[] = [];
-    for await (const file of filesOnIPFS) {
-      console.log(file);
-      res.push(file.cid);
-    }
-
-    const ipnsVal = await client.name.publish(
-      'QmdWsuHuHaW7YeenSNimy6d1osA8dwVEnALxHq7PKTEXa5',
-    );
-    console.info(ipnsVal);
-
-    return res;
-  }
-
-  //#endregion
 }

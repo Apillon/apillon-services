@@ -25,7 +25,7 @@ import {
   Message,
   ICredential,
 } from '@kiltprotocol/sdk-js';
-import { encryptionSigner, generateKeypairsV2 } from '../../lib/kilt';
+import { encryptionSigner, generateKeypairs } from '../../lib/kilt';
 import { JwtTokenType } from '../../config/types';
 import { SporranSessionVerifyDto } from './dtos/sporran-session.dto';
 import { DidUri } from '@kiltprotocol/types';
@@ -40,7 +40,7 @@ export class SporranService {
     // generate keypairs
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
-    const { authentication } = await generateKeypairsV2(
+    const { authentication } = await generateKeypairs(
       env.KILT_ATTESTER_MNEMONIC,
     );
 
@@ -108,9 +108,7 @@ export class SporranService {
       });
     }
 
-    const { keyAgreement } = await generateKeypairsV2(
-      env.KILT_ATTESTER_MNEMONIC,
-    );
+    const { keyAgreement } = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
 
     let decryptedChallenge: any;
     try {

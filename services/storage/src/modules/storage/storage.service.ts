@@ -12,6 +12,7 @@ import {
   SerializeFor,
   ServiceName,
   SqlModelStatus,
+  TrashedFilesQueryFilter,
 } from '@apillon/lib';
 import {
   QueueWorkerType,
@@ -24,10 +25,12 @@ import { v4 as uuidV4 } from 'uuid';
 import { BucketType, FileStatus, StorageErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
 import { StorageCodeException } from '../../lib/exceptions';
+import { hostingBucketProcessSessionFiles } from '../../lib/hosting-bucket-process-session-files';
 import { SyncToIPFSWorker } from '../../workers/s3-to-ipfs-sync-worker';
 import { WorkerName } from '../../workers/worker-executor';
 import { Bucket } from '../bucket/models/bucket.model';
 import { Directory } from '../directory/models/directory.model';
+import { HostingService } from '../hosting/hosting.service';
 import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
@@ -70,7 +73,7 @@ export class StorageService {
       bucket.size > maxBucketSizeQuota?.value * 1073741824 //quota is in GB - size is in bytes
     ) {
       throw new StorageCodeException({
-        code: StorageErrorCode.MAX_UPLOADED_TO_BUCKET_SIZE_REACHED,
+        code: StorageErrorCode.MAX_BUCKET_SIZE_REACHED,
         status: 400,
       });
     }
@@ -122,10 +125,15 @@ export class StorageService {
       event.body.path = dir.fullPath;
     }
 
-    //NOTE - session uuid is added to s3File key
-    const s3FileKey = `${BucketType[bucket.bucketType]}/${bucket.id}${
-      session?.session_uuid ? '/' + session.session_uuid : ''
-    }/${(event.body.path ? event.body.path : '') + event.body.fileName}`;
+    //NOTE - session uuid is added to s3File key.
+    /*File key structure:
+     * Bucket type(STORAGE, STORAGE_sessions, HOSTING)/bucket id/session uuid if present/path/filename
+     */
+    const s3FileKey = `${BucketType[bucket.bucketType]}${
+      session?.session_uuid ? '_sessions' : ''
+    }/${bucket.id}${session?.session_uuid ? '/' + session.session_uuid : ''}/${
+      (event.body.path ? event.body.path : '') + event.body.fileName
+    }`;
 
     //check if fileUploadRequest with that key already exists
     let fur: FileUploadRequest = await new FileUploadRequest(
@@ -178,7 +186,7 @@ export class StorageService {
     });
 
     return {
-      signedUrlForUpload: signedURLForUpload,
+      url: signedURLForUpload,
       file_uuid: fur.file_uuid,
       fileUploadRequestId: fur.id,
     };
@@ -215,45 +223,59 @@ export class StorageService {
       });
     }
 
-    if (
-      event.body.directSync &&
-      (env.APP_ENV == AppEnvironment.LOCAL_DEV ||
-        env.APP_ENV == AppEnvironment.TEST)
-    ) {
-      //Directly calls worker, to sync files to IPFS & CRUST - USED ONLY FOR DEVELOPMENT!!
-      const serviceDef: ServiceDefinition = {
-        type: ServiceDefinitionType.SQS,
-        config: { region: 'test' },
-        params: { FunctionName: 'test' },
-      };
-      const parameters = {
-        session_uuid: session.session_uuid,
-      };
-      const wd = new WorkerDefinition(
-        serviceDef,
-        WorkerName.SYNC_TO_IPFS_WORKER,
-        { parameters },
-      );
-
-      const worker = new SyncToIPFSWorker(
-        wd,
-        context,
-        QueueWorkerType.EXECUTOR,
-      );
-      await worker.runExecutor({ session_uuid: session.session_uuid });
-    } else {
-      //send message to SQS
-      await sendToWorkerQueue(
-        env.STORAGE_AWS_WORKER_SQS_URL,
-        WorkerName.SYNC_TO_IPFS_WORKER,
-        [
+    if (bucket.bucketType == BucketType.STORAGE) {
+      if (
+        event.body.directSync &&
+        (env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+          env.APP_ENV == AppEnvironment.TEST)
+      ) {
+        //Directly calls worker, to sync files to IPFS & CRUST - USED ONLY FOR DEVELOPMENT!!
+        const serviceDef: ServiceDefinition = {
+          type: ServiceDefinitionType.SQS,
+          config: { region: 'test' },
+          params: { FunctionName: 'test' },
+        };
+        const parameters = {
+          session_uuid: session.session_uuid,
+          wrapWithDirectory: event.body.wrapWithDirectory,
+          wrappingDirectoryPath: event.body.directoryPath,
+        };
+        const wd = new WorkerDefinition(
+          serviceDef,
+          WorkerName.SYNC_TO_IPFS_WORKER,
           {
-            session_uuid: session.session_uuid,
+            parameters,
           },
-        ],
-        null,
-        null,
-      );
+        );
+
+        const worker = new SyncToIPFSWorker(
+          wd,
+          context,
+          QueueWorkerType.EXECUTOR,
+        );
+        await worker.runExecutor({
+          session_uuid: session.session_uuid,
+          wrapWithDirectory: event.body.wrapWithDirectory,
+          wrappingDirectoryName: event.body.directoryPath,
+        });
+      } else {
+        //send message to SQS
+        await sendToWorkerQueue(
+          env.STORAGE_AWS_WORKER_SQS_URL,
+          WorkerName.SYNC_TO_IPFS_WORKER,
+          [
+            {
+              session_uuid: session.session_uuid,
+              wrapWithDirectory: event.body.wrapWithDirectory,
+              wrappingDirectoryName: event.body.directoryPath,
+            },
+          ],
+          null,
+          null,
+        );
+      }
+    } else if (bucket.bucketType == BucketType.HOSTING) {
+      await hostingBucketProcessSessionFiles(context, bucket, session);
     }
 
     return true;
@@ -409,7 +431,7 @@ export class StorageService {
     //File exists on IPFS and probably on CRUST- get status from CRUST
     if (file.CID) {
       fileStatus = FileStatus.PINNED_TO_CRUST;
-      file.downloadLink = env.STORAGE_IPFS_PROVIDER + file.CID;
+      file.downloadLink = env.STORAGE_IPFS_GATEWAY + file.CID;
     }
 
     return {
@@ -418,7 +440,7 @@ export class StorageService {
     };
   }
 
-  static async markFileForDeletion(
+  static async deleteFile(
     event: { id: string },
     context: ServiceContext,
   ): Promise<any> {
@@ -436,9 +458,16 @@ export class StorageService {
     }
     f.canModify(context);
 
-    await f.markForDeletion();
-
-    return f.serialize(SerializeFor.PROFILE);
+    //check bucket
+    const b: Bucket = await new Bucket({}, context).populateById(f.bucket_id);
+    if (b.bucketType == BucketType.STORAGE) {
+      await f.markForDeletion();
+      return f.serialize(SerializeFor.PROFILE);
+    } else if (b.bucketType == BucketType.HOSTING) {
+      return await HostingService.deleteFile({ file: f }, context);
+    } else {
+      return false;
+    }
   }
 
   static async unmarkFileForDeletion(
@@ -464,6 +493,16 @@ export class StorageService {
     await f.update();
 
     return f.serialize(SerializeFor.PROFILE);
+  }
+
+  static async listFilesMarkedForDeletion(
+    event: { query: TrashedFilesQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new File({}, context).getMarkedForDeletionList(
+      context,
+      new TrashedFilesQueryFilter(event.query, context),
+    );
   }
 
   //#endregion

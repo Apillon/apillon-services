@@ -30,7 +30,7 @@ export class ApiKeyService {
       throw await new AmsCodeException({
         status: 401,
         code: AmsErrorCode.INVALID_API_KEY,
-        errorMessage: 'Invalid API key',
+        errorMessage: 'Invalid API key or API key secret',
       }).writeToMonitor({
         user_uuid: context?.user?.user_uuid,
       });
