@@ -4,43 +4,45 @@ import {
   CodeException,
   SerializeFor,
   LogType,
-  parseJwtToken,
   env,
   AppEnvironment,
   Lmas,
   ServiceName,
+  ValidationException,
 } from '@apillon/lib';
 import axios from 'axios';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthenticationApiContext } from '../../context';
-import { AttestationEmailDto } from './dtos/attestation-email.dto';
 import { Identity } from './models/identity.model';
 import {
   IdentityState,
   JwtTokenType,
   AuthenticationErrorCode,
+  AuthApiEmailType,
   ApillonSupportedCTypes,
 } from '../../config/types';
 import {
+  generateMnemonic,
   generateKeypairs,
   generateAccount,
-  generateMnemonic,
   getCtypeSchema,
 } from '../../lib/kilt';
-import { ICredential, KiltKeyringPair } from '@kiltprotocol/types';
 import {
+  IClaimContents,
+  ICredential,
+  KiltKeyringPair,
+  SignResponseData,
+} from '@kiltprotocol/types';
+import {
+  Attestation,
   Blockchain,
   Claim,
   ConfigService,
   connect,
   Did,
   DidUri,
-  IClaimContents,
   Credential,
-  Attestation,
-  SignResponseData,
 } from '@kiltprotocol/sdk-js';
-
 import {
   QueueWorkerType,
   sendToWorkerQueue,
@@ -48,108 +50,105 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { WorkerName } from '../../workers/worker-executor';
-import { AuthenticationWorker } from '../../workers/authentication.worker';
 import { u8aToHex } from '@polkadot/util';
+import { WorkerName } from '../../workers/worker-executor';
+import { IdentityGenerateWorker } from '../../workers/generate-identity.worker';
 import { IdentityCreateDto } from './dtos/identity-create.dto';
-import { verifyCaptcha } from '@apillon/modules-lib';
+import { IdentityDidRevokeDto } from './dtos/identity-did-revoke.dto';
+import { VerificationEmailDto } from './dtos/identity-verification-email.dto';
+import { IdentityRevokeWorker } from '../../workers/revoke-identity.worker';
 
 @Injectable()
 export class IdentityService {
-  async startUserIdentityGenProcess(
+  async sendVerificationEmail(
     context: AuthenticationApiContext,
-    body: AttestationEmailDto,
+    body: VerificationEmailDto,
   ): Promise<any> {
     const email = body.email;
-    const token = generateJwtToken(JwtTokenType.IDENTITY_EMAIL_VERIFICATION, {
+    const token = generateJwtToken(JwtTokenType.IDENTITY_VERIFICATION, {
       email,
     });
-    let captchaResult;
-
-    if (env.CAPTCHA_SECRET && env.APP_ENV !== AppEnvironment.TEST) {
-      await verifyCaptcha(body.captcha?.token, env.CAPTCHA_SECRET).then(
-        (response) => (captchaResult = response),
-      );
-    } else {
-      throw new CodeException({
-        status: HttpStatus.INTERNAL_SERVER_ERROR,
-        code: AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_PRESENT,
-        errorCodes: AuthenticationErrorCode,
-      });
-    }
-
-    if (
-      env.CAPTCHA_SECRET &&
-      env.APP_ENV !== AppEnvironment.TEST &&
-      !captchaResult
-    ) {
-      throw new CodeException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        code: AuthenticationErrorCode.IDENTITY_CAPTCHA_INVALID,
-        errorCodes: AuthenticationErrorCode,
-      });
-    }
 
     let identity = await new Identity({}, context).populateByUserEmail(
       context,
       email,
     );
 
-    if (identity.exists()) {
-      // If email was already attested -> deny process
-      if (identity.state == IdentityState.ATTESTED) {
-        throw new CodeException({
-          status: HttpStatus.BAD_REQUEST,
-          code: AuthenticationErrorCode.IDENTITY_EMAIL_IS_ALREADY_ATTESTED,
-          errorCodes: AuthenticationErrorCode,
-          errorMessage: 'Email is already attested',
-        });
-      }
-    } else {
-      // If identity does not exist, create a new entry
-      identity = new Identity({}, context);
-    }
-
-    // Lock email to identity object
-    identity.populate({
-      context: context,
-      email: email,
-      state: IdentityState.IN_PROGRESS,
-      token: token,
-    });
-
-    try {
-      if (!identity.exists()) {
-        // CREATE NEW
-        await identity.insert(SerializeFor.INSERT_DB);
+    const verificationEmailType = body.type;
+    if (verificationEmailType == AuthApiEmailType.GENERATE_IDENTITY) {
+      // This is the start process of the identity generation, so we need
+      // to do some extra stuff before we can start the process
+      if (identity.exists()) {
+        // If email was already attested -> deny process
+        if (identity.state == IdentityState.ATTESTED) {
+          throw new CodeException({
+            status: HttpStatus.BAD_REQUEST,
+            code: AuthenticationErrorCode.IDENTITY_EMAIL_IS_ALREADY_ATTESTED,
+            errorCodes: AuthenticationErrorCode,
+          });
+        }
       } else {
-        // UPDATE EXISTING
-        await identity.update(SerializeFor.INSERT_DB);
+        // If identity does not exist, create a new entry
+        identity = new Identity({}, context);
       }
-    } catch (err) {
-      await new Lmas().writeLog({
-        context: context,
-        logType: LogType.ERROR,
-        message: `Error creating identity state for user with email ${email}'`,
-        location: 'Authentication-API/identity/sendVerificationEmail',
-        service: ServiceName.AUTHENTICATION_API,
-        data: err,
+
+      // Lock email to identity object
+      identity.populate({
+        email: email,
+        state: IdentityState.IN_PROGRESS,
+        token: token,
       });
-      throw err;
+
+      try {
+        if (!identity.exists()) {
+          // CREATE NEW
+          await identity.insert(SerializeFor.INSERT_DB);
+        } else {
+          // UPDATE EXISTING
+          await identity.update(SerializeFor.INSERT_DB);
+        }
+      } catch (err) {
+        await new Lmas().writeLog({
+          context: context,
+          logType: LogType.ERROR,
+          message: `Error creating identity state for user with email ${email}'`,
+          location: 'Authentication-API/identity/sendVerificationEmail',
+          service: ServiceName.AUTHENTICATION_API,
+          data: err,
+        });
+        throw err;
+      }
+    } else if (
+      (verificationEmailType == AuthApiEmailType.RESTORE_CREDENTIAL ||
+        verificationEmailType == AuthApiEmailType.REVOKE_DID) &&
+      (!identity.exists() || identity.state != IdentityState.ATTESTED)
+    ) {
+      throw new CodeException({
+        status: HttpStatus.NOT_FOUND,
+        code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
+        errorCodes: AuthenticationErrorCode,
+      });
     }
+
+    await new Lmas().writeLog({
+      logType: LogType.INFO,
+      message: `Sending verification email to ${email}`,
+      location: 'AUTHENTICATION-API/identity/',
+      service: ServiceName.AUTHENTICATION_API,
+    });
 
     await new Mailing(context).sendMail({
       emails: [email],
-      template: 'verify-identity',
+      template: verificationEmailType,
       data: {
-        actionUrl: `${env.AUTH_APP_URL}/identity/?token=${token}&email=${email}`,
+        actionUrl: `${env.AUTH_APP_URL}/identity/?token=${token}&email=${email}&type=${verificationEmailType}`,
       },
     });
 
     return { success: true };
   }
 
-  async getUserIdentityGenState(
+  async getIdentityGenProcessState(
     context: AuthenticationApiContext,
     email: string,
   ): Promise<any> {
@@ -183,28 +182,6 @@ export class IdentityService {
       didUri: body.didUri,
     };
 
-    let tokenData: any;
-    try {
-      tokenData = parseJwtToken(
-        JwtTokenType.IDENTITY_EMAIL_VERIFICATION,
-        body.token,
-      );
-    } catch (error) {
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
-        code: AuthenticationErrorCode.IDENTITY_INVALID_VERIFICATION_TOKEN,
-        errorCodes: AuthenticationErrorCode,
-      });
-    }
-
-    if (tokenData.email != body.email) {
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
-        code: AuthenticationErrorCode.IDENTITY_VERIFICATION_FAILED,
-        errorCodes: AuthenticationErrorCode,
-      });
-    }
-
     // Check if correct identity + state exists -> IN_PROGRESS
     const identity = await new Identity({}, context).populateByUserEmail(
       context,
@@ -237,7 +214,7 @@ export class IdentityService {
       env.APP_ENV == AppEnvironment.LOCAL_DEV ||
       env.APP_ENV == AppEnvironment.TEST
     ) {
-      console.log('Starting DEV Authentication worker ...');
+      console.log('Starting DEV IdentityGenerateWorker worker ...');
 
       // Directly calls Kilt worker -> USED ONLY FOR DEVELOPMENT!!
       const serviceDef: ServiceDefinition = {
@@ -248,13 +225,13 @@ export class IdentityService {
 
       const wd = new WorkerDefinition(
         serviceDef,
-        WorkerName.AUTHENTICATION_WORKER,
+        WorkerName.IDENTITY_GENERATE_WORKER,
         {
           parameters,
         },
       );
 
-      const worker = new AuthenticationWorker(
+      const worker = new IdentityGenerateWorker(
         wd,
         context,
         QueueWorkerType.EXECUTOR,
@@ -263,8 +240,8 @@ export class IdentityService {
     } else {
       //send message to SQS
       await sendToWorkerQueue(
-        env.AUTHENTICATION_AWS_WORKER_SQS_URL,
-        WorkerName.AUTHENTICATION_WORKER,
+        env.AUTH_AWS_WORKER_SQS_URL,
+        WorkerName.IDENTITY_GENERATE_WORKER,
         [parameters],
         null,
         null,
@@ -274,7 +251,10 @@ export class IdentityService {
     return { success: true };
   }
 
-  async getUserCredential(context: AuthenticationApiContext, email: string) {
+  async getUserIdentityCredential(
+    context: AuthenticationApiContext,
+    email: string,
+  ) {
     const identity = await new Identity({}, context).populateByUserEmail(
       context,
       email,
@@ -289,6 +269,71 @@ export class IdentityService {
     }
 
     return { credential: identity.credential };
+  }
+
+  async revokeIdentity(
+    context: AuthenticationApiContext,
+    body: IdentityDidRevokeDto,
+  ) {
+    const parameters = {
+      email: body.email,
+    };
+
+    const identity = await new Identity({}, context).populateByUserEmail(
+      context,
+      body.email,
+    );
+
+    if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
+      throw new CodeException({
+        status: HttpStatus.NOT_FOUND,
+        code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
+        errorCodes: AuthenticationErrorCode,
+      });
+    }
+
+    if (
+      env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+      env.APP_ENV == AppEnvironment.TEST
+    ) {
+      console.log('Starting DEV IdentityRevokeWorker worker ...');
+
+      // Directly calls Kilt worker -> USED ONLY FOR DEVELOPMENT!!
+      const serviceDef: ServiceDefinition = {
+        type: ServiceDefinitionType.SQS,
+        config: { region: 'test' },
+        params: { FunctionName: 'test' },
+      };
+
+      const wd = new WorkerDefinition(
+        serviceDef,
+        WorkerName.IDENTITY_REVOKE_WORKER,
+        {
+          parameters,
+        },
+      );
+
+      const worker = new IdentityRevokeWorker(
+        wd,
+        context,
+        QueueWorkerType.EXECUTOR,
+      );
+      await worker.runExecutor(parameters);
+    } else {
+      //send message to SQS
+      await sendToWorkerQueue(
+        env.AUTH_AWS_WORKER_SQS_URL,
+        WorkerName.IDENTITY_REVOKE_WORKER,
+        [parameters],
+        null,
+        null,
+      );
+    }
+
+    identity.state = IdentityState.REVOKED;
+    await identity.update();
+
+    return { success: true };
   }
 
   async generateDevResources(context: AuthenticationApiContext, body: any) {
@@ -307,10 +352,17 @@ export class IdentityService {
     const api = ConfigService.get('api');
 
     // Generate mnemonic
-    const mnemonic = generateMnemonic();
+    let mnemonic;
+    if (body.mnemonic) {
+      mnemonic = body.mnemonic;
+    } else {
+      mnemonic = generateMnemonic();
+    }
+
     // generate keypairs
-    const { authentication, encryption, assertion, delegation } =
-      await generateKeypairs(mnemonic);
+    const { authentication, assertion, keyAgreement } = await generateKeypairs(
+      mnemonic,
+    );
     // generate account
     const account = (await generateAccount(mnemonic)) as KiltKeyringPair;
 
@@ -318,7 +370,8 @@ export class IdentityService {
     let balance = parseInt(
       (await api.query.system.account(account.address)).data.free.toString(),
     );
-    if (balance < 3) {
+
+    while (balance < 3) {
       const reqTestTokens = `https://faucet-backend.peregrine.kilt.io/faucet/drop`;
       await (async () => {
         axios
@@ -332,30 +385,24 @@ export class IdentityService {
             };
           });
       })();
+      balance = parseInt(
+        (await api.query.system.account(account.address)).data.free.toString(),
+      );
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      while (balance < 3) {
-        console.log(`Balance: ${balance}`);
-        balance = parseInt(
-          (
-            await api.query.system.account(account.address)
-          ).data.free.toString(),
-        );
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-      }
-
-      console.log(`New balance: ${balance}`);
+      console.log(`Balance: ${balance}`);
     }
 
-    let didUri: DidUri;
-    let wellKnownDidconfig;
+    const didUri: DidUri = Did.getFullDidUriFromKey(authentication);
+    let wellKnownDidconfig: any;
+
     let didDoc = await Did.resolve(Did.getFullDidUriFromKey(authentication));
     if (!didDoc || !didDoc.document) {
       const fullDidCreationTx = await Did.getStoreTx(
         {
           authentication: [authentication],
-          keyAgreement: [encryption],
+          keyAgreement: [keyAgreement],
           assertionMethod: [assertion],
-          capabilityDelegation: [delegation],
         },
         account.address,
         async ({ data }) => ({
@@ -364,10 +411,9 @@ export class IdentityService {
         }),
       );
 
-      console.log('Submitting document create TX to bc ...');
+      console.log('Submitting document create TX to BC ...');
       await Blockchain.signAndSubmitTx(fullDidCreationTx, account);
 
-      didUri = Did.getFullDidUriFromKey(authentication);
       const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
       const { document } = Did.linkedInfoFromChain(encodedFullDid);
 
@@ -375,17 +421,16 @@ export class IdentityService {
         // DEV - no trigger to LMAS
         throw 'Full DID was not successfully created.';
       }
-
-      didDoc = await Did.resolve(Did.getFullDidUriFromKey(authentication));
     }
+
+    didDoc = await Did.resolve(Did.getFullDidUriFromKey(authentication));
+    const didResolveResult = await Did.resolve(didUri);
 
     if (body.domain_linkage) {
       const domainLinkage = body.domain_linkage;
       if (!domainLinkage.origin) {
         return { error: 'domain_linkage: Origin must be provided!!' };
       }
-
-      console.log(`Creating domain linkage for ${domainLinkage.origin}`);
 
       const domainLinkageCType = getCtypeSchema(
         ApillonSupportedCTypes.DOMAIN_LINKAGE,
@@ -411,7 +456,7 @@ export class IdentityService {
       const dLAttestTx = api.tx.attestation.add(claimHash, cTypeHash, null);
 
       console.log('Submitting domain linkage attestation to BC ...');
-      // We authorize the call using the attestation key of the Dapps DID.
+      // We authorize the call using the attestation key of the Dapps DID
       const submitDLAttestTx = await Did.authorizeTx(
         didUri,
         dLAttestTx,
@@ -436,13 +481,15 @@ export class IdentityService {
 
       const challenge =
         '0x3ce56bb25ea3b603f968c302578e77e28d3d7ba3c7a8c45d6ebd3f410da766e1';
+      const assertionMethodKeyId =
+        didResolveResult.document.assertionMethod[0].id;
       const domainLinkagePresentation = await Credential.createPresentation({
         credential: domainLinkageCredential,
         signCallback: async ({ data }) =>
           ({
-            signature: authentication.sign(data),
-            keyType: authentication.type,
-            keyUri: `${didUri}${didDoc.document?.authentication[0].id}`,
+            signature: assertion.sign(data),
+            keyType: assertion.type,
+            keyUri: `${didUri}${assertionMethodKeyId}`,
           } as SignResponseData),
         challenge,
       });
@@ -477,6 +524,7 @@ export class IdentityService {
         challenge: signature.challenge,
       };
 
+      // TODO: Maybe move to config
       wellKnownDidconfig = {
         '@context':
           'https://identity.foundation/.well-known/did-configuration/v1',
@@ -499,14 +547,11 @@ export class IdentityService {
         ],
       };
     }
-    const attesterAccount = (await generateAccount(
-      env.KILT_ATTESTER_MNEMONIC,
-    )) as KiltKeyringPair;
 
     return {
       mnemonic: mnemonic,
       address: account.address,
-      pubkey: u8aToHex(encryption.publicKey),
+      pubkey: u8aToHex(keyAgreement.publicKey),
       wellKnownDidconfig: wellKnownDidconfig,
     };
   }

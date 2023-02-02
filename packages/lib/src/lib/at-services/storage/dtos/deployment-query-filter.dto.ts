@@ -29,7 +29,6 @@ export class DeploymentQueryFilter extends BaseQueryFilter {
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
-    defaultValue: 1,
   })
   public environment: number;
 }

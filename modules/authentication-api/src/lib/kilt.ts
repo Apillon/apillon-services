@@ -1,9 +1,16 @@
-import { mnemonicGenerate, mnemonicToMiniSecret } from '@polkadot/util-crypto';
+import {
+  blake2AsU8a,
+  keyExtractPath,
+  keyFromPath,
+  mnemonicGenerate,
+  mnemonicToMiniSecret,
+  naclBoxPairFromSecret,
+  sr25519PairFromSeed,
+} from '@polkadot/util-crypto';
 import { LogType, env, ServiceName, Lmas } from '@apillon/lib';
 import {
   ConfigService,
   Did,
-  KeyringPair,
   KiltKeyringPair,
   Utils,
   connect,
@@ -13,48 +20,58 @@ import {
   Attestation,
   Credential,
   DidUri,
+  NewDidEncryptionKey,
 } from '@kiltprotocol/sdk-js';
 import {
   Keypairs,
-  KILT_DERIVATION_SIGN_ALGORITHM,
-  EclipticDerivationPaths,
+  KiltSignAlgorithm,
+  KiltDerivationPaths,
   ApillonSupportedCTypes,
 } from '../config/types';
+import { Keypair } from '@polkadot/util-crypto/types';
 
 export function generateMnemonic() {
   return mnemonicGenerate();
 }
 
-export async function generateAccount(mnemonic: string): Promise<KeyringPair> {
-  return Utils.Crypto.makeKeypairFromSeed(
-    mnemonicToMiniSecret(mnemonic),
-    KILT_DERIVATION_SIGN_ALGORITHM,
-  );
+export async function generateAccount(mnemonic: string) {
+  const signingKeyPairType = KiltSignAlgorithm.SR25519;
+  const keyring = new Utils.Keyring({
+    ss58Format: 38,
+    type: signingKeyPairType,
+  });
+  return keyring.addFromMnemonic(mnemonic);
 }
 
-export async function generateKeypairs(mnemonic: string) {
-  // Derivations matter! Must use same algorithm as the one
-  // stored on the chain
-  const authentication = Utils.Crypto.makeKeypairFromSeed(
-    mnemonicToMiniSecret(mnemonic),
-    'sr25519',
-  );
-  const encryption = Utils.Crypto.makeEncryptionKeypairFromSeed(
-    mnemonicToMiniSecret(mnemonic),
-  );
+export async function generateKeypairs(mnemonic: string): Promise<Keypairs> {
+  const account = await generateAccount(mnemonic);
+  const authentication = {
+    ...account.derive(KiltDerivationPaths.AUTHENTICATION),
+    type: KiltSignAlgorithm.SR25519,
+  } as KiltKeyringPair;
 
-  const assertion = authentication.derive(EclipticDerivationPaths.ATTESTATION, {
-    type: 'sr25519',
-  }) as KiltKeyringPair;
-  const delegation = authentication.derive(
-    EclipticDerivationPaths.DELEGATION,
-  ) as KiltKeyringPair;
+  const assertion = {
+    ...account.derive(KiltDerivationPaths.ASSERTION),
+    type: KiltSignAlgorithm.SR25519,
+  } as KiltKeyringPair;
+  const keyAgreement: NewDidEncryptionKey & Keypair = (function () {
+    const secretKeyPair = sr25519PairFromSeed(mnemonicToMiniSecret(mnemonic));
+    const { path } = keyExtractPath(KiltDerivationPaths.KEY_AGREEMENT);
+    const { secretKey } = keyFromPath(
+      secretKeyPair,
+      path,
+      KiltSignAlgorithm.SR25519,
+    );
+    return {
+      ...naclBoxPairFromSecret(blake2AsU8a(secretKey)),
+      type: KiltSignAlgorithm.X25519,
+    };
+  })();
 
   return {
     authentication,
-    encryption,
     assertion,
-    delegation,
+    keyAgreement,
   };
 }
 

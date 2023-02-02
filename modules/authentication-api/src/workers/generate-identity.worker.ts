@@ -15,37 +15,30 @@ import {
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import {
-  generateAccount,
-  generateKeypairs,
   getFullDidDocument,
   getNextNonce,
   createAttestationRequest,
+  generateKeypairs,
+  generateAccount,
 } from '../lib/kilt';
 import { AuthenticationApiContext } from '../context';
 import { Identity } from '../modules/identity/models/identity.model';
 import {
   AuthenticationErrorCode,
   IdentityState,
-  KILT_DERIVATION_SIGN_ALGORITHM,
+  KiltSignAlgorithm,
 } from '../config/types';
 import { HttpStatus } from '@nestjs/common';
 
-export class AuthenticationWorker extends BaseQueueWorker {
+export class IdentityGenerateWorker extends BaseQueueWorker {
   context: AuthenticationApiContext;
 
-  // TODO: Handle errors and edge cases properly
   public constructor(
     workerDefinition: WorkerDefinition,
     context: AuthenticationApiContext,
     type: QueueWorkerType,
   ) {
-    super(
-      workerDefinition,
-      context,
-      type,
-      env.AUTHENTICATION_AWS_WORKER_SQS_URL,
-    );
-
+    super(workerDefinition, context, type, env.AUTH_AWS_WORKER_SQS_URL);
     this.context = context;
   }
 
@@ -82,7 +75,7 @@ export class AuthenticationWorker extends BaseQueueWorker {
           nonce: hexToU8a(did_create_op.payload.nonce),
         },
         did_create_op.senderPubKey,
-        u8aToHex(attesterKeypairs.encryption.secretKey),
+        u8aToHex(attesterKeypairs.keyAgreement.secretKey),
       );
     } catch (error) {
       await new Lmas().writeLog({
@@ -134,7 +127,6 @@ export class AuthenticationWorker extends BaseQueueWorker {
             service: ServiceName.AUTHENTICATION_API,
             data: error,
           });
-
           throw error;
         }
       }
@@ -195,7 +187,7 @@ export class AuthenticationWorker extends BaseQueueWorker {
       const claimerCredential = {
         ...credential,
         claimerSignature: {
-          keyType: KILT_DERIVATION_SIGN_ALGORITHM,
+          keyType: KiltSignAlgorithm.SR25519,
           keyUri: claimerDidUri,
         },
       };
@@ -209,6 +201,7 @@ export class AuthenticationWorker extends BaseQueueWorker {
       identity.populate({
         state: IdentityState.ATTESTED,
         credential: claimerCredential,
+        didUri: parameters.didUri,
       });
 
       await identity.update();
