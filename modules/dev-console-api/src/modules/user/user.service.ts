@@ -74,6 +74,11 @@ export class UserService {
         });
       }
 
+      user.userRoles =
+        resp.data.authUserRoles
+          ?.filter((x) => !x.project_uuid)
+          ?.map((x) => x.role_id) || [];
+
       return {
         ...user.serialize(SerializeFor.PROFILE),
         token: resp.data.token,
