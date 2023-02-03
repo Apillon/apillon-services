@@ -7,7 +7,7 @@ import {
 } from '../../../../config/types';
 import { ModelBase, prop } from '../../../base-models/base';
 
-export class CreateS3SignedUrlForUploadDto extends ModelBase {
+export class CreateS3UrlForUploadDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],

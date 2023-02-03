@@ -1,5 +1,6 @@
 import {
-  CreateS3SignedUrlForUploadDto,
+  CreateS3UrlForUploadDto,
+  CreateS3UrlsForUploadDto,
   EndFileUploadSessionDto,
   FileDetailsQueryFilter,
   FileUploadsQueryFilter,
@@ -33,11 +34,22 @@ export class StorageService {
   async createS3SignedUrlForUpload(
     context: DevConsoleApiContext,
     bucket_uuid: string,
-    body: CreateS3SignedUrlForUploadDto,
+    body: CreateS3UrlForUploadDto,
   ) {
     body.bucket_uuid = bucket_uuid;
     return (
       await new StorageMicroservice(context).requestS3SignedURLForUpload(body)
+    ).data;
+  }
+
+  async createS3SignedUrlsForUpload(
+    context: DevConsoleApiContext,
+    bucket_uuid: string,
+    body: CreateS3UrlsForUploadDto,
+  ) {
+    body.bucket_uuid = bucket_uuid;
+    return (
+      await new StorageMicroservice(context).requestS3SignedURLsForUpload(body)
     ).data;
   }
 

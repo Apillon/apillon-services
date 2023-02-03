@@ -1,7 +1,8 @@
 import {
   AppEnvironment,
   AWS_S3,
-  CreateS3SignedUrlForUploadDto,
+  CreateS3UrlForUploadDto,
+  CreateS3UrlsForUploadDto,
   EndFileUploadSessionDto,
   env,
   FileUploadsQueryFilter,
@@ -39,7 +40,7 @@ export class StorageService {
   //#region file-upload functions
 
   static async generateS3SignedUrlForUpload(
-    event: { body: CreateS3SignedUrlForUploadDto },
+    event: { body: CreateS3UrlForUploadDto },
     context: ServiceContext,
   ): Promise<any> {
     //First create fileUploadSession & fileUploadRequest records in DB, then generate S3 signed url for upload
@@ -190,6 +191,146 @@ export class StorageService {
       file_uuid: fur.file_uuid,
       fileUploadRequestId: fur.id,
     };
+  }
+
+  static async generateMultipleS3UrlsForUpload(
+    event: { body: CreateS3UrlsForUploadDto },
+    context: ServiceContext,
+  ): Promise<any> {
+    //First create fileUploadSession & fileUploadRequest records in DB, then generate S3 signed urls for upload
+
+    //get bucket
+    const bucket: Bucket = await new Bucket({}, context).populateByUUID(
+      event.body.bucket_uuid,
+    );
+
+    if (!bucket.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.BUCKET_NOT_FOUND,
+        status: 404,
+      });
+    } else if (bucket.status == SqlModelStatus.MARKED_FOR_DELETION) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.BUCKET_IS_MARKED_FOR_DELETION,
+        status: 404,
+      });
+    }
+    bucket.canAccess(context);
+
+    //get max size quota for Bucket and compare it with current bucket size
+    const maxBucketSizeQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_BUCKET_SIZE,
+      project_uuid: bucket.project_uuid,
+      object_uuid: bucket.bucket_uuid,
+    });
+    if (
+      maxBucketSizeQuota?.value &&
+      bucket.size > maxBucketSizeQuota?.value * 1073741824 //quota is in GB - size is in bytes
+    ) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.MAX_BUCKET_SIZE_REACHED,
+        status: 400,
+      });
+    }
+
+    //Get existing or create new fileUploadSession
+    let session: FileUploadSession;
+    if (event.body.session_uuid) {
+      session = undefined;
+      session = await new FileUploadSession({}, context).populateByUUID(
+        event.body.session_uuid,
+      );
+
+      if (!session.exists()) {
+        //create new session
+        session = new FileUploadSession(
+          {
+            session_uuid: event.body.session_uuid,
+            bucket_id: bucket.id,
+            project_uuid: bucket.project_uuid,
+          },
+          context,
+        );
+        await session.insert();
+      } else if (session.bucket_id != bucket.id) {
+        throw new StorageCodeException({
+          code: StorageErrorCode.SESSION_UUID_BELONGS_TO_OTHER_BUCKET,
+          status: 404,
+        });
+      } else if (session.sessionStatus == 2) {
+        throw new StorageCodeException({
+          code: StorageErrorCode.FILE_UPLOAD_SESSION_ALREADY_TRANSFERED,
+          status: 404,
+        });
+      }
+    }
+
+    const s3Client: AWS_S3 = new AWS_S3();
+
+    for (const fileMetadata of event.body.files) {
+      //NOTE - session uuid is added to s3File key.
+      /*File key structure:
+       * Bucket type(STORAGE, STORAGE_sessions, HOSTING)/bucket id/session uuid if present/path/filename
+       */
+      const s3FileKey = `${BucketType[bucket.bucketType]}${
+        session?.session_uuid ? '_sessions' : ''
+      }/${bucket.id}${
+        session?.session_uuid ? '/' + session.session_uuid : ''
+      }/${
+        (fileMetadata.path ? fileMetadata.path : '') + fileMetadata.fileName
+      }`;
+
+      //check if fileUploadRequest with that key already exists
+      let fur: FileUploadRequest = await new FileUploadRequest(
+        {},
+        context,
+      ).populateByS3FileKey(s3FileKey);
+
+      if (!fur.exists()) {
+        fur = new FileUploadRequest(fileMetadata, context).populate({
+          file_uuid: uuidV4(),
+          session_id: session?.id,
+          bucket_id: bucket.id,
+          s3FileKey: s3FileKey,
+        });
+
+        await fur.insert();
+      } else {
+        //Update existing File upload request
+        await fur.update();
+      }
+      fileMetadata.file_uuid = fur.file_uuid;
+
+      try {
+        fileMetadata.url = await s3Client.generateSignedUploadURL(
+          env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+          s3FileKey,
+        );
+      } catch (err) {
+        throw await new StorageCodeException({
+          code: StorageErrorCode.ERROR_AT_GENERATE_S3_SIGNED_URL,
+          status: 500,
+        }).writeToMonitor({
+          context,
+          project_uuid: bucket.project_uuid,
+          service: ServiceName.STORAGE,
+          data: {
+            fileUploadRequest: fur,
+          },
+        });
+      }
+    }
+
+    await new Lmas().writeLog({
+      context: context,
+      project_uuid: bucket.project_uuid,
+      logType: LogType.INFO,
+      message: 'Generate multiple file-request-log and S3 signed url - success',
+      location: `${this.constructor.name}/runExecutor`,
+      service: ServiceName.STORAGE,
+    });
+
+    return event.body.files;
   }
 
   static async endFileUploadSession(

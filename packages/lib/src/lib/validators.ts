@@ -1,5 +1,6 @@
 import { numberSizeValidator, presenceValidator } from '@rawmodel/validators';
 import { AdvancedSQLModel } from './base-models/advanced-sql.model';
+import { ModelBase } from './base-models/base';
 
 /**
  * Expose standard validators.
@@ -71,5 +72,11 @@ export function anyPresenceValidator(fields: string[]) {
     }
     return false;
     // return fields.some((val) => !!this[val]);
+  };
+}
+
+export function arrayLengthValidator() {
+  return async function (this: ModelBase, value: any): Promise<boolean> {
+    return value?.length > 0;
   };
 }

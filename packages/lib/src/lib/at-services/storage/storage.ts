@@ -8,7 +8,7 @@ import { CreateBucketWebhookDto } from './dtos/create-bucket-webhook.dto';
 import { CreateBucketDto } from './dtos/create-bucket.dto';
 import { CreateDirectoryDto } from './dtos/create-directory.dto';
 import { CreateIpnsDto } from './dtos/create-ipns.dto';
-import { CreateS3SignedUrlForUploadDto } from './dtos/create-s3-signed-url-for-upload.dto';
+import { CreateS3UrlForUploadDto } from './dtos/create-s3-url-for-upload.dto';
 import { DirectoryContentQueryFilter } from './dtos/directory-content-query-filter.dto';
 import { EndFileUploadSessionDto } from './dtos/end-file-upload-session.dto';
 import { FileDetailsQueryFilter } from './dtos/file-details-query-filter.dto';
@@ -21,6 +21,7 @@ import { CreateWebPageDto } from './dtos/create-web-page.dto';
 import { DeployWebPageDto } from './dtos/deploy-web-page.dto';
 import { DeploymentQueryFilter } from './dtos/deployment-query-filter.dto';
 import { WebPagesQuotaReachedQueryFilter } from './dtos/web-pages-quota-reached-query-filter.dto';
+import { CreateS3UrlsForUploadDto } from './dtos/create-s3-urls-for-upload.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -151,11 +152,17 @@ export class StorageMicroservice extends BaseService {
 
   //#region upload files to S3, IPFS & pin to crust
 
-  public async requestS3SignedURLForUpload(
-    params: CreateS3SignedUrlForUploadDto,
-  ) {
+  public async requestS3SignedURLForUpload(params: CreateS3UrlForUploadDto) {
     const data = {
       eventName: StorageEventType.REQUEST_S3_SIGNED_URL_FOR_UPLOAD,
+      body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async requestS3SignedURLsForUpload(params: CreateS3UrlsForUploadDto) {
+    const data = {
+      eventName: StorageEventType.REQUEST_S3_SIGNED_URLS_FOR_UPLOAD,
       body: params.serialize(),
     };
     return await this.callService(data);

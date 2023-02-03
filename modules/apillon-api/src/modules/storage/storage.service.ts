@@ -1,7 +1,7 @@
 import {
   ApillonApiCreateS3SignedUrlForUploadDto,
   ApillonApiDirectoryContentQueryFilter,
-  CreateS3SignedUrlForUploadDto,
+  CreateS3UrlForUploadDto,
   DirectoryContentQueryFilter,
   EndFileUploadSessionDto,
   FileDetailsQueryFilter,
@@ -20,7 +20,7 @@ export class StorageService {
   ) {
     return (
       await new StorageMicroservice(context).requestS3SignedURLForUpload(
-        new CreateS3SignedUrlForUploadDto().populate({
+        new CreateS3UrlForUploadDto().populate({
           ...body.serialize(),
           bucket_uuid: bucket_uuid,
           session_uuid: body.sessionUuid,
