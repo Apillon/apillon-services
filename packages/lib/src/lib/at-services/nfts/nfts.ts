@@ -44,4 +44,13 @@ export class NftsMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
+
+  public async setNftCollectionBaseUri(collection_uuid: string, uri: string) {
+    const data = {
+      eventName: NftsEventType.SET_BASE_URI,
+      collection_uuid: collection_uuid,
+      uri: uri,
+    };
+    return await this.callService(data);
+  }
 }

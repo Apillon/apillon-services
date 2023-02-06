@@ -102,6 +102,8 @@ export enum ReferralEventType {
 export enum NftsEventType {
   HELLO = 'hello',
   DEPLOY_NFT = 'deploy-nft',
+  TRANSFER_OWNERSHIP = 'transfer-ownership',
+  SET_BASE_URI = 'set-base-uri',
 }
 
 export enum ServiceName {
