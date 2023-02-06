@@ -25,6 +25,7 @@ import {
 import { v4 as uuidV4 } from 'uuid';
 import { BucketType, FileStatus, StorageErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
+import { createFURAndS3Url } from '../../lib/create-fur-and-s3-url';
 import { StorageCodeException } from '../../lib/exceptions';
 import { hostingBucketProcessSessionFiles } from '../../lib/hosting-bucket-process-session-files';
 import { SyncToIPFSWorker } from '../../workers/s3-to-ipfs-sync-worker';
@@ -267,6 +268,8 @@ export class StorageService {
 
     const s3Client: AWS_S3 = new AWS_S3();
 
+    const promises = [];
+
     for (const fileMetadata of event.body.files) {
       //NOTE - session uuid is added to s3File key.
       /*File key structure:
@@ -280,46 +283,19 @@ export class StorageService {
         (fileMetadata.path ? fileMetadata.path : '') + fileMetadata.fileName
       }`;
 
-      //check if fileUploadRequest with that key already exists
-      let fur: FileUploadRequest = await new FileUploadRequest(
-        {},
-        context,
-      ).populateByS3FileKey(s3FileKey);
-
-      if (!fur.exists()) {
-        fur = new FileUploadRequest(fileMetadata, context).populate({
-          file_uuid: uuidV4(),
-          session_id: session?.id,
-          bucket_id: bucket.id,
-          s3FileKey: s3FileKey,
-        });
-
-        await fur.insert();
-      } else {
-        //Update existing File upload request
-        await fur.update();
-      }
-      fileMetadata.file_uuid = fur.file_uuid;
-
-      try {
-        fileMetadata.url = await s3Client.generateSignedUploadURL(
-          env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-          s3FileKey,
-        );
-      } catch (err) {
-        throw await new StorageCodeException({
-          code: StorageErrorCode.ERROR_AT_GENERATE_S3_SIGNED_URL,
-          status: 500,
-        }).writeToMonitor({
+      promises.push(
+        createFURAndS3Url(
           context,
-          project_uuid: bucket.project_uuid,
-          service: ServiceName.STORAGE,
-          data: {
-            fileUploadRequest: fur,
-          },
-        });
-      }
+          s3FileKey,
+          fileMetadata,
+          session,
+          bucket,
+          s3Client,
+        ),
+      );
     }
+
+    await Promise.all(promises);
 
     await new Lmas().writeLog({
       context: context,
