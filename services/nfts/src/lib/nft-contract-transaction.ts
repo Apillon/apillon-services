@@ -1,58 +1,157 @@
 import { DeployNftContractDto } from '@apillon/lib/dist/lib/at-services/nfts/dtos/deploy-nft-contract.dto';
-import { ContractFactory, ethers } from 'ethers';
+import { Contract, ContractFactory, ethers, UnsignedTransaction } from 'ethers';
 import { PayableNft } from './contracts/payable-mint-nft';
+import { Injectable, Scope } from '@nestjs/common';
 import { TransactionRequest, BaseProvider } from '@ethersproject/providers';
+import { TransactionUtils } from './utils/transaction-utils';
 
-export async function createDeployContractTransaction(
-  params: DeployNftContractDto,
-  provider: BaseProvider,
-): Promise<TransactionRequest> {
-  const walletAddress = '0xBa01526C6D80378A9a95f1687e9960857593983B';
-  console.log(
-    `Creating NFT deploy contract transaction from wallet address: ${walletAddress}`,
-  );
-
-  const nftContract: ContractFactory = new ContractFactory(
-    PayableNft.abi,
-    PayableNft.bytecode,
-  );
-
-  const contractData: TransactionRequest =
-    await nftContract.getDeployTransaction(
-      params.symbol,
-      params.name,
-      params.maxSupply,
-      // params.body.mintPrice -> convert to wei
-      10000000000000,
+@Injectable({ scope: Scope.REQUEST })
+export class NftTransaction {
+  /**
+   * @param params DeployNftContractDto parameters
+   * @param provider RPC provider
+   * @returns TransactionRequest
+   */
+  static async createDeployContractTransaction(
+    params: DeployNftContractDto,
+    provider: BaseProvider,
+  ): Promise<TransactionRequest> {
+    const walletAddress = '0xBa01526C6D80378A9a95f1687e9960857593983B';
+    console.log(
+      `Creating NFT deploy contract transaction from wallet address: ${walletAddress}, parameters=${JSON.stringify(
+        params,
+      )}`,
     );
 
-  const maxPriorityFeePerGas = ethers.utils.parseUnits('30', 'gwei').toNumber();
-  const estimatedBaseFee = (await provider.getGasPrice()).toNumber();
+    const nftContract: ContractFactory = new ContractFactory(
+      PayableNft.abi,
+      PayableNft.bytecode,
+    );
 
-  // Ensuring that transaction is desirable for at least 6 blocks.
-  const maxFeePerGas = estimatedBaseFee * 2 + maxPriorityFeePerGas;
-  const chainId = (await provider.getNetwork()).chainId;
+    const contractData: TransactionRequest =
+      await nftContract.getDeployTransaction(
+        params.symbol,
+        params.name,
+        params.maxSupply,
+        TransactionUtils.convertBaseToGwei(params.mintPrice),
+      );
 
-  const txCount = await provider.getTransactionCount(walletAddress);
+    const chainId = (await provider.getNetwork()).chainId;
+    const txCount = await provider.getTransactionCount(walletAddress);
 
-  const transaction: TransactionRequest = {
-    from: walletAddress,
-    to: null,
-    value: 0,
-    gasLimit: '8000000',
-    maxPriorityFeePerGas,
-    maxFeePerGas,
-    nonce: ethers.utils.hexlify(txCount),
-    type: 2,
-    chainId,
-    data: contractData.data,
-  };
+    const transaction: TransactionRequest = {
+      from: walletAddress,
+      to: null,
+      value: 0,
+      gasLimit: '8000000',
+      nonce: ethers.utils.hexlify(txCount),
+      type: 2,
+      chainId,
+      data: contractData.data,
+    };
 
-  const gas = await provider.estimateGas(transaction);
-  console.log(`Estimated gas=${gas}`);
-  // Increasing gas limit by 10% of current gas price to be on the safe side
-  const gasLimit = Math.floor(gas.toNumber() * 1.1);
-  transaction.gasLimit = gasLimit.toString();
+    await this.populateGas(transaction, provider);
+    return transaction;
+  }
 
-  return transaction;
+  /**
+   * @param contract contract address to transfer
+   * @param newOwner new owner of contract
+   * @param provider RPC provider
+   * @returns TransactionRequest
+   */
+  static async createTransferOwnershipTransaction(
+    contract: string,
+    newOwner: string,
+    provider: BaseProvider,
+  ): Promise<TransactionRequest> {
+    console.log(
+      `Creating NFT transfer ownership transaction to wallet address: ${newOwner}`,
+    );
+    const walletAddress = '0xBa01526C6D80378A9a95f1687e9960857593983B';
+    const nftContract: Contract = new Contract(contract, PayableNft.abi);
+
+    const contractData: UnsignedTransaction =
+      await nftContract.populateTransaction.transferOwnerShip(newOwner);
+
+    const chainId = (await provider.getNetwork()).chainId;
+    const txCount = await provider.getTransactionCount(walletAddress);
+
+    const transaction: TransactionRequest = {
+      from: walletAddress,
+      to: null,
+      value: 0,
+      gasLimit: '8000000',
+      nonce: ethers.utils.hexlify(txCount),
+      type: 2,
+      chainId,
+      data: contractData.data,
+    };
+
+    await this.populateGas(transaction, provider);
+    return transaction;
+  }
+
+  /**
+   *
+   * @param contract contract to set baseUri
+   * @param uri URI (ipfs base uri) to set
+   * @param provider RPC provider
+   * @returns TransactionRequest
+   */
+  static async createSetNftBaseUriTransaction(
+    contract: string,
+    uri: string,
+    provider: BaseProvider,
+  ): Promise<TransactionRequest> {
+    console.log('Creating NFT set base token URI transaction.');
+    const walletAddress = '0xBa01526C6D80378A9a95f1687e9960857593983B';
+    const nftContract: Contract = new Contract(contract, PayableNft.abi);
+
+    const contractData: UnsignedTransaction =
+      await nftContract.populateTransaction.setBaseTokenURI(uri);
+
+    const chainId = (await provider.getNetwork()).chainId;
+    const txCount = await provider.getTransactionCount(walletAddress);
+
+    const transaction: TransactionRequest = {
+      from: walletAddress,
+      to: null,
+      value: 0,
+      gasLimit: '8000000',
+      nonce: ethers.utils.hexlify(txCount),
+      type: 2,
+      chainId,
+      data: contractData.data,
+    };
+
+    await this.populateGas(transaction, provider);
+    return transaction;
+  }
+
+  /**
+   *
+   * @param transaction raw (unsigned) TransactionRequest
+   * @param provider RPC provider
+   */
+  private static async populateGas(
+    transaction: TransactionRequest,
+    provider: BaseProvider,
+  ) {
+    const maxPriorityFeePerGas = ethers.utils
+      .parseUnits('30', 'gwei')
+      .toNumber();
+    const estimatedBaseFee = (await provider.getGasPrice()).toNumber();
+
+    // Ensuring that transaction is desirable for at least 6 blocks.
+    const maxFeePerGas = estimatedBaseFee * 2 + maxPriorityFeePerGas;
+    transaction.maxPriorityFeePerGas = maxPriorityFeePerGas;
+    transaction.maxFeePerGas = maxFeePerGas;
+
+    const gas = await provider.estimateGas(transaction);
+    console.log(`Estimated gas=${gas}`);
+    // Increasing gas limit by 10% of current gas price to be on the safe side
+    const gasLimit = Math.floor(gas.toNumber() * 1.1);
+    transaction.gasLimit = gasLimit.toString();
+  }
 }
