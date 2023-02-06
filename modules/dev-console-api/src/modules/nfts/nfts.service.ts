@@ -1,7 +1,6 @@
 import { NftsMicroservice } from '@apillon/lib';
 import { DeployNftContractDto } from '@apillon/lib/dist/lib/at-services/nfts/dtos/deploy-nft-contract.dto';
 import { Injectable } from '@nestjs/common';
-import { url } from 'inspector';
 import { DevConsoleApiContext } from '../../context';
 
 @Injectable()
