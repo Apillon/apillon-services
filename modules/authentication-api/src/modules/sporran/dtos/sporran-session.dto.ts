@@ -38,7 +38,7 @@ export class SporranSessionVerifyDto extends ModelBase {
       },
     ],
   })
-  public encryptionKeyId: string;
+  public encryptionKeyUri: string;
 
   @prop({
     parser: { resolver: stringParser() },

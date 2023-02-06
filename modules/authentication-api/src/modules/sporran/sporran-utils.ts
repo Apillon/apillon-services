@@ -33,7 +33,7 @@ export async function prepareSignResources(encryptionKeyUri: string) {
 
   return {
     verifierDidUri: verifierDidUri,
-    encryptKeyUri: encryptKeyUri,
+    encryptionKeyUri: encryptKeyUri,
     claimerSessionDidUri: claimerSessionDidUri,
     requestChallenge: requestChallenge,
   };

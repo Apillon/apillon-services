@@ -92,7 +92,7 @@ export class SporranService {
     }
 
     const encryptionKey = await Did.resolveKey(
-      body.encryptionKeyId as DidResourceUri,
+      body.encryptionKeyUri as DidResourceUri,
     );
     if (!encryptionKey) {
       await new Lmas().writeLog({
@@ -157,7 +157,7 @@ export class SporranService {
 
     const {
       verifierDidUri: verifierDidUri,
-      encryptKeyUri: encryptKeyUri,
+      encryptionKeyUri: encryptionKeyUri,
       claimerSessionDidUri: claimerSessionDidUri,
       requestChallenge: requestChallenge,
     } = await prepareSignResources(body.encryptionKeyUri);
@@ -189,7 +189,6 @@ export class SporranService {
             delegationId: credential.delegationId,
             revoked: false,
           },
-          challenge: requestChallenge,
         },
         type: SporranMessageType.SUBMIT_ATTESTATION,
       },
@@ -200,7 +199,7 @@ export class SporranService {
     const encryptedMessage = await Message.encrypt(
       message,
       encryptionSigner,
-      encryptKeyUri as DidResourceUri,
+      encryptionKeyUri as DidResourceUri,
     );
 
     return { message: encryptedMessage };
@@ -212,7 +211,7 @@ export class SporranService {
   ) {
     const {
       verifierDidUri: verifierDidUri,
-      encryptKeyUri: encryptKeyUri,
+      encryptionKeyUri: encryptionKeyUri,
       claimerSessionDidUri: claimerSessionDidUri,
       requestChallenge: requestChallenge,
     } = await prepareSignResources(body.encryptionKeyUri);
@@ -241,7 +240,7 @@ export class SporranService {
     const encryptedMessage = await Message.encrypt(
       message,
       encryptionSigner,
-      encryptKeyUri as DidResourceUri,
+      encryptionKeyUri as DidResourceUri,
     );
 
     return { message: encryptedMessage };

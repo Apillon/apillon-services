@@ -375,6 +375,8 @@ export class IdentityService {
     // generate account
     const account = generateAccount(mnemonic) as KiltKeyringPair;
 
+    return { account: account.address };
+
     // First check if we have the required balance
     let balance = parseInt(
       (await api.query.system.account(account.address)).data.free.toString(),
