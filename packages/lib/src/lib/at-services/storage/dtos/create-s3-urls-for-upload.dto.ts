@@ -1,5 +1,5 @@
 import { stringParser } from '@rawmodel/parsers';
-import { arrayLengthValidator, presenceValidator } from '@rawmodel/validators';
+import { presenceValidator } from '@rawmodel/validators';
 import {
   PopulateFrom,
   SerializeFor,
@@ -80,6 +80,37 @@ export class CreateS3UrlsForUploadDto extends ModelBase {
     validators: [],
   })
   public session_uuid: string;
+
+  @prop({
+    parser: { resolver: UploadFileMetadataDto, array: true },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.CREATE_S3_URLS_FILES_NOT_PRESENT,
+      },
+    ],
+  })
+  public files: UploadFileMetadataDto[];
+}
+
+export class ApillonApiCreateS3UrlsForUploadDto extends ModelBase {
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+  })
+  public bucket_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+  })
+  public sessionUuid: string;
 
   @prop({
     parser: { resolver: UploadFileMetadataDto, array: true },
