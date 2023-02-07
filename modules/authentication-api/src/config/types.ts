@@ -5,7 +5,6 @@ import {
   NewDidEncryptionKey,
 } from '@kiltprotocol/types';
 import { IPublicKeyRecord, Proof } from '@kiltprotocol/vc-export';
-import { Keypair } from '@polkadot/util-crypto/types';
 
 export enum DbTables {
   IDENTITY = 'identity',
@@ -65,6 +64,7 @@ export enum AuthenticationErrorCode {
   SPORRAN_VERIFIER_DID_DOES_NOT_EXIST = 422070406,
   // Sporran verifier key-agreement does not exit
   SPORRAN_VERIFIER_KA_DOES_NOT_EXIST = 422070407,
+  SPORRAN_REQUEST_MESSAGE_NOT_PRESENT = 422070407,
 }
 
 // Well known did domain linkage Ctype required props
@@ -163,7 +163,13 @@ export enum ApillonSupportedCTypes {
 }
 
 export enum SporranMessageType {
+  SUBMIT_TERMS = 'submit-terms',
   REQUEST_ATTESTATION = 'request-attestation',
   SUBMIT_ATTESTATION = 'submit-attestation',
   REQUEST_CREDENTIAL = 'request-credential',
+}
+
+export enum IdentityGenFlag {
+  FULL_IDENTITY = 'full-identity-flag',
+  ATTESTATION = 'attestation-flag',
 }

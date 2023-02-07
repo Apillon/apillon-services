@@ -1,22 +1,10 @@
-import { JSONParser, ModelBase, PopulateFrom } from '@apillon/lib';
+import { ModelBase, PopulateFrom } from '@apillon/lib';
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { AuthenticationErrorCode } from '../../../../config/types';
 
-export class SubmitAttestationDto extends ModelBase {
-  @prop({
-    parser: { resolver: JSONParser() },
-    populatable: [PopulateFrom.PROFILE],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: AuthenticationErrorCode.SPORRAN_REQUEST_MESSAGE_NOT_PRESENT,
-      },
-    ],
-  })
-  public message: any;
-
+export class SubmitTermsDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
@@ -40,4 +28,16 @@ export class SubmitAttestationDto extends ModelBase {
     ],
   })
   public sessionId: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: AuthenticationErrorCode.USER_EMAIL_NOT_PRESENT,
+      },
+    ],
+  })
+  public email: string;
 }

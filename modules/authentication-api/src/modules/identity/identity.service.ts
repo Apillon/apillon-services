@@ -8,7 +8,6 @@ import {
   AppEnvironment,
   Lmas,
   ServiceName,
-  ValidationException,
 } from '@apillon/lib';
 import axios from 'axios';
 import { HttpStatus, Injectable } from '@nestjs/common';
@@ -24,6 +23,7 @@ import {
   ApillonSelfSignedProof,
   DEFAULT_VERIFIABLECREDENTIAL_TYPE,
   APILLON_VERIFIABLECREDENTIAL_TYPE,
+  IdentityGenFlag,
 } from '../../config/types';
 import {
   generateMnemonic,
@@ -184,6 +184,7 @@ export class IdentityService {
       did_create_op: body.did_create_op,
       email: body.email,
       didUri: body.didUri,
+      args: [IdentityGenFlag.FULL_IDENTITY],
     };
 
     // Check if correct identity + state exists -> IN_PROGRESS
@@ -281,6 +282,7 @@ export class IdentityService {
   ) {
     const parameters = {
       email: body.email,
+      args: [],
     };
 
     const identity = await new Identity({}, context).populateByUserEmail(
@@ -374,8 +376,6 @@ export class IdentityService {
 
     // generate account
     const account = generateAccount(mnemonic) as KiltKeyringPair;
-
-    return { account: account.address };
 
     // First check if we have the required balance
     let balance = parseInt(

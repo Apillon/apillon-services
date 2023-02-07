@@ -25,6 +25,7 @@ import { AuthenticationApiContext } from '../context';
 import { Identity } from '../modules/identity/models/identity.model';
 import {
   AuthenticationErrorCode,
+  IdentityGenFlag,
   IdentityState,
   KiltSignAlgorithm,
 } from '../config/types';
@@ -46,11 +47,11 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
     return [];
   }
 
-  public async runExecutor(parameters: any): Promise<any> {
+  public async runExecutor(params: any): Promise<any> {
     // Input parameters
-    const did_create_op = parameters.did_create_op;
-    const claimerEmail = parameters.email;
-    const claimerDidUri = parameters.didUri;
+    const did_create_op = params.did_create_op;
+    const claimerEmail = params.email;
+    const claimerDidUri = params.didUri;
 
     // Generate (retrieve) attester did data
     const attesterKeypairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
@@ -66,76 +67,78 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
 
-    let decrypted: any;
-    try {
-      // Decrypt incoming payload -> DID creation TX generated on FE
-      decrypted = Utils.Crypto.decryptAsymmetricAsStr(
-        {
-          box: hexToU8a(did_create_op.payload.message),
-          nonce: hexToU8a(did_create_op.payload.nonce),
-        },
-        did_create_op.senderPubKey,
-        u8aToHex(attesterKeypairs.keyAgreement.secretKey),
-      );
-    } catch (error) {
-      await new Lmas().writeLog({
-        logType: LogType.ERROR,
-        location: 'Authentication-API/identity/authentication.worker',
-        service: ServiceName.AUTHENTICATION_API,
-        data: error,
-      });
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
-        code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
-        errorCodes: AuthenticationErrorCode,
-      });
-    }
-
-    if (decrypted) {
-      const payload = JSON.parse(decrypted);
-      const data = hexToU8a(payload.data);
-      const signature = hexToU8a(payload.signature);
-
-      // Create DID create type and submit tx to Kilt BC
+    if (params.args.includes(IdentityGenFlag.FULL_IDENTITY)) {
+      let decrypted: any;
       try {
-        const fullDidCreationTx = api.tx.did.create(data, {
-          sr25519: signature,
-        });
-
-        await new Lmas().writeLog({
-          logType: LogType.INFO,
-          message: `Propagating DID create TX to KILT BC ...`,
-          location: 'AUTHENTICATION-API/identity/authentication.worker',
-          service: ServiceName.AUTHENTICATION_API,
-        });
-
-        await Blockchain.signAndSubmitTx(fullDidCreationTx, attesterAccount);
+        // Decrypt incoming payload -> DID creation TX generated on FE
+        decrypted = Utils.Crypto.decryptAsymmetricAsStr(
+          {
+            box: hexToU8a(did_create_op.payload.message),
+            nonce: hexToU8a(did_create_op.payload.nonce),
+          },
+          did_create_op.senderPubKey,
+          u8aToHex(attesterKeypairs.keyAgreement.secretKey),
+        );
       } catch (error) {
-        if (error.method == 'DidAlreadyPresent') {
-          // If DID present on chain, signAndSubmitTx will throw an error
-          await new Lmas().writeLog({
-            logType: LogType.INFO, //!! This is not an error !!
-            message: `${error.method}: ${error.docs[0]}`,
-            location: 'Authentication-API/identity/authentication.worker',
-            service: ServiceName.AUTHENTICATION_API,
-            data: error,
-          });
-        } else {
-          await new Lmas().writeLog({
-            logType: LogType.ERROR,
-            location: 'Authentication-API/identity/authentication.worker',
-            service: ServiceName.AUTHENTICATION_API,
-            data: error,
-          });
-          throw error;
-        }
+        await new Lmas().writeLog({
+          logType: LogType.ERROR,
+          location: 'Authentication-API/identity/authentication.worker',
+          service: ServiceName.AUTHENTICATION_API,
+          data: error,
+        });
+        throw new CodeException({
+          status: HttpStatus.BAD_REQUEST,
+          code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
+          errorCodes: AuthenticationErrorCode,
+        });
       }
-    } else {
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
-        code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
-        errorCodes: AuthenticationErrorCode,
-      });
+
+      if (decrypted) {
+        const payload = JSON.parse(decrypted);
+        const data = hexToU8a(payload.data);
+        const signature = hexToU8a(payload.signature);
+
+        // Create DID create type and submit tx to Kilt BC
+        try {
+          const fullDidCreationTx = api.tx.did.create(data, {
+            sr25519: signature,
+          });
+
+          await new Lmas().writeLog({
+            logType: LogType.INFO,
+            message: `Propagating DID create TX to KILT BC ...`,
+            location: 'AUTHENTICATION-API/identity/authentication.worker',
+            service: ServiceName.AUTHENTICATION_API,
+          });
+
+          await Blockchain.signAndSubmitTx(fullDidCreationTx, attesterAccount);
+        } catch (error) {
+          if (error.method == 'DidAlreadyPresent') {
+            // If DID present on chain, signAndSubmitTx will throw an error
+            await new Lmas().writeLog({
+              logType: LogType.INFO, //!! This is not an error !!
+              message: `${error.method}: ${error.docs[0]}`,
+              location: 'Authentication-API/identity/authentication.worker',
+              service: ServiceName.AUTHENTICATION_API,
+              data: error,
+            });
+          } else {
+            await new Lmas().writeLog({
+              logType: LogType.ERROR,
+              location: 'Authentication-API/identity/authentication.worker',
+              service: ServiceName.AUTHENTICATION_API,
+              data: error,
+            });
+            throw error;
+          }
+        }
+      } else {
+        throw new CodeException({
+          status: HttpStatus.BAD_REQUEST,
+          code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
+          errorCodes: AuthenticationErrorCode,
+        });
+      }
     }
 
     // Prepare identity instance and credential structure
@@ -152,6 +155,7 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
     );
 
     const nextNonceBN = new BN(await getNextNonce(attesterDidUri));
+
     // Prepare claim TX
     const emailClaimTx = await Did.authorizeTx(
       attesterDidUri,
@@ -192,21 +196,38 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
         },
       };
 
-      // Check if correct identity + state exists -> IN_PROGRESS
-      const identity = await new Identity({}, this.context).populateByUserEmail(
-        this.context,
-        claimerEmail,
-      );
+      let identity: Identity;
+      if (params.args.includes(IdentityGenFlag.ATTESTATION)) {
+        // UPDATE DATABASE MODELS
+        // Check if correct identity + state exists -> IN_PROGRESS
+        identity = new Identity({}, this.context);
 
-      identity.populate({
-        state: IdentityState.ATTESTED,
-        credential: claimerCredential,
-        didUri: parameters.didUri,
-      });
+        identity.populate({
+          state: IdentityState.ATTESTED,
+          credential: claimerCredential,
+          didUri: params.didUri,
+        });
+        await identity.insert();
+      } else {
+        // UPDATE DATABASE MODELS
+        // Check if correct identity + state exists -> IN_PROGRESS
+        identity = await new Identity({}, this.context).populateByUserEmail(
+          this.context,
+          claimerEmail,
+        );
 
-      await identity.update();
+        identity.populate({
+          state: IdentityState.ATTESTED,
+          credential: claimerCredential,
+          didUri: params.didUri,
+        });
+
+        await identity.update();
+      }
+
       return true;
     } catch (error) {
+      console.error(error);
       await new Lmas().writeLog({
         logType: LogType.ERROR,
         message: `Email ${claimerEmail} identity => ERROR`,
@@ -215,5 +236,7 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
         data: error,
       });
     }
+
+    return false;
   }
 }

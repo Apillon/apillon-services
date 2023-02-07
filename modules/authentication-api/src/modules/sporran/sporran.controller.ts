@@ -5,6 +5,7 @@ import { AuthenticationApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { RequestCredentialDto } from './dtos/message/request-credential.dto';
 import { SubmitAttestationDto } from './dtos/message/submit-attestation.dto';
+import { SubmitTermsDto } from './dtos/message/submit-terms.dto';
 import { SporranSessionVerifyDto } from './dtos/sporran-session.dto';
 import { SporranService } from './sporran.service';
 
@@ -30,6 +31,20 @@ export class SporranController {
     @Body() body: any,
   ) {
     return await this.sporranService.verifySession(context, body);
+  }
+
+  @Post('message/submit-terms')
+  @Validation({
+    dto: SubmitTermsDto,
+  })
+  @UseGuards(ValidationGuard)
+  async sporranSubmitTerms(
+    @Ctx() context: AuthenticationApiContext,
+    @Body() body: SubmitTermsDto,
+  ) {
+    // Creates a request-credential message, which requests a credential presentation
+    // from sporran
+    return await this.sporranService.submitTerms(context, body);
   }
 
   @Post('message/request-credential')

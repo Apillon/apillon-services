@@ -1,4 +1,5 @@
 import {
+  AppEnvironment,
   CodeException,
   env,
   generateJwtToken,
@@ -10,9 +11,12 @@ import {
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { AuthenticationApiContext } from '../../context';
+import { HexString } from '@polkadot/util/types';
 import {
+  ApillonSupportedCTypes,
   APILLON_DAPP_NAME,
   AuthenticationErrorCode,
+  IdentityGenFlag,
   IdentityState,
   SporranMessageType,
 } from '../../config/types';
@@ -25,14 +29,32 @@ import {
   Message,
   ICredential,
 } from '@kiltprotocol/sdk-js';
-import { encryptionSigner, generateKeypairs } from '../../lib/kilt';
+import {
+  encryptionSigner,
+  generateKeypairs,
+  getCtypeSchema,
+} from '../../lib/kilt';
 import { JwtTokenType } from '../../config/types';
 import { SporranSessionVerifyDto } from './dtos/sporran-session.dto';
-import { DidUri } from '@kiltprotocol/types';
+import {
+  DidUri,
+  IEncryptedMessage,
+  ISubmitTerms,
+  PartialClaim,
+} from '@kiltprotocol/types';
 import { SubmitAttestationDto } from './dtos/message/submit-attestation.dto';
 import { RequestCredentialDto } from './dtos/message/request-credential.dto';
 import { prepareSignResources } from './sporran-utils';
-import { Identity } from '../identity/models/identity.model';
+import { SubmitTermsDto } from './dtos/message/submit-terms.dto';
+import {
+  ServiceDefinition,
+  ServiceDefinitionType,
+  WorkerDefinition,
+  QueueWorkerType,
+  sendToWorkerQueue,
+} from '@apillon/workers-lib';
+import { WorkerName } from '../../workers/worker-executor';
+import { IdentityGenerateWorker } from '../../workers/generate-identity.worker';
 
 @Injectable()
 export class SporranService {
@@ -149,6 +171,50 @@ export class SporranService {
     return { success: true };
   }
 
+  async submitTerms(context: AuthenticationApiContext, body: SubmitTermsDto) {
+    const {
+      verifierDidUri: verifierDidUri,
+      encryptionKeyUri: encryptionKeyUri,
+      claimerSessionDidUri: claimerSessionDidUri,
+      requestChallenge: requestChallenge,
+    } = await prepareSignResources(body.encryptionKeyUri);
+
+    const emailContents = {
+      Email: body.email,
+    };
+
+    const partialClaim: PartialClaim = {
+      // TODO: Move hash to types - constants
+      cTypeHash:
+        '0x3291bb126e33b4862d421bfaa1d2f272e6cdfc4f96658988fbcffea8914bd9ac' as HexString,
+      contents: emailContents,
+    };
+
+    // We need to construct a message request for the sporran extension
+    const messageBody: ISubmitTerms = {
+      content: {
+        claim: partialClaim,
+        legitimations: [],
+        cTypes: [getCtypeSchema(ApillonSupportedCTypes.EMAIL)],
+      },
+      type: SporranMessageType.SUBMIT_TERMS,
+    };
+
+    const message = Message.fromBody(
+      { ...messageBody },
+      verifierDidUri,
+      claimerSessionDidUri as DidUri,
+    );
+
+    const encryptedMessage = (await Message.encrypt(
+      message,
+      encryptionSigner,
+      encryptionKeyUri as DidResourceUri,
+    )) as IEncryptedMessage;
+
+    return { message: encryptedMessage };
+  }
+
   async submitAttestation(
     context: AuthenticationApiContext,
     body: SubmitAttestationDto,
@@ -162,47 +228,107 @@ export class SporranService {
       requestChallenge: requestChallenge,
     } = await prepareSignResources(body.encryptionKeyUri);
 
-    const identity = await new Identity({}, context).populateByUserEmail(
-      context,
-      body.email,
+    const decryptionSenderKey = await Did.resolveKey(
+      body.message.senderKeyUri as DidResourceUri,
     );
 
-    if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
+    if (!decryptionSenderKey) {
+      await new Lmas().writeLog({
+        logType: LogType.ERROR,
+        location: 'Authentication-API/sporran/verify-session',
+        service: ServiceName.AUTHENTICATION_API,
+        data: 'Encryption key is not valid',
+      });
       throw new CodeException({
         status: HttpStatus.BAD_REQUEST,
-        code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
+        code: AuthenticationErrorCode.SPORRAN_INVALID_REQUEST,
         errorCodes: AuthenticationErrorCode,
       });
     }
 
-    const credential: ICredential = {
-      ...JSON.parse(identity.credential),
+    const { keyAgreement } = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
+
+    let decryptedMessage: any;
+    try {
+      decryptedMessage = Utils.Crypto.decryptAsymmetricAsStr(
+        {
+          box: body.message.ciphertext,
+          nonce: body.message.nonce,
+        },
+        decryptionSenderKey.publicKey,
+        keyAgreement.secretKey,
+      );
+    } catch (error) {
+      await new Lmas().writeLog({
+        logType: LogType.ERROR,
+        location: 'Authentication-API/sporran/submit-attestation',
+        service: ServiceName.AUTHENTICATION_API,
+        data: error,
+      });
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: AuthenticationErrorCode.SPORRAN_INVALID_REQUEST,
+        errorCodes: AuthenticationErrorCode,
+      });
+    }
+
+    if (!decryptedMessage) {
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: AuthenticationErrorCode.SPORRAN_INVALID_REQUEST,
+        errorCodes: AuthenticationErrorCode,
+      });
+    }
+
+    const credential = JSON.parse(decryptedMessage).body.content.credential;
+    const parameters = {
+      credential: credential,
+      args: [IdentityGenFlag.ATTESTATION],
+      email: credential.claim.contents.Email,
+      didUri: credential.claim.owner,
     };
 
-    const message = Message.fromBody(
-      {
-        content: {
-          attestation: {
-            claimHash: credential.rootHash,
-            cTypeHash: credential.claim.cTypeHash,
-            owner: credential.claim.owner,
-            delegationId: credential.delegationId,
-            revoked: false,
-          },
+    if (
+      env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+      env.APP_ENV == AppEnvironment.TEST
+    ) {
+      console.log('Starting DEV IdentityRevokeWorker worker ...');
+
+      // Directly calls Kilt worker -> USED ONLY FOR DEVELOPMENT!!
+      const serviceDef: ServiceDefinition = {
+        type: ServiceDefinitionType.SQS,
+        config: { region: 'test' },
+        params: { FunctionName: 'test' },
+      };
+
+      const wd = new WorkerDefinition(
+        serviceDef,
+        WorkerName.IDENTITY_GENERATE_WORKER,
+        {
+          parameters,
         },
-        type: SporranMessageType.SUBMIT_ATTESTATION,
-      },
-      verifierDidUri,
-      claimerSessionDidUri as DidUri,
-    );
+      );
 
-    const encryptedMessage = await Message.encrypt(
-      message,
-      encryptionSigner,
-      encryptionKeyUri as DidResourceUri,
-    );
+      const worker = new IdentityGenerateWorker(
+        wd,
+        context,
+        QueueWorkerType.EXECUTOR,
+      );
+      await worker.runExecutor(parameters);
+    } else {
+      //send message to SQS
+      await sendToWorkerQueue(
+        env.AUTH_AWS_WORKER_SQS_URL,
+        WorkerName.IDENTITY_GENERATE_WORKER,
+        [parameters],
+        null,
+        null,
+      );
+    }
 
-    return { message: encryptedMessage };
+    console.log('HERE WE AREEEE');
+
+    return { success: true, attested: true };
   }
 
   async requestCredential(
