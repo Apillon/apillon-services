@@ -10,6 +10,8 @@ export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
     [StorageEventType.REQUEST_S3_SIGNED_URL_FOR_UPLOAD]:
       StorageService.generateS3SignedUrlForUpload,
+    [StorageEventType.REQUEST_S3_SIGNED_URLS_FOR_UPLOAD]:
+      StorageService.generateMultipleS3UrlsForUpload,
     [StorageEventType.END_FILE_UPLOAD_SESSION]:
       StorageService.endFileUploadSession,
     [StorageEventType.END_FILE_UPLOAD]: StorageService.endFileUpload,

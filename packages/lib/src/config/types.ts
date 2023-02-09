@@ -28,6 +28,7 @@ export enum LmasEventType {
 
 export enum StorageEventType {
   REQUEST_S3_SIGNED_URL_FOR_UPLOAD = 'request-s3-signed-url-for-upload',
+  REQUEST_S3_SIGNED_URLS_FOR_UPLOAD = 'request-s3-signed-urls-for-upload',
   END_FILE_UPLOAD_SESSION = 'end-file-upload-session',
   END_FILE_UPLOAD = 'end-file-upload',
   CREATE_BUCKET = 'create-bucket',
@@ -332,6 +333,8 @@ export enum ValidatorErrorCode {
   WEB_PAGE_NAME_NOT_PRESENT = 42200037,
   DEPLOY_WEB_PAGE_ID_NOT_PRESENT = 42200038,
   DEPLOY_ENVIRONMENT_NOT_PRESENT = 42200039,
+  CREATE_S3_URLS_FILES_NOT_PRESENT = 42200040,
+  CREATE_S3_URLS_FILES_EMPTY = 42200041,
 }
 
 /**
