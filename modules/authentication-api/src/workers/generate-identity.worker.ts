@@ -67,6 +67,21 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
 
+    // Check if correct identity + state exists -> IN_PROGRESS
+    const identity = await new Identity({}, this.context).populateByUserEmail(
+      this.context,
+      claimerEmail,
+    );
+
+    if (identity.exists() && identity.state == IdentityState.ATTESTED) {
+      // TODO: Should probably check before worker - pass as parameter new / existing
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: AuthenticationErrorCode.IDENTITY_INVALID_STATE,
+        errorCodes: AuthenticationErrorCode,
+      });
+    }
+
     if (params.args.includes(IdentityGenFlag.FULL_IDENTITY)) {
       let decrypted: any;
       try {
@@ -196,39 +211,18 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
         },
       };
 
-      let identity: Identity;
-      if (params.args.includes(IdentityGenFlag.ATTESTATION)) {
-        // UPDATE DATABASE MODELS
-        // Check if correct identity + state exists -> IN_PROGRESS
-        identity = new Identity({}, this.context);
+      identity.populate({
+        state: IdentityState.ATTESTED,
+        credential: claimerCredential,
+        didUri: params.didUri ? params.didUri : null,
+      });
 
-        identity.populate({
-          state: IdentityState.ATTESTED,
-          credential: claimerCredential,
-          didUri: params.didUri,
-          email: claimerEmail,
-        });
-        await identity.insert();
-      } else {
-        // UPDATE DATABASE MODELS
-        // Check if correct identity + state exists -> IN_PROGRESS
-        identity = await new Identity({}, this.context).populateByUserEmail(
-          this.context,
-          claimerEmail,
-        );
-
-        identity.populate({
-          state: IdentityState.ATTESTED,
-          credential: claimerCredential,
-          didUri: params.didUri,
-        });
-
+      if (identity.exists()) {
         await identity.update();
+      } else {
+        await identity.insert();
       }
-
-      return true;
     } catch (error) {
-      console.error(error);
       await new Lmas().writeLog({
         logType: LogType.ERROR,
         message: `Email ${claimerEmail} identity => ERROR`,

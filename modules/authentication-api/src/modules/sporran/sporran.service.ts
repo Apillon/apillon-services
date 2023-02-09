@@ -29,6 +29,7 @@ import {
   Message,
   ICredential,
   Attestation,
+  ISubmitAttestation,
 } from '@kiltprotocol/sdk-js';
 import {
   encryptionSigner,
@@ -56,6 +57,7 @@ import {
 } from '@apillon/workers-lib';
 import { WorkerName } from '../../workers/worker-executor';
 import { IdentityGenerateWorker } from '../../workers/generate-identity.worker';
+import { Identity } from '../identity/models/identity.model';
 
 @Injectable()
 export class SporranService {
@@ -326,22 +328,41 @@ export class SporranService {
         null,
       );
     }
-    const attestation = Attestation.fromCredentialAndDid(
-      credential,
+
+    const identity = await new Identity({}, context).populateByUserEmail(
+      context,
+      credential.claim.contents.Email,
+    );
+
+    const attestObj = Attestation.fromCredentialAndDid(
+      // TODO: Should be a json attribute
+      JSON.parse(identity.credential) as ICredential,
       verifierDidUri,
     );
-    // We need to construct a message request for the sporran extension
+
+    Attestation.verifyDataStructure(attestObj);
+
+    const attestation = {
+      delegationId: null,
+      claimHash: credential.claim.contents.rootHash,
+      cTypeHash:
+        '0x3291bb126e33b4862d421bfaa1d2f272e6cdfc4f96658988fbcffea8914bd9ac' as HexString,
+      owner: attestObj.owner,
+      revoked: false,
+    };
+
+    const submitAttestationBody: ISubmitAttestation = {
+      content: { attestation },
+      type: SporranMessageType.SUBMIT_ATTESTATION,
+    };
+
     const message = Message.fromBody(
-      {
-        content: {
-          attestation: attestation,
-          challenge: requestChallenge,
-        },
-        type: SporranMessageType.SUBMIT_ATTESTATION,
-      },
+      submitAttestationBody,
       verifierDidUri,
       claimerSessionDidUri as DidUri,
     );
+
+    Message.ensureOwnerIsSender(message);
 
     const encryptedMessage = await Message.encrypt(
       message,
