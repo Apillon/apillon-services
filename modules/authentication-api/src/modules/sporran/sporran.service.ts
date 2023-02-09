@@ -28,6 +28,7 @@ import {
   Utils,
   Message,
   ICredential,
+  Attestation,
 } from '@kiltprotocol/sdk-js';
 import {
   encryptionSigner,
@@ -325,10 +326,30 @@ export class SporranService {
         null,
       );
     }
+    const attestation = Attestation.fromCredentialAndDid(
+      credential,
+      verifierDidUri,
+    );
+    // We need to construct a message request for the sporran extension
+    const message = Message.fromBody(
+      {
+        content: {
+          attestation: attestation,
+          challenge: requestChallenge,
+        },
+        type: SporranMessageType.SUBMIT_ATTESTATION,
+      },
+      verifierDidUri,
+      claimerSessionDidUri as DidUri,
+    );
 
-    console.log('HERE WE AREEEE');
+    const encryptedMessage = await Message.encrypt(
+      message,
+      encryptionSigner,
+      encryptionKeyUri as DidResourceUri,
+    );
 
-    return { success: true, attested: true };
+    return { message: encryptedMessage };
   }
 
   async requestCredential(

@@ -206,6 +206,7 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
           state: IdentityState.ATTESTED,
           credential: claimerCredential,
           didUri: params.didUri,
+          email: claimerEmail,
         });
         await identity.insert();
       } else {
