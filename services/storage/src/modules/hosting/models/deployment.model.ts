@@ -43,7 +43,6 @@ export class Deployment extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
     validators: [

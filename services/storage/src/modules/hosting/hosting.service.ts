@@ -60,7 +60,7 @@ export class HostingService {
     return await new WebPage({}, context).listDomains(context);
   }
 
-  static async getWebPage(event: { id: number }, context: ServiceContext) {
+  static async getWebPage(event: { id: any }, context: ServiceContext) {
     const webPage: WebPage = await new WebPage({}, context).populateById(
       event.id,
     );

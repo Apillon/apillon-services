@@ -70,7 +70,7 @@ export class StorageController {
     );
   }
 
-  @Post(':bucketUuid/file-upload/:sessionUuid/end')
+  @Post(':bucketUuid/upload/:sessionUuid/end')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_EXECUTE,
     serviceType: AttachedServiceType.STORAGE,

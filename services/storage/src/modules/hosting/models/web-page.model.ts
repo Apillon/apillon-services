@@ -6,6 +6,7 @@ import {
   env,
   ForbiddenErrorCodes,
   getQueryParams,
+  PoolConnection,
   PopulateFrom,
   presenceValidator,
   prop,
@@ -38,7 +39,28 @@ export class WebPage extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: StorageErrorCode.WEB_PAGE_UUID_NOT_PRESENT,
+      },
+    ],
+  })
+  public webPage_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
     ],
     validators: [
       {
@@ -61,8 +83,6 @@ export class WebPage extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -85,8 +105,6 @@ export class WebPage extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -109,8 +127,6 @@ export class WebPage extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -189,6 +205,21 @@ export class WebPage extends AdvancedSQLModel {
   /***************************************************
    * Info properties
    *****************************************************/
+  @prop({
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public bucket_uuid: string;
+
   @prop({
     populatable: [
       PopulateFrom.SERVICE,
@@ -303,6 +334,38 @@ export class WebPage extends AdvancedSQLModel {
     }
   }
 
+  public async populateById(
+    id: number | string,
+    conn?: PoolConnection,
+  ): Promise<this> {
+    if (!id) {
+      throw new Error('ID should not be null');
+    }
+
+    if (!this.hasOwnProperty('id')) {
+      throw new Error('Object does not contain id property');
+    }
+
+    this.reset();
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE ( id = @id OR webPage_uuid = @id)
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { id },
+      conn,
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
+
   /**
    * Function to get count of active web pages inside project
    * @param project_uuid
@@ -360,6 +423,7 @@ export class WebPage extends AdvancedSQLModel {
       this.bucket = await new Bucket({}, this.getContext()).populateById(
         this.bucket_id,
       );
+      this.bucket_uuid = this.bucket.bucket_uuid;
     }
     if (this.stagingBucket_id) {
       this.stagingBucket = await new Bucket({}, this.getContext()).populateById(

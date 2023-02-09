@@ -108,7 +108,12 @@ export class ApillonApiCreateS3UrlsForUploadDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.CREATE_S3_URLS_SESSION_UUID_NOT_PRESENT,
+      },
+    ],
   })
   public sessionUuid: string;
 
