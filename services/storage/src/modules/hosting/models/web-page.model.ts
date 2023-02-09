@@ -6,19 +6,24 @@ import {
   env,
   ForbiddenErrorCodes,
   getQueryParams,
+  Lmas,
+  LogType,
   PoolConnection,
   PopulateFrom,
   presenceValidator,
   prop,
   selectAndCountQuery,
   SerializeFor,
+  ServiceName,
   SqlModelStatus,
   WebPageQueryFilter,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import { DbTables, StorageErrorCode } from '../../../config/types';
+import { BucketType, DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
 import { Bucket } from '../../bucket/models/bucket.model';
+import { v4 as uuidV4 } from 'uuid';
+import { StorageValidationException } from '../../../lib/exceptions';
 
 export class WebPage extends AdvancedSQLModel {
   public readonly tableName = DbTables.WEB_PAGE;
@@ -364,6 +369,105 @@ export class WebPage extends AdvancedSQLModel {
     } else {
       return this.reset();
     }
+  }
+
+  /**
+   * Generates buckets for hosting, executes validation and inserts new records
+   * @param context
+   * @returns created web site, populated with buckets
+   */
+  public async createNewWebPage(context: ServiceContext): Promise<this> {
+    //Initialize buckets
+    const bucket: Bucket = new Bucket(
+      {
+        bucket_uuid: uuidV4(),
+        project_uuid: this.project_uuid,
+        bucketType: BucketType.HOSTING,
+        name: this.name,
+      },
+      context,
+    );
+    try {
+      await bucket.validate();
+    } catch (err) {
+      await bucket.handle(err);
+      if (!bucket.isValid()) throw new StorageValidationException(bucket);
+    }
+    const stagingBucket: Bucket = new Bucket(
+      {
+        bucket_uuid: uuidV4(),
+        project_uuid: this.project_uuid,
+        bucketType: BucketType.HOSTING,
+        name: this.name + '_staging',
+      },
+      context,
+    );
+    try {
+      await stagingBucket.validate();
+    } catch (err) {
+      await stagingBucket.handle(err);
+      if (!stagingBucket.isValid())
+        throw new StorageValidationException(stagingBucket);
+    }
+    const productionBucket: Bucket = new Bucket(
+      {
+        bucket_uuid: uuidV4(),
+        project_uuid: this.project_uuid,
+        bucketType: BucketType.HOSTING,
+        name: this.name + '_production',
+      },
+      context,
+    );
+    try {
+      await productionBucket.validate();
+    } catch (err) {
+      await productionBucket.handle(err);
+      if (!productionBucket.isValid())
+        throw new StorageValidationException(productionBucket);
+    }
+
+    const conn = await context.mysql.start();
+
+    try {
+      //Insert buckets
+      await Promise.all([
+        bucket.insert(SerializeFor.INSERT_DB, conn),
+        stagingBucket.insert(SerializeFor.INSERT_DB, conn),
+        productionBucket.insert(SerializeFor.INSERT_DB, conn),
+      ]);
+      //Populate webPage
+      this.populate({
+        webPage_uuid: uuidV4(),
+        bucket_id: bucket.id,
+        stagingBucket_id: stagingBucket.id,
+        productionBucket_id: productionBucket.id,
+        bucket: bucket,
+        stagingBucket: stagingBucket,
+        productionBucket: productionBucket,
+      });
+      //Insert web page record
+      await this.insert(SerializeFor.INSERT_DB, conn);
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+
+      await new Lmas().writeLog({
+        context,
+        project_uuid: this.project_uuid,
+        logType: LogType.ERROR,
+        message: 'Error creating new web page',
+        location: 'HostingService/createWebPage',
+        service: ServiceName.STORAGE,
+        data: {
+          error: err,
+          webPage: this.serialize(),
+        },
+      });
+
+      throw err;
+    }
+
+    return this;
   }
 
   /**

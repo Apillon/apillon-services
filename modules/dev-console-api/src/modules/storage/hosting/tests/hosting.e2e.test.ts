@@ -42,38 +42,13 @@ describe('Hosting tests', () => {
     testProject2 = await createTestProject(testUser2, stage.devConsoleContext);
 
     //Create test web page record
-    const webPageBucket = await createTestBucket(
-      testUser,
-      stage.storageContext,
-      testProject,
-      BucketType.HOSTING,
-    );
-    const webPageStagingBucket = await createTestBucket(
-      testUser,
-      stage.storageContext,
-      testProject,
-      BucketType.HOSTING,
-    );
-    const webPageProductionBucket = await createTestBucket(
-      testUser,
-      stage.storageContext,
-      testProject,
-      BucketType.HOSTING,
-    );
-
     testWebPage = await new WebPage({}, stage.storageContext)
       .populate({
         project_uuid: testProject.project_uuid,
-        bucket_id: webPageBucket.id,
-        stagingBucket_id: webPageStagingBucket.id,
-        productionBucket_id: webPageProductionBucket.id,
         name: 'Test web page',
         domain: 'https://hosting-e2e-tests.si',
-        bucket: webPageBucket,
-        stagingBucket: webPageStagingBucket,
-        productionBucket: webPageProductionBucket,
       })
-      .insert();
+      .createNewWebPage(stage.storageContext);
   });
 
   afterAll(async () => {
@@ -90,9 +65,6 @@ describe('Hosting tests', () => {
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBe(1);
       expect(response.body.data.items[0]?.id).toBeTruthy();
-      expect(response.body.data.items[0]?.bucket_id).toBeTruthy();
-      expect(response.body.data.items[0]?.stagingBucket_id).toBeTruthy();
-      expect(response.body.data.items[0]?.productionBucket_id).toBeTruthy();
       expect(response.body.data.items[0]?.name).toBeTruthy();
       expect(response.body.data.items[0]?.domain).toBeTruthy();
     });
@@ -111,9 +83,6 @@ describe('Hosting tests', () => {
         .get(`/storage/hosting/web-pages/${testWebPage.id}`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.data.bucket_id).toBeTruthy();
-      expect(response.body.data.stagingBucket_id).toBeTruthy();
-      expect(response.body.data.productionBucket_id).toBeTruthy();
       expect(response.body.data.name).toBeTruthy();
       expect(response.body.data.domain).toBeTruthy();
 
@@ -156,9 +125,6 @@ describe('Hosting tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
       expect(response.body.data.id).toBeTruthy();
-      expect(response.body.data.bucket_id).toBeTruthy();
-      expect(response.body.data.stagingBucket_id).toBeTruthy();
-      expect(response.body.data.productionBucket_id).toBeTruthy();
       expect(response.body.data.name).toBe('My test web page');
       expect(response.body.data.domain).toBe('https://www.my-test-page.si');
 

@@ -28,8 +28,8 @@ import {
   TestUser,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
-import { setupTest } from '../../../../test/helpers/setup';
 import { v4 as uuidV4 } from 'uuid';
+import { setupTest } from '../../../../test/helpers/setup';
 
 describe('Apillon API storage tests', () => {
   let stage: Stage;
@@ -422,7 +422,7 @@ describe('Apillon API storage tests', () => {
         // trigger sync to IPFS
         response = await request(stage.http)
           .post(
-            `/storage/${testBucket.bucket_uuid}/file-upload/${testSession_uuid}/end`,
+            `/storage/${testBucket.bucket_uuid}/upload/${testSession_uuid}/end`,
           )
           .send({
             directSync: true,
