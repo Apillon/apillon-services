@@ -259,6 +259,7 @@ export class HostingService {
       };
       const parameters = {
         deployment_id: d.id,
+        clearBucketForUpload: event.body.clearBucketForUpload,
       };
       const wd = new WorkerDefinition(
         serviceDef,
@@ -275,6 +276,7 @@ export class HostingService {
       );
       await worker.runExecutor({
         deployment_id: d.id,
+        clearBucketForUpload: event.body.clearBucketForUpload,
       });
     } else {
       //send message to SQS
@@ -284,6 +286,7 @@ export class HostingService {
         [
           {
             deployment_id: d.id,
+            clearBucketForUpload: event.body.clearBucketForUpload,
           },
         ],
         null,

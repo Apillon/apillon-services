@@ -27,7 +27,7 @@ export class HostingService {
     id: any,
     body: DeployWebPageDto,
   ) {
-    body.populate({ webPage_id: id });
+    body.populate({ webPage_id: id, clearBucketForUpload: true });
     try {
       await body.validate();
     } catch (err) {

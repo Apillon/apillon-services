@@ -40,4 +40,12 @@ export class DeployWebPageDto extends ModelBase {
     validators: [],
   })
   public directDeploy: boolean;
+
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+  })
+  public clearBucketForUpload: boolean;
 }

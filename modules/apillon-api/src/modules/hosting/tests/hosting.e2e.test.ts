@@ -283,6 +283,13 @@ describe('Apillon API hosting tests', () => {
         stage.storageContext,
       );
       expect(dirsInBucket.length).toBe(1);
+
+      //Check if source bucket was cleared
+      const filesInBucketForUpload = await new File(
+        {},
+        stage.storageContext,
+      ).populateFilesInBucket(testWebPage.bucket_id, stage.storageContext);
+      expect(filesInBucketForUpload.length).toBe(0);
     });
 
     test('Application (through Apillon API) should be able to deploy web page to production', async () => {
