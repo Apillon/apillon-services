@@ -1,6 +1,9 @@
-import { AttachedServiceType, DefaultUserRole } from '@apillon/lib';
+import { ValidateFor } from '@apillon/lib';
 import { DeployNftContractDto } from '@apillon/lib/dist/lib/at-services/nfts/dtos/deploy-nft-contract.dto';
-import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
+import { MintNftQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/mint-nft-query-filter.dto';
+import { TransferNftQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/transfer-nft-query-filter.dto';
+import { SetNftBaseUriQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/set-nft-base-uri-query.dto';
+import { Ctx, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
@@ -12,7 +15,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
-import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { NftsService } from './nfts.service';
 
@@ -36,41 +38,43 @@ export class NftsController {
   }
 
   @Get(':collection_uuid/transferOwnership')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
-  @HttpCode(200)
-  @UseGuards(AuthGuard)
+  @Validation({ dto: TransferNftQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard)
   async transferOwnership(
     @Ctx() context: DevConsoleApiContext,
     @Param('collection_uuid') collection_uuid: string,
-    @Query('address') address: string,
+    @Query() query: TransferNftQueryFilter,
   ) {
     return await this.nftsService.transferNftOwnership(
       context,
       collection_uuid,
-      address,
+      query,
     );
   }
 
+  @Get(':collection_uuid/mint')
+  @Validation({ dto: MintNftQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard)
+  async mintNft(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('collection_uuid') collection_uuid: string,
+    @Query() query: MintNftQueryFilter,
+  ) {
+    return await this.nftsService.mintNftTo(context, collection_uuid, query);
+  }
+
   @Get(':collection_uuid/setBaseUri')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
-  @HttpCode(200)
+  @Validation({ dto: SetNftBaseUriQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard)
   async setNftCollectionBaseUri(
     @Ctx() context: DevConsoleApiContext,
     @Param('collection_uuid') collection_uuid: string,
-    @Query('uri') uri: string,
+    @Query() query: SetNftBaseUriQueryFilter,
   ) {
     return await this.nftsService.setNftCollectionBaseUri(
       context,
       collection_uuid,
-      uri,
+      query,
     );
   }
 }

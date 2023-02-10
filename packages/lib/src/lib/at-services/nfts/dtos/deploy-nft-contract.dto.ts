@@ -1,5 +1,5 @@
 import { ModelBase, prop } from '../../../base-models/base';
-import { floatParser, integerParser, stringParser } from '@rawmodel/parsers';
+import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   PopulateFrom,
