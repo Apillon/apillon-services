@@ -8,14 +8,14 @@ import { handler } from './handler';
 
 const port =
   env.APP_ENV === AppEnvironment.TEST
-    ? env.STORAGE_SOCKET_PORT_TEST
-    : env.STORAGE_SOCKET_PORT;
+    ? env.AUTH_API_PORT_TEST
+    : env.AUTH_API_PORT;
 
 export function startDevServer() {
   const server = Net.createServer((socket) => {
     socket.on('data', async (chunk) => {
       console.log(
-        `STORAGE Socket server request: ${JSON.stringify(
+        `AUTH API Socket server request: ${JSON.stringify(
           JSON.parse(chunk.toString()),
         )}`,
       );
@@ -23,12 +23,12 @@ export function startDevServer() {
         const result = await handler(JSON.parse(chunk.toString()), {} as any);
         if (result) {
           socket.write(JSON.stringify(result));
-          console.log(`STORAGE Socket server response: ${result.toString()}`);
+          console.log(`AUTH API Socket server response: ${result.toString()}`);
         }
         socket.end();
-        console.log(`STORAGE Socket server finished with no response.`);
+        console.log(`AUTH API Socket server finished with no response.`);
       } catch (err) {
-        console.error('STORAGE Socket server ERROR:');
+        console.error('AUTH API Socket server ERROR:');
         console.error(err);
         socket.end();
       }
@@ -36,18 +36,18 @@ export function startDevServer() {
     // When the client requests to end the TCP connection with the server, the server
     // ends the connection.
     socket.on('end', function () {
-      console.log('STORAGE: Closing connection with the client');
+      console.log('AUTH API: Closing connection with the client');
     });
 
     // ERROR
     socket.on('error', function (err) {
-      console.log(`STORAGE: Error: ${err}`);
+      console.log(`AUTH API: Error: ${err}`);
     });
   });
 
   server.listen(port, () => {
     console.log(
-      `STORAGE: Socket server listening for connection requests on socket localhost:${port}`,
+      `AUTH API: Socket server listening for connection requests on socket localhost:${port}`,
     );
   });
 }
