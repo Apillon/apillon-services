@@ -225,6 +225,7 @@ export class SporranService {
     body: SubmitAttestationDto,
   ) {
     await connect(env.KILT_NETWORK);
+    const api = ConfigService.get('api');
 
     const {
       verifierDidUri: verifierDidUri,
@@ -351,7 +352,6 @@ export class SporranService {
         '0x3291bb126e33b4862d421bfaa1d2f272e6cdfc4f96658988fbcffea8914bd9ac' as HexString,
       owner: attestObj.owner,
       revoked: false,
-      status: CredentialAttestStatus.ATTESTED,
     };
 
     const submitAttestationBody: ISubmitAttestation = {
@@ -377,8 +377,6 @@ export class SporranService {
       encryptionSigner,
       encryptionKeyUri as DidResourceUri,
     );
-
-    console.log('ENCRYPTED MESSAGE ', encryptedMessage);
 
     return { message: encryptedMessage };
   }

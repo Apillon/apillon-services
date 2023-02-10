@@ -193,21 +193,21 @@ export class IdentityService {
       body.email,
     );
 
-    if (
-      !identity.exists() ||
-      (identity.state != IdentityState.IN_PROGRESS &&
-        identity.state != IdentityState.IDENTITY_VERIFIED)
-    ) {
-      // IDENTITY_VERIFIED just means that the process was broken before
-      // the entity was successfully attested --> See a few lines below
-      // This is done so we have better control of the process and for
-      // analytical purposes
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
-        code: AuthenticationErrorCode.IDENTITY_INVALID_STATE,
-        errorCodes: AuthenticationErrorCode,
-      });
-    }
+    // if (
+    //   !identity.exists() ||
+    //   (identity.state != IdentityState.IN_PROGRESS &&
+    //     identity.state != IdentityState.IDENTITY_VERIFIED)
+    // ) {
+    //   // IDENTITY_VERIFIED just means that the process was broken before
+    //   // the entity was successfully attested --> See a few lines below
+    //   // This is done so we have better control of the process and for
+    //   // analytical purposes
+    //   throw new CodeException({
+    //     status: HttpStatus.BAD_REQUEST,
+    //     code: AuthenticationErrorCode.IDENTITY_INVALID_STATE,
+    //     errorCodes: AuthenticationErrorCode,
+    //   });
+    // }
 
     identity.populate({
       state: IdentityState.IDENTITY_VERIFIED,
