@@ -211,8 +211,8 @@ export interface IEnv {
    * Authentication config (Uses Kilt module)
    ************************************************************/
 
-  AUTHENTICATION_AWS_WORKER_SQS_URL: string;
-  AUTHENTICATION_AWS_WORKER_LAMBDA_NAME: string;
+  AUTH_AWS_WORKER_SQS_URL: string;
+  AUTH_AWS_WORKER_LAMBDA_NAME: string;
 
   /************************************************************
    * Apillon Serverless workers config - STORAGE MS
@@ -251,6 +251,34 @@ export interface IEnv {
   CONFIG_MYSQL_DATABASE_TEST: string;
   CONFIG_MYSQL_USER_TEST: string;
   CONFIG_MYSQL_PASSWORD_TEST: string;
+
+  /************************************************************
+   * REFERRAL config
+   ************************************************************/
+  REFERRAL_FUNCTION_NAME: string;
+  REFERRAL_FUNCTION_NAME_TEST: string;
+  REFERRAL_SOCKET_PORT: number;
+  REFERRAL_SOCKET_PORT_TEST: number;
+
+  GITHUB_CLIENT_ID: string;
+  GITHUB_CLIENT_SECRET: string;
+  TWITTER_CONSUMER_TOKEN: string;
+  TWITTER_CONSUMER_SECRET: string;
+  TWITTER_BEARER_TOKEN: string;
+  TWITTER_USER_ID: string;
+  OUATH_CALLBACK_URL: string;
+
+  REFERRAL_MYSQL_HOST: string;
+  REFERRAL_MYSQL_PORT: number;
+  REFERRAL_MYSQL_USER: string;
+  REFERRAL_MYSQL_PASSWORD: string;
+  REFERRAL_MYSQL_DATABASE: string;
+
+  REFERRAL_MYSQL_HOST_TEST: string;
+  REFERRAL_MYSQL_PORT_TEST: number;
+  REFERRAL_MYSQL_USER_TEST: string;
+  REFERRAL_MYSQL_PASSWORD_TEST: string;
+  REFERRAL_MYSQL_DATABASE_TEST: string;
 
   /**
    * hCAPTCHA
@@ -423,10 +451,8 @@ export let env: IEnv = {
   // because it depends where you use this mnemonic
   KILT_DERIVATION_ALGORITHM:
     process.env['KILT_DERIVATION_ALGORITHM'] || 'sr25519',
-  AUTHENTICATION_AWS_WORKER_SQS_URL:
-    process.env['AUTHENTICATION_AWS_WORKER_SQS_URL'] || '',
-  AUTHENTICATION_AWS_WORKER_LAMBDA_NAME:
-    process.env['AUTHENTICATION_AWS_WORKER_LAMBDA_NAME'] || '',
+  AUTH_AWS_WORKER_SQS_URL: process.env['AUTH_AWS_WORKER_SQS_URL'] || '',
+  AUTH_AWS_WORKER_LAMBDA_NAME: process.env['AUTH_AWS_WORKER_LAMBDA_NAME'] || '',
 
   /**Apillon Serverless workers config*/
   /**
@@ -454,6 +480,35 @@ export let env: IEnv = {
   CONFIG_MYSQL_DATABASE_TEST: process.env['CONFIG_MYSQL_DATABASE_TEST'],
   CONFIG_MYSQL_USER_TEST: process.env['CONFIG_MYSQL_USER_TEST'],
   CONFIG_MYSQL_PASSWORD_TEST: process.env['CONFIG_MYSQL_PASSWORD_TEST'],
+
+  /**REFERRAL microservice */
+  REFERRAL_FUNCTION_NAME: process.env['REFERRAL_FUNCTION_NAME'],
+  REFERRAL_FUNCTION_NAME_TEST: process.env['REFERRAL_FUNCTION_NAME_TEST'],
+  REFERRAL_SOCKET_PORT: parseInt(process.env['REFERRAL_SOCKET_PORT']) || 6601,
+  REFERRAL_SOCKET_PORT_TEST:
+    parseInt(process.env['REFERRAL_SOCKET_PORT_TEST']) || 7601,
+  GITHUB_CLIENT_ID: process.env['GITHUB_CLIENT_ID'],
+  GITHUB_CLIENT_SECRET: process.env['GITHUB_CLIENT_SECRET'],
+  TWITTER_CONSUMER_TOKEN: process.env['TWITTER_CONSUMER_TOKEN'],
+  TWITTER_CONSUMER_SECRET: process.env['TWITTER_CONSUMER_SECRET'],
+  TWITTER_BEARER_TOKEN: process.env['TWITTER_BEARER_TOKEN'],
+  TWITTER_USER_ID: process.env['TWITTER_USER_ID'],
+  OUATH_CALLBACK_URL: process.env['OUATH_CALLBACK_URL'],
+
+  /**REFERRAL microservice */
+  REFERRAL_MYSQL_HOST: process.env['REFERRAL_MYSQL_HOST'],
+  REFERRAL_MYSQL_PORT: parseInt(process.env['REFERRAL_MYSQL_PORT']) || 3306,
+  REFERRAL_MYSQL_USER: process.env['REFERRAL_MYSQL_USER'],
+  REFERRAL_MYSQL_PASSWORD: process.env['REFERRAL_MYSQL_PASSWORD'],
+  REFERRAL_MYSQL_DATABASE: process.env['REFERRAL_MYSQL_DATABASE'],
+
+  /**REFERRAL microservice - TEST DB */
+  REFERRAL_MYSQL_HOST_TEST: process.env['REFERRAL_MYSQL_HOST_TEST'],
+  REFERRAL_MYSQL_PORT_TEST:
+    parseInt(process.env['REFERRAL_MYSQL_PORT_TEST']) || 3306,
+  REFERRAL_MYSQL_USER_TEST: process.env['REFERRAL_MYSQL_USER_TEST'],
+  REFERRAL_MYSQL_PASSWORD_TEST: process.env['REFERRAL_MYSQL_PASSWORD_TEST'],
+  REFERRAL_MYSQL_DATABASE_TEST: process.env['REFERRAL_MYSQL_DATABASE_TEST'],
 
   /** CAPTCHA */
   CAPTCHA_SECRET: process.env['CAPTCHA_SECRET'] || '',

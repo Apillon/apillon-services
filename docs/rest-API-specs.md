@@ -5,7 +5,9 @@ See dev-console-api project on how to write controllers and service functions.
 
 ## Request
 
-Use POST method for inserts and method executions, PATCH method for updating existing db records
+The server speaks [JSON](https://en.wikipedia.org/wiki/JSON). It's recommended that every call to the server includes a `Content-Type` header set to `application/json;`.
+
+Use POST method for inserts and method executions, PATCH method for updating existing db records.
 
 ## Response
 
@@ -13,6 +15,7 @@ POST methods, which creates new db records, should responded with status and ins
 
 ```json
 {
+  "id": "request id",
   "status": 201,
   "data": {
     "id": 3,
@@ -24,11 +27,27 @@ POST methods, which creates new db records, should responded with status and ins
 }
 ```
 
-PATCH methods should return status 200 - OK.
+PATCH methods should return status 200 - OK and updated record in `data` property.
+
+```json
+{
+  "id": "request id",
+  "status": 200,
+  "data": {
+    "id": 3,
+    "status": 5,
+    "name": "Projekt 3",
+    "shortDescription": "MOj prvi projekt",
+    "description": "Tole je pa nek posodobljen opis"
+  }
+}
+```
+
+DELETE methods should also return serialized deleted record in `data` property and status 200.
 
 ## Error handling
 
-Errors should be caught and returned in standard way. If possible, use exception.filter.ts implemented in dev-console-api.
+Errors should be caught and returned in standard way. If possible, use exception.filter.ts implemented in `@packages/modules-lib`.
 Error response example:
 
 ```json
@@ -41,7 +60,7 @@ Error response example:
 }
 ```
 
-Exception classes are defined in at-lib/src/lib/exceptions.
+Exception classes are defined in `@packages/lib/src/lib/exceptions`.
 
 ### Validation errors
 

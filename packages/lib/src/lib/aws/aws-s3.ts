@@ -172,18 +172,21 @@ export class AWS_S3 {
   }
 
   /**
-   * Removes up to 1000 S3 files.
+   * Removes files from S3.
    * @param source File source path.
    * @param ctx Request context.
    */
-  async removeFiles(
-    bucket: string,
-    keys: { Key: string }[],
-  ): Promise<DeleteObjectsOutput> {
-    const command = new DeleteObjectsCommand({
-      Bucket: bucket,
-      Delete: { Objects: keys },
-    });
-    return await this.s3Client.send(command);
+  async removeFiles(bucket: string, keys: { Key: string }[]): Promise<boolean> {
+    let counter = 0;
+    do {
+      const command = new DeleteObjectsCommand({
+        Bucket: bucket,
+        Delete: { Objects: keys.slice(counter, counter + 1000) },
+      });
+      await this.s3Client.send(command);
+      counter += 1000;
+    } while (counter < keys.length);
+
+    return true;
   }
 }

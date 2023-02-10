@@ -23,9 +23,16 @@ export async function setupTest(): Promise<Stage> {
   env.ACCESS_MYSQL_HOST = null; // safety
   env.STORAGE_MYSQL_HOST = null; // safety
   env.CONFIG_MYSQL_HOST = null; // safety
+  env.REFERRAL_MYSQL_HOST = null; // safety
 
   try {
     await rebuildTestDatabases();
+  } catch (err) {
+    console.error(err);
+    throw new Error('rebuildTestDatabases failed');
+  }
+
+  try {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();

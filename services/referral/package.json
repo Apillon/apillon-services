@@ -1,0 +1,41 @@
+{
+  "name": "@apillon/referral",
+  "version": "1.0.0",
+  "author": "Kalmia d.o.o.",
+  "license": "UNLICENSED",
+  "description": "",
+  "private": true,
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "test-service": "cross-env APP_ENV=testing LOG_TARGET=none jest --detectOpenHandles --runInBand --forceExit",
+    "test-server": "cross-env APP_ENV=test nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60007",
+    "build": "tsc",
+    "dev": "nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60007",
+    "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "deploy:prod": "serverless deploy --stage production",
+    "deploy:staging": "serverless deploy --stage staging",
+    "deploy:dev": "serverless deploy --stage dev",
+    "db-upgrade": "node -r ts-node/register ./src/scripts/db/upgrade-db",
+    "db-downgrade": "node -r ts-node/register ./src/scripts/db/downgrade-db",
+    "db-seed": "node -r ts-node/register ./src/scripts/db/seed-db",
+    "db-unseed": "node -r ts-node/register ./src/scripts/db/unseed-db",
+    "db-rebuild": "node -r ts-node/register ./src/scripts/db/rebuild-db",
+    "db-rebuild-test": "node -r ts-node/register ./src/scripts/db/rebuild-test-db",
+    "db-upgrade:ci": "node -r ts-node/register ./src/scripts/db/upgrade-db --F && node -r ts-node/register ./src/scripts/db/seed-db --F "
+  },
+  "dependencies": {
+    "@apillon/lib": "*",
+    "@middy/core": "^2.5.7",
+    "aws-lambda": "^1.0.7",
+    "axios": "^1.2.0",
+    "@faker-js/faker": "^7.5.0",
+    "twitter-api-v2": "^1.12.10",
+    "@rawmodel/core": "^3.3.4",
+    "@rawmodel/parsers": "^3.3.4",
+    "@rawmodel/validators": "^3.3.4"
+  },
+  "devDependencies": {
+    "eslint-config-common": "*",
+    "tsconfig": "*"
+  }
+}

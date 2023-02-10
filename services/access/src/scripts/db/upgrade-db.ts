@@ -20,34 +20,51 @@ const run = async () => {
   );
 };
 
-rl.question(
-  `You are about to upgrade database ${bgYellow(
-    black(` ${env.ACCESS_MYSQL_DATABASE} @ ${env.ACCESS_MYSQL_HOST} `),
-  )}.
+if (process.argv.includes('--F')) {
+  console.log(
+    `Upgrading database ${bgYellow(
+      black(` ${env.ACCESS_MYSQL_DATABASE} @ ${env.ACCESS_MYSQL_HOST} `),
+    )}`,
+  );
+  run()
+    .then(() => {
+      console.log('Complete!');
+      process.exit(0);
+    })
+    .catch((err) => {
+      console.log(err);
+      process.exit(1);
+    });
+} else {
+  rl.question(
+    `You are about to upgrade database ${bgYellow(
+      black(` ${env.ACCESS_MYSQL_DATABASE} @ ${env.ACCESS_MYSQL_HOST} `),
+    )}.
 
 Set number of versions to upgrade ('Y' for all, '<number>' for number of versions, 'N' to exit):`,
-  (answer) => {
-    steps = parseInt(answer);
-    if (answer.toUpperCase() === 'Y') {
-      steps = 0;
-      console.log('Upgrading to LATEST version.');
-    } else if (steps) {
-      console.log(`Upgrading for ${steps} version(s).`);
-    } else {
-      console.log('Invalid input. Exiting.');
-      process.exit(0);
-    }
-
-    rl.close();
-
-    run()
-      .then(() => {
-        console.log('Complete!');
+    (answer) => {
+      steps = parseInt(answer);
+      if (answer.toUpperCase() === 'Y') {
+        steps = 0;
+        console.log('Upgrading to LATEST version.');
+      } else if (steps) {
+        console.log(`Upgrading for ${steps} version(s).`);
+      } else {
+        console.log('Invalid input. Exiting.');
         process.exit(0);
-      })
-      .catch((err) => {
-        console.log(err);
-        process.exit(1);
-      });
-  },
-);
+      }
+
+      rl.close();
+
+      run()
+        .then(() => {
+          console.log('Complete!');
+          process.exit(0);
+        })
+        .catch((err) => {
+          console.log(err);
+          process.exit(1);
+        });
+    },
+  );
+}

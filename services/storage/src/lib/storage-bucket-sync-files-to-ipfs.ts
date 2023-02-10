@@ -24,7 +24,7 @@ import {
   generateDirectoriesFromPath,
 } from '../lib/generate-directories-from-path';
 import { pinFileToCRUST } from './pin-file-to-crust';
-import { getSizeOfFilesInSessionOnS3 } from './size-of-files';
+import { getSessionFilesOnS3 } from './file-upload-session-s3-files';
 
 /**
  * Transfers file from s3 to IPFS & CRUST
@@ -61,7 +61,7 @@ export async function storageBucketSyncFilesToIPFS(
 
     //Check if size of files is greater than allowed bucket size.
     const s3Client: AWS_S3 = new AWS_S3();
-    const filesOnS3 = await getSizeOfFilesInSessionOnS3(bucket, session);
+    const filesOnS3 = await getSessionFilesOnS3(bucket, session);
 
     if (filesOnS3.size + bucket.size > maxBucketSize) {
       //Update all file upload requests with max bucket size reached error status
@@ -79,7 +79,7 @@ export async function storageBucketSyncFilesToIPFS(
 
     let ipfsRes: uploadFilesToIPFSRes = undefined;
     try {
-      ipfsRes = await IPFSService.uploadFilesToIPFSFromS3({
+      ipfsRes = await IPFSService.uploadFURsToIPFSFromS3({
         fileUploadRequests: files,
         wrapWithDirectory: wrapWithDirectory,
       });
@@ -224,6 +224,7 @@ export async function storageBucketSyncFilesToIPFS(
       bucket.bucket_uuid,
       ipfsRes.parentDirCID,
       ipfsRes.size,
+      true,
     );
   } else {
     //loop through files to sync each one of it to IPFS
@@ -245,7 +246,7 @@ export async function storageBucketSyncFilesToIPFS(
 
       let ipfsRes = undefined;
       try {
-        ipfsRes = await IPFSService.uploadFileToIPFSFromS3(
+        ipfsRes = await IPFSService.uploadFURToIPFSFromS3(
           { fileUploadRequest: file },
           context,
         );
@@ -403,6 +404,7 @@ export async function storageBucketSyncFilesToIPFS(
           bucket.bucket_uuid,
           transferedFile.CID,
           transferedFile.size,
+          false,
         );
       }
     } catch (err) {

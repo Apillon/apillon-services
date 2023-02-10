@@ -1,6 +1,10 @@
 import {
+  ApillonApiCreateS3SignedUrlForUploadDto,
+  ApillonApiCreateS3UrlsForUploadDto,
   ApillonApiDirectoryContentQueryFilter,
-  CreateS3SignedUrlForUploadDto,
+  CreateS3UrlForUploadDto,
+  CreateS3UrlsForUploadDto,
+  DirectoryContentQueryFilter,
   EndFileUploadSessionDto,
   FileDetailsQueryFilter,
   StorageMicroservice,
@@ -14,12 +18,33 @@ export class StorageService {
   async createS3SignedUrlForUpload(
     context: ApillonApiContext,
     bucket_uuid: string,
-    body: CreateS3SignedUrlForUploadDto,
+    body: ApillonApiCreateS3SignedUrlForUploadDto,
   ) {
-    body.bucket_uuid = bucket_uuid;
-
     return (
-      await new StorageMicroservice(context).requestS3SignedURLForUpload(body)
+      await new StorageMicroservice(context).requestS3SignedURLForUpload(
+        new CreateS3UrlForUploadDto().populate({
+          ...body.serialize(),
+          bucket_uuid: bucket_uuid,
+          session_uuid: body.sessionUuid,
+          directory_uuid: body.directoryUuid,
+        }),
+      )
+    ).data;
+  }
+
+  async createS3SignedUrlsForUpload(
+    context: ApillonApiContext,
+    bucket_uuid: string,
+    body: ApillonApiCreateS3UrlsForUploadDto,
+  ) {
+    return (
+      await new StorageMicroservice(context).requestS3SignedURLsForUpload(
+        new CreateS3UrlsForUploadDto().populate({
+          ...body.serialize(),
+          bucket_uuid: bucket_uuid,
+          session_uuid: body.sessionUuid,
+        }),
+      )
     ).data;
   }
 
@@ -65,15 +90,20 @@ export class StorageService {
     bucket_uuid: string,
     query: ApillonApiDirectoryContentQueryFilter,
   ) {
-    query.bucket_uuid = bucket_uuid;
-
     try {
       await query.validate();
     } catch (err) {
       await query.handle(err);
       if (!query.isValid()) throw new ValidationException(query);
     }
-    return (await new StorageMicroservice(context).listDirectoryContent(query))
-      .data;
+    return (
+      await new StorageMicroservice(context).listDirectoryContent(
+        new DirectoryContentQueryFilter().populate({
+          ...query.serialize(),
+          bucket_uuid: bucket_uuid,
+          directory_id: query.directoryId,
+        }),
+      )
+    ).data;
   }
 }
