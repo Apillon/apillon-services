@@ -1,4 +1,6 @@
 import { DeployNftContractDto } from '@apillon/lib/dist/lib/at-services/nfts/dtos/deploy-nft-contract.dto';
+import { MintNftQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/mint-nft-query-filter.dto';
+import { SetNftBaseUriQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/set-nft-base-uri-query.dto';
 import { NftTransaction } from '../../lib/nft-contract-transaction';
 import {
   TransactionRequest,
@@ -6,6 +8,7 @@ import {
 } from '@ethersproject/providers';
 import { ethers, Wallet } from 'ethers';
 import { AppEnvironment, env } from '@apillon/lib';
+import { TransferNftQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/transfer-nft-query-filter.dto';
 
 export class NftsService {
   static async getHello() {
@@ -47,12 +50,9 @@ export class NftsService {
     };
   }
 
-  static async transferNftOwnership(params: {
-    address: string;
-    collection_uuid: string;
-  }) {
+  static async transferNftOwnership(params: { query: TransferNftQueryFilter }) {
     console.log(
-      `Transfering NFT Collection (uuid=${params.collection_uuid}) ownership to wallet address: ${params.address}`,
+      `Transfering NFT Collection (uuid=${params.query.collection_uuid}) ownership to wallet address: ${params.query.address}`,
     );
     const prodEnv = env.APP_ENV == AppEnvironment.PROD;
     const provider = new ethers.providers.StaticJsonRpcProvider(
@@ -65,8 +65,8 @@ export class NftsService {
 
     const contractTx: TransactionRequest =
       await NftTransaction.createTransferOwnershipTransaction(
-        '0xa1af3059e16a15ae06F6c642D806d33A39bd9d01', // Get from DB selected Collection (UUID)
-        params.address,
+        params.query.collection_uuid, // Later obtain contract from DB by collection_uuid
+        params.query.address,
         provider,
       );
 
@@ -84,20 +84,50 @@ export class NftsService {
     // Save transaction hash, contract address to db
     return {
       transaction_hash: transferedContract.transactionHash,
-      contract_address: transferedContract.contractAddress,
     };
   }
 
-  static async mintNft(address: string, collection_uuid: string) {
-    console.log(`Minting NFT Collection to wallet address: ${address}`);
+  static async mintNftTo(params: { query: MintNftQueryFilter }) {
+    console.log(
+      `Minting NFT Collection to wallet address: ${params.query.address}`,
+    );
+    const prodEnv = env.APP_ENV == AppEnvironment.PROD;
+    const provider = new ethers.providers.StaticJsonRpcProvider(
+      prodEnv ? env.NFTS_MOONBEAM_MAINNET_RPC : env.NFTS_MOONBEAM_TESTNET_RPC,
+      {
+        chainId: prodEnv ? 1284 : 1287,
+        name: prodEnv ? 'moonbeam' : 'moonbase-alphanet',
+      },
+    );
+
+    const contractTx: TransactionRequest =
+      await NftTransaction.createMintToTransaction(
+        params.query.collection_uuid, // Later obtain contract from DB by collection_uuid
+        params.query.address,
+        provider,
+      );
+
+    // Raw transaction can be signed elsewhere for the sake of security
+    const privateKey = prodEnv
+      ? env.NFTS_MOONBEAM_MAINNET_PRIVATEKEY
+      : env.NFTS_MOONBEAM_TESTNET_PRIVATEKEY;
+    const wallet = new Wallet(privateKey, provider);
+    await wallet.signTransaction(contractTx);
+
+    const mintNft: TransactionReceipt = await (
+      await wallet.sendTransaction(contractTx)
+    ).wait(1);
+
+    return {
+      transaction_hash: mintNft.transactionHash,
+    };
   }
 
   static async setNftCollectionBaseUri(params: {
-    collection_uuid: string;
-    uri: string;
+    query: SetNftBaseUriQueryFilter;
   }) {
     console.log(
-      `Setting URI of NFT Collection (uuid=${params.collection_uuid}): ${params.uri}`,
+      `Setting URI of NFT Collection (uuid=${params.query.collection_uuid}): ${params.query.uri}`,
     );
     const prodEnv = env.APP_ENV == AppEnvironment.PROD;
     const provider = new ethers.providers.StaticJsonRpcProvider(
@@ -110,8 +140,8 @@ export class NftsService {
 
     const contractTx: TransactionRequest =
       await NftTransaction.createSetNftBaseUriTransaction(
-        '0xa1af3059e16a15ae06F6c642D806d33A39bd9d01', // Get from DB selected Collection (UUID)
-        params.uri,
+        params.query.collection_uuid, // Get from DB selected Collection (UUID)
+        params.query.uri,
         provider,
       );
 
@@ -135,7 +165,6 @@ export class NftsService {
      */
     return {
       transaction_hash: setUriContract.transactionHash,
-      contract_address: setUriContract.contractAddress,
     };
   }
 }

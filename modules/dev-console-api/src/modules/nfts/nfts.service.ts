@@ -1,5 +1,8 @@
 import { NftsMicroservice } from '@apillon/lib';
 import { DeployNftContractDto } from '@apillon/lib/dist/lib/at-services/nfts/dtos/deploy-nft-contract.dto';
+import { TransferNftQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/transfer-nft-query-filter.dto';
+import { MintNftQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/mint-nft-query-filter.dto';
+import { SetNftBaseUriQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/set-nft-base-uri-query.dto';
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 
@@ -19,26 +22,29 @@ export class NftsService {
   async transferNftOwnership(
     context: DevConsoleApiContext,
     collection_uuid: string,
-    address: string,
+    query: TransferNftQueryFilter,
   ) {
-    return (
-      await new NftsMicroservice(context).transferNftOwnership(
-        collection_uuid,
-        address,
-      )
-    ).data;
+    query.collection_uuid = collection_uuid;
+    return (await new NftsMicroservice(context).transferNftOwnership(query))
+      .data;
+  }
+
+  async mintNftTo(
+    context: DevConsoleApiContext,
+    collection_uuid: string,
+    query: MintNftQueryFilter,
+  ) {
+    query.collection_uuid = collection_uuid;
+    return (await new NftsMicroservice(context).mintNft(query)).data;
   }
 
   async setNftCollectionBaseUri(
     context: DevConsoleApiContext,
     collection_uuid: string,
-    baseUri: string,
+    query: SetNftBaseUriQueryFilter,
   ) {
-    return (
-      await new NftsMicroservice(context).setNftCollectionBaseUri(
-        collection_uuid,
-        baseUri,
-      )
-    ).data;
+    query.collection_uuid = collection_uuid;
+    return (await new NftsMicroservice(context).setNftCollectionBaseUri(query))
+      .data;
   }
 }
