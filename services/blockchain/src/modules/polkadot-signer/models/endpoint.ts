@@ -3,7 +3,6 @@ import {
   AdvancedSQLModel,
   Chain,
   Context,
-  PoolConnection,
   PopulateFrom,
   prop,
   SerializeFor,
@@ -27,6 +26,7 @@ export class Endpoint extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
     ],
   })
   public url: string;
@@ -43,6 +43,7 @@ export class Endpoint extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
     ],
   })
   public chain: Chain;
@@ -59,6 +60,7 @@ export class Endpoint extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
     ],
   })
   public priority: number;
@@ -75,11 +77,15 @@ export class Endpoint extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
     ],
   })
   public type: number;
 
-  public async populateByChain(chain: Chain, priority?: number): Promise<this> {
+  public async populateByChain(
+    chain: Chain,
+    priority: number = null,
+  ): Promise<this> {
     if (!chain) {
       throw new Error('chain should not be null');
     }
@@ -90,7 +96,7 @@ export class Endpoint extends AdvancedSQLModel {
       FROM \`${this.tableName}\`
       WHERE (chain = @chain)
       AND status <> ${SqlModelStatus.DELETED}
-      AND priority = @priority
+      AND (@priority IS NULL OR @priority = priority)
       LIMIT 1;
       `,
       { chain, priority },
