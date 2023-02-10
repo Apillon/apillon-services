@@ -11,6 +11,10 @@ export enum DbTables {
   DEPLOYMENT = 'deployment',
 }
 
+export enum DbViews {
+  DOMAINS = 'view_domains',
+}
+
 export enum StorageErrorCode {
   //400
   DEFAULT_BAD_REQUEST_EROR = 40006000,
