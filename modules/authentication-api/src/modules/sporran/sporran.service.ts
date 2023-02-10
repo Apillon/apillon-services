@@ -16,6 +16,7 @@ import {
   ApillonSupportedCTypes,
   APILLON_DAPP_NAME,
   AuthenticationErrorCode,
+  CredentialAttestStatus,
   IdentityGenFlag,
   IdentityState,
   SporranMessageType,
@@ -58,6 +59,7 @@ import {
 import { WorkerName } from '../../workers/worker-executor';
 import { IdentityGenerateWorker } from '../../workers/generate-identity.worker';
 import { Identity } from '../identity/models/identity.model';
+import { request } from 'http';
 
 @Injectable()
 export class SporranService {
@@ -344,11 +346,12 @@ export class SporranService {
 
     const attestation = {
       delegationId: null,
-      claimHash: credential.claim.contents.rootHash,
+      claimHash: credential.rootHash,
       cTypeHash:
         '0x3291bb126e33b4862d421bfaa1d2f272e6cdfc4f96658988fbcffea8914bd9ac' as HexString,
       owner: attestObj.owner,
       revoked: false,
+      status: CredentialAttestStatus.ATTESTED,
     };
 
     const submitAttestationBody: ISubmitAttestation = {
@@ -356,12 +359,17 @@ export class SporranService {
       type: SporranMessageType.SUBMIT_ATTESTATION,
     };
 
+    Message.verifyMessageBody(submitAttestationBody);
+
     const message = Message.fromBody(
       submitAttestationBody,
       verifierDidUri,
       claimerSessionDidUri as DidUri,
     );
 
+    // Set inreply to, since we are replying to a request
+    message.inReplyTo = decryptedMessage.messageId;
+    // Just a health-check
     Message.ensureOwnerIsSender(message);
 
     const encryptedMessage = await Message.encrypt(
@@ -369,6 +377,8 @@ export class SporranService {
       encryptionSigner,
       encryptionKeyUri as DidResourceUri,
     );
+
+    console.log('ENCRYPTED MESSAGE ', encryptedMessage);
 
     return { message: encryptedMessage };
   }
@@ -405,6 +415,7 @@ export class SporranService {
       claimerSessionDidUri as DidUri,
     );
 
+    Message.verifyMessageBody(message.body);
     const encryptedMessage = await Message.encrypt(
       message,
       encryptionSigner,

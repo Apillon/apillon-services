@@ -99,6 +99,13 @@ export enum IdentityState {
   REVOKED = 'revoked',
 }
 
+export enum CredentialAttestStatus {
+  PENDING = 'pending',
+  ATTESTED = 'attested',
+  REJECTED = 'rejected',
+  REVOKED = 'revoked',
+}
+
 /**
  * JWT Token signing types.
  */
