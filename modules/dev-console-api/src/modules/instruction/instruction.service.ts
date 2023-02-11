@@ -16,15 +16,12 @@ export class InstructionService {
     );
   }
 
-  async getInstruction(context: DevConsoleApiContext, instructionEnum: string) {
-    const instruction = await new Instruction({}, context).getInstructionByEnum(
-      context,
-      instructionEnum,
-    );
+  async getInstruction(context: DevConsoleApiContext, id: number) {
+    const instruction = await new Instruction({}, context).populateById(id);
 
     if (!instruction.exists()) {
       throw new CodeException({
-        status: HttpStatus.UNAUTHORIZED,
+        status: HttpStatus.NOT_FOUND,
         code: ValidatorErrorCode.INSTRUCTION_ENUM_EXISTS,
         errorCodes: ValidatorErrorCode,
       });
@@ -33,31 +30,17 @@ export class InstructionService {
     return instruction.serialize(SerializeFor.PROFILE);
   }
 
-  async createInstruction(context: DevConsoleApiContext, body: any) {
-    const instruction = await new Instruction({}, context).getInstructionByEnum(
-      context,
-      body.instructionEnum,
-    );
-    if (instruction.exists()) {
-      throw new CodeException({
-        code: ValidatorErrorCode.INSTRUCTION_ENUM_EXISTS,
-        status: HttpStatus.CONFLICT,
-        errorCodes: ValidatorErrorCode,
-      });
-    }
-
-    return await body.insert();
+  async createInstruction(context: DevConsoleApiContext, body: Instruction) {
+    await body.insert();
+    return body.serialize(SerializeFor.PROFILE);
   }
 
   async updateInstruction(
     context: DevConsoleApiContext,
-    instructionEnum: string,
+    id: number,
     data: any,
   ) {
-    const instruction = await new Instruction({}, context).getInstructionByEnum(
-      context,
-      instructionEnum,
-    );
+    const instruction = await new Instruction({}, context).populateById(id);
     if (!instruction.exists()) {
       throw new CodeException({
         code: ResourceNotFoundErrorCode.INSTRUCTION_DOES_NOT_EXIST,
@@ -78,7 +61,7 @@ export class InstructionService {
       throw new ValidationException(instruction, ValidatorErrorCode);
 
     await instruction.update();
-    return instruction;
+    return instruction.serialize(SerializeFor.PROFILE);
   }
 
   async deleteInstruction(context: DevConsoleApiContext, id: number) {
@@ -92,6 +75,6 @@ export class InstructionService {
     }
 
     await instruction.delete();
-    return instruction;
+    return instruction.serialize(SerializeFor.PROFILE);
   }
 }

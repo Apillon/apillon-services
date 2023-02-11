@@ -1,12 +1,12 @@
-import { stringParser, integerParser } from '@rawmodel/parsers';
-import { presenceValidator } from '@rawmodel/validators';
 import {
   AdvancedSQLModel,
   PopulateFrom,
   prop,
-  selectAndCountQuery,
   SerializeFor,
+  SqlModelStatus,
 } from '@apillon/lib';
+import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
+import { presenceValidator } from '@rawmodel/validators';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
 
@@ -17,35 +17,16 @@ export class Instruction extends AdvancedSQLModel {
   tableName = DbTables.INSTRUCTION;
 
   /**
-   * Instruction instruction enum
-   */
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
-    serializable: [
-      SerializeFor.PROFILE,
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.INSTRUCTION_ENUM_NOT_PRESENT,
-      },
-    ],
-  })
-  public instructionEnum: string;
-
-  /**
    * Instruction title
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
     ],
   })
   public title: string;
@@ -55,11 +36,12 @@ export class Instruction extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -75,11 +57,12 @@ export class Instruction extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -95,11 +78,12 @@ export class Instruction extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
     ],
   })
   public extendedHtmlContent: string;
@@ -109,11 +93,12 @@ export class Instruction extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
     ],
   })
   public docsUrl: string;
@@ -123,38 +108,46 @@ export class Instruction extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.INSTRUCTION_FOR_ROUTE_NOT_PRESENT,
+      },
     ],
   })
   public forRoute: string;
 
-  /**
-   * Returns instruction instance from instructionEnum
-   */
-  public async getInstructionByEnum(
-    context: DevConsoleApiContext,
-    instructionEnum: string,
-  ) {
-    const data = await context.mysql.paramExecute(
-      `
-        SELECT *
-        FROM \`${DbTables.INSTRUCTION}\` i
-        WHERE instructionEnum = @instructionEnum
-        LIMIT 1
-      `,
-      { instructionEnum },
-    );
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
+    ],
+    defaultValue: true,
+  })
+  public expanded: boolean;
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    }
-
-    return this.reset();
-  }
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
+    ],
+  })
+  public sortId: number;
 
   /**
    * Returns instructions filtered by route
@@ -163,60 +156,15 @@ export class Instruction extends AdvancedSQLModel {
     context: DevConsoleApiContext,
     forRoute?: string,
   ) {
-    if (!forRoute) {
-      return this.getAllInstructions(context);
-    }
-
-    /** Routes with all subparts */
-    const routeParts = forRoute.split('-');
-    const routes = routeParts.map((_, key) => {
-      return routeParts.slice(0, key + 1).join('-');
-    });
-
-    const params = {
-      forRoute: `'${routes.join(`','`)}'`,
-      offset: 0,
-      limit: 10,
-    };
-
-    const sqlQuery = {
-      qSelect: `
-        SELECT *
-        `,
-      qFrom: `
-        FROM \`${DbTables.INSTRUCTION}\` 
-        WHERE  forRoute IN (${params.forRoute})
+    return await context.mysql.paramExecute(
+      `
+        SELECT ${this.generateSelectFields('i')}
+        FROM \`${DbTables.INSTRUCTION}\` i
+        WHERE (@forRoute IS NULL OR forRoute = @forRoute)
+        AND status <> ${SqlModelStatus.DELETED}
+        ORDER BY sortId ASC;
       `,
-      qFilter: `
-        ORDER BY CHAR_LENGTH(forRoute) DESC, instructionType
-        LIMIT ${params.limit} OFFSET ${params.offset};
-      `,
-    };
-
-    return selectAndCountQuery(context.mysql, sqlQuery, params, 'id');
-  }
-
-  /**
-   * Returns instructions filtered by route
-   */
-  public async getAllInstructions(context: DevConsoleApiContext) {
-    const params = {
-      offset: 0,
-      limit: 10,
-    };
-
-    const sqlQuery = {
-      qSelect: `
-        SELECT *
-        `,
-      qFrom: `
-        FROM \`${DbTables.INSTRUCTION}\` 
-      `,
-      qFilter: `
-        LIMIT ${params.limit} OFFSET ${params.offset};
-      `,
-    };
-
-    return selectAndCountQuery(context.mysql, sqlQuery, params, 'id');
+      { forRoute: forRoute || null },
+    );
   }
 }
