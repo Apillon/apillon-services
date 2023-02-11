@@ -65,7 +65,7 @@ export class HostingController {
     { role: DefaultUserRole.PROJECT_USER },
   )
   @UseGuards(AuthGuard)
-  async getBucket(
+  async getWebPage(
     @Ctx() context: DevConsoleApiContext,
     @Param('id', ParseIntPipe) id: number,
   ) {

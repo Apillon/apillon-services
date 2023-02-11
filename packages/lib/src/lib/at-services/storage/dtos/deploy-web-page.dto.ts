@@ -9,7 +9,6 @@ import { ModelBase, prop } from '../../../base-models/base';
 
 export class DeployWebPageDto extends ModelBase {
   @prop({
-    parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
@@ -19,7 +18,7 @@ export class DeployWebPageDto extends ModelBase {
       },
     ],
   })
-  public webPage_id: number;
+  public webPage_id: number | string;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -41,4 +40,12 @@ export class DeployWebPageDto extends ModelBase {
     validators: [],
   })
   public directDeploy: boolean;
+
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+  })
+  public clearBucketForUpload: boolean;
 }

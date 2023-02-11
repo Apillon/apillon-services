@@ -23,12 +23,7 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { v4 as uuidV4 } from 'uuid';
-import {
-  BucketType,
-  DeploymentEnvironment,
-  StorageErrorCode,
-} from '../../config/types';
+import { DeploymentEnvironment, StorageErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
 import { deleteDirectory } from '../../lib/delete-directory';
 import {
@@ -60,7 +55,7 @@ export class HostingService {
     return await new WebPage({}, context).listDomains(context);
   }
 
-  static async getWebPage(event: { id: number }, context: ServiceContext) {
+  static async getWebPage(event: { id: any }, context: ServiceContext) {
     const webPage: WebPage = await new WebPage({}, context).populateById(
       event.id,
     );
@@ -100,92 +95,7 @@ export class HostingService {
       });
     }
 
-    //Initialize buckets
-    const bucket: Bucket = new Bucket(
-      {
-        bucket_uuid: uuidV4(),
-        project_uuid: webPage.project_uuid,
-        bucketType: BucketType.HOSTING,
-        name: webPage.name,
-      },
-      context,
-    );
-    try {
-      await bucket.validate();
-    } catch (err) {
-      await bucket.handle(err);
-      if (!bucket.isValid()) throw new StorageValidationException(bucket);
-    }
-    const stagingBucket: Bucket = new Bucket(
-      {
-        bucket_uuid: uuidV4(),
-        project_uuid: webPage.project_uuid,
-        bucketType: BucketType.HOSTING,
-        name: webPage.name + '_staging',
-      },
-      context,
-    );
-    try {
-      await stagingBucket.validate();
-    } catch (err) {
-      await stagingBucket.handle(err);
-      if (!stagingBucket.isValid())
-        throw new StorageValidationException(stagingBucket);
-    }
-    const productionBucket: Bucket = new Bucket(
-      {
-        bucket_uuid: uuidV4(),
-        project_uuid: webPage.project_uuid,
-        bucketType: BucketType.HOSTING,
-        name: webPage.name + '_production',
-      },
-      context,
-    );
-    try {
-      await productionBucket.validate();
-    } catch (err) {
-      await productionBucket.handle(err);
-      if (!productionBucket.isValid())
-        throw new StorageValidationException(productionBucket);
-    }
-
-    const conn = await context.mysql.start();
-
-    try {
-      //Insert buckets
-      await bucket.insert(SerializeFor.INSERT_DB, conn);
-      await stagingBucket.insert(SerializeFor.INSERT_DB, conn);
-      await productionBucket.insert(SerializeFor.INSERT_DB, conn);
-      //Populate webPage
-      webPage.populate({
-        bucket_id: bucket.id,
-        stagingBucket_id: stagingBucket.id,
-        productionBucket_id: productionBucket.id,
-        bucket: bucket,
-        stagingBucket: stagingBucket,
-        productionBucket: productionBucket,
-      });
-      //Insert web page record
-      await webPage.insert(SerializeFor.INSERT_DB, conn);
-      await context.mysql.commit(conn);
-    } catch (err) {
-      await context.mysql.rollback(conn);
-
-      await new Lmas().writeLog({
-        context,
-        project_uuid: event.body.project_uuid,
-        logType: LogType.ERROR,
-        message: 'Error creating new web page',
-        location: 'HostingService/createWebPage',
-        service: ServiceName.STORAGE,
-        data: {
-          error: err,
-          webPage: webPage.serialize(),
-        },
-      });
-
-      throw err;
-    }
+    await webPage.createNewWebPage(context);
 
     await new Lmas().writeLog({
       context,
@@ -349,6 +259,7 @@ export class HostingService {
       };
       const parameters = {
         deployment_id: d.id,
+        clearBucketForUpload: event.body.clearBucketForUpload,
       };
       const wd = new WorkerDefinition(
         serviceDef,
@@ -365,6 +276,7 @@ export class HostingService {
       );
       await worker.runExecutor({
         deployment_id: d.id,
+        clearBucketForUpload: event.body.clearBucketForUpload,
       });
     } else {
       //send message to SQS
@@ -374,6 +286,7 @@ export class HostingService {
         [
           {
             deployment_id: d.id,
+            clearBucketForUpload: event.body.clearBucketForUpload,
           },
         ],
         null,

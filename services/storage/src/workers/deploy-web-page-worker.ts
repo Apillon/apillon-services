@@ -24,6 +24,7 @@ import { generateDirectoriesFromPath } from '../lib/generate-directories-from-pa
 import { pinFileToCRUST } from '../lib/pin-file-to-crust';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { Directory } from '../modules/directory/models/directory.model';
+import { HostingService } from '../modules/hosting/hosting.service';
 import { Deployment } from '../modules/hosting/models/deployment.model';
 import { WebPage } from '../modules/hosting/models/web-page.model';
 import { uploadFilesToIPFSRes } from '../modules/ipfs/interfaces/upload-files-to-ipfs-res.interface';
@@ -210,6 +211,18 @@ export class DeployWebPageWorker extends BaseQueueWorker {
         await deployment.update(SerializeFor.UPDATE_DB, conn);
 
         await this.context.mysql.commit(conn);
+        //Clear bucket for upload
+        try {
+          if (
+            deployment.environment == DeploymentEnvironment.STAGING &&
+            data.clearBucketForUpload
+          ) {
+            await HostingService.clearBucketContent(
+              { bucket: sourceBucket },
+              this.context,
+            );
+          }
+        } catch (err) {}
       } catch (err) {
         await this.context.mysql.rollback(conn);
         throw err;

@@ -1,4 +1,5 @@
 import {
+  AttachedServiceType,
   CodeException,
   CreateWebPageDto,
   DeploymentQueryFilter,
@@ -13,9 +14,14 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { ResourceNotFoundErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
 import { Project } from '../../project/models/project.model';
+import { ServiceQueryFilter } from '../../services/dtos/services-query-filter.dto';
+import { Service } from '../../services/models/service.model';
+import { ServicesService } from '../../services/services.service';
 
 @Injectable()
 export class HostingService {
+  constructor(private readonly serviceService: ServicesService) {}
+
   async listWebPages(context: DevConsoleApiContext, query: WebPageQueryFilter) {
     return (await new StorageMicroservice(context).listWebPages(query)).data;
   }
@@ -36,6 +42,26 @@ export class HostingService {
       });
     }
     project.canModify(context);
+
+    //Check if storage service for this project already exists
+    const query: ServiceQueryFilter = new ServiceQueryFilter(
+      {},
+      context,
+    ).populate({
+      project_id: project.id,
+      serviceType_id: AttachedServiceType.STORAGE,
+    });
+    const storageServices = await new Service({}).getServices(context, query);
+    if (storageServices.total == 0) {
+      //Create storage service - "Attach"
+      const storageService: Service = new Service({}, context).populate({
+        project_id: project.id,
+        name: 'Storage service',
+        serviceType_id: AttachedServiceType.STORAGE,
+      });
+
+      await this.serviceService.createService(context, storageService);
+    }
 
     //Call Storage microservice, to create webPage
     return (await new StorageMicroservice(context).createWebPage(body)).data;

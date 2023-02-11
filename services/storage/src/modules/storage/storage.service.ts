@@ -256,12 +256,12 @@ export class StorageService {
       } else if (session.bucket_id != bucket.id) {
         throw new StorageCodeException({
           code: StorageErrorCode.SESSION_UUID_BELONGS_TO_OTHER_BUCKET,
-          status: 404,
+          status: 400,
         });
       } else if (session.sessionStatus == 2) {
         throw new StorageCodeException({
           code: StorageErrorCode.FILE_UPLOAD_SESSION_ALREADY_TRANSFERED,
-          status: 404,
+          status: 400,
         });
       }
     }
