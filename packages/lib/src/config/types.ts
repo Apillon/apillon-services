@@ -71,6 +71,12 @@ export enum StorageEventType {
 
 export enum AuthenticationEventType {
   IDENTITY_VERIFICATION = 'identity-verification',
+  SEND_VERIFICATION_EMAIL = 'send-verification-email',
+  GET_IDENTITY_GEN_PROCESS_STATE = 'get-identity-gen-process-state',
+  GENERATE_IDENTITY = 'generate-identity',
+  GET_IDENTITY_USER_CREDENTIAL = 'get-identity-user-credential',
+  REVOKE_IDENTITY = 'revoke-identity',
+  GENERATE_DEV_RESOURCES = 'generate-dev-resources',
 }
 
 export enum MailEventType {

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AuthenticationApiContext } from '../../context';
-import { VerificationIdentityDto } from './dto/verify-identity.dto';
+import { VerificationIdentityDto } from './dtos/verify-identity.dto';
 
 import { AuthenticationMicroservice } from '@apillon/lib';
 
