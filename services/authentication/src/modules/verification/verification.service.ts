@@ -9,8 +9,8 @@ import {
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
-export class VerificationService {
-  async verifyIdentity(context, event): Promise<any> {
+export class VerificationMicroservice {
+  static async verifyIdentity(context, event): Promise<any> {
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
     const presentation = JSON.parse(event.presentation);
