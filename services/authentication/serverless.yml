@@ -1,7 +1,7 @@
 # console: true
 # org: apillonadmin
 # app: apillon-v2
-service: apillon-storage-service-${opt:stage, 'dev'}
+service: apillon-auth-service-${opt:stage, 'dev'}
 frameworkVersion: '3'
 
 custom:
