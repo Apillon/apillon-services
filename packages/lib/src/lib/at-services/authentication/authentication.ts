@@ -10,12 +10,12 @@ import { VerificationIdentityDto } from './dtos/verify-identity.dto';
 export class AuthenticationMicroservice extends BaseService {
   lambdaFunctionName =
     env.APP_ENV === AppEnvironment.TEST
-      ? env.STORAGE_FUNCTION_NAME_TEST
-      : env.STORAGE_FUNCTION_NAME;
+      ? env.AUTH_FUNCTION_NAME_TEST
+      : env.AUTH_FUNCTION_NAME;
   devPort =
     env.APP_ENV === AppEnvironment.TEST
-      ? env.STORAGE_SOCKET_PORT_TEST
-      : env.STORAGE_SOCKET_PORT;
+      ? env.AUTH_SOCKET_PORT_TEST
+      : env.AUTH_SOCKET_PORT;
   serviceName = 'AUTHETICATION';
 
   constructor(context: Context) {

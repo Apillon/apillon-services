@@ -8,24 +8,24 @@ export function MySqlConnect(instanceName = 'mysql', autoDisconnect = true) {
     const options = {
       host:
         env.APP_ENV === AppEnvironment.TEST
-          ? env.REFERRAL_MYSQL_HOST_TEST
-          : env.REFERRAL_MYSQL_HOST,
+          ? env.AUTH_API_MYSQL_HOST_TEST
+          : env.AUTH_API_MYSQL_HOST,
       port:
         env.APP_ENV === AppEnvironment.TEST
-          ? env.REFERRAL_MYSQL_PORT_TEST
-          : env.REFERRAL_MYSQL_PORT,
+          ? env.AUTH_API_MYSQL_PORT_TEST
+          : env.AUTH_API_MYSQL_PORT,
       database:
         env.APP_ENV === AppEnvironment.TEST
-          ? env.REFERRAL_MYSQL_DATABASE_TEST
-          : env.REFERRAL_MYSQL_DATABASE,
+          ? env.AUTH_API_MYSQL_DATABASE_TEST
+          : env.AUTH_API_MYSQL_DATABASE,
       user:
         env.APP_ENV === AppEnvironment.TEST
-          ? env.REFERRAL_MYSQL_USER_TEST
-          : env.REFERRAL_MYSQL_USER,
+          ? env.AUTH_API_MYSQL_USER_TEST
+          : env.AUTH_API_MYSQL_USER,
       password:
         env.APP_ENV === AppEnvironment.TEST
-          ? env.REFERRAL_MYSQL_PASSWORD_TEST
-          : env.REFERRAL_MYSQL_PASSWORD,
+          ? env.AUTH_API_MYSQL_PASSWORD_TEST
+          : env.AUTH_API_MYSQL_PASSWORD,
     };
 
     const { context } = request;

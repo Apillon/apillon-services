@@ -8,8 +8,8 @@ import { handler } from './handler';
 
 const port =
   env.APP_ENV === AppEnvironment.TEST
-    ? env.AUTH_API_PORT_TEST
-    : env.AUTH_API_PORT;
+    ? env.AUTH_SOCKET_PORT_TEST
+    : env.AUTH_SOCKET_PORT;
 
 export function startDevServer() {
   const server = Net.createServer((socket) => {

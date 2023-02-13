@@ -200,6 +200,12 @@ export interface IEnv {
   AUTH_API_MYSQL_PASSWORD_TEST: string;
   AUTH_API_MYSQL_DATABASE_TEST: string;
 
+  // MICROSERVICE
+  AUTH_FUNCTION_NAME: string;
+  AUTH_FUNCTION_NAME_TEST: string;
+  AUTH_SOCKET_PORT: number;
+  AUTH_SOCKET_PORT_TEST: number;
+
   /************************************************************
    * Kilt config
    ************************************************************/
@@ -512,6 +518,12 @@ export let env: IEnv = {
 
   /** CAPTCHA */
   CAPTCHA_SECRET: process.env['CAPTCHA_SECRET'] || '',
+
+  /** AUTH MICROSERVICE */
+  AUTH_FUNCTION_NAME: process.env['AUTH_FUNCTION_NAME'],
+  AUTH_FUNCTION_NAME_TEST: process.env['AUTH_FUNCTION_NAME_TEST'],
+  AUTH_SOCKET_PORT: parseInt(process.env['AUTH_SOCKET_PORT']) || 6801,
+  AUTH_SOCKET_PORT_TEST: parseInt(process.env['AUTH_SOCKET_PORT_TEST']) || 7801,
 };
 
 export let isEnvReady = false;
