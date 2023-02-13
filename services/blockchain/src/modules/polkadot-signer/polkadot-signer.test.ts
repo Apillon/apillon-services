@@ -1,4 +1,5 @@
 import { Chain } from '@apillon/lib';
+import Keyring from '@polkadot/keyring';
 import {
   generateWallets,
   releaseStage,
@@ -6,6 +7,7 @@ import {
   Stage,
 } from '../../../test/setup';
 import { Endpoint } from './models/endpoint';
+import { Wallet } from './models/wallet';
 import { PolkadotSignerService } from './polkadot-signer.service';
 
 describe('Polkadot signer unit test', () => {
@@ -13,7 +15,7 @@ describe('Polkadot signer unit test', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    await generateWallets(1, Chain.CRUST, stage.context);
+    // await generateWallets(1, Chain.CRUST, stage.context);
   });
 
   afterAll(async () => {
@@ -21,11 +23,41 @@ describe('Polkadot signer unit test', () => {
   });
 
   test('Test service', async () => {
+    const keyring = new Keyring({ ss58Format: 38, type: 'sr25519' });
+    const keypair = keyring.createFromUri(
+      'fine circle fiction good shop hand canal approve over canal border mixed',
+    );
+    console.log(keypair.address);
     await new Endpoint(
       {
-        url: 'wss://rpc.crust.network',
+        url: 'wss://rpc-rocky.crust.network',
         chain: Chain.CRUST,
         status: 5,
+      },
+      stage.context,
+    ).insert();
+    await new Endpoint(
+      {
+        url: 'wss://peregrine.kilt.io/parachain-public-ws',
+        chain: Chain.KILT,
+        status: 5,
+      },
+      stage.context,
+    ).insert();
+    await new Wallet(
+      {
+        chain: Chain.KILT,
+        seed: 'fine circle fiction good shop hand canal approve over canal border mixed',
+        address: '4q4EMLcCRKF1VgXgJgtcVu4CeVvwa6tsmBDQUKgNH9YUZRKq',
+      },
+      stage.context,
+    ).insert();
+
+    await new Wallet(
+      {
+        chain: Chain.CRUST,
+        seed: 'fine circle fiction good shop hand canal approve over canal border mixed',
+        address: '5DjjQpgetdaYUN6YyDGNguM1oMMDnNHnVPwgZDWuc29LswBi',
       },
       stage.context,
     ).insert();

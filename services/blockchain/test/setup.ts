@@ -39,13 +39,13 @@ export async function setupTest(): Promise<Stage> {
       env.BLOCKCHAIN_MYSQL_PASSWORD_TEST,
     );
 
-    await seedDatabase(
-      env.BLOCKCHAIN_MYSQL_DATABASE_TEST,
-      env.BLOCKCHAIN_MYSQL_HOST_TEST,
-      env.BLOCKCHAIN_MYSQL_PORT_TEST,
-      env.BLOCKCHAIN_MYSQL_USER_TEST,
-      env.BLOCKCHAIN_MYSQL_PASSWORD_TEST,
-    );
+    // await seedDatabase(
+    //   env.BLOCKCHAIN_MYSQL_DATABASE_TEST,
+    //   env.BLOCKCHAIN_MYSQL_HOST_TEST,
+    //   env.BLOCKCHAIN_MYSQL_PORT_TEST,
+    //   env.BLOCKCHAIN_MYSQL_USER_TEST,
+    //   env.BLOCKCHAIN_MYSQL_PASSWORD_TEST,
+    // );
     const config = {
       host: env.BLOCKCHAIN_MYSQL_HOST_TEST,
       database: env.BLOCKCHAIN_MYSQL_DATABASE_TEST,
