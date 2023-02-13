@@ -95,7 +95,7 @@ export enum CredentialAttestStatus {
  * JWT Token signing types.
  */
 export enum JwtTokenType {
-  SPORRAN_SESSION = 'SPORRAN_SESSION',
+  SPORRAN_SESSION = 'sporran-session',
   IDENTITY_VERIFICATION = 'identity-verification',
 }
 
