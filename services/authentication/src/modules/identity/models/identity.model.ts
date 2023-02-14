@@ -1,3 +1,4 @@
+import { Context } from '@apillon/lib';
 import {
   AdvancedSQLModel,
   PopulateFrom,
@@ -15,6 +16,10 @@ export class Identity extends AdvancedSQLModel {
    * User's table.
    */
   public readonly tableName = DbTables.IDENTITY;
+
+  public constructor(data: any, context: Context) {
+    super(data, context);
+  }
 
   /**
    * Identity email
@@ -116,7 +121,7 @@ export class Identity extends AdvancedSQLModel {
   public state: string;
 
   public async populateByUserEmail(context: ServiceContext, email: string) {
-    const data = await context.mysql.paramExecute(
+    const data = await this.getContext().mysql.paramExecute(
       `
           SELECT *
           FROM \`${DbTables.IDENTITY}\` i
@@ -146,6 +151,11 @@ export class Identity extends AdvancedSQLModel {
           `,
     };
 
-    return selectAndCountQuery(context.mysql, sqlQuery, params, 'i.id');
+    return selectAndCountQuery(
+      this.getContext().mysql,
+      sqlQuery,
+      params,
+      'i.id',
+    );
   }
 }

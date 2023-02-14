@@ -115,11 +115,8 @@ export class Identity extends AdvancedSQLModel {
   })
   public state: string;
 
-  public async populateByUserEmail(
-    context: AuthenticationApiContext,
-    email: string,
-  ) {
-    const data = await context.mysql.paramExecute(
+  public async populateByUserEmail(email: string) {
+    const data = await this.getContext().mysql.paramExecute(
       `
         SELECT *
         FROM \`${DbTables.IDENTITY}\` i
@@ -137,10 +134,7 @@ export class Identity extends AdvancedSQLModel {
   /**
    * Returns all identities, filtered by specific state
    */
-  public async listIdentitiesByState(
-    context: AuthenticationApiContext,
-    state: string,
-  ) {
+  public async listIdentitiesByState(state: string) {
     const params = { state };
     const sqlQuery = {
       qSelect: `
@@ -152,6 +146,11 @@ export class Identity extends AdvancedSQLModel {
         `,
     };
 
-    return selectAndCountQuery(context.mysql, sqlQuery, params, 'i.id');
+    return selectAndCountQuery(
+      this.getContext().mysql,
+      sqlQuery,
+      params,
+      'i.id',
+    );
   }
 }

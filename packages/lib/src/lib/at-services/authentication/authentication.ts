@@ -31,13 +31,13 @@ export class AuthenticationMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
-  //#ENDREGION
+  //#END
 
   //#REGION Identity Generation
   public async sendVerificationEmail(params: VerificationEmailDto) {
     const data = {
       eventName: AuthenticationEventType.SEND_VERIFICATION_EMAIL,
-      query: params.serialize(),
+      body: params.serialize(),
     };
     return await this.callService(data);
   }
@@ -53,14 +53,14 @@ export class AuthenticationMicroservice extends BaseService {
   public async generateIdentity(params: IdentityCreateDto) {
     const data = {
       eventName: AuthenticationEventType.GENERATE_IDENTITY,
-      query: params,
+      body: params,
     };
     return await this.callService(data);
   }
 
   public async getUserIdentityCredential(email: string) {
     const data = {
-      eventName: AuthenticationEventType.GENERATE_IDENTITY,
+      eventName: AuthenticationEventType.GET_IDENTITY_USER_CREDENTIAL,
       query: email,
     };
     return await this.callService(data);
@@ -69,7 +69,7 @@ export class AuthenticationMicroservice extends BaseService {
   public async revokeIdentity(params: IdentityDidRevokeDto) {
     const data = {
       eventName: AuthenticationEventType.REVOKE_IDENTITY,
-      query: params,
+      body: params,
     };
     return await this.callService(data);
   }
@@ -77,13 +77,50 @@ export class AuthenticationMicroservice extends BaseService {
   public async generateDevResources(params: any) {
     const data = {
       eventName: AuthenticationEventType.GENERATE_DEV_RESOURCES,
-      query: params,
+      body: params,
     };
     return await this.callService(data);
   }
-  //#ENDREGION
+  //#END
 
-  //#region Sporran Wallet
+  //#REGION Sporran Wallet
+  public async getSessionValues() {
+    const data = {
+      eventName: AuthenticationEventType.SPORRAN_GET_SESSION_VALUES,
+    };
+    return await this.callService(data);
+  }
 
-  //#endregion
+  public async sporranVerifySession(params: any) {
+    const data = {
+      eventName: AuthenticationEventType.SPORRAN_VERIFY_SESSION,
+      body: params,
+    };
+    return await this.callService(data);
+  }
+
+  public async sporranSubmitTerms(params: any) {
+    const data = {
+      eventName: AuthenticationEventType.SPORRAN_SUBMIT_TERMS,
+      body: params,
+    };
+    return await this.callService(data);
+  }
+
+  public async sporranSubmitAttestation(params: any) {
+    const data = {
+      eventName: AuthenticationEventType.SPORRAN_SUBMIT_ATTESTATION,
+      body: params,
+    };
+    return await this.callService(data);
+  }
+
+  public async sporranRequestCredential(params: any) {
+    const data = {
+      eventName: AuthenticationEventType.SPORRAN_REQUEST_CREDENTIAL,
+      body: params,
+    };
+    return await this.callService(data);
+  }
+  //#END
 }

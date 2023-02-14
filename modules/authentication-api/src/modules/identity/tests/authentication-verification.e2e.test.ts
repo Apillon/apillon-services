@@ -58,7 +58,7 @@ describe('VERFICATION', () => {
     const identityAttestedDb = await new Identity(
       {},
       context,
-    ).populateByUserEmail(context, testEmail);
+    ).populateByUserEmail(testEmail);
 
     expect(identityAttestedDb).not.toBeUndefined();
     expect(identityAttestedDb.email).toEqual(testEmail);

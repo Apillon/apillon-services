@@ -3,6 +3,7 @@ import { AuthenticationEventType } from '@apillon/lib';
 
 import { VerificationMicroservice } from './modules/verification/verification.service';
 import { IdentityMicroservice } from './modules/identity/identity.service';
+import { SporranMicroservice } from './modules/sporran/sporran.service';
 
 export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
@@ -23,6 +24,16 @@ export async function processEvent(event, context: Context): Promise<any> {
     [AuthenticationEventType.GENERATE_DEV_RESOURCES]:
       IdentityMicroservice.generateDevResources,
     // SPORRAN
+    [AuthenticationEventType.SPORRAN_GET_SESSION_VALUES]:
+      SporranMicroservice.getSessionValues,
+    [AuthenticationEventType.SPORRAN_SUBMIT_TERMS]:
+      SporranMicroservice.submitTerms,
+    [AuthenticationEventType.SPORRAN_SUBMIT_ATTESTATION]:
+      SporranMicroservice.submitAttestation,
+    [AuthenticationEventType.SPORRAN_REQUEST_CREDENTIAL]:
+      SporranMicroservice.requestCredential,
+    [AuthenticationEventType.SPORRAN_VERIFY_SESSION]:
+      SporranMicroservice.requestCredential,
   };
 
   return await processors[event.eventName](event, context);

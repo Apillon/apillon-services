@@ -64,10 +64,10 @@ import {
 @Injectable()
 export class IdentityMicroservice {
   static async sendVerificationEmail(
+    event: { body: VerificationEmailDto },
     context,
-    event: VerificationEmailDto,
   ): Promise<any> {
-    const email = event.email;
+    const email = event.body.email;
     const token = generateJwtToken(JwtTokenType.IDENTITY_VERIFICATION, {
       email,
     });
@@ -77,7 +77,7 @@ export class IdentityMicroservice {
       email,
     );
 
-    const verificationEmailType = event.type;
+    const verificationEmailType = event.body.type;
     if (verificationEmailType == AuthApiEmailType.GENERATE_IDENTITY) {
       // This is the start process of the identity generation, so we need
       // to do some extra stuff before we can start the process
@@ -152,8 +152,8 @@ export class IdentityMicroservice {
   }
 
   static async getIdentityGenProcessState(
+    { query: email },
     context,
-    email: string,
   ): Promise<any> {
     const identity = await new Identity({}, context).populateByUserEmail(
       context,
@@ -174,19 +174,19 @@ export class IdentityMicroservice {
     return { state: identity.state };
   }
 
-  static async generateIdentity(context, body: IdentityCreateDto) {
+  static async generateIdentity(event: { body: IdentityCreateDto }, context) {
     // Worker input parameters
     const parameters = {
-      did_create_op: body.did_create_op,
-      email: body.email,
-      didUri: body.didUri,
+      did_create_op: event.body.did_create_op,
+      email: event.body.email,
+      didUri: event.body.didUri,
       args: [IdentityGenFlag.FULL_IDENTITY],
     };
 
     // Check if correct identity + state exists -> IN_PROGRESS
     const identity = await new Identity({}, context).populateByUserEmail(
       context,
-      body.email,
+      event.body.email,
     );
 
     if (
@@ -252,10 +252,10 @@ export class IdentityMicroservice {
     return { success: true };
   }
 
-  static async getUserIdentityCredential(context, email: string) {
+  static async getUserIdentityCredential(event: { query: string }, context) {
     const identity = await new Identity({}, context).populateByUserEmail(
       context,
-      email,
+      event.query,
     );
 
     if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
@@ -269,15 +269,15 @@ export class IdentityMicroservice {
     return { credential: identity.credential };
   }
 
-  static async revokeIdentity(context, body: IdentityDidRevokeDto) {
+  static async revokeIdentity(event: { body: IdentityDidRevokeDto }, context) {
     const parameters = {
-      email: body.email,
+      email: event.body.email,
       args: [],
     };
 
     const identity = await new Identity({}, context).populateByUserEmail(
       context,
-      body.email,
+      event.body.email,
     );
 
     if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
@@ -332,7 +332,7 @@ export class IdentityMicroservice {
     return { success: true };
   }
 
-  static async generateDevResources(context, body: any) {
+  static async generateDevResources(event: { body: any }, context) {
     // Used to issue did documents to test accounts -> Since the peregrine faucet
     // only allows 100PILT token per account, we need a new one everytime funds
     // are depleted ...
@@ -350,8 +350,8 @@ export class IdentityMicroservice {
     let mnemonic;
 
     // Generate mnemonic
-    if (body.mnemonic) {
-      mnemonic = body.mnemonic;
+    if (event.body.mnemonic) {
+      mnemonic = event.body.mnemonic;
     } else {
       mnemonic = generateMnemonic();
     }
@@ -413,8 +413,8 @@ export class IdentityMicroservice {
       })) as SignExtrinsicCallback,
     );
 
-    if (body.domain_linkage) {
-      const domainLinkage = body.domain_linkage;
+    if (event.body.domain_linkage) {
+      const domainLinkage = event.body.domain_linkage;
       let origin = domainLinkage.origin;
 
       if (!origin) {

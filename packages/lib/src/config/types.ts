@@ -77,6 +77,11 @@ export enum AuthenticationEventType {
   GET_IDENTITY_USER_CREDENTIAL = 'get-identity-user-credential',
   REVOKE_IDENTITY = 'revoke-identity',
   GENERATE_DEV_RESOURCES = 'generate-dev-resources',
+  SPORRAN_GET_SESSION_VALUES = 'sporran-get-session-values',
+  SPORRAN_VERIFY_SESSION = 'sporran-verify-session',
+  SPORRAN_SUBMIT_TERMS = 'sporran-submit-terms',
+  SPORRAN_SUBMIT_ATTESTATION = 'sporran-submit-attestation',
+  SPORRAN_REQUEST_CREDENTIAL = 'sporran-request-credential',
 }
 
 export enum MailEventType {

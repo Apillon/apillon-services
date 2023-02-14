@@ -176,7 +176,6 @@ describe('IDENTITY', () => {
 
       // Double check
       const identityDb = await new Identity({}, context).populateByUserEmail(
-        context,
         testEmail,
       );
 
@@ -207,7 +206,7 @@ describe('IDENTITY', () => {
       const identityAttestedDb = await new Identity(
         {},
         context,
-      ).populateByUserEmail(context, testEmailAttested);
+      ).populateByUserEmail(testEmailAttested);
 
       expect(identityAttestedDb).not.toBeUndefined();
       expect(identityAttestedDb.email).toEqual(testEmailAttested);
