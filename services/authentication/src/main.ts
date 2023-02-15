@@ -33,7 +33,7 @@ export async function processEvent(event, context: Context): Promise<any> {
     [AuthenticationEventType.SPORRAN_REQUEST_CREDENTIAL]:
       SporranMicroservice.requestCredential,
     [AuthenticationEventType.SPORRAN_VERIFY_SESSION]:
-      SporranMicroservice.requestCredential,
+      SporranMicroservice.verifySession,
   };
 
   return await processors[event.eventName](event, context);

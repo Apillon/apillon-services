@@ -345,6 +345,7 @@ export class IdentityMicroservice {
     }
 
     await connect(env.KILT_NETWORK);
+    // await connect(env.KILT_NETWORK_TEST);
     const api = ConfigService.get('api');
     let wellKnownDidconfig;
     let mnemonic;
@@ -352,6 +353,8 @@ export class IdentityMicroservice {
     // Generate mnemonic
     if (event.body.mnemonic) {
       mnemonic = event.body.mnemonic;
+    } else if (event.body.domain_linkage_only) {
+      mnemonic = env.KILT_ATTESTER_MNEMONIC;
     } else {
       mnemonic = generateMnemonic();
     }
@@ -371,6 +374,7 @@ export class IdentityMicroservice {
     let balance = parseInt(
       (await api.query.system.account(account.address)).data.free.toString(),
     );
+
     if (balance < 3) {
       console.log(`Requesting tokens for account ${account.address}`);
 

@@ -28,12 +28,24 @@ export class AttestationEmailDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: AuthenticationErrorCode.IDENTITY_TOKEN_NOT_PRESENT,
+      },
+    ],
   })
   public token: string;
 
   @prop({
     parser: { resolver: JSONParser() },
     populatable: [PopulateFrom.PROFILE],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_PRESENT,
+      },
+    ],
   })
   public captcha: { eKey: string; token: string };
 }

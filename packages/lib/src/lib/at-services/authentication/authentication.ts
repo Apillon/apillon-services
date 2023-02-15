@@ -5,6 +5,10 @@ import { BaseService } from '../base-service';
 import { IdentityCreateDto } from './dtos/identity-create.dto';
 import { IdentityDidRevokeDto } from './dtos/identity-did-revoke.dto';
 import { VerificationEmailDto } from './dtos/identity-verification-email.dto';
+import { RequestCredentialDto } from './dtos/sporran/message/request-credential.dto';
+import { SubmitAttestationDto } from './dtos/sporran/message/submit-attestation.dto';
+import { SubmitTermsDto } from './dtos/sporran/message/submit-terms.dto';
+import { SporranSessionVerifyDto } from './dtos/sporran/sporran-session.dto';
 import { VerificationIdentityDto } from './dtos/verify-identity.dto';
 
 export class AuthenticationMicroservice extends BaseService {
@@ -91,7 +95,7 @@ export class AuthenticationMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async sporranVerifySession(params: any) {
+  public async sporranVerifySession(params: SporranSessionVerifyDto) {
     const data = {
       eventName: AuthenticationEventType.SPORRAN_VERIFY_SESSION,
       body: params,
@@ -99,7 +103,7 @@ export class AuthenticationMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async sporranSubmitTerms(params: any) {
+  public async sporranSubmitTerms(params: SubmitTermsDto) {
     const data = {
       eventName: AuthenticationEventType.SPORRAN_SUBMIT_TERMS,
       body: params,
@@ -107,7 +111,7 @@ export class AuthenticationMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async sporranSubmitAttestation(params: any) {
+  public async sporranSubmitAttestation(params: SubmitAttestationDto) {
     const data = {
       eventName: AuthenticationEventType.SPORRAN_SUBMIT_ATTESTATION,
       body: params,
@@ -115,7 +119,7 @@ export class AuthenticationMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async sporranRequestCredential(params: any) {
+  public async sporranRequestCredential(params: RequestCredentialDto) {
     const data = {
       eventName: AuthenticationEventType.SPORRAN_REQUEST_CREDENTIAL,
       body: params,
