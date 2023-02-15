@@ -1,13 +1,11 @@
 import * as request from 'supertest';
 import { releaseStage, Stage } from '@apillon/tests-lib';
 import { setupTest } from '../../../../test/helpers/setup';
-import { DbTables, IdentityState, JwtTokenType } from '../../../config/types';
+import { JwtTokenType } from '../../../config/types';
 import { generateJwtToken, SerializeFor } from '@apillon/lib';
-import { Identity } from '../models/identity.model';
 import { AuthenticationApiContext } from '../../../context';
 import * as mock from './mock-data';
 import { Utils } from '@kiltprotocol/sdk-js';
-import { generateKeypairs } from '../../../lib/kilt';
 import { u8aToHex } from '@polkadot/util';
 import { setupDidCreateMock } from './utils';
 
