@@ -1,14 +1,14 @@
 import {
   AttachedServiceType,
   CodeException,
-  CreateWebPageDto,
+  CreateWebsiteDto,
   DeploymentQueryFilter,
-  DeployWebPageDto,
+  DeployWebsiteDto,
   StorageMicroservice,
   ValidationException,
   ValidatorErrorCode,
-  WebPageQueryFilter,
-  WebPagesQuotaReachedQueryFilter,
+  WebsiteQueryFilter,
+  WebsitesQuotaReachedQueryFilter,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ResourceNotFoundErrorCode } from '../../../config/types';
@@ -22,15 +22,15 @@ import { ServicesService } from '../../services/services.service';
 export class HostingService {
   constructor(private readonly serviceService: ServicesService) {}
 
-  async listWebPages(context: DevConsoleApiContext, query: WebPageQueryFilter) {
-    return (await new StorageMicroservice(context).listWebPages(query)).data;
+  async listWebsites(context: DevConsoleApiContext, query: WebsiteQueryFilter) {
+    return (await new StorageMicroservice(context).listWebsites(query)).data;
   }
 
-  async getWebPage(context: DevConsoleApiContext, id: number) {
-    return (await new StorageMicroservice(context).getWebPage(id)).data;
+  async getWebsite(context: DevConsoleApiContext, id: number) {
+    return (await new StorageMicroservice(context).getWebsite(id)).data;
   }
 
-  async createWebPage(context: DevConsoleApiContext, body: CreateWebPageDto) {
+  async createWebsite(context: DevConsoleApiContext, body: CreateWebsiteDto) {
     const project: Project = await new Project({}, context).populateByUUID(
       body.project_uuid,
     );
@@ -63,34 +63,34 @@ export class HostingService {
       await this.serviceService.createService(context, storageService);
     }
 
-    //Call Storage microservice, to create webPage
-    return (await new StorageMicroservice(context).createWebPage(body)).data;
+    //Call Storage microservice, to create website
+    return (await new StorageMicroservice(context).createWebsite(body)).data;
   }
 
-  async updateWebPage(context: DevConsoleApiContext, id: number, body: any) {
+  async updateWebsite(context: DevConsoleApiContext, id: number, body: any) {
     return (
-      await new StorageMicroservice(context).updateWebPage({
+      await new StorageMicroservice(context).updateWebsite({
         id: id,
         data: body,
       })
     ).data;
   }
 
-  async isWebPagesQuotaReached(
+  async isWebsitesQuotaReached(
     context: DevConsoleApiContext,
-    query: WebPagesQuotaReachedQueryFilter,
+    query: WebsitesQuotaReachedQueryFilter,
   ) {
     return (
-      await new StorageMicroservice(context).maxWebPagesQuotaReached(query)
-    ).data.maxWebPagesQuotaReached;
+      await new StorageMicroservice(context).maxWebsitesQuotaReached(query)
+    ).data.maxWebsitesQuotaReached;
   }
 
-  async deployWebPage(
+  async deployWebsite(
     context: DevConsoleApiContext,
     id: number,
-    body: DeployWebPageDto,
+    body: DeployWebsiteDto,
   ) {
-    body.populate({ webPage_id: id });
+    body.populate({ website_id: id });
     try {
       await body.validate();
     } catch (err) {
@@ -98,15 +98,15 @@ export class HostingService {
       if (!body.isValid())
         throw new ValidationException(body, ValidatorErrorCode);
     }
-    return (await new StorageMicroservice(context).deployWebPage(body)).data;
+    return (await new StorageMicroservice(context).deployWebsite(body)).data;
   }
 
   async listDeployments(
     context: DevConsoleApiContext,
-    webPage_id: number,
+    website_id: number,
     query: DeploymentQueryFilter,
   ) {
-    query.webPage_id = webPage_id;
+    query.website_id = website_id;
     try {
       await query.validate();
     } catch (err) {

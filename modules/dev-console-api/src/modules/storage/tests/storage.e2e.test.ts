@@ -294,11 +294,11 @@ describe('Storage tests', () => {
           })
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(201);
-        expect(response.body.data.length).toBe(2);
-        const abcdUrlResponse = response.body.data.find(
+        expect(response.body.data.files.length).toBe(2);
+        const abcdUrlResponse = response.body.data.files.find(
           (x) => x.fileName == 'abcd.txt',
         );
-        const uvzUrlResponse = response.body.data.find(
+        const uvzUrlResponse = response.body.data.files.find(
           (x) => x.fileName == 'uvz.txt',
         );
 

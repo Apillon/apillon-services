@@ -28,6 +28,9 @@ import { StorageService } from './storage.service';
 export class StorageController {
   constructor(private storageService: StorageService) {}
 
+  /*
+  DEPRECATED
+
   @Post(':bucketUuid/upload')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_EXECUTE,
@@ -47,9 +50,9 @@ export class StorageController {
       bucket_uuid,
       body,
     );
-  }
+  }*/
 
-  @Post(':bucketUuid/upload-many')
+  @Post(':bucketUuid/upload')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_EXECUTE,
     serviceType: AttachedServiceType.STORAGE,

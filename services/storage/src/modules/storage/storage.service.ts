@@ -9,6 +9,7 @@ import {
   Lmas,
   LogType,
   QuotaCode,
+  runWithWorkers,
   Scs,
   SerializeFor,
   ServiceName,
@@ -264,38 +265,51 @@ export class StorageService {
           status: 400,
         });
       }
+    } else {
+      //create new session
+      session = new FileUploadSession(
+        {
+          session_uuid: uuidV4(),
+          bucket_id: bucket.id,
+          project_uuid: bucket.project_uuid,
+        },
+        context,
+      );
+      await session.insert();
     }
 
     const s3Client: AWS_S3 = new AWS_S3();
 
-    const promises = [];
+    const files = [];
+    await runWithWorkers(
+      event.body.files,
+      50,
+      context,
+      async (fileMetadata) => {
+        //NOTE - session uuid is added to s3File key.
+        /*File key structure:
+         * Bucket type(STORAGE, STORAGE_sessions, HOSTING)/bucket id/session uuid if present/path/filename
+         */
+        const s3FileKey = `${BucketType[bucket.bucketType]}${
+          session?.session_uuid ? '_sessions' : ''
+        }/${bucket.id}${
+          session?.session_uuid ? '/' + session.session_uuid : ''
+        }/${
+          (fileMetadata.path ? fileMetadata.path : '') + fileMetadata.fileName
+        }`;
 
-    for (const fileMetadata of event.body.files) {
-      //NOTE - session uuid is added to s3File key.
-      /*File key structure:
-       * Bucket type(STORAGE, STORAGE_sessions, HOSTING)/bucket id/session uuid if present/path/filename
-       */
-      const s3FileKey = `${BucketType[bucket.bucketType]}${
-        session?.session_uuid ? '_sessions' : ''
-      }/${bucket.id}${
-        session?.session_uuid ? '/' + session.session_uuid : ''
-      }/${
-        (fileMetadata.path ? fileMetadata.path : '') + fileMetadata.fileName
-      }`;
-
-      promises.push(
-        createFURAndS3Url(
-          context,
-          s3FileKey,
-          fileMetadata,
-          session,
-          bucket,
-          s3Client,
-        ),
-      );
-    }
-
-    await Promise.all(promises);
+        files.push(
+          await createFURAndS3Url(
+            context,
+            s3FileKey,
+            fileMetadata,
+            session,
+            bucket,
+            s3Client,
+          ),
+        );
+      },
+    );
 
     await new Lmas().writeLog({
       context: context,
@@ -306,7 +320,10 @@ export class StorageService {
       service: ServiceName.STORAGE,
     });
 
-    return event.body.files;
+    return {
+      session_uuid: session?.session_uuid,
+      files: files,
+    };
   }
 
   static async endFileUploadSession(

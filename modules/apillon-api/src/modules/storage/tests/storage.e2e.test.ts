@@ -7,6 +7,7 @@ import {
   DefaultApiKeyRole,
   env,
   SqlModelStatus,
+  ValidatorErrorCode,
 } from '@apillon/lib';
 import {
   FileStatus,
@@ -142,8 +143,12 @@ describe('Apillon API storage tests', () => {
         const response = await request(stage.http)
           .post(`/storage/${testBucket.bucket_uuid}/upload`)
           .send({
-            fileName: 'myTestFile.txt',
-            contentType: 'text/plain',
+            files: [
+              {
+                fileName: 'myTestFile.txt',
+                contentType: 'text/plain',
+              },
+            ],
           })
           .set(
             'Authorization',
@@ -152,17 +157,12 @@ describe('Apillon API storage tests', () => {
             ).toString('base64')}`,
           );
         expect(response.status).toBe(201);
-        expect(response.body.data.url).toBeTruthy();
-        expect(response.body.data.fileUuid).toBeTruthy();
+        expect(response.body.data.files.length).toBe(1);
+        expect(response.body.data.files[0].url).toBeTruthy();
+        expect(response.body.data.files[0].fileUuid).toBeTruthy();
 
-        const fur: FileUploadRequest = await new FileUploadRequest(
-          {},
-          stage.storageContext,
-        ).populateById(response.body.data.fileUploadRequestId);
-        expect(fur.exists()).toBeTruthy();
-
-        testS3SignedUrl = response.body.data.url;
-        testS3FileUUID = response.body.data.fileUuid;
+        testS3SignedUrl = response.body.data.files[0].url;
+        testS3FileUUID = response.body.data.files[0].fileUuid;
       });
 
       test('Application should be able to upload file to s3 via signed URL', async () => {
@@ -193,7 +193,9 @@ describe('Apillon API storage tests', () => {
       test('Application should recieve 422 error if missing required data', async () => {
         const response = await request(stage.http)
           .post(`/storage/${testBucket.bucket_uuid}/upload`)
-          .send({})
+          .send({
+            files: [{}],
+          })
           .set(
             'Authorization',
             `Basic ${Buffer.from(
@@ -215,12 +217,36 @@ describe('Apillon API storage tests', () => {
         ).toBeTruthy();
       });
 
+      test('Application should recieve 422 error if missing required data', async () => {
+        const response = await request(stage.http)
+          .post(`/storage/${testBucket.bucket_uuid}/upload`)
+          .send({})
+          .set(
+            'Authorization',
+            `Basic ${Buffer.from(
+              apiKey.apiKey + ':' + apiKey.apiKeySecret,
+            ).toString('base64')}`,
+          );
+        expect(response.status).toBe(422);
+        expect(response.body.errors).toBeTruthy();
+        expect(response.body.errors.length).toBeGreaterThan(0);
+        expect(
+          response.body.errors.filter(
+            (x) => x.code == ValidatorErrorCode.FILES_PROPERTY_NOT_PRESENT,
+          ),
+        ).toBeTruthy();
+      });
+
       test('Application should NOT be able to recieve S3 signed URL for ANOTHER USER project', async () => {
         const response = await request(stage.http)
           .post(`/storage/${testBucket.bucket_uuid}/upload`)
           .send({
-            fileName: 'myTestFile.txt',
-            contentType: 'text/plain',
+            files: [
+              {
+                fileName: 'myTestFile.txt',
+                contentType: 'text/plain',
+              },
+            ],
           })
           .set(
             'Authorization',
@@ -377,7 +403,7 @@ describe('Apillon API storage tests', () => {
 
         //Get urls for upload
         let response = await request(stage.http)
-          .post(`/storage/${testBucket.bucket_uuid}/upload-many`)
+          .post(`/storage/${testBucket.bucket_uuid}/upload`)
           .send({
             sessionUuid: testSession_uuid,
             files: [
@@ -399,11 +425,11 @@ describe('Apillon API storage tests', () => {
           );
 
         expect(response.status).toBe(201);
-        expect(response.body.data.length).toBe(2);
-        const abcdUrlResponse = response.body.data.find(
+        expect(response.body.data.files.length).toBe(2);
+        const abcdUrlResponse = response.body.data.files.find(
           (x) => x.fileName == 'abcd.txt',
         );
-        const uvzUrlResponse = response.body.data.find(
+        const uvzUrlResponse = response.body.data.files.find(
           (x) => x.fileName == 'uvz.txt',
         );
 

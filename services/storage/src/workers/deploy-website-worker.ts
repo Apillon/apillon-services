@@ -26,12 +26,12 @@ import { Bucket } from '../modules/bucket/models/bucket.model';
 import { Directory } from '../modules/directory/models/directory.model';
 import { HostingService } from '../modules/hosting/hosting.service';
 import { Deployment } from '../modules/hosting/models/deployment.model';
-import { WebPage } from '../modules/hosting/models/web-page.model';
+import { Website } from '../modules/hosting/models/website.model';
 import { uploadFilesToIPFSRes } from '../modules/ipfs/interfaces/upload-files-to-ipfs-res.interface';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { File } from '../modules/storage/models/file.model';
 
-export class DeployWebPageWorker extends BaseQueueWorker {
+export class DeployWebsiteWorker extends BaseQueueWorker {
   public constructor(
     workerDefinition: WorkerDefinition,
     context: Context,
@@ -44,7 +44,7 @@ export class DeployWebPageWorker extends BaseQueueWorker {
     return [];
   }
   public async runExecutor(data: any): Promise<any> {
-    console.info('RUN EXECUTOR (DeployWebPageWorker). data: ', data);
+    console.info('RUN EXECUTOR (DeployWebsiteWorker). data: ', data);
 
     const deployment = await new Deployment({}, this.context).populateById(
       data?.deployment_id,
@@ -63,18 +63,18 @@ export class DeployWebPageWorker extends BaseQueueWorker {
     await deployment.update();
 
     try {
-      const webPage: WebPage = await new WebPage({}, this.context).populateById(
-        deployment.webPage_id,
+      const website: Website = await new Website({}, this.context).populateById(
+        deployment.website_id,
       );
       //according to environment, select source and target bucket
       const sourceBucket_id =
         deployment.environment == DeploymentEnvironment.STAGING
-          ? webPage.bucket_id
-          : webPage.stagingBucket_id;
+          ? website.bucket_id
+          : website.stagingBucket_id;
       const targetBucket_id =
         deployment.environment == DeploymentEnvironment.STAGING
-          ? webPage.stagingBucket_id
-          : webPage.productionBucket_id;
+          ? website.stagingBucket_id
+          : website.productionBucket_id;
 
       const sourceBucket: Bucket = await new Bucket(
         {},
@@ -261,8 +261,8 @@ export class DeployWebPageWorker extends BaseQueueWorker {
         writeLog(
           LogType.ERROR,
           'Error updating deploymentStatus status to DeploymentStatus.FAILED',
-          'deploy-web-page-worker.ts',
-          'DeployWebPageWorker.runExecutor',
+          'deploy-website-worker.ts',
+          'DeployWebsiteWorker.runExecutor',
           upgError,
         );
       }

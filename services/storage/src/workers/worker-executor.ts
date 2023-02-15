@@ -13,7 +13,7 @@ import { SyncToIPFSWorker } from './s3-to-ipfs-sync-worker';
 import { TestWorker } from './test-worker';
 import { PinToCRUSTWorker } from './pin-to-crust-worker';
 import { Scheduler } from './scheduler';
-import { DeployWebPageWorker } from './deploy-web-page-worker';
+import { DeployWebsiteWorker } from './deploy-website-worker';
 import { DeleteBucketDirectoryFileWorker } from './delete-bucket-directory-file-worker';
 
 // get global mysql connection
@@ -25,7 +25,7 @@ export enum WorkerName {
   SYNC_TO_IPFS_WORKER = 'SyncToIpfsWorker',
   PIN_TO_CRUST_WORKER = 'PinToCrustWorker',
   DELETE_BUCKET_DIRECTORY_FILE_WORKER = 'DeleteBucketDirectoryFileWorker',
-  DEPLOY_WEB_PAGE_WORKER = 'DeployWebPageWorker',
+  DEPLOY_WEBSITE_WORKER = 'DeployWebsiteWorker',
 }
 
 export async function handler(event: any) {
@@ -204,8 +204,8 @@ export async function handleSqsMessages(
         });
         break;
       }
-      case WorkerName.DEPLOY_WEB_PAGE_WORKER: {
-        await new DeployWebPageWorker(
+      case WorkerName.DEPLOY_WEBSITE_WORKER: {
+        await new DeployWebsiteWorker(
           workerDefinition,
           context,
           QueueWorkerType.EXECUTOR,

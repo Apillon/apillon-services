@@ -1,5 +1,9 @@
 import {
-  DeployWebPageDto,
+  ApillonHostingApiCreateS3UrlsForUploadDto,
+  EndFileUploadSessionDto,
+} from '@apillon/lib';
+import {
+  DeployWebsiteDto,
   StorageMicroservice,
   ValidationException,
   ValidatorErrorCode,
@@ -13,8 +17,8 @@ export class HostingService {
     return (await new StorageMicroservice(context).listDomains()).data;
   }
 
-  async getWebPage(context: ApillonApiContext, id: any) {
-    const wp = (await new StorageMicroservice(context).getWebPage(id)).data;
+  async getWebsite(context: ApillonApiContext, id: any) {
+    const wp = (await new StorageMicroservice(context).getWebsite(id)).data;
     delete wp['bucket'];
     delete wp['stagingBucket'];
     delete wp['productionBucket'];
@@ -22,12 +26,12 @@ export class HostingService {
     return wp;
   }
 
-  async deployWebPage(
+  async createS3SignedUrlsForWebsiteUpload(
     context: ApillonApiContext,
-    id: any,
-    body: DeployWebPageDto,
+    website_uuid: string,
+    body: ApillonHostingApiCreateS3UrlsForUploadDto,
   ) {
-    body.populate({ webPage_id: id, clearBucketForUpload: true });
+    body.populate(website_uuid);
     try {
       await body.validate();
     } catch (err) {
@@ -35,7 +39,48 @@ export class HostingService {
       if (!body.isValid())
         throw new ValidationException(body, ValidatorErrorCode);
     }
-    return (await new StorageMicroservice(context).deployWebPage(body)).data;
+
+    return (
+      await new StorageMicroservice(
+        context,
+      ).requestS3SignedURLsForWebsiteUpload(
+        new ApillonHostingApiCreateS3UrlsForUploadDto().populate({
+          ...body.serialize(),
+          website_uuid: website_uuid,
+          session_uuid: body.sessionUuid,
+        }),
+      )
+    ).data;
+  }
+
+  async endFileUploadSession(
+    context: ApillonApiContext,
+    website_uuid: string,
+    session_uuid: string,
+    body: EndFileUploadSessionDto,
+  ) {
+    return (
+      await new StorageMicroservice(context).endFileUploadSession(
+        session_uuid,
+        body,
+      )
+    ).data;
+  }
+
+  async deployWebsite(
+    context: ApillonApiContext,
+    id: any,
+    body: DeployWebsiteDto,
+  ) {
+    body.populate({ website_id: id, clearBucketForUpload: true });
+    try {
+      await body.validate();
+    } catch (err) {
+      await body.handle(err);
+      if (!body.isValid())
+        throw new ValidationException(body, ValidatorErrorCode);
+    }
+    return (await new StorageMicroservice(context).deployWebsite(body)).data;
   }
 
   async getDeployment(context: ApillonApiContext, id: number) {
