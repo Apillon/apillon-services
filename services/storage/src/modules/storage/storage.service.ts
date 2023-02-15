@@ -285,7 +285,7 @@ export class StorageService {
       event.body.files,
       50,
       context,
-      async (fileMetadata, ctx) => {
+      async (fileMetadata) => {
         //NOTE - session uuid is added to s3File key.
         /*File key structure:
          * Bucket type(STORAGE, STORAGE_sessions, HOSTING)/bucket id/session uuid if present/path/filename
