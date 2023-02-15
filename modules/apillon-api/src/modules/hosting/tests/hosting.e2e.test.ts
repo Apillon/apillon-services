@@ -8,7 +8,7 @@ import {
   env,
 } from '@apillon/lib';
 import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
-import { WebPage } from '@apillon/storage/src/modules/hosting/models/web-page.model';
+import { Website } from '@apillon/storage/src/modules/hosting/models/website.model';
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 import {
   createTestApiKey,
@@ -37,7 +37,7 @@ describe('Apillon API hosting tests', () => {
 
   let apiKey2: ApiKey = undefined;
 
-  let testWebPage: WebPage;
+  let testWebsite: Website;
   let testSession_uuid: string = uuidV4();
 
   let file1FURRes;
@@ -56,14 +56,14 @@ describe('Apillon API hosting tests', () => {
     );
 
     //Create test web page record
-    testWebPage = await new WebPage({}, stage.storageContext)
+    testWebsite = await new Website({}, stage.storageContext)
       .populate({
-        webPage_uuid: uuidV4(),
+        website_uuid: uuidV4(),
         project_uuid: testProject.project_uuid,
         name: 'Test web page',
         domain: 'https://hosting-e2e-tests.si',
       })
-      .createNewWebPage(stage.storageContext);
+      .createNewWebsite(stage.storageContext);
 
     apiKey = await createTestApiKey(stage.amsContext, testProject.project_uuid);
     await apiKey.assignRole(
@@ -136,7 +136,7 @@ describe('Apillon API hosting tests', () => {
   describe('Apillon API upload files to hosting bucket tests', () => {
     test('Application (through Apillon API) should be able to recieve multiple S3 signed URLs, used to upload files to S3', async () => {
       let response = await request(stage.http)
-        .post(`/storage/${testWebPage.bucket.bucket_uuid}/upload-many`)
+        .post(`/storage/${testWebsite.bucket.bucket_uuid}/upload-many`)
         .send({
           sessionUuid: testSession_uuid,
           files: [
@@ -184,7 +184,7 @@ describe('Apillon API hosting tests', () => {
     test('Application (through Apillon API) should be able to end session and create files in preview bucket', async () => {
       const response = await request(stage.http)
         .post(
-          `/storage/${testWebPage.bucket.bucket_uuid}/upload/${testSession_uuid}/end`,
+          `/storage/${testWebsite.bucket.bucket_uuid}/upload/${testSession_uuid}/end`,
         )
         .set(
           'Authorization',
@@ -201,13 +201,13 @@ describe('Apillon API hosting tests', () => {
       ).populateByUUID(file1FURRes.fileUuid);
 
       expect(file.exists()).toBeTruthy();
-      expect(file.bucket_id).toBe(testWebPage.bucket_id);
+      expect(file.bucket_id).toBe(testWebsite.bucket_id);
     });
 
     test('Application (through Apillon API) should NOT be able to end same session multiple times', async () => {
       const response = await request(stage.http)
         .post(
-          `/storage/${testWebPage.bucket.bucket_uuid}/upload/${testSession_uuid}/end`,
+          `/storage/${testWebsite.bucket.bucket_uuid}/upload/${testSession_uuid}/end`,
         )
         .set(
           'Authorization',
@@ -224,7 +224,7 @@ describe('Apillon API hosting tests', () => {
 
     test('Application (through Apillon API) should NOT be able to recieve multiple S3 signed URLs for anther project', async () => {
       const response = await request(stage.http)
-        .post(`/storage/${testWebPage.bucket.bucket_uuid}/upload-many`)
+        .post(`/storage/${testWebsite.bucket.bucket_uuid}/upload-many`)
         .send({
           sessionUuid: testSession_uuid,
           files: [
@@ -250,7 +250,7 @@ describe('Apillon API hosting tests', () => {
     let deploymentId;
     test('Application (through Apillon API) should be able to deploy web page to staging', async () => {
       const response = await request(stage.http)
-        .post(`/hosting/web-pages/${testWebPage.webPage_uuid}/deploy`)
+        .post(`/hosting/websites/${testWebsite.website_uuid}/deploy`)
         .send({
           environment: 1,
           directDeploy: true,
@@ -268,7 +268,7 @@ describe('Apillon API hosting tests', () => {
         {},
         stage.storageContext,
       ).populateFilesInBucket(
-        testWebPage.stagingBucket_id,
+        testWebsite.stagingBucket_id,
         stage.storageContext,
       );
       expect(filesInBucket.length).toBe(2);
@@ -279,7 +279,7 @@ describe('Apillon API hosting tests', () => {
         {},
         stage.storageContext,
       ).populateDirectoriesInBucket(
-        testWebPage.stagingBucket_id,
+        testWebsite.stagingBucket_id,
         stage.storageContext,
       );
       expect(dirsInBucket.length).toBe(1);
@@ -288,13 +288,13 @@ describe('Apillon API hosting tests', () => {
       const filesInBucketForUpload = await new File(
         {},
         stage.storageContext,
-      ).populateFilesInBucket(testWebPage.bucket_id, stage.storageContext);
+      ).populateFilesInBucket(testWebsite.bucket_id, stage.storageContext);
       expect(filesInBucketForUpload.length).toBe(0);
     });
 
     test('Application (through Apillon API) should be able to deploy web page to production', async () => {
       const response = await request(stage.http)
-        .post(`/hosting/web-pages/${testWebPage.webPage_uuid}/deploy`)
+        .post(`/hosting/websites/${testWebsite.website_uuid}/deploy`)
         .send({
           environment: 2,
           directDeploy: true,
@@ -317,7 +317,7 @@ describe('Apillon API hosting tests', () => {
         {},
         stage.storageContext,
       ).populateFilesInBucket(
-        testWebPage.productionBucket_id,
+        testWebsite.productionBucket_id,
         stage.storageContext,
       );
       expect(filesInBucket.length).toBe(2);
@@ -328,7 +328,7 @@ describe('Apillon API hosting tests', () => {
         {},
         stage.storageContext,
       ).populateDirectoriesInBucket(
-        testWebPage.productionBucket_id,
+        testWebsite.productionBucket_id,
         stage.storageContext,
       );
       expect(dirsInBucket.length).toBe(1);
@@ -336,7 +336,7 @@ describe('Apillon API hosting tests', () => {
 
     test('Application (through Apillon API) should NOT be able to deploy ANOTHER user web page to staging', async () => {
       const response = await request(stage.http)
-        .post(`/hosting/web-pages/${testWebPage.webPage_uuid}/deploy`)
+        .post(`/hosting/websites/${testWebsite.website_uuid}/deploy`)
         .send({
           environment: 1,
           directDeploy: true,
@@ -353,7 +353,7 @@ describe('Apillon API hosting tests', () => {
     test('Application (through Apillon API) should be able to get deployment', async () => {
       const response = await request(stage.http)
         .get(
-          `/hosting/web-pages/${testWebPage.webPage_uuid}/deployments/${deploymentId}`,
+          `/hosting/websites/${testWebsite.website_uuid}/deployments/${deploymentId}`,
         )
         .set(
           'Authorization',
@@ -377,7 +377,7 @@ describe('Apillon API hosting tests', () => {
 
     test('Application (through Apillon API) should be able to get web page', async () => {
       const response = await request(stage.http)
-        .get(`/hosting/web-pages/${testWebPage.webPage_uuid}`)
+        .get(`/hosting/websites/${testWebsite.website_uuid}`)
         .set(
           'Authorization',
           `Basic ${Buffer.from(
@@ -417,7 +417,7 @@ describe('Apillon API hosting tests', () => {
     });
     test('Application (through Apillon API) should be able to recieve multiple NEW S3 signed URLs, used to upload files to S3', async () => {
       let response = await request(stage.http)
-        .post(`/storage/${testWebPage.bucket.bucket_uuid}/upload-many`)
+        .post(`/storage/${testWebsite.bucket.bucket_uuid}/upload-many`)
         .send({
           sessionUuid: testSession_uuid,
           files: [
@@ -470,7 +470,7 @@ describe('Apillon API hosting tests', () => {
     test('Application (through Apillon API) should be able to end NEW session and create files in preview bucket', async () => {
       const response = await request(stage.http)
         .post(
-          `/storage/${testWebPage.bucket.bucket_uuid}/upload/${testSession_uuid}/end`,
+          `/storage/${testWebsite.bucket.bucket_uuid}/upload/${testSession_uuid}/end`,
         )
         .set(
           'Authorization',
@@ -484,13 +484,13 @@ describe('Apillon API hosting tests', () => {
       const filesInBucket = await new File(
         {},
         stage.storageContext,
-      ).populateFilesInBucket(testWebPage.bucket_id, stage.storageContext);
+      ).populateFilesInBucket(testWebsite.bucket_id, stage.storageContext);
       expect(filesInBucket.length).toBe(3);
     });
 
     test('Application (through Apillon API) should be able to deploy NEW web page content to staging', async () => {
       const response = await request(stage.http)
-        .post(`/hosting/web-pages/${testWebPage.webPage_uuid}/deploy`)
+        .post(`/hosting/websites/${testWebsite.website_uuid}/deploy`)
         .send({
           environment: 1,
           directDeploy: true,
@@ -508,26 +508,26 @@ describe('Apillon API hosting tests', () => {
         {},
         stage.storageContext,
       ).populateFilesInBucket(
-        testWebPage.stagingBucket_id,
+        testWebsite.stagingBucket_id,
         stage.storageContext,
       );
       expect(filesInBucket.length).toBe(3);
       expect(filesInBucket[0].CID).toBeTruthy();
 
-      const tmpWebPage: WebPage = await new WebPage(
+      const tmpWebsite: Website = await new Website(
         {},
         stage.storageContext,
-      ).populateById(testWebPage.id);
-      await tmpWebPage.populateBucketsAndLink();
+      ).populateById(testWebsite.id);
+      await tmpWebsite.populateBucketsAndLink();
       //check that staging bucket CID is different than production bucket CID (production is stil in previous version)
-      expect(tmpWebPage.stagingBucket.CID).not.toBe(
-        tmpWebPage.productionBucket.CID,
+      expect(tmpWebsite.stagingBucket.CID).not.toBe(
+        tmpWebsite.productionBucket.CID,
       );
     });
 
     test('Application (through Apillon API) should be able to deploy NEW web page content to production', async () => {
       let response = await request(stage.http)
-        .post(`/hosting/web-pages/${testWebPage.webPage_uuid}/deploy`)
+        .post(`/hosting/websites/${testWebsite.website_uuid}/deploy`)
         .send({
           environment: 2,
           directDeploy: true,
@@ -545,26 +545,26 @@ describe('Apillon API hosting tests', () => {
         {},
         stage.storageContext,
       ).populateFilesInBucket(
-        testWebPage.productionBucket_id,
+        testWebsite.productionBucket_id,
         stage.storageContext,
       );
       expect(filesInBucket.length).toBe(3);
       expect(filesInBucket[0].CID).toBeTruthy();
 
-      const tmpWebPage: WebPage = await new WebPage(
+      const tmpWebsite: Website = await new Website(
         {},
         stage.storageContext,
-      ).populateById(testWebPage.id);
-      await tmpWebPage.populateBucketsAndLink();
+      ).populateById(testWebsite.id);
+      await tmpWebsite.populateBucketsAndLink();
       //check that staging bucket CID is same as production bucket CID
-      expect(tmpWebPage.stagingBucket.CID).toBe(
-        tmpWebPage.productionBucket.CID,
+      expect(tmpWebsite.stagingBucket.CID).toBe(
+        tmpWebsite.productionBucket.CID,
       );
 
       //Check, that index.html page was updated
       response = await request(
         env.STORAGE_IPFS_GATEWAY +
-          tmpWebPage.productionBucket.CID +
+          tmpWebsite.productionBucket.CID +
           '/index.html',
       ).get('');
       expect(response.status).toBe(200);

@@ -108,12 +108,38 @@ export class ApillonApiCreateS3UrlsForUploadDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+  })
+  public sessionUuid: string;
+
+  @prop({
+    parser: { resolver: UploadFileMetadataDto, array: true },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.CREATE_S3_URLS_SESSION_UUID_NOT_PRESENT,
+        code: ValidatorErrorCode.CREATE_S3_URLS_FILES_NOT_PRESENT,
       },
     ],
+  })
+  public files: UploadFileMetadataDto[];
+}
+
+export class ApillonHostingApiCreateS3UrlsForUploadDto extends ModelBase {
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+  })
+  public website_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
   })
   public sessionUuid: string;
 

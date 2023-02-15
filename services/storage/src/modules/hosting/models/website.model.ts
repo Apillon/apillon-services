@@ -16,7 +16,7 @@ import {
   SerializeFor,
   ServiceName,
   SqlModelStatus,
-  WebPageQueryFilter,
+  WebsiteQueryFilter,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { BucketType, DbTables, StorageErrorCode } from '../../../config/types';
@@ -25,8 +25,8 @@ import { Bucket } from '../../bucket/models/bucket.model';
 import { v4 as uuidV4 } from 'uuid';
 import { StorageValidationException } from '../../../lib/exceptions';
 
-export class WebPage extends AdvancedSQLModel {
-  public readonly tableName = DbTables.WEB_PAGE;
+export class Website extends AdvancedSQLModel {
+  public readonly tableName = DbTables.WEBSITE;
 
   public constructor(data: any, context: Context) {
     super(data, context);
@@ -44,15 +44,17 @@ export class WebPage extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.WEB_PAGE_UUID_NOT_PRESENT,
+        code: StorageErrorCode.WEBSITE_UUID_NOT_PRESENT,
       },
     ],
   })
-  public webPage_uuid: string;
+  public website_uuid: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -70,7 +72,7 @@ export class WebPage extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.WEB_PAGE_PROJECT_UUID_NOT_PRESENT,
+        code: StorageErrorCode.WEBSITE_PROJECT_UUID_NOT_PRESENT,
       },
     ],
   })
@@ -92,7 +94,7 @@ export class WebPage extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.WEB_PAGE_BUCKET_ID_NOT_PRESENT,
+        code: StorageErrorCode.WEBSITE_BUCKET_ID_NOT_PRESENT,
       },
     ],
   })
@@ -114,7 +116,7 @@ export class WebPage extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.WEB_PAGE_STAGING_BUCKET_ID_NOT_PRESENT,
+        code: StorageErrorCode.WEBSITE_STAGING_BUCKET_ID_NOT_PRESENT,
       },
     ],
   })
@@ -136,7 +138,7 @@ export class WebPage extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.WEB_PAGE_PRODUCTION_BUCKET_ID_NOT_PRESENT,
+        code: StorageErrorCode.WEBSITE_PRODUCTION_BUCKET_ID_NOT_PRESENT,
       },
     ],
   })
@@ -161,7 +163,7 @@ export class WebPage extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.WEB_PAGE_NAME_NOT_PRESENT,
+        code: StorageErrorCode.WEBSITE_NAME_NOT_PRESENT,
       },
     ],
   })
@@ -357,7 +359,7 @@ export class WebPage extends AdvancedSQLModel {
       `
       SELECT * 
       FROM \`${this.tableName}\`
-      WHERE ( id = @id OR webPage_uuid = @id)
+      WHERE ( id = @id OR website_uuid = @id)
       AND status <> ${SqlModelStatus.DELETED};
       `,
       { id },
@@ -376,7 +378,7 @@ export class WebPage extends AdvancedSQLModel {
    * @param context
    * @returns created web site, populated with buckets
    */
-  public async createNewWebPage(context: ServiceContext): Promise<this> {
+  public async createNewWebsite(context: ServiceContext): Promise<this> {
     //Initialize buckets
     const bucket: Bucket = new Bucket(
       {
@@ -435,9 +437,9 @@ export class WebPage extends AdvancedSQLModel {
         stagingBucket.insert(SerializeFor.INSERT_DB, conn),
         productionBucket.insert(SerializeFor.INSERT_DB, conn),
       ]);
-      //Populate webPage
+      //Populate website
       this.populate({
-        webPage_uuid: uuidV4(),
+        website_uuid: uuidV4(),
         bucket_id: bucket.id,
         stagingBucket_id: stagingBucket.id,
         productionBucket_id: productionBucket.id,
@@ -456,11 +458,11 @@ export class WebPage extends AdvancedSQLModel {
         project_uuid: this.project_uuid,
         logType: LogType.ERROR,
         message: 'Error creating new web page',
-        location: 'HostingService/createWebPage',
+        location: 'HostingService/createWebsite',
         service: ServiceName.STORAGE,
         data: {
           error: err,
-          webPage: this.serialize(),
+          website: this.serialize(),
         },
       });
 
@@ -476,7 +478,7 @@ export class WebPage extends AdvancedSQLModel {
    * @param bucketType
    * @returns
    */
-  public async getNumOfWebPages() {
+  public async getNumOfWebsites() {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT COUNT(*) as numOfPages
@@ -490,7 +492,7 @@ export class WebPage extends AdvancedSQLModel {
     return data[0].numOfPages;
   }
 
-  public async getList(context: ServiceContext, filter: WebPageQueryFilter) {
+  public async getList(context: ServiceContext, filter: WebsiteQueryFilter) {
     this.canAccess(context);
     // Map url query with sql fields.
     const fieldMap = {
@@ -508,7 +510,7 @@ export class WebPage extends AdvancedSQLModel {
         SELECT ${this.generateSelectFields('wp', '')}, wp.updateTime
         `,
       qFrom: `
-        FROM \`${DbTables.WEB_PAGE}\` wp
+        FROM \`${DbTables.WEBSITE}\` wp
         WHERE wp.project_uuid = @project_uuid
         AND (@search IS null OR wp.name LIKE CONCAT('%', @search, '%'))
         AND IFNULL(@status, ${SqlModelStatus.ACTIVE}) = status

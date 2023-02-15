@@ -52,4 +52,6 @@ export async function createFURAndS3Url(
       },
     });
   }
+
+  return fileMetadata;
 }

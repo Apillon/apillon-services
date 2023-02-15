@@ -3,7 +3,7 @@ import {
   StorageErrorCode,
 } from '@apillon/storage/src/config/types';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
-import { WebPage } from '@apillon/storage/src/modules/hosting/models/web-page.model';
+import { Website } from '@apillon/storage/src/modules/hosting/models/website.model';
 import {
   createTestBucket,
   createTestBucketDirectory,
@@ -30,7 +30,7 @@ describe('Hosting tests', () => {
   let testProject: Project;
   let testProject2: Project;
 
-  let testWebPage: WebPage;
+  let testWebsite: Website;
   let testSession_uuid: string;
 
   beforeAll(async () => {
@@ -42,13 +42,13 @@ describe('Hosting tests', () => {
     testProject2 = await createTestProject(testUser2, stage.devConsoleContext);
 
     //Create test web page record
-    testWebPage = await new WebPage({}, stage.storageContext)
+    testWebsite = await new Website({}, stage.storageContext)
       .populate({
         project_uuid: testProject.project_uuid,
         name: 'Test web page',
         domain: 'https://hosting-e2e-tests.si',
       })
-      .createNewWebPage(stage.storageContext);
+      .createNewWebsite(stage.storageContext);
   });
 
   afterAll(async () => {
@@ -59,7 +59,7 @@ describe('Hosting tests', () => {
     test('User should be able to get web page list', async () => {
       const response = await request(stage.http)
         .get(
-          `/storage/hosting/web-pages?project_uuid=${testProject.project_uuid}`,
+          `/storage/hosting/websites?project_uuid=${testProject.project_uuid}`,
         )
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
@@ -72,7 +72,7 @@ describe('Hosting tests', () => {
     test('User should NOT be able to get ANOTHER USER web pages', async () => {
       const response = await request(stage.http)
         .get(
-          `/storage/hosting/web-pages?project_uuid=${testProject.project_uuid}`,
+          `/storage/hosting/websites?project_uuid=${testProject.project_uuid}`,
         )
         .set('Authorization', `Bearer ${testUser2.token}`);
       expect(response.status).toBe(403);
@@ -80,7 +80,7 @@ describe('Hosting tests', () => {
 
     test('User should be able to get web page by id', async () => {
       const response = await request(stage.http)
-        .get(`/storage/hosting/web-pages/${testWebPage.id}`)
+        .get(`/storage/hosting/websites/${testWebsite.id}`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.name).toBeTruthy();
@@ -93,7 +93,7 @@ describe('Hosting tests', () => {
 
     test('User should NOT be able to create web page in ANOTHER user project', async () => {
       const response = await request(stage.http)
-        .post(`/storage/hosting/web-page`)
+        .post(`/storage/hosting/website`)
         .send({
           project_uuid: testProject2.project_uuid,
           name: 'My test web page',
@@ -108,7 +108,7 @@ describe('Hosting tests', () => {
 
     test('User should recieve 422 if invalid body in POST method', async () => {
       const response = await request(stage.http)
-        .post(`/storage/hosting/web-page`)
+        .post(`/storage/hosting/website`)
         .send({})
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(422);
@@ -116,7 +116,7 @@ describe('Hosting tests', () => {
 
     test('User should be able to create new web page', async () => {
       const response = await request(stage.http)
-        .post(`/storage/hosting/web-page`)
+        .post(`/storage/hosting/website`)
         .send({
           project_uuid: testProject.project_uuid,
           name: 'My test web page',
@@ -128,7 +128,7 @@ describe('Hosting tests', () => {
       expect(response.body.data.name).toBe('My test web page');
       expect(response.body.data.domain).toBe('https://www.my-test-page.si');
 
-      const wp: WebPage = await new WebPage(
+      const wp: Website = await new Website(
         {},
         stage.storageContext,
       ).populateById(response.body.data.id);
@@ -149,18 +149,18 @@ describe('Hosting tests', () => {
 
     test('User should recieve 404 if web page does not exists', async () => {
       const response = await request(stage.http)
-        .patch(`/storage/hosting/web-pages/44444`)
+        .patch(`/storage/hosting/websites/44444`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(404);
-      expect(response.body.code).toBe(StorageErrorCode.WEB_PAGE_NOT_FOUND);
+      expect(response.body.code).toBe(StorageErrorCode.WEBSITE_NOT_FOUND);
       expect(response.body.message).toBe(
-        StorageErrorCode[StorageErrorCode.WEB_PAGE_NOT_FOUND],
+        StorageErrorCode[StorageErrorCode.WEBSITE_NOT_FOUND],
       );
     });
 
     test('User should be able to update bucket', async () => {
       const response = await request(stage.http)
-        .patch(`/storage/hosting/web-pages/${testWebPage.id}`)
+        .patch(`/storage/hosting/websites/${testWebsite.id}`)
         .send({
           name: 'Updated web page name',
           description: 'Some awesome descirption',
@@ -172,7 +172,7 @@ describe('Hosting tests', () => {
       expect(response.body.data.name).toBe('Updated web page name');
       expect(response.body.data.description).toBe('Some awesome descirption');
 
-      const wp: WebPage = await new WebPage(
+      const wp: Website = await new Website(
         {},
         stage.storageContext,
       ).populateById(response.body.data.id);
@@ -192,7 +192,7 @@ describe('Hosting tests', () => {
 
       //Upload 2 files, each into its own directory
       let response = await request(stage.http)
-        .post(`/storage/${testWebPage.bucket.bucket_uuid}/file-upload`)
+        .post(`/storage/${testWebsite.bucket.bucket_uuid}/file-upload`)
         .send({
           session_uuid: testSession_uuid,
           fileName: 'index.html',
@@ -212,7 +212,7 @@ describe('Hosting tests', () => {
       expect(response.status).toBe(200);
 
       response = await request(stage.http)
-        .post(`/storage/${testWebPage.bucket.bucket_uuid}/file-upload`)
+        .post(`/storage/${testWebsite.bucket.bucket_uuid}/file-upload`)
         .send({
           session_uuid: testSession_uuid,
           fileName: 'styles.css',
@@ -232,7 +232,7 @@ describe('Hosting tests', () => {
     test('User should be able to end session and create files in preview bucket', async () => {
       const response = await request(stage.http)
         .post(
-          `/storage/${testWebPage.bucket.bucket_uuid}/file-upload/${testSession_uuid}/end`,
+          `/storage/${testWebsite.bucket.bucket_uuid}/file-upload/${testSession_uuid}/end`,
         )
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
@@ -244,12 +244,12 @@ describe('Hosting tests', () => {
       ).populateByUUID(file1_uuid);
 
       expect(file.exists()).toBeTruthy();
-      expect(file.bucket_id).toBe(testWebPage.bucket_id);
+      expect(file.bucket_id).toBe(testWebsite.bucket_id);
     });
 
     test('User should be able to deploy web page to staging', async () => {
       const response = await request(stage.http)
-        .post(`/storage/hosting/web-pages/${testWebPage.id}/deploy`)
+        .post(`/storage/hosting/websites/${testWebsite.id}/deploy`)
         .send({
           environment: 1,
           directDeploy: true,
@@ -262,7 +262,7 @@ describe('Hosting tests', () => {
         {},
         stage.storageContext,
       ).populateFilesInBucket(
-        testWebPage.stagingBucket_id,
+        testWebsite.stagingBucket_id,
         stage.storageContext,
       );
       expect(filesInBucket.length).toBe(2);
@@ -273,7 +273,7 @@ describe('Hosting tests', () => {
         {},
         stage.storageContext,
       ).populateDirectoriesInBucket(
-        testWebPage.stagingBucket_id,
+        testWebsite.stagingBucket_id,
         stage.storageContext,
       );
       expect(dirsInBucket.length).toBe(1);
@@ -281,7 +281,7 @@ describe('Hosting tests', () => {
 
     test('User should be able to deploy web page to production', async () => {
       const response = await request(stage.http)
-        .post(`/storage/hosting/web-pages/${testWebPage.id}/deploy`)
+        .post(`/storage/hosting/websites/${testWebsite.id}/deploy`)
         .send({
           environment: 2,
           directDeploy: true,
@@ -294,7 +294,7 @@ describe('Hosting tests', () => {
         {},
         stage.storageContext,
       ).populateFilesInBucket(
-        testWebPage.productionBucket_id,
+        testWebsite.productionBucket_id,
         stage.storageContext,
       );
       expect(filesInBucket.length).toBe(2);
@@ -305,7 +305,7 @@ describe('Hosting tests', () => {
         {},
         stage.storageContext,
       ).populateDirectoriesInBucket(
-        testWebPage.productionBucket_id,
+        testWebsite.productionBucket_id,
         stage.storageContext,
       );
       expect(dirsInBucket.length).toBe(1);
@@ -313,7 +313,7 @@ describe('Hosting tests', () => {
 
     test('User should NOT be able to deploy web page to production if no changes were made', async () => {
       const response = await request(stage.http)
-        .post(`/storage/hosting/web-pages/${testWebPage.id}/deploy`)
+        .post(`/storage/hosting/websites/${testWebsite.id}/deploy`)
         .send({
           environment: 2,
           directDeploy: true,
@@ -327,7 +327,7 @@ describe('Hosting tests', () => {
 
     test('User should be able to list deployments', async () => {
       const response = await request(stage.http)
-        .get(`/storage/hosting/web-pages/${testWebPage.id}/deployments`)
+        .get(`/storage/hosting/websites/${testWebsite.id}/deployments`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBeGreaterThan(0);
@@ -340,7 +340,7 @@ describe('Hosting tests', () => {
     test('User should be able to list deployments with filter', async () => {
       const response = await request(stage.http)
         .get(
-          `/storage/hosting/web-pages/${testWebPage.id}/deployments?environment=1`,
+          `/storage/hosting/websites/${testWebsite.id}/deployments?environment=1`,
         )
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
@@ -354,7 +354,7 @@ describe('Hosting tests', () => {
     beforeAll(async () => {
       fileToDelete = await createTestBucketFile(
         stage.storageContext,
-        testWebPage.bucket,
+        testWebsite.bucket,
         'delete file test.txt',
         'text/plain',
         false,
@@ -362,14 +362,14 @@ describe('Hosting tests', () => {
       dirToDelete = await createTestBucketDirectory(
         stage.storageContext,
         testProject,
-        testWebPage.bucket,
+        testWebsite.bucket,
         true,
       );
     });
     test('User should NOT be able to delete file from ANOTHER USER web page preview bucket', async () => {
       const response = await request(stage.http)
         .delete(
-          `/storage/${testWebPage.bucket.bucket_uuid}/file/${fileToDelete.id}`,
+          `/storage/${testWebsite.bucket.bucket_uuid}/file/${fileToDelete.id}`,
         )
         .set('Authorization', `Bearer ${testUser2.token}`);
       expect(response.status).toBe(403);
@@ -377,7 +377,7 @@ describe('Hosting tests', () => {
     test('User should be able to delete file from web page preview bucket', async () => {
       const response = await request(stage.http)
         .delete(
-          `/storage/${testWebPage.bucket.bucket_uuid}/file/${fileToDelete.id}`,
+          `/storage/${testWebsite.bucket.bucket_uuid}/file/${fileToDelete.id}`,
         )
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
@@ -416,64 +416,64 @@ describe('Hosting tests', () => {
 
     test('User should be able to clear bucket content', async () => {
       const response = await request(stage.http)
-        .delete(`/buckets/${testWebPage.bucket.id}/content`)
+        .delete(`/buckets/${testWebsite.bucket.id}/content`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
 
       const filesInBucket: File[] = await new File(
         {},
         stage.storageContext,
-      ).populateFilesInBucket(testWebPage.bucket.id, stage.storageContext);
+      ).populateFilesInBucket(testWebsite.bucket.id, stage.storageContext);
       expect(filesInBucket.length).toBe(0);
     });
 
     test('User should NOT be able to clear ANOTHER USER bucket content', async () => {
       const response = await request(stage.http)
-        .delete(`/buckets/${testWebPage.bucket.id}/content`)
+        .delete(`/buckets/${testWebsite.bucket.id}/content`)
         .set('Authorization', `Bearer ${testUser2.token}`);
       expect(response.status).toBe(403);
     });
   });
-  describe('Webpage quota tests', () => {
+  describe('Website quota tests', () => {
     beforeAll(async () => {
       //Insert dummy web pages
       for (let i = 0; i < 10; i++) {
-        const webPageBucket = await createTestBucket(
+        const websiteBucket = await createTestBucket(
           testUser,
           stage.storageContext,
           testProject2,
           BucketType.HOSTING,
         );
-        const webPageStagingBucket = await createTestBucket(
+        const websiteStagingBucket = await createTestBucket(
           testUser,
           stage.storageContext,
           testProject2,
           BucketType.HOSTING,
         );
-        const webPageProductionBucket = await createTestBucket(
+        const websiteProductionBucket = await createTestBucket(
           testUser,
           stage.storageContext,
           testProject2,
           BucketType.HOSTING,
         );
-        await new WebPage({}, stage.storageContext)
+        await new Website({}, stage.storageContext)
           .populate({
             project_uuid: testProject2.project_uuid,
-            bucket_id: webPageBucket.id,
-            stagingBucket_id: webPageStagingBucket.id,
-            productionBucket_id: webPageProductionBucket.id,
+            bucket_id: websiteBucket.id,
+            stagingBucket_id: websiteStagingBucket.id,
+            productionBucket_id: websiteProductionBucket.id,
             name: 'Test web page' + i.toString(),
             domain: 'https://hosting-e2e-tests.si',
-            bucket: webPageBucket,
-            stagingBucket: webPageStagingBucket,
-            productionBucket: webPageProductionBucket,
+            bucket: websiteBucket,
+            stagingBucket: websiteStagingBucket,
+            productionBucket: websiteProductionBucket,
           })
           .insert();
       }
     });
-    test('User should recieve status 400 when max webpages quota is reached', async () => {
+    test('User should recieve status 400 when max website quota is reached', async () => {
       const response = await request(stage.http)
-        .post(`/storage/hosting/web-page`)
+        .post(`/storage/hosting/website`)
         .send({
           project_uuid: testProject2.project_uuid,
           name: 'My test web page',
@@ -482,7 +482,7 @@ describe('Hosting tests', () => {
         .set('Authorization', `Bearer ${testUser2.token}`);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
-        StorageErrorCode[StorageErrorCode.MAX_WEB_PAGES_REACHED],
+        StorageErrorCode[StorageErrorCode.MAX_WEBSITES_REACHED],
       );
     });
   });

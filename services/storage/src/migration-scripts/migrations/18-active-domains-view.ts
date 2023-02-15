@@ -7,7 +7,7 @@ export async function upgrade(
   await queryFn(`
     CREATE OR REPLACE VIEW \`${DbViews.DOMAINS}\` AS
         SELECT wp.domain
-        FROM \`${DbTables.WEB_PAGE}\` wp
+        FROM \`${DbTables.WEBSITE}\` wp
         JOIN \`${DbTables.BUCKET}\` b ON b.id = wp.productionBucket_id
         WHERE wp.domain IS NOT NULL
         AND b.CID IS NOT NULL
