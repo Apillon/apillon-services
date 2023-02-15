@@ -20,6 +20,16 @@
         "type": "PLAINTEXT",
         "name": "SERVICE_PATH",
         "value": "services/access/"
+      },
+      {
+        "type": "PLAINTEXT",
+        "name": "DB_MIGRATIONS",
+        "value": "true"
+      },
+      {
+        "type": "PLAINTEXT",
+        "name": "AWS_SECRETS_ID",
+        "value": "Apillon-env-staging"
       }
     ],
     "type": "LINUX_CONTAINER"

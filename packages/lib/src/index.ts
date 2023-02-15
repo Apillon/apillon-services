@@ -55,3 +55,4 @@ export * from './lib/at-services/storage/dtos/deploy-web-page.dto';
 export * from './lib/at-services/storage/dtos/deployment-query-filter.dto';
 export * from './lib/at-services/storage/dtos/web-pages-quota-reached-query-filter.dto';
 export * from './lib/at-services/storage/dtos/create-s3-urls-for-upload.dto';
+export * from './lib/database/sql-migrator';

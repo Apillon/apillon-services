@@ -50,7 +50,14 @@ if [ "$WORKERS_LIB" == "true" ]
 then
   npm link @apillon/workers-lib --omit=dev
 fi
+
 npm i serverless-webpack copy-webpack-plugin webpack webpack-node-externals ts-loader
+
+if [ "$DB_MIGRATIONS" == "true" ]
+then
+  # requires DB configuration in ENV
+  npm run db-upgrade:ci
+fi
 
 if [ "$ENV" == "staging" ]
 then
