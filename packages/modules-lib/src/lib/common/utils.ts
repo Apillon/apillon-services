@@ -9,7 +9,10 @@ export async function verifyCaptcha(
     const req = axios.create({
       baseURL: 'https://hcaptcha.com',
       responseType: 'json',
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Accept-Encoding': 'gzip,deflate,compress',
+      },
     });
     const data = new FormData();
     data.append('response', token);

@@ -6,9 +6,12 @@ import {
   AttachedServiceType,
   DefaultApiKeyRole,
   env,
+  SqlModelStatus,
+  ValidatorErrorCode,
 } from '@apillon/lib';
 import {
   FileStatus,
+  ObjectType,
   StorageErrorCode,
 } from '@apillon/storage/src/config/types';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
@@ -26,9 +29,10 @@ import {
   TestUser,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
+import { v4 as uuidV4 } from 'uuid';
 import { setupTest } from '../../../../test/helpers/setup';
 
-describe('Storage tests', () => {
+describe('Apillon API storage tests', () => {
   let stage: Stage;
 
   let testUser: TestUser;
@@ -40,7 +44,7 @@ describe('Storage tests', () => {
   let testUser2: TestUser;
   let testProject2: Project;
   let testService2: Service;
-  let testBucket2: Bucket;
+
   let apiKey2: ApiKey = undefined;
 
   let testS3SignedUrl: string = undefined;
@@ -98,11 +102,6 @@ describe('Storage tests', () => {
       stage.devConsoleContext,
       testProject2,
     );
-    testBucket2 = await createTestBucket(
-      testUser2,
-      stage.storageContext,
-      testProject2,
-    );
 
     apiKey2 = await createTestApiKey(
       stage.amsContext,
@@ -144,8 +143,12 @@ describe('Storage tests', () => {
         const response = await request(stage.http)
           .post(`/storage/${testBucket.bucket_uuid}/upload`)
           .send({
-            fileName: 'myTestFile.txt',
-            contentType: 'text/plain',
+            files: [
+              {
+                fileName: 'myTestFile.txt',
+                contentType: 'text/plain',
+              },
+            ],
           })
           .set(
             'Authorization',
@@ -154,17 +157,12 @@ describe('Storage tests', () => {
             ).toString('base64')}`,
           );
         expect(response.status).toBe(201);
-        expect(response.body.data.signedUrlForUpload).toBeTruthy();
-        expect(response.body.data.file_uuid).toBeTruthy();
+        expect(response.body.data.files.length).toBe(1);
+        expect(response.body.data.files[0].url).toBeTruthy();
+        expect(response.body.data.files[0].fileUuid).toBeTruthy();
 
-        const fur: FileUploadRequest = await new FileUploadRequest(
-          {},
-          stage.storageContext,
-        ).populateById(response.body.data.fileUploadRequestId);
-        expect(fur.exists()).toBeTruthy();
-
-        testS3SignedUrl = response.body.data.signedUrlForUpload;
-        testS3FileUUID = response.body.data.file_uuid;
+        testS3SignedUrl = response.body.data.files[0].url;
+        testS3FileUUID = response.body.data.files[0].fileUuid;
       });
 
       test('Application should be able to upload file to s3 via signed URL', async () => {
@@ -195,6 +193,33 @@ describe('Storage tests', () => {
       test('Application should recieve 422 error if missing required data', async () => {
         const response = await request(stage.http)
           .post(`/storage/${testBucket.bucket_uuid}/upload`)
+          .send({
+            files: [{}],
+          })
+          .set(
+            'Authorization',
+            `Basic ${Buffer.from(
+              apiKey.apiKey + ':' + apiKey.apiKeySecret,
+            ).toString('base64')}`,
+          );
+        expect(response.status).toBe(422);
+        expect(response.body.errors).toBeTruthy();
+        expect(response.body.errors.length).toBeGreaterThan(0);
+        expect(
+          response.body.errors.filter(
+            (x) => x.code == StorageErrorCode.FILE_NAME_NOT_PRESENT,
+          ),
+        ).toBeTruthy();
+        expect(
+          response.body.errors.filter(
+            (x) => x.code == StorageErrorCode.BUCKET_PROJECT_UUID_NOT_PRESENT,
+          ),
+        ).toBeTruthy();
+      });
+
+      test('Application should recieve 422 error if missing required data', async () => {
+        const response = await request(stage.http)
+          .post(`/storage/${testBucket.bucket_uuid}/upload`)
           .send({})
           .set(
             'Authorization',
@@ -207,13 +232,7 @@ describe('Storage tests', () => {
         expect(response.body.errors.length).toBeGreaterThan(0);
         expect(
           response.body.errors.filter(
-            (x) => x.statusCode == StorageErrorCode.FILE_NAME_NOT_PRESENT,
-          ),
-        ).toBeTruthy();
-        expect(
-          response.body.errors.filter(
-            (x) =>
-              x.statusCode == StorageErrorCode.BUCKET_PROJECT_UUID_NOT_PRESENT,
+            (x) => x.code == ValidatorErrorCode.FILES_PROPERTY_NOT_PRESENT,
           ),
         ).toBeTruthy();
       });
@@ -222,8 +241,12 @@ describe('Storage tests', () => {
         const response = await request(stage.http)
           .post(`/storage/${testBucket.bucket_uuid}/upload`)
           .send({
-            fileName: 'myTestFile.txt',
-            contentType: 'text/plain',
+            files: [
+              {
+                fileName: 'myTestFile.txt',
+                contentType: 'text/plain',
+              },
+            ],
           })
           .set(
             'Authorization',
@@ -262,7 +285,7 @@ describe('Storage tests', () => {
         expect(response.status).toBe(200);
 
         expect(response.body.data.fileStatus).toBe(FileStatus.PINNED_TO_CRUST);
-        expect(response.body.data.file.file_uuid).toBe(testFile.file_uuid);
+        expect(response.body.data.file.fileUuid).toBe(testFile.file_uuid);
         expect(response.body.data.file.CID).toBe(testFile.CID);
         expect(response.body.data.file.name).toBe(testFile.name);
         expect(response.body.data.file.size).toBeGreaterThan(0);
@@ -280,7 +303,7 @@ describe('Storage tests', () => {
         expect(response.status).toBe(200);
 
         expect(response.body.data.fileStatus).toBe(FileStatus.PINNED_TO_CRUST);
-        expect(response.body.data.file.file_uuid).toBe(testFile.file_uuid);
+        expect(response.body.data.file.fileUuid).toBe(testFile.file_uuid);
         expect(response.body.data.file.CID).toBe(testFile.CID);
         expect(response.body.data.file.name).toBe(testFile.name);
         expect(response.body.data.file.size).toBeGreaterThan(0);
@@ -316,9 +339,9 @@ describe('Storage tests', () => {
 
         expect(response.body.data.total).toBe(1);
         expect(response.body.data.items.length).toBe(1);
-        expect(response.body.data.items[0].type).toBe('file');
+        expect(response.body.data.items[0].type).toBe(ObjectType.FILE);
         expect(response.body.data.items[0].CID).toBeTruthy();
-        expect(response.body.data.items[0].file_uuid).toBeTruthy();
+        expect(response.body.data.items[0].fileUuid).toBeTruthy();
         expect(response.body.data.items[0].name).toBeTruthy();
         expect(response.body.data.items[0].id).toBeTruthy();
       });
@@ -369,7 +392,86 @@ describe('Storage tests', () => {
         testFile = await new File({}, stage.storageContext).populateByUUID(
           testS3FileUUID,
         );
-        expect(testFile.exists()).toBeFalsy();
+        expect(testFile.exists()).toBeTruthy();
+        expect(testFile.status).toBe(SqlModelStatus.MARKED_FOR_DELETION);
+      });
+    });
+
+    describe('Single upload request, for multiple files', () => {
+      test('User should be able to recieve multiple s3 urls for upload', async () => {
+        const testSession_uuid = uuidV4();
+
+        //Get urls for upload
+        let response = await request(stage.http)
+          .post(`/storage/${testBucket.bucket_uuid}/upload`)
+          .send({
+            sessionUuid: testSession_uuid,
+            files: [
+              {
+                fileName: 'abcd.txt',
+                path: '',
+              },
+              {
+                fileName: 'uvz.txt',
+                path: '',
+              },
+            ],
+          })
+          .set(
+            'Authorization',
+            `Basic ${Buffer.from(
+              apiKey.apiKey + ':' + apiKey.apiKeySecret,
+            ).toString('base64')}`,
+          );
+
+        expect(response.status).toBe(201);
+        expect(response.body.data.files.length).toBe(2);
+        const abcdUrlResponse = response.body.data.files.find(
+          (x) => x.fileName == 'abcd.txt',
+        );
+        const uvzUrlResponse = response.body.data.files.find(
+          (x) => x.fileName == 'uvz.txt',
+        );
+
+        expect(abcdUrlResponse).toBeTruthy();
+        expect(uvzUrlResponse).toBeTruthy();
+
+        response = await request(abcdUrlResponse.url)
+          .put(``)
+          .send(new Date().toString() + 'abcd');
+        expect(response.status).toBe(200);
+
+        response = await request(uvzUrlResponse.url)
+          .put(``)
+          .send(new Date().toString() + 'uvz');
+        expect(response.status).toBe(200);
+        // trigger sync to IPFS
+        response = await request(stage.http)
+          .post(
+            `/storage/${testBucket.bucket_uuid}/upload/${testSession_uuid}/end`,
+          )
+          .send({
+            directSync: true,
+          })
+          .set(
+            'Authorization',
+            `Basic ${Buffer.from(
+              apiKey.apiKey + ':' + apiKey.apiKeySecret,
+            ).toString('base64')}`,
+          );
+        expect(response.status).toBe(200);
+
+        //Check if files exists
+        let file: File = await new File(
+          {},
+          stage.storageContext,
+        ).populateByUUID(abcdUrlResponse.fileUuid);
+
+        expect(file.exists()).toBeTruthy();
+        file = await new File({}, stage.storageContext).populateByUUID(
+          abcdUrlResponse.fileUuid,
+        );
+        expect(file.exists()).toBeTruthy();
       });
     });
   });

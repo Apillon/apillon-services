@@ -104,9 +104,9 @@ export abstract class BaseService {
     );
 
     return await new Promise((resolve, reject) => {
-      devSocket.on('error', () => {
+      devSocket.on('error', (e) => {
         devSocket.destroy();
-        reject('Socket error!');
+        reject(e);
       });
       devSocket.on('timeout', () => {
         console.log('socket timeout');

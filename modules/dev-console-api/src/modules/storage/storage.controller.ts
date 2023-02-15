@@ -1,7 +1,11 @@
-import { FileUploadsQueryFilter } from '@apillon/lib';
+import {
+  CreateS3UrlsForUploadDto,
+  FileUploadsQueryFilter,
+  TrashedFilesQueryFilter,
+} from '@apillon/lib';
 import { ValidateFor } from '@apillon/lib';
 import {
-  CreateS3SignedUrlForUploadDto,
+  CreateS3UrlForUploadDto,
   DefaultUserRole,
   EndFileUploadSessionDto,
 } from '@apillon/lib';
@@ -55,15 +59,37 @@ export class StorageController {
     { role: DefaultUserRole.PROJECT_USER },
   )
   @UseGuards(AuthGuard)
-  @Validation({ dto: CreateS3SignedUrlForUploadDto })
+  @Validation({ dto: CreateS3UrlForUploadDto })
   @UseGuards(ValidationGuard, AuthGuard)
   async createS3SignedUrlForUpload(
     @Ctx() context: DevConsoleApiContext,
     @Param('bucket_uuid') bucket_uuid: string,
     @Body()
-    body: CreateS3SignedUrlForUploadDto,
+    body: CreateS3UrlForUploadDto,
   ) {
     return await this.storageService.createS3SignedUrlForUpload(
+      context,
+      bucket_uuid,
+      body,
+    );
+  }
+
+  @Post(':bucket_uuid/files-upload')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @UseGuards(AuthGuard)
+  @Validation({ dto: CreateS3UrlsForUploadDto })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async createS3SignedUrlsForUpload(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('bucket_uuid') bucket_uuid: string,
+    @Body()
+    body: CreateS3UrlsForUploadDto,
+  ) {
+    return await this.storageService.createS3SignedUrlsForUpload(
       context,
       bucket_uuid,
       body,
@@ -122,6 +148,26 @@ export class StorageController {
     @Param('id') id: string,
   ) {
     return await this.storageService.getFileDetails(context, bucket_uuid, id);
+  }
+
+  @Get(':bucket_uuid/trashed-files')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @Validation({ dto: TrashedFilesQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async listFilesMarkedForDeletion(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('bucket_uuid') bucket_uuid: string,
+    @Query() query: TrashedFilesQueryFilter,
+  ) {
+    return await this.storageService.listFilesMarkedForDeletion(
+      context,
+      bucket_uuid,
+      query,
+    );
   }
 
   @Delete(':bucket_uuid/file/:id')

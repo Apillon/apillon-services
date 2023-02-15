@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/member-ordering */
 import { faker } from '@faker-js/faker';
 import { prop } from '@rawmodel/core';
-import { stringParser } from '@rawmodel/parsers';
+import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
+  Context,
   PopulateFrom,
   presenceValidator,
   SerializeFor,
 } from '@apillon/lib';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
-import { DevConsoleApiContext } from '../../../context';
 
 /**
  * User model.
@@ -96,6 +96,15 @@ export class User extends AdvancedSQLModel {
   })
   public phone: string;
 
+  /** user roles */
+  @prop({
+    parser: { resolver: integerParser(), array: true },
+    populatable: [],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    defaultValue: [],
+  })
+  public userRoles: number[];
+
   /**
    * Auth user - info property used to pass to microservices - othervise serialization removes this object
    */
@@ -104,11 +113,12 @@ export class User extends AdvancedSQLModel {
   })
   public authUser: any;
 
-  public async populateByUUID(
-    context: DevConsoleApiContext,
-    user_uuid: string,
-  ) {
-    const data = await context.mysql.paramExecute(
+  public constructor(data?: unknown, context?: Context) {
+    super(data, context);
+  }
+
+  public async populateByUUID(user_uuid: string) {
+    const data = await this.db().paramExecute(
       `
         SELECT *
         FROM \`${DbTables.USER}\` u
@@ -122,8 +132,8 @@ export class User extends AdvancedSQLModel {
     return this.reset();
   }
 
-  public async populateByEmail(context: DevConsoleApiContext, email: string) {
-    const data = await context.mysql.paramExecute(
+  public async populateByEmail(email: string) {
+    const data = await this.db().paramExecute(
       `
         SELECT *
         FROM \`${DbTables.USER}\` u

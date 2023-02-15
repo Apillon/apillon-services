@@ -90,6 +90,21 @@ export async function setupTestContextAndSql(): Promise<Stage> {
     const authApiContext = new TestContext();
     authApiContext.mysql = authApiSql;
 
+    /********************** REFERRAL MS **************************/
+    const referralConfig = {
+      host: env.REFERRAL_MYSQL_HOST_TEST,
+      database: env.REFERRAL_MYSQL_DATABASE_TEST,
+      password: env.REFERRAL_MYSQL_PASSWORD_TEST,
+      port: env.REFERRAL_MYSQL_PORT_TEST,
+      user: env.REFERRAL_MYSQL_USER_TEST,
+    };
+
+    const referralSql = new MySql(referralConfig);
+    await referralSql.connect();
+
+    const referralContext = new TestContext();
+    referralContext.mysql = referralSql;
+
     // startAmsServer();
     // startLmasServer();
 
@@ -108,6 +123,8 @@ export async function setupTestContextAndSql(): Promise<Stage> {
       configSql,
       authApiContext,
       authApiSql,
+      referralContext,
+      referralSql,
     };
   } catch (e) {
     console.error(e);
@@ -160,6 +177,14 @@ export const releaseStage = async (stage: Stage): Promise<void> => {
       await stage.configSql.close();
     } catch (error) {
       throw new Error('Error when releasing Config stage: ' + error);
+    }
+  }
+
+  if (stage.referralSql) {
+    try {
+      await stage.referralSql.close();
+    } catch (error) {
+      throw new Error('Error when releasing Referral stage: ' + error);
     }
   }
 

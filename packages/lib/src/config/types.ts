@@ -28,6 +28,8 @@ export enum LmasEventType {
 
 export enum StorageEventType {
   REQUEST_S3_SIGNED_URL_FOR_UPLOAD = 'request-s3-signed-url-for-upload',
+  REQUEST_S3_SIGNED_URLS_FOR_UPLOAD = 'request-s3-signed-urls-for-upload',
+  REQUEST_S3_SIGNED_URLS_FOR_WEBSITE_UPLOAD = 'request-s3-signed-urls-for-website-upload',
   END_FILE_UPLOAD_SESSION = 'end-file-upload-session',
   END_FILE_UPLOAD = 'end-file-upload',
   CREATE_BUCKET = 'create-bucket',
@@ -51,6 +53,22 @@ export enum StorageEventType {
   BUCKET_WEBHOOK_DELETE = 'delete-bucket-webhook',
   LIST_FILE_UPLOAD = 'list-file-upload',
   MAX_BUCKETS_QUOTA_REACHED = 'max-buckets-quota-reached',
+  LIST_FILES_MARKED_FOR_DELETION = 'list-files-marked-for-deletion',
+  IPNS_LIST = 'list-ipns',
+  IPNS_CREATE = 'create-ipns',
+  IPNS_UPDATE = 'update-ipns',
+  IPNS_DELETE = 'delete-ipns',
+  IPNS_PUBLISH = 'publish-ipns',
+  WEBSITE_LIST = 'list-websites',
+  WEBSITE_CREATE = 'create-website',
+  WEBSITE_UPDATE = 'update-website',
+  WEBSITE_GET = 'get-website',
+  WEBSITE_DEPLOY = 'deploy-website',
+  WEBSITE_LIST_DOMAINS = 'list-website-domains',
+  WEBSITE_QUOTA_REACHED = 'websites-quota-reached',
+  BUCKET_CLEAR_CONTENT = 'clear-bucket-content',
+  DEPLOYMENT_GET = 'get-deployment',
+  DEPLOYMENT_LIST = 'list-deployment',
 }
 
 export enum MailEventType {
@@ -70,6 +88,20 @@ export enum NftsEventType {
   SET_BASE_URI = 'set-base-uri',
 }
 
+export enum ReferralEventType {
+  CREATE_PLAYER = 'create-referral',
+  GET_PLAYER = 'get-referral',
+  GET_PRODUCTS = 'get-products',
+  ORDER_PRODUCT = 'order-product',
+  CONNECT_GITHUB = 'connect-githhub',
+  DISCONNECT_GITHUB = 'disconnect-githhub',
+  CONNECT_TWITTER = 'connect-twitter',
+  DISCONNECT_TWITTER = 'disconnect-twitter',
+  GET_TWITTER_LINK = 'get-twitter-link',
+  GET_TWEETS = 'get-tweets',
+  CONFIRM_RETWEET = 'confirm-retweet',
+}
+
 export enum ServiceName {
   GENERAL = 'GENERAL',
   AMS = 'AMS',
@@ -80,6 +112,7 @@ export enum ServiceName {
   APILLON_API = 'APILLON_API',
   AUTHENTICATION_API = 'AUTHENTICATION_API',
   NFTS = 'NFTS',
+  REFERRAL = 'REFERRAL',
 }
 
 export enum ServiceCode {
@@ -94,6 +127,7 @@ export enum ServiceCode {
   MAIL = '08',
   AUTH = '09',
   CONFIG = '10',
+  REFERRAL = '11',
   NFTS = '12',
 }
 
@@ -199,7 +233,10 @@ export enum DefaultUserRole {
   PROJECT_ADMIN = 11, // Admin of current project
   PROJECT_USER = 12, // (read only) User on current project
   // auth user roles
-  USER = 99, // user with access to platform
+  INTERNAL_TEST_USER = 90, //user with access to new unpublished features
+  EXTERNAL_TEST_USER = 91, //user with access to features ready for external testers
+  BETA_USER = 92, //user with access to closed beta features
+  USER = 99, // user with access to platform (published features)
 }
 
 export enum DefaultApiKeyRole {
@@ -263,6 +300,7 @@ export enum BadRequestErrorCode {
   INVALID_PATH = 40000001,
   INVALID_QUERY_PARAMETERS = 40000002,
   MISSING_AUTHORIZATION_HEADER = 40000003,
+  INVALID_AUTHORIZATION_HEADER = 40000004,
 }
 
 export enum ValidatorErrorCode {
@@ -298,6 +336,24 @@ export enum ValidatorErrorCode {
   NFT_TRANSFER_NFT_ADDRESS_NOT_PRESENT = 42200105,
   NFT_MINT_ADDRESS_NOT_PRESENT = 42200106,
   NFT_SET_BASE_URI_NOT_PRESENET = 42200107,
+  IPNS_PROJECT_UUID_NOT_PRESENT = 42200024,
+  IPNS_BUCKET_ID_NOT_PRESENT = 42200025,
+  IPNS_NAME_NOT_PRESENT = 42200026,
+  IPNS_IPNS_NAME_NOT_PRESENT = 42200027,
+  IPNS_IPNS_VALUE_NOT_PRESENT = 42200028,
+  PUBLISH_IPNS_IPNS_ID_NOT_PRESENT = 42200029,
+  PUBLISH_IPNS_CID_NOT_PRESENT = 42200030,
+  TASK_ID_NOT_PRESENT = 42200031,
+  USER_OAUTH_TOKEN_NOT_PRESENT = 42200032,
+  USER_OAUTH_VERIFIER_NOT_PRESENT = 42200033,
+  TWEET_ID_NOT_PRESENT = 42200034,
+  PRODUCT_ID_NOT_PRESENT = 42200035,
+  WEBSITE_PROJECT_UUID_NOT_PRESENT = 42200036,
+  WEBSITE_NAME_NOT_PRESENT = 42200037,
+  DEPLOY_WEBSITE_ID_NOT_PRESENT = 42200038,
+  DEPLOY_ENVIRONMENT_NOT_PRESENT = 42200039,
+  FILES_PROPERTY_NOT_PRESENT = 42200040,
+  FILES_PROPERTY_EMPTY = 42200041,
 }
 
 /**
@@ -341,4 +397,5 @@ export enum QuotaCode {
   MAX_FILE_BUCKETS = 5,
   MAX_BUCKET_SIZE = 6,
   MAX_ATTESTED_USERS = 7,
+  MAX_WEBSITES = 8,
 }

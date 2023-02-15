@@ -61,5 +61,7 @@ export function MySqlConnect(instanceName = 'mysql', autoDisconnect = true) {
     }
   };
 
-  return { before, after };
+  const onError = after;
+
+  return { before, after, onError };
 }

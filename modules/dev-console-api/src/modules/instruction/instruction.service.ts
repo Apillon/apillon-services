@@ -5,45 +5,42 @@ import {
 } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
 import { Instruction } from './models/instruction.model';
-import { CodeException, ValidationException } from '@apillon/lib';
+import { CodeException, SerializeFor, ValidationException } from '@apillon/lib';
 
 @Injectable()
 export class InstructionService {
-  async getInstruction(
-    context: DevConsoleApiContext,
-    instruction_enum: string,
-  ) {
-    return await new Instruction({}, context).getInstructionByEnum(
+  async getInstructions(context: DevConsoleApiContext, forRoute: string) {
+    return await new Instruction({}, context).getInstructions(
       context,
-      instruction_enum,
+      forRoute,
     );
   }
 
-  async createInstruction(context: DevConsoleApiContext, body: any) {
-    const instruction = await new Instruction({}, context).getInstructionByEnum(
-      context,
-      body.instructionEnum,
-    );
-    if (instruction.exists()) {
+  async getInstruction(context: DevConsoleApiContext, id: number) {
+    const instruction = await new Instruction({}, context).populateById(id);
+
+    if (!instruction.exists()) {
       throw new CodeException({
+        status: HttpStatus.NOT_FOUND,
         code: ValidatorErrorCode.INSTRUCTION_ENUM_EXISTS,
-        status: HttpStatus.CONFLICT,
         errorCodes: ValidatorErrorCode,
       });
     }
 
-    return await body.insert();
+    return instruction.serialize(SerializeFor.PROFILE);
+  }
+
+  async createInstruction(context: DevConsoleApiContext, body: Instruction) {
+    await body.insert();
+    return body.serialize(SerializeFor.PROFILE);
   }
 
   async updateInstruction(
     context: DevConsoleApiContext,
-    instruction_enum: string,
+    id: number,
     data: any,
   ) {
-    const instruction = await new Instruction({}, context).getInstructionByEnum(
-      context,
-      instruction_enum,
-    );
+    const instruction = await new Instruction({}, context).populateById(id);
     if (!instruction.exists()) {
       throw new CodeException({
         code: ResourceNotFoundErrorCode.INSTRUCTION_DOES_NOT_EXIST,
@@ -64,7 +61,7 @@ export class InstructionService {
       throw new ValidationException(instruction, ValidatorErrorCode);
 
     await instruction.update();
-    return instruction;
+    return instruction.serialize(SerializeFor.PROFILE);
   }
 
   async deleteInstruction(context: DevConsoleApiContext, id: number) {
@@ -78,6 +75,6 @@ export class InstructionService {
     }
 
     await instruction.delete();
-    return instruction;
+    return instruction.serialize(SerializeFor.PROFILE);
   }
 }

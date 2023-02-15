@@ -1,9 +1,16 @@
-import { mnemonicGenerate, mnemonicToMiniSecret } from '@polkadot/util-crypto';
+import {
+  blake2AsU8a,
+  keyExtractPath,
+  keyFromPath,
+  mnemonicGenerate,
+  mnemonicToMiniSecret,
+  naclBoxPairFromSecret,
+  sr25519PairFromSeed,
+} from '@polkadot/util-crypto';
 import { LogType, env, ServiceName, Lmas } from '@apillon/lib';
 import {
   ConfigService,
   Did,
-  KeyringPair,
   KiltKeyringPair,
   Utils,
   connect,
@@ -13,47 +20,58 @@ import {
   Attestation,
   Credential,
   DidUri,
+  NewDidEncryptionKey,
 } from '@kiltprotocol/sdk-js';
 import {
   Keypairs,
-  KILT_DERIVATION_SIGN_ALGORITHM,
-  EclipticDerivationPaths,
+  KiltSignAlgorithm,
+  KiltDerivationPaths,
+  ApillonSupportedCTypes,
 } from '../config/types';
+import { Keypair } from '@polkadot/util-crypto/types';
 
-export async function generateMnemonic() {
+export function generateMnemonic() {
   return mnemonicGenerate();
 }
 
-export async function generateAccount(mnemonic: string): Promise<KeyringPair> {
-  return Utils.Crypto.makeKeypairFromSeed(
-    mnemonicToMiniSecret(mnemonic),
-    KILT_DERIVATION_SIGN_ALGORITHM,
-  );
+export async function generateAccount(mnemonic: string) {
+  const signingKeyPairType = KiltSignAlgorithm.SR25519;
+  const keyring = new Utils.Keyring({
+    ss58Format: 38,
+    type: signingKeyPairType,
+  });
+  return keyring.addFromMnemonic(mnemonic);
 }
 
-export async function generateKeypairs(mnemonic: string) {
-  // Derivations matter! Must use same algorithm as the one
-  // stored on the chain
-  const authentication = Utils.Crypto.makeKeypairFromSeed(
-    mnemonicToMiniSecret(mnemonic),
-    'sr25519',
-  );
-  const encryption = Utils.Crypto.makeEncryptionKeypairFromSeed(
-    mnemonicToMiniSecret(mnemonic),
-  );
+export async function generateKeypairs(mnemonic: string): Promise<Keypairs> {
+  const account = await generateAccount(mnemonic);
+  const authentication = {
+    ...account.derive(KiltDerivationPaths.AUTHENTICATION),
+    type: KiltSignAlgorithm.SR25519,
+  } as KiltKeyringPair;
 
-  const assertion = authentication.derive(EclipticDerivationPaths.ATTESTATION, {
-    type: 'sr25519',
-  }) as KiltKeyringPair;
-  const delegation = authentication.derive(
-    EclipticDerivationPaths.DELEGATION,
-  ) as KiltKeyringPair;
+  const assertion = {
+    ...account.derive(KiltDerivationPaths.ASSERTION),
+    type: KiltSignAlgorithm.SR25519,
+  } as KiltKeyringPair;
+  const keyAgreement: NewDidEncryptionKey & Keypair = (function () {
+    const secretKeyPair = sr25519PairFromSeed(mnemonicToMiniSecret(mnemonic));
+    const { path } = keyExtractPath(KiltDerivationPaths.KEY_AGREEMENT);
+    const { secretKey } = keyFromPath(
+      secretKeyPair,
+      path,
+      KiltSignAlgorithm.SR25519,
+    );
+    return {
+      ...naclBoxPairFromSecret(blake2AsU8a(secretKey)),
+      type: KiltSignAlgorithm.X25519,
+    };
+  })();
 
   return {
     authentication,
-    encryption,
     assertion,
-    delegation,
+    keyAgreement,
   };
 }
 
@@ -84,14 +102,14 @@ export function createAttestationRequest(
   attesterDidUri: DidUri,
   claimerDidUri: DidUri,
 ) {
-  const authCType = getCtypeSchema();
-  const authContents = {
+  const emailCType = getCtypeSchema(ApillonSupportedCTypes.EMAIL);
+  const emailContents = {
     Email: email,
   };
 
   const authClaim = Claim.fromCTypeAndClaimContents(
-    authCType,
-    authContents,
+    emailCType,
+    emailContents,
     claimerDidUri,
   );
 
@@ -106,13 +124,40 @@ export function createAttestationRequest(
   };
 }
 
-export function getCtypeSchema(): ICType {
+export function getCtypeSchema(ctype: string): ICType {
   // NOTE: These are official CTypes created by Kilt
-  return CType.fromProperties('Email', {
-    Email: {
-      type: 'string',
-    },
-  });
+  switch (ctype) {
+    case ApillonSupportedCTypes.EMAIL: {
+      return CType.fromProperties('Email', {
+        Email: {
+          type: 'string',
+        },
+      });
+    }
+    case ApillonSupportedCTypes.DOMAIN_LINKAGE: {
+      // From https://github.com/KILTprotocol/ctype-index/blob/main/ctypes/0x9d271c790775ee831352291f01c5d04c7979713a5896dcf5e81708184cc5c643/ctype.json
+      const domainLinkage: ICType = {
+        $id: 'kilt:ctype:0x9d271c790775ee831352291f01c5d04c7979713a5896dcf5e81708184cc5c643',
+        $schema: 'http://kilt-protocol.org/draft-01/ctype#',
+        title: 'Domain Linkage Credential',
+        properties: {
+          id: {
+            type: 'string',
+          },
+          origin: {
+            type: 'string',
+          },
+        },
+        type: 'object',
+      };
+
+      return domainLinkage;
+    }
+
+    default: {
+      throw `Invalid CType: ${ctype}`;
+    }
+  }
 }
 
 export async function getNextNonce(didUri: DidUri) {

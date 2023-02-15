@@ -49,6 +49,9 @@
     },
     "test-server": {
       "cache": false
+    },
+    "db-upgrade:ci": {
+      "cache": false
     }
   }
 }
