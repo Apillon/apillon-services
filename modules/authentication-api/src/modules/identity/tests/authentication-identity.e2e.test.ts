@@ -8,6 +8,12 @@ import * as mock from './mock-data';
 import { Utils } from '@kiltprotocol/sdk-js';
 import { u8aToHex } from '@polkadot/util';
 import { setupDidCreateMock } from './utils';
+import { Identity } from '@apillon/authentication/src/modules/identity/models/identity.model';
+import {
+  DbTables,
+  IdentityState,
+} from '@apillon/authentication/src/config/types';
+import { generateKeypairs } from '@apillon/authentication/src/lib/kilt';
 
 describe('IDENTITY', () => {
   let stage: Stage;
@@ -174,6 +180,7 @@ describe('IDENTITY', () => {
 
       // Double check
       const identityDb = await new Identity({}, context).populateByUserEmail(
+        context,
         testEmail,
       );
 
@@ -204,7 +211,7 @@ describe('IDENTITY', () => {
       const identityAttestedDb = await new Identity(
         {},
         context,
-      ).populateByUserEmail(testEmailAttested);
+      ).populateByUserEmail(context, testEmailAttested);
 
       expect(identityAttestedDb).not.toBeUndefined();
       expect(identityAttestedDb.email).toEqual(testEmailAttested);
