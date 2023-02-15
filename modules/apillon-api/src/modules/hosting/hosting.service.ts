@@ -31,6 +31,15 @@ export class HostingService {
     website_uuid: string,
     body: ApillonHostingApiCreateS3UrlsForUploadDto,
   ) {
+    body.populate(website_uuid);
+    try {
+      await body.validate();
+    } catch (err) {
+      await body.handle(err);
+      if (!body.isValid())
+        throw new ValidationException(body, ValidatorErrorCode);
+    }
+
     return (
       await new StorageMicroservice(
         context,
@@ -51,9 +60,10 @@ export class HostingService {
     body: EndFileUploadSessionDto,
   ) {
     return (
-      await new StorageMicroservice(
-        context,
-      ).endFileUploadSessionAndExecuteSyncToIPFS(session_uuid, body)
+      await new StorageMicroservice(context).endFileUploadSession(
+        session_uuid,
+        body,
+      )
     ).data;
   }
 

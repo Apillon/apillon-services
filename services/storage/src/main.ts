@@ -60,6 +60,8 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.WEBSITE_LIST_DOMAINS]: HostingService.listDomains,
     [StorageEventType.WEBSITE_QUOTA_REACHED]:
       HostingService.maxWebsitesQuotaReached,
+    [StorageEventType.REQUEST_S3_SIGNED_URLS_FOR_WEBSITE_UPLOAD]:
+      HostingService.generateMultipleS3UrlsForUpload,
 
     [StorageEventType.DEPLOYMENT_GET]: HostingService.getDeployment,
     [StorageEventType.DEPLOYMENT_LIST]: HostingService.listDeployments,

@@ -171,7 +171,7 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async endFileUploadSessionAndExecuteSyncToIPFS(
+  public async endFileUploadSession(
     session_uuid: string,
     params: EndFileUploadSessionDto,
   ) {

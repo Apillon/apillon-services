@@ -26,9 +26,10 @@ export class StorageService {
     body: EndFileUploadSessionDto,
   ) {
     return (
-      await new StorageMicroservice(
-        context,
-      ).endFileUploadSessionAndExecuteSyncToIPFS(session_uuid, body)
+      await new StorageMicroservice(context).endFileUploadSession(
+        session_uuid,
+        body,
+      )
     ).data;
   }
   async createS3SignedUrlForUpload(

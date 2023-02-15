@@ -88,7 +88,7 @@ export class CreateS3UrlsForUploadDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.CREATE_S3_URLS_FILES_NOT_PRESENT,
+        code: ValidatorErrorCode.FILES_PROPERTY_NOT_PRESENT,
       },
     ],
   })
@@ -119,7 +119,7 @@ export class ApillonApiCreateS3UrlsForUploadDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.CREATE_S3_URLS_FILES_NOT_PRESENT,
+        code: ValidatorErrorCode.FILES_PROPERTY_NOT_PRESENT,
       },
     ],
   })
@@ -150,7 +150,7 @@ export class ApillonHostingApiCreateS3UrlsForUploadDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.CREATE_S3_URLS_FILES_NOT_PRESENT,
+        code: ValidatorErrorCode.FILES_PROPERTY_NOT_PRESENT,
       },
     ],
   })

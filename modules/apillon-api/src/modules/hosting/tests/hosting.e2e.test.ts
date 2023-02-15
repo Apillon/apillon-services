@@ -38,7 +38,7 @@ describe('Apillon API hosting tests', () => {
   let apiKey2: ApiKey = undefined;
 
   let testWebsite: Website;
-  let testSession_uuid: string = uuidV4();
+  let testSession_uuid: string;
 
   let file1FURRes;
   let file2FURRes;
@@ -136,9 +136,8 @@ describe('Apillon API hosting tests', () => {
   describe('Apillon API upload files to hosting bucket tests', () => {
     test('Application (through Apillon API) should be able to recieve multiple S3 signed URLs, used to upload files to S3', async () => {
       let response = await request(stage.http)
-        .post(`/storage/${testWebsite.bucket.bucket_uuid}/upload-many`)
+        .post(`/hosting/websites/${testWebsite.website_uuid}/upload`)
         .send({
-          sessionUuid: testSession_uuid,
           files: [
             {
               fileName: 'index.html',
@@ -157,12 +156,19 @@ describe('Apillon API hosting tests', () => {
           ).toString('base64')}`,
         );
       expect(response.status).toBe(201);
-      expect(response.body.data).toBeTruthy();
-      expect(response.body.data.length).toBe(2);
+      expect(response.body.data.sessionUuid).toBeTruthy();
+      testSession_uuid = response.body.data.sessionUuid;
 
-      file1FURRes = response.body.data.find((x) => x.fileName == 'index.html');
+      expect(response.body.data.files).toBeTruthy();
+      expect(response.body.data.files.length).toBe(2);
 
-      file2FURRes = response.body.data.find((x) => x.fileName == 'styles.css');
+      file1FURRes = response.body.data.files.find(
+        (x) => x.fileName == 'index.html',
+      );
+
+      file2FURRes = response.body.data.files.find(
+        (x) => x.fileName == 'styles.css',
+      );
 
       response = await request(file1FURRes.url)
         .put(``)
@@ -184,7 +190,7 @@ describe('Apillon API hosting tests', () => {
     test('Application (through Apillon API) should be able to end session and create files in preview bucket', async () => {
       const response = await request(stage.http)
         .post(
-          `/storage/${testWebsite.bucket.bucket_uuid}/upload/${testSession_uuid}/end`,
+          `/hosting/websites/${testWebsite.website_uuid}/upload/${testSession_uuid}/end`,
         )
         .set(
           'Authorization',
@@ -207,7 +213,7 @@ describe('Apillon API hosting tests', () => {
     test('Application (through Apillon API) should NOT be able to end same session multiple times', async () => {
       const response = await request(stage.http)
         .post(
-          `/storage/${testWebsite.bucket.bucket_uuid}/upload/${testSession_uuid}/end`,
+          `/hosting/websites/${testWebsite.website_uuid}/upload/${testSession_uuid}/end`,
         )
         .set(
           'Authorization',
@@ -224,9 +230,8 @@ describe('Apillon API hosting tests', () => {
 
     test('Application (through Apillon API) should NOT be able to recieve multiple S3 signed URLs for anther project', async () => {
       const response = await request(stage.http)
-        .post(`/storage/${testWebsite.bucket.bucket_uuid}/upload-many`)
+        .post(`/hosting/websites/${testWebsite.website_uuid}/upload`)
         .send({
-          sessionUuid: testSession_uuid,
           files: [
             {
               fileName: 'index.html',
@@ -412,14 +417,10 @@ describe('Apillon API hosting tests', () => {
 
   describe('Apillon API update web page content and redeploy tests', () => {
     const indexPageContent = `<h1>Welcome to my NEW test page. Curr date: ${new Date().toString()}</h1>`;
-    beforeAll(async () => {
-      testSession_uuid = uuidV4();
-    });
     test('Application (through Apillon API) should be able to recieve multiple NEW S3 signed URLs, used to upload files to S3', async () => {
       let response = await request(stage.http)
-        .post(`/storage/${testWebsite.bucket.bucket_uuid}/upload-many`)
+        .post(`/hosting/websites/${testWebsite.website_uuid}/upload`)
         .send({
-          sessionUuid: testSession_uuid,
           files: [
             {
               fileName: 'index.html',
@@ -442,12 +443,19 @@ describe('Apillon API hosting tests', () => {
           ).toString('base64')}`,
         );
       expect(response.status).toBe(201);
-      expect(response.body.data).toBeTruthy();
-      expect(response.body.data.length).toBe(3);
+      expect(response.body.data.sessionUuid).toBeTruthy();
+      expect(response.body.data.files.length).toBe(3);
+      testSession_uuid = response.body.data.sessionUuid;
 
-      file1FURRes = response.body.data.find((x) => x.fileName == 'index.html');
-      file2FURRes = response.body.data.find((x) => x.fileName == 'styles.css');
-      file3FURRes = response.body.data.find((x) => x.fileName == 'home.html');
+      file1FURRes = response.body.data.files.find(
+        (x) => x.fileName == 'index.html',
+      );
+      file2FURRes = response.body.data.files.find(
+        (x) => x.fileName == 'styles.css',
+      );
+      file3FURRes = response.body.data.files.find(
+        (x) => x.fileName == 'home.html',
+      );
 
       response = await request(file1FURRes.url).put(``).send(indexPageContent);
       expect(response.status).toBe(200);
@@ -470,7 +478,7 @@ describe('Apillon API hosting tests', () => {
     test('Application (through Apillon API) should be able to end NEW session and create files in preview bucket', async () => {
       const response = await request(stage.http)
         .post(
-          `/storage/${testWebsite.bucket.bucket_uuid}/upload/${testSession_uuid}/end`,
+          `/hosting/websites/${testWebsite.website_uuid}/upload/${testSession_uuid}/end`,
         )
         .set(
           'Authorization',

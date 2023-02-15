@@ -43,7 +43,6 @@ export class HostingController {
   }
 
   @Post('websites/:id/upload')
-  @HttpCode(200)
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_EXECUTE,
     serviceType: AttachedServiceType.STORAGE,
@@ -66,7 +65,7 @@ export class HostingController {
     );
   }
 
-  @Post('websites/:id/upload/:session_uuid/end')
+  @Post('websites/:id/upload/:sessionUuid/end')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_EXECUTE,
     serviceType: AttachedServiceType.STORAGE,
@@ -77,7 +76,7 @@ export class HostingController {
   @HttpCode(200)
   async endFileUploadSession(
     @Ctx() context: ApillonApiContext,
-    @Param('webSite') website_uuid: string,
+    @Param('id') website_uuid: string,
     @Param('sessionUuid') session_uuid: string,
     @Body() body: EndFileUploadSessionDto,
   ) {

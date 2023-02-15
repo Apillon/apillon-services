@@ -181,6 +181,8 @@ export class HostingService {
       });
     }
 
+    website.canAccess(context);
+
     await website.populateBucketsAndLink();
 
     const param: CreateS3UrlsForUploadDto =
