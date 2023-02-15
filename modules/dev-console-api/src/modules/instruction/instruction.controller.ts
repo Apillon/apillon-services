@@ -1,4 +1,5 @@
-import { DefaultUserRole, ValidateFor } from '@apillon/lib';
+import { DefaultUserRole } from '@apillon/lib';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
@@ -12,12 +13,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
+import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
-import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
-import { InstructionQueryFilter } from './dto/instruction-query-filter.dto';
 import { InstructionService } from './instruction.service';
 import { Instruction } from './models/instruction.model';
-import { AuthGuard } from '../../guards/auth.guard';
 
 @Controller('instructions')
 export class InstructionController {
@@ -25,16 +24,12 @@ export class InstructionController {
 
   @Get()
   @Permissions({ role: DefaultUserRole.USER })
-  @Validation({ dto: InstructionQueryFilter, validateFor: ValidateFor.QUERY })
-  @UseGuards(ValidationGuard, AuthGuard)
-  async getInstruction(
+  @UseGuards(AuthGuard)
+  async getInstructions(
     @Ctx() context: DevConsoleApiContext,
-    @Query('instructionEnum') instructionEnum: string,
+    @Query('forRoute') forRoute: string,
   ) {
-    return await this.instructionService.getInstruction(
-      context,
-      instructionEnum,
-    );
+    return await this.instructionService.getInstructions(context, forRoute);
   }
 
   @Post()
@@ -48,22 +43,18 @@ export class InstructionController {
     return await this.instructionService.createInstruction(context, body);
   }
 
-  @Patch('/:instructionEnum')
+  @Patch(':id')
   @Permissions({ role: DefaultUserRole.ADMIN })
   @UseGuards(AuthGuard)
   async updateInstruction(
     @Ctx() context: DevConsoleApiContext,
-    @Query('instructionEnum') instructionEnum: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() body: any,
   ) {
-    return await this.instructionService.updateInstruction(
-      context,
-      instructionEnum,
-      body,
-    );
+    return await this.instructionService.updateInstruction(context, id, body);
   }
 
-  @Delete('/:id')
+  @Delete(':id')
   @Permissions({ role: DefaultUserRole.ADMIN })
   @UseGuards(AuthGuard)
   async deleteInstruction(
