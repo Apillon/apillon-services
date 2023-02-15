@@ -9,7 +9,6 @@ import {
   sr25519PairFromSeed,
 } from '@polkadot/util-crypto';
 import { isHex } from '@polkadot/util';
-import { LogType, env, ServiceName, Lmas, CodeException } from '@apillon/lib';
 import {
   ConfigService,
   Did,
@@ -39,6 +38,7 @@ import {
 import { EncryptResponseData } from '@kiltprotocol/types';
 import { HttpStatus } from '@nestjs/common';
 import { Keypair } from '@polkadot/util-crypto/types';
+import { env, Lmas, LogType, ServiceName, CodeException } from '@apillon/lib';
 
 export function generateMnemonic() {
   return mnemonicGenerate();

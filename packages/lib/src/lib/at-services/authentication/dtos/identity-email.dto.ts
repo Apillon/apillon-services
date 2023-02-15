@@ -1,8 +1,12 @@
-import { JSONParser, ModelBase, PopulateFrom } from '@apillon/lib';
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator, emailValidator } from '@rawmodel/validators';
-import { AuthenticationErrorCode } from '../../../config/types';
+import {
+  AuthenticationErrorCode,
+  PopulateFrom,
+} from '../../../../config/types';
+import { ModelBase } from '../../../base-models/base';
+import { JSONParser } from '../../../parsers';
 
 export class AttestationEmailDto extends ModelBase {
   @prop({

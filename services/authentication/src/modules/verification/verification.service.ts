@@ -7,18 +7,13 @@ import {
   IAttestation,
 } from '@kiltprotocol/sdk-js';
 import { Injectable } from '@nestjs/common';
-import { AuthenticationApiContext } from '../../context';
-import { VerificationIdentityDto } from './dto/verify-identity.dto';
 
 @Injectable()
-export class VerificationService {
-  async verifyIdentity(
-    context: AuthenticationApiContext,
-    body: VerificationIdentityDto,
-  ): Promise<any> {
+export class VerificationMicroservice {
+  static async verifyIdentity(context, event): Promise<any> {
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
-    const presentation = JSON.parse(body.presentation);
+    const presentation = JSON.parse(event.presentation);
     let attestation: IAttestation;
 
     try {

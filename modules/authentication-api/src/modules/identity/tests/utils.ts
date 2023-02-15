@@ -10,10 +10,9 @@ import {
   Credential,
 } from '@kiltprotocol/sdk-js';
 import { generateJwtToken } from '@apillon/lib';
-import { generateKeypairs } from '../../../lib/kilt';
+import { generateKeypairs } from '@apillon/authentication/src/lib/kilt';
 import * as mock from './mock-data';
 import { u8aToHex } from '@polkadot/util';
-import { randomAsHex } from '@polkadot/util-crypto';
 
 export const setupDidCreateMock = async () => {
   const identityMock = mock.CREATE_IDENTITY_MOCK;

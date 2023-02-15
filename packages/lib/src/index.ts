@@ -54,3 +54,16 @@ export * from './lib/at-services/storage/dtos/create-web-page.dto';
 export * from './lib/at-services/storage/dtos/deploy-web-page.dto';
 export * from './lib/at-services/storage/dtos/deployment-query-filter.dto';
 export * from './lib/at-services/storage/dtos/web-pages-quota-reached-query-filter.dto';
+
+//#region Authentication API
+export * from './lib/at-services/authentication/authentication';
+export * from './lib/at-services/authentication/dtos/identity-create.dto';
+export * from './lib/at-services/authentication/dtos/identity-did-revoke.dto';
+export * from './lib/at-services/authentication/dtos/identity-email.dto';
+export * from './lib/at-services/authentication/dtos/identity-verification-email.dto';
+export * from './lib/at-services/authentication/dtos/verify-identity.dto';
+export * from './lib/at-services/authentication/dtos/sporran/sporran-session.dto';
+export * from './lib/at-services/authentication/dtos/sporran/message/request-credential.dto';
+export * from './lib/at-services/authentication/dtos/sporran/message/submit-attestation.dto';
+export * from './lib/at-services/authentication/dtos/sporran/message/submit-terms.dto';
+//#endregion

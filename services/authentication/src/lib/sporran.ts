@@ -1,8 +1,8 @@
 import { env, CodeException } from '@apillon/lib';
 import { Did, DidUri, connect } from '@kiltprotocol/sdk-js';
 import { HttpStatus } from '@nestjs/common';
-import { AuthenticationErrorCode } from '../../config/types';
-import { randomChallenge, generateKeypairs } from '../../lib/kilt';
+import { AuthenticationErrorCode } from '../config/types';
+import { randomChallenge, generateKeypairs } from './kilt';
 
 export async function prepareSignResources(encryptionKeyUri: string) {
   await connect(env.KILT_NETWORK);

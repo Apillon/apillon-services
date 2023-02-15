@@ -1,10 +1,14 @@
-import { JSONParser, ModelBase, PopulateFrom } from '@apillon/lib';
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator, emailValidator } from '@rawmodel/validators';
-import { AuthenticationErrorCode } from '../../../config/types';
+import {
+  AuthenticationErrorCode,
+  PopulateFrom,
+} from '../../../../config/types';
+import { ModelBase } from '../../../base-models/base';
+import { JSONParser } from '../../../parsers';
 
-export class AttestationEmailDto extends ModelBase {
+export class VerificationEmailDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
@@ -27,21 +31,15 @@ export class AttestationEmailDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: AuthenticationErrorCode.IDENTITY_TOKEN_NOT_PRESENT,
+        code: AuthenticationErrorCode.IDENTITY_VERIFICATION_EMAIL_TYPE_NOT_PRESENT,
       },
     ],
   })
-  public token: string;
+  public type: string;
 
   @prop({
     parser: { resolver: JSONParser() },
     populatable: [PopulateFrom.PROFILE],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_PRESENT,
-      },
-    ],
   })
   public captcha: { eKey: string; token: string };
 }

@@ -8,20 +8,12 @@ import {
   Blockchain,
   Did,
 } from '@kiltprotocol/sdk-js';
-import { CodeException, env, Lmas, LogType, ServiceName } from '@apillon/lib';
 import {
   BaseQueueWorker,
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import {
-  getFullDidDocument,
-  getNextNonce,
-  createAttestationRequest,
-  generateKeypairs,
-  generateAccount,
-} from '../lib/kilt';
-import { AuthenticationApiContext } from '../context';
+
 import { Identity } from '../modules/identity/models/identity.model';
 import {
   AuthenticationErrorCode,
@@ -30,13 +22,21 @@ import {
   KiltSignAlgorithm,
 } from '../config/types';
 import { HttpStatus } from '@nestjs/common';
+import {
+  generateKeypairs,
+  generateAccount,
+  getFullDidDocument,
+  createAttestationRequest,
+  getNextNonce,
+} from '../lib/kilt';
+import { env, Lmas, LogType, ServiceName, CodeException } from '@apillon/lib';
 
 export class IdentityGenerateWorker extends BaseQueueWorker {
-  context: AuthenticationApiContext;
+  context;
 
   public constructor(
     workerDefinition: WorkerDefinition,
-    context: AuthenticationApiContext,
+    context,
     type: QueueWorkerType,
   ) {
     super(workerDefinition, context, type, env.AUTH_AWS_WORKER_SQS_URL);
