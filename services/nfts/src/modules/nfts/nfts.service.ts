@@ -9,13 +9,20 @@ import {
 import { ethers, Wallet } from 'ethers';
 import { AppEnvironment, env } from '@apillon/lib';
 import { TransferNftQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/transfer-nft-query-filter.dto';
+import { TransactionService } from '../transaction/transaction.service';
+import { ServiceContext } from '../../context';
+import { TransactionDTO } from '../transaction/dtos/transaction.dto';
+import { Chains, DbTables, TransactionType } from '../../config/types';
 
 export class NftsService {
   static async getHello() {
     return 'Hello world from NFTS microservice';
   }
 
-  static async deployNftContract(params: { body: DeployNftContractDto }) {
+  static async deployNftContract(
+    params: { body: DeployNftContractDto },
+    context: ServiceContext,
+  ) {
     console.log(`Deploying NFT: ${JSON.stringify(params.body)}`);
     const prodEnv = env.APP_ENV == AppEnvironment.PROD;
     const provider = new ethers.providers.StaticJsonRpcProvider(
@@ -37,9 +44,19 @@ export class NftsService {
       ? env.NFTS_MOONBEAM_MAINNET_PRIVATEKEY
       : env.NFTS_MOONBEAM_TESTNET_PRIVATEKEY;
     const wallet = new Wallet(privateKey, provider);
-    await wallet.signTransaction(contractTx);
+    const rawTransaction = await wallet.signTransaction(contractTx);
 
-    const deployedContract: TransactionReceipt = await (
+    //insert transaction to DB
+    const tx: TransactionDTO = new TransactionDTO({}, context).populate({
+      chainId: Chains.MOONBASE,
+      transactionType: TransactionType.DEPLOY_CONTRACT,
+      rawTransaction: rawTransaction,
+      refTable: DbTables.COLLECTION,
+      refId: 1,
+    });
+    await TransactionService.createTransaction(context, tx);
+
+    /*const deployedContract: TransactionReceipt = await (
       await wallet.sendTransaction(contractTx)
     ).wait(1);
 
@@ -47,7 +64,9 @@ export class NftsService {
     return {
       transaction_hash: deployedContract.transactionHash,
       contract_address: deployedContract.contractAddress,
-    };
+    };*/
+
+    return true;
   }
 
   static async transferNftOwnership(params: { query: TransferNftQueryFilter }) {
