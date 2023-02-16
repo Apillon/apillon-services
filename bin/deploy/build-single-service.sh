@@ -55,7 +55,7 @@ npm i serverless-webpack copy-webpack-plugin webpack webpack-node-externals ts-l
 
 if [ "$DB_MIGRATIONS" == "true" ]
 then
-  # requires DB configuration in ENV
+  # requires VPC access to DB and configuration from secret manager
   npm run db-upgrade:ci
 fi
 
