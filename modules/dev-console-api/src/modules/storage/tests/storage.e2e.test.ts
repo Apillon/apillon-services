@@ -272,6 +272,92 @@ describe('Storage tests', () => {
       });
     });
 
+    describe('Single upload request, for multiple files', () => {
+      test('User should be able to recieve multiple s3 urls for upload', async () => {
+        testSession_uuid = uuidV4();
+
+        //Get urls for upload
+        let response = await request(stage.http)
+          .post(`/storage/${testBucket.bucket_uuid}/files-upload`)
+          .send({
+            session_uuid: testSession_uuid,
+            files: [
+              {
+                fileName: 'abcd.txt',
+                path: '',
+              },
+              {
+                fileName: 'uvz.txt',
+                path: '',
+              },
+            ],
+          })
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(201);
+        expect(response.body.data.files.length).toBe(2);
+        const abcdUrlResponse = response.body.data.files.find(
+          (x) => x.fileName == 'abcd.txt',
+        );
+        const uvzUrlResponse = response.body.data.files.find(
+          (x) => x.fileName == 'uvz.txt',
+        );
+
+        expect(abcdUrlResponse).toBeTruthy();
+        expect(uvzUrlResponse).toBeTruthy();
+
+        response = await request(abcdUrlResponse.url)
+          .put(``)
+          .send(new Date().toString() + 'abcd');
+        expect(response.status).toBe(200);
+
+        response = await request(uvzUrlResponse.url)
+          .put(``)
+          .send(new Date().toString() + 'uvz');
+        expect(response.status).toBe(200);
+        // trigger sync to IPFS
+        response = await request(stage.http)
+          .post(
+            `/storage/${testBucket.bucket_uuid}/file-upload/${testSession_uuid}/end`,
+          )
+          .send({
+            directSync: true,
+          })
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(200);
+
+        //Check if files exists
+        let file: File = await new File(
+          {},
+          stage.storageContext,
+        ).populateByUUID(abcdUrlResponse.file_uuid);
+
+        expect(file.exists()).toBeTruthy();
+        file = await new File({}, stage.storageContext).populateByUUID(
+          abcdUrlResponse.file_uuid,
+        );
+        expect(file.exists()).toBeTruthy();
+      });
+
+      test('User should NOT be able to recieve multiple s3 urls for upload for ANOTHER USER bucket', async () => {
+        testSession_uuid = uuidV4();
+
+        //Get urls for upload
+        const response = await request(stage.http)
+          .post(`/storage/${testBucket.bucket_uuid}/files-upload`)
+          .send({
+            session_uuid: testSession_uuid,
+            files: [
+              {
+                fileName: 'jjjj.txt',
+                path: '',
+              },
+            ],
+          })
+          .set('Authorization', `Bearer ${testUser2.token}`);
+        expect(response.status).toBe(403);
+      });
+    });
+
     describe('Wrap files into IPFS directory tests', () => {
       test('User should be able to upload multiple files to Apillon storage using session, and wrap those files into directory on IPFS', async () => {
         testSession_uuid = uuidV4();

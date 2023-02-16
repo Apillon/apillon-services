@@ -1,17 +1,16 @@
 import {
-  CreateWebPageDto,
+  CreateWebsiteDto,
   DefaultUserRole,
   DeploymentQueryFilter,
-  DeployWebPageDto,
+  DeployWebsiteDto,
   ValidateFor,
-  WebPageQueryFilter,
-  WebPagesQuotaReachedQueryFilter,
+  WebsiteQueryFilter,
+  WebsitesQuotaReachedQueryFilter,
 } from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
-  Delete,
   Get,
   HttpCode,
   Param,
@@ -30,80 +29,80 @@ import { HostingService } from './hosting.service';
 export class HostingController {
   constructor(private hostingService: HostingService) {}
 
-  @Get('web-pages')
+  @Get('websites')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
     { role: DefaultUserRole.PROJECT_USER },
   )
-  @Validation({ dto: WebPageQueryFilter, validateFor: ValidateFor.QUERY })
+  @Validation({ dto: WebsiteQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
-  async listWebPages(
+  async listWebsites(
     @Ctx() context: DevConsoleApiContext,
-    @Query() query: WebPageQueryFilter,
+    @Query() query: WebsiteQueryFilter,
   ) {
-    return await this.hostingService.listWebPages(context, query);
+    return await this.hostingService.listWebsites(context, query);
   }
 
-  @Get('web-pages/quota-reached')
+  @Get('websites/quota-reached')
   @Permissions({ role: DefaultUserRole.USER })
   @Validation({
-    dto: WebPagesQuotaReachedQueryFilter,
+    dto: WebsitesQuotaReachedQueryFilter,
     validateFor: ValidateFor.QUERY,
   })
   @UseGuards(ValidationGuard, AuthGuard)
-  async isWebPagesQuotaReached(
+  async isWebsitesQuotaReached(
     @Ctx() context: DevConsoleApiContext,
-    @Query() query: WebPagesQuotaReachedQueryFilter,
+    @Query() query: WebsitesQuotaReachedQueryFilter,
   ) {
-    return await this.hostingService.isWebPagesQuotaReached(context, query);
+    return await this.hostingService.isWebsitesQuotaReached(context, query);
   }
 
-  @Get('web-pages/:id')
+  @Get('websites/:id')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
     { role: DefaultUserRole.PROJECT_USER },
   )
   @UseGuards(AuthGuard)
-  async getBucket(
+  async getWebsite(
     @Ctx() context: DevConsoleApiContext,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return await this.hostingService.getWebPage(context, id);
+    return await this.hostingService.getWebsite(context, id);
   }
 
-  @Post('web-page')
+  @Post('website')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
     { role: DefaultUserRole.PROJECT_USER },
   )
   @UseGuards(AuthGuard)
-  @Validation({ dto: CreateWebPageDto })
+  @Validation({ dto: CreateWebsiteDto })
   @UseGuards(ValidationGuard)
-  async createWebPage(
+  async createWebsite(
     @Ctx() context: DevConsoleApiContext,
-    @Body() body: CreateWebPageDto,
+    @Body() body: CreateWebsiteDto,
   ) {
-    return await this.hostingService.createWebPage(context, body);
+    return await this.hostingService.createWebsite(context, body);
   }
 
-  @Patch('web-pages/:id')
+  @Patch('websites/:id')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
   @UseGuards(AuthGuard)
-  async updateWebPage(
+  async updateWebsite(
     @Ctx() context: DevConsoleApiContext,
     @Param('id', ParseIntPipe) id: number,
     @Body() body: any,
   ) {
-    return await this.hostingService.updateWebPage(context, id, body);
+    return await this.hostingService.updateWebsite(context, id, body);
   }
 
-  @Post('web-pages/:id/deploy')
+  @Post('websites/:id/deploy')
   @HttpCode(200)
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
@@ -111,17 +110,17 @@ export class HostingController {
     { role: DefaultUserRole.PROJECT_USER },
   )
   @UseGuards(AuthGuard)
-  @Validation({ dto: DeployWebPageDto, skipValidation: true })
+  @Validation({ dto: DeployWebsiteDto, skipValidation: true })
   @UseGuards(ValidationGuard)
-  async deployWebPage(
+  async deployWebsite(
     @Ctx() context: DevConsoleApiContext,
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: DeployWebPageDto,
+    @Body() body: DeployWebsiteDto,
   ) {
-    return await this.hostingService.deployWebPage(context, id, body);
+    return await this.hostingService.deployWebsite(context, id, body);
   }
 
-  @Get('web-pages/:webPage_id/deployments')
+  @Get('websites/:website_id/deployments')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -135,17 +134,17 @@ export class HostingController {
   @UseGuards(ValidationGuard, AuthGuard)
   async listDeployments(
     @Ctx() context: DevConsoleApiContext,
-    @Param('webPage_id', ParseIntPipe) webPage_id: number,
+    @Param('website_id', ParseIntPipe) website_id: number,
     @Query() query: DeploymentQueryFilter,
   ) {
     return await this.hostingService.listDeployments(
       context,
-      webPage_id,
+      website_id,
       query,
     );
   }
 
-  @Get('web-pages/:webPage_id/deployments/:id')
+  @Get('websites/:website_id/deployments/:id')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },

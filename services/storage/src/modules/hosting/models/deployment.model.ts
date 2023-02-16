@@ -22,7 +22,7 @@ import {
 } from '../../../config/types';
 import { ServiceContext } from '../../../context';
 import { Bucket } from '../../bucket/models/bucket.model';
-import { WebPage } from './web-page.model';
+import { Website } from './website.model';
 
 export class Deployment extends AdvancedSQLModel {
   public readonly tableName = DbTables.DEPLOYMENT;
@@ -43,17 +43,16 @@ export class Deployment extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.DEPLOYMENT_WEB_PAGE_ID_NOT_PRESENT,
+        code: StorageErrorCode.DEPLOYMENT_WEBSITE_ID_NOT_PRESENT,
       },
     ],
   })
-  public webPage_id: number;
+  public website_id: number;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -182,8 +181,8 @@ export class Deployment extends AdvancedSQLModel {
   public number: number;
 
   public async canAccess(context: ServiceContext) {
-    const webPage: WebPage = await new WebPage({}, context).populateById(
-      this.webPage_id,
+    const website: Website = await new Website({}, context).populateById(
+      this.website_id,
     );
     if (
       !context.hasRoleOnProject(
@@ -193,7 +192,7 @@ export class Deployment extends AdvancedSQLModel {
           DefaultUserRole.PROJECT_USER,
           DefaultUserRole.ADMIN,
         ],
-        webPage.project_uuid,
+        website.project_uuid,
       )
     ) {
       throw new CodeException({
@@ -228,10 +227,10 @@ export class Deployment extends AdvancedSQLModel {
   }
 
   public async populateLastDeployment(
-    webPage_id: number,
+    website_id: number,
     environment: DeploymentEnvironment,
   ): Promise<this> {
-    if (!webPage_id || !environment) {
+    if (!website_id || !environment) {
       throw new Error('parameters should not be null');
     }
 
@@ -239,13 +238,13 @@ export class Deployment extends AdvancedSQLModel {
       `
       SELECT * 
       FROM \`${this.tableName}\`
-      WHERE webPage_id = @webPage_id 
+      WHERE website_id = @website_id 
       AND environment = @environment
       AND status <> ${SqlModelStatus.DELETED}
       ORDER BY number DESC
       LIMIT 1;
       `,
-      { webPage_id, environment },
+      { website_id, environment },
     );
 
     if (data && data.length) {
@@ -274,13 +273,13 @@ export class Deployment extends AdvancedSQLModel {
         `,
       qFrom: `
         FROM \`${this.tableName}\` d
-        JOIN \`${DbTables.WEB_PAGE}\` wp ON wp.id = d.webPage_id
-        WHERE wp.id = @webPage_id
+        JOIN \`${DbTables.WEBSITE}\` wp ON wp.id = d.website_id
+        WHERE wp.id = @website_id
         AND d.status = ${SqlModelStatus.ACTIVE}
         AND (@environment IS NULL OR d.environment = @environment)
       `,
       qFilter: `
-        ORDER BY ${filters.orderStr}
+        ORDER BY ${filters.orderStr ? filters.orderStr : 'd.updateTime DESC'}
         LIMIT ${filters.limit} OFFSET ${filters.offset};
       `,
     };

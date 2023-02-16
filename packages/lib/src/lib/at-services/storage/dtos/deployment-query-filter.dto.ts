@@ -16,7 +16,7 @@ export class DeploymentQueryFilter extends BaseQueryFilter {
       },
     ],
   })
-  public webPage_id: number;
+  public website_id: number;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -29,7 +29,6 @@ export class DeploymentQueryFilter extends BaseQueryFilter {
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
-    defaultValue: 1,
   })
   public environment: number;
 }

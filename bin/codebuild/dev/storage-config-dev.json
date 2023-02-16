@@ -30,6 +30,16 @@
         "type": "PLAINTEXT",
         "name": "WORKER_SQS_ARN",
         "value": "arn:aws:sqs:eu-west-1:018021943180:apillon-storage-queue-dev"
+      },
+      {
+        "type": "PLAINTEXT",
+        "name": "DB_MIGRATIONS",
+        "value": "true"
+      },
+      {
+        "type": "PLAINTEXT",
+        "name": "AWS_SECRETS_ID",
+        "value": "apillon-development"
       }
     ],
     "type": "LINUX_CONTAINER"

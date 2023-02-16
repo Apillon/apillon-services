@@ -4,7 +4,7 @@ export async function upgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    CREATE TABLE IF NOT EXISTS \`${DbTables.WEB_PAGE}\` (
+    CREATE TABLE IF NOT EXISTS \`${DbTables.WEBSITE}\` (
   \`id\` INT NOT NULL AUTO_INCREMENT,
   \`project_uuid\` VARCHAR(36) NOT NULL,
   \`bucket_id\` INT NOT NULL,
@@ -19,19 +19,19 @@ export async function upgrade(
   \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   \`updateUser\` INT NULL,
   PRIMARY KEY (\`id\`),
-  CONSTRAINT \`fk_webPage_bucket\`
+  CONSTRAINT \`fk_website_bucket\`
         FOREIGN KEY (\`bucket_id\`)
         REFERENCES \`${DbTables.BUCKET}\` (\`id\`)
         ON DELETE CASCADE
         ON UPDATE NO ACTION
   ,
-  CONSTRAINT \`fk_webPage_Stagingbucket\`
+  CONSTRAINT \`fk_website_Stagingbucket\`
         FOREIGN KEY (\`stagingBucket_id\`)
         REFERENCES \`${DbTables.BUCKET}\` (\`id\`)
         ON DELETE CASCADE
         ON UPDATE NO ACTION
   ,
-  CONSTRAINT \`fk_webPage_productionBucket\`
+  CONSTRAINT \`fk_website_productionBucket\`
         FOREIGN KEY (\`productionBucket_id\`)
         REFERENCES \`${DbTables.BUCKET}\` (\`id\`)
         ON DELETE CASCADE
@@ -43,6 +43,6 @@ export async function downgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    DROP TABLE IF EXISTS \`${DbTables.WEB_PAGE}\`;
+    DROP TABLE IF EXISTS \`${DbTables.WEBSITE}\`;
   `);
 }

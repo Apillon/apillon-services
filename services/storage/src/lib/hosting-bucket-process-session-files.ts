@@ -7,7 +7,14 @@ import { FileUploadSession } from '../modules/storage/models/file-upload-session
 import { getSessionFilesOnS3 } from './file-upload-session-s3-files';
 import { generateDirectoriesForFUR } from './generate-directories-from-path';
 import { File } from '../modules/storage/models/file.model';
-import { Lmas, LogType, ServiceName, writeLog } from '@apillon/lib';
+import {
+  AWS_S3,
+  env,
+  Lmas,
+  LogType,
+  ServiceName,
+  writeLog,
+} from '@apillon/lib';
 
 export async function hostingBucketProcessSessionFiles(
   context: ServiceContext,
@@ -27,6 +34,8 @@ export async function hostingBucketProcessSessionFiles(
     {},
     context,
   ).populateDirectoriesInBucket(bucket.id, context);
+
+  const s3FilesToDelete: string[] = [];
 
   //Loop through FURs
   for (const fur of fileUploadRequests) {
@@ -53,6 +62,8 @@ export async function hostingBucketProcessSessionFiles(
       ).populateByNameAndDirectory(bucket.id, fur.fileName, fileDirectory?.id);
 
       if (existingFile.exists()) {
+        s3FilesToDelete.push(existingFile.s3FileKey);
+
         //Update existing file
         existingFile.populate({
           s3FileKey: fur.s3FileKey,
@@ -65,7 +76,7 @@ export async function hostingBucketProcessSessionFiles(
         await existingFile.update();
       } else {
         //Create new file
-        const tmpF = await new File({}, context)
+        await new File({}, context)
           .populate({
             file_uuid: fur.file_uuid,
             s3FileKey: fur.s3FileKey,
@@ -113,6 +124,24 @@ export async function hostingBucketProcessSessionFiles(
     //update file-upload-request status
     fur.fileStatus = FileUploadRequestFileStatus.UPLOADED_TO_S3;
     await fur.update();
+  }
+
+  try {
+    const s3Client: AWS_S3 = new AWS_S3();
+    await s3Client.removeFiles(
+      env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+      s3FilesToDelete.map((x) => {
+        return { Key: x };
+      }),
+    );
+  } catch (err) {
+    writeLog(
+      LogType.ERROR,
+      'Error removing files from s3, that were overwritten',
+      'hosting-bucket-process-session-files.ts',
+      'hostingBucketProcessSessionFiles',
+      err,
+    );
   }
 
   //update session

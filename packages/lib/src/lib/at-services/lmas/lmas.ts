@@ -41,6 +41,19 @@ export class Lmas extends BaseService {
     service?: string;
     data?: any;
   }) {
+    // hide some data from logging
+    if (!!params.data?.password) {
+      params.data.password = '******';
+    }
+
+    //// if we want to anonymize email
+    // if (!!params.data?.email) {
+    //   params.data.email = params.data.email.replace(
+    //     /(\w{1})[\w.-\\+]+(\w{1})@([\w.]+\w)/,
+    //     '$1***$2@$3',
+    //   );
+    // }
+
     const data = {
       requestId: params.context?.requestId || null,
       eventName: LmasEventType.WRITE_LOG,

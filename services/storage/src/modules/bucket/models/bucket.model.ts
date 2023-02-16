@@ -416,4 +416,23 @@ export class Bucket extends AdvancedSQLModel {
 
     return data[0].numOfBuckets;
   }
+
+  /**
+   * Method which returns true, if there are files inside this bucket
+   * @returns true / false
+   */
+  public async containsFiles() {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT f.id
+      FROM \`${DbTables.FILE}\` f
+      WHERE f.bucket_id = @bucket_id
+      AND status <> ${SqlModelStatus.DELETED}
+      LIMIT 1;
+      `,
+      { bucket_id: this.id },
+    );
+
+    return data.length > 0;
+  }
 }
