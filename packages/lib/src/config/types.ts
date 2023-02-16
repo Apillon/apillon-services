@@ -82,6 +82,7 @@ export enum AuthenticationEventType {
   SPORRAN_SUBMIT_TERMS = 'sporran-submit-terms',
   SPORRAN_SUBMIT_ATTESTATION = 'sporran-submit-attestation',
   SPORRAN_REQUEST_CREDENTIAL = 'sporran-request-credential',
+  SPORRAN_VERIFY_CREDENTIAL = 'sporran-verify-credential',
 }
 
 export enum MailEventType {

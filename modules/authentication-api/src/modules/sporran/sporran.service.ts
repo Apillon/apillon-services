@@ -5,6 +5,7 @@ import {
   SubmitAttestationDto,
   SubmitTermsDto,
 } from '@apillon/lib';
+import { VerifyCredentialDto } from './dtos/message/verify-credential.dto';
 import { Injectable } from '@nestjs/common';
 import { AuthenticationApiContext } from '../../context';
 
@@ -47,6 +48,17 @@ export class SporranService {
   ) {
     return (
       await new AuthenticationMicroservice(context).sporranRequestCredential(
+        body,
+      )
+    ).data;
+  }
+
+  async verifyCredential(
+    context: AuthenticationApiContext,
+    body: VerifyCredentialDto,
+  ) {
+    return (
+      await new AuthenticationMicroservice(context).sporranVerifyCredential(
         body,
       )
     ).data;

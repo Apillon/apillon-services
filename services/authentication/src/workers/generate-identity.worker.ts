@@ -7,6 +7,7 @@ import {
   Utils,
   Blockchain,
   Did,
+  ICredential,
 } from '@kiltprotocol/sdk-js';
 import {
   BaseQueueWorker,
@@ -27,7 +28,6 @@ import {
   generateAccount,
   getFullDidDocument,
   createAttestationRequest,
-  getNextNonce,
 } from '../lib/kilt';
 import { env, Lmas, LogType, ServiceName, CodeException } from '@apillon/lib';
 
@@ -161,6 +161,7 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
       claimerEmail,
       attesterDidUri,
       claimerDidUri,
+      params.credential as ICredential,
     );
 
     const attestation = api.tx.attestation.add(
@@ -169,7 +170,7 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
       null,
     );
 
-    const nextNonceBN = new BN(await getNextNonce(attesterDidUri));
+    // const nextNonceBN = new BN(await getNextNonce(attesterDidUri));
 
     // Prepare claim TX
     const emailClaimTx = await Did.authorizeTx(
@@ -180,7 +181,6 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
         keyType: attesterKeypairs.assertionMethod.type,
       }),
       attesterAccount.address,
-      { txCounter: nextNonceBN },
     );
 
     try {

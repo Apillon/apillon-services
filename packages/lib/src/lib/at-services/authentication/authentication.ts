@@ -8,6 +8,7 @@ import { VerificationEmailDto } from './dtos/identity-verification-email.dto';
 import { RequestCredentialDto } from './dtos/sporran/message/request-credential.dto';
 import { SubmitAttestationDto } from './dtos/sporran/message/submit-attestation.dto';
 import { SubmitTermsDto } from './dtos/sporran/message/submit-terms.dto';
+import { VerifyCredentialDto } from './dtos/sporran/message/verify-credential.dto';
 import { SporranSessionVerifyDto } from './dtos/sporran/sporran-session.dto';
 import { VerificationIdentityDto } from './dtos/verify-identity.dto';
 
@@ -122,6 +123,14 @@ export class AuthenticationMicroservice extends BaseService {
   public async sporranRequestCredential(params: RequestCredentialDto) {
     const data = {
       eventName: AuthenticationEventType.SPORRAN_REQUEST_CREDENTIAL,
+      body: params,
+    };
+    return await this.callService(data);
+  }
+
+  public async sporranVerifyCredential(params: VerifyCredentialDto) {
+    const data = {
+      eventName: AuthenticationEventType.SPORRAN_VERIFY_CREDENTIAL,
       body: params,
     };
     return await this.callService(data);

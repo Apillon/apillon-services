@@ -19,6 +19,7 @@ export class CaptchaGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   public async canActivate(execCtx: ExecutionContext): Promise<boolean> {
+    let error;
     try {
       const options = this.reflector.getAllAndMerge(VALIDATION_OPTIONS_KEY, [
         execCtx.getHandler(),
@@ -30,21 +31,13 @@ export class CaptchaGuard implements CanActivate {
 
       if (env.CAPTCHA_SECRET && env.APP_ENV !== AppEnvironment.TEST) {
         if (!data.captcha) {
-          throw new CodeException({
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            code: AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_PRESENT,
-            errorCodes: AuthenticationErrorCode,
-          });
+          error = AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_PRESENT;
         }
         await verifyCaptcha(data.captcha?.token, env.CAPTCHA_SECRET).then(
           (response) => (captchaResult = response),
         );
       } else {
-        throw new CodeException({
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          code: AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_CONFIGURED,
-          errorCodes: AuthenticationErrorCode,
-        });
+        error = AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_CONFIGURED;
       }
 
       if (
@@ -52,16 +45,22 @@ export class CaptchaGuard implements CanActivate {
         env.APP_ENV !== AppEnvironment.TEST &&
         !captchaResult
       ) {
-        throw new CodeException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          code: AuthenticationErrorCode.IDENTITY_CAPTCHA_INVALID,
-          errorCodes: AuthenticationErrorCode,
-        });
+        error = AuthenticationErrorCode.IDENTITY_CAPTCHA_INVALID;
       }
 
       return true;
     } catch (error) {
-      throw error;
+      error = error;
+    }
+
+    if (error) {
+      throw new CodeException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        code: error.prototype.isPrototypeOf(AuthenticationErrorCode)
+          ? error
+          : AuthenticationErrorCode.IDENTITY_CREATE_INVALID_REQUEST,
+        errorCodes: AuthenticationErrorCode,
+      });
     }
   }
 }

@@ -1,4 +1,5 @@
 import { ValidateFor } from '@apillon/lib';
+import { VerifyCredentialDto } from './dtos/message/verify-credential.dto';
 import { Ctx, Validation } from '@apillon/modules-lib';
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { AuthenticationApiContext } from '../../context';
@@ -59,6 +60,18 @@ export class SporranController {
     // Creates a request-credential message, which requests a credential presentation
     // from sporran
     return await this.sporranService.requestCredential(context, body);
+  }
+
+  @Post('message/verify-credential')
+  @Validation({
+    dto: VerifyCredentialDto,
+  })
+  @UseGuards(ValidationGuard)
+  async sporranVerifyAttestation(
+    @Ctx() context: AuthenticationApiContext,
+    @Body() body: VerifyCredentialDto,
+  ) {
+    return await this.sporranService.verifyCredential(context, body);
   }
 
   @Post('message/submit-attestation')

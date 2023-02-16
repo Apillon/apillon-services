@@ -118,19 +118,23 @@ export function createAttestationRequest(
   email: string,
   attesterDidUri: DidUri,
   claimerDidUri: DidUri,
+  credential?: ICredential,
 ) {
-  const emailCType = getCtypeSchema(ApillonSupportedCTypes.EMAIL);
-  const emailContents = {
-    Email: email,
-  };
+  let authCredential = credential;
+  if (!authCredential) {
+    const emailCType = getCtypeSchema(ApillonSupportedCTypes.EMAIL);
+    const emailContents = {
+      Email: email,
+    };
 
-  const authClaim = Claim.fromCTypeAndClaimContents(
-    emailCType,
-    emailContents,
-    claimerDidUri,
-  );
+    const authClaim = Claim.fromCTypeAndClaimContents(
+      emailCType,
+      emailContents,
+      claimerDidUri,
+    );
 
-  const authCredential = Credential.fromClaim(authClaim);
+    authCredential = Credential.fromClaim(authClaim);
+  }
 
   return {
     attestationInstance: Attestation.fromCredentialAndDid(

@@ -32,9 +32,13 @@ import {
   ICredential,
   Attestation,
   ISubmitAttestation,
+  Credential,
+  KiltKeyringPair,
+  Blockchain,
 } from '@kiltprotocol/sdk-js';
 import {
   encryptionSigner,
+  generateAccount,
   generateKeypairs,
   getCtypeSchema,
 } from '../../lib/kilt';
@@ -56,6 +60,8 @@ import { Identity } from '../identity/models/identity.model';
 import { WorkerName } from '../../workers/worker-executor';
 import { IdentityGenerateWorker } from '../../workers/generate-identity.worker';
 import { prepareSignResources } from '../../lib/sporran';
+import { VerifiableCredential } from '@kiltprotocol/vc-export';
+import { VerifyCredentialDto } from '@apillon/lib/dist/lib/at-services/authentication/dtos/sporran/message/verify-credential.dto';
 
 @Injectable()
 export class SporranMicroservice {
@@ -414,5 +420,91 @@ export class SporranMicroservice {
     );
 
     return { message: encryptedMessage };
+  }
+
+  static async verifyCredential(event: { body: VerifyCredentialDto }, context) {
+    const {
+      verifierDidUri: verifierDidUri,
+      encryptionKeyUri: encryptionKeyUri,
+      claimerSessionDidUri: claimerSessionDidUri,
+      requestChallenge: requestChallenge,
+    } = await prepareSignResources(event.body.encryptionKeyUri);
+
+    console.log('Verifying Sporran credential ...');
+
+    const decryptionSenderKey = await Did.resolveKey(
+      event.body.message.senderKeyUri as DidResourceUri,
+    );
+
+    const {
+      authentication,
+      keyAgreement,
+      assertionMethod,
+      capabilityDelegation,
+    } = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
+    const attesterAccount = (await generateAccount(
+      env.KILT_ATTESTER_MNEMONIC,
+    )) as KiltKeyringPair;
+
+    let decryptedMessage: any;
+    try {
+      decryptedMessage = Utils.Crypto.decryptAsymmetricAsStr(
+        {
+          box: event.body.message.ciphertext,
+          nonce: event.body.message.nonce,
+        },
+        decryptionSenderKey.publicKey,
+        keyAgreement.secretKey,
+      );
+    } catch (error) {
+      await new Lmas().writeLog({
+        logType: LogType.ERROR,
+        location: 'Authentication-API/sporran/verify-credential',
+        service: ServiceName.AUTHENTICATION_API,
+        data: error,
+      });
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: AuthenticationErrorCode.SPORRAN_INVALID_REQUEST,
+        errorCodes: AuthenticationErrorCode,
+      });
+    }
+
+    const message = JSON.parse(decryptedMessage);
+    const credential = message.body.content[0];
+
+    await Credential.verifyPresentation(credential);
+
+    await connect(env.KILT_NETWORK);
+    const api = ConfigService.get('api');
+
+    const attestationChain = await api.query.attestation.attestations(
+      credential.rootHash,
+    );
+
+    const attestation = Attestation.fromChain(
+      attestationChain,
+      credential.rootHash,
+    );
+
+    if (attestation.revoked) {
+      await new Lmas().writeLog({
+        logType: LogType.INFO,
+        location: 'Authentication-API/sporran/verify-credential',
+        service: ServiceName.AUTHENTICATION_API,
+        data: 'Credential is revoked!',
+      });
+      return { verified: false };
+    }
+
+    // TODO: Here we can check if the attester is valid
+    // if (isTrustedAttester(attestation.owner)) {
+    //   console.log(
+    //     "The claim is valid. Claimer's email:",
+    //     credential.claim.contents.Email,
+    //   );
+    // }
+
+    return { verified: true };
   }
 }
