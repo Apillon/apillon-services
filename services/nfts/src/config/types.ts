@@ -1,3 +1,26 @@
-export enum DbTables {}
+export enum DbTables {
+  TRANSACTION = 'transaction',
+  COLLECTION = 'collection',
+}
 
-export enum NftsErrorCode {}
+export enum NftsErrorCode {
+  //422
+  TRANSACTION_CHAIN_ID_NOT_PRESENT = 42212001,
+  TRANSACTION_RAW_TRANSACTION_NOT_PRESENT = 42212002,
+  TRANSACTION_NONCE_NOT_PRESENT = 42212003,
+  TRANSACTION_TYPE_NOT_PRESENT = 42212004,
+  //500
+  CREATE_NEW_TRANSACTION_ERROR = 50012001,
+}
+
+export enum Chains {
+  MOONBEAM = 1,
+  MOONBASE = 2,
+}
+
+export enum TransactionType {
+  DEPLOY_CONTRACT = 1,
+  TRANSFER_CONTRACT_OWNERSHIP = 2,
+  MINT_NFT = 3,
+  SET_COLLECTION_BASE_URI = 4,
+}

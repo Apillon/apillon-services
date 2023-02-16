@@ -72,7 +72,7 @@ export class CodeException extends HttpException {
         ? this.options.errorCodes[this.options.code]
         : this.options.errorMessage,
       location: this.options.sourceFunction,
-      service: params.service || ServiceName.STORAGE,
+      service: params.service || this.options.sourceModule,
       data: params.data || this.options.details,
     });
 
