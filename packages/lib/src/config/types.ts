@@ -86,6 +86,7 @@ export enum NftsEventType {
   TRANSFER_OWNERSHIP = 'transfer-ownership',
   MINT_NFT = 'mint-nft',
   SET_BASE_URI = 'set-base-uri',
+  CHECK_TRANSACTION_STATUS = 'check-transaction-status',
 }
 
 export enum ReferralEventType {

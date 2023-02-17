@@ -61,4 +61,11 @@ export class NftsMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
+
+  public async checkTransactionStatus() {
+    const data = {
+      eventName: NftsEventType.CHECK_TRANSACTION_STATUS,
+    };
+    return await this.callService(data);
+  }
 }

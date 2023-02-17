@@ -324,6 +324,12 @@ export interface IEnv {
   NFTS_MOONBEAM_MAINNET_RPC: string;
   NFTS_MOONBEAM_TESTNET_PRIVATEKEY: string;
   NFTS_MOONBEAM_MAINNET_PRIVATEKEY: string;
+
+  /**
+   * NFT workers config
+   */
+  NFTS_AWS_WORKER_SQS_URL: string;
+  NFTS_AWS_WORKER_LAMBDA_NAME: string;
 }
 
 // dotenv.config();
@@ -576,6 +582,8 @@ export let env: IEnv = {
     process.env['NFTS_MOONBEAM_TESTNET_PRIVATEKEY'],
   NFTS_MOONBEAM_MAINNET_PRIVATEKEY:
     process.env['NFTS_MOONBEAM_MAINNET_PRIVATEKEY'],
+  NFTS_AWS_WORKER_SQS_URL: process.env['NFTS_AWS_WORKER_SQS_URL'],
+  NFTS_AWS_WORKER_LAMBDA_NAME: process.env['NFTS_AWS_WORKER_LAMBDA_NAME'],
 };
 
 export let isEnvReady = false;

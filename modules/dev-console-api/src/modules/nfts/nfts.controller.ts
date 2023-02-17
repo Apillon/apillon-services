@@ -17,6 +17,7 @@ import {
 import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { NftsService } from './nfts.service';
+import { DevEnvGuard } from '../../guards/dev-env.guard';
 
 @Controller('nfts')
 export class NftsController {
@@ -76,5 +77,11 @@ export class NftsController {
       collection_uuid,
       query,
     );
+  }
+
+  @Post('/check-transactions-status')
+  @UseGuards(DevEnvGuard)
+  async checkTransactionStatus(@Ctx() context: DevConsoleApiContext) {
+    return await this.nftsService.checkTransactionStatus(context);
   }
 }
