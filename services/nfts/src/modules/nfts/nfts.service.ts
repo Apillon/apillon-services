@@ -13,6 +13,7 @@ import { TransactionService } from '../transaction/transaction.service';
 import { ServiceContext } from '../../context';
 import { TransactionDTO } from '../transaction/dtos/transaction.dto';
 import { Chains, DbTables, TransactionType } from '../../config/types';
+import { WalletService } from '../wallet/wallet.service';
 
 export class NftsService {
   static async getHello() {
@@ -24,27 +25,10 @@ export class NftsService {
     context: ServiceContext,
   ) {
     console.log(`Deploying NFT: ${JSON.stringify(params.body)}`);
-    const prodEnv = env.APP_ENV == AppEnvironment.PROD;
-    const provider = new ethers.providers.StaticJsonRpcProvider(
-      prodEnv ? env.NFTS_MOONBEAM_MAINNET_RPC : env.NFTS_MOONBEAM_TESTNET_RPC,
-      {
-        chainId: prodEnv ? 1284 : 1287,
-        name: prodEnv ? 'moonbeam' : 'moonbase-alphanet',
-      },
-    );
-    // Verify contract - TODO
-    const contractTx: TransactionRequest =
-      await NftTransaction.createDeployContractTransaction(
-        params.body,
-        provider,
-      );
-
-    // Raw transaction can be signed elsewhere for the sake of security
-    const privateKey = prodEnv
-      ? env.NFTS_MOONBEAM_MAINNET_PRIVATEKEY
-      : env.NFTS_MOONBEAM_TESTNET_PRIVATEKEY;
-    const wallet = new Wallet(privateKey, provider);
-    const rawTransaction = await wallet.signTransaction(contractTx);
+    const walletService = new WalletService();
+    const txRequest: TransactionRequest =
+      await walletService.createDeployTransaction(params.body);
+    const rawTransaction = await walletService.signTransaction(txRequest);
 
     //insert transaction to DB
     const tx: TransactionDTO = new TransactionDTO({}, context).populate({
@@ -54,19 +38,8 @@ export class NftsService {
       refTable: DbTables.COLLECTION,
       refId: 1,
     });
-    await TransactionService.createTransaction(context, tx);
-
-    /*const deployedContract: TransactionReceipt = await (
-      await wallet.sendTransaction(contractTx)
-    ).wait(1);
-
-    // Safe transaction hash, contract address to db, or atleast contract address
-    return {
-      transaction_hash: deployedContract.transactionHash,
-      contract_address: deployedContract.contractAddress,
-    };*/
-
-    return true;
+    const transaction = await TransactionService.saveTransaction(context, tx);
+    return await TransactionService.sendTransaction(transaction);
   }
 
   static async transferNftOwnership(params: { query: TransferNftQueryFilter }) {
