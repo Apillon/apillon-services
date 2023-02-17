@@ -3,6 +3,7 @@ import { ServiceContext } from './context';
 
 import { ApiKeyService } from './modules/api-key/api-key.service';
 import { AuthUserService } from './modules/auth-user/auth-user.service';
+import { DiscordService } from './modules/oauth-link/discord.service';
 import { RoleService } from './modules/role/role.service';
 
 export async function processEvent(
@@ -29,6 +30,9 @@ export async function processEvent(
     [AmsEventType.API_KEY_ROLE_ASSIGN]: RoleService.assignRoleToApiKey,
     [AmsEventType.API_KEY_ROLE_REMOVE]: RoleService.removeApiKeyRole,
     [AmsEventType.GET_API_KEY_ROLES]: RoleService.getApiKeyRoles,
+
+    [AmsEventType.DISCORD_LINK]: DiscordService.link,
+    [AmsEventType.DISCORD_UNLINK]: DiscordService.unlink,
   };
 
   return await processors[event.eventName](event, context);

@@ -16,6 +16,8 @@ export enum AmsEventType {
   API_KEY_ROLE_REMOVE = 'api-key-role-remove',
   GET_API_KEY_ROLES = 'get-api-key-roles',
   GET_API_KEY = 'get-api-key',
+  DISCORD_LINK = 'discord-link',
+  DISCORD_UNLINK = 'discord-unlink',
 }
 
 export enum LmasEventType {

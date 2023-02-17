@@ -1,8 +1,13 @@
-import { Model, prop } from '@rawmodel/core';
+import {
+  ModelBase,
+  PopulateFrom,
+  presenceValidator,
+  prop,
+  ValidatorErrorCode,
+} from '@apillon/lib';
 import { stringParser } from '@rawmodel/parsers';
-import { presenceValidator } from '@rawmodel/validators';
-import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
-export class OauthLinkDiscordDto extends Model<any> {
+
+export class DiscordCodeDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],

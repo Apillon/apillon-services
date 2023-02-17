@@ -6,9 +6,10 @@ import {
 } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
-import { ApiKeyQueryFilter } from './dtos/api-key-query-filter.dto';
+import { ApiKeyQueryFilterDto } from './dtos/api-key-query-filter.dto';
 import { ApiKeyRoleBaseDto } from './dtos/api-key-role-base.dto';
 import { CreateApiKeyDto } from './dtos/create-api-key.dto';
+import { CreateOauthLinkDto } from './dtos/create-oauth-link.dto';
 
 /**
  * Access Management Service client
@@ -177,7 +178,7 @@ export class Ams extends BaseService {
     return await this.callService(data);
   }
 
-  public async listApiKeys(params: ApiKeyQueryFilter) {
+  public async listApiKeys(params: ApiKeyQueryFilterDto) {
     const data = {
       eventName: AmsEventType.LIST_API_KEYS,
       query: params.serialize(),
@@ -228,4 +229,20 @@ export class Ams extends BaseService {
   }
 
   //#endregion
+
+  public async linkDiscord(params: CreateOauthLinkDto) {
+    const data = {
+      eventName: AmsEventType.DISCORD_LINK,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
+  public async unlinkDiscord(params: { user_uuid: string }) {
+    const data = {
+      eventName: AmsEventType.DISCORD_UNLINK,
+      ...params,
+    };
+    return await this.callService(data);
+  }
 }

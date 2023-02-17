@@ -1,18 +1,15 @@
-import {
-  env,
-  OauthLinkDiscordDto,
-  SerializeFor,
-  SqlModelStatus,
-} from '@apillon/lib';
+import { CreateOauthLinkDto, SerializeFor, SqlModelStatus } from '@apillon/lib';
 import { AmsErrorCode, OauthLinkType } from '../../config/types';
 import { ServiceContext } from '../../context';
 import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
 import { AuthUser } from '../auth-user/auth-user.model';
 import { OauthLink } from './oauth-link.model';
-import axios from 'axios';
 
 export class DiscordService {
-  public async link(event: OauthLinkDiscordDto, context: ServiceContext) {
+  public static async link(
+    discordProfile: CreateOauthLinkDto,
+    context: ServiceContext,
+  ) {
     let existingOauthLink = await new OauthLink(
       {},
       context,
@@ -30,23 +27,13 @@ export class DiscordService {
       });
     }
 
-    const discordProfile = await this.getDiscordProfile(event.code);
-
-    if (!discordProfile) {
-      throw await new AmsCodeException({
-        status: 400,
-        code: AmsErrorCode.OAUTH_CREDENTIALS_INVALID,
-      }).writeToMonitor({
-        context,
-        user_uuid: context?.user?.user_uuid,
-        data: event,
-      });
-    }
-
     existingOauthLink = await new OauthLink(
       {},
       context,
-    ).populateByExternalUserId(discordProfile.id, OauthLinkType.DISCORD);
+    ).populateByExternalUserId(
+      discordProfile.externalUserId,
+      OauthLinkType.DISCORD,
+    );
 
     // check if the discord ID is already used by another user
     if (existingOauthLink.exists()) {
@@ -58,7 +45,7 @@ export class DiscordService {
     let oauthLink = await new OauthLink({}, context).populateByUserUuidAndType(
       context.user.user_uuid,
       OauthLinkType.DISCORD,
-      discordProfile.id,
+      discordProfile.externalUserId,
     );
 
     if (!oauthLink.exists()) {
@@ -79,8 +66,8 @@ export class DiscordService {
 
       oauthLink = new OauthLink({}, context);
       oauthLink.authUser_id = authUser.id;
-      oauthLink.externalUserId = discordProfile.id;
-      oauthLink.externalUsername = discordProfile.username;
+      oauthLink.externalUserId = discordProfile.externalUserId;
+      oauthLink.externalUsername = discordProfile.externalUsername;
       oauthLink.type = OauthLinkType.DISCORD;
       try {
         await oauthLink.validate();
@@ -102,7 +89,7 @@ export class DiscordService {
     return oauthLink.serialize(SerializeFor.SERVICE);
   }
 
-  public async unlink(context: ServiceContext) {
+  public static async unlink(context: ServiceContext) {
     const oauthLink = await new OauthLink(
       {},
       context,
@@ -117,45 +104,5 @@ export class DiscordService {
     }
     await oauthLink.update();
     return { success: true };
-  }
-
-  //should we do this in conosle api ???
-  async getDiscordProfile(code: string): Promise<any> {
-    try {
-      const options = new URLSearchParams({
-        client_id: env.DISCORD_CLIENT_ID,
-        client_secret: env.DISCORD_CLIENT_SECRET,
-        grant_type: 'authorization_code',
-        redirect_uri: env.DISCORD_REDIRECT_URI,
-        code,
-      });
-      const token = await axios.post(
-        'https://discord.com/api/v10/oauth2/token',
-        options,
-      );
-
-      if (token.data.access_token) {
-        const res = await axios.get('https://discord.com/api/v10/users/@me', {
-          headers: { Authorization: `Bearer ${token.data.access_token}` },
-        });
-        return res?.data;
-      }
-    } catch (error) {
-      throw await new AmsCodeException({
-        status: 400,
-        code: AmsErrorCode.OAUTH_SERVICE_CONNECTION_FAILED,
-      }).writeToMonitor({
-        data: error.message,
-      });
-    }
-  }
-  public async getDiscordAuthURL() {
-    return {
-      url: `https://discord.com/api/oauth2/authorize?client_id=${
-        env.DISCORD_CLIENT_ID
-      }&redirect_uri=${encodeURIComponent(
-        env.DISCORD_REDIRECT_URI,
-      )}&response_type=code&scope=identify%20email`,
-    };
   }
 }

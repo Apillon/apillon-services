@@ -2,9 +2,11 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import {
   Ams,
   AppEnvironment,
+  BadRequestErrorCode,
   CodeException,
   Context,
   CreateReferralDto,
+  CreateOauthLinkDto,
   env,
   generateJwtToken,
   JwtTokenType,
@@ -30,8 +32,8 @@ import { ValidateEmailDto } from './dtos/validate-email.dto';
 import { User } from './models/user.model';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
-import { verifyCaptcha } from '@apillon/modules-lib';
-
+import { verifyCaptcha, getDiscordProfile } from '@apillon/modules-lib';
+import { DiscordCodeDto } from './dtos/discord-code-dto';
 @Injectable()
 export class UserService {
   constructor(private readonly projectService: ProjectService) {}
@@ -346,5 +348,30 @@ export class UserService {
     }
 
     return user.serialize(SerializeFor.PROFILE);
+  }
+
+  async connectDiscord(context: DevConsoleApiContext, body: DiscordCodeDto) {
+    const discordProfile = await getDiscordProfile(body.code);
+
+    if (!discordProfile) {
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: BadRequestErrorCode.BAD_REQUEST,
+        errorCodes: BadRequestErrorCode,
+      });
+    }
+
+    const payload = new CreateOauthLinkDto({
+      externalUserId: discordProfile.id,
+      externalUsername: discordProfile.username,
+    });
+
+    return await new Ams(context).linkDiscord(payload);
+  }
+
+  async disconnectDiscord(context: DevConsoleApiContext) {
+    await new Ams(context).unlinkDiscord({
+      user_uuid: context.user.user_uuid,
+    });
   }
 }
