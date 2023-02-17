@@ -27,15 +27,15 @@ export class TransactionStatusWorker extends ServerlessWorker {
       transactions,
     );
     const walletService: WalletService = new WalletService();
-    transactions.forEach(async (tx) => {
+    for (const tx of transactions) {
       const isConfirmed: boolean = await walletService.isTransacionConfirmed(
         tx.transactionHash,
       );
       if (isConfirmed) {
-        tx.status = TransactionStatus.FINISHED;
+        tx.transactionStatus = TransactionStatus.FINISHED;
         await tx.update();
       }
-    });
+    }
   }
 
   public async onSuccess(_data?: any, _successData?: any): Promise<any> {
