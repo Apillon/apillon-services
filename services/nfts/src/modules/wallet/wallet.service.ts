@@ -5,6 +5,7 @@ import { NftTransaction } from '../../lib/nft-contract-transaction';
 import {
   TransactionRequest,
   TransactionResponse,
+  TransactionReceipt,
 } from '@ethersproject/providers';
 
 export class WalletService {
@@ -76,5 +77,18 @@ export class WalletService {
 
   async sendTransaction(rawTransaction: string): Promise<TransactionResponse> {
     return this.provider.sendTransaction(rawTransaction);
+  }
+
+  async isTransacionConfirmed(txHash: string): Promise<boolean> {
+    const tx: TransactionReceipt = await this.provider.getTransactionReceipt(
+      txHash,
+    );
+    console.log(
+      `Transaction receipt (txHash=${txHash}): ${JSON.stringify(tx)}`,
+    );
+    if (tx) {
+      return !!(tx.confirmations > 1 && tx.blockNumber);
+    }
+    return false;
   }
 }
