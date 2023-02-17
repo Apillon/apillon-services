@@ -12,8 +12,16 @@ import { TransferNftQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/d
 import { TransactionService } from '../transaction/transaction.service';
 import { ServiceContext } from '../../context';
 import { TransactionDTO } from '../transaction/dtos/transaction.dto';
-import { Chains, DbTables, TransactionType } from '../../config/types';
+import {
+  Chains,
+  DbTables,
+  NftsErrorCode,
+  TransactionStatus,
+  TransactionType,
+} from '../../config/types';
 import { WalletService } from '../wallet/wallet.service';
+import { NftsCodeException } from '../../lib/exceptions';
+import { Transaction } from '../transaction/models/transaction.model';
 
 export class NftsService {
   static async getHello() {
@@ -26,20 +34,54 @@ export class NftsService {
   ) {
     console.log(`Deploying NFT: ${JSON.stringify(params.body)}`);
     const walletService = new WalletService();
-    const txRequest: TransactionRequest =
-      await walletService.createDeployTransaction(params.body);
-    const rawTransaction = await walletService.signTransaction(txRequest);
 
-    //insert transaction to DB
-    const tx: TransactionDTO = new TransactionDTO({}, context).populate({
-      chainId: Chains.MOONBASE,
-      transactionType: TransactionType.DEPLOY_CONTRACT,
-      rawTransaction: rawTransaction,
-      refTable: DbTables.COLLECTION,
-      refId: 1,
-    });
-    const transaction = await TransactionService.saveTransaction(context, tx);
-    return await TransactionService.sendTransaction(transaction);
+    const conn = await context.mysql.start();
+
+    try {
+      //Prepare transaction record
+      const dbTxRecord: Transaction = new Transaction({}, context);
+      await dbTxRecord.populateNonce(conn);
+      if (!dbTxRecord.nonce) {
+        //First transaction record - nonce should be acquired from chain
+        dbTxRecord.nonce = await walletService.getCurrentMaxNonce();
+      }
+      params.body.nonce = dbTxRecord.nonce;
+
+      //Send transaction to chain
+      const txRequest: TransactionRequest =
+        await walletService.createDeployTransaction(params.body);
+      const rawTransaction = await walletService.signTransaction(txRequest);
+      const txResponse = await walletService.sendTransaction(rawTransaction);
+      //Populate DB transaction record with properties
+      dbTxRecord.populate({
+        chainId: Chains.MOONBASE,
+        transactionType: TransactionType.DEPLOY_CONTRACT,
+        rawTransaction: rawTransaction,
+        refTable: DbTables.COLLECTION,
+        refId: 1,
+        transactionHash: txResponse.hash,
+        transactionStatus: TransactionStatus.PENDING,
+      });
+      //Insert to DB
+      const transaction = await TransactionService.saveTransaction(
+        context,
+        dbTxRecord,
+        conn,
+      );
+      await context.mysql.commit(conn);
+      return transaction;
+    } catch (err) {
+      await context.mysql.rollback(conn);
+
+      throw await new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.DEPLOY_NFT_CONTRACT_ERROR,
+        context: context,
+        sourceFunction: 'deployNftContract()',
+        errorMessage: 'Error deploying Nft contract',
+        details: err,
+      }).writeToMonitor({});
+    }
   }
 
   static async transferNftOwnership(params: { query: TransferNftQueryFilter }) {
