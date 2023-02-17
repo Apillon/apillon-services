@@ -10,6 +10,7 @@ import { ApiKeyQueryFilterDto } from './dtos/api-key-query-filter.dto';
 import { ApiKeyRoleBaseDto } from './dtos/api-key-role-base.dto';
 import { CreateApiKeyDto } from './dtos/create-api-key.dto';
 import { CreateOauthLinkDto } from './dtos/create-oauth-link.dto';
+import { DiscordUserListFilterDto } from './dtos/discord-user-list-filter.dto';
 
 /**
  * Access Management Service client
@@ -238,9 +239,16 @@ export class Ams extends BaseService {
     return await this.callService(data);
   }
 
-  public async unlinkDiscord(params: { user_uuid: string }) {
+  public async unlinkDiscord() {
     const data = {
       eventName: AmsEventType.DISCORD_UNLINK,
+    };
+    return await this.callService(data);
+  }
+
+  public async getDiscordUserList(params: DiscordUserListFilterDto) {
+    const data = {
+      eventName: AmsEventType.DISCORD_USER_LIST,
       ...params,
     };
     return await this.callService(data);

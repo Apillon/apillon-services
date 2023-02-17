@@ -57,3 +57,4 @@ export * from './lib/at-services/storage/dtos/websites-quota-reached-query-filte
 export * from './lib/at-services/storage/dtos/create-s3-urls-for-upload.dto';
 export * from './lib/database/sql-migrator';
 export * from './lib/at-services/ams/dtos/create-oauth-link.dto';
+export * from './lib/at-services/ams/dtos/discord-user-list-filter.dto';

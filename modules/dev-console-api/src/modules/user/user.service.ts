@@ -370,8 +370,6 @@ export class UserService {
   }
 
   async disconnectDiscord(context: DevConsoleApiContext) {
-    await new Ams(context).unlinkDiscord({
-      user_uuid: context.user.user_uuid,
-    });
+    await new Ams(context).unlinkDiscord();
   }
 }

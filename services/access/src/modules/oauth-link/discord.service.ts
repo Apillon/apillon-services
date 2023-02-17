@@ -1,5 +1,10 @@
-import { CreateOauthLinkDto, SerializeFor, SqlModelStatus } from '@apillon/lib';
-import { AmsErrorCode, OauthLinkType } from '../../config/types';
+import {
+  CreateOauthLinkDto,
+  SerializeFor,
+  SqlModelStatus,
+  DiscordUserListFilterDto,
+} from '@apillon/lib';
+import { AmsErrorCode, DbTables, OauthLinkType } from '../../config/types';
 import { ServiceContext } from '../../context';
 import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
 import { AuthUser } from '../auth-user/auth-user.model';
@@ -104,5 +109,41 @@ export class DiscordService {
     }
     await oauthLink.update();
     return { success: true };
+  }
+
+  public static async getDiscordUserList(
+    event: DiscordUserListFilterDto,
+    context: ServiceContext,
+  ) {
+    const resp = await context.mysql.paramExecute(
+      `
+      SELECT 
+        au.user_uuid,
+        au.email, 
+        ol.externalUserId,
+        ol.externalUsername,
+        ol.createTime
+      FROM ${DbTables.OAUTH_LINK} ol
+      JOIN ${DbTables.AUTH_USER} au
+        ON au.id = ol.authUser_id
+      WHERE 
+        ol.status = ${SqlModelStatus.ACTIVE}
+        AND ol.type = ${OauthLinkType.DISCORD}
+        AND (@dateFrom IS NULL OR ol.createTime >= @dateFrom)
+        AND (@dateTo IS NULL OR ol.createTime < @dateTo)
+        AND (@search IS NULL OR ol.externalUsername LIKE @search OR au.email LIKE @search)
+    `,
+      {
+        dateFrom: event?.dateFrom || null,
+        dateTo: event?.dateTo || null,
+        search: event?.search ? `${event.search}%` : null,
+      },
+    );
+
+    if (!resp.length) {
+      return [];
+    }
+
+    return resp;
   }
 }

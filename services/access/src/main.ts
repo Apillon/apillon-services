@@ -33,6 +33,7 @@ export async function processEvent(
 
     [AmsEventType.DISCORD_LINK]: DiscordService.link,
     [AmsEventType.DISCORD_UNLINK]: DiscordService.unlink,
+    [AmsEventType.DISCORD_USER_LIST]: DiscordService.getDiscordUserList,
   };
 
   return await processors[event.eventName](event, context);

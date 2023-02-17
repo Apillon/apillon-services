@@ -18,6 +18,7 @@ export enum AmsEventType {
   GET_API_KEY = 'get-api-key',
   DISCORD_LINK = 'discord-link',
   DISCORD_UNLINK = 'discord-unlink',
+  DISCORD_USER_LIST = 'discord-user-list',
 }
 
 export enum LmasEventType {
@@ -162,6 +163,7 @@ export enum SqlModelStatus {
 export enum AttachedServiceType {
   AUTHENTICATION = 1,
   STORAGE = 2,
+  SYSTEM = 999,
 }
 
 /**
