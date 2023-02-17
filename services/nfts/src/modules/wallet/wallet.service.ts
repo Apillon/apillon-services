@@ -30,6 +30,10 @@ export class WalletService {
     );
   }
 
+  async getCurrentMaxNonce() {
+    return await this.provider.getTransactionCount(this.wallet.address);
+  }
+
   async createDeployTransaction(
     params: DeployNftContractDto,
   ): Promise<TransactionRequest> {

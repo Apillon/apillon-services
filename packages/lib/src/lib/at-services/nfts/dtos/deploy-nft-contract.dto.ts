@@ -58,4 +58,13 @@ export class DeployNftContractDto extends ModelBase {
     ],
   })
   public mintPrice: number;
+
+  /**
+   * This property is programatically set and is not ment to be recieved in body. It will be overwritten.
+   */
+  @prop({
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+  })
+  public nonce: number;
 }

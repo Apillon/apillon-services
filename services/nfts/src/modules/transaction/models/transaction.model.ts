@@ -190,47 +190,19 @@ export class Transaction extends AdvancedSQLModel {
   })
   public transactionHash: string;
 
-  /**
-   * Model method, to insert new transaction record to DB
-   * Note: See that FOR UPDATE is used, to awoid problems with multiple same nonces
-   */
-  public async createTransaction() {
-    const conn = await this.getContext().mysql.start();
-    try {
-      //Get current max nonce
-      const data = await this.getContext().mysql.paramExecute(
-        `
+  public async populateNonce(conn) {
+    //Get current max nonce
+    const data = await this.getContext().mysql.paramExecute(
+      `
         SELECT MAX(nonce) as nonce
         FROM \`${this.tableName}\`
         FOR UPDATE;
-        `,
-        {},
-        conn,
-      );
-      this.nonce = data && data.length ? data[0].nonce + 1 : 1;
-
-      //Validate model
-      try {
-        await this.validate();
-      } catch (err) {
-        await this.handle(err);
-        if (!this.isValid()) throw new NftsValidationException(this);
-      }
-
-      //insert new transaction
-      await this.insert(SerializeFor.INSERT_DB, conn);
-      await this.getContext().mysql.commit(conn);
-    } catch (err) {
-      await this.getContext().mysql.rollback(conn);
-
-      throw await new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.CREATE_NEW_TRANSACTION_ERROR,
-        context: this.getContext(),
-        sourceFunction: 'createTransaction()',
-        errorMessage: 'Error creating new transaction',
-        details: err,
-      }).writeToMonitor({});
+      `,
+      {},
+      conn,
+    );
+    if (data && data.length) {
+      this.nonce = data[0].nonce ? data[0].nonce + 1 : undefined;
     }
   }
 

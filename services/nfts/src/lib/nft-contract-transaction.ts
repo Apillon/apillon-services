@@ -44,7 +44,7 @@ export class NftTransaction {
       to: null,
       value: 0,
       gasLimit: '8000000',
-      nonce: ethers.utils.hexlify(txCount),
+      nonce: ethers.utils.hexlify(params.nonce || txCount),
       type: 2,
       chainId,
       data: contractData.data,
