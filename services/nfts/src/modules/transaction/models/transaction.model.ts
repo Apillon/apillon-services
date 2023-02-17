@@ -8,7 +8,11 @@ import {
   SqlModelStatus,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import { DbTables, NftsErrorCode } from '../../../config/types';
+import {
+  DbTables,
+  NftsErrorCode,
+  TransactionStatus,
+} from '../../../config/types';
 import {
   NftsCodeException,
   NftsValidationException,
@@ -163,7 +167,7 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
     ],
-    defaultValue: 0,
+    defaultValue: TransactionStatus.REQUESTED,
   })
   public transactionStatus: number;
 

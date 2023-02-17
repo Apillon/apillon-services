@@ -24,3 +24,11 @@ export enum TransactionType {
   MINT_NFT = 3,
   SET_COLLECTION_BASE_URI = 4,
 }
+
+export enum TransactionStatus {
+  REQUESTED = 0,
+  PENDING = 1,
+  FINISHED = 2,
+  VERIFIED = 3,
+  FAILED = 4,
+}

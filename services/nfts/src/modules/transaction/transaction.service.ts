@@ -1,12 +1,14 @@
 import { AppEnvironment, env } from '@apillon/lib';
+import { TransactionStatus } from '../../config/types';
 import { ServiceContext } from '../../context';
 import { NftsValidationException } from '../../lib/exceptions';
 import { executeTransactionStatusWorker } from '../../scripts/serverless-workers/execute-transaction-status-worker';
+import { WalletService } from '../wallet/wallet.service';
 import { TransactionDTO } from './dtos/transaction.dto';
 import { Transaction } from './models/transaction.model';
 
 export class TransactionService {
-  static async createTransaction(
+  static async saveTransaction(
     context: ServiceContext,
     params: TransactionDTO,
   ) {
@@ -34,5 +36,17 @@ export class TransactionService {
       return true;
     }
     return false;
+  }
+
+  static async sendTransaction(transaction: Transaction) {
+    const walletService = new WalletService();
+    const txResponse = await walletService.sendTransaction(
+      transaction.rawTransaction,
+    );
+    transaction.transactionHash = txResponse.hash;
+    transaction.transactionStatus = TransactionStatus.PENDING;
+    await transaction.update();
+
+    return transaction;
   }
 }
