@@ -5,6 +5,7 @@ import {
   presenceValidator,
   prop,
   SerializeFor,
+  SqlModelStatus,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { DbTables, NftsErrorCode } from '../../../config/types';
@@ -227,5 +228,28 @@ export class Transaction extends AdvancedSQLModel {
         details: err,
       }).writeToMonitor({});
     }
+  }
+
+  public async getTransactions(
+    transactionStatus: number,
+  ): Promise<Transaction[]> {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT *
+      FROM \`${this.tableName}\`
+      WHERE status <> ${SqlModelStatus.DELETED}
+      AND transactionStatus = @transactionStatus;
+      `,
+      { transactionStatus },
+    );
+
+    const res: Transaction[] = [];
+    if (data && data.length) {
+      for (const t of data) {
+        res.push(new Transaction({}, this.getContext()).populate(t));
+      }
+    }
+
+    return res;
   }
 }

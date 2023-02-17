@@ -47,4 +47,8 @@ export class NftsService {
     return (await new NftsMicroservice(context).setNftCollectionBaseUri(query))
       .data;
   }
+
+  async checkTransactionStatus(context: DevConsoleApiContext) {
+    return (await new NftsMicroservice(context).checkTransactionStatus()).data;
+  }
 }
