@@ -1,6 +1,8 @@
 import { AppEnvironment, Context, env } from '@apillon/lib';
 import { Job, ServerlessWorker, WorkerDefinition } from '@apillon/workers-lib';
+import { TransactionStatus } from '../config/types';
 import { Transaction } from '../modules/transaction/models/transaction.model';
+import { WalletService } from '../modules/wallet/wallet.service';
 
 export class TransactionStatusWorker extends ServerlessWorker {
   private context: Context;
@@ -18,12 +20,22 @@ export class TransactionStatusWorker extends ServerlessWorker {
     const transactions: Transaction[] = await new Transaction(
       {},
       this.context,
-    ).getTransactions(1);
+    ).getTransactions(TransactionStatus.PENDING);
 
     console.info(
       'Transactions that needs to be checked on blockchain: ',
       transactions,
     );
+    const walletService: WalletService = new WalletService();
+    transactions.forEach(async (tx) => {
+      const isConfirmed: boolean = await walletService.isTransacionConfirmed(
+        tx.transactionHash,
+      );
+      if (isConfirmed) {
+        tx.status = TransactionStatus.FINISHED;
+        await tx.update();
+      }
+    });
   }
 
   public async onSuccess(_data?: any, _successData?: any): Promise<any> {
