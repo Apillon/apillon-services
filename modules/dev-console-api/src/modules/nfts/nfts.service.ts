@@ -1,10 +1,16 @@
-import { NftsMicroservice } from '@apillon/lib';
+import {
+  CodeException,
+  NFTCollectionQueryFilter,
+  NftsMicroservice,
+} from '@apillon/lib';
 import { DeployNftContractDto } from '@apillon/lib/dist/lib/at-services/nfts/dtos/deploy-nft-contract.dto';
 import { TransferNftQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/transfer-nft-query-filter.dto';
 import { MintNftQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/mint-nft-query-filter.dto';
 import { SetNftBaseUriQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/set-nft-base-uri-query.dto';
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
+import { Project } from '../project/models/project.model';
+import { ResourceNotFoundErrorCode } from '../../config/types';
 
 @Injectable()
 export class NftsService {
@@ -16,7 +22,28 @@ export class NftsService {
     context: DevConsoleApiContext,
     body: DeployNftContractDto,
   ) {
+    //check project
+    const project: Project = await new Project({}, context).populateByUUID(
+      body.project_uuid,
+    );
+    if (!project.exists()) {
+      throw new CodeException({
+        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
+        status: HttpStatus.NOT_FOUND,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+
+    project.canModify(context);
+
     return (await new NftsMicroservice(context).deployNftContract(body)).data;
+  }
+
+  async listNftCollections(
+    context: DevConsoleApiContext,
+    query: NFTCollectionQueryFilter,
+  ) {
+    return (await new NftsMicroservice(context).listNftCollections(query)).data;
   }
 
   async transferNftOwnership(

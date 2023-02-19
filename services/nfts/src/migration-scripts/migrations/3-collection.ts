@@ -13,6 +13,10 @@ export async function upgrade(
   \`description\` VARCHAR(1000) NULL,
   \`maxSupply\` BIGINT NOT NULL,
   \`mintPrice\` DECIMAL NOT NULL,
+  \`bucket_uuid\` VARCHAR(36) NULL,
+  \`baseUri\` VARCHAR(500) NULL,
+  \`contractAddress\` VARCHAR(255) NULL,
+  \`transactionHash\` VARCHAR(255) NULL,
   \`status\` INT NULL,
   \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
   \`createUser\` INT NULL,
@@ -21,17 +25,12 @@ export async function upgrade(
   PRIMARY KEY (\`id\`)
   );
   `);
-
-  await queryFn(`
-  CREATE UNIQUE INDEX transaction_nonce_index
-  ON \`${DbTables.TRANSACTION}\` (nonce);
-  `);
 }
 
 export async function downgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    DROP TABLE IF EXISTS \`${DbTables.TRANSACTION}\`;
+    DROP TABLE IF EXISTS \`${DbTables.COLLECTION}\`;
   `);
 }
