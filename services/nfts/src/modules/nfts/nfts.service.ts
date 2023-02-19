@@ -7,7 +7,13 @@ import {
   TransactionReceipt,
 } from '@ethersproject/providers';
 import { ethers, Wallet } from 'ethers';
-import { AppEnvironment, env } from '@apillon/lib';
+import {
+  AppEnvironment,
+  env,
+  NFTCollectionQueryFilter,
+  SerializeFor,
+  SqlModelStatus,
+} from '@apillon/lib';
 import { TransferNftQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/transfer-nft-query-filter.dto';
 import { TransactionService } from '../transaction/transaction.service';
 import { ServiceContext } from '../../context';
@@ -20,8 +26,13 @@ import {
   TransactionType,
 } from '../../config/types';
 import { WalletService } from '../wallet/wallet.service';
-import { NftsCodeException } from '../../lib/exceptions';
+import {
+  NftsCodeException,
+  NftsValidationException,
+} from '../../lib/exceptions';
 import { Transaction } from '../transaction/models/transaction.model';
+import { Collection } from './models/collection.model';
+import { v4 as uuidV4 } from 'uuid';
 
 export class NftsService {
   static async getHello() {
@@ -35,9 +46,27 @@ export class NftsService {
     console.log(`Deploying NFT: ${JSON.stringify(params.body)}`);
     const walletService = new WalletService();
 
+    //Create collection object
+    const collection: Collection = new Collection(
+      params.body,
+      context,
+    ).populate({
+      collection_uuid: uuidV4(),
+      status: SqlModelStatus.INCOMPLETE,
+    });
+
+    try {
+      await collection.validate();
+    } catch (err) {
+      await collection.handle(err);
+      if (!collection.isValid()) throw new NftsValidationException(collection);
+    }
+
     const conn = await context.mysql.start();
 
     try {
+      //Insert collection record to DB
+      await collection.insert(SerializeFor.INSERT_DB, conn);
       //Prepare transaction record
       const dbTxRecord: Transaction = new Transaction({}, context);
       await dbTxRecord.populateNonce(conn);
@@ -58,18 +87,15 @@ export class NftsService {
         transactionType: TransactionType.DEPLOY_CONTRACT,
         rawTransaction: rawTransaction,
         refTable: DbTables.COLLECTION,
-        refId: 1,
+        refId: collection.id,
         transactionHash: txResponse.hash,
         transactionStatus: TransactionStatus.PENDING,
       });
       //Insert to DB
-      const transaction = await TransactionService.saveTransaction(
-        context,
-        dbTxRecord,
-        conn,
-      );
+      await TransactionService.saveTransaction(context, dbTxRecord, conn);
+
       await context.mysql.commit(conn);
-      return transaction;
+      return collection;
     } catch (err) {
       await context.mysql.rollback(conn);
 
@@ -82,6 +108,16 @@ export class NftsService {
         details: err,
       }).writeToMonitor({});
     }
+  }
+
+  static async listNftCollections(
+    event: { query: NFTCollectionQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new Collection(
+      { project_uuid: event.query.project_uuid },
+      context,
+    ).getList(context, new NFTCollectionQueryFilter(event.query));
   }
 
   static async transferNftOwnership(params: { query: TransferNftQueryFilter }) {

@@ -7,6 +7,7 @@ export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
     [NftsEventType.HELLO]: NftsService.getHello,
     [NftsEventType.DEPLOY_NFT]: NftsService.deployNftContract,
+    [NftsEventType.NFT_COLLECTIONS_LIST]: NftsService.listNftCollections,
     [NftsEventType.TRANSFER_OWNERSHIP]: NftsService.transferNftOwnership,
     [NftsEventType.MINT_NFT]: NftsService.mintNftTo,
     [NftsEventType.SET_BASE_URI]: NftsService.setNftCollectionBaseUri,
