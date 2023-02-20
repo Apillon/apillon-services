@@ -33,12 +33,9 @@ import {
   Attestation,
   ISubmitAttestation,
   Credential,
-  KiltKeyringPair,
-  Blockchain,
 } from '@kiltprotocol/sdk-js';
 import {
   encryptionSigner,
-  generateAccount,
   generateKeypairs,
   getCtypeSchema,
 } from '../../lib/kilt';
@@ -60,7 +57,6 @@ import { Identity } from '../identity/models/identity.model';
 import { WorkerName } from '../../workers/worker-executor';
 import { IdentityGenerateWorker } from '../../workers/generate-identity.worker';
 import { prepareSignResources } from '../../lib/sporran';
-import { VerifiableCredential } from '@kiltprotocol/vc-export';
 import { VerifyCredentialDto } from '@apillon/lib/dist/lib/at-services/authentication/dtos/sporran/message/verify-credential.dto';
 
 @Injectable()
@@ -230,7 +226,6 @@ export class SporranMicroservice {
       verifierDidUri: verifierDidUri,
       encryptionKeyUri: encryptionKeyUri,
       claimerSessionDidUri: claimerSessionDidUri,
-      requestChallenge: requestChallenge,
     } = await prepareSignResources(event.body.encryptionKeyUri);
 
     const decryptionSenderKey = await Did.resolveKey(
@@ -423,28 +418,13 @@ export class SporranMicroservice {
   }
 
   static async verifyCredential(event: { body: VerifyCredentialDto }, context) {
-    const {
-      verifierDidUri: verifierDidUri,
-      encryptionKeyUri: encryptionKeyUri,
-      claimerSessionDidUri: claimerSessionDidUri,
-      requestChallenge: requestChallenge,
-    } = await prepareSignResources(event.body.encryptionKeyUri);
-
     console.log('Verifying Sporran credential ...');
 
     const decryptionSenderKey = await Did.resolveKey(
       event.body.message.senderKeyUri as DidResourceUri,
     );
 
-    const {
-      authentication,
-      keyAgreement,
-      assertionMethod,
-      capabilityDelegation,
-    } = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
-    const attesterAccount = (await generateAccount(
-      env.KILT_ATTESTER_MNEMONIC,
-    )) as KiltKeyringPair;
+    const { keyAgreement } = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
 
     let decryptedMessage: any;
     try {
@@ -496,14 +476,6 @@ export class SporranMicroservice {
       });
       return { verified: false };
     }
-
-    // TODO: Here we can check if the attester is valid
-    // if (isTrustedAttester(attestation.owner)) {
-    //   console.log(
-    //     "The claim is valid. Claimer's email:",
-    //     credential.claim.contents.Email,
-    //   );
-    // }
 
     return { verified: true };
   }
