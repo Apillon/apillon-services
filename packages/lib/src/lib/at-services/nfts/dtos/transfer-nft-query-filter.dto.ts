@@ -20,7 +20,12 @@ export class TransferNftQueryFilter extends BaseQueryFilter {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_COLLECTION_UUID_NOT_PRESENT,
+      },
+    ],
   })
   public collection_uuid: string;
 }

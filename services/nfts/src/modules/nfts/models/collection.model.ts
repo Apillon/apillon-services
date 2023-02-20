@@ -340,4 +340,24 @@ export class Collection extends AdvancedSQLModel {
 
     return await selectAndCountQuery(context.mysql, sqlQuery, params, 'c.id');
   }
+
+  public async getCollection(
+    collection_uuid: string,
+    context: ServiceContext,
+  ): Promise<Collection> {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+        SELECT *
+        FROM \`${this.tableName}\`
+        WHERE collection_uuid = @collection_uuid;
+        `,
+      { collection_uuid },
+    );
+
+    if (data) {
+      return new Collection({}, context).populate(data);
+    } else {
+      return null;
+    }
+  }
 }

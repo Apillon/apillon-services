@@ -74,11 +74,13 @@ export class NftsService {
         //First transaction record - nonce should be acquired from chain
         dbTxRecord.nonce = await walletService.getCurrentMaxNonce();
       }
-      params.body.nonce = dbTxRecord.nonce;
 
-      //Send transaction to chain
+      // Create transaction request to be sent on blockchain
       const txRequest: TransactionRequest =
-        await walletService.createDeployTransaction(params.body);
+        await walletService.createDeployTransaction(
+          params.body,
+          dbTxRecord.nonce,
+        );
       const rawTransaction = await walletService.signTransaction(txRequest);
       const txResponse = await walletService.sendTransaction(rawTransaction);
       //Populate DB transaction record with properties
@@ -120,121 +122,231 @@ export class NftsService {
     ).getList(context, new NFTCollectionQueryFilter(event.query));
   }
 
-  static async transferNftOwnership(params: { query: TransferNftQueryFilter }) {
+  static async transferNftOwnership(
+    params: { query: TransferNftQueryFilter },
+    context: ServiceContext,
+  ) {
     console.log(
       `Transfering NFT Collection (uuid=${params.query.collection_uuid}) ownership to wallet address: ${params.query.address}`,
     );
-    const prodEnv = env.APP_ENV == AppEnvironment.PROD;
-    const provider = new ethers.providers.StaticJsonRpcProvider(
-      prodEnv ? env.NFTS_MOONBEAM_MAINNET_RPC : env.NFTS_MOONBEAM_TESTNET_RPC,
-      {
-        chainId: prodEnv ? 1284 : 1287,
-        name: prodEnv ? 'moonbeam' : 'moonbase-alphanet',
-      },
+    const walletService = new WalletService();
+    const collection: Collection = await this.checkAndGetCollection(
+      params.query.collection_uuid,
+      walletService,
+      'transferNftOwnership()',
+      context,
     );
 
-    const contractTx: TransactionRequest =
-      await NftTransaction.createTransferOwnershipTransaction(
-        params.query.collection_uuid, // Later obtain contract from DB by collection_uuid
-        params.query.address,
-        provider,
-      );
+    const conn = await context.mysql.start();
+    try {
+      const dbTxRecord: Transaction = new Transaction({}, context);
+      await dbTxRecord.populateNonce(conn);
+      if (!dbTxRecord.nonce) {
+        //First transaction record - nonce should be acquired from chain
+        dbTxRecord.nonce = await walletService.getCurrentMaxNonce();
+      }
 
-    // Raw transaction can be signed elsewhere for the sake of security
-    const privateKey = prodEnv
-      ? env.NFTS_MOONBEAM_MAINNET_PRIVATEKEY
-      : env.NFTS_MOONBEAM_TESTNET_PRIVATEKEY;
-    const wallet = new Wallet(privateKey, provider);
-    await wallet.signTransaction(contractTx);
+      // Create transaction request to be sent on blockchain
+      const txRequest: TransactionRequest =
+        await walletService.createTransferOwnershipTransaction(
+          collection.contractAddress,
+          params.query.address,
+          dbTxRecord.nonce,
+        );
+      const rawTransaction = await walletService.signTransaction(txRequest);
+      const txResponse = await walletService.sendTransaction(rawTransaction);
+      //Populate DB transaction record with properties
+      dbTxRecord.populate({
+        chainId: Chains.MOONBASE,
+        transactionType: TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
+        rawTransaction: rawTransaction,
+        refTable: DbTables.COLLECTION,
+        refId: collection.id,
+        transactionHash: txResponse.hash,
+        transactionStatus: TransactionStatus.PENDING,
+      });
+      //Insert to DB
+      await TransactionService.saveTransaction(context, dbTxRecord, conn);
 
-    const transferedContract: TransactionReceipt = await (
-      await wallet.sendTransaction(contractTx)
-    ).wait(1);
+      await context.mysql.commit(conn);
+      return collection;
+    } catch (err) {
+      await context.mysql.rollback(conn);
 
-    // Save transaction hash, contract address to db
-    return {
-      transaction_hash: transferedContract.transactionHash,
-    };
+      throw await new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.TRANSFER_NFT_CONTRACT_ERROR,
+        context: context,
+        sourceFunction: 'transferNftOwnership()',
+        errorMessage: 'Error transfering Nft contract',
+        details: err,
+      }).writeToMonitor({});
+    }
   }
 
-  static async mintNftTo(params: { query: MintNftQueryFilter }) {
+  static async mintNftTo(
+    params: { query: MintNftQueryFilter },
+    context: ServiceContext,
+  ) {
     console.log(
       `Minting NFT Collection to wallet address: ${params.query.address}`,
     );
-    const prodEnv = env.APP_ENV == AppEnvironment.PROD;
-    const provider = new ethers.providers.StaticJsonRpcProvider(
-      prodEnv ? env.NFTS_MOONBEAM_MAINNET_RPC : env.NFTS_MOONBEAM_TESTNET_RPC,
-      {
-        chainId: prodEnv ? 1284 : 1287,
-        name: prodEnv ? 'moonbeam' : 'moonbase-alphanet',
-      },
+    const walletService: WalletService = new WalletService();
+    const collection: Collection = await this.checkAndGetCollection(
+      params.query.collection_uuid,
+      walletService,
+      'mintNftTo()',
+      context,
     );
 
-    const contractTx: TransactionRequest =
-      await NftTransaction.createMintToTransaction(
-        params.query.collection_uuid, // Later obtain contract from DB by collection_uuid
-        params.query.address,
-        provider,
-      );
+    const conn = await context.mysql.start();
+    try {
+      const dbTxRecord: Transaction = new Transaction({}, context);
+      await dbTxRecord.populateNonce(conn);
+      if (!dbTxRecord.nonce) {
+        //First transaction record - nonce should be acquired from chain
+        dbTxRecord.nonce = await walletService.getCurrentMaxNonce();
+      }
 
-    // Raw transaction can be signed elsewhere for the sake of security
-    const privateKey = prodEnv
-      ? env.NFTS_MOONBEAM_MAINNET_PRIVATEKEY
-      : env.NFTS_MOONBEAM_TESTNET_PRIVATEKEY;
-    const wallet = new Wallet(privateKey, provider);
-    await wallet.signTransaction(contractTx);
+      // Create transaction request to be sent on blockchain
+      const txRequest: TransactionRequest =
+        await await walletService.createMintToTransaction(
+          collection.contractAddress, // Later obtain contract from DB by collection_uuid
+          params.query.address,
+          dbTxRecord.nonce,
+        );
 
-    const mintNft: TransactionReceipt = await (
-      await wallet.sendTransaction(contractTx)
-    ).wait(1);
+      const rawTransaction = await walletService.signTransaction(txRequest);
+      const txResponse = await walletService.sendTransaction(rawTransaction);
+      //Populate DB transaction record with properties
+      dbTxRecord.populate({
+        chainId: Chains.MOONBASE,
+        transactionType: TransactionType.MINT_NFT,
+        rawTransaction: rawTransaction,
+        refTable: DbTables.COLLECTION,
+        refId: collection.id,
+        transactionHash: txResponse.hash,
+        transactionStatus: TransactionStatus.PENDING,
+      });
+      //Insert to DB
+      await TransactionService.saveTransaction(context, dbTxRecord, conn);
 
-    return {
-      transaction_hash: mintNft.transactionHash,
-    };
+      await context.mysql.commit(conn);
+      return collection;
+    } catch (err) {
+      await context.mysql.rollback(conn);
+
+      throw await new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.MINT_NFT_ERROR,
+        context: context,
+        sourceFunction: 'mintNftTo()',
+        errorMessage: 'Error minting NFT',
+        details: err,
+      }).writeToMonitor({});
+    }
   }
 
-  static async setNftCollectionBaseUri(params: {
-    query: SetNftBaseUriQueryFilter;
-  }) {
+  static async setNftCollectionBaseUri(
+    params: {
+      query: SetNftBaseUriQueryFilter;
+    },
+    context: ServiceContext,
+  ) {
     console.log(
       `Setting URI of NFT Collection (uuid=${params.query.collection_uuid}): ${params.query.uri}`,
     );
-    const prodEnv = env.APP_ENV == AppEnvironment.PROD;
-    const provider = new ethers.providers.StaticJsonRpcProvider(
-      prodEnv ? env.NFTS_MOONBEAM_MAINNET_RPC : env.NFTS_MOONBEAM_TESTNET_RPC,
-      {
-        chainId: prodEnv ? 1284 : 1287,
-        name: prodEnv ? 'moonbeam' : 'moonbase-alphanet',
-      },
+    const walletService = new WalletService();
+    const collection: Collection = await this.checkAndGetCollection(
+      params.query.collection_uuid,
+      walletService,
+      'setNftCollectionBaseUri()',
+      context,
     );
 
-    const contractTx: TransactionRequest =
-      await NftTransaction.createSetNftBaseUriTransaction(
-        params.query.collection_uuid, // Get from DB selected Collection (UUID)
-        params.query.uri,
-        provider,
-      );
+    const conn = await context.mysql.start();
+    try {
+      const dbTxRecord: Transaction = new Transaction({}, context);
+      await dbTxRecord.populateNonce(conn);
+      if (!dbTxRecord.nonce) {
+        //First transaction record - nonce should be acquired from chain
+        dbTxRecord.nonce = await walletService.getCurrentMaxNonce();
+      }
 
-    // Raw transaction can be signed elsewhere for the sake of security
-    const privateKey = prodEnv
-      ? env.NFTS_MOONBEAM_MAINNET_PRIVATEKEY
-      : env.NFTS_MOONBEAM_TESTNET_PRIVATEKEY;
-    const wallet = new Wallet(privateKey, provider);
-    await wallet.signTransaction(contractTx);
+      // Create transaction request to be sent on blockchain
+      const txRequest: TransactionRequest =
+        await await walletService.createSetNftBaseUriTransaction(
+          collection.contractAddress, // Later obtain contract from DB by collection_uuid
+          params.query.uri,
+          dbTxRecord.nonce,
+        );
 
-    const setUriContract: TransactionReceipt = await (
-      await wallet.sendTransaction(contractTx)
-    ).wait(1);
+      const rawTransaction = await walletService.signTransaction(txRequest);
+      const txResponse = await walletService.sendTransaction(rawTransaction);
+      //Populate DB transaction record with properties
+      dbTxRecord.populate({
+        chainId: Chains.MOONBASE,
+        transactionType: TransactionType.SET_COLLECTION_BASE_URI,
+        rawTransaction: rawTransaction,
+        refTable: DbTables.COLLECTION,
+        refId: collection.id,
+        transactionHash: txResponse.hash,
+        transactionStatus: TransactionStatus.PENDING,
+      });
+      //Insert to DB
+      await TransactionService.saveTransaction(context, dbTxRecord, conn);
 
-    /**
-     * Save transaction hash, contract address to db
-     * Should we have multiple tables with relations?
-     * For example:
-     * - Users - transaction, relation 1 to many
-     * - transactions - nft-transactions - one to one?
-     */
-    return {
-      transaction_hash: setUriContract.transactionHash,
-    };
+      await context.mysql.commit(conn);
+      return collection;
+    } catch (err) {
+      await context.mysql.rollback(conn);
+
+      throw await new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.SET_NFT_BASE_URI_ERROR,
+        context: context,
+        sourceFunction: 'setNftCollectionBaseUri()',
+        errorMessage: 'Error setting NFT collection base uri',
+        details: err,
+      }).writeToMonitor({});
+    }
+  }
+
+  private static async checkAndGetCollection(
+    collection_uuid: string,
+    walletService: WalletService,
+    sourceFunction: string,
+    context: ServiceContext,
+  ) {
+    const collection: Collection = await new Collection(
+      {},
+      context,
+    ).getCollection(collection_uuid, context);
+
+    if (!collection) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
+        context: context,
+        sourceFunction,
+        errorMessage: 'Error obtaining Nft collection',
+        details: 'Collection does not exist!',
+      }).writeToMonitor({});
+    }
+    const currentOwner = await walletService.getContractOwner(
+      collection.contractAddress,
+    );
+    // Obtaing wallet address from .env?
+    if ('0xBa01526C6D80378A9a95f1687e9960857593983B' !== currentOwner) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
+        context: context,
+        sourceFunction,
+        errorMessage: 'Error calling Nft contract function',
+        details: 'Caller is not the owner',
+      }).writeToMonitor({});
+    }
+    return collection;
   }
 }
