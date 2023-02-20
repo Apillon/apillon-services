@@ -341,10 +341,10 @@ export class Collection extends AdvancedSQLModel {
     return await selectAndCountQuery(context.mysql, sqlQuery, params, 'c.id');
   }
 
-  public async getCollection(
-    collection_uuid: string,
-    context: ServiceContext,
-  ): Promise<Collection> {
+  public async populateByUUID(collection_uuid: string): Promise<Collection> {
+    if (!collection_uuid) {
+      throw new Error('Uuid should not be null!');
+    }
     const data = await this.getContext().mysql.paramExecute(
       `
         SELECT *
@@ -354,10 +354,10 @@ export class Collection extends AdvancedSQLModel {
       { collection_uuid },
     );
 
-    if (data) {
-      return new Collection({}, context).populate(data);
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
     } else {
-      return null;
+      return this.reset();
     }
   }
 }

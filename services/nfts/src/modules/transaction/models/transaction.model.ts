@@ -12,6 +12,7 @@ import {
   DbTables,
   NftsErrorCode,
   TransactionStatus,
+  TransactionType,
 } from '../../../config/types';
 import {
   NftsCodeException,
@@ -207,16 +208,20 @@ export class Transaction extends AdvancedSQLModel {
   }
 
   public async getTransactions(
-    transactionStatus: number,
-  ): Promise<Transaction[]> {
+    txType: TransactionType,
+    txStatus: TransactionStatus,
+    refId: string,
+  ) {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT *
       FROM \`${this.tableName}\`
       WHERE status <> ${SqlModelStatus.DELETED}
-      AND transactionStatus = @transactionStatus;
+      AND @txType is NOT NULL OR transactionType = @txType
+      AND @txStatus is NOT NULL OR transactionStatus = @txStatus
+      AND @collection_id is NOT NULL OR refId = @collection_id
       `,
-      { transactionStatus },
+      { txType, txStatus, refId },
     );
 
     const res: Transaction[] = [];

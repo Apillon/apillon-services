@@ -130,7 +130,7 @@ export class NftsService {
       `Transfering NFT Collection (uuid=${params.query.collection_uuid}) ownership to wallet address: ${params.query.address}`,
     );
     const walletService = new WalletService();
-    const collection: Collection = await this.checkAndGetCollection(
+    const collection: Collection = await NftsService.checkAndGetCollection(
       params.query.collection_uuid,
       walletService,
       'transferNftOwnership()',
@@ -192,7 +192,7 @@ export class NftsService {
       `Minting NFT Collection to wallet address: ${params.query.address}`,
     );
     const walletService: WalletService = new WalletService();
-    const collection: Collection = await this.checkAndGetCollection(
+    const collection: Collection = await NftsService.checkAndGetCollection(
       params.query.collection_uuid,
       walletService,
       'mintNftTo()',
@@ -257,7 +257,7 @@ export class NftsService {
       `Setting URI of NFT Collection (uuid=${params.query.collection_uuid}): ${params.query.uri}`,
     );
     const walletService = new WalletService();
-    const collection: Collection = await this.checkAndGetCollection(
+    const collection: Collection = await NftsService.checkAndGetCollection(
       params.query.collection_uuid,
       walletService,
       'setNftCollectionBaseUri()',
@@ -317,25 +317,27 @@ export class NftsService {
     walletService: WalletService,
     sourceFunction: string,
     context: ServiceContext,
-  ) {
+  ): Promise<Collection> {
     const collection: Collection = await new Collection(
       {},
       context,
-    ).getCollection(collection_uuid, context);
+    ).populateByUUID(collection_uuid);
 
-    if (!collection) {
+    // Collection must exist and be confirmed on blockchain
+    if (!collection.exists() || collection.contractAddress == null) {
       throw new NftsCodeException({
         status: 500,
         code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
         context: context,
         sourceFunction,
         errorMessage: 'Error obtaining Nft collection',
-        details: 'Collection does not exist!',
-      }).writeToMonitor({});
+        details: 'Collection does not exist or is not confirmed on blockchain!',
+      });
     }
     const currentOwner = await walletService.getContractOwner(
       collection.contractAddress,
     );
+
     // Obtaing wallet address from .env?
     if ('0xBa01526C6D80378A9a95f1687e9960857593983B' !== currentOwner) {
       throw new NftsCodeException({
@@ -345,7 +347,7 @@ export class NftsService {
         sourceFunction,
         errorMessage: 'Error calling Nft contract function',
         details: 'Caller is not the owner',
-      }).writeToMonitor({});
+      });
     }
     return collection;
   }
