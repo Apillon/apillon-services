@@ -579,4 +579,91 @@ describe('Apillon API hosting tests', () => {
       expect(response.text).toBe(indexPageContent);
     });
   });
+
+  describe('Apillon API direct deploy tests', () => {
+    let directDeployTestWebsite;
+    beforeAll(async () => {
+      //create new website
+      directDeployTestWebsite = await new Website({}, stage.storageContext)
+        .populate({
+          website_uuid: uuidV4(),
+          project_uuid: testProject.project_uuid,
+          name: 'Direct deploy test website',
+        })
+        .createNewWebsite(stage.storageContext);
+    });
+    test('Application (through Apillon API) should be able to deploy directly to production', async () => {
+      let response = await request(stage.http)
+        .post(
+          `/hosting/websites/${directDeployTestWebsite.website_uuid}/upload`,
+        )
+        .send({
+          files: [
+            {
+              fileName: 'index.html',
+              contentType: 'text/html',
+            },
+          ],
+        })
+        .set(
+          'Authorization',
+          `Basic ${Buffer.from(
+            apiKey.apiKey + ':' + apiKey.apiKeySecret,
+          ).toString('base64')}`,
+        );
+      expect(response.status).toBe(201);
+      expect(response.body.data.sessionUuid).toBeTruthy();
+      testSession_uuid = response.body.data.sessionUuid;
+
+      file1FURRes = response.body.data.files.find(
+        (x) => x.fileName == 'index.html',
+      );
+
+      response = await request(file1FURRes.url)
+        .put(``)
+        .send(
+          `<h1>Testing direct deploy to production. Curr date: ${new Date().toString()}</h1>`,
+        );
+      expect(response.status).toBe(200);
+
+      response = await request(stage.http)
+        .post(
+          `/hosting/websites/${directDeployTestWebsite.website_uuid}/upload/${testSession_uuid}/end`,
+        )
+        .set(
+          'Authorization',
+          `Basic ${Buffer.from(
+            apiKey.apiKey + ':' + apiKey.apiKeySecret,
+          ).toString('base64')}`,
+        );
+      expect(response.status).toBe(200);
+
+      response = await request(stage.http)
+        .post(
+          `/hosting/websites/${directDeployTestWebsite.website_uuid}/deploy`,
+        )
+        .send({
+          environment: 3,
+          directDeploy: true,
+        })
+        .set(
+          'Authorization',
+          `Basic ${Buffer.from(
+            apiKey.apiKey + ':' + apiKey.apiKeySecret,
+          ).toString('base64')}`,
+        );
+      expect(response.status).toBe(200);
+
+      //check if files were created in staging bucket and have CID
+      const filesInBucket = await new File(
+        {},
+        stage.storageContext,
+      ).populateFilesInBucket(
+        directDeployTestWebsite.productionBucket_id,
+        stage.storageContext,
+      );
+      expect(filesInBucket.length).toBe(1);
+      expect(filesInBucket[0].CID).toBeTruthy();
+    });
+  });
 });

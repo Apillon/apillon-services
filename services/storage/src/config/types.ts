@@ -75,6 +75,7 @@ export enum StorageErrorCode {
   DEPLOYMENT_WEBSITE_ID_NOT_PRESENT = 42206036,
   DEPLOYMENT_ENVIRONMENT_NOT_PRESENT = 42206037,
   WEBSITE_UUID_NOT_PRESENT = 42206038,
+  DEPLOYMENT_ENVIRONMENT_NOT_VALID = 42206039,
 
   //404
   DEFAULT_RESOURCE_NOT_FOUND_ERROR = 40406000,
@@ -136,6 +137,7 @@ export enum BucketWebhookAuthMethod {
 export enum DeploymentEnvironment {
   STAGING = 1,
   PRODUCTION = 2,
+  DIRECT_TO_PRODUCTION = 3,
 }
 
 export enum DeploymentStatus {
