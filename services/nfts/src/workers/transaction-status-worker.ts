@@ -1,6 +1,7 @@
 import { AppEnvironment, Context, env } from '@apillon/lib';
 import { Job, ServerlessWorker, WorkerDefinition } from '@apillon/workers-lib';
-import { TransactionStatus } from '../config/types';
+import { TransactionStatus, TransactionType } from '../config/types';
+import { Collection } from '../modules/nfts/models/collection.model';
 import { Transaction } from '../modules/transaction/models/transaction.model';
 import { WalletService } from '../modules/wallet/wallet.service';
 
@@ -20,20 +21,27 @@ export class TransactionStatusWorker extends ServerlessWorker {
     const transactions: Transaction[] = await new Transaction(
       {},
       this.context,
-    ).getTransactions(TransactionStatus.PENDING);
+    ).getTransactions(null, TransactionStatus.PENDING, null);
 
     console.info(
-      'Transactions that needs to be checked on blockchain: ',
-      transactions,
+      'Number of transactions that needs to be checked on blockchain: ',
+      transactions.length,
     );
     const walletService: WalletService = new WalletService();
+
     for (const tx of transactions) {
-      const isConfirmed: boolean = await walletService.isTransacionConfirmed(
+      const txReceipt = await walletService.getTransactionByHash(
         tx.transactionHash,
       );
+      const isConfirmed: boolean = await walletService.isTransacionConfirmed(
+        txReceipt,
+      );
+
       if (isConfirmed) {
-        tx.transactionStatus = TransactionStatus.FINISHED;
-        await tx.update();
+        // Update transaction status based on blockchain data - txRecepit
+        await this.setTransactionStatus(tx, txReceipt);
+        // Update NFT collection with contractAddress
+        await this.setCollectionContractAddress(tx, txReceipt);
       }
     }
   }
@@ -60,5 +68,39 @@ export class TransactionStatusWorker extends ServerlessWorker {
 
   public onAutoRemove(): Promise<void> {
     throw new Error('Method not implemented.');
+  }
+
+  private async setCollectionContractAddress(tx: Transaction, txReceipt) {
+    if (
+      tx.transactionType === TransactionType.DEPLOY_CONTRACT &&
+      tx.transactionStatus === TransactionStatus.FINISHED
+    ) {
+      const collection: Collection = await new Collection(
+        {},
+        this.context,
+      ).populateById(tx.refId);
+
+      if (!collection.contractAddress) {
+        collection.contractAddress = txReceipt.contractAddress;
+        collection.transactionHash = txReceipt.transactionHash;
+        await collection.update();
+        console.log(
+          `Collection (id=${collection.id}) updated (contractAddress=${collection.contractAddress})`,
+        );
+      }
+    }
+  }
+
+  private async setTransactionStatus(tx: Transaction, txReceipt) {
+    // Transaction was mined (confirmed) but if its status is 0 - it failed on blockchain
+    if (txReceipt.status) {
+      tx.transactionStatus = TransactionStatus.FINISHED;
+      await tx.update();
+      console.log(`Transaction (txHash=${tx.transactionHash}) CONFIRMED.`);
+    } else {
+      tx.transactionStatus = TransactionStatus.FAILED;
+      await tx.update();
+      console.log(`Transaction (txHash=${tx.transactionHash}) is FAILED.`);
+    }
   }
 }
