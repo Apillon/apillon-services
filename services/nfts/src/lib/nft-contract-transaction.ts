@@ -15,6 +15,7 @@ export class NftTransaction {
   static async createDeployContractTransaction(
     params: DeployNftContractDto,
     provider: BaseProvider,
+    nonce: number,
   ): Promise<TransactionRequest> {
     const walletAddress = '0xBa01526C6D80378A9a95f1687e9960857593983B';
     console.log(
@@ -44,7 +45,7 @@ export class NftTransaction {
       to: null,
       value: 0,
       gasLimit: '8000000',
-      nonce: ethers.utils.hexlify(params.nonce || txCount),
+      nonce: ethers.utils.hexlify(nonce || txCount),
       type: 2,
       chainId,
       data: contractData.data,
@@ -64,6 +65,7 @@ export class NftTransaction {
     contract: string,
     newOwner: string,
     provider: BaseProvider,
+    nonce: number,
   ): Promise<TransactionRequest> {
     console.log(
       `Creating NFT transfer ownership (NFT contract address=${contract}) transaction to wallet address: ${newOwner}`,
@@ -82,7 +84,7 @@ export class NftTransaction {
       to: contract,
       value: 0,
       gasLimit: '8000000',
-      nonce: ethers.utils.hexlify(txCount),
+      nonce: ethers.utils.hexlify(nonce || txCount),
       type: 2,
       chainId,
       data: contractData.data,
@@ -103,6 +105,7 @@ export class NftTransaction {
     contract: string,
     uri: string,
     provider: BaseProvider,
+    nonce: number,
   ): Promise<TransactionRequest> {
     console.log(
       `Creating NFT set base token URI transaction (contract=${contract}, uri=${uri}).`,
@@ -121,7 +124,7 @@ export class NftTransaction {
       to: contract,
       value: 0,
       gasLimit: '8000000',
-      nonce: ethers.utils.hexlify(txCount),
+      nonce: ethers.utils.hexlify(nonce || txCount),
       type: 2,
       chainId,
       data: contractData.data,
@@ -141,6 +144,7 @@ export class NftTransaction {
     contract: string,
     address: string,
     provider: BaseProvider,
+    nonce: number,
   ) {
     console.log(
       `Creating NFT (NFT contract=${contract}) mint transaction (toAddress=${address}).`,
@@ -159,7 +163,7 @@ export class NftTransaction {
       to: contract,
       value: 0,
       gasLimit: '8000000',
-      nonce: ethers.utils.hexlify(txCount),
+      nonce: ethers.utils.hexlify(nonce || txCount),
       type: 2,
       chainId,
       data: contractData.data,
