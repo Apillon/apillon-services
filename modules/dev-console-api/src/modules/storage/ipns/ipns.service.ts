@@ -20,6 +20,10 @@ export class IpnsService {
     return (await new StorageMicroservice(context).listIpnses(query)).data;
   }
 
+  async getIpns(context: DevConsoleApiContext, id: number) {
+    return (await new StorageMicroservice(context).getIpns(id)).data;
+  }
+
   async createIpns(
     context: DevConsoleApiContext,
     bucket_id: number,

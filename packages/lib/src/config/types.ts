@@ -59,6 +59,7 @@ export enum StorageEventType {
   IPNS_UPDATE = 'update-ipns',
   IPNS_DELETE = 'delete-ipns',
   IPNS_PUBLISH = 'publish-ipns',
+  IPNS_GET = 'get-ipns',
   WEBSITE_LIST = 'list-websites',
   WEBSITE_CREATE = 'create-website',
   WEBSITE_UPDATE = 'update-website',
