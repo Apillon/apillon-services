@@ -1,3 +1,4 @@
+import { env } from '@apillon/lib';
 import axios, { AxiosResponse } from 'axios';
 import FormData from 'form-data';
 
@@ -27,4 +28,36 @@ export async function verifyCaptcha(
     console.error(err);
     throw err;
   }
+}
+
+export function getDiscordAuthURL() {
+  return {
+    url: `https://discord.com/api/oauth2/authorize?client_id=${
+      env.DISCORD_CLIENT_ID
+    }&redirect_uri=${encodeURIComponent(
+      env.DISCORD_REDIRECT_URI,
+    )}&response_type=code&scope=identify%20email`,
+  };
+}
+
+export async function getDiscordProfile(code: string): Promise<any> {
+  const options = new URLSearchParams({
+    client_id: env.DISCORD_CLIENT_ID,
+    client_secret: env.DISCORD_CLIENT_SECRET,
+    grant_type: 'authorization_code',
+    redirect_uri: env.DISCORD_REDIRECT_URI,
+    code,
+  });
+  const token = await axios.post(
+    'https://discord.com/api/v10/oauth2/token',
+    options,
+  );
+
+  if (token.data.access_token) {
+    const res = await axios.get('https://discord.com/api/v10/users/@me', {
+      headers: { Authorization: `Bearer ${token.data.access_token}` },
+    });
+    return res?.data;
+  }
+  return null;
 }

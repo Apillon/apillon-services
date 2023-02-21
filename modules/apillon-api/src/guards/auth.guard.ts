@@ -2,13 +2,10 @@ import {
   CodeException,
   DefaultApiKeyRole,
   ForbiddenErrorCodes,
-  UnauthorizedErrorCodes,
 } from '@apillon/lib';
 import {
   ApiKeyPermissionPass,
   API_KEY_PERMISSION_KEY,
-  PermissionPass,
-  PERMISSION_KEY,
 } from '@apillon/modules-lib';
 import {
   CanActivate,
@@ -46,7 +43,7 @@ export class AuthGuard implements CanActivate {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: HttpStatus.FORBIDDEN,
-        errorMessage: `Insufficient permissins - missing ${
+        errorMessage: `Insufficient permissions - missing ${
           DefaultApiKeyRole[requiredPermissions[0].role]
         } permission`,
       });

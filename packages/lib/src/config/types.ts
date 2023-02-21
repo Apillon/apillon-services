@@ -16,6 +16,10 @@ export enum AmsEventType {
   API_KEY_ROLE_REMOVE = 'api-key-role-remove',
   GET_API_KEY_ROLES = 'get-api-key-roles',
   GET_API_KEY = 'get-api-key',
+  DISCORD_LINK = 'discord-link',
+  DISCORD_UNLINK = 'discord-unlink',
+  DISCORD_USER_LIST = 'discord-user-list',
+  GET_OAUTH_LINKS = 'get-oauth-links',
 }
 
 export enum LmasEventType {
@@ -161,6 +165,7 @@ export enum SqlModelStatus {
 export enum AttachedServiceType {
   AUTHENTICATION = 1,
   STORAGE = 2,
+  SYSTEM = 999,
 }
 
 /**
@@ -381,4 +386,11 @@ export enum QuotaCode {
   MAX_BUCKET_SIZE = 6,
   MAX_ATTESTED_USERS = 7,
   MAX_WEBSITES = 8,
+}
+
+/* OAuth link type*/
+export enum OauthLinkType {
+  DISCORD = 1,
+  TWEETER = 2,
+  GITHUB = 3,
 }

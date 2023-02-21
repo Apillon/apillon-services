@@ -12,7 +12,7 @@ import {
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
-  ApiKeyQueryFilter,
+  ApiKeyQueryFilterDto,
   ApiKeyRoleBaseDto,
 } from '@apillon/lib';
 import { DbTables, AmsErrorCode } from '../../../config/types';
@@ -275,7 +275,7 @@ export class ApiKey extends AdvancedSQLModel {
     }
   }
 
-  public async getList(context: ServiceContext, filter: ApiKeyQueryFilter) {
+  public async getList(context: ServiceContext, filter: ApiKeyQueryFilterDto) {
     this.canAccess(context);
     // Map url query with sql fields.
     const fieldMap = {
