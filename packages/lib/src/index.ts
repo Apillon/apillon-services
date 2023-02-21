@@ -41,6 +41,7 @@ export * from './lib/at-services/storage/dtos/bucket-qouta-reached-query-filter.
 export * from './lib/at-services/nfts/nfts';
 export * from './lib/at-services/nfts/dtos/deploy-nft-contract.dto';
 export * from './lib/at-services/nfts/dtos/collection-query-filter.dto';
+export * from './lib/at-services/nfts/dtos/transaction-query-filter.dto';
 export * from './lib/at-services/storage/dtos/trashed-files-query-filter.dto';
 export * from './lib/at-services/storage/dtos/create-ipns.dto';
 export * from './lib/at-services/storage/dtos/ipns-query-filter.dto';

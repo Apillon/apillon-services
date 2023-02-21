@@ -1,11 +1,14 @@
 import {
   AdvancedSQLModel,
   Context,
+  getQueryParams,
   PopulateFrom,
   presenceValidator,
   prop,
+  selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
+  TransactionQueryFilter,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
@@ -38,6 +41,7 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -61,6 +65,7 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -166,6 +171,7 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     defaultValue: TransactionStatus.REQUESTED,
   })
@@ -185,6 +191,7 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [],
   })
@@ -227,5 +234,42 @@ export class Transaction extends AdvancedSQLModel {
     }
 
     return res;
+  }
+
+  public async getList(filter: TransactionQueryFilter) {
+    // Map url query with sql fields.
+    const fieldMap = {
+      id: 't.id',
+    };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      't',
+      fieldMap,
+      filter.serialize(),
+    );
+
+    const sqlQuery = {
+      qSelect: `
+        SELECT ${this.generateSelectFields('t', '')}, t.updateTime
+        `,
+      qFrom: `
+        FROM \`${this.tableName}\` t
+        WHERE (@refTable IS null OR refTable = @refTable) 
+        AND (@refId IS NULL or refId = @refId)
+        AND status <> ${SqlModelStatus.DELETED}
+        AND (@transactionStatus IS null OR t.transactionStatus = @transactionStatus)
+      `,
+      qFilter: `
+        ORDER BY ${filters.orderStr}
+        LIMIT ${filters.limit} OFFSET ${filters.offset};
+      `,
+    };
+
+    return await selectAndCountQuery(
+      this.getContext().mysql,
+      sqlQuery,
+      params,
+      't.id',
+    );
   }
 }

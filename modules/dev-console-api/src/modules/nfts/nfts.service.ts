@@ -2,6 +2,7 @@ import {
   CodeException,
   NFTCollectionQueryFilter,
   NftsMicroservice,
+  TransactionQueryFilter,
 } from '@apillon/lib';
 import { DeployNftContractDto } from '@apillon/lib/dist/lib/at-services/nfts/dtos/deploy-nft-contract.dto';
 import { TransferNftQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/transfer-nft-query-filter.dto';
@@ -77,5 +78,18 @@ export class NftsService {
 
   async checkTransactionStatus(context: DevConsoleApiContext) {
     return (await new NftsMicroservice(context).checkTransactionStatus()).data;
+  }
+
+  async listCollectionTransactions(
+    context: DevConsoleApiContext,
+    collection_uuid: string,
+    query: TransactionQueryFilter,
+  ) {
+    return (
+      await new NftsMicroservice(context).listCollectionTransactions(
+        collection_uuid,
+        query,
+      )
+    ).data;
   }
 }

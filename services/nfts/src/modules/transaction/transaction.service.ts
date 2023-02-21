@@ -5,12 +5,14 @@ import {
   env,
   PoolConnection,
   SerializeFor,
+  TransactionQueryFilter,
 } from '@apillon/lib';
 import { ServiceContext } from '../../context';
 import { NftsValidationException } from '../../lib/exceptions';
 import { executeTransactionStatusWorker } from '../../scripts/serverless-workers/execute-transaction-status-worker';
 import { WalletService } from '../wallet/wallet.service';
 import { TransactionDTO } from './dtos/transaction.dto';
+import { Collection } from '../nfts/models/collection.model';
 import { Transaction } from './models/transaction.model';
 
 export class TransactionService {
@@ -52,5 +54,14 @@ export class TransactionService {
     await transaction.update();
 
     return transaction;
+  }
+
+  static async listCollectionTransactions(
+    event: { collection_uuid: string; query: TransactionQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new Transaction({}, context).getList(
+      new TransactionQueryFilter(event.query),
+    );
   }
 }

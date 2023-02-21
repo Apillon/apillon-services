@@ -37,6 +37,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
