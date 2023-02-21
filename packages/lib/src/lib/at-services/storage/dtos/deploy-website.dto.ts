@@ -6,6 +6,7 @@ import {
   ValidatorErrorCode,
 } from '../../../../config/types';
 import { ModelBase, prop } from '../../../base-models/base';
+import { enumInclusionValidator } from '../../../validators';
 
 export class DeployWebsiteDto extends ModelBase {
   @prop({

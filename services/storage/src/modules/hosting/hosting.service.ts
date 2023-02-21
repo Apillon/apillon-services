@@ -14,6 +14,7 @@ import {
   Scs,
   SerializeFor,
   ServiceName,
+  ValidatorErrorCode,
   WebsiteQueryFilter,
   WebsitesQuotaReachedQueryFilter,
   writeLog,
@@ -222,9 +223,18 @@ export class HostingService {
     }
     website.canModify(context);
 
+    //Validate environment
+    if (!DeploymentEnvironment[event.body.environment]) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.DEPLOYMENT_ENVIRONMENT_NOT_VALID,
+        status: 400,
+      });
+    }
+
     //Check if there are files in source bucket
     const sourceBucket: Bucket = await new Bucket({}, context).populateById(
-      event.body.environment == DeploymentEnvironment.STAGING
+      event.body.environment == DeploymentEnvironment.STAGING ||
+        event.body.environment == DeploymentEnvironment.DIRECT_TO_PRODUCTION
         ? website.bucket_id
         : website.stagingBucket_id,
     );
@@ -251,8 +261,11 @@ export class HostingService {
       if (lastStagingDeployment.exists()) {
         deploymentNumber = lastStagingDeployment.number + 1;
       }
-    } else if (event.body.environment == DeploymentEnvironment.PRODUCTION) {
-      if (lastStagingDeployment.cid == lastProductionDeployment.cid) {
+    } else {
+      if (
+        event.body.environment == DeploymentEnvironment.PRODUCTION &&
+        lastStagingDeployment.cid == lastProductionDeployment.cid
+      ) {
         throw new StorageCodeException({
           code: StorageErrorCode.NO_CHANGES_TO_DEPLOY,
           status: 400,
