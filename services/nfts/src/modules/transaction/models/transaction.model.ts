@@ -17,10 +17,6 @@ import {
   TransactionStatus,
   TransactionType,
 } from '../../../config/types';
-import {
-  NftsCodeException,
-  NftsValidationException,
-} from '../../../lib/exceptions';
 
 export class Transaction extends AdvancedSQLModel {
   public readonly tableName = DbTables.TRANSACTION;

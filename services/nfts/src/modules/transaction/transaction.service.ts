@@ -7,8 +7,12 @@ import {
   SerializeFor,
   TransactionQueryFilter,
 } from '@apillon/lib';
+import { DbTables, NftsErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
-import { NftsValidationException } from '../../lib/exceptions';
+import {
+  NftsCodeException,
+  NftsValidationException,
+} from '../../lib/exceptions';
 import { executeTransactionStatusWorker } from '../../scripts/serverless-workers/execute-transaction-status-worker';
 import { WalletService } from '../wallet/wallet.service';
 import { TransactionDTO } from './dtos/transaction.dto';
@@ -60,8 +64,25 @@ export class TransactionService {
     event: { collection_uuid: string; query: TransactionQueryFilter },
     context: ServiceContext,
   ) {
-    return await new Transaction({}, context).getList(
-      new TransactionQueryFilter(event.query),
-    );
+    const collection: Collection = await new Collection(
+      {},
+      context,
+    ).populateByUUID(event.collection_uuid);
+    if (!collection.exists()) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
+        context: context,
+      });
+    }
+    collection.canAccess(context);
+
+    const query = new TransactionQueryFilter(event.query);
+    query.populate({
+      refTable: DbTables.COLLECTION,
+      refId: collection.id,
+    });
+
+    return await new Transaction({}, context).getList(query);
   }
 }
