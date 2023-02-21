@@ -2,7 +2,7 @@ import {
   Ams,
   AttachedServiceType,
   DefaultApiKeyRole,
-  DiscordUserListFilterDto,
+  OauthListFilterDto,
   ValidateFor,
 } from '@apillon/lib';
 import { ApiKeyPermissions, Ctx, Validation } from '@apillon/modules-lib';
@@ -19,11 +19,11 @@ export class DiscordBotController {
     serviceType: AttachedServiceType.SYSTEM,
   })
   @UseGuards(AuthGuard)
-  @Validation({ dto: DiscordUserListFilterDto, validateFor: ValidateFor.QUERY })
+  @Validation({ dto: OauthListFilterDto, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
   async getDiscordUserList(
     @Ctx() context: ApillonApiContext,
-    @Query() filter: DiscordUserListFilterDto,
+    @Query() filter: OauthListFilterDto,
   ) {
     return await new Ams(context).getDiscordUserList(filter);
   }

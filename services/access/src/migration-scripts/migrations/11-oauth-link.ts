@@ -24,7 +24,7 @@ export async function upgrade(
   `);
 
   await queryFn(`
-    ALTER TABLE  \`${DbTables.OAUTH_LINK}\` ADD UNIQUE \`unq_oauth_link\` (\`externalUserId\`, \`type\`);
+    ALTER TABLE  \`${DbTables.OAUTH_LINK}\` ADD UNIQUE \`unq_oauth_link\` (\`externalUserId\`, \`type\`, \`status\`);
   `);
 }
 

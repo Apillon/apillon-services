@@ -2,17 +2,18 @@ import {
   CreateOauthLinkDto,
   SerializeFor,
   SqlModelStatus,
-  DiscordUserListFilterDto,
+  OauthListFilterDto,
+  OauthLinkType,
 } from '@apillon/lib';
-import { AmsErrorCode, DbTables, OauthLinkType } from '../../config/types';
+import { AmsErrorCode, DbTables } from '../../config/types';
 import { ServiceContext } from '../../context';
 import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
 import { AuthUser } from '../auth-user/auth-user.model';
 import { OauthLink } from './oauth-link.model';
 
-export class DiscordService {
-  public static async link(
-    discordProfile: CreateOauthLinkDto,
+export class OauthLinkService {
+  public static async linkDiscord(
+    event: CreateOauthLinkDto,
     context: ServiceContext,
   ) {
     let existingOauthLink = await new OauthLink(
@@ -35,10 +36,7 @@ export class DiscordService {
     existingOauthLink = await new OauthLink(
       {},
       context,
-    ).populateByExternalUserId(
-      discordProfile.externalUserId,
-      OauthLinkType.DISCORD,
-    );
+    ).populateByExternalUserId(event.externalUserId, OauthLinkType.DISCORD);
 
     // check if the discord ID is already used by another user
     if (existingOauthLink.exists()) {
@@ -50,7 +48,7 @@ export class DiscordService {
     let oauthLink = await new OauthLink({}, context).populateByUserUuidAndType(
       context.user.user_uuid,
       OauthLinkType.DISCORD,
-      discordProfile.externalUserId,
+      event.externalUserId,
     );
 
     if (!oauthLink.exists()) {
@@ -71,8 +69,8 @@ export class DiscordService {
 
       oauthLink = new OauthLink({}, context);
       oauthLink.authUser_id = authUser.id;
-      oauthLink.externalUserId = discordProfile.externalUserId;
-      oauthLink.externalUsername = discordProfile.externalUsername;
+      oauthLink.externalUserId = event.externalUserId;
+      oauthLink.externalUsername = event.externalUsername;
       oauthLink.type = OauthLinkType.DISCORD;
       try {
         await oauthLink.validate();
@@ -94,7 +92,7 @@ export class DiscordService {
     return oauthLink.serialize(SerializeFor.SERVICE);
   }
 
-  public static async unlink(context: ServiceContext) {
+  public static async unlinkDiscord(_event: any, context: ServiceContext) {
     const oauthLink = await new OauthLink(
       {},
       context,
@@ -112,14 +110,35 @@ export class DiscordService {
   }
 
   public static async getDiscordUserList(
-    event: DiscordUserListFilterDto,
+    event: OauthListFilterDto,
     context: ServiceContext,
+  ) {
+    delete event.user_uuid;
+    return OauthLinkService.getOauthLinks(
+      event,
+      context,
+      OauthLinkType.DISCORD,
+    );
+  }
+
+  public static async getUserOauthLinks(
+    event: OauthListFilterDto,
+    context: ServiceContext,
+  ) {
+    return OauthLinkService.getOauthLinks(event, context);
+  }
+
+  private static async getOauthLinks(
+    event: OauthListFilterDto,
+    context: ServiceContext,
+    type: OauthLinkType = null,
   ) {
     const resp = await context.mysql.paramExecute(
       `
       SELECT 
         au.user_uuid,
         au.email, 
+        ol.type,
         ol.externalUserId,
         ol.externalUsername,
         ol.createTime
@@ -128,15 +147,18 @@ export class DiscordService {
         ON au.id = ol.authUser_id
       WHERE 
         ol.status = ${SqlModelStatus.ACTIVE}
-        AND ol.type = ${OauthLinkType.DISCORD}
+        AND (@type IS NULL OR ol.type = @type)
         AND (@dateFrom IS NULL OR ol.createTime >= @dateFrom)
         AND (@dateTo IS NULL OR ol.createTime < @dateTo)
         AND (@search IS NULL OR ol.externalUsername LIKE @search OR au.email LIKE @search)
+        AND (@user_uuid IS NULL OR au.user_uuid = @user_uuid)
     `,
       {
         dateFrom: event?.dateFrom || null,
         dateTo: event?.dateTo || null,
         search: event?.search ? `${event.search}%` : null,
+        user_uuid: event?.user_uuid || null,
+        type,
       },
     );
 

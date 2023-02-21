@@ -351,7 +351,16 @@ export class UserService {
   }
 
   async connectDiscord(context: DevConsoleApiContext, body: DiscordCodeDto) {
-    const discordProfile = await getDiscordProfile(body.code);
+    let discordProfile: any;
+    if (env.APP_ENV === AppEnvironment.TEST) {
+      const testId = body.code;
+      discordProfile = {
+        id: testId,
+        username: `TestUser${testId}`,
+      };
+    } else {
+      discordProfile = await getDiscordProfile(body.code);
+    }
 
     if (!discordProfile) {
       throw new CodeException({
@@ -371,5 +380,9 @@ export class UserService {
 
   async disconnectDiscord(context: DevConsoleApiContext) {
     await new Ams(context).unlinkDiscord();
+  }
+
+  async getOauthLinks(context: DevConsoleApiContext) {
+    return await new Ams(context).getOauthLinks();
   }
 }

@@ -3,13 +3,14 @@ import { presenceValidator } from '@rawmodel/validators';
 import {
   AdvancedSQLModel,
   Context,
+  OauthLinkType,
   PoolConnection,
   PopulateFrom,
   prop,
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
-import { AmsErrorCode, DbTables, OauthLinkType } from '../../config/types';
+import { AmsErrorCode, DbTables } from '../../config/types';
 
 export class OauthLink extends AdvancedSQLModel {
   public readonly tableName = DbTables.OAUTH_LINK;
@@ -42,6 +43,7 @@ export class OauthLink extends AdvancedSQLModel {
     ],
     serializable: [
       SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
     ],
@@ -145,7 +147,7 @@ export class OauthLink extends AdvancedSQLModel {
         AND ol.type = @type
         AND (@externalUserId IS NULL OR ol.externalUserId = @externalUserId)
     `,
-      { user_uuid, type, externalUserId },
+      { user_uuid, type, externalUserId: externalUserId || null },
       conn,
     );
 

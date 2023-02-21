@@ -19,6 +19,7 @@ export enum AmsEventType {
   DISCORD_LINK = 'discord-link',
   DISCORD_UNLINK = 'discord-unlink',
   DISCORD_USER_LIST = 'discord-user-list',
+  GET_OAUTH_LINKS = 'get-oauth-links',
 }
 
 export enum LmasEventType {
@@ -384,4 +385,11 @@ export enum QuotaCode {
   MAX_BUCKET_SIZE = 6,
   MAX_ATTESTED_USERS = 7,
   MAX_WEBSITES = 8,
+}
+
+/* OAuth link type*/
+export enum OauthLinkType {
+  DISCORD = 1,
+  TWEETER = 2,
+  GITHUB = 3,
 }

@@ -155,9 +155,3 @@ export enum SqlModelStatus {
 }
 
 //#endregion
-
-export enum OauthLinkType {
-  DISCORD = 1,
-  TWEETER = 2,
-  GITHUB = 3,
-}

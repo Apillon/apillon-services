@@ -111,6 +111,7 @@ export class UserController {
   }
 
   @Post('discord-disconnect')
+  @HttpCode(200)
   @UseGuards(AuthGuard)
   async disconnectDiscord(@Ctx() context: DevConsoleApiContext) {
     return await this.userService.disconnectDiscord(context);
@@ -120,5 +121,11 @@ export class UserController {
   @UseGuards(AuthGuard)
   async getDiscordUrl() {
     return getDiscordAuthURL();
+  }
+
+  @Get('oauth-links')
+  @UseGuards(AuthGuard)
+  async getOauthLinks(@Ctx() context: DevConsoleApiContext) {
+    return await this.userService.getOauthLinks(context);
   }
 }
