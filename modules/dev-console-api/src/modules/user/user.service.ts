@@ -365,7 +365,7 @@ export class UserService {
     if (!discordProfile) {
       throw new CodeException({
         status: HttpStatus.BAD_REQUEST,
-        code: BadRequestErrorCode.BAD_REQUEST,
+        code: BadRequestErrorCode.THIRD_PARTY_SERVICE_CONNECTION_FAILED,
         errorCodes: BadRequestErrorCode,
       });
     }

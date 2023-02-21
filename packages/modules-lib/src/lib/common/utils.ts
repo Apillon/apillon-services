@@ -53,6 +53,7 @@ export async function getDiscordProfile(code: string): Promise<any> {
     options,
     {
       headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
         'Accept-Encoding': 'gzip,deflate,compress',
       },
     },
