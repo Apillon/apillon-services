@@ -51,6 +51,11 @@ export async function getDiscordProfile(code: string): Promise<any> {
   const token = await axios.post(
     'https://discord.com/api/v10/oauth2/token',
     options,
+    {
+      headers: {
+        'Accept-Encoding': 'gzip,deflate,compress',
+      },
+    },
   );
 
   if (token.data.access_token) {
