@@ -6,6 +6,7 @@ import { NFTCollectionQueryFilter } from './dtos/collection-query-filter.dto';
 import { DeployNftContractDto } from './dtos/deploy-nft-contract.dto';
 import { MintNftQueryFilter } from './dtos/mint-nft-query-filter.dto';
 import { SetNftBaseUriQueryFilter } from './dtos/set-nft-base-uri-query.dto';
+import { TransactionQueryFilter } from './dtos/transaction-query-filter.dto';
 import { TransferNftQueryFilter } from './dtos/transfer-nft-query-filter.dto';
 
 export class NftsMicroservice extends BaseService {
@@ -74,6 +75,18 @@ export class NftsMicroservice extends BaseService {
   public async checkTransactionStatus() {
     const data = {
       eventName: NftsEventType.CHECK_TRANSACTION_STATUS,
+    };
+    return await this.callService(data);
+  }
+
+  public async listCollectionTransactions(
+    collection_uuid: string,
+    params: TransactionQueryFilter,
+  ) {
+    const data = {
+      eventName: NftsEventType.NFT_COLLECTION_TRANSACTION_LIST,
+      collection_uuid: collection_uuid,
+      query: params.serialize(),
     };
     return await this.callService(data);
   }

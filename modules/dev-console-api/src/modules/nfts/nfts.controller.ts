@@ -2,6 +2,7 @@ import {
   DefaultUserRole,
   DeployNftContractDto,
   NFTCollectionQueryFilter,
+  TransactionQueryFilter,
   ValidateFor,
 } from '@apillon/lib';
 import { MintNftQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/mint-nft-query-filter.dto';
@@ -108,5 +109,25 @@ export class NftsController {
   @UseGuards(DevEnvGuard)
   async checkTransactionStatus(@Ctx() context: DevConsoleApiContext) {
     return await this.nftsService.checkTransactionStatus(context);
+  }
+
+  @Get('/collections/:collection_uuid/transactions')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @Validation({ dto: TransactionQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async listCollectionTransactions(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('collection_uuid') collection_uuid: string,
+    @Query() query: TransactionQueryFilter,
+  ) {
+    return await this.nftsService.listCollectionTransactions(
+      context,
+      collection_uuid,
+      query,
+    );
   }
 }

@@ -13,6 +13,8 @@ export async function processEvent(event, context: Context): Promise<any> {
     [NftsEventType.SET_BASE_URI]: NftsService.setNftCollectionBaseUri,
     [NftsEventType.CHECK_TRANSACTION_STATUS]:
       TransactionService.checkTransactionsStatus,
+    [NftsEventType.NFT_COLLECTION_TRANSACTION_LIST]:
+      TransactionService.listCollectionTransactions,
   };
 
   return await processors[event.eventName](event, context);
