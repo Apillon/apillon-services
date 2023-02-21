@@ -4,10 +4,10 @@ import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { NFTCollectionQueryFilter } from './dtos/collection-query-filter.dto';
 import { DeployNftContractDto } from './dtos/deploy-nft-contract.dto';
-import { MintNftQueryFilter } from './dtos/mint-nft-query-filter.dto';
-import { SetNftBaseUriQueryFilter } from './dtos/set-nft-base-uri-query.dto';
+import { MintNftDTO } from './dtos/mint-nft.dto';
+import { SetCollectionBaseUriDTO } from './dtos/set-collection-base-uri.dto';
 import { TransactionQueryFilter } from './dtos/transaction-query-filter.dto';
-import { TransferNftQueryFilter } from './dtos/transfer-nft-query-filter.dto';
+import { TransferCollectionDTO } from './dtos/transfer-collection.dto';
 
 export class NftsMicroservice extends BaseService {
   lambdaFunctionName =
@@ -48,26 +48,26 @@ export class NftsMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async transferNftOwnership(params: TransferNftQueryFilter) {
+  public async transferCollectionOwnership(params: TransferCollectionDTO) {
     const data = {
       eventName: NftsEventType.TRANSFER_OWNERSHIP,
-      query: params.serialize(),
+      body: params.serialize(),
     };
     return await this.callService(data);
   }
 
-  public async mintNft(params: MintNftQueryFilter) {
+  public async mintNft(params: MintNftDTO) {
     const data = {
       eventName: NftsEventType.MINT_NFT,
-      query: params.serialize(),
+      body: params.serialize(),
     };
     return await this.callService(data);
   }
 
-  public async setNftCollectionBaseUri(params: SetNftBaseUriQueryFilter) {
+  public async setNftCollectionBaseUri(params: SetCollectionBaseUriDTO) {
     const data = {
       eventName: NftsEventType.SET_BASE_URI,
-      query: params.serialize(),
+      body: params.serialize(),
     };
     return await this.callService(data);
   }

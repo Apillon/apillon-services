@@ -2,30 +2,25 @@ import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
-import { BaseQueryFilter } from '../../../base-models/base-query-filter.model';
+import { ModelBase } from '../../../base-models/base';
 
-export class SetNftBaseUriQueryFilter extends BaseQueryFilter {
+export class MintNftDTO extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_SET_BASE_URI_NOT_PRESENET,
+        code: ValidatorErrorCode.NFT_MINT_ADDRESS_NOT_PRESENT,
       },
     ],
   })
-  public uri: string;
+  public address: string;
 
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_COLLECTION_UUID_NOT_PRESENT,
-      },
-    ],
+    validators: [],
   })
   public collection_uuid: string;
 }

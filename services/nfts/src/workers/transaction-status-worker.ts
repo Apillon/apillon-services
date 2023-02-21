@@ -1,4 +1,4 @@
-import { AppEnvironment, Context, env } from '@apillon/lib';
+import { AppEnvironment, Context, env, SqlModelStatus } from '@apillon/lib';
 import { Job, ServerlessWorker, WorkerDefinition } from '@apillon/workers-lib';
 import { TransactionStatus, TransactionType } from '../config/types';
 import { Collection } from '../modules/nfts/models/collection.model';
@@ -21,7 +21,7 @@ export class TransactionStatusWorker extends ServerlessWorker {
     const transactions: Transaction[] = await new Transaction(
       {},
       this.context,
-    ).getTransactions(null, TransactionStatus.PENDING, null);
+    ).getTransactions(TransactionStatus.PENDING);
 
     console.info(
       'Number of transactions that needs to be checked on blockchain: ',
@@ -80,14 +80,13 @@ export class TransactionStatusWorker extends ServerlessWorker {
         this.context,
       ).populateById(tx.refId);
 
-      if (!collection.contractAddress) {
-        collection.contractAddress = txReceipt.contractAddress;
-        collection.transactionHash = txReceipt.transactionHash;
-        await collection.update();
-        console.log(
-          `Collection (id=${collection.id}) updated (contractAddress=${collection.contractAddress})`,
-        );
-      }
+      collection.contractAddress = txReceipt.contractAddress;
+      collection.transactionHash = txReceipt.transactionHash;
+      collection.status = SqlModelStatus.ACTIVE;
+      await collection.update();
+      console.log(
+        `Collection (id=${collection.id}) updated (contractAddress=${collection.contractAddress})`,
+      );
     }
   }
 

@@ -1,13 +1,13 @@
 import {
   CodeException,
+  MintNftDTO,
   NFTCollectionQueryFilter,
   NftsMicroservice,
+  SetCollectionBaseUriDTO,
   TransactionQueryFilter,
+  TransferCollectionDTO,
 } from '@apillon/lib';
 import { DeployNftContractDto } from '@apillon/lib/dist/lib/at-services/nfts/dtos/deploy-nft-contract.dto';
-import { TransferNftQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/transfer-nft-query-filter.dto';
-import { MintNftQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/mint-nft-query-filter.dto';
-import { SetNftBaseUriQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/set-nft-base-uri-query.dto';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 import { Project } from '../project/models/project.model';
@@ -47,32 +47,33 @@ export class NftsService {
     return (await new NftsMicroservice(context).listNftCollections(query)).data;
   }
 
-  async transferNftOwnership(
+  async transferCollectionOwnership(
     context: DevConsoleApiContext,
     collection_uuid: string,
-    query: TransferNftQueryFilter,
+    body: TransferCollectionDTO,
   ) {
-    query.collection_uuid = collection_uuid;
-    return (await new NftsMicroservice(context).transferNftOwnership(query))
-      .data;
+    body.collection_uuid = collection_uuid;
+    return (
+      await new NftsMicroservice(context).transferCollectionOwnership(body)
+    ).data;
   }
 
   async mintNftTo(
     context: DevConsoleApiContext,
     collection_uuid: string,
-    query: MintNftQueryFilter,
+    body: MintNftDTO,
   ) {
-    query.collection_uuid = collection_uuid;
-    return (await new NftsMicroservice(context).mintNft(query)).data;
+    body.collection_uuid = collection_uuid;
+    return (await new NftsMicroservice(context).mintNft(body)).data;
   }
 
   async setNftCollectionBaseUri(
     context: DevConsoleApiContext,
     collection_uuid: string,
-    query: SetNftBaseUriQueryFilter,
+    body: SetCollectionBaseUriDTO,
   ) {
-    query.collection_uuid = collection_uuid;
-    return (await new NftsMicroservice(context).setNftCollectionBaseUri(query))
+    body.collection_uuid = collection_uuid;
+    return (await new NftsMicroservice(context).setNftCollectionBaseUri(body))
       .data;
   }
 

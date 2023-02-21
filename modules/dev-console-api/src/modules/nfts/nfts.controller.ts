@@ -1,13 +1,13 @@
 import {
   DefaultUserRole,
   DeployNftContractDto,
+  MintNftDTO,
   NFTCollectionQueryFilter,
+  SetCollectionBaseUriDTO,
   TransactionQueryFilter,
+  TransferCollectionDTO,
   ValidateFor,
 } from '@apillon/lib';
-import { MintNftQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/mint-nft-query-filter.dto';
-import { TransferNftQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/transfer-nft-query-filter.dto';
-import { SetNftBaseUriQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/set-nft-base-uri-query.dto';
 import { Ctx, Validation, Permissions } from '@apillon/modules-lib';
 import {
   Body,
@@ -64,44 +64,44 @@ export class NftsController {
     return await this.nftsService.listNftCollections(context, query);
   }
 
-  @Get(':collection_uuid/transferOwnership')
-  @Validation({ dto: TransferNftQueryFilter, validateFor: ValidateFor.QUERY })
+  @Post('/collections/:collection_uuid/transferOwnership')
+  @Validation({ dto: TransferCollectionDTO })
   @UseGuards(ValidationGuard)
   async transferOwnership(
     @Ctx() context: DevConsoleApiContext,
     @Param('collection_uuid') collection_uuid: string,
-    @Query() query: TransferNftQueryFilter,
+    @Body() body: TransferCollectionDTO,
   ) {
-    return await this.nftsService.transferNftOwnership(
+    return await this.nftsService.transferCollectionOwnership(
       context,
       collection_uuid,
-      query,
+      body,
     );
   }
 
-  @Get(':collection_uuid/mint')
-  @Validation({ dto: MintNftQueryFilter, validateFor: ValidateFor.QUERY })
+  @Get('collections/:collection_uuid/mint')
+  @Validation({ dto: MintNftDTO })
   @UseGuards(ValidationGuard)
   async mintNft(
     @Ctx() context: DevConsoleApiContext,
     @Param('collection_uuid') collection_uuid: string,
-    @Query() query: MintNftQueryFilter,
+    @Body() body: MintNftDTO,
   ) {
-    return await this.nftsService.mintNftTo(context, collection_uuid, query);
+    return await this.nftsService.mintNftTo(context, collection_uuid, body);
   }
 
-  @Get(':collection_uuid/setBaseUri')
-  @Validation({ dto: SetNftBaseUriQueryFilter, validateFor: ValidateFor.QUERY })
+  @Post('collections/:collection_uuid/setBaseUri')
+  @Validation({ dto: SetCollectionBaseUriDTO })
   @UseGuards(ValidationGuard)
   async setNftCollectionBaseUri(
     @Ctx() context: DevConsoleApiContext,
     @Param('collection_uuid') collection_uuid: string,
-    @Query() query: SetNftBaseUriQueryFilter,
+    @Body() body: SetCollectionBaseUriDTO,
   ) {
     return await this.nftsService.setNftCollectionBaseUri(
       context,
       collection_uuid,
-      query,
+      body,
     );
   }
 
