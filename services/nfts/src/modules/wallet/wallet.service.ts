@@ -8,6 +8,7 @@ import {
   TransactionReceipt,
 } from '@ethersproject/providers';
 import { PayableNft } from '../../lib/contracts/payable-mint-nft';
+import { Transaction } from '../transaction/models/transaction.model';
 
 export class WalletService {
   private wallet: Wallet;
@@ -94,21 +95,30 @@ export class WalletService {
     return this.provider.sendTransaction(rawTransaction);
   }
 
-  async isTransacionConfirmed(txHash: string): Promise<boolean> {
-    const tx: TransactionReceipt = await this.provider.getTransactionReceipt(
-      txHash,
-    );
-    console.log(
-      `Transaction receipt (txHash=${txHash}): ${JSON.stringify(tx)}`,
-    );
-    if (tx) {
-      return !!(tx.confirmations > 1 && tx.blockNumber);
+  async getTransactionByHash(txHash: string): Promise<TransactionReceipt> {
+    return await this.provider.getTransactionReceipt(txHash);
+  }
+
+  async isTransacionConfirmed(txReceipt: TransactionReceipt): Promise<boolean> {
+    if (txReceipt) {
+      return !!(txReceipt.confirmations > 1 && txReceipt.blockNumber);
     }
     return false;
   }
 
   async getContractOwner(contractAddress: string) {
-    const nftContract: Contract = new Contract(contractAddress, PayableNft.abi);
-    return await nftContract.callStatic.owner();
+    const nftContract: Contract = new Contract(
+      contractAddress,
+      PayableNft.abi,
+      this.provider,
+    );
+    return await nftContract.owner();
   }
+
+  // async getCollectionNfts(
+  //   contractAddress: string,
+  //   nftTransactions: Transaction[],
+  // ) {
+  //   const nftContract: Contract = new Contract(contractAddress, PayableNft.abi);
+  // }
 }
