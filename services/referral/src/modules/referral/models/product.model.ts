@@ -23,6 +23,7 @@ import {
 } from '../../../lib/exceptions';
 import { faker } from '@faker-js/faker';
 import { Attribute } from './attribute.model';
+import { Player } from './player.model';
 
 export class Product extends AdvancedSQLModel {
   public readonly tableName = DbTables.PRODUCT;
@@ -116,6 +117,7 @@ export class Product extends AdvancedSQLModel {
       PopulateFrom.PROFILE,
     ],
     serializable: [
+      SerializeFor.UPDATE_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
@@ -273,6 +275,11 @@ export class Product extends AdvancedSQLModel {
       filter.serialize(),
     );
 
+    const player = await new Player({}, context).populateByUserUuid(
+      context?.user?.user_uuid,
+    );
+    params.playerId = player?.id || null;
+
     const sqlQuery = {
       qSelect: `
         SELECT ${this.generateSelectFields('pr', '')},
@@ -285,8 +292,9 @@ export class Product extends AdvancedSQLModel {
           JSON_ARRAY()
         ) as attributes,
         (
-          SELECT SUM(o.volume) FROM \`${DbTables.ORDER}\` o
+          SELECT IFNULL(SUM(o.volume),0) FROM \`${DbTables.ORDER}\` o
           WHERE o.product_id = pr.id
+          AND o.player_id = @playerId
         ) as orderCount
         `,
       qFrom: `
