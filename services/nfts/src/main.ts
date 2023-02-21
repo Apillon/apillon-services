@@ -5,10 +5,9 @@ import { TransactionService } from './modules/transaction/transaction.service';
 
 export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
-    [NftsEventType.HELLO]: NftsService.getHello,
     [NftsEventType.DEPLOY_NFT]: NftsService.deployNftContract,
     [NftsEventType.NFT_COLLECTIONS_LIST]: NftsService.listNftCollections,
-    [NftsEventType.TRANSFER_OWNERSHIP]: NftsService.transferNftOwnership,
+    [NftsEventType.TRANSFER_OWNERSHIP]: NftsService.transferCollectionOwnership,
     [NftsEventType.MINT_NFT]: NftsService.mintNftTo,
     [NftsEventType.SET_BASE_URI]: NftsService.setNftCollectionBaseUri,
     [NftsEventType.CHECK_TRANSACTION_STATUS]:

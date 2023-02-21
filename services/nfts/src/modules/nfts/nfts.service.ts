@@ -1,23 +1,17 @@
-import { DeployNftContractDto } from '@apillon/lib/dist/lib/at-services/nfts/dtos/deploy-nft-contract.dto';
-import { MintNftQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/mint-nft-query-filter.dto';
-import { SetNftBaseUriQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/set-nft-base-uri-query.dto';
-import { NftTransaction } from '../../lib/nft-contract-transaction';
 import {
-  TransactionRequest,
-  TransactionReceipt,
-} from '@ethersproject/providers';
-import { ethers, Wallet } from 'ethers';
-import {
-  AppEnvironment,
-  env,
+  DeployNftContractDto,
+  Lmas,
+  LogType,
+  MintNftDTO,
   NFTCollectionQueryFilter,
   SerializeFor,
+  ServiceName,
+  SetCollectionBaseUriDTO,
   SqlModelStatus,
+  TransferCollectionDTO,
 } from '@apillon/lib';
-import { TransferNftQueryFilter } from '@apillon/lib/dist/lib/at-services/nfts/dtos/transfer-nft-query-filter.dto';
-import { TransactionService } from '../transaction/transaction.service';
-import { ServiceContext } from '../../context';
-import { TransactionDTO } from '../transaction/dtos/transaction.dto';
+import { TransactionRequest } from '@ethersproject/providers';
+import { v4 as uuidV4 } from 'uuid';
 import {
   Chains,
   DbTables,
@@ -25,14 +19,15 @@ import {
   TransactionStatus,
   TransactionType,
 } from '../../config/types';
-import { WalletService } from '../wallet/wallet.service';
+import { ServiceContext } from '../../context';
 import {
   NftsCodeException,
   NftsValidationException,
 } from '../../lib/exceptions';
 import { Transaction } from '../transaction/models/transaction.model';
+import { TransactionService } from '../transaction/transaction.service';
+import { WalletService } from '../wallet/wallet.service';
 import { Collection } from './models/collection.model';
-import { v4 as uuidV4 } from 'uuid';
 
 export class NftsService {
   static async getHello() {
@@ -97,7 +92,6 @@ export class NftsService {
       await TransactionService.saveTransaction(context, dbTxRecord, conn);
 
       await context.mysql.commit(conn);
-      return collection;
     } catch (err) {
       await context.mysql.rollback(conn);
 
@@ -110,6 +104,18 @@ export class NftsService {
         details: err,
       }).writeToMonitor({});
     }
+
+    await new Lmas().writeLog({
+      context,
+      project_uuid: collection.project_uuid,
+      logType: LogType.INFO,
+      message: 'New NFT collection created and submited to deployment',
+      location: 'NftsService/deployNftContract',
+      service: ServiceName.NFTS,
+      data: collection.serialize(),
+    });
+
+    return collection;
   }
 
   static async listNftCollections(
@@ -122,16 +128,16 @@ export class NftsService {
     ).getList(context, new NFTCollectionQueryFilter(event.query));
   }
 
-  static async transferNftOwnership(
-    params: { query: TransferNftQueryFilter },
+  static async transferCollectionOwnership(
+    params: { body: TransferCollectionDTO },
     context: ServiceContext,
   ) {
     console.log(
-      `Transfering NFT Collection (uuid=${params.query.collection_uuid}) ownership to wallet address: ${params.query.address}`,
+      `Transfering NFT Collection (uuid=${params.body.collection_uuid}) ownership to wallet address: ${params.body.address}`,
     );
     const walletService = new WalletService();
     const collection: Collection = await NftsService.checkAndGetCollection(
-      params.query.collection_uuid,
+      params.body.collection_uuid,
       walletService,
       'transferNftOwnership()',
       context,
@@ -150,7 +156,7 @@ export class NftsService {
       const txRequest: TransactionRequest =
         await walletService.createTransferOwnershipTransaction(
           collection.contractAddress,
-          params.query.address,
+          params.body.address,
           dbTxRecord.nonce,
         );
       const rawTransaction = await walletService.signTransaction(txRequest);
@@ -169,7 +175,6 @@ export class NftsService {
       await TransactionService.saveTransaction(context, dbTxRecord, conn);
 
       await context.mysql.commit(conn);
-      return collection;
     } catch (err) {
       await context.mysql.rollback(conn);
 
@@ -182,18 +187,30 @@ export class NftsService {
         details: err,
       }).writeToMonitor({});
     }
+
+    await new Lmas().writeLog({
+      context,
+      project_uuid: collection.project_uuid,
+      logType: LogType.INFO,
+      message: 'NFT collection ownership transfered',
+      location: 'NftsService/transferCollectionOwnership',
+      service: ServiceName.NFTS,
+      data: collection.serialize(),
+    });
+
+    return collection.serialize(SerializeFor.PROFILE);
   }
 
   static async mintNftTo(
-    params: { query: MintNftQueryFilter },
+    params: { body: MintNftDTO },
     context: ServiceContext,
   ) {
     console.log(
-      `Minting NFT Collection to wallet address: ${params.query.address}`,
+      `Minting NFT Collection to wallet address: ${params.body.address}`,
     );
     const walletService: WalletService = new WalletService();
     const collection: Collection = await NftsService.checkAndGetCollection(
-      params.query.collection_uuid,
+      params.body.collection_uuid,
       walletService,
       'mintNftTo()',
       context,
@@ -212,7 +229,7 @@ export class NftsService {
       const txRequest: TransactionRequest =
         await await walletService.createMintToTransaction(
           collection.contractAddress, // Later obtain contract from DB by collection_uuid
-          params.query.address,
+          params.body.address,
           dbTxRecord.nonce,
         );
 
@@ -232,7 +249,6 @@ export class NftsService {
       await TransactionService.saveTransaction(context, dbTxRecord, conn);
 
       await context.mysql.commit(conn);
-      return collection;
     } catch (err) {
       await context.mysql.rollback(conn);
 
@@ -245,20 +261,35 @@ export class NftsService {
         details: err,
       }).writeToMonitor({});
     }
+
+    await new Lmas().writeLog({
+      context,
+      project_uuid: collection.project_uuid,
+      logType: LogType.INFO,
+      message: 'NFT minted',
+      location: 'NftsService/mintNftTo',
+      service: ServiceName.NFTS,
+      data: {
+        collection: collection.serialize(SerializeFor.PROFILE),
+        body: params.body,
+      },
+    });
+
+    return { success: true };
   }
 
   static async setNftCollectionBaseUri(
     params: {
-      query: SetNftBaseUriQueryFilter;
+      body: SetCollectionBaseUriDTO;
     },
     context: ServiceContext,
   ) {
     console.log(
-      `Setting URI of NFT Collection (uuid=${params.query.collection_uuid}): ${params.query.uri}`,
+      `Setting URI of NFT Collection (uuid=${params.body.collection_uuid}): ${params.body.uri}`,
     );
     const walletService = new WalletService();
     const collection: Collection = await NftsService.checkAndGetCollection(
-      params.query.collection_uuid,
+      params.body.collection_uuid,
       walletService,
       'setNftCollectionBaseUri()',
       context,
@@ -277,7 +308,7 @@ export class NftsService {
       const txRequest: TransactionRequest =
         await await walletService.createSetNftBaseUriTransaction(
           collection.contractAddress, // Later obtain contract from DB by collection_uuid
-          params.query.uri,
+          params.body.uri,
           dbTxRecord.nonce,
         );
 

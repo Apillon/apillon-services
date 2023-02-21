@@ -2,9 +2,9 @@ import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
-import { BaseQueryFilter } from '../../../base-models/base-query-filter.model';
+import { ModelBase } from '../../../base-models/base';
 
-export class TransferNftQueryFilter extends BaseQueryFilter {
+export class TransferCollectionDTO extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
