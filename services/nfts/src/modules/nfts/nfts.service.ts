@@ -228,7 +228,7 @@ export class NftsService {
       // Create transaction request to be sent on blockchain
       const txRequest: TransactionRequest =
         await await walletService.createMintToTransaction(
-          collection.contractAddress, // Later obtain contract from DB by collection_uuid
+          collection.contractAddress,
           params.body.address,
           dbTxRecord.nonce,
         );
@@ -307,7 +307,7 @@ export class NftsService {
       // Create transaction request to be sent on blockchain
       const txRequest: TransactionRequest =
         await await walletService.createSetNftBaseUriTransaction(
-          collection.contractAddress, // Later obtain contract from DB by collection_uuid
+          collection.contractAddress,
           params.body.uri,
           dbTxRecord.nonce,
         );
@@ -369,8 +369,10 @@ export class NftsService {
       collection.contractAddress,
     );
 
+    const walletAddress = await walletService.getWalletAddress();
+    console.log('Wallet address: ', walletAddress);
     // Obtaing wallet address from .env?
-    if ('0xBa01526C6D80378A9a95f1687e9960857593983B' !== currentOwner) {
+    if (walletAddress !== currentOwner) {
       throw new NftsCodeException({
         status: 500,
         code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
