@@ -357,12 +357,8 @@ export class NftsService {
     // Collection must exist and be confirmed on blockchain
     if (!collection.exists() || collection.contractAddress == null) {
       throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
-        context: context,
-        sourceFunction,
-        errorMessage: 'Error obtaining Nft collection',
-        details: 'Collection does not exist or is not confirmed on blockchain!',
+        status: 400,
+        code: NftsErrorCode.NFT_CONTRACT_DOES_NOT_EXISTS_OR_NOT_CONFIRMED,
       });
     }
     const currentOwner = await walletService.getContractOwner(
@@ -372,12 +368,9 @@ export class NftsService {
     // Obtaing wallet address from .env?
     if ('0xBa01526C6D80378A9a95f1687e9960857593983B' !== currentOwner) {
       throw new NftsCodeException({
-        status: 500,
+        status: 400,
         code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
-        context: context,
-        sourceFunction,
-        errorMessage: 'Error calling Nft contract function',
-        details: 'Caller is not the owner',
+        errorMessage: 'Caller is not the owner',
       });
     }
     return collection;

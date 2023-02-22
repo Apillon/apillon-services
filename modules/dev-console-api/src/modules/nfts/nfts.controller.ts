@@ -79,7 +79,7 @@ export class NftsController {
     );
   }
 
-  @Get('collections/:collection_uuid/mint')
+  @Post('collections/:collection_uuid/mint')
   @Validation({ dto: MintNftDTO })
   @UseGuards(ValidationGuard)
   async mintNft(
