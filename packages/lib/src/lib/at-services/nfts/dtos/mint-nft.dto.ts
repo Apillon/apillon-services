@@ -1,5 +1,5 @@
 import { prop } from '@rawmodel/core';
-import { stringParser } from '@rawmodel/parsers';
+import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
@@ -15,7 +15,19 @@ export class MintNftDTO extends ModelBase {
       },
     ],
   })
-  public address: string;
+  public receivingAddress: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_MINT_QUANTITY_NOT_PRESENT,
+      },
+    ],
+  })
+  public quantity: number;
 
   @prop({
     parser: { resolver: stringParser() },

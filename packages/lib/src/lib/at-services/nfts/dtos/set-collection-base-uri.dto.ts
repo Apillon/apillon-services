@@ -11,7 +11,7 @@ export class SetCollectionBaseUriDTO extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_SET_BASE_URI_NOT_PRESENET,
+        code: ValidatorErrorCode.NFT_BASE_URI_NOT_PRESENT,
       },
     ],
   })

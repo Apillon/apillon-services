@@ -1,5 +1,9 @@
-import { AppEnvironment, env } from '@apillon/lib';
-import { DeployNftContractDto } from '@apillon/lib/dist/lib/at-services/nfts/dtos/deploy-nft-contract.dto';
+import {
+  AppEnvironment,
+  DeployNftContractDto,
+  MintNftDTO,
+  env,
+} from '@apillon/lib';
 import { Contract, ethers, Wallet } from 'ethers';
 import { NftTransaction } from '../../lib/nft-contract-transaction';
 import {
@@ -8,7 +12,6 @@ import {
   TransactionReceipt,
 } from '@ethersproject/providers';
 import { PayableNft } from '../../lib/contracts/payable-mint-nft';
-import { Transaction } from '../transaction/models/transaction.model';
 
 export class WalletService {
   private wallet: Wallet;
@@ -76,12 +79,12 @@ export class WalletService {
 
   async createMintToTransaction(
     contract: string,
-    address: string,
+    params: MintNftDTO,
     nonce: number,
   ) {
     return NftTransaction.createMintToTransaction(
       contract,
-      address,
+      params,
       this.provider,
       nonce,
     );

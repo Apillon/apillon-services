@@ -44,3 +44,9 @@ export enum TransactionStatus {
   VERIFIED = 3,
   FAILED = 4,
 }
+
+export enum CollectionStatus {
+  PENDING = 0,
+  DEPLOYED = 1,
+  TRANSFERED = 2,
+}

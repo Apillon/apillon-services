@@ -1,5 +1,5 @@
 import { ModelBase, prop } from '../../../base-models/base';
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   PopulateFrom,
@@ -66,6 +66,71 @@ export class DeployNftContractDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_BASE_URI_NOT_PRESENT,
+      },
+    ],
+  })
+  public baseUri: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_BASE_EXTENSION_NOT_PRESENT,
+      },
+    ],
+  })
+  public baseExtension: string;
+
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_DROP_BOOL_NOT_PRESENT,
+      },
+    ],
+  })
+  public isDrop: boolean;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_DROP_TIMESTAMP_NOT_PRESENT,
+      },
+    ],
+  })
+  public dropStart: number;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_DROP_BOOL_NOT_PRESENT,
+      },
+    ],
+  })
+  public reserve: number;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
         code: ValidatorErrorCode.NFT_DEPLOY_PROJECT_UUID_NOT_PRESENT,
       },
     ],
@@ -78,13 +143,4 @@ export class DeployNftContractDto extends ModelBase {
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
   })
   public description: string;
-
-  /**
-   * This property is programatically set and is not ment to be recieved in body. It will be overwritten.
-   */
-  @prop({
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-  })
-  public nonce: number;
 }

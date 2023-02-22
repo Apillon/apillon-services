@@ -1,4 +1,4 @@
-import { DeployNftContractDto } from '@apillon/lib/dist/lib/at-services/nfts/dtos/deploy-nft-contract.dto';
+import { DeployNftContractDto, MintNftDTO } from '@apillon/lib';
 import { Contract, ContractFactory, ethers, UnsignedTransaction } from 'ethers';
 import { PayableNft } from './contracts/payable-mint-nft';
 import { Injectable, Scope } from '@nestjs/common';
@@ -31,10 +31,17 @@ export class NftTransaction {
 
     const contractData: TransactionRequest =
       await nftContract.getDeployTransaction(
-        params.symbol,
         params.name,
-        params.maxSupply,
+        params.symbol,
+        params.baseUri,
+        params.baseExtension,
+        [params.isDrop, false, false],
         TransactionUtils.convertBaseToGwei(params.mintPrice),
+        params.dropStart,
+        params.maxSupply,
+        params.reserve,
+        walletAddress,
+        5,
       );
 
     const chainId = (await provider.getNetwork()).chainId;
@@ -114,7 +121,7 @@ export class NftTransaction {
     const nftContract: Contract = new Contract(contract, PayableNft.abi);
 
     const contractData: UnsignedTransaction =
-      await nftContract.populateTransaction.setBaseTokenURI(uri);
+      await nftContract.populateTransaction.setBaseURI(uri);
 
     const chainId = (await provider.getNetwork()).chainId;
     const txCount = await provider.getTransactionCount(walletAddress);
@@ -142,18 +149,21 @@ export class NftTransaction {
    */
   static async createMintToTransaction(
     contract: string,
-    address: string,
+    params: MintNftDTO,
     provider: BaseProvider,
     nonce: number,
   ) {
     console.log(
-      `Creating NFT (NFT contract=${contract}) mint transaction (toAddress=${address}).`,
+      `Creating NFT (NFT contract=${contract}) mint transaction (toAddress=${params.receivingAddress}).`,
     );
     const walletAddress = '0xBa01526C6D80378A9a95f1687e9960857593983B';
     const nftContract: Contract = new Contract(contract, PayableNft.abi);
 
     const contractData: UnsignedTransaction =
-      await nftContract.populateTransaction.mintTo(address);
+      await nftContract.populateTransaction.ownerMint(
+        params.quantity,
+        params.receivingAddress,
+      );
 
     const chainId = (await provider.getNetwork()).chainId;
     const txCount = await provider.getTransactionCount(walletAddress);

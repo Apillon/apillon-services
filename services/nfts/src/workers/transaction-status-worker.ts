@@ -1,6 +1,10 @@
 import { AppEnvironment, Context, env, SqlModelStatus } from '@apillon/lib';
 import { Job, ServerlessWorker, WorkerDefinition } from '@apillon/workers-lib';
-import { TransactionStatus, TransactionType } from '../config/types';
+import {
+  CollectionStatus,
+  TransactionStatus,
+  TransactionType,
+} from '../config/types';
 import { Collection } from '../modules/nfts/models/collection.model';
 import { Transaction } from '../modules/transaction/models/transaction.model';
 import { WalletService } from '../modules/wallet/wallet.service';
@@ -71,22 +75,32 @@ export class TransactionStatusWorker extends ServerlessWorker {
   }
 
   private async setCollectionContractAddress(tx: Transaction, txReceipt) {
-    if (
-      tx.transactionType === TransactionType.DEPLOY_CONTRACT &&
-      tx.transactionStatus === TransactionStatus.FINISHED
-    ) {
+    if (tx.transactionStatus === TransactionStatus.FINISHED) {
       const collection: Collection = await new Collection(
         {},
         this.context,
       ).populateById(tx.refId);
-
-      collection.contractAddress = txReceipt.contractAddress;
-      collection.transactionHash = txReceipt.transactionHash;
-      collection.status = SqlModelStatus.ACTIVE;
-      await collection.update();
-      console.log(
-        `Collection (id=${collection.id}) updated (contractAddress=${collection.contractAddress})`,
-      );
+      if (tx.transactionType === TransactionType.DEPLOY_CONTRACT) {
+        collection.collectionStatus = CollectionStatus.DEPLOYED;
+        collection.contractAddress = txReceipt.contractAddress;
+      } else if (
+        tx.transactionType === TransactionType.TRANSFER_CONTRACT_OWNERSHIP
+      ) {
+        collection.collectionStatus = CollectionStatus.TRANSFERED;
+      }
+      if (collection.isChanged()) {
+        collection.transactionHash = txReceipt.transactionHash;
+        collection.status = SqlModelStatus.ACTIVE;
+        await collection.update();
+        console.log(
+          `Collection (id=${collection.id}) updated 
+          (
+            contractAddress=${collection.contractAddress}, 
+            txHash=${collection.transactionHash}, 
+            collectionStatus=${collection.collectionStatus}
+          )`,
+        );
+      }
     }
   }
 

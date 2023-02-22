@@ -11,6 +11,7 @@ import {
   TransferCollectionDTO,
 } from '@apillon/lib';
 import { TransactionRequest } from '@ethersproject/providers';
+import { FormatTypes, Interface } from 'ethers/lib/utils';
 import { v4 as uuidV4 } from 'uuid';
 import {
   Chains,
@@ -40,12 +41,17 @@ export class NftsService {
   ) {
     console.log(`Deploying NFT: ${JSON.stringify(params.body)}`);
     const walletService = new WalletService();
+    const walletAddress = await walletService.getWalletAddress();
 
     //Create collection object
     const collection: Collection = new Collection(
       params.body,
       context,
     ).populate({
+      isRevokable: false,
+      isSoulbound: false,
+      royaltiesFees: 5,
+      royaltiesAddress: walletAddress,
       collection_uuid: uuidV4(),
       status: SqlModelStatus.INCOMPLETE,
     });
@@ -206,7 +212,7 @@ export class NftsService {
     context: ServiceContext,
   ) {
     console.log(
-      `Minting NFT Collection to wallet address: ${params.body.address}`,
+      `Minting NFT Collection to wallet address: ${params.body.receivingAddress}`,
     );
     const walletService: WalletService = new WalletService();
     const collection: Collection = await NftsService.checkAndGetCollection(
@@ -229,7 +235,7 @@ export class NftsService {
       const txRequest: TransactionRequest =
         await await walletService.createMintToTransaction(
           collection.contractAddress,
-          params.body.address,
+          params.body,
           dbTxRecord.nonce,
         );
 
