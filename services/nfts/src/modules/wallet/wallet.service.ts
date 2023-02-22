@@ -115,10 +115,7 @@ export class WalletService {
     return await nftContract.owner();
   }
 
-  // async getCollectionNfts(
-  //   contractAddress: string,
-  //   nftTransactions: Transaction[],
-  // ) {
-  //   const nftContract: Contract = new Contract(contractAddress, PayableNft.abi);
-  // }
+  async getWalletAddress() {
+    return this.wallet.getAddress();
+  }
 }
