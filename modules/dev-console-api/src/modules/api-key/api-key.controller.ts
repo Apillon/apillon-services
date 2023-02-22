@@ -1,5 +1,5 @@
 import {
-  ApiKeyQueryFilter,
+  ApiKeyQueryFilterDto,
   ApiKeyRoleBaseDto,
   CreateApiKeyDto,
   DefaultUserRole,
@@ -79,11 +79,11 @@ export class ApiKeyController {
     { role: DefaultUserRole.PROJECT_ADMIN },
     { role: DefaultUserRole.PROJECT_USER },
   )
-  @Validation({ dto: ApiKeyQueryFilter, validateFor: ValidateFor.QUERY })
+  @Validation({ dto: ApiKeyQueryFilterDto, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
   async getApiKeyList(
     @Ctx() context: DevConsoleApiContext,
-    @Query() query: ApiKeyQueryFilter,
+    @Query() query: ApiKeyQueryFilterDto,
   ) {
     return await this.apiKeyService.getApiKeyList(context, query);
   }

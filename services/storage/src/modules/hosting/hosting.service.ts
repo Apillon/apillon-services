@@ -1,9 +1,11 @@
 import {
+  ApillonHostingApiCreateS3UrlsForUploadDto,
   AppEnvironment,
   AWS_S3,
-  CreateWebPageDto,
+  CreateS3UrlsForUploadDto,
+  CreateWebsiteDto,
   DeploymentQueryFilter,
-  DeployWebPageDto,
+  DeployWebsiteDto,
   env,
   Lmas,
   LogType,
@@ -12,8 +14,9 @@ import {
   Scs,
   SerializeFor,
   ServiceName,
-  WebPageQueryFilter,
-  WebPagesQuotaReachedQueryFilter,
+  ValidatorErrorCode,
+  WebsiteQueryFilter,
+  WebsitesQuotaReachedQueryFilter,
   writeLog,
 } from '@apillon/lib';
 import {
@@ -23,229 +26,175 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { v4 as uuidV4 } from 'uuid';
-import {
-  BucketType,
-  DeploymentEnvironment,
-  StorageErrorCode,
-} from '../../config/types';
+import { DeploymentEnvironment, StorageErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
 import { deleteDirectory } from '../../lib/delete-directory';
 import {
   StorageCodeException,
   StorageValidationException,
 } from '../../lib/exceptions';
-import { DeployWebPageWorker } from '../../workers/deploy-web-page-worker';
+import { DeployWebsiteWorker } from '../../workers/deploy-website-worker';
 import { WorkerName } from '../../workers/worker-executor';
 import { Bucket } from '../bucket/models/bucket.model';
 import { Directory } from '../directory/models/directory.model';
 import { FileUploadRequest } from '../storage/models/file-upload-request.model';
 import { File } from '../storage/models/file.model';
+import { StorageService } from '../storage/storage.service';
 import { Deployment } from './models/deployment.model';
-import { WebPage } from './models/web-page.model';
+import { Website } from './models/website.model';
 
 export class HostingService {
   //#region web page CRUD
-  static async listWebPages(
-    event: { query: WebPageQueryFilter },
+  static async listWebsites(
+    event: { query: WebsiteQueryFilter },
     context: ServiceContext,
   ) {
-    return await new WebPage(
+    return await new Website(
       { project_uuid: event.query.project_uuid },
       context,
-    ).getList(context, new WebPageQueryFilter(event.query));
+    ).getList(context, new WebsiteQueryFilter(event.query));
   }
 
   static async listDomains(event: any, context: ServiceContext) {
-    return await new WebPage({}, context).listDomains(context);
+    return await new Website({}, context).listDomains(context);
   }
 
-  static async getWebPage(event: { id: number }, context: ServiceContext) {
-    const webPage: WebPage = await new WebPage({}, context).populateById(
+  static async getWebsite(event: { id: any }, context: ServiceContext) {
+    const website: Website = await new Website({}, context).populateById(
       event.id,
     );
 
-    if (!webPage.exists()) {
+    if (!website.exists()) {
       throw new StorageCodeException({
-        code: StorageErrorCode.WEB_PAGE_NOT_FOUND,
+        code: StorageErrorCode.WEBSITE_NOT_FOUND,
         status: 404,
       });
     }
-    webPage.canAccess(context);
+    website.canAccess(context);
 
     //Get buckets
-    await webPage.populateBucketsAndLink();
+    await website.populateBucketsAndLink();
 
-    return webPage.serialize(SerializeFor.PROFILE);
+    return website.serialize(SerializeFor.PROFILE);
   }
 
-  static async createWebPage(
-    event: { body: CreateWebPageDto },
+  static async createWebsite(
+    event: { body: CreateWebsiteDto },
     context: ServiceContext,
   ): Promise<any> {
-    const webPage: WebPage = new WebPage(event.body, context);
+    const website: Website = new Website(event.body, context);
 
     //check max web pages quota
-    const numOfWebPages = await webPage.getNumOfWebPages();
-    const maxWebPagesQuota = await new Scs(context).getQuota({
-      quota_id: QuotaCode.MAX_WEB_PAGES,
-      project_uuid: webPage.project_uuid,
+    const numOfWebsites = await website.getNumOfWebsites();
+    const maxWebsitesQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_WEBSITES,
+      project_uuid: website.project_uuid,
       object_uuid: context.user.user_uuid,
     });
 
-    if (numOfWebPages >= maxWebPagesQuota.value) {
+    if (numOfWebsites >= maxWebsitesQuota.value) {
       throw new StorageCodeException({
-        code: StorageErrorCode.MAX_WEB_PAGES_REACHED,
+        code: StorageErrorCode.MAX_WEBSITES_REACHED,
         status: 400,
       });
     }
 
-    //Initialize buckets
-    const bucket: Bucket = new Bucket(
-      {
-        bucket_uuid: uuidV4(),
-        project_uuid: webPage.project_uuid,
-        bucketType: BucketType.HOSTING,
-        name: webPage.name,
-      },
-      context,
-    );
-    try {
-      await bucket.validate();
-    } catch (err) {
-      await bucket.handle(err);
-      if (!bucket.isValid()) throw new StorageValidationException(bucket);
-    }
-    const stagingBucket: Bucket = new Bucket(
-      {
-        bucket_uuid: uuidV4(),
-        project_uuid: webPage.project_uuid,
-        bucketType: BucketType.HOSTING,
-        name: webPage.name + '_staging',
-      },
-      context,
-    );
-    try {
-      await stagingBucket.validate();
-    } catch (err) {
-      await stagingBucket.handle(err);
-      if (!stagingBucket.isValid())
-        throw new StorageValidationException(stagingBucket);
-    }
-    const productionBucket: Bucket = new Bucket(
-      {
-        bucket_uuid: uuidV4(),
-        project_uuid: webPage.project_uuid,
-        bucketType: BucketType.HOSTING,
-        name: webPage.name + '_production',
-      },
-      context,
-    );
-    try {
-      await productionBucket.validate();
-    } catch (err) {
-      await productionBucket.handle(err);
-      if (!productionBucket.isValid())
-        throw new StorageValidationException(productionBucket);
-    }
-
-    const conn = await context.mysql.start();
-
-    try {
-      //Insert buckets
-      await bucket.insert(SerializeFor.INSERT_DB, conn);
-      await stagingBucket.insert(SerializeFor.INSERT_DB, conn);
-      await productionBucket.insert(SerializeFor.INSERT_DB, conn);
-      //Populate webPage
-      webPage.populate({
-        bucket_id: bucket.id,
-        stagingBucket_id: stagingBucket.id,
-        productionBucket_id: productionBucket.id,
-        bucket: bucket,
-        stagingBucket: stagingBucket,
-        productionBucket: productionBucket,
-      });
-      //Insert web page record
-      await webPage.insert(SerializeFor.INSERT_DB, conn);
-      await context.mysql.commit(conn);
-    } catch (err) {
-      await context.mysql.rollback(conn);
-
-      await new Lmas().writeLog({
-        context,
-        project_uuid: event.body.project_uuid,
-        logType: LogType.ERROR,
-        message: 'Error creating new web page',
-        location: 'HostingService/createWebPage',
-        service: ServiceName.STORAGE,
-        data: {
-          error: err,
-          webPage: webPage.serialize(),
-        },
-      });
-
-      throw err;
-    }
+    await website.createNewWebsite(context);
 
     await new Lmas().writeLog({
       context,
       project_uuid: event.body.project_uuid,
       logType: LogType.INFO,
       message: 'New web page created',
-      location: 'HostingService/createWebPage',
+      location: 'HostingService/createWebsite',
       service: ServiceName.STORAGE,
-      data: webPage.serialize(),
+      data: website.serialize(),
     });
 
-    return webPage.serialize(SerializeFor.PROFILE);
+    return website.serialize(SerializeFor.PROFILE);
   }
 
-  static async updateWebPage(
+  static async updateWebsite(
     event: { id: number; data: any },
     context: ServiceContext,
   ): Promise<any> {
-    const webPage: WebPage = await new WebPage({}, context).populateById(
+    const website: Website = await new Website({}, context).populateById(
       event.id,
     );
 
-    if (!webPage.exists()) {
+    if (!website.exists()) {
       throw new StorageCodeException({
-        code: StorageErrorCode.WEB_PAGE_NOT_FOUND,
+        code: StorageErrorCode.WEBSITE_NOT_FOUND,
         status: 404,
       });
     }
-    webPage.canModify(context);
+    website.canModify(context);
 
-    webPage.populate(event.data, PopulateFrom.PROFILE);
+    website.populate(event.data, PopulateFrom.PROFILE);
 
     try {
-      await webPage.validate();
+      await website.validate();
     } catch (err) {
-      await webPage.handle(err);
-      if (!webPage.isValid()) throw new StorageValidationException(webPage);
+      await website.handle(err);
+      if (!website.isValid()) throw new StorageValidationException(website);
     }
 
-    await webPage.update();
-    return webPage.serialize(SerializeFor.PROFILE);
+    await website.update();
+    return website.serialize(SerializeFor.PROFILE);
   }
 
-  static async maxWebPagesQuotaReached(
-    event: { query: WebPagesQuotaReachedQueryFilter },
+  static async maxWebsitesQuotaReached(
+    event: { query: WebsitesQuotaReachedQueryFilter },
     context: ServiceContext,
   ) {
-    const webPage: WebPage = new WebPage(
+    const website: Website = new Website(
       { project_uuid: event.query.project_uuid },
       context,
     );
 
-    const numOfWebPages = await webPage.getNumOfWebPages();
-    const maxWebPagesQuota = await new Scs(context).getQuota({
-      quota_id: QuotaCode.MAX_WEB_PAGES,
-      project_uuid: webPage.project_uuid,
+    const numOfWebsites = await website.getNumOfWebsites();
+    const maxWebsitesQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_WEBSITES,
+      project_uuid: website.project_uuid,
       object_uuid: context.user.user_uuid,
     });
 
-    return { maxWebPagesQuotaReached: numOfWebPages >= maxWebPagesQuota.value };
+    return { maxWebsitesQuotaReached: numOfWebsites >= maxWebsitesQuota.value };
+  }
+
+  //#endregion
+
+  //#region upload files to website
+
+  static async generateMultipleS3UrlsForUpload(
+    event: { body: ApillonHostingApiCreateS3UrlsForUploadDto },
+    context: ServiceContext,
+  ): Promise<any> {
+    //get website and bucket uuid
+    const website = await new Website({}, context).populateById(
+      event.body.website_uuid,
+    );
+
+    if (!website.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.WEBSITE_NOT_FOUND,
+        status: 404,
+      });
+    }
+
+    website.canAccess(context);
+
+    await website.populateBucketsAndLink();
+
+    const param: CreateS3UrlsForUploadDto =
+      new CreateS3UrlsForUploadDto().populate({
+        ...event.body,
+        bucket_uuid: website.bucket.bucket_uuid,
+      });
+    return await StorageService.generateMultipleS3UrlsForUpload(
+      { body: param },
+      context,
+    );
   }
 
   //#endregion
@@ -258,27 +207,36 @@ export class HostingService {
    * @param context
    * @returns
    */
-  static async deployWebPage(
-    event: { body: DeployWebPageDto },
+  static async deployWebsite(
+    event: { body: DeployWebsiteDto },
     context: ServiceContext,
   ): Promise<any> {
-    const webPage: WebPage = await new WebPage({}, context).populateById(
-      event.body.webPage_id,
+    const website: Website = await new Website({}, context).populateById(
+      event.body.website_id,
     );
 
-    if (!webPage.exists()) {
+    if (!website.exists()) {
       throw new StorageCodeException({
-        code: StorageErrorCode.WEB_PAGE_NOT_FOUND,
+        code: StorageErrorCode.WEBSITE_NOT_FOUND,
         status: 404,
       });
     }
-    webPage.canModify(context);
+    website.canModify(context);
+
+    //Validate environment
+    if (!DeploymentEnvironment[event.body.environment]) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.DEPLOYMENT_ENVIRONMENT_NOT_VALID,
+        status: 400,
+      });
+    }
 
     //Check if there are files in source bucket
     const sourceBucket: Bucket = await new Bucket({}, context).populateById(
-      event.body.environment == DeploymentEnvironment.STAGING
-        ? webPage.bucket_id
-        : webPage.stagingBucket_id,
+      event.body.environment == DeploymentEnvironment.STAGING ||
+        event.body.environment == DeploymentEnvironment.DIRECT_TO_PRODUCTION
+        ? website.bucket_id
+        : website.stagingBucket_id,
     );
     if (!(await sourceBucket.containsFiles())) {
       throw new StorageCodeException({
@@ -291,20 +249,23 @@ export class HostingService {
     const lastStagingDeployment: Deployment = await new Deployment(
       {},
       context,
-    ).populateLastDeployment(webPage.id, DeploymentEnvironment.STAGING);
+    ).populateLastDeployment(website.id, DeploymentEnvironment.STAGING);
 
     const lastProductionDeployment: Deployment = await new Deployment(
       {},
       context,
-    ).populateLastDeployment(webPage.id, DeploymentEnvironment.PRODUCTION);
+    ).populateLastDeployment(website.id, DeploymentEnvironment.PRODUCTION);
 
     let deploymentNumber = 1;
     if (event.body.environment == DeploymentEnvironment.STAGING) {
       if (lastStagingDeployment.exists()) {
         deploymentNumber = lastStagingDeployment.number + 1;
       }
-    } else if (event.body.environment == DeploymentEnvironment.PRODUCTION) {
-      if (lastStagingDeployment.cid == lastProductionDeployment.cid) {
+    } else {
+      if (
+        event.body.environment == DeploymentEnvironment.PRODUCTION &&
+        lastStagingDeployment.cid == lastProductionDeployment.cid
+      ) {
         throw new StorageCodeException({
           code: StorageErrorCode.NO_CHANGES_TO_DEPLOY,
           status: 400,
@@ -317,11 +278,11 @@ export class HostingService {
 
     //Create deployment record
     const d: Deployment = new Deployment({}, context).populate({
-      webPage_id: webPage.id,
+      website_id: website.id,
       bucket_id:
         event.body.environment == DeploymentEnvironment.STAGING
-          ? webPage.stagingBucket_id
-          : webPage.productionBucket_id,
+          ? website.stagingBucket_id
+          : website.productionBucket_id,
       environment: event.body.environment,
       number: deploymentNumber,
     });
@@ -349,31 +310,34 @@ export class HostingService {
       };
       const parameters = {
         deployment_id: d.id,
+        clearBucketForUpload: event.body.clearBucketForUpload,
       };
       const wd = new WorkerDefinition(
         serviceDef,
-        WorkerName.DEPLOY_WEB_PAGE_WORKER,
+        WorkerName.DEPLOY_WEBSITE_WORKER,
         {
           parameters,
         },
       );
 
-      const worker = new DeployWebPageWorker(
+      const worker = new DeployWebsiteWorker(
         wd,
         context,
         QueueWorkerType.EXECUTOR,
       );
       await worker.runExecutor({
         deployment_id: d.id,
+        clearBucketForUpload: event.body.clearBucketForUpload,
       });
     } else {
       //send message to SQS
       await sendToWorkerQueue(
         env.STORAGE_AWS_WORKER_SQS_URL,
-        WorkerName.DEPLOY_WEB_PAGE_WORKER,
+        WorkerName.DEPLOY_WEBSITE_WORKER,
         [
           {
             deployment_id: d.id,
+            clearBucketForUpload: event.body.clearBucketForUpload,
           },
         ],
         null,
@@ -410,7 +374,7 @@ export class HostingService {
     context: ServiceContext,
   ) {
     return await new Deployment(
-      { webPage_id: event.query.webPage_id },
+      { website_id: event.query.website_id },
       context,
     ).getList(context, new DeploymentQueryFilter(event.query));
   }

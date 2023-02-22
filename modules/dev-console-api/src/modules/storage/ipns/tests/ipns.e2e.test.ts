@@ -14,7 +14,7 @@ import * as request from 'supertest';
 import { setupTest } from '../../../../../test/helpers/setup';
 import { Project } from '../../../project/models/project.model';
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';
-import { env } from '@apillon/lib';
+import { env, SqlModelStatus } from '@apillon/lib';
 
 describe('Ipns tests', () => {
   let stage: Stage;
@@ -102,6 +102,7 @@ describe('Ipns tests', () => {
       expect(response.status).toBe(201);
       expect(response.body.data.id).toBeTruthy();
       expect(response.body.data.name).toBeTruthy();
+      expect(response.body.data.status).toBe(SqlModelStatus.INCOMPLETE);
 
       const newIpns: Ipns = await new Ipns(
         {},
@@ -158,8 +159,6 @@ describe('Ipns tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.id).toBeTruthy();
-      expect(response.body.data.ipnsName).toBeTruthy();
-      expect(response.body.data.ipnsValue).toBeTruthy();
 
       const publishedIpns: Ipns = await new Ipns(
         {},
@@ -168,6 +167,7 @@ describe('Ipns tests', () => {
       expect(publishedIpns.exists()).toBeTruthy();
       expect(publishedIpns.ipnsName).toBeTruthy();
       expect(publishedIpns.ipnsValue).toBeTruthy();
+      expect(publishedIpns.status).toBe(SqlModelStatus.ACTIVE);
 
       publishedIpnsName = publishedIpns.ipnsName;
     });

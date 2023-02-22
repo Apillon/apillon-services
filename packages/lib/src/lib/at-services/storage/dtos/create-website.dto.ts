@@ -1,4 +1,4 @@
-import { booleanParser, integerParser } from '@rawmodel/parsers';
+import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   PopulateFrom,
@@ -7,38 +7,46 @@ import {
 } from '../../../../config/types';
 import { ModelBase, prop } from '../../../base-models/base';
 
-export class DeployWebPageDto extends ModelBase {
+export class CreateWebsiteDto extends ModelBase {
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.DEPLOY_WEB_PAGE_ID_NOT_PRESENT,
+        code: ValidatorErrorCode.WEBSITE_PROJECT_UUID_NOT_PRESENT,
       },
     ],
   })
-  public webPage_id: number;
+  public project_uuid: string;
 
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.DEPLOY_ENVIRONMENT_NOT_PRESENT,
+        code: ValidatorErrorCode.WEBSITE_NAME_NOT_PRESENT,
       },
     ],
   })
-  public environment: number;
+  public name: string;
 
   @prop({
-    parser: { resolver: booleanParser() },
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [],
   })
-  public directDeploy: boolean;
+  public description: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+  })
+  public domain: string;
 }

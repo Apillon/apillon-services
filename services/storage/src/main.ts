@@ -10,6 +10,8 @@ export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
     [StorageEventType.REQUEST_S3_SIGNED_URL_FOR_UPLOAD]:
       StorageService.generateS3SignedUrlForUpload,
+    [StorageEventType.REQUEST_S3_SIGNED_URLS_FOR_UPLOAD]:
+      StorageService.generateMultipleS3UrlsForUpload,
     [StorageEventType.END_FILE_UPLOAD_SESSION]:
       StorageService.endFileUploadSession,
     [StorageEventType.END_FILE_UPLOAD]: StorageService.endFileUpload,
@@ -49,15 +51,18 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.IPNS_UPDATE]: IpnsService.updateIpns,
     [StorageEventType.IPNS_DELETE]: IpnsService.deleteIpns,
     [StorageEventType.IPNS_PUBLISH]: IpnsService.publishIpns,
+    [StorageEventType.IPNS_GET]: IpnsService.getIpns,
 
-    [StorageEventType.WEB_PAGE_LIST]: HostingService.listWebPages,
-    [StorageEventType.WEB_PAGE_GET]: HostingService.getWebPage,
-    [StorageEventType.WEB_PAGE_CREATE]: HostingService.createWebPage,
-    [StorageEventType.WEB_PAGE_UPDATE]: HostingService.updateWebPage,
-    [StorageEventType.WEB_PAGE_DEPLOY]: HostingService.deployWebPage,
-    [StorageEventType.WEB_PAGE_LIST_DOMAINS]: HostingService.listDomains,
-    [StorageEventType.WEB_PAGE_QUOTA_REACHED]:
-      HostingService.maxWebPagesQuotaReached,
+    [StorageEventType.WEBSITE_LIST]: HostingService.listWebsites,
+    [StorageEventType.WEBSITE_GET]: HostingService.getWebsite,
+    [StorageEventType.WEBSITE_CREATE]: HostingService.createWebsite,
+    [StorageEventType.WEBSITE_UPDATE]: HostingService.updateWebsite,
+    [StorageEventType.WEBSITE_DEPLOY]: HostingService.deployWebsite,
+    [StorageEventType.WEBSITE_LIST_DOMAINS]: HostingService.listDomains,
+    [StorageEventType.WEBSITE_QUOTA_REACHED]:
+      HostingService.maxWebsitesQuotaReached,
+    [StorageEventType.REQUEST_S3_SIGNED_URLS_FOR_WEBSITE_UPLOAD]:
+      HostingService.generateMultipleS3UrlsForUpload,
 
     [StorageEventType.DEPLOYMENT_GET]: HostingService.getDeployment,
     [StorageEventType.DEPLOYMENT_LIST]: HostingService.listDeployments,

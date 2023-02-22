@@ -16,6 +16,10 @@ export enum AmsEventType {
   API_KEY_ROLE_REMOVE = 'api-key-role-remove',
   GET_API_KEY_ROLES = 'get-api-key-roles',
   GET_API_KEY = 'get-api-key',
+  DISCORD_LINK = 'discord-link',
+  DISCORD_UNLINK = 'discord-unlink',
+  DISCORD_USER_LIST = 'discord-user-list',
+  GET_OAUTH_LINKS = 'get-oauth-links',
 }
 
 export enum LmasEventType {
@@ -28,6 +32,8 @@ export enum LmasEventType {
 
 export enum StorageEventType {
   REQUEST_S3_SIGNED_URL_FOR_UPLOAD = 'request-s3-signed-url-for-upload',
+  REQUEST_S3_SIGNED_URLS_FOR_UPLOAD = 'request-s3-signed-urls-for-upload',
+  REQUEST_S3_SIGNED_URLS_FOR_WEBSITE_UPLOAD = 'request-s3-signed-urls-for-website-upload',
   END_FILE_UPLOAD_SESSION = 'end-file-upload-session',
   END_FILE_UPLOAD = 'end-file-upload',
   CREATE_BUCKET = 'create-bucket',
@@ -57,13 +63,14 @@ export enum StorageEventType {
   IPNS_UPDATE = 'update-ipns',
   IPNS_DELETE = 'delete-ipns',
   IPNS_PUBLISH = 'publish-ipns',
-  WEB_PAGE_LIST = 'list-web-pages',
-  WEB_PAGE_CREATE = 'create-web-page',
-  WEB_PAGE_UPDATE = 'update-web-page',
-  WEB_PAGE_GET = 'get-web-page',
-  WEB_PAGE_DEPLOY = 'deploy-web-page',
-  WEB_PAGE_LIST_DOMAINS = 'list-web-page-domains',
-  WEB_PAGE_QUOTA_REACHED = 'web-pages-quota-reached',
+  IPNS_GET = 'get-ipns',
+  WEBSITE_LIST = 'list-websites',
+  WEBSITE_CREATE = 'create-website',
+  WEBSITE_UPDATE = 'update-website',
+  WEBSITE_GET = 'get-website',
+  WEBSITE_DEPLOY = 'deploy-website',
+  WEBSITE_LIST_DOMAINS = 'list-website-domains',
+  WEBSITE_QUOTA_REACHED = 'websites-quota-reached',
   BUCKET_CLEAR_CONTENT = 'clear-bucket-content',
   DEPLOYMENT_GET = 'get-deployment',
   DEPLOYMENT_LIST = 'list-deployment',
@@ -158,6 +165,7 @@ export enum SqlModelStatus {
 export enum AttachedServiceType {
   AUTHENTICATION = 1,
   STORAGE = 2,
+  SYSTEM = 999,
 }
 
 /**
@@ -289,6 +297,7 @@ export enum BadRequestErrorCode {
   INVALID_QUERY_PARAMETERS = 40000002,
   MISSING_AUTHORIZATION_HEADER = 40000003,
   INVALID_AUTHORIZATION_HEADER = 40000004,
+  THIRD_PARTY_SERVICE_CONNECTION_FAILED = 40000005,
 }
 
 export enum ValidatorErrorCode {
@@ -328,10 +337,12 @@ export enum ValidatorErrorCode {
   USER_OAUTH_VERIFIER_NOT_PRESENT = 42200033,
   TWEET_ID_NOT_PRESENT = 42200034,
   PRODUCT_ID_NOT_PRESENT = 42200035,
-  WEB_PAGE_PROJECT_UUID_NOT_PRESENT = 42200036,
-  WEB_PAGE_NAME_NOT_PRESENT = 42200037,
-  DEPLOY_WEB_PAGE_ID_NOT_PRESENT = 42200038,
+  WEBSITE_PROJECT_UUID_NOT_PRESENT = 42200036,
+  WEBSITE_NAME_NOT_PRESENT = 42200037,
+  DEPLOY_WEBSITE_ID_NOT_PRESENT = 42200038,
   DEPLOY_ENVIRONMENT_NOT_PRESENT = 42200039,
+  FILES_PROPERTY_NOT_PRESENT = 42200040,
+  FILES_PROPERTY_EMPTY = 42200041,
 }
 
 /**
@@ -375,5 +386,12 @@ export enum QuotaCode {
   MAX_FILE_BUCKETS = 5,
   MAX_BUCKET_SIZE = 6,
   MAX_ATTESTED_USERS = 7,
-  MAX_WEB_PAGES = 8,
+  MAX_WEBSITES = 8,
+}
+
+/* OAuth link type*/
+export enum OauthLinkType {
+  DISCORD = 1,
+  TWEETER = 2,
+  GITHUB = 3,
 }

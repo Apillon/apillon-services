@@ -1,5 +1,6 @@
 import {
   ApillonApiCreateS3SignedUrlForUploadDto,
+  ApillonApiCreateS3UrlsForUploadDto,
   ApillonApiDirectoryContentQueryFilter,
   AttachedServiceType,
   DefaultApiKeyRole,
@@ -27,6 +28,9 @@ import { StorageService } from './storage.service';
 export class StorageController {
   constructor(private storageService: StorageService) {}
 
+  /*
+  DEPRECATED
+
   @Post(':bucketUuid/upload')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_EXECUTE,
@@ -46,9 +50,30 @@ export class StorageController {
       bucket_uuid,
       body,
     );
+  }*/
+
+  @Post(':bucketUuid/upload')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_EXECUTE,
+    serviceType: AttachedServiceType.STORAGE,
+  })
+  @UseGuards(AuthGuard)
+  @Validation({ dto: ApillonApiCreateS3UrlsForUploadDto })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async createS3SignedUrlsForUpload(
+    @Ctx() context: ApillonApiContext,
+    @Param('bucketUuid') bucket_uuid: string,
+    @Body()
+    body: ApillonApiCreateS3UrlsForUploadDto,
+  ) {
+    return await this.storageService.createS3SignedUrlsForUpload(
+      context,
+      bucket_uuid,
+      body,
+    );
   }
 
-  @Post(':bucketUuid/file-upload/:sessionUuid/end')
+  @Post(':bucketUuid/upload/:sessionUuid/end')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_EXECUTE,
     serviceType: AttachedServiceType.STORAGE,

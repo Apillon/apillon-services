@@ -6,5 +6,6 @@ export * from './lib/helpers/user';
 export * from './lib/helpers/referral';
 export * from './lib/helpers/migrations';
 export * from './lib/helpers/setup-context-and-sql';
+export * from './lib/helpers/api-key';
 export * from './lib/interfaces/database-state.interface';
 export * from './lib/interfaces/stage.interface';

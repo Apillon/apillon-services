@@ -20,6 +20,16 @@
         "type": "PLAINTEXT",
         "name": "SERVICE_PATH",
         "value": "services/config/"
+      },
+      {
+        "type": "PLAINTEXT",
+        "name": "DB_MIGRATIONS",
+        "value": "true"
+      },
+      {
+        "type": "PLAINTEXT",
+        "name": "AWS_SECRETS_ID",
+        "value": "apillon-development"
       }
     ],
     "type": "LINUX_CONTAINER"
@@ -56,5 +66,16 @@
       "streamName": "apillon-services-dev"
     }
   },
-  "encryptionKey": "arn:aws:kms:eu-west-1:018021943180:alias/aws/s3"
+  "encryptionKey": "arn:aws:kms:eu-west-1:018021943180:alias/aws/s3",
+  "vpcConfig": {
+    "subnets": [
+      "subnet-0bea6dd0c2a5ecc61",
+      "subnet-085447b898128fc92",
+      "subnet-0ed148d48e931f5fa"
+    ],
+    "vpcId": "vpc-077437e060881265d",
+    "securityGroupIds": [
+      "sg-091bc1ce7424a7921"
+    ]
+  }
 }
