@@ -330,6 +330,10 @@ export interface IEnv {
    */
   NFTS_AWS_WORKER_SQS_URL: string;
   NFTS_AWS_WORKER_LAMBDA_NAME: string;
+  /** DISCORD */
+  DISCORD_CLIENT_ID: string;
+  DISCORD_CLIENT_SECRET: string;
+  DISCORD_REDIRECT_URI: string;
 }
 
 // dotenv.config();
@@ -584,6 +588,10 @@ export let env: IEnv = {
     process.env['NFTS_MOONBEAM_MAINNET_PRIVATEKEY'],
   NFTS_AWS_WORKER_SQS_URL: process.env['NFTS_AWS_WORKER_SQS_URL'],
   NFTS_AWS_WORKER_LAMBDA_NAME: process.env['NFTS_AWS_WORKER_LAMBDA_NAME'],
+  /** DISCORD */
+  DISCORD_CLIENT_ID: process.env['DISCORD_CLIENT_ID'] || '',
+  DISCORD_CLIENT_SECRET: process.env['DISCORD_CLIENT_SECRET'] || '',
+  DISCORD_REDIRECT_URI: process.env['DISCORD_REDIRECT_URI'] || '',
 };
 
 export let isEnvReady = false;

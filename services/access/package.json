@@ -23,7 +23,8 @@
     "db-unseed": "node -r ts-node/register ./src/scripts/db/unseed-db",
     "db-rebuild": "node -r ts-node/register ./src/scripts/db/rebuild-db",
     "db-rebuild-test": "node -r ts-node/register ./src/scripts/db/rebuild-test-db",
-    "db-upgrade:ci": "node -r ts-node/register ./src/scripts/db/upgrade-db --F && node -r ts-node/register ./src/scripts/db/seed-db --F "
+    "db-upgrade:ci": "node -r ts-node/register ./src/scripts/db/upgrade-db --F && node -r ts-node/register ./src/scripts/db/seed-db --F ",
+    "generate-system-key": "node -r ts-node/register ./src/scripts/utils/generate-system-api-key"
   },
   "dependencies": {
     "@apillon/lib": "*",
@@ -32,7 +33,8 @@
     "@rawmodel/parsers": "^3.3.4",
     "@rawmodel/validators": "^3.3.4",
     "@types/uuid": "^8.3.4",
-    "bcryptjs": "^2.4.3"
+    "bcryptjs": "^2.4.3",
+    "axios": "^1.2.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",

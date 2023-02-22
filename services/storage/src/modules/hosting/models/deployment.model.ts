@@ -234,17 +234,22 @@ export class Deployment extends AdvancedSQLModel {
       throw new Error('parameters should not be null');
     }
 
+    const environmentCondition =
+      environment == DeploymentEnvironment.STAGING
+        ? `environment = ${DeploymentEnvironment.STAGING} `
+        : ` environment IN (${DeploymentEnvironment.PRODUCTION}, ${DeploymentEnvironment.DIRECT_TO_PRODUCTION}) `;
+
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT * 
       FROM \`${this.tableName}\`
       WHERE website_id = @website_id 
-      AND environment = @environment
+      AND ${environmentCondition}
       AND status <> ${SqlModelStatus.DELETED}
       ORDER BY number DESC
       LIMIT 1;
       `,
-      { website_id, environment },
+      { website_id },
     );
 
     if (data && data.length) {

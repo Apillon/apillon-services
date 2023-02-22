@@ -359,7 +359,7 @@ export class Website extends AdvancedSQLModel {
       `
       SELECT * 
       FROM \`${this.tableName}\`
-      WHERE ( id = @id OR website_uuid = @id)
+      WHERE ( id LIKE @id OR website_uuid LIKE @id)
       AND status <> ${SqlModelStatus.DELETED};
       `,
       { id },

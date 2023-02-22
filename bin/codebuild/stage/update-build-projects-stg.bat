@@ -16,6 +16,12 @@ aws codebuild update-webhook --cli-input-json file://mailing-webhook-stg.json --
 aws codebuild update-project --cli-input-json file://config-config-stg.json --profile apillon
 aws codebuild update-webhook --cli-input-json file://config-webhook-stg.json --profile apillon
 
+aws codebuild update-project --cli-input-json file://apillon-api-config-stg.json --profile apillon
+aws codebuild update-webhook --cli-input-json file://apillon-api-webhook-stg.json --profile apillon
+
+@REM aws codebuild update-project --cli-input-json file://auth-api-config-stg.json --profile apillon
+@REM aws codebuild update-webhook --cli-input-json file://auth-api-webhook-stg.json --profile apillon
+
 aws codebuild update-project --cli-input-json file://referral-config-stg.json --profile apillon
 aws codebuild update-webhook --cli-input-json file://referral-webhook-stg.json --profile apillon
 

@@ -9,7 +9,12 @@ import {
 } from '@nestjs/common';
 import { DefaultUserRole } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
-import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
+import {
+  Ctx,
+  getDiscordAuthURL,
+  Permissions,
+  Validation,
+} from '@apillon/modules-lib';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { LoginUserDto } from './dtos/login-user.dto';
 import { RegisterUserDto } from './dtos/register-user.dto';
@@ -18,6 +23,7 @@ import { UserService } from './user.service';
 import { AuthGuard } from '../../guards/auth.guard';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
+import { DiscordCodeDto } from './dtos/discord-code-dto';
 
 @Controller('users')
 export class UserController {
@@ -92,5 +98,34 @@ export class UserController {
     @Body() body: ResetPasswordDto,
   ) {
     return await this.userService.resetPassword(context, body);
+  }
+
+  @Post('discord-connect')
+  @Validation({ dto: DiscordCodeDto })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async connectDiscord(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: DiscordCodeDto,
+  ) {
+    return await this.userService.connectDiscord(context, body);
+  }
+
+  @Post('discord-disconnect')
+  @HttpCode(200)
+  @UseGuards(AuthGuard)
+  async disconnectDiscord(@Ctx() context: DevConsoleApiContext) {
+    return await this.userService.disconnectDiscord(context);
+  }
+
+  @Get('discord-url')
+  @UseGuards(AuthGuard)
+  async getDiscordUrl() {
+    return getDiscordAuthURL();
+  }
+
+  @Get('oauth-links')
+  @UseGuards(AuthGuard)
+  async getOauthLinks(@Ctx() context: DevConsoleApiContext) {
+    return await this.userService.getOauthLinks(context);
   }
 }

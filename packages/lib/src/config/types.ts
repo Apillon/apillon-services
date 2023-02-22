@@ -16,6 +16,10 @@ export enum AmsEventType {
   API_KEY_ROLE_REMOVE = 'api-key-role-remove',
   GET_API_KEY_ROLES = 'get-api-key-roles',
   GET_API_KEY = 'get-api-key',
+  DISCORD_LINK = 'discord-link',
+  DISCORD_UNLINK = 'discord-unlink',
+  DISCORD_USER_LIST = 'discord-user-list',
+  GET_OAUTH_LINKS = 'get-oauth-links',
 }
 
 export enum LmasEventType {
@@ -59,6 +63,7 @@ export enum StorageEventType {
   IPNS_UPDATE = 'update-ipns',
   IPNS_DELETE = 'delete-ipns',
   IPNS_PUBLISH = 'publish-ipns',
+  IPNS_GET = 'get-ipns',
   WEBSITE_LIST = 'list-websites',
   WEBSITE_CREATE = 'create-website',
   WEBSITE_UPDATE = 'update-website',
@@ -173,6 +178,7 @@ export enum SqlModelStatus {
 export enum AttachedServiceType {
   AUTHENTICATION = 1,
   STORAGE = 2,
+  SYSTEM = 999,
 }
 
 /**
@@ -304,6 +310,7 @@ export enum BadRequestErrorCode {
   INVALID_QUERY_PARAMETERS = 40000002,
   MISSING_AUTHORIZATION_HEADER = 40000003,
   INVALID_AUTHORIZATION_HEADER = 40000004,
+  THIRD_PARTY_SERVICE_CONNECTION_FAILED = 40000005,
 }
 
 export enum ValidatorErrorCode {
@@ -406,4 +413,11 @@ export enum QuotaCode {
   MAX_BUCKET_SIZE = 6,
   MAX_ATTESTED_USERS = 7,
   MAX_WEBSITES = 8,
+}
+
+/* OAuth link type*/
+export enum OauthLinkType {
+  DISCORD = 1,
+  TWEETER = 2,
+  GITHUB = 3,
 }
