@@ -19,6 +19,7 @@ import { ApiKeyModule } from './modules/api-key/api-key.module';
 import { env } from '@apillon/lib';
 import { IpnsModule } from './modules/storage/ipns/ipns.module';
 import { ReferralModule } from './modules/referral/referral.module';
+import { NftsModule } from './modules/nfts/nfts.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { ReferralModule } from './modules/referral/referral.module';
     ApiKeyModule,
     IpnsModule,
     ReferralModule,
+    NftsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
