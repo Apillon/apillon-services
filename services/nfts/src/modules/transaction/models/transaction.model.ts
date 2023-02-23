@@ -198,8 +198,10 @@ export class Transaction extends AdvancedSQLModel {
     //Get current max nonce
     const data = await this.getContext().mysql.paramExecute(
       `
-        SELECT MAX(nonce) as nonce
+        SELECT nonce
         FROM \`${this.tableName}\`
+        ORDER BY nonce DESC
+        LIMIT 1
         FOR UPDATE;
       `,
       {},
