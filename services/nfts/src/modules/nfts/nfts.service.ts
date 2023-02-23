@@ -35,6 +35,8 @@ export class NftsService {
     return 'Hello world from NFTS microservice';
   }
 
+  // TODO: Remove send transaction from all functions bellow, as we are planing to
+  // send those in different worker/job
   static async deployNftContract(
     params: { body: DeployNftContractDto },
     context: ServiceContext,

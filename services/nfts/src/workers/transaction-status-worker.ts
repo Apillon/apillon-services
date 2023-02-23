@@ -118,6 +118,7 @@ export class TransactionStatusWorker extends ServerlessWorker {
       tx.transactionStatus = TransactionStatus.FAILED;
       await tx.update();
       console.log(`Transaction (txHash=${tx.transactionHash}) is FAILED.`);
+      // TODO: Notify admin on failed tx
     }
   }
 }
