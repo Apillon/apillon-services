@@ -27,6 +27,7 @@ describe('Polkadot signer unit test', () => {
     const keypair = keyring.createFromUri(
       'fine circle fiction good shop hand canal approve over canal border mixed',
     );
+
     console.log(keypair.address);
     await new Endpoint(
       {
@@ -38,7 +39,7 @@ describe('Polkadot signer unit test', () => {
     ).insert();
     await new Endpoint(
       {
-        url: 'wss://peregrine.kilt.io/parachain-public-ws',
+        url: 'wss://spiritnet.api.onfinality.io/ws?apikey=15a3df59-0a99-4216-97b4-e2d242fe64e5',
         chain: Chain.KILT,
         status: 5,
       },
