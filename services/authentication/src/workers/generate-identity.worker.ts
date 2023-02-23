@@ -73,14 +73,14 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
       claimerEmail,
     );
 
-    // if (identity.exists() && identity.state == IdentityState.ATTESTED) {
-    //   // TODO: Should probably check before worker - pass as parameter new / existing
-    //   throw new CodeException({
-    //     status: HttpStatus.BAD_REQUEST,
-    //     code: AuthenticationErrorCode.IDENTITY_INVALID_STATE,
-    //     errorCodes: AuthenticationErrorCode,
-    //   });
-    // }
+    if (identity.exists() && identity.state == IdentityState.ATTESTED) {
+      // TODO: Should probably check before worker - pass as parameter new / existing
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: AuthenticationErrorCode.IDENTITY_INVALID_STATE,
+        errorCodes: AuthenticationErrorCode,
+      });
+    }
 
     if (params.args.includes(IdentityGenFlag.FULL_IDENTITY)) {
       let decrypted: any;

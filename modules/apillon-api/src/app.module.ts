@@ -5,12 +5,13 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthenticateApiKeyMiddleware } from './middlewares/authentication.middleware';
 import { ContextMiddleware } from './middlewares/context.middleware';
+import { AuthModule } from './modules/authentication/authentication.module';
 import { MySQLModule } from './modules/database/mysql.module';
 import { HostingModule } from './modules/hosting/hosting.module';
 import { StorageModule } from './modules/storage/storage.module';
 
 @Module({
-  imports: [MySQLModule, StorageModule, HostingModule],
+  imports: [MySQLModule, StorageModule, HostingModule, AuthModule],
   controllers: [AppController],
   providers: [AppService],
 })

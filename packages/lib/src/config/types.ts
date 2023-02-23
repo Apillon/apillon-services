@@ -439,6 +439,8 @@ export enum AuthenticationErrorCode {
   // Sporran verifier key-agreement does not exit
   SPORRAN_VERIFIER_KA_DOES_NOT_EXIST = 422070407,
   SPORRAN_REQUEST_MESSAGE_NOT_PRESENT = 422070407,
+  // Misc
+  AUTH_FORM_INVALID_REQUEST = 422070500,
 }
 
 //#endregion

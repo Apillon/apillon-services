@@ -13,3 +13,10 @@ export enum ValidatorErrorCode {
 export enum ResourceNotFoundErrorCode {
   DEFAULT_RESOURCE_NOT_FOUND_ERROR = 40405000,
 }
+
+/**
+ * JWT Token signing types.
+ */
+export enum JwtTokenType {
+  AUTH_SESSION = 'auth-session',
+}

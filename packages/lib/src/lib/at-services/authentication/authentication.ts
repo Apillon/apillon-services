@@ -32,7 +32,7 @@ export class AuthenticationMicroservice extends BaseService {
   public async verifyIdentity(params: VerificationIdentityDto) {
     const data = {
       eventName: AuthenticationEventType.IDENTITY_VERIFICATION,
-      query: params.serialize(),
+      body: params.serialize(),
     };
     return await this.callService(data);
   }
