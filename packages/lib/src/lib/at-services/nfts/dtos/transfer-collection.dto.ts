@@ -1,6 +1,6 @@
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
-import { presenceValidator } from '@rawmodel/validators';
+import { ethAddressValidator, presenceValidator } from '@rawmodel/validators';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
 
@@ -11,7 +11,11 @@ export class TransferCollectionDTO extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_TRANSFER_NFT_ADDRESS_NOT_PRESENT,
+        code: ValidatorErrorCode.NFT_TRANSFER_OWNERSHIP_ADDRESS_NOT_PRESENT,
+      },
+      {
+        resolver: ethAddressValidator(),
+        code: ValidatorErrorCode.NFT_TRANSFER_OWNERSHIP_ADDRESS_NOT_VALID,
       },
     ],
   })
@@ -20,7 +24,12 @@ export class TransferCollectionDTO extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_TRANSFER_OWNERSHIP_COLLECTION_UUID_NOT_PRESENT,
+      },
+    ],
   })
   public collection_uuid: string;
 }

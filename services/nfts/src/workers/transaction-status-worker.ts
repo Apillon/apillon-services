@@ -1,6 +1,10 @@
 import { AppEnvironment, Context, env, SqlModelStatus } from '@apillon/lib';
 import { Job, ServerlessWorker, WorkerDefinition } from '@apillon/workers-lib';
-import { TransactionStatus, TransactionType } from '../config/types';
+import {
+  CollectionStatus,
+  TransactionStatus,
+  TransactionType,
+} from '../config/types';
 import { Collection } from '../modules/nfts/models/collection.model';
 import { Transaction } from '../modules/transaction/models/transaction.model';
 import { WalletService } from '../modules/wallet/wallet.service';
@@ -39,9 +43,9 @@ export class TransactionStatusWorker extends ServerlessWorker {
 
       if (isConfirmed) {
         // Update transaction status based on blockchain data - txRecepit
-        await this.setTransactionStatus(tx, txReceipt);
+        await this.updateTransactionStatus(tx, txReceipt);
         // Update NFT collection with contractAddress
-        await this.setCollectionContractAddress(tx, txReceipt);
+        await this.updateCollectionStatus(tx, txReceipt);
       }
     }
   }
@@ -70,27 +74,41 @@ export class TransactionStatusWorker extends ServerlessWorker {
     throw new Error('Method not implemented.');
   }
 
-  private async setCollectionContractAddress(tx: Transaction, txReceipt) {
-    if (
-      tx.transactionType === TransactionType.DEPLOY_CONTRACT &&
-      tx.transactionStatus === TransactionStatus.FINISHED
-    ) {
+  private async updateCollectionStatus(tx: Transaction, txReceipt) {
+    if (tx.transactionStatus === TransactionStatus.FINISHED) {
       const collection: Collection = await new Collection(
         {},
         this.context,
       ).populateById(tx.refId);
+      let isChanged = false;
 
-      collection.contractAddress = txReceipt.contractAddress;
-      collection.transactionHash = txReceipt.transactionHash;
-      collection.status = SqlModelStatus.ACTIVE;
-      await collection.update();
-      console.log(
-        `Collection (id=${collection.id}) updated (contractAddress=${collection.contractAddress})`,
-      );
+      if (tx.transactionType === TransactionType.DEPLOY_CONTRACT) {
+        collection.collectionStatus = CollectionStatus.DEPLOYED;
+        collection.contractAddress = txReceipt.contractAddress;
+        isChanged = true;
+      } else if (
+        tx.transactionType === TransactionType.TRANSFER_CONTRACT_OWNERSHIP
+      ) {
+        collection.collectionStatus = CollectionStatus.TRANSFERED;
+        isChanged = true;
+      }
+      if (isChanged) {
+        collection.transactionHash = txReceipt.transactionHash;
+        collection.status = SqlModelStatus.ACTIVE;
+        await collection.update();
+        console.log(
+          `Collection (id=${collection.id}) updated 
+          (
+            contractAddress=${collection.contractAddress}, 
+            txHash=${collection.transactionHash}, 
+            collectionStatus=${collection.collectionStatus}
+          )`,
+        );
+      }
     }
   }
 
-  private async setTransactionStatus(tx: Transaction, txReceipt) {
+  private async updateTransactionStatus(tx: Transaction, txReceipt) {
     // Transaction was mined (confirmed) but if its status is 0 - it failed on blockchain
     if (txReceipt.status) {
       tx.transactionStatus = TransactionStatus.FINISHED;
@@ -100,6 +118,7 @@ export class TransactionStatusWorker extends ServerlessWorker {
       tx.transactionStatus = TransactionStatus.FAILED;
       await tx.update();
       console.log(`Transaction (txHash=${tx.transactionHash}) is FAILED.`);
+      // TODO: Notify admin on failed tx
     }
   }
 }

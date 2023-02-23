@@ -11,6 +11,7 @@ import {
   TransferCollectionDTO,
 } from '@apillon/lib';
 import { TransactionRequest } from '@ethersproject/providers';
+import { FormatTypes, Interface } from 'ethers/lib/utils';
 import { v4 as uuidV4 } from 'uuid';
 import {
   Chains,
@@ -34,18 +35,25 @@ export class NftsService {
     return 'Hello world from NFTS microservice';
   }
 
+  // TODO: Remove send transaction from all functions bellow, as we are planing to
+  // send those in different worker/job
   static async deployNftContract(
     params: { body: DeployNftContractDto },
     context: ServiceContext,
   ) {
     console.log(`Deploying NFT: ${JSON.stringify(params.body)}`);
     const walletService = new WalletService();
+    const walletAddress = await walletService.getWalletAddress();
 
     //Create collection object
     const collection: Collection = new Collection(
       params.body,
       context,
     ).populate({
+      isRevokable: false,
+      isSoulbound: false,
+      royaltiesFees: 5,
+      royaltiesAddress: walletAddress,
       collection_uuid: uuidV4(),
       status: SqlModelStatus.INCOMPLETE,
     });
@@ -206,7 +214,7 @@ export class NftsService {
     context: ServiceContext,
   ) {
     console.log(
-      `Minting NFT Collection to wallet address: ${params.body.address}`,
+      `Minting NFT Collection to wallet address: ${params.body.receivingAddress}`,
     );
     const walletService: WalletService = new WalletService();
     const collection: Collection = await NftsService.checkAndGetCollection(
@@ -229,7 +237,7 @@ export class NftsService {
       const txRequest: TransactionRequest =
         await await walletService.createMintToTransaction(
           collection.contractAddress,
-          params.body.address,
+          params.body,
           dbTxRecord.nonce,
         );
 
@@ -357,8 +365,12 @@ export class NftsService {
     // Collection must exist and be confirmed on blockchain
     if (!collection.exists() || collection.contractAddress == null) {
       throw new NftsCodeException({
-        status: 400,
-        code: NftsErrorCode.NFT_CONTRACT_DOES_NOT_EXISTS_OR_NOT_CONFIRMED,
+        status: 500,
+        code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
+        context: context,
+        sourceFunction,
+        errorMessage: 'Error obtaining Nft collection',
+        details: 'Collection does not exist or is not confirmed on blockchain!',
       });
     }
     const currentOwner = await walletService.getContractOwner(
@@ -370,9 +382,12 @@ export class NftsService {
     // Obtaing wallet address from .env?
     if (walletAddress !== currentOwner) {
       throw new NftsCodeException({
-        status: 400,
+        status: 500,
         code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
-        errorMessage: 'Caller is not the owner',
+        context: context,
+        sourceFunction,
+        errorMessage: 'Error calling Nft contract function',
+        details: 'Caller is not the owner',
       });
     }
     return collection;

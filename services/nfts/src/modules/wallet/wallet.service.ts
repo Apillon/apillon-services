@@ -1,5 +1,9 @@
-import { AppEnvironment, env } from '@apillon/lib';
-import { DeployNftContractDto } from '@apillon/lib/dist/lib/at-services/nfts/dtos/deploy-nft-contract.dto';
+import {
+  AppEnvironment,
+  DeployNftContractDto,
+  MintNftDTO,
+  env,
+} from '@apillon/lib';
 import { Contract, ethers, Wallet } from 'ethers';
 import { NftTransaction } from '../../lib/nft-contract-transaction';
 import {
@@ -8,12 +12,12 @@ import {
   TransactionReceipt,
 } from '@ethersproject/providers';
 import { PayableNft } from '../../lib/contracts/payable-mint-nft';
-import { Transaction } from '../transaction/models/transaction.model';
 
 export class WalletService {
   private wallet: Wallet;
   private provider: ethers.providers.StaticJsonRpcProvider;
   private prodEnv = env.APP_ENV == AppEnvironment.PROD;
+  private walletAddress: string;
 
   constructor() {
     this.provider = new ethers.providers.StaticJsonRpcProvider(
@@ -42,6 +46,7 @@ export class WalletService {
     nonce: number,
   ): Promise<TransactionRequest> {
     return NftTransaction.createDeployContractTransaction(
+      await this.getWalletAddress(),
       params,
       this.provider,
       nonce,
@@ -54,6 +59,7 @@ export class WalletService {
     nonce: number,
   ): Promise<TransactionRequest> {
     return NftTransaction.createTransferOwnershipTransaction(
+      await this.getWalletAddress(),
       contract,
       newOwner,
       this.provider,
@@ -67,6 +73,7 @@ export class WalletService {
     nonce: number,
   ) {
     return NftTransaction.createSetNftBaseUriTransaction(
+      await this.getWalletAddress(),
       contract,
       uri,
       this.provider,
@@ -76,12 +83,13 @@ export class WalletService {
 
   async createMintToTransaction(
     contract: string,
-    address: string,
+    params: MintNftDTO,
     nonce: number,
   ) {
     return NftTransaction.createMintToTransaction(
+      await this.getWalletAddress(),
       contract,
-      address,
+      params,
       this.provider,
       nonce,
     );
@@ -115,7 +123,7 @@ export class WalletService {
     return await nftContract.owner();
   }
 
-  async getWalletAddress() {
+  async getWalletAddress(): Promise<string> {
     return this.wallet.getAddress();
   }
 }

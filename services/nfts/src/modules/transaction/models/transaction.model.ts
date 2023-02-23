@@ -196,10 +196,13 @@ export class Transaction extends AdvancedSQLModel {
 
   public async populateNonce(conn) {
     //Get current max nonce
+    // TODO: filter by wallet and chainId
     const data = await this.getContext().mysql.paramExecute(
       `
-        SELECT MAX(nonce) as nonce
+        SELECT nonce
         FROM \`${this.tableName}\`
+        ORDER BY nonce DESC
+        LIMIT 1
         FOR UPDATE;
       `,
       {},

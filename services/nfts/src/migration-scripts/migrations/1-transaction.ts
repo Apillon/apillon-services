@@ -3,6 +3,7 @@ import { DbTables } from '../../config/types';
 export async function upgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
+  // TODO: Add execution Wallet and chain id
   await queryFn(`
     CREATE TABLE IF NOT EXISTS \`${DbTables.TRANSACTION}\` (
   \`id\` INT NOT NULL AUTO_INCREMENT,
@@ -24,6 +25,7 @@ export async function upgrade(
   );
   `);
 
+  // TODO: Add unique Index on execution wallet + chain + nonce
   await queryFn(`
   CREATE UNIQUE INDEX transaction_nonce_index
   ON \`${DbTables.TRANSACTION}\` (nonce);

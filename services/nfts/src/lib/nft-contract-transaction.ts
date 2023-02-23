@@ -1,4 +1,4 @@
-import { DeployNftContractDto } from '@apillon/lib/dist/lib/at-services/nfts/dtos/deploy-nft-contract.dto';
+import { DeployNftContractDto, MintNftDTO } from '@apillon/lib';
 import { Contract, ContractFactory, ethers, UnsignedTransaction } from 'ethers';
 import { PayableNft } from './contracts/payable-mint-nft';
 import { Injectable, Scope } from '@nestjs/common';
@@ -13,11 +13,11 @@ export class NftTransaction {
    * @returns TransactionRequest
    */
   static async createDeployContractTransaction(
+    walletAddress: string,
     params: DeployNftContractDto,
     provider: BaseProvider,
     nonce: number,
   ): Promise<TransactionRequest> {
-    const walletAddress = '0xBa01526C6D80378A9a95f1687e9960857593983B';
     console.log(
       `Creating NFT deploy contract transaction from wallet address: ${walletAddress}, parameters=${JSON.stringify(
         params,
@@ -31,28 +31,26 @@ export class NftTransaction {
 
     const contractData: TransactionRequest =
       await nftContract.getDeployTransaction(
-        params.symbol,
         params.name,
-        params.maxSupply,
+        params.symbol,
+        params.baseUri,
+        params.baseExtension,
+        [params.isDrop, false, false],
         TransactionUtils.convertBaseToGwei(params.mintPrice),
+        params.dropStart,
+        params.maxSupply,
+        params.reserve,
+        walletAddress,
+        5,
       );
 
-    const chainId = (await provider.getNetwork()).chainId;
-    const txCount = await provider.getTransactionCount(walletAddress);
-
-    const transaction: TransactionRequest = {
-      from: walletAddress,
-      to: null,
-      value: 0,
-      gasLimit: '8000000',
-      nonce: ethers.utils.hexlify(nonce || txCount),
-      type: 2,
-      chainId,
-      data: contractData.data,
-    };
-
-    await this.populateGas(transaction, provider);
-    return transaction;
+    return await this.createContractTransactionRequest(
+      walletAddress,
+      null,
+      contractData.data,
+      nonce,
+      provider,
+    );
   }
 
   /**
@@ -62,6 +60,7 @@ export class NftTransaction {
    * @returns TransactionRequest
    */
   static async createTransferOwnershipTransaction(
+    walletAddress: string,
     contract: string,
     newOwner: string,
     provider: BaseProvider,
@@ -70,28 +69,18 @@ export class NftTransaction {
     console.log(
       `Creating NFT transfer ownership (NFT contract address=${contract}) transaction to wallet address: ${newOwner}`,
     );
-    const walletAddress = '0xBa01526C6D80378A9a95f1687e9960857593983B';
     const nftContract: Contract = new Contract(contract, PayableNft.abi);
 
     const contractData: UnsignedTransaction =
       await nftContract.populateTransaction.transferOwnership(newOwner);
 
-    const chainId = (await provider.getNetwork()).chainId;
-    const txCount = await provider.getTransactionCount(walletAddress);
-
-    const transaction: TransactionRequest = {
-      from: walletAddress,
-      to: contract,
-      value: 0,
-      gasLimit: '8000000',
-      nonce: ethers.utils.hexlify(nonce || txCount),
-      type: 2,
-      chainId,
-      data: contractData.data,
-    };
-
-    await this.populateGas(transaction, provider);
-    return transaction;
+    return await this.createContractTransactionRequest(
+      walletAddress,
+      contract,
+      contractData.data,
+      nonce,
+      provider,
+    );
   }
 
   /**
@@ -102,6 +91,7 @@ export class NftTransaction {
    * @returns TransactionRequest
    */
   static async createSetNftBaseUriTransaction(
+    walletAddress: string,
     contract: string,
     uri: string,
     provider: BaseProvider,
@@ -110,28 +100,18 @@ export class NftTransaction {
     console.log(
       `Creating NFT set base token URI transaction (contract=${contract}, uri=${uri}).`,
     );
-    const walletAddress = '0xBa01526C6D80378A9a95f1687e9960857593983B';
     const nftContract: Contract = new Contract(contract, PayableNft.abi);
 
     const contractData: UnsignedTransaction =
-      await nftContract.populateTransaction.setBaseTokenURI(uri);
+      await nftContract.populateTransaction.setBaseURI(uri);
 
-    const chainId = (await provider.getNetwork()).chainId;
-    const txCount = await provider.getTransactionCount(walletAddress);
-
-    const transaction: TransactionRequest = {
-      from: walletAddress,
-      to: contract,
-      value: 0,
-      gasLimit: '8000000',
-      nonce: ethers.utils.hexlify(nonce || txCount),
-      type: 2,
-      chainId,
-      data: contractData.data,
-    };
-
-    await this.populateGas(transaction, provider);
-    return transaction;
+    return await this.createContractTransactionRequest(
+      walletAddress,
+      contract,
+      contractData.data,
+      nonce,
+      provider,
+    );
   }
 
   /**
@@ -141,36 +121,30 @@ export class NftTransaction {
    * @returns TransactionRequest
    */
   static async createMintToTransaction(
+    walletAddress: string,
     contract: string,
-    address: string,
+    params: MintNftDTO,
     provider: BaseProvider,
     nonce: number,
   ) {
     console.log(
-      `Creating NFT (NFT contract=${contract}) mint transaction (toAddress=${address}).`,
+      `Creating NFT (NFT contract=${contract}) mint transaction (toAddress=${params.receivingAddress}).`,
     );
-    const walletAddress = '0xBa01526C6D80378A9a95f1687e9960857593983B';
     const nftContract: Contract = new Contract(contract, PayableNft.abi);
 
     const contractData: UnsignedTransaction =
-      await nftContract.populateTransaction.mintTo(address);
+      await nftContract.populateTransaction.ownerMint(
+        params.quantity,
+        params.receivingAddress,
+      );
 
-    const chainId = (await provider.getNetwork()).chainId;
-    const txCount = await provider.getTransactionCount(walletAddress);
-
-    const transaction: TransactionRequest = {
-      from: walletAddress,
-      to: contract,
-      value: 0,
-      gasLimit: '8000000',
-      nonce: ethers.utils.hexlify(nonce || txCount),
-      type: 2,
-      chainId,
-      data: contractData.data,
-    };
-
-    await this.populateGas(transaction, provider);
-    return transaction;
+    return await this.createContractTransactionRequest(
+      walletAddress,
+      contract,
+      contractData.data,
+      nonce,
+      provider,
+    );
   }
 
   /**
@@ -187,6 +161,7 @@ export class NftTransaction {
     const estimatedBaseFee = (await provider.getGasPrice()).toNumber();
 
     // Ensuring that transaction is desirable for at least 6 blocks.
+    // TODO: On production check how gas estimate is calculated
     const maxFeePerGas = estimatedBaseFee * 2 + maxPriorityFeePerGas;
     transaction.maxPriorityFeePerGas = maxPriorityFeePerGas;
     transaction.maxFeePerGas = maxFeePerGas;
@@ -196,5 +171,39 @@ export class NftTransaction {
     // Increasing gas limit by 10% of current gas price to be on the safe side
     const gasLimit = Math.floor(gas.toNumber() * 1.1);
     transaction.gasLimit = gasLimit.toString();
+  }
+
+  /**
+   * Function creates transaction request - interaction with contract (smart contract call).
+   *
+   * @param walletAddress our wallet public address
+   * @param contractAddress contract address to interact with
+   * @param unsignedTx unsigned transaction
+   * @param nonce nonce
+   * @param provider RPC provider
+   * @returns TransactionRequest
+   */
+  private static async createContractTransactionRequest(
+    walletAddress: string,
+    contractAddress: string,
+    txData: ethers.utils.BytesLike,
+    nonce: number,
+    provider: BaseProvider,
+  ): Promise<TransactionRequest> {
+    const chainId = (await provider.getNetwork()).chainId;
+    const txCount = await provider.getTransactionCount(walletAddress);
+
+    const transaction: TransactionRequest = {
+      from: walletAddress,
+      to: contractAddress,
+      value: 0,
+      gasLimit: '8000000',
+      nonce: ethers.utils.hexlify(nonce || txCount),
+      type: 2,
+      chainId,
+      data: txData,
+    };
+    await this.populateGas(transaction, provider);
+    return transaction;
   }
 }

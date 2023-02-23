@@ -1,3 +1,4 @@
+import { TransactionStatus } from '../../config/types';
 import {
   AppEnvironment,
   env,
@@ -12,6 +13,8 @@ import {
   NftsValidationException,
 } from '../../lib/exceptions';
 import { executeTransactionStatusWorker } from '../../scripts/serverless-workers/execute-transaction-status-worker';
+import { WalletService } from '../wallet/wallet.service';
+import { TransactionDTO } from './dtos/transaction.dto';
 import { Collection } from '../nfts/models/collection.model';
 import { Transaction } from './models/transaction.model';
 
@@ -42,6 +45,18 @@ export class TransactionService {
       return true;
     }
     return false;
+  }
+
+  static async sendTransaction(transaction: Transaction) {
+    const walletService = new WalletService();
+    const txResponse = await walletService.sendTransaction(
+      transaction.rawTransaction,
+    );
+    transaction.transactionHash = txResponse.hash;
+    transaction.transactionStatus = TransactionStatus.PENDING;
+    await transaction.update();
+
+    return transaction;
   }
 
   static async listCollectionTransactions(
