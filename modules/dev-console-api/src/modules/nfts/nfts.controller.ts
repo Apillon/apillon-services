@@ -34,7 +34,7 @@ export class NftsController {
     return await this.nftsService.getHello(context);
   }
 
-  @Post('/collection')
+  @Post('/collections')
   @Validation({ dto: DeployNftContractDto })
   @UseGuards(ValidationGuard)
   @Permissions(
@@ -64,43 +64,43 @@ export class NftsController {
     return await this.nftsService.listNftCollections(context, query);
   }
 
-  @Post('/collections/:collection_uuid/transferOwnership')
+  @Post('/collections/:collectionUuid/transfer-ownership')
   @Validation({ dto: TransferCollectionDTO })
   @UseGuards(ValidationGuard)
   async transferOwnership(
     @Ctx() context: DevConsoleApiContext,
-    @Param('collection_uuid') collection_uuid: string,
+    @Param('collectionUuid') collectionUuid: string,
     @Body() body: TransferCollectionDTO,
   ) {
     return await this.nftsService.transferCollectionOwnership(
       context,
-      collection_uuid,
+      collectionUuid,
       body,
     );
   }
 
-  @Get('collections/:collection_uuid/mint')
+  @Post('/collections/:collectionUuid/mint')
   @Validation({ dto: MintNftDTO })
   @UseGuards(ValidationGuard)
   async mintNft(
     @Ctx() context: DevConsoleApiContext,
-    @Param('collection_uuid') collection_uuid: string,
+    @Param('collectionUuid') collectionUuid: string,
     @Body() body: MintNftDTO,
   ) {
-    return await this.nftsService.mintNftTo(context, collection_uuid, body);
+    return await this.nftsService.mintNftTo(context, collectionUuid, body);
   }
 
-  @Post('collections/:collection_uuid/setBaseUri')
+  @Post('/collections/:collectionUuid/set-base-uri')
   @Validation({ dto: SetCollectionBaseUriDTO })
   @UseGuards(ValidationGuard)
   async setNftCollectionBaseUri(
     @Ctx() context: DevConsoleApiContext,
-    @Param('collection_uuid') collection_uuid: string,
+    @Param('collectionUuid') collectionUuid: string,
     @Body() body: SetCollectionBaseUriDTO,
   ) {
     return await this.nftsService.setNftCollectionBaseUri(
       context,
-      collection_uuid,
+      collectionUuid,
       body,
     );
   }
@@ -111,7 +111,7 @@ export class NftsController {
     return await this.nftsService.checkTransactionStatus(context);
   }
 
-  @Get('/collections/:collection_uuid/transactions')
+  @Get('/collections/:collectionUuid/transactions')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -121,12 +121,12 @@ export class NftsController {
   @UseGuards(ValidationGuard, AuthGuard)
   async listCollectionTransactions(
     @Ctx() context: DevConsoleApiContext,
-    @Param('collection_uuid') collection_uuid: string,
+    @Param('collectionUuid') collectionUuid: string,
     @Query() query: TransactionQueryFilter,
   ) {
     return await this.nftsService.listCollectionTransactions(
       context,
-      collection_uuid,
+      collectionUuid,
       query,
     );
   }

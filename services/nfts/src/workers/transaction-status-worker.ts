@@ -43,9 +43,9 @@ export class TransactionStatusWorker extends ServerlessWorker {
 
       if (isConfirmed) {
         // Update transaction status based on blockchain data - txRecepit
-        await this.setTransactionStatus(tx, txReceipt);
+        await this.updateTransactionStatus(tx, txReceipt);
         // Update NFT collection with contractAddress
-        await this.setCollectionContractAddress(tx, txReceipt);
+        await this.updateCollectionStatus(tx, txReceipt);
       }
     }
   }
@@ -74,7 +74,7 @@ export class TransactionStatusWorker extends ServerlessWorker {
     throw new Error('Method not implemented.');
   }
 
-  private async setCollectionContractAddress(tx: Transaction, txReceipt) {
+  private async updateCollectionStatus(tx: Transaction, txReceipt) {
     if (tx.transactionStatus === TransactionStatus.FINISHED) {
       const collection: Collection = await new Collection(
         {},
@@ -104,7 +104,7 @@ export class TransactionStatusWorker extends ServerlessWorker {
     }
   }
 
-  private async setTransactionStatus(tx: Transaction, txReceipt) {
+  private async updateTransactionStatus(tx: Transaction, txReceipt) {
     // Transaction was mined (confirmed) but if its status is 0 - it failed on blockchain
     if (txReceipt.status) {
       tx.transactionStatus = TransactionStatus.FINISHED;
