@@ -161,6 +161,7 @@ export class NftTransaction {
     const estimatedBaseFee = (await provider.getGasPrice()).toNumber();
 
     // Ensuring that transaction is desirable for at least 6 blocks.
+    // TODO: On production check how gas estimate is calculated
     const maxFeePerGas = estimatedBaseFee * 2 + maxPriorityFeePerGas;
     transaction.maxPriorityFeePerGas = maxPriorityFeePerGas;
     transaction.maxFeePerGas = maxFeePerGas;

@@ -196,6 +196,7 @@ export class Transaction extends AdvancedSQLModel {
 
   public async populateNonce(conn) {
     //Get current max nonce
+    // TODO: filter by wallet and chainId
     const data = await this.getContext().mysql.paramExecute(
       `
         SELECT nonce
