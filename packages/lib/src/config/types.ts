@@ -121,7 +121,6 @@ export enum ServiceName {
   AUTHENTICATION_API = 'AUTHENTICATION_API',
   NFTS = 'NFTS',
   REFERRAL = 'REFERRAL',
-  NFTS = 'NFTS',
 }
 
 export enum ServiceCode {

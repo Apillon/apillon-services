@@ -1,4 +1,3 @@
-import { TransactionStatus } from '../../config/types';
 import {
   AppEnvironment,
   env,
@@ -6,16 +5,15 @@ import {
   SerializeFor,
   TransactionQueryFilter,
 } from '@apillon/lib';
-import { DbTables, NftsErrorCode } from '../../config/types';
+import { DbTables, NftsErrorCode, TransactionStatus } from '../../config/types';
 import { ServiceContext } from '../../context';
 import {
   NftsCodeException,
   NftsValidationException,
 } from '../../lib/exceptions';
 import { executeTransactionStatusWorker } from '../../scripts/serverless-workers/execute-transaction-status-worker';
-import { WalletService } from '../wallet/wallet.service';
-import { TransactionDTO } from './dtos/transaction.dto';
 import { Collection } from '../nfts/models/collection.model';
+import { WalletService } from '../wallet/wallet.service';
 import { Transaction } from './models/transaction.model';
 
 export class TransactionService {

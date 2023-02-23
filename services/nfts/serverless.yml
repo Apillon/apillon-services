@@ -52,3 +52,17 @@ functions:
     description: Apillon nfts Service
     memorySize: 512
     timeout: 30
+  nfts-service-worker:
+    handler: ./src/workers/worker-executor.handler
+    name: apillon-nfts-service-worker-${self:provider.stage}
+    description: Serverless workers for Apillon NFTs microservice
+    memorySize: 512
+    timeout: 900
+    reservedConcurrency: 30
+    environment:
+      AWS_WORKER_LAMBDA_NAME: ${self:functions.storage-service-worker.name}
+    events:
+      - sqs:
+          arn: ${env:WORKER_SQS_ARN}
+          batchSize: 4
+          maximumBatchingWindow: 5

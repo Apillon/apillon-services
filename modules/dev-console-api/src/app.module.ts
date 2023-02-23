@@ -20,7 +20,6 @@ import { env } from '@apillon/lib';
 import { NftsModule } from './modules/nfts/nfts.module';
 import { IpnsModule } from './modules/storage/ipns/ipns.module';
 import { ReferralModule } from './modules/referral/referral.module';
-import { NftsModule } from './modules/nfts/nfts.module';
 
 @Module({
   imports: [
