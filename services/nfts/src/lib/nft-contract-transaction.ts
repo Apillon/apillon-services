@@ -44,22 +44,13 @@ export class NftTransaction {
         5,
       );
 
-    const chainId = (await provider.getNetwork()).chainId;
-    const txCount = await provider.getTransactionCount(walletAddress);
-
-    const transaction: TransactionRequest = {
-      from: walletAddress,
-      to: null,
-      value: 0,
-      gasLimit: '8000000',
-      nonce: ethers.utils.hexlify(nonce || txCount),
-      type: 2,
-      chainId,
-      data: contractData.data,
-    };
-
-    await this.populateGas(transaction, provider);
-    return transaction;
+    return await this.createContractTransactionRequest(
+      walletAddress,
+      null,
+      contractData.data,
+      nonce,
+      provider,
+    );
   }
 
   /**
@@ -86,7 +77,7 @@ export class NftTransaction {
     return await this.createContractTransactionRequest(
       walletAddress,
       contract,
-      contractData,
+      contractData.data,
       nonce,
       provider,
     );
@@ -117,7 +108,7 @@ export class NftTransaction {
     return await this.createContractTransactionRequest(
       walletAddress,
       contract,
-      contractData,
+      contractData.data,
       nonce,
       provider,
     );
@@ -150,7 +141,7 @@ export class NftTransaction {
     return await this.createContractTransactionRequest(
       walletAddress,
       contract,
-      contractData,
+      contractData.data,
       nonce,
       provider,
     );
@@ -194,7 +185,7 @@ export class NftTransaction {
   private static async createContractTransactionRequest(
     walletAddress: string,
     contractAddress: string,
-    unsignedTx: UnsignedTransaction,
+    txData: ethers.utils.BytesLike,
     nonce: number,
     provider: BaseProvider,
   ): Promise<TransactionRequest> {
@@ -209,7 +200,7 @@ export class NftTransaction {
       nonce: ethers.utils.hexlify(nonce || txCount),
       type: 2,
       chainId,
-      data: unsignedTx.data,
+      data: txData,
     };
     await this.populateGas(transaction, provider);
     return transaction;

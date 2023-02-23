@@ -1,4 +1,3 @@
-import { AppEnvironment, env } from '@apillon/lib';
 import { TransactionStatus } from '../../config/types';
 import {
   AppEnvironment,
