@@ -80,15 +80,19 @@ export class TransactionStatusWorker extends ServerlessWorker {
         {},
         this.context,
       ).populateById(tx.refId);
+      let isChanged = false;
+
       if (tx.transactionType === TransactionType.DEPLOY_CONTRACT) {
         collection.collectionStatus = CollectionStatus.DEPLOYED;
         collection.contractAddress = txReceipt.contractAddress;
+        isChanged = true;
       } else if (
         tx.transactionType === TransactionType.TRANSFER_CONTRACT_OWNERSHIP
       ) {
         collection.collectionStatus = CollectionStatus.TRANSFERED;
+        isChanged = true;
       }
-      if (collection.isChanged()) {
+      if (isChanged) {
         collection.transactionHash = txReceipt.transactionHash;
         collection.status = SqlModelStatus.ACTIVE;
         await collection.update();
