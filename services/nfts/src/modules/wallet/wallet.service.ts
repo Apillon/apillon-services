@@ -118,7 +118,7 @@ export class WalletService {
     return await nftContract.owner();
   }
 
-  async getWalletAddress() {
+  async getWalletAddress(): Promise<string> {
     return this.wallet.getAddress();
   }
 }

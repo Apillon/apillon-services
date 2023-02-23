@@ -64,7 +64,7 @@ export class NftsController {
     return await this.nftsService.listNftCollections(context, query);
   }
 
-  @Post('/collections/:collectionUuid/transfer-ownership')
+  @Post('/collections/:collectionUuid/transferOwnership')
   @Validation({ dto: TransferCollectionDTO })
   @UseGuards(ValidationGuard)
   async transferOwnership(
