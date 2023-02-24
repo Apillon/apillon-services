@@ -376,10 +376,8 @@ export class NftsService {
     const currentOwner = await walletService.getContractOwner(
       collection.contractAddress,
     );
-
     const walletAddress = await walletService.getWalletAddress();
-    console.log('Wallet address: ', walletAddress);
-    // Obtaing wallet address from .env?
+
     if (walletAddress !== currentOwner) {
       throw new NftsCodeException({
         status: 500,
