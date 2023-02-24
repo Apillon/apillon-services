@@ -15,6 +15,7 @@ cat ./bin/deploy/env/env.yml
 # prepare the environemnt
 echo "Building libraries..."
 cd packages/lib/
+echo "Building @apillon/lib"
 npm install --omit=dev
 npm run build
 npm link
@@ -22,6 +23,7 @@ cd ../../
 
 if [ "$MODULES_LIB" == "true" ]
 then
+  echo "Building @apillon/modules-lib"
   cd packages/modules-lib/
   npm install --omit=dev
   npm run build
@@ -31,6 +33,7 @@ fi
 
 if [ "$WORKERS_LIB" == "true" ]
 then
+  echo "Building @apillon/workers-lib"
   cd packages/workers-lib/
   npm install --omit=dev
   npm run build
@@ -44,21 +47,26 @@ cd ${SERVICE_PATH}
 npm link @apillon/lib --omit=dev
 if [ "$MODULES_LIB" == "true" ]
 then
+  echo "Linking modules-lib"
   npm link @apillon/modules-lib --omit=dev
 fi
 if [ "$WORKERS_LIB" == "true" ]
 then
+  echo "Linking workers-lib"
   npm link @apillon/workers-lib --omit=dev
 fi
 
+echo "Instaling build dependencies"
 npm i serverless-webpack copy-webpack-plugin webpack webpack-node-externals ts-loader
 
 if [ "$DB_MIGRATIONS" == "true" ]
 then
   # requires VPC access to DB and configuration from secret manager
+  echo "Running migrations"
   npm run db-upgrade:ci
 fi
 
+echo "Deploying to $ENV..."
 if [ "$ENV" == "staging" ]
 then
   npm run deploy:staging
@@ -72,3 +80,4 @@ elif [ "$ENV" == "test" ]
 then
   npm run deploy:test
 fi
+echo "Deploy complete!"
