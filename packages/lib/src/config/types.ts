@@ -119,8 +119,8 @@ export enum ServiceName {
   STORAGE = 'STORAGE',
   APILLON_API = 'APILLON_API',
   AUTHENTICATION_API = 'AUTHENTICATION_API',
-  REFERRAL = 'REFERRAL',
   NFTS = 'NFTS',
+  REFERRAL = 'REFERRAL',
 }
 
 export enum ServiceCode {

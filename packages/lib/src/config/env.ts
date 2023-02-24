@@ -284,6 +284,7 @@ export interface IEnv {
    * hCAPTCHA
    */
   CAPTCHA_SECRET: string;
+
   /** DISCORD */
   DISCORD_CLIENT_ID: string;
   DISCORD_CLIENT_SECRET: string;
@@ -563,11 +564,6 @@ export let env: IEnv = {
   /** CAPTCHA */
   CAPTCHA_SECRET: process.env['CAPTCHA_SECRET'] || '',
 
-  /** DISCORD */
-  DISCORD_CLIENT_ID: process.env['DISCORD_CLIENT_ID'] || '',
-  DISCORD_CLIENT_SECRET: process.env['DISCORD_CLIENT_SECRET'] || '',
-  DISCORD_REDIRECT_URI: process.env['DISCORD_REDIRECT_URI'] || '',
-
   /** NFTS */
   NFTS_FUNCTION_NAME: process.env['NFTS_FUNCTION_NAME'],
   NFTS_FUNCTION_NAME_TEST: process.env['NFTS_FUNCTION_NAME_TEST'],
@@ -593,6 +589,10 @@ export let env: IEnv = {
     process.env['NFTS_MOONBEAM_MAINNET_PRIVATEKEY'],
   NFTS_AWS_WORKER_SQS_URL: process.env['NFTS_AWS_WORKER_SQS_URL'],
   NFTS_AWS_WORKER_LAMBDA_NAME: process.env['NFTS_AWS_WORKER_LAMBDA_NAME'],
+  /** DISCORD */
+  DISCORD_CLIENT_ID: process.env['DISCORD_CLIENT_ID'] || '',
+  DISCORD_CLIENT_SECRET: process.env['DISCORD_CLIENT_SECRET'] || '',
+  DISCORD_REDIRECT_URI: process.env['DISCORD_REDIRECT_URI'] || '',
 };
 
 export let isEnvReady = false;

@@ -54,29 +54,29 @@ export class NftTransaction {
   }
 
   /**
-   * @param contract contract address to transfer
+   * @param contractAddress contract address to transfer
    * @param newOwner new owner of contract
    * @param provider RPC provider
    * @returns TransactionRequest
    */
   static async createTransferOwnershipTransaction(
     walletAddress: string,
-    contract: string,
+    contractAddress: string,
     newOwner: string,
     provider: BaseProvider,
     nonce: number,
   ): Promise<TransactionRequest> {
     console.log(
-      `Creating NFT transfer ownership (NFT contract address=${contract}) transaction to wallet address: ${newOwner}`,
+      `Creating NFT transfer ownership (NFT contract address=${contractAddress}) transaction to wallet address: ${newOwner}`,
     );
-    const nftContract: Contract = new Contract(contract, PayableNft.abi);
+    const nftContract: Contract = new Contract(contractAddress, PayableNft.abi);
 
     const contractData: UnsignedTransaction =
       await nftContract.populateTransaction.transferOwnership(newOwner);
 
     return await this.createContractTransactionRequest(
       walletAddress,
-      contract,
+      contractAddress,
       contractData.data,
       nonce,
       provider,
@@ -85,29 +85,29 @@ export class NftTransaction {
 
   /**
    *
-   * @param contract contract to set baseUri
+   * @param contractAddress contract to set baseUri
    * @param uri URI (ipfs base uri) to set
    * @param provider RPC provider
    * @returns TransactionRequest
    */
   static async createSetNftBaseUriTransaction(
     walletAddress: string,
-    contract: string,
+    contractAddress: string,
     uri: string,
     provider: BaseProvider,
     nonce: number,
   ): Promise<TransactionRequest> {
     console.log(
-      `Creating NFT set base token URI transaction (contract=${contract}, uri=${uri}).`,
+      `Creating NFT set base token URI transaction (contract=${contractAddress}, uri=${uri}).`,
     );
-    const nftContract: Contract = new Contract(contract, PayableNft.abi);
+    const nftContract: Contract = new Contract(contractAddress, PayableNft.abi);
 
     const contractData: UnsignedTransaction =
       await nftContract.populateTransaction.setBaseURI(uri);
 
     return await this.createContractTransactionRequest(
       walletAddress,
-      contract,
+      contractAddress,
       contractData.data,
       nonce,
       provider,
@@ -115,22 +115,22 @@ export class NftTransaction {
   }
 
   /**
-   * @param contract NFT contract address
+   * @param contractAddress NFT contract address
    * @param address address to which NFT will be minted
    * @param provider RPC provider
    * @returns TransactionRequest
    */
   static async createMintToTransaction(
     walletAddress: string,
-    contract: string,
+    contractAddress: string,
     params: MintNftDTO,
     provider: BaseProvider,
     nonce: number,
   ) {
     console.log(
-      `Creating NFT (NFT contract=${contract}) mint transaction (toAddress=${params.receivingAddress}).`,
+      `Creating NFT (NFT contract=${contractAddress}) mint transaction (toAddress=${params.receivingAddress}).`,
     );
-    const nftContract: Contract = new Contract(contract, PayableNft.abi);
+    const nftContract: Contract = new Contract(contractAddress, PayableNft.abi);
 
     const contractData: UnsignedTransaction =
       await nftContract.populateTransaction.ownerMint(
@@ -140,7 +140,7 @@ export class NftTransaction {
 
     return await this.createContractTransactionRequest(
       walletAddress,
-      contract,
+      contractAddress,
       contractData.data,
       nonce,
       provider,
