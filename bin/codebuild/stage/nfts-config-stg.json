@@ -1,5 +1,5 @@
 {
-  "name": "apillon-dev-console-api-staging",
+  "name": "apillon-nfts-staging",
   "environment": {
     "computeType": "BUILD_GENERAL1_SMALL",
     "imagePullCredentialsType": "CODEBUILD",
@@ -19,17 +19,22 @@
       {
         "type": "PLAINTEXT",
         "name": "SERVICE_PATH",
-        "value": "modules/dev-console-api/"
-      },
-      {
-        "type": "PLAINTEXT",
-        "name": "MODULES_LIB",
-        "value": "true"
+        "value": "services/nfts/"
       },
       {
         "type": "PLAINTEXT",
         "name": "DB_MIGRATIONS",
         "value": "true"
+      },
+      {
+        "type": "PLAINTEXT",
+        "name": "WORKERS_LIB",
+        "value": "true"
+      },
+      {
+        "type": "PLAINTEXT",
+        "name": "WORKER_SQS_ARN",
+        "value": "arn:aws:sqs:eu-west-1:018021943180:apillon-nfts-queue-staging"
       },
       {
         "type": "PLAINTEXT",

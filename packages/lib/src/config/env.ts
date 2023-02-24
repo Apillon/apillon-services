@@ -325,6 +325,8 @@ export interface IEnv {
   NFTS_MYSQL_PORT: number;
   NFTS_MYSQL_USER: string;
   NFTS_MYSQL_PASSWORD: string;
+  NFTS_MYSQL_DEPLOY_USER: string;
+  NFTS_MYSQL_DEPLOY_PASSWORD: string;
   NFTS_MYSQL_DATABASE: string;
 
   // TEST
@@ -619,6 +621,11 @@ export let env: IEnv = {
   NFTS_MYSQL_DATABASE: process.env['NFTS_MYSQL_DATABASE'],
   NFTS_MYSQL_USER: process.env['NFTS_MYSQL_USER'],
   NFTS_MYSQL_PASSWORD: process.env['NFTS_MYSQL_PASSWORD'],
+  NFTS_MYSQL_DEPLOY_USER:
+    process.env['NFTS_MYSQL_DEPLOY_USER'] || process.env['NFTS_MYSQL_USER'],
+  NFTS_MYSQL_DEPLOY_PASSWORD:
+    process.env['NFTS_MYSQL_DEPLOY_PASSWORD'] ||
+    process.env['NFTS_MYSQL_PASSWORD'],
 
   NFTS_SOCKET_PORT_TEST: parseInt(process.env['NFTS_SOCKET_PORT_TEST']) || 7701,
   NFTS_MYSQL_HOST_TEST: process.env['NFTS_MYSQL_HOST_TEST'],

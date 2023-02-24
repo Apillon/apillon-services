@@ -1,5 +1,5 @@
 {
-  "name": "apillon-dev-console-api-staging",
+  "name": "apillon-nfts-production",
   "environment": {
     "computeType": "BUILD_GENERAL1_SMALL",
     "imagePullCredentialsType": "CODEBUILD",
@@ -9,22 +9,17 @@
       {
         "type": "PLAINTEXT",
         "name": "ENV",
-        "value": "staging"
+        "value": "production"
       },
       {
         "type": "PLAINTEXT",
         "name": "S3_CONFIG",
-        "value": "s3://apillon-services-config/env.staging.yml"
+        "value": "s3://apillon-services-config/env.prod.yml"
       },
       {
         "type": "PLAINTEXT",
         "name": "SERVICE_PATH",
-        "value": "modules/dev-console-api/"
-      },
-      {
-        "type": "PLAINTEXT",
-        "name": "MODULES_LIB",
-        "value": "true"
+        "value": "services/nfts/"
       },
       {
         "type": "PLAINTEXT",
@@ -33,8 +28,18 @@
       },
       {
         "type": "PLAINTEXT",
+        "name": "WORKERS_LIB",
+        "value": "true"
+      },
+      {
+        "type": "PLAINTEXT",
+        "name": "WORKER_SQS_ARN",
+        "value": "arn:aws:sqs:eu-west-1:018021943180:apillon-nfts-queue-production"
+      },
+      {
+        "type": "PLAINTEXT",
         "name": "AWS_SECRETS_ID",
-        "value": "apillon-staging"
+        "value": "apillon-production"
       }
     ],
     "type": "LINUX_CONTAINER"
@@ -68,7 +73,7 @@
     "cloudWatchLogs": {
       "status": "ENABLED",
       "groupName": "codebuild",
-      "streamName": "apillon-services-staging"
+      "streamName": "apillon-services-production"
     }
   },
   "encryptionKey": "arn:aws:kms:eu-west-1:018021943180:alias/aws/s3",
