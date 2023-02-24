@@ -1,45 +1,25 @@
-import * as readline from 'readline';
-import { env, downgradeDatabase } from '@apillon/lib';
+import { env, getEnvSecrets, SqlMigrator } from '@apillon/lib';
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
+async function run() {
+  await getEnvSecrets();
 
-let steps = 1;
+  const migrator = new SqlMigrator({
+    database: env.NFTS_MYSQL_DATABASE,
+    host: env.NFTS_MYSQL_HOST,
+    port: env.NFTS_MYSQL_PORT,
+    user: env.NFTS_MYSQL_USER,
+    password: env.NFTS_MYSQL_PASSWORD,
+  });
 
-const run = async () => {
-  await downgradeDatabase(
-    env.NFTS_MYSQL_DATABASE,
-    env.NFTS_MYSQL_HOST,
-    env.NFTS_MYSQL_PORT,
-    env.NFTS_MYSQL_USER,
-    env.NFTS_MYSQL_PASSWORD,
-    steps,
-  );
-};
+  const showDialog = !process.argv.includes('--F');
+  await migrator.downgrade(showDialog);
+}
 
-rl.question(
-  `You are about to downgrade database ${env.NFTS_MYSQL_DATABASE} @ ${env.NFTS_MYSQL_HOST}.\n Set number of versions to downgrade (-1 for all, 0 to exit):`,
-  (answer) => {
-    steps = parseInt(answer);
-    if (steps) {
-      console.log(`Downgrading ${steps > 0 ? steps : 'ALL'} version(s).`);
-    } else {
-      console.log('Invalid input. Exiting.');
-      process.exit(0);
-    }
-
-    rl.close();
-
-    run()
-      .then(() => {
-        console.log('Complete!');
-        process.exit(0);
-      })
-      .catch((err) => {
-        console.log(err);
-        process.exit(1);
-      });
-  },
-);
+run()
+  .then(() => {
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
