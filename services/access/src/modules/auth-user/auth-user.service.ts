@@ -1,4 +1,5 @@
 import {
+  DefaultUserRole,
   generateJwtToken,
   JwtTokenType,
   Lmas,
@@ -54,6 +55,8 @@ export class AuthUserService {
     try {
       await authUser.insert(SerializeFor.INSERT_DB, conn);
       await authUser.setDefaultRole(conn);
+      // Give beta roll to all new users
+      await authUser.assignRole('', DefaultUserRole.BETA_USER, conn);
 
       // Generate a new token with type USER_AUTH
       authUser.token = generateJwtToken(JwtTokenType.USER_AUTHENTICATION, {

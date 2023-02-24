@@ -284,10 +284,57 @@ export interface IEnv {
    * hCAPTCHA
    */
   CAPTCHA_SECRET: string;
+
   /** DISCORD */
   DISCORD_CLIENT_ID: string;
   DISCORD_CLIENT_SECRET: string;
   DISCORD_REDIRECT_URI: string;
+
+  /************************************************************
+   * Apillon Nfts API config
+   ************************************************************/
+  /**
+   *  function name
+   */
+  NFTS_FUNCTION_NAME: string;
+  NFTS_FUNCTION_NAME_TEST: string;
+
+  /**
+   * NFTS dev server port
+   */
+  NFTS_SOCKET_PORT: number;
+  NFTS_SOCKET_PORT_TEST: number;
+
+  /**
+   * NFTS Database config
+   */
+
+  NFTS_MYSQL_HOST: string;
+  NFTS_MYSQL_PORT: number;
+  NFTS_MYSQL_USER: string;
+  NFTS_MYSQL_PASSWORD: string;
+  NFTS_MYSQL_DATABASE: string;
+
+  // TEST
+  NFTS_MYSQL_HOST_TEST: string;
+  NFTS_MYSQL_PORT_TEST: number;
+  NFTS_MYSQL_USER_TEST: string;
+  NFTS_MYSQL_PASSWORD_TEST: string;
+  NFTS_MYSQL_DATABASE_TEST: string;
+
+  /**
+   * NFT Moonbeam config
+   */
+  NFTS_MOONBEAM_TESTNET_RPC: string;
+  NFTS_MOONBEAM_MAINNET_RPC: string;
+  NFTS_MOONBEAM_TESTNET_PRIVATEKEY: string;
+  NFTS_MOONBEAM_MAINNET_PRIVATEKEY: string;
+
+  /**
+   * NFT workers config
+   */
+  NFTS_AWS_WORKER_SQS_URL: string;
+  NFTS_AWS_WORKER_LAMBDA_NAME: string;
 }
 
 // dotenv.config();
@@ -385,7 +432,7 @@ export let env: IEnv = {
   STORAGE_DELETE_AFTER_INTERVAL:
     parseInt(process.env['STORAGE_DELETE_AFTER_INTERVAL']) || 90,
 
-  /**STORAGE microservice */
+  /**STORAGE microservice DB*/
   STORAGE_MYSQL_HOST: process.env['STORAGE_MYSQL_HOST'],
   STORAGE_MYSQL_PORT: parseInt(process.env['STORAGE_MYSQL_PORT']) || 3306,
   STORAGE_MYSQL_USER: process.env['STORAGE_MYSQL_USER'],
@@ -517,6 +564,31 @@ export let env: IEnv = {
   /** CAPTCHA */
   CAPTCHA_SECRET: process.env['CAPTCHA_SECRET'] || '',
 
+  /** NFTS */
+  NFTS_FUNCTION_NAME: process.env['NFTS_FUNCTION_NAME'],
+  NFTS_FUNCTION_NAME_TEST: process.env['NFTS_FUNCTION_NAME_TEST'],
+  NFTS_SOCKET_PORT: parseInt(process.env['NFTS_SOCKET_PORT']) || 6701,
+  NFTS_MYSQL_HOST: process.env['NFTS_MYSQL_HOST'],
+  NFTS_MYSQL_PORT: parseInt(process.env['NFTS_MYSQL_PORT']) || 3306,
+  NFTS_MYSQL_DATABASE: process.env['NFTS_MYSQL_DATABASE'],
+  NFTS_MYSQL_USER: process.env['NFTS_MYSQL_USER'],
+  NFTS_MYSQL_PASSWORD: process.env['NFTS_MYSQL_PASSWORD'],
+
+  NFTS_SOCKET_PORT_TEST: parseInt(process.env['NFTS_SOCKET_PORT_TEST']) || 7701,
+  NFTS_MYSQL_HOST_TEST: process.env['NFTS_MYSQL_HOST_TEST'],
+  NFTS_MYSQL_PORT_TEST: parseInt(process.env['NFTS_MYSQL_PORT_TEST']) || 3306,
+  NFTS_MYSQL_DATABASE_TEST: process.env['NFTS_MYSQL_DATABASE_TEST'],
+  NFTS_MYSQL_USER_TEST: process.env['NFTS_MYSQL_USER_TEST'],
+  NFTS_MYSQL_PASSWORD_TEST: process.env['NFTS_MYSQL_PASSWORD_TEST'],
+
+  NFTS_MOONBEAM_TESTNET_RPC: process.env['NFTS_MOONBEAM_TESTNET_RPC'],
+  NFTS_MOONBEAM_MAINNET_RPC: process.env['NFTS_MOONBEAM_MAINNET_RPC'],
+  NFTS_MOONBEAM_TESTNET_PRIVATEKEY:
+    process.env['NFTS_MOONBEAM_TESTNET_PRIVATEKEY'],
+  NFTS_MOONBEAM_MAINNET_PRIVATEKEY:
+    process.env['NFTS_MOONBEAM_MAINNET_PRIVATEKEY'],
+  NFTS_AWS_WORKER_SQS_URL: process.env['NFTS_AWS_WORKER_SQS_URL'],
+  NFTS_AWS_WORKER_LAMBDA_NAME: process.env['NFTS_AWS_WORKER_LAMBDA_NAME'],
   /** DISCORD */
   DISCORD_CLIENT_ID: process.env['DISCORD_CLIENT_ID'] || '',
   DISCORD_CLIENT_SECRET: process.env['DISCORD_CLIENT_SECRET'] || '',
