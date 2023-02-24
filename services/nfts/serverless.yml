@@ -60,7 +60,7 @@ functions:
     timeout: 900
     reservedConcurrency: 30
     environment:
-      AWS_WORKER_LAMBDA_NAME: ${self:functions.storage-service-worker.name}
+      AWS_WORKER_LAMBDA_NAME: ${self:functions.nfts-service-worker.name}
     events:
       - sqs:
           arn: ${env:WORKER_SQS_ARN}
