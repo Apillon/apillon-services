@@ -284,6 +284,10 @@ export interface IEnv {
    * hCAPTCHA
    */
   CAPTCHA_SECRET: string;
+  /** DISCORD */
+  DISCORD_CLIENT_ID: string;
+  DISCORD_CLIENT_SECRET: string;
+  DISCORD_REDIRECT_URI: string;
 }
 
 // dotenv.config();
@@ -512,6 +516,11 @@ export let env: IEnv = {
 
   /** CAPTCHA */
   CAPTCHA_SECRET: process.env['CAPTCHA_SECRET'] || '',
+
+  /** DISCORD */
+  DISCORD_CLIENT_ID: process.env['DISCORD_CLIENT_ID'] || '',
+  DISCORD_CLIENT_SECRET: process.env['DISCORD_CLIENT_SECRET'] || '',
+  DISCORD_REDIRECT_URI: process.env['DISCORD_REDIRECT_URI'] || '',
 };
 
 export let isEnvReady = false;

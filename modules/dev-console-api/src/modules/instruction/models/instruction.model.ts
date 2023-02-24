@@ -1,11 +1,12 @@
-import { stringParser, integerParser } from '@rawmodel/parsers';
-import { presenceValidator } from '@rawmodel/validators';
 import {
   AdvancedSQLModel,
   PopulateFrom,
   prop,
   SerializeFor,
+  SqlModelStatus,
 } from '@apillon/lib';
+import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
+import { presenceValidator } from '@rawmodel/validators';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
 
@@ -16,35 +17,16 @@ export class Instruction extends AdvancedSQLModel {
   tableName = DbTables.INSTRUCTION;
 
   /**
-   * Instruction instruction enum
-   */
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
-    serializable: [
-      SerializeFor.PROFILE,
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.INSTRUCTION_ENUM_NOT_PRESENT,
-      },
-    ],
-  })
-  public instructionEnum: string;
-
-  /**
    * Instruction title
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
     ],
   })
   public title: string;
@@ -54,11 +36,12 @@ export class Instruction extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -74,11 +57,12 @@ export class Instruction extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -94,11 +78,12 @@ export class Instruction extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
     ],
   })
   public extendedHtmlContent: string;
@@ -108,11 +93,12 @@ export class Instruction extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
     ],
   })
   public docsUrl: string;
@@ -122,36 +108,63 @@ export class Instruction extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.INSTRUCTION_FOR_ROUTE_NOT_PRESENT,
+      },
     ],
   })
   public forRoute: string;
 
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
+    ],
+    defaultValue: true,
+  })
+  public expanded: boolean;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
+    ],
+  })
+  public sortId: number;
+
   /**
-   * Returns instruction instance from instructionEnum
+   * Returns instructions filtered by route
    */
-  public async getInstructionByEnum(
+  public async getInstructions(
     context: DevConsoleApiContext,
-    instruction_enum: string,
+    forRoute?: string,
   ) {
-    const data = await context.mysql.paramExecute(
+    return await context.mysql.paramExecute(
       `
-        SELECT *
+        SELECT ${this.generateSelectFields('i')}
         FROM \`${DbTables.INSTRUCTION}\` i
-        WHERE instructionEnum = @instruction_enum
-        LIMIT 1
+        WHERE (@forRoute IS NULL OR forRoute = @forRoute)
+        AND status <> ${SqlModelStatus.DELETED}
+        ORDER BY sortId ASC;
       `,
-      { instruction_enum },
+      { forRoute: forRoute || null },
     );
-
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    }
-
-    return this.reset();
   }
 }

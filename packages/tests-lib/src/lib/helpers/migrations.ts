@@ -71,7 +71,7 @@ export async function upgradeTestDatabases(): Promise<void> {
     console.error('error at migrations.up()', err);
     throw err;
   }
-    
+
   await destroyTestMigrations();
 }
 

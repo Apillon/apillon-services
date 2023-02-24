@@ -1,6 +1,6 @@
 import {
   Ams,
-  ApiKeyQueryFilter,
+  ApiKeyQueryFilterDto,
   ApiKeyRoleBaseDto,
   CodeException,
   CreateApiKeyDto,
@@ -16,7 +16,10 @@ import { Service } from '../services/models/service.model';
 
 @Injectable()
 export class ApiKeyService {
-  async getApiKeyList(context: DevConsoleApiContext, query: ApiKeyQueryFilter) {
+  async getApiKeyList(
+    context: DevConsoleApiContext,
+    query: ApiKeyQueryFilterDto,
+  ) {
     return (await new Ams(context).listApiKeys(query)).data;
   }
 

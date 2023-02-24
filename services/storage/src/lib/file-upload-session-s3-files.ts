@@ -27,8 +27,8 @@ export async function getSessionFilesOnS3(
         session?.session_uuid ? '_sessions' : ''
       }/${bucket.id}/${session?.session_uuid}`,
     );
-    if (s3FileList.Contents.length > 0) s3FileLists.push(s3FileList);
-  } while (s3FileList.Contents.length == 1000);
+    if (s3FileList.Contents?.length > 0) s3FileLists.push(s3FileList);
+  } while (s3FileList.Contents?.length == 1000);
 
   if (s3FileLists.length == 0) {
     throw new StorageCodeException({

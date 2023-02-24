@@ -1,7 +1,11 @@
-import { FileUploadsQueryFilter, TrashedFilesQueryFilter } from '@apillon/lib';
+import {
+  CreateS3UrlsForUploadDto,
+  FileUploadsQueryFilter,
+  TrashedFilesQueryFilter,
+} from '@apillon/lib';
 import { ValidateFor } from '@apillon/lib';
 import {
-  CreateS3SignedUrlForUploadDto,
+  CreateS3UrlForUploadDto,
   DefaultUserRole,
   EndFileUploadSessionDto,
 } from '@apillon/lib';
@@ -55,15 +59,37 @@ export class StorageController {
     { role: DefaultUserRole.PROJECT_USER },
   )
   @UseGuards(AuthGuard)
-  @Validation({ dto: CreateS3SignedUrlForUploadDto })
+  @Validation({ dto: CreateS3UrlForUploadDto })
   @UseGuards(ValidationGuard, AuthGuard)
   async createS3SignedUrlForUpload(
     @Ctx() context: DevConsoleApiContext,
     @Param('bucket_uuid') bucket_uuid: string,
     @Body()
-    body: CreateS3SignedUrlForUploadDto,
+    body: CreateS3UrlForUploadDto,
   ) {
     return await this.storageService.createS3SignedUrlForUpload(
+      context,
+      bucket_uuid,
+      body,
+    );
+  }
+
+  @Post(':bucket_uuid/files-upload')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @UseGuards(AuthGuard)
+  @Validation({ dto: CreateS3UrlsForUploadDto })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async createS3SignedUrlsForUpload(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('bucket_uuid') bucket_uuid: string,
+    @Body()
+    body: CreateS3UrlsForUploadDto,
+  ) {
+    return await this.storageService.createS3SignedUrlsForUpload(
       context,
       bucket_uuid,
       body,

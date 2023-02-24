@@ -7,7 +7,64 @@ import {
 } from '../../../../config/types';
 import { ModelBase, prop } from '../../../base-models/base';
 
-export class CreateS3SignedUrlForUploadDto extends ModelBase {
+export class UploadFileMetadataDto extends ModelBase {
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    setter(value: string) {
+      if (value && value.length > 0) {
+        value = value.replace(/^\/+/g, '');
+        value += value.endsWith('/') ? '' : '/';
+      }
+      return value;
+    },
+    validators: [],
+  })
+  public path: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.FILE_NAME_NOT_PRESENT,
+      },
+    ],
+  })
+  public fileName: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+  })
+  public contentType: string;
+
+  /****************************************
+   *  Used for response
+   * ****************************************************/
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+  })
+  public url: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+  })
+  public file_uuid: string;
+}
+
+export class CreateS3UrlsForUploadDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -25,51 +82,28 @@ export class CreateS3SignedUrlForUploadDto extends ModelBase {
   public session_uuid: string;
 
   @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [],
-  })
-  public directory_uuid: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    setter(value: string) {
-      if (value && value.length > 0) {
-        value = value.replace(/^\/+/g, '');
-        value += value.endsWith('/') ? '' : '/';
-      }
-      return value;
-    },
-    validators: [],
-  })
-  public path: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: UploadFileMetadataDto, array: true },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.FILE_NAME_NOT_PRESENT,
+        code: ValidatorErrorCode.FILES_PROPERTY_NOT_PRESENT,
       },
     ],
   })
-  public fileName: string;
+  public files: UploadFileMetadataDto[];
+}
 
+export class ApillonApiCreateS3UrlsForUploadDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [],
   })
-  public contentType: string;
-}
+  public bucket_uuid: string;
 
-export class ApillonApiCreateS3SignedUrlForUploadDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -79,51 +113,46 @@ export class ApillonApiCreateS3SignedUrlForUploadDto extends ModelBase {
   public sessionUuid: string;
 
   @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [],
-  })
-  public directoryUuid: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    setter(value: string) {
-      if (value && value.length > 0) {
-        value = value.replace(/^\/+/g, '');
-        value += value.endsWith('/') ? '' : '/';
-      }
-      return value;
-    },
-    validators: [],
-  })
-  public path: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: UploadFileMetadataDto, array: true },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.FILE_NAME_NOT_PRESENT,
+        code: ValidatorErrorCode.FILES_PROPERTY_NOT_PRESENT,
       },
     ],
   })
-  public fileName: string;
+  public files: UploadFileMetadataDto[];
+}
+
+export class ApillonHostingApiCreateS3UrlsForUploadDto extends ModelBase {
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+  })
+  public website_uuid: string;
 
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+  })
+  public sessionUuid: string;
+
+  @prop({
+    parser: { resolver: UploadFileMetadataDto, array: true },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.FILE_CONTENT_TYPE_NOT_PRESENT,
+        code: ValidatorErrorCode.FILES_PROPERTY_NOT_PRESENT,
       },
     ],
   })
-  public contentType: string;
+  public files: UploadFileMetadataDto[];
 }

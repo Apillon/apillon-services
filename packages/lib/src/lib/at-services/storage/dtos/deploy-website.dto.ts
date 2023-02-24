@@ -1,4 +1,4 @@
-import { stringParser } from '@rawmodel/parsers';
+import { booleanParser, integerParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   PopulateFrom,
@@ -6,47 +6,47 @@ import {
   ValidatorErrorCode,
 } from '../../../../config/types';
 import { ModelBase, prop } from '../../../base-models/base';
+import { enumInclusionValidator } from '../../../validators';
 
-export class CreateWebPageDto extends ModelBase {
+export class DeployWebsiteDto extends ModelBase {
   @prop({
-    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.WEB_PAGE_PROJECT_UUID_NOT_PRESENT,
+        code: ValidatorErrorCode.DEPLOY_WEBSITE_ID_NOT_PRESENT,
       },
     ],
   })
-  public project_uuid: string;
+  public website_id: number | string;
 
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.WEB_PAGE_NAME_NOT_PRESENT,
+        code: ValidatorErrorCode.DEPLOY_ENVIRONMENT_NOT_PRESENT,
       },
     ],
   })
-  public name: string;
+  public environment: number;
 
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [],
   })
-  public description: string;
+  public directDeploy: boolean;
 
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [],
   })
-  public domain: string;
+  public clearBucketForUpload: boolean;
 }

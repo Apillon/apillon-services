@@ -6,7 +6,7 @@ export async function upgrade(
   await queryFn(`
     CREATE TABLE IF NOT EXISTS \`${DbTables.DEPLOYMENT}\` (
   \`id\` INT NOT NULL AUTO_INCREMENT,
-  \`webPage_id\` INT NOT NULL,
+  \`website_id\` INT NOT NULL,
   \`bucket_id\` INT NOT NULL,
   \`environment\` INT NOT NULL,
   \`deploymentStatus\` INT NOT NULL,

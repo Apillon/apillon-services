@@ -44,6 +44,20 @@ export class IpnsController {
     return await this.ipnsService.getIpnsList(context, bucket_id, query);
   }
 
+  @Get(':id')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @UseGuards(AuthGuard)
+  async getIpns(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return await this.ipnsService.getIpns(context, id);
+  }
+
   @Post()
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },

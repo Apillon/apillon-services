@@ -1,5 +1,5 @@
 import {
-  ApiKeyQueryFilter,
+  ApiKeyQueryFilterDto,
   CreateApiKeyDto,
   generatePassword,
   Lmas,
@@ -43,13 +43,13 @@ export class ApiKeyService {
 
   //#region Api-key CRUD
   static async listApiKeys(
-    event: { query: ApiKeyQueryFilter },
+    event: { query: ApiKeyQueryFilterDto },
     context: ServiceContext,
   ) {
     return await new ApiKey(
       { project_uuid: event.query.project_uuid },
       context,
-    ).getList(context, new ApiKeyQueryFilter(event.query));
+    ).getList(context, new ApiKeyQueryFilterDto(event.query));
   }
 
   static async createApiKey(

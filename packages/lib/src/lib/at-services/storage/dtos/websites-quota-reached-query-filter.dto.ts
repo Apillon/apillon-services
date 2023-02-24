@@ -4,7 +4,7 @@ import { presenceValidator } from '@rawmodel/validators';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
 
-export class WebPagesQuotaReachedQueryFilter extends ModelBase {
+export class WebsitesQuotaReachedQueryFilter extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
