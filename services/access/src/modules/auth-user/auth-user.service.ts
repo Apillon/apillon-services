@@ -1,4 +1,5 @@
 import {
+  DefaultUserRole,
   generateJwtToken,
   JwtTokenType,
   Lmas,
