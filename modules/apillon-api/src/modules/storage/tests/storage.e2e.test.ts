@@ -15,7 +15,6 @@ import {
   StorageErrorCode,
 } from '@apillon/storage/src/config/types';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
-import { FileUploadRequest } from '@apillon/storage/src/modules/storage/models/file-upload-request.model';
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 import { StorageService as StrageMSService } from '@apillon/storage/src/modules/storage/storage.service';
 import {

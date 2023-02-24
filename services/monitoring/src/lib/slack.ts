@@ -38,7 +38,8 @@ export class Slack {
   async publishMessage(channelId: string, text: string) {
     try {
       // Call the chat.postMessage method using the built-in WebClient
-      const result = await this.client.chat.postMessage({
+      // const result =
+      await this.client.chat.postMessage({
         token: env.SLACK_TOKEN,
         channel: channelId,
         blocks: [{ type: 'section', text: { type: 'mrkdwn', text } }],

@@ -21,7 +21,6 @@ import {
   StorageErrorCode,
 } from '../../../config/types';
 import { ServiceContext } from '../../../context';
-import { Bucket } from '../../bucket/models/bucket.model';
 import { Website } from './website.model';
 
 export class Deployment extends AdvancedSQLModel {

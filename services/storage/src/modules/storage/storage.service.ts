@@ -519,8 +519,9 @@ export class StorageService {
   static async getFileDetails(event: { id: string }, context: ServiceContext) {
     let file: File = undefined;
     let fileStatus: FileStatus = undefined;
-    if (event.id) file = await new File({}, context).populateById(event.id);
-    else {
+    if (event.id) {
+      file = await new File({}, context).populateById(event.id);
+    } else {
       throw new StorageCodeException({
         code: StorageErrorCode.DEFAULT_RESOURCE_NOT_FOUND_ERROR,
         status: 404,
@@ -543,9 +544,11 @@ export class StorageService {
             env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
             fur.s3FileKey,
           )
-        )
+        ) {
           fileStatus = FileStatus.UPLOADED_TO_S3;
-        else fileStatus = FileStatus.REQUEST_FOR_UPLOAD_GENERATED;
+        } else {
+          fileStatus = FileStatus.REQUEST_FOR_UPLOAD_GENERATED;
+        }
 
         return {
           fileStatus: fileStatus,

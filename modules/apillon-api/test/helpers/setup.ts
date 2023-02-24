@@ -1,5 +1,5 @@
 import { AppEnvironment, env } from '@apillon/lib';
-import { ExceptionsFilter, ResponseInterceptor } from '@apillon/modules-lib';
+import { ExceptionsFilter } from '@apillon/modules-lib';
 import {
   rebuildTestDatabases,
   setupTestContextAndSql,

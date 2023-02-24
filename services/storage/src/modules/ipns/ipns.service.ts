@@ -77,7 +77,9 @@ export class IpnsService {
       await ipns.validate();
     } catch (err) {
       await ipns.handle(err);
-      if (!ipns.isValid()) throw new StorageValidationException(ipns);
+      if (!ipns.isValid()) {
+        throw new StorageValidationException(ipns);
+      }
     }
     const conn = await context.mysql.start();
     try {
@@ -217,7 +219,9 @@ export class IpnsService {
       await ipns.validate();
     } catch (err) {
       await ipns.handle(err);
-      if (!ipns.isValid()) throw new StorageValidationException(ipns);
+      if (!ipns.isValid()) {
+        throw new StorageValidationException(ipns);
+      }
     }
 
     await ipns.update();

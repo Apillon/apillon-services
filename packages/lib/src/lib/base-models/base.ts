@@ -36,6 +36,8 @@ export abstract class ModelBase extends Model<any> {
   }
 
   public populateByStrategies(data, strategies: string[]) {
-    for (const strategy of strategies) this.populate(data, strategy);
+    for (const strategy of strategies) {
+      this.populate(data, strategy);
+    }
   }
 }
