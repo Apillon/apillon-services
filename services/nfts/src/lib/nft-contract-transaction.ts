@@ -1,11 +1,9 @@
 import { DeployNftContractDto, MintNftDTO } from '@apillon/lib';
 import { Contract, ContractFactory, ethers, UnsignedTransaction } from 'ethers';
 import { PayableNft } from './contracts/payable-mint-nft';
-import { Injectable, Scope } from '@nestjs/common';
 import { TransactionRequest, BaseProvider } from '@ethersproject/providers';
 import { TransactionUtils } from './utils/transaction-utils';
 
-@Injectable({ scope: Scope.REQUEST })
 export class NftTransaction {
   /**
    * @param params DeployNftContractDto parameters
