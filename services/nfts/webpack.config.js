@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const path = require('path');
-// const webpack = require('webpack');
+const webpack = require('webpack');
 const slsw = require('serverless-webpack');
 const nodeExternals = require('webpack-node-externals');
 const CopyPlugin = require('copy-webpack-plugin');
@@ -44,7 +44,7 @@ module.exports = {
   },
   externals: [
     nodeExternals({
-      allowlist: ['@apillon/lib', '@apillon/workers-lib', 'ethers'],
+      allowlist: ['@apillon/lib', '@apillon/workers-lib'],
     }),
   ],
   // externals: [nodeExternals()],
@@ -69,10 +69,10 @@ module.exports = {
     ],
   },
   plugins: [
-    // new webpack.ProvidePlugin({
-    //   WebSocket: 'ws',
-    //   fetch: ['node-fetch', 'default'],
-    // }),
+    new webpack.ProvidePlugin({
+      WebSocket: 'ws',
+      fetch: ['node-fetch', 'default'],
+    }),
     //   new CopyPlugin({
     //     patterns: [
     //       { from: './src/templates/mail/*.html' },
