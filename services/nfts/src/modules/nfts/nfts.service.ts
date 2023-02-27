@@ -11,7 +11,6 @@ import {
   TransferCollectionDTO,
 } from '@apillon/lib';
 import { TransactionRequest } from '@ethersproject/providers';
-import { FormatTypes, Interface } from 'ethers/lib/utils';
 import { v4 as uuidV4 } from 'uuid';
 import {
   Chains,
