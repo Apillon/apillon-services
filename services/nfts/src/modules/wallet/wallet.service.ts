@@ -15,12 +15,12 @@ import { PayableNft } from '../../lib/contracts/payable-mint-nft';
 
 export class WalletService {
   private wallet: Wallet;
-  private provider: ethers.providers.StaticJsonRpcProvider;
+  private provider: ethers.providers.WebSocketProvider;
   private prodEnv = env.APP_ENV === AppEnvironment.PROD;
   private walletAddress: string;
 
   constructor() {
-    this.provider = new ethers.providers.StaticJsonRpcProvider(
+    this.provider = new ethers.providers.WebSocketProvider(
       this.prodEnv
         ? env.NFTS_MOONBEAM_MAINNET_RPC
         : env.NFTS_MOONBEAM_TESTNET_RPC,
