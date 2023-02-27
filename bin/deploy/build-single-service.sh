@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#fail on first error
+set -e
+
 echo "Starting build script..."
 TIMESTAMP="$(date +%s)"
 echo $TIMESTAMP
