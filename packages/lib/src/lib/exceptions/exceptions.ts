@@ -55,7 +55,7 @@ export class CodeException extends HttpException {
     );
   }
 
-  public async writeToMonitor(params: {
+  public async writeToMonitor(params?: {
     context?: Context;
     project_uuid?: string;
     user_uuid?: string;
@@ -64,16 +64,16 @@ export class CodeException extends HttpException {
     data?: any;
   }) {
     await new Lmas().writeLog({
-      context: params.context || this.options.context,
-      project_uuid: params.project_uuid,
-      user_uuid: params.user_uuid || params.context?.user?.user_uuid || null,
-      logType: params.logType || LogType.ERROR,
+      context: params?.context || this.options.context,
+      project_uuid: params?.project_uuid,
+      user_uuid: params?.user_uuid || params?.context?.user?.user_uuid || null,
+      logType: params?.logType || LogType.ERROR,
       message: this.options.errorCodes
         ? this.options.errorCodes[this.options.code]
         : this.options.errorMessage,
       location: this.options.sourceFunction,
-      service: params.service || this.options.sourceModule,
-      data: params.data || this.options.details,
+      service: params?.service || this.options.sourceModule,
+      data: params?.data || this.options.details,
     });
 
     return this;

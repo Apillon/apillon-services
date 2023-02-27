@@ -61,7 +61,9 @@ export class NftsService {
       await collection.validate();
     } catch (err) {
       await collection.handle(err);
-      if (!collection.isValid()) throw new NftsValidationException(collection);
+      if (!collection.isValid()) {
+        throw new NftsValidationException(collection);
+      }
     }
 
     const conn = await context.mysql.start();

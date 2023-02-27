@@ -2,6 +2,7 @@ import { NftsEventType } from '@apillon/lib';
 import type { Context } from 'aws-lambda/handler';
 import { NftsService } from './modules/nfts/nfts.service';
 import { TransactionService } from './modules/transaction/transaction.service';
+import { testNet } from './scripts/test-net';
 
 export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
@@ -14,6 +15,7 @@ export async function processEvent(event, context: Context): Promise<any> {
       TransactionService.checkTransactionsStatus,
     [NftsEventType.NFT_COLLECTION_TRANSACTION_LIST]:
       TransactionService.listCollectionTransactions,
+    'test-net': testNet,
   };
 
   return await processors[event.eventName](event, context);
