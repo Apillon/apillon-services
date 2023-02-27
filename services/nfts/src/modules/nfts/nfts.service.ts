@@ -44,6 +44,10 @@ export class NftsService {
     const walletService = new WalletService();
     const walletAddress = await walletService.getWalletAddress();
 
+    //test
+    console.log('testing RPC calls');
+    await walletService.getCurrentMaxNonce();
+
     //Create collection object
     const collection: Collection = new Collection(
       params.body,

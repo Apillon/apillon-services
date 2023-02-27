@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const path = require('path');
+const webpack = require('webpack');
 const slsw = require('serverless-webpack');
 const nodeExternals = require('webpack-node-externals');
 const CopyPlugin = require('copy-webpack-plugin');
@@ -16,13 +17,13 @@ module.exports = {
     cacheWithContext: false,
     alias: {
       'bson-ext': false,
-      'kerberos': false,
-      // '@mongodb-js/zstd': false,
-      'snappy': false,
+      kerberos: false,
+      '@mongodb-js/zstd': false,
+      snappy: false,
       'snappy/package.json': false,
-      'aws4': false,
+      aws4: false,
       'mongodb-client-encryption': false,
-      'cardinal': false,
+      cardinal: false,
       // '@nestjs/websockets/socket-module': false,
       // 'cache-manager': false,
       // 'class-validator': false,
@@ -41,10 +42,11 @@ module.exports = {
   node: {
     __dirname: true,
   },
-  externals: [nodeExternals({
-    allowlist: ['@apillon/lib', '@apillon/workers-lib']
-  }
-  )],
+  externals: [
+    nodeExternals({
+      allowlist: ['@apillon/lib', '@apillon/workers-lib'],
+    }),
+  ],
   // externals: [nodeExternals()],
   module: {
     rules: [
@@ -66,13 +68,17 @@ module.exports = {
       },
     ],
   },
-  // plugins: [
-  //   new CopyPlugin({
-  //     patterns: [
-  //       { from: './src/templates/mail/*.html' },
-  //       { from: './src/templates/pdf/*.html' },
-  //       { from: './src/locales/*.json' },
-  //     ],
-  //   }),
-  // ],
+  plugins: [
+    new webpack.ProvidePlugin({
+      WebSocket: 'ws',
+      fetch: ['node-fetch', 'default'],
+    }),
+    //   new CopyPlugin({
+    //     patterns: [
+    //       { from: './src/templates/mail/*.html' },
+    //       { from: './src/templates/pdf/*.html' },
+    //       { from: './src/locales/*.json' },
+    //     ],
+    //   }),
+  ],
 };

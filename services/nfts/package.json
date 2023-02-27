@@ -29,7 +29,8 @@
     "@apillon/workers-lib": "*",
     "@middy/core": "^2.5.7",
     "@types/uuid": "^8.3.4",
-    "ethers": "^5.7.2"
+    "ethers": "^5.7.2",
+    "node-fetch": "2.6.7"
   },
   "devDependencies": {
     "eslint-config-common": "*",
