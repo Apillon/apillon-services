@@ -20,15 +20,24 @@ export class WalletService {
   private walletAddress: string;
 
   constructor() {
-    this.provider = new ethers.providers.StaticJsonRpcProvider(
-      this.prodEnv
-        ? env.NFTS_MOONBEAM_MAINNET_RPC
-        : env.NFTS_MOONBEAM_TESTNET_RPC,
-      {
-        chainId: this.prodEnv ? 1284 : 1287,
-        name: this.prodEnv ? 'moonbeam' : 'moonbase-alphanet',
-      },
-    );
+    // this.provider = new ethers.providers.StaticJsonRpcProvider(
+    //   this.prodEnv
+    //     ? env.NFTS_MOONBEAM_MAINNET_RPC
+    //     : env.NFTS_MOONBEAM_TESTNET_RPC,
+    //   {
+    //     chainId: this.prodEnv ? 1284 : 1287,
+    //     name: this.prodEnv ? 'moonbeam' : 'moonbase-alphanet',
+    //   },
+    // );
+
+    const rpcUrl = this.prodEnv
+      ? env.NFTS_MOONBEAM_MAINNET_RPC
+      : env.NFTS_MOONBEAM_TESTNET_RPC;
+
+    console.log('RPC URL:', rpcUrl);
+
+    this.provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+
     this.wallet = new Wallet(
       this.prodEnv
         ? env.NFTS_MOONBEAM_MAINNET_PRIVATEKEY
