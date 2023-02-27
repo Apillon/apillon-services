@@ -62,6 +62,7 @@ functions:
     environment:
       AWS_WORKER_LAMBDA_NAME: ${self:functions.nfts-service-worker.name}
     events:
+      - schedule: cron(${env:CRON_SCHEDULE, '0/3 * * * ? *'})
       - sqs:
           arn: ${env:WORKER_SQS_ARN}
           batchSize: 4
