@@ -16,7 +16,7 @@ import { PayableNft } from '../../lib/contracts/payable-mint-nft';
 export class WalletService {
   private wallet: Wallet;
   private provider: ethers.providers.StaticJsonRpcProvider;
-  private prodEnv = env.APP_ENV == AppEnvironment.PROD;
+  private prodEnv = env.APP_ENV === AppEnvironment.PROD;
   private walletAddress: string;
 
   constructor() {
@@ -34,6 +34,11 @@ export class WalletService {
         ? env.NFTS_MOONBEAM_MAINNET_PRIVATEKEY
         : env.NFTS_MOONBEAM_TESTNET_PRIVATEKEY,
       this.provider,
+    );
+    console.log(
+      `Wallet initialization (address=${
+        this.wallet.address
+      }) & RPC initialization ${JSON.stringify(this.provider.network)}`,
     );
   }
 
