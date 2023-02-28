@@ -1,4 +1,4 @@
-import { DbTables, FileStatus } from '../../config/types';
+import { DbTables } from '../../config/types';
 
 export async function upgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,

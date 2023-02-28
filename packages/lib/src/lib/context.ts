@@ -36,16 +36,18 @@ export class Context {
       if (Array.isArray(role)) {
         //Check if user has one of required roles
         for (const r of role) {
-          if (this.user.authUser.authUserRoles.find((x) => x.role.id == r))
+          if (this.user.authUser.authUserRoles.find((x) => x.role.id == r)) {
             return true;
+          }
         }
         return false;
       }
       //Check if user has specific role
-      else
+      else {
         return !!this.user.authUser.authUserRoles.find(
           (x) => x.role.id == role,
         );
+      }
     }
 
     return false;
@@ -60,7 +62,9 @@ export class Context {
   public hasRoleOnProject(role: number | number[], project_uuid: string) {
     //If call is made through api key
     if (this.apiKey) {
-      if (this.apiKey.project_uuid == project_uuid) return true;
+      if (this.apiKey.project_uuid == project_uuid) {
+        return true;
+      }
     } else {
       //If call was made by user (dev-console)
       if (Array.isArray(role)) {
@@ -71,18 +75,20 @@ export class Context {
               this.user.authUser.authUserRoles
                 .filter((x) => x.project_uuid == project_uuid)
                 .find((x) => x.role.id == r)
-            )
+            ) {
               return true;
+            }
           }
         }
 
         return false;
       }
       //Check if user has specific role
-      else
+      else {
         return !!this.user?.authUser?.authUserRoles
           .filter((x) => x.project_uuid == project_uuid)
           .find((x) => x.role.id == role);
+      }
     }
     return false;
   }

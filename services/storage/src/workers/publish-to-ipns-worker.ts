@@ -35,12 +35,13 @@ export class PublishToIPNSWorker extends BaseQueueWorker {
     const cid = data?.cid;
     const ipns_id = data?.ipns_id;
 
-    if (!cid || !ipns_id)
+    if (!cid || !ipns_id) {
       throw new StorageCodeException({
         code: StorageErrorCode.INVALID_DATA_PASSED_TO_WORKER,
         status: 500,
         details: data,
       });
+    }
 
     const ipns: Ipns = await new Ipns({}, this.context).populateById(ipns_id);
 

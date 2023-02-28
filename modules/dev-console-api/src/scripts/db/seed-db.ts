@@ -7,8 +7,11 @@ async function run() {
     database: env.DEV_CONSOLE_API_MYSQL_DATABASE,
     host: env.DEV_CONSOLE_API_MYSQL_HOST,
     port: env.DEV_CONSOLE_API_MYSQL_PORT,
-    user: env.DEV_CONSOLE_API_MYSQL_USER,
-    password: env.DEV_CONSOLE_API_MYSQL_PASSWORD,
+    user:
+      env.DEV_CONSOLE_API_MYSQL_DEPLOY_USER || env.DEV_CONSOLE_API_MYSQL_USER,
+    password:
+      env.DEV_CONSOLE_API_MYSQL_DEPLOY_PASSWORD ||
+      env.DEV_CONSOLE_API_MYSQL_PASSWORD,
   });
 
   const showDialog = !process.argv.includes('--F');

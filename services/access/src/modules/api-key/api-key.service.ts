@@ -68,7 +68,9 @@ export class ApiKeyService {
       await key.validate();
     } catch (err) {
       await key.handle(err);
-      if (!key.isValid()) throw new AmsValidationException(key);
+      if (!key.isValid()) {
+        throw new AmsValidationException(key);
+      }
     }
 
     //check max api keys quota
@@ -101,7 +103,9 @@ export class ApiKeyService {
           } catch (err) {
             await akr.handle(err);
 
-            if (!akr.isValid()) throw new AmsValidationException(akr);
+            if (!akr.isValid()) {
+              throw new AmsValidationException(akr);
+            }
           }
 
           await akr.insert(SerializeFor.INSERT_DB, conn);

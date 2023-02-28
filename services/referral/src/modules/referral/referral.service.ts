@@ -65,7 +65,9 @@ export class ReferralService {
       await player.validate();
     } catch (err) {
       await player.handle(err);
-      if (!player.isValid()) throw new ReferralValidationException(player);
+      if (!player.isValid()) {
+        throw new ReferralValidationException(player);
+      }
     }
 
     if (player.exists()) {

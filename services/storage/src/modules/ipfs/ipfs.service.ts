@@ -24,12 +24,13 @@ export class IPFSService {
     //return await CrustService.createIPFSClient();
 
     //Kalmia IPFS Gateway
-    if (!env.STORAGE_IPFS_API)
+    if (!env.STORAGE_IPFS_API) {
       throw new StorageCodeException({
         status: 500,
         code: StorageErrorCode.STORAGE_IPFS_API_NOT_SET,
         sourceFunction: `${this.constructor.name}/createIPFSClient`,
       });
+    }
     writeLog(
       LogType.INFO,
       `Connection to IPFS gateway: ${env.STORAGE_IPFS_API}`,
@@ -38,8 +39,9 @@ export class IPFSService {
     );
 
     let ipfsGatewayURL = env.STORAGE_IPFS_API;
-    if (ipfsGatewayURL.endsWith('/'))
+    if (ipfsGatewayURL.endsWith('/')) {
       ipfsGatewayURL = ipfsGatewayURL.slice(0, -1);
+    }
     return await create({ url: ipfsGatewayURL });
   }
 
@@ -297,12 +299,12 @@ export class IPFSService {
     }
 
     //Generate new key or use existing
-    if (!existingKeys || existingKeys.length == 0)
+    if (!existingKeys || existingKeys.length == 0) {
       key = await client.key.gen(ipfsKey, {
         type: 'rsa',
         size: 2048,
       });
-    else {
+    } else {
       key = existingKeys[0];
     }
     //Check key
@@ -376,7 +378,9 @@ export class IPFSService {
    * @returns true, if CID is pinned on IPFS
    */
   static async isCIDPinned(cid: string) {
-    if (!cid) return false;
+    if (!cid) {
+      return false;
+    }
     //Get IPFS client
     const client = await IPFSService.createIPFSClient();
     try {
@@ -385,7 +389,9 @@ export class IPFSService {
         return true;
       }
     } catch (err) {
-      if (err.message && err.message.includes('is not pinned')) return false;
+      if (err.message && err.message.includes('is not pinned')) {
+        return false;
+      }
       throw err;
     }
     return false;

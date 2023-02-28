@@ -25,3 +25,6 @@ aws codebuild update-webhook --cli-input-json file://auth-api-webhook-dev.json -
 aws codebuild update-project --cli-input-json file://referral-config-dev.json --profile apillon
 aws codebuild update-webhook --cli-input-json file://referral-webhook-dev.json --profile apillon
 
+aws codebuild update-project --cli-input-json file://nfts-config-dev.json --profile apillon
+aws codebuild update-webhook --cli-input-json file://nfts-webhook-dev.json --profile apillon
+

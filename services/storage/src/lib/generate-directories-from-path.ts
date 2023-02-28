@@ -83,22 +83,26 @@ export async function generateDirectoriesFromPath(
         const ipfsDirectory = ipfsDirectories?.find(
           (x) => x.path == splittedPath.slice(0, i + 1).join('/'),
         );
-        if (ipfsDirectory)
+        if (ipfsDirectory) {
           newDirectory.CID = ipfsDirectory.cid.toV0().toString();
+        }
 
         try {
           await newDirectory.validate();
         } catch (err) {
           await newDirectory.handle(err);
-          if (!newDirectory.isValid())
+          if (!newDirectory.isValid()) {
             throw new StorageValidationException(newDirectory);
+          }
         }
 
         currDirectory = await newDirectory.insert(SerializeFor.INSERT_DB, conn);
 
         //Add new directory to list of all directories
         directories.push(currDirectory);
-      } else currDirectory = existingDirectory;
+      } else {
+        currDirectory = existingDirectory;
+      }
     }
     return currDirectory;
   }

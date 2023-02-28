@@ -38,7 +38,7 @@
     "gitSubmodulesConfig": {
       "fetchSubmodules": false
     },
-    "location": "https://TineMlakar@bitbucket.org/kalmiadevs/apillon-app.git",
+    "location": "https://TineMlakar@bitbucket.org/kalmiadevs/atv2-app.git",
     "gitCloneDepth": 1,
     "type": "BITBUCKET",
     "reportBuildStatus": false

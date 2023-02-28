@@ -19,3 +19,6 @@ aws codebuild create-webhook --cli-input-json file://staging-webhook-stg.json --
 aws codebuild create-project --cli-input-json file://referral-config-stg.json --profile apillon
 aws codebuild create-webhook --cli-input-json file://referral-webhook-stg.json --profile apillon
 
+aws codebuild create-project --cli-input-json file://nfts-config-stg.json --profile apillon
+aws codebuild create-webhook --cli-input-json file://nfts-webhook-stg.json --profile apillon
+
