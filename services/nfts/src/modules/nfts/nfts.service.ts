@@ -135,10 +135,27 @@ export class NftsService {
     event: { query: NFTCollectionQueryFilter },
     context: ServiceContext,
   ) {
-    return await new Collection(
+    console.log('Listing all NFT Collections');
+
+    const collections = await new Collection(
       { project_uuid: event.query.project_uuid },
       context,
     ).getList(context, new NFTCollectionQueryFilter(event.query));
+
+    const walletService: WalletService = new WalletService();
+    const responseCollections = [];
+
+    for (const collection of collections.items) {
+      const mintedNr = collection.contractAddress
+        ? await walletService.getMintedNftsNr(collection.contractAddress)
+        : 0;
+
+      responseCollections.push({
+        ...collection,
+        minted: mintedNr,
+      });
+    }
+    return { items: responseCollections, total: collections.total };
   }
 
   static async transferCollectionOwnership(
@@ -232,6 +249,7 @@ export class NftsService {
     const mintedNftsNr = await walletService.getMintedNftsNr(
       collection.contractAddress,
     );
+
     if (mintedNftsNr + params.body.quantity > collection.maxSupply) {
       throw new NftsCodeException({
         status: 500,
