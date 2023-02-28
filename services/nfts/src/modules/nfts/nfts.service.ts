@@ -135,17 +135,15 @@ export class NftsService {
     event: { query: NFTCollectionQueryFilter },
     context: ServiceContext,
   ) {
-    const collections: any[] = (
-      await new Collection(
-        { project_uuid: event.query.project_uuid },
-        context,
-      ).getList(context, new NFTCollectionQueryFilter(event.query))
-    ).items;
+    const collections = await new Collection(
+      { project_uuid: event.query.project_uuid },
+      context,
+    ).getList(context, new NFTCollectionQueryFilter(event.query));
 
     const walletService: WalletService = new WalletService();
     let responseCollections: any[];
 
-    for (const collection of collections) {
+    for (const collection of collections.items) {
       const mintedNr = collection.contractAddress
         ? await walletService.getMintedNftsNr(collection.contractAddress)
         : 0;
@@ -155,7 +153,7 @@ export class NftsService {
         minted: mintedNr,
       });
     }
-    return responseCollections;
+    return { items: responseCollections, total: collections.total };
   }
 
   static async transferCollectionOwnership(
