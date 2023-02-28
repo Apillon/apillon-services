@@ -138,6 +138,7 @@ export class WalletService {
       PayableNft.abi,
       this.provider,
     );
-    return await nftContract.totalSupply();
+    const totalSupply = await nftContract.totalSupply();
+    return parseInt(totalSupply._hex, 16);
   }
 }

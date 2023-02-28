@@ -243,6 +243,7 @@ export class NftsService {
     const mintedNftsNr = await walletService.getMintedNftsNr(
       collection.contractAddress,
     );
+
     if (mintedNftsNr + params.body.quantity > collection.maxSupply) {
       throw new NftsCodeException({
         status: 500,
