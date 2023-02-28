@@ -236,7 +236,7 @@ export class Ipns extends AdvancedSQLModel {
         WHERE i.project_uuid = @project_uuid
         AND i.bucket_id = @bucket_id
         AND (@search IS null OR i.name LIKE CONCAT('%', @search, '%'))
-        AND status = ${SqlModelStatus.ACTIVE}
+        AND status <> ${SqlModelStatus.DELETED}
       `,
       qFilter: `
         ORDER BY ${filters.orderStr}
