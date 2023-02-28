@@ -223,6 +223,19 @@ export class NftsService {
       context,
     );
 
+    const mintedNftsNr = await walletService.getMintedNftsNr(
+      collection.contractAddress,
+    );
+    if (mintedNftsNr + params.body.quantity > collection.maxSupply) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.MINT_NFT_SUPPLY_ERROR,
+        context: context,
+        sourceFunction: 'mintNftTo()',
+        errorMessage: 'Unable to mint new NFTs, out of supply!',
+      });
+    }
+
     const conn = await context.mysql.start();
     try {
       const dbTxRecord: Transaction = new Transaction({}, context);
