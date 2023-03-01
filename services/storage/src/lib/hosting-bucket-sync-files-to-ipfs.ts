@@ -1,11 +1,4 @@
-import {
-  AWS_S3,
-  env,
-  Lmas,
-  LogType,
-  SerializeFor,
-  ServiceName,
-} from '@apillon/lib';
+import { Lmas, LogType, SerializeFor, ServiceName } from '@apillon/lib';
 import {
   FileStatus,
   FileUploadRequestFileStatus,
@@ -39,7 +32,6 @@ export async function hostingBucketSyncFilesToIPFS(
   const transferedFiles = [];
 
   //Check if size of files is greater than allowed bucket size.
-  const s3Client: AWS_S3 = new AWS_S3();
   const filesOnS3 = await getSessionFilesOnS3(bucket, session);
 
   if (filesOnS3.size > maxBucketSize) {

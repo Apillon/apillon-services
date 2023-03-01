@@ -25,3 +25,7 @@ aws codebuild create-webhook --cli-input-json file://auth-api-webhook-dev.json
 aws codebuild create-project --cli-input-json file://referral-config-dev.json
 aws codebuild create-webhook --cli-input-json file://referral-webhook-dev.json
 
+aws codebuild create-project --cli-input-json file://nfts-config-dev.json
+aws codebuild create-webhook --cli-input-json file://nfts-webhook-dev.json
+
+

@@ -135,7 +135,9 @@ export class HostingService {
       await website.validate();
     } catch (err) {
       await website.handle(err);
-      if (!website.isValid()) throw new StorageValidationException(website);
+      if (!website.isValid()) {
+        throw new StorageValidationException(website);
+      }
     }
 
     await website.update();
@@ -222,9 +224,18 @@ export class HostingService {
     }
     website.canModify(context);
 
+    //Validate environment
+    if (!DeploymentEnvironment[event.body.environment]) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.DEPLOYMENT_ENVIRONMENT_NOT_VALID,
+        status: 400,
+      });
+    }
+
     //Check if there are files in source bucket
     const sourceBucket: Bucket = await new Bucket({}, context).populateById(
-      event.body.environment == DeploymentEnvironment.STAGING
+      event.body.environment == DeploymentEnvironment.STAGING ||
+        event.body.environment == DeploymentEnvironment.DIRECT_TO_PRODUCTION
         ? website.bucket_id
         : website.stagingBucket_id,
     );
@@ -251,8 +262,11 @@ export class HostingService {
       if (lastStagingDeployment.exists()) {
         deploymentNumber = lastStagingDeployment.number + 1;
       }
-    } else if (event.body.environment == DeploymentEnvironment.PRODUCTION) {
-      if (lastStagingDeployment.cid == lastProductionDeployment.cid) {
+    } else {
+      if (
+        event.body.environment == DeploymentEnvironment.PRODUCTION &&
+        lastStagingDeployment.cid == lastProductionDeployment.cid
+      ) {
         throw new StorageCodeException({
           code: StorageErrorCode.NO_CHANGES_TO_DEPLOY,
           status: 400,
@@ -278,7 +292,9 @@ export class HostingService {
       await d.validate();
     } catch (err) {
       await d.handle(err);
-      if (!d.isValid()) throw new StorageValidationException(d);
+      if (!d.isValid()) {
+        throw new StorageValidationException(d);
+      }
     }
 
     await d.insert();

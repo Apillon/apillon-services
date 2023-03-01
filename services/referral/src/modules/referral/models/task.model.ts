@@ -279,8 +279,9 @@ export class Task extends AdvancedSQLModel {
       await realization.validate();
     } catch (err) {
       await realization.handle(err);
-      if (!realization.isValid())
+      if (!realization.isValid()) {
         throw new ReferralValidationException(realization);
+      }
     }
 
     await realization.insert(SerializeFor.INSERT_DB, conn);

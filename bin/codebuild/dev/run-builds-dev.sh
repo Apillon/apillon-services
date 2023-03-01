@@ -7,3 +7,4 @@ aws codebuild start-build --project-name apillon-config-dev
 aws codebuild start-build --project-name apillon-api-dev
 aws codebuild start-build --project-name apillon-auth-api-dev
 aws codebuild start-build --project-name apillon-referral-dev
+aws codebuild start-build --project-name apillon-nfts-dev

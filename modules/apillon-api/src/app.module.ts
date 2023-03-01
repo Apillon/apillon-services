@@ -8,9 +8,10 @@ import { ContextMiddleware } from './middlewares/context.middleware';
 import { MySQLModule } from './modules/database/mysql.module';
 import { HostingModule } from './modules/hosting/hosting.module';
 import { StorageModule } from './modules/storage/storage.module';
+import { SystemModule } from './modules/system/system.module';
 
 @Module({
-  imports: [MySQLModule, StorageModule, HostingModule],
+  imports: [MySQLModule, StorageModule, HostingModule, SystemModule],
   controllers: [AppController],
   providers: [AppService],
 })

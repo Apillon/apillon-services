@@ -483,8 +483,9 @@ export class File extends AdvancedSQLModel {
     );
     const res = [];
     if (data && data.length) {
-      for (const d of data)
+      for (const d of data) {
         res.push(new File({}, context).populate(d, PopulateFrom.DB));
+      }
     }
 
     return res;

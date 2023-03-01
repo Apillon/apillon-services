@@ -1,5 +1,7 @@
 import {
+  AppEnvironment,
   CreateIpnsDto,
+  env,
   IpnsQueryFilter,
   Lmas,
   LogType,
@@ -7,15 +9,24 @@ import {
   PopulateFrom,
   SerializeFor,
   ServiceName,
+  SqlModelStatus,
 } from '@apillon/lib';
+import {
+  QueueWorkerType,
+  sendToWorkerQueue,
+  ServiceDefinition,
+  ServiceDefinitionType,
+  WorkerDefinition,
+} from '@apillon/workers-lib';
 import { StorageErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
 import {
   StorageCodeException,
   StorageValidationException,
 } from '../../lib/exceptions';
+import { PublishToIPNSWorker } from '../../workers/publish-to-ipns-worker';
+import { WorkerName } from '../../workers/worker-executor';
 import { Bucket } from '../bucket/models/bucket.model';
-import { IPFSService } from '../ipfs/ipfs.service';
 import { Ipns } from './models/ipns.model';
 
 export class IpnsService {
@@ -27,6 +38,19 @@ export class IpnsService {
       context,
       new IpnsQueryFilter(event.query),
     );
+  }
+
+  static async getIpns(event: { id: number }, context: ServiceContext) {
+    const ipns: Ipns = await new Ipns({}, context).populateById(event.id);
+    if (!ipns.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.IPNS_NOT_FOUND,
+        status: 404,
+      });
+    }
+    ipns.canAccess(context);
+
+    return ipns.serialize(SerializeFor.PROFILE);
   }
 
   static async createIpns(
@@ -45,12 +69,17 @@ export class IpnsService {
     b.canModify(context);
 
     const ipns: Ipns = new Ipns(event.body, context);
-    ipns.populate({ project_uuid: b.project_uuid });
+    ipns.populate({
+      project_uuid: b.project_uuid,
+      status: SqlModelStatus.INCOMPLETE,
+    });
     try {
       await ipns.validate();
     } catch (err) {
       await ipns.handle(err);
-      if (!ipns.isValid()) throw new StorageValidationException(ipns);
+      if (!ipns.isValid()) {
+        throw new StorageValidationException(ipns);
+      }
     }
     const conn = await context.mysql.start();
     try {
@@ -117,15 +146,55 @@ export class IpnsService {
     }
     ipns.canModify(context);
 
-    const publishedIpns = await IPFSService.publishToIPNS(
-      event.cid,
-      `${ipns.project_uuid}_${ipns.bucket_id}_${ipns.id}`,
-    );
+    ipns.status = SqlModelStatus.INCOMPLETE;
+    await ipns.update();
 
-    ipns.ipnsName = publishedIpns.name;
-    ipns.ipnsValue = publishedIpns.value;
+    if (
+      env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+      env.APP_ENV == AppEnvironment.TEST
+    ) {
+      //Directly calls worker, to publish CID to IPNS
+      const serviceDef: ServiceDefinition = {
+        type: ServiceDefinitionType.SQS,
+        config: { region: 'test' },
+        params: { FunctionName: 'test' },
+      };
+      const parameters = {
+        cid: event.cid,
+        ipns_id: ipns.id,
+      };
+      const wd = new WorkerDefinition(
+        serviceDef,
+        WorkerName.PUBLISH_TO_IPNS_WORKER,
+        {
+          parameters,
+        },
+      );
 
-    await ipns.update(SerializeFor.UPDATE_DB, event.conn);
+      const worker = new PublishToIPNSWorker(
+        wd,
+        context,
+        QueueWorkerType.EXECUTOR,
+      );
+      await worker.runExecutor({
+        cid: event.cid,
+        ipns_id: ipns.id,
+      });
+    } else {
+      //send message to SQS
+      await sendToWorkerQueue(
+        env.STORAGE_AWS_WORKER_SQS_URL,
+        WorkerName.PUBLISH_TO_IPNS_WORKER,
+        [
+          {
+            cid: event.cid,
+            ipns_id: ipns.id,
+          },
+        ],
+        null,
+        null,
+      );
+    }
 
     return ipns.serialize(SerializeFor.PROFILE);
   }
@@ -150,7 +219,9 @@ export class IpnsService {
       await ipns.validate();
     } catch (err) {
       await ipns.handle(err);
-      if (!ipns.isValid()) throw new StorageValidationException(ipns);
+      if (!ipns.isValid()) {
+        throw new StorageValidationException(ipns);
+      }
     }
 
     await ipns.update();

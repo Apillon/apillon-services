@@ -12,7 +12,7 @@ import {
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
-  ApiKeyQueryFilter,
+  ApiKeyQueryFilterDto,
   ApiKeyRoleBaseDto,
 } from '@apillon/lib';
 import { DbTables, AmsErrorCode } from '../../../config/types';
@@ -203,11 +203,15 @@ export class ApiKey extends AdvancedSQLModel {
       await keyRole.validate();
     } catch (err) {
       await keyRole.handle(err);
-      if (!keyRole.isValid()) throw new AmsValidationException(keyRole);
+      if (!keyRole.isValid()) {
+        throw new AmsValidationException(keyRole);
+      }
     }
 
     //Check if role already assigned
-    if (!(await keyRole.hasRole(keyRole.role_id))) await keyRole.insert();
+    if (!(await keyRole.hasRole(keyRole.role_id))) {
+      await keyRole.insert();
+    }
 
     return keyRole.serialize(SerializeFor.SERVICE);
   }
@@ -275,7 +279,7 @@ export class ApiKey extends AdvancedSQLModel {
     }
   }
 
-  public async getList(context: ServiceContext, filter: ApiKeyQueryFilter) {
+  public async getList(context: ServiceContext, filter: ApiKeyQueryFilterDto) {
     this.canAccess(context);
     // Map url query with sql fields.
     const fieldMap = {

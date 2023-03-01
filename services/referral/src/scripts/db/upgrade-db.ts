@@ -7,8 +7,8 @@ async function run() {
     database: env.REFERRAL_MYSQL_DATABASE,
     host: env.REFERRAL_MYSQL_HOST,
     port: env.REFERRAL_MYSQL_PORT,
-    user: env.REFERRAL_MYSQL_USER,
-    password: env.REFERRAL_MYSQL_PASSWORD,
+    user: env.REFERRAL_MYSQL_DEPLOY_USER || env.REFERRAL_MYSQL_USER,
+    password: env.REFERRAL_MYSQL_DEPLOY_PASSWORD || env.REFERRAL_MYSQL_PASSWORD,
   });
 
   const showDialog = !process.argv.includes('--F');

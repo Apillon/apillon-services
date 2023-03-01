@@ -65,7 +65,9 @@ export class ReferralService {
       await player.validate();
     } catch (err) {
       await player.handle(err);
-      if (!player.isValid()) throw new ReferralValidationException(player);
+      if (!player.isValid()) {
+        throw new ReferralValidationException(player);
+      }
     }
 
     if (player.exists()) {
@@ -240,7 +242,7 @@ export class ReferralService {
       });
     }
     const retweetData = (await twitter.getRetweets(tweetId)) as any;
-    const retweeted = retweetData.data.some(
+    const retweeted = !!retweetData?.data?.some(
       (x: any) => x.id === player.twitter_id,
     );
     if (retweeted) {

@@ -283,6 +283,14 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async getIpns(id: number) {
+    const data = {
+      eventName: StorageEventType.IPNS_GET,
+      id: id,
+    };
+    return await this.callService(data);
+  }
+
   public async createIpns(params: CreateIpnsDto) {
     const data = {
       eventName: StorageEventType.IPNS_CREATE,
