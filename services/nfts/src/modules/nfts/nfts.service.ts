@@ -246,19 +246,12 @@ export class NftsService {
       context,
     );
 
-    const mintedNftsNr = await walletService.getMintedNftsNr(
-      collection.contractAddress,
+    await this.checkMintConditions(
+      params.body,
+      context,
+      collection,
+      walletService,
     );
-
-    if (mintedNftsNr + params.body.quantity > collection.maxSupply) {
-      throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.MINT_NFT_SUPPLY_ERROR,
-        context: context,
-        sourceFunction: 'mintNftTo()',
-        errorMessage: 'Unable to mint new NFTs, out of supply!',
-      });
-    }
 
     const conn = await context.mysql.start();
     try {
@@ -405,8 +398,6 @@ export class NftsService {
         code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
         context: context,
         sourceFunction,
-        errorMessage: 'Error obtaining Nft collection',
-        details: 'Collection does not exist or is not confirmed on blockchain!',
       });
     }
     const currentOwner = await walletService.getContractOwner(
@@ -420,10 +411,37 @@ export class NftsService {
         code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
         context: context,
         sourceFunction,
-        errorMessage: 'Error calling Nft contract function',
-        details: 'Caller is not the owner',
       });
     }
     return collection;
+  }
+
+  private static async checkMintConditions(
+    params: MintNftDTO,
+    context: ServiceContext,
+    collection: Collection,
+    walletService: WalletService,
+  ) {
+    const mintedNftsNr = await walletService.getMintedNftsNr(
+      collection.contractAddress,
+    );
+
+    if (mintedNftsNr + params.quantity > collection.maxSupply) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.MINT_NFT_SUPPLY_ERROR,
+        context: context,
+        sourceFunction: 'mintNftTo()',
+      });
+    }
+
+    if (collection.reserve - mintedNftsNr < params.quantity) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.MINT_NFT_RESERVE_ERROR,
+        context: context,
+        sourceFunction: 'mintNftTo()',
+      });
+    }
   }
 }
