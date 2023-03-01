@@ -250,7 +250,6 @@ export class NftsService {
         code: NftsErrorCode.MINT_NFT_SUPPLY_ERROR,
         context: context,
         sourceFunction: 'mintNftTo()',
-        errorMessage: 'Unable to mint new NFTs, out of supply!',
       });
     }
 
@@ -399,8 +398,6 @@ export class NftsService {
         code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
         context: context,
         sourceFunction,
-        errorMessage: 'Error obtaining Nft collection',
-        details: 'Collection does not exist or is not confirmed on blockchain!',
       });
     }
     const currentOwner = await walletService.getContractOwner(
@@ -414,8 +411,6 @@ export class NftsService {
         code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
         context: context,
         sourceFunction,
-        errorMessage: 'Error calling Nft contract function',
-        details: 'Caller is not the owner',
       });
     }
     return collection;
