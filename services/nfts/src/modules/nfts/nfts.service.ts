@@ -240,18 +240,12 @@ export class NftsService {
       context,
     );
 
-    const mintedNftsNr = await walletService.getMintedNftsNr(
-      collection.contractAddress,
+    await this.checkMintConditions(
+      params.body,
+      context,
+      collection,
+      walletService,
     );
-
-    if (mintedNftsNr + params.body.quantity > collection.maxSupply) {
-      throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.MINT_NFT_SUPPLY_ERROR,
-        context: context,
-        sourceFunction: 'mintNftTo()',
-      });
-    }
 
     const conn = await context.mysql.start();
     try {
@@ -414,5 +408,34 @@ export class NftsService {
       });
     }
     return collection;
+  }
+
+  private static async checkMintConditions(
+    params: MintNftDTO,
+    context: ServiceContext,
+    collection: Collection,
+    walletService: WalletService,
+  ) {
+    const mintedNftsNr = await walletService.getMintedNftsNr(
+      collection.contractAddress,
+    );
+
+    if (mintedNftsNr + params.quantity > collection.maxSupply) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.MINT_NFT_SUPPLY_ERROR,
+        context: context,
+        sourceFunction: 'mintNftTo()',
+      });
+    }
+
+    if (collection.reserve - mintedNftsNr < params.quantity) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.MINT_NFT_RESERVE_ERROR,
+        context: context,
+        sourceFunction: 'mintNftTo()',
+      });
+    }
   }
 }
