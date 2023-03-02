@@ -37,7 +37,7 @@ Those permission could be assigned to API key for every attached service (storag
 If request is made with API key, which lacks permission for called endpoint, following errors can occour:
 | Status | Message | Description
 |-|-|-
-|403|Insufficient permissins - missing `permission name` permission|API key lacks required permission for called service
+|403|Insufficient permissions - missing `permission name` permission|API key lacks required permission for called service
 |403|Insufficient permissions to access this record|Api key has required permissions for endpoint, however, he does not have the right to access addressed record (record belongs to another project, ...)
 
 ## Responses
