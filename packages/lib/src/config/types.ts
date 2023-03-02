@@ -31,7 +31,6 @@ export enum LmasEventType {
 }
 
 export enum StorageEventType {
-  REQUEST_S3_SIGNED_URL_FOR_UPLOAD = 'request-s3-signed-url-for-upload',
   REQUEST_S3_SIGNED_URLS_FOR_UPLOAD = 'request-s3-signed-urls-for-upload',
   REQUEST_S3_SIGNED_URLS_FOR_WEBSITE_UPLOAD = 'request-s3-signed-urls-for-website-upload',
   END_FILE_UPLOAD_SESSION = 'end-file-upload-session',
