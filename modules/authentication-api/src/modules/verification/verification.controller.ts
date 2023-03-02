@@ -4,7 +4,6 @@ import { VerificationService } from './verification.service';
 import { AuthenticationApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { VerificationIdentityDto } from './dtos/verify-identity.dto';
-import { AuthGuard } from '../../guards/auth.guard';
 
 @Controller('verification')
 export class VerificationController {
@@ -12,7 +11,7 @@ export class VerificationController {
 
   @Post('verify')
   @Validation({ dto: VerificationIdentityDto })
-  @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.IDENTITY_VERIFICATION))
+  @UseGuards(ValidationGuard)
   async verifyIdentity(
     @Ctx() context: AuthenticationApiContext,
     @Body() body: VerificationIdentityDto,

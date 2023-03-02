@@ -19,4 +19,6 @@ export enum ResourceNotFoundErrorCode {
  */
 export enum JwtTokenType {
   AUTH_SESSION = 'auth-session',
+  // TODO: Change this to kebab-case
+  USER_AUTHENTICATION = 'USER_AUTHENTICATION',
 }

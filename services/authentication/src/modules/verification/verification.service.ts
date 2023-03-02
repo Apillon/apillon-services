@@ -1,12 +1,21 @@
-import { env, Lmas, LogType, ServiceName } from '@apillon/lib';
+import {
+  env,
+  generateJwtToken,
+  JwtTokenType,
+  Lmas,
+  LogType,
+  ServiceName,
+} from '@apillon/lib';
 import {
   Attestation,
   ConfigService,
   connect,
   Credential,
   IAttestation,
+  ICredentialPresentation,
 } from '@kiltprotocol/sdk-js';
 import { Injectable } from '@nestjs/common';
+import { Identity } from '../identity/models/identity.model';
 
 @Injectable()
 export class VerificationMicroservice {
@@ -14,14 +23,31 @@ export class VerificationMicroservice {
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
 
-    const presentation = JSON.parse(event.body.presentation);
+    const presentation = JSON.parse(
+      event.body.presentation,
+    ) as ICredentialPresentation;
     let attestation: IAttestation;
 
-    try {
-      await Credential.verifyPresentation(presentation, {
-        challenge:
-          '0x3ce56bb25ea3b603f968c302578e77e28d3d7ba3c7a8c45d6ebd3f410da766e1',
+    // It's a string ...
+    const email = presentation.claim.contents.Email as string;
+    const identity = await new Identity({}, context).populateByUserEmail(
+      context,
+      email,
+    );
+
+    if (!identity.exists()) {
+      await new Lmas().writeLog({
+        context: context,
+        logType: LogType.INFO,
+        message: 'VERIFICATION FAILED',
+        location: 'AUTHENTICATION-API/verification/verifyIdentity',
+        service: ServiceName.AUTHENTICATION_API,
       });
+      return { verified: false, error: 'Identity does not exist' };
+    }
+
+    try {
+      await Credential.verifyPresentation(presentation);
 
       attestation = Attestation.fromChain(
         await api.query.attestation.attestations(presentation.rootHash),
@@ -42,8 +68,14 @@ export class VerificationMicroservice {
       };
     }
 
+    const token = generateJwtToken(
+      JwtTokenType.USER_AUTHENTICATION,
+      { email: email },
+      '10min',
+    );
+
     return attestation.revoked
       ? { verified: false, error: 'Credential was revoked!' }
-      : { verified: true };
+      : { verified: true, data: token };
   }
 }
