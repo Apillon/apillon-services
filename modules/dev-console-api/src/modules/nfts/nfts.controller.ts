@@ -14,6 +14,7 @@ import {
   Controller,
   Get,
   Param,
+  ParseIntPipe,
   Post,
   Query,
   UseGuards,
@@ -61,6 +62,20 @@ export class NftsController {
     @Query() query: NFTCollectionQueryFilter,
   ) {
     return await this.nftsService.listNftCollections(context, query);
+  }
+
+  @Get('/collections/:collectionId')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @UseGuards(AuthGuard)
+  async getCollection(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('collectionId', ParseIntPipe) collectionId: number,
+  ) {
+    return await this.nftsService.getNftCollection(context, collectionId);
   }
 
   @Post('/collections/:collectionUuid/transferOwnership')
