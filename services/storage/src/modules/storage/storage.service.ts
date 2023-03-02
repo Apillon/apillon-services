@@ -28,7 +28,7 @@ import { BucketType, FileStatus, StorageErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
 import { createFURAndS3Url } from '../../lib/create-fur-and-s3-url';
 import { StorageCodeException } from '../../lib/exceptions';
-import { hostingBucketProcessSessionFiles } from '../../lib/hosting-bucket-process-session-files';
+import { processSessionFiles } from '../../lib/process-session-files';
 import { SyncToIPFSWorker } from '../../workers/s3-to-ipfs-sync-worker';
 import { WorkerName } from '../../workers/worker-executor';
 import { Bucket } from '../bucket/models/bucket.model';
@@ -358,40 +358,42 @@ export class StorageService {
     }
 
     if (bucket.bucketType == BucketType.STORAGE) {
+      await processSessionFiles(context, bucket, session, event.body);
       if (
-        event.body.directSync &&
-        (env.APP_ENV == AppEnvironment.LOCAL_DEV ||
-          env.APP_ENV == AppEnvironment.TEST)
+        env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+        env.APP_ENV == AppEnvironment.TEST
       ) {
-        //Directly calls worker, to sync files to IPFS & CRUST - USED ONLY FOR DEVELOPMENT!!
-        const serviceDef: ServiceDefinition = {
-          type: ServiceDefinitionType.SQS,
-          config: { region: 'test' },
-          params: { FunctionName: 'test' },
-        };
-        const parameters = {
-          session_uuid: session.session_uuid,
-          wrapWithDirectory: event.body.wrapWithDirectory,
-          wrappingDirectoryPath: event.body.directoryPath,
-        };
-        const wd = new WorkerDefinition(
-          serviceDef,
-          WorkerName.SYNC_TO_IPFS_WORKER,
-          {
-            parameters,
-          },
-        );
+        if (event.body.directSync) {
+          //Directly calls worker, to sync files to IPFS & CRUST - USED ONLY FOR DEVELOPMENT!!
+          const serviceDef: ServiceDefinition = {
+            type: ServiceDefinitionType.SQS,
+            config: { region: 'test' },
+            params: { FunctionName: 'test' },
+          };
+          const parameters = {
+            session_uuid: session.session_uuid,
+            wrapWithDirectory: event.body.wrapWithDirectory,
+            wrappingDirectoryPath: event.body.directoryPath,
+          };
+          const wd = new WorkerDefinition(
+            serviceDef,
+            WorkerName.SYNC_TO_IPFS_WORKER,
+            {
+              parameters,
+            },
+          );
 
-        const worker = new SyncToIPFSWorker(
-          wd,
-          context,
-          QueueWorkerType.EXECUTOR,
-        );
-        await worker.runExecutor({
-          session_uuid: session.session_uuid,
-          wrapWithDirectory: event.body.wrapWithDirectory,
-          wrappingDirectoryName: event.body.directoryPath,
-        });
+          const worker = new SyncToIPFSWorker(
+            wd,
+            context,
+            QueueWorkerType.EXECUTOR,
+          );
+          await worker.runExecutor({
+            session_uuid: session.session_uuid,
+            wrapWithDirectory: event.body.wrapWithDirectory,
+            wrappingDirectoryName: event.body.directoryPath,
+          });
+        }
       } else {
         //send message to SQS
         await sendToWorkerQueue(
@@ -409,7 +411,7 @@ export class StorageService {
         );
       }
     } else if (bucket.bucketType == BucketType.HOSTING) {
-      await hostingBucketProcessSessionFiles(context, bucket, session);
+      await processSessionFiles(context, bucket, session, event.body);
     }
 
     return true;
