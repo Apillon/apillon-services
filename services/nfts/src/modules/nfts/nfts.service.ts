@@ -153,7 +153,6 @@ export class NftsService {
   }
 
   static async getCollection(event: { id: any }, context: ServiceContext) {
-    console.log(`Get collection by uuid (uuid=${event.id})`);
     const collection: Collection = await new Collection(
       {},
       context,
@@ -168,7 +167,7 @@ export class NftsService {
     }
     collection.canAccess(context);
     await collection.populateNumberOfMintedNfts();
-    return collection;
+    return collection.serialize(SerializeFor.PROFILE);
   }
 
   static async transferCollectionOwnership(

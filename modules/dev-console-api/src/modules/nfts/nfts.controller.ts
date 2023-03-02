@@ -64,7 +64,7 @@ export class NftsController {
     return await this.nftsService.listNftCollections(context, query);
   }
 
-  @Get('/collections/:collectionId')
+  @Get('/collections/:id')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -73,9 +73,9 @@ export class NftsController {
   @UseGuards(AuthGuard)
   async getCollection(
     @Ctx() context: DevConsoleApiContext,
-    @Param('collectionId', ParseIntPipe) collectionId: number,
+    @Param('id', ParseIntPipe) id: number,
   ) {
-    return await this.nftsService.getNftCollection(context, collectionId);
+    return await this.nftsService.getNftCollection(context, id);
   }
 
   @Post('/collections/:collectionUuid/transferOwnership')
