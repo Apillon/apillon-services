@@ -1,10 +1,7 @@
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
-import {
-  PopulateFrom,
-  AuthenticationErrorCode,
-} from '../../../../../config/types';
+import { PopulateFrom, ValidatorErrorCode } from '../../../../../config/types';
 import { ModelBase } from '../../../../base-models/base';
 
 export class SporranSessionVerifyDto extends ModelBase {
@@ -14,7 +11,7 @@ export class SporranSessionVerifyDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: AuthenticationErrorCode.SPORRAN_SESSIONID_NOT_PRESENT,
+        code: ValidatorErrorCode.SPORRAN_SESSIONID_NOT_PRESENT,
       },
     ],
   })
@@ -27,7 +24,7 @@ export class SporranSessionVerifyDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: AuthenticationErrorCode.SPORRAN_ENCRYPTED_CHALLENGE_NOT_PRESENT,
+        code: ValidatorErrorCode.SPORRAN_ENCRYPTED_CHALLENGE_NOT_PRESENT,
       },
     ],
   })
@@ -39,7 +36,7 @@ export class SporranSessionVerifyDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: AuthenticationErrorCode.SPORRAN_ENCRYPTED_CHALLENGE_NOT_PRESENT,
+        code: ValidatorErrorCode.SPORRAN_ENCRYPTED_CHALLENGE_NOT_PRESENT,
       },
     ],
   })
@@ -51,7 +48,7 @@ export class SporranSessionVerifyDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: AuthenticationErrorCode.SPORRAN_NONCE_NOT_PRESENT,
+        code: ValidatorErrorCode.SPORRAN_NONCE_NOT_PRESENT,
       },
     ],
   })

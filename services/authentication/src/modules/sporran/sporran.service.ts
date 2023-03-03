@@ -42,6 +42,7 @@ import {
 import { JwtTokenType } from '../../config/types';
 import {
   DidUri,
+  ICredentialPresentation,
   IEncryptedMessage,
   ISubmitTerms,
   PartialClaim,
@@ -451,20 +452,37 @@ export class SporranMicroservice {
     }
 
     const message = JSON.parse(decryptedMessage);
-    const credential = message.body.content[0];
+    const presentation = message.body.content[0] as ICredentialPresentation;
 
-    await Credential.verifyPresentation(credential);
+    const email = presentation.claim.contents.Email as string;
+    const identity = await new Identity({}, context).populateByUserEmail(
+      context,
+      email,
+    );
+
+    if (!identity.exists()) {
+      await new Lmas().writeLog({
+        context: context,
+        logType: LogType.INFO,
+        message: 'VERIFICATION FAILED',
+        location: 'AUTHENTICATION-API/sporran/verify-identity',
+        service: ServiceName.AUTHENTICATION_API,
+      });
+      return { verified: false, error: 'Identity does not exist' };
+    }
+
+    await Credential.verifyPresentation(presentation);
 
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
 
     const attestationChain = await api.query.attestation.attestations(
-      credential.rootHash,
+      presentation.rootHash,
     );
 
     const attestation = Attestation.fromChain(
       attestationChain,
-      credential.rootHash,
+      presentation.rootHash,
     );
 
     if (attestation.revoked) {
@@ -477,6 +495,12 @@ export class SporranMicroservice {
       return { verified: false };
     }
 
-    return { verified: true };
+    const token = generateJwtToken(
+      JwtTokenType.USER_AUTHENTICATION,
+      { email: email },
+      '10min',
+    );
+
+    return { verified: true, data: token };
   }
 }

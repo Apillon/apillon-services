@@ -2,7 +2,7 @@ import {
   ModelBase,
   JSONParser,
   PopulateFrom,
-  AuthenticationErrorCode,
+  ValidatorErrorCode,
 } from '@apillon/lib';
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
@@ -15,7 +15,7 @@ export class VerifyCredentialDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: AuthenticationErrorCode.SPORRAN_REQUEST_MESSAGE_NOT_PRESENT,
+        code: ValidatorErrorCode.SPORRAN_REQUEST_MESSAGE_NOT_PRESENT,
       },
     ],
   })
@@ -27,7 +27,7 @@ export class VerifyCredentialDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: AuthenticationErrorCode.SPORRAN_ENCRYPTED_KEY_URI_NOT_PRESENT,
+        code: ValidatorErrorCode.SPORRAN_ENCRYPTED_KEY_URI_NOT_PRESENT,
       },
     ],
   })
@@ -39,7 +39,7 @@ export class VerifyCredentialDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: AuthenticationErrorCode.SPORRAN_SESSIONID_NOT_PRESENT,
+        code: ValidatorErrorCode.SPORRAN_SESSIONID_NOT_PRESENT,
       },
     ],
   })

@@ -1,10 +1,7 @@
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
-import {
-  AuthenticationErrorCode,
-  PopulateFrom,
-} from '../../../../config/types';
+import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
 
 export class VerificationIdentityDto extends ModelBase {
@@ -14,7 +11,7 @@ export class VerificationIdentityDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: AuthenticationErrorCode.VERIFICATION_IDENTITY_NOT_PRESENT,
+        code: ValidatorErrorCode.VERIFICATION_IDENTITY_NOT_PRESENT,
       },
     ],
   })
