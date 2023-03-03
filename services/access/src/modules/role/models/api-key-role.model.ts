@@ -1,6 +1,5 @@
 import {
   AdvancedSQLModel,
-  ApiKeyRoleBaseDto,
   CodeException,
   Context,
   DefaultUserRole,

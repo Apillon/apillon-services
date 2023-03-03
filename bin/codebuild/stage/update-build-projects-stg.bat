@@ -25,6 +25,9 @@ aws codebuild update-webhook --cli-input-json file://apillon-api-webhook-stg.jso
 aws codebuild update-project --cli-input-json file://referral-config-stg.json --profile apillon
 aws codebuild update-webhook --cli-input-json file://referral-webhook-stg.json --profile apillon
 
+aws codebuild update-project --cli-input-json file://nfts-config-stg.json --profile apillon
+aws codebuild update-webhook --cli-input-json file://nfts-webhook-stg.json --profile apillon
+
 @REM FRONTEND:
 aws codebuild update-project --cli-input-json file://apillon-app-config-stg.json --profile apillon
 aws codebuild update-webhook --cli-input-json file://apillon-app-webhook-stg.json --profile apillon

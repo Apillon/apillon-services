@@ -367,8 +367,9 @@ export class Bucket extends AdvancedSQLModel {
         object_uuid: b.bucket_uuid,
       });
 
-      if (maxBucketSizeQuota?.value)
+      if (maxBucketSizeQuota?.value) {
         b.maxSize = Number(maxBucketSizeQuota?.value) * 1073741824;
+      }
     }
 
     return list;

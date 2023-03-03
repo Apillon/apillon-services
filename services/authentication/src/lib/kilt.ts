@@ -212,7 +212,12 @@ export async function createCompleteFullDid(
     console.log('Submitting document create TX to bc ...');
     await Blockchain.signAndSubmitTx(fullDidCreationTx, submitterAccount);
   } catch (error) {
-    console.error(error);
+    await new Lmas().writeLog({
+      logType: LogType.ERROR,
+      message: 'DID create TX failed',
+      location: 'Authentication Service',
+      service: ServiceName.AUTHENTICATION_API,
+    });
   }
 
   // The new information is fetched from the blockchain and returned.
@@ -230,7 +235,9 @@ export async function authenticationSigner({
 }: {
   authentication: KiltKeyringPair;
 }): Promise<SignExtrinsicCallback> {
-  if (!authentication) throw new Error('no authentication key');
+  if (!authentication) {
+    throw new Error('no authentication key');
+  }
 
   return async ({ data }) => ({
     signature: authentication.sign(data),
@@ -246,7 +253,9 @@ export async function assertionSigner({
   didDocument: DidDocument;
 }): Promise<SignCallback> {
   const { assertionMethod } = didDocument;
-  if (!assertionMethod) throw new Error('no assertionMethod key');
+  if (!assertionMethod) {
+    throw new Error('no assertionMethod key');
+  }
 
   return async ({ data }) => ({
     signature: assertion.sign(data),
@@ -312,7 +321,8 @@ export function toCredentialIRI(rootHash: string): string {
   if (rootHash.startsWith(KILT_CREDENTIAL_IRI_PREFIX)) {
     return rootHash;
   }
-  if (!isHex(rootHash))
+  if (!isHex(rootHash)) {
     throw new Error('Root hash is not a base16 / hex encoded string)');
+  }
   return KILT_CREDENTIAL_IRI_PREFIX + rootHash;
 }

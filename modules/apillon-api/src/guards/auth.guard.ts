@@ -43,7 +43,7 @@ export class AuthGuard implements CanActivate {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: HttpStatus.FORBIDDEN,
-        errorMessage: `Insufficient permissins - missing ${
+        errorMessage: `Insufficient permissions - missing ${
           DefaultApiKeyRole[requiredPermissions[0].role]
         } permission`,
       });

@@ -100,7 +100,7 @@ export class Twitter {
       const data = (await this.twitterApi.v2.userTimeline(
         env.TWITTER_USER_ID, // Apillon user ID
         {
-          exclude: 'replies',
+          exclude: ['retweets', 'replies'],
           'tweet.fields': 'in_reply_to_user_id',
           max_results: 30,
         },

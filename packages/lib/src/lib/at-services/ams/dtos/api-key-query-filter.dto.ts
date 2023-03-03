@@ -5,7 +5,7 @@ import { presenceValidator } from '@rawmodel/validators';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { BaseQueryFilter } from '../../../base-models/base-query-filter.model';
 
-export class ApiKeyQueryFilter extends BaseQueryFilter {
+export class ApiKeyQueryFilterDto extends BaseQueryFilter {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],

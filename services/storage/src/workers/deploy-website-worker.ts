@@ -68,9 +68,11 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
       );
       //according to environment, select source and target bucket
       const sourceBucket_id =
-        deployment.environment == DeploymentEnvironment.STAGING
+        deployment.environment == DeploymentEnvironment.STAGING ||
+        deployment.environment == DeploymentEnvironment.DIRECT_TO_PRODUCTION
           ? website.bucket_id
           : website.stagingBucket_id;
+
       const targetBucket_id =
         deployment.environment == DeploymentEnvironment.STAGING
           ? website.stagingBucket_id
@@ -107,7 +109,10 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
       //Add files to IPFS
       let ipfsRes: uploadFilesToIPFSRes = undefined;
       let cidSize: number = undefined;
-      if (deployment.environment == DeploymentEnvironment.STAGING) {
+      if (
+        deployment.environment == DeploymentEnvironment.STAGING ||
+        deployment.environment == DeploymentEnvironment.DIRECT_TO_PRODUCTION
+      ) {
         ipfsRes = await IPFSService.uploadFilesToIPFSFromS3({
           files: sourceFiles,
           wrapWithDirectory: true,
@@ -194,7 +199,12 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
               await dir.update(SerializeFor.UPDATE_DB, conn);
             }
           }
+        }
 
+        if (
+          deployment.environment == DeploymentEnvironment.PRODUCTION ||
+          deployment.environment == DeploymentEnvironment.DIRECT_TO_PRODUCTION
+        ) {
           //pin CID to CRUST
           await pinFileToCRUST(
             this.context,
@@ -214,7 +224,9 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         //Clear bucket for upload
         try {
           if (
-            deployment.environment == DeploymentEnvironment.STAGING &&
+            (deployment.environment == DeploymentEnvironment.STAGING ||
+              deployment.environment ==
+                DeploymentEnvironment.DIRECT_TO_PRODUCTION) &&
             data.clearBucketForUpload
           ) {
             await HostingService.clearBucketContent(

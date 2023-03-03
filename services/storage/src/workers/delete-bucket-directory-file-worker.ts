@@ -22,7 +22,7 @@ export class DeleteBucketDirectoryFileWorker extends ServerlessWorker {
     this.context = context;
   }
 
-  public async before(data?: any): Promise<any> {
+  public async before(_data?: any): Promise<any> {
     // No used
   }
   public async execute(data?: any): Promise<any> {
@@ -137,11 +137,15 @@ export class DeleteBucketDirectoryFileWorker extends ServerlessWorker {
     const decreasedSizeByBucket: any = {};
     for (const file of filesToDelete) {
       try {
-        if (file.CID) await IPFSService.unpinFile(file.CID);
+        if (file.CID) {
+          await IPFSService.unpinFile(file.CID);
+        }
         //Increase size of files, that were deleted per bucket
         if (decreasedSizeByBucket[file.bucket_id]) {
           decreasedSizeByBucket[file.bucket_id] += file.size;
-        } else decreasedSizeByBucket[file.bucket_id] = file.size;
+        } else {
+          decreasedSizeByBucket[file.bucket_id] = file.size;
+        }
       } catch (err) {
         await new Lmas().writeLog({
           context: this.context,
@@ -202,10 +206,11 @@ export class DeleteBucketDirectoryFileWorker extends ServerlessWorker {
     if (
       env.APP_ENV != AppEnvironment.LOCAL_DEV &&
       env.APP_ENV != AppEnvironment.TEST
-    )
+    ) {
       await new Job({}, this.context).updateWorkerDefinition(
         this.workerDefinition,
       );
+    }
     // this.logFn('DeleteBucketDirectoryFileWorker - update definition COMPLETE');
   }
 

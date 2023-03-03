@@ -1,0 +1,5 @@
+{
+  "ReceiveMessageWaitTimeSeconds": "5",
+  "VisibilityTimeout": "900",
+  "Policy": "{\"Version\": \"2012-10-17\",\"Id\": \"__default_policy_ID\",\"Statement\": [{\"Sid\": \"__owner_statement\",\"Effect\": \"Allow\",\"Principal\": {\"AWS\": \"arn:aws:iam::018021943180:user/executor\"},\"Action\": \"sqs:*\",\"Resource\": \"arn:aws:sqs:eu-west-1:018021943180:apillon-nfts-queue-test-dlq\"}]}"
+}

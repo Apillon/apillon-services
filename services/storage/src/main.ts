@@ -51,6 +51,7 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.IPNS_UPDATE]: IpnsService.updateIpns,
     [StorageEventType.IPNS_DELETE]: IpnsService.deleteIpns,
     [StorageEventType.IPNS_PUBLISH]: IpnsService.publishIpns,
+    [StorageEventType.IPNS_GET]: IpnsService.getIpns,
 
     [StorageEventType.WEBSITE_LIST]: HostingService.listWebsites,
     [StorageEventType.WEBSITE_GET]: HostingService.getWebsite,
