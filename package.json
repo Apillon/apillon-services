@@ -29,8 +29,7 @@
     "prettier": "latest",
     "serverless-webpack": "^5.9.1",
     "ts-node": "^10.9.1",
-    "turbo": "^1.7.4",
-    "valid-url": "^1.0.9"
+    "turbo": "^1.7.4"
   },
   "overrides": {
     "ipfs-utils": "9.0.6"
