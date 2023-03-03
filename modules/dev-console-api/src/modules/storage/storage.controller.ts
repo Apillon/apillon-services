@@ -52,28 +52,6 @@ export class StorageController {
     );
   }
 
-  @Post(':bucket_uuid/file-upload')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
-  @UseGuards(AuthGuard)
-  @Validation({ dto: CreateS3UrlForUploadDto })
-  @UseGuards(ValidationGuard, AuthGuard)
-  async createS3SignedUrlForUpload(
-    @Ctx() context: DevConsoleApiContext,
-    @Param('bucket_uuid') bucket_uuid: string,
-    @Body()
-    body: CreateS3UrlForUploadDto,
-  ) {
-    return await this.storageService.createS3SignedUrlForUpload(
-      context,
-      bucket_uuid,
-      body,
-    );
-  }
-
   @Post(':bucket_uuid/files-upload')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },

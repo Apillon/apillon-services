@@ -184,46 +184,49 @@ describe('Hosting tests', () => {
   });
 
   describe('Upload files and deploy page tests', () => {
-    let file1_uuid: string;
-    let file2_uuid: string;
+    let file1Fur: any;
+    let file2Fur: any;
 
     test('User should be able to upload files to bucket for Website preview', async () => {
       testSession_uuid = uuidV4();
 
       //Upload 2 files, each into its own directory
       let response = await request(stage.http)
-        .post(`/storage/${testWebsite.bucket.bucket_uuid}/file-upload`)
+        .post(`/storage/${testWebsite.bucket.bucket_uuid}/files-upload`)
         .send({
           session_uuid: testSession_uuid,
-          fileName: 'index.html',
-          contentType: 'text/plain',
-          path: '',
+          files: [
+            {
+              fileName: 'index.html',
+              contentType: 'text/html',
+              path: '',
+            },
+            {
+              fileName: 'styles.css',
+              contentType: 'text/css',
+              path: 'styles',
+            },
+          ],
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
-      file1_uuid = response.body.data.file_uuid;
-      const file1_signedUrlForUpload = response.body.data.url;
 
-      response = await request(file1_signedUrlForUpload)
+      expect(response.status).toBe(201);
+      file1Fur = response.body.data.files.find(
+        (x) => x.fileName == 'index.html',
+      );
+      file2Fur = response.body.data.files.find(
+        (x) => x.fileName == 'styles.css',
+      );
+
+      response = await request(file1Fur.url)
         .put(``)
         .send(
           `<h1>This is test page. Curr date: ${new Date().toString()}</h1>`,
         );
       expect(response.status).toBe(200);
 
-      response = await request(stage.http)
-        .post(`/storage/${testWebsite.bucket.bucket_uuid}/file-upload`)
-        .send({
-          session_uuid: testSession_uuid,
-          fileName: 'styles.css',
-          contentType: 'text/plain',
-          path: 'assets/',
-        })
-        .set('Authorization', `Bearer ${testUser.token}`);
-      file2_uuid = response.body.data.file_uuid;
-      const file2_signedUrlForUpload = response.body.data.url;
-
-      response = await request(file2_signedUrlForUpload)
+      response = await request(file2Fur.url)
         .put(``)
         .send(`h1{font:weight: bolder;}`);
       expect(response.status).toBe(200);
@@ -241,7 +244,7 @@ describe('Hosting tests', () => {
       const file: File = await new File(
         {},
         stage.storageContext,
-      ).populateByUUID(file1_uuid);
+      ).populateByUUID(file1Fur.file_uuid);
 
       expect(file.exists()).toBeTruthy();
       expect(file.bucket_id).toBe(testWebsite.bucket_id);

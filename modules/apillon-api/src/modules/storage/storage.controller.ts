@@ -27,30 +27,6 @@ import { StorageService } from './storage.service';
 export class StorageController {
   constructor(private storageService: StorageService) {}
 
-  /*
-  DEPRECATED
-
-  @Post(':bucketUuid/upload')
-  @ApiKeyPermissions({
-    role: DefaultApiKeyRole.KEY_EXECUTE,
-    serviceType: AttachedServiceType.STORAGE,
-  })
-  @UseGuards(AuthGuard)
-  @Validation({ dto: ApillonApiCreateS3SignedUrlForUploadDto })
-  @UseGuards(ValidationGuard, AuthGuard)
-  async createS3SignedUrlForUpload(
-    @Ctx() context: ApillonApiContext,
-    @Param('bucketUuid') bucket_uuid: string,
-    @Body()
-    body: ApillonApiCreateS3SignedUrlForUploadDto,
-  ) {
-    return await this.storageService.createS3SignedUrlForUpload(
-      context,
-      bucket_uuid,
-      body,
-    );
-  }*/
-
   @Post(':bucketUuid/upload')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_EXECUTE,
