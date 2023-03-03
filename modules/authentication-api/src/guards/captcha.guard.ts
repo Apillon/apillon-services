@@ -31,13 +31,25 @@ export class CaptchaGuard implements CanActivate {
 
       if (env.CAPTCHA_SECRET && env.APP_ENV !== AppEnvironment.TEST) {
         if (!data.captcha) {
-          error = AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_PRESENT;
+          throw new CodeException({
+            status: HttpStatus.UNPROCESSABLE_ENTITY,
+            code: error.prototype.isPrototypeOf(AuthenticationErrorCode)
+              ? error
+              : AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_PRESENT,
+            errorCodes: AuthenticationErrorCode,
+          });
         }
         await verifyCaptcha(data.captcha?.token, env.CAPTCHA_SECRET).then(
           (response) => (captchaResult = response),
         );
       } else {
-        error = AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_CONFIGURED;
+        throw new CodeException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          code: error.prototype.isPrototypeOf(AuthenticationErrorCode)
+            ? error
+            : AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_CONFIGURED,
+          errorCodes: AuthenticationErrorCode,
+        });
       }
 
       if (
@@ -45,15 +57,17 @@ export class CaptchaGuard implements CanActivate {
         env.APP_ENV !== AppEnvironment.TEST &&
         !captchaResult
       ) {
-        error = AuthenticationErrorCode.IDENTITY_CAPTCHA_INVALID;
+        throw new CodeException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          code: error.prototype.isPrototypeOf(AuthenticationErrorCode)
+            ? error
+            : AuthenticationErrorCode.IDENTITY_CAPTCHA_INVALID,
+          errorCodes: AuthenticationErrorCode,
+        });
       }
 
       return true;
     } catch (error) {
-      error = error;
-    }
-
-    if (error) {
       throw new CodeException({
         status: HttpStatus.UNPROCESSABLE_ENTITY,
         code: error.prototype.isPrototypeOf(AuthenticationErrorCode)
