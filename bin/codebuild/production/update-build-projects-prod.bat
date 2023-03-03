@@ -19,6 +19,9 @@ aws codebuild update-project --cli-input-json file://config-config-prod.json --p
 aws codebuild update-project --cli-input-json file://referral-config-prod.json --profile apillon
 @REM @REM aws codebuild update-webhook --cli-input-json file://referral-webhook-prod.json --profile apillon
 
+aws codebuild update-project --cli-input-json file://nfts-config-prod.json --profile apillon
+@REM @REM aws codebuild update-webhook --cli-input-json file://nfts-webhook-prod.json --profile apillon
+
 aws codebuild update-project --cli-input-json file://apillon-api-config-prod.json --profile apillon
 @REM @REM aws codebuild update-webhook --cli-input-json file://apillon-api-webhook-prod.json --profile apillon
 

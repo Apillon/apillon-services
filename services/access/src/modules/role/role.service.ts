@@ -1,6 +1,6 @@
 import { ApiKeyRoleBaseDto, SerializeFor } from '@apillon/lib';
 import { AmsErrorCode } from '../../config/types';
-import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
+import { AmsCodeException } from '../../lib/exceptions';
 import { ApiKey } from '../api-key/models/api-key.model';
 import { AuthUser } from '../auth-user/auth-user.model';
 import { ApiKeyRole } from './models/api-key-role.model';

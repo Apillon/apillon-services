@@ -25,6 +25,7 @@ export class SqlMigrator {
     password: string;
   }) {
     this.settings = options;
+    console.log(JSON.stringify(this.settings));
   }
 
   public async upgrade(showDialog = true, steps = 0): Promise<boolean> {
@@ -34,7 +35,7 @@ export class SqlMigrator {
         output: process.stdout,
       });
 
-      const dialog = await new Promise((resolve, reject) => {
+      const dialog = await new Promise((resolve, _reject) => {
         rl.question(
           `You are about to upgrade database ${bgYellow(
             black(` ${this.settings.database} @ ${this.settings.host} `),
@@ -91,7 +92,7 @@ Set number of versions to upgrade ('Y' for all, '<number>' for number of version
         output: process.stdout,
       });
 
-      const dialog = await new Promise((resolve, reject) => {
+      const dialog = await new Promise((resolve, _reject) => {
         rl.question(
           `You are about to downgrade database ${bgYellow(
             black(` ${this.settings.database} @ ${this.settings.host} `),
@@ -147,7 +148,7 @@ Set number of versions to upgrade ('Y' for all, '<number>' for number of version
         output: process.stdout,
       });
 
-      const dialog = await new Promise((resolve, reject) => {
+      const dialog = await new Promise((resolve, _reject) => {
         rl.question(
           `You are about to seed database ${bgYellow(
             black(` ${this.settings.database} @ ${this.settings.host} `),
@@ -203,7 +204,7 @@ Set number of versions to seed ('Y' for all, '<number>' for number of versions, 
         output: process.stdout,
       });
 
-      const dialog = await new Promise((resolve, reject) => {
+      const dialog = await new Promise((resolve, _reject) => {
         rl.question(
           `You are about to unseed database ${bgYellow(
             black(` ${this.settings.database} @ ${this.settings.host} `),
@@ -256,7 +257,7 @@ Set number of versions to seed ('Y' for all, '<number>' for number of versions, 
         output: process.stdout,
       });
 
-      const dialog = await new Promise((resolve, reject) => {
+      const dialog = await new Promise((resolve, _reject) => {
         rl.question(
           `You are about to reset database ${this.settings.database} @ ${this.settings.host}.\n Are you sure? (Yes/No):`,
           (answer) => {

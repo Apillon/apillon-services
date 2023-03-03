@@ -95,7 +95,9 @@ export class StorageService {
       await query.validate();
     } catch (err) {
       await query.handle(err);
-      if (!query.isValid()) throw new ValidationException(query);
+      if (!query.isValid()) {
+        throw new ValidationException(query);
+      }
     }
     return (
       await new StorageMicroservice(context).listDirectoryContent(

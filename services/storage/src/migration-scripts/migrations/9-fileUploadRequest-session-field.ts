@@ -10,7 +10,7 @@ export async function upgrade(
 }
 
 export async function downgrade(
-  queryFn: (query: string, values?: any[]) => Promise<any[]>,
+  _queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   //   await queryFn(`
   //     ALTER TABLE \`${DbTables.FILE_UPLOAD_REQUEST}\`

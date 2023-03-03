@@ -7,8 +7,8 @@ async function run() {
     database: env.NFTS_MYSQL_DATABASE,
     host: env.NFTS_MYSQL_HOST,
     port: env.NFTS_MYSQL_PORT,
-    user: env.NFTS_MYSQL_USER,
-    password: env.NFTS_MYSQL_PASSWORD,
+    user: env.NFTS_MYSQL_DEPLOY_USER || env.NFTS_MYSQL_USER,
+    password: env.NFTS_MYSQL_DEPLOY_PASSWORD || env.NFTS_MYSQL_PASSWORD,
   });
 
   const showDialog = !process.argv.includes('--F');

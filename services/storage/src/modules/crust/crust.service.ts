@@ -29,12 +29,13 @@ export class CrustService {
     const tx = api.tx.market.placeStorageOrder(fileCid, fileSize, tips, memo);
 
     //Load seeds(account)
-    if (!env.STORAGE_CRUST_SEED_PHRASE)
+    if (!env.STORAGE_CRUST_SEED_PHRASE) {
       throw new StorageCodeException({
         status: 500,
         code: StorageErrorCode.STORAGE_CRUST_SEED_NOT_SET,
         sourceFunction: `${this.constructor.name}/placeStorageOrderToCRUST`,
       });
+    }
 
     const seeds =
       env.APP_ENV == AppEnvironment.LOCAL_DEV ||

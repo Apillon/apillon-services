@@ -393,7 +393,9 @@ export class Website extends AdvancedSQLModel {
       await bucket.validate();
     } catch (err) {
       await bucket.handle(err);
-      if (!bucket.isValid()) throw new StorageValidationException(bucket);
+      if (!bucket.isValid()) {
+        throw new StorageValidationException(bucket);
+      }
     }
     const stagingBucket: Bucket = new Bucket(
       {
@@ -408,8 +410,9 @@ export class Website extends AdvancedSQLModel {
       await stagingBucket.validate();
     } catch (err) {
       await stagingBucket.handle(err);
-      if (!stagingBucket.isValid())
+      if (!stagingBucket.isValid()) {
         throw new StorageValidationException(stagingBucket);
+      }
     }
     const productionBucket: Bucket = new Bucket(
       {
@@ -424,8 +427,9 @@ export class Website extends AdvancedSQLModel {
       await productionBucket.validate();
     } catch (err) {
       await productionBucket.handle(err);
-      if (!productionBucket.isValid())
+      if (!productionBucket.isValid()) {
         throw new StorageValidationException(productionBucket);
+      }
     }
 
     const conn = await context.mysql.start();

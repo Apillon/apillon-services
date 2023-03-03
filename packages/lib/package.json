@@ -1,6 +1,6 @@
 {
   "name": "@apillon/lib",
-  "version": "1.0.0",
+  "version": "0.4.4",
   "description": "",
   "main": "./dist/index.js",
   "source": "./src/index.ts",

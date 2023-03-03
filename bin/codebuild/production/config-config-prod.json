@@ -14,7 +14,7 @@
       {
         "type": "PLAINTEXT",
         "name": "S3_CONFIG",
-        "value": "s3://apillon-services-config/env.production.yml"
+        "value": "s3://apillon-services-config/env.prod.yml"
       },
       {
         "type": "PLAINTEXT",

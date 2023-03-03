@@ -29,6 +29,7 @@ export class WalletService {
         name: this.prodEnv ? 'moonbeam' : 'moonbase-alphanet',
       },
     );
+
     this.wallet = new Wallet(
       this.prodEnv
         ? env.NFTS_MOONBEAM_MAINNET_PRIVATEKEY
