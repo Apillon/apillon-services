@@ -6,6 +6,7 @@ import {
   QuotaCode,
   Scs,
   ServiceName,
+  writeLog,
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
@@ -107,10 +108,10 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
           //Push to files, that will be processed
           files.push(tmpFur);
         } else {
-          //Update file-upload-request status
-          tmpFur.fileStatus =
-            FileUploadRequestFileStatus.ERROR_FILE_UPLOAD_REQUEST_DOES_NOT_EXISTS;
-          await tmpFur.update();
+          throw new StorageCodeException({
+            code: StorageErrorCode.FILE_UPLOAD_REQUEST_NOT_FOUND,
+            status: 500,
+          });
         }
       }
     } else {
