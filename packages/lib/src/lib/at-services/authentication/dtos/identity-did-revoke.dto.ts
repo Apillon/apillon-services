@@ -1,10 +1,7 @@
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator, emailValidator } from '@rawmodel/validators';
-import {
-  AuthenticationErrorCode,
-  PopulateFrom,
-} from '../../../../config/types';
+import { PopulateFrom } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
 
 export class IdentityDidRevokeDto extends ModelBase {
