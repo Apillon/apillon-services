@@ -147,7 +147,7 @@ export class NftsService {
 
     for (const collection of collections.items) {
       const mintedNr = collection.contractAddress
-        ? await walletService.getMintedNftsNr(collection.contractAddress)
+        ? await walletService.getNumberOfMintedNfts(collection.contractAddress)
         : 0;
 
       responseCollections.push({
@@ -156,6 +156,24 @@ export class NftsService {
       });
     }
     return { items: responseCollections, total: collections.total };
+  }
+
+  static async getCollection(event: { id: any }, context: ServiceContext) {
+    const collection: Collection = await new Collection(
+      {},
+      context,
+    ).populateById(event.id);
+
+    if (!collection.exists()) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.NFT_COLLECTION_DOES_NOT_EXIST,
+        context: context,
+      });
+    }
+    collection.canAccess(context);
+    await collection.populateNumberOfMintedNfts();
+    return collection.serialize(SerializeFor.PROFILE);
   }
 
   static async transferCollectionOwnership(
@@ -422,11 +440,11 @@ export class NftsService {
     collection: Collection,
     walletService: WalletService,
   ) {
-    const mintedNftsNr = await walletService.getMintedNftsNr(
+    const minted = await walletService.getNumberOfMintedNfts(
       collection.contractAddress,
     );
 
-    if (mintedNftsNr + params.quantity > collection.maxSupply) {
+    if (minted + params.quantity > collection.maxSupply) {
       throw new NftsCodeException({
         status: 500,
         code: NftsErrorCode.MINT_NFT_SUPPLY_ERROR,
@@ -435,7 +453,7 @@ export class NftsService {
       });
     }
 
-    if (collection.reserve - mintedNftsNr < params.quantity) {
+    if (collection.reserve - minted < params.quantity) {
       throw new NftsCodeException({
         status: 500,
         code: NftsErrorCode.MINT_NFT_RESERVE_ERROR,
