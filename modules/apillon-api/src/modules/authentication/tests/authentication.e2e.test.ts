@@ -64,13 +64,15 @@ describe('Authentication tests', () => {
 
   test('Anyone with an api-key can generate a session token ', async () => {
     const response = await request(stage.http)
-      .get(`/auth/generate-session`)
+      .get(`/auth/session-token`)
       .set(
         'Authorization',
         `Basic ${Buffer.from(
           apiKey.apiKey + ':' + apiKey.apiKeySecret,
         ).toString('base64')}`,
       );
-    expect(response.status).toBe(201);
+    expect(response.status).toBe(200);
+    const token = response.body.data.session;
+    expect(token).not.toBeNull();
   });
 });
