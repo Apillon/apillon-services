@@ -48,6 +48,14 @@ export class NftsMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async getNftCollection(id: number) {
+    const data = {
+      eventName: NftsEventType.GET_NFT_COLLECTION,
+      id: id,
+    };
+    return await this.callService(data);
+  }
+
   public async transferCollectionOwnership(params: TransferCollectionDTO) {
     const data = {
       eventName: NftsEventType.TRANSFER_OWNERSHIP,

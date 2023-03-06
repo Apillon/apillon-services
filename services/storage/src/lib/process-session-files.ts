@@ -5,10 +5,14 @@ import { Directory } from '../modules/directory/models/directory.model';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
 import { getSessionFilesOnS3 } from './file-upload-session-s3-files';
-import { generateDirectoriesForFUR } from './generate-directories-from-path';
+import {
+  generateDirectoriesForFUR,
+  generateDirectoriesFromPath,
+} from './generate-directories-from-path';
 import { File } from '../modules/storage/models/file.model';
 import {
   AWS_S3,
+  EndFileUploadSessionDto,
   env,
   Lmas,
   LogType,
@@ -16,10 +20,19 @@ import {
   writeLog,
 } from '@apillon/lib';
 
-export async function hostingBucketProcessSessionFiles(
+/**
+ * This function is called on session end.
+ * Function creates files(which were uploaded to s3) and file structure  in bucket, from fileUploadRequests.
+ * @param context
+ * @param bucket
+ * @param session
+ * @returns
+ */
+export async function processSessionFiles(
   context: ServiceContext,
   bucket: Bucket,
   session: FileUploadSession,
+  params: EndFileUploadSessionDto,
 ) {
   //Get FURs in session
   const fileUploadRequests: FileUploadRequest[] = await new FileUploadRequest(
@@ -37,6 +50,15 @@ export async function hostingBucketProcessSessionFiles(
 
   const s3FilesToDelete: string[] = [];
 
+  if (params.directoryPath) {
+    await generateDirectoriesFromPath(
+      context,
+      directories,
+      params.directoryPath,
+      bucket,
+    );
+  }
+
   //Loop through FURs
   for (const fur of fileUploadRequests) {
     const s3File = filesOnS3.files.find((x) => x.Key == fur.s3FileKey);
@@ -48,6 +70,12 @@ export async function hostingBucketProcessSessionFiles(
       continue;
     }
     try {
+      if (params.directoryPath) {
+        fur.path = fur.path
+          ? params.directoryPath + '/' + fur.path
+          : params.directoryPath;
+      }
+
       const fileDirectory = await generateDirectoriesForFUR(
         context,
         directories,

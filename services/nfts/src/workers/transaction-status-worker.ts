@@ -37,6 +37,9 @@ export class TransactionStatusWorker extends ServerlessWorker {
       const txReceipt = await walletService.getTransactionByHash(
         tx.transactionHash,
       );
+      console.log(
+        `Checking transaction (txId = ${tx.id}, txHash = ${txReceipt.transactionHash}, confirmations = ${txReceipt.confirmations})`,
+      );
       const isConfirmed: boolean = await walletService.isTransacionConfirmed(
         txReceipt,
       );

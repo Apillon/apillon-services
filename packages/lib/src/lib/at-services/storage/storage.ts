@@ -155,14 +155,6 @@ export class StorageMicroservice extends BaseService {
 
   //#region upload files to S3, IPFS & pin to crust
 
-  public async requestS3SignedURLForUpload(params: CreateS3UrlForUploadDto) {
-    const data = {
-      eventName: StorageEventType.REQUEST_S3_SIGNED_URL_FOR_UPLOAD,
-      body: params.serialize(),
-    };
-    return await this.callService(data);
-  }
-
   public async requestS3SignedURLsForUpload(params: CreateS3UrlsForUploadDto) {
     const data = {
       eventName: StorageEventType.REQUEST_S3_SIGNED_URLS_FOR_UPLOAD,

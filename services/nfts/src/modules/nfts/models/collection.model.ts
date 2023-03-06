@@ -6,6 +6,7 @@ import {
   ForbiddenErrorCodes,
   getQueryParams,
   NFTCollectionQueryFilter,
+  PoolConnection,
   PopulateFrom,
   presenceValidator,
   prop,
@@ -20,6 +21,7 @@ import {
   NftsErrorCode,
 } from '../../../config/types';
 import { ServiceContext } from '../../../context';
+import { WalletService } from '../../wallet/wallet.service';
 
 export class Collection extends AdvancedSQLModel {
   public readonly tableName = DbTables.COLLECTION;
@@ -439,6 +441,24 @@ export class Collection extends AdvancedSQLModel {
   })
   public transactionHash: string;
 
+  /***************************************************
+   * Info properties
+   *****************************************************/
+  @prop({
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public minted: number;
+
   public canAccess(context: ServiceContext) {
     if (
       !context.hasRoleOnProject(
@@ -518,6 +538,37 @@ export class Collection extends AdvancedSQLModel {
     return await selectAndCountQuery(context.mysql, sqlQuery, params, 'c.id');
   }
 
+  public async populateById(
+    id: number | string,
+    conn?: PoolConnection,
+  ): Promise<this> {
+    if (!id) {
+      throw new Error('ID should not be null');
+    }
+    if (!this.hasOwnProperty('id')) {
+      throw new Error('Object does not contain id property');
+    }
+
+    this.reset();
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE ( id LIKE @id OR collection_uuid LIKE @id)
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { id },
+      conn,
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
+
   public async populateByUUID(collection_uuid: string): Promise<Collection> {
     if (!collection_uuid) {
       throw new Error('Uuid should not be null!');
@@ -535,6 +586,17 @@ export class Collection extends AdvancedSQLModel {
       return this.populate(data[0], PopulateFrom.DB);
     } else {
       return this.reset();
+    }
+  }
+
+  public async populateNumberOfMintedNfts() {
+    const walletService: WalletService = new WalletService();
+    if (this.contractAddress) {
+      this.minted = await walletService.getNumberOfMintedNfts(
+        this.contractAddress,
+      );
+    } else {
+      this.minted = 0;
     }
   }
 }

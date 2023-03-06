@@ -133,7 +133,7 @@ export class WalletService {
     return this.wallet.getAddress();
   }
 
-  async getMintedNftsNr(contractAddress: string): Promise<number> {
+  async getNumberOfMintedNfts(contractAddress: string): Promise<number> {
     const nftContract: Contract = new Contract(
       contractAddress,
       PayableNft.abi,
