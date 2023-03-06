@@ -20,7 +20,7 @@ run-test-server:
 	npm run test-server;
 
 run-test-db:
-	docker-compose -f docker-compose-TEST.yml down -v; docker-compose -f docker-compose-TEST.yml up -d;
+	docker-compose -f docker-compose-TEST.yml down -v; docker-compose -f docker-compose-TEST.yml up -d --build;
 
 build:
 	npm run build;
