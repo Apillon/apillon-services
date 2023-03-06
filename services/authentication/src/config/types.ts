@@ -97,7 +97,7 @@ export enum CredentialAttestStatus {
 export enum JwtTokenType {
   SPORRAN_SESSION = 'sporran-session',
   IDENTITY_VERIFICATION = 'identity-verification',
-  USER_AUTHENTICATION = 'USER_AUTHENTICATION',
+  USER_AUTHENTICATION = 'user-authentication',
 }
 
 export enum IdentityEventType {

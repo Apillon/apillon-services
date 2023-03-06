@@ -53,6 +53,7 @@ export * from './lib/at-services/authentication/dtos/sporran/sporran-session.dto
 export * from './lib/at-services/authentication/dtos/sporran/message/request-credential.dto';
 export * from './lib/at-services/authentication/dtos/sporran/message/submit-attestation.dto';
 export * from './lib/at-services/authentication/dtos/sporran/message/submit-terms.dto';
+export * from './lib/at-services/authentication/dtos/verify-session.dto';
 
 //#REGION NTFS
 export * from './lib/at-services/nfts/nfts';

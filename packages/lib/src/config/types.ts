@@ -449,10 +449,10 @@ export enum RoleType {
  * JWT Token signing types.
  */
 export enum JwtTokenType {
-  USER_AUTHENTICATION = 'USER_AUTHENTICATION',
-  USER_RESET_PASSWORD = 'USER_RESET_PASSWORD',
-  USER_RESET_EMAIL = 'USER_RESET_EMAIL',
-  USER_CONFIRM_EMAIL = 'USER_CONFIRM_EMAIL',
+  USER_AUTHENTICATION = 'user-authentication',
+  USER_RESET_PASSWORD = 'user-reset-password',
+  USER_RESET_EMAIL = 'user-reset-email',
+  USER_CONFIRM_EMAIL = 'user-confirm-email',
 }
 
 /**

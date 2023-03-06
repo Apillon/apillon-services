@@ -2,18 +2,18 @@ import { generateJwtToken, parseJwtToken } from '@apillon/lib';
 import { JwtTokenType } from '../../config/types';
 import { Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
-import { VerifySessionDto } from './dtos/verify-session.dto';
+import { VerifyLoginDto } from '@apillon/lib';
 
 @Injectable()
 export class AuthService {
-  async generateSession(context: ApillonApiContext) {
+  async generateSessionToken(context: ApillonApiContext) {
     const token = generateJwtToken(JwtTokenType.AUTH_SESSION, '10min');
     return {
-      token: token,
+      session: token,
     };
   }
 
-  async verifySession(context: ApillonApiContext, query: VerifySessionDto) {
+  async verifyLogin(context: ApillonApiContext, query: VerifyLoginDto) {
     try {
       parseJwtToken(JwtTokenType.USER_AUTHENTICATION, query.token);
     } catch (error) {
