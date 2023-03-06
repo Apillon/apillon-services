@@ -150,7 +150,7 @@ export class BucketController {
   @UseGuards(AuthGuard)
   @Validation({ dto: CreateBucketDto })
   @UseGuards(ValidationGuard)
-  async createProject(
+  async createBucket(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateBucketDto,
   ) {

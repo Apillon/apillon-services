@@ -1,4 +1,5 @@
 import {
+  CreateBucketDto,
   DeployNftContractDto,
   Lmas,
   LogType,
@@ -8,6 +9,7 @@ import {
   ServiceName,
   SetCollectionBaseUriDTO,
   SqlModelStatus,
+  StorageMicroservice,
   TransferCollectionDTO,
 } from '@apillon/lib';
 import { TransactionRequest } from '@ethersproject/providers';
@@ -44,10 +46,6 @@ export class NftsService {
     const walletService = new WalletService();
     const walletAddress = await walletService.getWalletAddress();
 
-    //test
-    console.log('testing RPC calls');
-    await walletService.getCurrentMaxNonce();
-
     //Create collection object
     const collection: Collection = new Collection(
       params.body,
@@ -60,6 +58,30 @@ export class NftsService {
       collection_uuid: uuidV4(),
       status: SqlModelStatus.INCOMPLETE,
     });
+
+    //Call storage MS, to create bucket used to upload NFT metadata
+    let nftMetadataBucket;
+    try {
+      const createBucketParams: CreateBucketDto =
+        new CreateBucketDto().populate({
+          project_uuid: params.body.project_uuid,
+          bucketType: 3,
+          name: params.body.name,
+        });
+      nftMetadataBucket = (
+        await new StorageMicroservice(context).createBucket(createBucketParams)
+      ).data;
+      collection.bucket_uuid = nftMetadataBucket.bucket_uuid;
+    } catch (err) {
+      throw await new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.CREATE_BUCKET_FOR_NFT_METADATA_ERROR,
+        context: context,
+        sourceFunction: 'deployNftContract()',
+        errorMessage: 'Error creating bucket',
+        details: err,
+      }).writeToMonitor({});
+    }
 
     try {
       await collection.validate();

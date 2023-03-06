@@ -207,6 +207,12 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: NftsErrorCode.COLLECTION_MINT_PRICE_NOT_PRESENT,
+      },
+    ],
   })
   public bucket_uuid: string;
 
