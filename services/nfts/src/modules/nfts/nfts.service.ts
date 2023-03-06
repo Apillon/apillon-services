@@ -169,7 +169,7 @@ export class NftsService {
 
     for (const collection of collections.items) {
       const mintedNr = collection.contractAddress
-        ? await walletService.getMintedNftsNr(collection.contractAddress)
+        ? await walletService.getNumberOfMintedNfts(collection.contractAddress)
         : 0;
 
       responseCollections.push({
@@ -178,6 +178,24 @@ export class NftsService {
       });
     }
     return { items: responseCollections, total: collections.total };
+  }
+
+  static async getCollection(event: { id: any }, context: ServiceContext) {
+    const collection: Collection = await new Collection(
+      {},
+      context,
+    ).populateById(event.id);
+
+    if (!collection.exists()) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.NFT_COLLECTION_DOES_NOT_EXIST,
+        context: context,
+      });
+    }
+    collection.canAccess(context);
+    await collection.populateNumberOfMintedNfts();
+    return collection.serialize(SerializeFor.PROFILE);
   }
 
   static async transferCollectionOwnership(
@@ -268,19 +286,12 @@ export class NftsService {
       context,
     );
 
-    const mintedNftsNr = await walletService.getMintedNftsNr(
-      collection.contractAddress,
+    await NftsService.checkMintConditions(
+      params.body,
+      context,
+      collection,
+      walletService,
     );
-
-    if (mintedNftsNr + params.body.quantity > collection.maxSupply) {
-      throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.MINT_NFT_SUPPLY_ERROR,
-        context: context,
-        sourceFunction: 'mintNftTo()',
-        errorMessage: 'Unable to mint new NFTs, out of supply!',
-      });
-    }
 
     const conn = await context.mysql.start();
     try {
@@ -427,8 +438,6 @@ export class NftsService {
         code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
         context: context,
         sourceFunction,
-        errorMessage: 'Error obtaining Nft collection',
-        details: 'Collection does not exist or is not confirmed on blockchain!',
       });
     }
     const currentOwner = await walletService.getContractOwner(
@@ -442,10 +451,37 @@ export class NftsService {
         code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
         context: context,
         sourceFunction,
-        errorMessage: 'Error calling Nft contract function',
-        details: 'Caller is not the owner',
       });
     }
     return collection;
+  }
+
+  private static async checkMintConditions(
+    params: MintNftDTO,
+    context: ServiceContext,
+    collection: Collection,
+    walletService: WalletService,
+  ) {
+    const minted = await walletService.getNumberOfMintedNfts(
+      collection.contractAddress,
+    );
+
+    if (minted + params.quantity > collection.maxSupply) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.MINT_NFT_SUPPLY_ERROR,
+        context: context,
+        sourceFunction: 'mintNftTo()',
+      });
+    }
+
+    if (collection.reserve - minted < params.quantity) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.MINT_NFT_RESERVE_ERROR,
+        context: context,
+        sourceFunction: 'mintNftTo()',
+      });
+    }
   }
 }

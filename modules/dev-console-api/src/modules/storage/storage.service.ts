@@ -32,16 +32,6 @@ export class StorageService {
       )
     ).data;
   }
-  async createS3SignedUrlForUpload(
-    context: DevConsoleApiContext,
-    bucket_uuid: string,
-    body: CreateS3UrlForUploadDto,
-  ) {
-    body.bucket_uuid = bucket_uuid;
-    return (
-      await new StorageMicroservice(context).requestS3SignedURLForUpload(body)
-    ).data;
-  }
 
   async createS3SignedUrlsForUpload(
     context: DevConsoleApiContext,

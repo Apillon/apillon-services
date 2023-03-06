@@ -95,8 +95,9 @@ export class HostingService {
       await body.validate();
     } catch (err) {
       await body.handle(err);
-      if (!body.isValid())
+      if (!body.isValid()) {
         throw new ValidationException(body, ValidatorErrorCode);
+      }
     }
     return (await new StorageMicroservice(context).deployWebsite(body)).data;
   }
@@ -111,8 +112,9 @@ export class HostingService {
       await query.validate();
     } catch (err) {
       await query.handle(err);
-      if (!query.isValid())
+      if (!query.isValid()) {
         throw new ValidationException(query, ValidatorErrorCode);
+      }
     }
 
     return (await new StorageMicroservice(context).listDeployments(query)).data;
