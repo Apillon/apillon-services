@@ -15,6 +15,8 @@ export async function processEvent(event, context: Context): Promise<any> {
     [NftsEventType.NFT_COLLECTION_TRANSACTION_LIST]:
       TransactionService.listCollectionTransactions,
     [NftsEventType.GET_NFT_COLLECTION]: NftsService.getCollection,
+    [NftsEventType.PREPARE_COLLECTION_METADATA]:
+      NftsService.prepareCollectionMetadata,
   };
 
   return await processors[event.eventName](event, context);

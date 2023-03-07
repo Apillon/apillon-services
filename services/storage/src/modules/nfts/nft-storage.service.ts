@@ -4,6 +4,7 @@ import {
   Lmas,
   LogType,
   PrepareCollectionMetadataDTO,
+  runWithWorkers,
   ServiceName,
   streamToString,
 } from '@apillon/lib';
@@ -102,7 +103,7 @@ export class NftStorageService {
     //S3 client
     const s3Client: AWS_S3 = new AWS_S3();
 
-    for (const metadataFUR of metadataFURs) {
+    await runWithWorkers(metadataFURs, 50, context, async (metadataFUR) => {
       if (
         !(await s3Client.exists(
           env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
@@ -110,7 +111,7 @@ export class NftStorageService {
         ))
       ) {
         //NOTE: Define flow, what happen in this case. My gues - we should probably throw error
-        continue;
+        return;
       }
 
       const file = await s3Client.get(
@@ -121,16 +122,20 @@ export class NftStorageService {
       const fileContent = JSON.parse(await streamToString(file.Body, 'utf-8'));
       if (fileContent.image) {
         fileContent.image =
-          imagesOnIPFSRes.parentDirCID + '/' + fileContent.image;
+          env.STORAGE_IPFS_GATEWAY +
+          '/' +
+          imagesOnIPFSRes.parentDirCID.toV0().toString() +
+          '/' +
+          fileContent.image;
       }
 
       await s3Client.upload(
         env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
         metadataFUR.s3FileKey,
-        fileContent,
+        Buffer.from(JSON.stringify(fileContent), 'utf-8'),
         'application/json',
       );
-    }
+    });
 
     //#endregion
 
@@ -158,6 +163,10 @@ export class NftStorageService {
     }
     //#endregion
 
-    return { collectionMetadataCid: metadataOnIPFSRes.parentDirCID };
+    //TODO: Mark sessions as transferred and clear files from s3
+
+    return {
+      collectionMetadataCid: metadataOnIPFSRes.parentDirCID.toV0().toString(),
+    };
   }
 }

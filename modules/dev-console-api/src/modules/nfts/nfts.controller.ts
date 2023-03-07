@@ -3,6 +3,7 @@ import {
   DeployNftContractDto,
   MintNftDTO,
   NFTCollectionQueryFilter,
+  PrepareCollectionMetadataDTO,
   SetCollectionBaseUriDTO,
   TransactionQueryFilter,
   TransferCollectionDTO,
@@ -79,8 +80,12 @@ export class NftsController {
   }
 
   @Post('/collections/:collectionUuid/transferOwnership')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
   @Validation({ dto: TransferCollectionDTO })
-  @UseGuards(ValidationGuard)
+  @UseGuards(ValidationGuard, AuthGuard)
   async transferOwnership(
     @Ctx() context: DevConsoleApiContext,
     @Param('collectionUuid') collectionUuid: string,
@@ -94,8 +99,13 @@ export class NftsController {
   }
 
   @Post('/collections/:collectionUuid/mint')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
   @Validation({ dto: MintNftDTO })
-  @UseGuards(ValidationGuard)
+  @UseGuards(ValidationGuard, AuthGuard)
   async mintNft(
     @Ctx() context: DevConsoleApiContext,
     @Param('collectionUuid') collectionUuid: string,
@@ -105,8 +115,12 @@ export class NftsController {
   }
 
   @Post('/collections/:collectionUuid/set-base-uri')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
   @Validation({ dto: SetCollectionBaseUriDTO })
-  @UseGuards(ValidationGuard)
+  @UseGuards(ValidationGuard, AuthGuard)
   async setNftCollectionBaseUri(
     @Ctx() context: DevConsoleApiContext,
     @Param('collectionUuid') collectionUuid: string,
@@ -142,6 +156,26 @@ export class NftsController {
       context,
       collectionUuid,
       query,
+    );
+  }
+
+  @Post('/collections/:collectionUuid/prepare-metadata')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @Validation({ dto: PrepareCollectionMetadataDTO })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async prepareMetadata(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('collectionUuid') collectionUuid: string,
+    @Body() body: PrepareCollectionMetadataDTO,
+  ) {
+    return await this.nftsService.prepareCollectionMetadata(
+      context,
+      collectionUuid,
+      body,
     );
   }
 }

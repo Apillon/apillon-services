@@ -2,6 +2,7 @@ import { env } from '../../../config/env';
 import { AppEnvironment, NftsEventType } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
+import { PrepareCollectionMetadataDTO } from '../storage/dtos/prepare-collection-metadata.dto';
 import { NFTCollectionQueryFilter } from './dtos/collection-query-filter.dto';
 import { DeployNftContractDto } from './dtos/deploy-nft-contract.dto';
 import { MintNftDTO } from './dtos/mint-nft.dto';
@@ -95,6 +96,14 @@ export class NftsMicroservice extends BaseService {
       eventName: NftsEventType.NFT_COLLECTION_TRANSACTION_LIST,
       collection_uuid: collection_uuid,
       query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async prepareCollectionMetadata(params: PrepareCollectionMetadataDTO) {
+    const data = {
+      eventName: NftsEventType.PREPARE_COLLECTION_METADATA,
+      body: params.serialize(),
     };
     return await this.callService(data);
   }

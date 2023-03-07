@@ -1,4 +1,4 @@
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   PopulateFrom,
@@ -14,13 +14,31 @@ export class PrepareCollectionMetadataDTO extends ModelBase {
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [],
   })
+  public collection_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.COLLECTION_METADATA_IMAGE_SESSION_NOT_PRESENT,
+      },
+    ],
+  })
   public imagesSession: string;
 
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.COLLECTION_METADATA_METADATA_SESSION_NOT_PRESENT,
+      },
+    ],
   })
   public metadataSession: string;
 }

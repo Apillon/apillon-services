@@ -25,6 +25,7 @@ import {
   ApillonHostingApiCreateS3UrlsForUploadDto,
   CreateS3UrlsForUploadDto,
 } from './dtos/create-s3-urls-for-upload.dto';
+import { PrepareCollectionMetadataDTO } from './dtos/prepare-collection-metadata.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -397,6 +398,18 @@ export class StorageMicroservice extends BaseService {
     const data = {
       eventName: StorageEventType.DEPLOYMENT_GET,
       id: id,
+    };
+    return await this.callService(data);
+  }
+
+  //#endregion
+
+  //#region nfts storage functions
+
+  public async prepareCollectionMetadata(params: PrepareCollectionMetadataDTO) {
+    const data = {
+      eventName: StorageEventType.PREPARE_COLLECTION_METADATA,
+      body: params.serialize(),
     };
     return await this.callService(data);
   }

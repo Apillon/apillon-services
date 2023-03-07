@@ -3,6 +3,7 @@ import {
   MintNftDTO,
   NFTCollectionQueryFilter,
   NftsMicroservice,
+  PrepareCollectionMetadataDTO,
   SetCollectionBaseUriDTO,
   TransactionQueryFilter,
   TransferCollectionDTO,
@@ -96,5 +97,15 @@ export class NftsService {
         query,
       )
     ).data;
+  }
+
+  async prepareCollectionMetadata(
+    context: DevConsoleApiContext,
+    collection_uuid: string,
+    body: PrepareCollectionMetadataDTO,
+  ) {
+    body.collection_uuid = collection_uuid;
+    return (await new NftsMicroservice(context).prepareCollectionMetadata(body))
+      .data;
   }
 }

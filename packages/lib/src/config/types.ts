@@ -73,6 +73,7 @@ export enum StorageEventType {
   BUCKET_CLEAR_CONTENT = 'clear-bucket-content',
   DEPLOYMENT_GET = 'get-deployment',
   DEPLOYMENT_LIST = 'list-deployment',
+  PREPARE_COLLECTION_METADATA = 'prepare-collection-metadata',
 }
 
 export enum MailEventType {
@@ -94,6 +95,7 @@ export enum NftsEventType {
   SET_BASE_URI = 'set-base-uri',
   CHECK_TRANSACTION_STATUS = 'check-transaction-status',
   NFT_COLLECTION_TRANSACTION_LIST = 'list-collection-transactions',
+  PREPARE_COLLECTION_METADATA = 'prepare-collection-metadata',
 }
 
 export enum ReferralEventType {
@@ -388,6 +390,8 @@ export enum ValidatorErrorCode {
   DEPLOY_ENVIRONMENT_NOT_PRESENT = 42200039,
   FILES_PROPERTY_NOT_PRESENT = 42200040,
   FILES_PROPERTY_EMPTY = 42200041,
+  COLLECTION_METADATA_IMAGE_SESSION_NOT_PRESENT = 42200042,
+  COLLECTION_METADATA_METADATA_SESSION_NOT_PRESENT = 42200043,
 }
 
 /**
