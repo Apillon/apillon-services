@@ -1,5 +1,5 @@
 {
-  "name": "apillon-auth-api-dev",
+  "name": "apillon-auth-dev",
   "environment": {
     "computeType": "BUILD_GENERAL1_SMALL",
     "imagePullCredentialsType": "CODEBUILD",
@@ -18,13 +18,23 @@
       },
       {
         "type": "PLAINTEXT",
-        "name": "MODULES_LIB",
+        "name": "WORKERS_LIB",
         "value": "true"
       },
       {
         "type": "PLAINTEXT",
         "name": "SERVICE_PATH",
         "value": "modules/authentication-api/"
+      },
+      {
+        "type": "PLAINTEXT",
+        "name": "WORKER_SQS_ARN",
+        "value": "arn:aws:sqs:eu-west-1:018021943180:apillon-auth-queue-dev"
+      },
+      {
+        "type": "PLAINTEXT",
+        "name": "DB_MIGRATIONS",
+        "value": "true"
       },
       {
         "type": "PLAINTEXT",
