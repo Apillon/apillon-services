@@ -14,9 +14,7 @@ import {
   IAttestation,
   ICredentialPresentation,
 } from '@kiltprotocol/sdk-js';
-import { Injectable } from '@nestjs/common';
 
-@Injectable()
 export class VerificationMicroservice {
   static async verifyIdentity(event, context): Promise<any> {
     await connect(env.KILT_NETWORK);
