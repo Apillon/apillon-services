@@ -3,16 +3,16 @@ import {
   MintNftDTO,
   NFTCollectionQueryFilter,
   NftsMicroservice,
-  PrepareCollectionMetadataDTO,
+  DeployCollectionDTO,
   SetCollectionBaseUriDTO,
   TransactionQueryFilter,
   TransferCollectionDTO,
 } from '@apillon/lib';
-import { DeployNftContractDto } from '@apillon/lib/dist/lib/at-services/nfts/dtos/deploy-nft-contract.dto';
+import { CreateCollectionDTO } from '@apillon/lib/dist/lib/at-services/nfts/dtos/deploy-nft-contract.dto';
 import { HttpStatus, Injectable } from '@nestjs/common';
+import { ResourceNotFoundErrorCode } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
 import { Project } from '../project/models/project.model';
-import { ResourceNotFoundErrorCode } from '../../config/types';
 
 @Injectable()
 export class NftsService {
@@ -20,9 +20,9 @@ export class NftsService {
     return (await new NftsMicroservice(context).getHello()).data;
   }
 
-  async deployNftContract(
+  async createCollection(
     context: DevConsoleApiContext,
-    body: DeployNftContractDto,
+    body: CreateCollectionDTO,
   ) {
     //check project
     const project: Project = await new Project({}, context).populateByUUID(
@@ -38,7 +38,7 @@ export class NftsService {
 
     project.canModify(context);
 
-    return (await new NftsMicroservice(context).deployNftContract(body)).data;
+    return (await new NftsMicroservice(context).createCollection(body)).data;
   }
 
   async listNftCollections(
@@ -99,13 +99,12 @@ export class NftsService {
     ).data;
   }
 
-  async prepareCollectionMetadata(
+  async deployCollection(
     context: DevConsoleApiContext,
     collection_uuid: string,
-    body: PrepareCollectionMetadataDTO,
+    body: DeployCollectionDTO,
   ) {
     body.collection_uuid = collection_uuid;
-    return (await new NftsMicroservice(context).prepareCollectionMetadata(body))
-      .data;
+    return (await new NftsMicroservice(context).deployCollection(body)).data;
   }
 }

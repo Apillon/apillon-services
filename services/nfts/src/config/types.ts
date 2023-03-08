@@ -5,6 +5,11 @@ export enum DbTables {
 }
 
 export enum NftsErrorCode {
+  //400
+  COLLECTION_ALREADY_DEPLOYED = 40012001,
+  //404
+  COLLECTION_NOT_FOUND = 40412001,
+
   //422
   TRANSACTION_CHAIN_ID_NOT_PRESENT = 42212001,
   TRANSACTION_RAW_TRANSACTION_NOT_PRESENT = 42212002,
@@ -31,6 +36,7 @@ export enum NftsErrorCode {
   MINT_NFT_RESERVE_ERROR = 50012008,
   NFT_COLLECTION_DOES_NOT_EXIST = 50012009,
   CREATE_BUCKET_FOR_NFT_METADATA_ERROR = 50012010,
+  INVALID_DATA_PASSED_TO_WORKER = 50012011,
 }
 
 export enum Chains {
@@ -54,9 +60,10 @@ export enum TransactionStatus {
 }
 
 export enum CollectionStatus {
-  PENDING = 0,
-  DEPLOYED = 1,
-  TRANSFERED = 2,
+  CREATED = 0,
+  DEPLOYING = 1,
+  DEPLOYED = 2,
+  TRANSFERED = 3,
 }
 
 export enum CollectionMetadataStatus {

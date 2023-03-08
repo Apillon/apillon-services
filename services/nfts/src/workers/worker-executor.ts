@@ -19,6 +19,7 @@ export enum WorkerName {
   SCHEDULER = 'scheduler',
   PROCESS_TRANSACTION = 'ProcessTransactionWorker',
   TRANSACTION_STATUS = 'TransactionStatusWorker',
+  DEPLOY_COLLECTION = 'DeployCollectionWorker',
 }
 
 export async function handler(event: any) {

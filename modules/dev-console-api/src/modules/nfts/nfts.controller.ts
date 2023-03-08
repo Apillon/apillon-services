@@ -1,15 +1,15 @@
 import {
+  CreateCollectionDTO,
   DefaultUserRole,
-  DeployNftContractDto,
   MintNftDTO,
   NFTCollectionQueryFilter,
-  PrepareCollectionMetadataDTO,
+  DeployCollectionDTO,
   SetCollectionBaseUriDTO,
   TransactionQueryFilter,
   TransferCollectionDTO,
   ValidateFor,
 } from '@apillon/lib';
-import { Ctx, Validation, Permissions } from '@apillon/modules-lib';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
@@ -21,10 +21,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
+import { AuthGuard } from '../../guards/auth.guard';
+import { DevEnvGuard } from '../../guards/dev-env.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { NftsService } from './nfts.service';
-import { DevEnvGuard } from '../../guards/dev-env.guard';
-import { AuthGuard } from '../../guards/auth.guard';
 
 @Controller('nfts')
 export class NftsController {
@@ -36,18 +36,18 @@ export class NftsController {
   }
 
   @Post('/collections')
-  @Validation({ dto: DeployNftContractDto })
+  @Validation({ dto: CreateCollectionDTO })
   @UseGuards(ValidationGuard)
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
   @UseGuards(AuthGuard)
-  async deployNftContract(
+  async createCollection(
     @Ctx() context: DevConsoleApiContext,
-    @Body() body: DeployNftContractDto,
+    @Body() body: CreateCollectionDTO,
   ) {
-    return await this.nftsService.deployNftContract(context, body);
+    return await this.nftsService.createCollection(context, body);
   }
 
   @Get('/collections')
@@ -159,20 +159,20 @@ export class NftsController {
     );
   }
 
-  @Post('/collections/:collectionUuid/prepare-metadata')
+  @Post('/collections/:collectionUuid/deploy')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
     { role: DefaultUserRole.PROJECT_USER },
   )
-  @Validation({ dto: PrepareCollectionMetadataDTO })
+  @Validation({ dto: DeployCollectionDTO })
   @UseGuards(ValidationGuard, AuthGuard)
-  async prepareMetadata(
+  async deployCollection(
     @Ctx() context: DevConsoleApiContext,
     @Param('collectionUuid') collectionUuid: string,
-    @Body() body: PrepareCollectionMetadataDTO,
+    @Body() body: DeployCollectionDTO,
   ) {
-    return await this.nftsService.prepareCollectionMetadata(
+    return await this.nftsService.deployCollection(
       context,
       collectionUuid,
       body,

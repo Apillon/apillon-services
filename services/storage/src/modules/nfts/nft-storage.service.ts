@@ -3,7 +3,6 @@ import {
   env,
   Lmas,
   LogType,
-  PrepareCollectionMetadataDTO,
   runWithWorkers,
   ServiceName,
   streamToString,
@@ -22,11 +21,11 @@ import { FileUploadSession } from '../storage/models/file-upload-session.model';
 
 export class NftStorageService {
   static async prepareMetadataForCollection(
-    event: { body: PrepareCollectionMetadataDTO },
+    event: { body: { imagesSession: string; metadataSession: string } },
     context: ServiceContext,
   ) {
-    //#region Sync images to IPFS
-    //Get session
+    //#region Load data, execute validations and Sync images to IPFS
+    //Get sessions
     const imagesSession = await new FileUploadSession(
       {},
       context,
@@ -38,6 +37,19 @@ export class NftStorageService {
         status: 404,
       });
     }
+
+    const metadataSession = await new FileUploadSession(
+      {},
+      context,
+    ).populateByUUID(event.body.metadataSession);
+
+    if (!metadataSession.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.FILE_UPLOAD_SESSION_NOT_FOUND,
+        status: 404,
+      });
+    }
+
     //get bucket
     const bucket = await new Bucket({}, context).populateById(
       imagesSession.bucket_id,
@@ -78,18 +90,6 @@ export class NftStorageService {
 
     //#region Prepare NFT metadata
     //Download each metadata file from s3, update image property and upload back to s3
-
-    const metadataSession = await new FileUploadSession(
-      {},
-      context,
-    ).populateByUUID(event.body.metadataSession);
-
-    if (!metadataSession.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.FILE_UPLOAD_SESSION_NOT_FOUND,
-        status: 404,
-      });
-    }
 
     //Get files in session (fileStatus must be of status 1)
     const metadataFURs = (
@@ -166,7 +166,9 @@ export class NftStorageService {
     //TODO: Mark sessions as transferred and clear files from s3
 
     return {
-      collectionMetadataCid: metadataOnIPFSRes.parentDirCID.toV0().toString(),
+      baseUri:
+        env.STORAGE_IPFS_GATEWAY +
+        metadataOnIPFSRes.parentDirCID.toV0().toString(),
     };
   }
 }

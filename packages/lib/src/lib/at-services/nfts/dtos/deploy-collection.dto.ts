@@ -7,7 +7,7 @@ import {
 } from '../../../../config/types';
 import { ModelBase, prop } from '../../../base-models/base';
 
-export class PrepareCollectionMetadataDTO extends ModelBase {
+export class DeployCollectionDTO extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -23,7 +23,7 @@ export class PrepareCollectionMetadataDTO extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.COLLECTION_METADATA_IMAGE_SESSION_NOT_PRESENT,
+        code: ValidatorErrorCode.PREPARE_AND_DEPLOY_COLLECTION_IMAGE_SESSION_NOT_PRESENT,
       },
     ],
   })
@@ -36,7 +36,7 @@ export class PrepareCollectionMetadataDTO extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.COLLECTION_METADATA_METADATA_SESSION_NOT_PRESENT,
+        code: ValidatorErrorCode.PREPARE_AND_DEPLOY_COLLECTION_METADATA_SESSION_NOT_PRESENT,
       },
     ],
   })
