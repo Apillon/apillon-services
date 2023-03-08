@@ -1,6 +1,11 @@
 import { VerificationKeyRelationship, DidUri } from '@kiltprotocol/types';
 import { IPublicKeyRecord, Proof } from '@kiltprotocol/vc-export';
 
+export enum HttpStatus {
+  BAD_REQUEST = 400,
+  NOT_FOUND = 404,
+}
+
 export enum DbTables {
   IDENTITY = 'identity',
 }

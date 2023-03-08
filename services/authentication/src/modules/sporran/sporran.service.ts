@@ -12,13 +12,13 @@ import {
   SubmitAttestationDto,
   SubmitTermsDto,
 } from '@apillon/lib';
-import { HttpStatus, Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { HexString } from '@polkadot/util/types';
 import {
   ApillonSupportedCTypes,
   APILLON_DAPP_NAME,
   AuthenticationErrorCode,
+  HttpStatus,
   IdentityGenFlag,
   SporranMessageType,
 } from '../../config/types';
@@ -59,8 +59,8 @@ import { WorkerName } from '../../workers/worker-executor';
 import { IdentityGenerateWorker } from '../../workers/generate-identity.worker';
 import { prepareSignResources } from '../../lib/sporran';
 import { VerifyCredentialDto } from '@apillon/lib/dist/lib/at-services/authentication/dtos/sporran/message/verify-credential.dto';
+import { AuthenticationCodeException } from '../../lib/exceptions';
 
-@Injectable()
 export class SporranMicroservice {
   static async getSessionValues(context): Promise<any> {
     // generate keypairs
@@ -76,10 +76,9 @@ export class SporranMicroservice {
     const { document } = Did.linkedInfoFromChain(encodedFullDid);
     // If there is no DID, or the DID does not have any key agreement key, return
     if (!document.keyAgreement || !document.keyAgreement[0]) {
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
+      throw new AuthenticationCodeException({
         code: AuthenticationErrorCode.SPORRAN_INVALID_REQUEST,
-        errorCodes: AuthenticationErrorCode,
+        status: HttpStatus.BAD_REQUEST,
       });
     }
     const dAppEncryptionKeyUri =
@@ -125,10 +124,9 @@ export class SporranMicroservice {
         service: ServiceName.AUTHENTICATION_API,
         data: 'Encryption key is not valid',
       });
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
+      throw new AuthenticationCodeException({
         code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
-        errorCodes: AuthenticationErrorCode,
+        status: HttpStatus.BAD_REQUEST,
       });
     }
 
@@ -152,10 +150,9 @@ export class SporranMicroservice {
         service: ServiceName.AUTHENTICATION_API,
         data: error,
       });
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
+      throw new AuthenticationCodeException({
         code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
-        errorCodes: AuthenticationErrorCode,
+        status: HttpStatus.BAD_REQUEST,
       });
     }
 
@@ -163,10 +160,9 @@ export class SporranMicroservice {
       !decryptedChallenge ||
       tokenData.challenge.toString() != decryptedChallenge.toString()
     ) {
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
+      throw new AuthenticationCodeException({
         code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
-        errorCodes: AuthenticationErrorCode,
+        status: HttpStatus.BAD_REQUEST,
       });
     }
 
@@ -240,10 +236,9 @@ export class SporranMicroservice {
         service: ServiceName.AUTHENTICATION_API,
         data: 'Encryption key is not valid',
       });
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
+      throw new AuthenticationCodeException({
         code: AuthenticationErrorCode.SPORRAN_INVALID_REQUEST,
-        errorCodes: AuthenticationErrorCode,
+        status: HttpStatus.BAD_REQUEST,
       });
     }
 
@@ -266,18 +261,16 @@ export class SporranMicroservice {
         service: ServiceName.AUTHENTICATION_API,
         data: error,
       });
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
+      throw new AuthenticationCodeException({
         code: AuthenticationErrorCode.SPORRAN_INVALID_REQUEST,
-        errorCodes: AuthenticationErrorCode,
+        status: HttpStatus.BAD_REQUEST,
       });
     }
 
     if (!decryptedMessage) {
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
+      throw new AuthenticationCodeException({
         code: AuthenticationErrorCode.SPORRAN_INVALID_REQUEST,
-        errorCodes: AuthenticationErrorCode,
+        status: HttpStatus.BAD_REQUEST,
       });
     }
 
@@ -444,10 +437,9 @@ export class SporranMicroservice {
         service: ServiceName.AUTHENTICATION_API,
         data: error,
       });
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
+      throw new AuthenticationCodeException({
         code: AuthenticationErrorCode.SPORRAN_INVALID_REQUEST,
-        errorCodes: AuthenticationErrorCode,
+        status: HttpStatus.BAD_REQUEST,
       });
     }
 
