@@ -1,7 +1,6 @@
 import {
   Mailing,
   generateJwtToken,
-  CodeException,
   SerializeFor,
   LogType,
   env,
@@ -10,7 +9,6 @@ import {
   ServiceName,
 } from '@apillon/lib';
 import axios from 'axios';
-import { HttpStatus, Injectable } from '@nestjs/common';
 import { Identity } from './models/identity.model';
 import {
   IdentityState,
@@ -23,6 +21,7 @@ import {
   DEFAULT_VERIFIABLECREDENTIAL_TYPE,
   APILLON_VERIFIABLECREDENTIAL_TYPE,
   IdentityGenFlag,
+  HttpStatus,
 } from '../../config/types';
 
 import { KiltKeyringPair, SignExtrinsicCallback } from '@kiltprotocol/types';
@@ -60,8 +59,8 @@ import {
   getCtypeSchema,
   toCredentialIRI,
 } from '../../lib/kilt';
+import { AuthenticationCodeException } from '../../lib/exceptions';
 
-@Injectable()
 export class IdentityMicroservice {
   static async sendVerificationEmail(
     event: { body: VerificationEmailDto },
@@ -84,10 +83,9 @@ export class IdentityMicroservice {
       if (identity.exists()) {
         // If email was already attested -> deny process
         if (identity.state == IdentityState.ATTESTED) {
-          throw new CodeException({
-            status: HttpStatus.BAD_REQUEST,
+          throw new AuthenticationCodeException({
             code: AuthenticationErrorCode.IDENTITY_EMAIL_IS_ALREADY_ATTESTED,
-            errorCodes: AuthenticationErrorCode,
+            status: HttpStatus.BAD_REQUEST,
           });
         }
       } else {
@@ -126,10 +124,9 @@ export class IdentityMicroservice {
         verificationEmailType == AuthApiEmailType.REVOKE_DID) &&
       (!identity.exists() || identity.state != IdentityState.ATTESTED)
     ) {
-      throw new CodeException({
-        status: HttpStatus.NOT_FOUND,
+      throw new AuthenticationCodeException({
         code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
-        errorCodes: AuthenticationErrorCode,
+        status: HttpStatus.NOT_FOUND,
       });
     }
 
@@ -164,10 +161,9 @@ export class IdentityMicroservice {
       // Bad request because this resource is not present in our db - this
       // request should NEVER happen - it's not a resource addressing
       // problem, but a flow error
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
+      throw new AuthenticationCodeException({
         code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
-        errorCodes: AuthenticationErrorCode,
+        status: HttpStatus.BAD_REQUEST,
       });
     }
 
@@ -198,10 +194,9 @@ export class IdentityMicroservice {
       // the entity was successfully attested --> See a few lines below
       // This is done so we have better control of the process and for
       // analytical purposes
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
+      throw new AuthenticationCodeException({
         code: AuthenticationErrorCode.IDENTITY_INVALID_STATE,
-        errorCodes: AuthenticationErrorCode,
+        status: HttpStatus.BAD_REQUEST,
       });
     }
 
@@ -259,10 +254,9 @@ export class IdentityMicroservice {
     );
 
     if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
-      throw new CodeException({
-        status: HttpStatus.NOT_FOUND,
+      throw new AuthenticationCodeException({
         code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
-        errorCodes: AuthenticationErrorCode,
+        status: HttpStatus.NOT_FOUND,
       });
     }
 
@@ -281,10 +275,9 @@ export class IdentityMicroservice {
     );
 
     if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
-      throw new CodeException({
-        status: HttpStatus.NOT_FOUND,
+      throw new AuthenticationCodeException({
         code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
-        errorCodes: AuthenticationErrorCode,
+        status: HttpStatus.NOT_FOUND,
       });
     }
 

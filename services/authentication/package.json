@@ -27,8 +27,6 @@
   "dependencies": {
     "@apillon/lib": "*",
     "@apillon/workers-lib": "*",
-    "@crustio/crust-pin": "^1.0.0",
-    "@crustio/type-definitions": "^1.3.0",
     "@kiltprotocol/sdk-js": "^0.31.0",
     "@kiltprotocol/vc-export": "^0.31.0",
     "@middy/core": "^2.5.7",
@@ -38,7 +36,6 @@
     "@types/uuid": "^8.3.4",
     "axios": "^1.2.0",
     "electron": "^21.3.0",
-    "ipfs-http-client": "^56.0.3",
     "rimraf": "^4.1.2",
     "valid-url": "^1.0.9"
   },
