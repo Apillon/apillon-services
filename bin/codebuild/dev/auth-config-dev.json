@@ -24,7 +24,7 @@
       {
         "type": "PLAINTEXT",
         "name": "SERVICE_PATH",
-        "value": "modules/authentication-api/"
+        "value": "services/authentication/"
       },
       {
         "type": "PLAINTEXT",
