@@ -6,31 +6,24 @@ import {
   Did,
   DidUri,
 } from '@kiltprotocol/sdk-js';
-import {
-  CodeException,
-  Context,
-  env,
-  Lmas,
-  LogType,
-  ServiceName,
-} from '@apillon/lib';
+import { CodeException, env, Lmas, LogType, ServiceName } from '@apillon/lib';
 import {
   BaseQueueWorker,
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { generateAccount } from '../lib/kilt';
+
 import { Identity } from '../modules/identity/models/identity.model';
 import { AuthenticationErrorCode, IdentityState } from '../config/types';
 import { HttpStatus } from '@nestjs/common';
-import { AuthenticationApiContext } from '../context';
+import { generateAccount } from '../lib/kilt';
 
 export class IdentityRevokeWorker extends BaseQueueWorker {
-  context: AuthenticationApiContext;
+  context;
 
   public constructor(
     workerDefinition: WorkerDefinition,
-    context: AuthenticationApiContext,
+    context,
     type: QueueWorkerType,
   ) {
     super(workerDefinition, context, type, env.AUTH_AWS_WORKER_SQS_URL);

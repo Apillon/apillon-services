@@ -20,7 +20,7 @@ run-test-server:
 	npm run test-server;
 
 run-test-db:
-	docker-compose -f docker-compose-TEST.yml down -v; docker-compose -f docker-compose-TEST.yml up -d;
+	docker-compose -f docker-compose-TEST.yml down -v; docker-compose -f docker-compose-TEST.yml up -d --build;
 
 build:
 	npm run build;
@@ -31,7 +31,7 @@ install:
 rebuild: clean install build
 
 clean:
-	echo Removing ${BGreen}node_modules${NC}in${BRED}root${NC}; \
+	echo Removing${BGreen}node_modules${NC}in${BRED}root${NC}; \
 	rm -rf node_modules; \
 
 	for file in $(MODULES); do \

@@ -1,3 +1,4 @@
+import { Context } from '@apillon/lib';
 import {
   AdvancedSQLModel,
   PopulateFrom,
@@ -8,13 +9,17 @@ import {
 } from '@apillon/lib';
 import { stringParser } from '@rawmodel/parsers';
 import { AuthenticationErrorCode, DbTables } from '../../../config/types';
-import { AuthenticationApiContext } from '../../../context';
+import { ServiceContext } from '../../../context';
 
 export class Identity extends AdvancedSQLModel {
   /**
    * User's table.
    */
-  tableName = DbTables.IDENTITY;
+  public readonly tableName = DbTables.IDENTITY;
+
+  public constructor(data: any, context: Context) {
+    super(data, context);
+  }
 
   /**
    * Identity email
@@ -115,16 +120,13 @@ export class Identity extends AdvancedSQLModel {
   })
   public state: string;
 
-  public async populateByUserEmail(
-    context: AuthenticationApiContext,
-    email: string,
-  ) {
-    const data = await context.mysql.paramExecute(
+  public async populateByUserEmail(context: ServiceContext, email: string) {
+    const data = await this.getContext().mysql.paramExecute(
       `
-        SELECT *
-        FROM \`${DbTables.IDENTITY}\` i
-        WHERE i.email = @email
-      `,
+          SELECT *
+          FROM \`${DbTables.IDENTITY}\` i
+          WHERE i.email = @email
+        `,
       { email },
     );
     if (data && data.length) {
@@ -137,21 +139,23 @@ export class Identity extends AdvancedSQLModel {
   /**
    * Returns all identities, filtered by specific state
    */
-  public async listIdentitiesByState(
-    context: AuthenticationApiContext,
-    state: string,
-  ) {
+  public async listIdentitiesByState(context: ServiceContext, state: string) {
     const params = { state };
     const sqlQuery = {
       qSelect: `
-        SELECT ${this.generateSelectFields('i', '', SerializeFor.SELECT_DB)}
-        `,
+          SELECT ${this.generateSelectFields('i', '', SerializeFor.SELECT_DB)}
+          `,
       qFrom: `
-        FROM ${DbTables.IDENTITY} i
-        WHERE i.state = @state
-        `,
+          FROM ${DbTables.IDENTITY} i
+          WHERE i.state = @state
+          `,
     };
 
-    return selectAndCountQuery(context.mysql, sqlQuery, params, 'i.id');
+    return selectAndCountQuery(
+      this.getContext().mysql,
+      sqlQuery,
+      params,
+      'i.id',
+    );
   }
 }

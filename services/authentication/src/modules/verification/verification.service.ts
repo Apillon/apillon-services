@@ -1,31 +1,34 @@
-import { env, Lmas, LogType, ServiceName } from '@apillon/lib';
+import {
+  env,
+  generateJwtToken,
+  JwtTokenType,
+  Lmas,
+  LogType,
+  ServiceName,
+} from '@apillon/lib';
 import {
   Attestation,
   ConfigService,
   connect,
   Credential,
   IAttestation,
+  ICredentialPresentation,
 } from '@kiltprotocol/sdk-js';
 import { Injectable } from '@nestjs/common';
-import { AuthenticationApiContext } from '../../context';
-import { VerificationIdentityDto } from './dto/verify-identity.dto';
 
 @Injectable()
-export class VerificationService {
-  async verifyIdentity(
-    context: AuthenticationApiContext,
-    body: VerificationIdentityDto,
-  ): Promise<any> {
+export class VerificationMicroservice {
+  static async verifyIdentity(event, context): Promise<any> {
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
-    const presentation = JSON.parse(body.presentation);
+
+    const presentation = JSON.parse(
+      event.body.presentation,
+    ) as ICredentialPresentation;
     let attestation: IAttestation;
 
     try {
-      await Credential.verifyPresentation(presentation, {
-        challenge:
-          '0x3ce56bb25ea3b603f968c302578e77e28d3d7ba3c7a8c45d6ebd3f410da766e1',
-      });
+      await Credential.verifyPresentation(presentation);
 
       attestation = Attestation.fromChain(
         await api.query.attestation.attestations(presentation.rootHash),
@@ -46,8 +49,14 @@ export class VerificationService {
       };
     }
 
+    const token = generateJwtToken(
+      JwtTokenType.USER_AUTHENTICATION,
+      { email: presentation.claim.contents.Email },
+      '10min',
+    );
+
     return attestation.revoked
       ? { verified: false, error: 'Credential was revoked!' }
-      : { verified: true };
+      : { verified: true, data: token };
   }
 }

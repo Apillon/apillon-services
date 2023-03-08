@@ -1,10 +1,4 @@
-import {
-  AppEnvironment,
-  MySql,
-  Context,
-  env,
-  getEnvSecrets,
-} from '@apillon/lib';
+import { AppEnvironment, MySql, env, getEnvSecrets } from '@apillon/lib';
 import {
   ServiceDefinitionType,
   WorkerDefinition,
@@ -15,9 +9,11 @@ import {
 } from '@apillon/workers-lib';
 
 import { TestWorker } from './test-worker';
-import { IdentityRevokeWorker } from './revoke-identity.worker';
 import { IdentityGenerateWorker } from './generate-identity.worker';
+import { IdentityRevokeWorker } from './revoke-identity.worker';
+
 import { Scheduler } from './scheduler';
+import { ServiceContext } from '../context';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -35,29 +31,29 @@ export async function handler(event: any) {
   const options = {
     host:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.STORAGE_MYSQL_HOST_TEST
-        : env.STORAGE_MYSQL_HOST,
+        ? env.AUTH_API_HOST_TEST
+        : env.AUTH_API_MYSQL_HOST,
     port:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.STORAGE_MYSQL_PORT_TEST
-        : env.STORAGE_MYSQL_PORT,
+        ? env.AUTH_API_MYSQL_PORT_TEST
+        : env.AUTH_API_MYSQL_PORT,
     database:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.STORAGE_MYSQL_DATABASE_TEST
-        : env.STORAGE_MYSQL_DATABASE,
+        ? env.AUTH_API_MYSQL_DATABASE_TEST
+        : env.AUTH_API_MYSQL_DATABASE,
     user:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.STORAGE_MYSQL_USER_TEST
-        : env.STORAGE_MYSQL_USER,
+        ? env.AUTH_API_MYSQL_USER_TEST
+        : env.AUTH_API_MYSQL_USER,
     password:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.STORAGE_MYSQL_PASSWORD_TEST
-        : env.STORAGE_MYSQL_PASSWORD,
+        ? env.AUTH_API_MYSQL_PASSWORD_TEST
+        : env.AUTH_API_MYSQL_PASSWORD,
   };
 
   const mysql = new MySql(options);
   await mysql.connect();
-  const context = new Context();
+  const context = new ServiceContext();
   context.setMySql(mysql);
 
   const serviceDef = {
@@ -91,7 +87,7 @@ export async function handler(event: any) {
  */
 export async function handleLambdaEvent(
   event: any,
-  context: Context,
+  context: ServiceContext,
   serviceDef: ServiceDefinition,
 ) {
   let workerDefinition;
@@ -137,7 +133,7 @@ export async function handleLambdaEvent(
  */
 export async function handleSqsMessages(
   event: any,
-  context: Context,
+  context,
   serviceDef: ServiceDefinition,
 ) {
   console.info('handle sqs message. event.Records: ', event.Records);

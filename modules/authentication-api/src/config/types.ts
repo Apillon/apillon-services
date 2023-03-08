@@ -1,27 +1,3 @@
-import {
-  KiltKeyringPair,
-  VerificationKeyRelationship,
-  DidUri,
-  NewDidEncryptionKey,
-} from '@kiltprotocol/types';
-import { Keypair } from '@polkadot/util-crypto/types';
-
-export enum DbTables {
-  IDENTITY = 'identity',
-}
-
-export const enum KiltSignAlgorithm {
-  SR25519 = 'sr25519',
-  ED25519 = 'ed25519',
-  X25519 = 'x25519',
-}
-export enum KiltDerivationPaths {
-  AUTHENTICATION = '//did//0',
-  ASSERTION = '//did//assertion//0', // Attestation
-  CAPABILITY_DELEGATION = '//did//delegation//0',
-  KEY_AGREEMENT = '//did//keyAgreement//0',
-}
-
 /**
  * Validation error codes - 42207000.
  */
@@ -56,7 +32,18 @@ export enum AuthenticationErrorCode {
   VERIFICATION_IDENTITY_NOT_PRESENT = 422070300,
   VERIFICATION_CHALLENGE_NOT_PRESENT = 422070301,
   VERIFICATION_INVALID_CHALLENGE = 422070302,
+  SPORRAN_INVALID_REQUEST = 422070401,
+  SPORRAN_ENCRYPTED_KEY_URI_NOT_PRESENT = 422070402,
+  SPORRAN_ENCRYPTED_CHALLENGE_NOT_PRESENT = 422070403,
+  SPORRAN_NONCE_NOT_PRESENT = 422070404,
+  SPORRAN_SESSIONID_NOT_PRESENT = 422070405,
+  SPORRAN_VERIFIER_DID_DOES_NOT_EXIST = 422070406,
+  SPORRAN_VERIFIER_KA_DOES_NOT_EXIST = 422070407,
+  SPORRAN_REQUEST_MESSAGE_NOT_PRESENT = 422070407,
 }
+
+// Sporran specifics
+export const APILLON_DAPP_NAME = 'ApillonDApp';
 
 /**
  * Resource not found error codes - 40407000.
@@ -65,65 +52,12 @@ export enum ResourceNotFoundErrorCode {
   DEFAULT_RESOURCE_NOT_FOUND_ERROR = 404070000,
 }
 
-export enum IdentityState {
-  IDENTITY_VERIFIED = 'identity-verified',
-  IN_PROGRESS = 'in-progress',
-  ATTESTED = 'attested',
-  PENDING_VERIFICATION = 'pending-verification',
-  REJECTED = 'rejected',
-  REVOKED = 'revoked',
-}
-
 /**
  * JWT Token signing types.
  */
 export enum JwtTokenType {
+  SPORRAN_SESSION = 'SPORRAN_SESSION',
   IDENTITY_VERIFICATION = 'identity-verification',
-}
-
-export enum IdentityEventType {
-  CREATE_DECENTRALIZED_IDENTITY = 'create-decentralized-identity',
-}
-
-export enum AuthApiEmailType {
-  GENERATE_IDENTITY = 'generate-identity',
-  RESTORE_CREDENTIAL = 'restore-credential',
-  REVOKE_DID = 'revoke-did',
-}
-
-/************************************************************
- * Kilt types
- ************************************************************/
-export interface Presentation {
-  // TODO: REVIREW
-  claim: any;
-  legitimations: any;
-  claimHashes: any;
-  claimNonceMap: any;
-  rootHash: any;
-  delegationId: any;
-  claimerSignature: unknown;
-}
-
-export interface Keypairs {
-  authentication: KiltKeyringPair;
-  keyAgreement: NewDidEncryptionKey & Keypair;
-  assertion: KiltKeyringPair;
-}
-
-export interface SignRequestData {
-  /**
-   * Data to be signed.
-   */
-  data: Uint8Array;
-  /**
-   * The did key relationship to be used.
-   */
-  keyRelationship: VerificationKeyRelationship;
-  /**
-   * The DID to be used for signing.
-   */
-  did: DidUri;
 }
 
 export enum AuthAppErrors {

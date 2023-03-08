@@ -2,16 +2,20 @@ import * as request from 'supertest';
 import { generateJwtToken, SerializeFor } from '@apillon/lib';
 import { releaseStage, Stage } from '@apillon/tests-lib';
 import { setupTest } from '../../../../test/helpers/setup';
-import { DbTables, IdentityState, JwtTokenType } from '../../../config/types';
+import { JwtTokenType } from '../../../config/types';
 import { AuthenticationApiContext } from '../../../context';
-import { Identity } from '../models/identity.model';
 import * as mock from './mock-data';
 import {
   DidDocument,
   ICredential,
   SignResponseData,
 } from '@kiltprotocol/types';
-import { generateKeypairs } from '../../../lib/kilt';
+import { Identity } from '@apillon/authentication/src/modules/identity/models/identity.model';
+import {
+  DbTables,
+  IdentityState,
+} from '@apillon/authentication/src/config/types';
+import { generateKeypairs } from '@apillon/authentication/src/lib/kilt';
 import { getDidDocument, createPresentation } from './utils';
 
 describe('VERFICATION', () => {
@@ -23,7 +27,7 @@ describe('VERFICATION', () => {
   beforeAll(async () => {
     console.log('Setup stage ...');
     stage = await setupTest();
-    context = stage.authApiContext;
+    context = new AuthenticationApiContext();
     jest.setTimeout(10000); // Set timeout to 10 seconds
   });
 

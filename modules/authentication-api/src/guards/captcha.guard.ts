@@ -19,6 +19,7 @@ export class CaptchaGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   public async canActivate(execCtx: ExecutionContext): Promise<boolean> {
+    let error;
     try {
       const options = this.reflector.getAllAndMerge(VALIDATION_OPTIONS_KEY, [
         execCtx.getHandler(),
@@ -31,8 +32,10 @@ export class CaptchaGuard implements CanActivate {
       if (env.CAPTCHA_SECRET && env.APP_ENV !== AppEnvironment.TEST) {
         if (!data.captcha) {
           throw new CodeException({
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            code: AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_PRESENT,
+            status: HttpStatus.UNPROCESSABLE_ENTITY,
+            code: error.prototype.isPrototypeOf(AuthenticationErrorCode)
+              ? error
+              : AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_PRESENT,
             errorCodes: AuthenticationErrorCode,
           });
         }
@@ -41,8 +44,10 @@ export class CaptchaGuard implements CanActivate {
         );
       } else {
         throw new CodeException({
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          code: AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_CONFIGURED,
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          code: error.prototype.isPrototypeOf(AuthenticationErrorCode)
+            ? error
+            : AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_CONFIGURED,
           errorCodes: AuthenticationErrorCode,
         });
       }
@@ -54,14 +59,22 @@ export class CaptchaGuard implements CanActivate {
       ) {
         throw new CodeException({
           status: HttpStatus.UNPROCESSABLE_ENTITY,
-          code: AuthenticationErrorCode.IDENTITY_CAPTCHA_INVALID,
+          code: error.prototype.isPrototypeOf(AuthenticationErrorCode)
+            ? error
+            : AuthenticationErrorCode.IDENTITY_CAPTCHA_INVALID,
           errorCodes: AuthenticationErrorCode,
         });
       }
 
       return true;
     } catch (error) {
-      throw error;
+      throw new CodeException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        code: error.prototype.isPrototypeOf(AuthenticationErrorCode)
+          ? error
+          : AuthenticationErrorCode.IDENTITY_CREATE_INVALID_REQUEST,
+        errorCodes: AuthenticationErrorCode,
+      });
     }
   }
 }
