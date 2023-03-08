@@ -7,7 +7,7 @@ import {
   prop,
   SerializeFor,
 } from '@apillon/lib';
-import { DbTables, SqlModelStatus } from '../../../config/types';
+import { DbTables, SqlModelStatus } from '../../config/types';
 
 export class Endpoint extends AdvancedSQLModel {
   public readonly tableName = DbTables.ENDPOINT;

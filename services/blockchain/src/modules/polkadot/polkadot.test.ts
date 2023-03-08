@@ -6,9 +6,9 @@ import {
   setupTest,
   Stage,
 } from '../../../test/setup';
-import { Endpoint } from './models/endpoint';
-import { Wallet } from './models/wallet';
-import { PolkadotSignerService } from './polkadot-signer.service';
+import { Endpoint } from '../../common/models/endpoint';
+import { Wallet } from '../../common/models/wallet';
+import { PolkadotService } from './polkadot.service';
 
 describe('Polkadot signer unit test', () => {
   let stage: Stage;
@@ -62,10 +62,7 @@ describe('Polkadot signer unit test', () => {
       },
       stage.context,
     ).insert();
-    const res = await PolkadotSignerService.signTransaction(
-      null,
-      stage.context,
-    );
+    const res = await PolkadotService.signTransaction(null, stage.context);
     console.log('res: ', res);
   });
 });

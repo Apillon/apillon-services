@@ -1,6 +1,6 @@
 import { ServiceContext } from './context';
 import { BlockchainEventType } from '@apillon/lib';
-import { PolkadotSignerService } from './modules/polkadot-signer/polkadot-signer.service';
+import { PolkadotService } from './modules/polkadot/polkadot.service';
 
 export async function processEvent(
   event,
@@ -8,7 +8,7 @@ export async function processEvent(
 ): Promise<any> {
   const processors = {
     [BlockchainEventType.SIGN_POLKADOT_TRANSACTION]:
-      PolkadotSignerService.signTransaction,
+      PolkadotService.signTransaction,
   };
 
   return await processors[event.eventName](event, context);

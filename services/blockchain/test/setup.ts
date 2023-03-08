@@ -11,7 +11,7 @@ import {
 import Keyring from '@polkadot/keyring';
 import { mnemonicGenerate } from '@polkadot/util-crypto';
 import { ServiceContext } from '../src/context';
-import { Wallet } from '../src/modules/polkadot-signer/models/wallet';
+import { Wallet } from '../src/common/models/wallet';
 
 /**
  * Testing stage definition.

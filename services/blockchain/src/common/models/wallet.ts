@@ -14,7 +14,7 @@ import {
   BlockchainErrorCode,
   DbTables,
   SqlModelStatus,
-} from '../../../config/types';
+} from '../../config/types';
 
 export class Wallet extends AdvancedSQLModel {
   public readonly tableName = DbTables.WALLET;
@@ -176,6 +176,38 @@ export class Wallet extends AdvancedSQLModel {
       FOR UPDATE;
       `,
       { chain },
+      conn,
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
+
+  public async populateByAddress(
+    chain: Chain,
+    address: string,
+    conn?: PoolConnection,
+  ): Promise<this> {
+    if (!chain) {
+      throw new Error('chain should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE 
+        chain = @chain
+        AND address = @address
+        AND status <> ${SqlModelStatus.DELETED}
+      ORDER BY usage_timestamp ASC
+      LIMIT 1
+      FOR UPDATE;
+      `,
+      { chain, address: address.toLowerCase() },
       conn,
     );
 

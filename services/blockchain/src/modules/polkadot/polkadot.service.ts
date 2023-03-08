@@ -1,12 +1,12 @@
 import { ServiceContext } from '../../context';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Keyring } from '@polkadot/keyring';
-import { Wallet } from './models/wallet';
+import { Wallet } from '../../common/models/wallet';
 import { Chain } from '@apillon/lib';
-import { Endpoint } from './models/endpoint';
+import { Endpoint } from '../../common/models/endpoint';
 import { typesBundleForPolkadot } from '@crustio/type-definitions';
 
-export class PolkadotSignerService {
+export class PolkadotService {
   static async signTransaction(_event: any, context: ServiceContext) {
     const chain = Chain.CRUST;
     const endpoint = await new Endpoint({}, context).populateByChain(chain);
