@@ -1,7 +1,6 @@
 import {
   AppEnvironment,
   AWS_S3,
-  CreateS3UrlForUploadDto,
   CreateS3UrlsForUploadDto,
   EndFileUploadSessionDto,
   env,
@@ -28,11 +27,10 @@ import { BucketType, FileStatus, StorageErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
 import { createFURAndS3Url } from '../../lib/create-fur-and-s3-url';
 import { StorageCodeException } from '../../lib/exceptions';
-import { hostingBucketProcessSessionFiles } from '../../lib/hosting-bucket-process-session-files';
+import { processSessionFiles } from '../../lib/process-session-files';
 import { SyncToIPFSWorker } from '../../workers/s3-to-ipfs-sync-worker';
 import { WorkerName } from '../../workers/worker-executor';
 import { Bucket } from '../bucket/models/bucket.model';
-import { Directory } from '../directory/models/directory.model';
 import { HostingService } from '../hosting/hosting.service';
 import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
@@ -40,160 +38,6 @@ import { File } from './models/file.model';
 
 export class StorageService {
   //#region file-upload functions
-
-  static async generateS3SignedUrlForUpload(
-    event: { body: CreateS3UrlForUploadDto },
-    context: ServiceContext,
-  ): Promise<any> {
-    //First create fileUploadSession & fileUploadRequest records in DB, then generate S3 signed url for upload
-
-    //get bucket
-    const bucket: Bucket = await new Bucket({}, context).populateByUUID(
-      event.body.bucket_uuid,
-    );
-
-    if (!bucket.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.BUCKET_NOT_FOUND,
-        status: 404,
-      });
-    } else if (bucket.status == SqlModelStatus.MARKED_FOR_DELETION) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.BUCKET_IS_MARKED_FOR_DELETION,
-        status: 404,
-      });
-    }
-    bucket.canAccess(context);
-
-    //get max size quota for Bucket and compare it with current bucket size
-    const maxBucketSizeQuota = await new Scs(context).getQuota({
-      quota_id: QuotaCode.MAX_BUCKET_SIZE,
-      project_uuid: bucket.project_uuid,
-      object_uuid: bucket.bucket_uuid,
-    });
-    if (
-      maxBucketSizeQuota?.value &&
-      bucket.size > maxBucketSizeQuota?.value * 1073741824 //quota is in GB - size is in bytes
-    ) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.MAX_BUCKET_SIZE_REACHED,
-        status: 400,
-      });
-    }
-
-    //Get existing or create new fileUploadSession
-    let session: FileUploadSession;
-    if (event.body.session_uuid) {
-      session = undefined;
-      session = await new FileUploadSession({}, context).populateByUUID(
-        event.body.session_uuid,
-      );
-
-      if (!session.exists()) {
-        //create new session
-        session = new FileUploadSession(
-          {
-            session_uuid: event.body.session_uuid,
-            bucket_id: bucket.id,
-            project_uuid: bucket.project_uuid,
-          },
-          context,
-        );
-        await session.insert();
-      } else if (session.bucket_id != bucket.id) {
-        throw new StorageCodeException({
-          code: StorageErrorCode.SESSION_UUID_BELONGS_TO_OTHER_BUCKET,
-          status: 404,
-        });
-      } else if (session.sessionStatus == 2) {
-        throw new StorageCodeException({
-          code: StorageErrorCode.FILE_UPLOAD_SESSION_ALREADY_TRANSFERED,
-          status: 404,
-        });
-      }
-    }
-
-    //check directory if directory_uuid is present in body and fill its full path property
-    if (event.body.directory_uuid) {
-      const dir: Directory = await new Directory({}, context).populateByUUID(
-        event.body.directory_uuid,
-      );
-      if (!dir.exists()) {
-        throw new StorageCodeException({
-          code: StorageErrorCode.DIRECTORY_NOT_FOUND,
-          status: 404,
-        });
-      }
-      await dir.populateFullPath();
-      event.body.path = dir.fullPath;
-    }
-
-    //NOTE - session uuid is added to s3File key.
-    /*File key structure:
-     * Bucket type(STORAGE, STORAGE_sessions, HOSTING)/bucket id/session uuid if present/path/filename
-     */
-    const s3FileKey = `${BucketType[bucket.bucketType]}${
-      session?.session_uuid ? '_sessions' : ''
-    }/${bucket.id}${session?.session_uuid ? '/' + session.session_uuid : ''}/${
-      (event.body.path ? event.body.path : '') + event.body.fileName
-    }`;
-
-    //check if fileUploadRequest with that key already exists
-    let fur: FileUploadRequest = await new FileUploadRequest(
-      {},
-      context,
-    ).populateByS3FileKey(s3FileKey);
-
-    if (!fur.exists()) {
-      fur = new FileUploadRequest(event.body, context).populate({
-        file_uuid: uuidV4(),
-        session_id: session?.id,
-        bucket_id: bucket.id,
-        s3FileKey: s3FileKey,
-      });
-
-      await fur.insert();
-    } else {
-      //Update existing File upload request
-      await fur.update();
-    }
-
-    let signedURLForUpload = undefined;
-    try {
-      const s3Client: AWS_S3 = new AWS_S3();
-      signedURLForUpload = await s3Client.generateSignedUploadURL(
-        env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-        s3FileKey,
-      );
-    } catch (err) {
-      throw await new StorageCodeException({
-        code: StorageErrorCode.ERROR_AT_GENERATE_S3_SIGNED_URL,
-        status: 500,
-      }).writeToMonitor({
-        context,
-        project_uuid: bucket.project_uuid,
-        service: ServiceName.STORAGE,
-        data: {
-          fileUploadRequest: fur,
-        },
-      });
-    }
-
-    await new Lmas().writeLog({
-      context: context,
-      project_uuid: bucket.project_uuid,
-      logType: LogType.INFO,
-      message: 'Generate file-request-log and S3 signed url - success',
-      location: `${this.constructor.name}/runExecutor`,
-      service: ServiceName.STORAGE,
-    });
-
-    return {
-      url: signedURLForUpload,
-      file_uuid: fur.file_uuid,
-      fileUploadRequestId: fur.id,
-    };
-  }
 
   static async generateMultipleS3UrlsForUpload(
     event: { body: CreateS3UrlsForUploadDto },
@@ -358,40 +202,42 @@ export class StorageService {
     }
 
     if (bucket.bucketType == BucketType.STORAGE) {
+      await processSessionFiles(context, bucket, session, event.body);
       if (
-        event.body.directSync &&
-        (env.APP_ENV == AppEnvironment.LOCAL_DEV ||
-          env.APP_ENV == AppEnvironment.TEST)
+        env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+        env.APP_ENV == AppEnvironment.TEST
       ) {
-        //Directly calls worker, to sync files to IPFS & CRUST - USED ONLY FOR DEVELOPMENT!!
-        const serviceDef: ServiceDefinition = {
-          type: ServiceDefinitionType.SQS,
-          config: { region: 'test' },
-          params: { FunctionName: 'test' },
-        };
-        const parameters = {
-          session_uuid: session.session_uuid,
-          wrapWithDirectory: event.body.wrapWithDirectory,
-          wrappingDirectoryPath: event.body.directoryPath,
-        };
-        const wd = new WorkerDefinition(
-          serviceDef,
-          WorkerName.SYNC_TO_IPFS_WORKER,
-          {
-            parameters,
-          },
-        );
+        if (event.body.directSync) {
+          //Directly calls worker, to sync files to IPFS & CRUST - USED ONLY FOR DEVELOPMENT!!
+          const serviceDef: ServiceDefinition = {
+            type: ServiceDefinitionType.SQS,
+            config: { region: 'test' },
+            params: { FunctionName: 'test' },
+          };
+          const parameters = {
+            session_uuid: session.session_uuid,
+            wrapWithDirectory: event.body.wrapWithDirectory,
+            wrappingDirectoryPath: event.body.directoryPath,
+          };
+          const wd = new WorkerDefinition(
+            serviceDef,
+            WorkerName.SYNC_TO_IPFS_WORKER,
+            {
+              parameters,
+            },
+          );
 
-        const worker = new SyncToIPFSWorker(
-          wd,
-          context,
-          QueueWorkerType.EXECUTOR,
-        );
-        await worker.runExecutor({
-          session_uuid: session.session_uuid,
-          wrapWithDirectory: event.body.wrapWithDirectory,
-          wrappingDirectoryName: event.body.directoryPath,
-        });
+          const worker = new SyncToIPFSWorker(
+            wd,
+            context,
+            QueueWorkerType.EXECUTOR,
+          );
+          await worker.runExecutor({
+            session_uuid: session.session_uuid,
+            wrapWithDirectory: event.body.wrapWithDirectory,
+            wrappingDirectoryName: event.body.directoryPath,
+          });
+        }
       } else {
         //send message to SQS
         await sendToWorkerQueue(
@@ -409,7 +255,7 @@ export class StorageService {
         );
       }
     } else if (bucket.bucketType == BucketType.HOSTING) {
-      await hostingBucketProcessSessionFiles(context, bucket, session);
+      await processSessionFiles(context, bucket, session, event.body);
     }
 
     return true;

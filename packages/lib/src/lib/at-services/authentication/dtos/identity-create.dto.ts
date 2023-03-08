@@ -1,10 +1,7 @@
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { emailValidator, presenceValidator } from '@rawmodel/validators';
-import {
-  AuthenticationErrorCode,
-  PopulateFrom,
-} from '../../../../config/types';
+import { ValidatorErrorCode, PopulateFrom } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
 import {
   didCreateCreateOpValidator,
@@ -29,11 +26,11 @@ export class IdentityCreateDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: AuthenticationErrorCode.IDENTITY_CREATE_DID_CREATE_OP_NOT_PRESENT,
+        code: ValidatorErrorCode.IDENTITY_CREATE_DID_CREATE_OP_NOT_PRESENT,
       },
       {
         resolver: didCreateCreateOpValidator(),
-        code: AuthenticationErrorCode.IDENTITY_CREATE_INVALID_REQUEST,
+        code: ValidatorErrorCode.IDENTITY_CREATE_INVALID_REQUEST,
       },
     ],
   })
@@ -45,11 +42,11 @@ export class IdentityCreateDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: AuthenticationErrorCode.USER_EMAIL_NOT_PRESENT,
+        code: ValidatorErrorCode.USER_EMAIL_NOT_PRESENT,
       },
       {
         resolver: emailValidator(),
-        code: AuthenticationErrorCode.USER_EMAIL_NOT_VALID,
+        code: ValidatorErrorCode.USER_EMAIL_NOT_VALID,
       },
     ],
   })
@@ -61,11 +58,11 @@ export class IdentityCreateDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: AuthenticationErrorCode.DID_URI_NOT_PRESENT,
+        code: ValidatorErrorCode.DID_URI_NOT_PRESENT,
       },
       {
         resolver: didUriValidator(),
-        code: AuthenticationErrorCode.DID_URI_INVALID,
+        code: ValidatorErrorCode.DID_URI_INVALID,
       },
     ],
   })
@@ -77,7 +74,7 @@ export class IdentityCreateDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: AuthenticationErrorCode.IDENTITY_VERIFICATION_TOKEN_NOT_PRESENT,
+        code: ValidatorErrorCode.IDENTITY_VERIFICATION_TOKEN_NOT_PRESENT,
       },
     ],
   })

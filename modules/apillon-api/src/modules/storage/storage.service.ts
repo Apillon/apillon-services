@@ -1,8 +1,6 @@
 import {
-  ApillonApiCreateS3SignedUrlForUploadDto,
   ApillonApiCreateS3UrlsForUploadDto,
   ApillonApiDirectoryContentQueryFilter,
-  CreateS3UrlForUploadDto,
   CreateS3UrlsForUploadDto,
   DirectoryContentQueryFilter,
   EndFileUploadSessionDto,
@@ -15,23 +13,6 @@ import { ApillonApiContext } from '../../context';
 
 @Injectable()
 export class StorageService {
-  async createS3SignedUrlForUpload(
-    context: ApillonApiContext,
-    bucket_uuid: string,
-    body: ApillonApiCreateS3SignedUrlForUploadDto,
-  ) {
-    return (
-      await new StorageMicroservice(context).requestS3SignedURLForUpload(
-        new CreateS3UrlForUploadDto().populate({
-          ...body.serialize(),
-          bucket_uuid: bucket_uuid,
-          session_uuid: body.sessionUuid,
-          directory_uuid: body.directoryUuid,
-        }),
-      )
-    ).data;
-  }
-
   async createS3SignedUrlsForUpload(
     context: ApillonApiContext,
     bucket_uuid: string,

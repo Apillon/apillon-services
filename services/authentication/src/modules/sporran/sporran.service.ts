@@ -33,18 +33,16 @@ import {
   Attestation,
   ISubmitAttestation,
   Credential,
-  KiltKeyringPair,
-  Blockchain,
 } from '@kiltprotocol/sdk-js';
 import {
   encryptionSigner,
-  generateAccount,
   generateKeypairs,
   getCtypeSchema,
 } from '../../lib/kilt';
 import { JwtTokenType } from '../../config/types';
 import {
   DidUri,
+  ICredentialPresentation,
   IEncryptedMessage,
   ISubmitTerms,
   PartialClaim,
@@ -60,7 +58,6 @@ import { Identity } from '../identity/models/identity.model';
 import { WorkerName } from '../../workers/worker-executor';
 import { IdentityGenerateWorker } from '../../workers/generate-identity.worker';
 import { prepareSignResources } from '../../lib/sporran';
-import { VerifiableCredential } from '@kiltprotocol/vc-export';
 import { VerifyCredentialDto } from '@apillon/lib/dist/lib/at-services/authentication/dtos/sporran/message/verify-credential.dto';
 
 @Injectable()
@@ -230,7 +227,6 @@ export class SporranMicroservice {
       verifierDidUri: verifierDidUri,
       encryptionKeyUri: encryptionKeyUri,
       claimerSessionDidUri: claimerSessionDidUri,
-      requestChallenge: requestChallenge,
     } = await prepareSignResources(event.body.encryptionKeyUri);
 
     const decryptionSenderKey = await Did.resolveKey(
@@ -423,28 +419,13 @@ export class SporranMicroservice {
   }
 
   static async verifyCredential(event: { body: VerifyCredentialDto }, context) {
-    const {
-      verifierDidUri: verifierDidUri,
-      encryptionKeyUri: encryptionKeyUri,
-      claimerSessionDidUri: claimerSessionDidUri,
-      requestChallenge: requestChallenge,
-    } = await prepareSignResources(event.body.encryptionKeyUri);
-
     console.log('Verifying Sporran credential ...');
 
     const decryptionSenderKey = await Did.resolveKey(
       event.body.message.senderKeyUri as DidResourceUri,
     );
 
-    const {
-      authentication,
-      keyAgreement,
-      assertionMethod,
-      capabilityDelegation,
-    } = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
-    const attesterAccount = (await generateAccount(
-      env.KILT_ATTESTER_MNEMONIC,
-    )) as KiltKeyringPair;
+    const { keyAgreement } = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
 
     let decryptedMessage: any;
     try {
@@ -471,20 +452,37 @@ export class SporranMicroservice {
     }
 
     const message = JSON.parse(decryptedMessage);
-    const credential = message.body.content[0];
+    const presentation = message.body.content[0] as ICredentialPresentation;
 
-    await Credential.verifyPresentation(credential);
+    const email = presentation.claim.contents.Email as string;
+    const identity = await new Identity({}, context).populateByUserEmail(
+      context,
+      email,
+    );
+
+    if (!identity.exists()) {
+      await new Lmas().writeLog({
+        context: context,
+        logType: LogType.INFO,
+        message: 'VERIFICATION FAILED',
+        location: 'AUTHENTICATION-API/sporran/verify-identity',
+        service: ServiceName.AUTHENTICATION_API,
+      });
+      return { verified: false, error: 'Identity does not exist' };
+    }
+
+    await Credential.verifyPresentation(presentation);
 
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
 
     const attestationChain = await api.query.attestation.attestations(
-      credential.rootHash,
+      presentation.rootHash,
     );
 
     const attestation = Attestation.fromChain(
       attestationChain,
-      credential.rootHash,
+      presentation.rootHash,
     );
 
     if (attestation.revoked) {
@@ -497,14 +495,12 @@ export class SporranMicroservice {
       return { verified: false };
     }
 
-    // TODO: Here we can check if the attester is valid
-    // if (isTrustedAttester(attestation.owner)) {
-    //   console.log(
-    //     "The claim is valid. Claimer's email:",
-    //     credential.claim.contents.Email,
-    //   );
-    // }
+    const token = generateJwtToken(
+      JwtTokenType.USER_AUTHENTICATION,
+      { email: email },
+      '10min',
+    );
 
-    return { verified: true };
+    return { verified: true, data: token };
   }
 }

@@ -118,7 +118,7 @@ describe('Storage access (api keys, api keys permissions, ...) tests', () => {
           );
         expect(response.status).toBe(403);
         expect(response.body.message).toBe(
-          `Insufficient permissins - missing ${
+          `Insufficient permissions - missing ${
             DefaultApiKeyRole[DefaultApiKeyRole.KEY_READ]
           } permission`,
         );
@@ -143,7 +143,7 @@ describe('Storage access (api keys, api keys permissions, ...) tests', () => {
           );
         expect(response.status).toBe(403);
         expect(response.body.message).toBe(
-          `Insufficient permissins - missing ${
+          `Insufficient permissions - missing ${
             DefaultApiKeyRole[DefaultApiKeyRole.KEY_READ]
           } permission`,
         );
@@ -168,7 +168,7 @@ describe('Storage access (api keys, api keys permissions, ...) tests', () => {
           );
         expect(response.status).toBe(403);
         expect(response.body.message).toBe(
-          `Insufficient permissins - missing ${
+          `Insufficient permissions - missing ${
             DefaultApiKeyRole[DefaultApiKeyRole.KEY_READ]
           } permission`,
         );

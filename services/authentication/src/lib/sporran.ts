@@ -14,6 +14,7 @@ export async function prepareSignResources(encryptionKeyUri: string) {
   const { authentication } = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
   const verifierDidUri = Did.getFullDidUriFromKey(authentication);
   const { document } = await Did.resolve(verifierDidUri);
+
   if (!document) {
     throw new CodeException({
       status: HttpStatus.BAD_REQUEST,

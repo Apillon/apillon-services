@@ -25,5 +25,5 @@ export class EndFileUploadSessionDto extends ModelBase {
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [],
   })
-  public directoryPath: boolean;
+  public directoryPath: string;
 }

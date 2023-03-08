@@ -144,7 +144,7 @@ export class IdentityMicroservice {
       emails: [email],
       template: verificationEmailType,
       data: {
-        actionUrl: `${env.AUTH_APP_URL}/identity/?token=${token}&email=${email}&type=${verificationEmailType}`,
+        actionUrl: `${env.AUTH_APP_URL}/registration/?token=${token}&email=${email}&type=${verificationEmailType}`,
       },
     });
 

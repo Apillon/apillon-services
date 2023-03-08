@@ -495,7 +495,7 @@ export let env: IEnv = {
   /** --- SECTION: APILLON API --- */
   APILLON_API_HOST: process.env['APILLON_API_HOST'] || 'localhost',
   APILLON_API_PORT: parseInt(process.env['APILLON_API_PORT']) || 6002,
-  APILLON_API_HOST_TEST: process.env['APILLON_API_HOST_TEST'] || 'localhost',
+  APILLON_API_HOST_TEST: process.env['APILLON_API_HOST_TEST'] || '127.0.0.1',
   APILLON_API_PORT_TEST: parseInt(process.env['APILLON_API_PORT_TEST']) || 7002,
 
   /** --- SECTION: APILLON AUTHENTICATION API --- */

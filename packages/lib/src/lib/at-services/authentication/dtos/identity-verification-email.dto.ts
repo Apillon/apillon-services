@@ -1,10 +1,7 @@
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator, emailValidator } from '@rawmodel/validators';
-import {
-  AuthenticationErrorCode,
-  PopulateFrom,
-} from '../../../../config/types';
+import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
 import { JSONParser } from '../../../parsers';
 
@@ -15,11 +12,11 @@ export class VerificationEmailDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: AuthenticationErrorCode.USER_EMAIL_NOT_PRESENT,
+        code: ValidatorErrorCode.USER_EMAIL_NOT_PRESENT,
       },
       {
         resolver: emailValidator(),
-        code: AuthenticationErrorCode.USER_EMAIL_NOT_VALID,
+        code: ValidatorErrorCode.USER_EMAIL_NOT_VALID,
       },
     ],
   })
@@ -31,7 +28,7 @@ export class VerificationEmailDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: AuthenticationErrorCode.IDENTITY_VERIFICATION_EMAIL_TYPE_NOT_PRESENT,
+        code: ValidatorErrorCode.IDENTITY_VERIFICATION_EMAIL_TYPE_NOT_PRESENT,
       },
     ],
   })

@@ -122,22 +122,9 @@ export async function storageBucketSyncFilesToIPFS(
             : wrappingDirectoryPath;
         }
 
-        const fileDirectory = await generateDirectoriesForFUR(
-          context,
-          directories,
-          file,
-          bucket,
-          ipfsRes.ipfsDirectories,
-        );
-
         //check if file already exists
-        const existingFile = await new File(
-          {},
-          context,
-        ).populateByNameAndDirectory(
-          bucket.id,
-          file.fileName,
-          fileDirectory?.id,
+        const existingFile = await new File({}, context).populateByUUID(
+          file.file_uuid,
         );
 
         if (existingFile.exists()) {
@@ -155,6 +142,14 @@ export async function storageBucketSyncFilesToIPFS(
           transferedFiles.push(existingFile);
         } else {
           //Create new file
+          const fileDirectory = await generateDirectoriesForFUR(
+            context,
+            directories,
+            file,
+            bucket,
+            ipfsRes.ipfsDirectories,
+          );
+
           const tmpF = await new File({}, context)
             .populate({
               file_uuid: file.file_uuid,
@@ -279,21 +274,9 @@ export async function storageBucketSyncFilesToIPFS(
       }
 
       try {
-        const fileDirectory = await generateDirectoriesForFUR(
-          context,
-          directories,
-          file,
-          bucket,
-        );
-
-        //check if file already exists
-        const existingFile = await new File(
-          {},
-          context,
-        ).populateByNameAndDirectory(
-          bucket.id,
-          file.fileName,
-          fileDirectory?.id,
+        //File should already exists - get by uuid
+        const existingFile = await new File({}, context).populateByUUID(
+          file.file_uuid,
         );
 
         if (existingFile.exists()) {
@@ -310,7 +293,14 @@ export async function storageBucketSyncFilesToIPFS(
           await existingFile.update();
           transferedFiles.push(existingFile);
         } else {
-          //Create new file
+          //Create new file - this should probably newer happen. But will leave for now.
+          const fileDirectory = await generateDirectoriesForFUR(
+            context,
+            directories,
+            file,
+            bucket,
+          );
+
           const tmpF = await new File({}, context)
             .populate({
               file_uuid: file.file_uuid,

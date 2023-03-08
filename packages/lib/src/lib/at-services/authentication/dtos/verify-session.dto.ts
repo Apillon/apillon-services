@@ -4,16 +4,16 @@ import { presenceValidator } from '@rawmodel/validators';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
 
-export class VerificationIdentityDto extends ModelBase {
+export class VerifyLoginDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.VERIFICATION_IDENTITY_NOT_PRESENT,
+        code: ValidatorErrorCode.AUTH_SESSION_TOKEN_NOT_PRESENT,
       },
     ],
   })
-  public presentation: string;
+  public token: string;
 }
