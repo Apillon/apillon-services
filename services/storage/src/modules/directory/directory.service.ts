@@ -5,7 +5,7 @@ import {
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
-import { StorageErrorCode } from '../../config/types';
+import { BucketType, StorageErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
 import {
   StorageCodeException,
@@ -14,6 +14,7 @@ import {
 import { Directory } from './models/directory.model';
 import { v4 as uuidV4 } from 'uuid';
 import { Bucket } from '../bucket/models/bucket.model';
+import { HostingService } from '../hosting/hosting.service';
 
 export class DirectoryService {
   static async listDirectoryContent(
@@ -62,7 +63,9 @@ export class DirectoryService {
       await d.validate();
     } catch (err) {
       await d.handle(err);
-      if (!d.isValid()) throw new StorageValidationException(d);
+      if (!d.isValid()) {
+        throw new StorageValidationException(d);
+      }
     }
 
     await d.insert();
@@ -91,14 +94,16 @@ export class DirectoryService {
       await d.validate();
     } catch (err) {
       await d.handle(err);
-      if (!d.isValid()) throw new StorageValidationException(d);
+      if (!d.isValid()) {
+        throw new StorageValidationException(d);
+      }
     }
 
     await d.update();
     return d.serialize(SerializeFor.PROFILE);
   }
 
-  static async markDirectoryForDeletion(
+  static async deleteDirectory(
     event: { id: number },
     context: ServiceContext,
   ): Promise<any> {
@@ -119,8 +124,14 @@ export class DirectoryService {
     }
     d.canModify(context);
 
-    await d.markForDeletion();
-    return d.serialize(SerializeFor.PROFILE);
+    //check directory bucket
+    const b: Bucket = await new Bucket({}, context).populateById(d.bucket_id);
+    if (b.bucketType == BucketType.STORAGE) {
+      await d.markForDeletion();
+      return d.serialize(SerializeFor.PROFILE);
+    } else if (b.bucketType == BucketType.HOSTING) {
+      return await HostingService.deleteDirectory({ directory: d }, context);
+    }
   }
 
   static async unmarkDirectoryForDeletion(

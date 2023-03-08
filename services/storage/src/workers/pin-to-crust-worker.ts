@@ -28,13 +28,15 @@ export class PinToCRUSTWorker extends BaseQueueWorker {
     const CID = data?.CID;
     const size = data?.size;
     const bucket_uuid = data?.bucket_uuid;
+    const isDirectory = data?.isDirectory;
 
-    if (!CID || !size || !bucket_uuid)
+    if (!CID || !size || !bucket_uuid) {
       throw new StorageCodeException({
         code: StorageErrorCode.INVALID_DATA_PASSED_TO_WORKER,
         status: 500,
         details: data,
       });
+    }
 
     const bucket: Bucket = await new Bucket({}, this.context).populateByUUID(
       bucket_uuid,
@@ -44,6 +46,7 @@ export class PinToCRUSTWorker extends BaseQueueWorker {
       await CrustService.placeStorageOrderToCRUST({
         cid: CID,
         size: size,
+        isDirectory: isDirectory,
       });
       await new Lmas().writeLog({
         context: this.context,

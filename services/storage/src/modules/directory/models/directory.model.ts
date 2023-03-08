@@ -16,9 +16,10 @@ import {
   SqlModelStatus,
   unionSelectAndCountQuery,
 } from '@apillon/lib';
-import { DbTables, StorageErrorCode } from '../../../config/types';
+import { DbTables, ObjectType, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '../../../context';
 import { v4 as uuidV4 } from 'uuid';
+import { File } from '../../storage/models/file.model';
 
 export class Directory extends AdvancedSQLModel {
   public readonly tableName = DbTables.DIRECTORY;
@@ -207,6 +208,21 @@ export class Directory extends AdvancedSQLModel {
   })
   public fullPath: string;
 
+  @prop({
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public files: File;
+
   public canAccess(context: ServiceContext) {
     if (
       !context.hasRoleOnProject(
@@ -309,8 +325,9 @@ export class Directory extends AdvancedSQLModel {
     );
     const res = [];
     if (data && data.length) {
-      for (const d of data)
+      for (const d of data) {
         res.push(new Directory({}, context).populate(d, PopulateFrom.DB));
+      }
     }
 
     return res;
@@ -328,7 +345,7 @@ export class Directory extends AdvancedSQLModel {
   ) {
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
-      'pd',
+      '',
       {},
       filter.serialize(),
     );
@@ -336,9 +353,9 @@ export class Directory extends AdvancedSQLModel {
     const qSelects = [
       {
         qSelect: `
-        SELECT 'directory' as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime, 
+        SELECT ${ObjectType.DIRECTORY} as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime, 
         NULL as contentType, NULL as size, d.parentDirectory_id as parentDirectoryId, 
-        NULL as file_uuid, IF(d.CID IS NULL, NULL, CONCAT("${env.STORAGE_IPFS_GATEWAY}", d.CID)) as link
+        NULL as file_uuid, IF(d.CID IS NULL, NULL, CONCAT("${env.STORAGE_IPFS_GATEWAY}", d.CID)) as link, NULL as fileStatus
         `,
         qFrom: `
         FROM \`${DbTables.DIRECTORY}\` d
@@ -353,9 +370,9 @@ export class Directory extends AdvancedSQLModel {
       },
       {
         qSelect: `
-        SELECT 'file' as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime, 
+        SELECT ${ObjectType.FILE} as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime, 
         d.contentType as contentType, d.size as size, d.directory_id as parentDirectoryId, 
-        d.file_uuid as file_uuid, CONCAT("${env.STORAGE_IPFS_GATEWAY}", d.CID)
+        d.file_uuid as file_uuid, CONCAT("${env.STORAGE_IPFS_GATEWAY}", d.CID) as link, d.fileStatus as fileStatus
         `,
         qFrom: `
         FROM \`${DbTables.FILE}\` d
@@ -373,23 +390,32 @@ export class Directory extends AdvancedSQLModel {
       context.mysql,
       {
         qSelects: qSelects,
-        qFilter: `LIMIT ${filters.limit} OFFSET ${filters.offset};`,
+        qFilter: `ORDER BY ${filters.orderStr} LIMIT ${filters.limit} OFFSET ${filters.offset};`,
       },
       params,
       'd.name',
     );
   }
 
-  public async populateFullPath(): Promise<this> {
+  public async populateFullPath(directories?: Directory[]): Promise<this> {
     this.fullPath = this.name;
     if (!this.parentDirectory_id) {
       return;
     } else {
       let tmpDir: Directory = undefined;
       do {
-        tmpDir = await new Directory({}, this.getContext()).populateById(
-          tmpDir ? tmpDir.parentDirectory_id : this.parentDirectory_id,
-        );
+        if (directories) {
+          tmpDir = directories.find(
+            (x) =>
+              x.id ==
+              (tmpDir ? tmpDir.parentDirectory_id : this.parentDirectory_id),
+          );
+        } else {
+          tmpDir = await new Directory({}, this.getContext()).populateById(
+            tmpDir ? tmpDir.parentDirectory_id : this.parentDirectory_id,
+          );
+        }
+
         this.fullPath = tmpDir.name + '/' + this.fullPath;
       } while (tmpDir?.parentDirectory_id);
     }

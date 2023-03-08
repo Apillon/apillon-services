@@ -19,6 +19,6 @@ export async function downgrade(
 ): Promise<void> {
   await queryFn(`
     DELETE IGNORE FROM \`${DbTables.SERVICE_TYPE}\`
-    WHERE id IN (1,2,3);
+    WHERE id IN (${AttachedServiceType.AUTHENTICATION},${AttachedServiceType.STORAGE});
   `);
 }

@@ -85,14 +85,12 @@ describe('Storage access (api keys, api keys permissions, ...) tests', () => {
         expect(response.body.message).toBe('Missing Authorization header');
       });
 
-      test('Apillon API should return unauthorized response code if invalid authorization header is provided', async () => {
+      test('Apillon API should return bad request response code if malformed authorization header is provided', async () => {
         const response = await request(stage.http)
           .get(`/storage/${testBucket.bucket_uuid}/file/${testFile.id}/detail`)
           .set('Authorization', `Basic i will hack you`);
-        expect(response.status).toBe(401);
-        expect(response.body.message).toBe(
-          'Missing or invalid Authorization header',
-        );
+        expect(response.status).toBe(400);
+        expect(response.body.message).toBe('Malformed Authorization header');
       });
 
       test('Apillon API should return unauthorized response code if invalid api key / api key secret is provided in auth header', async () => {
@@ -105,7 +103,7 @@ describe('Storage access (api keys, api keys permissions, ...) tests', () => {
             )}`,
           );
         expect(response.status).toBe(401);
-        expect(response.body.message).toBe('Invalid API key');
+        expect(response.body.message).toBe('Invalid API key or API key secret');
       });
     });
     describe('Api key permissions tests', () => {
@@ -120,7 +118,7 @@ describe('Storage access (api keys, api keys permissions, ...) tests', () => {
           );
         expect(response.status).toBe(403);
         expect(response.body.message).toBe(
-          `Insufficient permissins - missing ${
+          `Insufficient permissions - missing ${
             DefaultApiKeyRole[DefaultApiKeyRole.KEY_READ]
           } permission`,
         );
@@ -145,7 +143,7 @@ describe('Storage access (api keys, api keys permissions, ...) tests', () => {
           );
         expect(response.status).toBe(403);
         expect(response.body.message).toBe(
-          `Insufficient permissins - missing ${
+          `Insufficient permissions - missing ${
             DefaultApiKeyRole[DefaultApiKeyRole.KEY_READ]
           } permission`,
         );
@@ -170,7 +168,7 @@ describe('Storage access (api keys, api keys permissions, ...) tests', () => {
           );
         expect(response.status).toBe(403);
         expect(response.body.message).toBe(
-          `Insufficient permissins - missing ${
+          `Insufficient permissions - missing ${
             DefaultApiKeyRole[DefaultApiKeyRole.KEY_READ]
           } permission`,
         );

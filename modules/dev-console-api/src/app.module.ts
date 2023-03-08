@@ -8,8 +8,8 @@ import { ProjectModule } from './modules/project/project.module';
 import { UserModule } from './modules/user/user.module';
 import { InstructionModule } from './modules/instruction/instruction.module';
 import { ServicesModule } from './modules/services/services.module';
-import { BucketModule } from './modules/bucket/bucket.module';
-import { DirectoryModule } from './modules/directory/directory.module';
+import { BucketModule } from './modules/storage/bucket/bucket.module';
+import { DirectoryModule } from './modules/storage/directory/directory.module';
 import { StorageModule } from './modules/storage/storage.module';
 import {
   AuthenticateUserMiddleware,
@@ -17,6 +17,9 @@ import {
 } from '@apillon/modules-lib';
 import { ApiKeyModule } from './modules/api-key/api-key.module';
 import { env } from '@apillon/lib';
+import { NftsModule } from './modules/nfts/nfts.module';
+import { IpnsModule } from './modules/storage/ipns/ipns.module';
+import { ReferralModule } from './modules/referral/referral.module';
 
 @Module({
   imports: [
@@ -30,6 +33,10 @@ import { env } from '@apillon/lib';
     DirectoryModule,
     StorageModule,
     ApiKeyModule,
+    NftsModule,
+    IpnsModule,
+    ReferralModule,
+    NftsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

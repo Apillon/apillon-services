@@ -1,29 +1,24 @@
-import { env, rebuildDatabase, seedDatabase } from '@apillon/lib';
+import { env, getEnvSecrets, SqlMigrator } from '@apillon/lib';
 
-const run = async () => {
-  await await rebuildDatabase(
-    env.DEV_CONSOLE_API_MYSQL_DATABASE_TEST,
-    env.DEV_CONSOLE_API_MYSQL_HOST_TEST,
-    env.DEV_CONSOLE_API_MYSQL_PORT_TEST,
-    env.DEV_CONSOLE_API_MYSQL_USER_TEST,
-    env.DEV_CONSOLE_API_MYSQL_PASSWORD_TEST,
-  );
+async function run() {
+  await getEnvSecrets();
 
-  await seedDatabase(
-    env.DEV_CONSOLE_API_MYSQL_DATABASE_TEST,
-    env.DEV_CONSOLE_API_MYSQL_HOST_TEST,
-    env.DEV_CONSOLE_API_MYSQL_PORT_TEST,
-    env.DEV_CONSOLE_API_MYSQL_USER_TEST,
-    env.DEV_CONSOLE_API_MYSQL_PASSWORD_TEST,
-  );
-};
+  const migrator = new SqlMigrator({
+    database: env.DEV_CONSOLE_API_MYSQL_DATABASE_TEST,
+    host: env.DEV_CONSOLE_API_MYSQL_HOST_TEST,
+    port: env.DEV_CONSOLE_API_MYSQL_PORT_TEST,
+    user: env.DEV_CONSOLE_API_MYSQL_USER_TEST,
+    password: env.DEV_CONSOLE_API_MYSQL_PASSWORD_TEST,
+  });
+
+  await migrator.rebuild(false);
+}
 
 run()
   .then(() => {
-    console.log('Complete!');
     process.exit(0);
   })
   .catch((err) => {
-    console.log(err);
+    console.error(err);
     process.exit(1);
   });

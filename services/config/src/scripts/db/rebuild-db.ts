@@ -1,48 +1,25 @@
-import { env, rebuildDatabase, seedDatabase } from '@apillon/lib';
-import * as readline from 'readline';
+import { env, getEnvSecrets, SqlMigrator } from '@apillon/lib';
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
+async function run() {
+  await getEnvSecrets();
 
-const run = async () => {
-  await rebuildDatabase(
-    env.CONFIG_MYSQL_DATABASE,
-    env.CONFIG_MYSQL_HOST,
-    env.CONFIG_MYSQL_PORT,
-    env.CONFIG_MYSQL_USER,
-    env.CONFIG_MYSQL_PASSWORD,
-  );
-  await seedDatabase(
-    env.CONFIG_MYSQL_DATABASE,
-    env.CONFIG_MYSQL_HOST,
-    env.CONFIG_MYSQL_PORT,
-    env.CONFIG_MYSQL_USER,
-    env.CONFIG_MYSQL_PASSWORD,
-  );
-};
+  const migrator = new SqlMigrator({
+    database: env.CONFIG_MYSQL_DATABASE,
+    host: env.CONFIG_MYSQL_HOST,
+    port: env.CONFIG_MYSQL_PORT,
+    user: env.CONFIG_MYSQL_DEPLOY_USER || env.CONFIG_MYSQL_USER,
+    password: env.CONFIG_MYSQL_DEPLOY_PASSWORD || env.CONFIG_MYSQL_PASSWORD,
+  });
 
-rl.question(
-  `You are about to reset database ${env.CONFIG_MYSQL_DATABASE} @ ${env.CONFIG_MYSQL_HOST}.\n Are you sure? (Yes/No):`,
-  (answer) => {
-    if (answer.toLowerCase() === 'yes') {
-      console.log('Rebuilding database ...');
-    } else {
-      console.log('Exiting.');
-      process.exit(0);
-    }
+  const showDialog = !process.argv.includes('--F');
+  await migrator.rebuild(showDialog);
+}
 
-    rl.close();
-
-    run()
-      .then(() => {
-        console.log('Complete!');
-        process.exit(0);
-      })
-      .catch((err) => {
-        console.log(err);
-        process.exit(1);
-      });
-  },
-);
+run()
+  .then(() => {
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });

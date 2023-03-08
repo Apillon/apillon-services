@@ -2,14 +2,18 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import {
   Ams,
   AppEnvironment,
+  BadRequestErrorCode,
   CodeException,
   Context,
+  CreateReferralDto,
+  CreateOauthLinkDto,
   env,
   generateJwtToken,
   JwtTokenType,
   LogType,
   Mailing,
   parseJwtToken,
+  ReferralMicroservice,
   SerializeFor,
   UnauthorizedErrorCodes,
   ValidationException,
@@ -28,8 +32,8 @@ import { ValidateEmailDto } from './dtos/validate-email.dto';
 import { User } from './models/user.model';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
-import { verifyCaptcha } from '@apillon/modules-lib';
-
+import { verifyCaptcha, getDiscordProfile } from '@apillon/modules-lib';
+import { DiscordCodeDto } from './dtos/discord-code-dto';
 @Injectable()
 export class UserService {
   constructor(private readonly projectService: ProjectService) {}
@@ -45,6 +49,8 @@ export class UserService {
       });
     }
 
+    user.userRoles = context.user.userRoles;
+
     return user.serialize(SerializeFor.PROFILE);
   }
 
@@ -59,7 +65,6 @@ export class UserService {
       });
 
       const user = await new User({}, context).populateByUUID(
-        context,
         resp.data.user_uuid,
       );
 
@@ -70,6 +75,11 @@ export class UserService {
           errorCodes: ValidatorErrorCode,
         });
       }
+
+      user.userRoles =
+        resp.data.authUserRoles
+          ?.filter((x) => !x.project_uuid)
+          ?.map((x) => x.role_id) || [];
 
       return {
         ...user.serialize(SerializeFor.PROFILE),
@@ -88,7 +98,7 @@ export class UserService {
     context: Context,
     emailVal: ValidateEmailDto,
   ): Promise<any> {
-    const { email, captcha } = emailVal;
+    const { email, captcha, refCode } = emailVal;
     let emailResult;
     let captchaResult;
     // console.log(captcha);
@@ -105,7 +115,13 @@ export class UserService {
           (response) => (captchaResult = response),
         ),
       );
-    }
+    } /*else {
+      throw new CodeException({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        code: ValidatorErrorCode.CAPTCHA_NOT_PRESENT,
+        errorCodes: ValidatorErrorCode,
+      });
+    }*/
 
     await Promise.all(promises);
 
@@ -137,7 +153,9 @@ export class UserService {
       emails: [email],
       template: 'welcome',
       data: {
-        actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}`,
+        actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}${
+          refCode ? '&REF=' + refCode : ''
+        }`,
       },
     });
 
@@ -184,12 +202,37 @@ export class UserService {
         email,
         password,
       });
+
       await context.mysql.commit(conn);
     } catch (err) {
       // TODO: The context of this error is not correct. What happens if
       //       ams fails? FE will see it as a DB write error, which is incorrect.
       await context.mysql.rollback(conn);
       throw err;
+    }
+    try {
+      // Create referral player - is inactive until accepts terms
+      const referralBody = new CreateReferralDto(
+        {
+          refCode: data?.refCode,
+        },
+        context,
+      );
+
+      await new ReferralMicroservice({
+        ...context,
+        user,
+      } as any).createPlayer(referralBody);
+    } catch (err) {
+      writeLog(
+        LogType.MSG,
+        `Error creating referral player${
+          data?.refCode ? ', refCode: ' + data?.refCode : ''
+        }`,
+        'user.service.ts',
+        'register',
+        err,
+      );
     }
 
     //User has been registered - check if pending invitations for project exists
@@ -305,5 +348,41 @@ export class UserService {
     }
 
     return user.serialize(SerializeFor.PROFILE);
+  }
+
+  async connectDiscord(context: DevConsoleApiContext, body: DiscordCodeDto) {
+    let discordProfile: any;
+    if (env.APP_ENV === AppEnvironment.TEST) {
+      const testId = body.code;
+      discordProfile = {
+        id: testId,
+        username: `TestUser${testId}`,
+      };
+    } else {
+      discordProfile = await getDiscordProfile(body.code);
+    }
+
+    if (!discordProfile) {
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: BadRequestErrorCode.THIRD_PARTY_SERVICE_CONNECTION_FAILED,
+        errorCodes: BadRequestErrorCode,
+      });
+    }
+
+    const payload = new CreateOauthLinkDto({
+      externalUserId: discordProfile.id,
+      externalUsername: discordProfile.username,
+    });
+
+    return await new Ams(context).linkDiscord(payload);
+  }
+
+  async disconnectDiscord(context: DevConsoleApiContext) {
+    await new Ams(context).unlinkDiscord();
+  }
+
+  async getOauthLinks(context: DevConsoleApiContext) {
+    return await new Ams(context).getOauthLinks();
   }
 }

@@ -39,6 +39,22 @@ export class Identity extends AdvancedSQLModel {
   public email: string;
 
   /**
+   * Identity didUri
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
+    ],
+  })
+  public didUri: string;
+
+  /**
    * Identity credential
    */
   @prop({

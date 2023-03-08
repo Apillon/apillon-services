@@ -28,4 +28,10 @@ export class RegisterUserDto extends ModelBase {
     ],
   })
   public password: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE],
+  })
+  public refCode: string;
 }

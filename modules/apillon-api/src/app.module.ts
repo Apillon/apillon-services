@@ -6,10 +6,12 @@ import { AppService } from './app.service';
 import { AuthenticateApiKeyMiddleware } from './middlewares/authentication.middleware';
 import { ContextMiddleware } from './middlewares/context.middleware';
 import { MySQLModule } from './modules/database/mysql.module';
+import { HostingModule } from './modules/hosting/hosting.module';
 import { StorageModule } from './modules/storage/storage.module';
+import { SystemModule } from './modules/system/system.module';
 
 @Module({
-  imports: [MySQLModule, StorageModule],
+  imports: [MySQLModule, StorageModule, HostingModule, SystemModule],
   controllers: [AppController],
   providers: [AppService],
 })
@@ -20,6 +22,8 @@ export class AppModule {
       .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer
       .apply(AuthenticateApiKeyMiddleware)
+      .exclude({ path: '/', method: RequestMethod.ALL })
+      .exclude({ path: '/hosting/domains', method: RequestMethod.ALL })
       .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer
       .apply(createRequestLogMiddleware(`apillon-api (${env.APP_ENV})`))

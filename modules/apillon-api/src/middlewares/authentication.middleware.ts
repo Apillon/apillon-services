@@ -1,11 +1,7 @@
-import {
-  BadRequestErrorCode,
-  CodeException,
-  UnauthorizedErrorCodes,
-} from '@apillon/lib';
+import { BadRequestErrorCode, CodeException } from '@apillon/lib';
 import { HttpStatus, Injectable, NestMiddleware } from '@nestjs/common';
 
-const AUTHORIZATION_HEADER = 'Authorization';
+// const AUTHORIZATION_HEADER = 'Authorization';
 
 /**
  * Authenticates user or returns error if that is not possible.
@@ -38,8 +34,15 @@ export class AuthenticateApiKeyMiddleware implements NestMiddleware {
     );
     const [apiKey, apiKeySecret] = credentials.split(':');
 
-    if (apiKey && apiKeySecret)
+    if (apiKey && apiKeySecret) {
       await context.authenticate(apiKey, apiKeySecret);
+    } else {
+      throw new CodeException({
+        code: BadRequestErrorCode.INVALID_AUTHORIZATION_HEADER,
+        status: HttpStatus.BAD_REQUEST,
+        errorMessage: 'Malformed Authorization header',
+      });
+    }
 
     next();
   }

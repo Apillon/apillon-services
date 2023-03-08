@@ -61,5 +61,7 @@ export function MongoDbConnect(
     }
   };
 
-  return { before, after };
+  const onError = after;
+
+  return { before, after, onError };
 }

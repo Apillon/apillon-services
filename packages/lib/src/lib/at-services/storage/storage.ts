@@ -7,11 +7,24 @@ import { BucketQueryFilter } from './dtos/bucket-query-filter.dto';
 import { CreateBucketWebhookDto } from './dtos/create-bucket-webhook.dto';
 import { CreateBucketDto } from './dtos/create-bucket.dto';
 import { CreateDirectoryDto } from './dtos/create-directory.dto';
-import { CreateS3SignedUrlForUploadDto } from './dtos/create-s3-signed-url-for-upload.dto';
+import { CreateIpnsDto } from './dtos/create-ipns.dto';
+import { CreateS3UrlForUploadDto } from './dtos/create-s3-url-for-upload.dto';
 import { DirectoryContentQueryFilter } from './dtos/directory-content-query-filter.dto';
 import { EndFileUploadSessionDto } from './dtos/end-file-upload-session.dto';
 import { FileDetailsQueryFilter } from './dtos/file-details-query-filter.dto';
 import { FileUploadsQueryFilter } from './dtos/file-uploads-query-filter.dto';
+import { TrashedFilesQueryFilter } from './dtos/trashed-files-query-filter.dto';
+import { IpnsQueryFilter } from './dtos/ipns-query-filter.dto';
+import { PublishIpnsDto } from './dtos/publish-ipns.dto';
+import { WebsiteQueryFilter } from './dtos/website-query-filter.dto';
+import { CreateWebsiteDto } from './dtos/create-website.dto';
+import { DeployWebsiteDto } from './dtos/deploy-website.dto';
+import { DeploymentQueryFilter } from './dtos/deployment-query-filter.dto';
+import { WebsitesQuotaReachedQueryFilter } from './dtos/websites-quota-reached-query-filter.dto';
+import {
+  ApillonHostingApiCreateS3UrlsForUploadDto,
+  CreateS3UrlsForUploadDto,
+} from './dtos/create-s3-urls-for-upload.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -79,6 +92,14 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async clearBucketContent(params: { id: number }) {
+    const data = {
+      eventName: StorageEventType.BUCKET_CLEAR_CONTENT,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
   public async maxBucketQuotaReached(params: BucketQuotaReachedQueryFilter) {
     const data = {
       eventName: StorageEventType.MAX_BUCKETS_QUOTA_REACHED,
@@ -134,17 +155,15 @@ export class StorageMicroservice extends BaseService {
 
   //#region upload files to S3, IPFS & pin to crust
 
-  public async requestS3SignedURLForUpload(
-    params: CreateS3SignedUrlForUploadDto,
-  ) {
+  public async requestS3SignedURLsForUpload(params: CreateS3UrlsForUploadDto) {
     const data = {
-      eventName: StorageEventType.REQUEST_S3_SIGNED_URL_FOR_UPLOAD,
+      eventName: StorageEventType.REQUEST_S3_SIGNED_URLS_FOR_UPLOAD,
       body: params.serialize(),
     };
     return await this.callService(data);
   }
 
-  public async endFileUploadSessionAndExecuteSyncToIPFS(
+  public async endFileUploadSession(
     session_uuid: string,
     params: EndFileUploadSessionDto,
   ) {
@@ -180,6 +199,14 @@ export class StorageMicroservice extends BaseService {
     const data = {
       eventName: StorageEventType.GET_FILE_DETAILS,
       ...params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async listFilesMarkedForDeletion(params: TrashedFilesQueryFilter) {
+    const data = {
+      eventName: StorageEventType.LIST_FILES_MARKED_FOR_DELETION,
+      query: params.serialize(),
     };
     return await this.callService(data);
   }
@@ -232,6 +259,144 @@ export class StorageMicroservice extends BaseService {
     const data = {
       eventName: StorageEventType.BUCKET_WEBHOOK_DELETE,
       ...params,
+    };
+    return await this.callService(data);
+  }
+
+  //#endregion
+
+  //#region ipns
+
+  public async listIpnses(params: IpnsQueryFilter) {
+    const data = {
+      eventName: StorageEventType.IPNS_LIST,
+      query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async getIpns(id: number) {
+    const data = {
+      eventName: StorageEventType.IPNS_GET,
+      id: id,
+    };
+    return await this.callService(data);
+  }
+
+  public async createIpns(params: CreateIpnsDto) {
+    const data = {
+      eventName: StorageEventType.IPNS_CREATE,
+      body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async publishIpns(params: PublishIpnsDto) {
+    const data = {
+      eventName: StorageEventType.IPNS_PUBLISH,
+      ...params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async updateIpns(params: { id: number; data: any }) {
+    const data = {
+      eventName: StorageEventType.IPNS_UPDATE,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
+  public async deleteIpns(params: { id: number }) {
+    const data = {
+      eventName: StorageEventType.IPNS_DELETE,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
+  //#endregion
+
+  //#region web pages, deployment
+
+  public async requestS3SignedURLsForWebsiteUpload(
+    params: ApillonHostingApiCreateS3UrlsForUploadDto,
+  ) {
+    const data = {
+      eventName: StorageEventType.REQUEST_S3_SIGNED_URLS_FOR_WEBSITE_UPLOAD,
+      body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async listWebsites(params: WebsiteQueryFilter) {
+    const data = {
+      eventName: StorageEventType.WEBSITE_LIST,
+      query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async getWebsite(id: number) {
+    const data = {
+      eventName: StorageEventType.WEBSITE_GET,
+      id: id,
+    };
+    return await this.callService(data);
+  }
+
+  public async createWebsite(params: CreateWebsiteDto) {
+    const data = {
+      eventName: StorageEventType.WEBSITE_CREATE,
+      body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+  public async updateWebsite(params: { id: number; data: any }) {
+    const data = {
+      eventName: StorageEventType.WEBSITE_UPDATE,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
+  public async maxWebsitesQuotaReached(
+    params: WebsitesQuotaReachedQueryFilter,
+  ) {
+    const data = {
+      eventName: StorageEventType.WEBSITE_QUOTA_REACHED,
+      query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async deployWebsite(params: DeployWebsiteDto) {
+    const data = {
+      eventName: StorageEventType.WEBSITE_DEPLOY,
+      body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async listDomains() {
+    const data = {
+      eventName: StorageEventType.WEBSITE_LIST_DOMAINS,
+    };
+    return await this.callService(data);
+  }
+
+  public async listDeployments(params: DeploymentQueryFilter) {
+    const data = {
+      eventName: StorageEventType.DEPLOYMENT_LIST,
+      query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async getDeployment(id: number) {
+    const data = {
+      eventName: StorageEventType.DEPLOYMENT_GET,
+      id: id,
     };
     return await this.callService(data);
   }

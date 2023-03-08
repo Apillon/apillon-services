@@ -1,37 +1,42 @@
-import {
-  S3Client,
-  PutObjectCommand,
-  HeadObjectCommand,
-  GetObjectCommand,
-  ListObjectsCommand,
-  DeleteObjectCommand,
-  DeleteObjectsCommand,
-  ListObjectsV2Output,
-  ListObjectsV2Command,
-} from '@aws-sdk/client-s3';
 import type {
+  DeleteObjectOutput,
   GetObjectOutput,
   ListObjectsOutput,
   PutObjectOutput,
-  DeleteObjectOutput,
-  DeleteObjectsOutput,
+} from '@aws-sdk/client-s3';
+import {
+  DeleteObjectCommand,
+  DeleteObjectsCommand,
+  GetObjectCommand,
+  HeadObjectCommand,
+  ListObjectsCommand,
+  ListObjectsV2Command,
+  ListObjectsV2Output,
+  PutObjectCommand,
+  S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { env } from '../../config/env';
 import { consumers, Readable } from 'stream';
+import { env } from '../../config/env';
 
 export class AWS_S3 {
   private s3Client: S3Client;
 
   constructor() {
     try {
-      this.s3Client = new S3Client({
-        // credentials: {
-        //   accessKeyId: env.AWS_KEY,
-        //   secretAccessKey: env.AWS_SECRET,
-        // },
-        region: env.AWS_REGION,
-      });
+      if (env.AWS_KEY && env.AWS_SECRET) {
+        this.s3Client = new S3Client({
+          region: env.AWS_REGION,
+          credentials: {
+            accessKeyId: env.AWS_KEY,
+            secretAccessKey: env.AWS_SECRET,
+          },
+        });
+      } else {
+        this.s3Client = new S3Client({
+          region: env.AWS_REGION,
+        });
+      }
     } catch (err) {
       console.error(
         'error creating AWS S3 client',
@@ -172,18 +177,21 @@ export class AWS_S3 {
   }
 
   /**
-   * Removes up to 1000 S3 files.
+   * Removes files from S3.
    * @param source File source path.
    * @param ctx Request context.
    */
-  async removeFiles(
-    bucket: string,
-    keys: { Key: string }[],
-  ): Promise<DeleteObjectsOutput> {
-    const command = new DeleteObjectsCommand({
-      Bucket: bucket,
-      Delete: { Objects: keys },
-    });
-    return await this.s3Client.send(command);
+  async removeFiles(bucket: string, keys: { Key: string }[]): Promise<boolean> {
+    let counter = 0;
+    do {
+      const command = new DeleteObjectsCommand({
+        Bucket: bucket,
+        Delete: { Objects: keys.slice(counter, counter + 1000) },
+      });
+      await this.s3Client.send(command);
+      counter += 1000;
+    } while (counter < keys.length);
+
+    return true;
   }
 }

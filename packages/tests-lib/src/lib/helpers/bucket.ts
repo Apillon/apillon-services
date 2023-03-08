@@ -48,7 +48,7 @@ export async function createTestBucketDirectory(
   bucket: Bucket,
   addFiles: boolean,
   parentDirectoryId?: number,
-  name?: string,
+  name = 'test directory',
   description?: string,
   status = SqlModelStatus.ACTIVE,
 ): Promise<Directory> {
@@ -122,8 +122,11 @@ export async function createTestBucketFile(
   await f.insert();
 
   //Increase bucket size
-  if (!bucket.size) bucket.size = 500;
-  else bucket.size += 500;
+  if (!bucket.size) {
+    bucket.size = 500;
+  } else {
+    bucket.size += 500;
+  }
 
   await bucket.update();
 

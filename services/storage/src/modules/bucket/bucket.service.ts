@@ -19,6 +19,7 @@ import {
   StorageCodeException,
   StorageValidationException,
 } from '../../lib/exceptions';
+import { HostingService } from '../hosting/hosting.service';
 import { BucketWebhook } from './models/bucket-webhook.model';
 import { Bucket } from './models/bucket.model';
 
@@ -71,7 +72,9 @@ export class BucketService {
       await b.validate();
     } catch (err) {
       await b.handle(err);
-      if (!b.isValid()) throw new StorageValidationException(b);
+      if (!b.isValid()) {
+        throw new StorageValidationException(b);
+      }
     }
 
     //check max bucket quota
@@ -130,7 +133,9 @@ export class BucketService {
       await b.validate();
     } catch (err) {
       await b.handle(err);
-      if (!b.isValid()) throw new StorageValidationException(b);
+      if (!b.isValid()) {
+        throw new StorageValidationException(b);
+      }
     }
 
     await b.update();
@@ -151,6 +156,11 @@ export class BucketService {
     } else if (b.status == SqlModelStatus.MARKED_FOR_DELETION) {
       throw new StorageCodeException({
         code: StorageErrorCode.BUCKET_ALREADY_MARKED_FOR_DELETION,
+        status: 400,
+      });
+    } else if (b.bucketType == BucketType.HOSTING) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.CANNOT_DELETE_HOSTING_BUCKET,
         status: 400,
       });
     }
@@ -184,6 +194,30 @@ export class BucketService {
     return b.serialize(SerializeFor.PROFILE);
   }
 
+  static async clearBucketContent(
+    event: { id: number },
+    context: ServiceContext,
+  ): Promise<any> {
+    const b: Bucket = await new Bucket({}, context).populateById(event.id);
+
+    if (!b.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.BUCKET_NOT_FOUND,
+        status: 404,
+      });
+    }
+    b.canAccess(context);
+
+    if (b.bucketType == BucketType.HOSTING) {
+      return await HostingService.clearBucketContent({ bucket: b }, context);
+    } else {
+      throw new StorageCodeException({
+        code: StorageErrorCode.CANNOT_CLEAR_STORAGE_BUCKET,
+        status: 400,
+      });
+    }
+  }
+
   static async maxBucketsQuotaReached(
     event: { query: BucketQuotaReachedQueryFilter },
     context: ServiceContext,
@@ -194,8 +228,9 @@ export class BucketService {
       await event.query.validate();
     } catch (err) {
       await event.query.handle(err);
-      if (!event.query.isValid())
+      if (!event.query.isValid()) {
         throw new StorageValidationException(event.query);
+      }
     }
 
     const numOfBuckets = await new Bucket(
@@ -261,7 +296,9 @@ export class BucketService {
       await webhook.validate();
     } catch (err) {
       await webhook.handle(err);
-      if (!webhook.isValid()) throw new StorageValidationException(webhook);
+      if (!webhook.isValid()) {
+        throw new StorageValidationException(webhook);
+      }
     }
 
     //Check if webhook for this bucket already exists
@@ -313,7 +350,9 @@ export class BucketService {
       await webhook.validate();
     } catch (err) {
       await webhook.handle(err);
-      if (!webhook.isValid()) throw new StorageValidationException(webhook);
+      if (!webhook.isValid()) {
+        throw new StorageValidationException(webhook);
+      }
     }
 
     await webhook.update();
@@ -341,5 +380,5 @@ export class BucketService {
     return webhook.serialize(SerializeFor.PROFILE);
   }
 
-  //#region
+  //#endregion
 }
