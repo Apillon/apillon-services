@@ -34,11 +34,12 @@ import {
   ApillonSupportedCTypes,
   KILT_CREDENTIAL_IRI_PREFIX,
   AuthenticationErrorCode,
+  HttpStatus,
 } from '../config/types';
 import { EncryptResponseData } from '@kiltprotocol/types';
-import { HttpStatus } from '@nestjs/common';
 import { Keypair } from '@polkadot/util-crypto/types';
-import { env, Lmas, LogType, ServiceName, CodeException } from '@apillon/lib';
+import { env, Lmas, LogType, ServiceName } from '@apillon/lib';
+import { AuthenticationCodeException } from './exceptions';
 
 export function generateMnemonic() {
   return mnemonicGenerate();
@@ -279,10 +280,9 @@ export async function encryptionSigner({
   const verifierDidDoc = await getFullDidDocument(keyPairs);
   const verifierEncryptionKey = verifierDidDoc.keyAgreement?.[0];
   if (!verifierEncryptionKey) {
-    throw new CodeException({
-      status: HttpStatus.BAD_REQUEST,
+    throw new AuthenticationCodeException({
       code: AuthenticationErrorCode.SPORRAN_VERIFIER_KA_DOES_NOT_EXIST,
-      errorCodes: AuthenticationErrorCode,
+      status: HttpStatus.BAD_REQUEST,
     });
   }
 
