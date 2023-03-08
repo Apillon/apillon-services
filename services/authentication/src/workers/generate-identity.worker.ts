@@ -1,5 +1,4 @@
 import { u8aToHex, hexToU8a } from '@polkadot/util';
-import { BN } from '@polkadot/util/bn/bn';
 import {
   connect,
   ConfigService,
@@ -18,18 +17,19 @@ import {
 import { Identity } from '../modules/identity/models/identity.model';
 import {
   AuthenticationErrorCode,
+  HttpStatus,
   IdentityGenFlag,
   IdentityState,
   KiltSignAlgorithm,
 } from '../config/types';
-import { HttpStatus } from '@nestjs/common';
 import {
   generateKeypairs,
   generateAccount,
   getFullDidDocument,
   createAttestationRequest,
 } from '../lib/kilt';
-import { env, Lmas, LogType, ServiceName, CodeException } from '@apillon/lib';
+import { env, Lmas, LogType, ServiceName } from '@apillon/lib';
+import { AuthenticationCodeException } from '../lib/exceptions';
 
 export class IdentityGenerateWorker extends BaseQueueWorker {
   context;
@@ -74,11 +74,9 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
     );
 
     if (identity.exists() && identity.state == IdentityState.ATTESTED) {
-      // TODO: Should probably check before worker - pass as parameter new / existing
-      throw new CodeException({
-        status: HttpStatus.BAD_REQUEST,
+      throw new AuthenticationCodeException({
         code: AuthenticationErrorCode.IDENTITY_INVALID_STATE,
-        errorCodes: AuthenticationErrorCode,
+        status: HttpStatus.BAD_REQUEST,
       });
     }
 
@@ -101,10 +99,9 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
           service: ServiceName.AUTHENTICATION_API,
           data: error,
         });
-        throw new CodeException({
-          status: HttpStatus.BAD_REQUEST,
+        throw new AuthenticationCodeException({
           code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
-          errorCodes: AuthenticationErrorCode,
+          status: HttpStatus.BAD_REQUEST,
         });
       }
 
@@ -148,10 +145,9 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
           }
         }
       } else {
-        throw new CodeException({
-          status: HttpStatus.BAD_REQUEST,
+        throw new AuthenticationCodeException({
           code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
-          errorCodes: AuthenticationErrorCode,
+          status: HttpStatus.BAD_REQUEST,
         });
       }
     }

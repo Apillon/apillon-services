@@ -1,7 +1,7 @@
-import { env, CodeException } from '@apillon/lib';
+import { env } from '@apillon/lib';
 import { Did, DidUri, connect } from '@kiltprotocol/sdk-js';
-import { HttpStatus } from '@nestjs/common';
-import { AuthenticationErrorCode } from '../config/types';
+import { AuthenticationErrorCode, HttpStatus } from '../config/types';
+import { AuthenticationCodeException } from './exceptions';
 import { randomChallenge, generateKeypairs } from './kilt';
 
 export async function prepareSignResources(encryptionKeyUri: string) {
@@ -16,19 +16,17 @@ export async function prepareSignResources(encryptionKeyUri: string) {
   const { document } = await Did.resolve(verifierDidUri);
 
   if (!document) {
-    throw new CodeException({
-      status: HttpStatus.BAD_REQUEST,
+    throw new AuthenticationCodeException({
       code: AuthenticationErrorCode.SPORRAN_VERIFIER_DID_DOES_NOT_EXIST,
-      errorCodes: AuthenticationErrorCode,
+      status: HttpStatus.BAD_REQUEST,
     });
   }
 
   const verifierEncryptionKey = document.keyAgreement?.[0];
   if (!verifierEncryptionKey) {
-    throw new CodeException({
-      status: HttpStatus.BAD_REQUEST,
+    throw new AuthenticationCodeException({
       code: AuthenticationErrorCode.SPORRAN_VERIFIER_KA_DOES_NOT_EXIST,
-      errorCodes: AuthenticationErrorCode,
+      status: HttpStatus.BAD_REQUEST,
     });
   }
 
