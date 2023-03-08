@@ -15,7 +15,6 @@ import {
   ICredentialPresentation,
 } from '@kiltprotocol/sdk-js';
 import { Injectable } from '@nestjs/common';
-import { Identity } from '../identity/models/identity.model';
 
 @Injectable()
 export class VerificationMicroservice {
@@ -27,24 +26,6 @@ export class VerificationMicroservice {
       event.body.presentation,
     ) as ICredentialPresentation;
     let attestation: IAttestation;
-
-    // It's a string ...
-    const email = presentation.claim.contents.Email as string;
-    const identity = await new Identity({}, context).populateByUserEmail(
-      context,
-      email,
-    );
-
-    if (!identity.exists()) {
-      await new Lmas().writeLog({
-        context: context,
-        logType: LogType.INFO,
-        message: 'VERIFICATION FAILED',
-        location: 'AUTHENTICATION-API/verification/verifyIdentity',
-        service: ServiceName.AUTHENTICATION_API,
-      });
-      return { verified: false, error: 'Identity does not exist' };
-    }
 
     try {
       await Credential.verifyPresentation(presentation);
@@ -70,7 +51,7 @@ export class VerificationMicroservice {
 
     const token = generateJwtToken(
       JwtTokenType.USER_AUTHENTICATION,
-      { email: email },
+      { email: presentation.claim.contents.Email },
       '10min',
     );
 

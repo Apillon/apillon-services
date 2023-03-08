@@ -21,7 +21,7 @@ export class AuthenticationMicroservice extends BaseService {
     env.APP_ENV === AppEnvironment.TEST
       ? env.AUTH_SOCKET_PORT_TEST
       : env.AUTH_SOCKET_PORT;
-  serviceName = 'AUTHETICATION';
+  serviceName = 'AUTHENTICATION';
 
   constructor(context: Context) {
     super(context);

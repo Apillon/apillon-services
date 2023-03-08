@@ -17,10 +17,8 @@ export class AuthService {
     try {
       parseJwtToken(JwtTokenType.USER_AUTHENTICATION, query.token);
     } catch (error) {
-      console.log(error);
       return { verified: false };
     }
-
     return { verified: true };
   }
 }
