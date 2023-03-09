@@ -19,7 +19,6 @@ export class CaptchaGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   public async canActivate(execCtx: ExecutionContext): Promise<boolean> {
-    let error;
     try {
       const options = this.reflector.getAllAndMerge(VALIDATION_OPTIONS_KEY, [
         execCtx.getHandler(),
@@ -33,9 +32,7 @@ export class CaptchaGuard implements CanActivate {
         if (!data.captcha) {
           throw new CodeException({
             status: HttpStatus.UNPROCESSABLE_ENTITY,
-            code: error.prototype.isPrototypeOf(AuthenticationErrorCode)
-              ? error
-              : AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_PRESENT,
+            code: AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_PRESENT,
             errorCodes: AuthenticationErrorCode,
           });
         }
@@ -45,9 +42,7 @@ export class CaptchaGuard implements CanActivate {
       } else {
         throw new CodeException({
           status: HttpStatus.UNPROCESSABLE_ENTITY,
-          code: error.prototype.isPrototypeOf(AuthenticationErrorCode)
-            ? error
-            : AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_CONFIGURED,
+          code: AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_CONFIGURED,
           errorCodes: AuthenticationErrorCode,
         });
       }
@@ -59,9 +54,7 @@ export class CaptchaGuard implements CanActivate {
       ) {
         throw new CodeException({
           status: HttpStatus.UNPROCESSABLE_ENTITY,
-          code: error.prototype.isPrototypeOf(AuthenticationErrorCode)
-            ? error
-            : AuthenticationErrorCode.IDENTITY_CAPTCHA_INVALID,
+          code: AuthenticationErrorCode.IDENTITY_CAPTCHA_INVALID,
           errorCodes: AuthenticationErrorCode,
         });
       }
@@ -70,9 +63,10 @@ export class CaptchaGuard implements CanActivate {
     } catch (error) {
       throw new CodeException({
         status: HttpStatus.UNPROCESSABLE_ENTITY,
-        code: error.prototype.isPrototypeOf(AuthenticationErrorCode)
-          ? error
-          : AuthenticationErrorCode.IDENTITY_CREATE_INVALID_REQUEST,
+        code:
+          error.name == 'CodeException'
+            ? AuthenticationErrorCode.IDENTITY_CREATE_INVALID_REQUEST
+            : error,
         errorCodes: AuthenticationErrorCode,
       });
     }
