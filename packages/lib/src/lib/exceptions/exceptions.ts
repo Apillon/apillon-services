@@ -3,7 +3,6 @@ import {
   BadRequestErrorCode,
   ErrorOrigin,
   LogType,
-  ServiceName,
   SystemErrorCode,
   ValidatorErrorCode,
 } from '../../config/types';

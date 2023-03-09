@@ -6,7 +6,7 @@ import {
   Did,
   DidUri,
 } from '@kiltprotocol/sdk-js';
-import { CodeException, env, Lmas, LogType, ServiceName } from '@apillon/lib';
+import { env, Lmas, LogType, ServiceName } from '@apillon/lib';
 import {
   BaseQueueWorker,
   QueueWorkerType,

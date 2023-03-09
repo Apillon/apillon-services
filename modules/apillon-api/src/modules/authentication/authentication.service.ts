@@ -6,14 +6,14 @@ import { VerifyLoginDto } from '@apillon/lib';
 
 @Injectable()
 export class AuthService {
-  async generateSessionToken(context: ApillonApiContext) {
+  async generateSessionToken(_context: ApillonApiContext) {
     const token = generateJwtToken(JwtTokenType.AUTH_SESSION, '10min');
     return {
       session: token,
     };
   }
 
-  async verifyLogin(context: ApillonApiContext, query: VerifyLoginDto) {
+  async verifyLogin(_context: ApillonApiContext, query: VerifyLoginDto) {
     try {
       parseJwtToken(JwtTokenType.USER_AUTHENTICATION, query.token);
     } catch (error) {

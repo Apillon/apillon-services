@@ -155,6 +155,7 @@ export async function handleSqsMessages(
 
     const workerName = message?.messageAttributes?.workerName?.stringValue;
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const workerDefinition = new WorkerDefinition(serviceDef, workerName, {
       id,
       parameters,

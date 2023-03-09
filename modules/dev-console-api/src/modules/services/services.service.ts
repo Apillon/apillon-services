@@ -92,8 +92,9 @@ export class ServicesService {
       await service.validate();
     } catch (err) {
       await service.handle(err);
-      if (!service.isValid())
+      if (!service.isValid()) {
         throw new ValidationException(service, ValidatorErrorCode);
+      }
     }
 
     await service.update();

@@ -16,7 +16,7 @@ export class TransactionStatusWorker extends ServerlessWorker {
     this.context = context;
   }
 
-  public async before(data?: any): Promise<any> {
+  public async before(_data?: any): Promise<any> {
     // No used
   }
   public async execute(data?: any): Promise<any> {
@@ -66,10 +66,11 @@ export class TransactionStatusWorker extends ServerlessWorker {
     if (
       env.APP_ENV != AppEnvironment.LOCAL_DEV &&
       env.APP_ENV != AppEnvironment.TEST
-    )
+    ) {
       await new Job({}, this.context).updateWorkerDefinition(
         this.workerDefinition,
       );
+    }
     // this.logFn('DeleteBucketDirectoryFileWorker - update definition COMPLETE');
   }
 

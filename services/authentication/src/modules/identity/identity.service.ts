@@ -57,7 +57,6 @@ import {
   generateKeypairs,
   generateMnemonic,
   getCtypeSchema,
-  toCredentialIRI,
 } from '../../lib/kilt';
 import { AuthenticationCodeException } from '../../lib/exceptions';
 
@@ -325,7 +324,7 @@ export class IdentityMicroservice {
     return { success: true };
   }
 
-  static async generateDevResources(event: { body: any }, context) {
+  static async generateDevResources(event: { body: any }, _context) {
     // Used to issue did documents to test accounts -> Since the peregrine faucet
     // only allows 100PILT token per account, we need a new one everytime funds
     // are depleted ...
@@ -474,7 +473,7 @@ export class IdentityMicroservice {
 
       const issuanceDate = new Date().toISOString();
       const { claimerSignature, rootHash } = domainLinkageCredential;
-      const id = toCredentialIRI(credential.rootHash);
+      // const id = toCredentialIRI(credential.rootHash);
 
       await Did.verifyDidSignature({
         expectedVerificationMethod: 'assertionMethod',

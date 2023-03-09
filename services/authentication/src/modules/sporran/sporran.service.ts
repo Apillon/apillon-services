@@ -62,7 +62,7 @@ import { VerifyCredentialDto } from '@apillon/lib/dist/lib/at-services/authentic
 import { AuthenticationCodeException } from '../../lib/exceptions';
 
 export class SporranMicroservice {
-  static async getSessionValues(context): Promise<any> {
+  static async getSessionValues(_context): Promise<any> {
     // generate keypairs
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
@@ -99,7 +99,7 @@ export class SporranMicroservice {
 
   static async verifySession(
     event: { body: SporranSessionVerifyDto },
-    context,
+    _context,
   ): Promise<any> {
     await connect(env.KILT_NETWORK);
 
@@ -169,12 +169,12 @@ export class SporranMicroservice {
     return { success: true };
   }
 
-  static async submitTerms(event: { body: SubmitTermsDto }, context) {
+  static async submitTerms(event: { body: SubmitTermsDto }, _context) {
     const {
-      verifierDidUri: verifierDidUri,
-      encryptionKeyUri: encryptionKeyUri,
-      claimerSessionDidUri: claimerSessionDidUri,
-      requestChallenge: requestChallenge,
+      verifierDidUri,
+      encryptionKeyUri,
+      claimerSessionDidUri,
+      // requestChallenge,
     } = await prepareSignResources(event.body.encryptionKeyUri);
 
     const emailContents = {
@@ -219,11 +219,8 @@ export class SporranMicroservice {
   ) {
     await connect(env.KILT_NETWORK);
 
-    const {
-      verifierDidUri: verifierDidUri,
-      encryptionKeyUri: encryptionKeyUri,
-      claimerSessionDidUri: claimerSessionDidUri,
-    } = await prepareSignResources(event.body.encryptionKeyUri);
+    const { verifierDidUri, encryptionKeyUri, claimerSessionDidUri } =
+      await prepareSignResources(event.body.encryptionKeyUri);
 
     const decryptionSenderKey = await Did.resolveKey(
       event.body.message.senderKeyUri as DidResourceUri,
@@ -371,13 +368,13 @@ export class SporranMicroservice {
 
   static async requestCredential(
     event: { body: RequestCredentialDto },
-    context,
+    _context,
   ) {
     const {
-      verifierDidUri: verifierDidUri,
-      encryptionKeyUri: encryptionKeyUri,
-      claimerSessionDidUri: claimerSessionDidUri,
-      requestChallenge: requestChallenge,
+      verifierDidUri,
+      encryptionKeyUri,
+      claimerSessionDidUri,
+      requestChallenge,
     } = await prepareSignResources(event.body.encryptionKeyUri);
 
     // We need to construct a message request for the sporran extension

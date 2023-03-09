@@ -3,7 +3,6 @@ import {
   DefaultApiKeyRole,
   AttachedServiceType,
   generateJwtToken,
-  parseJwtToken,
 } from '@apillon/lib';
 import {
   Stage,

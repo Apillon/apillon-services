@@ -4,21 +4,24 @@ It is highly recommended to read this docs alogn with [res-API-specs](/docs/rest
 
 ## Services and service codes
 
-| Code | Short   | Service name                             | Package name             | path                      |
-| ---- | ------- | ---------------------------------------- | ------------------------ | ------------------------- |
-| 00   | #       | Apillon Web3 Services                    | @apillon                 | /                         |
-| 01   | LIB     | Service Code Library                     | @apillon/lib             | /packages/lib/            |
-| 02   | AMS     | Access Management Service                | @apillon/access          | /services/access/         |
-| 03   | LMAS    | Logging, Monitoring and Alerting Service | @apillon/monitoring      | /services/monitoring/     |
-| 04   | DEV-API | Developer Console API                    | @apillon/dev-console-api | /modules/dev-console-api/ |
-| 05   | AP-API  | Apillon Service API                      | @apillon/apillon-api     | /modules/apillon-api/     |
-| 06   | IPFS    | IPFS Storage Service                     | @apillon/storage         | /services/storage/        |
-| 07   | AUTH    | Authentication API                       | @apillon/auth-api        | /modules/auth/            |
-| 08   | MAIL    | Mailing Service                          | @apillon/mailing         | /services/mailing/        |
-| 09   | MOD-LIB | Module Code Library                      | @apillon/modules-lib     | /packages/modules-lib/    |
-| 10   | SCS     | System Configuration Service             | @apillon/config          | /services/config          |
-| 11   | REF     | Referral program                         | @apillon/referral        | /services/referral        |
-| 12   | NFTS    | NFTS Service                             | @apillon/nfts            | /services/nfts            |
+| Code | Short    | Service name                             | Package name             | path                      |
+| ---- | -------- | ---------------------------------------- | ------------------------ | ------------------------- |
+| 00   | #        | Apillon Web3 Services                    | @apillon                 | /                         |
+| 01   | LIB      | Service Code Library                     | @apillon/lib             | /packages/lib/            |
+| 02   | AMS      | Access Management Service                | @apillon/access          | /services/access/         |
+| 03   | LMAS     | Logging, Monitoring and Alerting Service | @apillon/monitoring      | /services/monitoring/     |
+| 04   | DEV-API  | Developer Console API                    | @apillon/dev-console-api | /modules/dev-console-api/ |
+| 05   | AP-API   | Apillon Service API                      | @apillon/apillon-api     | /modules/apillon-api/     |
+| 06   | IPFS     | IPFS Storage Service                     | @apillon/storage         | /services/storage/        |
+| 07   | AUTH-API | Authentication API                       | @apillon/auth-api        | /modules/auth/            |
+| 08   | MAIL     | Mailing Service                          | @apillon/mailing         | /services/mailing/        |
+| 09   | MOD-LIB  | Module Code Library                      | @apillon/modules-lib     | /packages/modules-lib/    |
+| 10   | SCS      | System Configuration Service             | @apillon/config          | /services/config/         |
+| 11   | REF      | Referral program                         | @apillon/referral        | /services/referral/       |
+| 12   | NFTS     | NFTS Service                             | @apillon/nfts            | /services/nfts/           |
+| 13   | AUTH     | Authentication Service                   | @apillon/auth            | /services/authentication/ |
+| 14   | TEST-LIB | Testing Library                          | @apillon/tests-lib       | /packages/tests-lib/      |
+| 15   | WORK-LIB | Worker Library                           | @apillon/worker-lib      | /packages/worker-lib/     |
 
 ## Error codes
 

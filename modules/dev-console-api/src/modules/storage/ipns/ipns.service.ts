@@ -53,8 +53,9 @@ export class IpnsService {
       await body.validate();
     } catch (err) {
       await body.handle(err);
-      if (!body.isValid())
+      if (!body.isValid()) {
         throw new ValidationException(body, ValidatorErrorCode);
+      }
     }
 
     return (await new StorageMicroservice(context).publishIpns(body)).data;
