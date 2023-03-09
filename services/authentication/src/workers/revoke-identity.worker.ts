@@ -14,9 +14,13 @@ import {
 } from '@apillon/workers-lib';
 
 import { Identity } from '../modules/identity/models/identity.model';
-import { AuthenticationErrorCode, IdentityState } from '../config/types';
-import { HttpStatus } from '@nestjs/common';
+import {
+  AuthenticationErrorCode,
+  HttpStatus,
+  IdentityState,
+} from '../config/types';
 import { generateAccount } from '../lib/kilt';
+import { AuthenticationCodeException } from '../lib/exceptions';
 
 export class IdentityRevokeWorker extends BaseQueueWorker {
   context;
@@ -41,10 +45,9 @@ export class IdentityRevokeWorker extends BaseQueueWorker {
     );
 
     if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
-      throw new CodeException({
-        status: HttpStatus.NOT_FOUND,
+      throw new AuthenticationCodeException({
         code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
-        errorCodes: AuthenticationErrorCode,
+        status: HttpStatus.NOT_FOUND,
       });
     }
 
