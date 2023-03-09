@@ -8,11 +8,13 @@ import {
   streamToString,
 } from '@apillon/lib';
 import {
+  BucketType,
   FileUploadRequestFileStatus,
   StorageErrorCode,
 } from '../../config/types';
 import { ServiceContext } from '../../context';
 import { StorageCodeException } from '../../lib/exceptions';
+import { pinFileToCRUST } from '../../lib/pin-file-to-crust';
 import { Bucket } from '../bucket/models/bucket.model';
 import { uploadFilesToIPFSRes } from '../ipfs/interfaces/upload-files-to-ipfs-res.interface';
 import { IPFSService } from '../ipfs/ipfs.service';
@@ -21,7 +23,13 @@ import { FileUploadSession } from '../storage/models/file-upload-session.model';
 
 export class NftStorageService {
   static async prepareMetadataForCollection(
-    event: { body: { imagesSession: string; metadataSession: string } },
+    event: {
+      body: {
+        collection_uuid: string;
+        imagesSession: string;
+        metadataSession: string;
+      };
+    },
     context: ServiceContext,
   ) {
     //#region Load data, execute validations and Sync images to IPFS
@@ -163,12 +171,38 @@ export class NftStorageService {
     }
     //#endregion
 
-    //TODO: Mark sessions as transferred and clear files from s3
+    //#region Publish to IPNS, Pin to IPFS, Remove from S3, ...
+    await pinFileToCRUST(
+      context,
+      bucket.bucket_uuid,
+      imagesOnIPFSRes.parentDirCID,
+      imagesOnIPFSRes.size,
+      true,
+    );
+    await pinFileToCRUST(
+      context,
+      bucket.bucket_uuid,
+      metadataOnIPFSRes.parentDirCID,
+      metadataOnIPFSRes.size,
+      true,
+    );
+
+    //Pin to IPNS
+    const ipns = await IPFSService.publishToIPNS(
+      metadataOnIPFSRes.parentDirCID.toV0().toString(),
+      event.body.collection_uuid,
+    );
+
+    //Remove all files of this bucket in S3
+    await s3Client.removeDirectory(
+      env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+      `${BucketType[bucket.bucketType]}_sessions/${bucket.id}`,
+    );
+
+    //#region
 
     return {
-      baseUri:
-        env.STORAGE_IPFS_GATEWAY +
-        metadataOnIPFSRes.parentDirCID.toV0().toString(),
+      baseUri: env.STORAGE_IPFS_GATEWAY.replace('/ipfs/', '/ipns/') + ipns.name,
     };
   }
 }

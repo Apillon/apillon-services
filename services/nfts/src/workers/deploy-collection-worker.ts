@@ -55,6 +55,7 @@ export class DeployCollectionWorker extends BaseQueueWorker {
     if (collection.imagesSession && collection.metadataSession) {
       const metadataIpfsCID = (
         await new StorageMicroservice(this.context).prepareCollectionMetadata({
+          collection_uuid: collection.collection_uuid,
           imagesSession: collection.imagesSession,
           metadataSession: collection.metadataSession,
         })
