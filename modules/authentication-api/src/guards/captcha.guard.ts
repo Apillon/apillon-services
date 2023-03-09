@@ -41,7 +41,7 @@ export class CaptchaGuard implements CanActivate {
         );
       } else {
         throw new CodeException({
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
           code: AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_CONFIGURED,
           errorCodes: AuthenticationErrorCode,
         });
