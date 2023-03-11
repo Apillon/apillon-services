@@ -64,6 +64,7 @@ export * from './lib/at-services/nfts/dtos/transaction-query-filter.dto';
 export * from './lib/at-services/nfts/dtos/mint-nft.dto';
 export * from './lib/at-services/nfts/dtos/set-collection-base-uri.dto';
 export * from './lib/at-services/nfts/dtos/transfer-collection.dto';
+export * from './lib/at-services/nfts/dtos/create-collection.dto';
 
 //#REGION Mix
 export * from './lib/at-services/ams/dtos/create-oauth-link.dto';
