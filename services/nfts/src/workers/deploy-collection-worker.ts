@@ -1,4 +1,10 @@
-import { Context, env, StorageMicroservice } from '@apillon/lib';
+import {
+  Context,
+  env,
+  LogType,
+  StorageMicroservice,
+  writeLog,
+} from '@apillon/lib';
 import {
   BaseQueueWorker,
   QueueWorkerType,
@@ -24,6 +30,7 @@ export class DeployCollectionWorker extends BaseQueueWorker {
   }
   public async runExecutor(data: any): Promise<any> {
     console.info('RUN EXECUTOR (CollectionMetadataWorker). data: ', data);
+    //Prepare data and execute validations
     if (!data?.collectionId) {
       throw new NftsCodeException({
         code: NftsErrorCode.INVALID_DATA_PASSED_TO_WORKER,
@@ -44,7 +51,10 @@ export class DeployCollectionWorker extends BaseQueueWorker {
         context: this.context,
       });
     }
-    if (collection.collectionStatus != CollectionStatus.CREATED) {
+    if (
+      collection.collectionStatus == CollectionStatus.DEPLOYING ||
+      collection.collectionStatus == CollectionStatus.DEPLOYED
+    ) {
       throw new NftsCodeException({
         status: 400,
         code: NftsErrorCode.COLLECTION_ALREADY_DEPLOYED,
@@ -52,34 +62,57 @@ export class DeployCollectionWorker extends BaseQueueWorker {
       });
     }
 
-    if (collection.imagesSession && collection.metadataSession) {
-      const metadataIpfsCID = (
-        await new StorageMicroservice(this.context).prepareCollectionMetadata({
-          collection_uuid: collection.collection_uuid,
-          imagesSession: collection.imagesSession,
-          metadataSession: collection.metadataSession,
-        })
-      ).data.baseUri;
+    collection.collectionStatus = CollectionStatus.DEPLOYING;
+    await collection.update();
 
-      collection.baseUri = metadataIpfsCID;
-    }
-
-    const conn = await this.context.mysql.start();
     try {
-      //Deploy NFT contract
-      await deployNFTCollectionContract(this.context, collection, conn);
-      await this.context.mysql.commit(conn);
-    } catch (err) {
-      await this.context.mysql.rollback(conn);
+      //If upload sessions for collection exists, call storage microservice to prepare collection metadata in IPFS
+      if (collection.imagesSession && collection.metadataSession) {
+        const metadataIpfsCID = (
+          await new StorageMicroservice(this.context).prepareCollectionMetadata(
+            {
+              collection_uuid: collection.collection_uuid,
+              imagesSession: collection.imagesSession,
+              metadataSession: collection.metadataSession,
+            },
+          )
+        ).data.baseUri;
 
-      throw await new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.DEPLOY_NFT_CONTRACT_ERROR,
-        context: this.context,
-        sourceFunction: 'DeployCollectionWorker.runExecutor()',
-        errorMessage: 'Error deploying Nft contract',
-        details: err,
-      }).writeToMonitor({});
+        collection.baseUri = metadataIpfsCID;
+      }
+
+      const conn = await this.context.mysql.start();
+      try {
+        //Deploy NFT contract
+        await deployNFTCollectionContract(this.context, collection, conn);
+        await this.context.mysql.commit(conn);
+      } catch (err) {
+        await this.context.mysql.rollback(conn);
+
+        throw await new NftsCodeException({
+          status: 500,
+          code: NftsErrorCode.DEPLOY_NFT_CONTRACT_ERROR,
+          context: this.context,
+          sourceFunction: 'DeployCollectionWorker.runExecutor()',
+          errorMessage: 'Error deploying Nft contract',
+          details: err,
+        }).writeToMonitor({});
+      }
+    } catch (err) {
+      //Update collection status to error
+      try {
+        collection.collectionStatus = CollectionStatus.FAILED;
+        await collection.update();
+      } catch (updateError) {
+        writeLog(
+          LogType.ERROR,
+          'Error updating collection status to FAILED.',
+          'deploy-collection-worker.ts',
+          'runExecuter',
+          updateError,
+        );
+      }
+      throw err;
     }
 
     await this.writeLogToDb(

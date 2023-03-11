@@ -162,7 +162,11 @@ export class NftsService {
         context: context,
       });
     }
-    if (collection.collectionStatus != CollectionStatus.CREATED) {
+    if (
+      collection.collectionStatus == CollectionStatus.DEPLOYED ||
+      collection.collectionStatus == CollectionStatus.DEPLOY_INITIATED ||
+      collection.collectionStatus == CollectionStatus.DEPLOYING
+    ) {
       throw new NftsCodeException({
         status: 400,
         code: NftsErrorCode.COLLECTION_ALREADY_DEPLOYED,
@@ -170,9 +174,10 @@ export class NftsService {
       });
     }
 
-    //Update collection sessions fields
+    //Update collection sessions fields and status
     collection.imagesSession = params.body.imagesSession;
     collection.metadataSession = params.body.metadataSession;
+    collection.collectionStatus = CollectionStatus.DEPLOY_INITIATED;
     await collection.update();
 
     //Send message to SQS or run directly for local and test environments

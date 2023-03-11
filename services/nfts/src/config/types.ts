@@ -61,15 +61,9 @@ export enum TransactionStatus {
 
 export enum CollectionStatus {
   CREATED = 0,
-  DEPLOYING = 1,
-  DEPLOYED = 2,
-  TRANSFERED = 3,
-}
-
-export enum CollectionMetadataStatus {
-  PENDING = 1,
-  PROCESSING = 2,
-  FINISHED = 3,
-  FAILED = 100,
-  INVALID = 101,
+  DEPLOY_INITIATED = 1,
+  DEPLOYING = 2,
+  DEPLOYED = 3,
+  TRANSFERED = 4,
+  FAILED = 5,
 }

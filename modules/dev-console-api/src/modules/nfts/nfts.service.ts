@@ -7,8 +7,8 @@ import {
   SetCollectionBaseUriDTO,
   TransactionQueryFilter,
   TransferCollectionDTO,
+  CreateCollectionDTO,
 } from '@apillon/lib';
-import { CreateCollectionDTO } from '@apillon/lib/dist/lib/at-services/nfts/dtos/deploy-nft-contract.dto';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ResourceNotFoundErrorCode } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
