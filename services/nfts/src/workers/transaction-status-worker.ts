@@ -23,7 +23,7 @@ export class TransactionStatusWorker extends ServerlessWorker {
     this.context = context;
   }
 
-  public async before(data?: any): Promise<any> {
+  public async before(_data?: any): Promise<any> {
     // No used
   }
   public async execute(data?: any): Promise<any> {
@@ -87,7 +87,6 @@ export class TransactionStatusWorker extends ServerlessWorker {
         this.workerDefinition,
       );
     }
-
     // this.logFn('DeleteBucketDirectoryFileWorker - update definition COMPLETE');
   }
 

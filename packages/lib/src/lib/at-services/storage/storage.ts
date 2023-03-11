@@ -8,7 +8,6 @@ import { CreateBucketWebhookDto } from './dtos/create-bucket-webhook.dto';
 import { CreateBucketDto } from './dtos/create-bucket.dto';
 import { CreateDirectoryDto } from './dtos/create-directory.dto';
 import { CreateIpnsDto } from './dtos/create-ipns.dto';
-import { CreateS3UrlForUploadDto } from './dtos/create-s3-url-for-upload.dto';
 import { DirectoryContentQueryFilter } from './dtos/directory-content-query-filter.dto';
 import { EndFileUploadSessionDto } from './dtos/end-file-upload-session.dto';
 import { FileDetailsQueryFilter } from './dtos/file-details-query-filter.dto';

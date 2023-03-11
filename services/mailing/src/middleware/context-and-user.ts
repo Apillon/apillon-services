@@ -1,4 +1,4 @@
-import { ServiceContext } from '../context';
+import { ServiceContext } from '../scripts/context';
 
 export function InitializeContextAndFillUser() {
   const before = async (request) => {

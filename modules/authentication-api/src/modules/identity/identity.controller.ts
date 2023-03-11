@@ -1,4 +1,4 @@
-import { ValidateFor } from '@apillon/lib';
+import { ValidateFor, VerificationEmailDto } from '@apillon/lib';
 import { Ctx, Validation } from '@apillon/modules-lib';
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthenticationApiContext } from '../../context';
@@ -10,7 +10,6 @@ import { IdentityCreateDto } from './dtos/identity-create.dto';
 import { JwtTokenType } from '../../config/types';
 import { DevEnvGuard } from '../../guards/dev-env.guard';
 import { IdentityDidRevokeDto } from './dtos/identity-did-revoke.dto';
-import { VerificationEmailDto } from './dtos/identity-verification-email.dto';
 import { CaptchaGuard } from '../../guards/captcha.guard';
 
 @Controller('identity')
@@ -62,7 +61,8 @@ export class IdentityController {
 
   @Post('verification/email')
   @Validation({ dto: VerificationEmailDto })
-  @UseGuards(ValidationGuard, CaptchaGuard)
+  // TODO: Temp disable for TESTING - CaptchaGuard. 9.3.2023
+  @UseGuards(ValidationGuard)
   async identityVerification(
     @Ctx() context: AuthenticationApiContext,
     @Body() body: any,

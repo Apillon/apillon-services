@@ -277,7 +277,7 @@ async function initDevConsoleTestSeed() {
   try {
     env.APP_ENV = AppEnvironment.TEST;
 
-    const poolConfig: ConnectionOptions = {
+    const devConsoleConfig: ConnectionOptions = {
       host: env.DEV_CONSOLE_API_MYSQL_HOST_TEST,
       database: env.DEV_CONSOLE_API_MYSQL_DATABASE_TEST,
       password: env.DEV_CONSOLE_API_MYSQL_PASSWORD_TEST,
@@ -287,11 +287,11 @@ async function initDevConsoleTestSeed() {
       connectionLimit: 1,
     };
 
-    if (!/(test|testing)/i.test(poolConfig.database)) {
-      throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
+    if (!/(test|testing)/i.test(devConsoleConfig.database)) {
+      throw new Error(`DEV-CONSOLE: NO TEST DATABASE!`);
     }
 
-    const pool = createPool(poolConfig);
+    const pool = createPool(devConsoleConfig);
 
     dbConsoleSeed = new Migration({
       conn: pool as unknown as MigrationConnection,
@@ -311,7 +311,7 @@ async function initStorageTestMigrations() {
   try {
     env.APP_ENV = AppEnvironment.TEST;
 
-    const poolConfig: ConnectionOptions = {
+    const storageConfig: ConnectionOptions = {
       host: env.STORAGE_MYSQL_HOST_TEST,
       database: env.STORAGE_MYSQL_DATABASE_TEST,
       password: env.STORAGE_MYSQL_PASSWORD_TEST,
@@ -321,11 +321,11 @@ async function initStorageTestMigrations() {
       connectionLimit: 1,
     };
 
-    if (!/(test|testing)/i.test(poolConfig.database)) {
-      throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
+    if (!/(test|testing)/i.test(storageConfig.database)) {
+      throw new Error(`STORAGE: NO TEST DATABASE!`);
     }
 
-    const pool = createPool(poolConfig);
+    const pool = createPool(storageConfig);
 
     dbStorageMigration = new Migration({
       conn: pool as unknown as MigrationConnection,
@@ -385,7 +385,7 @@ async function initConfigTestMigrations() {
     };
 
     if (!/(test|testing)/i.test(poolConfig.database)) {
-      throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
+      throw new Error(`CONFIG: NO TEST DATABASE!`);
     }
 
     const pool = createPool(poolConfig);
@@ -418,7 +418,7 @@ async function initReferralTestMigrations() {
   };
 
   if (!/(test|testing)/i.test(poolReferral.database)) {
-    throw new Error('!!! NOT TEST DATABASE? !!!');
+    throw new Error(`REFERRAL: NO TEST DATABASE!`);
   }
 
   const pool = createPool(poolReferral);
@@ -437,7 +437,7 @@ async function initAmsTestSeed() {
   try {
     env.APP_ENV = AppEnvironment.TEST;
 
-    const poolConfig: ConnectionOptions = {
+    const poolAccess: ConnectionOptions = {
       host: env.ACCESS_MYSQL_HOST_TEST,
       database: env.ACCESS_MYSQL_DATABASE_TEST,
       password: env.ACCESS_MYSQL_PASSWORD_TEST,
@@ -447,11 +447,11 @@ async function initAmsTestSeed() {
       connectionLimit: 1,
     };
 
-    if (!/(test|testing)/i.test(poolConfig.database)) {
-      throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
+    if (!/(test|testing)/i.test(poolAccess.database)) {
+      throw new Error(`AMS: NO TEST DATABASE!`);
     }
 
-    const pool = createPool(poolConfig);
+    const pool = createPool(poolAccess);
 
     dbAmsSeed = new Migration({
       conn: pool as unknown as MigrationConnection,
@@ -482,7 +482,7 @@ async function initConfigTestSeed() {
     };
 
     if (!/(test|testing)/i.test(poolConfig.database)) {
-      throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
+      throw new Error(`CONFIG: NO TEST DATABASE!`);
     }
 
     const pool = createPool(poolConfig);
@@ -516,7 +516,7 @@ async function initAuthApiTestMigrations() {
     };
 
     if (!/(test|testing)/i.test(poolAuthApi.database)) {
-      throw new Error('!!! NOT TEST DATABASE? !!!');
+      throw new Error(`AUTH-API: NO TEST DATABASE!`);
     }
 
     const pool = createPool(poolAuthApi);
@@ -524,7 +524,7 @@ async function initAuthApiTestMigrations() {
     dbAuthApiMigration = new Migration({
       conn: pool as unknown as MigrationConnection,
       tableName: 'migrations',
-      dir: '../../modules/authentication-api/src/migration-scripts/migrations/',
+      dir: '../../services/authentication/src/migration-scripts/migrations/',
       silent: env.APP_ENV === AppEnvironment.TEST,
     });
 

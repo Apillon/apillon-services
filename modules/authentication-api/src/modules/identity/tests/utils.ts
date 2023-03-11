@@ -10,11 +10,11 @@ import {
   Credential,
 } from '@kiltprotocol/sdk-js';
 import { generateJwtToken } from '@apillon/lib';
-import { generateKeypairs } from '../../../lib/kilt';
+import { generateKeypairs } from '@apillon/authentication/src/lib/kilt';
 import * as mock from './mock-data';
 import { u8aToHex } from '@polkadot/util';
 
-export const setupDidCreateMock = async () => {
+export async function setupDidCreateMock(): Promise<any> {
   const identityMock = mock.CREATE_IDENTITY_MOCK;
   const didMock = identityMock.did_create_op_data;
   const { keyAgreement } = await generateKeypairs(identityMock.mnemonic);
@@ -54,7 +54,7 @@ export const setupDidCreateMock = async () => {
     claimer_encryption_key: keyAgreement,
     body_mock: bodyMock,
   };
-};
+}
 
 export async function getDidDocument(mnemonic: string) {
   await connect(mock.KILT_NETWORK);

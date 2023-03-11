@@ -146,8 +146,9 @@ export class ProjectService {
       await project.validate();
     } catch (err) {
       await project.handle(err);
-      if (!project.isValid())
+      if (!project.isValid()) {
         throw new ValidationException(project, ValidatorErrorCode);
+      }
     }
 
     await project.update();
