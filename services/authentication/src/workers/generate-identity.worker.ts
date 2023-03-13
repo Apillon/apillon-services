@@ -1,4 +1,4 @@
-import { u8aToHex, hexToU8a } from '@polkadot/util';
+import { u8aToHex, hexToU8a, BN } from '@polkadot/util';
 import {
   connect,
   ConfigService,
@@ -27,6 +27,7 @@ import {
   generateAccount,
   getFullDidDocument,
   createAttestationRequest,
+  getNextNonce,
 } from '../lib/kilt';
 import { env, Lmas, LogType, ServiceName } from '@apillon/lib';
 import { AuthenticationCodeException } from '../lib/exceptions';
@@ -55,7 +56,7 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
 
     // Generate (retrieve) attester did data
     const attesterKeypairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
-    const attesterAccount = (await generateAccount(
+    const attesterAcc = (await generateAccount(
       env.KILT_ATTESTER_MNEMONIC,
     )) as KiltKeyringPair;
 
@@ -123,12 +124,12 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
             service: ServiceName.AUTHENTICATION_API,
           });
 
-          await Blockchain.signAndSubmitTx(fullDidCreationTx, attesterAccount);
+          await Blockchain.signAndSubmitTx(fullDidCreationTx, attesterAcc);
         } catch (error) {
           if (error.method == 'DidAlreadyPresent') {
             // If DID present on chain, signAndSubmitTx will throw an error
             await new Lmas().writeLog({
-              logType: LogType.INFO, //!! This is not an error !!
+              logType: LogType.INFO, //!! This is NOT an error !!
               message: `${error.method}: ${error.docs[0]}`,
               location: 'Authentication-API/identity/authentication.worker',
               service: ServiceName.AUTHENTICATION_API,
@@ -153,7 +154,7 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
     }
 
     // Prepare identity instance and credential structure
-    const { attestationInstance, credential } = createAttestationRequest(
+    const { attestationRequest, credential } = createAttestationRequest(
       claimerEmail,
       attesterDidUri,
       claimerDidUri,
@@ -161,12 +162,12 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
     );
 
     const attestation = api.tx.attestation.add(
-      attestationInstance.claimHash,
-      attestationInstance.cTypeHash,
+      attestationRequest.claimHash,
+      attestationRequest.cTypeHash,
       null,
     );
 
-    // const nextNonceBN = new BN(await getNextNonce(attesterDidUri));
+    const nextNonce = new BN(await getNextNonce(attesterDidUri));
 
     // Prepare claim TX
     const emailClaimTx = await Did.authorizeTx(
@@ -176,11 +177,12 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
         signature: attesterKeypairs.assertionMethod.sign(data),
         keyType: attesterKeypairs.assertionMethod.type,
       }),
-      attesterAccount.address,
+      attesterAcc.address,
+      { txCounter: nextNonce },
     );
 
     try {
-      await Blockchain.signAndSubmitTx(emailClaimTx, attesterAccount);
+      await Blockchain.signAndSubmitTx(emailClaimTx, attesterAcc);
       const emailAttested = Boolean(
         await api.query.attestation.attestations(credential.rootHash),
       );
@@ -188,7 +190,7 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
       await new Lmas().writeLog({
         logType: LogType.INFO,
         message:
-          `Email ${claimerEmail} identity => ` + emailAttested
+          `Attestation for ${claimerEmail} => ` + emailAttested
             ? 'SUCCESS'
             : 'FALSE',
         location: 'AUTHENTICATION-API/identity/authentication.worker',

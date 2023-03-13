@@ -53,7 +53,7 @@ export class IdentityRevokeWorker extends BaseQueueWorker {
 
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
-    // This is the attester account, used elsewhere in the code
+    // This is the attesterAcc, used elsewhere in the code
     const depositPayerAccount = (await generateAccount(
       env.KILT_ATTESTER_MNEMONIC,
     )) as KiltKeyringPair;

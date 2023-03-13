@@ -467,7 +467,7 @@ export class IdentityMicroservice {
 
       const credentialSubject = {
         id: didUri,
-        origin: 'http://localhost:5173',
+        origin: event.body.domain_linkage.origin,
         rootHash: domainLinkageCredential.rootHash,
       };
 

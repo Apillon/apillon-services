@@ -285,7 +285,7 @@ export class SporranMicroservice {
     ) {
       console.log('Starting DEV IdentityRevokeWorker worker ...');
 
-      // Directly calls Kilt worker -> USED ONLY FOR DEVELOPMENT!!
+      // Directly calls Identity worker -> USED ONLY FOR DEVELOPMENT!!
       const serviceDef: ServiceDefinition = {
         type: ServiceDefinitionType.SQS,
         config: { region: 'test' },
@@ -323,7 +323,6 @@ export class SporranMicroservice {
     );
 
     const attestObj = Attestation.fromCredentialAndDid(
-      // TODO: Should be a json attribute
       JSON.parse(identity.credential) as ICredential,
       verifierDidUri,
     );
@@ -387,6 +386,7 @@ export class SporranMicroservice {
               // NOTE: Hash of the email ctype
               cTypeHash:
                 '0x3291bb126e33b4862d421bfaa1d2f272e6cdfc4f96658988fbcffea8914bd9ac',
+              // Here we specify which properties of the cType are *required
               requiredProperties: ['Email'],
             },
           ],
