@@ -91,6 +91,12 @@ export class CreateCollectionDTO extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    setter(value: string) {
+      if (value && value.length > 0) {
+        value = (value.startsWith('.') ? '' : '.') + value;
+      }
+      return value;
+    },
     validators: [
       {
         resolver: presenceValidator(),

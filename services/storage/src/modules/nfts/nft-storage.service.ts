@@ -202,7 +202,8 @@ export class NftStorageService {
     //#region
 
     return {
-      baseUri: env.STORAGE_IPFS_GATEWAY.replace('/ipfs/', '/ipns/') + ipns.name,
+      baseUri:
+        env.STORAGE_IPFS_GATEWAY.replace('/ipfs/', '/ipns/') + ipns.name + '/',
     };
   }
 }
