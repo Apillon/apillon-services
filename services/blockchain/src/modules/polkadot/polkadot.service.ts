@@ -26,7 +26,6 @@ export class PolkadotService {
       _event.chain,
     );
     const provider = new WsProvider(endpoint.url);
-    let api = null;
 
     // Start connection to database at the beginning of the function
     const conn = await context.mysql.start();
@@ -64,7 +63,8 @@ export class PolkadotService {
         }
       }
 
-      api = await ApiPromise.create({
+      // TODO: Refactor to txwrapper when typesBundle supported
+      const api = await ApiPromise.create({
         provider,
         typesBundle, // TODO: add
       });
