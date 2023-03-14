@@ -194,4 +194,30 @@ export class AWS_S3 {
 
     return true;
   }
+
+  /**
+   * Fetch all files with specific key prefix ("directory") and deletes them
+   * @param bucket
+   * @param directory key prefix
+   * @returns
+   */
+  async removeDirectory(bucket: string, directory: string): Promise<boolean> {
+    let files: ListObjectsV2Output = undefined;
+    do {
+      files = await this.listFiles(bucket, directory);
+      if (files.KeyCount > 0) {
+        const command = new DeleteObjectsCommand({
+          Bucket: bucket,
+          Delete: {
+            Objects: files.Contents.map((x) => ({
+              Key: x.Key,
+            })),
+          },
+        });
+        await this.s3Client.send(command);
+      }
+    } while (files.KeyCount > 0);
+
+    return true;
+  }
 }

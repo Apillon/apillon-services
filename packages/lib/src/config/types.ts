@@ -73,6 +73,7 @@ export enum StorageEventType {
   BUCKET_CLEAR_CONTENT = 'clear-bucket-content',
   DEPLOYMENT_GET = 'get-deployment',
   DEPLOYMENT_LIST = 'list-deployment',
+  PREPARE_COLLECTION_METADATA = 'prepare-collection-metadata',
 }
 
 export enum AuthenticationEventType {
@@ -102,7 +103,7 @@ export enum ScsEventType {
 
 export enum NftsEventType {
   HELLO = 'hello',
-  DEPLOY_NFT = 'deploy-nft',
+  CREATE_COLLECTION = 'create-collection',
   NFT_COLLECTIONS_LIST = 'list-nft-collections',
   GET_NFT_COLLECTION = 'get-nft-collection',
   TRANSFER_OWNERSHIP = 'transfer-ownership',
@@ -110,6 +111,7 @@ export enum NftsEventType {
   SET_BASE_URI = 'set-base-uri',
   CHECK_TRANSACTION_STATUS = 'check-transaction-status',
   NFT_COLLECTION_TRANSACTION_LIST = 'list-collection-transactions',
+  DEPLOY_COLLECTION = 'deploy-collection',
 }
 
 export enum ReferralEventType {
@@ -404,6 +406,8 @@ export enum ValidatorErrorCode {
   DEPLOY_ENVIRONMENT_NOT_PRESENT = 42200039,
   FILES_PROPERTY_NOT_PRESENT = 42200040,
   FILES_PROPERTY_EMPTY = 42200041,
+  PREPARE_AND_DEPLOY_COLLECTION_IMAGE_SESSION_NOT_PRESENT = 42200042,
+  PREPARE_AND_DEPLOY_COLLECTION_METADATA_SESSION_NOT_PRESENT = 42200043,
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,
   USER_EMAIL_NOT_PRESENT = 42200702,

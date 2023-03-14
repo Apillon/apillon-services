@@ -79,6 +79,7 @@ export class BucketService {
 
     //check max bucket quota
     if (
+      b.bucketType == BucketType.STORAGE &&
       (
         await BucketService.maxBucketsQuotaReached(
           {

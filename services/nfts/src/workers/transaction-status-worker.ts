@@ -1,4 +1,11 @@
-import { AppEnvironment, Context, env, SqlModelStatus } from '@apillon/lib';
+import {
+  AppEnvironment,
+  Context,
+  env,
+  LogType,
+  SqlModelStatus,
+  writeLog,
+} from '@apillon/lib';
 import { Job, ServerlessWorker, WorkerDefinition } from '@apillon/workers-lib';
 import {
   CollectionStatus,
@@ -37,18 +44,27 @@ export class TransactionStatusWorker extends ServerlessWorker {
       const txReceipt = await walletService.getTransactionByHash(
         tx.transactionHash,
       );
-      console.log(
-        `Checking transaction (txId = ${tx.id}, txHash = ${txReceipt.transactionHash}, confirmations = ${txReceipt.confirmations})`,
-      );
-      const isConfirmed: boolean = await walletService.isTransacionConfirmed(
-        txReceipt,
-      );
+      if (txReceipt) {
+        console.log(
+          `Checking transaction (txId = ${tx.id}, txHash = ${txReceipt.transactionHash}, confirmations = ${txReceipt.confirmations})`,
+        );
+        const isConfirmed: boolean = await walletService.isTransacionConfirmed(
+          txReceipt,
+        );
 
-      if (isConfirmed) {
-        // Update transaction status based on blockchain data - txRecepit
-        await this.updateTransactionStatus(tx, txReceipt);
-        // Update NFT collection with contractAddress
-        await this.updateCollectionStatus(tx, txReceipt);
+        if (isConfirmed) {
+          // Update transaction status based on blockchain data - txRecepit
+          await this.updateTransactionStatus(tx, txReceipt);
+          // Update NFT collection with contractAddress
+          await this.updateCollectionStatus(tx, txReceipt);
+        }
+      } else {
+        writeLog(
+          LogType.ERROR,
+          'Transaction not found by transactionHash',
+          'transaction-status-worker.ts',
+          'TransactionStatusWorker.execute()',
+        );
       }
     }
   }

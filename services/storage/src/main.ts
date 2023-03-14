@@ -4,6 +4,7 @@ import { BucketService } from './modules/bucket/bucket.service';
 import { DirectoryService } from './modules/directory/directory.service';
 import { HostingService } from './modules/hosting/hosting.service';
 import { IpnsService } from './modules/ipns/ipns.service';
+import { NftStorageService } from './modules/nfts/nft-storage.service';
 import { StorageService } from './modules/storage/storage.service';
 
 export async function processEvent(event, context: Context): Promise<any> {
@@ -64,6 +65,9 @@ export async function processEvent(event, context: Context): Promise<any> {
 
     [StorageEventType.DEPLOYMENT_GET]: HostingService.getDeployment,
     [StorageEventType.DEPLOYMENT_LIST]: HostingService.listDeployments,
+
+    [StorageEventType.PREPARE_COLLECTION_METADATA]:
+      NftStorageService.prepareMetadataForCollection,
   };
 
   return await processors[event.eventName](event, context);

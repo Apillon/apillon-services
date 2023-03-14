@@ -122,6 +122,7 @@ export enum FileUploadRequestFileStatus {
 export enum BucketType {
   STORAGE = 1,
   HOSTING = 2,
+  NFT_METADATA = 3,
 }
 
 export enum FileStatus {
