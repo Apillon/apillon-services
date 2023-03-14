@@ -6,19 +6,20 @@ export async function upgrade(
   await queryFn(`
     CREATE TABLE IF NOT EXISTS \`${DbTables.TRANSACTION_QUEUE}\` (
     \`id\` INT NOT NULL AUTO_INCREMENT,
+    \`status\` INT NULL,
     \`nonce\` INT NOT NULL,
     \`address\` VARCHAR(50) NOT NULL,
     \`chain\` INT NOT NULL,
-    \`tx_hash\` VARCHAR(500) NOT NULL,
-    \`raw_transaction\` VARCHAR(1000) NOT NULL,
-    \`reference_table\` VARCHAR (50) NULL,
-    \`reference_id\` INT NULL,
+    \`transactionHash\` VARCHAR(500) NOT NULL,
+    \`rawTransaction\` VARCHAR(1000) NOT NULL,
+    \`referenceTable\` VARCHAR (50) NULL,
+    \`referenceId\` INT NULL,
     \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
     \`createUser\` INT NULL,
     \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     \`updateUser\` INT NULL,
     PRIMARY KEY (\`id\`),
-    UNIQUE INDEX \`address_chain\` (\`tx_hash\`,\`chain\`)
+    UNIQUE INDEX \`address_chain\` (\`transactionHash\`,\`chain\`)
   );
   `);
 }

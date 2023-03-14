@@ -8,7 +8,7 @@ export async function processEvent(
 ): Promise<any> {
   const processors = {
     [BlockchainEventType.SIGN_POLKADOT_TRANSACTION]:
-      PolkadotService.signTransaction,
+      PolkadotService.sendTransaction,
   };
 
   return await processors[event.eventName](event, context);

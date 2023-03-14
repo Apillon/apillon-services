@@ -91,7 +91,7 @@ export class Wallet extends AdvancedSQLModel {
   public seed: string;
 
   /**
-   * next_nonce
+   * nextNonce
    */
   @prop({
     parser: { resolver: integerParser() },
@@ -104,11 +104,12 @@ export class Wallet extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.SERVICE,
     ],
+    defaultValue: 0,
   })
-  public next_nonce: number;
+  public nextNonce: number;
 
   /**
-   * last_processed_nonce
+   * lastProcessedNonce
    */
   @prop({
     parser: { resolver: integerParser() },
@@ -121,10 +122,10 @@ export class Wallet extends AdvancedSQLModel {
       SerializeFor.SERVICE,
     ],
   })
-  public last_processed_nonce: number;
+  public lastProcessedNonce: number;
 
   /**
-   * usage_timestamp
+   * usageTimestamp
    */
   @prop({
     parser: { resolver: dateParser() },
@@ -138,7 +139,7 @@ export class Wallet extends AdvancedSQLModel {
       SerializeFor.SERVICE,
     ],
   })
-  public usage_timestamp: Date;
+  public usageTimestamp: Date;
 
   /**
    * type
@@ -171,7 +172,7 @@ export class Wallet extends AdvancedSQLModel {
       FROM \`${this.tableName}\`
       WHERE (chain = @chain)
       AND status <> ${SqlModelStatus.DELETED}
-      ORDER BY usage_timestamp ASC
+      ORDER BY usageTimestamp ASC
       LIMIT 1
       FOR UPDATE;
       `,
@@ -203,7 +204,7 @@ export class Wallet extends AdvancedSQLModel {
         chain = @chain
         AND address = @address
         AND status <> ${SqlModelStatus.DELETED}
-      ORDER BY usage_timestamp ASC
+      ORDER BY usageTimestamp ASC
       LIMIT 1
       FOR UPDATE;
       `,
@@ -216,5 +217,19 @@ export class Wallet extends AdvancedSQLModel {
     } else {
       return this.reset();
     }
+  }
+
+  // always iterate inside a transaction
+  public async iterateNonce(conn: PoolConnection) {
+    await this.getContext().mysql.paramExecute(
+      `
+      UPDATE \`${this.tableName}\`
+      SET nextNonce = nextNonce + 1, 
+      usageTimestamp = now()
+      WHERE id = @id;
+      `,
+      { id: this.id },
+      conn,
+    );
   }
 }

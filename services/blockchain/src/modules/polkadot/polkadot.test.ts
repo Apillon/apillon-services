@@ -9,6 +9,8 @@ import {
 import { Endpoint } from '../../common/models/endpoint';
 import { Wallet } from '../../common/models/wallet';
 import { PolkadotService } from './polkadot.service';
+import { typesBundleForPolkadot } from '@crustio/type-definitions';
+import { ApiPromise, WsProvider } from '@polkadot/api';
 
 describe('Polkadot signer unit test', () => {
   let stage: Stage;
@@ -29,7 +31,7 @@ describe('Polkadot signer unit test', () => {
     );
 
     console.log(keypair.address);
-    await new Endpoint(
+    const endpoint = await new Endpoint(
       {
         url: 'wss://rpc-rocky.crust.network',
         chain: Chain.CRUST,
@@ -59,10 +61,32 @@ describe('Polkadot signer unit test', () => {
         chain: Chain.CRUST,
         seed: 'fine circle fiction good shop hand canal approve over canal border mixed',
         address: '5DjjQpgetdaYUN6YyDGNguM1oMMDnNHnVPwgZDWuc29LswBi',
+        nextNonce: 0,
       },
       stage.context,
     ).insert();
-    const res = await PolkadotService.signTransaction(null, stage.context);
+
+    const provider = new WsProvider(endpoint.url);
+    const api = await ApiPromise.create({
+      provider,
+      typesBundle: typesBundleForPolkadot,
+    });
+    const tx = await api.tx.market.placeStorageOrder(
+      'QmUQ6i2Njyktbtvb5vxnzynD9fTrAvYN1qYbSKjudCv8mB',
+      7390,
+      0,
+      '',
+    );
+    const serialize = tx.toHex();
+    console.log(serialize);
+
+    const res = await PolkadotService.sendTransaction(
+      { transaction: serialize, chain: Chain.CRUST },
+      stage.context,
+    );
+    // const id = 124392353;
+
+    // PolkadotService.getTransactionStatus({ id }, stage.context);
     console.log('res: ', res);
   });
 });
