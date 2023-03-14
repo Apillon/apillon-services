@@ -136,6 +136,7 @@ export enum ServiceName {
   AUTHENTICATION_API = 'AUTHENTICATION_API',
   NFTS = 'NFTS',
   REFERRAL = 'REFERRAL',
+  BLOCKCHAIN = 'BLOCKCHAIN',
 }
 
 export enum ServiceCode {
@@ -152,6 +153,7 @@ export enum ServiceCode {
   CONFIG = '10',
   REFERRAL = '11',
   NFTS = '12',
+  BLOCKCHAIN = '13',
 }
 
 export enum AppEnvironment {
