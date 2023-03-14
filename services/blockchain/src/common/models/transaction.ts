@@ -3,6 +3,7 @@ import {
   AdvancedSQLModel,
   Chain,
   Context,
+  PoolConnection,
   PopulateFrom,
   prop,
   SerializeFor,
@@ -130,4 +131,24 @@ export class Transaction extends AdvancedSQLModel {
     ],
   })
   public rawTransaction: string;
+
+  public async getList(
+    chain: Chain,
+    address: string,
+    nonce: number,
+    conn?: PoolConnection,
+  ) {
+    return await this.getContext().mysql.paramExecute(
+      `
+      SELECT *
+      FROM \`${this.tableName}\`
+      WHERE chain = @chain
+      AND address = @address
+      AND nonce > @nonce
+      order by nonce ASC;
+      `,
+      { chain, address, nonce },
+      conn,
+    );
+  }
 }

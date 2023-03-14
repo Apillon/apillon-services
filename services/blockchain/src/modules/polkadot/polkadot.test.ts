@@ -47,6 +47,17 @@ describe('Polkadot signer unit test', () => {
       },
       stage.context,
     ).insert();
+
+    const provider = new WsProvider(endpoint.url);
+    const api = await ApiPromise.create({
+      provider,
+      typesBundle: typesBundleForPolkadot,
+    });
+
+    const nonce = await api.rpc.system.accountNextIndex(
+      '5DjjQpgetdaYUN6YyDGNguM1oMMDnNHnVPwgZDWuc29LswBi',
+    );
+    console.log('NONCE: ', nonce);
     await new Wallet(
       {
         chain: Chain.KILT,
@@ -61,16 +72,11 @@ describe('Polkadot signer unit test', () => {
         chain: Chain.CRUST,
         seed: 'fine circle fiction good shop hand canal approve over canal border mixed',
         address: '5DjjQpgetdaYUN6YyDGNguM1oMMDnNHnVPwgZDWuc29LswBi',
-        nextNonce: 0,
+        nextNonce: nonce.toNumber(),
       },
       stage.context,
     ).insert();
 
-    const provider = new WsProvider(endpoint.url);
-    const api = await ApiPromise.create({
-      provider,
-      typesBundle: typesBundleForPolkadot,
-    });
     const tx = await api.tx.market.placeStorageOrder(
       'QmUQ6i2Njyktbtvb5vxnzynD9fTrAvYN1qYbSKjudCv8mB',
       7390,
@@ -80,7 +86,7 @@ describe('Polkadot signer unit test', () => {
     const serialize = tx.toHex();
     console.log(serialize);
 
-    const res = await PolkadotService.sendTransaction(
+    const res = await PolkadotService.createTransaction(
       { transaction: serialize, chain: Chain.CRUST },
       stage.context,
     );
@@ -88,5 +94,11 @@ describe('Polkadot signer unit test', () => {
 
     // PolkadotService.getTransactionStatus({ id }, stage.context);
     console.log('res: ', res);
+
+    const res2 = await PolkadotService.transmitTransactions(
+      { chain: Chain.CRUST },
+      stage.context,
+    );
+    console.log('res2: ', res2);
   });
 });

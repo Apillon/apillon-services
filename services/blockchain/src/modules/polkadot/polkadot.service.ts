@@ -10,7 +10,7 @@ import { Transaction } from '../../common/models/transaction';
 import { typesBundleForPolkadot } from '@crustio/type-definitions';
 
 export class PolkadotService {
-  static async sendTransaction(
+  static async createTransaction(
     _event: {
       transaction: string;
       chain: Chain;
@@ -107,7 +107,7 @@ export class PolkadotService {
       await new Lmas().writeLog({
         logType: LogType.INFO,
         message: 'Transaction signed',
-        location: 'PolkadotService.sendTransaction',
+        location: 'PolkadotService.createTransaction',
         service: ServiceName.BLOCKCHAIN,
         data: {
           transaction: _event.transaction,
@@ -123,8 +123,8 @@ export class PolkadotService {
       //Write log to LMAS
       await new Lmas().writeLog({
         logType: LogType.ERROR,
-        message: 'Error transmiting transaction',
-        location: 'PolkadotService.sendTransaction',
+        message: 'Error creating transaction',
+        location: 'PolkadotService.createTransaction',
         service: ServiceName.BLOCKCHAIN,
         data: {
           error: e,
@@ -157,6 +157,94 @@ export class PolkadotService {
       }
     }
      */
+  }
+
+  /**
+   * @dev Ensure that only once instance of this method is running at the same time.
+   * @param _event chain for which we should process transaction
+   * @param context Service context
+   */
+  static async transmitTransactions(
+    _event: {
+      chain: Chain;
+      address?: string;
+    },
+    context: ServiceContext,
+  ) {
+    const wallets = await new Wallet({}, context).getList(
+      _event.chain,
+      _event.address,
+    );
+    const endpoint = await new Endpoint({}, context).populateByChain(
+      _event.chain,
+    );
+    const provider = new WsProvider(endpoint.url);
+    let typesBundle = null;
+    switch (_event.chain) {
+      case Chain.KILT: {
+        break;
+      }
+      case Chain.CRUST: {
+        typesBundle = typesBundleForPolkadot;
+        break;
+      }
+      default: {
+        break;
+      }
+    }
+
+    // TODO: Refactor to txwrapper when typesBundle supported
+    const api = await ApiPromise.create({
+      provider,
+      typesBundle, // TODO: add
+    });
+
+    for (let i = 0; i < wallets.length; i++) {
+      const transactions = await new Transaction({}, context).getList(
+        _event.chain,
+        wallets[i].address,
+        wallets[i].lastProcessedNonce,
+      );
+      let latestSuccess = null;
+      try {
+        for (let j = 0; j < transactions.length; j++) {
+          const signedTx = api.tx(transactions[j].rawTransaction);
+          console.log('SENDING TRANSACTION');
+          const timestamp = new Date();
+          const txHash = await signedTx.send();
+
+          // (({ status }) => {
+          //   console.log('STATUS: ', status);
+          //   if (status.isInBlock) {
+          //     console.log(`included in ${status.asInBlock}`);
+          //   }
+          // });
+          console.log(
+            'Duration: ',
+            (new Date().getTime() - timestamp.getTime()) / 1000,
+            's',
+          );
+          console.log('txHash: ', txHash.toHuman());
+          // await signedTx.send();
+          latestSuccess = transactions[j].nonce;
+        }
+      } catch (e) {
+        await new Lmas().writeLog({
+          logType: LogType.ERROR,
+          message: 'Error transmiting transaction',
+          location: 'PolkadotService.transmitTransactions',
+          service: ServiceName.BLOCKCHAIN,
+          data: {
+            error: e,
+            wallet: wallets[i].address,
+          },
+        });
+        break;
+      }
+      const wallet = new Wallet(wallets[i], context);
+      wallet.populate({ lastProcessedNonce: latestSuccess });
+      await wallet.update();
+    }
   }
   //#region
 }

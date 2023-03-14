@@ -50,6 +50,7 @@ export enum BlockchainErrorCode {
   ERROR_WRITING_TO_DATABASE = 50013001,
   ERROR_READING_FROM_DATABASE = 50013002,
   ERROR_GENERATING_TRANSACTION = 50013003,
+  ERROR_TRANSMITING_TRANSACTION = 50013004,
 }
 
 //#region SQL stuff - TODO: Should be streamlined? This is part of the SQL lib, not access

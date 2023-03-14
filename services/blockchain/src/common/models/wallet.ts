@@ -121,6 +121,7 @@ export class Wallet extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
     ],
+    defaultValue: -1,
   })
   public lastProcessedNonce: number;
 
@@ -229,6 +230,19 @@ export class Wallet extends AdvancedSQLModel {
       WHERE id = @id;
       `,
       { id: this.id },
+      conn,
+    );
+  }
+
+  public async getList(chain: Chain, address?: string, conn?: PoolConnection) {
+    return await this.getContext().mysql.paramExecute(
+      `
+      SELECT *
+      FROM \`${this.tableName}\`
+      WHERE chain = @chain
+      AND (@address IS NULL OR address = @address);
+      `,
+      { chain, address: address || null },
       conn,
     );
   }
