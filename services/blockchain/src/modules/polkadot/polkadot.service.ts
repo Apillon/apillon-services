@@ -141,22 +141,6 @@ export class PolkadotService {
         status: 500,
       });
     }
-
-    // const signedTx = api.tx(signedSerialized);
-    // console.log('Signed: ', signedTx);
-    // console.log('Signed: ', signedTx.toJSON());
-    // console.log('Signed: ', signedTx.toHex());
-    // console.log('hash: ', signedTx.hash.toHuman());
-
-    // await signedTx.send();
-    /**
-     * (({ status }) => {
-      console.log(status);
-      if (status.isInBlock) {
-        console.log(`included in ${status.asInBlock}`);
-      }
-    }
-     */
   }
 
   /**
@@ -196,7 +180,7 @@ export class PolkadotService {
     // TODO: Refactor to txwrapper when typesBundle supported
     const api = await ApiPromise.create({
       provider,
-      typesBundle, // TODO: add
+      typesBundle,
     });
 
     for (let i = 0; i < wallets.length; i++) {
@@ -209,23 +193,7 @@ export class PolkadotService {
       try {
         for (let j = 0; j < transactions.length; j++) {
           const signedTx = api.tx(transactions[j].rawTransaction);
-          console.log('SENDING TRANSACTION');
-          const timestamp = new Date();
-          const txHash = await signedTx.send();
-
-          // (({ status }) => {
-          //   console.log('STATUS: ', status);
-          //   if (status.isInBlock) {
-          //     console.log(`included in ${status.asInBlock}`);
-          //   }
-          // });
-          console.log(
-            'Duration: ',
-            (new Date().getTime() - timestamp.getTime()) / 1000,
-            's',
-          );
-          console.log('txHash: ', txHash.toHuman());
-          // await signedTx.send();
+          await signedTx.send();
           latestSuccess = transactions[j].nonce;
         }
       } catch (e) {
