@@ -26,7 +26,7 @@ export class IdentityController {
     return await this.identityService.generateIdentity(context, body);
   }
 
-  @Get('generate/query/state')
+  @Get('generate/state/query')
   @Validation({ dto: AttestationEmailDto, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard)
   async attestationGetIdentityState(
