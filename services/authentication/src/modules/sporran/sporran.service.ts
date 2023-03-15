@@ -183,8 +183,7 @@ export class SporranMicroservice {
 
     const partialClaim: PartialClaim = {
       // TODO: Move hash to types - constants
-      cTypeHash:
-        '0x3291bb126e33b4862d421bfaa1d2f272e6cdfc4f96658988fbcffea8914bd9ac' as HexString,
+      cTypeHash: getCtypeSchema(ApillonSupportedCTypes.EMAIL).$id as HexString,
       contents: emailContents,
     };
 
@@ -285,7 +284,7 @@ export class SporranMicroservice {
     ) {
       console.log('Starting DEV IdentityRevokeWorker worker ...');
 
-      // Directly calls Kilt worker -> USED ONLY FOR DEVELOPMENT!!
+      // Directly calls Identity worker -> USED ONLY FOR DEVELOPMENT!!
       const serviceDef: ServiceDefinition = {
         type: ServiceDefinitionType.SQS,
         config: { region: 'test' },
@@ -323,7 +322,6 @@ export class SporranMicroservice {
     );
 
     const attestObj = Attestation.fromCredentialAndDid(
-      // TODO: Should be a json attribute
       JSON.parse(identity.credential) as ICredential,
       verifierDidUri,
     );
@@ -333,8 +331,7 @@ export class SporranMicroservice {
     const attestation = {
       delegationId: null,
       claimHash: credential.rootHash,
-      cTypeHash:
-        '0x3291bb126e33b4862d421bfaa1d2f272e6cdfc4f96658988fbcffea8914bd9ac' as HexString,
+      cTypeHash: getCtypeSchema(ApillonSupportedCTypes.EMAIL).$id as HexString,
       owner: attestObj.owner,
       revoked: false,
     };
@@ -383,10 +380,10 @@ export class SporranMicroservice {
         content: {
           cTypes: [
             {
-              // TODO: MOVE TO kilt.getCtypeSchema!!!!!
               // NOTE: Hash of the email ctype
-              cTypeHash:
-                '0x3291bb126e33b4862d421bfaa1d2f272e6cdfc4f96658988fbcffea8914bd9ac',
+              cTypeHash: getCtypeSchema(ApillonSupportedCTypes.EMAIL)
+                .$id as HexString,
+              // Here we specify which properties of the cType are *required
               requiredProperties: ['Email'],
             },
           ],

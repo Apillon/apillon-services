@@ -45,7 +45,11 @@ export function generateMnemonic() {
   return mnemonicGenerate();
 }
 
-// This function basically creates a keyring from a mnemonic
+// This function basically creates a keyring - wallet, from a mnemonic
+// The MNEMONIC is a MASTER KEY - it unlocks all the other UTILITY KEYS
+// The utility keys are bound to the master key (the wallet or the account)
+// The mnemonic can't be changed. Once lost, it cannot be retrieved.
+// The utility keys can be replaced if compromised - using the master key
 export function generateAccount(mnemonic: string) {
   const signingKeyPairType = 'sr25519';
   const keyring = new Utils.Keyring({
@@ -57,13 +61,13 @@ export function generateAccount(mnemonic: string) {
 
 export async function generateKeypairs(mnemonic: string) {
   const account = generateAccount(mnemonic);
-  // Authenticate presentations
+  // Authenticates the DID owner
   const authentication = {
     ...account.derive('//did//0'),
     type: 'sr25519',
   } as KiltKeyringPair;
 
-  // Key used to attest transacations
+  // Key used to sign transactions
   const assertionMethod = {
     ...account.derive('//did//assertion//0'),
     type: 'sr25519',
@@ -138,7 +142,7 @@ export function createAttestationRequest(
   }
 
   return {
-    attestationInstance: Attestation.fromCredentialAndDid(
+    attestationRequest: Attestation.fromCredentialAndDid(
       authCredential,
       attesterDidUri,
     ),
