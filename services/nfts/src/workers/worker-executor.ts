@@ -1,5 +1,6 @@
 import { AppEnvironment, getEnvSecrets, MySql } from '@apillon/lib';
 import {
+  QueueWorkerType,
   ServiceDefinition,
   ServiceDefinitionType,
   WorkerDefinition,
@@ -10,6 +11,7 @@ import {
 import { Context, env } from '@apillon/lib';
 import { Scheduler } from './scheduler';
 import { TransactionStatusWorker } from './transaction-status-worker';
+import { DeployCollectionWorker } from './deploy-collection-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -110,6 +112,14 @@ export async function handleLambdaEvent(
         context,
       );
       await txStatusWorker.run();
+      break;
+    case WorkerName.DEPLOY_COLLECTION:
+      const deployCollectionWorker = new DeployCollectionWorker(
+        workerDefinition,
+        context,
+        QueueWorkerType.EXECUTOR,
+      );
+      await deployCollectionWorker.run();
       break;
     default:
       console.log(
