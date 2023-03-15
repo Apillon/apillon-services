@@ -113,14 +113,6 @@ export async function handleLambdaEvent(
       );
       await txStatusWorker.run();
       break;
-    case WorkerName.DEPLOY_COLLECTION:
-      const deployCollectionWorker = new DeployCollectionWorker(
-        workerDefinition,
-        context,
-        QueueWorkerType.EXECUTOR,
-      );
-      await deployCollectionWorker.run();
-      break;
     default:
       console.log(
         `ERROR - INVALID WORKER NAME: ${workerDefinition.workerName}`,
@@ -174,8 +166,8 @@ export async function handleSqsMessages(
 
     // eslint-disable-next-line sonarjs/no-small-switch
     switch (workerName) {
-      /*case WorkerName.SYNC_TO_IPFS_WORKER: {
-        await new SyncToIPFSWorker(
+      case WorkerName.DEPLOY_COLLECTION: {
+        await new DeployCollectionWorker(
           workerDefinition,
           context,
           QueueWorkerType.EXECUTOR,
@@ -183,7 +175,7 @@ export async function handleSqsMessages(
           executeArg: message?.body,
         });
         break;
-      }*/
+      }
       default:
         console.log(
           `ERROR - INVALID WORKER NAME: ${message?.messageAttributes?.workerName}`,
