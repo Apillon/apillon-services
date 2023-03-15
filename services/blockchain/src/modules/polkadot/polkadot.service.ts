@@ -117,7 +117,7 @@ export class PolkadotService {
           referenceId: _event.referenceId,
         },
       });
-
+      // TODO: push queue message to worker to transmit
       return transaction.serialize(SerializeFor.PROFILE);
     } catch (e) {
       //Write log to LMAS
@@ -145,6 +145,7 @@ export class PolkadotService {
 
   /**
    * @dev Ensure that only once instance of this method is running at the same time.
+   * Should be called from worker
    * @param _event chain for which we should process transaction
    * @param context Service context
    */
@@ -213,6 +214,7 @@ export class PolkadotService {
       wallet.populate({ lastProcessedNonce: latestSuccess });
       await wallet.update();
     }
+    // TODO: call transaction checker
   }
   //#region
 }
