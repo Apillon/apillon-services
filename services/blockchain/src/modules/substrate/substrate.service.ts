@@ -2,19 +2,26 @@ import { ServiceContext } from '../../context';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Keyring } from '@polkadot/keyring';
 import { Wallet } from '../../common/models/wallet';
-import { Chain, Lmas, LogType, SerializeFor, ServiceName } from '@apillon/lib';
+import {
+  SubstrateChain,
+  ChainType,
+  Lmas,
+  LogType,
+  SerializeFor,
+  ServiceName,
+} from '@apillon/lib';
 import { Endpoint } from '../../common/models/endpoint';
 import { BlockchainErrorCode } from '../../config/types';
 import { BlockchainCodeException } from '../../lib/exceptions';
 import { Transaction } from '../../common/models/transaction';
 import { typesBundleForPolkadot } from '@crustio/type-definitions';
 
-export class PolkadotService {
+export class SubstrateService {
   static async createTransaction(
     _event: {
       transaction: string;
-      chain: Chain;
-      address?: string;
+      chain: SubstrateChain;
+      fromAddress?: string;
       referenceTable?: string;
       referenceId?: string;
     },
@@ -24,7 +31,16 @@ export class PolkadotService {
     // TODO: Add logic if endpoint is unavailable to fetch the backup one.
     const endpoint = await new Endpoint({}, context).populateByChain(
       _event.chain,
+      ChainType.SUBSTRATE,
     );
+
+    if (!endpoint.exists()) {
+      throw new BlockchainCodeException({
+        code: BlockchainErrorCode.INVALID_CHAIN,
+        status: 400,
+      });
+    }
+
     const provider = new WsProvider(endpoint.url);
 
     // Start connection to database at the beginning of the function
@@ -34,32 +50,40 @@ export class PolkadotService {
       let wallet = new Wallet({}, context);
 
       // if specific address is specified to be used for this transaction fetch the wallet
-      if (_event.address) {
+      if (_event.fromAddress) {
         wallet = await wallet.populateByAddress(
           _event.chain,
-          _event.address,
+          ChainType.SUBSTRATE,
+          _event.fromAddress,
           conn,
         );
       }
 
       // if address is not specified or not found then get the least used wallet
       if (!wallet.exists()) {
-        wallet = await wallet.populateByLeastUsed(_event.chain, conn);
+        wallet = await wallet.populateByLeastUsed(
+          _event.chain,
+          ChainType.SUBSTRATE,
+          conn,
+        );
       }
 
       let keyring = new Keyring(); // generate privatekey from mnemonic - different for different chains
       let typesBundle = null; // different types for different chains
       switch (_event.chain) {
-        case Chain.KILT: {
+        case SubstrateChain.KILT: {
           keyring = new Keyring({ ss58Format: 38, type: 'sr25519' });
           break;
         }
-        case Chain.CRUST: {
+        case SubstrateChain.CRUST: {
           typesBundle = typesBundleForPolkadot;
           break;
         }
         default: {
-          break;
+          throw new BlockchainCodeException({
+            code: BlockchainErrorCode.INVALID_CHAIN,
+            status: 400,
+          });
         }
       }
 
@@ -87,11 +111,11 @@ export class PolkadotService {
       await wallet.iterateNonce(conn);
 
       const signedSerialized = signed.toHex();
-      signed.hash.toString();
 
       const transaction = new Transaction({}, context);
       transaction.populate({
         chain: _event.chain,
+        chainType: ChainType.SUBSTRATE,
         address: wallet.address,
         nonce: wallet.nextNonce,
         referenceTable: _event.referenceTable,
@@ -107,12 +131,13 @@ export class PolkadotService {
       await new Lmas().writeLog({
         logType: LogType.INFO,
         message: 'Transaction signed',
-        location: 'PolkadotService.createTransaction',
+        location: 'SubstrateService.createTransaction',
         service: ServiceName.BLOCKCHAIN,
         data: {
           transaction: _event.transaction,
+          chainType: ChainType.SUBSTRATE,
           chain: _event.chain,
-          address: _event.address,
+          address: _event.fromAddress,
           referenceTable: _event.referenceTable,
           referenceId: _event.referenceId,
         },
@@ -124,13 +149,14 @@ export class PolkadotService {
       await new Lmas().writeLog({
         logType: LogType.ERROR,
         message: 'Error creating transaction',
-        location: 'PolkadotService.createTransaction',
+        location: 'SubstrateService.createTransaction',
         service: ServiceName.BLOCKCHAIN,
         data: {
           error: e,
           transaction: _event.transaction,
           chain: _event.chain,
-          address: _event.address,
+          chainType: ChainType.SUBSTRATE,
+          address: _event.fromAddress,
           referenceTable: _event.referenceTable,
           referenceId: _event.referenceId,
         },
@@ -151,25 +177,27 @@ export class PolkadotService {
    */
   static async transmitTransactions(
     _event: {
-      chain: Chain;
+      chain: SubstrateChain;
       address?: string;
     },
     context: ServiceContext,
   ) {
     const wallets = await new Wallet({}, context).getList(
       _event.chain,
+      ChainType.SUBSTRATE,
       _event.address,
     );
     const endpoint = await new Endpoint({}, context).populateByChain(
       _event.chain,
+      ChainType.SUBSTRATE,
     );
     const provider = new WsProvider(endpoint.url);
     let typesBundle = null;
     switch (_event.chain) {
-      case Chain.KILT: {
+      case SubstrateChain.KILT: {
         break;
       }
-      case Chain.CRUST: {
+      case SubstrateChain.CRUST: {
         typesBundle = typesBundleForPolkadot;
         break;
       }
@@ -187,6 +215,7 @@ export class PolkadotService {
     for (let i = 0; i < wallets.length; i++) {
       const transactions = await new Transaction({}, context).getList(
         _event.chain,
+        ChainType.SUBSTRATE,
         wallets[i].address,
         wallets[i].lastProcessedNonce,
       );
@@ -201,7 +230,7 @@ export class PolkadotService {
         await new Lmas().writeLog({
           logType: LogType.ERROR,
           message: 'Error transmiting transaction',
-          location: 'PolkadotService.transmitTransactions',
+          location: 'SubstrateService.transmitTransactions',
           service: ServiceName.BLOCKCHAIN,
           data: {
             error: e,

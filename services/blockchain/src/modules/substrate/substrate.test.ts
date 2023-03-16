@@ -1,14 +1,9 @@
-import { Chain } from '@apillon/lib';
+import { ChainType, SubstrateChain } from '@apillon/lib';
 import Keyring from '@polkadot/keyring';
-import {
-  generateWallets,
-  releaseStage,
-  setupTest,
-  Stage,
-} from '../../../test/setup';
+import { releaseStage, setupTest, Stage } from '../../../test/setup';
 import { Endpoint } from '../../common/models/endpoint';
 import { Wallet } from '../../common/models/wallet';
-import { PolkadotService } from './polkadot.service';
+import { SubstrateService } from './substrate.service';
 import { typesBundleForPolkadot } from '@crustio/type-definitions';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 
@@ -17,7 +12,7 @@ describe('Polkadot signer unit test', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    // await generateWallets(1, Chain.CRUST, stage.context);
+    // await generateSubstrateWallets(1, SubstrateChain.CRUST, stage.context);
   });
 
   afterAll(async () => {
@@ -34,7 +29,8 @@ describe('Polkadot signer unit test', () => {
     const endpoint = await new Endpoint(
       {
         url: 'wss://rpc-rocky.crust.network',
-        chain: Chain.CRUST,
+        chain: SubstrateChain.CRUST,
+        chainType: ChainType.SUBSTRATE,
         status: 5,
       },
       stage.context,
@@ -42,7 +38,8 @@ describe('Polkadot signer unit test', () => {
     await new Endpoint(
       {
         url: 'wss://spiritnet.api.onfinality.io/ws?apikey=15a3df59-0a99-4216-97b4-e2d242fe64e5',
-        chain: Chain.KILT,
+        chain: SubstrateChain.KILT,
+        chainType: ChainType.SUBSTRATE,
         status: 5,
       },
       stage.context,
@@ -60,7 +57,8 @@ describe('Polkadot signer unit test', () => {
     console.log('NONCE: ', nonce);
     await new Wallet(
       {
-        chain: Chain.KILT,
+        chain: SubstrateChain.KILT,
+        chainType: ChainType.SUBSTRATE,
         seed: 'fine circle fiction good shop hand canal approve over canal border mixed',
         address: '4q4EMLcCRKF1VgXgJgtcVu4CeVvwa6tsmBDQUKgNH9YUZRKq',
       },
@@ -69,7 +67,8 @@ describe('Polkadot signer unit test', () => {
 
     await new Wallet(
       {
-        chain: Chain.CRUST,
+        chain: SubstrateChain.CRUST,
+        chainType: ChainType.SUBSTRATE,
         seed: 'fine circle fiction good shop hand canal approve over canal border mixed',
         address: '5DjjQpgetdaYUN6YyDGNguM1oMMDnNHnVPwgZDWuc29LswBi',
         nextNonce: nonce.toNumber(),
@@ -86,17 +85,17 @@ describe('Polkadot signer unit test', () => {
     const serialize = tx.toHex();
     console.log(serialize);
 
-    const res = await PolkadotService.createTransaction(
-      { transaction: serialize, chain: Chain.CRUST },
+    const res = await SubstrateService.createTransaction(
+      { transaction: serialize, chain: SubstrateChain.CRUST },
       stage.context,
     );
     // const id = 124392353;
 
-    // PolkadotService.getTransactionStatus({ id }, stage.context);
+    // SubstrateService.getTransactionStatus({ id }, stage.context);
     console.log('res: ', res);
 
-    const res2 = await PolkadotService.transmitTransactions(
-      { chain: Chain.CRUST },
+    const res2 = await SubstrateService.transmitTransactions(
+      { chain: SubstrateChain.CRUST },
       stage.context,
     );
     console.log('res2: ', res2);

@@ -1,17 +1,20 @@
 import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
-  Chain,
+  ChainType,
   Context,
   enumInclusionValidator,
+  EvmChain,
   PoolConnection,
   PopulateFrom,
   presenceValidator,
   prop,
   SerializeFor,
+  SubstrateChain,
 } from '@apillon/lib';
 import {
   BlockchainErrorCode,
+  Chain,
   DbTables,
   SqlModelStatus,
 } from '../../config/types';
@@ -60,12 +63,30 @@ export class Wallet extends AdvancedSQLModel {
     ],
     validators: [
       {
-        resolver: enumInclusionValidator(Chain, false),
+        resolver: enumInclusionValidator(EvmChain && SubstrateChain, false),
         code: BlockchainErrorCode.WALLET_INVALID_CHAIN,
       },
     ],
   })
   public chain: Chain;
+
+  /**
+   * chainType
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public chainType: ChainType;
 
   /**
    * seed
@@ -161,6 +182,7 @@ export class Wallet extends AdvancedSQLModel {
 
   public async populateByLeastUsed(
     chain: Chain,
+    chainType: ChainType,
     conn?: PoolConnection,
   ): Promise<this> {
     if (!chain) {
@@ -171,13 +193,15 @@ export class Wallet extends AdvancedSQLModel {
       `
       SELECT * 
       FROM \`${this.tableName}\`
-      WHERE (chain = @chain)
+      WHERE 
+      chainType = @chainType
+      AND chain = @chain
       AND status <> ${SqlModelStatus.DELETED}
       ORDER BY usageTimestamp ASC
       LIMIT 1
       FOR UPDATE;
       `,
-      { chain },
+      { chain, chainType },
       conn,
     );
 
@@ -190,6 +214,7 @@ export class Wallet extends AdvancedSQLModel {
 
   public async populateByAddress(
     chain: Chain,
+    chainType: ChainType,
     address: string,
     conn?: PoolConnection,
   ): Promise<this> {
@@ -202,14 +227,15 @@ export class Wallet extends AdvancedSQLModel {
       SELECT * 
       FROM \`${this.tableName}\`
       WHERE 
-        chain = @chain
+        chainType = @chainType
+        AND chain = @chain
         AND address = @address
         AND status <> ${SqlModelStatus.DELETED}
       ORDER BY usageTimestamp ASC
       LIMIT 1
       FOR UPDATE;
       `,
-      { chain, address: address.toLowerCase() },
+      { chain, chainType, address: address.toLowerCase() },
       conn,
     );
 
@@ -234,15 +260,22 @@ export class Wallet extends AdvancedSQLModel {
     );
   }
 
-  public async getList(chain: Chain, address?: string, conn?: PoolConnection) {
+  public async getList(
+    chain: Chain,
+    chainType: ChainType,
+    address?: string,
+    conn?: PoolConnection,
+  ) {
     return await this.getContext().mysql.paramExecute(
       `
       SELECT *
       FROM \`${this.tableName}\`
-      WHERE chain = @chain
+      WHERE 
+      chainType = @chainType
+      AND chain = @chain
       AND (@address IS NULL OR address = @address);
       `,
-      { chain, address: address || null },
+      { chainType, chain, address: address || null },
       conn,
     );
   }

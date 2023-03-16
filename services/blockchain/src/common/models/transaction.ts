@@ -1,14 +1,14 @@
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
-  Chain,
+  ChainType,
   Context,
   PoolConnection,
   PopulateFrom,
   prop,
   SerializeFor,
 } from '@apillon/lib';
-import { DbTables } from '../../config/types';
+import { Chain, DbTables } from '../../config/types';
 
 export class Transaction extends AdvancedSQLModel {
   public readonly tableName = DbTables.TRANSACTION_QUEUE;
@@ -65,6 +65,24 @@ export class Transaction extends AdvancedSQLModel {
     ],
   })
   public chain: Chain;
+
+  /**
+   * chainType
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public chainType: ChainType;
 
   /**
    * Transaction hash
@@ -134,6 +152,7 @@ export class Transaction extends AdvancedSQLModel {
 
   public async getList(
     chain: Chain,
+    chainType: ChainType,
     address: string,
     nonce: number,
     conn?: PoolConnection,
@@ -142,12 +161,14 @@ export class Transaction extends AdvancedSQLModel {
       `
       SELECT *
       FROM \`${this.tableName}\`
-      WHERE chain = @chain
+      WHERE 
+      chainType = @chainType
+      AND chain = @chain
       AND address = @address
       AND nonce > @nonce
       order by nonce ASC;
       `,
-      { chain, address, nonce },
+      { chain, chainType, address, nonce },
       conn,
     );
   }

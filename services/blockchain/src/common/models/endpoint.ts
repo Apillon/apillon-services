@@ -1,13 +1,13 @@
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
-  Chain,
+  ChainType,
   Context,
   PopulateFrom,
   prop,
   SerializeFor,
 } from '@apillon/lib';
-import { DbTables, SqlModelStatus } from '../../config/types';
+import { Chain, DbTables, SqlModelStatus } from '../../config/types';
 
 export class Endpoint extends AdvancedSQLModel {
   public readonly tableName = DbTables.ENDPOINT;
@@ -49,6 +49,24 @@ export class Endpoint extends AdvancedSQLModel {
   public chain: Chain;
 
   /**
+   * chainType
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public chainType: ChainType;
+
+  /**
    * priority
    */
   @prop({
@@ -65,25 +83,9 @@ export class Endpoint extends AdvancedSQLModel {
   })
   public priority: number;
 
-  /**
-   * type
-   */
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB, //
-    ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.SELECT_DB,
-      SerializeFor.SERVICE,
-      SerializeFor.INSERT_DB,
-    ],
-  })
-  public type: number;
-
   public async populateByChain(
     chain: Chain,
+    type: ChainType,
     priority: number = null,
   ): Promise<this> {
     if (!chain) {
@@ -94,12 +96,14 @@ export class Endpoint extends AdvancedSQLModel {
       `
       SELECT * 
       FROM \`${this.tableName}\`
-      WHERE (chain = @chain)
+      WHERE
+      chainType = @type
+      AND chain = @chain
       AND status <> ${SqlModelStatus.DELETED}
       AND (@priority IS NULL OR @priority = priority)
       LIMIT 1;
       `,
-      { chain, priority },
+      { chain, type, priority },
     );
 
     if (data && data.length) {

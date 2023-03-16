@@ -10,6 +10,7 @@ export async function upgrade(
     \`nonce\` INT NOT NULL,
     \`address\` VARCHAR(50) NOT NULL,
     \`chain\` INT NOT NULL,
+    \`chainType\` INT NOT NULL,
     \`transactionHash\` VARCHAR(500) NOT NULL,
     \`rawTransaction\` VARCHAR(1000) NOT NULL,
     \`referenceTable\` VARCHAR (50) NULL,
@@ -19,7 +20,7 @@ export async function upgrade(
     \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     \`updateUser\` INT NULL,
     PRIMARY KEY (\`id\`),
-    UNIQUE INDEX \`address_chain\` (\`transactionHash\`,\`chain\`)
+    UNIQUE INDEX \`address_chain\` (\`transactionHash\`,\`chain\`,\`chainType\`)
   );
   `);
 }

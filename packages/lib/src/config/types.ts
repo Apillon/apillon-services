@@ -1,10 +1,18 @@
-export enum Chain {
-  KUSAMA = 1,
-  POLKADOT = 2,
-  CRUST = 3,
-  KILT = 4,
-  MOONBEAM = 5,
-  PHALA = 6,
+export enum ChainType {
+  SUBSTRATE = 1,
+  EVM = 2,
+}
+
+export enum SubstrateChain {
+  CRUST = 1,
+  KILT = 2,
+  KILT_SPIRITNET = 3,
+  PHALA = 4,
+}
+
+export enum EvmChain {
+  MOONBEAM = 1284,
+  MOONBASE = 1287,
 }
 
 export enum BlockchainEventType {}
@@ -42,7 +50,7 @@ export enum LmasEventType {
 }
 
 export enum BlockchainEventType {
-  SIGN_POLKADOT_TRANSACTION = 'sign-polkadot-transaction',
+  SIGN_SUBSTRATE_TRANSACTION = 'sign-polkadot-transaction',
 }
 
 export enum StorageEventType {

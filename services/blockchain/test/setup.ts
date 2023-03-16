@@ -1,4 +1,3 @@
-import { Chain } from '@apillon/lib';
 import { Context } from '@apillon/lib';
 import {
   AppEnvironment,
@@ -12,6 +11,8 @@ import Keyring from '@polkadot/keyring';
 import { mnemonicGenerate } from '@polkadot/util-crypto';
 import { ServiceContext } from '../src/context';
 import { Wallet } from '../src/common/models/wallet';
+import { SubstrateChain } from '@apillon/lib';
+import { ChainType } from '@apillon/lib';
 
 /**
  * Testing stage definition.
@@ -69,9 +70,9 @@ export async function setupTest(): Promise<Stage> {
   }
 }
 
-export async function generateWallets(
+export async function generateSubstrateWallets(
   amount: number,
-  type: Chain,
+  type: SubstrateChain,
   context: Context,
 ) {
   const keyring = new Keyring();
@@ -81,6 +82,7 @@ export async function generateWallets(
     const wallet = new Wallet(
       {
         chain: type,
+        chainType: ChainType.SUBSTRATE,
         seed: mnemonic,
         address: pair.address,
       },

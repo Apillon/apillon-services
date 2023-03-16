@@ -12,6 +12,7 @@ export async function upgrade(
     \`status\` INT NULL,
     \`address\` VARCHAR(50) NOT NULL,
     \`chain\` INT NOT NULL,
+    \`chainType\` INT NOT NULL,
     \`seed\` VARCHAR(120) NOT NULL,
     \`nextNonce\` INT NOT NULL DEFAULT 0,
     \`lastProcessedNonce\` INT NULL DEFAULT -1,
@@ -22,7 +23,7 @@ export async function upgrade(
     \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     \`updateUser\` INT NULL,
     PRIMARY KEY (\`id\`),
-    UNIQUE INDEX \`address_chain\` (\`address\`,\`chain\`)
+    UNIQUE INDEX \`address_chain\` (\`address\`,\`chain\`,\`chainType\`)
   );
   `);
 }

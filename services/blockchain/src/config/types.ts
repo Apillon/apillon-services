@@ -1,3 +1,7 @@
+import { EvmChain, SubstrateChain } from '@apillon/lib';
+
+export type Chain = SubstrateChain | EvmChain;
+
 export enum DbTables {
   WALLET = 'wallet',
   ENDPOINT = 'endpoint',
@@ -30,12 +34,7 @@ export enum BlockchainErrorCode {
 
   // 400 - Bad request
   BAD_REQUEST = 40013001,
-  USER_DOES_NOT_EXISTS = 40013100,
-  USER_ALREADY_REGISTERED = 40013101,
-  USER_AUTH_TOKEN_NOT_EXISTS = 40013220,
-  USER_AUTH_TOKEN_IS_INVALID = 40013201,
-  MAX_API_KEY_QUOTA_REACHED = 40013300,
-  INVALID_API_KEY = 40112400,
+  INVALID_CHAIN = 40013002,
 
   // 401 - Unauthorized (Not authenticated)
   USER_IS_NOT_AUTHENTICATED = 40113100,
