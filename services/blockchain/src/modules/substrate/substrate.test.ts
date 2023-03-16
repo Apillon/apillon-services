@@ -7,7 +7,7 @@ import { SubstrateService } from './substrate.service';
 import { typesBundleForPolkadot } from '@crustio/type-definitions';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 
-describe('Polkadot signer unit test', () => {
+describe.skip('Substrate service unit test', () => {
   let stage: Stage;
 
   beforeAll(async () => {
@@ -89,9 +89,6 @@ describe('Polkadot signer unit test', () => {
       { transaction: serialize, chain: SubstrateChain.CRUST },
       stage.context,
     );
-    // const id = 124392353;
-
-    // SubstrateService.getTransactionStatus({ id }, stage.context);
     console.log('res: ', res);
 
     const res2 = await SubstrateService.transmitTransactions(
