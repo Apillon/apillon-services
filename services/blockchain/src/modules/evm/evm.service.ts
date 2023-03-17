@@ -91,6 +91,8 @@ export class EvmService {
 
       // parse and set transaction information
       const unsignedTx = ethers.utils.parseTransaction(_event.transaction);
+      // TODO: add transaction checker to detect annomalies.
+      // Reject transaction sending value etc.
       unsignedTx.from = wallet.address;
 
       unsignedTx.maxPriorityFeePerGas =

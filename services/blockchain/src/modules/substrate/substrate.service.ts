@@ -94,6 +94,7 @@ export class SubstrateService {
       });
       const pair = keyring.addFromUri(wallet.seed);
       const unsignedTx = api.tx(_event.transaction);
+      // TODO: add validation service for transaction to detect and prevent weird transactions.
 
       // const info = await unsignedTx.paymentInfo(pair);
       // console.log(`
@@ -221,6 +222,7 @@ export class SubstrateService {
       );
       let latestSuccess = null;
       try {
+        // TODO: consider batching transaction api.tx.utility.batch
         for (let j = 0; j < transactions.length; j++) {
           const signedTx = api.tx(transactions[j].rawTransaction);
           await signedTx.send();
