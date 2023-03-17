@@ -18,6 +18,8 @@ export async function processEvent(
     [AmsEventType.USER_PASSWORD_RESET]: AuthUserService.resetPassword,
     [AmsEventType.USER_EMAIL_EXISTS]: AuthUserService.emailExists,
     [AmsEventType.GET_AUTH_USER_BY_EMAIL]: AuthUserService.getAuthUserByEmail,
+    [AmsEventType.GET_AUTH_USER_BY_WALLET]:
+      AuthUserService.getAuthUserByWalletAddress,
 
     [AmsEventType.USER_ROLE_ASSIGN]: RoleService.assignUserRoleOnProject,
     [AmsEventType.USER_ROLE_REMOVE]: RoleService.removeUserRoleOnProject,

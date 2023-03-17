@@ -329,4 +329,23 @@ export class AuthUserService {
 
     return authUser.serialize(SerializeFor.SERVICE);
   }
+
+  static async getAuthUserByWalletAddress(event, context: ServiceContext) {
+    if (!event?.wallet) {
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.BAD_REQUEST,
+      }).writeToMonitor({
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
+      });
+    }
+
+    const authUser = await new AuthUser({}, context).populateByWalletAddress(
+      event.wallet,
+    );
+
+    return authUser.serialize(SerializeFor.SERVICE);
+  }
 }

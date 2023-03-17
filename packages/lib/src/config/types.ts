@@ -9,6 +9,7 @@ export enum AmsEventType {
   AUTH_TOKEN_CREATE_UPDATE_TOKEN = 'auth-token-create-update-token',
   USER_EMAIL_EXISTS = 'user-email-exists',
   GET_AUTH_USER_BY_EMAIL = 'get-auth-user-by-email',
+  GET_AUTH_USER_BY_WALLET = 'get-auth-user-by-wallet',
   CREATE_API_KEY = 'create-api-key',
   DELETE_API_KEY = 'delete-api-key',
   LIST_API_KEYS = 'list-api-keys',
@@ -435,7 +436,8 @@ export enum ValidatorErrorCode {
  */
 export enum UnauthorizedErrorCodes {
   UNAUTHORIZED = 40100000,
-  INVALID_TOKEN = 40100000,
+  INVALID_TOKEN = 40100001,
+  INVALID_SIGNATURE = 40100002,
 }
 
 export enum ForbiddenErrorCodes {

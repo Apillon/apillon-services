@@ -34,6 +34,8 @@ import { UpdateUserDto } from './dtos/update-user.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { verifyCaptcha, getDiscordProfile } from '@apillon/modules-lib';
 import { DiscordCodeDto } from './dtos/discord-code-dto';
+import { UserWalletAuthDto } from './dtos/user-wallet-auth-dto';
+import { signatureVerify } from '@polkadot/util-crypto';
 @Injectable()
 export class UserService {
   constructor(private readonly projectService: ProjectService) {}
@@ -261,6 +263,103 @@ export class UserService {
       ...user.serialize(SerializeFor.PROFILE),
       token: amsResponse.data.token,
     };
+  }
+
+  public getAuthMessage(timestamp: number = new Date().getTime()) {
+    return {
+      message: `Please sign this message.\n${timestamp}`,
+      timestamp,
+    };
+  }
+
+  async walletLogin(userAuth: UserWalletAuthDto, context: Context) {
+    // 1 hour validity
+    if (new Date().getTime() - userAuth.timestamp > 60 * 60 * 1000) {
+      throw new CodeException({
+        status: HttpStatus.UNAUTHORIZED,
+        code: UnauthorizedErrorCodes.INVALID_SIGNATURE,
+        sourceFunction: `${this.constructor.name}/walletLogin`,
+        context,
+      });
+    }
+
+    const { message } = this.getAuthMessage(userAuth.timestamp);
+    const { isValid } = signatureVerify(
+      message,
+      userAuth.signature,
+      userAuth.wallet,
+    );
+
+    if (!isValid) {
+      throw new CodeException({
+        status: HttpStatus.UNAUTHORIZED,
+        code: UnauthorizedErrorCodes.INVALID_SIGNATURE,
+        sourceFunction: `${this.constructor.name}/walletLogin`,
+        context,
+      });
+    }
+
+    const resp = await new Ams(context).getAuthUserByWalletAddress(
+      userAuth.wallet,
+    );
+    const user = await new User({}, context).populateByUUID(
+      resp.data.user_uuid,
+    );
+
+    if (!user.exists()) {
+      throw new CodeException({
+        status: HttpStatus.UNAUTHORIZED,
+        code: ValidatorErrorCode.USER_INVALID_LOGIN,
+        errorCodes: ValidatorErrorCode,
+      });
+    }
+
+    user.userRoles =
+      resp.data.authUserRoles
+        ?.filter((x) => !x.project_uuid)
+        ?.map((x) => x.role_id) || [];
+
+    return {
+      ...user.serialize(SerializeFor.PROFILE),
+      token: resp.data.token,
+    };
+  }
+
+  async walletConnect(userAuth: UserWalletAuthDto, context: Context) {
+    // 1 hour validity
+    if (new Date().getTime() - userAuth.timestamp > 60 * 60 * 1000) {
+      throw new CodeException({
+        status: HttpStatus.UNAUTHORIZED,
+        code: UnauthorizedErrorCodes.INVALID_SIGNATURE,
+        sourceFunction: `${this.constructor.name}/walletConnect`,
+        context,
+      });
+    }
+
+    const { message } = this.getAuthMessage(userAuth.timestamp);
+    const { isValid } = signatureVerify(
+      message,
+      userAuth.signature,
+      userAuth.wallet,
+    );
+
+    if (!isValid) {
+      throw new CodeException({
+        status: HttpStatus.UNAUTHORIZED,
+        code: UnauthorizedErrorCodes.INVALID_SIGNATURE,
+        sourceFunction: `${this.constructor.name}/walletConnect`,
+        context,
+      });
+    }
+
+    const resp = await new Ams(context).updateAuthUser({
+      user_uuid: context.user.user_uuid,
+      wallet: userAuth.wallet,
+    });
+
+    context.user.populate(resp);
+
+    return context.user.serialize(SerializeFor.PROFILE);
   }
 
   async passwordResetRequest(context: Context, body: ValidateEmailDto) {

@@ -138,6 +138,20 @@ export class Ams extends BaseService {
     };
   }
 
+  public async getAuthUserByWalletAddress(wallet: string) {
+    const data = {
+      eventName: AmsEventType.GET_AUTH_USER_BY_WALLET,
+      wallet,
+    };
+
+    // eslint-disable-next-line sonarjs/prefer-immediate-return
+    const amsResponse = await this.callService(data);
+
+    return {
+      ...amsResponse,
+    };
+  }
+
   public async assignUserRoleOnProject(params: {
     user: any;
     user_uuid: string;

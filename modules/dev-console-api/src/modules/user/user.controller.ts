@@ -24,6 +24,7 @@ import { AuthGuard } from '../../guards/auth.guard';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { DiscordCodeDto } from './dtos/discord-code-dto';
+import { UserWalletAuthDto } from './dtos/user-wallet-auth-dto';
 
 @Controller('users')
 export class UserController {
@@ -127,5 +128,31 @@ export class UserController {
   @UseGuards(AuthGuard)
   async getOauthLinks(@Ctx() context: DevConsoleApiContext) {
     return await this.userService.getOauthLinks(context);
+  }
+
+  @Get('/auth-msg')
+  getAuthMsg(): any {
+    return this.userService.getAuthMessage();
+  }
+
+  @Post('/login/wallet')
+  @Validation({ dto: UserWalletAuthDto })
+  @UseGuards(ValidationGuard)
+  walletLogin(
+    @Body() body: UserWalletAuthDto,
+    @Ctx() context: DevConsoleApiContext,
+  ): any {
+    return this.userService.walletLogin(body, context);
+  }
+
+  @Post('/wallet-connect')
+  @HttpCode(200)
+  @Validation({ dto: UserWalletAuthDto })
+  @UseGuards(ValidationGuard, AuthGuard)
+  walletConnect(
+    @Body() body: UserWalletAuthDto,
+    @Ctx() context: DevConsoleApiContext,
+  ): any {
+    return this.userService.walletConnect(body, context);
   }
 }

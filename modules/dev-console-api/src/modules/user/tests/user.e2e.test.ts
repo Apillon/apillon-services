@@ -4,6 +4,8 @@ import { releaseStage, Stage } from '@apillon/tests-lib';
 import { createTestUser, TestUser } from '@apillon/tests-lib';
 import { ValidateEmailDto } from '../dtos/validate-email.dto';
 import { setupTest } from '../../../../test/helpers/setup';
+import { createTestKeyring } from '@polkadot/keyring';
+import { u8aToHex } from '@polkadot/util';
 
 describe('Auth tests', () => {
   let stage: Stage;
@@ -163,5 +165,27 @@ describe('Auth tests', () => {
 
     newUserData.authToken = response2.body.data.token;
     newUserData.password = 'MyNewPassword01!';
+  });
+
+  test.only('User should be able to connect with polkadot wallet', async () => {
+    const keyring = createTestKeyring();
+    const keyPair = keyring.addFromUri('//Alice');
+
+    const authMsgResp = await request(stage.http).get('/users/auth-msg');
+    expect(authMsgResp.status).toBe(200);
+
+    const signature = u8aToHex(keyPair.sign(authMsgResp.body.data.message));
+
+    const connectResp = await request(stage.http)
+      .post('/users/wallet-connect')
+      .send({
+        wallet: keyPair.address,
+        signature,
+        timestamp: authMsgResp.body.data.timestamp,
+      })
+      .set('Authorization', `Bearer ${testUser.token}`);
+
+    expect(connectResp.status).toBe(200);
+    expect(connectResp.body.data.wallet).toBe(keyPair.address);
   });
 });
