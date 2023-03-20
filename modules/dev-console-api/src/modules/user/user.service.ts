@@ -319,6 +319,8 @@ export class UserService {
         ?.filter((x) => !x.project_uuid)
         ?.map((x) => x.role_id) || [];
 
+    user.wallet = resp.data.wallet;
+
     return {
       ...user.serialize(SerializeFor.PROFILE),
       token: resp.data.token,
@@ -357,7 +359,7 @@ export class UserService {
       wallet: userAuth.wallet,
     });
 
-    context.user.populate(resp);
+    context.user.populate(resp.data);
 
     return context.user.serialize(SerializeFor.PROFILE);
   }
