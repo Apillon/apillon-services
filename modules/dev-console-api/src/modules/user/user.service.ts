@@ -299,9 +299,7 @@ export class UserService {
       });
     }
 
-    const resp = await new Ams(context).getAuthUserByWalletAddress(
-      userAuth.wallet,
-    );
+    const resp = await new Ams(context).loginWithWallet(userAuth.wallet);
     const user = await new User({}, context).populateByUUID(
       resp.data.user_uuid,
     );

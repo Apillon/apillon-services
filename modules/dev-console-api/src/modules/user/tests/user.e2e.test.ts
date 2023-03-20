@@ -12,6 +12,7 @@ describe('Auth tests', () => {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let testUser: TestUser;
+  let testUserKeyPair;
   const newUserData = {
     email: 'dev+test@apillon.io',
     password: 'MyPassword01!',
@@ -22,6 +23,9 @@ describe('Auth tests', () => {
   beforeAll(async () => {
     stage = await setupTest();
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+
+    const keyring = createTestKeyring();
+    testUserKeyPair = keyring.addFromUri('//Alice');
   });
 
   afterAll(async () => {
@@ -167,9 +171,52 @@ describe('Auth tests', () => {
     newUserData.password = 'MyNewPassword01!';
   });
 
-  test.only('User should be able to connect with polkadot wallet', async () => {
+  test('User should be able to connect with polkadot wallet', async () => {
+    const authMsgResp = await request(stage.http).get('/users/auth-msg');
+    expect(authMsgResp.status).toBe(200);
+
+    const signature = u8aToHex(
+      testUserKeyPair.sign(authMsgResp.body.data.message),
+    );
+
+    const connectResp = await request(stage.http)
+      .post('/users/wallet-connect')
+      .send({
+        wallet: testUserKeyPair.address,
+        signature,
+        timestamp: authMsgResp.body.data.timestamp,
+      })
+      .set('Authorization', `Bearer ${testUser.token}`);
+
+    expect(connectResp.status).toBe(200);
+    expect(connectResp.body.data.wallet).toBe(testUserKeyPair.address);
+  });
+
+  test('User should be able to login with polkadot wallet', async () => {
+    const authMsgResp = await request(stage.http).get('/users/auth-msg');
+    expect(authMsgResp.status).toBe(200);
+
+    const signature = u8aToHex(
+      testUserKeyPair.sign(authMsgResp.body.data.message),
+    );
+
+    const connectResp = await request(stage.http)
+      .post('/users/login/wallet')
+      .send({
+        wallet: testUserKeyPair.address,
+        signature,
+        timestamp: authMsgResp.body.data.timestamp,
+      });
+
+    expect(connectResp.status).toBe(200);
+    expect(connectResp.body.data.wallet).toBe(testUserKeyPair.address);
+    expect(connectResp.body.data.token).toBeTruthy();
+    expect(connectResp.body.data.id).toBe(testUser.user.id);
+  });
+
+  test('User should NOT BE able to login with invalid signature or unconnected wallet', async () => {
     const keyring = createTestKeyring();
-    const keyPair = keyring.addFromUri('//Alice');
+    const keyPair = keyring.addFromUri('//Bob');
 
     const authMsgResp = await request(stage.http).get('/users/auth-msg');
     expect(authMsgResp.status).toBe(200);
@@ -177,15 +224,23 @@ describe('Auth tests', () => {
     const signature = u8aToHex(keyPair.sign(authMsgResp.body.data.message));
 
     const connectResp = await request(stage.http)
-      .post('/users/wallet-connect')
+      .post('/users/login/wallet')
+      .send({
+        wallet: testUserKeyPair.address,
+        signature,
+        timestamp: authMsgResp.body.data.timestamp,
+      });
+
+    expect(connectResp.status).toBe(401);
+
+    const connectResp2 = await request(stage.http)
+      .post('/users/login/wallet')
       .send({
         wallet: keyPair.address,
         signature,
         timestamp: authMsgResp.body.data.timestamp,
-      })
-      .set('Authorization', `Bearer ${testUser.token}`);
+      });
 
-    expect(connectResp.status).toBe(200);
-    expect(connectResp.body.data.wallet).toBe(keyPair.address);
+    expect(connectResp2.status).toBe(401);
   });
 });

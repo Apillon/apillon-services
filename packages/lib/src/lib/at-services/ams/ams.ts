@@ -138,9 +138,9 @@ export class Ams extends BaseService {
     };
   }
 
-  public async getAuthUserByWalletAddress(wallet: string) {
+  public async loginWithWallet(wallet: string) {
     const data = {
-      eventName: AmsEventType.GET_AUTH_USER_BY_WALLET,
+      eventName: AmsEventType.USER_WALLET_LOGIN,
       wallet,
     };
 

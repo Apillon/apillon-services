@@ -330,7 +330,7 @@ export class AuthUserService {
     return authUser.serialize(SerializeFor.SERVICE);
   }
 
-  static async getAuthUserByWalletAddress(event, context: ServiceContext) {
+  static async loginWithWalletAddress(event, context: ServiceContext) {
     if (!event?.wallet) {
       throw await new AmsCodeException({
         status: 400,
@@ -345,6 +345,24 @@ export class AuthUserService {
     const authUser = await new AuthUser({}, context).populateByWalletAddress(
       event.wallet,
     );
+
+    if (!authUser.exists()) {
+      throw await new AmsCodeException({
+        status: 401,
+        code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
+      }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
+    }
+
+    await authUser.loginUser();
+
+    await new Lmas().writeLog({
+      context,
+      logType: LogType.INFO,
+      message: 'User login',
+      location: 'AMS/UserService/loginWithWalletAddress',
+      user_uuid: authUser.user_uuid,
+      service: ServiceName.AMS,
+    });
 
     return authUser.serialize(SerializeFor.SERVICE);
   }

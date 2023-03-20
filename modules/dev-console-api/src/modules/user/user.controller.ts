@@ -136,6 +136,7 @@ export class UserController {
   }
 
   @Post('/login/wallet')
+  @HttpCode(200)
   @Validation({ dto: UserWalletAuthDto })
   @UseGuards(ValidationGuard)
   walletLogin(
