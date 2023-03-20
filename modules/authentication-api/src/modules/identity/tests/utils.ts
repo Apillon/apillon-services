@@ -1,8 +1,5 @@
 import { JwtTokenType } from '../../../config/types';
 import {
-  ConfigService,
-  connect,
-  Did,
   ICredential,
   ICredentialPresentation,
   SignCallback,
@@ -54,25 +51,6 @@ export async function setupDidCreateMock(): Promise<any> {
     claimer_encryption_key: keyAgreement,
     body_mock: bodyMock,
   };
-}
-
-export async function getDidDocument(mnemonic: string) {
-  await connect(mock.KILT_NETWORK);
-  const api = ConfigService.get('api');
-
-  const { authentication } = await generateKeypairs(mnemonic);
-
-  const didUri = Did.getFullDidUriFromKey(authentication);
-
-  const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
-  const { document } = Did.linkedInfoFromChain(encodedFullDid);
-
-  if (!document) {
-    console.error('Full DID was not successfully created.');
-    return '';
-  }
-
-  return document;
 }
 
 export async function createPresentation(
