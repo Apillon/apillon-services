@@ -8,7 +8,7 @@ import {
   randomAsHex,
   sr25519PairFromSeed,
 } from '@polkadot/util-crypto';
-// import { isHex } from '@polkadot/util';
+import { isHex } from '@polkadot/util';
 import {
   ConfigService,
   Did,
@@ -325,8 +325,8 @@ export function toCredentialIRI(rootHash: string): string {
   if (rootHash.startsWith(KILT_CREDENTIAL_IRI_PREFIX)) {
     return rootHash;
   }
-  // if (!isHex(rootHash)) {
-  //   throw new Error('Root hash is not a base16 / hex encoded string)');
-  // }
+  if (!isHex(rootHash)) {
+    throw new Error('Root hash is not a base16 / hex encoded string)');
+  }
   return KILT_CREDENTIAL_IRI_PREFIX + rootHash;
 }
