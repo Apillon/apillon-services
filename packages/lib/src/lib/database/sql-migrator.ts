@@ -25,7 +25,6 @@ export class SqlMigrator {
     password: string;
   }) {
     this.settings = options;
-    console.log(JSON.stringify(this.settings));
   }
 
   public async upgrade(showDialog = true, steps = 0): Promise<boolean> {

@@ -3,7 +3,7 @@ import { Options, MailOptions } from 'nodemailer/lib/smtp-transport';
 import { MailTemplates } from './mail-templates';
 import { Attachment } from 'nodemailer/lib/mailer';
 import { env, getEnvSecrets, Lmas, LogType, ServiceName } from '@apillon/lib';
-import { ServiceContext } from '../context';
+import { ServiceContext } from '../scripts/context';
 import { generateTemplateData } from './template-data';
 import * as handlebars from 'handlebars';
 

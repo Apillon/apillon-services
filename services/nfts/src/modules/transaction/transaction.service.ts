@@ -26,8 +26,9 @@ export class TransactionService {
       await transaction.validate();
     } catch (err) {
       await transaction.handle(err);
-      if (!transaction.isValid())
+      if (!transaction.isValid()) {
         throw new NftsValidationException(transaction);
+      }
     }
     await transaction.insert(SerializeFor.INSERT_DB, conn);
 

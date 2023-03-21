@@ -1,5 +1,6 @@
 import { AppEnvironment, getEnvSecrets, MySql } from '@apillon/lib';
 import {
+  QueueWorkerType,
   ServiceDefinition,
   ServiceDefinitionType,
   WorkerDefinition,
@@ -10,6 +11,7 @@ import {
 import { Context, env } from '@apillon/lib';
 import { Scheduler } from './scheduler';
 import { TransactionStatusWorker } from './transaction-status-worker';
+import { DeployCollectionWorker } from './deploy-collection-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -19,6 +21,7 @@ export enum WorkerName {
   SCHEDULER = 'scheduler',
   PROCESS_TRANSACTION = 'ProcessTransactionWorker',
   TRANSACTION_STATUS = 'TransactionStatusWorker',
+  DEPLOY_COLLECTION = 'DeployCollectionWorker',
 }
 
 export async function handler(event: any) {
@@ -155,6 +158,7 @@ export async function handleSqsMessages(
 
     const workerName = message?.messageAttributes?.workerName?.stringValue;
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const workerDefinition = new WorkerDefinition(serviceDef, workerName, {
       id,
       parameters,
@@ -162,8 +166,8 @@ export async function handleSqsMessages(
 
     // eslint-disable-next-line sonarjs/no-small-switch
     switch (workerName) {
-      /*case WorkerName.SYNC_TO_IPFS_WORKER: {
-        await new SyncToIPFSWorker(
+      case WorkerName.DEPLOY_COLLECTION: {
+        await new DeployCollectionWorker(
           workerDefinition,
           context,
           QueueWorkerType.EXECUTOR,
@@ -171,7 +175,7 @@ export async function handleSqsMessages(
           executeArg: message?.body,
         });
         break;
-      }*/
+      }
       default:
         console.log(
           `ERROR - INVALID WORKER NAME: ${message?.messageAttributes?.workerName}`,

@@ -96,6 +96,23 @@ export enum StorageEventType {
   BUCKET_CLEAR_CONTENT = 'clear-bucket-content',
   DEPLOYMENT_GET = 'get-deployment',
   DEPLOYMENT_LIST = 'list-deployment',
+  PREPARE_COLLECTION_METADATA = 'prepare-collection-metadata',
+}
+
+export enum AuthenticationEventType {
+  IDENTITY_VERIFICATION = 'identity-verification',
+  SEND_VERIFICATION_EMAIL = 'send-verification-email',
+  GET_IDENTITY_GEN_PROCESS_STATE = 'get-identity-gen-process-state',
+  GENERATE_IDENTITY = 'generate-identity',
+  GET_IDENTITY_USER_CREDENTIAL = 'get-identity-user-credential',
+  REVOKE_IDENTITY = 'revoke-identity',
+  GENERATE_DEV_RESOURCES = 'generate-dev-resources',
+  SPORRAN_GET_SESSION_VALUES = 'sporran-get-session-values',
+  SPORRAN_VERIFY_SESSION = 'sporran-verify-session',
+  SPORRAN_SUBMIT_TERMS = 'sporran-submit-terms',
+  SPORRAN_SUBMIT_ATTESTATION = 'sporran-submit-attestation',
+  SPORRAN_REQUEST_CREDENTIAL = 'sporran-request-credential',
+  SPORRAN_VERIFY_CREDENTIAL = 'sporran-verify-credential',
 }
 
 export enum MailEventType {
@@ -109,7 +126,7 @@ export enum ScsEventType {
 
 export enum NftsEventType {
   HELLO = 'hello',
-  DEPLOY_NFT = 'deploy-nft',
+  CREATE_COLLECTION = 'create-collection',
   NFT_COLLECTIONS_LIST = 'list-nft-collections',
   GET_NFT_COLLECTION = 'get-nft-collection',
   TRANSFER_OWNERSHIP = 'transfer-ownership',
@@ -117,6 +134,7 @@ export enum NftsEventType {
   SET_BASE_URI = 'set-base-uri',
   CHECK_TRANSACTION_STATUS = 'check-transaction-status',
   NFT_COLLECTION_TRANSACTION_LIST = 'list-collection-transactions',
+  DEPLOY_COLLECTION = 'deploy-collection',
 }
 
 export enum ReferralEventType {
@@ -413,6 +431,28 @@ export enum ValidatorErrorCode {
   DEPLOY_ENVIRONMENT_NOT_PRESENT = 42200039,
   FILES_PROPERTY_NOT_PRESENT = 42200040,
   FILES_PROPERTY_EMPTY = 42200041,
+  PREPARE_AND_DEPLOY_COLLECTION_IMAGE_SESSION_NOT_PRESENT = 42200042,
+  PREPARE_AND_DEPLOY_COLLECTION_METADATA_SESSION_NOT_PRESENT = 42200043,
+  //#region Authentication
+  USER_EMAIL_ALREADY_TAKEN = 42200701,
+  USER_EMAIL_NOT_PRESENT = 42200702,
+  USER_EMAIL_NOT_VALID = 42200703,
+  VERIFICATION_IDENTITY_NOT_PRESENT = 42200704,
+  IDENTITY_TOKEN_NOT_PRESENT = 42200705,
+  IDENTITY_CAPTCHA_NOT_PRESENT = 42200706,
+  IDENTITY_CREATE_DID_CREATE_OP_NOT_PRESENT = 42200707,
+  IDENTITY_CREATE_INVALID_REQUEST = 42200708,
+  IDENTITY_VERIFICATION_TOKEN_NOT_PRESENT = 42200709,
+  IDENTITY_VERIFICATION_EMAIL_TYPE_NOT_PRESENT = 42200710,
+  DID_URI_NOT_PRESENT = 42200711,
+  DID_URI_INVALID = 42200712,
+  SPORRAN_ENCRYPTED_KEY_URI_NOT_PRESENT = 42200713,
+  SPORRAN_SESSIONID_NOT_PRESENT = 42200714,
+  SPORRAN_REQUEST_MESSAGE_NOT_PRESENT = 42200715,
+  SPORRAN_ENCRYPTED_CHALLENGE_NOT_PRESENT = 42200716,
+  SPORRAN_NONCE_NOT_PRESENT = 42200717,
+  AUTH_SESSION_TOKEN_NOT_PRESENT = 42200718,
+  //#endregion
 }
 
 /**
@@ -438,10 +478,10 @@ export enum RoleType {
  * JWT Token signing types.
  */
 export enum JwtTokenType {
-  USER_AUTHENTICATION = 'USER_AUTHENTICATION',
-  USER_RESET_PASSWORD = 'USER_RESET_PASSWORD',
-  USER_RESET_EMAIL = 'USER_RESET_EMAIL',
-  USER_CONFIRM_EMAIL = 'USER_CONFIRM_EMAIL',
+  USER_AUTHENTICATION = 'user-authentication',
+  USER_RESET_PASSWORD = 'user-reset-password',
+  USER_RESET_EMAIL = 'user-reset-email',
+  USER_CONFIRM_EMAIL = 'user-confirm-email',
 }
 
 /**

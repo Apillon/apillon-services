@@ -209,6 +209,12 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: NftsErrorCode.COLLECTION_MINT_PRICE_NOT_PRESENT,
+      },
+    ],
   })
   public bucket_uuid: string;
 
@@ -399,7 +405,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    defaultValue: CollectionStatus.PENDING,
+    defaultValue: CollectionStatus.CREATED,
   })
   public collectionStatus: number;
 
@@ -440,6 +446,42 @@ export class Collection extends AdvancedSQLModel {
     ],
   })
   public transactionHash: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public imagesSession: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public metadataSession: string;
 
   /***************************************************
    * Info properties

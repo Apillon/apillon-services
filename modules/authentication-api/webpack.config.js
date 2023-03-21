@@ -15,6 +15,13 @@ module.exports = {
     symlinks: false,
     cacheWithContext: false,
     alias: {
+      'bson-ext': false,
+      kerberos: false,
+      '@mongodb-js/zstd': false,
+      snappy: false,
+      'snappy/package.json': false,
+      'mongodb-client-encryption': false,
+      cardinal: false,
       '@nestjs/websockets/socket-module': false,
       'cache-manager': false,
       'class-validator': false,

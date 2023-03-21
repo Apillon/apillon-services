@@ -189,8 +189,9 @@ export class UserService {
       await user.validate();
     } catch (err) {
       await user.handle(err);
-      if (!user.isValid())
+      if (!user.isValid()) {
         throw new ValidationException(user, ValidatorErrorCode);
+      }
     }
 
     const conn = await context.mysql.start();
@@ -327,8 +328,9 @@ export class UserService {
       await user.validate();
     } catch (err) {
       await user.handle(err);
-      if (!user.isValid())
+      if (!user.isValid()) {
         throw new ValidationException(user, ValidatorErrorCode);
+      }
     }
 
     const conn = await context.mysql.start();

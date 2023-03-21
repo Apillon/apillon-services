@@ -2,7 +2,6 @@ import { env, SqlModelStatus, ValidatorErrorCode } from '@apillon/lib';
 import {
   FileStatus,
   FileUploadRequestFileStatus,
-  StorageErrorCode,
 } from '@apillon/storage/src/config/types';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
 import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';

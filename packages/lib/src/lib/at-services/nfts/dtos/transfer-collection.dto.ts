@@ -24,12 +24,7 @@ export class TransferCollectionDTO extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_TRANSFER_OWNERSHIP_COLLECTION_UUID_NOT_PRESENT,
-      },
-    ],
+    validators: [],
   })
   public collection_uuid: string;
 }

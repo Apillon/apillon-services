@@ -6,7 +6,6 @@ import {
   QuotaCode,
   Scs,
   ServiceName,
-  writeLog,
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
