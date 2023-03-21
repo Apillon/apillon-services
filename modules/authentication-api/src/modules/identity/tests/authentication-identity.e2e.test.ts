@@ -17,6 +17,11 @@ import {
   IdentityState,
 } from '@apillon/authentication/src/config/types';
 
+// !!!! NOTE !!!!: Some tests are commented out - Mostly valid ones, because we need a proper
+// test environment, which we do not as have as of now. In the future, a test node of the KILT
+// network will be deployed (mostly likely a docker container), and the tests
+// consolidated then. For now, it enough we know what will NOT WORK or NOT BE ALLOWED for the end-user.
+
 describe('Identity', () => {
   let stage: Stage;
   let context: AuthenticationApiContext;
