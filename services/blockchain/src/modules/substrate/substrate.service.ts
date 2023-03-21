@@ -9,12 +9,15 @@ import {
   LogType,
   SerializeFor,
   ServiceName,
+  env,
 } from '@apillon/lib';
 import { Endpoint } from '../../common/models/endpoint';
 import { BlockchainErrorCode } from '../../config/types';
 import { BlockchainCodeException } from '../../lib/exceptions';
 import { Transaction } from '../../common/models/transaction';
 import { typesBundleForPolkadot } from '@crustio/type-definitions';
+import { sendToWorkerQueue } from '@apillon/workers-lib';
+import { WorkerName } from '../../workers/worker-executor';
 
 export class SubstrateService {
   static async createTransaction(
@@ -245,7 +248,17 @@ export class SubstrateService {
       wallet.populate({ lastProcessedNonce: latestSuccess });
       await wallet.update();
     }
-    // TODO: call transaction checker
+    await sendToWorkerQueue(
+      env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
+      WorkerName.SCHEDULER,
+      [
+        {
+          chain: _event.chain,
+        },
+      ],
+      null,
+      null,
+    );
   }
   //#region
 }

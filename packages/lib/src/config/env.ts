@@ -191,6 +191,10 @@ export interface IEnv {
   BLOCKCHAIN_MYSQL_USER_TEST: string;
   BLOCKCHAIN_MYSQL_PASSWORD_TEST: string;
 
+  BLOCKCHAIN_AWS_WORKER_SQS_URL: string;
+  BLOCKCHAIN_AWS_WORKER_SQS_ARN: string;
+  BLOCKCHAIN_AWS_WORKER_LAMBDA_NAME: string;
+
   /************************************************************
    * Apillon API config
    ************************************************************/
@@ -513,6 +517,14 @@ export let env: IEnv = {
   BLOCKCHAIN_MYSQL_DATABASE_TEST: process.env['BLOCKCHAIN_MYSQL_DATABASE_TEST'],
   BLOCKCHAIN_MYSQL_USER_TEST: process.env['BLOCKCHAIN_MYSQL_USER_TEST'],
   BLOCKCHAIN_MYSQL_PASSWORD_TEST: process.env['BLOCKCHAIN_MYSQL_PASSWORD_TEST'],
+
+  /**
+   * AWS SQS url for worker communications
+   */
+  BLOCKCHAIN_AWS_WORKER_SQS_URL: process.env['BLOCKCHAIN_AWS_WORKER_SQS_URL'],
+  BLOCKCHAIN_AWS_WORKER_SQS_ARN: process.env['BLOCKCHAIN_AWS_WORKER_SQS_ARN'],
+  BLOCKCHAIN_AWS_WORKER_LAMBDA_NAME:
+    process.env['BLOCKCHAIN_AWS_WORKER_LAMBDA_NAME'],
 
   /** MAILING */
   MAIL_FUNCTION_NAME: process.env['MAIL_FUNCTION_NAME'],
