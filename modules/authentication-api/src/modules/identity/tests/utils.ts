@@ -7,8 +7,11 @@ import {
   KiltKeyringPair,
   NewDidEncryptionKey,
   Utils,
+  connect,
+  ConfigService,
+  Did,
 } from '@kiltprotocol/sdk-js';
-import { generateJwtToken } from '@apillon/lib';
+import { env, generateJwtToken } from '@apillon/lib';
 import * as mock from './mock-data';
 import { u8aToHex } from '@polkadot/util';
 import {
@@ -131,6 +134,20 @@ export async function generateKeypairs(mnemonic: string) {
     assertionMethod: assertionMethod,
     capabilityDelegation: capabilityDelegation,
   };
+}
+
+export async function getFullDidDocument(keypairs: any) {
+  await connect(env.KILT_NETWORK);
+  const api = ConfigService.get('api');
+  const didUri = Did.getFullDidUriFromKey(keypairs.authentication);
+  const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
+  const { document } = Did.linkedInfoFromChain(encodedFullDid);
+
+  if (!document) {
+    throw 'No documento';
+  }
+
+  return document;
 }
 
 export async function createPresentation(
