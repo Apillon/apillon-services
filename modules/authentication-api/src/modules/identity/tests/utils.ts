@@ -3,13 +3,23 @@ import {
   ICredential,
   ICredentialPresentation,
   SignCallback,
-  Utils,
   Credential,
+  KiltKeyringPair,
+  NewDidEncryptionKey,
+  Utils,
 } from '@kiltprotocol/sdk-js';
 import { generateJwtToken } from '@apillon/lib';
-import { generateKeypairs } from '@apillon/authentication/src/lib/kilt';
 import * as mock from './mock-data';
 import { u8aToHex } from '@polkadot/util';
+import {
+  blake2AsU8a,
+  keyExtractPath,
+  keyFromPath,
+  mnemonicToMiniSecret,
+  naclBoxPairFromSecret,
+  sr25519PairFromSeed,
+} from '@polkadot/util-crypto';
+import { Keypair } from '@polkadot/util-crypto/types';
 
 export async function setupDidCreateMock(): Promise<any> {
   const identityMock = mock.CREATE_IDENTITY_MOCK;
@@ -21,7 +31,7 @@ export async function setupDidCreateMock(): Promise<any> {
     signature: didMock.encoded_data,
   };
 
-  const encryptedData = Utils.Crypto.encryptAsymmetric(
+  const encryptedData = await encryptAsymmetric(
     JSON.stringify(did_create_call),
     mock.APILLON_ACC_ENCRYPT_KEY,
     u8aToHex(keyAgreement.secretKey),
@@ -50,6 +60,76 @@ export async function setupDidCreateMock(): Promise<any> {
     did_create_op: did_create_op,
     claimer_encryption_key: keyAgreement,
     body_mock: bodyMock,
+  };
+}
+
+export async function decryptAsymmetric(
+  encryptedData: any,
+  publicKey: any,
+  secretKey: any,
+) {
+  return Utils.Crypto.decryptAsymmetricAsStr(
+    {
+      box: encryptedData.payload.message,
+      nonce: encryptedData.payload.nonce,
+    },
+    publicKey,
+    secretKey,
+  );
+}
+
+export async function encryptAsymmetric(
+  data: any,
+  publicKeyA: any,
+  secretKeyB: any,
+) {
+  return Utils.Crypto.encryptAsymmetric(data, publicKeyA, secretKeyB);
+}
+
+export function generateAccount(mnemonic: string) {
+  const signingKeyPairType = 'sr25519';
+  const keyring = new Utils.Keyring({
+    ss58Format: 38,
+    type: signingKeyPairType,
+  });
+  return keyring.addFromMnemonic(mnemonic);
+}
+
+export async function generateKeypairs(mnemonic: string) {
+  const account = generateAccount(mnemonic);
+  // Authenticates the DID owner
+  const authentication = {
+    ...account.derive('//did//0'),
+    type: 'sr25519',
+  } as KiltKeyringPair;
+
+  // Key used to sign transactions
+  const assertionMethod = {
+    ...account.derive('//did//assertion//0'),
+    type: 'sr25519',
+  } as KiltKeyringPair;
+  // Key used for authority delgation
+  const capabilityDelegation = {
+    ...account.derive('//did//delegation//0'),
+    type: 'sr25519',
+  } as KiltKeyringPair;
+
+  // Used to encrypt and decrypt messages
+  const keyAgreement: NewDidEncryptionKey & Keypair = (function () {
+    const secretKeyPair = sr25519PairFromSeed(mnemonicToMiniSecret(mnemonic));
+    const { path } = keyExtractPath('//did//keyAgreement//0');
+    const { secretKey } = keyFromPath(secretKeyPair, path, 'sr25519');
+    return {
+      ...naclBoxPairFromSecret(blake2AsU8a(secretKey)),
+      type: 'x25519',
+    };
+  })();
+
+  return {
+    authentication: authentication,
+    keyAgreement: keyAgreement,
+    assertionMethod: assertionMethod,
+    capabilityDelegation: capabilityDelegation,
   };
 }
 
