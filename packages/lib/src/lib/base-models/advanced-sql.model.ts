@@ -144,6 +144,7 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
   public async populateById(
     id: number | string,
     conn?: PoolConnection,
+    forUpdate = false,
   ): Promise<this> {
     if (!id) {
       throw new Error('ID should not be null');
@@ -159,7 +160,8 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
       `
       SELECT * 
       FROM \`${this.tableName}\`
-      WHERE id = @id AND status <> ${SqlModelStatus.DELETED};
+      WHERE id = @id AND status <> ${SqlModelStatus.DELETED}
+      ${conn && forUpdate ? 'FOR UPDATE' : ''};
       `,
       { id },
       conn,
@@ -175,13 +177,22 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
   public async populateByName(
     name: string,
     conn?: PoolConnection,
+    forUpdate = false,
   ): Promise<this> {
     if (!this.hasOwnProperty('name')) {
       throw new Error('Object does not contain name property');
     }
 
+    if (!name) {
+      return this.reset();
+    }
     const data = await this.db().paramExecute(
-      `SELECT * FROM ${this.tableName} WHERE name = @name`,
+      `
+      SELECT * 
+      FROM ${this.tableName}
+      WHERE name = @name
+      ${conn && forUpdate ? 'FOR UPDATE' : ''}
+    `,
       { name },
       conn,
     );
@@ -434,5 +445,14 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
     }
 
     return this;
+  }
+
+  /**
+   *  reloads model from database
+   */
+  public async reload() {
+    const id = this.id;
+    this.reset();
+    return await this.populateById(id);
   }
 }

@@ -7,7 +7,7 @@ import { SubstrateService } from './substrate.service';
 import { typesBundleForPolkadot } from '@crustio/type-definitions';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 
-describe.skip('Substrate service unit test', () => {
+describe('Substrate service unit test', () => {
   let stage: Stage;
 
   beforeAll(async () => {
