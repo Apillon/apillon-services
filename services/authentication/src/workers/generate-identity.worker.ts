@@ -197,7 +197,7 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
         logType: LogType.INFO,
         message: emailAttested
           ? `ATTESTATION for ${claimerEmail}: SUCCESS`
-          : `ATTESTATION for ${claimerEmail}: FALIURE`,
+          : `ATTESTATION for ${claimerEmail}: FAILURE`,
         location: 'AUTHENTICATION-API/identity/authentication.worker',
         service: ServiceName.AUTHENTICATION_API,
       });
