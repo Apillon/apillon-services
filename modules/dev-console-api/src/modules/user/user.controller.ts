@@ -7,7 +7,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { DefaultUserRole } from '@apillon/lib';
+import { DefaultUserRole, UserWalletAuthDto } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import {
   Ctx,
@@ -24,7 +24,6 @@ import { AuthGuard } from '../../guards/auth.guard';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { DiscordCodeDto } from './dtos/discord-code-dto';
-import { UserWalletAuthDto } from './dtos/user-wallet-auth-dto';
 
 @Controller('users')
 export class UserController {

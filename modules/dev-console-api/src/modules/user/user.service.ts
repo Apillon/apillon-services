@@ -18,6 +18,7 @@ import {
   UnauthorizedErrorCodes,
   ValidationException,
   writeLog,
+  UserWalletAuthDto,
 } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
 import {
@@ -34,7 +35,6 @@ import { UpdateUserDto } from './dtos/update-user.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { verifyCaptcha, getDiscordProfile } from '@apillon/modules-lib';
 import { DiscordCodeDto } from './dtos/discord-code-dto';
-import { UserWalletAuthDto } from './dtos/user-wallet-auth-dto';
 import { signatureVerify } from '@polkadot/util-crypto';
 @Injectable()
 export class UserService {
@@ -287,22 +287,7 @@ export class UserService {
     }
 
     const { message } = this.getAuthMessage(userAuth.timestamp);
-    const { isValid } = signatureVerify(
-      message,
-      userAuth.signature,
-      userAuth.wallet,
-    );
-
-    if (!isValid) {
-      throw new CodeException({
-        status: HttpStatus.UNAUTHORIZED,
-        code: UnauthorizedErrorCodes.INVALID_SIGNATURE,
-        sourceFunction: `${this.constructor.name}/walletLogin`,
-        context,
-      });
-    }
-
-    const resp = await new Ams(context).loginWithWallet(userAuth.wallet);
+    const resp = await new Ams(context).loginWithWallet(userAuth, message);
     const user = await new User({}, context).populateByUUID(
       resp.data.user_uuid,
     );

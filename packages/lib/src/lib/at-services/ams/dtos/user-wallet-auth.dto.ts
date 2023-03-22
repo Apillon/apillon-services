@@ -1,7 +1,7 @@
-import { ModelBase, PopulateFrom, prop } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
-import { ValidatorErrorCode } from '../../../config/types';
+import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
+import { ModelBase, prop } from '../../../base-models/base';
 
 export class UserWalletAuthDto extends ModelBase {
   @prop({

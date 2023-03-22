@@ -8,6 +8,7 @@ import {
   PopulateFrom,
   SerializeFor,
   ServiceName,
+  UserWalletAuthDto,
 } from '@apillon/lib';
 import { AmsErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
@@ -17,6 +18,7 @@ import { AuthUser } from './auth-user.model';
 
 import { TokenExpiresInStr } from '../../config/types';
 import { CryptoHash } from '../../lib/hash-with-crypto';
+import { signatureVerify } from '@polkadot/util-crypto';
 
 export class AuthUserService {
   static async register(event, context: ServiceContext) {
@@ -331,7 +333,15 @@ export class AuthUserService {
   }
 
   static async loginWithWalletAddress(event, context: ServiceContext) {
-    if (!event?.wallet) {
+    const authData = new UserWalletAuthDto(event.authData);
+
+    try {
+      await authData.validate();
+    } catch (err) {
+      throw new AmsValidationException(authData);
+    }
+
+    if (!event?.message) {
       throw await new AmsCodeException({
         status: 400,
         code: AmsErrorCode.BAD_REQUEST,
@@ -342,8 +352,25 @@ export class AuthUserService {
       });
     }
 
+    const { isValid } = signatureVerify(
+      event.message,
+      authData.signature,
+      authData.wallet,
+    );
+
+    if (!isValid) {
+      throw await new AmsCodeException({
+        status: 401,
+        code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
+      }).writeToMonitor({
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
+      });
+    }
+
     const authUser = await new AuthUser({}, context).populateByWalletAddress(
-      event.wallet,
+      authData.wallet,
     );
 
     if (!authUser.exists()) {

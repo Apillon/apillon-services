@@ -12,6 +12,7 @@ import { ApiKeyRoleBaseDto } from './dtos/api-key-role-base.dto';
 import { CreateApiKeyDto } from './dtos/create-api-key.dto';
 import { CreateOauthLinkDto } from './dtos/create-oauth-link.dto';
 import { OauthListFilterDto } from './dtos/discord-user-list-filter.dto';
+import { UserWalletAuthDto } from './dtos/user-wallet-auth.dto';
 
 /**
  * Access Management Service client
@@ -138,10 +139,11 @@ export class Ams extends BaseService {
     };
   }
 
-  public async loginWithWallet(wallet: string) {
+  public async loginWithWallet(authData: UserWalletAuthDto, message: string) {
     const data = {
       eventName: AmsEventType.USER_WALLET_LOGIN,
-      wallet,
+      authData,
+      message,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return

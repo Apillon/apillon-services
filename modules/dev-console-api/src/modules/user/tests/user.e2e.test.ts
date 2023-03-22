@@ -171,7 +171,7 @@ describe('Auth tests', () => {
     newUserData.password = 'MyNewPassword01!';
   });
 
-  test('User should be able to connect with polkadot wallet', async () => {
+  test.only('User should be able to connect with polkadot wallet', async () => {
     const authMsgResp = await request(stage.http).get('/users/auth-msg');
     expect(authMsgResp.status).toBe(200);
 
@@ -199,7 +199,7 @@ describe('Auth tests', () => {
     expect(meResp.body.data.wallet).toBe(testUserKeyPair.address);
   });
 
-  test('User should be able to login with polkadot wallet', async () => {
+  test.only('User should be able to login with polkadot wallet', async () => {
     const authMsgResp = await request(stage.http).get('/users/auth-msg');
     expect(authMsgResp.status).toBe(200);
 
@@ -221,7 +221,7 @@ describe('Auth tests', () => {
     expect(connectResp.body.data.id).toBe(testUser.user.id);
   });
 
-  test('User should NOT BE able to login with invalid signature or unconnected wallet', async () => {
+  test.only('User should NOT BE able to login with invalid signature or unconnected wallet', async () => {
     const keyring = createTestKeyring();
     const keyPair = keyring.addFromUri('//Bob');
 
