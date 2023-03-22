@@ -52,6 +52,7 @@ export class UserService {
     }
 
     user.userRoles = context.user.userRoles;
+    user.wallet = context.user.authUser.wallet;
 
     return user.serialize(SerializeFor.PROFILE);
   }
@@ -77,6 +78,8 @@ export class UserService {
           errorCodes: ValidatorErrorCode,
         });
       }
+
+      user.wallet = resp.data.wallet;
 
       user.userRoles =
         resp.data.authUserRoles

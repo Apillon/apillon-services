@@ -190,6 +190,13 @@ describe('Auth tests', () => {
 
     expect(connectResp.status).toBe(200);
     expect(connectResp.body.data.wallet).toBe(testUserKeyPair.address);
+
+    const meResp = await request(stage.http)
+      .get('/users/me')
+      .set('Authorization', `Bearer ${testUser.token}`);
+
+    expect(meResp.status).toBe(200);
+    expect(meResp.body.data.wallet).toBe(testUserKeyPair.address);
   });
 
   test('User should be able to login with polkadot wallet', async () => {
