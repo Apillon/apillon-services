@@ -1,28 +1,30 @@
 import {
+  CreateCollectionDTO,
   DefaultUserRole,
-  DeployNftContractDto,
   MintNftDTO,
   NFTCollectionQueryFilter,
+  DeployCollectionDTO,
   SetCollectionBaseUriDTO,
   TransactionQueryFilter,
   TransferCollectionDTO,
   ValidateFor,
 } from '@apillon/lib';
-import { Ctx, Validation, Permissions } from '@apillon/modules-lib';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
   Get,
   Param,
+  ParseIntPipe,
   Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
+import { AuthGuard } from '../../guards/auth.guard';
+import { DevEnvGuard } from '../../guards/dev-env.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { NftsService } from './nfts.service';
-import { DevEnvGuard } from '../../guards/dev-env.guard';
-import { AuthGuard } from '../../guards/auth.guard';
 
 @Controller('nfts')
 export class NftsController {
@@ -34,18 +36,18 @@ export class NftsController {
   }
 
   @Post('/collections')
-  @Validation({ dto: DeployNftContractDto })
+  @Validation({ dto: CreateCollectionDTO })
   @UseGuards(ValidationGuard)
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
   @UseGuards(AuthGuard)
-  async deployNftContract(
+  async createCollection(
     @Ctx() context: DevConsoleApiContext,
-    @Body() body: DeployNftContractDto,
+    @Body() body: CreateCollectionDTO,
   ) {
-    return await this.nftsService.deployNftContract(context, body);
+    return await this.nftsService.createCollection(context, body);
   }
 
   @Get('/collections')
@@ -63,9 +65,27 @@ export class NftsController {
     return await this.nftsService.listNftCollections(context, query);
   }
 
+  @Get('/collections/:id')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @UseGuards(AuthGuard)
+  async getCollection(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return await this.nftsService.getNftCollection(context, id);
+  }
+
   @Post('/collections/:collectionUuid/transferOwnership')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
   @Validation({ dto: TransferCollectionDTO })
-  @UseGuards(ValidationGuard)
+  @UseGuards(ValidationGuard, AuthGuard)
   async transferOwnership(
     @Ctx() context: DevConsoleApiContext,
     @Param('collectionUuid') collectionUuid: string,
@@ -79,8 +99,13 @@ export class NftsController {
   }
 
   @Post('/collections/:collectionUuid/mint')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
   @Validation({ dto: MintNftDTO })
-  @UseGuards(ValidationGuard)
+  @UseGuards(ValidationGuard, AuthGuard)
   async mintNft(
     @Ctx() context: DevConsoleApiContext,
     @Param('collectionUuid') collectionUuid: string,
@@ -90,8 +115,12 @@ export class NftsController {
   }
 
   @Post('/collections/:collectionUuid/set-base-uri')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
   @Validation({ dto: SetCollectionBaseUriDTO })
-  @UseGuards(ValidationGuard)
+  @UseGuards(ValidationGuard, AuthGuard)
   async setNftCollectionBaseUri(
     @Ctx() context: DevConsoleApiContext,
     @Param('collectionUuid') collectionUuid: string,
@@ -127,6 +156,26 @@ export class NftsController {
       context,
       collectionUuid,
       query,
+    );
+  }
+
+  @Post('/collections/:collectionUuid/deploy')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @Validation({ dto: DeployCollectionDTO })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async deployCollection(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('collectionUuid') collectionUuid: string,
+    @Body() body: DeployCollectionDTO,
+  ) {
+    return await this.nftsService.deployCollection(
+      context,
+      collectionUuid,
+      body,
     );
   }
 }

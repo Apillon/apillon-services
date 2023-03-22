@@ -3,8 +3,9 @@ import { AppEnvironment, NftsEventType } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { NFTCollectionQueryFilter } from './dtos/collection-query-filter.dto';
-import { DeployNftContractDto } from './dtos/deploy-nft-contract.dto';
+import { CreateCollectionDTO } from './dtos/create-collection.dto';
 import { MintNftDTO } from './dtos/mint-nft.dto';
+import { DeployCollectionDTO } from './dtos/deploy-collection.dto';
 import { SetCollectionBaseUriDTO } from './dtos/set-collection-base-uri.dto';
 import { TransactionQueryFilter } from './dtos/transaction-query-filter.dto';
 import { TransferCollectionDTO } from './dtos/transfer-collection.dto';
@@ -32,9 +33,9 @@ export class NftsMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async deployNftContract(params: DeployNftContractDto) {
+  public async createCollection(params: CreateCollectionDTO) {
     const data = {
-      eventName: NftsEventType.DEPLOY_NFT,
+      eventName: NftsEventType.CREATE_COLLECTION,
       body: params.serialize(),
     };
     return await this.callService(data);
@@ -44,6 +45,14 @@ export class NftsMicroservice extends BaseService {
     const data = {
       eventName: NftsEventType.NFT_COLLECTIONS_LIST,
       query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async getNftCollection(id: number) {
+    const data = {
+      eventName: NftsEventType.GET_NFT_COLLECTION,
+      id: id,
     };
     return await this.callService(data);
   }
@@ -87,6 +96,14 @@ export class NftsMicroservice extends BaseService {
       eventName: NftsEventType.NFT_COLLECTION_TRANSACTION_LIST,
       collection_uuid: collection_uuid,
       query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async deployCollection(params: DeployCollectionDTO) {
+    const data = {
+      eventName: NftsEventType.DEPLOY_COLLECTION,
+      body: params.serialize(),
     };
     return await this.callService(data);
   }

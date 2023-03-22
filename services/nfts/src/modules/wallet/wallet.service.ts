@@ -1,6 +1,6 @@
 import {
   AppEnvironment,
-  DeployNftContractDto,
+  CreateCollectionDTO,
   MintNftDTO,
   env,
 } from '@apillon/lib';
@@ -12,6 +12,7 @@ import {
   TransactionReceipt,
 } from '@ethersproject/providers';
 import { PayableNft } from '../../lib/contracts/payable-mint-nft';
+import { Collection } from '../nfts/models/collection.model';
 
 export class WalletService {
   private wallet: Wallet;
@@ -48,7 +49,7 @@ export class WalletService {
   }
 
   async createDeployTransaction(
-    params: DeployNftContractDto,
+    params: Collection,
     nonce: number,
   ): Promise<TransactionRequest> {
     return NftTransaction.createDeployContractTransaction(
@@ -133,7 +134,7 @@ export class WalletService {
     return this.wallet.getAddress();
   }
 
-  async getMintedNftsNr(contractAddress: string): Promise<number> {
+  async getNumberOfMintedNfts(contractAddress: string): Promise<number> {
     const nftContract: Contract = new Contract(
       contractAddress,
       PayableNft.abi,

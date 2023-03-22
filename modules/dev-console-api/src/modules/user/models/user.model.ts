@@ -59,6 +59,22 @@ export class User extends AdvancedSQLModel {
   public email: string;
 
   /**
+   * web3 wallet
+   * virtual field populated from access service
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.SERVICE, //
+    ],
+    serializable: [
+      SerializeFor.PROFILE, //
+      SerializeFor.ADMIN,
+    ],
+  })
+  public wallet: string;
+
+  /**
    * User's name (first name + last name) property definition.
    */
   @prop({

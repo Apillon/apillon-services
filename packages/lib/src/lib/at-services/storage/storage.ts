@@ -8,7 +8,6 @@ import { CreateBucketWebhookDto } from './dtos/create-bucket-webhook.dto';
 import { CreateBucketDto } from './dtos/create-bucket.dto';
 import { CreateDirectoryDto } from './dtos/create-directory.dto';
 import { CreateIpnsDto } from './dtos/create-ipns.dto';
-import { CreateS3UrlForUploadDto } from './dtos/create-s3-url-for-upload.dto';
 import { DirectoryContentQueryFilter } from './dtos/directory-content-query-filter.dto';
 import { EndFileUploadSessionDto } from './dtos/end-file-upload-session.dto';
 import { FileDetailsQueryFilter } from './dtos/file-details-query-filter.dto';
@@ -154,14 +153,6 @@ export class StorageMicroservice extends BaseService {
   //#endregion
 
   //#region upload files to S3, IPFS & pin to crust
-
-  public async requestS3SignedURLForUpload(params: CreateS3UrlForUploadDto) {
-    const data = {
-      eventName: StorageEventType.REQUEST_S3_SIGNED_URL_FOR_UPLOAD,
-      body: params.serialize(),
-    };
-    return await this.callService(data);
-  }
 
   public async requestS3SignedURLsForUpload(params: CreateS3UrlsForUploadDto) {
     const data = {
@@ -405,6 +396,22 @@ export class StorageMicroservice extends BaseService {
     const data = {
       eventName: StorageEventType.DEPLOYMENT_GET,
       id: id,
+    };
+    return await this.callService(data);
+  }
+
+  //#endregion
+
+  //#region nfts storage functions
+
+  public async prepareCollectionMetadata(params: {
+    collection_uuid: string;
+    imagesSession: string;
+    metadataSession: string;
+  }): Promise<{ data: { baseUri: string } }> {
+    const data = {
+      eventName: StorageEventType.PREPARE_COLLECTION_METADATA,
+      body: params,
     };
     return await this.callService(data);
   }

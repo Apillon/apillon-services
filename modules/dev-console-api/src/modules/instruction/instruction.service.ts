@@ -57,8 +57,9 @@ export class InstructionService {
       await instruction.handle(err);
     }
 
-    if (!instruction.isValid())
+    if (!instruction.isValid()) {
       throw new ValidationException(instruction, ValidatorErrorCode);
+    }
 
     await instruction.update();
     return instruction.serialize(SerializeFor.PROFILE);

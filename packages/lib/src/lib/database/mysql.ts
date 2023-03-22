@@ -238,18 +238,16 @@ export class MySql {
     const conn = await this.db.getConnection();
     await this.ensureAlive(conn);
 
-    writeLog(LogType.DB, 'BEGIN TRANSACTION', 'mysql.ts', 'start');
     if (readUncommitted) {
-      await conn.execute(
-        'SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED ;',
-      );
+      await conn.execute('SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED ;');
       writeLog(
         LogType.DB,
-        'SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED',
+        'SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED',
         'mysql.ts',
         'start',
       );
     }
+    writeLog(LogType.DB, 'BEGIN TRANSACTION', 'mysql.ts', 'start');
 
     await conn.beginTransaction();
 

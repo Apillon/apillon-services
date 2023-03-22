@@ -7,7 +7,7 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "test/**/*.ts",
-    "src/modules/verfication"
+    "src/modules/verification"
   ],
   "exclude": [
     "node_modules",

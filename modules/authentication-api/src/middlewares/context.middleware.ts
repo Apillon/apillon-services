@@ -27,6 +27,7 @@ export class ContextMiddleware implements NestMiddleware {
 
     req.context = new AuthenticationApiContext(requestId);
     req.context.setMySql(this.mysql);
+
     next();
   }
 }

@@ -1,0 +1,18 @@
+{
+    "projectName": "apillon-auth-test",
+    "filterGroups": [
+        [
+            {
+                "pattern": "PUSH",
+                "type": "EVENT",
+                "excludeMatchedPattern": false
+            },
+            {
+                "pattern": "refs/heads/test$",
+                "type": "HEAD_REF",
+                "excludeMatchedPattern": false
+            }
+        ]
+    ],
+    "buildType": "BUILD"
+}

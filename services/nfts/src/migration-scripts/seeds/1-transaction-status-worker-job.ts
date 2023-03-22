@@ -6,7 +6,7 @@ export async function upgrade(
 ): Promise<void> {
   await queryFn(
     `INSERT INTO \`${DbTables.JOB}\` (\`status\`,\`name\`, \`interval\`, \`nextRun\`, \`timeout\`)
-    VALUES (5, '${WorkerName.TRANSACTION_STATUS}', '0/3 * * * *', NOW(), 86400);`,
+    VALUES (5, '${WorkerName.TRANSACTION_STATUS}', '0/1 * * * *', NOW(), 86400);`,
   );
 }
 

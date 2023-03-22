@@ -15,7 +15,6 @@ import {
   DbTables,
   NftsErrorCode,
   TransactionStatus,
-  TransactionType,
 } from '../../../config/types';
 
 export class Transaction extends AdvancedSQLModel {
