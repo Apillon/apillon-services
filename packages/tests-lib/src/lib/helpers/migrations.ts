@@ -3,15 +3,25 @@ import { ConnectionOptions, createPool } from 'mysql2';
 import { AppEnvironment, env } from '@apillon/lib';
 
 let dbConsoleMigration: Migration = null;
-let dbAmsMigration: Migration = null;
 let dbConsoleSeed: Migration = null;
+
+let dbAmsMigration: Migration = null;
 let dbAmsSeed: Migration = null;
+
 let dbStorageMigration: Migration = null;
 // let dbStorageSeed: Migration = null;
+
 let dbConfigMigration: Migration = null;
 let dbConfigSeed: Migration = null;
+
 let dbAuthApiMigration: Migration = null;
+let dbAuthApiSeed: Migration = null;
+
 let dbReferralMigration: Migration = null;
+let dbReferralSeed: Migration = null;
+
+let dbNftsMigration: Migration = null;
+let dbNftsSeed: Migration = null;
 
 export async function setupTestDatabase(): Promise<void> {
   await upgradeTestDatabases();
@@ -39,6 +49,10 @@ async function initMigrations() {
   if (!dbReferralMigration) {
     await initReferralTestMigrations();
   }
+
+  if (!dbNftsMigration) {
+    await initNftsTestMigrations();
+  }
 }
 
 async function initSeeds() {
@@ -54,6 +68,17 @@ async function initSeeds() {
   if (!dbConfigSeed) {
     await initConfigTestSeed();
   }
+
+  if (!dbAuthApiSeed) {
+    await initAuthApiTestSeed();
+  }
+
+  if (!dbReferralSeed) {
+    await initReferralTestSeed();
+  }
+  if (!dbNftsSeed) {
+    await initNftsTestSeed();
+  }
 }
 
 export async function upgradeTestDatabases(): Promise<void> {
@@ -66,6 +91,7 @@ export async function upgradeTestDatabases(): Promise<void> {
       dbConfigMigration.up(),
       dbAuthApiMigration.up(),
       dbReferralMigration.up(),
+      dbNftsMigration.up(),
     ]);
   } catch (err) {
     console.error('error at migrations.up()', err);
@@ -84,6 +110,7 @@ export async function downgradeTestDatabases(): Promise<void> {
     dbConfigMigration.down(-1),
     dbAuthApiMigration.down(-1),
     dbReferralMigration.down(-1),
+    dbNftsMigration.down(-1),
   ]);
   await destroyTestMigrations();
 }
@@ -96,6 +123,9 @@ export async function seedTestDatabases(): Promise<void> {
       dbConsoleSeed.up(),
       // dbStorageSeed.up(),
       dbConfigSeed.up(),
+      dbAuthApiSeed.up(),
+      dbReferralSeed.up(),
+      dbNftsSeed.up(),
     ]);
   } catch (err) {
     console.error('error at seeds.up()', err);
@@ -111,6 +141,9 @@ export async function unseedTestDatabases(): Promise<void> {
     dbConsoleSeed.down(-1),
     // dbStorageSeed.down(-1),
     dbConfigSeed.down(-1),
+    dbAuthApiSeed.down(-1),
+    dbReferralSeed.down(-1),
+    dbNftsSeed.down(-1),
   ]);
   await destroyTestSeeds();
 }
@@ -135,6 +168,9 @@ export async function destroyTestMigrations(): Promise<void> {
   if (dbReferralMigration) {
     promises.push(dbReferralMigration.destroy());
   }
+  if (dbNftsMigration) {
+    promises.push(dbNftsMigration.destroy());
+  }
   await Promise.all(promises);
   dbConsoleMigration = null;
   dbAmsMigration = null;
@@ -142,6 +178,7 @@ export async function destroyTestMigrations(): Promise<void> {
   dbConfigMigration = null;
   dbAuthApiMigration = null;
   dbReferralMigration = null;
+  dbNftsMigration = null;
 }
 
 export async function destroyTestSeeds(): Promise<void> {
@@ -158,6 +195,19 @@ export async function destroyTestSeeds(): Promise<void> {
   if (dbConfigSeed) {
     promises.push(dbConfigSeed.destroy());
   }
+
+  if (dbAuthApiSeed) {
+    promises.push(dbAuthApiSeed.destroy());
+  }
+
+  if (dbReferralSeed) {
+    promises.push(dbReferralSeed.destroy());
+  }
+
+  if (dbNftsSeed) {
+    promises.push(dbNftsSeed.destroy());
+  }
+
   await Promise.all(promises);
   dbConsoleSeed = null;
   dbAmsSeed = null;
@@ -177,6 +227,7 @@ export async function rebuildTestDatabases(): Promise<void> {
       dbConfigMigration.reset(),
       dbAuthApiMigration.reset(),
       dbReferralMigration.reset(),
+      dbNftsMigration.reset(),
     ]);
   } catch (err) {
     console.error('error at migrations.reset()', err);
@@ -190,6 +241,9 @@ export async function rebuildTestDatabases(): Promise<void> {
       dbConsoleSeed.reset(),
       // dbStorageSeed.reset(),
       dbConfigSeed.reset(),
+      dbAuthApiSeed.reset(),
+      dbReferralSeed.reset(),
+      dbNftsSeed.reset(),
     ]);
   } catch (err) {
     console.error('error at seed.reset()', err);
@@ -433,6 +487,98 @@ async function initReferralTestMigrations() {
   await dbReferralMigration.initialize();
 }
 
+async function initReferralTestSeed() {
+  env.APP_ENV = AppEnvironment.TEST;
+
+  const poolReferral: ConnectionOptions = {
+    host: env.REFERRAL_MYSQL_HOST_TEST,
+    database: env.REFERRAL_MYSQL_DATABASE_TEST,
+    password: env.REFERRAL_MYSQL_PASSWORD_TEST,
+    port: env.REFERRAL_MYSQL_PORT_TEST,
+    user: env.REFERRAL_MYSQL_USER_TEST,
+    // debug: true,
+    connectionLimit: 1,
+  };
+
+  if (!/(test|testing)/i.test(poolReferral.database)) {
+    throw new Error(`REFERRAL: NO TEST DATABASE!`);
+  }
+
+  const pool = createPool(poolReferral);
+
+  dbReferralSeed = new Migration({
+    conn: pool as unknown as MigrationConnection,
+    tableName: 'seeds',
+    dir: '../../services/referral/src/migration-scripts/seeds',
+    silent: env.APP_ENV === AppEnvironment.TEST,
+  });
+
+  await dbReferralSeed.initialize();
+}
+
+async function initNftsTestMigrations() {
+  env.APP_ENV = AppEnvironment.TEST;
+
+  const poolNfts: ConnectionOptions = {
+    host: env.NFTS_MYSQL_HOST_TEST,
+    database: env.NFTS_MYSQL_DATABASE_TEST,
+    password: env.NFTS_MYSQL_PASSWORD_TEST,
+    port: env.NFTS_MYSQL_PORT_TEST,
+    user: env.NFTS_MYSQL_USER_TEST,
+    // debug: true,
+    connectionLimit: 1,
+  };
+
+  if (!/(test|testing)/i.test(poolNfts.database)) {
+    throw new Error(`Nfts: NO TEST DATABASE!`);
+  }
+
+  const pool = createPool(poolNfts);
+
+  dbNftsMigration = new Migration({
+    conn: pool as unknown as MigrationConnection,
+    tableName: 'migrations',
+    dir: '../../services/nfts/src/migration-scripts/migrations',
+    silent: env.APP_ENV === AppEnvironment.TEST,
+  });
+
+  await dbNftsMigration.initialize();
+}
+
+async function initNftsTestSeed() {
+  try {
+    env.APP_ENV = AppEnvironment.TEST;
+
+    const poolNfts: ConnectionOptions = {
+      host: env.NFTS_MYSQL_HOST_TEST,
+      database: env.NFTS_MYSQL_DATABASE_TEST,
+      password: env.NFTS_MYSQL_PASSWORD_TEST,
+      port: env.NFTS_MYSQL_PORT_TEST,
+      user: env.NFTS_MYSQL_USER_TEST,
+      // debug: true,
+      connectionLimit: 1,
+    };
+
+    if (!/(test|testing)/i.test(poolNfts.database)) {
+      throw new Error(`NFTS: NO TEST DATABASE!`);
+    }
+
+    const pool = createPool(poolNfts);
+
+    dbNftsSeed = new Migration({
+      conn: pool as unknown as MigrationConnection,
+      tableName: 'seeds',
+      dir: '../../services/nfts/src/migration-scripts/seeds',
+      silent: env.APP_ENV === AppEnvironment.TEST,
+    });
+
+    await dbNftsSeed.initialize();
+  } catch (err) {
+    console.error('Error at initConfigTestSeed', err);
+    throw err;
+  }
+}
+
 async function initAmsTestSeed() {
   try {
     env.APP_ENV = AppEnvironment.TEST;
@@ -531,6 +677,40 @@ async function initAuthApiTestMigrations() {
     await dbAuthApiMigration.initialize();
   } catch (err) {
     console.error('Error at initAuthApiTestMigrations', err);
+    throw err;
+  }
+}
+
+async function initAuthApiTestSeed() {
+  try {
+    env.APP_ENV = AppEnvironment.TEST;
+
+    const poolAuthApi: ConnectionOptions = {
+      host: env.AUTH_API_MYSQL_HOST_TEST,
+      database: env.AUTH_API_MYSQL_DATABASE_TEST,
+      password: env.AUTH_API_MYSQL_PASSWORD_TEST,
+      port: env.AUTH_API_MYSQL_PORT_TEST,
+      user: env.AUTH_API_MYSQL_USER_TEST,
+      // debug: true,
+      connectionLimit: 1,
+    };
+
+    if (!/(test|testing)/i.test(poolAuthApi.database)) {
+      throw new Error(`AuthApi: NO TEST DATABASE!`);
+    }
+
+    const pool = createPool(poolAuthApi);
+
+    dbAuthApiSeed = new Migration({
+      conn: pool as unknown as MigrationConnection,
+      tableName: 'seeds',
+      dir: '../../services/authentication/src/migration-scripts/seeds',
+      silent: env.APP_ENV === AppEnvironment.TEST,
+    });
+
+    await dbAuthApiSeed.initialize();
+  } catch (err) {
+    console.error('Error at initAuthApiTestSeed', err);
     throw err;
   }
 }

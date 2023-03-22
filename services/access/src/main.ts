@@ -19,6 +19,8 @@ export async function processEvent(
     [AmsEventType.USER_EMAIL_EXISTS]: AuthUserService.emailExists,
     [AmsEventType.GET_AUTH_USER_BY_EMAIL]: AuthUserService.getAuthUserByEmail,
 
+    [AmsEventType.USER_WALLET_LOGIN]: AuthUserService.loginWithWalletAddress,
+
     [AmsEventType.USER_ROLE_ASSIGN]: RoleService.assignUserRoleOnProject,
     [AmsEventType.USER_ROLE_REMOVE]: RoleService.removeUserRoleOnProject,
 
