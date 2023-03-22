@@ -44,12 +44,7 @@ export class MintNftDTO extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_MINT_COLLECTION_UUID_NOT_PRESENT,
-      },
-    ],
+    validators: [],
   })
   public collection_uuid: string;
 }

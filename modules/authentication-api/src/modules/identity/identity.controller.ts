@@ -26,7 +26,7 @@ export class IdentityController {
     return await this.identityService.generateIdentity(context, body);
   }
 
-  @Get('generate/query/state')
+  @Get('generate/state/query')
   @Validation({ dto: AttestationEmailDto, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard)
   async attestationGetIdentityState(
@@ -62,7 +62,7 @@ export class IdentityController {
   @Post('verification/email')
   @Validation({ dto: VerificationEmailDto })
   // TODO: Temp disable for TESTING - CaptchaGuard. 9.3.2023
-  @UseGuards(ValidationGuard)
+  @UseGuards(ValidationGuard, CaptchaGuard)
   async identityVerification(
     @Ctx() context: AuthenticationApiContext,
     @Body() body: any,

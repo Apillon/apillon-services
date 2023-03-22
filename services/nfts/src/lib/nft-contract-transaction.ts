@@ -1,18 +1,19 @@
-import { DeployNftContractDto, MintNftDTO } from '@apillon/lib';
+import { CreateCollectionDTO, MintNftDTO } from '@apillon/lib';
 import { Contract, ContractFactory, ethers, UnsignedTransaction } from 'ethers';
 import { PayableNft } from './contracts/payable-mint-nft';
 import { TransactionRequest, BaseProvider } from '@ethersproject/providers';
 import { TransactionUtils } from './utils/transaction-utils';
+import { Collection } from '../modules/nfts/models/collection.model';
 
 export class NftTransaction {
   /**
-   * @param params DeployNftContractDto parameters
+   * @param params CreateCollectionDTO parameters
    * @param provider RPC provider
    * @returns TransactionRequest
    */
   static async createDeployContractTransaction(
     walletAddress: string,
-    params: DeployNftContractDto,
+    params: Collection,
     provider: BaseProvider,
     nonce: number,
   ): Promise<TransactionRequest> {

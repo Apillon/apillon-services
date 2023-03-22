@@ -401,4 +401,20 @@ export class StorageMicroservice extends BaseService {
   }
 
   //#endregion
+
+  //#region nfts storage functions
+
+  public async prepareCollectionMetadata(params: {
+    collection_uuid: string;
+    imagesSession: string;
+    metadataSession: string;
+  }): Promise<{ data: { baseUri: string } }> {
+    const data = {
+      eventName: StorageEventType.PREPARE_COLLECTION_METADATA,
+      body: params,
+    };
+    return await this.callService(data);
+  }
+
+  //#endregion
 }

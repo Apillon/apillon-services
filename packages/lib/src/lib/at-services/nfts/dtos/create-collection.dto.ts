@@ -11,7 +11,7 @@ import {
   ValidatorErrorCode,
 } from '../../../../config/types';
 
-export class DeployNftContractDto extends ModelBase {
+export class CreateCollectionDTO extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -83,16 +83,7 @@ export class DeployNftContractDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_DEPLOY_BASE_URI_NOT_PRESENT,
-      },
-      {
-        resolver: stringLengthValidator({ minOrEqual: 1, maxOrEqual: 500 }),
-        code: ValidatorErrorCode.NFT_DEPLOY_BASE_URI_NOT_VALID,
-      },
-    ],
+    validators: [],
   })
   public baseUri: string;
 
@@ -100,6 +91,12 @@ export class DeployNftContractDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    setter(value: string) {
+      if (value && value.length > 0) {
+        value = (value.startsWith('.') ? '' : '.') + value;
+      }
+      return value;
+    },
     validators: [
       {
         resolver: presenceValidator(),

@@ -36,8 +36,6 @@ export async function setupTestContextAndSql(): Promise<Stage> {
     const amsContext = new TestContext();
     amsContext.mysql = amsSql;
 
-    /********************** LMAS MS **************************/
-
     const lmasMongo = new Mongo(
       env.MONITORING_MONGO_SRV_TEST,
       env.MONITORING_MONGO_DATABASE_TEST,
@@ -194,7 +192,7 @@ export const releaseStage = async (stage: Stage): Promise<void> => {
     try {
       await stage.authApiSql.close();
     } catch (error) {
-      throw new Error('Error when releasing Auth stage: ' + error);
+      throw new Error('Error when releasing Auth Api stage: ' + error);
     }
   }
 
