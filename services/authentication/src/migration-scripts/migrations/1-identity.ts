@@ -10,7 +10,7 @@ export const upgrade = async (
     \`email\` VARCHAR(100) NOT NULL,
     \`didUri\` VARCHAR(57) NULL,
     \`state\` VARCHAR(25) NOT NULL DEFAULT '${IdentityState.PENDING_VERIFICATION}',
-    \`token\` VARCHAR(225) NULL,
+    \`token\` VARCHAR(500) NULL,
     \`credential\` JSON  NULL,
     \`status\` INT NOT NULL DEFAULT '${SqlModelStatus.ACTIVE}',
     \`createTime\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

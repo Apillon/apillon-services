@@ -182,6 +182,12 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
     );
 
     try {
+      await new Lmas().writeLog({
+        logType: LogType.INFO,
+        message: 'Propagating ATTESTATION TX to KILT BC ...',
+        location: 'AUTHENTICATION-API/identity/authentication.worker',
+        service: ServiceName.AUTHENTICATION_API,
+      });
       await Blockchain.signAndSubmitTx(emailClaimTx, attesterAcc);
       const emailAttested = Boolean(
         await api.query.attestation.attestations(credential.rootHash),
@@ -189,10 +195,9 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
 
       await new Lmas().writeLog({
         logType: LogType.INFO,
-        message:
-          `Attestation for ${claimerEmail} => ` + emailAttested
-            ? 'SUCCESS'
-            : 'FALSE',
+        message: emailAttested
+          ? `ATTESTATION for ${claimerEmail}: SUCCESS`
+          : `ATTESTATION for ${claimerEmail}: FAILURE`,
         location: 'AUTHENTICATION-API/identity/authentication.worker',
         service: ServiceName.AUTHENTICATION_API,
       });
@@ -223,7 +228,7 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
     } catch (error) {
       await new Lmas().writeLog({
         logType: LogType.ERROR,
-        message: `Email ${claimerEmail} identity => ERROR`,
+        message: `ATTESTATION for ${claimerEmail}: ERROR`,
         location: 'AUTHENTICATION-API/identity/authentication.worker',
         service: ServiceName.AUTHENTICATION_API,
         data: error,

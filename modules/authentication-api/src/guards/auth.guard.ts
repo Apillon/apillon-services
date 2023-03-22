@@ -43,7 +43,7 @@ export const AuthGuard = (tokenType: string) => {
       if (tokenData.email != data.email) {
         throw new CodeException({
           status: HttpStatus.BAD_REQUEST,
-          code: AuthenticationErrorCode.IDENTITY_INVALID_VERIFICATION_TOKEN,
+          code: AuthenticationErrorCode.IDENTITY_INVALID_TOKEN_DATA,
           errorCodes: AuthenticationErrorCode,
         });
       }
