@@ -6,6 +6,12 @@ import { AuthUserService } from './modules/auth-user/auth-user.service';
 import { OauthLinkService } from './modules/oauth-link/discord.service';
 import { RoleService } from './modules/role/role.service';
 
+/**
+ * Processing lambda event with appropriate service function based on eventName
+ * @param event lambda event
+ * @param context lambda context
+ * @returns service response
+ */
 export async function processEvent(
   event,
   context: ServiceContext,

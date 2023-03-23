@@ -1,6 +1,11 @@
 import { AppEnvironment, env, getEnvSecrets, MySql } from '@apillon/lib';
 const instances = {};
-
+/**
+ * MySQL middleware
+ * @param instanceName name of the instance - supported multiple db instance configuration
+ * @param autoDisconnect should connection terminate on finished request
+ * @returns database connection on context object
+ */
 export function MySqlConnect(instanceName = 'mysql', autoDisconnect = true) {
   const before = async (request) => {
     await getEnvSecrets();

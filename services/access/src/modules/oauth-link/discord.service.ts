@@ -11,7 +11,16 @@ import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
 import { AuthUser } from '../auth-user/auth-user.model';
 import { OauthLink } from './oauth-link.model';
 
+/**
+ * OauthLinkService class for handling OAuth linking with Discord.
+ */
 export class OauthLinkService {
+  /**
+   * Link a user's account to their Discord account.
+   * @param {CreateOauthLinkDto} event - The data needed to create an OAuth link.
+   * @param {ServiceContext} context - The service context for database access.
+   * @returns {Promise<any>} - A serialized OAuth link for service response.
+   */
   public static async linkDiscord(
     event: CreateOauthLinkDto,
     context: ServiceContext,
@@ -92,6 +101,12 @@ export class OauthLinkService {
     return oauthLink.serialize(SerializeFor.SERVICE);
   }
 
+  /**
+   * Unlink a user's account from their Discord account.
+   * @param {any} _event - The event data is not used, but left here for consistency.
+   * @param {ServiceContext} context - The service context for database access.
+   * @returns {Promise<{ success: boolean }>} - An object with a success property.
+   */
   public static async unlinkDiscord(_event: any, context: ServiceContext) {
     const oauthLink = await new OauthLink(
       {},
@@ -109,6 +124,12 @@ export class OauthLinkService {
     return { success: true };
   }
 
+  /**
+   * Get a list of Discord users with linked accounts.
+   * @param {OauthListFilterDto} event - The data to filter the list of Discord users.
+   * @param {ServiceContext} context - The service context for database access.
+   * @returns {Promise<any[]>} - An array of Discord users with linked accounts.
+   */
   public static async getDiscordUserList(
     event: OauthListFilterDto,
     context: ServiceContext,
@@ -121,6 +142,12 @@ export class OauthLinkService {
     );
   }
 
+  /**
+   * Get a list of a user's OAuth links.
+   * @param {OauthListFilterDto} event - The data to filter the list of OAuth links.
+   * @param {ServiceContext} context - The service context for database access.
+   * @returns {Promise<any[]>} - An array of OAuth links for a user.
+   */
   public static async getUserOauthLinks(
     event: OauthListFilterDto,
     context: ServiceContext,
@@ -128,6 +155,14 @@ export class OauthLinkService {
     return OauthLinkService.getOauthLinks(event, context);
   }
 
+  /**
+   * Get a list of OAuth links with optional filtering by type.
+   * @private
+   * @param {OauthListFilterDto} event - The data to filter the list of OAuth links.
+   * @param {ServiceContext} context - The service context for database access.
+   * @param {OauthLinkType} type - Optional OAuth link type for filtering results.
+   * @returns {Promise<any[]>} - An array of OAuth links matching the specified filters.
+   */
   private static async getOauthLinks(
     event: OauthListFilterDto,
     context: ServiceContext,

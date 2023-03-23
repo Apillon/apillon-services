@@ -6,7 +6,7 @@ import { MySqlConnect } from './middleware/mysql';
 import { ResponseFormat } from './middleware/response';
 import { InitializeContextAndFillUser } from './middleware/context-and-user';
 
-export const lambdaHandler: Handler = async (
+const lambdaHandler: Handler = async (
   event: any,
   context: any,
   _callback: Callback,
@@ -19,6 +19,7 @@ export const lambdaHandler: Handler = async (
   return res;
 };
 
+// exposing lambda handler and setup middlewares
 export const handler = middy.default(lambdaHandler);
 handler
   .use(InitializeContextAndFillUser())

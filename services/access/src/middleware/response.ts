@@ -1,3 +1,7 @@
+/**
+ * Response middleware
+ * @returns formatted service response
+ */
 export function ResponseFormat() {
   const after = (request) => {
     console.log('RESPONSE FORMAT MIDDLEWARE');
