@@ -19,4 +19,6 @@ export interface Stage {
   authApiSql: MySql;
   referralContext: TestContext;
   referralSql: MySql;
+  nftsContext: TestContext;
+  nftsSql: MySql;
 }

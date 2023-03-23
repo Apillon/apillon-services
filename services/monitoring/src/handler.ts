@@ -1,9 +1,12 @@
+import { AppEnvironment, env } from '@apillon/lib';
+import {
+  ErrorHandler,
+  MongoDbConnect,
+  ResponseFormat,
+} from '@apillon/service-lib';
 import * as middy from '@middy/core';
 import type { Callback, Context, Handler } from 'aws-lambda/handler';
 import { processEvent } from './main';
-import { ErrorHandler } from './middleware/error';
-import { MongoDbConnect } from './middleware/mongoDb';
-import { ResponseFormat } from './middleware/response';
 
 const lambdaHandler: Handler = async (
   event: any,
@@ -19,8 +22,20 @@ const lambdaHandler: Handler = async (
   return await processEvent(event, context);
 };
 
+const connectionParams = {
+  connectionString:
+    env.APP_ENV === AppEnvironment.TEST
+      ? env.MONITORING_MONGO_SRV_TEST
+      : env.MONITORING_MONGO_SRV,
+  database:
+    env.APP_ENV === AppEnvironment.TEST
+      ? env.MONITORING_MONGO_DATABASE_TEST
+      : env.MONITORING_MONGO_DATABASE,
+  poolSize: 10,
+};
+
 export const handler = middy.default(lambdaHandler);
 handler //
-  .use(MongoDbConnect())
+  .use(MongoDbConnect(connectionParams))
   .use(ResponseFormat())
   .use(ErrorHandler());
