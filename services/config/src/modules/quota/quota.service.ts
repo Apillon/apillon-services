@@ -2,8 +2,17 @@ import { GetQuotaDto, SqlModelStatus } from '@apillon/lib';
 import { ConfigErrorCode } from '../../config/types';
 import { ServiceContext } from '../../context';
 import { ScsCodeException } from '../../lib/exceptions';
-
+/**
+ * QuotaService class for handling quota requests
+ */
 export class QuotaService {
+  /**
+   * Get the quota for a specific project and object.
+   * @param {GetQuotaDto} data - The data containing quota ID, project UUID, and object UUID.
+   * @param {ServiceContext} context - The service context for database access.
+   * @returns {Promise<any>} - The quota data.
+   * @throws {ScsCodeException} - If the quota is not found.
+   */
   static async getQuota(data: GetQuotaDto, context: ServiceContext) {
     console.log(data, context);
 
