@@ -1,5 +1,9 @@
 import { ServiceContext } from '../scripts/context';
 
+/**
+ * Context middleware
+ * @returns Service context object with received  user object
+ */
 export function InitializeContextAndFillUser() {
   const before = async (request) => {
     //Event contains data, which is sent from API to microservice.

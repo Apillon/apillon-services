@@ -44,13 +44,14 @@ Project contains multiple workspaces. Basically each service and library should 
 ### Project libs
 
 - @apillon/lib is minimalistic general library, which include types and functions that are used in all other services. This library shoud contain as little as possible dependencies (other packages).
-- @apillon/modules-lib is library for NEST.js APIs. It includes some general middlewares, helpers, interceptors, decorators, ... This library should not be used in microservices (becouse of nest dependencies).
+- @apillon/modules-lib is library for NEST.js APIs. It includes some general middlewares, helpers, interceptors, decorators, ... This library should not be used in microservices (because of nest dependencies).
+- @apillon/service-lib is library for microservices. It includes some general middlewares and other common classes for microservices. This library should only be used in microservices.
 - @apillon/tests-lib is a library, which provides interfaces, classes and functions for testing environment setup and generating data for tests.
-- @apillon/workers-lib is a library, which provides types, models and classes for serverless workers. This library can be used in APIs and also in microserices (example of use can be seen in @services/storage, where multiple workers are implemented).
+- @apillon/workers-lib is a library, which provides types, models and classes for serverless workers. This library can be used in APIs and also in microservices (example of use can be seen in @services/storage, where multiple workers are implemented).
 
 ## Setting up new API or microservice
 
-Each service has its unique [code](#services-and-service-codes). First add new code and other informations to above table. Then add new enum values for `ServiceName` and `ServiceCode` in [types.ts](/packages/lib/src/config/types.ts) file inside @apillon/lib.
+Each service has its unique [code](#services-and-service-codes). First add new code and other information to above table. Then add new enum values for `ServiceName` and `ServiceCode` in [types.ts](/packages/lib/src/config/types.ts) file inside @apillon/lib.
 
 Easiest way to create new service is to copy existing one, clean it and change it's configuration.
 Services runs parallel, so each one of them need to run on separate port (defined in .env).

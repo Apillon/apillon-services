@@ -1,5 +1,9 @@
 import { ScsCodeException } from '../lib/exceptions';
 
+/**
+ * Error middleware for logging and formatting response
+ * @returns formatted error response
+ */
 export function ErrorHandler() {
   const onError = (request) => {
     console.log('ON ERROR MIDLLEWARE');

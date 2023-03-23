@@ -35,7 +35,6 @@
     "@polkadot/util": "^10.1.10",
     "@types/uuid": "^8.3.4",
     "axios": "^1.2.0",
-    "electron": "^21.3.0",
     "ipfs-http-client": "^56.0.3"
   },
   "devDependencies": {

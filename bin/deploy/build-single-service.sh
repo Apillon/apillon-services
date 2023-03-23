@@ -32,6 +32,13 @@ then
   npm run build
   npm link
   cd ../../
+else
+  echo "Building @apillon/service-lib"
+  cd packages/service-lib/
+  npm install --omit=dev
+  npm run build
+  npm link
+  cd ../../
 fi
 
 if [ "$WORKERS_LIB" == "true" ]

@@ -1,4 +1,3 @@
-import { AmsCodeException } from '../lib/exceptions';
 /**
  * Error middleware for logging and formatting response
  * @returns formatted error response
@@ -12,7 +11,7 @@ export function ErrorHandler() {
       status: request?.error?.status || 500,
       data: null,
       error:
-        request?.error instanceof AmsCodeException
+        request?.error?.options?.errorMessage && request?.error?.options?.code
           ? {
               message: request?.error?.options.errorMessage,
               errorCode: request?.error?.options.code,

@@ -57,6 +57,10 @@
       "path": "packages/modules-lib"
     },
     {
+      "name": "📦@packages/service-lib",
+      "path": "packages/service-lib"
+    },
+    {
       "name": "📦@packages/workers-lib",
       "path": "packages/workers-lib"
     },
@@ -83,7 +87,11 @@
     "[typescript]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
-    "cSpell.words": ["Apillon", "Authtrail", "LMAS"],
+    "cSpell.words": [
+      "Apillon",
+      "Authtrail",
+      "LMAS"
+    ],
     "files.exclude": {
       "**/.git": true,
       "**/.svn": true,
