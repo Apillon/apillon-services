@@ -200,6 +200,24 @@ export class AuthUser extends AdvancedSQLModel {
     return this.reset();
   }
 
+  public async populateByWalletAddress(wallet: string, conn?: PoolConnection) {
+    const res = await this.db().paramExecute(
+      `
+      SELECT * FROM authUser
+      WHERE wallet = @wallet
+    `,
+      { wallet },
+      conn,
+    );
+
+    if (res.length) {
+      this.populate(res[0], PopulateFrom.DB);
+      await this.populateAuthUserRoles(conn);
+      return this;
+    }
+    return this.reset();
+  }
+
   public async loginUser() {
     const context = this.getContext();
 

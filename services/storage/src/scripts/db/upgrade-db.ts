@@ -7,8 +7,8 @@ async function run() {
     database: env.STORAGE_MYSQL_DATABASE,
     host: env.STORAGE_MYSQL_HOST,
     port: env.STORAGE_MYSQL_PORT,
-    user: env.STORAGE_MYSQL_DEPLOY_USER,
-    password: env.STORAGE_MYSQL_DEPLOY_PASSWORD,
+    user: env.STORAGE_MYSQL_DEPLOY_USER || env.STORAGE_MYSQL_USER,
+    password: env.STORAGE_MYSQL_DEPLOY_PASSWORD || env.STORAGE_MYSQL_PASSWORD,
   });
 
   const showDialog = !process.argv.includes('--F');

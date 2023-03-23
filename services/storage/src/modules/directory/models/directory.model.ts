@@ -325,8 +325,9 @@ export class Directory extends AdvancedSQLModel {
     );
     const res = [];
     if (data && data.length) {
-      for (const d of data)
+      for (const d of data) {
         res.push(new Directory({}, context).populate(d, PopulateFrom.DB));
+      }
     }
 
     return res;
@@ -354,7 +355,7 @@ export class Directory extends AdvancedSQLModel {
         qSelect: `
         SELECT ${ObjectType.DIRECTORY} as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime, 
         NULL as contentType, NULL as size, d.parentDirectory_id as parentDirectoryId, 
-        NULL as file_uuid, IF(d.CID IS NULL, NULL, CONCAT("${env.STORAGE_IPFS_GATEWAY}", d.CID)) as link
+        NULL as file_uuid, IF(d.CID IS NULL, NULL, CONCAT("${env.STORAGE_IPFS_GATEWAY}", d.CID)) as link, NULL as fileStatus
         `,
         qFrom: `
         FROM \`${DbTables.DIRECTORY}\` d
@@ -371,7 +372,7 @@ export class Directory extends AdvancedSQLModel {
         qSelect: `
         SELECT ${ObjectType.FILE} as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime, 
         d.contentType as contentType, d.size as size, d.directory_id as parentDirectoryId, 
-        d.file_uuid as file_uuid, CONCAT("${env.STORAGE_IPFS_GATEWAY}", d.CID) as link
+        d.file_uuid as file_uuid, CONCAT("${env.STORAGE_IPFS_GATEWAY}", d.CID) as link, d.fileStatus as fileStatus
         `,
         qFrom: `
         FROM \`${DbTables.FILE}\` d

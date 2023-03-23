@@ -72,11 +72,14 @@ export class BucketService {
       await b.validate();
     } catch (err) {
       await b.handle(err);
-      if (!b.isValid()) throw new StorageValidationException(b);
+      if (!b.isValid()) {
+        throw new StorageValidationException(b);
+      }
     }
 
     //check max bucket quota
     if (
+      b.bucketType == BucketType.STORAGE &&
       (
         await BucketService.maxBucketsQuotaReached(
           {
@@ -131,7 +134,9 @@ export class BucketService {
       await b.validate();
     } catch (err) {
       await b.handle(err);
-      if (!b.isValid()) throw new StorageValidationException(b);
+      if (!b.isValid()) {
+        throw new StorageValidationException(b);
+      }
     }
 
     await b.update();
@@ -224,8 +229,9 @@ export class BucketService {
       await event.query.validate();
     } catch (err) {
       await event.query.handle(err);
-      if (!event.query.isValid())
+      if (!event.query.isValid()) {
         throw new StorageValidationException(event.query);
+      }
     }
 
     const numOfBuckets = await new Bucket(
@@ -291,7 +297,9 @@ export class BucketService {
       await webhook.validate();
     } catch (err) {
       await webhook.handle(err);
-      if (!webhook.isValid()) throw new StorageValidationException(webhook);
+      if (!webhook.isValid()) {
+        throw new StorageValidationException(webhook);
+      }
     }
 
     //Check if webhook for this bucket already exists
@@ -343,7 +351,9 @@ export class BucketService {
       await webhook.validate();
     } catch (err) {
       await webhook.handle(err);
-      if (!webhook.isValid()) throw new StorageValidationException(webhook);
+      if (!webhook.isValid()) {
+        throw new StorageValidationException(webhook);
+      }
     }
 
     await webhook.update();

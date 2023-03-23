@@ -188,6 +188,14 @@ export const releaseStage = async (stage: Stage): Promise<void> => {
     }
   }
 
+  if (stage.authApiSql) {
+    try {
+      await stage.authApiSql.close();
+    } catch (error) {
+      throw new Error('Error when releasing Auth Api stage: ' + error);
+    }
+  }
+
   if (stage.http) {
     try {
       await stage.http.close();

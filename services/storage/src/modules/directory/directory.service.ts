@@ -63,7 +63,9 @@ export class DirectoryService {
       await d.validate();
     } catch (err) {
       await d.handle(err);
-      if (!d.isValid()) throw new StorageValidationException(d);
+      if (!d.isValid()) {
+        throw new StorageValidationException(d);
+      }
     }
 
     await d.insert();
@@ -92,7 +94,9 @@ export class DirectoryService {
       await d.validate();
     } catch (err) {
       await d.handle(err);
-      if (!d.isValid()) throw new StorageValidationException(d);
+      if (!d.isValid()) {
+        throw new StorageValidationException(d);
+      }
     }
 
     await d.update();

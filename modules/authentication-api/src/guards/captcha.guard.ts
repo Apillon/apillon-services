@@ -31,7 +31,7 @@ export class CaptchaGuard implements CanActivate {
       if (env.CAPTCHA_SECRET && env.APP_ENV !== AppEnvironment.TEST) {
         if (!data.captcha) {
           throw new CodeException({
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
+            status: HttpStatus.UNPROCESSABLE_ENTITY,
             code: AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_PRESENT,
             errorCodes: AuthenticationErrorCode,
           });
@@ -41,7 +41,7 @@ export class CaptchaGuard implements CanActivate {
         );
       } else {
         throw new CodeException({
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
           code: AuthenticationErrorCode.IDENTITY_CAPTCHA_NOT_CONFIGURED,
           errorCodes: AuthenticationErrorCode,
         });
@@ -61,7 +61,14 @@ export class CaptchaGuard implements CanActivate {
 
       return true;
     } catch (error) {
-      throw error;
+      throw new CodeException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        code:
+          error.name == 'CodeException'
+            ? AuthenticationErrorCode.IDENTITY_CREATE_INVALID_REQUEST
+            : error,
+        errorCodes: AuthenticationErrorCode,
+      });
     }
   }
 }

@@ -1,5 +1,5 @@
 import { AppEnvironment, env } from '@apillon/lib';
-import { ExceptionsFilter, ResponseInterceptor } from '@apillon/modules-lib';
+import { ExceptionsFilter } from '@apillon/modules-lib';
 import {
   rebuildTestDatabases,
   setupTestContextAndSql,
@@ -38,7 +38,7 @@ export async function setupTest(): Promise<Stage> {
 
     await app.init();
 
-    await app.listen(env.APILLON_API_PORT_TEST, env.APILLON_API_HOST_TEST);
+    await app.listen(7002, '0.0.0.0');
     http = app.getHttpServer();
 
     const stage: Stage = await setupTestContextAndSql();

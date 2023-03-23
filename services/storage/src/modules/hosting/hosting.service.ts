@@ -14,7 +14,6 @@ import {
   Scs,
   SerializeFor,
   ServiceName,
-  ValidatorErrorCode,
   WebsiteQueryFilter,
   WebsitesQuotaReachedQueryFilter,
   writeLog,
@@ -136,7 +135,9 @@ export class HostingService {
       await website.validate();
     } catch (err) {
       await website.handle(err);
-      if (!website.isValid()) throw new StorageValidationException(website);
+      if (!website.isValid()) {
+        throw new StorageValidationException(website);
+      }
     }
 
     await website.update();
@@ -291,7 +292,9 @@ export class HostingService {
       await d.validate();
     } catch (err) {
       await d.handle(err);
-      if (!d.isValid()) throw new StorageValidationException(d);
+      if (!d.isValid()) {
+        throw new StorageValidationException(d);
+      }
     }
 
     await d.insert();

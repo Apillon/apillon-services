@@ -38,10 +38,13 @@ export function MongoDbConnect(
       );
 
       instances[instanceName] = mongo;
+    } else {
+      console.log(
+        `Mongo client instance ${instanceName} is already connected!`,
+      );
     }
 
     context[instanceName] = instances[instanceName];
-    console.log(`Mongo client instance ${instanceName} is already connected!`);
   };
 
   const after = async (_response) => {

@@ -18,13 +18,12 @@ import {
   FileUploadRequestFileStatus,
   StorageErrorCode,
 } from '../config/types';
+import { sendTransferredFilesToBucketWebhook } from '../lib/bucket-webhook';
 import { StorageCodeException } from '../lib/exceptions';
+import { storageBucketSyncFilesToIPFS } from '../lib/storage-bucket-sync-files-to-ipfs';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
-import { sendTransferredFilesToBucketWebhook } from '../lib/bucket-webhook';
-import { hostingBucketSyncFilesToIPFS } from '../lib/hosting-bucket-sync-files-to-ipfs';
-import { storageBucketSyncFilesToIPFS } from '../lib/storage-bucket-sync-files-to-ipfs';
 
 export class SyncToIPFSWorker extends BaseQueueWorker {
   public constructor(
@@ -108,13 +107,12 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
           //Push to files, that will be processed
           files.push(tmpFur);
         } else {
-          //Update file-upload-request status
-          tmpFur.fileStatus =
-            FileUploadRequestFileStatus.ERROR_FILE_UPLOAD_REQUEST_DOES_NOT_EXISTS;
-          await tmpFur.update();
+          throw new StorageCodeException({
+            code: StorageErrorCode.FILE_UPLOAD_REQUEST_NOT_FOUND,
+            status: 500,
+          });
         }
       }
-      //Get bucket
     } else {
       throw new StorageCodeException({
         code: StorageErrorCode.INVALID_BODY_FOR_WORKER,
@@ -142,16 +140,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
 
     let transferedFiles = [];
 
-    if (bucket.bucketType == BucketType.HOSTING) {
-      transferedFiles = await hostingBucketSyncFilesToIPFS(
-        this.context,
-        `${this.constructor.name}/runExecutor`,
-        bucket,
-        maxBucketSize,
-        session,
-        files,
-      );
-    } else {
+    if (bucket.bucketType == BucketType.STORAGE) {
       transferedFiles = await storageBucketSyncFilesToIPFS(
         this.context,
         `${this.constructor.name}/runExecutor`,
@@ -162,6 +151,11 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         data?.wrapWithDirectory,
         data?.wrappingDirectoryName,
       );
+    } else {
+      throw new StorageCodeException({
+        code: StorageErrorCode.INVALID_BUCKET_TYPE_FOR_IPFS_SYNC_WORKER,
+        status: 400,
+      });
     }
 
     //update session status

@@ -21,8 +21,20 @@
       "path": "services/config"
     },
     {
+      "name": "🌐@services/nfts [@apillon/nfts]",
+      "path": "services/nfts"
+    },
+    {
       "name": "🌐@services/referral [@apillon/referral]",
-      "path": "services\\referral"
+      "path": "services/referral"
+    },
+    {
+      "name": "🌐@services/authentication [@apillon/authentication]",
+      "path": "services/authentication"
+    },
+    {
+      "name": "🌐@services/nfts [@apillon/nfts]",
+      "path": "services/nfts"
     },
     {
       "name": "😎@modules/dev-console-api",

@@ -6,7 +6,9 @@ export class CryptoHash {
       const salt = crypto.randomBytes(8).toString('hex');
 
       crypto.scrypt(text, salt, 64, (err, derivedKey) => {
-        if (err) reject(err);
+        if (err) {
+          reject(err);
+        }
         resolve(salt + ':' + derivedKey.toString('hex'));
       });
     });
@@ -16,7 +18,9 @@ export class CryptoHash {
     return new Promise((resolve, reject) => {
       const [salt, key] = hash.split(':');
       crypto.scrypt(text, salt, 64, (err, derivedKey) => {
-        if (err) reject(err);
+        if (err) {
+          reject(err);
+        }
         resolve(key == derivedKey.toString('hex'));
       });
     });

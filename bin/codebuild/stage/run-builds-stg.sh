@@ -5,5 +5,6 @@ aws codebuild start-build --project-name apillon-dev-console-api-staging
 aws codebuild start-build --project-name apillon-storage-staging
 aws codebuild start-build --project-name apillon-config-staging
 aws codebuild start-build --project-name apillon-referral-staging
+aws codebuild start-build --project-name apillon-nfts-staging
 aws codebuild start-build --project-name apillon-api-staging
-aws codebuild start-build --project-name apillon-auth-api-staging
+# aws codebuild start-build --project-name apillon-auth-api-staging

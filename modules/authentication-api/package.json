@@ -1,6 +1,6 @@
 {
   "name": "@apillon/authentication-api",
-  "version": "0.4.4",
+  "version": "0.5.1",
   "description": "",
   "author": "",
   "private": true,
@@ -24,12 +24,7 @@
     "dev": "cross-env IS_OFFLINE=true npm run start:dev",
     "deploy:prod": "serverless deploy --stage production",
     "deploy:staging": "serverless deploy --stage staging",
-    "deploy:dev": "serverless deploy --stage dev",
-    "db-upgrade": "node -r ts-node/register ./src/scripts/db/upgrade-db",
-    "db-downgrade": "node -r ts-node/register ./src/scripts/db/downgrade-db",
-    "db-seed": "node -r ts-node/register ./src/scripts/db/seed-db",
-    "db-unseed": "node -r ts-node/register ./src/scripts/db/unseed-db",
-    "db-upgrade:ci": "node -r ts-node/register ./src/scripts/db/upgrade-db --F && node -r ts-node/register ./src/scripts/db/seed-db --F "
+    "deploy:dev": "serverless deploy --stage dev"
   },
   "dependencies": {
     "@apillon/lib": "*",

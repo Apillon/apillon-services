@@ -22,5 +22,11 @@ aws codebuild create-webhook --cli-input-json file://apillon-api-webhook-dev.jso
 aws codebuild create-project --cli-input-json file://auth-api-config-dev.json --profile apillon
 aws codebuild create-webhook --cli-input-json file://auth-api-webhook-dev.json --profile apillon
 
+aws codebuild create-project --cli-input-json file://auth-config-dev.json --profile apillon
+aws codebuild create-webhook --cli-input-json file://auth-webhook-dev.json --profile apillon
+
 aws codebuild create-project --cli-input-json file://referral-config-dev.json --profile apillon
 aws codebuild create-webhook --cli-input-json file://referral-webhook-dev.json --profile apillon
+
+aws codebuild create-project --cli-input-json file://nfts-config-dev.json --profile apillon
+aws codebuild create-webhook --cli-input-json file://nfts-webhook-dev.json --profile apillon

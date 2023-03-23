@@ -208,6 +208,12 @@ export interface IEnv {
   AUTH_API_MYSQL_PASSWORD_TEST: string;
   AUTH_API_MYSQL_DATABASE_TEST: string;
 
+  // MICROSERVICE
+  AUTH_FUNCTION_NAME: string;
+  AUTH_FUNCTION_NAME_TEST: string;
+  AUTH_SOCKET_PORT: number;
+  AUTH_SOCKET_PORT_TEST: number;
+
   /************************************************************
    * Kilt config
    ************************************************************/
@@ -296,10 +302,59 @@ export interface IEnv {
    * hCAPTCHA
    */
   CAPTCHA_SECRET: string;
+
   /** DISCORD */
   DISCORD_CLIENT_ID: string;
   DISCORD_CLIENT_SECRET: string;
   DISCORD_REDIRECT_URI: string;
+
+  /************************************************************
+   * Apillon Nfts API config
+   ************************************************************/
+  /**
+   *  function name
+   */
+  NFTS_FUNCTION_NAME: string;
+  NFTS_FUNCTION_NAME_TEST: string;
+
+  /**
+   * NFTS dev server port
+   */
+  NFTS_SOCKET_PORT: number;
+  NFTS_SOCKET_PORT_TEST: number;
+
+  /**
+   * NFTS Database config
+   */
+
+  NFTS_MYSQL_HOST: string;
+  NFTS_MYSQL_PORT: number;
+  NFTS_MYSQL_USER: string;
+  NFTS_MYSQL_PASSWORD: string;
+  NFTS_MYSQL_DEPLOY_USER: string;
+  NFTS_MYSQL_DEPLOY_PASSWORD: string;
+  NFTS_MYSQL_DATABASE: string;
+
+  // TEST
+  NFTS_MYSQL_HOST_TEST: string;
+  NFTS_MYSQL_PORT_TEST: number;
+  NFTS_MYSQL_USER_TEST: string;
+  NFTS_MYSQL_PASSWORD_TEST: string;
+  NFTS_MYSQL_DATABASE_TEST: string;
+
+  /**
+   * NFT Moonbeam config
+   */
+  NFTS_MOONBEAM_TESTNET_RPC: string;
+  NFTS_MOONBEAM_MAINNET_RPC: string;
+  NFTS_MOONBEAM_TESTNET_PRIVATEKEY: string;
+  NFTS_MOONBEAM_MAINNET_PRIVATEKEY: string;
+
+  /**
+   * NFT workers config
+   */
+  NFTS_AWS_WORKER_SQS_URL: string;
+  NFTS_AWS_WORKER_LAMBDA_NAME: string;
 }
 
 // dotenv.config();
@@ -327,11 +382,8 @@ export let env: IEnv = {
   ACCESS_MYSQL_DATABASE: process.env['ACCESS_MYSQL_DATABASE'],
   ACCESS_MYSQL_USER: process.env['ACCESS_MYSQL_USER'],
   ACCESS_MYSQL_PASSWORD: process.env['ACCESS_MYSQL_PASSWORD'],
-  ACCESS_MYSQL_DEPLOY_USER:
-    process.env['ACCESS_MYSQL_DEPLOY_USER'] || process.env['ACCESS_MYSQL_USER'],
-  ACCESS_MYSQL_DEPLOY_PASSWORD:
-    process.env['ACCESS_MYSQL_DEPLOY_PASSWORD'] ||
-    process.env['ACCESS_MYSQL_PASSWORD'],
+  ACCESS_MYSQL_DEPLOY_USER: process.env['ACCESS_MYSQL_DEPLOY_USER'],
+  ACCESS_MYSQL_DEPLOY_PASSWORD: process.env['ACCESS_MYSQL_DEPLOY_PASSWORD'],
 
   ACCESS_SOCKET_PORT_TEST:
     parseInt(process.env['ACCESS_SOCKET_PORT_TEST']) || 7101,
@@ -366,11 +418,9 @@ export let env: IEnv = {
   DEV_CONSOLE_API_MYSQL_USER: process.env['DEV_CONSOLE_API_MYSQL_USER'],
   DEV_CONSOLE_API_MYSQL_PASSWORD: process.env['DEV_CONSOLE_API_MYSQL_PASSWORD'],
   DEV_CONSOLE_API_MYSQL_DEPLOY_USER:
-    process.env['DEV_CONSOLE_API_MYSQL_DEPLOY_USER'] ||
-    process.env['DEV_CONSOLE_API_MYSQL_USER'],
+    process.env['DEV_CONSOLE_API_MYSQL_DEPLOY_USER'],
   DEV_CONSOLE_API_MYSQL_DEPLOY_PASSWORD:
-    process.env['DEV_CONSOLE_API_MYSQL_DEPLOY_PASSWORD'] ||
-    process.env['DEV_CONSOLE_API_MYSQL_PASSWORD'],
+    process.env['DEV_CONSOLE_API_MYSQL_DEPLOY_PASSWORD'],
   DEV_CONSOLE_API_MYSQL_DATABASE: process.env['DEV_CONSOLE_API_MYSQL_DATABASE'],
   /** DEV CONSOLE API TEST DB conn*/
   DEV_CONSOLE_API_MYSQL_HOST_TEST:
@@ -408,17 +458,13 @@ export let env: IEnv = {
   STORAGE_DELETE_AFTER_INTERVAL:
     parseInt(process.env['STORAGE_DELETE_AFTER_INTERVAL']) || 90,
 
-  /**STORAGE microservice */
+  /**STORAGE microservice DB*/
   STORAGE_MYSQL_HOST: process.env['STORAGE_MYSQL_HOST'],
   STORAGE_MYSQL_PORT: parseInt(process.env['STORAGE_MYSQL_PORT']) || 3306,
   STORAGE_MYSQL_USER: process.env['STORAGE_MYSQL_USER'],
   STORAGE_MYSQL_PASSWORD: process.env['STORAGE_MYSQL_PASSWORD'],
-  STORAGE_MYSQL_DEPLOY_USER:
-    process.env['STORAGE_MYSQL_DEPLOY_USER'] ||
-    process.env['STORAGE_MYSQL_USER'],
-  STORAGE_MYSQL_DEPLOY_PASSWORD:
-    process.env['STORAGE_MYSQL_DEPLOY_PASSWORD'] ||
-    process.env['STORAGE_MYSQL_PASSWORD'],
+  STORAGE_MYSQL_DEPLOY_USER: process.env['STORAGE_MYSQL_DEPLOY_USER'],
+  STORAGE_MYSQL_DEPLOY_PASSWORD: process.env['STORAGE_MYSQL_DEPLOY_PASSWORD'],
   STORAGE_MYSQL_DATABASE: process.env['STORAGE_MYSQL_DATABASE'],
 
   /**STORAGE microservice - TEST DB */
@@ -449,7 +495,7 @@ export let env: IEnv = {
   /** --- SECTION: APILLON API --- */
   APILLON_API_HOST: process.env['APILLON_API_HOST'] || 'localhost',
   APILLON_API_PORT: parseInt(process.env['APILLON_API_PORT']) || 6002,
-  APILLON_API_HOST_TEST: process.env['APILLON_API_HOST_TEST'] || 'localhost',
+  APILLON_API_HOST_TEST: process.env['APILLON_API_HOST_TEST'] || '127.0.0.1',
   APILLON_API_PORT_TEST: parseInt(process.env['APILLON_API_PORT_TEST']) || 7002,
 
   /** --- SECTION: APILLON AUTHENTICATION API --- */
@@ -467,12 +513,8 @@ export let env: IEnv = {
   AUTH_API_MYSQL_PORT: parseInt(process.env['AUTH_API_MYSQL_PORT']) || 3306,
   AUTH_API_MYSQL_USER: process.env['AUTH_API_MYSQL_USER'],
   AUTH_API_MYSQL_PASSWORD: process.env['AUTH_API_MYSQL_PASSWORD'],
-  AUTH_API_MYSQL_DEPLOY_USER:
-    process.env['AUTH_API_MYSQL_DEPLOY_USER'] ||
-    process.env['AUTH_API_MYSQL_USER'],
-  AUTH_API_MYSQL_DEPLOY_PASSWORD:
-    process.env['AUTH_API_MYSQL_DEPLOY_PASSWORD'] ||
-    process.env['AUTH_API_MYSQL_PASSWORD'],
+  AUTH_API_MYSQL_DEPLOY_USER: process.env['AUTH_API_MYSQL_DEPLOY_USER'],
+  AUTH_API_MYSQL_DEPLOY_PASSWORD: process.env['AUTH_API_MYSQL_DEPLOY_PASSWORD'],
   AUTH_API_MYSQL_DATABASE: process.env['AUTH_API_MYSQL_DATABASE'],
   AUTH_API_MYSQL_HOST_TEST: process.env['AUTH_API_MYSQL_HOST_TEST'],
   AUTH_API_MYSQL_PORT_TEST:
@@ -510,11 +552,8 @@ export let env: IEnv = {
   CONFIG_MYSQL_DATABASE: process.env['CONFIG_MYSQL_DATABASE'],
   CONFIG_MYSQL_USER: process.env['CONFIG_MYSQL_USER'],
   CONFIG_MYSQL_PASSWORD: process.env['CONFIG_MYSQL_PASSWORD'],
-  CONFIG_MYSQL_DEPLOY_USER:
-    process.env['CONFIG_MYSQL_DEPLOY_USER'] || process.env['CONFIG_MYSQL_USER'],
-  CONFIG_MYSQL_DEPLOY_PASSWORD:
-    process.env['CONFIG_MYSQL_DEPLOY_PASSWORD'] ||
-    process.env['CONFIG_MYSQL_PASSWORD'],
+  CONFIG_MYSQL_DEPLOY_USER: process.env['CONFIG_MYSQL_DEPLOY_USER'],
+  CONFIG_MYSQL_DEPLOY_PASSWORD: process.env['CONFIG_MYSQL_DEPLOY_PASSWORD'],
 
   CONFIG_SOCKET_PORT_TEST:
     parseInt(process.env['CONFIG_SOCKET_PORT_TEST']) || 7501,
@@ -544,12 +583,8 @@ export let env: IEnv = {
   REFERRAL_MYSQL_PORT: parseInt(process.env['REFERRAL_MYSQL_PORT']) || 3306,
   REFERRAL_MYSQL_USER: process.env['REFERRAL_MYSQL_USER'],
   REFERRAL_MYSQL_PASSWORD: process.env['REFERRAL_MYSQL_PASSWORD'],
-  REFERRAL_MYSQL_DEPLOY_USER:
-    process.env['REFERRAL_MYSQL_DEPLOY_USER'] ||
-    process.env['REFERRAL_MYSQL_USER'],
-  REFERRAL_MYSQL_DEPLOY_PASSWORD:
-    process.env['REFERRAL_MYSQL_DEPLOY_PASSWORD'] ||
-    process.env['REFERRAL_MYSQL_PASSWORD'],
+  REFERRAL_MYSQL_DEPLOY_USER: process.env['REFERRAL_MYSQL_DEPLOY_USER'],
+  REFERRAL_MYSQL_DEPLOY_PASSWORD: process.env['REFERRAL_MYSQL_DEPLOY_PASSWORD'],
   REFERRAL_MYSQL_DATABASE: process.env['REFERRAL_MYSQL_DATABASE'],
 
   /**REFERRAL microservice - TEST DB */
@@ -563,6 +598,39 @@ export let env: IEnv = {
   /** CAPTCHA */
   CAPTCHA_SECRET: process.env['CAPTCHA_SECRET'] || '',
 
+  /** AUTH MICROSERVICE */
+  AUTH_FUNCTION_NAME: process.env['AUTH_FUNCTION_NAME'],
+  AUTH_FUNCTION_NAME_TEST: process.env['AUTH_FUNCTION_NAME_TEST'],
+  AUTH_SOCKET_PORT: parseInt(process.env['AUTH_SOCKET_PORT']) || 6801,
+  AUTH_SOCKET_PORT_TEST: parseInt(process.env['AUTH_SOCKET_PORT_TEST']) || 7801,
+
+  /** NFTS */
+  NFTS_FUNCTION_NAME: process.env['NFTS_FUNCTION_NAME'],
+  NFTS_FUNCTION_NAME_TEST: process.env['NFTS_FUNCTION_NAME_TEST'],
+  NFTS_SOCKET_PORT: parseInt(process.env['NFTS_SOCKET_PORT']) || 6701,
+  NFTS_MYSQL_HOST: process.env['NFTS_MYSQL_HOST'],
+  NFTS_MYSQL_PORT: parseInt(process.env['NFTS_MYSQL_PORT']) || 3306,
+  NFTS_MYSQL_DATABASE: process.env['NFTS_MYSQL_DATABASE'],
+  NFTS_MYSQL_USER: process.env['NFTS_MYSQL_USER'],
+  NFTS_MYSQL_PASSWORD: process.env['NFTS_MYSQL_PASSWORD'],
+  NFTS_MYSQL_DEPLOY_USER: process.env['NFTS_MYSQL_DEPLOY_USER'],
+  NFTS_MYSQL_DEPLOY_PASSWORD: process.env['NFTS_MYSQL_DEPLOY_PASSWORD'],
+
+  NFTS_SOCKET_PORT_TEST: parseInt(process.env['NFTS_SOCKET_PORT_TEST']) || 7701,
+  NFTS_MYSQL_HOST_TEST: process.env['NFTS_MYSQL_HOST_TEST'],
+  NFTS_MYSQL_PORT_TEST: parseInt(process.env['NFTS_MYSQL_PORT_TEST']) || 3306,
+  NFTS_MYSQL_DATABASE_TEST: process.env['NFTS_MYSQL_DATABASE_TEST'],
+  NFTS_MYSQL_USER_TEST: process.env['NFTS_MYSQL_USER_TEST'],
+  NFTS_MYSQL_PASSWORD_TEST: process.env['NFTS_MYSQL_PASSWORD_TEST'],
+
+  NFTS_MOONBEAM_TESTNET_RPC: process.env['NFTS_MOONBEAM_TESTNET_RPC'],
+  NFTS_MOONBEAM_MAINNET_RPC: process.env['NFTS_MOONBEAM_MAINNET_RPC'],
+  NFTS_MOONBEAM_TESTNET_PRIVATEKEY:
+    process.env['NFTS_MOONBEAM_TESTNET_PRIVATEKEY'],
+  NFTS_MOONBEAM_MAINNET_PRIVATEKEY:
+    process.env['NFTS_MOONBEAM_MAINNET_PRIVATEKEY'],
+  NFTS_AWS_WORKER_SQS_URL: process.env['NFTS_AWS_WORKER_SQS_URL'],
+  NFTS_AWS_WORKER_LAMBDA_NAME: process.env['NFTS_AWS_WORKER_LAMBDA_NAME'],
   /** DISCORD */
   DISCORD_CLIENT_ID: process.env['DISCORD_CLIENT_ID'] || '',
   DISCORD_CLIENT_SECRET: process.env['DISCORD_CLIENT_SECRET'] || '',
@@ -579,6 +647,7 @@ export async function getEnvSecrets() {
   if (!isEnvReady) {
     await populateSecrets();
   }
+  // only uncomment for debugging... should not print out in production!!!
   // console.log(JSON.stringify(env, null, 2));
   return env;
 }

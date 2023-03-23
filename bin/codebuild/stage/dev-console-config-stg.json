@@ -34,7 +34,7 @@
       {
         "type": "PLAINTEXT",
         "name": "AWS_SECRETS_ID",
-        "value": "Apillon-env-staging"
+        "value": "apillon-staging"
       }
     ],
     "type": "LINUX_CONTAINER"

@@ -20,14 +20,19 @@ export async function getSessionFilesOnS3(
    */
   const s3FileLists: any[] = [];
   let s3FileList: any = undefined;
+  let lastS3Key: string = undefined;
   do {
     s3FileList = await s3Client.listFiles(
       env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
       `${BucketType[bucket.bucketType]}${
         session?.session_uuid ? '_sessions' : ''
       }/${bucket.id}/${session?.session_uuid}`,
+      lastS3Key,
     );
-    if (s3FileList.Contents?.length > 0) s3FileLists.push(s3FileList);
+    if (s3FileList.Contents?.length > 0) {
+      s3FileLists.push(s3FileList);
+      lastS3Key = s3FileList.Contents.slice(-1)[0].Key;
+    }
   } while (s3FileList.Contents?.length == 1000);
 
   if (s3FileLists.length == 0) {
