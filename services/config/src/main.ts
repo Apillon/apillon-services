@@ -1,5 +1,5 @@
 import { ScsEventType } from '@apillon/lib';
-import { ServiceContext } from './context';
+import { ServiceContext } from '@apillon/service-lib';
 
 import { QuotaService } from './modules/quota/quota.service';
 

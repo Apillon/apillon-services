@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@apillon/lib": "*",
+    "@apillon/service-lib": "*",
     "@middy/core": "^2.5.7",
     "aws-lambda": "^1.0.7",
     "axios": "^1.2.0",

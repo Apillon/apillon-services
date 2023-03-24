@@ -20,7 +20,7 @@ import {
   DbTables,
   NftsErrorCode,
 } from '../../../config/types';
-import { ServiceContext } from '../../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { WalletService } from '../../wallet/wallet.service';
 
 export class Collection extends AdvancedSQLModel {

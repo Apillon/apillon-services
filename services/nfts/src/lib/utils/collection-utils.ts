@@ -7,7 +7,7 @@ import {
   TransactionStatus,
   TransactionType,
 } from '../../config/types';
-import { ServiceContext } from '../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { Collection } from '../../modules/nfts/models/collection.model';
 import { Transaction } from '../../modules/transaction/models/transaction.model';
 import { TransactionService } from '../../modules/transaction/transaction.service';

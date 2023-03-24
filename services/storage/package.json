@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@apillon/lib": "*",
+    "@apillon/service-lib": "*",
     "@apillon/workers-lib": "*",
     "@crustio/crust-pin": "^1.0.0",
     "@crustio/type-definitions": "^1.3.0",

@@ -9,7 +9,7 @@ import {
   SerializeFor,
   ServiceName,
 } from '@apillon/lib';
-import { ServiceContext } from '../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { ApiKey } from './models/api-key.model';
 import { v4 as uuidV4 } from 'uuid';
 import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';

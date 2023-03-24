@@ -4,7 +4,7 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { ServiceContext } from '../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { TransactionStatusWorker } from '../../workers/transaction-status-worker';
 import { WorkerName } from '../../workers/worker-executor';
 

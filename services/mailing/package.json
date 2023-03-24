@@ -20,6 +20,7 @@
   "dependencies": {
     "@middy/core": "^2.5.7",
     "@apillon/lib": "*",
+    "@apillon/service-lib": "*",
     "nodemailer": "^6.8.0"
   },
   "devDependencies": {

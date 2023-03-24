@@ -1,5 +1,5 @@
 import { AmsEventType } from '@apillon/lib';
-import { ServiceContext } from './context';
+import { ServiceContext } from '@apillon/service-lib';
 
 import { ApiKeyService } from './modules/api-key/api-key.service';
 import { AuthUserService } from './modules/auth-user/auth-user.service';

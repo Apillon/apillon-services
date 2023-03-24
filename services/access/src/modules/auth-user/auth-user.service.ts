@@ -11,7 +11,7 @@ import {
   UserWalletAuthDto,
 } from '@apillon/lib';
 import { AmsErrorCode } from '../../config/types';
-import { ServiceContext } from '../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
 import { AuthToken } from '../auth-token/auth-token.model';
 import { AuthUser } from './auth-user.model';

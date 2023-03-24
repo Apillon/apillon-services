@@ -19,7 +19,7 @@ import {
   SqlModelStatus,
 } from '@apillon/lib';
 import { BucketType, DbTables, StorageErrorCode } from '../../../config/types';
-import { ServiceContext } from '../../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
 
 export class Bucket extends AdvancedSQLModel {

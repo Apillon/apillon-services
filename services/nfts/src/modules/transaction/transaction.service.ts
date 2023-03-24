@@ -6,7 +6,7 @@ import {
   TransactionQueryFilter,
 } from '@apillon/lib';
 import { DbTables, NftsErrorCode, TransactionStatus } from '../../config/types';
-import { ServiceContext } from '../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import {
   NftsCodeException,
   NftsValidationException,

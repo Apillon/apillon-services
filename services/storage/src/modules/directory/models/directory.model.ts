@@ -17,7 +17,7 @@ import {
   unionSelectAndCountQuery,
 } from '@apillon/lib';
 import { DbTables, ObjectType, StorageErrorCode } from '../../../config/types';
-import { ServiceContext } from '../../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
 import { File } from '../../storage/models/file.model';
 

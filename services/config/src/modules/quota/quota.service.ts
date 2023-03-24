@@ -1,6 +1,6 @@
 import { GetQuotaDto, SqlModelStatus } from '@apillon/lib';
 import { ConfigErrorCode } from '../../config/types';
-import { ServiceContext } from '../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { ScsCodeException } from '../../lib/exceptions';
 /**
  * QuotaService class for handling quota requests

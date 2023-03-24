@@ -6,7 +6,7 @@ import {
   OauthLinkType,
 } from '@apillon/lib';
 import { AmsErrorCode, DbTables } from '../../config/types';
-import { ServiceContext } from '../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
 import { AuthUser } from '../auth-user/auth-user.model';
 import { OauthLink } from './oauth-link.model';

@@ -9,7 +9,7 @@ import {
 } from '@apillon/lib';
 import { stringParser } from '@rawmodel/parsers';
 import { AuthenticationErrorCode, DbTables } from '../../../config/types';
-import { ServiceContext } from '../../../context';
+import { ServiceContext } from '@apillon/service-lib';
 
 export class Identity extends AdvancedSQLModel {
   /**

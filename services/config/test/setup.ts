@@ -6,7 +6,7 @@ import {
   rebuildDatabase,
   seedDatabase,
 } from '@apillon/lib';
-import { ServiceContext } from '../src/context';
+import { ServiceContext } from '@apillon/service-lib';
 
 /**
  * Testing stage definition.
