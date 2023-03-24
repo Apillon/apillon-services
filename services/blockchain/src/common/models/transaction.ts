@@ -2,6 +2,7 @@ import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
   ChainType,
+  TransactionStatus,
   Context,
   PoolConnection,
   PopulateFrom,
@@ -67,13 +68,29 @@ export class Transaction extends AdvancedSQLModel {
   public chain: Chain;
 
   /**
-   * chainType
+   * Transaction status
    */
   @prop({
     parser: { resolver: integerParser() },
     populatable: [
       PopulateFrom.DB, //
     ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public transactionStatus: TransactionStatus;
+
+  /**
+   * chainType
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -154,6 +171,7 @@ export class Transaction extends AdvancedSQLModel {
     chain: Chain,
     chainType: ChainType,
     address: string,
+    transactionsStatus: TransactionStatus,
     nonce: number,
     conn?: PoolConnection,
   ) {
@@ -165,11 +183,49 @@ export class Transaction extends AdvancedSQLModel {
       chainType = @chainType
       AND chain = @chain
       AND address = @address
+      AND transactionStatus = @transactionStatus
       AND nonce > @nonce
       order by nonce ASC;
       `,
-      { chain, chainType, address, nonce },
+      { chain, chainType, address, transactionsStatus, nonce },
       conn,
     );
+  }
+
+  public async getTransactionsInHashes(
+    chain: Chain,
+    chainType: ChainType,
+    address: string,
+    transactionStatus: TransactionStatus,
+    hashes: string,
+    conn?: PoolConnection,
+  ) {
+    const data = await this.getContext().mysql.paramExecute(
+      `SELECT *
+      FROM \`${DbTables.TRANSACTION_QUEUE}\` 
+      WHERE 
+        transactionHash IN (@hashes)
+        AND chain = @chain
+        AND chainType = @chainType
+        AND address = @address
+        AND transactionStatus = @status`,
+      {
+        status: transactionStatus,
+        hashes,
+        address,
+        chain,
+        chainType,
+      },
+      conn,
+    );
+
+    const res: Transaction[] = [];
+    if (data && data.length) {
+      for (const t of data) {
+        res.push(new Transaction({}, this.getContext()).populate(t));
+      }
+    }
+
+    return res;
   }
 }

@@ -10,12 +10,14 @@ import {
 
 import { Context, env } from '@apillon/lib';
 import { Scheduler } from './scheduler';
+import { CrustTransactionWorker } from './crust-transaction-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
 
 export enum WorkerName {
   SCHEDULER = 'scheduler',
+  CRUST_TRANSACTIONS = 'crust-transactions',
 }
 
 export async function handler(event: any) {
@@ -99,6 +101,10 @@ export async function handleLambdaEvent(
     case WorkerName.SCHEDULER:
       const scheduler = new Scheduler(serviceDef, context);
       await scheduler.run();
+      break;
+    case WorkerName.CRUST_TRANSACTIONS:
+      const txWorker = new CrustTransactionWorker(workerDefinition, context);
+      await txWorker.execute();
       break;
     default:
       console.log(
