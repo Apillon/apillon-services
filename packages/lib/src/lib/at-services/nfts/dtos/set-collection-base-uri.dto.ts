@@ -24,12 +24,7 @@ export class SetCollectionBaseUriDTO extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_SET_BASE_URI_COLLECTION_UUID_NOT_PRESENT,
-      },
-    ],
+    validators: [],
   })
   public collection_uuid: string;
 }

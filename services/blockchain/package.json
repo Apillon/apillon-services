@@ -29,6 +29,7 @@
   "dependencies": {
     "@apillon/lib": "*",
     "@golevelup/nestjs-graphql-request": "^0.1.14",
+    "@apillon/workers-lib": "*",
     "@middy/core": "^3.3.1",
     "@polkadot/api": "^9.11.3",
     "@polkadot/keyring": "^10.2.6",

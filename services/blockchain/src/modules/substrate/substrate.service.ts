@@ -9,12 +9,15 @@ import {
   LogType,
   SerializeFor,
   ServiceName,
+  env,
 } from '@apillon/lib';
 import { Endpoint } from '../../common/models/endpoint';
 import { BlockchainErrorCode } from '../../config/types';
 import { BlockchainCodeException } from '../../lib/exceptions';
 import { Transaction } from '../../common/models/transaction';
 import { typesBundleForPolkadot } from '@crustio/type-definitions';
+import { sendToWorkerQueue } from '@apillon/workers-lib';
+import { WorkerName } from '../../workers/worker-executor';
 
 export class SubstrateService {
   static async createTransaction(
@@ -94,6 +97,7 @@ export class SubstrateService {
       });
       const pair = keyring.addFromUri(wallet.seed);
       const unsignedTx = api.tx(_event.transaction);
+      // TODO: add validation service for transaction to detect and prevent weird transactions.
 
       // const info = await unsignedTx.paymentInfo(pair);
       // console.log(`
@@ -221,6 +225,7 @@ export class SubstrateService {
       );
       let latestSuccess = null;
       try {
+        // TODO: consider batching transaction api.tx.utility.batch
         for (let j = 0; j < transactions.length; j++) {
           const signedTx = api.tx(transactions[j].rawTransaction);
           await signedTx.send();
@@ -243,7 +248,17 @@ export class SubstrateService {
       wallet.populate({ lastProcessedNonce: latestSuccess });
       await wallet.update();
     }
-    // TODO: call transaction checker
+    await sendToWorkerQueue(
+      env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
+      WorkerName.SCHEDULER,
+      [
+        {
+          chain: _event.chain,
+        },
+      ],
+      null,
+      null,
+    );
   }
   //#region
 }

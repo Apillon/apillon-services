@@ -16,7 +16,10 @@ export function isPlainObject(testVar: any): boolean {
   return true;
 }
 
-export async function streamToString(stream: any, encoding: BufferEncoding) {
+export async function streamToString(
+  stream: any,
+  encoding: BufferEncoding,
+): Promise<string> {
   const chunks = [];
   return new Promise((resolve, reject) => {
     stream.on('data', (chunk: any) => chunks.push(Buffer.from(chunk)));

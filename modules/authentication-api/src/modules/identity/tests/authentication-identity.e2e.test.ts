@@ -1,15 +1,19 @@
 import * as request from 'supertest';
 import { releaseStage, Stage } from '@apillon/tests-lib';
 import { setupTest } from '../../../../test/helpers/setup';
-import { DbTables, IdentityState, JwtTokenType } from '../../../config/types';
+import { JwtTokenType } from '../../../config/types';
 import { generateJwtToken, SerializeFor } from '@apillon/lib';
-import { Identity } from '../models/identity.model';
 import { AuthenticationApiContext } from '../../../context';
 import * as mock from './mock-data';
 import { Utils } from '@kiltprotocol/sdk-js';
-import { generateKeypairs } from '../../../lib/kilt';
 import { u8aToHex } from '@polkadot/util';
 import { setupDidCreateMock } from './utils';
+import { Identity } from '@apillon/authentication/src/modules/identity/models/identity.model';
+import {
+  DbTables,
+  IdentityState,
+} from '@apillon/authentication/src/config/types';
+import { generateKeypairs } from '@apillon/authentication/src/lib/kilt';
 
 describe('IDENTITY', () => {
   let stage: Stage;
@@ -23,7 +27,7 @@ describe('IDENTITY', () => {
   beforeAll(async () => {
     console.log('Setup stage ...');
     stage = await setupTest();
-    context = stage.authApiContext;
+    context = new AuthenticationApiContext();
   });
 
   afterAll(async () => {
@@ -97,7 +101,6 @@ describe('IDENTITY', () => {
       // So we make sure the object is commited to the database right away
       const identity = new Identity({}, context);
       identity.populate({
-        context: context,
         email: testEmail,
         state: IdentityState.ATTESTED,
         token: token,

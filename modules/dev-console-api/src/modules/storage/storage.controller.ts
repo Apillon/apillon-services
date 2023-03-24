@@ -4,11 +4,7 @@ import {
   TrashedFilesQueryFilter,
 } from '@apillon/lib';
 import { ValidateFor } from '@apillon/lib';
-import {
-  CreateS3UrlForUploadDto,
-  DefaultUserRole,
-  EndFileUploadSessionDto,
-} from '@apillon/lib';
+import { DefaultUserRole, EndFileUploadSessionDto } from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,
