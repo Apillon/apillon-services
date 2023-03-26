@@ -63,3 +63,4 @@ db-downgrade-auth-api:
 ####### MISC #######
 run-s3:
 	docker-compose -f ${DOCKER_COMPOSE} up --force-recreate
+
