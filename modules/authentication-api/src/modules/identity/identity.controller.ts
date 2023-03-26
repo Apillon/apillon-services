@@ -61,8 +61,7 @@ export class IdentityController {
 
   @Post('verification/email')
   @Validation({ dto: VerificationEmailDto })
-  // TODO: Add CaptchaGuard!!!!
-  @UseGuards(ValidationGuard)
+  @UseGuards(ValidationGuard, CaptchaGuard)
   async identityVerification(
     @Ctx() context: AuthenticationApiContext,
     @Body() body: any,
