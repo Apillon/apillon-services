@@ -1,5 +1,7 @@
 import { env } from '@apillon/lib';
 import { GraphQLClient, gql } from 'graphql-request';
+import { CrustTransferType } from '../../config/types';
+import { CrustBlockHeight } from './data-models/crust-block-height';
 import { CrustStorageOrders } from './data-models/crust-storage-orders';
 import { CrustTransfers } from './data-models/crust-transfers';
 
@@ -19,10 +21,15 @@ export class CrustBlockchainIndexer {
     toBlock: number,
   ): Promise<CrustTransfers> {
     const GRAPHQL_QUERY = gql`
-      query getWitdrawals($address: String!, $fromBlock: Int!, $toBlock: Int!) {
+      query getWitdrawals(
+        $address: String!
+        $fromBlock: Int!
+        $toBlock: Int!
+        $transactionType: Int!
+      ) {
         transfers(
           where: {
-            transactionType_eq: 0
+            transactionType_eq: $transactionType
             from: { id_eq: $address }
             blockNumber_gt: $fromBlock
             blockNumber_lte: $toBlock
@@ -47,7 +54,12 @@ export class CrustBlockchainIndexer {
 
     const data: CrustTransfers = await this.graphQlClient.request(
       GRAPHQL_QUERY,
-      { address, fromBlock, toBlock },
+      {
+        address,
+        fromBlock,
+        toBlock,
+        transactionType: CrustTransferType.TRANSFER,
+      },
     );
     return data;
   }
@@ -58,10 +70,15 @@ export class CrustBlockchainIndexer {
     toBlock: number,
   ): Promise<CrustTransfers> {
     const GRAPHQL_QUERY = gql`
-      query getDeposits($address: String!, $fromBlock: Int!, $toBlock: Int!) {
+      query getDeposits(
+        $address: String!
+        $fromBlock: Int!
+        $toBlock: Int!
+        $transactionType: Int!
+      ) {
         transfers(
           where: {
-            transactionType_eq: 0
+            transactionType_eq: $transactionType
             to: { id_eq: $address }
             blockNumber_gt: $fromBlock
             blockNumber_lte: $toBlock
@@ -86,7 +103,12 @@ export class CrustBlockchainIndexer {
 
     const data: CrustTransfers = await this.graphQlClient.request(
       GRAPHQL_QUERY,
-      { address, fromBlock, toBlock },
+      {
+        address,
+        fromBlock,
+        toBlock,
+        transactionType: CrustTransferType.TRANSFER,
+      },
     );
     return data;
   }
@@ -95,7 +117,7 @@ export class CrustBlockchainIndexer {
     address: string,
     fromBlock: number,
     toBlock: number,
-  ) {
+  ): Promise<CrustStorageOrders> {
     const GRAPHQL_QUERY = gql`
       query getFileOrders($address: String!, $fromBlock: Int!, $toBlock: Int!) {
         storageOrders(
@@ -125,5 +147,20 @@ export class CrustBlockchainIndexer {
       { address, fromBlock, toBlock },
     );
     return data;
+  }
+
+  public async getBlockHeight(): Promise<number> {
+    const GRAPHQL_QUERY = gql`
+      query getBlockHeight {
+        squidStatus {
+          height
+        }
+      }
+    `;
+
+    const data: CrustBlockHeight = await this.graphQlClient.request(
+      GRAPHQL_QUERY,
+    );
+    return data.squidStatus.height;
   }
 }

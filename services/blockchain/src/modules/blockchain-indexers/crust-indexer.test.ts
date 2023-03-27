@@ -79,6 +79,18 @@ describe('Crust blockchain indexer err', () => {
   });
 });
 
+describe('Crust blockchain indexer - block height', () => {
+  beforeAll(async () => {
+    env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://18.203.251.180:8080/graphql';
+  });
+  test('Block nr higher than 6000', async () => {
+    const crustIndexer = new CrustBlockchainIndexer();
+
+    const blockHeight: number = await crustIndexer.getBlockHeight();
+    expect(blockHeight > 6000).toBe(true);
+  });
+});
+
 describe('Hashes test', () => {
   test('Iterableiterator to string comma delimited.', () => {
     const test = new Map<string, number>();

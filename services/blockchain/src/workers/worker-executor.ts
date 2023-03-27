@@ -113,7 +113,7 @@ export async function handleLambdaEvent(
       break;
     case WorkerName.CRUST_TRANSACTIONS:
       const txWorker = new CrustTransactionWorker(workerDefinition, context);
-      await txWorker.execute();
+      await txWorker.run();
       break;
     default:
       console.log(

@@ -1,8 +1,6 @@
 import {
-  AppEnvironment,
   ChainType,
   Context,
-  env,
   Lmas,
   LogType,
   PoolConnection,
@@ -10,7 +8,7 @@ import {
   SubstrateChain,
   TransactionStatus,
 } from '@apillon/lib';
-import { Job, ServerlessWorker, WorkerDefinition } from '@apillon/workers-lib';
+import { BaseSingleThreadWorker, WorkerDefinition } from '@apillon/workers-lib';
 import { Transaction } from '../common/models/transaction';
 import { Wallet } from '../common/models/wallet';
 import { DbTables } from '../config/types';
@@ -23,60 +21,66 @@ import {
   CrustTransfer,
   CrustTransfers,
 } from '../modules/blockchain-indexers/data-models/crust-transfers';
-// TODO: change to single thread worker
-export class CrustTransactionWorker extends ServerlessWorker {
-  private context: Context;
+
+export class CrustTransactionWorker extends BaseSingleThreadWorker {
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
-    super(workerDefinition);
-    this.context = context;
+    super(workerDefinition, context);
   }
 
-  public async before(data?: any): Promise<any> {
-    // No used
+  public async runPlanner(): Promise<any[]> {
+    return [];
   }
 
-  public async execute(data?: any): Promise<any> {
+  public async runExecutor(_data: any): Promise<any> {
+    console.info('RUN EXECUTOR (CrustTransactionWorker).');
+
     const wallets = await new Wallet({}, this.context).getList(
       SubstrateChain.CRUST,
       ChainType.SUBSTRATE,
     );
 
     const maxBlocks = 50;
+
     for (const wallet of wallets) {
       const conn = await this.context.mysql.start();
-      console.log(
-        `Checking PENDING transactions (sourceWallet=${wallet.address}, lastParsedBlock=${wallet.lastParsedBlock})..`,
-      );
       try {
-        const lastParsedBlock: number = wallet.lastParsedBlock;
+        const crustIndexer: CrustBlockchainIndexer =
+          new CrustBlockchainIndexer();
+        const blockHeight = await crustIndexer.getBlockHeight();
 
-        // to block - obtain max block from GraphQl (Crust indexer)
-        const crustTransactions = await this.fetchAllCrustTransactions(
-          wallet.address,
-          lastParsedBlock,
-          lastParsedBlock + maxBlocks,
+        const lastParsedBlock: number = wallet.lastParsedBlock;
+        const toBlock: number =
+          lastParsedBlock + maxBlocks < blockHeight
+            ? lastParsedBlock + maxBlocks
+            : blockHeight;
+
+        console.log(
+          `Checking PENDING transactions (sourceWallet=${wallet.address}, lastParsedBlock=${wallet.lastParsedBlock}, toBlock=${toBlock})..`,
         );
 
-        let currentParsedBlock = await this.handleBlockchainTransfers(
+        const crustTransactions = await this.fetchAllCrustTransactions(
+          crustIndexer,
+          wallet.address,
           lastParsedBlock,
+          toBlock,
+        );
+        await this.handleBlockchainTransfers(
           wallet,
           crustTransactions.withdrawals,
           crustTransactions.deposits,
           conn,
         );
-
-        currentParsedBlock = await this.handleCrustFileOrders(
-          lastParsedBlock,
-          currentParsedBlock,
+        await this.handleCrustFileOrders(
           wallet,
           crustTransactions.fileOrders,
           conn,
         );
-        wallet.blockNum = currentParsedBlock;
+
+        wallet.lastParsedBlock = toBlock;
         await wallet.update();
         await conn.commit();
         console.log(
-          `Checking PENDING transactions (sourceWallet=${wallet.address}, lastProcessedBlock=${currentParsedBlock}) FINISHED!`,
+          `Checking PENDING transactions (sourceWallet=${wallet.address}, lastProcessedBlock=${toBlock}) FINISHED!`,
         );
       } catch (err) {
         await conn.rollback();
@@ -97,31 +101,6 @@ export class CrustTransactionWorker extends ServerlessWorker {
     }
   }
 
-  public async onSuccess(_data?: any, _successData?: any): Promise<any> {
-    // this.logFn(`ClearLogs - success: ${data} | ${successData} `);
-  }
-
-  public async onError(error: Error): Promise<any> {
-    this.logFn(`DeleteBucketDirectoryFileWorker - error: ${error}`);
-  }
-
-  public async onUpdateWorkerDefinition(): Promise<void> {
-    // this.logFn(`DeleteBucketDirectoryFileWorker - update definition: ${this.workerDefinition}`);
-    if (
-      env.APP_ENV != AppEnvironment.LOCAL_DEV &&
-      env.APP_ENV != AppEnvironment.TEST
-    ) {
-      await new Job({}, this.context).updateWorkerDefinition(
-        this.workerDefinition,
-      );
-    }
-    // this.logFn('DeleteBucketDirectoryFileWorker - update definition COMPLETE');
-  }
-
-  public onAutoRemove(): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
   /**
    * Handling blockchain withdrawals/deposits
    *
@@ -129,39 +108,25 @@ export class CrustTransactionWorker extends ServerlessWorker {
    * @param pendingDbTxs pending transactions in db
    */
   public async handleBlockchainTransfers(
-    fromBlock: number,
     wallet: Wallet,
     withdrawals: CrustTransfers,
     deposits: CrustTransfers,
     conn: PoolConnection,
-  ): Promise<number> {
-    let latestParsedBlock = await this.handleCrustWithdrawals(
-      fromBlock,
-      withdrawals,
-      wallet,
-      conn,
-    );
-    latestParsedBlock = await this.handleCrustDeposits(
-      fromBlock,
-      latestParsedBlock,
-      deposits,
-      wallet,
-    );
-
-    return latestParsedBlock;
+  ) {
+    await this.handleCrustWithdrawals(withdrawals, wallet, conn);
+    await this.handleCrustDeposits(deposits, wallet);
   }
 
   public async handleCrustWithdrawals(
-    lastParsedBlock: number,
     withdrawals: CrustTransfers,
     wallet: Wallet,
     conn: PoolConnection,
-  ): Promise<number> {
+  ) {
     if (!withdrawals.transfers.length) {
       console.log(
         `There are no new withdrawals received from blockchain indexer (address=${wallet.address}).`,
       );
-      return lastParsedBlock;
+      return;
     }
     const withdrawalsByHash = new Map<string, CrustTransfer>(
       withdrawals.transfers.map((w) => [w.extrinsicHash, w]),
@@ -178,24 +143,20 @@ export class CrustTransactionWorker extends ServerlessWorker {
       `${confirmedDbTxHashes.length} Transactions matched (txHashes=${txDbHashesString}) in db.`,
     );
 
-    let maxBlock = 0;
+    // All transactions were matched with db
+    if (withdrawalsByHash.entries.length === confirmedDbTxHashes.length) {
+      return;
+    }
+
     withdrawalsByHash.forEach((value, key) => {
       if (!confirmedDbTxHashes.includes(key)) {
         // TODO: Send notification - critical: Withdrawal (txHash) was not initiated by us
         // use info from value variable to get all required data
-        withdrawalsByHash.delete(key);
-      }
-      if (value.blockNumber > maxBlock) {
-        maxBlock = value.blockNumber;
       }
     });
-
-    return maxBlock;
   }
 
   public async handleCrustDeposits(
-    lastParsedBlock: number,
-    currentParsedBlock: number,
     deposits: CrustTransfers,
     wallet: Wallet,
     conn?: PoolConnection,
@@ -204,34 +165,27 @@ export class CrustTransactionWorker extends ServerlessWorker {
       console.log(
         `There are no new deposits to wallet (address=${wallet.address}).`,
       );
-      return lastParsedBlock;
+      return;
     }
     console.log(
       `Received ${deposits.transfers.length} deposits from blockchain indexer.`,
     );
-    let maxBlockNr = 0;
+
     deposits.transfers.forEach((bcTx) => {
       // TODO: Send notification of a new deposit to a wallet address and save to accounting table
-      if (bcTx.blockNumber > maxBlockNr) {
-        maxBlockNr = bcTx.blockNumber;
-      }
     });
-    // Check if latest processed block (withdrawals) is bigger than maxBlock from deposits
-    if (currentParsedBlock > maxBlockNr) {
-      maxBlockNr = currentParsedBlock;
-    }
-    return maxBlockNr;
   }
 
   public async handleCrustFileOrders(
-    lastParsedBlock: number,
-    currentParsedBlock: number,
     wallet: Wallet,
     bcFileOrders: CrustStorageOrders,
     conn: PoolConnection,
-  ): Promise<number> {
+  ) {
     if (!bcFileOrders.storageOrders.length) {
-      return lastParsedBlock;
+      console.log(
+        `There are no new file storage orders received from blockchain indexer (address=${wallet.address}).`,
+      );
+      return;
     }
     const bcFileOrdersByHash = new Map<string, CrustStorageOrder>(
       bcFileOrders.storageOrders.map((so) => [so.extrinsicHash, so]),
@@ -244,23 +198,17 @@ export class CrustTransactionWorker extends ServerlessWorker {
     const confirmedDbTxHashes: string[] =
       await this.updateConfirmedTransactions(bcHashesString, wallet, conn);
 
-    let maxBlockNr = 0;
+    // All transactions were matched with db
+    if (bcFileOrdersByHash.entries.length === confirmedDbTxHashes.length) {
+      return;
+    }
+
     bcFileOrdersByHash.forEach((value, key) => {
       if (!confirmedDbTxHashes.includes(key)) {
         // TODO: Send notification - critical: Withdrawal (txHash) was not initiated by us
         // use info from value variable to get all required data
-        bcFileOrdersByHash.delete(key);
-      }
-      if (value.blockNum > maxBlockNr) {
-        maxBlockNr = value.blockNum;
       }
     });
-
-    // Check if latest processed block (withdrawals) is bigger than maxBlock from deposits
-    if (currentParsedBlock > maxBlockNr) {
-      maxBlockNr = currentParsedBlock;
-    }
-    return maxBlockNr;
   }
 
   /**
@@ -321,12 +269,11 @@ export class CrustTransactionWorker extends ServerlessWorker {
    * @param toBlock transactions included to block number
    */
   public async fetchAllCrustTransactions(
+    crustIndexer: CrustBlockchainIndexer,
     address: string,
     fromBlock: number,
     toBlock: number,
   ) {
-    const crustIndexer = new CrustBlockchainIndexer();
-
     const withdrawals = await crustIndexer.getWalletWitdrawals(
       address,
       fromBlock,
