@@ -3,7 +3,10 @@ import {
   ChainType,
   Context,
   env,
+  Lmas,
+  LogType,
   PoolConnection,
+  ServiceName,
   SubstrateChain,
   TransactionStatus,
 } from '@apillon/lib';
@@ -78,6 +81,16 @@ export class CrustTransactionWorker extends ServerlessWorker {
         console.log(
           `Checking PENDING transactions (sourceWallet=${wallet.address}) FAILED! Error: ${err}`,
         );
+        await new Lmas().writeLog({
+          logType: LogType.ERROR,
+          message: 'Error confirming transactions',
+          location: 'CrustTransactionWorker',
+          service: ServiceName.BLOCKCHAIN,
+          data: {
+            error: err,
+            wallet: wallets.address,
+          },
+        });
       }
     }
   }
@@ -169,10 +182,9 @@ export class CrustTransactionWorker extends ServerlessWorker {
         // TODO: Send notification - critical: Withdrawal (txHash) was not initiated by us
         // use info from value variable to get all required data
         withdrawalsByHash.delete(key);
-      } else {
-        if (value.blockNumber > maxBlock) {
-          maxBlock = value.blockNumber;
-        }
+      }
+      if (value.blockNumber > maxBlock) {
+        maxBlock = value.blockNumber;
       }
     });
 
@@ -236,10 +248,9 @@ export class CrustTransactionWorker extends ServerlessWorker {
         // TODO: Send notification - critical: Withdrawal (txHash) was not initiated by us
         // use info from value variable to get all required data
         bcFileOrdersByHash.delete(key);
-      } else {
-        if (value.blockNum > maxBlockNr) {
-          maxBlockNr = value.blockNum;
-        }
+      }
+      if (value.blockNum > maxBlockNr) {
+        maxBlockNr = value.blockNum;
       }
     });
 
@@ -251,7 +262,7 @@ export class CrustTransactionWorker extends ServerlessWorker {
   }
 
   /**
-   * Updates transactions which are confirmed on blockchain based on blockchain indexer
+   * Updates transaction statuses which are confirmed on blockchain
    *
    * @param bcHashesString blockhain hashes delimited with comma
    * @param wallet wallet entity

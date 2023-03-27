@@ -195,6 +195,8 @@ export interface IEnv {
   BLOCKCHAIN_AWS_WORKER_SQS_ARN: string;
   BLOCKCHAIN_AWS_WORKER_LAMBDA_NAME: string;
 
+  BLOCKCHAIN_CRUST_GRAPHQL_SERVER: string;
+
   /************************************************************
    * Apillon API config
    ************************************************************/

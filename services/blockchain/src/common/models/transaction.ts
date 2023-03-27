@@ -171,7 +171,6 @@ export class Transaction extends AdvancedSQLModel {
     chain: Chain,
     chainType: ChainType,
     address: string,
-    transactionsStatus: TransactionStatus,
     nonce: number,
     conn?: PoolConnection,
   ) {
@@ -183,11 +182,10 @@ export class Transaction extends AdvancedSQLModel {
       chainType = @chainType
       AND chain = @chain
       AND address = @address
-      AND transactionStatus = @transactionStatus
       AND nonce > @nonce
       order by nonce ASC;
       `,
-      { chain, chainType, address, transactionsStatus, nonce },
+      { chain, chainType, address, nonce },
       conn,
     );
   }
