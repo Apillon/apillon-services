@@ -190,7 +190,7 @@ export class Transaction extends AdvancedSQLModel {
     );
   }
 
-  public async getTransactionsInHashes(
+  public async getTransactionsByHashes(
     chain: Chain,
     chainType: ChainType,
     address: string,

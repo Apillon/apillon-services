@@ -243,7 +243,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
     );
 
     const confirmedDbTxHashes = (
-      await new Transaction({}, this.context).getTransactionsInHashes(
+      await new Transaction({}, this.context).getTransactionsByHashes(
         wallet.chain,
         wallet.chainType,
         wallet.address,
