@@ -23,7 +23,7 @@ import {
   CrustTransfer,
   CrustTransfers,
 } from '../modules/blockchain-indexers/data-models/crust-transfers';
-
+// TODO: change to single thread worker
 export class CrustTransactionWorker extends ServerlessWorker {
   private context: Context;
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
@@ -49,6 +49,8 @@ export class CrustTransactionWorker extends ServerlessWorker {
       );
       try {
         const lastParsedBlock: number = wallet.lastParsedBlock;
+
+        // to block - obtain max block from GraphQl (Crust indexer)
         const crustTransactions = await this.fetchAllCrustTransactions(
           wallet.address,
           lastParsedBlock,

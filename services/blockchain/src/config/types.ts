@@ -8,6 +8,11 @@ export enum DbTables {
   TRANSACTION_QUEUE = 'transaction_queue',
 }
 
+export enum CrustTransferType {
+  TRANSFER = 0,
+  STORAGE_ORDER = 1,
+}
+
 /**
  * Error codes
  * code format : HTTPCODE|MODULE_CODE|MODULE_INTERNAL_ERROR_CODE
