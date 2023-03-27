@@ -4,9 +4,9 @@ export enum ChainType {
 }
 
 export enum TransactionStatus {
-  SIGNED = 1,
-  PENDING = 2,
-  CONFIRMED = 3,
+  PENDING = 1,
+  CONFIRMED = 2,
+  FAILED = 3,
 }
 
 export enum SubstrateChain {
