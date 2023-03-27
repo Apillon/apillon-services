@@ -7,6 +7,7 @@ export enum TransactionStatus {
   PENDING = 1,
   CONFIRMED = 2,
   FAILED = 3,
+  ERROR = 4,
 }
 
 export enum SubstrateChain {
