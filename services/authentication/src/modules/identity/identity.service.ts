@@ -181,7 +181,7 @@ export class IdentityMicroservice {
     // Check if correct identity + state exists -> IN_PROGRESS
     const identity = await new Identity({}, context).populateByUserEmail(
       context,
-      event.body.email,
+      parameters.email,
     );
 
     if (

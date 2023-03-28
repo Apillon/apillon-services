@@ -63,7 +63,7 @@ export class IdentityRevokeWorker extends BaseQueueWorker {
     const endpointsCountForDid = await api.query.did.didEndpointsCount(
       identifier,
     );
-    const depositClaimExtrinsic = api.tx.did.reclaimDeposit(
+    const depositReClaimExtrinsic = api.tx.did.reclaimDeposit(
       identifier,
       endpointsCountForDid,
     );
@@ -76,7 +76,7 @@ export class IdentityRevokeWorker extends BaseQueueWorker {
         service: ServiceName.AUTHENTICATION_API,
       });
       await Blockchain.signAndSubmitTx(
-        depositClaimExtrinsic,
+        depositReClaimExtrinsic,
         depositPayerAccount,
       );
     } catch (error) {
