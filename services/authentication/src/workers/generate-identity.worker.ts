@@ -223,10 +223,14 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
       });
 
       if (identity.exists()) {
+        console.log('UPDATING identity');
         await identity.update();
       } else {
+        console.log('CREATING identity');
         await identity.insert();
       }
+
+      return true;
     } catch (error) {
       await new Lmas().writeLog({
         logType: LogType.ERROR,
