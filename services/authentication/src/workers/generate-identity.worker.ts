@@ -203,6 +203,7 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
       });
 
       if (!emailAttested) {
+        console.error('Email is not attezted');
         return false;
       }
 
@@ -218,6 +219,7 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
         state: IdentityState.ATTESTED,
         credential: claimerCredential,
         didUri: params.didUri ? params.didUri : null,
+        email: claimerEmail,
       });
 
       if (identity.exists()) {
@@ -228,7 +230,7 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
     } catch (error) {
       await new Lmas().writeLog({
         logType: LogType.ERROR,
-        message: `ATTESTATION for ${claimerEmail}: ERROR`,
+        message: `ATTESTATION for ${claimerEmail} ERROR: ${error}`,
         location: 'AUTHENTICATION-API/identity/authentication.worker',
         service: ServiceName.AUTHENTICATION_API,
         data: error,
