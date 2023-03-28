@@ -171,6 +171,8 @@ export async function handleSqsMessages(
           executeArg: message?.body,
         });
         break;
+      case WorkerName.CRUST_TRANSACTIONS:
+        await new CrustTransactionWorker(workerDefinition, context).run();
         break;
       default:
         console.log(
