@@ -1,12 +1,14 @@
-import { Context, Lmas, LogType, ServiceName } from '@apillon/lib';
+import { Context, env, Lmas, LogType, ServiceName } from '@apillon/lib';
 import {
   WorkerDefinition,
   WorkerLogStatus,
   BaseSingleThreadWorker,
+  sendToWorkerQueue,
 } from '@apillon/workers-lib';
 import { BlockchainErrorCode } from '../config/types';
 import { BlockchainCodeException } from '../lib/exceptions';
 import { SubstrateService } from '../modules/substrate/substrate.service';
+import { WorkerName } from './worker-executor';
 
 export class TransmitSubstrateTransactionWorker extends BaseSingleThreadWorker {
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
@@ -32,7 +34,6 @@ export class TransmitSubstrateTransactionWorker extends BaseSingleThreadWorker {
 
     try {
       await SubstrateService.transmitTransactions({ chain }, this.context);
-      // TODO: Call transaction parser worker
 
       await new Lmas().writeLog({
         context: this.context,
@@ -55,6 +56,26 @@ export class TransmitSubstrateTransactionWorker extends BaseSingleThreadWorker {
         },
       });
       throw err;
+    }
+
+    try {
+      await sendToWorkerQueue(
+        env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
+        WorkerName.CRUST_TRANSACTIONS,
+        [{}],
+        null,
+        null,
+      );
+    } catch (e) {
+      await new Lmas().writeLog({
+        logType: LogType.ERROR,
+        message: 'Error triggering CRUST_TRANSACTIONS worker queue',
+        location: 'TransmitSubstrateTransactionWorker.runExecutor',
+        service: ServiceName.BLOCKCHAIN,
+        data: {
+          error: e,
+        },
+      });
     }
 
     await this.writeLogToDb(

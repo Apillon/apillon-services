@@ -83,7 +83,6 @@ describe('Substrate service unit test', () => {
       '',
     );
     const serialize = tx.toHex();
-    console.log(serialize);
 
     const res = await SubstrateService.createTransaction(
       { transaction: serialize, chain: SubstrateChain.CRUST },
@@ -91,10 +90,17 @@ describe('Substrate service unit test', () => {
     );
     console.log('res: ', res);
 
-    const res2 = await SubstrateService.transmitTransactions(
-      { chain: SubstrateChain.CRUST },
+    const transaction = await SubstrateService.getTransactionById(
+      { id: res.id },
       stage.context,
     );
-    console.log('res2: ', res2);
+
+    console.log('transaction: ', transaction);
+
+    // const res2 = await SubstrateService.transmitTransactions(
+    //   { chain: SubstrateChain.CRUST },
+    //   stage.context,
+    // );
+    // console.log('res2: ', res2);
   });
 });

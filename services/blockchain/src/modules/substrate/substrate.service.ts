@@ -10,6 +10,7 @@ import {
   SerializeFor,
   ServiceName,
   env,
+  TransactionStatus,
 } from '@apillon/lib';
 import { Endpoint } from '../../common/models/endpoint';
 import { BlockchainErrorCode } from '../../config/types';
@@ -126,6 +127,7 @@ export class SubstrateService {
         referenceId: _event.referenceId,
         rawTransaction: signedSerialized,
         transactionHash: signed.hash.toString(),
+        transactionStatus: TransactionStatus.PENDING,
       });
 
       await transaction.insert(SerializeFor.INSERT_DB, conn);
@@ -146,7 +148,31 @@ export class SubstrateService {
           referenceId: _event.referenceId,
         },
       });
-      // TODO: push queue message to worker to transmit
+
+      try {
+        await sendToWorkerQueue(
+          env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
+          WorkerName.TRANSMIT_SUBSTRATE_TRANSACTIOM,
+          [
+            {
+              chain: _event.chain,
+            },
+          ],
+          null,
+          null,
+        );
+      } catch (e) {
+        await new Lmas().writeLog({
+          logType: LogType.ERROR,
+          message:
+            'Error triggering TRANSMIT_SUBSTRATE_TRANSACTIO worker queue',
+          location: 'SubstrateService.createTransaction',
+          service: ServiceName.BLOCKCHAIN,
+          data: {
+            error: e,
+          },
+        });
+      }
       return transaction.serialize(SerializeFor.PROFILE);
     } catch (e) {
       //Write log to LMAS
@@ -171,6 +197,24 @@ export class SubstrateService {
         status: 500,
       });
     }
+  }
+
+  static async getTransactionById(
+    _event: {
+      id: number;
+    },
+    context: ServiceContext,
+  ) {
+    const transaction = await new Transaction({}, context).populateById(
+      _event.id,
+    );
+    if (!transaction.exists()) {
+      throw new BlockchainCodeException({
+        code: BlockchainErrorCode.TRANSACTION_NOT_FOUND,
+        status: 404,
+      });
+    }
+    return transaction.serialize(SerializeFor.PROFILE);
   }
 
   /**
@@ -248,17 +292,6 @@ export class SubstrateService {
       wallet.populate({ lastProcessedNonce: latestSuccess });
       await wallet.update();
     }
-    await sendToWorkerQueue(
-      env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
-      WorkerName.SCHEDULER,
-      [
-        {
-          chain: _event.chain,
-        },
-      ],
-      null,
-      null,
-    );
   }
   //#region
 }

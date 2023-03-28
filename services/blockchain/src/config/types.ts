@@ -49,6 +49,7 @@ export enum BlockchainErrorCode {
 
   // 404 - Not found
   API_KEY_NOT_FOUND = 40413001,
+  TRANSACTION_NOT_FOUND = 40413002,
 
   // 500 - Internal Error
   ERROR_WRITING_TO_DATABASE = 50013001,
