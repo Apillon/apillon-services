@@ -84,10 +84,11 @@ export class IdentityRevokeWorker extends BaseQueueWorker {
       );
     } catch (error) {
       await new Lmas().writeLog({
+        message: error,
         logType: LogType.ERROR,
         location: 'Authentication-API/identity/identity-revoke',
         service: ServiceName.AUTHENTICATION_API,
-        data: { email: claimerEmail, didUri: identity.didUri, error: error },
+        data: { email: claimerEmail, didUri: identity.didUri },
       });
     }
 
