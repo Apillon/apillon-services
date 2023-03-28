@@ -57,7 +57,8 @@ export enum LmasEventType {
 }
 
 export enum BlockchainEventType {
-  SIGN_SUBSTRATE_TRANSACTION = 'sign-polkadot-transaction',
+  SUBSTRATE_SIGN_TRANSACTION = 'substrate-sign-transaction',
+  SUBSTRATE_GET_TRANSACTION = 'substrate-get-transaction',
 }
 
 export enum StorageEventType {
@@ -460,6 +461,11 @@ export enum ValidatorErrorCode {
   SPORRAN_NONCE_NOT_PRESENT = 42200717,
   AUTH_SESSION_TOKEN_NOT_PRESENT = 42200718,
   //#endregion
+  //#region Blockchain
+  SUBSTRATE_TRANSACTION_NOT_PRESENT = 42200801,
+  SUBSTRATE_CHAIN_NOT_PRESENT = 42200802,
+  SUBSTRATE_CHAIN_NOT_VALID = 42200803,
+  //#endregion"
 }
 
 /**

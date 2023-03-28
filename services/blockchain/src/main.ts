@@ -7,8 +7,10 @@ export async function processEvent(
   context: ServiceContext,
 ): Promise<any> {
   const processors = {
-    [BlockchainEventType.SIGN_SUBSTRATE_TRANSACTION]:
+    [BlockchainEventType.SUBSTRATE_SIGN_TRANSACTION]:
       SubstrateService.createTransaction,
+    [BlockchainEventType.SUBSTRATE_GET_TRANSACTION]:
+      SubstrateService.getTransactionById,
   };
 
   return await processors[event.eventName](event, context);

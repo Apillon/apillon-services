@@ -66,6 +66,10 @@ export * from './lib/at-services/nfts/dtos/set-collection-base-uri.dto';
 export * from './lib/at-services/nfts/dtos/transfer-collection.dto';
 export * from './lib/at-services/nfts/dtos/create-collection.dto';
 
+//#REGION Blockchain
+export * from './lib/at-services/blockchain/blockchain';
+export * from './lib/at-services/blockchain/dtos/create-substrate-transaction.dto';
+
 //#REGION Mix
 export * from './lib/at-services/ams/dtos/create-oauth-link.dto';
 export * from './lib/at-services/ams/dtos/discord-user-list-filter.dto';

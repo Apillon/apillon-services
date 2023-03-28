@@ -43,11 +43,14 @@ export class PinToCRUSTWorker extends BaseQueueWorker {
     );
 
     try {
-      await CrustService.placeStorageOrderToCRUST({
-        cid: CID,
-        size: size,
-        isDirectory: isDirectory,
-      });
+      await CrustService.placeStorageOrderToCRUST(
+        {
+          cid: CID,
+          size: size,
+          isDirectory: isDirectory,
+        },
+        this.context,
+      );
       await new Lmas().writeLog({
         context: this.context,
         project_uuid: bucket.project_uuid,
