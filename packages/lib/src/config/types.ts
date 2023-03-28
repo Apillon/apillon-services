@@ -3,6 +3,13 @@ export enum ChainType {
   EVM = 2,
 }
 
+export enum TransactionStatus {
+  PENDING = 1,
+  CONFIRMED = 2,
+  FAILED = 3,
+  ERROR = 4,
+}
+
 export enum SubstrateChain {
   CRUST = 1,
   KILT = 2,

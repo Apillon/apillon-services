@@ -16,6 +16,7 @@ export async function upgrade(
     \`seed\` VARCHAR(120) NOT NULL,
     \`nextNonce\` INT NOT NULL DEFAULT 0,
     \`lastProcessedNonce\` INT NULL DEFAULT -1,
+    \`lastParsedBlock\` INT NULL,
     \`usageTimestamp\` DATETIME NULL,
     \`type\` INT NULL,
     \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,

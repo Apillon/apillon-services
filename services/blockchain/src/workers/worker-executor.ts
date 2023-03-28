@@ -10,6 +10,7 @@ import {
 import { Context, env } from '@apillon/lib';
 import { Scheduler } from './scheduler';
 import { TransmitSubstrateTransactionWorker } from './transmit-substrate-transaction-worker';
+import { CrustTransactionWorker } from './crust-transaction-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -17,6 +18,7 @@ import { TransmitSubstrateTransactionWorker } from './transmit-substrate-transac
 export enum WorkerName {
   SCHEDULER = 'scheduler',
   TRANSMIT_SUBSTRATE_TRANSACTIOM = 'transmit_substrate_transaction',
+  CRUST_TRANSACTIONS = 'crust-transactions',
 }
 
 export async function handler(event: any) {
@@ -109,6 +111,10 @@ export async function handleLambdaEvent(
         executeArg: { chain: 1 },
       });
       break;
+    case WorkerName.CRUST_TRANSACTIONS:
+      const txWorker = new CrustTransactionWorker(workerDefinition, context);
+      await txWorker.run();
+      break;
     default:
       console.log(
         `ERROR - INVALID WORKER NAME: ${workerDefinition.workerName}`,
@@ -165,6 +171,8 @@ export async function handleSqsMessages(
           executeArg: message?.body,
         });
         break;
+      case WorkerName.CRUST_TRANSACTIONS:
+        await new CrustTransactionWorker(workerDefinition, context).run();
         break;
       default:
         console.log(

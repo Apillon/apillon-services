@@ -147,6 +147,22 @@ export class Wallet extends AdvancedSQLModel {
   public lastProcessedNonce: number;
 
   /**
+   * lastParsedBlock
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public lastParsedBlock: number;
+
+  /**
    * usageTimestamp
    */
   @prop({

@@ -13,6 +13,7 @@ export async function upgrade(
     \`chainType\` INT NOT NULL,
     \`transactionHash\` VARCHAR(500) NOT NULL,
     \`rawTransaction\` VARCHAR(1000) NOT NULL,
+    \`transactionStatus\` INT NULL,
     \`referenceTable\` VARCHAR (50) NULL,
     \`referenceId\` INT NULL,
     \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,

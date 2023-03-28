@@ -195,6 +195,8 @@ export interface IEnv {
   BLOCKCHAIN_AWS_WORKER_SQS_ARN: string;
   BLOCKCHAIN_AWS_WORKER_LAMBDA_NAME: string;
 
+  BLOCKCHAIN_CRUST_GRAPHQL_SERVER: string;
+
   /************************************************************
    * Apillon API config
    ************************************************************/
@@ -517,6 +519,9 @@ export let env: IEnv = {
   BLOCKCHAIN_MYSQL_DATABASE_TEST: process.env['BLOCKCHAIN_MYSQL_DATABASE_TEST'],
   BLOCKCHAIN_MYSQL_USER_TEST: process.env['BLOCKCHAIN_MYSQL_USER_TEST'],
   BLOCKCHAIN_MYSQL_PASSWORD_TEST: process.env['BLOCKCHAIN_MYSQL_PASSWORD_TEST'],
+
+  BLOCKCHAIN_CRUST_GRAPHQL_SERVER:
+    process.env['BLOCKCHAIN_CRUST_GRAPHQL_SERVER'],
 
   /**
    * AWS SQS url for worker communications
