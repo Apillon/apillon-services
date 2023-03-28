@@ -233,14 +233,21 @@ export class IdentityMicroservice {
       );
       await worker.runExecutor(parameters);
     } else {
-      //send message to SQS
-      await sendToWorkerQueue(
-        env.AUTH_AWS_WORKER_SQS_URL,
-        WorkerName.IDENTITY_GENERATE_WORKER,
-        [parameters],
-        null,
-        null,
-      );
+      console.log('Starting WORKER');
+
+      try {
+        //send message to SQS
+        await sendToWorkerQueue(
+          env.AUTH_AWS_WORKER_SQS_URL,
+          WorkerName.IDENTITY_GENERATE_WORKER,
+          [parameters],
+          null,
+          null,
+        );
+      } catch (error) {
+        console.error('Error sending data to queue - ', error);
+        throw error;
+      }
     }
 
     return { success: true };
