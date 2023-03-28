@@ -49,7 +49,7 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
   }
 
   public async runExecutor(params: any): Promise<any> {
-    console.log('ENV: ', env);
+    console.log('ENV: ', JSON.stringify(env));
     // Input parameters
     const did_create_op = params.did_create_op;
     const claimerEmail = params.email;
