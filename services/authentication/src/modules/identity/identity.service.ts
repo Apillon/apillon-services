@@ -69,6 +69,7 @@ export class IdentityMicroservice {
     const token = generateJwtToken(JwtTokenType.IDENTITY_VERIFICATION, {
       email,
     });
+    let auth_app_page = 'registration';
 
     let identity = await new Identity({}, context).populateByUserEmail(
       context,
@@ -119,14 +120,16 @@ export class IdentityMicroservice {
         throw err;
       }
     } else if (
-      (verificationEmailType == AuthApiEmailType.RESTORE_CREDENTIAL ||
-        verificationEmailType == AuthApiEmailType.REVOKE_DID) &&
-      (!identity.exists() || identity.state != IdentityState.ATTESTED)
+      verificationEmailType == AuthApiEmailType.RESTORE_CREDENTIAL ||
+      verificationEmailType == AuthApiEmailType.REVOKE_DID
     ) {
-      throw new AuthenticationCodeException({
-        code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
-        status: HttpStatus.NOT_FOUND,
-      });
+      if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
+        throw new AuthenticationCodeException({
+          code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
+          status: HttpStatus.NOT_FOUND,
+        });
+      }
+      auth_app_page = 'restore';
     }
 
     await new Lmas().writeLog({
@@ -140,7 +143,7 @@ export class IdentityMicroservice {
       emails: [email],
       template: verificationEmailType,
       data: {
-        actionUrl: `${env.AUTH_APP_URL}/registration/?token=${token}&email=${email}&type=${verificationEmailType}`,
+        actionUrl: `${env.AUTH_APP_URL}/${auth_app_page}/?token=${token}&email=${email}&type=${verificationEmailType}`,
       },
     });
 

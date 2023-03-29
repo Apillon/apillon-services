@@ -16,6 +16,8 @@ import {
 
 import { Identity } from '../modules/identity/models/identity.model';
 import {
+  ApillonSupportedCTypes,
+  Attester,
   AuthenticationErrorCode,
   HttpStatus,
   IdentityGenFlag,
@@ -28,6 +30,7 @@ import {
   getFullDidDocument,
   createAttestationRequest,
   getNextNonce,
+  getCtypeSchema,
 } from '../lib/kilt';
 import { env, Lmas, LogType, ServiceName } from '@apillon/lib';
 import { AuthenticationCodeException } from '../lib/exceptions';
@@ -49,7 +52,6 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
   }
 
   public async runExecutor(params: any): Promise<any> {
-    console.log('ENV: ', JSON.stringify(env));
     // Input parameters
     const did_create_op = params.did_create_op;
     const claimerEmail = params.email;
@@ -217,11 +219,17 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
       }
 
       const claimerCredential = {
-        ...credential,
+        credential: {
+          ...credential,
+        },
         claimerSignature: {
           keyType: KiltSignAlgorithm.SR25519,
           keyUri: claimerDidUri,
         },
+        name: 'Email',
+        status: emailAttested ? 'attested' : 'pending',
+        attester: Attester.APILLON,
+        cTypeTitle: getCtypeSchema(ApillonSupportedCTypes.EMAIL).title,
       };
 
       console.log('Updating attestation DB model ...');
