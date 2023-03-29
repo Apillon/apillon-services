@@ -47,10 +47,6 @@ export class CaptchaGuard implements CanActivate {
         });
       }
 
-      console.log('CAPTCHA S', env.CAPTCHA_SECRET);
-      console.log('CAPTCHA RESULT ', captchaResult);
-      console.log('DATA RECEIVED ', data);
-
       if (
         env.CAPTCHA_SECRET &&
         env.APP_ENV !== AppEnvironment.TEST &&
