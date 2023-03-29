@@ -183,7 +183,8 @@ export class SporranMicroservice {
 
     const partialClaim: PartialClaim = {
       // TODO: Move hash to types - constants
-      cTypeHash: getCtypeSchema(ApillonSupportedCTypes.EMAIL).$id as HexString,
+      cTypeHash:
+        '0x9d271c790775ee831352291f01c5d04c7979713a5896dcf5e81708184cc5c643' as HexString,
       contents: emailContents,
     };
 
@@ -331,7 +332,8 @@ export class SporranMicroservice {
     const attestation = {
       delegationId: null,
       claimHash: credential.rootHash,
-      cTypeHash: getCtypeSchema(ApillonSupportedCTypes.EMAIL).$id as HexString,
+      cTypeHash:
+        '0x9d271c790775ee831352291f01c5d04c7979713a5896dcf5e81708184cc5c643' as HexString,
       owner: attestObj.owner,
       revoked: false,
     };
@@ -381,8 +383,8 @@ export class SporranMicroservice {
           cTypes: [
             {
               // NOTE: Hash of the email ctype
-              cTypeHash: getCtypeSchema(ApillonSupportedCTypes.EMAIL)
-                .$id as HexString,
+              cTypeHash:
+                '0x9d271c790775ee831352291f01c5d04c7979713a5896dcf5e81708184cc5c643' as HexString,
               // Here we specify which properties of the cType are *required
               requiredProperties: ['Email'],
             },
