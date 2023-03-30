@@ -13,21 +13,8 @@ export function MongoDbConnect(
 ) {
   const before = async (request) => {
     await getEnvSecrets();
-
-    // const options = {
-    //   connectionString:
-    //     env.APP_ENV === AppEnvironment.TEST
-    //       ? env.MONITORING_MONGO_SRV_TEST
-    //       : env.MONITORING_MONGO_SRV,
-    //   database:
-    //     env.APP_ENV === AppEnvironment.TEST
-    //       ? env.MONITORING_MONGO_DATABASE_TEST
-    //       : env.MONITORING_MONGO_DATABASE,
-    //   poolSize: 10,
-    // };
-
     console.log(`Starting MongoDB middleware...`);
-    console.log(`Params: ${JSON.stringify(connectionParams, null, 2)}`);
+
     const { context } = request;
 
     if (!instances[instanceName]) {
