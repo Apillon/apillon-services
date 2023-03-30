@@ -30,3 +30,6 @@ aws codebuild create-webhook --cli-input-json file://referral-webhook-dev.json -
 
 aws codebuild create-project --cli-input-json file://nfts-config-dev.json --profile apillon
 aws codebuild create-webhook --cli-input-json file://nfts-webhook-dev.json --profile apillon
+
+aws codebuild create-project --cli-input-json file://blockchain-config-dev.json --profile apillon
+aws codebuild create-webhook --cli-input-json file://blockchain-webhook-dev.json --profile apillon

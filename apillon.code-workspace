@@ -21,6 +21,10 @@
       "path": "services/config"
     },
     {
+      "name": "🌐@services/blockchain [@apillon/blockchain]",
+      "path": "services/blockchain"
+    },
+    {
       "name": "🌐@services/nfts [@apillon/nfts]",
       "path": "services/nfts"
     },

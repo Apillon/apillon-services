@@ -1,0 +1,82 @@
+{
+  "name": "@apillon/blockchain",
+  "version": "1.0.0",
+  "author": "Kalmia d.o.o.",
+  "license": "UNLICENSED",
+  "description": "Access management service",
+  "main": "index.js",
+  "private": true,
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "test": "cross-env APP_ENV=test LOG_TARGET=none jest --detectOpenHandles --runInBand --forceExit --verbose",
+    "test:logging": "cross-env APP_ENV=test LOG_TARGET=console jest --detectOpenHandles --runInBand --forceExit",
+    "test-service": "jest --passWithNoTests",
+    "test-server": "cross-env APP_ENV=test nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60001",
+    "build": "tsc",
+    "dev": "nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60001",
+    "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "deploy:prod": "serverless deploy --stage production",
+    "deploy:staging": "serverless deploy --stage staging",
+    "deploy:dev": "serverless deploy --stage dev",
+    "deploy:test": "serverless deploy --stage test",
+    "db-upgrade": "node -r ts-node/register ./src/scripts/db/upgrade-db",
+    "db-downgrade": "node -r ts-node/register ./src/scripts/db/downgrade-db",
+    "db-seed": "node -r ts-node/register ./src/scripts/db/seed-db",
+    "db-unseed": "node -r ts-node/register ./src/scripts/db/unseed-db",
+    "db-rebuild": "node -r ts-node/register ./src/scripts/db/rebuild-db",
+    "db-rebuild-test": "node -r ts-node/register ./src/scripts/db/rebuild-test-db",
+    "db-upgrade:ci": "node -r ts-node/register ./src/scripts/db/upgrade-db --F && node -r ts-node/register ./src/scripts/db/seed-db --F"
+  },
+  "dependencies": {
+    "@apillon/lib": "*",
+    "@golevelup/nestjs-graphql-request": "^0.1.14",
+    "@apillon/workers-lib": "*",
+    "@middy/core": "^3.3.1",
+    "@polkadot/api": "^9.11.3",
+    "@polkadot/keyring": "^10.2.6",
+    "@polkadot/util": "^10.2.6",
+    "@polkadot/util-crypto": "^10.2.6",
+    "@rawmodel/core": "^3.3.4",
+    "@rawmodel/parsers": "^3.3.4",
+    "@rawmodel/validators": "^3.3.4",
+    "@types/uuid": "^8.3.4",
+    "bcryptjs": "^2.4.3",
+    "ethers": "^5.7.2",
+    "graphql": "^16.6.0",
+    "graphql-request": "^5.2.0",
+    "node-fetch": "2.6.7"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.2",
+    "eslint-config-common": "*",
+    "ts-loader": "^9.2.3",
+    "tsconfig": "*",
+    "webpack": "^5.41.1",
+    "webpack-node-externals": "^3.0.0"
+  },
+  "jest": {
+    "testTimeout": 1800000,
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "json"
+    ],
+    "rootDir": "src",
+    "testPathIgnorePatterns": [
+      "dist/*"
+    ],
+    "testRegex": ".*\\.test\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "collectCoverage": false,
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node",
+    "preset": "ts-jest",
+    "verbose": true
+  }
+}

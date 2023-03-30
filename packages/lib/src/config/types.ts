@@ -1,3 +1,29 @@
+export enum ChainType {
+  SUBSTRATE = 1,
+  EVM = 2,
+}
+
+export enum TransactionStatus {
+  PENDING = 1,
+  CONFIRMED = 2,
+  FAILED = 3,
+  ERROR = 4,
+}
+
+export enum SubstrateChain {
+  CRUST = 1,
+  KILT = 2,
+  KILT_SPIRITNET = 3,
+  PHALA = 4,
+}
+
+export enum EvmChain {
+  MOONBEAM = 1284,
+  MOONBASE = 1287,
+}
+
+export enum BlockchainEventType {}
+
 export enum AmsEventType {
   USER_REGISTER = 'user-register',
   USER_GET_AUTH = 'user-get-auth',
@@ -29,6 +55,11 @@ export enum LmasEventType {
   SEND_ALERT = 'send-alert',
   SEND_ADMIN_ALERT = 'send-admin-alert',
   NOTIFY = 'notify',
+}
+
+export enum BlockchainEventType {
+  SUBSTRATE_SIGN_TRANSACTION = 'substrate-sign-transaction',
+  SUBSTRATE_GET_TRANSACTION = 'substrate-get-transaction',
 }
 
 export enum StorageEventType {
@@ -140,6 +171,7 @@ export enum ServiceName {
   AUTHENTICATION_API = 'AUTHENTICATION_API',
   NFTS = 'NFTS',
   REFERRAL = 'REFERRAL',
+  BLOCKCHAIN = 'BLOCKCHAIN',
 }
 
 export enum ServiceCode {
@@ -156,6 +188,7 @@ export enum ServiceCode {
   CONFIG = '10',
   REFERRAL = '11',
   NFTS = '12',
+  BLOCKCHAIN = '13',
 }
 
 export enum AppEnvironment {
@@ -433,6 +466,11 @@ export enum ValidatorErrorCode {
   SPORRAN_NONCE_NOT_PRESENT = 42200717,
   AUTH_SESSION_TOKEN_NOT_PRESENT = 42200718,
   //#endregion
+  //#region Blockchain
+  SUBSTRATE_TRANSACTION_NOT_PRESENT = 42200801,
+  SUBSTRATE_CHAIN_NOT_PRESENT = 42200802,
+  SUBSTRATE_CHAIN_NOT_VALID = 42200803,
+  //#endregion"
 }
 
 /**
