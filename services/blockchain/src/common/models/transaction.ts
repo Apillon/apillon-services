@@ -177,7 +177,7 @@ export class Transaction extends AdvancedSQLModel {
     return await this.getContext().mysql.paramExecute(
       `
       SELECT *
-      FROM \`${this.tableName}\`
+      FROM \`${DbTables.TRANSACTION_QUEUE}\`
       WHERE 
       chainType = @chainType
       AND chain = @chain

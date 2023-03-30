@@ -208,7 +208,7 @@ export class Wallet extends AdvancedSQLModel {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT * 
-      FROM \`${this.tableName}\`
+      FROM \`${DbTables.WALLET}\`
       WHERE 
       chainType = @chainType
       AND chain = @chain
@@ -241,7 +241,7 @@ export class Wallet extends AdvancedSQLModel {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT * 
-      FROM \`${this.tableName}\`
+      FROM \`${DbTables.WALLET}\`
       WHERE 
         chainType = @chainType
         AND chain = @chain
@@ -285,7 +285,7 @@ export class Wallet extends AdvancedSQLModel {
     return await this.getContext().mysql.paramExecute(
       `
       SELECT *
-      FROM \`${this.tableName}\`
+      FROM \`${DbTables.WALLET}\`
       WHERE 
       chainType = @chainType
       AND chain = @chain
