@@ -95,7 +95,7 @@ export class Endpoint extends AdvancedSQLModel {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT * 
-      FROM \`${this.tableName}\`
+      FROM \`${DbTables.ENDPOINT}\`
       WHERE
       chainType = @type
       AND chain = @chain
