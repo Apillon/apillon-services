@@ -35,6 +35,11 @@
         "type": "PLAINTEXT",
         "name": "AWS_SECRETS_ID",
         "value": "apillon-development"
+      },
+      {
+        "type": "PLAINTEXT",
+        "name": "WORKER_SQS_ARN",
+        "value": "arn:aws:sqs:eu-west-1:018021943180:apillon-blockchain-queue-dev"
       }
     ],
     "type": "LINUX_CONTAINER"

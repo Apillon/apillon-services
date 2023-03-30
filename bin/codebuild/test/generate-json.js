@@ -42,6 +42,11 @@ const sampleJsonConfig = {
         name: 'MODULES_LIB',
         value: 'XXXmodules-lib#false',
       },
+      {
+        type: 'PLAINTEXT',
+        name: 'WORKER_SQS_ARN',
+        value: 'XXXSQS_ARN#none',
+      },
     ],
     type: 'LINUX_CONTAINER',
   },

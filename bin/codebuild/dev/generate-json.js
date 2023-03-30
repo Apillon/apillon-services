@@ -47,6 +47,11 @@ const sampleJsonConfig = {
         name: 'AWS_SECRETS_ID',
         value: 'XXXAWS_SECRETS_ID#apillon-development',
       },
+      {
+        type: 'PLAINTEXT',
+        name: 'WORKER_SQS_ARN',
+        value: 'XXXSQS_ARN#none',
+      },
     ],
     type: 'LINUX_CONTAINER',
   },
