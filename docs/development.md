@@ -30,8 +30,6 @@ It is highly recommended to read this docs alogn with [res-API-specs](/docs/rest
 - HTTP CODE = 422 for valdiation, 400 for invalid request, 500 internal error,...
 - MODULE CODE: see service codes
 - INTERNAL ERROR CODE: 000 - 999
-  <<<<<<< HEAD
-  =======
 
 ## Project structure
 
