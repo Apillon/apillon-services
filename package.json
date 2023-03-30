@@ -12,14 +12,15 @@
     "build-no-cache": "npx turbo run build --no-cache",
     "dev": "npx turbo run dev --parallel",
     "dev-min": "npx turbo run dev --parallel --filter=!@apillon/authentication-api --filter=!@apillon/api --filter=!@apillon/referral --filter=!@apillon/monitoring --filter=!@apillon/mailing -filter=!@apillon/workers-lib",
-    "test": "npx turbo run test --concurrency=1 --continue --filter=!@apillon/authentication-api",
     "test:blockchain": "npx turbo run test --concurrency=1 --continue --filter=@apillon/blockchain",
+    "test": "npx turbo run test --concurrency=1 --continue --filter=!@apillon/authentication-api --force",
+    "test:logging": "npx turbo run test:logging --concurrency=1 --continue --filter=!@apillon/authentication-api --force",
     "test-server": "npx turbo run test-server",
     "lint": "npx turbo run lint --force",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "deploy:dev": "npx turbo run deploy:dev -vvv --force --continue=false --filter=!@apillon/api --filter=!@apillon/authentication-api",
     "watch-libs": "npx turbo run dev --filter=@apillon/lib --filter=@apillon/modules-lib",
-    "db-upgrade:ci": "npx turbo run db-upgrade:ci --filter=!@apillon/authentication-api"
+    "db-upgrade:ci": "npx turbo run db-upgrade:ci"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.108",

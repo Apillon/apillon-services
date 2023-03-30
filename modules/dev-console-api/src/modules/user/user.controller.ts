@@ -7,7 +7,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { DefaultUserRole } from '@apillon/lib';
+import { DefaultUserRole, UserWalletAuthDto } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import {
   Ctx,
@@ -127,5 +127,32 @@ export class UserController {
   @UseGuards(AuthGuard)
   async getOauthLinks(@Ctx() context: DevConsoleApiContext) {
     return await this.userService.getOauthLinks(context);
+  }
+
+  @Get('/auth-msg')
+  getAuthMsg(): any {
+    return this.userService.getAuthMessage();
+  }
+
+  @Post('/login/wallet')
+  @HttpCode(200)
+  @Validation({ dto: UserWalletAuthDto })
+  @UseGuards(ValidationGuard)
+  walletLogin(
+    @Body() body: UserWalletAuthDto,
+    @Ctx() context: DevConsoleApiContext,
+  ): any {
+    return this.userService.walletLogin(body, context);
+  }
+
+  @Post('/wallet-connect')
+  @HttpCode(200)
+  @Validation({ dto: UserWalletAuthDto })
+  @UseGuards(ValidationGuard, AuthGuard)
+  walletConnect(
+    @Body() body: UserWalletAuthDto,
+    @Ctx() context: DevConsoleApiContext,
+  ): any {
+    return this.userService.walletConnect(body, context);
   }
 }

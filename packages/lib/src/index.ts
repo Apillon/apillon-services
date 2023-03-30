@@ -73,6 +73,7 @@ export * from './lib/at-services/blockchain/dtos/create-substrate-transaction.dt
 //#REGION Mix
 export * from './lib/at-services/ams/dtos/create-oauth-link.dto';
 export * from './lib/at-services/ams/dtos/discord-user-list-filter.dto';
+export * from './lib/at-services/ams/dtos/user-wallet-auth.dto';
 export * from './lib/at-services/nfts/nfts';
 export * from './lib/at-services/nfts/dtos/deploy-collection.dto';
 
