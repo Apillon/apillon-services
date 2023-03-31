@@ -17,7 +17,7 @@ import { CrustTransactionWorker } from './crust-transaction-worker';
 
 export enum WorkerName {
   SCHEDULER = 'scheduler',
-  TRANSMIT_SUBSTRATE_TRANSACTIOM = 'TransmitSubstrateTransaction',
+  TRANSMIT_SUBSTRATE_TRANSACTION = 'TransmitSubstrateTransaction',
   CRUST_TRANSACTIONS = 'CrustTransactions',
 }
 
@@ -102,14 +102,14 @@ export async function handleLambdaEvent(
       const scheduler = new Scheduler(serviceDef, context);
       await scheduler.run();
       break;
-    case WorkerName.TRANSMIT_SUBSTRATE_TRANSACTIOM:
+    case WorkerName.TRANSMIT_SUBSTRATE_TRANSACTION:
       await new TransmitSubstrateTransactionWorker(
         workerDefinition,
         context,
-      ).run();
-      // {
-      //   executeArg: { chain: 1 },
-      // }
+      ).run({
+        executeArg: JSON.stringify({ chain: 1 }),
+      });
+
       break;
     case WorkerName.CRUST_TRANSACTIONS:
       const txWorker = new CrustTransactionWorker(workerDefinition, context);
@@ -163,7 +163,7 @@ export async function handleSqsMessages(
 
     // eslint-disable-next-line sonarjs/no-small-switch
     switch (workerName) {
-      case WorkerName.TRANSMIT_SUBSTRATE_TRANSACTIOM:
+      case WorkerName.TRANSMIT_SUBSTRATE_TRANSACTION:
         await new TransmitSubstrateTransactionWorker(
           workerDefinition,
           context,
