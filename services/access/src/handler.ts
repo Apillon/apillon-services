@@ -9,6 +9,12 @@ import {
 } from '@apillon/service-lib';
 import { AppEnvironment, env } from '@apillon/lib';
 
+/**
+ * Handles AWS Lambda events and passes them to processEvent() for processing.
+ * @param event - Lambda event object.
+ * @param context - Lambda execution context.
+ * @returns service response
+ */
 const lambdaHandler: Handler = async (
   event: any,
   context: any,
@@ -22,6 +28,9 @@ const lambdaHandler: Handler = async (
   return res;
 };
 
+/**
+ * An object containing connection parameters for a MySQL database.
+ */
 const connectionParams = {
   host:
     env.APP_ENV === AppEnvironment.TEST
@@ -45,7 +54,9 @@ const connectionParams = {
       : env.ACCESS_MYSQL_PASSWORD,
 };
 
-// exposing lambda handler and setup middlewares
+/**
+ *  Exposes the Lambda handler and sets up middleware functions to run before and after the processEvent() function is called.
+ */
 export const handler = middy.default(lambdaHandler);
 handler
   .use(InitializeContextAndFillUser())

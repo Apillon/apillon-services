@@ -3,6 +3,12 @@ import { LmasEventType } from '@apillon/lib';
 import { Alerting } from './alerting';
 import type { Context } from 'aws-lambda/handler';
 
+/**
+ * Processes an event using one of the provided processors based on the event's name.
+ * @param event Lambda event message
+ * @param context Lambda context
+ * @returns service response
+ */
 export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
     [LmasEventType.WRITE_LOG]: Logger.writeLog,

@@ -5,6 +5,12 @@ import { VerificationMicroservice } from './modules/verification/verification.se
 import { IdentityMicroservice } from './modules/identity/identity.service';
 import { SporranMicroservice } from './modules/sporran/sporran.service';
 
+/**
+ * Processing lambda event with appropriate service function based on event name
+ * @param event lambda event
+ * @param context lambda context
+ * @returns service response
+ */
 export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
     // VERIFICATION

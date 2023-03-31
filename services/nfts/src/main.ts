@@ -3,6 +3,12 @@ import type { Context } from 'aws-lambda/handler';
 import { NftsService } from './modules/nfts/nfts.service';
 import { TransactionService } from './modules/transaction/transaction.service';
 
+/**
+ * Processing lambda event with appropriate service function based on event name
+ * @param event lambda event
+ * @param context lambda context
+ * @returns service response
+ */
 export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
     [NftsEventType.CREATE_COLLECTION]: NftsService.createCollection,

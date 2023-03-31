@@ -6,6 +6,12 @@ import { MySqlConnect } from './middleware/mysql';
 import { ResponseFormat } from './middleware/response';
 import { InitializeContextAndFillUser } from './middleware/context-and-user';
 
+/**
+ * Handles AWS Lambda events and passes them to processEvent() for processing.
+ * @param event - Lambda event object.
+ * @param context - Lambda execution context.
+ * @returns service response
+ */
 export const lambdaHandler: Handler = async (
   event: any,
   context: any,
@@ -19,6 +25,9 @@ export const lambdaHandler: Handler = async (
   return res;
 };
 
+/**
+ *  Exposes the Lambda handler and sets up middleware functions to run before and after the processEvent() function is called.
+ */
 export const handler = middy.default(lambdaHandler);
 handler
   .use(InitializeContextAndFillUser())
