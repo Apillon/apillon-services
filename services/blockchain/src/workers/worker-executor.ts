@@ -17,8 +17,8 @@ import { CrustTransactionWorker } from './crust-transaction-worker';
 
 export enum WorkerName {
   SCHEDULER = 'scheduler',
-  TRANSMIT_SUBSTRATE_TRANSACTIOM = 'transmit_substrate_transaction',
-  CRUST_TRANSACTIONS = 'crust-transactions',
+  TRANSMIT_SUBSTRATE_TRANSACTIOM = 'TransmitSubstrateTransaction',
+  CRUST_TRANSACTIONS = 'CrustTransactions',
 }
 
 export async function handler(event: any) {
