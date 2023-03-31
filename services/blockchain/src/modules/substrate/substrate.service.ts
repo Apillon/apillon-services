@@ -23,18 +23,20 @@ import { WorkerName } from '../../workers/worker-executor';
 export class SubstrateService {
   static async createTransaction(
     _event: {
-      transaction: string;
-      chain: SubstrateChain;
-      fromAddress?: string;
-      referenceTable?: string;
-      referenceId?: string;
+      params: {
+        transaction: string;
+        chain: SubstrateChain;
+        fromAddress?: string;
+        referenceTable?: string;
+        referenceId?: string;
+      };
     },
     context: ServiceContext,
   ) {
     // connect to chain
     // TODO: Add logic if endpoint is unavailable to fetch the backup one.
     const endpoint = await new Endpoint({}, context).populateByChain(
-      _event.chain,
+      _event.params.chain,
       ChainType.SUBSTRATE,
     );
 
@@ -54,11 +56,11 @@ export class SubstrateService {
       let wallet = new Wallet({}, context);
 
       // if specific address is specified to be used for this transaction fetch the wallet
-      if (_event.fromAddress) {
+      if (_event.params.fromAddress) {
         wallet = await wallet.populateByAddress(
-          _event.chain,
+          _event.params.chain,
           ChainType.SUBSTRATE,
-          _event.fromAddress,
+          _event.params.fromAddress,
           conn,
         );
       }
@@ -66,7 +68,7 @@ export class SubstrateService {
       // if address is not specified or not found then get the least used wallet
       if (!wallet.exists()) {
         wallet = await wallet.populateByLeastUsed(
-          _event.chain,
+          _event.params.chain,
           ChainType.SUBSTRATE,
           conn,
         );
@@ -74,7 +76,7 @@ export class SubstrateService {
 
       let keyring = new Keyring(); // generate privatekey from mnemonic - different for different chains
       let typesBundle = null; // different types for different chains
-      switch (_event.chain) {
+      switch (_event.params.chain) {
         case SubstrateChain.KILT: {
           keyring = new Keyring({ ss58Format: 38, type: 'sr25519' });
           break;
@@ -97,7 +99,7 @@ export class SubstrateService {
         typesBundle, // TODO: add
       });
       const pair = keyring.addFromUri(wallet.seed);
-      const unsignedTx = api.tx(_event.transaction);
+      const unsignedTx = api.tx(_event.params.transaction);
       // TODO: add validation service for transaction to detect and prevent weird transactions.
 
       // const info = await unsignedTx.paymentInfo(pair);
@@ -119,12 +121,12 @@ export class SubstrateService {
 
       const transaction = new Transaction({}, context);
       transaction.populate({
-        chain: _event.chain,
+        chain: _event.params.chain,
         chainType: ChainType.SUBSTRATE,
         address: wallet.address,
         nonce: wallet.nextNonce,
-        referenceTable: _event.referenceTable,
-        referenceId: _event.referenceId,
+        referenceTable: _event.params.referenceTable,
+        referenceId: _event.params.referenceId,
         rawTransaction: signedSerialized,
         transactionHash: signed.hash.toString(),
         transactionStatus: TransactionStatus.PENDING,
@@ -140,12 +142,12 @@ export class SubstrateService {
         location: 'SubstrateService.createTransaction',
         service: ServiceName.BLOCKCHAIN,
         data: {
-          transaction: _event.transaction,
+          transaction: _event.params.transaction,
           chainType: ChainType.SUBSTRATE,
-          chain: _event.chain,
-          address: _event.fromAddress,
-          referenceTable: _event.referenceTable,
-          referenceId: _event.referenceId,
+          chain: _event.params.chain,
+          address: _event.params.fromAddress,
+          referenceTable: _event.params.referenceTable,
+          referenceId: _event.params.referenceId,
         },
       });
 
@@ -155,7 +157,7 @@ export class SubstrateService {
           WorkerName.TRANSMIT_SUBSTRATE_TRANSACTIOM,
           [
             {
-              chain: _event.chain,
+              chain: _event.params.chain,
             },
           ],
           null,
@@ -183,12 +185,12 @@ export class SubstrateService {
         service: ServiceName.BLOCKCHAIN,
         data: {
           error: e,
-          transaction: _event.transaction,
-          chain: _event.chain,
+          transaction: _event.params.transaction,
+          chain: _event.params.chain,
           chainType: ChainType.SUBSTRATE,
-          address: _event.fromAddress,
-          referenceTable: _event.referenceTable,
-          referenceId: _event.referenceId,
+          address: _event.params.fromAddress,
+          referenceTable: _event.params.referenceTable,
+          referenceId: _event.params.referenceId,
         },
       });
       await conn.rollback();

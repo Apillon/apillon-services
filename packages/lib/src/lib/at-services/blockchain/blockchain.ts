@@ -27,7 +27,7 @@ export class BlockchainMicroservice extends BaseService {
   ) {
     const data = {
       eventName: BlockchainEventType.SUBSTRATE_SIGN_TRANSACTION,
-      query: params.serialize(),
+      params: params.serialize(),
     };
     return await this.callService(data);
   }
