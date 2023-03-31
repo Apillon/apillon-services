@@ -1,14 +1,12 @@
-# Dev console API
+# Apillon Developer console API
 
-## Endpoints
+## Environments
 
-List of endpoints the API is available at:
-
-| Environment | URL                                     |
-| ----------- | --------------------------------------- |
-| Development | https://console-api-dev.apillon.io/     |
-| Staging     | https://console-api-staging.apillon.io/ |
-| Production  | https://console-api.apillon.io/         |
+| Environment | API URL                                   | Frontend URL                              |
+| ----------- | ---------------------------------------   | ---------------------------------------   |
+| Development | <https://console-api-dev.apillon.io/>     | <https://app-dev.apillon.io/>             |
+| Staging     | <https://console-api-staging.apillon.io/> | <https://app-staging.apillon.io/>         |
+| Production  | <https://console-api.apillon.io/>         | <https://app.apillon.io/>                 |
 
 ## Requests
 
@@ -24,7 +22,7 @@ Requests must include a [bearer token](https://swagger.io/docs/specification/aut
 Authorization is checked at the endpoint level in controller. Required permissions are defined with `@Permissions` decorator. Example:
 
 ```ts
-@Permissions(
+  @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
     { role: DefaultUserRole.PROJECT_USER },

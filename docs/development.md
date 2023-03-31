@@ -38,13 +38,13 @@ Project contains multiple workspaces. Basically each service and library should 
 
 ### APIs
 
-APIs are built with [Nest.js - a progressive node.js framework](https://nestjs.com/). Check out ther documentation to get familiar with modules, controllers, providers, middlewares, ...
+APIs are built with [Nest.js - a progressive node.js framework](https://nestjs.com/). Check out ther documentation to get familiar with modules, controllers, providers, middlewares, guards,  ...
 
 #### APIs list
 
 - @apillon/dev-console-api is Nest.js API, which is used by Apillon developers console.
 - @apillon/apillon-api is Nest.js API, which is used by developers, to integrate Apillon into their applications. See [docs](/modules/apillon-api/docs/apillon-api.md)
-- @authentication-api is Nest.js API for KILT, DID, some kind of OAuth xD
+- @authentication-api is Nest.js API for Apillon OAuth service.
 
 ### Project libs
 
@@ -65,29 +65,19 @@ So far the practice is that every service, has its own database.
 
 ### Microservices
 
-Microservices are not build with any framework. Pure Node.js with common.js as target!
+Microservices are Node.js programs with common.js as target(!). They are intended to run on AWS Lambda and supposed to be as lightweight as possible (no bloated frameworks included!).
 Files that ensure the functioning of the microservice:
 
-- scripts/dev/run-server.ts entry point for local development server
-- server.ts contain function to start local development socket server
-- handler.ts exports labmda handler - here developer can add middlewares
-
-```ts
-export const handler = middy(lambdaHandler);
-handler
-  .use(InitializeContextAndFillUser())
-  .use(MySqlConnect())
-  .use(ResponseFormat())
-  .use(ErrorHandler());
-```
-
-- main.ts exports `processEvent` function, which based on recieved `eventName` runs microservice function. Each microservice has its own `eventType` enum, defined in [types.ts](/packages/lib/src/config/types.ts). Each MS function should be mapped to value in this enum.
+- package `@apillon/service-lib` - includes common functions, middlewares and classes for microservices
+- `scripts/dev/run-server.ts` entry point for local development server
+- `handler.ts` - exports Lambda handler/entry point and defines middlewares with middy framework
+- `main.ts` exports `processEvent` function, which based on recieved `eventName` runs microservice function. Each microservice has its own `eventType` enum, defined in [types.ts](/packages/lib/src/config/types.ts). Each MS function should be mapped to value in this enum.
 
 #### How to call microservice
 
-Microservices are deployed as separate lambdas to AWS, but cannot be directly called. Microservices are used by APIs (dev-console-api, apillon-api, ...).
+Microservices are deployed as separate lambdas to AWS, but are not exposed to outside of the VPC. Microservices are only used by APIs (dev-console-api, apillon-api, ...) and backend workers.
 
-In @packages/lib/src/lib/at-services define new class, which extends [BaseService](/packages/lib/src/lib/at-services/base-service.ts).
+In `@packages/lib/src/lib/at-services` define new class, which extends [BaseService](/packages/lib/src/lib/at-services/base-service.ts).
 That class should then contain methods, to call microservice functions. Below is a simple example, which takes DTO (defined in lib) as parameter, composes data object with `eventName` and other properties, and executes call.
 
 ```ts
@@ -103,7 +93,7 @@ public async createBucket(params: CreateBucketDto) {
 
 ## Logging
 
-Services uses two types of logging - logging to console (cloudWatch) and to Mongo DB.
+Services uses two types of logging - logging to console (cloudWatch) and to monitoring service (LMAS) that writes formatted logs to MongoDb.
 
 ### Logging to console
 

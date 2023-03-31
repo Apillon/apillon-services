@@ -28,6 +28,9 @@ export const lambdaHandler: Handler = async (
   return res;
 };
 
+/**
+ * An object containing connection parameters for a MySQL database.
+ */
 const connectionParams = {
   host:
     env.APP_ENV === AppEnvironment.TEST
@@ -50,6 +53,7 @@ const connectionParams = {
       ? env.BLOCKCHAIN_MYSQL_PASSWORD_TEST
       : env.BLOCKCHAIN_MYSQL_PASSWORD,
 };
+
 /**
  *  Exposes the Lambda handler and sets up middleware functions to run before and after the processEvent() function is called.
  */
