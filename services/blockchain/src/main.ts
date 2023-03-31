@@ -1,5 +1,5 @@
-import { ServiceContext } from './context';
 import { BlockchainEventType } from '@apillon/lib';
+import { ServiceContext } from '@apillon/service-lib';
 import { SubstrateService } from './modules/substrate/substrate.service';
 
 /**

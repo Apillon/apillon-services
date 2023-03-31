@@ -7,12 +7,12 @@ import {
   SerializeFor,
 } from '@apillon/lib';
 import { Endpoint } from '../../common/models/endpoint';
-import { ServiceContext } from '../../context';
 import { ethers } from 'ethers';
 import { BlockchainCodeException } from '../../lib/exceptions';
 import { BlockchainErrorCode } from '../../config/types';
 import { Wallet } from '../../common/models/wallet';
 import { Transaction } from '../../common/models/transaction';
+import { ServiceContext } from '@apillon/service-lib';
 
 export class EvmService {
   static async createTransaction(
