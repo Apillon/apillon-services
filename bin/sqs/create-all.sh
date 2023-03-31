@@ -36,3 +36,7 @@ aws sqs create-queue --queue-name apillon-auth-queue-production --attributes fil
 
 aws sqs create-queue --queue-name apillon-auth-queue-test-dlq --attributes file://test/auth-queue-test-dlq.json --region eu-west-1
 aws sqs create-queue --queue-name apillon-auth-queue-test --attributes file://test/auth-queue-test.json  --region eu-west-1
+
+
+aws sqs create-queue --queue-name apillon-blockchain-queue-dev-dlq --attributes file://dev/blockchain-queue-dev-dlq.json --region eu-west-1
+aws sqs create-queue --queue-name apillon-blockchain-queue-dev --attributes file://dev/blockchain-queue-dev.json  --region eu-west-1

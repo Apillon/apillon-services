@@ -22,6 +22,7 @@ It is highly recommended to read this docs alogn with [res-API-specs](/docs/rest
 | 13   | AUTH     | Authentication Service                   | @apillon/auth            | /services/authentication/ |
 | 14   | TEST-LIB | Testing Library                          | @apillon/tests-lib       | /packages/tests-lib/      |
 | 15   | WORK-LIB | Worker Library                           | @apillon/worker-lib      | /packages/worker-lib/     |
+| 16   | BCS      | Blockchain service                       | @apillon/blockchain      | /packages/blockchain/     |
 
 ## Error codes
 
