@@ -97,7 +97,6 @@ export async function handleLambdaEvent(
     workerDefinition = new WorkerDefinition(serviceDef, WorkerName.SCHEDULER);
   }
 
-  // eslint-disable-next-line sonarjs/no-small-switch
   switch (workerDefinition.workerName) {
     case WorkerName.SCHEDULER:
       const scheduler = new Scheduler(serviceDef, context);
@@ -107,9 +106,10 @@ export async function handleLambdaEvent(
       await new TransmitSubstrateTransactionWorker(
         workerDefinition,
         context,
-      ).run({
-        executeArg: { chain: 1 },
-      });
+      ).run();
+      // {
+      //   executeArg: { chain: 1 },
+      // }
       break;
     case WorkerName.CRUST_TRANSACTIONS:
       const txWorker = new CrustTransactionWorker(workerDefinition, context);
@@ -168,7 +168,7 @@ export async function handleSqsMessages(
           workerDefinition,
           context,
         ).run({
-          executeArg: message?.body,
+          executeArg: { chain: 1 },
         });
         break;
       case WorkerName.CRUST_TRANSACTIONS:

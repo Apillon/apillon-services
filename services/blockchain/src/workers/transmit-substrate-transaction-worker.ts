@@ -1,3 +1,4 @@
+import { SubstrateChain } from '@apillon/lib';
 import { Context, env, Lmas, LogType, ServiceName } from '@apillon/lib';
 import {
   WorkerDefinition,
@@ -23,7 +24,8 @@ export class TransmitSubstrateTransactionWorker extends BaseSingleThreadWorker {
       'RUN EXECUTOR (TransmitSubstrateTransactionWorker). data: ',
       data,
     );
-    const chain = data?.chain;
+    // const chain = data?.chain;
+    const chain = SubstrateChain.CRUST;
     if (!chain) {
       throw new BlockchainCodeException({
         code: BlockchainErrorCode.INVALID_DATA_PASSED_TO_WORKER,
