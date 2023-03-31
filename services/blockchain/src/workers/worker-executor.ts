@@ -55,7 +55,7 @@ export async function handler(event: any) {
   const serviceDef = {
     type: ServiceDefinitionType.LAMBDA,
     config: { region: env.AWS_REGION },
-    params: { FunctionName: env.STORAGE_AWS_WORKER_LAMBDA_NAME },
+    params: { FunctionName: env.BLOCKCHAIN_AWS_WORKER_LAMBDA_NAME },
   };
 
   console.info(`EVENT: ${JSON.stringify(event)}`);
