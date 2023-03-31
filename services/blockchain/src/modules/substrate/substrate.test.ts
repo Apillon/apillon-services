@@ -85,7 +85,7 @@ describe('Substrate service unit test', () => {
     const serialize = tx.toHex();
 
     const res = await SubstrateService.createTransaction(
-      { transaction: serialize, chain: SubstrateChain.CRUST },
+      { params: { transaction: serialize, chain: SubstrateChain.CRUST } },
       stage.context,
     );
     console.log('res: ', res);
