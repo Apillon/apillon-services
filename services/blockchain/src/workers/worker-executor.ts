@@ -168,7 +168,7 @@ export async function handleSqsMessages(
           workerDefinition,
           context,
         ).run({
-          executeArg: { chain: 1 },
+          executeArg: JSON.stringify({ chain: 1 }),
         });
         break;
       case WorkerName.CRUST_TRANSACTIONS:
