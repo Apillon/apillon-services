@@ -154,7 +154,7 @@ export class SubstrateService {
       try {
         await sendToWorkerQueue(
           env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
-          WorkerName.TRANSMIT_SUBSTRATE_TRANSACTIOM,
+          WorkerName.TRANSMIT_SUBSTRATE_TRANSACTION,
           [
             {
               chain: _event.params.chain,
@@ -232,15 +232,19 @@ export class SubstrateService {
     },
     context: ServiceContext,
   ) {
+    console.log('chain: ', _event.chain);
+    console.log('address: ', _event.address);
     const wallets = await new Wallet({}, context).getList(
       _event.chain,
       ChainType.SUBSTRATE,
       _event.address,
     );
+    console.log('wallets: ', wallets);
     const endpoint = await new Endpoint({}, context).populateByChain(
       _event.chain,
       ChainType.SUBSTRATE,
     );
+    console.log('endpoint: ', endpoint.url);
     const provider = new WsProvider(endpoint.url);
     let typesBundle = null;
     switch (_event.chain) {
@@ -270,11 +274,13 @@ export class SubstrateService {
         wallets[i].lastProcessedNonce,
       );
       let latestSuccess = null;
+      console.log('transactions: ', transactions);
       try {
         // TODO: consider batching transaction api.tx.utility.batch
         for (let j = 0; j < transactions.length; j++) {
           const signedTx = api.tx(transactions[j].rawTransaction);
           await signedTx.send();
+          console.log('successfuly transmited');
           latestSuccess = transactions[j].nonce;
         }
       } catch (e) {

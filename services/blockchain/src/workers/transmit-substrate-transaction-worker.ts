@@ -24,8 +24,7 @@ export class TransmitSubstrateTransactionWorker extends BaseSingleThreadWorker {
       'RUN EXECUTOR (TransmitSubstrateTransactionWorker). data: ',
       data,
     );
-    // const chain = data?.chain;
-    const chain = SubstrateChain.CRUST;
+    const chain = data?.chain;
     if (!chain) {
       throw new BlockchainCodeException({
         code: BlockchainErrorCode.INVALID_DATA_PASSED_TO_WORKER,
