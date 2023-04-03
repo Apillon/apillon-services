@@ -76,7 +76,7 @@ export class SubstrateService {
       }
 
       console.log(wallet.serialize());
-      let keyring = new Keyring(); // generate privatekey from mnemonic - different for different chains
+      let keyring; // generate privatekey from mnemonic - different for different chains
       let typesBundle = null; // different types for different chains
       switch (_event.params.chain) {
         case SubstrateChain.KILT: {
@@ -84,6 +84,7 @@ export class SubstrateService {
           break;
         }
         case SubstrateChain.CRUST: {
+          keyring = new Keyring({ type: 'sr25519' });
           typesBundle = typesBundleForPolkadot;
           break;
         }
