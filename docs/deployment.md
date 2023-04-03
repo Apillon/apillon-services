@@ -16,6 +16,12 @@
 
   Currently build for production is started manually, other environments are deployed automatically on push to specific branch.
 
+### Environment variables
+
+Variables are loaded from S3 on build time. See `./bin/deploy/aws-build.sh`. Before build there should be updated version of variables on S3.
+
+Majority of variables and secrets for cloud environments are also stored in AWS Secret manager.
+
 ### Build scripts and configuration files
 
 | Path                                 | Description                                                       |
