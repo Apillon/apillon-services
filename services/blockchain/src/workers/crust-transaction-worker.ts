@@ -13,6 +13,7 @@ import { Transaction } from '../common/models/transaction';
 import { Wallet } from '../common/models/wallet';
 import { DbTables } from '../config/types';
 import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/crust-indexer.service';
+import { BlockchainStatus } from '../modules/blockchain-indexers/data-models/blockchain-status';
 import {
   CrustStorageOrders,
   CrustStorageOrder,
@@ -128,28 +129,32 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
       );
       return;
     }
-    const withdrawalsByHash = new Map<string, CrustTransfer>(
-      withdrawals.transfers.map((w) => [w.extrinsicHash, w]),
-    );
-    const bcHashesString: string = [...withdrawalsByHash.keys()].join(',');
     console.log(
-      `Matching ${withdrawals.transfers.length} blockchain transactions with transactions in DB. (txHashes=${bcHashesString})`,
+      `Matching ${withdrawals.transfers.length} blockchain transactions with transactions in DB.`,
     );
-    const confirmedDbTxHashes: string[] =
-      await this.updateConfirmedTransactions(bcHashesString, wallet, conn);
 
-    const txDbHashesString = confirmedDbTxHashes.join(',');
-    console.log(
-      `${confirmedDbTxHashes.length} Transactions matched (txHashes=${txDbHashesString}) in db.`,
+    const confirmedDbTxHashes: string[] = await this.updateWithdrawalsByStatus(
+      withdrawals,
+      TransactionStatus.CONFIRMED,
+      wallet,
+      conn,
     );
+    const failedDbTxHashes: string[] = await this.updateWithdrawalsByStatus(
+      withdrawals,
+      TransactionStatus.FAILED,
+      wallet,
+      conn,
+    );
+
+    const updatedDbTxs = confirmedDbTxHashes.concat(failedDbTxHashes);
 
     // All transactions were matched with db
-    if (withdrawalsByHash.entries.length === confirmedDbTxHashes.length) {
+    if (withdrawals.transfers.length == updatedDbTxs.length) {
       return;
     }
 
-    withdrawalsByHash.forEach((value, key) => {
-      if (!confirmedDbTxHashes.includes(key)) {
+    withdrawals.transfers.forEach((bcTx) => {
+      if (!updatedDbTxs.includes(bcTx.extrinsicHash)) {
         // TODO: Send notification - critical: Withdrawal (txHash) was not initiated by us
         // use info from value variable to get all required data
       }
@@ -178,33 +183,42 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
 
   public async handleCrustFileOrders(
     wallet: Wallet,
-    bcFileOrders: CrustStorageOrders,
+    bcOrders: CrustStorageOrders,
     conn: PoolConnection,
   ) {
-    if (!bcFileOrders.storageOrders.length) {
+    if (!bcOrders.storageOrders.length) {
       console.log(
         `There are no new file storage orders received from blockchain indexer (address=${wallet.address}).`,
       );
       return;
     }
-    const bcFileOrdersByHash = new Map<string, CrustStorageOrder>(
-      bcFileOrders.storageOrders.map((so) => [so.extrinsicHash, so]),
-    );
-    const bcHashesString: string = [...bcFileOrdersByHash.keys()].join(',');
     console.log(
-      `Matching ${bcFileOrders.storageOrders.length} blockchain storage orders with transactions in DB. (txHashes=${bcHashesString})`,
+      `Matching ${bcOrders.storageOrders.length} blockchain storage orders with transactions in DB.`,
     );
 
     const confirmedDbTxHashes: string[] =
-      await this.updateConfirmedTransactions(bcHashesString, wallet, conn);
+      await this.updateStorageOrdersByStatus(
+        bcOrders,
+        TransactionStatus.CONFIRMED,
+        wallet,
+        conn,
+      );
 
+    const failedDbTxHashes: string[] = await this.updateStorageOrdersByStatus(
+      bcOrders,
+      TransactionStatus.FAILED,
+      wallet,
+      conn,
+    );
+
+    const updatedDbTxs = confirmedDbTxHashes.concat(failedDbTxHashes);
     // All transactions were matched with db
-    if (bcFileOrdersByHash.entries.length === confirmedDbTxHashes.length) {
+    if (bcOrders.storageOrders.length === updatedDbTxs.length) {
       return;
     }
 
-    bcFileOrdersByHash.forEach((value, key) => {
-      if (!confirmedDbTxHashes.includes(key)) {
+    bcOrders.storageOrders.forEach((bcTx) => {
+      if (!updatedDbTxs.includes(bcTx.extrinsicHash)) {
         // TODO: Send notification - critical: Withdrawal (txHash) was not initiated by us
         // use info from value variable to get all required data
       }
@@ -219,8 +233,9 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
    * @param conn connection
    * @returns array of confirmed transaction hashes
    */
-  public async updateConfirmedTransactions(
+  public async updateTransactions(
     bcHashesString: string,
+    status: TransactionStatus,
     wallet: Wallet,
     conn: PoolConnection,
   ): Promise<string[]> {
@@ -233,7 +248,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         AND address = @address
         AND transactionHash in (@hashes)`,
       {
-        status: TransactionStatus.CONFIRMED,
+        status,
         hashes: bcHashesString,
         chain: wallet.chain,
         address: wallet.address,
@@ -242,24 +257,87 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
       conn,
     );
 
-    const confirmedDbTxHashes = (
+    return (
       await new Transaction({}, this.context).getTransactionsByHashes(
         wallet.chain,
         wallet.chainType,
         wallet.address,
-        TransactionStatus.CONFIRMED,
+        status,
         bcHashesString,
         conn,
       )
     ).map((tx) => {
       return tx.transactionHash;
     });
+  }
 
-    const txDbHashesString = confirmedDbTxHashes.join(',');
-    console.log(
-      `${confirmedDbTxHashes.length} Transactions matched (txHashes=${txDbHashesString}) in db.`,
+  public async updateWithdrawalsByStatus(
+    withdrawals: CrustTransfers,
+    status: TransactionStatus,
+    wallet: Wallet,
+    conn: PoolConnection,
+  ): Promise<string[]> {
+    const bcStatus: BlockchainStatus =
+      status == TransactionStatus.CONFIRMED
+        ? BlockchainStatus.CONFIRMED
+        : BlockchainStatus.FAILED;
+
+    const bcWithdrawals = new Map<string, CrustTransfer>(
+      withdrawals.transfers
+        .filter((tx) => {
+          return tx.status == bcStatus;
+        })
+        .map((w) => [w.extrinsicHash, w]),
     );
-    return confirmedDbTxHashes;
+
+    const bcHashesString: string = [...bcWithdrawals.keys()].join(',');
+    const updatedDbTxs: string[] = await this.updateTransactions(
+      bcHashesString,
+      status,
+      wallet,
+      conn,
+    );
+
+    const txDbHashesString = updatedDbTxs.join(',');
+    console.log(
+      `${updatedDbTxs.length} [${TransactionStatus[status]}] transactions matched (txHashes=${txDbHashesString}) in db.`,
+    );
+
+    return updatedDbTxs;
+  }
+
+  public async updateStorageOrdersByStatus(
+    bcOrders: CrustStorageOrders,
+    status: TransactionStatus,
+    wallet: Wallet,
+    conn: PoolConnection,
+  ): Promise<string[]> {
+    const bcStatus: BlockchainStatus =
+      status == TransactionStatus.CONFIRMED
+        ? BlockchainStatus.CONFIRMED
+        : BlockchainStatus.FAILED;
+
+    const storageOrders = new Map<string, CrustStorageOrder>(
+      bcOrders.storageOrders
+        .filter((so) => {
+          return so.status == bcStatus;
+        })
+        .map((so) => [so.extrinsicHash, so]),
+    );
+    const soHashesString: string = [...storageOrders.keys()].join(',');
+
+    const updatedDbTxs: string[] = await this.updateTransactions(
+      soHashesString,
+      status,
+      wallet,
+      conn,
+    );
+
+    const txDbHashesString = updatedDbTxs.join(',');
+    console.log(
+      `${updatedDbTxs.length} [${TransactionStatus[status]}] storage orders matched (txHashes=${txDbHashesString}) in db.`,
+    );
+    return updatedDbTxs;
   }
 
   /**
