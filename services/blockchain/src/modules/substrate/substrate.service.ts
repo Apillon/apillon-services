@@ -47,6 +47,7 @@ export class SubstrateService {
       });
     }
 
+    console.log('endpoint: ', endpoint.url);
     const provider = new WsProvider(endpoint.url);
 
     // Start connection to database at the beginning of the function
@@ -74,6 +75,7 @@ export class SubstrateService {
         );
       }
 
+      console.log(wallet.serialize());
       let keyring = new Keyring(); // generate privatekey from mnemonic - different for different chains
       let typesBundle = null; // different types for different chains
       switch (_event.params.chain) {
@@ -99,6 +101,9 @@ export class SubstrateService {
         typesBundle, // TODO: add
       });
       const pair = keyring.addFromUri(wallet.seed);
+      console.log('wallet: ', pair.address);
+      const balance = await api.query.system.account(pair.address);
+      console.log('balance: ', balance);
       const unsignedTx = api.tx(_event.params.transaction);
       // TODO: add validation service for transaction to detect and prevent weird transactions.
 
@@ -110,9 +115,10 @@ export class SubstrateService {
       // `);
 
       // TODO: Determine the best era
+      console.log(unsignedTx.toHuman());
       const signed = await unsignedTx.signAsync(pair, {
         nonce: wallet.nextNonce,
-        era: 150, // number of blocks the transaction is valid - 6s per block * 150 blocks / 60 = 15 minutes
+        era: 600, // number of blocks the transaction is valid - 6s per block * 150 blocks / 60 = 15 minutes
       });
 
       await wallet.iterateNonce(conn);
