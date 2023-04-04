@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@apillon/lib": "*",
+    "@apillon/service-lib": "*",
     "@middy/core": "^3.3.1",
     "@rawmodel/core": "^3.3.4",
     "@rawmodel/parsers": "^3.3.4",

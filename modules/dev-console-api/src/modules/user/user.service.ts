@@ -40,6 +40,11 @@ import { signatureVerify } from '@polkadot/util-crypto';
 export class UserService {
   constructor(private readonly projectService: ProjectService) {}
 
+  /**
+   * Retrieves the user profile information.
+   * @param {DevConsoleApiContext} context - The API context with current user session.
+   * @returns {Promise<any>} The serialized user profile data.
+   */
   async getUserProfile(context: DevConsoleApiContext) {
     const user = await new User({}, context).populateById(context.user.id);
 
@@ -57,6 +62,12 @@ export class UserService {
     return user.serialize(SerializeFor.PROFILE);
   }
 
+  /**
+   * Authenticates a user using email and password.
+   * @param {LoginUserDto} loginInfo - The email and password data for login.
+   * @param {DevConsoleApiContext} context - The API context for database access
+   * @returns {Promise<any>} The serialized user profile data and token.
+   */
   async login(
     loginInfo: LoginUserDto,
     context: DevConsoleApiContext,
@@ -99,6 +110,12 @@ export class UserService {
     }
   }
 
+  /**
+   * Validates the email and captcha for the user registration process.
+   * @param {Context} context - The API context
+   * @param {ValidateEmailDto} emailVal - The email and captcha data.
+   * @returns {Promise<any>} The email validation result.
+   */
   async validateEmail(
     context: Context,
     emailVal: ValidateEmailDto,
@@ -167,6 +184,12 @@ export class UserService {
     return emailResult;
   }
 
+  /**
+   * Registers a new user.
+   * @param {RegisterUserDto} data - The registration data including email and password.
+   * @param {DevConsoleApiContext} context - The API context
+   * @returns {Promise<any>} The serialized user profile data and token.
+   */
   async registerUser(
     data: RegisterUserDto,
     context: DevConsoleApiContext,
@@ -268,6 +291,11 @@ export class UserService {
     };
   }
 
+  /**
+   * Generates an auth message with a timestamp for wallet login.
+   * @param {number} [timestamp] - The timestamp for the message. Default is the current time.
+   * @returns {object} The auth message and timestamp.
+   */
   public getAuthMessage(timestamp: number = new Date().getTime()) {
     return {
       message: `Please sign this message.\n${timestamp}`,
@@ -275,6 +303,12 @@ export class UserService {
     };
   }
 
+  /**
+   * Authenticates a user using wallet signature.
+   * @param {UserWalletAuthDto} userAuth - The wallet authentication data.
+   * @param {Context} context - The API context with current user session.
+   * @returns {Promise<any>} The serialized user profile data and token.
+   */
   async walletLogin(userAuth: UserWalletAuthDto, context: Context) {
     // 1 hour validity
     if (new Date().getTime() - userAuth.timestamp > 60 * 60 * 1000) {
@@ -313,6 +347,12 @@ export class UserService {
     };
   }
 
+  /**
+   * Connects a wallet to the user profile.
+   * @param {UserWalletAuthDto} userAuth - The wallet authentication data.
+   * @param {Context} context - The API context with current user session.
+   * @returns {Promise<any>} The serialized user profile data.
+   */
   async walletConnect(userAuth: UserWalletAuthDto, context: Context) {
     // 1 hour validity
     if (new Date().getTime() - userAuth.timestamp > 60 * 60 * 1000) {
@@ -350,6 +390,12 @@ export class UserService {
     return context.user.serialize(SerializeFor.PROFILE);
   }
 
+  /**
+   * Initiates the password reset process by sending an email with a token.
+   * @param {Context} context - The API context with current user session.
+   * @param {ValidateEmailDto} body - The email data.
+   * @returns {Promise<boolean>} True if the email was sent successfully.
+   */
   async passwordResetRequest(context: Context, body: ValidateEmailDto) {
     const res = await new Ams(context).emailExists(body.email);
 
@@ -377,6 +423,12 @@ export class UserService {
     return true;
   }
 
+  /**
+   * Resets the user password using the provided token and new password.
+   * @param {Context} context - The API context with current user session.
+   * @param {ResetPasswordDto} body - The token and new password data.
+   * @returns {Promise<boolean>} True if the password was reset successfully.
+   */
   async resetPassword(context: Context, body: ResetPasswordDto) {
     const tokenData = parseJwtToken(
       JwtTokenType.USER_RESET_PASSWORD,
@@ -399,6 +451,12 @@ export class UserService {
     return true;
   }
 
+  /**
+   * Updates the user profile information.
+   * @param {DevConsoleApiContext} context - The API context with current user session.
+   * @param {UpdateUserDto} body - The updated user data.
+   * @returns {Promise<any>} The serialized updated user profile data.
+   */
   async updateUserProfile(context: DevConsoleApiContext, body: UpdateUserDto) {
     const user = await new User({}, context).populateById(context.user.id);
 
@@ -439,6 +497,12 @@ export class UserService {
     return user.serialize(SerializeFor.PROFILE);
   }
 
+  /**
+   * Connects the user's Discord account to their profile.
+   * @param {DevConsoleApiContext} context - The API context with current user session.
+   * @param {string} code - The Discord OAuth code.
+   * @returns {Promise<any>} The serialized updated user profile data.
+   */
   async connectDiscord(context: DevConsoleApiContext, body: DiscordCodeDto) {
     let discordProfile: any;
     if (env.APP_ENV === AppEnvironment.TEST) {
@@ -467,10 +531,20 @@ export class UserService {
     return await new Ams(context).linkDiscord(payload);
   }
 
+  /**
+   * Disconnects the user's Discord account from their profile.
+   * @param {DevConsoleApiContext} context - The API context with current user session.
+   * @returns {Promise<any>} The serialized updated user profile data.
+   */
   async disconnectDiscord(context: DevConsoleApiContext) {
     await new Ams(context).unlinkDiscord();
   }
 
+  /**
+   * Get connection info for users connected OAuth providers.
+   * @param context - The API context with current user session.
+   * @returns User oauth links info.
+   */
   async getOauthLinks(context: DevConsoleApiContext) {
     return await new Ams(context).getOauthLinks();
   }

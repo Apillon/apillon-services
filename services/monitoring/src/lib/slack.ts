@@ -58,6 +58,13 @@ export class Slack {
   }
 }
 
+/**
+ * Notify administrators of an event in the system via Slack.
+ * Message is formatted and users are notified depending on severity level. Channel is set on env variable.
+ * @param message Message to post on slack
+ * @param serviceName Name of the origin service
+ * @param level level of severity of the message
+ */
 export async function postToSlack(
   message: string,
   serviceName: string,

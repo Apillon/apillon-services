@@ -19,7 +19,7 @@ import {
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { StorageErrorCode } from '../../config/types';
-import { ServiceContext } from '../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import {
   StorageCodeException,
   StorageValidationException,

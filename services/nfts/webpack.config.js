@@ -44,7 +44,11 @@ module.exports = {
   },
   externals: [
     nodeExternals({
-      allowlist: ['@apillon/lib', '@apillon/workers-lib'],
+      allowlist: [
+        '@apillon/lib',
+        '@apillon/service-lib',
+        '@apillon/workers-lib',
+      ],
     }),
   ],
   // externals: [nodeExternals()],

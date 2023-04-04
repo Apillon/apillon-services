@@ -1,5 +1,5 @@
 import { AWS_S3, env, ServiceName } from '@apillon/lib';
-import { ServiceContext } from '../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
 import { v4 as uuidV4 } from 'uuid';
 import { StorageCodeException } from './exceptions';

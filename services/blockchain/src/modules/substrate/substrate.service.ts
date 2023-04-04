@@ -1,4 +1,3 @@
-import { ServiceContext } from '../../context';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Keyring } from '@polkadot/keyring';
 import { Wallet } from '../../common/models/wallet';
@@ -19,6 +18,7 @@ import { Transaction } from '../../common/models/transaction';
 import { typesBundleForPolkadot } from '@crustio/type-definitions';
 import { sendToWorkerQueue } from '@apillon/workers-lib';
 import { WorkerName } from '../../workers/worker-executor';
+import { ServiceContext } from '@apillon/service-lib';
 
 export class SubstrateService {
   static async createTransaction(

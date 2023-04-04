@@ -25,6 +25,12 @@ aws codebuild create-webhook --cli-input-json file://apillon-api-webhook-stg.jso
 aws codebuild create-project --cli-input-json file://nfts-config-stg.json --profile apillon
 aws codebuild create-webhook --cli-input-json file://nfts-webhook-stg.json --profile apillon
 
+aws codebuild create-project --cli-input-json file://auth-api-config-stg.json --profile apillon
+aws codebuild create-webhook --cli-input-json file://auth-api-webhook-stg.json --profile apillon
+
+aws codebuild create-project --cli-input-json file://auth-config-stg.json --profile apillon
+aws codebuild create-webhook --cli-input-json file://auth-webhook-stg.json --profile apillon
+
 @REM FRONTEND:
 aws codebuild create-project --cli-input-json file://apillon-app-config-stg.json --profile apillon
 aws codebuild create-webhook --cli-input-json file://apillon-app-webhook-stg.json --profile apillon

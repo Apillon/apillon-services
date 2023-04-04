@@ -1,73 +1,86 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Apillon Developer console API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+This API is consumed by Apillon Developer Console web application (frontend).
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Table of Contents
 
-## Description
+1. [Getting Started](#getting-started)
+2. [Configuration](#configuration)
+3. [Environments](#environments)
+4. [Requests](#requests)
+5. [Authentication and authorization](#authentication-and-authorization)
+6. [Deployment](#deployment)
+7. [License](#license)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Getting Started
 
-## Installation
+Please read [Development](../../docs/development.md) and [Debug and Test](../../docs/debug-and-test.md) documentation. These instructions will help you set up the development environment and run the API locally.
 
-```bash
-$ npm install
+## Configuration
+
+Environment variables that has to be set:
+
+```ts
+  /************************************************************
+   * DEV-CONSOLE-API -Apillon Developer Console API
+   ************************************************************/
+  DEV_CONSOLE_API_MYSQL_HOST: string;
+  DEV_CONSOLE_API_MYSQL_PORT: number;
+  DEV_CONSOLE_API_MYSQL_USER: string;
+  DEV_CONSOLE_API_MYSQL_PASSWORD: string;
+  DEV_CONSOLE_API_MYSQL_DEPLOY_USER: string;
+  DEV_CONSOLE_API_MYSQL_DEPLOY_PASSWORD: string;
+  DEV_CONSOLE_API_MYSQL_DATABASE: string;
+
+  DEV_CONSOLE_API_MYSQL_HOST_TEST: string;
+  DEV_CONSOLE_API_MYSQL_PORT_TEST: number;
+  DEV_CONSOLE_API_MYSQL_USER_TEST: string;
+  DEV_CONSOLE_API_MYSQL_PASSWORD_TEST: string;
+  DEV_CONSOLE_API_MYSQL_DATABASE_TEST: string;
+
+  DEV_CONSOLE_API_HOST: string;
+  DEV_CONSOLE_API_PORT: number;
+
+  DEV_CONSOLE_API_HOST_TEST: string;
+  DEV_CONSOLE_API_PORT_TEST: number;
+
+
 ```
 
-## Running the app
+## Environments
 
-```bash
-# development
-$ npm run start
+| Environment | API URL                                   | Frontend URL                              |
+| ----------- | ---------------------------------------   | ---------------------------------------   |
+| Development | <https://console-api-dev.apillon.io/>     | <https://app-dev.apillon.io/>             |
+| Staging     | <https://console-api-staging.apillon.io/> | <https://app-staging.apillon.io/>         |
+| Production  | <https://console-api.apillon.io/>         | <https://app.apillon.io/>                 |
 
-# watch mode
-$ npm run start:dev
+## Requests
 
-# production mode
-$ npm run start:prod
+The server speaks [JSON](https://en.wikipedia.org/wiki/JSON). It is recommended that every call to the server includes a `Content-Type` header set to `application/json;`.
+
+## Authentication and authorization
+
+`AuthGuard` middleware performs authentication and authorization checks.
+
+Except for the login and reset routes, API routes restrict public access and require authentication.
+Requests must include a [bearer token](https://swagger.io/docs/specification/authentication/bearer-authentication/). This token can be recieved with call to (`/users/login`) endpoint.
+
+Authorization is checked at the endpoint level in controller. Required permissions are defined with `@Permissions` decorator. Example:
+
+```ts
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @UseGuards(AuthGuard)
 ```
 
-## Test
+## Deployment
 
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Please read [Deployment](../../docs/deployment.md) documentation.
 
 ## License
 
-Nest is [MIT licensed](LICENSE).
+Copyright (c) Apillon - all rights reserved.

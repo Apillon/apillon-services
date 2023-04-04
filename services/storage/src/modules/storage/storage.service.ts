@@ -24,7 +24,7 @@ import {
 } from '@apillon/workers-lib';
 import { v4 as uuidV4 } from 'uuid';
 import { BucketType, FileStatus, StorageErrorCode } from '../../config/types';
-import { ServiceContext } from '../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { createFURAndS3Url } from '../../lib/create-fur-and-s3-url';
 import { StorageCodeException } from '../../lib/exceptions';
 import { processSessionFiles } from '../../lib/process-session-files';

@@ -16,13 +16,13 @@ module.exports = {
     cacheWithContext: false,
     alias: {
       'bson-ext': false,
-      'kerberos': false,
+      kerberos: false,
       // '@mongodb-js/zstd': false,
-      'snappy': false,
+      snappy: false,
       'snappy/package.json': false,
-      'aws4': false,
+      aws4: false,
       'mongodb-client-encryption': false,
-      'cardinal': false,
+      cardinal: false,
       // '@apillon/lib': path.join(__dirname, '..', '..', 'packages', 'lib')
     },
   },
@@ -38,7 +38,7 @@ module.exports = {
   externals: [
     // nodeExternals()
     nodeExternals({
-      allowlist: ['@apillon/lib'],
+      allowlist: ['@apillon/lib', '@apillon/service-lib'],
     }),
   ],
   module: {

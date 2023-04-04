@@ -12,7 +12,7 @@ import {
   Lmas,
   ServiceName,
 } from '@apillon/lib';
-import { ServiceContext } from '../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import {
   ReferralCodeException,
   ReferralValidationException,

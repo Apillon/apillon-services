@@ -4,7 +4,7 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { ServiceContext } from '../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { DeleteBucketDirectoryFileWorker } from '../../workers/delete-bucket-directory-file-worker';
 import { WorkerName } from '../../workers/worker-executor';
 

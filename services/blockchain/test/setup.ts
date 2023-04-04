@@ -5,14 +5,13 @@ import {
   env,
   MySql,
   rebuildDatabase,
-  seedDatabase,
 } from '@apillon/lib';
 import Keyring from '@polkadot/keyring';
 import { mnemonicGenerate } from '@polkadot/util-crypto';
-import { ServiceContext } from '../src/context';
 import { Wallet } from '../src/common/models/wallet';
 import { SubstrateChain } from '@apillon/lib';
 import { ChainType } from '@apillon/lib';
+import { ServiceContext } from '@apillon/service-lib';
 
 /**
  * Testing stage definition.

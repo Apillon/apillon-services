@@ -12,7 +12,7 @@ import {
   FileUploadRequestFileStatus,
   StorageErrorCode,
 } from '../../config/types';
-import { ServiceContext } from '../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { StorageCodeException } from '../../lib/exceptions';
 import { pinFileToCRUST } from '../../lib/pin-file-to-crust';
 import { Bucket } from '../bucket/models/bucket.model';

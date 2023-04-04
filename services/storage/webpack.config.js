@@ -16,13 +16,13 @@ module.exports = {
     cacheWithContext: false,
     alias: {
       'bson-ext': false,
-      'kerberos': false,
+      kerberos: false,
       // '@mongodb-js/zstd': false,
-      'snappy': false,
+      snappy: false,
       'snappy/package.json': false,
-      'aws4': false,
+      aws4: false,
       'mongodb-client-encryption': false,
-      'cardinal': false,
+      cardinal: false,
       // '@nestjs/websockets/socket-module': false,
       // 'cache-manager': false,
       // 'class-validator': false,
@@ -41,10 +41,15 @@ module.exports = {
   node: {
     __dirname: true,
   },
-  externals: [nodeExternals({
-    allowlist: ['@apillon/lib', '@apillon/workers-lib']
-  }
-  )],
+  externals: [
+    nodeExternals({
+      allowlist: [
+        '@apillon/lib',
+        '@apillon/service-lib',
+        '@apillon/workers-lib',
+      ],
+    }),
+  ],
   // externals: [nodeExternals()],
   module: {
     rules: [

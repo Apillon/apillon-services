@@ -1,12 +1,21 @@
 import * as middy from '@middy/core';
 import type { Callback, Handler } from 'aws-lambda/handler';
 import { processEvent } from './main';
-import { ErrorHandler } from './middleware/error';
-import { MySqlConnect } from './middleware/mysql';
-import { ResponseFormat } from './middleware/response';
-import { InitializeContextAndFillUser } from './middleware/context-and-user';
+import {
+  InitializeContextAndFillUser,
+  MySqlConnect,
+  ResponseFormat,
+  ErrorHandler,
+} from '@apillon/service-lib';
+import { AppEnvironment, env } from '@apillon/lib';
 
-export const lambdaHandler: Handler = async (
+/**
+ * Handles AWS Lambda events and passes them to processEvent() for processing.
+ * @param event - Lambda event object.
+ * @param context - Lambda execution context.
+ * @returns service response
+ */
+const lambdaHandler: Handler = async (
   event: any,
   context: any,
   _callback: Callback,
@@ -19,9 +28,38 @@ export const lambdaHandler: Handler = async (
   return res;
 };
 
+/**
+ * An object containing connection parameters for a MySQL database.
+ */
+const connectionParams = {
+  host:
+    env.APP_ENV === AppEnvironment.TEST
+      ? env.ACCESS_MYSQL_HOST_TEST
+      : env.ACCESS_MYSQL_HOST,
+  port:
+    env.APP_ENV === AppEnvironment.TEST
+      ? env.ACCESS_MYSQL_PORT_TEST
+      : env.ACCESS_MYSQL_PORT,
+  database:
+    env.APP_ENV === AppEnvironment.TEST
+      ? env.ACCESS_MYSQL_DATABASE_TEST
+      : env.ACCESS_MYSQL_DATABASE,
+  user:
+    env.APP_ENV === AppEnvironment.TEST
+      ? env.ACCESS_MYSQL_USER_TEST
+      : env.ACCESS_MYSQL_USER,
+  password:
+    env.APP_ENV === AppEnvironment.TEST
+      ? env.ACCESS_MYSQL_PASSWORD_TEST
+      : env.ACCESS_MYSQL_PASSWORD,
+};
+
+/**
+ *  Exposes the Lambda handler and sets up middleware functions to run before and after the processEvent() function is called.
+ */
 export const handler = middy.default(lambdaHandler);
 handler
   .use(InitializeContextAndFillUser())
-  .use(MySqlConnect())
+  .use(MySqlConnect(connectionParams))
   .use(ResponseFormat())
   .use(ErrorHandler());
