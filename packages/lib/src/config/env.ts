@@ -30,7 +30,7 @@ export interface IEnv {
   AWS_SECRET: string;
 
   /*************************************************************
-   * AMS -Apillon Access Management Service
+   * AMS - Apillon Access Management Service
    *************************************************************/
   /**
    *  function name
@@ -90,7 +90,7 @@ export interface IEnv {
   SLACK_CHANNEL: string;
 
   /************************************************************
-   * MAIL - mailing service
+   * MAIL - Apillon Mailing Service
    ************************************************************/
 
   /**
@@ -145,7 +145,7 @@ export interface IEnv {
   DEFAULT_PAGE_SIZE: number;
 
   /************************************************************
-   * AT-STORAGE config
+   * IPFS - Apillon Storage Service
    ************************************************************/
   STORAGE_FUNCTION_NAME: string;
   STORAGE_FUNCTION_NAME_TEST: string;
