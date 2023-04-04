@@ -4,6 +4,7 @@ import {
   Lmas,
   LogType,
   PoolConnection,
+  SerializeFor,
   ServiceName,
   SubstrateChain,
   TransactionStatus,
@@ -42,9 +43,10 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
 
     const maxBlocks = 50;
 
-    for (const wallet of wallets) {
+    for (const w of wallets) {
       const conn = await this.context.mysql.start();
       try {
+        const wallet: Wallet = new Wallet(w, this.context);
         const crustIndexer: CrustBlockchainIndexer =
           new CrustBlockchainIndexer();
         const blockHeight = await crustIndexer.getBlockHeight();
@@ -78,7 +80,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         );
 
         wallet.lastParsedBlock = toBlock;
-        await wallet.update();
+        await wallet.update(SerializeFor.UPDATE_DB, conn);
         await conn.commit();
         console.log(
           `Checking PENDING transactions (sourceWallet=${wallet.address}, lastProcessedBlock=${toBlock}) FINISHED!`,
@@ -86,7 +88,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
       } catch (err) {
         await conn.rollback();
         console.log(
-          `Checking PENDING transactions (sourceWallet=${wallet.address}) FAILED! Error: ${err}`,
+          `Checking PENDING transactions (sourceWallet=${w.address}) FAILED! Error: ${err}`,
         );
         await new Lmas().writeLog({
           logType: LogType.ERROR,
@@ -228,13 +230,13 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
   /**
    * Updates transaction statuses which are confirmed on blockchain
    *
-   * @param bcHashesString blockhain hashes delimited with comma
+   * @param bcHashes blockhain hashes array
    * @param wallet wallet entity
    * @param conn connection
    * @returns array of confirmed transaction hashes
    */
   public async updateTransactions(
-    bcHashesString: string,
+    bcHashes: string[],
     status: TransactionStatus,
     wallet: Wallet,
     conn: PoolConnection,
@@ -246,10 +248,9 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         chain = @chain
         AND chainType = @chainType
         AND address = @address
-        AND transactionHash in (@hashes)`,
+        AND transactionHash in ('${bcHashes.join("','")}')`,
       {
         status,
-        hashes: bcHashesString,
         chain: wallet.chain,
         address: wallet.address,
         chainType: wallet.chainType,
@@ -263,7 +264,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         wallet.chainType,
         wallet.address,
         status,
-        bcHashesString,
+        bcHashes,
         conn,
       )
     ).map((tx) => {
@@ -290,9 +291,20 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         .map((w) => [w.extrinsicHash, w]),
     );
 
-    const bcHashesString: string = [...bcWithdrawals.keys()].join(',');
+    const bcHashes: string[] = [...bcWithdrawals.keys()];
+
+    console.log(
+      `Updating transactions 
+        (
+          sourceWallet=${wallet.address}, 
+          chain=${wallet.chain}, 
+          chainType=${wallet.chainType}, 
+          txHashes=${bcHashes}, 
+          toStatus=${TransactionStatus[status]}
+        )`,
+    );
     const updatedDbTxs: string[] = await this.updateTransactions(
-      bcHashesString,
+      bcHashes,
       status,
       wallet,
       conn,
@@ -324,10 +336,20 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         })
         .map((so) => [so.extrinsicHash, so]),
     );
-    const soHashesString: string = [...storageOrders.keys()].join(',');
+    const soHashes: string[] = [...storageOrders.keys()];
 
+    console.log(
+      `Updating storage orders transactions 
+        (
+          sourceWallet=${wallet.address}, 
+          chain=${wallet.chain}, 
+          chainType=${wallet.chainType}, 
+          txHashes=${soHashes}, 
+          toStatus=${TransactionStatus[status]}
+        )`,
+    );
     const updatedDbTxs: string[] = await this.updateTransactions(
-      soHashesString,
+      soHashes,
       status,
       wallet,
       conn,
