@@ -32,6 +32,7 @@ module.exports = {
       'mongodb-client-encryption': false,
       cardinal: false,
       // '@apillon/lib': path.join(__dirname, '..', '..', 'packages', 'lib')
+      debug: false,
     },
   },
   output: {

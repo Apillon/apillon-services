@@ -30,6 +30,7 @@ module.exports = {
       // '@nestjs/microservices/microservices-module': false,
       // '@nestjs/microservices': false,
       //'@apillon/lib': path.join(__dirname, '..', '..', 'packages', 'lib', 'dist')
+      'electron-fetch': false,
     },
   },
   output: {
