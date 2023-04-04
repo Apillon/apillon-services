@@ -33,7 +33,7 @@ Migrations are execute inside service directory, so .env with DB variables must 
 
 Then run:
 
-```
+```sh
 npm run db-upgrade
 ```
 
@@ -50,3 +50,4 @@ Migrations and seeds can be executed automatically before building for specific 
     }
     ...
 }
+```
