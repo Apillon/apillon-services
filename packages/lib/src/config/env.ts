@@ -117,7 +117,7 @@ export interface IEnv {
   ADMIN_EMAILS: string;
 
   /************************************************************
-   * dev-console-api Database config
+   * DEV-CONSOLE-API -Apillon Developer Console API
    ************************************************************/
   DEV_CONSOLE_API_MYSQL_HOST: string;
   DEV_CONSOLE_API_MYSQL_PORT: number;
@@ -173,7 +173,14 @@ export interface IEnv {
   STORAGE_MYSQL_DATABASE_TEST: string;
 
   /************************************************************
-   * BLOCKCHAIN config
+   * Serverless workers config - STORAGE MS
+   ************************************************************/
+  STORAGE_AWS_WORKER_SQS_URL: string;
+  STORAGE_AWS_WORKER_SQS_ARN: string;
+  STORAGE_AWS_WORKER_LAMBDA_NAME: string;
+
+  /************************************************************
+   * BIS - Apillon Blockchain Integration Service
    ************************************************************/
   BLOCKCHAIN_FUNCTION_NAME: string;
   BLOCKCHAIN_FUNCTION_NAME_TEST: string;
@@ -198,7 +205,7 @@ export interface IEnv {
   BLOCKCHAIN_CRUST_GRAPHQL_SERVER: string;
 
   /************************************************************
-   * Apillon API config
+   * API - Apillon API config
    ************************************************************/
   APILLON_API_HOST: string;
   APILLON_API_PORT: number;
@@ -207,7 +214,7 @@ export interface IEnv {
   APILLON_API_PORT_TEST: number;
 
   /************************************************************
-   * Apillon Authentication API config
+   * AUTH - Apillon Authentication Service
    ************************************************************/
   // MAIN
   AUTH_API_HOST: string;
@@ -253,13 +260,6 @@ export interface IEnv {
   AUTH_AWS_WORKER_SQS_URL: string;
   AUTH_AWS_WORKER_LAMBDA_NAME: string;
 
-  /************************************************************
-   * Apillon Serverless workers config - STORAGE MS
-   ************************************************************/
-  STORAGE_AWS_WORKER_SQS_URL: string;
-  STORAGE_AWS_WORKER_SQS_ARN: string;
-  STORAGE_AWS_WORKER_LAMBDA_NAME;
-
   /*************************************************************
    * SCS - Apillon System Configuration Service
    *************************************************************/
@@ -294,7 +294,7 @@ export interface IEnv {
   CONFIG_MYSQL_PASSWORD_TEST: string;
 
   /************************************************************
-   * REFERRAL config
+   * REF - Apillon Referral Service
    ************************************************************/
   REFERRAL_FUNCTION_NAME: string;
   REFERRAL_FUNCTION_NAME_TEST: string;
@@ -334,7 +334,7 @@ export interface IEnv {
   DISCORD_REDIRECT_URI: string;
 
   /************************************************************
-   * Apillon Nfts API config
+   * NFTS - Apillon NFTs Service
    ************************************************************/
   /**
    *  function name

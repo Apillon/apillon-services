@@ -15,7 +15,7 @@ In this repository you will find source and documentation for microservices, API
 
 | Code | Short    | Service name                             | Package name                                          | path                      |
 | ---- | -------- | ---------------------------------------- | ----------------------------------------------------- | ------------------------- |
-| 00   | #        | Source root                              | [@apillon](/)                                         | /                         |
+| 00   | #        | Source repository root                   | [@apillon](/)                                         | /                         |
 | 01   | LIB      | Service Code Library                     | [@apillon/lib](/packages/lib/)                        | /packages/lib/            |
 | 02   | AMS      | Access Management Service                | [@apillon/access](/services/access/)                  | /services/access/         |
 | 03   | LMAS     | Logging, Monitoring and Alerting Service | [@apillon/monitoring](/services/monitoring/)          | /services/monitoring/     |
@@ -54,7 +54,7 @@ Copyright (c) Apillon 2022 - All Rights Reserved
 | ------------ | ------------------------ | ----------------------- |
 | Tadej Vengust| Tech Lead                | tadej@kalmia.si         |
 | Tine Mlakar  | Architect & DevOps       | tine@kalmia.si          |
-| Vinko Šmid   | Project lead             | vinko.smid@kalmia.si    |
-| Luka Golinar | Developer                | luka.golinar@kalmia.si  |
-| Matic Kolar  | Developer                |                         |
+| Vinko Šmid   | Lead Developer           | vinko.smid@kalmia.si    |
 | Urban Kovač  | Frontend Developer       | urban.kovac@kalmia.si   |
+| Luka Golinar | Developer                | luka.golinar@kalmia.si  |
+| Matic Kolar  | Developer                | matic.kolar@apillon.io  |

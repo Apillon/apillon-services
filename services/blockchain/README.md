@@ -18,38 +18,31 @@ Please read [Development](../../docs/development.md) and [Debug and Test](../../
 Environment variables that has to be set:
 
 ```ts
-  /*************************************************************
-   * SCS - Apillon System Configuration Service
-   *************************************************************/
-  /**
-   *  function name
-   */
-  CONFIG_FUNCTION_NAME: string;
-  CONFIG_FUNCTION_NAME_TEST: string;
+  /************************************************************
+   * BIS - Apillon Blockchain Integration Service
+   ************************************************************/
+  BLOCKCHAIN_FUNCTION_NAME: string;
+  BLOCKCHAIN_FUNCTION_NAME_TEST: string;
+  BLOCKCHAIN_SOCKET_PORT: number;
+  
+  BLOCKCHAIN_MYSQL_HOST: string;
+  BLOCKCHAIN_MYSQL_PORT: number;
+  BLOCKCHAIN_MYSQL_DATABASE: string;
+  BLOCKCHAIN_MYSQL_USER: string;
+  BLOCKCHAIN_MYSQL_PASSWORD: string;
 
-  /**
-   * SCS dev server port
-   */
-  CONFIG_SOCKET_PORT: number;
-  CONFIG_SOCKET_PORT_TEST: number;
+  BLOCKCHAIN_SOCKET_PORT_TEST: number;
+  BLOCKCHAIN_MYSQL_HOST_TEST: string;
+  BLOCKCHAIN_MYSQL_PORT_TEST: number;
+  BLOCKCHAIN_MYSQL_DATABASE_TEST: string;
+  BLOCKCHAIN_MYSQL_USER_TEST: string;
+  BLOCKCHAIN_MYSQL_PASSWORD_TEST: string;
 
-  /**
-   * SCS Database config
-   */
+  BLOCKCHAIN_AWS_WORKER_SQS_URL: string;
+  BLOCKCHAIN_AWS_WORKER_SQS_ARN: string;
+  BLOCKCHAIN_AWS_WORKER_LAMBDA_NAME: string;
 
-  CONFIG_MYSQL_HOST: string;
-  CONFIG_MYSQL_PORT: number;
-  CONFIG_MYSQL_DATABASE: string;
-  CONFIG_MYSQL_USER: string;
-  CONFIG_MYSQL_PASSWORD: string;
-  CONFIG_MYSQL_DEPLOY_USER: string;
-  CONFIG_MYSQL_DEPLOY_PASSWORD: string;
-
-  CONFIG_MYSQL_HOST_TEST: string;
-  CONFIG_MYSQL_PORT_TEST: number;
-  CONFIG_MYSQL_DATABASE_TEST: string;
-  CONFIG_MYSQL_USER_TEST: string;
-  CONFIG_MYSQL_PASSWORD_TEST: string;
+  BLOCKCHAIN_CRUST_GRAPHQL_SERVER: string;
 ```
 
 ## Deployment

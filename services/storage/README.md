@@ -47,6 +47,13 @@ Environment variables that has to be set:
   STORAGE_MYSQL_USER_TEST: string;
   STORAGE_MYSQL_PASSWORD_TEST: string;
   STORAGE_MYSQL_DATABASE_TEST: string;
+
+  /************************************************************
+   * Serverless workers config - STORAGE MS
+   ************************************************************/
+  STORAGE_AWS_WORKER_SQS_URL: string;
+  STORAGE_AWS_WORKER_SQS_ARN: string;
+  STORAGE_AWS_WORKER_LAMBDA_NAME: string;
 ```
 
 ## Deployment
