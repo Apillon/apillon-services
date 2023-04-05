@@ -53,12 +53,24 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
 
         const lastParsedBlock: number = wallet.lastParsedBlock;
         const toBlock: number =
-          lastParsedBlock + maxBlocks < blockHeight
-            ? lastParsedBlock + maxBlocks
+          lastParsedBlock + wallet.maxParsedBlocks < blockHeight
+            ? lastParsedBlock + wallet.maxParsedBlocks
             : blockHeight;
 
+        await new Lmas().writeLog({
+          logType: LogType.INFO,
+          message: 'Checking [SUBSTRATE][CRUST] pending transactions..',
+          location: 'CrustTransactionWorker',
+          service: ServiceName.BLOCKCHAIN,
+          data: {
+            wallet: wallets.address,
+            fromBlock: lastParsedBlock,
+            toBlock,
+          },
+        });
+
         console.log(
-          `Checking PENDING transactions (sourceWallet=${wallet.address}, lastParsedBlock=${wallet.lastParsedBlock}, toBlock=${toBlock})..`,
+          `[SUBSTRATE][CRUST] Checking PENDING transactions (sourceWallet=${wallet.address}, lastParsedBlock=${wallet.lastParsedBlock}, toBlock=${toBlock})..`,
         );
 
         const crustTransactions = await this.fetchAllCrustTransactions(
@@ -83,12 +95,24 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         await wallet.update(SerializeFor.UPDATE_DB, conn);
         await conn.commit();
         console.log(
-          `Checking PENDING transactions (sourceWallet=${wallet.address}, lastProcessedBlock=${toBlock}) FINISHED!`,
+          `[SUBSTRATE][CRUST] Checking PENDING transactions (sourceWallet=${wallet.address}, lastProcessedBlock=${toBlock}) FINISHED!`,
         );
+
+        await new Lmas().writeLog({
+          logType: LogType.INFO,
+          message: 'Checking [SUBSTRATE][CRUST] pending transactions finished!',
+          location: 'CrustTransactionWorker',
+          service: ServiceName.BLOCKCHAIN,
+          data: {
+            wallet: wallets.address,
+            fromBlock: lastParsedBlock,
+            toBlock,
+          },
+        });
       } catch (err) {
         await conn.rollback();
-        console.log(
-          `Checking PENDING transactions (sourceWallet=${w.address}) FAILED! Error: ${err}`,
+        console.error(
+          `[SUBSTRATE][CRUST] Checking PENDING transactions (sourceWallet=${w.address}) FAILED! Error: ${err}`,
         );
         await new Lmas().writeLog({
           logType: LogType.ERROR,
@@ -127,12 +151,12 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
   ) {
     if (!withdrawals.transfers.length) {
       console.log(
-        `There are no new withdrawals received from blockchain indexer (address=${wallet.address}).`,
+        `[SUBSTRATE][CRUST] There are no new withdrawals received from blockchain indexer (address=${wallet.address}).`,
       );
       return;
     }
     console.log(
-      `Matching ${withdrawals.transfers.length} blockchain transactions with transactions in DB.`,
+      `[SUBSTRATE][CRUST] Matching ${withdrawals.transfers.length} blockchain transactions with transactions in DB.`,
     );
 
     const confirmedDbTxHashes: string[] = await this.updateWithdrawalsByStatus(
@@ -170,12 +194,12 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
   ) {
     if (!deposits.transfers.length) {
       console.log(
-        `There are no new deposits to wallet (address=${wallet.address}).`,
+        `[SUBSTRATE][CRUST] There are no new deposits to wallet (address=${wallet.address}).`,
       );
       return;
     }
     console.log(
-      `Received ${deposits.transfers.length} deposits from blockchain indexer.`,
+      `[SUBSTRATE][CRUST] Received ${deposits.transfers.length} deposits from blockchain indexer.`,
     );
 
     deposits.transfers.forEach((bcTx) => {
@@ -190,12 +214,12 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
   ) {
     if (!bcOrders.storageOrders.length) {
       console.log(
-        `There are no new file storage orders received from blockchain indexer (address=${wallet.address}).`,
+        `[SUBSTRATE][CRUST] There are no new file storage orders received from blockchain indexer (address=${wallet.address}).`,
       );
       return;
     }
     console.log(
-      `Matching ${bcOrders.storageOrders.length} blockchain storage orders with transactions in DB.`,
+      `[SUBSTRATE][CRUST] Matching ${bcOrders.storageOrders.length} blockchain storage orders with transactions in DB.`,
     );
 
     const confirmedDbTxHashes: string[] =
@@ -292,17 +316,6 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
     );
 
     const bcHashes: string[] = [...bcWithdrawals.keys()];
-
-    console.log(
-      `Updating transactions 
-        (
-          sourceWallet=${wallet.address}, 
-          chain=${wallet.chain}, 
-          chainType=${wallet.chainType}, 
-          txHashes=${bcHashes}, 
-          toStatus=${TransactionStatus[status]}
-        )`,
-    );
     const updatedDbTxs: string[] = await this.updateTransactions(
       bcHashes,
       status,
@@ -312,7 +325,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
 
     const txDbHashesString = updatedDbTxs.join(',');
     console.log(
-      `${updatedDbTxs.length} [${TransactionStatus[status]}] transactions matched (txHashes=${txDbHashesString}) in db.`,
+      `[SUBSTRATE][CRUST] ${updatedDbTxs.length} [${TransactionStatus[status]}] transactions matched (txHashes=${txDbHashesString}) in db.`,
     );
 
     return updatedDbTxs;
@@ -337,17 +350,6 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         .map((so) => [so.extrinsicHash, so]),
     );
     const soHashes: string[] = [...storageOrders.keys()];
-
-    console.log(
-      `Updating storage orders transactions 
-        (
-          sourceWallet=${wallet.address}, 
-          chain=${wallet.chain}, 
-          chainType=${wallet.chainType}, 
-          txHashes=${soHashes}, 
-          toStatus=${TransactionStatus[status]}
-        )`,
-    );
     const updatedDbTxs: string[] = await this.updateTransactions(
       soHashes,
       status,
@@ -357,7 +359,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
 
     const txDbHashesString = updatedDbTxs.join(',');
     console.log(
-      `${updatedDbTxs.length} [${TransactionStatus[status]}] storage orders matched (txHashes=${txDbHashesString}) in db.`,
+      `[SUBSTRATE][CRUST] ${updatedDbTxs.length} [${TransactionStatus[status]}] storage orders matched (txHashes=${txDbHashesString}) in db.`,
     );
     return updatedDbTxs;
   }
