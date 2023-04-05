@@ -3,7 +3,7 @@ const path = require('path');
 const webpack = require('webpack');
 const slsw = require('serverless-webpack');
 const nodeExternals = require('webpack-node-externals');
-const CopyPlugin = require('copy-webpack-plugin');
+// const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   context: __dirname,
