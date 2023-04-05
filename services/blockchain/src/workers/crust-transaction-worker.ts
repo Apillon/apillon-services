@@ -53,8 +53,8 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
 
         const lastParsedBlock: number = wallet.lastParsedBlock;
         const toBlock: number =
-          lastParsedBlock + wallet.maxParsedBlocks < blockHeight
-            ? lastParsedBlock + wallet.maxParsedBlocks
+          lastParsedBlock + wallet.blockParseSize < blockHeight
+            ? lastParsedBlock + wallet.blockParseSize
             : blockHeight;
 
         await new Lmas().writeLog({
