@@ -16,6 +16,7 @@ export async function upgrade(
     \`transactionStatus\` INT NULL,
     \`referenceTable\` VARCHAR (50) NULL,
     \`referenceId\` INT NULL,
+    \`webhookTriggered\` DATETIME NULL,
     \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
     \`createUser\` INT NULL,
     \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
