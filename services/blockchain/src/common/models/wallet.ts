@@ -184,7 +184,7 @@ export class Wallet extends AdvancedSQLModel {
     ],
     defaultValue: 50,
   })
-  public maxParsedBlocks: number;
+  public blockParseSize: number;
 
   /**
    * usageTimestamp
