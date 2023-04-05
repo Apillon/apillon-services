@@ -42,6 +42,7 @@ export class CrustBlockchainIndexer {
           id
           timestamp
           transactionType
+          status
           from {
             id
           }
@@ -91,6 +92,7 @@ export class CrustBlockchainIndexer {
           id
           timestamp
           transactionType
+          status
           from {
             id
           }
@@ -135,6 +137,7 @@ export class CrustBlockchainIndexer {
           createdAt
           blockNum
           blockHash
+          status
           account {
             id
           }

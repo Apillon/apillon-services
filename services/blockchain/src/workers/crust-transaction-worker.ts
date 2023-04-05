@@ -4,6 +4,7 @@ import {
   Lmas,
   LogType,
   PoolConnection,
+  SerializeFor,
   ServiceName,
   SubstrateChain,
   TransactionStatus,
@@ -13,6 +14,7 @@ import { Transaction } from '../common/models/transaction';
 import { Wallet } from '../common/models/wallet';
 import { DbTables } from '../config/types';
 import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/crust-indexer.service';
+import { BlockchainStatus } from '../modules/blockchain-indexers/data-models/blockchain-status';
 import {
   CrustStorageOrders,
   CrustStorageOrder,
@@ -41,21 +43,34 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
 
     const maxBlocks = 50;
 
-    for (const wallet of wallets) {
+    for (const w of wallets) {
       const conn = await this.context.mysql.start();
       try {
+        const wallet: Wallet = new Wallet(w, this.context);
         const crustIndexer: CrustBlockchainIndexer =
           new CrustBlockchainIndexer();
         const blockHeight = await crustIndexer.getBlockHeight();
 
         const lastParsedBlock: number = wallet.lastParsedBlock;
         const toBlock: number =
-          lastParsedBlock + maxBlocks < blockHeight
-            ? lastParsedBlock + maxBlocks
+          lastParsedBlock + wallet.maxParsedBlocks < blockHeight
+            ? lastParsedBlock + wallet.maxParsedBlocks
             : blockHeight;
 
+        await new Lmas().writeLog({
+          logType: LogType.INFO,
+          message: 'Checking [SUBSTRATE][CRUST] pending transactions..',
+          location: 'CrustTransactionWorker',
+          service: ServiceName.BLOCKCHAIN,
+          data: {
+            wallet: wallets.address,
+            fromBlock: lastParsedBlock,
+            toBlock,
+          },
+        });
+
         console.log(
-          `Checking PENDING transactions (sourceWallet=${wallet.address}, lastParsedBlock=${wallet.lastParsedBlock}, toBlock=${toBlock})..`,
+          `[SUBSTRATE][CRUST] Checking PENDING transactions (sourceWallet=${wallet.address}, lastParsedBlock=${wallet.lastParsedBlock}, toBlock=${toBlock})..`,
         );
 
         const crustTransactions = await this.fetchAllCrustTransactions(
@@ -77,15 +92,27 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         );
 
         wallet.lastParsedBlock = toBlock;
-        await wallet.update();
+        await wallet.update(SerializeFor.UPDATE_DB, conn);
         await conn.commit();
         console.log(
-          `Checking PENDING transactions (sourceWallet=${wallet.address}, lastProcessedBlock=${toBlock}) FINISHED!`,
+          `[SUBSTRATE][CRUST] Checking PENDING transactions (sourceWallet=${wallet.address}, lastProcessedBlock=${toBlock}) FINISHED!`,
         );
+
+        await new Lmas().writeLog({
+          logType: LogType.INFO,
+          message: 'Checking [SUBSTRATE][CRUST] pending transactions finished!',
+          location: 'CrustTransactionWorker',
+          service: ServiceName.BLOCKCHAIN,
+          data: {
+            wallet: wallets.address,
+            fromBlock: lastParsedBlock,
+            toBlock,
+          },
+        });
       } catch (err) {
         await conn.rollback();
-        console.log(
-          `Checking PENDING transactions (sourceWallet=${wallet.address}) FAILED! Error: ${err}`,
+        console.error(
+          `[SUBSTRATE][CRUST] Checking PENDING transactions (sourceWallet=${w.address}) FAILED! Error: ${err}`,
         );
         await new Lmas().writeLog({
           logType: LogType.ERROR,
@@ -124,32 +151,36 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
   ) {
     if (!withdrawals.transfers.length) {
       console.log(
-        `There are no new withdrawals received from blockchain indexer (address=${wallet.address}).`,
+        `[SUBSTRATE][CRUST] There are no new withdrawals received from blockchain indexer (address=${wallet.address}).`,
       );
       return;
     }
-    const withdrawalsByHash = new Map<string, CrustTransfer>(
-      withdrawals.transfers.map((w) => [w.extrinsicHash, w]),
-    );
-    const bcHashesString: string = [...withdrawalsByHash.keys()].join(',');
     console.log(
-      `Matching ${withdrawals.transfers.length} blockchain transactions with transactions in DB. (txHashes=${bcHashesString})`,
+      `[SUBSTRATE][CRUST] Matching ${withdrawals.transfers.length} blockchain transactions with transactions in DB.`,
     );
-    const confirmedDbTxHashes: string[] =
-      await this.updateConfirmedTransactions(bcHashesString, wallet, conn);
 
-    const txDbHashesString = confirmedDbTxHashes.join(',');
-    console.log(
-      `${confirmedDbTxHashes.length} Transactions matched (txHashes=${txDbHashesString}) in db.`,
+    const confirmedDbTxHashes: string[] = await this.updateWithdrawalsByStatus(
+      withdrawals,
+      TransactionStatus.CONFIRMED,
+      wallet,
+      conn,
     );
+    const failedDbTxHashes: string[] = await this.updateWithdrawalsByStatus(
+      withdrawals,
+      TransactionStatus.FAILED,
+      wallet,
+      conn,
+    );
+
+    const updatedDbTxs = confirmedDbTxHashes.concat(failedDbTxHashes);
 
     // All transactions were matched with db
-    if (withdrawalsByHash.entries.length === confirmedDbTxHashes.length) {
+    if (withdrawals.transfers.length == updatedDbTxs.length) {
       return;
     }
 
-    withdrawalsByHash.forEach((value, key) => {
-      if (!confirmedDbTxHashes.includes(key)) {
+    withdrawals.transfers.forEach((bcTx) => {
+      if (!updatedDbTxs.includes(bcTx.extrinsicHash)) {
         // TODO: Send notification - critical: Withdrawal (txHash) was not initiated by us
         // use info from value variable to get all required data
       }
@@ -163,12 +194,12 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
   ) {
     if (!deposits.transfers.length) {
       console.log(
-        `There are no new deposits to wallet (address=${wallet.address}).`,
+        `[SUBSTRATE][CRUST] There are no new deposits to wallet (address=${wallet.address}).`,
       );
       return;
     }
     console.log(
-      `Received ${deposits.transfers.length} deposits from blockchain indexer.`,
+      `[SUBSTRATE][CRUST] Received ${deposits.transfers.length} deposits from blockchain indexer.`,
     );
 
     deposits.transfers.forEach((bcTx) => {
@@ -178,33 +209,42 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
 
   public async handleCrustFileOrders(
     wallet: Wallet,
-    bcFileOrders: CrustStorageOrders,
+    bcOrders: CrustStorageOrders,
     conn: PoolConnection,
   ) {
-    if (!bcFileOrders.storageOrders.length) {
+    if (!bcOrders.storageOrders.length) {
       console.log(
-        `There are no new file storage orders received from blockchain indexer (address=${wallet.address}).`,
+        `[SUBSTRATE][CRUST] There are no new file storage orders received from blockchain indexer (address=${wallet.address}).`,
       );
       return;
     }
-    const bcFileOrdersByHash = new Map<string, CrustStorageOrder>(
-      bcFileOrders.storageOrders.map((so) => [so.extrinsicHash, so]),
-    );
-    const bcHashesString: string = [...bcFileOrdersByHash.keys()].join(',');
     console.log(
-      `Matching ${bcFileOrders.storageOrders.length} blockchain storage orders with transactions in DB. (txHashes=${bcHashesString})`,
+      `[SUBSTRATE][CRUST] Matching ${bcOrders.storageOrders.length} blockchain storage orders with transactions in DB.`,
     );
 
     const confirmedDbTxHashes: string[] =
-      await this.updateConfirmedTransactions(bcHashesString, wallet, conn);
+      await this.updateStorageOrdersByStatus(
+        bcOrders,
+        TransactionStatus.CONFIRMED,
+        wallet,
+        conn,
+      );
 
+    const failedDbTxHashes: string[] = await this.updateStorageOrdersByStatus(
+      bcOrders,
+      TransactionStatus.FAILED,
+      wallet,
+      conn,
+    );
+
+    const updatedDbTxs = confirmedDbTxHashes.concat(failedDbTxHashes);
     // All transactions were matched with db
-    if (bcFileOrdersByHash.entries.length === confirmedDbTxHashes.length) {
+    if (bcOrders.storageOrders.length === updatedDbTxs.length) {
       return;
     }
 
-    bcFileOrdersByHash.forEach((value, key) => {
-      if (!confirmedDbTxHashes.includes(key)) {
+    bcOrders.storageOrders.forEach((bcTx) => {
+      if (!updatedDbTxs.includes(bcTx.extrinsicHash)) {
         // TODO: Send notification - critical: Withdrawal (txHash) was not initiated by us
         // use info from value variable to get all required data
       }
@@ -214,13 +254,14 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
   /**
    * Updates transaction statuses which are confirmed on blockchain
    *
-   * @param bcHashesString blockhain hashes delimited with comma
+   * @param bcHashes blockhain hashes array
    * @param wallet wallet entity
    * @param conn connection
    * @returns array of confirmed transaction hashes
    */
-  public async updateConfirmedTransactions(
-    bcHashesString: string,
+  public async updateTransactions(
+    bcHashes: string[],
+    status: TransactionStatus,
     wallet: Wallet,
     conn: PoolConnection,
   ): Promise<string[]> {
@@ -231,10 +272,9 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         chain = @chain
         AND chainType = @chainType
         AND address = @address
-        AND transactionHash in (@hashes)`,
+        AND transactionHash in ('${bcHashes.join("','")}')`,
       {
-        status: TransactionStatus.CONFIRMED,
-        hashes: bcHashesString,
+        status,
         chain: wallet.chain,
         address: wallet.address,
         chainType: wallet.chainType,
@@ -242,24 +282,86 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
       conn,
     );
 
-    const confirmedDbTxHashes = (
+    return (
       await new Transaction({}, this.context).getTransactionsByHashes(
         wallet.chain,
         wallet.chainType,
         wallet.address,
-        TransactionStatus.CONFIRMED,
-        bcHashesString,
+        status,
+        bcHashes,
         conn,
       )
     ).map((tx) => {
       return tx.transactionHash;
     });
+  }
 
-    const txDbHashesString = confirmedDbTxHashes.join(',');
-    console.log(
-      `${confirmedDbTxHashes.length} Transactions matched (txHashes=${txDbHashesString}) in db.`,
+  public async updateWithdrawalsByStatus(
+    withdrawals: CrustTransfers,
+    status: TransactionStatus,
+    wallet: Wallet,
+    conn: PoolConnection,
+  ): Promise<string[]> {
+    const bcStatus: BlockchainStatus =
+      status == TransactionStatus.CONFIRMED
+        ? BlockchainStatus.CONFIRMED
+        : BlockchainStatus.FAILED;
+
+    const bcWithdrawals = new Map<string, CrustTransfer>(
+      withdrawals.transfers
+        .filter((tx) => {
+          return tx.status == bcStatus;
+        })
+        .map((w) => [w.extrinsicHash, w]),
     );
-    return confirmedDbTxHashes;
+
+    const bcHashes: string[] = [...bcWithdrawals.keys()];
+    const updatedDbTxs: string[] = await this.updateTransactions(
+      bcHashes,
+      status,
+      wallet,
+      conn,
+    );
+
+    const txDbHashesString = updatedDbTxs.join(',');
+    console.log(
+      `[SUBSTRATE][CRUST] ${updatedDbTxs.length} [${TransactionStatus[status]}] transactions matched (txHashes=${txDbHashesString}) in db.`,
+    );
+
+    return updatedDbTxs;
+  }
+
+  public async updateStorageOrdersByStatus(
+    bcOrders: CrustStorageOrders,
+    status: TransactionStatus,
+    wallet: Wallet,
+    conn: PoolConnection,
+  ): Promise<string[]> {
+    const bcStatus: BlockchainStatus =
+      status == TransactionStatus.CONFIRMED
+        ? BlockchainStatus.CONFIRMED
+        : BlockchainStatus.FAILED;
+
+    const storageOrders = new Map<string, CrustStorageOrder>(
+      bcOrders.storageOrders
+        .filter((so) => {
+          return so.status == bcStatus;
+        })
+        .map((so) => [so.extrinsicHash, so]),
+    );
+    const soHashes: string[] = [...storageOrders.keys()];
+    const updatedDbTxs: string[] = await this.updateTransactions(
+      soHashes,
+      status,
+      wallet,
+      conn,
+    );
+
+    const txDbHashesString = updatedDbTxs.join(',');
+    console.log(
+      `[SUBSTRATE][CRUST] ${updatedDbTxs.length} [${TransactionStatus[status]}] storage orders matched (txHashes=${txDbHashesString}) in db.`,
+    );
+    return updatedDbTxs;
   }
 
   /**

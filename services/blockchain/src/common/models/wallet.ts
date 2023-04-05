@@ -168,6 +168,25 @@ export class Wallet extends AdvancedSQLModel {
   public lastParsedBlock: number;
 
   /**
+   * maxParsedBlock
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+    ],
+    defaultValue: 50,
+  })
+  public maxParsedBlocks: number;
+
+  /**
    * usageTimestamp
    */
   @prop({
