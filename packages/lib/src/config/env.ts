@@ -727,9 +727,7 @@ async function populateSecrets() {
     return;
   }
   try {
-    console.log('getting secrets');
     const secrets = await getSecrets(env.AWS_SECRETS_ID);
-    console.log('secrets got: ', secrets);
     env = { ...env, ...secrets };
   } catch (err) {
     console.error('ERROR populating env secretes!');

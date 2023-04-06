@@ -19,11 +19,9 @@ function createClient() {
 }
 
 export async function getSecrets(id: string): Promise<any> {
-  console.log('Secrets id: ', id);
   const command = new GetSecretValueCommand({
     SecretId: id,
   });
   const response = await createClient().send(command);
-  console.log('Response: ', response);
   return safeJsonParse(response.SecretString);
 }
