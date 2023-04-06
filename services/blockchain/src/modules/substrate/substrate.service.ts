@@ -188,6 +188,7 @@ export class SubstrateService {
       return transaction.serialize(SerializeFor.PROFILE);
     } catch (e) {
       //Write log to LMAS
+      console.log(e);
       await new Lmas().writeLog({
         logType: LogType.ERROR,
         message: 'Error creating transaction',
@@ -306,9 +307,11 @@ export class SubstrateService {
         });
         break;
       }
-      const wallet = new Wallet(wallets[i], context);
-      wallet.populate({ lastProcessedNonce: latestSuccess });
-      await wallet.update();
+      if (latestSuccess) {
+        const wallet = new Wallet(wallets[i], context);
+        wallet.populate({ lastProcessedNonce: latestSuccess });
+        await wallet.update();
+      }
     }
   }
   //#region
