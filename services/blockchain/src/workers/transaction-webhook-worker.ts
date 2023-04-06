@@ -38,7 +38,7 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
           WHERE
             transactionStatus > ${TransactionStatus.PENDING}
             AND webhookTriggered IS NULL
-          FOR UPDATE`,
+          FOR UPDATE SKIP LOCKED`,
         null,
         conn,
       );

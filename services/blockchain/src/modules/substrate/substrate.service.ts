@@ -11,6 +11,7 @@ import {
   ServiceName,
   env,
   TransactionStatus,
+  getSecrets,
 } from '@apillon/lib';
 import { Endpoint } from '../../common/models/endpoint';
 import { BlockchainErrorCode } from '../../config/types';
@@ -96,12 +97,14 @@ export class SubstrateService {
         }
       }
 
+      const seed = await getWalletSeed(wallet.seed);
+
       // TODO: Refactor to txwrapper when typesBundle supported
       const api = await ApiPromise.create({
         provider,
         typesBundle, // TODO: add
       });
-      const pair = keyring.addFromUri(wallet.seed);
+      const pair = keyring.addFromUri(seed);
       console.log('wallet: ', pair.address);
       const balance = await api.query.system.account(pair.address);
       console.log('balance: ', balance);
@@ -309,4 +312,8 @@ export class SubstrateService {
     }
   }
   //#region
+}
+async function getWalletSeed(seed: string) {
+  const secrets = await getSecrets(env.BLOCKCHAIN_SECRETS);
+  return secrets[seed];
 }
