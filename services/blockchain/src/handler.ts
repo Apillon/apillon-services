@@ -31,27 +31,29 @@ export const lambdaHandler: Handler = async (
 /**
  * An object containing connection parameters for a MySQL database.
  */
-const connectionParams = {
-  host:
-    env.APP_ENV === AppEnvironment.TEST
-      ? env.BLOCKCHAIN_MYSQL_HOST_TEST
-      : env.BLOCKCHAIN_MYSQL_HOST,
-  port:
-    env.APP_ENV === AppEnvironment.TEST
-      ? env.BLOCKCHAIN_MYSQL_PORT_TEST
-      : env.BLOCKCHAIN_MYSQL_PORT,
-  database:
-    env.APP_ENV === AppEnvironment.TEST
-      ? env.BLOCKCHAIN_MYSQL_DATABASE_TEST
-      : env.BLOCKCHAIN_MYSQL_DATABASE,
-  user:
-    env.APP_ENV === AppEnvironment.TEST
-      ? env.BLOCKCHAIN_MYSQL_USER_TEST
-      : env.BLOCKCHAIN_MYSQL_USER,
-  password:
-    env.APP_ENV === AppEnvironment.TEST
-      ? env.BLOCKCHAIN_MYSQL_PASSWORD_TEST
-      : env.BLOCKCHAIN_MYSQL_PASSWORD,
+const getConnectionParams = () => {
+  return {
+    host:
+      env.APP_ENV === AppEnvironment.TEST
+        ? env.BLOCKCHAIN_MYSQL_HOST_TEST
+        : env.BLOCKCHAIN_MYSQL_HOST,
+    port:
+      env.APP_ENV === AppEnvironment.TEST
+        ? env.BLOCKCHAIN_MYSQL_PORT_TEST
+        : env.BLOCKCHAIN_MYSQL_PORT,
+    database:
+      env.APP_ENV === AppEnvironment.TEST
+        ? env.BLOCKCHAIN_MYSQL_DATABASE_TEST
+        : env.BLOCKCHAIN_MYSQL_DATABASE,
+    user:
+      env.APP_ENV === AppEnvironment.TEST
+        ? env.BLOCKCHAIN_MYSQL_USER_TEST
+        : env.BLOCKCHAIN_MYSQL_USER,
+    password:
+      env.APP_ENV === AppEnvironment.TEST
+        ? env.BLOCKCHAIN_MYSQL_PASSWORD_TEST
+        : env.BLOCKCHAIN_MYSQL_PASSWORD,
+  };
 };
 
 /**
@@ -60,6 +62,6 @@ const connectionParams = {
 export const handler = middy.default(lambdaHandler);
 handler
   .use(InitializeContextAndFillUser())
-  .use(MySqlConnect(connectionParams))
+  .use(MySqlConnect(getConnectionParams))
   .use(ResponseFormat())
   .use(ErrorHandler());

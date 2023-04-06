@@ -8,7 +8,7 @@ const instances = {};
  * @returns database connection on context object
  */
 export function MySqlConnect(
-  connectionParams: {
+  getConnectionParams: () => {
     host: string;
     port: number;
     database: string;
@@ -21,9 +21,10 @@ export function MySqlConnect(
   const before = async (request) => {
     // console.log(request);
     const { context } = request;
+    await getEnvSecrets();
 
     if (!instances[instanceName]) {
-      const mysql = new MySql(connectionParams);
+      const mysql = new MySql(getConnectionParams());
 
       await mysql.connect();
       console.log(
