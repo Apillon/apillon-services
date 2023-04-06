@@ -13,7 +13,7 @@ export function InitializeContextAndFillUser() {
 
     const serviceContext: ServiceContext = new ServiceContext();
     serviceContext.user = request.event.user;
-    serviceContext.user = request.event.apiKey;
+    serviceContext.apiKey = request.event.apiKey;
     serviceContext.requestId = request.event.requestId || context.requestId;
 
     context.serviceContext = serviceContext;
