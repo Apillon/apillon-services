@@ -1,5 +1,6 @@
 import { AppEnvironment, getEnvSecrets, MySql } from '@apillon/lib';
 import {
+  QueueWorkerType,
   ServiceDefinition,
   ServiceDefinitionType,
   WorkerDefinition,
@@ -11,6 +12,7 @@ import { Context, env } from '@apillon/lib';
 import { Scheduler } from './scheduler';
 import { TransmitSubstrateTransactionWorker } from './transmit-substrate-transaction-worker';
 import { CrustTransactionWorker } from './crust-transaction-worker';
+import { TransactionWebhookWorker } from './transaction-webhook-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -19,6 +21,7 @@ export enum WorkerName {
   SCHEDULER = 'scheduler',
   TRANSMIT_SUBSTRATE_TRANSACTION = 'TransmitSubstrateTransaction',
   CRUST_TRANSACTIONS = 'CrustTransactions',
+  TRANSACTION_WEBHOOKS = 'TransactionWebhooks',
 }
 
 export async function handler(event: any) {
@@ -173,6 +176,15 @@ export async function handleSqsMessages(
         break;
       case WorkerName.CRUST_TRANSACTIONS:
         await new CrustTransactionWorker(workerDefinition, context).run();
+        break;
+      case WorkerName.TRANSACTION_WEBHOOKS:
+        await new TransactionWebhookWorker(
+          workerDefinition,
+          context,
+          QueueWorkerType.EXECUTOR,
+        ).run({
+          executeArg: message?.body,
+        });
         break;
       default:
         console.log(

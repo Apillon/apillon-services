@@ -18,9 +18,9 @@ function createClient() {
   // });
 }
 
-export async function getSecrets(): Promise<any> {
+export async function getSecrets(id: string): Promise<any> {
   const command = new GetSecretValueCommand({
-    SecretId: env.AWS_SECRETS_ID,
+    SecretId: id,
   });
   const response = await createClient().send(command);
   return safeJsonParse(response.SecretString);

@@ -1,6 +1,7 @@
 import {
   ChainType,
   Context,
+  env,
   Lmas,
   LogType,
   PoolConnection,
@@ -9,7 +10,11 @@ import {
   SubstrateChain,
   TransactionStatus,
 } from '@apillon/lib';
-import { BaseSingleThreadWorker, WorkerDefinition } from '@apillon/workers-lib';
+import {
+  BaseSingleThreadWorker,
+  sendToWorkerQueue,
+  WorkerDefinition,
+} from '@apillon/workers-lib';
 import { Transaction } from '../common/models/transaction';
 import { Wallet } from '../common/models/wallet';
 import { DbTables } from '../config/types';
@@ -23,6 +28,7 @@ import {
   CrustTransfer,
   CrustTransfers,
 } from '../modules/blockchain-indexers/data-models/crust-transfers';
+import { WorkerName } from './worker-executor';
 
 export class CrustTransactionWorker extends BaseSingleThreadWorker {
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
@@ -40,8 +46,6 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
       SubstrateChain.CRUST,
       ChainType.SUBSTRATE,
     );
-
-    const maxBlocks = 50;
 
     for (const w of wallets) {
       const conn = await this.context.mysql.start();
@@ -97,7 +101,19 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         console.log(
           `[SUBSTRATE][CRUST] Checking PENDING transactions (sourceWallet=${wallet.address}, lastProcessedBlock=${toBlock}) FINISHED!`,
         );
-
+        if (
+          crustTransactions.fileOrders.storageOrders.length > 0 ||
+          crustTransactions.withdrawals.transfers.length > 0
+        ) {
+          // TODO: uncomment when transaction webhook finished
+          // await sendToWorkerQueue(
+          //   env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
+          //   WorkerName.TRANSACTION_WEBHOOKS,
+          //   [{}],
+          //   null,
+          //   null,
+          // );
+        }
         await new Lmas().writeLog({
           logType: LogType.INFO,
           message: 'Checking [SUBSTRATE][CRUST] pending transactions finished!',

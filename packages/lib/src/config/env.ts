@@ -206,6 +206,7 @@ export interface IEnv {
   BLOCKCHAIN_AWS_WORKER_LAMBDA_NAME: string;
 
   BLOCKCHAIN_CRUST_GRAPHQL_SERVER: string;
+  BLOCKCHAIN_SECRETS: string;
 
   /************************************************************
    * API - Apillon API config
@@ -530,6 +531,8 @@ export let env: IEnv = {
   BLOCKCHAIN_CRUST_GRAPHQL_SERVER:
     process.env['BLOCKCHAIN_CRUST_GRAPHQL_SERVER'],
 
+  BLOCKCHAIN_SECRETS: process.env['BLOCKCHAIN_SECRETS'],
+
   /**
    * AWS SQS url for worker communications
    */
@@ -724,7 +727,7 @@ async function populateSecrets() {
     return;
   }
   try {
-    const secrets = await getSecrets();
+    const secrets = await getSecrets(env.AWS_SECRETS_ID);
     env = { ...env, ...secrets };
   } catch (err) {
     console.error('ERROR populating env secretes!');
