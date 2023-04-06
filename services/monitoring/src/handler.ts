@@ -31,16 +31,18 @@ const lambdaHandler: Handler = async (
 /**
  * An object containing connection parameters for a MongoDB database.
  */
-const connectionParams = {
-  connectionString:
-    env.APP_ENV === AppEnvironment.TEST
-      ? env.MONITORING_MONGO_SRV_TEST
-      : env.MONITORING_MONGO_SRV,
-  database:
-    env.APP_ENV === AppEnvironment.TEST
-      ? env.MONITORING_MONGO_DATABASE_TEST
-      : env.MONITORING_MONGO_DATABASE,
-  poolSize: 10,
+const getConnectionParams = () => {
+  return {
+    connectionString:
+      env.APP_ENV === AppEnvironment.TEST
+        ? env.MONITORING_MONGO_SRV_TEST
+        : env.MONITORING_MONGO_SRV,
+    database:
+      env.APP_ENV === AppEnvironment.TEST
+        ? env.MONITORING_MONGO_DATABASE_TEST
+        : env.MONITORING_MONGO_DATABASE,
+    poolSize: 10,
+  };
 };
 
 /**
@@ -48,6 +50,6 @@ const connectionParams = {
  */
 export const handler = middy.default(lambdaHandler);
 handler //
-  .use(MongoDbConnect(connectionParams))
+  .use(MongoDbConnect(getConnectionParams))
   .use(ResponseFormat())
   .use(ErrorHandler());

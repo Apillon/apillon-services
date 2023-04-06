@@ -3,7 +3,7 @@ import { AppEnvironment, env, getEnvSecrets, Mongo } from '@apillon/lib';
 const instances = {};
 
 export function MongoDbConnect(
-  connectionParams: {
+  getConnectionParams: () => {
     connectionString: string;
     database: string;
     poolSize?: number;
@@ -12,10 +12,11 @@ export function MongoDbConnect(
   autoDisconnect = env.APP_ENV == AppEnvironment.LOCAL_DEV ? false : true,
 ) {
   const before = async (request) => {
-    await getEnvSecrets();
     console.log(`Starting MongoDB middleware...`);
 
     const { context } = request;
+    await getEnvSecrets();
+    const connectionParams = getConnectionParams();
 
     if (!instances[instanceName]) {
       const mongo = new Mongo(
