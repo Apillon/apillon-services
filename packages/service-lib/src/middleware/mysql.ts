@@ -19,31 +19,6 @@ export function MySqlConnect(
   autoDisconnect = true,
 ) {
   const before = async (request) => {
-    await getEnvSecrets();
-
-    // const options = {
-    //   host:
-    //     env.APP_ENV === AppEnvironment.TEST
-    //       ? env.ACCESS_MYSQL_HOST_TEST
-    //       : env.ACCESS_MYSQL_HOST,
-    //   port:
-    //     env.APP_ENV === AppEnvironment.TEST
-    //       ? env.ACCESS_MYSQL_PORT_TEST
-    //       : env.ACCESS_MYSQL_PORT,
-    //   database:
-    //     env.APP_ENV === AppEnvironment.TEST
-    //       ? env.ACCESS_MYSQL_DATABASE_TEST
-    //       : env.ACCESS_MYSQL_DATABASE,
-    //   user:
-    //     env.APP_ENV === AppEnvironment.TEST
-    //       ? env.ACCESS_MYSQL_USER_TEST
-    //       : env.ACCESS_MYSQL_USER,
-    //   password:
-    //     env.APP_ENV === AppEnvironment.TEST
-    //       ? env.ACCESS_MYSQL_PASSWORD_TEST
-    //       : env.ACCESS_MYSQL_PASSWORD,
-    // };
-
     // console.log(request);
     const { context } = request;
 

@@ -1,3 +1,4 @@
+import { getEnvSecrets } from '@apillon/lib';
 import { ServiceContext } from '../context';
 
 /**
@@ -10,6 +11,7 @@ export function InitializeContextAndFillUser() {
     //APIs should add user, that is making request, to the params.
     //This middleware fills context user
     const { context } = request;
+    await getEnvSecrets();
 
     const serviceContext: ServiceContext = new ServiceContext();
     serviceContext.user = request.event.user;
