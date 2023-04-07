@@ -140,6 +140,9 @@ export class SubstrateService {
       await transaction.insert(SerializeFor.INSERT_DB, conn);
       await wallet.iterateNonce(conn);
 
+      const w2 = await new Wallet({}, context).populateById(wallet.id, conn);
+      console.log(w2.serialize());
+
       await conn.commit();
 
       await new Lmas().writeLog({
