@@ -293,7 +293,7 @@ export class Wallet extends AdvancedSQLModel {
     await this.getContext().mysql.paramExecute(
       `
       UPDATE \`${DbTables.WALLET}\`
-      SET lastProcessedNonce = @lastProcessedNonce, 
+      SET lastProcessedNonce = @lastProcessedNonce
       WHERE id = @id;
       `,
       { lastProcessedNonce, id: this.id },
