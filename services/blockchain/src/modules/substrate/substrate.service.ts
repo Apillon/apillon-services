@@ -106,9 +106,6 @@ export class SubstrateService {
         typesBundle, // TODO: add
       });
       const pair = keyring.addFromUri(seed);
-      console.log('wallet: ', pair.address);
-      const balance = await api.query.system.account(pair.address);
-      console.log('balance: ', balance);
       const unsignedTx = api.tx(_event.params.transaction);
       // TODO: add validation service for transaction to detect and prevent weird transactions.
 
@@ -120,13 +117,10 @@ export class SubstrateService {
       // `);
 
       // TODO: Determine the best era
-      console.log(unsignedTx.toHuman());
       const signed = await unsignedTx.signAsync(pair, {
         nonce: wallet.nextNonce,
         era: 600, // number of blocks the transaction is valid - 6s per block * 150 blocks / 60 = 15 minutes
       });
-
-      await wallet.iterateNonce(conn);
 
       const signedSerialized = signed.toHex();
 
@@ -144,6 +138,10 @@ export class SubstrateService {
       });
 
       await transaction.insert(SerializeFor.INSERT_DB, conn);
+      await wallet.iterateNonce(conn);
+
+      const w2 = await new Wallet({}, context).populateById(wallet.id, conn);
+      console.log(w2.serialize());
 
       await conn.commit();
 
