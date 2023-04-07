@@ -7,6 +7,13 @@ import { isPlainObject } from '../utils';
 
 export { PoolConnection } from 'mysql2/promise';
 
+export enum IsolationLevel {
+  READ_UNCOMMITTED = 'READ UNCOMMITTED',
+  READ_COMMITTED = 'READ COMMITTED',
+  REPEATABLE_READ = 'REPEATABLE READ',
+  READ_SERIALIZABLE = 'READ SERIALIZABLE',
+}
+
 /**
  * MySQL client class.
  */
@@ -230,23 +237,26 @@ export class MySql {
     }
   }
 
-  public async start(readUncommitted = false): Promise<PoolConnection> {
+  public async start(isolationLevel?: IsolationLevel): Promise<PoolConnection> {
     // await this.db.query('SET SESSION autocommit = 0; START TRANSACTION;');
     if (!this.db) {
       await this.connect();
     }
     const conn = await this.db.getConnection();
     await this.ensureAlive(conn);
-
-    if (readUncommitted) {
-      await conn.execute('SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED ;');
+    if (isolationLevel) {
       writeLog(
         LogType.DB,
-        'SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED',
+        `SET TRANSACTION ISOLATION LEVEL ${isolationLevel}`,
         'mysql.ts',
         'start',
       );
+      await conn.execute(
+        `SET TRANSACTION ISOLATION LEVEL ${isolationLevel}`,
+        null,
+      );
     }
+
     writeLog(LogType.DB, 'BEGIN TRANSACTION', 'mysql.ts', 'start');
 
     await conn.beginTransaction();
