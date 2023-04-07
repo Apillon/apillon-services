@@ -20,6 +20,7 @@ import { typesBundleForPolkadot } from '@crustio/type-definitions';
 import { sendToWorkerQueue } from '@apillon/workers-lib';
 import { WorkerName } from '../../workers/worker-executor';
 import { ServiceContext } from '@apillon/service-lib';
+import { IsolationLevel } from '@apillon/lib';
 
 export class SubstrateService {
   static async createTransaction(
@@ -52,7 +53,7 @@ export class SubstrateService {
     const provider = new WsProvider(endpoint.url);
 
     // Start connection to database at the beginning of the function
-    const conn = await context.mysql.start();
+    const conn = await context.mysql.start(IsolationLevel.READ_COMMITTED);
 
     try {
       let wallet = new Wallet({}, context);
