@@ -123,7 +123,6 @@ export class Wallet extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
     ],
     defaultValue: 0,
@@ -287,11 +286,27 @@ export class Wallet extends AdvancedSQLModel {
     }
   }
 
+  public async updateLastProcessedNonce(
+    lastProcessedNonce: number,
+    conn?: PoolConnection,
+  ) {
+    await this.getContext().mysql.paramExecute(
+      `
+      UPDATE \`${DbTables.WALLET}\`
+      SET lastProcessedNonce = @lastProcessedNonce, 
+      WHERE id = @id;
+      `,
+      { lastProcessedNonce, id: this.id },
+      conn,
+    );
+    this.lastProcessedNonce = lastProcessedNonce;
+  }
+
   // always iterate inside a transaction
   public async iterateNonce(conn: PoolConnection) {
     await this.getContext().mysql.paramExecute(
       `
-      UPDATE \`${this.tableName}\`
+      UPDATE \`${DbTables.WALLET}\`
       SET nextNonce = nextNonce + 1, 
       usageTimestamp = now()
       WHERE id = @id;

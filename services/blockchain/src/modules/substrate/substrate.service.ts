@@ -140,9 +140,6 @@ export class SubstrateService {
       await transaction.insert(SerializeFor.INSERT_DB, conn);
       await wallet.iterateNonce(conn);
 
-      const w2 = await new Wallet({}, context).populateById(wallet.id, conn);
-      console.log(w2.serialize());
-
       await conn.commit();
 
       await new Lmas().writeLog({
@@ -308,8 +305,7 @@ export class SubstrateService {
       }
       if (latestSuccess) {
         const wallet = new Wallet(wallets[i], context);
-        wallet.populate({ lastProcessedNonce: latestSuccess });
-        await wallet.update();
+        await wallet.updateLastProcessedNonce(latestSuccess);
       }
     }
   }
