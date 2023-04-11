@@ -16,6 +16,7 @@ import { Scheduler } from './scheduler';
 import { DeployWebsiteWorker } from './deploy-website-worker';
 import { DeleteBucketDirectoryFileWorker } from './delete-bucket-directory-file-worker';
 import { PublishToIPNSWorker } from './publish-to-ipns-worker';
+import { UpdateCrustStatusWorker } from './update-crust-status-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -28,6 +29,7 @@ export enum WorkerName {
   DELETE_BUCKET_DIRECTORY_FILE_WORKER = 'DeleteBucketDirectoryFileWorker',
   DEPLOY_WEBSITE_WORKER = 'DeployWebsiteWorker',
   PUBLISH_TO_IPNS_WORKER = 'PublishToIPNSWorker',
+  UPDATE_CRUST_STATUS_WORKER = 'UpdateCrustStatusWorker',
 }
 
 export async function handler(event: any) {
@@ -218,6 +220,16 @@ export async function handleSqsMessages(
       }
       case WorkerName.PUBLISH_TO_IPNS_WORKER: {
         await new PublishToIPNSWorker(
+          workerDefinition,
+          context,
+          QueueWorkerType.EXECUTOR,
+        ).run({
+          executeArg: message?.body,
+        });
+        break;
+      }
+      case WorkerName.UPDATE_CRUST_STATUS_WORKER: {
+        await new UpdateCrustStatusWorker(
           workerDefinition,
           context,
           QueueWorkerType.EXECUTOR,

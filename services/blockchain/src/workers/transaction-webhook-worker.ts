@@ -55,7 +55,7 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
             try {
               await sendToWorkerQueue(
                 env.STORAGE_AWS_WORKER_SQS_URL,
-                '', // todo storage worker name
+                'UpdateCrustStatusWorker', // todo storage worker name
                 [
                   {
                     id: transaction.id,

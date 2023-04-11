@@ -130,6 +130,7 @@ export enum FileStatus {
   UPLOADED_TO_S3 = 2,
   UPLOADED_TO_IPFS = 3,
   PINNED_TO_CRUST = 4,
+  PINNING_TO_CRUST = 5,
 }
 
 export enum BucketWebhookAuthMethod {

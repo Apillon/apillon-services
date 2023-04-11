@@ -5,7 +5,7 @@ import {
   WorkerDefinition,
   WorkerLogStatus,
 } from '@apillon/workers-lib';
-import { FileStatus, StorageErrorCode } from '../config/types';
+import { DbTables, FileStatus, StorageErrorCode } from '../config/types';
 import { StorageCodeException } from '../lib/exceptions';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { CrustService } from '../modules/crust/crust.service';
@@ -41,16 +41,20 @@ export class PinToCRUSTWorker extends BaseQueueWorker {
     const bucket: Bucket = await new Bucket({}, this.context).populateByUUID(
       bucket_uuid,
     );
+    const file: File = await new File({}, this.context).populateById(CID);
 
     try {
-      await CrustService.placeStorageOrderToCRUST(
+      const res = await CrustService.placeStorageOrderToCRUST(
         {
           cid: CID,
           size: size,
           isDirectory: isDirectory,
+          refTable: DbTables.FILE,
+          refId: file?.file_uuid,
         },
         this.context,
       );
+      console.log(res);
       await new Lmas().writeLog({
         context: this.context,
         project_uuid: bucket.project_uuid,
@@ -60,6 +64,11 @@ export class PinToCRUSTWorker extends BaseQueueWorker {
         service: ServiceName.STORAGE,
         data: data,
       });
+      //if file, then update file status
+      if (file.exists()) {
+        file.fileStatus = FileStatus.PINNING_TO_CRUST;
+        await file.update();
+      }
     } catch (err) {
       await new Lmas().writeLog({
         context: this.context,
@@ -74,13 +83,6 @@ export class PinToCRUSTWorker extends BaseQueueWorker {
         },
       });
       throw err;
-    }
-
-    //if file, then update file status
-    const file: File = await new File({}, this.context).populateById(CID);
-    if (file.exists()) {
-      file.fileStatus = FileStatus.PINNED_TO_CRUST;
-      await file.update();
     }
 
     await this.writeLogToDb(
