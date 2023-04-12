@@ -15,7 +15,7 @@ export async function upgrade(
     \`rawTransaction\` VARCHAR(1000) NOT NULL,
     \`transactionStatus\` INT NULL,
     \`referenceTable\` VARCHAR (50) NULL,
-    \`referenceId\` INT NULL,
+    \`referenceId\` VARCHAR (50) NULL,
     \`webhookTriggered\` DATETIME NULL,
     \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
     \`createUser\` INT NULL,
