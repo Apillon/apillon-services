@@ -16,7 +16,7 @@ describe('Handle crust transactions (storage orders)', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://18.203.251.180:8080/graphql';
+    env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://18.203.251.180:8081/graphql';
     const address = 'cTL1jk9CbHJAYz2hWDh3PprRCtrPAHUvSDw7gZbVWbUYt8SJU';
     const chain = SubstrateChain.CRUST;
     const chainType = ChainType.SUBSTRATE;
