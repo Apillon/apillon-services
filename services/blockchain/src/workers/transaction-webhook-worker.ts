@@ -43,9 +43,12 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
         conn,
       );
 
+      console.log('res: ', res);
+
       const updates = [];
       if (res && res.length > 0) {
         const transactions = res[0];
+        console.log('transactions: ', transactions);
         for (let i = 0; i < transactions.length; i++) {
           const transaction = transactions[i];
           if (
@@ -55,7 +58,7 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
             try {
               await sendToWorkerQueue(
                 env.STORAGE_AWS_WORKER_SQS_URL,
-                'UpdateCrustStatusWorker', // todo storage worker name
+                'UpdateCrustStatusWorker',
                 [
                   {
                     id: transaction.id,
@@ -68,6 +71,7 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
                 null,
                 null,
               );
+              console.log('pushed webhook');
               updates.push(transaction.id);
             } catch (e) {
               console.log(e);
@@ -87,6 +91,7 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
         }
       }
 
+      console.log('updates: ', updates);
       if (updates.length > 0) {
         await this.context.mysql.paramExecute(
           `
@@ -108,6 +113,7 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
         data: data,
       });
     } catch (err) {
+      console.log(err);
       await conn.rollback();
       await new Lmas().writeLog({
         context: this.context,
