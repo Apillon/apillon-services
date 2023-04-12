@@ -32,7 +32,7 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
     const conn = await this.context.mysql.start();
 
     try {
-      const res = await this.context.mysql.paramExecute(
+      const transactions = await this.context.mysql.paramExecute(
         `
           SELECT * FROM \`${DbTables.TRANSACTION_QUEUE}\`
           WHERE
@@ -43,12 +43,10 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
         conn,
       );
 
-      console.log('res: ', res);
+      console.log('transactions: ', transactions);
 
       const updates = [];
-      if (res && res.length > 0) {
-        const transactions = res[0];
-        console.log('transactions: ', transactions);
+      if (transactions && transactions.length > 0) {
         for (let i = 0; i < transactions.length; i++) {
           const transaction = transactions[i];
           if (
