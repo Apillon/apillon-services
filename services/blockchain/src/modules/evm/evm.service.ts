@@ -221,9 +221,10 @@ export class EvmService {
         });
         break;
       }
-      const wallet = new Wallet(wallets[i], context);
-      wallet.populate({ lastProcessedNonce: latestSuccess });
-      await wallet.update();
+      if (latestSuccess) {
+        const wallet = new Wallet(wallets[i], context);
+        await wallet.updateLastProcessedNonce(latestSuccess);
+      }
     }
     // TODO: call transaction checker
   }

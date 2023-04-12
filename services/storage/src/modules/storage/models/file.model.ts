@@ -396,7 +396,7 @@ export class File extends AdvancedSQLModel {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT * 
-      FROM \`${this.tableName}\`
+      FROM \`${DbTables.FILE}\`
       WHERE file_uuid = @file_uuid AND status <> ${SqlModelStatus.DELETED};
       `,
       { file_uuid },
