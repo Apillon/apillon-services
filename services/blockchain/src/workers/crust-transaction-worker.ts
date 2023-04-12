@@ -105,14 +105,13 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
           crustTransactions.fileOrders.storageOrders.length > 0 ||
           crustTransactions.withdrawals.transfers.length > 0
         ) {
-          // TODO: uncomment when transaction webhook finished
-          // await sendToWorkerQueue(
-          //   env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
-          //   WorkerName.TRANSACTION_WEBHOOKS,
-          //   [{}],
-          //   null,
-          //   null,
-          // );
+          await sendToWorkerQueue(
+            env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
+            WorkerName.TRANSACTION_WEBHOOKS,
+            [{}],
+            null,
+            null,
+          );
         }
         await new Lmas().writeLog({
           logType: LogType.INFO,
