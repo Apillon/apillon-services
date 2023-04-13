@@ -96,8 +96,8 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
             UPDATE \`${DbTables.TRANSACTION_QUEUE}\` 
             SET webhookTriggered = NOW()
             WHERE
-              id in (@updates)`,
-          { updates },
+              id in (${updates.join(',')})`,
+          null,
           conn,
         );
       }
