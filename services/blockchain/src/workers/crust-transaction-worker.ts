@@ -67,7 +67,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
           location: 'CrustTransactionWorker',
           service: ServiceName.BLOCKCHAIN,
           data: {
-            wallet: wallets.address,
+            wallet: wallet.address,
             fromBlock: lastParsedBlock,
             toBlock,
           },
