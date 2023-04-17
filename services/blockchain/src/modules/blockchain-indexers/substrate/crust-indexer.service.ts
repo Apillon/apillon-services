@@ -1,7 +1,7 @@
 import { env } from '@apillon/lib';
 import { GraphQLClient, gql } from 'graphql-request';
-import { CrustTransferType } from '../../config/types';
-import { CrustBlockHeight } from './data-models/crust-block-height';
+import { CrustTransferType } from '../../../config/types';
+import { BlockHeight } from '../block-height';
 import { CrustStorageOrders } from './data-models/crust-storage-orders';
 import { CrustTransfers } from './data-models/crust-transfers';
 
@@ -161,9 +161,7 @@ export class CrustBlockchainIndexer {
       }
     `;
 
-    const data: CrustBlockHeight = await this.graphQlClient.request(
-      GRAPHQL_QUERY,
-    );
+    const data: BlockHeight = await this.graphQlClient.request(GRAPHQL_QUERY);
     return data.squidStatus.height;
   }
 }

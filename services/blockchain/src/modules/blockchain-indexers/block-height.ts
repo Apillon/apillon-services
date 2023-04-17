@@ -1,3 +1,3 @@
-export interface CrustBlockHeight {
+export interface BlockHeight {
   squidStatus: { height: number };
 }
