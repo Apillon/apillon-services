@@ -157,6 +157,24 @@ export class EvmService {
     //#region
   }
 
+  static async getTransactionById(
+    _event: {
+      id: number;
+    },
+    context: ServiceContext,
+  ) {
+    const transaction = await new Transaction({}, context).populateById(
+      _event.id,
+    );
+    if (!transaction.exists() || transaction.chainType != ChainType.EVM) {
+      throw new BlockchainCodeException({
+        code: BlockchainErrorCode.TRANSACTION_NOT_FOUND,
+        status: 404,
+      });
+    }
+    return transaction.serialize(SerializeFor.PROFILE);
+  }
+
   /**
    * @dev Ensure that only once instance of this method is running at the same time.
    * Should be called from worker

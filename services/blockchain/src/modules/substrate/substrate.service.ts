@@ -217,7 +217,7 @@ export class SubstrateService {
     const transaction = await new Transaction({}, context).populateById(
       _event.id,
     );
-    if (!transaction.exists()) {
+    if (!transaction.exists() || transaction.chainType != ChainType.SUBSTRATE) {
       throw new BlockchainCodeException({
         code: BlockchainErrorCode.TRANSACTION_NOT_FOUND,
         status: 404,

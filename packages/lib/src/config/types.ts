@@ -60,6 +60,8 @@ export enum LmasEventType {
 export enum BlockchainEventType {
   SUBSTRATE_SIGN_TRANSACTION = 'substrate-sign-transaction',
   SUBSTRATE_GET_TRANSACTION = 'substrate-get-transaction',
+  EVM_SIGN_TRANSACTION = 'evm-sign-transaction',
+  EVM_GET_TRANSACTION = 'evm-get-transaction',
 }
 
 export enum StorageEventType {
@@ -470,6 +472,9 @@ export enum ValidatorErrorCode {
   SUBSTRATE_TRANSACTION_NOT_PRESENT = 42200801,
   SUBSTRATE_CHAIN_NOT_PRESENT = 42200802,
   SUBSTRATE_CHAIN_NOT_VALID = 42200803,
+  EVM_TRANSACTION_NOT_PRESENT = 42200804,
+  EVM_CHAIN_NOT_PRESENT = 42200805,
+  EVM_CHAIN_NOT_VALID = 42200806,
   //#endregion"
 }
 
