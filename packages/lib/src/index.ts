@@ -69,6 +69,7 @@ export * from './lib/at-services/nfts/dtos/create-collection.dto';
 //#REGION Blockchain
 export * from './lib/at-services/blockchain/blockchain';
 export * from './lib/at-services/blockchain/dtos/create-substrate-transaction.dto';
+export * from './lib/at-services/blockchain/dtos/create-evm-transaction.dto';
 
 //#REGION Mix
 export * from './lib/at-services/ams/dtos/create-oauth-link.dto';
