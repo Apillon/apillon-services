@@ -71,7 +71,7 @@ export class NftsService {
       isRevokable: params.body.isRevokable,
       isSoulbound: params.body.isSoulbound,
       chain: params.body.chain,
-      royaltiesFees: 5,
+      royaltiesFees: params.body.royaltiesFees,
       royaltiesAddress: params.body.royaltiesAddress,
       collection_uuid: uuidV4(),
       status: SqlModelStatus.INCOMPLETE,

@@ -47,7 +47,7 @@ export class NftTransaction {
       params.maxSupply,
       params.reserve,
       params.royaltiesAddress,
-      5,
+      params.royaltiesFees,
     );
 
     return {
