@@ -45,7 +45,8 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
 
       console.log('transactions: ', transactions);
 
-      const updates = [];
+      let updates = [];
+      const crustWebhooks = [];
       if (transactions && transactions.length > 0) {
         for (let i = 0; i < transactions.length; i++) {
           const transaction = transactions[i];
@@ -53,38 +54,52 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
             transaction.chainType == ChainType.SUBSTRATE &&
             transaction.chain == SubstrateChain.CRUST
           ) {
-            try {
-              await sendToWorkerQueue(
-                env.STORAGE_AWS_WORKER_SQS_URL,
-                'UpdateCrustStatusWorker',
-                [
-                  {
-                    id: transaction.id,
-                    transactionHash: transaction.transactionHash,
-                    referenceTable: transaction.referenceTable,
-                    referenceId: transaction.referenceId,
-                    transactionStatus: transaction.transactionStatus,
-                  },
-                ],
-                null,
-                null,
-              );
-              console.log('pushed webhook');
-              updates.push(transaction.id);
-            } catch (e) {
-              console.log(e);
-              await new Lmas().writeLog({
-                context: this.context,
-                logType: LogType.ERROR,
-                message: 'Error in TransactionWebhookWorker sending webhook',
-                location: `${this.constructor.name}/runExecutor`,
-                service: ServiceName.BLOCKCHAIN,
-                data: {
-                  data,
-                  e,
+            crustWebhooks.push({
+              id: transaction.id,
+              transactionHash: transaction.transactionHash,
+              referenceTable: transaction.referenceTable,
+              referenceId: transaction.referenceId,
+              transactionStatus: transaction.transactionStatus,
+            });
+          }
+        }
+      }
+
+      if (crustWebhooks.length > 0) {
+        const splits = this.splitter(crustWebhooks, 10); // batch updates to up to 10 items
+        for (let i = 0; i < splits.length; i++) {
+          try {
+            // sending batch by batch because we need to know if a failure occurred.
+            const res = await sendToWorkerQueue(
+              env.STORAGE_AWS_WORKER_SQS_URL,
+              'UpdateCrustStatusWorker',
+              [
+                {
+                  data: splits[i],
                 },
-              });
+              ],
+              null,
+              null,
+            );
+            if (res.errCount > 0) {
+              throw new Error(res.errMsgs[0]);
             }
+
+            console.log('pushed webhook');
+            updates = [...updates, splits[i].map((a) => a.id)];
+          } catch (e) {
+            console.log(e);
+            await new Lmas().writeLog({
+              context: this.context,
+              logType: LogType.ERROR,
+              message: 'Error in TransactionWebhookWorker sending webhook',
+              location: `${this.constructor.name}/runExecutor`,
+              service: ServiceName.BLOCKCHAIN,
+              data: {
+                data,
+                e,
+              },
+            });
           }
         }
       }
@@ -133,5 +148,14 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
     );
 
     return true;
+  }
+
+  splitter(arr, splitBy) {
+    const cache = [];
+    const tmp = [...arr];
+    while (tmp.length) {
+      cache.push(tmp.splice(0, splitBy));
+    }
+    return cache;
   }
 }
