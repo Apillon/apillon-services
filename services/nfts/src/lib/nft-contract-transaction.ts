@@ -25,7 +25,7 @@ export class NftTransaction {
       `[${
         EvmChain[params.chain]
       }] Creating NFT deploy contract transaction from wallet address: ${
-        params.address
+        params.deployerAddress
       }, parameters=${JSON.stringify(params)}`,
     );
     const deployedNftContract: DeployedNftContract = EvmChainNftContracts.get(

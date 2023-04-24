@@ -309,7 +309,7 @@ export class NftsService {
           {
             chain: collection.chain,
             transaction: ethers.utils.serializeTransaction(tx),
-            fromAddress: collection.address,
+            fromAddress: collection.deployerAddress,
             referenceTable: DbTables.COLLECTION,
             referenceId: collection.id,
           },
@@ -395,7 +395,7 @@ export class NftsService {
           {
             chain: collection.chain,
             transaction: ethers.utils.serializeTransaction(tx),
-            fromAddress: collection.address,
+            fromAddress: collection.deployerAddress,
             referenceTable: DbTables.COLLECTION,
             referenceId: collection.id,
           },
@@ -475,7 +475,7 @@ export class NftsService {
           {
             chain: collection.chain,
             transaction: ethers.utils.serializeTransaction(tx),
-            fromAddress: collection.address,
+            fromAddress: collection.deployerAddress,
             referenceTable: DbTables.COLLECTION,
             referenceId: collection.id,
           },
@@ -560,7 +560,7 @@ export class NftsService {
           {
             chain: collection.chain,
             transaction: ethers.utils.serializeTransaction(tx),
-            fromAddress: collection.address,
+            fromAddress: collection.deployerAddress,
             referenceTable: DbTables.COLLECTION,
             referenceId: collection.id,
           },
@@ -637,7 +637,7 @@ export class NftsService {
       collection.contractAddress,
     );
 
-    if (collection.address !== currentOwner) {
+    if (collection.deployerAddress !== currentOwner) {
       throw new NftsCodeException({
         status: 500,
         code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,

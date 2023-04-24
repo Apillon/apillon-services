@@ -1,7 +1,6 @@
 import {
   BlockchainMicroservice,
   CreateEvmTransactionDto,
-  EvmChain,
   PoolConnection,
   SerializeFor,
 } from '@apillon/lib';
@@ -46,6 +45,6 @@ export async function deployNFTCollectionContract(
   await TransactionService.saveTransaction(context, dbTxRecord, conn);
   //Update collection status
   collection.collectionStatus = CollectionStatus.DEPLOYING;
-  collection.address = response.address;
+  collection.deployerAddress = response.data;
   await collection.update(SerializeFor.UPDATE_DB, conn);
 }

@@ -502,7 +502,7 @@ export class Collection extends AdvancedSQLModel {
     ],
     validators: [],
   })
-  public address: string;
+  public deployerAddress: string;
 
   @prop({
     parser: { resolver: integerParser() },
