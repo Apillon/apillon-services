@@ -6,11 +6,13 @@ import {
 } from '@apillon/workers-lib';
 import {
   CollectionStatus,
+  DbTables,
   TransactionStatus,
   TransactionType,
 } from '../config/types';
 import { Collection } from '../modules/nfts/models/collection.model';
 import { Transaction } from '../modules/transaction/models/transaction.model';
+import { TransactionService } from '../modules/transaction/transaction.service';
 
 export class TransactionStatusWorker extends BaseQueueWorker {
   public constructor(
@@ -27,35 +29,53 @@ export class TransactionStatusWorker extends BaseQueueWorker {
   public async runExecutor(input: any): Promise<any> {
     console.info('RUN EXECUTOR (TransactionStatusWorker). data: ', input);
 
-    const transactions: Transaction[] = await new Transaction(
-      {},
-      this.context,
-    ).getTransactions(TransactionStatus.PENDING);
-
-    console.info(
-      'Number of transactions that needs to be checked on blockchain: ',
-      transactions.length,
+    const failedBcTxs: Map<string, any> = new Map<string, any>(
+      input.data
+        .filter((bcTx) => {
+          return bcTx.status == 3;
+        })
+        .map((bcTx) => [bcTx.transactionHash, bcTx]),
+    );
+    const confirmedBcTxs: Map<string, any> = new Map<string, any>(
+      input.data
+        .filter((bcTx) => {
+          return bcTx.status == 2;
+        })
+        .map((bcTx) => [bcTx.transactionHash, bcTx]),
     );
 
-    const txsByHash: Map<string, Transaction> = new Map<string, Transaction>(
-      transactions.map((tx) => [tx.transactionHash, tx]),
-    );
-
-    for (let i = 0; i < input.data.length; i++) {
-      const data = input.data[i];
-      const dbTx = txsByHash.get(data.transactionHash);
-      if (dbTx) {
-        await this.updateTransactionStatus(dbTx, data);
-        await this.updateCollectionStatus(dbTx, data);
-      } else {
-        console.log(
-          `Transaction (txHash=${data.transactionHash}) not found in table!`,
+    const conn = await this.context.mysql.start();
+    try {
+      if (failedBcTxs.size) {
+        await TransactionService.updateTransactionStatusInHashes(
+          this.context,
+          [...failedBcTxs.keys()],
+          TransactionStatus.FAILED,
+          conn,
         );
       }
+      if (confirmedBcTxs.size) {
+        await TransactionService.updateTransactionStatusInHashes(
+          this.context,
+          [...confirmedBcTxs.keys()],
+          TransactionStatus.FINISHED,
+          conn,
+        );
+        const updatedDbTxs: Transaction[] = await new Transaction(
+          {},
+          this.context,
+        ).getTransactionsByHashes([...confirmedBcTxs.keys()]);
+
+        for (const tx of updatedDbTxs) {
+          await this.updateCollectionStatus(tx);
+        }
+      }
+    } catch (err) {
+      await conn.rollback();
     }
   }
 
-  private async updateCollectionStatus(tx: Transaction, blockchainData) {
+  private async updateCollectionStatus(tx: Transaction) {
     if (tx.transactionStatus === TransactionStatus.FINISHED) {
       const collection: Collection = await new Collection(
         {},
@@ -65,7 +85,6 @@ export class TransactionStatusWorker extends BaseQueueWorker {
 
       if (tx.transactionType === TransactionType.DEPLOY_CONTRACT) {
         collection.collectionStatus = CollectionStatus.DEPLOYED;
-        collection.contractAddress = blockchainData.data;
         isChanged = true;
       } else if (
         tx.transactionType === TransactionType.TRANSFER_CONTRACT_OWNERSHIP
@@ -74,7 +93,6 @@ export class TransactionStatusWorker extends BaseQueueWorker {
         isChanged = true;
       }
       if (isChanged) {
-        collection.transactionHash = blockchainData.transactionHash;
         collection.status = SqlModelStatus.ACTIVE;
         await collection.update();
         console.log(

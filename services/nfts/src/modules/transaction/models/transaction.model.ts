@@ -170,6 +170,26 @@ export class Transaction extends AdvancedSQLModel {
     return res;
   }
 
+  public async getTransactionsByHashes(
+    hashes: string[],
+  ): Promise<Transaction[]> {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT *
+      FROM \`${this.tableName}\`
+      WHERE transactionHash in ('${hashes.join("','")}')`,
+    );
+
+    const res: Transaction[] = [];
+    if (data && data.length) {
+      for (const t of data) {
+        res.push(new Transaction({}, this.getContext()).populate(t));
+      }
+    }
+
+    return res;
+  }
+
   public async getList(filter: TransactionQueryFilter) {
     // Map url query with sql fields.
     const fieldMap = {
