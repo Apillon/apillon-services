@@ -14,7 +14,6 @@ import {
 
 export class WalletService {
   private readonly provider: ethers.providers.StaticJsonRpcProvider;
-  private readonly prodEnv = env.APP_ENV === AppEnvironment.PROD;
   private readonly evmChain: EvmChain;
 
   constructor(chain: EvmChain) {
