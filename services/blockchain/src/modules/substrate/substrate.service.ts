@@ -129,10 +129,12 @@ export class SubstrateService {
         chain: _event.params.chain,
         chainType: ChainType.SUBSTRATE,
         address: wallet.address,
+        to: null,
         nonce: wallet.nextNonce,
         referenceTable: _event.params.referenceTable,
         referenceId: _event.params.referenceId,
         rawTransaction: signedSerialized,
+        data: null,
         transactionHash: signed.hash.toString(),
         transactionStatus: TransactionStatus.PENDING,
       });

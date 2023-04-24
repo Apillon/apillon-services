@@ -44,6 +44,7 @@ export class EvmService {
     let maxFeePerGas;
     let type;
     let gasPrice;
+    let data = null;
     // eslint-disable-next-line sonarjs/no-small-switch
     switch (_event.chain) {
       case EvmChain.MOONBASE:
@@ -112,16 +113,22 @@ export class EvmService {
       console.log(unsignedTx);
       const rawTransaction = await signingWallet.signTransaction(unsignedTx);
 
+      if (!unsignedTx.to) {
+        data = getContractAddress(wallet.address, wallet.nextNonce);
+      }
+
       // save transaction
       const transaction = new Transaction({}, context);
       transaction.populate({
         chain: _event.chain,
         chainType: ChainType.EVM,
         address: wallet.address,
+        to: unsignedTx.to,
         nonce: wallet.nextNonce,
         referenceTable: _event.referenceTable,
         referenceId: _event.referenceId,
         rawTransaction,
+        data,
         transactionHash: ethers.utils.keccak256(rawTransaction),
       });
       await transaction.insert(SerializeFor.INSERT_DB, conn);
@@ -246,4 +253,13 @@ export class EvmService {
     }
     // TODO: call transaction checker
   }
+}
+function getContractAddress(address: string, nonce: number): string {
+  const rlp_encoded = ethers.utils.RLP.encode([
+    address,
+    ethers.BigNumber.from(nonce.toString()).toHexString(),
+  ]);
+  const contract_address_long = ethers.utils.keccak256(rlp_encoded);
+  const contract_address = '0x'.concat(contract_address_long.substring(26));
+  return ethers.utils.getAddress(contract_address);
 }
