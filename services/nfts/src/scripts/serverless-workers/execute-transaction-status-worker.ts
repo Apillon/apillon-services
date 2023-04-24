@@ -17,7 +17,7 @@ import { WorkerName } from '../../workers/worker-executor';
 export async function executeTransactionStatusWorker(
   context: ServiceContext,
 ): Promise<any> {
-  if (
+  /*if (
     env.APP_ENV == AppEnvironment.LOCAL_DEV ||
     env.APP_ENV == AppEnvironment.TEST
   ) {
@@ -38,5 +38,5 @@ export async function executeTransactionStatusWorker(
 
     return true;
   }
-  return false;
+  return false;*/
 }

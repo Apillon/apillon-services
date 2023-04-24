@@ -45,6 +45,7 @@ export async function deployNFTCollectionContract(
   await TransactionService.saveTransaction(context, dbTxRecord, conn);
   //Update collection status
   collection.collectionStatus = CollectionStatus.DEPLOYING;
-  collection.deployerAddress = response.data;
+  collection.contractAddress = response.data;
+  collection.deployerAddress = response.address;
   await collection.update(SerializeFor.UPDATE_DB, conn);
 }

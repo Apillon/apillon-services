@@ -1,12 +1,9 @@
+import { Context, env, SqlModelStatus } from '@apillon/lib';
 import {
-  AppEnvironment,
-  Context,
-  env,
-  LogType,
-  SqlModelStatus,
-  writeLog,
-} from '@apillon/lib';
-import { Job, ServerlessWorker, WorkerDefinition } from '@apillon/workers-lib';
+  BaseQueueWorker,
+  QueueWorkerType,
+  WorkerDefinition,
+} from '@apillon/workers-lib';
 import {
   CollectionStatus,
   TransactionStatus,
@@ -14,21 +11,22 @@ import {
 } from '../config/types';
 import { Collection } from '../modules/nfts/models/collection.model';
 import { Transaction } from '../modules/transaction/models/transaction.model';
-import { WalletService } from '../modules/wallet/wallet.service';
 
-export class TransactionStatusWorker extends ServerlessWorker {
-  private context: Context;
-  public constructor(workerDefinition: WorkerDefinition, context: Context) {
-    super(workerDefinition);
-    this.context = context;
+export class TransactionStatusWorker extends BaseQueueWorker {
+  public constructor(
+    workerDefinition: WorkerDefinition,
+    context: Context,
+    type: QueueWorkerType,
+  ) {
+    super(workerDefinition, context, type, env.STORAGE_AWS_WORKER_SQS_URL);
   }
 
-  public async before(_data?: any): Promise<any> {
-    // No used
+  public async runPlanner(): Promise<any[]> {
+    return [];
   }
-  public async execute(data?: any): Promise<any> {
-    this.logFn(`TransactionStatusWorker - execute BEGIN: ${data}`);
-    //Get all transaction, that were sent to blockchain
+  public async runExecutor(input: any): Promise<any> {
+    console.info('RUN EXECUTOR (TransactionStatusWorker). data: ', input);
+
     const transactions: Transaction[] = await new Transaction(
       {},
       this.context,
@@ -38,64 +36,26 @@ export class TransactionStatusWorker extends ServerlessWorker {
       'Number of transactions that needs to be checked on blockchain: ',
       transactions.length,
     );
-    /*
-    const walletService: WalletService = new WalletService();
 
-    for (const tx of transactions) {
-      const txReceipt = await walletService.getTransactionByHash(
-        tx.transactionHash,
-      );
-      if (txReceipt) {
-        console.log(
-          `Checking transaction (txId = ${tx.id}, txHash = ${txReceipt.transactionHash}, confirmations = ${txReceipt.confirmations})`,
-        );
-        const isConfirmed: boolean = await walletService.isTransacionConfirmed(
-          txReceipt,
-        );
+    const txsByHash: Map<string, Transaction> = new Map<string, Transaction>(
+      transactions.map((tx) => [tx.transactionHash, tx]),
+    );
 
-        if (isConfirmed) {
-          // Update transaction status based on blockchain data - txRecepit
-          await this.updateTransactionStatus(tx, txReceipt);
-          // Update NFT collection with contractAddress
-          await this.updateCollectionStatus(tx, txReceipt);
-        }
+    for (let i = 0; i < input.data.length; i++) {
+      const data = input.data[i];
+      const dbTx = txsByHash.get(data.transactionHash);
+      if (dbTx) {
+        await this.updateTransactionStatus(dbTx, data);
+        await this.updateCollectionStatus(dbTx, data);
       } else {
-        writeLog(
-          LogType.ERROR,
-          'Transaction not found by transactionHash',
-          'transaction-status-worker.ts',
-          'TransactionStatusWorker.execute()',
+        console.log(
+          `Transaction (txHash=${data.transactionHash}) not found in table!`,
         );
       }
-    }*/
-  }
-
-  public async onSuccess(_data?: any, _successData?: any): Promise<any> {
-    // this.logFn(`ClearLogs - success: ${data} | ${successData} `);
-  }
-
-  public async onError(error: Error): Promise<any> {
-    this.logFn(`DeleteBucketDirectoryFileWorker - error: ${error}`);
-  }
-
-  public async onUpdateWorkerDefinition(): Promise<void> {
-    // this.logFn(`DeleteBucketDirectoryFileWorker - update definition: ${this.workerDefinition}`);
-    if (
-      env.APP_ENV != AppEnvironment.LOCAL_DEV &&
-      env.APP_ENV != AppEnvironment.TEST
-    ) {
-      await new Job({}, this.context).updateWorkerDefinition(
-        this.workerDefinition,
-      );
     }
-    // this.logFn('DeleteBucketDirectoryFileWorker - update definition COMPLETE');
   }
 
-  public onAutoRemove(): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
-  private async updateCollectionStatus(tx: Transaction, txReceipt) {
+  private async updateCollectionStatus(tx: Transaction, blockchainData) {
     if (tx.transactionStatus === TransactionStatus.FINISHED) {
       const collection: Collection = await new Collection(
         {},
@@ -105,7 +65,7 @@ export class TransactionStatusWorker extends ServerlessWorker {
 
       if (tx.transactionType === TransactionType.DEPLOY_CONTRACT) {
         collection.collectionStatus = CollectionStatus.DEPLOYED;
-        collection.contractAddress = txReceipt.contractAddress;
+        collection.contractAddress = blockchainData.data;
         isChanged = true;
       } else if (
         tx.transactionType === TransactionType.TRANSFER_CONTRACT_OWNERSHIP
@@ -114,7 +74,7 @@ export class TransactionStatusWorker extends ServerlessWorker {
         isChanged = true;
       }
       if (isChanged) {
-        collection.transactionHash = txReceipt.transactionHash;
+        collection.transactionHash = blockchainData.transactionHash;
         collection.status = SqlModelStatus.ACTIVE;
         await collection.update();
         console.log(
@@ -129,13 +89,13 @@ export class TransactionStatusWorker extends ServerlessWorker {
     }
   }
 
-  private async updateTransactionStatus(tx: Transaction, txReceipt) {
+  private async updateTransactionStatus(tx: Transaction, blockchainData) {
     // Transaction was mined (confirmed) but if its status is 0 - it failed on blockchain
-    if (txReceipt.status) {
+    if (blockchainData.status == 2) {
       tx.transactionStatus = TransactionStatus.FINISHED;
       await tx.update();
       console.log(`Transaction (txHash=${tx.transactionHash}) CONFIRMED.`);
-    } else {
+    } else if (blockchainData.status == 3) {
       tx.transactionStatus = TransactionStatus.FAILED;
       await tx.update();
       console.log(`Transaction (txHash=${tx.transactionHash}) is FAILED.`);
