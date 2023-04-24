@@ -3,6 +3,7 @@ import {
   CodeException,
   Context,
   DefaultUserRole,
+  EvmChain,
   ForbiddenErrorCodes,
   getQueryParams,
   NFTCollectionQueryFilter,
@@ -483,6 +484,46 @@ export class Collection extends AdvancedSQLModel {
   })
   public metadataSession: string;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+  })
+  public address: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+  })
+  public chain: EvmChain;
+
   /***************************************************
    * Info properties
    *****************************************************/
@@ -632,7 +673,7 @@ export class Collection extends AdvancedSQLModel {
   }
 
   public async populateNumberOfMintedNfts() {
-    const walletService: WalletService = new WalletService();
+    const walletService: WalletService = new WalletService(this.chain);
     if (this.contractAddress) {
       this.minted = await walletService.getNumberOfMintedNfts(
         this.contractAddress,

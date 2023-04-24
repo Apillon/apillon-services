@@ -37,6 +37,7 @@ export enum NftsErrorCode {
   NFT_COLLECTION_DOES_NOT_EXIST = 50012009,
   CREATE_BUCKET_FOR_NFT_METADATA_ERROR = 50012010,
   INVALID_DATA_PASSED_TO_WORKER = 50012011,
+  BURN_NFT_ERROR = 50012012,
 }
 
 export enum Chains {
@@ -49,6 +50,7 @@ export enum TransactionType {
   TRANSFER_CONTRACT_OWNERSHIP = 2,
   MINT_NFT = 3,
   SET_COLLECTION_BASE_URI = 4,
+  BURN_NFT = 5,
 }
 
 export enum TransactionStatus {

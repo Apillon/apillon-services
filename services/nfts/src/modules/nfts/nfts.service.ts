@@ -1,7 +1,9 @@
 import {
   AppEnvironment,
+  BlockchainMicroservice,
   CreateBucketDto,
   CreateCollectionDTO,
+  CreateEvmTransactionDto,
   DeployCollectionDTO,
   env,
   Lmas,
@@ -22,7 +24,6 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { TransactionRequest } from '@ethersproject/providers';
 import { v4 as uuidV4 } from 'uuid';
 import {
   Chains,
@@ -44,6 +45,8 @@ import { Transaction } from '../transaction/models/transaction.model';
 import { TransactionService } from '../transaction/transaction.service';
 import { WalletService } from '../wallet/wallet.service';
 import { Collection } from './models/collection.model';
+import { ethers, UnsignedTransaction } from 'ethers';
+import { BurnNftDto } from '@apillon/lib';
 
 export class NftsService {
   static async getHello() {
@@ -59,18 +62,17 @@ export class NftsService {
     context: ServiceContext,
   ) {
     console.log(`Deploying NFT: ${JSON.stringify(params.body)}`);
-    const walletService = new WalletService();
-    const walletAddress = await walletService.getWalletAddress();
 
     //Create collection object
     const collection: Collection = new Collection(
       params.body,
       context,
     ).populate({
-      isRevokable: false,
-      isSoulbound: false,
+      isRevokable: params.body.isRevokable,
+      isSoulbound: params.body.isSoulbound,
+      chain: params.body.chain,
       royaltiesFees: 5,
-      royaltiesAddress: walletAddress,
+      royaltiesAddress: params.body.royaltiesAddress,
       collection_uuid: uuidV4(),
       status: SqlModelStatus.INCOMPLETE,
     });
@@ -238,10 +240,10 @@ export class NftsService {
       context,
     ).getList(context, new NFTCollectionQueryFilter(event.query));
 
-    const walletService: WalletService = new WalletService();
     const responseCollections = [];
 
     for (const collection of collections.items) {
+      const walletService: WalletService = new WalletService(collection.chain);
       const mintedNr = collection.contractAddress
         ? await walletService.getNumberOfMintedNfts(collection.contractAddress)
         : 0;
@@ -279,9 +281,15 @@ export class NftsService {
     console.log(
       `Transfering NFT Collection (uuid=${params.body.collection_uuid}) ownership to wallet address: ${params.body.address}`,
     );
-    const walletService = new WalletService();
-    const collection: Collection = await NftsService.checkAndGetCollection(
-      params.body.collection_uuid,
+
+    const collection: Collection = await new Collection(
+      {},
+      context,
+    ).populateByUUID(params.body.collection_uuid);
+    const walletService = new WalletService(collection.chain);
+
+    await NftsService.checkCollection(
+      collection,
       walletService,
       'transferNftOwnership()',
       context,
@@ -290,29 +298,34 @@ export class NftsService {
     const conn = await context.mysql.start();
     try {
       const dbTxRecord: Transaction = new Transaction({}, context);
-      await dbTxRecord.populateNonce(conn);
-      if (!dbTxRecord.nonce) {
-        //First transaction record - nonce should be acquired from chain
-        dbTxRecord.nonce = await walletService.getCurrentMaxNonce();
-      }
-
-      // Create transaction request to be sent on blockchain
-      const txRequest: TransactionRequest =
+      const tx: UnsignedTransaction =
         await walletService.createTransferOwnershipTransaction(
           collection.contractAddress,
           params.body.address,
-          dbTxRecord.nonce,
         );
-      const rawTransaction = await walletService.signTransaction(txRequest);
-      const txResponse = await walletService.sendTransaction(rawTransaction);
+
+      const blockchainRequest: CreateEvmTransactionDto =
+        new CreateEvmTransactionDto(
+          {
+            chain: collection.chain,
+            transaction: ethers.utils.serializeTransaction(tx),
+            fromAddress: collection.address,
+            referenceTable: DbTables.COLLECTION,
+            referenceId: collection.id,
+          },
+          context,
+        );
+      const response = await new BlockchainMicroservice(
+        context,
+      ).createEvmTransaction(blockchainRequest);
+
       //Populate DB transaction record with properties
       dbTxRecord.populate({
-        chainId: Chains.MOONBASE,
+        chainId: collection.chain,
         transactionType: TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
-        rawTransaction: rawTransaction,
         refTable: DbTables.COLLECTION,
         refId: collection.id,
-        transactionHash: txResponse.hash,
+        transactionHash: response.transactionHash,
         transactionStatus: TransactionStatus.PENDING,
       });
       //Insert to DB
@@ -354,9 +367,15 @@ export class NftsService {
     console.log(
       `Setting URI of NFT Collection (uuid=${params.body.collection_uuid}): ${params.body.uri}`,
     );
-    const walletService = new WalletService();
-    const collection: Collection = await NftsService.checkAndGetCollection(
-      params.body.collection_uuid,
+
+    const collection: Collection = await new Collection(
+      {},
+      context,
+    ).populateByUUID(params.body.collection_uuid);
+    const walletService = new WalletService(collection.chain);
+
+    await NftsService.checkCollection(
+      collection,
       walletService,
       'setNftCollectionBaseUri()',
       context,
@@ -365,30 +384,34 @@ export class NftsService {
     const conn = await context.mysql.start();
     try {
       const dbTxRecord: Transaction = new Transaction({}, context);
-      await dbTxRecord.populateNonce(conn);
-      if (!dbTxRecord.nonce) {
-        //First transaction record - nonce should be acquired from chain
-        dbTxRecord.nonce = await walletService.getCurrentMaxNonce();
-      }
-
-      // Create transaction request to be sent on blockchain
-      const txRequest: TransactionRequest =
+      const tx: UnsignedTransaction =
         await await walletService.createSetNftBaseUriTransaction(
           collection.contractAddress,
           params.body.uri,
-          dbTxRecord.nonce,
         );
 
-      const rawTransaction = await walletService.signTransaction(txRequest);
-      const txResponse = await walletService.sendTransaction(rawTransaction);
+      const blockchainRequest: CreateEvmTransactionDto =
+        new CreateEvmTransactionDto(
+          {
+            chain: collection.chain,
+            transaction: ethers.utils.serializeTransaction(tx),
+            fromAddress: collection.address,
+            referenceTable: DbTables.COLLECTION,
+            referenceId: collection.id,
+          },
+          context,
+        );
+      const response = await new BlockchainMicroservice(
+        context,
+      ).createEvmTransaction(blockchainRequest);
+
       //Populate DB transaction record with properties
       dbTxRecord.populate({
         chainId: Chains.MOONBASE,
         transactionType: TransactionType.SET_COLLECTION_BASE_URI,
-        rawTransaction: rawTransaction,
         refTable: DbTables.COLLECTION,
         refId: collection.id,
-        transactionHash: txResponse.hash,
+        transactionHash: response.transactionHash,
         transactionStatus: TransactionStatus.PENDING,
       });
       //Insert to DB
@@ -410,48 +433,6 @@ export class NftsService {
     }
   }
 
-  private static async checkAndGetCollection(
-    collection_uuid: string,
-    walletService: WalletService,
-    sourceFunction: string,
-    context: ServiceContext,
-  ): Promise<Collection> {
-    const collection: Collection = await new Collection(
-      {},
-      context,
-    ).populateByUUID(collection_uuid);
-
-    // Collection must exist and be confirmed on blockchain
-    if (!collection.exists() || collection.contractAddress == null) {
-      throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
-        context: context,
-        sourceFunction,
-      });
-    }
-    collection.canAccess(context);
-
-    const currentOwner = await walletService.getContractOwner(
-      collection.contractAddress,
-    );
-    const walletAddress = await walletService.getWalletAddress();
-
-    if (walletAddress !== currentOwner) {
-      throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
-        context: context,
-        sourceFunction,
-      });
-    }
-    return collection;
-  }
-
-  //#endregion
-
-  //#region NFT functions
-
   static async mintNftTo(
     params: { body: MintNftDTO },
     context: ServiceContext,
@@ -459,9 +440,15 @@ export class NftsService {
     console.log(
       `Minting NFT Collection to wallet address: ${params.body.receivingAddress}`,
     );
-    const walletService: WalletService = new WalletService();
-    const collection: Collection = await NftsService.checkAndGetCollection(
-      params.body.collection_uuid,
+
+    const collection: Collection = await new Collection(
+      {},
+      context,
+    ).populateByUUID(params.body.collection_uuid);
+    const walletService = new WalletService(collection.chain);
+
+    await NftsService.checkCollection(
+      collection,
       walletService,
       'mintNftTo()',
       context,
@@ -477,30 +464,34 @@ export class NftsService {
     const conn = await context.mysql.start();
     try {
       const dbTxRecord: Transaction = new Transaction({}, context);
-      await dbTxRecord.populateNonce(conn);
-      if (!dbTxRecord.nonce) {
-        //First transaction record - nonce should be acquired from chain
-        dbTxRecord.nonce = await walletService.getCurrentMaxNonce();
-      }
-
-      // Create transaction request to be sent on blockchain
-      const txRequest: TransactionRequest =
-        await await walletService.createMintToTransaction(
+      const tx: UnsignedTransaction =
+        await walletService.createMintToTransaction(
           collection.contractAddress,
           params.body,
-          dbTxRecord.nonce,
         );
 
-      const rawTransaction = await walletService.signTransaction(txRequest);
-      const txResponse = await walletService.sendTransaction(rawTransaction);
+      const blockchainRequest: CreateEvmTransactionDto =
+        new CreateEvmTransactionDto(
+          {
+            chain: collection.chain,
+            transaction: ethers.utils.serializeTransaction(tx),
+            fromAddress: collection.address,
+            referenceTable: DbTables.COLLECTION,
+            referenceId: collection.id,
+          },
+          context,
+        );
+      const response = await new BlockchainMicroservice(
+        context,
+      ).createEvmTransaction(blockchainRequest);
+
       //Populate DB transaction record with properties
       dbTxRecord.populate({
         chainId: Chains.MOONBASE,
         transactionType: TransactionType.MINT_NFT,
-        rawTransaction: rawTransaction,
         refTable: DbTables.COLLECTION,
         refId: collection.id,
-        transactionHash: txResponse.hash,
+        transactionHash: response.transactionHash,
         transactionStatus: TransactionStatus.PENDING,
       });
       //Insert to DB
@@ -534,6 +525,126 @@ export class NftsService {
     });
 
     return { success: true };
+  }
+
+  static async burnNftToken(
+    params: { body: BurnNftDto },
+    context: ServiceContext,
+  ) {
+    console.log(
+      `Burning NFT token (collection uuid=${params.body.collection_uuid}), tokenId= ${params.body.tokenId})`,
+    );
+    const collection: Collection = await new Collection(
+      {},
+      context,
+    ).populateByUUID(params.body.collection_uuid);
+    const walletService = new WalletService(collection.chain);
+
+    await NftsService.checkCollection(
+      collection,
+      walletService,
+      'burnNftToken()',
+      context,
+    );
+
+    const conn = await context.mysql.start();
+    try {
+      const dbTxRecord: Transaction = new Transaction({}, context);
+      const tx: UnsignedTransaction =
+        await walletService.createBurnNftTransaction(
+          collection.contractAddress,
+          params.body.tokenId,
+        );
+      const blockchainRequest: CreateEvmTransactionDto =
+        new CreateEvmTransactionDto(
+          {
+            chain: collection.chain,
+            transaction: ethers.utils.serializeTransaction(tx),
+            fromAddress: collection.address,
+            referenceTable: DbTables.COLLECTION,
+            referenceId: collection.id,
+          },
+          context,
+        );
+      const response = await new BlockchainMicroservice(
+        context,
+      ).createEvmTransaction(blockchainRequest);
+
+      //Populate DB transaction record with properties
+      dbTxRecord.populate({
+        chainId: Chains.MOONBASE,
+        transactionType: TransactionType.BURN_NFT,
+        refTable: DbTables.COLLECTION,
+        refId: collection.id,
+        transactionHash: response.transactionHash,
+        transactionStatus: TransactionStatus.PENDING,
+      });
+      //Insert to DB
+      await TransactionService.saveTransaction(context, dbTxRecord, conn);
+
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+
+      throw await new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.BURN_NFT_ERROR,
+        context: context,
+        sourceFunction: 'burnNftToken()',
+        errorMessage: 'Error burning NFT',
+        details: err,
+      }).writeToMonitor({});
+    }
+
+    await new Lmas().writeLog({
+      context,
+      project_uuid: collection.project_uuid,
+      logType: LogType.INFO,
+      message: 'NFT burned',
+      location: 'NftsService/burnNftToken',
+      service: ServiceName.NFTS,
+      data: {
+        collection: collection.serialize(SerializeFor.PROFILE),
+        body: params.body,
+      },
+    });
+
+    return { success: true };
+  }
+
+  //#endregion
+
+  //#region NFT functions
+
+  private static async checkCollection(
+    collection: Collection,
+    walletService: WalletService,
+    sourceFunction: string,
+    context: ServiceContext,
+  ) {
+    // Collection must exist and be confirmed on blockchain
+    if (!collection.exists() || collection.contractAddress == null) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
+        context: context,
+        sourceFunction,
+      });
+    }
+    collection.canAccess(context);
+
+    const currentOwner = await walletService.getContractOwner(
+      collection.contractAddress,
+    );
+
+    if (collection.address !== currentOwner) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
+        context: context,
+        sourceFunction,
+      });
+    }
   }
 
   private static async checkMintConditions(

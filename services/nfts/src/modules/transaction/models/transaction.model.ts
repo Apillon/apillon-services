@@ -73,6 +73,41 @@ export class Transaction extends AdvancedSQLModel {
   public transactionType: number;
 
   @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public refTable: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public refId: number;
+
+  @prop({
     parser: { resolver: integerParser() },
     populatable: [
       PopulateFrom.DB,
@@ -111,45 +146,6 @@ export class Transaction extends AdvancedSQLModel {
     validators: [],
   })
   public transactionHash: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-    ],
-    validators: [],
-  })
-  public sourceAddress: string;
-
-  public async populateNonce(conn) {
-    //Get current max nonce
-    // TODO: filter by wallet and chainId
-    const data = await this.getContext().mysql.paramExecute(
-      `
-        SELECT nonce
-        FROM \`${this.tableName}\`
-        ORDER BY nonce DESC
-        LIMIT 1
-        FOR UPDATE;
-      `,
-      {},
-      conn,
-    );
-    if (data && data.length) {
-      this.nonce = data[0].nonce ? data[0].nonce + 1 : undefined;
-    }
-  }
 
   public async getTransactions(
     transactionStatus: number,
