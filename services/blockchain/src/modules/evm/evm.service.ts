@@ -5,6 +5,7 @@ import {
   LogType,
   ServiceName,
   SerializeFor,
+  env,
 } from '@apillon/lib';
 import { Endpoint } from '../../common/models/endpoint';
 import { ethers } from 'ethers';
@@ -13,6 +14,8 @@ import { BlockchainErrorCode } from '../../config/types';
 import { Wallet } from '../../common/models/wallet';
 import { Transaction } from '../../common/models/transaction';
 import { ServiceContext } from '@apillon/service-lib';
+import { sendToWorkerQueue } from '@apillon/workers-lib';
+import { WorkerName } from '../../workers/worker-executor';
 
 export class EvmService {
   static async createTransaction(
@@ -135,6 +138,31 @@ export class EvmService {
       await wallet.iterateNonce(conn);
 
       await conn.commit();
+
+      try {
+        await sendToWorkerQueue(
+          env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
+          WorkerName.TRANSMIT_EVM_TRANSACTION,
+          [
+            {
+              chain: _event.chain,
+            },
+          ],
+          null,
+          null,
+        );
+      } catch (e) {
+        await new Lmas().writeLog({
+          logType: LogType.ERROR,
+          message:
+            'Error triggering TRANSMIT_SUBSTRATE_TRANSACTIO worker queue',
+          location: 'SubstrateService.createTransaction',
+          service: ServiceName.BLOCKCHAIN,
+          data: {
+            error: e,
+          },
+        });
+      }
 
       return transaction.serialize();
     } catch (e) {

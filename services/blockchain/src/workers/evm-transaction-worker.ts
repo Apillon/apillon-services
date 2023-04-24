@@ -1,8 +1,13 @@
-import { BaseSingleThreadWorker, WorkerDefinition } from '@apillon/workers-lib';
+import {
+  BaseSingleThreadWorker,
+  sendToWorkerQueue,
+  WorkerDefinition,
+} from '@apillon/workers-lib';
 import { Wallet } from '../common/models/wallet';
 import {
   ChainType,
   Context,
+  env,
   EvmChain,
   Lmas,
   LogType,
@@ -14,9 +19,11 @@ import {
 import { EvmBlockchainIndexer } from '../modules/blockchain-indexers/evm/evm-indexer.service';
 import { EvmTransfers } from '../modules/blockchain-indexers/evm/data-models/evm-transfer';
 import { Transaction } from '../common/models/transaction';
-import { DbTables } from '../config/types';
+import { BlockchainErrorCode, DbTables } from '../config/types';
 import { BlockchainStatus } from '../modules/blockchain-indexers/blockchain-status';
 import { EvmTransfer } from '../modules/blockchain-indexers/evm/data-models/evm-transfer';
+import { BlockchainCodeException } from '../lib/exceptions';
+import { WorkerName } from './worker-executor';
 
 export class EvmTransactionWorker extends BaseSingleThreadWorker {
   private logPrefix: string;
@@ -31,8 +38,16 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
   }
 
   public async runExecutor(data: any): Promise<any> {
-    this.evmChain = data.executeArg;
-    this.logPrefix = `[EVM][${EvmChain[data.executeArg]}]`;
+    this.evmChain = data?.chain;
+    if (!this.evmChain) {
+      throw new BlockchainCodeException({
+        code: BlockchainErrorCode.INVALID_DATA_PASSED_TO_WORKER,
+        status: 500,
+        details: data,
+      });
+    }
+
+    this.logPrefix = `[EVM][${EvmChain[data.chain]}]`;
 
     console.info(
       `${this.logPrefix} RUN EXECUTOR (EvmTransactionWorker). data: `,
@@ -92,6 +107,19 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
         console.log(
           `${this.logPrefix} Checking PENDING transactions (sourceWallet=${wallet.address}, lastProcessedBlock=${toBlock}) FINISHED!`,
         );
+
+        if (
+          walletTxs.incomingTxs.transactions.length > 0 ||
+          walletTxs.outgoingTxs.transactions.length > 0
+        ) {
+          await sendToWorkerQueue(
+            env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
+            WorkerName.TRANSACTION_WEBHOOKS,
+            [{}],
+            null,
+            null,
+          );
+        }
         await new Lmas().writeLog({
           logType: LogType.INFO,
           message: `Checking ${this.logPrefix} pending transactions finished!`,
