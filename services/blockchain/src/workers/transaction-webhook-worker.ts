@@ -2,6 +2,7 @@ import {
   ChainType,
   Context,
   env,
+  EvmChain,
   Lmas,
   LogType,
   ServiceName,
@@ -44,9 +45,8 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
       );
 
       console.log('transactions: ', transactions);
-
-      let updates = [];
       const crustWebhooks = [];
+      const nftWebhooks = [];
       if (transactions && transactions.length > 0) {
         for (let i = 0; i < transactions.length; i++) {
           const transaction = transactions[i];
@@ -60,49 +60,46 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
               referenceTable: transaction.referenceTable,
               referenceId: transaction.referenceId,
               transactionStatus: transaction.transactionStatus,
+              data: transaction.data,
+            });
+          } else if (
+            transaction.chainType == ChainType.EVM &&
+            (transaction.chain == EvmChain.MOONBEAM ||
+              transaction.chain == EvmChain.MOONBASE ||
+              transaction.chain == EvmChain.ASTAR_SHIBUYA ||
+              EvmChain.ASTAR)
+          ) {
+            nftWebhooks.push({
+              id: transaction.id,
+              transactionHash: transaction.transactionHash,
+              referenceTable: transaction.referenceTable,
+              referenceId: transaction.referenceId,
+              transactionStatus: transaction.transactionStatus,
+              data: transaction.data,
             });
           }
         }
       }
 
-      if (crustWebhooks.length > 0) {
-        const splits = this.splitter(crustWebhooks, 10); // batch updates to up to 10 items
-        for (let i = 0; i < splits.length; i++) {
-          try {
-            // sending batch by batch because we need to know if a failure occurred.
-            const res = await sendToWorkerQueue(
-              env.STORAGE_AWS_WORKER_SQS_URL,
-              'UpdateCrustStatusWorker',
-              [
-                {
-                  data: splits[i],
-                },
-              ],
-              null,
-              null,
-            );
-            if (res.errCount > 0) {
-              throw new Error(res.errMsgs[0]);
-            }
-
-            console.log('pushed webhook');
-            updates = [...updates, splits[i].map((a) => a.id)];
-          } catch (e) {
-            console.log(e);
-            await new Lmas().writeLog({
-              context: this.context,
-              logType: LogType.ERROR,
-              message: 'Error in TransactionWebhookWorker sending webhook',
-              location: `${this.constructor.name}/runExecutor`,
-              service: ServiceName.BLOCKCHAIN,
-              data: {
-                data,
-                e,
-              },
-            });
-          }
-        }
-      }
+      /**
+       * TODO:
+       * If there will be multiple different services using the same blockchains then webhooks
+       * need to be refactored. I would change so that the service creating transactions adds
+       * sqsUrl and workerName. If those two are present in DB then we trigger the webhook for the
+       * transactions otherwise we do nothing.
+       */
+      const updates = [
+        ...(await this.processWebhook(
+          crustWebhooks,
+          env.STORAGE_AWS_WORKER_SQS_URL,
+          'UpdateCrustStatusWorker',
+        )),
+        ...(await this.processWebhook(
+          nftWebhooks,
+          env.NFTS_AWS_WORKER_SQS_URL,
+          'TransactionStatusWorker',
+        )),
+      ];
 
       console.log('updates: ', updates);
       if (updates.length > 0) {
@@ -157,5 +154,48 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
       cache.push(tmp.splice(0, splitBy));
     }
     return cache;
+  }
+
+  async processWebhook(webhooks: any[], sqsUrl: string, workerName: string) {
+    let updates = [];
+    if (webhooks.length > 0) {
+      const splits = this.splitter(webhooks, 10); // batch updates to up to 10 items
+      for (let i = 0; i < splits.length; i++) {
+        try {
+          // sending batch by batch because we need to know if a failure occurred.
+          const res = await sendToWorkerQueue(
+            sqsUrl,
+            workerName,
+            [
+              {
+                data: splits[i],
+              },
+            ],
+            null,
+            null,
+          );
+          if (res.errCount > 0) {
+            throw new Error(res.errMsgs[0]);
+          }
+
+          console.log('pushed webhook');
+          updates = [...updates, splits[i].map((a) => a.id)];
+        } catch (e) {
+          console.log(e);
+          await new Lmas().writeLog({
+            context: this.context,
+            logType: LogType.ERROR,
+            message: 'Error in TransactionWebhookWorker sending webhook',
+            location: `${this.constructor.name}/runExecutor`,
+            service: ServiceName.BLOCKCHAIN,
+            data: {
+              splits,
+              e,
+            },
+          });
+        }
+      }
+    }
+    return updates;
   }
 }
