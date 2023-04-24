@@ -38,6 +38,7 @@ export class TransactionStatusWorker extends ServerlessWorker {
       'Number of transactions that needs to be checked on blockchain: ',
       transactions.length,
     );
+    /*
     const walletService: WalletService = new WalletService();
 
     for (const tx of transactions) {
@@ -66,7 +67,7 @@ export class TransactionStatusWorker extends ServerlessWorker {
           'TransactionStatusWorker.execute()',
         );
       }
-    }
+    }*/
   }
 
   public async onSuccess(_data?: any, _successData?: any): Promise<any> {

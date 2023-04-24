@@ -1,113 +1,85 @@
-import {
-  AppEnvironment,
-  CreateCollectionDTO,
-  MintNftDTO,
-  env,
-} from '@apillon/lib';
-import { Contract, ethers, Wallet } from 'ethers';
+import { AppEnvironment, EvmChain, MintNftDTO, env } from '@apillon/lib';
+import { Contract, ethers, UnsignedTransaction, Wallet } from 'ethers';
 import { NftTransaction } from '../../lib/nft-contract-transaction';
-import {
-  TransactionRequest,
-  TransactionResponse,
-  TransactionReceipt,
-} from '@ethersproject/providers';
-import { PayableNft } from '../../lib/contracts/payable-mint-nft';
+import { TransactionReceipt } from '@ethersproject/providers';
 import { Collection } from '../nfts/models/collection.model';
+import {
+  DeployedNftContract,
+  EvmChainNftContracts,
+} from '../../lib/contracts/deployed-nft-contract';
+import {
+  EvmRpcEndpoint,
+  EvmRpcEndpoints,
+} from '../../lib/utils/evm-rpc-endpoint';
 
 export class WalletService {
-  private wallet: Wallet;
-  private provider: ethers.providers.StaticJsonRpcProvider;
-  private prodEnv = env.APP_ENV === AppEnvironment.PROD;
-  private walletAddress: string;
+  private readonly provider: ethers.providers.StaticJsonRpcProvider;
+  private readonly evmChain: EvmChain;
 
-  constructor() {
-    this.provider = new ethers.providers.StaticJsonRpcProvider(
-      this.prodEnv
-        ? env.NFTS_MOONBEAM_MAINNET_RPC
-        : env.NFTS_MOONBEAM_TESTNET_RPC,
-      {
-        chainId: this.prodEnv ? 1284 : 1287,
-        name: this.prodEnv ? 'moonbeam' : 'moonbase-alphanet',
-      },
-    );
+  constructor(chain: EvmChain) {
+    this.evmChain = chain;
+    const evmRpc: EvmRpcEndpoint = EvmRpcEndpoints.get(chain);
 
-    this.wallet = new Wallet(
-      this.prodEnv
-        ? env.NFTS_MOONBEAM_MAINNET_PRIVATEKEY
-        : env.NFTS_MOONBEAM_TESTNET_PRIVATEKEY,
-      this.provider,
-    );
-    console.log(
-      `Wallet initialization (address=${
-        this.wallet.address
-      }) & RPC initialization ${JSON.stringify(this.provider.network)}`,
-    );
-  }
+    if (!evmRpc) {
+      throw new Error('Missing RPC endpoint!');
+    }
 
-  async getCurrentMaxNonce() {
-    return await this.provider.getTransactionCount(this.wallet.address);
+    this.provider = new ethers.providers.StaticJsonRpcProvider(evmRpc.rpcUrl, {
+      chainId: chain,
+      name: evmRpc.name,
+    });
+
+    console.log(`RPC initialization ${JSON.stringify(this.provider.network)}`);
   }
 
   async createDeployTransaction(
     params: Collection,
-    nonce: number,
-  ): Promise<TransactionRequest> {
-    return NftTransaction.createDeployContractTransaction(
-      await this.getWalletAddress(),
-      params,
-      this.provider,
-      nonce,
-    );
+  ): Promise<UnsignedTransaction> {
+    return await NftTransaction.createDeployContractTransaction(params);
   }
 
   async createTransferOwnershipTransaction(
     contract: string,
     newOwner: string,
-    nonce: number,
-  ): Promise<TransactionRequest> {
-    return NftTransaction.createTransferOwnershipTransaction(
-      await this.getWalletAddress(),
+  ): Promise<UnsignedTransaction> {
+    return await NftTransaction.createTransferOwnershipTransaction(
+      this.evmChain,
       contract,
       newOwner,
-      this.provider,
-      nonce,
     );
   }
 
   async createSetNftBaseUriTransaction(
     contract: string,
     uri: string,
-    nonce: number,
-  ) {
-    return NftTransaction.createSetNftBaseUriTransaction(
-      await this.getWalletAddress(),
+  ): Promise<UnsignedTransaction> {
+    return await NftTransaction.createSetNftBaseUriTransaction(
+      this.evmChain,
       contract,
       uri,
-      this.provider,
-      nonce,
     );
   }
 
   async createMintToTransaction(
     contract: string,
     params: MintNftDTO,
-    nonce: number,
-  ) {
-    return NftTransaction.createMintToTransaction(
-      await this.getWalletAddress(),
+  ): Promise<UnsignedTransaction> {
+    return await NftTransaction.createMintToTransaction(
+      this.evmChain,
       contract,
       params,
-      this.provider,
-      nonce,
     );
   }
 
-  async signTransaction(request: TransactionRequest): Promise<string> {
-    return this.wallet.signTransaction(request);
-  }
-
-  async sendTransaction(rawTransaction: string): Promise<TransactionResponse> {
-    return this.provider.sendTransaction(rawTransaction);
+  async createBurnNftTransaction(
+    contract: string,
+    tokenId: number,
+  ): Promise<UnsignedTransaction> {
+    return await NftTransaction.createBurnNftTransaction(
+      this.evmChain,
+      contract,
+      tokenId,
+    );
   }
 
   async getTransactionByHash(txHash: string): Promise<TransactionReceipt> {
@@ -122,22 +94,24 @@ export class WalletService {
   }
 
   async getContractOwner(contractAddress: string) {
+    const contractFactory: DeployedNftContract = EvmChainNftContracts.get(
+      this.evmChain,
+    );
     const nftContract: Contract = new Contract(
       contractAddress,
-      PayableNft.abi,
+      contractFactory.abi,
       this.provider,
     );
     return await nftContract.owner();
   }
 
-  async getWalletAddress(): Promise<string> {
-    return this.wallet.getAddress();
-  }
-
   async getNumberOfMintedNfts(contractAddress: string): Promise<number> {
+    const contractFactory: DeployedNftContract = EvmChainNftContracts.get(
+      this.evmChain,
+    );
     const nftContract: Contract = new Contract(
       contractAddress,
-      PayableNft.abi,
+      contractFactory.abi,
       this.provider,
     );
     const totalSupply = await nftContract.totalSupply();
