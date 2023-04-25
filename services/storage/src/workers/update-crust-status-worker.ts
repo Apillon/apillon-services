@@ -1,4 +1,11 @@
-import { Context, env, Lmas, LogType, ServiceName } from '@apillon/lib';
+import {
+  Context,
+  env,
+  Lmas,
+  LogType,
+  runWithWorkers,
+  ServiceName,
+} from '@apillon/lib';
 import {
   BaseQueueWorker,
   QueueWorkerType,
@@ -23,8 +30,7 @@ export class UpdateCrustStatusWorker extends BaseQueueWorker {
   public async runExecutor(input: any): Promise<any> {
     console.info('RUN EXECUTOR (UpdateCrustStatusWorker). data: ', input);
 
-    for (let i = 0; i < input.data.length; i++) {
-      const data = input.data[i];
+    await runWithWorkers(input.data, 50, this.context, async (data) => {
       if (data.referenceId) {
         const file: File = await new File({}, this.context).populateByUUID(
           data.referenceId,
@@ -91,7 +97,7 @@ export class UpdateCrustStatusWorker extends BaseQueueWorker {
           },
         });
       }
-    }
+    });
 
     await this.writeLogToDb(
       WorkerLogStatus.INFO,

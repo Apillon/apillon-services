@@ -20,6 +20,8 @@ export class WalletService {
     if (!evmRpc) {
       throw new Error('Missing RPC endpoint!');
     }
+    console.log(chain);
+    console.log(env.NFTS_MOONBEAM_TESTNET_RPC);
     this.provider = new ethers.providers.JsonRpcProvider(evmRpc.rpcUrl);
 
     console.log(`RPC initialization ${evmRpc.rpcUrl}`);
