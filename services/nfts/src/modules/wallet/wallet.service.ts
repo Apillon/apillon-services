@@ -4,10 +4,6 @@ import { NftTransaction } from '../../lib/nft-contract-transaction';
 import { TransactionReceipt } from '@ethersproject/providers';
 import { Collection } from '../nfts/models/collection.model';
 import { EvmNftABI } from '../../lib/contracts/deployed-nft-contract';
-import {
-  EvmRpcEndpoint,
-  EvmRpcEndpoints,
-} from '../../lib/utils/evm-rpc-endpoint';
 
 export class WalletService {
   private readonly provider: ethers.providers.JsonRpcProvider;
@@ -15,16 +11,10 @@ export class WalletService {
 
   constructor(chain: EvmChain) {
     this.evmChain = chain;
-    const evmRpc: EvmRpcEndpoint = EvmRpcEndpoints.get(chain);
+    const rpcEndpoint = this.getRpcEndpoint(chain);
+    this.provider = new ethers.providers.JsonRpcProvider(rpcEndpoint);
 
-    if (!evmRpc) {
-      throw new Error('Missing RPC endpoint!');
-    }
-    console.log(chain);
-    console.log(env.NFTS_MOONBEAM_TESTNET_RPC);
-    this.provider = new ethers.providers.JsonRpcProvider(evmRpc.rpcUrl);
-
-    console.log(`RPC initialization ${evmRpc.rpcUrl}`);
+    console.log(`RPC initialization ${rpcEndpoint}`);
   }
 
   async createDeployTransaction(
@@ -105,5 +95,28 @@ export class WalletService {
     );
     const totalSupply = await nftContract.totalSupply();
     return parseInt(totalSupply._hex, 16);
+  }
+
+  // TODO: Use blockchain service endpoints!!!
+  getRpcEndpoint(chain: EvmChain) {
+    switch (chain) {
+      case EvmChain.ASTAR: {
+        return env.NFTS_ASTAR_MAINNET_RPC;
+      }
+      case EvmChain.ASTAR_SHIBUYA: {
+        return env.NFTS_ASTAR_TESTNET_RPC;
+      }
+      case EvmChain.MOONBASE: {
+        return env.NFTS_MOONBEAM_TESTNET_RPC;
+        break;
+      }
+      case EvmChain.MOONBEAM: {
+        return env.NFTS_MOONBEAM_MAINNET_RPC;
+        break;
+      }
+      default: {
+        throw new Error('Unsupported chain');
+      }
+    }
   }
 }
