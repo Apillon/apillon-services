@@ -3,17 +3,14 @@ import { Contract, ethers, UnsignedTransaction, Wallet } from 'ethers';
 import { NftTransaction } from '../../lib/nft-contract-transaction';
 import { TransactionReceipt } from '@ethersproject/providers';
 import { Collection } from '../nfts/models/collection.model';
-import {
-  DeployedNftContract,
-  EvmChainNftContracts,
-} from '../../lib/contracts/deployed-nft-contract';
+import { EvmNftABI } from '../../lib/contracts/deployed-nft-contract';
 import {
   EvmRpcEndpoint,
   EvmRpcEndpoints,
 } from '../../lib/utils/evm-rpc-endpoint';
 
 export class WalletService {
-  private readonly provider: ethers.providers.StaticJsonRpcProvider;
+  private readonly provider: ethers.providers.JsonRpcProvider;
   private readonly evmChain: EvmChain;
 
   constructor(chain: EvmChain) {
@@ -23,13 +20,9 @@ export class WalletService {
     if (!evmRpc) {
       throw new Error('Missing RPC endpoint!');
     }
+    this.provider = new ethers.providers.JsonRpcProvider(evmRpc.rpcUrl);
 
-    this.provider = new ethers.providers.StaticJsonRpcProvider(evmRpc.rpcUrl, {
-      chainId: chain,
-      name: evmRpc.name,
-    });
-
-    console.log(`RPC initialization ${JSON.stringify(this.provider.network)}`);
+    console.log(`RPC initialization ${evmRpc.rpcUrl}`);
   }
 
   async createDeployTransaction(
@@ -94,24 +87,18 @@ export class WalletService {
   }
 
   async getContractOwner(contractAddress: string) {
-    const contractFactory: DeployedNftContract = EvmChainNftContracts.get(
-      this.evmChain,
-    );
     const nftContract: Contract = new Contract(
       contractAddress,
-      contractFactory.abi,
+      EvmNftABI,
       this.provider,
     );
     return await nftContract.owner();
   }
 
   async getNumberOfMintedNfts(contractAddress: string): Promise<number> {
-    const contractFactory: DeployedNftContract = EvmChainNftContracts.get(
-      this.evmChain,
-    );
     const nftContract: Contract = new Contract(
       contractAddress,
-      contractFactory.abi,
+      EvmNftABI,
       this.provider,
     );
     const totalSupply = await nftContract.totalSupply();
