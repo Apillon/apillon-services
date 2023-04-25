@@ -1,5 +1,3 @@
-import { EvmChain } from '@apillon/lib';
-
 export const EvmNftABI = [
   'constructor(string _name, string _symbol, string _initBaseURI, string _baseExtension, bool[] _settings, uint256 _price, uint256 _dropStart, uint256 _maxSupply, uint256 _reserve, address _royaltiesAddress, uint256 _royaltiesFees)',
   'event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId)',
