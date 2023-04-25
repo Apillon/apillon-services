@@ -5,7 +5,7 @@ import { CrustTransfers } from './data-models/crust-transfers';
 
 describe('Crust blockchain indexer - Wallet transfers', () => {
   beforeAll(async () => {
-    env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://18.203.251.180:8080/graphql';
+    env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://18.203.251.180:8081/graphql';
   });
 
   test('Crust withdrawals exists.', async () => {
@@ -34,7 +34,7 @@ describe('Crust blockchain indexer - Wallet transfers', () => {
 
 describe('Crust blockchain indexer - File storage orders', () => {
   beforeAll(async () => {
-    env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://18.203.251.180:8080/graphql';
+    env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://18.203.251.180:8081/graphql';
   });
 
   test('Crust file orders exists between blocks.', async () => {
@@ -80,7 +80,7 @@ describe('Crust blockchain indexer err', () => {
 
 describe('Crust blockchain indexer - block height', () => {
   beforeAll(async () => {
-    env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://18.203.251.180:8080/graphql';
+    env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://18.203.251.180:8081/graphql';
   });
   test('Block nr higher than 6000', async () => {
     const crustIndexer = new CrustBlockchainIndexer();

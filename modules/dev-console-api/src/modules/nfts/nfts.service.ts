@@ -8,6 +8,7 @@ import {
   TransactionQueryFilter,
   TransferCollectionDTO,
   CreateCollectionDTO,
+  BurnNftDto,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ResourceNotFoundErrorCode } from '../../config/types';
@@ -80,6 +81,15 @@ export class NftsService {
     body.collection_uuid = collection_uuid;
     return (await new NftsMicroservice(context).setNftCollectionBaseUri(body))
       .data;
+  }
+
+  async burnNftToken(
+    context: DevConsoleApiContext,
+    collection_uuid: string,
+    body: BurnNftDto,
+  ) {
+    body.collection_uuid = collection_uuid;
+    return (await new NftsMicroservice(context).burnNftToken(body)).data;
   }
 
   async checkTransactionStatus(context: DevConsoleApiContext) {

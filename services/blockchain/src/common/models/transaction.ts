@@ -50,6 +50,22 @@ export class Transaction extends AdvancedSQLModel {
   public address: string;
 
   /**
+   * @dev Blockchain address - can be EVM or polkadot based.
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public to: string;
+
+  /**
    * chain
    */
   @prop({
@@ -150,6 +166,22 @@ export class Transaction extends AdvancedSQLModel {
     ],
   })
   public referenceId: string;
+
+  /**
+   * Additional data. Can be error, contract deploy address etc.
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public data: string;
 
   /**
    * rawTransaction

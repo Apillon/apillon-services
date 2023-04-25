@@ -65,10 +65,12 @@ export * from './lib/at-services/nfts/dtos/mint-nft.dto';
 export * from './lib/at-services/nfts/dtos/set-collection-base-uri.dto';
 export * from './lib/at-services/nfts/dtos/transfer-collection.dto';
 export * from './lib/at-services/nfts/dtos/create-collection.dto';
+export * from './lib/at-services/nfts/dtos/burn-nft.dto';
 
 //#REGION Blockchain
 export * from './lib/at-services/blockchain/blockchain';
 export * from './lib/at-services/blockchain/dtos/create-substrate-transaction.dto';
+export * from './lib/at-services/blockchain/dtos/create-evm-transaction.dto';
 
 //#REGION Mix
 export * from './lib/at-services/ams/dtos/create-oauth-link.dto';

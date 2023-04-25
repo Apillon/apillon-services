@@ -15,6 +15,7 @@ export async function processEvent(event, context: Context): Promise<any> {
     [NftsEventType.NFT_COLLECTIONS_LIST]: NftsService.listNftCollections,
     [NftsEventType.TRANSFER_OWNERSHIP]: NftsService.transferCollectionOwnership,
     [NftsEventType.MINT_NFT]: NftsService.mintNftTo,
+    [NftsEventType.BURN_NFT]: NftsService.burnNftToken,
     [NftsEventType.SET_BASE_URI]: NftsService.setNftCollectionBaseUri,
     [NftsEventType.CHECK_TRANSACTION_STATUS]:
       TransactionService.checkTransactionsStatus,

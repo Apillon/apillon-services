@@ -106,13 +106,6 @@ export async function handleLambdaEvent(
       const scheduler = new Scheduler(serviceDef, context);
       await scheduler.run();
       break;
-    case WorkerName.TRANSACTION_STATUS:
-      const txStatusWorker = new TransactionStatusWorker(
-        workerDefinition,
-        context,
-      );
-      await txStatusWorker.run();
-      break;
     default:
       console.log(
         `ERROR - INVALID WORKER NAME: ${workerDefinition.workerName}`,
