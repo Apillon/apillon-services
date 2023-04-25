@@ -22,12 +22,6 @@ export async function upgrade(
   PRIMARY KEY (\`id\`)
   );
   `);
-
-  // TODO: Add unique Index on execution wallet + chain + nonce
-  await queryFn(`
-  CREATE UNIQUE INDEX transaction_nonce_index
-  ON \`${DbTables.TRANSACTION}\` (nonce);
-  `);
 }
 
 export async function downgrade(
