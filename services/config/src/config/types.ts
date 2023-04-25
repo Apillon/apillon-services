@@ -3,6 +3,7 @@ export enum DbTables {
   OVERRIDE = 'override',
   QUOTA_TEMPLATE = 'quotaTemplate',
   TEMPLATE_VALUE = 'templateValue',
+  TERMS = 'terms',
 }
 
 /**

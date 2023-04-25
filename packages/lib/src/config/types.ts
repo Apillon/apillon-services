@@ -135,6 +135,7 @@ export enum MailEventType {
 
 export enum ScsEventType {
   GET_QUOTA = 'get-quota',
+  GET_ACTIVE_TERMS = 'get-active-terms',
 }
 
 export enum NftsEventType {
