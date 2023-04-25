@@ -1,5 +1,6 @@
 import { BlockchainEventType } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
+import { EvmService } from './modules/evm/evm.service';
 import { SubstrateService } from './modules/substrate/substrate.service';
 
 /**
@@ -17,6 +18,8 @@ export async function processEvent(
       SubstrateService.createTransaction,
     [BlockchainEventType.SUBSTRATE_GET_TRANSACTION]:
       SubstrateService.getTransactionById,
+    [BlockchainEventType.EVM_SIGN_TRANSACTION]: EvmService.createTransaction,
+    [BlockchainEventType.EVM_GET_TRANSACTION]: EvmService.getTransactionById,
   };
 
   return await processors[event.eventName](event, context);

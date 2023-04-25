@@ -1,4 +1,11 @@
-import { Context, env, Lmas, LogType, ServiceName } from '@apillon/lib';
+import {
+  Context,
+  env,
+  Lmas,
+  LogType,
+  runWithWorkers,
+  ServiceName,
+} from '@apillon/lib';
 import {
   BaseQueueWorker,
   QueueWorkerType,
@@ -20,75 +27,77 @@ export class UpdateCrustStatusWorker extends BaseQueueWorker {
   public async runPlanner(): Promise<any[]> {
     return [];
   }
-  public async runExecutor(data: any): Promise<any> {
-    console.info('RUN EXECUTOR (UpdateCrustStatusWorker). data: ', data);
+  public async runExecutor(input: any): Promise<any> {
+    console.info('RUN EXECUTOR (UpdateCrustStatusWorker). data: ', input);
 
-    if (data.referenceId) {
-      const file: File = await new File({}, this.context).populateByUUID(
-        data.referenceId,
-      );
+    await runWithWorkers(input.data, 50, this.context, async (data) => {
+      if (data.referenceId) {
+        const file: File = await new File({}, this.context).populateByUUID(
+          data.referenceId,
+        );
 
-      try {
-        if (file.exists()) {
-          // success
-          if (data.transactionStatus == 2) {
-            file.fileStatus = FileStatus.PINNED_TO_CRUST;
-            await file.update();
+        try {
+          if (file.exists()) {
+            // success
+            if (data.transactionStatus == 2) {
+              file.fileStatus = FileStatus.PINNED_TO_CRUST;
+              await file.update();
+            } else {
+              // error
+              // TODO:
+              await new Lmas().writeLog({
+                context: this.context,
+                logType: LogType.ERROR,
+                message: 'Crust pin transaction FAILED',
+                location: `${this.constructor.name}/runExecutor`,
+                service: ServiceName.STORAGE,
+                data: {
+                  data,
+                  file: file.serialize(),
+                },
+              });
+            }
           } else {
-            // error
-            // TODO:
+            console.log('No file to update');
             await new Lmas().writeLog({
               context: this.context,
-              logType: LogType.ERROR,
-              message: 'Crust pin transaction FAILED',
+              logType: LogType.WARN,
+              message: 'No file matching reference found.',
               location: `${this.constructor.name}/runExecutor`,
               service: ServiceName.STORAGE,
               data: {
                 data,
-                file: file.serialize(),
               },
             });
           }
-        } else {
-          console.log('No file to update');
+        } catch (err) {
+          console.log(env);
           await new Lmas().writeLog({
             context: this.context,
-            logType: LogType.WARN,
-            message: 'No file matching reference found.',
+            logType: LogType.ERROR,
+            message: 'Error at updating status',
             location: `${this.constructor.name}/runExecutor`,
             service: ServiceName.STORAGE,
             data: {
               data,
+              err,
             },
           });
+          throw err;
         }
-      } catch (err) {
-        console.log(env);
+      } else {
         await new Lmas().writeLog({
           context: this.context,
-          logType: LogType.ERROR,
-          message: 'Error at updating status',
+          logType: LogType.WARN,
+          message: 'Got message without reference',
           location: `${this.constructor.name}/runExecutor`,
           service: ServiceName.STORAGE,
           data: {
             data,
-            err,
           },
         });
-        throw err;
       }
-    } else {
-      await new Lmas().writeLog({
-        context: this.context,
-        logType: LogType.WARN,
-        message: 'Got message without reference',
-        location: `${this.constructor.name}/runExecutor`,
-        service: ServiceName.STORAGE,
-        data: {
-          data,
-        },
-      });
-    }
+    });
 
     await this.writeLogToDb(
       WorkerLogStatus.INFO,

@@ -5,6 +5,7 @@ import {
   LogType,
   ServiceName,
   SerializeFor,
+  env,
 } from '@apillon/lib';
 import { Endpoint } from '../../common/models/endpoint';
 import { ethers } from 'ethers';
@@ -13,6 +14,8 @@ import { BlockchainErrorCode } from '../../config/types';
 import { Wallet } from '../../common/models/wallet';
 import { Transaction } from '../../common/models/transaction';
 import { ServiceContext } from '@apillon/service-lib';
+import { sendToWorkerQueue } from '@apillon/workers-lib';
+import { WorkerName } from '../../workers/worker-executor';
 
 export class EvmService {
   static async createTransaction(
@@ -44,6 +47,7 @@ export class EvmService {
     let maxFeePerGas;
     let type;
     let gasPrice;
+    let data = null;
     // eslint-disable-next-line sonarjs/no-small-switch
     switch (_event.chain) {
       case EvmChain.MOONBASE:
@@ -112,22 +116,53 @@ export class EvmService {
       console.log(unsignedTx);
       const rawTransaction = await signingWallet.signTransaction(unsignedTx);
 
+      if (!unsignedTx.to) {
+        data = getContractAddress(wallet.address, wallet.nextNonce);
+      }
+
       // save transaction
       const transaction = new Transaction({}, context);
       transaction.populate({
         chain: _event.chain,
         chainType: ChainType.EVM,
         address: wallet.address,
+        to: unsignedTx.to,
         nonce: wallet.nextNonce,
         referenceTable: _event.referenceTable,
         referenceId: _event.referenceId,
         rawTransaction,
+        data,
         transactionHash: ethers.utils.keccak256(rawTransaction),
       });
       await transaction.insert(SerializeFor.INSERT_DB, conn);
       await wallet.iterateNonce(conn);
 
       await conn.commit();
+
+      try {
+        await sendToWorkerQueue(
+          env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
+          WorkerName.TRANSMIT_EVM_TRANSACTION,
+          [
+            {
+              chain: _event.chain,
+            },
+          ],
+          null,
+          null,
+        );
+      } catch (e) {
+        await new Lmas().writeLog({
+          logType: LogType.ERROR,
+          message:
+            'Error triggering TRANSMIT_SUBSTRATE_TRANSACTIO worker queue',
+          location: 'SubstrateService.createTransaction',
+          service: ServiceName.BLOCKCHAIN,
+          data: {
+            error: e,
+          },
+        });
+      }
 
       return transaction.serialize();
     } catch (e) {
@@ -155,6 +190,24 @@ export class EvmService {
       });
     }
     //#region
+  }
+
+  static async getTransactionById(
+    _event: {
+      id: number;
+    },
+    context: ServiceContext,
+  ) {
+    const transaction = await new Transaction({}, context).populateById(
+      _event.id,
+    );
+    if (!transaction.exists() || transaction.chainType != ChainType.EVM) {
+      throw new BlockchainCodeException({
+        code: BlockchainErrorCode.TRANSACTION_NOT_FOUND,
+        status: 404,
+      });
+    }
+    return transaction.serialize(SerializeFor.PROFILE);
   }
 
   /**
@@ -228,4 +281,13 @@ export class EvmService {
     }
     // TODO: call transaction checker
   }
+}
+function getContractAddress(address: string, nonce: number): string {
+  const rlp_encoded = ethers.utils.RLP.encode([
+    address,
+    ethers.BigNumber.from(nonce.toString()).toHexString(),
+  ]);
+  const contract_address_long = ethers.utils.keccak256(rlp_encoded);
+  const contract_address = '0x'.concat(contract_address_long.substring(26));
+  return ethers.utils.getAddress(contract_address);
 }

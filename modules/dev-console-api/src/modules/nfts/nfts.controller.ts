@@ -8,6 +8,7 @@ import {
   TransactionQueryFilter,
   TransferCollectionDTO,
   ValidateFor,
+  BurnNftDto,
 } from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
@@ -157,6 +158,22 @@ export class NftsController {
       collectionUuid,
       query,
     );
+  }
+
+  @Get('/collections/:collectionUuid/burn')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @Validation({ dto: BurnNftDto })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async burnNftToken(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('collectionUuid') collectionUuid: string,
+    @Query() body: BurnNftDto,
+  ) {
+    return await this.nftsService.burnNftToken(context, collectionUuid, body);
   }
 
   @Post('/collections/:collectionUuid/deploy')

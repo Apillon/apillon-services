@@ -129,10 +129,12 @@ export class SubstrateService {
         chain: _event.params.chain,
         chainType: ChainType.SUBSTRATE,
         address: wallet.address,
+        to: null,
         nonce: wallet.nextNonce,
         referenceTable: _event.params.referenceTable,
         referenceId: _event.params.referenceId,
         rawTransaction: signedSerialized,
+        data: null,
         transactionHash: signed.hash.toString(),
         transactionStatus: TransactionStatus.PENDING,
       });
@@ -217,7 +219,7 @@ export class SubstrateService {
     const transaction = await new Transaction({}, context).populateById(
       _event.id,
     );
-    if (!transaction.exists()) {
+    if (!transaction.exists() || transaction.chainType != ChainType.SUBSTRATE) {
       throw new BlockchainCodeException({
         code: BlockchainErrorCode.TRANSACTION_NOT_FOUND,
         status: 404,

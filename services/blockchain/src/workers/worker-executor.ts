@@ -1,4 +1,10 @@
-import { AppEnvironment, getEnvSecrets, MySql } from '@apillon/lib';
+import {
+  AppEnvironment,
+  EvmChain,
+  getEnvSecrets,
+  MySql,
+  SubstrateChain,
+} from '@apillon/lib';
 import {
   QueueWorkerType,
   ServiceDefinition,
@@ -13,6 +19,8 @@ import { Scheduler } from './scheduler';
 import { TransmitSubstrateTransactionWorker } from './transmit-substrate-transaction-worker';
 import { CrustTransactionWorker } from './crust-transaction-worker';
 import { TransactionWebhookWorker } from './transaction-webhook-worker';
+import { TransmitEvmTransactionWorker } from './transmit-evm-transaction-worker';
+import { EvmTransactionWorker } from './evm-transaction-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -20,7 +28,9 @@ import { TransactionWebhookWorker } from './transaction-webhook-worker';
 export enum WorkerName {
   SCHEDULER = 'scheduler',
   TRANSMIT_SUBSTRATE_TRANSACTION = 'TransmitSubstrateTransaction',
+  TRANSMIT_EVM_TRANSACTION = 'TransmitEVMTransaction',
   CRUST_TRANSACTIONS = 'CrustTransactions',
+  EVM_TRANSACTIONS = 'EvmTransactions',
   TRANSACTION_WEBHOOKS = 'TransactionWebhooks',
 }
 
@@ -110,13 +120,22 @@ export async function handleLambdaEvent(
         workerDefinition,
         context,
       ).run({
-        executeArg: JSON.stringify({ chain: 1 }),
+        executeArg: JSON.stringify({ chain: SubstrateChain.CRUST }),
       });
-
       break;
     case WorkerName.CRUST_TRANSACTIONS:
       const txWorker = new CrustTransactionWorker(workerDefinition, context);
       await txWorker.run();
+      break;
+    case WorkerName.EVM_TRANSACTIONS:
+      await new EvmTransactionWorker(workerDefinition, context).run({
+        executeArg: JSON.stringify({ chain: EvmChain.MOONBASE }),
+      });
+      break;
+    case WorkerName.TRANSMIT_EVM_TRANSACTION:
+      await new TransmitEvmTransactionWorker(workerDefinition, context).run({
+        executeArg: JSON.stringify({ chain: EvmChain.MOONBASE }),
+      });
       break;
     default:
       console.log(
@@ -171,11 +190,21 @@ export async function handleSqsMessages(
           workerDefinition,
           context,
         ).run({
-          executeArg: JSON.stringify({ chain: 1 }),
+          executeArg: message?.body,
+        });
+        break;
+      case WorkerName.TRANSMIT_EVM_TRANSACTION:
+        await new TransmitEvmTransactionWorker(workerDefinition, context).run({
+          executeArg: message?.body,
         });
         break;
       case WorkerName.CRUST_TRANSACTIONS:
         await new CrustTransactionWorker(workerDefinition, context).run();
+        break;
+      case WorkerName.EVM_TRANSACTIONS:
+        await new EvmTransactionWorker(workerDefinition, context).run({
+          executeArg: message?.body,
+        });
         break;
       case WorkerName.TRANSACTION_WEBHOOKS:
         await new TransactionWebhookWorker(

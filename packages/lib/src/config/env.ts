@@ -208,6 +208,11 @@ export interface IEnv {
   BLOCKCHAIN_CRUST_GRAPHQL_SERVER: string;
   BLOCKCHAIN_SECRETS: string;
 
+  /**
+   * EVM blockchain indexers
+   */
+  BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER: string;
+
   /************************************************************
    * API - Apillon API config
    ************************************************************/
@@ -376,8 +381,8 @@ export interface IEnv {
    */
   NFTS_MOONBEAM_TESTNET_RPC: string;
   NFTS_MOONBEAM_MAINNET_RPC: string;
-  NFTS_MOONBEAM_TESTNET_PRIVATEKEY: string;
-  NFTS_MOONBEAM_MAINNET_PRIVATEKEY: string;
+  NFTS_ASTAR_TESTNET_RPC: string;
+  NFTS_ASTAR_MAINNET_RPC: string;
 
   /**
    * NFT workers config
@@ -508,7 +513,7 @@ export let env: IEnv = {
   BLOCKCHAIN_FUNCTION_NAME: process.env['BLOCKCHAIN_FUNCTION_NAME'],
   BLOCKCHAIN_FUNCTION_NAME_TEST: process.env['BLOCKCHAIN_FUNCTION_NAME_TEST'],
   BLOCKCHAIN_SOCKET_PORT:
-    parseInt(process.env['BLOCKCHAIN_SOCKET_PORT']) || 6601,
+    parseInt(process.env['BLOCKCHAIN_SOCKET_PORT']) || 6901,
   BLOCKCHAIN_MYSQL_HOST: process.env['BLOCKCHAIN_MYSQL_HOST'],
   BLOCKCHAIN_MYSQL_PORT: parseInt(process.env['BLOCKCHAIN_MYSQL_PORT']) || 3306,
   BLOCKCHAIN_MYSQL_DATABASE: process.env['BLOCKCHAIN_MYSQL_DATABASE'],
@@ -520,7 +525,7 @@ export let env: IEnv = {
     process.env['BLOCKCHAIN_MYSQL_DEPLOY_PASSWORD'],
 
   BLOCKCHAIN_SOCKET_PORT_TEST:
-    parseInt(process.env['BLOCKCHAIN_SOCKET_PORT_TEST']) || 8601,
+    parseInt(process.env['BLOCKCHAIN_SOCKET_PORT_TEST']) || 7901,
   BLOCKCHAIN_MYSQL_HOST_TEST: process.env['BLOCKCHAIN_MYSQL_HOST_TEST'],
   BLOCKCHAIN_MYSQL_PORT_TEST:
     parseInt(process.env['BLOCKCHAIN_MYSQL_PORT_TEST']) || 3306,
@@ -530,6 +535,8 @@ export let env: IEnv = {
 
   BLOCKCHAIN_CRUST_GRAPHQL_SERVER:
     process.env['BLOCKCHAIN_CRUST_GRAPHQL_SERVER'],
+  BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER:
+    process.env['BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER'],
 
   BLOCKCHAIN_SECRETS: process.env['BLOCKCHAIN_SECRETS'],
 
@@ -691,10 +698,8 @@ export let env: IEnv = {
 
   NFTS_MOONBEAM_TESTNET_RPC: process.env['NFTS_MOONBEAM_TESTNET_RPC'],
   NFTS_MOONBEAM_MAINNET_RPC: process.env['NFTS_MOONBEAM_MAINNET_RPC'],
-  NFTS_MOONBEAM_TESTNET_PRIVATEKEY:
-    process.env['NFTS_MOONBEAM_TESTNET_PRIVATEKEY'],
-  NFTS_MOONBEAM_MAINNET_PRIVATEKEY:
-    process.env['NFTS_MOONBEAM_MAINNET_PRIVATEKEY'],
+  NFTS_ASTAR_TESTNET_RPC: process.env['NFTS_ASTAR_TESTNET_RPC'],
+  NFTS_ASTAR_MAINNET_RPC: process.env['NFTS_ASTAR_MAINNET_RPC'],
   NFTS_AWS_WORKER_SQS_URL: process.env['NFTS_AWS_WORKER_SQS_URL'],
   NFTS_AWS_WORKER_LAMBDA_NAME: process.env['NFTS_AWS_WORKER_LAMBDA_NAME'],
   /** DISCORD */

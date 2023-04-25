@@ -9,8 +9,6 @@ export async function upgrade(
   \`id\` INT NOT NULL AUTO_INCREMENT,
   \`chainId\` INT NOT NULL,
   \`transactionType\` INT NOT NULL,
-  \`rawTransaction\` TEXT NOT NULL,
-  \`nonce\` INT NOT NULL,
   \`refTable\` VARCHAR(100) NULL,
   \`refId\` INT NULL,
   \`transactionStatus\` INT NULL,
