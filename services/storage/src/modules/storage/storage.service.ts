@@ -14,6 +14,7 @@ import {
   ServiceName,
   SqlModelStatus,
   TrashedFilesQueryFilter,
+  writeLog,
 } from '@apillon/lib';
 import {
   QueueWorkerType,

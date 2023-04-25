@@ -366,6 +366,11 @@ export class File extends AdvancedSQLModel {
     }
   }
 
+  /**
+   *
+   * @param id internal id, cid or file_uuid
+   * @returns
+   */
   public async populateById(id: string | number): Promise<this> {
     if (!id) {
       throw new Error('id should not be null');
