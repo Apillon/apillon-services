@@ -1,101 +1,81 @@
+import { Context, env, SqlModelStatus } from '@apillon/lib';
 import {
-  AppEnvironment,
-  Context,
-  env,
-  LogType,
-  SqlModelStatus,
-  writeLog,
-} from '@apillon/lib';
-import { Job, ServerlessWorker, WorkerDefinition } from '@apillon/workers-lib';
+  BaseQueueWorker,
+  QueueWorkerType,
+  WorkerDefinition,
+} from '@apillon/workers-lib';
 import {
   CollectionStatus,
+  DbTables,
   TransactionStatus,
   TransactionType,
 } from '../config/types';
 import { Collection } from '../modules/nfts/models/collection.model';
 import { Transaction } from '../modules/transaction/models/transaction.model';
-import { WalletService } from '../modules/wallet/wallet.service';
+import { TransactionService } from '../modules/transaction/transaction.service';
 
-export class TransactionStatusWorker extends ServerlessWorker {
-  private context: Context;
-  public constructor(workerDefinition: WorkerDefinition, context: Context) {
-    super(workerDefinition);
-    this.context = context;
+export class TransactionStatusWorker extends BaseQueueWorker {
+  public constructor(
+    workerDefinition: WorkerDefinition,
+    context: Context,
+    type: QueueWorkerType,
+  ) {
+    super(workerDefinition, context, type, env.STORAGE_AWS_WORKER_SQS_URL);
   }
 
-  public async before(_data?: any): Promise<any> {
-    // No used
+  public async runPlanner(): Promise<any[]> {
+    return [];
   }
-  public async execute(data?: any): Promise<any> {
-    this.logFn(`TransactionStatusWorker - execute BEGIN: ${data}`);
-    //Get all transaction, that were sent to blockchain
-    const transactions: Transaction[] = await new Transaction(
-      {},
-      this.context,
-    ).getTransactions(TransactionStatus.PENDING);
+  public async runExecutor(input: any): Promise<any> {
+    console.info('RUN EXECUTOR (TransactionStatusWorker). data: ', input);
 
-    console.info(
-      'Number of transactions that needs to be checked on blockchain: ',
-      transactions.length,
+    const failedBcTxs: Map<string, any> = new Map<string, any>(
+      input.data
+        .filter((bcTx) => {
+          return bcTx.status == 3;
+        })
+        .map((bcTx) => [bcTx.transactionHash, bcTx]),
     );
-    /*
-    const walletService: WalletService = new WalletService();
+    const confirmedBcTxs: Map<string, any> = new Map<string, any>(
+      input.data
+        .filter((bcTx) => {
+          return bcTx.status == 2;
+        })
+        .map((bcTx) => [bcTx.transactionHash, bcTx]),
+    );
 
-    for (const tx of transactions) {
-      const txReceipt = await walletService.getTransactionByHash(
-        tx.transactionHash,
-      );
-      if (txReceipt) {
-        console.log(
-          `Checking transaction (txId = ${tx.id}, txHash = ${txReceipt.transactionHash}, confirmations = ${txReceipt.confirmations})`,
-        );
-        const isConfirmed: boolean = await walletService.isTransacionConfirmed(
-          txReceipt,
-        );
-
-        if (isConfirmed) {
-          // Update transaction status based on blockchain data - txRecepit
-          await this.updateTransactionStatus(tx, txReceipt);
-          // Update NFT collection with contractAddress
-          await this.updateCollectionStatus(tx, txReceipt);
-        }
-      } else {
-        writeLog(
-          LogType.ERROR,
-          'Transaction not found by transactionHash',
-          'transaction-status-worker.ts',
-          'TransactionStatusWorker.execute()',
+    const conn = await this.context.mysql.start();
+    try {
+      if (failedBcTxs.size) {
+        await TransactionService.updateTransactionStatusInHashes(
+          this.context,
+          [...failedBcTxs.keys()],
+          TransactionStatus.FAILED,
+          conn,
         );
       }
-    }*/
-  }
+      if (confirmedBcTxs.size) {
+        await TransactionService.updateTransactionStatusInHashes(
+          this.context,
+          [...confirmedBcTxs.keys()],
+          TransactionStatus.FINISHED,
+          conn,
+        );
+        const updatedDbTxs: Transaction[] = await new Transaction(
+          {},
+          this.context,
+        ).getTransactionsByHashes([...confirmedBcTxs.keys()]);
 
-  public async onSuccess(_data?: any, _successData?: any): Promise<any> {
-    // this.logFn(`ClearLogs - success: ${data} | ${successData} `);
-  }
-
-  public async onError(error: Error): Promise<any> {
-    this.logFn(`DeleteBucketDirectoryFileWorker - error: ${error}`);
-  }
-
-  public async onUpdateWorkerDefinition(): Promise<void> {
-    // this.logFn(`DeleteBucketDirectoryFileWorker - update definition: ${this.workerDefinition}`);
-    if (
-      env.APP_ENV != AppEnvironment.LOCAL_DEV &&
-      env.APP_ENV != AppEnvironment.TEST
-    ) {
-      await new Job({}, this.context).updateWorkerDefinition(
-        this.workerDefinition,
-      );
+        for (const tx of updatedDbTxs) {
+          await this.updateCollectionStatus(tx);
+        }
+      }
+    } catch (err) {
+      await conn.rollback();
     }
-    // this.logFn('DeleteBucketDirectoryFileWorker - update definition COMPLETE');
   }
 
-  public onAutoRemove(): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
-  private async updateCollectionStatus(tx: Transaction, txReceipt) {
+  private async updateCollectionStatus(tx: Transaction) {
     if (tx.transactionStatus === TransactionStatus.FINISHED) {
       const collection: Collection = await new Collection(
         {},
@@ -105,7 +85,6 @@ export class TransactionStatusWorker extends ServerlessWorker {
 
       if (tx.transactionType === TransactionType.DEPLOY_CONTRACT) {
         collection.collectionStatus = CollectionStatus.DEPLOYED;
-        collection.contractAddress = txReceipt.contractAddress;
         isChanged = true;
       } else if (
         tx.transactionType === TransactionType.TRANSFER_CONTRACT_OWNERSHIP
@@ -114,7 +93,6 @@ export class TransactionStatusWorker extends ServerlessWorker {
         isChanged = true;
       }
       if (isChanged) {
-        collection.transactionHash = txReceipt.transactionHash;
         collection.status = SqlModelStatus.ACTIVE;
         await collection.update();
         console.log(
@@ -129,13 +107,13 @@ export class TransactionStatusWorker extends ServerlessWorker {
     }
   }
 
-  private async updateTransactionStatus(tx: Transaction, txReceipt) {
+  private async updateTransactionStatus(tx: Transaction, blockchainData) {
     // Transaction was mined (confirmed) but if its status is 0 - it failed on blockchain
-    if (txReceipt.status) {
+    if (blockchainData.status == 2) {
       tx.transactionStatus = TransactionStatus.FINISHED;
       await tx.update();
       console.log(`Transaction (txHash=${tx.transactionHash}) CONFIRMED.`);
-    } else {
+    } else if (blockchainData.status == 3) {
       tx.transactionStatus = TransactionStatus.FAILED;
       await tx.update();
       console.log(`Transaction (txHash=${tx.transactionHash}) is FAILED.`);

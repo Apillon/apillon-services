@@ -5,10 +5,7 @@ import {
   PopulatedTransaction,
   UnsignedTransaction,
 } from 'ethers';
-import {
-  DeployedNftContract,
-  EvmChainNftContracts,
-} from './contracts/deployed-nft-contract';
+import { EvmNftABI, EvmNftBytecode } from './contracts/deployed-nft-contract';
 import { TransactionRequest } from '@ethersproject/providers';
 import { TransactionUtils } from './utils/transaction-utils';
 import { Collection } from '../modules/nfts/models/collection.model';
@@ -28,12 +25,9 @@ export class NftTransaction {
         params.deployerAddress
       }, parameters=${JSON.stringify(params)}`,
     );
-    const deployedNftContract: DeployedNftContract = EvmChainNftContracts.get(
-      params.chain,
-    );
     const nftContract: ContractFactory = new ContractFactory(
-      deployedNftContract.abi,
-      deployedNftContract.bytecode,
+      EvmNftABI,
+      EvmNftBytecode,
     );
 
     const txData: TransactionRequest = await nftContract.getDeployTransaction(
@@ -70,12 +64,7 @@ export class NftTransaction {
     console.log(
       `[${EvmChain[chain]}] Creating NFT transfer ownership (NFT contract address=${contractAddress}) transaction to wallet address: ${newOwner}`,
     );
-    const deployedNftContract: DeployedNftContract =
-      EvmChainNftContracts.get(chain);
-    const nftContract: Contract = new Contract(
-      contractAddress,
-      deployedNftContract.abi,
-    );
+    const nftContract: Contract = new Contract(contractAddress, EvmNftABI);
 
     const txData: PopulatedTransaction =
       await nftContract.populateTransaction.transferOwnership(newOwner);
@@ -100,12 +89,7 @@ export class NftTransaction {
     console.log(
       `[${EvmChain[chain]}] Creating NFT set base token URI transaction (contract=${contractAddress}, uri=${uri}).`,
     );
-    const deployedNftContract: DeployedNftContract =
-      EvmChainNftContracts.get(chain);
-    const nftContract: Contract = new Contract(
-      contractAddress,
-      deployedNftContract.abi,
-    );
+    const nftContract: Contract = new Contract(contractAddress, EvmNftABI);
 
     const txData: PopulatedTransaction =
       await nftContract.populateTransaction.setBaseURI(uri);
@@ -130,12 +114,7 @@ export class NftTransaction {
     console.log(
       `[${EvmChain[chain]}] Creating NFT (NFT contract=${contractAddress}) mint transaction (toAddress=${params.receivingAddress}).`,
     );
-    const deployedNftContract: DeployedNftContract =
-      EvmChainNftContracts.get(chain);
-    const nftContract: Contract = new Contract(
-      contractAddress,
-      deployedNftContract.abi,
-    );
+    const nftContract: Contract = new Contract(contractAddress, EvmNftABI);
 
     const txData: PopulatedTransaction =
       await nftContract.populateTransaction.ownerMint(
@@ -162,12 +141,7 @@ export class NftTransaction {
     console.log(
       `[${EvmChain[chain]}] Creating NFT (NFT contract=${contractAddress}) burn NFT transaction (tokenId=${tokenId}).`,
     );
-    const deployedNftContract: DeployedNftContract =
-      EvmChainNftContracts.get(chain);
-    const nftContract: Contract = new Contract(
-      contractAddress,
-      deployedNftContract.abi,
-    );
+    const nftContract: Contract = new Contract(contractAddress, EvmNftABI);
 
     const txData: PopulatedTransaction =
       await nftContract.populateTransaction.burn(tokenId);

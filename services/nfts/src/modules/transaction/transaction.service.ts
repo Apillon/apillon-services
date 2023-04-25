@@ -5,7 +5,7 @@ import {
   SerializeFor,
   TransactionQueryFilter,
 } from '@apillon/lib';
-import { DbTables, NftsErrorCode } from '../../config/types';
+import { DbTables, NftsErrorCode, TransactionStatus } from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import {
   NftsCodeException,
@@ -69,5 +69,23 @@ export class TransactionService {
     });
 
     return await new Transaction({}, context).getList(query);
+  }
+
+  static async updateTransactionStatusInHashes(
+    context: ServiceContext,
+    hashes: string[],
+    status: TransactionStatus,
+    conn: PoolConnection,
+  ) {
+    await context.mysql.paramExecute(
+      `UPDATE \`${DbTables.TRANSACTION}\`
+      SET transactionStatus = @status
+      WHERE
+        AND transactionHash in ('${hashes.join("','")}')`,
+      {
+        status,
+      },
+      conn,
+    );
   }
 }
