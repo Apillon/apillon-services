@@ -3,6 +3,8 @@ import { DbTables, FileStatus } from '../config/types';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { CrustService } from '../modules/crust/crust.service';
 import { File } from '../modules/storage/models/file.model';
+import { Directory } from '../modules/directory/models/directory.model';
+import { CID } from 'ipfs-http-client';
 
 /**
  * Function to execute PinToCRUST
@@ -12,20 +14,33 @@ import { File } from '../modules/storage/models/file.model';
 export async function pinFileToCRUST(
   context,
   bucket_uuid,
-  CID,
-  size,
-  isDirectory,
+  CID: CID,
+  size: number,
+  isDirectory: boolean,
 ) {
   const bucket: Bucket = await new Bucket({}, context).populateByUUID(
     bucket_uuid,
   );
-  const file: File = await new File({}, context).populateById(CID);
 
   try {
-    //if file, then update file status
-    if (file.exists()) {
-      file.fileStatus = FileStatus.PINNING_TO_CRUST;
-      await file.update();
+    let refId = undefined;
+    if (isDirectory) {
+      const dir: Directory = await new Directory({}, context).populateByCid(
+        CID.toV0().toString(),
+      );
+      if (dir.exists()) {
+        refId = dir.CID;
+      }
+    } else {
+      const file: File = await new File({}, context).populateById(
+        CID.toV0().toString(),
+      );
+      //if file, then update file status
+      if (file.exists()) {
+        file.fileStatus = FileStatus.PINNING_TO_CRUST;
+        await file.update();
+        refId = file.file_uuid;
+      }
     }
 
     const res = await CrustService.placeStorageOrderToCRUST(
@@ -33,8 +48,8 @@ export async function pinFileToCRUST(
         cid: CID,
         size: size,
         isDirectory: isDirectory,
-        refTable: DbTables.FILE,
-        refId: file?.file_uuid,
+        refTable: isDirectory ? DbTables.DIRECTORY : DbTables.FILE,
+        refId: refId,
       },
       context,
     );

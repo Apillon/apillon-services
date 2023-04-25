@@ -301,6 +301,27 @@ export class Directory extends AdvancedSQLModel {
     }
   }
 
+  public async populateByCid(cid: string): Promise<this> {
+    if (!cid) {
+      throw new Error('cid should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE CID = @cid AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { cid },
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
+
   /**
    * Return array of Directories, that are in bucket
    * @param bucket_id
