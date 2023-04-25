@@ -26,7 +26,7 @@ export class CrustService {
     });
 
     // Construct place-storage-order tx
-    const fileCid = params.cid; // IPFS CID, take `Qm123` as example
+    const fileCid = params.cid.toV0().toString(); // IPFS CID, take `Qm123` as example
     const fileSize = params.size; // Let's say 2 gb(in byte)
     const tips = 0;
     const memo = params.isDirectory ? 'folder' : '';
