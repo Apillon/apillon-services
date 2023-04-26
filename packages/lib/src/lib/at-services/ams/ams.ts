@@ -98,6 +98,7 @@ export class Ams extends BaseService {
     status?: number;
     email?: string;
     wallet?: string;
+    consents?: Array<any>;
   }) {
     const data = {
       eventName: AmsEventType.USER_UPDATE,

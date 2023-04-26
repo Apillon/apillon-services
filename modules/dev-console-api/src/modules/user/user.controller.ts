@@ -23,7 +23,8 @@ import { UserService } from './user.service';
 import { AuthGuard } from '../../guards/auth.guard';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
-import { DiscordCodeDto } from './dtos/discord-code-dto';
+import { DiscordCodeDto } from './dtos/discord-code.dto';
+import { UserConsentDto } from './dtos/user-consent.dto';
 
 @Controller('users')
 export class UserController {
@@ -34,6 +35,13 @@ export class UserController {
   @UseGuards(AuthGuard)
   async getUserProfile(@Ctx() context: DevConsoleApiContext) {
     return await this.userService.getUserProfile(context);
+  }
+
+  @Get('terms')
+  @Permissions({ role: DefaultUserRole.USER })
+  @UseGuards(AuthGuard)
+  async getPendingTermsForUser(@Ctx() context: DevConsoleApiContext) {
+    return await this.userService.getPendingTermsForUser(context);
   }
 
   @Patch('me')
@@ -154,5 +162,14 @@ export class UserController {
     @Ctx() context: DevConsoleApiContext,
   ): any {
     return this.userService.walletConnect(body, context);
+  }
+
+  @Post('consents')
+  @UseGuards(ValidationGuard)
+  async userConsents(
+    @Body() body: Array<UserConsentDto>,
+    @Ctx() context: DevConsoleApiContext,
+  ) {
+    return await this.userService.setUserConsents(body, context);
   }
 }

@@ -5,6 +5,7 @@ import {
   Context,
   DefaultUserRole,
   generateJwtToken,
+  JSONParser,
   JwtTokenType,
   PoolConnection,
   PopulateFrom,
@@ -158,6 +159,21 @@ export class AuthUser extends AdvancedSQLModel {
     ],
   })
   public token: string;
+
+  /**
+   * terms consents
+   */
+  @prop({
+    parser: { resolver: JSONParser() },
+    populatable: [
+      PopulateFrom.SERVICE, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN, //
+      SerializeFor.SERVICE,
+    ],
+  })
+  public consents: any;
 
   public constructor(data: any, context: Context) {
     super(data, context);

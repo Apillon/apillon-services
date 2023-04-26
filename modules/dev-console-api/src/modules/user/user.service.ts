@@ -19,6 +19,7 @@ import {
   ValidationException,
   writeLog,
   UserWalletAuthDto,
+  Scs,
 } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
 import {
@@ -34,8 +35,9 @@ import { User } from './models/user.model';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { verifyCaptcha, getDiscordProfile } from '@apillon/modules-lib';
-import { DiscordCodeDto } from './dtos/discord-code-dto';
+import { DiscordCodeDto } from './dtos/discord-code.dto';
 import { signatureVerify } from '@polkadot/util-crypto';
+import { UserConsentDto, UserConsentStatus } from './dtos/user-consent.dto';
 @Injectable()
 export class UserService {
   constructor(private readonly projectService: ProjectService) {}
@@ -547,5 +549,51 @@ export class UserService {
    */
   async getOauthLinks(context: DevConsoleApiContext) {
     return await new Ams(context).getOauthLinks();
+  }
+
+  /**
+   * Get terms that user needs to review and accept
+   * @param context - The API context with current user session.
+   * @returns new terms for user
+   */
+  async getPendingTermsForUser(context: DevConsoleApiContext) {
+    const terms = await new Scs(context).getActiveTerms();
+    return terms.filter(
+      (x) =>
+        !context.user?.authUser?.consents?.terms.find((c) => {
+          c.id === x.id;
+        }),
+    );
+  }
+
+  async setUserConsents(
+    consents: Array<UserConsentDto>,
+    context: DevConsoleApiContext,
+  ) {
+    const activeTerms = await new Scs(context).getActiveTerms();
+
+    for (const consent of consents) {
+      try {
+        await consent.validate();
+      } catch (err) {
+        await consent.handle(err);
+        if (!consent.isValid()) {
+          throw new ValidationException(consent, ValidatorErrorCode);
+        }
+      }
+      const term = activeTerms.find((x) => (x.id = consent.id));
+      if (!!term.isRequired && consent.status !== UserConsentStatus.ACCEPTED) {
+        throw new CodeException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          code: ValidatorErrorCode.USER_CONSENT_IS_REQUIRED,
+          errorCodes: ValidatorErrorCode,
+        });
+      }
+    }
+
+    await new Ams(context).updateAuthUser({
+      user_uuid: context.user.user_uuid,
+      consents: consents.map((x) => x.serialize()),
+    });
   }
 }
