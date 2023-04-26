@@ -20,18 +20,21 @@ import { WorkerName } from '../../workers/worker-executor';
 export class EvmService {
   static async createTransaction(
     _event: {
-      chain: EvmChain;
-      fromAddress?: string;
-      transaction: string;
-      referenceTable?: string;
-      referenceId?: string;
+      params: {
+        chain: EvmChain;
+        fromAddress?: string;
+        transaction: string;
+        referenceTable?: string;
+        referenceId?: string;
+      };
     },
     context: ServiceContext,
   ) {
+    console.log(_event);
     // connect to chain
     // TODO: Add logic if endpoint is unavailable to fetch the backup one.
     const endpoint = await new Endpoint({}, context).populateByChain(
-      _event.chain,
+      _event.params.chain,
       ChainType.EVM,
     );
 
@@ -49,7 +52,7 @@ export class EvmService {
     let gasPrice;
     let data = null;
     // eslint-disable-next-line sonarjs/no-small-switch
-    switch (_event.chain) {
+    switch (_event.params.chain) {
       case EvmChain.MOONBASE:
       case EvmChain.MOONBEAM: {
         maxPriorityFeePerGas = ethers.utils.parseUnits('30', 'gwei').toNumber();
@@ -75,11 +78,11 @@ export class EvmService {
       let wallet = new Wallet({}, context);
 
       // if specific address is specified to be used for this transaction fetch the wallet
-      if (_event.fromAddress) {
+      if (_event.params.fromAddress) {
         wallet = await wallet.populateByAddress(
-          _event.chain,
+          _event.params.chain,
           ChainType.EVM,
-          _event.fromAddress,
+          _event.params.fromAddress,
           conn,
         );
       }
@@ -87,14 +90,16 @@ export class EvmService {
       // if address is not specified or not found then get the least used wallet
       if (!wallet.exists()) {
         wallet = await wallet.populateByLeastUsed(
-          _event.chain,
+          _event.params.chain,
           ChainType.EVM,
           conn,
         );
       }
 
       // parse and set transaction information
-      const unsignedTx = ethers.utils.parseTransaction(_event.transaction);
+      const unsignedTx = ethers.utils.parseTransaction(
+        _event.params.transaction,
+      );
       // TODO: add transaction checker to detect annomalies.
       // Reject transaction sending value etc.
       unsignedTx.from = wallet.address;
@@ -104,6 +109,7 @@ export class EvmService {
       unsignedTx.maxFeePerGas = ethers.BigNumber.from(maxFeePerGas);
       unsignedTx.gasPrice = gasPrice;
       unsignedTx.type = type;
+      unsignedTx.chainId = wallet.chain;
 
       const gas = await provider.estimateGas(unsignedTx);
       console.log(`Estimated gas=${gas}`);
@@ -123,13 +129,13 @@ export class EvmService {
       // save transaction
       const transaction = new Transaction({}, context);
       transaction.populate({
-        chain: _event.chain,
+        chain: _event.params.chain,
         chainType: ChainType.EVM,
         address: wallet.address,
         to: unsignedTx.to,
         nonce: wallet.nextNonce,
-        referenceTable: _event.referenceTable,
-        referenceId: _event.referenceId,
+        referenceTable: _event.params.referenceTable,
+        referenceId: _event.params.referenceId,
         rawTransaction,
         data,
         transactionHash: ethers.utils.keccak256(rawTransaction),
@@ -145,7 +151,7 @@ export class EvmService {
           WorkerName.TRANSMIT_EVM_TRANSACTION,
           [
             {
-              chain: _event.chain,
+              chain: _event.params.chain,
             },
           ],
           null,
@@ -175,12 +181,12 @@ export class EvmService {
         service: ServiceName.BLOCKCHAIN,
         data: {
           error: e,
-          transaction: _event.transaction,
-          chain: _event.chain,
+          transaction: _event.params.transaction,
+          chain: _event.params.chain,
           chainType: ChainType.EVM,
-          fromAddress: _event.fromAddress,
-          referenceTable: _event.referenceTable,
-          referenceId: _event.referenceId,
+          fromAddress: _event.params.fromAddress,
+          referenceTable: _event.params.referenceTable,
+          referenceId: _event.params.referenceId,
         },
       });
       await conn.rollback();
