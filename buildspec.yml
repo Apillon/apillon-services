@@ -11,7 +11,7 @@ phases:
         copy-webpack-plugin
         webpack webpack-node-externals
         ts-loader ts-node
-        copyfiles
+        copyfiles rimraf
         turbo
   pre_build:
     commands:
