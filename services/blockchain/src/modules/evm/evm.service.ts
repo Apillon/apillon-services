@@ -45,6 +45,7 @@ export class EvmService {
       });
     }
 
+    console.log(endpoint.url);
     const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
     let maxPriorityFeePerGas;
     let maxFeePerGas;
@@ -57,6 +58,7 @@ export class EvmService {
       case EvmChain.MOONBEAM: {
         maxPriorityFeePerGas = ethers.utils.parseUnits('30', 'gwei').toNumber();
         const estimatedBaseFee = (await provider.getGasPrice()).toNumber();
+        console.log('here2');
         // Ensuring that transaction is desirable for at least 6 blocks.
         // TODO: On production check how gas estimate is calculated
         maxFeePerGas = estimatedBaseFee * 2 + maxPriorityFeePerGas;
@@ -146,6 +148,7 @@ export class EvmService {
       await conn.commit();
 
       try {
+        if (env.)
         await sendToWorkerQueue(
           env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
           WorkerName.TRANSMIT_EVM_TRANSACTION,
