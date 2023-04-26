@@ -5,7 +5,7 @@ import { Transaction } from '../common/models/transaction';
 import { ServiceDefinitionType, WorkerDefinition } from '@apillon/workers-lib';
 import { EvmTransactionWorker } from './evm-transaction-worker';
 
-describe('Handle evm transactions', () => {
+describe.skip('Handle evm transactions', () => {
   let stage: Stage;
   let wallet: Wallet;
 

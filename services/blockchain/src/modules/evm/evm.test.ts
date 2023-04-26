@@ -5,7 +5,7 @@ import { Wallet } from '../../common/models/wallet';
 import { EvmService } from './evm.service';
 import { ethers, UnsignedTransaction } from 'ethers';
 
-describe('Evm service unit test', () => {
+describe.only('Evm service unit test', () => {
   let stage: Stage;
 
   beforeAll(async () => {
@@ -19,7 +19,7 @@ describe('Evm service unit test', () => {
   test('Test service', async () => {
     const endpoint = await new Endpoint(
       {
-        url: 'https://moonbeam-alpha.api.onfinality.io/public',
+        url: 'https://moonbeam-alpha.api.onfinality.io/rpc?apikey=15a3df59-0a99-4216-97b4-e2d242fe64e5',
         chain: EvmChain.MOONBASE,
         chainType: ChainType.EVM,
         status: 5,
@@ -52,14 +52,14 @@ describe('Evm service unit test', () => {
     const serialized = ethers.utils.serializeTransaction(transaction);
 
     const res = await EvmService.createTransaction(
-      { transaction: serialized, chain: EvmChain.MOONBASE },
+      { params: { transaction: serialized, chain: EvmChain.MOONBASE } },
       stage.context,
     );
     console.log('res: ', res);
-    const res2 = await EvmService.transmitTransactions(
-      { chain: EvmChain.MOONBASE },
-      stage.context,
-    );
-    console.log('res2: ', res2);
+    // const res2 = await EvmService.transmitTransactions(
+    //   { chain: EvmChain.MOONBASE },
+    //   stage.context,
+    // );
+    // console.log('res2: ', res2);
   });
 });

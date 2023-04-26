@@ -30,7 +30,7 @@ export class EvmService {
     },
     context: ServiceContext,
   ) {
-    console.log(_event);
+    console.log('Params: ', _event.params);
     // connect to chain
     // TODO: Add logic if endpoint is unavailable to fetch the backup one.
     const endpoint = await new Endpoint({}, context).populateByChain(
@@ -45,6 +45,7 @@ export class EvmService {
       });
     }
 
+    console.log('Endpoint: ', endpoint.url);
     const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
     let maxPriorityFeePerGas;
     let maxFeePerGas;
@@ -57,6 +58,7 @@ export class EvmService {
       case EvmChain.MOONBEAM: {
         maxPriorityFeePerGas = ethers.utils.parseUnits('30', 'gwei').toNumber();
         const estimatedBaseFee = (await provider.getGasPrice()).toNumber();
+        console.log('here2');
         // Ensuring that transaction is desirable for at least 6 blocks.
         // TODO: On production check how gas estimate is calculated
         maxFeePerGas = estimatedBaseFee * 2 + maxPriorityFeePerGas;
@@ -229,6 +231,7 @@ export class EvmService {
     },
     context: ServiceContext,
   ) {
+    console.log('transmitTransactions', _event);
     const wallets = await new Wallet({}, context).getList(
       _event.chain,
       ChainType.EVM,
