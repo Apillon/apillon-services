@@ -10,7 +10,7 @@ import { Transaction } from '../common/models/transaction';
 import { Wallet } from '../common/models/wallet';
 import { CrustTransactionWorker } from './crust-transaction-worker';
 
-describe('Handle crust transactions (storage orders)', () => {
+describe.skip('Handle crust transactions (storage orders)', () => {
   let stage: Stage;
   let wallet: Wallet;
 

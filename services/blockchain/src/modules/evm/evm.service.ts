@@ -30,7 +30,7 @@ export class EvmService {
     },
     context: ServiceContext,
   ) {
-    console.log(_event);
+    console.log('Params: ', _event.params);
     // connect to chain
     // TODO: Add logic if endpoint is unavailable to fetch the backup one.
     const endpoint = await new Endpoint({}, context).populateByChain(
@@ -45,7 +45,7 @@ export class EvmService {
       });
     }
 
-    console.log(endpoint.url);
+    console.log('Endpoint: ', endpoint.url);
     const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
     let maxPriorityFeePerGas;
     let maxFeePerGas;
@@ -148,7 +148,6 @@ export class EvmService {
       await conn.commit();
 
       try {
-        if (env.)
         await sendToWorkerQueue(
           env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
           WorkerName.TRANSMIT_EVM_TRANSACTION,
@@ -232,6 +231,7 @@ export class EvmService {
     },
     context: ServiceContext,
   ) {
+    console.log('transmitTransactions', _event);
     const wallets = await new Wallet({}, context).getList(
       _event.chain,
       ChainType.EVM,
