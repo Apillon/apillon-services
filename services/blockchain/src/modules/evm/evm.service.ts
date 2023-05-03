@@ -16,6 +16,7 @@ import { Transaction } from '../../common/models/transaction';
 import { ServiceContext } from '@apillon/service-lib';
 import { sendToWorkerQueue } from '@apillon/workers-lib';
 import { WorkerName } from '../../workers/worker-executor';
+import axios from 'axios';
 
 export class EvmService {
   static async createTransaction(
@@ -47,7 +48,10 @@ export class EvmService {
 
     console.log('Endpoint: ', endpoint.url);
     const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
-    console.log(await provider.ready);
+
+    console.log(await axios.get('https://api.coingecko.com/api/v3/ping'));
+
+    //  console.log(await provider.ready);
     let maxPriorityFeePerGas;
     let maxFeePerGas;
     let type;
