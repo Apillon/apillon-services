@@ -107,12 +107,12 @@ export class EvmService {
       // TODO: add transaction checker to detect annomalies.
       // Reject transaction sending value etc.
       unsignedTx.from = wallet.address;
-
       unsignedTx.maxPriorityFeePerGas =
         ethers.BigNumber.from(maxPriorityFeePerGas);
       unsignedTx.maxFeePerGas = ethers.BigNumber.from(maxFeePerGas);
       unsignedTx.gasPrice = gasPrice;
       unsignedTx.type = type;
+      unsignedTx.gasLimit = null;
       unsignedTx.chainId = wallet.chain;
       unsignedTx.nonce = wallet.nextNonce;
 
