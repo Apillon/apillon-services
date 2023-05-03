@@ -57,12 +57,10 @@ export class EvmService {
     switch (_event.params.chain) {
       case EvmChain.MOONBASE:
       case EvmChain.MOONBEAM: {
-        console.log('here1');
         maxPriorityFeePerGas = ethers.utils.parseUnits('30', 'gwei').toNumber();
 
         console.log((await provider.getGasPrice()).toNumber());
         const estimatedBaseFee = (await provider.getGasPrice()).toNumber();
-        console.log('here2');
         // Ensuring that transaction is desirable for at least 6 blocks.
         // TODO: On production check how gas estimate is calculated
         maxFeePerGas = estimatedBaseFee * 2 + maxPriorityFeePerGas;
@@ -116,6 +114,7 @@ export class EvmService {
       unsignedTx.gasPrice = gasPrice;
       unsignedTx.type = type;
       unsignedTx.chainId = wallet.chain;
+      unsignedTx.nonce = wallet.nextNonce;
 
       const gas = await provider.estimateGas(unsignedTx);
       console.log(`Estimated gas=${gas}`);
