@@ -10,7 +10,6 @@ import {
   ServiceName,
   env,
   TransactionStatus,
-  getSecrets,
 } from '@apillon/lib';
 import { Endpoint } from '../../common/models/endpoint';
 import { BlockchainErrorCode } from '../../config/types';
@@ -21,6 +20,7 @@ import { sendToWorkerQueue } from '@apillon/workers-lib';
 import { WorkerName } from '../../workers/worker-executor';
 import { ServiceContext } from '@apillon/service-lib';
 import { IsolationLevel } from '@apillon/lib';
+import { getWalletSeed } from '../../lib/seed';
 
 export class SubstrateService {
   static async createTransaction(
@@ -312,11 +312,4 @@ export class SubstrateService {
     }
   }
   //#region
-}
-async function getWalletSeed(seed: string) {
-  if (env.APP_ENV == 'test') {
-    return seed;
-  }
-  const secrets = await getSecrets(env.BLOCKCHAIN_SECRETS);
-  return secrets[seed];
 }

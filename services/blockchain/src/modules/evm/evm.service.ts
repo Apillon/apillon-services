@@ -16,6 +16,7 @@ import { Transaction } from '../../common/models/transaction';
 import { ServiceContext } from '@apillon/service-lib';
 import { sendToWorkerQueue } from '@apillon/workers-lib';
 import { WorkerName } from '../../workers/worker-executor';
+import { getWalletSeed } from '../../lib/seed';
 
 export class EvmService {
   static async createTransaction(
@@ -123,7 +124,8 @@ export class EvmService {
       unsignedTx.gasLimit = ethers.BigNumber.from(gasLimit);
 
       // sign transaction
-      const signingWallet = new ethers.Wallet(wallet.seed);
+      const seed = await getWalletSeed(wallet.seed);
+      const signingWallet = new ethers.Wallet(seed);
       console.log(unsignedTx);
       const rawTransaction = await signingWallet.signTransaction(unsignedTx);
 
