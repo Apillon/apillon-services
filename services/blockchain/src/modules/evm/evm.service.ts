@@ -47,6 +47,7 @@ export class EvmService {
 
     console.log('Endpoint: ', endpoint.url);
     const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
+    console.log(await provider.ready);
     let maxPriorityFeePerGas;
     let maxFeePerGas;
     let type;
@@ -56,6 +57,7 @@ export class EvmService {
     switch (_event.params.chain) {
       case EvmChain.MOONBASE:
       case EvmChain.MOONBEAM: {
+        console.log('here1');
         maxPriorityFeePerGas = ethers.utils.parseUnits('30', 'gwei').toNumber();
         const estimatedBaseFee = (await provider.getGasPrice()).toNumber();
         console.log('here2');
