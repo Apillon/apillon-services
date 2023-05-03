@@ -16,7 +16,6 @@ import { Transaction } from '../../common/models/transaction';
 import { ServiceContext } from '@apillon/service-lib';
 import { sendToWorkerQueue } from '@apillon/workers-lib';
 import { WorkerName } from '../../workers/worker-executor';
-import axios from 'axios';
 
 export class EvmService {
   static async createTransaction(
@@ -47,11 +46,11 @@ export class EvmService {
     }
 
     console.log('Endpoint: ', endpoint.url);
-    const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
+    //const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
+    const provider = new ethers.providers.JsonRpcProvider(
+      'https://moonbeam-alpha.api.onfinality.io/rpc?apikey=15a3df59-0a99-4216-97b4-e2d242fe64e5',
+    );
 
-    console.log(await axios.get('https://api.coingecko.com/api/v3/ping'));
-
-    //  console.log(await provider.ready);
     let maxPriorityFeePerGas;
     let maxFeePerGas;
     let type;
