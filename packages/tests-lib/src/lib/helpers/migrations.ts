@@ -234,7 +234,7 @@ export async function rebuildTestDatabases(): Promise<void> {
   await initMigrations();
   console.info('initMigrations success');
   try {
-    await Promise.all([
+    const migrationResults = await Promise.allSettled([
       dbAmsMigration.reset(),
       dbConsoleMigration.reset(),
       dbStorageMigration.reset(),
@@ -243,6 +243,11 @@ export async function rebuildTestDatabases(): Promise<void> {
       dbReferralMigration.reset(),
       dbNftsMigration.reset(),
     ]);
+    for (const res of migrationResults) {
+      if (res.status === 'rejected') {
+        throw new Error(`Migration reset rejected with: ${res.reason}`);
+      }
+    }
   } catch (err) {
     console.error('error at migrations.reset()', err);
     throw err;
@@ -250,7 +255,7 @@ export async function rebuildTestDatabases(): Promise<void> {
   await destroyTestMigrations();
   await initSeeds();
   try {
-    await Promise.all([
+    const migrationResults = await Promise.allSettled([
       dbAmsSeed.reset(),
       dbConsoleSeed.reset(),
       // dbStorageSeed.reset(),
@@ -259,6 +264,11 @@ export async function rebuildTestDatabases(): Promise<void> {
       dbReferralSeed.reset(),
       dbNftsSeed.reset(),
     ]);
+    for (const res of migrationResults) {
+      if (res.status === 'rejected') {
+        throw new Error(`Migration reset rejected with: ${res.reason}`);
+      }
+    }
   } catch (err) {
     console.error('error at seed.reset()', err);
     throw err;
