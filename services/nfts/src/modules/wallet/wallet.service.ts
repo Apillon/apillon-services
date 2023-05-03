@@ -94,6 +94,7 @@ export class WalletService {
       this.provider,
     );
     const totalSupply = await nftContract.totalSupply();
+    console.log((await this.provider.getGasPrice()).toNumber());
     return parseInt(totalSupply._hex, 16);
   }
 
