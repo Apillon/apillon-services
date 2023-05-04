@@ -6,6 +6,7 @@ import {
   ServiceName,
   SerializeFor,
   env,
+  TransactionStatus,
 } from '@apillon/lib';
 import { Endpoint } from '../../common/models/endpoint';
 import { ethers } from 'ethers';
@@ -146,6 +147,7 @@ export class EvmService {
         rawTransaction,
         data,
         transactionHash: ethers.utils.keccak256(rawTransaction),
+        transactionStatus: TransactionStatus.PENDING,
       });
       await transaction.insert(SerializeFor.INSERT_DB, conn);
       await wallet.iterateNonce(conn);
@@ -167,9 +169,8 @@ export class EvmService {
       } catch (e) {
         await new Lmas().writeLog({
           logType: LogType.ERROR,
-          message:
-            'Error triggering TRANSMIT_SUBSTRATE_TRANSACTIO worker queue',
-          location: 'SubstrateService.createTransaction',
+          message: 'Error triggering TRANSMIT_EVM_TRANSACTION worker queue',
+          location: 'EvmService.createTransaction',
           service: ServiceName.BLOCKCHAIN,
           data: {
             error: e,
