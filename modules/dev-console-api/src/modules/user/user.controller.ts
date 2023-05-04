@@ -137,12 +137,12 @@ export class UserController {
     return await this.userService.getOauthLinks(context);
   }
 
-  @Get('/auth-msg')
+  @Get('auth-msg')
   getAuthMsg(): any {
     return this.userService.getAuthMessage();
   }
 
-  @Post('/login/wallet')
+  @Post('login/wallet')
   @HttpCode(200)
   @Validation({ dto: UserWalletAuthDto })
   @UseGuards(ValidationGuard)
@@ -153,7 +153,7 @@ export class UserController {
     return this.userService.walletLogin(body, context);
   }
 
-  @Post('/wallet-connect')
+  @Post('wallet-connect')
   @HttpCode(200)
   @Validation({ dto: UserWalletAuthDto })
   @UseGuards(ValidationGuard, AuthGuard)

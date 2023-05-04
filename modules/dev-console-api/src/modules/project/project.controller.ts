@@ -86,7 +86,7 @@ export class ProjectController {
     return await this.projectService.inviteUserProject(context, id, body);
   }
 
-  @Patch('/user/:projectUserId')
+  @Patch('user/:projectUserId')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -105,7 +105,7 @@ export class ProjectController {
     );
   }
 
-  @Delete('/user/:projectUserId')
+  @Delete('user/:projectUserId')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
