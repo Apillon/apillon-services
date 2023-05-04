@@ -92,10 +92,7 @@ export class UserService {
 
       user.wallet = resp.data.wallet;
 
-      user.userRoles =
-        resp.data.authUserRoles
-          ?.filter((x) => !x.project_uuid)
-          ?.map((x) => x.role_id) || [];
+      user.setUserRolesFromAmsResponse(resp);
 
       return {
         ...user.serialize(SerializeFor.PROFILE),
@@ -232,6 +229,8 @@ export class UserService {
         password,
       });
 
+      user.setUserRolesFromAmsResponse(amsResponse);
+
       await context.mysql.commit(conn);
     } catch (err) {
       // TODO: The context of this error is not correct. What happens if
@@ -334,10 +333,7 @@ export class UserService {
       });
     }
 
-    user.userRoles =
-      resp.data.authUserRoles
-        ?.filter((x) => !x.project_uuid)
-        ?.map((x) => x.role_id) || [];
+    user.setUserRolesFromAmsResponse(resp);
 
     user.wallet = resp.data.wallet;
 
