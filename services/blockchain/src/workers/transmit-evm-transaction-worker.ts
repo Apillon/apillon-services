@@ -1,4 +1,3 @@
-import { EvmChain } from '@apillon/lib';
 import { Context, env, Lmas, LogType, ServiceName } from '@apillon/lib';
 import {
   WorkerDefinition,
