@@ -6,7 +6,7 @@ export async function upgrade(
   await queryFn(`
     INSERT INTO quota (id, status, groupName, name, description, valueType, value)
     VALUES 
-    (${QuotaCode.MAX_WEBSITES}, 5, 'Storage', 'Web pages count limit', 'Max number of web pages inside project', 1, 3)
+    (${QuotaCode.MAX_NFT_COLLECTIONS}, 5, 'NFTs', 'NFT collections limit', 'Max number of NFT collections per project', 1, 3)
 ;
   `);
 }
@@ -16,6 +16,6 @@ export async function downgrade(
 ): Promise<void> {
   await queryFn(`
     DELETE FROM quota
-    WHERE id = ${QuotaCode.MAX_WEBSITES};
+    WHERE id = ${QuotaCode.MAX_NFT_COLLECTIONS};
   `);
 }

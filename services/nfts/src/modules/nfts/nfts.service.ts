@@ -1,6 +1,7 @@
 import {
   AppEnvironment,
   BlockchainMicroservice,
+  CollectionsQuotaReachedQueryFilter,
   CreateBucketDto,
   CreateCollectionDTO,
   CreateEvmTransactionDto,
@@ -10,6 +11,8 @@ import {
   LogType,
   MintNftDTO,
   NFTCollectionQueryFilter,
+  QuotaCode,
+  Scs,
   SerializeFor,
   ServiceName,
   SetCollectionBaseUriDTO,
@@ -61,7 +64,7 @@ export class NftsService {
     params: { body: CreateCollectionDTO },
     context: ServiceContext,
   ) {
-    console.log(`Deploying NFT: ${JSON.stringify(params.body)}`);
+    console.log(`Creating NFT collections: ${JSON.stringify(params.body)}`);
 
     //Create collection object
     const collection: Collection = new Collection(
@@ -76,6 +79,20 @@ export class NftsService {
       collection_uuid: uuidV4(),
       status: SqlModelStatus.INCOMPLETE,
     });
+
+    //check max collections quota
+    const collectionsCount = await collection.getCollectionsCount();
+    const maxCollectionsQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_NFT_COLLECTIONS,
+      project_uuid: collection.project_uuid,
+    });
+
+    if (collectionsCount >= maxCollectionsQuota.value) {
+      throw new NftsCodeException({
+        code: NftsErrorCode.MAX_COLLECTIONS_REACHED,
+        status: 400,
+      });
+    }
 
     //Call storage MS, to create bucket used to upload NFT metadata
     let nftMetadataBucket;
@@ -677,4 +694,24 @@ export class NftsService {
   }
 
   //#endregion
+
+  static async maxCollectionsQuotaReached(
+    event: { query: CollectionsQuotaReachedQueryFilter },
+    context: ServiceContext,
+  ) {
+    const collection: Collection = new Collection(
+      { project_uuid: event.query.project_uuid },
+      context,
+    );
+
+    const collectionsCount = await collection.getCollectionsCount();
+    const maxCollectionsQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_NFT_COLLECTIONS,
+      project_uuid: collection.project_uuid,
+    });
+
+    return {
+      maxCollectionsQuotaReached: collectionsCount >= maxCollectionsQuota.value,
+    };
+  }
 }

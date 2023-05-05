@@ -682,4 +682,25 @@ export class Collection extends AdvancedSQLModel {
       this.minted = 0;
     }
   }
+
+  /**
+   * Function to get count of active NFT collections on the project
+   * @param project_uuid
+   * @returns Number of collections
+   */
+  public async getCollectionsCount(project_uuid?: string) {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT COUNT(*) as collectionsCount
+      FROM \`${DbTables.COLLECTION}\`
+      WHERE project_uuid = @project_uuid 
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      {
+        project_uuid: project_uuid || this.project_uuid,
+      },
+    );
+
+    return data[0].collectionsCount;
+  }
 }
