@@ -27,10 +27,7 @@ export class DevConsoleApiContext extends Context {
 
       if (user.exists()) {
         user.authUser = userData.data;
-        user.userRoles =
-          user.authUser?.authUserRoles
-            ?.filter((x) => !x.project_uuid)
-            ?.map((x) => x.role_id) || [];
+        user.setUserRolesFromAmsResponse(userData);
         this.user = user;
       }
     }
