@@ -4,8 +4,9 @@ import {
   PoolConnection,
   SerializeFor,
   TransactionQueryFilter,
+  TransactionStatus,
 } from '@apillon/lib';
-import { DbTables, NftsErrorCode, TransactionStatus } from '../../config/types';
+import { DbTables, NftsErrorCode } from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import {
   NftsCodeException,

@@ -15,6 +15,7 @@ import {
   SetCollectionBaseUriDTO,
   SqlModelStatus,
   StorageMicroservice,
+  TransactionStatus,
   TransferCollectionDTO,
 } from '@apillon/lib';
 import {
@@ -30,7 +31,6 @@ import {
   CollectionStatus,
   DbTables,
   NftsErrorCode,
-  TransactionStatus,
   TransactionType,
 } from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
@@ -325,7 +325,7 @@ export class NftsService {
         transactionType: TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
         refTable: DbTables.COLLECTION,
         refId: collection.id,
-        transactionHash: response.transactionHash,
+        transactionHash: response.data.transactionHash,
         transactionStatus: TransactionStatus.PENDING,
       });
       //Insert to DB
@@ -411,7 +411,7 @@ export class NftsService {
         transactionType: TransactionType.SET_COLLECTION_BASE_URI,
         refTable: DbTables.COLLECTION,
         refId: collection.id,
-        transactionHash: response.transactionHash,
+        transactionHash: response.data.transactionHash,
         transactionStatus: TransactionStatus.PENDING,
       });
       //Insert to DB
@@ -491,7 +491,7 @@ export class NftsService {
         transactionType: TransactionType.MINT_NFT,
         refTable: DbTables.COLLECTION,
         refId: collection.id,
-        transactionHash: response.transactionHash,
+        transactionHash: response.data.transactionHash,
         transactionStatus: TransactionStatus.PENDING,
       });
       //Insert to DB
@@ -576,7 +576,7 @@ export class NftsService {
         transactionType: TransactionType.BURN_NFT,
         refTable: DbTables.COLLECTION,
         refId: collection.id,
-        transactionHash: response.transactionHash,
+        transactionHash: response.data.transactionHash,
         transactionStatus: TransactionStatus.PENDING,
       });
       //Insert to DB
