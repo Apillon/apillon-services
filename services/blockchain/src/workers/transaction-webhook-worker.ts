@@ -8,6 +8,7 @@ import {
   ServiceName,
   SubstrateChain,
   TransactionStatus,
+  TransactionWebhookDataDto,
 } from '@apillon/lib';
 import {
   WorkerDefinition,
@@ -45,8 +46,8 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
       );
 
       console.log('transactions: ', transactions);
-      const crustWebhooks = [];
-      const nftWebhooks = [];
+      const crustWebhooks: TransactionWebhookDataDto[] = [];
+      const nftWebhooks: TransactionWebhookDataDto[] = [];
       if (transactions && transactions.length > 0) {
         for (let i = 0; i < transactions.length; i++) {
           const transaction = transactions[i];
@@ -54,14 +55,16 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
             transaction.chainType == ChainType.SUBSTRATE &&
             transaction.chain == SubstrateChain.CRUST
           ) {
-            crustWebhooks.push({
-              id: transaction.id,
-              transactionHash: transaction.transactionHash,
-              referenceTable: transaction.referenceTable,
-              referenceId: transaction.referenceId,
-              transactionStatus: transaction.transactionStatus,
-              data: transaction.data,
-            });
+            crustWebhooks.push(
+              new TransactionWebhookDataDto().populate({
+                id: transaction.id,
+                transactionHash: transaction.transactionHash,
+                referenceTable: transaction.referenceTable,
+                referenceId: transaction.referenceId,
+                transactionStatus: transaction.transactionStatus,
+                data: transaction.data,
+              }),
+            );
           } else if (
             transaction.chainType == ChainType.EVM &&
             (transaction.chain == EvmChain.MOONBEAM ||
@@ -69,14 +72,16 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
               transaction.chain == EvmChain.ASTAR_SHIBUYA ||
               EvmChain.ASTAR)
           ) {
-            nftWebhooks.push({
-              id: transaction.id,
-              transactionHash: transaction.transactionHash,
-              referenceTable: transaction.referenceTable,
-              referenceId: transaction.referenceId,
-              transactionStatus: transaction.transactionStatus,
-              data: transaction.data,
-            });
+            nftWebhooks.push(
+              new TransactionWebhookDataDto().populate({
+                id: transaction.id,
+                transactionHash: transaction.transactionHash,
+                referenceTable: transaction.referenceTable,
+                referenceId: transaction.referenceId,
+                transactionStatus: transaction.transactionStatus,
+                data: transaction.data,
+              }),
+            );
           }
         }
       }

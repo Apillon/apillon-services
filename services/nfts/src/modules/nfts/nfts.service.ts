@@ -15,6 +15,7 @@ import {
   SetCollectionBaseUriDTO,
   SqlModelStatus,
   StorageMicroservice,
+  TransactionStatus,
   TransferCollectionDTO,
 } from '@apillon/lib';
 import {
@@ -30,7 +31,6 @@ import {
   CollectionStatus,
   DbTables,
   NftsErrorCode,
-  TransactionStatus,
   TransactionType,
 } from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
