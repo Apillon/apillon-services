@@ -6,6 +6,7 @@ import {
   runWithWorkers,
   ServiceName,
   streamToString,
+  writeLog,
 } from '@apillon/lib';
 import {
   BucketType,
@@ -32,6 +33,7 @@ export class NftStorageService {
     },
     context: ServiceContext,
   ) {
+    console.info('prepareMetadataForCollection initiated', event);
     //#region Load data, execute validations and Sync images to IPFS
     //Get sessions
     const imagesSession = await new FileUploadSession(
@@ -172,6 +174,12 @@ export class NftStorageService {
     //#endregion
 
     //#region Publish to IPNS, Pin to IPFS, Remove from S3, ...
+    writeLog(
+      LogType.INFO,
+      'pinning folders to CRUST',
+      'nft-storage.service.ts',
+      'prepareMetadataForCollection',
+    );
     await pinFileToCRUST(
       context,
       bucket.bucket_uuid,
