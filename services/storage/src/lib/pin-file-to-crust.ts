@@ -1,4 +1,4 @@
-import { Lmas, LogType, ServiceName } from '@apillon/lib';
+import { Lmas, LogType, ServiceName, writeLog } from '@apillon/lib';
 import { DbTables, FileStatus } from '../config/types';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { CrustService } from '../modules/crust/crust.service';
@@ -18,6 +18,16 @@ export async function pinFileToCRUST(
   size: number,
   isDirectory: boolean,
 ) {
+  console.info('pinFileToCRUST', {
+    params: {
+      bucket_uuid,
+      CID,
+      size,
+      isDirectory,
+      cidV0: CID.toV0().toString(),
+    },
+  });
+
   const bucket: Bucket = await new Bucket({}, context).populateByUUID(
     bucket_uuid,
   );
@@ -43,7 +53,7 @@ export async function pinFileToCRUST(
       }
     }
 
-    const res = await CrustService.placeStorageOrderToCRUST(
+    await CrustService.placeStorageOrderToCRUST(
       {
         cid: CID,
         size: size,
@@ -58,7 +68,7 @@ export async function pinFileToCRUST(
       project_uuid: bucket.project_uuid,
       logType: LogType.COST,
       message: 'Success placing storage order to CRUST',
-      location: `${this.constructor.name}/runExecutor`,
+      location: `pinFileToCRUST`,
       service: ServiceName.STORAGE,
     });
   } catch (err) {
@@ -67,7 +77,7 @@ export async function pinFileToCRUST(
       project_uuid: bucket.project_uuid,
       logType: LogType.ERROR,
       message: 'Error at placing storage order to CRUST',
-      location: `${this.constructor.name}/runExecutor`,
+      location: `pinFileToCRUST`,
       service: ServiceName.STORAGE,
       data: {
         err,
