@@ -3,8 +3,13 @@ import {
   CreateEvmTransactionDto,
   PoolConnection,
   SerializeFor,
+  TransactionStatus,
 } from '@apillon/lib';
-import { CollectionStatus, DbTables } from '../../config/types';
+import {
+  CollectionStatus,
+  DbTables,
+  TransactionType,
+} from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { Collection } from '../../modules/nfts/models/collection.model';
 import { Transaction } from '../../modules/transaction/models/transaction.model';
@@ -40,12 +45,20 @@ export async function deployNFTCollectionContract(
     context,
   ).createEvmTransaction(blockchainServiceRequest);
 
-  dbTxRecord.transactionHash = response.transactionHash;
+  dbTxRecord.populate({
+    chainId: collection.chain,
+    transactionType: TransactionType.DEPLOY_CONTRACT,
+    refTable: DbTables.COLLECTION,
+    refId: collection.id,
+    transactionHash: response.data.transactionHash,
+    transactionStatus: TransactionStatus.PENDING,
+  });
+
   //Insert to DB
   await TransactionService.saveTransaction(context, dbTxRecord, conn);
   //Update collection status
   collection.collectionStatus = CollectionStatus.DEPLOYING;
-  collection.contractAddress = response.data;
-  collection.deployerAddress = response.address;
+  collection.contractAddress = response.data.data;
+  collection.deployerAddress = response.data.address;
   await collection.update(SerializeFor.UPDATE_DB, conn);
 }

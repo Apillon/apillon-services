@@ -178,7 +178,7 @@ export class EvmService {
         });
       }
 
-      return transaction.serialize();
+      return transaction.serialize(SerializeFor.PROFILE);
     } catch (e) {
       console.log(e);
       //Write log to LMAS
