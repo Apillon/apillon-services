@@ -169,6 +169,16 @@ export async function handleSqsMessages(
         });
         break;
       }
+      case WorkerName.TRANSACTION_STATUS: {
+        await new TransactionStatusWorker(
+          workerDefinition,
+          context,
+          QueueWorkerType.EXECUTOR,
+        ).run({
+          executeArg: message?.body,
+        });
+        break;
+      }
       default:
         console.log(
           `ERROR - INVALID WORKER NAME: ${message?.messageAttributes?.workerName}`,

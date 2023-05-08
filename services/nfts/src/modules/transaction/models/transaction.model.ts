@@ -9,13 +9,10 @@ import {
   SerializeFor,
   SqlModelStatus,
   TransactionQueryFilter,
+  TransactionStatus,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import {
-  DbTables,
-  NftsErrorCode,
-  TransactionStatus,
-} from '../../../config/types';
+import { DbTables, NftsErrorCode } from '../../../config/types';
 
 export class Transaction extends AdvancedSQLModel {
   public readonly tableName = DbTables.TRANSACTION;
@@ -123,7 +120,7 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    defaultValue: TransactionStatus.REQUESTED,
+    defaultValue: TransactionStatus.PENDING,
   })
   public transactionStatus: number;
 
@@ -146,6 +143,28 @@ export class Transaction extends AdvancedSQLModel {
     validators: [],
   })
   public transactionHash: string;
+
+  public async populateByTransactionHash(
+    transactionHash: string,
+  ): Promise<Transaction> {
+    if (!transactionHash) {
+      throw new Error('transactionHash should not be null!');
+    }
+    const data = await this.getContext().mysql.paramExecute(
+      `
+        SELECT *
+        FROM \`${this.tableName}\`
+        WHERE transactionHash = @transactionHash;
+        `,
+      { transactionHash },
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
 
   public async getTransactions(
     transactionStatus: number,

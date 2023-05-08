@@ -53,14 +53,6 @@ export enum TransactionType {
   BURN_NFT = 5,
 }
 
-export enum TransactionStatus {
-  REQUESTED = 0,
-  PENDING = 1,
-  FINISHED = 2,
-  VERIFIED = 3,
-  FAILED = 4,
-}
-
 export enum CollectionStatus {
   CREATED = 0,
   DEPLOY_INITIATED = 1,
