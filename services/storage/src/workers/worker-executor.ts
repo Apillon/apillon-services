@@ -11,11 +11,12 @@ import {
 import { Context, env } from '@apillon/lib';
 import { SyncToIPFSWorker } from './s3-to-ipfs-sync-worker';
 import { TestWorker } from './test-worker';
-import { PinToCRUSTWorker } from './pin-to-crust-worker';
 import { Scheduler } from './scheduler';
 import { DeployWebsiteWorker } from './deploy-website-worker';
 import { DeleteBucketDirectoryFileWorker } from './delete-bucket-directory-file-worker';
 import { PublishToIPNSWorker } from './publish-to-ipns-worker';
+import { UpdateCrustStatusWorker } from './update-crust-status-worker';
+import { PrepareMetadataForCollectionWorker } from './prepare-metada-for-collection-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -24,10 +25,11 @@ export enum WorkerName {
   TEST_WORKER = 'TestWorker',
   SCHEDULER = 'scheduler',
   SYNC_TO_IPFS_WORKER = 'SyncToIpfsWorker',
-  PIN_TO_CRUST_WORKER = 'PinToCrustWorker',
   DELETE_BUCKET_DIRECTORY_FILE_WORKER = 'DeleteBucketDirectoryFileWorker',
   DEPLOY_WEBSITE_WORKER = 'DeployWebsiteWorker',
   PUBLISH_TO_IPNS_WORKER = 'PublishToIPNSWorker',
+  UPDATE_CRUST_STATUS_WORKER = 'UpdateCrustStatusWorker',
+  PREPARE_METADATA_FOR_COLLECTION_WORKER = 'PrepareMetadataForCollectionWorker',
 }
 
 export async function handler(event: any) {
@@ -196,16 +198,6 @@ export async function handleSqsMessages(
         });
         break;
       }
-      case WorkerName.PIN_TO_CRUST_WORKER: {
-        await new PinToCRUSTWorker(
-          workerDefinition,
-          context,
-          QueueWorkerType.EXECUTOR,
-        ).run({
-          executeArg: message?.body,
-        });
-        break;
-      }
       case WorkerName.DEPLOY_WEBSITE_WORKER: {
         await new DeployWebsiteWorker(
           workerDefinition,
@@ -218,6 +210,26 @@ export async function handleSqsMessages(
       }
       case WorkerName.PUBLISH_TO_IPNS_WORKER: {
         await new PublishToIPNSWorker(
+          workerDefinition,
+          context,
+          QueueWorkerType.EXECUTOR,
+        ).run({
+          executeArg: message?.body,
+        });
+        break;
+      }
+      case WorkerName.UPDATE_CRUST_STATUS_WORKER: {
+        await new UpdateCrustStatusWorker(
+          workerDefinition,
+          context,
+          QueueWorkerType.EXECUTOR,
+        ).run({
+          executeArg: message?.body,
+        });
+        break;
+      }
+      case WorkerName.PREPARE_METADATA_FOR_COLLECTION_WORKER: {
+        await new PrepareMetadataForCollectionWorker(
           workerDefinition,
           context,
           QueueWorkerType.EXECUTOR,

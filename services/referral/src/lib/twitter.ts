@@ -6,7 +6,7 @@ import {
   ReferralCodeException,
   ReferralValidationException,
 } from './exceptions';
-import { ServiceContext } from '../context';
+import { ServiceContext } from '@apillon/service-lib';
 
 export class Twitter {
   public twitterApi: TwitterApi;

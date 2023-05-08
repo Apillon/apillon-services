@@ -1,15 +1,18 @@
 import { ModelBase, prop } from '../../../base-models/base';
 import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
+  ethAddressValidator,
   numberSizeValidator,
   presenceValidator,
   stringLengthValidator,
 } from '@rawmodel/validators';
 import {
+  EvmChain,
   PopulateFrom,
   SerializeFor,
   ValidatorErrorCode,
 } from '../../../../config/types';
+import { enumInclusionValidator } from '../../../validators';
 
 export class CreateCollectionDTO extends ModelBase {
   @prop({
@@ -174,4 +177,79 @@ export class CreateCollectionDTO extends ModelBase {
     ],
   })
   public description: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_COLLECTION_CHAIN_NOT_PRESENT,
+      },
+      {
+        resolver: enumInclusionValidator(EvmChain),
+        code: ValidatorErrorCode.NFT_COLLECTION_CHAIN_NOT_VALID,
+      },
+    ],
+  })
+  public chain: EvmChain;
+
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_COLLECTION_REVOKABLE_NOT_PRESENT,
+      },
+    ],
+  })
+  public isRevokable: boolean;
+
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_COLLECTION_SOULBOUND_NOT_PRESENT,
+      },
+    ],
+  })
+  public isSoulbound: boolean;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_COLLECTION_ROYALTIES_ADDRESS_NOT_PRESENT,
+      },
+      {
+        resolver: ethAddressValidator(),
+        code: ValidatorErrorCode.NFT_COLLECTION_ROYALTIES_ADDRESS_NOT_VALID,
+      },
+    ],
+  })
+  public royaltiesAddress: string;
+
+  @prop({
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_COLLECTION_ROYALTIES_FEES_NOT_PRESENT,
+      },
+      {
+        resolver: numberSizeValidator({ minOrEqual: 0, maxOrEqual: 100 }),
+        code: ValidatorErrorCode.NFT_COLLECTION_ROYALTIES_FEES_NOT_VALID,
+      },
+    ],
+  })
+  public royaltiesFees: number;
 }

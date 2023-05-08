@@ -17,7 +17,7 @@ import {
   unionSelectAndCountQuery,
 } from '@apillon/lib';
 import { DbTables, ObjectType, StorageErrorCode } from '../../../config/types';
-import { ServiceContext } from '../../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
 import { File } from '../../storage/models/file.model';
 
@@ -292,6 +292,27 @@ export class Directory extends AdvancedSQLModel {
       WHERE directory_uuid = @uuid AND status <> ${SqlModelStatus.DELETED};
       `,
       { uuid },
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
+
+  public async populateByCid(cid: string): Promise<this> {
+    if (!cid) {
+      throw new Error('cid should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE CID = @cid AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { cid },
     );
 
     if (data && data.length) {

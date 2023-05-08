@@ -9,6 +9,8 @@ import { DeployCollectionDTO } from './dtos/deploy-collection.dto';
 import { SetCollectionBaseUriDTO } from './dtos/set-collection-base-uri.dto';
 import { TransactionQueryFilter } from './dtos/transaction-query-filter.dto';
 import { TransferCollectionDTO } from './dtos/transfer-collection.dto';
+import { BurnNftDto } from './dtos/burn-nft.dto';
+import { CollectionsQuotaReachedQueryFilter } from './dtos/collections-quota-reached-query-filter.dto';
 
 export class NftsMicroservice extends BaseService {
   lambdaFunctionName =
@@ -81,6 +83,14 @@ export class NftsMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async burnNftToken(params: BurnNftDto) {
+    const data = {
+      eventName: NftsEventType.BURN_NFT,
+      body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
   public async checkTransactionStatus() {
     const data = {
       eventName: NftsEventType.CHECK_TRANSACTION_STATUS,
@@ -104,6 +114,16 @@ export class NftsMicroservice extends BaseService {
     const data = {
       eventName: NftsEventType.DEPLOY_COLLECTION,
       body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async maxCollectionsQuotaReached(
+    params: CollectionsQuotaReachedQueryFilter,
+  ) {
+    const data = {
+      eventName: NftsEventType.MAX_COLLECTIONS_QUOTA_REACHED,
+      query: params.serialize(),
     };
     return await this.callService(data);
   }

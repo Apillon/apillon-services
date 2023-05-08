@@ -105,8 +105,20 @@ export async function setupTestContextAndSql(): Promise<Stage> {
     const referralContext = new TestContext();
     referralContext.mysql = referralSql;
 
-    // startAmsServer();
-    // startLmasServer();
+    /********************** REFERRAL MS **************************/
+    const NftsConfig = {
+      host: env.NFTS_MYSQL_HOST_TEST,
+      database: env.NFTS_MYSQL_DATABASE_TEST,
+      password: env.NFTS_MYSQL_PASSWORD_TEST,
+      port: env.NFTS_MYSQL_PORT_TEST,
+      user: env.NFTS_MYSQL_USER_TEST,
+    };
+
+    const nftsSql = new MySql(NftsConfig);
+    await nftsSql.connect();
+
+    const nftsContext = new TestContext();
+    nftsContext.mysql = nftsSql;
 
     return {
       http: undefined,
@@ -125,6 +137,8 @@ export async function setupTestContextAndSql(): Promise<Stage> {
       authApiSql,
       referralContext,
       referralSql,
+      nftsContext: nftsContext,
+      nftsSql: nftsSql,
     };
   } catch (e) {
     console.error(e);
@@ -141,6 +155,22 @@ export const releaseStage = async (stage: Stage): Promise<void> => {
   if (!stage) {
     throw new Error('Error - stage does not exist');
   }
+  if (stage.http) {
+    try {
+      await stage.http.close();
+    } catch (error) {
+      throw new Error('Error when closing http server: ' + error);
+    }
+  }
+
+  if (stage.app) {
+    try {
+      await stage.app.close();
+    } catch (error) {
+      throw new Error('Error when closing application: ' + error);
+    }
+  }
+
   await dropTestDatabases();
   if (stage.devConsoleSql) {
     try {
@@ -196,19 +226,11 @@ export const releaseStage = async (stage: Stage): Promise<void> => {
     }
   }
 
-  if (stage.http) {
+  if (stage.nftsSql) {
     try {
-      await stage.http.close();
+      await stage.nftsSql.close();
     } catch (error) {
-      throw new Error('Error when closing http server: ' + error);
-    }
-  }
-
-  if (stage.app) {
-    try {
-      await stage.app.close();
-    } catch (error) {
-      throw new Error('Error when closing application: ' + error);
+      throw new Error('Error when releasing NFTs stage: ' + error);
     }
   }
 };

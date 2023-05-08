@@ -9,8 +9,6 @@ export async function upgrade(
   \`id\` INT NOT NULL AUTO_INCREMENT,
   \`chainId\` INT NOT NULL,
   \`transactionType\` INT NOT NULL,
-  \`rawTransaction\` TEXT NOT NULL,
-  \`nonce\` INT NOT NULL,
   \`refTable\` VARCHAR(100) NULL,
   \`refId\` INT NULL,
   \`transactionStatus\` INT NULL,
@@ -23,12 +21,6 @@ export async function upgrade(
   \`updateUser\` INT NULL,
   PRIMARY KEY (\`id\`)
   );
-  `);
-
-  // TODO: Add unique Index on execution wallet + chain + nonce
-  await queryFn(`
-  CREATE UNIQUE INDEX transaction_nonce_index
-  ON \`${DbTables.TRANSACTION}\` (nonce);
   `);
 }
 

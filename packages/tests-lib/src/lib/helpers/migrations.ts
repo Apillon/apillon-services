@@ -103,15 +103,21 @@ export async function upgradeTestDatabases(): Promise<void> {
 
 export async function downgradeTestDatabases(): Promise<void> {
   await initMigrations();
-  await Promise.all([
-    dbAmsMigration.down(-1),
-    dbConsoleMigration.down(-1),
-    dbStorageMigration.down(-1),
-    dbConfigMigration.down(-1),
-    dbAuthApiMigration.down(-1),
-    dbReferralMigration.down(-1),
-    dbNftsMigration.down(-1),
-  ]);
+  try {
+    await Promise.all([
+      dbAmsMigration.down(-1),
+      dbConsoleMigration.down(-1),
+      dbStorageMigration.down(-1),
+      dbConfigMigration.down(-1),
+      dbAuthApiMigration.down(-1),
+      dbReferralMigration.down(-1),
+      dbNftsMigration.down(-1),
+    ]);
+  } catch (err) {
+    console.error('error at migrations.down()', err);
+    throw err;
+  }
+
   await destroyTestMigrations();
 }
 
@@ -136,15 +142,20 @@ export async function seedTestDatabases(): Promise<void> {
 
 export async function unseedTestDatabases(): Promise<void> {
   await initSeeds();
-  await Promise.all([
-    dbAmsSeed.down(-1),
-    dbConsoleSeed.down(-1),
-    // dbStorageSeed.down(-1),
-    dbConfigSeed.down(-1),
-    dbAuthApiSeed.down(-1),
-    dbReferralSeed.down(-1),
-    dbNftsSeed.down(-1),
-  ]);
+  try {
+    await Promise.all([
+      dbAmsSeed.down(-1),
+      dbConsoleSeed.down(-1),
+      // dbStorageSeed.down(-1),
+      dbConfigSeed.down(-1),
+      dbAuthApiSeed.down(-1),
+      dbReferralSeed.down(-1),
+      dbNftsSeed.down(-1),
+    ]);
+  } catch (err) {
+    console.error('error at seeds.down()', err);
+    throw err;
+  }
   await destroyTestSeeds();
 }
 
@@ -213,6 +224,9 @@ export async function destroyTestSeeds(): Promise<void> {
   dbAmsSeed = null;
   // dbStorageSeed = null;
   dbConfigSeed = null;
+  dbAuthApiSeed = null;
+  dbReferralSeed = null;
+  dbNftsSeed = null;
 }
 
 export async function rebuildTestDatabases(): Promise<void> {
@@ -220,7 +234,7 @@ export async function rebuildTestDatabases(): Promise<void> {
   await initMigrations();
   console.info('initMigrations success');
   try {
-    await Promise.all([
+    const migrationResults = await Promise.allSettled([
       dbAmsMigration.reset(),
       dbConsoleMigration.reset(),
       dbStorageMigration.reset(),
@@ -229,6 +243,11 @@ export async function rebuildTestDatabases(): Promise<void> {
       dbReferralMigration.reset(),
       dbNftsMigration.reset(),
     ]);
+    for (const res of migrationResults) {
+      if (res.status === 'rejected') {
+        throw new Error(`Migration reset rejected with: ${res.reason}`);
+      }
+    }
   } catch (err) {
     console.error('error at migrations.reset()', err);
     throw err;
@@ -236,7 +255,7 @@ export async function rebuildTestDatabases(): Promise<void> {
   await destroyTestMigrations();
   await initSeeds();
   try {
-    await Promise.all([
+    const migrationResults = await Promise.allSettled([
       dbAmsSeed.reset(),
       dbConsoleSeed.reset(),
       // dbStorageSeed.reset(),
@@ -245,6 +264,11 @@ export async function rebuildTestDatabases(): Promise<void> {
       dbReferralSeed.reset(),
       dbNftsSeed.reset(),
     ]);
+    for (const res of migrationResults) {
+      if (res.status === 'rejected') {
+        throw new Error(`Migration reset rejected with: ${res.reason}`);
+      }
+    }
   } catch (err) {
     console.error('error at seed.reset()', err);
     throw err;

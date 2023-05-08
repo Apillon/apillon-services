@@ -20,7 +20,7 @@ import {
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { BucketType, DbTables, StorageErrorCode } from '../../../config/types';
-import { ServiceContext } from '../../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { Bucket } from '../../bucket/models/bucket.model';
 import { v4 as uuidV4 } from 'uuid';
 import { StorageValidationException } from '../../../lib/exceptions';

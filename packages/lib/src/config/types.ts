@@ -1,3 +1,31 @@
+export enum ChainType {
+  SUBSTRATE = 1,
+  EVM = 2,
+}
+
+export enum TransactionStatus {
+  PENDING = 1,
+  CONFIRMED = 2,
+  FAILED = 3,
+  ERROR = 4,
+}
+
+export enum SubstrateChain {
+  CRUST = 1,
+  KILT = 2,
+  KILT_SPIRITNET = 3,
+  PHALA = 4,
+}
+
+export enum EvmChain {
+  MOONBEAM = 1284,
+  MOONBASE = 1287,
+  ASTAR_SHIBUYA = 81, // testnet
+  ASTAR = 592,
+}
+
+export enum BlockchainEventType {}
+
 export enum AmsEventType {
   USER_REGISTER = 'user-register',
   USER_GET_AUTH = 'user-get-auth',
@@ -29,6 +57,13 @@ export enum LmasEventType {
   SEND_ALERT = 'send-alert',
   SEND_ADMIN_ALERT = 'send-admin-alert',
   NOTIFY = 'notify',
+}
+
+export enum BlockchainEventType {
+  SUBSTRATE_SIGN_TRANSACTION = 'substrate-sign-transaction',
+  SUBSTRATE_GET_TRANSACTION = 'substrate-get-transaction',
+  EVM_SIGN_TRANSACTION = 'evm-sign-transaction',
+  EVM_GET_TRANSACTION = 'evm-get-transaction',
 }
 
 export enum StorageEventType {
@@ -113,6 +148,8 @@ export enum NftsEventType {
   CHECK_TRANSACTION_STATUS = 'check-transaction-status',
   NFT_COLLECTION_TRANSACTION_LIST = 'list-collection-transactions',
   DEPLOY_COLLECTION = 'deploy-collection',
+  BURN_NFT = 'burn-nft',
+  MAX_COLLECTIONS_QUOTA_REACHED = 'max-collections-quota-reached',
 }
 
 export enum ReferralEventType {
@@ -140,6 +177,7 @@ export enum ServiceName {
   AUTHENTICATION_API = 'AUTHENTICATION_API',
   NFTS = 'NFTS',
   REFERRAL = 'REFERRAL',
+  BLOCKCHAIN = 'BLOCKCHAIN',
 }
 
 export enum ServiceCode {
@@ -156,6 +194,7 @@ export enum ServiceCode {
   CONFIG = '10',
   REFERRAL = '11',
   NFTS = '12',
+  BLOCKCHAIN = '13',
 }
 
 export enum AppEnvironment {
@@ -410,8 +449,16 @@ export enum ValidatorErrorCode {
   NFT_SET_BASE_URI_COLLECTION_UUID_NOT_PRESENT = 42200127,
   NFT_PROJECT_UUID_QUERY_PARAM_NOT_PRESENT = 42200128,
   NFT_COLLECTION_UUI_PARAM_NOT_PRESENT = 42200129,
-  TRANSACTION_REF_TABLE_PARAM_NOT_PRESENT = 42200130,
-  TRANSACTION_REF_ID_PARAM_NOT_PRESENT = 42200131,
+  NFT_COLLECTION_CHAIN_NOT_VALID = 42200130,
+  NFT_COLLECTION_CHAIN_NOT_PRESENT = 42200131,
+  NFT_COLLECTION_SOULBOUND_NOT_PRESENT = 42200132,
+  NFT_COLLECTION_REVOKABLE_NOT_PRESENT = 42200133,
+  NFT_COLLECTION_ROYALTIES_ADDRESS_NOT_PRESENT = 42200134,
+  NFT_COLLECTION_ROYALTIES_ADDRESS_NOT_VALID = 42200135,
+  NFT_COLLECTION_ROYALTIES_FEES_NOT_PRESENT = 42200136,
+  NFT_COLLECTION_ROYALTIES_FEES_NOT_VALID = 42200137,
+  TRANSACTION_REF_TABLE_PARAM_NOT_PRESENT = 42200138,
+  TRANSACTION_REF_ID_PARAM_NOT_PRESENT = 42200139,
 
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,
@@ -433,6 +480,14 @@ export enum ValidatorErrorCode {
   SPORRAN_NONCE_NOT_PRESENT = 42200717,
   AUTH_SESSION_TOKEN_NOT_PRESENT = 42200718,
   //#endregion
+  //#region Blockchain
+  SUBSTRATE_TRANSACTION_NOT_PRESENT = 42200801,
+  SUBSTRATE_CHAIN_NOT_PRESENT = 42200802,
+  SUBSTRATE_CHAIN_NOT_VALID = 42200803,
+  EVM_TRANSACTION_NOT_PRESENT = 42200804,
+  EVM_CHAIN_NOT_PRESENT = 42200805,
+  EVM_CHAIN_NOT_VALID = 42200806,
+  //#endregion"
 }
 
 /**
@@ -478,6 +533,7 @@ export enum QuotaCode {
   MAX_BUCKET_SIZE = 6,
   MAX_ATTESTED_USERS = 7,
   MAX_WEBSITES = 8,
+  MAX_NFT_COLLECTIONS = 9,
 }
 
 /* OAuth link type*/

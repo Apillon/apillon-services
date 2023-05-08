@@ -9,7 +9,7 @@ import {
   SerializeFor,
   ServiceName,
 } from '@apillon/lib';
-import { ServiceContext } from '../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { ApiKey } from './models/api-key.model';
 import { v4 as uuidV4 } from 'uuid';
 import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
@@ -17,7 +17,16 @@ import * as bcrypt from 'bcryptjs';
 import { AmsErrorCode } from '../../config/types';
 import { ApiKeyRole } from '../role/models/api-key-role.model';
 
+/**
+ * ApiKeyService class handles API key management, including getting, listing, creating, and deleting API keys.
+ */
 export class ApiKeyService {
+  /**
+   * Retrieves an API key based on the provided apiKey and apiKeySecret.
+   * @param event An object containing the apiKey and apiKeySecret.
+   * @param context The ServiceContext instance for the current request.
+   * @returns The ApiKey instance if found and verified.
+   */
   static async getApiKey(
     event: { apiKey: string; apiKeySecret: string },
     context: ServiceContext,
@@ -42,6 +51,13 @@ export class ApiKeyService {
   }
 
   //#region Api-key CRUD
+
+  /**
+   * Lists API keys based on the provided query.
+   * @param event An object containing the query for filtering API keys.
+   * @param context The ServiceContext instance for the current request.
+   * @returns An array of ApiKey instances that match the given query.
+   */
   static async listApiKeys(
     event: { query: ApiKeyQueryFilterDto },
     context: ServiceContext,
@@ -52,6 +68,12 @@ export class ApiKeyService {
     ).getList(context, new ApiKeyQueryFilterDto(event.query));
   }
 
+  /**
+   * Creates a new API key using the provided data.
+   * @param event An object containing the data for creating a new API key.
+   * @param context The ServiceContext instance for the current request.
+   * @returns An object containing the newly created ApiKey instance and its apiKeySecret.
+   */
   static async createApiKey(
     event: { body: CreateApiKeyDto },
     context: ServiceContext,
@@ -133,6 +155,12 @@ export class ApiKeyService {
     };
   }
 
+  /**
+   * Deletes an API key based on the provided ID.
+   * @param event An object containing the ID of the API key to be deleted.
+   * @param context The ServiceContext instance for the current request.
+   * @returns A boolean value indicating whether the API key was successfully deleted.
+   */
   static async deleteApiKey(
     event: { id: number },
     context: ServiceContext,

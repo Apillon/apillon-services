@@ -3,6 +3,7 @@ import {
   CodeException,
   Context,
   DefaultUserRole,
+  EvmChain,
   ForbiddenErrorCodes,
   getQueryParams,
   NFTCollectionQueryFilter,
@@ -20,7 +21,7 @@ import {
   DbTables,
   NftsErrorCode,
 } from '../../../config/types';
-import { ServiceContext } from '../../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { WalletService } from '../../wallet/wallet.service';
 
 export class Collection extends AdvancedSQLModel {
@@ -483,6 +484,46 @@ export class Collection extends AdvancedSQLModel {
   })
   public metadataSession: string;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+  })
+  public deployerAddress: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+  })
+  public chain: EvmChain;
+
   /***************************************************
    * Info properties
    *****************************************************/
@@ -632,7 +673,7 @@ export class Collection extends AdvancedSQLModel {
   }
 
   public async populateNumberOfMintedNfts() {
-    const walletService: WalletService = new WalletService();
+    const walletService: WalletService = new WalletService(this.chain);
     if (this.contractAddress) {
       this.minted = await walletService.getNumberOfMintedNfts(
         this.contractAddress,
@@ -640,5 +681,26 @@ export class Collection extends AdvancedSQLModel {
     } else {
       this.minted = 0;
     }
+  }
+
+  /**
+   * Function to get count of active NFT collections on the project
+   * @param project_uuid
+   * @returns Number of collections
+   */
+  public async getCollectionsCount(project_uuid?: string) {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT COUNT(*) as collectionsCount
+      FROM \`${DbTables.COLLECTION}\`
+      WHERE project_uuid = @project_uuid 
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      {
+        project_uuid: project_uuid || this.project_uuid,
+      },
+    );
+
+    return data[0].collectionsCount;
   }
 }

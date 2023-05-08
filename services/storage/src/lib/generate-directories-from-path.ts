@@ -1,6 +1,6 @@
 import { PoolConnection, SerializeFor } from '@apillon/lib';
 import { CID } from 'ipfs-http-client';
-import { ServiceContext } from '../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { Directory } from '../modules/directory/models/directory.model';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';

@@ -11,7 +11,7 @@ import {
   UserWalletAuthDto,
 } from '@apillon/lib';
 import { AmsErrorCode } from '../../config/types';
-import { ServiceContext } from '../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
 import { AuthToken } from '../auth-token/auth-token.model';
 import { AuthUser } from './auth-user.model';
@@ -20,7 +20,16 @@ import { TokenExpiresInStr } from '../../config/types';
 import { CryptoHash } from '../../lib/hash-with-crypto';
 import { signatureVerify } from '@polkadot/util-crypto';
 
+/**
+ * AuthUserService class handles user authentication and related operations, such as registration, login, password reset, and email verification.
+ */
 export class AuthUserService {
+  /**
+   * Registers a new user with the provided email, password, and user_uuid.
+   * @param event An object containing the user details.
+   * @param context The ServiceContext instance for the current request.
+   * @returns The newly registered user's data.
+   */
   static async register(event, context: ServiceContext) {
     if (!event?.user_uuid || !event.password || !event.email) {
       throw await new AmsCodeException({
@@ -106,7 +115,12 @@ export class AuthUserService {
     console.log(res);
     return res;
   }
-
+  /**
+   * Authenticates a user using their email and password.
+   * @param event An object containing the user's email and password.
+   * @param context The ServiceContext instance for the current request.
+   * @returns The authenticated user's data.
+   */
   static async login(event, context: ServiceContext) {
     const authUser = await new AuthUser({}, context).populateByEmail(
       event.email,
@@ -131,7 +145,12 @@ export class AuthUserService {
 
     return authUser.serialize(SerializeFor.SERVICE);
   }
-
+  /**
+   * Retrieves an authenticated user's data using their token.
+   * @param event An object containing the user's token.
+   * @param context The ServiceContext instance for the current request.
+   * @returns The authenticated user's data.
+   */
   static async getAuthUser(event, context: ServiceContext) {
     // send log to monitoring service
     // await new Lmas().writeLog(
@@ -208,7 +227,12 @@ export class AuthUserService {
 
     return authUser.serialize(SerializeFor.SERVICE);
   }
-
+  /**
+   * Updates an authenticated user's data with the provided information.
+   * @param event An object containing the user's updated data.
+   * @param context The ServiceContext instance for the current request.
+   * @returns The updated user's data.
+   */
   static async updateAuthUser(event, context: ServiceContext) {
     const authUser = await new AuthUser({}, context).populateByUserUuid(
       event.user_uuid,
@@ -255,7 +279,12 @@ export class AuthUserService {
 
     return authUser.serialize(SerializeFor.SERVICE);
   }
-
+  /**
+   * Resets a user's password using their email and new password.
+   * @param event An object containing the user's email and new password.
+   * @param context The ServiceContext instance for the current request.
+   * @returns A boolean value indicating whether the password reset was successful.
+   */
   static async resetPassword(event, context: ServiceContext) {
     if (!event?.email || !event.password) {
       throw await new AmsCodeException({
@@ -293,7 +322,12 @@ export class AuthUserService {
 
     return true;
   }
-
+  /**
+   * Checks if an email address is already associated with an existing user.
+   * @param event An object containing the user's email.
+   * @param context The ServiceContext instance for the current request.
+   * @returns An object with a boolean result indicating whether the email exists.
+   */
   static async emailExists(event, context: ServiceContext) {
     if (!event?.email) {
       throw await new AmsCodeException({
@@ -312,7 +346,12 @@ export class AuthUserService {
 
     return { result: authUser.exists() };
   }
-
+  /**
+   * Retrieves an authenticated user's data using their email.
+   * @param event An object containing the user's email.
+   * @param context The ServiceContext instance for the current request.
+   * @returns The authenticated user's data.
+   */
   static async getAuthUserByEmail(event, context: ServiceContext) {
     if (!event?.email) {
       throw await new AmsCodeException({
@@ -331,7 +370,12 @@ export class AuthUserService {
 
     return authUser.serialize(SerializeFor.SERVICE);
   }
-
+  /**
+   * Authenticates a user using their wallet address.
+   * @param event An object containing the user's wallet address.
+   * @param context The ServiceContext instance for the current request.
+   * @returns The authenticated user's data.
+   */
   static async loginWithWalletAddress(event, context: ServiceContext) {
     const authData = new UserWalletAuthDto(event.authData);
 

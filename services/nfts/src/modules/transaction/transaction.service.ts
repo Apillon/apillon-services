@@ -4,16 +4,16 @@ import {
   PoolConnection,
   SerializeFor,
   TransactionQueryFilter,
+  TransactionStatus,
 } from '@apillon/lib';
-import { DbTables, NftsErrorCode, TransactionStatus } from '../../config/types';
-import { ServiceContext } from '../../context';
+import { DbTables, NftsErrorCode } from '../../config/types';
+import { ServiceContext } from '@apillon/service-lib';
 import {
   NftsCodeException,
   NftsValidationException,
 } from '../../lib/exceptions';
 import { executeTransactionStatusWorker } from '../../scripts/serverless-workers/execute-transaction-status-worker';
 import { Collection } from '../nfts/models/collection.model';
-import { WalletService } from '../wallet/wallet.service';
 import { Transaction } from './models/transaction.model';
 
 export class TransactionService {
@@ -46,18 +46,6 @@ export class TransactionService {
     return false;
   }
 
-  static async sendTransaction(transaction: Transaction) {
-    const walletService = new WalletService();
-    const txResponse = await walletService.sendTransaction(
-      transaction.rawTransaction,
-    );
-    transaction.transactionHash = txResponse.hash;
-    transaction.transactionStatus = TransactionStatus.PENDING;
-    await transaction.update();
-
-    return transaction;
-  }
-
   static async listCollectionTransactions(
     event: { collection_uuid: string; query: TransactionQueryFilter },
     context: ServiceContext,
@@ -82,5 +70,23 @@ export class TransactionService {
     });
 
     return await new Transaction({}, context).getList(query);
+  }
+
+  static async updateTransactionStatusInHashes(
+    context: ServiceContext,
+    hashes: string[],
+    status: TransactionStatus,
+    conn: PoolConnection,
+  ) {
+    await context.mysql.paramExecute(
+      `UPDATE \`${DbTables.TRANSACTION}\`
+      SET transactionStatus = @status
+      WHERE
+        AND transactionHash in ('${hashes.join("','")}')`,
+      {
+        status,
+      },
+      conn,
+    );
   }
 }

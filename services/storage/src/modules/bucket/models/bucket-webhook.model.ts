@@ -12,7 +12,7 @@ import {
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { DbTables, StorageErrorCode } from '../../../config/types';
-import { ServiceContext } from '../../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { Bucket } from './bucket.model';
 
 export class BucketWebhook extends AdvancedSQLModel {

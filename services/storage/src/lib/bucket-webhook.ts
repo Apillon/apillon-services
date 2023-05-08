@@ -1,4 +1,4 @@
-import { ServiceContext } from '../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { BucketWebhook } from '../modules/bucket/models/bucket-webhook.model';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { File } from '../modules/storage/models/file.model';

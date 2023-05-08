@@ -99,10 +99,11 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
         );
       } catch (error) {
         await new Lmas().writeLog({
+          message: error,
           logType: LogType.ERROR,
           location: 'Authentication-API/identity/authentication.worker',
           service: ServiceName.AUTHENTICATION_API,
-          data: error,
+          data: { email: claimerEmail, didUri: claimerDidUri, error: error },
         });
         throw new AuthenticationCodeException({
           code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
@@ -127,6 +128,7 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
             message: `Propagating DID create TX to KILT BC ...`,
             location: 'AUTHENTICATION-API/identity/authentication.worker',
             service: ServiceName.AUTHENTICATION_API,
+            data: { email: claimerEmail, didUri: claimerDidUri },
           });
 
           await Blockchain.signAndSubmitTx(fullDidCreationTx, attesterAcc);
@@ -138,14 +140,21 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
               message: `${error.method}: ${error.docs[0]}`,
               location: 'Authentication-API/identity/authentication.worker',
               service: ServiceName.AUTHENTICATION_API,
-              data: error,
+              data: {
+                email: claimerEmail,
+                didUri: claimerDidUri,
+              },
             });
           } else {
             await new Lmas().writeLog({
+              message: error,
               logType: LogType.ERROR,
               location: 'Authentication-API/identity/authentication.worker',
               service: ServiceName.AUTHENTICATION_API,
-              data: error,
+              data: {
+                email: claimerEmail,
+                didUri: claimerDidUri,
+              },
             });
             throw error;
           }
@@ -196,6 +205,7 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
         message: 'Propagating ATTESTATION TX to KILT BC ...',
         location: 'AUTHENTICATION-API/identity/authentication.worker',
         service: ServiceName.AUTHENTICATION_API,
+        data: { email: claimerEmail, didUri: claimerDidUri },
       });
 
       console.log('Submitting attestation TX ...');
@@ -211,6 +221,7 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
           : `ATTESTATION: FAILURE`,
         location: 'AUTHENTICATION-API/identity/authentication.worker',
         service: ServiceName.AUTHENTICATION_API,
+        data: { email: claimerEmail, didUri: claimerDidUri },
       });
 
       if (!emailAttested) {
@@ -252,10 +263,10 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
     } catch (error) {
       await new Lmas().writeLog({
         logType: LogType.ERROR,
-        message: `ATTESTATION ERROR: ${error}`,
+        message: error,
         location: 'AUTHENTICATION-API/identity/authentication.worker',
         service: ServiceName.AUTHENTICATION_API,
-        data: error,
+        data: { email: claimerEmail, didUri: claimerDidUri },
       });
 
       throw error;

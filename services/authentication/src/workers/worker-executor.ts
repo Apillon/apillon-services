@@ -13,7 +13,7 @@ import { IdentityGenerateWorker } from './generate-identity.worker';
 import { IdentityRevokeWorker } from './revoke-identity.worker';
 
 import { Scheduler } from './scheduler';
-import { ServiceContext } from '../context';
+import { ServiceContext } from '@apillon/service-lib';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);

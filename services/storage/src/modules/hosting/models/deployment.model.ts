@@ -20,7 +20,7 @@ import {
   DeploymentStatus,
   StorageErrorCode,
 } from '../../../config/types';
-import { ServiceContext } from '../../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { Website } from './website.model';
 
 export class Deployment extends AdvancedSQLModel {

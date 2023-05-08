@@ -22,6 +22,13 @@ import {
 } from '../../lib/serverless-workers';
 import { DbTables } from '../../config/types';
 
+export enum JobStatus {
+  INCOMPLETE = 1,
+  ACTIVE = 5,
+  LOCKED = 6,
+  DEACTIVATED = 9,
+}
+
 export class Job extends AdvancedSQLModel {
   public tableName = DbTables.JOB;
 
@@ -252,7 +259,7 @@ export class Job extends AdvancedSQLModel {
       SerializeFor.WORKER,
     ],
   })
-  public executorCount: boolean;
+  public executorCount: number;
 
   public constructor(data: any, context: Context) {
     super(data, context);
@@ -263,7 +270,7 @@ export class Job extends AdvancedSQLModel {
       .mysql.paramExecute(
         `
       SELECT * FROM \`${this.tableName}\`
-      WHERE status = ${SqlModelStatus.ACTIVE}
+      WHERE status IN (${JobStatus.ACTIVE}, ${JobStatus.LOCKED})
       AND nextRun IS NOT NULL
       AND nextRun <= NOW()
       AND (
