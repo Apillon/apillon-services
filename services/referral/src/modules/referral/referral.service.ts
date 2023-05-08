@@ -140,6 +140,7 @@ export class ReferralService {
       Volume: ${order.volume}
       Stock remaining: ${product.stock}
       Info: ${JSON.stringify(order.info, null, 2)}
+      From: ${player.userEmail}
       `,
       ServiceName.REFERRAL,
       'message',
