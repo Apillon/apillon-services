@@ -142,7 +142,9 @@ export async function handleLambdaEvent(
         workerDefinition,
         context,
         QueueWorkerType.EXECUTOR,
-      ).run();
+      ).run({
+        executeArg: {},
+      });
       break;
     default:
       console.log(
