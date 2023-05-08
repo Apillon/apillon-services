@@ -143,7 +143,7 @@ export async function handleLambdaEvent(
         context,
         QueueWorkerType.EXECUTOR,
       ).run({
-        executeArg: {},
+        executeArg: JSON.stringify({}),
       });
       break;
     default:
