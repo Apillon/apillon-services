@@ -17,7 +17,7 @@ export class TransmitSubstrateTransactionWorker extends BaseSingleThreadWorker {
   }
 
   public async runPlanner(): Promise<any[]> {
-    return [];
+    return [{}];
   }
   public async runExecutor(data: any): Promise<any> {
     console.info(
