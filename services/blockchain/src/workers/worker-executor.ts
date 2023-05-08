@@ -137,6 +137,13 @@ export async function handleLambdaEvent(
         executeArg: JSON.stringify({ chain: EvmChain.MOONBASE }),
       });
       break;
+    case WorkerName.TRANSACTION_WEBHOOKS:
+      await new TransactionWebhookWorker(
+        workerDefinition,
+        context,
+        QueueWorkerType.EXECUTOR,
+      ).run();
+      break;
     default:
       console.log(
         `ERROR - INVALID WORKER NAME: ${workerDefinition.workerName}`,
