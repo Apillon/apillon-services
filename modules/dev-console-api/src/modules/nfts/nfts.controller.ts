@@ -67,6 +67,20 @@ export class NftsController {
     return await this.nftsService.listNftCollections(context, query);
   }
 
+  @Get('collections/quota-reached')
+  @Permissions({ role: DefaultUserRole.USER })
+  @Validation({
+    dto: CollectionsQuotaReachedQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async isCollectionsQuotaReached(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: CollectionsQuotaReachedQueryFilter,
+  ) {
+    return await this.nftsService.isCollectionsQuotaReached(context, query);
+  }
+
   @Get('/collections/:id')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
@@ -195,19 +209,5 @@ export class NftsController {
       collectionUuid,
       body,
     );
-  }
-
-  @Get('collections/quota-reached')
-  @Permissions({ role: DefaultUserRole.USER })
-  @Validation({
-    dto: CollectionsQuotaReachedQueryFilter,
-    validateFor: ValidateFor.QUERY,
-  })
-  @UseGuards(ValidationGuard, AuthGuard)
-  async isCollectionsQuotaReached(
-    @Ctx() context: DevConsoleApiContext,
-    @Query() query: CollectionsQuotaReachedQueryFilter,
-  ) {
-    return await this.nftsService.isCollectionsQuotaReached(context, query);
   }
 }
