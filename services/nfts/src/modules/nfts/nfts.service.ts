@@ -632,19 +632,6 @@ export class NftsService {
       });
     }
     collection.canAccess(context);
-
-    const currentOwner = await walletService.getContractOwner(
-      collection.contractAddress,
-    );
-
-    if (collection.deployerAddress !== currentOwner) {
-      throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
-        context: context,
-        sourceFunction,
-      });
-    }
   }
 
   private static async checkMintConditions(
