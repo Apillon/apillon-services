@@ -640,6 +640,10 @@ export class NftsService {
     collection: Collection,
     walletService: WalletService,
   ) {
+    if (collection.maxSupply == 0) {
+      return true;
+    }
+
     const minted = await walletService.getNumberOfMintedNfts(
       collection.contractAddress,
     );
