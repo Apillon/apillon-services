@@ -3,6 +3,7 @@ import {
   Context,
   CreateSubstrateTransactionDto,
   SubstrateChain,
+  writeLog,
 } from '@apillon/lib';
 import { typesBundleForPolkadot } from '@crustio/type-definitions';
 import { ApiPromise, WsProvider } from '@polkadot/api';
@@ -19,6 +20,7 @@ export class CrustService {
     },
     context: Context,
   ) {
+    console.info('placeStorageOrderToCRUST', params);
     // Pin dist directory on Crust
     const api = new ApiPromise({
       provider: new WsProvider('wss://rpc.crust.network'),
@@ -43,6 +45,7 @@ export class CrustService {
       },
       context,
     );
+    console.info('createSubstrateTransaction...');
     return await new BlockchainMicroservice(context).createSubstrateTransaction(
       dto,
     );

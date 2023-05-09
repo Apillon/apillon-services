@@ -150,6 +150,7 @@ export enum NftsEventType {
   NFT_COLLECTION_TRANSACTION_LIST = 'list-collection-transactions',
   DEPLOY_COLLECTION = 'deploy-collection',
   BURN_NFT = 'burn-nft',
+  MAX_COLLECTIONS_QUOTA_REACHED = 'max-collections-quota-reached',
 }
 
 export enum ReferralEventType {
@@ -533,6 +534,7 @@ export enum QuotaCode {
   MAX_BUCKET_SIZE = 6,
   MAX_ATTESTED_USERS = 7,
   MAX_WEBSITES = 8,
+  MAX_NFT_COLLECTIONS = 9,
 }
 
 /* OAuth link type*/

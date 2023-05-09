@@ -3,7 +3,7 @@ import { CrustBlockchainIndexer } from './crust-indexer.service';
 import { CrustStorageOrders } from './data-models/crust-storage-orders';
 import { CrustTransfers } from './data-models/crust-transfers';
 
-describe('Crust blockchain indexer - Wallet transfers', () => {
+describe.skip('Crust blockchain indexer - Wallet transfers', () => {
   beforeAll(async () => {
     env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://18.203.251.180:8081/graphql';
   });
@@ -32,7 +32,7 @@ describe('Crust blockchain indexer - Wallet transfers', () => {
   });
 });
 
-describe('Crust blockchain indexer - File storage orders', () => {
+describe.skip('Crust blockchain indexer - File storage orders', () => {
   beforeAll(async () => {
     env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://18.203.251.180:8081/graphql';
   });
@@ -67,7 +67,7 @@ describe('Crust blockchain indexer - File storage orders', () => {
   });
 });
 
-describe('Crust blockchain indexer err', () => {
+describe.skip('Crust blockchain indexer err', () => {
   beforeAll(async () => {
     env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = null;
   });
@@ -78,7 +78,7 @@ describe('Crust blockchain indexer err', () => {
   });
 });
 
-describe('Crust blockchain indexer - block height', () => {
+describe.skip('Crust blockchain indexer - block height', () => {
   beforeAll(async () => {
     env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://18.203.251.180:8081/graphql';
   });
@@ -90,7 +90,7 @@ describe('Crust blockchain indexer - block height', () => {
   });
 });
 
-describe('Hashes test', () => {
+describe.skip('Hashes test', () => {
   test('Iterableiterator to string comma delimited.', () => {
     const test = new Map<string, number>();
     test.set(

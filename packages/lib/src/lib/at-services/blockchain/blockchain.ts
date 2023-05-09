@@ -4,6 +4,7 @@ import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { CreateEvmTransactionDto } from './dtos/create-evm-transaction.dto';
 import { CreateSubstrateTransactionDto } from './dtos/create-substrate-transaction.dto';
+import { TransactionDto } from './dtos/transaction.dto';
 
 export class BlockchainMicroservice extends BaseService {
   lambdaFunctionName =
@@ -45,7 +46,9 @@ export class BlockchainMicroservice extends BaseService {
 
   //#region evm transactions
 
-  public async createEvmTransaction(params: CreateEvmTransactionDto) {
+  public async createEvmTransaction(
+    params: CreateEvmTransactionDto,
+  ): Promise<{ data: TransactionDto }> {
     const data = {
       eventName: BlockchainEventType.EVM_SIGN_TRANSACTION,
       params: params.serialize(),

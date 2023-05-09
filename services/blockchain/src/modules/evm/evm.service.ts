@@ -6,6 +6,7 @@ import {
   ServiceName,
   SerializeFor,
   env,
+  TransactionStatus,
 } from '@apillon/lib';
 import { Endpoint } from '../../common/models/endpoint';
 import { ethers } from 'ethers';
@@ -16,22 +17,26 @@ import { Transaction } from '../../common/models/transaction';
 import { ServiceContext } from '@apillon/service-lib';
 import { sendToWorkerQueue } from '@apillon/workers-lib';
 import { WorkerName } from '../../workers/worker-executor';
+import { getWalletSeed } from '../../lib/seed';
 
 export class EvmService {
   static async createTransaction(
     _event: {
-      chain: EvmChain;
-      fromAddress?: string;
-      transaction: string;
-      referenceTable?: string;
-      referenceId?: string;
+      params: {
+        chain: EvmChain;
+        fromAddress?: string;
+        transaction: string;
+        referenceTable?: string;
+        referenceId?: string;
+      };
     },
     context: ServiceContext,
   ) {
+    console.log('Params: ', _event.params);
     // connect to chain
     // TODO: Add logic if endpoint is unavailable to fetch the backup one.
     const endpoint = await new Endpoint({}, context).populateByChain(
-      _event.chain,
+      _event.params.chain,
       ChainType.EVM,
     );
 
@@ -42,17 +47,21 @@ export class EvmService {
       });
     }
 
+    console.log('Endpoint: ', endpoint.url);
     const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
+
     let maxPriorityFeePerGas;
     let maxFeePerGas;
     let type;
     let gasPrice;
     let data = null;
     // eslint-disable-next-line sonarjs/no-small-switch
-    switch (_event.chain) {
+    switch (_event.params.chain) {
       case EvmChain.MOONBASE:
       case EvmChain.MOONBEAM: {
         maxPriorityFeePerGas = ethers.utils.parseUnits('30', 'gwei').toNumber();
+
+        console.log((await provider.getGasPrice()).toNumber());
         const estimatedBaseFee = (await provider.getGasPrice()).toNumber();
         // Ensuring that transaction is desirable for at least 6 blocks.
         // TODO: On production check how gas estimate is calculated
@@ -75,11 +84,11 @@ export class EvmService {
       let wallet = new Wallet({}, context);
 
       // if specific address is specified to be used for this transaction fetch the wallet
-      if (_event.fromAddress) {
+      if (_event.params.fromAddress) {
         wallet = await wallet.populateByAddress(
-          _event.chain,
+          _event.params.chain,
           ChainType.EVM,
-          _event.fromAddress,
+          _event.params.fromAddress,
           conn,
         );
       }
@@ -87,23 +96,27 @@ export class EvmService {
       // if address is not specified or not found then get the least used wallet
       if (!wallet.exists()) {
         wallet = await wallet.populateByLeastUsed(
-          _event.chain,
+          _event.params.chain,
           ChainType.EVM,
           conn,
         );
       }
 
       // parse and set transaction information
-      const unsignedTx = ethers.utils.parseTransaction(_event.transaction);
+      const unsignedTx = ethers.utils.parseTransaction(
+        _event.params.transaction,
+      );
       // TODO: add transaction checker to detect annomalies.
       // Reject transaction sending value etc.
       unsignedTx.from = wallet.address;
-
       unsignedTx.maxPriorityFeePerGas =
         ethers.BigNumber.from(maxPriorityFeePerGas);
       unsignedTx.maxFeePerGas = ethers.BigNumber.from(maxFeePerGas);
       unsignedTx.gasPrice = gasPrice;
       unsignedTx.type = type;
+      unsignedTx.gasLimit = null;
+      unsignedTx.chainId = wallet.chain;
+      unsignedTx.nonce = wallet.nextNonce;
 
       const gas = await provider.estimateGas(unsignedTx);
       console.log(`Estimated gas=${gas}`);
@@ -112,7 +125,8 @@ export class EvmService {
       unsignedTx.gasLimit = ethers.BigNumber.from(gasLimit);
 
       // sign transaction
-      const signingWallet = new ethers.Wallet(wallet.seed);
+      const seed = await getWalletSeed(wallet.seed);
+      const signingWallet = new ethers.Wallet(seed);
       console.log(unsignedTx);
       const rawTransaction = await signingWallet.signTransaction(unsignedTx);
 
@@ -123,16 +137,17 @@ export class EvmService {
       // save transaction
       const transaction = new Transaction({}, context);
       transaction.populate({
-        chain: _event.chain,
+        chain: _event.params.chain,
         chainType: ChainType.EVM,
         address: wallet.address,
         to: unsignedTx.to,
         nonce: wallet.nextNonce,
-        referenceTable: _event.referenceTable,
-        referenceId: _event.referenceId,
+        referenceTable: _event.params.referenceTable,
+        referenceId: _event.params.referenceId,
         rawTransaction,
         data,
         transactionHash: ethers.utils.keccak256(rawTransaction),
+        transactionStatus: TransactionStatus.PENDING,
       });
       await transaction.insert(SerializeFor.INSERT_DB, conn);
       await wallet.iterateNonce(conn);
@@ -145,7 +160,7 @@ export class EvmService {
           WorkerName.TRANSMIT_EVM_TRANSACTION,
           [
             {
-              chain: _event.chain,
+              chain: _event.params.chain,
             },
           ],
           null,
@@ -154,9 +169,8 @@ export class EvmService {
       } catch (e) {
         await new Lmas().writeLog({
           logType: LogType.ERROR,
-          message:
-            'Error triggering TRANSMIT_SUBSTRATE_TRANSACTIO worker queue',
-          location: 'SubstrateService.createTransaction',
+          message: 'Error triggering TRANSMIT_EVM_TRANSACTION worker queue',
+          location: 'EvmService.createTransaction',
           service: ServiceName.BLOCKCHAIN,
           data: {
             error: e,
@@ -164,7 +178,7 @@ export class EvmService {
         });
       }
 
-      return transaction.serialize();
+      return transaction.serialize(SerializeFor.PROFILE);
     } catch (e) {
       console.log(e);
       //Write log to LMAS
@@ -175,12 +189,12 @@ export class EvmService {
         service: ServiceName.BLOCKCHAIN,
         data: {
           error: e,
-          transaction: _event.transaction,
-          chain: _event.chain,
+          transaction: _event.params.transaction,
+          chain: _event.params.chain,
           chainType: ChainType.EVM,
-          fromAddress: _event.fromAddress,
-          referenceTable: _event.referenceTable,
-          referenceId: _event.referenceId,
+          fromAddress: _event.params.fromAddress,
+          referenceTable: _event.params.referenceTable,
+          referenceId: _event.params.referenceId,
         },
       });
       await conn.rollback();
@@ -223,6 +237,7 @@ export class EvmService {
     },
     context: ServiceContext,
   ) {
+    console.log('transmitTransactions', _event);
     const wallets = await new Wallet({}, context).getList(
       _event.chain,
       ChainType.EVM,

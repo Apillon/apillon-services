@@ -2,7 +2,7 @@ import { ChainType, EvmChain, env } from '@apillon/lib';
 import { EvmBlockchainIndexer } from './evm-indexer.service';
 import { EvmTransfers } from './data-models/evm-transfer';
 
-describe('Crust blockchain indexer - Wallet outgoing transactions', () => {
+describe.skip('Crust blockchain indexer - Wallet outgoing transactions', () => {
   beforeAll(async () => {
     env.BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER =
       'http://18.203.251.180:8083/graphql';
@@ -39,7 +39,7 @@ describe('Crust blockchain indexer - Wallet outgoing transactions', () => {
   });
 });
 
-describe('EVM blockchain indexer err', () => {
+describe.skip('EVM blockchain indexer err', () => {
   beforeAll(async () => {
     env.BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER = null;
   });

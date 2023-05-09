@@ -108,11 +108,9 @@ export class WalletService {
       }
       case EvmChain.MOONBASE: {
         return env.NFTS_MOONBEAM_TESTNET_RPC;
-        break;
       }
       case EvmChain.MOONBEAM: {
         return env.NFTS_MOONBEAM_MAINNET_RPC;
-        break;
       }
       default: {
         throw new Error('Unsupported chain');

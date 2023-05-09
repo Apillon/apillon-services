@@ -718,6 +718,7 @@ export async function getEnvSecrets() {
   if (!isEnvReady) {
     await populateSecrets();
   }
+  // only uncomment for debugging... should not print out in production!!!
   // console.log(JSON.stringify(env, null, 2));
   return env;
 }

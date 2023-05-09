@@ -162,4 +162,16 @@ export class User extends AdvancedSQLModel {
     }
     return this.reset();
   }
+
+  public setUserRolesFromAmsResponse(amsResponse: any) {
+    const data = amsResponse?.data || amsResponse;
+    if (!data || !data?.authUserRoles) {
+      return this;
+    }
+    this.userRoles =
+      data.authUserRoles
+        ?.filter((x) => !x.project_uuid)
+        ?.map((x) => x.role_id) || [];
+    return this;
+  }
 }

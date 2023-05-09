@@ -1,6 +1,7 @@
 import {
   AppEnvironment,
   BlockchainMicroservice,
+  CollectionsQuotaReachedQueryFilter,
   CreateBucketDto,
   CreateCollectionDTO,
   CreateEvmTransactionDto,
@@ -10,11 +11,14 @@ import {
   LogType,
   MintNftDTO,
   NFTCollectionQueryFilter,
+  QuotaCode,
+  Scs,
   SerializeFor,
   ServiceName,
   SetCollectionBaseUriDTO,
   SqlModelStatus,
   StorageMicroservice,
+  TransactionStatus,
   TransferCollectionDTO,
 } from '@apillon/lib';
 import {
@@ -30,7 +34,6 @@ import {
   CollectionStatus,
   DbTables,
   NftsErrorCode,
-  TransactionStatus,
   TransactionType,
 } from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
@@ -61,7 +64,7 @@ export class NftsService {
     params: { body: CreateCollectionDTO },
     context: ServiceContext,
   ) {
-    console.log(`Deploying NFT: ${JSON.stringify(params.body)}`);
+    console.log(`Creating NFT collections: ${JSON.stringify(params.body)}`);
 
     //Create collection object
     const collection: Collection = new Collection(
@@ -76,6 +79,20 @@ export class NftsService {
       collection_uuid: uuidV4(),
       status: SqlModelStatus.INCOMPLETE,
     });
+
+    //check max collections quota
+    const collectionsCount = await collection.getCollectionsCount();
+    const maxCollectionsQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_NFT_COLLECTIONS,
+      project_uuid: collection.project_uuid,
+    });
+
+    if (collectionsCount >= maxCollectionsQuota.value) {
+      throw new NftsCodeException({
+        code: NftsErrorCode.MAX_COLLECTIONS_REACHED,
+        status: 400,
+      });
+    }
 
     //Call storage MS, to create bucket used to upload NFT metadata
     let nftMetadataBucket;
@@ -325,7 +342,7 @@ export class NftsService {
         transactionType: TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
         refTable: DbTables.COLLECTION,
         refId: collection.id,
-        transactionHash: response.transactionHash,
+        transactionHash: response.data.transactionHash,
         transactionStatus: TransactionStatus.PENDING,
       });
       //Insert to DB
@@ -411,7 +428,7 @@ export class NftsService {
         transactionType: TransactionType.SET_COLLECTION_BASE_URI,
         refTable: DbTables.COLLECTION,
         refId: collection.id,
-        transactionHash: response.transactionHash,
+        transactionHash: response.data.transactionHash,
         transactionStatus: TransactionStatus.PENDING,
       });
       //Insert to DB
@@ -491,7 +508,7 @@ export class NftsService {
         transactionType: TransactionType.MINT_NFT,
         refTable: DbTables.COLLECTION,
         refId: collection.id,
-        transactionHash: response.transactionHash,
+        transactionHash: response.data.transactionHash,
         transactionStatus: TransactionStatus.PENDING,
       });
       //Insert to DB
@@ -576,7 +593,7 @@ export class NftsService {
         transactionType: TransactionType.BURN_NFT,
         refTable: DbTables.COLLECTION,
         refId: collection.id,
-        transactionHash: response.transactionHash,
+        transactionHash: response.data.transactionHash,
         transactionStatus: TransactionStatus.PENDING,
       });
       //Insert to DB
@@ -632,19 +649,6 @@ export class NftsService {
       });
     }
     collection.canAccess(context);
-
-    const currentOwner = await walletService.getContractOwner(
-      collection.contractAddress,
-    );
-
-    if (collection.deployerAddress !== currentOwner) {
-      throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
-        context: context,
-        sourceFunction,
-      });
-    }
   }
 
   private static async checkMintConditions(
@@ -653,6 +657,10 @@ export class NftsService {
     collection: Collection,
     walletService: WalletService,
   ) {
+    if (collection.maxSupply == 0) {
+      return true;
+    }
+
     const minted = await walletService.getNumberOfMintedNfts(
       collection.contractAddress,
     );
@@ -677,4 +685,24 @@ export class NftsService {
   }
 
   //#endregion
+
+  static async maxCollectionsQuotaReached(
+    event: { query: CollectionsQuotaReachedQueryFilter },
+    context: ServiceContext,
+  ) {
+    const collection: Collection = new Collection(
+      { project_uuid: event.query.project_uuid },
+      context,
+    );
+
+    const collectionsCount = await collection.getCollectionsCount();
+    const maxCollectionsQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_NFT_COLLECTIONS,
+      project_uuid: collection.project_uuid,
+    });
+
+    return {
+      maxCollectionsQuotaReached: collectionsCount >= maxCollectionsQuota.value,
+    };
+  }
 }
