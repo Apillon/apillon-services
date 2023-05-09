@@ -433,6 +433,10 @@ export class NftsService {
     }
   }
 
+  //#endregion
+
+  //#region NFT functions
+
   static async mintNftTo(
     params: { body: MintNftDTO },
     context: ServiceContext,
@@ -611,10 +615,6 @@ export class NftsService {
 
     return { success: true };
   }
-
-  //#endregion
-
-  //#region NFT functions
 
   private static async checkCollection(
     collection: Collection,

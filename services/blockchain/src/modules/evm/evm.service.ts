@@ -7,6 +7,7 @@ import {
   SerializeFor,
   env,
   TransactionStatus,
+  AppEnvironment,
 } from '@apillon/lib';
 import { Endpoint } from '../../common/models/endpoint';
 import { ethers } from 'ethers';
@@ -15,9 +16,16 @@ import { BlockchainErrorCode } from '../../config/types';
 import { Wallet } from '../../common/models/wallet';
 import { Transaction } from '../../common/models/transaction';
 import { ServiceContext } from '@apillon/service-lib';
-import { sendToWorkerQueue } from '@apillon/workers-lib';
+import {
+  ServiceDefinition,
+  ServiceDefinitionType,
+  WorkerDefinition,
+  sendToWorkerQueue,
+} from '@apillon/workers-lib';
 import { WorkerName } from '../../workers/worker-executor';
 import { getWalletSeed } from '../../lib/seed';
+import { TransmitEvmTransactionWorker } from '../../workers/transmit-evm-transaction-worker';
+import { transmitAndProcessEvmTransaction } from '../../lib/transmit-and-process-evm-transaction';
 
 export class EvmService {
   static async createTransaction(
@@ -154,28 +162,39 @@ export class EvmService {
 
       await conn.commit();
 
-      try {
-        await sendToWorkerQueue(
-          env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
-          WorkerName.TRANSMIT_EVM_TRANSACTION,
-          [
-            {
-              chain: _event.params.chain,
-            },
-          ],
-          null,
-          null,
+      if (
+        env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+        env.APP_ENV == AppEnvironment.TEST
+      ) {
+        await transmitAndProcessEvmTransaction(
+          context,
+          _event.params.chain,
+          transaction,
         );
-      } catch (e) {
-        await new Lmas().writeLog({
-          logType: LogType.ERROR,
-          message: 'Error triggering TRANSMIT_EVM_TRANSACTION worker queue',
-          location: 'EvmService.createTransaction',
-          service: ServiceName.BLOCKCHAIN,
-          data: {
-            error: e,
-          },
-        });
+      } else {
+        try {
+          await sendToWorkerQueue(
+            env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
+            WorkerName.TRANSMIT_EVM_TRANSACTION,
+            [
+              {
+                chain: _event.params.chain,
+              },
+            ],
+            null,
+            null,
+          );
+        } catch (e) {
+          await new Lmas().writeLog({
+            logType: LogType.ERROR,
+            message: 'Error triggering TRANSMIT_EVM_TRANSACTION worker queue',
+            location: 'EvmService.createTransaction',
+            service: ServiceName.BLOCKCHAIN,
+            data: {
+              error: e,
+            },
+          });
+        }
       }
 
       return transaction.serialize(SerializeFor.PROFILE);
