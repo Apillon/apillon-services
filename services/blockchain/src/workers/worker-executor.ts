@@ -141,7 +141,7 @@ export async function handleLambdaEvent(
       await new TransactionWebhookWorker(
         workerDefinition,
         context,
-        QueueWorkerType.EXECUTOR,
+        QueueWorkerType.PLANNER,
       ).run();
       break;
     default:
