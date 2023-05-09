@@ -15,8 +15,14 @@ import { WorkerName } from '../workers/worker-executor';
 import { TransmitEvmTransactionWorker } from '../workers/transmit-evm-transaction-worker';
 import { ServiceContext } from '@apillon/service-lib';
 import { Transaction } from '../common/models/transaction';
+import { EvmTransactionWorker } from '../workers/evm-transaction-worker';
 
-//Function is used to manually execute workers, which are on AWS executed via SQS and jobs
+/**
+ * Function is used to manually execute workers, which are on AWS executed via SQS and jobs
+ * @param context
+ * @param chain
+ * @param transaction
+ */
 export async function transmitAndProcessEvmTransaction(
   context: ServiceContext,
   chain: EvmChain,
@@ -65,13 +71,13 @@ export async function transmitAndProcessEvmTransaction(
 
     const wd = new WorkerDefinition(
       evnTransactionServiceDef,
-      WorkerName.TRANSMIT_EVM_TRANSACTION,
+      WorkerName.EVM_TRANSACTIONS,
       {
         parameters: { chain: chain },
       },
     );
 
-    const worker = new TransmitEvmTransactionWorker(wd, context);
+    const worker = new EvmTransactionWorker(wd, context);
     await worker.runExecutor({
       chain: chain,
     });

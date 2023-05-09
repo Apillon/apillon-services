@@ -105,7 +105,7 @@ export async function setupTestContextAndSql(): Promise<Stage> {
     const referralContext = new TestContext();
     referralContext.mysql = referralSql;
 
-    /********************** REFERRAL MS **************************/
+    /********************** NFTS MS **************************/
     const NftsConfig = {
       host: env.NFTS_MYSQL_HOST_TEST,
       database: env.NFTS_MYSQL_DATABASE_TEST,

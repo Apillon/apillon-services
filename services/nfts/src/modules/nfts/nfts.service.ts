@@ -240,20 +240,21 @@ export class NftsService {
       context,
     ).getList(context, new NFTCollectionQueryFilter(event.query));
 
-    const responseCollections = [];
-
     for (const collection of collections.items) {
-      const walletService: WalletService = new WalletService(collection.chain);
-      const mintedNr = collection.contractAddress
-        ? await walletService.getNumberOfMintedNfts(collection.contractAddress)
-        : 0;
-
-      responseCollections.push({
-        ...collection,
-        minted: mintedNr,
-      });
+      collection.minted = 0;
+      if (
+        collection.collectionStatus == CollectionStatus.DEPLOYED &&
+        collection.contractAddress
+      ) {
+        const walletService: WalletService = new WalletService(
+          collection.chain,
+        );
+        collection.minted = await walletService.getNumberOfMintedNfts(
+          collection.contractAddress,
+        );
+      }
     }
-    return { items: responseCollections, total: collections.total };
+    return collections;
   }
 
   static async getCollection(event: { id: any }, context: ServiceContext) {

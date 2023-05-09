@@ -1,31 +1,25 @@
 import {
-  EvmChain,
+  AppEnvironment,
   ChainType,
+  EvmChain,
   Lmas,
   LogType,
-  ServiceName,
   SerializeFor,
-  env,
+  ServiceName,
   TransactionStatus,
-  AppEnvironment,
+  env,
 } from '@apillon/lib';
-import { Endpoint } from '../../common/models/endpoint';
-import { ethers } from 'ethers';
-import { BlockchainCodeException } from '../../lib/exceptions';
-import { BlockchainErrorCode } from '../../config/types';
-import { Wallet } from '../../common/models/wallet';
-import { Transaction } from '../../common/models/transaction';
 import { ServiceContext } from '@apillon/service-lib';
-import {
-  ServiceDefinition,
-  ServiceDefinitionType,
-  WorkerDefinition,
-  sendToWorkerQueue,
-} from '@apillon/workers-lib';
-import { WorkerName } from '../../workers/worker-executor';
+import { sendToWorkerQueue } from '@apillon/workers-lib';
+import { ethers } from 'ethers';
+import { Endpoint } from '../../common/models/endpoint';
+import { Transaction } from '../../common/models/transaction';
+import { Wallet } from '../../common/models/wallet';
+import { BlockchainErrorCode } from '../../config/types';
+import { BlockchainCodeException } from '../../lib/exceptions';
 import { getWalletSeed } from '../../lib/seed';
-import { TransmitEvmTransactionWorker } from '../../workers/transmit-evm-transaction-worker';
 import { transmitAndProcessEvmTransaction } from '../../lib/transmit-and-process-evm-transaction';
+import { WorkerName } from '../../workers/worker-executor';
 
 export class EvmService {
   static async createTransaction(

@@ -82,6 +82,11 @@ export class TransactionService {
     return await new Transaction({}, context).getList(query);
   }
 
+  /**
+   * Local_dev function to simulate webhook call from BCS
+   * @param event
+   * @param context
+   */
   static async checkTransactionStatusAndRunWorker(
     event: { transactionWebhookData: TransactionWebhookDataDto },
     context: ServiceContext,
