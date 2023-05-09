@@ -554,21 +554,22 @@ export class UserService {
    */
   async getPendingTermsForUser(context: DevConsoleApiContext) {
     const terms = await new Scs(context).getActiveTerms();
-    return terms.filter(
-      (x) =>
-        !context.user?.authUser?.consents?.terms.find((c) => {
-          c.id === x.id;
-        }),
-    );
+    const resp = terms.filter((x) => {
+      return !context.user?.authUser?.consents?.terms.find((c) => c.id == x.id);
+    });
+
+    console.log(resp);
+    return resp;
   }
 
-  async setUserConsents(
-    consents: Array<UserConsentDto>,
-    context: DevConsoleApiContext,
-  ) {
+  async setUserConsents(body: Array<any>, context: DevConsoleApiContext) {
     const activeTerms = await new Scs(context).getActiveTerms();
+    const consents = [];
+    for (const data of body) {
+      const consent = new UserConsentDto(data);
 
-    for (const consent of consents) {
+      consent.dateOfAgreement =
+        consent.status === UserConsentStatus.ACCEPTED ? new Date() : null;
       try {
         await consent.validate();
       } catch (err) {
@@ -577,7 +578,16 @@ export class UserService {
           throw new ValidationException(consent, ValidatorErrorCode);
         }
       }
-      const term = activeTerms.find((x) => (x.id = consent.id));
+      const term = activeTerms.find(
+        (x) => x.id == consent.id && x.type == consent.type,
+      );
+      if (!term) {
+        throw new CodeException({
+          status: HttpStatus.BAD_REQUEST,
+          code: BadRequestErrorCode.RESOURCE_DOES_NOT_EXISTS,
+          errorCodes: BadRequestErrorCode,
+        });
+      }
       if (!!term.isRequired && consent.status !== UserConsentStatus.ACCEPTED) {
         throw new CodeException({
           status: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -585,11 +595,12 @@ export class UserService {
           errorCodes: ValidatorErrorCode,
         });
       }
+      consents.push(consent.serialize());
     }
 
     await new Ams(context).updateAuthUser({
       user_uuid: context.user.user_uuid,
-      consents: consents.map((x) => x.serialize()),
+      consents: { terms: consents },
     });
   }
 }

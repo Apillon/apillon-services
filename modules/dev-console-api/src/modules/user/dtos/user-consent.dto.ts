@@ -46,7 +46,7 @@ export class UserConsentDto extends ModelBase {
   public dateOfAgreement: Date;
 
   @prop({
-    parser: { resolver: dateParser() },
+    parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE],
     validators: [
       {

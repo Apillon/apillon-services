@@ -24,7 +24,6 @@ import { AuthGuard } from '../../guards/auth.guard';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { DiscordCodeDto } from './dtos/discord-code.dto';
-import { UserConsentDto } from './dtos/user-consent.dto';
 
 @Controller('users')
 export class UserController {
@@ -165,11 +164,8 @@ export class UserController {
   }
 
   @Post('consents')
-  @UseGuards(ValidationGuard)
-  async userConsents(
-    @Body() body: Array<UserConsentDto>,
-    @Ctx() context: DevConsoleApiContext,
-  ) {
+  @UseGuards(AuthGuard)
+  async userConsents(@Body() body: any, @Ctx() context: DevConsoleApiContext) {
     return await this.userService.setUserConsents(body, context);
   }
 }

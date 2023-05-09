@@ -167,10 +167,13 @@ export class AuthUser extends AdvancedSQLModel {
     parser: { resolver: JSONParser() },
     populatable: [
       PopulateFrom.SERVICE, //
+      PopulateFrom.DB, //
     ],
     serializable: [
       SerializeFor.ADMIN, //
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB, //
+      SerializeFor.UPDATE_DB,
     ],
   })
   public consents: any;
