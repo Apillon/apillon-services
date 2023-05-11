@@ -51,7 +51,7 @@ functions:
     name: 'apillon-storage-service-${self:provider.stage}'
     description: Apillon storage Service
     memorySize: 512
-    timeout: 30
+    timeout: 90
   storage-service-worker:
     handler: ./src/workers/worker-executor.handler
     name: apillon-storage-service-worker-${self:provider.stage}
