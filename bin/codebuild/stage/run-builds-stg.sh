@@ -9,3 +9,4 @@ aws codebuild start-build --project-name apillon-nfts-staging
 aws codebuild start-build --project-name apillon-api-staging
 aws codebuild start-build --project-name apillon-auth-api-staging
 aws codebuild start-build --project-name apillon-auth-staging
+aws codebuild start-build --project-name apillon-blockchain-staging

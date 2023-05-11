@@ -7,7 +7,7 @@ aws codebuild start-build --project-name apillon-config-production
 aws codebuild start-build --project-name apillon-api-production
 aws codebuild start-build --project-name apillon-referral-production
 aws codebuild start-build --project-name apillon-nfts-production
+aws codebuild start-build --project-name apillon-blockchain-production
 
-# FE
 aws codebuild start-build --project-name apillon-app-production
 
