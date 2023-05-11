@@ -1,4 +1,11 @@
-import { Context, env, Lmas, LogType, ServiceName } from '@apillon/lib';
+import {
+  Context,
+  env,
+  EvmChain,
+  Lmas,
+  LogType,
+  ServiceName,
+} from '@apillon/lib';
 import {
   WorkerDefinition,
   WorkerLogStatus,
@@ -60,7 +67,7 @@ export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
         env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
         WorkerName.EVM_TRANSACTIONS,
         [{ chain: data?.chain }],
-        null,
+        data?.chain == EvmChain.MOONBASE ? 4 : 7,
         null,
       );
     } catch (e) {
