@@ -37,7 +37,7 @@
   "cache": {
     "type": "NO_CACHE"
   },
-  "sourceVersion": "stage",
+  "sourceVersion": "master",
   "source": {
     "insecureSsl": false,
     "gitSubmodulesConfig": {
