@@ -5,6 +5,7 @@ import {
   env,
   Lmas,
   LogType,
+  runWithWorkers,
   ServiceName,
   writeLog,
 } from '@apillon/lib';
@@ -112,41 +113,54 @@ export class IPFSService {
       'uploadFURsToIPFSFromS3 start',
       event.fileUploadRequests.map((x) => x.serialize()),
     );
-    //Get IPFS client
-    const client = await IPFSService.createIPFSClient();
 
     //S3 client
     const s3Client: AWS_S3 = new AWS_S3();
 
     const filesForIPFS = [];
 
-    for (const fileUploadReq of event.fileUploadRequests) {
-      if (
-        !(await s3Client.exists(
-          env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-          fileUploadReq.s3FileKey,
-        ))
-      ) {
-        fileUploadReq.fileStatus =
-          FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3;
-        continue;
-      }
+    await runWithWorkers(
+      event.fileUploadRequests,
+      50,
+      undefined,
+      async (fileUploadReq) => {
+        if (
+          !(await s3Client.exists(
+            env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+            fileUploadReq.s3FileKey,
+          ))
+        ) {
+          fileUploadReq.fileStatus =
+            FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3;
+        } else {
+          const file = await s3Client.get(
+            env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+            fileUploadReq.s3FileKey,
+          );
 
-      const file = await s3Client.get(
-        env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-        fileUploadReq.s3FileKey,
-      );
-
-      filesForIPFS.push({
-        path: (fileUploadReq.path || '') + fileUploadReq.fileName,
-        content: file.Body as any,
-      });
-    }
+          filesForIPFS.push({
+            path: (fileUploadReq.path || '') + fileUploadReq.fileName,
+            content: file.Body as any,
+          });
+          console.info(
+            'File successfully acquired from s3',
+            (fileUploadReq.path || '') + fileUploadReq.fileName,
+          );
+        }
+      },
+    );
+    console.info(
+      'runWithWorkers to get files from s3 SUCCESS. Num of files: ' +
+        filesForIPFS.length,
+    );
 
     /**Wrapping directory CID*/
     let baseDirectoryOnIPFS = undefined;
     /**Directories on IPFS - each dir on IPFS gets CID */
     const ipfsDirectories = [];
+
+    //Get IPFS client
+    const client = await IPFSService.createIPFSClient();
 
     console.info(
       'Adding files to IPFS',
