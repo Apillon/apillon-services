@@ -30,7 +30,7 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
     return [];
   }
   public async runExecutor(data: any): Promise<any> {
-    console.info('RUN EXECUTOR (TransactionWebhookWorker). data: ', data);
+    // console.info('RUN EXECUTOR (TransactionWebhookWorker). data: ', data);
     const conn = await this.context.mysql.start();
 
     try {
@@ -119,14 +119,14 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
         );
       }
       await conn.commit();
-      await new Lmas().writeLog({
-        context: this.context,
-        logType: LogType.INFO,
-        message: 'TransactionWebhookWorker finished',
-        location: `${this.constructor.name}/runExecutor`,
-        service: ServiceName.BLOCKCHAIN,
-        data: data,
-      });
+      // await new Lmas().writeLog({
+      //   context: this.context,
+      //   logType: LogType.INFO,
+      //   message: 'TransactionWebhookWorker finished',
+      //   location: `${this.constructor.name}/runExecutor`,
+      //   service: ServiceName.BLOCKCHAIN,
+      //   data: data,
+      // });
     } catch (err) {
       console.log(err);
       await conn.rollback();
