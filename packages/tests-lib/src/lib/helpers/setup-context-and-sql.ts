@@ -120,6 +120,21 @@ export async function setupTestContextAndSql(): Promise<Stage> {
     const nftsContext = new TestContext();
     nftsContext.mysql = nftsSql;
 
+    /********************** BCS MS **************************/
+    const blockchainConfig = {
+      host: env.BLOCKCHAIN_MYSQL_HOST_TEST,
+      database: env.BLOCKCHAIN_MYSQL_DATABASE_TEST,
+      password: env.BLOCKCHAIN_MYSQL_PASSWORD_TEST,
+      port: env.BLOCKCHAIN_MYSQL_PORT_TEST,
+      user: env.BLOCKCHAIN_MYSQL_USER_TEST,
+    };
+
+    const blockchainSql = new MySql(blockchainConfig);
+    await blockchainSql.connect();
+
+    const blockchainContext = new TestContext();
+    blockchainContext.mysql = blockchainSql;
+
     return {
       http: undefined,
       app: undefined,
@@ -139,6 +154,8 @@ export async function setupTestContextAndSql(): Promise<Stage> {
       referralSql,
       nftsContext: nftsContext,
       nftsSql: nftsSql,
+      blockchainContext,
+      blockchainSql,
     };
   } catch (e) {
     console.error(e);
@@ -231,6 +248,14 @@ export const releaseStage = async (stage: Stage): Promise<void> => {
       await stage.nftsSql.close();
     } catch (error) {
       throw new Error('Error when releasing NFTs stage: ' + error);
+    }
+  }
+
+  if (stage.blockchainSql) {
+    try {
+      await stage.blockchainSql.close();
+    } catch (error) {
+      throw new Error('Error when releasing Blockchain stage: ' + error);
     }
   }
 };

@@ -7,6 +7,7 @@ import {
   createTestProject,
   createTestUser,
   releaseStage,
+  startGanacheRPCServer,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
@@ -26,6 +27,7 @@ describe('Storage bucket tests', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
+    await startGanacheRPCServer(stage);
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
 
@@ -69,6 +71,31 @@ describe('Storage bucket tests', () => {
       expect(response.body.data.items[0]?.collectionStatus).toBe(0);
       expect(response.body.data.items[0]?.contractAddress).toBeTruthy();
       expect(response.body.data.items[0]?.chain).toBeTruthy();
+    });
+
+    test('User should be able to create new collection with existing baseURI', async () => {
+      const response = await request(stage.http)
+        .post(`/nfts/collections?project_uuid=${testProject.project_uuid}`)
+        .send({
+          symbol: 'TNFT',
+          name: 'Test NFT Collection',
+          maxSupply: 50,
+          mintPrice: 0,
+          project_uuid: testProject.project_uuid,
+          baseUri:
+            'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/',
+          baseExtension: 'json',
+          isDrop: false,
+          dropStart: 0,
+          reserve: 5,
+          chain: 1287,
+          isRevokable: true,
+          isSoulbound: false,
+          royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
+          royaltiesFees: 0,
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
     });
   });
 });

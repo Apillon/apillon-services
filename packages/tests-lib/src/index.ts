@@ -10,3 +10,4 @@ export * from './lib/helpers/api-key';
 export * from './lib/interfaces/database-state.interface';
 export * from './lib/interfaces/stage.interface';
 export * from './lib/helpers/collection';
+export * from './lib/helpers/blockchain';
