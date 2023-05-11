@@ -106,13 +106,6 @@ export async function handleLambdaEvent(
       const scheduler = new Scheduler(serviceDef, context);
       await scheduler.run();
       break;
-    case WorkerName.TRANSACTION_STATUS:
-      const txStatusWorker = new TransactionStatusWorker(
-        workerDefinition,
-        context,
-      );
-      await txStatusWorker.run();
-      break;
     default:
       console.log(
         `ERROR - INVALID WORKER NAME: ${workerDefinition.workerName}`,
@@ -168,6 +161,16 @@ export async function handleSqsMessages(
     switch (workerName) {
       case WorkerName.DEPLOY_COLLECTION: {
         await new DeployCollectionWorker(
+          workerDefinition,
+          context,
+          QueueWorkerType.EXECUTOR,
+        ).run({
+          executeArg: message?.body,
+        });
+        break;
+      }
+      case WorkerName.TRANSACTION_STATUS: {
+        await new TransactionStatusWorker(
           workerDefinition,
           context,
           QueueWorkerType.EXECUTOR,

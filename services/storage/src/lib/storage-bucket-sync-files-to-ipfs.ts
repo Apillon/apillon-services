@@ -25,6 +25,7 @@ import {
 } from '../lib/generate-directories-from-path';
 import { pinFileToCRUST } from './pin-file-to-crust';
 import { getSessionFilesOnS3 } from './file-upload-session-s3-files';
+import { CID } from 'ipfs-http-client';
 
 /**
  * Transfers file from s3 to IPFS & CRUST
@@ -387,23 +388,13 @@ export async function storageBucketSyncFilesToIPFS(
       'storage-bucket-sync-files-to-ipfsRes.ts',
       'storageBucketSyncFilesToIPFS',
     );
-    try {
-      for (const transferedFile of transferedFiles) {
-        await pinFileToCRUST(
-          context,
-          bucket.bucket_uuid,
-          transferedFile.CID,
-          transferedFile.size,
-          false,
-        );
-      }
-    } catch (err) {
-      writeLog(
-        LogType.ERROR,
-        `Error sending files to PinToCRUST worker. `,
-        'storage-bucket-sync-files-to-ipfsRes.ts',
-        'storageBucketSyncFilesToIPFS',
-        err,
+    for (const transferedFile of transferedFiles) {
+      await pinFileToCRUST(
+        context,
+        bucket.bucket_uuid,
+        CID.parse(transferedFile.CID),
+        transferedFile.size,
+        false,
       );
     }
   }

@@ -12,7 +12,7 @@ import {
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { AmsErrorCode, DbTables } from '../../../config/types';
-import { ServiceContext } from '../../../context';
+import { ServiceContext } from '@apillon/service-lib';
 
 export class ApiKeyRole extends AdvancedSQLModel {
   public readonly tableName = DbTables.API_KEY_ROLE;

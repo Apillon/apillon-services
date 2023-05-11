@@ -1,70 +1,88 @@
-import { AppEnvironment, env } from '@apillon/lib';
-import {
-  QueueWorkerType,
-  sendToWorkerQueue,
-  ServiceDefinition,
-  ServiceDefinitionType,
-  WorkerDefinition,
-} from '@apillon/workers-lib';
-import { PinToCRUSTWorker } from '../workers/pin-to-crust-worker';
-import { WorkerName } from '../workers/worker-executor';
+import { Lmas, LogType, ServiceName, writeLog } from '@apillon/lib';
+import { DbTables, FileStatus } from '../config/types';
+import { Bucket } from '../modules/bucket/models/bucket.model';
+import { CrustService } from '../modules/crust/crust.service';
+import { File } from '../modules/storage/models/file.model';
+import { Directory } from '../modules/directory/models/directory.model';
+import { CID } from 'ipfs-http-client';
 
 /**
- * Function to execute PinToCRUST worker directly (if local_dev or test), othervise sends message to queue
+ * Function to execute PinToCRUST
  * @param context
  * @param CID
  */
 export async function pinFileToCRUST(
   context,
   bucket_uuid,
-  CID,
-  size,
-  isDirectory,
+  CID: CID,
+  size: number,
+  isDirectory: boolean,
 ) {
-  if (
-    env.APP_ENV == AppEnvironment.LOCAL_DEV ||
-    env.APP_ENV == AppEnvironment.TEST
-  ) {
-    //Execute PIN to CRUST
-    const serviceDef: ServiceDefinition = {
-      type: ServiceDefinitionType.SQS,
-      config: { region: 'test' },
-      params: { FunctionName: 'test' },
-    };
-    const parameters = {
-      bucket_uuid: bucket_uuid,
-      CID: CID,
-      size: size,
-      isDirectory: isDirectory,
-    };
+  console.info('pinFileToCRUST', {
+    params: {
+      bucket_uuid,
+      CID,
+      size,
+      isDirectory,
+      cidV0: CID.toV0().toString(),
+    },
+  });
 
-    const wd = new WorkerDefinition(
-      serviceDef,
-      WorkerName.PIN_TO_CRUST_WORKER,
-      { parameters },
+  const bucket: Bucket = await new Bucket({}, context).populateByUUID(
+    bucket_uuid,
+  );
+
+  try {
+    let refId = undefined;
+    if (isDirectory) {
+      const dir: Directory = await new Directory({}, context).populateByCid(
+        CID.toV0().toString(),
+      );
+      if (dir.exists()) {
+        refId = dir.CID;
+      }
+    } else {
+      const file: File = await new File({}, context).populateById(
+        CID.toV0().toString(),
+      );
+      //if file, then update file status
+      if (file.exists()) {
+        file.fileStatus = FileStatus.PINNING_TO_CRUST;
+        await file.update();
+        refId = file.file_uuid;
+      }
+    }
+
+    await CrustService.placeStorageOrderToCRUST(
+      {
+        cid: CID,
+        size: size,
+        isDirectory: isDirectory,
+        refTable: isDirectory ? DbTables.DIRECTORY : DbTables.FILE,
+        refId: refId,
+      },
+      context,
     );
-
-    const worker = new PinToCRUSTWorker(wd, context, QueueWorkerType.EXECUTOR);
-    await worker.runExecutor({
-      bucket_uuid: bucket_uuid,
-      CID: CID,
-      size: size,
-      isDirectory: isDirectory,
+    await new Lmas().writeLog({
+      context: context,
+      project_uuid: bucket.project_uuid,
+      logType: LogType.COST,
+      message: 'Success placing storage order to CRUST',
+      location: `pinFileToCRUST`,
+      service: ServiceName.STORAGE,
     });
-  } else {
-    //send message to SQS - worker will PIN files to CRUST
-    await sendToWorkerQueue(
-      env.STORAGE_AWS_WORKER_SQS_URL,
-      WorkerName.PIN_TO_CRUST_WORKER,
-      [
-        {
-          bucket_uuid: bucket_uuid,
-          CID: CID,
-          size: size,
-        },
-      ],
-      null,
-      null,
-    );
+  } catch (err) {
+    await new Lmas().writeLog({
+      context: context,
+      project_uuid: bucket.project_uuid,
+      logType: LogType.ERROR,
+      message: 'Error at placing storage order to CRUST',
+      location: `pinFileToCRUST`,
+      service: ServiceName.STORAGE,
+      data: {
+        err,
+      },
+    });
+    throw err;
   }
 }

@@ -15,7 +15,7 @@ import {
   ReferralErrorCode,
   TransactionDirection,
 } from '../../../config/types';
-import { ServiceContext } from '../../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { Order, OrderStatus } from './order.model';
 import {
   ReferralCodeException,

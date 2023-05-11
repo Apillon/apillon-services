@@ -1,6 +1,6 @@
 {
   "name": "@apillon/access",
-  "version": "0.5.1",
+  "version": "0.7.0",
   "author": "Kalmia d.o.o.",
   "license": "UNLICENSED",
   "description": "Access management service",
@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@apillon/lib": "*",
+    "@apillon/service-lib": "*",
     "@middy/core": "^3.3.1",
     "@rawmodel/core": "^3.3.4",
     "@rawmodel/parsers": "^3.3.4",

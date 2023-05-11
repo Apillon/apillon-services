@@ -7,6 +7,12 @@ import { IpnsService } from './modules/ipns/ipns.service';
 import { NftStorageService } from './modules/nfts/nft-storage.service';
 import { StorageService } from './modules/storage/storage.service';
 
+/**
+ * Processing lambda event with appropriate service function based on event name
+ * @param event lambda event
+ * @param context lambda context
+ * @returns service response
+ */
 export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
     [StorageEventType.REQUEST_S3_SIGNED_URLS_FOR_UPLOAD]:

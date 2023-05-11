@@ -1,8 +1,8 @@
 # DB migrations & seeds
 
-Migration functions (upgradeDatabase, downgrade...) are located in at-lib and are common for all services in this repository.
-However scripts, that calls migration functions and actual migration scripts are specific for each service and must be implemented directly in service.
-For example, look at dev-consol-api.
+Migration functions (upgradeDatabase, downgrade...) and Seed funcions (seed, unseed) and `Migrator` class are located in `@apillon/lib`. They and are common for all services and APIs in this repository.
+However scripts, that calls Migrator's functions and actual migration scripts are slightly specific for each service and must be implemented directly in service.
+For example, look at `dev-console-api`.
 
 ## Add migrations to service
 
@@ -13,11 +13,14 @@ Add commands to package.json
 
 ```JSON
 {
-    ...
-    "db-upgrade": "node -r ts-node/register ./src/scripts/db/upgrade-db",
-    "db-downgrade": "node -r ts-node/register ./src/scripts/db/downgrade-db",
-    "db-seed": "node -r ts-node/register ./src/scripts/db/seed-db",
-    "db-unseed": "node -r ts-node/register ./src/scripts/db/unseed-db"
+    "scripts": {
+        ...
+        "db-upgrade": "node -r ts-node/register ./src/scripts/db/upgrade-db",
+        "db-downgrade": "node -r ts-node/register ./src/scripts/db/downgrade-db",
+        "db-seed": "node -r ts-node/register ./src/scripts/db/seed-db",
+        "db-unseed": "node -r ts-node/register ./src/scripts/db/unseed-db"
+        ...
+    }
     ...
 }
 ```
@@ -30,6 +33,21 @@ Migrations are execute inside service directory, so .env with DB variables must 
 
 Then run:
 
-```
+```sh
 npm run db-upgrade
+```
+
+## Automatic migration and seed before build
+
+Migrations and seeds can be executed automatically before building for specific environment on AWS Codebuild. To achieve that there must be following script added to the `package.json`
+
+```JSON
+{
+    "scripts" : {
+        ...
+        "db-upgrade:ci": "node -r ts-node/register ./src/scripts/db/upgrade-db --F && node -r ts-node/register ./src/scripts/db/seed-db --F "
+        ...
+    }
+    ...
+}
 ```

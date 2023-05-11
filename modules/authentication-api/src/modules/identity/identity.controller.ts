@@ -61,7 +61,6 @@ export class IdentityController {
 
   @Post('verification/email')
   @Validation({ dto: VerificationEmailDto })
-  // TODO: Temp disable for TESTING - CaptchaGuard. 9.3.2023
   @UseGuards(ValidationGuard, CaptchaGuard)
   async identityVerification(
     @Ctx() context: AuthenticationApiContext,

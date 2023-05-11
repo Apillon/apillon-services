@@ -30,6 +30,7 @@ import { Website } from '../modules/hosting/models/website.model';
 import { uploadFilesToIPFSRes } from '../modules/ipfs/interfaces/upload-files-to-ipfs-res.interface';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { File } from '../modules/storage/models/file.model';
+import { CID } from 'ipfs-http-client';
 
 export class DeployWebsiteWorker extends BaseQueueWorker {
   public constructor(
@@ -209,7 +210,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
           await pinFileToCRUST(
             this.context,
             targetBucket.bucket_uuid,
-            targetBucket.CID,
+            CID.parse(targetBucket.CID),
             cidSize,
             true,
           );

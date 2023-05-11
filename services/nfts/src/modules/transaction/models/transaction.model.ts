@@ -9,13 +9,10 @@ import {
   SerializeFor,
   SqlModelStatus,
   TransactionQueryFilter,
+  TransactionStatus,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import {
-  DbTables,
-  NftsErrorCode,
-  TransactionStatus,
-} from '../../../config/types';
+import { DbTables, NftsErrorCode } from '../../../config/types';
 
 export class Transaction extends AdvancedSQLModel {
   public readonly tableName = DbTables.TRANSACTION;
@@ -86,52 +83,6 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
     ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: NftsErrorCode.TRANSACTION_RAW_TRANSACTION_NOT_PRESENT,
-      },
-    ],
-  })
-  public rawTransaction: string;
-
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: NftsErrorCode.TRANSACTION_NONCE_NOT_PRESENT,
-      },
-    ],
-  })
-  public nonce: number;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
     validators: [],
   })
   public refTable: string;
@@ -169,7 +120,7 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    defaultValue: TransactionStatus.REQUESTED,
+    defaultValue: TransactionStatus.PENDING,
   })
   public transactionStatus: number;
 
@@ -193,22 +144,25 @@ export class Transaction extends AdvancedSQLModel {
   })
   public transactionHash: string;
 
-  public async populateNonce(conn) {
-    //Get current max nonce
-    // TODO: filter by wallet and chainId
+  public async populateByTransactionHash(
+    transactionHash: string,
+  ): Promise<Transaction> {
+    if (!transactionHash) {
+      throw new Error('transactionHash should not be null!');
+    }
     const data = await this.getContext().mysql.paramExecute(
       `
-        SELECT nonce
+        SELECT *
         FROM \`${this.tableName}\`
-        ORDER BY nonce DESC
-        LIMIT 1
-        FOR UPDATE;
-      `,
-      {},
-      conn,
+        WHERE transactionHash = @transactionHash;
+        `,
+      { transactionHash },
     );
+
     if (data && data.length) {
-      this.nonce = data[0].nonce ? data[0].nonce + 1 : undefined;
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
     }
   }
 
@@ -223,6 +177,26 @@ export class Transaction extends AdvancedSQLModel {
       AND transactionStatus = @transactionStatus;
       `,
       { transactionStatus },
+    );
+
+    const res: Transaction[] = [];
+    if (data && data.length) {
+      for (const t of data) {
+        res.push(new Transaction({}, this.getContext()).populate(t));
+      }
+    }
+
+    return res;
+  }
+
+  public async getTransactionsByHashes(
+    hashes: string[],
+  ): Promise<Transaction[]> {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT *
+      FROM \`${this.tableName}\`
+      WHERE transactionHash in ('${hashes.join("','")}')`,
     );
 
     const res: Transaction[] = [];

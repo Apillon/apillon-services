@@ -30,7 +30,7 @@ export interface IEnv {
   AWS_SECRET: string;
 
   /*************************************************************
-   * AMS -Apillon Access Management Service
+   * AMS - Apillon Access Management Service
    *************************************************************/
   /**
    *  function name
@@ -90,7 +90,7 @@ export interface IEnv {
   SLACK_CHANNEL: string;
 
   /************************************************************
-   * MAIL - mailing service
+   * MAIL - Apillon Mailing Service
    ************************************************************/
 
   /**
@@ -117,7 +117,7 @@ export interface IEnv {
   ADMIN_EMAILS: string;
 
   /************************************************************
-   * dev-console-api Database config
+   * DEV-CONSOLE-API -Apillon Developer Console API
    ************************************************************/
   DEV_CONSOLE_API_MYSQL_HOST: string;
   DEV_CONSOLE_API_MYSQL_PORT: number;
@@ -145,7 +145,7 @@ export interface IEnv {
   DEFAULT_PAGE_SIZE: number;
 
   /************************************************************
-   * AT-STORAGE config
+   * IPFS - Apillon Storage Service
    ************************************************************/
   STORAGE_FUNCTION_NAME: string;
   STORAGE_FUNCTION_NAME_TEST: string;
@@ -173,7 +173,48 @@ export interface IEnv {
   STORAGE_MYSQL_DATABASE_TEST: string;
 
   /************************************************************
-   * Apillon API config
+   * Serverless workers config - STORAGE MS
+   ************************************************************/
+  STORAGE_AWS_WORKER_SQS_URL: string;
+  STORAGE_AWS_WORKER_SQS_ARN: string;
+  STORAGE_AWS_WORKER_LAMBDA_NAME: string;
+
+  /************************************************************
+   * BIS - Apillon Blockchain Integration Service
+   ************************************************************/
+  BLOCKCHAIN_FUNCTION_NAME: string;
+  BLOCKCHAIN_FUNCTION_NAME_TEST: string;
+  BLOCKCHAIN_SOCKET_PORT: number;
+  BLOCKCHAIN_MYSQL_HOST: string;
+  BLOCKCHAIN_MYSQL_PORT: number;
+  BLOCKCHAIN_MYSQL_DATABASE: string;
+  BLOCKCHAIN_MYSQL_USER: string;
+  BLOCKCHAIN_MYSQL_PASSWORD: string;
+
+  BLOCKCHAIN_MYSQL_DEPLOY_USER: string;
+  BLOCKCHAIN_MYSQL_DEPLOY_PASSWORD: string;
+
+  BLOCKCHAIN_SOCKET_PORT_TEST: number;
+  BLOCKCHAIN_MYSQL_HOST_TEST: string;
+  BLOCKCHAIN_MYSQL_PORT_TEST: number;
+  BLOCKCHAIN_MYSQL_DATABASE_TEST: string;
+  BLOCKCHAIN_MYSQL_USER_TEST: string;
+  BLOCKCHAIN_MYSQL_PASSWORD_TEST: string;
+
+  BLOCKCHAIN_AWS_WORKER_SQS_URL: string;
+  BLOCKCHAIN_AWS_WORKER_SQS_ARN: string;
+  BLOCKCHAIN_AWS_WORKER_LAMBDA_NAME: string;
+
+  BLOCKCHAIN_CRUST_GRAPHQL_SERVER: string;
+  BLOCKCHAIN_SECRETS: string;
+
+  /**
+   * EVM blockchain indexers
+   */
+  BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER: string;
+
+  /************************************************************
+   * API - Apillon API config
    ************************************************************/
   APILLON_API_HOST: string;
   APILLON_API_PORT: number;
@@ -182,7 +223,7 @@ export interface IEnv {
   APILLON_API_PORT_TEST: number;
 
   /************************************************************
-   * Apillon Authentication API config
+   * AUTH - Apillon Authentication Service
    ************************************************************/
   // MAIN
   AUTH_API_HOST: string;
@@ -228,13 +269,6 @@ export interface IEnv {
   AUTH_AWS_WORKER_SQS_URL: string;
   AUTH_AWS_WORKER_LAMBDA_NAME: string;
 
-  /************************************************************
-   * Apillon Serverless workers config - STORAGE MS
-   ************************************************************/
-  STORAGE_AWS_WORKER_SQS_URL: string;
-  STORAGE_AWS_WORKER_SQS_ARN: string;
-  STORAGE_AWS_WORKER_LAMBDA_NAME;
-
   /*************************************************************
    * SCS - Apillon System Configuration Service
    *************************************************************/
@@ -269,7 +303,7 @@ export interface IEnv {
   CONFIG_MYSQL_PASSWORD_TEST: string;
 
   /************************************************************
-   * REFERRAL config
+   * REF - Apillon Referral Service
    ************************************************************/
   REFERRAL_FUNCTION_NAME: string;
   REFERRAL_FUNCTION_NAME_TEST: string;
@@ -309,7 +343,7 @@ export interface IEnv {
   DISCORD_REDIRECT_URI: string;
 
   /************************************************************
-   * Apillon Nfts API config
+   * NFTS - Apillon NFTs Service
    ************************************************************/
   /**
    *  function name
@@ -347,8 +381,8 @@ export interface IEnv {
    */
   NFTS_MOONBEAM_TESTNET_RPC: string;
   NFTS_MOONBEAM_MAINNET_RPC: string;
-  NFTS_MOONBEAM_TESTNET_PRIVATEKEY: string;
-  NFTS_MOONBEAM_MAINNET_PRIVATEKEY: string;
+  NFTS_ASTAR_TESTNET_RPC: string;
+  NFTS_ASTAR_MAINNET_RPC: string;
 
   /**
    * NFT workers config
@@ -474,6 +508,45 @@ export let env: IEnv = {
   STORAGE_MYSQL_USER_TEST: process.env['STORAGE_MYSQL_USER_TEST'],
   STORAGE_MYSQL_PASSWORD_TEST: process.env['STORAGE_MYSQL_PASSWORD_TEST'],
   STORAGE_MYSQL_DATABASE_TEST: process.env['STORAGE_MYSQL_DATABASE_TEST'],
+
+  /** Blockchain service **/
+  BLOCKCHAIN_FUNCTION_NAME: process.env['BLOCKCHAIN_FUNCTION_NAME'],
+  BLOCKCHAIN_FUNCTION_NAME_TEST: process.env['BLOCKCHAIN_FUNCTION_NAME_TEST'],
+  BLOCKCHAIN_SOCKET_PORT:
+    parseInt(process.env['BLOCKCHAIN_SOCKET_PORT']) || 6901,
+  BLOCKCHAIN_MYSQL_HOST: process.env['BLOCKCHAIN_MYSQL_HOST'],
+  BLOCKCHAIN_MYSQL_PORT: parseInt(process.env['BLOCKCHAIN_MYSQL_PORT']) || 3306,
+  BLOCKCHAIN_MYSQL_DATABASE: process.env['BLOCKCHAIN_MYSQL_DATABASE'],
+  BLOCKCHAIN_MYSQL_USER: process.env['BLOCKCHAIN_MYSQL_USER'],
+  BLOCKCHAIN_MYSQL_PASSWORD: process.env['BLOCKCHAIN_MYSQL_PASSWORD'],
+
+  BLOCKCHAIN_MYSQL_DEPLOY_USER: process.env['BLOCKCHAIN_MYSQL_DEPLOY_USER'],
+  BLOCKCHAIN_MYSQL_DEPLOY_PASSWORD:
+    process.env['BLOCKCHAIN_MYSQL_DEPLOY_PASSWORD'],
+
+  BLOCKCHAIN_SOCKET_PORT_TEST:
+    parseInt(process.env['BLOCKCHAIN_SOCKET_PORT_TEST']) || 7901,
+  BLOCKCHAIN_MYSQL_HOST_TEST: process.env['BLOCKCHAIN_MYSQL_HOST_TEST'],
+  BLOCKCHAIN_MYSQL_PORT_TEST:
+    parseInt(process.env['BLOCKCHAIN_MYSQL_PORT_TEST']) || 3306,
+  BLOCKCHAIN_MYSQL_DATABASE_TEST: process.env['BLOCKCHAIN_MYSQL_DATABASE_TEST'],
+  BLOCKCHAIN_MYSQL_USER_TEST: process.env['BLOCKCHAIN_MYSQL_USER_TEST'],
+  BLOCKCHAIN_MYSQL_PASSWORD_TEST: process.env['BLOCKCHAIN_MYSQL_PASSWORD_TEST'],
+
+  BLOCKCHAIN_CRUST_GRAPHQL_SERVER:
+    process.env['BLOCKCHAIN_CRUST_GRAPHQL_SERVER'],
+  BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER:
+    process.env['BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER'],
+
+  BLOCKCHAIN_SECRETS: process.env['BLOCKCHAIN_SECRETS'],
+
+  /**
+   * AWS SQS url for worker communications
+   */
+  BLOCKCHAIN_AWS_WORKER_SQS_URL: process.env['BLOCKCHAIN_AWS_WORKER_SQS_URL'],
+  BLOCKCHAIN_AWS_WORKER_SQS_ARN: process.env['BLOCKCHAIN_AWS_WORKER_SQS_ARN'],
+  BLOCKCHAIN_AWS_WORKER_LAMBDA_NAME:
+    process.env['BLOCKCHAIN_AWS_WORKER_LAMBDA_NAME'],
 
   /** MAILING */
   MAIL_FUNCTION_NAME: process.env['MAIL_FUNCTION_NAME'],
@@ -625,10 +698,8 @@ export let env: IEnv = {
 
   NFTS_MOONBEAM_TESTNET_RPC: process.env['NFTS_MOONBEAM_TESTNET_RPC'],
   NFTS_MOONBEAM_MAINNET_RPC: process.env['NFTS_MOONBEAM_MAINNET_RPC'],
-  NFTS_MOONBEAM_TESTNET_PRIVATEKEY:
-    process.env['NFTS_MOONBEAM_TESTNET_PRIVATEKEY'],
-  NFTS_MOONBEAM_MAINNET_PRIVATEKEY:
-    process.env['NFTS_MOONBEAM_MAINNET_PRIVATEKEY'],
+  NFTS_ASTAR_TESTNET_RPC: process.env['NFTS_ASTAR_TESTNET_RPC'],
+  NFTS_ASTAR_MAINNET_RPC: process.env['NFTS_ASTAR_MAINNET_RPC'],
   NFTS_AWS_WORKER_SQS_URL: process.env['NFTS_AWS_WORKER_SQS_URL'],
   NFTS_AWS_WORKER_LAMBDA_NAME: process.env['NFTS_AWS_WORKER_LAMBDA_NAME'],
   /** DISCORD */
@@ -662,7 +733,7 @@ async function populateSecrets() {
     return;
   }
   try {
-    const secrets = await getSecrets();
+    const secrets = await getSecrets(env.AWS_SECRETS_ID);
     env = { ...env, ...secrets };
   } catch (err) {
     console.error('ERROR populating env secretes!');

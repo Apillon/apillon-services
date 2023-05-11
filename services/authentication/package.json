@@ -1,6 +1,6 @@
 {
   "name": "@apillon/authentication",
-  "version": "0.5.1",
+  "version": "0.7.0",
   "author": "Kalmia d.o.o.",
   "license": "UNLICENSED",
   "description": "",
@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@apillon/lib": "*",
+    "@apillon/service-lib": "*",
     "@apillon/workers-lib": "*",
     "@kiltprotocol/sdk-js": "^0.31.1",
     "@kiltprotocol/vc-export": "^0.31.0",
@@ -35,13 +36,12 @@
     "@polkadot/util": "^10.1.10",
     "@types/uuid": "^8.3.4",
     "axios": "^1.2.0",
-    "electron": "^21.3.0",
-    "rimraf": "^4.1.2",
     "valid-url": "^1.0.9"
   },
   "devDependencies": {
     "eslint-config-common": "*",
-    "tsconfig": "*"
+    "tsconfig": "*",
+    "rimraf": "^4.1.2"
   },
   "overrides": {
     "ipfs-utils": "9.0.6"

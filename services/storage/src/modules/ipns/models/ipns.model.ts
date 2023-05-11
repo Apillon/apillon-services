@@ -16,7 +16,7 @@ import {
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { DbTables, StorageErrorCode } from '../../../config/types';
-import { ServiceContext } from '../../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { StorageCodeException } from '../../../lib/exceptions';
 import { Bucket } from '../../bucket/models/bucket.model';
 

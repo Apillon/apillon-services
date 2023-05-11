@@ -19,6 +19,13 @@ import { Project } from '../project/models/project.model';
 
 @Injectable()
 export class ServicesService {
+  /**
+   * Retrieves a service by its ID.
+   *
+   * @param {DevConsoleApiContext} context - Dev Console API context object.
+   * @param {number} id - The ID of the service to retrieve.
+   * @returns {Promise<Service>} - The retrieved service.
+   */
   async getService(context: DevConsoleApiContext, id: number) {
     const service: Service = await new Service({}, context).populateById(id);
     if (!service.exists()) {
@@ -33,6 +40,13 @@ export class ServicesService {
     return service;
   }
 
+  /**
+   * Retrieves a list of services based on a query filter.
+   *
+   * @param {DevConsoleApiContext} context - Dev Console API context object.
+   * @param {ServiceQueryFilter} query - Service query filter.
+   * @returns {Promise<Service[]>} - List of services.
+   */
   async getServiceList(
     context: DevConsoleApiContext,
     query: ServiceQueryFilter,
@@ -40,6 +54,13 @@ export class ServicesService {
     return await new Service({}).getServices(context, query);
   }
 
+  /**
+   * Creates a new service.
+   *
+   * @param {DevConsoleApiContext} context - Dev Console API context object.
+   * @param {Service} body - The service object to create.
+   * @returns {Promise<Service>} - The created service object.
+   */
   async createService(
     context: DevConsoleApiContext,
     body: Service,
@@ -71,6 +92,14 @@ export class ServicesService {
     return service;
   }
 
+  /**
+   * Updates a service with new data.
+   *
+   * @param {DevConsoleApiContext} context - Dev Console API context object.
+   * @param {number} id - The ID of the service to update.
+   * @param {any} data - The data to update the service with.
+   * @returns {Promise<Service>} - The updated service object.
+   */
   async updateService(
     context: DevConsoleApiContext,
     id: number,
@@ -101,6 +130,13 @@ export class ServicesService {
     return service;
   }
 
+  /**
+   * Deletes a service. (soft delete)
+   *
+   * @param {DevConsoleApiContext} context - Dev Console API context object.
+   * @param {number} id - The ID of the service to delete.
+   * @returns {Promise<Service>} - The deleted service object.
+   */
   async deleteService(
     context: DevConsoleApiContext,
     id: number,

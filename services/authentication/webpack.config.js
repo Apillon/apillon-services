@@ -2,7 +2,7 @@
 const path = require('path');
 const slsw = require('serverless-webpack');
 const nodeExternals = require('webpack-node-externals');
-const CopyPlugin = require('copy-webpack-plugin');
+// const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   context: __dirname,
@@ -43,7 +43,11 @@ module.exports = {
   },
   externals: [
     nodeExternals({
-      allowlist: ['@apillon/lib', '@apillon/workers-lib'],
+      allowlist: [
+        '@apillon/lib',
+        '@apillon/service-lib',
+        '@apillon/workers-lib',
+      ],
     }),
   ],
   // externals: [nodeExternals()],

@@ -39,9 +39,11 @@ export class IdentityRevokeWorker extends BaseQueueWorker {
   }
 
   public async runExecutor(parameters: any): Promise<any> {
+    const claimerEmail = parameters.email;
+
     const identity = await new Identity({}, this.context).populateByUserEmail(
       this.context,
-      parameters.email,
+      claimerEmail,
     );
 
     if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
@@ -63,7 +65,7 @@ export class IdentityRevokeWorker extends BaseQueueWorker {
     const endpointsCountForDid = await api.query.did.didEndpointsCount(
       identifier,
     );
-    const depositClaimExtrinsic = api.tx.did.reclaimDeposit(
+    const depositReClaimExtrinsic = api.tx.did.reclaimDeposit(
       identifier,
       endpointsCountForDid,
     );
@@ -74,17 +76,19 @@ export class IdentityRevokeWorker extends BaseQueueWorker {
         message: `Propagating DID delete TX to KILT BC ...`,
         location: 'AUTHENTICATION-API/identity/identity-revoke',
         service: ServiceName.AUTHENTICATION_API,
+        data: { email: claimerEmail, didUri: identity.didUri },
       });
       await Blockchain.signAndSubmitTx(
-        depositClaimExtrinsic,
+        depositReClaimExtrinsic,
         depositPayerAccount,
       );
     } catch (error) {
       await new Lmas().writeLog({
+        message: error,
         logType: LogType.ERROR,
         location: 'Authentication-API/identity/identity-revoke',
         service: ServiceName.AUTHENTICATION_API,
-        data: error,
+        data: { email: claimerEmail, didUri: identity.didUri },
       });
     }
 

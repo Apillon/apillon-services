@@ -12,7 +12,7 @@ import {
 import { Injectable, HttpStatus } from '@nestjs/common';
 import axios from 'axios';
 import { ReferralErrorCode } from '../../config/types';
-import { ServiceContext } from '../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import {
   ReferralCodeException,
   ReferralValidationException,

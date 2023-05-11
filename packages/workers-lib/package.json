@@ -1,6 +1,6 @@
 {
   "name": "@apillon/workers-lib",
-  "version": "0.5.1",
+  "version": "0.7.0",
   "description": "",
   "main": "./dist/index.js",
   "source": "./src/index.ts",
@@ -27,14 +27,10 @@
     "@aws-sdk/client-lambda": "^3.241.0",
     "@aws-sdk/client-sqs": "^3.241.0",
     "@faker-js/faker": "^7.6.0",
-    "@nestjs/common": "^9.0.11",
-    "@nestjs/core": "^9.0.0",
     "@rawmodel/core": "^3.3.4",
     "@rawmodel/parsers": "^3.3.4",
     "@rawmodel/validators": "^3.3.4",
     "cron-parser": "^4.7.0",
-    "dotenv": "^16.0.2",
-    "express": "^4.17.1",
-    "rxjs": "^7.1.0"
+    "moment": "^2.29.1"
   }
 }

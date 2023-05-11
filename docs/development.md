@@ -1,87 +1,172 @@
-# Development docs
+# Apillon Web3 platform - Development documentation
 
-It is highly recommended to read this docs alogn with [res-API-specs](/docs/rest-API-specs.md) and other .md files inside docs directory before starting programming Apillon services!
+It is highly recommended to read this docs along with [res-API-specs](/docs/rest-API-specs.md) and other .md files inside docs directory before starting programming Apillon services!
 
-## Services and service codes
+## Table of content
 
-| Code | Short    | Service name                             | Package name             | path                      |
-| ---- | -------- | ---------------------------------------- | ------------------------ | ------------------------- |
-| 00   | #        | Apillon Web3 Services                    | @apillon                 | /                         |
-| 01   | LIB      | Service Code Library                     | @apillon/lib             | /packages/lib/            |
-| 02   | AMS      | Access Management Service                | @apillon/access          | /services/access/         |
-| 03   | LMAS     | Logging, Monitoring and Alerting Service | @apillon/monitoring      | /services/monitoring/     |
-| 04   | DEV-API  | Developer Console API                    | @apillon/dev-console-api | /modules/dev-console-api/ |
-| 05   | AP-API   | Apillon Service API                      | @apillon/apillon-api     | /modules/apillon-api/     |
-| 06   | IPFS     | IPFS Storage Service                     | @apillon/storage         | /services/storage/        |
-| 07   | AUTH-API | Authentication API                       | @apillon/auth-api        | /modules/auth/            |
-| 08   | MAIL     | Mailing Service                          | @apillon/mailing         | /services/mailing/        |
-| 09   | MOD-LIB  | Module Code Library                      | @apillon/modules-lib     | /packages/modules-lib/    |
-| 10   | SCS      | System Configuration Service             | @apillon/config          | /services/config/         |
-| 11   | REF      | Referral program                         | @apillon/referral        | /services/referral/       |
-| 12   | NFTS     | NFTS Service                             | @apillon/nfts            | /services/nfts/           |
-| 13   | AUTH     | Authentication Service                   | @apillon/auth            | /services/authentication/ |
-| 14   | TEST-LIB | Testing Library                          | @apillon/tests-lib       | /packages/tests-lib/      |
-| 15   | WORK-LIB | Worker Library                           | @apillon/worker-lib      | /packages/worker-lib/     |
+1. [Prerequisites](#prerequisites)
+2. [Getting Started](#getting-started)
+3. [Project structure](#project-structure)
+4. [Creating a new API or microservice](#creating-a-new-api-or-microservice)
+5. [Logging](#logging)
 
-## Error codes
+## Prerequisites
 
-> code format : HTTPCODE | MODULE_CODE | MODULE_INTERNAL_ERROR_CODE
+- Node.js v16.17.0 or higher
+- npm v8.4.0 or higher
+- Turborepo
 
-- HTTP CODE = 422 for valdiation, 400 for invalid request, 500 internal error,...
-- MODULE CODE: see service codes
-- INTERNAL ERROR CODE: 000 - 999
+## Getting Started
+
+This monorepo project is configured to run with `npm` and `turborepo` build system (<https://turborepo.org/docs>). For deployment to AWS `serverless` framework is used (<https://serverless.com/docs>)
+
+### Environment variables
+
+Local ENV variables should be stored in `.env` file inside root folder! **`.env` file must not be committed to git!**
+
+> **All `npm` commands should be run in root folder of the repo!**
+
+### Installing packages
+
+> All installation should be done in the root folder of the repo!
+
+To install dependencies on all workspaces:
+
+```ssh
+npm i
+```
+
+To install new package common to all workspaces (only dev dependencies are allowed):
+
+```ssh
+npm i <package> -D
+```
+
+To instal new package to specific workspace
+
+```ssh
+npm i <package> -w=<workspace>
+```
+
+for example:
+
+```ssh
+npm i lodash -w=@apillon/dev-console-api
+```
+
+more: <https://turborepo.org/docs/guides/workspaces#managing-dependencies>
+
+### Build
+
+To build all apps and packages, run the following command:
+
+```sh
+npm run build
+```
+
+### Develop
+
+To run all apps and packages in develop mode, run the following command:
+
+```sh
+npm run dev
+```
+
+Please see detailed instructions for debugging and testing here:
+
+- [Debug & test docs](/docs/debug-and-test.md)
+
+### Deploy
+
+To manually deploy changes from local to development environment on AWS use:
+
+```sh
+npm run deploy:dev
+```
+
+**Code should not be deployed to other environments from local machine.** Deployment is automatically preformed on AWS Codebuild from `develop`, `stage` and `master` branches to `dev`, `staging` and `production` environment respectively.
+
+Please see detailed documentation for deploying:
+
+- [Deployment docs](/docs/deployment.md)
+
+### Working with Turborepo
+
+Turbo repo settings: `turbo.json`
+
+Read more about pipeline setup:
+
+- [Pipelines](https://turborepo.org/docs/core-concepts/pipelines)
+
+References to other Turborepo documentation:
+
+- [Caching](https://turborepo.org/docs/core-concepts/caching)
+- [Remote Caching](https://turborepo.org/docs/core-concepts/remote-caching)
+- [Scoped Tasks](https://turborepo.org/docs/core-concepts/scopes)
+- [Configuration Options](https://turborepo.org/docs/reference/configuration)
+- [CLI Usage](https://turborepo.org/docs/reference/command-line-reference)
 
 ## Project structure
 
-Project contains multiple workspaces. Basically each service and library should have it's own workspace defined in [apillon.code-workspace](/apillon.code-workspace)
+Project contains multiple workspaces. Each service and library should have it's own workspace defined in [apillon.code-workspace](/apillon.code-workspace)
+
+Please see list of service in [/README.md](/README.md#index-of-services)
 
 ### APIs
 
-- @apillon/dev-console-api is Nest.js API, which is used by Apillon developers console.
-- @apillon/apillon-api is Nest.js API, which is used by developers, to integrate Apillon into their applications. See [docs](/modules/apillon-api/docs/apillon-api.md)
-- @authentication-api is Nest.js API for KILT, DID, some kind of OAuth xD
+APIs are built with [Nest.js - a progressive node.js framework](https://nestjs.com/). Check out ther documentation to get familiar with modules, controllers, providers, middlewares, guards,  ...
 
-### Project libs
+#### APIs list
 
-- @apillon/lib is minimalistic general library, which include types and functions that are used in all other services. This library shoud contain as little as possible dependencies (other packages).
-- @apillon/modules-lib is library for NEST.js APIs. It includes some general middlewares, helpers, interceptors, decorators, ... This library should not be used in microservices (becouse of nest dependencies).
-- @apillon/tests-lib is a library, which provides interfaces, classes and functions for testing environment setup and generating data for tests.
-- @apillon/workers-lib is a library, which provides types, models and classes for serverless workers. This library can be used in APIs and also in microserices (example of use can be seen in @services/storage, where multiple workers are implemented).
+| Package | Description | Documentation |
+|---------|-------------|---------------|
+| `@apillon/dev-console-api` | Nest.js API, which is used by Apillon developers console. | |
+| `@apillon/apillon-api` | Nest.js API, which is used by developers, to integrate Apillon into their applications. | [docs](/modules/apillon-api/docs/apillon-api.md) |
+| `@apillon/authentication-api` | Nest.js API for Apillon OAuth service. | |
 
-## Setting up new API or microservice
+### Code libraries
 
-Each service has its unique [code](#services-and-service-codes). First add new code and other informations to above table. Then add new enum values for `ServiceName` and `ServiceCode` in [types.ts](/packages/lib/src/config/types.ts) file inside @apillon/lib.
+| Package | Description | Usage |
+|---------|-------------|-------|
+| `@apillon/lib` | General library, which includes types and functions that are used in many other services and APIs. This library should have minimum dependencies and should be as lean as possible, as it is widely used across services. | * |
+| `@apillon/modules-lib` | Library for NEST.js APIs. It includes some general middlewares, helpers, interceptors, decorators, etc. This library should not be used in microservices (because of nest dependencies). | NEST.js APIs |
+| `@apillon/service-lib` | Library for microservices. It includes some general middlewares and other common classes for microservices. This library should only be used in microservices. | Microservices |
+| `@apillon/tests-lib` | A library, which provides interfaces, classes, and functions for testing environment setup and generating data for tests. | Testing |
+| `@apillon/workers-lib` | A library, which provides types, models, and classes for serverless workers. This library can be used in APIs and also in microservices (example of use can be seen in service `@apillon/storage`, where multiple workers are implemented). | APIs and Microservices |
+
+## Creating a new API or microservice
+
+### Developing in VS Code Workspaces
+
+Run VS Code by opening `at.code-workspace` file to have workspaces setup. File should be updated if new workspaces are added to project. There could also be multiple workspace files if needed.
+
+### Prepare the framework
+
+Each service has its unique [code](/README.md#index-of-services). First add new code and other information to [this table](README.md#index-of-services). Then add new enum values for `ServiceName` and `ServiceCode` in [types.ts](/packages/lib/src/config/types.ts) file inside @apillon/lib.
 
 Easiest way to create new service is to copy existing one, clean it and change it's configuration.
 Services runs parallel, so each one of them need to run on separate port (defined in .env).
 
-So far the practice is that every service, has its own database.
+### Database
+
+So far the practice is that every service, has its own database. If your service needs a SQL database, you should prepare the migration scripts and connection environment variables. See [DB Migrations](/docs/db-migrations.md) documentation.
 
 ### Microservices
 
-Microservices are not build with any framework. Pure Node.js with common.js as target!
+Microservices are Node.js programs with common.js as target(!). They are intended to run on AWS Lambda and supposed to be as lightweight as possible (no bloated frameworks included!).
+
 Files that ensure the functioning of the microservice:
 
-- scripts/dev/run-server.ts entry point for local development server
-- server.ts contain function to start local development socket server
-- handler.ts exports labmda handler - here developer can add middlewares
-
-```ts
-export const handler = middy(lambdaHandler);
-handler
-  .use(InitializeContextAndFillUser())
-  .use(MySqlConnect())
-  .use(ResponseFormat())
-  .use(ErrorHandler());
-```
-
-- main.ts exports `processEvent` function, which based on recieved `eventName` runs microservice function. Each microservice has its own `eventType` enum, defined in [types.ts](/packages/lib/src/config/types.ts). Each MS function should be mapped to value in this enum.
+- package `@apillon/service-lib` - includes common functions, middlewares and classes for microservices
+- `scripts/dev/run-server.ts` entry point for local development server
+- `handler.ts` - exports Lambda handler/entry point and defines middlewares with middy framework
+- `main.ts` exports `processEvent` function, which based on recieved `eventName` runs microservice function. Each microservice has its own `eventType` enum, defined in [types.ts](/packages/lib/src/config/types.ts). Each MS function should be mapped to value in this enum.
 
 #### How to call microservice
 
-Microservices are deployed as separate lambdas to AWS, but cannot be directly called. Microservices are used by APIs (dev-console-api, apillon-api, ...).
+Microservices are deployed as separate lambdas to AWS, but are not exposed to outside of the VPC. Microservices are only used by APIs (dev-console-api, apillon-api, ...) and backend workers.
 
-In @packages/lib/src/lib/at-services define new class, which extends [BaseService](/packages/lib/src/lib/at-services/base-service.ts).
+In `@packages/lib/src/lib/at-services` define new class, which extends [BaseService](/packages/lib/src/lib/at-services/base-service.ts).
 That class should then contain methods, to call microservice functions. Below is a simple example, which takes DTO (defined in lib) as parameter, composes data object with `eventName` and other properties, and executes call.
 
 ```ts
@@ -97,7 +182,7 @@ public async createBucket(params: CreateBucketDto) {
 
 ## Logging
 
-Services uses two types of logging - logging to console (cloudWatch) and to Mongo DB.
+Services uses two types of logging - logging to console (cloudWatch) and to monitoring service (LMAS) that writes formatted logs to MongoDb.
 
 ### Logging to console
 
@@ -130,3 +215,17 @@ await new Lmas().writeLog({
   data: bucket.serialize(),
 });
 ```
+
+### Error codes
+
+>
+
+**Code format:**
+
+```ts
+HTTP_CODE | MODULE_CODE | MODULE_INTERNAL_ERROR_CODE
+```
+
+- `HTTP_CODE` = 422 for valdiation, 400 for invalid request, 500 internal error,...
+- `MODULE_CODE`: see [Service index](/README.md#index-of-services) for module code!
+- `INTERNAL_ERROR_CODE`: 000 - 999

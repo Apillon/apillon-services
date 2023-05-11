@@ -16,6 +16,8 @@ import {
 
 import { Identity } from '../modules/identity/models/identity.model';
 import {
+  ApillonSupportedCTypes,
+  Attester,
   AuthenticationErrorCode,
   HttpStatus,
   IdentityGenFlag,
@@ -28,6 +30,7 @@ import {
   getFullDidDocument,
   createAttestationRequest,
   getNextNonce,
+  getCtypeSchema,
 } from '../lib/kilt';
 import { env, Lmas, LogType, ServiceName } from '@apillon/lib';
 import { AuthenticationCodeException } from '../lib/exceptions';
@@ -69,6 +72,7 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
     const api = ConfigService.get('api');
 
     // Check if correct identity + state exists -> IN_PROGRESS
+    console.log('Populating identity ...');
     const identity = await new Identity({}, this.context).populateByUserEmail(
       this.context,
       claimerEmail,
@@ -95,10 +99,11 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
         );
       } catch (error) {
         await new Lmas().writeLog({
+          message: error,
           logType: LogType.ERROR,
           location: 'Authentication-API/identity/authentication.worker',
           service: ServiceName.AUTHENTICATION_API,
-          data: error,
+          data: { email: claimerEmail, didUri: claimerDidUri, error: error },
         });
         throw new AuthenticationCodeException({
           code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
@@ -117,11 +122,13 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
             sr25519: signature,
           });
 
+          console.log('Propagating DID create TX to KILT BC ...');
           await new Lmas().writeLog({
             logType: LogType.INFO,
             message: `Propagating DID create TX to KILT BC ...`,
             location: 'AUTHENTICATION-API/identity/authentication.worker',
             service: ServiceName.AUTHENTICATION_API,
+            data: { email: claimerEmail, didUri: claimerDidUri },
           });
 
           await Blockchain.signAndSubmitTx(fullDidCreationTx, attesterAcc);
@@ -133,19 +140,27 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
               message: `${error.method}: ${error.docs[0]}`,
               location: 'Authentication-API/identity/authentication.worker',
               service: ServiceName.AUTHENTICATION_API,
-              data: error,
+              data: {
+                email: claimerEmail,
+                didUri: claimerDidUri,
+              },
             });
           } else {
             await new Lmas().writeLog({
+              message: error,
               logType: LogType.ERROR,
               location: 'Authentication-API/identity/authentication.worker',
               service: ServiceName.AUTHENTICATION_API,
-              data: error,
+              data: {
+                email: claimerEmail,
+                didUri: claimerDidUri,
+              },
             });
             throw error;
           }
         }
       } else {
+        console.error('Decryption failed  ...');
         throw new AuthenticationCodeException({
           code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
           status: HttpStatus.BAD_REQUEST,
@@ -153,6 +168,7 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
       }
     }
 
+    console.log('Starting attestation process ...');
     // Prepare identity instance and credential structure
     const { attestationRequest, credential } = createAttestationRequest(
       claimerEmail,
@@ -181,7 +197,18 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
       { txCounter: nextNonce },
     );
 
+    console.log('Created attestation TX ...');
+
     try {
+      await new Lmas().writeLog({
+        logType: LogType.INFO,
+        message: 'Propagating ATTESTATION TX to KILT BC ...',
+        location: 'AUTHENTICATION-API/identity/authentication.worker',
+        service: ServiceName.AUTHENTICATION_API,
+        data: { email: claimerEmail, didUri: claimerDidUri },
+      });
+
+      console.log('Submitting attestation TX ...');
       await Blockchain.signAndSubmitTx(emailClaimTx, attesterAcc);
       const emailAttested = Boolean(
         await api.query.attestation.attestations(credential.rootHash),
@@ -189,45 +216,60 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
 
       await new Lmas().writeLog({
         logType: LogType.INFO,
-        message:
-          `Attestation for ${claimerEmail} => ` + emailAttested
-            ? 'SUCCESS'
-            : 'FALSE',
+        message: emailAttested
+          ? `ATTESTATION: SUCCESS`
+          : `ATTESTATION: FAILURE`,
         location: 'AUTHENTICATION-API/identity/authentication.worker',
         service: ServiceName.AUTHENTICATION_API,
+        data: { email: claimerEmail, didUri: claimerDidUri },
       });
 
       if (!emailAttested) {
+        console.error('Email is not attezted');
         return false;
       }
 
       const claimerCredential = {
-        ...credential,
+        credential: {
+          ...credential,
+        },
         claimerSignature: {
           keyType: KiltSignAlgorithm.SR25519,
           keyUri: claimerDidUri,
         },
+        name: 'Email',
+        status: emailAttested ? 'attested' : 'pending',
+        attester: Attester.APILLON,
+        cTypeTitle: getCtypeSchema(ApillonSupportedCTypes.EMAIL).title,
       };
 
+      console.log('Updating attestation DB model ...');
       identity.populate({
         state: IdentityState.ATTESTED,
         credential: claimerCredential,
         didUri: params.didUri ? params.didUri : null,
+        email: claimerEmail,
       });
 
       if (identity.exists()) {
+        console.log('UPDATING Identity in DB ...');
         await identity.update();
       } else {
+        console.log('CREATING Identity in DB ...');
         await identity.insert();
       }
+
+      return true;
     } catch (error) {
       await new Lmas().writeLog({
         logType: LogType.ERROR,
-        message: `Email ${claimerEmail} identity => ERROR`,
+        message: error,
         location: 'AUTHENTICATION-API/identity/authentication.worker',
         service: ServiceName.AUTHENTICATION_API,
-        data: error,
+        data: { email: claimerEmail, didUri: claimerDidUri },
       });
+
+      throw error;
     }
 
     return false;

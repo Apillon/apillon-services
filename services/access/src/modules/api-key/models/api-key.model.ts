@@ -16,7 +16,7 @@ import {
   ApiKeyRoleBaseDto,
 } from '@apillon/lib';
 import { DbTables, AmsErrorCode } from '../../../config/types';
-import { ServiceContext } from '../../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { ApiKeyRole } from '../../role/models/api-key-role.model';
 import * as bcrypt from 'bcryptjs';
 import { AmsValidationException } from '../../../lib/exceptions';

@@ -10,6 +10,10 @@ export enum DbTables {
   IDENTITY = 'identity',
 }
 
+export const enum Attester {
+  APILLON = 'Apillon',
+}
+
 export const enum KiltSignAlgorithm {
   SR25519 = 'sr25519',
   ED25519 = 'ed25519',

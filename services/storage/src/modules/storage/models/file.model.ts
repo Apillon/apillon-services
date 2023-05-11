@@ -22,7 +22,7 @@ import {
   ObjectType,
   StorageErrorCode,
 } from '../../../config/types';
-import { ServiceContext } from '../../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
 import { Bucket } from '../../bucket/models/bucket.model';
 import { StorageCodeException } from '../../../lib/exceptions';
@@ -366,6 +366,11 @@ export class File extends AdvancedSQLModel {
     }
   }
 
+  /**
+   *
+   * @param id internal id, cid or file_uuid
+   * @returns
+   */
   public async populateById(id: string | number): Promise<this> {
     if (!id) {
       throw new Error('id should not be null');
@@ -396,7 +401,7 @@ export class File extends AdvancedSQLModel {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT * 
-      FROM \`${this.tableName}\`
+      FROM \`${DbTables.FILE}\`
       WHERE file_uuid = @file_uuid AND status <> ${SqlModelStatus.DELETED};
       `,
       { file_uuid },

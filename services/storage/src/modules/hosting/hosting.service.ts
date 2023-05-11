@@ -26,7 +26,7 @@ import {
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { DeploymentEnvironment, StorageErrorCode } from '../../config/types';
-import { ServiceContext } from '../../context';
+import { ServiceContext } from '@apillon/service-lib';
 import { deleteDirectory } from '../../lib/delete-directory';
 import {
   StorageCodeException,

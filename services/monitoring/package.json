@@ -1,6 +1,6 @@
 {
   "name": "@apillon/monitoring",
-  "version": "0.5.1",
+  "version": "0.7.0",
   "author": "Kalmia d.o.o.",
   "license": "UNLICENSED",
   "description": "",
@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@apillon/lib": "*",
+    "@apillon/service-lib": "*",
     "@middy/core": "^3.3.1",
     "@slack/web-api": "^6.8.0"
   },
