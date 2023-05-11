@@ -7,7 +7,7 @@ export class EvmBlockchainIndexer {
   private graphQlClient: GraphQLClient;
 
   private chainGqlMap = new Map<EvmChain, string>([
-    [EvmChain.MOONBASE, env.BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER],
+    [EvmChain.MOONBASE, env.BLOCKCHAIN_MOONBASE_GRAPHQL_SERVER],
     [EvmChain.MOONBEAM, env.BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER],
   ]);
 

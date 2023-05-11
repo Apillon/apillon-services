@@ -212,6 +212,7 @@ export interface IEnv {
    * EVM blockchain indexers
    */
   BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER: string;
+  BLOCKCHAIN_MOONBASE_GRAPHQL_SERVER: string;
 
   /************************************************************
    * API - Apillon API config
@@ -537,6 +538,8 @@ export let env: IEnv = {
     process.env['BLOCKCHAIN_CRUST_GRAPHQL_SERVER'],
   BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER:
     process.env['BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER'],
+  BLOCKCHAIN_MOONBASE_GRAPHQL_SERVER:
+    process.env['BLOCKCHAIN_MOONBASE_GRAPHQL_SERVER'],
 
   BLOCKCHAIN_SECRETS: process.env['BLOCKCHAIN_SECRETS'],
 

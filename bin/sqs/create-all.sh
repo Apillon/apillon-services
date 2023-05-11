@@ -43,3 +43,6 @@ aws sqs create-queue --queue-name apillon-blockchain-queue-dev --attributes file
 
 aws sqs create-queue --queue-name apillon-blockchain-queue-staging-dlq --attributes file://staging/blockchain-queue-staging-dlq.json --region eu-west-1
 aws sqs create-queue --queue-name apillon-blockchain-queue-staging --attributes file://staging/blockchain-queue-staging.json  --region eu-west-1
+
+aws sqs create-queue --queue-name apillon-blockchain-queue-production-dlq --attributes file://production/blockchain-queue-production-dlq.json --region eu-west-1
+aws sqs create-queue --queue-name apillon-blockchain-queue-production --attributes file://production/blockchain-queue-production.json  --region eu-west-1

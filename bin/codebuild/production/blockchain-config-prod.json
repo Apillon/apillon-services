@@ -1,5 +1,5 @@
 {
-  "name": "apillon-nfts-production",
+  "name": "apillon-blockchain-production",
   "environment": {
     "computeType": "BUILD_GENERAL1_SMALL",
     "imagePullCredentialsType": "CODEBUILD",
@@ -19,7 +19,7 @@
       {
         "type": "PLAINTEXT",
         "name": "SERVICE_PATH",
-        "value": "services/nfts/"
+        "value": "services/blockchain"
       },
       {
         "type": "PLAINTEXT",
@@ -33,13 +33,13 @@
       },
       {
         "type": "PLAINTEXT",
-        "name": "WORKER_SQS_ARN",
-        "value": "arn:aws:sqs:eu-west-1:018021943180:apillon-nfts-queue-production"
+        "name": "AWS_SECRETS_ID",
+        "value": "apillon-production"
       },
       {
         "type": "PLAINTEXT",
-        "name": "AWS_SECRETS_ID",
-        "value": "apillon-production"
+        "name": "WORKER_SQS_ARN",
+        "value": "arn:aws:sqs:eu-west-1:018021943180:apillon-blockchain-queue-production"
       }
     ],
     "type": "LINUX_CONTAINER"
