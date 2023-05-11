@@ -108,6 +108,10 @@ export class IPFSService {
     fileUploadRequests: FileUploadRequest[];
     wrapWithDirectory: boolean;
   }): Promise<uploadFilesToIPFSRes> {
+    console.info(
+      'uploadFURsToIPFSFromS3 start',
+      event.fileUploadRequests.map((x) => x.serialize()),
+    );
     //Get IPFS client
     const client = await IPFSService.createIPFSClient();
 
@@ -143,9 +147,16 @@ export class IPFSService {
     let baseDirectoryOnIPFS = undefined;
     /**Directories on IPFS - each dir on IPFS gets CID */
     const ipfsDirectories = [];
+
+    console.info(
+      'Adding files to IPFS',
+      filesForIPFS.map((x) => x.path),
+    );
     const filesOnIPFS = await client.addAll(filesForIPFS, {
       wrapWithDirectory: event.wrapWithDirectory,
     });
+
+    console.info('Files were successfully uploaded to IPFS', filesOnIPFS);
 
     /**Loop through IPFS result and set CID property in fileUploadRequests */
     for await (const file of filesOnIPFS) {
