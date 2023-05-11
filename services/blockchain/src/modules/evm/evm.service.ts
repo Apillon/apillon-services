@@ -163,7 +163,7 @@ export class EvmService {
               chain: _event.params.chain,
             },
           ],
-          null,
+          _event.params.chain == EvmChain.MOONBASE ? 3 : 6, // job id
           null,
         );
       } catch (e) {
