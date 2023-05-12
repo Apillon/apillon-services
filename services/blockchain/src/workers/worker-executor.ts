@@ -129,12 +129,12 @@ export async function handleLambdaEvent(
       break;
     case WorkerName.EVM_TRANSACTIONS:
       await new EvmTransactionWorker(workerDefinition, context).run({
-        executeArg: JSON.stringify({ chain: EvmChain.MOONBASE }),
+        executeArg: JSON.stringify(workerDefinition.parameters),
       });
       break;
     case WorkerName.TRANSMIT_EVM_TRANSACTION:
       await new TransmitEvmTransactionWorker(workerDefinition, context).run({
-        executeArg: JSON.stringify({ chain: EvmChain.MOONBASE }),
+        executeArg: JSON.stringify(workerDefinition.parameters),
       });
       break;
     case WorkerName.TRANSACTION_WEBHOOKS:

@@ -302,6 +302,22 @@ export class Wallet extends AdvancedSQLModel {
     this.lastProcessedNonce = lastProcessedNonce;
   }
 
+  public async updateLastParsedBlock(
+    lastParsedBlock: number,
+    conn?: PoolConnection,
+  ) {
+    await this.getContext().mysql.paramExecute(
+      `
+      UPDATE \`${DbTables.WALLET}\`
+      SET lastParsedBlock = @lastParsedBlock
+      WHERE id = @id;
+      `,
+      { lastParsedBlock, id: this.id },
+      conn,
+    );
+    this.lastParsedBlock = lastParsedBlock;
+  }
+
   // always iterate inside a transaction
   public async iterateNonce(conn: PoolConnection) {
     await this.getContext().mysql.paramExecute(

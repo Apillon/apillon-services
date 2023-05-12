@@ -5,6 +5,7 @@ import {
   env,
   Lmas,
   LogType,
+  runWithWorkers,
   ServiceName,
   writeLog,
 } from '@apillon/lib';
@@ -108,8 +109,10 @@ export class IPFSService {
     fileUploadRequests: FileUploadRequest[];
     wrapWithDirectory: boolean;
   }): Promise<uploadFilesToIPFSRes> {
-    //Get IPFS client
-    const client = await IPFSService.createIPFSClient();
+    console.info(
+      'uploadFURsToIPFSFromS3 start',
+      event.fileUploadRequests.map((x) => x.serialize()),
+    );
 
     //S3 client
     const s3Client: AWS_S3 = new AWS_S3();
@@ -117,7 +120,11 @@ export class IPFSService {
     const filesForIPFS = [];
 
     for (const fileUploadReq of event.fileUploadRequests) {
-      if (
+      console.info(
+        'Get file from S3 START',
+        (fileUploadReq.path || '') + fileUploadReq.fileName,
+      );
+      /*if (
         !(await s3Client.exists(
           env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
           fileUploadReq.s3FileKey,
@@ -126,26 +133,50 @@ export class IPFSService {
         fileUploadReq.fileStatus =
           FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3;
         continue;
+      }*/
+
+      try {
+        const file = await s3Client.get(
+          env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+          fileUploadReq.s3FileKey,
+        );
+
+        filesForIPFS.push({
+          path: (fileUploadReq.path || '') + fileUploadReq.fileName,
+          content: file.Body as any,
+        });
+      } catch (error) {
+        console.error('Get file from s3 error', error);
       }
 
-      const file = await s3Client.get(
-        env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-        fileUploadReq.s3FileKey,
+      console.info(
+        'Get file from S3 SUCCESS',
+        (fileUploadReq.path || '') + fileUploadReq.fileName,
       );
-
-      filesForIPFS.push({
-        path: (fileUploadReq.path || '') + fileUploadReq.fileName,
-        content: file.Body as any,
-      });
     }
+
+    console.info(
+      'runWithWorkers to get files from s3 SUCCESS. Num of files: ' +
+        filesForIPFS.length,
+    );
 
     /**Wrapping directory CID*/
     let baseDirectoryOnIPFS = undefined;
     /**Directories on IPFS - each dir on IPFS gets CID */
     const ipfsDirectories = [];
+
+    //Get IPFS client
+    const client = await IPFSService.createIPFSClient();
+
+    console.info(
+      'Adding files to IPFS',
+      filesForIPFS.map((x) => x.path),
+    );
     const filesOnIPFS = await client.addAll(filesForIPFS, {
       wrapWithDirectory: event.wrapWithDirectory,
     });
+
+    console.info('Files were successfully uploaded to IPFS', filesOnIPFS);
 
     /**Loop through IPFS result and set CID property in fileUploadRequests */
     for await (const file of filesOnIPFS) {

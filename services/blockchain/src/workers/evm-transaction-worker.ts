@@ -95,8 +95,7 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
         await this.handleOutgoingEvmTxs(wallet, walletTxs.outgoingTxs, conn);
         await this.handleIncomingEvmTxs(wallet, walletTxs.incomingTxs);
 
-        wallet.lastParsedBlock = toBlock;
-        await wallet.update(SerializeFor.UPDATE_DB, conn);
+        await wallet.updateLastParsedBlock(toBlock, conn);
         await conn.commit();
 
         // console.log(

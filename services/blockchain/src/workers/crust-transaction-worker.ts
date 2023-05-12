@@ -93,8 +93,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
           conn,
         );
 
-        wallet.lastParsedBlock = toBlock;
-        await wallet.update(SerializeFor.UPDATE_DB, conn);
+        await wallet.updateLastParsedBlock(toBlock, conn);
         await conn.commit();
 
         if (
