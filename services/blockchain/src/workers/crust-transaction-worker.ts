@@ -96,9 +96,6 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         wallet.lastParsedBlock = toBlock;
         await wallet.update(SerializeFor.UPDATE_DB, conn);
         await conn.commit();
-        // console.log(
-        //   `[SUBSTRATE][CRUST] Checking PENDING transactions (sourceWallet=${wallet.address}, lastProcessedBlock=${toBlock}) FINISHED!`,
-        // );
 
         if (
           crustTransactions.fileOrders.storageOrders.length > 0 ||
@@ -117,26 +114,19 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
             {
               storageOrders: crustTransactions.fileOrders.storageOrders,
               transfers: crustTransactions.withdrawals.transfers,
+              wallet: wallet.address,
             },
           );
         }
-        // await this.writeLogToDb(
-        //   WorkerLogStatus.INFO,
-        //   'Checking PENDING transactions FINISHED!',
-        //   {
-        //     wallet: wallet.address,
-        //     fromBlock: lastParsedBlock,
-        //     toBlock,
-        //   },
-        // );
+        console.log(
+          `[SUBSTRATE][CRUST] Checking PENDING transactions (sourceWallet=${wallet.address}, lastProcessedBlock=${toBlock}) FINISHED!`,
+        );
       } catch (err) {
         await conn.rollback();
-        console.error(
-          `[SUBSTRATE][CRUST] Checking PENDING transactions (sourceWallet=${w.address}) FAILED! Error: ${err}`,
-        );
+
         await this.writeLogToDb(
           WorkerLogStatus.ERROR,
-          'Checking PENDING transactions FAILED!',
+          'Checking transactions FAILED!',
           { wallet: wallets.address },
           err,
         );
@@ -181,9 +171,6 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
       );
       return;
     }
-    console.log(
-      `[SUBSTRATE][CRUST] Matching ${withdrawals.transfers.length} blockchain transactions with transactions in DB.`,
-    );
 
     await this.writeLogToDb(
       WorkerLogStatus.INFO,
