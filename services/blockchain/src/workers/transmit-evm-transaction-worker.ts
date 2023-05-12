@@ -27,7 +27,7 @@ export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
   }
   public async runExecutor(data: any): Promise<any> {
     console.info('RUN EXECUTOR (TransmitEvmTransactionWorker). data: ', data);
-    const chain = data?.chain;
+    const chain = data?.chain; // todo: move to workerDefinition.parameters
     if (!chain) {
       throw new BlockchainCodeException({
         code: BlockchainErrorCode.INVALID_DATA_PASSED_TO_WORKER,
