@@ -95,8 +95,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
           conn,
         );
 
-        wallet.lastParsedBlock = toBlock;
-        await wallet.update(SerializeFor.UPDATE_DB, conn);
+        await wallet.updateLastParsedBlock(toBlock, conn);
         await conn.commit();
         console.log(
           `[SUBSTRATE][CRUST] Checking PENDING transactions (sourceWallet=${wallet.address}, lastProcessedBlock=${toBlock}) FINISHED!`,
