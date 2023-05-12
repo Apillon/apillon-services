@@ -119,36 +119,42 @@ export class IPFSService {
 
     const filesForIPFS = [];
 
-    await runWithWorkers(
-      event.fileUploadRequests,
-      50,
-      undefined,
-      async (fileUploadReq) => {
-        if (
-          !(await s3Client.exists(
-            env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-            fileUploadReq.s3FileKey,
-          ))
-        ) {
-          fileUploadReq.fileStatus =
-            FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3;
-        } else {
-          const file = await s3Client.get(
-            env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-            fileUploadReq.s3FileKey,
-          );
+    for (const fileUploadReq of event.fileUploadRequests) {
+      console.info(
+        'Get file from S3 START',
+        (fileUploadReq.path || '') + fileUploadReq.fileName,
+      );
+      /*if (
+        !(await s3Client.exists(
+          env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+          fileUploadReq.s3FileKey,
+        ))
+      ) {
+        fileUploadReq.fileStatus =
+          FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3;
+        continue;
+      }*/
 
-          filesForIPFS.push({
-            path: (fileUploadReq.path || '') + fileUploadReq.fileName,
-            content: file.Body as any,
-          });
-          console.info(
-            'File successfully acquired from s3',
-            (fileUploadReq.path || '') + fileUploadReq.fileName,
-          );
-        }
-      },
-    );
+      try {
+        const file = await s3Client.get(
+          env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+          fileUploadReq.s3FileKey,
+        );
+
+        filesForIPFS.push({
+          path: (fileUploadReq.path || '') + fileUploadReq.fileName,
+          content: file.Body as any,
+        });
+      } catch (error) {
+        console.error('Get file from s3 error', error);
+      }
+
+      console.info(
+        'Get file from S3 SUCCESS',
+        (fileUploadReq.path || '') + fileUploadReq.fileName,
+      );
+    }
+
     console.info(
       'runWithWorkers to get files from s3 SUCCESS. Num of files: ' +
         filesForIPFS.length,
