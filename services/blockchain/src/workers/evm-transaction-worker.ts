@@ -93,7 +93,7 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
         );
 
         await this.handleOutgoingEvmTxs(wallet, walletTxs.outgoingTxs, conn);
-        await this.handleIncomingEvmTxs(wallet, walletTxs.incomingTxs, conn);
+        await this.handleIncomingEvmTxs(wallet, walletTxs.incomingTxs);
 
         wallet.lastParsedBlock = toBlock;
         await wallet.update(SerializeFor.UPDATE_DB, conn);
@@ -123,14 +123,6 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
             },
           );
         }
-        //   WorkerLogStatus.INFO,
-        //   'Checking PENDING transactions FINISHED!',
-        //   {
-        //     wallet: wallet.address,
-        //     fromBlock: lastParsedBlock,
-        //     toBlock,
-        //   },
-        // );
       } catch (err) {
         await conn.rollback();
         console.error(
@@ -152,6 +144,11 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
             wallet: wallets.address,
           },
         });
+        await new Lmas().sendAdminAlert(
+          `${this.logPrefix}: Error confirming transactions!`,
+          ServiceName.BLOCKCHAIN,
+          'alert',
+        );
       }
     }
   }
@@ -186,9 +183,6 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
       );
       return;
     }
-    console.log(
-      `${this.logPrefix} Matching ${outgoingTxs.transactions.length} outgoing blockchain transactions with transactions in DB.`,
-    );
 
     await this.writeLogToDb(
       WorkerLogStatus.INFO,
@@ -225,20 +219,13 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
     });
   }
 
-  public async handleIncomingEvmTxs(
-    wallet: Wallet,
-    incomingTxs: EvmTransfers,
-    conn: PoolConnection,
-  ) {
+  public async handleIncomingEvmTxs(wallet: Wallet, incomingTxs: EvmTransfers) {
     if (!incomingTxs.transactions.length) {
       console.log(
         `${this.logPrefix} There are no new deposits to wallet (address=${wallet.address}).`,
       );
       return;
     }
-    console.log(
-      `${this.logPrefix} Received ${incomingTxs.transactions.length} deposits from blockchain indexer.`,
-    );
 
     await this.writeLogToDb(
       WorkerLogStatus.INFO,

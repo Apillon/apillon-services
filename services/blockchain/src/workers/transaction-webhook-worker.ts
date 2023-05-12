@@ -117,16 +117,15 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
           null,
           conn,
         );
+        await this.writeLogToDb(
+          WorkerLogStatus.INFO,
+          `Triggered webhooks for ${updates.length} transactions!`,
+          {
+            updates,
+          },
+        );
       }
       await conn.commit();
-      // await new Lmas().writeLog({
-      //   context: this.context,
-      //   logType: LogType.INFO,
-      //   message: 'TransactionWebhookWorker finished',
-      //   location: `${this.constructor.name}/runExecutor`,
-      //   service: ServiceName.BLOCKCHAIN,
-      //   data: data,
-      // });
     } catch (err) {
       console.log(err);
       await conn.rollback();
@@ -143,11 +142,6 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
       });
       throw err;
     }
-
-    await this.writeLogToDb(
-      WorkerLogStatus.INFO,
-      `TransactionWebhookWorker worker has been completed!`,
-    );
 
     return true;
   }

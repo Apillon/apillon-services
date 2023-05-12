@@ -140,6 +140,11 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
             wallet: wallets.address,
           },
         });
+        await new Lmas().sendAdminAlert(
+          `${this.logPrefix}: Error confirming transactions!`,
+          ServiceName.BLOCKCHAIN,
+          'alert',
+        );
       }
     }
   }
@@ -215,9 +220,6 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
       );
       return;
     }
-    console.log(
-      `[SUBSTRATE][CRUST] Received ${deposits.transfers.length} deposits from blockchain indexer.`,
-    );
 
     await this.writeLogToDb(
       WorkerLogStatus.INFO,
@@ -238,14 +240,11 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
     conn: PoolConnection,
   ) {
     if (!bcOrders.storageOrders.length) {
-      // console.log(
-      //   `[SUBSTRATE][CRUST] There are no new file storage orders received from blockchain indexer (address=${wallet.address}).`,
-      // );
+      console.log(
+        `${this.logPrefix} There are no new file storage orders received from blockchain indexer (address=${wallet.address}).`,
+      );
       return;
     }
-    // console.log(
-    //   `[SUBSTRATE][CRUST] Matching ${bcOrders.storageOrders.length} blockchain storage orders with transactions in DB.`,
-    // );
 
     await this.writeLogToDb(
       WorkerLogStatus.INFO,
@@ -361,6 +360,13 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
     console.log(
       `[SUBSTRATE][CRUST] ${updatedDbTxs.length} [${TransactionStatus[status]}] transactions matched (txHashes=${txDbHashesString}) in db.`,
     );
+    await this.writeLogToDb(
+      WorkerLogStatus.SUCCESS,
+      `${updatedDbTxs.length} [${TransactionStatus[status]}] transactions matched in db.`,
+      {
+        txDbHashesString,
+      },
+    );
 
     return updatedDbTxs;
   }
@@ -394,6 +400,13 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
     const txDbHashesString = updatedDbTxs.join(',');
     console.log(
       `[SUBSTRATE][CRUST] ${updatedDbTxs.length} [${TransactionStatus[status]}] storage orders matched (txHashes=${txDbHashesString}) in db.`,
+    );
+    await this.writeLogToDb(
+      WorkerLogStatus.SUCCESS,
+      `${updatedDbTxs.length} [${TransactionStatus[status]}] storage orders matched in db.`,
+      {
+        txDbHashesString,
+      },
     );
     return updatedDbTxs;
   }
