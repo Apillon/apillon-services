@@ -17,6 +17,14 @@ import { BlockchainCodeException } from '../lib/exceptions';
 import { EvmService } from '../modules/evm/evm.service';
 import { WorkerName } from './worker-executor';
 
+/**
+ * TODO: error logging:
+ * await new Lmas().sendAdminAlert(
+      ':wave: Hello from the other side!',
+      ServiceName.DEV_CONSOLE,
+      'message',
+    );
+ */
 export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);
