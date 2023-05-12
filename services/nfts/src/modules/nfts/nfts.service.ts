@@ -20,6 +20,7 @@ import {
   StorageMicroservice,
   TransactionStatus,
   TransferCollectionDTO,
+  writeLog,
 } from '@apillon/lib';
 import {
   QueueWorkerType,
@@ -257,20 +258,25 @@ export class NftsService {
       context,
     ).getList(context, new NFTCollectionQueryFilter(event.query));
 
-    const responseCollections = [];
-
     for (const collection of collections.items) {
       const walletService: WalletService = new WalletService(collection.chain);
-      const mintedNr = collection.contractAddress
-        ? await walletService.getNumberOfMintedNfts(collection.contractAddress)
-        : 0;
-
-      responseCollections.push({
-        ...collection,
-        minted: mintedNr,
-      });
+      try {
+        collection.minted = collection.contractAddress
+          ? await walletService.getNumberOfMintedNfts(
+              collection.contractAddress,
+            )
+          : 0;
+      } catch (err) {
+        writeLog(
+          LogType.ERROR,
+          'getNumberOfMintedNfts failed',
+          'nft.service.ts',
+          'listNftCollections',
+          err,
+        );
+      }
     }
-    return { items: responseCollections, total: collections.total };
+    return collections;
   }
 
   static async getCollection(event: { id: any }, context: ServiceContext) {
@@ -674,7 +680,7 @@ export class NftsService {
       });
     }
 
-    if (collection.reserve - minted < params.quantity) {
+    if (collection.isDrop && collection.reserve - minted < params.quantity) {
       throw new NftsCodeException({
         status: 500,
         code: NftsErrorCode.MINT_NFT_RESERVE_ERROR,
