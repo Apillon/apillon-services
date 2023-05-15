@@ -23,11 +23,11 @@ export class Scheduler extends WorkerScheduler {
 
     for (const job of jobs) {
       // console.log(`JOB READY: ${JSON.stringify(job.serialize())}`);
-      await this.writeLogToDb(
-        WorkerLogStatus.INFO,
-        `${job.name} scheduled to run`,
-        job,
-      );
+      // await this.writeLogToDb(
+      //   WorkerLogStatus.INFO,
+      //   `${job.name} scheduled to run`,
+      //   job,
+      // );
       defs.push(
         new WorkerDefinition(
           this.workerDefinition.serviceDefinition,
