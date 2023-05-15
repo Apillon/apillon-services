@@ -155,8 +155,8 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             await pinFileToCRUST(
               this.context,
               bucket.bucket_uuid,
-              fileImageFUR.CID,
-              fileImageFUR.size,
+              imageIpfsRes.CID,
+              imageIpfsRes.size,
               true,
             );
           }
