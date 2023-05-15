@@ -90,8 +90,9 @@ export async function processSessionFiles(
       ).populateByNameAndDirectory(bucket.id, fur.fileName, fileDirectory?.id);
 
       if (existingFile.exists()) {
-        s3FilesToDelete.push(existingFile.s3FileKey);
-
+        if (existingFile.s3FileKey != fur.s3FileKey) {
+          s3FilesToDelete.push(existingFile.s3FileKey);
+        }
         //Update existing file
         existingFile.populate({
           s3FileKey: fur.s3FileKey,

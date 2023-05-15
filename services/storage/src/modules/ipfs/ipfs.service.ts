@@ -9,7 +9,7 @@ import {
   ServiceName,
   writeLog,
 } from '@apillon/lib';
-import { CID, create } from 'ipfs-http-client';
+import { CID, create, globSource } from 'ipfs-http-client';
 import {
   FileUploadRequestFileStatus,
   StorageErrorCode,
@@ -18,6 +18,10 @@ import { StorageCodeException } from '../../lib/exceptions';
 import { FileUploadRequest } from '../storage/models/file-upload-request.model';
 import { uploadFilesToIPFSRes } from './interfaces/upload-files-to-ipfs-res.interface';
 import { File } from '../storage/models/file.model';
+import { Readable } from 'stream';
+import * as fs from 'fs';
+import * as StreamPromises from 'stream/promises';
+import * as path from 'path';
 
 export class IPFSService {
   static async createIPFSClient() {
@@ -117,7 +121,15 @@ export class IPFSService {
     //S3 client
     const s3Client: AWS_S3 = new AWS_S3();
 
-    const filesForIPFS = [];
+    const dirForUpload = env.STORAGE_FILE_CACHE_DIRECTORY;
+    const isAbsolutePath = path.isAbsolute(dirForUpload);
+    if (!fs.existsSync(dirForUpload)) {
+      fs.mkdirSync(dirForUpload);
+    } else {
+      //First delete then create new one
+      fs.rmSync(dirForUpload, { recursive: true, force: true });
+      fs.mkdirSync(dirForUpload);
+    }
 
     for (const fileUploadReq of event.fileUploadRequests) {
       console.info(
@@ -141,10 +153,19 @@ export class IPFSService {
           fileUploadReq.s3FileKey,
         );
 
-        filesForIPFS.push({
-          path: (fileUploadReq.path || '') + fileUploadReq.fileName,
-          content: file.Body as any,
-        });
+        //Save file to disk
+        const writeStream = fs.createWriteStream(
+          dirForUpload +
+            '/' +
+            (fileUploadReq.path || '') +
+            fileUploadReq.fileName,
+        );
+        if (fileUploadReq.path) {
+          fs.mkdirSync(dirForUpload + '/' + fileUploadReq.path);
+        }
+
+        const readStream = file.Body as Readable;
+        await StreamPromises.pipeline(readStream, writeStream);
       } catch (error) {
         console.error('Get file from s3 error', error);
       }
@@ -155,10 +176,7 @@ export class IPFSService {
       );
     }
 
-    console.info(
-      'runWithWorkers to get files from s3 SUCCESS. Num of files: ' +
-        filesForIPFS.length,
-    );
+    console.info('runWithWorkers to get files from s3 finished.');
 
     /**Wrapping directory CID*/
     let baseDirectoryOnIPFS = undefined;
@@ -168,31 +186,47 @@ export class IPFSService {
     //Get IPFS client
     const client = await IPFSService.createIPFSClient();
 
-    console.info(
-      'Adding files to IPFS',
-      filesForIPFS.map((x) => x.path),
+    console.info('Adding files to IPFS', globSource(dirForUpload, '**/*'));
+
+    const filesOnIPFSAsyncIterator = await client.addAll(
+      globSource(dirForUpload, '**/*'),
+      {
+        wrapWithDirectory: event.wrapWithDirectory,
+      },
     );
-    const filesOnIPFS = await client.addAll(filesForIPFS, {
-      wrapWithDirectory: event.wrapWithDirectory,
-    });
 
-    console.info('Files were successfully uploaded to IPFS', filesOnIPFS);
+    console.info('Files were successfully uploaded to IPFS');
 
+    const ipfsFilePrefix = isAbsolutePath ? dirForUpload : '';
+
+    const filesOnIPFS = [];
     /**Loop through IPFS result and set CID property in fileUploadRequests */
-    for await (const file of filesOnIPFS) {
-      if (file.path === '') {
+    for await (const file of filesOnIPFSAsyncIterator) {
+      if (file.path.length < ipfsFilePrefix.length) {
+        continue;
+      }
+
+      filesOnIPFS.push({ ...file, fileCid: file.cid.toV0().toString() });
+      if (file.path === ipfsFilePrefix) {
         baseDirectoryOnIPFS = file;
         continue;
       }
       //Map IPFS result to fileUploadRequests if file or add record to IPFSDirectories if directory
       const fileRequest = event.fileUploadRequests.find(
-        (x) => (x.path || '') + x.fileName == file.path,
+        (x) =>
+          (ipfsFilePrefix ? ipfsFilePrefix + '/' : '') +
+            (x.path || '') +
+            x.fileName ==
+          file.path,
       );
       if (fileRequest) {
         fileRequest.CID = file.cid;
         fileRequest.size = file.size;
       } else {
-        ipfsDirectories.push({ path: file.path, cid: file.cid });
+        ipfsDirectories.push({
+          path: file.path.replace(dirForUpload, ''),
+          cid: file.cid,
+        });
       }
     }
 
@@ -203,7 +237,7 @@ export class IPFSService {
       location: 'IPFSService.uploadFilesToIPFSFromS3',
       service: ServiceName.STORAGE,
       data: {
-        fileUploadRequests: event.fileUploadRequests,
+        fileUploadRequests: event.fileUploadRequests.map((x) => x.serialize()),
         ipfsResponse: filesOnIPFS,
       },
     });
