@@ -157,7 +157,6 @@ export interface IEnv {
   STORAGE_IPFS_API: string;
   STORAGE_IPFS_GATEWAY: string;
   STORAGE_DELETE_AFTER_INTERVAL: number;
-  STORAGE_FILE_CACHE_DIRECTORY: string;
 
   STORAGE_MYSQL_HOST: string;
   STORAGE_MYSQL_PORT: number;
@@ -492,8 +491,6 @@ export let env: IEnv = {
   STORAGE_IPFS_GATEWAY: process.env['STORAGE_IPFS_GATEWAY'],
   STORAGE_DELETE_AFTER_INTERVAL:
     parseInt(process.env['STORAGE_DELETE_AFTER_INTERVAL']) || 90,
-  STORAGE_FILE_CACHE_DIRECTORY:
-    process.env['STORAGE_FILE_CACHE_DIRECTORY'] || './tmpFiles',
 
   /**STORAGE microservice DB*/
   STORAGE_MYSQL_HOST: process.env['STORAGE_MYSQL_HOST'],

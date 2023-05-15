@@ -95,7 +95,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
     try {
       imagesOnIPFSRes = await IPFSService.uploadFURsToIPFSFromS3({
         fileUploadRequests: imageFURs,
-        wrapWithDirectory: true,
+        wrapWithDirectory: false,
       });
       console.info(
         'Collection images successfully uploaded to IPFS',
@@ -162,12 +162,22 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           await streamToString(file.Body, 'utf-8'),
         );
         if (fileContent.image) {
-          fileContent.image =
-            env.STORAGE_IPFS_GATEWAY +
-            '/' +
-            imagesOnIPFSRes.parentDirCID.toV0().toString() +
-            '/' +
-            fileContent.image;
+          const fileImageFUR = imageFURs.find(
+            (x) => x.fileName == fileContent.image,
+          );
+
+          if (fileImageFUR) {
+            fileContent.image =
+              env.STORAGE_IPFS_GATEWAY + fileImageFUR.CID.toV0().toString();
+
+            await pinFileToCRUST(
+              this.context,
+              bucket.bucket_uuid,
+              fileImageFUR.CID,
+              fileImageFUR.size,
+              true,
+            );
+          }
         }
 
         await s3Client.upload(
@@ -216,17 +226,11 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
     //#region Publish to IPNS, Pin to IPFS, Remove from S3, ...
     writeLog(
       LogType.INFO,
-      'pinning folders to CRUST',
+      'pinning metadata and images to CRUST',
       'prepare-metadata-for-collection-worker.ts',
       'runExecutor',
     );
-    await pinFileToCRUST(
-      this.context,
-      bucket.bucket_uuid,
-      imagesOnIPFSRes.parentDirCID,
-      imagesOnIPFSRes.size,
-      true,
-    );
+
     await pinFileToCRUST(
       this.context,
       bucket.bucket_uuid,

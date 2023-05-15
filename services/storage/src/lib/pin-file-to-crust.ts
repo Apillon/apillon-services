@@ -70,6 +70,11 @@ export async function pinFileToCRUST(
       message: 'Success placing storage order to CRUST',
       location: `pinFileToCRUST`,
       service: ServiceName.STORAGE,
+      data: {
+        CID: CID.toV0().toString(),
+        size,
+        isDirectory,
+      },
     });
   } catch (err) {
     await new Lmas().writeLog({
@@ -80,9 +85,11 @@ export async function pinFileToCRUST(
       location: `pinFileToCRUST`,
       service: ServiceName.STORAGE,
       data: {
+        CID: CID.toV0().toString(),
+        size,
+        isDirectory,
         err,
       },
     });
-    throw err;
   }
 }
