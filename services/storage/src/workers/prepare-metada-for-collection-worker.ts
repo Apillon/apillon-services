@@ -5,7 +5,6 @@ import {
   Lmas,
   LogType,
   runWithWorkers,
-  SerializeFor,
   ServiceName,
   streamToString,
   writeLog,
