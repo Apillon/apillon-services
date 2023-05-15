@@ -66,11 +66,13 @@ export class IPFSService {
       });
     }
 
+    console.info('Getting file from S3', event.fileUploadRequest.s3FileKey);
     const file = await s3Client.get(
       env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
       event.fileUploadRequest.s3FileKey,
     );
 
+    console.info('Add file to IPFS, ...');
     const filesOnIPFS = await client.add({
       content: file.Body as any,
     });
@@ -83,7 +85,10 @@ export class IPFSService {
       service: ServiceName.STORAGE,
       data: {
         fileUploadRequest: event.fileUploadRequest,
-        ipfsResponse: filesOnIPFS,
+        ipfsResponse: {
+          cidV0: filesOnIPFS.cid.toV0().toString(),
+          filesOnIPFS,
+        },
       },
     });
 
@@ -130,14 +135,13 @@ export class IPFSService {
           path: (fileUploadReq.path || '') + fileUploadReq.fileName,
           content: file.Body as any,
         });
+        console.info(
+          'Get file from S3 SUCCESS',
+          (fileUploadReq.path || '') + fileUploadReq.fileName,
+        );
       } catch (error) {
         console.error('Get file from s3 error', error);
       }
-
-      console.info(
-        'Get file from S3 SUCCESS',
-        (fileUploadReq.path || '') + fileUploadReq.fileName,
-      );
     }
 
     console.info(

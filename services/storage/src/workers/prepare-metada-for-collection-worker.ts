@@ -46,7 +46,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       data,
     );
 
-    //#region Load data, execute validations and Sync images to IPFS
+    //#region Load data, execute validations
     //Get sessions
     const imagesSession = await new FileUploadSession(
       {},
@@ -90,32 +90,6 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
     ).filter(
       (x) => x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED,
     );
-
-    let imagesOnIPFSRes: uploadFilesToIPFSRes = undefined;
-    try {
-      imagesOnIPFSRes = await IPFSService.uploadFURsToIPFSFromS3({
-        fileUploadRequests: imageFURs,
-        wrapWithDirectory: false,
-      });
-      console.info(
-        'Collection images successfully uploaded to IPFS',
-        imagesOnIPFSRes,
-      );
-    } catch (err) {
-      await new Lmas().writeLog({
-        context: this.context,
-        project_uuid: bucket.project_uuid,
-        logType: LogType.ERROR,
-        message: 'Error uploading nft collection images to IPFS',
-        location: 'NftStorageService/prepareMetadataForCollection',
-        service: ServiceName.STORAGE,
-        data: {
-          files: imageFURs.map((x) => x.serialize()),
-          error: err,
-        },
-      });
-      throw err;
-    }
     //#endregion
 
     //#region Prepare NFT metadata
@@ -140,7 +114,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
 
     await runWithWorkers(
       metadataFURs,
-      50,
+      20,
       this.context,
       async (metadataFUR) => {
         if (
@@ -152,7 +126,6 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           //NOTE: Define flow, what happen in this case. My gues - we should probably throw error
           return;
         }
-
         const file = await s3Client.get(
           env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
           metadataFUR.s3FileKey,
@@ -167,8 +140,17 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           );
 
           if (fileImageFUR) {
-            fileContent.image =
-              env.STORAGE_IPFS_GATEWAY + fileImageFUR.CID.toV0().toString();
+            //Upload image to IPFS
+            console.info(
+              'Uploading NFT image to IPFS',
+              fileImageFUR.serialize(),
+            );
+            const imageIpfsRes = await IPFSService.uploadFURToIPFSFromS3(
+              { fileUploadRequest: fileImageFUR },
+              this.context,
+            );
+
+            fileContent.image = env.STORAGE_IPFS_GATEWAY + imageIpfsRes;
 
             await pinFileToCRUST(
               this.context,
@@ -204,7 +186,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       });
       console.info(
         'Collection metadata successfully uploaded to IPFS',
-        imagesOnIPFSRes,
+        metadataOnIPFSRes,
       );
     } catch (err) {
       await new Lmas().writeLog({
