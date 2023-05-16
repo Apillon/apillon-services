@@ -36,7 +36,6 @@ export class BucketQueryFilter extends BaseQueryFilter {
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
-    defaultValue: 1,
   })
   public bucketType: number;
 }

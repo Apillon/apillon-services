@@ -7,6 +7,7 @@ import {
   writeLog,
 } from '@apillon/lib';
 import {
+  DbTables,
   FileStatus,
   FileUploadRequestFileStatus,
   StorageErrorCode,
@@ -46,6 +47,7 @@ export async function storageBucketSyncFilesToIPFS(
   wrappingDirectoryPath: string,
 ) {
   const transferedFiles: File[] = [];
+  let wrappedDirCid: string = undefined;
 
   //get directories in bucket
   const directories = await new Directory(
@@ -221,7 +223,10 @@ export async function storageBucketSyncFilesToIPFS(
       ipfsRes.parentDirCID,
       ipfsRes.size,
       true,
+      wrappingDirectory.directory_uuid,
+      DbTables.DIRECTORY,
     );
+    wrappedDirCid = ipfsRes.parentDirCID.toV0().toString();
   } else {
     //loop through files to sync each one of it to IPFS
     for (const file of files.filter(
@@ -395,6 +400,8 @@ export async function storageBucketSyncFilesToIPFS(
         CID.parse(transferedFile.CID),
         transferedFile.size,
         false,
+        transferedFile.file_uuid,
+        DbTables.FILE,
       );
     }
   }
@@ -424,5 +431,5 @@ export async function storageBucketSyncFilesToIPFS(
     'storageBucketSyncFilesToIPFS',
   );
 
-  return transferedFiles;
+  return { files: transferedFiles, wrappedDirCid: wrappedDirCid };
 }
