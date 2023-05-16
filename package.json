@@ -23,7 +23,9 @@
     "db-upgrade:ci": "npx turbo run db-upgrade:ci"
   },
   "devDependencies": {
+    "@jest/globals": "^29.5.0",
     "@types/aws-lambda": "^8.10.108",
+    "@types/jest": "^29.5.1",
     "copyfiles": "^2.4.1",
     "cross-env": "^7.0.3",
     "eslint-config-common": "*",

@@ -15,13 +15,13 @@ export class CrustBlockchainIndexer {
     this.graphQlClient = new GraphQLClient(env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER);
   }
 
-  public async getWalletWitdrawals(
+  public async getWalletWithdrawals(
     address: string,
     fromBlock: number,
     toBlock: number,
   ): Promise<CrustTransfers> {
     const GRAPHQL_QUERY = gql`
-      query getWitdrawals(
+      query getWithdrawals(
         $address: String!
         $fromBlock: Int!
         $toBlock: Int!
@@ -110,6 +110,51 @@ export class CrustBlockchainIndexer {
         fromBlock,
         toBlock,
         transactionType: CrustTransferType.TRANSFER,
+      },
+    );
+    return data;
+  }
+
+  public async getWalletTransfers(
+    address: string,
+    fromBlock: number,
+  ): Promise<CrustTransfers> {
+    const GRAPHQL_QUERY = gql`
+      query getTransfers($address: String!, $fromBlock: Int!) {
+        transfers(
+          where: {
+            AND: [
+              {
+                OR: [{ to: { id_eq: $address } }, { from: { id_eq: $address } }]
+              }
+              { blockNumber_gt: $fromBlock }
+            ]
+          }
+          orderBy: blockNumber_ASC
+        ) {
+          amount
+          blockNumber
+          extrinsicHash
+          fee
+          id
+          timestamp
+          transactionType
+          status
+          from {
+            id
+          }
+          to {
+            id
+          }
+        }
+      }
+    `;
+
+    const data: CrustTransfers = await this.graphQlClient.request(
+      GRAPHQL_QUERY,
+      {
+        address,
+        fromBlock,
       },
     );
     return data;

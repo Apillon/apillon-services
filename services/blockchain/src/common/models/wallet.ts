@@ -37,6 +37,7 @@ export class Wallet extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.WORKER,
     ],
     validators: [
       {
@@ -60,6 +61,7 @@ export class Wallet extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.WORKER,
     ],
     validators: [
       {
@@ -84,6 +86,7 @@ export class Wallet extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
       SerializeFor.PROFILE,
+      SerializeFor.WORKER,
     ],
   })
   public chainType: ChainType;
@@ -343,12 +346,34 @@ export class Wallet extends AdvancedSQLModel {
       SELECT *
       FROM \`${DbTables.WALLET}\`
       WHERE 
-      chainType = @chainType
+      status = ${SqlModelStatus.ACTIVE}
+      AND chainType = @chainType
       AND chain = @chain
       AND (@address IS NULL OR address = @address);
       `,
       { chainType, chain, address: address || null },
       conn,
     );
+  }
+
+  public async getAllWallets(
+    chain: Chain = null,
+    chainType: ChainType = null,
+    conn?: PoolConnection,
+  ): Promise<Wallet[]> {
+    const resp = await this.getContext().mysql.paramExecute(
+      `
+      SELECT *
+      FROM \`${DbTables.WALLET}\`
+      WHERE 
+      status = ${SqlModelStatus.ACTIVE}
+      AND (@chainType IS NULL OR chainType = @chainType)
+      AND (@chain IS NULL OR chain = @chain);
+      `,
+      { chainType, chain },
+      conn,
+    );
+
+    return resp?.map((x) => new Wallet(x, this.getContext())) || [];
   }
 }
