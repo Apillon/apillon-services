@@ -3,6 +3,7 @@ import {
   env,
   Lmas,
   LogType,
+  runWithWorkers,
   ServiceName,
   writeLog,
 } from '@apillon/lib';
@@ -393,17 +394,23 @@ export async function storageBucketSyncFilesToIPFS(
       'storage-bucket-sync-files-to-ipfsRes.ts',
       'storageBucketSyncFilesToIPFS',
     );
-    for (const transferedFile of transferedFiles) {
-      await pinFileToCRUST(
-        context,
-        bucket.bucket_uuid,
-        CID.parse(transferedFile.CID),
-        transferedFile.size,
-        false,
-        transferedFile.file_uuid,
-        DbTables.FILE,
-      );
-    }
+
+    await runWithWorkers(
+      transferedFiles,
+      20,
+      this.context,
+      async (transferedFile) => {
+        await pinFileToCRUST(
+          context,
+          bucket.bucket_uuid,
+          CID.parse(transferedFile.CID),
+          transferedFile.size,
+          false,
+          transferedFile.file_uuid,
+          DbTables.FILE,
+        );
+      },
+    );
   }
 
   //update bucket size
