@@ -404,7 +404,7 @@ export class StorageMicroservice extends BaseService {
 
   //#region nfts storage functions
 
-  public async prepareCollectionMetadata(params: {
+  public async executePrepareCollectionBaseUriWorker(params: {
     bucket_uuid: string;
     collection_uuid: string;
     collectionName: string;
@@ -412,7 +412,7 @@ export class StorageMicroservice extends BaseService {
     metadataSession: string;
   }): Promise<{ data: { baseUri: string } }> {
     const data = {
-      eventName: StorageEventType.PREPARE_COLLECTION_METADATA,
+      eventName: StorageEventType.EXECUTE_PREPARE_COLLECTION_BASE_URI_WORKER,
       body: params,
     };
     return await this.callService(data);

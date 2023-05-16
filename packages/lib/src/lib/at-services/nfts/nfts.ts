@@ -127,4 +127,15 @@ export class NftsMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
+
+  public async executeDeployCollectionWorker(params: {
+    collection_uuid: string;
+    baseUri: string;
+  }) {
+    const data = {
+      eventName: NftsEventType.EXECUTE_DEPLOY_COLLECTION_WORKER,
+      body: params,
+    };
+    return await this.callService(data);
+  }
 }

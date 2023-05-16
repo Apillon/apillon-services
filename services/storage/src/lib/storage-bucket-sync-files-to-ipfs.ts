@@ -398,7 +398,7 @@ export async function storageBucketSyncFilesToIPFS(
     await runWithWorkers(
       transferedFiles,
       20,
-      this.context,
+      context,
       async (transferedFile) => {
         await pinFileToCRUST(
           context,
