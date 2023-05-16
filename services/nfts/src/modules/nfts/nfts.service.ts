@@ -102,7 +102,7 @@ export class NftsService {
         new CreateBucketDto().populate({
           project_uuid: params.body.project_uuid,
           bucketType: 3,
-          name: 'collection' + collection.collection_uuid,
+          name: collection.name + ' bucket',
         });
       nftMetadataBucket = (
         await new StorageMicroservice(context).createBucket(createBucketParams)

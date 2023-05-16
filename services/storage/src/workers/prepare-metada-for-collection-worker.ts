@@ -2,10 +2,9 @@ import {
   AWS_S3,
   Context,
   env,
-  Lmas,
   LogType,
   runWithWorkers,
-  ServiceName,
+  SerializeFor,
   streamToString,
   writeLog,
 } from '@apillon/lib';
@@ -21,12 +20,12 @@ import {
   StorageErrorCode,
 } from '../config/types';
 import { StorageCodeException } from '../lib/exceptions';
-import { pinFileToCRUST } from '../lib/pin-file-to-crust';
+import { storageBucketSyncFilesToIPFS } from '../lib/storage-bucket-sync-files-to-ipfs';
 import { Bucket } from '../modules/bucket/models/bucket.model';
-import { uploadFilesToIPFSRes } from '../modules/ipfs/interfaces/upload-files-to-ipfs-res.interface';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
+import { Ipns } from '../modules/ipns/models/ipns.model';
 
 export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
   public constructor(
@@ -90,6 +89,17 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
     ).filter(
       (x) => x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED,
     );
+
+    const imageFiles = await storageBucketSyncFilesToIPFS(
+      this.context,
+      `${this.constructor.name}/runExecutor`,
+      bucket,
+      5368709120,
+      imageFURs,
+      imagesSession,
+      false,
+      undefined,
+    );
     //#endregion
 
     //#region Prepare NFT metadata
@@ -135,31 +145,10 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           await streamToString(file.Body, 'utf-8'),
         );
         if (fileContent.image) {
-          const fileImageFUR = imageFURs.find(
-            (x) => x.fileName == fileContent.image,
+          const imageFile = imageFiles.files.find(
+            (x) => x.name == fileContent.image,
           );
-
-          if (fileImageFUR) {
-            //Upload image to IPFS
-            console.info(
-              'Uploading NFT image to IPFS',
-              fileImageFUR.serialize(),
-            );
-            const imageIpfsRes = await IPFSService.uploadFURToIPFSFromS3(
-              { fileUploadRequest: fileImageFUR },
-              this.context,
-            );
-
-            fileContent.image = env.STORAGE_IPFS_GATEWAY + imageIpfsRes;
-
-            await pinFileToCRUST(
-              this.context,
-              bucket.bucket_uuid,
-              imageIpfsRes.CID,
-              imageIpfsRes.size,
-              true,
-            );
-          }
+          fileContent.image = env.STORAGE_IPFS_GATEWAY + imageFile.CID;
         }
 
         await s3Client.upload(
@@ -178,31 +167,16 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
     //#endregion
 
     //#region Sync metadata to IPFS
-    let metadataOnIPFSRes: uploadFilesToIPFSRes = undefined;
-    try {
-      metadataOnIPFSRes = await IPFSService.uploadFURsToIPFSFromS3({
-        fileUploadRequests: metadataFURs,
-        wrapWithDirectory: true,
-      });
-      console.info(
-        'Collection metadata successfully uploaded to IPFS',
-        metadataOnIPFSRes,
-      );
-    } catch (err) {
-      await new Lmas().writeLog({
-        context: this.context,
-        project_uuid: bucket.project_uuid,
-        logType: LogType.ERROR,
-        message: 'Error uploading collection metadata to IPFS',
-        location: 'NftStorageService/prepareMetadataForCollection',
-        service: ServiceName.STORAGE,
-        data: {
-          files: imageFURs.map((x) => x.serialize()),
-          error: err,
-        },
-      });
-      throw err;
-    }
+    const metadataFiles = await storageBucketSyncFilesToIPFS(
+      this.context,
+      `${this.constructor.name}/runExecutor`,
+      bucket,
+      5368709120,
+      metadataFURs,
+      metadataSession,
+      true,
+      'Metadata',
+    );
     //#endregion
 
     //#region Publish to IPNS, Pin to IPFS, Remove from S3, ...
@@ -213,25 +187,20 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       'runExecutor',
     );
 
-    await pinFileToCRUST(
-      this.context,
-      bucket.bucket_uuid,
-      metadataOnIPFSRes.parentDirCID,
-      metadataOnIPFSRes.size,
-      true,
-    );
-
     console.info(
-      `pinning metadata CID (${metadataOnIPFSRes.parentDirCID
-        .toV0()
-        .toString()}) to IPNS`,
+      `pinning metadata CID (${metadataFiles.wrappedDirCid}) to IPNS`,
     );
 
     //Pin to IPNS
-    await IPFSService.publishToIPNS(
-      metadataOnIPFSRes.parentDirCID.toV0().toString(),
-      data.collection_uuid,
+    const ipnsDbRecord: Ipns = await new Ipns({}, this.context).populateById(
+      data.ipnsId,
     );
+    const ipnsRecord = await IPFSService.publishToIPNS(
+      metadataFiles.wrappedDirCid,
+      `${ipnsDbRecord.project_uuid}_${ipnsDbRecord.bucket_id}_${ipnsDbRecord.id}`,
+    );
+    ipnsDbRecord.ipnsValue = ipnsRecord.value;
+    await ipnsDbRecord.update(SerializeFor.UPDATE_DB);
 
     console.info(`IPNS sucessfully published. Removing files from s3`);
 

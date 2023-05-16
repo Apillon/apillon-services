@@ -6,6 +6,7 @@ import {
   EvmChain,
   ForbiddenErrorCodes,
   getQueryParams,
+  LogType,
   NFTCollectionQueryFilter,
   PoolConnection,
   PopulateFrom,
@@ -14,6 +15,7 @@ import {
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
+  writeLog,
 } from '@apillon/lib';
 import { integerParser, stringParser, booleanParser } from '@rawmodel/parsers';
 import {
@@ -673,13 +675,23 @@ export class Collection extends AdvancedSQLModel {
   }
 
   public async populateNumberOfMintedNfts() {
-    const walletService: WalletService = new WalletService(this.chain);
-    if (this.contractAddress) {
-      this.minted = await walletService.getNumberOfMintedNfts(
-        this.contractAddress,
+    this.minted = 0;
+
+    try {
+      const walletService: WalletService = new WalletService(this.chain);
+      if (this.contractAddress) {
+        this.minted = await walletService.getNumberOfMintedNfts(
+          this.contractAddress,
+        );
+      }
+    } catch (err) {
+      writeLog(
+        LogType.ERROR,
+        'getNumberOfMintedNfts failed',
+        'collection.model.ts',
+        'populateNumberOfMintedNfts',
+        err,
       );
-    } else {
-      this.minted = 0;
     }
   }
 
