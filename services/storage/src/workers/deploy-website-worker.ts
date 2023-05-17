@@ -14,6 +14,7 @@ import {
 } from '@apillon/workers-lib';
 import { v4 as uuidV4 } from 'uuid';
 import {
+  DbTables,
   DeploymentEnvironment,
   DeploymentStatus,
   FileStatus,
@@ -213,6 +214,8 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
             CID.parse(targetBucket.CID),
             cidSize,
             true,
+            targetBucket.bucket_uuid,
+            DbTables.BUCKET,
           );
         }
 

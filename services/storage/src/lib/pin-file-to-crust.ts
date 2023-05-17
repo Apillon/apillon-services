@@ -1,10 +1,10 @@
-import { Lmas, LogType, ServiceName, writeLog } from '@apillon/lib';
-import { DbTables, FileStatus } from '../config/types';
+import { Lmas, LogType, ServiceName } from '@apillon/lib';
+import { CID } from 'ipfs-http-client';
+import { FileStatus } from '../config/types';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { CrustService } from '../modules/crust/crust.service';
-import { File } from '../modules/storage/models/file.model';
 import { Directory } from '../modules/directory/models/directory.model';
-import { CID } from 'ipfs-http-client';
+import { File } from '../modules/storage/models/file.model';
 
 /**
  * Function to execute PinToCRUST
@@ -17,6 +17,8 @@ export async function pinFileToCRUST(
   CID: CID,
   size: number,
   isDirectory: boolean,
+  refId: string,
+  refTable: string,
 ) {
   console.info('pinFileToCRUST', {
     params: {
@@ -33,23 +35,24 @@ export async function pinFileToCRUST(
   );
 
   try {
-    let refId = undefined;
-    if (isDirectory) {
-      const dir: Directory = await new Directory({}, context).populateByCid(
-        CID.toV0().toString(),
-      );
-      if (dir.exists()) {
-        refId = dir.CID;
-      }
-    } else {
-      const file: File = await new File({}, context).populateById(
-        CID.toV0().toString(),
-      );
-      //if file, then update file status
-      if (file.exists()) {
-        file.fileStatus = FileStatus.PINNING_TO_CRUST;
-        await file.update();
-        refId = file.file_uuid;
+    if (!refId) {
+      if (isDirectory) {
+        const dir: Directory = await new Directory({}, context).populateByCid(
+          CID.toV0().toString(),
+        );
+        if (dir.exists()) {
+          refId = dir.directory_uuid;
+        }
+      } else {
+        const file: File = await new File({}, context).populateById(
+          CID.toV0().toString(),
+        );
+        //if file, then update file status
+        if (file.exists()) {
+          file.fileStatus = FileStatus.PINNING_TO_CRUST;
+          await file.update();
+          refId = file.file_uuid;
+        }
       }
     }
 
@@ -58,7 +61,7 @@ export async function pinFileToCRUST(
         cid: CID,
         size: size,
         isDirectory: isDirectory,
-        refTable: isDirectory ? DbTables.DIRECTORY : DbTables.FILE,
+        refTable: refTable,
         refId: refId,
       },
       context,
@@ -70,6 +73,11 @@ export async function pinFileToCRUST(
       message: 'Success placing storage order to CRUST',
       location: `pinFileToCRUST`,
       service: ServiceName.STORAGE,
+      data: {
+        CID: CID.toV0().toString(),
+        size,
+        isDirectory,
+      },
     });
   } catch (err) {
     await new Lmas().writeLog({
@@ -80,9 +88,11 @@ export async function pinFileToCRUST(
       location: `pinFileToCRUST`,
       service: ServiceName.STORAGE,
       data: {
+        CID: CID.toV0().toString(),
+        size,
+        isDirectory,
         err,
       },
     });
-    throw err;
   }
 }

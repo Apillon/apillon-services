@@ -102,7 +102,7 @@ export class NftsService {
         new CreateBucketDto().populate({
           project_uuid: params.body.project_uuid,
           bucketType: 3,
-          name: 'collection' + collection.collection_uuid,
+          name: collection.name + ' bucket',
         });
       nftMetadataBucket = (
         await new StorageMicroservice(context).createBucket(createBucketParams)
@@ -205,38 +205,28 @@ export class NftsService {
       env.APP_ENV == AppEnvironment.LOCAL_DEV ||
       env.APP_ENV == AppEnvironment.TEST
     ) {
-      const serviceDef: ServiceDefinition = {
-        type: ServiceDefinitionType.SQS,
-        config: { region: 'test' },
-        params: { FunctionName: 'test' },
-      };
-      const parameters = {
-        collectionId: collection.id,
-      };
-      const wd = new WorkerDefinition(
-        serviceDef,
-        WorkerName.DEPLOY_COLLECTION,
-        {
-          parameters,
-        },
-      );
-
-      const worker = new DeployCollectionWorker(
-        wd,
+      //Call Storage MS function, which will trigger worker
+      await new StorageMicroservice(
         context,
-        QueueWorkerType.EXECUTOR,
-      );
-      await worker.runExecutor({
-        collectionId: collection.id,
+      ).executePrepareCollectionBaseUriWorker({
+        bucket_uuid: collection.bucket_uuid,
+        collection_uuid: collection.collection_uuid,
+        collectionName: collection.name,
+        imagesSession: collection.imagesSession,
+        metadataSession: collection.metadataSession,
       });
     } else {
       //send message to SQS
       await sendToWorkerQueue(
-        env.NFTS_AWS_WORKER_SQS_URL,
-        WorkerName.DEPLOY_COLLECTION,
+        env.STORAGE_AWS_WORKER_SQS_URL,
+        'PrepareBaseUriForCollectionWorker',
         [
           {
-            collectionId: collection.id,
+            bucket_uuid: collection.bucket_uuid,
+            collection_uuid: collection.collection_uuid,
+            collectionName: collection.name,
+            imagesSession: collection.imagesSession,
+            metadataSession: collection.metadataSession,
           },
         ],
         null,
@@ -245,6 +235,42 @@ export class NftsService {
     }
 
     return collection.serialize(SerializeFor.PROFILE);
+  }
+
+  /**
+   * Function executes deploy collection worker - This should be used only for LOCAL_DEV
+   * Called from storage microservice in PrepareBaseUriForCollectionWorker
+   * @param params
+   * @param context
+   */
+  static async executeDeployCollectionWorker(
+    params: { body: { collection_uuid: string; baseUri: string } },
+    context: ServiceContext,
+  ) {
+    const serviceDef: ServiceDefinition = {
+      type: ServiceDefinitionType.SQS,
+      config: { region: 'test' },
+      params: { FunctionName: 'test' },
+    };
+    const parameters = {
+      collection_uuid: params.body.collection_uuid,
+      baseUri: params.body.baseUri,
+    };
+    const wd = new WorkerDefinition(serviceDef, WorkerName.DEPLOY_COLLECTION, {
+      parameters,
+    });
+
+    const worker = new DeployCollectionWorker(
+      wd,
+      context,
+      QueueWorkerType.EXECUTOR,
+    );
+    await worker.runExecutor({
+      collection_uuid: params.body.collection_uuid,
+      baseUri: params.body.baseUri,
+    });
+
+    return { success: true };
   }
 
   static async listNftCollections(

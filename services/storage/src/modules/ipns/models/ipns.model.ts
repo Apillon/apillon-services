@@ -198,6 +198,30 @@ export class Ipns extends AdvancedSQLModel {
     }
   }
 
+  public async populateByProjectAndName(
+    project_uuid: string,
+    name: string,
+  ): Promise<this> {
+    if (!project_uuid || !name) {
+      throw new Error('params should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE project_uuid = @project_uuid and name = @name AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { project_uuid, name },
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
+
   public async getList(context: ServiceContext, filter: IpnsQueryFilter) {
     const b: Bucket = await new Bucket({}, context).populateById(
       filter.bucket_id,

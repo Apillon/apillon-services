@@ -109,7 +109,7 @@ export enum StorageEventType {
   BUCKET_CLEAR_CONTENT = 'clear-bucket-content',
   DEPLOYMENT_GET = 'get-deployment',
   DEPLOYMENT_LIST = 'list-deployment',
-  PREPARE_COLLECTION_METADATA = 'prepare-collection-metadata',
+  EXECUTE_PREPARE_COLLECTION_BASE_URI_WORKER = 'execute-prepare-collection-base-uri-worker',
 }
 
 export enum AuthenticationEventType {
@@ -150,6 +150,7 @@ export enum NftsEventType {
   DEPLOY_COLLECTION = 'deploy-collection',
   BURN_NFT = 'burn-nft',
   MAX_COLLECTIONS_QUOTA_REACHED = 'max-collections-quota-reached',
+  EXECUTE_DEPLOY_COLLECTION_WORKER = 'execute-deploy-collection-worker',
 }
 
 export enum ReferralEventType {

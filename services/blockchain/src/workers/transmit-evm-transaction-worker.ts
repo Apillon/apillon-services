@@ -55,6 +55,13 @@ export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
         service: ServiceName.BLOCKCHAIN,
         data: data,
       });
+      await this.writeLogToDb(
+        WorkerLogStatus.INFO,
+        'EVM transactions submitted',
+        {
+          data,
+        },
+      );
     } catch (err) {
       await new Lmas().writeLog({
         context: this.context,
@@ -67,6 +74,11 @@ export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
           err,
         },
       });
+      await new Lmas().sendAdminAlert(
+        ' [Transmit Evm Transaction Worker]: Error submitting transactions',
+        ServiceName.BLOCKCHAIN,
+        'alert',
+      );
       throw err;
     }
 
@@ -90,11 +102,6 @@ export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
         },
       });
     }
-
-    await this.writeLogToDb(
-      WorkerLogStatus.INFO,
-      `TransmitEvmTransactionWorker worker has been completed!`,
-    );
 
     return true;
   }

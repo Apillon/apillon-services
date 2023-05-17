@@ -2,6 +2,7 @@ import {
   BaseSingleThreadWorker,
   sendToWorkerQueue,
   WorkerDefinition,
+  WorkerLogStatus,
 } from '@apillon/workers-lib';
 import { Wallet } from '../common/models/wallet';
 import {
@@ -31,10 +32,6 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
 
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);
-  }
-
-  public async runPlanner(): Promise<any[]> {
-    return [];
   }
 
   public async runExecutor(data: any): Promise<any> {
@@ -74,21 +71,19 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
             ? lastParsedBlock + wallet.blockParseSize
             : blockHeight;
 
-        await new Lmas().writeLog({
-          logType: LogType.INFO,
-          message: `Checking ${this.logPrefix} pending transactions..`,
-          location: 'EvmTransactionWorker',
-          service: ServiceName.BLOCKCHAIN,
-          data: {
-            wallet: wallet.address,
-            fromBlock: lastParsedBlock,
-            toBlock,
-          },
-        });
-
         console.log(
           `${this.logPrefix} Checking PENDING transactions (sourceWallet=${wallet.address}, lastParsedBlock=${wallet.lastParsedBlock}, toBlock=${toBlock})..`,
         );
+
+        // await this.writeLogToDb(
+        //   WorkerLogStatus.INFO,
+        //   'Checking pending transactions..',
+        //   {
+        //     wallet: wallet.address,
+        //     fromBlock: lastParsedBlock,
+        //     toBlock,
+        //   },
+        // );
 
         const walletTxs = await this.fetchAllEvmTransactions(
           evmIndexer,
@@ -98,14 +93,14 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
         );
 
         await this.handleOutgoingEvmTxs(wallet, walletTxs.outgoingTxs, conn);
-        await this.handleIncomingEvmTxs(wallet, walletTxs.incomingTxs, conn);
+        await this.handleIncomingEvmTxs(wallet, walletTxs.incomingTxs);
 
         await wallet.updateLastParsedBlock(toBlock, conn);
         await conn.commit();
 
-        console.log(
-          `${this.logPrefix} Checking PENDING transactions (sourceWallet=${wallet.address}, lastProcessedBlock=${toBlock}) FINISHED!`,
-        );
+        // console.log(
+        //   `${this.logPrefix} Checking PENDING transactions (sourceWallet=${wallet.address}, lastProcessedBlock=${toBlock}) FINISHED!`,
+        // );
 
         if (
           walletTxs.incomingTxs.transactions.length > 0 ||
@@ -118,22 +113,25 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
             null,
             null,
           );
+          await this.writeLogToDb(
+            WorkerLogStatus.INFO,
+            'Found new transactions. Triggering transaction webhook worker!',
+            {
+              incoming: walletTxs.incomingTxs.transactions,
+              outgoing: walletTxs.outgoingTxs.transactions,
+            },
+          );
         }
-        await new Lmas().writeLog({
-          logType: LogType.INFO,
-          message: `Checking ${this.logPrefix} pending transactions finished!`,
-          location: 'EvmTransactionWorker',
-          service: ServiceName.BLOCKCHAIN,
-          data: {
-            wallet: wallets.address,
-            fromBlock: lastParsedBlock,
-            toBlock,
-          },
-        });
       } catch (err) {
         await conn.rollback();
         console.error(
           `${this.logPrefix} Checking PENDING transactions (sourceWallet=${w.address}) FAILED! Error: ${err}`,
+        );
+        await this.writeLogToDb(
+          WorkerLogStatus.ERROR,
+          'Checking PENDING transactions FAILED!',
+          { wallet: wallets.address },
+          err,
         );
         await new Lmas().writeLog({
           logType: LogType.ERROR,
@@ -145,6 +143,11 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
             wallet: wallets.address,
           },
         });
+        await new Lmas().sendAdminAlert(
+          `${this.logPrefix}: Error confirming transactions!`,
+          ServiceName.BLOCKCHAIN,
+          'alert',
+        );
       }
     }
   }
@@ -179,8 +182,13 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
       );
       return;
     }
-    console.log(
-      `${this.logPrefix} Matching ${outgoingTxs.transactions.length} outgoing blockchain transactions with transactions in DB.`,
+
+    await this.writeLogToDb(
+      WorkerLogStatus.INFO,
+      `Matching ${outgoingTxs.transactions.length} outgoing blockchain transactions with transactions in DB.`,
+      {
+        transactions: outgoingTxs.transactions,
+      },
     );
 
     const confirmedTxs: string[] = await this.updateEvmTransactionsByStatus(
@@ -210,19 +218,20 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
     });
   }
 
-  public async handleIncomingEvmTxs(
-    wallet: Wallet,
-    incomingTxs: EvmTransfers,
-    conn: PoolConnection,
-  ) {
+  public async handleIncomingEvmTxs(wallet: Wallet, incomingTxs: EvmTransfers) {
     if (!incomingTxs.transactions.length) {
       console.log(
         `${this.logPrefix} There are no new deposits to wallet (address=${wallet.address}).`,
       );
       return;
     }
-    console.log(
-      `${this.logPrefix} Received ${incomingTxs.transactions.length} deposits from blockchain indexer.`,
+
+    await this.writeLogToDb(
+      WorkerLogStatus.INFO,
+      `Matching ${incomingTxs.transactions.length} outgoing blockchain transactions with transactions in DB.`,
+      {
+        transactions: incomingTxs.transactions,
+      },
     );
 
     incomingTxs.transactions.forEach((bcTx) => {

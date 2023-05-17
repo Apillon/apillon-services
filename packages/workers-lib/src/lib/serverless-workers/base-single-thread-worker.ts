@@ -75,7 +75,7 @@ export abstract class BaseSingleThreadWorker extends BaseWorker {
       this.shouldRunJob = await this.checkLockedStatus();
 
       if (!this.shouldRunJob) {
-        console.log('TEST:::::Worker locked!');
+        // console.log('TEST:::::Worker locked!');
         await conn.rollback();
         return;
       }
@@ -105,7 +105,7 @@ export abstract class BaseSingleThreadWorker extends BaseWorker {
     }
     await this.writeLogToDb(
       WorkerLogStatus.START,
-      'Started SINGLE THREAD worker',
+      'Started execution on SINGLE THREAD worker!',
     );
 
     await this.runExecutor(data ? JSON.parse(data) : null);
@@ -150,12 +150,12 @@ export abstract class BaseSingleThreadWorker extends BaseWorker {
       return false;
     }
 
-    console.log(
-      `${moment().diff(
-        moment(this.job.lastRun),
-        'second',
-      )} seconds since last job run! TIMEOUT=(${this.job.timeout})`,
-    );
+    // console.log(
+    //   `${moment().diff(
+    //     moment(this.job.lastRun),
+    //     'second',
+    //   )} seconds since last job run! TIMEOUT=(${this.job.timeout})`,
+    // );
     // if past timeout - ignore count and locked status
 
     if (
