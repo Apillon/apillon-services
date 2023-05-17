@@ -47,7 +47,7 @@ export class IPFSService {
     context,
   ): Promise<{ CID: CID; cidV0: string; cidV1: string; size: number }> {
     //Get IPFS client
-    const client = await IPFSService.createIPFSClient();
+    let client = await IPFSService.createIPFSClient();
 
     //Get File from S3
     const s3Client: AWS_S3 = new AWS_S3();
@@ -67,7 +67,7 @@ export class IPFSService {
     }
 
     console.info('Getting file from S3', event.fileUploadRequest.s3FileKey);
-    const file = await s3Client.get(
+    let file = await s3Client.get(
       env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
       event.fileUploadRequest.s3FileKey,
     );
@@ -76,6 +76,14 @@ export class IPFSService {
     const filesOnIPFS = await client.add({
       content: file.Body as any,
     });
+
+    try {
+      (file.Body as any).destroy();
+    } catch (err) {
+      console.error(err);
+    }
+    file = undefined;
+    client = undefined;
 
     //Write log to LMAS
     await new Lmas().writeLog({
