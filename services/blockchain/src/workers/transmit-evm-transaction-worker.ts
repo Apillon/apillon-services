@@ -2,6 +2,7 @@ import {
   AppEnvironment,
   Context,
   env,
+  EvmChain,
   Lmas,
   LogType,
   ServiceName,
@@ -17,6 +18,14 @@ import { BlockchainCodeException } from '../lib/exceptions';
 import { EvmService } from '../modules/evm/evm.service';
 import { WorkerName } from './worker-executor';
 
+/**
+ * TODO: error logging:
+ * await new Lmas().sendAdminAlert(
+      ':wave: Hello from the other side!',
+      ServiceName.DEV_CONSOLE,
+      'message',
+    );
+ */
 export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);
@@ -27,7 +36,7 @@ export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
   }
   public async runExecutor(data: any): Promise<any> {
     console.info('RUN EXECUTOR (TransmitEvmTransactionWorker). data: ', data);
-    const chain = data?.chain;
+    const chain = data?.chain; // todo: move to workerDefinition.parameters
     if (!chain) {
       throw new BlockchainCodeException({
         code: BlockchainErrorCode.INVALID_DATA_PASSED_TO_WORKER,
@@ -47,6 +56,13 @@ export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
         service: ServiceName.BLOCKCHAIN,
         data: data,
       });
+      await this.writeLogToDb(
+        WorkerLogStatus.INFO,
+        'EVM transactions submitted',
+        {
+          data,
+        },
+      );
     } catch (err) {
       await new Lmas().writeLog({
         context: this.context,
@@ -59,6 +75,11 @@ export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
           err,
         },
       });
+      await new Lmas().sendAdminAlert(
+        ' [Transmit Evm Transaction Worker]: Error submitting transactions',
+        ServiceName.BLOCKCHAIN,
+        'alert',
+      );
       throw err;
     }
 
@@ -71,7 +92,7 @@ export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
           env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
           WorkerName.EVM_TRANSACTIONS,
           [{ chain: data?.chain }],
-          null,
+          data?.chain == EvmChain.MOONBASE ? 4 : 7,
           null,
         );
       } catch (e) {
@@ -87,12 +108,6 @@ export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
         });
       }
     }
-
-    await this.writeLogToDb(
-      WorkerLogStatus.INFO,
-      `TransmitEvmTransactionWorker worker has been completed!`,
-    );
-
     return true;
   }
 }

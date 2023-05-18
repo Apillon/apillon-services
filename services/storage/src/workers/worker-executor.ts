@@ -17,6 +17,8 @@ import { DeleteBucketDirectoryFileWorker } from './delete-bucket-directory-file-
 import { PublishToIPNSWorker } from './publish-to-ipns-worker';
 import { UpdateCrustStatusWorker } from './update-crust-status-worker';
 import { PrepareMetadataForCollectionWorker } from './prepare-metada-for-collection-worker';
+import { PrepareBaseUriForCollectionWorker } from './prepare-base-uri-for-collection-worker';
+import { PinToCrustWorker } from './pin-to-crust-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -30,6 +32,8 @@ export enum WorkerName {
   PUBLISH_TO_IPNS_WORKER = 'PublishToIPNSWorker',
   UPDATE_CRUST_STATUS_WORKER = 'UpdateCrustStatusWorker',
   PREPARE_METADATA_FOR_COLLECTION_WORKER = 'PrepareMetadataForCollectionWorker',
+  PREPARE_BASE_URI_FOR_COLLECTION_WORKER = 'PrepareBaseUriForCollectionWorker',
+  PIN_TO_CRUST_WORKER = 'PinToCrustWorker',
 }
 
 export async function handler(event: any) {
@@ -124,6 +128,10 @@ export async function handleLambdaEvent(
         context,
       );
       await workerForDeletion.run();
+      break;
+    case WorkerName.PIN_TO_CRUST_WORKER:
+      const pinToCrustWorker = new PinToCrustWorker(workerDefinition, context);
+      await pinToCrustWorker.run();
       break;
     default:
       console.log(
@@ -238,6 +246,17 @@ export async function handleSqsMessages(
         });
         break;
       }
+      case WorkerName.PREPARE_BASE_URI_FOR_COLLECTION_WORKER: {
+        await new PrepareBaseUriForCollectionWorker(
+          workerDefinition,
+          context,
+          QueueWorkerType.EXECUTOR,
+        ).run({
+          executeArg: message?.body,
+        });
+        break;
+      }
+
       default:
         console.log(
           `ERROR - INVALID WORKER NAME: ${message?.messageAttributes?.workerName}`,

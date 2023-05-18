@@ -34,7 +34,10 @@ export class BucketService {
     ).getList(context, new BucketQueryFilter(event.query));
   }
 
-  static async getBucket(event: { id: number }, context: ServiceContext) {
+  static async getBucket(
+    event: { id: string | number },
+    context: ServiceContext,
+  ) {
     const b = await new Bucket({}, context).populateById(event.id);
     if (!b.exists()) {
       throw new StorageCodeException({

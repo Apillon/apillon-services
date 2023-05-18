@@ -109,17 +109,17 @@ export class SubstrateService {
       const unsignedTx = api.tx(_event.params.transaction);
       // TODO: add validation service for transaction to detect and prevent weird transactions.
 
-      // const info = await unsignedTx.paymentInfo(pair);
-      // console.log(`
-      //   class=${info.class.toString()},
-      //   weight=${info.weight.toString()},
-      //   partialFee=${info.partialFee.toHuman()}
-      // `);
+      const info = await unsignedTx.paymentInfo(pair);
+      console.log(`
+        class=${info.class.toString()},
+        weight=${info.weight.toString()},
+        partialFee=${info.partialFee.toHuman()}
+      `);
 
       // TODO: Determine the best era
       const signed = await unsignedTx.signAsync(pair, {
         nonce: wallet.nextNonce,
-        era: 600, // number of blocks the transaction is valid - 6s per block * 150 blocks / 60 = 15 minutes
+        era: 600, // number of blocks the transaction is valid - 6s per block * 6000 blocks / 60 = 600 minutes -> 10 hours
       });
 
       const signedSerialized = signed.toHex();

@@ -10,6 +10,7 @@ import { SetCollectionBaseUriDTO } from './dtos/set-collection-base-uri.dto';
 import { TransactionQueryFilter } from './dtos/transaction-query-filter.dto';
 import { TransferCollectionDTO } from './dtos/transfer-collection.dto';
 import { BurnNftDto } from './dtos/burn-nft.dto';
+import { CollectionsQuotaReachedQueryFilter } from './dtos/collections-quota-reached-query-filter.dto';
 
 export class NftsMicroservice extends BaseService {
   lambdaFunctionName =
@@ -113,6 +114,27 @@ export class NftsMicroservice extends BaseService {
     const data = {
       eventName: NftsEventType.DEPLOY_COLLECTION,
       body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async maxCollectionsQuotaReached(
+    params: CollectionsQuotaReachedQueryFilter,
+  ) {
+    const data = {
+      eventName: NftsEventType.MAX_COLLECTIONS_QUOTA_REACHED,
+      query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async executeDeployCollectionWorker(params: {
+    collection_uuid: string;
+    baseUri: string;
+  }) {
+    const data = {
+      eventName: NftsEventType.EXECUTE_DEPLOY_COLLECTION_WORKER,
+      body: params,
     };
     return await this.callService(data);
   }

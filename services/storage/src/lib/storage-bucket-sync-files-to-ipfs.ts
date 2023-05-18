@@ -3,10 +3,12 @@ import {
   env,
   Lmas,
   LogType,
+  runWithWorkers,
   ServiceName,
   writeLog,
 } from '@apillon/lib';
 import {
+  DbTables,
   FileStatus,
   FileUploadRequestFileStatus,
   StorageErrorCode,
@@ -21,6 +23,7 @@ import { FileUploadSession } from '../modules/storage/models/file-upload-session
 import { File } from '../modules/storage/models/file.model';
 import {
   generateDirectoriesForFUR,
+  generateDirectoriesForFURs,
   generateDirectoriesFromPath,
 } from '../lib/generate-directories-from-path';
 import { pinFileToCRUST } from './pin-file-to-crust';
@@ -46,6 +49,7 @@ export async function storageBucketSyncFilesToIPFS(
   wrappingDirectoryPath: string,
 ) {
   const transferedFiles: File[] = [];
+  let wrappedDirCid: string = undefined;
 
   //get directories in bucket
   const directories = await new Directory(
@@ -221,48 +225,122 @@ export async function storageBucketSyncFilesToIPFS(
       ipfsRes.parentDirCID,
       ipfsRes.size,
       true,
+      wrappingDirectory.directory_uuid,
+      DbTables.DIRECTORY,
     );
+    wrappedDirCid = ipfsRes.parentDirCID.toV0().toString();
   } else {
+    //Generate directories
+    await generateDirectoriesForFURs(context, directories, files, bucket);
     //loop through files to sync each one of it to IPFS
-    for (const file of files.filter(
-      (x) => x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED,
-    )) {
-      if (bucket.size >= maxBucketSize) {
-        //max size was reached - mark files that will not be transfered to IPFS
-        file.fileStatus = FileUploadRequestFileStatus.ERROR_BUCKET_FULL;
-        await file.update();
-        //delete file from s3
-        const s3Client: AWS_S3 = new AWS_S3();
-        await s3Client.remove(
-          env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-          file.s3FileKey,
-        );
-        continue;
-      }
-
-      let ipfsRes = undefined;
-      try {
-        ipfsRes = await IPFSService.uploadFURToIPFSFromS3(
-          { fileUploadRequest: file },
-          context,
-        );
-      } catch (err) {
-        if (
-          err?.options?.code == StorageErrorCode.FILE_DOES_NOT_EXISTS_IN_BUCKET
-        ) {
-          file.fileStatus =
-            FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3;
+    await runWithWorkers(
+      files.filter(
+        (x) => x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED,
+      ),
+      20,
+      context,
+      async (file) => {
+        file = new FileUploadRequest(file, context);
+        if (bucket.size >= maxBucketSize) {
+          //max size was reached - mark files that will not be transfered to IPFS
+          file.fileStatus = FileUploadRequestFileStatus.ERROR_BUCKET_FULL;
           await file.update();
-          continue;
-        } else {
-          file.fileStatus = FileUploadRequestFileStatus.ERROR_UPLOADING_TO_IPFS;
-          await file.update();
+          //delete file from s3
+          const s3Client: AWS_S3 = new AWS_S3();
+          await s3Client.remove(
+            env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+            file.s3FileKey,
+          );
+          return;
+        }
 
+        let ipfsRes = undefined;
+        try {
+          ipfsRes = await IPFSService.uploadFURToIPFSFromS3(
+            { fileUploadRequest: file },
+            context,
+          );
+        } catch (err) {
+          if (
+            err?.options?.code ==
+            StorageErrorCode.FILE_DOES_NOT_EXISTS_IN_BUCKET
+          ) {
+            file.fileStatus =
+              FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3;
+            await file.update();
+            return;
+          } else {
+            file.fileStatus =
+              FileUploadRequestFileStatus.ERROR_UPLOADING_TO_IPFS;
+            await file.update();
+
+            await new Lmas().writeLog({
+              context: context,
+              project_uuid: bucket.project_uuid,
+              logType: LogType.ERROR,
+              message: 'Error uploading file to IPFS',
+              location: location,
+              service: ServiceName.STORAGE,
+              data: {
+                file: file.serialize(),
+                error: err,
+              },
+            });
+            throw err;
+          }
+        }
+
+        try {
+          //File should already exists - get by uuid
+          const existingFile = await new File({}, context).populateByUUID(
+            file.file_uuid,
+          );
+
+          if (existingFile.exists()) {
+            //Update existing file
+            existingFile.populate({
+              CID: ipfsRes.cidV0,
+              s3FileKey: file.s3FileKey,
+              name: file.fileName,
+              contentType: file.contentType,
+              size: ipfsRes.size,
+              fileStatus: FileStatus.UPLOADED_TO_IPFS,
+            });
+
+            await existingFile.update();
+            transferedFiles.push(existingFile);
+          } else {
+            //Create new file - this should probably newer happen. But will leave for now.
+            const fileDirectory = await generateDirectoriesForFUR(
+              context,
+              directories,
+              file,
+              bucket,
+            );
+
+            const tmpF = await new File({}, context)
+              .populate({
+                file_uuid: file.file_uuid,
+                CID: ipfsRes.cidV0,
+                s3FileKey: file.s3FileKey,
+                name: file.fileName,
+                contentType: file.contentType,
+                project_uuid: bucket.project_uuid,
+                bucket_id: file.bucket_id,
+                directory_id: fileDirectory?.id,
+                size: ipfsRes.size,
+                fileStatus: FileStatus.UPLOADED_TO_IPFS,
+              })
+              .insert();
+
+            transferedFiles.push(tmpF);
+          }
+        } catch (err) {
           await new Lmas().writeLog({
             context: context,
             project_uuid: bucket.project_uuid,
             logType: LogType.ERROR,
-            message: 'Error uploading file to IPFS',
+            message: 'Error creating directory or file',
             location: location,
             service: ServiceName.STORAGE,
             data: {
@@ -270,117 +348,59 @@ export async function storageBucketSyncFilesToIPFS(
               error: err,
             },
           });
+
+          try {
+            file.fileStatus =
+              FileUploadRequestFileStatus.ERROR_CREATING_FILE_OBJECT;
+            await file.update();
+          } catch (err2) {
+            writeLog(
+              LogType.ERROR,
+              'Error updating fileUploadRequest status to ERROR_CREATING_FILE_OBJECT',
+              'storage-bucket-sync-files-to-ipfsRes.ts',
+              'storageBucketSyncFilesToIPFS',
+              err2,
+            );
+          }
+
           throw err;
         }
-      }
 
-      try {
-        //File should already exists - get by uuid
-        const existingFile = await new File({}, context).populateByUUID(
-          file.file_uuid,
+        //now the file has CID, exists in IPFS node and in bucket
+        //update file-upload-request status
+        file.fileStatus = FileUploadRequestFileStatus.UPLOAD_COMPLETED;
+        await file.update();
+
+        tmpSize += ipfsRes.size;
+        bucket.uploadedSize += ipfsRes.size;
+        bucket.size = bucket.size ? bucket.size + ipfsRes.size : ipfsRes.size;
+
+        //delete file from s3
+        const s3Client: AWS_S3 = new AWS_S3();
+        await s3Client.remove(
+          env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+          file.s3FileKey,
         );
 
-        if (existingFile.exists()) {
-          //Update existing file
-          existingFile.populate({
-            CID: ipfsRes.cidV0,
-            s3FileKey: file.s3FileKey,
-            name: file.fileName,
-            contentType: file.contentType,
-            size: ipfsRes.size,
-            fileStatus: FileStatus.UPLOADED_TO_IPFS,
+        //Check if bucket max size reached. Write message to monitoring -
+        //all following files will not be transfered to IPFS. Their status will update to error and they will be deleted from S3.
+        if (bucket.size >= maxBucketSize) {
+          await new Lmas().writeLog({
+            context: context,
+            project_uuid: bucket.project_uuid,
+            logType: LogType.INFO,
+            message: 'MAX Storage bucket size reached',
+            location: location,
+            service: ServiceName.STORAGE,
+            data: {
+              bucket_uuid: bucket.bucket_uuid,
+              bucketSize: bucket.size,
+              bucketUploadedSize: bucket.uploadedSize,
+            },
           });
-
-          await existingFile.update();
-          transferedFiles.push(existingFile);
-        } else {
-          //Create new file - this should probably newer happen. But will leave for now.
-          const fileDirectory = await generateDirectoriesForFUR(
-            context,
-            directories,
-            file,
-            bucket,
-          );
-
-          const tmpF = await new File({}, context)
-            .populate({
-              file_uuid: file.file_uuid,
-              CID: ipfsRes.cidV0,
-              s3FileKey: file.s3FileKey,
-              name: file.fileName,
-              contentType: file.contentType,
-              project_uuid: bucket.project_uuid,
-              bucket_id: file.bucket_id,
-              directory_id: fileDirectory?.id,
-              size: ipfsRes.size,
-              fileStatus: FileStatus.UPLOADED_TO_IPFS,
-            })
-            .insert();
-
-          transferedFiles.push(tmpF);
         }
-      } catch (err) {
-        await new Lmas().writeLog({
-          context: context,
-          project_uuid: bucket.project_uuid,
-          logType: LogType.ERROR,
-          message: 'Error creating directory or file',
-          location: location,
-          service: ServiceName.STORAGE,
-          data: {
-            file: file.serialize(),
-            error: err,
-          },
-        });
-
-        try {
-          file.fileStatus =
-            FileUploadRequestFileStatus.ERROR_CREATING_FILE_OBJECT;
-          await file.update();
-        } catch (err2) {
-          writeLog(
-            LogType.ERROR,
-            'Error updating fileUploadRequest status to ERROR_CREATING_FILE_OBJECT',
-            'storage-bucket-sync-files-to-ipfsRes.ts',
-            'storageBucketSyncFilesToIPFS',
-            err2,
-          );
-        }
-
-        throw err;
-      }
-
-      //now the file has CID, exists in IPFS node and in bucket
-      //update file-upload-request status
-      file.fileStatus = FileUploadRequestFileStatus.UPLOAD_COMPLETED;
-      await file.update();
-
-      tmpSize += ipfsRes.size;
-      bucket.uploadedSize += ipfsRes.size;
-      bucket.size = bucket.size ? bucket.size + ipfsRes.size : ipfsRes.size;
-
-      //delete file from s3
-      const s3Client: AWS_S3 = new AWS_S3();
-      await s3Client.remove(env.STORAGE_AWS_IPFS_QUEUE_BUCKET, file.s3FileKey);
-
-      //Check if bucket max size reached. Write message to monitoring -
-      //all following files will not be transfered to IPFS. Their status will update to error and they will be deleted from S3.
-      if (bucket.size >= maxBucketSize) {
-        await new Lmas().writeLog({
-          context: context,
-          project_uuid: bucket.project_uuid,
-          logType: LogType.INFO,
-          message: 'MAX Storage bucket size reached',
-          location: location,
-          service: ServiceName.STORAGE,
-          data: {
-            bucket_uuid: bucket.bucket_uuid,
-            bucketSize: bucket.size,
-            bucketUploadedSize: bucket.uploadedSize,
-          },
-        });
-      }
-    }
+      },
+    );
 
     writeLog(
       LogType.INFO,
@@ -388,15 +408,23 @@ export async function storageBucketSyncFilesToIPFS(
       'storage-bucket-sync-files-to-ipfsRes.ts',
       'storageBucketSyncFilesToIPFS',
     );
-    for (const transferedFile of transferedFiles) {
-      await pinFileToCRUST(
-        context,
-        bucket.bucket_uuid,
-        CID.parse(transferedFile.CID),
-        transferedFile.size,
-        false,
-      );
-    }
+
+    await runWithWorkers(
+      transferedFiles,
+      20,
+      context,
+      async (transferedFile) => {
+        await pinFileToCRUST(
+          context,
+          bucket.bucket_uuid,
+          CID.parse(transferedFile.CID),
+          transferedFile.size,
+          false,
+          transferedFile.file_uuid,
+          DbTables.FILE,
+        );
+      },
+    );
   }
 
   //update bucket size
@@ -424,5 +452,5 @@ export async function storageBucketSyncFilesToIPFS(
     'storageBucketSyncFilesToIPFS',
   );
 
-  return transferedFiles;
+  return { files: transferedFiles, wrappedDirCid: wrappedDirCid };
 }

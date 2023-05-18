@@ -72,8 +72,8 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.DEPLOYMENT_GET]: HostingService.getDeployment,
     [StorageEventType.DEPLOYMENT_LIST]: HostingService.listDeployments,
 
-    [StorageEventType.PREPARE_COLLECTION_METADATA]:
-      NftStorageService.prepareMetadataForCollection,
+    [StorageEventType.EXECUTE_PREPARE_COLLECTION_BASE_URI_WORKER]:
+      NftStorageService.executePrepareBaseUriForCollectionWorker,
   };
 
   return await processors[event.eventName](event, context);

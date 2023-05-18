@@ -9,6 +9,7 @@ import {
   TransferCollectionDTO,
   ValidateFor,
   BurnNftDto,
+  CollectionsQuotaReachedQueryFilter,
 } from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
@@ -64,6 +65,20 @@ export class NftsController {
     @Query() query: NFTCollectionQueryFilter,
   ) {
     return await this.nftsService.listNftCollections(context, query);
+  }
+
+  @Get('collections/quota-reached')
+  @Permissions({ role: DefaultUserRole.USER })
+  @Validation({
+    dto: CollectionsQuotaReachedQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async isCollectionsQuotaReached(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: CollectionsQuotaReachedQueryFilter,
+  ) {
+    return await this.nftsService.isCollectionsQuotaReached(context, query);
   }
 
   @Get('/collections/:id')
@@ -176,7 +191,7 @@ export class NftsController {
     return await this.nftsService.burnNftToken(context, collectionUuid, body);
   }
 
-  @Post('/collections/:collectionUuid/deploy')
+  @Post('collections/:collectionUuid/deploy')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },

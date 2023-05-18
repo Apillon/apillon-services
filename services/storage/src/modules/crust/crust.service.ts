@@ -3,7 +3,6 @@ import {
   Context,
   CreateSubstrateTransactionDto,
   SubstrateChain,
-  writeLog,
 } from '@apillon/lib';
 import { typesBundleForPolkadot } from '@crustio/type-definitions';
 import { ApiPromise, WsProvider } from '@polkadot/api';

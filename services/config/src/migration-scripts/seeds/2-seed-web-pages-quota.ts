@@ -16,6 +16,6 @@ export async function downgrade(
 ): Promise<void> {
   await queryFn(`
     DELETE FROM quota
-    WHERE id = 8;
+    WHERE id = ${QuotaCode.MAX_WEBSITES};
   `);
 }
