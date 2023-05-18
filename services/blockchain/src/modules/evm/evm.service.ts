@@ -18,6 +18,7 @@ import { ServiceContext } from '@apillon/service-lib';
 import { sendToWorkerQueue } from '@apillon/workers-lib';
 import { WorkerName } from '../../workers/worker-executor';
 import { getWalletSeed } from '../../lib/seed';
+import { evmChainToJob } from '../../lib/helpers';
 
 export class EvmService {
   static async createTransaction(
@@ -59,10 +60,23 @@ export class EvmService {
     switch (_event.params.chain) {
       case EvmChain.MOONBASE:
       case EvmChain.MOONBEAM: {
-        maxPriorityFeePerGas = ethers.utils.parseUnits('30', 'gwei').toNumber();
+        maxPriorityFeePerGas = ethers.utils.parseUnits('3', 'gwei').toNumber();
 
-        console.log((await provider.getGasPrice()).toNumber());
         const estimatedBaseFee = (await provider.getGasPrice()).toNumber();
+        console.log(estimatedBaseFee);
+        // Ensuring that transaction is desirable for at least 6 blocks.
+        // TODO: On production check how gas estimate is calculated
+        maxFeePerGas = estimatedBaseFee * 2 + maxPriorityFeePerGas;
+        type = 2;
+        gasPrice = null;
+        break;
+      }
+      case EvmChain.ASTAR:
+      case EvmChain.ASTAR_SHIBUYA: {
+        maxPriorityFeePerGas = ethers.utils.parseUnits('1', 'gwei').toNumber();
+
+        const estimatedBaseFee = (await provider.getGasPrice()).toNumber();
+        console.log(estimatedBaseFee);
         // Ensuring that transaction is desirable for at least 6 blocks.
         // TODO: On production check how gas estimate is calculated
         maxFeePerGas = estimatedBaseFee * 2 + maxPriorityFeePerGas;
@@ -163,7 +177,10 @@ export class EvmService {
               chain: _event.params.chain,
             },
           ],
-          _event.params.chain == EvmChain.MOONBASE ? 3 : 6, // job id
+          evmChainToJob(
+            _event.params.chain,
+            WorkerName.TRANSMIT_EVM_TRANSACTION,
+          ),
           null,
         );
       } catch (e) {
