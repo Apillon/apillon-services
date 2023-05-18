@@ -20,6 +20,7 @@ import { BlockchainCodeException } from '../../lib/exceptions';
 import { getWalletSeed } from '../../lib/seed';
 import { transmitAndProcessEvmTransaction } from '../../lib/transmit-and-process-evm-transaction';
 import { WorkerName } from '../../workers/worker-executor';
+import { evmChainToJob } from '../../lib/helpers';
 
 export class EvmService {
   static async createTransaction(
@@ -60,12 +61,24 @@ export class EvmService {
     // eslint-disable-next-line sonarjs/no-small-switch
     switch (_event.params.chain) {
       case EvmChain.MOONBASE:
-      case EvmChain.MOONBEAM:
-      case EvmChain.ASTAR: {
-        maxPriorityFeePerGas = ethers.utils.parseUnits('30', 'gwei').toNumber();
+      case EvmChain.MOONBEAM: {
+        maxPriorityFeePerGas = ethers.utils.parseUnits('3', 'gwei').toNumber();
 
-        console.log((await provider.getGasPrice()).toNumber());
         const estimatedBaseFee = (await provider.getGasPrice()).toNumber();
+        console.log(estimatedBaseFee);
+        // Ensuring that transaction is desirable for at least 6 blocks.
+        // TODO: On production check how gas estimate is calculated
+        maxFeePerGas = estimatedBaseFee * 2 + maxPriorityFeePerGas;
+        type = 2;
+        gasPrice = null;
+        break;
+      }
+      case EvmChain.ASTAR:
+      case EvmChain.ASTAR_SHIBUYA: {
+        maxPriorityFeePerGas = ethers.utils.parseUnits('1', 'gwei').toNumber();
+
+        const estimatedBaseFee = (await provider.getGasPrice()).toNumber();
+        console.log(estimatedBaseFee);
         // Ensuring that transaction is desirable for at least 6 blocks.
         // TODO: On production check how gas estimate is calculated
         maxFeePerGas = estimatedBaseFee * 2 + maxPriorityFeePerGas;
@@ -168,18 +181,6 @@ export class EvmService {
         );
       } else {
         try {
-          let jobId = null;
-          switch (_event.params.chain) {
-            case EvmChain.MOONBASE:
-              jobId = 3;
-              break;
-            case EvmChain.MOONBEAM:
-              jobId = 6;
-              break;
-            case EvmChain.ASTAR:
-              jobId = 8;
-              break;
-          }
           await sendToWorkerQueue(
             env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
             WorkerName.TRANSMIT_EVM_TRANSACTION,
@@ -188,7 +189,10 @@ export class EvmService {
                 chain: _event.params.chain,
               },
             ],
-            jobId, // job id
+            evmChainToJob(
+              _event.params.chain,
+              WorkerName.TRANSMIT_EVM_TRANSACTION,
+            ),
             null,
           );
         } catch (e) {

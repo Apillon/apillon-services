@@ -17,6 +17,7 @@ import { BlockchainErrorCode } from '../config/types';
 import { BlockchainCodeException } from '../lib/exceptions';
 import { EvmService } from '../modules/evm/evm.service';
 import { WorkerName } from './worker-executor';
+import { evmChainToJob } from '../lib/helpers';
 
 /**
  * TODO: error logging:
@@ -88,24 +89,11 @@ export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
       env.APP_ENV != AppEnvironment.TEST
     ) {
       try {
-        let jobId = null;
-        switch (data?.chain) {
-          case EvmChain.MOONBASE:
-            jobId = 4;
-            break;
-          case EvmChain.MOONBEAM:
-            jobId = 7;
-            break;
-          case EvmChain.ASTAR:
-            jobId = 9;
-            break;
-        }
-
         await sendToWorkerQueue(
           env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
           WorkerName.EVM_TRANSACTIONS,
           [{ chain: data?.chain }],
-          jobId,
+          evmChainToJob(data?.chain, WorkerName.EVM_TRANSACTIONS),
           null,
         );
       } catch (e) {
