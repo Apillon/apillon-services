@@ -2,6 +2,7 @@ import {
   AdvancedSQLModel,
   ChainType,
   Context,
+  EvmChain,
   PopulateFrom,
   presenceValidator,
   prop,
@@ -17,7 +18,7 @@ import {
 import { ethers } from 'ethers';
 import { Wallet } from '../../common/models/wallet';
 
-import { BlockchainErrorCode, DbTables } from '../../config/types';
+import { BlockchainErrorCode, Chain, DbTables } from '../../config/types';
 
 export enum TxStatus {
   PENDING = 1,
@@ -27,7 +28,7 @@ export enum TxStatus {
 
 export enum TxDirection {
   INCOME = 1,
-  OUTCOME = 2,
+  COST = 2,
 }
 
 export enum TxToken {
@@ -37,7 +38,9 @@ export enum TxToken {
   MOONBEAM_TOKEN = 'GLMR',
   PHALA_TOKEN = 'PHA',
   POLKADOT_TOKEN = 'DOT',
-  ETH = 'ETH',
+  ASTAR_TOKEN = 'ASTR',
+  SHIBUYA_TOKEN = 'SBY',
+  ETHEREUM = 'ETH',
   USDC = 'USDC',
   USDT = 'USDT',
 }
@@ -61,6 +64,7 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
     ],
     validators: [
       {
@@ -80,6 +84,7 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
     ],
     validators: [
       {
@@ -97,6 +102,7 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
     ],
     validators: [
       {
@@ -116,6 +122,7 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
     ],
     validators: [
       {
@@ -133,6 +140,7 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
     ],
     validators: [
       {
@@ -152,6 +160,7 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
     ],
     validators: [
       {
@@ -171,6 +180,7 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
     ],
     validators: [
       {
@@ -190,6 +200,7 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
     ],
     validators: [
       {
@@ -209,6 +220,7 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
     ],
   })
   public addressFrom: string;
@@ -222,6 +234,7 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
     ],
   })
   public addressTo: string;
@@ -233,6 +246,7 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
     ],
     validators: [
       {
@@ -250,6 +264,7 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
     ],
   })
   public transactionQueue_id: number;
@@ -261,6 +276,7 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
     ],
     validators: [
       {
@@ -281,6 +297,7 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
     ],
     validators: [
       {
@@ -301,6 +318,7 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
     ],
   })
   public fee: string;
@@ -315,6 +333,7 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
     ],
   })
   public totalPrice: string;
@@ -329,6 +348,7 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
     ],
   })
   public value: number;
@@ -343,8 +363,7 @@ export class TransactionLog extends AdvancedSQLModel {
     this.addressFrom = data?.from?.id;
     this.addressTo = data?.to?.id;
     this.amount = data?.amount;
-    this.fee = data?.fee;
-    this.calculateTotalPrice();
+
     this.hash = data?.extrinsicHash;
     this.wallet = wallet.address;
 
@@ -352,24 +371,86 @@ export class TransactionLog extends AdvancedSQLModel {
     this.chainType = wallet.chainType;
     this.chain = wallet.chain;
     this.token = TxToken.CRUST_TOKEN;
-    if (data.transactionType === 0) {
-      if (this.addressFrom === this.wallet) {
-        this.direction = TxDirection.OUTCOME;
-        this.action = TxAction.WITHDRAWAL;
-      } else if (this.addressTo === this.wallet) {
-        this.direction = TxDirection.INCOME;
-        this.action = TxAction.DEPOSIT;
-      } else {
-        throw new Error('Inconsistent transaction addresses!');
-      }
+
+    if (this.addressFrom === this.wallet) {
+      this.direction = TxDirection.COST;
+      this.action =
+        data.transactionType === 0 ? TxAction.WITHDRAWAL : TxAction.TRANSACTION;
+      this.fee = data?.fee;
+    } else if (this.addressTo === this.wallet) {
+      this.direction = TxDirection.INCOME;
+      this.action =
+        data.transactionType === 0 ? TxAction.DEPOSIT : TxAction.TRANSACTION;
+    } else {
+      throw new Error('Inconsistent transaction addresses!');
     }
+
+    this.calculateTotalPrice();
+
+    return this;
+  }
+
+  public createFromEvmIndexerData(data: any, wallet: Wallet) {
+    this.ts = data?.timestamp;
+    this.blockId = data?.blockNumber;
+    this.addressFrom = data?.from;
+    this.addressTo = data?.to;
+    this.amount = data?.value;
+
+    this.hash = data?.hash;
+    this.wallet = wallet.address;
+
+    this.status = data?.status === 0 ? TxStatus.COMPLETED : TxStatus.FAILED;
+    this.chainType = wallet.chainType;
+    this.chain = wallet.chain;
+    this.token = this.getTokenFromChain(wallet.chain);
+
+    if (this.addressFrom === this.wallet) {
+      this.direction = TxDirection.COST;
+      this.action = TxAction.TRANSACTION;
+      this.fee = ethers.BigNumber.from(data?.gas || 0)
+        .mul(ethers.BigNumber.from(data?.gasPrice || 0))
+        .toString();
+    } else if (this.addressTo === this.wallet) {
+      this.direction = TxDirection.INCOME;
+      this.action = TxAction.DEPOSIT;
+    } else {
+      throw new Error('Inconsistent transaction addresses!');
+    }
+
+    this.calculateTotalPrice();
+
     return this;
   }
 
   public calculateTotalPrice() {
-    this.totalPrice = ethers.BigNumber.from(this.amount)
-      .add(ethers.BigNumber.from(this.fee))
-      .toString();
+    if (this.direction == TxDirection.INCOME) {
+      this.totalPrice = this.amount;
+    } else {
+      this.totalPrice = ethers.BigNumber.from(this.amount)
+        .add(ethers.BigNumber.from(this.fee))
+        .toString();
+    }
     return this;
+  }
+
+  public addToAmount(amount: string) {
+    this.amount = ethers.BigNumber.from(this.amount)
+      .add(ethers.BigNumber.from(amount))
+      .toString();
+  }
+
+  public getTokenFromChain(chain: Chain) {
+    const options = {
+      [EvmChain.MOONBEAM]: TxToken.MOONBEAM_TOKEN,
+      [EvmChain.MOONBASE]: TxToken.MOONBASE_TOKEN,
+      [EvmChain.ASTAR]: TxToken.ASTAR_TOKEN,
+      [EvmChain.ASTAR_SHIBUYA]: TxToken.SHIBUYA_TOKEN,
+      [SubstrateChain.CRUST]: TxToken.CRUST_TOKEN,
+      [SubstrateChain.KILT]: TxToken.KILT_TOKEN,
+      [SubstrateChain.KILT_SPIRITNET]: TxToken.KILT_TOKEN,
+      [SubstrateChain.PHALA]: TxToken.PHALA_TOKEN,
+    };
+    return options[chain] || null;
   }
 }

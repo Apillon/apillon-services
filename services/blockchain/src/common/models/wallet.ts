@@ -18,6 +18,9 @@ import {
   DbTables,
   SqlModelStatus,
 } from '../../config/types';
+import { Endpoint } from './endpoint';
+import { ethers } from 'ethers';
+import { ApiPromise, WsProvider } from '@polkadot/api';
 
 export class Wallet extends AdvancedSQLModel {
   public readonly tableName = DbTables.WALLET;
@@ -223,6 +226,24 @@ export class Wallet extends AdvancedSQLModel {
   })
   public type: number;
 
+  /**
+   * minBalance - string representation of BigNumber
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.WORKER,
+    ],
+  })
+  public minBalance: string;
+
   public async populateByLeastUsed(
     chain: Chain,
     chainType: ChainType,
@@ -375,5 +396,43 @@ export class Wallet extends AdvancedSQLModel {
     );
 
     return resp?.map((x) => new Wallet(x, this.getContext())) || [];
+  }
+
+  public async checkBallance() {
+    let balance = null;
+    const endpoint = await new Endpoint({}, this.getContext()).populateByChain(
+      this.chain,
+      this.chainType,
+    );
+
+    if (!endpoint.exists()) {
+      throw new Error('Endpoint does not exits');
+    }
+    if (this.chainType === ChainType.EVM) {
+      const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
+      balance = (await provider.getBalance(this.address)).toString();
+    }
+    if (this.chainType === ChainType.SUBSTRATE) {
+      const provider = new WsProvider(endpoint.url);
+      const api = await ApiPromise.create({
+        provider,
+      });
+      const account = (await api.query.system.account(this.address)) as any;
+      balance = account.data.free.toString();
+    }
+
+    if (!balance && balance !== '0') {
+      throw new Error('Can not check balance!');
+    }
+
+    return {
+      balance,
+      minBalance: this.minBalance,
+      isBelowThreshold: this.minBalance
+        ? ethers.BigNumber.from(this.minBalance).gte(
+            ethers.BigNumber.from(balance),
+          )
+        : null,
+    };
   }
 }

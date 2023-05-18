@@ -118,9 +118,10 @@ export class CrustBlockchainIndexer {
   public async getWalletTransfers(
     address: string,
     fromBlock: number,
+    limit: number = null,
   ): Promise<CrustTransfers> {
     const GRAPHQL_QUERY = gql`
-      query getTransfers($address: String!, $fromBlock: Int!) {
+      query getTransfers($address: String!, $fromBlock: Int!, $limit: Int) {
         transfers(
           where: {
             AND: [
@@ -131,6 +132,7 @@ export class CrustBlockchainIndexer {
             ]
           }
           orderBy: blockNumber_ASC
+          limit: $limit
         ) {
           amount
           blockNumber
@@ -155,6 +157,7 @@ export class CrustBlockchainIndexer {
       {
         address,
         fromBlock,
+        limit,
       },
     );
     return data;

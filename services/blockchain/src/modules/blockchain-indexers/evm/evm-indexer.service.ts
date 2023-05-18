@@ -116,9 +116,10 @@ export class EvmBlockchainIndexer {
   public async getWalletTransactions(
     address: string,
     fromBlock: number,
+    limit: number = null,
   ): Promise<EvmTransfers> {
     const GRAPHQL_QUERY = gql`
-      query getIncomingTxs($address: String!, $fromBlock: Int!) {
+      query getIncomingTxs($address: String!, $fromBlock: Int!, $limit: Int) {
         transactions(
           where: {
             AND: [
@@ -127,6 +128,7 @@ export class EvmBlockchainIndexer {
             ]
           }
           orderBy: blockNumber_ASC
+          limit: $limit
         ) {
           blockNumber
           from
@@ -150,6 +152,7 @@ export class EvmBlockchainIndexer {
         {
           address,
           fromBlock,
+          limit,
         },
       );
       return data;

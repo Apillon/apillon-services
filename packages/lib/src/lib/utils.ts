@@ -106,3 +106,7 @@ export function generatePassword(length: number) {
   }
   return password;
 }
+
+export function dateToSqlString(date: Date): string {
+  return date.toISOString().replace(/T/, ' ').replace(/Z/, '');
+}

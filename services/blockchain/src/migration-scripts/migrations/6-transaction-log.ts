@@ -20,7 +20,7 @@ export async function upgrade(
       \`transactionQueue_id\` INT NULL,
       \`token\` VARCHAR(10) NOT NULL,
       \`amount\` DECIMAL(40,0) NOT NULL,
-      \`fee\` DECIMAL(40,0) NOT NULL,
+      \`fee\` DECIMAL(40,0) NOT NULL DEFAULT 0,
       \`totalPrice\` DECIMAL(40,0) NOT NULL,
       \`value\` DECIMAL(12,2) NULL,
       \`createTime\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -28,6 +28,10 @@ export async function upgrade(
       \`updateTime\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       \`updateUser\` INT NULL,
     PRIMARY KEY (\`id\`));
+  `);
+  await queryFn(`
+    ALTER TABLE  \`${DbTables.TRANSACTION_LOG}\`
+    ADD UNIQUE INDEX \`idx_log_hash\` (\`hash\` ASC, \`chain\` ASC);
   `);
 }
 
