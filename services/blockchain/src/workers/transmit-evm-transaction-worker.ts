@@ -88,11 +88,24 @@ export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
       env.APP_ENV != AppEnvironment.TEST
     ) {
       try {
+        let jobId = null;
+        switch (data?.chain) {
+          case EvmChain.MOONBASE:
+            jobId = 4;
+            break;
+          case EvmChain.MOONBEAM:
+            jobId = 7;
+            break;
+          case EvmChain.ASTAR:
+            jobId = 9;
+            break;
+        }
+
         await sendToWorkerQueue(
           env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
           WorkerName.EVM_TRANSACTIONS,
           [{ chain: data?.chain }],
-          data?.chain == EvmChain.MOONBASE ? 4 : 7,
+          jobId,
           null,
         );
       } catch (e) {

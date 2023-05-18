@@ -1,9 +1,9 @@
-import { AppEnvironment, EvmChain, MintNftDTO, env } from '@apillon/lib';
-import { Contract, ethers, UnsignedTransaction, Wallet } from 'ethers';
-import { NftTransaction } from '../../lib/nft-contract-transaction';
+import { EvmChain, MintNftDTO, env } from '@apillon/lib';
 import { TransactionReceipt } from '@ethersproject/providers';
-import { Collection } from '../nfts/models/collection.model';
+import { Contract, UnsignedTransaction, ethers } from 'ethers';
 import { EvmNftABI } from '../../lib/contracts/deployed-nft-contract';
+import { NftTransaction } from '../../lib/nft-contract-transaction';
+import { Collection } from '../nfts/models/collection.model';
 
 export class WalletService {
   private readonly provider: ethers.providers.JsonRpcProvider;

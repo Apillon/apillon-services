@@ -60,7 +60,8 @@ export class EvmService {
     // eslint-disable-next-line sonarjs/no-small-switch
     switch (_event.params.chain) {
       case EvmChain.MOONBASE:
-      case EvmChain.MOONBEAM: {
+      case EvmChain.MOONBEAM:
+      case EvmChain.ASTAR: {
         maxPriorityFeePerGas = ethers.utils.parseUnits('30', 'gwei').toNumber();
 
         console.log((await provider.getGasPrice()).toNumber());
@@ -167,6 +168,18 @@ export class EvmService {
         );
       } else {
         try {
+          let jobId = null;
+          switch (_event.params.chain) {
+            case EvmChain.MOONBASE:
+              jobId = 3;
+              break;
+            case EvmChain.MOONBEAM:
+              jobId = 6;
+              break;
+            case EvmChain.ASTAR:
+              jobId = 8;
+              break;
+          }
           await sendToWorkerQueue(
             env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
             WorkerName.TRANSMIT_EVM_TRANSACTION,
@@ -175,7 +188,7 @@ export class EvmService {
                 chain: _event.params.chain,
               },
             ],
-            _event.params.chain == EvmChain.MOONBASE ? 3 : 6, // job id
+            jobId, // job id
             null,
           );
         } catch (e) {
@@ -265,7 +278,8 @@ export class EvmService {
     // eslint-disable-next-line sonarjs/no-small-switch
     switch (_event.chain) {
       case EvmChain.MOONBASE:
-      case EvmChain.MOONBEAM: {
+      case EvmChain.MOONBEAM:
+      case EvmChain.ASTAR: {
         break;
       }
       default: {

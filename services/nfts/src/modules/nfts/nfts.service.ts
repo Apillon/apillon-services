@@ -285,10 +285,7 @@ export class NftsService {
 
     for (const collection of collections.items) {
       collection.minted = 0;
-      if (
-        collection.collectionStatus == CollectionStatus.DEPLOYED &&
-        collection.contractAddress
-      ) {
+      if (collection.contractAddress) {
         const walletService: WalletService = new WalletService(
           collection.chain,
         );

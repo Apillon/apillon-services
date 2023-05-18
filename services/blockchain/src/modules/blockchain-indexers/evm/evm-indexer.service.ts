@@ -9,6 +9,7 @@ export class EvmBlockchainIndexer {
   private chainGqlMap = new Map<EvmChain, string>([
     [EvmChain.MOONBASE, env.BLOCKCHAIN_MOONBASE_GRAPHQL_SERVER],
     [EvmChain.MOONBEAM, env.BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER],
+    [EvmChain.ASTAR, env.BLOCKCHAIN_ASTAR_GRAPHQL_SERVER],
   ]);
 
   constructor(chain: EvmChain) {
