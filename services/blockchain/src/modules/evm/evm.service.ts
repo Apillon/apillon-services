@@ -1,23 +1,25 @@
 import {
-  EvmChain,
+  AppEnvironment,
   ChainType,
+  EvmChain,
   Lmas,
   LogType,
-  ServiceName,
   SerializeFor,
-  env,
+  ServiceName,
   TransactionStatus,
+  env,
 } from '@apillon/lib';
-import { Endpoint } from '../../common/models/endpoint';
-import { ethers } from 'ethers';
-import { BlockchainCodeException } from '../../lib/exceptions';
-import { BlockchainErrorCode } from '../../config/types';
-import { Wallet } from '../../common/models/wallet';
-import { Transaction } from '../../common/models/transaction';
 import { ServiceContext } from '@apillon/service-lib';
 import { sendToWorkerQueue } from '@apillon/workers-lib';
-import { WorkerName } from '../../workers/worker-executor';
+import { ethers } from 'ethers';
+import { Endpoint } from '../../common/models/endpoint';
+import { Transaction } from '../../common/models/transaction';
+import { Wallet } from '../../common/models/wallet';
+import { BlockchainErrorCode } from '../../config/types';
+import { BlockchainCodeException } from '../../lib/exceptions';
 import { getWalletSeed } from '../../lib/seed';
+import { transmitAndProcessEvmTransaction } from '../../lib/transmit-and-process-evm-transaction';
+import { WorkerName } from '../../workers/worker-executor';
 import { evmChainToJob } from '../../lib/helpers';
 
 export class EvmService {
@@ -168,31 +170,42 @@ export class EvmService {
 
       await conn.commit();
 
-      try {
-        await sendToWorkerQueue(
-          env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
-          WorkerName.TRANSMIT_EVM_TRANSACTION,
-          [
-            {
-              chain: _event.params.chain,
-            },
-          ],
-          evmChainToJob(
-            _event.params.chain,
-            WorkerName.TRANSMIT_EVM_TRANSACTION,
-          ),
-          null,
+      if (
+        env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+        env.APP_ENV == AppEnvironment.TEST
+      ) {
+        await transmitAndProcessEvmTransaction(
+          context,
+          _event.params.chain,
+          transaction,
         );
-      } catch (e) {
-        await new Lmas().writeLog({
-          logType: LogType.ERROR,
-          message: 'Error triggering TRANSMIT_EVM_TRANSACTION worker queue',
-          location: 'EvmService.createTransaction',
-          service: ServiceName.BLOCKCHAIN,
-          data: {
-            error: e,
-          },
-        });
+      } else {
+        try {
+          await sendToWorkerQueue(
+            env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
+            WorkerName.TRANSMIT_EVM_TRANSACTION,
+            [
+              {
+                chain: _event.params.chain,
+              },
+            ],
+            evmChainToJob(
+              _event.params.chain,
+              WorkerName.TRANSMIT_EVM_TRANSACTION,
+            ),
+            null,
+          );
+        } catch (e) {
+          await new Lmas().writeLog({
+            logType: LogType.ERROR,
+            message: 'Error triggering TRANSMIT_EVM_TRANSACTION worker queue',
+            location: 'EvmService.createTransaction',
+            service: ServiceName.BLOCKCHAIN,
+            data: {
+              error: e,
+            },
+          });
+        }
       }
 
       return transaction.serialize(SerializeFor.PROFILE);
@@ -269,7 +282,8 @@ export class EvmService {
     // eslint-disable-next-line sonarjs/no-small-switch
     switch (_event.chain) {
       case EvmChain.MOONBASE:
-      case EvmChain.MOONBEAM: {
+      case EvmChain.MOONBEAM:
+      case EvmChain.ASTAR: {
         break;
       }
       default: {

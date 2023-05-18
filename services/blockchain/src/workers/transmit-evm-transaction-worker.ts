@@ -1,4 +1,5 @@
 import {
+  AppEnvironment,
   Context,
   env,
   EvmChain,
@@ -83,27 +84,31 @@ export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
       throw err;
     }
 
-    try {
-      await sendToWorkerQueue(
-        env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
-        WorkerName.EVM_TRANSACTIONS,
-        [{ chain: data?.chain }],
-        evmChainToJob(data?.chain, WorkerName.EVM_TRANSACTIONS),
-        null,
-      );
-    } catch (e) {
-      await new Lmas().writeLog({
-        logType: LogType.ERROR,
-        message: 'Error triggering EVM_TRANSACTIONS worker queue',
-        location: 'TransmitEvmTransactionWorker.runExecutor',
-        service: ServiceName.BLOCKCHAIN,
-        data: {
-          error: e,
-          chain: data?.chain,
-        },
-      });
+    if (
+      env.APP_ENV != AppEnvironment.LOCAL_DEV &&
+      env.APP_ENV != AppEnvironment.TEST
+    ) {
+      try {
+        await sendToWorkerQueue(
+          env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
+          WorkerName.EVM_TRANSACTIONS,
+          [{ chain: data?.chain }],
+          evmChainToJob(data?.chain, WorkerName.EVM_TRANSACTIONS),
+          null,
+        );
+      } catch (e) {
+        await new Lmas().writeLog({
+          logType: LogType.ERROR,
+          message: 'Error triggering EVM_TRANSACTIONS worker queue',
+          location: 'TransmitEvmTransactionWorker.runExecutor',
+          service: ServiceName.BLOCKCHAIN,
+          data: {
+            error: e,
+            chain: data?.chain,
+          },
+        });
+      }
     }
-
     return true;
   }
 }

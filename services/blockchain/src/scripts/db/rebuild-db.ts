@@ -1,48 +1,26 @@
-import { env, rebuildDatabase, seedDatabase } from '@apillon/lib';
-import * as readline from 'readline';
+import { env, getEnvSecrets, SqlMigrator } from '@apillon/lib';
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
+async function run() {
+  await getEnvSecrets();
 
-const run = async () => {
-  await rebuildDatabase(
-    env.BLOCKCHAIN_MYSQL_DATABASE,
-    env.BLOCKCHAIN_MYSQL_HOST,
-    env.BLOCKCHAIN_MYSQL_PORT,
-    env.BLOCKCHAIN_MYSQL_USER,
-    env.BLOCKCHAIN_MYSQL_PASSWORD,
-  );
-  await seedDatabase(
-    env.BLOCKCHAIN_MYSQL_DATABASE,
-    env.BLOCKCHAIN_MYSQL_HOST,
-    env.BLOCKCHAIN_MYSQL_PORT,
-    env.BLOCKCHAIN_MYSQL_USER,
-    env.BLOCKCHAIN_MYSQL_PASSWORD,
-  );
-};
+  const migrator = new SqlMigrator({
+    database: env.BLOCKCHAIN_MYSQL_DATABASE,
+    host: env.BLOCKCHAIN_MYSQL_HOST,
+    port: env.BLOCKCHAIN_MYSQL_PORT,
+    user: env.BLOCKCHAIN_MYSQL_DEPLOY_USER || env.BLOCKCHAIN_MYSQL_USER,
+    password:
+      env.BLOCKCHAIN_MYSQL_DEPLOY_PASSWORD || env.BLOCKCHAIN_MYSQL_PASSWORD,
+  });
 
-rl.question(
-  `You are about to reset database ${env.BLOCKCHAIN_MYSQL_DATABASE} @ ${env.BLOCKCHAIN_MYSQL_HOST}.\n Are you sure? (Yes/No):`,
-  (answer) => {
-    if (answer.toLowerCase() === 'yes') {
-      console.log('Rebuilding database ...');
-    } else {
-      console.log('Exiting.');
-      process.exit(0);
-    }
+  const showDialog = !process.argv.includes('--F');
+  await migrator.rebuild(showDialog);
+}
 
-    rl.close();
-
-    run()
-      .then(() => {
-        console.log('Complete!');
-        process.exit(0);
-      })
-      .catch((err) => {
-        console.log(err);
-        process.exit(1);
-      });
-  },
-);
+run()
+  .then(() => {
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });

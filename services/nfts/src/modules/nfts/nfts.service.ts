@@ -1,6 +1,7 @@
 import {
   AppEnvironment,
   BlockchainMicroservice,
+  BurnNftDto,
   CollectionsQuotaReachedQueryFilter,
   CreateBucketDto,
   CreateCollectionDTO,
@@ -20,8 +21,8 @@ import {
   StorageMicroservice,
   TransactionStatus,
   TransferCollectionDTO,
-  writeLog,
 } from '@apillon/lib';
+import { ServiceContext } from '@apillon/service-lib';
 import {
   QueueWorkerType,
   sendToWorkerQueue,
@@ -29,6 +30,7 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
+import { ethers, UnsignedTransaction } from 'ethers';
 import { v4 as uuidV4 } from 'uuid';
 import {
   Chains,
@@ -37,7 +39,6 @@ import {
   NftsErrorCode,
   TransactionType,
 } from '../../config/types';
-import { ServiceContext } from '@apillon/service-lib';
 import {
   NftsCodeException,
   NftsValidationException,
@@ -49,8 +50,6 @@ import { Transaction } from '../transaction/models/transaction.model';
 import { TransactionService } from '../transaction/transaction.service';
 import { WalletService } from '../wallet/wallet.service';
 import { Collection } from './models/collection.model';
-import { ethers, UnsignedTransaction } from 'ethers';
-import { BurnNftDto } from '@apillon/lib';
 
 export class NftsService {
   static async getHello() {
@@ -285,20 +284,13 @@ export class NftsService {
     ).getList(context, new NFTCollectionQueryFilter(event.query));
 
     for (const collection of collections.items) {
-      const walletService: WalletService = new WalletService(collection.chain);
-      try {
-        collection.minted = collection.contractAddress
-          ? await walletService.getNumberOfMintedNfts(
-              collection.contractAddress,
-            )
-          : 0;
-      } catch (err) {
-        writeLog(
-          LogType.ERROR,
-          'getNumberOfMintedNfts failed',
-          'nft.service.ts',
-          'listNftCollections',
-          err,
+      collection.minted = 0;
+      if (collection.contractAddress) {
+        const walletService: WalletService = new WalletService(
+          collection.chain,
+        );
+        collection.minted = await walletService.getNumberOfMintedNfts(
+          collection.contractAddress,
         );
       }
     }
@@ -482,6 +474,10 @@ export class NftsService {
     }
   }
 
+  //#endregion
+
+  //#region NFT functions
+
   static async mintNftTo(
     params: { body: MintNftDTO },
     context: ServiceContext,
@@ -660,10 +656,6 @@ export class NftsService {
 
     return { success: true };
   }
-
-  //#endregion
-
-  //#region NFT functions
 
   private static async checkCollection(
     collection: Collection,
