@@ -14,11 +14,9 @@ import {
   WorkerDefinition,
   WorkerLogStatus,
 } from '@apillon/workers-lib';
-import { ethers } from 'ethers';
-import { Endpoint } from '../common/models/endpoint';
 import { Wallet } from '../common/models/wallet';
-import { BlockchainErrorCode, Chain, DbTables } from '../config/types';
-import { BlockchainCodeException } from '../lib/exceptions';
+import { DbTables } from '../config/types';
+
 import {
   TransactionLog,
   TxDirection,
@@ -68,7 +66,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
     await this.logTransactions(transactions);
 
     // link with transaction queue && alert if no link
-    await this.linkTransactions(transactions, wallet.chain);
+    await this.linkTransactions(transactions, wallet);
 
     // check wallet ballance && alert if low
     await this.checkWalletBalance(wallet);
@@ -193,11 +191,14 @@ export class TransactionLogWorker extends BaseQueueWorker {
        })
        .join(',')}
      `;
-    console.log(sql);
+
     await this.context.mysql.paramExecute(sql);
   }
 
-  private async linkTransactions(transactions: TransactionLog[], chain: Chain) {
+  private async linkTransactions(
+    transactions: TransactionLog[],
+    wallet: Wallet,
+  ) {
     if (!transactions.length) {
       console.log('No transactions to link');
 
@@ -217,7 +218,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
       AND tl.chain = @chain
       ;
     `,
-      { chain },
+      { chain: wallet.chain },
     );
 
     // find unlinked transactions
@@ -230,17 +231,25 @@ export class TransactionLogWorker extends BaseQueueWorker {
       AND chain = @chain
       ;
     `,
-      { chain },
+      { chain: wallet.chain },
     );
 
     if (unlinked.length) {
       await this.writeLogToDb(
         WorkerLogStatus.WARNING,
-        `${unlinked.length} UNLINKED TRANSACTIONS DETECTED! (wallet: ${transactions[0].wallet})`,
-        { wallet: transactions[0].wallet, hashes: unlinked.map((x) => x.hash) },
+        `${unlinked.length} UNLINKED TRANSACTIONS DETECTED! ${
+          wallet.chainType === ChainType.EVM
+            ? EvmChain[wallet.chain]
+            : SubstrateChain[wallet.chain]
+        }:${wallet.address}`,
+        { wallet: wallet.address, hashes: unlinked.map((x) => x.hash) },
       );
       await new Lmas().sendAdminAlert(
-        `${unlinked.length} UNLINKED TRANSACTIONS DETECTED! (wallet: ${transactions[0].wallet})`,
+        `${unlinked.length} UNLINKED TRANSACTIONS DETECTED! ${
+          wallet.chainType === ChainType.EVM
+            ? EvmChain[wallet.chain]
+            : SubstrateChain[wallet.chain]
+        }:${wallet.address}`,
         ServiceName.BLOCKCHAIN,
         'alert',
       );

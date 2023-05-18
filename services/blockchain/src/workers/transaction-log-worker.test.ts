@@ -19,7 +19,7 @@ describe('Transaction Log Worker unit test', () => {
   let moonbaseLogCount: number;
   let moonbaseWallet: Wallet;
   let worker: TransactionLogWorker;
-  const batchLimit = 1000;
+  const batchLimit = 100;
 
   beforeAll(async () => {
     stage = await setupTest();
