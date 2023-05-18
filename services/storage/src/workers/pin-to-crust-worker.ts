@@ -32,64 +32,69 @@ export class PinToCrustWorker extends ServerlessWorker {
       this.context,
     ).getPendingRequest();
 
-    await runWithWorkers(pendingPinRequests, 20, this.context, async (data) => {
-      const pinToCrustRequest: PinToCrustRequest = new PinToCrustRequest(
-        data,
-        this.context,
-      );
-      try {
-        await CrustService.placeStorageOrderToCRUST(
-          {
-            cid: CID.parse(pinToCrustRequest.cid),
-            size: pinToCrustRequest.size,
-            isDirectory: pinToCrustRequest.isDirectory,
-            refTable: pinToCrustRequest.refTable,
-            refId: pinToCrustRequest.refId,
-          },
-          this.context,
+    await runWithWorkers(
+      pendingPinRequests,
+      20,
+      this.context,
+      async (data, ctx) => {
+        const pinToCrustRequest: PinToCrustRequest = new PinToCrustRequest(
+          data,
+          ctx,
         );
-        pinToCrustRequest.pinningStatus = CrustPinningStatus.SUCCESSFULL;
-        pinToCrustRequest.message = '';
-        pinToCrustRequest.numOfExecutions += 1;
-
-        await pinToCrustRequest.update();
-
-        await new Lmas().writeLog({
-          context: this.context,
-          logType: LogType.COST,
-          message: 'Success placing storage order to CRUST',
-          location: `PinToCrustWorker`,
-          service: ServiceName.STORAGE,
-          data: {
-            pinToCrustRequest: pinToCrustRequest.serialize(),
-          },
-        });
-      } catch (err) {
         try {
-          pinToCrustRequest.pinningStatus = CrustPinningStatus.FAILED;
-          pinToCrustRequest.message = err.message;
+          await CrustService.placeStorageOrderToCRUST(
+            {
+              cid: CID.parse(pinToCrustRequest.cid),
+              size: pinToCrustRequest.size,
+              isDirectory: pinToCrustRequest.isDirectory,
+              refTable: pinToCrustRequest.refTable,
+              refId: pinToCrustRequest.refId,
+            },
+            ctx,
+          );
+          pinToCrustRequest.pinningStatus = CrustPinningStatus.SUCCESSFULL;
+          pinToCrustRequest.message = '';
           pinToCrustRequest.numOfExecutions += 1;
 
           await pinToCrustRequest.update();
-        } catch (err2) {
-          console.error(err2);
-        }
 
-        await new Lmas().writeLog({
-          context: this.context,
-          logType: LogType.ERROR,
-          message: 'Error at placing storage order to CRUST',
-          location: `PinToCrustWorker`,
-          service: ServiceName.STORAGE,
-          data: {
+          await new Lmas().writeLog({
+            context: ctx,
+            logType: LogType.COST,
+            message: 'Success placing storage order to CRUST',
+            location: `PinToCrustWorker`,
+            service: ServiceName.STORAGE,
             data: {
               pinToCrustRequest: pinToCrustRequest.serialize(),
             },
-            err,
-          },
-        });
-      }
-    });
+          });
+        } catch (err) {
+          try {
+            pinToCrustRequest.pinningStatus = CrustPinningStatus.FAILED;
+            pinToCrustRequest.message = err.message;
+            pinToCrustRequest.numOfExecutions += 1;
+
+            await pinToCrustRequest.update();
+          } catch (err2) {
+            console.error(err2);
+          }
+
+          await new Lmas().writeLog({
+            context: ctx,
+            logType: LogType.ERROR,
+            message: 'Error at placing storage order to CRUST',
+            location: `PinToCrustWorker`,
+            service: ServiceName.STORAGE,
+            data: {
+              data: {
+                pinToCrustRequest: pinToCrustRequest.serialize(),
+              },
+              err,
+            },
+          });
+        }
+      },
+    );
   }
 
   public async onSuccess(_data?: any, _successData?: any): Promise<any> {
