@@ -17,10 +17,10 @@ import { Transaction } from '../../common/models/transaction';
 import { Wallet } from '../../common/models/wallet';
 import { BlockchainErrorCode } from '../../config/types';
 import { BlockchainCodeException } from '../../lib/exceptions';
+import { evmChainToJob } from '../../lib/helpers';
 import { getWalletSeed } from '../../lib/seed';
 import { transmitAndProcessEvmTransaction } from '../../lib/transmit-and-process-evm-transaction';
 import { WorkerName } from '../../workers/worker-executor';
-import { evmChainToJob } from '../../lib/helpers';
 
 export class EvmService {
   static async createTransaction(

@@ -1,25 +1,49 @@
-import { EvmChain, MintNftDTO, env } from '@apillon/lib';
+import {
+  BlockchainMicroservice,
+  ChainType,
+  Context,
+  EvmChain,
+  MintNftDTO,
+} from '@apillon/lib';
 import { TransactionReceipt } from '@ethersproject/providers';
 import { Contract, UnsignedTransaction, ethers } from 'ethers';
 import { EvmNftABI } from '../../lib/contracts/deployed-nft-contract';
 import { NftTransaction } from '../../lib/nft-contract-transaction';
 import { Collection } from '../nfts/models/collection.model';
+import { CollectionStatus } from '../../config/types';
 
 export class WalletService {
-  private readonly provider: ethers.providers.JsonRpcProvider;
   private readonly evmChain: EvmChain;
+  private provider: ethers.providers.JsonRpcProvider;
+  private context: Context;
 
-  constructor(chain: EvmChain) {
+  constructor(context: Context, chain: EvmChain) {
+    this.context = context;
     this.evmChain = chain;
-    const rpcEndpoint = this.getRpcEndpoint(chain);
-    this.provider = new ethers.providers.JsonRpcProvider(rpcEndpoint);
+  }
 
-    console.log(`RPC initialization ${rpcEndpoint}`);
+  /**
+   * Function to initialize RPC provider. BCS is called to get endpoint, which is then used to initialize Provider
+   * NOTE: This function should be called before each function in this class
+   */
+  async initializeProvider() {
+    if (!this.provider) {
+      const rpcEndpoint = (
+        await new BlockchainMicroservice(this.context).getChainEndpoint(
+          this.evmChain,
+          ChainType.EVM,
+        )
+      ).data.url;
+
+      this.provider = new ethers.providers.JsonRpcProvider(rpcEndpoint);
+      console.log(`RPC initialization ${rpcEndpoint}`);
+    }
   }
 
   async createDeployTransaction(
     params: Collection,
   ): Promise<UnsignedTransaction> {
+    await this.initializeProvider();
     return await NftTransaction.createDeployContractTransaction(params);
   }
 
@@ -27,6 +51,7 @@ export class WalletService {
     contract: string,
     newOwner: string,
   ): Promise<UnsignedTransaction> {
+    await this.initializeProvider();
     return await NftTransaction.createTransferOwnershipTransaction(
       this.evmChain,
       contract,
@@ -38,6 +63,7 @@ export class WalletService {
     contract: string,
     uri: string,
   ): Promise<UnsignedTransaction> {
+    await this.initializeProvider();
     return await NftTransaction.createSetNftBaseUriTransaction(
       this.evmChain,
       contract,
@@ -49,6 +75,7 @@ export class WalletService {
     contract: string,
     params: MintNftDTO,
   ): Promise<UnsignedTransaction> {
+    await this.initializeProvider();
     return await NftTransaction.createMintToTransaction(
       this.evmChain,
       contract,
@@ -60,6 +87,7 @@ export class WalletService {
     contract: string,
     tokenId: number,
   ): Promise<UnsignedTransaction> {
+    await this.initializeProvider();
     return await NftTransaction.createBurnNftTransaction(
       this.evmChain,
       contract,
@@ -68,10 +96,12 @@ export class WalletService {
   }
 
   async getTransactionByHash(txHash: string): Promise<TransactionReceipt> {
+    await this.initializeProvider();
     return await this.provider.getTransactionReceipt(txHash);
   }
 
   async isTransacionConfirmed(txReceipt: TransactionReceipt): Promise<boolean> {
+    await this.initializeProvider();
     if (txReceipt) {
       return !!(txReceipt.confirmations > 1 && txReceipt.blockNumber);
     }
@@ -79,6 +109,7 @@ export class WalletService {
   }
 
   async getContractOwner(contractAddress: string) {
+    await this.initializeProvider();
     const nftContract: Contract = new Contract(
       contractAddress,
       EvmNftABI,
@@ -87,34 +118,27 @@ export class WalletService {
     return await nftContract.owner();
   }
 
-  async getNumberOfMintedNfts(contractAddress: string): Promise<number> {
+  /**
+   * Num of minted NFTs can be acquired, if contract is deployed to chain
+   * @param collection
+   * @returns
+   */
+  async getNumberOfMintedNfts(collection: Collection): Promise<number> {
+    if (
+      (collection.collectionStatus != CollectionStatus.DEPLOYED &&
+        collection.collectionStatus != CollectionStatus.TRANSFERED) ||
+      !collection.contractAddress
+    ) {
+      return 0;
+    }
+
+    await this.initializeProvider();
     const nftContract: Contract = new Contract(
-      contractAddress,
+      collection.contractAddress,
       EvmNftABI,
       this.provider,
     );
     const totalSupply = await nftContract.totalSupply();
     return parseInt(totalSupply._hex, 16);
-  }
-
-  // TODO: Use blockchain service endpoints!!!
-  getRpcEndpoint(chain: EvmChain) {
-    switch (chain) {
-      case EvmChain.ASTAR: {
-        return env.NFTS_ASTAR_MAINNET_RPC;
-      }
-      case EvmChain.ASTAR_SHIBUYA: {
-        return env.NFTS_ASTAR_TESTNET_RPC;
-      }
-      case EvmChain.MOONBASE: {
-        return env.NFTS_MOONBEAM_TESTNET_RPC;
-      }
-      case EvmChain.MOONBEAM: {
-        return env.NFTS_MOONBEAM_MAINNET_RPC;
-      }
-      default: {
-        throw new Error('Unsupported chain');
-      }
-    }
   }
 }

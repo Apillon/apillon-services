@@ -21,6 +21,7 @@ import {
   StorageMicroservice,
   TransactionStatus,
   TransferCollectionDTO,
+  writeLog,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import {
@@ -287,11 +288,22 @@ export class NftsService {
       collection.minted = 0;
       if (collection.contractAddress) {
         const walletService: WalletService = new WalletService(
+          context,
           collection.chain,
         );
-        collection.minted = await walletService.getNumberOfMintedNfts(
-          collection.contractAddress,
-        );
+        try {
+          collection.minted = await walletService.getNumberOfMintedNfts(
+            collection,
+          );
+        } catch (err) {
+          writeLog(
+            LogType.ERROR,
+            'GetNumberOfMintedNfts Error',
+            'nfts.service.ts',
+            'listNftCollections',
+            err,
+          );
+        }
       }
     }
     return collections;
@@ -327,11 +339,10 @@ export class NftsService {
       {},
       context,
     ).populateByUUID(params.body.collection_uuid);
-    const walletService = new WalletService(collection.chain);
+    const walletService = new WalletService(context, collection.chain);
 
     await NftsService.checkCollection(
       collection,
-      walletService,
       'transferNftOwnership()',
       context,
     );
@@ -413,11 +424,10 @@ export class NftsService {
       {},
       context,
     ).populateByUUID(params.body.collection_uuid);
-    const walletService = new WalletService(collection.chain);
+    const walletService = new WalletService(context, collection.chain);
 
     await NftsService.checkCollection(
       collection,
-      walletService,
       'setNftCollectionBaseUri()',
       context,
     );
@@ -490,14 +500,9 @@ export class NftsService {
       {},
       context,
     ).populateByUUID(params.body.collection_uuid);
-    const walletService = new WalletService(collection.chain);
+    const walletService = new WalletService(context, collection.chain);
 
-    await NftsService.checkCollection(
-      collection,
-      walletService,
-      'mintNftTo()',
-      context,
-    );
+    await NftsService.checkCollection(collection, 'mintNftTo()', context);
 
     await NftsService.checkMintConditions(
       params.body,
@@ -583,14 +588,9 @@ export class NftsService {
       {},
       context,
     ).populateByUUID(params.body.collection_uuid);
-    const walletService = new WalletService(collection.chain);
+    const walletService = new WalletService(context, collection.chain);
 
-    await NftsService.checkCollection(
-      collection,
-      walletService,
-      'burnNftToken()',
-      context,
-    );
+    await NftsService.checkCollection(collection, 'burnNftToken()', context);
 
     const conn = await context.mysql.start();
     try {
@@ -659,7 +659,6 @@ export class NftsService {
 
   private static async checkCollection(
     collection: Collection,
-    walletService: WalletService,
     sourceFunction: string,
     context: ServiceContext,
   ) {
@@ -685,9 +684,7 @@ export class NftsService {
       return true;
     }
 
-    const minted = await walletService.getNumberOfMintedNfts(
-      collection.contractAddress,
-    );
+    const minted = await walletService.getNumberOfMintedNfts(collection);
 
     if (minted + params.quantity > collection.maxSupply) {
       throw new NftsCodeException({
