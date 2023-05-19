@@ -5,19 +5,15 @@ import {
   env,
   Lmas,
   LogType,
-  runWithWorkers,
   ServiceName,
   writeLog,
 } from '@apillon/lib';
 import { CID, create } from 'ipfs-http-client';
-import {
-  FileUploadRequestFileStatus,
-  StorageErrorCode,
-} from '../../config/types';
+import { StorageErrorCode } from '../../config/types';
 import { StorageCodeException } from '../../lib/exceptions';
 import { FileUploadRequest } from '../storage/models/file-upload-request.model';
-import { uploadFilesToIPFSRes } from './interfaces/upload-files-to-ipfs-res.interface';
 import { File } from '../storage/models/file.model';
+import { uploadFilesToIPFSRes } from './interfaces/upload-files-to-ipfs-res.interface';
 
 export class IPFSService {
   static async createIPFSClient() {
@@ -51,7 +47,7 @@ export class IPFSService {
     context,
   ): Promise<{ CID: CID; cidV0: string; cidV1: string; size: number }> {
     //Get IPFS client
-    const client = await IPFSService.createIPFSClient();
+    let client = await IPFSService.createIPFSClient();
 
     //Get File from S3
     const s3Client: AWS_S3 = new AWS_S3();
@@ -70,14 +66,24 @@ export class IPFSService {
       });
     }
 
-    const file = await s3Client.get(
+    console.info('Getting file from S3', event.fileUploadRequest.s3FileKey);
+    let file = await s3Client.get(
       env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
       event.fileUploadRequest.s3FileKey,
     );
 
+    console.info('Add file to IPFS, ...');
     const filesOnIPFS = await client.add({
       content: file.Body as any,
     });
+
+    try {
+      (file.Body as any).destroy();
+    } catch (err) {
+      console.error(err);
+    }
+    file = undefined;
+    client = undefined;
 
     //Write log to LMAS
     await new Lmas().writeLog({
@@ -87,7 +93,10 @@ export class IPFSService {
       service: ServiceName.STORAGE,
       data: {
         fileUploadRequest: event.fileUploadRequest,
-        ipfsResponse: filesOnIPFS,
+        ipfsResponse: {
+          cidV0: filesOnIPFS.cid.toV0().toString(),
+          filesOnIPFS,
+        },
       },
     });
 
@@ -124,17 +133,6 @@ export class IPFSService {
         'Get file from S3 START',
         (fileUploadReq.path || '') + fileUploadReq.fileName,
       );
-      /*if (
-        !(await s3Client.exists(
-          env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-          fileUploadReq.s3FileKey,
-        ))
-      ) {
-        fileUploadReq.fileStatus =
-          FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3;
-        continue;
-      }*/
-
       try {
         const file = await s3Client.get(
           env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
@@ -145,14 +143,13 @@ export class IPFSService {
           path: (fileUploadReq.path || '') + fileUploadReq.fileName,
           content: file.Body as any,
         });
+        console.info(
+          'Get file from S3 SUCCESS',
+          (fileUploadReq.path || '') + fileUploadReq.fileName,
+        );
       } catch (error) {
         console.error('Get file from s3 error', error);
       }
-
-      console.info(
-        'Get file from S3 SUCCESS',
-        (fileUploadReq.path || '') + fileUploadReq.fileName,
-      );
     }
 
     console.info(
@@ -316,7 +313,6 @@ export class IPFSService {
     const client = await IPFSService.createIPFSClient();
     let key = undefined;
     let existingKeys = undefined;
-    console.info(await client.key.list());
     try {
       existingKeys = (await client.key.list()).filter((x) => x.name == ipfsKey);
     } catch (err) {

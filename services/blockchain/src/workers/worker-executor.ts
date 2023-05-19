@@ -1,6 +1,5 @@
 import {
   AppEnvironment,
-  EvmChain,
   getEnvSecrets,
   MySql,
   SubstrateChain,
@@ -15,12 +14,12 @@ import {
 } from '@apillon/workers-lib';
 
 import { Context, env } from '@apillon/lib';
-import { Scheduler } from './scheduler';
-import { TransmitSubstrateTransactionWorker } from './transmit-substrate-transaction-worker';
 import { CrustTransactionWorker } from './crust-transaction-worker';
+import { EvmTransactionWorker } from './evm-transaction-worker';
+import { Scheduler } from './scheduler';
 import { TransactionWebhookWorker } from './transaction-webhook-worker';
 import { TransmitEvmTransactionWorker } from './transmit-evm-transaction-worker';
-import { EvmTransactionWorker } from './evm-transaction-worker';
+import { TransmitSubstrateTransactionWorker } from './transmit-substrate-transaction-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);

@@ -6,6 +6,7 @@ import {
   EvmChain,
   ForbiddenErrorCodes,
   getQueryParams,
+  LogType,
   NFTCollectionQueryFilter,
   PoolConnection,
   PopulateFrom,
@@ -14,6 +15,7 @@ import {
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
+  writeLog,
 } from '@apillon/lib';
 import { integerParser, stringParser, booleanParser } from '@rawmodel/parsers';
 import {
@@ -99,6 +101,7 @@ export class Collection extends AdvancedSQLModel {
         code: NftsErrorCode.COLLECTION_SYMBOL_NOT_PRESENT,
       },
     ],
+    fakeValue: 'NFT',
   })
   public symbol: string;
 
@@ -124,6 +127,7 @@ export class Collection extends AdvancedSQLModel {
         code: NftsErrorCode.COLLECTION_NAME_NOT_PRESENT,
       },
     ],
+    fakeValue: 'NFT collection',
   })
   public name: string;
 
@@ -167,6 +171,7 @@ export class Collection extends AdvancedSQLModel {
         code: NftsErrorCode.COLLECTION_MAX_SUPPLY_NOT_PRESENT,
       },
     ],
+    fakeValue: 10,
   })
   public maxSupply: number;
 
@@ -191,6 +196,7 @@ export class Collection extends AdvancedSQLModel {
         code: NftsErrorCode.COLLECTION_MINT_PRICE_NOT_PRESENT,
       },
     ],
+    fakeValue: 0,
   })
   public mintPrice: number;
 
@@ -235,6 +241,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    fakeValue: '',
   })
   public baseUri: string;
 
@@ -254,6 +261,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    fakeValue: 'json',
   })
   public baseExtension: string;
 
@@ -273,6 +281,8 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    fakeValue: false,
+    defaultValue: false,
   })
   public isDrop: boolean;
 
@@ -292,6 +302,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    fakeValue: false,
   })
   public isSoulbound: boolean;
 
@@ -311,6 +322,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    fakeValue: true,
   })
   public isRevokable: boolean;
 
@@ -330,6 +342,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    fakeValue: 5555555,
   })
   public dropStart: number;
 
@@ -349,6 +362,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    fakeValue: 1,
   })
   public reserve: number;
 
@@ -368,6 +382,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    fakeValue: 0,
   })
   public royaltiesFees: number;
 
@@ -387,6 +402,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    fakeValue: '0x25Cd0fE6953F5799AEbDa9ee445287CFb101972E',
   })
   public royaltiesAddress: string;
 
@@ -426,6 +442,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    fakeValue: '0xCD60e2534f80cF917ed45A62d7C29aD3BE2CaAc3',
   })
   public contractAddress: string;
 
@@ -443,7 +460,6 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
     ],
   })
   public transactionHash: string;
@@ -521,6 +537,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
     ],
     validators: [],
+    fakeValue: EvmChain.MOONBASE,
   })
   public chain: EvmChain;
 
@@ -673,13 +690,24 @@ export class Collection extends AdvancedSQLModel {
   }
 
   public async populateNumberOfMintedNfts() {
-    const walletService: WalletService = new WalletService(this.chain);
-    if (this.contractAddress) {
-      this.minted = await walletService.getNumberOfMintedNfts(
-        this.contractAddress,
+    this.minted = 0;
+
+    try {
+      const walletService: WalletService = new WalletService(
+        this.getContext(),
+        this.chain,
       );
-    } else {
-      this.minted = 0;
+      if (this.contractAddress) {
+        this.minted = await walletService.getNumberOfMintedNfts(this);
+      }
+    } catch (err) {
+      writeLog(
+        LogType.ERROR,
+        'getNumberOfMintedNfts failed',
+        'collection.model.ts',
+        'populateNumberOfMintedNfts',
+        err,
+      );
     }
   }
 

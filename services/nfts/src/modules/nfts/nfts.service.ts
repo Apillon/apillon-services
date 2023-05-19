@@ -1,6 +1,7 @@
 import {
   AppEnvironment,
   BlockchainMicroservice,
+  BurnNftDto,
   CollectionsQuotaReachedQueryFilter,
   CreateBucketDto,
   CreateCollectionDTO,
@@ -22,6 +23,7 @@ import {
   TransferCollectionDTO,
   writeLog,
 } from '@apillon/lib';
+import { ServiceContext } from '@apillon/service-lib';
 import {
   QueueWorkerType,
   sendToWorkerQueue,
@@ -29,6 +31,7 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
+import { ethers, UnsignedTransaction } from 'ethers';
 import { v4 as uuidV4 } from 'uuid';
 import {
   Chains,
@@ -37,7 +40,6 @@ import {
   NftsErrorCode,
   TransactionType,
 } from '../../config/types';
-import { ServiceContext } from '@apillon/service-lib';
 import {
   NftsCodeException,
   NftsValidationException,
@@ -49,8 +51,6 @@ import { Transaction } from '../transaction/models/transaction.model';
 import { TransactionService } from '../transaction/transaction.service';
 import { WalletService } from '../wallet/wallet.service';
 import { Collection } from './models/collection.model';
-import { ethers, UnsignedTransaction } from 'ethers';
-import { BurnNftDto } from '@apillon/lib';
 
 export class NftsService {
   static async getHello() {
@@ -102,7 +102,7 @@ export class NftsService {
         new CreateBucketDto().populate({
           project_uuid: params.body.project_uuid,
           bucketType: 3,
-          name: 'collection' + collection.collection_uuid,
+          name: collection.name + ' bucket',
         });
       nftMetadataBucket = (
         await new StorageMicroservice(context).createBucket(createBucketParams)
@@ -205,38 +205,28 @@ export class NftsService {
       env.APP_ENV == AppEnvironment.LOCAL_DEV ||
       env.APP_ENV == AppEnvironment.TEST
     ) {
-      const serviceDef: ServiceDefinition = {
-        type: ServiceDefinitionType.SQS,
-        config: { region: 'test' },
-        params: { FunctionName: 'test' },
-      };
-      const parameters = {
-        collectionId: collection.id,
-      };
-      const wd = new WorkerDefinition(
-        serviceDef,
-        WorkerName.DEPLOY_COLLECTION,
-        {
-          parameters,
-        },
-      );
-
-      const worker = new DeployCollectionWorker(
-        wd,
+      //Call Storage MS function, which will trigger worker
+      await new StorageMicroservice(
         context,
-        QueueWorkerType.EXECUTOR,
-      );
-      await worker.runExecutor({
-        collectionId: collection.id,
+      ).executePrepareCollectionBaseUriWorker({
+        bucket_uuid: collection.bucket_uuid,
+        collection_uuid: collection.collection_uuid,
+        collectionName: collection.name,
+        imagesSession: collection.imagesSession,
+        metadataSession: collection.metadataSession,
       });
     } else {
       //send message to SQS
       await sendToWorkerQueue(
-        env.NFTS_AWS_WORKER_SQS_URL,
-        WorkerName.DEPLOY_COLLECTION,
+        env.STORAGE_AWS_WORKER_SQS_URL,
+        'PrepareBaseUriForCollectionWorker',
         [
           {
-            collectionId: collection.id,
+            bucket_uuid: collection.bucket_uuid,
+            collection_uuid: collection.collection_uuid,
+            collectionName: collection.name,
+            imagesSession: collection.imagesSession,
+            metadataSession: collection.metadataSession,
           },
         ],
         null,
@@ -245,6 +235,42 @@ export class NftsService {
     }
 
     return collection.serialize(SerializeFor.PROFILE);
+  }
+
+  /**
+   * Function executes deploy collection worker - This should be used only for LOCAL_DEV
+   * Called from storage microservice in PrepareBaseUriForCollectionWorker
+   * @param params
+   * @param context
+   */
+  static async executeDeployCollectionWorker(
+    params: { body: { collection_uuid: string; baseUri: string } },
+    context: ServiceContext,
+  ) {
+    const serviceDef: ServiceDefinition = {
+      type: ServiceDefinitionType.SQS,
+      config: { region: 'test' },
+      params: { FunctionName: 'test' },
+    };
+    const parameters = {
+      collection_uuid: params.body.collection_uuid,
+      baseUri: params.body.baseUri,
+    };
+    const wd = new WorkerDefinition(serviceDef, WorkerName.DEPLOY_COLLECTION, {
+      parameters,
+    });
+
+    const worker = new DeployCollectionWorker(
+      wd,
+      context,
+      QueueWorkerType.EXECUTOR,
+    );
+    await worker.runExecutor({
+      collection_uuid: params.body.collection_uuid,
+      baseUri: params.body.baseUri,
+    });
+
+    return { success: true };
   }
 
   static async listNftCollections(
@@ -259,21 +285,25 @@ export class NftsService {
     ).getList(context, new NFTCollectionQueryFilter(event.query));
 
     for (const collection of collections.items) {
-      const walletService: WalletService = new WalletService(collection.chain);
-      try {
-        collection.minted = collection.contractAddress
-          ? await walletService.getNumberOfMintedNfts(
-              collection.contractAddress,
-            )
-          : 0;
-      } catch (err) {
-        writeLog(
-          LogType.ERROR,
-          'getNumberOfMintedNfts failed',
-          'nft.service.ts',
-          'listNftCollections',
-          err,
+      collection.minted = 0;
+      if (collection.contractAddress) {
+        const walletService: WalletService = new WalletService(
+          context,
+          collection.chain,
         );
+        try {
+          collection.minted = await walletService.getNumberOfMintedNfts(
+            collection,
+          );
+        } catch (err) {
+          writeLog(
+            LogType.ERROR,
+            'GetNumberOfMintedNfts Error',
+            'nfts.service.ts',
+            'listNftCollections',
+            err,
+          );
+        }
       }
     }
     return collections;
@@ -309,11 +339,10 @@ export class NftsService {
       {},
       context,
     ).populateByUUID(params.body.collection_uuid);
-    const walletService = new WalletService(collection.chain);
+    const walletService = new WalletService(context, collection.chain);
 
     await NftsService.checkCollection(
       collection,
-      walletService,
       'transferNftOwnership()',
       context,
     );
@@ -395,11 +424,10 @@ export class NftsService {
       {},
       context,
     ).populateByUUID(params.body.collection_uuid);
-    const walletService = new WalletService(collection.chain);
+    const walletService = new WalletService(context, collection.chain);
 
     await NftsService.checkCollection(
       collection,
-      walletService,
       'setNftCollectionBaseUri()',
       context,
     );
@@ -456,6 +484,10 @@ export class NftsService {
     }
   }
 
+  //#endregion
+
+  //#region NFT functions
+
   static async mintNftTo(
     params: { body: MintNftDTO },
     context: ServiceContext,
@@ -468,14 +500,9 @@ export class NftsService {
       {},
       context,
     ).populateByUUID(params.body.collection_uuid);
-    const walletService = new WalletService(collection.chain);
+    const walletService = new WalletService(context, collection.chain);
 
-    await NftsService.checkCollection(
-      collection,
-      walletService,
-      'mintNftTo()',
-      context,
-    );
+    await NftsService.checkCollection(collection, 'mintNftTo()', context);
 
     await NftsService.checkMintConditions(
       params.body,
@@ -561,14 +588,9 @@ export class NftsService {
       {},
       context,
     ).populateByUUID(params.body.collection_uuid);
-    const walletService = new WalletService(collection.chain);
+    const walletService = new WalletService(context, collection.chain);
 
-    await NftsService.checkCollection(
-      collection,
-      walletService,
-      'burnNftToken()',
-      context,
-    );
+    await NftsService.checkCollection(collection, 'burnNftToken()', context);
 
     const conn = await context.mysql.start();
     try {
@@ -635,13 +657,8 @@ export class NftsService {
     return { success: true };
   }
 
-  //#endregion
-
-  //#region NFT functions
-
   private static async checkCollection(
     collection: Collection,
-    walletService: WalletService,
     sourceFunction: string,
     context: ServiceContext,
   ) {
@@ -667,9 +684,7 @@ export class NftsService {
       return true;
     }
 
-    const minted = await walletService.getNumberOfMintedNfts(
-      collection.contractAddress,
-    );
+    const minted = await walletService.getNumberOfMintedNfts(collection);
 
     if (minted + params.quantity > collection.maxSupply) {
       throw new NftsCodeException({

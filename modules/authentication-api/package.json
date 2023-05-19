@@ -46,6 +46,7 @@
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
+    "@apillon/tests-lib": "*",
     "@nestjs/cli": "^9.0.0",
     "@nestjs/schematics": "^9.0.0",
     "@nestjs/testing": "^9.0.0",
