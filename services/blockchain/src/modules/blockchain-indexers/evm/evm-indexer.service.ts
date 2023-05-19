@@ -114,6 +114,54 @@ export class EvmBlockchainIndexer {
     }
   }
 
+  public async getWalletTransactions(
+    address: string,
+    fromBlock: number,
+    limit: number = null,
+  ): Promise<EvmTransfers> {
+    const GRAPHQL_QUERY = gql`
+      query getIncomingTxs($address: String!, $fromBlock: Int!, $limit: Int) {
+        transactions(
+          where: {
+            AND: [
+              { OR: [{ to_eq: $address }, { from_eq: $address }] }
+              { blockNumber_gt: $fromBlock }
+            ]
+          }
+          orderBy: blockNumber_ASC
+          limit: $limit
+        ) {
+          blockNumber
+          from
+          gas
+          gasPrice
+          hash
+          id
+          nonce
+          status
+          timestamp
+          to
+          value
+        }
+      }
+    `;
+
+    address = address.toLowerCase();
+    try {
+      const data: EvmTransfers = await this.graphQlClient.request(
+        GRAPHQL_QUERY,
+        {
+          address,
+          fromBlock,
+          limit,
+        },
+      );
+      return data;
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   public async getBlockHeight(): Promise<number> {
     const GRAPHQL_QUERY = gql`
       query getBlockHeight {

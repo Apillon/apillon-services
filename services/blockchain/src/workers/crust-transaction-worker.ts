@@ -5,7 +5,6 @@ import {
   Lmas,
   LogType,
   PoolConnection,
-  SerializeFor,
   ServiceName,
   SubstrateChain,
   TransactionStatus,
@@ -65,22 +64,13 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
           `[SUBSTRATE][CRUST] Checking PENDING transactions (sourceWallet=${wallet.address}, lastParsedBlock=${wallet.lastParsedBlock}, toBlock=${toBlock})..`,
         );
 
-        // await this.writeLogToDb(
-        //   WorkerLogStatus.INFO,
-        //   'Checking pending transactions..',
-        //   {
-        //     wallet: wallet.address,
-        //     fromBlock: lastParsedBlock,
-        //     toBlock,
-        //   },
-        // );
-
         const crustTransactions = await this.fetchAllCrustTransactions(
           crustIndexer,
           wallet.address,
           lastParsedBlock,
           toBlock,
         );
+
         await this.handleBlockchainTransfers(
           wallet,
           crustTransactions.withdrawals,
@@ -422,7 +412,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
     fromBlock: number,
     toBlock: number,
   ) {
-    const withdrawals = await crustIndexer.getWalletWitdrawals(
+    const withdrawals = await crustIndexer.getWalletWithdrawals(
       address,
       fromBlock,
       toBlock,

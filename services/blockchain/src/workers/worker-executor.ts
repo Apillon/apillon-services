@@ -31,6 +31,7 @@ export enum WorkerName {
   CRUST_TRANSACTIONS = 'CrustTransactions',
   EVM_TRANSACTIONS = 'EvmTransactions',
   TRANSACTION_WEBHOOKS = 'TransactionWebhooks',
+  TRANSACTION_LOG = 'TransactionLog',
 }
 
 export async function handler(event: any) {
