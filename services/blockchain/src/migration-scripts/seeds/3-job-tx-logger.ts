@@ -11,10 +11,11 @@ export async function upgrade(
       \`interval\`,
       \`nextRun\`,
       \`status\`,
-      \`timeout\`
+      \`timeout\`,
+      \`parameters\`
       )
       VALUES
-      ('${WorkerName.TRANSACTION_LOG}', 0, '*/5 * * * *', '2023-01-25 10:00:00', 5, 900);
+      ('${WorkerName.TRANSACTION_LOG}', 0, '*/5 * * * *', '2023-01-25 10:00:00', 5, 900, '{"batchLimit": 500}');
   `);
 }
 
