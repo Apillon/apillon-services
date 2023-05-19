@@ -20,6 +20,7 @@ import { Scheduler } from './scheduler';
 import { TransactionWebhookWorker } from './transaction-webhook-worker';
 import { TransmitEvmTransactionWorker } from './transmit-evm-transaction-worker';
 import { TransmitSubstrateTransactionWorker } from './transmit-substrate-transaction-worker';
+import { TransactionLogWorker } from './transaction-log-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -144,6 +145,13 @@ export async function handleLambdaEvent(
         QueueWorkerType.PLANNER,
       ).run();
       break;
+    case WorkerName.TRANSACTION_LOG:
+      await new TransactionLogWorker(
+        workerDefinition,
+        context,
+        QueueWorkerType.PLANNER,
+      ).run();
+      break;
     default:
       console.log(
         `ERROR - INVALID WORKER NAME: ${workerDefinition.workerName}`,
@@ -215,6 +223,15 @@ export async function handleSqsMessages(
         break;
       case WorkerName.TRANSACTION_WEBHOOKS:
         await new TransactionWebhookWorker(
+          workerDefinition,
+          context,
+          QueueWorkerType.EXECUTOR,
+        ).run({
+          executeArg: message?.body,
+        });
+        break;
+      case WorkerName.TRANSACTION_LOG:
+        await new TransactionLogWorker(
           workerDefinition,
           context,
           QueueWorkerType.EXECUTOR,
