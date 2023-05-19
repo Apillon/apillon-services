@@ -368,12 +368,12 @@ export class TransactionLog extends AdvancedSQLModel {
   public createFromEvmIndexerData(data: any, wallet: Wallet) {
     this.ts = data?.timestamp;
     this.blockId = data?.blockNumber;
-    this.addressFrom = data?.from;
-    this.addressTo = data?.to;
+    this.addressFrom = data?.from?.toLowerCase();
+    this.addressTo = data?.to?.toLowerCase();
     this.amount = data?.value;
 
     this.hash = data?.hash;
-    this.wallet = wallet.address;
+    this.wallet = wallet.address?.toLowerCase();
 
     this.status = data?.status === 0 ? TxStatus.COMPLETED : TxStatus.FAILED;
     this.chainType = wallet.chainType;
@@ -390,7 +390,9 @@ export class TransactionLog extends AdvancedSQLModel {
       this.direction = TxDirection.INCOME;
       this.action = TxAction.DEPOSIT;
     } else {
-      throw new Error('Inconsistent transaction addresses!');
+      throw new Error(
+        `Inconsistent transaction addresses! f:${this.addressFrom} t:${this.addressTo} w:${this.wallet}`,
+      );
     }
 
     this.calculateTotalPrice();

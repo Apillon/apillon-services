@@ -270,6 +270,9 @@ export class Wallet extends AdvancedSQLModel {
     );
 
     if (data && data.length) {
+      if (data[0].chainType === ChainType.EVM) {
+        data[0].address = data[0].address.toLowerCase();
+      }
       return this.populate(data[0], PopulateFrom.DB);
     } else {
       return this.reset();
@@ -293,7 +296,8 @@ export class Wallet extends AdvancedSQLModel {
       WHERE 
         chainType = @chainType
         AND chain = @chain
-        AND address = @address
+        -- case insensitive comparison
+        AND address like @address
         AND status <> ${SqlModelStatus.DELETED}
       ORDER BY usageTimestamp ASC
       LIMIT 1
@@ -370,7 +374,7 @@ export class Wallet extends AdvancedSQLModel {
       status = ${SqlModelStatus.ACTIVE}
       AND chainType = @chainType
       AND chain = @chain
-      AND (@address IS NULL OR address = @address);
+      AND (@address IS NULL OR address like @address);
       `,
       { chainType, chain, address: address || null },
       conn,
@@ -395,7 +399,14 @@ export class Wallet extends AdvancedSQLModel {
       conn,
     );
 
-    return resp?.map((x) => new Wallet(x, this.getContext())) || [];
+    return (
+      resp?.map((x) => {
+        if (x.chainType === ChainType.EVM) {
+          x.address = x.address.toLowerCase();
+        }
+        return new Wallet(x, this.getContext());
+      }) || []
+    );
   }
 
   public async checkBallance() {
