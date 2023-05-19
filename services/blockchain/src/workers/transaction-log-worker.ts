@@ -7,6 +7,7 @@ import {
   Context,
   Lmas,
   ServiceName,
+  env,
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
@@ -30,9 +31,8 @@ export class TransactionLogWorker extends BaseQueueWorker {
     workerDefinition: WorkerDefinition,
     context: Context,
     type: QueueWorkerType,
-    queueUrl: string,
   ) {
-    super(workerDefinition, context, type, queueUrl);
+    super(workerDefinition, context, type, env.BLOCKCHAIN_AWS_WORKER_SQS_URL);
     this.batchLimit = workerDefinition?.parameters?.batchLimit || 100;
   }
   async runPlanner(_data?: any): Promise<any[]> {
