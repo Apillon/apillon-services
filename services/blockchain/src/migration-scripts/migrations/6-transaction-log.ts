@@ -31,7 +31,7 @@ export async function upgrade(
   `);
   await queryFn(`
     ALTER TABLE  \`${DbTables.TRANSACTION_LOG}\`
-    ADD UNIQUE INDEX \`idx_log_hash\` (\`hash\` ASC, \`chain\` ASC);
+    ADD UNIQUE INDEX \`idx_log_hash\` (\`hash\` ASC, \`chain\` ASC, \`chainType\` ASC);
   `);
 }
 

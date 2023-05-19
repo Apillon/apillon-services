@@ -15,14 +15,11 @@ import {
   WorkerLogStatus,
 } from '@apillon/workers-lib';
 import { Wallet } from '../common/models/wallet';
-import { DbTables } from '../config/types';
+import { DbTables, TxDirection } from '../config/types';
+import { formatTokenWithDecimals } from '../lib/utils';
 
-import {
-  TransactionLog,
-  TxDirection,
-} from '../modules/accounting/transaction-log.model';
+import { TransactionLog } from '../modules/accounting/transaction-log.model';
 
-import { TransactionLogService } from '../modules/accounting/transaction-log.service';
 import { EvmBlockchainIndexer } from '../modules/blockchain-indexers/evm/evm-indexer.service';
 import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust-indexer.service';
 
@@ -52,11 +49,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
   async runExecutor(data: any): Promise<any> {
     const wallet = new Wallet(data.wallet, this.context);
 
-    const service = new TransactionLogService(wallet.chain, wallet.chainType);
-    const lastBlock = await service.getLastLoggedBlockNumber(
-      this.context,
-      wallet.address,
-    );
+    const lastBlock = await this.getLastLoggedBlockNumber(wallet);
     const transactions = await this.getTransactionsForWallet(
       wallet,
       lastBlock || 1,
@@ -81,6 +74,25 @@ export class TransactionLogWorker extends BaseQueueWorker {
         }:${wallet.address}`,
       );
     }
+  }
+
+  private async getLastLoggedBlockNumber(wallet: Wallet) {
+    const res = await this.context.mysql.paramExecute(
+      `
+      SELECT MAX(blockId) as maxBlockId
+      FROM \`${DbTables.TRANSACTION_LOG}\`
+      WHERE chain = @chain
+      AND chainType = @chainType
+      AND wallet = @wallet
+    `,
+      {
+        wallet: wallet.address,
+        chain: wallet.chain,
+        chainType: wallet.chainType,
+      },
+    );
+
+    return res.length ? res[0].maxBlockId : 0;
   }
 
   private async getTransactionsForWallet(
@@ -216,9 +228,10 @@ export class TransactionLogWorker extends BaseQueueWorker {
       WHERE tq.id IS NOT NULL
       AND tl.hash IN (${transactions.map((x) => `'${x.hash}'`).join(',')})
       AND tl.chain = @chain
+      AND tl.chainType = @chainType
       ;
     `,
-      { chain: wallet.chain },
+      { chain: wallet.chain, chainType: wallet.chainType },
     );
 
     // find unlinked transactions
@@ -229,9 +242,10 @@ export class TransactionLogWorker extends BaseQueueWorker {
       AND direction = ${TxDirection.COST}
       AND hash IN (${transactions.map((x) => `'${x.hash}'`).join(',')})
       AND chain = @chain
+      AND chainType = @chainType
       ;
     `,
-      { chain: wallet.chain },
+      { chain: wallet.chain, chainType: wallet.chainType },
     );
 
     if (unlinked.length) {
@@ -275,7 +289,11 @@ export class TransactionLogWorker extends BaseQueueWorker {
           wallet.chainType === ChainType.EVM
             ? EvmChain[wallet.chain]
             : SubstrateChain[wallet.chain]
-        }:${wallet.address} ==> balance: ${balanceData.balance}`,
+        }: ${wallet.address} ==> balance: ${formatTokenWithDecimals(
+          balanceData.balance,
+          wallet.chainType,
+          wallet.chain,
+        )}`,
         ServiceName.BLOCKCHAIN,
         'warning',
       );
@@ -288,7 +306,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
           wallet.chainType === ChainType.EVM
             ? EvmChain[wallet.chain]
             : SubstrateChain[wallet.chain]
-        }:${wallet.address}`,
+        }: ${wallet.address}`,
         balanceData,
       );
 
@@ -297,9 +315,15 @@ export class TransactionLogWorker extends BaseQueueWorker {
           wallet.chainType === ChainType.EVM
             ? EvmChain[wallet.chain]
             : SubstrateChain[wallet.chain]
-        }:${wallet.address} ==> balance: ${balanceData.balance}/${
-          balanceData.minBalance
-        }`,
+        }: ${wallet.address} ==> balance: ${formatTokenWithDecimals(
+          balanceData.balance,
+          wallet.chainType,
+          wallet.chain,
+        )} / ${formatTokenWithDecimals(
+          balanceData.minBalance,
+          wallet.chainType,
+          wallet.chain,
+        )}`,
         ServiceName.BLOCKCHAIN,
         'alert',
       );

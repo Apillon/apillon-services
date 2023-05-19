@@ -81,3 +81,35 @@ export enum SqlModelStatus {
 }
 
 //#endregion
+
+export enum TxStatus {
+  PENDING = 1,
+  COMPLETED = 5,
+  FAILED = 9,
+}
+
+export enum TxDirection {
+  INCOME = 1,
+  COST = 2,
+}
+
+export enum TxToken {
+  CRUST_TOKEN = 'CRU',
+  KILT_TOKEN = 'KILT',
+  MOONBASE_TOKEN = 'DEV',
+  MOONBEAM_TOKEN = 'GLMR',
+  PHALA_TOKEN = 'PHA',
+  POLKADOT_TOKEN = 'DOT',
+  ASTAR_TOKEN = 'ASTR',
+  SHIBUYA_TOKEN = 'SBY',
+  ETHEREUM = 'ETH',
+  USDC = 'USDC',
+  USDT = 'USDT',
+}
+
+export enum TxAction {
+  DEPOSIT = 'DEPOSIT',
+  WITHDRAWAL = 'WITHDRAWAL',
+  TRANSACTION = 'TRANSACTION',
+  UNKNOWN = 'UNKNOWN',
+}

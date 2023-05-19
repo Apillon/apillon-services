@@ -18,40 +18,15 @@ import {
 import { ethers } from 'ethers';
 import { Wallet } from '../../common/models/wallet';
 
-import { BlockchainErrorCode, Chain, DbTables } from '../../config/types';
-
-export enum TxStatus {
-  PENDING = 1,
-  COMPLETED = 5,
-  FAILED = 9,
-}
-
-export enum TxDirection {
-  INCOME = 1,
-  COST = 2,
-}
-
-export enum TxToken {
-  CRUST_TOKEN = 'CRU',
-  KILT_TOKEN = 'KILT',
-  MOONBASE_TOKEN = 'DEV',
-  MOONBEAM_TOKEN = 'GLMR',
-  PHALA_TOKEN = 'PHA',
-  POLKADOT_TOKEN = 'DOT',
-  ASTAR_TOKEN = 'ASTR',
-  SHIBUYA_TOKEN = 'SBY',
-  ETHEREUM = 'ETH',
-  USDC = 'USDC',
-  USDT = 'USDT',
-}
-
-export enum TxAction {
-  DEPOSIT = 'DEPOSIT',
-  WITHDRAWAL = 'WITHDRAWAL',
-  TRANSACTION = 'TRANSACTION',
-  UNKNOWN = 'UNKNOWN',
-}
-
+import {
+  BlockchainErrorCode,
+  DbTables,
+  TxAction,
+  TxDirection,
+  TxStatus,
+  TxToken,
+} from '../../config/types';
+import { getTokenFromChain } from '../../lib/utils';
 export class TransactionLog extends AdvancedSQLModel {
   public readonly tableName = DbTables.TRANSACTION_LOG;
 
@@ -403,7 +378,7 @@ export class TransactionLog extends AdvancedSQLModel {
     this.status = data?.status === 0 ? TxStatus.COMPLETED : TxStatus.FAILED;
     this.chainType = wallet.chainType;
     this.chain = wallet.chain;
-    this.token = this.getTokenFromChain(wallet.chain);
+    this.token = getTokenFromChain(wallet.chainType, wallet.chain);
 
     if (this.addressFrom === this.wallet) {
       this.direction = TxDirection.COST;
@@ -438,19 +413,5 @@ export class TransactionLog extends AdvancedSQLModel {
     this.amount = ethers.BigNumber.from(this.amount)
       .add(ethers.BigNumber.from(amount))
       .toString();
-  }
-
-  public getTokenFromChain(chain: Chain) {
-    const options = {
-      [EvmChain.MOONBEAM]: TxToken.MOONBEAM_TOKEN,
-      [EvmChain.MOONBASE]: TxToken.MOONBASE_TOKEN,
-      [EvmChain.ASTAR]: TxToken.ASTAR_TOKEN,
-      [EvmChain.ASTAR_SHIBUYA]: TxToken.SHIBUYA_TOKEN,
-      [SubstrateChain.CRUST]: TxToken.CRUST_TOKEN,
-      [SubstrateChain.KILT]: TxToken.KILT_TOKEN,
-      [SubstrateChain.KILT_SPIRITNET]: TxToken.KILT_TOKEN,
-      [SubstrateChain.PHALA]: TxToken.PHALA_TOKEN,
-    };
-    return options[chain] || null;
   }
 }
