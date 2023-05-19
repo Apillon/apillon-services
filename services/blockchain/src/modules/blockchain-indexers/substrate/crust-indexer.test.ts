@@ -12,7 +12,7 @@ describe.skip('Crust blockchain indexer - Wallet transfers', () => {
     const crustIndexer = new CrustBlockchainIndexer();
 
     // Withdrawals from block to block
-    const txs: CrustTransfers = await crustIndexer.getWalletWitdrawals(
+    const txs: CrustTransfers = await crustIndexer.getWalletWithdrawals(
       'cTL9KUAybw2tneR6VgUbDzXwuYzVuWCbFwK1Esnq2s1mzEVza',
       6465276,
       6465276 + 50,

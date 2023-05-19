@@ -52,6 +52,34 @@ export class SubstrateService {
     console.log('endpoint: ', endpoint.url);
     const provider = new WsProvider(endpoint.url);
 
+    let keyring; // generate privatekey from mnemonic - different for different chains
+    let typesBundle = null; // different types for different chains
+    switch (_event.params.chain) {
+      case SubstrateChain.KILT: {
+        keyring = new Keyring({ ss58Format: 38, type: 'sr25519' });
+        break;
+      }
+      case SubstrateChain.CRUST: {
+        keyring = new Keyring({ type: 'sr25519' });
+        typesBundle = typesBundleForPolkadot;
+        break;
+      }
+      default: {
+        throw new BlockchainCodeException({
+          code: BlockchainErrorCode.INVALID_CHAIN,
+          status: 400,
+        });
+      }
+    }
+
+    console.info('Creating APIPromise');
+    // TODO: Refactor to txwrapper when typesBundle supported
+    const api = await ApiPromise.create({
+      provider,
+      typesBundle, // TODO: add
+    });
+
+    console.info('Start db transaction.');
     // Start connection to database at the beginning of the function
     const conn = await context.mysql.start(IsolationLevel.READ_COMMITTED);
 
@@ -77,44 +105,14 @@ export class SubstrateService {
         );
       }
 
-      console.log(wallet.serialize());
-      let keyring; // generate privatekey from mnemonic - different for different chains
-      let typesBundle = null; // different types for different chains
-      switch (_event.params.chain) {
-        case SubstrateChain.KILT: {
-          keyring = new Keyring({ ss58Format: 38, type: 'sr25519' });
-          break;
-        }
-        case SubstrateChain.CRUST: {
-          keyring = new Keyring({ type: 'sr25519' });
-          typesBundle = typesBundleForPolkadot;
-          break;
-        }
-        default: {
-          throw new BlockchainCodeException({
-            code: BlockchainErrorCode.INVALID_CHAIN,
-            status: 400,
-          });
-        }
-      }
-
+      console.log('Wallet', wallet.serialize());
+      console.info('Getting wallet seed, ...');
       const seed = await getWalletSeed(wallet.seed);
 
-      // TODO: Refactor to txwrapper when typesBundle supported
-      const api = await ApiPromise.create({
-        provider,
-        typesBundle, // TODO: add
-      });
+      console.info('Generating unsigned transaction');
       const pair = keyring.addFromUri(seed);
       const unsignedTx = api.tx(_event.params.transaction);
       // TODO: add validation service for transaction to detect and prevent weird transactions.
-
-      const info = await unsignedTx.paymentInfo(pair);
-      console.log(`
-        class=${info.class.toString()},
-        weight=${info.weight.toString()},
-        partialFee=${info.partialFee.toHuman()}
-      `);
 
       // TODO: Determine the best era
       const signed = await unsignedTx.signAsync(pair, {
@@ -122,6 +120,7 @@ export class SubstrateService {
         era: 600, // number of blocks the transaction is valid - 6s per block * 6000 blocks / 60 = 600 minutes -> 10 hours
       });
 
+      console.info('signAsync SUCCESSFULL. Saving transaction to DB.');
       const signedSerialized = signed.toHex();
 
       const transaction = new Transaction({}, context);
@@ -140,6 +139,7 @@ export class SubstrateService {
       });
 
       await transaction.insert(SerializeFor.INSERT_DB, conn);
+      console.info('Transaction inserted. Iterating nonce ...');
       await wallet.iterateNonce(conn);
 
       await conn.commit();

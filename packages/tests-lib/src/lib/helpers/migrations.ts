@@ -23,6 +23,9 @@ let dbReferralSeed: Migration = null;
 let dbNftsMigration: Migration = null;
 let dbNftsSeed: Migration = null;
 
+let dbBcsMigration: Migration = null;
+let dbBcsSeed: Migration = null;
+
 export async function setupTestDatabase(): Promise<void> {
   await upgradeTestDatabases();
 }
@@ -53,6 +56,10 @@ async function initMigrations() {
   if (!dbNftsMigration) {
     await initNftsTestMigrations();
   }
+
+  if (!dbBcsMigration) {
+    await initBcsTestMigrations();
+  }
 }
 
 async function initSeeds() {
@@ -79,6 +86,9 @@ async function initSeeds() {
   if (!dbNftsSeed) {
     await initNftsTestSeed();
   }
+  if (!dbBcsSeed) {
+    await initBcsTestSeed();
+  }
 }
 
 export async function upgradeTestDatabases(): Promise<void> {
@@ -92,6 +102,7 @@ export async function upgradeTestDatabases(): Promise<void> {
       dbAuthApiMigration.up(),
       dbReferralMigration.up(),
       dbNftsMigration.up(),
+      dbBcsMigration.up(),
     ]);
   } catch (err) {
     console.error('error at migrations.up()', err);
@@ -112,6 +123,7 @@ export async function downgradeTestDatabases(): Promise<void> {
       dbAuthApiMigration.down(-1),
       dbReferralMigration.down(-1),
       dbNftsMigration.down(-1),
+      dbBcsMigration.down(-1),
     ]);
   } catch (err) {
     console.error('error at migrations.down()', err);
@@ -132,6 +144,7 @@ export async function seedTestDatabases(): Promise<void> {
       dbAuthApiSeed.up(),
       dbReferralSeed.up(),
       dbNftsSeed.up(),
+      dbBcsSeed.up(),
     ]);
   } catch (err) {
     console.error('error at seeds.up()', err);
@@ -151,6 +164,7 @@ export async function unseedTestDatabases(): Promise<void> {
       dbAuthApiSeed.down(-1),
       dbReferralSeed.down(-1),
       dbNftsSeed.down(-1),
+      dbBcsSeed.down(-1),
     ]);
   } catch (err) {
     console.error('error at seeds.down()', err);
@@ -182,6 +196,10 @@ export async function destroyTestMigrations(): Promise<void> {
   if (dbNftsMigration) {
     promises.push(dbNftsMigration.destroy());
   }
+  if (dbBcsMigration) {
+    promises.push(dbBcsMigration.destroy());
+  }
+
   await Promise.all(promises);
   dbConsoleMigration = null;
   dbAmsMigration = null;
@@ -190,6 +208,7 @@ export async function destroyTestMigrations(): Promise<void> {
   dbAuthApiMigration = null;
   dbReferralMigration = null;
   dbNftsMigration = null;
+  dbBcsMigration = null;
 }
 
 export async function destroyTestSeeds(): Promise<void> {
@@ -219,6 +238,10 @@ export async function destroyTestSeeds(): Promise<void> {
     promises.push(dbNftsSeed.destroy());
   }
 
+  if (dbBcsSeed) {
+    promises.push(dbBcsSeed.destroy());
+  }
+
   await Promise.all(promises);
   dbConsoleSeed = null;
   dbAmsSeed = null;
@@ -227,6 +250,7 @@ export async function destroyTestSeeds(): Promise<void> {
   dbAuthApiSeed = null;
   dbReferralSeed = null;
   dbNftsSeed = null;
+  dbBcsSeed = null;
 }
 
 export async function rebuildTestDatabases(): Promise<void> {
@@ -242,6 +266,7 @@ export async function rebuildTestDatabases(): Promise<void> {
       dbAuthApiMigration.reset(),
       dbReferralMigration.reset(),
       dbNftsMigration.reset(),
+      dbBcsMigration.reset(),
     ]);
     for (const res of migrationResults) {
       if (res.status === 'rejected') {
@@ -263,6 +288,7 @@ export async function rebuildTestDatabases(): Promise<void> {
       dbAuthApiSeed.reset(),
       dbReferralSeed.reset(),
       dbNftsSeed.reset(),
+      dbBcsSeed.reset(),
     ]);
     for (const res of migrationResults) {
       if (res.status === 'rejected') {
@@ -735,6 +761,69 @@ async function initAuthApiTestSeed() {
     await dbAuthApiSeed.initialize();
   } catch (err) {
     console.error('Error at initAuthApiTestSeed', err);
+    throw err;
+  }
+}
+
+async function initBcsTestMigrations() {
+  env.APP_ENV = AppEnvironment.TEST;
+
+  const poolBcs: ConnectionOptions = {
+    host: env.BLOCKCHAIN_MYSQL_HOST_TEST,
+    database: env.BLOCKCHAIN_MYSQL_DATABASE_TEST,
+    password: env.BLOCKCHAIN_MYSQL_PASSWORD_TEST,
+    port: env.BLOCKCHAIN_MYSQL_PORT_TEST,
+    user: env.BLOCKCHAIN_MYSQL_USER_TEST,
+    // debug: true,
+    connectionLimit: 1,
+  };
+
+  if (!/(test|testing)/i.test(poolBcs.database)) {
+    throw new Error(`Blockchain: NO TEST DATABASE!`);
+  }
+
+  const pool = createPool(poolBcs);
+
+  dbBcsMigration = new Migration({
+    conn: pool as unknown as MigrationConnection,
+    tableName: 'migrations',
+    dir: '../../services/blockchain/src/migration-scripts/migrations',
+    silent: env.APP_ENV === AppEnvironment.TEST,
+  });
+
+  await dbBcsMigration.initialize();
+}
+
+async function initBcsTestSeed() {
+  try {
+    env.APP_ENV = AppEnvironment.TEST;
+
+    const poolBcs: ConnectionOptions = {
+      host: env.BLOCKCHAIN_MYSQL_HOST_TEST,
+      database: env.BLOCKCHAIN_MYSQL_DATABASE_TEST,
+      password: env.BLOCKCHAIN_MYSQL_PASSWORD_TEST,
+      port: env.BLOCKCHAIN_MYSQL_PORT_TEST,
+      user: env.BLOCKCHAIN_MYSQL_USER_TEST,
+      // debug: true,
+      connectionLimit: 1,
+    };
+
+    if (!/(test|testing)/i.test(poolBcs.database)) {
+      throw new Error(`Blockchain: NO TEST DATABASE!`);
+    }
+
+    const pool = createPool(poolBcs);
+
+    dbBcsSeed = new Migration({
+      conn: pool as unknown as MigrationConnection,
+      tableName: 'seeds',
+      dir: '../../services/blockchain/src/migration-scripts/seeds',
+      silent: env.APP_ENV === AppEnvironment.TEST,
+    });
+
+    await dbBcsSeed.initialize();
+  } catch (err) {
+    console.error('Error at initBcsTestSeed', err);
     throw err;
   }
 }

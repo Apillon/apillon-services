@@ -1,13 +1,21 @@
-import { Lmas, LogType, ServiceName } from '@apillon/lib';
+import { AppEnvironment, Lmas, LogType, ServiceName, env } from '@apillon/lib';
 import { CID } from 'ipfs-http-client';
 import { FileStatus } from '../config/types';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { CrustService } from '../modules/crust/crust.service';
 import { Directory } from '../modules/directory/models/directory.model';
 import { File } from '../modules/storage/models/file.model';
+import { PinToCrustRequest } from '../modules/crust/models/pin-to-crust-request.model';
+import {
+  ServiceDefinition,
+  ServiceDefinitionType,
+  WorkerDefinition,
+} from '@apillon/workers-lib';
+import { WorkerName } from '../workers/worker-executor';
+import { PinToCrustWorker } from '../workers/pin-to-crust-worker';
 
 /**
- * Function to execute PinToCRUST
+ * Function to create PinToCrustRequest
  * @param context
  * @param CID
  */
@@ -20,7 +28,7 @@ export async function pinFileToCRUST(
   refId: string,
   refTable: string,
 ) {
-  console.info('pinFileToCRUST', {
+  console.info('Create PinToCrust request', {
     params: {
       bucket_uuid,
       CID,
@@ -30,69 +38,40 @@ export async function pinFileToCRUST(
     },
   });
 
-  const bucket: Bucket = await new Bucket({}, context).populateByUUID(
-    bucket_uuid,
-  );
+  const pinToCrustRequest: PinToCrustRequest = new PinToCrustRequest(
+    {},
+    context,
+  ).populate({
+    bucket_uuid: bucket_uuid,
+    cid: CID.toV0().toString(),
+    size: size,
+    isDirectory: isDirectory,
+    refId: refId,
+    refTable: refTable,
+  });
 
-  try {
-    if (!refId) {
-      if (isDirectory) {
-        const dir: Directory = await new Directory({}, context).populateByCid(
-          CID.toV0().toString(),
-        );
-        if (dir.exists()) {
-          refId = dir.directory_uuid;
-        }
-      } else {
-        const file: File = await new File({}, context).populateById(
-          CID.toV0().toString(),
-        );
-        //if file, then update file status
-        if (file.exists()) {
-          file.fileStatus = FileStatus.PINNING_TO_CRUST;
-          await file.update();
-          refId = file.file_uuid;
-        }
-      }
-    }
+  await pinToCrustRequest.insert();
 
-    await CrustService.placeStorageOrderToCRUST(
-      {
-        cid: CID,
-        size: size,
-        isDirectory: isDirectory,
-        refTable: refTable,
-        refId: refId,
-      },
-      context,
+  if (
+    env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+    env.APP_ENV == AppEnvironment.TEST
+  ) {
+    //Directly calls worker for pinning
+    const serviceDef: ServiceDefinition = {
+      type: ServiceDefinitionType.LAMBDA,
+      config: { region: 'test' },
+      params: { FunctionName: 'test' },
+    };
+    const wd = new WorkerDefinition(
+      serviceDef,
+      WorkerName.PIN_TO_CRUST_WORKER,
+      {},
     );
-    await new Lmas().writeLog({
-      context: context,
-      project_uuid: bucket.project_uuid,
-      logType: LogType.COST,
-      message: 'Success placing storage order to CRUST',
-      location: `pinFileToCRUST`,
-      service: ServiceName.STORAGE,
-      data: {
-        CID: CID.toV0().toString(),
-        size,
-        isDirectory,
-      },
-    });
-  } catch (err) {
-    await new Lmas().writeLog({
-      context: context,
-      project_uuid: bucket.project_uuid,
-      logType: LogType.ERROR,
-      message: 'Error at placing storage order to CRUST',
-      location: `pinFileToCRUST`,
-      service: ServiceName.STORAGE,
-      data: {
-        CID: CID.toV0().toString(),
-        size,
-        isDirectory,
-        err,
-      },
-    });
+
+    const worker = new PinToCrustWorker(wd, context);
+    await worker.execute();
+
+    return true;
   }
+  return false;
 }

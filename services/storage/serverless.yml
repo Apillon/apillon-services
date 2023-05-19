@@ -62,6 +62,7 @@ functions:
     environment:
       AWS_WORKER_LAMBDA_NAME: ${self:functions.storage-service-worker.name}
     events:
+      - schedule: cron(${env:CRON_SCHEDULE, '0/1 * * * ? *'})
       - sqs:
           arn: ${env:WORKER_SQS_ARN} #arn:aws:sqs:eu-west-1:018021943180:apillon-storage-queue-dev 
           batchSize: 4

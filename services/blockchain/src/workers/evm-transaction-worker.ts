@@ -1,11 +1,4 @@
 import {
-  BaseSingleThreadWorker,
-  sendToWorkerQueue,
-  WorkerDefinition,
-  WorkerLogStatus,
-} from '@apillon/workers-lib';
-import { Wallet } from '../common/models/wallet';
-import {
   ChainType,
   Context,
   env,
@@ -13,17 +6,25 @@ import {
   Lmas,
   LogType,
   PoolConnection,
-  SerializeFor,
   ServiceName,
   TransactionStatus,
 } from '@apillon/lib';
-import { EvmBlockchainIndexer } from '../modules/blockchain-indexers/evm/evm-indexer.service';
-import { EvmTransfers } from '../modules/blockchain-indexers/evm/data-models/evm-transfer';
+import {
+  BaseSingleThreadWorker,
+  sendToWorkerQueue,
+  WorkerDefinition,
+  WorkerLogStatus,
+} from '@apillon/workers-lib';
 import { Transaction } from '../common/models/transaction';
+import { Wallet } from '../common/models/wallet';
 import { BlockchainErrorCode, DbTables } from '../config/types';
-import { BlockchainStatus } from '../modules/blockchain-indexers/blockchain-status';
-import { EvmTransfer } from '../modules/blockchain-indexers/evm/data-models/evm-transfer';
 import { BlockchainCodeException } from '../lib/exceptions';
+import { BlockchainStatus } from '../modules/blockchain-indexers/blockchain-status';
+import {
+  EvmTransfer,
+  EvmTransfers,
+} from '../modules/blockchain-indexers/evm/data-models/evm-transfer';
+import { EvmBlockchainIndexer } from '../modules/blockchain-indexers/evm/evm-indexer.service';
 import { WorkerName } from './worker-executor';
 
 export class EvmTransactionWorker extends BaseSingleThreadWorker {

@@ -64,6 +64,7 @@ export enum BlockchainEventType {
   SUBSTRATE_GET_TRANSACTION = 'substrate-get-transaction',
   EVM_SIGN_TRANSACTION = 'evm-sign-transaction',
   EVM_GET_TRANSACTION = 'evm-get-transaction',
+  GET_CHAIN_ENDPOINT = 'get-chain-endpoint',
 }
 
 export enum StorageEventType {
