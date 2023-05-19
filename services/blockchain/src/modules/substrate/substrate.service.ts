@@ -98,13 +98,17 @@ export class SubstrateService {
         }
       }
 
+      console.info('Getting wallet seed, ...');
       const seed = await getWalletSeed(wallet.seed);
 
+      console.info('Creating APIPromise');
       // TODO: Refactor to txwrapper when typesBundle supported
       const api = await ApiPromise.create({
         provider,
         typesBundle, // TODO: add
       });
+
+      console.info('Generating unsigned transaction');
       const pair = keyring.addFromUri(seed);
       const unsignedTx = api.tx(_event.params.transaction);
       // TODO: add validation service for transaction to detect and prevent weird transactions.
@@ -122,6 +126,7 @@ export class SubstrateService {
         era: 600, // number of blocks the transaction is valid - 6s per block * 6000 blocks / 60 = 600 minutes -> 10 hours
       });
 
+      console.info('signAsync SUCCESSFULL. Saving transaction to DB.');
       const signedSerialized = signed.toHex();
 
       const transaction = new Transaction({}, context);
@@ -140,6 +145,7 @@ export class SubstrateService {
       });
 
       await transaction.insert(SerializeFor.INSERT_DB, conn);
+      console.info('Transaction inserted. Iterating nonce ...');
       await wallet.iterateNonce(conn);
 
       await conn.commit();
