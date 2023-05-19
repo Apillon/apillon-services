@@ -93,8 +93,11 @@
     },
     "cSpell.words": [
       "Apillon",
+      "ASTAR",
       "Authtrail",
-      "LMAS"
+      "LMAS",
+      "MOONBASE",
+      "PHALA"
     ],
     "files.exclude": {
       "**/.git": true,

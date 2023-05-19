@@ -289,6 +289,13 @@ export abstract class BaseSQLModel extends BaseDBModel {
     );
   }
 
+  public generateInsertFields(serializeStrategy = SerializeFor.INSERT_DB) {
+    const serialized = this.serialize(serializeStrategy);
+    return Object.keys(serialized)
+      .map((x) => `\`${x}\``)
+      .join(', ');
+  }
+
   public generateSelectJSONFields(
     prefix = '',
     asPrefix = '',
