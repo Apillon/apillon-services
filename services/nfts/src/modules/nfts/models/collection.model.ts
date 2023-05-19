@@ -693,11 +693,12 @@ export class Collection extends AdvancedSQLModel {
     this.minted = 0;
 
     try {
-      const walletService: WalletService = new WalletService(this.chain);
+      const walletService: WalletService = new WalletService(
+        this.getContext(),
+        this.chain,
+      );
       if (this.contractAddress) {
-        this.minted = await walletService.getNumberOfMintedNfts(
-          this.contractAddress,
-        );
+        this.minted = await walletService.getNumberOfMintedNfts(this);
       }
     } catch (err) {
       writeLog(
