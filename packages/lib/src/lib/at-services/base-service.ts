@@ -1,12 +1,13 @@
-import { env, getEnvSecrets } from '../../config/env';
+import { getEnvSecrets } from '../../config/env';
 import { AppEnvironment } from '../../config/types';
 import * as Net from 'net';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 import { safeJsonParse } from '../utils';
 import { Context } from '../context';
+import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
+import type { SendMessageCommandInput } from '@aws-sdk/client-sqs';
 
 export abstract class BaseService {
-  private lambda: LambdaClient;
   protected isDefaultAsync = false;
   abstract lambdaFunctionName: string;
   abstract devPort: number;
@@ -17,13 +18,6 @@ export abstract class BaseService {
   private apiKey: any;
 
   constructor(context?: Context) {
-    this.lambda = new LambdaClient({
-      // credentials: {
-      //   accessKeyId: env.AWS_KEY,
-      //   secretAccessKey: env.AWS_SECRET,
-      // },
-      region: env.AWS_REGION,
-    });
     this.securityToken = this.generateSecurityToken();
     this.requestId = context?.requestId;
     this.user = context?.user;
@@ -35,7 +29,14 @@ export abstract class BaseService {
     return 'SecurityToken';
   }
 
-  protected async callService(payload, isAsync = this.isDefaultAsync) {
+  protected async callService(
+    payload: any,
+    options?: {
+      isAsync?: boolean;
+      queueUrl?: string;
+    },
+  ) {
+    const isAsync = options?.isAsync || options.queueUrl || this.isDefaultAsync;
     const env = await getEnvSecrets();
     let result;
 
@@ -56,17 +57,50 @@ export abstract class BaseService {
     ) {
       result = await this.callDevService(payload, isAsync);
     } else {
-      const command = new InvokeCommand({
-        FunctionName: this.lambdaFunctionName,
-        InvocationType: isAsync ? 'Event' : 'RequestResponse',
-        Payload: Buffer.from(JSON.stringify(payload)),
-      });
+      if (options?.queueUrl) {
+        // send msg to SQS
+        const sqs = new SQSClient({
+          // credentials: {
+          //   accessKeyId: env.AWS_KEY,
+          //   secretAccessKey: env.AWS_SECRET,
+          // },
+          region: env.AWS_REGION,
+        });
+        const message: SendMessageCommandInput = {
+          // Remove DelaySeconds parameter and value for FIFO queues
+          //  DelaySeconds: 10,
+          MessageBody: JSON.stringify(payload),
+          // MessageDeduplicationId: 'TheWhistler',  // Required for FIFO queues
+          // MessageGroupId: 'Group1',  // Required for FIFO queues
+          QueueUrl: options.queueUrl,
+        };
+        try {
+          const command = new SendMessageCommand(message);
+          result = await sqs.send(command);
+        } catch (err) {
+          console.log('Apillon MS: Error sending SQS message!', err);
+        }
+      } else {
+        // invoke lambda
+        const lambda = new LambdaClient({
+          // credentials: {
+          //   accessKeyId: env.AWS_KEY,
+          //   secretAccessKey: env.AWS_SECRET,
+          // },
+          region: env.AWS_REGION,
+        });
+        const command = new InvokeCommand({
+          FunctionName: this.lambdaFunctionName,
+          InvocationType: isAsync ? 'Event' : 'RequestResponse',
+          Payload: Buffer.from(JSON.stringify(payload)),
+        });
 
-      try {
-        const { Payload } = await this.lambda.send(command);
-        result = safeJsonParse(Buffer.from(Payload).toString());
-      } catch (err) {
-        console.error('Error invoking lambda!', err);
+        try {
+          const { Payload } = await lambda.send(command);
+          result = safeJsonParse(Buffer.from(Payload).toString());
+        } catch (err) {
+          console.error('Error invoking lambda!', err);
+        }
       }
     }
     console.log(result);

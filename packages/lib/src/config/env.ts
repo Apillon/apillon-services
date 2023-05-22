@@ -89,6 +89,11 @@ export interface IEnv {
   SLACK_TOKEN: string;
   SLACK_CHANNEL: string;
 
+  /**
+   * MONITORING SQS
+   */
+  MONITORING_SQS_URL: string;
+
   /************************************************************
    * MAIL - Apillon Mailing Service
    ************************************************************/
@@ -433,6 +438,7 @@ export let env: IEnv = {
   /** LMAS */
   MONITORING_FUNCTION_NAME: process.env['MONITORING_FUNCTION_NAME'],
   MONITORING_FUNCTION_NAME_TEST: process.env['MONITORING_FUNCTION_NAME_TEST'],
+  MONITORING_SQS_URL: process.env['MONITORING_SQS_URL'],
   MONITORING_SOCKET_PORT:
     parseInt(process.env['MONITORING_SOCKET_PORT']) || 6201,
   MONITORING_MONGO_SRV: process.env['MONITORING_MONGO_SRV'],

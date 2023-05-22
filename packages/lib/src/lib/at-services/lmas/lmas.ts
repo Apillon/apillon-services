@@ -69,7 +69,7 @@ export class Lmas extends BaseService {
     console.log(JSON.stringify(data));
 
     try {
-      await this.callService(data);
+      await this.callService(data, { queueUrl: env.MONITORING_SQS_URL });
     } catch (err) {
       console.error(`LMAS writeLog CALL SERVICE ERROR: ${err.message}`);
     }
@@ -84,7 +84,7 @@ export class Lmas extends BaseService {
     // console.log(JSON.stringify(data));
 
     try {
-      await this.callService(data);
+      await this.callService(data, { queueUrl: env.MONITORING_SQS_URL });
     } catch (err) {
       console.error(`LMAS writeRequestLog CALL SERVICE ERROR: ${err.message}`);
     }
@@ -105,6 +105,7 @@ export class Lmas extends BaseService {
     // console.log(JSON.stringify(data));
 
     try {
+      // admin alerts are bypassing SQS
       await this.callService(data);
     } catch (err) {
       console.error(`LMAS sendAdminAlert CALL SERVICE ERROR: ${err.message}`);
