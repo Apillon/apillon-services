@@ -23,6 +23,7 @@ export class VerificationMicroservice {
     const presentation = JSON.parse(
       event.body.presentation,
     ) as ICredentialPresentation;
+
     let attestation: IAttestation;
 
     try {

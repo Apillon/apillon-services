@@ -153,5 +153,10 @@ export enum SqlModelStatus {
   ACTIVE = 5,
   DELETED = 9,
 }
-
 //#endregion
+
+/* Login type */
+export enum LoginType {
+  BASIC_AUTH = 'basic-auth',
+  KILT_AUTH = 'kilt-auth',
+}

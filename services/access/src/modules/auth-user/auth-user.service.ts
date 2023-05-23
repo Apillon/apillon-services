@@ -9,8 +9,9 @@ import {
   SerializeFor,
   ServiceName,
   UserWalletAuthDto,
+  AuthenticationMicroservice,
 } from '@apillon/lib';
-import { AmsErrorCode } from '../../config/types';
+import { AmsErrorCode, LoginType } from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
 import { AuthToken } from '../auth-token/auth-token.model';
@@ -126,13 +127,45 @@ export class AuthUserService {
     const authUser = await new AuthUser({}, context).populateByEmail(
       event.email,
     );
-    if (!authUser.exists() || !authUser.verifyPassword(event.password)) {
+
+    // 1.EXCEPTION: User does not exist in our database
+    if (!authUser.exists()) {
       throw await new AmsCodeException({
         status: 401,
         code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
       }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
     }
 
+    // 2.EXCEPTION: Normal login and password verification failed
+    if (
+      event.login_type == LoginType.BASIC_AUTH &&
+      !authUser.verifyPassword(event.password)
+    ) {
+      throw await new AmsCodeException({
+        status: 401,
+        code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
+      }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
+    }
+
+    // 3.EXCEPTION: Kilt auth && presentation verification failed
+    if (event.login_type == LoginType.KILT_AUTH) {
+      const verificationResult = await new AuthenticationMicroservice(
+        context,
+      ).verifyIdentity(event);
+
+      if (!verificationResult) {
+        throw await new AmsCodeException({
+          status: 401,
+          code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
+        }).writeToMonitor({
+          context,
+          user_uuid: event?.user_uuid,
+          data: event,
+        });
+      }
+    }
+
+    // 4. Finally, login user
     await authUser.loginUser();
 
     await new Lmas().writeLog({
