@@ -16,7 +16,6 @@ import {
 import { StorageCodeException } from '../lib/exceptions';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { Directory } from '../modules/directory/models/directory.model';
-import { uploadFilesToIPFSRes } from '../modules/ipfs/interfaces/upload-files-to-ipfs-res.interface';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
@@ -29,6 +28,7 @@ import {
 import { pinFileToCRUST } from './pin-file-to-crust';
 import { getSessionFilesOnS3 } from './file-upload-session-s3-files';
 import { CID } from 'ipfs-http-client';
+import { uploadItemsToIPFSRes } from '../modules/ipfs/interfaces/upload-items-to-ipfs-res.interface';
 
 /**
  * Transfers file from s3 to IPFS & CRUST
@@ -82,7 +82,7 @@ export async function storageBucketSyncFilesToIPFS(
       });
     }
 
-    let ipfsRes: uploadFilesToIPFSRes = undefined;
+    let ipfsRes: uploadItemsToIPFSRes = undefined;
     try {
       ipfsRes = await IPFSService.uploadFURsToIPFSFromS3(
         {
