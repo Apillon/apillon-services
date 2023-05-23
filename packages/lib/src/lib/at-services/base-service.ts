@@ -9,6 +9,7 @@ import type { SendMessageCommandInput } from '@aws-sdk/client-sqs';
 
 export abstract class BaseService {
   protected isDefaultAsync = false;
+  protected defaultQueueUrl: string = null;
   abstract lambdaFunctionName: string;
   abstract devPort: number;
   abstract serviceName: string;
@@ -36,7 +37,9 @@ export abstract class BaseService {
       queueUrl?: string;
     },
   ) {
-    const isAsync = options?.isAsync || options.queueUrl || this.isDefaultAsync;
+    const queueUrl = options?.queueUrl || this.defaultQueueUrl;
+    const isAsync = options?.isAsync || queueUrl || this.isDefaultAsync;
+
     const env = await getEnvSecrets();
     let result;
 
@@ -57,7 +60,7 @@ export abstract class BaseService {
     ) {
       result = await this.callDevService(payload, isAsync);
     } else {
-      if (options?.queueUrl) {
+      if (queueUrl) {
         // send msg to SQS
         const sqs = new SQSClient({
           // credentials: {
@@ -72,7 +75,7 @@ export abstract class BaseService {
           MessageBody: JSON.stringify(payload),
           // MessageDeduplicationId: 'TheWhistler',  // Required for FIFO queues
           // MessageGroupId: 'Group1',  // Required for FIFO queues
-          QueueUrl: options.queueUrl,
+          QueueUrl: queueUrl,
         };
         try {
           const command = new SendMessageCommand(message);

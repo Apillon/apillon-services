@@ -67,3 +67,4 @@ functions:
           arn: ${env:WORKER_SQS_ARN}
           batchSize: 4
           maximumBatchingWindow: 0
+          functionResponseType: ReportBatchItemFailures

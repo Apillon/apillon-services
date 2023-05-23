@@ -26,6 +26,7 @@ export class Lmas extends BaseService {
   constructor() {
     super();
     this.isDefaultAsync = true;
+    this.defaultQueueUrl = env.MONITORING_SQS_URL;
   }
 
   public async writeLog(params: {
@@ -69,7 +70,7 @@ export class Lmas extends BaseService {
     console.log(JSON.stringify(data));
 
     try {
-      await this.callService(data, { queueUrl: env.MONITORING_SQS_URL });
+      await this.callService(data);
     } catch (err) {
       console.error(`LMAS writeLog CALL SERVICE ERROR: ${err.message}`);
     }
@@ -84,7 +85,7 @@ export class Lmas extends BaseService {
     // console.log(JSON.stringify(data));
 
     try {
-      await this.callService(data, { queueUrl: env.MONITORING_SQS_URL });
+      await this.callService(data);
     } catch (err) {
       console.error(`LMAS writeRequestLog CALL SERVICE ERROR: ${err.message}`);
     }
@@ -105,7 +106,6 @@ export class Lmas extends BaseService {
     // console.log(JSON.stringify(data));
 
     try {
-      // admin alerts are bypassing SQS
       await this.callService(data);
     } catch (err) {
       console.error(`LMAS sendAdminAlert CALL SERVICE ERROR: ${err.message}`);

@@ -3,11 +3,11 @@ import {
   ErrorHandler,
   MongoDbConnect,
   ResponseFormat,
+  SqsPartialBatchFailure,
 } from '@apillon/service-lib';
 import * as middy from '@middy/core';
 import type { Callback, Context, Handler } from 'aws-lambda/handler';
 import { processEvent } from './main';
-import sqsBatch from '@middy/sqs-partial-batch-failure';
 
 /**
  * Handles AWS Lambda events and passes them to processEvent() for processing.
@@ -21,13 +21,16 @@ const lambdaHandler: Handler = async (
   _callback: Callback,
 ) => {
   if (event.Records) {
+    console.log('Processing SQS bath messages...');
     const promises = [];
     for (const msg of event.Records) {
       promises.push(handleMessage(JSON.parse(msg.body), context));
     }
-    return Promise.allSettled(promises);
+    return await Promise.allSettled(promises);
   }
-  return await handleMessage(event, context);
+  const res = await handleMessage(event, context);
+  console.log(res);
+  return res;
 };
 
 async function handleMessage(event: any, context: Context) {
@@ -63,6 +66,6 @@ const getConnectionParams = () => {
 export const handler = middy.default(lambdaHandler);
 handler //
   .use(MongoDbConnect(getConnectionParams))
+  .use(SqsPartialBatchFailure())
   .use(ResponseFormat())
-  .use(ErrorHandler())
-  .use(sqsBatch());
+  .use(ErrorHandler());
