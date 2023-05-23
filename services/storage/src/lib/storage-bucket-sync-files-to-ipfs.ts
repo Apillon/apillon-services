@@ -84,10 +84,14 @@ export async function storageBucketSyncFilesToIPFS(
 
     let ipfsRes: uploadFilesToIPFSRes = undefined;
     try {
-      ipfsRes = await IPFSService.uploadFURsToIPFSFromS3({
-        fileUploadRequests: files,
-        wrapWithDirectory: wrapWithDirectory,
-      });
+      ipfsRes = await IPFSService.uploadFURsToIPFSFromS3(
+        {
+          fileUploadRequests: files,
+          wrapWithDirectory: wrapWithDirectory,
+          wrappingDirectoryPath,
+        },
+        context,
+      );
     } catch (err) {
       await new Lmas().writeLog({
         context: context,
@@ -104,6 +108,7 @@ export async function storageBucketSyncFilesToIPFS(
       throw err;
     }
 
+    //Update directories CIDs
     let wrappingDirectory: Directory;
     if (wrappingDirectoryPath) {
       wrappingDirectory = await generateDirectoriesFromPath(
@@ -113,20 +118,34 @@ export async function storageBucketSyncFilesToIPFS(
         bucket,
         ipfsRes.ipfsDirectories,
       );
+
+      wrappingDirectory.CID = ipfsRes.parentDirCID.toV0().toString();
+      await wrappingDirectory.update();
     }
 
+    for (const ipfsDir of ipfsRes.ipfsDirectories) {
+      //Update directories with CID
+      const dir = await generateDirectoriesFromPath(
+        context,
+        directories,
+        wrappingDirectoryPath
+          ? wrappingDirectoryPath + '/' + ipfsDir.path
+          : ipfsDir.path,
+        bucket,
+      );
+      if (dir.exists()) {
+        dir.CID = ipfsDir.cid.toV0().toString();
+        await dir.update();
+      }
+    }
+
+    //Update files CIDs
     for (const file of files.filter(
       (x) =>
         x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED &&
         x.fileStatus != FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3,
     )) {
       try {
-        if (wrappingDirectoryPath) {
-          file.path = file.path
-            ? wrappingDirectoryPath + '/' + file.path
-            : wrappingDirectoryPath;
-        }
-
         //check if file already exists
         const existingFile = await new File({}, context).populateByUUID(
           file.file_uuid,
@@ -145,7 +164,7 @@ export async function storageBucketSyncFilesToIPFS(
 
           await existingFile.update();
           transferedFiles.push(existingFile);
-        } else {
+        } /*else {
           //Create new file
           const fileDirectory = await generateDirectoriesForFUR(
             context,
@@ -171,7 +190,7 @@ export async function storageBucketSyncFilesToIPFS(
             .insert();
 
           transferedFiles.push(tmpF);
-        }
+        }*/
       } catch (err) {
         await new Lmas().writeLog({
           context: context,
@@ -214,10 +233,6 @@ export async function storageBucketSyncFilesToIPFS(
       //delete file from s3
       await s3Client.remove(env.STORAGE_AWS_IPFS_QUEUE_BUCKET, file.s3FileKey);
     }
-
-    //Update wrapping directory CID
-    wrappingDirectory.CID = ipfsRes.parentDirCID.toV0().toString();
-    await wrappingDirectory.update();
 
     await pinFileToCRUST(
       context,

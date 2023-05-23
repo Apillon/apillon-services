@@ -1,4 +1,8 @@
-import { FileStatus, FileUploadRequestFileStatus } from '../config/types';
+import {
+  FileStatus,
+  FileUploadRequestFileStatus,
+  FileUploadSessionStatus,
+} from '../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { Directory } from '../modules/directory/models/directory.model';
@@ -59,6 +63,11 @@ export async function processSessionFiles(
       params.directoryPath,
       bucket,
     );
+    for (const fur of fileUploadRequests) {
+      fur.path = fur.path
+        ? params.directoryPath + '/' + fur.path
+        : params.directoryPath;
+    }
   }
 
   await generateDirectoriesForFURs(
@@ -79,12 +88,6 @@ export async function processSessionFiles(
       await fur.update();
     } else {
       try {
-        if (params.directoryPath) {
-          fur.path = fur.path
-            ? params.directoryPath + '/' + fur.path
-            : params.directoryPath;
-        }
-
         const fileDirectory = await generateDirectoriesForFUR(
           context,
           directories,
@@ -162,8 +165,6 @@ export async function processSessionFiles(
 
         throw err;
       }
-
-      //now the file has CID, exists in IPFS node and in bucket
       //update file-upload-request status
       fur.fileStatus = FileUploadRequestFileStatus.UPLOADED_TO_S3;
       await fur.update();
@@ -189,7 +190,7 @@ export async function processSessionFiles(
   }
 
   //update session
-  session.sessionStatus = 2;
+  session.sessionStatus = FileUploadSessionStatus.PROCESSED;
   await session.update();
 
   return true;
