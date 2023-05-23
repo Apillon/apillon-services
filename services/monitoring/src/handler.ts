@@ -66,6 +66,6 @@ const getConnectionParams = () => {
 export const handler = middy.default(lambdaHandler);
 handler //
   .use(MongoDbConnect(getConnectionParams))
-  .use(SqsPartialBatchFailure())
   .use(ResponseFormat())
+  .use(SqsPartialBatchFailure())
   .use(ErrorHandler());

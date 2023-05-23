@@ -30,9 +30,6 @@ export function SqsPartialBatchFailure(
       request.response = {
         batchItemFailures,
       };
-    } else {
-      // not a SQS Request
-      return request;
     }
   };
   return {
