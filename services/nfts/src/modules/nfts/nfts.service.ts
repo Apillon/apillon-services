@@ -53,10 +53,6 @@ import { WalletService } from '../wallet/wallet.service';
 import { Collection } from './models/collection.model';
 
 export class NftsService {
-  static async getHello() {
-    return 'Hello world from NFTS microservice';
-  }
-
   //#region collection functions
 
   // TODO: Remove send transaction from all functions bellow, as we are planing to

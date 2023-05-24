@@ -1,18 +1,29 @@
 import ganache from 'ganache';
 import { Stage } from '../interfaces/stage.interface';
-import { Endpoint } from '@apillon/blockchain/src/common/models/endpoint';
 import { Wallet } from '@apillon/blockchain/src/common/models/wallet';
 import { ChainType, EvmChain, SubstrateChain } from '@apillon/lib';
 
 export async function startGanacheRPCServer(stage: Stage) {
-  const options = {};
-  const server = ganache.server(options);
+  const server = ganache.server({
+    wallet: {
+      accounts: [
+        {
+          balance: 1000000,
+          secretKey:
+            '0x7f109a9e3b0d8ecfba9cc23a3614433ce0fa7ddcc80f2a8f10b222179a5a80d6',
+        },
+      ],
+    },
+  });
   const PORT = 0; // 0 means any available port
   server.listen(PORT, async (err) => {
     if (err) {
       throw err;
     }
 
+    const ganacheServerAddress = `${server.address().address}:${
+      server.address().port
+    }`;
     console.log(
       `ganache listening on ${server.address().address}:${
         server.address().port
@@ -32,8 +43,9 @@ export async function startGanacheRPCServer(stage: Stage) {
       `
       INSERT INTO endpoint (status, url, chain, chainType)
       VALUES 
-      (5, 'wss://rpc.crust.network', ${SubstrateChain.CRUST}, ${ChainType.SUBSTRATE}),
-      (5, 'wss://spiritnet.kilt.io', ${SubstrateChain.KILT}, ${ChainType.SUBSTRATE})
+      (5, 'http://${ganacheServerAddress}', ${SubstrateChain.CRUST}, ${ChainType.SUBSTRATE}),
+      (5, 'htpp://${ganacheServerAddress}', ${SubstrateChain.KILT}, ${ChainType.SUBSTRATE}),
+      (5, 'http://${ganacheServerAddress}', ${EvmChain.MOONBASE}, ${ChainType.EVM})
       ;
     `,
       { url: server.address().address },
@@ -46,7 +58,7 @@ export async function startGanacheRPCServer(stage: Stage) {
       address: accounts[0],
       chain: EvmChain.MOONBASE,
       chainType: ChainType.EVM,
-      seed: '123',
+      seed: '0x7f109a9e3b0d8ecfba9cc23a3614433ce0fa7ddcc80f2a8f10b222179a5a80d6',
       type: 1,
     });
     await moonbaseWallet.insert();
