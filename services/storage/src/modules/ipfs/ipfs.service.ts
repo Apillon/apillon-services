@@ -155,7 +155,7 @@ export class IPFSService {
           (fileUploadReq.path || '') + fileUploadReq.fileName,
         );
         try {
-          const file = await s3Client.get(
+          let file = await s3Client.get(
             env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
             fileUploadReq.s3FileKey,
           );
@@ -168,6 +168,13 @@ export class IPFSService {
             file.Body as any,
             { create: true, parents: true },
           );
+
+          try {
+            (file.Body as any).destroy();
+          } catch (err) {
+            console.error(err);
+          }
+          file = undefined;
         } catch (error) {
           console.error('Get file from s3 and add to IPFS files FAILED', error);
         }
@@ -179,7 +186,7 @@ export class IPFSService {
     );
 
     const mfsDirectoryCID = await client.files.stat(mfsDirectoryPath);
-    console.info('DIR CID: ', mfsDirectoryCID);
+    console.info('DIR CID: ', mfsDirectoryCID.cid.toV0().toString());
 
     /**Directories on IPFS - each dir on IPFS gets CID */
     const ipfsDirectories = [];
@@ -213,8 +220,8 @@ export class IPFSService {
       location: 'IPFSService.uploadFilesToIPFSFromS3',
       service: ServiceName.STORAGE,
       data: {
-        fileUploadRequests: event.fileUploadRequests,
-        itemInIpfsMfs: itemInIpfsMfs,
+        session_id: event.fileUploadRequests[0].session_id,
+        mfsDirectoryCID: mfsDirectoryCID.cid.toV0().toString(),
       },
     });
 
@@ -282,7 +289,7 @@ export class IPFSService {
       fileUploadRequests.push(fur);
     }
 
-    return await this.uploadFURsToIPFSFromS3(
+    const syncToIpfsRes = await this.uploadFURsToIPFSFromS3(
       {
         fileUploadRequests: fileUploadRequests,
         wrapWithDirectory: event.wrapWithDirectory,
@@ -290,6 +297,15 @@ export class IPFSService {
       },
       context,
     );
+
+    //Update CID and size properties of event.files, as files are returned to parent function by reference
+    for (const file of event.files) {
+      const fur = fileUploadRequests.find((x) => x.file_uuid == file.file_uuid);
+      file.CID = fur.CID.toV0().toString();
+      file.size = fur.size;
+    }
+
+    return syncToIpfsRes;
   }
 
   /**

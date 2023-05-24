@@ -226,13 +226,13 @@ export async function storageBucketSyncFilesToIPFS(
       file.fileStatus = FileUploadRequestFileStatus.UPLOAD_COMPLETED;
       await file.update();
 
-      tmpSize += ipfsRes.size;
-      bucket.uploadedSize += ipfsRes.size;
-      bucket.size = bucket.size ? bucket.size + ipfsRes.size : ipfsRes.size;
-
       //delete file from s3
       await s3Client.remove(env.STORAGE_AWS_IPFS_QUEUE_BUCKET, file.s3FileKey);
     }
+
+    tmpSize += ipfsRes.size;
+    bucket.uploadedSize += ipfsRes.size;
+    bucket.size = bucket.size ? bucket.size + ipfsRes.size : ipfsRes.size;
 
     await pinFileToCRUST(
       context,
