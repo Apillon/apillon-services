@@ -28,12 +28,17 @@ import {
 import { DevConsoleApiContext } from '../../context';
 import { ProjectService } from '../project/project.service';
 import { LoginUserDto } from './dtos/login-user.dto';
+import { LoginUserKiltDto } from './dtos/login-user-kilt.dto';
 import { RegisterUserDto } from './dtos/register-user.dto';
 import { ValidateEmailDto } from './dtos/validate-email.dto';
 import { User } from './models/user.model';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
-import { verifyCaptcha, getDiscordProfile } from '@apillon/modules-lib';
+import {
+  verifyCaptcha,
+  getDiscordProfile,
+  getOauthSessionToken,
+} from '@apillon/modules-lib';
 import { DiscordCodeDto } from './dtos/discord-code-dto';
 import { signatureVerify } from '@polkadot/util-crypto';
 @Injectable()
@@ -76,6 +81,50 @@ export class UserService {
       const resp = await new Ams(context).login({
         email: loginInfo.email,
         password: loginInfo.password,
+      });
+
+      const user = await new User({}, context).populateByUUID(
+        resp.data.user_uuid,
+      );
+
+      if (!user.exists()) {
+        throw new CodeException({
+          status: HttpStatus.UNAUTHORIZED,
+          code: ValidatorErrorCode.USER_INVALID_LOGIN,
+          errorCodes: ValidatorErrorCode,
+        });
+      }
+
+      user.wallet = resp.data.wallet;
+
+      user.setUserRolesFromAmsResponse(resp);
+
+      return {
+        ...user.serialize(SerializeFor.PROFILE),
+        token: resp.data.token,
+      };
+    } catch (error) {
+      throw new CodeException({
+        status: HttpStatus.UNAUTHORIZED,
+        code: ValidatorErrorCode.USER_INVALID_LOGIN,
+        errorCodes: ValidatorErrorCode,
+      });
+    }
+  }
+
+  /**
+   * Authenticates a user using email and password.
+   * @param {LoginUserKiltDto} loginInfo - The email and password data for login.
+   * @param {DevConsoleApiContext} context - The API context for database access
+   * @returns {Promise<any>} The serialized user profile data and token.
+   */
+  async loginWithKilt(
+    loginInfo: LoginUserKiltDto,
+    context: DevConsoleApiContext,
+  ): Promise<any> {
+    try {
+      const resp = await new Ams(context).loginWithKilt({
+        token: loginInfo.token,
       });
 
       const user = await new User({}, context).populateByUUID(
@@ -543,5 +592,17 @@ export class UserService {
    */
   async getOauthLinks(context: DevConsoleApiContext) {
     return await new Ams(context).getOauthLinks();
+  }
+
+  /**
+   * Get session token for the oauth module
+   * @param context - The API context with current user session.
+   * @returns Session info for the oauth module
+   */
+  async getOauthSession() {
+    return await getOauthSessionToken(
+      env.APILLON_API_KEY,
+      env.APILLON_API_SECRET,
+    );
   }
 }

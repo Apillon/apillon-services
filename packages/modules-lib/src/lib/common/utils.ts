@@ -1,3 +1,4 @@
+import { AppEnvironment } from '@apillon/lib';
 import { env } from '@apillon/lib';
 import axios, { AxiosResponse } from 'axios';
 import FormData from 'form-data';
@@ -66,4 +67,24 @@ export async function getDiscordProfile(code: string): Promise<any> {
     return res?.data;
   }
   return null;
+}
+
+export async function getOauthSessionToken(apiKey: string, apiSecret: string) {
+  // TODO: Maybe not the most efficient way??? Could just do an OR
+  let protocol = '';
+  if (
+    env.APP_ENV === AppEnvironment.TEST ||
+    env.APP_ENV == AppEnvironment.LOCAL_DEV
+  ) {
+    protocol = 'http://';
+  }
+
+  const requestUrl = `${protocol}${env.APILLON_API_HOST}:${env.APILLON_API_PORT}/auth/session-token`;
+  const response = await axios.get(requestUrl, {
+    auth: {
+      username: apiKey,
+      password: apiSecret,
+    },
+  });
+  return response.data;
 }

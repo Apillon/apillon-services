@@ -19,6 +19,7 @@ export async function processEvent(
   const processors = {
     [AmsEventType.USER_REGISTER]: AuthUserService.register,
     [AmsEventType.USER_LOGIN]: AuthUserService.login,
+    [AmsEventType.USER_LOGIN_KILT]: AuthUserService.loginWithKilt,
     [AmsEventType.USER_GET_AUTH]: AuthUserService.getAuthUser,
     [AmsEventType.USER_UPDATE]: AuthUserService.updateAuthUser,
     [AmsEventType.USER_PASSWORD_RESET]: AuthUserService.resetPassword,

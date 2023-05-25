@@ -80,6 +80,20 @@ export class Ams extends BaseService {
     };
   }
 
+  public async loginWithKilt(params: { token: string }) {
+    const data = {
+      eventName: AmsEventType.USER_LOGIN_KILT,
+      ...params,
+    };
+
+    // eslint-disable-next-line sonarjs/prefer-immediate-return
+    const amsResponse = await this.callService(data);
+
+    return {
+      ...amsResponse,
+    };
+  }
+
   public async resetPassword(params: { email: string; password: string }) {
     const data = {
       eventName: AmsEventType.USER_PASSWORD_RESET,
