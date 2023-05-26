@@ -412,7 +412,7 @@ export let env: IEnv = {
   AWS_SECRET: process.env['AWS_SECRET'],
   AWS_BUCKET: process.env['AWS_BUCKET'],
   AWS_ENDPOINT: process.env['AWS_ENDPOINT'],
-  APP_SECRET: process.env['APP_SECRET'] || 'notasecret',
+  APP_SECRET: process.env['APP_SECRET'] || 'Du7Rvyqt7u38naZ2',
 
   /** AMS */
   ACCESS_FUNCTION_NAME: process.env['ACCESS_FUNCTION_NAME'],

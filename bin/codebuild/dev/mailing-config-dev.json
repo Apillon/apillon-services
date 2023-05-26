@@ -20,11 +20,6 @@
         "type": "PLAINTEXT",
         "name": "SERVICE_PATH",
         "value": "services/mailing/"
-      },
-      {
-        "type": "PLAINTEXT",
-        "name": "MONITORING_SQS_ARN",
-        "value": "arn:aws:sqs:eu-west-1:018021943180:apillon-monitoring-queue-dev"
       }
     ],
     "type": "LINUX_CONTAINER"
