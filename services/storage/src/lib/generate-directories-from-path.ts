@@ -34,7 +34,7 @@ export async function generateDirectoriesForFUR(
     }
     return d;
   } else if (fur.path) {
-    return generateDirectoriesFromPath(
+    return await generateDirectoriesFromPath(
       context,
       directories,
       fur.path,
@@ -44,6 +44,32 @@ export async function generateDirectoriesForFUR(
     );
   }
   return undefined;
+}
+
+/**
+ * Function to prepare directories for file upload requests - mostly used, so that processing of files can be done through workers
+ */
+export async function generateDirectoriesForFURs(
+  context: ServiceContext,
+  directories: Directory[],
+  furs: FileUploadRequest[],
+  bucket: Bucket,
+  ipfsDirectories?: { path: string; cid: CID }[],
+  conn?: PoolConnection,
+) {
+  const paths = [...new Set(furs.map((item) => item.path))];
+  for (const path of paths) {
+    if (path) {
+      await generateDirectoriesFromPath(
+        context,
+        directories,
+        path,
+        bucket,
+        ipfsDirectories,
+        conn,
+      );
+    }
+  }
 }
 
 export async function generateDirectoriesFromPath(

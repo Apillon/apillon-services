@@ -7,8 +7,9 @@ export class EvmBlockchainIndexer {
   private graphQlClient: GraphQLClient;
 
   private chainGqlMap = new Map<EvmChain, string>([
-    [EvmChain.MOONBASE, env.BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER],
+    [EvmChain.MOONBASE, env.BLOCKCHAIN_MOONBASE_GRAPHQL_SERVER],
     [EvmChain.MOONBEAM, env.BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER],
+    [EvmChain.ASTAR, env.BLOCKCHAIN_ASTAR_GRAPHQL_SERVER],
   ]);
 
   constructor(chain: EvmChain) {
@@ -105,6 +106,54 @@ export class EvmBlockchainIndexer {
           address,
           fromBlock,
           toBlock,
+        },
+      );
+      return data;
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  public async getWalletTransactions(
+    address: string,
+    fromBlock: number,
+    limit: number = null,
+  ): Promise<EvmTransfers> {
+    const GRAPHQL_QUERY = gql`
+      query getIncomingTxs($address: String!, $fromBlock: Int!, $limit: Int) {
+        transactions(
+          where: {
+            AND: [
+              { OR: [{ to_eq: $address }, { from_eq: $address }] }
+              { blockNumber_gt: $fromBlock }
+            ]
+          }
+          orderBy: blockNumber_ASC
+          limit: $limit
+        ) {
+          blockNumber
+          from
+          gas
+          gasPrice
+          hash
+          id
+          nonce
+          status
+          timestamp
+          to
+          value
+        }
+      }
+    `;
+
+    address = address.toLowerCase();
+    try {
+      const data: EvmTransfers = await this.graphQlClient.request(
+        GRAPHQL_QUERY,
+        {
+          address,
+          fromBlock,
+          limit,
         },
       );
       return data;

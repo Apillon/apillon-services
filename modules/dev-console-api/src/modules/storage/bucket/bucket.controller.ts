@@ -137,7 +137,7 @@ export class BucketController {
   @UseGuards(AuthGuard)
   async getBucket(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: number | string,
   ) {
     return await this.bucketService.getBucket(context, id);
   }

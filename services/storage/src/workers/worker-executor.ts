@@ -17,6 +17,8 @@ import { DeleteBucketDirectoryFileWorker } from './delete-bucket-directory-file-
 import { PublishToIPNSWorker } from './publish-to-ipns-worker';
 import { UpdateCrustStatusWorker } from './update-crust-status-worker';
 import { PrepareMetadataForCollectionWorker } from './prepare-metada-for-collection-worker';
+import { PrepareBaseUriForCollectionWorker } from './prepare-base-uri-for-collection-worker';
+import { PinToCrustWorker } from './pin-to-crust-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -30,6 +32,8 @@ export enum WorkerName {
   PUBLISH_TO_IPNS_WORKER = 'PublishToIPNSWorker',
   UPDATE_CRUST_STATUS_WORKER = 'UpdateCrustStatusWorker',
   PREPARE_METADATA_FOR_COLLECTION_WORKER = 'PrepareMetadataForCollectionWorker',
+  PREPARE_BASE_URI_FOR_COLLECTION_WORKER = 'PrepareBaseUriForCollectionWorker',
+  PIN_TO_CRUST_WORKER = 'PinToCrustWorker',
 }
 
 export async function handler(event: any) {
@@ -73,7 +77,7 @@ export async function handler(event: any) {
 
   try {
     if (event.Records) {
-      await handleSqsMessages(event, context, serviceDef);
+      return await handleSqsMessages(event, context, serviceDef);
     } else {
       await handleLambdaEvent(event, context, serviceDef);
     }
@@ -125,6 +129,10 @@ export async function handleLambdaEvent(
       );
       await workerForDeletion.run();
       break;
+    case WorkerName.PIN_TO_CRUST_WORKER:
+      const pinToCrustWorker = new PinToCrustWorker(workerDefinition, context);
+      await pinToCrustWorker.run();
+      break;
     default:
       console.log(
         `ERROR - INVALID WORKER NAME: ${workerDefinition.workerName}`,
@@ -155,93 +163,114 @@ export async function handleSqsMessages(
   serviceDef: ServiceDefinition,
 ) {
   console.info('handle sqs message. event.Records: ', event.Records);
+  const response = { batchItemFailures: [] };
   for (const message of event.Records) {
-    let parameters: any;
-    if (message?.messageAttributes?.parameters?.stringValue) {
-      parameters = JSON.parse(
-        message?.messageAttributes?.parameters?.stringValue,
-      );
-    }
-
-    let id: number;
-    if (message?.messageAttributes?.jobId?.stringValue) {
-      id = parseInt(message?.messageAttributes?.jobId?.stringValue);
-    }
-
-    let workerName = message?.messageAttributes?.workerName?.stringValue;
-    if (!workerName) {
-      //Worker name is not present in messageAttributes
-      console.info('worker name not present in message.messageAttributes');
-      if (message?.eventSourceARN == env.STORAGE_AWS_WORKER_SQS_ARN) {
-        //Special cases: Sqs message can be sent from s3 - check if eventSourceARN is present in message
-        workerName = WorkerName.SYNC_TO_IPFS_WORKER;
-      }
-    }
-
-    console.info('worker name', workerName);
-    console.info('STORAGE_AWS_WORKER_SQS_ARN', env.STORAGE_AWS_WORKER_SQS_ARN);
-
-    const workerDefinition = new WorkerDefinition(serviceDef, workerName, {
-      id,
-      parameters,
-    });
-
-    // eslint-disable-next-line sonarjs/no-small-switch
-    switch (workerName) {
-      case WorkerName.SYNC_TO_IPFS_WORKER: {
-        await new SyncToIPFSWorker(
-          workerDefinition,
-          context,
-          QueueWorkerType.EXECUTOR,
-        ).run({
-          executeArg: message?.body,
-        });
-        break;
-      }
-      case WorkerName.DEPLOY_WEBSITE_WORKER: {
-        await new DeployWebsiteWorker(
-          workerDefinition,
-          context,
-          QueueWorkerType.EXECUTOR,
-        ).run({
-          executeArg: message?.body,
-        });
-        break;
-      }
-      case WorkerName.PUBLISH_TO_IPNS_WORKER: {
-        await new PublishToIPNSWorker(
-          workerDefinition,
-          context,
-          QueueWorkerType.EXECUTOR,
-        ).run({
-          executeArg: message?.body,
-        });
-        break;
-      }
-      case WorkerName.UPDATE_CRUST_STATUS_WORKER: {
-        await new UpdateCrustStatusWorker(
-          workerDefinition,
-          context,
-          QueueWorkerType.EXECUTOR,
-        ).run({
-          executeArg: message?.body,
-        });
-        break;
-      }
-      case WorkerName.PREPARE_METADATA_FOR_COLLECTION_WORKER: {
-        await new PrepareMetadataForCollectionWorker(
-          workerDefinition,
-          context,
-          QueueWorkerType.EXECUTOR,
-        ).run({
-          executeArg: message?.body,
-        });
-        break;
-      }
-      default:
-        console.log(
-          `ERROR - INVALID WORKER NAME: ${message?.messageAttributes?.workerName}`,
+    try {
+      let parameters: any;
+      if (message?.messageAttributes?.parameters?.stringValue) {
+        parameters = JSON.parse(
+          message?.messageAttributes?.parameters?.stringValue,
         );
+      }
+
+      let id: number;
+      if (message?.messageAttributes?.jobId?.stringValue) {
+        id = parseInt(message?.messageAttributes?.jobId?.stringValue);
+      }
+
+      let workerName = message?.messageAttributes?.workerName?.stringValue;
+      if (!workerName) {
+        //Worker name is not present in messageAttributes
+        console.info('worker name not present in message.messageAttributes');
+        if (message?.eventSourceARN == env.STORAGE_AWS_WORKER_SQS_ARN) {
+          //Special cases: Sqs message can be sent from s3 - check if eventSourceARN is present in message
+          workerName = WorkerName.SYNC_TO_IPFS_WORKER;
+        }
+      }
+
+      console.info('worker name', workerName);
+      console.info(
+        'STORAGE_AWS_WORKER_SQS_ARN',
+        env.STORAGE_AWS_WORKER_SQS_ARN,
+      );
+
+      const workerDefinition = new WorkerDefinition(serviceDef, workerName, {
+        id,
+        parameters,
+      });
+
+      // eslint-disable-next-line sonarjs/no-small-switch
+      switch (workerName) {
+        case WorkerName.SYNC_TO_IPFS_WORKER: {
+          await new SyncToIPFSWorker(
+            workerDefinition,
+            context,
+            QueueWorkerType.EXECUTOR,
+          ).run({
+            executeArg: message?.body,
+          });
+          break;
+        }
+        case WorkerName.DEPLOY_WEBSITE_WORKER: {
+          await new DeployWebsiteWorker(
+            workerDefinition,
+            context,
+            QueueWorkerType.EXECUTOR,
+          ).run({
+            executeArg: message?.body,
+          });
+          break;
+        }
+        case WorkerName.PUBLISH_TO_IPNS_WORKER: {
+          await new PublishToIPNSWorker(
+            workerDefinition,
+            context,
+            QueueWorkerType.EXECUTOR,
+          ).run({
+            executeArg: message?.body,
+          });
+          break;
+        }
+        case WorkerName.UPDATE_CRUST_STATUS_WORKER: {
+          await new UpdateCrustStatusWorker(
+            workerDefinition,
+            context,
+            QueueWorkerType.EXECUTOR,
+          ).run({
+            executeArg: message?.body,
+          });
+          break;
+        }
+        case WorkerName.PREPARE_METADATA_FOR_COLLECTION_WORKER: {
+          await new PrepareMetadataForCollectionWorker(
+            workerDefinition,
+            context,
+            QueueWorkerType.EXECUTOR,
+          ).run({
+            executeArg: message?.body,
+          });
+          break;
+        }
+        case WorkerName.PREPARE_BASE_URI_FOR_COLLECTION_WORKER: {
+          await new PrepareBaseUriForCollectionWorker(
+            workerDefinition,
+            context,
+            QueueWorkerType.EXECUTOR,
+          ).run({
+            executeArg: message?.body,
+          });
+          break;
+        }
+
+        default:
+          console.log(
+            `ERROR - INVALID WORKER NAME: ${message?.messageAttributes?.workerName}`,
+          );
+      }
+    } catch (error) {
+      console.log(error);
+      response.batchItemFailures.push({ itemIdentifier: message.messageId });
     }
   }
+  return response;
 }

@@ -89,6 +89,11 @@ export interface IEnv {
   SLACK_TOKEN: string;
   SLACK_CHANNEL: string;
 
+  /**
+   * MONITORING SQS
+   */
+  MONITORING_SQS_URL: string;
+
   /************************************************************
    * MAIL - Apillon Mailing Service
    ************************************************************/
@@ -212,6 +217,8 @@ export interface IEnv {
    * EVM blockchain indexers
    */
   BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER: string;
+  BLOCKCHAIN_MOONBASE_GRAPHQL_SERVER: string;
+  BLOCKCHAIN_ASTAR_GRAPHQL_SERVER: string;
 
   /************************************************************
    * API - Apillon API config
@@ -405,7 +412,7 @@ export let env: IEnv = {
   AWS_SECRET: process.env['AWS_SECRET'],
   AWS_BUCKET: process.env['AWS_BUCKET'],
   AWS_ENDPOINT: process.env['AWS_ENDPOINT'],
-  APP_SECRET: process.env['APP_SECRET'] || 'notasecret',
+  APP_SECRET: process.env['APP_SECRET'] || 'Du7Rvyqt7u38naZ2',
 
   /** AMS */
   ACCESS_FUNCTION_NAME: process.env['ACCESS_FUNCTION_NAME'],
@@ -431,6 +438,7 @@ export let env: IEnv = {
   /** LMAS */
   MONITORING_FUNCTION_NAME: process.env['MONITORING_FUNCTION_NAME'],
   MONITORING_FUNCTION_NAME_TEST: process.env['MONITORING_FUNCTION_NAME_TEST'],
+  MONITORING_SQS_URL: process.env['MONITORING_SQS_URL'],
   MONITORING_SOCKET_PORT:
     parseInt(process.env['MONITORING_SOCKET_PORT']) || 6201,
   MONITORING_MONGO_SRV: process.env['MONITORING_MONGO_SRV'],
@@ -537,6 +545,10 @@ export let env: IEnv = {
     process.env['BLOCKCHAIN_CRUST_GRAPHQL_SERVER'],
   BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER:
     process.env['BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER'],
+  BLOCKCHAIN_MOONBASE_GRAPHQL_SERVER:
+    process.env['BLOCKCHAIN_MOONBASE_GRAPHQL_SERVER'],
+  BLOCKCHAIN_ASTAR_GRAPHQL_SERVER:
+    process.env['BLOCKCHAIN_ASTAR_GRAPHQL_SERVER'],
 
   BLOCKCHAIN_SECRETS: process.env['BLOCKCHAIN_SECRETS'],
 

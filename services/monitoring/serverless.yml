@@ -52,3 +52,11 @@ functions:
     description: AT Logging & Monitoring & Alerting Service
     memorySize: 512
     timeout: 30
+    reservedConcurrency: 30
+    # monitoring queue
+    events:
+      - sqs:
+          arn: ${env:MONITORING_SQS_ARN}
+          batchSize: 10
+          functionResponseType: ReportBatchItemFailures
+

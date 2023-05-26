@@ -30,9 +30,9 @@ export class UpdateCrustStatusWorker extends BaseQueueWorker {
   public async runExecutor(input: any): Promise<any> {
     console.info('RUN EXECUTOR (UpdateCrustStatusWorker). data: ', input);
 
-    await runWithWorkers(input.data, 50, this.context, async (data) => {
+    await runWithWorkers(input.data, 50, this.context, async (data, ctx) => {
       if (data.referenceId && data.referenceTable == DbTables.FILE) {
-        const file: File = await new File({}, this.context).populateByUUID(
+        const file: File = await new File({}, ctx).populateByUUID(
           data.referenceId,
         );
 
@@ -46,7 +46,7 @@ export class UpdateCrustStatusWorker extends BaseQueueWorker {
               // error
               // TODO:
               await new Lmas().writeLog({
-                context: this.context,
+                context: ctx,
                 logType: LogType.ERROR,
                 message: 'Crust pin transaction FAILED',
                 location: `${this.constructor.name}/runExecutor`,
@@ -60,7 +60,7 @@ export class UpdateCrustStatusWorker extends BaseQueueWorker {
           } else {
             console.log('No file to update');
             await new Lmas().writeLog({
-              context: this.context,
+              context: ctx,
               logType: LogType.WARN,
               message: 'No file matching reference found.',
               location: `${this.constructor.name}/runExecutor`,
@@ -73,7 +73,7 @@ export class UpdateCrustStatusWorker extends BaseQueueWorker {
         } catch (err) {
           console.log(env);
           await new Lmas().writeLog({
-            context: this.context,
+            context: ctx,
             logType: LogType.ERROR,
             message: 'Error at updating status',
             location: `${this.constructor.name}/runExecutor`,
@@ -87,7 +87,7 @@ export class UpdateCrustStatusWorker extends BaseQueueWorker {
         }
       } else {
         await new Lmas().writeLog({
-          context: this.context,
+          context: ctx,
           logType: LogType.WARN,
           message: 'Got message without reference',
           location: `${this.constructor.name}/runExecutor`,

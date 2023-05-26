@@ -39,11 +39,11 @@ export class TransactionStatusWorker extends BaseQueueWorker {
       input.data,
       50,
       this.context,
-      async (res: TransactionWebhookDataDto) => {
+      async (res: TransactionWebhookDataDto, ctx) => {
         console.info('processing webhook transaction: ', res);
         const nftTransaction: Transaction = await new Transaction(
           {},
-          this.context,
+          ctx,
         ).populateByTransactionHash(res.transactionHash);
         if (nftTransaction.exists()) {
           console.info('nftTransaction: ', nftTransaction);

@@ -2,6 +2,7 @@ import { BlockchainEventType } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { EvmService } from './modules/evm/evm.service';
 import { SubstrateService } from './modules/substrate/substrate.service';
+import { CommonService } from './modules/common/common.service';
 
 /**
  * Processing lambda event with appropriate service function based on event name
@@ -20,6 +21,7 @@ export async function processEvent(
       SubstrateService.getTransactionById,
     [BlockchainEventType.EVM_SIGN_TRANSACTION]: EvmService.createTransaction,
     [BlockchainEventType.EVM_GET_TRANSACTION]: EvmService.getTransactionById,
+    [BlockchainEventType.GET_CHAIN_ENDPOINT]: CommonService.getChainEndpoint,
   };
 
   return await processors[event.eventName](event, context);

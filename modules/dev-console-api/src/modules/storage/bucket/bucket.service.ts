@@ -23,7 +23,7 @@ export class BucketService {
     return (await new StorageMicroservice(context).listBuckets(query)).data;
   }
 
-  async getBucket(context: DevConsoleApiContext, id: number) {
+  async getBucket(context: DevConsoleApiContext, id: number | string) {
     return (await new StorageMicroservice(context).getBucket(id)).data;
   }
 

@@ -141,16 +141,18 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
     let transferedFiles = [];
 
     if (bucket.bucketType == BucketType.STORAGE) {
-      transferedFiles = await storageBucketSyncFilesToIPFS(
-        this.context,
-        `${this.constructor.name}/runExecutor`,
-        bucket,
-        maxBucketSize,
-        files,
-        session,
-        data?.wrapWithDirectory,
-        data?.wrappingDirectoryName,
-      );
+      transferedFiles = (
+        await storageBucketSyncFilesToIPFS(
+          this.context,
+          `${this.constructor.name}/runExecutor`,
+          bucket,
+          maxBucketSize,
+          files,
+          session,
+          data?.wrapWithDirectory,
+          data?.wrappingDirectoryName,
+        )
+      ).files;
     } else {
       throw new StorageCodeException({
         code: StorageErrorCode.INVALID_BUCKET_TYPE_FOR_IPFS_SYNC_WORKER,

@@ -21,4 +21,6 @@ export interface Stage {
   referralSql: MySql;
   nftsContext: TestContext;
   nftsSql: MySql;
+  blockchainContext: TestContext;
+  blockchainSql: MySql;
 }
