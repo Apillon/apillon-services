@@ -123,6 +123,7 @@ export class UserService {
     context: DevConsoleApiContext,
   ): Promise<any> {
     try {
+      console.log('USER1');
       const resp = await new Ams(context).loginWithKilt({
         token: loginInfo.token,
       });
@@ -142,6 +143,8 @@ export class UserService {
       user.wallet = resp.data.wallet;
 
       user.setUserRolesFromAmsResponse(resp);
+
+      console.log('TOKEN: ', resp.data.token);
 
       return {
         ...user.serialize(SerializeFor.PROFILE),
