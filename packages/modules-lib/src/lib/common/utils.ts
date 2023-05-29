@@ -70,15 +70,7 @@ export async function getDiscordProfile(code: string): Promise<any> {
 }
 
 export async function getOauthSessionToken(apiKey: string, apiSecret: string) {
-  let protocol = '';
-  if (
-    env.APP_ENV === AppEnvironment.TEST ||
-    env.APP_ENV == AppEnvironment.LOCAL_DEV
-  ) {
-    protocol = 'http://';
-  }
-
-  const requestUrl = `${protocol}${env.APILLON_API_HOST}:${env.APILLON_API_PORT}/auth/session-token`;
+  const requestUrl = `${env.APILLON_API_URL}/auth/session-token`;
   const response = await axios.get(requestUrl, {
     auth: {
       username: apiKey,
