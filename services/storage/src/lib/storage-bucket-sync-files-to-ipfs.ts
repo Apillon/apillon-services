@@ -105,6 +105,12 @@ export async function storageBucketSyncFilesToIPFS(
           error: err,
         },
       });
+      await new Lmas().sendAdminAlert(
+        `[Storage]: Error uploading to IPFS!`,
+        ServiceName.STORAGE,
+        'alert',
+      );
+
       throw err;
     }
 
@@ -164,33 +170,7 @@ export async function storageBucketSyncFilesToIPFS(
 
           await existingFile.update();
           transferedFiles.push(existingFile);
-        } /*else {
-          //Create new file
-          const fileDirectory = await generateDirectoriesForFUR(
-            context,
-            directories,
-            file,
-            bucket,
-            ipfsRes.ipfsDirectories,
-          );
-
-          const tmpF = await new File({}, context)
-            .populate({
-              file_uuid: file.file_uuid,
-              CID: file.CID.toV0().toString(),
-              s3FileKey: file.s3FileKey,
-              name: file.fileName,
-              contentType: file.contentType,
-              project_uuid: bucket.project_uuid,
-              bucket_id: file.bucket_id,
-              directory_id: fileDirectory?.id,
-              size: file.size,
-              fileStatus: FileStatus.UPLOADED_TO_IPFS,
-            })
-            .insert();
-
-          transferedFiles.push(tmpF);
-        }*/
+        }
       } catch (err) {
         await new Lmas().writeLog({
           context: context,
@@ -301,6 +281,12 @@ export async function storageBucketSyncFilesToIPFS(
                 error: err,
               },
             });
+
+            await new Lmas().sendAdminAlert(
+              `[Storage]: Error uploading to IPFS!`,
+              ServiceName.STORAGE,
+              'alert',
+            );
             throw err;
           }
         }

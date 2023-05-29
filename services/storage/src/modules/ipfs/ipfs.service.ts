@@ -11,7 +11,10 @@ import {
   writeLog,
 } from '@apillon/lib';
 import { CID, create } from 'ipfs-http-client';
-import { StorageErrorCode } from '../../config/types';
+import {
+  FileUploadRequestFileStatus,
+  StorageErrorCode,
+} from '../../config/types';
 import { StorageCodeException } from '../../lib/exceptions';
 import { FileUploadRequest } from '../storage/models/file-upload-request.model';
 import { File } from '../storage/models/file.model';
@@ -100,7 +103,7 @@ export class IPFSService {
       location: 'IPFSService.uploadFURsToIPFSFromS3',
       service: ServiceName.STORAGE,
       data: {
-        fileUploadRequest: event.fileUploadRequest,
+        fileUploadRequest: event.fileUploadRequest.serialize(),
         ipfsResponse: {
           cidV0: filesOnIPFS.cid.toV0().toString(),
           filesOnIPFS,
@@ -149,7 +152,7 @@ export class IPFSService {
       event.fileUploadRequests,
       10,
       context,
-      async (fileUploadReq) => {
+      async (fileUploadReq: FileUploadRequest) => {
         console.info(
           'Adding file to IPFS, ...',
           (fileUploadReq.path || '') + fileUploadReq.fileName,
@@ -176,7 +179,21 @@ export class IPFSService {
           }
           file = undefined;
         } catch (error) {
-          console.error('Get file from s3 and add to IPFS files FAILED', error);
+          if (error.Code == 'NoSuchKey') {
+            //File does not exists on S3 - update FUR status
+            try {
+              if (fileUploadReq.exists()) {
+                fileUploadReq.fileStatus =
+                  FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3;
+                await fileUploadReq.update();
+              }
+            } catch (err) {
+              console.error(err);
+            }
+          } else {
+            //Something else does not work - maybe IPFS node. Throw error.
+            throw error;
+          }
         }
       },
     );
