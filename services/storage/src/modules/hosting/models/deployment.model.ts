@@ -213,6 +213,7 @@ export class Deployment extends AdvancedSQLModel {
       FROM \`${this.tableName}\`
       WHERE cid = @cid 
       AND status <> ${SqlModelStatus.DELETED}
+      ORDER BY createTime DESC
       LIMIT 1;
       `,
       { cid },
