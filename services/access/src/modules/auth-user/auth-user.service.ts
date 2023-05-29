@@ -165,7 +165,7 @@ export class AuthUserService {
     );
 
     // Fetch user from OUR database. Since a verification was
-    // performed with KILT, then only thing we need to confirm
+    // performed with KILT, then the only thing that we need to confirm
     // is that email is present in our database to verify
     // and successfully login the user
     if (!authUser.exists()) {

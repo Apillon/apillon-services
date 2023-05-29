@@ -70,7 +70,6 @@ export async function getDiscordProfile(code: string): Promise<any> {
 }
 
 export async function getOauthSessionToken(apiKey: string, apiSecret: string) {
-  // TODO: Maybe not the most efficient way??? Could just do an OR
   let protocol = '';
   if (
     env.APP_ENV === AppEnvironment.TEST ||
