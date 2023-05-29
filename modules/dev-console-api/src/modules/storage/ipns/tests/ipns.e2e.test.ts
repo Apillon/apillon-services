@@ -24,7 +24,7 @@ describe('Ipns tests', () => {
   let testBucket: Bucket;
 
   let testUser2: TestUser;
-  // let testProject2: Project;
+  let testProject2: Project;
 
   let ipnsRecord: any;
 
@@ -48,7 +48,12 @@ describe('Ipns tests', () => {
       .insert();
 
     testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    // testProject2 = await createTestProject(testUser2, stage.devConsoleContext);
+    testProject2 = await createTestProject(testUser2, stage.devConsoleContext);
+
+    console.info(
+      'testProject2 is needed so that user has permisions. ',
+      testProject2,
+    );
   });
 
   afterAll(async () => {

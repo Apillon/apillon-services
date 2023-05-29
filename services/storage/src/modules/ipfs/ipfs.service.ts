@@ -2,18 +2,23 @@
 import {
   AWS_S3,
   CodeException,
+  Context,
   env,
   Lmas,
   LogType,
+  runWithWorkers,
   ServiceName,
   writeLog,
 } from '@apillon/lib';
 import { CID, create } from 'ipfs-http-client';
-import { StorageErrorCode } from '../../config/types';
+import {
+  FileUploadRequestFileStatus,
+  StorageErrorCode,
+} from '../../config/types';
 import { StorageCodeException } from '../../lib/exceptions';
 import { FileUploadRequest } from '../storage/models/file-upload-request.model';
 import { File } from '../storage/models/file.model';
-import { uploadFilesToIPFSRes } from './interfaces/upload-files-to-ipfs-res.interface';
+import { uploadItemsToIPFSRes } from './interfaces/upload-items-to-ipfs-res.interface';
 
 export class IPFSService {
   static async createIPFSClient() {
@@ -42,6 +47,12 @@ export class IPFSService {
     return await create({ url: ipfsGatewayURL });
   }
 
+  /**
+   * Get single file from s3 and upload it to IPFS
+   * @param event
+   * @param context
+   * @returns
+   */
   static async uploadFURToIPFSFromS3(
     event: { fileUploadRequest: FileUploadRequest },
     context,
@@ -92,7 +103,7 @@ export class IPFSService {
       location: 'IPFSService.uploadFURsToIPFSFromS3',
       service: ServiceName.STORAGE,
       data: {
-        fileUploadRequest: event.fileUploadRequest,
+        fileUploadRequest: event.fileUploadRequest.serialize(),
         ipfsResponse: {
           cidV0: filesOnIPFS.cid.toV0().toString(),
           filesOnIPFS,
@@ -109,15 +120,20 @@ export class IPFSService {
   }
 
   /**
-   * Process file upload request, get each one from s3 and assemble array of files, that will bi added to IPFS.
+   * Process file upload requests - in parallel worker, get files from s3 and uploads it to IPFS MFS.
+   * Then process files that are in MFS directory to acquire CIDs for folders and files.
    * File upload request statuses, are updated
    * @param event
    * @returns
    */
-  static async uploadFURsToIPFSFromS3(event: {
-    fileUploadRequests: FileUploadRequest[];
-    wrapWithDirectory: boolean;
-  }): Promise<uploadFilesToIPFSRes> {
+  static async uploadFURsToIPFSFromS3(
+    event: {
+      fileUploadRequests: FileUploadRequest[];
+      wrapWithDirectory: boolean;
+      wrappingDirectoryPath: string;
+    },
+    context: Context,
+  ): Promise<uploadItemsToIPFSRes> {
     console.info(
       'uploadFURsToIPFSFromS3 start',
       event.fileUploadRequests.map((x) => x.serialize()),
@@ -125,71 +141,92 @@ export class IPFSService {
 
     //S3 client
     const s3Client: AWS_S3 = new AWS_S3();
-
-    const filesForIPFS = [];
-
-    for (const fileUploadReq of event.fileUploadRequests) {
-      console.info(
-        'Get file from S3 START',
-        (fileUploadReq.path || '') + fileUploadReq.fileName,
-      );
-      try {
-        const file = await s3Client.get(
-          env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-          fileUploadReq.s3FileKey,
-        );
-
-        filesForIPFS.push({
-          path: (fileUploadReq.path || '') + fileUploadReq.fileName,
-          content: file.Body as any,
-        });
-        console.info(
-          'Get file from S3 SUCCESS',
-          (fileUploadReq.path || '') + fileUploadReq.fileName,
-        );
-      } catch (error) {
-        console.error('Get file from s3 error', error);
-      }
-    }
-
-    console.info(
-      'runWithWorkers to get files from s3 SUCCESS. Num of files: ' +
-        filesForIPFS.length,
-    );
-
-    /**Wrapping directory CID*/
-    let baseDirectoryOnIPFS = undefined;
-    /**Directories on IPFS - each dir on IPFS gets CID */
-    const ipfsDirectories = [];
-
     //Get IPFS client
     const client = await IPFSService.createIPFSClient();
 
-    console.info(
-      'Adding files to IPFS',
-      filesForIPFS.map((x) => x.path),
+    const mfsDirectoryPath = `/${event.fileUploadRequests[0].bucket_id}${
+      event.wrappingDirectoryPath ? '/' + event.wrappingDirectoryPath : ''
+    }`;
+
+    await runWithWorkers(
+      event.fileUploadRequests,
+      10,
+      context,
+      async (fileUploadReq: FileUploadRequest) => {
+        console.info(
+          'Adding file to IPFS, ...',
+          (fileUploadReq.path || '') + fileUploadReq.fileName,
+        );
+        try {
+          let file = await s3Client.get(
+            env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+            fileUploadReq.s3FileKey,
+          );
+
+          await client.files.write(
+            mfsDirectoryPath +
+              '/' +
+              (fileUploadReq.path ? fileUploadReq.path + '/' : '') +
+              fileUploadReq.fileName,
+            file.Body as any,
+            { create: true, parents: true },
+          );
+
+          try {
+            (file.Body as any).destroy();
+          } catch (err) {
+            console.error(err);
+          }
+          file = undefined;
+        } catch (error) {
+          if (error.Code == 'NoSuchKey') {
+            //File does not exists on S3 - update FUR status
+            try {
+              if (fileUploadReq.exists()) {
+                fileUploadReq.fileStatus =
+                  FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3;
+                await fileUploadReq.update();
+              }
+            } catch (err) {
+              console.error(err);
+            }
+          } else {
+            //Something else does not work - maybe IPFS node. Throw error.
+            throw error;
+          }
+        }
+      },
     );
-    const filesOnIPFS = await client.addAll(filesForIPFS, {
-      wrapWithDirectory: event.wrapWithDirectory,
-    });
 
-    console.info('Files were successfully uploaded to IPFS', filesOnIPFS);
+    console.info(
+      'runWithWorkers to get files from s3 and add them to IPFS files FINISHED.',
+    );
 
-    /**Loop through IPFS result and set CID property in fileUploadRequests */
-    for await (const file of filesOnIPFS) {
-      if (file.path === '') {
-        baseDirectoryOnIPFS = file;
-        continue;
-      }
-      //Map IPFS result to fileUploadRequests if file or add record to IPFSDirectories if directory
-      const fileRequest = event.fileUploadRequests.find(
-        (x) => (x.path || '') + x.fileName == file.path,
-      );
-      if (fileRequest) {
-        fileRequest.CID = file.cid;
-        fileRequest.size = file.size;
+    const mfsDirectoryCID = await client.files.stat(mfsDirectoryPath);
+    console.info('DIR CID: ', mfsDirectoryCID.cid.toV0().toString());
+
+    /**Directories on IPFS - each dir on IPFS gets CID */
+    const ipfsDirectories = [];
+
+    const itemInIpfsMfs = await this.recursiveListIPFSDirectoryContent(
+      mfsDirectoryPath,
+      '',
+    );
+    let totalSizeOfFiles = 0;
+    console.info(`MFS folder (${mfsDirectoryPath}) content.`, itemInIpfsMfs);
+
+    for (const item of itemInIpfsMfs) {
+      if (item.type == 'directory') {
+        ipfsDirectories.push({ path: item.name, cid: item.cid });
       } else {
-        ipfsDirectories.push({ path: file.path, cid: file.cid });
+        const fileRequest = event.fileUploadRequests.find(
+          (x) => (x.path || '') + x.fileName == item.name,
+        );
+        if (fileRequest) {
+          fileRequest.CID = item.cid;
+          fileRequest.size = item.size;
+          totalSizeOfFiles += item.size;
+        }
       }
     }
 
@@ -200,103 +237,92 @@ export class IPFSService {
       location: 'IPFSService.uploadFilesToIPFSFromS3',
       service: ServiceName.STORAGE,
       data: {
-        fileUploadRequests: event.fileUploadRequests,
-        ipfsResponse: filesOnIPFS,
+        session_id: event.fileUploadRequests[0].session_id,
+        mfsDirectoryCID: mfsDirectoryCID.cid.toV0().toString(),
       },
     });
 
     return {
-      parentDirCID: baseDirectoryOnIPFS?.cid,
+      parentDirCID: mfsDirectoryCID?.cid,
       ipfsDirectories: ipfsDirectories,
-      size: baseDirectoryOnIPFS?.size,
+      size: totalSizeOfFiles,
     };
   }
 
   /**
-   * Upload files (FIle records already exists in bucket), to IPFS. Loop, get from s3, and pusth to IPFS.
+   * Get files and directories in IPFS. For directories recursively call this function
+   * @param mfsBasePath starting path
+   * @param subPath path of subdirectiries
+   * @returns flat array of files and directories
+   */
+  static async recursiveListIPFSDirectoryContent(
+    mfsBasePath: string,
+    subPath: string,
+  ) {
+    const client = await IPFSService.createIPFSClient();
+    const content: any[] = [];
+
+    const dirContent = client.files.ls(mfsBasePath + subPath);
+    for await (const f of dirContent) {
+      if (f.type == 'directory') {
+        content.push(
+          ...(await this.recursiveListIPFSDirectoryContent(
+            mfsBasePath,
+            subPath + '/' + f.name,
+          )),
+        );
+      }
+      f.name = (subPath + '/' + f.name).substring(1);
+      content.push(f);
+    }
+
+    return content;
+  }
+
+  /**
+   * Upload files (FIle records already exists in bucket), to IPFS. Create array of FURS and call general function to upload FURs to IPFS.
    * On success, update file CID.
    * @param event
    * @returns
    */
-  static async uploadFilesToIPFSFromS3(event: {
-    files: File[];
-    wrapWithDirectory: boolean;
-  }): Promise<uploadFilesToIPFSRes> {
-    //Get IPFS client
-    const client = await IPFSService.createIPFSClient();
-
-    //S3 client
-    const s3Client: AWS_S3 = new AWS_S3();
-
-    const filesForIPFS = [];
-
+  static async uploadFilesToIPFSFromS3(
+    event: {
+      files: File[];
+      wrapWithDirectory: boolean;
+      wrappingDirectoryPath: string;
+    },
+    context: Context,
+  ): Promise<uploadItemsToIPFSRes> {
+    //Create array of fileUploadRequests - some properties does not match, so they have to be populated
+    const fileUploadRequests: FileUploadRequest[] = [];
     for (const file of event.files) {
-      if (
-        !(await s3Client.exists(
-          env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-          file.s3FileKey,
-        ))
-      ) {
-        continue;
-      }
-
-      const fileOnS3 = await s3Client.get(
-        env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-        file.s3FileKey,
-      );
-
-      filesForIPFS.push({
-        path: (file.path || '') + file.name,
-        content: fileOnS3.Body as any,
+      const fur: FileUploadRequest = new FileUploadRequest(
+        file,
+        context,
+      ).populate({
+        fileName: file.name,
       });
+
+      fileUploadRequests.push(fur);
     }
 
-    /**Wrapping directory CID*/
-    let baseDirectoryOnIPFS = undefined;
-    /**Directories on IPFS - each dir on IPFS gets CID */
-    const ipfsDirectories = [];
-    const objectOnIPFS = await client.addAll(filesForIPFS, {
-      wrapWithDirectory: event.wrapWithDirectory,
-    });
-
-    /**Loop through IPFS result and set CID property in files */
-    for await (const objectOnIpfs of objectOnIPFS) {
-      if (objectOnIpfs.path === '') {
-        baseDirectoryOnIPFS = objectOnIpfs;
-        continue;
-      }
-      //Map IPFS result to files and directories
-      const file: File = event.files.find(
-        (x) => (x.path || '') + x.name == objectOnIpfs.path,
-      );
-      if (file) {
-        file.CID = objectOnIpfs.cid.toV0().toString();
-        file.size = objectOnIpfs.size;
-      } else {
-        ipfsDirectories.push({
-          path: objectOnIpfs.path,
-          cid: objectOnIpfs.cid,
-        });
-      }
-    }
-
-    //Write log to LMAS
-    await new Lmas().writeLog({
-      logType: LogType.INFO,
-      message: 'Files uploaded to IPFS',
-      location: 'IPFSService.uploadFilesToIPFSFromS3',
-      service: ServiceName.STORAGE,
-      data: {
-        files: event.files,
-        ipfsResponse: objectOnIPFS,
+    const syncToIpfsRes = await this.uploadFURsToIPFSFromS3(
+      {
+        fileUploadRequests: fileUploadRequests,
+        wrapWithDirectory: event.wrapWithDirectory,
+        wrappingDirectoryPath: event.wrappingDirectoryPath,
       },
-    });
+      context,
+    );
 
-    return {
-      parentDirCID: baseDirectoryOnIPFS?.cid,
-      ipfsDirectories: ipfsDirectories,
-      size: baseDirectoryOnIPFS?.size,
-    };
+    //Update CID and size properties of event.files, as files are returned to parent function by reference
+    for (const file of event.files) {
+      const fur = fileUploadRequests.find((x) => x.file_uuid == file.file_uuid);
+      file.CID = fur.CID.toV0().toString();
+      file.size = fur.size;
+    }
+
+    return syncToIpfsRes;
   }
 
   /**
