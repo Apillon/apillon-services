@@ -113,7 +113,8 @@ export class UserService {
   }
 
   /**
-   * Authenticates a user using email and password.
+   * Parses the USER_AUTHENTICATAION token, containing a verified email from the
+   * Kilt verification process
    * @param {LoginUserKiltDto} loginInfo - The email and password data for login.
    * @param {DevConsoleApiContext} context - The API context for database access
    * @returns {Promise<any>} The serialized user profile data and token.
@@ -601,8 +602,8 @@ export class UserService {
    */
   async getOauthSession() {
     return await getOauthSessionToken(
-      env.APILLON_API_KEY,
-      env.APILLON_API_SECRET,
+      env.APILLON_API_SYSTEM_API_KEY,
+      env.APILLON_API_SYSTEM_API_SECRET,
     );
   }
 }

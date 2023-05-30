@@ -230,8 +230,8 @@ export interface IEnv {
 
   APILLON_API_URL: string;
 
-  APILLON_API_KEY: string;
-  APILLON_API_SECRET: string;
+  APILLON_API_SYSTEM_API_KEY: string;
+  APILLON_API_SYSTEM_API_SECRET: string;
 
   /************************************************************
    * AUTH - Apillon Authentication Service
@@ -586,8 +586,9 @@ export let env: IEnv = {
   APILLON_API_PORT: parseInt(process.env['APILLON_API_PORT']) || 6002,
   APILLON_API_HOST_TEST: process.env['APILLON_API_HOST_TEST'] || '127.0.0.1',
   APILLON_API_PORT_TEST: parseInt(process.env['APILLON_API_PORT_TEST']) || 7002,
-  APILLON_API_KEY: process.env['APILLON_API_KEY'] || '',
-  APILLON_API_SECRET: process.env['APILLON_API_SECRET'] || '',
+  APILLON_API_SYSTEM_API_KEY: process.env['APILLON_API_SYSTEM_API_KEY'] || '',
+  APILLON_API_SYSTEM_API_SECRET:
+    process.env['APILLON_API_SYSTEM_API_SECRET'] || '',
   APILLON_API_URL: process.env['APILLON_API_URL'] || 'http://localhost',
 
   /** --- SECTION: APILLON AUTHENTICATION API --- */
