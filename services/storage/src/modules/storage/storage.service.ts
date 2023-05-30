@@ -24,7 +24,12 @@ import {
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { v4 as uuidV4 } from 'uuid';
-import { BucketType, FileStatus, StorageErrorCode } from '../../config/types';
+import {
+  BucketType,
+  FileStatus,
+  FileUploadSessionStatus,
+  StorageErrorCode,
+} from '../../config/types';
 import { createFURAndS3Url } from '../../lib/create-fur-and-s3-url';
 import { StorageCodeException } from '../../lib/exceptions';
 import { processSessionFiles } from '../../lib/process-session-files';
@@ -103,7 +108,7 @@ export class StorageService {
           code: StorageErrorCode.SESSION_UUID_BELONGS_TO_OTHER_BUCKET,
           status: 400,
         });
-      } else if (session.sessionStatus == 2) {
+      } else if (session.sessionStatus != FileUploadSessionStatus.CREATED) {
         throw new StorageCodeException({
           code: StorageErrorCode.FILE_UPLOAD_SESSION_ALREADY_TRANSFERED,
           status: 400,
@@ -194,7 +199,7 @@ export class StorageService {
     );
     bucket.canAccess(context);
 
-    if (session.sessionStatus != 1) {
+    if (session.sessionStatus == FileUploadSessionStatus.FINISHED) {
       throw new StorageCodeException({
         code: StorageErrorCode.FILE_UPLOAD_SESSION_ALREADY_TRANSFERED,
         status: 400,
@@ -202,7 +207,9 @@ export class StorageService {
     }
 
     if (bucket.bucketType == BucketType.STORAGE) {
-      await processSessionFiles(context, bucket, session, event.body);
+      if (session.sessionStatus == FileUploadSessionStatus.CREATED) {
+        await processSessionFiles(context, bucket, session, event.body);
+      }
       if (
         env.APP_ENV == AppEnvironment.LOCAL_DEV ||
         env.APP_ENV == AppEnvironment.TEST

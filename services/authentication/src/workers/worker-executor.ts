@@ -65,12 +65,14 @@ export async function handler(event: any) {
   console.info(`EVENT: ${JSON.stringify(event)}`);
 
   try {
+    let resp;
     if (event.Records) {
-      await handleSqsMessages(event, context, serviceDef);
+      resp = await handleSqsMessages(event, context, serviceDef);
     } else {
-      await handleLambdaEvent(event, context, serviceDef);
+      resp = await handleLambdaEvent(event, context, serviceDef);
     }
     await context.mysql.close();
+    return resp;
   } catch (e) {
     console.error('ERROR HANDLING LAMBDA!');
     console.error(e.message);
@@ -137,51 +139,58 @@ export async function handleSqsMessages(
   serviceDef: ServiceDefinition,
 ) {
   console.info('handle sqs message. event.Records: ', event.Records);
+  const response = { batchItemFailures: [] };
   for (const message of event.Records) {
-    let parameters: any;
-    if (message?.messageAttributes?.parameters?.stringValue) {
-      parameters = JSON.parse(
-        message?.messageAttributes?.parameters?.stringValue,
-      );
-    }
-
-    let id: number;
-    if (message?.messageAttributes?.jobId?.stringValue) {
-      id = parseInt(message?.messageAttributes?.jobId?.stringValue);
-    }
-
-    const workerDefinition = new WorkerDefinition(
-      serviceDef,
-      message?.messageAttributes?.workerName?.stringValue,
-      { id, parameters },
-    );
-
-    // eslint-disable-next-line sonarjs/no-small-switch
-    switch (message?.messageAttributes?.workerName?.stringValue) {
-      case WorkerName.IDENTITY_GENERATE_WORKER: {
-        await new IdentityGenerateWorker(
-          workerDefinition,
-          context,
-          QueueWorkerType.EXECUTOR,
-        ).run({
-          executeArg: message?.body,
-        });
-        break;
-      }
-      case WorkerName.IDENTITY_REVOKE_WORKER: {
-        await new IdentityRevokeWorker(
-          workerDefinition,
-          context,
-          QueueWorkerType.EXECUTOR,
-        ).run({
-          executeArg: message?.body,
-        });
-        break;
-      }
-      default:
-        console.log(
-          `ERROR - INVALID WORKER NAME: ${message?.messageAttributes?.workerName}`,
+    try {
+      let parameters: any;
+      if (message?.messageAttributes?.parameters?.stringValue) {
+        parameters = JSON.parse(
+          message?.messageAttributes?.parameters?.stringValue,
         );
+      }
+
+      let id: number;
+      if (message?.messageAttributes?.jobId?.stringValue) {
+        id = parseInt(message?.messageAttributes?.jobId?.stringValue);
+      }
+
+      const workerDefinition = new WorkerDefinition(
+        serviceDef,
+        message?.messageAttributes?.workerName?.stringValue,
+        { id, parameters },
+      );
+
+      // eslint-disable-next-line sonarjs/no-small-switch
+      switch (message?.messageAttributes?.workerName?.stringValue) {
+        case WorkerName.IDENTITY_GENERATE_WORKER: {
+          await new IdentityGenerateWorker(
+            workerDefinition,
+            context,
+            QueueWorkerType.EXECUTOR,
+          ).run({
+            executeArg: message?.body,
+          });
+          break;
+        }
+        case WorkerName.IDENTITY_REVOKE_WORKER: {
+          await new IdentityRevokeWorker(
+            workerDefinition,
+            context,
+            QueueWorkerType.EXECUTOR,
+          ).run({
+            executeArg: message?.body,
+          });
+          break;
+        }
+        default:
+          console.log(
+            `ERROR - INVALID WORKER NAME: ${message?.messageAttributes?.workerName}`,
+          );
+      }
+    } catch (error) {
+      console.log(error);
+      response.batchItemFailures.push({ itemIdentifier: message.messageId });
     }
   }
+  return response;
 }
