@@ -147,6 +147,53 @@ export class AuthUserService {
     return authUser.serialize(SerializeFor.SERVICE);
   }
   /**
+   * Authenticates a user using their email and password.
+   * @param event An object containing the user's email and password.
+   * @param context The ServiceContext instance for the current request.
+   * @returns The authenticated user's data.
+   */
+  static async loginWithKilt(event, context: ServiceContext) {
+    // Parse received token - trigger exception if this token
+    // does not belong to us
+    const tokenData = parseJwtToken(
+      JwtTokenType.USER_AUTHENTICATION,
+      event.token,
+    );
+
+    const authUser = await new AuthUser({}, context).populateByEmail(
+      tokenData.email,
+    );
+
+    // Fetch user from OUR database. Since a verification was
+    // performed with KILT, then the only thing that we need to confirm
+    // is that email is present in our database to verify
+    // and successfully login the user
+    if (!authUser.exists()) {
+      throw await new AmsCodeException({
+        status: 401,
+        code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
+      }).writeToMonitor({
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
+      });
+    }
+
+    await authUser.loginUser();
+
+    await new Lmas().writeLog({
+      context,
+      logType: LogType.INFO,
+      message: 'User login',
+      location: 'AMS/UserService/login',
+      user_uuid: authUser.user_uuid,
+      service: ServiceName.AMS,
+    });
+
+    return authUser.serialize(SerializeFor.SERVICE);
+  }
+
+  /**
    * Retrieves an authenticated user's data using their token.
    * @param event An object containing the user's token.
    * @param context The ServiceContext instance for the current request.
