@@ -137,6 +137,18 @@ export enum FileStatus {
   PINNING_TO_CRUST = 5,
 }
 
+export enum FileUploadSessionStatus {
+  CREATED = 1,
+  /**
+   * End session was called - folder and file structure has been generated.
+   */
+  PROCESSED = 2,
+  /**
+   * Files in session has been synced to IPFS
+   */
+  FINISHED = 3,
+}
+
 export enum BucketWebhookAuthMethod {
   BASIC = 'basic',
   TOKEN = 'bearer-token',

@@ -64,12 +64,14 @@ export async function handler(event: any) {
   console.info(`EVENT: ${JSON.stringify(event)}`);
 
   try {
+    let resp;
     if (event.Records) {
-      return await handleSqsMessages(event, context, serviceDef);
+      resp = await handleSqsMessages(event, context, serviceDef);
     } else {
-      await handleLambdaEvent(event, context, serviceDef);
+      resp = await handleLambdaEvent(event, context, serviceDef);
     }
     await context.mysql.close();
+    return resp;
   } catch (e) {
     console.error('ERROR HANDLING LAMBDA!');
     console.error(e.message);

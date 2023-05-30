@@ -16,6 +16,7 @@ import {
 import {
   BucketType,
   FileUploadRequestFileStatus,
+  FileUploadSessionStatus,
   StorageErrorCode,
 } from '../config/types';
 import { sendTransferredFilesToBucketWebhook } from '../lib/bucket-webhook';
@@ -162,7 +163,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
 
     //update session status
     if (session) {
-      session.sessionStatus = 2;
+      session.sessionStatus = FileUploadSessionStatus.FINISHED;
       await session.update();
     }
 

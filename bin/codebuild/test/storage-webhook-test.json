@@ -13,6 +13,5 @@
                 "excludeMatchedPattern": false
             }
         ]
-    ],
-    "buildType": "BUILD"
+    ]
 }
