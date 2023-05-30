@@ -43,13 +43,17 @@ export async function startGanacheRPCServer(stage: Stage) {
       `
       INSERT INTO endpoint (status, url, chain, chainType)
       VALUES 
-      (5, 'http://${ganacheServerAddress}', ${SubstrateChain.CRUST}, ${ChainType.SUBSTRATE}),
-      (5, 'htpp://${ganacheServerAddress}', ${SubstrateChain.KILT}, ${ChainType.SUBSTRATE}),
       (5, 'http://${ganacheServerAddress}', ${EvmChain.MOONBASE}, ${ChainType.EVM})
       ;
     `,
-      { url: server.address().address },
+      {},
     );
+
+    const endpoints = await stage.blockchainSql.paramExecute(
+      `SELECT * FROM endpoint`,
+      {},
+    );
+    console.info('Endpoints', endpoints);
     //Configure wallets
     const moonbaseWallet: Wallet = new Wallet(
       {},

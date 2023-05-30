@@ -13,7 +13,10 @@ import {
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
-import { CollectionStatus } from '@apillon/nfts/src/config/types';
+import {
+  CollectionStatus,
+  TransactionType,
+} from '@apillon/nfts/src/config/types';
 
 describe('Storage bucket tests', () => {
   let stage: Stage;
@@ -136,7 +139,7 @@ describe('Storage bucket tests', () => {
 
       expect(newCollection.exists()).toBeTruthy();
 
-      newCollection.status = CollectionStatus.DEPLOYED;
+      newCollection.collectionStatus = CollectionStatus.DEPLOYED;
       await newCollection.update();
     });
 
@@ -165,7 +168,176 @@ describe('Storage bucket tests', () => {
         stage.nftsContext,
       ).getCollectionTransactions(newCollection.id, 1);
 
-      expect(transaction.length).toBe(2);
+      expect(
+        transaction.find((x) => x.transactionType == TransactionType.MINT_NFT),
+      ).toBeTruthy();
+    });
+
+    test('User should be able to transfer NFT collection', async () => {
+      const response = await request(stage.http)
+        .post(
+          `/nfts/collections/${newCollection.collection_uuid}/transferOwnership`,
+        )
+        .send({
+          address: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(201);
+
+      //Check if new transactions exists
+      const transaction: Transaction[] = await new Transaction(
+        {},
+        stage.nftsContext,
+      ).getCollectionTransactions(newCollection.id, 1);
+
+      expect(
+        transaction.find(
+          (x) =>
+            x.transactionType == TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
+        ),
+      ).toBeTruthy();
+    });
+
+    test('User should NOT be able to Mint transferred collection', async () => {
+      newCollection.collectionStatus = CollectionStatus.TRANSFERED;
+      await newCollection.update();
+
+      const response = await request(stage.http)
+        .post(`/nfts/collections/${newCollection.collection_uuid}/mint`)
+        .send({
+          receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
+          quantity: 1,
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(500);
+      expect(response.body.code).toBe(50012002);
+    });
+  });
+
+  describe('Moonbeam NFT Collection tests with metadata', () => {
+    test('User should be able to create new collection without baseURI', async () => {
+      const response = await request(stage.http)
+        .post(`/nfts/collections?project_uuid=${testProject.project_uuid}`)
+        .send({
+          symbol: 'TNFT',
+          name: 'Test NFT Collection',
+          maxSupply: 50,
+          mintPrice: 0,
+          project_uuid: testProject.project_uuid,
+          baseExtension: 'json',
+          isDrop: false,
+          dropStart: 0,
+          reserve: 5,
+          chain: 1287,
+          isRevokable: true,
+          isSoulbound: false,
+          royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
+          royaltiesFees: 0,
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(201);
+      expect(response.body.data.bucket_uuid).toBeTruthy();
+
+      //Get collection from DB
+      newCollection = await new Collection({}, stage.nftsContext).populateById(
+        response.body.data.id,
+      );
+      expect(newCollection.exists()).toBeTruthy();
+    });
+
+    test('User should be able to upload images and metadata files to bucket', async () => {
+      //Images
+      let response = await request(stage.http)
+        .post(`/storage/${newCollection.bucket_uuid}/files-upload`)
+        .send({
+          files: [
+            {
+              fileName: '1.png',
+              path: '',
+            },
+            {
+              fileName: '2.png',
+              path: '',
+            },
+          ],
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(201);
+      newCollection.imagesSession = response.body.data.session_uuid;
+
+      const file1Fur = response.body.data.files.find(
+        (x) => x.fileName == '1.png',
+      );
+      const file2Fur = response.body.data.files.find(
+        (x) => x.fileName == '2.png',
+      );
+
+      response = await request(file1Fur.url)
+        .put(``)
+        .send(`Image 1 ${new Date().toString()}`);
+      expect(response.status).toBe(200);
+
+      response = await request(file2Fur.url)
+        .put(``)
+        .send(`Image 2 ${new Date().toString()}`);
+      expect(response.status).toBe(200);
+
+      //Metadata
+      response = await request(stage.http)
+        .post(`/storage/${newCollection.bucket_uuid}/files-upload`)
+        .send({
+          files: [
+            {
+              fileName: '1.json',
+              path: '',
+            },
+            {
+              fileName: '2.json',
+              path: '',
+            },
+          ],
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(201);
+      newCollection.metadataSession = response.body.data.session_uuid;
+
+      const jsonFile1Fur = response.body.data.files.find(
+        (x) => x.fileName == '1.json',
+      );
+      const jsonFile2Fur = response.body.data.files.find(
+        (x) => x.fileName == '2.json',
+      );
+
+      response = await request(jsonFile1Fur.url)
+        .put(``)
+        .send(
+          `{"name":"NFT 1 Name","description":"NFT 1 Description","image":"1.png"}`,
+        );
+      expect(response.status).toBe(200);
+
+      response = await request(jsonFile2Fur.url)
+        .put(``)
+        .send(
+          `{"name":"NFT 2 Name","description":"NFT 2 Description","image":"2.png"}`,
+        );
+      expect(response.status).toBe(200);
+    });
+
+    test('User should be able to deploy NFT collection', async () => {
+      const response = await request(stage.http)
+        .post(`/nfts/collections/${newCollection.collection_uuid}/deploy`)
+        .send({
+          metadataSession: newCollection.metadataSession,
+          imagesSession: newCollection.imagesSession,
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(201);
+
+      //Get collection from DB
+      newCollection = await new Collection({}, stage.nftsContext).populateById(
+        newCollection.id,
+      );
+      expect(newCollection.baseUri).toBeTruthy();
     });
   });
 });

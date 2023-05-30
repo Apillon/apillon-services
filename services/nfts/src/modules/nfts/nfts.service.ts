@@ -659,7 +659,11 @@ export class NftsService {
     context: ServiceContext,
   ) {
     // Collection must exist and be confirmed on blockchain
-    if (!collection.exists() || collection.contractAddress == null) {
+    if (
+      !collection.exists() ||
+      collection.contractAddress == null ||
+      collection.collectionStatus == CollectionStatus.TRANSFERED
+    ) {
       throw new NftsCodeException({
         status: 500,
         code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
