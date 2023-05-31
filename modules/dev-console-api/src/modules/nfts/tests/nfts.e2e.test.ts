@@ -348,6 +348,10 @@ describe('Storage bucket tests', () => {
         newCollection.id,
       );
       expect(newCollection.baseUri).toBeTruthy();
+
+      //1.json should be available in baseUri
+      const response2 = await request(newCollection.baseUri + '1.json').get('');
+      expect(response2.status).toBe(200);
     });
   });
 
