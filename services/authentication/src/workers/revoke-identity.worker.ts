@@ -14,13 +14,7 @@ import {
 } from '@apillon/workers-lib';
 
 import { Identity } from '../modules/identity/models/identity.model';
-import {
-  AuthenticationErrorCode,
-  HttpStatus,
-  IdentityState,
-} from '../config/types';
 import { generateAccount } from '../lib/kilt';
-import { AuthenticationCodeException } from '../lib/exceptions';
 
 export class IdentityRevokeWorker extends BaseQueueWorker {
   context;
@@ -40,19 +34,6 @@ export class IdentityRevokeWorker extends BaseQueueWorker {
 
   public async runExecutor(parameters: any): Promise<any> {
     const claimerEmail = parameters.email;
-
-    const identity = await new Identity({}, this.context).populateByUserEmail(
-      this.context,
-      claimerEmail,
-    );
-
-    if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
-      throw new AuthenticationCodeException({
-        code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
-        status: HttpStatus.NOT_FOUND,
-      });
-    }
-
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
     // This is the attesterAcc, used elsewhere in the code
@@ -60,11 +41,17 @@ export class IdentityRevokeWorker extends BaseQueueWorker {
       env.KILT_ATTESTER_MNEMONIC,
     )) as KiltKeyringPair;
 
+    const identity = await new Identity({}, this.context).populateByUserEmail(
+      this.context,
+      claimerEmail,
+    );
+
     const identifier = Did.toChain(identity.didUri as DidUri);
 
     const endpointsCountForDid = await api.query.did.didEndpointsCount(
       identifier,
     );
+
     const depositReClaimExtrinsic = api.tx.did.reclaimDeposit(
       identifier,
       endpointsCountForDid,
