@@ -237,9 +237,6 @@ export class AuthUser extends AdvancedSQLModel {
       expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
     };
 
-    console.log('THIS TOKEN: ', this.token);
-    console.log('TOKEN DATA: ', tokenData);
-
     authToken.populate(tokenData, PopulateFrom.SERVICE);
 
     try {
@@ -255,22 +252,14 @@ export class AuthUser extends AdvancedSQLModel {
         JwtTokenType.USER_AUTHENTICATION,
       );
 
-      console.log('THIS USER_UUID: ', this.user_uuid);
-      console.log('TOKEN TYPE: ', JwtTokenType.USER_AUTHENTICATION);
-      console.log('FOUND OLD TOKEN: ', oldToken);
-
       if (oldToken.exists()) {
-        console.log('UPDATING OLD TOKEN: ', oldToken.toString());
         oldToken.status = SqlModelStatus.DELETED;
         await oldToken.update(SerializeFor.UPDATE_DB);
       }
 
-      // console.log('UPDATING EXISTING TOKEN: ', oldToken.toString());
       await authToken.insert(SerializeFor.INSERT_DB);
 
       await context.mysql.commit(conn);
-
-      // console.log('Connection3 ', conn);
     } catch (err) {
       await context.mysql.rollback(conn);
       throw await new AmsCodeException({
