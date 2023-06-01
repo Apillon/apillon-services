@@ -53,10 +53,6 @@ import { WalletService } from '../wallet/wallet.service';
 import { Collection } from './models/collection.model';
 
 export class NftsService {
-  static async getHello() {
-    return 'Hello world from NFTS microservice';
-  }
-
   //#region collection functions
 
   // TODO: Remove send transaction from all functions bellow, as we are planing to
@@ -663,7 +659,11 @@ export class NftsService {
     context: ServiceContext,
   ) {
     // Collection must exist and be confirmed on blockchain
-    if (!collection.exists() || collection.contractAddress == null) {
+    if (
+      !collection.exists() ||
+      collection.contractAddress == null ||
+      collection.collectionStatus == CollectionStatus.TRANSFERED
+    ) {
       throw new NftsCodeException({
         status: 500,
         code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,

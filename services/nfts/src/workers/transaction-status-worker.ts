@@ -16,7 +16,6 @@ import {
 import { CollectionStatus, TransactionType } from '../config/types';
 import { Collection } from '../modules/nfts/models/collection.model';
 import { Transaction } from '../modules/transaction/models/transaction.model';
-import { TransactionService } from '../modules/transaction/transaction.service';
 
 export class TransactionStatusWorker extends BaseQueueWorker {
   public constructor(
