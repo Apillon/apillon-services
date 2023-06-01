@@ -18,7 +18,7 @@ import {
   SqlModelStatus,
   WebsiteQueryFilter,
 } from '@apillon/lib';
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { integerParser, stringParser, dateParser } from '@rawmodel/parsers';
 import { BucketType, DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { Bucket } from '../../bucket/models/bucket.model';
@@ -208,6 +208,26 @@ export class Website extends AdvancedSQLModel {
     validators: [],
   })
   public domain: string;
+
+  @prop({
+    parser: { resolver: dateParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+  })
+  public domainChangeDate: Date;
 
   /***************************************************
    * Info properties
@@ -450,6 +470,7 @@ export class Website extends AdvancedSQLModel {
         bucket: bucket,
         stagingBucket: stagingBucket,
         productionBucket: productionBucket,
+        domainChangeDate: this.domain ? new Date() : undefined,
       });
       //Insert web page record
       await this.insert(SerializeFor.INSERT_DB, conn);
@@ -565,6 +586,7 @@ export class Website extends AdvancedSQLModel {
         FROM \`${this.tableName}\` wp
         JOIN \`${DbTables.BUCKET}\` b ON b.id = wp.productionBucket_id
         WHERE wp.domain IS NOT NULL
+        AND wp.domain <> ''
         AND b.CID IS NOT NULL
         AND wp.status <> ${SqlModelStatus.DELETED};
         `,

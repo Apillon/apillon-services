@@ -28,6 +28,11 @@ export class HostingController {
   constructor(private hostingService: HostingService) {}
 
   @Get('domains')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_READ,
+    serviceType: AttachedServiceType.SYSTEM,
+  })
+  @UseGuards(AuthGuard)
   async listDomains(@Ctx() context: ApillonApiContext) {
     return await this.hostingService.listDomains(context);
   }

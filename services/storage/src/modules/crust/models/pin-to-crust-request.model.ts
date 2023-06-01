@@ -216,6 +216,27 @@ export class PinToCrustRequest extends AdvancedSQLModel {
   })
   public message: string;
 
+  public async populateByCid(cid: string): Promise<this> {
+    if (!cid) {
+      throw new Error('cid should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE cid = @cid AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { cid },
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
+
   /**
    * Get requests that are waiting to be sent to crust (BCS)
    * @returns Array of PinToCrustRequest instances

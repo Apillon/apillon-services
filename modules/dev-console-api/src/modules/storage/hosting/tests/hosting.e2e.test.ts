@@ -158,13 +158,12 @@ describe('Hosting tests', () => {
       );
     });
 
-    test('User should be able to update bucket', async () => {
+    test('User should be able to update website', async () => {
       const response = await request(stage.http)
         .patch(`/storage/hosting/websites/${testWebsite.id}`)
         .send({
           name: 'Updated Website name',
           description: 'Some awesome descirption',
-          domain: 'https://banane.si',
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
@@ -179,7 +178,39 @@ describe('Hosting tests', () => {
       expect(wp.exists()).toBeTruthy();
       expect(wp.name).toBe('Updated Website name');
       expect(wp.description).toBe('Some awesome descirption');
-      expect(wp.domain).toBe('https://banane.si');
+    });
+
+    test('User should NOT be able to update website domain in less than 15 minutes', async () => {
+      const response = await request(stage.http)
+        .patch(`/storage/hosting/websites/${testWebsite.id}`)
+        .send({
+          domain: 'https://www.my-test-page-2.si',
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(400);
+      expect(response.body.code).toBe(40006019);
+    });
+
+    test('User should be able to update website domain after 15 minutes', async () => {
+      let wp: Website = await new Website(
+        {},
+        stage.storageContext,
+      ).populateById(testWebsite.id);
+      wp.domainChangeDate = new Date(Date.now() - 16000 * 60); //Minus 16 minutes
+      await wp.update();
+
+      const response = await request(stage.http)
+        .patch(`/storage/hosting/websites/${testWebsite.id}`)
+        .send({
+          domain: 'https://www.my-test-page-2.si',
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+
+      wp = await new Website({}, stage.storageContext).populateById(
+        response.body.data.id,
+      );
+      expect(wp.domain).toBe('https://www.my-test-page-2.si');
     });
   });
 
