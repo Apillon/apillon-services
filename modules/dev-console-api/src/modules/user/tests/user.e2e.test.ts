@@ -116,6 +116,8 @@ describe('Auth tests', () => {
   test('User should NOT be able to authenticate with old token', async () => {
     const oldToken = newUserData.authToken;
 
+    // Tokens are time based, so this test might fail sometimes if it
+    // executes too fast
     await new Promise((resolve) => {
       setTimeout(() => {
         resolve(null);
