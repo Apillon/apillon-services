@@ -254,10 +254,10 @@ export class AuthUser extends AdvancedSQLModel {
 
       if (oldToken.exists()) {
         oldToken.status = SqlModelStatus.DELETED;
-        await oldToken.update(SerializeFor.UPDATE_DB);
+        await oldToken.update(SerializeFor.UPDATE_DB, conn);
       }
 
-      await authToken.insert(SerializeFor.INSERT_DB);
+      await authToken.insert(SerializeFor.INSERT_DB, conn);
 
       await context.mysql.commit(conn);
     } catch (err) {

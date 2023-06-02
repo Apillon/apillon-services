@@ -126,6 +126,7 @@ export class AuthUserService {
     const authUser = await new AuthUser({}, context).populateByEmail(
       event.email,
     );
+
     if (!authUser.exists() || !authUser.verifyPassword(event.password)) {
       throw await new AmsCodeException({
         status: 401,
