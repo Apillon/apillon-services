@@ -156,10 +156,19 @@ export class AuthUserService {
   static async loginWithKilt(event, context: ServiceContext) {
     // Parse received token - trigger exception if this token
     // does not belong to us
-    const tokenData = parseJwtToken(
-      JwtTokenType.USER_AUTHENTICATION,
-      event.token,
-    );
+    let tokenData;
+    try {
+      tokenData = parseJwtToken(JwtTokenType.USER_AUTHENTICATION, event.token);
+    } catch (error) {
+      throw await new AmsCodeException({
+        status: 401,
+        code: AmsErrorCode.USER_AUTH_TOKEN_IS_INVALID,
+      }).writeToMonitor({
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
+      });
+    }
 
     const authUser = await new AuthUser({}, context).populateByEmail(
       tokenData.email,
@@ -179,6 +188,7 @@ export class AuthUserService {
         data: event,
       });
     }
+    console.log('LOGGIN IN USER AMS ...');
 
     await authUser.loginUser();
 

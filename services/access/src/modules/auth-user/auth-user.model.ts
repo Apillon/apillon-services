@@ -186,9 +186,9 @@ export class AuthUser extends AdvancedSQLModel {
     const res = await this.db().paramExecute(
       `
       SELECT * FROM authUser
-      WHERE email = @email
+      WHERE email = @email AND status = @status
     `,
-      { email },
+      { email, status: SqlModelStatus.ACTIVE },
       conn,
     );
 

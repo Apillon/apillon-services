@@ -3,6 +3,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 // External modules
 import { signatureVerify } from '@polkadot/util-crypto';
 import { v4 as uuidV4 } from 'uuid';
+import { randomUUID } from 'crypto';
 // Internal library
 import {
   Ams,
@@ -146,7 +147,6 @@ export class UserService {
       }
 
       user.wallet = resp.data.wallet;
-
       user.setUserRolesFromAmsResponse(resp);
 
       return {
@@ -154,11 +154,51 @@ export class UserService {
         token: resp.data.token,
       };
     } catch (error) {
-      throw new CodeException({
-        status: HttpStatus.UNAUTHORIZED,
-        code: ValidatorErrorCode.USER_INVALID_LOGIN,
-        errorCodes: ValidatorErrorCode,
-      });
+      // TODO: Where is this exception expected?
+      if (error.code == 40102100) {
+        // TODO: Better logging
+        writeLog(
+          LogType.MSG,
+          'KILT LOGIN is VALID. CREATING NEW USER...',
+          'user.service.ts',
+          'register',
+        );
+
+        const conn = await context.mysql.start();
+        let amsResponse;
+        try {
+          const tokenData = parseJwtToken(
+            JwtTokenType.USER_AUTHENTICATION,
+            loginInfo.token,
+          );
+          const credentialEmail = tokenData.email;
+          const user = new User({}, context).populate({
+            user_uuid: uuidV4(),
+            email: credentialEmail,
+          });
+          await user.insert(SerializeFor.INSERT_DB, conn);
+
+          // Register a user with random password and the
+          // email provided in the credential presentation (loginWithKilt)
+          amsResponse = await new Ams(context).register({
+            user_uuid: user.user_uuid,
+            email: credentialEmail,
+            password: randomUUID(),
+          });
+          user.setUserRolesFromAmsResponse(amsResponse);
+          await context.mysql.commit(conn);
+
+          writeLog(
+            LogType.MSG,
+            'KILT LOGIN: USER CREATED...',
+            'user.service.ts',
+            'register',
+          );
+        } catch (err) {
+          await context.mysql.rollback(conn);
+          throw err;
+        }
+      }
     }
   }
 

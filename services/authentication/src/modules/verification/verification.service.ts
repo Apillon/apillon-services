@@ -33,6 +33,9 @@ export class VerificationMicroservice {
         presentation.rootHash,
       );
 
+      console.log('ATTESTATION ', attestation);
+      console.log('PRESENTATION ', presentation);
+
       await new Lmas().writeLog({
         context: context,
         logType: LogType.INFO,
