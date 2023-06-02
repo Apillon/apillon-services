@@ -214,9 +214,13 @@ export class UserService {
       });
     }
 
-    const token = generateJwtToken(JwtTokenType.USER_CONFIRM_EMAIL, {
-      email,
-    });
+    const token = generateJwtToken(
+      JwtTokenType.USER_CONFIRM_EMAIL,
+      {
+        email,
+      },
+      '1h',
+    );
 
     await new Mailing(context).sendMail({
       emails: [email],
