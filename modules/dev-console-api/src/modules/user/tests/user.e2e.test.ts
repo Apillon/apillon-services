@@ -7,8 +7,6 @@ import { setupTest } from '../../../../test/helpers/setup';
 import { createTestKeyring } from '@polkadot/keyring';
 import { u8aToHex } from '@polkadot/util';
 
-import { AuthToken } from '@apillon/access/src/modules/auth-token/auth-token.model';
-
 describe('Auth tests', () => {
   let stage: Stage;
 
