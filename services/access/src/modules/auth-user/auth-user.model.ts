@@ -250,11 +250,12 @@ export class AuthUser extends AdvancedSQLModel {
       const oldToken = await new AuthToken({}, context).populateByUserAndType(
         this.user_uuid,
         JwtTokenType.USER_AUTHENTICATION,
+        conn,
       );
 
       if (oldToken.exists()) {
-        oldToken.status = SqlModelStatus.DELETED;
-        await oldToken.update(SerializeFor.UPDATE_DB, conn);
+        console.log('Deleting old token ...');
+        await oldToken.delete(conn);
       }
 
       await authToken.insert(SerializeFor.INSERT_DB, conn);

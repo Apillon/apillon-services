@@ -7,6 +7,8 @@ import { setupTest } from '../../../../test/helpers/setup';
 import { createTestKeyring } from '@polkadot/keyring';
 import { u8aToHex } from '@polkadot/util';
 
+import { AuthToken } from '@apillon/access/src/modules/auth-token/auth-token.model';
+
 describe('Auth tests', () => {
   let stage: Stage;
 
@@ -119,8 +121,14 @@ describe('Auth tests', () => {
       password: newUserData.password,
     });
     expect(response1.status).toBe(201);
-    newUserData.authToken = response1.body.data.token;
 
+    await new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(null);
+      }, 1000);
+    });
+
+    newUserData.authToken = response1.body.data.token;
     const response = await request(stage.http)
       .get('/users/me')
       .set('Authorization', `Bearer ${oldToken}`);
