@@ -26,7 +26,6 @@ export class AuthGuard implements CanActivate {
     const context: Context = execCtx.getArgByIndex(0).context;
     // eslint-disable-next-line sonarjs/prefer-single-boolean-return
     if (!context.isAuthenticated()) {
-      console.log('USER IS NOT AUTHENTICATED ...');
       throw new CodeException({
         code: UnauthorizedErrorCodes.UNAUTHORIZED,
         status: HttpStatus.UNAUTHORIZED,
