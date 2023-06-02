@@ -32,6 +32,7 @@ export class User extends AdvancedSQLModel {
       SerializeFor.INSERT_DB, //
       SerializeFor.ADMIN,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -52,11 +53,47 @@ export class User extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
     ],
     fakeValue: () => faker.internet.email(),
   })
   public email: string;
+
+  /**
+   * User's name (first name + last name) property definition.
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB, //
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
+    ],
+    fakeValue: () => faker.name.fullName(),
+  })
+  public name: string;
+
+  /**
+   * Phone number
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB, //
+    ],
+    serializable: [],
+
+    fakeValue: '+386 41 885 885',
+  })
+  public phone: string;
+
+  /*************************************************INFO properties - not part of DB table */
 
   /**
    * web3 wallet
@@ -73,44 +110,6 @@ export class User extends AdvancedSQLModel {
     ],
   })
   public wallet: string;
-
-  /**
-   * User's name (first name + last name) property definition.
-   */
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB, //
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.PROFILE,
-      SerializeFor.ADMIN,
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-    ],
-    fakeValue: () => faker.name.fullName(),
-  })
-  public name: string;
-
-  /**
-   * Phone number
-   */
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB, //
-    ],
-    serializable: [
-      SerializeFor.PROFILE,
-      SerializeFor.ADMIN,
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-    ],
-
-    fakeValue: '+386 41 885 885',
-  })
-  public phone: string;
 
   /** user roles */
   @prop({

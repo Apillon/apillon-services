@@ -18,10 +18,10 @@ export class UpdateUserDto extends ModelBase {
   })
   public name: string;
 
-  @prop({
+  /*@prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
     fakeValue: () => faker.phone.number(),
   })
-  public phone: string;
+  public phone: string;*/
 }
