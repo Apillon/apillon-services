@@ -1,4 +1,9 @@
+// Framework modules (NestJS)
 import { HttpStatus, Injectable } from '@nestjs/common';
+// External modules
+import { signatureVerify } from '@polkadot/util-crypto';
+import { v4 as uuidV4 } from 'uuid';
+// Internal library
 import {
   Ams,
   AppEnvironment,
@@ -20,27 +25,27 @@ import {
   writeLog,
   UserWalletAuthDto,
 } from '@apillon/lib';
-import { v4 as uuidV4 } from 'uuid';
+import { verifyCaptcha, getDiscordProfile } from '@apillon/modules-lib';
+// Modules level import
+import { ProjectService } from '../project/project.service';
 import {
   ResourceNotFoundErrorCode,
   ValidatorErrorCode,
 } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
-import { ProjectService } from '../project/project.service';
+// This.Module level imports
+import { User } from './models/user.model';
+// DTOs
 import { LoginUserDto } from './dtos/login-user.dto';
 import { LoginUserKiltDto } from './dtos/login-user-kilt.dto';
 import { RegisterUserDto } from './dtos/register-user.dto';
 import { ValidateEmailDto } from './dtos/validate-email.dto';
-import { User } from './models/user.model';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
-import {
-  verifyCaptcha,
-  getDiscordProfile,
-  getOauthSessionToken,
-} from '@apillon/modules-lib';
 import { DiscordCodeDto } from './dtos/discord-code-dto';
-import { signatureVerify } from '@polkadot/util-crypto';
+
+import { getOauthSessionToken } from './utils/oauth-utils';
+
 @Injectable()
 export class UserService {
   constructor(private readonly projectService: ProjectService) {}
