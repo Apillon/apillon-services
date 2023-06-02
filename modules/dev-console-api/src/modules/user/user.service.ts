@@ -1,25 +1,31 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
 import {
   Ams,
   AppEnvironment,
   BadRequestErrorCode,
   CodeException,
   Context,
-  CreateReferralDto,
   CreateOauthLinkDto,
-  env,
-  generateJwtToken,
+  CreateReferralDto,
   JwtTokenType,
   LogType,
   Mailing,
-  parseJwtToken,
   ReferralMicroservice,
   SerializeFor,
   UnauthorizedErrorCodes,
-  ValidationException,
-  writeLog,
   UserWalletAuthDto,
+  ValidationException,
+  env,
+  generateJwtToken,
+  parseJwtToken,
+  writeLog,
 } from '@apillon/lib';
+import {
+  getDiscordProfile,
+  getOauthSessionToken,
+  verifyCaptcha,
+} from '@apillon/modules-lib';
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { signatureVerify } from '@polkadot/util-crypto';
 import { v4 as uuidV4 } from 'uuid';
 import {
   ResourceNotFoundErrorCode,
@@ -27,20 +33,14 @@ import {
 } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
 import { ProjectService } from '../project/project.service';
-import { LoginUserDto } from './dtos/login-user.dto';
+import { DiscordCodeDto } from './dtos/discord-code-dto';
 import { LoginUserKiltDto } from './dtos/login-user-kilt.dto';
+import { LoginUserDto } from './dtos/login-user.dto';
 import { RegisterUserDto } from './dtos/register-user.dto';
+import { ResetPasswordDto } from './dtos/reset-password.dto';
+import { UpdateUserDto } from './dtos/update-user.dto';
 import { ValidateEmailDto } from './dtos/validate-email.dto';
 import { User } from './models/user.model';
-import { UpdateUserDto } from './dtos/update-user.dto';
-import { ResetPasswordDto } from './dtos/reset-password.dto';
-import {
-  verifyCaptcha,
-  getDiscordProfile,
-  getOauthSessionToken,
-} from '@apillon/modules-lib';
-import { DiscordCodeDto } from './dtos/discord-code-dto';
-import { signatureVerify } from '@polkadot/util-crypto';
 @Injectable()
 export class UserService {
   constructor(private readonly projectService: ProjectService) {}
@@ -453,9 +453,14 @@ export class UserService {
       });
     }
 
-    const token = generateJwtToken(JwtTokenType.USER_RESET_PASSWORD, {
-      email: body.email,
-    });
+    const token = generateJwtToken(
+      JwtTokenType.USER_RESET_PASSWORD,
+      {
+        email: body.email,
+      },
+      '1h',
+      res.data.authUser.password ? res.data.authUser.password : undefined,
+    );
 
     await new Mailing(context).sendMail({
       emails: [body.email],
@@ -476,21 +481,8 @@ export class UserService {
    * @returns {Promise<boolean>} True if the password was reset successfully.
    */
   async resetPassword(context: Context, body: ResetPasswordDto) {
-    const tokenData = parseJwtToken(
-      JwtTokenType.USER_RESET_PASSWORD,
-      body.token,
-    );
-
-    if (!tokenData?.email) {
-      throw new CodeException({
-        status: HttpStatus.UNAUTHORIZED,
-        code: UnauthorizedErrorCodes.INVALID_TOKEN,
-        errorCodes: UnauthorizedErrorCodes,
-      });
-    }
-
     await new Ams(context).resetPassword({
-      email: tokenData.email,
+      token: body.token,
       password: body.password,
     });
 
