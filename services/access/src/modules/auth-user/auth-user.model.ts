@@ -255,7 +255,8 @@ export class AuthUser extends AdvancedSQLModel {
 
       if (oldToken.exists()) {
         console.log('Deleting old token ...');
-        await oldToken.delete(conn);
+        oldToken.status = SqlModelStatus.DELETED;
+        await oldToken.update(SerializeFor.UPDATE_DB, conn);
       }
 
       await authToken.insert(SerializeFor.INSERT_DB, conn);

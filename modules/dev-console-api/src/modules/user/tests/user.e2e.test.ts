@@ -116,17 +116,17 @@ describe('Auth tests', () => {
   test('User should NOT be able to authenticate with old token', async () => {
     const oldToken = newUserData.authToken;
 
-    const response1 = await request(stage.http).post('/users/login').send({
-      email: newUserData.email,
-      password: newUserData.password,
-    });
-    expect(response1.status).toBe(201);
-
     await new Promise((resolve) => {
       setTimeout(() => {
         resolve(null);
       }, 1000);
     });
+
+    const response1 = await request(stage.http).post('/users/login').send({
+      email: newUserData.email,
+      password: newUserData.password,
+    });
+    expect(response1.status).toBe(201);
 
     newUserData.authToken = response1.body.data.token;
     const response = await request(stage.http)
