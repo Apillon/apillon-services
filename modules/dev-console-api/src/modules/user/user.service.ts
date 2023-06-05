@@ -156,7 +156,7 @@ export class UserService {
     } catch (error) {
       // TODO: Where is this exception expected?
       if (error.code == 40102100) {
-        // TODO: Better logging
+        // TODO: ADD LMAS
         writeLog(
           LogType.MSG,
           'KILT LOGIN is VALID. CREATING NEW USER...',
@@ -185,7 +185,9 @@ export class UserService {
             email: credentialEmail,
             password: randomUUID(),
           });
+
           user.setUserRolesFromAmsResponse(amsResponse);
+
           await context.mysql.commit(conn);
 
           writeLog(
@@ -194,6 +196,11 @@ export class UserService {
             'user.service.ts',
             'register',
           );
+
+          return {
+            ...user.serialize(SerializeFor.PROFILE),
+            token: amsResponse.data.token,
+          };
         } catch (err) {
           await context.mysql.rollback(conn);
           throw err;

@@ -46,9 +46,8 @@ export class VerificationMicroservice {
         error: error.message.replace(/['"]+/g, ''),
       };
     }
-
     const whitelist = env.KILT_ATTESTERS_WHITELIST.split(';');
-    if (!whitelist.include(attestation.owner)) {
+    if (!whitelist.includes(attestation.owner.split('did:kilt:')[1])) {
       await new Lmas().writeLog({
         context: context,
         logType: LogType.INFO,

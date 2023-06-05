@@ -258,4 +258,48 @@ describe('Auth tests', () => {
 
     expect(connectResp2.status).toBe(401);
   });
+
+  test('Kilt login: Existing user should be able to login', async () => {
+    const tokenKilt = generateJwtToken(
+      JwtTokenType.USER_AUTHENTICATION,
+      { email: newUserData.email },
+      '10min',
+    );
+
+    const resp = await request(stage.http)
+      .post('/users/login-kilt')
+      .send({ token: tokenKilt });
+    expect(resp.status).toBe(201);
+  });
+
+  test('Kilt login: New user should be able to login', async () => {
+    const controlEmail = 'luka.golinar@kalmia.si';
+    const tokenKiltNew = generateJwtToken(
+      JwtTokenType.USER_AUTHENTICATION,
+      { email: controlEmail },
+      '10min',
+    );
+
+    const resp1 = await request(stage.http)
+      .post('/users/login-kilt')
+      .send({ token: tokenKiltNew });
+    expect(resp1.status).toBe(201);
+
+    const userData = resp1.body.data;
+    const sqlRes1 = await stage.devConsoleSql.paramExecute(
+      `SELECT * from user WHERE user_uuid = @uuid`,
+      { uuid: userData.user_uuid },
+    );
+
+    expect(sqlRes1.length).toBe(1);
+    expect(sqlRes1[0].id).toBe(resp1.body.data.id);
+
+    const sqlRes2 = await stage.amsSql.paramExecute(
+      `SELECT * from authUser WHERE user_uuid = @uuid`,
+      { uuid: userData.user_uuid },
+    );
+
+    expect(sqlRes2.length).toBe(1);
+    expect(sqlRes2[0].email).toBe(controlEmail);
+  });
 });
