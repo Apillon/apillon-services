@@ -156,7 +156,7 @@ export class UserService {
     } catch (error) {
       // TODO: Where is this exception expected?
       if (error.code == 40102100) {
-        // TODO: ADD LMAS
+        // TODO: USE LMAS
         writeLog(
           LogType.MSG,
           'KILT LOGIN is VALID. CREATING NEW USER...',
