@@ -366,6 +366,11 @@ export class ProjectService {
       });
     }
 
+    const project: Project = await new Project({}, context).populateById(
+      project_user.project_id,
+    );
+    project.canModify(context);
+
     if (project_user.role_id == DefaultUserRole.PROJECT_OWNER) {
       throw new CodeException({
         status: HttpStatus.BAD_REQUEST,
@@ -375,10 +380,6 @@ export class ProjectService {
         errorCodes: BadRequestErrorCode,
       });
     }
-    const project: Project = await new Project({}, context).populateById(
-      project_user.project_id,
-    );
-    project.canModify(context);
 
     //Check if role is different
     if (project_user.role_id == body.role_id) {
