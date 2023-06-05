@@ -33,9 +33,6 @@ export class VerificationMicroservice {
         presentation.rootHash,
       );
 
-      console.log('ATTESTATION ', attestation);
-      console.log('PRESENTATION ', presentation);
-
       await new Lmas().writeLog({
         context: context,
         logType: LogType.INFO,
@@ -47,6 +44,22 @@ export class VerificationMicroservice {
       return {
         verified: false,
         error: error.message.replace(/['"]+/g, ''),
+      };
+    }
+
+    const whitelist = env.KILT_ATTESTERS_WHITELIST.split(';');
+    if (!whitelist.include(attestation.owner)) {
+      await new Lmas().writeLog({
+        context: context,
+        logType: LogType.INFO,
+        message: 'VERIFICATION FAILED: Unknown attester',
+        location: 'AUTHENTICATION-API/verification/verifyIdentity',
+        service: ServiceName.AUTHENTICATION_API,
+      });
+
+      return {
+        verified: false,
+        error: 'Verification failed',
       };
     }
 
