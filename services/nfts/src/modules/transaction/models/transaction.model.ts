@@ -170,26 +170,19 @@ export class Transaction extends AdvancedSQLModel {
     }
   }
 
-  /**
-   * Get array of transactions for collection
-   * @param collectionId
-   * @param transactionType
-   * @returns Array of transactions
-   */
   public async getCollectionTransactions(
-    collectionId: number,
-    transactionType?: TransactionType,
+    collection_id: number,
+    transactionStatus?: number,
   ): Promise<Transaction[]> {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT *
       FROM \`${this.tableName}\`
       WHERE status <> ${SqlModelStatus.DELETED}
-      AND refTable LIKE '${DbTables.COLLECTION}'
-      AND refId = @collectionId
-      AND (@transactionType IS NULL OR transactionType = @transactionType);
+      AND (@transactionStatus IS NULL OR transactionStatus = @transactionStatus)
+      AND refId = @collection_id
       `,
-      { collectionId, transactionType },
+      { transactionStatus, collection_id },
     );
 
     const res: Transaction[] = [];

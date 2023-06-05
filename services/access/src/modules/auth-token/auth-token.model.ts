@@ -110,4 +110,25 @@ export class AuthToken extends AdvancedSQLModel {
     }
     return this.reset();
   }
+
+  /**
+   * Returns auth token by uuid
+   */
+  public async populateByTokenHash(tokenHash: string, conn?: PoolConnection) {
+    const data = await this.db().paramExecute(
+      `
+        SELECT *
+        FROM \`${DbTables.AUTH_TOKEN}\` at
+        WHERE at.tokenHash = @tokenHash
+        LIMIT 1
+        `,
+      { tokenHash },
+      conn,
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    }
+    return this.reset();
+  }
 }
