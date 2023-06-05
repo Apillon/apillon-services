@@ -16,7 +16,6 @@ import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { ServiceQueryFilter } from './dtos/services-query-filter.dto';
-import { Service } from './models/service.model';
 import { ServicesService } from './services.service';
 import { ServiceDto } from './dtos/service.dto';
 
