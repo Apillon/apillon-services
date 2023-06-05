@@ -11,11 +11,13 @@ import {
   CodeException,
   Lmas,
   LogType,
+  SerializeFor,
   ServiceName,
   ValidationException,
 } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
 import { Project } from '../project/models/project.model';
+import { ServiceDto } from './dtos/service.dto';
 
 @Injectable()
 export class ServicesService {
@@ -23,11 +25,13 @@ export class ServicesService {
    * Retrieves a service by its ID.
    *
    * @param {DevConsoleApiContext} context - Dev Console API context object.
-   * @param {number} id - The ID of the service to retrieve.
-   * @returns {Promise<Service>} - The retrieved service.
+   * @param {string} uuid - The ID of the service to retrieve.
+   * @returns {Promise<any>} - The retrieved service.
    */
-  async getService(context: DevConsoleApiContext, id: number) {
-    const service: Service = await new Service({}, context).populateById(id);
+  async getService(context: DevConsoleApiContext, uuid: string) {
+    const service: Service = await new Service({}, context).populateByUUID(
+      uuid,
+    );
     if (!service.exists()) {
       throw new CodeException({
         code: ResourceNotFoundErrorCode.SERVICE_DOES_NOT_EXIST,
@@ -37,7 +41,7 @@ export class ServicesService {
     }
     await service.canAccess(context);
 
-    return service;
+    return service.serialize(SerializeFor.PROFILE);
   }
 
   /**
@@ -59,15 +63,15 @@ export class ServicesService {
    *
    * @param {DevConsoleApiContext} context - Dev Console API context object.
    * @param {Service} body - The service object to create.
-   * @returns {Promise<Service>} - The created service object.
+   * @returns {Promise<any>} - The created service object.
    */
   async createService(
     context: DevConsoleApiContext,
-    body: Service,
-  ): Promise<Service> {
+    body: ServiceDto,
+  ): Promise<any> {
     //Check if project exists & user has required role on it
-    const project: Project = await new Project({}, context).populateById(
-      body.project_id,
+    const project: Project = await new Project({}, context).populateByUUID(
+      body.project_uuid,
     );
     if (!project.exists()) {
       throw new CodeException({
@@ -78,7 +82,9 @@ export class ServicesService {
     }
     project.canModify(context);
 
-    const service = await body.populate({ service_uuid: uuidV4() }).insert();
+    const service = new Service(body, context);
+    service.populate({ service_uuid: uuidV4(), project_id: project.id });
+    await service.insert();
 
     await new Lmas().writeLog({
       context: context,
@@ -89,23 +95,25 @@ export class ServicesService {
       service: ServiceName.DEV_CONSOLE,
     });
 
-    return service;
+    return service.serialize(SerializeFor.PROFILE);
   }
 
   /**
    * Updates a service with new data.
    *
    * @param {DevConsoleApiContext} context - Dev Console API context object.
-   * @param {number} id - The ID of the service to update.
+   * @param {string} uuid - The ID of the service to update.
    * @param {any} data - The data to update the service with.
-   * @returns {Promise<Service>} - The updated service object.
+   * @returns {Promise<any>} - The updated service object.
    */
   async updateService(
     context: DevConsoleApiContext,
-    id: number,
+    uuid: string,
     data: any,
-  ): Promise<Service> {
-    const service: Service = await new Service({}, context).populateById(id);
+  ): Promise<any> {
+    const service: Service = await new Service({}, context).populateByUUID(
+      uuid,
+    );
     if (!service.exists()) {
       throw new CodeException({
         code: ResourceNotFoundErrorCode.SERVICE_DOES_NOT_EXIST,
@@ -127,21 +135,23 @@ export class ServicesService {
     }
 
     await service.update();
-    return service;
+    return service.serialize(SerializeFor.PROFILE);
   }
 
   /**
    * Deletes a service. (soft delete)
    *
    * @param {DevConsoleApiContext} context - Dev Console API context object.
-   * @param {number} id - The ID of the service to delete.
-   * @returns {Promise<Service>} - The deleted service object.
+   * @param {string} uuid - The ID of the service to delete.
+   * @returns {Promise<any>} - The deleted service object.
    */
   async deleteService(
     context: DevConsoleApiContext,
-    id: number,
-  ): Promise<Service> {
-    const service: Service = await new Service({}, context).populateById(id);
+    uuid: string,
+  ): Promise<any> {
+    const service: Service = await new Service({}, context).populateByUUID(
+      uuid,
+    );
     if (!service.exists()) {
       throw new CodeException({
         code: ResourceNotFoundErrorCode.SERVICE_DOES_NOT_EXIST,
@@ -152,6 +162,6 @@ export class ServicesService {
     await service.canModify(context);
 
     await service.markDeleted();
-    return service;
+    return service.serialize(SerializeFor.PROFILE);
   }
 }

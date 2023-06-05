@@ -20,6 +20,17 @@ export class User extends AdvancedSQLModel {
    */
   tableName = DbTables.USER;
 
+  @prop({
+    parser: { resolver: integerParser() },
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+    ],
+    populatable: [PopulateFrom.DB],
+  })
+  public id: number;
+
   /**
    * User's UUID used for synchronization with microservices
    */

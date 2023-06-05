@@ -14,6 +14,7 @@ import { Project } from '../../project/models/project.model';
 import { Service } from '../../services/models/service.model';
 import { ServiceQueryFilter } from '../../services/dtos/services-query-filter.dto';
 import { ServicesService } from '../../services/services.service';
+import { ServiceDto } from '../../services/dtos/service.dto';
 
 @Injectable()
 export class BucketService {
@@ -60,8 +61,8 @@ export class BucketService {
     const storageServices = await new Service({}).getServices(context, query);
     if (storageServices.total == 0) {
       //Create storage service - "Attach"
-      const storageService: Service = new Service({}, context).populate({
-        project_id: project.id,
+      const storageService: ServiceDto = new ServiceDto({}, context).populate({
+        project_uuid: project.project_uuid,
         name: 'Storage service',
         serviceType_id: AttachedServiceType.STORAGE,
       });

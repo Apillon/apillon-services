@@ -41,7 +41,7 @@ export class ProjectService {
   async createProject(
     context: DevConsoleApiContext,
     body: Project,
-  ): Promise<Project> {
+  ): Promise<any> {
     //Check max project quota
     if (await this.isProjectsQuotaReached(context)) {
       throw new CodeException({
@@ -84,7 +84,7 @@ export class ProjectService {
         service: ServiceName.DEV_CONSOLE,
       });
 
-      return project;
+      return project.serialize(SerializeFor.PROFILE);
     } catch (err) {
       await context.mysql.rollback(conn);
       throw err;
@@ -102,11 +102,10 @@ export class ProjectService {
     );
   }
 
-  async getProject(
-    context: DevConsoleApiContext,
-    id: number,
-  ): Promise<Project> {
-    const project: Project = await new Project({}, context).populateById(id);
+  async getProject(context: DevConsoleApiContext, uuid: string): Promise<any> {
+    const project: Project = await new Project({}, context).populateByUUID(
+      uuid,
+    );
     if (!project.exists()) {
       throw new CodeException({
         code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
@@ -120,15 +119,17 @@ export class ProjectService {
     //Populate user role on this project
     await project.populateMyRoleOnProject(context);
 
-    return project;
+    return project.serialize(SerializeFor.PROFILE);
   }
 
   async updateProject(
     context: DevConsoleApiContext,
-    id: number,
+    uuid: string,
     data: any,
-  ): Promise<Project> {
-    const project: Project = await new Project({}, context).populateById(id);
+  ): Promise<any> {
+    const project: Project = await new Project({}, context).populateByUUID(
+      uuid,
+    );
     if (!project.exists()) {
       throw new CodeException({
         code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
@@ -152,7 +153,7 @@ export class ProjectService {
     }
 
     await project.update();
-    return project;
+    return project.serialize(SerializeFor.PROFILE);
   }
 
   async getUserProjects(context: DevConsoleApiContext) {
@@ -161,23 +162,23 @@ export class ProjectService {
 
   async getProjectUsers(
     context: DevConsoleApiContext,
-    projectId: number,
+    project_uuid: string,
     query: ProjectUserFilter,
   ) {
     return await new ProjectUser({}, context).getProjectUsers(
       context,
-      projectId,
+      project_uuid,
       query,
     );
   }
 
   async inviteUserProject(
     context: DevConsoleApiContext,
-    projectId: number,
+    project_uuid: string,
     data: ProjectUserInviteDto,
   ) {
-    const project: Project = await new Project({}, context).populateById(
-      projectId,
+    const project: Project = await new Project({}, context).populateByUUID(
+      project_uuid,
     );
     if (!project.exists()) {
       throw new CodeException({
@@ -214,7 +215,7 @@ export class ProjectService {
 
       //check if user already on project
       if (
-        await new ProjectUser({}, context).isUserOnProject(projectId, user.id)
+        await new ProjectUser({}, context).isUserOnProject(project.id, user.id)
       ) {
         throw new CodeException({
           code: ConflictErrorCode.USER_ALREADY_ON_PROJECT,
@@ -480,10 +481,10 @@ export class ProjectService {
 
   async updateProjectImage(
     context: DevConsoleApiContext,
-    project_id: number,
+    project_uuid: string,
     uploadedFile: File,
   ) {
-    const project = await new Project({}, context).populateById(project_id);
+    const project = await new Project({}, context).populateByUUID(project_uuid);
     if (!project.exists()) {
       throw new CodeException({
         code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,

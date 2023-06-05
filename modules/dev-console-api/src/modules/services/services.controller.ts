@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -19,6 +18,7 @@ import { ValidationGuard } from '../../guards/validation.guard';
 import { ServiceQueryFilter } from './dtos/services-query-filter.dto';
 import { Service } from './models/service.model';
 import { ServicesService } from './services.service';
+import { ServiceDto } from './dtos/service.dto';
 
 @Controller('services')
 export class ServicesController {
@@ -39,7 +39,7 @@ export class ServicesController {
     return await this.serviceService.getServiceList(context, query);
   }
 
-  @Get(':id')
+  @Get(':uuid')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -48,9 +48,9 @@ export class ServicesController {
   @UseGuards(AuthGuard)
   async getService(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('uuid') uuid: string,
   ) {
-    return await this.serviceService.getService(context, id);
+    return await this.serviceService.getService(context, uuid);
   }
 
   @Post()
@@ -58,16 +58,16 @@ export class ServicesController {
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
-  @Validation({ dto: Service })
+  @Validation({ dto: ServiceDto })
   @UseGuards(ValidationGuard, AuthGuard)
   async createService(
     @Ctx() context: DevConsoleApiContext,
-    @Body() body: Service,
+    @Body() body: ServiceDto,
   ) {
     return await this.serviceService.createService(context, body);
   }
 
-  @Patch(':id')
+  @Patch(':uuid')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -75,13 +75,13 @@ export class ServicesController {
   @UseGuards(AuthGuard)
   async updateService(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('uuid') uuid: string,
     @Body() body: any,
   ) {
-    return await this.serviceService.updateService(context, id, body);
+    return await this.serviceService.updateService(context, uuid, body);
   }
 
-  @Delete(':id')
+  @Delete(':uuid')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -89,8 +89,8 @@ export class ServicesController {
   @UseGuards(AuthGuard)
   async deleteService(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('uuid') uuid: string,
   ) {
-    return await this.serviceService.deleteService(context, id);
+    return await this.serviceService.deleteService(context, uuid);
   }
 }
