@@ -1,5 +1,4 @@
 import {
-  DefaultUserRole,
   generateJwtToken,
   JwtTokenType,
   Lmas,
@@ -57,12 +56,8 @@ export class AuthUserService {
     authUser.setPassword(event.password);
     const conn = await context.mysql.start();
 
-    console.log('Validating user ...', authUser);
-
     try {
-      console.log('Validating user 2', authUser);
       await authUser.validate();
-      console.log('Validating user 3', authUser);
     } catch (err) {
       throw new AmsValidationException(authUser);
     }
@@ -192,7 +187,6 @@ export class AuthUserService {
         data: event,
       });
     }
-    console.log('LOGGIN IN USER AMS ...');
 
     await authUser.loginUser();
 
@@ -406,8 +400,6 @@ export class AuthUserService {
     const authUser = await new AuthUser({}, context).populateByEmail(
       event.email,
     );
-
-    console.log('USER EXISTS: ', authUser.exists());
 
     return { result: authUser.exists() };
   }
