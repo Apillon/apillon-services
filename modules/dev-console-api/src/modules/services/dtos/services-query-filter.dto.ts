@@ -1,13 +1,13 @@
 // import { ApiProperty } from '@babel/core';
 import { prop } from '@rawmodel/core';
-import { integerParser } from '@rawmodel/parsers';
+import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { ValidatorErrorCode } from '../../../config/types';
 import { BaseQueryFilter, PopulateFrom, SerializeFor } from '@apillon/lib';
 
 export class ServiceQueryFilter extends BaseQueryFilter {
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
