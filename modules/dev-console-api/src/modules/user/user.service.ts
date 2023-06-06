@@ -3,7 +3,6 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 // External modules
 import { signatureVerify } from '@polkadot/util-crypto';
 import { v4 as uuidV4 } from 'uuid';
-import { randomUUID } from 'crypto';
 // Internal library
 import {
   Ams,
@@ -130,6 +129,7 @@ export class UserService {
     context: DevConsoleApiContext,
   ): Promise<any> {
     try {
+      // Case 0: User exists - authenticated and logged in using Access MS
       const resp = await new Ams(context).loginWithKilt({
         token: loginInfo.token,
       });
@@ -154,16 +154,10 @@ export class UserService {
         token: resp.data.token,
       };
     } catch (error) {
-      // TODO: Where is this exception expected?
       if (error.code == 40102100) {
-        // TODO: USE LMAS
-        writeLog(
-          LogType.MSG,
-          'KILT LOGIN is VALID. CREATING NEW USER...',
-          'user.service.ts',
-          'register',
-        );
-
+        // CASE 1: User does not exists - Access MS did not find it:
+        //         Create a new user with a random password in Access and create
+        //         a new user in DEV-CONSOLE
         const conn = await context.mysql.start();
         let amsResponse;
         try {
@@ -183,19 +177,12 @@ export class UserService {
           amsResponse = await new Ams(context).register({
             user_uuid: user.user_uuid,
             email: credentialEmail,
-            password: randomUUID(),
+            password: uuidV4(),
           });
 
           user.setUserRolesFromAmsResponse(amsResponse);
 
           await context.mysql.commit(conn);
-
-          writeLog(
-            LogType.MSG,
-            'KILT LOGIN: USER CREATED...',
-            'user.service.ts',
-            'register',
-          );
 
           return {
             ...user.serialize(SerializeFor.PROFILE),
@@ -203,8 +190,18 @@ export class UserService {
           };
         } catch (err) {
           await context.mysql.rollback(conn);
-          throw err;
+          throw new CodeException({
+            status: HttpStatus.UNAUTHORIZED,
+            code: ValidatorErrorCode.USER_INVALID_LOGIN,
+            errorCodes: ValidatorErrorCode,
+          });
         }
+      } else {
+        throw new CodeException({
+          status: HttpStatus.UNAUTHORIZED,
+          code: ValidatorErrorCode.USER_INVALID_LOGIN,
+          errorCodes: ValidatorErrorCode,
+        });
       }
     }
   }
