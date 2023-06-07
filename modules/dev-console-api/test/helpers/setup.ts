@@ -26,6 +26,7 @@ export async function setupTest(): Promise<Stage> {
   env.REFERRAL_MYSQL_HOST = null; // safety
   env.NFTS_MYSQL_HOST = null; // safety
   env.AUTH_API_MYSQL_HOST = null; // safety
+  env.BLOCKCHAIN_MYSQL_HOST = null; // safety
 
   try {
     await rebuildTestDatabases();

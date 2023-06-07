@@ -6,7 +6,7 @@ CREATE DATABASE IF NOT EXISTS `Apillon_config_test`;
 CREATE DATABASE IF NOT EXISTS `Apillon_authentication_test`;
 CREATE DATABASE IF NOT EXISTS `Apillon_referral_test`;
 CREATE DATABASE IF NOT EXISTS `Apillon_nfts_test`;
-
+CREATE DATABASE IF NOT EXISTS `Apillon_blockchain_test`;
 
 -- create root user and grant rights
 GRANT ALL ON *.* TO 'root'@'localhost';
