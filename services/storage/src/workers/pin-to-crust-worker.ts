@@ -101,6 +101,38 @@ export class PinToCrustWorker extends ServerlessWorker {
       },
     );
 
+    console.info(
+      'Pinning completed. Checking for pins, that should be renewed',
+    );
+
+    //Get pin to crust request, that need to be renewed.
+    //Update those request and they should be pinned in next worker iteration
+    const pinRequestForRenowal: PinToCrustRequest[] =
+      await new PinToCrustRequest({}, this.context).getRequestForRenewal();
+
+    console.info(
+      'Num of pins, that should be renewed: ' + pinRequestForRenowal.length,
+    );
+
+    await runWithWorkers(
+      pinRequestForRenowal,
+      env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+        env.APP_ENV == AppEnvironment.TEST
+        ? 1
+        : 5,
+      this.context,
+      async (data) => {
+        const pinToCrustRequest: PinToCrustRequest = new PinToCrustRequest(
+          data,
+          this.context,
+        );
+        pinToCrustRequest.renewalDate = new Date();
+        pinToCrustRequest.pinningStatus = CrustPinningStatus.PENDING;
+        pinToCrustRequest.numOfExecutions = 0;
+        await pinToCrustRequest.update();
+      },
+    );
+
     return true;
   }
 
