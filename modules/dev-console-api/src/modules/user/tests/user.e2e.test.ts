@@ -273,7 +273,7 @@ describe('Auth tests', () => {
   });
 
   test('Kilt login: New user should be able to login', async () => {
-    const controlEmail = 'luka.golinar@kalmia.si';
+    const controlEmail = 'dims.okniv@kalmia.si';
     const tokenKiltNew = generateJwtToken(
       JwtTokenType.USER_AUTHENTICATION,
       { email: controlEmail },
@@ -284,6 +284,8 @@ describe('Auth tests', () => {
       .post('/users/login-kilt')
       .send({ token: tokenKiltNew });
     expect(resp1.status).toBe(201);
+    expect(resp1.body.data.token).toBeTruthy();
+    expect(resp1.body.data.user_uuid).toBeTruthy();
 
     const userData = resp1.body.data;
     const sqlRes1 = await stage.devConsoleSql.paramExecute(
