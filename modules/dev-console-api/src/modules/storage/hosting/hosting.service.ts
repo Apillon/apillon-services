@@ -49,7 +49,7 @@ export class HostingService {
       {},
       context,
     ).populate({
-      project_id: project.id,
+      project_uuid: project.project_uuid,
       serviceType_id: AttachedServiceType.STORAGE,
     });
     const storageServices = await new Service({}).getServices(context, query);
