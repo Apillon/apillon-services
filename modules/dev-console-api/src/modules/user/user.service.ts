@@ -120,7 +120,7 @@ export class UserService {
     context: DevConsoleApiContext,
   ): Promise<any> {
     try {
-      // Case 0: User EXISTS - authenticated and logged in using Access MS
+      // Case 1: User EXISTS - authenticated and logged in using Access MS
       const resp = await new Ams(context).loginWithKilt({
         token: loginInfo.token,
       });
