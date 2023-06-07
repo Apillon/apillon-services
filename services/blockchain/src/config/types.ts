@@ -14,6 +14,11 @@ export enum CrustTransferType {
   STORAGE_ORDER = 1,
 }
 
+export enum KiltTransferType {
+  TRANSFER = 0,
+  DID_CREATE_ORDER = 1,
+}
+
 /**
  * Error codes
  * code format : HTTPCODE|MODULE_CODE|MODULE_INTERNAL_ERROR_CODE

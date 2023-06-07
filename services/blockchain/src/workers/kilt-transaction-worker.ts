@@ -18,7 +18,6 @@ import {
 import { Transaction } from '../common/models/transaction';
 import { Wallet } from '../common/models/wallet';
 import { DbTables } from '../config/types';
-import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
 import { BlockchainStatus } from '../modules/blockchain-indexers/blockchain-status';
 import {
   CrustStorageOrders,
@@ -29,8 +28,9 @@ import {
   CrustTransfers,
 } from '../modules/blockchain-indexers/substrate/crust/data-models/crust-transfers';
 import { WorkerName } from './worker-executor';
+import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/kilt-indexer.service';
 
-export class CrustTransactionWorker extends BaseSingleThreadWorker {
+export class KiltTransactionWorker extends BaseSingleThreadWorker {
   private logPrefix: string;
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);
@@ -38,21 +38,20 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
 
   public async runExecutor(_data: any): Promise<any> {
     const wallets = await new Wallet({}, this.context).getList(
-      SubstrateChain.CRUST,
+      SubstrateChain.KILT_PEREGRINE,
       ChainType.SUBSTRATE,
     );
 
-    this.logPrefix = `[SUBSTRATE][CRUST]`;
+    this.logPrefix = `[SUBSTRATE][KILT_PEREGRINE]`;
 
-    console.info(`${this.logPrefix} RUN EXECUTOR (CrustTransactionWorker).`);
+    console.info(`${this.logPrefix} RUN EXECUTOR (KiltTransactionWorker).`);
 
     for (const w of wallets) {
       const conn = await this.context.mysql.start();
       try {
         const wallet: Wallet = new Wallet(w, this.context);
-        const crustIndexer: CrustBlockchainIndexer =
-          new CrustBlockchainIndexer();
-        const blockHeight = await crustIndexer.getBlockHeight();
+        const kiltIndexer: KiltBlockchainIndexer = new KiltBlockchainIndexer();
+        const blockHeight = await kiltIndexer.getBlockHeight();
 
         const lastParsedBlock: number = wallet.lastParsedBlock;
         const toBlock: number =
@@ -64,14 +63,14 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
           `[SUBSTRATE][CRUST] Checking PENDING transactions (sourceWallet=${wallet.address}, lastParsedBlock=${wallet.lastParsedBlock}, toBlock=${toBlock})..`,
         );
 
-        const crustTransactions = await this.fetchAllCrustTransactions(
-          crustIndexer,
+        const kiltTransactions = await this.fetchAllKiltTransactions(
+          kiltIndexer,
           wallet.address,
           lastParsedBlock,
           toBlock,
         );
 
-        await this.handleBlockchainTransfers(
+        /*await this.handleBlockchainTransfers(
           wallet,
           crustTransactions.withdrawals,
           crustTransactions.deposits,
@@ -81,15 +80,12 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
           wallet,
           crustTransactions.fileOrders,
           conn,
-        );
+        );*/
 
         await wallet.updateLastParsedBlock(toBlock, conn);
         await conn.commit();
 
-        if (
-          crustTransactions.fileOrders.storageOrders.length > 0 ||
-          crustTransactions.withdrawals.transfers.length > 0
-        ) {
+        if (kiltTransactions.withdrawals.transfers.length > 0) {
           await sendToWorkerQueue(
             env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
             WorkerName.TRANSACTION_WEBHOOKS,
@@ -101,8 +97,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
             WorkerLogStatus.INFO,
             'Found new transactions. Triggering transaction webhook worker!',
             {
-              storageOrders: crustTransactions.fileOrders.storageOrders,
-              transfers: crustTransactions.withdrawals.transfers,
+              transfers: kiltTransactions.withdrawals.transfers,
               wallet: wallet.address,
             },
           );
@@ -289,12 +284,12 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
   ): Promise<string[]> {
     await this.context.mysql.paramExecute(
       `UPDATE \`${DbTables.TRANSACTION_QUEUE}\`
-      SET transactionStatus = @status
-      WHERE
-        chain = @chain
-        AND chainType = @chainType
-        AND address = @address
-        AND transactionHash in ('${bcHashes.join("','")}')`,
+        SET transactionStatus = @status
+        WHERE
+          chain = @chain
+          AND chainType = @chainType
+          AND address = @address
+          AND transactionHash in ('${bcHashes.join("','")}')`,
       {
         status,
         chain: wallet.chain,
@@ -401,32 +396,27 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
   }
 
   /**
-   * Obtain crust transactions
+   * Obtain kilt transactions
    * @param address transactions created from wallet address
    * @param fromBlock transactions included from block number
    * @param toBlock transactions included to block number
    */
-  public async fetchAllCrustTransactions(
-    crustIndexer: CrustBlockchainIndexer,
+  public async fetchAllKiltTransactions(
+    kiltIndexer: KiltBlockchainIndexer,
     address: string,
     fromBlock: number,
     toBlock: number,
   ) {
-    const withdrawals = await crustIndexer.getWalletWithdrawals(
+    const withdrawals = await kiltIndexer.getWalletWithdrawals(
       address,
       fromBlock,
       toBlock,
     );
-    const deposits = await crustIndexer.getWalletDeposits(
+    const deposits = await kiltIndexer.getWalletDeposits(
       address,
       fromBlock,
       toBlock,
     );
-    const fileOrders = await crustIndexer.getMarketFileOrders(
-      address,
-      fromBlock,
-      toBlock,
-    );
-    return { withdrawals, deposits, fileOrders };
+    return { withdrawals, deposits };
   }
 }
