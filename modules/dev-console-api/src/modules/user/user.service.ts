@@ -1,25 +1,22 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
 import {
   Ams,
   AppEnvironment,
   BadRequestErrorCode,
   CodeException,
   Context,
-  CreateReferralDto,
   CreateOauthLinkDto,
-  env,
-  generateJwtToken,
   JwtTokenType,
-  LogType,
   Mailing,
-  parseJwtToken,
-  ReferralMicroservice,
   SerializeFor,
   UnauthorizedErrorCodes,
-  ValidationException,
-  writeLog,
   UserWalletAuthDto,
+  ValidationException,
+  env,
+  generateJwtToken,
 } from '@apillon/lib';
+import { getDiscordProfile, verifyCaptcha } from '@apillon/modules-lib';
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { signatureVerify } from '@polkadot/util-crypto';
 import { v4 as uuidV4 } from 'uuid';
 import {
   ResourceNotFoundErrorCode,
@@ -27,20 +24,18 @@ import {
 } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
 import { ProjectService } from '../project/project.service';
-import { LoginUserDto } from './dtos/login-user.dto';
+import { DiscordCodeDto } from './dtos/discord-code-dto';
 import { LoginUserKiltDto } from './dtos/login-user-kilt.dto';
+import { LoginUserDto } from './dtos/login-user.dto';
 import { RegisterUserDto } from './dtos/register-user.dto';
+import { ResetPasswordDto } from './dtos/reset-password.dto';
+import { UpdateUserDto } from './dtos/update-user.dto';
 import { ValidateEmailDto } from './dtos/validate-email.dto';
 import { User } from './models/user.model';
-import { UpdateUserDto } from './dtos/update-user.dto';
-import { ResetPasswordDto } from './dtos/reset-password.dto';
-import {
-  verifyCaptcha,
-  getDiscordProfile,
-  getOauthSessionToken,
-} from '@apillon/modules-lib';
-import { DiscordCodeDto } from './dtos/discord-code-dto';
-import { signatureVerify } from '@polkadot/util-crypto';
+
+import { registerUser } from './utils/authentication-utils';
+import { getOauthSessionToken } from './utils/oauth-utils';
+
 @Injectable()
 export class UserService {
   constructor(private readonly projectService: ProjectService) {}
@@ -124,6 +119,7 @@ export class UserService {
     context: DevConsoleApiContext,
   ): Promise<any> {
     try {
+      // Case 1: User EXISTS - authenticated and logged in using Access MS
       const resp = await new Ams(context).loginWithKilt({
         token: loginInfo.token,
       });
@@ -141,7 +137,6 @@ export class UserService {
       }
 
       user.wallet = resp.data.wallet;
-
       user.setUserRolesFromAmsResponse(resp);
 
       return {
@@ -149,12 +144,25 @@ export class UserService {
         token: resp.data.token,
       };
     } catch (error) {
-      throw new CodeException({
-        status: HttpStatus.UNAUTHORIZED,
-        code: ValidatorErrorCode.USER_INVALID_LOGIN,
-        errorCodes: ValidatorErrorCode,
-      });
+      if (error.code != 40102100) {
+        throw new CodeException({
+          status: HttpStatus.UNAUTHORIZED,
+          code: ValidatorErrorCode.USER_INVALID_LOGIN,
+          errorCodes: ValidatorErrorCode,
+        });
+      }
     }
+
+    // CASE 2 User does NOT EXIST - Access MS did not find it.
+    // ==> Create new user with random passowrd
+    const params = {
+      token: loginInfo.token,
+      password: uuidV4(),
+      projectService: this.projectService,
+      tokenType: JwtTokenType.USER_AUTHENTICATION,
+    };
+
+    return registerUser(params, context);
   }
 
   /**
@@ -214,9 +222,13 @@ export class UserService {
       });
     }
 
-    const token = generateJwtToken(JwtTokenType.USER_CONFIRM_EMAIL, {
-      email,
-    });
+    const token = generateJwtToken(
+      JwtTokenType.USER_CONFIRM_EMAIL,
+      {
+        email,
+      },
+      '1h',
+    );
 
     await new Mailing(context).sendMail({
       emails: [email],
@@ -241,103 +253,12 @@ export class UserService {
     data: RegisterUserDto,
     context: DevConsoleApiContext,
   ): Promise<any> {
-    const { token, password } = data;
-
-    const tokenData = parseJwtToken(JwtTokenType.USER_CONFIRM_EMAIL, token);
-
-    if (!tokenData?.email) {
-      throw new CodeException({
-        status: HttpStatus.UNAUTHORIZED,
-        code: UnauthorizedErrorCodes.INVALID_TOKEN,
-        errorCodes: UnauthorizedErrorCodes,
-      });
-    }
-
-    const email = tokenData.email;
-
-    const user: User = new User({}, context).populate({
-      user_uuid: uuidV4(),
-      email: tokenData.email,
-    });
-
-    try {
-      await user.validate();
-    } catch (err) {
-      await user.handle(err);
-      if (!user.isValid()) {
-        throw new ValidationException(user, ValidatorErrorCode);
-      }
-    }
-
-    const conn = await context.mysql.start();
-    let amsResponse;
-    try {
-      await user.insert(SerializeFor.INSERT_DB, conn);
-      amsResponse = await new Ams(context).register({
-        user_uuid: user.user_uuid,
-        email,
-        password,
-      });
-
-      user.setUserRolesFromAmsResponse(amsResponse);
-
-      await context.mysql.commit(conn);
-    } catch (err) {
-      // TODO: The context of this error is not correct. What happens if
-      //       ams fails? FE will see it as a DB write error, which is incorrect.
-      await context.mysql.rollback(conn);
-      throw err;
-    }
-    try {
-      // Create referral player - is inactive until accepts terms
-      const referralBody = new CreateReferralDto(
-        {
-          refCode: data?.refCode,
-        },
-        context,
-      );
-
-      await new ReferralMicroservice({
-        ...context,
-        user,
-      } as any).createPlayer(referralBody);
-    } catch (err) {
-      writeLog(
-        LogType.MSG,
-        `Error creating referral player${
-          data?.refCode ? ', refCode: ' + data?.refCode : ''
-        }`,
-        'user.service.ts',
-        'register',
-        err,
-      );
-    }
-
-    //User has been registered - check if pending invitations for project exists
-    //This is done outside transaction as it is not crucial operation - admin is able to reinvite user to project
-    try {
-      if (tokenData.hasPendingInvitation) {
-        await this.projectService.resolveProjectUserPendingInvitations(
-          context,
-          email,
-          user.id,
-          user.user_uuid,
-        );
-      }
-    } catch (err) {
-      writeLog(
-        LogType.MSG,
-        'Error resolving project user pending invitations',
-        'user.service.ts',
-        'register',
-        err,
-      );
-    }
-
-    return {
-      ...user.serialize(SerializeFor.PROFILE),
-      token: amsResponse.data.token,
+    const params = {
+      ...data,
+      projectService: this.projectService,
+      tokenType: JwtTokenType.USER_CONFIRM_EMAIL,
     };
+    return registerUser(params, context);
   }
 
   /**
@@ -485,10 +406,15 @@ export class UserService {
       // for security reason do not return error to FE
       return true;
     }
-
-    const token = generateJwtToken(JwtTokenType.USER_RESET_PASSWORD, {
+    
+    const token = generateJwtToken(
+      JwtTokenType.USER_RESET_PASSWORD,
+      {
       email: email,
-    });
+      },
+      '1h',
+      emailResult.data.authUser.password ? emailResult.data.authUser.password : undefined,
+    );
 
     await new Mailing(context).sendMail({
       emails: [email],
@@ -509,21 +435,8 @@ export class UserService {
    * @returns {Promise<boolean>} True if the password was reset successfully.
    */
   async resetPassword(context: Context, body: ResetPasswordDto) {
-    const tokenData = parseJwtToken(
-      JwtTokenType.USER_RESET_PASSWORD,
-      body.token,
-    );
-
-    if (!tokenData?.email) {
-      throw new CodeException({
-        status: HttpStatus.UNAUTHORIZED,
-        code: UnauthorizedErrorCodes.INVALID_TOKEN,
-        errorCodes: UnauthorizedErrorCodes,
-      });
-    }
-
     await new Ams(context).resetPassword({
-      email: tokenData.email,
+      token: body.token,
       password: body.password,
     });
 

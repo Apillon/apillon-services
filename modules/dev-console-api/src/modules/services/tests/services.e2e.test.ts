@@ -42,18 +42,18 @@ describe('Project services tests', () => {
   describe('Service CRUD tests', () => {
     test('User should be able to get project service list', async () => {
       const response = await request(stage.http)
-        .get(`/services?project_id=${testProject.id}`)
+        .get(`/services?project_uuid=${testProject.project_uuid}`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBe(1);
-      expect(response.body.data.items[0]?.id).toBeTruthy();
+      expect(response.body.data.items[0]?.id).toBeFalsy();
       expect(response.body.data.items[0]?.service_uuid).toBeTruthy();
       expect(response.body.data.items[0]?.serviceType_id).toBeTruthy();
     });
 
     test('User should NOT be able to get ANOTHER USER project service list', async () => {
       const response = await request(stage.http)
-        .get(`/services?project_id=${testProject2.id}`)
+        .get(`/services?project_uuid=${testProject2.project_uuid}`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(403);
     });
@@ -67,17 +67,17 @@ describe('Project services tests', () => {
 
     test('User should get 404 status if project does not exists', async () => {
       const response = await request(stage.http)
-        .get(`/services?project_id=555`)
+        .get(`/services?project_uuid=555`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(404);
     });
 
     test('User should be able to get service', async () => {
       const response = await request(stage.http)
-        .get(`/services/${testProjectService.id}`)
+        .get(`/services/${testProjectService.service_uuid}`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.data.id).toBeTruthy();
+      expect(response.body.data.id).toBeFalsy();
       expect(response.body.data.service_uuid).toBeTruthy();
       expect(response.body.data.serviceType_id).toBeTruthy();
     });
@@ -87,21 +87,21 @@ describe('Project services tests', () => {
         .get(`/services/555`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(404);
-      expect(response.body?.data?.id).toBeFalsy();
+      expect(response.body?.data?.service_uuid).toBeFalsy();
     });
 
     test('User should be able to create new service', async () => {
       const response = await request(stage.http)
         .post(`/services`)
         .send({
-          project_id: testProject.id,
+          project_uuid: testProject.project_uuid,
           name: 'Storage service',
           active: true,
           serviceType_id: AttachedServiceType.STORAGE,
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
-      expect(response.body.data.id).toBeTruthy();
+      expect(response.body.data.id).toBeFalsy();
       expect(response.body.data.service_uuid).toBeTruthy();
       expect(response.body.data.name).toBeTruthy();
       expect(response.body.data.serviceType_id).toBe(
@@ -111,28 +111,27 @@ describe('Project services tests', () => {
       const s: Service = await new Service(
         {},
         stage.devConsoleContext,
-      ).populateById(response.body.data.id);
+      ).populateByUUID(response.body.data.service_uuid);
 
       expect(s.exists()).toBeTruthy();
     });
 
     test('User should be able to update service', async () => {
       const response = await request(stage.http)
-        .patch(`/services/${testProjectService.id}`)
+        .patch(`/services/${testProjectService.service_uuid}`)
         .send({
           name: 'spremenjeno ime',
           active: false,
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.data.id).toBeTruthy();
       expect(response.body.data.name).toBe('spremenjeno ime');
       expect(response.body.data.active).toBeFalsy();
 
       const s: Service = await new Service(
         {},
         stage.devConsoleContext,
-      ).populateById(response.body.data.id);
+      ).populateByUUID(response.body.data.service_uuid);
 
       expect(s.exists()).toBeTruthy();
       expect(s.name).toBe('spremenjeno ime');
@@ -141,21 +140,21 @@ describe('Project services tests', () => {
 
     test('User should NOT be able to delete ANOTHER USER service', async () => {
       const response = await request(stage.http)
-        .delete(`/services/${testProjectService.id}`)
+        .delete(`/services/${testProjectService.service_uuid}`)
         .set('Authorization', `Bearer ${testUser2.token}`);
       expect(response.status).toBe(403);
     });
 
     test('User should be able to delete service', async () => {
       const response = await request(stage.http)
-        .delete(`/services/${testProjectService.id}`)
+        .delete(`/services/${testProjectService.service_uuid}`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
 
       const s: Service = await new Service(
         {},
         stage.devConsoleContext,
-      ).populateById(testProjectService.id);
+      ).populateByUUID(testProjectService.service_uuid);
 
       expect(s.exists()).toBeFalsy();
     });

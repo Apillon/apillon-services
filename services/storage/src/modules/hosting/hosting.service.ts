@@ -129,6 +129,23 @@ export class HostingService {
     }
     website.canModify(context);
 
+    //Check if domain was changed
+    if (event.data.domain && website.domain != event.data.domain) {
+      //Domain can be changed every 15 minutes
+      if (website.domainChangeDate) {
+        const domainChangeDate = new Date(website.domainChangeDate);
+        const currDate = new Date();
+        const difference = currDate.getTime() - domainChangeDate.getTime(); // This will give difference in milliseconds
+        if (Math.round(difference / 60000) < 15) {
+          throw new StorageCodeException({
+            code: StorageErrorCode.WEBSITE_DOMAIN_CHANGE_NOT_ALLOWED,
+            status: 400,
+          });
+        }
+      }
+      website.domainChangeDate = new Date();
+    }
+
     website.populate(event.data, PopulateFrom.PROFILE);
 
     try {
