@@ -9,7 +9,7 @@ import { PinToCrustRequest } from '../modules/crust/models/pin-to-crust-request.
 import { File } from '../modules/storage/models/file.model';
 import { PinToCrustWorker } from '../workers/pin-to-crust-worker';
 import { WorkerName } from '../workers/worker-executor';
-import { DbTables, FileStatus } from '../config/types';
+import { CrustPinningStatus, DbTables, FileStatus } from '../config/types';
 import { Directory } from '../modules/directory/models/directory.model';
 
 /**
@@ -50,6 +50,15 @@ export async function pinFileToCRUST(
         file.fileStatus = FileStatus.PINNED_TO_CRUST;
         await file.update();
       }
+    }
+    //If pinToCrustRequest was not successfully submitted to CRUST, reset status and number of executions. (PinToCrust worker will fetch this request and trigger pin to CRUST)
+    if (
+      pinToCrustRequest.pinningStatus == CrustPinningStatus.FAILED &&
+      pinToCrustRequest.numOfExecutions >= 5
+    ) {
+      pinToCrustRequest.pinningStatus = CrustPinningStatus.PENDING;
+      pinToCrustRequest.numOfExecutions = 0;
+      await pinToCrustRequest.update();
     }
   } else {
     pinToCrustRequest = new PinToCrustRequest({}, context).populate({
