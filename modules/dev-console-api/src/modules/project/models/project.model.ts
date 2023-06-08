@@ -25,6 +25,17 @@ import { DevConsoleApiContext } from '../../../context';
 export class Project extends AdvancedSQLModel {
   tableName = DbTables.PROJECT;
 
+  @prop({
+    parser: { resolver: integerParser() },
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+    ],
+    populatable: [PopulateFrom.DB],
+  })
+  public id: number;
+
   /**
    * Project's UUID
    */
@@ -33,6 +44,7 @@ export class Project extends AdvancedSQLModel {
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
+      SerializeFor.PROFILE,
       SerializeFor.INSERT_DB,
       SerializeFor.SELECT_DB,
     ],

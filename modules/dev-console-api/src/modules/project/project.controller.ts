@@ -10,7 +10,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { DefaultUserRole, ValidateFor } from '@apillon/lib';
+import { DefaultUserRole, SerializeFor, ValidateFor } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { ValidationGuard } from '../../guards/validation.guard';
@@ -40,7 +40,7 @@ export class ProjectController {
     return await this.projectService.isProjectsQuotaReached(context);
   }
 
-  @Post(':id/image')
+  @Post(':uuid/image')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -49,13 +49,13 @@ export class ProjectController {
   @UseGuards(AuthGuard, ValidationGuard)
   async updateProjectImage(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('uuid') uuid: string,
     @Body() body: File,
   ) {
-    return await this.projectService.updateProjectImage(context, id, body);
+    return await this.projectService.updateProjectImage(context, uuid, body);
   }
 
-  @Get(':id/users')
+  @Get(':uuid/users')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -65,13 +65,13 @@ export class ProjectController {
   @UseGuards(AuthGuard, ValidationGuard)
   async getProjectUsers(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('uuid') uuid: string,
     @Query() query: ProjectUserFilter,
   ) {
-    return await this.projectService.getProjectUsers(context, id, query);
+    return await this.projectService.getProjectUsers(context, uuid, query);
   }
 
-  @Post(':id/invite-user')
+  @Post(':uuid/invite-user')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -80,10 +80,10 @@ export class ProjectController {
   @UseGuards(AuthGuard, ValidationGuard)
   async inviteUserProject(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('uuid') uuid: string,
     @Body() body: ProjectUserInviteDto,
   ) {
-    return await this.projectService.inviteUserProject(context, id, body);
+    return await this.projectService.inviteUserProject(context, uuid, body);
   }
 
   @Patch('/user/:projectUserId')
@@ -118,7 +118,7 @@ export class ProjectController {
     return await this.projectService.removeUserProject(context, projectUserId);
   }
 
-  @Get(':id')
+  @Get(':uuid')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -128,9 +128,11 @@ export class ProjectController {
   @UseGuards(AuthGuard)
   async getProject(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('uuid') uuid: string,
   ) {
-    return await this.projectService.getProject(context, id);
+    return (await this.projectService.getProject(context, uuid)).serialize(
+      SerializeFor.PROFILE,
+    );
   }
 
   @Post()
@@ -142,10 +144,12 @@ export class ProjectController {
     @Ctx() context: DevConsoleApiContext,
     @Body() body: Project,
   ) {
-    return await this.projectService.createProject(context, body);
+    return (await this.projectService.createProject(context, body)).serialize(
+      SerializeFor.PROFILE,
+    );
   }
 
-  @Patch(':id')
+  @Patch(':uuid')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -153,9 +157,11 @@ export class ProjectController {
   @UseGuards(AuthGuard)
   async updateProject(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('uuid') uuid: string,
     @Body() body: any,
   ) {
-    return await this.projectService.updateProject(context, id, body);
+    return (
+      await this.projectService.updateProject(context, uuid, body)
+    ).serialize(SerializeFor.PROFILE);
   }
 }

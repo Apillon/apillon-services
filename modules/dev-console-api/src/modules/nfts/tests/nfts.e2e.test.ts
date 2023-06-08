@@ -176,7 +176,7 @@ describe('Storage bucket tests', () => {
       const transaction: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
-      ).getCollectionTransactions(newCollection.id, 1);
+      ).getCollectionTransactions(newCollection.id);
 
       expect(
         transaction.find((x) => x.transactionType == TransactionType.MINT_NFT),
@@ -198,7 +198,7 @@ describe('Storage bucket tests', () => {
       const transaction: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
-      ).getCollectionTransactions(newCollection.id, 1);
+      ).getCollectionTransactions(newCollection.id);
 
       expect(
         transaction.find(
@@ -206,6 +206,18 @@ describe('Storage bucket tests', () => {
             x.transactionType == TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
         ),
       ).toBeTruthy();
+    });
+
+    test('User should NOT be able to transfer NFT collection multiple times', async () => {
+      const response = await request(stage.http)
+        .post(
+          `/nfts/collections/${newCollection.collection_uuid}/transferOwnership`,
+        )
+        .send({
+          address: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(400);
     });
 
     test('User should NOT be able to Mint transferred collection', async () => {
@@ -451,7 +463,7 @@ describe('Storage bucket tests', () => {
       const transaction: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
-      ).getCollectionTransactions(newCollection.id, 1);
+      ).getCollectionTransactions(newCollection.id);
 
       expect(
         transaction.find((x) => x.transactionType == TransactionType.MINT_NFT),
@@ -473,7 +485,7 @@ describe('Storage bucket tests', () => {
       const transaction: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
-      ).getCollectionTransactions(newCollection.id, 1);
+      ).getCollectionTransactions(newCollection.id);
 
       expect(
         transaction.find(

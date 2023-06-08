@@ -12,7 +12,11 @@ import {
   TransactionStatus,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import { DbTables, NftsErrorCode } from '../../../config/types';
+import {
+  DbTables,
+  NftsErrorCode,
+  TransactionType,
+} from '../../../config/types';
 
 export class Transaction extends AdvancedSQLModel {
   public readonly tableName = DbTables.TRANSACTION;
@@ -168,7 +172,8 @@ export class Transaction extends AdvancedSQLModel {
 
   public async getCollectionTransactions(
     collection_id: number,
-    transactionStatus?: number,
+    transactionStatus: TransactionStatus = null,
+    transactionType: TransactionType = null,
   ): Promise<Transaction[]> {
     const data = await this.getContext().mysql.paramExecute(
       `
@@ -176,9 +181,10 @@ export class Transaction extends AdvancedSQLModel {
       FROM \`${this.tableName}\`
       WHERE status <> ${SqlModelStatus.DELETED}
       AND (@transactionStatus IS NULL OR transactionStatus = @transactionStatus)
+      AND (@transactionType IS NULL OR transactionType = @transactionType)
       AND refId = @collection_id
       `,
-      { transactionStatus, collection_id },
+      { transactionStatus, transactionType, collection_id },
     );
 
     const res: Transaction[] = [];
