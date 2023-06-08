@@ -364,27 +364,60 @@ export class UserService {
    * @returns {Promise<boolean>} True if the email was sent successfully.
    */
   async passwordResetRequest(context: Context, body: ValidateEmailDto) {
-    const res = await new Ams(context).emailExists(body.email);
+    const { email, captcha } = body;
+    let emailResult;
+    let captchaResult;
 
-    if (!res.data.result) {
+    const promises = [];
+    promises.push(
+      new Ams(context)
+        .emailExists(email)
+        .then((response) => (emailResult = response)),
+    );
+    if (env.CAPTCHA_SECRET && env.APP_ENV !== AppEnvironment.TEST) {
+      promises.push(
+        verifyCaptcha(captcha?.token, env.CAPTCHA_SECRET).then(
+          (response) => (captchaResult = response),
+        ),
+      );
+    } /*else {
       throw new CodeException({
-        status: HttpStatus.NOT_FOUND,
-        code: ResourceNotFoundErrorCode.USER_EMAIL_NOT_EXISTS,
-        errorCodes: ResourceNotFoundErrorCode,
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        code: ValidatorErrorCode.CAPTCHA_NOT_PRESENT,
+        errorCodes: ValidatorErrorCode,
+      });
+    }*/
+
+    await Promise.all(promises);
+
+    if (
+      env.CAPTCHA_SECRET &&
+      env.APP_ENV !== AppEnvironment.TEST &&
+      !captchaResult
+    ) {
+      throw new CodeException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        code: ValidatorErrorCode.CAPTCHA_CHALLENGE_INVALID,
+        errorCodes: ValidatorErrorCode,
       });
     }
 
+    if (emailResult.data.result !== true) {
+      // for security reason do not return error to FE
+      return true;
+    }
+    
     const token = generateJwtToken(
       JwtTokenType.USER_RESET_PASSWORD,
       {
-        email: body.email,
+      email: email,
       },
       '1h',
-      res.data.authUser.password ? res.data.authUser.password : undefined,
+      emailResult.data.authUser.password ? emailResult.data.authUser.password : undefined,
     );
 
     await new Mailing(context).sendMail({
-      emails: [body.email],
+      emails: [email],
       // subject: 'Apillon password reset',
       template: 'reset-password',
       data: {
@@ -441,19 +474,13 @@ export class UserService {
 
     try {
       await user.update(SerializeFor.UPDATE_DB, conn);
-      //Call access MS to update auth user
-      await new Ams(context).updateAuthUser({
-        user_uuid: context.user.user_uuid,
-        wallet: body.wallet,
-      });
-
       await context.mysql.commit(conn);
     } catch (err) {
       await context.mysql.rollback(conn);
       throw err;
     }
 
-    return user.serialize(SerializeFor.PROFILE);
+    return user;
   }
 
   /**
