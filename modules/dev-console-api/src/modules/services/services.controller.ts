@@ -10,7 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
-import { DefaultUserRole, ValidateFor } from '@apillon/lib';
+import { DefaultUserRole, SerializeFor, ValidateFor } from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
@@ -49,7 +49,9 @@ export class ServicesController {
     @Ctx() context: DevConsoleApiContext,
     @Param('uuid') uuid: string,
   ) {
-    return await this.serviceService.getService(context, uuid);
+    return (await this.serviceService.getService(context, uuid)).serialize(
+      SerializeFor.PROFILE,
+    );
   }
 
   @Post()
@@ -63,7 +65,9 @@ export class ServicesController {
     @Ctx() context: DevConsoleApiContext,
     @Body() body: ServiceDto,
   ) {
-    return await this.serviceService.createService(context, body);
+    return (await this.serviceService.createService(context, body)).serialize(
+      SerializeFor.PROFILE,
+    );
   }
 
   @Patch(':uuid')
@@ -77,7 +81,9 @@ export class ServicesController {
     @Param('uuid') uuid: string,
     @Body() body: any,
   ) {
-    return await this.serviceService.updateService(context, uuid, body);
+    return (
+      await this.serviceService.updateService(context, uuid, body)
+    ).serialize(SerializeFor.PROFILE);
   }
 
   @Delete(':uuid')
@@ -90,6 +96,8 @@ export class ServicesController {
     @Ctx() context: DevConsoleApiContext,
     @Param('uuid') uuid: string,
   ) {
-    return await this.serviceService.deleteService(context, uuid);
+    return (await this.serviceService.deleteService(context, uuid)).serialize(
+      SerializeFor.PROFILE,
+    );
   }
 }

@@ -122,14 +122,21 @@ export class PinToCrustWorker extends ServerlessWorker {
         : 5,
       this.context,
       async (data) => {
-        const pinToCrustRequest: PinToCrustRequest = new PinToCrustRequest(
-          data,
-          this.context,
-        );
-        pinToCrustRequest.renewalDate = new Date();
-        pinToCrustRequest.pinningStatus = CrustPinningStatus.PENDING;
-        pinToCrustRequest.numOfExecutions = 0;
-        await pinToCrustRequest.update();
+        try {
+          const pinToCrustRequest: PinToCrustRequest = new PinToCrustRequest(
+            data,
+            this.context,
+          );
+          pinToCrustRequest.renewalDate = new Date();
+          pinToCrustRequest.pinningStatus = CrustPinningStatus.PENDING;
+          pinToCrustRequest.numOfExecutions = 0;
+          await pinToCrustRequest.update();
+        } catch (err) {
+          console.error(
+            'Error updating renewal date of PinToCrustRequest',
+            err,
+          );
+        }
       },
     );
 

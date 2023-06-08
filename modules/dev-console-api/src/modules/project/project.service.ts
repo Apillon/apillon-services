@@ -41,7 +41,7 @@ export class ProjectService {
   async createProject(
     context: DevConsoleApiContext,
     body: Project,
-  ): Promise<any> {
+  ): Promise<Project> {
     //Check max project quota
     if (await this.isProjectsQuotaReached(context)) {
       throw new CodeException({
@@ -84,7 +84,7 @@ export class ProjectService {
         service: ServiceName.DEV_CONSOLE,
       });
 
-      return project.serialize(SerializeFor.PROFILE);
+      return project;
     } catch (err) {
       await context.mysql.rollback(conn);
       throw err;
@@ -102,7 +102,10 @@ export class ProjectService {
     );
   }
 
-  async getProject(context: DevConsoleApiContext, uuid: string): Promise<any> {
+  async getProject(
+    context: DevConsoleApiContext,
+    uuid: string,
+  ): Promise<Project> {
     const project: Project = await new Project({}, context).populateByUUID(
       uuid,
     );
@@ -119,14 +122,14 @@ export class ProjectService {
     //Populate user role on this project
     await project.populateMyRoleOnProject(context);
 
-    return project.serialize(SerializeFor.PROFILE);
+    return project;
   }
 
   async updateProject(
     context: DevConsoleApiContext,
     uuid: string,
     data: any,
-  ): Promise<any> {
+  ): Promise<Project> {
     const project: Project = await new Project({}, context).populateByUUID(
       uuid,
     );
@@ -153,7 +156,7 @@ export class ProjectService {
     }
 
     await project.update();
-    return project.serialize(SerializeFor.PROFILE);
+    return project;
   }
 
   async getUserProjects(context: DevConsoleApiContext) {

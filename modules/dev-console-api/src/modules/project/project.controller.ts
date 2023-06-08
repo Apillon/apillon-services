@@ -10,7 +10,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { DefaultUserRole, ValidateFor } from '@apillon/lib';
+import { DefaultUserRole, SerializeFor, ValidateFor } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { ValidationGuard } from '../../guards/validation.guard';
@@ -130,7 +130,9 @@ export class ProjectController {
     @Ctx() context: DevConsoleApiContext,
     @Param('uuid') uuid: string,
   ) {
-    return await this.projectService.getProject(context, uuid);
+    return (await this.projectService.getProject(context, uuid)).serialize(
+      SerializeFor.PROFILE,
+    );
   }
 
   @Post()
@@ -142,7 +144,9 @@ export class ProjectController {
     @Ctx() context: DevConsoleApiContext,
     @Body() body: Project,
   ) {
-    return await this.projectService.createProject(context, body);
+    return (await this.projectService.createProject(context, body)).serialize(
+      SerializeFor.PROFILE,
+    );
   }
 
   @Patch(':uuid')
@@ -156,6 +160,8 @@ export class ProjectController {
     @Param('uuid') uuid: string,
     @Body() body: any,
   ) {
-    return await this.projectService.updateProject(context, uuid, body);
+    return (
+      await this.projectService.updateProject(context, uuid, body)
+    ).serialize(SerializeFor.PROFILE);
   }
 }

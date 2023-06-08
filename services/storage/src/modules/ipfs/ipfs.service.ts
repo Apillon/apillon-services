@@ -426,6 +426,7 @@ export class IPFSService {
         'ipfs.service.ts',
         'pinCidToCluster',
       );
+      return;
     }
     try {
       await axios.post(

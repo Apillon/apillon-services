@@ -28,7 +28,10 @@ export class ServicesService {
    * @param {string} uuid - The ID of the service to retrieve.
    * @returns {Promise<any>} - The retrieved service.
    */
-  async getService(context: DevConsoleApiContext, uuid: string) {
+  async getService(
+    context: DevConsoleApiContext,
+    uuid: string,
+  ): Promise<Service> {
     const service: Service = await new Service({}, context).populateByUUID(
       uuid,
     );
@@ -41,7 +44,7 @@ export class ServicesService {
     }
     await service.canAccess(context);
 
-    return service.serialize(SerializeFor.PROFILE);
+    return service;
   }
 
   /**
@@ -68,7 +71,7 @@ export class ServicesService {
   async createService(
     context: DevConsoleApiContext,
     body: ServiceDto,
-  ): Promise<any> {
+  ): Promise<Service> {
     //Check if project exists & user has required role on it
     const project: Project = await new Project({}, context).populateByUUID(
       body.project_uuid,
@@ -95,7 +98,7 @@ export class ServicesService {
       service: ServiceName.DEV_CONSOLE,
     });
 
-    return service.serialize(SerializeFor.PROFILE);
+    return service;
   }
 
   /**
@@ -110,7 +113,7 @@ export class ServicesService {
     context: DevConsoleApiContext,
     uuid: string,
     data: any,
-  ): Promise<any> {
+  ): Promise<Service> {
     const service: Service = await new Service({}, context).populateByUUID(
       uuid,
     );
@@ -135,7 +138,7 @@ export class ServicesService {
     }
 
     await service.update();
-    return service.serialize(SerializeFor.PROFILE);
+    return service;
   }
 
   /**
@@ -148,7 +151,7 @@ export class ServicesService {
   async deleteService(
     context: DevConsoleApiContext,
     uuid: string,
-  ): Promise<any> {
+  ): Promise<Service> {
     const service: Service = await new Service({}, context).populateByUUID(
       uuid,
     );
@@ -162,6 +165,6 @@ export class ServicesService {
     await service.canModify(context);
 
     await service.markDeleted();
-    return service.serialize(SerializeFor.PROFILE);
+    return service;
   }
 }
