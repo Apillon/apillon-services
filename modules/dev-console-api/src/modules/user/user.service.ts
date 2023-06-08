@@ -561,19 +561,13 @@ export class UserService {
 
     try {
       await user.update(SerializeFor.UPDATE_DB, conn);
-      //Call access MS to update auth user
-      await new Ams(context).updateAuthUser({
-        user_uuid: context.user.user_uuid,
-        wallet: body.wallet,
-      });
-
       await context.mysql.commit(conn);
     } catch (err) {
       await context.mysql.rollback(conn);
       throw err;
     }
 
-    return user.serialize(SerializeFor.PROFILE);
+    return user;
   }
 
   /**
