@@ -186,9 +186,9 @@ export class AuthUser extends AdvancedSQLModel {
     const res = await this.db().paramExecute(
       `
       SELECT * FROM authUser
-      WHERE email = @email
+      WHERE email = @email AND status = @status
     `,
-      { email },
+      { email, status: SqlModelStatus.ACTIVE },
       conn,
     );
 
@@ -237,9 +237,6 @@ export class AuthUser extends AdvancedSQLModel {
       expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
     };
 
-    console.log('THIS TOKEN: ', this.token);
-    console.log('TOKEN DATA: ', tokenData);
-
     authToken.populate(tokenData, PopulateFrom.SERVICE);
 
     try {
@@ -253,24 +250,18 @@ export class AuthUser extends AdvancedSQLModel {
       const oldToken = await new AuthToken({}, context).populateByUserAndType(
         this.user_uuid,
         JwtTokenType.USER_AUTHENTICATION,
+        conn,
       );
 
-      console.log('THIS USER_UUID: ', this.user_uuid);
-      console.log('TOKEN TYPE: ', JwtTokenType.USER_AUTHENTICATION);
-      console.log('FOUND OLD TOKEN: ', oldToken);
-
       if (oldToken.exists()) {
-        console.log('UPDATING OLD TOKEN: ', oldToken.toString());
+        console.log('Deleting old token ...');
         oldToken.status = SqlModelStatus.DELETED;
-        await oldToken.update(SerializeFor.UPDATE_DB);
+        await oldToken.update(SerializeFor.UPDATE_DB, conn);
       }
 
-      // console.log('UPDATING EXISTING TOKEN: ', oldToken.toString());
-      await authToken.insert(SerializeFor.INSERT_DB);
+      await authToken.insert(SerializeFor.INSERT_DB, conn);
 
       await context.mysql.commit(conn);
-
-      // console.log('Connection3 ', conn);
     } catch (err) {
       await context.mysql.rollback(conn);
       throw await new AmsCodeException({

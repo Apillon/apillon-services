@@ -100,29 +100,9 @@ export class AuthToken extends AdvancedSQLModel {
           AND at.tokenType = @tokenType
           AND at.status = ${SqlModelStatus.ACTIVE}
         LIMIT 1
+        FOR UPDATE;
         `,
       { user_uuid, tokenType },
-      conn,
-    );
-
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    }
-    return this.reset();
-  }
-
-  /**
-   * Returns auth token by uuid
-   */
-  public async populateByTokenHash(tokenHash: string, conn?: PoolConnection) {
-    const data = await this.db().paramExecute(
-      `
-        SELECT *
-        FROM \`${DbTables.AUTH_TOKEN}\` at
-        WHERE at.tokenHash = @tokenHash
-        LIMIT 1
-        `,
-      { tokenHash },
       conn,
     );
 
