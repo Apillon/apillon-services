@@ -33,6 +33,7 @@ import {
   Did,
   Credential,
   Utils,
+  SubmittableExtrinsic,
 } from '@kiltprotocol/sdk-js';
 import * as validUrl from 'valid-url';
 import { hexToU8a, u8aToHex } from '@polkadot/util';
@@ -61,6 +62,7 @@ import {
   getFullDidDocument,
 } from '../../lib/kilt';
 import { AuthenticationCodeException } from '../../lib/exceptions';
+import { sendIdentityCreateTx } from '../../lib/utils/identity-utils';
 
 export class IdentityMicroservice {
   static async sendVerificationEmail(
@@ -217,7 +219,7 @@ export class IdentityMicroservice {
 
     // DID
     const attesterDidDoc = await getFullDidDocument(attesterKeypairs);
-    const attesterDidUri = attesterDidDoc.uri;
+    // const attesterDidUri = attesterDidDoc.uri;
 
     // Init Kilt essentials
     await connect(env.KILT_NETWORK);
@@ -253,49 +255,22 @@ export class IdentityMicroservice {
       const data = hexToU8a(payload.data);
       const signature = hexToU8a(payload.signature);
 
-      // Create DID create type and submit tx to Kilt BC
-      try {
-        const fullDidCreationTx = api.tx.did.create(data, {
-          sr25519: signature,
-        });
+      const didCreationTx: SubmittableExtrinsic = api.tx.did.create(data, {
+        sr25519: signature,
+      });
 
-        console.log('Propagating DID create TX to KILT BC ...');
-        await new Lmas().writeLog({
-          logType: LogType.INFO,
-          message: `Propagating DID create TX to KILT BC ...`,
-          location: 'AUTHENTICATION-API/identity/authentication.worker',
-          service: ServiceName.AUTHENTICATION_API,
-          data: { email: params.email, didUri: params.didUri },
-        });
+      console.log('Sending DID create TX to BCS ...');
+      await new Lmas().writeLog({
+        logType: LogType.INFO,
+        message: `Sending DID create TX to BCS ...'`,
+        location: 'AUTHENTICATION-API/identity/authentication.worker',
+        service: ServiceName.AUTHENTICATION_API,
+        data: { email: params.email, didUri: params.didUri },
+      });
 
-        // await Blockchain.signAndSubmitTx(fullDidCreationTx, attesterAcc);
-      } catch (error) {
-        if (error.method == 'DidAlreadyPresent') {
-          // If DID present on chain, signAndSubmitTx will throw an error
-          await new Lmas().writeLog({
-            logType: LogType.INFO, //!! This is NOT an error !!
-            message: `${error.method}: ${error.docs[0]}`,
-            location: 'Authentication-API/identity/authentication.worker',
-            service: ServiceName.AUTHENTICATION_API,
-            data: {
-              email: params.email,
-              didUri: params.didUri,
-            },
-          });
-        } else {
-          await new Lmas().writeLog({
-            message: error,
-            logType: LogType.ERROR,
-            location: 'Authentication-API/identity/authentication.worker',
-            service: ServiceName.AUTHENTICATION_API,
-            data: {
-              email: params.email,
-              didUri: params.didUri,
-            },
-          });
-          throw error;
-        }
-      }
+      await sendIdentityCreateTx(context, identity, didCreationTx);
+
+      // await Blockchain.signAndSubmitTx(didCreationTx, attesterAcc);
     } else {
       console.error('Decryption failed  ...');
       throw new AuthenticationCodeException({

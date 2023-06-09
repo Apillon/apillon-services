@@ -199,6 +199,12 @@ export interface DidCreateOp {
   senderPubKey: string;
 }
 
+export enum TransactionType {
+  DID_CREATE_TX = 1,
+  ATTESTATION_TX = 2,
+  REVOKE_TX = 3,
+}
+
 // Sporran specifics
 export const APILLON_DAPP_NAME = 'ApillonDApp';
 // END
