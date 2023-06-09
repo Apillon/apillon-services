@@ -22,6 +22,7 @@ import {
   APILLON_VERIFIABLECREDENTIAL_TYPE,
   IdentityGenFlag,
   HttpStatus,
+  DidCreateOp,
 } from '../../config/types';
 
 import { KiltKeyringPair, SignExtrinsicCallback } from '@kiltprotocol/types';
@@ -57,6 +58,7 @@ import {
   generateKeypairs,
   generateMnemonic,
   getCtypeSchema,
+  getFullDidDocument,
 } from '../../lib/kilt';
 import { AuthenticationCodeException } from '../../lib/exceptions';
 
@@ -173,18 +175,16 @@ export class IdentityMicroservice {
   }
 
   static async generateIdentity(event: { body: IdentityCreateDto }, context) {
-    // Worker input parameters
-    const parameters = {
-      did_create_op: event.body.did_create_op,
+    const params = {
+      did_create_op: event.body.did_create_op as DidCreateOp,
       email: event.body.email,
       didUri: event.body.didUri,
-      args: [IdentityGenFlag.FULL_IDENTITY],
     };
 
     // Check if correct identity + state exists -> IN_PROGRESS
     const identity = await new Identity({}, context).populateByUserEmail(
       context,
-      parameters.email,
+      params.email,
     );
 
     if (
@@ -206,7 +206,103 @@ export class IdentityMicroservice {
       state: IdentityState.IDENTITY_VERIFIED,
     });
 
+    // Single transaction locks the pro
     await identity.update();
+
+    // Generate (retrieve) attester did data
+    const attesterKeypairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
+    const attesterAcc = (await generateAccount(
+      env.KILT_ATTESTER_MNEMONIC,
+    )) as KiltKeyringPair;
+
+    // DID
+    const attesterDidDoc = await getFullDidDocument(attesterKeypairs);
+    const attesterDidUri = attesterDidDoc.uri;
+
+    // Init Kilt essentials
+    await connect(env.KILT_NETWORK);
+    const api = ConfigService.get('api');
+
+    let decrypted: any;
+    try {
+      // Decrypt incoming payload -> DID creation TX generated on FE
+      decrypted = Utils.Crypto.decryptAsymmetricAsStr(
+        {
+          box: hexToU8a(params.did_create_op.payload.message),
+          nonce: hexToU8a(params.did_create_op.payload.nonce),
+        },
+        params.did_create_op.senderPubKey,
+        u8aToHex(attesterKeypairs.keyAgreement.secretKey),
+      );
+    } catch (error) {
+      await new Lmas().writeLog({
+        message: error,
+        logType: LogType.ERROR,
+        location: 'Authentication-API/identity/authentication.worker',
+        service: ServiceName.AUTHENTICATION_API,
+        data: { email: params.email, didUri: params.didUri, error: error },
+      });
+      throw new AuthenticationCodeException({
+        code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    if (decrypted) {
+      const payload = JSON.parse(decrypted);
+      const data = hexToU8a(payload.data);
+      const signature = hexToU8a(payload.signature);
+
+      // Create DID create type and submit tx to Kilt BC
+      try {
+        const fullDidCreationTx = api.tx.did.create(data, {
+          sr25519: signature,
+        });
+
+        console.log('Propagating DID create TX to KILT BC ...');
+        await new Lmas().writeLog({
+          logType: LogType.INFO,
+          message: `Propagating DID create TX to KILT BC ...`,
+          location: 'AUTHENTICATION-API/identity/authentication.worker',
+          service: ServiceName.AUTHENTICATION_API,
+          data: { email: params.email, didUri: params.didUri },
+        });
+
+        // await Blockchain.signAndSubmitTx(fullDidCreationTx, attesterAcc);
+      } catch (error) {
+        if (error.method == 'DidAlreadyPresent') {
+          // If DID present on chain, signAndSubmitTx will throw an error
+          await new Lmas().writeLog({
+            logType: LogType.INFO, //!! This is NOT an error !!
+            message: `${error.method}: ${error.docs[0]}`,
+            location: 'Authentication-API/identity/authentication.worker',
+            service: ServiceName.AUTHENTICATION_API,
+            data: {
+              email: params.email,
+              didUri: params.didUri,
+            },
+          });
+        } else {
+          await new Lmas().writeLog({
+            message: error,
+            logType: LogType.ERROR,
+            location: 'Authentication-API/identity/authentication.worker',
+            service: ServiceName.AUTHENTICATION_API,
+            data: {
+              email: params.email,
+              didUri: params.didUri,
+            },
+          });
+          throw error;
+        }
+      }
+    } else {
+      console.error('Decryption failed  ...');
+      throw new AuthenticationCodeException({
+        code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
 
     if (
       env.APP_ENV == AppEnvironment.LOCAL_DEV ||
@@ -225,7 +321,7 @@ export class IdentityMicroservice {
         serviceDef,
         WorkerName.IDENTITY_GENERATE_WORKER,
         {
-          parameters,
+          parameters: params,
         },
       );
 
@@ -234,7 +330,7 @@ export class IdentityMicroservice {
         context,
         QueueWorkerType.EXECUTOR,
       );
-      await worker.runExecutor(parameters);
+      await worker.runExecutor(params);
     } else {
       console.log('Starting WORKER');
 
@@ -243,7 +339,7 @@ export class IdentityMicroservice {
         await sendToWorkerQueue(
           env.AUTH_AWS_WORKER_SQS_URL,
           WorkerName.IDENTITY_GENERATE_WORKER,
-          [parameters],
+          [params],
           null,
           null,
         );

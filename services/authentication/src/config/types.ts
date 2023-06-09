@@ -8,6 +8,7 @@ export enum HttpStatus {
 
 export enum DbTables {
   IDENTITY = 'identity',
+  TRANSACTION = 'transaction',
 }
 
 export const enum Attester {
@@ -186,6 +187,16 @@ export interface ApillonSelfSignedProof extends Proof {
   verificationMethod: IPublicKeyRecord['id'] | IPublicKeyRecord;
   signature: string;
   challenge?: string;
+}
+
+interface DidPayload {
+  message: string;
+  nonce: string;
+}
+
+export interface DidCreateOp {
+  payload: DidPayload;
+  senderPubKey: string;
 }
 
 // Sporran specifics
