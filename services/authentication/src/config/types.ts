@@ -1,39 +1,16 @@
 import { VerificationKeyRelationship, DidUri } from '@kiltprotocol/types';
 import { IPublicKeyRecord, Proof } from '@kiltprotocol/vc-export';
 
-export enum HttpStatus {
-  BAD_REQUEST = 400,
-  NOT_FOUND = 404,
-}
-
 export enum DbTables {
   IDENTITY = 'identity',
   TRANSACTION = 'transaction',
-}
-
-export const enum Attester {
-  APILLON = 'Apillon',
-}
-
-export const enum KiltSignAlgorithm {
-  SR25519 = 'sr25519',
-  ED25519 = 'ed25519',
-  X25519 = 'x25519',
-}
-export enum KiltDerivationPaths {
-  AUTHENTICATION = '//did//0',
-  ASSERTION = '//did//assertion//0', // Attestation
-  CAPABILITY_DELEGATION = '//did//delegation//0',
-  KEY_AGREEMENT = '//did//keyAgreement//0',
 }
 
 /**
  * Validation error codes - 42213000.
  */
 export enum AuthenticationErrorCode {
-  // TODO: Review correct code order (in the end)
   DEFAULT_VALIDATION_ERROR = 42213000,
-  // This is the same as the error codes from the console-api
   USER_EMAIL_ALREADY_TAKEN = 422130001,
   USER_EMAIL_NOT_PRESENT = 422130002,
   USER_EMAIL_NOT_VALID = 422130003,
@@ -70,6 +47,22 @@ export enum AuthenticationErrorCode {
   // Sporran verifier key-agreement does not exit
   SPORRAN_VERIFIER_KA_DOES_NOT_EXIST = 422130407,
   SPORRAN_REQUEST_MESSAGE_NOT_PRESENT = 422130407,
+  // Blockchain service integration
+  TRANSACTION_CHAIN_ID_NOT_PRESENT = 422130501,
+  TRANSACTION_TYPE_NOT_PRESENT = 422130502,
+  TRANSACTION_RAW_TRANSACTION_NOT_PRESENT = 422130503,
+}
+
+/**
+ * Resource not found error codes - 40413000.
+ */
+export enum ResourceNotFoundErrorCode {
+  DEFAULT_RESOURCE_NOT_FOUND_ERROR = 404130000,
+}
+
+export enum HttpStatus {
+  BAD_REQUEST = 400,
+  NOT_FOUND = 404,
 }
 
 // Well known did domain linkage Ctype required props
@@ -78,11 +71,20 @@ export const APILLON_VERIFIABLECREDENTIAL_TYPE = 'ApillonCredential2023';
 export const DEFAULT_VERIFIABLECREDENTIAL_TYPE = 'VerifiableCredential';
 export declare const APILLON_SELF_SIGNED_PROOF_TYPE = 'ApillonSelfSigned2020';
 
-/**
- * Resource not found error codes - 40413000.
- */
-export enum ResourceNotFoundErrorCode {
-  DEFAULT_RESOURCE_NOT_FOUND_ERROR = 404130000,
+export const enum Attester {
+  APILLON = 'Apillon',
+}
+
+export const enum KiltSignAlgorithm {
+  SR25519 = 'sr25519',
+  ED25519 = 'ed25519',
+  X25519 = 'x25519',
+}
+export enum KiltDerivationPaths {
+  AUTHENTICATION = '//did//0',
+  ASSERTION = '//did//assertion//0', // Attestation
+  CAPABILITY_DELEGATION = '//did//delegation//0',
+  KEY_AGREEMENT = '//did//keyAgreement//0',
 }
 
 export enum IdentityState {
@@ -120,11 +122,7 @@ export enum AuthApiEmailType {
   REVOKE_DID = 'revoke-did',
 }
 
-/************************************************************
- * Kilt types
- ************************************************************/
 export interface Presentation {
-  // TODO: REVIREW
   claim: any;
   legitimations: any;
   claimHashes: any;
@@ -148,14 +146,6 @@ export interface SignRequestData {
    */
   did: DidUri;
 }
-
-// TODO: Deprecated
-// export interface Keypairs {
-//   authentication: KiltKeyringPair;
-//   keyAgreement: NewDidEncryptionKey;
-//   assertion: KiltKeyringPair;
-//   delegation: KiltKeyringPair;
-// }
 
 // TODO: Remove identity prefix
 export enum AuthAppErrors {
@@ -189,6 +179,8 @@ export interface ApillonSelfSignedProof extends Proof {
   challenge?: string;
 }
 
+export const APILLON_DAPP_NAME = 'ApillonDApp';
+
 interface DidPayload {
   message: string;
   nonce: string;
@@ -200,11 +192,7 @@ export interface DidCreateOp {
 }
 
 export enum TransactionType {
-  DID_CREATE_TX = 1,
-  ATTESTATION_TX = 2,
-  REVOKE_TX = 3,
+  DID_CREATE = 1,
+  ATTESTATION = 2,
+  REVOKE = 3,
 }
-
-// Sporran specifics
-export const APILLON_DAPP_NAME = 'ApillonDApp';
-// END

@@ -18,7 +18,7 @@ import { SubmittableExtrinsic } from '@kiltprotocol/sdk-js';
 export async function sendIdentityCreateTx(
   context: ServiceContext,
   identity: Identity,
-  transation: SubmittableExtrinsic,
+  transaction: SubmittableExtrinsic,
 ) {
   await new Lmas().writeLog({
     logType: LogType.INFO,
@@ -34,23 +34,18 @@ export async function sendIdentityCreateTx(
     new CreateSubstrateTransactionDto(
       {
         chain: SubstrateChain.KILT,
-        transaction: transation,
+        transaction: transaction,
         referenceTable: DbTables.IDENTITY,
         referenceId: identity.id,
       },
       context,
     );
 
-  const response = await new BlockchainMicroservice(
-    context,
-  ).createSubstrateTransaction(blockchainServiceRequest);
-
   dbTxRecord.populate({
     chainId: SubstrateChain.KILT,
-    transactionType: TransactionType.DID_CREATE_TX,
+    transactionType: TransactionType.DID_CREATE,
     refTable: DbTables.IDENTITY,
     refId: identity.id,
-    transactionHash: response.data.transactionHash,
     transactionStatus: TransactionStatus.PENDING,
   });
 
@@ -60,6 +55,9 @@ export async function sendIdentityCreateTx(
   identity.state = IdentityState.IN_PROGRESS;
   await identity.update(SerializeFor.UPDATE_DB, conn);
 
-  // Commit the transaction to DB
   await conn.commit();
+
+  await new BlockchainMicroservice(context).createSubstrateTransaction(
+    blockchainServiceRequest,
+  );
 }

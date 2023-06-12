@@ -24,4 +24,28 @@
           });
           throw error;
         }
-      }
+    
+
+
+  const blockchainServiceRequest: CreateSubstrateTransactionDto =
+    new CreateSubstrateTransactionDto(
+      {
+        chain: SubstrateChain.KILT,
+        transaction: transation,
+        referenceTable: DbTables.IDENTITY,
+        referenceId: identity.id,
+      },
+      context,
+    );
+
+  const response = await new BlockchainMicroservice(
+    context,
+  ).createSubstrateTransaction(blockchainServiceRequest);
+
+      const attesterAcc = (await generateAccount(
+      env.KILT_ATTESTER_MNEMONIC,
+    )) as KiltKeyringPair;
+
+    // DID
+    const attesterDidDoc = await getFullDidDocument(attesterKeypairs);
+    // const attesterDidUri = attesterDidDoc.uri;

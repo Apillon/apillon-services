@@ -7,7 +7,7 @@ import {
   SerializeFor,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import { DbTables, NftsErrorCode } from '../../../config/types';
+import { DbTables, AuthenticationErrorCode } from '../../../config/types';
 
 export class TransactionDTO extends ModelBase {
   public readonly tableName = DbTables.TRANSACTION;
@@ -23,7 +23,7 @@ export class TransactionDTO extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: NftsErrorCode.TRANSACTION_CHAIN_ID_NOT_PRESENT,
+        code: AuthenticationErrorCode.TRANSACTION_CHAIN_ID_NOT_PRESENT,
       },
     ],
   })
@@ -36,7 +36,7 @@ export class TransactionDTO extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: NftsErrorCode.TRANSACTION_TYPE_NOT_PRESENT,
+        code: AuthenticationErrorCode.TRANSACTION_TYPE_NOT_PRESENT,
       },
     ],
   })
@@ -49,7 +49,7 @@ export class TransactionDTO extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: NftsErrorCode.TRANSACTION_RAW_TRANSACTION_NOT_PRESENT,
+        code: AuthenticationErrorCode.TRANSACTION_RAW_TRANSACTION_NOT_PRESENT,
       },
     ],
   })

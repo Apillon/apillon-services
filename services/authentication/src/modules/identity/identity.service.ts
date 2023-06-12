@@ -20,7 +20,6 @@ import {
   ApillonSelfSignedProof,
   DEFAULT_VERIFIABLECREDENTIAL_TYPE,
   APILLON_VERIFIABLECREDENTIAL_TYPE,
-  IdentityGenFlag,
   HttpStatus,
   DidCreateOp,
 } from '../../config/types';
@@ -59,7 +58,6 @@ import {
   generateKeypairs,
   generateMnemonic,
   getCtypeSchema,
-  getFullDidDocument,
 } from '../../lib/kilt';
 import { AuthenticationCodeException } from '../../lib/exceptions';
 import { sendIdentityCreateTx } from '../../lib/utils/identity-utils';
@@ -213,13 +211,6 @@ export class IdentityMicroservice {
 
     // Generate (retrieve) attester did data
     const attesterKeypairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
-    const attesterAcc = (await generateAccount(
-      env.KILT_ATTESTER_MNEMONIC,
-    )) as KiltKeyringPair;
-
-    // DID
-    const attesterDidDoc = await getFullDidDocument(attesterKeypairs);
-    // const attesterDidUri = attesterDidDoc.uri;
 
     // Init Kilt essentials
     await connect(env.KILT_NETWORK);
@@ -269,59 +260,12 @@ export class IdentityMicroservice {
       });
 
       await sendIdentityCreateTx(context, identity, didCreationTx);
-
-      // await Blockchain.signAndSubmitTx(didCreationTx, attesterAcc);
     } else {
       console.error('Decryption failed  ...');
       throw new AuthenticationCodeException({
         code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
         status: HttpStatus.BAD_REQUEST,
       });
-    }
-
-    if (
-      env.APP_ENV == AppEnvironment.LOCAL_DEV ||
-      env.APP_ENV == AppEnvironment.TEST
-    ) {
-      console.log('Starting DEV IdentityGenerateWorker worker ...');
-
-      // Directly calls Kilt worker -> USED ONLY FOR DEVELOPMENT!!
-      const serviceDef: ServiceDefinition = {
-        type: ServiceDefinitionType.SQS,
-        config: { region: 'test' },
-        params: { FunctionName: 'test' },
-      };
-
-      const wd = new WorkerDefinition(
-        serviceDef,
-        WorkerName.IDENTITY_GENERATE_WORKER,
-        {
-          parameters: params,
-        },
-      );
-
-      const worker = new IdentityGenerateWorker(
-        wd,
-        context,
-        QueueWorkerType.EXECUTOR,
-      );
-      await worker.runExecutor(params);
-    } else {
-      console.log('Starting WORKER');
-
-      try {
-        //send message to SQS
-        await sendToWorkerQueue(
-          env.AUTH_AWS_WORKER_SQS_URL,
-          WorkerName.IDENTITY_GENERATE_WORKER,
-          [params],
-          null,
-          null,
-        );
-      } catch (error) {
-        console.error('Error sending data to queue - ', error);
-        throw error;
-      }
     }
 
     return { success: true };
@@ -343,67 +287,67 @@ export class IdentityMicroservice {
     return { credential: identity.credential };
   }
 
-  static async revokeIdentity(event: { body: IdentityDidRevokeDto }, context) {
-    const parameters = {
-      email: event.body.email,
-      args: [],
-    };
+  // static async revokeIdentity(event: { body: IdentityDidRevokeDto }, context) {
+  //   const parameters = {
+  //     email: event.body.email,
+  //     args: [],
+  //   };
 
-    const identity = await new Identity({}, context).populateByUserEmail(
-      context,
-      event.body.email,
-    );
+  //   const identity = await new Identity({}, context).populateByUserEmail(
+  //     context,
+  //     event.body.email,
+  //   );
 
-    if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
-      throw new AuthenticationCodeException({
-        code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
-        status: HttpStatus.NOT_FOUND,
-      });
-    }
+  //   if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
+  //     throw new AuthenticationCodeException({
+  //       code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
+  //       status: HttpStatus.NOT_FOUND,
+  //     });
+  //   }
 
-    if (
-      env.APP_ENV == AppEnvironment.LOCAL_DEV ||
-      env.APP_ENV == AppEnvironment.TEST
-    ) {
-      console.log('Starting DEV IdentityRevokeWorker worker ...');
+  //   if (
+  //     env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+  //     env.APP_ENV == AppEnvironment.TEST
+  //   ) {
+  //     console.log('Starting DEV IdentityRevokeWorker worker ...');
 
-      // Directly calls Kilt worker -> USED ONLY FOR DEVELOPMENT!!
-      const serviceDef: ServiceDefinition = {
-        type: ServiceDefinitionType.SQS,
-        config: { region: 'test' },
-        params: { FunctionName: 'test' },
-      };
+  //     // Directly calls Kilt worker -> USED ONLY FOR DEVELOPMENT!!
+  //     const serviceDef: ServiceDefinition = {
+  //       type: ServiceDefinitionType.SQS,
+  //       config: { region: 'test' },
+  //       params: { FunctionName: 'test' },
+  //     };
 
-      const wd = new WorkerDefinition(
-        serviceDef,
-        WorkerName.IDENTITY_REVOKE_WORKER,
-        {
-          parameters,
-        },
-      );
+  //     const wd = new WorkerDefinition(
+  //       serviceDef,
+  //       WorkerName.IDENTITY_REVOKE_WORKER,
+  //       {
+  //         parameters,
+  //       },
+  //     );
 
-      const worker = new IdentityRevokeWorker(
-        wd,
-        context,
-        QueueWorkerType.EXECUTOR,
-      );
-      await worker.runExecutor(parameters);
-    } else {
-      //send message to SQS
-      await sendToWorkerQueue(
-        env.AUTH_AWS_WORKER_SQS_URL,
-        WorkerName.IDENTITY_REVOKE_WORKER,
-        [parameters],
-        null,
-        null,
-      );
-    }
+  //     const worker = new IdentityRevokeWorker(
+  //       wd,
+  //       context,
+  //       QueueWorkerType.EXECUTOR,
+  //     );
+  //     await worker.runExecutor(parameters);
+  //   } else {
+  //     //send message to SQS
+  //     await sendToWorkerQueue(
+  //       env.AUTH_AWS_WORKER_SQS_URL,
+  //       WorkerName.IDENTITY_REVOKE_WORKER,
+  //       [parameters],
+  //       null,
+  //       null,
+  //     );
+  //   }
 
-    identity.state = IdentityState.REVOKED;
-    await identity.update();
+  //   identity.state = IdentityState.REVOKED;
+  //   await identity.update();
 
-    return { success: true };
-  }
+  //   return { success: true };
+  // }
 
   static async generateDevResources(event: { body: any }, _context) {
     // Used to issue did documents to test accounts -> Since the peregrine faucet

@@ -5,13 +5,9 @@ import {
   ServiceDefinition,
   writeWorkerLog,
   WorkerLogStatus,
-  QueueWorkerType,
 } from '@apillon/workers-lib';
 
 import { TestWorker } from './test-worker';
-import { IdentityGenerateWorker } from './generate-identity.worker';
-import { IdentityRevokeWorker } from './revoke-identity.worker';
-
 import { Scheduler } from './scheduler';
 import { ServiceContext } from '@apillon/service-lib';
 
@@ -21,8 +17,7 @@ import { ServiceContext } from '@apillon/service-lib';
 export enum WorkerName {
   TEST_WORKER = 'TestWorker',
   SCHEDULER = 'scheduler',
-  IDENTITY_GENERATE_WORKER = 'IdentityGenerateWorker',
-  IDENTITY_REVOKE_WORKER = 'IdentityRevokeWorker',
+  PROCESS_TRANSACTIONS_WORKER = 'ProcessTransactionsWorker',
 }
 
 export async function handler(event: any) {
@@ -113,6 +108,13 @@ export async function handleLambdaEvent(
       const scheduler = new Scheduler(serviceDef, context);
       await scheduler.run();
       break;
+    case WorkerName.PROCESS_TRANSACTIONS_WORKER: {
+      const workerForDeletion = new ProcessTransactionsWorker(
+        workerDefinition,
+        context,
+      );
+      await workerForDeletion.run();
+    }
     default:
       console.log(
         `ERROR - INVALID WORKER NAME: ${workerDefinition.workerName}`,
@@ -162,26 +164,6 @@ export async function handleSqsMessages(
 
       // eslint-disable-next-line sonarjs/no-small-switch
       switch (message?.messageAttributes?.workerName?.stringValue) {
-        case WorkerName.IDENTITY_GENERATE_WORKER: {
-          await new IdentityGenerateWorker(
-            workerDefinition,
-            context,
-            QueueWorkerType.EXECUTOR,
-          ).run({
-            executeArg: message?.body,
-          });
-          break;
-        }
-        case WorkerName.IDENTITY_REVOKE_WORKER: {
-          await new IdentityRevokeWorker(
-            workerDefinition,
-            context,
-            QueueWorkerType.EXECUTOR,
-          ).run({
-            executeArg: message?.body,
-          });
-          break;
-        }
         default:
           console.log(
             `ERROR - INVALID WORKER NAME: ${message?.messageAttributes?.workerName}`,

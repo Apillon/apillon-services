@@ -12,7 +12,7 @@ import {
   TransactionStatus,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import { DbTables, NftsErrorCode } from '../../../config/types';
+import { AuthenticationErrorCode, DbTables } from '../../../config/types';
 
 export class Transaction extends AdvancedSQLModel {
   public readonly tableName = DbTables.TRANSACTION;
@@ -39,7 +39,7 @@ export class Transaction extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: NftsErrorCode.TRANSACTION_CHAIN_ID_NOT_PRESENT,
+        code: AuthenticationErrorCode.TRANSACTION_CHAIN_ID_NOT_PRESENT,
       },
     ],
   })
@@ -63,7 +63,7 @@ export class Transaction extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: NftsErrorCode.TRANSACTION_TYPE_NOT_PRESENT,
+        code: AuthenticationErrorCode.TRANSACTION_TYPE_NOT_PRESENT,
       },
     ],
   })
