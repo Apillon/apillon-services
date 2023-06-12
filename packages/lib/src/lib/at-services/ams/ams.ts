@@ -288,9 +288,10 @@ export class Ams extends BaseService {
     return await this.callService(data);
   }
 
-  public async getOauthLinks() {
+  public async getOauthLinks(user_uuid: string) {
     const data = {
       eventName: AmsEventType.GET_OAUTH_LINKS,
+      user_uuid,
     };
     return await this.callService(data);
   }
