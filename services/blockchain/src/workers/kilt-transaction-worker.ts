@@ -20,13 +20,9 @@ import { Wallet } from '../common/models/wallet';
 import { DbTables } from '../config/types';
 import { BlockchainStatus } from '../modules/blockchain-indexers/blockchain-status';
 import {
-  CrustStorageOrders,
-  CrustStorageOrder,
-} from '../modules/blockchain-indexers/substrate/crust/data-models/crust-storage-orders';
-import {
-  CrustTransfer,
-  CrustTransfers,
-} from '../modules/blockchain-indexers/substrate/crust/data-models/crust-transfers';
+  KiltTransfer,
+  KiltTransfers,
+} from '../modules/blockchain-indexers/substrate/kilt/data-models/kilt-transfers';
 import { WorkerName } from './worker-executor';
 import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/kilt-indexer.service';
 
@@ -38,11 +34,11 @@ export class KiltTransactionWorker extends BaseSingleThreadWorker {
 
   public async runExecutor(_data: any): Promise<any> {
     const wallets = await new Wallet({}, this.context).getList(
-      SubstrateChain.KILT_PEREGRINE,
+      SubstrateChain.KILT,
       ChainType.SUBSTRATE,
     );
 
-    this.logPrefix = `[SUBSTRATE][KILT_PEREGRINE]`;
+    this.logPrefix = `[SUBSTRATE][KILT]`;
 
     console.info(`${this.logPrefix} RUN EXECUTOR (KiltTransactionWorker).`);
 
@@ -60,7 +56,7 @@ export class KiltTransactionWorker extends BaseSingleThreadWorker {
             : blockHeight;
 
         console.log(
-          `[SUBSTRATE][CRUST] Checking PENDING transactions (sourceWallet=${wallet.address}, lastParsedBlock=${wallet.lastParsedBlock}, toBlock=${toBlock})..`,
+          `[SUBSTRATE][KILT] Checking PENDING transactions (sourceWallet=${wallet.address}, lastParsedBlock=${wallet.lastParsedBlock}, toBlock=${toBlock})..`,
         );
 
         const kiltTransactions = await this.fetchAllKiltTransactions(
@@ -72,13 +68,13 @@ export class KiltTransactionWorker extends BaseSingleThreadWorker {
 
         /*await this.handleBlockchainTransfers(
           wallet,
-          crustTransactions.withdrawals,
-          crustTransactions.deposits,
+          kiltTransactions.withdrawals,
+          kiltTransactions.deposits,
           conn,
         );
-        await this.handleCrustFileOrders(
+        await this.handleKiltFileOrders(
           wallet,
-          crustTransactions.fileOrders,
+          kiltTransactions.fileOrders,
           conn,
         );*/
 
@@ -103,7 +99,7 @@ export class KiltTransactionWorker extends BaseSingleThreadWorker {
           );
         }
         console.log(
-          `[SUBSTRATE][CRUST] Checking PENDING transactions (sourceWallet=${wallet.address}, lastProcessedBlock=${toBlock}) FINISHED!`,
+          `[SUBSTRATE][KILT] Checking PENDING transactions (sourceWallet=${wallet.address}, lastProcessedBlock=${toBlock}) FINISHED!`,
         );
       } catch (err) {
         await conn.rollback();
@@ -117,7 +113,7 @@ export class KiltTransactionWorker extends BaseSingleThreadWorker {
         await new Lmas().writeLog({
           logType: LogType.ERROR,
           message: 'Error confirming transactions',
-          location: 'CrustTransactionWorker',
+          location: 'KiltTransactionWorker',
           service: ServiceName.BLOCKCHAIN,
           data: {
             error: err,
@@ -141,22 +137,22 @@ export class KiltTransactionWorker extends BaseSingleThreadWorker {
    */
   public async handleBlockchainTransfers(
     wallet: Wallet,
-    withdrawals: CrustTransfers,
-    deposits: CrustTransfers,
+    withdrawals: KiltTransfers,
+    deposits: KiltTransfers,
     conn: PoolConnection,
   ) {
-    await this.handleCrustWithdrawals(withdrawals, wallet, conn);
-    await this.handleCrustDeposits(deposits, wallet);
+    await this.handleKiltWithdrawals(withdrawals, wallet, conn);
+    await this.handleKiltDeposits(deposits, wallet);
   }
 
-  public async handleCrustWithdrawals(
-    withdrawals: CrustTransfers,
+  public async handleKiltWithdrawals(
+    withdrawals: KiltTransfers,
     wallet: Wallet,
     conn: PoolConnection,
   ) {
     if (!withdrawals.transfers.length) {
       console.log(
-        `[SUBSTRATE][CRUST] There are no new withdrawals received from blockchain indexer (address=${wallet.address}).`,
+        `[SUBSTRATE][KILT] There are no new withdrawals received from blockchain indexer (address=${wallet.address}).`,
       );
       return;
     }
@@ -197,10 +193,10 @@ export class KiltTransactionWorker extends BaseSingleThreadWorker {
     });
   }
 
-  public async handleCrustDeposits(deposits: CrustTransfers, wallet: Wallet) {
+  public async handleKiltDeposits(deposits: KiltTransfers, wallet: Wallet) {
     if (!deposits.transfers.length) {
       console.log(
-        `[SUBSTRATE][CRUST] There are no new deposits to wallet (address=${wallet.address}).`,
+        `[SUBSTRATE][KILT] There are no new deposits to wallet (address=${wallet.address}).`,
       );
       return;
     }
@@ -215,56 +211,6 @@ export class KiltTransactionWorker extends BaseSingleThreadWorker {
 
     deposits.transfers.forEach((bcTx) => {
       // TODO: Send notification of a new deposit to a wallet address and save to accounting table
-    });
-  }
-
-  public async handleCrustFileOrders(
-    wallet: Wallet,
-    bcOrders: CrustStorageOrders,
-    conn: PoolConnection,
-  ) {
-    if (!bcOrders.storageOrders.length) {
-      console.log(
-        `${this.logPrefix} There are no new file storage orders received from blockchain indexer (address=${wallet.address}).`,
-      );
-      return;
-    }
-
-    await this.writeLogToDb(
-      WorkerLogStatus.INFO,
-      `Matching ${bcOrders.storageOrders.length} blockchain storage orders with transactions in DB.`,
-      {
-        wallet,
-        bcOrders,
-      },
-    );
-
-    const confirmedDbTxHashes: string[] =
-      await this.updateStorageOrdersByStatus(
-        bcOrders,
-        TransactionStatus.CONFIRMED,
-        wallet,
-        conn,
-      );
-
-    const failedDbTxHashes: string[] = await this.updateStorageOrdersByStatus(
-      bcOrders,
-      TransactionStatus.FAILED,
-      wallet,
-      conn,
-    );
-
-    const updatedDbTxs = confirmedDbTxHashes.concat(failedDbTxHashes);
-    // All transactions were matched with db
-    if (bcOrders.storageOrders.length === updatedDbTxs.length) {
-      return;
-    }
-
-    bcOrders.storageOrders.forEach((bcTx) => {
-      if (!updatedDbTxs.includes(bcTx.extrinsicHash)) {
-        // TODO: Send notification - critical: Withdrawal (txHash) was not initiated by us
-        // use info from value variable to get all required data
-      }
     });
   }
 
@@ -314,7 +260,7 @@ export class KiltTransactionWorker extends BaseSingleThreadWorker {
   }
 
   public async updateWithdrawalsByStatus(
-    withdrawals: CrustTransfers,
+    withdrawals: KiltTransfers,
     status: TransactionStatus,
     wallet: Wallet,
     conn: PoolConnection,
@@ -324,7 +270,7 @@ export class KiltTransactionWorker extends BaseSingleThreadWorker {
         ? BlockchainStatus.CONFIRMED
         : BlockchainStatus.FAILED;
 
-    const bcWithdrawals = new Map<string, CrustTransfer>(
+    const bcWithdrawals = new Map<string, KiltTransfer>(
       withdrawals.transfers
         .filter((tx) => {
           return tx.status == bcStatus;
@@ -342,7 +288,7 @@ export class KiltTransactionWorker extends BaseSingleThreadWorker {
 
     const txDbHashesString = updatedDbTxs.join(',');
     console.log(
-      `[SUBSTRATE][CRUST] ${updatedDbTxs.length} [${TransactionStatus[status]}] transactions matched (txHashes=${txDbHashesString}) in db.`,
+      `[SUBSTRATE][KILT] ${updatedDbTxs.length} [${TransactionStatus[status]}] transactions matched (txHashes=${txDbHashesString}) in db.`,
     );
     await this.writeLogToDb(
       WorkerLogStatus.SUCCESS,
@@ -352,46 +298,6 @@ export class KiltTransactionWorker extends BaseSingleThreadWorker {
       },
     );
 
-    return updatedDbTxs;
-  }
-
-  public async updateStorageOrdersByStatus(
-    bcOrders: CrustStorageOrders,
-    status: TransactionStatus,
-    wallet: Wallet,
-    conn: PoolConnection,
-  ): Promise<string[]> {
-    const bcStatus: BlockchainStatus =
-      status == TransactionStatus.CONFIRMED
-        ? BlockchainStatus.CONFIRMED
-        : BlockchainStatus.FAILED;
-
-    const storageOrders = new Map<string, CrustStorageOrder>(
-      bcOrders.storageOrders
-        .filter((so) => {
-          return so.status == bcStatus;
-        })
-        .map((so) => [so.extrinsicHash, so]),
-    );
-    const soHashes: string[] = [...storageOrders.keys()];
-    const updatedDbTxs: string[] = await this.updateTransactions(
-      soHashes,
-      status,
-      wallet,
-      conn,
-    );
-
-    const txDbHashesString = updatedDbTxs.join(',');
-    console.log(
-      `[SUBSTRATE][CRUST] ${updatedDbTxs.length} [${TransactionStatus[status]}] storage orders matched (txHashes=${txDbHashesString}) in db.`,
-    );
-    await this.writeLogToDb(
-      WorkerLogStatus.SUCCESS,
-      `${updatedDbTxs.length} [${TransactionStatus[status]}] storage orders matched in db.`,
-      {
-        txDbHashesString,
-      },
-    );
     return updatedDbTxs;
   }
 

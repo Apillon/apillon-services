@@ -1,7 +1,6 @@
 import { env } from '@apillon/lib';
 import { GraphQLClient, gql } from 'graphql-request';
 import { BlockHeight } from '../../block-height';
-import { KiltStorageOrders } from './data-models/kilt-storage-orders';
 import { KiltTransfers } from './data-models/kilt-transfers';
 import { KiltTransferType } from '../../../../config/types';
 
