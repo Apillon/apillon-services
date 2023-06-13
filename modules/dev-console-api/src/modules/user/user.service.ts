@@ -406,14 +406,16 @@ export class UserService {
       // for security reason do not return error to FE
       return true;
     }
-    
+
     const token = generateJwtToken(
       JwtTokenType.USER_RESET_PASSWORD,
       {
-      email: email,
+        email: email,
       },
       '1h',
-      emailResult.data.authUser.password ? emailResult.data.authUser.password : undefined,
+      emailResult.data.authUser.password
+        ? emailResult.data.authUser.password
+        : undefined,
     );
 
     await new Mailing(context).sendMail({
@@ -532,7 +534,7 @@ export class UserService {
    * @returns User oauth links info.
    */
   async getOauthLinks(context: DevConsoleApiContext) {
-    return await new Ams(context).getOauthLinks();
+    return await new Ams(context).getOauthLinks(context.user.user_uuid);
   }
 
   /**
