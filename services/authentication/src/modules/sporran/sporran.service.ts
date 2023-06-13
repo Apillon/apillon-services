@@ -279,43 +279,43 @@ export class SporranMicroservice {
       didUri: credential.claim.owner,
     };
 
-    if (
-      env.APP_ENV == AppEnvironment.LOCAL_DEV ||
-      env.APP_ENV == AppEnvironment.TEST
-    ) {
-      console.log('Starting DEV IdentityRevokeWorker worker ...');
+    // if (
+    //   env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+    //   env.APP_ENV == AppEnvironment.TEST
+    // ) {
+    //   console.log('Starting DEV IdentityRevokeWorker worker ...');
 
-      // Directly calls Identity worker -> USED ONLY FOR DEVELOPMENT!!
-      const serviceDef: ServiceDefinition = {
-        type: ServiceDefinitionType.SQS,
-        config: { region: 'test' },
-        params: { FunctionName: 'test' },
-      };
+    //   // Directly calls Identity worker -> USED ONLY FOR DEVELOPMENT!!
+    //   const serviceDef: ServiceDefinition = {
+    //     type: ServiceDefinitionType.SQS,
+    //     config: { region: 'test' },
+    //     params: { FunctionName: 'test' },
+    //   };
 
-      const wd = new WorkerDefinition(
-        serviceDef,
-        WorkerName.IDENTITY_GENERATE_WORKER,
-        {
-          parameters,
-        },
-      );
+    //   const wd = new WorkerDefinition(
+    //     serviceDef,
+    //     WorkerName.IDENTITY_GENERATE_WORKER,
+    //     {
+    //       parameters,
+    //     },
+    //   );
 
-      const worker = new IdentityGenerateWorker(
-        wd,
-        context,
-        QueueWorkerType.EXECUTOR,
-      );
-      await worker.runExecutor(parameters);
-    } else {
-      //send message to SQS
-      await sendToWorkerQueue(
-        env.AUTH_AWS_WORKER_SQS_URL,
-        WorkerName.IDENTITY_GENERATE_WORKER,
-        [parameters],
-        null,
-        null,
-      );
-    }
+    //   const worker = new IdentityGenerateWorker(
+    //     wd,
+    //     context,
+    //     QueueWorkerType.EXECUTOR,
+    //   );
+    //   await worker.runExecutor(parameters);
+    // } else {
+    //   //send message to SQS
+    //   await sendToWorkerQueue(
+    //     env.AUTH_AWS_WORKER_SQS_URL,
+    //     WorkerName.IDENTITY_GENERATE_WORKER,
+    //     [parameters],
+    //     null,
+    //     null,
+    //   );
+    // }
 
     const identity = await new Identity({}, context).populateByUserEmail(
       context,

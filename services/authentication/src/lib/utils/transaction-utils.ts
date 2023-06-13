@@ -19,7 +19,7 @@ export async function prepareDIDCreateRequest(
   context: ServiceContext,
   transaction: SubmittableExtrinsic,
   identity: Identity,
-  conn: PoolConnection,
+  conn?: PoolConnection,
 ) {
   await new Lmas().writeLog({
     logType: LogType.INFO,
@@ -58,7 +58,7 @@ export async function prepareAttestationRequest(
   context: ServiceContext,
   transaction: SubmittableExtrinsic,
   identity: Identity,
-  conn: PoolConnection,
+  conn?: PoolConnection,
 ) {
   await new Lmas().writeLog({
     logType: LogType.INFO,
@@ -97,7 +97,7 @@ export async function prepareDIDRevokeRequest(
   context: ServiceContext,
   transaction: SubmittableExtrinsic,
   identity: Identity,
-  conn: PoolConnection,
+  conn?: PoolConnection,
 ) {
   await new Lmas().writeLog({
     logType: LogType.INFO,

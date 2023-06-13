@@ -125,8 +125,7 @@ export function createAttestationRequest(
   claimerDidUri: DidUri,
   credential?: ICredential,
 ) {
-  let authCredential = credential;
-  if (!authCredential) {
+  if (!credential) {
     const emailCType = getCtypeSchema(ApillonSupportedCTypes.EMAIL);
     const emailContents = {
       Email: email,
@@ -138,15 +137,15 @@ export function createAttestationRequest(
       claimerDidUri,
     );
 
-    authCredential = Credential.fromClaim(authClaim);
+    credential = Credential.fromClaim(authClaim);
   }
 
   return {
     attestationRequest: Attestation.fromCredentialAndDid(
-      authCredential,
+      credential,
       attesterDidUri,
     ),
-    credential: authCredential,
+    credential: credential,
   };
 }
 
