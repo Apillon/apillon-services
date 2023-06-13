@@ -1,5 +1,8 @@
 import {
+  ApillonApiBurnNftDto,
   ApillonApiCreateCollectionDTO,
+  ApillonApiMintNftDTO,
+  ApillonApiTransferCollectionDTO,
   BurnNftDto,
   CreateCollectionDTO,
   MintNftDTO,
@@ -43,30 +46,42 @@ export class NftService {
 
   async mintNft(
     context: ApillonApiContext,
-    bucket_uuid: string,
-    session_uuid: string,
-    body: MintNftDTO,
+    collection_uuid: string,
+    body: ApillonApiMintNftDTO,
   ) {
-    return (await new NftsMicroservice(context).mintNft(body)).data;
+    const dto = new MintNftDTO().populate({
+      ...body.serialize(),
+      collection_uuid: collection_uuid,
+    });
+
+    return (await new NftsMicroservice(context).mintNft(dto)).data;
   }
 
   async transferCollectionOwnership(
     context: ApillonApiContext,
     collection_uuid: string,
-    body: TransferCollectionDTO,
+    body: ApillonApiTransferCollectionDTO,
   ) {
-    body.collection_uuid = collection_uuid;
+    const dto = new TransferCollectionDTO().populate({
+      ...body,
+      collection_uuid,
+    });
+
     return (
-      await new NftsMicroservice(context).transferCollectionOwnership(body)
+      await new NftsMicroservice(context).transferCollectionOwnership(dto)
     ).data;
   }
 
-  async burnNftToken(
+  async burnNft(
     context: ApillonApiContext,
     collection_uuid: string,
-    body: BurnNftDto,
+    body: ApillonApiBurnNftDto,
   ) {
-    body.collection_uuid = collection_uuid;
-    return (await new NftsMicroservice(context).burnNftToken(body)).data;
+    const dto = new BurnNftDto().populate({
+      ...body.serialize(),
+      collection_uuid,
+    });
+
+    return (await new NftsMicroservice(context).burnNftToken(dto)).data;
   }
 }

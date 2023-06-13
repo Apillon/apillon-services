@@ -8,7 +8,7 @@ import {
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
 
-export class MintNftDTO extends ModelBase {
+export class MintNftDTOBase extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -40,7 +40,9 @@ export class MintNftDTO extends ModelBase {
     ],
   })
   public quantity: number;
+}
 
+export class MintNftDTO extends MintNftDTOBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -48,3 +50,5 @@ export class MintNftDTO extends ModelBase {
   })
   public collection_uuid: string;
 }
+
+export class ApillonApiMintNftDTO extends MintNftDTOBase {}

@@ -1,5 +1,8 @@
 import {
+  ApillonApiBurnNftDto,
   ApillonApiCreateCollectionDTO,
+  ApillonApiMintNftDTO,
+  ApillonApiTransferCollectionDTO,
   AttachedServiceType,
   DefaultApiKeyRole,
   TransactionQueryFilter,
@@ -34,8 +37,7 @@ export class NftController {
   @UseGuards(AuthGuard, ValidationGuard)
   async createCollection(
     @Ctx() context: ApillonApiContext,
-    @Body()
-    body: ApillonApiCreateCollectionDTO,
+    @Body() body: ApillonApiCreateCollectionDTO,
   ) {
     return await this.nftService.createCollection(context, body);
   }
@@ -74,5 +76,54 @@ export class NftController {
       uuid,
       query,
     );
+  }
+
+  @Post('collections/:uuid/transfer')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_EXECUTE,
+    serviceType: AttachedServiceType.NFT,
+  })
+  @Validation({ dto: ApillonApiTransferCollectionDTO })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async transferCollectionOwnership(
+    @Ctx() context: ApillonApiContext,
+    @Param('uuid') uuid: string,
+    @Body() body: ApillonApiTransferCollectionDTO,
+  ) {
+    return await this.nftService.transferCollectionOwnership(
+      context,
+      uuid,
+      body,
+    );
+  }
+
+  @Post('collections/:uuid/mint')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_EXECUTE,
+    serviceType: AttachedServiceType.NFT,
+  })
+  @Validation({ dto: ApillonApiMintNftDTO })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async mintCollectionNft(
+    @Ctx() context: ApillonApiContext,
+    @Param('uuid') uuid: string,
+    @Body() body: ApillonApiMintNftDTO,
+  ) {
+    return await this.nftService.mintNft(context, uuid, body);
+  }
+
+  @Post('collections/:uuid/burn')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_EXECUTE,
+    serviceType: AttachedServiceType.NFT,
+  })
+  @Validation({ dto: ApillonApiBurnNftDto })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async burnCollectionNft(
+    @Ctx() context: ApillonApiContext,
+    @Param('uuid') uuid: string,
+    @Body() body: ApillonApiBurnNftDto,
+  ) {
+    return await this.nftService.burnNft(context, uuid, body);
   }
 }
