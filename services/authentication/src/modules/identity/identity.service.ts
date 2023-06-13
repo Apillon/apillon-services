@@ -34,6 +34,7 @@ import {
   Utils,
   SubmittableExtrinsic,
   DidUri,
+  ICredential,
 } from '@kiltprotocol/sdk-js';
 import * as validUrl from 'valid-url';
 import { BN, hexToU8a, u8aToHex } from '@polkadot/util';
@@ -374,7 +375,7 @@ export class IdentityMicroservice {
       email,
       attesterDidUri,
       didUri as DidUri,
-      event.body.credential,
+      JSON.parse(event.body.credential) as ICredential,
     );
 
     const attestation = api.tx.attestation.add(
@@ -416,7 +417,7 @@ export class IdentityMicroservice {
     await sendBlockchainServiceRequest(context, request);
 
     // Save the generated credential to the identity -> It's not yet attested
-    identity.credential = credential;
+    identity.credential = JSON.stringify(credential);
     await identity.update();
 
     return { success: true };

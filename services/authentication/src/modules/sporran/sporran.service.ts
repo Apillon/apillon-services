@@ -47,16 +47,9 @@ import {
   ISubmitTerms,
   PartialClaim,
 } from '@kiltprotocol/types';
-import {
-  ServiceDefinition,
-  ServiceDefinitionType,
-  WorkerDefinition,
-  QueueWorkerType,
-  sendToWorkerQueue,
-} from '@apillon/workers-lib';
+
 import { Identity } from '../identity/models/identity.model';
 import { WorkerName } from '../../workers/worker-executor';
-import { IdentityGenerateWorker } from '../../workers/generate-identity.worker';
 import { prepareSignResources } from '../../lib/sporran';
 import { VerifyCredentialDto } from '@apillon/lib/dist/lib/at-services/authentication/dtos/sporran/message/verify-credential.dto';
 import { AuthenticationCodeException } from '../../lib/exceptions';
