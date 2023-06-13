@@ -41,16 +41,6 @@ import { IdentityCreateDto } from '@apillon/lib';
 import { IdentityDidRevokeDto } from '@apillon/lib';
 import { VerificationEmailDto } from '@apillon/lib';
 import {
-  QueueWorkerType,
-  sendToWorkerQueue,
-  ServiceDefinition,
-  ServiceDefinitionType,
-  WorkerDefinition,
-} from '@apillon/workers-lib';
-import { WorkerName } from '../../workers/worker-executor';
-import { IdentityRevokeWorker } from '../../workers/revoke-identity.worker';
-import { IdentityGenerateWorker } from '../../workers/generate-identity.worker';
-import {
   assertionSigner,
   createCompleteFullDid,
   createPresentation,
@@ -60,7 +50,8 @@ import {
   getCtypeSchema,
 } from '../../lib/kilt';
 import { AuthenticationCodeException } from '../../lib/exceptions';
-import { sendIdentityCreateTx } from '../../lib/utils/identity-utils';
+import { prepareDIDCreateRequest } from '../../lib/utils/transaction-utils';
+import { sendBlockchainServiceRequest } from '../../lib/utils/blockchain-utils';
 
 export class IdentityMicroservice {
   static async sendVerificationEmail(
@@ -259,9 +250,25 @@ export class IdentityMicroservice {
         data: { email: params.email, didUri: params.didUri },
       });
 
-      await sendIdentityCreateTx(context, identity, didCreationTx);
+      const conn = await context.mysql.start();
+
+      // Prepare blockchain service request
+      const request = await prepareDIDCreateRequest(
+        context,
+        didCreationTx,
+        identity,
+        conn,
+      );
+
+      // Send request to the blockchain service
+      await sendBlockchainServiceRequest(context, request);
+
+      // Update collection status
+      identity.state = IdentityState.IN_PROGRESS;
+      await identity.update(SerializeFor.UPDATE_DB, conn);
+
+      await conn.commit();
     } else {
-      console.error('Decryption failed  ...');
       throw new AuthenticationCodeException({
         code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
         status: HttpStatus.BAD_REQUEST,

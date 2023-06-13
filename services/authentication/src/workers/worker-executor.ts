@@ -5,11 +5,13 @@ import {
   ServiceDefinition,
   writeWorkerLog,
   WorkerLogStatus,
+  QueueWorkerType,
 } from '@apillon/workers-lib';
 
 import { TestWorker } from './test-worker';
 import { Scheduler } from './scheduler';
 import { ServiceContext } from '@apillon/service-lib';
+import { UpdateStateWorker } from './update-state.worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -17,7 +19,7 @@ import { ServiceContext } from '@apillon/service-lib';
 export enum WorkerName {
   TEST_WORKER = 'TestWorker',
   SCHEDULER = 'scheduler',
-  PROCESS_TRANSACTIONS_WORKER = 'ProcessTransactionsWorker',
+  UPDATE_STATE_WORKER = 'UpdateStateWorker',
 }
 
 export async function handler(event: any) {
@@ -108,12 +110,12 @@ export async function handleLambdaEvent(
       const scheduler = new Scheduler(serviceDef, context);
       await scheduler.run();
       break;
-    case WorkerName.PROCESS_TRANSACTIONS_WORKER: {
-      const workerForDeletion = new ProcessTransactionsWorker(
+    case WorkerName.UPDATE_STATE_WORKER: {
+      await new UpdateStateWorker(
         workerDefinition,
         context,
-      );
-      await workerForDeletion.run();
+        QueueWorkerType.EXECUTOR,
+      ).run();
     }
     default:
       console.log(

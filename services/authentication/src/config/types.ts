@@ -193,6 +193,6 @@ export interface DidCreateOp {
 
 export enum TransactionType {
   DID_CREATE = 1,
-  ATTESTATION = 2,
-  REVOKE = 3,
+  DID_REVOKE = 2,
+  ATTESTATION = 3,
 }
