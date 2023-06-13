@@ -1,15 +1,15 @@
 import {
-  BurnNftDto,
   CodeException,
-  CollectionsQuotaReachedQueryFilter,
-  CreateCollectionDTO,
-  DeployCollectionDTO,
   MintNftDTO,
   NFTCollectionQueryFilter,
   NftsMicroservice,
+  DeployCollectionDTO,
   SetCollectionBaseUriDTO,
   TransactionQueryFilter,
   TransferCollectionDTO,
+  CreateCollectionDTO,
+  BurnNftDto,
+  CollectionsQuotaReachedQueryFilter,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ResourceNotFoundErrorCode } from '../../config/types';

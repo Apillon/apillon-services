@@ -1,15 +1,15 @@
 import {
-  BurnNftDto,
-  CollectionsQuotaReachedQueryFilter,
   CreateCollectionDTO,
   DefaultUserRole,
-  DeployCollectionDTO,
   MintNftDTO,
   NFTCollectionQueryFilter,
+  DeployCollectionDTO,
   SetCollectionBaseUriDTO,
   TransactionQueryFilter,
   TransferCollectionDTO,
   ValidateFor,
+  BurnNftDto,
+  CollectionsQuotaReachedQueryFilter,
 } from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
