@@ -415,6 +415,10 @@ export class IdentityMicroservice {
     // Send request to the blockchain service
     await sendBlockchainServiceRequest(context, request);
 
+    // Save the generated credential to the identity -> It's not yet attested
+    identity.credential = credential;
+    await identity.update();
+
     return { success: true };
   }
 
