@@ -7,7 +7,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { DefaultUserRole, UserWalletAuthDto } from '@apillon/lib';
+import { DefaultUserRole, SerializeFor, UserWalletAuthDto } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import {
   Ctx,
@@ -17,6 +17,7 @@ import {
 } from '@apillon/modules-lib';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { LoginUserDto } from './dtos/login-user.dto';
+import { LoginUserKiltDto } from './dtos/login-user-kilt.dto';
 import { RegisterUserDto } from './dtos/register-user.dto';
 import { ValidateEmailDto } from './dtos/validate-email.dto';
 import { UserService } from './user.service';
@@ -45,7 +46,9 @@ export class UserController {
     @Ctx() context: DevConsoleApiContext,
     @Body() body: UpdateUserDto,
   ) {
-    return await this.userService.updateUserProfile(context, body);
+    return (await this.userService.updateUserProfile(context, body)).serialize(
+      SerializeFor.PROFILE,
+    );
   }
 
   @Post('login')
@@ -56,6 +59,16 @@ export class UserController {
     @Ctx() context: DevConsoleApiContext,
   ) {
     return await this.userService.login(body, context);
+  }
+
+  @Post('login-kilt')
+  @Validation({ dto: LoginUserKiltDto })
+  @UseGuards(ValidationGuard)
+  async loginWithKilt(
+    @Body() body: LoginUserKiltDto,
+    @Ctx() context: DevConsoleApiContext,
+  ) {
+    return await this.userService.loginWithKilt(body, context);
   }
 
   @Post('validate-email')
@@ -154,5 +167,10 @@ export class UserController {
     @Ctx() context: DevConsoleApiContext,
   ): any {
     return this.userService.walletConnect(body, context);
+  }
+
+  @Get('/oauth-session')
+  getOauthSession() {
+    return this.userService.getOauthSession();
   }
 }

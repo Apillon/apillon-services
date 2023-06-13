@@ -80,7 +80,21 @@ export class Ams extends BaseService {
     };
   }
 
-  public async resetPassword(params: { email: string; password: string }) {
+  public async loginWithKilt(params: { token: string }) {
+    const data = {
+      eventName: AmsEventType.USER_LOGIN_KILT,
+      ...params,
+    };
+
+    // eslint-disable-next-line sonarjs/prefer-immediate-return
+    const amsResponse = await this.callService(data);
+
+    return {
+      ...amsResponse,
+    };
+  }
+
+  public async resetPassword(params: { token: string; password: string }) {
     const data = {
       eventName: AmsEventType.USER_PASSWORD_RESET,
       ...params,
@@ -111,7 +125,9 @@ export class Ams extends BaseService {
     return amsResponse;
   }
 
-  public async emailExists(email: string) {
+  public async emailExists(
+    email: string,
+  ): Promise<{ data: { result: boolean; authUser: any } }> {
     const data = {
       eventName: AmsEventType.USER_EMAIL_EXISTS,
       email,
@@ -272,9 +288,10 @@ export class Ams extends BaseService {
     return await this.callService(data);
   }
 
-  public async getOauthLinks() {
+  public async getOauthLinks(user_uuid: string) {
     const data = {
       eventName: AmsEventType.GET_OAUTH_LINKS,
+      user_uuid,
     };
     return await this.callService(data);
   }

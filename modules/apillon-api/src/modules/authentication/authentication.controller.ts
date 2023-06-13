@@ -16,10 +16,16 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Get('session-token')
-  @ApiKeyPermissions({
-    role: DefaultApiKeyRole.KEY_EXECUTE,
-    serviceType: AttachedServiceType.AUTHENTICATION,
-  })
+  @ApiKeyPermissions(
+    {
+      role: DefaultApiKeyRole.KEY_EXECUTE,
+      serviceType: AttachedServiceType.AUTHENTICATION,
+    },
+    {
+      role: DefaultApiKeyRole.KEY_EXECUTE,
+      serviceType: AttachedServiceType.SYSTEM,
+    },
+  )
   @UseGuards(AuthGuard)
   async generateSessionToken(@Ctx() context: ApillonApiContext) {
     return await this.authService.generateSessionToken(context);

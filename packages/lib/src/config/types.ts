@@ -30,6 +30,7 @@ export enum AmsEventType {
   USER_REGISTER = 'user-register',
   USER_GET_AUTH = 'user-get-auth',
   USER_LOGIN = 'user-login',
+  USER_LOGIN_KILT = 'user-login-kilt',
   USER_WALLET_LOGIN = 'user-wallet-login',
   USER_UPDATE = 'user-update',
   USER_PASSWORD_RESET = 'user-password-reset',

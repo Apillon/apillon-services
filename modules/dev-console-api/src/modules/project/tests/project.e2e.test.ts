@@ -62,20 +62,19 @@ describe('Project tests', () => {
 
     test('User should be able to get his project', async () => {
       const response = await request(stage.http)
-        .get(`/projects/${testProject.id}`)
+        .get(`/projects/${testProject.project_uuid}`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.data.id).toBeTruthy();
       expect(response.body.data.project_uuid).toBeTruthy();
       expect(response.body.data.name).toBeTruthy();
     });
 
     test('User should NOT be able to get ANOTHER USER project', async () => {
       const response = await request(stage.http)
-        .get(`/projects/${testProject2.id}`)
+        .get(`/projects/${testProject2.project_uuid}`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(403);
-      expect(response.body?.data?.id).toBeFalsy();
+      expect(response.body?.data?.project_uuid).toBeFalsy();
     });
 
     test('User should be able to check if project-quota is reached', async () => {
@@ -95,7 +94,6 @@ describe('Project tests', () => {
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
-      expect(response.body.data.id).toBeTruthy();
       expect(response.body.data.project_uuid).toBeTruthy();
       expect(response.body.data.name).toBeTruthy();
       expect(response.body.data.description).toBeTruthy();
@@ -103,7 +101,7 @@ describe('Project tests', () => {
       const p: Project = await new Project(
         {},
         stage.devConsoleContext,
-      ).populateById(response.body.data.id);
+      ).populateByUUID(response.body.data.project_uuid);
       expect(p.exists()).toBe(true);
     });
 
@@ -119,7 +117,7 @@ describe('Project tests', () => {
 
     test('User should be able to update existing project', async () => {
       const response = await request(stage.http)
-        .patch(`/projects/${testProject.id}`)
+        .patch(`/projects/${testProject.project_uuid}`)
         .send({
           name: 'Spremenjen naziv projekta',
         })
@@ -130,20 +128,20 @@ describe('Project tests', () => {
       const p: Project = await new Project(
         {},
         stage.devConsoleContext,
-      ).populateById(response.body.data.id);
+      ).populateByUUID(response.body.data.project_uuid);
       expect(p.exists()).toBe(true);
       expect(p.name).toBe('Spremenjen naziv projekta');
     });
 
     test('User should NOT be able to update ANOTHER user project', async () => {
       const response = await request(stage.http)
-        .patch(`/projects/${testProject2.id}`)
+        .patch(`/projects/${testProject2.project_uuid}`)
         .send({
           name: 'Spremenjen naziv projekta',
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(403);
-      expect(response.body?.data?.id).toBeFalsy();
+      expect(response.body?.data?.project_uuid).toBeFalsy();
     });
   });
 
@@ -151,7 +149,7 @@ describe('Project tests', () => {
     let addedProjectUser;
     test('User should be able to get project users', async () => {
       const response = await request(stage.http)
-        .get(`/projects/${testProject.id}/users`)
+        .get(`/projects/${testProject.project_uuid}/users`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBe(1);
@@ -162,14 +160,14 @@ describe('Project tests', () => {
 
     test('User should NOT be able to get ANOTHER project users', async () => {
       const response = await request(stage.http)
-        .get(`/projects/${testProject2.id}/users`)
+        .get(`/projects/${testProject2.project_uuid}/users`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(403);
     });
 
     test('User should be able to invite existing user to project', async () => {
       const response = await request(stage.http)
-        .post(`/projects/${testProject.id}/invite-user`)
+        .post(`/projects/${testProject.project_uuid}/invite-user`)
         .send({
           email: testUser2.authUser.email,
           role_id: DefaultUserRole.PROJECT_USER,
@@ -189,7 +187,7 @@ describe('Project tests', () => {
 
     test('User should be able to invite new user (not yet registered in Apillon) to project', async () => {
       const response = await request(stage.http)
-        .post(`/projects/${testProject.id}/invite-user`)
+        .post(`/projects/${testProject.project_uuid}/invite-user`)
         .send({
           email: 'nek-testni-mail-123@gmail.com',
           role_id: DefaultUserRole.PROJECT_USER,
@@ -256,18 +254,18 @@ describe('Project tests', () => {
     test('User with role "ProjectUser" should NOT update project', async () => {
       //Only admin & owner can modify project
       const response = await request(stage.http)
-        .patch(`/projects/${testProject2.id}`)
+        .patch(`/projects/${testProject2.project_uuid}`)
         .send({
           name: 'Spremenjen naziv projekta',
         })
         .set('Authorization', `Bearer ${testUser3.token}`);
       expect(response.status).toBe(403);
-      expect(response.body?.data?.id).toBeFalsy();
+      expect(response.body?.data?.project_uuid).toBeFalsy();
     });
     test('User with role "ProjectUser" should NOT invite user to project', async () => {
       //Only admin & owner can invite new user
       const response2 = await request(stage.http)
-        .post(`/projects/${testProject.id}/invite-user`)
+        .post(`/projects/${testProject.project_uuid}/invite-user`)
         .send({
           email: testUser2.authUser.email,
           role_id: DefaultUserRole.PROJECT_USER,
@@ -331,7 +329,7 @@ describe('Project tests', () => {
 
     test('User should recieve status 400, when max users on project quota is reached, ', async () => {
       const response = await request(stage.http)
-        .post(`/projects/${quotaTestProject.id}/invite-user`)
+        .post(`/projects/${quotaTestProject.project_uuid}/invite-user`)
         .send({
           email: 'nekTestniMail@gmail.com',
           role_id: DefaultUserRole.PROJECT_USER,

@@ -333,7 +333,7 @@ export class SporranMicroservice {
       delegationId: null,
       claimHash: credential.rootHash,
       cTypeHash:
-        '0x9d271c790775ee831352291f01c5d04c7979713a5896dcf5e81708184cc5c643' as HexString,
+        '0x3291bb126e33b4862d421bfaa1d2f272e6cdfc4f96658988fbcffea8914bd9ac' as HexString,
       owner: attestObj.owner,
       revoked: false,
     };
@@ -384,7 +384,7 @@ export class SporranMicroservice {
             {
               // NOTE: Hash of the email ctype
               cTypeHash:
-                '0x9d271c790775ee831352291f01c5d04c7979713a5896dcf5e81708184cc5c643' as HexString,
+                '0x3291bb126e33b4862d421bfaa1d2f272e6cdfc4f96658988fbcffea8914bd9ac' as HexString,
               // Here we specify which properties of the cType are *required
               requiredProperties: ['Email'],
             },

@@ -71,7 +71,6 @@ export class UpdateCrustStatusWorker extends BaseQueueWorker {
             });
           }
         } catch (err) {
-          console.log(env);
           await new Lmas().writeLog({
             context: ctx,
             logType: LogType.ERROR,

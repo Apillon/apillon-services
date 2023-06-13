@@ -186,9 +186,9 @@ export class AuthUser extends AdvancedSQLModel {
     const res = await this.db().paramExecute(
       `
       SELECT * FROM authUser
-      WHERE email = @email
+      WHERE email = @email AND status = @status
     `,
-      { email },
+      { email, status: SqlModelStatus.ACTIVE },
       conn,
     );
 
@@ -221,7 +221,6 @@ export class AuthUser extends AdvancedSQLModel {
   public async loginUser() {
     const context = this.getContext();
 
-    // Start connection to database at the beginning of the function
     const conn = await context.mysql.start();
 
     // Generate a new token with type USER_AUTH
@@ -255,6 +254,7 @@ export class AuthUser extends AdvancedSQLModel {
       );
 
       if (oldToken.exists()) {
+        console.log('Deleting old token ...');
         oldToken.status = SqlModelStatus.DELETED;
         await oldToken.update(SerializeFor.UPDATE_DB, conn);
       }
