@@ -231,10 +231,21 @@ export class AuthUserService {
       });
     }
 
-    const tokenData = parseJwtToken(
-      JwtTokenType.USER_AUTHENTICATION,
-      event.token,
-    );
+    let tokenData;
+    try {
+      tokenData = parseJwtToken(JwtTokenType.USER_AUTHENTICATION, event.token);
+    } catch (err) {
+      if ((err.message = 'jwt expired')) {
+        throw await new AmsCodeException({
+          status: 401,
+          code: AmsErrorCode.AUTH_TOKEN_EXPIRED,
+        });
+      }
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.USER_AUTH_TOKEN_IS_INVALID,
+      });
+    }
 
     if (!tokenData.user_uuid) {
       throw await new AmsCodeException({
