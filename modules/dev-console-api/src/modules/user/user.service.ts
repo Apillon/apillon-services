@@ -286,6 +286,7 @@ export class UserService {
         status: HttpStatus.UNAUTHORIZED,
         code: UnauthorizedErrorCodes.INVALID_SIGNATURE,
         sourceFunction: `${this.constructor.name}/walletLogin`,
+        errorCodes: UnauthorizedErrorCodes,
         context,
       });
     }
