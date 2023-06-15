@@ -64,6 +64,7 @@ export enum AmsErrorCode {
 
   // 401 - Unauthorized (Not authenticated)
   USER_IS_NOT_AUTHENTICATED = 40102100,
+  AUTH_TOKEN_EXPIRED = 401021001,
 
   // 403 - Forbidden
   USER_IS_NOT_AUTHORIZED = 40302100,

@@ -59,7 +59,7 @@ export async function transmitAndProcessEvmTransaction(
   });
 
   //Check transaction status on indexer - in test environment this cant be performed - graphQl server does not exists for genache provider
-  if (env.APP_ENV != AppEnvironment.TEST) {
+  /*if (env.APP_ENV != AppEnvironment.TEST) {
     let tx: Transaction = await new Transaction({}, context).populateById(
       transaction.id,
     );
@@ -89,5 +89,5 @@ export async function transmitAndProcessEvmTransaction(
         console.log('Delayed for 1 second.');
       }, 1000);
     } while (tx.transactionStatus == TransactionStatus.PENDING);
-  }
+  }*/
 }
