@@ -1,11 +1,11 @@
 import {
-  ApillonApiBurnNftDto,
   ApillonApiCreateCollectionDTO,
-  ApillonApiMintNftDTO,
-  ApillonApiTransferCollectionDTO,
   AttachedServiceType,
+  BurnNftDto,
   DefaultApiKeyRole,
+  MintNftDTO,
   TransactionQueryFilter,
+  TransferCollectionDTO,
   ValidateFor,
 } from '@apillon/lib';
 import { ApiKeyPermissions, Ctx, Validation } from '@apillon/modules-lib';
@@ -83,12 +83,12 @@ export class NftController {
     role: DefaultApiKeyRole.KEY_EXECUTE,
     serviceType: AttachedServiceType.NFT,
   })
-  @Validation({ dto: ApillonApiTransferCollectionDTO })
+  @Validation({ dto: TransferCollectionDTO })
   @UseGuards(AuthGuard, ValidationGuard)
   async transferCollectionOwnership(
     @Ctx() context: ApillonApiContext,
     @Param('uuid') uuid: string,
-    @Body() body: ApillonApiTransferCollectionDTO,
+    @Body() body: TransferCollectionDTO,
   ) {
     return await this.nftService.transferCollectionOwnership(
       context,
@@ -102,12 +102,12 @@ export class NftController {
     role: DefaultApiKeyRole.KEY_EXECUTE,
     serviceType: AttachedServiceType.NFT,
   })
-  @Validation({ dto: ApillonApiMintNftDTO })
+  @Validation({ dto: MintNftDTO })
   @UseGuards(AuthGuard, ValidationGuard)
   async mintCollectionNft(
     @Ctx() context: ApillonApiContext,
     @Param('uuid') uuid: string,
-    @Body() body: ApillonApiMintNftDTO,
+    @Body() body: MintNftDTO,
   ) {
     return await this.nftService.mintNft(context, uuid, body);
   }
@@ -117,12 +117,12 @@ export class NftController {
     role: DefaultApiKeyRole.KEY_EXECUTE,
     serviceType: AttachedServiceType.NFT,
   })
-  @Validation({ dto: ApillonApiBurnNftDto })
+  @Validation({ dto: BurnNftDto })
   @UseGuards(AuthGuard, ValidationGuard)
   async burnCollectionNft(
     @Ctx() context: ApillonApiContext,
     @Param('uuid') uuid: string,
-    @Body() body: ApillonApiBurnNftDto,
+    @Body() body: BurnNftDto,
   ) {
     return await this.nftService.burnNft(context, uuid, body);
   }

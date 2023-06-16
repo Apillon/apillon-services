@@ -4,7 +4,7 @@ import { ethAddressValidator, presenceValidator } from '@rawmodel/validators';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
 
-export class TransferCollectionDTOBase extends ModelBase {
+export class TransferCollectionDTO extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -20,9 +20,7 @@ export class TransferCollectionDTOBase extends ModelBase {
     ],
   })
   public address: string;
-}
 
-export class TransferCollectionDTO extends TransferCollectionDTOBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -30,5 +28,3 @@ export class TransferCollectionDTO extends TransferCollectionDTOBase {
   })
   public collection_uuid: string;
 }
-
-export class ApillonApiTransferCollectionDTO extends TransferCollectionDTOBase {}
