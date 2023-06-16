@@ -37,13 +37,13 @@ export class AuthGuard implements CanActivate {
       for (const requiredPerm of requiredPermissions.filter(
         (x) => x.permission,
       )) {
-        if (requiredPerm.role && context.hasRole(requiredPerm.role)) {
-          return true;
+        if (!context.hasPermission(requiredPerm.permission)) {
+          return false;
         }
       }
 
       for (const requiredPerm of requiredPermissions.filter((x) => x.role)) {
-        if (requiredPerm.role && context.hasRole(requiredPerm.role)) {
+        if (context.hasRole(requiredPerm.role)) {
           return true;
         }
       }
