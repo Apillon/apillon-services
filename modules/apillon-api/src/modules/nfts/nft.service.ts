@@ -1,8 +1,5 @@
 import {
-  ApillonApiBurnNftDto,
   ApillonApiCreateCollectionDTO,
-  ApillonApiMintNftDTO,
-  ApillonApiTransferCollectionDTO,
   BurnNftDto,
   CreateCollectionDTO,
   MintNftDTO,
@@ -47,7 +44,7 @@ export class NftService {
   async mintNft(
     context: ApillonApiContext,
     collection_uuid: string,
-    body: ApillonApiMintNftDTO,
+    body: MintNftDTO,
   ) {
     const dto = new MintNftDTO().populate({
       ...body.serialize(),
@@ -60,7 +57,7 @@ export class NftService {
   async transferCollectionOwnership(
     context: ApillonApiContext,
     collection_uuid: string,
-    body: ApillonApiTransferCollectionDTO,
+    body: TransferCollectionDTO,
   ) {
     const dto = new TransferCollectionDTO().populate({
       ...body,
@@ -75,7 +72,7 @@ export class NftService {
   async burnNft(
     context: ApillonApiContext,
     collection_uuid: string,
-    body: ApillonApiBurnNftDto,
+    body: BurnNftDto,
   ) {
     const dto = new BurnNftDto().populate({
       ...body.serialize(),
