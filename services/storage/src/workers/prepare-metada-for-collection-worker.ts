@@ -167,6 +167,10 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
     //#endregion
 
     //#region Sync metadata to IPFS
+    for (const fur of metadataFURs) {
+      fur.path = 'Metadata/' + fur.path;
+    }
+
     const metadataFiles = await storageBucketSyncFilesToIPFS(
       this.context,
       `${this.constructor.name}/runExecutor`,

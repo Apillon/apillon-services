@@ -17,6 +17,9 @@ import {
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
+import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
+import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
+import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 
 describe('Storage bucket tests', () => {
   let stage: Stage;
@@ -364,6 +367,31 @@ describe('Storage bucket tests', () => {
       //1.json should be available in baseUri
       const response2 = await request(newCollection.baseUri + '1.json').get('');
       expect(response2.status).toBe(200);
+
+      //Bucket should contain 2 directories
+      const collectionBucket = await new Bucket(
+        {},
+        stage.storageContext,
+      ).populateByUUID(newCollection.bucket_uuid);
+
+      const bucketDirs = await new Directory(
+        {},
+        stage.storageContext,
+      ).populateDirectoriesInBucket(collectionBucket.id, stage.storageContext);
+      expect(bucketDirs.length).toBe(2);
+
+      const metadataDir = bucketDirs.find((x) => x.name == 'Metadata');
+      expect(metadataDir).toBeTruthy();
+
+      const collectionMetadataFiles: File[] = await new File(
+        {},
+        stage.storageContext,
+      ).populateFilesInBucket(collectionBucket.id, stage.storageContext);
+
+      expect(collectionMetadataFiles.length).toBe(4);
+      expect(
+        collectionMetadataFiles.find((x) => x.name == '1.json').directory_id,
+      ).toBe(metadataDir.id);
     });
   });
 
