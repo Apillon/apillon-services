@@ -261,9 +261,30 @@ describe('Apillon API NFTs tests', () => {
         testProject,
         SqlModelStatus.DRAFT,
         CollectionStatus.CREATED,
+        { collectionStatus: CollectionStatus.TRANSFERED },
       );
-      newCollection.collectionStatus = CollectionStatus.TRANSFERED;
-      await newCollection.update();
+
+      const response = await postRequest(
+        `/nfts/collections/${newCollection.collection_uuid}/mint`,
+        {
+          receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
+          quantity: 1,
+        },
+      );
+
+      expect(response.status).toBe(500);
+      expect(response.body.code).toBe(50012002);
+    });
+
+    test('User should NOT be able to Mint transferred collection', async () => {
+      const newCollection = await createTestNFTCollection(
+        testUser,
+        stage.nftsContext,
+        testProject,
+        SqlModelStatus.DRAFT,
+        CollectionStatus.CREATED,
+        { collectionStatus: CollectionStatus.TRANSFERED },
+      );
 
       const response = await postRequest(
         `/nfts/collections/${newCollection.collection_uuid}/mint`,
@@ -443,9 +464,8 @@ describe('Apillon API NFTs tests', () => {
           testProject,
           SqlModelStatus.DRAFT,
           CollectionStatus.CREATED,
+          { collectionStatus: CollectionStatus.TRANSFERED },
         );
-        newCollection.collectionStatus = CollectionStatus.TRANSFERED;
-        await newCollection.update();
 
         const response = await postRequest(
           `/nfts/collections/${newCollection.collection_uuid}/mint`,
