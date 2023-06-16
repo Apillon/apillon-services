@@ -32,7 +32,17 @@ export class AuthGuard implements CanActivate {
         errorMessage: 'User is not authenticated!',
       });
     } else if (requiredPermissions.length > 0) {
-      for (const requiredPerm of requiredPermissions) {
+      //Check required roles and required permissions. Both are passed through @Permission decorator.
+      //User should have all permissions and at least one of required roles.
+      for (const requiredPerm of requiredPermissions.filter(
+        (x) => x.permission,
+      )) {
+        if (requiredPerm.role && context.hasRole(requiredPerm.role)) {
+          return true;
+        }
+      }
+
+      for (const requiredPerm of requiredPermissions.filter((x) => x.role)) {
         if (requiredPerm.role && context.hasRole(requiredPerm.role)) {
           return true;
         }

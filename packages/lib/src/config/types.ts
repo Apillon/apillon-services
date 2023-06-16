@@ -277,7 +277,7 @@ export enum ValidateFor {
   QUERY = 'query',
 }
 
-//#region Permissions
+//#region Roles & Permissions
 
 export enum PermissionType {
   READ = 'read',
@@ -314,6 +314,14 @@ export enum DefaultApiKeyRole {
   KEY_EXECUTE = 50,
   KEY_WRITE = 51,
   KEY_READ = 52,
+}
+
+export enum DefaultPermission {
+  STORAGE = 1,
+  HOSTING = 2,
+  NFTS = 3,
+  AUTHENTICATION = 4,
+  COMPUTING = 5,
 }
 
 //#endregion
@@ -490,7 +498,7 @@ export enum ValidatorErrorCode {
   EVM_TRANSACTION_NOT_PRESENT = 42200804,
   EVM_CHAIN_NOT_PRESENT = 42200805,
   EVM_CHAIN_NOT_VALID = 42200806,
-  //#endregion"
+  //#endregion
 }
 
 /**
