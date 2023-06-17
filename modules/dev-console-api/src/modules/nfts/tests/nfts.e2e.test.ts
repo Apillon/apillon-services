@@ -278,11 +278,11 @@ describe('Storage bucket tests', () => {
           files: [
             {
               fileName: '1.png',
-              path: '',
+              path: 'Images/',
             },
             {
               fileName: '2.png',
-              path: '',
+              path: 'Images/',
             },
           ],
         })
