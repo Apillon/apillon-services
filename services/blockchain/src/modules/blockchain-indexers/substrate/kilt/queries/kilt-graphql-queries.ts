@@ -1,5 +1,5 @@
 export enum KiltGQLQueries {
-  /* Returns all WITHDRAWALS from a specific account in KILT */
+  /* Returns all TRANSFERS from a specific account in KILT */
   ACCOUNT_TRANSFERS_Q = `query getAccountTransfers(
       $address: String!
       $fromBlock: Int!
@@ -16,7 +16,7 @@ export enum KiltGQLQueries {
             { blockNumber_gte: $fromBlock }
             { blockNumber_lte: $toBlock }
           ],
-          transactionType_eq: $
+          transactionType_eq: $transactionType
         }
       ) {
         id
@@ -86,6 +86,7 @@ export enum KiltGQLQueries {
       }
     }`,
 
+  /* SYSTEM QUERIES */
   SYSTEM_BLOCK_HEIGHT_Q = `
       query getBlockHeight {
         squidStatus {

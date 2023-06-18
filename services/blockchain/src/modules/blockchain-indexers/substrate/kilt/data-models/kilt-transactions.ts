@@ -1,9 +1,3 @@
-export interface KiltTransactions {
-  transfers: TransferTransaction[];
-  didTransactions: DidTransaction[];
-  attestatonTransactions: AttestationTransation[];
-}
-
 interface BaseTransaction {
   // TODO: I suggest we put this in a library and use in Crust as well
   readonly id: string;

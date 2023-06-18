@@ -17,35 +17,51 @@ import {
 } from '@apillon/workers-lib';
 import { Transaction } from '../common/models/transaction';
 import { Wallet } from '../common/models/wallet';
-import { DbTables } from '../config/types';
+import {
+  AttestTransactions,
+  DbTables,
+  DidTransactions,
+  KiltTransactionType,
+  TransfersTransactions,
+} from '../config/types';
 import { BlockchainStatus } from '../modules/blockchain-indexers/blockchain-status';
-import { KiltTransactions } from '../modules/blockchain-indexers/substrate/kilt/data-models/kilt-transactions';
+import {
+  DidTransaction,
+  TransferTransaction,
+} from '../modules/blockchain-indexers/substrate/kilt/data-models/kilt-transactions';
 import { WorkerName } from './worker-executor';
 import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/kilt-indexer.service';
 
 export class KiltTransactionWorker extends BaseSingleThreadWorker {
   private logPrefix: string;
+  private kiltIndexer: KiltBlockchainIndexer;
+
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);
+
+    this.logPrefix = `[SUBSTRATE | KILT]`;
+    this.kiltIndexer = new KiltBlockchainIndexer();
+  }
+
+  private log(message: any) {
+    console.log(`${this.logPrefix}: ${message}`);
   }
 
   public async runExecutor(_data: any): Promise<any> {
-    const wallets = await new Wallet({}, this.context).getList(
+    const wallets = await new Wallet({}, await this.context).getList(
       SubstrateChain.KILT,
       ChainType.SUBSTRATE,
     );
 
-    this.logPrefix = `[SUBSTRATE][KILT]`;
-
-    console.info(`${this.logPrefix} RUN EXECUTOR (KiltTransactionWorker).`);
+    this.log(`RUN EXECUTOR (KiltTransactionWorker)`);
 
     for (const w of wallets) {
       const conn = await this.context.mysql.start();
 
       try {
         const wallet: Wallet = new Wallet(w, this.context);
-        const kiltIndexer: KiltBlockchainIndexer = new KiltBlockchainIndexer();
-        const blockHeight = await kiltIndexer.getBlockHeight();
+
+        const blockHeight = await this.kiltIndexer.getBlockHeight();
 
         const lastParsedBlock: number = wallet.lastParsedBlock;
         const toBlock: number =
@@ -53,49 +69,56 @@ export class KiltTransactionWorker extends BaseSingleThreadWorker {
             ? lastParsedBlock + wallet.blockParseSize
             : blockHeight;
 
-        console.log(
-          `[SUBSTRATE][KILT] Checking PENDING transactions (sourceWallet=${wallet.address}, lastParsedBlock=${wallet.lastParsedBlock}, toBlock=${toBlock})..`,
+        this.log(
+          `Checking PENDING transactions (sourceWallet=${wallet.address}, lastParsedBlock=${wallet.lastParsedBlock}, toBlock=${toBlock})..`,
         );
 
-        // const kiltTransactions = await this.fetchAllKiltTransactions(
-        //   kiltIndexer,
-        //   wallet.address,
-        //   lastParsedBlock,
-        //   toBlock,
-        // );
+        const { balanceTransactions, didTransactions, attestTransactions } =
+          await this.fetchAllKiltTransactions(
+            await this.kiltIndexer,
+            wallet.address,
+            lastParsedBlock,
+            toBlock,
+          );
 
-        /*await this.handleBlockchainTransfers(
+        await this.handleBlockchainTransfers(wallet, conn, balanceTransactions);
+
+        /*
+        await await kiltIndexer.handleBlockchainTransfers(
           wallet,
           kiltTransactions.withdrawals,
           kiltTransactions.deposits,
           conn,
         );
-        await this.handleKiltFileOrders(
+
+        await await kiltIndexer.handleKiltFileOrders(
           wallet,
           kiltTransactions.fileOrders,
           conn,
-        );*/
+        );
+        */
 
         await wallet.updateLastParsedBlock(toBlock, conn);
         await conn.commit();
 
-        if (kiltTransactions.withdrawals.transfers.length > 0) {
-          await sendToWorkerQueue(
-            env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
-            WorkerName.TRANSACTION_WEBHOOKS,
-            [{}],
-            null,
-            null,
-          );
-          await this.writeLogToDb(
-            WorkerLogStatus.INFO,
-            'Found new transactions. Triggering transaction webhook worker!',
-            {
-              transfers: kiltTransactions.withdrawals.transfers,
-              wallet: wallet.address,
-            },
-          );
-        }
+        // if (kiltTransactions.withdrawals.transfers.length > 0) {
+        //   await sendToWorkerQueue(
+        //     env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
+        //     WorkerName.TRANSACTION_WEBHOOKS,
+        //     [{}],
+        //     null,
+        //     null,
+        //   );
+
+        //   await await kiltIndexer.writeLogToDb(
+        //     WorkerLogStatus.INFO,
+        //     'Found new transactions. Triggering transaction webhook worker!',
+        //     {
+        //       transfers: kiltTransactions.withdrawals.transfers,
+        //       wallet: wallet.address,
+        //     },
+        //   );
+        // }
 
         console.log(
           `[SUBSTRATE][KILT] Checking PENDING transactions (sourceWallet=${wallet.address}, lastProcessedBlock=${toBlock}) FINISHED!`,
@@ -128,177 +151,42 @@ export class KiltTransactionWorker extends BaseSingleThreadWorker {
     }
   }
 
-  public async handleKiltDeposits(deposits: KiltTransfers, wallet: Wallet) {
-    if (!deposits.transfers.length) {
-      console.log(
-        `[SUBSTRATE][KILT] There are no new deposits to wallet (address=${wallet.address}).`,
-      );
-      return;
-    }
-
-    await this.writeLogToDb(
-      WorkerLogStatus.INFO,
-      `Detecting ${deposits.transfers.length} blockchain deposit(s) to ${wallet}.`,
-      {
-        wallet,
-      },
-    );
-
-    deposits.transfers.forEach((bcTx) => {
-      // TODO: Send notification of a new deposit to a wallet address and save to accounting table
-    });
+  public async handleBlockchainTransfers(
+    wallet: Wallet,
+    conn: PoolConnection,
+    transactions: TransfersTransactions,
+  ) {
+    // if (!transfers.length) {
+    //   console.log(
+    //     `[SUBSTRATE][KILT] There are no new deposits to wallet (address=${wallet.address}).`,
+    //   );
+    //   return;
+    // }
+    console.log('Hello There TRANSFER');
+    console.log('transactions: ', transactions);
   }
 
-  // /**
-  //  * Handling blockchain withdrawals/deposits
-  //  *
-  //  * @param sourceWallet wallet from/to transaction happened
-  //  * @param pendingDbTxs pending transactions in db
-  //  */
-  // public async handleBlockchainTransfers(
-  //   wallet: Wallet,
-  //   withdrawals: KiltTransfers,
-  //   deposits: KiltTransfers,
-  //   conn: PoolConnection,
-  // ) {
-  //   await this.handleKiltWithdrawals(withdrawals, wallet, conn);
-  //   await this.handleKiltDeposits(deposits, wallet);
-  // }
+  public async handleBlockchainDidTransactions(
+    wallet: Wallet,
+    conn: PoolConnection,
+    transactions: DidTransactions,
+  ) {
+    // if (!transfers.length) {
+    //   console.log(
+    //     `[SUBSTRATE][KILT] There are no new deposits to wallet (address=${wallet.address}).`,
+    //   );
+    //   return;
+    // }
+    console.log('Hello There DID');
+  }
 
-  // public async handleKiltWithdrawals(
-  //   withdrawals: KiltTransfers,
-  //   wallet: Wallet,
-  //   conn: PoolConnection,
-  // ) {
-  //   if (!withdrawals.transfers.length) {
-  //     console.log(
-  //       `[SUBSTRATE][KILT] There are no new withdrawals received from blockchain indexer (address=${wallet.address}).`,
-  //     );
-  //     return;
-  //   }
-
-  //   await this.writeLogToDb(
-  //     WorkerLogStatus.INFO,
-  //     `Matching ${withdrawals.transfers.length} blockchain transactions with transactions in DB.`,
-  //     {
-  //       transfers: withdrawals.transfers,
-  //     },
-  //   );
-
-  //   const confirmedDbTxHashes: string[] = await this.updateWithdrawalsByStatus(
-  //     withdrawals,
-  //     TransactionStatus.CONFIRMED,
-  //     wallet,
-  //     conn,
-  //   );
-  //   const failedDbTxHashes: string[] = await this.updateWithdrawalsByStatus(
-  //     withdrawals,
-  //     TransactionStatus.FAILED,
-  //     wallet,
-  //     conn,
-  //   );
-
-  //   const updatedDbTxs = confirmedDbTxHashes.concat(failedDbTxHashes);
-
-  //   // All transactions were matched with db
-  //   if (withdrawals.transfers.length == updatedDbTxs.length) {
-  //     return;
-  //   }
-
-  //   withdrawals.transfers.forEach((bcTx) => {
-  //     if (!updatedDbTxs.includes(bcTx.extrinsicHash)) {
-  //       // TODO: Send notification - critical: Withdrawal (txHash) was not initiated by us
-  //       // use info from value variable to get all required data
-  //     }
-  //   });
-  // }
-
-  // /**
-  //  * Updates transaction statuses which are confirmed on blockchain
-  //  *
-  //  * @param bcHashes blockhain hashes array
-  //  * @param wallet wallet entity
-  //  * @param conn connection
-  //  * @returns array of confirmed transaction hashes
-  //  */
-  // public async updateTransactions(
-  //   bcHashes: string[],
-  //   status: TransactionStatus,
-  //   wallet: Wallet,
-  //   conn: PoolConnection,
-  // ): Promise<string[]> {
-  //   await this.context.mysql.paramExecute(
-  //     `UPDATE \`${DbTables.TRANSACTION_QUEUE}\`
-  //       SET transactionStatus = @status
-  //       WHERE
-  //         chain = @chain
-  //         AND chainType = @chainType
-  //         AND address = @address
-  //         AND transactionHash in ('${bcHashes.join("','")}')`,
-  //     {
-  //       status,
-  //       chain: wallet.chain,
-  //       address: wallet.address,
-  //       chainType: wallet.chainType,
-  //     },
-  //     conn,
-  //   );
-
-  //   return (
-  //     await new Transaction({}, this.context).getTransactionsByHashes(
-  //       wallet.chain,
-  //       wallet.chainType,
-  //       wallet.address,
-  //       status,
-  //       bcHashes,
-  //       conn,
-  //     )
-  //   ).map((tx) => {
-  //     return tx.transactionHash;
-  //   });
-  // }
-
-  // public async updateWithdrawalsByStatus(
-  //   withdrawals: KiltTransfers,
-  //   status: TransactionStatus,
-  //   wallet: Wallet,
-  //   conn: PoolConnection,
-  // ): Promise<string[]> {
-  //   const bcStatus: BlockchainStatus =
-  //     status == TransactionStatus.CONFIRMED
-  //       ? BlockchainStatus.CONFIRMED
-  //       : BlockchainStatus.FAILED;
-
-  //   const bcWithdrawals = new Map<string, KiltTransfer>(
-  //     withdrawals.transfers
-  //       .filter((tx) => {
-  //         return tx.status == bcStatus;
-  //       })
-  //       .map((w) => [w.extrinsicHash, w]),
-  //   );
-
-  //   const bcHashes: string[] = [...bcWithdrawals.keys()];
-  //   const updatedDbTxs: string[] = await this.updateTransactions(
-  //     bcHashes,
-  //     status,
-  //     wallet,
-  //     conn,
-  //   );
-
-  //   const txDbHashesString = updatedDbTxs.join(',');
-  //   console.log(
-  //     `[SUBSTRATE][KILT] ${updatedDbTxs.length} [${TransactionStatus[status]}] transactions matched (txHashes=${txDbHashesString}) in db.`,
-  //   );
-  //   await this.writeLogToDb(
-  //     WorkerLogStatus.SUCCESS,
-  //     `${updatedDbTxs.length} [${TransactionStatus[status]}] transactions matched in db.`,
-  //     {
-  //       txDbHashesString,
-  //     },
-  //   );
-
-  //   return updatedDbTxs;
-  // }
+  public async handleBlockchainAttestTransaction(
+    wallet: Wallet,
+    conn: PoolConnection,
+    transactions: AttestTransactions,
+  ) {
+    console.log('Hello There ATTEST');
+  }
 
   /**
    * Obtain kilt transactions
@@ -312,16 +200,68 @@ export class KiltTransactionWorker extends BaseSingleThreadWorker {
     fromBlock: number,
     toBlock: number,
   ) {
-    const withdrawals = await kiltIndexer.ACCOUNT_WITHDRAWALS_Q(
-      address,
-      fromBlock,
-      toBlock,
-    );
-    // const deposits = await kiltIndexer.getWalletDeposits(
-    //   address,
-    //   fromBlock,
-    //   toBlock,
-    // );
-    return { withdrawals };
+    // Get all transfers
+    const balanceTransactions = {
+      TRANSFER: await kiltIndexer.getAccountTransfers(
+        address,
+        fromBlock,
+        toBlock,
+      ),
+      WITHDRAWAL: await kiltIndexer.getAccountWithdrawals(
+        address,
+        fromBlock,
+        toBlock,
+      ),
+      DEPOSIT: await kiltIndexer.getAccountDeposits(
+        address,
+        fromBlock,
+        toBlock,
+      ),
+      RESERVED_BALANCES: await kiltIndexer.getAccountReserved(
+        address,
+        fromBlock,
+        toBlock,
+      ),
+    } as TransfersTransactions;
+
+    // All attestation transactions
+    const attestTransactions = {
+      CREATE: await kiltIndexer.getAccountAttestCreate(
+        address,
+        fromBlock,
+        toBlock,
+      ),
+      REMOVE: await kiltIndexer.getAccountAttestRemove(
+        address,
+        fromBlock,
+        toBlock,
+      ),
+      REVOKE: await kiltIndexer.getAccountAttestRevoke(
+        address,
+        fromBlock,
+        toBlock,
+      ),
+    } as AttestTransactions;
+
+    // Get all DID transactions
+    const didTransactions = {
+      CREATE: await kiltIndexer.getAccountDidCreate(
+        address,
+        fromBlock,
+        toBlock,
+      ),
+      DELETE: await kiltIndexer.getAccountDidDelete(
+        address,
+        fromBlock,
+        toBlock,
+      ),
+      UPDATE: await kiltIndexer.getAccountDidUpdate(
+        address,
+        fromBlock,
+        toBlock,
+      ),
+    } as DidTransactions;
+
+    return { balanceTransactions, didTransactions, attestTransactions };
   }
 }

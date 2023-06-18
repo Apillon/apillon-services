@@ -67,7 +67,7 @@ export async function generateKeypairs(mnemonic: string) {
     type: 'sr25519',
   } as KiltKeyringPair;
 
-  // Key used to sign transactions
+  // Attestation keypair
   const assertionMethod = {
     ...account.derive('//did//assertion//0'),
     type: 'sr25519',

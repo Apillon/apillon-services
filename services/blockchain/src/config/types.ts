@@ -1,4 +1,9 @@
 import { EvmChain, SubstrateChain } from '@apillon/lib';
+import {
+  DidTransaction,
+  TransferTransaction,
+  AttestationTransation,
+} from '../modules/blockchain-indexers/substrate/kilt/data-models/kilt-transactions';
 
 export type Chain = SubstrateChain | EvmChain;
 
@@ -15,7 +20,7 @@ export enum CrustTransferType {
 }
 
 // NOTE: Do not change!! These are mappings from the SQUID KILT service
-export enum TransactionType {
+export enum KiltTransactionType {
   BALANCE_TRANSFER = 'balance-transfer',
   BALANCE_DEPOSIT = 'balance-deposit',
   BALANCE_WITHDRAW = 'balance-withdraw',
@@ -27,6 +32,25 @@ export enum TransactionType {
   ATTESTATION_REMOVE = 'attestation-remove',
   ATTESTATION_REVOKE = 'attestation-revoke',
 }
+
+export type TransfersTransactions = {
+  TRANSFER: TransferTransaction[];
+  DEPOSIT: TransferTransaction[];
+  WITHDRAWAL: TransferTransaction[];
+  RESERVED_BALANCES: TransferTransaction[];
+};
+
+export type DidTransactions = {
+  CREATE: DidTransaction[];
+  DELETE: DidTransaction[];
+  UPDATE: DidTransaction[];
+};
+
+export type AttestTransactions = {
+  CREATE: AttestationTransation[];
+  REMOVE: AttestationTransation[];
+  REVOKE: AttestationTransation[];
+};
 
 /**
  * Error codes

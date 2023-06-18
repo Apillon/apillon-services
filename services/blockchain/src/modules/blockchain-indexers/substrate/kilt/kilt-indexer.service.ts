@@ -1,8 +1,12 @@
 import { env } from '@apillon/lib';
 import { GraphQLClient, gql } from 'graphql-request';
 import { BlockHeight } from '../../block-height';
-import { KiltTransactions } from './data-models/kilt-transactions';
-import { TransactionType } from '../../../../config/types';
+import {
+  AttestationTransation,
+  DidTransaction,
+  TransferTransaction,
+} from './data-models/kilt-transactions';
+import { KiltTransactionType } from '../../../../config/types';
 import { KiltGQLQueries } from './queries/kilt-graphql-queries';
 
 export class KiltBlockchainIndexer {
@@ -20,8 +24,8 @@ export class KiltBlockchainIndexer {
     address: string,
     fromBlock: number,
     toBlock: number,
-  ): Promise<KiltTransactions> {
-    const data: KiltTransactions = await this.graphQlClient.request(
+  ): Promise<TransferTransaction[]> {
+    const data: TransferTransaction[] = await this.graphQlClient.request(
       gql`
         ${KiltGQLQueries.ACCOUNT_TRANSFERS_Q}
       `,
@@ -29,7 +33,7 @@ export class KiltBlockchainIndexer {
         address,
         fromBlock,
         toBlock,
-        transactionType: TransactionType.BALANCE_TRANSFER,
+        transactionType: KiltTransactionType.BALANCE_TRANSFER,
       },
     );
     return data;
@@ -40,8 +44,8 @@ export class KiltBlockchainIndexer {
     address: string,
     fromBlock: number,
     toBlock: number,
-  ): Promise<KiltTransactions> {
-    const data: KiltTransactions = await this.graphQlClient.request(
+  ): Promise<TransferTransaction[]> {
+    const data: TransferTransaction[] = await this.graphQlClient.request(
       gql`
         ${KiltGQLQueries.ACCOUNT_TRANSFERS_Q}
       `,
@@ -49,7 +53,7 @@ export class KiltBlockchainIndexer {
         address,
         fromBlock,
         toBlock,
-        transactionType: TransactionType.BALANCE_WITHDRAW,
+        transactionType: KiltTransactionType.BALANCE_WITHDRAW,
       },
     );
     return data;
@@ -60,8 +64,8 @@ export class KiltBlockchainIndexer {
     address: string,
     fromBlock: number,
     toBlock: number,
-  ): Promise<KiltTransactions> {
-    const data: KiltTransactions = await this.graphQlClient.request(
+  ): Promise<TransferTransaction[]> {
+    const data: TransferTransaction[] = await this.graphQlClient.request(
       gql`
         ${KiltGQLQueries.ACCOUNT_TRANSFERS_Q}
       `,
@@ -69,7 +73,7 @@ export class KiltBlockchainIndexer {
         address,
         fromBlock,
         toBlock,
-        transactionType: TransactionType.BALANCE_DEPOSIT,
+        transactionType: KiltTransactionType.BALANCE_DEPOSIT,
       },
     );
     return data;
@@ -82,8 +86,8 @@ export class KiltBlockchainIndexer {
     address: string,
     fromBlock: number,
     toBlock: number,
-  ): Promise<KiltTransactions> {
-    const data: KiltTransactions = await this.graphQlClient.request(
+  ): Promise<TransferTransaction[]> {
+    const data: TransferTransaction[] = await this.graphQlClient.request(
       gql`
         ${KiltGQLQueries.ACCOUNT_TRANSFERS_Q}
       `,
@@ -91,7 +95,7 @@ export class KiltBlockchainIndexer {
         address,
         fromBlock,
         toBlock,
-        transactionType: TransactionType.BALANCE_RESERVE,
+        transactionType: KiltTransactionType.BALANCE_RESERVE,
       },
     );
     return data;
@@ -101,8 +105,8 @@ export class KiltBlockchainIndexer {
     address: string,
     fromBlock: number,
     toBlock: number,
-  ): Promise<KiltTransactions> {
-    const data: KiltTransactions = await this.graphQlClient.request(
+  ): Promise<DidTransaction[]> {
+    const data: DidTransaction[] = await this.graphQlClient.request(
       gql`
         ${KiltGQLQueries.ACCOUNT_DID_Q}
       `,
@@ -110,7 +114,7 @@ export class KiltBlockchainIndexer {
         address,
         fromBlock,
         toBlock,
-        transactionType: TransactionType.DID_CREATE,
+        transactionType: KiltTransactionType.DID_CREATE,
       },
     );
     return data;
@@ -120,8 +124,8 @@ export class KiltBlockchainIndexer {
     address: string,
     fromBlock: number,
     toBlock: number,
-  ): Promise<KiltTransactions> {
-    const data: KiltTransactions = await this.graphQlClient.request(
+  ): Promise<DidTransaction[]> {
+    const data: DidTransaction[] = await this.graphQlClient.request(
       gql`
         ${KiltGQLQueries.ACCOUNT_DID_Q}
       `,
@@ -129,7 +133,7 @@ export class KiltBlockchainIndexer {
         address,
         fromBlock,
         toBlock,
-        transactionType: TransactionType.DID_DELETE,
+        transactionType: KiltTransactionType.DID_DELETE,
       },
     );
     return data;
@@ -139,8 +143,8 @@ export class KiltBlockchainIndexer {
     address: string,
     fromBlock: number,
     toBlock: number,
-  ): Promise<KiltTransactions> {
-    const data: KiltTransactions = await this.graphQlClient.request(
+  ): Promise<DidTransaction[]> {
+    const data: DidTransaction[] = await this.graphQlClient.request(
       gql`
         ${KiltGQLQueries.ACCOUNT_DID_Q}
       `,
@@ -148,7 +152,7 @@ export class KiltBlockchainIndexer {
         address,
         fromBlock,
         toBlock,
-        transactionType: TransactionType.DID_UPDATE,
+        transactionType: KiltTransactionType.DID_UPDATE,
       },
     );
     return data;
@@ -158,8 +162,8 @@ export class KiltBlockchainIndexer {
     attesterId: string,
     fromBlock: number,
     toBlock: number,
-  ): Promise<KiltTransactions> {
-    const data: KiltTransactions = await this.graphQlClient.request(
+  ): Promise<AttestationTransation[]> {
+    const data: AttestationTransation[] = await this.graphQlClient.request(
       gql`
         ${KiltGQLQueries.ACCOUNT_ATTESTATIONS_Q}
       `,
@@ -167,7 +171,7 @@ export class KiltBlockchainIndexer {
         attesterId,
         fromBlock,
         toBlock,
-        transactionType: TransactionType.ATTESTATION_CREATE,
+        transactionType: KiltTransactionType.ATTESTATION_CREATE,
       },
     );
     return data;
@@ -177,8 +181,8 @@ export class KiltBlockchainIndexer {
     attesterId: string,
     fromBlock: number,
     toBlock: number,
-  ): Promise<KiltTransactions> {
-    const data: KiltTransactions = await this.graphQlClient.request(
+  ): Promise<AttestationTransation[]> {
+    const data: AttestationTransation[] = await this.graphQlClient.request(
       gql`
         ${KiltGQLQueries.ACCOUNT_ATTESTATIONS_Q}
       `,
@@ -186,7 +190,7 @@ export class KiltBlockchainIndexer {
         attesterId,
         fromBlock,
         toBlock,
-        transactionType: TransactionType.ATTESTATION_REMOVE,
+        transactionType: KiltTransactionType.ATTESTATION_REMOVE,
       },
     );
     return data;
@@ -196,8 +200,8 @@ export class KiltBlockchainIndexer {
     attesterId: string,
     fromBlock: number,
     toBlock: number,
-  ): Promise<KiltTransactions> {
-    const data: KiltTransactions = await this.graphQlClient.request(
+  ): Promise<AttestationTransation[]> {
+    const data: AttestationTransation[] = await this.graphQlClient.request(
       gql`
         ${KiltGQLQueries.ACCOUNT_ATTESTATIONS_Q}
       `,
@@ -205,7 +209,7 @@ export class KiltBlockchainIndexer {
         attesterId,
         fromBlock,
         toBlock,
-        transactionType: TransactionType.ATTESTATION_REVOKE,
+        transactionType: KiltTransactionType.ATTESTATION_REVOKE,
       },
     );
     return data;
