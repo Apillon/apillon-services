@@ -112,6 +112,7 @@ export class CrustBlockchainIndexer {
         transactionType: CrustTransferType.TRANSFER,
       },
     );
+
     return data;
   }
 

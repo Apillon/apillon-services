@@ -81,6 +81,7 @@ export class SporranMicroservice {
         status: HttpStatus.BAD_REQUEST,
       });
     }
+
     const dAppEncryptionKeyUri =
       `${document.uri}${document.keyAgreement[0].id}` as DidResourceUri;
 
