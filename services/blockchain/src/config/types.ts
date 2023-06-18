@@ -14,9 +14,18 @@ export enum CrustTransferType {
   STORAGE_ORDER = 1,
 }
 
-export enum KiltTransferType {
-  TRANSFER = 0,
-  DID_CREATE_ORDER = 1,
+// NOTE: Do not change!! These are mappings from the SQUID KILT service
+export enum TransactionType {
+  BALANCE_TRANSFER = 'balance-transfer',
+  BALANCE_DEPOSIT = 'balance-deposit',
+  BALANCE_WITHDRAW = 'balance-withdraw',
+  BALANCE_RESERVE = 'balance-reserve',
+  DID_CREATE = 'did-create',
+  DID_DELETE = 'did-delete',
+  DID_UPDATE = 'did-update',
+  ATTESTATION_CREATE = 'attestation-create',
+  ATTESTATION_REMOVE = 'attestation-remove',
+  ATTESTATION_REVOKE = 'attestation-revoke',
 }
 
 /**

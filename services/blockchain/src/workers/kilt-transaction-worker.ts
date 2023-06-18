@@ -57,12 +57,12 @@ export class KiltTransactionWorker extends BaseSingleThreadWorker {
           `[SUBSTRATE][KILT] Checking PENDING transactions (sourceWallet=${wallet.address}, lastParsedBlock=${wallet.lastParsedBlock}, toBlock=${toBlock})..`,
         );
 
-        const kiltTransactions = await this.fetchAllKiltTransactions(
-          kiltIndexer,
-          wallet.address,
-          lastParsedBlock,
-          toBlock,
-        );
+        // const kiltTransactions = await this.fetchAllKiltTransactions(
+        //   kiltIndexer,
+        //   wallet.address,
+        //   lastParsedBlock,
+        //   toBlock,
+        // );
 
         /*await this.handleBlockchainTransfers(
           wallet,
@@ -96,6 +96,7 @@ export class KiltTransactionWorker extends BaseSingleThreadWorker {
             },
           );
         }
+
         console.log(
           `[SUBSTRATE][KILT] Checking PENDING transactions (sourceWallet=${wallet.address}, lastProcessedBlock=${toBlock}) FINISHED!`,
         );
@@ -299,28 +300,28 @@ export class KiltTransactionWorker extends BaseSingleThreadWorker {
   //   return updatedDbTxs;
   // }
 
-  // /**
-  //  * Obtain kilt transactions
-  //  * @param address transactions created from wallet address
-  //  * @param fromBlock transactions included from block number
-  //  * @param toBlock transactions included to block number
-  //  */
-  // public async fetchAllKiltTransactions(
-  //   kiltIndexer: KiltBlockchainIndexer,
-  //   address: string,
-  //   fromBlock: number,
-  //   toBlock: number,
-  // ) {
-  //   const withdrawals = await kiltIndexer.getWalletWithdrawals(
-  //     address,
-  //     fromBlock,
-  //     toBlock,
-  //   );
-  //   const deposits = await kiltIndexer.getWalletDeposits(
-  //     address,
-  //     fromBlock,
-  //     toBlock,
-  //   );
-  //   return { withdrawals, deposits };
-  // }
+  /**
+   * Obtain kilt transactions
+   * @param address transactions created from wallet address
+   * @param fromBlock transactions included from block number
+   * @param toBlock transactions included to block number
+   */
+  public async fetchAllKiltTransactions(
+    kiltIndexer: KiltBlockchainIndexer,
+    address: string,
+    fromBlock: number,
+    toBlock: number,
+  ) {
+    const withdrawals = await kiltIndexer.ACCOUNT_WITHDRAWALS_Q(
+      address,
+      fromBlock,
+      toBlock,
+    );
+    // const deposits = await kiltIndexer.getWalletDeposits(
+    //   address,
+    //   fromBlock,
+    //   toBlock,
+    // );
+    return { withdrawals };
+  }
 }

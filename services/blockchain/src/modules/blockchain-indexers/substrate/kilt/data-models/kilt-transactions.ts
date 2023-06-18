@@ -4,7 +4,7 @@ export interface KiltTransactions {
   attestatonTransactions: AttestationTransation[];
 }
 
-export interface BaseTransaction {
+interface BaseTransaction {
   // TODO: I suggest we put this in a library and use in Crust as well
   readonly id: string;
   readonly blockNumber: number;

@@ -2,7 +2,8 @@ import { env } from '@apillon/lib';
 import { GraphQLClient, gql } from 'graphql-request';
 import { BlockHeight } from '../../block-height';
 import { KiltTransactions } from './data-models/kilt-transactions';
-import { KiltTransferType } from '../../../../config/types';
+import { TransactionType } from '../../../../config/types';
+import { KiltGQLQueries } from './queries/kilt-graphql-queries';
 
 export class KiltBlockchainIndexer {
   private graphQlClient: GraphQLClient;
@@ -14,161 +15,205 @@ export class KiltBlockchainIndexer {
     this.graphQlClient = new GraphQLClient(env.BLOCKCHAIN_KILT_GRAPHQL_SERVER);
   }
 
-  // public async getWalletWithdrawals(
-  //   address: string,
-  //   fromBlock: number,
-  //   toBlock: number,
-  // ): Promise<KiltTransactions> {
-  //   const GRAPHQL_QUERY = gql`
-  //     query getWithdrawals(
-  //       $address: String!
-  //       $fromBlock: Int!
-  //       $toBlock: Int!
-  //       $transactionType: Int!
-  //     ) {
-  //       transfers(
-  //         where: {
-  //           transactionType_eq: $transactionType
-  //           from: { id_eq: $address }
-  //           blockNumber_gt: $fromBlock
-  //           blockNumber_lte: $toBlock
-  //         }
-  //       ) {
-  //         amount
-  //         blockNumber
-  //         extrinsicHash
-  //         fee
-  //         id
-  //         timestamp
-  //         transactionType
-  //         status
-  //         from {
-  //           id
-  //         }
-  //         to {
-  //           id
-  //         }
-  //       }
-  //     }
-  //   `;
+  /* These indicate a transfer from one account -> another */
+  public async getAccountTransfers(
+    address: string,
+    fromBlock: number,
+    toBlock: number,
+  ): Promise<KiltTransactions> {
+    const data: KiltTransactions = await this.graphQlClient.request(
+      gql`
+        ${KiltGQLQueries.ACCOUNT_TRANSFERS_Q}
+      `,
+      {
+        address,
+        fromBlock,
+        toBlock,
+        transactionType: TransactionType.BALANCE_TRANSFER,
+      },
+    );
+    return data;
+  }
 
-  //   const data: KiltTransfers = await this.graphQlClient.request(
-  //     GRAPHQL_QUERY,
-  //     {
-  //       address,
-  //       fromBlock,
-  //       toBlock,
-  //       transactionType: KiltTransferType.TRANSFER,
-  //     },
-  //   );
-  //   return data;
-  // }
+  /* TODO: What is the difference between withdrawal and transfer FROM OUR_ACC -> X  ??? */
+  public async getAccountWithdrawals(
+    address: string,
+    fromBlock: number,
+    toBlock: number,
+  ): Promise<KiltTransactions> {
+    const data: KiltTransactions = await this.graphQlClient.request(
+      gql`
+        ${KiltGQLQueries.ACCOUNT_TRANSFERS_Q}
+      `,
+      {
+        address,
+        fromBlock,
+        toBlock,
+        transactionType: TransactionType.BALANCE_WITHDRAW,
+      },
+    );
+    return data;
+  }
 
-  // public async getWalletDeposits(
-  //   address: string,
-  //   fromBlock: number,
-  //   toBlock: number,
-  // ): Promise<KiltTransfers> {
-  //   const GRAPHQL_QUERY = gql`
-  //     query getDeposits(
-  //       $address: String!
-  //       $fromBlock: Int!
-  //       $toBlock: Int!
-  //       $transactionType: Int!
-  //     ) {
-  //       transfers(
-  //         where: {
-  //           transactionType_eq: $transactionType
-  //           to: { id_eq: $address }
-  //           blockNumber_gt: $fromBlock
-  //           blockNumber_lte: $toBlock
-  //         }
-  //       ) {
-  //         amount
-  //         blockNumber
-  //         extrinsicHash
-  //         fee
-  //         id
-  //         timestamp
-  //         transactionType
-  //         status
-  //         from {
-  //           id
-  //         }
-  //         to {
-  //           id
-  //         }
-  //       }
-  //     }
-  //   `;
+  /* TODO: What is the difference between deposit and transfer FROM Y -> OUR_ACC ??? */
+  public async getAccountDeposits(
+    address: string,
+    fromBlock: number,
+    toBlock: number,
+  ): Promise<KiltTransactions> {
+    const data: KiltTransactions = await this.graphQlClient.request(
+      gql`
+        ${KiltGQLQueries.ACCOUNT_TRANSFERS_Q}
+      `,
+      {
+        address,
+        fromBlock,
+        toBlock,
+        transactionType: TransactionType.BALANCE_DEPOSIT,
+      },
+    );
+    return data;
+  }
 
-  //   const data: KiltTransfers = await this.graphQlClient.request(
-  //     GRAPHQL_QUERY,
-  //     {
-  //       address,
-  //       fromBlock,
-  //       toBlock,
-  //       transactionType: KiltTransferType.TRANSFER,
-  //     },
-  //   );
-  //   return data;
-  // }
+  /* NOTE: An amount X of balance Y becomes reserved when a did submittion happens.
+          In this case, 2 KILT tokens are reserved for the creation of that DID document  
+  */
+  public async getAccountReserved(
+    address: string,
+    fromBlock: number,
+    toBlock: number,
+  ): Promise<KiltTransactions> {
+    const data: KiltTransactions = await this.graphQlClient.request(
+      gql`
+        ${KiltGQLQueries.ACCOUNT_TRANSFERS_Q}
+      `,
+      {
+        address,
+        fromBlock,
+        toBlock,
+        transactionType: TransactionType.BALANCE_RESERVE,
+      },
+    );
+    return data;
+  }
 
-  // public async getWalletTransfers(
-  //   address: string,
-  //   fromBlock: number,
-  //   limit: number = null,
-  // ): Promise<KiltTransfers> {
-  //   const GRAPHQL_QUERY = gql`
-  //     query getTransfers($address: String!, $fromBlock: Int!, $limit: Int) {
-  //       transfers(
-  //         where: {
-  //           AND: [
-  //             {
-  //               OR: [{ to: { id_eq: $address } }, { from: { id_eq: $address } }]
-  //             }
-  //             { blockNumber_gt: $fromBlock }
-  //           ]
-  //         }
-  //         orderBy: blockNumber_ASC
-  //         limit: $limit
-  //       ) {
-  //         amount
-  //         blockNumber
-  //         extrinsicHash
-  //         fee
-  //         id
-  //         timestamp
-  //         transactionType
-  //         status
-  //         from {
-  //           id
-  //         }
-  //         to {
-  //           id
-  //         }
-  //       }
-  //     }
-  //   `;
+  public async getAccountDidCreate(
+    address: string,
+    fromBlock: number,
+    toBlock: number,
+  ): Promise<KiltTransactions> {
+    const data: KiltTransactions = await this.graphQlClient.request(
+      gql`
+        ${KiltGQLQueries.ACCOUNT_DID_Q}
+      `,
+      {
+        address,
+        fromBlock,
+        toBlock,
+        transactionType: TransactionType.DID_CREATE,
+      },
+    );
+    return data;
+  }
 
-  //   const data: KiltTransfers = await this.graphQlClient.request(
-  //     GRAPHQL_QUERY,
-  //     {
-  //       address,
-  //       fromBlock,
-  //       limit,
-  //     },
-  //   );
-  //   return data;
-  // }
+  public async getAccountDidDelete(
+    address: string,
+    fromBlock: number,
+    toBlock: number,
+  ): Promise<KiltTransactions> {
+    const data: KiltTransactions = await this.graphQlClient.request(
+      gql`
+        ${KiltGQLQueries.ACCOUNT_DID_Q}
+      `,
+      {
+        address,
+        fromBlock,
+        toBlock,
+        transactionType: TransactionType.DID_DELETE,
+      },
+    );
+    return data;
+  }
+
+  public async getAccountDidUpdate(
+    address: string,
+    fromBlock: number,
+    toBlock: number,
+  ): Promise<KiltTransactions> {
+    const data: KiltTransactions = await this.graphQlClient.request(
+      gql`
+        ${KiltGQLQueries.ACCOUNT_DID_Q}
+      `,
+      {
+        address,
+        fromBlock,
+        toBlock,
+        transactionType: TransactionType.DID_UPDATE,
+      },
+    );
+    return data;
+  }
+
+  public async getAccountAttestCreate(
+    attesterId: string,
+    fromBlock: number,
+    toBlock: number,
+  ): Promise<KiltTransactions> {
+    const data: KiltTransactions = await this.graphQlClient.request(
+      gql`
+        ${KiltGQLQueries.ACCOUNT_ATTESTATIONS_Q}
+      `,
+      {
+        attesterId,
+        fromBlock,
+        toBlock,
+        transactionType: TransactionType.ATTESTATION_CREATE,
+      },
+    );
+    return data;
+  }
+
+  public async getAccountAttestRemove(
+    attesterId: string,
+    fromBlock: number,
+    toBlock: number,
+  ): Promise<KiltTransactions> {
+    const data: KiltTransactions = await this.graphQlClient.request(
+      gql`
+        ${KiltGQLQueries.ACCOUNT_ATTESTATIONS_Q}
+      `,
+      {
+        attesterId,
+        fromBlock,
+        toBlock,
+        transactionType: TransactionType.ATTESTATION_REMOVE,
+      },
+    );
+    return data;
+  }
+
+  public async getAccountAttestRevoke(
+    attesterId: string,
+    fromBlock: number,
+    toBlock: number,
+  ): Promise<KiltTransactions> {
+    const data: KiltTransactions = await this.graphQlClient.request(
+      gql`
+        ${KiltGQLQueries.ACCOUNT_ATTESTATIONS_Q}
+      `,
+      {
+        attesterId,
+        fromBlock,
+        toBlock,
+        transactionType: TransactionType.ATTESTATION_REVOKE,
+      },
+    );
+    return data;
+  }
 
   public async getBlockHeight(): Promise<number> {
     const GRAPHQL_QUERY = gql`
-      query getBlockHeight {
-        squidStatus {
-          height
-        }
-      }
+      ${KiltGQLQueries.SYSTEM_BLOCK_HEIGHT_Q}
     `;
 
     const data: BlockHeight = await this.graphQlClient.request(GRAPHQL_QUERY);
