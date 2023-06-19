@@ -55,9 +55,7 @@ export class Context {
 
   public hasPermission(permission: number) {
     if (this.user) {
-      return !!this.user.authUser.authUserPermissions.find(
-        (x) => x.permission.id == permission,
-      );
+      return !!this.user.userPermissions.find((x) => x == permission);
     }
     return false;
   }

@@ -63,7 +63,7 @@ export async function registerUser(params: any, context: DevConsoleApiContext) {
       password: params.password,
     });
 
-    user.setUserRolesFromAmsResponse(amsResponse);
+    user.setUserRolesAndPermissionsFromAmsResponse(amsResponse);
 
     await context.mysql.commit(conn);
   } catch (err) {
