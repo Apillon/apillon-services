@@ -20,6 +20,7 @@ import { FileUploadRequest } from '../storage/models/file-upload-request.model';
 import { File } from '../storage/models/file.model';
 import { uploadItemsToIPFSRes } from './interfaces/upload-items-to-ipfs-res.interface';
 import axios from 'axios';
+import { Bucket } from '../bucket/models/bucket.model';
 
 export class IPFSService {
   static async createIPFSClient() {
@@ -147,7 +148,12 @@ export class IPFSService {
     //Get IPFS client
     const client = await IPFSService.createIPFSClient();
 
-    const mfsDirectoryPath = `/${event.fileUploadRequests[0].bucket_id}${
+    const bucket: Bucket = await new Bucket({}, context).populateById(
+      event.fileUploadRequests[0].bucket_id,
+    );
+
+    //Bucket uuid must be used for mfs directory path, because same IPFS is used in different environments. An so bucket id can overlap.
+    const mfsDirectoryPath = `/${bucket.bucket_uuid}${
       event.wrappingDirectoryPath ? '/' + event.wrappingDirectoryPath : ''
     }`;
 

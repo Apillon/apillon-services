@@ -231,10 +231,21 @@ export class AuthUserService {
       });
     }
 
-    const tokenData = parseJwtToken(
-      JwtTokenType.USER_AUTHENTICATION,
-      event.token,
-    );
+    let tokenData;
+    try {
+      tokenData = parseJwtToken(JwtTokenType.USER_AUTHENTICATION, event.token);
+    } catch (err) {
+      if ((err.message = 'jwt expired')) {
+        throw await new AmsCodeException({
+          status: 401,
+          code: AmsErrorCode.AUTH_TOKEN_EXPIRED,
+        });
+      }
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.USER_AUTH_TOKEN_IS_INVALID,
+      });
+    }
 
     if (!tokenData.user_uuid) {
       throw await new AmsCodeException({
@@ -505,6 +516,28 @@ export class AuthUserService {
         code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
       }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
     }
+
+    //If login token with greater timestamp exists, throw error - signature was already used for login
+    const authToken = await new AuthToken({}, context).populateByUserAndType(
+      authUser.user_uuid,
+      JwtTokenType.USER_AUTHENTICATION,
+    );
+
+    if (
+      authToken.exists() &&
+      authToken?.updateTime?.getTime() > authData.timestamp
+    ) {
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.WALLET_SIGNATURE_ALREADY_USED,
+      }).writeToMonitor({
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
+      });
+    }
+
+    //Login user
 
     await authUser.loginUser();
 
