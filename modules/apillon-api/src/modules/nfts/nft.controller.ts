@@ -1,5 +1,6 @@
 import {
   ApillonApiCreateCollectionDTO,
+  ApillonApiNFTCollectionQueryFilter,
   AttachedServiceType,
   BurnNftDto,
   DefaultApiKeyRole,
@@ -40,6 +41,26 @@ export class NftController {
     @Body() body: ApillonApiCreateCollectionDTO,
   ) {
     return await this.nftService.createCollection(context, body);
+  }
+
+  @Get('collections')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_READ,
+    serviceType: AttachedServiceType.NFT,
+  })
+  @UseGuards(AuthGuard, ValidationGuard)
+  @HttpCode(200)
+  @Validation({
+    dto: ApillonApiNFTCollectionQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  async listNftCollections(
+    @Ctx() context: ApillonApiContext,
+    @Query() query: ApillonApiNFTCollectionQueryFilter,
+  ) {
+    query.project_uuid = context.apiKey.project_uuid;
+
+    return await this.nftService.listNftCollections(context, query);
   }
 
   @Get('collections/:uuid')

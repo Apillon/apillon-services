@@ -1,5 +1,6 @@
 import {
   ApillonApiCreateCollectionDTO,
+  ApillonApiNFTCollectionQueryFilter,
   BurnNftDto,
   CreateCollectionDTO,
   MintNftDTO,
@@ -22,6 +23,13 @@ export class NftService {
     });
 
     return (await new NftsMicroservice(context).createCollection(dto)).data;
+  }
+
+  async listNftCollections(
+    context: ApillonApiContext,
+    query: ApillonApiNFTCollectionQueryFilter,
+  ) {
+    return (await new NftsMicroservice(context).listNftCollections(query)).data;
   }
 
   async getCollection(context: ApillonApiContext, uuid: string) {

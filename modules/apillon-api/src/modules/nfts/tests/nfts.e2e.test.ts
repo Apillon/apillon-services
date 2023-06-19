@@ -116,6 +116,53 @@ describe('Apillon API NFTs tests', () => {
     await releaseStage(stage);
   });
   describe('Moonbeam NFT Collection tests', () => {
+    test('User should be able to get collection list', async () => {
+      const response = await getRequest(
+        `/nfts/collections?status=${CollectionStatus.DEPLOY_INITIATED}&search=${testCollection.name}`,
+      );
+
+      expect(response.status).toBe(200);
+      const data = response.body.data;
+      expect(data.items.length).toBe(1);
+      const firstCollection = data.items[0];
+      expect(firstCollection?.id).toBeTruthy();
+      expect(firstCollection?.status).toBeTruthy();
+      expect(firstCollection?.collectionUuid).toBeTruthy();
+      expect(firstCollection?.symbol).toBeTruthy();
+      expect(firstCollection?.name).toBeTruthy();
+      expect(firstCollection?.maxSupply).toBeTruthy();
+      expect(firstCollection?.mintPrice).toBe(0);
+      expect(firstCollection?.isDrop).toBe(0);
+      expect(firstCollection?.isSoulbound).toBe(0);
+      expect(firstCollection?.isRevokable).toBeTruthy();
+      expect(firstCollection?.dropStart).toBeTruthy();
+      expect(firstCollection?.reserve).toBeTruthy();
+      expect(firstCollection?.royaltiesFees).toBe(0);
+      expect(firstCollection?.royaltiesAddress).toBeTruthy();
+      expect(firstCollection?.collectionStatus).toBe(0);
+      expect(firstCollection?.contractAddress).toBeTruthy();
+      expect(firstCollection?.chain).toBeTruthy();
+    });
+
+    test('User should not be able to get collections from another project', async () => {
+      const otherCollection = await createTestNFTCollection(
+        testUser,
+        stage.nftsContext,
+        testProject,
+        SqlModelStatus.DRAFT,
+        CollectionStatus.CREATED,
+        { project_uuid: 'another_project_uuid', name: 'Other Collection' },
+      );
+
+      const response = await getRequest(
+        `/nfts/collections?search=${otherCollection.name}`,
+      );
+
+      expect(response.status).toBe(200);
+      const data = response.body.data;
+      expect(data.items.length).toBe(0);
+    });
+
     test('User should be able to get collection by uuid', async () => {
       const response = await getRequest(
         `/nfts/collections/${testCollection.collection_uuid}`,
