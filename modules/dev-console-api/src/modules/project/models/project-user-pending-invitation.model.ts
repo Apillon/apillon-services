@@ -75,7 +75,9 @@ export class ProjectUserPendingInvitation extends AdvancedSQLModel {
       `
       SELECT * 
       FROM \`${this.tableName}\`
-      WHERE project_id = @project_id AND email = @email AND status <> ${SqlModelStatus.DELETED};
+      WHERE project_id = @project_id 
+      AND email = @email 
+      AND status <> ${SqlModelStatus.DELETED};
       `,
       { project_id, email },
     );
