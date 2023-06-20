@@ -239,6 +239,8 @@ export enum SqlModelStatus {
 export enum AttachedServiceType {
   AUTHENTICATION = 1,
   STORAGE = 2,
+  NFT = 3,
+  HOSTING = 4,
   SYSTEM = 999,
 }
 

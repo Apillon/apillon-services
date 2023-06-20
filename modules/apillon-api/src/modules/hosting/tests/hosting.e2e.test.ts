@@ -72,7 +72,7 @@ describe('Apillon API hosting tests', () => {
         role_id: DefaultApiKeyRole.KEY_EXECUTE,
         project_uuid: testProject.project_uuid,
         service_uuid: testService.service_uuid,
-        serviceType_id: AttachedServiceType.STORAGE,
+        serviceType_id: AttachedServiceType.HOSTING,
       }),
     );
     await apiKey.assignRole(
@@ -80,7 +80,7 @@ describe('Apillon API hosting tests', () => {
         role_id: DefaultApiKeyRole.KEY_READ,
         project_uuid: testProject.project_uuid,
         service_uuid: testService.service_uuid,
-        serviceType_id: AttachedServiceType.STORAGE,
+        serviceType_id: AttachedServiceType.HOSTING,
       }),
     );
     await apiKey.assignRole(
@@ -88,7 +88,7 @@ describe('Apillon API hosting tests', () => {
         role_id: DefaultApiKeyRole.KEY_WRITE,
         project_uuid: testProject.project_uuid,
         service_uuid: testService.service_uuid,
-        serviceType_id: AttachedServiceType.STORAGE,
+        serviceType_id: AttachedServiceType.HOSTING,
       }),
     );
 
@@ -109,7 +109,7 @@ describe('Apillon API hosting tests', () => {
         role_id: DefaultApiKeyRole.KEY_EXECUTE,
         project_uuid: testProject2.project_uuid,
         service_uuid: testService2.service_uuid,
-        serviceType_id: AttachedServiceType.STORAGE,
+        serviceType_id: AttachedServiceType.HOSTING,
       }),
     );
     await apiKey2.assignRole(
@@ -117,7 +117,7 @@ describe('Apillon API hosting tests', () => {
         role_id: DefaultApiKeyRole.KEY_READ,
         project_uuid: testProject2.project_uuid,
         service_uuid: testService2.service_uuid,
-        serviceType_id: AttachedServiceType.STORAGE,
+        serviceType_id: AttachedServiceType.HOSTING,
       }),
     );
     await apiKey2.assignRole(
@@ -125,7 +125,7 @@ describe('Apillon API hosting tests', () => {
         role_id: DefaultApiKeyRole.KEY_WRITE,
         project_uuid: testProject2.project_uuid,
         service_uuid: testService2.service_uuid,
-        serviceType_id: AttachedServiceType.STORAGE,
+        serviceType_id: AttachedServiceType.HOSTING,
       }),
     );
   });
