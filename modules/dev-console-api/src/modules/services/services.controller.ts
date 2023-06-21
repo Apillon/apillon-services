@@ -23,6 +23,13 @@ import { ServiceDto } from './dtos/service.dto';
 export class ServicesController {
   constructor(private readonly serviceService: ServicesService) {}
 
+  @Get('types')
+  @Permissions({ role: DefaultUserRole.USER })
+  @UseGuards(AuthGuard)
+  async getServiceTypes(@Ctx() context: DevConsoleApiContext) {
+    return await this.serviceService.getServiceTypes(context);
+  }
+
   @Get()
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },

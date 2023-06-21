@@ -1,24 +1,29 @@
 import { AttachedServiceType } from '@apillon/lib';
 import { DbTables } from '../../config/types';
-
 export async function upgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    INSERT IGNORE INTO \`${DbTables.SERVICE_TYPE}\`
+    INSERT
+    IGNORE INTO \`${DbTables.SERVICE_TYPE}\`
       (id, name, description, active)
     VALUES
-      (${AttachedServiceType.AUTHENTICATION}, 'Authentication', 'Authentication (KILT) service', 1),
-      (${AttachedServiceType.STORAGE}, 'Storage', 'Storage service provides buckets and IPFS storage solution.', 0)
-      ;
+      (
+    ${AttachedServiceType.NFT},
+    'NFT',
+    'Service for managing NFTs.',
+    1
+    )
+    ;
   `);
 }
-
 export async function downgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    DELETE IGNORE FROM \`${DbTables.SERVICE_TYPE}\`
-    WHERE id IN (${AttachedServiceType.AUTHENTICATION},${AttachedServiceType.STORAGE});
+    DELETE
+    IGNORE FROM \`${DbTables.SERVICE_TYPE}\`
+    WHERE id =
+    ${AttachedServiceType.NFT};
   `);
 }

@@ -6,6 +6,7 @@ import {
   SerializeFor,
 } from '@apillon/lib';
 import { DbTables } from '../../../config/types';
+import { RolePermission } from './role-permission.model';
 
 export class Role extends AdvancedSQLModel {
   public readonly tableName = DbTables.ROLE;
@@ -41,4 +42,20 @@ export class Role extends AdvancedSQLModel {
     ],
   })
   public type: string;
+
+  /**************************************INFO properties - not par od DB*/
+  /**
+   * Properties
+   */
+  @prop({
+    populatable: [
+      PopulateFrom.SERVICE, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public rolePermissions: RolePermission[];
 }

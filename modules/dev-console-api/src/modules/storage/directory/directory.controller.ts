@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import {
   CreateDirectoryDto,
+  DefaultPermission,
   DefaultUserRole,
   DirectoryContentQueryFilter,
   ValidateFor,
@@ -23,6 +24,7 @@ import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { AuthGuard } from '../../../guards/auth.guard';
 
 @Controller('directories')
+@Permissions({ permission: DefaultPermission.STORAGE })
 export class DirectoryController {
   constructor(private directoryService: DirectoryService) {}
 

@@ -50,15 +50,15 @@ export class HostingService {
       context,
     ).populate({
       project_uuid: project.project_uuid,
-      serviceType_id: AttachedServiceType.STORAGE,
+      serviceType_id: AttachedServiceType.HOSTING,
     });
-    const storageServices = await new Service({}).getServices(context, query);
-    if (storageServices.total == 0) {
-      //Create storage service - "Attach"
+    const hostingServices = await new Service({}).getServices(context, query);
+    if (hostingServices.total == 0) {
+      //Create HOSTING service - "Attach"
       const storageService: ServiceDto = new ServiceDto({}, context).populate({
         project_uuid: project.project_uuid,
         name: 'Storage service',
-        serviceType_id: AttachedServiceType.STORAGE,
+        serviceType_id: AttachedServiceType.HOSTING,
       });
 
       await this.serviceService.createService(context, storageService);
