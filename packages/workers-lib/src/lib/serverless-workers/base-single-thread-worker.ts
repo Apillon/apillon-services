@@ -136,8 +136,10 @@ export abstract class BaseSingleThreadWorker extends BaseWorker {
     if (!this.shouldRunJob) {
       return;
     }
-    await await this.context.mysql.paramExecute(
-      `DELETE FROM ${DbTables.JOB} WHERE id = @id`,
+    await this.context.mysql.paramExecute(
+      `DELETE
+       FROM ${DbTables.JOB}
+       WHERE id = @id`,
       {
         id: this.workerDefinition.id,
       },

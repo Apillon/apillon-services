@@ -144,6 +144,7 @@ export enum NftsEventType {
   CREATE_COLLECTION = 'create-collection',
   NFT_COLLECTIONS_LIST = 'list-nft-collections',
   GET_NFT_COLLECTION = 'get-nft-collection',
+  GET_NFT_COLLECTION_BY_UUID = 'get-nft-collection-by-uuid',
   TRANSFER_OWNERSHIP = 'transfer-ownership',
   MINT_NFT = 'mint-nft',
   SET_BASE_URI = 'set-base-uri',
@@ -472,6 +473,7 @@ export enum ValidatorErrorCode {
   NFT_COLLECTION_ROYALTIES_FEES_NOT_VALID = 42200137,
   TRANSACTION_REF_TABLE_PARAM_NOT_PRESENT = 42200138,
   TRANSACTION_REF_ID_PARAM_NOT_PRESENT = 42200139,
+  NFT_COLLECTION_BASE_URI_NOT_PRESENT = 42200140,
 
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,

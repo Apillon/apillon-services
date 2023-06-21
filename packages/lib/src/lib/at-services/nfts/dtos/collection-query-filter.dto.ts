@@ -32,3 +32,12 @@ export class NFTCollectionQueryFilter extends BaseQueryFilter {
   })
   public status: number;
 }
+
+export class ApillonApiNFTCollectionQueryFilter extends NFTCollectionQueryFilter {
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [],
+  })
+  public project_uuid: string;
+}

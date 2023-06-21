@@ -6,13 +6,14 @@ import {
 import { Collection } from '@apillon/nfts/src/modules/nfts/models/collection.model';
 import { Transaction } from '@apillon/nfts/src/modules/transaction/models/transaction.model';
 import {
-  Stage,
-  TestUser,
   createTestNFTCollection,
   createTestProject,
   createTestUser,
+  overrideDefaultQuota,
   releaseStage,
+  Stage,
   startGanacheRPCServer,
+  TestUser,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
@@ -49,17 +50,20 @@ describe('Storage bucket tests', () => {
       0,
     );
 
+    await overrideDefaultQuota(
+      stage,
+      testProject.project_uuid,
+      QuotaCode.MAX_NFT_COLLECTIONS,
+      10,
+    );
     await stage.configContext.mysql.paramExecute(`
-    INSERT INTO override (status, quota_id, project_uuid,  object_uuid, package_id, value)
-    VALUES 
-      (
-        5,
-        ${QuotaCode.MAX_NFT_COLLECTIONS},
-        '${testProject.project_uuid}',
-        null, 
-        null,
-        '10'
-      )
+      INSERT INTO override (status, quota_id, project_uuid, object_uuid, package_id, value)
+      VALUES (5,
+              ${QuotaCode.MAX_NFT_COLLECTIONS},
+              '${testProject.project_uuid}',
+              null,
+              null,
+              '10')
     `);
   });
 
@@ -93,9 +97,9 @@ describe('Storage bucket tests', () => {
       expect(response.body.data.items[0]?.chain).toBeTruthy();
     });
 
-    test('User should be able to get collection by id', async () => {
+    test('User should be able to get collection by uuid', async () => {
       const response = await request(stage.http)
-        .get(`/nfts/collections/${testCollection.id}`)
+        .get(`/nfts/collections/${testCollection.collection_uuid}`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.id).toBeTruthy();

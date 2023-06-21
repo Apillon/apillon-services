@@ -323,6 +323,28 @@ export class NftsService {
     return collection.serialize(SerializeFor.PROFILE);
   }
 
+  static async getCollectionByUuid(
+    event: { uuid: any },
+    context: ServiceContext,
+  ) {
+    const collection: Collection = await new Collection(
+      {},
+      context,
+    ).populateByUUID(event.uuid);
+
+    if (!collection.exists()) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.NFT_COLLECTION_DOES_NOT_EXIST,
+        context: context,
+      });
+    }
+    collection.canAccess(context);
+    await collection.populateNumberOfMintedNfts();
+
+    return collection.serialize(SerializeFor.PROFILE);
+  }
+
   static async transferCollectionOwnership(
     params: { body: TransferCollectionDTO },
     context: ServiceContext,
@@ -434,7 +456,7 @@ export class NftsService {
     try {
       const dbTxRecord: Transaction = new Transaction({}, context);
       const tx: UnsignedTransaction =
-        await await walletService.createSetNftBaseUriTransaction(
+        await walletService.createSetNftBaseUriTransaction(
           collection.contractAddress,
           params.body.uri,
         );
