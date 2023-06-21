@@ -57,6 +57,7 @@ export class UserService {
     }
 
     user.userRoles = context.user.userRoles;
+    user.userPermissions = context.user.userPermissions;
     user.wallet = context.user.authUser.wallet;
 
     return user.serialize(SerializeFor.PROFILE);
@@ -92,7 +93,7 @@ export class UserService {
 
       user.wallet = resp.data.wallet;
 
-      user.setUserRolesFromAmsResponse(resp);
+      user.setUserRolesAndPermissionsFromAmsResponse(resp);
 
       return {
         ...user.serialize(SerializeFor.PROFILE),
@@ -137,7 +138,7 @@ export class UserService {
       }
 
       user.wallet = resp.data.wallet;
-      user.setUserRolesFromAmsResponse(resp);
+      user.setUserRolesAndPermissionsFromAmsResponse(resp);
 
       return {
         ...user.serialize(SerializeFor.PROFILE),
@@ -305,7 +306,7 @@ export class UserService {
       });
     }
 
-    user.setUserRolesFromAmsResponse(resp);
+    user.setUserRolesAndPermissionsFromAmsResponse(resp);
 
     user.wallet = resp.data.wallet;
 

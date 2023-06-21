@@ -105,7 +105,6 @@ export class Service extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
     ],
     validators: [

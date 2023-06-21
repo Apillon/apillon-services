@@ -1,5 +1,10 @@
 // import { ApiProperty } from '@babel/core';
-import { PopulateFrom, SerializeFor } from '@apillon/lib';
+import {
+  AttachedServiceType,
+  PopulateFrom,
+  SerializeFor,
+  enumInclusionValidator,
+} from '@apillon/lib';
 import { ModelBase } from '@apillon/lib/dist/lib/base-models/base';
 import { prop } from '@rawmodel/core';
 import { integerParser, stringParser } from '@rawmodel/parsers';
@@ -41,6 +46,10 @@ export class ServiceDto extends ModelBase {
       {
         resolver: presenceValidator(),
         code: ValidatorErrorCode.SERVICE_TYPE_NOT_PRESENT,
+      },
+      {
+        resolver: enumInclusionValidator(AttachedServiceType, false),
+        code: ValidatorErrorCode.SERVICE_TYPE_ID_NOT_VALID,
       },
     ],
     fakeValue: 1,

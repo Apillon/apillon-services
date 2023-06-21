@@ -121,9 +121,9 @@ export abstract class BaseService {
       throw {
         status: result?.status || 500,
         message:
-          //// do not show original error message to user response!
-          // result?.error?.message ||
-          // result?.error?.errorMessage ||
+          // do not display lambda/function names
+          result?.error?.message ||
+          result?.error?.errorMessage ||
           `Error calling internal service!`,
         code: result?.error?.errorCode,
       };
