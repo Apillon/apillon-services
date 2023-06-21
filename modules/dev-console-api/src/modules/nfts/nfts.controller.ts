@@ -10,6 +10,7 @@ import {
   ValidateFor,
   BurnNftDto,
   CollectionsQuotaReachedQueryFilter,
+  DefaultPermission,
 } from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
@@ -28,6 +29,7 @@ import { ValidationGuard } from '../../guards/validation.guard';
 import { NftsService } from './nfts.service';
 
 @Controller('nfts')
+@Permissions({ permission: DefaultPermission.NFTS })
 export class NftsController {
   constructor(private readonly nftsService: NftsService) {}
 

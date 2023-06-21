@@ -4,23 +4,30 @@ import {
   ValidatorErrorCode,
 } from '../../config/types';
 
-import { DevConsoleApiContext } from '../../context';
-import { ServiceQueryFilter } from './dtos/services-query-filter.dto';
-import { Service } from './models/service.model';
 import {
+  AttachedServiceType,
   CodeException,
+  DefaultPermission,
+  ForbiddenErrorCodes,
   Lmas,
   LogType,
-  SerializeFor,
   ServiceName,
   ValidationException,
 } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
+import { DevConsoleApiContext } from '../../context';
 import { Project } from '../project/models/project.model';
 import { ServiceDto } from './dtos/service.dto';
+import { ServiceQueryFilter } from './dtos/services-query-filter.dto';
+import { Service } from './models/service.model';
+import { ServiceType } from './models/service-type.model';
 
 @Injectable()
 export class ServicesService {
+  async getServiceTypes(context: DevConsoleApiContext) {
+    return await new ServiceType({}, context).getServiceTypes();
+  }
+
   /**
    * Retrieves a service by its ID.
    *
@@ -84,6 +91,31 @@ export class ServicesService {
       });
     }
     project.canModify(context);
+
+    //Check if user has permissions to use this service type - mapping with permissions need to be done
+    let requiredPermission = undefined;
+    switch (body.serviceType_id) {
+      case AttachedServiceType.AUTHENTICATION:
+        requiredPermission = DefaultPermission.AUTHENTICATION;
+        break;
+      case AttachedServiceType.STORAGE:
+        requiredPermission = DefaultPermission.STORAGE;
+        break;
+      case AttachedServiceType.HOSTING:
+        requiredPermission = DefaultPermission.HOSTING;
+        break;
+      case AttachedServiceType.NFT:
+        requiredPermission = DefaultPermission.NFTS;
+        break;
+    }
+
+    if (requiredPermission && !context.hasPermission(requiredPermission)) {
+      throw new CodeException({
+        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: HttpStatus.FORBIDDEN,
+        errorCodes: ForbiddenErrorCodes,
+      });
+    }
 
     const service = new Service(body, context);
     service.populate({ service_uuid: uuidV4(), project_id: project.id });

@@ -118,6 +118,13 @@ export class EvmService {
         );
       }
 
+      if (!wallet.exists()) {
+        throw new BlockchainCodeException({
+          code: BlockchainErrorCode.WALLET_DOES_NOT_EXISTS,
+          status: 500,
+        });
+      }
+
       // parse and set transaction information
       const unsignedTx = ethers.utils.parseTransaction(
         _event.params.transaction,

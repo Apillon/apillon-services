@@ -27,7 +27,7 @@ export class DevConsoleApiContext extends Context {
 
       if (user.exists()) {
         user.authUser = userData.data;
-        user.setUserRolesFromAmsResponse(userData);
+        user.setUserRolesAndPermissionsFromAmsResponse(userData);
         this.user = user;
       }
     }

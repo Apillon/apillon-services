@@ -15,6 +15,7 @@ import {
   BucketQuotaReachedQueryFilter,
   CreateBucketDto,
   CreateBucketWebhookDto,
+  DefaultPermission,
   DefaultUserRole,
   ValidateFor,
 } from '@apillon/lib';
@@ -25,6 +26,7 @@ import { BucketService } from './bucket.service';
 import { AuthGuard } from '../../../guards/auth.guard';
 
 @Controller('buckets')
+@Permissions({ permission: DefaultPermission.STORAGE })
 export class BucketController {
   constructor(private bucketService: BucketService) {}
 

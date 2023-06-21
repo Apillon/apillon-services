@@ -158,5 +158,14 @@ describe('Project services tests', () => {
 
       expect(s.exists()).toBeFalsy();
     });
+
+    test('User should be able to get service types', async () => {
+      const response = await request(stage.http)
+        .get(`/services/types`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data[0]?.id).toBeTruthy();
+      expect(response.body.data[0]?.name).toBeTruthy();
+    });
   });
 });

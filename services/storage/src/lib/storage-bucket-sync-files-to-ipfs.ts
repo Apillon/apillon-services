@@ -127,6 +127,12 @@ export async function storageBucketSyncFilesToIPFS(
 
       wrappingDirectory.CID = ipfsRes.parentDirCID.toV0().toString();
       await wrappingDirectory.update();
+
+      for (const fur of files) {
+        fur.path = fur.path
+          ? wrappingDirectoryPath + '/' + fur.path
+          : wrappingDirectoryPath;
+      }
     }
 
     for (const ipfsDir of ipfsRes.ipfsDirectories) {

@@ -53,6 +53,13 @@ export class Context {
     return false;
   }
 
+  public hasPermission(permission: number) {
+    if (this.user) {
+      return !!this.user.userPermissions.find((x) => x == permission);
+    }
+    return false;
+  }
+
   /**
    * Check if apiKey or user has permission to access this specific record in project
    * @param role required role/roles

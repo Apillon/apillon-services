@@ -131,6 +131,15 @@ export class User extends AdvancedSQLModel {
   })
   public userRoles: number[];
 
+  /** user permissions */
+  @prop({
+    parser: { resolver: integerParser(), array: true },
+    populatable: [],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    defaultValue: [],
+  })
+  public userPermissions: number[];
+
   /**
    * Auth user - info property used to pass to microservices - othervise serialization removes this object
    */
@@ -173,15 +182,21 @@ export class User extends AdvancedSQLModel {
     return this.reset();
   }
 
-  public setUserRolesFromAmsResponse(amsResponse: any) {
+  public setUserRolesAndPermissionsFromAmsResponse(amsResponse: any) {
     const data = amsResponse?.data || amsResponse;
-    if (!data || !data?.authUserRoles) {
-      return this;
+    if (data?.authUserRoles) {
+      this.userRoles =
+        data.authUserRoles
+          ?.filter((x) => !x.project_uuid)
+          ?.map((x) => x.role_id) || [];
+
+      this.userPermissions = data.authUserRoles
+        .filter((x) => !x.project_uuid)
+        .map((x) => x.role.rolePermissions)
+        .flat()
+        .map((rp) => rp.permission_id)
+        .filter((value, index, self) => self.indexOf(value) === index);
     }
-    this.userRoles =
-      data.authUserRoles
-        ?.filter((x) => !x.project_uuid)
-        ?.map((x) => x.role_id) || [];
     return this;
   }
 }
