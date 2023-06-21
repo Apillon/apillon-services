@@ -21,6 +21,7 @@ import { ProjectUserUpdateRoleDto } from './dtos/project_user-update-role.dto';
 import { Project } from './models/project.model';
 import { ProjectService } from './project.service';
 import { AuthGuard } from '../../guards/auth.guard';
+import { ProjectUserUninviteDto } from './dtos/project_user-uninvite.dto';
 
 @Controller('projects')
 export class ProjectController {
@@ -84,6 +85,25 @@ export class ProjectController {
     @Body() body: ProjectUserInviteDto,
   ) {
     return await this.projectService.inviteUserProject(context, uuid, body);
+  }
+
+  @Post(':uuid/uninvite-user')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @Validation({ dto: ProjectUserUninviteDto })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async uninviteUserFromProject(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') uuid: string,
+    @Body() body: ProjectUserUninviteDto,
+  ) {
+    return await this.projectService.uninviteUserFromProject(
+      context,
+      uuid,
+      body,
+    );
   }
 
   @Patch('/user/:projectUserId')

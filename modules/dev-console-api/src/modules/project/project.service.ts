@@ -33,6 +33,7 @@ import { ProjectUserPendingInvitation } from './models/project-user-pending-invi
 import { ProjectUser } from './models/project-user.model';
 import { Project } from './models/project.model';
 import { v4 as uuidV4 } from 'uuid';
+import { ProjectUserUninviteDto } from './dtos/project_user-uninvite.dto';
 
 @Injectable()
 export class ProjectService {
@@ -310,6 +311,34 @@ export class ProjectService {
         throw err;
       }
     }
+    return true;
+  }
+
+  async uninviteUserFromProject(
+    context: DevConsoleApiContext,
+    project_uuid: string,
+    data: ProjectUserUninviteDto,
+  ) {
+    const project: Project = await new Project({}, context).populateByUUID(
+      project_uuid,
+    );
+    if (!project.exists()) {
+      throw new CodeException({
+        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
+        status: HttpStatus.NOT_FOUND,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+    project.canModify(context);
+
+    const pupi = await new ProjectUserPendingInvitation(
+      {},
+      context,
+    ).populateByEmailAndProject(project.id, data.email);
+    if (pupi.exists()) {
+      await pupi.delete();
+    }
+
     return true;
   }
 
