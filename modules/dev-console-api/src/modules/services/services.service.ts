@@ -113,6 +113,7 @@ export class ServicesService {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: HttpStatus.FORBIDDEN,
+        errorCodes: ForbiddenErrorCodes,
       });
     }
 
