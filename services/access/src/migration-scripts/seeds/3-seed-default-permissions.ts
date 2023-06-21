@@ -11,7 +11,7 @@ export async function upgrade(
      (${DefaultPermission.HOSTING}, 5, 'Hosting permission'),
      (${DefaultPermission.AUTHENTICATION}, 5, 'Authentication (KILT) permission'),
      (${DefaultPermission.NFTS}, 5, 'Nfts permission'),
-     (${DefaultPermission.COMPUTING}, 5, 'Nfts permission')
+     (${DefaultPermission.COMPUTING}, 5, 'Computing permission')
     ;
   `);
 }
