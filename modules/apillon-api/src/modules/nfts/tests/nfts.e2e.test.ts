@@ -144,19 +144,33 @@ describe('Apillon API NFTs tests', () => {
       expect(firstCollection?.chain).toBeTruthy();
     });
 
-    test('User should not be able to get collections from another project', async () => {
-      const otherCollection = await createTestNFTCollection(
-        testUser,
-        stage.nftsContext,
-        testProject,
-        SqlModelStatus.DRAFT,
-        CollectionStatus.CREATED,
-        { project_uuid: 'another_project_uuid', name: 'Other Collection' },
+    test('User should not be able to list collections from another project', async () => {
+      const otherUser = await createTestUser(
+        stage.devConsoleContext,
+        stage.amsContext,
+      );
+      const otherProject = await createTestProject(
+        otherUser,
+        stage.devConsoleContext,
+      );
+      const otherService = await createTestProjectService(
+        stage.devConsoleContext,
+        otherProject,
+      );
+      const otherApiKey = await createTestApiKey(
+        stage.amsContext,
+        otherProject.project_uuid,
+      );
+      await otherApiKey.assignRole(
+        new ApiKeyRoleBaseDto().populate({
+          role_id: DefaultApiKeyRole.KEY_READ,
+          project_uuid: otherProject.project_uuid,
+          service_uuid: otherService.service_uuid,
+          serviceType_id: AttachedServiceType.NFT,
+        }),
       );
 
-      const response = await getRequest(
-        `/nfts/collections?search=${otherCollection.name}`,
-      );
+      const response = await getRequest('/nfts/collections', otherApiKey);
 
       expect(response.status).toBe(200);
       const data = response.body.data;
