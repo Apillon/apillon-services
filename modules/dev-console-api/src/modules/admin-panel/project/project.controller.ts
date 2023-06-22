@@ -1,9 +1,11 @@
-import { DefaultUserRole } from '@apillon/lib';
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
-import { Ctx, Permissions } from '@apillon/modules-lib';
+import { DefaultUserRole, ValidateFor } from '@apillon/lib';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { AuthGuard } from '../../../guards/auth.guard';
 import { ProjectService } from './project.service';
 import { DevConsoleApiContext } from '../../../context';
+import { ProjectQueryFilter } from './dtos/project-query-filter.dto';
+import { ValidationGuard } from '../../../guards/validation.guard';
 
 @Controller('admin-panel/projects')
 @Permissions({ role: DefaultUserRole.ADMIN })
@@ -12,8 +14,13 @@ export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
   @Get()
-  async listProjects() {
-    return []; // TODO
+  @Validation({ dto: ProjectQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async listProjects(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: ProjectQueryFilter,
+  ) {
+    return this.projectService.getProjectList(context, query);
   }
 
   @Get(':project_uuid')

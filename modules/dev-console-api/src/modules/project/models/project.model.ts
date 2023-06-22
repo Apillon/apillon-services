@@ -8,6 +8,7 @@ import {
   CodeException,
   DefaultUserRole,
   ForbiddenErrorCodes,
+  getQueryParams,
   PopulateFrom,
   selectAndCountQuery,
   SerializeFor,
@@ -18,6 +19,7 @@ import { faker } from '@faker-js/faker';
 import { HttpStatus } from '@nestjs/common';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
+import { ProjectQueryFilter } from '../../admin-panel/project/dtos/project-query-filter.dto';
 
 /**
  * Project model.
@@ -195,6 +197,18 @@ export class Project extends AdvancedSQLModel {
     }
   }
 
+  public async getProjectDetail(project_uuid: string) {
+    const data = await this.db().paramExecute(
+      `
+        SELECT ${this.generateSelectFields()}
+        FROM \`${DbTables.PROJECT}\` p
+        WHERE p.project_uuid = @project_uuid
+      `,
+      { project_uuid },
+    );
+    return data?.length ? data[0] : data;
+  }
+
   /**
    * Returns all user projects
    */
@@ -211,6 +225,31 @@ export class Project extends AdvancedSQLModel {
         FROM ${DbTables.PROJECT} p
         INNER JOIN ${DbTables.PROJECT_USER} pu ON pu.project_id = p.id
         WHERE pu.user_id = ${params.user_id}
+        `,
+    };
+
+    return selectAndCountQuery(context.mysql, sqlQuery, params, 'p.id');
+  }
+
+  public async listAllProjects(
+    context: DevConsoleApiContext,
+    filter: ProjectQueryFilter,
+  ) {
+    // Map url query with sql fields.
+    const fieldMap = { id: 'p.d' };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'p',
+      fieldMap,
+      filter.serialize(),
+    );
+
+    const sqlQuery = {
+      qSelect: `SELECT ${this.generateSelectFields('p')}`,
+      qFrom: `FROM \`${DbTables.PROJECT}\` p`,
+      qFilter: `
+          ORDER BY ${filters.orderStr}
+          LIMIT ${filters.limit} OFFSET ${filters.offset};
         `,
     };
 

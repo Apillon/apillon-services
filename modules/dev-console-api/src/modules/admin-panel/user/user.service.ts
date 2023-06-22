@@ -1,8 +1,9 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../../context';
 import { User } from '../../user/models/user.model';
-import { CodeException, SerializeFor } from '@apillon/lib';
+import { CodeException } from '@apillon/lib';
 import { ResourceNotFoundErrorCode } from '../../../config/types';
+import { UserQueryFilter } from './dtos/user-query-filter.dto';
 
 @Injectable()
 export class UserService {
@@ -13,21 +14,17 @@ export class UserService {
    * @returns {Promise<any>} The serialized user data.
    */
   async getUser(context: DevConsoleApiContext, uuid: string): Promise<any> {
-    const user = await new User({}, context).populateByUUID(uuid);
+    const user = await new User({}, context).getUserDetail(uuid);
 
-    if (!user.exists) {
+    if (!user?.id) {
       throw new CodeException({
-        status: HttpStatus.UNAUTHORIZED,
+        status: HttpStatus.NOT_FOUND,
         code: ResourceNotFoundErrorCode.USER_DOES_NOT_EXISTS,
         errorCodes: ResourceNotFoundErrorCode,
       });
     }
 
-    user.userRoles = context.user.userRoles;
-    user.userPermissions = context.user.userPermissions;
-    user.wallet = context.user.authUser.wallet;
-
-    return user.serialize(SerializeFor.ADMIN);
+    return user;
   }
 
   /**
@@ -35,7 +32,10 @@ export class UserService {
    * @param {DevConsoleApiContext} context - The API context with current user session.
    * @returns {Promise<any>} The serialized user data.
    */
-  async getUserList(context: DevConsoleApiContext, filter): Promise<any> {
-    return await new User({}, context).listUsers(context, filter);
+  async getUserList(
+    context: DevConsoleApiContext,
+    filter: UserQueryFilter,
+  ): Promise<any> {
+    return await new User({}, context).listAllUsers(context, filter);
   }
 }

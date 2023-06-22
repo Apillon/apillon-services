@@ -16,7 +16,7 @@ import { ValidationGuard } from '../../../guards/validation.guard';
 import { UserQueryFilter } from './dtos/user-query-filter.dto';
 
 @Controller('admin-panel/users')
-@Permissions({ role: DefaultUserRole.USER })
+@Permissions({ role: DefaultUserRole.ADMIN })
 @UseGuards(AuthGuard)
 export class UserController {
   constructor(private readonly userService: UserService) {}

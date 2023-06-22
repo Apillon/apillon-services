@@ -171,7 +171,19 @@ export class User extends AdvancedSQLModel {
     return this.reset();
   }
 
-  public async listUsers(
+  public async getUserDetail(user_uuid: string) {
+    const data = await this.db().paramExecute(
+      `
+        SELECT ${this.generateSelectFields()}
+        FROM \`${DbTables.USER}\` u
+        WHERE u.user_uuid = @user_uuid
+      `,
+      { user_uuid },
+    );
+    return data?.length ? data[0] : data;
+  }
+
+  public async listAllUsers(
     context: DevConsoleApiContext,
     filter: UserQueryFilter,
   ) {
