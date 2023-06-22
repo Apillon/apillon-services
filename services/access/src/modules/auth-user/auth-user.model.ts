@@ -1,25 +1,26 @@
-import { stringParser } from '@rawmodel/parsers';
-import { emailValidator, presenceValidator } from '@rawmodel/validators';
 import {
   AdvancedSQLModel,
   Context,
   DefaultUserRole,
-  generateJwtToken,
   JwtTokenType,
   PoolConnection,
   PopulateFrom,
-  prop,
   SerializeFor,
   SqlModelStatus,
+  generateJwtToken,
+  prop,
   uniqueFieldValue,
 } from '@apillon/lib';
-import { AmsErrorCode, DbTables, TokenExpiresInStr } from '../../config/types';
+import { stringParser } from '@rawmodel/parsers';
+import { emailValidator, presenceValidator } from '@rawmodel/validators';
 import * as bcrypt from 'bcryptjs';
-import { Role } from '../role/models/role.model';
-import { AuthUserRole } from '../role/models/auth-user-role.model';
-import { AuthToken } from '../auth-token/auth-token.model';
-import { CryptoHash } from '../../lib/hash-with-crypto';
+import { AmsErrorCode, DbTables, TokenExpiresInStr } from '../../config/types';
 import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
+import { CryptoHash } from '../../lib/hash-with-crypto';
+import { AuthToken } from '../auth-token/auth-token.model';
+import { AuthUserRole } from '../role/models/auth-user-role.model';
+import { RolePermission } from '../role/models/role-permission.model';
+import { Role } from '../role/models/role.model';
 
 export class AuthUser extends AdvancedSQLModel {
   public readonly tableName = DbTables.AUTH_USER;
@@ -141,6 +142,7 @@ export class AuthUser extends AdvancedSQLModel {
       SerializeFor.ADMIN, //
       SerializeFor.SERVICE,
     ],
+    defaultValue: [],
   })
   public authUserRoles: AuthUserRole[];
 
@@ -339,13 +341,11 @@ export class AuthUser extends AdvancedSQLModel {
           'aur',
           'authUserRole',
         )},
-        ${new Role({}, this.getContext()).generateSelectFields('r', 'role')}
-        ` +
-        //${new RolePermission({}, this.getContext()).generateSelectFields(
-        //   'rp',
-        //   'rolePermission',
-        // )},
-        `
+        ${new Role({}, this.getContext()).generateSelectFields('r', 'role')},
+        ${new RolePermission({}, this.getContext()).generateSelectFields(
+          'rp',
+          'rolePermission',
+        )}
       FROM ${DbTables.AUTH_USER_ROLE} aur
       JOIN ${DbTables.ROLE} r
       ON r.id = aur.role_id
@@ -360,7 +360,9 @@ export class AuthUser extends AdvancedSQLModel {
 
     for (const r of res) {
       let userRole = this.authUserRoles.find(
-        (x) => x.role_id === r.userRole__role_id,
+        (x) =>
+          x.role_id === r.authUserRole__role_id &&
+          x.project_uuid == r.authUserRole__project_uuid,
       );
       if (!userRole) {
         userRole = new AuthUserRole({}, this.getContext()).populateWithPrefix(
@@ -374,25 +376,26 @@ export class AuthUser extends AdvancedSQLModel {
           'role',
           PopulateFrom.DB,
         );
-        this.authUserRoles = [...this.authUserRoles, userRole];
+        userRole.role.rolePermissions = [];
+        this.authUserRoles.push(userRole);
       }
 
-      // let permission = userRole.role.rolePermissions.find(
-      //   (x) => x.permission_id == r.rolePermission__permission_id,
-      // );
-      // if (!permission) {
-      //   permission = new RolePermission(
-      //     {},
-      //     this.getContext(),
-      //   ).populateWithPrefix(r, 'rolePermission', PopulateFrom.DB);
+      //Fill role permission
+      if (r.rolePermission__permission_id) {
+        let permission = userRole.role?.rolePermissions?.find(
+          (x) => x.permission_id == r.rolePermission__permission_id,
+        );
+        if (!permission) {
+          permission = new RolePermission(
+            {},
+            this.getContext(),
+          ).populateWithPrefix(r, 'rolePermission', PopulateFrom.DB);
 
-      //   if (permission.permission_id) {
-      //     userRole.role.rolePermissions = [
-      //       ...userRole.role.rolePermissions,
-      //       permission,
-      //     ];
-      //   }
-      // }
+          if (permission.permission_id) {
+            userRole.role.rolePermissions.push(permission);
+          }
+        }
+      }
     }
 
     return this;

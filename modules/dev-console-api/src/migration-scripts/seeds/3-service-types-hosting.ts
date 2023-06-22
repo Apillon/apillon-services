@@ -9,9 +9,9 @@ export async function upgrade(
       (id, name, description, active)
     VALUES
       (
-    ${AttachedServiceType.NFT},
-    'NFT',
-    'Service for managing NFTs.',
+    ${AttachedServiceType.HOSTING},
+    'Hosting',
+    'Service for website hosting',
     1
     )
     ;
@@ -24,6 +24,6 @@ export async function downgrade(
     DELETE
     IGNORE FROM \`${DbTables.SERVICE_TYPE}\`
     WHERE id =
-    ${AttachedServiceType.NFT};
+    ${AttachedServiceType.HOSTING};
   `);
 }

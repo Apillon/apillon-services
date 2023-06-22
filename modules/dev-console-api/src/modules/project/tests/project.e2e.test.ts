@@ -238,6 +238,27 @@ describe('Project tests', () => {
 
       expect(pu.exists()).toBeFalsy();
     });
+
+    test('User should be able to remove pending user from project', async () => {
+      const response = await request(stage.http)
+        .post(`/projects/${testProject.project_uuid}/uninvite-user`)
+        .send({
+          email: 'nek-testni-mail-123@gmail.com',
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(201);
+
+      const pu: ProjectUserPendingInvitation =
+        await new ProjectUserPendingInvitation(
+          {},
+          stage.devConsoleContext,
+        ).populateByEmailAndProject(
+          testProject.id,
+          'nek-testni-mail-123@gmail.com',
+        );
+
+      expect(pu.exists()).toBeFalsy();
+    });
   });
 
   describe('Project access tests', () => {

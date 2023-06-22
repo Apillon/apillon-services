@@ -517,6 +517,28 @@ export class AuthUserService {
       }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
     }
 
+    //If login token with greater timestamp exists, throw error - signature was already used for login
+    const authToken = await new AuthToken({}, context).populateByUserAndType(
+      authUser.user_uuid,
+      JwtTokenType.USER_AUTHENTICATION,
+    );
+
+    if (
+      authToken.exists() &&
+      authToken?.updateTime?.getTime() > authData.timestamp
+    ) {
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.WALLET_SIGNATURE_ALREADY_USED,
+      }).writeToMonitor({
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
+      });
+    }
+
+    //Login user
+
     await authUser.loginUser();
 
     await new Lmas().writeLog({
