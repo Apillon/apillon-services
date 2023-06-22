@@ -21,8 +21,15 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
 
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);
+
+    // Kinda part of the worker definition, the chainId is
+    this.chainId = workerDefinition.parameters.chainId;
+
     this.chainName = SubstrateChain[this.chainId];
-    this.logPrefix = `[SUBSTRATE | ${this.chainName}`;
+    this.logPrefix = `[SUBSTRATE | ${this.chainName}]`;
+
+    console.error('Chain ID', this.chainId);
+    console.error('Chain Name', this.chainName);
 
     // I feel like this is an antipattern and should be done in a better way
     switch (this.chainName) {
@@ -32,13 +39,16 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       case 'CRUST':
         //this.indexer = new CrustBlockchainIndexer();
         break;
+      default:
+        // TODO: Proper error handling
+        console.error('Invalid chain');
     }
   }
 
-  public async runExecutor(_data: any): Promise<any> {
+  public async runExecutor(_data?: any): Promise<any> {
     // Wallets will be populated once the runExecutor method is called
     this.wallets = await new Wallet({}, this.context).getList(
-      SubstrateChain.CRUST,
+      SubstrateChain.KILT,
       ChainType.SUBSTRATE,
     );
 
@@ -64,7 +74,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
           : blockHeight;
 
       this.log(
-        `Checking PENDING transactions (sourceWallet=${wallet.address}, lastParsedBlock=${wallet.lastParsedBlock}, toBlock=${toBlock})..`,
+        `Checking RESOLVED transactions (sourceWallet=${wallet.address}, lastParsedBlock=${wallet.lastParsedBlock}, toBlock=${toBlock})..`,
       );
 
       // Get all transactions from the indexer
