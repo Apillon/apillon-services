@@ -1,22 +1,22 @@
+import { gql } from 'graphql-request';
 import { env } from '@apillon/lib';
-import { GraphQLClient, gql } from 'graphql-request';
+import { BaseBlockchainIndexer } from '../base-blockchain-indexer';
 import { BlockHeight } from '../../block-height';
+import { KiltTransactionType } from '../../../../config/types';
 import {
   AttestationTransation,
   DidTransaction,
   TransferTransaction,
 } from './data-models/kilt-transactions';
-import { KiltTransactionType } from '../../../../config/types';
 import { KiltGQLQueries } from './queries/kilt-graphql-queries';
 
-export class KiltBlockchainIndexer {
-  private graphQlClient: GraphQLClient;
-
+export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
   constructor() {
-    if (!env.BLOCKCHAIN_KILT_GRAPHQL_SERVER) {
+    // TODO: Change to KILT
+    if (!env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER) {
       throw new Error('Missing GraphQL server url!');
     }
-    this.graphQlClient = new GraphQLClient(env.BLOCKCHAIN_KILT_GRAPHQL_SERVER);
+    super(env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER);
   }
 
   /* These indicate a transfer from one account -> another */
