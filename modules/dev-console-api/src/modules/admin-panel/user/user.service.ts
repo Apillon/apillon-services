@@ -29,4 +29,13 @@ export class UserService {
 
     return user.serialize(SerializeFor.ADMIN);
   }
+
+  /**
+   * Retrieves a list of all users
+   * @param {DevConsoleApiContext} context - The API context with current user session.
+   * @returns {Promise<any>} The serialized user data.
+   */
+  async getUserList(context: DevConsoleApiContext, filter): Promise<any> {
+    return await new User({}, context).listUsers(context, filter);
+  }
 }

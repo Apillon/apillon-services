@@ -1,3 +1,4 @@
+import { DevConsoleApiContext } from './../../../context';
 /* eslint-disable @typescript-eslint/member-ordering */
 import { faker } from '@faker-js/faker';
 import { prop } from '@rawmodel/core';
@@ -5,11 +6,14 @@ import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
   Context,
+  getQueryParams,
   PopulateFrom,
   presenceValidator,
+  selectAndCountQuery,
   SerializeFor,
 } from '@apillon/lib';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
+import { UserQueryFilter } from '../../admin-panel/user/dtos/user-query-filter.dto';
 
 /**
  * User model.
@@ -165,6 +169,31 @@ export class User extends AdvancedSQLModel {
       return this.populate(data[0], PopulateFrom.DB);
     }
     return this.reset();
+  }
+
+  public async listUsers(
+    context: DevConsoleApiContext,
+    filter: UserQueryFilter,
+  ) {
+    // Map url query with sql fields.
+    const fieldMap = { id: 'u.d' };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'u',
+      fieldMap,
+      filter.serialize(),
+    );
+
+    const sqlQuery = {
+      qSelect: `SELECT ${this.generateSelectFields('u')}`,
+      qFrom: `FROM \`${DbTables.USER}\` u`,
+      qFilter: `
+          ORDER BY ${filters.orderStr}
+          LIMIT ${filters.limit} OFFSET ${filters.offset};
+        `,
+    };
+
+    return selectAndCountQuery(context.mysql, sqlQuery, params, 'u.id');
   }
 
   public async populateByEmail(email: string) {

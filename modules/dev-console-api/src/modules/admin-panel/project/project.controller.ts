@@ -5,18 +5,18 @@ import { AuthGuard } from '../../../guards/auth.guard';
 import { ProjectService } from './project.service';
 import { DevConsoleApiContext } from '../../../context';
 
-@Controller('admin-panel')
+@Controller('admin-panel/projects')
 @Permissions({ role: DefaultUserRole.ADMIN })
 @UseGuards(AuthGuard)
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
-  @Get('projects')
+  @Get()
   async listProjects() {
     return []; // TODO
   }
 
-  @Get('projects/:project_uuid')
+  @Get(':project_uuid')
   async getProject(
     @Ctx() context: DevConsoleApiContext,
     @Param('project_uuid') project_uuid: string,
@@ -24,7 +24,7 @@ export class ProjectController {
     return this.projectService.getProject(context, project_uuid);
   }
 
-  @Get('projects/:project_uuid/qoutas')
+  @Get(':project_uuid/qoutas')
   async getProjectQuotas(
     @Ctx() context: DevConsoleApiContext,
     @Param('project_uuid') project_uuid: string,
