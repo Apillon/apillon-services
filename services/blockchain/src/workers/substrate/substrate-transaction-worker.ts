@@ -75,7 +75,13 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       );
 
       // Update the state of all transactions in the BCS DB
-      await this.updateTransactions(wallet, transactions, conn);
+      const evalTransactions = await this.updateTransactions(
+        wallet,
+        transactions,
+        conn,
+      );
+
+      // Handle alerts
     }
   }
 
@@ -84,6 +90,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     fromBlock: number,
     toBlock: number,
   ) {
+    // Get all transactions from the
     const transactions = await this.indexer.getAllTransactions(
       address,
       fromBlock,
@@ -102,11 +109,19 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     transactions: any[],
     conn: PoolConnection,
   ) {
-    for (const transaction in transactions) {
-      console.log('Transaction ', transaction);
-
-      // await updateTransaction(transaction.exstrinsicHash as );
+    const evalTransactions = [];
+    for (let i = 0; i < transactions.length; i++) {
+      console.log('Transaction ', transactions[i]);
+      evalTransactions.push(
+        await this.updateTransaction(
+          transactions[i].exstrinsicHash,
+          wallet,
+          conn,
+        ),
+      );
     }
+
+    return evalTransactions;
   }
 
   /**
@@ -117,35 +132,34 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
    * @param conn connection
    * @returns array of confirmed transaction hashes
    */
-  // public async updateTransaction(
-  //   transactionHash: string,
-  //   wallet: Wallet,
-  //   conn: PoolConnection,
-  // ): Promise<string[]> {
-  //   await this.context.mysql.paramExecute(
-  //     `UPDATE \`${DbTables.TRANSACTION_QUEUE}\`
-  //     SET transactionStatus = @status
-  //     WHERE
-  //       chain = @chain
-  //       AND chainType = @chainType
-  //       AND address = @address
-  //       AND transactionHash = @transactionHash`,
-  //     {
-  //       chain: wallet.chain,
-  //       address: wallet.address,
-  //       chainType: wallet.chainType,
-  //       transactionHash: transactionHash,
-  //     },
-  //     conn,
-  //   );
+  public async updateTransaction(
+    transactionHash: string,
+    wallet: Wallet,
+    conn: PoolConnection,
+  ): Promise<string[]> {
+    await this.context.mysql.paramExecute(
+      `UPDATE \`${DbTables.TRANSACTION_QUEUE}\`
+      SET transactionStatus = @status
+      WHERE
+        chain = @chain
+        AND chainType = @chainType
+        AND address = @address
+        AND transactionHash = @transactionHash`,
+      {
+        chain: wallet.chain,
+        address: wallet.address,
+        chainType: wallet.chainType,
+        transactionHash: transactionHash,
+      },
+      conn,
+    );
 
-  //   // TODO: Why do dis??
-  //   return await new Transaction({}, this.context).getTransactionList(
-  //     wallet.chain,
-  //     wallet.chainType,
-  //     wallet.address,
-  //     [transactionHash],
-  //     conn,
-  //   )[0].transactionHash;
-  // }
+    // TODO: Why do dis??
+    return await new Transaction({}, this.context).getTransactionList(
+      wallet.chain,
+      wallet.chainType,
+      wallet.address,
+      conn,
+    )[0].transactionHash;
+  }
 }

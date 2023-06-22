@@ -263,15 +263,13 @@ export class Transaction extends AdvancedSQLModel {
     chain: Chain,
     chainType: ChainType,
     address: string,
-    transactionStatus: TransactionStatus,
-    hashes: string[],
     conn?: PoolConnection,
+    transactionStatus?: TransactionStatus,
   ) {
     const data = await this.getContext().mysql.paramExecute(
       `SELECT *
       FROM \`${DbTables.TRANSACTION_QUEUE}\` 
-      WHERE 
-        transactionHash IN ('${hashes.join("','")}')
+      WHERE
         AND chain = @chain
         AND chainType = @chainType
         AND address = @address
