@@ -7,10 +7,10 @@ import { ResourceNotFoundErrorCode } from '../../../config/types';
 @Injectable()
 export class UserService {
   /**
-   * Retrieves the user profile information.
+   * Retrieves the user information.
    * @param {DevConsoleApiContext} context - The API context with current user session.
    * @param {string} uuid - The user's uuid.
-   * @returns {Promise<any>} The serialized user profile data.
+   * @returns {Promise<any>} The serialized user data.
    */
   async getUser(context: DevConsoleApiContext, uuid: string): Promise<any> {
     const user = await new User({}, context).populateByUUID(uuid);
