@@ -1,7 +1,6 @@
 import { gql } from 'graphql-request';
 import { env } from '@apillon/lib';
 import { BaseBlockchainIndexer } from '../base-blockchain-indexer';
-import { BlockHeight } from '../../block-height';
 import { KiltTransactionType } from '../../../../config/types';
 import {
   AttestationTransation,
@@ -213,14 +212,5 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
       },
     );
     return data;
-  }
-
-  public async getBlockHeight(): Promise<number> {
-    const GRAPHQL_QUERY = gql`
-      ${KiltGQLQueries.SYSTEM_BLOCK_HEIGHT_Q}
-    `;
-
-    const data: BlockHeight = await this.graphQlClient.request(GRAPHQL_QUERY);
-    return data.squidStatus.height;
   }
 }
