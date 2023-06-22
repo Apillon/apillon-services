@@ -1,3 +1,4 @@
+import { AdminPanelModule } from './modules/admin-panel/admin-panel.module';
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -24,6 +25,7 @@ import { ReferralModule } from './modules/referral/referral.module';
 @Module({
   imports: [
     UserModule,
+    AdminPanelModule,
     MySQLModule,
     ProjectModule,
     FileModule,
