@@ -15,20 +15,20 @@ import {
   WorkerDefinition,
   WorkerLogStatus,
 } from '@apillon/workers-lib';
-import { Transaction } from '../common/models/transaction';
-import { Wallet } from '../common/models/wallet';
-import { DbTables } from '../config/types';
-import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
-import { BlockchainStatus } from '../modules/blockchain-indexers/blockchain-status';
+import { Transaction } from '../../../common/models/transaction';
+import { Wallet } from '../../../common/models/wallet';
+import { DbTables } from '../../../config/types';
+import { CrustBlockchainIndexer } from '../../../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
+import { BlockchainStatus } from '../../../modules/blockchain-indexers/blockchain-status';
 import {
   CrustStorageOrders,
   CrustStorageOrder,
-} from '../modules/blockchain-indexers/substrate/crust/data-models/crust-storage-orders';
+} from '../../../modules/blockchain-indexers/substrate/crust/data-models/crust-storage-orders';
 import {
   CrustTransfer,
   CrustTransfers,
-} from '../modules/blockchain-indexers/substrate/crust/data-models/crust-transfers';
-import { WorkerName } from './worker-executor';
+} from '../../../modules/blockchain-indexers/substrate/crust/data-models/crust-transfers';
+import { WorkerName } from '../../worker-executor';
 
 export class CrustTransactionWorker extends BaseSingleThreadWorker {
   private logPrefix: string;
@@ -71,12 +71,14 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
           toBlock,
         );
 
+        // TODO: Implement
         await this.handleBlockchainTransfers(
           wallet,
           crustTransactions.withdrawals,
           crustTransactions.deposits,
           conn,
         );
+
         await this.handleCrustFileOrders(
           wallet,
           crustTransactions.fileOrders,
@@ -371,6 +373,8 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         ? BlockchainStatus.CONFIRMED
         : BlockchainStatus.FAILED;
 
+    // 1. Filter all transactions by status - so SUCCESS / FAILED
+    // 2. Map only the extrinsicHash
     const storageOrders = new Map<string, CrustStorageOrder>(
       bcOrders.storageOrders
         .filter((so) => {
@@ -378,7 +382,10 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         })
         .map((so) => [so.extrinsicHash, so]),
     );
+
+    // aray of storage order hashes
     const soHashes: string[] = [...storageOrders.keys()];
+    // Update all transactions in the DB with hash value to the status
     const updatedDbTxs: string[] = await this.updateTransactions(
       soHashes,
       status,
@@ -386,6 +393,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
       conn,
     );
 
+    // Some logging
     const txDbHashesString = updatedDbTxs.join(',');
     console.log(
       `[SUBSTRATE][CRUST] ${updatedDbTxs.length} [${TransactionStatus[status]}] storage orders matched (txHashes=${txDbHashesString}) in db.`,

@@ -85,13 +85,4 @@ export enum KiltGQLQueries {
         status
       }
     }`,
-
-  /* SYSTEM QUERIES */
-  SYSTEM_BLOCK_HEIGHT_Q = `
-      query getBlockHeight {
-        squidStatus {
-          height
-        }
-      }
-    `,
 }

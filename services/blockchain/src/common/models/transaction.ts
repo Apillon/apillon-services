@@ -222,6 +222,7 @@ export class Transaction extends AdvancedSQLModel {
     );
   }
 
+  // TODO: What about transaction list?? Maybe rename...
   public async getTransactionsByHashes(
     chain: Chain,
     chainType: ChainType,
@@ -239,6 +240,42 @@ export class Transaction extends AdvancedSQLModel {
         AND chainType = @chainType
         AND address = @address
         AND transactionStatus = @status`,
+      {
+        status: transactionStatus,
+        address,
+        chain,
+        chainType,
+      },
+      conn,
+    );
+
+    const res: Transaction[] = [];
+    if (data && data.length) {
+      for (const t of data) {
+        res.push(new Transaction({}, this.getContext()).populate(t));
+      }
+    }
+
+    return res;
+  }
+
+  public async getTransactionList(
+    chain: Chain,
+    chainType: ChainType,
+    address: string,
+    transactionStatus: TransactionStatus,
+    hashes: string[],
+    conn?: PoolConnection,
+  ) {
+    const data = await this.getContext().mysql.paramExecute(
+      `SELECT *
+      FROM \`${DbTables.TRANSACTION_QUEUE}\` 
+      WHERE 
+        transactionHash IN ('${hashes.join("','")}')
+        AND chain = @chain
+        AND chainType = @chainType
+        AND address = @address
+        AND (@transactionStatus IS NULL OR transactionStatus = @transactionStatus)`,
       {
         status: transactionStatus,
         address,

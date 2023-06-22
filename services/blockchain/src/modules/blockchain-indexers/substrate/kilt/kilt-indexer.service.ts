@@ -18,6 +18,51 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     super(env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER);
   }
 
+  public async getAllTransactions(
+    address: string,
+    fromBlock: number,
+    toBlock: number,
+    // TODO: Filter by state as well
+    // state?: string,
+  ) {
+    return {
+      transfers_transfers: await this.getAccountTransfers(
+        address,
+        fromBlock,
+        toBlock,
+      ),
+      withdrawals: await this.getAccountWithdrawals(
+        address,
+        fromBlock,
+        toBlock,
+      ),
+      deposits: await this.getAccountDeposits(address, fromBlock, toBlock),
+      reserved_balances: await this.getAccountReserved(
+        address,
+        fromBlock,
+        toBlock,
+      ),
+      did_create: await this.getAccountDidCreate(address, fromBlock, toBlock),
+      did_delete: await this.getAccountDidDelete(address, fromBlock, toBlock),
+      did_update: await this.getAccountDidUpdate(address, fromBlock, toBlock),
+      attestattions_create: await this.getAccountAttestCreate(
+        address,
+        fromBlock,
+        toBlock,
+      ),
+      attestattions_remove: await this.getAccountAttestRemove(
+        address,
+        fromBlock,
+        toBlock,
+      ),
+      attestattions_revoke: await this.getAccountAttestRevoke(
+        address,
+        fromBlock,
+        toBlock,
+      ),
+    };
+  }
+
   /* These indicate a transfer from one account -> another */
   public async getAccountTransfers(
     address: string,

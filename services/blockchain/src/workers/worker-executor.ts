@@ -3,6 +3,8 @@ import {
   getEnvSecrets,
   MySql,
   SubstrateChain,
+  Context,
+  env,
 } from '@apillon/lib';
 import {
   QueueWorkerType,
@@ -13,15 +15,15 @@ import {
   writeWorkerLog,
 } from '@apillon/workers-lib';
 
-import { Context, env } from '@apillon/lib';
-import { CrustTransactionWorker } from './crust-transaction-worker';
-import { EvmTransactionWorker } from './evm-transaction-worker';
 import { Scheduler } from './scheduler';
+import { TransactionLogWorker } from './transaction-log-worker';
 import { TransactionWebhookWorker } from './transaction-webhook-worker';
 import { TransmitEvmTransactionWorker } from './transmit-evm-transaction-worker';
 import { TransmitSubstrateTransactionWorker } from './transmit-substrate-transaction-worker';
-import { TransactionLogWorker } from './transaction-log-worker';
-import { KiltTransactionWorker } from './kilt-transaction-worker';
+
+import { CrustTransactionWorker } from './substrate/crust/crust-transaction-worker';
+import { KiltTransactionWorker } from './substrate/kilt/kilt-transaction-worker';
+import { EvmTransactionWorker } from './evm/evm-transaction-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -120,6 +122,12 @@ export async function handleLambdaEvent(
       const scheduler = new Scheduler(serviceDef, context);
       await scheduler.run();
       break;
+    // -- TRANSMIT TRANSACTION WORKERS --
+    case WorkerName.TRANSMIT_EVM_TRANSACTION:
+      await new TransmitEvmTransactionWorker(workerDefinition, context).run({
+        executeArg: JSON.stringify(workerDefinition.parameters),
+      });
+      break;
     case WorkerName.TRANSMIT_SUBSTRATE_TRANSACTION:
       await new TransmitSubstrateTransactionWorker(
         workerDefinition,
@@ -128,22 +136,21 @@ export async function handleLambdaEvent(
         executeArg: JSON.stringify({ chain: SubstrateChain.CRUST }),
       });
       break;
+    // ###### UPDATE TRANSACTIONS WORKERS ######
+    // -- SUBSTRATE --
     case WorkerName.CRUST_TRANSACTIONS:
       await new CrustTransactionWorker(workerDefinition, context).run();
       break;
     case WorkerName.KILT_TRANSACTIONS:
       await new KiltTransactionWorker(workerDefinition, context).run();
       break;
+    // -- EVM --
     case WorkerName.EVM_TRANSACTIONS:
       await new EvmTransactionWorker(workerDefinition, context).run({
         executeArg: JSON.stringify(workerDefinition.parameters),
       });
       break;
-    case WorkerName.TRANSMIT_EVM_TRANSACTION:
-      await new TransmitEvmTransactionWorker(workerDefinition, context).run({
-        executeArg: JSON.stringify(workerDefinition.parameters),
-      });
-      break;
+    // ###### TRANSACTIONS WEBHOOKS ######
     case WorkerName.TRANSACTION_WEBHOOKS:
       await new TransactionWebhookWorker(
         workerDefinition,
@@ -208,6 +215,7 @@ export async function handleSqsMessages(
 
       // eslint-disable-next-line sonarjs/no-small-switch
       switch (workerName) {
+        // -- TRANSMIT TRANSACTION WORKERS --
         case WorkerName.TRANSMIT_SUBSTRATE_TRANSACTION:
           await new TransmitSubstrateTransactionWorker(
             workerDefinition,
