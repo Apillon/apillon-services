@@ -10,6 +10,20 @@ export class TransactionQueryFilter extends BaseQueryFilter {
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
   })
+  public refTable: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [],
+  })
+  public refId: number;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [],
+  })
   public search: string;
 
   @prop({
