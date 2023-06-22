@@ -165,7 +165,7 @@ export class PrepareBaseUriForCollectionWorker extends BaseQueueWorker {
 
     await this.writeLogToDb(
       WorkerLogStatus.INFO,
-      `PrepareMetadataForCollectionWorker worker has been completed!`,
+      `PrepareBaseUriForCollectionWorker worker has been completed!`,
     );
 
     return true;

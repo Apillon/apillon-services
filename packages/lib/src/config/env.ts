@@ -89,6 +89,11 @@ export interface IEnv {
   SLACK_TOKEN: string;
   SLACK_CHANNEL: string;
 
+  /**
+   * MONITORING SQS
+   */
+  MONITORING_SQS_URL: string;
+
   /************************************************************
    * MAIL - Apillon Mailing Service
    ************************************************************/
@@ -156,6 +161,7 @@ export interface IEnv {
   STORAGE_AWS_IPFS_QUEUE_BUCKET: string;
   STORAGE_IPFS_API: string;
   STORAGE_IPFS_GATEWAY: string;
+  STORAGE_IPFS_CLUSTER_SERVER: string;
   STORAGE_DELETE_AFTER_INTERVAL: number;
 
   STORAGE_MYSQL_HOST: string;
@@ -220,9 +226,13 @@ export interface IEnv {
    ************************************************************/
   APILLON_API_HOST: string;
   APILLON_API_PORT: number;
-
   APILLON_API_HOST_TEST: string;
   APILLON_API_PORT_TEST: number;
+
+  APILLON_API_URL: string;
+
+  APILLON_API_SYSTEM_API_KEY: string;
+  APILLON_API_SYSTEM_API_SECRET: string;
 
   /************************************************************
    * AUTH - Apillon Authentication Service
@@ -263,6 +273,7 @@ export interface IEnv {
   KILT_NETWORK: string;
   KILT_ATTESTER_MNEMONIC: string;
   KILT_DERIVATION_ALGORITHM: string;
+  KILT_ATTESTERS_WHITELIST: string;
 
   /************************************************************
    * Authentication config (Uses Kilt module)
@@ -407,7 +418,7 @@ export let env: IEnv = {
   AWS_SECRET: process.env['AWS_SECRET'],
   AWS_BUCKET: process.env['AWS_BUCKET'],
   AWS_ENDPOINT: process.env['AWS_ENDPOINT'],
-  APP_SECRET: process.env['APP_SECRET'] || 'notasecret',
+  APP_SECRET: process.env['APP_SECRET'] || 'Du7Rvyqt7u38naZ2',
 
   /** AMS */
   ACCESS_FUNCTION_NAME: process.env['ACCESS_FUNCTION_NAME'],
@@ -433,6 +444,7 @@ export let env: IEnv = {
   /** LMAS */
   MONITORING_FUNCTION_NAME: process.env['MONITORING_FUNCTION_NAME'],
   MONITORING_FUNCTION_NAME_TEST: process.env['MONITORING_FUNCTION_NAME_TEST'],
+  MONITORING_SQS_URL: process.env['MONITORING_SQS_URL'],
   MONITORING_SOCKET_PORT:
     parseInt(process.env['MONITORING_SOCKET_PORT']) || 6201,
   MONITORING_MONGO_SRV: process.env['MONITORING_MONGO_SRV'],
@@ -491,6 +503,7 @@ export let env: IEnv = {
   STORAGE_AWS_IPFS_QUEUE_BUCKET: process.env['STORAGE_AWS_IPFS_QUEUE_BUCKET'],
   STORAGE_IPFS_API: process.env['STORAGE_IPFS_API'],
   STORAGE_IPFS_GATEWAY: process.env['STORAGE_IPFS_GATEWAY'],
+  STORAGE_IPFS_CLUSTER_SERVER: process.env['STORAGE_IPFS_CLUSTER_SERVER'],
   STORAGE_DELETE_AFTER_INTERVAL:
     parseInt(process.env['STORAGE_DELETE_AFTER_INTERVAL']) || 90,
 
@@ -576,6 +589,10 @@ export let env: IEnv = {
   APILLON_API_PORT: parseInt(process.env['APILLON_API_PORT']) || 6002,
   APILLON_API_HOST_TEST: process.env['APILLON_API_HOST_TEST'] || '127.0.0.1',
   APILLON_API_PORT_TEST: parseInt(process.env['APILLON_API_PORT_TEST']) || 7002,
+  APILLON_API_SYSTEM_API_KEY: process.env['APILLON_API_SYSTEM_API_KEY'] || '',
+  APILLON_API_SYSTEM_API_SECRET:
+    process.env['APILLON_API_SYSTEM_API_SECRET'] || '',
+  APILLON_API_URL: process.env['APILLON_API_URL'] || 'http://localhost',
 
   /** --- SECTION: APILLON AUTHENTICATION API --- */
   AUTH_API_HOST: process.env['AUTH_API_HOST'] || 'localhost',
@@ -607,6 +624,7 @@ export let env: IEnv = {
     process.env['KILT_NETWORK'] ||
     'wss://peregrine.kilt.io/parachain-public-ws',
   KILT_ATTESTER_MNEMONIC: process.env['KILT_ATTESTER_MNEMONIC'] || '',
+  KILT_ATTESTERS_WHITELIST: process.env['KILT_ATTESTERS_WHITELIST'] || '',
   // TODO: Unused -> Left here because we might introduce it later as configurable algorithm
   // because it depends where you use this mnemonic
   KILT_DERIVATION_ALGORITHM:

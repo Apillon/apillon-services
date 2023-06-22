@@ -100,6 +100,7 @@ export class AuthToken extends AdvancedSQLModel {
           AND at.tokenType = @tokenType
           AND at.status = ${SqlModelStatus.ACTIVE}
         LIMIT 1
+        FOR UPDATE;
         `,
       { user_uuid, tokenType },
       conn,

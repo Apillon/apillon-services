@@ -5,9 +5,8 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { PrepareMetadataForCollectionWorker } from '../../workers/prepare-metada-for-collection-worker';
-import { WorkerName } from '../../workers/worker-executor';
 import { PrepareBaseUriForCollectionWorker } from '../../workers/prepare-base-uri-for-collection-worker';
+import { WorkerName } from '../../workers/worker-executor';
 
 export class NftStorageService {
   static async executePrepareBaseUriForCollectionWorker(

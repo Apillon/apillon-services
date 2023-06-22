@@ -1,9 +1,11 @@
 import {
+  AppEnvironment,
   BlockchainMicroservice,
   ChainType,
   Context,
   EvmChain,
   MintNftDTO,
+  env,
 } from '@apillon/lib';
 import { TransactionReceipt } from '@ethersproject/providers';
 import { Contract, UnsignedTransaction, ethers } from 'ethers';
@@ -127,7 +129,8 @@ export class WalletService {
     if (
       (collection.collectionStatus != CollectionStatus.DEPLOYED &&
         collection.collectionStatus != CollectionStatus.TRANSFERED) ||
-      !collection.contractAddress
+      !collection.contractAddress ||
+      env.APP_ENV == AppEnvironment.TEST
     ) {
       return 0;
     }

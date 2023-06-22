@@ -53,10 +53,6 @@ import { WalletService } from '../wallet/wallet.service';
 import { Collection } from './models/collection.model';
 
 export class NftsService {
-  static async getHello() {
-    return 'Hello world from NFTS microservice';
-  }
-
   //#region collection functions
 
   // TODO: Remove send transaction from all functions bellow, as we are planing to
@@ -346,6 +342,8 @@ export class NftsService {
       'transferNftOwnership()',
       context,
     );
+
+    await NftsService.checkTransferConditions(params.body, context, collection);
 
     const conn = await context.mysql.start();
     try {
@@ -663,7 +661,11 @@ export class NftsService {
     context: ServiceContext,
   ) {
     // Collection must exist and be confirmed on blockchain
-    if (!collection.exists() || collection.contractAddress == null) {
+    if (
+      !collection.exists() ||
+      collection.contractAddress == null ||
+      collection.collectionStatus == CollectionStatus.TRANSFERED
+    ) {
       throw new NftsCodeException({
         status: 500,
         code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
@@ -701,6 +703,55 @@ export class NftsService {
         code: NftsErrorCode.MINT_NFT_RESERVE_ERROR,
         context: context,
         sourceFunction: 'mintNftTo()',
+      });
+    }
+  }
+
+  /**
+   * CONDITIONS:
+   * Address should not be the same as deployer address
+   * If transaction for transfer already exists (is pending or finished), transfer should fail
+   * @param params
+   * @param context
+   * @param collection
+   * @returns
+   */
+  private static async checkTransferConditions(
+    params: TransferCollectionDTO,
+    context: ServiceContext,
+    collection: Collection,
+  ) {
+    if (collection.deployerAddress == params.address) {
+      throw new NftsCodeException({
+        status: 400,
+        code: NftsErrorCode.INVALID_ADDRESS_FOR_TRANSFER_TO,
+        context: context,
+        sourceFunction: 'checkTransferConditions()',
+      });
+    }
+
+    //Check if transaction for transfer contract already exists
+    const transactions: Transaction[] = await new Transaction(
+      {},
+      context,
+    ).getCollectionTransactions(
+      collection.id,
+      null,
+      TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
+    );
+
+    if (
+      transactions.find(
+        (x) =>
+          x.transactionStatus == TransactionStatus.PENDING ||
+          x.transactionStatus == TransactionStatus.CONFIRMED,
+      )
+    ) {
+      throw new NftsCodeException({
+        status: 400,
+        code: NftsErrorCode.TRANSACTION_FOR_TRANSFER_ALREADY_EXISTS,
+        context: context,
+        sourceFunction: 'checkTransferConditions()',
       });
     }
   }

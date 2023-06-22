@@ -73,6 +73,7 @@ export enum BlockchainErrorCode {
   ERROR_GENERATING_TRANSACTION = 50016003,
   ERROR_TRANSMITING_TRANSACTION = 50016004,
   INVALID_DATA_PASSED_TO_WORKER = 50016005,
+  WALLET_DOES_NOT_EXISTS = 50016006,
 }
 
 //#region SQL stuff - TODO: Should be streamlined? This is part of the SQL lib, not access

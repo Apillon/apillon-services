@@ -37,6 +37,7 @@ export enum StorageErrorCode {
   NO_FILES_TO_DEPLOY = 40006016,
   NO_CHANGES_TO_DEPLOY = 40006017,
   INVALID_BUCKET_TYPE_FOR_IPFS_SYNC_WORKER = 40006018,
+  WEBSITE_DOMAIN_CHANGE_NOT_ALLOWED = 40006019,
   //422
   DEFAULT_VALIDATION_ERROR = 42206000,
   BUCKET_PROJECT_UUID_NOT_PRESENT = 42206001,
@@ -135,6 +136,18 @@ export enum FileStatus {
   UPLOADED_TO_IPFS = 3,
   PINNED_TO_CRUST = 4,
   PINNING_TO_CRUST = 5,
+}
+
+export enum FileUploadSessionStatus {
+  CREATED = 1,
+  /**
+   * End session was called - folder and file structure has been generated.
+   */
+  PROCESSED = 2,
+  /**
+   * Files in session has been synced to IPFS
+   */
+  FINISHED = 3,
 }
 
 export enum BucketWebhookAuthMethod {

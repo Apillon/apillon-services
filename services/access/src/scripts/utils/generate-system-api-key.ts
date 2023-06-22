@@ -42,7 +42,7 @@ const options = {
       : env.ACCESS_MYSQL_PASSWORD,
 };
 
-async function run() {
+export async function run() {
   const context = new ServiceContext();
   const mysql = new MySql(options);
   await mysql.connect();

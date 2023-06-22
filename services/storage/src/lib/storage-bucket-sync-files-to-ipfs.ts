@@ -16,7 +16,6 @@ import {
 import { StorageCodeException } from '../lib/exceptions';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { Directory } from '../modules/directory/models/directory.model';
-import { uploadFilesToIPFSRes } from '../modules/ipfs/interfaces/upload-files-to-ipfs-res.interface';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
@@ -29,6 +28,7 @@ import {
 import { pinFileToCRUST } from './pin-file-to-crust';
 import { getSessionFilesOnS3 } from './file-upload-session-s3-files';
 import { CID } from 'ipfs-http-client';
+import { uploadItemsToIPFSRes } from '../modules/ipfs/interfaces/upload-items-to-ipfs-res.interface';
 
 /**
  * Transfers file from s3 to IPFS & CRUST
@@ -82,12 +82,16 @@ export async function storageBucketSyncFilesToIPFS(
       });
     }
 
-    let ipfsRes: uploadFilesToIPFSRes = undefined;
+    let ipfsRes: uploadItemsToIPFSRes = undefined;
     try {
-      ipfsRes = await IPFSService.uploadFURsToIPFSFromS3({
-        fileUploadRequests: files,
-        wrapWithDirectory: wrapWithDirectory,
-      });
+      ipfsRes = await IPFSService.uploadFURsToIPFSFromS3(
+        {
+          fileUploadRequests: files,
+          wrapWithDirectory: wrapWithDirectory,
+          wrappingDirectoryPath,
+        },
+        context,
+      );
     } catch (err) {
       await new Lmas().writeLog({
         context: context,
@@ -101,9 +105,16 @@ export async function storageBucketSyncFilesToIPFS(
           error: err,
         },
       });
+      await new Lmas().sendAdminAlert(
+        `[Storage]: Error uploading to IPFS!`,
+        ServiceName.STORAGE,
+        'alert',
+      );
+
       throw err;
     }
 
+    //Update directories CIDs
     let wrappingDirectory: Directory;
     if (wrappingDirectoryPath) {
       wrappingDirectory = await generateDirectoriesFromPath(
@@ -113,20 +124,40 @@ export async function storageBucketSyncFilesToIPFS(
         bucket,
         ipfsRes.ipfsDirectories,
       );
+
+      wrappingDirectory.CID = ipfsRes.parentDirCID.toV0().toString();
+      await wrappingDirectory.update();
+
+      for (const fur of files) {
+        fur.path = fur.path
+          ? wrappingDirectoryPath + '/' + fur.path
+          : wrappingDirectoryPath;
+      }
     }
 
+    for (const ipfsDir of ipfsRes.ipfsDirectories) {
+      //Update directories with CID
+      const dir = await generateDirectoriesFromPath(
+        context,
+        directories,
+        wrappingDirectoryPath
+          ? wrappingDirectoryPath + '/' + ipfsDir.path
+          : ipfsDir.path,
+        bucket,
+      );
+      if (dir.exists()) {
+        dir.CID = ipfsDir.cid.toV0().toString();
+        await dir.update();
+      }
+    }
+
+    //Update files CIDs
     for (const file of files.filter(
       (x) =>
         x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED &&
         x.fileStatus != FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3,
     )) {
       try {
-        if (wrappingDirectoryPath) {
-          file.path = file.path
-            ? wrappingDirectoryPath + '/' + file.path
-            : wrappingDirectoryPath;
-        }
-
         //check if file already exists
         const existingFile = await new File({}, context).populateByUUID(
           file.file_uuid,
@@ -207,17 +238,13 @@ export async function storageBucketSyncFilesToIPFS(
       file.fileStatus = FileUploadRequestFileStatus.UPLOAD_COMPLETED;
       await file.update();
 
-      tmpSize += ipfsRes.size;
-      bucket.uploadedSize += ipfsRes.size;
-      bucket.size = bucket.size ? bucket.size + ipfsRes.size : ipfsRes.size;
-
       //delete file from s3
       await s3Client.remove(env.STORAGE_AWS_IPFS_QUEUE_BUCKET, file.s3FileKey);
     }
 
-    //Update wrapping directory CID
-    wrappingDirectory.CID = ipfsRes.parentDirCID.toV0().toString();
-    await wrappingDirectory.update();
+    tmpSize += ipfsRes.size;
+    bucket.uploadedSize += ipfsRes.size;
+    bucket.size = bucket.size ? bucket.size + ipfsRes.size : ipfsRes.size;
 
     await pinFileToCRUST(
       context,
@@ -286,6 +313,12 @@ export async function storageBucketSyncFilesToIPFS(
                 error: err,
               },
             });
+
+            await new Lmas().sendAdminAlert(
+              `[Storage]: Error uploading to IPFS!`,
+              ServiceName.STORAGE,
+              'alert',
+            );
             throw err;
           }
         }

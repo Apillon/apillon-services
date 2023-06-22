@@ -26,6 +26,7 @@ export class Lmas extends BaseService {
   constructor() {
     super();
     this.isDefaultAsync = true;
+    this.defaultQueueUrl = env.MONITORING_SQS_URL;
   }
 
   public async writeLog(params: {

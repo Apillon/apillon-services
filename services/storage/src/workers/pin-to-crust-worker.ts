@@ -32,14 +32,19 @@ export class PinToCrustWorker extends ServerlessWorker {
       this.context,
     ).getPendingRequest();
 
+    console.info('Num of pendingPinRequests: ' + pendingPinRequests.length);
+
     await runWithWorkers(
       pendingPinRequests,
-      20,
+      env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+        env.APP_ENV == AppEnvironment.TEST
+        ? 1
+        : 5,
       this.context,
-      async (data, ctx) => {
+      async (data) => {
         const pinToCrustRequest: PinToCrustRequest = new PinToCrustRequest(
           data,
-          ctx,
+          this.context,
         );
         try {
           await CrustService.placeStorageOrderToCRUST(
@@ -50,7 +55,7 @@ export class PinToCrustWorker extends ServerlessWorker {
               refTable: pinToCrustRequest.refTable,
               refId: pinToCrustRequest.refId,
             },
-            ctx,
+            this.context,
           );
           pinToCrustRequest.pinningStatus = CrustPinningStatus.SUCCESSFULL;
           pinToCrustRequest.message = '';
@@ -59,7 +64,7 @@ export class PinToCrustWorker extends ServerlessWorker {
           await pinToCrustRequest.update();
 
           await new Lmas().writeLog({
-            context: ctx,
+            context: this.context,
             logType: LogType.COST,
             message: 'Success placing storage order to CRUST',
             location: `PinToCrustWorker`,
@@ -80,7 +85,7 @@ export class PinToCrustWorker extends ServerlessWorker {
           }
 
           await new Lmas().writeLog({
-            context: ctx,
+            context: this.context,
             logType: LogType.ERROR,
             message: 'Error at placing storage order to CRUST',
             location: `PinToCrustWorker`,
@@ -95,6 +100,47 @@ export class PinToCrustWorker extends ServerlessWorker {
         }
       },
     );
+
+    console.info(
+      'Pinning completed. Checking for pins, that should be renewed',
+    );
+
+    //Get pin to crust request, that need to be renewed.
+    //Update those request and they should be pinned in next worker iteration
+    const pinRequestForRenowal: PinToCrustRequest[] =
+      await new PinToCrustRequest({}, this.context).getRequestForRenewal();
+
+    console.info(
+      'Num of pins, that should be renewed: ' + pinRequestForRenowal.length,
+    );
+
+    await runWithWorkers(
+      pinRequestForRenowal,
+      env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+        env.APP_ENV == AppEnvironment.TEST
+        ? 1
+        : 5,
+      this.context,
+      async (data) => {
+        try {
+          const pinToCrustRequest: PinToCrustRequest = new PinToCrustRequest(
+            data,
+            this.context,
+          );
+          pinToCrustRequest.renewalDate = new Date();
+          pinToCrustRequest.pinningStatus = CrustPinningStatus.PENDING;
+          pinToCrustRequest.numOfExecutions = 0;
+          await pinToCrustRequest.update();
+        } catch (err) {
+          console.error(
+            'Error updating renewal date of PinToCrustRequest',
+            err,
+          );
+        }
+      },
+    );
+
+    return true;
   }
 
   public async onSuccess(_data?: any, _successData?: any): Promise<any> {

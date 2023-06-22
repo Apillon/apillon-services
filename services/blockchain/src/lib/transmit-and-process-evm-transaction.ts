@@ -58,34 +58,36 @@ export async function transmitAndProcessEvmTransaction(
     chain: chain,
   });
 
-  //Check transaction status on indexer
-  let tx: Transaction = await new Transaction({}, context).populateById(
-    transaction.id,
-  );
-  do {
-    const evnTransactionServiceDef: ServiceDefinition = {
-      type: ServiceDefinitionType.LAMBDA,
-      config: { region: 'test' },
-      params: { FunctionName: 'test' },
-    };
-
-    const wd = new WorkerDefinition(
-      evnTransactionServiceDef,
-      WorkerName.EVM_TRANSACTIONS,
-      {
-        parameters: { chain: chain },
-      },
+  //Check transaction status on indexer - in test environment this cant be performed - graphQl server does not exists for genache provider
+  /*if (env.APP_ENV != AppEnvironment.TEST) {
+    let tx: Transaction = await new Transaction({}, context).populateById(
+      transaction.id,
     );
+    do {
+      const evnTransactionServiceDef: ServiceDefinition = {
+        type: ServiceDefinitionType.LAMBDA,
+        config: { region: 'test' },
+        params: { FunctionName: 'test' },
+      };
 
-    const worker = new EvmTransactionWorker(wd, context);
-    await worker.runExecutor({
-      chain: chain,
-    });
+      const wd = new WorkerDefinition(
+        evnTransactionServiceDef,
+        WorkerName.EVM_TRANSACTIONS,
+        {
+          parameters: { chain: chain },
+        },
+      );
 
-    tx = await new Transaction({}, context).populateById(transaction.id);
+      const worker = new EvmTransactionWorker(wd, context);
+      await worker.runExecutor({
+        chain: chain,
+      });
 
-    setTimeout(() => {
-      console.log('Delayed for 1 second.');
-    }, 1000);
-  } while (tx.transactionStatus == TransactionStatus.PENDING);
+      tx = await new Transaction({}, context).populateById(transaction.id);
+
+      setTimeout(() => {
+        console.log('Delayed for 1 second.');
+      }, 1000);
+    } while (tx.transactionStatus == TransactionStatus.PENDING);
+  }*/
 }
