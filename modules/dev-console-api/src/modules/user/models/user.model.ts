@@ -1,3 +1,4 @@
+import { Project } from './../../project/models/project.model';
 import { DevConsoleApiContext } from './../../../context';
 /* eslint-disable @typescript-eslint/member-ordering */
 import { faker } from '@faker-js/faker';
@@ -14,6 +15,8 @@ import {
 } from '@apillon/lib';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { UserQueryFilter } from '../../admin-panel/user/dtos/user-query-filter.dto';
+import { UUID } from 'crypto';
+import { UserProjectsQueryFilter } from '../../admin-panel/user/dtos/user-projects-query-filter.dto';
 
 /**
  * User model.
@@ -184,7 +187,6 @@ export class User extends AdvancedSQLModel {
   }
 
   public async listAllUsers(filter: UserQueryFilter) {
-    // Map url query with sql fields.
     const fieldMap = { id: 'u.id' };
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
@@ -247,5 +249,38 @@ export class User extends AdvancedSQLModel {
         .filter((value, index, self) => self.indexOf(value) === index);
     }
     return this;
+  }
+
+  public async listProjects(user_uuid: UUID, filter: UserProjectsQueryFilter) {
+    const fieldMap = { id: 'u.id' };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'u',
+      fieldMap,
+      filter.serialize(),
+    );
+    const sqlQuery = {
+      qSelect: `SELECT ${new Project(
+        {},
+        this.getContext(),
+      ).generateSelectFields('p')}`,
+      qFrom: `FROM \`${DbTables.USER}\` u
+        JOIN project_user pu ON u.id = pu.user_id
+        JOIN project p ON pu.project_id = p.id
+        WHERE u.user_uuid = @user_uuid
+        AND (@search IS null OR p.name LIKE CONCAT('%', @search, '%'))
+        `,
+      qFilter: `
+          ORDER BY ${filters.orderStr || 'u.createTime DESC'}
+          LIMIT ${filters.limit} OFFSET ${filters.offset};
+        `,
+    };
+
+    return selectAndCountQuery(
+      this.getContext().mysql,
+      sqlQuery,
+      { ...params, user_uuid },
+      'u.id',
+    );
   }
 }
