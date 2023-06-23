@@ -37,6 +37,7 @@ export enum AmsEventType {
   USER_ROLE_ASSIGN = 'user-role-assign',
   USER_ROLE_REMOVE = 'user-role-remove',
   USER_GET_LOGINS = 'user-get-logins',
+  USER_GET_ROLES = 'user-get-roles',
   AUTH_TOKEN_CREATE_UPDATE_TOKEN = 'auth-token-create-update-token',
   USER_EMAIL_EXISTS = 'user-email-exists',
   GET_AUTH_USER_BY_EMAIL = 'get-auth-user-by-email',

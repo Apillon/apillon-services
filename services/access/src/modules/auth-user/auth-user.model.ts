@@ -8,6 +8,7 @@ import {
   SerializeFor,
   SqlModelStatus,
   UserLoginsQueryFilterDto,
+  UserRolesQueryFilterDto,
   generateJwtToken,
   getQueryParams,
   prop,
@@ -422,7 +423,8 @@ export class AuthUser extends AdvancedSQLModel {
         {},
         this.getContext(),
       ).generateSelectFields('at', '', SerializeFor.ADMIN)}`,
-      qFrom: `FROM \`${DbTables.AUTH_TOKEN}\` at`,
+      qFrom: `FROM \`${DbTables.AUTH_TOKEN}\` at
+        WHERE at.user_uuid = @user_uuid`,
       qFilter: `
           ORDER BY ${filters.orderStr || 'at.createTime DESC'}
           LIMIT ${filters.limit} OFFSET ${filters.offset};
@@ -432,8 +434,44 @@ export class AuthUser extends AdvancedSQLModel {
     return selectAndCountQuery(
       this.getContext().mysql,
       sqlQuery,
-      params,
+      { ...params, user_uuid: event.user_uuid },
       'at.id',
+    );
+  }
+
+  public async listRoles(event: {
+    user_uuid: string;
+    query: UserRolesQueryFilterDto;
+  }) {
+    const filter = new UserRolesQueryFilterDto(event.query);
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'aur',
+      null,
+      filter.serialize(),
+    );
+    const sqlQuery = {
+      qSelect: `SELECT ${new Role({}, this.getContext()).generateSelectFields(
+        'r',
+      )}`,
+      qFrom: `FROM \`${DbTables.AUTH_USER_ROLE}\` aur
+        JOIN role r ON aur.role_id = r.id
+        WHERE aur.user_uuid = @user_uuid
+        AND aur.project_uuid = ''
+        AND r.status = ${SqlModelStatus.ACTIVE}
+        AND (@search IS null OR r.name LIKE CONCAT('%', @search, '%'))
+      `,
+      qFilter: `
+          ORDER BY ${filters.orderStr}
+          LIMIT ${filters.limit} OFFSET ${filters.offset};
+        `,
+    };
+
+    return selectAndCountQuery(
+      this.getContext().mysql,
+      sqlQuery,
+      { ...params, user_uuid: event.user_uuid },
+      'aur.createTime',
     );
   }
 }

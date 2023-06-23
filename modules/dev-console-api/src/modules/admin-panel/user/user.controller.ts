@@ -1,4 +1,8 @@
-import { DefaultUserRole, ValidateFor } from '@apillon/lib';
+import {
+  DefaultUserRole,
+  UserRolesQueryFilterDto,
+  ValidateFor,
+} from '@apillon/lib';
 import {
   Controller,
   Get,
@@ -63,6 +67,17 @@ export class UserController {
     @Query() query: UserLoginsQueryFilterDto,
   ) {
     return this.userService.getUserLogins(context, user_uuid, query);
+  }
+
+  @Get(':user_uuid/roles')
+  @Validation({ dto: UserRolesQueryFilterDto, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async getUserRoles(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
+    @Query() query: UserRolesQueryFilterDto,
+  ) {
+    return this.userService.getUserRoles(context, user_uuid, query);
   }
 
   @Patch(':user_uuid')

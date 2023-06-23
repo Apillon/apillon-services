@@ -32,6 +32,7 @@ export async function processEvent(
     [AmsEventType.USER_ROLE_REMOVE]: RoleService.removeUserRoleOnProject,
 
     [AmsEventType.USER_GET_LOGINS]: AuthUserService.getUserLogins,
+    [AmsEventType.USER_GET_ROLES]: AuthUserService.getUserRoles,
 
     [AmsEventType.CREATE_API_KEY]: ApiKeyService.createApiKey,
     [AmsEventType.DELETE_API_KEY]: ApiKeyService.deleteApiKey,

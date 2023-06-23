@@ -1,7 +1,12 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../../context';
 import { User } from '../../user/models/user.model';
-import { Ams, CodeException, UserLoginsQueryFilterDto } from '@apillon/lib';
+import {
+  Ams,
+  CodeException,
+  UserLoginsQueryFilterDto,
+  UserRolesQueryFilterDto,
+} from '@apillon/lib';
 import { ResourceNotFoundErrorCode } from '../../../config/types';
 import { UserQueryFilter } from './dtos/user-query-filter.dto';
 import { UserProjectsQueryFilter } from './dtos/user-projects-query-filter.dto';
@@ -71,5 +76,21 @@ export class UserService {
     query: UserProjectsQueryFilter,
   ): Promise<any> {
     return await new User({}, context).listProjects(user_uuid, query);
+  }
+
+  /**
+   * Retreives a list of all roles for a user that are not linked to a project
+   * @async
+   * @param {DevConsoleApiContext} context
+   * @param {string} user_uuid
+   * @param {UserRolesQueryFilterDto} query
+   * @returns {Promise<any>}
+   */
+  async getUserRoles(
+    context: DevConsoleApiContext,
+    user_uuid: UUID,
+    query: UserRolesQueryFilterDto,
+  ): Promise<any> {
+    return (await new Ams(context).getUserRoles(user_uuid, query)).data;
   }
 }

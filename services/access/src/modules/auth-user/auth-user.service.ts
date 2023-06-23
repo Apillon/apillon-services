@@ -9,11 +9,16 @@ import {
   SerializeFor,
   ServiceName,
   UserLoginsQueryFilterDto,
+  UserRolesQueryFilterDto,
   UserWalletAuthDto,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AmsErrorCode } from '../../config/types';
-import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
+import {
+  AmsBadRequestException,
+  AmsCodeException,
+  AmsValidationException,
+} from '../../lib/exceptions';
 import { AuthToken } from '../auth-token/auth-token.model';
 import { AuthUser } from './auth-user.model';
 
@@ -33,14 +38,7 @@ export class AuthUserService {
    */
   static async register(event, context: ServiceContext) {
     if (!event?.user_uuid || !event.password || !event.email) {
-      throw await new AmsCodeException({
-        status: 400,
-        code: AmsErrorCode.BAD_REQUEST,
-      }).writeToMonitor({
-        context,
-        user_uuid: event?.user_uuid,
-        data: event,
-      });
+      throw await new AmsBadRequestException(context, event).writeToMonitor();
     }
     //check if email already exists - user cannot register twice
     const checkEmailRes = await AuthUserService.emailExists(event, context);
@@ -357,10 +355,7 @@ export class AuthUserService {
    */
   static async resetPassword(event, context: ServiceContext) {
     if (!event?.token || !event.password) {
-      throw await new AmsCodeException({
-        status: 400,
-        code: AmsErrorCode.BAD_REQUEST,
-      }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
+      throw await new AmsBadRequestException(context, event).writeToMonitor();
     }
 
     //Decode JWT token to get email
@@ -424,14 +419,7 @@ export class AuthUserService {
    */
   static async emailExists(event, context: ServiceContext) {
     if (!event?.email) {
-      throw await new AmsCodeException({
-        status: 400,
-        code: AmsErrorCode.BAD_REQUEST,
-      }).writeToMonitor({
-        context,
-        user_uuid: event?.user_uuid,
-        data: event,
-      });
+      throw await new AmsBadRequestException(context, event).writeToMonitor();
     }
 
     const authUser = await new AuthUser({}, context).populateByEmail(
@@ -448,14 +436,7 @@ export class AuthUserService {
    */
   static async getAuthUserByEmail(event, context: ServiceContext) {
     if (!event?.email) {
-      throw await new AmsCodeException({
-        status: 400,
-        code: AmsErrorCode.BAD_REQUEST,
-      }).writeToMonitor({
-        context,
-        user_uuid: event?.user_uuid,
-        data: event,
-      });
+      throw await new AmsBadRequestException(context, event).writeToMonitor();
     }
 
     const authUser = await new AuthUser({}, context).populateByEmail(
@@ -480,14 +461,7 @@ export class AuthUserService {
     }
 
     if (!event?.message) {
-      throw await new AmsCodeException({
-        status: 400,
-        code: AmsErrorCode.BAD_REQUEST,
-      }).writeToMonitor({
-        context,
-        user_uuid: event?.user_uuid,
-        data: event,
-      });
+      throw await new AmsBadRequestException(context, event).writeToMonitor();
     }
 
     const { isValid } = signatureVerify(
@@ -565,15 +539,26 @@ export class AuthUserService {
     context: ServiceContext,
   ) {
     if (!event?.user_uuid) {
-      throw await new AmsCodeException({
-        status: 400,
-        code: AmsErrorCode.BAD_REQUEST,
-      }).writeToMonitor({
-        context,
-        data: event,
-      });
+      throw await new AmsBadRequestException(context, event).writeToMonitor();
     }
 
     return await new AuthUser({}, context).listLogins(event);
+  }
+
+  /**
+   * Gets all roles for a user
+   * @param event An object containing the user's uuid and query parameters.
+   * @param context The ServiceContext instance for the current request.
+   * @returns An array of the user's roles
+   */
+  static async getUserRoles(
+    event: { user_uuid: string; query: UserRolesQueryFilterDto },
+    context: ServiceContext,
+  ) {
+    if (!event?.user_uuid) {
+      throw await new AmsBadRequestException(context, event).writeToMonitor();
+    }
+
+    return await new AuthUser({}, context).listRoles(event);
   }
 }
