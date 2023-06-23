@@ -29,7 +29,6 @@ export class UserController {
     @Ctx() context: DevConsoleApiContext,
     @Query() query: UserQueryFilter,
   ) {
-    // # projects and # services
     return this.userService.getUserList(context, query);
   }
 

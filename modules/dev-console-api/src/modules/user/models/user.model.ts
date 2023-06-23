@@ -185,21 +185,27 @@ export class User extends AdvancedSQLModel {
 
   public async listAllUsers(filter: UserQueryFilter) {
     // Map url query with sql fields.
-    const fieldMap = { id: 'u.d' };
+    const fieldMap = { id: 'u.id' };
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
       'u',
       fieldMap,
       filter.serialize(),
     );
-
     const sqlQuery = {
-      qSelect: `SELECT ${this.generateSelectFields('u')}`,
-      qFrom: `FROM \`${DbTables.USER}\` u`,
+      qSelect: `SELECT ${this.generateSelectFields(
+        'u',
+      )}, COUNT(DISTINCT p.id) AS totalProjects, COUNT(s.id) AS totalServices`,
+      qFrom: `FROM \`${DbTables.USER}\` u
+        JOIN project_user pu ON u.id = pu.user_id
+        JOIN project p ON pu.project_id = p.id
+        LEFT JOIN service s ON p.id = s.project_id
+        `,
       qFilter: `
           ORDER BY ${filters.orderStr || 'u.createTime DESC'}
           LIMIT ${filters.limit} OFFSET ${filters.offset};
         `,
+      qGroup: `GROUP BY ${this.generateGroupByFields()}`,
     };
 
     return selectAndCountQuery(
