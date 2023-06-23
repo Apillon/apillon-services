@@ -12,10 +12,10 @@ import { KiltGQLQueries } from './queries/kilt-graphql-queries';
 export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
   constructor() {
     // TODO: Change to KILT
-    if (!env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER) {
+    if (!env.BLOCKCHAIN_KILT_GRAPHQL_SERVER) {
       throw new Error('Missing GraphQL server url!');
     }
-    super(env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER);
+    super(env.BLOCKCHAIN_KILT_GRAPHQL_SERVER);
   }
 
   public async getAllTransactions(
@@ -69,6 +69,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     fromBlock: number,
     toBlock: number,
   ): Promise<TransferTransaction[]> {
+    console.error('Getting all TRANSFERS ...');
     const data: TransferTransaction[] = await this.graphQlClient.request(
       gql`
         ${KiltGQLQueries.ACCOUNT_TRANSFERS_Q}
@@ -80,6 +81,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
         transactionType: KiltTransactionType.BALANCE_TRANSFER,
       },
     );
+    console.error('Fetched DATA ...');
     return data;
   }
 

@@ -21,9 +21,10 @@ import { TransactionWebhookWorker } from './transaction-webhook-worker';
 import { TransmitEvmTransactionWorker } from './transmit-evm-transaction-worker';
 import { TransmitSubstrateTransactionWorker } from './transmit-substrate-transaction-worker';
 
-import { CrustTransactionWorker } from './substrate/crust/crust-transaction-worker';
-import { KiltTransactionWorker } from './substrate/kilt/kilt-transaction-worker';
-import { EvmTransactionWorker } from './evm/evm-transaction-worker';
+import { CrustTransactionWorker } from './crust-transaction-worker';
+// import { KiltTransactionWorker } from './substrate/kilt/kilt-transaction-worker';
+import { EvmTransactionWorker } from './evm-transaction-worker';
+import { SubstrateTransactionWorker } from './substrate/substrate-transaction-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -37,6 +38,7 @@ export enum WorkerName {
   TRANSACTION_WEBHOOKS = 'TransactionWebhooks',
   TRANSACTION_LOG = 'TransactionLog',
   KILT_TRANSACTIONS = 'KiltTransactions',
+  SUBSTRATE_TRANSACTION = 'SubstrateTransaction',
 }
 
 export async function handler(event: any) {
@@ -141,8 +143,10 @@ export async function handleLambdaEvent(
     case WorkerName.CRUST_TRANSACTIONS:
       await new CrustTransactionWorker(workerDefinition, context).run();
       break;
-    case WorkerName.KILT_TRANSACTIONS:
-      await new KiltTransactionWorker(workerDefinition, context).run();
+
+    // ###### !!!!WIP!!!! - SUBSTRATE TRANSACTION WORKER ######
+    case WorkerName.SUBSTRATE_TRANSACTION:
+      await new SubstrateTransactionWorker(workerDefinition, context).run();
       break;
     // -- EVM --
     case WorkerName.EVM_TRANSACTIONS:
