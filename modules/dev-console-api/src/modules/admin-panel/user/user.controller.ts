@@ -8,6 +8,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { UserLoginsQueryFilterDto } from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { AuthGuard } from '../../../guards/auth.guard';
 import { UserService } from './user.service';
@@ -28,6 +29,7 @@ export class UserController {
     @Ctx() context: DevConsoleApiContext,
     @Query() query: UserQueryFilter,
   ) {
+    // # projects and # services
     return this.userService.getUserList(context, query);
   }
 
@@ -49,11 +51,14 @@ export class UserController {
   }
 
   @Get(':user_uuid/logins')
+  @Validation({ dto: UserLoginsQueryFilterDto, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard, AuthGuard)
   async getUserLogins(
     @Ctx() context: DevConsoleApiContext,
     @Param('user_uuid', ParseUUIDPipe) user_uuid: string,
+    @Query() query: UserLoginsQueryFilterDto,
   ) {
-    return []; // TODO
+    return this.userService.getUserLogins(context, user_uuid, query);
   }
 
   @Patch(':user_uuid')

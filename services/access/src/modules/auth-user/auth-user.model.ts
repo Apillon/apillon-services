@@ -7,8 +7,11 @@ import {
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
+  UserLoginsQueryFilterDto,
   generateJwtToken,
+  getQueryParams,
   prop,
+  selectAndCountQuery,
   uniqueFieldValue,
 } from '@apillon/lib';
 import { stringParser } from '@rawmodel/parsers';
@@ -399,5 +402,38 @@ export class AuthUser extends AdvancedSQLModel {
     }
 
     return this;
+  }
+
+  public async listLogins(event: {
+    user_uuid: string;
+    query: UserLoginsQueryFilterDto;
+  }) {
+    const filter = new UserLoginsQueryFilterDto(event.query);
+    const fieldMap = { id: 'at.d' };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'at',
+      fieldMap,
+      filter.serialize(),
+    );
+
+    const sqlQuery = {
+      qSelect: `SELECT ${new AuthToken(
+        {},
+        this.getContext(),
+      ).generateSelectFields('at', '', SerializeFor.ADMIN)}`,
+      qFrom: `FROM \`${DbTables.AUTH_TOKEN}\` at`,
+      qFilter: `
+          ORDER BY ${filters.orderStr || 'at.createTime DESC'}
+          LIMIT ${filters.limit} OFFSET ${filters.offset};
+        `,
+    };
+
+    return selectAndCountQuery(
+      this.getContext().mysql,
+      sqlQuery,
+      params,
+      'at.id',
+    );
   }
 }

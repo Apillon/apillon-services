@@ -8,6 +8,7 @@ import {
   PopulateFrom,
   SerializeFor,
   ServiceName,
+  UserLoginsQueryFilterDto,
   UserWalletAuthDto,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
@@ -551,5 +552,28 @@ export class AuthUserService {
     });
 
     return authUser.serialize(SerializeFor.SERVICE);
+  }
+
+  /**
+   * Gets all logins for a user
+   * @param event An object containing the user's uuid and query parameters.
+   * @param context The ServiceContext instance for the current request.
+   * @returns An array of the user's logins
+   */
+  static async getUserLogins(
+    event: { user_uuid: string; query: UserLoginsQueryFilterDto },
+    context: ServiceContext,
+  ) {
+    if (!event?.user_uuid) {
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.BAD_REQUEST,
+      }).writeToMonitor({
+        context,
+        data: event,
+      });
+    }
+
+    return await new AuthUser({}, context).listLogins(event);
   }
 }

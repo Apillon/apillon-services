@@ -12,6 +12,7 @@ import { ApiKeyRoleBaseDto } from './dtos/api-key-role-base.dto';
 import { CreateApiKeyDto } from './dtos/create-api-key.dto';
 import { CreateOauthLinkDto } from './dtos/create-oauth-link.dto';
 import { OauthListFilterDto } from './dtos/discord-user-list-filter.dto';
+import { UserLoginsQueryFilterDto } from './dtos/user-logins-query-filter.dto';
 import { UserWalletAuthDto } from './dtos/user-wallet-auth.dto';
 
 /**
@@ -292,6 +293,18 @@ export class Ams extends BaseService {
     const data = {
       eventName: AmsEventType.GET_OAUTH_LINKS,
       user_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async getUserLogins(
+    user_uuid: string,
+    query: UserLoginsQueryFilterDto,
+  ) {
+    const data = {
+      eventName: AmsEventType.USER_GET_LOGINS,
+      user_uuid,
+      query,
     };
     return await this.callService(data);
   }

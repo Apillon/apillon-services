@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../../context';
 import { User } from '../../user/models/user.model';
-import { CodeException } from '@apillon/lib';
+import { Ams, CodeException, UserLoginsQueryFilterDto } from '@apillon/lib';
 import { ResourceNotFoundErrorCode } from '../../../config/types';
 import { UserQueryFilter } from './dtos/user-query-filter.dto';
 
@@ -36,6 +36,14 @@ export class UserService {
     context: DevConsoleApiContext,
     filter: UserQueryFilter,
   ): Promise<any> {
-    return await new User({}, context).listAllUsers(context, filter);
+    return await new User({}, context).listAllUsers(filter);
+  }
+
+  async getUserLogins(
+    context: DevConsoleApiContext,
+    uuid: string,
+    query: UserLoginsQueryFilterDto,
+  ): Promise<any> {
+    return (await new Ams(context).getUserLogins(uuid, query)).data;
   }
 }

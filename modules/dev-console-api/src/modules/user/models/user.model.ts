@@ -183,10 +183,7 @@ export class User extends AdvancedSQLModel {
     return data?.length ? data[0] : data;
   }
 
-  public async listAllUsers(
-    context: DevConsoleApiContext,
-    filter: UserQueryFilter,
-  ) {
+  public async listAllUsers(filter: UserQueryFilter) {
     // Map url query with sql fields.
     const fieldMap = { id: 'u.d' };
     const { params, filters } = getQueryParams(
@@ -200,12 +197,17 @@ export class User extends AdvancedSQLModel {
       qSelect: `SELECT ${this.generateSelectFields('u')}`,
       qFrom: `FROM \`${DbTables.USER}\` u`,
       qFilter: `
-          ORDER BY ${filters.orderStr}
+          ORDER BY ${filters.orderStr || 'u.createTime DESC'}
           LIMIT ${filters.limit} OFFSET ${filters.offset};
         `,
     };
 
-    return selectAndCountQuery(context.mysql, sqlQuery, params, 'u.id');
+    return selectAndCountQuery(
+      this.getContext().mysql,
+      sqlQuery,
+      params,
+      'u.id',
+    );
   }
 
   public async populateByEmail(email: string) {
