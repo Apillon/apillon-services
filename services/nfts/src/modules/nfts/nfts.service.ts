@@ -21,7 +21,6 @@ import {
   StorageMicroservice,
   TransactionStatus,
   TransferCollectionDTO,
-  writeLog,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import {
@@ -275,34 +274,10 @@ export class NftsService {
   ) {
     console.log('Listing all NFT Collections');
 
-    const collections = await new Collection(
+    return await new Collection(
       { project_uuid: event.query.project_uuid },
       context,
     ).getList(context, new NFTCollectionQueryFilter(event.query));
-
-    for (const collection of collections.items) {
-      collection.minted = 0;
-      if (collection.contractAddress) {
-        const walletService: WalletService = new WalletService(
-          context,
-          collection.chain,
-        );
-        try {
-          collection.minted = await walletService.getNumberOfMintedNfts(
-            collection,
-          );
-        } catch (err) {
-          writeLog(
-            LogType.ERROR,
-            'GetNumberOfMintedNfts Error',
-            'nfts.service.ts',
-            'listNftCollections',
-            err,
-          );
-        }
-      }
-    }
-    return collections;
   }
 
   static async getCollection(event: { id: any }, context: ServiceContext) {
@@ -319,7 +294,7 @@ export class NftsService {
       });
     }
     collection.canAccess(context);
-    await collection.populateNumberOfMintedNfts();
+
     return collection.serialize(SerializeFor.PROFILE);
   }
 
@@ -340,7 +315,6 @@ export class NftsService {
       });
     }
     collection.canAccess(context);
-    await collection.populateNumberOfMintedNfts();
 
     return collection.serialize(SerializeFor.PROFILE);
   }

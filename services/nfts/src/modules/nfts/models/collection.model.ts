@@ -6,7 +6,6 @@ import {
   EvmChain,
   ForbiddenErrorCodes,
   getQueryParams,
-  LogType,
   NFTCollectionQueryFilter,
   PoolConnection,
   PopulateFrom,
@@ -15,16 +14,14 @@ import {
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
-  writeLog,
 } from '@apillon/lib';
-import { integerParser, stringParser, booleanParser } from '@rawmodel/parsers';
+import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
   CollectionStatus,
   DbTables,
   NftsErrorCode,
 } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
-import { WalletService } from '../../wallet/wallet.service';
 
 export class Collection extends AdvancedSQLModel {
   public readonly tableName = DbTables.COLLECTION;
@@ -544,20 +541,6 @@ export class Collection extends AdvancedSQLModel {
   /***************************************************
    * Info properties
    *****************************************************/
-  @prop({
-    populatable: [
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
-    validators: [],
-  })
-  public minted: number;
 
   public canAccess(context: ServiceContext) {
     if (
@@ -622,7 +605,7 @@ export class Collection extends AdvancedSQLModel {
         FROM \`${this.tableName}\` c
         WHERE c.project_uuid = @project_uuid
         AND (@search IS null OR c.name LIKE CONCAT('%', @search, '%'))
-        AND 
+        AND
             (
                 (@status IS null AND c.status <> ${SqlModelStatus.DELETED})
                 OR
@@ -653,8 +636,8 @@ export class Collection extends AdvancedSQLModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
-      FROM \`${this.tableName}\`
+        SELECT *
+        FROM \`${this.tableName}\`
       WHERE ( id LIKE @id OR collection_uuid LIKE @id)
       AND status <> ${SqlModelStatus.DELETED};
       `,
@@ -689,28 +672,6 @@ export class Collection extends AdvancedSQLModel {
     }
   }
 
-  public async populateNumberOfMintedNfts() {
-    this.minted = 0;
-
-    try {
-      const walletService: WalletService = new WalletService(
-        this.getContext(),
-        this.chain,
-      );
-      if (this.contractAddress) {
-        this.minted = await walletService.getNumberOfMintedNfts(this);
-      }
-    } catch (err) {
-      writeLog(
-        LogType.ERROR,
-        'getNumberOfMintedNfts failed',
-        'collection.model.ts',
-        'populateNumberOfMintedNfts',
-        err,
-      );
-    }
-  }
-
   /**
    * Function to get count of active NFT collections on the project
    * @param project_uuid
@@ -721,8 +682,8 @@ export class Collection extends AdvancedSQLModel {
       `
       SELECT COUNT(*) as collectionsCount
       FROM \`${DbTables.COLLECTION}\`
-      WHERE project_uuid = @project_uuid 
-      AND collectionStatus <> ${CollectionStatus.FAILED}
+      WHERE project_uuid = @project_uuid
+        AND collectionStatus <> ${CollectionStatus.FAILED}
       AND status <> ${SqlModelStatus.DELETED};
       `,
       {
