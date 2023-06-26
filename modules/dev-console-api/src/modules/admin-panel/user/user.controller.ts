@@ -21,6 +21,8 @@ import { ValidationGuard } from '../../../guards/validation.guard';
 import { UserQueryFilter } from './dtos/user-query-filter.dto';
 import { UserProjectsQueryFilter } from './dtos/user-projects-query-filter.dto';
 import { UUID } from 'crypto';
+import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
+import { GetAllQuotasDto } from '@apillon/lib/dist/lib/at-services/config/dtos/get-all-quotas.dto';
 
 @Controller('admin-panel/users')
 @Permissions({ role: DefaultUserRole.ADMIN })
@@ -78,6 +80,18 @@ export class UserController {
     @Query() query: UserRolesQueryFilterDto,
   ) {
     return this.userService.getUserRoles(context, user_uuid, query);
+  }
+
+  @Get(':user_uuid/quotas')
+  @Validation({ dto: GetAllQuotasDto, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async getUserQuotas(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
+    @Query() query: GetAllQuotasDto,
+  ): Promise<QuotaDto[]> {
+    query.object_uuid = user_uuid;
+    return this.userService.getUserQuotas(context, query);
   }
 
   @Patch(':user_uuid')

@@ -139,6 +139,7 @@ export enum MailEventType {
 
 export enum ScsEventType {
   GET_QUOTA = 'get-quota',
+  GET_ALL_QUOTAS = 'get-all-quotas',
 }
 
 export enum NftsEventType {

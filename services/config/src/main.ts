@@ -15,6 +15,7 @@ export async function processEvent(
 ): Promise<any> {
   const processors = {
     [ScsEventType.GET_QUOTA]: QuotaService.getQuota,
+    [ScsEventType.GET_ALL_QUOTAS]: QuotaService.getAllQuotas,
   };
 
   return await processors[event.eventName](event, context);

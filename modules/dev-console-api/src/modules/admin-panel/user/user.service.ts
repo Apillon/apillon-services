@@ -4,6 +4,7 @@ import { User } from '../../user/models/user.model';
 import {
   Ams,
   CodeException,
+  Scs,
   UserLoginsQueryFilterDto,
   UserRolesQueryFilterDto,
 } from '@apillon/lib';
@@ -11,13 +12,15 @@ import { ResourceNotFoundErrorCode } from '../../../config/types';
 import { UserQueryFilter } from './dtos/user-query-filter.dto';
 import { UserProjectsQueryFilter } from './dtos/user-projects-query-filter.dto';
 import { UUID } from 'crypto';
+import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
+import { GetAllQuotasDto } from '@apillon/lib/dist/lib/at-services/config/dtos/get-all-quotas.dto';
 
 @Injectable()
 export class UserService {
   /**
    * Retrieves the user information.
    * @param {DevConsoleApiContext} context - The API context with current user session.
-   * @param {string} user_uuid - The user's uuid.
+   * @param {UUID} user_uuid - The user's uuid.
    * @returns {Promise<any>} The serialized user data.
    */
   async getUser(context: DevConsoleApiContext, user_uuid: UUID): Promise<any> {
@@ -50,7 +53,7 @@ export class UserService {
    * Retreives a list of all logins for a uer
    * @async
    * @param {DevConsoleApiContext} context
-   * @param {string} user_uuid
+   * @param {UUID} user_uuid
    * @param {UserLoginsQueryFilterDto} query
    * @returns {Promise<any>}
    */
@@ -82,7 +85,7 @@ export class UserService {
    * Retreives a list of all roles for a user that are not linked to a project
    * @async
    * @param {DevConsoleApiContext} context
-   * @param {string} user_uuid
+   * @param {UUID} user_uuid
    * @param {UserRolesQueryFilterDto} query
    * @returns {Promise<any>}
    */
@@ -92,5 +95,19 @@ export class UserService {
     query: UserRolesQueryFilterDto,
   ): Promise<any> {
     return (await new Ams(context).getUserRoles(user_uuid, query)).data;
+  }
+
+  /**
+   * Retreives a list of all quotas for a user
+   * @async
+   * @param {DevConsoleApiContext} context
+   * @param {GetAllQuotasDto} query
+   * @returns {Promise<QuotaDto[]>}
+   */
+  async getUserQuotas(
+    context: DevConsoleApiContext,
+    query: GetAllQuotasDto,
+  ): Promise<QuotaDto[]> {
+    return await new Scs(context).getAllQuotas(query);
   }
 }

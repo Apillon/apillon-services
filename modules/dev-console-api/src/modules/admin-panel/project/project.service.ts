@@ -1,14 +1,16 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../../context';
 import { Project } from '../../project/models/project.model';
-import { CodeException } from '@apillon/lib';
+import { CodeException, GetAllQuotasDto, Scs } from '@apillon/lib';
 import { ResourceNotFoundErrorCode } from '../../../config/types';
 import { ProjectQueryFilter } from './dtos/project-query-filter.dto';
+import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
+import { UUID } from 'crypto';
 
 @Injectable()
 export class ProjectService {
   /**
-   * Retrieves a list of all users
+   * Retrieves a list of all projects
    * @param {DevConsoleApiContext} context - The API context with current user session.
    * @returns {Promise<any>} The serialized user data.
    */
@@ -23,12 +25,12 @@ export class ProjectService {
    * Retreive a project by its uuid
    * @async
    * @param {DevConsoleApiContext} context - - The API context with current user session.
-   * @param {string} project_uuid - The project's uuid
+   * @param {UUID} project_uuid - The project's uuid
    * @returns {Promise<Project>}
    */
   async getProject(
     context: DevConsoleApiContext,
-    project_uuid: string,
+    project_uuid: UUID,
   ): Promise<Project> {
     const project: Project = await new Project({}, context).getProjectDetail(
       project_uuid,
@@ -42,5 +44,19 @@ export class ProjectService {
     }
 
     return project;
+  }
+
+  /**
+   * Retreives a list of all quotas for a project
+   * @async
+   * @param {DevConsoleApiContext} context
+   * @param {GetAllQuotasDto} query
+   * @returns {Promise<QuotaDto[]>}
+   */
+  async getProjectQuotas(
+    context: DevConsoleApiContext,
+    query: GetAllQuotasDto,
+  ): Promise<QuotaDto[]> {
+    return await new Scs(context).getAllQuotas(query);
   }
 }

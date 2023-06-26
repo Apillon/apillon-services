@@ -1,11 +1,20 @@
-import { DefaultUserRole, ValidateFor } from '@apillon/lib';
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { DefaultUserRole, GetAllQuotasDto, ValidateFor } from '@apillon/lib';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { AuthGuard } from '../../../guards/auth.guard';
 import { ProjectService } from './project.service';
 import { DevConsoleApiContext } from '../../../context';
 import { ProjectQueryFilter } from './dtos/project-query-filter.dto';
 import { ValidationGuard } from '../../../guards/validation.guard';
+import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
+import { UUID } from 'crypto';
 
 @Controller('admin-panel/projects')
 @Permissions({ role: DefaultUserRole.ADMIN })
@@ -26,16 +35,20 @@ export class ProjectController {
   @Get(':project_uuid')
   async getProject(
     @Ctx() context: DevConsoleApiContext,
-    @Param('project_uuid') project_uuid: string,
+    @Param('project_uuid', ParseUUIDPipe) project_uuid: UUID,
   ) {
     return this.projectService.getProject(context, project_uuid);
   }
 
-  @Get(':project_uuid/qoutas')
+  @Get(':project_uuid/quotas')
+  @Validation({ dto: GetAllQuotasDto, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard, AuthGuard)
   async getProjectQuotas(
     @Ctx() context: DevConsoleApiContext,
-    @Param('project_uuid') project_uuid: string,
-  ) {
-    return []; // TODO
+    @Param('project_uuid', ParseUUIDPipe) project_uuid: UUID,
+    @Query() query: GetAllQuotasDto,
+  ): Promise<QuotaDto[]> {
+    query.project_uuid = project_uuid;
+    return this.projectService.getProjectQuotas(context, query);
   }
 }

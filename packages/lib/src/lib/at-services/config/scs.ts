@@ -2,6 +2,8 @@ import { env } from '../../../config/env';
 import { AppEnvironment, ScsEventType } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
+import { GetAllQuotasDto } from './dtos/get-all-quotas.dto';
+import { GetQuotaDto } from './dtos/get-quota.dto';
 import { QuotaDto } from './dtos/quota.dto';
 
 /**
@@ -36,5 +38,16 @@ export class Scs extends BaseService {
     const scsResponse = await this.callService(data);
 
     return new QuotaDto().populate(scsResponse.data);
+  }
+
+  public async getAllQuotas(params: GetAllQuotasDto): Promise<QuotaDto[]> {
+    const data = {
+      eventName: ScsEventType.GET_ALL_QUOTAS,
+      ...params,
+    };
+
+    const { data: scsResponseData } = await this.callService(data);
+
+    return scsResponseData;
   }
 }
