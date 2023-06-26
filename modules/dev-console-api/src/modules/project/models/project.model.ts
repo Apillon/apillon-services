@@ -246,10 +246,11 @@ export class Project extends AdvancedSQLModel {
 
     const sqlQuery = {
       qSelect: `SELECT ${this.generateSelectFields('p')}`,
-      qFrom: `FROM \`${DbTables.PROJECT}\` p`,
+      qFrom: `FROM \`${DbTables.PROJECT}\` p
+        WHERE (@search IS null OR p.name LIKE CONCAT('%', @search, '%'))`,
       qFilter: `
           ORDER BY ${filters.orderStr}
-          LIMIT ${filters.limit} OFFSET ${filters.offset};
+          LIMIT ${filters.limit} OFFSET ${filters.offset}
         `,
     };
 

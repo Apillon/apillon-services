@@ -21,9 +21,9 @@ export class UserService {
    * Retrieves the user information.
    * @param {DevConsoleApiContext} context - The API context with current user session.
    * @param {UUID} user_uuid - The user's uuid.
-   * @returns {Promise<any>} The serialized user data.
+   * @returns {Promise<User>} The serialized user data.
    */
-  async getUser(context: DevConsoleApiContext, user_uuid: UUID): Promise<any> {
+  async getUser(context: DevConsoleApiContext, user_uuid: UUID): Promise<User> {
     const user = await new User({}, context).getUserDetail(user_uuid);
 
     if (!user?.id) {
