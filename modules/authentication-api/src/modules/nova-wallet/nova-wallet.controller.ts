@@ -9,6 +9,11 @@ import { ValidationGuard } from '../../guards/validation.guard';
 import { AuthenticationApiContext } from '../../context';
 import { NovaWalletService } from './nova-wallet.service';
 
+/**
+ * Controller with endpoints, which will be called from website to manage wallets associated with web3 name.
+ * Endpoints are public
+ * Endpoints actually interact with Apillon API. For that, API key and secret must be set in environment(NOVA_WALLET_API_KEY,NOVA_WALLET_API_KEY_SECRET).
+ */
 @Controller('wallets')
 export class NovaWalletController {
   constructor(private novaWalletService: NovaWalletService) {}
