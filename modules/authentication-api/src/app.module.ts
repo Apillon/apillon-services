@@ -1,3 +1,4 @@
+import { NovaWalletModule } from './modules/nova-wallet/nova-wallet.module';
 import { env } from '@apillon/lib';
 import { createRequestLogMiddleware } from '@apillon/modules-lib';
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
@@ -10,7 +11,13 @@ import { VerificationModule } from './modules/verification/verification.module';
 import { SporranModule } from './modules/sporran/sporran.module';
 
 @Module({
-  imports: [MySQLModule, VerificationModule, IdentityModule, SporranModule],
+  imports: [
+    NovaWalletModule,
+    MySQLModule,
+    VerificationModule,
+    IdentityModule,
+    SporranModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

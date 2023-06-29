@@ -267,6 +267,11 @@ export interface IEnv {
   AUTH_SOCKET_PORT: number;
   AUTH_SOCKET_PORT_TEST: number;
 
+  //Nova wallet
+  NOVA_WALLET_BUCKET_UUID: string;
+  NOVA_WALLET_API_KEY: string;
+  NOVA_WALLET_API_KEY_SECRET: string;
+
   /************************************************************
    * Kilt config
    ************************************************************/
@@ -631,6 +636,11 @@ export let env: IEnv = {
     process.env['KILT_DERIVATION_ALGORITHM'] || 'sr25519',
   AUTH_AWS_WORKER_SQS_URL: process.env['AUTH_AWS_WORKER_SQS_URL'] || '',
   AUTH_AWS_WORKER_LAMBDA_NAME: process.env['AUTH_AWS_WORKER_LAMBDA_NAME'] || '',
+
+  /** NOVA WALLET - AUTHENTICATION API */
+  NOVA_WALLET_BUCKET_UUID: process.env['NOVA_WALLET_BUCKET_UUID'] || '',
+  NOVA_WALLET_API_KEY: process.env['NOVA_WALLET_API_KEY'] || '',
+  NOVA_WALLET_API_KEY_SECRET: process.env['NOVA_WALLET_API_KEY_SECRET'] || '',
 
   /**Apillon Serverless workers config*/
   /**
