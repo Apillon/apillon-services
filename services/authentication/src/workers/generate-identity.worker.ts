@@ -169,6 +169,7 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
     }
 
     console.log('Starting attestation process ...');
+
     // Prepare identity instance and credential structure
     const { attestationRequest, credential } = createAttestationRequest(
       claimerEmail,

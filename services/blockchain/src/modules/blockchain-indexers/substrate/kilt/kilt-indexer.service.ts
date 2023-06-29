@@ -26,18 +26,14 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     // state?: string,
   ) {
     return {
-      transfers_transfers: await this.getAccountTransfers(
-        account,
-        fromBlock,
-        toBlock,
-      ),
+      transfers: await this.getAccountTransfers(account, fromBlock, toBlock),
       withdrawals: await this.getAccountWithdrawals(
         account,
         fromBlock,
         toBlock,
       ),
       deposits: await this.getAccountDeposits(account, fromBlock, toBlock),
-      reserved_balance: await this.getAccountReserved(
+      balance_reserve: await this.getAccountReserved(
         account,
         fromBlock,
         toBlock,
@@ -45,17 +41,17 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
       did_create: await this.getAccountDidCreate(account, fromBlock, toBlock),
       did_delete: await this.getAccountDidDelete(account, fromBlock, toBlock),
       did_update: await this.getAccountDidUpdate(account, fromBlock, toBlock),
-      attestattions_create: await this.getAccountAttestCreate(
+      attest_create: await this.getAccountAttestCreate(
         account,
         fromBlock,
         toBlock,
       ),
-      attestattions_remove: await this.getAccountAttestRemove(
+      attest_remove: await this.getAccountAttestRemove(
         account,
         fromBlock,
         toBlock,
       ),
-      attestattions_revoke: await this.getAccountAttestRevoke(
+      attest_revoke: await this.getAccountAttestRevoke(
         account,
         fromBlock,
         toBlock,
