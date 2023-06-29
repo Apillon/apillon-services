@@ -30,13 +30,12 @@ describe('Kilt tests', () => {
     const chainType = ChainType.SUBSTRATE;
     // BIP-39 mnemonic
     const mnemonic = mnemonicGenerate();
-    const fromBlock = 3994601;
+    const fromBlock = 3996243;
     wallet = await new Wallet(
       {
         chain,
         chainType,
         address,
-        // TODO: Not OK!! Must be bip39 generate
         seed: mnemonic,
         lastParsedBlock: fromBlock,
       },

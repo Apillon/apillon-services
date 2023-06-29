@@ -4,13 +4,19 @@ import { BaseBlockchainIndexer } from '../../modules/blockchain-indexers/substra
 import {
   ChainType,
   Context,
+  Lmas,
+  LogType,
   PoolConnection,
+  ServiceName,
   SubstrateChain,
-  TransactionStatus,
 } from '@apillon/lib';
 import { KiltBlockchainIndexer } from '../../modules/blockchain-indexers/substrate/kilt/kilt-indexer.service';
 import { DbTables } from '../../config/types';
 import { Transaction } from '../../common/models/transaction';
+
+function formatMessage(a: string, t: number, f: number): string {
+  return `Evaluating RESOLVED transactions: SOURCE ${a}, FROM ${t}, TO ${f}`;
+}
 
 export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
   private chainId: string;
@@ -27,22 +33,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
 
     this.chainName = SubstrateChain[this.chainId];
     this.logPrefix = `[SUBSTRATE | ${this.chainName}]`;
-
-    console.error('Chain ID', this.chainId);
-    console.error('Chain Name', this.chainName);
-
-    // I feel like this is an antipattern and should be done in a better way
-    switch (this.chainName) {
-      case 'KILT':
-        this.indexer = new KiltBlockchainIndexer();
-        break;
-      case 'CRUST':
-        //this.indexer = new CrustBlockchainIndexer();
-        break;
-      default:
-        // TODO: Proper error handling
-        console.error('Invalid chain');
-    }
+    this.setIndexer();
   }
 
   public async runExecutor(_data?: any): Promise<any> {
@@ -60,27 +51,60 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     console.log(`${this.logPrefix}: ${message}`);
   }
 
+  private async logAms(message: any, wallet?: string, error?: boolean) {
+    await new Lmas().writeLog({
+      logType: error ? LogType.ERROR : LogType.INFO,
+      message: message,
+      location: 'SubstrateTransactionWorker',
+      service: ServiceName.BLOCKCHAIN,
+      data: {
+        wallet,
+      },
+    });
+  }
+
+  // NOTE: Sets the Substrate Indexer
+  private setIndexer() {
+    switch (this.chainName) {
+      case 'KILT':
+        this.indexer = new KiltBlockchainIndexer();
+        break;
+      case 'CRUST':
+        //this.indexer = new CrustBlockchainIndexer();
+        break;
+      default:
+        // TODO: Proper error handling
+        console.error('Invalid chain');
+    }
+
+    this.log(this.indexer.toString());
+  }
+
   private async handleResolvedTransactions(wallets: Wallet[]) {
     const conn = await this.context.mysql.start();
 
     const blockHeight = await this.indexer.getBlockHeight();
+
+    console.log('BLOCK HEIGHT', blockHeight);
+
     for (const w of wallets) {
       const wallet = new Wallet(w, this.context);
 
-      const lastParsedBlock: number = wallet.lastParsedBlock;
-      const toBlock: number =
-        lastParsedBlock + wallet.blockParseSize < blockHeight
-          ? lastParsedBlock + wallet.blockParseSize
-          : blockHeight;
+      // TODO: There was range calculation here, which I am not
+      // sure is relevant to be honest. Maybe if there are
+      // a shitton of transactions, this could break. Let's see
+      const fromBlock: number = wallet.lastParsedBlock;
+      const toBlock: number = blockHeight;
 
-      this.log(
-        `Checking RESOLVED transactions (sourceWallet=${wallet.address}, lastParsedBlock=${wallet.lastParsedBlock}, toBlock=${toBlock})..`,
+      const message = this.log(
+        formatMessage(wallet.address, fromBlock, toBlock),
       );
+      await this.logAms(message);
 
       // Get all transactions from the indexer
       const transactions = await this.fetchAllResolvedTransactions(
         wallet.address,
-        lastParsedBlock,
+        fromBlock,
         toBlock,
       );
 
@@ -90,6 +114,8 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         transactions,
         conn,
       );
+
+      console.error('Evaluated transactions: ', evalTransactions);
 
       // Handle alerts
     }
@@ -107,11 +133,17 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       toBlock,
     );
 
+    console.log('TX', transactions);
+    console.log('Lenght', Object.keys(transactions).length);
+
     // We are expecting an array of arrays from .values, so flatten
     // to single non-nested array of transaction to evaluate
     // getTransaction should be generic enough to implement
     // in all cases - all parachains
-    return transactions.values().flatten(Infinity);
+    // return transactions.objects().length > 0
+    //   ? transactions.values().flatten(Infinity)
+    //   : [];
+    return [];
   }
 
   private async updateTransactions(

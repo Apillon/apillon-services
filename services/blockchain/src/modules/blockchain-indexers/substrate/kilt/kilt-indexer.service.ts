@@ -19,7 +19,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
   }
 
   public async getAllTransactions(
-    address: string,
+    account: string,
     fromBlock: number,
     toBlock: number,
     // TODO: Filter by state as well
@@ -27,36 +27,36 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
   ) {
     return {
       transfers_transfers: await this.getAccountTransfers(
-        address,
+        account,
         fromBlock,
         toBlock,
       ),
       withdrawals: await this.getAccountWithdrawals(
-        address,
+        account,
         fromBlock,
         toBlock,
       ),
-      deposits: await this.getAccountDeposits(address, fromBlock, toBlock),
-      reserved_balances: await this.getAccountReserved(
-        address,
+      deposits: await this.getAccountDeposits(account, fromBlock, toBlock),
+      reserved_balance: await this.getAccountReserved(
+        account,
         fromBlock,
         toBlock,
       ),
-      did_create: await this.getAccountDidCreate(address, fromBlock, toBlock),
-      did_delete: await this.getAccountDidDelete(address, fromBlock, toBlock),
-      did_update: await this.getAccountDidUpdate(address, fromBlock, toBlock),
+      did_create: await this.getAccountDidCreate(account, fromBlock, toBlock),
+      did_delete: await this.getAccountDidDelete(account, fromBlock, toBlock),
+      did_update: await this.getAccountDidUpdate(account, fromBlock, toBlock),
       attestattions_create: await this.getAccountAttestCreate(
-        address,
+        account,
         fromBlock,
         toBlock,
       ),
       attestattions_remove: await this.getAccountAttestRemove(
-        address,
+        account,
         fromBlock,
         toBlock,
       ),
       attestattions_revoke: await this.getAccountAttestRevoke(
-        address,
+        account,
         fromBlock,
         toBlock,
       ),
@@ -65,147 +65,147 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
 
   /* These indicate a transfer from one account -> another */
   public async getAccountTransfers(
-    address: string,
+    account: string,
     fromBlock: number,
     toBlock: number,
   ): Promise<TransferTransaction[]> {
-    console.error('Getting all TRANSFERS ...');
-    const data: TransferTransaction[] = await this.graphQlClient.request(
+    const data: any = await this.graphQlClient.request(
       gql`
         ${KiltGQLQueries.ACCOUNT_TRANSFERS_Q}
       `,
       {
-        address,
+        account,
         fromBlock,
         toBlock,
         transactionType: KiltTransactionType.BALANCE_TRANSFER,
       },
     );
-    console.error('Fetched DATA ...');
-    return data;
+
+    return data.transfers;
   }
 
   /* TODO: What is the difference between withdrawal and transfer FROM OUR_ACC -> X  ??? */
   public async getAccountWithdrawals(
-    address: string,
+    account: string,
     fromBlock: number,
     toBlock: number,
   ): Promise<TransferTransaction[]> {
-    const data: TransferTransaction[] = await this.graphQlClient.request(
+    const data: any = await this.graphQlClient.request(
       gql`
         ${KiltGQLQueries.ACCOUNT_TRANSFERS_Q}
       `,
       {
-        address,
+        account,
         fromBlock,
         toBlock,
         transactionType: KiltTransactionType.BALANCE_WITHDRAW,
       },
     );
-    return data;
+    return data.transfers;
   }
 
   /* TODO: What is the difference between deposit and transfer FROM Y -> OUR_ACC ??? */
   public async getAccountDeposits(
-    address: string,
+    account: string,
     fromBlock: number,
     toBlock: number,
   ): Promise<TransferTransaction[]> {
-    const data: TransferTransaction[] = await this.graphQlClient.request(
+    const data: any = await this.graphQlClient.request(
       gql`
         ${KiltGQLQueries.ACCOUNT_TRANSFERS_Q}
       `,
       {
-        address,
+        account,
         fromBlock,
         toBlock,
         transactionType: KiltTransactionType.BALANCE_DEPOSIT,
       },
     );
-    return data;
+    return data.transfers;
   }
 
   /* NOTE: An amount X of balance Y becomes reserved when a did submittion happens.
           In this case, 2 KILT tokens are reserved for the creation of that DID document  
   */
   public async getAccountReserved(
-    address: string,
+    account: string,
     fromBlock: number,
     toBlock: number,
   ): Promise<TransferTransaction[]> {
-    const data: TransferTransaction[] = await this.graphQlClient.request(
+    const data: any = await this.graphQlClient.request(
       gql`
         ${KiltGQLQueries.ACCOUNT_TRANSFERS_Q}
       `,
       {
-        address,
+        account,
         fromBlock,
         toBlock,
         transactionType: KiltTransactionType.BALANCE_RESERVE,
       },
     );
-    return data;
+
+    return data.transfers;
   }
 
   public async getAccountDidCreate(
-    address: string,
+    account: string,
     fromBlock: number,
     toBlock: number,
   ): Promise<DidTransaction[]> {
-    const data: DidTransaction[] = await this.graphQlClient.request(
+    const data: any = await this.graphQlClient.request(
       gql`
         ${KiltGQLQueries.ACCOUNT_DID_Q}
       `,
       {
-        address,
+        account,
         fromBlock,
         toBlock,
         transactionType: KiltTransactionType.DID_CREATE,
       },
     );
-    return data;
+    return data.dids;
   }
 
   public async getAccountDidDelete(
-    address: string,
+    account: string,
     fromBlock: number,
     toBlock: number,
   ): Promise<DidTransaction[]> {
-    const data: DidTransaction[] = await this.graphQlClient.request(
+    const data: any = await this.graphQlClient.request(
       gql`
         ${KiltGQLQueries.ACCOUNT_DID_Q}
       `,
       {
-        address,
+        account,
         fromBlock,
         toBlock,
         transactionType: KiltTransactionType.DID_DELETE,
       },
     );
-    return data;
+    return data.dids;
   }
 
   public async getAccountDidUpdate(
-    address: string,
+    account: string,
     fromBlock: number,
     toBlock: number,
   ): Promise<DidTransaction[]> {
-    const data: DidTransaction[] = await this.graphQlClient.request(
+    const data: any = await this.graphQlClient.request(
       gql`
         ${KiltGQLQueries.ACCOUNT_DID_Q}
       `,
       {
-        address,
+        account,
         fromBlock,
         toBlock,
         transactionType: KiltTransactionType.DID_UPDATE,
       },
     );
-    return data;
+    return data.dids;
   }
 
   public async getAccountAttestCreate(
-    attesterId: string,
+    account: string,
     fromBlock: number,
     toBlock: number,
   ): Promise<AttestationTransation[]> {
@@ -214,7 +214,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
         ${KiltGQLQueries.ACCOUNT_ATTESTATIONS_Q}
       `,
       {
-        attesterId,
+        account,
         fromBlock,
         toBlock,
         transactionType: KiltTransactionType.ATTESTATION_CREATE,
@@ -224,7 +224,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
   }
 
   public async getAccountAttestRemove(
-    attesterId: string,
+    account: string,
     fromBlock: number,
     toBlock: number,
   ): Promise<AttestationTransation[]> {
@@ -233,7 +233,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
         ${KiltGQLQueries.ACCOUNT_ATTESTATIONS_Q}
       `,
       {
-        attesterId,
+        account,
         fromBlock,
         toBlock,
         transactionType: KiltTransactionType.ATTESTATION_REMOVE,
@@ -243,7 +243,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
   }
 
   public async getAccountAttestRevoke(
-    attesterId: string,
+    account: string,
     fromBlock: number,
     toBlock: number,
   ): Promise<AttestationTransation[]> {
@@ -252,7 +252,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
         ${KiltGQLQueries.ACCOUNT_ATTESTATIONS_Q}
       `,
       {
-        attesterId,
+        account,
         fromBlock,
         toBlock,
         transactionType: KiltTransactionType.ATTESTATION_REVOKE,

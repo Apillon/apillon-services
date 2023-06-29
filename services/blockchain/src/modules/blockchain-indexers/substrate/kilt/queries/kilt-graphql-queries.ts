@@ -1,88 +1,111 @@
 export enum KiltGQLQueries {
+  // NOTE: These params are always present
+  BASE_SUBSTRATE_PARAMS_Q = `
+    id
+    blockHash
+    blockNumber
+    extrinsicId
+    extrinsicHash
+    transactionType
+    createdAt
+    status
+  `,
+
+  //   transfers(where: {
+  //   AND: {
+  //   	transactionType_eq: "balance-deposit",
+  //     OR: {from_eq: "4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn", to_eq: "4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn"}}
+  //   }
+  // ) {
+  //   amount
+  //   fee
+  //   blockHash
+  //   blockNumber
+  //   createdAt
+  //   extrinsicHash
+  //   extrinsicId
+  //   from
+  //   id
+  //   status
+  //   to
+  //   transactionType
+  // }
+
   /* Returns all TRANSFERS from a specific account in KILT */
   ACCOUNT_TRANSFERS_Q = `query getAccountTransfers(
-      $address: String!
-      $fromBlock: Int!
-      $toBlock: Int!
-      $transactionType: String!
-    ) {
-      transfers(
-        where: {
-          OR: [
-            {from_eq: $address},
-            {to_eq: $address}
-          ],
-          AND: [
-            { blockNumber_gte: $fromBlock }
-            { blockNumber_lte: $toBlock }
-          ],
-          transactionType_eq: $transactionType
+    $account: String!
+    $fromBlock: Int!, 
+    $toBlock: Int!,
+    $transactionType: String!) {
+    transfers(
+      where: {
+        AND: {
+          blockNumber_gte: $fromBlock,
+          blockNumber_lte: $toBlock,
+          transactionType_eq: $transactionType,
+          AND: { 
+            OR: [{from_eq: $account}, {to_eq: $account}]
+          }
         }
-      ) {
-        id
-        from
-        to
-        amount
-        fee
-        createdAt
-        transactionType
-        status
       }
-    }`,
+    )
+    {
+      ${BASE_SUBSTRATE_PARAMS_Q}
+      from
+      to
+      amount
+      fee
+    }
+  }`,
 
   /* Returns all transactions releated to DID from a specific account in KILT */
   ACCOUNT_DID_Q = `query getAccountDidTransactions(
-      $account: String!
-      $fromBlock: Int!
-      $toBlock: Int!
-      $transactionType: String!
-    ) {
-      dids(
-        where: {
-          account_eq: $account,
+    $account: String!,
+    $fromBlock: Int!,
+    $toBlock: Int!,
+    $transactionType: String!) {
+    dids(
+      where: {
+        AND: {
+          blockNumber_gte: $fromBlock,
+          blockNumber_lte: $toBlock,
           transactionType_eq: $transactionType,
-          AND: [
-            { blockNumber_gte: $fromBlock }
-            { blockNumber_lte: $toBlock }
-          ]
+          account_eq: $account
         }
-      ) {
-        id
-        account
-        didId
-        amount
-        fee
-        createdAt
-        transactionType
-        status
       }
-    }`,
+    )
+    {
+      ${BASE_SUBSTRATE_PARAMS_Q}
+      account
+      didId
+      fee
+    }
+  }`,
 
   /* Returns all attestations performed by attesterId */
   ACCOUNT_ATTESTATIONS_Q = `query getAccountAttestations(
-      $attesterId: String!
+      $account: String!,
       $fromBlock: Int!
       $toBlock: Int!
       $transactionType: String!
     ) {
-      dids(
-        where: {
-          attesterId_eq: $attesterId,
+    attestations(
+      where: {
+        AND: {
+          blockNumber_gte: $fromBlock,
+          blockNumber_lte: $toBlock,
           transactionType_eq: $transactionType,
-          AND: [
-            { blockNumber_gte: $fromBlock }
-            { blockNumber_lte: $toBlock }
-          ]
+          AND: { 
+            OR: [{attesterId_eq: $account}, {account_eq: $account}]
+          }
         }
-      ) {
-        id
-        account
-        attesterId
-        claimHash
-        fee
-        createdAt
-        transactionType
-        status
       }
-    }`,
+    ) {
+      ${BASE_SUBSTRATE_PARAMS_Q}
+      account
+      attesterId
+      claimHash
+      fee
+    }
+  }`,
 }

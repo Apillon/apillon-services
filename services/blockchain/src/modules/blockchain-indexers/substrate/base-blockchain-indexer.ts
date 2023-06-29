@@ -20,6 +20,7 @@ export class BaseBlockchainIndexer {
     `;
 
     const data: BlockHeight = await this.graphQlClient.request(GRAPHQL_QUERY);
+    console.log('HEIGHT: ', data);
     return data.squidStatus.height;
   }
 
