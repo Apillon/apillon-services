@@ -30,14 +30,13 @@ describe('Kilt tests', () => {
     const chainType = ChainType.SUBSTRATE;
     // BIP-39 mnemonic
     const mnemonic = mnemonicGenerate();
-    const fromBlock = 3996243;
     wallet = await new Wallet(
       {
         chain,
         chainType,
         address,
         seed: mnemonic,
-        lastParsedBlock: fromBlock,
+        lastParsedBlock: 1,
       },
       stage.context,
     ).insert();
@@ -48,30 +47,68 @@ describe('Kilt tests', () => {
   });
 
   test('Single wallet transactions', async () => {
-    const address = 'cTL1jk9CbHJAYz2hWDh3PprRCtrPAHUvSDw7gZbVWbUYt8SJU';
+    const address = '4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn';
     const chain = SubstrateChain.KILT;
     const chainType = ChainType.SUBSTRATE;
-    await insertControlTransaction(
-      address,
+
+    await new Transaction(
+      {
+        address,
+        chain,
+        chainType,
+        transactionStatus: TransactionStatus.PENDING,
+        nonce: 1,
+        rawTransaction: 'blablablablablablablablablablablalba',
+        transactionHash:
+          '0xb532c8bae0a61c6fd715c8461b4e076c3ef5ae91210213a809d281dc5ab689ce',
+      },
+      stage.context,
+    ).insert();
+
+    await new Transaction(
+      {
+        address,
+        chain,
+        chainType,
+        transactionStatus: TransactionStatus.PENDING,
+        nonce: 2,
+        rawTransaction: 'blablablablablablablablablablablalba',
+        transactionHash:
+          '0x41a4ea4e792b7326e8d7fff275f2033b451b174994a44b5308b9ac4c1ddbf3df',
+      },
+      stage.context,
+    ).insert();
+
+    await new Transaction(
+      {
+        address,
+        chain,
+        chainType,
+        transactionStatus: TransactionStatus.PENDING,
+        nonce: 3,
+        rawTransaction: 'blablablablablablablablablablablalba',
+        transactionHash:
+          '0xcef2d10686fa042c01277ec898b0b75f2016b05e252205da7ec664d1fa5daef0',
+      },
+      stage.context,
+    ).insert();
+
+    const tList = await new Transaction(
+      {},
+      stage.context,
+    ).getTransactionsByHashes(
       chain,
       chainType,
-      stage.context,
-      '0xd19fcea891c243aedc1315200e91',
-    );
-    await insertControlTransaction(
       address,
-      chain,
-      chainType,
-      stage.context,
-      '0xd19fcea891c243aedc1315200e92',
+      TransactionStatus.PENDING,
+      [
+        '0xcef2d10686fa042c01277ec898b0b75f2016b05e252205da7ec664d1fa5daef0',
+        '0x41a4ea4e792b7326e8d7fff275f2033b451b174994a44b5308b9ac4c1ddbf3df',
+        '0xb532c8bae0a61c6fd715c8461b4e076c3ef5ae91210213a809d281dc5ab689ce',
+      ],
     );
-    await insertControlTransaction(
-      address,
-      chain,
-      chainType,
-      stage.context,
-      '0xd19fcea891c243aedc1315200e93',
-    );
+
+    console.log('T LIST: ', tList[0].transactionHash);
 
     const parameters = {
       chainId: SubstrateChain.KILT,
@@ -90,25 +127,23 @@ describe('Kilt tests', () => {
         parameters: { FunctionName: 'test', ...parameters },
       },
     );
+
+    console.log('SubstrateTransactionWorker ...');
     await new SubstrateTransactionWorker(
       workerDefinition,
       stage.context,
     ).runExecutor();
 
-    // const txs: Transaction[] = await new Transaction({}, stage.context).getList(
-    //   chain,
-    //   chainType,
-    //   address,
-    //   0,
-    // );
-    // let confirmed = true;
-    // txs.forEach((tx) => {
-    //   if (tx.transactionStatus !== TransactionStatus.CONFIRMED) {
-    //     confirmed = false;
-    //   }
-    // });
-    // expect(txs.length).toBe(3);
-    // expect(confirmed).toBe(true);
+    console.log('Substrate worker ...');
+
+    const txs: Transaction[] = await new Transaction({}, stage.context).getList(
+      chain,
+      chainType,
+      address,
+      0,
+    );
+
+    console.log(txs);
   });
 
   //   test('Processing multiple transactions (storage orders)', async () => {

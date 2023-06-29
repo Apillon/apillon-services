@@ -259,37 +259,98 @@ export class Transaction extends AdvancedSQLModel {
     return res;
   }
 
-  public async getTransactionList(
-    chain: Chain,
-    chainType: ChainType,
-    address: string,
-    conn?: PoolConnection,
-    transactionStatus?: TransactionStatus,
+  public async getTransaction(
+    chainId: string,
+    extrinsicHash: string,
+    conn: PoolConnection,
   ) {
     const data = await this.getContext().mysql.paramExecute(
       `SELECT *
-      FROM \`${DbTables.TRANSACTION_QUEUE}\` 
+      FROM \`${DbTables.TRANSACTION_QUEUE}\`
       WHERE
-        AND chain = @chain
-        AND chainType = @chainType
-        AND address = @address
-        AND (@transactionStatus IS NULL OR transactionStatus = @transactionStatus)`,
+        chain = @chain
+        AND transactionHash = @transactionHash`,
       {
-        status: transactionStatus,
-        address,
-        chain,
-        chainType,
+        chain: chainId,
+        transactionHash: extrinsicHash,
+      },
+      conn,
+    );
+  }
+
+  public async populateByHash(hash: string) {
+    const data = await this.db().paramExecute(
+      `
+        SELECT *
+        FROM \`${DbTables.TRANSACTION_QUEUE}\` tq
+        WHERE tq.transactionHash = @hash
+      `,
+      { hash },
+    );
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    }
+    return this.reset();
+  }
+
+  public async updateTransaction(
+    chainId: string,
+    extrinsicHash: string,
+    conn: PoolConnection,
+  ) {
+    const data = await this.getContext().mysql.paramExecute(
+      `UPDATE \`${DbTables.TRANSACTION_QUEUE}\`
+      SET transactionStatus = @status
+      WHERE
+        chain = @chain
+        AND transactionHash = @transactionHash`,
+      {
+        chain: chainId,
+        transactionHash: extrinsicHash,
       },
       conn,
     );
 
-    const res: Transaction[] = [];
+    console.log(chainId, extrinsicHash);
+
     if (data && data.length) {
-      for (const t of data) {
-        res.push(new Transaction({}, this.getContext()).populate(t));
-      }
+      return new Transaction({}, this.getContext()).populate(data);
     }
 
-    return res;
+    return null;
   }
+
+  // public async getTransactionList(
+  //   chain: Chain,
+  //   chainType: ChainType,
+  //   address: string,
+  //   conn?: PoolConnection,
+  //   transactionStatus?: TransactionStatus,
+  // ) {
+  //   const data = await this.getContext().mysql.paramExecute(
+  //     `SELECT *
+  //     FROM \`${DbTables.TRANSACTION_QUEUE}\`
+  //     WHERE
+  //       chain = @chain
+  //       AND chainType = @chainType
+  //       AND address = @address
+  //       AND (@transactionStatus IS NULL OR transactionStatus = @transactionStatus)`,
+  //     {
+  //       status: transactionStatus,
+  //       address,
+  //       chain,
+  //       chainType,
+  //     },
+  //     conn,
+  //   );
+
+  //   const res: Transaction[] = [];
+  //   if (data && data.length) {
+  //     for (const t of data) {
+  //       res.push(new Transaction({}, this.getContext()).populate(t));
+  //     }
+  //   }
+
+  //   return res;
+  // }
 }

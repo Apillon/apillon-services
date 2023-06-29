@@ -1,7 +1,16 @@
-import { BaseSingleThreadWorker, WorkerDefinition } from '@apillon/workers-lib';
+import {
+  BaseSingleThreadWorker,
+  QueueWorkerType,
+  ServiceDefinition,
+  ServiceDefinitionType,
+  WorkerDefinition,
+  WorkerLogStatus,
+  sendToWorkerQueue,
+} from '@apillon/workers-lib';
 import { Wallet } from '../../common/models/wallet';
 import { BaseBlockchainIndexer } from '../../modules/blockchain-indexers/substrate/base-blockchain-indexer';
 import {
+  AppEnvironment,
   ChainType,
   Context,
   Lmas,
@@ -9,10 +18,13 @@ import {
   PoolConnection,
   ServiceName,
   SubstrateChain,
+  TransactionStatus,
+  env,
 } from '@apillon/lib';
 import { KiltBlockchainIndexer } from '../../modules/blockchain-indexers/substrate/kilt/kilt-indexer.service';
-import { DbTables } from '../../config/types';
 import { Transaction } from '../../common/models/transaction';
+import { WorkerName } from '../worker-executor';
+import { TransactionWebhookWorker } from '../transaction-webhook-worker';
 
 function formatMessage(a: string, t: number, f: number): string {
   return `Evaluating RESOLVED transactions: SOURCE ${a}, FROM ${t}, TO ${f}`;
@@ -85,8 +97,6 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
 
     const blockHeight = await this.indexer.getBlockHeight();
 
-    console.log('BLOCK HEIGHT', blockHeight);
-
     for (const w of wallets) {
       const wallet = new Wallet(w, this.context);
 
@@ -109,15 +119,54 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       );
 
       // Update the state of all transactions in the BCS DB
-      const evalTransactions = await this.updateTransactions(
-        wallet,
-        transactions,
-        conn,
-      );
+      await this.updateTransactions(transactions);
 
-      console.error('Evaluated transactions: ', evalTransactions);
+      if (transactions.length > 0) {
+        if (
+          env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+          env.APP_ENV == AppEnvironment.TEST
+        ) {
+          console.log('Starting DEV Webhook worker ...');
 
-      // Handle alerts
+          // Directly calls worker -> USED ONLY FOR DEVELOPMENT!!
+          const serviceDef: ServiceDefinition = {
+            type: ServiceDefinitionType.SQS,
+            config: { region: 'test' },
+            params: { FunctionName: 'test' },
+          };
+
+          const wd = new WorkerDefinition(
+            serviceDef,
+            WorkerName.TRANSACTION_WEBHOOKS,
+            {},
+          );
+
+          const worker = new TransactionWebhookWorker(
+            wd,
+            this.context,
+            QueueWorkerType.EXECUTOR,
+          );
+          await worker.runExecutor({});
+        } else {
+          // Trigger webhook worker
+          await sendToWorkerQueue(
+            env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
+            WorkerName.TRANSACTION_WEBHOOKS,
+            [{}],
+            null,
+            null,
+          );
+        }
+
+        await this.writeLogToDb(
+          WorkerLogStatus.INFO,
+          'Found new transactions. Triggering transaction webhook worker!',
+          {
+            transactions: transactions,
+            wallet: wallet.address,
+          },
+        );
+      }
     }
   }
 
@@ -133,75 +182,31 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       toBlock,
     );
 
-    console.log('TX', transactions);
-    console.log('Lenght', Object.keys(transactions).length);
-
-    // We are expecting an array of arrays from .values, so flatten
-    // to single non-nested array of transaction to evaluate
-    // getTransaction should be generic enough to implement
-    // in all cases - all parachains
-    // return transactions.objects().length > 0
-    //   ? transactions.values().flatten(Infinity)
-    //   : [];
-    return [];
+    const trasactionsArray: Array<Transaction> = Object.values(transactions);
+    return trasactionsArray.length > 0 ? trasactionsArray.flat(Infinity) : [];
   }
 
-  private async updateTransactions(
-    wallet: Wallet,
-    transactions: any[],
-    conn: PoolConnection,
-  ) {
-    const evalTransactions = [];
+  private async updateTransactions(transactions: any[]) {
     for (let i = 0; i < transactions.length; i++) {
-      console.log('Transaction ', transactions[i]);
-      evalTransactions.push(
-        await this.updateTransaction(
-          transactions[i].exstrinsicHash,
-          wallet,
-          conn,
-        ),
-      );
+      console.log('Transaction 1111', transactions[i]);
+
+      const transaction = await new Transaction(
+        {},
+        this.context,
+      ).populateByHash(transactions[i].extrinsicHash);
+
+      if (!transaction.exists()) {
+        console.error('no tra');
+      } else {
+        console.log('HEREREEEEE');
+        const t = transactions[i];
+        t.transactionStatus = 2;
+        transaction.populate(t);
+        // transactions[i].status == 1
+        //   ? TransactionStatus.CONFIRMED
+        //   : TransactionStatus.FAILED;
+        await transaction.update();
+      }
     }
-
-    return evalTransactions;
-  }
-
-  /**
-   * Updates transaction statuses which are confirmed on blockchain
-   *
-   * @param transactionHash hash of transaction
-   * @param wallet wallet entity
-   * @param conn connection
-   * @returns array of confirmed transaction hashes
-   */
-  public async updateTransaction(
-    transactionHash: string,
-    wallet: Wallet,
-    conn: PoolConnection,
-  ): Promise<string[]> {
-    await this.context.mysql.paramExecute(
-      `UPDATE \`${DbTables.TRANSACTION_QUEUE}\`
-      SET transactionStatus = @status
-      WHERE
-        chain = @chain
-        AND chainType = @chainType
-        AND address = @address
-        AND transactionHash = @transactionHash`,
-      {
-        chain: wallet.chain,
-        address: wallet.address,
-        chainType: wallet.chainType,
-        transactionHash: transactionHash,
-      },
-      conn,
-    );
-
-    // TODO: Why do dis??
-    return await new Transaction({}, this.context).getTransactionList(
-      wallet.chain,
-      wallet.chainType,
-      wallet.address,
-      conn,
-    )[0].transactionHash;
   }
 }

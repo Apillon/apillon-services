@@ -18,13 +18,6 @@ export enum SubstrateChain {
   PHALA = 4,
 }
 
-// export interface SubstrateChainV2 {
-//   CRUST: { id: 1; name: 'CRUST' };
-//   KILT: { id: 1; name: 'KILT' };
-//   KILT_PEREGRINE: { id: 1; name: 'KILT_PEREGRINE' };
-//   PHALA: { id: 1; name: 'PHALA' };
-// }
-
 export enum EvmChain {
   MOONBEAM = 1284,
   MOONBASE = 1287,

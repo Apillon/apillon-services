@@ -205,7 +205,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     fromBlock: number,
     toBlock: number,
   ): Promise<AttestationTransation[]> {
-    const data: AttestationTransation[] = await this.graphQlClient.request(
+    const data: any = await this.graphQlClient.request(
       gql`
         ${KiltGQLQueries.ACCOUNT_ATTESTATIONS_Q}
       `,
@@ -216,7 +216,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
         transactionType: KiltTransactionType.ATTESTATION_CREATE,
       },
     );
-    return data;
+    return data.attestations;
   }
 
   public async getAccountAttestRemove(
@@ -224,7 +224,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     fromBlock: number,
     toBlock: number,
   ): Promise<AttestationTransation[]> {
-    const data: AttestationTransation[] = await this.graphQlClient.request(
+    const data: any = await this.graphQlClient.request(
       gql`
         ${KiltGQLQueries.ACCOUNT_ATTESTATIONS_Q}
       `,
@@ -235,7 +235,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
         transactionType: KiltTransactionType.ATTESTATION_REMOVE,
       },
     );
-    return data;
+    return data.attestations;
   }
 
   public async getAccountAttestRevoke(
@@ -243,7 +243,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     fromBlock: number,
     toBlock: number,
   ): Promise<AttestationTransation[]> {
-    const data: AttestationTransation[] = await this.graphQlClient.request(
+    const data: any = await this.graphQlClient.request(
       gql`
         ${KiltGQLQueries.ACCOUNT_ATTESTATIONS_Q}
       `,
@@ -254,6 +254,6 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
         transactionType: KiltTransactionType.ATTESTATION_REVOKE,
       },
     );
-    return data;
+    return data.attestations;
   }
 }
