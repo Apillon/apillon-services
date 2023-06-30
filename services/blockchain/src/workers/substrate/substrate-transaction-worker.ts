@@ -24,7 +24,7 @@ import {
 import { KiltBlockchainIndexer } from '../../modules/blockchain-indexers/substrate/kilt/kilt-indexer.service';
 import { WorkerName } from '../worker-executor';
 import { TransactionWebhookWorker } from '../transaction-webhook-worker';
-import { DbTables, TransactionIndexerStatus } from '../../config/types';
+import { Chain, DbTables, TransactionIndexerStatus } from '../../config/types';
 
 function formatMessage(a: string, t: number, f: number): string {
   return `Evaluating RESOLVED transactions: SOURCE ${a}, FROM ${t}, TO ${f}`;
@@ -49,9 +49,10 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
   }
 
   public async runExecutor(_data?: any): Promise<any> {
+    console.log('Chain data: ', this.chainId, this.chainName);
     // Wallets will be populated once the runExecutor method is called
     this.wallets = await new Wallet({}, this.context).getList(
-      SubstrateChain.KILT,
+      SubstrateChain[this.chainName],
       ChainType.SUBSTRATE,
     );
 

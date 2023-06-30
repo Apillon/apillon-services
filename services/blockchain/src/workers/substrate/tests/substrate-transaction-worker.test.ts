@@ -13,10 +13,8 @@ import {
 import { releaseStage, setupTest, Stage } from '../../../../test/setup';
 import { Transaction } from '../../../common/models/transaction';
 import { Wallet } from '../../../common/models/wallet';
-import { insertControlTransaction } from './utils';
 import { SubstrateTransactionWorker } from '../substrate-transaction-worker';
 import { WorkerName } from '../../worker-executor';
-// import { CrustTransactionWorker } from './crust-transaction-worker'
 
 describe('Kilt tests', () => {
   let stage: Stage;
@@ -43,7 +41,7 @@ describe('Kilt tests', () => {
   });
 
   afterAll(async () => {
-    // await releaseStage(stage);
+    await releaseStage(stage);
   });
 
   test('Single wallet transactions', async () => {
@@ -58,7 +56,7 @@ describe('Kilt tests', () => {
         chainType,
         transactionStatus: TransactionStatus.PENDING,
         nonce: 1,
-        rawTransaction: 'blablablablablablablablablablablalba',
+        rawTransaction: 'SOME_RAW_DATA',
         transactionHash:
           '0xb532c8bae0a61c6fd715c8461b4e076c3ef5ae91210213a809d281dc5ab689ce',
       },
@@ -72,7 +70,7 @@ describe('Kilt tests', () => {
         chainType,
         transactionStatus: TransactionStatus.PENDING,
         nonce: 2,
-        rawTransaction: 'blablablablablablablablablablablalba',
+        rawTransaction: 'SOME_RAW_DATA_2',
         transactionHash:
           '0x41a4ea4e792b7326e8d7fff275f2033b451b174994a44b5308b9ac4c1ddbf3df',
       },
@@ -86,7 +84,7 @@ describe('Kilt tests', () => {
         chainType,
         transactionStatus: TransactionStatus.PENDING,
         nonce: 3,
-        rawTransaction: 'blablablablablablablablablablablalba',
+        rawTransaction: 'SOME_RAW_DATA_3',
         transactionHash:
           '0xcef2d10686fa042c01277ec898b0b75f2016b05e252205da7ec664d1fa5daef0',
       },
