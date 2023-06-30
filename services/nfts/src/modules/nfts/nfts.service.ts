@@ -323,6 +323,28 @@ export class NftsService {
     return collection.serialize(SerializeFor.PROFILE);
   }
 
+  static async getCollectionByUuid(
+    event: { uuid: any },
+    context: ServiceContext,
+  ) {
+    const collection: Collection = await new Collection(
+      {},
+      context,
+    ).populateByUUID(event.uuid);
+
+    if (!collection.exists()) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.NFT_COLLECTION_DOES_NOT_EXIST,
+        context: context,
+      });
+    }
+    collection.canAccess(context);
+    await collection.populateNumberOfMintedNfts();
+
+    return collection.serialize(SerializeFor.PROFILE);
+  }
+
   static async transferCollectionOwnership(
     params: { body: TransferCollectionDTO },
     context: ServiceContext,
@@ -342,6 +364,8 @@ export class NftsService {
       'transferNftOwnership()',
       context,
     );
+
+    await NftsService.checkTransferConditions(params.body, context, collection);
 
     const conn = await context.mysql.start();
     try {
@@ -432,7 +456,7 @@ export class NftsService {
     try {
       const dbTxRecord: Transaction = new Transaction({}, context);
       const tx: UnsignedTransaction =
-        await await walletService.createSetNftBaseUriTransaction(
+        await walletService.createSetNftBaseUriTransaction(
           collection.contractAddress,
           params.body.uri,
         );
@@ -701,6 +725,55 @@ export class NftsService {
         code: NftsErrorCode.MINT_NFT_RESERVE_ERROR,
         context: context,
         sourceFunction: 'mintNftTo()',
+      });
+    }
+  }
+
+  /**
+   * CONDITIONS:
+   * Address should not be the same as deployer address
+   * If transaction for transfer already exists (is pending or finished), transfer should fail
+   * @param params
+   * @param context
+   * @param collection
+   * @returns
+   */
+  private static async checkTransferConditions(
+    params: TransferCollectionDTO,
+    context: ServiceContext,
+    collection: Collection,
+  ) {
+    if (collection.deployerAddress == params.address) {
+      throw new NftsCodeException({
+        status: 400,
+        code: NftsErrorCode.INVALID_ADDRESS_FOR_TRANSFER_TO,
+        context: context,
+        sourceFunction: 'checkTransferConditions()',
+      });
+    }
+
+    //Check if transaction for transfer contract already exists
+    const transactions: Transaction[] = await new Transaction(
+      {},
+      context,
+    ).getCollectionTransactions(
+      collection.id,
+      null,
+      TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
+    );
+
+    if (
+      transactions.find(
+        (x) =>
+          x.transactionStatus == TransactionStatus.PENDING ||
+          x.transactionStatus == TransactionStatus.CONFIRMED,
+      )
+    ) {
+      throw new NftsCodeException({
+        status: 400,
+        code: NftsErrorCode.TRANSACTION_FOR_TRANSFER_ALREADY_EXISTS,
+        context: context,
+        sourceFunction: 'checkTransferConditions()',
       });
     }
   }

@@ -6,17 +6,21 @@ import {
 import { Collection } from '@apillon/nfts/src/modules/nfts/models/collection.model';
 import { Transaction } from '@apillon/nfts/src/modules/transaction/models/transaction.model';
 import {
-  Stage,
-  TestUser,
   createTestNFTCollection,
   createTestProject,
   createTestUser,
+  overrideDefaultQuota,
   releaseStage,
+  Stage,
   startGanacheRPCServer,
+  TestUser,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
+import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
+import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
+import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 
 describe('Storage bucket tests', () => {
   let stage: Stage;
@@ -46,17 +50,20 @@ describe('Storage bucket tests', () => {
       0,
     );
 
+    await overrideDefaultQuota(
+      stage,
+      testProject.project_uuid,
+      QuotaCode.MAX_NFT_COLLECTIONS,
+      10,
+    );
     await stage.configContext.mysql.paramExecute(`
-    INSERT INTO override (status, quota_id, project_uuid,  object_uuid, package_id, value)
-    VALUES 
-      (
-        5,
-        ${QuotaCode.MAX_NFT_COLLECTIONS},
-        '${testProject.project_uuid}',
-        null, 
-        null,
-        '10'
-      )
+      INSERT INTO override (status, quota_id, project_uuid, object_uuid, package_id, value)
+      VALUES (5,
+              ${QuotaCode.MAX_NFT_COLLECTIONS},
+              '${testProject.project_uuid}',
+              null,
+              null,
+              '10')
     `);
   });
 
@@ -90,9 +97,9 @@ describe('Storage bucket tests', () => {
       expect(response.body.data.items[0]?.chain).toBeTruthy();
     });
 
-    test('User should be able to get collection by id', async () => {
+    test('User should be able to get collection by uuid', async () => {
       const response = await request(stage.http)
-        .get(`/nfts/collections/${testCollection.id}`)
+        .get(`/nfts/collections/${testCollection.collection_uuid}`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.id).toBeTruthy();
@@ -176,7 +183,7 @@ describe('Storage bucket tests', () => {
       const transaction: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
-      ).getCollectionTransactions(newCollection.id, 1);
+      ).getCollectionTransactions(newCollection.id);
 
       expect(
         transaction.find((x) => x.transactionType == TransactionType.MINT_NFT),
@@ -198,7 +205,7 @@ describe('Storage bucket tests', () => {
       const transaction: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
-      ).getCollectionTransactions(newCollection.id, 1);
+      ).getCollectionTransactions(newCollection.id);
 
       expect(
         transaction.find(
@@ -206,6 +213,18 @@ describe('Storage bucket tests', () => {
             x.transactionType == TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
         ),
       ).toBeTruthy();
+    });
+
+    test('User should NOT be able to transfer NFT collection multiple times', async () => {
+      const response = await request(stage.http)
+        .post(
+          `/nfts/collections/${newCollection.collection_uuid}/transferOwnership`,
+        )
+        .send({
+          address: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(400);
     });
 
     test('User should NOT be able to Mint transferred collection', async () => {
@@ -263,11 +282,11 @@ describe('Storage bucket tests', () => {
           files: [
             {
               fileName: '1.png',
-              path: '',
+              path: 'Images/',
             },
             {
               fileName: '2.png',
-              path: '',
+              path: 'Images/',
             },
           ],
         })
@@ -352,6 +371,31 @@ describe('Storage bucket tests', () => {
       //1.json should be available in baseUri
       const response2 = await request(newCollection.baseUri + '1.json').get('');
       expect(response2.status).toBe(200);
+
+      //Bucket should contain 2 directories
+      const collectionBucket = await new Bucket(
+        {},
+        stage.storageContext,
+      ).populateByUUID(newCollection.bucket_uuid);
+
+      const bucketDirs = await new Directory(
+        {},
+        stage.storageContext,
+      ).populateDirectoriesInBucket(collectionBucket.id, stage.storageContext);
+      expect(bucketDirs.length).toBe(2);
+
+      const metadataDir = bucketDirs.find((x) => x.name == 'Metadata');
+      expect(metadataDir).toBeTruthy();
+
+      const collectionMetadataFiles: File[] = await new File(
+        {},
+        stage.storageContext,
+      ).populateFilesInBucket(collectionBucket.id, stage.storageContext);
+
+      expect(collectionMetadataFiles.length).toBe(4);
+      expect(
+        collectionMetadataFiles.find((x) => x.name == '1.json').directory_id,
+      ).toBe(metadataDir.id);
     });
   });
 
@@ -451,7 +495,7 @@ describe('Storage bucket tests', () => {
       const transaction: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
-      ).getCollectionTransactions(newCollection.id, 1);
+      ).getCollectionTransactions(newCollection.id);
 
       expect(
         transaction.find((x) => x.transactionType == TransactionType.MINT_NFT),
@@ -473,7 +517,7 @@ describe('Storage bucket tests', () => {
       const transaction: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
-      ).getCollectionTransactions(newCollection.id, 1);
+      ).getCollectionTransactions(newCollection.id);
 
       expect(
         transaction.find(

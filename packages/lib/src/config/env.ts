@@ -161,6 +161,7 @@ export interface IEnv {
   STORAGE_AWS_IPFS_QUEUE_BUCKET: string;
   STORAGE_IPFS_API: string;
   STORAGE_IPFS_GATEWAY: string;
+  STORAGE_IPFS_CLUSTER_SERVER: string;
   STORAGE_DELETE_AFTER_INTERVAL: number;
 
   STORAGE_MYSQL_HOST: string;
@@ -265,6 +266,11 @@ export interface IEnv {
   AUTH_FUNCTION_NAME_TEST: string;
   AUTH_SOCKET_PORT: number;
   AUTH_SOCKET_PORT_TEST: number;
+
+  //Nova wallet
+  NOVA_WALLET_BUCKET_UUID: string;
+  NOVA_WALLET_API_KEY: string;
+  NOVA_WALLET_API_KEY_SECRET: string;
 
   /************************************************************
    * Kilt config
@@ -502,6 +508,7 @@ export let env: IEnv = {
   STORAGE_AWS_IPFS_QUEUE_BUCKET: process.env['STORAGE_AWS_IPFS_QUEUE_BUCKET'],
   STORAGE_IPFS_API: process.env['STORAGE_IPFS_API'],
   STORAGE_IPFS_GATEWAY: process.env['STORAGE_IPFS_GATEWAY'],
+  STORAGE_IPFS_CLUSTER_SERVER: process.env['STORAGE_IPFS_CLUSTER_SERVER'],
   STORAGE_DELETE_AFTER_INTERVAL:
     parseInt(process.env['STORAGE_DELETE_AFTER_INTERVAL']) || 90,
 
@@ -629,6 +636,11 @@ export let env: IEnv = {
     process.env['KILT_DERIVATION_ALGORITHM'] || 'sr25519',
   AUTH_AWS_WORKER_SQS_URL: process.env['AUTH_AWS_WORKER_SQS_URL'] || '',
   AUTH_AWS_WORKER_LAMBDA_NAME: process.env['AUTH_AWS_WORKER_LAMBDA_NAME'] || '',
+
+  /** NOVA WALLET - AUTHENTICATION API */
+  NOVA_WALLET_BUCKET_UUID: process.env['NOVA_WALLET_BUCKET_UUID'] || '',
+  NOVA_WALLET_API_KEY: process.env['NOVA_WALLET_API_KEY'] || '',
+  NOVA_WALLET_API_KEY_SECRET: process.env['NOVA_WALLET_API_KEY_SECRET'] || '',
 
   /**Apillon Serverless workers config*/
   /**

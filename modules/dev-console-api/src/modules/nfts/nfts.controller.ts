@@ -10,6 +10,7 @@ import {
   ValidateFor,
   BurnNftDto,
   CollectionsQuotaReachedQueryFilter,
+  DefaultPermission,
 } from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
@@ -17,7 +18,6 @@ import {
   Controller,
   Get,
   Param,
-  ParseIntPipe,
   Post,
   Query,
   UseGuards,
@@ -29,6 +29,7 @@ import { ValidationGuard } from '../../guards/validation.guard';
 import { NftsService } from './nfts.service';
 
 @Controller('nfts')
+@Permissions({ permission: DefaultPermission.NFTS })
 export class NftsController {
   constructor(private readonly nftsService: NftsService) {}
 
@@ -81,7 +82,7 @@ export class NftsController {
     return await this.nftsService.isCollectionsQuotaReached(context, query);
   }
 
-  @Get('/collections/:id')
+  @Get('/collections/:uuid')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -90,9 +91,9 @@ export class NftsController {
   @UseGuards(AuthGuard)
   async getCollection(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('uuid') uuid: string,
   ) {
-    return await this.nftsService.getNftCollection(context, id);
+    return await this.nftsService.getNftCollection(context, uuid);
   }
 
   @Post('/collections/:collectionUuid/transferOwnership')

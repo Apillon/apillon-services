@@ -11,12 +11,14 @@ export async function createTestNFTCollection(
   project: Project,
   status = SqlModelStatus.ACTIVE,
   collectionStatus: number,
+  overrides: any = {},
 ): Promise<Collection> {
   const collection: Collection = new Collection({}, nftCtx).fake().populate({
     collection_uuid: uuidV4(),
     project_uuid: project.project_uuid,
     status,
     collectionStatus,
+    ...overrides,
   });
 
   await collection.insert();

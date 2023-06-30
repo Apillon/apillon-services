@@ -6,7 +6,12 @@ import {
   SqlModelStatus,
   prop,
 } from '@apillon/lib';
-import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
+import {
+  booleanParser,
+  integerParser,
+  stringParser,
+  dateParser,
+} from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   CrustPinningStatus,
@@ -216,6 +221,47 @@ export class PinToCrustRequest extends AdvancedSQLModel {
   })
   public message: string;
 
+  @prop({
+    parser: { resolver: dateParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+  })
+  public renewalDate: Date;
+
+  public async populateByCid(cid: string): Promise<this> {
+    if (!cid) {
+      throw new Error('cid should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE cid = @cid AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { cid },
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
+
   /**
    * Get requests that are waiting to be sent to crust (BCS)
    * @returns Array of PinToCrustRequest instances
@@ -241,5 +287,36 @@ export class PinToCrustRequest extends AdvancedSQLModel {
     }
 
     return pendingRequests;
+  }
+
+  /**
+   * Get requests that need to be renewed
+   * @returns Array of PinToCrustRequest instances
+   */
+  public async getRequestForRenewal(): Promise<PinToCrustRequest[]> {
+    const context = this.getContext();
+    const data = await context.mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE pinningStatus = ${CrustPinningStatus.SUCCESSFULL}
+      AND (
+        (renewalDate IS NULL AND createTime < CURRENT_DATE() - INTERVAL 6 MONTH)
+        OR
+        (renewalDate IS NOT NULL AND renewalDate < CURRENT_DATE() - INTERVAL 6 MONTH)
+      )
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      {},
+    );
+
+    const requests: PinToCrustRequest[] = [];
+    if (data?.length) {
+      for (const pinToCrustRequest of data) {
+        requests.push(new PinToCrustRequest(pinToCrustRequest, context));
+      }
+    }
+
+    return requests;
   }
 }

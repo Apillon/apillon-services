@@ -26,6 +26,7 @@ import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
 import { Ipns } from '../modules/ipns/models/ipns.model';
+import { File } from '../modules/storage/models/file.model';
 
 export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
   public constructor(
@@ -81,25 +82,48 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
     );
 
     //Get files in session (fileStatus must be of status 1)
-    const imageFURs = (
-      await new FileUploadRequest(
-        {},
-        this.context,
-      ).populateFileUploadRequestsInSession(imagesSession.id, this.context)
-    ).filter(
-      (x) => x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED,
-    );
-
-    const imageFiles = await storageBucketSyncFilesToIPFS(
+    const imageFURs = await new FileUploadRequest(
+      {},
       this.context,
-      `${this.constructor.name}/runExecutor`,
-      bucket,
-      5368709120,
-      imageFURs,
-      imagesSession,
-      false,
-      undefined,
-    );
+    ).populateFileUploadRequestsInSession(imagesSession.id, this.context);
+
+    /*Upload nft images to IPFS. Upload only FURs, that were not yed uploaded. 
+    Something may fail and it is possible, that some or all images were already uploaded to IPFS. In this case, retrieve existing uploaded images.*/
+    let imageFiles = { files: [], wrappedDirCid: undefined };
+    if (
+      imageFURs.filter(
+        (x) => x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED,
+      ).length > 0
+    ) {
+      imageFiles = await storageBucketSyncFilesToIPFS(
+        this.context,
+        `${this.constructor.name}/runExecutor`,
+        bucket,
+        5368709120,
+        imageFURs.filter(
+          (x) => x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED,
+        ),
+        imagesSession,
+        false,
+        undefined,
+      );
+    }
+    if (
+      imageFURs.filter(
+        (x) => x.fileStatus == FileUploadRequestFileStatus.UPLOAD_COMPLETED,
+      ).length > 0
+    ) {
+      //get uploaded files and add them to imageFiles object
+      for (const f of imageFURs.filter(
+        (x) => x.fileStatus == FileUploadRequestFileStatus.UPLOAD_COMPLETED,
+      )) {
+        const tmpFile: File = await new File({}, this.context).populateByUUID(
+          f.file_uuid,
+        );
+        imageFiles.files.push(tmpFile);
+      }
+    }
+
     //#endregion
 
     //#region Prepare NFT metadata
@@ -167,6 +191,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
     //#endregion
 
     //#region Sync metadata to IPFS
+
     const metadataFiles = await storageBucketSyncFilesToIPFS(
       this.context,
       `${this.constructor.name}/runExecutor`,

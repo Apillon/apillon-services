@@ -29,6 +29,16 @@ export async function registerUser(params: any, context: DevConsoleApiContext) {
 
   const email = tokenData.email;
 
+  // this handles security recommendation for single use token at registration!
+  const emailCheckResult = await new Ams(context).emailExists(email);
+  if (emailCheckResult.data.result === true) {
+    throw new CodeException({
+      status: HttpStatus.UNPROCESSABLE_ENTITY,
+      code: ValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
+      errorCodes: ValidatorErrorCode,
+    });
+  }
+
   const user: User = new User({}, context).populate({
     user_uuid: uuidV4(),
     email: tokenData.email,
@@ -53,7 +63,7 @@ export async function registerUser(params: any, context: DevConsoleApiContext) {
       password: params.password,
     });
 
-    user.setUserRolesFromAmsResponse(amsResponse);
+    user.setUserRolesAndPermissionsFromAmsResponse(amsResponse);
 
     await context.mysql.commit(conn);
   } catch (err) {

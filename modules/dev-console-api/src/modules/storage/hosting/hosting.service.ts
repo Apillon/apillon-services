@@ -17,6 +17,7 @@ import { Project } from '../../project/models/project.model';
 import { ServiceQueryFilter } from '../../services/dtos/services-query-filter.dto';
 import { Service } from '../../services/models/service.model';
 import { ServicesService } from '../../services/services.service';
+import { ServiceDto } from '../../services/dtos/service.dto';
 
 @Injectable()
 export class HostingService {
@@ -48,16 +49,16 @@ export class HostingService {
       {},
       context,
     ).populate({
-      project_id: project.id,
-      serviceType_id: AttachedServiceType.STORAGE,
+      project_uuid: project.project_uuid,
+      serviceType_id: AttachedServiceType.HOSTING,
     });
-    const storageServices = await new Service({}).getServices(context, query);
-    if (storageServices.total == 0) {
-      //Create storage service - "Attach"
-      const storageService: Service = new Service({}, context).populate({
-        project_id: project.id,
+    const hostingServices = await new Service({}).getServices(context, query);
+    if (hostingServices.total == 0) {
+      //Create HOSTING service - "Attach"
+      const storageService: ServiceDto = new ServiceDto({}, context).populate({
+        project_uuid: project.project_uuid,
         name: 'Storage service',
-        serviceType_id: AttachedServiceType.STORAGE,
+        serviceType_id: AttachedServiceType.HOSTING,
       });
 
       await this.serviceService.createService(context, storageService);

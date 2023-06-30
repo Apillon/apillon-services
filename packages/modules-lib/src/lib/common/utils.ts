@@ -1,4 +1,4 @@
-import { env } from '@apillon/lib';
+import { CodeException, env } from '@apillon/lib';
 import axios, { AxiosResponse } from 'axios';
 import FormData from 'form-data';
 
@@ -66,4 +66,47 @@ export async function getDiscordProfile(code: string): Promise<any> {
     return res?.data;
   }
   return null;
+}
+
+/**
+ * Function to execute calls to Apillon-API from other services
+ * @param apiKey key
+ * @param apiKeySecret secret
+ * @param method GET, POST
+ * @param relativeUrl function endpoint
+ * @param body POST body
+ * @returns response from API
+ */
+export async function callApillonApi(
+  apiKey: string,
+  apiKeySecret: string,
+  method: string,
+  relativeUrl: string,
+  body?: any,
+) {
+  const requestUrl = `${env.APILLON_API_URL}${relativeUrl}`;
+  if (method == 'GET') {
+    const response = await axios.get(requestUrl, {
+      auth: {
+        username: apiKey,
+        password: apiKeySecret,
+      },
+    });
+    return response.data;
+  } else if (method == 'POST') {
+    const response = await axios.post(requestUrl, body, {
+      auth: {
+        username: apiKey,
+        password: apiKeySecret,
+      },
+    });
+    return response.data;
+  }
+
+  throw new CodeException({
+    status: 500,
+    code: 500000,
+    errorMessage: 'Method not supported',
+    sourceFunction: 'callApillonApi',
+  });
 }
