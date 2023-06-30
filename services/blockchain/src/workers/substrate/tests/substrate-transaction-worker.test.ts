@@ -28,14 +28,14 @@ describe('Kilt tests', () => {
     const address = '4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn';
     const chain = SubstrateChain.KILT;
     const chainType = ChainType.SUBSTRATE;
-    // BIP-39 mnemonic
-    const mnemonic = mnemonicGenerate();
+
     wallet = await new Wallet(
       {
         chain,
         chainType,
         address,
-        seed: mnemonic,
+        // This is actually not correct - the seed should match the address
+        seed: mnemonicGenerate(),
         lastParsedBlock: 1,
       },
       stage.context,
@@ -43,7 +43,7 @@ describe('Kilt tests', () => {
   });
 
   afterAll(async () => {
-    await releaseStage(stage);
+    // await releaseStage(stage);
   });
 
   test('Single wallet transactions', async () => {
@@ -93,23 +93,6 @@ describe('Kilt tests', () => {
       stage.context,
     ).insert();
 
-    const tList = await new Transaction(
-      {},
-      stage.context,
-    ).getTransactionsByHashes(
-      chain,
-      chainType,
-      address,
-      TransactionStatus.PENDING,
-      [
-        '0xcef2d10686fa042c01277ec898b0b75f2016b05e252205da7ec664d1fa5daef0',
-        '0x41a4ea4e792b7326e8d7fff275f2033b451b174994a44b5308b9ac4c1ddbf3df',
-        '0xb532c8bae0a61c6fd715c8461b4e076c3ef5ae91210213a809d281dc5ab689ce',
-      ],
-    );
-
-    console.log('T LIST: ', tList[0].transactionHash);
-
     const parameters = {
       chainId: SubstrateChain.KILT,
     };
@@ -128,13 +111,10 @@ describe('Kilt tests', () => {
       },
     );
 
-    console.log('SubstrateTransactionWorker ...');
     await new SubstrateTransactionWorker(
       workerDefinition,
       stage.context,
     ).runExecutor();
-
-    console.log('Substrate worker ...');
 
     const txs: Transaction[] = await new Transaction({}, stage.context).getList(
       chain,
@@ -143,7 +123,15 @@ describe('Kilt tests', () => {
       0,
     );
 
-    console.log(txs);
+    let confirmed = true;
+    txs.forEach((tx) => {
+      if (tx.transactionStatus !== TransactionStatus.CONFIRMED) {
+        confirmed = false;
+      }
+    });
+
+    expect(txs.length).toBe(3);
+    expect(confirmed).toBe(true);
   });
 
   //   test('Processing multiple transactions (storage orders)', async () => {

@@ -154,3 +154,8 @@ export enum TxAction {
   TRANSACTION = 'TRANSACTION',
   UNKNOWN = 'UNKNOWN',
 }
+
+export enum TransactionIndexerStatus {
+  FAIL = 0,
+  SUCCESS = 1,
+}

@@ -13,7 +13,6 @@ import {
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-
 import { Identity } from '../modules/identity/models/identity.model';
 import {
   ApillonSupportedCTypes,

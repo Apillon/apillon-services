@@ -25,6 +25,7 @@ import { KiltBlockchainIndexer } from '../../modules/blockchain-indexers/substra
 import { Transaction } from '../../common/models/transaction';
 import { WorkerName } from '../worker-executor';
 import { TransactionWebhookWorker } from '../transaction-webhook-worker';
+import { DbTables, TransactionIndexerStatus } from '../../config/types';
 
 function formatMessage(a: string, t: number, f: number): string {
   return `Evaluating RESOLVED transactions: SOURCE ${a}, FROM ${t}, TO ${f}`;
@@ -93,8 +94,6 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
   }
 
   private async handleResolvedTransactions(wallets: Wallet[]) {
-    const conn = await this.context.mysql.start();
-
     const blockHeight = await this.indexer.getBlockHeight();
 
     for (const w of wallets) {
@@ -102,7 +101,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
 
       // TODO: There was range calculation here, which I am not
       // sure is relevant to be honest. Maybe if there are
-      // a shitton of transactions, this could break. Let's see
+      // a shitton transactions at once, this could break. Let's see
       const fromBlock: number = wallet.lastParsedBlock;
       const toBlock: number = blockHeight;
 
@@ -118,8 +117,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         toBlock,
       );
 
-      // Update the state of all transactions in the BCS DB
-      await this.updateTransactions(transactions);
+      await this.setTransactionsState(transactions);
 
       if (transactions.length > 0) {
         if (
@@ -182,31 +180,64 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       toBlock,
     );
 
-    const trasactionsArray: Array<Transaction> = Object.values(transactions);
+    const trasactionsArray: Array<any> = Object.values(transactions);
     return trasactionsArray.length > 0 ? trasactionsArray.flat(Infinity) : [];
   }
 
-  private async updateTransactions(transactions: any[]) {
-    for (let i = 0; i < transactions.length; i++) {
-      console.log('Transaction 1111', transactions[i]);
+  private async setTransactionsState(transactions: any[]) {
+    const conn = await this.context.mysql.start();
 
-      const transaction = await new Transaction(
-        {},
-        this.context,
-      ).populateByHash(transactions[i].extrinsicHash);
+    const successTransactions: any = transactions
+      .filter((t: any) => {
+        return t.status == TransactionIndexerStatus.SUCCESS;
+      })
+      .map((t: any): string => {
+        return t.extrinsicHash;
+      });
 
-      if (!transaction.exists()) {
-        console.error('no tra');
-      } else {
-        console.log('HEREREEEEE');
-        const t = transactions[i];
-        t.transactionStatus = 2;
-        transaction.populate(t);
-        // transactions[i].status == 1
-        //   ? TransactionStatus.CONFIRMED
-        //   : TransactionStatus.FAILED;
-        await transaction.update();
-      }
-    }
+    const failedTransactions: string[] = transactions
+      .filter((t: any) => {
+        t.status == TransactionIndexerStatus.FAIL;
+      })
+      .map((t: any): string => {
+        return t.transactionHash;
+      });
+
+    // Update SUCCESSFULL transactions
+    await this.updateTransactions(
+      successTransactions,
+      TransactionStatus.CONFIRMED,
+      conn,
+    );
+
+    // Update FAILED transactions
+    await this.updateTransactions(
+      failedTransactions,
+      TransactionStatus.CONFIRMED,
+      conn,
+    );
+
+    await conn.commit();
+    // Start a new connection for each parsed wallet
+    conn.destroy();
+  }
+
+  private async updateTransactions(
+    transactionHashes: string[],
+    status: TransactionStatus,
+    conn: PoolConnection,
+  ) {
+    await this.context.mysql.paramExecute(
+      `UPDATE \`${DbTables.TRANSACTION_QUEUE}\`
+      SET transactionStatus = @status
+      WHERE
+        chain = @chain
+        AND transactionHash in ('${transactionHashes.join("','")}')`,
+      {
+        chain: this.chainId,
+        status: status,
+      },
+      conn,
+    );
   }
 }
