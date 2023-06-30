@@ -1,4 +1,4 @@
-import { NovaWalletModule } from './modules/nova-wallet/nova-wallet.module';
+import { NovaWalletModule } from './modules/nova-wallet/w3n-assets.module';
 import { env } from '@apillon/lib';
 import { createRequestLogMiddleware } from '@apillon/modules-lib';
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';

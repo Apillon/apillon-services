@@ -4,7 +4,7 @@ https://docs.nestjs.com/providers#services
 
 import { Injectable } from '@nestjs/common';
 import { AuthenticationApiContext } from '../../context';
-import { UploadWalletsToIpfsDto } from './dtos/upload-wallets-to-ipfs.dto';
+import { W3nAssetsDto } from './dtos/w3n-assets.dto';
 import { callApillonApi } from '@apillon/modules-lib';
 import { CodeException, env } from '@apillon/lib';
 import axios from 'axios';
@@ -15,13 +15,13 @@ import {
 } from '../../config/types';
 
 @Injectable()
-export class NovaWalletService {
-  async uploadWalletsToIpfs(
+export class W3nAssetsService {
+  async uploadAssetsToIpfs(
     context: AuthenticationApiContext,
-    body: UploadWalletsToIpfsDto,
+    body: W3nAssetsDto,
   ) {
     //Validate wallets --> https://github.com/KILTprotocol/spec-KiltTransferAssetRecipient
-    const assets = Object.keys(body.wallets);
+    const assets = Object.keys(body.assets);
     for (const asset of assets) {
       const regex = new RegExp(
         '[-a-z0-9]{3,8}:[-_a-zA-Z0-9]{1,32}/[-a-z0-9]{3,8}:[-.%a-zA-Z0-9]{1,128}',
@@ -64,7 +64,7 @@ export class NovaWalletService {
     const uploadUrl = uploadSession.data.files[0];
 
     //Upload to S3
-    await axios.put(uploadUrl.url, body.wallets);
+    await axios.put(uploadUrl.url, body.assets);
 
     //End session
     await callApillonApi(

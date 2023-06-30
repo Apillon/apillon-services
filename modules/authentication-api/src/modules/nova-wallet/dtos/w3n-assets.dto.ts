@@ -5,7 +5,7 @@ import { prop } from '@rawmodel/core';
 import { presenceValidator } from '@rawmodel/validators';
 import { AuthenticationErrorCode } from '../../../config/types';
 
-export class UploadWalletsToIpfsDto extends ModelBase {
+export class W3nAssetsDto extends ModelBase {
   @prop({
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [
@@ -15,5 +15,5 @@ export class UploadWalletsToIpfsDto extends ModelBase {
       },
     ],
   })
-  public wallets: any;
+  public assets: any;
 }

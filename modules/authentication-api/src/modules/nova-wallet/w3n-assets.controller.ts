@@ -4,28 +4,28 @@ https://docs.nestjs.com/controllers#controllers
 
 import { Ctx, Validation } from '@apillon/modules-lib';
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
-import { UploadWalletsToIpfsDto } from './dtos/upload-wallets-to-ipfs.dto';
+import { W3nAssetsDto } from './dtos/w3n-assets.dto';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { AuthenticationApiContext } from '../../context';
-import { NovaWalletService } from './nova-wallet.service';
+import { W3nAssetsService } from './w3n-assets.service';
 
 /**
  * Controller with endpoints, which will be called from website to manage wallets associated with web3 name.
  * Endpoints are public
  * Endpoints actually interact with Apillon API. For that, API key and secret must be set in environment(NOVA_WALLET_API_KEY,NOVA_WALLET_API_KEY_SECRET).
  */
-@Controller('wallets')
-export class NovaWalletController {
-  constructor(private novaWalletService: NovaWalletService) {}
+@Controller('w3n-assets')
+export class W3nAssetsController {
+  constructor(private w3nAssetsService: W3nAssetsService) {}
 
   @Post()
-  @Validation({ dto: UploadWalletsToIpfsDto })
+  @Validation({ dto: W3nAssetsDto })
   @UseGuards(ValidationGuard)
-  async uploadWalletsToIpfs(
+  async uploadAssetsToIpfs(
     @Ctx() context: AuthenticationApiContext,
-    @Body() body: UploadWalletsToIpfsDto,
+    @Body() body: W3nAssetsDto,
   ) {
-    return await this.novaWalletService.uploadWalletsToIpfs(context, body);
+    return await this.w3nAssetsService.uploadAssetsToIpfs(context, body);
   }
 
   @Get(':uuid')
@@ -33,6 +33,6 @@ export class NovaWalletController {
     @Ctx() context: AuthenticationApiContext,
     @Param('uuid') uuid: string,
   ) {
-    return await this.novaWalletService.getFileDetail(context, uuid);
+    return await this.w3nAssetsService.getFileDetail(context, uuid);
   }
 }

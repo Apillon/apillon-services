@@ -20,19 +20,19 @@ describe('Nova wallet endpoints tests', () => {
 
   describe('Wallet tests', () => {
     test('User should recieve 422 error if invalid body is passed', async () => {
-      const response = await request(stage.http).post('/wallets');
+      const response = await request(stage.http).post('/w3n-assets');
       expect(response.status).toBe(422);
     });
 
     test('User should recieve 422 error if invalid body is passed', async () => {
-      const response = await request(stage.http).post('/wallets').send({
-        wallets: 'Some invalid fake data, that I am trying to upload to IPFS',
+      const response = await request(stage.http).post('/w3n-assets').send({
+        assets: 'Some invalid fake data, that I am trying to upload to IPFS',
       });
       expect(response.status).toBe(422);
     });
 
     test('User should be able to upload wallets to IPFS', async () => {
-      const wallets = {
+      const assets = {
         'polkadot:b0a8d493285c2df73290dfb7e61f870f/slip44:434': {
           EJDj2GKnx89HTzUkGW8Rk9RoYUmAJHPM8aacWFp3fi1gYUQ: {
             description: 'Personal account',
@@ -58,8 +58,8 @@ describe('Nova wallet endpoints tests', () => {
           },
         },
       };
-      const response = await request(stage.http).post('/wallets').send({
-        wallets,
+      const response = await request(stage.http).post('/w3n-assets').send({
+        assets,
       });
       expect(response.status).toBe(201);
       expect(response.body.data.fileUuid).toBeTruthy();
@@ -67,7 +67,7 @@ describe('Nova wallet endpoints tests', () => {
     });
 
     test('User should be able to query file status', async () => {
-      const response = await request(stage.http).get(`/wallets/${fileUuid}`);
+      const response = await request(stage.http).get(`/w3n-assets/${fileUuid}`);
       expect(response.status).toBe(200);
       expect(response.body.data.fileStatus).toBeTruthy();
       expect(response.body.data.file.fileUuid).toBe(fileUuid);
@@ -81,7 +81,7 @@ describe('Nova wallet endpoints tests', () => {
         }, 60000);
       });
 
-      const response = await request(stage.http).get(`/wallets/${fileUuid}`);
+      const response = await request(stage.http).get(`/w3n-assets/${fileUuid}`);
       expect(response.status).toBe(200);
       expect(response.body.data.file.CID).toBeTruthy();
     });
