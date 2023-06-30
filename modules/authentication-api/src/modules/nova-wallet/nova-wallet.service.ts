@@ -20,7 +20,7 @@ export class NovaWalletService {
     context: AuthenticationApiContext,
     body: UploadWalletsToIpfsDto,
   ) {
-    //Validate wallets
+    //Validate wallets --> https://github.com/KILTprotocol/spec-KiltTransferAssetRecipient
     const assets = Object.keys(body.wallets);
     for (const asset of assets) {
       const regex = new RegExp(
