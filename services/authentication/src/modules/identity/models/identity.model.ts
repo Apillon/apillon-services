@@ -126,6 +126,7 @@ export class Identity extends AdvancedSQLModel {
           SELECT *
           FROM \`${DbTables.IDENTITY}\` i
           WHERE i.email = @email
+          FOR UPDATE
         `,
       { email },
     );
