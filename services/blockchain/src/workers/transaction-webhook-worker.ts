@@ -48,23 +48,21 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
       console.log('transactions: ', transactions);
       const crustWebhooks: TransactionWebhookDataDto[] = [];
       const nftWebhooks: TransactionWebhookDataDto[] = [];
+      const kiltWebooks: TransactionWebhookDataDto[] = [];
+
       if (transactions && transactions.length > 0) {
         for (let i = 0; i < transactions.length; i++) {
           const transaction = transactions[i];
-          if (
-            transaction.chainType == ChainType.SUBSTRATE &&
-            transaction.chain == SubstrateChain.CRUST
-          ) {
-            crustWebhooks.push(
-              new TransactionWebhookDataDto().populate({
-                id: transaction.id,
-                transactionHash: transaction.transactionHash,
-                referenceTable: transaction.referenceTable,
-                referenceId: transaction.referenceId,
-                transactionStatus: transaction.transactionStatus,
-                data: transaction.data,
-              }),
-            );
+          if (transaction.chainType == ChainType.SUBSTRATE) {
+            if (transaction.chain == SubstrateChain.CRUST) {
+              const crustTWh =
+                this.createSubstrateTransactionWebhookDto(transaction);
+              crustWebhooks.push(crustTWh);
+            } else if (transaction.chain == SubstrateChain.KILT) {
+              const kiltTWh =
+                this.createSubstrateTransactionWebhookDto(transaction);
+              kiltWebooks.push(kiltTWh);
+            }
           } else if (
             transaction.chainType == ChainType.EVM &&
             (transaction.chain == EvmChain.MOONBEAM ||
@@ -94,11 +92,20 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
        * transactions otherwise we do nothing.
        */
       const updates = [
+        // SUBSTRATE
         ...(await this.processWebhook(
           crustWebhooks,
-          env.STORAGE_AWS_WORKER_SQS_URL,
+          env.AUTH_AWS_WORKER_SQS_URL,
           'UpdateCrustStatusWorker',
         )),
+
+        ...(await this.processWebhook(
+          kiltWebooks,
+          env.AUTH_AWS_WORKER_SQS_URL,
+          'UpdateKiltStatusWorker',
+        )),
+
+        // EVM
         ...(await this.processWebhook(
           nftWebhooks,
           env.NFTS_AWS_WORKER_SQS_URL,
@@ -196,5 +203,18 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
       }
     }
     return updates;
+  }
+
+  private createSubstrateTransactionWebhookDto(
+    transaction,
+  ): TransactionWebhookDataDto {
+    return new TransactionWebhookDataDto().populate({
+      id: transaction.id,
+      transactionHash: transaction.transactionHash,
+      referenceTable: transaction.referenceTable,
+      referenceId: transaction.referenceId,
+      transactionStatus: transaction.transactionStatus,
+      data: transaction.data,
+    });
   }
 }

@@ -24,10 +24,15 @@ import {
 import { KiltBlockchainIndexer } from '../../modules/blockchain-indexers/substrate/kilt/kilt-indexer.service';
 import { WorkerName } from '../worker-executor';
 import { TransactionWebhookWorker } from '../transaction-webhook-worker';
-import { Chain, DbTables, TransactionIndexerStatus } from '../../config/types';
+import { DbTables, TransactionIndexerStatus } from '../../config/types';
 
 function formatMessage(a: string, t: number, f: number): string {
   return `Evaluating RESOLVED transactions: SOURCE ${a}, FROM ${t}, TO ${f}`;
+}
+
+export enum SubstrateChainName {
+  KILT = 'KILT',
+  CRUST = 'CRUST',
 }
 
 export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
@@ -79,10 +84,10 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
   // NOTE: Sets the Substrate Indexer
   private setIndexer() {
     switch (this.chainName) {
-      case 'KILT':
+      case SubstrateChainName.KILT:
         this.indexer = new KiltBlockchainIndexer();
         break;
-      case 'CRUST':
+      case SubstrateChainName.CRUST:
         //this.indexer = new CrustBlockchainIndexer();
         break;
       default:

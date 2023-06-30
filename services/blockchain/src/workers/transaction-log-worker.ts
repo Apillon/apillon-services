@@ -153,10 +153,6 @@ export class TransactionLogWorker extends BaseQueueWorker {
             //
             throw new Error('KILT is not supported yet!');
           },
-          [SubstrateChain.KILT_PEREGRINE]: () => {
-            //
-            throw new Error('KILT SPIRITNET is not supported yet!');
-          },
           [SubstrateChain.PHALA]: () => {
             //
             throw new Error('PHALA is not supported yet!');
