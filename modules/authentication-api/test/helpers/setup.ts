@@ -23,9 +23,20 @@ export async function setupTest(): Promise<Stage> {
   env.ACCESS_MYSQL_HOST = null; // safety
   env.MONITORING_MONGO_SRV = null; // safety
   env.STORAGE_MYSQL_HOST = null; // safety
+  env.CONFIG_MYSQL_HOST = null; // safety
+  env.REFERRAL_MYSQL_HOST = null; // safety
+  env.NFTS_MYSQL_HOST = null; // safety
+  env.AUTH_API_MYSQL_HOST = null; // safety
+  env.BLOCKCHAIN_MYSQL_HOST = null; // safety
 
   try {
     await rebuildTestDatabases();
+  } catch (err) {
+    console.error(err);
+    throw new Error('rebuildTestDatabases failed');
+  }
+
+  try {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -38,7 +49,7 @@ export async function setupTest(): Promise<Stage> {
     await app.listen(
       env.AUTH_API_PORT_TEST,
       // For some reason, this causes to bind only a ipv6 address
-      // env.DEV_CONSOLE_API_HOST_TEST,
+      env.AUTH_API_HOST_TEST,
     );
 
     http = app.getHttpServer();
@@ -48,7 +59,8 @@ export async function setupTest(): Promise<Stage> {
     stage.http = http;
 
     return stage;
-  } catch (error) {
-    throw `Unable to set up env - ${error}`;
+  } catch (e) {
+    console.error(e);
+    throw new Error('Unable to set up env');
   }
 }
