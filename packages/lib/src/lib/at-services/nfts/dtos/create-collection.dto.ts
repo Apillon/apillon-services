@@ -14,7 +14,7 @@ import {
 } from '../../../../config/types';
 import { enumInclusionValidator } from '../../../validators';
 
-export class CreateCollectionDTO extends ModelBase {
+export class CreateCollectionDTOBase extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -86,14 +86,6 @@ export class CreateCollectionDTO extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [],
-  })
-  public baseUri: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     setter(value: string) {
       if (value && value.length > 0) {
         value = (value.startsWith('.') ? '' : '.') + value;
@@ -151,19 +143,6 @@ export class CreateCollectionDTO extends ModelBase {
     ],
   })
   public reserve: number;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_DEPLOY_PROJECT_UUID_NOT_PRESENT,
-      },
-    ],
-  })
-  public project_uuid: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -252,4 +231,42 @@ export class CreateCollectionDTO extends ModelBase {
     ],
   })
   public royaltiesFees: number;
+}
+
+export class CreateCollectionDTO extends CreateCollectionDTOBase {
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_DEPLOY_PROJECT_UUID_NOT_PRESENT,
+      },
+    ],
+  })
+  public project_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+  })
+  public baseUri: string;
+}
+
+export class ApillonApiCreateCollectionDTO extends CreateCollectionDTOBase {
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_COLLECTION_BASE_URI_NOT_PRESENT,
+      },
+    ],
+  })
+  public baseUri: string;
 }

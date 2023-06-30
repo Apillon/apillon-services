@@ -1,5 +1,5 @@
 import {
-  DefaultUserRole,
+  decodeJwtToken,
   generateJwtToken,
   JwtTokenType,
   Lmas,
@@ -10,15 +10,15 @@ import {
   ServiceName,
   UserWalletAuthDto,
 } from '@apillon/lib';
-import { AmsErrorCode } from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
+import { AmsErrorCode } from '../../config/types';
 import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
 import { AuthToken } from '../auth-token/auth-token.model';
 import { AuthUser } from './auth-user.model';
 
+import { signatureVerify } from '@polkadot/util-crypto';
 import { TokenExpiresInStr } from '../../config/types';
 import { CryptoHash } from '../../lib/hash-with-crypto';
-import { signatureVerify } from '@polkadot/util-crypto';
 
 /**
  * AuthUserService class handles user authentication and related operations, such as registration, login, password reset, and email verification.
@@ -126,6 +126,7 @@ export class AuthUserService {
     const authUser = await new AuthUser({}, context).populateByEmail(
       event.email,
     );
+
     if (!authUser.exists() || !authUser.verifyPassword(event.password)) {
       throw await new AmsCodeException({
         status: 401,
@@ -155,10 +156,19 @@ export class AuthUserService {
   static async loginWithKilt(event, context: ServiceContext) {
     // Parse received token - trigger exception if this token
     // does not belong to us
-    const tokenData = parseJwtToken(
-      JwtTokenType.USER_AUTHENTICATION,
-      event.token,
-    );
+    let tokenData;
+    try {
+      tokenData = parseJwtToken(JwtTokenType.USER_AUTHENTICATION, event.token);
+    } catch (error) {
+      throw await new AmsCodeException({
+        status: 401,
+        code: AmsErrorCode.USER_AUTH_TOKEN_IS_INVALID,
+      }).writeToMonitor({
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
+      });
+    }
 
     const authUser = await new AuthUser({}, context).populateByEmail(
       tokenData.email,
@@ -221,10 +231,21 @@ export class AuthUserService {
       });
     }
 
-    const tokenData = parseJwtToken(
-      JwtTokenType.USER_AUTHENTICATION,
-      event.token,
-    );
+    let tokenData;
+    try {
+      tokenData = parseJwtToken(JwtTokenType.USER_AUTHENTICATION, event.token);
+    } catch (err) {
+      if ((err.message = 'jwt expired')) {
+        throw await new AmsCodeException({
+          status: 401,
+          code: AmsErrorCode.AUTH_TOKEN_EXPIRED,
+        });
+      }
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.USER_AUTH_TOKEN_IS_INVALID,
+      });
+    }
 
     if (!tokenData.user_uuid) {
       throw await new AmsCodeException({
@@ -334,15 +355,25 @@ export class AuthUserService {
    * @returns A boolean value indicating whether the password reset was successful.
    */
   static async resetPassword(event, context: ServiceContext) {
-    if (!event?.email || !event.password) {
+    if (!event?.token || !event.password) {
       throw await new AmsCodeException({
         status: 400,
         code: AmsErrorCode.BAD_REQUEST,
       }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
     }
 
+    //Decode JWT token to get email
+    const decodedToken = decodeJwtToken(event.token);
+
+    if (!decodedToken.email) {
+      throw new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.INVALID_TOKEN,
+      });
+    }
+
     const authUser = await new AuthUser({}, context).populateByEmail(
-      event.email,
+      decodedToken.email,
     );
 
     if (!authUser.exists()) {
@@ -350,6 +381,20 @@ export class AuthUserService {
         status: 400,
         code: AmsErrorCode.USER_DOES_NOT_EXISTS,
       }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
+    }
+
+    //Use authUser password to parse and verify token
+    try {
+      parseJwtToken(
+        JwtTokenType.USER_RESET_PASSWORD,
+        event.token,
+        authUser.password,
+      );
+    } catch (error) {
+      throw new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.INVALID_TOKEN,
+      });
     }
 
     authUser.setPassword(event.password);
@@ -392,7 +437,7 @@ export class AuthUserService {
       event.email,
     );
 
-    return { result: authUser.exists() };
+    return { result: authUser.exists(), authUser: authUser.serialize() };
   }
   /**
    * Retrieves an authenticated user's data using their email.
@@ -471,6 +516,28 @@ export class AuthUserService {
         code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
       }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
     }
+
+    //If login token with greater timestamp exists, throw error - signature was already used for login
+    const authToken = await new AuthToken({}, context).populateByUserAndType(
+      authUser.user_uuid,
+      JwtTokenType.USER_AUTHENTICATION,
+    );
+
+    if (
+      authToken.exists() &&
+      authToken?.updateTime?.getTime() > authData.timestamp
+    ) {
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.WALLET_SIGNATURE_ALREADY_USED,
+      }).writeToMonitor({
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
+      });
+    }
+
+    //Login user
 
     await authUser.loginUser();
 

@@ -19,6 +19,8 @@ import { StorageCodeException } from '../../lib/exceptions';
 import { FileUploadRequest } from '../storage/models/file-upload-request.model';
 import { File } from '../storage/models/file.model';
 import { uploadItemsToIPFSRes } from './interfaces/upload-items-to-ipfs-res.interface';
+import axios from 'axios';
+import { Bucket } from '../bucket/models/bucket.model';
 
 export class IPFSService {
   static async createIPFSClient() {
@@ -88,6 +90,8 @@ export class IPFSService {
       content: file.Body as any,
     });
 
+    await IPFSService.pinCidToCluster(filesOnIPFS.cid.toV0().toString());
+
     try {
       (file.Body as any).destroy();
     } catch (err) {
@@ -144,7 +148,12 @@ export class IPFSService {
     //Get IPFS client
     const client = await IPFSService.createIPFSClient();
 
-    const mfsDirectoryPath = `/${event.fileUploadRequests[0].bucket_id}${
+    const bucket: Bucket = await new Bucket({}, context).populateById(
+      event.fileUploadRequests[0].bucket_id,
+    );
+
+    //Bucket uuid must be used for mfs directory path, because same IPFS is used in different environments. An so bucket id can overlap.
+    const mfsDirectoryPath = `/${bucket.bucket_uuid}${
       event.wrappingDirectoryPath ? '/' + event.wrappingDirectoryPath : ''
     }`;
 
@@ -228,6 +237,11 @@ export class IPFSService {
           totalSizeOfFiles += item.size;
         }
       }
+    }
+
+    if (mfsDirectoryCID?.cid) {
+      //It's probably enough to pin just the parent folder - content should be automatically pinned
+      await IPFSService.pinCidToCluster(mfsDirectoryCID?.cid.toV0().toString());
     }
 
     //Write log to LMAS
@@ -404,6 +418,37 @@ export class IPFSService {
     }
 
     return filesInDirectory;
+  }
+
+  /**
+   * Call cluster API to PIN specific CID to child nodes
+   * @param cid cid to be pinned
+   */
+  static async pinCidToCluster(cid: string) {
+    if (!env.STORAGE_IPFS_CLUSTER_SERVER) {
+      writeLog(
+        LogType.ERROR,
+        `STORAGE_IPFS_CLUSTER_SERVER is not set!`,
+        'ipfs.service.ts',
+        'pinCidToCluster',
+      );
+      return;
+    }
+    try {
+      await axios.post(
+        env.STORAGE_IPFS_CLUSTER_SERVER + `pins/ipfs/${cid}`,
+        {},
+        {},
+      );
+    } catch (err) {
+      writeLog(
+        LogType.ERROR,
+        `Error pinning cid to cluster server`,
+        'ipfs.service.ts',
+        'pinCidToCluster',
+        err,
+      );
+    }
   }
 
   /**

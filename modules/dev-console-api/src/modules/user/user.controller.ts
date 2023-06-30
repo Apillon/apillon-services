@@ -7,7 +7,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { DefaultUserRole, UserWalletAuthDto } from '@apillon/lib';
+import { DefaultUserRole, SerializeFor, UserWalletAuthDto } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import {
   Ctx,
@@ -46,7 +46,9 @@ export class UserController {
     @Ctx() context: DevConsoleApiContext,
     @Body() body: UpdateUserDto,
   ) {
-    return await this.userService.updateUserProfile(context, body);
+    return (await this.userService.updateUserProfile(context, body)).serialize(
+      SerializeFor.PROFILE,
+    );
   }
 
   @Post('login')

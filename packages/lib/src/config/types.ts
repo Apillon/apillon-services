@@ -145,6 +145,7 @@ export enum NftsEventType {
   CREATE_COLLECTION = 'create-collection',
   NFT_COLLECTIONS_LIST = 'list-nft-collections',
   GET_NFT_COLLECTION = 'get-nft-collection',
+  GET_NFT_COLLECTION_BY_UUID = 'get-nft-collection-by-uuid',
   TRANSFER_OWNERSHIP = 'transfer-ownership',
   MINT_NFT = 'mint-nft',
   SET_BASE_URI = 'set-base-uri',
@@ -240,6 +241,8 @@ export enum SqlModelStatus {
 export enum AttachedServiceType {
   AUTHENTICATION = 1,
   STORAGE = 2,
+  NFT = 3,
+  HOSTING = 4,
   SYSTEM = 999,
 }
 
@@ -278,7 +281,7 @@ export enum ValidateFor {
   QUERY = 'query',
 }
 
-//#region Permissions
+//#region Roles & Permissions
 
 export enum PermissionType {
   READ = 'read',
@@ -315,6 +318,14 @@ export enum DefaultApiKeyRole {
   KEY_EXECUTE = 50,
   KEY_WRITE = 51,
   KEY_READ = 52,
+}
+
+export enum DefaultPermission {
+  STORAGE = 1,
+  HOSTING = 2,
+  NFTS = 3,
+  AUTHENTICATION = 4,
+  COMPUTING = 5,
 }
 
 //#endregion
@@ -463,6 +474,7 @@ export enum ValidatorErrorCode {
   NFT_COLLECTION_ROYALTIES_FEES_NOT_VALID = 42200137,
   TRANSACTION_REF_TABLE_PARAM_NOT_PRESENT = 42200138,
   TRANSACTION_REF_ID_PARAM_NOT_PRESENT = 42200139,
+  NFT_COLLECTION_BASE_URI_NOT_PRESENT = 42200140,
 
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,
@@ -491,7 +503,7 @@ export enum ValidatorErrorCode {
   EVM_TRANSACTION_NOT_PRESENT = 42200804,
   EVM_CHAIN_NOT_PRESENT = 42200805,
   EVM_CHAIN_NOT_VALID = 42200806,
-  //#endregion"
+  //#endregion
 }
 
 /**

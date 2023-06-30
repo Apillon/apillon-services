@@ -1,5 +1,6 @@
 import {
   CreateWebsiteDto,
+  DefaultPermission,
   DefaultUserRole,
   DeploymentQueryFilter,
   DeployWebsiteDto,
@@ -26,6 +27,7 @@ import { ValidationGuard } from '../../../guards/validation.guard';
 import { HostingService } from './hosting.service';
 
 @Controller('storage/hosting')
+@Permissions({ permission: DefaultPermission.HOSTING })
 export class HostingController {
   constructor(private hostingService: HostingService) {}
 

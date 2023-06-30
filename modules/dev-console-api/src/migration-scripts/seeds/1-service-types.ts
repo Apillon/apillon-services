@@ -8,8 +8,8 @@ export async function upgrade(
     INSERT IGNORE INTO \`${DbTables.SERVICE_TYPE}\`
       (id, name, description, active)
     VALUES
-      (${AttachedServiceType.AUTHENTICATION}, 'Authentication', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum.', 1),
-      (${AttachedServiceType.STORAGE}, 'Storage', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum.', 0)
+      (${AttachedServiceType.AUTHENTICATION}, 'Authentication', 'Authentication (KILT) service', 1),
+      (${AttachedServiceType.STORAGE}, 'Storage', 'Storage service provides buckets and IPFS storage solution.', 0)
       ;
   `);
 }

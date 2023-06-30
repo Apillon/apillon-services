@@ -81,7 +81,7 @@ export abstract class BaseService {
           const command = new SendMessageCommand(message);
           result = await sqs.send(command);
         } catch (err) {
-          console.log('Apillon MS: Error sending SQS message!', err);
+          console.error('Apillon MS: Error sending SQS message!', err);
         }
       } else {
         // invoke lambda
@@ -121,9 +121,10 @@ export abstract class BaseService {
       throw {
         status: result?.status || 500,
         message:
+          // do not display lambda/function names
           result?.error?.message ||
           result?.error?.errorMessage ||
-          `Error after calling lambda ${this.lambdaFunctionName}`,
+          `Error calling internal service!`,
         code: result?.error?.errorCode,
       };
     }

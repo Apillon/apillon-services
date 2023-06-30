@@ -722,6 +722,7 @@ export class Collection extends AdvancedSQLModel {
       SELECT COUNT(*) as collectionsCount
       FROM \`${DbTables.COLLECTION}\`
       WHERE project_uuid = @project_uuid 
+      AND collectionStatus <> ${CollectionStatus.FAILED}
       AND status <> ${SqlModelStatus.DELETED};
       `,
       {

@@ -1,5 +1,6 @@
 import {
   CreateIpnsDto,
+  DefaultPermission,
   DefaultUserRole,
   IpnsQueryFilter,
   PublishIpnsDto,
@@ -25,6 +26,7 @@ import { ValidationGuard } from '../../../guards/validation.guard';
 import { IpnsService } from './ipns.service';
 
 @Controller('buckets/:bucket_id/ipns')
+@Permissions({ permission: DefaultPermission.STORAGE })
 export class IpnsController {
   constructor(private ipnsService: IpnsService) {}
 

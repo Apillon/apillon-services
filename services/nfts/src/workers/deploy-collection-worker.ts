@@ -29,7 +29,7 @@ export class DeployCollectionWorker extends BaseQueueWorker {
     return [];
   }
   public async runExecutor(data: any): Promise<any> {
-    console.info('RUN EXECUTOR (CollectionMetadataWorker). data: ', data);
+    console.info('RUN EXECUTOR (DeployCollectionWorker). data: ', data);
     //Prepare data and execute validations
     if (!data?.collection_uuid || !data?.baseUri) {
       throw new NftsCodeException({
