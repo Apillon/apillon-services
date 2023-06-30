@@ -34,15 +34,6 @@ export class TransmitSubstrateTransactionWorker extends BaseSingleThreadWorker {
 
     try {
       await SubstrateService.transmitTransactions({ chain }, this.context);
-
-      await new Lmas().writeLog({
-        context: this.context,
-        logType: LogType.COST,
-        message: 'Substrate transactions submitted',
-        location: `${this.constructor.name}/runExecutor`,
-        service: ServiceName.BLOCKCHAIN,
-        data: data,
-      });
       await this.writeLogToDb(
         WorkerLogStatus.INFO,
         'Substrate transactions submitted',

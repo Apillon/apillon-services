@@ -283,32 +283,47 @@ export class SubstrateService {
         wallets[i].lastProcessedNonce,
       );
       let latestSuccess = null;
+      let transmited = 0;
       console.log('transactions: ', transactions);
-      try {
-        // TODO: consider batching transaction api.tx.utility.batch
-        for (let j = 0; j < transactions.length; j++) {
+      // TODO: consider batching transaction api.tx.utility.batch
+      for (let j = 0; j < transactions.length; j++) {
+        try {
           const signedTx = api.tx(transactions[j].rawTransaction);
           await signedTx.send();
           console.log('successfuly transmited');
           latestSuccess = transactions[j].nonce;
+          transmited++;
+        } catch (e) {
+          await new Lmas().writeLog({
+            logType: LogType.ERROR,
+            message: 'Error transmiting transaction',
+            location: 'SubstrateService.transmitTransactions',
+            service: ServiceName.BLOCKCHAIN,
+            data: {
+              error: e,
+              wallet: wallets[i].address,
+            },
+          });
+          break;
         }
-      } catch (e) {
-        await new Lmas().writeLog({
-          logType: LogType.ERROR,
-          message: 'Error transmiting transaction',
-          location: 'SubstrateService.transmitTransactions',
-          service: ServiceName.BLOCKCHAIN,
-          data: {
-            error: e,
-            wallet: wallets[i].address,
-          },
-        });
-        break;
       }
       if (latestSuccess) {
         const wallet = new Wallet(wallets[i], context);
         await wallet.updateLastProcessedNonce(latestSuccess);
       }
+
+      await new Lmas().writeLog({
+        context: context,
+        logType: LogType.COST,
+        message: 'Substrate transactions submitted',
+        location: `SubstrateService/runExecutor`,
+        service: ServiceName.BLOCKCHAIN,
+        data: {
+          wallet: wallets[i],
+          numOfTransactions: transactions.length,
+          transmited: transmited,
+        },
+      });
     }
   }
   //#region

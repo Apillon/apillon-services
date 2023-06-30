@@ -48,15 +48,6 @@ export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
 
     try {
       await EvmService.transmitTransactions({ chain }, this.context);
-
-      await new Lmas().writeLog({
-        context: this.context,
-        logType: LogType.COST,
-        message: 'EVM transactions submitted',
-        location: `${this.constructor.name}/runExecutor`,
-        service: ServiceName.BLOCKCHAIN,
-        data: data,
-      });
       await this.writeLogToDb(
         WorkerLogStatus.INFO,
         'EVM transactions submitted',
