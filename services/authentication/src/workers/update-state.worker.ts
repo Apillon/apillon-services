@@ -12,8 +12,8 @@ import {
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { Transaction } from '../modules/transaction/models/transaction.model';
 import { TransactionType } from '../config/types';
+import { Transaction } from '../modules/transaction/models/transaction.model';
 
 export class UpdateStateWorker extends BaseQueueWorker {
   context;
@@ -32,7 +32,7 @@ export class UpdateStateWorker extends BaseQueueWorker {
   }
 
   public async runExecutor(input: any): Promise<any> {
-    console.info('RUN EXECUTOR (StateManagementWorker). data: ', input);
+    console.info('RUN EXECUTOR (UpdateStateWorker). data: ', input);
 
     await runWithWorkers(
       input.data,
@@ -46,8 +46,10 @@ export class UpdateStateWorker extends BaseQueueWorker {
           ctx,
         ).populateByTransactionHash(res.transactionHash);
 
+        console.log('YEHHHAHHH');
+
         if (transaction.exists()) {
-          console.info('Kilt transaction: ', transaction);
+          console.info('TRANSACTION ', transaction);
 
           res.transactionStatus == TransactionStatus.CONFIRMED
             ? await new Lmas().writeLog({
