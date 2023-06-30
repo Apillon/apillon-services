@@ -22,7 +22,6 @@ import {
   env,
 } from '@apillon/lib';
 import { KiltBlockchainIndexer } from '../../modules/blockchain-indexers/substrate/kilt/kilt-indexer.service';
-import { Transaction } from '../../common/models/transaction';
 import { WorkerName } from '../worker-executor';
 import { TransactionWebhookWorker } from '../transaction-webhook-worker';
 import { DbTables, TransactionIndexerStatus } from '../../config/types';
