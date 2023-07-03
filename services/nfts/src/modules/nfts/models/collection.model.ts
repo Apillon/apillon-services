@@ -638,8 +638,8 @@ export class Collection extends AdvancedSQLModel {
       `
         SELECT *
         FROM \`${this.tableName}\`
-      WHERE ( id LIKE @id OR collection_uuid LIKE @id)
-      AND status <> ${SqlModelStatus.DELETED};
+        WHERE (id LIKE @id OR collection_uuid LIKE @id)
+          AND status <> ${SqlModelStatus.DELETED};
       `,
       { id },
       conn,
