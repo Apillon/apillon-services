@@ -1,9 +1,12 @@
 import { DefaultUserRole, GetAllQuotasDto, ValidateFor } from '@apillon/lib';
 import {
   Controller,
+  Delete,
   Get,
   Param,
   ParseUUIDPipe,
+  Patch,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -50,5 +53,29 @@ export class ProjectController {
   ): Promise<QuotaDto[]> {
     query.project_uuid = project_uuid;
     return this.projectService.getProjectQuotas(context, query);
+  }
+
+  @Post(':project_uuid/quotas')
+  async addProjectQuota(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('project_uuid', ParseUUIDPipe) project_uuid: UUID,
+  ): Promise<QuotaDto[]> {
+    return; // TODO
+  }
+
+  @Patch(':project_uuid/quotas')
+  async updateProjectQuota(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('project_uuid', ParseUUIDPipe) project_uuid: UUID,
+  ): Promise<QuotaDto[]> {
+    return; // TODO
+  }
+
+  @Delete(':project_uuid/quotas')
+  async deleteProjectQuota(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('project_uuid', ParseUUIDPipe) project_uuid: UUID,
+  ): Promise<QuotaDto[]> {
+    return; // TODO
   }
 }

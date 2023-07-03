@@ -5,10 +5,12 @@ import {
 } from '@apillon/lib';
 import {
   Controller,
+  Delete,
   Get,
   Param,
   ParseUUIDPipe,
   Patch,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -92,6 +94,30 @@ export class UserController {
   ): Promise<QuotaDto[]> {
     query.object_uuid = user_uuid;
     return this.userService.getUserQuotas(context, query);
+  }
+
+  @Post(':user_uuid/quotas')
+  async addUserQuota(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
+  ): Promise<QuotaDto[]> {
+    return; // TODO
+  }
+
+  @Patch(':user_uuid/quotas')
+  async updateUserQuota(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
+  ): Promise<QuotaDto[]> {
+    return; // TODO
+  }
+
+  @Delete(':user_uuid/quotas')
+  async deleteUserQuota(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
+  ): Promise<QuotaDto[]> {
+    return; // TODO
   }
 
   @Patch(':user_uuid')
