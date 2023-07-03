@@ -1,7 +1,4 @@
-import { AdminPanelModule } from './modules/admin-panel/admin-panel.module';
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ContextMiddleware } from './middlewares/context.middleware';
 import { MySQLModule } from './modules/database/mysql.module';
 import { FileModule } from './modules/file/file.module';
@@ -25,7 +22,6 @@ import { ReferralModule } from './modules/referral/referral.module';
 @Module({
   imports: [
     UserModule,
-    AdminPanelModule,
     MySQLModule,
     ProjectModule,
     FileModule,
@@ -40,10 +36,16 @@ import { ReferralModule } from './modules/referral/referral.module';
     ReferralModule,
     NftsModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {
+  logsPrefix = 'dev-console-api';
+
+  setLogsPrefix(prefix: string) {
+    this.logsPrefix = prefix;
+  }
+
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(ContextMiddleware)
@@ -61,7 +63,7 @@ export class AppModule {
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer
-      .apply(createRequestLogMiddleware(`dev-console-api (${env.APP_ENV})`))
+      .apply(createRequestLogMiddleware(`${this.logsPrefix} (${env.APP_ENV})`))
       .exclude(
         { path: '*', method: RequestMethod.HEAD },
         { path: '*', method: RequestMethod.OPTIONS },
