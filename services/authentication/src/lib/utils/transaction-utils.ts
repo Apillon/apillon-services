@@ -1,4 +1,5 @@
 import {
+  ChainType,
   CreateSubstrateTransactionDto,
   Lmas,
   LogType,
@@ -15,7 +16,7 @@ import { Transaction } from '../../modules/transaction/models/transaction.model'
 import { TransactionService } from '../../modules/transaction/transaction.service';
 
 /* NOTE: Creates a DID create transaction */
-export async function prepareDIDCreateRequest(
+export async function createDIDCreateBlockchainRequest(
   context: ServiceContext,
   transaction: SubmittableExtrinsic,
   identity: Identity,
@@ -23,38 +24,45 @@ export async function prepareDIDCreateRequest(
 ) {
   await new Lmas().writeLog({
     logType: LogType.INFO,
-    message: `Preparing DID create request ...`,
+    message: `Creating DID create request ...`,
     location: 'Authentication-API/identity/authentication.worker',
     service: ServiceName.AUTHENTICATION_API,
   });
+
+  console.log('Saving transaction ....');
   const dbTxRecord: Transaction = new Transaction({}, context);
-
-  const bcServiceRequest: CreateSubstrateTransactionDto =
-    new CreateSubstrateTransactionDto(
-      {
-        chain: SubstrateChain.KILT,
-        transaction: transaction,
-        referenceTable: DbTables.IDENTITY,
-        referenceId: identity.id,
-      },
-      context,
-    );
-
   dbTxRecord.populate({
-    chainId: SubstrateChain.KILT,
+    transactionHash: transaction.hash,
     transactionType: TransactionType.DID_CREATE,
     refTable: DbTables.IDENTITY,
     refId: identity.id,
     transactionStatus: TransactionStatus.PENDING,
   });
-
   await TransactionService.saveTransaction(context, dbTxRecord, conn);
+
+  console.log('Saved ....');
+  const data = {
+    transactionType: TransactionType.DID_CREATE,
+  };
+
+  console.log('VCreating DTO for bc ....');
+  const bcServiceRequest: CreateSubstrateTransactionDto =
+    new CreateSubstrateTransactionDto(
+      {
+        chain: SubstrateChain.KILT,
+        transaction: transaction.toHex(),
+        referenceTable: DbTables.IDENTITY,
+        referenceId: identity.id,
+        data: data,
+      },
+      context,
+    );
 
   return bcServiceRequest;
 }
 
 /* NOTE: Creates an attestation transaction */
-export async function prepareAttestationRequest(
+export async function createAttesBlockchainRequest(
   context: ServiceContext,
   transaction: SubmittableExtrinsic,
   identity: Identity,
@@ -62,7 +70,7 @@ export async function prepareAttestationRequest(
 ) {
   await new Lmas().writeLog({
     logType: LogType.INFO,
-    message: `Preparing attestation request ...`,
+    message: `Creating attestation request ...`,
     location: 'Authentication-API/identity/authentication.worker',
     service: ServiceName.AUTHENTICATION_API,
   });
@@ -93,7 +101,7 @@ export async function prepareAttestationRequest(
 }
 
 /* NOTE: Creates a DID revoke request */
-export async function prepareDIDRevokeRequest(
+export async function createDIDRevokeBlockhainRequest(
   context: ServiceContext,
   transaction: SubmittableExtrinsic,
   identity: Identity,
@@ -101,7 +109,7 @@ export async function prepareDIDRevokeRequest(
 ) {
   await new Lmas().writeLog({
     logType: LogType.INFO,
-    message: `Preparing DID revoke request ...`,
+    message: `Creating DID revoke request ...`,
     location: 'Authentication-API/identity/authentication.worker',
     service: ServiceName.AUTHENTICATION_API,
   });

@@ -179,6 +179,7 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
     if (webhooks.length > 0) {
       const splits = this.splitter(webhooks, 10); // batch updates to up to 10 items
       for (let i = 0; i < splits.length; i++) {
+        console.log(splits[i]);
         if (
           env.APP_ENV == AppEnvironment.LOCAL_DEV ||
           env.APP_ENV == AppEnvironment.TEST

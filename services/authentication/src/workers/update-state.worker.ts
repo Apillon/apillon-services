@@ -12,8 +12,8 @@ import {
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { TransactionType } from '../config/types';
 import { Transaction } from '../modules/transaction/models/transaction.model';
+import { TransactionType } from '../config/types';
 
 export class UpdateStateWorker extends BaseQueueWorker {
   context;
@@ -38,20 +38,18 @@ export class UpdateStateWorker extends BaseQueueWorker {
       input.data,
       50,
       this.context,
-      async (res: TransactionWebhookDataDto, ctx) => {
-        console.info('processing webhook transaction: ', res);
+      async (result: TransactionWebhookDataDto, ctx) => {
+        console.info('processing webhook transaction: ', result);
+        const data = JSON.parse(result.data);
+        const status = result.transactionStatus;
 
         const transaction: Transaction = await new Transaction(
           {},
           ctx,
-        ).populateByTransactionHash(res.transactionHash);
-
-        console.log('YEHHHAHHH');
+        ).populateByTransactionHash(result.transactionHash);
 
         if (transaction.exists()) {
-          console.info('TRANSACTION ', transaction);
-
-          res.transactionStatus == TransactionStatus.CONFIRMED
+          status == TransactionStatus.CONFIRMED
             ? await new Lmas().writeLog({
                 context: ctx,
                 logType: LogType.INFO,
@@ -68,47 +66,37 @@ export class UpdateStateWorker extends BaseQueueWorker {
               });
 
           // Update status
-          transaction.transactionStatus = res.transactionStatus;
+          transaction.transactionStatus = status;
           await transaction.update();
 
           // perform custom logic, depend of transactionType
-          if (transaction.transactionType == TransactionType.DID_CREATE) {
-            if (res.transactionStatus == TransactionStatus.CONFIRMED) {
+          if (status === TransactionStatus.CONFIRMED) {
+            if (transaction.transactionType == TransactionType.DID_CREATE) {
               console.log('DID success');
-            } else {
-              console.log('DID fail');
-            }
-          } else if (
-            transaction.transactionType == TransactionType.ATTESTATION
-          ) {
-            if (res.transactionStatus == TransactionStatus.CONFIRMED) {
+            } else if (
+              transaction.transactionType == TransactionType.ATTESTATION
+            ) {
               console.log('ATTESTATION success');
-            } else {
-              console.log('ATTESTATION fail');
-            }
-          } else if (
-            transaction.transactionType == TransactionType.DID_REVOKE
-          ) {
-            if (res.transactionStatus == TransactionStatus.CONFIRMED) {
+            } else if (
+              transaction.transactionType == TransactionType.DID_REVOKE
+            ) {
               console.log('DID REVOKE success');
             } else {
-              console.log('DID REVOKE fail');
+              // Execute attestation
+              await new Lmas().writeLog({
+                context: ctx,
+                logType: LogType.ERROR,
+                message: 'Invalid transaction type',
+                location: `${this.constructor.name}/runExecutor`,
+                service: ServiceName.AUTHENTICATION_API,
+              });
             }
-          } else {
-            // Execute attestation
-            await new Lmas().writeLog({
-              context: ctx,
-              logType: LogType.ERROR,
-              message: 'Invalid transaction type',
-              location: `${this.constructor.name}/runExecutor`,
-              service: ServiceName.AUTHENTICATION_API,
-            });
           }
         } else {
           await new Lmas().writeLog({
             context: ctx,
             logType: LogType.ERROR,
-            message: `Transaction for hash ${res.transactionHash} does not exist!`,
+            message: `Transaction for hash ${result.transactionHash} does not exist!`,
             location: `${this.constructor.name}/runExecutor`,
             service: ServiceName.AUTHENTICATION_API,
           });

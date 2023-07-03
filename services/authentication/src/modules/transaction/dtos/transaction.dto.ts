@@ -23,37 +23,11 @@ export class TransactionDTO extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: AuthenticationErrorCode.TRANSACTION_CHAIN_ID_NOT_PRESENT,
-      },
-    ],
-  })
-  public chainId: number;
-
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
         code: AuthenticationErrorCode.TRANSACTION_TYPE_NOT_PRESENT,
       },
     ],
   })
   public transactionType: number;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: AuthenticationErrorCode.TRANSACTION_RAW_TRANSACTION_NOT_PRESENT,
-      },
-    ],
-  })
-  public rawTransaction: string;
 
   @prop({
     parser: { resolver: stringParser() },

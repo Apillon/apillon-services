@@ -57,9 +57,9 @@ import {
 } from '../../lib/kilt';
 import { AuthenticationCodeException } from '../../lib/exceptions';
 import {
-  prepareAttestationRequest,
-  prepareDIDCreateRequest,
-  prepareDIDRevokeRequest,
+  createAttesBlockchainRequest,
+  createDIDCreateBlockchainRequest,
+  createDIDRevokeBlockhainRequest,
 } from '../../lib/utils/transaction-utils';
 import { sendBlockchainServiceRequest } from '../../lib/utils/blockchain-utils';
 
@@ -254,17 +254,16 @@ export class IdentityMicroservice {
       const conn = await context.mysql.start();
 
       // Prepare blockchain service request
-      const request = await prepareDIDCreateRequest(
+      const request = await createDIDCreateBlockchainRequest(
         context,
         didCreationEx,
         identity,
         conn,
       );
 
-      console.log('Sending DID create EX to BCS ...');
       await new Lmas().writeLog({
         logType: LogType.INFO,
-        message: `Sending DID create EX to BCS ...'`,
+        message: `Sending DID create REQUEST to BCS ...'`,
         location: 'AUTHENTICATION-API/identity/authentication.worker',
         service: ServiceName.AUTHENTICATION_API,
         data: { email: params.email, didUri: params.didUri },
@@ -320,14 +319,14 @@ export class IdentityMicroservice {
     );
 
     // Prepare blockchain service request
-    const request = await prepareDIDRevokeRequest(
+    const request = await createDIDRevokeBlockhainRequest(
       context,
       depositReclaimEx,
       identity,
       conn,
     );
 
-    console.log('Sending DID revoke EX to BCS ...');
+    console.log('Sending DID REVOKE request to BCS ...');
     await new Lmas().writeLog({
       logType: LogType.INFO,
       message: `Sending DID revoke EX to BCS ...'`,
@@ -399,7 +398,7 @@ export class IdentityMicroservice {
     );
 
     // Prepare blockchain service request
-    const request = await prepareAttestationRequest(
+    const request = await createAttesBlockchainRequest(
       context,
       emailClaimEx,
       identity,
@@ -407,7 +406,7 @@ export class IdentityMicroservice {
 
     await new Lmas().writeLog({
       logType: LogType.INFO,
-      message: 'Sending ATTESTATION EX to KILT BC ...',
+      message: 'Sending ATTESTATION requestion to KILT BC ...',
       location: 'AUTHENTICATION-API/identity/authentication.worker',
       service: ServiceName.AUTHENTICATION_API,
       data: { email: email, didUri: didUri },
