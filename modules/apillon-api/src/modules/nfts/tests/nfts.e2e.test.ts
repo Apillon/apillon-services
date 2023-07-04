@@ -131,12 +131,12 @@ describe('Apillon API NFTs tests', () => {
       expect(firstCollection?.symbol).toBeTruthy();
       expect(firstCollection?.name).toBeTruthy();
       expect(firstCollection?.maxSupply).toBeTruthy();
-      expect(firstCollection?.mintPrice).toBe(0);
-      expect(firstCollection?.isDrop).toBe(0);
+      expect(firstCollection?.dropPrice).toBe(0);
+      expect(firstCollection?.drop).toBe(0);
       expect(firstCollection?.isSoulbound).toBe(0);
       expect(firstCollection?.isRevokable).toBeTruthy();
       expect(firstCollection?.dropStart).toBeTruthy();
-      expect(firstCollection?.reserve).toBeTruthy();
+      expect(firstCollection?.dropReserve).toBeTruthy();
       expect(firstCollection?.royaltiesFees).toBe(0);
       expect(firstCollection?.royaltiesAddress).toBeTruthy();
       expect(firstCollection?.collectionStatus).toBe(0);
@@ -189,14 +189,14 @@ describe('Apillon API NFTs tests', () => {
       expect(data.symbol).toBe(testCollection.symbol);
       expect(data.name).toBe(testCollection.name);
       expect(data.maxSupply).toBe(testCollection.maxSupply);
-      expect(data.mintPrice).toBe(testCollection.mintPrice);
+      expect(data.dropPrice).toBe(testCollection.dropPrice);
       expect(data.baseUri).toBe(testCollection.baseUri);
       expect(data.baseExtension).toBe(testCollection.baseExtension);
-      expect(data.isDrop).toBe(testCollection.isDrop);
+      expect(data.drop).toBe(testCollection.drop);
       expect(data.isSoulbound).toBe(testCollection.isSoulbound);
       expect(data.isRevokable).toBe(testCollection.isRevokable);
       expect(data.dropStart).toBe(testCollection.dropStart);
-      expect(data.reserve).toBe(testCollection.reserve);
+      expect(data.dropReserve).toBe(testCollection.dropReserve);
       expect(data.royaltiesFees).toBe(testCollection.royaltiesFees);
     });
 
@@ -205,13 +205,13 @@ describe('Apillon API NFTs tests', () => {
         symbol: 'TNFT',
         name: 'Test NFT Collection',
         maxSupply: 50,
-        mintPrice: 0,
+        dropPrice: 0,
         project_uuid: testProject.project_uuid,
         baseUri: TEST_COLLECTION_BASE_URI,
         baseExtension: 'json',
-        isDrop: false,
+        drop: false,
         dropStart: 0,
-        reserve: 5,
+        dropReserve: 5,
         chain: 1287,
         isRevokable: true,
         isSoulbound: false,
@@ -366,12 +366,12 @@ describe('Apillon API NFTs tests', () => {
         symbol: 'TNFT',
         name: 'Test NFT Collection',
         maxSupply: 2,
-        mintPrice: 0,
+        dropPrice: 0,
         project_uuid: testProject.project_uuid,
         baseExtension: 'json',
-        isDrop: false,
+        drop: false,
         dropStart: 0,
-        reserve: 2,
+        dropReserve: 2,
         chain: 1287,
         isRevokable: true,
         isSoulbound: false,
@@ -404,13 +404,13 @@ describe('Apillon API NFTs tests', () => {
           symbol: 'ANFT',
           name: testCollectionName,
           maxSupply: 50,
-          mintPrice: 0,
+          dropPrice: 0,
           project_uuid: testProject.project_uuid,
           baseUri: TEST_COLLECTION_BASE_URI,
           baseExtension: 'json',
-          isDrop: false,
+          drop: false,
           dropStart: 0,
-          reserve: 5,
+          dropReserve: 5,
           chain: EvmChain.ASTAR,
           isRevokable: true,
           isSoulbound: false,

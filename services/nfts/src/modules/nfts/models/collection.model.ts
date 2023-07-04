@@ -195,7 +195,7 @@ export class Collection extends AdvancedSQLModel {
     ],
     fakeValue: 0,
   })
-  public mintPrice: number;
+  public dropPrice: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -281,7 +281,7 @@ export class Collection extends AdvancedSQLModel {
     fakeValue: false,
     defaultValue: false,
   })
-  public isDrop: boolean;
+  public drop: boolean;
 
   @prop({
     parser: { resolver: booleanParser() },
@@ -361,7 +361,7 @@ export class Collection extends AdvancedSQLModel {
     ],
     fakeValue: 1,
   })
-  public reserve: number;
+  public dropReserve: number;
 
   @prop({
     parser: { resolver: integerParser() },

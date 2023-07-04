@@ -80,7 +80,7 @@ export class CreateCollectionDTOBase extends ModelBase {
       },
     ],
   })
-  public mintPrice: number;
+  public dropPrice: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -116,7 +116,7 @@ export class CreateCollectionDTOBase extends ModelBase {
       },
     ],
   })
-  public isDrop: boolean;
+  public drop: boolean;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -142,7 +142,7 @@ export class CreateCollectionDTOBase extends ModelBase {
       },
     ],
   })
-  public reserve: number;
+  public dropReserve: number;
 
   @prop({
     parser: { resolver: stringParser() },
