@@ -90,6 +90,7 @@ export enum KiltDerivationPaths {
 export enum IdentityState {
   IDENTITY_VERIFIED = 'identity-verified',
   IN_PROGRESS = 'in-progress',
+  TRANSACTION_SUBMITTED = 'transaction-submitted',
   ATTESTED = 'attested',
   PENDING_VERIFICATION = 'pending-verification',
   REJECTED = 'rejected',
@@ -170,6 +171,16 @@ export enum IdentityGenFlag {
   ATTESTATION = 'attestation-flag',
 }
 
+export interface EncryptedPayload {
+  message: string;
+  payload: string;
+}
+
+export interface DidCreateOp {
+  payload: EncryptedPayload;
+  senderPubKey: string;
+}
+
 // SECTION
 export interface ApillonSelfSignedProof extends Proof {
   type: typeof APILLON_SELF_SIGNED_PROOF_TYPE;
@@ -180,16 +191,6 @@ export interface ApillonSelfSignedProof extends Proof {
 }
 
 export const APILLON_DAPP_NAME = 'ApillonDApp';
-
-interface DidPayload {
-  message: string;
-  nonce: string;
-}
-
-export interface DidCreateOp {
-  payload: DidPayload;
-  senderPubKey: string;
-}
 
 export enum TransactionType {
   DID_CREATE = 1,

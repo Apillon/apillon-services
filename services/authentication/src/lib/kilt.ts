@@ -234,11 +234,11 @@ export async function createCompleteFullDid(
 
 // SECTION - Sign callbacks
 // Various sign callbacks used in Kilt operations
-export async function authenticationSigner({
+export function authenticationSigner({
   authentication,
 }: {
   authentication: KiltKeyringPair;
-}): Promise<SignExtrinsicCallback> {
+}): SignExtrinsicCallback {
   if (!authentication) {
     throw new Error('no authentication key');
   }

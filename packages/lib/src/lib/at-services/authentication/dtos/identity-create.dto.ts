@@ -34,7 +34,7 @@ export class IdentityCreateDto extends ModelBase {
       },
     ],
   })
-  public did_create_op: object;
+  public did_create_op: any;
 
   @prop({
     parser: { resolver: stringParser() },

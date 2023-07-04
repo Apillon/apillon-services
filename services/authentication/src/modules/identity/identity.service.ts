@@ -16,52 +16,30 @@ import {
   AuthenticationErrorCode,
   AuthApiEmailType,
   ApillonSupportedCTypes,
-  APILLON_SELF_SIGNED_PROOF_TYPE,
-  ApillonSelfSignedProof,
-  DEFAULT_VERIFIABLECREDENTIAL_TYPE,
-  APILLON_VERIFIABLECREDENTIAL_TYPE,
   HttpStatus,
   DidCreateOp,
+  Attester,
+  KiltSignAlgorithm,
 } from '../../config/types';
 
-import { KiltKeyringPair, SignExtrinsicCallback } from '@kiltprotocol/types';
-import {
-  Claim,
-  ConfigService,
-  connect,
-  Did,
-  Credential,
-  Utils,
-  SubmittableExtrinsic,
-  DidUri,
-  ICredential,
-} from '@kiltprotocol/sdk-js';
-import * as validUrl from 'valid-url';
+import { KiltKeyringPair } from '@kiltprotocol/types';
+import { ConfigService, connect, Did, DidUri } from '@kiltprotocol/sdk-js';
 import { BN, hexToU8a, u8aToHex } from '@polkadot/util';
 // Dtos
 import { IdentityCreateDto } from '@apillon/lib';
-import { AttestationDto } from '@apillon/lib';
 import { IdentityDidRevokeDto } from '@apillon/lib';
 import { VerificationEmailDto } from '@apillon/lib';
 import {
-  assertionSigner,
+  authenticationSigner,
   createAttestationRequest,
-  createCompleteFullDid,
-  createPresentation,
   generateAccount,
   generateKeypairs,
-  generateMnemonic,
   getCtypeSchema,
   getFullDidDocument,
   getNextNonce,
 } from '../../lib/kilt';
 import { AuthenticationCodeException } from '../../lib/exceptions';
-import {
-  createAttesBlockchainRequest,
-  createDIDCreateBlockchainRequest,
-  createDIDRevokeBlockhainRequest,
-} from '../../lib/utils/transaction-utils';
-import { sendBlockchainServiceRequest } from '../../lib/utils/blockchain-utils';
+import { decryptAssymetric } from '../../lib/crypto-utils';
 
 export class IdentityMicroservice {
   static async sendVerificationEmail(
@@ -176,16 +154,14 @@ export class IdentityMicroservice {
   }
 
   static async generateIdentity(event: { body: IdentityCreateDto }, context) {
-    const params = {
-      did_create_op: event.body.did_create_op as DidCreateOp,
-      email: event.body.email,
-      didUri: event.body.didUri,
-    };
+    const did_create_op: DidCreateOp = event.body.did_create_op as DidCreateOp;
+    const claimerEmail = event.body.email;
+    const claimerDidUri = event.body.didUri;
 
     // Check if correct identity + state exists -> IN_PROGRESS
     const identity = await new Identity({}, context).populateByUserEmail(
       context,
-      params.email,
+      claimerEmail,
     );
 
     if (
@@ -207,174 +183,63 @@ export class IdentityMicroservice {
       state: IdentityState.IDENTITY_VERIFIED,
     });
 
-    // Single transaction locks the pro
     await identity.update();
 
     // Generate (retrieve) attester did data
     const attesterKeypairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
+    const attesterAcc = (await generateAccount(
+      env.KILT_ATTESTER_MNEMONIC,
+    )) as KiltKeyringPair;
+
+    // DID
+    const attesterDidDoc = await getFullDidDocument(attesterKeypairs);
+    const attesterDidUri = attesterDidDoc.uri;
 
     // Init Kilt essentials
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
 
-    let decrypted: any;
-    try {
-      // Decrypt incoming payload -> DID creation TX generated on FE
-      decrypted = Utils.Crypto.decryptAsymmetricAsStr(
-        {
-          box: hexToU8a(params.did_create_op.payload.message),
-          nonce: hexToU8a(params.did_create_op.payload.nonce),
-        },
-        params.did_create_op.senderPubKey,
-        u8aToHex(attesterKeypairs.keyAgreement.secretKey),
-      );
-    } catch (error) {
-      await new Lmas().writeLog({
-        message: error,
-        logType: LogType.ERROR,
-        location: 'Authentication-API/identity/authentication.worker',
-        service: ServiceName.AUTHENTICATION_API,
-        data: { email: params.email, didUri: params.didUri, error: error },
-      });
-      throw new AuthenticationCodeException({
-        code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
-        status: HttpStatus.BAD_REQUEST,
-      });
-    }
+    const decrypted = await decryptAssymetric(
+      did_create_op.payload,
+      did_create_op.senderPubKey,
+      u8aToHex(attesterKeypairs.keyAgreement.secretKey),
+    );
 
+    let fullDidCreationTx = null;
     if (decrypted) {
       const payload = JSON.parse(decrypted);
       const data = hexToU8a(payload.data);
       const signature = hexToU8a(payload.signature);
 
-      const didCreationEx: SubmittableExtrinsic = api.tx.did.create(data, {
+      fullDidCreationTx = api.tx.did.create(data, {
         sr25519: signature,
       });
 
-      const conn = await context.mysql.start();
-
-      // Prepare blockchain service request
-      const request = await createDIDCreateBlockchainRequest(
-        context,
-        didCreationEx,
-        identity,
-        conn,
-      );
-
       await new Lmas().writeLog({
         logType: LogType.INFO,
-        message: `Sending DID create REQUEST to BCS ...'`,
+        message: `Creating DID create TX ...`,
         location: 'AUTHENTICATION-API/identity/authentication.worker',
         service: ServiceName.AUTHENTICATION_API,
-        data: { email: params.email, didUri: params.didUri },
+        data: { email: claimerEmail, didUri: claimerDidUri },
       });
-
-      // Send request to the blockchain service
-      await sendBlockchainServiceRequest(context, request);
-
-      // Update collection status
-      identity.state = IdentityState.IN_PROGRESS;
-      await identity.update(SerializeFor.UPDATE_DB, conn);
-
-      await conn.commit();
     } else {
+      await new Lmas().writeLog({
+        message: 'Decryption failed',
+        logType: LogType.ERROR,
+        location: 'Authentication-API/identity/authentication.worker',
+        service: ServiceName.AUTHENTICATION_API,
+      });
       throw new AuthenticationCodeException({
         code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
         status: HttpStatus.BAD_REQUEST,
       });
     }
 
-    return { success: true };
-  }
-
-  static async revokeIdentity(event: { body: IdentityDidRevokeDto }, context) {
-    const email = event.body.email;
-
-    const identity = await new Identity({}, context).populateByUserEmail(
-      context,
-      email,
-    );
-
-    if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
-      throw new AuthenticationCodeException({
-        code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
-        status: HttpStatus.NOT_FOUND,
-      });
-    }
-
-    // We need to the api instantiated
-    await connect(env.KILT_NETWORK);
-    const api = ConfigService.get('api');
-    const conn = await context.mysql.start();
-
-    const identifier = Did.toChain(identity.didUri as DidUri);
-
-    const endpointsCountForDid = await api.query.did.didEndpointsCount(
-      identifier,
-    );
-
-    const depositReclaimEx = api.tx.did.reclaimDeposit(
-      identifier,
-      endpointsCountForDid,
-    );
-
-    // Prepare blockchain service request
-    const request = await createDIDRevokeBlockhainRequest(
-      context,
-      depositReclaimEx,
-      identity,
-      conn,
-    );
-
-    console.log('Sending DID REVOKE request to BCS ...');
-    await new Lmas().writeLog({
-      logType: LogType.INFO,
-      message: `Sending DID revoke EX to BCS ...'`,
-      location: 'AUTHENTICATION-API/identity/authentication.worker',
-      service: ServiceName.AUTHENTICATION_API,
-      data: { email: email, didUri: identity.didUri },
-    });
-
-    // Send request to the blockchain service
-    await sendBlockchainServiceRequest(context, request);
-
-    identity.state = IdentityState.REVOKED;
-    await identity.update();
-
-    return { success: true };
-  }
-
-  static async attestation(event: { body: AttestationDto }, context) {
-    const email = event.body.email;
-    const didUri = event.body.didUri;
-
-    const identity = await new Identity({}, context).populateByUserEmail(
-      context,
-      email,
-    );
-
-    if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
-      throw new AuthenticationCodeException({
-        code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
-        status: HttpStatus.NOT_FOUND,
-      });
-    }
-
-    // We need to the api instantiated
-    await connect(env.KILT_NETWORK);
-    const api = ConfigService.get('api');
-    const attesterKeypairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
-    const attesterAcc = (await generateAccount(
-      env.KILT_ATTESTER_MNEMONIC,
-    )) as KiltKeyringPair;
-    const attesterDidDoc = await getFullDidDocument(attesterKeypairs);
-    const attesterDidUri = attesterDidDoc.uri;
-
+    // Prepare identity instance and credential structure
     const { attestationRequest, credential } = createAttestationRequest(
-      email,
+      claimerEmail,
       attesterDidUri,
-      didUri as DidUri,
-      JSON.parse(event.body.credential) as ICredential,
+      claimerDidUri as DidUri,
     );
 
     const attestation = api.tx.attestation.add(
@@ -385,8 +250,15 @@ export class IdentityMicroservice {
 
     const nextNonce = new BN(await getNextNonce(attesterDidUri));
 
-    // Prepare claim extrinsic
-    const emailClaimEx = await Did.authorizeTx(
+    await new Lmas().writeLog({
+      logType: LogType.INFO,
+      message: 'Creating ATTESTATION TX ...',
+      location: 'AUTHENTICATION-API/identity/authentication.worker',
+      service: ServiceName.AUTHENTICATION_API,
+      data: { email: claimerEmail, didUri: claimerDidUri },
+    });
+
+    const emailAttesatationTx = await Did.authorizeTx(
       attesterDidUri,
       attestation,
       async ({ data }) => ({
@@ -397,26 +269,38 @@ export class IdentityMicroservice {
       { txCounter: nextNonce },
     );
 
-    // Prepare blockchain service request
-    const request = await createAttesBlockchainRequest(
-      context,
-      emailClaimEx,
-      identity,
-    );
-
-    await new Lmas().writeLog({
-      logType: LogType.INFO,
-      message: 'Sending ATTESTATION requestion to KILT BC ...',
-      location: 'AUTHENTICATION-API/identity/authentication.worker',
-      service: ServiceName.AUTHENTICATION_API,
-      data: { email: email, didUri: didUri },
+    // Prepare batch
+    const authorizedBatchedTxs = await Did.authorizeBatch({
+      batchFunction: api.tx.utility.batchAll,
+      did: attesterDidUri,
+      extrinsics: [fullDidCreationTx, emailAttesatationTx],
+      sign: authenticationSigner(attesterKeypairs),
+      submitter: attesterAcc.address,
     });
 
-    // Send request to the blockchain service
-    await sendBlockchainServiceRequest(context, request);
+    // Call blockchain server and submit batch request
 
-    // Save the generated credential to the identity -> It's not yet attested
-    identity.credential = JSON.stringify(credential);
+    const claimerCredential = {
+      credential: {
+        ...credential,
+      },
+      claimerSignature: {
+        keyType: KiltSignAlgorithm.SR25519,
+        keyUri: claimerDidUri,
+      },
+      name: 'Email',
+      status: 'pending',
+      attester: Attester.APILLON,
+      cTypeTitle: getCtypeSchema(ApillonSupportedCTypes.EMAIL).title,
+    };
+
+    identity.populate({
+      state: IdentityState.TRANSACTION_SUBMITTED,
+      credential: claimerCredential,
+      didUri: claimerDidUri,
+      email: claimerEmail,
+    });
+
     await identity.update();
 
     return { success: true };
@@ -438,202 +322,65 @@ export class IdentityMicroservice {
     return { credential: identity.credential };
   }
 
-  static async generateDevResources(event: { body: any }, _context) {
-    // Used to issue did documents to test accounts -> Since the peregrine faucet
-    // only allows 100PILT token per account, we need a new one everytime funds
-    // are depleted ...
-    // NOTE: Use this function to generate a testnet DID
-    if (
-      env.APP_ENV != AppEnvironment.TEST &&
-      env.APP_ENV != AppEnvironment.LOCAL_DEV
-    ) {
-      throw 'Invalid request!';
-    }
+  // static async revokeIdentity(event: { body: IdentityDidRevokeDto }, context) {
+  //   const parameters = {
+  //     email: event.body.email,
+  //     args: [],
+  //   };
 
-    await connect(env.KILT_NETWORK);
-    // await connect(env.KILT_NETWORK_TEST);
-    const api = ConfigService.get('api');
-    let wellKnownDidconfig;
-    let mnemonic;
+  //   const identity = await new Identity({}, context).populateByUserEmail(
+  //     context,
+  //     event.body.email,
+  //   );
 
-    // Generate mnemonic
-    if (event.body.mnemonic) {
-      mnemonic = event.body.mnemonic;
-    } else if (event.body.domain_linkage_only) {
-      mnemonic = env.KILT_ATTESTER_MNEMONIC;
-    } else {
-      mnemonic = generateMnemonic();
-    }
+  //   if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
+  //     throw new AuthenticationCodeException({
+  //       code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
+  //       status: HttpStatus.NOT_FOUND,
+  //     });
+  //   }
 
-    // generate keypairs
-    const {
-      authentication,
-      keyAgreement,
-      assertionMethod,
-      capabilityDelegation,
-    } = await generateKeypairs(mnemonic);
+  //   if (
+  //     env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+  //     env.APP_ENV == AppEnvironment.TEST
+  //   ) {
+  //     console.log('Starting DEV IdentityRevokeWorker worker ...');
 
-    // generate account
-    const account = generateAccount(mnemonic) as KiltKeyringPair;
+  //     // Directly calls Kilt worker -> USED ONLY FOR DEVELOPMENT!!
+  //     const serviceDef: ServiceDefinition = {
+  //       type: ServiceDefinitionType.SQS,
+  //       config: { region: 'test' },
+  //       params: { FunctionName: 'test' },
+  //     };
 
-    // First check if we have the required balance
-    let balance = parseInt(
-      (await api.query.system.account(account.address)).data.free.toString(),
-    );
+  //     const wd = new WorkerDefinition(
+  //       serviceDef,
+  //       WorkerName.IDENTITY_REVOKE_WORKER,
+  //       {
+  //         parameters,
+  //       },
+  //     );
 
-    if (balance < 3) {
-      console.log(`Requesting tokens for account ${account.address}`);
+  //     const worker = new IdentityRevokeWorker(
+  //       wd,
+  //       context,
+  //       QueueWorkerType.EXECUTOR,
+  //     );
+  //     await worker.runExecutor(parameters);
+  //   } else {
+  //     //send message to SQS
+  //     await sendToWorkerQueue(
+  //       env.AUTH_AWS_WORKER_SQS_URL,
+  //       WorkerName.IDENTITY_REVOKE_WORKER,
+  //       [parameters],
+  //       null,
+  //       null,
+  //     );
+  //   }
 
-      const reqTestTokens = `https://faucet-backend.peregrine.kilt.io/faucet/drop`;
-      await (async () => {
-        axios
-          .post(reqTestTokens, { address: account.address })
-          .then((resp: any) => {
-            console.log('Response ', resp.status);
-          })
-          .catch((error: any) => {
-            return {
-              error: `Error when requesting token from peregrine faucet: ${error}`,
-            };
-          });
-      })();
+  //   identity.state = IdentityState.REVOKED;
+  //   await identity.update();
 
-      while (balance < 3) {
-        balance = parseInt(
-          (
-            await api.query.system.account(account.address)
-          ).data.free.toString(),
-        );
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        console.log(`Balance: ${balance}`);
-      }
-    }
-
-    const document = await createCompleteFullDid(
-      account,
-      {
-        authentication: authentication,
-        keyAgreement: keyAgreement,
-        assertionMethod: assertionMethod,
-        capabilityDelegation: capabilityDelegation,
-      },
-      (async ({ data }) => ({
-        signature: authentication.sign(data),
-        keyType: authentication.type,
-      })) as SignExtrinsicCallback,
-    );
-
-    if (event.body.domain_linkage) {
-      const domainLinkage = event.body.domain_linkage;
-      let origin = domainLinkage.origin;
-
-      if (!origin) {
-        return { error: 'domain_linkage: Origin must be provided!!' };
-      }
-
-      console.log(`Creating domain linkage for ${origin}`);
-      if (!validUrl.isUri(origin)) {
-        throw new Error('The origin is not a valid url');
-      }
-
-      const domainClaimContents = {
-        origin,
-      };
-
-      const claim = Claim.fromCTypeAndClaimContents(
-        getCtypeSchema(ApillonSupportedCTypes.DOMAIN_LINKAGE),
-        domainClaimContents,
-        document.uri,
-      );
-
-      const credential = Credential.fromClaim(claim);
-
-      const assertionKey = document.assertionMethod?.[0];
-
-      if (!assertionKey) {
-        throw new Error(
-          'Full DID doesnt have assertion key: Please add assertion key',
-        );
-      }
-
-      const domainLinkageCredential = await createPresentation(
-        credential,
-        await assertionSigner({
-          assertion: assertionMethod,
-          didDocument: document,
-        }),
-      );
-
-      const claimContents = domainLinkageCredential.claim.contents;
-      if (!domainLinkageCredential.claim.owner && !claimContents.origin) {
-        throw new Error('Claim do not content an owner or origin');
-      }
-
-      Did.validateUri(credential.claim.owner);
-      const didUri = credential.claim.owner;
-      if (typeof claimContents.origin !== 'string') {
-        throw new Error('claim contents id is not a string');
-      } else if (!validUrl.isUri(claimContents.origin)) {
-        throw new Error('The claim contents origin is not a valid url');
-      } else {
-        origin = claimContents.origin;
-      }
-
-      const credentialSubject = {
-        id: didUri,
-        origin: event.body.domain_linkage.origin,
-        rootHash: domainLinkageCredential.rootHash,
-      };
-
-      const issuanceDate = new Date().toISOString();
-      const { claimerSignature, rootHash } = domainLinkageCredential;
-      // const id = toCredentialIRI(credential.rootHash);
-
-      await Did.verifyDidSignature({
-        expectedVerificationMethod: 'assertionMethod',
-        signature: hexToU8a(claimerSignature.signature),
-        keyUri: claimerSignature.keyUri,
-        message: Utils.Crypto.coToUInt8(rootHash),
-      });
-
-      // add self-signed proof
-      const proof: ApillonSelfSignedProof = {
-        type: APILLON_SELF_SIGNED_PROOF_TYPE,
-        proofPurpose: 'assertionMethod',
-        verificationMethod: claimerSignature.keyUri,
-        signature: claimerSignature.signature,
-        challenge: claimerSignature.challenge,
-      };
-
-      wellKnownDidconfig = {
-        '@context':
-          'https://identity.foundation/.well-known/did-configuration/v1',
-        linked_dids: [
-          {
-            '@context': [
-              'https://www.w3.org/2018/credentials/v1',
-              'https://identity.foundation/.well-known/did-configuration/v1',
-            ],
-            issuer: didUri,
-            issuanceDate,
-            type: [
-              DEFAULT_VERIFIABLECREDENTIAL_TYPE,
-              'DomainLinkageCredential',
-              APILLON_VERIFIABLECREDENTIAL_TYPE,
-            ],
-            credentialSubject,
-            proof,
-          },
-        ],
-      };
-    }
-
-    return {
-      account: account.address,
-      didUri: document.uri,
-      didConfiguration: wellKnownDidconfig,
-      mnemonic: mnemonic,
-      encryptionPubKey: u8aToHex(keyAgreement.publicKey),
-    };
-  }
+  //   return { success: true };
+  // }
 }
