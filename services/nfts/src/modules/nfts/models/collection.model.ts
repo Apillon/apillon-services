@@ -17,7 +17,7 @@ import {
   SqlModelStatus,
   writeLog,
 } from '@apillon/lib';
-import { integerParser, stringParser, booleanParser } from '@rawmodel/parsers';
+import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
   CollectionStatus,
   DbTables,
@@ -198,7 +198,7 @@ export class Collection extends AdvancedSQLModel {
     ],
     fakeValue: 0,
   })
-  public mintPrice: number;
+  public dropPrice: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -284,7 +284,7 @@ export class Collection extends AdvancedSQLModel {
     fakeValue: false,
     defaultValue: false,
   })
-  public isDrop: boolean;
+  public drop: boolean;
 
   @prop({
     parser: { resolver: booleanParser() },
@@ -364,7 +364,7 @@ export class Collection extends AdvancedSQLModel {
     ],
     fakeValue: 1,
   })
-  public reserve: number;
+  public dropReserve: number;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -622,7 +622,7 @@ export class Collection extends AdvancedSQLModel {
         FROM \`${this.tableName}\` c
         WHERE c.project_uuid = @project_uuid
         AND (@search IS null OR c.name LIKE CONCAT('%', @search, '%'))
-        AND 
+        AND
             (
                 (@status IS null AND c.status <> ${SqlModelStatus.DELETED})
                 OR
@@ -653,7 +653,7 @@ export class Collection extends AdvancedSQLModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
       WHERE ( id LIKE @id OR collection_uuid LIKE @id)
       AND status <> ${SqlModelStatus.DELETED};
@@ -721,7 +721,7 @@ export class Collection extends AdvancedSQLModel {
       `
       SELECT COUNT(*) as collectionsCount
       FROM \`${DbTables.COLLECTION}\`
-      WHERE project_uuid = @project_uuid 
+      WHERE project_uuid = @project_uuid
       AND collectionStatus <> ${CollectionStatus.FAILED}
       AND status <> ${SqlModelStatus.DELETED};
       `,

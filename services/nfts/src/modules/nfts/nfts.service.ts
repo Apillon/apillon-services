@@ -116,6 +116,7 @@ export class NftsService {
     }
 
     try {
+      console.log('collection123', collection);
       await collection.validate();
     } catch (err) {
       await collection.handle(err);
@@ -719,7 +720,7 @@ export class NftsService {
       });
     }
 
-    if (collection.isDrop && collection.reserve - minted < params.quantity) {
+    if (collection.drop && collection.dropReserve - minted < params.quantity) {
       throw new NftsCodeException({
         status: 500,
         code: NftsErrorCode.MINT_NFT_RESERVE_ERROR,

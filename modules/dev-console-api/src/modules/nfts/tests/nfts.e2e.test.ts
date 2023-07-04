@@ -84,12 +84,12 @@ describe('Storage bucket tests', () => {
       expect(response.body.data.items[0]?.symbol).toBeTruthy();
       expect(response.body.data.items[0]?.name).toBeTruthy();
       expect(response.body.data.items[0]?.maxSupply).toBeTruthy();
-      expect(response.body.data.items[0]?.mintPrice).toBe(0);
-      expect(response.body.data.items[0]?.isDrop).toBe(0);
+      expect(response.body.data.items[0]?.dropPrice).toBe(0);
+      expect(response.body.data.items[0]?.drop).toBe(0);
       expect(response.body.data.items[0]?.isSoulbound).toBe(0);
       expect(response.body.data.items[0]?.isRevokable).toBeTruthy();
       expect(response.body.data.items[0]?.dropStart).toBeTruthy();
-      expect(response.body.data.items[0]?.reserve).toBeTruthy();
+      expect(response.body.data.items[0]?.dropReserve).toBeTruthy();
       expect(response.body.data.items[0]?.royaltiesFees).toBe(0);
       expect(response.body.data.items[0]?.royaltiesAddress).toBeTruthy();
       expect(response.body.data.items[0]?.collectionStatus).toBe(0);
@@ -109,16 +109,16 @@ describe('Storage bucket tests', () => {
       expect(response.body.data.symbol).toBe(testCollection.symbol);
       expect(response.body.data.name).toBe(testCollection.name);
       expect(response.body.data.maxSupply).toBe(testCollection.maxSupply);
-      expect(response.body.data.mintPrice).toBe(testCollection.mintPrice);
+      expect(response.body.data.dropPrice).toBe(testCollection.dropPrice);
       expect(response.body.data.baseUri).toBe(testCollection.baseUri);
       expect(response.body.data.baseExtension).toBe(
         testCollection.baseExtension,
       );
-      expect(response.body.data.isDrop).toBe(testCollection.isDrop);
+      expect(response.body.data.drop).toBe(testCollection.drop);
       expect(response.body.data.isSoulbound).toBe(testCollection.isSoulbound);
       expect(response.body.data.isRevokable).toBe(testCollection.isRevokable);
       expect(response.body.data.dropStart).toBe(testCollection.dropStart);
-      expect(response.body.data.reserve).toBe(testCollection.reserve);
+      expect(response.body.data.dropReserve).toBe(testCollection.dropReserve);
       expect(response.body.data.royaltiesFees).toBe(
         testCollection.royaltiesFees,
       );
@@ -131,14 +131,14 @@ describe('Storage bucket tests', () => {
           symbol: 'TNFT',
           name: 'Test NFT Collection',
           maxSupply: 50,
-          mintPrice: 0,
+          dropPrice: 0,
           project_uuid: testProject.project_uuid,
           baseUri:
             'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/',
           baseExtension: 'json',
-          isDrop: false,
+          drop: false,
           dropStart: 0,
-          reserve: 5,
+          dropReserve: 5,
           chain: 1287,
           isRevokable: true,
           isSoulbound: false,
@@ -251,12 +251,12 @@ describe('Storage bucket tests', () => {
           symbol: 'TNFT',
           name: 'Test NFT Collection',
           maxSupply: 2,
-          mintPrice: 0,
+          dropPrice: 0,
           project_uuid: testProject.project_uuid,
           baseExtension: 'json',
-          isDrop: false,
+          drop: false,
           dropStart: 0,
-          reserve: 2,
+          dropReserve: 2,
           chain: 1287,
           isRevokable: true,
           isSoulbound: false,
@@ -419,12 +419,12 @@ describe('Storage bucket tests', () => {
           symbol: 'TNFT',
           name: 'Test NFT Collection',
           maxSupply: 2,
-          mintPrice: 0,
+          dropPrice: 0,
           project_uuid: testProject.project_uuid,
           baseExtension: 'json',
-          isDrop: false,
+          drop: false,
           dropStart: 0,
-          reserve: 2,
+          dropReserve: 2,
           chain: 1287,
           isRevokable: true,
           isSoulbound: false,
@@ -443,14 +443,14 @@ describe('Storage bucket tests', () => {
           symbol: 'ANFT',
           name: 'Astar Test NFT Collection',
           maxSupply: 50,
-          mintPrice: 0,
+          dropPrice: 0,
           project_uuid: testProject.project_uuid,
           baseUri:
             'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/',
           baseExtension: 'json',
-          isDrop: false,
+          drop: false,
           dropStart: 0,
-          reserve: 5,
+          dropReserve: 5,
           chain: 592,
           isRevokable: true,
           isSoulbound: false,
