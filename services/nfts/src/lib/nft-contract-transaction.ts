@@ -106,7 +106,7 @@ export class NftTransaction {
   /**
    * @param chain EVM chain used
    * @param contractAddress NFT contract address
-   * @param address address to which NFT will be minted
+   * @param params MintNftDTO parameters
    * @returns UnsignedTransaction
    */
   static async createMintToTransaction(
