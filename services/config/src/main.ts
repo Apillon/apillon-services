@@ -18,6 +18,7 @@ export async function processEvent(
     [ScsEventType.GET_QUOTA]: QuotaService.getQuota,
     [ScsEventType.GET_ALL_QUOTAS]: QuotaService.getAllQuotas,
     [ScsEventType.CREATE_OVERRIDE]: OverrideService.createOverride,
+    [ScsEventType.DELETE_OVERRIDE]: OverrideService.deleteOverride,
   };
 
   return await processors[event.eventName](event, context);

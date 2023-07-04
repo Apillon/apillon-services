@@ -1,9 +1,11 @@
+import { ValidatorErrorCode } from './../../../../config/types';
 import { prop } from '@rawmodel/core';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { PopulateFrom, SerializeFor } from '../../../../config/types';
-import { DeleteOverrideDto } from './delete-override.dto';
+import { ModelBase } from '../../../base-models/base';
+import { presenceValidator } from '@rawmodel/validators';
 
-export class CreateOverrideDto extends DeleteOverrideDto {
+export class DeleteOverrideDto extends ModelBase {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
@@ -12,28 +14,34 @@ export class CreateOverrideDto extends DeleteOverrideDto {
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
     ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.QUOTA_ID_NOT_PRESENT,
+      },
+    ],
   })
-  public package_id: number;
+  public quota_id: number;
 
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.ADMIN,
-      SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.SELECT_DB,
     ],
   })
-  public description: string;
+  public project_uuid: string;
 
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.ADMIN,
-      SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.SELECT_DB,
     ],
   })
-  public value: number;
+  public object_uuid: string;
 }

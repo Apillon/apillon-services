@@ -3,6 +3,7 @@ export * from './lib/at-services/config/scs';
 export * from './lib/at-services/config/dtos/get-quota.dto';
 export * from './lib/at-services/config/dtos/get-all-quotas.dto';
 export * from './lib/at-services/config/dtos/create-override.dto';
+export * from './lib/at-services/config/dtos/delete-override.dto';
 export * from './config/types';
 export * from './config/env';
 

@@ -3,6 +3,7 @@ import {
   GetAllQuotasDto,
   ValidateFor,
   CreateOverrideDto,
+  DeleteOverrideDto,
   PopulateFrom,
 } from '@apillon/lib';
 import {
@@ -78,10 +79,18 @@ export class ProjectController {
   }
 
   @Delete(':project_uuid/quotas')
+  @Validation({
+    dto: DeleteOverrideDto,
+    validateFor: ValidateFor.BODY,
+    populateFrom: PopulateFrom.ADMIN,
+  })
+  @UseGuards(ValidationGuard)
   async deleteProjectQuota(
     @Ctx() context: DevConsoleApiContext,
     @Param('project_uuid', ParseUUIDPipe) project_uuid: UUID,
+    @Body() data: DeleteOverrideDto,
   ): Promise<QuotaDto[]> {
-    return; // TODO
+    data.project_uuid = project_uuid;
+    return this.projectService.deleteProjectQuota(context, data);
   }
 }

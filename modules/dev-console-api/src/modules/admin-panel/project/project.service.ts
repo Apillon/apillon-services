@@ -4,6 +4,7 @@ import { Project } from '../../project/models/project.model';
 import {
   CodeException,
   CreateOverrideDto,
+  DeleteOverrideDto,
   GetAllQuotasDto,
   Scs,
 } from '@apillon/lib';
@@ -75,5 +76,17 @@ export class ProjectService {
     data: CreateOverrideDto,
   ) {
     return await new Scs(context).createOverride(data);
+  }
+
+  /**
+   * Deletes project quota by project_uuid and quota_id
+   * @param {DevConsoleApiContext} context
+   * @param {DeleteOverrideDto} dto - Create or Update data
+   */
+  async deleteProjectQuota(
+    context: DevConsoleApiContext,
+    data: DeleteOverrideDto,
+  ) {
+    return await new Scs(context).deleteOverride(data);
   }
 }

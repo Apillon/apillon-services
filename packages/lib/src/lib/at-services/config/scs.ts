@@ -3,6 +3,7 @@ import { AppEnvironment, ScsEventType } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { CreateOverrideDto } from './dtos/create-override.dto';
+import { DeleteOverrideDto } from './dtos/delete-override.dto';
 import { GetAllQuotasDto } from './dtos/get-all-quotas.dto';
 import { QuotaDto } from './dtos/quota.dto';
 
@@ -54,6 +55,15 @@ export class Scs extends BaseService {
   public async createOverride(dto: CreateOverrideDto): Promise<QuotaDto[]> {
     const data = {
       eventName: ScsEventType.CREATE_OVERRIDE,
+      ...dto,
+    };
+
+    return await this.callService(data);
+  }
+
+  public async deleteOverride(dto: DeleteOverrideDto): Promise<QuotaDto[]> {
+    const data = {
+      eventName: ScsEventType.DELETE_OVERRIDE,
       ...dto,
     };
 
