@@ -1,11 +1,17 @@
-import { DefaultUserRole, GetAllQuotasDto, ValidateFor } from '@apillon/lib';
 import {
+  DefaultUserRole,
+  GetAllQuotasDto,
+  ValidateFor,
+  CreateOverrideDto,
+  PopulateFrom,
+} from '@apillon/lib';
+import {
+  Body,
   Controller,
   Delete,
   Get,
   Param,
   ParseUUIDPipe,
-  Patch,
   Post,
   Query,
   UseGuards,
@@ -27,7 +33,7 @@ export class ProjectController {
 
   @Get()
   @Validation({ dto: ProjectQueryFilter, validateFor: ValidateFor.QUERY })
-  @UseGuards(ValidationGuard, AuthGuard)
+  @UseGuards(ValidationGuard)
   async listProjects(
     @Ctx() context: DevConsoleApiContext,
     @Query() query: ProjectQueryFilter,
@@ -45,7 +51,7 @@ export class ProjectController {
 
   @Get(':project_uuid/quotas')
   @Validation({ dto: GetAllQuotasDto, validateFor: ValidateFor.QUERY })
-  @UseGuards(ValidationGuard, AuthGuard)
+  @UseGuards(ValidationGuard)
   async getProjectQuotas(
     @Ctx() context: DevConsoleApiContext,
     @Param('project_uuid', ParseUUIDPipe) project_uuid: UUID,
@@ -56,19 +62,19 @@ export class ProjectController {
   }
 
   @Post(':project_uuid/quotas')
-  async addProjectQuota(
+  @Validation({
+    dto: CreateOverrideDto,
+    validateFor: ValidateFor.BODY,
+    populateFrom: PopulateFrom.ADMIN,
+  })
+  @UseGuards(ValidationGuard)
+  async createProjectQuota(
     @Ctx() context: DevConsoleApiContext,
     @Param('project_uuid', ParseUUIDPipe) project_uuid: UUID,
+    @Body() data: CreateOverrideDto,
   ): Promise<QuotaDto[]> {
-    return; // TODO
-  }
-
-  @Patch(':project_uuid/quotas')
-  async updateProjectQuota(
-    @Ctx() context: DevConsoleApiContext,
-    @Param('project_uuid', ParseUUIDPipe) project_uuid: UUID,
-  ): Promise<QuotaDto[]> {
-    return; // TODO
+    data.project_uuid = project_uuid;
+    return this.projectService.createProjectQuota(context, data);
   }
 
   @Delete(':project_uuid/quotas')

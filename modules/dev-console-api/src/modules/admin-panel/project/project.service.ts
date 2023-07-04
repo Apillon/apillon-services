@@ -1,7 +1,12 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../../context';
 import { Project } from '../../project/models/project.model';
-import { CodeException, GetAllQuotasDto, Scs } from '@apillon/lib';
+import {
+  CodeException,
+  CreateOverrideDto,
+  GetAllQuotasDto,
+  Scs,
+} from '@apillon/lib';
 import { ResourceNotFoundErrorCode } from '../../../config/types';
 import { ProjectQueryFilter } from './dtos/project-query-filter.dto';
 import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
@@ -58,5 +63,17 @@ export class ProjectService {
     query: GetAllQuotasDto,
   ): Promise<QuotaDto[]> {
     return await new Scs(context).getAllQuotas(query);
+  }
+
+  /**
+   * Creates or updates a project quota by project_uuid and quota_id
+   * @param {DevConsoleApiContext} context
+   * @param {CreateOverrideDto} dto - Create or Update data
+   */
+  async createProjectQuota(
+    context: DevConsoleApiContext,
+    data: CreateOverrideDto,
+  ) {
+    return await new Scs(context).createOverride(data);
   }
 }
