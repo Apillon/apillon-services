@@ -1,0 +1,58 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Config",
+      "runtimeExecutable": "nodemon",
+      "runtimeArgs": [
+        "./src/scripts/dev/run-server.ts",
+        "--inspect=9229",
+      ],
+      "cwd": "${workspaceFolder}/services/config",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Access",
+      "runtimeExecutable": "nodemon",
+      "runtimeArgs": [
+        "./src/scripts/dev/run-server.ts",
+        "--inspect=9230",
+      ],
+      "cwd": "${workspaceFolder}/services/access",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Dev Console API",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--inspect=9231"
+      ],
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "cwd": "${workspaceFolder}/modules/dev-console-api",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Microservices",
+      "configurations": [
+        "Config",
+        "Access"
+      ],
+      "stopAll": true
+    }
+  ]
+}
