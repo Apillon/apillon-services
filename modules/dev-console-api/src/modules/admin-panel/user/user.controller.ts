@@ -1,9 +1,13 @@
 import {
+  CreateOverrideDto,
   DefaultUserRole,
+  DeleteOverrideDto,
+  PopulateFrom,
   UserRolesQueryFilterDto,
   ValidateFor,
 } from '@apillon/lib';
 import {
+  Body,
   Controller,
   Delete,
   Get,
@@ -21,10 +25,10 @@ import { UserService } from './user.service';
 import { DevConsoleApiContext } from '../../../context';
 import { ValidationGuard } from '../../../guards/validation.guard';
 import { UserQueryFilter } from './dtos/user-query-filter.dto';
-import { UserProjectsQueryFilter } from './dtos/user-projects-query-filter.dto';
-import { UUID } from 'crypto';
 import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
 import { GetAllQuotasDto } from '@apillon/lib/dist/lib/at-services/config/dtos/get-all-quotas.dto';
+import { UUID } from 'crypto';
+import { UserProjectsQueryFilter } from './dtos/user-projects-query-filter.dto';
 
 @Controller('admin-panel/users')
 @Permissions({ role: DefaultUserRole.ADMIN })
@@ -97,27 +101,35 @@ export class UserController {
   }
 
   @Post(':user_uuid/quotas')
-  async addUserQuota(
+  @Validation({
+    dto: CreateOverrideDto,
+    validateFor: ValidateFor.BODY,
+    populateFrom: PopulateFrom.ADMIN,
+  })
+  @UseGuards(ValidationGuard)
+  async createUserQuota(
     @Ctx() context: DevConsoleApiContext,
     @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
+    @Body() data: CreateOverrideDto,
   ): Promise<QuotaDto[]> {
-    return; // TODO
-  }
-
-  @Patch(':user_uuid/quotas')
-  async updateUserQuota(
-    @Ctx() context: DevConsoleApiContext,
-    @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
-  ): Promise<QuotaDto[]> {
-    return; // TODO
+    data.object_uuid = user_uuid;
+    return this.userService.createUserQuota(context, data);
   }
 
   @Delete(':user_uuid/quotas')
+  @Validation({
+    dto: DeleteOverrideDto,
+    validateFor: ValidateFor.BODY,
+    populateFrom: PopulateFrom.ADMIN,
+  })
+  @UseGuards(ValidationGuard)
   async deleteUserQuota(
     @Ctx() context: DevConsoleApiContext,
     @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
+    @Body() data: DeleteOverrideDto,
   ): Promise<QuotaDto[]> {
-    return; // TODO
+    data.object_uuid = user_uuid;
+    return this.userService.deleteUserQuota(context, data);
   }
 
   @Patch(':user_uuid')

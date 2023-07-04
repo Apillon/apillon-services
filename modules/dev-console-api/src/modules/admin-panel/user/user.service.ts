@@ -4,16 +4,18 @@ import { User } from '../../user/models/user.model';
 import {
   Ams,
   CodeException,
+  CreateOverrideDto,
+  DeleteOverrideDto,
   Scs,
   UserLoginsQueryFilterDto,
   UserRolesQueryFilterDto,
 } from '@apillon/lib';
 import { ResourceNotFoundErrorCode } from '../../../config/types';
 import { UserQueryFilter } from './dtos/user-query-filter.dto';
-import { UserProjectsQueryFilter } from './dtos/user-projects-query-filter.dto';
 import { UUID } from 'crypto';
 import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
 import { GetAllQuotasDto } from '@apillon/lib/dist/lib/at-services/config/dtos/get-all-quotas.dto';
+import { UserProjectsQueryFilter } from './dtos/user-projects-query-filter.dto';
 
 @Injectable()
 export class UserService {
@@ -109,5 +111,29 @@ export class UserService {
     query: GetAllQuotasDto,
   ): Promise<QuotaDto[]> {
     return await new Scs(context).getAllQuotas(query);
+  }
+
+  /**
+   * Creates or updates a user quota by user_uuid and quota_id
+   * @param {DevConsoleApiContext} context
+   * @param {CreateOverrideDto} dto - Create or Update data
+   */
+  async createUserQuota(
+    context: DevConsoleApiContext,
+    data: CreateOverrideDto,
+  ) {
+    return await new Scs(context).createOverride(data);
+  }
+
+  /**
+   * Deletes user quota by user_uuid and quota_id
+   * @param {DevConsoleApiContext} context
+   * @param {DeleteOverrideDto} dto - Create or Update data
+   */
+  async deleteUserQuota(
+    context: DevConsoleApiContext,
+    data: DeleteOverrideDto,
+  ) {
+    return await new Scs(context).deleteOverride(data);
   }
 }

@@ -101,4 +101,25 @@ export class Override extends AdvancedSQLModel {
 
     return data.map((override) => this.populate(override, PopulateFrom.DB));
   }
+
+  public async findManyByObjectUuid(object_uuid: string): Promise<this[]> {
+    if (!object_uuid) {
+      throw new Error('object_uuid should not be null');
+    }
+
+    const data: any[] = await this.getContext().mysql.paramExecute(
+      `
+      SELECT *
+      FROM \`${this.tableName}\`
+      WHERE object_uuid = @object_uuid AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { object_uuid },
+    );
+
+    if (!data?.length) {
+      return null;
+    }
+
+    return data.map((override) => this.populate(override, PopulateFrom.DB));
+  }
 }

@@ -10,32 +10,25 @@ import { ConfigErrorCode } from '../../config/types';
 import { ScsCodeException } from '../../lib/exceptions';
 
 export class OverrideService {
-  static async createOverride(
-    data: CreateOverrideDto,
-    context: ServiceContext,
-  ) {
-    const override = await OverrideService.getOverrideByProjectAndQuota(
-      data,
-      context,
-    );
+  static async createOverride(dto: CreateOverrideDto, context: ServiceContext) {
+    // Method to get overrides by project or object uuid, based on which parameter is present in the data
+    const getOverrideMethod = OverrideService.getOverrideMethod(dto);
+
+    const override = await getOverrideMethod(dto, context);
     // If an override exists, update it, else create a new override
     if (override) {
-      override.populate(data, PopulateFrom.ADMIN);
+      override.populate(dto, PopulateFrom.ADMIN);
       await override.update(SerializeFor.ADMIN);
       return override;
     }
-    const newOverride = new Override(data, context);
+    const newOverride = new Override(dto, context);
     return await newOverride.insert(SerializeFor.ADMIN);
   }
 
-  static async deleteOverride(
-    data: DeleteOverrideDto,
-    context: ServiceContext,
-  ) {
-    const override = await OverrideService.getOverrideByProjectAndQuota(
-      data,
-      context,
-    );
+  static async deleteOverride(dto: DeleteOverrideDto, context: ServiceContext) {
+    const getOverrideMethod = OverrideService.getOverrideMethod(dto);
+
+    const override = await getOverrideMethod(dto, context);
     if (!override) {
       throw new ScsCodeException({
         status: 404,
@@ -47,12 +40,39 @@ export class OverrideService {
   }
 
   static async getOverrideByProjectAndQuota(
-    data: CreateOverrideDto | DeleteOverrideDto,
+    dto: CreateOverrideDto | DeleteOverrideDto,
     context: ServiceContext,
   ) {
     const overrides = await new Override({}, context).findManyByProjectUuid(
-      data.project_uuid,
+      dto.project_uuid,
     );
-    return overrides.find((override) => override.quota_id === data.quota_id);
+    return overrides.find((override) => override.quota_id === dto.quota_id);
+  }
+
+  static async getOverrideByUserAndQuota(
+    dto: CreateOverrideDto | DeleteOverrideDto,
+    context: ServiceContext,
+  ) {
+    const overrides = await new Override({}, context).findManyByObjectUuid(
+      dto.object_uuid,
+    );
+    return overrides.find((override) => override.quota_id === dto.quota_id);
+  }
+
+  static getOverrideMethod(dto: CreateOverrideDto | DeleteOverrideDto) {
+    const getOverrideMethod = dto.project_uuid
+      ? OverrideService.getOverrideByProjectAndQuota
+      : dto.object_uuid
+      ? OverrideService.getOverrideByUserAndQuota
+      : null;
+
+    if (!getOverrideMethod) {
+      throw new ScsCodeException({
+        status: 422,
+        code: ConfigErrorCode.PROJECT_OR_OBJECT_UUID_NOT_PRESENT,
+      });
+    }
+
+    return getOverrideMethod;
   }
 }

@@ -14,6 +14,7 @@ export enum ConfigErrorCode {
   // 422 - Unprocessable entry
   STATUS_NOT_PRESENT = 42210000,
   INVALID_STATUS = 42210001,
+  PROJECT_OR_OBJECT_UUID_NOT_PRESENT = 42210002,
 
   // 400 - Bad request
   BAD_REQUEST = 40010001,
