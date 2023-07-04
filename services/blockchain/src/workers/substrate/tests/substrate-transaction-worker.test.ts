@@ -16,7 +16,7 @@ import { Wallet } from '../../../common/models/wallet';
 import { SubstrateTransactionWorker } from '../substrate-transaction-worker';
 import { WorkerName } from '../../worker-executor';
 
-describe('Kilt tests', () => {
+describe('Substrate tests', () => {
   let stage: Stage;
   let wallet: Wallet;
 

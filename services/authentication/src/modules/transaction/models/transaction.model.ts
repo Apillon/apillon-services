@@ -142,60 +142,20 @@ export class Transaction extends AdvancedSQLModel {
     }
   }
 
-  // public async getTransactionsByHashes(
-  //   hashes: string[],
-  // ): Promise<Transaction[]> {
-  //   const data = await this.getContext().mysql.paramExecute(
-  //     `
-  //     SELECT *
-  //     FROM \`${this.tableName}\`
-  //     WHERE transactionHash in ('${hashes.join("','")}')`,
-  //   );
+  public async populateByRefId(refId: number) {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+        SELECT *
+        FROM \`${this.tableName}\`
+        WHERE refId = @refId;
+        `,
+      { refId },
+    );
 
-  //   const res: Transaction[] = [];
-  //   if (data && data.length) {
-  //     for (const t of data) {
-  //       res.push(new Transaction({}, this.getContext()).populate(t));
-  //     }
-  //   }
-
-  //   return res;
-  // }
-
-  // public async getList(filter: TransactionQueryFilter) {
-  //   // Map url query with sql fields.
-  //   const fieldMap = {
-  //     id: 't.id',
-  //   };
-  //   const { params, filters } = getQueryParams(
-  //     filter.getDefaultValues(),
-  //     't',
-  //     fieldMap,
-  //     filter.serialize(),
-  //   );
-
-  //   const sqlQuery = {
-  //     qSelect: `
-  //       SELECT ${this.generateSelectFields('t', '')}, t.updateTime
-  //       `,
-  //     qFrom: `
-  //       FROM \`${this.tableName}\` t
-  //       WHERE (@refTable IS null OR refTable = @refTable)
-  //       AND (@refId IS NULL or refId = @refId)
-  //       AND status <> ${SqlModelStatus.DELETED}
-  //       AND (@transactionStatus IS null OR t.transactionStatus = @transactionStatus)
-  //     `,
-  //     qFilter: `
-  //       ORDER BY ${filters.orderStr}
-  //       LIMIT ${filters.limit} OFFSET ${filters.offset};
-  //     `,
-  //   };
-
-  //   return await selectAndCountQuery(
-  //     this.getContext().mysql,
-  //     sqlQuery,
-  //     params,
-  //     't.id',
-  //   );
-  // }
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
 }

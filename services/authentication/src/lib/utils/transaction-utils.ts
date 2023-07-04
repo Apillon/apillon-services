@@ -16,7 +16,7 @@ import { Transaction } from '../../modules/transaction/models/transaction.model'
 import { TransactionService } from '../../modules/transaction/transaction.service';
 
 /* NOTE: Creates a DID create transaction */
-export async function createDIDCreateBlockchainRequest(
+export async function identityCreateRequest(
   context: ServiceContext,
   transaction: SubmittableExtrinsic,
   identity: Identity,
@@ -29,7 +29,6 @@ export async function createDIDCreateBlockchainRequest(
     service: ServiceName.AUTHENTICATION_API,
   });
 
-  console.log('Saving transaction ....');
   const dbTxRecord: Transaction = new Transaction({}, context);
   dbTxRecord.populate({
     transactionHash: transaction.hash,
@@ -40,12 +39,6 @@ export async function createDIDCreateBlockchainRequest(
   });
   await TransactionService.saveTransaction(context, dbTxRecord, conn);
 
-  console.log('Saved ....');
-  const data = {
-    transactionType: TransactionType.DID_CREATE,
-  };
-
-  console.log('VCreating DTO for bc ....');
   const bcServiceRequest: CreateSubstrateTransactionDto =
     new CreateSubstrateTransactionDto(
       {
@@ -53,7 +46,9 @@ export async function createDIDCreateBlockchainRequest(
         transaction: transaction.toHex(),
         referenceTable: DbTables.IDENTITY,
         referenceId: identity.id,
-        data: data,
+        data: {
+          transactionType: TransactionType.DID_CREATE,
+        },
       },
       context,
     );
@@ -61,8 +56,7 @@ export async function createDIDCreateBlockchainRequest(
   return bcServiceRequest;
 }
 
-/* NOTE: Creates an attestation transaction */
-export async function createAttesBlockchainRequest(
+export async function attestationCreateRequest(
   context: ServiceContext,
   transaction: SubmittableExtrinsic,
   identity: Identity,
@@ -70,35 +64,109 @@ export async function createAttesBlockchainRequest(
 ) {
   await new Lmas().writeLog({
     logType: LogType.INFO,
-    message: `Creating attestation request ...`,
+    message: `Creating DID create request ...`,
     location: 'Authentication-API/identity/authentication.worker',
     service: ServiceName.AUTHENTICATION_API,
   });
-  const dbTxRecord: Transaction = new Transaction({}, context);
 
-  const bcServiceRequest: CreateSubstrateTransactionDto =
-    new CreateSubstrateTransactionDto(
-      {
-        chain: SubstrateChain.KILT,
-        transaction: transaction,
-        referenceTable: DbTables.IDENTITY,
-        referenceId: identity.id,
-      },
-      context,
-    );
+  const dbTxRecord: Transaction = await new Transaction(
+    {},
+    context,
+  ).populateByRefId(identity.id);
 
   dbTxRecord.populate({
-    chainId: SubstrateChain.KILT,
+    transactionHash: transaction.hash,
     transactionType: TransactionType.ATTESTATION,
     refTable: DbTables.IDENTITY,
     refId: identity.id,
     transactionStatus: TransactionStatus.PENDING,
   });
 
-  await TransactionService.saveTransaction(context, dbTxRecord, conn);
+  if (dbTxRecord.exists()) {
+    await TransactionService.saveTransaction(context, dbTxRecord, conn);
+  } else {
+    await dbTxRecord.update();
+  }
+
+  const bcServiceRequest: CreateSubstrateTransactionDto =
+    new CreateSubstrateTransactionDto(
+      {
+        chain: SubstrateChain.KILT,
+        transaction: transaction.toHex(),
+        referenceTable: DbTables.IDENTITY,
+        referenceId: identity.id,
+        data: {
+          transactionType: TransactionType.ATTESTATION,
+        },
+      },
+      context,
+    );
 
   return bcServiceRequest;
 }
+
+// Prepare identity instance and credential structure
+// const { attestationRequest, credential } = createAttestationRequest(
+//   claimerEmail,
+//   attesterDidUri,
+//   claimerDidUri as DidUri,
+// );
+
+// // NOTE!!: Did.getKeyRelationshipForTx(attestation) --> assertionMethod
+// const attestation = api.tx.attestation.add(
+//   attestationRequest.claimHash,
+//   attestationRequest.cTypeHash,
+//   null,
+// );
+
+// const nextNonce = new BN(await getNextNonce(attesterDidUri));
+
+// await new Lmas().writeLog({
+//   logType: LogType.INFO,
+//   message: 'Creating ATTESTATION TX ...',
+//   location: 'AUTHENTICATION-API/identity/authentication.worker',
+//   service: ServiceName.AUTHENTICATION_API,
+//   data: { email: claimerEmail, didUri: claimerDidUri },
+// });
+
+// const emailAttesatationTx = await Did.authorizeTx(
+//   attesterDidUri,
+//   attestation,
+//   async ({ data }) => ({
+//     signature: attesterKeypairs.assertionMethod.sign(data),
+//     keyType: attesterKeypairs.assertionMethod.type,
+//   }),
+//   attesterAcc.address,
+//   { txCounter: nextNonce },
+// );
+
+// const authorizedBatchedTxs = await Did.authorizeBatch({
+//   batchFunction: api.tx.utility.batchAll,
+//   did: attesterDidUri,
+//   extrinsics: [fullDidCreationTx, emailAttesatationTx],
+//   sign: authenticationSigner(attesterKeypairs),
+//   submitter: attesterAcc.address,
+// });
+
+// const bcsRequest = await identityCreateRequest(
+//   context,
+//   authorizedBatchedTxs,
+//   identity,
+// );
+
+// const claimerCredential = {
+//   credential: {
+//     ...credential,
+//   },
+//   claimerSignature: {
+//     keyType: KiltSignAlgorithm.SR25519,
+//     keyUri: claimerDidUri,
+//   },
+//   name: 'Email',
+//   status: 'pending',
+//   attester: Attester.APILLON,
+//   cTypeTitle: getCtypeSchema(ApillonSupportedCTypes.EMAIL).title,
+// };
 
 /* NOTE: Creates a DID revoke request */
 export async function createDIDRevokeBlockhainRequest(

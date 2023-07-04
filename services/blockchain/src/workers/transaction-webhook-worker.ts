@@ -41,8 +41,7 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
   public async runPlanner(): Promise<any[]> {
     return [];
   }
-  public async runExecutor(data: any): Promise<any> {
-    // console.info('RUN EXECUTOR (TransactionWebhookWorker). data: ', data);
+  public async runExecutor(params: any): Promise<any> {
     const conn = await this.context.mysql.start();
 
     try {
@@ -58,6 +57,7 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
       );
 
       console.log('transactions: ', transactions);
+
       const crustWebhooks: TransactionWebhookDataDto[] = [];
       const nftWebhooks: TransactionWebhookDataDto[] = [];
       const kiltWebooks: TransactionWebhookDataDto[] = [];
@@ -109,12 +109,14 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
           crustWebhooks,
           env.AUTH_AWS_WORKER_SQS_URL,
           'UpdateCrustStatusWorker',
+          params,
         )),
 
         ...(await this.processWebhook(
           kiltWebooks,
           env.AUTH_AWS_WORKER_SQS_URL,
           'UpdateKiltStatusWorker',
+          params,
         )),
 
         // EVM
@@ -122,6 +124,7 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
           nftWebhooks,
           env.NFTS_AWS_WORKER_SQS_URL,
           'TransactionStatusWorker',
+          params,
         )),
       ];
 
@@ -155,7 +158,7 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
         location: `${this.constructor.name}/runExecutor`,
         service: ServiceName.BLOCKCHAIN,
         data: {
-          data,
+          params,
           err,
         },
       });
@@ -174,18 +177,24 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
     return cache;
   }
 
-  async processWebhook(webhooks: any[], sqsUrl: string, workerName: string) {
+  async processWebhook(
+    webhooks: any[],
+    sqsUrl: string,
+    workerName: string,
+    params?: any,
+  ) {
     let updates = [];
     if (webhooks.length > 0) {
       const splits = this.splitter(webhooks, 10); // batch updates to up to 10 items
       for (let i = 0; i < splits.length; i++) {
-        console.log(splits[i]);
         if (
           env.APP_ENV == AppEnvironment.LOCAL_DEV ||
           env.APP_ENV == AppEnvironment.TEST
         ) {
           console.log('Starting DEV worker ...');
 
+          // TODO: If development, the calling worker should
+          // maybe define their own context
           // Directly calls worker -> USED ONLY FOR DEVELOPMENT!!
           const serviceDef: ServiceDefinition = {
             type: ServiceDefinitionType.SQS,
@@ -198,12 +207,10 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
 
           const worker = new workerCls(
             wd,
-            this.context,
+            params.devContext,
             QueueWorkerType.EXECUTOR,
           );
-          await worker.runExecutor({
-            data: splits[i],
-          });
+          await worker.runExecutor({ data: splits[i] });
         } else {
           try {
             // sending batch by batch because we need to know if a failure occurred.
@@ -239,6 +246,8 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
             });
           }
         }
+
+        updates = [...updates, splits[i].map((a) => a.id)];
       }
     }
     return updates;

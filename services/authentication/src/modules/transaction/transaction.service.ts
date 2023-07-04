@@ -1,14 +1,4 @@
-import {
-  AppEnvironment,
-  CodeException,
-  env,
-  PoolConnection,
-  SerializeFor,
-  TransactionQueryFilter,
-  TransactionStatus,
-  TransactionWebhookDataDto,
-} from '@apillon/lib';
-import { DbTables, AuthenticationErrorCode } from '../../config/types';
+import { PoolConnection, SerializeFor } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { Transaction } from './models/transaction.model';
 import { AuthenticationValidationException } from '../../lib/exceptions';
@@ -41,32 +31,6 @@ export class TransactionService {
   //       return true;
   //     }
   //     return false;
-  //   }
-
-  //   static async listCollectionTransactions(
-  //     event: { collection_uuid: string; query: TransactionQueryFilter },
-  //     context: ServiceContext,
-  //   ) {
-  //     const collection: Collection = await new Collection(
-  //       {},
-  //       context,
-  //     ).populateByUUID(event.collection_uuid);
-  //     if (!collection.exists()) {
-  //       throw new NftsCodeException({
-  //         status: 500,
-  //         code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
-  //         context: context,
-  //       });
-  //     }
-  //     collection.canAccess(context);
-
-  //     const query = new TransactionQueryFilter(event.query);
-  //     query.populate({
-  //       refTable: DbTables.COLLECTION,
-  //       refId: collection.id,
-  //     });
-
-  //     return await new Transaction({}, context).getList(query);
   //   }
 
   //   /**

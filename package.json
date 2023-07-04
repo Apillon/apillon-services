@@ -11,7 +11,7 @@
     "build": "npx turbo run build",
     "build-libs": "npx turbo run build --filter=@apillon/lib --filter=@apillon/modules-lib --filter=@apillon/service-lib --filter=@apillon/workers-lib --filter=@apillon/tests-lib",
     "build-no-cache": "npx turbo run build --no-cache",
-    "dev": "npx turbo run dev --parallel",
+    "dev": "npx turbo run dev --parallel --filter=!@apillon/monitoring",
     "dev-min": "npx turbo run dev --parallel --filter=!@apillon/authentication-api --filter=!@apillon/api --filter=!@apillon/referral --filter=!@apillon/monitoring --filter=!@apillon/mailing --filter=!@apillon/workers-lib",
     "test:blockchain": "npx turbo run test --concurrency=1 --continue --filter=@apillon/blockchain",
     "test": "npx turbo run test --concurrency=1 --continue --filter=!@apillon/authentication-api --force",

@@ -90,7 +90,8 @@ export enum KiltDerivationPaths {
 export enum IdentityState {
   IDENTITY_VERIFIED = 'identity-verified',
   IN_PROGRESS = 'in-progress',
-  TRANSACTION_SUBMITTED = 'transaction-submitted',
+  SUBMITTED_DID_CREATE_REQ = 'submitted-did-create-req',
+  SUBMITTED_ATTESATION_REQ = 'submitted-attest-req',
   ATTESTED = 'attested',
   PENDING_VERIFICATION = 'pending-verification',
   REJECTED = 'rejected',

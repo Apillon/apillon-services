@@ -16,8 +16,6 @@ import { Transaction } from '../modules/transaction/models/transaction.model';
 import { TransactionType } from '../config/types';
 
 export class UpdateStateWorker extends BaseQueueWorker {
-  context;
-
   public constructor(
     workerDefinition: WorkerDefinition,
     context,
@@ -32,21 +30,29 @@ export class UpdateStateWorker extends BaseQueueWorker {
   }
 
   public async runExecutor(input: any): Promise<any> {
-    console.info('RUN EXECUTOR (UpdateStateWorker). data: ', input);
-
+    console.info('RUN EXECUTOR (UpdateStateWorker). data: ', input.data);
     await runWithWorkers(
       input.data,
       50,
       this.context,
-      async (result: TransactionWebhookDataDto, ctx) => {
-        console.info('processing webhook transaction: ', result);
-        const data = JSON.parse(result.data);
+      async (result: any, ctx) => {
+        console.log(result);
+        const incomingTx = result;
+
         const status = result.transactionStatus;
+        const txType = result.data.transactionType;
+
+        console.log('Transaction status ', incomingTx.transactionHash);
 
         const transaction: Transaction = await new Transaction(
           {},
           ctx,
-        ).populateByTransactionHash(result.transactionHash);
+        ).populateByTransactionHash(incomingTx.transactionHash);
+
+        console.log('Transaction ', transaction);
+        console.log('Transaction status ', transaction);
+        console.log('Transaction type: ', txType);
+        console.log('Transaction stauts: ', status);
 
         if (transaction.exists()) {
           status == TransactionStatus.CONFIRMED
@@ -69,17 +75,16 @@ export class UpdateStateWorker extends BaseQueueWorker {
           transaction.transactionStatus = status;
           await transaction.update();
 
+          console.log('Transaction type: ', txType);
+          console.log('Transaction stauts: ', status);
+
           // perform custom logic, depend of transactionType
           if (status === TransactionStatus.CONFIRMED) {
-            if (transaction.transactionType == TransactionType.DID_CREATE) {
+            if (txType == TransactionType.DID_CREATE) {
               console.log('DID success');
-            } else if (
-              transaction.transactionType == TransactionType.ATTESTATION
-            ) {
+            } else if (txType == TransactionType.ATTESTATION) {
               console.log('ATTESTATION success');
-            } else if (
-              transaction.transactionType == TransactionType.DID_REVOKE
-            ) {
+            } else if (txType == TransactionType.DID_REVOKE) {
               console.log('DID REVOKE success');
             } else {
               // Execute attestation

@@ -4,9 +4,9 @@ import {
   SerializeFor,
   LogType,
   env,
-  AppEnvironment,
   Lmas,
   ServiceName,
+  AttestationDto,
 } from '@apillon/lib';
 import axios from 'axios';
 import { Identity } from './models/identity.model';
@@ -23,14 +23,19 @@ import {
 } from '../../config/types';
 
 import { KiltKeyringPair } from '@kiltprotocol/types';
-import { ConfigService, connect, Did, DidUri } from '@kiltprotocol/sdk-js';
+import {
+  ConfigService,
+  connect,
+  Did,
+  DidUri,
+  ICredential,
+} from '@kiltprotocol/sdk-js';
 import { BN, hexToU8a, u8aToHex } from '@polkadot/util';
 // Dtos
 import { IdentityCreateDto } from '@apillon/lib';
 import { IdentityDidRevokeDto } from '@apillon/lib';
 import { VerificationEmailDto } from '@apillon/lib';
 import {
-  authenticationSigner,
   createAttestationRequest,
   generateAccount,
   generateKeypairs,
@@ -39,7 +44,12 @@ import {
   getNextNonce,
 } from '../../lib/kilt';
 import { AuthenticationCodeException } from '../../lib/exceptions';
-import { decryptAssymetric } from '../../lib/crypto-utils';
+import { decryptAssymetric } from '../../lib/utils/crypto-utils';
+import { sendBlockchainServiceRequest } from '../../lib/utils/blockchain-utils';
+import {
+  attestationCreateRequest,
+  identityCreateRequest,
+} from '../../lib/utils/transaction-utils';
 
 export class IdentityMicroservice {
   static async sendVerificationEmail(
@@ -167,7 +177,8 @@ export class IdentityMicroservice {
     if (
       !identity.exists() ||
       (identity.state != IdentityState.IN_PROGRESS &&
-        identity.state != IdentityState.IDENTITY_VERIFIED)
+        identity.state != IdentityState.IDENTITY_VERIFIED &&
+        identity.state != IdentityState.SUBMITTED_DID_CREATE_REQ)
     ) {
       // IDENTITY_VERIFIED just means that the process was broken before
       // the entity was successfully attested --> See a few lines below
@@ -187,13 +198,6 @@ export class IdentityMicroservice {
 
     // Generate (retrieve) attester did data
     const attesterKeypairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
-    const attesterAcc = (await generateAccount(
-      env.KILT_ATTESTER_MNEMONIC,
-    )) as KiltKeyringPair;
-
-    // DID
-    const attesterDidDoc = await getFullDidDocument(attesterKeypairs);
-    const attesterDidUri = attesterDidDoc.uri;
 
     // Init Kilt essentials
     await connect(env.KILT_NETWORK);
@@ -211,9 +215,16 @@ export class IdentityMicroservice {
       const data = hexToU8a(payload.data);
       const signature = hexToU8a(payload.signature);
 
+      // NOTE!!: Did.getKeyRelationshipForTx(attestation) --> undefined
       fullDidCreationTx = api.tx.did.create(data, {
         sr25519: signature,
       });
+
+      console.log(
+        'Key relationship: ',
+        fullDidCreationTx.method,
+        Did.getKeyRelationshipForTx(fullDidCreationTx),
+      );
 
       await new Lmas().writeLog({
         logType: LogType.INFO,
@@ -235,11 +246,58 @@ export class IdentityMicroservice {
       });
     }
 
+    const bcsRequest = await identityCreateRequest(
+      context,
+      fullDidCreationTx,
+      identity,
+    );
+
+    // Call blockchain server and submit batch request
+    await sendBlockchainServiceRequest(context, bcsRequest);
+
+    return { success: true };
+  }
+
+  static async attestClaim(event: { body: AttestationDto }, context) {
+    const claimerEmail = event.body.email;
+    const claimerDidUri: DidUri = event.body.didUri as DidUri;
+    // This parameter is optional, since we can only perform attestaion
+    const credentialRequest: ICredential = JSON.parse(
+      event.body.credential,
+    ) as ICredential;
+
+    // Generate (retrieve) attester did data
+    const attesterKeypairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
+    const attesterAcc = (await generateAccount(
+      env.KILT_ATTESTER_MNEMONIC,
+    )) as KiltKeyringPair;
+
+    // DID
+    const attesterDidDoc = await getFullDidDocument(attesterKeypairs);
+    const attesterDidUri = attesterDidDoc.uri;
+
+    const identity = await new Identity({}, context).populateByUserEmail(
+      context,
+      claimerEmail,
+    );
+
+    if (identity.exists() && identity.state == IdentityState.ATTESTED) {
+      throw new AuthenticationCodeException({
+        code: AuthenticationErrorCode.IDENTITY_INVALID_STATE,
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    // Init Kilt essentials
+    await connect(env.KILT_NETWORK);
+    const api = ConfigService.get('api');
+
     // Prepare identity instance and credential structure
     const { attestationRequest, credential } = createAttestationRequest(
       claimerEmail,
       attesterDidUri,
-      claimerDidUri as DidUri,
+      claimerDidUri,
+      credentialRequest,
     );
 
     const attestation = api.tx.attestation.add(
@@ -249,36 +307,6 @@ export class IdentityMicroservice {
     );
 
     const nextNonce = new BN(await getNextNonce(attesterDidUri));
-
-    await new Lmas().writeLog({
-      logType: LogType.INFO,
-      message: 'Creating ATTESTATION TX ...',
-      location: 'AUTHENTICATION-API/identity/authentication.worker',
-      service: ServiceName.AUTHENTICATION_API,
-      data: { email: claimerEmail, didUri: claimerDidUri },
-    });
-
-    const emailAttesatationTx = await Did.authorizeTx(
-      attesterDidUri,
-      attestation,
-      async ({ data }) => ({
-        signature: attesterKeypairs.assertionMethod.sign(data),
-        keyType: attesterKeypairs.assertionMethod.type,
-      }),
-      attesterAcc.address,
-      { txCounter: nextNonce },
-    );
-
-    // Prepare batch
-    const authorizedBatchedTxs = await Did.authorizeBatch({
-      batchFunction: api.tx.utility.batchAll,
-      did: attesterDidUri,
-      extrinsics: [fullDidCreationTx, emailAttesatationTx],
-      sign: authenticationSigner(attesterKeypairs),
-      submitter: attesterAcc.address,
-    });
-
-    // Call blockchain server and submit batch request
 
     const claimerCredential = {
       credential: {
@@ -295,15 +323,34 @@ export class IdentityMicroservice {
     };
 
     identity.populate({
-      state: IdentityState.TRANSACTION_SUBMITTED,
+      state: IdentityState.SUBMITTED_ATTESATION_REQ,
       credential: claimerCredential,
-      didUri: claimerDidUri,
+      didUri: claimerDidUri ? claimerDidUri : null,
       email: claimerEmail,
     });
 
-    await identity.update();
+    // Prepare claim TX
+    const attestationTx = await Did.authorizeTx(
+      attesterDidUri,
+      attestation,
+      async ({ data }) => ({
+        signature: attesterKeypairs.assertionMethod.sign(data),
+        keyType: attesterKeypairs.assertionMethod.type,
+      }),
+      attesterAcc.address,
+      { txCounter: nextNonce },
+    );
 
-    return { success: true };
+    const bcsRequest = await attestationCreateRequest(
+      context,
+      attestationTx,
+      identity,
+    );
+
+    // Call blockchain server and submit batch request
+    await sendBlockchainServiceRequest(context, bcsRequest);
+
+    await identity.update();
   }
 
   static async getUserIdentityCredential(event: { query: string }, context) {

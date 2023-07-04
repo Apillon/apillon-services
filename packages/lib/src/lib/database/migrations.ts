@@ -68,9 +68,17 @@ export async function rebuildDatabase(
   port: number,
   user: string,
   password: string,
+  migrationDirectory?: string,
 ): Promise<void> {
   if (!dbMigration) {
-    await initMigrations(database, host, port, user, password);
+    await initMigrations(
+      database,
+      host,
+      port,
+      user,
+      password,
+      migrationDirectory,
+    );
   }
 
   await dbMigration.reset();
@@ -163,6 +171,8 @@ async function initMigrations(
 
   const pool = createPool(poolConfig);
 
+  console.log('Transaction pool ', pool);
+
   dbMigration = new Migration({
     conn: pool as unknown as MigrationConnection,
     tableName: tableName ? tableName : 'migrations',
@@ -172,6 +182,8 @@ async function initMigrations(
     silent: env.APP_ENV === AppEnvironment.TEST,
     // silent: false,
   });
+
+  console.log('dbMigration ', dbMigration);
 
   seedMigration = new Migration({
     conn: pool as unknown as MigrationConnection,
