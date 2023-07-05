@@ -24,6 +24,11 @@ export enum EvmChain {
   ASTAR = 592,
 }
 
+export enum NFTCollectionType {
+  GENERIC = 1,
+  NESTABLE = 2,
+}
+
 export enum BlockchainEventType {}
 
 export enum AmsEventType {
@@ -474,6 +479,8 @@ export enum ValidatorErrorCode {
   TRANSACTION_REF_TABLE_PARAM_NOT_PRESENT = 42200138,
   TRANSACTION_REF_ID_PARAM_NOT_PRESENT = 42200139,
   NFT_COLLECTION_BASE_URI_NOT_PRESENT = 42200140,
+  NFT_TYPE_NOT_PRESENT = 42200141,
+  NFT_TYPE_NOT_VALID = 42200142,
 
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,

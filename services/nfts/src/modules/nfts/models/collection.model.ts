@@ -3,10 +3,12 @@ import {
   CodeException,
   Context,
   DefaultUserRole,
+  enumInclusionValidator,
   EvmChain,
   ForbiddenErrorCodes,
   getQueryParams,
   NFTCollectionQueryFilter,
+  NFTCollectionType,
   PoolConnection,
   PopulateFrom,
   presenceValidator,
@@ -29,6 +31,36 @@ export class Collection extends AdvancedSQLModel {
   public constructor(data: any, context: Context) {
     super(data, context);
   }
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: NftsErrorCode.COLLECTION_TYPE_NOT_PRESENT,
+      },
+      {
+        resolver: enumInclusionValidator(NFTCollectionType),
+        code: NftsErrorCode.COLLECTION_TYPE_NOT_VALID,
+      },
+    ],
+    fakeValue: NFTCollectionType.GENERIC,
+  })
+  public collectionType: NFTCollectionType;
 
   @prop({
     parser: { resolver: stringParser() },

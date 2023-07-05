@@ -8,6 +8,7 @@ import {
 } from '@rawmodel/validators';
 import {
   EvmChain,
+  NFTCollectionType,
   PopulateFrom,
   SerializeFor,
   ValidatorErrorCode,
@@ -15,6 +16,23 @@ import {
 import { enumInclusionValidator } from '../../../validators';
 
 export class CreateCollectionDTOBase extends ModelBase {
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_TYPE_NOT_PRESENT,
+      },
+      {
+        resolver: enumInclusionValidator(NFTCollectionType),
+        code: ValidatorErrorCode.NFT_TYPE_NOT_VALID,
+      },
+    ],
+  })
+  public collectionType: NFTCollectionType;
+
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],

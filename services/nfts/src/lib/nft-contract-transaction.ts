@@ -1,14 +1,20 @@
-import { EvmChain, MintNftDTO } from '@apillon/lib';
+import { EvmChain, MintNftDTO, NFTCollectionType } from '@apillon/lib';
 import {
+  constants,
   Contract,
   ContractFactory,
   PopulatedTransaction,
   UnsignedTransaction,
 } from 'ethers';
-import { EvmNftABI, EvmNftBytecode } from './contracts/deployed-nft-contract';
-import { TransactionRequest } from '@ethersproject/providers';
+import {
+  EvmNftABI,
+  EvmNftBytecode,
+  EvmNftRmrkABI,
+} from './contracts/deployed-nft-contract';
 import { TransactionUtils } from './utils/transaction-utils';
 import { Collection } from '../modules/nfts/models/collection.model';
+import { NftsCodeException } from './exceptions';
+import { NftsErrorCode } from '../config/types';
 
 export class NftTransaction {
   /**
@@ -25,24 +31,56 @@ export class NftTransaction {
         params.deployerAddress
       }, parameters=${JSON.stringify(params)}`,
     );
-    const nftContract: ContractFactory = new ContractFactory(
-      EvmNftABI,
-      EvmNftBytecode,
-    );
-
-    const txData: TransactionRequest = await nftContract.getDeployTransaction(
-      params.name,
-      params.symbol,
-      params.baseUri,
-      params.baseExtension,
-      [params.drop, params.isSoulbound, params.isRevokable],
-      TransactionUtils.convertBaseToGwei(params.dropPrice),
-      params.dropStart,
-      params.maxSupply,
-      params.dropReserve,
-      params.royaltiesAddress,
-      params.royaltiesFees,
-    );
+    let txData;
+    switch (params.collectionType) {
+      case NFTCollectionType.GENERIC:
+        const genericNftContract = new ContractFactory(
+          EvmNftABI,
+          EvmNftBytecode,
+        );
+        txData = await genericNftContract.getDeployTransaction(
+          params.name,
+          params.symbol,
+          params.baseUri,
+          params.baseExtension,
+          [params.drop, params.isSoulbound, params.isRevokable],
+          TransactionUtils.convertBaseToGwei(params.dropPrice),
+          params.dropStart,
+          params.maxSupply,
+          params.dropReserve,
+          params.royaltiesAddress,
+          params.royaltiesFees,
+        );
+        break;
+      case NFTCollectionType.NESTABLE:
+        const nestableNftContract = new ContractFactory(
+          EvmNftRmrkABI,
+          EvmNftBytecode,
+        );
+        txData = await nestableNftContract.getDeployTransaction(
+          params.name,
+          params.symbol,
+          params.baseUri,
+          params.baseExtension,
+          [params.drop, params.isSoulbound, params.isRevokable],
+          params.dropStart,
+          params.dropReserve,
+          {
+            erc20TokenAddress: constants.AddressZero,
+            tokenUriIsEnumerable: true,
+            royaltyRecipient: params.royaltiesAddress,
+            royaltyPercentageBps: params.royaltiesFees,
+            maxSupply: params.maxSupply,
+            pricePerMint: TransactionUtils.convertBaseToGwei(params.dropPrice),
+          },
+        );
+        break;
+      default:
+        throw new NftsCodeException({
+          status: 500,
+          code: NftsErrorCode.GENERAL_SERVER_ERROR,
+        });
+    }
 
     return {
       to: null,
@@ -121,8 +159,8 @@ export class NftTransaction {
 
     const txData: PopulatedTransaction =
       await nftContract.populateTransaction.ownerMint(
-        params.quantity,
         params.receivingAddress,
+        params.quantity,
       );
     return {
       to: contractAddress,

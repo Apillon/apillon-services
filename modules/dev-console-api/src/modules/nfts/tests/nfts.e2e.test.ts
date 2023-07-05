@@ -30,8 +30,9 @@ describe('Storage bucket tests', () => {
 
   let testProject: Project;
 
-  let testCollection: Collection;
-  let newCollection: Collection;
+  let testCollection: Collection,
+    newCollection: Collection,
+    nestableCollection: Collection;
 
   beforeAll(async () => {
     stage = await setupTest();
@@ -48,6 +49,23 @@ describe('Storage bucket tests', () => {
       testProject,
       SqlModelStatus.INCOMPLETE,
       0,
+    );
+
+    const nestableUser = await createTestUser(
+      stage.devConsoleContext,
+      stage.amsContext,
+    );
+    const nestableProject = await createTestProject(
+      nestableUser,
+      stage.devConsoleContext,
+    );
+    nestableCollection = await createTestNFTCollection(
+      testUser,
+      stage.nftsContext,
+      nestableProject,
+      SqlModelStatus.INCOMPLETE,
+      0,
+      { collectionType: 2 },
     );
 
     await overrideDefaultQuota(
@@ -80,6 +98,7 @@ describe('Storage bucket tests', () => {
       expect(response.body.data.items.length).toBe(1);
       expect(response.body.data.items[0]?.id).toBeTruthy();
       expect(response.body.data.items[0]?.status).toBeTruthy();
+      expect(response.body.data.items[0]?.collectionType).toBeTruthy();
       expect(response.body.data.items[0]?.collection_uuid).toBeTruthy();
       expect(response.body.data.items[0]?.symbol).toBeTruthy();
       expect(response.body.data.items[0]?.name).toBeTruthy();
@@ -103,6 +122,9 @@ describe('Storage bucket tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.id).toBeTruthy();
+      expect(response.body.data.collectionType).toBe(
+        testCollection.collectionType,
+      );
       expect(response.body.data.collection_uuid).toBe(
         testCollection.collection_uuid,
       );
@@ -128,6 +150,7 @@ describe('Storage bucket tests', () => {
       const response = await request(stage.http)
         .post(`/nfts/collections?project_uuid=${testProject.project_uuid}`)
         .send({
+          collectionType: 1,
           symbol: 'TNFT',
           name: 'Test NFT Collection',
           maxSupply: 50,
@@ -248,6 +271,7 @@ describe('Storage bucket tests', () => {
       const response = await request(stage.http)
         .post(`/nfts/collections?project_uuid=${testProject.project_uuid}`)
         .send({
+          collectionType: 1,
           symbol: 'TNFT',
           name: 'Test NFT Collection',
           maxSupply: 2,
@@ -416,6 +440,7 @@ describe('Storage bucket tests', () => {
       const response = await request(stage.http)
         .post(`/nfts/collections?project_uuid=${testProject.project_uuid}`)
         .send({
+          collectionType: 1,
           symbol: 'TNFT',
           name: 'Test NFT Collection',
           maxSupply: 2,
@@ -440,6 +465,7 @@ describe('Storage bucket tests', () => {
       const response = await request(stage.http)
         .post(`/nfts/collections?project_uuid=${testProject.project_uuid}`)
         .send({
+          collectionType: 1,
           symbol: 'ANFT',
           name: 'Astar Test NFT Collection',
           maxSupply: 50,
@@ -533,6 +559,230 @@ describe('Storage bucket tests', () => {
 
       const response = await request(stage.http)
         .post(`/nfts/collections/${newCollection.collection_uuid}/mint`)
+        .send({
+          receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
+          quantity: 1,
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(500);
+      expect(response.body.code).toBe(50012002);
+    });
+  });
+
+  describe('Astar NFT Collection tests for nestable type', () => {
+    test('User should be able to create new Astar collection with existing baseURI', async () => {
+      const response = await request(stage.http)
+        .post(`/nfts/collections?project_uuid=${testProject.project_uuid}`)
+        .send({
+          collectionType: 2,
+          symbol: 'ANFT',
+          name: 'Astar Test NFT Collection',
+          maxSupply: 50,
+          dropPrice: 0,
+          project_uuid: testProject.project_uuid,
+          baseUri:
+            'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/',
+          baseExtension: 'json',
+          drop: false,
+          dropStart: 0,
+          dropReserve: 5,
+          chain: 592,
+          isRevokable: true,
+          isSoulbound: false,
+          royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
+          royaltiesFees: 0,
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(201);
+      expect(response.body.data.contractAddress).toBeTruthy();
+
+      //Get collection from DB
+      nestableCollection = await new Collection(
+        {},
+        stage.nftsContext,
+      ).populateById(response.body.data.id);
+
+      expect(nestableCollection.exists()).toBeTruthy();
+
+      nestableCollection.collectionStatus = CollectionStatus.DEPLOYED;
+      await nestableCollection.update();
+    });
+
+    test('User should be able to get collection transactions', async () => {
+      const response = await request(stage.http)
+        .get(
+          `/nfts/collections/${nestableCollection.collection_uuid}/transactions`,
+        )
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.items.length).toBe(1);
+      expect(response.body.data.items[0]?.transactionHash).toBeTruthy();
+    });
+
+    test('User should be able to mint NFT', async () => {
+      const response = await request(stage.http)
+        .post(`/nfts/collections/${nestableCollection.collection_uuid}/mint`)
+        .send({
+          receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
+          quantity: 1,
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(201);
+
+      //Check if new transactions exists
+      const transaction: Transaction[] = await new Transaction(
+        {},
+        stage.nftsContext,
+      ).getCollectionTransactions(nestableCollection.id);
+
+      expect(
+        transaction.find((x) => x.transactionType == TransactionType.MINT_NFT),
+      ).toBeTruthy();
+    });
+
+    test('User should be able to transfer NFT collection', async () => {
+      const response = await request(stage.http)
+        .post(
+          `/nfts/collections/${nestableCollection.collection_uuid}/transferOwnership`,
+        )
+        .send({
+          address: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(201);
+
+      //Check if new transactions exists
+      const transaction: Transaction[] = await new Transaction(
+        {},
+        stage.nftsContext,
+      ).getCollectionTransactions(nestableCollection.id);
+
+      expect(
+        transaction.find(
+          (x) =>
+            x.transactionType == TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
+        ),
+      ).toBeTruthy();
+    });
+
+    test('User should NOT be able to Mint transferred collection', async () => {
+      nestableCollection.collectionStatus = CollectionStatus.TRANSFERED;
+      await nestableCollection.update();
+
+      const response = await request(stage.http)
+        .post(`/nfts/collections/${nestableCollection.collection_uuid}/mint`)
+        .send({
+          receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
+          quantity: 1,
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(500);
+      expect(response.body.code).toBe(50012002);
+    });
+  });
+
+  describe('Astar NFT Collection tests for nestable type', () => {
+    test('User should be able to create new Astar nestable collection with existing baseURI', async () => {
+      const response = await request(stage.http)
+        .post(`/nfts/collections?project_uuid=${testProject.project_uuid}`)
+        .send({
+          collectionType: 2,
+          symbol: 'ANFT',
+          name: 'Astar Test NFT Collection',
+          maxSupply: 50,
+          dropPrice: 0,
+          project_uuid: testProject.project_uuid,
+          baseUri:
+            'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/',
+          baseExtension: 'json',
+          drop: false,
+          dropStart: 0,
+          dropReserve: 5,
+          chain: 592,
+          isRevokable: true,
+          isSoulbound: false,
+          royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
+          royaltiesFees: 0,
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(201);
+      expect(response.body.data.contractAddress).toBeTruthy();
+
+      //Get collection from DB
+      nestableCollection = await new Collection(
+        {},
+        stage.nftsContext,
+      ).populateById(response.body.data.id);
+
+      expect(nestableCollection.exists()).toBeTruthy();
+
+      nestableCollection.collectionStatus = CollectionStatus.DEPLOYED;
+      await nestableCollection.update();
+    });
+
+    test('User should be able to get nestable collection transactions', async () => {
+      const response = await request(stage.http)
+        .get(
+          `/nfts/collections/${nestableCollection.collection_uuid}/transactions`,
+        )
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.items.length).toBe(1);
+      expect(response.body.data.items[0]?.transactionHash).toBeTruthy();
+    });
+
+    test('User should be able to mint nestable collection NFT', async () => {
+      const response = await request(stage.http)
+        .post(`/nfts/collections/${nestableCollection.collection_uuid}/mint`)
+        .send({
+          receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
+          quantity: 1,
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(201);
+
+      //Check if new transactions exists
+      const transaction: Transaction[] = await new Transaction(
+        {},
+        stage.nftsContext,
+      ).getCollectionTransactions(nestableCollection.id);
+
+      expect(
+        transaction.find((x) => x.transactionType == TransactionType.MINT_NFT),
+      ).toBeTruthy();
+    });
+
+    test('User should be able to transfer nestable NFT collection', async () => {
+      const response = await request(stage.http)
+        .post(
+          `/nfts/collections/${nestableCollection.collection_uuid}/transferOwnership`,
+        )
+        .send({
+          address: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(201);
+
+      //Check if new transactions exists
+      const transaction: Transaction[] = await new Transaction(
+        {},
+        stage.nftsContext,
+      ).getCollectionTransactions(nestableCollection.id);
+
+      expect(
+        transaction.find(
+          (x) =>
+            x.transactionType == TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
+        ),
+      ).toBeTruthy();
+    });
+
+    test('User should NOT be able to Mint transferred nestable collection', async () => {
+      nestableCollection.collectionStatus = CollectionStatus.TRANSFERED;
+      await nestableCollection.update();
+
+      const response = await request(stage.http)
+        .post(`/nfts/collections/${nestableCollection.collection_uuid}/mint`)
         .send({
           receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
           quantity: 1,
