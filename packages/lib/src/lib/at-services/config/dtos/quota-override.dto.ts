@@ -1,11 +1,12 @@
-import { ValidatorErrorCode } from './../../../../config/types';
+import { ValidatorErrorCode } from '../../../../config/types';
 import { prop } from '@rawmodel/core';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { PopulateFrom, SerializeFor } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
 import { presenceValidator } from '@rawmodel/validators';
 
-export class DeleteOverrideDto extends ModelBase {
+// Base class for quota overrides, containing the basic override relational data
+export class QuotaOverrideDto extends ModelBase {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],

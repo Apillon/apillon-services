@@ -16,7 +16,7 @@ export async function processEvent(
 ): Promise<any> {
   const processors = {
     [ScsEventType.GET_QUOTA]: QuotaService.getQuota,
-    [ScsEventType.GET_ALL_QUOTAS]: QuotaService.getAllQuotas,
+    [ScsEventType.GET_ALL_QUOTAS]: QuotaService.getQuotas,
     [ScsEventType.CREATE_OVERRIDE]: OverrideService.createOverride,
     [ScsEventType.DELETE_OVERRIDE]: OverrideService.deleteOverride,
   };

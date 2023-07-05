@@ -3,19 +3,16 @@ import { DevConsoleApiContext } from '../../../context';
 import { User } from '../../user/models/user.model';
 import {
   Ams,
+  BaseQueryFilter,
   CodeException,
-  CreateOverrideDto,
-  DeleteOverrideDto,
+  CreateQuotaOverrideDto,
+  QuotaOverrideDto,
   Scs,
-  UserLoginsQueryFilterDto,
-  UserRolesQueryFilterDto,
 } from '@apillon/lib';
 import { ResourceNotFoundErrorCode } from '../../../config/types';
-import { UserQueryFilter } from './dtos/user-query-filter.dto';
 import { UUID } from 'crypto';
 import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
-import { GetAllQuotasDto } from '@apillon/lib/dist/lib/at-services/config/dtos/get-all-quotas.dto';
-import { UserProjectsQueryFilter } from './dtos/user-projects-query-filter.dto';
+import { GetQuotasDto } from '@apillon/lib/dist/lib/at-services/config/dtos/get-quotas.dto';
 
 @Injectable()
 export class UserService {
@@ -42,11 +39,12 @@ export class UserService {
   /**
    * Retrieves a list of all users
    * @param {DevConsoleApiContext} context - The API context with current user session.
+   * @param {BaseQueryFilter} filter - The query filter data
    * @returns {Promise<any>} The serialized user data.
    */
   async getUserList(
     context: DevConsoleApiContext,
-    filter: UserQueryFilter,
+    filter: BaseQueryFilter,
   ): Promise<any> {
     return await new User({}, context).listAllUsers(filter);
   }
@@ -56,13 +54,13 @@ export class UserService {
    * @async
    * @param {DevConsoleApiContext} context
    * @param {UUID} user_uuid
-   * @param {UserLoginsQueryFilterDto} query
+   * @param {BaseQueryFilter} query
    * @returns {Promise<any>}
    */
   async getUserLogins(
     context: DevConsoleApiContext,
     user_uuid: UUID,
-    query: UserLoginsQueryFilterDto,
+    query: BaseQueryFilter,
   ): Promise<any> {
     return (await new Ams(context).getUserLogins(user_uuid, query)).data;
   }
@@ -72,13 +70,13 @@ export class UserService {
    * @async
    * @param {DevConsoleApiContext} context
    * @param {UUID} user_uuid
-   * @param {UserProjectsQueryFilter} query
+   * @param {BaseQueryFilter} query
    * @returns {Promise<any>}
    */
   async getUserProjects(
     context: DevConsoleApiContext,
     user_uuid: UUID,
-    query: UserProjectsQueryFilter,
+    query: BaseQueryFilter,
   ): Promise<any> {
     return await new User({}, context).listProjects(user_uuid, query);
   }
@@ -88,13 +86,13 @@ export class UserService {
    * @async
    * @param {DevConsoleApiContext} context
    * @param {UUID} user_uuid
-   * @param {UserRolesQueryFilterDto} query
+   * @param {BaseQueryFilter} query
    * @returns {Promise<any>}
    */
   async getUserRoles(
     context: DevConsoleApiContext,
     user_uuid: UUID,
-    query: UserRolesQueryFilterDto,
+    query: BaseQueryFilter,
   ): Promise<any> {
     return (await new Ams(context).getUserRoles(user_uuid, query)).data;
   }
@@ -103,24 +101,24 @@ export class UserService {
    * Retreives a list of all quotas for a user
    * @async
    * @param {DevConsoleApiContext} context
-   * @param {GetAllQuotasDto} query
+   * @param {GetQuotasDto} query
    * @returns {Promise<QuotaDto[]>}
    */
   async getUserQuotas(
     context: DevConsoleApiContext,
-    query: GetAllQuotasDto,
+    query: GetQuotasDto,
   ): Promise<QuotaDto[]> {
-    return await new Scs(context).getAllQuotas(query);
+    return await new Scs(context).getQuotas(query);
   }
 
   /**
    * Creates or updates a user quota by user_uuid and quota_id
    * @param {DevConsoleApiContext} context
-   * @param {CreateOverrideDto} dto - Create or Update data
+   * @param {CreateQuotaOverrideDto} dto - Create or Update data
    */
   async createUserQuota(
     context: DevConsoleApiContext,
-    data: CreateOverrideDto,
+    data: CreateQuotaOverrideDto,
   ) {
     return await new Scs(context).createOverride(data);
   }
@@ -128,12 +126,9 @@ export class UserService {
   /**
    * Deletes user quota by user_uuid and quota_id
    * @param {DevConsoleApiContext} context
-   * @param {DeleteOverrideDto} dto - Create or Update data
+   * @param {QuotaOverrideDto} dto - Create or Update data
    */
-  async deleteUserQuota(
-    context: DevConsoleApiContext,
-    data: DeleteOverrideDto,
-  ) {
+  async deleteUserQuota(context: DevConsoleApiContext, data: QuotaOverrideDto) {
     return await new Scs(context).deleteOverride(data);
   }
 }

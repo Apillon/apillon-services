@@ -12,11 +12,11 @@ import {
   presenceValidator,
   selectAndCountQuery,
   SerializeFor,
+  SqlModelStatus,
 } from '@apillon/lib';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
-import { UserQueryFilter } from '../../admin-panel/user/dtos/user-query-filter.dto';
 import { UUID } from 'crypto';
-import { UserProjectsQueryFilter } from '../../admin-panel/user/dtos/user-projects-query-filter.dto';
+import { BaseQueryFilter } from '@apillon/lib';
 
 /**
  * User model.
@@ -186,7 +186,7 @@ export class User extends AdvancedSQLModel {
     return data?.length ? data[0] : data;
   }
 
-  public async listAllUsers(filter: UserQueryFilter) {
+  public async listAllUsers(filter: BaseQueryFilter) {
     const fieldMap = { id: 'u.id' };
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
@@ -251,7 +251,7 @@ export class User extends AdvancedSQLModel {
     return this;
   }
 
-  public async listProjects(user_uuid: UUID, filter: UserProjectsQueryFilter) {
+  public async listProjects(user_uuid: UUID, filter: BaseQueryFilter) {
     const fieldMap = { id: 'u.id' };
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
@@ -268,6 +268,7 @@ export class User extends AdvancedSQLModel {
         JOIN project_user pu ON u.id = pu.user_id
         JOIN project p ON pu.project_id = p.id
         WHERE u.user_uuid = @user_uuid
+        AND pu.status <> ${SqlModelStatus.DELETED}
         AND (@search IS null OR p.name LIKE CONCAT('%', @search, '%'))
         `,
       qFilter: `

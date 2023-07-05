@@ -1,4 +1,5 @@
 import {
+  BaseQueryFilter,
   decodeJwtToken,
   generateJwtToken,
   JwtTokenType,
@@ -8,8 +9,6 @@ import {
   PopulateFrom,
   SerializeFor,
   ServiceName,
-  UserLoginsQueryFilterDto,
-  UserRolesQueryFilterDto,
   UserWalletAuthDto,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
@@ -38,7 +37,10 @@ export class AuthUserService {
    */
   static async register(event, context: ServiceContext) {
     if (!event?.user_uuid || !event.password || !event.email) {
-      throw await new AmsBadRequestException(context, event).writeToMonitor();
+      throw await new AmsCodeException({
+        status: 500,
+        code: AmsErrorCode.INVALID_EVENT_DATA,
+      }).writeToMonitor();
     }
     //check if email already exists - user cannot register twice
     const checkEmailRes = await AuthUserService.emailExists(event, context);
@@ -535,11 +537,14 @@ export class AuthUserService {
    * @returns An array of the user's logins
    */
   static async getUserLogins(
-    event: { user_uuid: string; query: UserLoginsQueryFilterDto },
+    event: { user_uuid: string; query: BaseQueryFilter },
     context: ServiceContext,
   ) {
     if (!event?.user_uuid) {
-      throw await new AmsBadRequestException(context, event).writeToMonitor();
+      throw new AmsCodeException({
+        status: 500,
+        code: AmsErrorCode.INVALID_EVENT_DATA,
+      });
     }
 
     return await new AuthUser({}, context).listLogins(event);
@@ -552,11 +557,14 @@ export class AuthUserService {
    * @returns An array of the user's roles
    */
   static async getUserRoles(
-    event: { user_uuid: string; query: UserRolesQueryFilterDto },
+    event: { user_uuid: string; query: BaseQueryFilter },
     context: ServiceContext,
   ) {
     if (!event?.user_uuid) {
-      throw await new AmsBadRequestException(context, event).writeToMonitor();
+      throw new AmsCodeException({
+        status: 500,
+        code: AmsErrorCode.INVALID_EVENT_DATA,
+      });
     }
 
     return await new AuthUser({}, context).listRoles(event);

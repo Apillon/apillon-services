@@ -5,6 +5,7 @@ import { presenceValidator } from '@rawmodel/validators';
 
 import {
   AdvancedSQLModel,
+  BaseQueryFilter,
   CodeException,
   DefaultUserRole,
   ForbiddenErrorCodes,
@@ -19,7 +20,6 @@ import { faker } from '@faker-js/faker';
 import { HttpStatus } from '@nestjs/common';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
-import { ProjectQueryFilter } from '../../admin-panel/project/dtos/project-query-filter.dto';
 
 /**
  * Project model.
@@ -178,35 +178,21 @@ export class Project extends AdvancedSQLModel {
 
   public async populateByUUID(uuid: string): Promise<this> {
     if (!uuid) {
-      throw new Error('uuid should not be null');
+      throw new Error('project uuid should not be null');
     }
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
       WHERE project_uuid = @uuid AND status <> ${SqlModelStatus.DELETED};
       `,
       { uuid },
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
-  }
-
-  public async getProjectDetail(project_uuid: string) {
-    const data = await this.db().paramExecute(
-      `
-        SELECT ${this.generateSelectFields()}
-        FROM \`${DbTables.PROJECT}\` p
-        WHERE p.project_uuid = @project_uuid
-      `,
-      { project_uuid },
-    );
-    return data?.length ? data[0] : data;
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   /**
@@ -231,9 +217,9 @@ export class Project extends AdvancedSQLModel {
     return selectAndCountQuery(context.mysql, sqlQuery, params, 'p.id');
   }
 
-  public async listAllProjects(
+  public async listProjects(
     context: DevConsoleApiContext,
-    filter: ProjectQueryFilter,
+    filter: BaseQueryFilter,
   ) {
     // Map url query with sql fields.
     const fieldMap = { id: 'p.d' };
@@ -245,9 +231,16 @@ export class Project extends AdvancedSQLModel {
     );
 
     const sqlQuery = {
-      qSelect: `SELECT ${this.generateSelectFields('p')}`,
+      qSelect: `SELECT ${this.generateSelectFields('p')},
+      (SELECT COUNT(*) FROM ${
+        DbTables.PROJECT_USER
+      } WHERE project_id = p.id) AS totalUsers,
+      (SELECT COUNT(*) FROM ${
+        DbTables.SERVICE
+      } WHERE project_id = p.id) AS totalServices`,
       qFrom: `FROM \`${DbTables.PROJECT}\` p
-        WHERE (@search IS null OR p.name LIKE CONCAT('%', @search, '%'))`,
+        WHERE (@search IS null OR p.name LIKE CONCAT('%', @search, '%'))
+        AND status <> ${SqlModelStatus.DELETED}`,
       qFilter: `
           ORDER BY ${filters.orderStr}
           LIMIT ${filters.limit} OFFSET ${filters.offset}
@@ -279,12 +272,12 @@ export class Project extends AdvancedSQLModel {
       `
       select sum(project_users.numOfUsers) as numOfUsersOnProject
       from (
-        SELECT count(*) as numOfUsers 
+        SELECT count(*) as numOfUsers
         from \`${DbTables.PROJECT_USER}\`
         WHERE project_id = @project_id
         AND status <> ${SqlModelStatus.DELETED}
           union all
-        select count(*) as numOfUsers 
+        select count(*) as numOfUsers
         from \`${DbTables.PROJECT_USER_PENDING_INVITATION}\`
         WHERE project_id = @project_id
         AND status <> ${SqlModelStatus.DELETED}

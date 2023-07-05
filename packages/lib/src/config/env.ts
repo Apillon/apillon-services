@@ -500,11 +500,11 @@ export let env: IEnv = {
 
   ADMIN_CONSOLE_API_HOST: process.env['ADMIN_CONSOLE_API_HOST'] || 'localhost',
   ADMIN_CONSOLE_API_PORT:
-    parseInt(process.env['ADMIN_CONSOLE_API_PORT']) || 8001,
+    parseInt(process.env['ADMIN_CONSOLE_API_PORT']) || 6004,
   ADMIN_CONSOLE_API_HOST_TEST:
     process.env['ADMIN_CONSOLE_API_HOST_TEST'] || 'localhost',
   ADMIN_CONSOLE_API_PORT_TEST:
-    parseInt(process.env['ADMIN_CONSOLE_API_PORT_TEST']) || 9001,
+    parseInt(process.env['ADMIN_CONSOLE_API_PORT_TEST']) || 7004,
 
   /** SQL UTILS */
   DEFAULT_PAGE_SIZE: parseInt(process.env['DEFAULT_PAGE_SIZE']) || 20,

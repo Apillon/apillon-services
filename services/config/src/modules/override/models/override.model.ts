@@ -1,9 +1,9 @@
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
-  MySql,
   PopulateFrom,
   prop,
+  QuotaOverrideDto,
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
@@ -81,25 +81,23 @@ export class Override extends AdvancedSQLModel {
   })
   public value: number;
 
-  public async findManyByProjectUuid(project_uuid: string): Promise<this[]> {
-    if (!project_uuid) {
-      throw new Error('project_uuid should not be null');
+  public async findByProjectObjectUuid(dto: QuotaOverrideDto): Promise<this[]> {
+    if (!dto.project_uuid && !dto.object_uuid) {
+      throw new Error('project_uuid and object_uuid should not be null');
     }
 
     const data: any[] = await this.getContext().mysql.paramExecute(
       `
       SELECT *
       FROM \`${this.tableName}\`
-      WHERE project_uuid = @project_uuid AND status <> ${SqlModelStatus.DELETED};
+      WHERE (project_uuid IS NULL OR project_uuid = @project_uuid)
+      AND (object_uuid IS NULL OR object_uuid = @object_uuid)
+      AND status <> ${SqlModelStatus.DELETED};
       `,
-      { project_uuid },
+      dto,
     );
 
-    if (!data?.length) {
-      return null;
-    }
-
-    return data.map((override) => this.populate(override, PopulateFrom.DB));
+    return data?.map((override) => this.populate(override, PopulateFrom.DB));
   }
 
   public async findManyByObjectUuid(object_uuid: string): Promise<this[]> {

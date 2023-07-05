@@ -1,5 +1,6 @@
 import {
   AdvancedSQLModel,
+  BaseQueryFilter,
   Context,
   DefaultUserRole,
   JwtTokenType,
@@ -7,8 +8,6 @@ import {
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
-  UserLoginsQueryFilterDto,
-  UserRolesQueryFilterDto,
   generateJwtToken,
   getQueryParams,
   prop,
@@ -300,7 +299,7 @@ export class AuthUser extends AdvancedSQLModel {
   ) {
     await this.db().paramExecute(
       `
-      INSERT INTO ${DbTables.AUTH_USER_ROLE} 
+      INSERT INTO ${DbTables.AUTH_USER_ROLE}
       (authUser_id, role_id, user_uuid, project_uuid)
       VALUES (@authUser_id, @role_id, @user_uuid, @project_uuid)
       `,
@@ -323,7 +322,7 @@ export class AuthUser extends AdvancedSQLModel {
   ) {
     await this.db().paramExecute(
       `
-      DELETE FROM ${DbTables.AUTH_USER_ROLE} 
+      DELETE FROM ${DbTables.AUTH_USER_ROLE}
       WHERE authUser_id = @authUser_id
       AND role_id = @role_id
       AND project_uuid = @project_uuid
@@ -407,9 +406,9 @@ export class AuthUser extends AdvancedSQLModel {
 
   public async listLogins(event: {
     user_uuid: string;
-    query: UserLoginsQueryFilterDto;
+    query: BaseQueryFilter;
   }) {
-    const filter = new UserLoginsQueryFilterDto(event.query);
+    const filter = new BaseQueryFilter(event.query);
     const fieldMap = { id: 'at.d' };
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
@@ -419,10 +418,7 @@ export class AuthUser extends AdvancedSQLModel {
     );
 
     const sqlQuery = {
-      qSelect: `SELECT ${new AuthToken(
-        {},
-        this.getContext(),
-      ).generateSelectFields('at', '', SerializeFor.ADMIN)}`,
+      qSelect: `SELECT createTime as loginDate`,
       qFrom: `FROM \`${DbTables.AUTH_TOKEN}\` at
         WHERE at.user_uuid = @user_uuid`,
       qFilter: `
@@ -439,11 +435,8 @@ export class AuthUser extends AdvancedSQLModel {
     );
   }
 
-  public async listRoles(event: {
-    user_uuid: string;
-    query: UserRolesQueryFilterDto;
-  }) {
-    const filter = new UserRolesQueryFilterDto(event.query);
+  public async listRoles(event: { user_uuid: string; query: BaseQueryFilter }) {
+    const filter = new BaseQueryFilter(event.query);
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
       'aur',

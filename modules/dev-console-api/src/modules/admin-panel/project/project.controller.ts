@@ -1,10 +1,11 @@
 import {
   DefaultUserRole,
-  GetAllQuotasDto,
+  GetQuotasDto,
   ValidateFor,
-  CreateOverrideDto,
-  DeleteOverrideDto,
+  CreateQuotaOverrideDto,
+  QuotaOverrideDto,
   PopulateFrom,
+  BaseQueryFilter,
 } from '@apillon/lib';
 import {
   Body,
@@ -21,7 +22,6 @@ import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { AuthGuard } from '../../../guards/auth.guard';
 import { ProjectService } from './project.service';
 import { DevConsoleApiContext } from '../../../context';
-import { ProjectQueryFilter } from './dtos/project-query-filter.dto';
 import { ValidationGuard } from '../../../guards/validation.guard';
 import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
 import { UUID } from 'crypto';
@@ -33,11 +33,11 @@ export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
   @Get()
-  @Validation({ dto: ProjectQueryFilter, validateFor: ValidateFor.QUERY })
+  @Validation({ dto: BaseQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard)
   async listProjects(
     @Ctx() context: DevConsoleApiContext,
-    @Query() query: ProjectQueryFilter,
+    @Query() query: BaseQueryFilter,
   ) {
     return this.projectService.getProjectList(context, query);
   }
@@ -51,12 +51,12 @@ export class ProjectController {
   }
 
   @Get(':project_uuid/quotas')
-  @Validation({ dto: GetAllQuotasDto, validateFor: ValidateFor.QUERY })
+  @Validation({ dto: GetQuotasDto, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard)
   async getProjectQuotas(
     @Ctx() context: DevConsoleApiContext,
     @Param('project_uuid', ParseUUIDPipe) project_uuid: UUID,
-    @Query() query: GetAllQuotasDto,
+    @Query() query: GetQuotasDto,
   ): Promise<QuotaDto[]> {
     query.project_uuid = project_uuid;
     return this.projectService.getProjectQuotas(context, query);
@@ -64,7 +64,7 @@ export class ProjectController {
 
   @Post(':project_uuid/quotas')
   @Validation({
-    dto: CreateOverrideDto,
+    dto: CreateQuotaOverrideDto,
     validateFor: ValidateFor.BODY,
     populateFrom: PopulateFrom.ADMIN,
   })
@@ -72,7 +72,7 @@ export class ProjectController {
   async createProjectQuota(
     @Ctx() context: DevConsoleApiContext,
     @Param('project_uuid', ParseUUIDPipe) project_uuid: UUID,
-    @Body() data: CreateOverrideDto,
+    @Body() data: CreateQuotaOverrideDto,
   ): Promise<QuotaDto[]> {
     data.project_uuid = project_uuid;
     return this.projectService.createProjectQuota(context, data);
@@ -80,7 +80,7 @@ export class ProjectController {
 
   @Delete(':project_uuid/quotas')
   @Validation({
-    dto: DeleteOverrideDto,
+    dto: QuotaOverrideDto,
     validateFor: ValidateFor.BODY,
     populateFrom: PopulateFrom.ADMIN,
   })
@@ -88,7 +88,7 @@ export class ProjectController {
   async deleteProjectQuota(
     @Ctx() context: DevConsoleApiContext,
     @Param('project_uuid', ParseUUIDPipe) project_uuid: UUID,
-    @Body() data: DeleteOverrideDto,
+    @Body() data: QuotaOverrideDto,
   ): Promise<QuotaDto[]> {
     data.project_uuid = project_uuid;
     return this.projectService.deleteProjectQuota(context, data);

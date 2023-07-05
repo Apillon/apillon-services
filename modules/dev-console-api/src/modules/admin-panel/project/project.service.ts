@@ -2,14 +2,14 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../../context';
 import { Project } from '../../project/models/project.model';
 import {
+  BaseQueryFilter,
   CodeException,
-  CreateOverrideDto,
-  DeleteOverrideDto,
-  GetAllQuotasDto,
+  CreateQuotaOverrideDto,
+  QuotaOverrideDto,
+  GetQuotasDto,
   Scs,
 } from '@apillon/lib';
 import { ResourceNotFoundErrorCode } from '../../../config/types';
-import { ProjectQueryFilter } from './dtos/project-query-filter.dto';
 import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
 import { UUID } from 'crypto';
 
@@ -22,9 +22,9 @@ export class ProjectService {
    */
   async getProjectList(
     context: DevConsoleApiContext,
-    filter: ProjectQueryFilter,
+    filter: BaseQueryFilter,
   ): Promise<any> {
-    return await new Project({}, context).listAllProjects(context, filter);
+    return await new Project({}, context).listProjects(context, filter);
   }
 
   /**
@@ -38,10 +38,10 @@ export class ProjectService {
     context: DevConsoleApiContext,
     project_uuid: UUID,
   ): Promise<Project> {
-    const project: Project = await new Project({}, context).getProjectDetail(
+    const project: Project = await new Project({}, context).populateByUUID(
       project_uuid,
     );
-    if (!project?.id) {
+    if (!project?.exists()) {
       throw new CodeException({
         status: HttpStatus.NOT_FOUND,
         code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
@@ -56,24 +56,24 @@ export class ProjectService {
    * Retreives a list of all quotas for a project
    * @async
    * @param {DevConsoleApiContext} context
-   * @param {GetAllQuotasDto} query
+   * @param {GetQuotasDto} query
    * @returns {Promise<QuotaDto[]>}
    */
   async getProjectQuotas(
     context: DevConsoleApiContext,
-    query: GetAllQuotasDto,
+    query: GetQuotasDto,
   ): Promise<QuotaDto[]> {
-    return await new Scs(context).getAllQuotas(query);
+    return await new Scs(context).getQuotas(query);
   }
 
   /**
    * Creates or updates a project quota by project_uuid and quota_id
    * @param {DevConsoleApiContext} context
-   * @param {CreateOverrideDto} dto - Create or Update data
+   * @param {CreateQuotaOverrideDto} dto - Create or Update data
    */
   async createProjectQuota(
     context: DevConsoleApiContext,
-    data: CreateOverrideDto,
+    data: CreateQuotaOverrideDto,
   ) {
     return await new Scs(context).createOverride(data);
   }
@@ -81,11 +81,11 @@ export class ProjectService {
   /**
    * Deletes project quota by project_uuid and quota_id
    * @param {DevConsoleApiContext} context
-   * @param {DeleteOverrideDto} dto - Create or Update data
+   * @param {QuotaOverrideDto} dto - Create or Update data
    */
   async deleteProjectQuota(
     context: DevConsoleApiContext,
-    data: DeleteOverrideDto,
+    data: QuotaOverrideDto,
   ) {
     return await new Scs(context).deleteOverride(data);
   }
