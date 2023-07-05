@@ -69,7 +69,12 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     console.log(`${this.logPrefix}: ${message}`);
   }
 
-  private async logAms(message: any, wallet?: string, error?: boolean) {
+  private async logAms(
+    message: any,
+    wallet?: string,
+    error?: boolean,
+    data?: any,
+  ) {
     await new Lmas().writeLog({
       logType: error ? LogType.ERROR : LogType.INFO,
       message: message,
@@ -77,6 +82,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       service: ServiceName.BLOCKCHAIN,
       data: {
         wallet,
+        ...data,
       },
     });
   }

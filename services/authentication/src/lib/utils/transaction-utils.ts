@@ -8,10 +8,10 @@ import {
   SubstrateChain,
   TransactionStatus,
 } from '@apillon/lib';
-import { DbTables, TransactionType } from '../../config/types';
+import { DbTables, DidCreateOp, TransactionType } from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { Identity } from '../../modules/identity/models/identity.model';
-import { SubmittableExtrinsic } from '@kiltprotocol/sdk-js';
+import { Did, SubmittableExtrinsic } from '@kiltprotocol/sdk-js';
 import { Transaction } from '../../modules/transaction/models/transaction.model';
 import { TransactionService } from '../../modules/transaction/transaction.service';
 
@@ -20,6 +20,7 @@ export async function identityCreateRequest(
   context: ServiceContext,
   transaction: SubmittableExtrinsic,
   identity: Identity,
+  did_create_op: DidCreateOp,
   conn?: PoolConnection,
 ) {
   await new Lmas().writeLog({
@@ -37,7 +38,7 @@ export async function identityCreateRequest(
     refId: identity.id,
     transactionStatus: TransactionStatus.PENDING,
   });
-  await TransactionService.saveTransaction(context, dbTxRecord, conn);
+  await TransactionService.saveTransaction(dbTxRecord);
 
   const bcServiceRequest: CreateSubstrateTransactionDto =
     new CreateSubstrateTransactionDto(
@@ -47,6 +48,8 @@ export async function identityCreateRequest(
         referenceTable: DbTables.IDENTITY,
         referenceId: identity.id,
         data: {
+          email: identity.email,
+          did_create_op: did_create_op,
           transactionType: TransactionType.DID_CREATE,
         },
       },
@@ -83,7 +86,7 @@ export async function attestationCreateRequest(
   });
 
   if (dbTxRecord.exists()) {
-    await TransactionService.saveTransaction(context, dbTxRecord, conn);
+    await TransactionService.saveTransaction(dbTxRecord);
   } else {
     await dbTxRecord.update();
   }
@@ -104,69 +107,6 @@ export async function attestationCreateRequest(
 
   return bcServiceRequest;
 }
-
-// Prepare identity instance and credential structure
-// const { attestationRequest, credential } = createAttestationRequest(
-//   claimerEmail,
-//   attesterDidUri,
-//   claimerDidUri as DidUri,
-// );
-
-// // NOTE!!: Did.getKeyRelationshipForTx(attestation) --> assertionMethod
-// const attestation = api.tx.attestation.add(
-//   attestationRequest.claimHash,
-//   attestationRequest.cTypeHash,
-//   null,
-// );
-
-// const nextNonce = new BN(await getNextNonce(attesterDidUri));
-
-// await new Lmas().writeLog({
-//   logType: LogType.INFO,
-//   message: 'Creating ATTESTATION TX ...',
-//   location: 'AUTHENTICATION-API/identity/authentication.worker',
-//   service: ServiceName.AUTHENTICATION_API,
-//   data: { email: claimerEmail, didUri: claimerDidUri },
-// });
-
-// const emailAttesatationTx = await Did.authorizeTx(
-//   attesterDidUri,
-//   attestation,
-//   async ({ data }) => ({
-//     signature: attesterKeypairs.assertionMethod.sign(data),
-//     keyType: attesterKeypairs.assertionMethod.type,
-//   }),
-//   attesterAcc.address,
-//   { txCounter: nextNonce },
-// );
-
-// const authorizedBatchedTxs = await Did.authorizeBatch({
-//   batchFunction: api.tx.utility.batchAll,
-//   did: attesterDidUri,
-//   extrinsics: [fullDidCreationTx, emailAttesatationTx],
-//   sign: authenticationSigner(attesterKeypairs),
-//   submitter: attesterAcc.address,
-// });
-
-// const bcsRequest = await identityCreateRequest(
-//   context,
-//   authorizedBatchedTxs,
-//   identity,
-// );
-
-// const claimerCredential = {
-//   credential: {
-//     ...credential,
-//   },
-//   claimerSignature: {
-//     keyType: KiltSignAlgorithm.SR25519,
-//     keyUri: claimerDidUri,
-//   },
-//   name: 'Email',
-//   status: 'pending',
-//   attester: Attester.APILLON,
-//   cTypeTitle: getCtypeSchema(ApillonSupportedCTypes.EMAIL).title,
-// };
 
 /* NOTE: Creates a DID revoke request */
 export async function createDIDRevokeBlockhainRequest(
@@ -202,7 +142,7 @@ export async function createDIDRevokeBlockhainRequest(
     transactionStatus: TransactionStatus.PENDING,
   });
 
-  await TransactionService.saveTransaction(context, dbTxRecord, conn);
+  await TransactionService.saveTransaction(dbTxRecord);
 
   return bcServiceRequest;
 }

@@ -1,14 +1,10 @@
 import {
   AdvancedSQLModel,
   Context,
-  getQueryParams,
   PopulateFrom,
   presenceValidator,
   prop,
-  selectAndCountQuery,
   SerializeFor,
-  SqlModelStatus,
-  TransactionQueryFilter,
   TransactionStatus,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
@@ -119,6 +115,26 @@ export class Transaction extends AdvancedSQLModel {
     validators: [],
   })
   public transactionHash: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+  })
+  public numOfRetries: number;
 
   public async populateByTransactionHash(
     transactionHash: string,

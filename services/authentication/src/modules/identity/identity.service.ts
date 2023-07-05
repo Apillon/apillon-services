@@ -174,12 +174,15 @@ export class IdentityMicroservice {
       claimerEmail,
     );
 
+    console.log(identity.state);
+
     if (
       !identity.exists() ||
       (identity.state != IdentityState.IN_PROGRESS &&
         identity.state != IdentityState.IDENTITY_VERIFIED &&
         identity.state != IdentityState.SUBMITTED_DID_CREATE_REQ)
     ) {
+      console.error('Ideneityt ', identity.state, identity.exists());
       // IDENTITY_VERIFIED just means that the process was broken before
       // the entity was successfully attested --> See a few lines below
       // This is done so we have better control of the process and for
@@ -250,6 +253,7 @@ export class IdentityMicroservice {
       context,
       fullDidCreationTx,
       identity,
+      did_create_op,
     );
 
     // Call blockchain server and submit batch request
@@ -369,65 +373,74 @@ export class IdentityMicroservice {
     return { credential: identity.credential };
   }
 
-  // static async revokeIdentity(event: { body: IdentityDidRevokeDto }, context) {
-  //   const parameters = {
-  //     email: event.body.email,
-  //     args: [],
-  //   };
+  static async revokeIdentity(event: { body: IdentityDidRevokeDto }, context) {
+    const parameters = {
+      email: event.body.email,
+      args: [],
+    };
 
-  //   const identity = await new Identity({}, context).populateByUserEmail(
-  //     context,
-  //     event.body.email,
-  //   );
+    const identity = await new Identity({}, context).populateByUserEmail(
+      context,
+      event.body.email,
+    );
 
-  //   if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
-  //     throw new AuthenticationCodeException({
-  //       code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
-  //       status: HttpStatus.NOT_FOUND,
-  //     });
-  //   }
+    if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
+      throw new AuthenticationCodeException({
+        code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
+        status: HttpStatus.NOT_FOUND,
+      });
+    }
 
-  //   if (
-  //     env.APP_ENV == AppEnvironment.LOCAL_DEV ||
-  //     env.APP_ENV == AppEnvironment.TEST
-  //   ) {
-  //     console.log('Starting DEV IdentityRevokeWorker worker ...');
+    // const bcsRequest = await identityCreateRequest(
+    //   context,
+    //   fullDidCreationTx,
+    //   identity,
+    // );
 
-  //     // Directly calls Kilt worker -> USED ONLY FOR DEVELOPMENT!!
-  //     const serviceDef: ServiceDefinition = {
-  //       type: ServiceDefinitionType.SQS,
-  //       config: { region: 'test' },
-  //       params: { FunctionName: 'test' },
-  //     };
+    // // Call blockchain server and submit batch request
+    // await sendBlockchainServiceRequest(context, bcsRequest);
 
-  //     const wd = new WorkerDefinition(
-  //       serviceDef,
-  //       WorkerName.IDENTITY_REVOKE_WORKER,
-  //       {
-  //         parameters,
-  //       },
-  //     );
+    // if (
+    //   env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+    //   env.APP_ENV == AppEnvironment.TEST
+    // ) {
+    //   console.log('Starting DEV IdentityRevokeWorker worker ...');
 
-  //     const worker = new IdentityRevokeWorker(
-  //       wd,
-  //       context,
-  //       QueueWorkerType.EXECUTOR,
-  //     );
-  //     await worker.runExecutor(parameters);
-  //   } else {
-  //     //send message to SQS
-  //     await sendToWorkerQueue(
-  //       env.AUTH_AWS_WORKER_SQS_URL,
-  //       WorkerName.IDENTITY_REVOKE_WORKER,
-  //       [parameters],
-  //       null,
-  //       null,
-  //     );
-  //   }
+    //   // Directly calls Kilt worker -> USED ONLY FOR DEVELOPMENT!!
+    //   const serviceDef: ServiceDefinition = {
+    //     type: ServiceDefinitionType.SQS,
+    //     config: { region: 'test' },
+    //     params: { FunctionName: 'test' },
+    //   };
 
-  //   identity.state = IdentityState.REVOKED;
-  //   await identity.update();
+    //   const wd = new WorkerDefinition(
+    //     serviceDef,
+    //     WorkerName.IDENTITY_REVOKE_WORKER,
+    //     {
+    //       parameters,
+    //     },
+    //   );
 
-  //   return { success: true };
-  // }
+    //   const worker = new IdentityRevokeWorker(
+    //     wd,
+    //     context,
+    //     QueueWorkerType.EXECUTOR,
+    //   );
+    //   await worker.runExecutor(parameters);
+    // } else {
+    //   //send message to SQS
+    //   await sendToWorkerQueue(
+    //     env.AUTH_AWS_WORKER_SQS_URL,
+    //     WorkerName.IDENTITY_REVOKE_WORKER,
+    //     [parameters],
+    //     null,
+    //     null,
+    //   );
+    // }
+
+    identity.state = IdentityState.REVOKED;
+    await identity.update();
+
+    return { success: true };
+  }
 }

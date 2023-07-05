@@ -11,6 +11,7 @@ export async function upgrade(
       \`transactionStatus\` INT NULL,
       \`refTable\` VARCHAR(100) NULL,
       \`refId\` INT NULL,
+      \`numOfRetries\` INT NULL,
       \`status\` INT NULL,
       \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
       \`createUser\` INT NULL,

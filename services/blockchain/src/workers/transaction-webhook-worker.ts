@@ -193,7 +193,7 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
         ) {
           console.log('Starting DEV worker ...');
 
-          // TODO: If development, the calling worker should
+          // TODO: If development / test, the calling worker should
           // maybe define their own context
           // Directly calls worker -> USED ONLY FOR DEVELOPMENT!!
           const serviceDef: ServiceDefinition = {
@@ -256,6 +256,8 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
   private createSubstrateTransactionWebhookDto(
     transaction,
   ): TransactionWebhookDataDto {
+    console.log('transaction data: ', transaction.data);
+
     return new TransactionWebhookDataDto().populate({
       id: transaction.id,
       transactionHash: transaction.transactionHash,

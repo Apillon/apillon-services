@@ -92,6 +92,7 @@ export enum IdentityState {
   IN_PROGRESS = 'in-progress',
   SUBMITTED_DID_CREATE_REQ = 'submitted-did-create-req',
   SUBMITTED_ATTESATION_REQ = 'submitted-attest-req',
+  DID_CREATED = 'did-created',
   ATTESTED = 'attested',
   PENDING_VERIFICATION = 'pending-verification',
   REJECTED = 'rejected',
@@ -198,3 +199,5 @@ export enum TransactionType {
   DID_REVOKE = 2,
   ATTESTATION = 3,
 }
+
+export const TRANSACTION_MAX_RETRIES = 5;
