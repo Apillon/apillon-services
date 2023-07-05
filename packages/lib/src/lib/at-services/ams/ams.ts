@@ -171,31 +171,31 @@ export class Ams extends BaseService {
     };
   }
 
-  public async assignUserRoleOnProject(params: {
-    user: any;
+  public async assignUserRole(params: {
+    user?: any;
     user_uuid: string;
-    project_uuid: string;
+    project_uuid?: string;
     role_id: DefaultUserRole;
   }) {
     const data = {
       ...params,
       eventName: AmsEventType.USER_ROLE_ASSIGN,
-      user: params.user ? params.user.serialize() : undefined,
+      user: params.user?.serialize(),
     };
 
     return await this.callService(data);
   }
 
-  public async removeUserRoleOnProject(params: {
-    user: any;
+  public async removeUserRole(params: {
+    user?: any;
     user_uuid: string;
-    project_uuid: string;
+    project_uuid?: string;
     role_id: DefaultUserRole;
   }) {
     const data = {
       ...params,
       eventName: AmsEventType.USER_ROLE_REMOVE,
-      user: params.user.serialize(),
+      user: params.user?.serialize(),
     };
 
     return await this.callService(data);

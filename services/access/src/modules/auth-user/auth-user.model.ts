@@ -307,7 +307,7 @@ export class AuthUser extends AdvancedSQLModel {
         authUser_id: this.id,
         role_id,
         user_uuid: this.user_uuid,
-        project_uuid,
+        project_uuid: project_uuid ?? '',
       },
       conn,
     );
@@ -325,10 +325,10 @@ export class AuthUser extends AdvancedSQLModel {
       DELETE FROM ${DbTables.AUTH_USER_ROLE}
       WHERE authUser_id = @authUser_id
       AND role_id = @role_id
-      AND project_uuid = @project_uuid
+      AND (@project_uuid IS NULL OR project_uuid = @project_uuid)
       ;
       `,
-      { authUser_id: this.id, role_id, project_uuid },
+      { authUser_id: this.id, role_id, project_uuid: project_uuid || null },
       conn,
     );
     await this.populateAuthUserRoles(conn);

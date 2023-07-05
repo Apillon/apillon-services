@@ -6,6 +6,7 @@ import {
   BaseQueryFilter,
   CodeException,
   CreateQuotaOverrideDto,
+  DefaultUserRole,
   QuotaOverrideDto,
   Scs,
 } from '@apillon/lib';
@@ -95,6 +96,38 @@ export class UserService {
     query: BaseQueryFilter,
   ): Promise<any> {
     return (await new Ams(context).getUserRoles(user_uuid, query)).data;
+  }
+
+  /**
+   * Add a role to a user
+   * @async
+   * @param {DevConsoleApiContext} context
+   * @param {{ user_uuid: UUID; role_id: DefaultUserRole; }} data
+   */
+  async addUserRole(
+    context: DevConsoleApiContext,
+    data: {
+      user_uuid: UUID;
+      role_id: DefaultUserRole;
+    },
+  ) {
+    return (await new Ams(context).assignUserRole(data)).data;
+  }
+
+  /**
+   * Remove a role from a user
+   * @async
+   * @param {DevConsoleApiContext} context
+   * @param {{ user_uuid: UUID; role_id: DefaultUserRole; }} data
+   */
+  async removeUserRole(
+    context: DevConsoleApiContext,
+    data: {
+      user_uuid: UUID;
+      role_id: DefaultUserRole;
+    },
+  ) {
+    return (await new Ams(context).removeUserRole(data)).data;
   }
 
   /**

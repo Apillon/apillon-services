@@ -12,6 +12,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   ParseUUIDPipe,
   Patch,
   Post,
@@ -82,6 +83,24 @@ export class UserController {
     @Query() query: BaseQueryFilter,
   ) {
     return this.userService.getUserRoles(context, user_uuid, query);
+  }
+
+  @Post(':user_uuid/roles/:id')
+  async addUserRole(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
+    @Param('id', ParseIntPipe) role_id: DefaultUserRole,
+  ): Promise<QuotaDto[]> {
+    return this.userService.addUserRole(context, { user_uuid, role_id });
+  }
+
+  @Delete(':user_uuid/roles/:id')
+  async removeUserRole(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
+    @Param('id', ParseIntPipe) role_id: DefaultUserRole,
+  ): Promise<QuotaDto[]> {
+    return this.userService.removeUserRole(context, { user_uuid, role_id });
   }
 
   @Get(':user_uuid/quotas')
