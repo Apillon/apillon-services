@@ -53,16 +53,7 @@ export class AttestationDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.DID_URI_NOT_PRESENT,
-      },
-      {
-        resolver: didUriValidator(),
-        code: ValidatorErrorCode.DID_URI_INVALID,
-      },
-    ],
+    validators: [],
   })
-  public credential?: string;
+  public credential: string;
 }
