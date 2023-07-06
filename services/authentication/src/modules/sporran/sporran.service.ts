@@ -53,6 +53,14 @@ import { WorkerName } from '../../workers/worker-executor';
 import { prepareSignResources } from '../../lib/sporran';
 import { VerifyCredentialDto } from '@apillon/lib/dist/lib/at-services/authentication/dtos/sporran/message/verify-credential.dto';
 import { AuthenticationCodeException } from '../../lib/exceptions';
+import {
+  ServiceDefinition,
+  ServiceDefinitionType,
+  WorkerDefinition,
+  QueueWorkerType,
+  sendToWorkerQueue,
+} from '@apillon/workers-lib';
+import { IdentityGenerateWorker } from '../../workers/generate-identity.worker';
 
 export class SporranMicroservice {
   static async getSessionValues(_context): Promise<any> {
@@ -273,43 +281,45 @@ export class SporranMicroservice {
       didUri: credential.claim.owner,
     };
 
-    // if (
-    //   env.APP_ENV == AppEnvironment.LOCAL_DEV ||
-    //   env.APP_ENV == AppEnvironment.TEST
-    // ) {
-    //   console.log('Starting DEV IdentityRevokeWorker worker ...');
+    if (
+      env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+      env.APP_ENV == AppEnvironment.TEST
+    ) {
+      console.log('Starting DEV IdentityRevokeWorker worker ...');
 
-    //   // Directly calls Identity worker -> USED ONLY FOR DEVELOPMENT!!
-    //   const serviceDef: ServiceDefinition = {
-    //     type: ServiceDefinitionType.SQS,
-    //     config: { region: 'test' },
-    //     params: { FunctionName: 'test' },
-    //   };
+      throw new Error('DEPRECATED: Worker identity generate does not exist. ');
+      // Directly calls Identity worker -> USED ONLY FOR DEVELOPMENT!!
+      // const serviceDef: ServiceDefinition = {
+      //   type: ServiceDefinitionType.SQS,
+      //   config: { region: 'test' },
+      //   params: { FunctionName: 'test' },
+      // };
 
-    //   const wd = new WorkerDefinition(
-    //     serviceDef,
-    //     WorkerName.IDENTITY_GENERATE_WORKER,
-    //     {
-    //       parameters,
-    //     },
-    //   );
+      // const wd = new WorkerDefinition(
+      //   serviceDef,
+      //   WorkerName.IDENTITY_GENERATE_WORKER,
+      //   {
+      //     parameters,
+      //   },
+      // );
 
-    //   const worker = new IdentityGenerateWorker(
-    //     wd,
-    //     context,
-    //     QueueWorkerType.EXECUTOR,
-    //   );
-    //   await worker.runExecutor(parameters);
-    // } else {
-    //   //send message to SQS
-    //   await sendToWorkerQueue(
-    //     env.AUTH_AWS_WORKER_SQS_URL,
-    //     WorkerName.IDENTITY_GENERATE_WORKER,
-    //     [parameters],
-    //     null,
-    //     null,
-    //   );
-    // }
+      // const worker = new IdentityGenerateWorker(
+      //   wd,
+      //   context,
+      //   QueueWorkerType.EXECUTOR,
+      // );
+      // await worker.runExecutor(parameters);
+    } else {
+      throw new Error('DEPRECATED: Worker identity generate does not exist. ');
+      //send message to SQS
+      // await sendToWorkerQueue(
+      //   env.AUTH_AWS_WORKER_SQS_URL,
+      //   WorkerName.IDENTITY_GENERATE_WORKER,
+      //   [parameters],
+      //   null,
+      //   null,
+      // );
+    }
 
     const identity = await new Identity({}, context).populateByUserEmail(
       context,

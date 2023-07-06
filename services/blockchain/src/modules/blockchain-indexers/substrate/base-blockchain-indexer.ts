@@ -23,8 +23,6 @@ export class BaseBlockchainIndexer {
     return data.squidStatus.height;
   }
 
-  // TODO: Not sure this the right way to do this
-  // I want to implement an abstract method
   public async getAllTransactions(...args: any[]): Promise<any> {
     throw new Error('Method not implemented.');
   }

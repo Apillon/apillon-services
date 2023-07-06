@@ -71,7 +71,6 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
           toBlock,
         );
 
-        // TODO: Implement
         await this.handleBlockchainTransfers(
           wallet,
           crustTransactions.withdrawals,
@@ -373,8 +372,6 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         ? BlockchainStatus.CONFIRMED
         : BlockchainStatus.FAILED;
 
-    // 1. Filter all transactions by status - so SUCCESS / FAILED
-    // 2. Map only the extrinsicHash
     const storageOrders = new Map<string, CrustStorageOrder>(
       bcOrders.storageOrders
         .filter((so) => {
@@ -383,9 +380,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         .map((so) => [so.extrinsicHash, so]),
     );
 
-    // aray of storage order hashes
     const soHashes: string[] = [...storageOrders.keys()];
-    // Update all transactions in the DB with hash value to the status
     const updatedDbTxs: string[] = await this.updateTransactions(
       soHashes,
       status,
@@ -393,7 +388,6 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
       conn,
     );
 
-    // Some logging
     const txDbHashesString = updatedDbTxs.join(',');
     console.log(
       `[SUBSTRATE][CRUST] ${updatedDbTxs.length} [${TransactionStatus[status]}] storage orders matched (txHashes=${txDbHashesString}) in db.`,

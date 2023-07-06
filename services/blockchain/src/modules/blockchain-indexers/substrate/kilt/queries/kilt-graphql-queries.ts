@@ -11,26 +11,6 @@ export enum KiltGQLQueries {
     status
   `,
 
-  //   transfers(where: {
-  //   AND: {
-  //   	transactionType_eq: "balance-deposit",
-  //     OR: {from_eq: "4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn", to_eq: "4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn"}}
-  //   }
-  // ) {
-  //   amount
-  //   fee
-  //   blockHash
-  //   blockNumber
-  //   createdAt
-  //   extrinsicHash
-  //   extrinsicId
-  //   from
-  //   id
-  //   status
-  //   to
-  //   transactionType
-  // }
-
   /* Returns all TRANSFERS from a specific account in KILT */
   ACCOUNT_TRANSFERS_Q = `query getAccountTransfers(
     $account: String!

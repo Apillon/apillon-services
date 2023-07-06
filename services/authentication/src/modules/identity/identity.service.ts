@@ -224,12 +224,6 @@ export class IdentityMicroservice {
         sr25519: signature,
       });
 
-      console.log(
-        'Key relationship: ',
-        fullDidCreationTx.method,
-        Did.getKeyRelationshipForTx(fullDidCreationTx),
-      );
-
       await new Lmas().writeLog({
         logType: LogType.INFO,
         message: `Creating DID create TX ...`,
@@ -380,9 +374,10 @@ export class IdentityMicroservice {
   }
 
   static async revokeIdentity(event: { body: IdentityDidRevokeDto }, context) {
+    const claimerEmail = event.body.email;
     const identity = await new Identity({}, context).populateByUserEmail(
       context,
-      event.body.email,
+      claimerEmail,
     );
 
     if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
@@ -392,55 +387,43 @@ export class IdentityMicroservice {
       });
     }
 
-    // const bcsRequest = await didRevokeRequestBc(
-    //   context,
-    //   attestationTx,
-    //   identity,
-    // );
+    await connect(env.KILT_NETWORK);
+    const api = ConfigService.get('api');
+    // This is the attesterAcc, used elsewhere in the code
 
-    // Call blockchain server and submit batch request
-    // await sendBlockchainServiceRequest(context, bcsRequest);
+    const identifier = Did.toChain(identity.didUri as DidUri);
+    const endpointsCountForDid = await api.query.did.didEndpointsCount(
+      identifier,
+    );
+    const depositReClaimExtrinsic = api.tx.did.reclaimDeposit(
+      identifier,
+      endpointsCountForDid,
+    );
+    try {
+      await new Lmas().writeLog({
+        logType: LogType.INFO,
+        message: `Propagating DID delete TX to KILT BC ...`,
+        location: 'AUTHENTICATION-API/identity/identity-revoke',
+        service: ServiceName.AUTHENTICATION_API,
+        data: { email: claimerEmail, didUri: identity.didUri },
+      });
+      const bcsRequest = await didRevokeRequestBc(
+        context,
+        depositReClaimExtrinsic,
+        identity,
+      );
 
-    // // Call blockchain server and submit batch request
-    // await sendBlockchainServiceRequest(context, bcsRequest);
-
-    // if (
-    //   env.APP_ENV == AppEnvironment.LOCAL_DEV ||
-    //   env.APP_ENV == AppEnvironment.TEST
-    // ) {
-    //   console.log('Starting DEV IdentityRevokeWorker worker ...');
-
-    //   // Directly calls Kilt worker -> USED ONLY FOR DEVELOPMENT!!
-    //   const serviceDef: ServiceDefinition = {
-    //     type: ServiceDefinitionType.SQS,
-    //     config: { region: 'test' },
-    //     params: { FunctionName: 'test' },
-    //   };
-
-    //   const wd = new WorkerDefinition(
-    //     serviceDef,
-    //     WorkerName.IDENTITY_REVOKE_WORKER,
-    //     {
-    //       parameters,
-    //     },
-    //   );
-
-    //   const worker = new IdentityRevokeWorker(
-    //     wd,
-    //     context,
-    //     QueueWorkerType.EXECUTOR,
-    //   );
-    //   await worker.runExecutor(parameters);
-    // } else {
-    //   //send message to SQS
-    //   await sendToWorkerQueue(
-    //     env.AUTH_AWS_WORKER_SQS_URL,
-    //     WorkerName.IDENTITY_REVOKE_WORKER,
-    //     [parameters],
-    //     null,
-    //     null,
-    //   );
-    // }
+      // Call blockchain server and submit batch request
+      await sendBlockchainServiceRequest(context, bcsRequest);
+    } catch (error) {
+      await new Lmas().writeLog({
+        message: error,
+        logType: LogType.ERROR,
+        location: 'Authentication-API/identity/identity-revoke',
+        service: ServiceName.AUTHENTICATION_API,
+        data: { email: claimerEmail, didUri: identity.didUri },
+      });
+    }
 
     identity.state = IdentityState.REVOKED;
     await identity.update();
