@@ -68,17 +68,9 @@ export async function rebuildDatabase(
   port: number,
   user: string,
   password: string,
-  migrationDirectory?: string,
 ): Promise<void> {
   if (!dbMigration) {
-    await initMigrations(
-      database,
-      host,
-      port,
-      user,
-      password,
-      migrationDirectory,
-    );
+    await initMigrations(database, host, port, user, password);
   }
 
   await dbMigration.reset();

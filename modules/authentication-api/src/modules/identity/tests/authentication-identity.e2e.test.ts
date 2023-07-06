@@ -343,199 +343,200 @@ describe('Identity', () => {
       expect(error2.code).toEqual(422070201);
     });
 
-    // // input parameters combinations (did_create_op, email, didUri), token data combinations
-    // test('Combinatorics - Email', async () => {
-    //   const mockData = await setupDidCreateMock();
-    //   const controlRequestBody = { ...mockData.body_mock };
-    //   // INVALID EMAIL
-    //   controlRequestBody.email = controlMailInvalid;
-    //   const resp = await request(stage.http)
-    //     .post('/identity/generate/identity')
-    //     .send({
-    //       ...controlRequestBody,
-    //     });
-    //   const error = resp.body.errors[0];
-    //   expect(resp.status).toBe(422);
-    //   expect(error.code).toEqual(422070003);
-    //   expect(error.message).toEqual('USER_EMAIL_NOT_VALID');
-    //   // EMPTY EMAIL
-    //   controlRequestBody.email = '';
-    //   const resp2 = await request(stage.http)
-    //     .post('/identity/generate/identity')
-    //     .send({
-    //       ...controlRequestBody,
-    //     });
-    //   const error2 = resp2.body.errors[0];
-    //   expect(resp2.status).toBe(422);
-    //   expect(error2.message).toEqual('USER_EMAIL_NOT_PRESENT');
-    //   expect(error2.code).toEqual(422070002);
-    //   // ATTESTED EMAIL
-    //   controlRequestBody.email = testEmailAttested;
-    //   // Generate a new token with the correct data
-    //   controlRequestBody.token = generateJwtToken(
-    //     JwtTokenType.IDENTITY_VERIFICATION,
-    //     {
-    //       email: testEmailAttested,
-    //     },
-    //   );
-    //   const resp3 = await request(stage.http)
-    //     .post('/identity/generate/identity')
-    //     .send({
-    //       ...controlRequestBody,
-    //     });
-    //   expect(resp3.status).toBe(400);
-    //   expect(resp3.body.message).toEqual('IDENTITY_INVALID_STATE');
-    //   // VALID EMAIL
-    //   // const resp4 = await request(stage.http)
-    //   //   .post('/identity/generate/identity')
-    //   //   .send({
-    //   //     ...mockData.body_mock,
-    //   //   });
-    //   // expect(resp4.status).toBe(201);
-    // });
+    // input parameters combinations (did_create_op, email, didUri), token data combinations
+    test('Combinatorics - Email', async () => {
+      const mockData = await setupDidCreateMock();
+      const controlRequestBody = { ...mockData.body_mock };
+      // INVALID EMAIL
+      controlRequestBody.email = controlMailInvalid;
+      const resp = await request(stage.http)
+        .post('/identity/generate/identity')
+        .send({
+          ...controlRequestBody,
+        });
+      const error = resp.body.errors[0];
+      expect(resp.status).toBe(422);
+      expect(error.code).toEqual(422070003);
+      expect(error.message).toEqual('USER_EMAIL_NOT_VALID');
+      // EMPTY EMAIL
+      controlRequestBody.email = '';
+      const resp2 = await request(stage.http)
+        .post('/identity/generate/identity')
+        .send({
+          ...controlRequestBody,
+        });
+      const error2 = resp2.body.errors[0];
+      expect(resp2.status).toBe(422);
+      expect(error2.message).toEqual('USER_EMAIL_NOT_PRESENT');
+      expect(error2.code).toEqual(422070002);
+      // ATTESTED EMAIL
+      controlRequestBody.email = testEmailAttested;
+      // Generate a new token with the correct data
+      controlRequestBody.token = generateJwtToken(
+        JwtTokenType.IDENTITY_VERIFICATION,
+        {
+          email: testEmailAttested,
+        },
+      );
+      const resp3 = await request(stage.http)
+        .post('/identity/generate/identity')
+        .send({
+          ...controlRequestBody,
+        });
+      expect(resp3.status).toBe(400);
+      expect(resp3.body.message).toEqual('IDENTITY_INVALID_STATE');
+      // VALID EMAIL
+      // const resp4 = await request(stage.http)
+      //   .post('/identity/generate/identity')
+      //   .send({
+      //     ...mockData.body_mock,
+      //   });
+      // expect(resp4.status).toBe(201);
+    });
 
-    // test('Combinatorics - did_create_op', async () => {
-    //   const mockData = await setupDidCreateMock();
-    //   const controlRequestBody = { ...mockData.body_mock };
-    //   // 1. DID_CREATE_OP is null
-    //   controlRequestBody.did_create_op = null;
-    //   const resp = await request(stage.http)
-    //     .post('/identity/generate/identity')
-    //     .send({
-    //       ...controlRequestBody,
-    //     });
-    //   expect(resp.status).toBe(422);
-    //   expect(resp.body.errors.length).toEqual(1);
-    //   const error1 = resp.body.errors[0];
-    //   expect(error1.message).toEqual(
-    //     'IDENTITY_CREATE_DID_CREATE_OP_NOT_PRESENT',
-    //   );
-    //   expect(error1.property).toEqual('did_create_op');
-    //   expect(error1.code).toEqual(422070112);
-    //   // 2. DID_CREATE_OP payload nonce is null
-    //   const controlRequestBody2 = { ...mockData.body_mock };
-    //   controlRequestBody2.did_create_op.payload.nonce = null;
-    //   const resp2 = await request(stage.http)
-    //     .post('/identity/generate/identity')
-    //     .send({
-    //       ...controlRequestBody2,
-    //     });
-    //   expect(resp2.status).toEqual(400);
-    //   expect(resp2.body.message).toEqual('IDENTITY_INVALID_REQUEST');
-    //   // 3. DID_CREATE_OP payload message is null
-    //   const controlRequestBody3 = {
-    //     ...mockData.body_mock,
-    //   };
-    //   controlRequestBody3.did_create_op.payload.message = null;
-    //   const resp3 = await request(stage.http)
-    //     .post('/identity/generate/identity')
-    //     .send({
-    //       ...controlRequestBody3,
-    //     });
-    //   expect(resp3.status).toEqual(400);
-    //   expect(resp3.body.message).toEqual('IDENTITY_INVALID_REQUEST');
-    //   // 4. DID_CREATE_OP invalid encryption
-    //   const controlRequestBody4 = { ...mockData };
-    //   const didCreateCall = controlRequestBody4.did_create_call;
-    //   const { keyAgreement } = await generateKeypairs(
-    //     mock.CREATE_IDENTITY_MOCK.mnemonic_control,
-    //   );
-    //   const encryptedData = await encryptAsymmetric(
-    //     JSON.stringify(didCreateCall),
-    //     mock.APILLON_ACC_ENCRYPT_KEY,
-    //     u8aToHex(keyAgreement.secretKey),
-    //   );
+    test('Combinatorics - did_create_op', async () => {
+      const mockData = await setupDidCreateMock();
+      const controlRequestBody = { ...mockData.body_mock };
+      // 1. DID_CREATE_OP is null
+      controlRequestBody.did_create_op = null;
+      const resp = await request(stage.http)
+        .post('/identity/generate/identity')
+        .send({
+          ...controlRequestBody,
+        });
+      expect(resp.status).toBe(422);
+      expect(resp.body.errors.length).toEqual(1);
+      const error1 = resp.body.errors[0];
+      expect(error1.message).toEqual(
+        'IDENTITY_CREATE_DID_CREATE_OP_NOT_PRESENT',
+      );
+      expect(error1.property).toEqual('did_create_op');
+      expect(error1.code).toEqual(422070112);
+      // 2. DID_CREATE_OP payload nonce is null
+      const controlRequestBody2 = { ...mockData.body_mock };
+      controlRequestBody2.did_create_op.payload.nonce = null;
+      const resp2 = await request(stage.http)
+        .post('/identity/generate/identity')
+        .send({
+          ...controlRequestBody2,
+        });
+      expect(resp2.status).toEqual(400);
+      expect(resp2.body.message).toEqual('IDENTITY_INVALID_REQUEST');
+      // 3. DID_CREATE_OP payload message is null
+      const controlRequestBody3 = {
+        ...mockData.body_mock,
+      };
+      controlRequestBody3.did_create_op.payload.message = null;
+      const resp3 = await request(stage.http)
+        .post('/identity/generate/identity')
+        .send({
+          ...controlRequestBody3,
+        });
+      expect(resp3.status).toEqual(400);
+      expect(resp3.body.message).toEqual('IDENTITY_INVALID_REQUEST');
+      // 4. DID_CREATE_OP invalid encryption
+      const controlRequestBody4 = { ...mockData };
+      const didCreateCall = controlRequestBody4.did_create_call;
+      const { keyAgreement } = await generateKeypairs(
+        mock.CREATE_IDENTITY_MOCK.mnemonic_control,
+      );
+      const encryptedData = await encryptAsymmetric(
+        JSON.stringify(didCreateCall),
+        mock.APILLON_ACC_ENCRYPT_KEY,
+        u8aToHex(keyAgreement.secretKey),
+      );
 
-    //   const invalid_did_create_op = {
-    //     payload: {
-    //       message: u8aToHex(encryptedData.box),
-    //       nonce: u8aToHex(encryptedData.nonce),
-    //     },
-    //     senderPubKey: u8aToHex(
-    //       controlRequestBody4.claimer_encryption_key.publicKey,
-    //     ),
-    //   };
-    //   controlRequestBody4.did_create_op = invalid_did_create_op;
-    //   const params = {
-    //     did_create_op: invalid_did_create_op,
-    //     email: mock.CREATE_IDENTITY_MOCK.email,
-    //     didUri: mock.CREATE_IDENTITY_MOCK.did_uri,
-    //     token: generateJwtToken(JwtTokenType.IDENTITY_VERIFICATION, {
-    //       email: mock.CREATE_IDENTITY_MOCK.email,
-    //     }),
-    //   };
-    //   const resp4 = await request(stage.http)
-    //     .post('/identity/generate/identity')
-    //     .send({
-    //       ...params,
-    //     });
-    //   expect(resp4.status).toEqual(400);
-    //   expect(resp3.body.message).toEqual('IDENTITY_INVALID_REQUEST');
-    //   const encryptedData2 = await encryptAsymmetric(
-    //     JSON.stringify(didCreateCall),
-    //     mock.APILLON_ACC_ENCRYPT_KEY,
-    //     u8aToHex(controlRequestBody4.claimer_encryption_key.secretKey),
-    //   );
-    // 5. DID_CREATE_OP VALID
-    // params.did_create_op = {
-    //   payload: {
-    //     message: u8aToHex(encryptedData2.box),
-    //     nonce: u8aToHex(encryptedData2.nonce),
-    //   },
-    //   senderPubKey: u8aToHex(
-    //     controlRequestBody4.claimer_encryption_key.publicKey,
-    //   ),
-    // };
-    // const resp5 = await request(stage.http)
-    //   .post('/identity/generate/identity')
-    //   .send({
-    //     ...params,
-    //   });
-    // expect(resp5.status).toEqual(201);
+      const invalid_did_create_op = {
+        payload: {
+          message: u8aToHex(encryptedData.box),
+          nonce: u8aToHex(encryptedData.nonce),
+        },
+        senderPubKey: u8aToHex(
+          controlRequestBody4.claimer_encryption_key.publicKey,
+        ),
+      };
+      controlRequestBody4.did_create_op = invalid_did_create_op;
+      const params = {
+        did_create_op: invalid_did_create_op,
+        email: mock.CREATE_IDENTITY_MOCK.email,
+        didUri: mock.CREATE_IDENTITY_MOCK.did_uri,
+        token: generateJwtToken(JwtTokenType.IDENTITY_VERIFICATION, {
+          email: mock.CREATE_IDENTITY_MOCK.email,
+        }),
+      };
+      const resp4 = await request(stage.http)
+        .post('/identity/generate/identity')
+        .send({
+          ...params,
+        });
+      expect(resp4.status).toEqual(400);
+      expect(resp3.body.message).toEqual('IDENTITY_INVALID_REQUEST');
+      const encryptedData2 = await encryptAsymmetric(
+        JSON.stringify(didCreateCall),
+        mock.APILLON_ACC_ENCRYPT_KEY,
+        u8aToHex(controlRequestBody4.claimer_encryption_key.secretKey),
+      );
+      // 5. DID_CREATE_OP VALID
+      params.did_create_op = {
+        payload: {
+          message: u8aToHex(encryptedData2.box),
+          nonce: u8aToHex(encryptedData2.nonce),
+        },
+        senderPubKey: u8aToHex(
+          controlRequestBody4.claimer_encryption_key.publicKey,
+        ),
+      };
+      const resp5 = await request(stage.http)
+        .post('/identity/generate/identity')
+        .send({
+          ...params,
+        });
+      expect(resp5.status).toEqual(201);
+    });
+
+    test('Combinatorics - empty body', async () => {
+      const resp = await request(stage.http)
+        .post('/identity/generate/identity')
+        .send({});
+      expect(resp.status).toEqual(422);
+      const errors = resp.body.errors;
+      expect(errors.length).toBeGreaterThan(0);
+      const errorCodes = errors.map((x) =>
+        x.message == 'IDENTITY_CREATE_DID_CREATE_OP_NOT_PRESENT' ||
+        x.message == 'USER_EMAIL_NOT_PRESENT' ||
+        x.message == 'DID_URI_NOT_PRESENT' ||
+        x.message == 'IDENTITY_VERIFICATION_TOKEN_NOT_PRESENT'
+          ? x.message
+          : null,
+      );
+      expect(
+        errorCodes.includes('IDENTITY_CREATE_DID_CREATE_OP_NOT_PRESENT'),
+      ).toBeTruthy();
+      expect(errorCodes.includes('USER_EMAIL_NOT_PRESENT')).toBeTruthy();
+      expect(errorCodes.includes('DID_URI_NOT_PRESENT')).toBeTruthy();
+      expect(
+        errorCodes.includes('IDENTITY_VERIFICATION_TOKEN_NOT_PRESENT'),
+      ).toBeTruthy();
+    });
+
+    test('Correct credential structure', async () => {
+      const mockData = await setupDidCreateMock();
+      const controlRequestBody = { ...mockData.body_mock };
+      controlRequestBody.token = generateJwtToken(
+        JwtTokenType.IDENTITY_VERIFICATION,
+        {
+          email: identityMock.email,
+        },
+        '1d', // valid 0 miliseconds
+      );
+      // VALID EMAIL
+      const resp = await request(stage.http)
+        .post('/identity/generate/identity')
+        .send({
+          ...controlRequestBody,
+        });
+
+      expect(resp.status).toBe(201);
+    });
   });
-
-  // test('Combinatorics - empty body', async () => {
-  //   const resp = await request(stage.http)
-  //     .post('/identity/generate/identity')
-  //     .send({});
-  //   expect(resp.status).toEqual(422);
-  //   const errors = resp.body.errors;
-  //   expect(errors.length).toBeGreaterThan(0);
-  //   const errorCodes = errors.map((x) =>
-  //     x.message == 'IDENTITY_CREATE_DID_CREATE_OP_NOT_PRESENT' ||
-  //     x.message == 'USER_EMAIL_NOT_PRESENT' ||
-  //     x.message == 'DID_URI_NOT_PRESENT' ||
-  //     x.message == 'IDENTITY_VERIFICATION_TOKEN_NOT_PRESENT'
-  //       ? x.message
-  //       : null,
-  //   );
-  //   expect(
-  //     errorCodes.includes('IDENTITY_CREATE_DID_CREATE_OP_NOT_PRESENT'),
-  //   ).toBeTruthy();
-  //   expect(errorCodes.includes('USER_EMAIL_NOT_PRESENT')).toBeTruthy();
-  //   expect(errorCodes.includes('DID_URI_NOT_PRESENT')).toBeTruthy();
-  //   expect(
-  //     errorCodes.includes('IDENTITY_VERIFICATION_TOKEN_NOT_PRESENT'),
-  //   ).toBeTruthy();
-  // });
-
-  // test('Correct credential structure', async () => {
-  //   const mockData = await setupDidCreateMock();
-  //   const controlRequestBody = { ...mockData.body_mock };
-  //   controlRequestBody.token = generateJwtToken(
-  //     JwtTokenType.IDENTITY_VERIFICATION,
-  //     {
-  //       email: identityMock.email,
-  //     },
-  //     '1d', // valid 0 miliseconds
-  //   );
-  //   // VALID EMAIL
-  //   const resp = await request(stage.http)
-  //     .post('/identity/generate/identity')
-  //     .send({
-  //       ...controlRequestBody,
-  //     });
-
-  //   expect(resp.status).toBe(201);
-  // });
 });
