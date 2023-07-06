@@ -6,7 +6,6 @@ import {
   LogType,
   ServiceName,
   TransactionStatus,
-  TransactionWebhookDataDto,
   env,
   runWithWorkers,
 } from '@apillon/lib';
@@ -16,13 +15,10 @@ import {
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { Transaction } from '../modules/transaction/models/transaction.model';
-import {
-  IdentityState,
-  TRANSACTION_MAX_RETRIES,
-  TransactionType,
-} from '../config/types';
+import { IdentityState, TransactionType } from '../config/types';
 import { Identity } from '../modules/identity/models/identity.model';
 import { IdentityMicroservice } from '../modules/identity/identity.service';
+import { IdentityJobService } from '../modules/identity-job/identity-job.service';
 
 export class UpdateStateWorker extends BaseQueueWorker {
   public constructor(
@@ -84,10 +80,6 @@ export class UpdateStateWorker extends BaseQueueWorker {
     //   { body: identityCreateDto },
     //   this.context,
     // );
-    // await IdentityMicroservice.attestClaim(
-    //   { body: attestationClaim },
-    //   this.context,
-    // );
   }
 
   private async execIdentityRevoke(incomignTxData: any) {
@@ -103,12 +95,6 @@ export class UpdateStateWorker extends BaseQueueWorker {
     //   { body: attestationClaim },
     //   this.context,
     // );
-  }
-
-  private async transactionRetry(transaction: Transaction) {
-    transaction.numOfRetries = transaction.numOfRetries + 1;
-    await transaction.update();
-    return transaction.numOfRetries < TRANSACTION_MAX_RETRIES;
   }
 
   public async runExecutor(input: any): Promise<any> {
@@ -127,6 +113,11 @@ export class UpdateStateWorker extends BaseQueueWorker {
           {},
           ctx,
         ).populateByTransactionHash(incomingTx.transactionHash);
+        // const identityJob = await new IdentityJob(
+        //   {},
+        //   ctx,
+        // ).populateByIdentityKey(identity_id);
+
         if (transaction.exists()) {
           status == TransactionStatus.CONFIRMED
             ? await this.logAms(
@@ -147,54 +138,62 @@ export class UpdateStateWorker extends BaseQueueWorker {
             incomingTx.referenceId,
           );
 
+          console.log('Transaction fail: ', txType);
+          console.log('Transaction fail: ', txType);
+
           switch (txType) {
             case TransactionType.DID_CREATE:
               if (status == TransactionStatus.CONFIRMED) {
-                console.log('Step DID CREATE: success. Next step: ATTESTATION');
+                console.log('DID CREATE step SUCCESS');
                 await this.execAttestClaim(identity);
               } else {
-                if (await this.transactionRetry(transaction)) {
-                  console.log(
-                    `Step DID CREATE ==> fail | Retry count: ${transaction.numOfRetries}`,
-                  );
-
-                  console.log('Identity state: ', identity.state);
-
+                if (
+                  await IdentityJobService.identityJobRetry(ctx, identity.id)
+                ) {
+                  console.log(`DID CREATE step FAILED. Retrying ...`);
                   await this.execIdentityGenerate(incomignTxData);
                 } else {
+                  console.log(
+                    `DID CREATE step FAILED | Retry exceeded: STOPPING`,
+                  );
                   // TODO: Notification logic
                 }
               }
               break;
             case TransactionType.ATTESTATION:
               if (status == TransactionStatus.CONFIRMED) {
-                console.log('Step ATTESTATION: success');
+                console.log('ATTESTATION step SUCCESS');
                 identity.state = IdentityState.ATTESTED;
                 await identity.update();
               } else if (status == TransactionStatus.FAILED) {
-                console.log(
-                  `Step ATTESTATION: fail. Retry count: ${transaction.numOfRetries}`,
-                );
-                if (await this.transactionRetry(transaction)) {
-                  await this.execAttestClaim(identity);
+                if (
+                  await IdentityJobService.identityJobRetry(ctx, identity.id)
+                ) {
+                  console.log(`ATTESTATION step FAILED. Retrying ...`);
+                  await this.execIdentityGenerate(incomignTxData);
+                } else {
+                  console.log(
+                    `ATTESTATION step FAILED | Retry exceeded: STOPPING`,
+                  );
+                  // TODO: Notification logic
                 }
               }
 
               break;
-            case TransactionType.DID_REVOKE:
-              if (status == TransactionStatus.CONFIRMED) {
-                console.log('Step REVOKED: success');
-                identity.state = IdentityState.REVOKED;
-                await identity.update();
-              } else {
-                console.log(
-                  `Step ATTESTATION ==> fail | Retry count: ${transaction.numOfRetries}`,
-                );
-                if (await this.transactionRetry(transaction)) {
-                  await this.execAttestClaim(identity);
-                }
-              }
-              break;
+            // case TransactionType.DID_REVOKE:
+            //   if (status == TransactionStatus.CONFIRMED) {
+            //     console.log('Step REVOKED: success');
+            //     identity.state = IdentityState.REVOKED;
+            //     await identity.update();
+            //   } else {
+            //     console.log(
+            //       `Step ATTESTATION ==> fail | Retry count: ${transaction.numOfRetries}`,
+            //     );
+            //     if (await this.transactionRetry(transaction)) {
+            //       await this.execAttestClaim(identity);
+            //     }
+            //   }
+            //   break;
             default:
               await this.logAms(ctx, 'Invalid transaction type', true);
           }

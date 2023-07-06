@@ -19,7 +19,7 @@ import {
 
 import { Transaction as BlockchainTransaction } from '../../../../../blockchain/src/common/models/transaction';
 import { TransactionWebhookWorker } from '../../../../../blockchain/src/workers/transaction-webhook-worker';
-import { Transaction as IdentityTransaction } from '../../transaction/models/transaction.model';
+import { Transaction } from '../../transaction/models/transaction.model';
 import { Context } from '@apillon/lib';
 import { TransactionService } from '../../transaction/transaction.service';
 
@@ -31,6 +31,7 @@ async function insertBlockchainServiceControlTx(
   address = '4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn',
   txStatus = TransactionStatus.CONFIRMED,
   email?: string,
+  nonce = 1,
 ) {
   const chain = SubstrateChain.KILT;
   const chainType = ChainType.SUBSTRATE;
@@ -46,7 +47,7 @@ async function insertBlockchainServiceControlTx(
       rawTransaction: 'SOME_RAW_DATA',
       transactionHash: txHash,
       webhookTriggered: null,
-      nonce: 1,
+      nonce: nonce,
       data: {
         transactionType: txType,
         email: email,
@@ -71,7 +72,7 @@ async function insertIdentityServiceControlTx(
   identity_id: number,
   context: Context,
 ) {
-  const dbTxRecord: IdentityTransaction = new IdentityTransaction({}, context);
+  const dbTxRecord: Transaction = new Transaction({}, context);
   dbTxRecord.populate({
     transactionHash: txHash,
     transactionType: TransactionType.DID_CREATE,
@@ -188,6 +189,13 @@ describe('Identity generate tests', () => {
       stage.authApiContext,
     ).insert();
 
+    let nonce = 1;
+    await insertIdentityServiceControlTx(
+      controlTxHash1,
+      identity.id,
+      stage.authApiContext,
+    );
+
     // DID CREATE REQUEST
     await insertBlockchainServiceControlTx(
       stage.blockchainContext,
@@ -197,6 +205,7 @@ describe('Identity generate tests', () => {
       '4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn',
       TransactionStatus.FAILED,
       'test_2@example.com',
+      nonce,
     );
 
     // TODO: Add batch insert
@@ -229,6 +238,13 @@ describe('Identity generate tests', () => {
 
     expect(idCtrl.state).toEqual(IdentityState.IDENTITY_VERIFIED);
 
+    nonce = 2;
+    await insertIdentityServiceControlTx(
+      controlTxHash2,
+      identity.id,
+      stage.authApiContext,
+    );
+
     await insertBlockchainServiceControlTx(
       stage.blockchainContext,
       identity.id,
@@ -237,6 +253,7 @@ describe('Identity generate tests', () => {
       '4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn',
       TransactionStatus.CONFIRMED,
       'test_2@example.com',
+      nonce,
     );
 
     // Call worker
@@ -250,15 +267,27 @@ describe('Identity generate tests', () => {
 
     expect(idCtr2.state).toEqual(IdentityState.SUBMITTED_ATTESATION_REQ);
 
+    nonce = 3;
+    await insertIdentityServiceControlTx(
+      controlTxHash3,
+      identity.id,
+      stage.authApiContext,
+    );
     await insertBlockchainServiceControlTx(
       stage.blockchainContext,
       identity.id,
-      controlTxHash2,
+      controlTxHash3,
       TransactionType.ATTESTATION,
       '4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn',
       TransactionStatus.CONFIRMED,
       'test_2@example.com',
+      nonce,
     );
+
+    // Call worker
+    await worker1.runExecutor({
+      devContext: stage.authApiContext,
+    });
 
     const idCtr3 = await new Identity({}, stage.authApiContext).populateById(
       identity.id,

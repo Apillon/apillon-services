@@ -171,8 +171,6 @@ async function initMigrations(
 
   const pool = createPool(poolConfig);
 
-  console.log('Transaction pool ', pool);
-
   dbMigration = new Migration({
     conn: pool as unknown as MigrationConnection,
     tableName: tableName ? tableName : 'migrations',

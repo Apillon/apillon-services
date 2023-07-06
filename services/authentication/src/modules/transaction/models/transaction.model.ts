@@ -116,26 +116,6 @@ export class Transaction extends AdvancedSQLModel {
   })
   public transactionHash: string;
 
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-    ],
-    validators: [],
-  })
-  public numOfRetries: number;
-
   public async populateByTransactionHash(
     transactionHash: string,
   ): Promise<Transaction> {

@@ -3,6 +3,7 @@ import { IPublicKeyRecord, Proof } from '@kiltprotocol/vc-export';
 
 export enum DbTables {
   IDENTITY = 'identity',
+  IDENTITY_JOB = 'identity-job',
   TRANSACTION = 'transaction',
 }
 
@@ -200,4 +201,5 @@ export enum TransactionType {
   ATTESTATION = 3,
 }
 
-export const TRANSACTION_MAX_RETRIES = 5;
+// Retry once
+export const IDENTITY_JOB_MAX_RETRIES = 1;
