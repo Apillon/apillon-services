@@ -396,11 +396,14 @@ export class IdentityMicroservice {
       });
     }
 
-    // const bcsRequest = await identityCreateRequest(
-    //   context,
-    //   fullDidCreationTx,
-    //   identity,
-    // );
+    const bcsRequest = await attestationCreateRequest(
+      context,
+      attestationTx,
+      identity,
+    );
+
+    // Call blockchain server and submit batch request
+    await sendBlockchainServiceRequest(context, bcsRequest);
 
     // // Call blockchain server and submit batch request
     // await sendBlockchainServiceRequest(context, bcsRequest);

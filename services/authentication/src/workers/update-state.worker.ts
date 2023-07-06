@@ -1,4 +1,5 @@
 import {
+  AppEnvironment,
   AttestationDto,
   IdentityCreateDto,
   IdentityDidRevokeDto,
@@ -64,10 +65,12 @@ export class UpdateStateWorker extends BaseQueueWorker {
       didUri: identity.didUri,
       token: identity.token,
     });
-    // await IdentityMicroservice.attestClaim(
-    //   { body: attestationClaimDto },
-    //   this.context,
-    // );
+    if (env.APP_ENV != AppEnvironment.TEST) {
+      await IdentityMicroservice.attestClaim(
+        { body: attestationClaimDto },
+        this.context,
+      );
+    }
   }
 
   private async execIdentityGenerate(identity: Identity, incomignTxData: any) {
@@ -79,10 +82,12 @@ export class UpdateStateWorker extends BaseQueueWorker {
     identity.state = IdentityState.SUBMITTED_DID_CREATE_REQ;
     await identity.update();
 
-    // await IdentityMicroservice.generateIdentity(
-    //   { body: identityCreateDto },
-    //   this.context,
-    // );
+    if (env.APP_ENV != AppEnvironment.TEST) {
+      await IdentityMicroservice.generateIdentity(
+        { body: identityCreateDto },
+        this.context,
+      );
+    }
   }
 
   private async execIdentityRevoke(incomignTxData: any) {
@@ -94,10 +99,13 @@ export class UpdateStateWorker extends BaseQueueWorker {
       { body: identityRevokeDto },
       this.context,
     );
-    // await IdentityMicroservice.attestClaim(
-    //   { body: attestationClaim },
-    //   this.context,
-    // );
+
+    if (env.APP_ENV != AppEnvironment.TEST) {
+      await IdentityMicroservice.revokeIdentity(
+        { body: identityRevokeDto },
+        this.context,
+      );
+    }
   }
 
   public async runExecutor(input: any): Promise<any> {
@@ -120,114 +128,118 @@ export class UpdateStateWorker extends BaseQueueWorker {
           ctx,
         ).populateByTransactionHash(incomingTx.transactionHash);
 
-        if (transaction.exists()) {
-          status == TransactionStatus.CONFIRMED
-            ? await this.logAms(
-                ctx,
-                `Transaction ${transaction.transactionType} SUCCESS`,
-              )
-            : await this.logAms(
-                ctx,
-                `Transaction ${transaction.transactionType} FAILED`,
-                true,
-              );
-
-          // Update status
-          transaction.transactionStatus = status;
-          await transaction.update();
-
-          console.log('Reference id: ', incomingTx.referenceId);
-
-          const identity = await new Identity({}, ctx).populateById(
-            incomingTx.referenceId,
-          );
-
-          console.log('Transaction type: ', txType);
-          console.log('Transaction status: ', status);
-
-          switch (txType) {
-            case TransactionType.DID_CREATE:
-              if (status == TransactionStatus.CONFIRMED) {
-                console.log('DID CREATE step SUCCESS');
-
-                if (await idjs.isFinalStage(ctx, identity.id)) {
-                  await idjs.setCompleted(ctx, identity.id);
-                } else {
-                  console.log('Executing attestation stage ...');
-                  // Update identity state
-                  identity.state = IdentityState.DID_CREATED;
-                  await identity.update();
-                  // Set identity job current(next) stage
-                  await idjs.setCurrentStage(
-                    ctx,
-                    identity.id,
-                    IdentityJobStage.ATESTATION,
-                  );
-                  await this.execAttestClaim(identity);
-                }
-              } else {
-                // Set identity job status to FAILED
-                await idjs.setFailed(ctx, identity.id);
-
-                if (await idjs.identityJobRetry(ctx, identity.id)) {
-                  console.log(`DID CREATE step FAILED. Retrying ...`);
-                  await this.execIdentityGenerate(identity, incomignTxData);
-                } else {
-                  console.log(
-                    `DID CREATE step FAILED | Retry exceeded: STOPPING`,
-                  );
-                  // TODO: Notification logic
-                }
-              }
-              break;
-            case TransactionType.ATTESTATION:
-              console.log('ATTESTATION RECEIVED ... ');
-              if (status == TransactionStatus.CONFIRMED) {
-                console.log('ATTESTATION step SUCCESS');
-                if (await idjs.isFinalStage(ctx, identity.id)) {
-                  console.log('final stage reached!!');
-                  await idjs.setCompleted(ctx, identity.id);
-                }
-                identity.state = IdentityState.ATTESTED;
-                await identity.update();
-              } else if (status == TransactionStatus.FAILED) {
-                await idjs.setFailed(ctx, identity.id);
-
-                if (await idjs.identityJobRetry(ctx, identity.id)) {
-                  console.log(`ATTESTATION step FAILED. Retrying ...`);
-                  await this.execAttestClaim(identity);
-                } else {
-                  console.log(
-                    `ATTESTATION step FAILED | Retry exceeded: STOPPING`,
-                  );
-                  // TODO: Notification logic
-                }
-              }
-
-              break;
-            // case TransactionType.DID_REVOKE:
-            //   if (status == TransactionStatus.CONFIRMED) {
-            //     console.log('Step REVOKED: success');
-            //     identity.state = IdentityState.REVOKED;
-            //     await identity.update();
-            //   } else {
-            //     console.log(
-            //       `Step ATTESTATION ==> fail | Retry count: ${transaction.numOfRetries}`,
-            //     );
-            //     if (await this.transactionRetry(transaction)) {
-            //       await this.execAttestClaim(identity);
-            //     }
-            //   }
-            //   break;
-            default:
-              await this.logAms(ctx, 'Invalid transaction type', true);
-          }
-        } else {
+        if (!transaction.exists()) {
           await this.logAms(
             ctx,
-            'Transaction for hash ${result.transactionHash} does not exist!',
+            `Transaction for hash ${result.transactionHash} does not exist!`,
             true,
           );
+          return;
+        }
+
+        status == TransactionStatus.CONFIRMED
+          ? await this.logAms(
+              ctx,
+              `Transaction ${transaction.transactionType} SUCCESS`,
+            )
+          : await this.logAms(
+              ctx,
+              `Transaction ${transaction.transactionType} FAILED`,
+              true,
+            );
+
+        // Update status
+        transaction.transactionStatus = status;
+        await transaction.update();
+
+        console.log('Reference id: ', incomingTx.referenceId);
+
+        const identity = await new Identity({}, ctx).populateById(
+          incomingTx.referenceId,
+        );
+
+        console.log('Transaction type: ', txType);
+        console.log('Transaction status: ', status);
+
+        switch (txType) {
+          case TransactionType.DID_CREATE:
+            if (status == TransactionStatus.CONFIRMED) {
+              console.log('DID CREATE step SUCCESS');
+
+              if (await idjs.isFinalStage(ctx, identity.id)) {
+                await idjs.setCompleted(ctx, identity.id);
+              } else {
+                console.log('Executing attestation stage ...');
+                // Update identity state
+                identity.state = IdentityState.DID_CREATED;
+                await identity.update();
+                // Set identity job current(next) stage
+                await idjs.setCurrentStage(
+                  ctx,
+                  identity.id,
+                  IdentityJobStage.ATESTATION,
+                );
+                await this.execAttestClaim(identity);
+              }
+            } else {
+              // Set identity job status to FAILED
+              await idjs.setFailed(ctx, identity.id);
+
+              if (await idjs.identityJobRetry(ctx, identity.id)) {
+                console.log(`DID CREATE step FAILED. Retrying ...`);
+                await this.execIdentityGenerate(identity, incomignTxData);
+              } else {
+                console.log(
+                  `DID CREATE step FAILED | Retry exceeded: STOPPING`,
+                );
+                // TODO: Notification logic
+              }
+            }
+            break;
+          case TransactionType.ATTESTATION:
+            console.log('ATTESTATION RECEIVED ... ');
+            if (status == TransactionStatus.CONFIRMED) {
+              console.log('ATTESTATION step SUCCESS');
+              if (await idjs.isFinalStage(ctx, identity.id)) {
+                console.log('final stage reached!!');
+                await idjs.setCompleted(ctx, identity.id);
+              }
+              identity.state = IdentityState.ATTESTED;
+              await identity.update();
+            } else if (status == TransactionStatus.FAILED) {
+              await idjs.setFailed(ctx, identity.id);
+
+              if (await idjs.identityJobRetry(ctx, identity.id)) {
+                console.log(`ATTESTATION step FAILED. Retrying ...`);
+                await this.execAttestClaim(identity);
+              } else {
+                console.log(
+                  `ATTESTATION step FAILED | Retry exceeded: STOPPING`,
+                );
+                // TODO: Notification logic
+              }
+            }
+
+            break;
+          case TransactionType.DID_REVOKE:
+            if (status == TransactionStatus.CONFIRMED) {
+              console.log('Step REVOKED: success');
+              identity.state = IdentityState.REVOKED;
+              await idjs.setCompleted(ctx, identity.id);
+              await identity.update();
+            } else {
+              if (await idjs.identityJobRetry(ctx, identity.id)) {
+                console.log(`REVOKE step FAILED. Retrying ...`);
+                await this.execAttestClaim(identity);
+              } else {
+                console.log(`REVOKE step FAILED | Retry exceeded: STOPPING`);
+                // TODO: Notification logic
+              }
+            }
+            break;
+          default:
+            await this.logAms(ctx, 'Invalid transaction type', true);
+            break;
         }
       },
     );

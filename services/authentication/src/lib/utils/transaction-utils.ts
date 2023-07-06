@@ -133,7 +133,6 @@ export async function createDIDRevokeBlockhainRequest(
   context: ServiceContext,
   transaction: SubmittableExtrinsic,
   identity: Identity,
-  conn?: PoolConnection,
 ) {
   await new Lmas().writeLog({
     logType: LogType.INFO,
@@ -142,6 +141,21 @@ export async function createDIDRevokeBlockhainRequest(
     service: ServiceName.AUTHENTICATION_API,
   });
   const dbTxRecord: Transaction = new Transaction({}, context);
+
+  // Init JOB and set current stage
+  await IdentityJobService.initOrGetIdentityJob(
+    context,
+    identity.id,
+    // The final stage for this job
+    IdentityJobStage.DID_REVOKE,
+  );
+
+  await IdentityJobService.setCurrentStage(
+    context,
+    identity.id,
+    // The final stage for this job
+    IdentityJobStage.DID_REVOKE,
+  );
 
   const bcServiceRequest: CreateSubstrateTransactionDto =
     new CreateSubstrateTransactionDto(
