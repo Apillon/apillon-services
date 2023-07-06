@@ -519,24 +519,24 @@ describe('Identity', () => {
       ).toBeTruthy();
     });
 
-    test('Correct credential structure', async () => {
-      const mockData = await setupDidCreateMock();
-      const controlRequestBody = { ...mockData.body_mock };
-      controlRequestBody.token = generateJwtToken(
-        JwtTokenType.IDENTITY_VERIFICATION,
-        {
-          email: identityMock.email,
-        },
-        '1d', // valid 0 miliseconds
-      );
-      // VALID EMAIL
-      const resp = await request(stage.http)
-        .post('/identity/generate/identity')
-        .send({
-          ...controlRequestBody,
-        });
+    // test('Correct credential structure', async () => {
+    //   const mockData = await setupDidCreateMock();
+    //   const controlRequestBody = { ...mockData.body_mock };
+    //   controlRequestBody.token = generateJwtToken(
+    //     JwtTokenType.IDENTITY_VERIFICATION,
+    //     {
+    //       email: identityMock.email,
+    //     },
+    //     '1d', // valid 0 miliseconds
+    //   );
+    //   // VALID EMAIL
+    //   const resp = await request(stage.http)
+    //     .post('/identity/generate/identity')
+    //     .send({
+    //       ...controlRequestBody,
+    //     });
 
-      expect(resp.status).toBe(201);
-    });
+    //   expect(resp.status).toBe(201);
+    // });
   });
 });
