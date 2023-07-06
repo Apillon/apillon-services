@@ -1,16 +1,16 @@
 import {
+  BurnNftDto,
+  CollectionsQuotaReachedQueryFilter,
   CreateCollectionDTO,
+  DefaultPermission,
   DefaultUserRole,
+  DeployCollectionDTO,
   MintNftDTO,
   NFTCollectionQueryFilter,
-  DeployCollectionDTO,
   SetCollectionBaseUriDTO,
   TransactionQueryFilter,
   TransferCollectionDTO,
   ValidateFor,
-  BurnNftDto,
-  CollectionsQuotaReachedQueryFilter,
-  DefaultPermission,
 } from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
@@ -176,7 +176,7 @@ export class NftsController {
     );
   }
 
-  @Get('/collections/:collectionUuid/burn')
+  @Post('/collections/:collectionUuid/burn')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -187,7 +187,7 @@ export class NftsController {
   async burnNftToken(
     @Ctx() context: DevConsoleApiContext,
     @Param('collectionUuid') collectionUuid: string,
-    @Query() body: BurnNftDto,
+    @Body() body: BurnNftDto,
   ) {
     return await this.nftsService.burnNftToken(context, collectionUuid, body);
   }

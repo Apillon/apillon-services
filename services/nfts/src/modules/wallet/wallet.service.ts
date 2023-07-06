@@ -3,12 +3,13 @@ import {
   BlockchainMicroservice,
   ChainType,
   Context,
+  env,
   EvmChain,
   MintNftDTO,
-  env,
+  NFTCollectionType,
 } from '@apillon/lib';
 import { TransactionReceipt } from '@ethersproject/providers';
-import { Contract, UnsignedTransaction, ethers } from 'ethers';
+import { Contract, ethers, UnsignedTransaction } from 'ethers';
 import { EvmNftABI } from '../../lib/contracts/deployed-nft-contract';
 import { NftTransaction } from '../../lib/nft-contract-transaction';
 import { Collection } from '../nfts/models/collection.model';
@@ -52,47 +53,55 @@ export class WalletService {
   async createTransferOwnershipTransaction(
     contract: string,
     newOwner: string,
+    collectionType: NFTCollectionType,
   ): Promise<UnsignedTransaction> {
     await this.initializeProvider();
     return await NftTransaction.createTransferOwnershipTransaction(
       this.evmChain,
       contract,
       newOwner,
+      collectionType,
     );
   }
 
   async createSetNftBaseUriTransaction(
     contract: string,
     uri: string,
+    collectionType: NFTCollectionType,
   ): Promise<UnsignedTransaction> {
     await this.initializeProvider();
     return await NftTransaction.createSetNftBaseUriTransaction(
       this.evmChain,
       contract,
+      collectionType,
       uri,
     );
   }
 
   async createMintToTransaction(
     contract: string,
+    collectionType: NFTCollectionType,
     params: MintNftDTO,
   ): Promise<UnsignedTransaction> {
     await this.initializeProvider();
     return await NftTransaction.createMintToTransaction(
       this.evmChain,
       contract,
+      collectionType,
       params,
     );
   }
 
   async createBurnNftTransaction(
     contract: string,
+    collectionType: NFTCollectionType,
     tokenId: number,
   ): Promise<UnsignedTransaction> {
     await this.initializeProvider();
     return await NftTransaction.createBurnNftTransaction(
       this.evmChain,
       contract,
+      collectionType,
       tokenId,
     );
   }

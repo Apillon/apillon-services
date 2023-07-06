@@ -349,6 +349,7 @@ export class NftsService {
         await walletService.createTransferOwnershipTransaction(
           collection.contractAddress,
           params.body.address,
+          collection.collectionType,
         );
 
       const blockchainRequest: CreateEvmTransactionDto =
@@ -434,6 +435,7 @@ export class NftsService {
         await walletService.createSetNftBaseUriTransaction(
           collection.contractAddress,
           params.body.uri,
+          collection.collectionType,
         );
 
       const blockchainRequest: CreateEvmTransactionDto =
@@ -512,6 +514,7 @@ export class NftsService {
       const tx: UnsignedTransaction =
         await walletService.createMintToTransaction(
           collection.contractAddress,
+          collection.collectionType,
           params.body,
         );
 
@@ -593,6 +596,7 @@ export class NftsService {
       const tx: UnsignedTransaction =
         await walletService.createBurnNftTransaction(
           collection.contractAddress,
+          collection.collectionType,
           params.body.tokenId,
         );
       const blockchainRequest: CreateEvmTransactionDto =
