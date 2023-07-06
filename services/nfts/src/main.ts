@@ -15,6 +15,7 @@ export async function processEvent(event, context: Context): Promise<any> {
     [NftsEventType.NFT_COLLECTIONS_LIST]: NftsService.listNftCollections,
     [NftsEventType.TRANSFER_OWNERSHIP]: NftsService.transferCollectionOwnership,
     [NftsEventType.MINT_NFT]: NftsService.mintNftTo,
+    [NftsEventType.NEST_MINT_NFT]: NftsService.nestMintNftTo,
     [NftsEventType.BURN_NFT]: NftsService.burnNftToken,
     [NftsEventType.SET_BASE_URI]: NftsService.setNftCollectionBaseUri,
     [NftsEventType.MAX_COLLECTIONS_QUOTA_REACHED]:

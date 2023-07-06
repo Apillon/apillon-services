@@ -31,7 +31,7 @@ describe('Storage bucket tests', () => {
 
   let testCollection: Collection,
     newCollection: Collection,
-    nestableCollection: Collection;
+    nestedCollection: Collection;
 
   beforeAll(async () => {
     stage = await setupTest();
@@ -66,7 +66,7 @@ describe('Storage bucket tests', () => {
       nestableUser,
       stage.devConsoleContext,
     );
-    nestableCollection = await createTestNFTCollection(
+    nestedCollection = await createTestNFTCollection(
       nestableUser,
       stage.nftsContext,
       nestableProject,
@@ -614,21 +614,21 @@ describe('Storage bucket tests', () => {
       expect(response.body.data.contractAddress).toBeTruthy();
 
       //Get collection from DB
-      nestableCollection = await new Collection(
+      nestedCollection = await new Collection(
         {},
         stage.nftsContext,
       ).populateById(response.body.data.id);
 
-      expect(nestableCollection.exists()).toBeTruthy();
+      expect(nestedCollection.exists()).toBeTruthy();
 
-      nestableCollection.collectionStatus = CollectionStatus.DEPLOYED;
-      await nestableCollection.update();
+      nestedCollection.collectionStatus = CollectionStatus.DEPLOYED;
+      await nestedCollection.update();
     });
 
     test('User should be able to get nestable collection transactions', async () => {
       const response = await request(stage.http)
         .get(
-          `/nfts/collections/${nestableCollection.collection_uuid}/transactions`,
+          `/nfts/collections/${nestedCollection.collection_uuid}/transactions`,
         )
         .set('Authorization', `Bearer ${nestableUser.token}`);
       expect(response.status).toBe(200);
@@ -638,7 +638,7 @@ describe('Storage bucket tests', () => {
 
     test('User should be able to mint nestable NFT', async () => {
       const response = await request(stage.http)
-        .post(`/nfts/collections/${nestableCollection.collection_uuid}/mint`)
+        .post(`/nfts/collections/${nestedCollection.collection_uuid}/mint`)
         .send({
           receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
           quantity: 1,
@@ -650,16 +650,65 @@ describe('Storage bucket tests', () => {
       const transaction: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
-      ).getCollectionTransactions(nestableCollection.id);
+      ).getCollectionTransactions(nestedCollection.id);
 
       expect(
         transaction.find((x) => x.transactionType == TransactionType.MINT_NFT),
       ).toBeTruthy();
     });
 
+    test('User should be able to nest mint NFT for nestable NFT', async () => {
+      const destinationCollectionResponse = await request(stage.http)
+        .post(`/nfts/collections?project_uuid=${nestableProject.project_uuid}`)
+        .send({
+          collectionType: 2,
+          symbol: 'ANFTN',
+          name: 'Nested NFT Collection',
+          maxSupply: 50,
+          dropPrice: 0,
+          project_uuid: nestableProject.project_uuid,
+          baseUri:
+            'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/',
+          baseExtension: 'json',
+          drop: false,
+          dropStart: 0,
+          dropReserve: 5,
+          chain: 592,
+          isRevokable: true,
+          isSoulbound: false,
+          royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
+          royaltiesFees: 0,
+        })
+        .set('Authorization', `Bearer ${nestableUser.token}`);
+      expect(destinationCollectionResponse.status).toBe(201);
+      const destinationCollection = destinationCollectionResponse.body.data;
+
+      const response = await request(stage.http)
+        .post(`/nfts/collections/${nestedCollection.collection_uuid}/nest-mint`)
+        .send({
+          destinationCollectionUuid: destinationCollection.collection_uuid,
+          destinationNftId: 1,
+          quantity: 1,
+        })
+        .set('Authorization', `Bearer ${nestableUser.token}`);
+      expect(response.status).toBe(201);
+      expect(response.body.data.success).toBe(true);
+
+      //Check if new transactions exists
+      const transaction: Transaction[] = await new Transaction(
+        {},
+        stage.nftsContext,
+      ).getCollectionTransactions(nestedCollection.id);
+      expect(
+        transaction.find(
+          (x) => x.transactionType == TransactionType.NEST_MINT_NFT,
+        ),
+      ).toBeTruthy();
+    });
+
     test('User should be able to burn nestable collection NFT', async () => {
       const response = await request(stage.http)
-        .post(`/nfts/collections/${nestableCollection.collection_uuid}/burn`)
+        .post(`/nfts/collections/${nestedCollection.collection_uuid}/burn`)
         .send({ tokenId: 1 })
         .set('Authorization', `Bearer ${nestableUser.token}`);
 
@@ -670,7 +719,7 @@ describe('Storage bucket tests', () => {
     test('User should be able to transfer nestable NFT collection', async () => {
       const response = await request(stage.http)
         .post(
-          `/nfts/collections/${nestableCollection.collection_uuid}/transferOwnership`,
+          `/nfts/collections/${nestedCollection.collection_uuid}/transferOwnership`,
         )
         .send({
           address: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
@@ -682,7 +731,7 @@ describe('Storage bucket tests', () => {
       const transaction: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
-      ).getCollectionTransactions(nestableCollection.id);
+      ).getCollectionTransactions(nestedCollection.id);
 
       expect(
         transaction.find(
@@ -693,11 +742,11 @@ describe('Storage bucket tests', () => {
     });
 
     test('User should NOT be able to Mint transferred nestable collection', async () => {
-      nestableCollection.collectionStatus = CollectionStatus.TRANSFERED;
-      await nestableCollection.update();
+      nestedCollection.collectionStatus = CollectionStatus.TRANSFERED;
+      await nestedCollection.update();
 
       const response = await request(stage.http)
-        .post(`/nfts/collections/${nestableCollection.collection_uuid}/mint`)
+        .post(`/nfts/collections/${nestedCollection.collection_uuid}/mint`)
         .send({
           receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
           quantity: 1,

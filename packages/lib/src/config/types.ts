@@ -152,6 +152,7 @@ export enum NftsEventType {
   GET_NFT_COLLECTION_BY_UUID = 'get-nft-collection-by-uuid',
   TRANSFER_OWNERSHIP = 'transfer-ownership',
   MINT_NFT = 'mint-nft',
+  NEST_MINT_NFT = 'nest-mint-nft',
   SET_BASE_URI = 'set-base-uri',
   CHECK_TRANSACTION_STATUS = 'check-transaction-status',
   NFT_COLLECTION_TRANSACTION_LIST = 'list-collection-transactions',
@@ -481,6 +482,8 @@ export enum ValidatorErrorCode {
   NFT_COLLECTION_BASE_URI_NOT_PRESENT = 42200140,
   NFT_TYPE_NOT_PRESENT = 42200141,
   NFT_TYPE_NOT_VALID = 42200142,
+  NFT_MINT_DESTINATION_COLLECTION_ID_NOT_PRESENT = 42200143,
+  NFT_MINT_DESTINATION_NFT_ID_NOT_PRESENT = 42200143,
 
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,

@@ -1,5 +1,11 @@
 import { EvmChain, MintNftDTO, NFTCollectionType } from '@apillon/lib';
-import { constants, Contract, ContractFactory, PopulatedTransaction, UnsignedTransaction, } from 'ethers';
+import {
+  constants,
+  Contract,
+  ContractFactory,
+  PopulatedTransaction,
+  UnsignedTransaction,
+} from 'ethers';
 import {
   EvmNftABI,
   EvmNftBytecode,
@@ -204,6 +210,44 @@ export class NftTransaction {
         params.receivingAddress,
         params.quantity,
       );
+    return {
+      to: contractAddress,
+      data: txData.data,
+      type: 2,
+    };
+  }
+
+  /**
+   * @param chain EVM chain used
+   * @param destinationCollectionAddress collection under which we are mint nesting NFT
+   * @param destinationNftId NFT id under which we are mint nesting NFT
+   * @param contractAddress NFT contract address
+   * @param collectionType NFTCollectionType
+   * @param quantity number of NFTs to nest mint
+   * @returns UnsignedTransaction
+   */
+  static async createNestMintToTransaction(
+    chain: EvmChain,
+    destinationCollectionAddress: string,
+    destinationNftId: number,
+    contractAddress: string,
+    collectionType: NFTCollectionType,
+    quantity: number,
+  ): Promise<UnsignedTransaction> {
+    console.log(
+      `[${EvmChain[chain]}] Creating NFT (NFT contract=${contractAddress}) nest mint transaction (toAddress=${destinationCollectionAddress}, collection type=${collectionType}).`,
+    );
+
+    const nftContractAbi = getNftContractAbi(collectionType);
+    const nftContract: Contract = new Contract(contractAddress, nftContractAbi);
+
+    const txData: PopulatedTransaction =
+      await nftContract.populateTransaction.nestMint(
+        destinationCollectionAddress,
+        quantity,
+        destinationNftId,
+      );
+
     return {
       to: contractAddress,
       data: txData.data,

@@ -92,6 +92,24 @@ export class WalletService {
     );
   }
 
+  async createNestMintToTransaction(
+    destinationCollectionAddress: string,
+    destinationNftId: number,
+    contract: string,
+    collectionType: NFTCollectionType,
+    quantity: number,
+  ): Promise<UnsignedTransaction> {
+    await this.initializeProvider();
+    return await NftTransaction.createNestMintToTransaction(
+      this.evmChain,
+      destinationCollectionAddress,
+      destinationNftId,
+      contract,
+      collectionType,
+      quantity,
+    );
+  }
+
   async createBurnNftTransaction(
     contract: string,
     collectionType: NFTCollectionType,

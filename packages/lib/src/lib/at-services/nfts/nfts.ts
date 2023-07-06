@@ -4,7 +4,7 @@ import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { NFTCollectionQueryFilter } from './dtos/collection-query-filter.dto';
 import { CreateCollectionDTO } from './dtos/create-collection.dto';
-import { MintNftDTO } from './dtos/mint-nft.dto';
+import { MintNftDTO, NestMintNftDTO } from './dtos/mint-nft.dto';
 import { DeployCollectionDTO } from './dtos/deploy-collection.dto';
 import { SetCollectionBaseUriDTO } from './dtos/set-collection-base-uri.dto';
 import { TransactionQueryFilter } from './dtos/transaction-query-filter.dto';
@@ -70,6 +70,14 @@ export class NftsMicroservice extends BaseService {
   public async mintNft(params: MintNftDTO) {
     const data = {
       eventName: NftsEventType.MINT_NFT,
+      body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async nestMintNft(params: NestMintNftDTO) {
+    const data = {
+      eventName: NftsEventType.NEST_MINT_NFT,
       body: params.serialize(),
     };
     return await this.callService(data);
