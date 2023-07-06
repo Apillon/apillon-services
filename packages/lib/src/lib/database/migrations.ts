@@ -173,8 +173,6 @@ async function initMigrations(
     // silent: false,
   });
 
-  console.log('dbMigration ', dbMigration);
-
   seedMigration = new Migration({
     conn: pool as unknown as MigrationConnection,
     tableName: tableName ? tableName : 'seeds',

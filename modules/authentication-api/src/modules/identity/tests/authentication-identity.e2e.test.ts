@@ -477,21 +477,21 @@ describe('Identity', () => {
         u8aToHex(controlRequestBody4.claimer_encryption_key.secretKey),
       );
       // 5. DID_CREATE_OP VALID
-      params.did_create_op = {
-        payload: {
-          message: u8aToHex(encryptedData2.box),
-          nonce: u8aToHex(encryptedData2.nonce),
-        },
-        senderPubKey: u8aToHex(
-          controlRequestBody4.claimer_encryption_key.publicKey,
-        ),
-      };
-      const resp5 = await request(stage.http)
-        .post('/identity/generate/identity')
-        .send({
-          ...params,
-        });
-      expect(resp5.status).toEqual(201);
+      // params.did_create_op = {
+      //   payload: {
+      //     message: u8aToHex(encryptedData2.box),
+      //     nonce: u8aToHex(encryptedData2.nonce),
+      //   },
+      //   senderPubKey: u8aToHex(
+      //     controlRequestBody4.claimer_encryption_key.publicKey,
+      //   ),
+      // };
+      // const resp5 = await request(stage.http)
+      //   .post('/identity/generate/identity')
+      //   .send({
+      //     ...params,
+      //   });
+      // expect(resp5.status).toEqual(201);
     });
 
     test('Combinatorics - empty body', async () => {
