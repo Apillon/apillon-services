@@ -17,18 +17,9 @@ import {
   sendToWorkerQueue,
   BaseQueueWorker,
   QueueWorkerType,
-  ServiceDefinition,
-  ServiceDefinitionType,
 } from '@apillon/workers-lib';
 import { DbTables } from '../config/types';
 import { WorkerName } from './worker-executor';
-import { UpdateCrustStatusWorker } from '../../../storage/src/workers/update-crust-status-worker';
-import { UpdateStateWorker } from '../../../authentication/src/workers/update-state.worker';
-
-const workerMapping = {
-  UpdateCrustStatusWorker: UpdateCrustStatusWorker,
-  UpdateKiltStatusWorker: UpdateStateWorker,
-};
 
 export class TransactionWebhookWorker extends BaseQueueWorker {
   public constructor(
@@ -108,23 +99,20 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
         ...(await this.processWebhook(
           crustWebhooks,
           env.AUTH_AWS_WORKER_SQS_URL,
-          'UpdateCrustStatusWorker',
-          params,
+          WorkerName.CRUST_TRANSACTIONS,
         )),
 
         ...(await this.processWebhook(
           kiltWebooks,
           env.AUTH_AWS_WORKER_SQS_URL,
-          'UpdateKiltStatusWorker',
-          params,
+          WorkerName.KILT_TRANSACTIONS,
         )),
 
         // EVM
         ...(await this.processWebhook(
           nftWebhooks,
           env.NFTS_AWS_WORKER_SQS_URL,
-          'TransactionStatusWorker',
-          params,
+          WorkerName.SUBSTRATE_TRANSACTION,
         )),
       ];
 
@@ -177,74 +165,43 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
     return cache;
   }
 
-  async processWebhook(
-    webhooks: any[],
-    sqsUrl: string,
-    workerName: string,
-    params?: any,
-  ) {
+  async processWebhook(webhooks: any[], sqsUrl: string, workerName: string) {
     let updates = [];
     if (webhooks.length > 0) {
       const splits = this.splitter(webhooks, 10); // batch updates to up to 10 items
       for (let i = 0; i < splits.length; i++) {
-        if (
-          env.APP_ENV == AppEnvironment.LOCAL_DEV ||
-          env.APP_ENV == AppEnvironment.TEST
-        ) {
-          console.log('Starting DEV worker ...');
-
-          // TODO: If development / test, the calling worker should
-          // maybe define their own context
-          // Directly calls worker -> USED ONLY FOR DEVELOPMENT!!
-          const serviceDef: ServiceDefinition = {
-            type: ServiceDefinitionType.SQS,
-            config: { region: 'test' },
-            params: { FunctionName: 'test' },
-          };
-
-          const wd = new WorkerDefinition(serviceDef, workerName, {});
-          const workerCls = workerMapping[workerName];
-
-          const worker = new workerCls(
-            wd,
-            params.devContext,
-            QueueWorkerType.EXECUTOR,
-          );
-          await worker.runExecutor({ data: splits[i] });
-        } else {
-          try {
-            // sending batch by batch because we need to know if a failure occurred.
-            const res = await sendToWorkerQueue(
-              sqsUrl,
-              workerName,
-              [
-                {
-                  data: splits[i],
-                },
-              ],
-              null,
-              null,
-            );
-            if (res.errCount > 0) {
-              throw new Error(res.errMsgs[0]);
-            }
-
-            console.log('pushed webhook');
-            updates = [...updates, splits[i].map((a) => a.id)];
-          } catch (e) {
-            console.log(e);
-            await new Lmas().writeLog({
-              context: this.context,
-              logType: LogType.ERROR,
-              message: 'Error in TransactionWebhookWorker sending webhook',
-              location: `${this.constructor.name}/runExecutor`,
-              service: ServiceName.BLOCKCHAIN,
-              data: {
-                splits,
-                e,
+        try {
+          // sending batch by batch because we need to know if a failure occurred.
+          const res = await sendToWorkerQueue(
+            sqsUrl,
+            workerName,
+            [
+              {
+                data: splits[i],
               },
-            });
+            ],
+            null,
+            null,
+          );
+          if (res.errCount > 0) {
+            throw new Error(res.errMsgs[0]);
           }
+
+          console.log('pushed webhook');
+          updates = [...updates, splits[i].map((a) => a.id)];
+        } catch (e) {
+          console.log(e);
+          await new Lmas().writeLog({
+            context: this.context,
+            logType: LogType.ERROR,
+            message: 'Error in TransactionWebhookWorker sending webhook',
+            location: `${this.constructor.name}/runExecutor`,
+            service: ServiceName.BLOCKCHAIN,
+            data: {
+              splits,
+              e,
+            },
+          });
         }
 
         updates = [...updates, splits[i].map((a) => a.id)];

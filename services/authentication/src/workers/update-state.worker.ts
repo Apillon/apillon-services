@@ -18,7 +18,8 @@ import { Transaction } from '../modules/transaction/models/transaction.model';
 import { IdentityState, TransactionType } from '../config/types';
 import { Identity } from '../modules/identity/models/identity.model';
 import { IdentityMicroservice } from '../modules/identity/identity.service';
-import { IdentityJobService } from '../modules/identity-job/identity-job.service';
+import { IdentityJobService as idjs } from '../modules/identity-job/identity-job.service';
+import { TxStatus } from '../../../blockchain/src/config/types';
 
 export class UpdateStateWorker extends BaseQueueWorker {
   public constructor(
@@ -98,11 +99,14 @@ export class UpdateStateWorker extends BaseQueueWorker {
   }
 
   public async runExecutor(input: any): Promise<any> {
+    console.info('RUN EXECUTOR (UpdateCrustStatusWorker). data: ', input);
+
     await runWithWorkers(
       input.data,
       50,
       this.context,
       async (result: any, ctx) => {
+        console.log('Running with workers...');
         const incomingTx = result;
         const incomignTxData = JSON.parse(incomingTx.data);
 
@@ -113,10 +117,6 @@ export class UpdateStateWorker extends BaseQueueWorker {
           {},
           ctx,
         ).populateByTransactionHash(incomingTx.transactionHash);
-        // const identityJob = await new IdentityJob(
-        //   {},
-        //   ctx,
-        // ).populateByIdentityKey(identity_id);
 
         if (transaction.exists()) {
           status == TransactionStatus.CONFIRMED
@@ -138,8 +138,8 @@ export class UpdateStateWorker extends BaseQueueWorker {
             incomingTx.referenceId,
           );
 
-          console.log('Transaction fail: ', txType);
-          console.log('Transaction fail: ', txType);
+          console.log('Transaction type: ', txType);
+          console.log('Transaction status: ', status);
 
           switch (txType) {
             case TransactionType.DID_CREATE:
@@ -147,9 +147,7 @@ export class UpdateStateWorker extends BaseQueueWorker {
                 console.log('DID CREATE step SUCCESS');
                 await this.execAttestClaim(identity);
               } else {
-                if (
-                  await IdentityJobService.identityJobRetry(ctx, identity.id)
-                ) {
+                if (await idjs.identityJobRetry(ctx, identity.id)) {
                   console.log(`DID CREATE step FAILED. Retrying ...`);
                   await this.execIdentityGenerate(incomignTxData);
                 } else {
@@ -166,9 +164,7 @@ export class UpdateStateWorker extends BaseQueueWorker {
                 identity.state = IdentityState.ATTESTED;
                 await identity.update();
               } else if (status == TransactionStatus.FAILED) {
-                if (
-                  await IdentityJobService.identityJobRetry(ctx, identity.id)
-                ) {
+                if (await idjs.identityJobRetry(ctx, identity.id)) {
                   console.log(`ATTESTATION step FAILED. Retrying ...`);
                   await this.execIdentityGenerate(incomignTxData);
                 } else {

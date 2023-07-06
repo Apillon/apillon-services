@@ -11,9 +11,10 @@ import {
 import { DbTables, DidCreateOp, TransactionType } from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { Identity } from '../../modules/identity/models/identity.model';
-import { Did, SubmittableExtrinsic } from '@kiltprotocol/sdk-js';
+import { SubmittableExtrinsic } from '@kiltprotocol/sdk-js';
 import { Transaction } from '../../modules/transaction/models/transaction.model';
 import { TransactionService } from '../../modules/transaction/transaction.service';
+import { IdentityJobService } from '../../modules/identity-job/identity-job.service';
 
 /* NOTE: Creates a DID create transaction */
 export async function identityCreateRequest(
@@ -39,6 +40,8 @@ export async function identityCreateRequest(
     transactionStatus: TransactionStatus.PENDING,
   });
   await TransactionService.saveTransaction(dbTxRecord);
+
+  await IdentityJobService.initIdentityJob(context, identity.id);
 
   const bcServiceRequest: CreateSubstrateTransactionDto =
     new CreateSubstrateTransactionDto(

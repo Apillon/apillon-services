@@ -1,10 +1,23 @@
 import { PoolConnection, SerializeFor } from '@apillon/lib';
-import { AuthenticationValidationException } from '../../lib/exceptions';
-import { IdentityJob } from './models/identity-job.model';
-import { IDENTITY_JOB_MAX_RETRIES } from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 
+import { IDENTITY_JOB_MAX_RETRIES } from '../../config/types';
+import { AuthenticationValidationException } from '../../lib/exceptions';
+
+import { IdentityJob } from './models/identity-job.model';
+
 export class IdentityJobService {
+  public static async initIdentityJob(
+    context: ServiceContext,
+    identity_key: number,
+  ) {
+    return await new IdentityJob({}, context)
+      .populate({
+        identity_key: identity_key,
+      })
+      .insert();
+  }
+
   public static async saveIdentityJob(job: IdentityJob, conn?: PoolConnection) {
     try {
       await job.validate();
@@ -32,12 +45,12 @@ export class IdentityJobService {
 
   public static async identityJobRetry(
     context: ServiceContext,
-    identity_id: number,
+    identity_key: number,
   ) {
     const identityJob = await new IdentityJob(
       {},
       context,
-    ).populateByIdentityKey(identity_id);
+    ).populateByIdentityKey(identity_key);
     return identityJob.retries >= IDENTITY_JOB_MAX_RETRIES;
   }
 }

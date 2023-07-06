@@ -7,7 +7,7 @@ export async function upgrade(
   await queryFn(
     `CREATE TABLE IF NOT EXISTS \`${DbTables.IDENTITY_JOB}\` (
       \`id\` INT NOT NULL AUTO_INCREMENT,
-      \`retries\` INT NULL,
+      \`retries\` INT NOT NULL DEFAULT 0,
       \`identity_key\` INT NULL,
       \`completedAt\` DATETIME NULL,
       \`lastError\` TEXT NULL,
