@@ -25,9 +25,9 @@ import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 describe('Storage bucket tests', () => {
   let stage: Stage;
 
-  let testUser: TestUser, testUser2: TestUser, nestableUser: TestUser;
+  let testUser: TestUser, testUser2: TestUser, nestedUser: TestUser;
 
-  let testProject: Project, nestableProject: Project;
+  let testProject: Project, nestedProject: Project;
 
   let testCollection: Collection,
     newCollection: Collection,
@@ -58,25 +58,25 @@ describe('Storage bucket tests', () => {
     );
 
     // nestable collection
-    nestableUser = await createTestUser(
+    nestedUser = await createTestUser(
       stage.devConsoleContext,
       stage.amsContext,
     );
-    nestableProject = await createTestProject(
-      nestableUser,
+    nestedProject = await createTestProject(
+      nestedUser,
       stage.devConsoleContext,
     );
     nestedCollection = await createTestNFTCollection(
-      nestableUser,
+      nestedUser,
       stage.nftsContext,
-      nestableProject,
+      nestedProject,
       SqlModelStatus.INCOMPLETE,
       0,
       { collectionType: 2 },
     );
     await overrideDefaultQuota(
       stage,
-      nestableProject.project_uuid,
+      nestedProject.project_uuid,
       QuotaCode.MAX_NFT_COLLECTIONS,
       10,
     );
@@ -589,14 +589,14 @@ describe('Storage bucket tests', () => {
   describe('NFT Collection tests for nestable type', () => {
     test('User should be able to create new Astar nestable collection with existing baseURI', async () => {
       const response = await request(stage.http)
-        .post(`/nfts/collections?project_uuid=${nestableProject.project_uuid}`)
+        .post(`/nfts/collections?project_uuid=${nestedProject.project_uuid}`)
         .send({
           collectionType: 2,
           symbol: 'ANFT',
           name: 'Astar Test NFT Collection',
           maxSupply: 50,
           dropPrice: 0,
-          project_uuid: nestableProject.project_uuid,
+          project_uuid: nestedProject.project_uuid,
           baseUri:
             'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/',
           baseExtension: 'json',
@@ -609,7 +609,7 @@ describe('Storage bucket tests', () => {
           royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
           royaltiesFees: 0,
         })
-        .set('Authorization', `Bearer ${nestableUser.token}`);
+        .set('Authorization', `Bearer ${nestedUser.token}`);
       expect(response.status).toBe(201);
       expect(response.body.data.contractAddress).toBeTruthy();
 
@@ -630,7 +630,7 @@ describe('Storage bucket tests', () => {
         .get(
           `/nfts/collections/${nestedCollection.collection_uuid}/transactions`,
         )
-        .set('Authorization', `Bearer ${nestableUser.token}`);
+        .set('Authorization', `Bearer ${nestedUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBe(1);
       expect(response.body.data.items[0]?.transactionHash).toBeTruthy();
@@ -643,7 +643,7 @@ describe('Storage bucket tests', () => {
           receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
           quantity: 1,
         })
-        .set('Authorization', `Bearer ${nestableUser.token}`);
+        .set('Authorization', `Bearer ${nestedUser.token}`);
       expect(response.status).toBe(201);
 
       //Check if new transactions exists
@@ -659,14 +659,14 @@ describe('Storage bucket tests', () => {
 
     test('User should be able to nest mint NFT for nestable NFT', async () => {
       const destinationCollectionResponse = await request(stage.http)
-        .post(`/nfts/collections?project_uuid=${nestableProject.project_uuid}`)
+        .post(`/nfts/collections?project_uuid=${nestedProject.project_uuid}`)
         .send({
           collectionType: 2,
           symbol: 'ANFTN',
           name: 'Nested NFT Collection',
           maxSupply: 50,
           dropPrice: 0,
-          project_uuid: nestableProject.project_uuid,
+          project_uuid: nestedProject.project_uuid,
           baseUri:
             'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/',
           baseExtension: 'json',
@@ -679,7 +679,7 @@ describe('Storage bucket tests', () => {
           royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
           royaltiesFees: 0,
         })
-        .set('Authorization', `Bearer ${nestableUser.token}`);
+        .set('Authorization', `Bearer ${nestedUser.token}`);
       expect(destinationCollectionResponse.status).toBe(201);
       const destinationCollection = destinationCollectionResponse.body.data;
 
@@ -690,7 +690,7 @@ describe('Storage bucket tests', () => {
           destinationNftId: 1,
           quantity: 1,
         })
-        .set('Authorization', `Bearer ${nestableUser.token}`);
+        .set('Authorization', `Bearer ${nestedUser.token}`);
       expect(response.status).toBe(201);
       expect(response.body.data.success).toBe(true);
 
@@ -710,7 +710,7 @@ describe('Storage bucket tests', () => {
       const response = await request(stage.http)
         .post(`/nfts/collections/${nestedCollection.collection_uuid}/burn`)
         .send({ tokenId: 1 })
-        .set('Authorization', `Bearer ${nestableUser.token}`);
+        .set('Authorization', `Bearer ${nestedUser.token}`);
 
       expect(response.status).toBe(201);
       expect(response.body.data.success).toBe(true);
@@ -724,7 +724,7 @@ describe('Storage bucket tests', () => {
         .send({
           address: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
         })
-        .set('Authorization', `Bearer ${nestableUser.token}`);
+        .set('Authorization', `Bearer ${nestedUser.token}`);
       expect(response.status).toBe(201);
 
       //Check if new transactions exists
@@ -751,7 +751,7 @@ describe('Storage bucket tests', () => {
           receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
           quantity: 1,
         })
-        .set('Authorization', `Bearer ${nestableUser.token}`);
+        .set('Authorization', `Bearer ${nestedUser.token}`);
       expect(response.status).toBe(500);
       expect(response.body.code).toBe(50012002);
     });
