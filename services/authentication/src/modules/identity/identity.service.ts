@@ -256,6 +256,11 @@ export class IdentityMicroservice {
       did_create_op,
     );
 
+    identity.populate({
+      state: IdentityState.SUBMITTED_DID_CREATE_REQ,
+    });
+    await identity.update();
+
     // Call blockchain server and submit batch request
     await sendBlockchainServiceRequest(context, bcsRequest);
 

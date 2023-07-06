@@ -15,11 +15,14 @@ import {
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { Transaction } from '../modules/transaction/models/transaction.model';
-import { IdentityState, TransactionType } from '../config/types';
+import {
+  IdentityJobStage,
+  IdentityState,
+  TransactionType,
+} from '../config/types';
 import { Identity } from '../modules/identity/models/identity.model';
 import { IdentityMicroservice } from '../modules/identity/identity.service';
 import { IdentityJobService as idjs } from '../modules/identity-job/identity-job.service';
-import { TxStatus } from '../../../blockchain/src/config/types';
 
 export class UpdateStateWorker extends BaseQueueWorker {
   public constructor(
@@ -61,21 +64,20 @@ export class UpdateStateWorker extends BaseQueueWorker {
       didUri: identity.didUri,
       token: identity.token,
     });
-    identity.state = IdentityState.SUBMITTED_ATTESATION_REQ;
-    await identity.update();
     // await IdentityMicroservice.attestClaim(
     //   { body: attestationClaimDto },
     //   this.context,
     // );
   }
 
-  private async execIdentityGenerate(incomignTxData: any) {
+  private async execIdentityGenerate(identity: Identity, incomignTxData: any) {
     const identityCreateDto = new IdentityCreateDto().populate({
       email: incomignTxData.email,
       did_create_op: incomignTxData.did_create_op,
     });
 
-    console.log('Ideneity create dto ', identityCreateDto);
+    identity.state = IdentityState.SUBMITTED_DID_CREATE_REQ;
+    await identity.update();
 
     // await IdentityMicroservice.generateIdentity(
     //   { body: identityCreateDto },
@@ -106,9 +108,9 @@ export class UpdateStateWorker extends BaseQueueWorker {
       50,
       this.context,
       async (result: any, ctx) => {
-        console.log('Running with workers...');
         const incomingTx = result;
-        const incomignTxData = JSON.parse(incomingTx.data);
+
+        const incomignTxData = incomingTx.data;
 
         const status = incomingTx.transactionStatus;
         const txType = incomignTxData.transactionType;
@@ -134,6 +136,8 @@ export class UpdateStateWorker extends BaseQueueWorker {
           transaction.transactionStatus = status;
           await transaction.update();
 
+          console.log('Reference id: ', incomingTx.referenceId);
+
           const identity = await new Identity({}, ctx).populateById(
             incomingTx.referenceId,
           );
@@ -145,11 +149,29 @@ export class UpdateStateWorker extends BaseQueueWorker {
             case TransactionType.DID_CREATE:
               if (status == TransactionStatus.CONFIRMED) {
                 console.log('DID CREATE step SUCCESS');
-                await this.execAttestClaim(identity);
+
+                if (await idjs.isFinalStage(ctx, identity.id)) {
+                  await idjs.setCompleted(ctx, identity.id);
+                } else {
+                  console.log('Executing attestation stage ...');
+                  // Update identity state
+                  identity.state = IdentityState.DID_CREATED;
+                  await identity.update();
+                  // Set identity job current(next) stage
+                  await idjs.setCurrentStage(
+                    ctx,
+                    identity.id,
+                    IdentityJobStage.ATESTATION,
+                  );
+                  await this.execAttestClaim(identity);
+                }
               } else {
+                // Set identity job status to FAILED
+                await idjs.setFailed(ctx, identity.id);
+
                 if (await idjs.identityJobRetry(ctx, identity.id)) {
                   console.log(`DID CREATE step FAILED. Retrying ...`);
-                  await this.execIdentityGenerate(incomignTxData);
+                  await this.execIdentityGenerate(identity, incomignTxData);
                 } else {
                   console.log(
                     `DID CREATE step FAILED | Retry exceeded: STOPPING`,
@@ -159,14 +181,21 @@ export class UpdateStateWorker extends BaseQueueWorker {
               }
               break;
             case TransactionType.ATTESTATION:
+              console.log('ATTESTATION RECEIVED ... ');
               if (status == TransactionStatus.CONFIRMED) {
                 console.log('ATTESTATION step SUCCESS');
+                if (await idjs.isFinalStage(ctx, identity.id)) {
+                  console.log('final stage reached!!');
+                  await idjs.setCompleted(ctx, identity.id);
+                }
                 identity.state = IdentityState.ATTESTED;
                 await identity.update();
               } else if (status == TransactionStatus.FAILED) {
+                await idjs.setFailed(ctx, identity.id);
+
                 if (await idjs.identityJobRetry(ctx, identity.id)) {
                   console.log(`ATTESTATION step FAILED. Retrying ...`);
-                  await this.execIdentityGenerate(incomignTxData);
+                  await this.execAttestClaim(identity);
                 } else {
                   console.log(
                     `ATTESTATION step FAILED | Retry exceeded: STOPPING`,

@@ -3,7 +3,7 @@ import { IPublicKeyRecord, Proof } from '@kiltprotocol/vc-export';
 
 export enum DbTables {
   IDENTITY = 'identity',
-  IDENTITY_JOB = 'identity-job',
+  IDENTITY_JOB = 'identity_job',
   TRANSACTION = 'transaction',
 }
 
@@ -98,6 +98,14 @@ export enum IdentityState {
   PENDING_VERIFICATION = 'pending-verification',
   REJECTED = 'rejected',
   REVOKED = 'revoked',
+}
+
+export enum IdentityJobStage {
+  // Stage 1: DID_CREATE -> Stage 2: ATESTATION
+  DID_CREATE = 'did-create',
+  ATESTATION = 'attestation',
+  // Stage 1: DID_REVOKE
+  DID_REVOKE = 'did-revoke',
 }
 
 export enum CredentialAttestStatus {

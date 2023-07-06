@@ -8,7 +8,12 @@ import {
   SubstrateChain,
   TransactionStatus,
 } from '@apillon/lib';
-import { DbTables, DidCreateOp, TransactionType } from '../../config/types';
+import {
+  DbTables,
+  DidCreateOp,
+  IdentityJobStage,
+  TransactionType,
+} from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { Identity } from '../../modules/identity/models/identity.model';
 import { SubmittableExtrinsic } from '@kiltprotocol/sdk-js';
@@ -22,7 +27,6 @@ export async function identityCreateRequest(
   transaction: SubmittableExtrinsic,
   identity: Identity,
   did_create_op: DidCreateOp,
-  conn?: PoolConnection,
 ) {
   await new Lmas().writeLog({
     logType: LogType.INFO,
@@ -41,7 +45,20 @@ export async function identityCreateRequest(
   });
   await TransactionService.saveTransaction(dbTxRecord);
 
-  await IdentityJobService.initIdentityJob(context, identity.id);
+  // Init JOB and set current stage
+  await IdentityJobService.initOrGetIdentityJob(
+    context,
+    identity.id,
+    // The final stage for this job
+    IdentityJobStage.ATESTATION,
+  );
+
+  await IdentityJobService.setCurrentStage(
+    context,
+    identity.id,
+    // The final stage for this job
+    IdentityJobStage.DID_CREATE,
+  );
 
   const bcServiceRequest: CreateSubstrateTransactionDto =
     new CreateSubstrateTransactionDto(

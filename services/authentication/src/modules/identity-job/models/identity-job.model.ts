@@ -34,7 +34,7 @@ export class IdentityJob extends AdvancedSQLModel {
     ],
     validators: [],
   })
-  public identity_id: number;
+  public identity_key: number;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -55,6 +55,52 @@ export class IdentityJob extends AdvancedSQLModel {
     validators: [],
   })
   public retries: number;
+
+  /**
+   * Current stage of the identity generation process
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+  })
+  public currentStage: string;
+
+  /**
+   * setComplete when this stage is reached (currentStage == finalStage)
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+  })
+  public finalStage: string;
 
   /**
    * time when last error occured
