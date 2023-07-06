@@ -52,9 +52,7 @@ export class Scs extends BaseService {
     return scsResponseData;
   }
 
-  public async createOverride(
-    dto: CreateQuotaOverrideDto,
-  ): Promise<QuotaDto[]> {
+  public async createOverride(dto: CreateQuotaOverrideDto): Promise<any> {
     const data = {
       eventName: ScsEventType.CREATE_OVERRIDE,
       ...dto,

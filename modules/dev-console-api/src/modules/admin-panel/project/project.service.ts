@@ -75,7 +75,7 @@ export class ProjectService {
     context: DevConsoleApiContext,
     data: CreateQuotaOverrideDto,
   ) {
-    return await new Scs(context).createOverride(data);
+    return (await new Scs(context).createOverride(data)).data;
   }
 
   /**
