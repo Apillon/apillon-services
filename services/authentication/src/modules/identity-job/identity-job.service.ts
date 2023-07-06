@@ -9,7 +9,7 @@ export class IdentityJobService {
   public static async initOrGetIdentityJob(
     context: ServiceContext,
     identity_key: number,
-    finalStage: string,
+    finalStage?: string,
   ) {
     // if this is a retry, return existingf
     const identityJob = await new IdentityJob(

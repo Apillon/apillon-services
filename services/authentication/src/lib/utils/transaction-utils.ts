@@ -22,7 +22,7 @@ import { TransactionService } from '../../modules/transaction/transaction.servic
 import { IdentityJobService } from '../../modules/identity-job/identity-job.service';
 
 /* NOTE: Creates a DID create transaction */
-export async function identityCreateRequest(
+export async function identityCreateRequestBc(
   context: ServiceContext,
   transaction: SubmittableExtrinsic,
   identity: Identity,
@@ -79,11 +79,10 @@ export async function identityCreateRequest(
   return bcServiceRequest;
 }
 
-export async function attestationCreateRequest(
+export async function attestationRequestBc(
   context: ServiceContext,
   transaction: SubmittableExtrinsic,
   identity: Identity,
-  conn?: PoolConnection,
 ) {
   await new Lmas().writeLog({
     logType: LogType.INFO,
@@ -111,6 +110,9 @@ export async function attestationCreateRequest(
     await dbTxRecord.update();
   }
 
+  // Init JOB and set current stage
+  await IdentityJobService.initOrGetIdentityJob(context, identity.id);
+
   const bcServiceRequest: CreateSubstrateTransactionDto =
     new CreateSubstrateTransactionDto(
       {
@@ -129,7 +131,7 @@ export async function attestationCreateRequest(
 }
 
 /* NOTE: Creates a DID revoke request */
-export async function createDIDRevokeBlockhainRequest(
+export async function didRevokeRequestBc(
   context: ServiceContext,
   transaction: SubmittableExtrinsic,
   identity: Identity,

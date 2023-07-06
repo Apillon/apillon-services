@@ -47,8 +47,9 @@ import { AuthenticationCodeException } from '../../lib/exceptions';
 import { decryptAssymetric } from '../../lib/utils/crypto-utils';
 import { sendBlockchainServiceRequest } from '../../lib/utils/blockchain-utils';
 import {
-  attestationCreateRequest,
-  identityCreateRequest,
+  didRevokeRequestBc,
+  attestationRequestBc,
+  identityCreateRequestBc,
 } from '../../lib/utils/transaction-utils';
 
 export class IdentityMicroservice {
@@ -249,7 +250,7 @@ export class IdentityMicroservice {
       });
     }
 
-    const bcsRequest = await identityCreateRequest(
+    const bcsRequest = await identityCreateRequestBc(
       context,
       fullDidCreationTx,
       identity,
@@ -350,7 +351,7 @@ export class IdentityMicroservice {
       { txCounter: nextNonce },
     );
 
-    const bcsRequest = await attestationCreateRequest(
+    const bcsRequest = await attestationRequestBc(
       context,
       attestationTx,
       identity,
@@ -379,11 +380,6 @@ export class IdentityMicroservice {
   }
 
   static async revokeIdentity(event: { body: IdentityDidRevokeDto }, context) {
-    const parameters = {
-      email: event.body.email,
-      args: [],
-    };
-
     const identity = await new Identity({}, context).populateByUserEmail(
       context,
       event.body.email,
@@ -396,14 +392,14 @@ export class IdentityMicroservice {
       });
     }
 
-    const bcsRequest = await attestationCreateRequest(
-      context,
-      attestationTx,
-      identity,
-    );
+    // const bcsRequest = await didRevokeRequestBc(
+    //   context,
+    //   attestationTx,
+    //   identity,
+    // );
 
     // Call blockchain server and submit batch request
-    await sendBlockchainServiceRequest(context, bcsRequest);
+    // await sendBlockchainServiceRequest(context, bcsRequest);
 
     // // Call blockchain server and submit batch request
     // await sendBlockchainServiceRequest(context, bcsRequest);
