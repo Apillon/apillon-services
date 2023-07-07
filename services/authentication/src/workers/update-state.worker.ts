@@ -133,7 +133,7 @@ export class UpdateStateWorker extends BaseQueueWorker {
         const identityJob: IdentityJob = await new IdentityJob(
           {},
           ctx,
-        ).populateByIdentityKey(incomingTx.referenceId);
+        ).populateByIdentityId(incomingTx.referenceId);
 
         console.log('Identity JOB: ', identityJob);
 

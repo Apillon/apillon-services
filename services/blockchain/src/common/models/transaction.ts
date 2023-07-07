@@ -223,7 +223,6 @@ export class Transaction extends AdvancedSQLModel {
     );
   }
 
-  // TODO: What about transaction list?? Maybe rename...
   public async getTransactionsByHashes(
     chain: Chain,
     chainType: ChainType,
@@ -258,25 +257,6 @@ export class Transaction extends AdvancedSQLModel {
     }
 
     return res;
-  }
-
-  public async getTransaction(
-    chainId: string,
-    extrinsicHash: string,
-    conn: PoolConnection,
-  ) {
-    const data = await this.getContext().mysql.paramExecute(
-      `SELECT *
-      FROM \`${DbTables.TRANSACTION_QUEUE}\`
-      WHERE
-        chain = @chain
-        AND transactionHash = @transactionHash`,
-      {
-        chain: chainId,
-        transactionHash: extrinsicHash,
-      },
-      conn,
-    );
   }
 
   public async populateByHash(hash: string) {
@@ -320,38 +300,4 @@ export class Transaction extends AdvancedSQLModel {
 
     return null;
   }
-
-  // public async getTransactionList(
-  //   chain: Chain,
-  //   chainType: ChainType,
-  //   address: string,
-  //   conn?: PoolConnection,
-  //   transactionStatus?: TransactionStatus,
-  // ) {
-  //   const data = await this.getContext().mysql.paramExecute(
-  //     `SELECT *
-  //     FROM \`${DbTables.TRANSACTION_QUEUE}\`
-  //     WHERE
-  //       chain = @chain
-  //       AND chainType = @chainType
-  //       AND address = @address
-  //       AND (@transactionStatus IS NULL OR transactionStatus = @transactionStatus)`,
-  //     {
-  //       status: transactionStatus,
-  //       address,
-  //       chain,
-  //       chainType,
-  //     },
-  //     conn,
-  //   );
-
-  //   const res: Transaction[] = [];
-  //   if (data && data.length) {
-  //     for (const t of data) {
-  //       res.push(new Transaction({}, this.getContext()).populate(t));
-  //     }
-  //   }
-
-  //   return res;
-  // }
 }

@@ -27,14 +27,11 @@ export class IdentityJob extends AdvancedSQLModel {
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
     validators: [],
   })
-  public identity_key: number;
+  public identity_id: number;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -47,9 +44,6 @@ export class IdentityJob extends AdvancedSQLModel {
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
     validators: [],
@@ -70,9 +64,6 @@ export class IdentityJob extends AdvancedSQLModel {
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
     validators: [],
@@ -93,9 +84,6 @@ export class IdentityJob extends AdvancedSQLModel {
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
     validators: [],
@@ -184,14 +172,14 @@ export class IdentityJob extends AdvancedSQLModel {
     return this.retries === null || this.retries <= IDENTITY_JOB_MAX_RETRIES;
   }
 
-  public async populateByIdentityKey(identity_key: number) {
+  public async populateByIdentityId(identity_id: number) {
     const data = await this.getContext().mysql.paramExecute(
       `
         SELECT *
         FROM \`${this.tableName}\`
-        WHERE identity_key = @identity_key;
+        WHERE identity_id = @identity_id;
         `,
-      { identity_key },
+      { identity_id },
     );
 
     if (data && data.length) {

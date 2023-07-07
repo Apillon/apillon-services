@@ -6,19 +6,18 @@ import { IdentityJob } from './models/identity-job.model';
 export class IdentityJobService {
   public static async initOrGetIdentityJob(
     context: ServiceContext,
-    identity_key: number,
+    identity_id: number,
     finalStage?: string,
   ) {
     // if this is a retry, return existingf
-    const identityJob = await new IdentityJob(
-      {},
-      context,
-    ).populateByIdentityKey(identity_key);
+    const identityJob = await new IdentityJob({}, context).populateByIdentityId(
+      identity_id,
+    );
     return identityJob.exists()
       ? identityJob
       : await new IdentityJob({}, context)
           .populate({
-            identity_key: identity_key,
+            identity_id: identity_id,
             finalStage: finalStage,
           })
           .insert();

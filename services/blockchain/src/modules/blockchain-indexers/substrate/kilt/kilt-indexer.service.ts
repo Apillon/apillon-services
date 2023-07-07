@@ -11,7 +11,6 @@ import { KiltGQLQueries } from './queries/kilt-graphql-queries';
 
 export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
   constructor() {
-    // TODO: Change to KILT
     if (!env.BLOCKCHAIN_KILT_GRAPHQL_SERVER) {
       throw new Error('Missing GraphQL server url!');
     }

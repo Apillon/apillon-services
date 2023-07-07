@@ -24,7 +24,7 @@ import { IdentityJobService } from '../../identity-job/identity-job.service';
 async function insertIdentityServiceControlTx(
   context: Context,
   txHash: string,
-  identity_key: number,
+  identity_id: number,
   transactionType = TransactionType.DID_CREATE,
 ) {
   const dbTxRecord: Transaction = new Transaction({}, context);
@@ -32,7 +32,7 @@ async function insertIdentityServiceControlTx(
     transactionHash: txHash,
     transactionType: transactionType,
     refTable: DbTables.IDENTITY,
-    refId: identity_key,
+    refId: identity_id,
     transactionStatus: TransactionStatus.PENDING,
   });
   await TransactionService.saveTransaction(dbTxRecord);
@@ -117,7 +117,7 @@ describe('Identity generate tests', () => {
     const identityJobCtrl = await new IdentityJob(
       {},
       stage.authApiContext,
-    ).populateByIdentityKey(idCtrl.id);
+    ).populateByIdentityId(idCtrl.id);
 
     expect(identityJobCtrl.retries).toEqual(1);
     expect(identityJobCtrl.completedAt).toEqual(null);
@@ -156,7 +156,7 @@ describe('Identity generate tests', () => {
     const identityJobCtrl2 = await new IdentityJob(
       {},
       stage.authApiContext,
-    ).populateByIdentityKey(idCtrl.id);
+    ).populateByIdentityId(idCtrl.id);
 
     expect(identityJobCtrl2.retries).toEqual(0);
     expect(identityJobCtrl2.completedAt).toEqual(null);
@@ -194,7 +194,7 @@ describe('Identity generate tests', () => {
     const identityJobCtrl3 = await new IdentityJob(
       {},
       stage.authApiContext,
-    ).populateByIdentityKey(idCtr3.id);
+    ).populateByIdentityId(idCtr3.id);
 
     expect(identityJobCtrl3.retries).toEqual(1);
     expect(identityJobCtrl3.lastError).toBeNull();
@@ -232,7 +232,7 @@ describe('Identity generate tests', () => {
     const identityJobCtrl4 = await new IdentityJob(
       {},
       stage.authApiContext,
-    ).populateByIdentityKey(idCtr4.id);
+    ).populateByIdentityId(idCtr4.id);
 
     // Set completed does not reset retries - it just finishes the job.
     expect(identityJobCtrl4.retries).toEqual(1);

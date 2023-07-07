@@ -160,7 +160,6 @@ export class IdentityMicroservice {
   static async generateIdentity(event: { body: IdentityCreateDto }, context) {
     const did_create_op: DidCreateOp = event.body.did_create_op as DidCreateOp;
     const claimerEmail = event.body.email;
-    const claimerDidUri = event.body.didUri;
 
     // Check if correct identity + state exists -> IN_PROGRESS
     const identity = await new Identity({}, context).populateByUserEmail(
@@ -174,7 +173,6 @@ export class IdentityMicroservice {
         identity.state != IdentityState.IDENTITY_VERIFIED &&
         identity.state != IdentityState.SUBMITTED_DID_CREATE_REQ)
     ) {
-      console.error('Ideneityt ', identity.state, identity.exists());
       // IDENTITY_VERIFIED just means that the process was broken before
       // the entity was successfully attested --> See a few lines below
       // This is done so we have better control of the process and for

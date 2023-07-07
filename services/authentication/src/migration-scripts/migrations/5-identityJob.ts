@@ -10,7 +10,7 @@ export async function upgrade(
       \`retries\` INT NULL,
       \`currentStage\` TEXT NULL,
       \`finalStage\` TEXT NULL,
-      \`identity_key\` INT NULL,
+      \`identity_id\` INT NULL,
       \`completedAt\` DATETIME NULL,
       \`lastError\` TEXT NULL,
       \`lastFailed\` DATETIME NULL,
@@ -21,7 +21,7 @@ export async function upgrade(
       \`updateUser\` INT NULL,
       PRIMARY KEY (\`id\`),
       CONSTRAINT \`fk_identity\`
-        FOREIGN KEY (\`identity_key\`)
+        FOREIGN KEY (\`identity_id\`)
         REFERENCES \`${DbTables.IDENTITY}\` (\`id\`)
         ON DELETE NO ACTION
         ON UPDATE NO ACTION

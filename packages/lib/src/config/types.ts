@@ -13,8 +13,6 @@ export enum TransactionStatus {
 export enum SubstrateChain {
   CRUST = 1,
   KILT = 2,
-  // TODO: Split to testnet is redundant
-  // KILT_PEREGRINE = 3,
   PHALA = 4,
 }
 
