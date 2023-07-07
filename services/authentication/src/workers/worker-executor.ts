@@ -115,7 +115,7 @@ export async function handleLambdaEvent(
         workerDefinition,
         context,
         QueueWorkerType.EXECUTOR,
-      ).run();
+      ).run({});
     }
     default:
       console.log(
@@ -166,6 +166,13 @@ export async function handleSqsMessages(
 
       // eslint-disable-next-line sonarjs/no-small-switch
       switch (message?.messageAttributes?.workerName?.stringValue) {
+        case WorkerName.UPDATE_STATE_WORKER: {
+          await new UpdateStateWorker(
+            workerDefinition,
+            context,
+            QueueWorkerType.EXECUTOR,
+          ).run({ executeArg: message?.body });
+        }
         default:
           console.log(
             `ERROR - INVALID WORKER NAME: ${message?.messageAttributes?.workerName}`,

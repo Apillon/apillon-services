@@ -124,7 +124,7 @@ export async function handleLambdaEvent(
       const scheduler = new Scheduler(serviceDef, context);
       await scheduler.run();
       break;
-    // -- TRANSMIT TRANSACTION WORKERS --
+    // --- TRANSMIT TRANSACTION WORKERS ---
     case WorkerName.TRANSMIT_EVM_TRANSACTION:
       await new TransmitEvmTransactionWorker(workerDefinition, context).run({
         executeArg: JSON.stringify(workerDefinition.parameters),
@@ -138,23 +138,25 @@ export async function handleLambdaEvent(
         executeArg: JSON.stringify({ chain: SubstrateChain.CRUST }),
       });
       break;
-    // ###### UPDATE TRANSACTIONS WORKERS ######
-    // -- SUBSTRATE --
+    // --- UPDATE TRANSACTIONS WORKERS ---
+    // SUBSTRATE
     case WorkerName.CRUST_TRANSACTIONS:
       await new CrustTransactionWorker(workerDefinition, context).run();
       break;
 
-    // ###### !!!!WIP!!!! - SUBSTRATE TRANSACTION WORKER ######
+    // !!!!WIP!!!! - SUBSTRATE TRANSACTION WORKER
     case WorkerName.SUBSTRATE_TRANSACTION:
-      await new SubstrateTransactionWorker(workerDefinition, context).run();
+      await new SubstrateTransactionWorker(workerDefinition, context).run({
+        executeArg: JSON.stringify(workerDefinition.parameters),
+      });
       break;
-    // -- EVM --
+    // --- EVM ---
     case WorkerName.EVM_TRANSACTIONS:
       await new EvmTransactionWorker(workerDefinition, context).run({
         executeArg: JSON.stringify(workerDefinition.parameters),
       });
       break;
-    // ###### TRANSACTIONS WEBHOOKS ######
+    // TRANSACTIONS WEBHOOKS
     case WorkerName.TRANSACTION_WEBHOOKS:
       await new TransactionWebhookWorker(
         workerDefinition,

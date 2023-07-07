@@ -101,11 +101,11 @@ export enum IdentityState {
   REVOKED = 'revoked',
 }
 
-export enum IdentityJobStage {
-  // Stage 1: DID_CREATE -> Stage 2: ATESTATION
+export enum IdentityJobState {
+  // State 1: DID_CREATE -> State 2: ATESTATION
   DID_CREATE = 'did-create',
   ATESTATION = 'attestation',
-  // Stage 1: DID_REVOKE
+  // State 1: DID_REVOKE
   DID_REVOKE = 'did-revoke',
 }
 

@@ -98,20 +98,20 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
         ...(await this.processWebhook(
           crustWebhooks,
           env.AUTH_AWS_WORKER_SQS_URL,
-          WorkerName.CRUST_TRANSACTIONS,
+          'UpdateCrustStatusWorker',
         )),
 
         ...(await this.processWebhook(
           kiltWebooks,
           env.AUTH_AWS_WORKER_SQS_URL,
-          WorkerName.KILT_TRANSACTIONS,
+          'UpdateStateWorker',
         )),
 
-        // EVM
+        // Evm
         ...(await this.processWebhook(
           nftWebhooks,
           env.NFTS_AWS_WORKER_SQS_URL,
-          WorkerName.SUBSTRATE_TRANSACTION,
+          'TransactionStatusWorker',
         )),
       ];
 
@@ -202,8 +202,6 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
             },
           });
         }
-
-        updates = [...updates, splits[i].map((a) => a.id)];
       }
     }
     return updates;

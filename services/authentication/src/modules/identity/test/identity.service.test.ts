@@ -10,7 +10,7 @@ import {
 import { Stage, releaseStage, setupTest } from '../../../../test/setup';
 import {
   DbTables,
-  IdentityJobStage,
+  IdentityJobState,
   IdentityState,
   TransactionType,
 } from '../../../config/types';
@@ -79,9 +79,9 @@ describe('Identity generate tests', () => {
     const identityJob = await IdentityJobService.initOrGetIdentityJob(
       stage.authApiContext,
       identity.id,
-      IdentityJobStage.ATESTATION,
+      IdentityJobState.ATESTATION,
     );
-    await identityJob.setCurrentStage(IdentityJobStage.DID_CREATE);
+    await identityJob.setState(IdentityJobState.DID_CREATE);
 
     const serviceDef: ServiceDefinition = {
       type: ServiceDefinitionType.SQS,
@@ -121,8 +121,8 @@ describe('Identity generate tests', () => {
 
     expect(identityJobCtrl.retries).toEqual(1);
     expect(identityJobCtrl.completedAt).toEqual(null);
-    expect(identityJobCtrl.currentStage).toEqual(IdentityJobStage.DID_CREATE);
-    expect(identityJobCtrl.finalStage).toEqual(IdentityJobStage.ATESTATION);
+    expect(identityJobCtrl.state).toEqual(IdentityJobState.DID_CREATE);
+    expect(identityJobCtrl.finalState).toEqual(IdentityJobState.ATESTATION);
     expect(identityJobCtrl.lastFailed).not.toBeNull();
 
     // Repeate transaction DID_CREATE for identity.id
@@ -161,7 +161,7 @@ describe('Identity generate tests', () => {
     expect(identityJobCtrl2.retries).toEqual(0);
     expect(identityJobCtrl2.completedAt).toEqual(null);
     expect(identityJobCtrl2.lastFailed).not.toBeNull();
-    expect(identityJobCtrl2.currentStage).toEqual(IdentityJobStage.ATESTATION);
+    expect(identityJobCtrl2.state).toEqual(IdentityJobState.ATESTATION);
 
     // Now call attestation process FAILED
     await insertIdentityServiceControlTx(
@@ -199,7 +199,7 @@ describe('Identity generate tests', () => {
     expect(identityJobCtrl3.retries).toEqual(1);
     expect(identityJobCtrl3.lastError).toBeNull();
     expect(identityJobCtrl3.completedAt).toBeNull();
-    expect(identityJobCtrl3.currentStage).toEqual(IdentityJobStage.ATESTATION);
+    expect(identityJobCtrl3.state).toEqual(IdentityJobState.ATESTATION);
 
     // Now call attestation process FAILED
     await insertIdentityServiceControlTx(
@@ -238,6 +238,6 @@ describe('Identity generate tests', () => {
     expect(identityJobCtrl4.retries).toEqual(1);
     expect(identityJobCtrl4.lastError).toBeNull();
     expect(identityJobCtrl4.completedAt).not.toBeNull();
-    expect(identityJobCtrl4.currentStage).toEqual(IdentityJobStage.ATESTATION);
+    expect(identityJobCtrl4.state).toEqual(IdentityJobState.ATESTATION);
   });
 });
