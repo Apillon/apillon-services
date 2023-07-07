@@ -1,6 +1,9 @@
 //#REGION Config
 export * from './lib/at-services/config/scs';
 export * from './lib/at-services/config/dtos/get-quota.dto';
+export * from './lib/at-services/config/dtos/get-quotas.dto';
+export * from './lib/at-services/config/dtos/create-quota-override.dto';
+export * from './lib/at-services/config/dtos/quota-override.dto';
 export * from './config/types';
 export * from './config/env';
 

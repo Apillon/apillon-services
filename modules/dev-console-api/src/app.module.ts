@@ -1,6 +1,4 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ContextMiddleware } from './middlewares/context.middleware';
 import { MySQLModule } from './modules/database/mysql.module';
 import { FileModule } from './modules/file/file.module';
@@ -38,8 +36,8 @@ import { ReferralModule } from './modules/referral/referral.module';
     ReferralModule,
     NftsModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {

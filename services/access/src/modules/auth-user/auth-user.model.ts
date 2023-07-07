@@ -1,5 +1,6 @@
 import {
   AdvancedSQLModel,
+  BaseQueryFilter,
   Context,
   DefaultUserRole,
   JwtTokenType,
@@ -8,7 +9,9 @@ import {
   SerializeFor,
   SqlModelStatus,
   generateJwtToken,
+  getQueryParams,
   prop,
+  selectAndCountQuery,
   uniqueFieldValue,
 } from '@apillon/lib';
 import { stringParser } from '@rawmodel/parsers';
@@ -296,7 +299,7 @@ export class AuthUser extends AdvancedSQLModel {
   ) {
     await this.db().paramExecute(
       `
-      INSERT INTO ${DbTables.AUTH_USER_ROLE} 
+      INSERT INTO ${DbTables.AUTH_USER_ROLE}
       (authUser_id, role_id, user_uuid, project_uuid)
       VALUES (@authUser_id, @role_id, @user_uuid, @project_uuid)
       `,
@@ -304,7 +307,7 @@ export class AuthUser extends AdvancedSQLModel {
         authUser_id: this.id,
         role_id,
         user_uuid: this.user_uuid,
-        project_uuid,
+        project_uuid: project_uuid ?? '',
       },
       conn,
     );
@@ -319,13 +322,13 @@ export class AuthUser extends AdvancedSQLModel {
   ) {
     await this.db().paramExecute(
       `
-      DELETE FROM ${DbTables.AUTH_USER_ROLE} 
+      DELETE FROM ${DbTables.AUTH_USER_ROLE}
       WHERE authUser_id = @authUser_id
       AND role_id = @role_id
-      AND project_uuid = @project_uuid
+      AND (@project_uuid IS NULL OR project_uuid = @project_uuid)
       ;
       `,
-      { authUser_id: this.id, role_id, project_uuid },
+      { authUser_id: this.id, role_id, project_uuid: project_uuid || null },
       conn,
     );
     await this.populateAuthUserRoles(conn);
@@ -399,5 +402,69 @@ export class AuthUser extends AdvancedSQLModel {
     }
 
     return this;
+  }
+
+  public async listLogins(event: {
+    user_uuid: string;
+    query: BaseQueryFilter;
+  }) {
+    const filter = new BaseQueryFilter(event.query);
+    const fieldMap = { id: 'at.d' };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'at',
+      fieldMap,
+      filter.serialize(),
+    );
+
+    const sqlQuery = {
+      qSelect: `SELECT createTime as loginDate`,
+      qFrom: `FROM \`${DbTables.AUTH_TOKEN}\` at
+        WHERE at.user_uuid = @user_uuid`,
+      qFilter: `
+          ORDER BY ${filters.orderStr || 'at.createTime DESC'}
+          LIMIT ${filters.limit} OFFSET ${filters.offset};
+        `,
+    };
+
+    return selectAndCountQuery(
+      this.getContext().mysql,
+      sqlQuery,
+      { ...params, user_uuid: event.user_uuid },
+      'at.id',
+    );
+  }
+
+  public async listRoles(event: { user_uuid: string; query: BaseQueryFilter }) {
+    const filter = new BaseQueryFilter(event.query);
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'aur',
+      null,
+      filter.serialize(),
+    );
+    const sqlQuery = {
+      qSelect: `SELECT ${new Role({}, this.getContext()).generateSelectFields(
+        'r',
+      )}`,
+      qFrom: `FROM \`${DbTables.AUTH_USER_ROLE}\` aur
+        JOIN role r ON aur.role_id = r.id
+        WHERE aur.user_uuid = @user_uuid
+        AND aur.project_uuid = ''
+        AND r.status = ${SqlModelStatus.ACTIVE}
+        AND (@search IS null OR r.name LIKE CONCAT('%', @search, '%'))
+      `,
+      qFilter: `
+          ORDER BY ${filters.orderStr}
+          LIMIT ${filters.limit} OFFSET ${filters.offset};
+        `,
+    };
+
+    return selectAndCountQuery(
+      this.getContext().mysql,
+      sqlQuery,
+      { ...params, user_uuid: event.user_uuid },
+      'aur.createTime',
+    );
   }
 }

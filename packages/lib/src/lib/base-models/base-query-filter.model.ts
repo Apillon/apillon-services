@@ -19,10 +19,7 @@ export class BaseQueryFilter extends ModelBase {
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE],
     setter(v) {
-      if (v < 1) {
-        v = 20;
-      }
-      return v;
+      return v < 1 ? 20 : v;
     },
     defaultValue: 20,
   })
@@ -47,6 +44,13 @@ export class BaseQueryFilter extends ModelBase {
     defaultValue: [],
   })
   public desc: string[];
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [],
+  })
+  public search?: string;
 
   /**
    * Returns default values of the query object.

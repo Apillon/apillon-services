@@ -5,6 +5,7 @@ import {
   DefaultUserRole,
   OauthLinkType,
 } from '../../../config/types';
+import { BaseQueryFilter } from '../../base-models/base-query-filter.model';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { ApiKeyQueryFilterDto } from './dtos/api-key-query-filter.dto';
@@ -170,31 +171,31 @@ export class Ams extends BaseService {
     };
   }
 
-  public async assignUserRoleOnProject(params: {
-    user: any;
+  public async assignUserRole(params: {
+    user?: any;
     user_uuid: string;
-    project_uuid: string;
+    project_uuid?: string;
     role_id: DefaultUserRole;
   }) {
     const data = {
       ...params,
       eventName: AmsEventType.USER_ROLE_ASSIGN,
-      user: params.user ? params.user.serialize() : undefined,
+      user: params.user?.serialize(),
     };
 
     return await this.callService(data);
   }
 
-  public async removeUserRoleOnProject(params: {
-    user: any;
+  public async removeUserRole(params: {
+    user?: any;
     user_uuid: string;
-    project_uuid: string;
+    project_uuid?: string;
     role_id: DefaultUserRole;
   }) {
     const data = {
       ...params,
       eventName: AmsEventType.USER_ROLE_REMOVE,
-      user: params.user.serialize(),
+      user: params.user?.serialize(),
     };
 
     return await this.callService(data);
@@ -292,6 +293,24 @@ export class Ams extends BaseService {
     const data = {
       eventName: AmsEventType.GET_OAUTH_LINKS,
       user_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async getUserLogins(user_uuid: string, query: BaseQueryFilter) {
+    const data = {
+      eventName: AmsEventType.USER_GET_LOGINS,
+      user_uuid,
+      query,
+    };
+    return await this.callService(data);
+  }
+
+  public async getUserRoles(user_uuid: string, query: BaseQueryFilter) {
+    const data = {
+      eventName: AmsEventType.USER_GET_ROLES,
+      user_uuid,
+      query,
     };
     return await this.callService(data);
   }

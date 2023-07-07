@@ -48,7 +48,7 @@ export class UserService {
   async getUserProfile(context: DevConsoleApiContext) {
     const user = await new User({}, context).populateById(context.user.id);
 
-    if (!user.exists) {
+    if (!user.exists()) {
       throw new CodeException({
         status: HttpStatus.UNAUTHORIZED,
         code: ResourceNotFoundErrorCode.USER_DOES_NOT_EXISTS,
@@ -456,7 +456,7 @@ export class UserService {
   async updateUserProfile(context: DevConsoleApiContext, body: UpdateUserDto) {
     const user = await new User({}, context).populateById(context.user.id);
 
-    if (!user.exists) {
+    if (!user.exists()) {
       throw new CodeException({
         status: HttpStatus.UNAUTHORIZED,
         code: ResourceNotFoundErrorCode.USER_DOES_NOT_EXISTS,

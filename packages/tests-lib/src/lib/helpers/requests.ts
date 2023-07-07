@@ -1,5 +1,5 @@
+import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
 import { HttpServer } from '@nestjs/common';
-import { ApiKey } from '@apillon/access/dist/modules/api-key/models/api-key.model';
 import supertest from 'supertest';
 
 export function getRequestFactory(server: HttpServer, apiKey: ApiKey) {

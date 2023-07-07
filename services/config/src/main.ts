@@ -2,6 +2,7 @@ import { ScsEventType } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 
 import { QuotaService } from './modules/quota/quota.service';
+import { OverrideService } from './modules/override/override.service';
 
 /**
  * Processing lambda event with appropriate service function based on event name
@@ -15,6 +16,9 @@ export async function processEvent(
 ): Promise<any> {
   const processors = {
     [ScsEventType.GET_QUOTA]: QuotaService.getQuota,
+    [ScsEventType.GET_ALL_QUOTAS]: QuotaService.getQuotas,
+    [ScsEventType.CREATE_OVERRIDE]: OverrideService.createOverride,
+    [ScsEventType.DELETE_OVERRIDE]: OverrideService.deleteOverride,
   };
 
   return await processors[event.eventName](event, context);
