@@ -150,8 +150,9 @@ export class TransactionLogWorker extends BaseQueueWorker {
           },
 
           [SubstrateChain.KILT]: () => {
-            //
-            throw new Error('KILT is not supported yet!');
+            // TODO: Add KILT support!!!!!
+            // throw new Error('KILT is not supported yet!');
+            console.log(`KILT LOG HANDLE: !THIS IS A TEST!`);
           },
           [SubstrateChain.PHALA]: () => {
             //
