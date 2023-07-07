@@ -76,18 +76,12 @@ describe('Identity generate tests', () => {
       TransactionType.DID_CREATE,
     );
 
-    // Init job
-    await IdentityJobService.initOrGetIdentityJob(
+    const identityJob = await IdentityJobService.initOrGetIdentityJob(
       stage.authApiContext,
       identity.id,
       IdentityJobStage.ATESTATION,
     );
-    // Set current stage
-    await IdentityJobService.setCurrentStage(
-      stage.authApiContext,
-      identity.id,
-      IdentityJobStage.DID_CREATE,
-    );
+    await identityJob.setCurrentStage(IdentityJobStage.DID_CREATE);
 
     const serviceDef: ServiceDefinition = {
       type: ServiceDefinitionType.SQS,

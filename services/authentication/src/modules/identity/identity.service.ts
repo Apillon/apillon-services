@@ -124,13 +124,6 @@ export class IdentityMicroservice {
       auth_app_page = 'restore';
     }
 
-    await new Lmas().writeLog({
-      logType: LogType.INFO,
-      message: `Sending verification email to ${email}`,
-      location: 'AUTHENTICATION-API/identity/',
-      service: ServiceName.AUTHENTICATION_API,
-    });
-
     await new Mailing(context).sendMail({
       emails: [email],
       template: verificationEmailType,
@@ -174,8 +167,6 @@ export class IdentityMicroservice {
       context,
       claimerEmail,
     );
-
-    console.log(identity.state);
 
     if (
       !identity.exists() ||
@@ -222,14 +213,6 @@ export class IdentityMicroservice {
       // NOTE!!: Did.getKeyRelationshipForTx(attestation) --> undefined
       fullDidCreationTx = api.tx.did.create(data, {
         sr25519: signature,
-      });
-
-      await new Lmas().writeLog({
-        logType: LogType.INFO,
-        message: `Creating DID create TX ...`,
-        location: 'AUTHENTICATION-API/identity/authentication.worker',
-        service: ServiceName.AUTHENTICATION_API,
-        data: { email: claimerEmail, didUri: claimerDidUri },
       });
     } else {
       await new Lmas().writeLog({
@@ -400,13 +383,6 @@ export class IdentityMicroservice {
       endpointsCountForDid,
     );
     try {
-      await new Lmas().writeLog({
-        logType: LogType.INFO,
-        message: `Propagating DID delete TX to KILT BC ...`,
-        location: 'AUTHENTICATION-API/identity/identity-revoke',
-        service: ServiceName.AUTHENTICATION_API,
-        data: { email: claimerEmail, didUri: identity.didUri },
-      });
       const bcsRequest = await didRevokeRequestBc(
         context,
         depositReClaimExtrinsic,

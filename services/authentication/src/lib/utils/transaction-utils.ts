@@ -7,6 +7,7 @@ import {
   ServiceName,
   SubstrateChain,
   TransactionStatus,
+  writeLog,
 } from '@apillon/lib';
 import {
   DbTables,
@@ -28,13 +29,6 @@ export async function identityCreateRequestBc(
   identity: Identity,
   did_create_op: DidCreateOp,
 ) {
-  await new Lmas().writeLog({
-    logType: LogType.INFO,
-    message: `Creating DID create request ...`,
-    location: 'Authentication-API/identity/authentication.worker',
-    service: ServiceName.AUTHENTICATION_API,
-  });
-
   const dbTxRecord: Transaction = new Transaction({}, context);
   dbTxRecord.populate({
     transactionHash: transaction.hash,
@@ -45,20 +39,13 @@ export async function identityCreateRequestBc(
   });
   await TransactionService.saveTransaction(dbTxRecord);
 
-  // Init JOB and set current stage
-  await IdentityJobService.initOrGetIdentityJob(
+  const identityJob = await IdentityJobService.initOrGetIdentityJob(
     context,
     identity.id,
-    // The final stage for this job
     IdentityJobStage.ATESTATION,
   );
 
-  await IdentityJobService.setCurrentStage(
-    context,
-    identity.id,
-    // The final stage for this job
-    IdentityJobStage.DID_CREATE,
-  );
+  await identityJob.setCurrentStage(IdentityJobStage.ATESTATION);
 
   const bcServiceRequest: CreateSubstrateTransactionDto =
     new CreateSubstrateTransactionDto(
@@ -84,13 +71,6 @@ export async function attestationRequestBc(
   transaction: SubmittableExtrinsic,
   identity: Identity,
 ) {
-  await new Lmas().writeLog({
-    logType: LogType.INFO,
-    message: `Creating DID create request ...`,
-    location: 'Authentication-API/identity/authentication.worker',
-    service: ServiceName.AUTHENTICATION_API,
-  });
-
   const dbTxRecord: Transaction = await new Transaction(
     {},
     context,
@@ -110,7 +90,6 @@ export async function attestationRequestBc(
     await dbTxRecord.update();
   }
 
-  // Init JOB and set current stage
   await IdentityJobService.initOrGetIdentityJob(context, identity.id);
 
   const bcServiceRequest: CreateSubstrateTransactionDto =
@@ -136,28 +115,15 @@ export async function didRevokeRequestBc(
   transaction: SubmittableExtrinsic,
   identity: Identity,
 ) {
-  await new Lmas().writeLog({
-    logType: LogType.INFO,
-    message: `Creating DID revoke request ...`,
-    location: 'Authentication-API/identity/authentication.worker',
-    service: ServiceName.AUTHENTICATION_API,
-  });
   const dbTxRecord: Transaction = new Transaction({}, context);
 
-  // Init JOB and set current stage
-  await IdentityJobService.initOrGetIdentityJob(
+  const identityJob = await IdentityJobService.initOrGetIdentityJob(
     context,
     identity.id,
-    // The final stage for this job
     IdentityJobStage.DID_REVOKE,
   );
 
-  await IdentityJobService.setCurrentStage(
-    context,
-    identity.id,
-    // The final stage for this job
-    IdentityJobStage.DID_REVOKE,
-  );
+  await identityJob.setCurrentStage(IdentityJobStage.DID_REVOKE);
 
   const bcServiceRequest: CreateSubstrateTransactionDto =
     new CreateSubstrateTransactionDto(

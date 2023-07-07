@@ -7,7 +7,7 @@ import {
 } from '@apillon/lib';
 import { integerParser, stringParser, dateParser } from '@rawmodel/parsers';
 
-import { DbTables } from '../../../config/types';
+import { DbTables, IDENTITY_JOB_MAX_RETRIES } from '../../../config/types';
 
 export class IdentityJob extends AdvancedSQLModel {
   public readonly tableName = DbTables.IDENTITY_JOB;
@@ -143,6 +143,46 @@ export class IdentityJob extends AdvancedSQLModel {
     ],
   })
   public completedAt: Date;
+
+  /**
+   * Sets completed property when the job if completed
+   */
+  public async setCompleted() {
+    this.completedAt = new Date();
+    await this.update();
+  }
+
+  /**
+   * Sets current job state
+   */
+  public async setCurrentStage(stage: string) {
+    this.currentStage = stage;
+    this.retries = 0;
+    await this.update();
+  }
+
+  /**
+   * Sets final stage
+   */
+  public async isFinalStage() {
+    return this.currentStage === this.finalStage;
+  }
+
+  /**
+   * Sets failed date and increments retires or sets to 1
+   */
+  public async setFailed() {
+    this.lastFailed = new Date();
+    this.retries = this.retries ? ++this.retries : 1;
+    await this.update();
+  }
+
+  /**
+   * Returns true if job can be retires, false otherwise
+   */
+  public async identityJobRetry() {
+    return this.retries === null || this.retries <= IDENTITY_JOB_MAX_RETRIES;
+  }
 
   public async populateByIdentityKey(identity_key: number) {
     const data = await this.getContext().mysql.paramExecute(

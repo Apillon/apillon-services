@@ -24,6 +24,7 @@ import {
 import { Identity } from '../modules/identity/models/identity.model';
 import { IdentityMicroservice } from '../modules/identity/identity.service';
 import { IdentityJobService as idjs } from '../modules/identity-job/identity-job.service';
+import { IdentityJob } from '../modules/identity-job/models/identity-job.model';
 
 export class UpdateStateWorker extends BaseQueueWorker {
   public constructor(
@@ -128,6 +129,14 @@ export class UpdateStateWorker extends BaseQueueWorker {
           ctx,
         ).populateByTransactionHash(incomingTx.transactionHash);
 
+        // TODO: Perform a join here maybe?
+        const identityJob: IdentityJob = await new IdentityJob(
+          {},
+          ctx,
+        ).populateByIdentityKey(incomingTx.referenceId);
+
+        console.log('Identity JOB: ', identityJob);
+
         if (!transaction.exists()) {
           await this.logAms(
             ctx,
@@ -166,26 +175,20 @@ export class UpdateStateWorker extends BaseQueueWorker {
             if (status == TransactionStatus.CONFIRMED) {
               console.log('DID CREATE step SUCCESS');
 
-              if (await idjs.isFinalStage(ctx, identity.id)) {
-                await idjs.setCompleted(ctx, identity.id);
+              if (await identityJob.isFinalStage()) {
+                await identityJob.setCompleted();
               } else {
                 console.log('Executing attestation stage ...');
-                // Update identity state
                 identity.state = IdentityState.DID_CREATED;
                 await identity.update();
-                // Set identity job current(next) stage
-                await idjs.setCurrentStage(
-                  ctx,
-                  identity.id,
-                  IdentityJobStage.ATESTATION,
-                );
+                await identityJob.setCurrentStage(IdentityJobStage.ATESTATION);
                 await this.execAttestClaim(identity);
               }
             } else {
               // Set identity job status to FAILED
-              await idjs.setFailed(ctx, identity.id);
+              await identityJob.setFailed();
 
-              if (await idjs.identityJobRetry(ctx, identity.id)) {
+              if (await identityJob.identityJobRetry()) {
                 console.log(`DID CREATE step FAILED. Retrying ...`);
                 await this.execIdentityGenerate(identity, incomignTxData);
               } else {
@@ -200,16 +203,16 @@ export class UpdateStateWorker extends BaseQueueWorker {
             console.log('ATTESTATION RECEIVED ... ');
             if (status == TransactionStatus.CONFIRMED) {
               console.log('ATTESTATION step SUCCESS');
-              if (await idjs.isFinalStage(ctx, identity.id)) {
+              if (await identityJob.isFinalStage()) {
                 console.log('final stage reached!!');
-                await idjs.setCompleted(ctx, identity.id);
+                await identityJob.setCompleted();
               }
               identity.state = IdentityState.ATTESTED;
               await identity.update();
             } else if (status == TransactionStatus.FAILED) {
-              await idjs.setFailed(ctx, identity.id);
+              await identityJob.setFailed();
 
-              if (await idjs.identityJobRetry(ctx, identity.id)) {
+              if (await identityJob.identityJobRetry()) {
                 console.log(`ATTESTATION step FAILED. Retrying ...`);
                 await this.execAttestClaim(identity);
               } else {
@@ -225,10 +228,10 @@ export class UpdateStateWorker extends BaseQueueWorker {
             if (status == TransactionStatus.CONFIRMED) {
               console.log('Step REVOKED: success');
               identity.state = IdentityState.REVOKED;
-              await idjs.setCompleted(ctx, identity.id);
+              await identityJob.setCompleted();
               await identity.update();
             } else {
-              if (await idjs.identityJobRetry(ctx, identity.id)) {
+              if (await identityJob.identityJobRetry()) {
                 console.log(`REVOKE step FAILED. Retrying ...`);
                 await this.execAttestClaim(identity);
               } else {

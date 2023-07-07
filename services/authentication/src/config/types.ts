@@ -81,6 +81,7 @@ export const enum KiltSignAlgorithm {
   ED25519 = 'ed25519',
   X25519 = 'x25519',
 }
+
 export enum KiltDerivationPaths {
   AUTHENTICATION = '//did//0',
   ASSERTION = '//did//assertion//0', // Attestation
