@@ -1,6 +1,11 @@
-import { AppEnvironment, dropDatabase, env, MySql } from '@apillon/lib';
+import {
+  AppEnvironment,
+  dropDatabase,
+  env,
+  MySql,
+  rebuildDatabase,
+} from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
-import { rebuildTestDatabases } from '@apillon/tests-lib';
 
 export interface Stage {
   authApiContext: ServiceContext;
@@ -12,8 +17,13 @@ export async function setupTest(): Promise<Stage> {
   env.AUTH_API_MYSQL_HOST_TEST = null;
 
   try {
-    // TODO: Just rebuild the databases you want....
-    await rebuildTestDatabases();
+    await rebuildDatabase(
+      env.AUTH_API_MYSQL_DATABASE_TEST,
+      env.AUTH_API_MYSQL_HOST_TEST,
+      env.AUTH_API_MYSQL_PORT_TEST,
+      env.AUTH_API_MYSQL_USER_TEST,
+      env.AUTH_API_MYSQL_PASSWORD_TEST,
+    );
 
     const configAuthApi = {
       host: env.AUTH_API_MYSQL_HOST_TEST,

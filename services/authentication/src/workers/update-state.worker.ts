@@ -9,6 +9,7 @@ import {
   TransactionStatus,
   env,
   runWithWorkers,
+  writeLog,
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
@@ -23,7 +24,6 @@ import {
 } from '../config/types';
 import { Identity } from '../modules/identity/models/identity.model';
 import { IdentityMicroservice } from '../modules/identity/identity.service';
-import { IdentityJobService as idjs } from '../modules/identity-job/identity-job.service';
 import { IdentityJob } from '../modules/identity-job/models/identity-job.model';
 
 export class UpdateStateWorker extends BaseQueueWorker {
@@ -44,7 +44,6 @@ export class UpdateStateWorker extends BaseQueueWorker {
     contex?: any,
     message?: any,
     error?: boolean,
-    wallet?: string,
     data?: any,
   ) {
     await new Lmas().writeLog({
@@ -54,7 +53,6 @@ export class UpdateStateWorker extends BaseQueueWorker {
       location: `${this.constructor.name}`,
       service: ServiceName.AUTHENTICATION_API,
       data: {
-        wallet,
         ...data,
       },
     });
@@ -173,12 +171,12 @@ export class UpdateStateWorker extends BaseQueueWorker {
         switch (txType) {
           case TransactionType.DID_CREATE:
             if (status == TransactionStatus.CONFIRMED) {
-              console.log('DID CREATE step SUCCESS');
+              writeLog(LogType.INFO, 'DID CREATE step SUCCESS');
 
               if (await identityJob.isFinalStage()) {
                 await identityJob.setCompleted();
               } else {
-                console.log('Executing attestation stage ...');
+                writeLog(LogType.INFO, 'Executing attestation stage ...');
                 identity.state = IdentityState.DID_CREATED;
                 await identity.update();
                 await identityJob.setCurrentStage(IdentityJobStage.ATESTATION);
@@ -189,10 +187,11 @@ export class UpdateStateWorker extends BaseQueueWorker {
               await identityJob.setFailed();
 
               if (await identityJob.identityJobRetry()) {
-                console.log(`DID CREATE step FAILED. Retrying ...`);
+                writeLog(LogType.INFO, `DID CREATE step FAILED. Retrying ...`);
                 await this.execIdentityGenerate(identity, incomignTxData);
               } else {
-                console.log(
+                writeLog(
+                  LogType.INFO,
                   `DID CREATE step FAILED | Retry exceeded: STOPPING`,
                 );
                 // TODO: Notification logic
@@ -200,11 +199,11 @@ export class UpdateStateWorker extends BaseQueueWorker {
             }
             break;
           case TransactionType.ATTESTATION:
-            console.log('ATTESTATION RECEIVED ... ');
+            writeLog(LogType.INFO, 'ATTESTATION RECEIVED ... ');
             if (status == TransactionStatus.CONFIRMED) {
-              console.log('ATTESTATION step SUCCESS');
+              writeLog(LogType.INFO, 'ATTESTATION step SUCCESS');
               if (await identityJob.isFinalStage()) {
-                console.log('final stage reached!!');
+                writeLog(LogType.INFO, 'final stage reached!!');
                 await identityJob.setCompleted();
               }
               identity.state = IdentityState.ATTESTED;
@@ -213,11 +212,17 @@ export class UpdateStateWorker extends BaseQueueWorker {
               await identityJob.setFailed();
 
               if (await identityJob.identityJobRetry()) {
-                console.log(`ATTESTATION step FAILED. Retrying ...`);
+                writeLog(LogType.INFO, `ATTESTATION step FAILED. Retrying ...`);
                 await this.execAttestClaim(identity);
               } else {
-                console.log(
+                writeLog(
+                  LogType.INFO,
+                  'ATTESTATION step FAILED | Retry exceeded: STOPPING',
+                );
+                await this.logAms(
                   `ATTESTATION step FAILED | Retry exceeded: STOPPING`,
+                  true,
+                  incomingTx,
                 );
                 // TODO: Notification logic
               }
@@ -232,16 +237,30 @@ export class UpdateStateWorker extends BaseQueueWorker {
               await identity.update();
             } else {
               if (await identityJob.identityJobRetry()) {
-                console.log(`REVOKE step FAILED. Retrying ...`);
+                await writeLog(ctx, 'REVOKE step FAILED. Retrying ...');
                 await this.execAttestClaim(identity);
               } else {
-                console.log(`REVOKE step FAILED | Retry exceeded: STOPPING`);
+                writeLog(
+                  LogType.INFO,
+                  `REVOKE step FAILED | Retry exceeded: STOPPING`,
+                );
+                await this.logAms(
+                  ctx,
+                  'REVOKE step FAILED. Retrying ...',
+                  true,
+                  incomingTx,
+                );
                 // TODO: Notification logic
               }
             }
             break;
           default:
-            await this.logAms(ctx, 'Invalid transaction type', true);
+            await this.logAms(
+              ctx,
+              'Invalid transaction type',
+              true,
+              incomingTx,
+            );
             break;
         }
       },

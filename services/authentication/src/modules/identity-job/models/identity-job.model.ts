@@ -24,11 +24,7 @@ export class IdentityJob extends AdvancedSQLModel {
       PopulateFrom.ADMIN,
       PopulateFrom.PROFILE,
     ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.SELECT_DB,
-    ],
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.SELECT_DB],
     validators: [],
   })
   public identity_id: number;
@@ -81,11 +77,7 @@ export class IdentityJob extends AdvancedSQLModel {
       PopulateFrom.ADMIN,
       PopulateFrom.PROFILE,
     ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.SELECT_DB,
-    ],
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.SELECT_DB],
     validators: [],
   })
   public finalStage: string;

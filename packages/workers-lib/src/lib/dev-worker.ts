@@ -1,3 +1,4 @@
+import { LogType, writeLog } from '@apillon/lib';
 import { QueueWorkerType } from '../config/types';
 import {
   ServiceDefinition,
@@ -10,7 +11,7 @@ export async function callDevWorker(
   workerClass: any,
   parameters?: any,
 ): Promise<void> {
-  console.log(`Starting DEV ${workerName} worker ...`);
+  writeLog(LogType.INFO, `Starting DEV ${workerName} worker ...`);
 
   // Directly calls Kilt worker -> USED ONLY FOR DEVELOPMENT!!
   const serviceDef: ServiceDefinition = {

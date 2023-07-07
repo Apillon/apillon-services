@@ -130,42 +130,17 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
 
       await this.setTransactionsState(transactions);
 
+      await wallet.updateLastParsedBlock(toBlock);
+
       if (transactions.length > 0) {
-        if (
-          env.APP_ENV == AppEnvironment.LOCAL_DEV ||
-          env.APP_ENV == AppEnvironment.TEST
-        ) {
-          console.log('Starting DEV Webhook worker ...');
-
-          // Directly calls worker -> USED ONLY FOR DEVELOPMENT!!
-          const serviceDef: ServiceDefinition = {
-            type: ServiceDefinitionType.SQS,
-            config: { region: 'test' },
-            params: { FunctionName: 'test' },
-          };
-
-          const wd = new WorkerDefinition(
-            serviceDef,
-            WorkerName.TRANSACTION_WEBHOOKS,
-            {},
-          );
-
-          const worker = new TransactionWebhookWorker(
-            wd,
-            this.context,
-            QueueWorkerType.EXECUTOR,
-          );
-          await worker.runExecutor({});
-        } else {
-          // Trigger webhook worker
-          await sendToWorkerQueue(
-            env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
-            WorkerName.TRANSACTION_WEBHOOKS,
-            [{}],
-            null,
-            null,
-          );
-        }
+        // Trigger webhook worker
+        await sendToWorkerQueue(
+          env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
+          WorkerName.TRANSACTION_WEBHOOKS,
+          [{}],
+          null,
+          null,
+        );
 
         await this.writeLogToDb(
           WorkerLogStatus.INFO,

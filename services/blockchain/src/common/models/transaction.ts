@@ -258,46 +258,4 @@ export class Transaction extends AdvancedSQLModel {
 
     return res;
   }
-
-  public async populateByHash(hash: string) {
-    const data = await this.db().paramExecute(
-      `
-        SELECT *
-        FROM \`${DbTables.TRANSACTION_QUEUE}\` tq
-        WHERE tq.transactionHash = @hash
-      `,
-      { hash },
-    );
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    }
-    return this.reset();
-  }
-
-  public async updateTransaction(
-    chainId: string,
-    extrinsicHash: string,
-    conn: PoolConnection,
-  ) {
-    const data = await this.getContext().mysql.paramExecute(
-      `UPDATE \`${DbTables.TRANSACTION_QUEUE}\`
-      SET transactionStatus = @status
-      WHERE
-        chain = @chain
-        AND transactionHash = @transactionHash`,
-      {
-        chain: chainId,
-        transactionHash: extrinsicHash,
-      },
-      conn,
-    );
-
-    console.log(chainId, extrinsicHash);
-
-    if (data && data.length) {
-      return new Transaction({}, this.getContext()).populate(data);
-    }
-
-    return null;
-  }
 }
