@@ -1,7 +1,7 @@
 import { env } from '@apillon/lib';
 import { GraphQLClient, gql } from 'graphql-request';
-import { CrustTransferType } from '../../../config/types';
-import { BlockHeight } from '../block-height';
+import { CrustTransferType } from '../../../../config/types';
+import { BlockHeight } from '../../block-height';
 import { CrustStorageOrders } from './data-models/crust-storage-orders';
 import { CrustTransfers } from './data-models/crust-transfers';
 
@@ -112,6 +112,7 @@ export class CrustBlockchainIndexer {
         transactionType: CrustTransferType.TRANSFER,
       },
     );
+
     return data;
   }
 

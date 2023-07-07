@@ -1,41 +1,11 @@
 import { prop } from '@rawmodel/core';
-import { booleanParser, stringParser } from '@rawmodel/parsers';
-import { emailValidator, presenceValidator } from '@rawmodel/validators';
-import { ValidatorErrorCode, PopulateFrom } from '../../../../config/types';
+import { stringParser } from '@rawmodel/parsers';
+import { presenceValidator, emailValidator } from '@rawmodel/validators';
+import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
-import {
-  didCreateCreateOpValidator,
-  didUriValidator,
-} from '../validators/did-create.validator';
+import { didUriValidator } from '../validators/did-create.validator';
 
-// const body = {
-//   did_create_op: {
-//    payload: {
-//     message: u8aToHex(encryptedData.box),
-//     nonce: u8aToHex(encryptedData.nonce),
-//    },
-//    senderPubKey: u8aToHex(keypair.publicKey),
-//   },
-//   claimerEmail: string,
-//   didUri: string,
-// };
-export class IdentityCreateDto extends ModelBase {
-  @prop({
-    // TODO: parser -> This is an object, so do we really need to parse anything?
-    populatable: [PopulateFrom.PROFILE],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.IDENTITY_CREATE_DID_CREATE_OP_NOT_PRESENT,
-      },
-      {
-        resolver: didCreateCreateOpValidator(),
-        code: ValidatorErrorCode.IDENTITY_CREATE_INVALID_REQUEST,
-      },
-    ],
-  })
-  public did_create_op: any;
-
+export class AttestationDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
@@ -79,4 +49,11 @@ export class IdentityCreateDto extends ModelBase {
     ],
   })
   public token: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE],
+    validators: [],
+  })
+  public credential: string;
 }

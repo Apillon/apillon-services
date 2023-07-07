@@ -13,7 +13,6 @@ export enum TransactionStatus {
 export enum SubstrateChain {
   CRUST = 1,
   KILT = 2,
-  KILT_SPIRITNET = 3,
   PHALA = 4,
 }
 

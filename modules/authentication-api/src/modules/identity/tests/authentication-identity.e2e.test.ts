@@ -48,7 +48,7 @@ describe('Identity', () => {
   describe('Test init identity generation process', () => {
     test('Empty email', async () => {
       const resp = await request(stage.http)
-        .post('/identity/generate/identity')
+        .post('/identity/generate')
         .send({});
       // SUBCASE 1: EMPTY BODY
       expect(resp.status).toBe(422);
@@ -122,18 +122,14 @@ describe('Identity', () => {
   describe('Test GET identity generation process STATE', () => {
     test('Test INVALID email', async () => {
       const resp = await request(stage.http)
-        .get(
-          `/identity/generate/state/query?email=${controlMailInvalid}&token=${token}`,
-        )
+        .get(`/identity/state/query?email=${controlMailInvalid}&token=${token}`)
         .send();
       expect(resp.status).toBe(422);
     });
 
     test('Test INVALID email domain', async () => {
       const resp = await request(stage.http)
-        .get(
-          `/identity/generate/state/query?email=${controlMailInvalid}&token=${token}`,
-        )
+        .get(`/identity/state/query?email=${controlMailInvalid}&token=${token}`)
         .send();
       expect(resp.status).toBe(422);
     });
@@ -145,7 +141,7 @@ describe('Identity', () => {
       });
       // STATE --> No entry for this email
       const resp = await request(stage.http)
-        .get(`/identity/generate/state/query?email=${mail}&token=${tokenT}`)
+        .get(`/identity/state/query?email=${mail}&token=${tokenT}`)
         .send();
       expect(resp.status).toBe(400);
       expect(resp.body.message).toEqual('IDENTITY_DOES_NOT_EXIST');
@@ -166,9 +162,7 @@ describe('Identity', () => {
       await identity.insert(SerializeFor.INSERT_DB);
 
       const resp = await request(stage.http)
-        .get(
-          `/identity/generate/state/query?email=${testEmail4}&token=${token}`,
-        )
+        .get(`/identity/state/query?email=${testEmail4}&token=${token}`)
         .send();
       expect(resp.status).toBe(200);
       const data = resp.body.data;
@@ -202,7 +196,7 @@ describe('Identity', () => {
       expect(identityDb.email).toEqual(testEmail);
       expect(identityDb.state).toEqual(IdentityState.IN_PROGRESS);
       const resp = await request(stage.http)
-        .get(`/identity/generate/state/query?email=${testEmail}&token=${token}`)
+        .get(`/identity/state/query?email=${testEmail}&token=${token}`)
         .send();
       expect(resp.status).toBe(200);
       const data = resp.body.data;
@@ -226,9 +220,7 @@ describe('Identity', () => {
       expect(identityAttestedDb.email).toEqual(testEmailAttested);
       expect(identityAttestedDb.state).toEqual(IdentityState.ATTESTED);
       const resp1 = await request(stage.http)
-        .get(
-          `/identity/generate/state/query?email=${testEmailAttested}&token=${token}`,
-        )
+        .get(`/identity/state/query?email=${testEmailAttested}&token=${token}`)
         .send();
       expect(resp1.status).toBe(200);
       const data1 = resp1.body.data;
@@ -238,8 +230,8 @@ describe('Identity', () => {
     afterEach(async () => {
       await stage.authApiContext.mysql.paramExecute(
         `
-           DELETE FROM \`${DbTables.IDENTITY}\` i
-         `,
+        DELETE FROM \`${DbTables.IDENTITY}\` i
+        `,
       );
     });
 
@@ -250,7 +242,7 @@ describe('Identity', () => {
       // INVALID TOKEN
       controlRequestBody.token = 'INVALID_TOKEN';
       const resp = await request(stage.http)
-        .post('/identity/generate/identity')
+        .post('/identity/generate')
         .send({
           ...controlRequestBody,
         });
@@ -259,14 +251,14 @@ describe('Identity', () => {
       // EMPTY TOKEN
       controlRequestBody.token = null;
       const resp2 = await request(stage.http)
-        .post('/identity/generate/identity')
+        .post('/identity/generate')
         .send({
           ...controlRequestBody,
         });
 
       const errors2 = resp2.body.errors[0];
       expect(resp2.status).toBe(422);
-      expect(errors2.code).toEqual(422070110);
+      expect(errors2.code).toEqual(422070111);
       expect(errors2.message).toEqual(
         'IDENTITY_VERIFICATION_TOKEN_NOT_PRESENT',
       );
@@ -279,7 +271,7 @@ describe('Identity', () => {
         '0', // valid 0 miliseconds
       );
       const resp3 = await request(stage.http)
-        .post('/identity/generate/identity')
+        .post('/identity/generate')
         .send({
           ...controlRequestBody,
         });
@@ -296,7 +288,7 @@ describe('Identity', () => {
       );
       controlRequestBody.email = testEmailAttested;
       const resp4 = await request(stage.http)
-        .post('/identity/generate/identity')
+        .post('/identity/generate')
         .send({
           ...controlRequestBody,
         });
@@ -310,7 +302,7 @@ describe('Identity', () => {
       // EMPTY DIDURI
       controlRequestBody.didUri = null;
       const resp = await request(stage.http)
-        .post('/identity/generate/identity')
+        .post('/identity/generate')
         .send({
           ...controlRequestBody,
         });
@@ -324,7 +316,7 @@ describe('Identity', () => {
       // EMPTY DID 2
       controlRequestBody.didUri = '';
       const resp1 = await request(stage.http)
-        .post('/identity/generate/identity')
+        .post('/identity/generate')
         .send({
           ...controlRequestBody,
         });
@@ -338,7 +330,7 @@ describe('Identity', () => {
       // INVALID DID
       controlRequestBody.didUri = 'did:klt:123asdasdasd';
       const resp2 = await request(stage.http)
-        .post('/identity/generate/identity')
+        .post('/identity/generate')
         .send({
           ...controlRequestBody,
         });

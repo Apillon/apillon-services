@@ -18,16 +18,16 @@ import {
 import { Transaction } from '../common/models/transaction';
 import { Wallet } from '../common/models/wallet';
 import { DbTables } from '../config/types';
-import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust-indexer.service';
+import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
 import { BlockchainStatus } from '../modules/blockchain-indexers/blockchain-status';
 import {
   CrustStorageOrders,
   CrustStorageOrder,
-} from '../modules/blockchain-indexers/substrate/data-models/crust-storage-orders';
+} from '../modules/blockchain-indexers/substrate/crust/data-models/crust-storage-orders';
 import {
   CrustTransfer,
   CrustTransfers,
-} from '../modules/blockchain-indexers/substrate/data-models/crust-transfers';
+} from '../modules/blockchain-indexers/substrate/crust/data-models/crust-transfers';
 import { WorkerName } from './worker-executor';
 
 export class CrustTransactionWorker extends BaseSingleThreadWorker {
@@ -77,6 +77,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
           crustTransactions.deposits,
           conn,
         );
+
         await this.handleCrustFileOrders(
           wallet,
           crustTransactions.fileOrders,
@@ -378,6 +379,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         })
         .map((so) => [so.extrinsicHash, so]),
     );
+
     const soHashes: string[] = [...storageOrders.keys()];
     const updatedDbTxs: string[] = await this.updateTransactions(
       soHashes,

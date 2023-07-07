@@ -1,4 +1,4 @@
-import { BlockchainStatus } from '../../blockchain-status';
+import { BlockchainStatus } from '../../../blockchain-status';
 
 export interface CrustStorageOrders {
   storageOrders: CrustStorageOrder[];

@@ -48,6 +48,7 @@ export * from './lib/at-services/storage/dtos/create-s3-urls-for-upload.dto';
 //#REGION Authentication API
 export * from './lib/at-services/authentication/authentication';
 export * from './lib/at-services/authentication/dtos/identity-create.dto';
+export * from './lib/at-services/authentication/dtos/attestation.dto';
 export * from './lib/at-services/authentication/dtos/identity-did-revoke.dto';
 export * from './lib/at-services/authentication/dtos/identity-email.dto';
 export * from './lib/at-services/authentication/dtos/identity-verification-email.dto';

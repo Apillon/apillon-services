@@ -22,7 +22,7 @@ import { formatTokenWithDecimals } from '../lib/utils';
 import { TransactionLog } from '../modules/accounting/transaction-log.model';
 
 import { EvmBlockchainIndexer } from '../modules/blockchain-indexers/evm/evm-indexer.service';
-import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust-indexer.service';
+import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
 
 export class TransactionLogWorker extends BaseQueueWorker {
   private batchLimit: number;
@@ -152,10 +152,6 @@ export class TransactionLogWorker extends BaseQueueWorker {
           [SubstrateChain.KILT]: () => {
             //
             throw new Error('KILT is not supported yet!');
-          },
-          [SubstrateChain.KILT_SPIRITNET]: () => {
-            //
-            throw new Error('KILT SPIRITNET is not supported yet!');
           },
           [SubstrateChain.PHALA]: () => {
             //
