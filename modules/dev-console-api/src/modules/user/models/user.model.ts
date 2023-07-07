@@ -201,6 +201,8 @@ export class User extends AdvancedSQLModel {
         JOIN project_user pu ON u.id = pu.user_id
         JOIN project p ON pu.project_id = p.id
         LEFT JOIN service s ON p.id = s.project_id
+        WHERE (@search IS null OR u.name LIKE CONCAT('%', @search, '%'))
+        AND u.status <> ${SqlModelStatus.DELETED}
         `,
       qFilter: `
           ORDER BY ${filters.orderStr || 'u.createTime DESC'}

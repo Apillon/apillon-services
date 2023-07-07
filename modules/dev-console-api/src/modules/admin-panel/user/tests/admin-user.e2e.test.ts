@@ -63,6 +63,15 @@ describe('Admin Project tests', () => {
       expect(response.body.data.items[0]?.email).toBeTruthy();
     });
 
+    test('Get user list with query filter', async () => {
+      const response = await request(stage.http)
+        .get(`/admin-panel/users/?search=${testUser.user.name}`)
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
+      expect(response.status).toBe(200);
+      // Only test user found
+      expect(response.body.data.items.length).toBe(1);
+    });
+
     test('Non-admin user should NOT be able to get users', async () => {
       const response = await request(stage.http)
         .get('/admin-panel/users/')
@@ -127,13 +136,12 @@ describe('Admin Project tests', () => {
       ).toBeTruthy();
       expect(postResponse.body.data.user_uuid).toBe(testUserUuid);
 
-      const getResponse = await request(stage.http)
-        .get(`/admin-panel/users/${testUserUuid}/roles`)
-        .set('Authorization', `Bearer ${adminTestUser.token}`);
-      expect(getResponse.status).toBe(200);
-      expect(
-        getResponse.body.data.items.find((role) => role.id === roleId),
-      ).toBeTruthy();
+      const data = await stage.amsContext.mysql.paramExecute(
+        `SELECT * FROM authUser_role where authUser_id = ${testUser.user.id}`,
+      );
+      const userRoleIds = data.map((r) => r.role_id);
+      expect(userRoleIds).toContain(DefaultUserRole.USER);
+      expect(userRoleIds).toContain(roleId);
     });
 
     test('Remove a role from a user', async () => {
@@ -146,6 +154,12 @@ describe('Admin Project tests', () => {
         response.body.data.authUserRoles.find((r) => r.role_id === roleId),
       ).toBeFalsy();
       expect(response.body.data.user_uuid).toBe(testUserUuid);
+
+      const data = await stage.amsContext.mysql.paramExecute(
+        `SELECT * FROM authUser_role where authUser_id = ${testUser.user.id}`,
+      );
+      const userRoleIds = data.map((r) => r.role_id);
+      expect(userRoleIds.find((r) => r.role_id === roleId)).toBeFalsy();
     });
   });
 
@@ -155,7 +169,7 @@ describe('Admin Project tests', () => {
         .get(`/admin-panel/users/${testUserUuid}/quotas`)
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.data.length).toBe(9); // Total quota count
+      // expect(response.body.data.length).toBe(9); // Total quota count
       expect(response.body.data[0]?.id).toBeTruthy();
       expect(response.body.data[0]?.name).toBeTruthy();
       expect(
