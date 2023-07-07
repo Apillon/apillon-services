@@ -43,7 +43,7 @@ export class IdentityJob extends AdvancedSQLModel {
   public retries: number;
 
   /**
-   * Current stage of the identity generation process
+   * Current state of the identity generation process
    */
   @prop({
     parser: { resolver: stringParser() },
@@ -55,10 +55,10 @@ export class IdentityJob extends AdvancedSQLModel {
     ],
     validators: [],
   })
-  public currentStage: string;
+  public state: string;
 
   /**
-   * setComplete when this stage is reached (currentStage == finalStage)
+   * Final state of the identity generation process
    */
   @prop({
     parser: { resolver: stringParser() },
@@ -66,10 +66,10 @@ export class IdentityJob extends AdvancedSQLModel {
     serializable: [SerializeFor.INSERT_DB, SerializeFor.SELECT_DB],
     validators: [],
   })
-  public finalStage: string;
+  public finalState: string;
 
   /**
-   * time when last error occured
+   * Time when last error occured
    */
   @prop({
     parser: { resolver: dateParser() },
@@ -79,7 +79,7 @@ export class IdentityJob extends AdvancedSQLModel {
   public lastFailed: Date;
 
   /**
-   * last error info
+   * Last error info
    */
   @prop({
     parser: { resolver: stringParser() },
@@ -89,7 +89,7 @@ export class IdentityJob extends AdvancedSQLModel {
   public lastError: string;
 
   /**
-   * time of last successful run - set at the end of execution
+   * Time of last successful run - set at the end of execution
    */
   @prop({
     parser: { resolver: dateParser() },
@@ -99,18 +99,19 @@ export class IdentityJob extends AdvancedSQLModel {
   public completedAt: Date;
 
   /**
-   * Sets completed property when the job if completed
+   * Sets state to finalState property when the job if completed
    */
   public async setCompleted() {
     this.completedAt = new Date();
+    this.state = this.finalState;
     await this.update();
   }
 
   /**
    * Sets current job state
    */
-  public async setCurrentStage(stage: string) {
-    this.currentStage = stage;
+  public async setState(state: string) {
+    this.state = state;
     this.retries = 0;
     await this.update();
   }
@@ -118,8 +119,8 @@ export class IdentityJob extends AdvancedSQLModel {
   /**
    * Sets final stage
    */
-  public async isFinalStage() {
-    return this.currentStage === this.finalStage;
+  public async isFinalState() {
+    return this.state === this.finalState;
   }
 
   /**

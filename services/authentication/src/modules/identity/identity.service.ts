@@ -7,6 +7,7 @@ import {
   Lmas,
   ServiceName,
   AttestationDto,
+  writeLog,
 } from '@apillon/lib';
 import axios from 'axios';
 import { Identity } from './models/identity.model';
@@ -170,8 +171,7 @@ export class IdentityMicroservice {
     if (
       !identity.exists() ||
       (identity.state != IdentityState.IN_PROGRESS &&
-        identity.state != IdentityState.IDENTITY_VERIFIED &&
-        identity.state != IdentityState.SUBMITTED_DID_CREATE_REQ)
+        identity.state != IdentityState.IDENTITY_VERIFIED)
     ) {
       // IDENTITY_VERIFIED just means that the process was broken before
       // the entity was successfully attested --> See a few lines below
@@ -196,6 +196,7 @@ export class IdentityMicroservice {
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
 
+    writeLog(LogType.INFO, 'Decrypting payload..');
     const decrypted = await decryptAssymetric(
       did_create_op.payload,
       did_create_op.senderPubKey,
@@ -208,7 +209,6 @@ export class IdentityMicroservice {
       const data = hexToU8a(payload.data);
       const signature = hexToU8a(payload.signature);
 
-      // NOTE!!: Did.getKeyRelationshipForTx(attestation) --> undefined
       fullDidCreationTx = api.tx.did.create(data, {
         sr25519: signature,
       });
@@ -232,11 +232,7 @@ export class IdentityMicroservice {
       did_create_op,
     );
 
-    identity.populate({
-      state: IdentityState.SUBMITTED_DID_CREATE_REQ,
-    });
-    await identity.update();
-
+    writeLog(LogType.INFO, 'Sending blockchain request..');
     // Call blockchain server and submit batch request
     await sendBlockchainServiceRequest(context, bcsRequest);
 
@@ -278,6 +274,7 @@ export class IdentityMicroservice {
     const api = ConfigService.get('api');
 
     // Prepare identity instance and credential structure
+    writeLog(LogType.INFO, 'Preparing attestation request..');
     const { attestationRequest, credential } = createAttestationRequest(
       claimerEmail,
       attesterDidUri,
@@ -308,13 +305,13 @@ export class IdentityMicroservice {
     };
 
     identity.populate({
-      state: IdentityState.SUBMITTED_ATTESATION_REQ,
       credential: claimerCredential,
       didUri: claimerDidUri ? claimerDidUri : null,
       email: claimerEmail,
     });
+    await identity.update();
 
-    // Prepare claim TX
+    writeLog(LogType.INFO, 'Creating attestation TX ..');
     const attestationTx = await Did.authorizeTx(
       attesterDidUri,
       attestation,
@@ -332,10 +329,9 @@ export class IdentityMicroservice {
       identity,
     );
 
+    writeLog(LogType.INFO, 'Sending blockchain request..');
     // Call blockchain server and submit batch request
     await sendBlockchainServiceRequest(context, bcsRequest);
-
-    await identity.update();
   }
 
   static async getUserIdentityCredential(event: { query: string }, context) {

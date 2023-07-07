@@ -8,8 +8,8 @@ export async function upgrade(
     `CREATE TABLE IF NOT EXISTS \`${DbTables.IDENTITY_JOB}\` (
       \`id\` INT NOT NULL AUTO_INCREMENT,
       \`retries\` INT NULL,
-      \`currentStage\` TEXT NULL,
-      \`finalStage\` TEXT NULL,
+      \`state\` TEXT NULL,
+      \`finalState\` TEXT NULL,
       \`identity_id\` INT NULL,
       \`completedAt\` DATETIME NULL,
       \`lastError\` TEXT NULL,

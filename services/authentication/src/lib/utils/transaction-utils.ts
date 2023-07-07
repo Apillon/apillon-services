@@ -1,10 +1,5 @@
 import {
-  ChainType,
   CreateSubstrateTransactionDto,
-  Lmas,
-  LogType,
-  PoolConnection,
-  ServiceName,
   SubstrateChain,
   TransactionStatus,
   writeLog,
@@ -12,7 +7,7 @@ import {
 import {
   DbTables,
   DidCreateOp,
-  IdentityJobStage,
+  IdentityJobState,
   TransactionType,
 } from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
@@ -49,10 +44,10 @@ export async function identityCreateRequestBc(
   const identityJob = await IdentityJobService.initOrGetIdentityJob(
     context,
     identity.id,
-    IdentityJobStage.ATESTATION,
+    IdentityJobState.ATESTATION,
   );
 
-  await identityJob.setCurrentStage(IdentityJobStage.ATESTATION);
+  await identityJob.setState(IdentityJobState.ATESTATION);
 
   const bcServiceRequest: CreateSubstrateTransactionDto =
     new CreateSubstrateTransactionDto(
@@ -140,10 +135,10 @@ export async function didRevokeRequestBc(
   const identityJob = await IdentityJobService.initOrGetIdentityJob(
     context,
     identity.id,
-    IdentityJobStage.DID_REVOKE,
+    IdentityJobState.DID_REVOKE,
   );
 
-  await identityJob.setCurrentStage(IdentityJobStage.DID_REVOKE);
+  await identityJob.setState(IdentityJobState.DID_REVOKE);
 
   const bcServiceRequest: CreateSubstrateTransactionDto =
     new CreateSubstrateTransactionDto(

@@ -7,18 +7,19 @@ export class IdentityJobService {
   public static async initOrGetIdentityJob(
     context: ServiceContext,
     identity_id: number,
-    finalStage?: string,
+    finalState?: string,
   ) {
-    // if this is a retry, return existingf
+    // if this is a retry, return existing
     const identityJob = await new IdentityJob({}, context).populateByIdentityId(
       identity_id,
     );
+
     return identityJob.exists()
       ? identityJob
       : await new IdentityJob({}, context)
           .populate({
             identity_id: identity_id,
-            finalStage: finalStage,
+            finalState: finalState,
           })
           .insert();
   }

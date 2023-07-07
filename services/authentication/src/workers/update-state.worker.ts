@@ -18,7 +18,7 @@ import {
 } from '@apillon/workers-lib';
 import { Transaction } from '../modules/transaction/models/transaction.model';
 import {
-  IdentityJobStage,
+  IdentityJobState,
   IdentityState,
   TransactionType,
 } from '../config/types';
@@ -118,7 +118,6 @@ export class UpdateStateWorker extends BaseQueueWorker {
         const incomingTx = result;
 
         const incomignTxData = incomingTx.data;
-
         const status = incomingTx.transactionStatus;
         const txType = incomignTxData.transactionType;
 
@@ -173,13 +172,13 @@ export class UpdateStateWorker extends BaseQueueWorker {
             if (status == TransactionStatus.CONFIRMED) {
               writeLog(LogType.INFO, 'DID CREATE step SUCCESS');
 
-              if (await identityJob.isFinalStage()) {
+              if (await identityJob.isFinalState()) {
                 await identityJob.setCompleted();
               } else {
-                writeLog(LogType.INFO, 'Executing attestation stage ...');
+                writeLog(LogType.INFO, 'Executing attestation ...');
                 identity.state = IdentityState.DID_CREATED;
                 await identity.update();
-                await identityJob.setCurrentStage(IdentityJobStage.ATESTATION);
+                await identityJob.setState(IdentityJobState.ATESTATION);
                 await this.execAttestClaim(identity);
               }
             } else {
@@ -202,8 +201,8 @@ export class UpdateStateWorker extends BaseQueueWorker {
             writeLog(LogType.INFO, 'ATTESTATION RECEIVED ... ');
             if (status == TransactionStatus.CONFIRMED) {
               writeLog(LogType.INFO, 'ATTESTATION step SUCCESS');
-              if (await identityJob.isFinalStage()) {
-                writeLog(LogType.INFO, 'final stage reached!!');
+              if (await identityJob.isFinalState()) {
+                writeLog(LogType.INFO, 'Final state reached!!');
                 await identityJob.setCompleted();
               }
               identity.state = IdentityState.ATTESTED;
