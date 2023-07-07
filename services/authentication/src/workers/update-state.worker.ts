@@ -50,7 +50,7 @@ export class UpdateStateWorker extends BaseQueueWorker {
       context: contex,
       logType: error ? LogType.ERROR : LogType.INFO,
       message: message,
-      location: `${this.constructor.name}`,
+      location: `UpdateStateWorker`,
       service: ServiceName.AUTHENTICATION_API,
       data: {
         ...data,
@@ -213,6 +213,11 @@ export class UpdateStateWorker extends BaseQueueWorker {
 
               if (await identityJob.identityJobRetry()) {
                 writeLog(LogType.INFO, `ATTESTATION step FAILED. Retrying ...`);
+                await this.logAms(
+                  ctx,
+                  `ATTESTATION step FAILED. Retrying ...`,
+                  true,
+                );
                 await this.execAttestClaim(identity);
               } else {
                 writeLog(
@@ -237,7 +242,7 @@ export class UpdateStateWorker extends BaseQueueWorker {
               await identity.update();
             } else {
               if (await identityJob.identityJobRetry()) {
-                await writeLog(ctx, 'REVOKE step FAILED. Retrying ...');
+                writeLog(LogType.INFO, 'REVOKE step FAILED. Retrying ...');
                 await this.execAttestClaim(identity);
               } else {
                 writeLog(
