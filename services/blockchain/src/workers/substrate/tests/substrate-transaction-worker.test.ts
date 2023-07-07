@@ -22,7 +22,7 @@ describe('Substrate tests', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    env.BLOCKCHAIN_KILT_GRAPHQL_SERVER = 'http://3.251.2.33:8082/graphql';
+    env.BLOCKCHAIN_KILT_GRAPHQL_SERVER = 'http://18.203.251.180:8082/graphql';
     const address = '4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn';
     const chain = SubstrateChain.KILT;
     const chainType = ChainType.SUBSTRATE;
