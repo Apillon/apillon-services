@@ -202,8 +202,6 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
             },
           });
         }
-
-        updates = [...updates, splits[i].map((a) => a.id)];
       }
     }
     return updates;
