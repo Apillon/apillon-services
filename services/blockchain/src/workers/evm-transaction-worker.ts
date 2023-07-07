@@ -51,7 +51,7 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
       `${this.logPrefix} RUN EXECUTOR (EvmTransactionWorker). data: `,
       data,
     );
-    const wallets = await new Wallet({}, this.context).getList(
+    const wallets = await new Wallet({}, this.context).getByChainAndChainType(
       this.evmChain,
       ChainType.EVM,
     );

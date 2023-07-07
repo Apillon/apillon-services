@@ -24,8 +24,6 @@ export enum EvmChain {
   ASTAR = 592,
 }
 
-export enum BlockchainEventType {}
-
 export enum AmsEventType {
   USER_REGISTER = 'user-register',
   USER_GET_AUTH = 'user-get-auth',
@@ -68,6 +66,9 @@ export enum BlockchainEventType {
   EVM_SIGN_TRANSACTION = 'evm-sign-transaction',
   EVM_GET_TRANSACTION = 'evm-get-transaction',
   GET_CHAIN_ENDPOINT = 'get-chain-endpoint',
+  LIST_WALLETS = 'list-wallets',
+  GET_WALLET = 'get-wallet',
+  GET_WALLET_TRANSACTIONS = 'get-wallet-transactions',
 }
 
 export enum StorageEventType {

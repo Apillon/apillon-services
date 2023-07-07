@@ -158,7 +158,7 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
       WHERE id = @id AND status <> ${SqlModelStatus.DELETED}
       ${conn && forUpdate ? 'FOR UPDATE' : ''};
@@ -167,11 +167,9 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
       conn,
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   public async populateByName(
@@ -188,7 +186,7 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
     }
     const data = await this.db().paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM ${this.tableName}
       WHERE name = @name
       ${conn && forUpdate ? 'FOR UPDATE' : ''}

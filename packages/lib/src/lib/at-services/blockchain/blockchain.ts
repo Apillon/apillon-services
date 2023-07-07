@@ -6,6 +6,7 @@ import {
   EvmChain,
   SubstrateChain,
 } from '../../../config/types';
+import { BaseQueryFilter } from '../../base-models/base-query-filter.model';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { CreateEvmTransactionDto } from './dtos/create-evm-transaction.dto';
@@ -43,7 +44,7 @@ export class BlockchainMicroservice extends BaseService {
   public async getSubstrateTransaction(id: number) {
     const data = {
       eventName: BlockchainEventType.SUBSTRATE_GET_TRANSACTION,
-      id: id,
+      id,
     };
     return await this.callService(data);
   }
@@ -65,7 +66,7 @@ export class BlockchainMicroservice extends BaseService {
   public async getEvmTransaction(id: number) {
     const data = {
       eventName: BlockchainEventType.EVM_GET_TRANSACTION,
-      id: id,
+      id,
     };
     return await this.callService(data);
   }
@@ -83,4 +84,29 @@ export class BlockchainMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
+
+  //#region wallet methods
+
+  public async listWallets(filter: BaseQueryFilter) {
+    return await this.callService({
+      eventName: BlockchainEventType.LIST_WALLETS,
+      ...filter,
+    });
+  }
+
+  public async getWallet(walletId: number) {
+    return await this.callService({
+      eventName: BlockchainEventType.GET_WALLET,
+      walletId,
+    });
+  }
+
+  public async getWalletTransactions(walletId: number) {
+    return await this.callService({
+      eventName: BlockchainEventType.GET_WALLET_TRANSACTIONS,
+      walletId,
+    });
+  }
+
+  //#endregion
 }

@@ -243,7 +243,7 @@ export class SubstrateService {
   ) {
     console.log('chain: ', _event.chain);
     console.log('address: ', _event.address);
-    const wallets = await new Wallet({}, context).getList(
+    const wallets = await new Wallet({}, context).getByChainAndChainType(
       _event.chain,
       ChainType.SUBSTRATE,
       _event.address,

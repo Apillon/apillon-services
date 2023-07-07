@@ -1,14 +1,17 @@
 import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
+  BaseQueryFilter,
   ChainType,
   Context,
   enumInclusionValidator,
   EvmChain,
+  getQueryParams,
   PoolConnection,
   PopulateFrom,
   presenceValidator,
   prop,
+  selectAndCountQuery,
   SerializeFor,
   SubstrateChain,
 } from '@apillon/lib';
@@ -255,9 +258,9 @@ export class Wallet extends AdvancedSQLModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${DbTables.WALLET}\`
-      WHERE 
+      WHERE
       chainType = @chainType
       AND chain = @chain
       AND status <> ${SqlModelStatus.DELETED}
@@ -291,9 +294,9 @@ export class Wallet extends AdvancedSQLModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${DbTables.WALLET}\`
-      WHERE 
+      WHERE
         chainType = @chainType
         AND chain = @chain
         -- case insensitive comparison
@@ -351,7 +354,7 @@ export class Wallet extends AdvancedSQLModel {
     await this.getContext().mysql.paramExecute(
       `
       UPDATE \`${DbTables.WALLET}\`
-      SET nextNonce = nextNonce + 1, 
+      SET nextNonce = nextNonce + 1,
       usageTimestamp = now()
       WHERE id = @id;
       `,
@@ -360,7 +363,7 @@ export class Wallet extends AdvancedSQLModel {
     );
   }
 
-  public async getList(
+  public async getByChainAndChainType(
     chain: Chain,
     chainType: ChainType,
     address?: string,
@@ -370,7 +373,7 @@ export class Wallet extends AdvancedSQLModel {
       `
       SELECT *
       FROM \`${DbTables.WALLET}\`
-      WHERE 
+      WHERE
       status = ${SqlModelStatus.ACTIVE}
       AND chainType = @chainType
       AND chain = @chain
@@ -390,7 +393,7 @@ export class Wallet extends AdvancedSQLModel {
       `
       SELECT *
       FROM \`${DbTables.WALLET}\`
-      WHERE 
+      WHERE
       status = ${SqlModelStatus.ACTIVE}
       AND (@chainType IS NULL OR chainType = @chainType)
       AND (@chain IS NULL OR chain = @chain);
@@ -406,6 +409,32 @@ export class Wallet extends AdvancedSQLModel {
         }
         return new Wallet(x, this.getContext());
       }) || []
+    );
+  }
+
+  public async listWallets(query: BaseQueryFilter) {
+    const filter = new BaseQueryFilter(query);
+    const fieldMap = { id: 'w.id' };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'w',
+      fieldMap,
+      filter.serialize(),
+    );
+    const sqlQuery = {
+      qSelect: `SELECT ${this.generateSelectFields()}`,
+      qFrom: `FROM ${DbTables.WALLET} w`,
+      qFilter: `
+          ORDER BY ${filters.orderStr}
+          LIMIT ${filters.limit} OFFSET ${filters.offset};
+        `,
+    };
+
+    return selectAndCountQuery(
+      this.getContext().mysql,
+      sqlQuery,
+      params,
+      'w.id',
     );
   }
 
@@ -445,5 +474,9 @@ export class Wallet extends AdvancedSQLModel {
           )
         : null,
     };
+  }
+
+  public async getTransactions() {
+    return []; // TODO
   }
 }
