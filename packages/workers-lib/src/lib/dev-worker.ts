@@ -1,4 +1,4 @@
-import { LogType, writeLog } from '@apillon/lib';
+import { Context, LogType, writeLog } from '@apillon/lib';
 import { QueueWorkerType } from '../config/types';
 import {
   ServiceDefinition,
@@ -7,6 +7,7 @@ import {
 } from './serverless-workers';
 
 export async function callDevWorker(
+  context: Context,
   workerName: string,
   workerClass: any,
   parameters?: any,
