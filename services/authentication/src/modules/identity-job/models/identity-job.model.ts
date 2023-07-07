@@ -16,27 +16,23 @@ export class IdentityJob extends AdvancedSQLModel {
     super(data, context);
   }
 
+  /**
+   * Foreign key of the identity table
+   */
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.WORKER],
     serializable: [SerializeFor.INSERT_DB, SerializeFor.SELECT_DB],
     validators: [],
   })
   public identity_id: number;
 
+  /**
+   * Number of times this job retired
+   */
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.WORKER],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
@@ -51,12 +47,7 @@ export class IdentityJob extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.WORKER],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
@@ -71,12 +62,7 @@ export class IdentityJob extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.WORKER],
     serializable: [SerializeFor.INSERT_DB, SerializeFor.SELECT_DB],
     validators: [],
   })
@@ -88,11 +74,7 @@ export class IdentityJob extends AdvancedSQLModel {
   @prop({
     parser: { resolver: dateParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.WORKER],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.WORKER,
-    ],
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
   })
   public lastFailed: Date;
 
@@ -102,11 +84,7 @@ export class IdentityJob extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.WORKER],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.WORKER,
-    ],
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
   })
   public lastError: string;
 
@@ -116,11 +94,7 @@ export class IdentityJob extends AdvancedSQLModel {
   @prop({
     parser: { resolver: dateParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.WORKER],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.WORKER,
-    ],
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
   })
   public completedAt: Date;
 
