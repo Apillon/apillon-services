@@ -59,8 +59,6 @@ functions:
     environment:
       AWS_WORKER_LAMBDA_NAME: ${self:functions.auth-service-worker.name}
     events:
-      # Not a good solution - we need to call
-      # this every few seconds, but lambda can't be called less than every minute
       - schedule: cron(${env:CRON_SCHEDULE, '0/1 * * * ? *'})
       - sqs:
           arn: ${env:WORKER_SQS_ARN} #arn:aws:sqs:eu-west-1:018021943180:apillon-auth-queue-dev

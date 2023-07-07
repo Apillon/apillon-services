@@ -1,5 +1,4 @@
 import {
-  AppEnvironment,
   ChainType,
   Context,
   env,
@@ -213,8 +212,6 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
   private createSubstrateTransactionWebhookDto(
     transaction,
   ): TransactionWebhookDataDto {
-    console.log('transaction data: ', transaction.data);
-
     return new TransactionWebhookDataDto().populate({
       id: transaction.id,
       transactionHash: transaction.transactionHash,

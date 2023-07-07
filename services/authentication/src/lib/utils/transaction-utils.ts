@@ -22,7 +22,14 @@ import { Transaction } from '../../modules/transaction/models/transaction.model'
 import { TransactionService } from '../../modules/transaction/transaction.service';
 import { IdentityJobService } from '../../modules/identity-job/identity-job.service';
 
-/* NOTE: Creates a DID create transaction */
+/**
+ * Creates identity create request for the blockchain service
+ *
+ * @param context
+ * @param SubmittableExtrinsic with did creation details
+ * @param identity Identity
+ * @param did_create_op DidCreateOp
+ */
 export async function identityCreateRequestBc(
   context: ServiceContext,
   transaction: SubmittableExtrinsic,
@@ -66,6 +73,13 @@ export async function identityCreateRequestBc(
   return bcServiceRequest;
 }
 
+/**
+ * Creates attestation request for the blockchain service
+ *
+ * @param context
+ * @param SubmittableExtrinsic with did creation details
+ * @param identity Identity
+ */
 export async function attestationRequestBc(
   context: ServiceContext,
   transaction: SubmittableExtrinsic,
@@ -109,7 +123,13 @@ export async function attestationRequestBc(
   return bcServiceRequest;
 }
 
-/* NOTE: Creates a DID revoke request */
+/**
+ * Creates did revoke request for the blockchain service
+ *
+ * @param context
+ * @param SubmittableExtrinsic with did creation details
+ * @param identity Identity
+ */
 export async function didRevokeRequestBc(
   context: ServiceContext,
   transaction: SubmittableExtrinsic,
