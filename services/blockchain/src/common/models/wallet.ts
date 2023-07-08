@@ -24,6 +24,7 @@ import {
 import { Endpoint } from './endpoint';
 import { ethers } from 'ethers';
 import { ApiPromise, WsProvider } from '@polkadot/api';
+import { TransactionLog } from '../../modules/accounting/transaction-log.model';
 
 export class Wallet extends AdvancedSQLModel {
   public readonly tableName = DbTables.WALLET;
@@ -310,11 +311,9 @@ export class Wallet extends AdvancedSQLModel {
       conn,
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   public async updateLastProcessedNonce(
@@ -476,7 +475,35 @@ export class Wallet extends AdvancedSQLModel {
     };
   }
 
-  public async getTransactions() {
-    return []; // TODO
+  public async getTransactions(walletAddress: string, filter: BaseQueryFilter) {
+    const fieldMap = { id: 't.id' };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      't',
+      fieldMap,
+      filter.serialize(),
+    );
+
+    const sqlQuery = {
+      qSelect: `SELECT ${new TransactionLog(
+        {},
+        this.getContext(),
+      ).generateSelectFields('', '', SerializeFor.ADMIN)}`,
+      qFrom: `FROM \`${DbTables.TRANSACTION_LOG}\` t
+        WHERE t.wallet = '${walletAddress}'
+        AND (@search IS null OR t.hash LIKE CONCAT('%', @search, '%'))
+        `,
+      qFilter: `
+          ORDER BY ${filters.orderStr}
+          LIMIT ${filters.limit} OFFSET ${filters.offset};
+        `,
+    };
+
+    return selectAndCountQuery(
+      this.getContext().mysql,
+      sqlQuery,
+      { ...params },
+      't.id',
+    );
   }
 }

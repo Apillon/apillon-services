@@ -28,7 +28,23 @@ export class WalletService {
     return wallet;
   }
 
-  static async getWalletTransactions(): Promise<any[]> {
-    return [];
+  static async getWalletTransactions(
+    event: any,
+    context: ServiceContext,
+  ): Promise<any> {
+    const wallet = await new Wallet({}, context).populateById(
+      event.walletId as number,
+    );
+    if (!wallet.exists()) {
+      throw new BlockchainCodeException({
+        code: BlockchainErrorCode.WALLET_NOT_FOUND,
+        status: 404,
+      });
+    }
+
+    return await new Wallet({}, context).getTransactions(
+      wallet.address,
+      new BaseQueryFilter(event),
+    );
   }
 }

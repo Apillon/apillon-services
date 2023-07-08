@@ -101,10 +101,11 @@ export class BlockchainMicroservice extends BaseService {
     });
   }
 
-  public async getWalletTransactions(walletId: number) {
+  public async getWalletTransactions(query: BaseQueryFilter, walletId: number) {
     return await this.callService({
       eventName: BlockchainEventType.GET_WALLET_TRANSACTIONS,
       walletId,
+      ...query,
     });
   }
   //#endregion

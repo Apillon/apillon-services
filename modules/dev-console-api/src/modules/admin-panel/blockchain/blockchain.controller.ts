@@ -43,6 +43,10 @@ export class BlockchainController {
     @Query() query: BaseQueryFilter,
     @Param('id', ParseIntPipe) walletId: number,
   ) {
-    return this.blockchainService.getWalletTransactions(context, walletId);
+    return this.blockchainService.getWalletTransactions(
+      context,
+      query,
+      walletId,
+    );
   }
 }

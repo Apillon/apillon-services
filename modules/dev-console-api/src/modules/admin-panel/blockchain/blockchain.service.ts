@@ -39,10 +39,14 @@ export class BlockchainService {
    */
   async getWalletTransactions(
     context: DevConsoleApiContext,
+    query: BaseQueryFilter,
     walletId: number,
   ): Promise<any[]> {
     return (
-      await new BlockchainMicroservice(context).getWalletTransactions(walletId)
+      await new BlockchainMicroservice(context).getWalletTransactions(
+        query,
+        walletId,
+      )
     ).data;
   }
 }
