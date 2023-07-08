@@ -271,7 +271,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
   }
 
   private async checkWalletBalance(wallet: Wallet) {
-    const balanceData = await wallet.checkBallance();
+    const balanceData = await wallet.checkBalance();
 
     if (!balanceData.minBalance) {
       await this.writeLogToDb(

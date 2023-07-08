@@ -1,6 +1,6 @@
 import { BaseQueryFilter } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
-import { Wallet } from '../../common/models/wallet';
+import { Wallet, WalletWithBalance } from '../../common/models/wallet';
 import { BlockchainCodeException } from '../../lib/exceptions';
 import { BlockchainErrorCode } from '../../config/types';
 
@@ -15,7 +15,7 @@ export class WalletService {
   static async getWallet(
     { walletId }: { walletId: number },
     context: ServiceContext,
-  ): Promise<Wallet> {
+  ): Promise<WalletWithBalance> {
     const wallet = await new Wallet({}, context).populateById(walletId);
 
     if (!wallet.exists()) {
@@ -24,8 +24,9 @@ export class WalletService {
         status: 404,
       });
     }
-
-    return wallet;
+    const { balance } = await wallet.checkBalance();
+    // TODO: Round balance amount based on chain?
+    return { ...wallet, balance } as WalletWithBalance;
   }
 
   static async getWalletTransactions(

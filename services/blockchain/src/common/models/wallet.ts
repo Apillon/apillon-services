@@ -437,7 +437,7 @@ export class Wallet extends AdvancedSQLModel {
     );
   }
 
-  public async checkBallance() {
+  public async checkBalance() {
     let balance = null;
     const endpoint = await new Endpoint({}, this.getContext()).populateByChain(
       this.chain,
@@ -507,3 +507,5 @@ export class Wallet extends AdvancedSQLModel {
     );
   }
 }
+
+export type WalletWithBalance = Wallet & { balance: number };
