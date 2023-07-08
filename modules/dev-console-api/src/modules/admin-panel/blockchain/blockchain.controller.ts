@@ -1,4 +1,4 @@
-import { DefaultUserRole, ValidateFor, BaseQueryFilter } from '@apillon/lib';
+import { DefaultUserRole, BaseQueryFilter } from '@apillon/lib';
 import {
   Controller,
   Get,
@@ -7,11 +7,11 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
+import { Ctx, Permissions } from '@apillon/modules-lib';
 import { AuthGuard } from '../../../guards/auth.guard';
 import { DevConsoleApiContext } from '../../../context';
-import { ValidationGuard } from '../../../guards/validation.guard';
 import { BlockchainService } from './blockchain.service';
+import { BaseQueryFilterValidator } from '../../../decorators/base-query-filter-validator';
 
 @Controller('admin-panel/blockchain')
 @Permissions({ role: DefaultUserRole.ADMIN })
@@ -20,8 +20,7 @@ export class BlockchainController {
   constructor(private readonly blockchainService: BlockchainService) {}
 
   @Get('wallets')
-  @Validation({ dto: BaseQueryFilter, validateFor: ValidateFor.QUERY })
-  @UseGuards(ValidationGuard)
+  @BaseQueryFilterValidator()
   async listWallets(
     @Ctx() context: DevConsoleApiContext,
     @Query() query: BaseQueryFilter,
@@ -38,8 +37,10 @@ export class BlockchainController {
   }
 
   @Get('wallets/:id/transactions')
+  @BaseQueryFilterValidator()
   async getWalletTransactions(
     @Ctx() context: DevConsoleApiContext,
+    @Query() query: BaseQueryFilter,
     @Param('id', ParseIntPipe) walletId: number,
   ) {
     return this.blockchainService.getWalletTransactions(context, walletId);

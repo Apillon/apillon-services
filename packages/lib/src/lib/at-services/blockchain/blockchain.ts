@@ -107,6 +107,5 @@ export class BlockchainMicroservice extends BaseService {
       walletId,
     });
   }
-
   //#endregion
 }

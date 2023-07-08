@@ -27,6 +27,7 @@ import { ValidationGuard } from '../../../guards/validation.guard';
 import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
 import { GetQuotasDto } from '@apillon/lib/dist/lib/at-services/config/dtos/get-quotas.dto';
 import { UUID } from 'crypto';
+import { BaseQueryFilterValidator } from '../../../decorators/base-query-filter-validator';
 
 @Controller('admin-panel/users')
 @Permissions({ role: DefaultUserRole.ADMIN })
@@ -35,8 +36,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  @Validation({ dto: BaseQueryFilter, validateFor: ValidateFor.QUERY })
-  @UseGuards(ValidationGuard, AuthGuard)
+  @BaseQueryFilterValidator()
   async listUsers(
     @Ctx() context: DevConsoleApiContext,
     @Query() query: BaseQueryFilter,
@@ -53,8 +53,7 @@ export class UserController {
   }
 
   @Get(':user_uuid/projects')
-  @Validation({ dto: BaseQueryFilter, validateFor: ValidateFor.QUERY })
-  @UseGuards(ValidationGuard, AuthGuard)
+  @BaseQueryFilterValidator()
   async getUserProjects(
     @Ctx() context: DevConsoleApiContext,
     @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
@@ -64,8 +63,7 @@ export class UserController {
   }
 
   @Get(':user_uuid/logins')
-  @Validation({ dto: BaseQueryFilter, validateFor: ValidateFor.QUERY })
-  @UseGuards(ValidationGuard, AuthGuard)
+  @BaseQueryFilterValidator()
   async getUserLogins(
     @Ctx() context: DevConsoleApiContext,
     @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
@@ -75,8 +73,7 @@ export class UserController {
   }
 
   @Get(':user_uuid/roles')
-  @Validation({ dto: BaseQueryFilter, validateFor: ValidateFor.QUERY })
-  @UseGuards(ValidationGuard, AuthGuard)
+  @BaseQueryFilterValidator()
   async getUserRoles(
     @Ctx() context: DevConsoleApiContext,
     @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,

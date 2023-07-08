@@ -41,8 +41,8 @@ export class BlockchainService {
     context: DevConsoleApiContext,
     walletId: number,
   ): Promise<any[]> {
-    return await new BlockchainMicroservice(context).getWalletTransactions(
-      walletId,
-    );
+    return (
+      await new BlockchainMicroservice(context).getWalletTransactions(walletId)
+    ).data;
   }
 }
