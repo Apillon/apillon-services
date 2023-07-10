@@ -113,6 +113,7 @@ export class SubstrateService {
 
       console.info('Generating unsigned transaction');
       const pair = keyring.addFromUri(seed);
+      console.log('Address: ', pair.address);
       const unsignedTx = api.tx(_event.params.transaction);
       // TODO: add validation service for transaction to detect and prevent weird transactions.
 
