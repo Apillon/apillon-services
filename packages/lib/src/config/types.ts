@@ -139,6 +139,7 @@ export enum MailEventType {
 export enum ScsEventType {
   GET_QUOTA = 'get-quota',
   GET_ALL_QUOTAS = 'get-all-quotas',
+  GET_ACTIVE_TERMS = 'get-active-terms',
   CREATE_OVERRIDE = 'create-override',
   DELETE_OVERRIDE = 'delete-override',
 }
@@ -387,6 +388,7 @@ export enum BadRequestErrorCode {
   MISSING_AUTHORIZATION_HEADER = 40000003,
   INVALID_AUTHORIZATION_HEADER = 40000004,
   THIRD_PARTY_SERVICE_CONNECTION_FAILED = 40000005,
+  RESOURCE_DOES_NOT_EXISTS = 40000006,
 }
 
 export enum ValidatorErrorCode {

@@ -6,6 +6,7 @@ import { CreateQuotaOverrideDto } from './dtos/create-quota-override.dto';
 import { QuotaOverrideDto } from './dtos/quota-override.dto';
 import { GetQuotasDto } from './dtos/get-quotas.dto';
 import { QuotaDto } from './dtos/quota.dto';
+import { TermsDto } from './dtos/terms.dto';
 
 /**
  * System config Service client
@@ -68,5 +69,15 @@ export class Scs extends BaseService {
     };
 
     return await this.callService(data);
+  }
+  
+  public async getActiveTerms(): Promise<Array<TermsDto>> {
+    const data = {
+      eventName: ScsEventType.GET_ACTIVE_TERMS,
+    };
+
+    const scsResponse = await this.callService(data);
+
+    return scsResponse.data.map((x) => new TermsDto().populate(x));
   }
 }
