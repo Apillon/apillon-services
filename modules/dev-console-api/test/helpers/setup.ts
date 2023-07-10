@@ -8,12 +8,16 @@ import {
 import { HttpServer, INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
+import { AdminAppModule } from '../../src/admin-app.module';
 
 /**
  * Setup test environment. Rebuild BD, run test app and create test stage object
  * @returns
  */
-export async function setupTest(): Promise<Stage> {
+export async function setupTest(
+  apiPort = env.DEV_CONSOLE_API_PORT_TEST,
+  apiHost = env.DEV_CONSOLE_API_HOST_TEST,
+): Promise<Stage> {
   let app: INestApplication = null;
   let http: HttpServer = null;
 
@@ -26,6 +30,7 @@ export async function setupTest(): Promise<Stage> {
   env.REFERRAL_MYSQL_HOST = null; // safety
   env.NFTS_MYSQL_HOST = null; // safety
   env.AUTH_API_MYSQL_HOST = null; // safety
+  env.BLOCKCHAIN_MYSQL_HOST = null; // safety
 
   try {
     await rebuildTestDatabases();
@@ -36,7 +41,7 @@ export async function setupTest(): Promise<Stage> {
 
   try {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [AppModule, AdminAppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
@@ -45,10 +50,7 @@ export async function setupTest(): Promise<Stage> {
 
     await app.init();
 
-    await app.listen(
-      env.DEV_CONSOLE_API_PORT_TEST,
-      env.DEV_CONSOLE_API_HOST_TEST,
-    );
+    await app.listen(apiPort, apiHost);
     http = app.getHttpServer();
 
     const stage: Stage = await setupTestContextAndSql();

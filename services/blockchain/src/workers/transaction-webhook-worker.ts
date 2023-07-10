@@ -18,6 +18,8 @@ import {
   QueueWorkerType,
 } from '@apillon/workers-lib';
 import { DbTables } from '../config/types';
+import { WorkerName } from './worker-executor';
+
 export class TransactionWebhookWorker extends BaseQueueWorker {
   public constructor(
     workerDefinition: WorkerDefinition,
@@ -29,8 +31,7 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
   public async runPlanner(): Promise<any[]> {
     return [];
   }
-  public async runExecutor(data: any): Promise<any> {
-    console.info('RUN EXECUTOR (TransactionWebhookWorker). data: ', data);
+  public async runExecutor(params: any): Promise<any> {
     const conn = await this.context.mysql.start();
 
     try {
@@ -46,25 +47,24 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
       );
 
       console.log('transactions: ', transactions);
+
       const crustWebhooks: TransactionWebhookDataDto[] = [];
       const nftWebhooks: TransactionWebhookDataDto[] = [];
+      const kiltWebooks: TransactionWebhookDataDto[] = [];
+
       if (transactions && transactions.length > 0) {
         for (let i = 0; i < transactions.length; i++) {
           const transaction = transactions[i];
-          if (
-            transaction.chainType == ChainType.SUBSTRATE &&
-            transaction.chain == SubstrateChain.CRUST
-          ) {
-            crustWebhooks.push(
-              new TransactionWebhookDataDto().populate({
-                id: transaction.id,
-                transactionHash: transaction.transactionHash,
-                referenceTable: transaction.referenceTable,
-                referenceId: transaction.referenceId,
-                transactionStatus: transaction.transactionStatus,
-                data: transaction.data,
-              }),
-            );
+          if (transaction.chainType == ChainType.SUBSTRATE) {
+            if (transaction.chain == SubstrateChain.CRUST) {
+              const crustTWh =
+                this.createSubstrateTransactionWebhookDto(transaction);
+              crustWebhooks.push(crustTWh);
+            } else if (transaction.chain == SubstrateChain.KILT) {
+              const kiltTWh =
+                this.createSubstrateTransactionWebhookDto(transaction);
+              kiltWebooks.push(kiltTWh);
+            }
           } else if (
             transaction.chainType == ChainType.EVM &&
             (transaction.chain == EvmChain.MOONBEAM ||
@@ -94,11 +94,20 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
        * transactions otherwise we do nothing.
        */
       const updates = [
+        // SUBSTRATE
         ...(await this.processWebhook(
           crustWebhooks,
-          env.STORAGE_AWS_WORKER_SQS_URL,
+          env.AUTH_AWS_WORKER_SQS_URL,
           'UpdateCrustStatusWorker',
         )),
+
+        ...(await this.processWebhook(
+          kiltWebooks,
+          env.AUTH_AWS_WORKER_SQS_URL,
+          'UpdateStateWorker',
+        )),
+
+        // Evm
         ...(await this.processWebhook(
           nftWebhooks,
           env.NFTS_AWS_WORKER_SQS_URL,
@@ -117,16 +126,15 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
           null,
           conn,
         );
+        await this.writeLogToDb(
+          WorkerLogStatus.INFO,
+          `Triggered webhooks for ${updates.length} transactions!`,
+          {
+            updates,
+          },
+        );
       }
       await conn.commit();
-      await new Lmas().writeLog({
-        context: this.context,
-        logType: LogType.INFO,
-        message: 'TransactionWebhookWorker finished',
-        location: `${this.constructor.name}/runExecutor`,
-        service: ServiceName.BLOCKCHAIN,
-        data: data,
-      });
     } catch (err) {
       console.log(err);
       await conn.rollback();
@@ -137,17 +145,12 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
         location: `${this.constructor.name}/runExecutor`,
         service: ServiceName.BLOCKCHAIN,
         data: {
-          data,
+          params,
           err,
         },
       });
       throw err;
     }
-
-    await this.writeLogToDb(
-      WorkerLogStatus.INFO,
-      `TransactionWebhookWorker worker has been completed!`,
-    );
 
     return true;
   }
@@ -202,5 +205,18 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
       }
     }
     return updates;
+  }
+
+  private createSubstrateTransactionWebhookDto(
+    transaction,
+  ): TransactionWebhookDataDto {
+    return new TransactionWebhookDataDto().populate({
+      id: transaction.id,
+      transactionHash: transaction.transactionHash,
+      referenceTable: transaction.referenceTable,
+      referenceId: transaction.referenceId,
+      transactionStatus: transaction.transactionStatus,
+      data: transaction.data,
+    });
   }
 }

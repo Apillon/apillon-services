@@ -32,7 +32,7 @@ export class ExceptionsFilter implements ExceptionFilter {
       res.status(error.getStatus()).json({
         id: request?.context?.requestId,
         status: error.getStatus(),
-        code: error.getResponse()['code'],
+        code: error.getResponse()['code'] || error.getResponse()['statusCode'],
         message: error.message,
         origin: error.origin,
         path: request.url,

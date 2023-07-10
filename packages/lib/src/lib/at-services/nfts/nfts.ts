@@ -51,10 +51,10 @@ export class NftsMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async getNftCollection(id: number) {
+  public async getNftCollection(uuid: string) {
     const data = {
-      eventName: NftsEventType.GET_NFT_COLLECTION,
-      id: id,
+      eventName: NftsEventType.GET_NFT_COLLECTION_BY_UUID,
+      uuid,
     };
     return await this.callService(data);
   }
@@ -124,6 +124,17 @@ export class NftsMicroservice extends BaseService {
     const data = {
       eventName: NftsEventType.MAX_COLLECTIONS_QUOTA_REACHED,
       query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async executeDeployCollectionWorker(params: {
+    collection_uuid: string;
+    baseUri: string;
+  }) {
+    const data = {
+      eventName: NftsEventType.EXECUTE_DEPLOY_COLLECTION_WORKER,
+      body: params,
     };
     return await this.callService(data);
   }

@@ -32,6 +32,13 @@ import { HttpStatus } from '@nestjs/common';
 export class Service extends AdvancedSQLModel {
   tableName = DbTables.SERVICE;
 
+  @prop({
+    parser: { resolver: integerParser() },
+    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    populatable: [PopulateFrom.DB],
+  })
+  public id: number;
+
   /**
    * Service's UUID
    */
@@ -98,7 +105,6 @@ export class Service extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
     ],
     validators: [
@@ -223,8 +229,8 @@ export class Service extends AdvancedSQLModel {
     context: DevConsoleApiContext,
     filter: ServiceQueryFilter,
   ) {
-    const project: Project = await new Project({}, context).populateById(
-      filter.project_id,
+    const project: Project = await new Project({}, context).populateByUUID(
+      filter.project_uuid,
     );
     if (!project.exists()) {
       throw new CodeException({
@@ -258,7 +264,9 @@ export class Service extends AdvancedSQLModel {
         FROM \`${DbTables.SERVICE}\` s
         INNER JOIN \`${DbTables.SERVICE_TYPE}\` st
           ON st.id = s.serviceType_id
-        WHERE project_id= @project_id
+        INNER JOIN \`${DbTables.PROJECT}\` p
+          ON p.id = s.project_id
+        WHERE p.project_uuid = @project_uuid
         AND (@serviceType_id IS NULL OR  s.serviceType_id = @serviceType_id )
       `,
       qFilter: `

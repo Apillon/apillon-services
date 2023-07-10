@@ -15,7 +15,8 @@ import { Endpoint } from '../../common/models/endpoint';
 import { BlockchainErrorCode } from '../../config/types';
 import { BlockchainCodeException } from '../../lib/exceptions';
 import { Transaction } from '../../common/models/transaction';
-import { typesBundleForPolkadot } from '@crustio/type-definitions';
+import { typesBundleForPolkadot as CrustTypesBundle } from '@crustio/type-definitions';
+import { typesBundle as KiltTypesBundle } from '@kiltprotocol/type-definitions';
 import { sendToWorkerQueue } from '@apillon/workers-lib';
 import { WorkerName } from '../../workers/worker-executor';
 import { ServiceContext } from '@apillon/service-lib';
@@ -52,6 +53,35 @@ export class SubstrateService {
     console.log('endpoint: ', endpoint.url);
     const provider = new WsProvider(endpoint.url);
 
+    let keyring; // generate privatekey from mnemonic - different for different chains
+    let typesBundle = null; // different types for different chains
+    switch (_event.params.chain) {
+      case SubstrateChain.KILT: {
+        keyring = new Keyring({ ss58Format: 38, type: 'sr25519' });
+        typesBundle = KiltTypesBundle;
+        break;
+      }
+      case SubstrateChain.CRUST: {
+        keyring = new Keyring({ type: 'sr25519' });
+        typesBundle = CrustTypesBundle;
+        break;
+      }
+      default: {
+        throw new BlockchainCodeException({
+          code: BlockchainErrorCode.INVALID_CHAIN,
+          status: 400,
+        });
+      }
+    }
+
+    console.info('Creating APIPromise');
+    // TODO: Refactor to txwrapper when typesBundle supported
+    const api = await ApiPromise.create({
+      provider,
+      typesBundle, // TODO: add
+    });
+
+    console.info('Start db transaction.');
     // Start connection to database at the beginning of the function
     const conn = await context.mysql.start(IsolationLevel.READ_COMMITTED);
 
@@ -77,51 +107,22 @@ export class SubstrateService {
         );
       }
 
-      console.log(wallet.serialize());
-      let keyring; // generate privatekey from mnemonic - different for different chains
-      let typesBundle = null; // different types for different chains
-      switch (_event.params.chain) {
-        case SubstrateChain.KILT: {
-          keyring = new Keyring({ ss58Format: 38, type: 'sr25519' });
-          break;
-        }
-        case SubstrateChain.CRUST: {
-          keyring = new Keyring({ type: 'sr25519' });
-          typesBundle = typesBundleForPolkadot;
-          break;
-        }
-        default: {
-          throw new BlockchainCodeException({
-            code: BlockchainErrorCode.INVALID_CHAIN,
-            status: 400,
-          });
-        }
-      }
-
+      console.log('Wallet', wallet.serialize());
+      console.info('Getting wallet seed, ...');
       const seed = await getWalletSeed(wallet.seed);
 
-      // TODO: Refactor to txwrapper when typesBundle supported
-      const api = await ApiPromise.create({
-        provider,
-        typesBundle, // TODO: add
-      });
+      console.info('Generating unsigned transaction');
       const pair = keyring.addFromUri(seed);
       const unsignedTx = api.tx(_event.params.transaction);
       // TODO: add validation service for transaction to detect and prevent weird transactions.
 
-      // const info = await unsignedTx.paymentInfo(pair);
-      // console.log(`
-      //   class=${info.class.toString()},
-      //   weight=${info.weight.toString()},
-      //   partialFee=${info.partialFee.toHuman()}
-      // `);
-
       // TODO: Determine the best era
       const signed = await unsignedTx.signAsync(pair, {
         nonce: wallet.nextNonce,
-        era: 600, // number of blocks the transaction is valid - 6s per block * 150 blocks / 60 = 15 minutes
+        era: 600, // number of blocks the transaction is valid - 6s per block * 6000 blocks / 60 = 600 minutes -> 10 hours
       });
 
+      console.info('signAsync SUCCESSFULL. Saving transaction to DB.');
       const signedSerialized = signed.toHex();
 
       const transaction = new Transaction({}, context);
@@ -140,6 +141,7 @@ export class SubstrateService {
       });
 
       await transaction.insert(SerializeFor.INSERT_DB, conn);
+      console.info('Transaction inserted. Iterating nonce ...');
       await wallet.iterateNonce(conn);
 
       await conn.commit();
@@ -256,12 +258,14 @@ export class SubstrateService {
     console.log('endpoint: ', endpoint.url);
     const provider = new WsProvider(endpoint.url);
     let typesBundle = null;
+    console.log('CHAIN  ', _event.chain);
     switch (_event.chain) {
       case SubstrateChain.KILT: {
+        typesBundle = KiltTypesBundle;
         break;
       }
       case SubstrateChain.CRUST: {
-        typesBundle = typesBundleForPolkadot;
+        typesBundle = CrustTypesBundle;
         break;
       }
       default: {
@@ -283,32 +287,47 @@ export class SubstrateService {
         wallets[i].lastProcessedNonce,
       );
       let latestSuccess = null;
+      let transmited = 0;
       console.log('transactions: ', transactions);
-      try {
-        // TODO: consider batching transaction api.tx.utility.batch
-        for (let j = 0; j < transactions.length; j++) {
+      // TODO: consider batching transaction api.tx.utility.batch
+      for (let j = 0; j < transactions.length; j++) {
+        try {
           const signedTx = api.tx(transactions[j].rawTransaction);
           await signedTx.send();
           console.log('successfuly transmited');
           latestSuccess = transactions[j].nonce;
+          transmited++;
+        } catch (e) {
+          await new Lmas().writeLog({
+            logType: LogType.ERROR,
+            message: 'Error transmiting transaction',
+            location: 'SubstrateService.transmitTransactions',
+            service: ServiceName.BLOCKCHAIN,
+            data: {
+              error: e,
+              wallet: wallets[i].address,
+            },
+          });
+          break;
         }
-      } catch (e) {
-        await new Lmas().writeLog({
-          logType: LogType.ERROR,
-          message: 'Error transmiting transaction',
-          location: 'SubstrateService.transmitTransactions',
-          service: ServiceName.BLOCKCHAIN,
-          data: {
-            error: e,
-            wallet: wallets[i].address,
-          },
-        });
-        break;
       }
       if (latestSuccess) {
         const wallet = new Wallet(wallets[i], context);
         await wallet.updateLastProcessedNonce(latestSuccess);
       }
+
+      await new Lmas().writeLog({
+        context: context,
+        logType: LogType.COST,
+        message: 'Substrate transactions submitted',
+        location: `SubstrateService/runExecutor`,
+        service: ServiceName.BLOCKCHAIN,
+        data: {
+          wallet: wallets[i],
+          numOfTransactions: transactions.length,
+          transmited: transmited,
+        },
+      });
     }
   }
   //#region

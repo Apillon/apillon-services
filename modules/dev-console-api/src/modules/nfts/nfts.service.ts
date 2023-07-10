@@ -50,8 +50,8 @@ export class NftsService {
     return (await new NftsMicroservice(context).listNftCollections(query)).data;
   }
 
-  async getNftCollection(context: DevConsoleApiContext, id: number) {
-    return (await new NftsMicroservice(context).getNftCollection(id)).data;
+  async getNftCollection(context: DevConsoleApiContext, uuid: string) {
+    return (await new NftsMicroservice(context).getNftCollection(uuid)).data;
   }
 
   async transferCollectionOwnership(

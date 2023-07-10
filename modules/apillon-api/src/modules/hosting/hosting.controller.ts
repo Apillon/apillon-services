@@ -28,6 +28,11 @@ export class HostingController {
   constructor(private hostingService: HostingService) {}
 
   @Get('domains')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_READ,
+    serviceType: AttachedServiceType.SYSTEM,
+  })
+  @UseGuards(AuthGuard)
   async listDomains(@Ctx() context: ApillonApiContext) {
     return await this.hostingService.listDomains(context);
   }
@@ -35,7 +40,7 @@ export class HostingController {
   @Get('websites/:id')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_READ,
-    serviceType: AttachedServiceType.STORAGE,
+    serviceType: AttachedServiceType.HOSTING,
   })
   @UseGuards(AuthGuard)
   async getWebsite(@Ctx() context: ApillonApiContext, @Param('id') id: any) {
@@ -45,7 +50,7 @@ export class HostingController {
   @Post('websites/:id/upload')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_EXECUTE,
-    serviceType: AttachedServiceType.STORAGE,
+    serviceType: AttachedServiceType.HOSTING,
   })
   @UseGuards(AuthGuard)
   @Validation({
@@ -68,7 +73,7 @@ export class HostingController {
   @Post('websites/:id/upload/:sessionUuid/end')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_EXECUTE,
-    serviceType: AttachedServiceType.STORAGE,
+    serviceType: AttachedServiceType.HOSTING,
   })
   @UseGuards(AuthGuard)
   @Validation({ dto: EndFileUploadSessionDto })
@@ -92,7 +97,7 @@ export class HostingController {
   @HttpCode(200)
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_EXECUTE,
-    serviceType: AttachedServiceType.STORAGE,
+    serviceType: AttachedServiceType.HOSTING,
   })
   @UseGuards(AuthGuard)
   @Validation({ dto: DeployWebsiteDto, skipValidation: true })
@@ -108,7 +113,7 @@ export class HostingController {
   @Get('websites/:website_id/deployments/:id')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_READ,
-    serviceType: AttachedServiceType.STORAGE,
+    serviceType: AttachedServiceType.HOSTING,
   })
   @UseGuards(AuthGuard)
   async getDeployment(

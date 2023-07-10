@@ -9,11 +9,13 @@ describe('oAuth connections tests', () => {
 
   let testUser: TestUser;
   let testUser2: TestUser;
+  let testUser3: TestUser;
 
   beforeAll(async () => {
     stage = await setupTest();
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser3 = await createTestUser(stage.devConsoleContext, stage.amsContext);
   });
 
   afterAll(async () => {
@@ -39,6 +41,28 @@ describe('oAuth connections tests', () => {
           x.type === OauthLinkType.DISCORD &&
           x.externalUserId == 12345,
       ),
+    ).toBeTruthy();
+  });
+
+  test('User should only access his oauth links', async () => {
+    const resp = await request(stage.http)
+      .post('/users/discord-connect')
+      .send({ code: 22222 })
+      .set('Authorization', `Bearer ${testUser2.token}`);
+    expect(resp.status).toBe(201);
+
+    const resp2 = await request(stage.http)
+      .get('/users/oauth-links')
+      .set('Authorization', `Bearer ${testUser.token}`);
+    expect(resp2.status).toBe(200);
+
+    expect(
+      resp2.body.data.data.find(
+        (x) => x.user_uuid === testUser2.user.user_uuid,
+      ),
+    ).toBeFalsy();
+    expect(
+      resp2.body.data.data.find((x) => x.user_uuid === testUser.user.user_uuid),
     ).toBeTruthy();
   });
 
@@ -96,18 +120,18 @@ describe('oAuth connections tests', () => {
     const resp = await request(stage.http)
       .post('/users/discord-connect')
       .send({ code: 54321 })
-      .set('Authorization', `Bearer ${testUser2.token}`);
+      .set('Authorization', `Bearer ${testUser3.token}`);
     expect(resp.status).toBe(201);
 
     const resp2 = await request(stage.http)
       .get('/users/oauth-links')
-      .set('Authorization', `Bearer ${testUser2.token}`);
+      .set('Authorization', `Bearer ${testUser3.token}`);
     expect(resp2.status).toBe(200);
 
     expect(
       resp2.body.data.data.find(
         (x) =>
-          x.user_uuid === testUser2.user.user_uuid &&
+          x.user_uuid === testUser3.user.user_uuid &&
           x.type === OauthLinkType.DISCORD &&
           x.externalUserId == 54321,
       ),

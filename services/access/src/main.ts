@@ -19,6 +19,7 @@ export async function processEvent(
   const processors = {
     [AmsEventType.USER_REGISTER]: AuthUserService.register,
     [AmsEventType.USER_LOGIN]: AuthUserService.login,
+    [AmsEventType.USER_LOGIN_KILT]: AuthUserService.loginWithKilt,
     [AmsEventType.USER_GET_AUTH]: AuthUserService.getAuthUser,
     [AmsEventType.USER_UPDATE]: AuthUserService.updateAuthUser,
     [AmsEventType.USER_PASSWORD_RESET]: AuthUserService.resetPassword,
@@ -27,8 +28,11 @@ export async function processEvent(
 
     [AmsEventType.USER_WALLET_LOGIN]: AuthUserService.loginWithWalletAddress,
 
-    [AmsEventType.USER_ROLE_ASSIGN]: RoleService.assignUserRoleOnProject,
-    [AmsEventType.USER_ROLE_REMOVE]: RoleService.removeUserRoleOnProject,
+    [AmsEventType.USER_ROLE_ASSIGN]: RoleService.assignUserRole,
+    [AmsEventType.USER_ROLE_REMOVE]: RoleService.removeUserRole,
+
+    [AmsEventType.USER_GET_LOGINS]: AuthUserService.getUserLogins,
+    [AmsEventType.USER_GET_ROLES]: AuthUserService.getUserRoles,
 
     [AmsEventType.CREATE_API_KEY]: ApiKeyService.createApiKey,
     [AmsEventType.DELETE_API_KEY]: ApiKeyService.deleteApiKey,

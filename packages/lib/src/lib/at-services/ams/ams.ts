@@ -5,6 +5,7 @@ import {
   DefaultUserRole,
   OauthLinkType,
 } from '../../../config/types';
+import { BaseQueryFilter } from '../../base-models/base-query-filter.model';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { ApiKeyQueryFilterDto } from './dtos/api-key-query-filter.dto';
@@ -80,7 +81,21 @@ export class Ams extends BaseService {
     };
   }
 
-  public async resetPassword(params: { email: string; password: string }) {
+  public async loginWithKilt(params: { token: string }) {
+    const data = {
+      eventName: AmsEventType.USER_LOGIN_KILT,
+      ...params,
+    };
+
+    // eslint-disable-next-line sonarjs/prefer-immediate-return
+    const amsResponse = await this.callService(data);
+
+    return {
+      ...amsResponse,
+    };
+  }
+
+  public async resetPassword(params: { token: string; password: string }) {
     const data = {
       eventName: AmsEventType.USER_PASSWORD_RESET,
       ...params,
@@ -112,7 +127,9 @@ export class Ams extends BaseService {
     return amsResponse;
   }
 
-  public async emailExists(email: string) {
+  public async emailExists(
+    email: string,
+  ): Promise<{ data: { result: boolean; authUser: any } }> {
     const data = {
       eventName: AmsEventType.USER_EMAIL_EXISTS,
       email,
@@ -155,31 +172,31 @@ export class Ams extends BaseService {
     };
   }
 
-  public async assignUserRoleOnProject(params: {
-    user: any;
+  public async assignUserRole(params: {
+    user?: any;
     user_uuid: string;
-    project_uuid: string;
+    project_uuid?: string;
     role_id: DefaultUserRole;
   }) {
     const data = {
       ...params,
       eventName: AmsEventType.USER_ROLE_ASSIGN,
-      user: params.user ? params.user.serialize() : undefined,
+      user: params.user?.serialize(),
     };
 
     return await this.callService(data);
   }
 
-  public async removeUserRoleOnProject(params: {
-    user: any;
+  public async removeUserRole(params: {
+    user?: any;
     user_uuid: string;
-    project_uuid: string;
+    project_uuid?: string;
     role_id: DefaultUserRole;
   }) {
     const data = {
       ...params,
       eventName: AmsEventType.USER_ROLE_REMOVE,
-      user: params.user.serialize(),
+      user: params.user?.serialize(),
     };
 
     return await this.callService(data);
@@ -273,9 +290,28 @@ export class Ams extends BaseService {
     return await this.callService(data);
   }
 
-  public async getOauthLinks() {
+  public async getOauthLinks(user_uuid: string) {
     const data = {
       eventName: AmsEventType.GET_OAUTH_LINKS,
+      user_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async getUserLogins(user_uuid: string, query: BaseQueryFilter) {
+    const data = {
+      eventName: AmsEventType.USER_GET_LOGINS,
+      user_uuid,
+      query,
+    };
+    return await this.callService(data);
+  }
+
+  public async getUserRoles(user_uuid: string, query: BaseQueryFilter) {
+    const data = {
+      eventName: AmsEventType.USER_GET_ROLES,
+      user_uuid,
+      query,
     };
     return await this.callService(data);
   }

@@ -16,6 +16,7 @@ import {
 import {
   BucketType,
   FileUploadRequestFileStatus,
+  FileUploadSessionStatus,
   StorageErrorCode,
 } from '../config/types';
 import { sendTransferredFilesToBucketWebhook } from '../lib/bucket-webhook';
@@ -120,68 +121,68 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
       });
     }
 
-    if (files.length == 0) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.NO_FILES_FOR_TRANSFER_TO_IPFS,
-        status: 404,
+    if (files.length > 0) {
+      let maxBucketSize = 5368709120;
+      //get max bucket size quota and check if bucket is at max size
+      const maxBucketSizeQuota = await new Scs(this.context).getQuota({
+        quota_id: QuotaCode.MAX_BUCKET_SIZE,
+        project_uuid: bucket.project_uuid,
+        object_uuid: bucket.bucket_uuid,
       });
-    }
+      if (maxBucketSizeQuota?.value) {
+        maxBucketSize = maxBucketSizeQuota.value * 1073741824; //quota is in GB - convert to bytes
+      }
 
-    let maxBucketSize = 5368709120;
-    //get max bucket size quota and check if bucket is at max size
-    const maxBucketSizeQuota = await new Scs(this.context).getQuota({
-      quota_id: QuotaCode.MAX_BUCKET_SIZE,
-      project_uuid: bucket.project_uuid,
-      object_uuid: bucket.bucket_uuid,
-    });
-    if (maxBucketSizeQuota?.value) {
-      maxBucketSize = maxBucketSizeQuota.value * 1073741824; //quota is in GB - convert to bytes
-    }
+      let transferedFiles = [];
 
-    let transferedFiles = [];
+      if (bucket.bucketType == BucketType.STORAGE) {
+        transferedFiles = (
+          await storageBucketSyncFilesToIPFS(
+            this.context,
+            `${this.constructor.name}/runExecutor`,
+            bucket,
+            maxBucketSize,
+            files,
+            session,
+            data?.wrapWithDirectory,
+            data?.wrappingDirectoryName,
+          )
+        ).files;
+      } else {
+        throw new StorageCodeException({
+          code: StorageErrorCode.INVALID_BUCKET_TYPE_FOR_IPFS_SYNC_WORKER,
+          status: 400,
+        });
+      }
 
-    if (bucket.bucketType == BucketType.STORAGE) {
-      transferedFiles = await storageBucketSyncFilesToIPFS(
+      //update session status
+      if (session) {
+        session.sessionStatus = FileUploadSessionStatus.FINISHED;
+        await session.update();
+      }
+
+      //if webhook is set for this bucket, SEND POST request with transferred data
+      await sendTransferredFilesToBucketWebhook(
         this.context,
-        `${this.constructor.name}/runExecutor`,
         bucket,
-        maxBucketSize,
-        files,
-        session,
-        data?.wrapWithDirectory,
-        data?.wrappingDirectoryName,
+        transferedFiles,
       );
-    } else {
-      throw new StorageCodeException({
-        code: StorageErrorCode.INVALID_BUCKET_TYPE_FOR_IPFS_SYNC_WORKER,
-        status: 400,
+
+      await new Lmas().writeLog({
+        context: this.context,
+        logType: LogType.INFO,
+        message: 'Sync to IPFS worker completed',
+        location: `${this.constructor.name}/runExecutor`,
+        service: ServiceName.STORAGE,
+        data: {
+          transferedFiles: transferedFiles,
+          data,
+        },
       });
+    } else {
+      console.info('NO FILES FOR TRANSFER!');
     }
 
-    //update session status
-    if (session) {
-      session.sessionStatus = 2;
-      await session.update();
-    }
-
-    //if webhook is set for this bucket, SEND POST request with transferred data
-    await sendTransferredFilesToBucketWebhook(
-      this.context,
-      bucket,
-      transferedFiles,
-    );
-
-    await new Lmas().writeLog({
-      context: this.context,
-      logType: LogType.INFO,
-      message: 'Sync to IPFS worker completed',
-      location: `${this.constructor.name}/runExecutor`,
-      service: ServiceName.STORAGE,
-      data: {
-        transferedFiles: transferedFiles,
-        data,
-      },
-    });
     await this.writeLogToDb(
       WorkerLogStatus.INFO,
       `SyncToIPFS worker has been completed!`,

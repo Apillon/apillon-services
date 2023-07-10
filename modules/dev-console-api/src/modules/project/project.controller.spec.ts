@@ -54,7 +54,7 @@ describe('ProjectController', () => {
       const body = { shortDescription: 'Ma tole je nek test' };
       const res = await controller.updateProject(
         context,
-        createdProject.id,
+        createdProject.project_uuid,
         body,
       );
       expect(res.id).toBe(createdProject.id);

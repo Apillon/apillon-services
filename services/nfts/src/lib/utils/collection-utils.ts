@@ -22,7 +22,7 @@ export async function deployNFTCollectionContract(
   collection: Collection,
   conn: PoolConnection,
 ) {
-  const walletService = new WalletService(collection.chain);
+  const walletService = new WalletService(context, collection.chain);
   //Prepare transaction record
   const dbTxRecord: Transaction = new Transaction({}, context);
 

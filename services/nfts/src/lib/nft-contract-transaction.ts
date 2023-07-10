@@ -35,11 +35,11 @@ export class NftTransaction {
       params.symbol,
       params.baseUri,
       params.baseExtension,
-      [params.isDrop, params.isSoulbound, params.isRevokable],
-      TransactionUtils.convertBaseToGwei(params.mintPrice),
+      [params.drop, params.isSoulbound, params.isRevokable],
+      TransactionUtils.convertBaseToGwei(params.dropPrice),
       params.dropStart,
       params.maxSupply,
-      params.reserve,
+      params.dropReserve,
       params.royaltiesAddress,
       params.royaltiesFees,
     );
@@ -52,6 +52,7 @@ export class NftTransaction {
   }
 
   /**
+   * @param chain EVM chain used
    * @param contractAddress contract address to transfer
    * @param newOwner new owner of contract
    * @returns UnsignedTransaction
@@ -77,6 +78,7 @@ export class NftTransaction {
 
   /**
    *
+   * @param chain EVM chain used
    * @param contractAddress contract to set baseUri
    * @param uri URI (ipfs base uri) to set
    * @returns UnsignedTransaction
@@ -102,8 +104,9 @@ export class NftTransaction {
   }
 
   /**
+   * @param chain EVM chain used
    * @param contractAddress NFT contract address
-   * @param address address to which NFT will be minted
+   * @param params MintNftDTO parameters
    * @returns UnsignedTransaction
    */
   static async createMintToTransaction(
@@ -129,6 +132,7 @@ export class NftTransaction {
   }
 
   /**
+   * @param chain EVM chain used
    * @param contractAddress NFT contract address
    * @param tokenId tokenId to burn
    * @returns UnsignedTransaction

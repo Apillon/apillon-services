@@ -284,6 +284,37 @@ export class Bucket extends AdvancedSQLModel {
     }
   }
 
+  public async populateById(
+    id: number | string,
+    conn?: PoolConnection,
+  ): Promise<this> {
+    if (!id) {
+      throw new Error('ID should not be null');
+    }
+    if (!this.hasOwnProperty('id')) {
+      throw new Error('Object does not contain id property');
+    }
+
+    this.reset();
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * 
+      FROM \`${this.tableName}\`
+      WHERE ( id LIKE @id OR bucket_uuid LIKE @id)
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { id },
+      conn,
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
+
   public async populateByUUID(uuid: string): Promise<this> {
     if (!uuid) {
       throw new Error('uuid should not be null');
@@ -343,7 +374,7 @@ export class Bucket extends AdvancedSQLModel {
       qFrom: `
         FROM \`${DbTables.BUCKET}\` b
         WHERE b.project_uuid = @project_uuid
-        AND b.bucketType = @bucketType
+        AND ((@bucketType IS null AND b.bucketType IN (1,3)) OR b.bucketType = @bucketType)
         AND (@search IS null OR b.name LIKE CONCAT('%', @search, '%'))
         AND IFNULL(@status, ${SqlModelStatus.ACTIVE}) = status
       `,

@@ -20,7 +20,7 @@ export class AuthToken extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
-    serializable: [SerializeFor.INSERT_DB],
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
@@ -36,7 +36,7 @@ export class AuthToken extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
-    serializable: [SerializeFor.INSERT_DB],
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
@@ -51,7 +51,7 @@ export class AuthToken extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    serializable: [SerializeFor.INSERT_DB],
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.ADMIN],
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
     // TODO: Check what happens if token == null OR token == undefined
     // Uncomment block if needed
@@ -69,7 +69,7 @@ export class AuthToken extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    serializable: [SerializeFor.INSERT_DB],
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.ADMIN],
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
     validators: [
       {
@@ -100,6 +100,7 @@ export class AuthToken extends AdvancedSQLModel {
           AND at.tokenType = @tokenType
           AND at.status = ${SqlModelStatus.ACTIVE}
         LIMIT 1
+        FOR UPDATE;
         `,
       { user_uuid, tokenType },
       conn,

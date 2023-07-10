@@ -1,5 +1,5 @@
 import { prop } from '@rawmodel/core';
-import { stringParser } from '@rawmodel/parsers';
+import { booleanParser, stringParser } from '@rawmodel/parsers';
 import { emailValidator, presenceValidator } from '@rawmodel/validators';
 import { ValidatorErrorCode, PopulateFrom } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
@@ -34,7 +34,7 @@ export class IdentityCreateDto extends ModelBase {
       },
     ],
   })
-  public did_create_op: object;
+  public did_create_op: any;
 
   @prop({
     parser: { resolver: stringParser() },

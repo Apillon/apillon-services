@@ -40,3 +40,18 @@ aws sqs create-queue --queue-name apillon-auth-queue-test --attributes file://te
 
 aws sqs create-queue --queue-name apillon-blockchain-queue-dev-dlq --attributes file://dev/blockchain-queue-dev-dlq.json --region eu-west-1
 aws sqs create-queue --queue-name apillon-blockchain-queue-dev --attributes file://dev/blockchain-queue-dev.json  --region eu-west-1
+
+aws sqs create-queue --queue-name apillon-blockchain-queue-staging-dlq --attributes file://staging/blockchain-queue-staging-dlq.json --region eu-west-1
+aws sqs create-queue --queue-name apillon-blockchain-queue-staging --attributes file://staging/blockchain-queue-staging.json  --region eu-west-1
+
+aws sqs create-queue --queue-name apillon-blockchain-queue-production-dlq --attributes file://production/blockchain-queue-production-dlq.json --region eu-west-1
+aws sqs create-queue --queue-name apillon-blockchain-queue-production --attributes file://production/blockchain-queue-production.json  --region eu-west-1
+
+aws sqs create-queue --queue-name apillon-monitoring-queue-dev-dlq --attributes file://dev/monitoring-queue-dev-dlq.json --region eu-west-1
+aws sqs create-queue --queue-name apillon-monitoring-queue-dev --attributes file://dev/monitoring-queue-dev.json  --region eu-west-1
+
+aws sqs create-queue --queue-name apillon-monitoring-queue-staging-dlq --attributes file://staging/monitoring-queue-staging-dlq.json --region eu-west-1
+aws sqs create-queue --queue-name apillon-monitoring-queue-staging --attributes file://staging/monitoring-queue-staging.json  --region eu-west-1
+
+aws sqs create-queue --queue-name apillon-monitoring-queue-production-dlq --attributes file://production/monitoring-queue-production-dlq.json --region eu-west-1
+aws sqs create-queue --queue-name apillon-monitoring-queue-production --attributes file://production/monitoring-queue-production.json  --region eu-west-1

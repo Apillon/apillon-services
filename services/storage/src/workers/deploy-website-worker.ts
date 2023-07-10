@@ -14,6 +14,7 @@ import {
 } from '@apillon/workers-lib';
 import { v4 as uuidV4 } from 'uuid';
 import {
+  DbTables,
   DeploymentEnvironment,
   DeploymentStatus,
   FileStatus,
@@ -27,10 +28,10 @@ import { Directory } from '../modules/directory/models/directory.model';
 import { HostingService } from '../modules/hosting/hosting.service';
 import { Deployment } from '../modules/hosting/models/deployment.model';
 import { Website } from '../modules/hosting/models/website.model';
-import { uploadFilesToIPFSRes } from '../modules/ipfs/interfaces/upload-files-to-ipfs-res.interface';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { File } from '../modules/storage/models/file.model';
 import { CID } from 'ipfs-http-client';
+import { uploadItemsToIPFSRes } from '../modules/ipfs/interfaces/upload-items-to-ipfs-res.interface';
 
 export class DeployWebsiteWorker extends BaseQueueWorker {
   public constructor(
@@ -108,16 +109,20 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
       }
 
       //Add files to IPFS
-      let ipfsRes: uploadFilesToIPFSRes = undefined;
+      let ipfsRes: uploadItemsToIPFSRes = undefined;
       let cidSize: number = undefined;
       if (
         deployment.environment == DeploymentEnvironment.STAGING ||
         deployment.environment == DeploymentEnvironment.DIRECT_TO_PRODUCTION
       ) {
-        ipfsRes = await IPFSService.uploadFilesToIPFSFromS3({
-          files: sourceFiles,
-          wrapWithDirectory: true,
-        });
+        ipfsRes = await IPFSService.uploadFilesToIPFSFromS3(
+          {
+            files: sourceFiles,
+            wrapWithDirectory: true,
+            wrappingDirectoryPath: 'Deployment_' + deployment.id,
+          },
+          this.context,
+        );
 
         targetBucket.CID = ipfsRes.parentDirCID.toV0().toString();
 
@@ -213,6 +218,8 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
             CID.parse(targetBucket.CID),
             cidSize,
             true,
+            targetBucket.bucket_uuid,
+            DbTables.BUCKET,
           );
         }
 

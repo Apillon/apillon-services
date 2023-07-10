@@ -13,7 +13,6 @@ export enum TransactionStatus {
 export enum SubstrateChain {
   CRUST = 1,
   KILT = 2,
-  KILT_SPIRITNET = 3,
   PHALA = 4,
 }
 
@@ -30,11 +29,14 @@ export enum AmsEventType {
   USER_REGISTER = 'user-register',
   USER_GET_AUTH = 'user-get-auth',
   USER_LOGIN = 'user-login',
+  USER_LOGIN_KILT = 'user-login-kilt',
   USER_WALLET_LOGIN = 'user-wallet-login',
   USER_UPDATE = 'user-update',
   USER_PASSWORD_RESET = 'user-password-reset',
   USER_ROLE_ASSIGN = 'user-role-assign',
   USER_ROLE_REMOVE = 'user-role-remove',
+  USER_GET_LOGINS = 'user-get-logins',
+  USER_GET_ROLES = 'user-get-roles',
   AUTH_TOKEN_CREATE_UPDATE_TOKEN = 'auth-token-create-update-token',
   USER_EMAIL_EXISTS = 'user-email-exists',
   GET_AUTH_USER_BY_EMAIL = 'get-auth-user-by-email',
@@ -64,6 +66,7 @@ export enum BlockchainEventType {
   SUBSTRATE_GET_TRANSACTION = 'substrate-get-transaction',
   EVM_SIGN_TRANSACTION = 'evm-sign-transaction',
   EVM_GET_TRANSACTION = 'evm-get-transaction',
+  GET_CHAIN_ENDPOINT = 'get-chain-endpoint',
 }
 
 export enum StorageEventType {
@@ -109,7 +112,7 @@ export enum StorageEventType {
   BUCKET_CLEAR_CONTENT = 'clear-bucket-content',
   DEPLOYMENT_GET = 'get-deployment',
   DEPLOYMENT_LIST = 'list-deployment',
-  PREPARE_COLLECTION_METADATA = 'prepare-collection-metadata',
+  EXECUTE_PREPARE_COLLECTION_BASE_URI_WORKER = 'execute-prepare-collection-base-uri-worker',
 }
 
 export enum AuthenticationEventType {
@@ -135,7 +138,10 @@ export enum MailEventType {
 
 export enum ScsEventType {
   GET_QUOTA = 'get-quota',
+  GET_ALL_QUOTAS = 'get-all-quotas',
   GET_ACTIVE_TERMS = 'get-active-terms',
+  CREATE_OVERRIDE = 'create-override',
+  DELETE_OVERRIDE = 'delete-override',
 }
 
 export enum NftsEventType {
@@ -143,6 +149,7 @@ export enum NftsEventType {
   CREATE_COLLECTION = 'create-collection',
   NFT_COLLECTIONS_LIST = 'list-nft-collections',
   GET_NFT_COLLECTION = 'get-nft-collection',
+  GET_NFT_COLLECTION_BY_UUID = 'get-nft-collection-by-uuid',
   TRANSFER_OWNERSHIP = 'transfer-ownership',
   MINT_NFT = 'mint-nft',
   SET_BASE_URI = 'set-base-uri',
@@ -151,6 +158,7 @@ export enum NftsEventType {
   DEPLOY_COLLECTION = 'deploy-collection',
   BURN_NFT = 'burn-nft',
   MAX_COLLECTIONS_QUOTA_REACHED = 'max-collections-quota-reached',
+  EXECUTE_DEPLOY_COLLECTION_WORKER = 'execute-deploy-collection-worker',
 }
 
 export enum ReferralEventType {
@@ -237,6 +245,8 @@ export enum SqlModelStatus {
 export enum AttachedServiceType {
   AUTHENTICATION = 1,
   STORAGE = 2,
+  NFT = 3,
+  HOSTING = 4,
   SYSTEM = 999,
 }
 
@@ -275,7 +285,7 @@ export enum ValidateFor {
   QUERY = 'query',
 }
 
-//#region Permissions
+//#region Roles & Permissions
 
 export enum PermissionType {
   READ = 'read',
@@ -312,6 +322,14 @@ export enum DefaultApiKeyRole {
   KEY_EXECUTE = 50,
   KEY_WRITE = 51,
   KEY_READ = 52,
+}
+
+export enum DefaultPermission {
+  STORAGE = 1,
+  HOSTING = 2,
+  NFTS = 3,
+  AUTHENTICATION = 4,
+  COMPUTING = 5,
 }
 
 //#endregion
@@ -461,6 +479,7 @@ export enum ValidatorErrorCode {
   NFT_COLLECTION_ROYALTIES_FEES_NOT_VALID = 42200137,
   TRANSACTION_REF_TABLE_PARAM_NOT_PRESENT = 42200138,
   TRANSACTION_REF_ID_PARAM_NOT_PRESENT = 42200139,
+  NFT_COLLECTION_BASE_URI_NOT_PRESENT = 42200140,
 
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,
@@ -489,7 +508,7 @@ export enum ValidatorErrorCode {
   EVM_TRANSACTION_NOT_PRESENT = 42200804,
   EVM_CHAIN_NOT_PRESENT = 42200805,
   EVM_CHAIN_NOT_VALID = 42200806,
-  //#endregion"
+  //#endregion
 }
 
 /**

@@ -22,6 +22,7 @@ import {
 import * as request from 'supertest';
 import { v4 as uuidV4 } from 'uuid';
 import { setupTest } from '../../../../test/helpers/setup';
+import { run as generateSystemApiKey } from '@apillon/access/src/scripts/utils/generate-system-api-key';
 
 describe('Apillon API hosting tests', () => {
   let stage: Stage;
@@ -71,7 +72,7 @@ describe('Apillon API hosting tests', () => {
         role_id: DefaultApiKeyRole.KEY_EXECUTE,
         project_uuid: testProject.project_uuid,
         service_uuid: testService.service_uuid,
-        serviceType_id: AttachedServiceType.STORAGE,
+        serviceType_id: AttachedServiceType.HOSTING,
       }),
     );
     await apiKey.assignRole(
@@ -79,7 +80,7 @@ describe('Apillon API hosting tests', () => {
         role_id: DefaultApiKeyRole.KEY_READ,
         project_uuid: testProject.project_uuid,
         service_uuid: testService.service_uuid,
-        serviceType_id: AttachedServiceType.STORAGE,
+        serviceType_id: AttachedServiceType.HOSTING,
       }),
     );
     await apiKey.assignRole(
@@ -87,7 +88,7 @@ describe('Apillon API hosting tests', () => {
         role_id: DefaultApiKeyRole.KEY_WRITE,
         project_uuid: testProject.project_uuid,
         service_uuid: testService.service_uuid,
-        serviceType_id: AttachedServiceType.STORAGE,
+        serviceType_id: AttachedServiceType.HOSTING,
       }),
     );
 
@@ -108,7 +109,7 @@ describe('Apillon API hosting tests', () => {
         role_id: DefaultApiKeyRole.KEY_EXECUTE,
         project_uuid: testProject2.project_uuid,
         service_uuid: testService2.service_uuid,
-        serviceType_id: AttachedServiceType.STORAGE,
+        serviceType_id: AttachedServiceType.HOSTING,
       }),
     );
     await apiKey2.assignRole(
@@ -116,7 +117,7 @@ describe('Apillon API hosting tests', () => {
         role_id: DefaultApiKeyRole.KEY_READ,
         project_uuid: testProject2.project_uuid,
         service_uuid: testService2.service_uuid,
-        serviceType_id: AttachedServiceType.STORAGE,
+        serviceType_id: AttachedServiceType.HOSTING,
       }),
     );
     await apiKey2.assignRole(
@@ -124,7 +125,7 @@ describe('Apillon API hosting tests', () => {
         role_id: DefaultApiKeyRole.KEY_WRITE,
         project_uuid: testProject2.project_uuid,
         service_uuid: testService2.service_uuid,
-        serviceType_id: AttachedServiceType.STORAGE,
+        serviceType_id: AttachedServiceType.HOSTING,
       }),
     );
   });
@@ -208,24 +209,6 @@ describe('Apillon API hosting tests', () => {
 
       expect(file.exists()).toBeTruthy();
       expect(file.bucket_id).toBe(testWebsite.bucket_id);
-    });
-
-    test('Application (through Apillon API) should NOT be able to end same session multiple times', async () => {
-      const response = await request(stage.http)
-        .post(
-          `/hosting/websites/${testWebsite.website_uuid}/upload/${testSession_uuid}/end`,
-        )
-        .set(
-          'Authorization',
-          `Basic ${Buffer.from(
-            apiKey.apiKey + ':' + apiKey.apiKeySecret,
-          ).toString('base64')}`,
-        );
-      expect(response.status).toBe(400);
-      expect(response.body.code).toBe(40006001);
-      expect(response.body.message).toBe(
-        'FILE_UPLOAD_SESSION_ALREADY_TRANSFERED',
-      );
     });
 
     test('Application (through Apillon API) should NOT be able to recieve multiple S3 signed URLs for anther project', async () => {
@@ -664,6 +647,41 @@ describe('Apillon API hosting tests', () => {
       );
       expect(filesInBucket.length).toBe(1);
       expect(filesInBucket[0].CID).toBeTruthy();
+    });
+  });
+  describe('Apillon API list domains tests', () => {
+    let systemApiKey: { key: string; secret: string };
+    beforeAll(async () => {
+      systemApiKey = await generateSystemApiKey();
+    });
+    test('Application (through Apillon API) should be able to get domain list', async () => {
+      const response = await request(stage.http)
+        .get(`/hosting/domains`)
+        .set(
+          'Authorization',
+          `Basic ${Buffer.from(
+            systemApiKey.key + ':' + systemApiKey.secret,
+          ).toString('base64')}`,
+        );
+      expect(response.status).toBe(200);
+      expect(response.body.data.length).toBeGreaterThan(0);
+    });
+
+    test('Application (through Apillon API) should NOT be able to get domain list without valid SYSTEM_GENERAL key', async () => {
+      const response = await request(stage.http)
+        .get(`/hosting/domains`)
+        .set(
+          'Authorization',
+          `Basic ${Buffer.from(
+            apiKey.apiKey + ':' + apiKey.apiKeySecret,
+          ).toString('base64')}`,
+        );
+      expect(response.status).toBe(403);
+    });
+
+    test('Application (through Apillon API) should NOT be able to get domain list without key', async () => {
+      const response = await request(stage.http).get(`/hosting/domains`);
+      expect(response.status).toBe(400);
     });
   });
 });

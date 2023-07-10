@@ -14,6 +14,7 @@ import { Project } from '../../project/models/project.model';
 import { Service } from '../../services/models/service.model';
 import { ServiceQueryFilter } from '../../services/dtos/services-query-filter.dto';
 import { ServicesService } from '../../services/services.service';
+import { ServiceDto } from '../../services/dtos/service.dto';
 
 @Injectable()
 export class BucketService {
@@ -23,7 +24,7 @@ export class BucketService {
     return (await new StorageMicroservice(context).listBuckets(query)).data;
   }
 
-  async getBucket(context: DevConsoleApiContext, id: number) {
+  async getBucket(context: DevConsoleApiContext, id: number | string) {
     return (await new StorageMicroservice(context).getBucket(id)).data;
   }
 
@@ -54,14 +55,14 @@ export class BucketService {
       {},
       context,
     ).populate({
-      project_id: project.id,
+      project_uuid: project.project_uuid,
       serviceType_id: AttachedServiceType.STORAGE,
     });
     const storageServices = await new Service({}).getServices(context, query);
     if (storageServices.total == 0) {
       //Create storage service - "Attach"
-      const storageService: Service = new Service({}, context).populate({
-        project_id: project.id,
+      const storageService: ServiceDto = new ServiceDto({}, context).populate({
+        project_uuid: project.project_uuid,
         name: 'Storage service',
         serviceType_id: AttachedServiceType.STORAGE,
       });

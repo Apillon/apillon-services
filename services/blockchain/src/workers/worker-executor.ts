@@ -1,9 +1,10 @@
 import {
   AppEnvironment,
-  EvmChain,
   getEnvSecrets,
   MySql,
   SubstrateChain,
+  Context,
+  env,
 } from '@apillon/lib';
 import {
   QueueWorkerType,
@@ -14,13 +15,16 @@ import {
   writeWorkerLog,
 } from '@apillon/workers-lib';
 
-import { Context, env } from '@apillon/lib';
 import { Scheduler } from './scheduler';
-import { TransmitSubstrateTransactionWorker } from './transmit-substrate-transaction-worker';
-import { CrustTransactionWorker } from './crust-transaction-worker';
+import { TransactionLogWorker } from './transaction-log-worker';
 import { TransactionWebhookWorker } from './transaction-webhook-worker';
 import { TransmitEvmTransactionWorker } from './transmit-evm-transaction-worker';
+import { TransmitSubstrateTransactionWorker } from './transmit-substrate-transaction-worker';
+
+import { CrustTransactionWorker } from './crust-transaction-worker';
+// import { KiltTransactionWorker } from './substrate/kilt/kilt-transaction-worker';
 import { EvmTransactionWorker } from './evm-transaction-worker';
+import { SubstrateTransactionWorker } from './substrate/substrate-transaction-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -32,6 +36,9 @@ export enum WorkerName {
   CRUST_TRANSACTIONS = 'CrustTransactions',
   EVM_TRANSACTIONS = 'EvmTransactions',
   TRANSACTION_WEBHOOKS = 'TransactionWebhooks',
+  TRANSACTION_LOG = 'TransactionLog',
+  KILT_TRANSACTIONS = 'KiltTransactions',
+  SUBSTRATE_TRANSACTION = 'SubstrateTransaction',
 }
 
 export async function handler(event: any) {
@@ -74,12 +81,14 @@ export async function handler(event: any) {
   console.info(`EVENT: ${JSON.stringify(event)}`);
 
   try {
+    let resp;
     if (event.Records) {
-      await handleSqsMessages(event, context, serviceDef);
+      resp = await handleSqsMessages(event, context, serviceDef);
     } else {
-      await handleLambdaEvent(event, context, serviceDef);
+      resp = await handleLambdaEvent(event, context, serviceDef);
     }
     await context.mysql.close();
+    return resp;
   } catch (e) {
     console.error('ERROR HANDLING LAMBDA!');
     console.error(e.message);
@@ -115,6 +124,12 @@ export async function handleLambdaEvent(
       const scheduler = new Scheduler(serviceDef, context);
       await scheduler.run();
       break;
+    // --- TRANSMIT TRANSACTION WORKERS ---
+    case WorkerName.TRANSMIT_EVM_TRANSACTION:
+      await new TransmitEvmTransactionWorker(workerDefinition, context).run({
+        executeArg: JSON.stringify(workerDefinition.parameters),
+      });
+      break;
     case WorkerName.TRANSMIT_SUBSTRATE_TRANSACTION:
       await new TransmitSubstrateTransactionWorker(
         workerDefinition,
@@ -123,22 +138,34 @@ export async function handleLambdaEvent(
         executeArg: JSON.stringify({ chain: SubstrateChain.CRUST }),
       });
       break;
+    // --- UPDATE TRANSACTIONS WORKERS ---
+    // SUBSTRATE
     case WorkerName.CRUST_TRANSACTIONS:
-      const txWorker = new CrustTransactionWorker(workerDefinition, context);
-      await txWorker.run();
+      await new CrustTransactionWorker(workerDefinition, context).run();
       break;
+
+    // !!!!WIP!!!! - SUBSTRATE TRANSACTION WORKER
+    case WorkerName.SUBSTRATE_TRANSACTION:
+      await new SubstrateTransactionWorker(workerDefinition, context).run({
+        executeArg: JSON.stringify(workerDefinition.parameters),
+      });
+      break;
+    // --- EVM ---
     case WorkerName.EVM_TRANSACTIONS:
       await new EvmTransactionWorker(workerDefinition, context).run({
-        executeArg: JSON.stringify({ chain: EvmChain.MOONBASE }),
+        executeArg: JSON.stringify(workerDefinition.parameters),
       });
       break;
-    case WorkerName.TRANSMIT_EVM_TRANSACTION:
-      await new TransmitEvmTransactionWorker(workerDefinition, context).run({
-        executeArg: JSON.stringify({ chain: EvmChain.MOONBASE }),
-      });
-      break;
+    // TRANSACTIONS WEBHOOKS
     case WorkerName.TRANSACTION_WEBHOOKS:
       await new TransactionWebhookWorker(
+        workerDefinition,
+        context,
+        QueueWorkerType.PLANNER,
+      ).run();
+      break;
+    case WorkerName.TRANSACTION_LOG:
+      await new TransactionLogWorker(
         workerDefinition,
         context,
         QueueWorkerType.PLANNER,
@@ -170,62 +197,81 @@ export async function handleSqsMessages(
   serviceDef: ServiceDefinition,
 ) {
   console.info('handle sqs message. event.Records: ', event.Records);
+  const response = { batchItemFailures: [] };
   for (const message of event.Records) {
-    let parameters: any;
-    if (message?.messageAttributes?.parameters?.stringValue) {
-      parameters = JSON.parse(
-        message?.messageAttributes?.parameters?.stringValue,
-      );
-    }
-
-    let id: number;
-    if (message?.messageAttributes?.jobId?.stringValue) {
-      id = parseInt(message?.messageAttributes?.jobId?.stringValue);
-    }
-
-    const workerName = message?.messageAttributes?.workerName?.stringValue;
-
-    const workerDefinition = new WorkerDefinition(serviceDef, workerName, {
-      id,
-      parameters,
-    });
-
-    // eslint-disable-next-line sonarjs/no-small-switch
-    switch (workerName) {
-      case WorkerName.TRANSMIT_SUBSTRATE_TRANSACTION:
-        await new TransmitSubstrateTransactionWorker(
-          workerDefinition,
-          context,
-        ).run({
-          executeArg: message?.body,
-        });
-        break;
-      case WorkerName.TRANSMIT_EVM_TRANSACTION:
-        await new TransmitEvmTransactionWorker(workerDefinition, context).run({
-          executeArg: message?.body,
-        });
-        break;
-      case WorkerName.CRUST_TRANSACTIONS:
-        await new CrustTransactionWorker(workerDefinition, context).run();
-        break;
-      case WorkerName.EVM_TRANSACTIONS:
-        await new EvmTransactionWorker(workerDefinition, context).run({
-          executeArg: message?.body,
-        });
-        break;
-      case WorkerName.TRANSACTION_WEBHOOKS:
-        await new TransactionWebhookWorker(
-          workerDefinition,
-          context,
-          QueueWorkerType.EXECUTOR,
-        ).run({
-          executeArg: message?.body,
-        });
-        break;
-      default:
-        console.log(
-          `ERROR - INVALID WORKER NAME: ${message?.messageAttributes?.workerName}`,
+    try {
+      let parameters: any;
+      if (message?.messageAttributes?.parameters?.stringValue) {
+        parameters = JSON.parse(
+          message?.messageAttributes?.parameters?.stringValue,
         );
+      }
+
+      let id: number;
+      if (message?.messageAttributes?.jobId?.stringValue) {
+        id = parseInt(message?.messageAttributes?.jobId?.stringValue);
+      }
+
+      const workerName = message?.messageAttributes?.workerName?.stringValue;
+
+      const workerDefinition = new WorkerDefinition(serviceDef, workerName, {
+        id,
+        parameters,
+      });
+
+      // eslint-disable-next-line sonarjs/no-small-switch
+      switch (workerName) {
+        // -- TRANSMIT TRANSACTION WORKERS --
+        case WorkerName.TRANSMIT_SUBSTRATE_TRANSACTION:
+          await new TransmitSubstrateTransactionWorker(
+            workerDefinition,
+            context,
+          ).run({
+            executeArg: message?.body,
+          });
+          break;
+        case WorkerName.TRANSMIT_EVM_TRANSACTION:
+          await new TransmitEvmTransactionWorker(workerDefinition, context).run(
+            {
+              executeArg: message?.body,
+            },
+          );
+          break;
+        case WorkerName.CRUST_TRANSACTIONS:
+          await new CrustTransactionWorker(workerDefinition, context).run();
+          break;
+        case WorkerName.EVM_TRANSACTIONS:
+          await new EvmTransactionWorker(workerDefinition, context).run({
+            executeArg: message?.body,
+          });
+          break;
+        case WorkerName.TRANSACTION_WEBHOOKS:
+          await new TransactionWebhookWorker(
+            workerDefinition,
+            context,
+            QueueWorkerType.EXECUTOR,
+          ).run({
+            executeArg: message?.body,
+          });
+          break;
+        case WorkerName.TRANSACTION_LOG:
+          await new TransactionLogWorker(
+            workerDefinition,
+            context,
+            QueueWorkerType.EXECUTOR,
+          ).run({
+            executeArg: message?.body,
+          });
+          break;
+        default:
+          console.log(
+            `ERROR - INVALID WORKER NAME: ${message?.messageAttributes?.workerName}`,
+          );
+      }
+    } catch (error) {
+      console.log(error);
+      response.batchItemFailures.push({ itemIdentifier: message.messageId });
     }
   }
+  return response;
 }

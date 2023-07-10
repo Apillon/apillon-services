@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { sign, verify } from 'jsonwebtoken';
+import { sign, verify, decode } from 'jsonwebtoken';
 import { env } from '../config/env';
 
 export function isPlainObject(testVar: any): boolean {
@@ -89,12 +89,24 @@ export function checkEmail(email: string) {
   return regex.test(email);
 }
 
-export function generateJwtToken(subject: string, data: any, expiresIn = '1d') {
-  return sign({ ...data }, env.APP_SECRET, { subject, expiresIn });
+export function generateJwtToken(
+  subject: string,
+  data: any,
+  expiresIn = '1d',
+  secret?: string,
+) {
+  return sign({ ...data }, secret ? secret : env.APP_SECRET, {
+    subject,
+    expiresIn,
+  });
 }
 
-export function parseJwtToken(subject: string, token: string) {
-  return verify(token, env.APP_SECRET, { subject }) as any;
+export function parseJwtToken(subject: string, token: string, secret?: string) {
+  return verify(token, secret ? secret : env.APP_SECRET, { subject }) as any;
+}
+
+export function decodeJwtToken(token: string) {
+  return decode(token) as any;
 }
 
 export function generatePassword(length: number) {
@@ -105,4 +117,8 @@ export function generatePassword(length: number) {
     password += charset.charAt(Math.floor(Math.random() * n));
   }
   return password;
+}
+
+export function dateToSqlString(date: Date): string {
+  return date.toISOString().replace(/T/, ' ').replace(/Z/, '');
 }

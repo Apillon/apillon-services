@@ -16,7 +16,7 @@ export interface TestUser {
 export async function createTestUser(
   consoleCtx: TestContext,
   amsCtx: TestContext,
-  role = DefaultUserRole.USER,
+  roleId = DefaultUserRole.USER,
   status = SqlModelStatus.ACTIVE,
   project_uuid = '',
 ): Promise<TestUser> {
@@ -32,20 +32,25 @@ export async function createTestUser(
   authUser.setPassword(password);
   await authUser.insert();
   await authUser.setDefaultRole(null);
-  if (project_uuid && role) {
-    const project: Project = await new Project({}, consoleCtx).populateByUUID(
-      project_uuid,
-    );
+  if (roleId) {
+    if (project_uuid) {
+      const project: Project = await new Project({}, consoleCtx).populateByUUID(
+        project_uuid,
+      );
 
-    const projectUser: ProjectUser = new ProjectUser({}, consoleCtx).populate({
-      project_id: project.id,
-      user_id: user.id,
-      pendingInvitation: false,
-      role_id: role,
-    });
-    await projectUser.insert();
-
-    await authUser.assignRole(project_uuid, role);
+      const projectUser: ProjectUser = new ProjectUser({}, consoleCtx).populate(
+        {
+          project_id: project.id,
+          user_id: user.id,
+          pendingInvitation: false,
+          role_id: roleId,
+        },
+      );
+      await projectUser.insert();
+    }
+    if (!authUser.authUserRoles.find((u) => u.role_id === roleId)) {
+      await authUser.assignRole(project_uuid, roleId);
+    }
   }
 
   await authUser.loginUser();

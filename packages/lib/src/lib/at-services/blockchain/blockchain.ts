@@ -1,5 +1,11 @@
 import { env } from '../../../config/env';
-import { AppEnvironment, BlockchainEventType } from '../../../config/types';
+import {
+  AppEnvironment,
+  BlockchainEventType,
+  ChainType,
+  EvmChain,
+  SubstrateChain,
+} from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { CreateEvmTransactionDto } from './dtos/create-evm-transaction.dto';
@@ -26,7 +32,7 @@ export class BlockchainMicroservice extends BaseService {
 
   public async createSubstrateTransaction(
     params: CreateSubstrateTransactionDto,
-  ) {
+  ): Promise<{ data: TransactionDto }> {
     const data = {
       eventName: BlockchainEventType.SUBSTRATE_SIGN_TRANSACTION,
       params: params.serialize(),
@@ -65,4 +71,16 @@ export class BlockchainMicroservice extends BaseService {
   }
 
   //#endregion
+
+  public async getChainEndpoint(
+    chain: EvmChain | SubstrateChain,
+    chainType: ChainType,
+  ): Promise<{ data: { url: string } }> {
+    const data = {
+      eventName: BlockchainEventType.GET_CHAIN_ENDPOINT,
+      chain,
+      chainType,
+    };
+    return await this.callService(data);
+  }
 }

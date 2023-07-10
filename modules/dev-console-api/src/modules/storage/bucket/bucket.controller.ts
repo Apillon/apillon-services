@@ -15,6 +15,7 @@ import {
   BucketQuotaReachedQueryFilter,
   CreateBucketDto,
   CreateBucketWebhookDto,
+  DefaultPermission,
   DefaultUserRole,
   ValidateFor,
 } from '@apillon/lib';
@@ -25,6 +26,7 @@ import { BucketService } from './bucket.service';
 import { AuthGuard } from '../../../guards/auth.guard';
 
 @Controller('buckets')
+@Permissions({ permission: DefaultPermission.STORAGE })
 export class BucketController {
   constructor(private bucketService: BucketService) {}
 
@@ -137,7 +139,7 @@ export class BucketController {
   @UseGuards(AuthGuard)
   async getBucket(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: number | string,
   ) {
     return await this.bucketService.getBucket(context, id);
   }

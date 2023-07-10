@@ -1,5 +1,6 @@
 import {
   CreateS3UrlsForUploadDto,
+  DefaultPermission,
   FileUploadsQueryFilter,
   TrashedFilesQueryFilter,
 } from '@apillon/lib';
@@ -24,6 +25,7 @@ import { ValidationGuard } from '../../guards/validation.guard';
 import { StorageService } from './storage.service';
 
 @Controller('storage')
+@Permissions({ permission: DefaultPermission.STORAGE })
 export class StorageController {
   constructor(private storageService: StorageService) {}
 

@@ -9,6 +9,7 @@ export enum DbTables {
   IPNS = 'ipns',
   WEBSITE = 'website',
   DEPLOYMENT = 'deployment',
+  PIN_TO_CRUST_REQUEST = 'pin_to_crust_request',
 }
 
 export enum DbViews {
@@ -36,6 +37,7 @@ export enum StorageErrorCode {
   NO_FILES_TO_DEPLOY = 40006016,
   NO_CHANGES_TO_DEPLOY = 40006017,
   INVALID_BUCKET_TYPE_FOR_IPFS_SYNC_WORKER = 40006018,
+  WEBSITE_DOMAIN_CHANGE_NOT_ALLOWED = 40006019,
   //422
   DEFAULT_VALIDATION_ERROR = 42206000,
   BUCKET_PROJECT_UUID_NOT_PRESENT = 42206001,
@@ -77,6 +79,9 @@ export enum StorageErrorCode {
   DEPLOYMENT_ENVIRONMENT_NOT_PRESENT = 42206037,
   WEBSITE_UUID_NOT_PRESENT = 42206038,
   DEPLOYMENT_ENVIRONMENT_NOT_VALID = 42206039,
+  PIN_TO_CRUST_REQUEST_BUCKET_UUID_NOT_PRESENT = 42206040,
+  PIN_TO_CRUST_REQUEST_CID_NOT_PRESENT = 42206041,
+  PIN_TO_CRUST_REQUEST_SIZE_NOT_PRESENT = 42206042,
 
   //404
   DEFAULT_RESOURCE_NOT_FOUND_ERROR = 40406000,
@@ -133,6 +138,18 @@ export enum FileStatus {
   PINNING_TO_CRUST = 5,
 }
 
+export enum FileUploadSessionStatus {
+  CREATED = 1,
+  /**
+   * End session was called - folder and file structure has been generated.
+   */
+  PROCESSED = 2,
+  /**
+   * Files in session has been synced to IPFS
+   */
+  FINISHED = 3,
+}
+
 export enum BucketWebhookAuthMethod {
   BASIC = 'basic',
   TOKEN = 'bearer-token',
@@ -157,4 +174,10 @@ export enum DeploymentStatus {
 export enum ObjectType {
   DIRECTORY = 1,
   FILE = 2,
+}
+
+export enum CrustPinningStatus {
+  PENDING = 0,
+  SUCCESSFULL = 10,
+  FAILED = 20,
 }

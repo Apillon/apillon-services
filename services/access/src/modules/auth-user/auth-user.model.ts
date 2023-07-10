@@ -1,26 +1,30 @@
-import { stringParser } from '@rawmodel/parsers';
-import { emailValidator, presenceValidator } from '@rawmodel/validators';
 import {
   AdvancedSQLModel,
+  BaseQueryFilter,
   Context,
   DefaultUserRole,
-  generateJwtToken,
   JSONParser,
   JwtTokenType,
   PoolConnection,
   PopulateFrom,
-  prop,
   SerializeFor,
   SqlModelStatus,
+  generateJwtToken,
+  getQueryParams,
+  prop,
+  selectAndCountQuery,
   uniqueFieldValue,
 } from '@apillon/lib';
-import { AmsErrorCode, DbTables, TokenExpiresInStr } from '../../config/types';
+import { stringParser } from '@rawmodel/parsers';
+import { emailValidator, presenceValidator } from '@rawmodel/validators';
 import * as bcrypt from 'bcryptjs';
-import { Role } from '../role/models/role.model';
-import { AuthUserRole } from '../role/models/auth-user-role.model';
-import { AuthToken } from '../auth-token/auth-token.model';
-import { CryptoHash } from '../../lib/hash-with-crypto';
+import { AmsErrorCode, DbTables, TokenExpiresInStr } from '../../config/types';
 import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
+import { CryptoHash } from '../../lib/hash-with-crypto';
+import { AuthToken } from '../auth-token/auth-token.model';
+import { AuthUserRole } from '../role/models/auth-user-role.model';
+import { RolePermission } from '../role/models/role-permission.model';
+import { Role } from '../role/models/role.model';
 
 export class AuthUser extends AdvancedSQLModel {
   public readonly tableName = DbTables.AUTH_USER;
@@ -142,6 +146,7 @@ export class AuthUser extends AdvancedSQLModel {
       SerializeFor.ADMIN, //
       SerializeFor.SERVICE,
     ],
+    defaultValue: [],
   })
   public authUserRoles: AuthUserRole[];
 
@@ -205,9 +210,9 @@ export class AuthUser extends AdvancedSQLModel {
     const res = await this.db().paramExecute(
       `
       SELECT * FROM authUser
-      WHERE email = @email
+      WHERE email = @email AND status = @status
     `,
-      { email },
+      { email, status: SqlModelStatus.ACTIVE },
       conn,
     );
 
@@ -240,7 +245,6 @@ export class AuthUser extends AdvancedSQLModel {
   public async loginUser() {
     const context = this.getContext();
 
-    // Start connection to database at the beginning of the function
     const conn = await context.mysql.start();
 
     // Generate a new token with type USER_AUTH
@@ -274,6 +278,7 @@ export class AuthUser extends AdvancedSQLModel {
       );
 
       if (oldToken.exists()) {
+        console.log('Deleting old token ...');
         oldToken.status = SqlModelStatus.DELETED;
         await oldToken.update(SerializeFor.UPDATE_DB, conn);
       }
@@ -313,7 +318,7 @@ export class AuthUser extends AdvancedSQLModel {
   ) {
     await this.db().paramExecute(
       `
-      INSERT INTO ${DbTables.AUTH_USER_ROLE} 
+      INSERT INTO ${DbTables.AUTH_USER_ROLE}
       (authUser_id, role_id, user_uuid, project_uuid)
       VALUES (@authUser_id, @role_id, @user_uuid, @project_uuid)
       `,
@@ -321,7 +326,7 @@ export class AuthUser extends AdvancedSQLModel {
         authUser_id: this.id,
         role_id,
         user_uuid: this.user_uuid,
-        project_uuid,
+        project_uuid: project_uuid ?? '',
       },
       conn,
     );
@@ -336,13 +341,13 @@ export class AuthUser extends AdvancedSQLModel {
   ) {
     await this.db().paramExecute(
       `
-      DELETE FROM ${DbTables.AUTH_USER_ROLE} 
+      DELETE FROM ${DbTables.AUTH_USER_ROLE}
       WHERE authUser_id = @authUser_id
       AND role_id = @role_id
-      AND project_uuid = @project_uuid
+      AND (@project_uuid IS NULL OR project_uuid = @project_uuid)
       ;
       `,
-      { authUser_id: this.id, role_id, project_uuid },
+      { authUser_id: this.id, role_id, project_uuid: project_uuid || null },
       conn,
     );
     await this.populateAuthUserRoles(conn);
@@ -358,13 +363,11 @@ export class AuthUser extends AdvancedSQLModel {
           'aur',
           'authUserRole',
         )},
-        ${new Role({}, this.getContext()).generateSelectFields('r', 'role')}
-        ` +
-        //${new RolePermission({}, this.getContext()).generateSelectFields(
-        //   'rp',
-        //   'rolePermission',
-        // )},
-        `
+        ${new Role({}, this.getContext()).generateSelectFields('r', 'role')},
+        ${new RolePermission({}, this.getContext()).generateSelectFields(
+          'rp',
+          'rolePermission',
+        )}
       FROM ${DbTables.AUTH_USER_ROLE} aur
       JOIN ${DbTables.ROLE} r
       ON r.id = aur.role_id
@@ -379,7 +382,9 @@ export class AuthUser extends AdvancedSQLModel {
 
     for (const r of res) {
       let userRole = this.authUserRoles.find(
-        (x) => x.role_id === r.userRole__role_id,
+        (x) =>
+          x.role_id === r.authUserRole__role_id &&
+          x.project_uuid == r.authUserRole__project_uuid,
       );
       if (!userRole) {
         userRole = new AuthUserRole({}, this.getContext()).populateWithPrefix(
@@ -393,27 +398,92 @@ export class AuthUser extends AdvancedSQLModel {
           'role',
           PopulateFrom.DB,
         );
-        this.authUserRoles = [...this.authUserRoles, userRole];
+        userRole.role.rolePermissions = [];
+        this.authUserRoles.push(userRole);
       }
 
-      // let permission = userRole.role.rolePermissions.find(
-      //   (x) => x.permission_id == r.rolePermission__permission_id,
-      // );
-      // if (!permission) {
-      //   permission = new RolePermission(
-      //     {},
-      //     this.getContext(),
-      //   ).populateWithPrefix(r, 'rolePermission', PopulateFrom.DB);
+      //Fill role permission
+      if (r.rolePermission__permission_id) {
+        let permission = userRole.role?.rolePermissions?.find(
+          (x) => x.permission_id == r.rolePermission__permission_id,
+        );
+        if (!permission) {
+          permission = new RolePermission(
+            {},
+            this.getContext(),
+          ).populateWithPrefix(r, 'rolePermission', PopulateFrom.DB);
 
-      //   if (permission.permission_id) {
-      //     userRole.role.rolePermissions = [
-      //       ...userRole.role.rolePermissions,
-      //       permission,
-      //     ];
-      //   }
-      // }
+          if (permission.permission_id) {
+            userRole.role.rolePermissions.push(permission);
+          }
+        }
+      }
     }
 
     return this;
+  }
+
+  public async listLogins(event: {
+    user_uuid: string;
+    query: BaseQueryFilter;
+  }) {
+    const filter = new BaseQueryFilter(event.query);
+    const fieldMap = { id: 'at.d' };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'at',
+      fieldMap,
+      filter.serialize(),
+    );
+
+    const sqlQuery = {
+      qSelect: `SELECT createTime as loginDate`,
+      qFrom: `FROM \`${DbTables.AUTH_TOKEN}\` at
+        WHERE at.user_uuid = @user_uuid`,
+      qFilter: `
+          ORDER BY ${filters.orderStr || 'at.createTime DESC'}
+          LIMIT ${filters.limit} OFFSET ${filters.offset};
+        `,
+    };
+
+    return selectAndCountQuery(
+      this.getContext().mysql,
+      sqlQuery,
+      { ...params, user_uuid: event.user_uuid },
+      'at.id',
+    );
+  }
+
+  public async listRoles(event: { user_uuid: string; query: BaseQueryFilter }) {
+    const filter = new BaseQueryFilter(event.query);
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'aur',
+      null,
+      filter.serialize(),
+    );
+    const sqlQuery = {
+      qSelect: `SELECT ${new Role({}, this.getContext()).generateSelectFields(
+        'r',
+      )}`,
+      qFrom: `FROM \`${DbTables.AUTH_USER_ROLE}\` aur
+        JOIN role r ON aur.role_id = r.id
+        WHERE aur.user_uuid = @user_uuid
+        AND aur.project_uuid = ''
+        AND r.status = ${SqlModelStatus.ACTIVE}
+        AND (@search IS null OR r.name LIKE CONCAT('%', @search, '%'))
+      `,
+      qFilter: `
+          ORDER BY ${filters.orderStr}
+          LIMIT ${filters.limit} OFFSET ${filters.offset};
+        `,
+    };
+
+    return selectAndCountQuery(
+      this.getContext().mysql,
+      sqlQuery,
+      { ...params, user_uuid: event.user_uuid },
+      'aur.createTime',
+    );
   }
 }

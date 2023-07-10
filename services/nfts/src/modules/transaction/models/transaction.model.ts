@@ -12,7 +12,11 @@ import {
   TransactionStatus,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import { DbTables, NftsErrorCode } from '../../../config/types';
+import {
+  DbTables,
+  NftsErrorCode,
+  TransactionType,
+} from '../../../config/types';
 
 export class Transaction extends AdvancedSQLModel {
   public readonly tableName = DbTables.TRANSACTION;
@@ -166,17 +170,21 @@ export class Transaction extends AdvancedSQLModel {
     }
   }
 
-  public async getTransactions(
-    transactionStatus: number,
+  public async getCollectionTransactions(
+    collection_id: number,
+    transactionStatus: TransactionStatus = null,
+    transactionType: TransactionType = null,
   ): Promise<Transaction[]> {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT *
       FROM \`${this.tableName}\`
       WHERE status <> ${SqlModelStatus.DELETED}
-      AND transactionStatus = @transactionStatus;
+      AND (@transactionStatus IS NULL OR transactionStatus = @transactionStatus)
+      AND (@transactionType IS NULL OR transactionType = @transactionType)
+      AND refId = @collection_id
       `,
-      { transactionStatus },
+      { transactionStatus, transactionType, collection_id },
     );
 
     const res: Transaction[] = [];
@@ -227,10 +235,11 @@ export class Transaction extends AdvancedSQLModel {
         `,
       qFrom: `
         FROM \`${this.tableName}\` t
-        WHERE (@refTable IS null OR refTable = @refTable) 
+        WHERE (@refTable IS null OR refTable = @refTable)
         AND (@refId IS NULL or refId = @refId)
         AND status <> ${SqlModelStatus.DELETED}
         AND (@transactionStatus IS null OR t.transactionStatus = @transactionStatus)
+        AND (@search IS null OR transactionHash LIKE CONCAT('%', @search, '%'))
       `,
       qFilter: `
         ORDER BY ${filters.orderStr}

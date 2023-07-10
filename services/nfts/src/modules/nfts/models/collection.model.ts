@@ -15,14 +15,13 @@ import {
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
-import { integerParser, stringParser, booleanParser } from '@rawmodel/parsers';
+import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
   CollectionStatus,
   DbTables,
   NftsErrorCode,
 } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
-import { WalletService } from '../../wallet/wallet.service';
 
 export class Collection extends AdvancedSQLModel {
   public readonly tableName = DbTables.COLLECTION;
@@ -99,6 +98,7 @@ export class Collection extends AdvancedSQLModel {
         code: NftsErrorCode.COLLECTION_SYMBOL_NOT_PRESENT,
       },
     ],
+    fakeValue: 'NFT',
   })
   public symbol: string;
 
@@ -124,6 +124,7 @@ export class Collection extends AdvancedSQLModel {
         code: NftsErrorCode.COLLECTION_NAME_NOT_PRESENT,
       },
     ],
+    fakeValue: 'NFT collection',
   })
   public name: string;
 
@@ -167,6 +168,7 @@ export class Collection extends AdvancedSQLModel {
         code: NftsErrorCode.COLLECTION_MAX_SUPPLY_NOT_PRESENT,
       },
     ],
+    fakeValue: 10,
   })
   public maxSupply: number;
 
@@ -191,8 +193,9 @@ export class Collection extends AdvancedSQLModel {
         code: NftsErrorCode.COLLECTION_MINT_PRICE_NOT_PRESENT,
       },
     ],
+    fakeValue: 0,
   })
-  public mintPrice: number;
+  public dropPrice: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -235,6 +238,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    fakeValue: '',
   })
   public baseUri: string;
 
@@ -254,6 +258,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    fakeValue: 'json',
   })
   public baseExtension: string;
 
@@ -273,8 +278,10 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    fakeValue: false,
+    defaultValue: false,
   })
-  public isDrop: boolean;
+  public drop: boolean;
 
   @prop({
     parser: { resolver: booleanParser() },
@@ -292,6 +299,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    fakeValue: false,
   })
   public isSoulbound: boolean;
 
@@ -311,6 +319,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    fakeValue: true,
   })
   public isRevokable: boolean;
 
@@ -330,6 +339,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    fakeValue: 5555555,
   })
   public dropStart: number;
 
@@ -349,8 +359,9 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    fakeValue: 1,
   })
-  public reserve: number;
+  public dropReserve: number;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -368,6 +379,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    fakeValue: 0,
   })
   public royaltiesFees: number;
 
@@ -387,6 +399,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    fakeValue: '0x25Cd0fE6953F5799AEbDa9ee445287CFb101972E',
   })
   public royaltiesAddress: string;
 
@@ -426,6 +439,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    fakeValue: '0xCD60e2534f80cF917ed45A62d7C29aD3BE2CaAc3',
   })
   public contractAddress: string;
 
@@ -443,7 +457,6 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
     ],
   })
   public transactionHash: string;
@@ -521,26 +534,13 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
     ],
     validators: [],
+    fakeValue: EvmChain.MOONBASE,
   })
   public chain: EvmChain;
 
   /***************************************************
    * Info properties
    *****************************************************/
-  @prop({
-    populatable: [
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
-    validators: [],
-  })
-  public minted: number;
 
   public canAccess(context: ServiceContext) {
     if (
@@ -605,7 +605,7 @@ export class Collection extends AdvancedSQLModel {
         FROM \`${this.tableName}\` c
         WHERE c.project_uuid = @project_uuid
         AND (@search IS null OR c.name LIKE CONCAT('%', @search, '%'))
-        AND 
+        AND
             (
                 (@status IS null AND c.status <> ${SqlModelStatus.DELETED})
                 OR
@@ -636,7 +636,7 @@ export class Collection extends AdvancedSQLModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
       WHERE ( id LIKE @id OR collection_uuid LIKE @id)
       AND status <> ${SqlModelStatus.DELETED};
@@ -672,17 +672,6 @@ export class Collection extends AdvancedSQLModel {
     }
   }
 
-  public async populateNumberOfMintedNfts() {
-    const walletService: WalletService = new WalletService(this.chain);
-    if (this.contractAddress) {
-      this.minted = await walletService.getNumberOfMintedNfts(
-        this.contractAddress,
-      );
-    } else {
-      this.minted = 0;
-    }
-  }
-
   /**
    * Function to get count of active NFT collections on the project
    * @param project_uuid
@@ -693,7 +682,8 @@ export class Collection extends AdvancedSQLModel {
       `
       SELECT COUNT(*) as collectionsCount
       FROM \`${DbTables.COLLECTION}\`
-      WHERE project_uuid = @project_uuid 
+      WHERE project_uuid = @project_uuid
+        AND collectionStatus <> ${CollectionStatus.FAILED}
       AND status <> ${SqlModelStatus.DELETED};
       `,
       {

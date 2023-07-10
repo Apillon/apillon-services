@@ -29,9 +29,9 @@ export class DeployCollectionWorker extends BaseQueueWorker {
     return [];
   }
   public async runExecutor(data: any): Promise<any> {
-    console.info('RUN EXECUTOR (CollectionMetadataWorker). data: ', data);
+    console.info('RUN EXECUTOR (DeployCollectionWorker). data: ', data);
     //Prepare data and execute validations
-    if (!data?.collectionId) {
+    if (!data?.collection_uuid || !data?.baseUri) {
       throw new NftsCodeException({
         code: NftsErrorCode.INVALID_DATA_PASSED_TO_WORKER,
         status: 500,
@@ -42,7 +42,7 @@ export class DeployCollectionWorker extends BaseQueueWorker {
     const collection: Collection = await new Collection(
       {},
       this.context,
-    ).populateById(data.collectionId);
+    ).populateByUUID(data.collection_uuid);
 
     if (!collection.exists()) {
       throw new NftsCodeException({
@@ -63,24 +63,10 @@ export class DeployCollectionWorker extends BaseQueueWorker {
     }
 
     collection.collectionStatus = CollectionStatus.DEPLOYING;
+    collection.baseUri = data.baseUri;
     await collection.update();
 
     try {
-      //If upload sessions for collection exists, call storage microservice to prepare collection metadata in IPFS
-      if (collection.imagesSession && collection.metadataSession) {
-        const metadataIpfsCID = (
-          await new StorageMicroservice(this.context).prepareCollectionMetadata(
-            {
-              collection_uuid: collection.collection_uuid,
-              imagesSession: collection.imagesSession,
-              metadataSession: collection.metadataSession,
-            },
-          )
-        ).data.baseUri;
-
-        collection.baseUri = metadataIpfsCID;
-      }
-
       const conn = await this.context.mysql.start();
       try {
         //Deploy NFT contract
