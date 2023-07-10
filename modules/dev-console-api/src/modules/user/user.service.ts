@@ -25,7 +25,6 @@ import {
 } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
 import { ProjectService } from '../project/project.service';
-import { DiscordCodeDto } from './dtos/discord-code-dto';
 import { LoginUserKiltDto } from './dtos/login-user-kilt.dto';
 import { LoginUserDto } from './dtos/login-user.dto';
 import { RegisterUserDto } from './dtos/register-user.dto';
@@ -37,6 +36,7 @@ import { User } from './models/user.model';
 import { registerUser } from './utils/authentication-utils';
 import { getOauthSessionToken } from './utils/oauth-utils';
 import { UserConsentDto, UserConsentStatus } from './dtos/user-consent.dto';
+import { DiscordCodeDto } from './dtos/discord-code.dto';
 
 @Injectable()
 export class UserService {
