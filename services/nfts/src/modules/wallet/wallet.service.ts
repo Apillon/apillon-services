@@ -171,4 +171,18 @@ export class WalletService {
     const totalSupply = await nftContract.totalSupply();
     return parseInt(totalSupply._hex, 16);
   }
+
+  /**
+   * Checks if collection implements RMRK interface
+   * @param collection Collection
+   */
+  async implementsRmrkInterface(collection: Collection): Promise<boolean> {
+    await this.initializeProvider();
+    const nftContract: Contract = new Contract(
+      collection.contractAddress,
+      EvmNftABI,
+      this.provider,
+    );
+    return await nftContract.supportsInterface('0x42b0e56f');
+  }
 }
