@@ -24,10 +24,7 @@ import {
   CrustStorageOrders,
   CrustStorageOrder,
 } from '../modules/blockchain-indexers/substrate/crust/data-models/crust-storage-orders';
-import {
-  CrustTransfer,
-  CrustTransfers,
-} from '../modules/blockchain-indexers/substrate/crust/data-models/crust-transfers';
+import { CrustTransfers } from '../modules/blockchain-indexers/substrate/crust/data-models/crust-transfers';
 import { WorkerName } from './worker-executor';
 
 export class CrustTransactionWorker extends BaseSingleThreadWorker {
@@ -44,7 +41,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
 
     this.logPrefix = `[SUBSTRATE][CRUST]`;
 
-    console.info(`${this.logPrefix} RUN EXECUTOR (CrustTransactionWorker).`);
+    // console.info(`${this.logPrefix} RUN EXECUTOR (CrustTransactionWorker).`);
 
     for (const w of wallets) {
       const conn = await this.context.mysql.start();
@@ -60,9 +57,9 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
             ? lastParsedBlock + wallet.blockParseSize
             : blockHeight;
 
-        console.log(
-          `[SUBSTRATE][CRUST] Checking PENDING transactions (sourceWallet=${wallet.address}, lastParsedBlock=${wallet.lastParsedBlock}, toBlock=${toBlock})..`,
-        );
+        // console.log(
+        //   `[SUBSTRATE][CRUST] Checking PENDING transactions (sourceWallet=${wallet.address}, lastParsedBlock=${wallet.lastParsedBlock}, toBlock=${toBlock})..`,
+        // );
 
         const crustTransactions = await this.fetchAllCrustTransactions(
           crustIndexer,
@@ -75,7 +72,6 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
           wallet,
           crustTransactions.withdrawals,
           crustTransactions.deposits,
-          conn,
         );
 
         await this.handleCrustFileOrders(
@@ -108,9 +104,9 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
             },
           );
         }
-        console.log(
-          `[SUBSTRATE][CRUST] Checking PENDING transactions (sourceWallet=${wallet.address}, lastProcessedBlock=${toBlock}) FINISHED!`,
-        );
+        // console.log(
+        //   `[SUBSTRATE][CRUST] Checking PENDING transactions (sourceWallet=${wallet.address}, lastProcessedBlock=${toBlock}) FINISHED!`,
+        // );
       } catch (err) {
         await conn.rollback();
 
@@ -149,79 +145,113 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
     wallet: Wallet,
     withdrawals: CrustTransfers,
     deposits: CrustTransfers,
-    conn: PoolConnection,
   ) {
-    await this.handleCrustWithdrawals(withdrawals, wallet, conn);
+    await this.handleCrustWithdrawals(withdrawals, wallet);
     await this.handleCrustDeposits(deposits, wallet);
   }
 
   public async handleCrustWithdrawals(
     withdrawals: CrustTransfers,
     wallet: Wallet,
-    conn: PoolConnection,
+    // conn: PoolConnection,
   ) {
     if (!withdrawals.transfers.length) {
-      console.log(
-        `[SUBSTRATE][CRUST] There are no new withdrawals received from blockchain indexer (address=${wallet.address}).`,
-      );
+      // console.log(
+      //   `[SUBSTRATE][CRUST] There are no new withdrawals received from blockchain indexer (address=${wallet.address}).`,
+      // );
       return;
     }
 
     await this.writeLogToDb(
-      WorkerLogStatus.INFO,
-      `Matching ${withdrawals.transfers.length} blockchain transactions with transactions in DB.`,
+      WorkerLogStatus.WARNING,
+      `Detecting ${withdrawals.transfers.length} withdrawal from ${wallet.address}!!!`,
       {
+        wallet,
         transfers: withdrawals.transfers,
       },
     );
 
-    const confirmedDbTxHashes: string[] = await this.updateWithdrawalsByStatus(
-      withdrawals,
-      TransactionStatus.CONFIRMED,
-      wallet,
-      conn,
-    );
-    const failedDbTxHashes: string[] = await this.updateWithdrawalsByStatus(
-      withdrawals,
-      TransactionStatus.FAILED,
-      wallet,
-      conn,
-    );
-
-    const updatedDbTxs = confirmedDbTxHashes.concat(failedDbTxHashes);
-
-    // All transactions were matched with db
-    if (withdrawals.transfers.length == updatedDbTxs.length) {
-      return;
-    }
-
-    withdrawals.transfers.forEach((bcTx) => {
-      if (!updatedDbTxs.includes(bcTx.extrinsicHash)) {
-        // TODO: Send notification - critical: Withdrawal (txHash) was not initiated by us
-        // use info from value variable to get all required data
-      }
+    await new Lmas().writeLog({
+      logType: LogType.WARN,
+      message: `Detecting ${withdrawals.transfers.length} withdrawals from ${wallet.address}!!!`,
+      location: 'CrustTransactionWorker',
+      service: ServiceName.BLOCKCHAIN,
+      data: {
+        wallet: wallet.address,
+      },
     });
+    await new Lmas().sendAdminAlert(
+      `${this.logPrefix}: Detecting ${withdrawals.transfers.length} withdrawals from ${wallet.address}!!!`,
+      ServiceName.BLOCKCHAIN,
+      'warning',
+    );
+
+    /**
+     * Withdrawals are not supposed to be in the transaction queue, so we only send notifications when detected.
+     */
+
+    // const confirmedDbTxHashes: string[] = await this.updateWithdrawalsByStatus(
+    //   withdrawals,
+    //   TransactionStatus.CONFIRMED,
+    //   wallet,
+    //   conn,
+    // );
+    // const failedDbTxHashes: string[] = await this.updateWithdrawalsByStatus(
+    //   withdrawals,
+    //   TransactionStatus.FAILED,
+    //   wallet,
+    //   conn,
+    // );
+
+    // const updatedDbTxs = confirmedDbTxHashes.concat(failedDbTxHashes);
+
+    // // All transactions were matched with db
+    // if (withdrawals.transfers.length == updatedDbTxs.length) {
+    //   return;
+    // }
+
+    // withdrawals.transfers.forEach((bcTx) => {
+    //   if (!updatedDbTxs.includes(bcTx.extrinsicHash)) {
+    //     // TODO: Send notification - critical: Withdrawal (txHash) was not initiated by us
+    //     // use info from value variable to get all required data
+    //   }
+    // });
   }
 
   public async handleCrustDeposits(deposits: CrustTransfers, wallet: Wallet) {
     if (!deposits.transfers.length) {
-      console.log(
-        `[SUBSTRATE][CRUST] There are no new deposits to wallet (address=${wallet.address}).`,
-      );
+      // console.log(
+      //   `[SUBSTRATE][CRUST] There are no new deposits to wallet (address=${wallet.address}).`,
+      // );
       return;
     }
 
     await this.writeLogToDb(
       WorkerLogStatus.INFO,
-      `Detecting ${deposits.transfers.length} blockchain deposit(s) to ${wallet}.`,
+      `Detecting ${deposits.transfers.length} deposit(s) to ${wallet}.`,
       {
         wallet,
+        transfers: deposits.transfers,
       },
     );
-
-    deposits.transfers.forEach((bcTx) => {
-      // TODO: Send notification of a new deposit to a wallet address and save to accounting table
+    await new Lmas().writeLog({
+      logType: LogType.INFO,
+      message: `Detecting ${deposits.transfers.length} deposits to ${wallet.address}.`,
+      location: 'CrustTransactionWorker',
+      service: ServiceName.BLOCKCHAIN,
+      data: {
+        wallet: wallet.address,
+      },
     });
+    await new Lmas().sendAdminAlert(
+      `${this.logPrefix}: Detecting ${deposits.transfers.length} deposits to ${wallet.address}.`,
+      ServiceName.BLOCKCHAIN,
+      'message',
+    );
+
+    // deposits.transfers.forEach((bcTx) => {
+    //   // TODO: Send notification of a new deposit to a wallet address and save to accounting table
+    // });
   }
 
   public async handleCrustFileOrders(
@@ -230,9 +260,9 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
     conn: PoolConnection,
   ) {
     if (!bcOrders.storageOrders.length) {
-      console.log(
-        `${this.logPrefix} There are no new file storage orders received from blockchain indexer (address=${wallet.address}).`,
-      );
+      // console.log(
+      //   `${this.logPrefix} There are no new file storage orders received from blockchain indexer (address=${wallet.address}).`,
+      // );
       return;
     }
 
@@ -266,10 +296,24 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
       return;
     }
 
-    bcOrders.storageOrders.forEach((bcTx) => {
+    bcOrders.storageOrders.forEach(async (bcTx) => {
       if (!updatedDbTxs.includes(bcTx.extrinsicHash)) {
         // TODO: Send notification - critical: Withdrawal (txHash) was not initiated by us
         // use info from value variable to get all required data
+        await new Lmas().sendAdminAlert(
+          `${this.logPrefix}: Detecting unauthorized transactions from ${wallet.address}!`,
+          ServiceName.BLOCKCHAIN,
+          'alert',
+        );
+        await new Lmas().writeLog({
+          logType: LogType.WARN,
+          message: `Detecting unauthorized transactions from ${wallet.address}!`,
+          location: 'CrustTransactionWorker',
+          service: ServiceName.BLOCKCHAIN,
+          data: {
+            tx: bcTx,
+          },
+        });
       }
     });
   }
@@ -319,47 +363,47 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
     });
   }
 
-  public async updateWithdrawalsByStatus(
-    withdrawals: CrustTransfers,
-    status: TransactionStatus,
-    wallet: Wallet,
-    conn: PoolConnection,
-  ): Promise<string[]> {
-    const bcStatus: BlockchainStatus =
-      status == TransactionStatus.CONFIRMED
-        ? BlockchainStatus.CONFIRMED
-        : BlockchainStatus.FAILED;
+  // public async updateWithdrawalsByStatus(
+  //   withdrawals: CrustTransfers,
+  //   status: TransactionStatus,
+  //   wallet: Wallet,
+  //   conn: PoolConnection,
+  // ): Promise<string[]> {
+  //   const bcStatus: BlockchainStatus =
+  //     status == TransactionStatus.CONFIRMED
+  //       ? BlockchainStatus.CONFIRMED
+  //       : BlockchainStatus.FAILED;
 
-    const bcWithdrawals = new Map<string, CrustTransfer>(
-      withdrawals.transfers
-        .filter((tx) => {
-          return tx.status == bcStatus;
-        })
-        .map((w) => [w.extrinsicHash, w]),
-    );
+  //   const bcWithdrawals = new Map<string, CrustTransfer>(
+  //     withdrawals.transfers
+  //       .filter((tx) => {
+  //         return tx.status == bcStatus;
+  //       })
+  //       .map((w) => [w.extrinsicHash, w]),
+  //   );
 
-    const bcHashes: string[] = [...bcWithdrawals.keys()];
-    const updatedDbTxs: string[] = await this.updateTransactions(
-      bcHashes,
-      status,
-      wallet,
-      conn,
-    );
+  //   const bcHashes: string[] = [...bcWithdrawals.keys()];
+  //   const updatedDbTxs: string[] = await this.updateTransactions(
+  //     bcHashes,
+  //     status,
+  //     wallet,
+  //     conn,
+  //   );
 
-    const txDbHashesString = updatedDbTxs.join(',');
-    console.log(
-      `[SUBSTRATE][CRUST] ${updatedDbTxs.length} [${TransactionStatus[status]}] transactions matched (txHashes=${txDbHashesString}) in db.`,
-    );
-    await this.writeLogToDb(
-      WorkerLogStatus.SUCCESS,
-      `${updatedDbTxs.length} [${TransactionStatus[status]}] transactions matched in db.`,
-      {
-        txDbHashesString,
-      },
-    );
+  //   const txDbHashesString = updatedDbTxs.join(',');
+  //   console.log(
+  //     `[SUBSTRATE][CRUST] ${updatedDbTxs.length} [${TransactionStatus[status]}] transactions matched (txHashes=${txDbHashesString}) in db.`,
+  //   );
+  //   await this.writeLogToDb(
+  //     WorkerLogStatus.SUCCESS,
+  //     `${updatedDbTxs.length} [${TransactionStatus[status]}] transactions matched in db.`,
+  //     {
+  //       txDbHashesString,
+  //     },
+  //   );
 
-    return updatedDbTxs;
-  }
+  //   return updatedDbTxs;
+  // }
 
   public async updateStorageOrdersByStatus(
     bcOrders: CrustStorageOrders,
