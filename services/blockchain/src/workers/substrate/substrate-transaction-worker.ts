@@ -78,6 +78,25 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         await conn.commit();
       } catch (err) {
         await conn.rollback();
+        await this.writeLogToDb(
+          WorkerLogStatus.ERROR,
+          'Error updating transactions!',
+          {
+            wallet: w.address,
+          },
+          err,
+        );
+        await new Lmas().writeLog({
+          logType: LogType.ERROR,
+          message: `Error updating transactions for ${wallet?.address} [chain:${wallet?.chain}]`,
+          location: 'SubstrateTransactionWorker',
+          service: ServiceName.BLOCKCHAIN,
+          data: {
+            wallet: w.address,
+            error: err?.message,
+          },
+        });
+        continue;
       }
       if (transactions.length > 0) {
         // Trigger webhook worker
