@@ -242,7 +242,7 @@ export class NftTransaction {
     const nftContract: Contract = new Contract(contractAddress, nftContractAbi);
 
     const txData: PopulatedTransaction =
-      await nftContract.populateTransaction.nestMint(
+      await nftContract.populateTransaction.ownerNestMint(
         destinationCollectionAddress,
         quantity,
         destinationNftId,
