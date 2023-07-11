@@ -4,8 +4,8 @@ import {
   WorkerLogStatus,
   sendToWorkerQueue,
 } from '@apillon/workers-lib';
-import { Wallet } from '../../common/models/wallet';
-import { BaseBlockchainIndexer } from '../../modules/blockchain-indexers/substrate/base-blockchain-indexer';
+import { Wallet } from '../common/models/wallet';
+import { BaseBlockchainIndexer } from '../modules/blockchain-indexers/substrate/base-blockchain-indexer';
 import {
   ChainType,
   Context,
@@ -17,10 +17,10 @@ import {
   TransactionStatus,
   env,
 } from '@apillon/lib';
-import { KiltBlockchainIndexer } from '../../modules/blockchain-indexers/substrate/kilt/kilt-indexer.service';
-import { WorkerName } from '../worker-executor';
-import { DbTables, TransactionIndexerStatus } from '../../config/types';
-import { CrustBlockchainIndexer } from '../../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
+import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/kilt-indexer.service';
+import { WorkerName } from './worker-executor';
+import { DbTables, TransactionIndexerStatus } from '../config/types';
+import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
 
 export enum SubstrateChainName {
   KILT = 'KILT',

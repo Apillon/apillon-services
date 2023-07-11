@@ -24,7 +24,7 @@ import { TransmitSubstrateTransactionWorker } from './transmit-substrate-transac
 import { CrustTransactionWorker } from './crust-transaction-worker';
 // import { KiltTransactionWorker } from './substrate/kilt/kilt-transaction-worker';
 import { EvmTransactionWorker } from './evm-transaction-worker';
-import { SubstrateTransactionWorker } from './substrate/substrate-transaction-worker';
+import { SubstrateTransactionWorker } from './substrate-transaction-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);

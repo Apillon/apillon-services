@@ -5,10 +5,10 @@ import {
   TransactionStatus,
 } from '@apillon/lib';
 import { ServiceDefinitionType, WorkerDefinition } from '@apillon/workers-lib';
-import { releaseStage, setupTest, Stage } from '../../test/setup';
-import { Transaction } from '../common/models/transaction';
-import { Wallet } from '../common/models/wallet';
-import { CrustTransactionWorker } from './crust-transaction-worker';
+import { releaseStage, setupTest, Stage } from '../../../test/setup';
+import { Transaction } from '../../common/models/transaction';
+import { Wallet } from '../../common/models/wallet';
+import { CrustTransactionWorker } from '../crust-transaction-worker';
 
 describe.skip('Handle crust transactions (storage orders)', () => {
   let stage: Stage;
