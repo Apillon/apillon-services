@@ -1,14 +1,16 @@
 import { GraphQLClient, gql } from 'graphql-request';
 import { BlockHeight } from '../block-height';
 
-export class BaseBlockchainIndexer {
-  public graphQlClient: GraphQLClient;
+export abstract class BaseBlockchainIndexer {
+  protected graphQlClient: GraphQLClient;
   private blockchainGraphQLServerUrl: string;
 
   constructor(bcsGQLUrl: string) {
     this.blockchainGraphQLServerUrl = bcsGQLUrl;
     this.graphQlClient = new GraphQLClient(this.blockchainGraphQLServerUrl);
   }
+
+  public abstract getAllTransactions(...args: any[]): Promise<any>;
 
   public async getBlockHeight(): Promise<number> {
     const GRAPHQL_QUERY = gql`
@@ -23,15 +25,11 @@ export class BaseBlockchainIndexer {
     return data.squidStatus.height;
   }
 
-  public async getAllTransactions(...args: any[]): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-
-  public setGrapQlUrl(url: string) {
+  public setGraphQlUrl(url: string) {
     this.blockchainGraphQLServerUrl = url;
   }
 
-  public getGrapQlUrl() {
+  public getGraphQlUrl() {
     return this.blockchainGraphQLServerUrl;
   }
 

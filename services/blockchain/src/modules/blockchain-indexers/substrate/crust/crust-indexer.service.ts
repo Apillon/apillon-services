@@ -1,18 +1,18 @@
 import { env } from '@apillon/lib';
-import { GraphQLClient, gql } from 'graphql-request';
+import { gql } from 'graphql-request';
 import { CrustTransferType } from '../../../../config/types';
 import { BlockHeight } from '../../block-height';
+import { BaseBlockchainIndexer } from '../base-blockchain-indexer';
 import { CrustStorageOrders } from './data-models/crust-storage-orders';
 import { CrustTransfers } from './data-models/crust-transfers';
 
-export class CrustBlockchainIndexer {
-  private graphQlClient: GraphQLClient;
-
+export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
   constructor() {
     if (!env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER) {
       throw new Error('Missing GraphQL server url!');
     }
-    this.graphQlClient = new GraphQLClient(env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER);
+    // this.graphQlClient = new GraphQLClient(env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER);
+    super(env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER);
   }
 
   public async getWalletWithdrawals(
@@ -162,6 +162,22 @@ export class CrustBlockchainIndexer {
       },
     );
     return data;
+  }
+
+  public async getAllTransactions(
+    address: string,
+    fromBlock: number,
+    toBlock: number,
+    // TODO: Filter by state as well
+    // state?: string,
+  ) {
+    // return {
+    //   transfers: await this.getWalletTransfers(address, fromBlock, toBlock),
+    //   withdrawals: await this.getWalletWithdrawals(address, fromBlock, toBlock),
+    //   deposits: await this.getWalletDeposits(address, fromBlock, toBlock),
+    //   orders: await this.getMarketFileOrders(address, fromBlock, toBlock),
+    // };
+    return await this.getMarketFileOrders(address, fromBlock, toBlock);
   }
 
   public async getMarketFileOrders(
