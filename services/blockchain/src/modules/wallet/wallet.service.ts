@@ -3,11 +3,13 @@ import {
   PopulateFrom,
   SerializeFor,
   UpdateWalletDto,
+  UpdateTransactionDto,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { Wallet, WalletWithBalance } from '../../common/models/wallet';
 import { BlockchainCodeException } from '../../lib/exceptions';
 import { BlockchainErrorCode } from '../../config/types';
+import { TransactionLog } from '../accounting/transaction-log.model';
 
 export class WalletService {
   static async listWallets(
@@ -54,6 +56,28 @@ export class WalletService {
       wallet.address,
       new BaseQueryFilter(event),
     );
+  }
+
+  static async updateTransaction(
+    {
+      transactionId,
+      data,
+    }: { transactionId: number; data: UpdateTransactionDto },
+    context: ServiceContext,
+  ): Promise<TransactionLog> {
+    const transaction = await new TransactionLog({}, context).populateById(
+      transactionId,
+    );
+    if (!transaction.exists()) {
+      throw new BlockchainCodeException({
+        code: BlockchainErrorCode.TRANSACTION_NOT_FOUND,
+        status: 404,
+      });
+    }
+
+    transaction.populate(data, PopulateFrom.ADMIN);
+    await transaction.update(SerializeFor.ADMIN);
+    return transaction;
   }
 
   static checkExists(wallet: Wallet) {

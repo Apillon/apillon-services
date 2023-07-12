@@ -4,6 +4,7 @@ import {
   BaseQueryFilter,
   BlockchainMicroservice,
   UpdateWalletDto,
+  UpdateTransactionDto,
 } from '@apillon/lib';
 
 @Injectable()
@@ -68,6 +69,27 @@ export class BlockchainService {
       await new BlockchainMicroservice(context).getWalletTransactions(
         query,
         walletId,
+      )
+    ).data;
+  }
+
+  /**
+   * Update a transaction by id and patch data
+   * @async
+   * @param {DevConsoleApiContext} context - - The API context with current user session.
+   * @param {number} transactionId - The transaction's id
+   * @param {UpdateTransactionDto} data - The transaction's update data
+   * @returns {Promise<any>}
+   */
+  async updateTransaction(
+    context: DevConsoleApiContext,
+    transactionId: number,
+    data: UpdateTransactionDto,
+  ): Promise<any> {
+    return (
+      await new BlockchainMicroservice(context).updateTransaction(
+        transactionId,
+        data,
       )
     ).data;
   }

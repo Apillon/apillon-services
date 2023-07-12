@@ -9,10 +9,13 @@ import {
 import { BaseQueryFilter } from '../../base-models/base-query-filter.model';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
-import { UpdateWalletDto } from './dtos/update-wallet.dto';
-import { CreateEvmTransactionDto } from './dtos/create-evm-transaction.dto';
-import { CreateSubstrateTransactionDto } from './dtos/create-substrate-transaction.dto';
-import { TransactionDto } from './dtos/transaction.dto';
+import {
+  UpdateTransactionDto,
+  UpdateWalletDto,
+  CreateEvmTransactionDto,
+  CreateSubstrateTransactionDto,
+  TransactionDto,
+} from '../../..';
 
 export class BlockchainMicroservice extends BaseService {
   lambdaFunctionName =
@@ -115,6 +118,17 @@ export class BlockchainMicroservice extends BaseService {
       eventName: BlockchainEventType.GET_WALLET_TRANSACTIONS,
       walletId,
       ...query,
+    });
+  }
+
+  public async updateTransaction(
+    transactionId: number,
+    data: UpdateTransactionDto,
+  ) {
+    return await this.callService({
+      eventName: BlockchainEventType.UPDATE_TRANSACTION,
+      transactionId,
+      data,
     });
   }
   //#endregion

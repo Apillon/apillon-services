@@ -2,7 +2,9 @@ import {
   DefaultUserRole,
   BaseQueryFilter,
   UpdateWalletDto,
+  UpdateTransactionDto,
   ValidateFor,
+  PopulateFrom,
 } from '@apillon/lib';
 import {
   Body,
@@ -45,7 +47,11 @@ export class BlockchainController {
   }
 
   @Patch('wallets/:id')
-  @Validation({ dto: UpdateWalletDto, validateFor: ValidateFor.BODY })
+  @Validation({
+    dto: UpdateWalletDto,
+    validateFor: ValidateFor.BODY,
+    populateFrom: PopulateFrom.ADMIN,
+  })
   @UseGuards(ValidationGuard)
   async updateWallet(
     @Ctx() context: DevConsoleApiContext,
@@ -70,6 +76,25 @@ export class BlockchainController {
       context,
       query,
       walletId,
+    );
+  }
+
+  @Patch('transactions/:id')
+  @Validation({
+    dto: UpdateTransactionDto,
+    validateFor: ValidateFor.BODY,
+    populateFrom: PopulateFrom.ADMIN,
+  })
+  @UseGuards(ValidationGuard)
+  async updateTransaction(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id', ParseIntPipe) transactionId: number,
+    @Body() updateTransactionDto: UpdateTransactionDto,
+  ) {
+    return this.blockchainService.updateTransaction(
+      context,
+      transactionId,
+      updateTransactionDto,
     );
   }
 }

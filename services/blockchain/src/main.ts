@@ -28,6 +28,7 @@ export async function processEvent(
     [BlockchainEventType.UPDATE_WALLET]: WalletService.updateWallet,
     [BlockchainEventType.GET_WALLET_TRANSACTIONS]:
       WalletService.getWalletTransactions,
+    [BlockchainEventType.UPDATE_TRANSACTION]: WalletService.updateTransaction,
   };
 
   return await processors[event.eventName](event, context);

@@ -70,6 +70,7 @@ export enum BlockchainEventType {
   GET_WALLET = 'get-wallet',
   UPDATE_WALLET = 'update-wallet',
   GET_WALLET_TRANSACTIONS = 'get-wallet-transactions',
+  UPDATE_TRANSACTION = 'update-transaction',
 }
 
 export enum StorageEventType {
