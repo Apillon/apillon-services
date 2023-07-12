@@ -237,6 +237,9 @@ export class CreateCollectionDTOBase extends ModelBase {
   @prop({
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    setter(value: number) {
+      return value * 100;
+    },
     validators: [
       {
         resolver: presenceValidator(),

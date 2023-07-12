@@ -411,6 +411,9 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    setter(value: number) {
+      return value / 100;
+    },
     fakeValue: 0,
   })
   public royaltiesFees: number;
