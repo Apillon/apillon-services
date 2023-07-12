@@ -2,24 +2,17 @@
   // Use IntelliSense to learn about possible attributes.
   // Hover to view descriptions of existing attributes.
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-  "version": "0.2.0",
+  "version": "0.3.0",
   "configurations": [
     {
       "type": "node",
       "request": "launch",
-      "name": "Jest Test Current file",
-      "program": "${workspaceFolder}/../../node_modules/jest/bin/jest.js",
-      "args": [
-        "--runInBand",
-        "--config=${workspaceFolder}/package.json",
-        "--detectOpenHandles",
-        "--forceExit",
-        "${fileBasename}"
+      "name": "Config",
+      "runtimeExecutable": "nodemon",
+      "runtimeArgs": [
+        "./src/scripts/dev/run-server.ts",
+        "--inspect=9233",
       ],
-      "env": {
-        "LOG_TARGET": "color",
-        "APP_ENV": "test"
-      },
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
     },

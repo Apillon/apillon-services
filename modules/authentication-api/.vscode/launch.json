@@ -44,12 +44,12 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Dev Console API",
+      "name": "Authentication API",
       "runtimeExecutable": "npm",
       "runtimeArgs": [
         "run",
         "dev",
-        "--inspect=9226"
+        "--inspect=9228"
       ],
       "skipFiles": [
         "<node_internals>/**"

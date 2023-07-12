@@ -7,11 +7,11 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Blockchain",
+      "name": "Storage",
       "runtimeExecutable": "nodemon",
       "runtimeArgs": [
         "./src/scripts/dev/run-server.ts",
-        "--inspect=9234",
+        "--inspect=9231",
       ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
