@@ -144,6 +144,15 @@ export interface IEnv {
   DEV_CONSOLE_API_HOST_TEST: string;
   DEV_CONSOLE_API_PORT_TEST: number;
 
+  /************************************************************
+   * ADMIN-CONSOLE-API - Apillon Admin Console API
+   ************************************************************/
+  ADMIN_CONSOLE_API_HOST: string;
+  ADMIN_CONSOLE_API_PORT: number;
+
+  ADMIN_CONSOLE_API_HOST_TEST: string;
+  ADMIN_CONSOLE_API_PORT_TEST: number;
+
   /**
    * Page size used in sql utils
    */
@@ -212,6 +221,7 @@ export interface IEnv {
   BLOCKCHAIN_AWS_WORKER_LAMBDA_NAME: string;
 
   BLOCKCHAIN_CRUST_GRAPHQL_SERVER: string;
+  BLOCKCHAIN_KILT_GRAPHQL_SERVER: string;
   BLOCKCHAIN_SECRETS: string;
 
   /**
@@ -490,9 +500,17 @@ export let env: IEnv = {
   DEV_CONSOLE_API_HOST: process.env['DEV_CONSOLE_API_HOST'] || 'localhost',
   DEV_CONSOLE_API_PORT: parseInt(process.env['DEV_CONSOLE_API_PORT']) || 6001,
   DEV_CONSOLE_API_HOST_TEST:
-    process.env['DEV_CONSOLE_API_HOS_TEST'] || 'localhost',
+    process.env['DEV_CONSOLE_API_HOST_TEST'] || 'localhost',
   DEV_CONSOLE_API_PORT_TEST:
     parseInt(process.env['DEV_CONSOLE_API_PORT_TEST']) || 7001,
+
+  ADMIN_CONSOLE_API_HOST: process.env['ADMIN_CONSOLE_API_HOST'] || 'localhost',
+  ADMIN_CONSOLE_API_PORT:
+    parseInt(process.env['ADMIN_CONSOLE_API_PORT']) || 6004,
+  ADMIN_CONSOLE_API_HOST_TEST:
+    process.env['ADMIN_CONSOLE_API_HOST_TEST'] || 'localhost',
+  ADMIN_CONSOLE_API_PORT_TEST:
+    parseInt(process.env['ADMIN_CONSOLE_API_PORT_TEST']) || 7004,
 
   /** SQL UTILS */
   DEFAULT_PAGE_SIZE: parseInt(process.env['DEFAULT_PAGE_SIZE']) || 20,
@@ -555,6 +573,7 @@ export let env: IEnv = {
 
   BLOCKCHAIN_CRUST_GRAPHQL_SERVER:
     process.env['BLOCKCHAIN_CRUST_GRAPHQL_SERVER'],
+  BLOCKCHAIN_KILT_GRAPHQL_SERVER: process.env['BLOCKCHAIN_KILT_GRAPHQL_SERVER'],
   BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER:
     process.env['BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER'],
   BLOCKCHAIN_MOONBASE_GRAPHQL_SERVER:

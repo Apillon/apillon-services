@@ -16,7 +16,7 @@ import { CaptchaGuard } from '../../guards/captcha.guard';
 export class IdentityController {
   constructor(private identityService: IdentityService) {}
 
-  @Post('generate/identity')
+  @Post('generate')
   @Validation({ dto: IdentityCreateDto })
   @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.IDENTITY_VERIFICATION))
   async attestationGenerateIdentity(
@@ -26,7 +26,7 @@ export class IdentityController {
     return await this.identityService.generateIdentity(context, body);
   }
 
-  @Get('generate/state/query')
+  @Get('state/query')
   @Validation({ dto: AttestationEmailDto, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard)
   async attestationGetIdentityState(

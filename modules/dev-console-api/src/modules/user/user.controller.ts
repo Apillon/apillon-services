@@ -24,7 +24,7 @@ import { UserService } from './user.service';
 import { AuthGuard } from '../../guards/auth.guard';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
-import { DiscordCodeDto } from './dtos/discord-code-dto';
+import { DiscordCodeDto } from './dtos/discord-code.dto';
 
 @Controller('users')
 export class UserController {
@@ -35,6 +35,13 @@ export class UserController {
   @UseGuards(AuthGuard)
   async getUserProfile(@Ctx() context: DevConsoleApiContext) {
     return await this.userService.getUserProfile(context);
+  }
+
+  @Get('terms')
+  @Permissions({ role: DefaultUserRole.USER })
+  @UseGuards(AuthGuard)
+  async getPendingTermsForUser(@Ctx() context: DevConsoleApiContext) {
+    return await this.userService.getPendingTermsForUser(context);
   }
 
   @Patch('me')
@@ -142,12 +149,12 @@ export class UserController {
     return await this.userService.getOauthLinks(context);
   }
 
-  @Get('/auth-msg')
+  @Get('auth-msg')
   getAuthMsg(): any {
     return this.userService.getAuthMessage();
   }
 
-  @Post('/login/wallet')
+  @Post('login/wallet')
   @HttpCode(200)
   @Validation({ dto: UserWalletAuthDto })
   @UseGuards(ValidationGuard)
@@ -158,7 +165,7 @@ export class UserController {
     return this.userService.walletLogin(body, context);
   }
 
-  @Post('/wallet-connect')
+  @Post('wallet-connect')
   @HttpCode(200)
   @Validation({ dto: UserWalletAuthDto })
   @UseGuards(ValidationGuard, AuthGuard)
@@ -169,6 +176,12 @@ export class UserController {
     return this.userService.walletConnect(body, context);
   }
 
+  @Post('consents')
+  @UseGuards(AuthGuard)
+  async userConsents(@Body() body: any, @Ctx() context: DevConsoleApiContext) {
+    return await this.userService.setUserConsents(body, context);
+  }
+  
   @Get('/oauth-session')
   getOauthSession() {
     return this.userService.getOauthSession();

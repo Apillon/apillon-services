@@ -14,7 +14,6 @@ export function getTokenFromChain(chainType: ChainType, chain: Chain) {
     [ChainType.SUBSTRATE]: {
       [SubstrateChain.CRUST]: TxToken.CRUST_TOKEN,
       [SubstrateChain.KILT]: TxToken.KILT_TOKEN,
-      [SubstrateChain.KILT_SPIRITNET]: TxToken.KILT_TOKEN,
       [SubstrateChain.PHALA]: TxToken.PHALA_TOKEN,
     },
   };
@@ -32,7 +31,6 @@ export function getTokenDecimalsFromChain(chainType: ChainType, chain: Chain) {
     [ChainType.SUBSTRATE]: {
       [SubstrateChain.CRUST]: 12,
       [SubstrateChain.KILT]: 18,
-      [SubstrateChain.KILT_SPIRITNET]: 18,
       [SubstrateChain.PHALA]: 18,
     },
   };

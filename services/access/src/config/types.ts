@@ -76,6 +76,7 @@ export enum AmsErrorCode {
   // 500 - Internal Error
   ERROR_WRITING_TO_DATABASE = 50002001,
   ERROR_READING_FROM_DATABASE = 50002002,
+  INVALID_EVENT_DATA = 50002003,
 }
 
 /**

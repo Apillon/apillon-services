@@ -121,10 +121,8 @@ describe.skip('Handle crust transactions (storage orders)', () => {
     const chain = SubstrateChain.CRUST;
     const chainType = ChainType.SUBSTRATE;
     const fromBlock = 7912024;
-
     wallet.lastParsedBlock = fromBlock;
     await wallet.update();
-
     await new Transaction(
       {
         address,
@@ -138,7 +136,6 @@ describe.skip('Handle crust transactions (storage orders)', () => {
       },
       stage.context,
     ).insert();
-
     await new Transaction(
       {
         address,
@@ -152,7 +149,6 @@ describe.skip('Handle crust transactions (storage orders)', () => {
       },
       stage.context,
     ).insert();
-
     await new Transaction(
       {
         address,
@@ -166,7 +162,6 @@ describe.skip('Handle crust transactions (storage orders)', () => {
       },
       stage.context,
     ).insert();
-
     await new Transaction(
       {
         address,
@@ -180,7 +175,6 @@ describe.skip('Handle crust transactions (storage orders)', () => {
       },
       stage.context,
     ).insert();
-
     await new Transaction(
       {
         address,
@@ -194,7 +188,6 @@ describe.skip('Handle crust transactions (storage orders)', () => {
       },
       stage.context,
     ).insert();
-
     const workerDefinition = new WorkerDefinition(
       {
         type: ServiceDefinitionType.SQS,
@@ -208,21 +201,18 @@ describe.skip('Handle crust transactions (storage orders)', () => {
       workerDefinition,
       stage.context,
     ).runExecutor({});
-
     const txs: Transaction[] = await new Transaction({}, stage.context).getList(
       chain,
       chainType,
       address,
       4,
     );
-
     let confirmed = true;
     txs.forEach((tx) => {
       if (tx.transactionStatus !== TransactionStatus.CONFIRMED) {
         confirmed = false;
       }
     });
-
     expect(txs.length).toBe(5);
     expect(confirmed).toBe(true);
   });

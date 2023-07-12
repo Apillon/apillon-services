@@ -47,6 +47,12 @@ import {
   ISubmitTerms,
   PartialClaim,
 } from '@kiltprotocol/types';
+
+import { Identity } from '../identity/models/identity.model';
+import { WorkerName } from '../../workers/worker-executor';
+import { prepareSignResources } from '../../lib/sporran';
+import { VerifyCredentialDto } from '@apillon/lib/dist/lib/at-services/authentication/dtos/sporran/message/verify-credential.dto';
+import { AuthenticationCodeException } from '../../lib/exceptions';
 import {
   ServiceDefinition,
   ServiceDefinitionType,
@@ -54,12 +60,7 @@ import {
   QueueWorkerType,
   sendToWorkerQueue,
 } from '@apillon/workers-lib';
-import { Identity } from '../identity/models/identity.model';
-import { WorkerName } from '../../workers/worker-executor';
 import { IdentityGenerateWorker } from '../../workers/generate-identity.worker';
-import { prepareSignResources } from '../../lib/sporran';
-import { VerifyCredentialDto } from '@apillon/lib/dist/lib/at-services/authentication/dtos/sporran/message/verify-credential.dto';
-import { AuthenticationCodeException } from '../../lib/exceptions';
 
 export class SporranMicroservice {
   static async getSessionValues(_context): Promise<any> {
@@ -81,6 +82,7 @@ export class SporranMicroservice {
         status: HttpStatus.BAD_REQUEST,
       });
     }
+
     const dAppEncryptionKeyUri =
       `${document.uri}${document.keyAgreement[0].id}` as DidResourceUri;
 
@@ -272,50 +274,6 @@ export class SporranMicroservice {
     }
 
     const credential = JSON.parse(decryptedMessage).body.content.credential;
-    const parameters = {
-      credential: credential,
-      args: [IdentityGenFlag.ATTESTATION],
-      email: credential.claim.contents.Email,
-      didUri: credential.claim.owner,
-    };
-
-    if (
-      env.APP_ENV == AppEnvironment.LOCAL_DEV ||
-      env.APP_ENV == AppEnvironment.TEST
-    ) {
-      console.log('Starting DEV IdentityRevokeWorker worker ...');
-
-      // Directly calls Identity worker -> USED ONLY FOR DEVELOPMENT!!
-      const serviceDef: ServiceDefinition = {
-        type: ServiceDefinitionType.SQS,
-        config: { region: 'test' },
-        params: { FunctionName: 'test' },
-      };
-
-      const wd = new WorkerDefinition(
-        serviceDef,
-        WorkerName.IDENTITY_GENERATE_WORKER,
-        {
-          parameters,
-        },
-      );
-
-      const worker = new IdentityGenerateWorker(
-        wd,
-        context,
-        QueueWorkerType.EXECUTOR,
-      );
-      await worker.runExecutor(parameters);
-    } else {
-      //send message to SQS
-      await sendToWorkerQueue(
-        env.AUTH_AWS_WORKER_SQS_URL,
-        WorkerName.IDENTITY_GENERATE_WORKER,
-        [parameters],
-        null,
-        null,
-      );
-    }
 
     const identity = await new Identity({}, context).populateByUserEmail(
       context,

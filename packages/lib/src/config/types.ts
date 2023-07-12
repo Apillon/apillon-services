@@ -13,7 +13,6 @@ export enum TransactionStatus {
 export enum SubstrateChain {
   CRUST = 1,
   KILT = 2,
-  KILT_SPIRITNET = 3,
   PHALA = 4,
 }
 
@@ -36,6 +35,8 @@ export enum AmsEventType {
   USER_PASSWORD_RESET = 'user-password-reset',
   USER_ROLE_ASSIGN = 'user-role-assign',
   USER_ROLE_REMOVE = 'user-role-remove',
+  USER_GET_LOGINS = 'user-get-logins',
+  USER_GET_ROLES = 'user-get-roles',
   AUTH_TOKEN_CREATE_UPDATE_TOKEN = 'auth-token-create-update-token',
   USER_EMAIL_EXISTS = 'user-email-exists',
   GET_AUTH_USER_BY_EMAIL = 'get-auth-user-by-email',
@@ -137,6 +138,10 @@ export enum MailEventType {
 
 export enum ScsEventType {
   GET_QUOTA = 'get-quota',
+  GET_ALL_QUOTAS = 'get-all-quotas',
+  GET_ACTIVE_TERMS = 'get-active-terms',
+  CREATE_OVERRIDE = 'create-override',
+  DELETE_OVERRIDE = 'delete-override',
 }
 
 export enum NftsEventType {
@@ -383,6 +388,7 @@ export enum BadRequestErrorCode {
   MISSING_AUTHORIZATION_HEADER = 40000003,
   INVALID_AUTHORIZATION_HEADER = 40000004,
   THIRD_PARTY_SERVICE_CONNECTION_FAILED = 40000005,
+  RESOURCE_DOES_NOT_EXISTS = 40000006,
 }
 
 export enum ValidatorErrorCode {

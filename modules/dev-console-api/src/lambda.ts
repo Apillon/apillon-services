@@ -8,15 +8,18 @@ import { Server } from 'http';
 import { AppModule } from './app.module';
 import { ExceptionsFilter, ResponseInterceptor } from '@apillon/modules-lib';
 
-export async function bootstrap() {
+export async function bootstrapModule(module: any) {
   const expressApp = express();
   const adapter = new ExpressAdapter(expressApp);
-  const app = await NestFactory.create(AppModule, adapter);
+  const app = await NestFactory.create(module, adapter);
   app.enableCors({ origin: '*' });
   app.useGlobalFilters(new ExceptionsFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());
   await app.init();
   return createServer(expressApp);
+}
+export async function bootstrap() {
+  return bootstrapModule(AppModule);
 }
 
 let cachedServer: Server;
