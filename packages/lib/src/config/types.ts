@@ -68,6 +68,7 @@ export enum BlockchainEventType {
   GET_CHAIN_ENDPOINT = 'get-chain-endpoint',
   LIST_WALLETS = 'list-wallets',
   GET_WALLET = 'get-wallet',
+  UPDATE_WALLET = 'update-wallet',
   GET_WALLET_TRANSACTIONS = 'get-wallet-transactions',
 }
 

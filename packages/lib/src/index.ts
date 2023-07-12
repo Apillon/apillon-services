@@ -77,6 +77,7 @@ export * from './lib/at-services/blockchain/dtos/create-substrate-transaction.dt
 export * from './lib/at-services/blockchain/dtos/create-evm-transaction.dto';
 export * from './lib/at-services/blockchain/dtos/transaction.dto';
 export * from './lib/at-services/blockchain/dtos/transaction-webhook-data.dto';
+export * from './lib/at-services/blockchain/dtos/update-wallet.dto';
 
 //#REGION Mix
 export * from './lib/at-services/ams/dtos/create-oauth-link.dto';

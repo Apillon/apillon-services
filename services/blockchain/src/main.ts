@@ -25,6 +25,7 @@ export async function processEvent(
     [BlockchainEventType.GET_CHAIN_ENDPOINT]: CommonService.getChainEndpoint,
     [BlockchainEventType.LIST_WALLETS]: WalletService.listWallets,
     [BlockchainEventType.GET_WALLET]: WalletService.getWallet,
+    [BlockchainEventType.UPDATE_WALLET]: WalletService.updateWallet,
     [BlockchainEventType.GET_WALLET_TRANSACTIONS]:
       WalletService.getWalletTransactions,
   };

@@ -1,17 +1,25 @@
-import { DefaultUserRole, BaseQueryFilter } from '@apillon/lib';
 import {
+  DefaultUserRole,
+  BaseQueryFilter,
+  UpdateWalletDto,
+  ValidateFor,
+} from '@apillon/lib';
+import {
+  Body,
   Controller,
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { Ctx, Permissions } from '@apillon/modules-lib';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { AuthGuard } from '../../../guards/auth.guard';
 import { DevConsoleApiContext } from '../../../context';
 import { BlockchainService } from './blockchain.service';
 import { BaseQueryFilterValidator } from '../../../decorators/base-query-filter-validator';
+import { ValidationGuard } from '../../../guards/validation.guard';
 
 @Controller('admin-panel/blockchain')
 @Permissions({ role: DefaultUserRole.ADMIN })
@@ -34,6 +42,21 @@ export class BlockchainController {
     @Param('id', ParseIntPipe) walletId: number,
   ) {
     return this.blockchainService.getWallet(context, walletId);
+  }
+
+  @Patch('wallets/:id')
+  @Validation({ dto: UpdateWalletDto, validateFor: ValidateFor.BODY })
+  @UseGuards(ValidationGuard)
+  async updateWallet(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id', ParseIntPipe) walletId: number,
+    @Body() updateWalletDto: UpdateWalletDto,
+  ) {
+    return this.blockchainService.updateWallet(
+      context,
+      walletId,
+      updateWalletDto,
+    );
   }
 
   @Get('wallets/:id/transactions')

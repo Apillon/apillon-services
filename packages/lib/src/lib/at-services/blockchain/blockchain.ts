@@ -9,6 +9,7 @@ import {
 import { BaseQueryFilter } from '../../base-models/base-query-filter.model';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
+import { UpdateWalletDto } from './dtos/update-wallet.dto';
 import { CreateEvmTransactionDto } from './dtos/create-evm-transaction.dto';
 import { CreateSubstrateTransactionDto } from './dtos/create-substrate-transaction.dto';
 import { TransactionDto } from './dtos/transaction.dto';
@@ -98,6 +99,14 @@ export class BlockchainMicroservice extends BaseService {
     return await this.callService({
       eventName: BlockchainEventType.GET_WALLET,
       walletId,
+    });
+  }
+
+  public async updateWallet(walletId: number, data: UpdateWalletDto) {
+    return await this.callService({
+      eventName: BlockchainEventType.UPDATE_WALLET,
+      walletId,
+      data,
     });
   }
 

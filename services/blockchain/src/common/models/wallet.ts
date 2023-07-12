@@ -235,9 +235,7 @@ export class Wallet extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB, //
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -273,7 +271,7 @@ export class Wallet extends AdvancedSQLModel {
       conn,
     );
 
-    if (data && data.length) {
+    if (data?.length) {
       if (data[0].chainType === ChainType.EVM) {
         data[0].address = data[0].address.toLowerCase();
       }
@@ -508,4 +506,8 @@ export class Wallet extends AdvancedSQLModel {
   }
 }
 
-export type WalletWithBalance = Wallet & { balance: number };
+export type WalletWithBalance = Wallet & {
+  balance: string;
+  minBalance: string;
+  isBelowThreshold: boolean;
+};

@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../../context';
-import { BaseQueryFilter, BlockchainMicroservice } from '@apillon/lib';
+import {
+  BaseQueryFilter,
+  BlockchainMicroservice,
+  UpdateWalletDto,
+} from '@apillon/lib';
 
 @Injectable()
 export class BlockchainService {
@@ -28,6 +32,24 @@ export class BlockchainService {
     walletId: number,
   ): Promise<any> {
     return (await new BlockchainMicroservice(context).getWallet(walletId)).data;
+  }
+
+  /**
+   * Update a wallet by id and patch data
+   * @async
+   * @param {DevConsoleApiContext} context - - The API context with current user session.
+   * @param {number} walletId - The wallet's id
+   * @param {UpdateWalletDto} data - The wallet's update data
+   * @returns {Promise<any>}
+   */
+  async updateWallet(
+    context: DevConsoleApiContext,
+    walletId: number,
+    data: UpdateWalletDto,
+  ): Promise<any> {
+    return (
+      await new BlockchainMicroservice(context).updateWallet(walletId, data)
+    ).data;
   }
 
   /**
