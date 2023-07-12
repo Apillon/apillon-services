@@ -12,10 +12,10 @@ import {
 } from '@apillon/lib';
 import {
   WorkerDefinition,
-  WorkerLogStatus,
   sendToWorkerQueue,
   BaseQueueWorker,
   QueueWorkerType,
+  LogOutput,
 } from '@apillon/workers-lib';
 import { DbTables } from '../config/types';
 
@@ -45,7 +45,7 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
         conn,
       );
 
-      console.log('transactions: ', transactions);
+      // console.log('transactions: ', transactions);
 
       const crustWebhooks: TransactionWebhookDataDto[] = [];
       const nftWebhooks: TransactionWebhookDataDto[] = [];
@@ -114,7 +114,7 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
         )),
       ];
 
-      console.log('updates: ', updates);
+      // console.log('updates: ', updates);
       if (updates.length > 0) {
         await this.context.mysql.paramExecute(
           `
@@ -125,29 +125,31 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
           null,
           conn,
         );
-        await this.writeLogToDb(
-          WorkerLogStatus.INFO,
-          `Triggered webhooks for ${updates.length} transactions!`,
+
+        await this.writeEventLog(
           {
-            updates,
+            logType: LogType.INFO,
+            message: `Triggered webhooks for ${updates.length} transactions!`,
+            service: ServiceName.BLOCKCHAIN,
+            data: { updates },
           },
+          LogOutput.EVENT_INFO,
         );
       }
       await conn.commit();
     } catch (err) {
-      console.log(err);
+      // console.log(err);
       await conn.rollback();
-      await new Lmas().writeLog({
-        context: this.context,
-        logType: LogType.ERROR,
-        message: 'Error in TransactionWebhookWorker',
-        location: `${this.constructor.name}/runExecutor`,
-        service: ServiceName.BLOCKCHAIN,
-        data: {
-          params,
+      await this.writeEventLog(
+        {
+          logType: LogType.ERROR,
+          message: 'Error in TransactionWebhookWorker',
+          service: ServiceName.BLOCKCHAIN,
+          data: { params, err },
           err,
         },
-      });
+        LogOutput.SYS_ERROR,
+      );
       throw err;
     }
 
@@ -188,18 +190,16 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
           console.log('pushed webhook');
           updates = [...updates, splits[i].map((a) => a.id)];
         } catch (e) {
-          console.log(e);
-          await new Lmas().writeLog({
-            context: this.context,
-            logType: LogType.ERROR,
-            message: 'Error in TransactionWebhookWorker sending webhook',
-            location: `${this.constructor.name}/runExecutor`,
-            service: ServiceName.BLOCKCHAIN,
-            data: {
-              splits,
-              e,
+          await this.writeEventLog(
+            {
+              logType: LogType.ERROR,
+              message: 'Error in TransactionWebhookWorker sending webhook',
+              service: ServiceName.BLOCKCHAIN,
+              data: { splits, e },
+              err: e,
             },
-          });
+            LogOutput.SYS_ERROR,
+          );
         }
       }
     }

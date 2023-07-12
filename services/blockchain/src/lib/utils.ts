@@ -1,6 +1,7 @@
 import { ChainType, EvmChain, SubstrateChain } from '@apillon/lib';
 import { ethers } from 'ethers';
 import { formatUnits } from 'ethers/lib/utils';
+import type { Wallet } from '../common/models/wallet';
 import { Chain, TxToken } from '../config/types';
 
 export function getTokenFromChain(chainType: ChainType, chain: Chain) {
@@ -46,4 +47,12 @@ export function formatTokenWithDecimals(
     ethers.BigNumber.from(amount),
     getTokenDecimalsFromChain(chainType, chain),
   );
+}
+
+export function formatWalletAddress(wallet: Wallet) {
+  return `${
+    wallet.chainType === ChainType.EVM
+      ? EvmChain[wallet.chain]
+      : SubstrateChain[wallet.chain]
+  }: ${wallet.address}`;
 }

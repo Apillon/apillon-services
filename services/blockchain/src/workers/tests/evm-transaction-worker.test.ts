@@ -1,9 +1,9 @@
 import { ChainType, EvmChain, TransactionStatus, env } from '@apillon/lib';
-import { Stage, releaseStage, setupTest } from '../../test/setup';
-import { Wallet } from '../common/models/wallet';
-import { Transaction } from '../common/models/transaction';
+import { Stage, releaseStage, setupTest } from '../../../test/setup';
+import { Wallet } from '../../common/models/wallet';
+import { Transaction } from '../../common/models/transaction';
 import { ServiceDefinitionType, WorkerDefinition } from '@apillon/workers-lib';
-import { EvmTransactionWorker } from './evm-transaction-worker';
+import { EvmTransactionWorker } from '../evm-transaction-worker';
 
 describe.skip('Handle evm transactions', () => {
   let stage: Stage;
