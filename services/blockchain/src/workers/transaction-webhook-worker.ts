@@ -18,7 +18,6 @@ import {
   QueueWorkerType,
 } from '@apillon/workers-lib';
 import { DbTables } from '../config/types';
-import { WorkerName } from './worker-executor';
 
 export class TransactionWebhookWorker extends BaseQueueWorker {
   public constructor(

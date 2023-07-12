@@ -1,8 +1,5 @@
 import {
   BaseSingleThreadWorker,
-  QueueWorkerType,
-  ServiceDefinition,
-  ServiceDefinitionType,
   WorkerDefinition,
   WorkerLogStatus,
   sendToWorkerQueue,
@@ -10,7 +7,6 @@ import {
 import { Wallet } from '../../common/models/wallet';
 import { BaseBlockchainIndexer } from '../../modules/blockchain-indexers/substrate/base-blockchain-indexer';
 import {
-  AppEnvironment,
   ChainType,
   Context,
   Lmas,
@@ -23,12 +19,8 @@ import {
 } from '@apillon/lib';
 import { KiltBlockchainIndexer } from '../../modules/blockchain-indexers/substrate/kilt/kilt-indexer.service';
 import { WorkerName } from '../worker-executor';
-import { TransactionWebhookWorker } from '../transaction-webhook-worker';
 import { DbTables, TransactionIndexerStatus } from '../../config/types';
-
-function formatMessage(a: string, t: number, f: number): string {
-  return `Evaluating RESOLVED transactions: SOURCE ${a}, FROM ${t}, TO ${f}`;
-}
+import { CrustBlockchainIndexer } from '../../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
 
 export enum SubstrateChainName {
   KILT = 'KILT',
@@ -54,60 +46,15 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
   }
 
   public async runExecutor(_data?: any): Promise<any> {
-    console.log('Chain data: ', this.chainId, this.chainName);
     // Wallets will be populated once the runExecutor method is called
     this.wallets = await new Wallet({}, this.context).getList(
       SubstrateChain[this.chainName],
       ChainType.SUBSTRATE,
     );
 
-    // A pending transaction should not be evaluated
-    await this.handleResolvedTransactions(this.wallets);
-  }
-
-  private log(message: any) {
-    console.log(`${this.logPrefix}: ${message}`);
-  }
-
-  private async logAms(
-    message: any,
-    wallet?: string,
-    error?: boolean,
-    data?: any,
-  ) {
-    await new Lmas().writeLog({
-      logType: error ? LogType.ERROR : LogType.INFO,
-      message: message,
-      location: 'SubstrateTransactionWorker',
-      service: ServiceName.BLOCKCHAIN,
-      data: {
-        wallet,
-        ...data,
-      },
-    });
-  }
-
-  // NOTE: Sets the Substrate Indexer
-  private setIndexer() {
-    switch (this.chainName) {
-      case SubstrateChainName.KILT:
-        this.indexer = new KiltBlockchainIndexer();
-        break;
-      case SubstrateChainName.CRUST:
-        //this.indexer = new CrustBlockchainIndexer();
-        break;
-      default:
-        // TODO: Proper error handling
-        console.error('Invalid chain');
-    }
-
-    this.log(this.indexer.toString());
-  }
-
-  private async handleResolvedTransactions(wallets: Wallet[]) {
     const blockHeight = await this.indexer.getBlockHeight();
 
-    for (const w of wallets) {
+    for (const w of this.wallets) {
       const wallet = new Wallet(w, this.context);
 
       // TODO: There was range calculation here, which I am not
@@ -116,11 +63,6 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       const fromBlock: number = wallet.lastParsedBlock;
       const toBlock: number = blockHeight;
 
-      const message = this.log(
-        formatMessage(wallet.address, fromBlock, toBlock),
-      );
-      await this.logAms(message);
-
       // Get all transactions from the indexer
       const transactions = await this.fetchAllResolvedTransactions(
         wallet.address,
@@ -128,10 +70,34 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         toBlock,
       );
 
-      await this.setTransactionsState(transactions);
+      const conn = await this.context.mysql.start();
+      try {
+        await this.setTransactionsState(transactions, conn);
 
-      await wallet.updateLastParsedBlock(toBlock);
-
+        await wallet.updateLastParsedBlock(toBlock, conn);
+        await conn.commit();
+      } catch (err) {
+        await conn.rollback();
+        await this.writeLogToDb(
+          WorkerLogStatus.ERROR,
+          'Error updating transactions!',
+          {
+            wallet: w.address,
+          },
+          err,
+        );
+        await new Lmas().writeLog({
+          logType: LogType.ERROR,
+          message: `Error updating transactions for ${wallet?.address} [chain:${wallet?.chain}]`,
+          location: 'SubstrateTransactionWorker',
+          service: ServiceName.BLOCKCHAIN,
+          data: {
+            wallet: w.address,
+            error: err?.message,
+          },
+        });
+        continue;
+      }
       if (transactions.length > 0) {
         // Trigger webhook worker
         await sendToWorkerQueue(
@@ -150,8 +116,38 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
             wallet: wallet.address,
           },
         );
+        await new Lmas().writeLog({
+          logType: LogType.INFO,
+          message: `Reading ${transactions.length} transactions from indexer for ${wallet.address} [chain:${wallet.chain}]`,
+          location: 'SubstrateTransactionWorker',
+          service: ServiceName.BLOCKCHAIN,
+          data: {
+            wallet: wallet.address,
+          },
+        });
       }
     }
+  }
+
+  private log(message: any) {
+    console.log(`${this.logPrefix}: ${message}`);
+  }
+
+  // NOTE: Sets the Substrate Indexer
+  private setIndexer() {
+    switch (this.chainName) {
+      case SubstrateChainName.KILT:
+        this.indexer = new KiltBlockchainIndexer();
+        break;
+      case SubstrateChainName.CRUST:
+        this.indexer = new CrustBlockchainIndexer();
+        break;
+      default:
+        // TODO: Proper error handling
+        console.error('Invalid chain');
+    }
+
+    this.log(this.indexer.toString());
   }
 
   private async fetchAllResolvedTransactions(
@@ -166,12 +162,17 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       toBlock,
     );
 
-    const trasactionsArray: Array<any> = Object.values(transactions);
-    return trasactionsArray.length > 0 ? trasactionsArray.flat(Infinity) : [];
+    const transactionsArray: Array<any> = Object.values(transactions);
+    return transactionsArray.length > 0 ? transactionsArray.flat(Infinity) : [];
   }
 
-  private async setTransactionsState(transactions: any[]) {
-    const conn = await this.context.mysql.start();
+  private async setTransactionsState(
+    transactions: any[],
+    conn: PoolConnection,
+  ) {
+    if (!transactions?.length) {
+      return;
+    }
 
     const successTransactions: any = transactions
       .filter((t: any) => {
@@ -189,7 +190,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         return t.transactionHash;
       });
 
-    // Update SUCCESSFULL transactions
+    // Update SUCCESSFUL transactions
     await this.updateTransactions(
       successTransactions,
       TransactionStatus.CONFIRMED,
@@ -199,13 +200,9 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     // Update FAILED transactions
     await this.updateTransactions(
       failedTransactions,
-      TransactionStatus.CONFIRMED,
+      TransactionStatus.FAILED,
       conn,
     );
-
-    await conn.commit();
-    // Start a new connection for each parsed wallet
-    conn.destroy();
   }
 
   private async updateTransactions(
