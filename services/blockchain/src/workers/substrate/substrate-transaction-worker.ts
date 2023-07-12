@@ -174,21 +174,15 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       return;
     }
 
-    const successTransactions: any = transactions
-      .filter((t: any) => {
-        return t.status == TransactionIndexerStatus.SUCCESS;
-      })
-      .map((t: any): string => {
-        return t.extrinsicHash;
-      });
+    const successTransactions: any = transactions.map((t: any) => {
+      return t.status == TransactionIndexerStatus.SUCCESS
+        ? t.extrinsicHash
+        : null;
+    });
 
-    const failedTransactions: string[] = transactions
-      .filter((t: any) => {
-        t.status == TransactionIndexerStatus.FAIL;
-      })
-      .map((t: any): string => {
-        return t.transactionHash;
-      });
+    const failedTransactions: string[] = transactions.filter((t: any) => {
+      return t.status == TransactionIndexerStatus.FAIL ? t.extrinsicHash : null;
+    });
 
     // Update SUCCESSFUL transactions
     await this.updateTransactions(
