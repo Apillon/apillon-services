@@ -6,52 +6,14 @@ import {
   PopulatedTransaction,
   UnsignedTransaction,
 } from 'ethers';
-import {
-  EvmNftABI,
-  EvmNftBytecode,
-  EvmNftNestableABI,
-  EvmNftNestableBytecode,
-} from './contracts/deployed-nft-contract';
 import { TransactionUtils } from './utils/transaction-utils';
 import { Collection } from '../modules/nfts/models/collection.model';
 import { NftsCodeException } from './exceptions';
 import { NftsErrorCode } from '../config/types';
-
-/**
- * Returns smart contract ABI based on NFT collection type
- * @param collectionType NFTCollectionType
- */
-function getNftContractAbi(collectionType: NFTCollectionType) {
-  switch (collectionType) {
-    case NFTCollectionType.GENERIC:
-      return EvmNftABI;
-    case NFTCollectionType.NESTABLE:
-      return EvmNftNestableABI;
-    default:
-      throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.GENERAL_SERVER_ERROR,
-      });
-  }
-}
-
-/**
- * Returns smart contract bytecode based on NFT collection type
- * @param collectionType NFTCollectionType
- */
-function getNftContractBytecode(collectionType: NFTCollectionType) {
-  switch (collectionType) {
-    case NFTCollectionType.GENERIC:
-      return EvmNftBytecode;
-    case NFTCollectionType.NESTABLE:
-      return EvmNftNestableBytecode;
-    default:
-      throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.GENERAL_SERVER_ERROR,
-      });
-  }
-}
+import {
+  getNftContractAbi,
+  getNftContractBytecode,
+} from './utils/collection-utils';
 
 export class NftTransaction {
   /**

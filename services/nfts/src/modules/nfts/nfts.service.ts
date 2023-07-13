@@ -117,7 +117,6 @@ export class NftsService {
     }
 
     try {
-      console.log('collection123', collection);
       await collection.validate();
     } catch (err) {
       await collection.handle(err);
@@ -864,7 +863,8 @@ export class NftsService {
     }
 
     const isChildNestable = await walletService.implementsRmrkInterface(
-      childCollection,
+      childCollection.collectionType,
+      childCollection.contractAddress,
     );
     if (!isChildNestable) {
       throw new NftsCodeException({

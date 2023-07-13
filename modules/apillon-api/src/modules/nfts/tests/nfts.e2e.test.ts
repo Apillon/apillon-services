@@ -40,11 +40,11 @@ describe('Apillon API NFTs tests', () => {
   let stage: Stage;
 
   let testUser: TestUser;
-  let testProject: Project, nestedProject: Project;
+  let testProject: Project, nestableProject: Project;
   let testService: Service;
   let testCollection: Collection,
     transferredCollection: Collection,
-    nestedCollection: Collection;
+    nestableCollection: Collection;
   let apiKey: ApiKey, nestedApiKey: ApiKey;
   let getRequest, postRequest;
 
@@ -117,24 +117,24 @@ describe('Apillon API NFTs tests', () => {
       stage.devConsoleContext,
       stage.amsContext,
     );
-    nestedProject = await createTestProject(
+    nestableProject = await createTestProject(
       nestableUser,
       stage.devConsoleContext,
     );
     await overrideDefaultQuota(
       stage,
-      nestedProject.project_uuid,
+      nestableProject.project_uuid,
       QuotaCode.MAX_NFT_COLLECTIONS,
       10,
     );
     nestedApiKey = await createTestApiKey(
       stage.amsContext,
-      nestedProject.project_uuid,
+      nestableProject.project_uuid,
     );
     await nestedApiKey.assignRole(
       new ApiKeyRoleBaseDto().populate({
         role_id: DefaultApiKeyRole.KEY_READ,
-        project_uuid: nestedProject.project_uuid,
+        project_uuid: nestableProject.project_uuid,
         service_uuid: testService.service_uuid,
         serviceType_id: AttachedServiceType.NFT,
       }),
@@ -142,7 +142,7 @@ describe('Apillon API NFTs tests', () => {
     await nestedApiKey.assignRole(
       new ApiKeyRoleBaseDto().populate({
         role_id: DefaultApiKeyRole.KEY_WRITE,
-        project_uuid: nestedProject.project_uuid,
+        project_uuid: nestableProject.project_uuid,
         service_uuid: testService.service_uuid,
         serviceType_id: AttachedServiceType.NFT,
       }),
@@ -150,16 +150,16 @@ describe('Apillon API NFTs tests', () => {
     await nestedApiKey.assignRole(
       new ApiKeyRoleBaseDto().populate({
         role_id: DefaultApiKeyRole.KEY_EXECUTE,
-        project_uuid: nestedProject.project_uuid,
+        project_uuid: nestableProject.project_uuid,
         service_uuid: testService.service_uuid,
         serviceType_id: AttachedServiceType.NFT,
       }),
     );
 
-    nestedCollection = await createTestNFTCollection(
+    nestableCollection = await createTestNFTCollection(
       nestableUser,
       stage.nftsContext,
-      nestedProject,
+      nestableProject,
       SqlModelStatus.INCOMPLETE,
       0,
       { collectionType: 2 },
@@ -612,7 +612,7 @@ describe('Apillon API NFTs tests', () => {
           name: testCollectionName,
           maxSupply: 50,
           dropPrice: 0,
-          project_uuid: nestedProject.project_uuid,
+          project_uuid: nestableProject.project_uuid,
           baseUri: TEST_COLLECTION_BASE_URI,
           baseExtension: 'json',
           drop: false,
@@ -644,7 +644,7 @@ describe('Apillon API NFTs tests', () => {
       const collection = await createTestNFTCollection(
         testUser,
         stage.nftsContext,
-        nestedProject,
+        nestableProject,
         SqlModelStatus.ACTIVE,
         CollectionStatus.CREATED,
         { collectionType: 2 },
@@ -672,7 +672,7 @@ describe('Apillon API NFTs tests', () => {
 
     test('User should be able to mint nestable collection NFT', async () => {
       const response = await postRequest(
-        `/nfts/collections/${nestedCollection.collection_uuid}/mint`,
+        `/nfts/collections/${nestableCollection.collection_uuid}/mint`,
         {
           receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
           quantity: 1,
@@ -685,22 +685,22 @@ describe('Apillon API NFTs tests', () => {
       const transaction: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
-      ).getCollectionTransactions(nestedCollection.id);
+      ).getCollectionTransactions(nestableCollection.id);
       expect(
         transaction.find((x) => x.transactionType == TransactionType.MINT_NFT),
       ).toBeTruthy();
     });
 
     test('User should be able to nest mint NFT for nestable NFT', async () => {
-      const destinationCollectionResponse = await postRequest(
+      const parentCollectionResponse = await postRequest(
         '/nfts/collections',
         {
           collectionType: 2,
           symbol: 'ANFTN',
-          name: 'Nestable Collection',
+          name: 'Parent Collection',
           maxSupply: 50,
           dropPrice: 0,
-          project_uuid: nestedProject.project_uuid,
+          project_uuid: nestableProject.project_uuid,
           baseUri: TEST_COLLECTION_BASE_URI,
           baseExtension: 'json',
           drop: false,
@@ -714,13 +714,37 @@ describe('Apillon API NFTs tests', () => {
         },
         nestedApiKey,
       );
-      expect(destinationCollectionResponse.status).toBe(201);
-      const destinationCollection = destinationCollectionResponse.body.data;
+      expect(parentCollectionResponse.status).toBe(201);
+      const parentCollection = parentCollectionResponse.body.data;
+      const childCollectionResponse = await postRequest(
+        '/nfts/collections',
+        {
+          collectionType: 2,
+          symbol: 'ANFTN',
+          name: 'Child Collection',
+          maxSupply: 50,
+          dropPrice: 0,
+          project_uuid: nestableProject.project_uuid,
+          baseUri: TEST_COLLECTION_BASE_URI,
+          baseExtension: 'json',
+          drop: false,
+          dropStart: 0,
+          dropReserve: 5,
+          chain: EvmChain.MOONBASE,
+          isRevokable: true,
+          isSoulbound: false,
+          royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
+          royaltiesFees: 0,
+        },
+        nestedApiKey,
+      );
+      expect(childCollectionResponse.status).toBe(201);
+      const childCollection = childCollectionResponse.body.data;
 
       const response = await postRequest(
-        `/nfts/collections/${nestedCollection.collection_uuid}/nest-mint`,
+        `/nfts/collections/${childCollection.collectionUuid}/nest-mint`,
         {
-          destinationCollectionUuid: destinationCollection.collectionUuid,
+          destinationCollectionUuid: parentCollection.collectionUuid,
           destinationNftId: 1,
           quantity: 1,
         },
@@ -733,7 +757,7 @@ describe('Apillon API NFTs tests', () => {
       const transaction: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
-      ).getCollectionTransactions(nestedCollection.id);
+      ).getCollectionTransactions(nestableCollection.id);
       expect(
         transaction.find(
           (x) => x.transactionType == TransactionType.NEST_MINT_NFT,
@@ -745,7 +769,7 @@ describe('Apillon API NFTs tests', () => {
       const newCollection = await createTestNFTCollection(
         testUser,
         stage.nftsContext,
-        nestedProject,
+        nestableProject,
         SqlModelStatus.DRAFT,
         CollectionStatus.CREATED,
         { collectionType: 2 },
@@ -776,7 +800,7 @@ describe('Apillon API NFTs tests', () => {
       const newCollection = await createTestNFTCollection(
         testUser,
         stage.nftsContext,
-        nestedProject,
+        nestableProject,
         SqlModelStatus.DRAFT,
         CollectionStatus.CREATED,
         { collectionStatus: CollectionStatus.TRANSFERED, collectionType: 2 },
@@ -797,7 +821,7 @@ describe('Apillon API NFTs tests', () => {
 
     test('User should be able to burn nestable collection NFT', async () => {
       const response = await postRequest(
-        `/nfts/collections/${nestedCollection.collection_uuid}/burn`,
+        `/nfts/collections/${nestableCollection.collection_uuid}/burn`,
         { tokenId: 1 },
         nestedApiKey,
       );

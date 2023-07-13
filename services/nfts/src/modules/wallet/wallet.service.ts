@@ -14,6 +14,7 @@ import { EvmNftABI } from '../../lib/contracts/deployed-nft-contract';
 import { NftTransaction } from '../../lib/nft-contract-transaction';
 import { Collection } from '../nfts/models/collection.model';
 import { CollectionStatus } from '../../config/types';
+import { getNftContractAbi } from '../../lib/utils/collection-utils';
 
 export class WalletService {
   private readonly evmChain: EvmChain;
@@ -174,15 +175,26 @@ export class WalletService {
 
   /**
    * Checks if collection implements RMRK interface
-   * @param collection Collection
+   * @param collectionType NFTCollectionType
+   * @param contractAddress address where collection is deployed
    */
-  async implementsRmrkInterface(collection: Collection): Promise<boolean> {
+  async implementsRmrkInterface(
+    collectionType: NFTCollectionType,
+    contractAddress: string,
+  ): Promise<boolean> {
     await this.initializeProvider();
+
+    const abi = getNftContractAbi(collectionType);
     const nftContract: Contract = new Contract(
-      collection.contractAddress,
-      EvmNftABI,
+      contractAddress,
+      abi,
       this.provider,
     );
-    return await nftContract.supportsInterface('0x42b0e56f');
+    try {
+      return await nftContract.supportsInterface('0x42b0e56f');
+    } catch (e: any) {
+      console.error(e);
+      return false;
+    }
   }
 }

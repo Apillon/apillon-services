@@ -51,7 +51,7 @@ export class MintNftDTO extends ModelBase {
 
 export class NestMintNftDTO extends ModelBase {
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [
       {
