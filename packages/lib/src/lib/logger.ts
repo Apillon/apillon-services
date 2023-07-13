@@ -27,21 +27,12 @@ export function writeLog(
   error?: Error,
 ): void {
   const levelFilter = {
-    [LogLevel.DB_ONLY]: () => {
-      return [LogType.DB, LogType.WARN, LogType.ERROR].includes(type);
-    },
-    [LogLevel.NO_DB]: () => {
-      return type !== LogType.DB;
-    },
-    [LogLevel.ERROR_ONLY]: () => {
-      return type === LogType.ERROR;
-    },
-    [LogLevel.WARN]: () => {
-      return [LogType.WARN, LogType.ERROR].includes(type);
-    },
-    [LogLevel.DEBUG]: () => {
-      return true;
-    },
+    [LogLevel.DB_ONLY]: () =>
+      [LogType.DB, LogType.WARN, LogType.ERROR].includes(type),
+    [LogLevel.NO_DB]: () => type !== LogType.DB,
+    [LogLevel.ERROR_ONLY]: () => type === LogType.ERROR,
+    [LogLevel.WARN]: () => [LogType.WARN, LogType.ERROR].includes(type),
+    [LogLevel.DEBUG]: () => true,
   };
 
   try {

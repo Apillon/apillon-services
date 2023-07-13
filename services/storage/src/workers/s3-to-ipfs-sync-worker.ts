@@ -1,7 +1,6 @@
 import {
   Context,
   env,
-  Lmas,
   LogType,
   QuotaCode,
   Scs,
@@ -11,7 +10,6 @@ import {
   BaseQueueWorker,
   QueueWorkerType,
   WorkerDefinition,
-  WorkerLogStatus,
 } from '@apillon/workers-lib';
 import {
   BucketType,
@@ -39,15 +37,13 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
     return [];
   }
   public async runExecutor(data: any): Promise<any> {
-    console.info('RUN EXECUTOR (SyncToIPFSWorker). data: ', data);
+    // console.info('RUN EXECUTOR (SyncToIPFSWorker). data: ', data);
 
-    await new Lmas().writeLog({
-      context: this.context,
+    await this.writeEventLog({
       logType: LogType.INFO,
       message: 'Sync to IPFS worker started',
-      location: `${this.constructor.name}/runExecutor`,
       service: ServiceName.STORAGE,
-      data: data,
+      data,
     });
 
     const session_uuid = data?.session_uuid;
@@ -122,7 +118,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
     }
 
     if (files.length > 0) {
-      let maxBucketSize = 5368709120;
+      let maxBucketSize = 5_368_709_120;
       //get max bucket size quota and check if bucket is at max size
       const maxBucketSizeQuota = await new Scs(this.context).getQuota({
         quota_id: QuotaCode.MAX_BUCKET_SIZE,
@@ -130,7 +126,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         object_uuid: bucket.bucket_uuid,
       });
       if (maxBucketSizeQuota?.value) {
-        maxBucketSize = maxBucketSizeQuota.value * 1073741824; //quota is in GB - convert to bytes
+        maxBucketSize = maxBucketSizeQuota.value * 1_073_741_824; //quota is in GB - convert to bytes
       }
 
       let transferedFiles = [];
@@ -168,25 +164,18 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         transferedFiles,
       );
 
-      await new Lmas().writeLog({
-        context: this.context,
+      await this.writeEventLog({
         logType: LogType.INFO,
         message: 'Sync to IPFS worker completed',
-        location: `${this.constructor.name}/runExecutor`,
         service: ServiceName.STORAGE,
         data: {
-          transferedFiles: transferedFiles,
+          transferedFiles,
           data,
         },
       });
     } else {
       console.info('NO FILES FOR TRANSFER!');
     }
-
-    await this.writeLogToDb(
-      WorkerLogStatus.INFO,
-      `SyncToIPFS worker has been completed!`,
-    );
 
     return true;
   }
