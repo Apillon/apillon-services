@@ -5,12 +5,12 @@ import {
   SqlModelStatus,
   ConfirmRetweetDto,
   AppEnvironment,
-  ProductQueryFilter,
   ProductOrderDto,
   writeLog,
   LogType,
   Lmas,
   ServiceName,
+  BaseQueryFilter,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import {
@@ -34,20 +34,15 @@ export class ReferralService {
       user_uuid,
     );
 
-    let referrer: Player = null;
-
-    if (event.body.refCode) {
-      referrer = await new Player({}, context).populateByRefCode(
-        event.body.refCode,
-      );
-    }
+    const referrer: Player = event.body.refCode
+      ? await new Player({}, context).populateByRefCode(event.body.refCode)
+      : null;
 
     if (!player.exists()) {
-      const code = await player.generateCode();
       player.populate({
         user_uuid,
         userEmail,
-        refCode: code,
+        refCode: await player.generateCode(),
         referrer_id: referrer?.id,
         status: SqlModelStatus.INCOMPLETE,
       });
@@ -57,7 +52,7 @@ export class ReferralService {
       (!player.termsAccepted || player.status === SqlModelStatus.INCOMPLETE) &&
       event.body.termsAccepted
     ) {
-      player.termsAccepted = player.termsAccepted || new Date();
+      player.termsAccepted ||= new Date();
       player.status = SqlModelStatus.ACTIVE;
     }
 
@@ -106,12 +101,12 @@ export class ReferralService {
   }
 
   static async getProducts(
-    event: { query: ProductQueryFilter },
+    event: { query: BaseQueryFilter },
     context: ServiceContext,
   ): Promise<any> {
     return await new Product({}, context).getList(
       context,
-      new ProductQueryFilter(event.query),
+      new BaseQueryFilter(event.query),
     );
   }
 
@@ -196,7 +191,7 @@ export class ReferralService {
       // Check if user has confirmed retweet for any tweet
       const data = await context.mysql.paramExecute(
         `
-        SELECT JSON_VALUE(r.data, '$.tweet_id') as tweet 
+        SELECT JSON_VALUE(r.data, '$.tweet_id') as tweet
         FROM \`${DbTables.REALIZATION}\` r
         JOIN \`${DbTables.TASK}\` t
         ON t.id = r.task_id
@@ -208,13 +203,9 @@ export class ReferralService {
         { playerId: player.id },
       );
       const retweets = data.map((x) => x.tweet);
-      return tweets.map((x) => {
-        return { id: x, retweeted: retweets.includes(x) };
-      });
+      return tweets.map((id) => ({ id, retweeted: retweets.includes(id) }));
     }
-    return tweets.map((x) => {
-      return { id: x, retweeted: false };
-    });
+    return tweets.map((id) => ({ id, retweeted: false }));
   }
 
   /**

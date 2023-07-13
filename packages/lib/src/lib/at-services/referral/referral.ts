@@ -1,12 +1,12 @@
 import { env } from '../../../config/env';
 import { AppEnvironment, ReferralEventType } from '../../../config/types';
+import { BaseQueryFilter } from '../../base-models/base-query-filter.model';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { ConfirmRetweetDto } from './dtos/confirm-retweet.dto';
 import { CreateReferralDto } from './dtos/create-referral.dto';
 import { GithubOauthDto } from './dtos/github-oauth.dto';
 import { ProductOrderDto } from './dtos/product-order.dto';
-import { ProductQueryFilter } from './dtos/product-query-filter.dto';
 import { TwitterOauthDto } from './dtos/twitter-oauth.dto';
 
 export class ReferralMicroservice extends BaseService {
@@ -43,7 +43,7 @@ export class ReferralMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async getProducts(params: ProductQueryFilter) {
+  public async getProducts(params: BaseQueryFilter) {
     const data = {
       eventName: ReferralEventType.GET_PRODUCTS,
       query: params.serialize(),
