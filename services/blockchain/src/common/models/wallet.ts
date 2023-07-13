@@ -363,8 +363,8 @@ export class Wallet extends AdvancedSQLModel {
   }
 
   public async getWallets(
-    chain: Chain,
-    chainType: ChainType,
+    chain?: Chain,
+    chainType?: ChainType,
     address?: string,
     conn?: PoolConnection,
   ) {
@@ -374,40 +374,12 @@ export class Wallet extends AdvancedSQLModel {
       FROM \`${DbTables.WALLET}\`
       WHERE
       status = ${SqlModelStatus.ACTIVE}
-      AND chainType = @chainType
-      AND chain = @chain
+      AND (@chainType IS NULL OR chainType = @chainType)
+      AND (@chain IS NULL OR chain = @chain)
       AND (@address IS NULL OR address like @address);
       `,
       { chainType, chain, address: address || null },
       conn,
-    );
-  }
-
-  public async getAllWallets(
-    chain: Chain = null,
-    chainType: ChainType = null,
-    conn?: PoolConnection,
-  ): Promise<Wallet[]> {
-    const resp = await this.getContext().mysql.paramExecute(
-      `
-      SELECT *
-      FROM \`${DbTables.WALLET}\`
-      WHERE
-      status = ${SqlModelStatus.ACTIVE}
-      AND (@chainType IS NULL OR chainType = @chainType)
-      AND (@chain IS NULL OR chain = @chain);
-      `,
-      { chainType, chain },
-      conn,
-    );
-
-    return (
-      resp?.map((x) => {
-        if (x.chainType === ChainType.EVM) {
-          x.address = x.address.toLowerCase();
-        }
-        return new Wallet(x, this.getContext());
-      }) || []
     );
   }
 
