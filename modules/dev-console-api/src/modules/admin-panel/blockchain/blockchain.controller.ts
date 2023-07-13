@@ -79,7 +79,7 @@ export class BlockchainController {
     );
   }
 
-  @Patch('transactions/:id')
+  @Patch('wallets/:id/transactions/:tid')
   @Validation({
     dto: UpdateTransactionDto,
     validateFor: ValidateFor.BODY,
@@ -88,11 +88,13 @@ export class BlockchainController {
   @UseGuards(ValidationGuard)
   async updateTransaction(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) transactionId: number,
+    @Param('id', ParseIntPipe) walletId: number,
+    @Param('tid', ParseIntPipe) transactionId: number,
     @Body() updateTransactionDto: UpdateTransactionDto,
   ) {
     return this.blockchainService.updateTransaction(
       context,
+      walletId,
       transactionId,
       updateTransactionDto,
     );

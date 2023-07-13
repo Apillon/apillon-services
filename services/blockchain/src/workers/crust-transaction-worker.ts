@@ -37,7 +37,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
   }
 
   public async runExecutor(_data: any): Promise<any> {
-    const wallets = await new Wallet({}, this.context).getByChainAndChainType(
+    const wallets = await new Wallet({}, this.context).getWallets(
       SubstrateChain.CRUST,
       ChainType.SUBSTRATE,
     );

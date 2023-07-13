@@ -7,7 +7,10 @@ import {
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { Wallet, WalletWithBalance } from '../../common/models/wallet';
-import { BlockchainCodeException } from '../../lib/exceptions';
+import {
+  BlockchainCodeException,
+  BlockchainValidationException,
+} from '../../lib/exceptions';
 import { BlockchainErrorCode } from '../../config/types';
 import { TransactionLog } from '../accounting/transaction-log.model';
 
@@ -39,6 +42,14 @@ export class WalletService {
     WalletService.checkExists(wallet);
 
     wallet.populate(data, PopulateFrom.ADMIN);
+    try {
+      await wallet.validate();
+    } catch (err) {
+      await wallet.handle(err);
+      if (!wallet.isValid()) {
+        throw new BlockchainValidationException(wallet);
+      }
+    }
     await wallet.update(SerializeFor.ADMIN);
     return wallet;
   }
@@ -60,11 +71,15 @@ export class WalletService {
 
   static async updateTransaction(
     {
+      walletId,
       transactionId,
       data,
-    }: { transactionId: number; data: UpdateTransactionDto },
+    }: { walletId: number; transactionId: number; data: UpdateTransactionDto },
     context: ServiceContext,
   ): Promise<TransactionLog> {
+    const wallet = await new Wallet({}, context).populateById(walletId);
+    WalletService.checkExists(wallet);
+
     const transaction = await new TransactionLog({}, context).populateById(
       transactionId,
     );
@@ -76,6 +91,15 @@ export class WalletService {
     }
 
     transaction.populate(data, PopulateFrom.ADMIN);
+
+    try {
+      await transaction.validate();
+    } catch (err) {
+      await transaction.handle(err);
+      if (!transaction.isValid()) {
+        throw new BlockchainValidationException(transaction);
+      }
+    }
     await transaction.update(SerializeFor.ADMIN);
     return transaction;
   }

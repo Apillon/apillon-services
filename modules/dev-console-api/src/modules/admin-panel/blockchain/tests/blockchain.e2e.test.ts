@@ -66,6 +66,7 @@ describe('Blockchain endpoint tests', () => {
         fee: '0.01',
         totalPrice: '1.01',
         status: SqlModelStatus.ACTIVE,
+        ts: new Date(),
       },
       stage.blockchainContext,
     );
@@ -94,8 +95,14 @@ describe('Blockchain endpoint tests', () => {
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data?.id).toBeTruthy();
-      expect(response.body.data?.id).toEqual(testWallet.id);
-      expect(response.body.data?.address).toEqual(testWallet.address);
+
+      const serializedWallet = new Wallet(
+        response.body.data,
+        stage.blockchainContext,
+      ).serialize(SerializeFor.ADMIN);
+      for (const key of Object.keys(serializedWallet)) {
+        expect(serializedWallet[key]).toEqual(testWallet[key]);
+      }
     });
 
     test('Non-admin user should NOT be able to get a wallet', async () => {
@@ -146,7 +153,9 @@ describe('Blockchain endpoint tests', () => {
   describe('Transactions PATCH tests', () => {
     test('Update a transaction', async () => {
       const response = await request(stage.http)
-        .patch(`/admin-panel/blockchain/transactions/${testTransaction.id}`)
+        .patch(
+          `/admin-panel/blockchain/wallets/${testWallet.id}/transactions/${testTransaction.id}`,
+        )
         .set('Authorization', `Bearer ${adminTestUser.token}`)
         .send({
           totalPrice: '1.05',
@@ -166,7 +175,9 @@ describe('Blockchain endpoint tests', () => {
 
     test('Non-admin user should NOT be able to update a transaction', async () => {
       const response = await request(stage.http)
-        .patch(`/admin-panel/blockchain/transactions/${testTransaction.id}`)
+        .patch(
+          `/admin-panel/blockchain/wallets/${testWallet.id}/transactions/${testTransaction.id}`,
+        )
         .set('Authorization', `Bearer ${testUser.token}`)
         .send({
           status: 'completed',

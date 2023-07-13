@@ -26,6 +26,8 @@ import { ethers } from 'ethers';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { TransactionLog } from '../../modules/accounting/transaction-log.model';
 
+// For enum inclusion validator
+const EvmOrSubstrateChain = { ...EvmChain, ...SubstrateChain };
 export class Wallet extends AdvancedSQLModel {
   public readonly tableName = DbTables.WALLET;
 
@@ -72,7 +74,7 @@ export class Wallet extends AdvancedSQLModel {
     ],
     validators: [
       {
-        resolver: enumInclusionValidator(EvmChain && SubstrateChain, false),
+        resolver: enumInclusionValidator(EvmOrSubstrateChain, false),
         code: BlockchainErrorCode.WALLET_INVALID_CHAIN,
       },
     ],
@@ -360,7 +362,7 @@ export class Wallet extends AdvancedSQLModel {
     );
   }
 
-  public async getByChainAndChainType(
+  public async getWallets(
     chain: Chain,
     chainType: ChainType,
     address?: string,

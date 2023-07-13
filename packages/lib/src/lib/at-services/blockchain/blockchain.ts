@@ -122,11 +122,13 @@ export class BlockchainMicroservice extends BaseService {
   }
 
   public async updateTransaction(
+    walletId: number,
     transactionId: number,
     data: UpdateTransactionDto,
   ) {
     return await this.callService({
       eventName: BlockchainEventType.UPDATE_TRANSACTION,
+      walletId,
       transactionId,
       data,
     });

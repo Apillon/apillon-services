@@ -10,17 +10,17 @@ export async function upgrade(
 
   await queryFn(`
     ALTER TABLE \`${DbTables.TRANSACTION_LOG}\`
-    MODIFY \`amount\` VARCHAR(36) NOT NULL
+    MODIFY \`amount\` VARCHAR(36) NOT NULL DEFAULT '0'
   `);
 
   await queryFn(`
     ALTER TABLE \`${DbTables.TRANSACTION_LOG}\`
-    MODIFY \`fee\` VARCHAR(36) NOT NULL
+    MODIFY \`fee\` VARCHAR(36) NOT NULL DEFAULT '0'
   `);
 
   await queryFn(`
     ALTER TABLE \`${DbTables.TRANSACTION_LOG}\`
-    MODIFY \`totalPrice\` VARCHAR(36) NOT NULL
+    MODIFY \`totalPrice\` VARCHAR(36) NOT NULL DEFAULT '0'
   `);
 }
 
@@ -34,16 +34,16 @@ export async function downgrade(
 
   await queryFn(`
     ALTER TABLE \`${DbTables.TRANSACTION_LOG}\`
-    MODIFY \`amount\` DECIMAL(40,0) NOT NULL
+    MODIFY \`amount\` DECIMAL(40,0) NOT NULL DEFAULT 0
   `);
 
   await queryFn(`
     ALTER TABLE \`${DbTables.TRANSACTION_LOG}\`
-    MODIFY \`fee\` DECIMAL(40,0) NOT NULL
+    MODIFY \`fee\` DECIMAL(40,0) NOT NULL DEFAULT 0
   `);
 
   await queryFn(`
     ALTER TABLE \`${DbTables.TRANSACTION_LOG}\`
-    MODIFY \`totalPrice\` DECIMAL(40,0) NOT NULL
+    MODIFY \`totalPrice\` DECIMAL(40,0) NOT NULL DEFAULT 0
   `);
 }
