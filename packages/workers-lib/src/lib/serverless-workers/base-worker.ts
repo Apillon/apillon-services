@@ -26,7 +26,7 @@ export abstract class BaseWorker extends ServerlessWorker {
       case LogOutput.EVENT_WARN:
       case LogOutput.SYS_WARN:
         console.warn(
-          `${this.workerName} ${options.message} ${JSON.stringify(
+          `[${this.workerName}] ${options.message} ${JSON.stringify(
             options.data,
           )}`,
           options.err,
@@ -35,7 +35,7 @@ export abstract class BaseWorker extends ServerlessWorker {
       case LogOutput.EVENT_ERROR:
       case LogOutput.SYS_ERROR:
         console.error(
-          `${this.workerName} ${options.message} ${JSON.stringify(
+          `[${this.workerName}] ${options.message} ${JSON.stringify(
             options.data,
           )}`,
           options.err,
@@ -43,7 +43,7 @@ export abstract class BaseWorker extends ServerlessWorker {
         break;
       default:
         console.log(
-          `${this.workerName} ${options.message} ${JSON.stringify(
+          `[${this.workerName}] ${options.message} ${JSON.stringify(
             options.data,
           )}`,
         );
@@ -91,7 +91,7 @@ export abstract class BaseWorker extends ServerlessWorker {
       ].includes(output)
     ) {
       await new Lmas().sendAdminAlert(
-        options.message,
+        `[${this.workerName}] ${options.message}`,
         options.service as any,
         notifyType[output],
       );
