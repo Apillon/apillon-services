@@ -757,7 +757,7 @@ describe('Apillon API NFTs tests', () => {
       const transaction: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
-      ).getCollectionTransactions(nestableCollection.id);
+      ).getCollectionTransactions(childCollection.id);
       expect(
         transaction.find(
           (x) => x.transactionType == TransactionType.NEST_MINT_NFT,
