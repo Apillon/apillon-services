@@ -4,13 +4,13 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { releaseStage, setupTest, Stage } from '../../test/setup';
-import { Wallet } from '../common/models/wallet';
-import { DbTables } from '../config/types';
-import { TransactionLogWorker } from './transaction-log-worker';
+import { releaseStage, setupTest, Stage } from '../../../test/setup';
+import { Wallet } from '../../common/models/wallet';
+import { DbTables } from '../../config/types';
+import { TransactionLogWorker } from '../transaction-log-worker';
 
 import * as fs from 'fs/promises';
-import { Endpoint } from '../common/models/endpoint';
+import { Endpoint } from '../../common/models/endpoint';
 
 describe('Transaction Log Worker unit test', () => {
   let stage: Stage;

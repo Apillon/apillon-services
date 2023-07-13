@@ -37,7 +37,7 @@ export class BlockchainMicroservice extends BaseService {
 
   public async createSubstrateTransaction(
     params: CreateSubstrateTransactionDto,
-  ) {
+  ): Promise<{ data: TransactionDto }> {
     const data = {
       eventName: BlockchainEventType.SUBSTRATE_SIGN_TRANSACTION,
       params: params.serialize(),

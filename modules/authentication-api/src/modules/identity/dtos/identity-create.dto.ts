@@ -8,17 +8,6 @@ import {
   didUriValidator,
 } from '../validators/did-create.validator';
 
-// const body = {
-//   did_create_op: {
-//    payload: {
-//     message: u8aToHex(encryptedData.box),
-//     nonce: u8aToHex(encryptedData.nonce),
-//    },
-//    senderPubKey: u8aToHex(keypair.publicKey),
-//   },
-//   claimerEmail: string,
-//   didUri: string,
-// };
 export class IdentityCreateDto extends ModelBase {
   @prop({
     // TODO: parser -> This is an object, so do we really need to parse anything?

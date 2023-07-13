@@ -129,7 +129,7 @@ export class EvmService {
       const unsignedTx = ethers.utils.parseTransaction(
         _event.params.transaction,
       );
-      // TODO: add transaction checker to detect annomalies.
+      // TODO: add transaction checker to detect anomalies.
       // Reject transaction sending value etc.
       unsignedTx.from = wallet.address;
       unsignedTx.maxPriorityFeePerGas =
@@ -309,17 +309,17 @@ export class EvmService {
         wallets[i].lastProcessedNonce,
       );
       let latestSuccess = null;
-      let transmited = 0;
+      let transmitted = 0;
 
       for (let j = 0; j < transactions.length; j++) {
         try {
           await provider.sendTransaction(transactions[j].rawTransaction);
           latestSuccess = transactions[j].nonce;
-          transmited++;
+          transmitted++;
         } catch (e) {
           await new Lmas().writeLog({
             logType: LogType.ERROR,
-            message: 'Error transmiting transaction',
+            message: 'Error transmitting transaction',
             location: 'EvmService.transmitTransactions',
             service: ServiceName.BLOCKCHAIN,
             data: {
@@ -345,7 +345,7 @@ export class EvmService {
         data: {
           wallet: wallets[i],
           numOfTransactions: transactions.length,
-          transmited: transmited,
+          transmitted: transmitted,
         },
       });
     }

@@ -5,24 +5,24 @@ import {
   SubstrateChain,
   dateToSqlString,
   Context,
-  Lmas,
   ServiceName,
   env,
+  LogType,
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
+  LogOutput,
   QueueWorkerType,
   WorkerDefinition,
-  WorkerLogStatus,
 } from '@apillon/workers-lib';
 import { Wallet } from '../common/models/wallet';
 import { DbTables, TxDirection } from '../config/types';
-import { formatTokenWithDecimals } from '../lib/utils';
+import { formatTokenWithDecimals, formatWalletAddress } from '../lib/utils';
 
 import { TransactionLog } from '../modules/accounting/transaction-log.model';
 
 import { EvmBlockchainIndexer } from '../modules/blockchain-indexers/evm/evm-indexer.service';
-import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust-indexer.service';
+import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
 
 export class TransactionLogWorker extends BaseQueueWorker {
   private batchLimit: number;
@@ -65,13 +65,20 @@ export class TransactionLogWorker extends BaseQueueWorker {
     await this.checkWalletBalance(wallet);
 
     if (transactions.length) {
-      await this.writeLogToDb(
-        WorkerLogStatus.SUCCESS,
-        `Logged ${transactions.length} transactions for ${
-          wallet.chainType === ChainType.EVM
-            ? EvmChain[wallet.chain]
-            : SubstrateChain[wallet.chain]
-        }:${wallet.address}`,
+      await this.writeEventLog(
+        {
+          logType: LogType.INFO,
+          message: `Logged ${transactions.length} transactions for ${
+            wallet.chainType === ChainType.EVM
+              ? EvmChain[wallet.chain]
+              : SubstrateChain[wallet.chain]
+          }:${wallet.address}`,
+          service: ServiceName.BLOCKCHAIN,
+          data: {
+            wallet: wallet.address,
+          },
+        },
+        LogOutput.EVENT_INFO,
       );
     }
   }
@@ -107,7 +114,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
           wallet.chain as EvmChain,
         ).getWalletTransactions(wallet.address, lastBlock, limit);
 
-        console.log(`Got ${res.transactions.length} EVM transactions!`);
+        // console.log(`Got ${res.transactions.length} EVM transactions!`);
         return res.transactions.map((x) =>
           new TransactionLog({}, this.context).createFromEvmIndexerData(
             x,
@@ -150,12 +157,9 @@ export class TransactionLogWorker extends BaseQueueWorker {
           },
 
           [SubstrateChain.KILT]: () => {
-            //
-            throw new Error('KILT is not supported yet!');
-          },
-          [SubstrateChain.KILT_SPIRITNET]: () => {
-            //
-            throw new Error('KILT SPIRITNET is not supported yet!');
+            // TODO: Add KILT support!!!!!
+            // throw new Error('KILT is not supported yet!');
+            console.log(`KILT LOG HANDLE: !THIS IS A TEST!`);
           },
           [SubstrateChain.PHALA]: () => {
             //
@@ -249,23 +253,16 @@ export class TransactionLogWorker extends BaseQueueWorker {
     );
 
     if (unlinked.length) {
-      await this.writeLogToDb(
-        WorkerLogStatus.WARNING,
-        `${unlinked.length} UNLINKED TRANSACTIONS DETECTED! ${
-          wallet.chainType === ChainType.EVM
-            ? EvmChain[wallet.chain]
-            : SubstrateChain[wallet.chain]
-        }:${wallet.address}`,
-        { wallet: wallet.address, hashes: unlinked.map((x) => x.hash) },
-      );
-      await new Lmas().sendAdminAlert(
-        `${unlinked.length} UNLINKED TRANSACTIONS DETECTED! ${
-          wallet.chainType === ChainType.EVM
-            ? EvmChain[wallet.chain]
-            : SubstrateChain[wallet.chain]
-        }:${wallet.address}`,
-        ServiceName.BLOCKCHAIN,
-        'alert',
+      await this.writeEventLog(
+        {
+          logType: LogType.WARN,
+          message: `${
+            unlinked.length
+          } UNLINKED TRANSACTIONS DETECTED! ${formatWalletAddress(wallet)}`,
+          service: ServiceName.BLOCKCHAIN,
+          data: { wallet: wallet.address, hashes: unlinked.map((x) => x.hash) },
+        },
+        LogOutput.NOTIFY_ALERT,
       );
     }
   }
@@ -274,58 +271,42 @@ export class TransactionLogWorker extends BaseQueueWorker {
     const balanceData = await wallet.checkBalance();
 
     if (!balanceData.minBalance) {
-      await this.writeLogToDb(
-        WorkerLogStatus.WARNING,
-        `MIN BALLANCE IS NOT SET! ${
-          wallet.chainType === ChainType.EVM
-            ? EvmChain[wallet.chain]
-            : SubstrateChain[wallet.chain]
-        }:${wallet.address}`,
-        balanceData,
-      );
-
-      await new Lmas().sendAdminAlert(
-        `MIN BALLANCE IS NOT SET! ${
-          wallet.chainType === ChainType.EVM
-            ? EvmChain[wallet.chain]
-            : SubstrateChain[wallet.chain]
-        }: ${wallet.address} ==> balance: ${formatTokenWithDecimals(
-          balanceData.balance,
-          wallet.chainType,
-          wallet.chain,
-        )}`,
-        ServiceName.BLOCKCHAIN,
-        'warning',
+      await this.writeEventLog(
+        {
+          logType: LogType.WARN,
+          message: `MIN BALLANCE IS NOT SET! ${formatWalletAddress(
+            wallet,
+          )}  ==> balance: ${formatTokenWithDecimals(
+            balanceData.balance,
+            wallet.chainType,
+            wallet.chain,
+          )}`,
+          service: ServiceName.BLOCKCHAIN,
+          data: { ...balanceData, wallet: wallet.address },
+        },
+        LogOutput.NOTIFY_WARN,
       );
     }
 
     if (balanceData.isBelowThreshold) {
-      await this.writeLogToDb(
-        WorkerLogStatus.WARNING,
-        `LOW WALLET BALANCE! ${
-          wallet.chainType === ChainType.EVM
-            ? EvmChain[wallet.chain]
-            : SubstrateChain[wallet.chain]
-        }: ${wallet.address}`,
-        balanceData,
-      );
-
-      await new Lmas().sendAdminAlert(
-        `LOW WALLET BALANCE! ${
-          wallet.chainType === ChainType.EVM
-            ? EvmChain[wallet.chain]
-            : SubstrateChain[wallet.chain]
-        }: ${wallet.address} ==> balance: ${formatTokenWithDecimals(
-          balanceData.balance,
-          wallet.chainType,
-          wallet.chain,
-        )} / ${formatTokenWithDecimals(
-          balanceData.minBalance,
-          wallet.chainType,
-          wallet.chain,
-        )}`,
-        ServiceName.BLOCKCHAIN,
-        'alert',
+      await this.writeEventLog(
+        {
+          logType: LogType.WARN,
+          message: `LOW WALLET BALANCE! ${formatWalletAddress(
+            wallet,
+          )} ==> balance: ${formatTokenWithDecimals(
+            balanceData.balance,
+            wallet.chainType,
+            wallet.chain,
+          )} / ${formatTokenWithDecimals(
+            balanceData.minBalance,
+            wallet.chainType,
+            wallet.chain,
+          )}`,
+          service: ServiceName.BLOCKCHAIN,
+          data: { ...balanceData, wallet: wallet.address },
+        },
+        LogOutput.NOTIFY_ALERT,
       );
     }
   }

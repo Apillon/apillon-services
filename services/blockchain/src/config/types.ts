@@ -1,4 +1,9 @@
 import { EvmChain, SubstrateChain } from '@apillon/lib';
+import {
+  DidTransaction,
+  TransferTransaction,
+  AttestationTransation,
+} from '../modules/blockchain-indexers/substrate/kilt/data-models/kilt-transactions';
 
 export type Chain = SubstrateChain | EvmChain;
 
@@ -13,6 +18,39 @@ export enum CrustTransferType {
   TRANSFER = 0,
   STORAGE_ORDER = 1,
 }
+
+// NOTE: Do not change!! These are mappings from the SQUID KILT service
+export enum KiltTransactionType {
+  BALANCE_TRANSFER = 'balance-transfer',
+  BALANCE_DEPOSIT = 'balance-deposit',
+  BALANCE_WITHDRAW = 'balance-withdraw',
+  BALANCE_RESERVE = 'balance-reserve',
+  DID_CREATE = 'did-create',
+  DID_DELETE = 'did-delete',
+  DID_UPDATE = 'did-update',
+  ATTESTATION_CREATE = 'attestation-create',
+  ATTESTATION_REMOVE = 'attestation-remove',
+  ATTESTATION_REVOKE = 'attestation-revoke',
+}
+
+export type TransfersTransactions = {
+  TRANSFER: TransferTransaction[];
+  DEPOSIT: TransferTransaction[];
+  WITHDRAWAL: TransferTransaction[];
+  RESERVED_BALANCES: TransferTransaction[];
+};
+
+export type DidTransactions = {
+  CREATE: DidTransaction[];
+  DELETE: DidTransaction[];
+  UPDATE: DidTransaction[];
+};
+
+export type AttestTransactions = {
+  CREATE: AttestationTransation[];
+  REMOVE: AttestationTransation[];
+  REVOKE: AttestationTransation[];
+};
 
 /**
  * Error codes
@@ -117,4 +155,9 @@ export enum TxAction {
   WITHDRAWAL = 'WITHDRAWAL',
   TRANSACTION = 'TRANSACTION',
   UNKNOWN = 'UNKNOWN',
+}
+
+export enum TransactionIndexerStatus {
+  FAIL = 0,
+  SUCCESS = 1,
 }

@@ -67,7 +67,7 @@ export async function generateKeypairs(mnemonic: string) {
     type: 'sr25519',
   } as KiltKeyringPair;
 
-  // Key used to sign transactions
+  // Attestation keypair
   const assertionMethod = {
     ...account.derive('//did//assertion//0'),
     type: 'sr25519',
@@ -125,8 +125,7 @@ export function createAttestationRequest(
   claimerDidUri: DidUri,
   credential?: ICredential,
 ) {
-  let authCredential = credential;
-  if (!authCredential) {
+  if (!credential) {
     const emailCType = getCtypeSchema(ApillonSupportedCTypes.EMAIL);
     const emailContents = {
       Email: email,
@@ -138,15 +137,15 @@ export function createAttestationRequest(
       claimerDidUri,
     );
 
-    authCredential = Credential.fromClaim(authClaim);
+    credential = Credential.fromClaim(authClaim);
   }
 
   return {
     attestationRequest: Attestation.fromCredentialAndDid(
-      authCredential,
+      credential,
       attesterDidUri,
     ),
-    credential: authCredential,
+    credential: credential,
   };
 }
 
@@ -235,11 +234,11 @@ export async function createCompleteFullDid(
 
 // SECTION - Sign callbacks
 // Various sign callbacks used in Kilt operations
-export async function authenticationSigner({
+export function authenticationSigner({
   authentication,
 }: {
   authentication: KiltKeyringPair;
-}): Promise<SignExtrinsicCallback> {
+}): SignExtrinsicCallback {
   if (!authentication) {
     throw new Error('no authentication key');
   }

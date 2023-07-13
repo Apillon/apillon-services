@@ -147,7 +147,7 @@ export class User extends AdvancedSQLModel {
   public userPermissions: number[];
 
   /**
-   * Auth user - info property used to pass to microservices - othervise serialization removes this object
+   * Auth user - info property used to pass to microservices - otherwise serialization removes this object
    */
   @prop({
     serializable: [SerializeFor.SERVICE],
