@@ -34,16 +34,20 @@ export class TransmitSubstrateTransactionWorker extends BaseSingleThreadWorker {
     }
 
     try {
-      await SubstrateService.transmitTransactions({ chain }, this.context);
-      await this.writeEventLog(
-        {
-          logType: LogType.INFO,
-          message: 'Substrate transaction submitted!',
-          service: ServiceName.BLOCKCHAIN,
-          data,
-        },
-        LogOutput.EVENT_INFO,
+      await SubstrateService.transmitTransactions(
+        { chain },
+        this.context,
+        this.writeEventLog,
       );
+      // await this.writeEventLog(
+      //   {
+      //     logType: LogType.INFO,
+      //     message: 'Substrate transaction submitted!',
+      //     service: ServiceName.BLOCKCHAIN,
+      //     data,
+      //   },
+      //   LogOutput.EVENT_INFO,
+      // );
     } catch (err) {
       await this.writeEventLog(
         {
