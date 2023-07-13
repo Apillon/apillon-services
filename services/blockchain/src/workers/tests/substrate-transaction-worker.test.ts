@@ -10,11 +10,11 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { releaseStage, setupTest, Stage } from '../../../../test/setup';
-import { Transaction } from '../../../common/models/transaction';
-import { Wallet } from '../../../common/models/wallet';
+import { releaseStage, setupTest, Stage } from '../../../test/setup';
+import { Transaction } from '../../common/models/transaction';
+import { Wallet } from '../../common/models/wallet';
 import { SubstrateTransactionWorker } from '../substrate-transaction-worker';
-import { WorkerName } from '../../worker-executor';
+import { WorkerName } from '../worker-executor';
 
 describe('Substrate tests', () => {
   let stage: Stage;

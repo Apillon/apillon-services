@@ -2,7 +2,6 @@ import {
   ChainType,
   Context,
   env,
-  Lmas,
   LogType,
   PoolConnection,
   ServiceName,
@@ -11,9 +10,9 @@ import {
 } from '@apillon/lib';
 import {
   BaseSingleThreadWorker,
+  LogOutput,
   sendToWorkerQueue,
   WorkerDefinition,
-  WorkerLogStatus,
 } from '@apillon/workers-lib';
 import { Transaction } from '../common/models/transaction';
 import { Wallet } from '../common/models/wallet';
@@ -24,10 +23,7 @@ import {
   CrustStorageOrders,
   CrustStorageOrder,
 } from '../modules/blockchain-indexers/substrate/crust/data-models/crust-storage-orders';
-import {
-  CrustTransfer,
-  CrustTransfers,
-} from '../modules/blockchain-indexers/substrate/crust/data-models/crust-transfers';
+import { CrustTransfers } from '../modules/blockchain-indexers/substrate/crust/data-models/crust-transfers';
 import { WorkerName } from './worker-executor';
 
 export class CrustTransactionWorker extends BaseSingleThreadWorker {
@@ -44,7 +40,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
 
     this.logPrefix = `[SUBSTRATE][CRUST]`;
 
-    console.info(`${this.logPrefix} RUN EXECUTOR (CrustTransactionWorker).`);
+    // console.info(`${this.logPrefix} RUN EXECUTOR (CrustTransactionWorker).`);
 
     for (const w of wallets) {
       const conn = await this.context.mysql.start();
@@ -60,9 +56,9 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
             ? lastParsedBlock + wallet.blockParseSize
             : blockHeight;
 
-        console.log(
-          `[SUBSTRATE][CRUST] Checking PENDING transactions (sourceWallet=${wallet.address}, lastParsedBlock=${wallet.lastParsedBlock}, toBlock=${toBlock})..`,
-        );
+        // console.log(
+        //   `[SUBSTRATE][CRUST] Checking PENDING transactions (sourceWallet=${wallet.address}, lastParsedBlock=${wallet.lastParsedBlock}, toBlock=${toBlock})..`,
+        // );
 
         const crustTransactions = await this.fetchAllCrustTransactions(
           crustIndexer,
@@ -75,7 +71,6 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
           wallet,
           crustTransactions.withdrawals,
           crustTransactions.deposits,
-          conn,
         );
 
         await this.handleCrustFileOrders(
@@ -88,8 +83,8 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         await conn.commit();
 
         if (
-          crustTransactions.fileOrders.storageOrders.length > 0 ||
-          crustTransactions.withdrawals.transfers.length > 0
+          crustTransactions.fileOrders.storageOrders.length > 0
+          // || crustTransactions.withdrawals.transfers.length > 0
         ) {
           await sendToWorkerQueue(
             env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
@@ -98,42 +93,28 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
             null,
             null,
           );
-          await this.writeLogToDb(
-            WorkerLogStatus.INFO,
-            'Found new transactions. Triggering transaction webhook worker!',
+          await this.writeEventLog(
             {
-              storageOrders: crustTransactions.fileOrders.storageOrders,
-              transfers: crustTransactions.withdrawals.transfers,
-              wallet: wallet.address,
+              logType: LogType.INFO,
+              message: `${this.logPrefix}: Processed ${crustTransactions.fileOrders.storageOrders.length} storage order transactions!`,
+              service: ServiceName.BLOCKCHAIN,
+              data: { wallet: wallet.address },
             },
+            LogOutput.EVENT_INFO,
           );
         }
-        console.log(
-          `[SUBSTRATE][CRUST] Checking PENDING transactions (sourceWallet=${wallet.address}, lastProcessedBlock=${toBlock}) FINISHED!`,
-        );
       } catch (err) {
         await conn.rollback();
 
-        await this.writeLogToDb(
-          WorkerLogStatus.ERROR,
-          'Checking transactions FAILED!',
-          { wallet: wallets.address },
-          err,
-        );
-        await new Lmas().writeLog({
-          logType: LogType.ERROR,
-          message: 'Error confirming transactions',
-          location: 'CrustTransactionWorker',
-          service: ServiceName.BLOCKCHAIN,
-          data: {
-            error: err,
-            wallet: wallets.address,
+        await this.writeEventLog(
+          {
+            logType: LogType.ERROR,
+            message: `${this.logPrefix}: Error confirming transactions!`,
+            service: ServiceName.BLOCKCHAIN,
+            data: { wallet: w },
+            err,
           },
-        });
-        await new Lmas().sendAdminAlert(
-          `${this.logPrefix}: Error confirming transactions!`,
-          ServiceName.BLOCKCHAIN,
-          'alert',
+          LogOutput.NOTIFY_ALERT,
         );
       }
     }
@@ -149,79 +130,80 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
     wallet: Wallet,
     withdrawals: CrustTransfers,
     deposits: CrustTransfers,
-    conn: PoolConnection,
   ) {
-    await this.handleCrustWithdrawals(withdrawals, wallet, conn);
+    await this.handleCrustWithdrawals(withdrawals, wallet);
     await this.handleCrustDeposits(deposits, wallet);
   }
 
   public async handleCrustWithdrawals(
     withdrawals: CrustTransfers,
     wallet: Wallet,
-    conn: PoolConnection,
+    // conn: PoolConnection,
   ) {
     if (!withdrawals.transfers.length) {
-      console.log(
-        `[SUBSTRATE][CRUST] There are no new withdrawals received from blockchain indexer (address=${wallet.address}).`,
-      );
       return;
     }
 
-    await this.writeLogToDb(
-      WorkerLogStatus.INFO,
-      `Matching ${withdrawals.transfers.length} blockchain transactions with transactions in DB.`,
+    await this.writeEventLog(
       {
-        transfers: withdrawals.transfers,
+        logType: LogType.WARN,
+        message: `${this.logPrefix}: Detected ${withdrawals.transfers.length} withdrawals from ${wallet.address}!!!`,
+        service: ServiceName.BLOCKCHAIN,
+        data: { wallet: wallet.address },
       },
+      LogOutput.NOTIFY_ALERT,
     );
 
-    const confirmedDbTxHashes: string[] = await this.updateWithdrawalsByStatus(
-      withdrawals,
-      TransactionStatus.CONFIRMED,
-      wallet,
-      conn,
-    );
-    const failedDbTxHashes: string[] = await this.updateWithdrawalsByStatus(
-      withdrawals,
-      TransactionStatus.FAILED,
-      wallet,
-      conn,
-    );
+    /**
+     * Withdrawals are not supposed to be in the transaction queue, so we only send notifications when detected.
+     */
 
-    const updatedDbTxs = confirmedDbTxHashes.concat(failedDbTxHashes);
+    // const confirmedDbTxHashes: string[] = await this.updateWithdrawalsByStatus(
+    //   withdrawals,
+    //   TransactionStatus.CONFIRMED,
+    //   wallet,
+    //   conn,
+    // );
+    // const failedDbTxHashes: string[] = await this.updateWithdrawalsByStatus(
+    //   withdrawals,
+    //   TransactionStatus.FAILED,
+    //   wallet,
+    //   conn,
+    // );
 
-    // All transactions were matched with db
-    if (withdrawals.transfers.length == updatedDbTxs.length) {
-      return;
-    }
+    // const updatedDbTxs = confirmedDbTxHashes.concat(failedDbTxHashes);
 
-    withdrawals.transfers.forEach((bcTx) => {
-      if (!updatedDbTxs.includes(bcTx.extrinsicHash)) {
-        // TODO: Send notification - critical: Withdrawal (txHash) was not initiated by us
-        // use info from value variable to get all required data
-      }
-    });
+    // // All transactions were matched with db
+    // if (withdrawals.transfers.length == updatedDbTxs.length) {
+    //   return;
+    // }
+
+    // withdrawals.transfers.forEach((bcTx) => {
+    //   if (!updatedDbTxs.includes(bcTx.extrinsicHash)) {
+    //     // TODO: Send notification - critical: Withdrawal (txHash) was not initiated by us
+    //     // use info from value variable to get all required data
+    //   }
+    // });
   }
 
   public async handleCrustDeposits(deposits: CrustTransfers, wallet: Wallet) {
     if (!deposits.transfers.length) {
-      console.log(
-        `[SUBSTRATE][CRUST] There are no new deposits to wallet (address=${wallet.address}).`,
-      );
       return;
     }
 
-    await this.writeLogToDb(
-      WorkerLogStatus.INFO,
-      `Detecting ${deposits.transfers.length} blockchain deposit(s) to ${wallet}.`,
+    await this.writeEventLog(
       {
-        wallet,
+        logType: LogType.INFO,
+        message: `${this.logPrefix}: Detected ${deposits.transfers.length} deposits to ${wallet.address}.`,
+        service: ServiceName.BLOCKCHAIN,
+        data: { wallet: wallet.address },
       },
+      LogOutput.NOTIFY_MSG,
     );
 
-    deposits.transfers.forEach((bcTx) => {
-      // TODO: Send notification of a new deposit to a wallet address and save to accounting table
-    });
+    // deposits.transfers.forEach((bcTx) => {
+    //   // TODO: Send notification of a new deposit to a wallet address and save to accounting table
+    // });
   }
 
   public async handleCrustFileOrders(
@@ -230,20 +212,8 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
     conn: PoolConnection,
   ) {
     if (!bcOrders.storageOrders.length) {
-      console.log(
-        `${this.logPrefix} There are no new file storage orders received from blockchain indexer (address=${wallet.address}).`,
-      );
       return;
     }
-
-    await this.writeLogToDb(
-      WorkerLogStatus.INFO,
-      `Matching ${bcOrders.storageOrders.length} blockchain storage orders with transactions in DB.`,
-      {
-        wallet,
-        bcOrders,
-      },
-    );
 
     const confirmedDbTxHashes: string[] =
       await this.updateStorageOrdersByStatus(
@@ -261,15 +231,41 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
     );
 
     const updatedDbTxs = confirmedDbTxHashes.concat(failedDbTxHashes);
+
+    await this.writeEventLog(
+      {
+        logType: LogType.INFO,
+        message: `${this.logPrefix}: Processed ${updatedDbTxs.length} transactions.`,
+        service: ServiceName.BLOCKCHAIN,
+        data: {
+          wallet: wallet.address,
+          confirmed: confirmedDbTxHashes.length,
+          failed: failedDbTxHashes.length,
+        },
+      },
+      LogOutput.EVENT_INFO,
+    );
+
     // All transactions were matched with db
     if (bcOrders.storageOrders.length === updatedDbTxs.length) {
       return;
     }
 
-    bcOrders.storageOrders.forEach((bcTx) => {
+    bcOrders.storageOrders.forEach(async (bcTx) => {
       if (!updatedDbTxs.includes(bcTx.extrinsicHash)) {
-        // TODO: Send notification - critical: Withdrawal (txHash) was not initiated by us
-        // use info from value variable to get all required data
+        // UNKNOWN TX!
+        await this.writeEventLog(
+          {
+            logType: LogType.WARN,
+            message: `${this.logPrefix} Detected unknown transactions from ${wallet.address}!`,
+            service: ServiceName.BLOCKCHAIN,
+            data: {
+              wallet: wallet.address,
+              tx: bcTx,
+            },
+          },
+          LogOutput.NOTIFY_ALERT,
+        );
       }
     });
   }
@@ -319,47 +315,47 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
     });
   }
 
-  public async updateWithdrawalsByStatus(
-    withdrawals: CrustTransfers,
-    status: TransactionStatus,
-    wallet: Wallet,
-    conn: PoolConnection,
-  ): Promise<string[]> {
-    const bcStatus: BlockchainStatus =
-      status == TransactionStatus.CONFIRMED
-        ? BlockchainStatus.CONFIRMED
-        : BlockchainStatus.FAILED;
+  // public async updateWithdrawalsByStatus(
+  //   withdrawals: CrustTransfers,
+  //   status: TransactionStatus,
+  //   wallet: Wallet,
+  //   conn: PoolConnection,
+  // ): Promise<string[]> {
+  //   const bcStatus: BlockchainStatus =
+  //     status == TransactionStatus.CONFIRMED
+  //       ? BlockchainStatus.CONFIRMED
+  //       : BlockchainStatus.FAILED;
 
-    const bcWithdrawals = new Map<string, CrustTransfer>(
-      withdrawals.transfers
-        .filter((tx) => {
-          return tx.status == bcStatus;
-        })
-        .map((w) => [w.extrinsicHash, w]),
-    );
+  //   const bcWithdrawals = new Map<string, CrustTransfer>(
+  //     withdrawals.transfers
+  //       .filter((tx) => {
+  //         return tx.status == bcStatus;
+  //       })
+  //       .map((w) => [w.extrinsicHash, w]),
+  //   );
 
-    const bcHashes: string[] = [...bcWithdrawals.keys()];
-    const updatedDbTxs: string[] = await this.updateTransactions(
-      bcHashes,
-      status,
-      wallet,
-      conn,
-    );
+  //   const bcHashes: string[] = [...bcWithdrawals.keys()];
+  //   const updatedDbTxs: string[] = await this.updateTransactions(
+  //     bcHashes,
+  //     status,
+  //     wallet,
+  //     conn,
+  //   );
 
-    const txDbHashesString = updatedDbTxs.join(',');
-    console.log(
-      `[SUBSTRATE][CRUST] ${updatedDbTxs.length} [${TransactionStatus[status]}] transactions matched (txHashes=${txDbHashesString}) in db.`,
-    );
-    await this.writeLogToDb(
-      WorkerLogStatus.SUCCESS,
-      `${updatedDbTxs.length} [${TransactionStatus[status]}] transactions matched in db.`,
-      {
-        txDbHashesString,
-      },
-    );
+  //   const txDbHashesString = updatedDbTxs.join(',');
+  //   console.log(
+  //     `[SUBSTRATE][CRUST] ${updatedDbTxs.length} [${TransactionStatus[status]}] transactions matched (txHashes=${txDbHashesString}) in db.`,
+  //   );
+  //   await this.writeLogToDb(
+  //     WorkerLogStatus.SUCCESS,
+  //     `${updatedDbTxs.length} [${TransactionStatus[status]}] transactions matched in db.`,
+  //     {
+  //       txDbHashesString,
+  //     },
+  //   );
 
-    return updatedDbTxs;
-  }
+  //   return updatedDbTxs;
+  // }
 
   public async updateStorageOrdersByStatus(
     bcOrders: CrustStorageOrders,
@@ -389,15 +385,16 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
     );
 
     const txDbHashesString = updatedDbTxs.join(',');
-    console.log(
-      `[SUBSTRATE][CRUST] ${updatedDbTxs.length} [${TransactionStatus[status]}] storage orders matched (txHashes=${txDbHashesString}) in db.`,
-    );
-    await this.writeLogToDb(
-      WorkerLogStatus.SUCCESS,
-      `${updatedDbTxs.length} [${TransactionStatus[status]}] storage orders matched in db.`,
+    await this.writeEventLog(
       {
-        txDbHashesString,
+        logType: LogType.INFO,
+        message: `${this.logPrefix}: ${updatedDbTxs.length} [${TransactionStatus[status]}] storage orders matched (txHashes=${txDbHashesString}) in db.`,
+        service: ServiceName.BLOCKCHAIN,
+        data: {
+          txDbHashesString,
+        },
       },
+      LogOutput.EVENT_INFO,
     );
     return updatedDbTxs;
   }

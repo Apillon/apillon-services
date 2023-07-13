@@ -1,15 +1,14 @@
 import {
   BaseSingleThreadWorker,
   WorkerDefinition,
-  WorkerLogStatus,
   sendToWorkerQueue,
+  LogOutput,
 } from '@apillon/workers-lib';
-import { Wallet } from '../../common/models/wallet';
-import { BaseBlockchainIndexer } from '../../modules/blockchain-indexers/substrate/base-blockchain-indexer';
+import { Wallet } from '../common/models/wallet';
+import { BaseBlockchainIndexer } from '../modules/blockchain-indexers/substrate/base-blockchain-indexer';
 import {
   ChainType,
   Context,
-  Lmas,
   LogType,
   PoolConnection,
   ServiceName,
@@ -17,10 +16,10 @@ import {
   TransactionStatus,
   env,
 } from '@apillon/lib';
-import { KiltBlockchainIndexer } from '../../modules/blockchain-indexers/substrate/kilt/kilt-indexer.service';
-import { WorkerName } from '../worker-executor';
-import { DbTables, TransactionIndexerStatus } from '../../config/types';
-import { CrustBlockchainIndexer } from '../../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
+import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/kilt-indexer.service';
+import { WorkerName } from './worker-executor';
+import { DbTables, TransactionIndexerStatus } from '../config/types';
+import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
 
 export enum SubstrateChainName {
   KILT = 'KILT',
@@ -78,24 +77,18 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         await conn.commit();
       } catch (err) {
         await conn.rollback();
-        await this.writeLogToDb(
-          WorkerLogStatus.ERROR,
-          'Error updating transactions!',
+        await this.writeEventLog(
           {
-            wallet: w.address,
+            logType: LogType.ERROR,
+            message: `${this.logPrefix}: Error confirming transactions`,
+            service: ServiceName.BLOCKCHAIN,
+            data: {
+              error: err,
+              wallet: wallet.address,
+            },
           },
-          err,
+          LogOutput.NOTIFY_ALERT,
         );
-        await new Lmas().writeLog({
-          logType: LogType.ERROR,
-          message: `Error updating transactions for ${wallet?.address} [chain:${wallet?.chain}]`,
-          location: 'SubstrateTransactionWorker',
-          service: ServiceName.BLOCKCHAIN,
-          data: {
-            wallet: w.address,
-            error: err?.message,
-          },
-        });
         continue;
       }
       if (transactions.length > 0) {
@@ -107,30 +100,8 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
           null,
           null,
         );
-
-        await this.writeLogToDb(
-          WorkerLogStatus.INFO,
-          'Found new transactions. Triggering transaction webhook worker!',
-          {
-            transactions: transactions,
-            wallet: wallet.address,
-          },
-        );
-        await new Lmas().writeLog({
-          logType: LogType.INFO,
-          message: `Reading ${transactions.length} transactions from indexer for ${wallet.address} [chain:${wallet.chain}]`,
-          location: 'SubstrateTransactionWorker',
-          service: ServiceName.BLOCKCHAIN,
-          data: {
-            wallet: wallet.address,
-          },
-        });
       }
     }
-  }
-
-  private log(message: any) {
-    console.log(`${this.logPrefix}: ${message}`);
   }
 
   // NOTE: Sets the Substrate Indexer
@@ -146,8 +117,6 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         // TODO: Proper error handling
         console.error('Invalid chain');
     }
-
-    this.log(this.indexer.toString());
   }
 
   private async fetchAllResolvedTransactions(
@@ -221,6 +190,23 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         status: status,
       },
       conn,
+    );
+
+    await this.writeEventLog(
+      {
+        logType: LogType.INFO,
+        message: `${this.logPrefix}: ${transactionHashes.length} [${
+          TransactionStatus[status]
+        }] blockchain transactions matched (txHashes=${transactionHashes.join(
+          "','",
+        )}) in db.`,
+        service: ServiceName.BLOCKCHAIN,
+        data: {
+          transactionHashes,
+          chain: this.chainId,
+        },
+      },
+      LogOutput.EVENT_INFO,
     );
   }
 }
