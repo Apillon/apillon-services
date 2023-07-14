@@ -51,10 +51,10 @@ export class NftsMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async getNftCollection(id: number) {
+  public async getNftCollection(uuid: string) {
     const data = {
-      eventName: NftsEventType.GET_NFT_COLLECTION,
-      id: id,
+      eventName: NftsEventType.GET_NFT_COLLECTION_BY_UUID,
+      uuid,
     };
     return await this.callService(data);
   }

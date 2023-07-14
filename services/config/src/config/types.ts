@@ -3,6 +3,7 @@ export enum DbTables {
   OVERRIDE = 'override',
   QUOTA_TEMPLATE = 'quotaTemplate',
   TEMPLATE_VALUE = 'templateValue',
+  TERMS = 'terms',
 }
 
 /**
@@ -14,6 +15,7 @@ export enum ConfigErrorCode {
   // 422 - Unprocessable entry
   STATUS_NOT_PRESENT = 42210000,
   INVALID_STATUS = 42210001,
+  PROJECT_OR_OBJECT_UUID_NOT_PRESENT = 42210002,
 
   // 400 - Bad request
   BAD_REQUEST = 40010001,
@@ -28,6 +30,7 @@ export enum ConfigErrorCode {
   // 404 - Not found
   API_KEY_NOT_FOUND = 40410001,
   QUOTA_NOT_FOUND = 404010002,
+  OVERRIDE_NOT_FOUND = 404010003,
 
   // 500 - Internal Error
   ERROR_WRITING_TO_DATABASE = 50010001,

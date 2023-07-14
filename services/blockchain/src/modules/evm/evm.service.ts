@@ -129,7 +129,7 @@ export class EvmService {
       const unsignedTx = ethers.utils.parseTransaction(
         _event.params.transaction,
       );
-      // TODO: add transaction checker to detect annomalies.
+      // TODO: add transaction checker to detect anomalies.
       // Reject transaction sending value etc.
       unsignedTx.from = wallet.address;
       unsignedTx.maxPriorityFeePerGas =
@@ -309,28 +309,45 @@ export class EvmService {
         wallets[i].lastProcessedNonce,
       );
       let latestSuccess = null;
-      try {
-        for (let j = 0; j < transactions.length; j++) {
+      let transmitted = 0;
+
+      for (let j = 0; j < transactions.length; j++) {
+        try {
           await provider.sendTransaction(transactions[j].rawTransaction);
           latestSuccess = transactions[j].nonce;
+          transmitted++;
+        } catch (e) {
+          await new Lmas().writeLog({
+            logType: LogType.ERROR,
+            message: 'Error transmitting transaction',
+            location: 'EvmService.transmitTransactions',
+            service: ServiceName.BLOCKCHAIN,
+            data: {
+              error: e,
+              wallet: wallets[i].address,
+            },
+          });
+          break;
         }
-      } catch (e) {
-        await new Lmas().writeLog({
-          logType: LogType.ERROR,
-          message: 'Error transmiting transaction',
-          location: 'EvmService.transmitTransactions',
-          service: ServiceName.BLOCKCHAIN,
-          data: {
-            error: e,
-            wallet: wallets[i].address,
-          },
-        });
-        break;
       }
+
       if (latestSuccess) {
         const wallet = new Wallet(wallets[i], context);
         await wallet.updateLastProcessedNonce(latestSuccess);
       }
+
+      await new Lmas().writeLog({
+        context: context,
+        logType: LogType.COST,
+        message: 'EVM transactions submitted',
+        location: `EvmService/runExecutor`,
+        service: ServiceName.BLOCKCHAIN,
+        data: {
+          wallet: wallets[i],
+          numOfTransactions: transactions.length,
+          transmitted: transmitted,
+        },
+      });
     }
     // TODO: call transaction checker
   }

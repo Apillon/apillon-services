@@ -4,6 +4,7 @@ import {
   WorkerLogStatus,
   BaseSingleThreadWorker,
   sendToWorkerQueue,
+  LogOutput,
 } from '@apillon/workers-lib';
 import { BlockchainErrorCode } from '../config/types';
 import { BlockchainCodeException } from '../lib/exceptions';
@@ -34,34 +35,30 @@ export class TransmitSubstrateTransactionWorker extends BaseSingleThreadWorker {
 
     try {
       await SubstrateService.transmitTransactions({ chain }, this.context);
-
-      await new Lmas().writeLog({
-        context: this.context,
-        logType: LogType.COST,
-        message: 'Substrate transactions submitted',
-        location: `${this.constructor.name}/runExecutor`,
-        service: ServiceName.BLOCKCHAIN,
-        data: data,
-      });
-      await this.writeLogToDb(
-        WorkerLogStatus.INFO,
-        'Substrate transactions submitted',
+      await this.writeEventLog(
         {
+          logType: LogType.INFO,
+          message: 'Substrate transaction submitted!',
+          service: ServiceName.BLOCKCHAIN,
           data,
         },
+        LogOutput.EVENT_INFO,
       );
     } catch (err) {
-      await new Lmas().writeLog({
-        context: this.context,
-        logType: LogType.ERROR,
-        message: 'Error submitting transactions',
-        location: `${this.constructor.name}/runExecutor`,
-        service: ServiceName.BLOCKCHAIN,
-        data: {
-          data,
+      await this.writeEventLog(
+        {
+          logType: LogType.ERROR,
+          message:
+            '[Transmit Substrate Transaction Worker]: Error submitting transactions',
+          service: ServiceName.BLOCKCHAIN,
+          data: {
+            data,
+            err,
+          },
           err,
         },
-      });
+        LogOutput.NOTIFY_ALERT,
+      );
       throw err;
     }
 
@@ -74,22 +71,20 @@ export class TransmitSubstrateTransactionWorker extends BaseSingleThreadWorker {
         null,
       );
     } catch (e) {
-      await new Lmas().writeLog({
-        logType: LogType.ERROR,
-        message: 'Error triggering CRUST_TRANSACTIONS worker queue',
-        location: 'TransmitSubstrateTransactionWorker.runExecutor',
-        service: ServiceName.BLOCKCHAIN,
-        data: {
-          error: e,
+      await this.writeEventLog(
+        {
+          logType: LogType.ERROR,
+          message: 'Error sending messages to SQS',
+          service: ServiceName.BLOCKCHAIN,
+          data: {
+            data,
+            error: e,
+          },
+          err: e,
         },
-      });
+        LogOutput.SYS_ERROR,
+      );
     }
-
-    await this.writeLogToDb(
-      WorkerLogStatus.INFO,
-      `TransmitSubstrateTransactionWorker worker has been completed!`,
-    );
-
     return true;
   }
 }

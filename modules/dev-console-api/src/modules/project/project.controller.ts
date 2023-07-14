@@ -106,7 +106,7 @@ export class ProjectController {
     );
   }
 
-  @Patch('/user/:projectUserId')
+  @Patch('user/:projectUserId')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -125,7 +125,7 @@ export class ProjectController {
     );
   }
 
-  @Delete('/user/:projectUserId')
+  @Delete('user/:projectUserId')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },

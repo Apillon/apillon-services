@@ -1,6 +1,6 @@
 import { ApiKeyRoleBaseDto, SerializeFor } from '@apillon/lib';
 import { AmsErrorCode } from '../../config/types';
-import { AmsCodeException } from '../../lib/exceptions';
+import { AmsBadRequestException, AmsCodeException } from '../../lib/exceptions';
 import { ApiKey } from '../api-key/models/api-key.model';
 import { AuthUser } from '../auth-user/auth-user.model';
 import { ApiKeyRole } from './models/api-key-role.model';
@@ -10,21 +10,14 @@ import { ApiKeyRole } from './models/api-key-role.model';
  */
 export class RoleService {
   /**
-   * Assign a user role to a specific project.
-   * @param {any} event - The data needed to assign a user role to a project.
+   * Assign a user role. Use event.project_uuid to assign role to a specific project
+   * @param {any} event - The data needed to assign a user role
    * @param {any} context - The service context for database access.
    * @returns {Promise<any>} - A serialized AuthUser for service response.
    */
-  static async assignUserRoleOnProject(event, context) {
-    if (!event?.user_uuid || !event.project_uuid || !event.role_id) {
-      throw await new AmsCodeException({
-        status: 400,
-        code: AmsErrorCode.BAD_REQUEST,
-      }).writeToMonitor({
-        context,
-        project_uuid: event?.project_uuid,
-        data: event,
-      });
+  static async assignUserRole(event, context) {
+    if (!event?.user_uuid || !event.role_id) {
+      throw await new AmsBadRequestException(context, event).writeToMonitor();
     }
 
     const authUser = await new AuthUser({}, context).populateByUserUuid(
@@ -48,21 +41,14 @@ export class RoleService {
   }
 
   /**
-   * Remove a user role from a specific project.
-   * @param {any} event - The data needed to remove a user role from a project.
+   * Remove a user role from a specific project. Use event.project_uuid to remove roles from a specific project only
+   * @param {any} event - The data needed to remove a user role.
    * @param {any} context - The service context for database access.
    * @returns {Promise<any>} - A serialized AuthUser for service response.
    */
-  static async removeUserRoleOnProject(event, context) {
-    if (!event?.user_uuid || !event.project_uuid || !event.role_id) {
-      throw await new AmsCodeException({
-        status: 400,
-        code: AmsErrorCode.BAD_REQUEST,
-      }).writeToMonitor({
-        context,
-        project_uuid: event?.project_uuid,
-        data: event,
-      });
+  static async removeUserRole(event, context) {
+    if (!event?.user_uuid || !event.role_id) {
+      throw await new AmsBadRequestException(context, event).writeToMonitor();
     }
 
     const authUser = await new AuthUser({}, context).populateByUserUuid(

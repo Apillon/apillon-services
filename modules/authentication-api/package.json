@@ -41,6 +41,7 @@
     "@rawmodel/validators": "^3.3.4",
     "@types/uuid": "^8.3.4",
     "aws-serverless-express": "^3.4.0",
+    "axios": "^1.4.0",
     "bn": "^1.0.5",
     "error-stack-parser": "^2.1.4",
     "helmet": "^7.0.0",
@@ -72,20 +73,28 @@
     "webpack-node-externals": "^3.0.0"
   },
   "jest": {
+    "testTimeout": 1800000,
     "moduleFileExtensions": [
+      "ts",
+      "tsx",
       "js",
-      "json",
-      "ts"
+      "json"
     ],
     "rootDir": "src",
+    "testPathIgnorePatterns": [
+      "dist/*"
+    ],
     "testRegex": ".*\\.test\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
+    "collectCoverage": false,
     "collectCoverageFrom": [
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "preset": "ts-jest",
+    "verbose": true
   }
 }
