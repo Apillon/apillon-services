@@ -1,4 +1,3 @@
-import { NovaWalletModule } from './modules/nova-wallet/w3n-assets.module';
 import { env } from '@apillon/lib';
 import { createRequestLogMiddleware } from '@apillon/modules-lib';
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
@@ -6,14 +5,13 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ContextMiddleware } from './middlewares/context.middleware';
 import { IdentityModule } from './modules/identity/identity.module';
-import { MySQLModule } from './modules/database/mysql.module';
-import { VerificationModule } from './modules/verification/verification.module';
+import { NovaWalletModule } from './modules/nova-wallet/w3n-assets.module';
 import { SporranModule } from './modules/sporran/sporran.module';
+import { VerificationModule } from './modules/verification/verification.module';
 
 @Module({
   imports: [
     NovaWalletModule,
-    MySQLModule,
     VerificationModule,
     IdentityModule,
     SporranModule,
