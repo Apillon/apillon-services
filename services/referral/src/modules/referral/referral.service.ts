@@ -34,19 +34,19 @@ export class ReferralService {
       user_uuid,
     );
 
-    const referrer: Player = event.body.refCode
-      ? await new Player({}, context).populateByRefCode(event.body.refCode)
-      : null;
-
     if (!player.exists()) {
       player.populate({
         user_uuid,
         userEmail,
         refCode: await player.generateCode(),
-        referrer_id: referrer?.id,
         status: SqlModelStatus.INCOMPLETE,
       });
     }
+    const referrer: Player = event.body.refCode
+      ? await new Player({}, context).populateByRefCode(event.body.refCode)
+      : null;
+
+    player.referrer_id = referrer?.id;
 
     if (
       (!player.termsAccepted || player.status === SqlModelStatus.INCOMPLETE) &&
