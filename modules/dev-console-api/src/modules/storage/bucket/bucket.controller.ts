@@ -9,6 +9,7 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   BucketQueryFilter,
@@ -18,9 +19,17 @@ import {
   DefaultPermission,
   DefaultUserRole,
   ValidateFor,
+  CacheKeyPrefix,
+  CacheKeyTTL,
 } from '@apillon/lib';
+import { Cache } from '@apillon/modules-lib';
 import { DevConsoleApiContext } from '../../../context';
-import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
+import {
+  Ctx,
+  Permissions,
+  Validation,
+  CacheInterceptor,
+} from '@apillon/modules-lib';
 import { ValidationGuard } from '../../../guards/validation.guard';
 import { BucketService } from './bucket.service';
 import { AuthGuard } from '../../../guards/auth.guard';
@@ -123,6 +132,12 @@ export class BucketController {
   )
   @Validation({ dto: BucketQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
+  @UseInterceptors(CacheInterceptor)
+  @Cache({
+    keyPrefix: CacheKeyPrefix.BUCKET_LIST,
+    ttl: CacheKeyTTL.EXTRA_LONG,
+    byUser: true,
+  })
   async getBucketList(
     @Ctx() context: DevConsoleApiContext,
     @Query() query: BucketQueryFilter,

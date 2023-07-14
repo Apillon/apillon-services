@@ -1,7 +1,10 @@
 import { env } from '@apillon/lib';
 import * as redis from 'redis';
 
-function flatObject(obj: any, joinChar: string) {
+function flatObject(obj: Record<any, any>, joinChar = '-') {
+  if (!obj) {
+    return '';
+  }
   return Object.keys(obj)
     .map((x) => `${x}${obj[x]}`)
     .join(joinChar);
@@ -21,9 +24,9 @@ export function generateCacheKey(
   params: any,
   userId: number,
 ) {
-  return `${prefix}#${path}@${userId ? `userId${userId}` : ''}|${
-    params ? flatObject(params, '-') : ''
-  }|${query ? flatObject(query, '-') : ''}`;
+  return `${prefix}#${path}@${userId ? `userId${userId}` : ''}|${flatObject(
+    params,
+  )}|${flatObject(query)}`;
 }
 
 /**
@@ -46,31 +49,31 @@ export async function runCachedFunction(
       await cache.connect();
       result = await cache.getKey(key);
       if (result) {
-        console.log('CACHE: Returning function results from CACHE!');
-        cache.disconnect();
+        console.info('CACHE: Returning function results from CACHE!');
+        await cache.disconnect();
         // console.timeEnd('CHECK_CACHE');
         return result;
       }
     } catch (err) {
-      console.log(err);
+      console.error(`Error returning results from cache: ${err}`);
     }
   }
   // console.time('ACTION_CACHE');
   result = await action.call(this);
   // console.timeEnd('ACTION_CACHE');
-  console.log('CACHE: Missing key! Returning result from function!');
+  console.warn('CACHE: Missing key! Returning result from function!');
 
   if (cache) {
     // console.time('SET_CACHE');
     try {
       await cache.setKey(key, result, expire);
-      cache.disconnect();
+      await cache.disconnect();
     } catch (err) {
-      console.log(err);
+      console.error(`Error setting cache: ${err}`);
     }
     // console.timeEnd('SET_CACHE');
   } else {
-    console.log('CACHE: Result is not saved to cache!');
+    console.info('CACHE: Result is not saved to cache!');
   }
 
   return result;
@@ -91,7 +94,7 @@ export async function invalidateCachePrefixes(
     promises.push(invalidateCacheMatch(prefix, { userId }, cache));
   }
   await Promise.all(promises);
-  cache.disconnect();
+  await cache.disconnect();
 }
 
 /**
@@ -125,7 +128,7 @@ export async function invalidateCacheMatch(
       matchOptions?.userId ? `userId${matchOptions?.userId}` : ''
     }*${
       // custom parameters (query + body)
-      matchOptions?.params ? flatObject(matchOptions?.params, '*') : ''
+      flatObject(matchOptions?.params, '*')
     }*`;
 
   try {
@@ -137,10 +140,10 @@ export async function invalidateCacheMatch(
     }
     await cache.removeMatch(keyPattern);
     if (isSingleCall) {
-      cache.disconnect();
+      await cache.disconnect();
     }
   } catch (err) {
-    console.log(err);
+    console.error(err);
   }
 }
 /**
@@ -154,9 +157,9 @@ export async function flushCache() {
     const cache = new AppCache();
     await cache.connect();
     await cache.flush();
-    cache.disconnect();
+    await await cache.disconnect();
   } catch (err) {
-    console.log(err);
+    console.error(err);
   }
 }
 
@@ -164,13 +167,13 @@ export class AppCache {
   private redisClient: redis.RedisClientType;
   // private cache: CachemanRedis;
 
-  public disconnect() {
+  public async disconnect() {
     try {
       if (this.redisClient) {
-        this.redisClient.quit();
+        await this.redisClient.quit();
       }
     } catch (err) {
-      console.log(err);
+      console.error(err);
     }
   }
 
@@ -202,12 +205,12 @@ export class AppCache {
   }
 
   public async removeMatch(keyPattern: string) {
-    const keys = await this.redisClient.keys(`${keyPattern}`);
+    const keys = await this.redisClient.keys(keyPattern);
     if (keys.length) {
-      console.log(`CACHE: Removing keys: ${keys.join(', ')}`);
+      console.info(`CACHE: Removing keys: ${keys.join(', ')}`);
       await this.redisClient.del(keys);
     } else {
-      console.log(`CACHE: Found no keys to be removed.`);
+      console.info(`CACHE: Found no keys to be removed.`);
     }
   }
 

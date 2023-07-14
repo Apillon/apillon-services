@@ -37,7 +37,7 @@ export class CacheInterceptor implements NestInterceptor {
       !cacheOptions?.enabled ||
       !this.allowedMethods.includes(request.method)
     ) {
-      console.log('CACHE: disabled!');
+      console.info('CACHE: disabled!');
       return next.handle();
     }
 
@@ -69,7 +69,7 @@ export class CacheInterceptor implements NestInterceptor {
   ) {
     let result: any;
     if (!env.REDIS_URL) {
-      console.log('CACHE: Cache disabled! (REDIS_URL missing)');
+      console.warn('CACHE: Cache disabled! (REDIS_URL missing)');
       return next.handle();
     }
     const cache = new AppCache();
@@ -79,13 +79,13 @@ export class CacheInterceptor implements NestInterceptor {
       await cache.connect();
       result = await cache.getKey(key);
       if (result) {
-        console.log('CACHE: Returning results from CACHE!');
-        cache.disconnect();
+        console.info('CACHE: Returning results from CACHE!');
+        await cache.disconnect();
         // console.timeEnd('CHECK_CACHE');
         return of(result);
       }
     } catch (err) {
-      console.log(err);
+      console.error(`Error setting redis cache: ${err}`);
     }
     // console.timeEnd('CHECK_CACHE');
 
@@ -95,15 +95,14 @@ export class CacheInterceptor implements NestInterceptor {
           return;
         }
 
-        console.log('CACHE: Missing key. Returning results from API!');
+        console.info('CACHE: Missing key. Returning results from API!');
         try {
           await cache.connect();
           await cache.setKey(key, response, expire);
-          cache.disconnect();
-          console.log('CACHE: Response cached!');
+          await cache.disconnect();
+          console.info('CACHE: Response cached!');
         } catch (err) {
-          console.log('CACHE: Result is not saved to cache!');
-          console.log(err);
+          console.error(`CACHE ERROR: Result is not saved to cache: ${err}`);
         }
       }),
     );
