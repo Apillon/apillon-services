@@ -27,8 +27,6 @@ export async function processEvent(event, context: Context): Promise<any> {
       IdentityMicroservice.getUserIdentityCredential,
     [AuthenticationEventType.REVOKE_IDENTITY]:
       IdentityMicroservice.revokeIdentity,
-    [AuthenticationEventType.GENERATE_DEV_RESOURCES]:
-      IdentityMicroservice.generateDevResources,
     // SPORRAN
     [AuthenticationEventType.SPORRAN_GET_SESSION_VALUES]:
       SporranMicroservice.getSessionValues,

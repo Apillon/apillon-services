@@ -1,6 +1,9 @@
 //#REGION Config
 export * from './lib/at-services/config/scs';
 export * from './lib/at-services/config/dtos/get-quota.dto';
+export * from './lib/at-services/config/dtos/get-quotas.dto';
+export * from './lib/at-services/config/dtos/create-quota-override.dto';
+export * from './lib/at-services/config/dtos/quota-override.dto';
 export * from './config/types';
 export * from './config/env';
 
@@ -45,6 +48,7 @@ export * from './lib/at-services/storage/dtos/create-s3-urls-for-upload.dto';
 //#REGION Authentication API
 export * from './lib/at-services/authentication/authentication';
 export * from './lib/at-services/authentication/dtos/identity-create.dto';
+export * from './lib/at-services/authentication/dtos/attestation.dto';
 export * from './lib/at-services/authentication/dtos/identity-did-revoke.dto';
 export * from './lib/at-services/authentication/dtos/identity-email.dto';
 export * from './lib/at-services/authentication/dtos/identity-verification-email.dto';

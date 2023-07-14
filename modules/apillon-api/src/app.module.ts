@@ -10,11 +10,13 @@ import { MySQLModule } from './modules/database/mysql.module';
 import { HostingModule } from './modules/hosting/hosting.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { SystemModule } from './modules/system/system.module';
+import { NftModule } from './modules/nfts/nft.module';
 
 @Module({
   imports: [
     MySQLModule,
     StorageModule,
+    NftModule,
     HostingModule,
     SystemModule,
     AuthModule,

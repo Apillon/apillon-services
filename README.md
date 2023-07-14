@@ -35,14 +35,14 @@ In this repository you will find source and documentation for microservices, API
 
 ## Documentation
 
-| Resource                                        | Description                                                           |
-| ----------------------------------------------- | --------------------------------------------------------------------- |
-| [Development](docs/development.md)              | A must read for all first-time contributors to this code              |
-| [Rest API](docs/rest-API-specs.md)              | Basic information about request, response ...                         |
-| [DB migrations](docs/db-migrations.md)          | How to handle changes to database                                     |
-| [Debugging and testing](docs/debug-and-test.md) | How to debug services and how execute e2e tests                       |
-| [Deployment](docs/deployment.md)                | A service deployment to AWS                                           |
-| [Infrastructure](docs/infrastructure.md)        | A list of used AWS and other services                                 |
+| Resource                                        | Description                                              |
+| ----------------------------------------------- | -------------------------------------------------------- |
+| [Development](docs/development.md)              | A must read for all first-time contributors to this code |
+| [Rest API](docs/rest-API-specs.md)              | Basic information about request, response ...            |
+| [DB migrations](docs/db-migrations.md)          | How to handle changes to database                        |
+| [Debugging and testing](docs/debug-and-test.md) | How to debug services and how execute e2e tests          |
+| [Deployment](docs/deployment.md)                | A service deployment to AWS                              |
+| [Infrastructure](docs/infrastructure.md)        | A list of used AWS and other services                    |
 
 ## License
 
@@ -50,11 +50,12 @@ Copyright (c) Apillon 2022 - All Rights Reserved
 
 ## Authors
 
-| Name         | Role                     | Email                   |
-| ------------ | ------------------------ | ----------------------- |
-| Tadej Vengust| Tech Lead                | tadej@kalmia.si         |
-| Tine Mlakar  | Architect & DevOps       | tine@kalmia.si          |
-| Vinko Šmid   | Lead Developer           | vinko.smid@kalmia.si    |
-| Urban Kovač  | Frontend Developer       | urban.kovac@kalmia.si   |
-| Luka Golinar | Developer                | luka.golinar@kalmia.si  |
-| Matic Kolar  | Developer                | matic.kolar@apillon.io  |
+| Name            | Role                 | Email                      |
+| --------------- | -------------------- | -------------------------- |
+| Tadej Vengust   | Tech Lead            | tadej@kalmia.si            |
+| Tine Mlakar     | Architect & DevOps   | tine@kalmia.si             |
+| Vinko Šmid      | Lead Developer       | vinko.smid@kalmia.si       |
+| Urban Kovač     | Frontend Developer   | urban.kovac@kalmia.si      |
+| Luka Golinar    | Full stack developer | luka.golinar@kalmia.si     |
+| Damjan Dimitrov | Backend developer    | damjan.dimitrov@apillon.io |
+| Tadej Rudel     | Backend developer    | tadej.rudel@apillon.io     |

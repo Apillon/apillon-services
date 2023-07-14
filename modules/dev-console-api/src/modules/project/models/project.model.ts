@@ -5,9 +5,11 @@ import { presenceValidator } from '@rawmodel/validators';
 
 import {
   AdvancedSQLModel,
+  BaseQueryFilter,
   CodeException,
   DefaultUserRole,
   ForbiddenErrorCodes,
+  getQueryParams,
   PopulateFrom,
   selectAndCountQuery,
   SerializeFor,
@@ -176,23 +178,21 @@ export class Project extends AdvancedSQLModel {
 
   public async populateByUUID(uuid: string): Promise<this> {
     if (!uuid) {
-      throw new Error('uuid should not be null');
+      throw new Error('project uuid should not be null');
     }
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
       WHERE project_uuid = @uuid AND status <> ${SqlModelStatus.DELETED};
       `,
       { uuid },
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   /**
@@ -211,6 +211,39 @@ export class Project extends AdvancedSQLModel {
         FROM ${DbTables.PROJECT} p
         INNER JOIN ${DbTables.PROJECT_USER} pu ON pu.project_id = p.id
         WHERE pu.user_id = ${params.user_id}
+        `,
+    };
+
+    return selectAndCountQuery(context.mysql, sqlQuery, params, 'p.id');
+  }
+
+  public async listProjects(
+    context: DevConsoleApiContext,
+    filter: BaseQueryFilter,
+  ) {
+    // Map url query with sql fields.
+    const fieldMap = { id: 'p.d' };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'p',
+      fieldMap,
+      filter.serialize(),
+    );
+
+    const sqlQuery = {
+      qSelect: `SELECT ${this.generateSelectFields('p')},
+      (SELECT COUNT(*) FROM ${
+        DbTables.PROJECT_USER
+      } WHERE project_id = p.id) AS totalUsers,
+      (SELECT COUNT(*) FROM ${
+        DbTables.SERVICE
+      } WHERE project_id = p.id) AS totalServices`,
+      qFrom: `FROM \`${DbTables.PROJECT}\` p
+        WHERE (@search IS null OR p.name LIKE CONCAT('%', @search, '%'))
+        AND status <> ${SqlModelStatus.DELETED}`,
+      qFilter: `
+          ORDER BY ${filters.orderStr}
+          LIMIT ${filters.limit} OFFSET ${filters.offset}
         `,
     };
 
@@ -239,12 +272,12 @@ export class Project extends AdvancedSQLModel {
       `
       select sum(project_users.numOfUsers) as numOfUsersOnProject
       from (
-        SELECT count(*) as numOfUsers 
+        SELECT count(*) as numOfUsers
         from \`${DbTables.PROJECT_USER}\`
         WHERE project_id = @project_id
         AND status <> ${SqlModelStatus.DELETED}
           union all
-        select count(*) as numOfUsers 
+        select count(*) as numOfUsers
         from \`${DbTables.PROJECT_USER_PENDING_INVITATION}\`
         WHERE project_id = @project_id
         AND status <> ${SqlModelStatus.DELETED}

@@ -235,10 +235,11 @@ export class Transaction extends AdvancedSQLModel {
         `,
       qFrom: `
         FROM \`${this.tableName}\` t
-        WHERE (@refTable IS null OR refTable = @refTable) 
+        WHERE (@refTable IS null OR refTable = @refTable)
         AND (@refId IS NULL or refId = @refId)
         AND status <> ${SqlModelStatus.DELETED}
         AND (@transactionStatus IS null OR t.transactionStatus = @transactionStatus)
+        AND (@search IS null OR transactionHash LIKE CONCAT('%', @search, '%'))
       `,
       qFilter: `
         ORDER BY ${filters.orderStr}

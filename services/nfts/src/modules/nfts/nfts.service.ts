@@ -21,7 +21,6 @@ import {
   StorageMicroservice,
   TransactionStatus,
   TransferCollectionDTO,
-  writeLog,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import {
@@ -116,6 +115,7 @@ export class NftsService {
     }
 
     try {
+      console.log('collection123', collection);
       await collection.validate();
     } catch (err) {
       await collection.handle(err);
@@ -275,34 +275,10 @@ export class NftsService {
   ) {
     console.log('Listing all NFT Collections');
 
-    const collections = await new Collection(
+    return await new Collection(
       { project_uuid: event.query.project_uuid },
       context,
     ).getList(context, new NFTCollectionQueryFilter(event.query));
-
-    for (const collection of collections.items) {
-      collection.minted = 0;
-      if (collection.contractAddress) {
-        const walletService: WalletService = new WalletService(
-          context,
-          collection.chain,
-        );
-        try {
-          collection.minted = await walletService.getNumberOfMintedNfts(
-            collection,
-          );
-        } catch (err) {
-          writeLog(
-            LogType.ERROR,
-            'GetNumberOfMintedNfts Error',
-            'nfts.service.ts',
-            'listNftCollections',
-            err,
-          );
-        }
-      }
-    }
-    return collections;
   }
 
   static async getCollection(event: { id: any }, context: ServiceContext) {
@@ -319,7 +295,28 @@ export class NftsService {
       });
     }
     collection.canAccess(context);
-    await collection.populateNumberOfMintedNfts();
+
+    return collection.serialize(SerializeFor.PROFILE);
+  }
+
+  static async getCollectionByUuid(
+    event: { uuid: any },
+    context: ServiceContext,
+  ) {
+    const collection: Collection = await new Collection(
+      {},
+      context,
+    ).populateByUUID(event.uuid);
+
+    if (!collection.exists()) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.NFT_COLLECTION_DOES_NOT_EXIST,
+        context: context,
+      });
+    }
+    collection.canAccess(context);
+
     return collection.serialize(SerializeFor.PROFILE);
   }
 
@@ -434,7 +431,7 @@ export class NftsService {
     try {
       const dbTxRecord: Transaction = new Transaction({}, context);
       const tx: UnsignedTransaction =
-        await await walletService.createSetNftBaseUriTransaction(
+        await walletService.createSetNftBaseUriTransaction(
           collection.contractAddress,
           params.body.uri,
         );
@@ -697,7 +694,7 @@ export class NftsService {
       });
     }
 
-    if (collection.isDrop && collection.reserve - minted < params.quantity) {
+    if (collection.drop && collection.dropReserve - minted < params.quantity) {
       throw new NftsCodeException({
         status: 500,
         code: NftsErrorCode.MINT_NFT_RESERVE_ERROR,

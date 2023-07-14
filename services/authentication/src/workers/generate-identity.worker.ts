@@ -13,7 +13,6 @@ import {
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-
 import { Identity } from '../modules/identity/models/identity.model';
 import {
   ApillonSupportedCTypes,
@@ -169,6 +168,7 @@ export class IdentityGenerateWorker extends BaseQueueWorker {
     }
 
     console.log('Starting attestation process ...');
+
     // Prepare identity instance and credential structure
     const { attestationRequest, credential } = createAttestationRequest(
       claimerEmail,
