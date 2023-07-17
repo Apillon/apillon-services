@@ -3,10 +3,10 @@ import {
   env,
   LogType,
   runWithWorkers,
+  ServiceName,
   SqlModelStatus,
   TransactionStatus,
   TransactionWebhookDataDto,
-  writeLog,
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
@@ -32,20 +32,20 @@ export class TransactionStatusWorker extends BaseQueueWorker {
   public async runExecutor(input: {
     data: TransactionWebhookDataDto[];
   }): Promise<any> {
-    console.info('RUN EXECUTOR (TransactionStatusWorker). data: ', input);
+    // console.info('RUN EXECUTOR (TransactionStatusWorker). data: ', input);
 
     await runWithWorkers(
       input.data,
       50,
       this.context,
       async (res: TransactionWebhookDataDto, ctx) => {
-        console.info('processing webhook transaction: ', res);
+        // console.info('processing webhook transaction: ', res);
         const nftTransaction: Transaction = await new Transaction(
           {},
           ctx,
         ).populateByTransactionHash(res.transactionHash);
         if (nftTransaction.exists()) {
-          console.info('nftTransaction: ', nftTransaction);
+          // console.info('nftTransaction: ', nftTransaction);
           nftTransaction.transactionStatus = res.transactionStatus;
           await nftTransaction.update();
 
@@ -79,14 +79,17 @@ export class TransactionStatusWorker extends BaseQueueWorker {
       }
       collection.status = SqlModelStatus.ACTIVE;
       await collection.update();
-      console.log(
-        `Collection (id=${collection.id}) updated 
-          (
-            contractAddress=${collection.contractAddress}, 
-            txHash=${collection.transactionHash}, 
-            collectionStatus=${collection.collectionStatus}
-          )`,
-      );
+
+      await this.writeEventLog({
+        logType: LogType.INFO,
+        message: `Collection (id=${collection.id}) updated
+        (
+          contractAddress=${collection.contractAddress},
+          txHash=${collection.transactionHash},
+          collectionStatus=${collection.collectionStatus}
+        )`,
+        service: ServiceName.NFTS,
+      });
     }
   }
 }

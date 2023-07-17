@@ -2,8 +2,10 @@ import {
   AppEnvironment,
   Context,
   env,
+  LogType,
   NftsMicroservice,
   SerializeFor,
+  ServiceName,
   SqlModelStatus,
 } from '@apillon/lib';
 import {
@@ -13,7 +15,6 @@ import {
   ServiceDefinition,
   ServiceDefinitionType,
   WorkerDefinition,
-  WorkerLogStatus,
 } from '@apillon/workers-lib';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
@@ -40,10 +41,10 @@ export class PrepareBaseUriForCollectionWorker extends BaseQueueWorker {
     imagesSession: string;
     metadataSession: string;
   }): Promise<any> {
-    console.info(
-      'RUN EXECUTOR (PrepareBaseUriForCollectionWorker). data: ',
-      data,
-    );
+    // console.info(
+    //   'RUN EXECUTOR (PrepareBaseUriForCollectionWorker). data: ',
+    //   data,
+    // );
     //Create initial CID for this collection - IPNS Publish does not work otherwise
     const ipfsRes = await IPFSService.addFileToIPFS({
       path: '',
@@ -60,14 +61,14 @@ export class PrepareBaseUriForCollectionWorker extends BaseQueueWorker {
       this.context,
     ).populateByProjectAndName(
       bucket.project_uuid,
-      data.collectionName + ' IPNS Record',
+      `${data.collectionName} IPNS Record`,
     );
 
     if (!ipnsDbRecord.exists()) {
       ipnsDbRecord = new Ipns({}, this.context).populate({
         project_uuid: bucket.project_uuid,
         bucket_id: bucket.id,
-        name: data.collectionName + ' IPNS Record',
+        name: `${data.collectionName} IPNS Record`,
         status: SqlModelStatus.ACTIVE,
       });
       await ipnsDbRecord.insert();
@@ -130,7 +131,7 @@ export class PrepareBaseUriForCollectionWorker extends BaseQueueWorker {
       //Call NFTs MS function, which will trigger deploy collection worker
       await new NftsMicroservice(this.context).executeDeployCollectionWorker({
         collection_uuid: data.collection_uuid,
-        baseUri: baseUri,
+        baseUri,
       });
     } else {
       //send messages to sqs
@@ -155,7 +156,7 @@ export class PrepareBaseUriForCollectionWorker extends BaseQueueWorker {
         [
           {
             collection_uuid: data.collection_uuid,
-            baseUri: baseUri,
+            baseUri,
           },
         ],
         null,
@@ -163,10 +164,11 @@ export class PrepareBaseUriForCollectionWorker extends BaseQueueWorker {
       );
     }
 
-    await this.writeLogToDb(
-      WorkerLogStatus.INFO,
-      `PrepareBaseUriForCollectionWorker worker has been completed!`,
-    );
+    await this.writeEventLog({
+      logType: LogType.INFO,
+      message: 'PrepareBaseUriForCollectionWorker worker has been completed!',
+      service: ServiceName.STORAGE,
+    });
 
     return true;
   }
