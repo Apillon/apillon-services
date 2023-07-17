@@ -14,7 +14,6 @@ export * from './lib/at-services/referral/dtos/github-oauth.dto';
 export * from './lib/at-services/referral/dtos/twitter-oauth.dto';
 export * from './lib/at-services/referral/dtos/confirm-retweet.dto';
 export * from './lib/at-services/referral/dtos/product-order.dto';
-export * from './lib/at-services/referral/dtos/product-query-filter.dto';
 
 //#REGION Storage
 export * from './lib/at-services/storage/dtos/trashed-files-query-filter.dto';

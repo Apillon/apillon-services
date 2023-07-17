@@ -7,11 +7,11 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Access",
+      "name": "NFTs",
       "runtimeExecutable": "nodemon",
       "runtimeArgs": [
         "./src/scripts/dev/run-server.ts",
-        "--inspect=9229",
+        "--inspect=9235",
       ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"

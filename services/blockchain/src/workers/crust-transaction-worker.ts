@@ -93,15 +93,12 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
             null,
             null,
           );
-          await this.writeEventLog(
-            {
-              logType: LogType.INFO,
-              message: `${this.logPrefix}: Processed ${crustTransactions.fileOrders.storageOrders.length} storage order transactions!`,
-              service: ServiceName.BLOCKCHAIN,
-              data: { wallet: wallet.address },
-            },
-            LogOutput.EVENT_INFO,
-          );
+          await this.writeEventLog({
+            logType: LogType.INFO,
+            message: `${this.logPrefix}: Processed ${crustTransactions.fileOrders.storageOrders.length} storage order transactions!`,
+            service: ServiceName.BLOCKCHAIN,
+            data: { wallet: wallet.address },
+          });
         }
       } catch (err) {
         await conn.rollback();
@@ -291,7 +288,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         chain = @chain
         AND chainType = @chainType
         AND address = @address
-        AND transactionHash in ('${bcHashes.join("','")}')`,
+        AND transactionHash in ('${bcHashes.join(`','`)}')`,
       {
         status,
         chain: wallet.chain,
@@ -310,9 +307,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         bcHashes,
         conn,
       )
-    ).map((tx) => {
-      return tx.transactionHash;
-    });
+    ).map((tx) => tx.transactionHash);
   }
 
   // public async updateWithdrawalsByStatus(
@@ -370,9 +365,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
 
     const storageOrders = new Map<string, CrustStorageOrder>(
       bcOrders.storageOrders
-        .filter((so) => {
-          return so.status == bcStatus;
-        })
+        .filter((so) => so.status == bcStatus)
         .map((so) => [so.extrinsicHash, so]),
     );
 

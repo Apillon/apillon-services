@@ -195,14 +195,14 @@ export class TransactionLogWorker extends BaseQueueWorker {
       amount, fee, totalPrice
     )
      VALUES ${transactions
-       .map((x) => {
-         return `(
+       .map(
+         (x) => `(
           '${dateToSqlString(x.ts)}', ${x.blockId}, ${x.status}, ${x.direction},
         '${x.action}', ${x.chain}, ${x.chainType}, '${x.wallet}',
         '${x.addressFrom}', '${x.addressTo}', '${x.hash}', '${x.token}',
         '${x.amount}', '${x.fee || '0'}', '${x.totalPrice}'
-        )`;
-       })
+        )`,
+       )
        .join(',')}
      `;
 
@@ -221,8 +221,8 @@ export class TransactionLogWorker extends BaseQueueWorker {
     // link transaction log and transaction queue
     await this.context.mysql.paramExecute(
       `
-      UPDATE 
-        transaction_log tl 
+      UPDATE
+        transaction_log tl
         LEFT JOIN transaction_queue tq
         ON tq.transactionHash = tl.hash
       SET
@@ -239,7 +239,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
     // find unlinked transactions
     const unlinked = await this.context.mysql.paramExecute(
       `
-      SELECT * FROM transaction_log 
+      SELECT * FROM transaction_log
       WHERE transactionQueue_id IS NULL
       AND direction = ${TxDirection.COST}
       AND hash IN (${transactions.map((x) => `'${x.hash}'`).join(',')})

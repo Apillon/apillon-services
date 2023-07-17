@@ -81,16 +81,15 @@ export class Twitter {
         throw new ReferralValidationException(pair);
       }
       return pair.insert();
-    } else {
-      pair.oauth_secret = resp.oauth_token_secret;
-      try {
-        await pair.validate();
-      } catch (err) {
-        await pair.handle(err);
-        throw new ReferralValidationException(pair);
-      }
-      return pair.update();
     }
+    pair.oauth_secret = resp.oauth_token_secret;
+    try {
+      await pair.validate();
+    } catch (err) {
+      await pair.handle(err);
+      throw new ReferralValidationException(pair);
+    }
+    return pair.update();
   }
 
   public async getLatestTweets() {
@@ -130,14 +129,12 @@ export class Twitter {
   }
 
   public getTwitterApi(bearer = false): TwitterApi {
-    if (bearer) {
-      this.twitterApi = new TwitterApi(env.TWITTER_BEARER_TOKEN);
-    } else {
-      this.twitterApi = new TwitterApi({
-        appKey: env.TWITTER_CONSUMER_TOKEN,
-        appSecret: env.TWITTER_CONSUMER_SECRET,
-      });
-    }
+    this.twitterApi = bearer
+      ? new TwitterApi(env.TWITTER_BEARER_TOKEN)
+      : new TwitterApi({
+          appKey: env.TWITTER_CONSUMER_TOKEN,
+          appSecret: env.TWITTER_CONSUMER_SECRET,
+        });
     return this.twitterApi;
   }
 
@@ -231,9 +228,9 @@ export class Twitter {
 
   private throwErrorCode(code: ReferralErrorCode, context: Context) {
     throw new ReferralCodeException({
-      code: code,
+      code,
       status: 400,
-      context: context,
+      context,
       sourceFunction: `${this.constructor.name}/oauth`,
     });
   }
