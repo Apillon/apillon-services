@@ -11,19 +11,17 @@ export { numberSizeValidator, presenceValidator };
  *  Validates if value is inside enumerator
  */
 export function enumInclusionValidator(enumerator: any, allowNull = false) {
-  return function (value: any) {
-    if (allowNull && (value === null || value === undefined)) {
+  return (value: any) => {
+    if (allowNull && value == null) {
       return true;
     }
 
-    let valid = false;
     for (const key in enumerator) {
       if (enumerator.hasOwnProperty(key) && value === enumerator[key]) {
-        valid = true;
-        break;
+        return true;
       }
     }
-    return valid;
+    return false;
   };
 }
 

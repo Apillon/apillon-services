@@ -303,7 +303,7 @@ export class TransactionLog extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -327,6 +327,21 @@ export class TransactionLog extends AdvancedSQLModel {
     ],
   })
   public value: number;
+
+  /**
+   * Text describing the transaction, can be edited by admin
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+    ],
+  })
+  public description: string;
 
   public constructor(data?: any, context?: Context) {
     super(data, context);
@@ -401,13 +416,12 @@ export class TransactionLog extends AdvancedSQLModel {
   }
 
   public calculateTotalPrice() {
-    if (this.direction == TxDirection.INCOME) {
-      this.totalPrice = this.amount;
-    } else {
-      this.totalPrice = ethers.BigNumber.from(this.amount)
-        .add(ethers.BigNumber.from(this.fee))
-        .toString();
-    }
+    this.totalPrice =
+      this.direction == TxDirection.INCOME
+        ? this.amount
+        : ethers.BigNumber.from(this.amount)
+            .add(ethers.BigNumber.from(this.fee))
+            .toString();
     return this;
   }
 
