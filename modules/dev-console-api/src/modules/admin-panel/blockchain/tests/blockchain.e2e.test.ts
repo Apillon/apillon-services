@@ -11,6 +11,7 @@ import * as request from 'supertest';
 import {
   createTestProject,
   createTestUser,
+  startGanacheRPCServer,
   TestUser,
 } from '@apillon/tests-lib';
 import { releaseStage, Stage } from '@apillon/tests-lib';
@@ -32,6 +33,7 @@ describe('Blockchain endpoint tests', () => {
       env.ADMIN_CONSOLE_API_PORT_TEST,
       env.ADMIN_CONSOLE_API_HOST_TEST,
     );
+    await startGanacheRPCServer(stage);
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     adminTestUser = await createTestUser(
       stage.devConsoleContext,
@@ -42,7 +44,7 @@ describe('Blockchain endpoint tests', () => {
       {
         address: '0x25Cd0fE6953F5799AEbDa9ee445287CFb101972E',
         chainType: ChainType.EVM,
-        chain: EvmChain.MOONBEAM,
+        chain: EvmChain.MOONBASE,
         seed: '2cf25b7536db83303e3fb5b8ca50a08758ffbfd1a4e1c7a8bc7a4d6e9f9e7519',
         nonce: 0,
         nextNoce: 1,
@@ -84,9 +86,11 @@ describe('Blockchain endpoint tests', () => {
         .get('/admin-panel/blockchain/wallets/')
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.data.items.length).toBe(1);
+      expect(response.body.data.items.length).toBe(3); // 2 wallets from ganache test server
       expect(response.body.data.items[0]?.id).toBeTruthy();
-      expect(response.body.data.items[0]?.address).toEqual(testWallet.address);
+      expect(response.body.data.items.at(-1)?.address?.toLowerCase()).toEqual(
+        testWallet.address?.toLowerCase(),
+      );
     });
 
     test('Get a single wallet', async () => {

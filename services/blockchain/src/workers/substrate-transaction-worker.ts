@@ -46,7 +46,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
 
   public async runExecutor(_data?: any): Promise<any> {
     // Wallets will be populated once the runExecutor method is called
-    this.wallets = await new Wallet({}, this.context).getList(
+    this.wallets = await new Wallet({}, this.context).getWallets(
       SubstrateChain[this.chainName],
       ChainType.SUBSTRATE,
     );
