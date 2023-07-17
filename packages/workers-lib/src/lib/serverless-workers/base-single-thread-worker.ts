@@ -57,19 +57,17 @@ export abstract class BaseSingleThreadWorker extends BaseWorker {
 
     // validate job ID and check for active jobs
     try {
-      if (this.workerDefinition.id) {
-        this.job = await new Job({}, this.context).populateById(
-          this.workerDefinition.id,
-          conn,
-          true, // lock row in DB
-        );
-      } else {
-        this.job = await new Job({}, this.context).populateByName(
-          this.workerDefinition.workerName,
-          conn,
-          true, // lock row in DB
-        );
-      }
+      this.job = this.workerDefinition.id
+        ? await new Job({}, this.context).populateById(
+            this.workerDefinition.id,
+            conn,
+            true, // lock row in DB
+          )
+        : await new Job({}, this.context).populateByName(
+            this.workerDefinition.workerName,
+            conn,
+            true, // lock row in DB
+          );
 
       // ensure job is in a correct state
       this.shouldRunJob = await this.checkLockedStatus();
