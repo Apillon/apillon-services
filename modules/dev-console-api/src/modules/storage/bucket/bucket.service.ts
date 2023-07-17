@@ -7,6 +7,8 @@ import {
   CreateBucketWebhookDto,
   AttachedServiceType,
   BucketQuotaReachedQueryFilter,
+  CacheKeyPrefix,
+  invalidateCacheMatch,
 } from '@apillon/lib';
 import { ResourceNotFoundErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
@@ -71,7 +73,11 @@ export class BucketService {
     }
 
     //Call Storage microservice, to create bucket
-    return (await new StorageMicroservice(context).createBucket(body)).data;
+    const { data } = await new StorageMicroservice(context).createBucket(body);
+    await invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
+      projectUuid: project.project_uuid,
+    });
+    return data;
   }
 
   async updateBucket(context: DevConsoleApiContext, id: number, body: any) {

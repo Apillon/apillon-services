@@ -1,6 +1,7 @@
 import {
   BucketQueryFilter,
   BucketQuotaReachedQueryFilter,
+  CacheKeyPrefix,
   CreateBucketDto,
   CreateBucketWebhookDto,
   Lmas,
@@ -11,6 +12,7 @@ import {
   SerializeFor,
   ServiceName,
   SqlModelStatus,
+  invalidateCacheMatch,
 } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
 import { BucketType, StorageErrorCode } from '../../config/types';
@@ -171,6 +173,10 @@ export class BucketService {
     b.canModify(context);
 
     await b.markForDeletion();
+    await invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
+      projectUuid: b.project_uuid,
+    });
+
     return b.serialize(SerializeFor.PROFILE);
   }
 

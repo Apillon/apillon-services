@@ -36,6 +36,7 @@ import { AuthGuard } from '../../../guards/auth.guard';
 
 @Controller('buckets')
 @Permissions({ permission: DefaultPermission.STORAGE })
+@UseInterceptors(CacheInterceptor)
 export class BucketController {
   constructor(private bucketService: BucketService) {}
 
@@ -132,11 +133,11 @@ export class BucketController {
   )
   @Validation({ dto: BucketQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
-  @UseInterceptors(CacheInterceptor)
   @Cache({
     keyPrefix: CacheKeyPrefix.BUCKET_LIST,
     ttl: CacheKeyTTL.EXTRA_LONG,
-    byUser: true,
+    byUser: false,
+    byProject: true,
   })
   async getBucketList(
     @Ctx() context: DevConsoleApiContext,
