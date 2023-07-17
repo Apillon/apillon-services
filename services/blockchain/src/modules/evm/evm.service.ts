@@ -1,13 +1,13 @@
 import {
   AppEnvironment,
   ChainType,
+  env,
   EvmChain,
   Lmas,
   LogType,
   SerializeFor,
   ServiceName,
   TransactionStatus,
-  env,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { sendToWorkerQueue } from '@apillon/workers-lib';
@@ -327,6 +327,9 @@ export class EvmService {
               wallet: wallets[i].address,
             },
           });
+          if (env.APP_ENV === AppEnvironment.TEST) {
+            throw e;
+          }
           break;
         }
       }
