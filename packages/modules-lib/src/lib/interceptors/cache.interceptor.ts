@@ -6,10 +6,8 @@ import {
   StreamableFile,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-
 import { Observable, of, tap } from 'rxjs';
-import { Context, env } from '@apillon/lib';
-import { AppCache, generateCacheKey } from '../common/cache';
+import { AppCache, Context, env, generateCacheKey } from '@apillon/lib';
 import { CACHE_OPTIONS, ICacheOptions } from '../decorators/cache.decorator';
 
 @Injectable()
@@ -25,13 +23,17 @@ export class CacheInterceptor implements NestInterceptor {
       CACHE_OPTIONS,
       [execCtx.getHandler(), execCtx.getClass()],
     );
-
     const cacheOptions: ICacheOptions = (
       cacheDecoratorValue.length ? cacheDecoratorValue[0] : cacheDecoratorValue
     ) as ICacheOptions;
     const context: Context = execCtx.getArgByIndex(0).context;
     const request = execCtx.switchToHttp().getRequest();
     const userId = context?.user?.id;
+    // If caching by project_uuid, check for that property in any of the request's receiving parameters
+    const projectUuid =
+      request.query['project_uuid'] ||
+      request.body['project_uuid'] ||
+      request.params['project_uuid'];
 
     if (
       !cacheOptions?.enabled ||
@@ -47,13 +49,10 @@ export class CacheInterceptor implements NestInterceptor {
       request.query,
       request.params,
       cacheOptions.byUser ? userId : null,
+      cacheOptions.byProject ? projectUuid : null,
     );
 
-    return this.runCachedInterception(
-      key,
-      next,
-      cacheOptions.ttl || env.DEFAULT_CACHE_TTL,
-    );
+    return this.runCachedInterception(key, next, cacheOptions.ttl);
   }
 
   /**

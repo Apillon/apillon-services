@@ -1,12 +1,12 @@
-import { env } from '@apillon/lib';
+import { env } from '../config/env';
 import * as redis from 'redis';
 
-function flatObject(obj: Record<any, any>, joinChar = '-') {
+function flatObject(obj: Record<any, any>, joinChar = '/') {
   if (!obj) {
     return '';
   }
   return Object.keys(obj)
-    .map((x) => `${x}${obj[x]}`)
+    .map((x) => `${x}:${obj[x]}`)
     .join(joinChar);
 }
 
@@ -16,6 +16,7 @@ function flatObject(obj: Record<any, any>, joinChar = '-') {
  * @param query query params from request URL
  * @param params path params from request URL
  * @param userId user Id for per-user caching, pass null for global caching
+ * @param projectUuid project uuid for per-project caching
  */
 export function generateCacheKey(
   prefix: string,
@@ -23,10 +24,11 @@ export function generateCacheKey(
   query: any,
   params: any,
   userId: number,
+  projectUuid: string,
 ) {
-  return `${prefix}#${path}@${userId ? `userId${userId}` : ''}|${flatObject(
-    params,
-  )}|${flatObject(query)}`;
+  return `${prefix}#${path}@${userId ? `userId:${userId}` : ''}|${
+    projectUuid ? `projectUuid:${projectUuid}` : ''
+  }|${flatObject(params)}|${flatObject(query)}`;
 }
 
 /**
@@ -38,7 +40,7 @@ export function generateCacheKey(
 export async function runCachedFunction(
   key: string,
   action: () => any,
-  expire = env.DEFAULT_CACHE_TTL || 300,
+  expire = env.DEFAULT_CACHE_TTL,
 ) {
   let cache: AppCache = null;
   let result: any;
@@ -86,12 +88,13 @@ export async function runCachedFunction(
 export async function invalidateCachePrefixes(
   prefixes: string[],
   userId?: number,
+  projectUuid?: string,
 ) {
   const promises = [];
   const cache = new AppCache();
   await cache.connect();
   for (const prefix of prefixes) {
-    promises.push(invalidateCacheMatch(prefix, { userId }, cache));
+    promises.push(invalidateCacheMatch(prefix, { userId, projectUuid }, cache));
   }
   await Promise.all(promises);
   await cache.disconnect();
@@ -109,6 +112,7 @@ export async function invalidateCacheMatch(
     path?: string;
     params?: any;
     userId?: number;
+    projectUuid?: string;
   },
   cache: AppCache = null,
 ) {
@@ -125,7 +129,12 @@ export async function invalidateCacheMatch(
       matchOptions?.path ? `${matchOptions?.path}:` : '*@'
     }${
       // user id
-      matchOptions?.userId ? `userId${matchOptions?.userId}` : ''
+      matchOptions?.userId ? `userId:${matchOptions?.userId}` : ''
+    }*${
+      // project uuid
+      matchOptions?.projectUuid
+        ? `projectUuid:${matchOptions?.projectUuid}`
+        : ''
     }*${
       // custom parameters (query + body)
       flatObject(matchOptions?.params, '*')
