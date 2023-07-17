@@ -1,6 +1,5 @@
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import {
-  ProductQueryFilter,
   ConfirmRetweetDto,
   CreateReferralDto,
   DefaultUserRole,
@@ -8,6 +7,7 @@ import {
   ProductOrderDto,
   TwitterOauthDto,
   ValidateFor,
+  BaseQueryFilter,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
@@ -41,12 +41,12 @@ export class ReferralController {
   @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard, ValidationGuard)
   @Validation({
-    dto: ProductQueryFilter,
+    dto: BaseQueryFilter,
     validateFor: ValidateFor.QUERY,
   })
   async getProducts(
     @Ctx() context: DevConsoleApiContext,
-    @Query() query: ProductQueryFilter,
+    @Query() query: BaseQueryFilter,
   ) {
     return await this.referralService.getProducts(context, query);
   }

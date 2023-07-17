@@ -109,7 +109,7 @@ export class OauthService {
       throw new ReferralCodeException({
         code: ReferralErrorCode.OAUTH_PROFILE_CREDENTIALS_INVALID,
         status: HttpStatus.BAD_REQUEST,
-        context: context,
+        context,
         sourceFunction: `${this.constructor.name}/oauth`,
       });
     }
@@ -123,7 +123,7 @@ export class OauthService {
       throw new ReferralCodeException({
         code: ReferralErrorCode.OAUTH_USER_ID_ALREADY_PRESENT,
         status: HttpStatus.BAD_REQUEST,
-        context: context,
+        context,
         sourceFunction: `${this.constructor.name}/oauth`,
       });
     }
@@ -211,81 +211,80 @@ export class OauthService {
       // get user profile
       const gitUser = await axios.get('https://api.github.com/user', {
         headers: {
-          Authorization: 'token ' + res?.data?.access_token,
+          Authorization: `token ${res?.data?.access_token}`,
         },
       });
 
-      if (gitUser?.data?.id) {
-        // check if oauth with the same account id exists
-        const existingOauth = await new Player({}, context).populateByGithubId(
-          gitUser?.data?.id,
-        );
-
-        if (existingOauth.exists()) {
-          throw new ReferralCodeException({
-            code: ReferralErrorCode.OAUTH_USER_ID_ALREADY_PRESENT,
-            status: HttpStatus.BAD_REQUEST,
-            context: context,
-            sourceFunction: `${this.constructor.name}/oauth`,
-          });
-        }
-
-        player.github_id = gitUser?.data?.id;
-        player.github_name = gitUser?.data?.login;
-        const conn = await context.mysql.start();
-        try {
-          try {
-            await player.validate();
-          } catch (err) {
-            await player.handle(err);
-            throw new ReferralValidationException(player);
-          }
-          await player.update(SerializeFor.UPDATE_DB, conn);
-          // Complete github task if present
-          if (task.exists()) {
-            try {
-              await task.confirmTask(
-                player.id,
-                { id: player.github_id },
-                false,
-                conn,
-              );
-            } catch (error) {
-              console.log(error);
-            }
-          }
-          // If player was referred, reward the referrer
-          if (player.referrer_id) {
-            const referrer = await new Player({}, context).populateById(
-              player.referrer_id,
-            );
-            if (referrer.exists()) {
-              await referrer.confirmRefer(player.id, conn);
-            }
-          }
-          await context.mysql.commit(conn);
-          await new Lmas().writeLog({
-            context,
-            logType: LogType.INFO,
-            message: 'Github connected!',
-            location: 'Referral/OauthService/linkGithub',
-            service: ServiceName.REFERRAL,
-          });
-        } catch (error) {
-          await context.mysql.rollback(conn);
-          throw new ReferralCodeException({
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            code: ReferralErrorCode.ERROR_LINKING_GITHUB,
-          });
-        }
-      } else {
+      if (!gitUser?.data?.id) {
         throw new ReferralCodeException({
           status: HttpStatus.BAD_REQUEST,
           code: ReferralErrorCode.OAUTH_APP_DENIED_OR_SESSION_EXPIRED, // getting github user
         });
       }
+      // check if oauth with the same account id exists
+      const existingOauth = await new Player({}, context).populateByGithubId(
+        gitUser?.data?.id,
+      );
+
+      if (existingOauth.exists()) {
+        throw new ReferralCodeException({
+          code: ReferralErrorCode.OAUTH_USER_ID_ALREADY_PRESENT,
+          status: HttpStatus.BAD_REQUEST,
+          context,
+          sourceFunction: `${this.constructor.name}/oauth`,
+        });
+      }
+
+      player.github_id = gitUser?.data?.id;
+      player.github_name = gitUser?.data?.login;
+      const conn = await context.mysql.start();
+      try {
+        try {
+          await player.validate();
+        } catch (err) {
+          await player.handle(err);
+          throw new ReferralValidationException(player);
+        }
+        await player.update(SerializeFor.UPDATE_DB, conn);
+        // Complete github task if present
+        if (task.exists()) {
+          try {
+            await task.confirmTask(
+              player.id,
+              { id: player.github_id },
+              false,
+              conn,
+            );
+          } catch (error) {
+            console.log(error);
+          }
+        }
+        // If player was referred, reward the referrer
+        if (player.referrer_id) {
+          const referrer = await new Player({}, context).populateById(
+            player.referrer_id,
+          );
+          if (referrer.exists()) {
+            await referrer.confirmRefer(player.id, conn);
+          }
+        }
+        await context.mysql.commit(conn);
+        await new Lmas().writeLog({
+          context,
+          logType: LogType.INFO,
+          message: 'Github connected!',
+          location: 'Referral/OauthService/linkGithub',
+          service: ServiceName.REFERRAL,
+        });
+      } catch (error) {
+        await context.mysql.rollback(conn);
+        throw new ReferralCodeException({
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          code: ReferralErrorCode.ERROR_LINKING_GITHUB,
+        });
+      }
     } else {
-      throw await new ReferralCodeException({
+      throw new ReferralCodeException({
         status: HttpStatus.BAD_REQUEST,
         code: ReferralErrorCode.OAUTH_APP_DENIED_OR_SESSION_EXPIRED, // getting access token
       });
