@@ -1,9 +1,7 @@
 import {
-  AppEnvironment,
   BlockchainMicroservice,
   ChainType,
   Context,
-  env,
   EvmChain,
   MintNftDTO,
   NFTCollectionType,
@@ -157,8 +155,7 @@ export class WalletService {
     if (
       (collection.collectionStatus != CollectionStatus.DEPLOYED &&
         collection.collectionStatus != CollectionStatus.TRANSFERED) ||
-      !collection.contractAddress ||
-      env.APP_ENV == AppEnvironment.TEST
+      !collection.contractAddress
     ) {
       return 0;
     }
@@ -182,10 +179,6 @@ export class WalletService {
     collectionType: NFTCollectionType,
     contractAddress: string,
   ): Promise<boolean> {
-    // calling supportsInterface fails during testing so this is a workaround
-    if (env.APP_ENV === AppEnvironment.TEST) {
-      return true;
-    }
     await this.initializeProvider();
 
     const abi = getNftContractAbi(collectionType);

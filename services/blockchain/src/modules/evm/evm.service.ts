@@ -119,6 +119,7 @@ export class EvmService {
       }
 
       if (!wallet.exists()) {
+        // noinspection ExceptionCaughtLocallyJS
         throw new BlockchainCodeException({
           code: BlockchainErrorCode.WALLET_DOES_NOT_EXISTS,
           status: 500,
@@ -334,7 +335,7 @@ export class EvmService {
         }
       }
 
-      if (latestSuccess) {
+      if (latestSuccess >= 0) {
         const wallet = new Wallet(wallets[i], context);
         await wallet.updateLastProcessedNonce(latestSuccess);
       }
