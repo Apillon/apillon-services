@@ -22,6 +22,7 @@ import { DevConsoleApiContext } from '../../../context';
 import { BlockchainService } from './blockchain.service';
 import { BaseQueryFilterValidator } from '../../../decorators/base-query-filter-validator';
 import { ValidationGuard } from '../../../guards/validation.guard';
+import { GetWalletTransactionsDto } from '@apillon/lib';
 
 @Controller('admin-panel/blockchain')
 @Permissions({ role: DefaultUserRole.ADMIN })
@@ -66,10 +67,11 @@ export class BlockchainController {
   }
 
   @Get('wallets/:id/transactions')
-  @BaseQueryFilterValidator()
+  @Validation({ dto: GetWalletTransactionsDto, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard)
   async getWalletTransactions(
     @Ctx() context: DevConsoleApiContext,
-    @Query() query: BaseQueryFilter,
+    @Query() query: GetWalletTransactionsDto,
     @Param('id', ParseIntPipe) walletId: number,
   ) {
     return this.blockchainService.getWalletTransactions(

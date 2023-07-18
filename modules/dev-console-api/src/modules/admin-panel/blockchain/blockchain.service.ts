@@ -5,6 +5,7 @@ import {
   BlockchainMicroservice,
   UpdateWalletDto,
   UpdateTransactionDto,
+  GetWalletTransactionsDto,
 } from '@apillon/lib';
 
 @Injectable()
@@ -62,7 +63,7 @@ export class BlockchainService {
    */
   async getWalletTransactions(
     context: DevConsoleApiContext,
-    query: BaseQueryFilter,
+    query: GetWalletTransactionsDto,
     walletId: number,
   ): Promise<any[]> {
     return (

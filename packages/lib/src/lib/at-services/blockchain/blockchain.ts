@@ -15,6 +15,7 @@ import {
   CreateEvmTransactionDto,
   CreateSubstrateTransactionDto,
   TransactionDto,
+  GetWalletTransactionsDto,
 } from '../../..';
 
 export class BlockchainMicroservice extends BaseService {
@@ -113,7 +114,10 @@ export class BlockchainMicroservice extends BaseService {
     });
   }
 
-  public async getWalletTransactions(query: BaseQueryFilter, walletId: number) {
+  public async getWalletTransactions(
+    query: GetWalletTransactionsDto,
+    walletId: number,
+  ) {
     return await this.callService({
       eventName: BlockchainEventType.GET_WALLET_TRANSACTIONS,
       walletId,

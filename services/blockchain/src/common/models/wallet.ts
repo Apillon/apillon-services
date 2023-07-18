@@ -7,6 +7,7 @@ import {
   enumInclusionValidator,
   EvmChain,
   getQueryParams,
+  GetWalletTransactionsDto,
   PoolConnection,
   PopulateFrom,
   presenceValidator,
@@ -394,7 +395,9 @@ export class Wallet extends AdvancedSQLModel {
     );
     const sqlQuery = {
       qSelect: `SELECT ${this.generateSelectFields()}`,
-      qFrom: `FROM ${DbTables.WALLET} w`,
+      qFrom: `FROM ${DbTables.WALLET} w
+        WHERE (@search IS null OR w.address LIKE CONCAT('%', @search, '%'))
+        AND w.status <> ${SqlModelStatus.DELETED}`,
       qFilter: `
           ORDER BY ${filters.orderStr}
           LIMIT ${filters.limit} OFFSET ${filters.offset};
@@ -447,7 +450,10 @@ export class Wallet extends AdvancedSQLModel {
     };
   }
 
-  public async getTransactions(walletAddress: string, filter: BaseQueryFilter) {
+  public async getTransactions(
+    walletAddress: string,
+    filter: GetWalletTransactionsDto,
+  ) {
     const fieldMap = { id: 't.id' };
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
@@ -464,6 +470,7 @@ export class Wallet extends AdvancedSQLModel {
       qFrom: `FROM \`${DbTables.TRANSACTION_LOG}\` t
         WHERE t.wallet = '${walletAddress}'
         AND (@search IS null OR t.hash LIKE CONCAT('%', @search, '%'))
+        AND (@status IS NULL OR t.status = @status)
         `,
       qFilter: `
           ORDER BY ${filters.orderStr}
