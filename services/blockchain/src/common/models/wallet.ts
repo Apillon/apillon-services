@@ -363,9 +363,9 @@ export class Wallet extends AdvancedSQLModel {
   }
 
   public async getWallets(
-    chain?: Chain,
-    chainType?: ChainType,
-    address?: string,
+    chain: Chain = null,
+    chainType: ChainType = null,
+    address: string = null,
     conn?: PoolConnection,
   ) {
     return await this.getContext().mysql.paramExecute(
@@ -378,7 +378,7 @@ export class Wallet extends AdvancedSQLModel {
       AND (@chain IS NULL OR chain = @chain)
       AND (@address IS NULL OR address like @address);
       `,
-      { chainType, chain, address: address || null },
+      { chainType, chain, address },
       conn,
     );
   }
