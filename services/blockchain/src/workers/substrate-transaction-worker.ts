@@ -184,7 +184,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       SET transactionStatus = @status
       WHERE
         chain = @chain
-        AND transactionHash in ('${transactionHashes.join("','")}')`,
+        AND transactionHash in ('${transactionHashes.join(`','`)}')`,
       {
         chain: this.chainId,
         status: status,

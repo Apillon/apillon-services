@@ -40,6 +40,20 @@
         "Authentication API",
         "Apillon API"
       ]
-    }
-  ]
+    },
+    {
+      "name": "BC dev",
+      "configurations": [
+        "Access",
+        "Monitoring",
+        "Config",
+        "Blockchain",
+        "NFTs",
+        "Dev Console API",
+        "Storage"
+      ],
+      "stopAll": true
+    },
+  ],
+  "configurations": []
 }
