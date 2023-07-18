@@ -173,4 +173,17 @@ export class StorageController {
   ) {
     return await this.storageService.cancelFileDeletion(context, id);
   }
+
+  @Post('test-crust-provider')
+  @Permissions({ role: DefaultUserRole.USER })
+  @UseGuards(AuthGuard)
+  async testCrustProvider(
+    @Ctx() context: DevConsoleApiContext,
+    @Query('providerEndpoint') providerEndpoint: string,
+  ) {
+    return await this.storageService.testCrustProvider(
+      context,
+      providerEndpoint,
+    );
+  }
 }
