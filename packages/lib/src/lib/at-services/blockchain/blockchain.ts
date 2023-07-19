@@ -15,7 +15,7 @@ import {
   CreateEvmTransactionDto,
   CreateSubstrateTransactionDto,
   TransactionDto,
-  GetWalletTransactionsDto,
+  WalletTransactionsQueryFilter,
 } from '../../..';
 
 export class BlockchainMicroservice extends BaseService {
@@ -115,7 +115,7 @@ export class BlockchainMicroservice extends BaseService {
   }
 
   public async getWalletTransactions(
-    query: GetWalletTransactionsDto,
+    query: WalletTransactionsQueryFilter,
     walletId: number,
   ) {
     return await this.callService({

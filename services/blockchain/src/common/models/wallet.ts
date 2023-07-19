@@ -7,7 +7,7 @@ import {
   enumInclusionValidator,
   EvmChain,
   getQueryParams,
-  GetWalletTransactionsDto,
+  WalletTransactionsQueryFilter,
   PoolConnection,
   PopulateFrom,
   presenceValidator,
@@ -452,7 +452,7 @@ export class Wallet extends AdvancedSQLModel {
 
   public async getTransactions(
     walletAddress: string,
-    filter: GetWalletTransactionsDto,
+    filter: WalletTransactionsQueryFilter,
   ) {
     const fieldMap = { id: 't.id' };
     const { params, filters } = getQueryParams(
