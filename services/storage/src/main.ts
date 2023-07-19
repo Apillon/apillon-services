@@ -6,6 +6,7 @@ import { HostingService } from './modules/hosting/hosting.service';
 import { IpnsService } from './modules/ipns/ipns.service';
 import { NftStorageService } from './modules/nfts/nft-storage.service';
 import { StorageService } from './modules/storage/storage.service';
+import { CrustService } from './modules/crust/crust.service';
 
 /**
  * Processing lambda event with appropriate service function based on event name
@@ -74,6 +75,8 @@ export async function processEvent(event, context: Context): Promise<any> {
 
     [StorageEventType.EXECUTE_PREPARE_COLLECTION_BASE_URI_WORKER]:
       NftStorageService.executePrepareBaseUriForCollectionWorker,
+
+    [StorageEventType.TEST_CRUST_PROVIDER]: CrustService.testCrustProvider,
   };
 
   return await processors[event.eventName](event, context);

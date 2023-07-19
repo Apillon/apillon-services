@@ -116,6 +116,7 @@ export enum StorageEventType {
   DEPLOYMENT_GET = 'get-deployment',
   DEPLOYMENT_LIST = 'list-deployment',
   EXECUTE_PREPARE_COLLECTION_BASE_URI_WORKER = 'execute-prepare-collection-base-uri-worker',
+  TEST_CRUST_PROVIDER = 'test-crust-provider',
 }
 
 export enum AuthenticationEventType {
@@ -565,4 +566,17 @@ export enum OauthLinkType {
   DISCORD = 1,
   TWEETER = 2,
   GITHUB = 3,
+}
+
+export enum CacheKeyPrefix {
+  BUCKET_LIST = 'bucket-list',
+}
+
+export enum CacheKeyTTL {
+  EXTRA_SHORT = 10, // 10 s
+  SHORT = 60, // 1 min
+  DEFAULT = 5 * 60, // 5 min
+  EXTENDED = 10 * 60, // 10 min
+  LONG = 30 * 60, // 30 min
+  EXTRA_LONG = 60 * 60, // 60 min
 }
