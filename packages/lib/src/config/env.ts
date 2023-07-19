@@ -370,6 +370,10 @@ export interface IEnv {
   DISCORD_CLIENT_SECRET: string;
   DISCORD_REDIRECT_URI: string;
 
+  /** REDIS */
+  REDIS_URL: string;
+  DEFAULT_CACHE_TTL: number;
+
   /************************************************************
    * NFTS - Apillon NFTs Service
    ************************************************************/
@@ -759,6 +763,10 @@ export let env: IEnv = {
   DISCORD_CLIENT_ID: process.env['DISCORD_CLIENT_ID'] || '',
   DISCORD_CLIENT_SECRET: process.env['DISCORD_CLIENT_SECRET'] || '',
   DISCORD_REDIRECT_URI: process.env['DISCORD_REDIRECT_URI'] || '',
+
+  //** REDIS */
+  REDIS_URL: process.env['REDIS_URL'],
+  DEFAULT_CACHE_TTL: +process.env['DEFAULT_CACHE_TTL'] || 300, // 5 min
 };
 
 export let isEnvReady = false;
