@@ -35,7 +35,6 @@ import {
 import { ethers, UnsignedTransaction } from 'ethers';
 import { v4 as uuidV4 } from 'uuid';
 import {
-  Chains,
   CollectionStatus,
   DbTables,
   NftsErrorCode,
@@ -456,7 +455,7 @@ export class NftsService {
 
       //Populate DB transaction record with properties
       dbTxRecord.populate({
-        chainId: Chains.MOONBASE,
+        chainId: collection.chain,
         transactionType: TransactionType.SET_COLLECTION_BASE_URI,
         refTable: DbTables.COLLECTION,
         refId: collection.id,
@@ -536,7 +535,7 @@ export class NftsService {
 
       //Populate DB transaction record with properties
       dbTxRecord.populate({
-        chainId: Chains.MOONBASE,
+        chainId: collection.chain,
         transactionType: TransactionType.MINT_NFT,
         refTable: DbTables.COLLECTION,
         refId: collection.id,
@@ -655,7 +654,7 @@ export class NftsService {
 
       //Populate DB transaction record with properties
       dbTxRecord.populate({
-        chainId: Chains.MOONBASE,
+        chainId: childCollection.chain,
         transactionType: TransactionType.NEST_MINT_NFT,
         refTable: DbTables.COLLECTION,
         refId: childCollection.id,
@@ -736,7 +735,7 @@ export class NftsService {
 
       //Populate DB transaction record with properties
       dbTxRecord.populate({
-        chainId: Chains.MOONBASE,
+        chainId: collection.chain,
         transactionType: TransactionType.BURN_NFT,
         refTable: DbTables.COLLECTION,
         refId: collection.id,
