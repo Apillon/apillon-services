@@ -73,11 +73,7 @@ export class BucketService {
     }
 
     //Call Storage microservice, to create bucket
-    const { data } = await new StorageMicroservice(context).createBucket(body);
-    await invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
-      projectUuid: project.project_uuid,
-    });
-    return data;
+    return (await new StorageMicroservice(context).createBucket(body)).data;
   }
 
   async updateBucket(context: DevConsoleApiContext, id: number, body: any) {
