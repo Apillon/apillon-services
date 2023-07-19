@@ -1,7 +1,7 @@
 # console: true
 # org: apillonadmin
 # app: apillon-v2
-service: apillon-dev-console-${opt:stage, 'dev'}
+service: apillon-admin-api-${opt:stage, 'dev'}
 frameworkVersion: '3'
 
 custom:
@@ -56,10 +56,10 @@ package:
   excludeDevDependencies: true
 
 functions:
-  dev-console-api:
-    handler: ./src/lambda.handler
-    name: 'apillon-dev-console-api-${self:provider.stage}'
-    description: API for Apillon developer console
+  admin-api:
+    handler: ./src/admin-lambda.handler
+    name: 'apillon-admin-api-${self:provider.stage}'
+    description: API for Apillon Admin app
     memorySize: 512
     timeout: 30
     events:
