@@ -27,11 +27,11 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
   let blockchain: TestBlockchain;
   let stage: Stage;
 
-  let testUser: TestUser, testUser2: TestUser, nestedUser: TestUser;
-  let testProject: Project, nestedProject: Project;
+  let testUser: TestUser, testUser2: TestUser, nestableUser: TestUser;
+  let testProject: Project, nestableProject: Project;
   let testCollection: Collection,
     newCollection: Collection,
-    nestedCollection: Collection;
+    nestableCollection: Collection;
   let deployerAddress: string;
 
   beforeAll(async () => {
@@ -62,17 +62,17 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
     );
 
     // nestable collection
-    nestedUser = await createTestUser(
+    nestableUser = await createTestUser(
       stage.devConsoleContext,
       stage.amsContext,
     );
-    nestedProject = await createTestProject(
-      nestedUser,
+    nestableProject = await createTestProject(
+      nestableUser,
       stage.devConsoleContext,
     );
     await overrideDefaultQuota(
       stage,
-      nestedProject.project_uuid,
+      nestableProject.project_uuid,
       QuotaCode.MAX_NFT_COLLECTIONS,
       10,
     );
@@ -464,14 +464,14 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
   describe('NFT Collection tests for nestable type', () => {
     test('User should be able to create new nestable collection with existing baseURI', async () => {
       const response = await request(stage.http)
-        .post(`/nfts/collections?project_uuid=${nestedProject.project_uuid}`)
+        .post(`/nfts/collections?project_uuid=${nestableProject.project_uuid}`)
         .send({
           collectionType: 2,
           symbol: 'ANFT',
           name: 'Test NFT Collection',
           maxSupply: 50,
           dropPrice: 0,
-          project_uuid: nestedProject.project_uuid,
+          project_uuid: nestableProject.project_uuid,
           baseUri:
             'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/',
           baseExtension: 'json',
@@ -484,28 +484,28 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
           royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
           royaltiesFees: 0,
         })
-        .set('Authorization', `Bearer ${nestedUser.token}`);
+        .set('Authorization', `Bearer ${nestableUser.token}`);
       expect(response.status).toBe(201);
       expect(response.body.data.contractAddress).toBeTruthy();
 
       //Get collection from DB
-      nestedCollection = await new Collection(
+      nestableCollection = await new Collection(
         {},
         stage.nftsContext,
       ).populateById(response.body.data.id);
 
-      expect(nestedCollection.exists()).toBeTruthy();
+      expect(nestableCollection.exists()).toBeTruthy();
 
-      nestedCollection.collectionStatus = CollectionStatus.DEPLOYED;
-      await nestedCollection.update();
+      nestableCollection.collectionStatus = CollectionStatus.DEPLOYED;
+      await nestableCollection.update();
     });
 
     test('User should be able to get nestable collection transactions', async () => {
       const response = await request(stage.http)
         .get(
-          `/nfts/collections/${nestedCollection.collection_uuid}/transactions`,
+          `/nfts/collections/${nestableCollection.collection_uuid}/transactions`,
         )
-        .set('Authorization', `Bearer ${nestedUser.token}`);
+        .set('Authorization', `Bearer ${nestableUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBe(1);
       expect(response.body.data.items[0]?.transactionHash).toBeTruthy();
@@ -513,19 +513,19 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
 
     test('User should be able to mint nestable NFT', async () => {
       const response = await request(stage.http)
-        .post(`/nfts/collections/${nestedCollection.collection_uuid}/mint`)
+        .post(`/nfts/collections/${nestableCollection.collection_uuid}/mint`)
         .send({
           receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
           quantity: 1,
         })
-        .set('Authorization', `Bearer ${nestedUser.token}`);
+        .set('Authorization', `Bearer ${nestableUser.token}`);
       expect(response.status).toBe(201);
 
       //Check if new transactions exists
       const transaction: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
-      ).getCollectionTransactions(nestedCollection.id);
+      ).getCollectionTransactions(nestableCollection.id);
 
       expect(
         transaction.find((x) => x.transactionType == TransactionType.MINT_NFT),
@@ -534,14 +534,14 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
 
     test('User should be able to nest mint NFT for nestable NFT', async () => {
       const parentCollectionResponse = await request(stage.http)
-        .post(`/nfts/collections?project_uuid=${nestedProject.project_uuid}`)
+        .post(`/nfts/collections?project_uuid=${nestableProject.project_uuid}`)
         .send({
           collectionType: 2,
           symbol: 'ANFTN',
           name: 'PArent NFT Collection',
           maxSupply: 50,
           dropPrice: 0,
-          project_uuid: nestedProject.project_uuid,
+          project_uuid: nestableProject.project_uuid,
           baseUri:
             'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/',
           baseExtension: 'json',
@@ -554,7 +554,7 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
           royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
           royaltiesFees: 0,
         })
-        .set('Authorization', `Bearer ${nestedUser.token}`);
+        .set('Authorization', `Bearer ${nestableUser.token}`);
       expect(parentCollectionResponse.status).toBe(201);
       const parentCollection = parentCollectionResponse.body.data;
       const mintParentResponse = await request(stage.http)
@@ -563,17 +563,17 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
           receivingAddress: deployerAddress,
           quantity: 1,
         })
-        .set('Authorization', `Bearer ${nestedUser.token}`);
+        .set('Authorization', `Bearer ${nestableUser.token}`);
       expect(mintParentResponse.status).toBe(201);
       const childCollectionResponse = await request(stage.http)
-        .post(`/nfts/collections?project_uuid=${nestedProject.project_uuid}`)
+        .post(`/nfts/collections?project_uuid=${nestableProject.project_uuid}`)
         .send({
           collectionType: 2,
           symbol: 'ANFTN',
           name: 'Child NFT Collection',
           maxSupply: 50,
           dropPrice: 0,
-          project_uuid: nestedProject.project_uuid,
+          project_uuid: nestableProject.project_uuid,
           baseUri:
             'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/',
           baseExtension: 'json',
@@ -586,7 +586,7 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
           royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
           royaltiesFees: 0,
         })
-        .set('Authorization', `Bearer ${nestedUser.token}`);
+        .set('Authorization', `Bearer ${nestableUser.token}`);
       expect(childCollectionResponse.status).toBe(201);
       const childCollection = childCollectionResponse.body.data;
 
@@ -597,7 +597,7 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
           destinationNftId: 1,
           quantity: 1,
         })
-        .set('Authorization', `Bearer ${nestedUser.token}`);
+        .set('Authorization', `Bearer ${nestableUser.token}`);
       expect(response.status).toBe(201);
       expect(response.body.data.success).toBe(true);
 
@@ -616,9 +616,9 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
     // TODO: fix test (contract is always set to isRevokable=false)
     // test('User should be able to burn nestable collection NFT', async () => {
     //   const response = await request(stage.http)
-    //     .post(`/nfts/collections/${nestedCollection.collection_uuid}/burn`)
+    //     .post(`/nfts/collections/${nestableCollection.collection_uuid}/burn`)
     //     .send({ tokenId: 1 })
-    //     .set('Authorization', `Bearer ${nestedUser.token}`);
+    //     .set('Authorization', `Bearer ${nestableUser.token}`);
     //
     //   expect(response.status).toBe(201);
     //   expect(response.body.data.success).toBe(true);
@@ -627,19 +627,19 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
     test('User should be able to transfer nestable NFT collection', async () => {
       const response = await request(stage.http)
         .post(
-          `/nfts/collections/${nestedCollection.collection_uuid}/transferOwnership`,
+          `/nfts/collections/${nestableCollection.collection_uuid}/transferOwnership`,
         )
         .send({
           address: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
         })
-        .set('Authorization', `Bearer ${nestedUser.token}`);
+        .set('Authorization', `Bearer ${nestableUser.token}`);
       expect(response.status).toBe(201);
 
       //Check if new transactions exists
       const transaction: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
-      ).getCollectionTransactions(nestedCollection.id);
+      ).getCollectionTransactions(nestableCollection.id);
 
       expect(
         transaction.find(
@@ -650,16 +650,16 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
     });
 
     test('User should NOT be able to Mint transferred nestable collection', async () => {
-      nestedCollection.collectionStatus = CollectionStatus.TRANSFERED;
-      await nestedCollection.update();
+      nestableCollection.collectionStatus = CollectionStatus.TRANSFERED;
+      await nestableCollection.update();
 
       const response = await request(stage.http)
-        .post(`/nfts/collections/${nestedCollection.collection_uuid}/mint`)
+        .post(`/nfts/collections/${nestableCollection.collection_uuid}/mint`)
         .send({
           receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
           quantity: 1,
         })
-        .set('Authorization', `Bearer ${nestedUser.token}`);
+        .set('Authorization', `Bearer ${nestableUser.token}`);
       expect(response.status).toBe(500);
       expect(response.body.code).toBe(50012002);
     });

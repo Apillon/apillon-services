@@ -47,7 +47,7 @@ describe('Apillon API NFTs tests', () => {
   let testCollection: Collection,
     transferredCollection: Collection,
     nestableCollection: Collection;
-  let apiKey: ApiKey, nestedApiKey: ApiKey;
+  let apiKey: ApiKey, nestableApiKey: ApiKey;
   let getRequest, postRequest;
   let deployerAddress: string;
 
@@ -134,11 +134,11 @@ describe('Apillon API NFTs tests', () => {
       QuotaCode.MAX_NFT_COLLECTIONS,
       10,
     );
-    nestedApiKey = await createTestApiKey(
+    nestableApiKey = await createTestApiKey(
       stage.amsContext,
       nestableProject.project_uuid,
     );
-    await nestedApiKey.assignRole(
+    await nestableApiKey.assignRole(
       new ApiKeyRoleBaseDto().populate({
         role_id: DefaultApiKeyRole.KEY_READ,
         project_uuid: nestableProject.project_uuid,
@@ -146,7 +146,7 @@ describe('Apillon API NFTs tests', () => {
         serviceType_id: AttachedServiceType.NFT,
       }),
     );
-    await nestedApiKey.assignRole(
+    await nestableApiKey.assignRole(
       new ApiKeyRoleBaseDto().populate({
         role_id: DefaultApiKeyRole.KEY_WRITE,
         project_uuid: nestableProject.project_uuid,
@@ -154,7 +154,7 @@ describe('Apillon API NFTs tests', () => {
         serviceType_id: AttachedServiceType.NFT,
       }),
     );
-    await nestedApiKey.assignRole(
+    await nestableApiKey.assignRole(
       new ApiKeyRoleBaseDto().populate({
         role_id: DefaultApiKeyRole.KEY_EXECUTE,
         project_uuid: nestableProject.project_uuid,
@@ -482,7 +482,7 @@ describe('Apillon API NFTs tests', () => {
           royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
           royaltiesFees: 0,
         },
-        nestedApiKey,
+        nestableApiKey,
       );
 
       expect(response.status).toBe(201);
@@ -518,7 +518,7 @@ describe('Apillon API NFTs tests', () => {
 
       const response = await getRequest(
         `/nfts/collections/${collection.collection_uuid}/transactions`,
-        nestedApiKey,
+        nestableApiKey,
       );
 
       expect(response.status).toBe(200);
@@ -535,7 +535,7 @@ describe('Apillon API NFTs tests', () => {
           receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
           quantity: 1,
         },
-        nestedApiKey,
+        nestableApiKey,
       );
 
       expect(response.status).toBe(201);
@@ -570,7 +570,7 @@ describe('Apillon API NFTs tests', () => {
           royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
           royaltiesFees: 0,
         },
-        nestedApiKey,
+        nestableApiKey,
       );
       expect(parentCollectionResponse.status).toBe(201);
       const parentCollection = parentCollectionResponse.body.data;
@@ -580,7 +580,7 @@ describe('Apillon API NFTs tests', () => {
           receivingAddress: deployerAddress,
           quantity: 1,
         },
-        nestedApiKey,
+        nestableApiKey,
       );
       expect(parentCollectionMintResponse.status).toBe(201);
       const childCollectionResponse = await postRequest(
@@ -603,7 +603,7 @@ describe('Apillon API NFTs tests', () => {
           royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
           royaltiesFees: 0,
         },
-        nestedApiKey,
+        nestableApiKey,
       );
       expect(childCollectionResponse.status).toBe(201);
       const childCollection = childCollectionResponse.body.data;
@@ -615,7 +615,7 @@ describe('Apillon API NFTs tests', () => {
           destinationNftId: 1,
           quantity: 1,
         },
-        nestedApiKey,
+        nestableApiKey,
       );
 
       expect(response.status).toBe(201);
@@ -646,7 +646,7 @@ describe('Apillon API NFTs tests', () => {
         {
           address: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
         },
-        nestedApiKey,
+        nestableApiKey,
       );
 
       expect(response.status).toBe(201);
@@ -679,7 +679,7 @@ describe('Apillon API NFTs tests', () => {
           receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
           quantity: 1,
         },
-        nestedApiKey,
+        nestableApiKey,
       );
 
       expect(response.status).toBe(500);
@@ -690,7 +690,7 @@ describe('Apillon API NFTs tests', () => {
       const response = await postRequest(
         `/nfts/collections/${nestableCollection.collection_uuid}/burn`,
         { tokenId: 1 },
-        nestedApiKey,
+        nestableApiKey,
       );
 
       expect(response.status).toBe(201);

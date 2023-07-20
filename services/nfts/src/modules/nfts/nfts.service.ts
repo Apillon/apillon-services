@@ -609,7 +609,7 @@ export class NftsService {
 
     if (parentCollection.chain !== childCollection.chain) {
       throw new NftsCodeException({
-        code: NftsErrorCode.COLLECTION_NESTABLE_AND_NESTING_CHAIN_MISMATCH,
+        code: NftsErrorCode.COLLECTION_PARENT_AND_CHILD_NFT_CHAIN_MISMATCH,
         status: 400,
       });
     }
