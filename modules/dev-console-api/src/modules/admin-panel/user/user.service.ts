@@ -47,7 +47,7 @@ export class UserService {
     context: DevConsoleApiContext,
     filter: BaseQueryFilter,
   ): Promise<any> {
-    return await new User({}, context).listAllUsers(filter);
+    return await new User({}, context).listUsers(filter);
   }
 
   /**

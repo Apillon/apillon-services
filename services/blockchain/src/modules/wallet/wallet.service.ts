@@ -4,6 +4,7 @@ import {
   SerializeFor,
   UpdateWalletDto,
   UpdateTransactionDto,
+  WalletTransactionsQueryFilter,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { Wallet, WalletWithBalance } from '../../common/models/wallet';
@@ -65,7 +66,7 @@ export class WalletService {
 
     return await new Wallet({}, context).getTransactions(
       wallet.address,
-      new BaseQueryFilter(event),
+      new WalletTransactionsQueryFilter(event),
     );
   }
 
