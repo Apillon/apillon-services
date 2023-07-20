@@ -11,7 +11,7 @@ import {
   overrideDefaultQuota,
   releaseStage,
   Stage,
-  startGanacheRPCServer,
+  TestBlockchain,
   TestUser,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
@@ -20,6 +20,7 @@ import { Project } from '../../project/models/project.model';
 
 describe('Apillon Console NFTs tests for Astar', () => {
   const CHAIN_ID = EvmChain.ASTAR;
+  let blockchain: TestBlockchain;
   let stage: Stage;
 
   let testUser: TestUser;
@@ -28,7 +29,9 @@ describe('Apillon Console NFTs tests for Astar', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    await startGanacheRPCServer(stage, CHAIN_ID);
+
+    blockchain = new TestBlockchain(stage, CHAIN_ID);
+    await blockchain.start();
 
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     testProject = await createTestProject(testUser, stage.devConsoleContext);
@@ -152,5 +155,9 @@ describe('Apillon Console NFTs tests for Astar', () => {
       expect(response.status).toBe(500);
       expect(response.body.code).toBe(50012002);
     });
+  });
+
+  afterAll(async () => {
+    await blockchain.stop();
   });
 });

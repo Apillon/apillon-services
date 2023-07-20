@@ -12,7 +12,7 @@ import {
   overrideDefaultQuota,
   releaseStage,
   Stage,
-  startGanacheRPCServer,
+  TestBlockchain,
   TestUser,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
@@ -24,6 +24,7 @@ import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 
 describe('Apillon Console NFTs tests for Moonbase', () => {
   const CHAIN_ID = EvmChain.MOONBASE;
+  let blockchain: TestBlockchain;
   let stage: Stage;
 
   let testUser: TestUser, testUser2: TestUser, nestedUser: TestUser;
@@ -35,14 +36,16 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    const accounts = await startGanacheRPCServer(stage, CHAIN_ID);
-    deployerAddress = accounts[0];
+
+    blockchain = new TestBlockchain(stage, CHAIN_ID);
+    await blockchain.start();
+    deployerAddress = blockchain.getWalletAddress(0);
+
+    // test collection
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
-
     testProject = await createTestProject(testUser, stage.devConsoleContext);
     await createTestProject(testUser2, stage.devConsoleContext);
-
     testCollection = await createTestNFTCollection(
       testUser,
       stage.nftsContext,
@@ -51,7 +54,6 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       0,
       { chain: CHAIN_ID },
     );
-
     await overrideDefaultQuota(
       stage,
       testProject.project_uuid,
@@ -665,5 +667,9 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       expect(response.status).toBe(500);
       expect(response.body.code).toBe(50012002);
     });
+  });
+
+  afterAll(async () => {
+    await blockchain.stop();
   });
 });

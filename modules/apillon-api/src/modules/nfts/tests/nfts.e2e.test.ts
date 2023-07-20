@@ -8,7 +8,7 @@ import {
   overrideDefaultQuota,
   releaseStage,
   Stage,
-  startGanacheRPCServer,
+  TestBlockchain,
   TestUser,
 } from '@apillon/tests-lib';
 import {
@@ -38,6 +38,8 @@ const TEST_COLLECTION_BASE_URI =
 
 describe('Apillon API NFTs tests', () => {
   const CHAIN_ID = EvmChain.MOONBASE;
+  let blockchain: TestBlockchain;
+
   let stage: Stage;
   let testUser: TestUser;
   let testProject: Project, nestableProject: Project;
@@ -51,8 +53,11 @@ describe('Apillon API NFTs tests', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    const accounts = await startGanacheRPCServer(stage, CHAIN_ID);
-    deployerAddress = accounts[0];
+
+    blockchain = new TestBlockchain(stage, CHAIN_ID);
+    await blockchain.start();
+    deployerAddress = blockchain.getWalletAddress(0);
+
     //User 1 project & other data
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
 
@@ -694,5 +699,9 @@ describe('Apillon API NFTs tests', () => {
       expect(response.status).toBe(201);
       expect(response.body.data.success).toBe(true);
     });
+  });
+
+  afterAll(async () => {
+    await blockchain.stop();
   });
 });
