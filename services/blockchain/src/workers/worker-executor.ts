@@ -146,7 +146,7 @@ export async function handleLambdaEvent(
 
     // !!!!WIP!!!! - SUBSTRATE TRANSACTION WORKER
     case WorkerName.SUBSTRATE_TRANSACTION:
-      await new SubstrateTransactionWorker(workerDefinition, context).run({});
+      await new SubstrateTransactionWorker(workerDefinition, context).run();
       break;
     // --- EVM ---
     case WorkerName.EVM_TRANSACTIONS:
