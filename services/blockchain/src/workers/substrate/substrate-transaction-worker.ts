@@ -38,8 +38,9 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     super(workerDefinition, context);
 
     // Kinda part of the worker definition, the chainId is
-    const params = JSON.parse(workerDefinition.parameters);
-    this.chainId = params.chainId;
+    console.log('SUBSTRATEW: workerDefinition ', workerDefinition);
+    console.log('SUBSTRATEW: parameters', workerDefinition.parameters);
+    this.chainId = workerDefinition.parameters.chainId;
 
     this.chainName = SubstrateChain[this.chainId];
     this.logPrefix = `[SUBSTRATE | ${this.chainName}]`;
