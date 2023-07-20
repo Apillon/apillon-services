@@ -173,9 +173,6 @@ describe('Apillon API NFTs tests', () => {
     );
   });
 
-  afterAll(async () => {
-    await releaseStage(stage);
-  });
   describe('Moonbeam NFT Collection tests', () => {
     test('User should be able to get collection list', async () => {
       const response = await getRequest(
@@ -703,5 +700,6 @@ describe('Apillon API NFTs tests', () => {
 
   afterAll(async () => {
     await blockchain.stop();
+    await releaseStage(stage);
   });
 });

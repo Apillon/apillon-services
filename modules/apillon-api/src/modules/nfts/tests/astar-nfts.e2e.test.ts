@@ -98,10 +98,6 @@ describe('Apillon API NFTs tests on Astar', () => {
     postRequest = postRequestFactory(stage.http, apiKey);
   });
 
-  afterAll(async () => {
-    await releaseStage(stage);
-  });
-
   describe('Astar NFT Collection tests', () => {
     test('User should be able to create new Astar collection with existing baseURI', async () => {
       const testCollectionName = 'Astar Created NFT Collection';
@@ -250,5 +246,6 @@ describe('Apillon API NFTs tests on Astar', () => {
 
   afterAll(async () => {
     await blockchain.stop();
+    await releaseStage(stage);
   });
 });

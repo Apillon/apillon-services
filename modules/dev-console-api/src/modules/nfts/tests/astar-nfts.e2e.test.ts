@@ -44,10 +44,6 @@ describe('Apillon Console NFTs tests for Astar', () => {
     );
   });
 
-  afterAll(async () => {
-    await releaseStage(stage);
-  });
-
   describe('Astar NFT Collection tests', () => {
     test('User should be able to create new Astar collection with existing baseURI', async () => {
       const response = await request(stage.http)
@@ -159,5 +155,6 @@ describe('Apillon Console NFTs tests for Astar', () => {
 
   afterAll(async () => {
     await blockchain.stop();
+    await releaseStage(stage);
   });
 });

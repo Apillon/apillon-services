@@ -78,10 +78,6 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
     );
   });
 
-  afterAll(async () => {
-    await releaseStage(stage);
-  });
-
   describe('Moonbeam NFT Collection tests', () => {
     test('User should be able to get collection list', async () => {
       const response = await request(stage.http)
@@ -671,5 +667,6 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
 
   afterAll(async () => {
     await blockchain.stop();
+    await releaseStage(stage);
   });
 });
