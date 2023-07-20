@@ -36,7 +36,9 @@ export class TransactionLogWorker extends BaseQueueWorker {
     this.batchLimit = workerDefinition?.parameters?.batchLimit || 100;
   }
   async runPlanner(_data?: any): Promise<any[]> {
-    const wallets = await new Wallet({}, this.context).getWallets();
+    const wallets = (await new Wallet({}, this.context).getWallets()).map(
+      (x) => new Wallet(x, this.context),
+    );
 
     return wallets.map((x) => ({
       wallet: x.serialize(SerializeFor.WORKER),

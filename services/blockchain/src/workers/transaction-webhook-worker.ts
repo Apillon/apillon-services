@@ -96,7 +96,7 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
         // SUBSTRATE
         ...(await this.processWebhook(
           crustWebhooks,
-          env.AUTH_AWS_WORKER_SQS_URL,
+          env.STORAGE_AWS_WORKER_SQS_URL,
           'UpdateCrustStatusWorker',
         )),
 

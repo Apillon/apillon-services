@@ -419,4 +419,16 @@ export class StorageMicroservice extends BaseService {
   }
 
   //#endregion
+
+  //#region test/helper functions
+
+  public async testCrustProvider(providerEndpoint: string) {
+    const data = {
+      eventName: StorageEventType.TEST_CRUST_PROVIDER,
+      providerEndpoint,
+    };
+    return await this.callService(data);
+  }
+
+  //#endregion
 }

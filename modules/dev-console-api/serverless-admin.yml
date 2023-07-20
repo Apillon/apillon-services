@@ -1,0 +1,73 @@
+# console: true
+# org: apillonadmin
+# app: apillon-v2
+service: apillon-admin-api-${opt:stage, 'dev'}
+frameworkVersion: '3'
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules:
+      modeModulesRelativeDir: '../../'
+      forceExclude:
+        - aws-sdk
+      forceInclude: 
+        - follow-redirects
+    packagerOptions:
+      lockFile: '../../package-lock.json'
+    excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*|**/test/**/|**/*\.spec\.ts|**/*\.spec\.js'
+  # serverlessPluginTypescript:
+  #   tsConfigFileLocation: './tsconfig.build.json'
+ 
+
+plugins:
+  - serverless-webpack
+  # - serverless-plugin-typescript
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  region: eu-west-1
+  stage: ${opt:stage, 'dev'}
+  iam:
+    role: arn:aws:iam::018021943180:role/serverless-workers-executor
+  apiGateway:
+    minimumCompressionSize: 1024 # Enable gzip compression for responses > 1 KB
+  vpc:
+    securityGroupIds:
+      - sg-091bc1ce7424a7921
+    subnetIds:
+      - subnet-0bea6dd0c2a5ecc61
+      - subnet-085447b898128fc92
+      - subnet-0ed148d48e931f5fa
+
+  environment:
+    ${file(../../bin/deploy/env/env.yml)}
+    # ACCESS_FUNCTION_NAME: 'apillon-access-service-${self:provider.stage}'
+    # MONITORING_FUNCTION_NAME: 'apillon-monitoring-service-${self:provider.stage}'
+
+# you can add packaging information here
+package:
+  patterns:
+    - '!dist/**'
+    # - '!**/*.*'
+    # - '!.turbo'
+    # - './dist/**'
+  excludeDevDependencies: true
+
+functions:
+  admin-api:
+    handler: ./src/admin-lambda.handler
+    name: 'apillon-admin-api-${self:provider.stage}'
+    description: API for Apillon Admin app
+    memorySize: 512
+    timeout: 30
+    events:
+      - http: # this is an API Gateway HTTP event trigger
+          path: /
+          method: ANY
+          cors: true
+      - http: # all routes get proxied to the Express router
+          path: /{proxy+}
+          method: ANY
+          cors: true

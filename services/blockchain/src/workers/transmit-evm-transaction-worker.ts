@@ -48,7 +48,7 @@ export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
       await EvmService.transmitTransactions(
         { chain },
         this.context,
-        this.writeEventLog,
+        async (...args) => await this.writeEventLog.call(this, ...args),
       );
     } catch (err) {
       await this.writeEventLog(
