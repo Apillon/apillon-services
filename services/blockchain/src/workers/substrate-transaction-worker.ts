@@ -200,7 +200,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         message: `${this.logPrefix}: ${transactionHashes.length} [${
           TransactionStatus[status]
         }] blockchain transactions matched (txHashes=${transactionHashes.join(
-          "','",
+          `','`,
         )}) in db.`,
         service: ServiceName.BLOCKCHAIN,
         data: {
