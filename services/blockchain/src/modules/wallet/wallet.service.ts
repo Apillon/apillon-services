@@ -7,13 +7,14 @@ import {
   WalletTransactionsQueryFilter,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
-import { Wallet, WalletWithBalance } from '../../common/models/wallet';
+import { Wallet } from '../../common/models/wallet';
 import {
   BlockchainCodeException,
   BlockchainValidationException,
 } from '../../lib/exceptions';
 import { BlockchainErrorCode } from '../../config/types';
 import { TransactionLog } from '../accounting/transaction-log.model';
+import { WalletWithBalanceDto } from '../../common/dto/wallet-with-balance.dto';
 
 export class WalletService {
   static async listWallets(
@@ -26,13 +27,21 @@ export class WalletService {
   static async getWallet(
     { walletId }: { walletId: number },
     context: ServiceContext,
-  ): Promise<WalletWithBalance> {
+  ): Promise<WalletWithBalanceDto> {
     const wallet = await new Wallet({}, context).populateById(walletId);
     WalletService.checkExists(wallet);
 
     const balanceData = await wallet.checkBalance();
-    // TODO: Round balance amount based on chain?
-    return { ...wallet, ...balanceData } as WalletWithBalance;
+    const transactionSumData = await new TransactionLog(
+      { wallet: wallet.address },
+      context,
+    ).getTransactionAggregateData();
+
+    return {
+      ...wallet,
+      ...balanceData,
+      ...transactionSumData,
+    } as WalletWithBalanceDto;
   }
 
   static async updateWallet(

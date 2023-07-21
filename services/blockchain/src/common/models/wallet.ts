@@ -486,9 +486,3 @@ export class Wallet extends AdvancedSQLModel {
     );
   }
 }
-
-export type WalletWithBalance = Wallet & {
-  balance: string;
-  minBalance: string;
-  isBelowThreshold: boolean;
-};

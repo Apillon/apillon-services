@@ -162,18 +162,18 @@ describe('Blockchain endpoint tests', () => {
         )
         .set('Authorization', `Bearer ${adminTestUser.token}`)
         .send({
-          totalPrice: '1.05',
+          value: 1.05,
           description: 'test123',
         });
       expect(response.status).toBe(200);
       expect(response.body.data.id).toEqual(testTransaction.id);
-      expect(response.body.data.totalPrice).toBe('1.05');
+      expect(response.body.data.value).toBe(1.05);
       expect(response.body.data.description).toBe('test123');
 
       const data = await stage.blockchainContext.mysql.paramExecute(
-        `SELECT totalPrice, description from transaction_log WHERE id = '${testTransaction.id}'`,
+        `SELECT value, description from transaction_log WHERE id = '${testTransaction.id}'`,
       );
-      expect(data[0]?.totalPrice).toBe('1.05');
+      expect(data[0]?.value).toBe(1.05);
       expect(data[0]?.description).toBe('test123');
     });
 
