@@ -6,11 +6,17 @@ import {
   EvmChain,
   SubstrateChain,
 } from '../../../config/types';
+import { BaseQueryFilter } from '../../base-models/base-query-filter.model';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
-import { CreateEvmTransactionDto } from './dtos/create-evm-transaction.dto';
-import { CreateSubstrateTransactionDto } from './dtos/create-substrate-transaction.dto';
-import { TransactionDto } from './dtos/transaction.dto';
+import {
+  UpdateTransactionDto,
+  UpdateWalletDto,
+  CreateEvmTransactionDto,
+  CreateSubstrateTransactionDto,
+  TransactionDto,
+  WalletTransactionsQueryFilter,
+} from '../../..';
 
 export class BlockchainMicroservice extends BaseService {
   lambdaFunctionName =
@@ -43,7 +49,7 @@ export class BlockchainMicroservice extends BaseService {
   public async getSubstrateTransaction(id: number) {
     const data = {
       eventName: BlockchainEventType.SUBSTRATE_GET_TRANSACTION,
-      id: id,
+      id,
     };
     return await this.callService(data);
   }
@@ -65,7 +71,7 @@ export class BlockchainMicroservice extends BaseService {
   public async getEvmTransaction(id: number) {
     const data = {
       eventName: BlockchainEventType.EVM_GET_TRANSACTION,
-      id: id,
+      id,
     };
     return await this.callService(data);
   }
@@ -83,4 +89,53 @@ export class BlockchainMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
+
+  //#region wallet methods
+
+  public async listWallets(filter: BaseQueryFilter) {
+    return await this.callService({
+      eventName: BlockchainEventType.LIST_WALLETS,
+      ...filter,
+    });
+  }
+
+  public async getWallet(walletId: number) {
+    return await this.callService({
+      eventName: BlockchainEventType.GET_WALLET,
+      walletId,
+    });
+  }
+
+  public async updateWallet(walletId: number, data: UpdateWalletDto) {
+    return await this.callService({
+      eventName: BlockchainEventType.UPDATE_WALLET,
+      walletId,
+      data,
+    });
+  }
+
+  public async getWalletTransactions(
+    query: WalletTransactionsQueryFilter,
+    walletId: number,
+  ) {
+    return await this.callService({
+      eventName: BlockchainEventType.GET_WALLET_TRANSACTIONS,
+      walletId,
+      ...query,
+    });
+  }
+
+  public async updateTransaction(
+    walletId: number,
+    transactionId: number,
+    data: UpdateTransactionDto,
+  ) {
+    return await this.callService({
+      eventName: BlockchainEventType.UPDATE_TRANSACTION,
+      walletId,
+      transactionId,
+      data,
+    });
+  }
+  //#endregion
 }

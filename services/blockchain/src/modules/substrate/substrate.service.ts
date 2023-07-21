@@ -119,7 +119,7 @@ export class SubstrateService {
 
       // TODO: Determine the best era
       const signed = await unsignedTx.signAsync(pair, {
-        nonce: wallet.nextNonce,
+        // nonce: wallet.nextNonce,
         era: 600, // number of blocks the transaction is valid - 6s per block * 6000 blocks / 60 = 600 minutes -> 10 hours
       });
 
@@ -247,7 +247,7 @@ export class SubstrateService {
   ) {
     // console.log('chain: ', _event.chain);
     // console.log('address: ', _event.address);
-    const wallets = await new Wallet({}, context).getList(
+    const wallets = await new Wallet({}, context).getWallets(
       _event.chain,
       ChainType.SUBSTRATE,
       _event.address,

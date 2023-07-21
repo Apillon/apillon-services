@@ -4,6 +4,7 @@ import {
   CreateSubstrateTransactionDto,
   SubstrateChain,
 } from '@apillon/lib';
+import { ServiceContext } from '@apillon/service-lib';
 import { typesBundleForPolkadot } from '@crustio/type-definitions';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { CID } from 'ipfs-http-client';
@@ -48,5 +49,29 @@ export class CrustService {
     return await new BlockchainMicroservice(context).createSubstrateTransaction(
       dto,
     );
+  }
+
+  static async testCrustProvider(
+    event: { providerEndpoint: string },
+    context: ServiceContext,
+  ) {
+    const provider = new WsProvider(
+      event.providerEndpoint
+        ? event.providerEndpoint
+        : 'wss://crust.api.onfinality.io/ws?apikey=15a3df59-0a99-4216-97b4-e2d242fe64e5',
+    );
+    const api = await ApiPromise.create({
+      provider,
+      typesBundle: typesBundleForPolkadot,
+    });
+
+    await api.isReady;
+    const balance = await api.query.system.account(
+      'cTHA4D34PHTD5jkK68tbyLakwnC6mYWgUEq6pA1kSqAeUtpH1',
+    );
+
+    console.log(balance.toHuman());
+
+    return { balance: balance.toHuman() };
   }
 }

@@ -276,7 +276,7 @@ export class EvmService {
     eventLogger: (options: any, output: LogOutput) => Promise<void>,
   ) {
     // console.log('transmitTransactions', _event);
-    const wallets = await new Wallet({}, context).getList(
+    const wallets = await new Wallet({}, context).getWallets(
       _event.chain,
       ChainType.EVM,
       _event.address,

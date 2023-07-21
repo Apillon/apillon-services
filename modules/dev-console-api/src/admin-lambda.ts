@@ -1,11 +1,11 @@
 import type { Context } from 'aws-lambda';
 import { proxy, Response } from 'aws-serverless-express';
 import { Server } from 'http';
+import { AdminAppModule } from './admin-app.module';
 import { bootstrapModule } from './lambda';
-import { AdminPanelModule } from './modules/admin-panel/admin-panel.module';
 
 export async function bootstrap() {
-  return bootstrapModule(AdminPanelModule);
+  return bootstrapModule(AdminAppModule);
 }
 
 let cachedServer: Server;

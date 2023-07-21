@@ -37,7 +37,7 @@ export class TransmitSubstrateTransactionWorker extends BaseSingleThreadWorker {
       await SubstrateService.transmitTransactions(
         { chain },
         this.context,
-        this.writeEventLog,
+        async (...args) => await this.writeEventLog.call(this, ...args),
       );
       // await this.writeEventLog(
       //   {

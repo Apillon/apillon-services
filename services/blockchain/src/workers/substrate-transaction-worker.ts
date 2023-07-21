@@ -37,6 +37,8 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     super(workerDefinition, context);
 
     // Kinda part of the worker definition, the chainId is
+    console.log('SUBSTRATEW: workerDefinition ', workerDefinition);
+    console.log('SUBSTRATEW: parameters', workerDefinition.parameters);
     this.chainId = workerDefinition.parameters.chainId;
 
     this.chainName = SubstrateChain[this.chainId];
@@ -46,7 +48,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
 
   public async runExecutor(_data?: any): Promise<any> {
     // Wallets will be populated once the runExecutor method is called
-    this.wallets = await new Wallet({}, this.context).getList(
+    this.wallets = await new Wallet({}, this.context).getWallets(
       SubstrateChain[this.chainName],
       ChainType.SUBSTRATE,
     );
@@ -184,7 +186,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       SET transactionStatus = @status
       WHERE
         chain = @chain
-        AND transactionHash in ('${transactionHashes.join("','")}')`,
+        AND transactionHash in ('${transactionHashes.join(`','`)}')`,
       {
         chain: this.chainId,
         status: status,

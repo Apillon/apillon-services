@@ -1,14 +1,18 @@
 import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
+  BaseQueryFilter,
   ChainType,
   Context,
   enumInclusionValidator,
   EvmChain,
+  getQueryParams,
+  WalletTransactionsQueryFilter,
   PoolConnection,
   PopulateFrom,
   presenceValidator,
   prop,
+  selectAndCountQuery,
   SerializeFor,
   SubstrateChain,
 } from '@apillon/lib';
@@ -21,7 +25,10 @@ import {
 import { Endpoint } from './endpoint';
 import { ethers } from 'ethers';
 import { ApiPromise, WsProvider } from '@polkadot/api';
+import { TransactionLog } from '../../modules/accounting/transaction-log.model';
 
+// For enum inclusion validator
+const EvmOrSubstrateChain = { ...EvmChain, ...SubstrateChain };
 export class Wallet extends AdvancedSQLModel {
   public readonly tableName = DbTables.WALLET;
 
@@ -68,7 +75,7 @@ export class Wallet extends AdvancedSQLModel {
     ],
     validators: [
       {
-        resolver: enumInclusionValidator(EvmChain && SubstrateChain, false),
+        resolver: enumInclusionValidator(EvmOrSubstrateChain, false),
         code: BlockchainErrorCode.WALLET_INVALID_CHAIN,
       },
     ],
@@ -231,9 +238,7 @@ export class Wallet extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB, //
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -255,9 +260,9 @@ export class Wallet extends AdvancedSQLModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${DbTables.WALLET}\`
-      WHERE 
+      WHERE
       chainType = @chainType
       AND chain = @chain
       AND status <> ${SqlModelStatus.DELETED}
@@ -269,7 +274,7 @@ export class Wallet extends AdvancedSQLModel {
       conn,
     );
 
-    if (data && data.length) {
+    if (data?.length) {
       if (data[0].chainType === ChainType.EVM) {
         data[0].address = data[0].address.toLowerCase();
       }
@@ -291,9 +296,9 @@ export class Wallet extends AdvancedSQLModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${DbTables.WALLET}\`
-      WHERE 
+      WHERE
         chainType = @chainType
         AND chain = @chain
         -- case insensitive comparison
@@ -307,11 +312,9 @@ export class Wallet extends AdvancedSQLModel {
       conn,
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   public async updateLastProcessedNonce(
@@ -351,7 +354,7 @@ export class Wallet extends AdvancedSQLModel {
     await this.getContext().mysql.paramExecute(
       `
       UPDATE \`${DbTables.WALLET}\`
-      SET nextNonce = nextNonce + 1, 
+      SET nextNonce = nextNonce + 1,
       usageTimestamp = now()
       WHERE id = @id;
       `,
@@ -360,56 +363,56 @@ export class Wallet extends AdvancedSQLModel {
     );
   }
 
-  public async getList(
-    chain: Chain,
-    chainType: ChainType,
-    address?: string,
+  public async getWallets(
+    chain: Chain = null,
+    chainType: ChainType = null,
+    address: string = null,
     conn?: PoolConnection,
   ) {
     return await this.getContext().mysql.paramExecute(
       `
       SELECT *
       FROM \`${DbTables.WALLET}\`
-      WHERE 
-      status = ${SqlModelStatus.ACTIVE}
-      AND chainType = @chainType
-      AND chain = @chain
-      AND (@address IS NULL OR address like @address);
-      `,
-      { chainType, chain, address: address || null },
-      conn,
-    );
-  }
-
-  public async getAllWallets(
-    chain: Chain = null,
-    chainType: ChainType = null,
-    conn?: PoolConnection,
-  ): Promise<Wallet[]> {
-    const resp = await this.getContext().mysql.paramExecute(
-      `
-      SELECT *
-      FROM \`${DbTables.WALLET}\`
-      WHERE 
+      WHERE
       status = ${SqlModelStatus.ACTIVE}
       AND (@chainType IS NULL OR chainType = @chainType)
-      AND (@chain IS NULL OR chain = @chain);
+      AND (@chain IS NULL OR chain = @chain)
+      AND (@address IS NULL OR address like @address);
       `,
-      { chainType, chain },
+      { chainType, chain, address },
       conn,
-    );
-
-    return (
-      resp?.map((x) => {
-        if (x.chainType === ChainType.EVM) {
-          x.address = x.address.toLowerCase();
-        }
-        return new Wallet(x, this.getContext());
-      }) || []
     );
   }
 
-  public async checkBallance() {
+  public async listWallets(query: BaseQueryFilter) {
+    const filter = new BaseQueryFilter(query);
+    const fieldMap = { id: 'w.id' };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'w',
+      fieldMap,
+      filter.serialize(),
+    );
+    const sqlQuery = {
+      qSelect: `SELECT ${this.generateSelectFields()}`,
+      qFrom: `FROM ${DbTables.WALLET} w
+        WHERE (@search IS null OR w.address LIKE CONCAT('%', @search, '%'))
+        AND w.status <> ${SqlModelStatus.DELETED}`,
+      qFilter: `
+          ORDER BY ${filters.orderStr}
+          LIMIT ${filters.limit} OFFSET ${filters.offset};
+        `,
+    };
+
+    return selectAndCountQuery(
+      this.getContext().mysql,
+      sqlQuery,
+      params,
+      'w.id',
+    );
+  }
+
+  public async checkBalance() {
     let balance = null;
     const endpoint = await new Endpoint({}, this.getContext()).populateByChain(
       this.chain,
@@ -446,4 +449,46 @@ export class Wallet extends AdvancedSQLModel {
         : null,
     };
   }
+
+  public async getTransactions(
+    walletAddress: string,
+    filter: WalletTransactionsQueryFilter,
+  ) {
+    const fieldMap = { id: 't.id' };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      't',
+      fieldMap,
+      filter.serialize(),
+    );
+
+    const sqlQuery = {
+      qSelect: `SELECT ${new TransactionLog(
+        {},
+        this.getContext(),
+      ).generateSelectFields('', '', SerializeFor.ADMIN)}`,
+      qFrom: `FROM \`${DbTables.TRANSACTION_LOG}\` t
+        WHERE t.wallet = '${walletAddress}'
+        AND (@search IS null OR t.hash LIKE CONCAT('%', @search, '%'))
+        AND (@status IS NULL OR t.status = @status)
+        `,
+      qFilter: `
+          ORDER BY ${filters.orderStr}
+          LIMIT ${filters.limit} OFFSET ${filters.offset};
+        `,
+    };
+
+    return selectAndCountQuery(
+      this.getContext().mysql,
+      sqlQuery,
+      { ...params },
+      't.id',
+    );
+  }
 }
+
+export type WalletWithBalance = Wallet & {
+  balance: string;
+  minBalance: string;
+  isBelowThreshold: boolean;
+};

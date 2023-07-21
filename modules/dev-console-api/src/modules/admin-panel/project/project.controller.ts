@@ -25,6 +25,7 @@ import { DevConsoleApiContext } from '../../../context';
 import { ValidationGuard } from '../../../guards/validation.guard';
 import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
 import { UUID } from 'crypto';
+import { BaseQueryFilterValidator } from '../../../decorators/base-query-filter-validator';
 
 @Controller('admin-panel/projects')
 @Permissions({ role: DefaultUserRole.ADMIN })
@@ -33,8 +34,7 @@ export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
   @Get()
-  @Validation({ dto: BaseQueryFilter, validateFor: ValidateFor.QUERY })
-  @UseGuards(ValidationGuard)
+  @BaseQueryFilterValidator()
   async listProjects(
     @Ctx() context: DevConsoleApiContext,
     @Query() query: BaseQueryFilter,
