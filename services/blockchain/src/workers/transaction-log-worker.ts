@@ -23,6 +23,7 @@ import { TransactionLog } from '../modules/accounting/transaction-log.model';
 
 import { EvmBlockchainIndexer } from '../modules/blockchain-indexers/evm/evm-indexer.service';
 import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
+import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/kilt-indexer.service';
 
 export class TransactionLogWorker extends BaseQueueWorker {
   private batchLimit: number;
@@ -156,10 +157,34 @@ export class TransactionLogWorker extends BaseQueueWorker {
             );
           },
 
-          [SubstrateChain.KILT]: () => {
-            // TODO: Add KILT support!!!!!
-            // throw new Error('KILT is not supported yet!');
-            console.log(`KILT LOG HANDLE: !THIS IS A TEST!`);
+          [SubstrateChain.KILT]: async () => {
+            const res =
+              await new KiltBlockchainIndexer().getAllAccountTransfers(
+                wallet.address,
+                lastBlock,
+                limit,
+              );
+            console.log(`Got ${res.length} Kilt transfers!`);
+            return (
+              res
+                .map((x) =>
+                  new TransactionLog(
+                    {},
+                    this.context,
+                  ).createFromKiltIndexerData(x, wallet),
+                )
+                // merge transfers that has the same hash (not happening in kilt?)
+                .reduce((acc, tx) => {
+                  const found = acc.find((x) => x.hash === tx.hash);
+                  if (found) {
+                    found.addToAmount(tx.amount);
+                    found.calculateTotalPrice();
+                  } else {
+                    acc.push(tx);
+                  }
+                  return acc;
+                }, [] as TransactionLog[])
+            );
           },
           [SubstrateChain.PHALA]: () => {
             //
