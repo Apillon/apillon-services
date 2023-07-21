@@ -593,8 +593,8 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       const response = await request(stage.http)
         .post(`/nfts/collections/${childCollection.collection_uuid}/nest-mint`)
         .send({
-          destinationCollectionUuid: parentCollection.collection_uuid,
-          destinationNftId: 1,
+          parentCollectionUuid: parentCollection.collection_uuid,
+          parentNftId: 1,
           quantity: 1,
         })
         .set('Authorization', `Bearer ${nestableUser.token}`);

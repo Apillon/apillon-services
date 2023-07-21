@@ -60,7 +60,7 @@ export class NestMintNftDTO extends ModelBase {
       },
     ],
   })
-  public destinationCollectionUuid: string;
+  public parentCollectionUuid: string;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -72,7 +72,7 @@ export class NestMintNftDTO extends ModelBase {
       },
     ],
   })
-  public destinationNftId: number;
+  public parentNftId: number;
 
   @prop({
     parser: { resolver: stringParser() },

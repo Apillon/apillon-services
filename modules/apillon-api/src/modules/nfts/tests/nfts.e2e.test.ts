@@ -611,8 +611,8 @@ describe('Apillon API NFTs tests', () => {
       const response = await postRequest(
         `/nfts/collections/${childCollection.collectionUuid}/nest-mint`,
         {
-          destinationCollectionUuid: parentCollection.collectionUuid,
-          destinationNftId: 1,
+          parentCollectionUuid: parentCollection.collectionUuid,
+          parentNftId: 1,
           quantity: 1,
         },
         nestableApiKey,

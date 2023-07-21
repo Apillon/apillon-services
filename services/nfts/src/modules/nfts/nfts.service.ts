@@ -581,12 +581,12 @@ export class NftsService {
   ) {
     const sourceFunction = 'nestMintNftTo()';
     console.log(
-      `Nest minting NFT collection with id ${params.body.collection_uuid} under collection with id ${params.body.destinationCollectionUuid} and token id ${params.body.destinationNftId}.`,
+      `Nest minting NFT collection with id ${params.body.collection_uuid} under collection with id ${params.body.parentCollectionUuid} and token id ${params.body.parentNftId}.`,
     );
     const parentCollection: Collection = await new Collection(
       {},
       context,
-    ).populateByUUID(params.body.destinationCollectionUuid);
+    ).populateByUUID(params.body.parentCollectionUuid);
     // only RMRK NFTs can be used for nesting
     if (parentCollection.collectionType !== NFTCollectionType.NESTABLE) {
       throw new NftsCodeException({
@@ -631,7 +631,7 @@ export class NftsService {
       const tx: UnsignedTransaction =
         await walletService.createNestMintToTransaction(
           parentCollection.contractAddress,
-          params.body.destinationNftId,
+          params.body.parentNftId,
           childCollection.contractAddress,
           childCollection.collectionType,
           params.body.quantity,

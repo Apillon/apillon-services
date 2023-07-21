@@ -181,37 +181,40 @@ export class NftTransaction {
 
   /**
    * @param chain EVM chain used
-   * @param destinationCollectionAddress collection under which we are mint nesting NFT
-   * @param destinationNftId NFT id under which we are mint nesting NFT
-   * @param contractAddress NFT contract address
-   * @param collectionType NFTCollectionType
+   * @param parentCollectionAddress collection under which we are mint nesting NFT
+   * @param parentNftId NFT id under which we are mint nesting NFT
+   * @param childCollectionAddress NFT contract address
+   * @param childCollectionType NFTCollectionType
    * @param quantity number of NFTs to nest mint
    * @returns UnsignedTransaction
    */
   static async createNestMintToTransaction(
     chain: EvmChain,
-    destinationCollectionAddress: string,
-    destinationNftId: number,
-    contractAddress: string,
-    collectionType: NFTCollectionType,
+    parentCollectionAddress: string,
+    parentNftId: number,
+    childCollectionAddress: string,
+    childCollectionType: NFTCollectionType,
     quantity: number,
   ): Promise<UnsignedTransaction> {
     console.log(
-      `[${EvmChain[chain]}] Creating NFT (NFT contract=${contractAddress}) nest mint transaction (toAddress=${destinationCollectionAddress}, collection type=${collectionType}).`,
+      `[${EvmChain[chain]}] Creating NFT (NFT contract=${childCollectionAddress}) nest mint transaction (toAddress=${parentCollectionAddress}, collection type=${childCollectionType}).`,
     );
 
-    const nftContractAbi = getNftContractAbi(collectionType);
-    const nftContract: Contract = new Contract(contractAddress, nftContractAbi);
+    const nftContractAbi = getNftContractAbi(childCollectionType);
+    const nftContract: Contract = new Contract(
+      childCollectionAddress,
+      nftContractAbi,
+    );
 
     const txData: PopulatedTransaction =
       await nftContract.populateTransaction.ownerNestMint(
-        destinationCollectionAddress,
+        parentCollectionAddress,
         quantity,
-        destinationNftId,
+        parentNftId,
       );
 
     return {
-      to: contractAddress,
+      to: childCollectionAddress,
       data: txData.data,
       type: 2,
     };

@@ -92,19 +92,19 @@ export class WalletService {
   }
 
   async createNestMintToTransaction(
-    destinationCollectionAddress: string,
-    destinationNftId: number,
-    contract: string,
-    collectionType: NFTCollectionType,
+    parentCollectionAddress: string,
+    parentNftId: number,
+    childCollectionAddress: string,
+    childCollectionType: NFTCollectionType,
     quantity: number,
   ): Promise<UnsignedTransaction> {
     await this.initializeProvider();
     return await NftTransaction.createNestMintToTransaction(
       this.evmChain,
-      destinationCollectionAddress,
-      destinationNftId,
-      contract,
-      collectionType,
+      parentCollectionAddress,
+      parentNftId,
+      childCollectionAddress,
+      childCollectionType,
       quantity,
     );
   }
