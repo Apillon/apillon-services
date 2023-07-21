@@ -144,11 +144,11 @@ export class UserController {
     return this.userService.deleteUserQuota(context, data);
   }
 
-  @Patch(':user_uuid')
-  async updateUser(
+  @Post(':user_uuid/block')
+  async blockUser(
     @Ctx() context: DevConsoleApiContext,
     @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
   ) {
-    return; // TODO
+    return this.userService.blockUser(context, user_uuid);
   }
 }

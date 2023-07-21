@@ -198,8 +198,8 @@ export class User extends AdvancedSQLModel {
         'u',
       )}, COUNT(DISTINCT p.id) AS totalProjects, COUNT(s.id) AS totalServices`,
       qFrom: `FROM \`${DbTables.USER}\` u
-        JOIN project_user pu ON u.id = pu.user_id
-        JOIN project p ON pu.project_id = p.id
+        LEFT JOIN project_user pu ON u.id = pu.user_id
+        LEFT JOIN project p ON pu.project_id = p.id
         LEFT JOIN service s ON p.id = s.project_id
         WHERE (@search IS null OR u.name LIKE CONCAT('%', @search, '%'))
         AND u.status <> ${SqlModelStatus.DELETED}

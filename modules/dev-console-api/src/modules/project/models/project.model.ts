@@ -197,11 +197,16 @@ export class Project extends AdvancedSQLModel {
 
   /**
    * Returns all user projects
+   * @param context
+   * @param user_id if null, projects of user in context are returned
+   * @returns
    */
-
-  public async getUserProjects(context: DevConsoleApiContext) {
+  public async getUserProjects(
+    context: DevConsoleApiContext,
+    user_id?: number,
+  ) {
     const params = {
-      user_id: context.user.id,
+      user_id: user_id || context.user.id,
     };
     const sqlQuery = {
       qSelect: `

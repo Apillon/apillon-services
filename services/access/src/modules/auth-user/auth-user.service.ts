@@ -10,6 +10,7 @@ import {
   SerializeFor,
   ServiceName,
   UserWalletAuthDto,
+  SqlModelStatus,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AmsErrorCode } from '../../config/types';
@@ -568,5 +569,60 @@ export class AuthUserService {
     }
 
     return await new AuthUser({}, context).listRoles(event);
+  }
+
+  /**
+   * Function for setting authUser status (blocking, ...)
+   * @param event user uuid & status to be set
+   * @param context
+   * @returns user
+   */
+  static async updateAuthUserStatus(
+    event: { user_uuid: string; status: SqlModelStatus },
+    context: ServiceContext,
+  ) {
+    const authUser = await new AuthUser({}, context).populateByUserUuid(
+      event.user_uuid,
+      undefined,
+      null,
+    );
+
+    if (!authUser.exists()) {
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.USER_DOES_NOT_EXISTS,
+      });
+    }
+
+    authUser.populate(event, PopulateFrom.SERVICE);
+    try {
+      await authUser.validate();
+    } catch (err) {
+      throw new AmsValidationException(authUser);
+    }
+    try {
+      await authUser.update();
+    } catch (err) {
+      throw await new AmsCodeException({
+        status: 500,
+        code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
+      }).writeToMonitor({
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
+      });
+    }
+
+    // send log to monitoring service
+    await new Lmas().writeLog({
+      context,
+      logType: LogType.INFO,
+      message: 'AuthUser status updated!',
+      location: 'AMS/UserService/updateAuthUserStatus',
+      service: ServiceName.AMS,
+      data: event,
+    });
+
+    return authUser.serialize(SerializeFor.SERVICE);
   }
 }

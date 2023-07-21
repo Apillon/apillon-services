@@ -95,9 +95,12 @@
       "Apillon",
       "ASTAR",
       "Authtrail",
+      "endregion",
       "LMAS",
       "MOONBASE",
-      "PHALA"
+      "PHALA",
+      "populatable",
+      "rawmodel"
     ],
     "files.exclude": {
       "**/.git": true,

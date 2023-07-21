@@ -187,14 +187,18 @@ export class AuthUser extends AdvancedSQLModel {
     super(data, context);
   }
 
-  public async populateByUserUuid(user_uuid: string, conn?: PoolConnection) {
+  public async populateByUserUuid(
+    user_uuid: string,
+    conn?: PoolConnection,
+    status: SqlModelStatus = SqlModelStatus.ACTIVE,
+  ) {
     const res = await this.db().paramExecute(
       `
       SELECT * FROM authUser
       WHERE user_uuid = @user_uuid
-      AND status = @status
+      AND (@status IS NULL OR status = @status)
     `,
-      { user_uuid, status: SqlModelStatus.ACTIVE },
+      { user_uuid, status },
       conn,
     );
 
