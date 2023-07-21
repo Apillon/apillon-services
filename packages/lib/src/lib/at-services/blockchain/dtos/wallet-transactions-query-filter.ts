@@ -6,7 +6,7 @@ import { BaseQueryFilter } from '../../../base-models/base-query-filter.model';
 export class WalletTransactionsQueryFilter extends BaseQueryFilter {
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    populatable: [PopulateFrom.ADMIN],
   })
   public status: number;
 }

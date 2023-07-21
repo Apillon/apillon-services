@@ -5,7 +5,7 @@ import {
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { releaseStage, setupTest, Stage } from '../../../test/setup';
-import { Wallet } from '../../common/models/wallet';
+import { Wallet } from '../../modules/wallet/wallet.model';
 import { DbTables } from '../../config/types';
 import { TransactionLogWorker } from '../transaction-log-worker';
 

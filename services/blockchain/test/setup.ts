@@ -8,7 +8,7 @@ import {
 } from '@apillon/lib';
 import Keyring from '@polkadot/keyring';
 import { mnemonicGenerate } from '@polkadot/util-crypto';
-import { Wallet } from '../src/common/models/wallet';
+import { Wallet } from '../src/modules/wallet/wallet.model';
 import { SubstrateChain } from '@apillon/lib';
 import { ChainType } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';

@@ -22,10 +22,10 @@ import {
   DbTables,
   SqlModelStatus,
 } from '../../config/types';
-import { Endpoint } from './endpoint';
+import { Endpoint } from '../../common/models/endpoint';
 import { ethers } from 'ethers';
 import { ApiPromise, WsProvider } from '@polkadot/api';
-import { TransactionLog } from '../../modules/accounting/transaction-log.model';
+import { TransactionLog } from '../accounting/transaction-log.model';
 
 // For enum inclusion validator
 const EvmOrSubstrateChain = { ...EvmChain, ...SubstrateChain };
@@ -238,7 +238,11 @@ export class Wallet extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
+    populatable: [
+      //
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN,
+    ],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -248,6 +252,94 @@ export class Wallet extends AdvancedSQLModel {
     ],
   })
   public minBalance: string;
+
+  /**
+   * virtual - min balance in base token
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [],
+    serializable: [SerializeFor.ADMIN],
+  })
+  public minTokenBalance: string;
+
+  /**
+   * currentBalance - string representation of BigNumber
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      //
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.WORKER,
+    ],
+  })
+  public currentBalance: string;
+
+  /**
+   * virtual - current balance in base token
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [],
+    serializable: [SerializeFor.ADMIN],
+  })
+  public currentTokenBalance: string;
+
+  /**
+   * decimals - token decimals
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      //
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public decimals: number;
+
+  /**
+   * token - token symbol
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      //
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public token: string;
+
+  public async populateById(
+    id: string | number,
+    conn?: PoolConnection,
+    forUpdate?: boolean,
+  ): Promise<this> {
+    return (
+      await super.populateById(id, conn, forUpdate)
+    ).calculateTokenBallance();
+  }
 
   public async populateByLeastUsed(
     chain: Chain,
@@ -278,7 +370,7 @@ export class Wallet extends AdvancedSQLModel {
       if (data[0].chainType === ChainType.EVM) {
         data[0].address = data[0].address.toLowerCase();
       }
-      return this.populate(data[0], PopulateFrom.DB);
+      return this.populate(data[0], PopulateFrom.DB).calculateTokenBallance();
     } else {
       return this.reset();
     }
@@ -312,9 +404,24 @@ export class Wallet extends AdvancedSQLModel {
       conn,
     );
 
-    return data?.length
-      ? this.populate(data[0], PopulateFrom.DB)
-      : this.reset();
+    if (data?.length) {
+      return this.populate(data[0], PopulateFrom.DB).calculateTokenBallance();
+    }
+    return this.reset();
+  }
+
+  public calculateTokenBallance() {
+    if (!this.decimals) {
+      return this;
+    }
+    this.minTokenBalance = ethers.BigNumber.from(this.minBalance)
+      .div(Math.pow(10, this.decimals))
+      .toString();
+    this.currentTokenBalance = ethers.BigNumber.from(this.currentBalance)
+      .div(Math.pow(10, this.decimals))
+      .toString();
+
+    return this;
   }
 
   public async updateLastProcessedNonce(
@@ -394,7 +501,11 @@ export class Wallet extends AdvancedSQLModel {
       filter.serialize(),
     );
     const sqlQuery = {
-      qSelect: `SELECT ${this.generateSelectFields()}`,
+      qSelect: `SELECT 
+        ${this.generateSelectFields()},
+        w.minBallance / POW(10, w.decimals) as minTokenBallance,
+        w.currentBallance / POW(10, w.decimals) as currentTokenBallance
+      `,
       qFrom: `FROM ${DbTables.WALLET} w
         WHERE (@search IS null OR w.address LIKE CONCAT('%', @search, '%'))
         AND w.status <> ${SqlModelStatus.DELETED}`,
@@ -412,7 +523,7 @@ export class Wallet extends AdvancedSQLModel {
     );
   }
 
-  public async checkBalance() {
+  public async checkAndUpdateBallance() {
     let balance = null;
     const endpoint = await new Endpoint({}, this.getContext()).populateByChain(
       this.chain,
@@ -438,6 +549,9 @@ export class Wallet extends AdvancedSQLModel {
     if (!balance && balance !== '0') {
       throw new Error('Can not check balance!');
     }
+
+    this.currentBalance = balance;
+    await this.update();
 
     return {
       balance,
@@ -486,9 +600,3 @@ export class Wallet extends AdvancedSQLModel {
     );
   }
 }
-
-export type WalletWithBalance = Wallet & {
-  balance: string;
-  minBalance: string;
-  isBelowThreshold: boolean;
-};

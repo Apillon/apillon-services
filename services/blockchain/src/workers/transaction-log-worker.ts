@@ -15,7 +15,7 @@ import {
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { Wallet } from '../common/models/wallet';
+import { Wallet } from '../modules/wallet/wallet.model';
 import { DbTables, TxDirection } from '../config/types';
 import { formatTokenWithDecimals, formatWalletAddress } from '../lib/utils';
 
@@ -293,7 +293,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
   }
 
   private async checkWalletBalance(wallet: Wallet) {
-    const balanceData = await wallet.checkBalance();
+    const balanceData = await wallet.checkAndUpdateBallance();
 
     if (!balanceData.minBalance) {
       await this.writeEventLog(

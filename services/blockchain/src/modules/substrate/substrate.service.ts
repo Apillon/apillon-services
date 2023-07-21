@@ -1,6 +1,6 @@
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Keyring } from '@polkadot/keyring';
-import { Wallet } from '../../common/models/wallet';
+import { Wallet } from '../wallet/wallet.model';
 import {
   SubstrateChain,
   ChainType,

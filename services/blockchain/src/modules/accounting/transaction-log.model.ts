@@ -16,7 +16,7 @@ import {
   stringParser,
 } from '@rawmodel/parsers';
 import { ethers } from 'ethers';
-import { Wallet } from '../../common/models/wallet';
+import { Wallet } from '../wallet/wallet.model';
 
 import {
   BlockchainErrorCode,

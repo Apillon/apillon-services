@@ -15,7 +15,7 @@ import {
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { Transaction } from '../common/models/transaction';
-import { Wallet } from '../common/models/wallet';
+import { Wallet } from '../modules/wallet/wallet.model';
 import { DbTables } from '../config/types';
 import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
 import { BlockchainStatus } from '../modules/blockchain-indexers/blockchain-status';

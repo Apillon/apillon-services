@@ -4,7 +4,7 @@ import {
   sendToWorkerQueue,
   LogOutput,
 } from '@apillon/workers-lib';
-import { Wallet } from '../common/models/wallet';
+import { Wallet } from '../modules/wallet/wallet.model';
 import { BaseBlockchainIndexer } from '../modules/blockchain-indexers/substrate/base-blockchain-indexer';
 import {
   ChainType,
