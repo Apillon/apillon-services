@@ -101,14 +101,6 @@ export enum IdentityState {
   REVOKED = 'revoked',
 }
 
-export enum IdentityJobState {
-  // State 1: DID_CREATE -> State 2: ATESTATION
-  DID_CREATE = 'did-create',
-  ATESTATION = 'attestation',
-  // State 1: DID_REVOKE
-  DID_REVOKE = 'did-revoke',
-}
-
 export enum CredentialAttestStatus {
   PENDING = 'pending',
   ATTESTED = 'attested',
@@ -204,11 +196,13 @@ export interface ApillonSelfSignedProof extends Proof {
 
 export const APILLON_DAPP_NAME = 'ApillonDApp';
 
-export enum TransactionType {
-  DID_CREATE = 1,
-  DID_REVOKE = 2,
-  ATTESTATION = 3,
-}
-
 // Retry once
 export const IDENTITY_JOB_MAX_RETRIES = 1;
+
+export enum IdentityJobState {
+  // State 1: DID_CREATE -> State 2: ATESTATION
+  DID_CREATE = 'did-create',
+  ATESTATION = 'attestation',
+  // State 1: DID_REVOKE
+  DID_REVOKE = 'did-revoke',
+}

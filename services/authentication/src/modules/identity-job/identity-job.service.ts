@@ -4,10 +4,11 @@ import { AuthenticationValidationException } from '../../lib/exceptions';
 import { IdentityJob } from './models/identity-job.model';
 
 export class IdentityJobService {
-  public static async initOrGetIdentityJob(
+  public static async createOrGetIdentityJob(
     context: ServiceContext,
     identity_id: number,
     finalState?: string,
+    data?: any,
   ) {
     // if this is a retry, return existing
     const identityJob = await new IdentityJob({}, context).populateByIdentityId(
@@ -20,6 +21,7 @@ export class IdentityJobService {
           .populate({
             identity_id: identity_id,
             finalState: finalState,
+            data: data,
           })
           .insert();
   }
