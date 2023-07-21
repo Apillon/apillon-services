@@ -14,6 +14,7 @@ import {
   ValidatorErrorCode,
 } from '../../../../config/types';
 import { enumInclusionValidator } from '../../../validators';
+import { dropReserveLowerOrEqualToMaxSupplyValidator } from '../validators/create-collection-drop-reserve-validator';
 
 export class CreateCollectionDTOBase extends ModelBase {
   @prop({
@@ -157,6 +158,14 @@ export class CreateCollectionDTOBase extends ModelBase {
       {
         resolver: presenceValidator(),
         code: ValidatorErrorCode.NFT_DEPLOY_RESERVE_NOT_PRESENT,
+      },
+      {
+        resolver: numberSizeValidator({ minOrEqual: 0 }),
+        code: ValidatorErrorCode.NFT_DEPLOY_DROP_RESERVE_NOT_VALID,
+      },
+      {
+        resolver: dropReserveLowerOrEqualToMaxSupplyValidator(),
+        code: ValidatorErrorCode.NFT_DEPLOY_DROP_RESERVE_GREATER_THAN_MAX_SUPPLY,
       },
     ],
   })
