@@ -51,7 +51,7 @@ export async function runCachedFunction(
       await cache.connect();
       result = await cache.getKey(key);
       if (result) {
-        console.info('CACHE: Returning function results from CACHE!');
+        console.info('[CACHE]: Returning function results from CACHE!');
         await cache.disconnect();
         // console.timeEnd('CHECK_CACHE');
         return result;
@@ -63,7 +63,7 @@ export async function runCachedFunction(
   // console.time('ACTION_CACHE');
   result = await action.call(this);
   // console.timeEnd('ACTION_CACHE');
-  console.warn('CACHE: Missing key! Returning result from function!');
+  console.warn('[CACHE]: Missing key! Returning result from function!');
 
   if (cache) {
     // console.time('SET_CACHE');
@@ -75,7 +75,7 @@ export async function runCachedFunction(
     }
     // console.timeEnd('SET_CACHE');
   } else {
-    console.info('CACHE: Result is not saved to cache!');
+    console.info('[CACHE]: Result is not saved to cache!');
   }
 
   return result;
@@ -166,7 +166,7 @@ export async function flushCache() {
     const cache = new AppCache();
     await cache.connect();
     await cache.flush();
-    await await cache.disconnect();
+    await cache.disconnect();
   } catch (err) {
     console.error(err);
   }
@@ -187,16 +187,7 @@ export class AppCache {
   }
 
   public async connect() {
-    // this.redisClient = redis.createClient({
-    //   password: 'gntF3mGEKxUNiqlykqcjSjzhm66zl5bw',
-    //   socket: {
-    //     host: 'redis-10228.c300.eu-central-1-1.ec2.cloud.redislabs.com',
-    //     port: 10228,
-    //   },
-    // });
-    this.redisClient = redis.createClient({
-      url: env.REDIS_URL,
-    });
+    this.redisClient = redis.createClient({ url: env.REDIS_URL });
     await this.redisClient.connect();
   }
 
@@ -216,10 +207,10 @@ export class AppCache {
   public async removeMatch(keyPattern: string) {
     const keys = await this.redisClient.keys(keyPattern);
     if (keys.length) {
-      console.info(`CACHE: Removing keys: ${keys.join(', ')}`);
+      // console.info(`[CACHE]: Removing keys: ${keys.join(', ')}`);
       await this.redisClient.del(keys);
     } else {
-      console.info(`CACHE: Found no keys to be removed.`);
+      console.warn(`[CACHE]: Found no keys to be removed.`);
     }
   }
 
