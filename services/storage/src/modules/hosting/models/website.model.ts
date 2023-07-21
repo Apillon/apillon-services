@@ -499,8 +499,6 @@ export class Website extends AdvancedSQLModel {
 
   /**
    * Function to get count of active web pages inside project
-   * @param project_uuid
-   * @param bucketType
    * @returns
    */
   public async getNumOfWebsites() {

@@ -6,7 +6,7 @@ export function ResponseFormat() {
   const after = (request) => {
     // console.log('RESPONSE FORMAT MIDDLEWARE');
     // console.log(request);
-    if (request.response) {
+    if (request.response != null) {
       request.response = {
         success: true,
         status: 200,

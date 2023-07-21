@@ -138,4 +138,12 @@ export class NftsMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
+
+  public async getProjectCollectionsCount(project_uuid: string) {
+    const data = {
+      eventName: NftsEventType.PROJECT_COLLECTIONS_COUNT,
+      project_uuid,
+    };
+    return await this.callService(data);
+  }
 }

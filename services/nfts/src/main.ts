@@ -28,6 +28,7 @@ export async function processEvent(event, context: Context): Promise<any> {
     [NftsEventType.DEPLOY_COLLECTION]: NftsService.deployCollection,
     [NftsEventType.EXECUTE_DEPLOY_COLLECTION_WORKER]:
       NftsService.executeDeployCollectionWorker,
+    [NftsEventType.PROJECT_COLLECTIONS_COUNT]: NftsService.getCollectionsCount,
   };
 
   return await processors[event.eventName](event, context);

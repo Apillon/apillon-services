@@ -479,6 +479,16 @@ export class NftsService {
     }
   }
 
+  static async getCollectionsCount(
+    { project_uuid }: { project_uuid: string },
+    context: ServiceContext,
+  ) {
+    return await new Collection(
+      { project_uuid },
+      context,
+    ).getCollectionsCount();
+  }
+
   //#endregion
 
   //#region NFT functions

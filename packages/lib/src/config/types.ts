@@ -111,8 +111,10 @@ export enum StorageEventType {
   WEBSITE_GET = 'get-website',
   WEBSITE_DEPLOY = 'deploy-website',
   WEBSITE_LIST_DOMAINS = 'list-website-domains',
+  GET_TOTAL_PROJECT_WEBSITES = 'get-total-project-websites',
   WEBSITE_QUOTA_REACHED = 'websites-quota-reached',
   BUCKET_CLEAR_CONTENT = 'clear-bucket-content',
+  GET_BUCKET_DETAILS_FOR_PROJECT = 'get-bucket-details-for-project',
   DEPLOYMENT_GET = 'get-deployment',
   DEPLOYMENT_LIST = 'list-deployment',
   EXECUTE_PREPARE_COLLECTION_BASE_URI_WORKER = 'execute-prepare-collection-base-uri-worker',
@@ -163,6 +165,7 @@ export enum NftsEventType {
   BURN_NFT = 'burn-nft',
   MAX_COLLECTIONS_QUOTA_REACHED = 'max-collections-quota-reached',
   EXECUTE_DEPLOY_COLLECTION_WORKER = 'execute-deploy-collection-worker',
+  PROJECT_COLLECTIONS_COUNT = 'project-collections-count',
 }
 
 export enum ReferralEventType {

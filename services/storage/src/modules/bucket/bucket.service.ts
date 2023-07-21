@@ -19,6 +19,7 @@ import { BucketType, StorageErrorCode } from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import {
   StorageCodeException,
+  StorageNotFoundException,
   StorageValidationException,
 } from '../../lib/exceptions';
 import { HostingService } from '../hosting/hosting.service';
@@ -42,10 +43,7 @@ export class BucketService {
   ) {
     const b = await new Bucket({}, context).populateById(event.id);
     if (!b.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.BUCKET_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException();
     }
     b.canAccess(context);
 
@@ -129,10 +127,7 @@ export class BucketService {
     const b: Bucket = await new Bucket({}, context).populateById(event.id);
 
     if (!b.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.BUCKET_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException();
     }
     b.canModify(context);
 
@@ -161,10 +156,7 @@ export class BucketService {
     const b: Bucket = await new Bucket({}, context).populateById(event.id);
 
     if (!b.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.BUCKET_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException();
     } else if (b.status == SqlModelStatus.MARKED_FOR_DELETION) {
       throw new StorageCodeException({
         code: StorageErrorCode.BUCKET_ALREADY_MARKED_FOR_DELETION,
@@ -193,10 +185,7 @@ export class BucketService {
     const b: Bucket = await new Bucket({}, context).populateById(event.id);
 
     if (!b.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.BUCKET_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException();
     } else if (b.status != SqlModelStatus.MARKED_FOR_DELETION) {
       throw new StorageCodeException({
         code: StorageErrorCode.BUCKET_NOT_MARKED_FOR_DELETION,
@@ -217,10 +206,7 @@ export class BucketService {
     const b: Bucket = await new Bucket({}, context).populateById(event.id);
 
     if (!b.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.BUCKET_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException();
     }
     b.canAccess(context);
 
@@ -268,6 +254,13 @@ export class BucketService {
     };
   }
 
+  static async getBucketDetailsForProject(
+    { project_uuid }: { project_uuid: string },
+    context: ServiceContext,
+  ): Promise<any> {
+    return await new Bucket({ project_uuid }, context).getDetailsForProject();
+  }
+
   //#region bucket webhook functions
 
   static async getBucketWebhook(
@@ -280,10 +273,9 @@ export class BucketService {
     ).populateByBucketId(event.bucket_id);
 
     if (!webhook.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.BUCKET_WEBHOOK_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException(
+        StorageErrorCode.BUCKET_WEBHOOK_NOT_FOUND,
+      );
     }
     await webhook.canAccess(context);
 
@@ -299,10 +291,7 @@ export class BucketService {
     );
 
     if (!b.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.BUCKET_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException();
     }
 
     b.canModify(context);
@@ -354,10 +343,9 @@ export class BucketService {
     ).populateById(event.id);
 
     if (!webhook.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.BUCKET_WEBHOOK_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException(
+        StorageErrorCode.BUCKET_WEBHOOK_NOT_FOUND,
+      );
     }
     await webhook.canModify(context);
 
@@ -385,10 +373,9 @@ export class BucketService {
     ).populateById(event.id);
 
     if (!webhook.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.BUCKET_WEBHOOK_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException(
+        StorageErrorCode.BUCKET_WEBHOOK_NOT_FOUND,
+      );
     }
     await webhook.canModify(context);
 

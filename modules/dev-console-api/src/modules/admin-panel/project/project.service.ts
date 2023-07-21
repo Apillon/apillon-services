@@ -8,6 +8,8 @@ import {
   QuotaOverrideDto,
   GetQuotasDto,
   Scs,
+  StorageMicroservice,
+  NftsMicroservice,
 } from '@apillon/lib';
 import { ResourceNotFoundErrorCode } from '../../../config/types';
 import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
@@ -37,7 +39,14 @@ export class ProjectService {
   async getProject(
     context: DevConsoleApiContext,
     project_uuid: UUID,
-  ): Promise<Project> {
+  ): Promise<
+    Project & {
+      totalBucketSize: number;
+      numOfWebsites: number;
+      numOfBuckets: number;
+      numOfCollections: number;
+    }
+  > {
     const project: Project = await new Project({}, context).populateByUUID(
       project_uuid,
     );
@@ -48,8 +57,24 @@ export class ProjectService {
         errorCodes: ResourceNotFoundErrorCode,
       });
     }
+    const { data: projectBucketDetails } = await new StorageMicroservice(
+      context,
+    ).getProjectBucketDetails(project_uuid);
 
-    return project;
+    const { data: numOfWebsites } = await new StorageMicroservice(
+      context,
+    ).getNumOfProjectWebsites(project_uuid);
+
+    const { data: numOfCollections } = await new NftsMicroservice(
+      context,
+    ).getProjectCollectionsCount(project_uuid);
+
+    return {
+      ...project,
+      ...projectBucketDetails,
+      numOfWebsites,
+      numOfCollections,
+    };
   }
 
   /**

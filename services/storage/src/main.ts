@@ -33,6 +33,8 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.MAX_BUCKETS_QUOTA_REACHED]:
       BucketService.maxBucketsQuotaReached,
     [StorageEventType.BUCKET_CLEAR_CONTENT]: BucketService.clearBucketContent,
+    [StorageEventType.GET_BUCKET_DETAILS_FOR_PROJECT]:
+      BucketService.getBucketDetailsForProject,
 
     [StorageEventType.CREATE_DIRECTORY]: DirectoryService.createDirectory,
     [StorageEventType.UPDATE_DIRECTROY]: DirectoryService.updateDirectory,
@@ -69,6 +71,8 @@ export async function processEvent(event, context: Context): Promise<any> {
       HostingService.maxWebsitesQuotaReached,
     [StorageEventType.REQUEST_S3_SIGNED_URLS_FOR_WEBSITE_UPLOAD]:
       HostingService.generateMultipleS3UrlsForUpload,
+    [StorageEventType.GET_TOTAL_PROJECT_WEBSITES]:
+      HostingService.getNumberOfWebsites,
 
     [StorageEventType.DEPLOYMENT_GET]: HostingService.getDeployment,
     [StorageEventType.DEPLOYMENT_LIST]: HostingService.listDeployments,
