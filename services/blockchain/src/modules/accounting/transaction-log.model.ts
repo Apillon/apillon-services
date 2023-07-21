@@ -303,7 +303,7 @@ export class TransactionLog extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
+    populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -318,12 +318,13 @@ export class TransactionLog extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: floatParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
     ],
   })
   public value: number;
@@ -339,6 +340,7 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
     ],
   })
   public description: string;

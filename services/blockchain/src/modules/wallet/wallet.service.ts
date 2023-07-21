@@ -101,8 +101,8 @@ export class WalletService {
         throw new BlockchainValidationException(transaction);
       }
     }
-    await transaction.update(SerializeFor.ADMIN);
-    return transaction;
+    await transaction.update();
+    return transaction.serialize(SerializeFor.ADMIN) as TransactionLog;
   }
 
   static checkExists(wallet: Wallet) {

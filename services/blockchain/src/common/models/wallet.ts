@@ -473,7 +473,7 @@ export class Wallet extends AdvancedSQLModel {
         AND (@status IS NULL OR t.status = @status)
         `,
       qFilter: `
-          ORDER BY ${filters.orderStr}
+          ORDER BY ${filters.orderStr || 't.ts DESC'}
           LIMIT ${filters.limit} OFFSET ${filters.offset};
         `,
     };
