@@ -289,6 +289,7 @@ export class SubstrateService {
         wallets[i].lastProcessedNonce,
       );
 
+      // continue to next wallet if there is no transactions!
       if (!transactions.length) {
         continue;
       }

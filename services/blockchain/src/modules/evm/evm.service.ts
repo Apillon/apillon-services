@@ -309,6 +309,12 @@ export class EvmService {
         wallets[i].address,
         wallets[i].lastProcessedNonce,
       );
+
+      // continue to next wallet if there is no transactions!
+      if (!transactions.length) {
+        continue;
+      }
+
       let latestSuccess = null;
       let transmitted = 0;
 
