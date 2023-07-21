@@ -331,7 +331,10 @@ export class EvmService {
               wallet: wallets[i].address,
             },
           });
-          if (env.APP_ENV === AppEnvironment.TEST) {
+          if (
+            env.APP_ENV === AppEnvironment.TEST ||
+            env.APP_ENV === AppEnvironment.LOCAL_DEV
+          ) {
             throw e;
           }
           break;
