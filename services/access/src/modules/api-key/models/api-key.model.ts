@@ -246,7 +246,7 @@ export class ApiKey extends AdvancedSQLModel {
       `
       SELECT * 
       FROM \`${this.tableName}\`
-      WHERE apiKey = @apiKey AND status <> ${SqlModelStatus.DELETED};
+      WHERE apiKey = @apiKey AND status = ${SqlModelStatus.ACTIVE};
       `,
       { apiKey },
     );
@@ -263,7 +263,7 @@ export class ApiKey extends AdvancedSQLModel {
       `
       SELECT * 
       FROM \`${DbTables.API_KEY_ROLE}\`
-      WHERE apiKey_id = @id AND status <> ${SqlModelStatus.DELETED};
+      WHERE apiKey_id = @id AND status = ${SqlModelStatus.ACTIVE};
       `,
       { id: this.id },
     );

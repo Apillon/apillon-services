@@ -195,16 +195,28 @@ export class UserService {
 
     const conn = await context.mysql.start();
     try {
+      //Update user status
       await user.update(SerializeFor.UPDATE_DB, conn);
-      await new Ams(context).updateAuthUserStatus({
+
+      //Update user status in access MS + delete current login tokens (logout)
+      const ams: Ams = new Ams(context);
+      await ams.updateAuthUserStatus({
         user_uuid,
         status: SqlModelStatus.BLOCKED,
       });
+      await ams.logout({ user_uuid: user.user_uuid });
 
+      //Block api keys
       await new Ams(context).updateApiKeysInProject({
         project_uuids: userProjects.items.map((x) => x.project_uuid),
         block: true,
       });
+
+      //Block projects
+      await new Project({}, context).updateUserProjectsStatus(
+        user.id,
+        SqlModelStatus.BLOCKED,
+      );
 
       await context.mysql.commit(conn);
     } catch (err) {
@@ -216,5 +228,63 @@ export class UserService {
         details: err,
       });
     }
+
+    return user.serialize(SerializeFor.ADMIN);
+  }
+
+  /**
+   * Unblock user. Implemented as separate endpoint.
+   * Set status of user and authUser to active and unblock api keys, to enable access via APIs
+   * @param context
+   * @param user_uuid
+   */
+  async unblockUser(context: DevConsoleApiContext, user_uuid: string) {
+    const user = await new User({}, context).populateByUUID(user_uuid);
+
+    if (!user.exists()) {
+      throw new CodeException({
+        status: HttpStatus.NOT_FOUND,
+        code: ResourceNotFoundErrorCode.USER_DOES_NOT_EXISTS,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+
+    user.status = SqlModelStatus.ACTIVE;
+
+    const userProjects = await new Project({}).getUserProjects(
+      context,
+      user.id,
+    );
+
+    const conn = await context.mysql.start();
+    try {
+      await user.update(SerializeFor.UPDATE_DB, conn);
+      await new Ams(context).updateAuthUserStatus({
+        user_uuid,
+        status: SqlModelStatus.ACTIVE,
+      });
+
+      await new Ams(context).updateApiKeysInProject({
+        project_uuids: userProjects.items.map((x) => x.project_uuid),
+        block: false,
+      });
+
+      await new Project({}, context).updateUserProjectsStatus(
+        user.id,
+        SqlModelStatus.ACTIVE,
+      );
+
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+      throw new CodeException({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        code: SystemErrorCode.UNHANDLED_SYSTEM_ERROR,
+        errorCodes: SystemErrorCode,
+        details: err,
+      });
+    }
+
+    return user.serialize(SerializeFor.ADMIN);
   }
 }

@@ -206,6 +206,23 @@ export class AuthUserService {
   }
 
   /**
+   * Logout function. Used to logout specific user (logout by admin) or to logout user making the request
+   * @param event
+   * @param context
+   * @returns
+   */
+  static async logout(event: { user_uuid: string }, context: ServiceContext) {
+    const authUser = await new AuthUser({}, context).populateByUserUuid(
+      event.user_uuid || context.user.user_uuid,
+    );
+
+    if (authUser.exists()) {
+      await authUser.logoutUser();
+    }
+    return true;
+  }
+
+  /**
    * Retrieves an authenticated user's data using their token.
    * @param event An object containing the user's token.
    * @param context The ServiceContext instance for the current request.
@@ -594,7 +611,7 @@ export class AuthUserService {
       });
     }
 
-    authUser.populate(event, PopulateFrom.SERVICE);
+    authUser.status = event.status;
     try {
       await authUser.validate();
     } catch (err) {

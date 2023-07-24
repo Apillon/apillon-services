@@ -95,6 +95,14 @@ export class Ams extends BaseService {
     };
   }
 
+  public async logout(params: { user_uuid?: string }) {
+    const data = {
+      eventName: AmsEventType.USER_LOGOUT,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
   public async resetPassword(params: { token: string; password: string }) {
     const data = {
       eventName: AmsEventType.USER_PASSWORD_RESET,

@@ -25,6 +25,7 @@ export async function processEvent(
     [AmsEventType.USER_PASSWORD_RESET]: AuthUserService.resetPassword,
     [AmsEventType.USER_EMAIL_EXISTS]: AuthUserService.emailExists,
     [AmsEventType.GET_AUTH_USER_BY_EMAIL]: AuthUserService.getAuthUserByEmail,
+    [AmsEventType.USER_LOGOUT]: AuthUserService.logout,
 
     [AmsEventType.USER_WALLET_LOGIN]: AuthUserService.loginWithWalletAddress,
 

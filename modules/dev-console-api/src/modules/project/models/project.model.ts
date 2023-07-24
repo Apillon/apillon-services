@@ -222,6 +222,30 @@ export class Project extends AdvancedSQLModel {
     return selectAndCountQuery(context.mysql, sqlQuery, params, 'p.id');
   }
 
+  /**
+   * Update status (block, unblock) of all user projects
+   * @param userId
+   * @param status
+   * @returns
+   */
+  public async updateUserProjectsStatus(userId: number, status: number) {
+    await this.getContext().mysql.paramExecute(
+      `
+      UPDATE \`${this.tableName}\` p
+      SET p.status = @status
+      WHERE EXISTS (
+        SELECT 1 FROM \`${DbTables.PROJECT_USER}\` pu 
+        WHERE pu.user_id = @userId
+        AND pu.project_id = p.id
+      )
+      AND p.status IN ( ${SqlModelStatus.ACTIVE}, ${SqlModelStatus.BLOCKED} )
+      `,
+      { userId, status },
+    );
+
+    return true;
+  }
+
   public async listProjects(
     context: DevConsoleApiContext,
     filter: BaseQueryFilter,

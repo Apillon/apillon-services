@@ -299,6 +299,29 @@ export class AuthUser extends AdvancedSQLModel {
     }
   }
 
+  public async logoutUser() {
+    const context = this.getContext();
+
+    try {
+      // Find old token
+      const oldToken = await new AuthToken({}, context).populateByUserAndType(
+        this.user_uuid,
+        JwtTokenType.USER_AUTHENTICATION,
+      );
+
+      if (oldToken.exists()) {
+        console.log('Deleting token ...');
+        oldToken.status = SqlModelStatus.DELETED;
+        await oldToken.update(SerializeFor.UPDATE_DB);
+      }
+    } catch (err) {
+      throw await new AmsCodeException({
+        status: 500,
+        code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
+      }).writeToMonitor({ user_uuid: this.user_uuid });
+    }
+  }
+
   public verifyPassword(password: string) {
     return (
       typeof password === 'string' &&
