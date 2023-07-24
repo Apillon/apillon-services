@@ -14,6 +14,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   ParseIntPipe,
   ParseUUIDPipe,
@@ -144,6 +145,7 @@ export class UserController {
   }
 
   @Post(':user_uuid/block')
+  @HttpCode(200)
   async blockUser(
     @Ctx() context: DevConsoleApiContext,
     @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
@@ -152,6 +154,7 @@ export class UserController {
   }
 
   @Post(':user_uuid/unblock')
+  @HttpCode(200)
   async unblockUser(
     @Ctx() context: DevConsoleApiContext,
     @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
