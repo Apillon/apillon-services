@@ -338,7 +338,7 @@ export class Wallet extends AdvancedSQLModel {
   ): Promise<this> {
     return (
       await super.populateById(id, conn, forUpdate)
-    ).calculateTokenBallance();
+    ).calculateTokenBalance();
   }
 
   public async populateByLeastUsed(
@@ -370,7 +370,7 @@ export class Wallet extends AdvancedSQLModel {
       if (data[0].chainType === ChainType.EVM) {
         data[0].address = data[0].address.toLowerCase();
       }
-      return this.populate(data[0], PopulateFrom.DB).calculateTokenBallance();
+      return this.populate(data[0], PopulateFrom.DB).calculateTokenBalance();
     } else {
       return this.reset();
     }
@@ -405,12 +405,12 @@ export class Wallet extends AdvancedSQLModel {
     );
 
     if (data?.length) {
-      return this.populate(data[0], PopulateFrom.DB).calculateTokenBallance();
+      return this.populate(data[0], PopulateFrom.DB).calculateTokenBalance();
     }
     return this.reset();
   }
 
-  public calculateTokenBallance() {
+  public calculateTokenBalance() {
     if (!this.decimals) {
       return this;
     }
@@ -503,8 +503,8 @@ export class Wallet extends AdvancedSQLModel {
     const sqlQuery = {
       qSelect: `SELECT 
         ${this.generateSelectFields()},
-        w.minBallance / POW(10, w.decimals) as minTokenBallance,
-        w.currentBallance / POW(10, w.decimals) as currentTokenBallance
+        w.minBalance / POW(10, w.decimals) as minTokenBalance,
+        w.currentBalance / POW(10, w.decimals) as currentTokenBalance
       `,
       qFrom: `FROM ${DbTables.WALLET} w
         WHERE (@search IS null OR w.address LIKE CONCAT('%', @search, '%'))
@@ -523,7 +523,7 @@ export class Wallet extends AdvancedSQLModel {
     );
   }
 
-  public async checkAndUpdateBallance() {
+  public async checkAndUpdateBalance() {
     let balance = null;
     const endpoint = await new Endpoint({}, this.getContext()).populateByChain(
       this.chain,

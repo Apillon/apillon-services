@@ -30,8 +30,8 @@ export class WalletService {
     const wallet = await new Wallet({}, context).populateById(walletId);
     WalletService.checkExists(wallet);
 
-    await wallet.checkAndUpdateBallance();
-    wallet.calculateTokenBallance();
+    await wallet.checkAndUpdateBalance();
+    wallet.calculateTokenBalance();
 
     return wallet.serialize(SerializeFor.ADMIN);
   }

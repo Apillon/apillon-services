@@ -5,7 +5,7 @@ export async function upgrade(
 ): Promise<void> {
   await queryFn(`
     ALTER TABLE \`${DbTables.WALLET}\` 
-    ADD COLUMN \`currentBalance\` DECIMAL(40,0) NULL AFTER \`minBallance\`,
+    ADD COLUMN \`currentBalance\` DECIMAL(40,0) NULL AFTER \`minBalance\`,
     ADD COLUMN \`decimals\` INT(3) NULL AFTER \`currentBalance\`,
     ADD COLUMN \`token\` VARCHAR(10) NULL AFTER \`decimals\`;
   `);
