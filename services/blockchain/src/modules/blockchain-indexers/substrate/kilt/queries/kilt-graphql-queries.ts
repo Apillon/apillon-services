@@ -1,6 +1,6 @@
-export enum KiltGQLQueries {
+export class KiltGQLQueries {
   // NOTE: These params are always present
-  BASE_SUBSTRATE_PARAMS_Q = `
+  static BASE_SUBSTRATE_PARAMS = `
     id
     blockHash
     blockNumber
@@ -9,10 +9,36 @@ export enum KiltGQLQueries {
     transactionType
     createdAt
     status
-  `,
+    `;
 
   /* Returns all TRANSFERS from a specific account in KILT */
-  ACCOUNT_TRANSFERS_Q = `query getAccountTransfers(
+  static ACCOUNT_ALL_TRANSFERS_QUERY = `query getAccountTransfers(
+    $account: String!
+    $fromBlock: Int!, 
+    $limit: Int!
+   ) {
+    transfers(
+      where: {
+        AND: {
+          blockNumber_gte: $fromBlock,
+          AND: { 
+            OR: [{from_eq: $account}, {to_eq: $account}]
+          }
+        }
+      }
+      limit: $limit
+    )
+    {
+      ${this.BASE_SUBSTRATE_PARAMS}
+      from
+      to
+      amount
+      fee
+    }
+  }`;
+
+  /* Returns TRANSFERS by TransactionType from a specific account in KILT */
+  static ACCOUNT_TRANSFERS_BY_TYPE_QUERY = `query getAccountTransfers(
     $account: String!
     $fromBlock: Int!, 
     $toBlock: Int!,
@@ -30,16 +56,16 @@ export enum KiltGQLQueries {
       }
     )
     {
-      ${BASE_SUBSTRATE_PARAMS_Q}
+      ${this.BASE_SUBSTRATE_PARAMS}
       from
       to
       amount
       fee
     }
-  }`,
+  }`;
 
   /* Returns all transactions releated to DID from a specific account in KILT */
-  ACCOUNT_DID_Q = `query getAccountDidTransactions(
+  static ACCOUNT_DID_QUERY = `query getAccountDidTransactions(
     $account: String!,
     $fromBlock: Int!,
     $toBlock: Int!,
@@ -55,15 +81,15 @@ export enum KiltGQLQueries {
       }
     )
     {
-      ${BASE_SUBSTRATE_PARAMS_Q}
+      ${this.BASE_SUBSTRATE_PARAMS}
       account
       didId
       fee
     }
-  }`,
+  }`;
 
   /* Returns all attestations performed by attesterId */
-  ACCOUNT_ATTESTATIONS_Q = `query getAccountAttestations(
+  static ACCOUNT_ATTESTATIONS_QUERY = `query getAccountAttestations(
       $account: String!,
       $fromBlock: Int!
       $toBlock: Int!
@@ -81,11 +107,11 @@ export enum KiltGQLQueries {
         }
       }
     ) {
-      ${BASE_SUBSTRATE_PARAMS_Q}
+      ${this.BASE_SUBSTRATE_PARAMS}
       account
       attesterId
       claimHash
       fee
     }
-  }`,
+  }`;
 }

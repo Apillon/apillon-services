@@ -428,7 +428,7 @@ dotenv.config({ path: '../../.env' });
 
 export let env: IEnv = {
   APP_URL: process.env['APP_URL'] || 'https://app.apillon.io',
-  APP_ENV: process.env['APP_ENV'] || AppEnvironment.STG,
+  APP_ENV: process.env['APP_ENV'] || AppEnvironment.LOCAL_DEV,
   LOG_TARGET: process.env['LOG_TARGET'] || 'console',
   LOG_LEVEL: process.env['LOG_LEVEL'] || 'no-db',
   AWS_REGION: process.env['AWS_REGION'], // env var from lambda - can not be overwritten in lambda setting!

@@ -1,4 +1,4 @@
-import { Wallet } from './../models/wallet';
+import { Wallet } from '../../modules/wallet/wallet.model';
 
 export type WalletBalanceData = {
   balance: string;

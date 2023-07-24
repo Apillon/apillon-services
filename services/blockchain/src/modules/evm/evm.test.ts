@@ -1,7 +1,7 @@
 import { ChainType, EvmChain, SubstrateChain } from '@apillon/lib';
 import { releaseStage, setupTest, Stage } from '../../../test/setup';
 import { Endpoint } from '../../common/models/endpoint';
-import { Wallet } from '../../common/models/wallet';
+import { Wallet } from '../wallet/wallet.model';
 import { EvmService } from './evm.service';
 import { ethers, UnsignedTransaction } from 'ethers';
 

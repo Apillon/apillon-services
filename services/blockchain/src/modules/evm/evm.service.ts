@@ -14,7 +14,7 @@ import { LogOutput, sendToWorkerQueue } from '@apillon/workers-lib';
 import { ethers } from 'ethers';
 import { Endpoint } from '../../common/models/endpoint';
 import { Transaction } from '../../common/models/transaction';
-import { Wallet } from '../../common/models/wallet';
+import { Wallet } from '../wallet/wallet.model';
 import { BlockchainErrorCode } from '../../config/types';
 import { BlockchainCodeException } from '../../lib/exceptions';
 import { evmChainToJob } from '../../lib/helpers';
@@ -309,6 +309,12 @@ export class EvmService {
         wallets[i].address,
         wallets[i].lastProcessedNonce,
       );
+
+      // continue to next wallet if there is no transactions!
+      if (!transactions.length) {
+        continue;
+      }
+
       let latestSuccess = null;
       let transmitted = 0;
 

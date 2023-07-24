@@ -2,7 +2,6 @@ import {
   ChainType,
   DefaultUserRole,
   EvmChain,
-  QuotaCode,
   SerializeFor,
   SqlModelStatus,
   env,
@@ -16,9 +15,9 @@ import {
 } from '@apillon/tests-lib';
 import { releaseStage, Stage } from '@apillon/tests-lib';
 import { setupTest } from '../../../../../test/helpers/setup';
-import { Wallet } from '@apillon/blockchain/src/common/models/wallet';
 import { TransactionLog } from '@apillon/blockchain/src/modules/accounting/transaction-log.model';
 import { TxAction, TxDirection } from '@apillon/blockchain/src/config/types';
+import { Wallet } from '@apillon/blockchain/src/modules/wallet/wallet.model';
 describe('Blockchain endpoint tests', () => {
   let stage: Stage;
 
@@ -49,6 +48,9 @@ describe('Blockchain endpoint tests', () => {
         nonce: 0,
         nextNoce: 1,
         status: SqlModelStatus.ACTIVE,
+        minBalance: 200_000_000_000,
+        currentBalance: 200_000_000_001,
+        decimals: 10,
       },
       stage.blockchainContext,
     );

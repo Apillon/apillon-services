@@ -1,6 +1,6 @@
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Keyring } from '@polkadot/keyring';
-import { Wallet } from '../../common/models/wallet';
+import { Wallet } from '../wallet/wallet.model';
 import {
   SubstrateChain,
   ChainType,
@@ -289,6 +289,7 @@ export class SubstrateService {
         wallets[i].lastProcessedNonce,
       );
 
+      // continue to next wallet if there is no transactions!
       if (!transactions.length) {
         continue;
       }
