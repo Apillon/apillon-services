@@ -247,6 +247,7 @@ export class Wallet extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
       SerializeFor.WORKER,
     ],
@@ -307,6 +308,7 @@ export class Wallet extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
     ],
   })
@@ -326,6 +328,7 @@ export class Wallet extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
     ],
   })

@@ -13,9 +13,11 @@ import {
   startGanacheRPCServer,
   TestUser,
 } from '@apillon/tests-lib';
+import { ethers } from 'ethers';
 import { releaseStage, Stage } from '@apillon/tests-lib';
 import { setupTest } from '../../../../../test/helpers/setup';
 import { TransactionLog } from '@apillon/blockchain/src/modules/accounting/transaction-log.model';
+import { WalletTransactionSumData } from '@apillon/blockchain/src/common/dto/wallet-with-balance.dto';
 import { TxAction, TxDirection } from '@apillon/blockchain/src/config/types';
 import { Wallet } from '@apillon/blockchain/src/modules/wallet/wallet.model';
 describe('Blockchain endpoint tests', () => {
@@ -46,7 +48,7 @@ describe('Blockchain endpoint tests', () => {
         chain: EvmChain.MOONBASE,
         seed: '2cf25b7536db83303e3fb5b8ca50a08758ffbfd1a4e1c7a8bc7a4d6e9f9e7519',
         nonce: 0,
-        nextNoce: 1,
+        nextNonce: 1,
         status: SqlModelStatus.ACTIVE,
         minBalance: 200_000_000_000,
         currentBalance: 200_000_000_001,
@@ -54,7 +56,9 @@ describe('Blockchain endpoint tests', () => {
       },
       stage.blockchainContext,
     );
-    await testWallet.insert(SerializeFor.ADMIN);
+    await testWallet.checkAndUpdateBalance();
+    testWallet.calculateTokenBalance();
+    await testWallet.insert();
 
     testTransaction = new TransactionLog(
       {
@@ -66,9 +70,9 @@ describe('Blockchain endpoint tests', () => {
         direction: TxDirection.INCOME,
         hash: '1234567890',
         token: 'ETH',
-        amount: '1',
-        fee: '0.01',
-        totalPrice: '1.01',
+        amount: 1,
+        fee: 0.01,
+        totalPrice: 1.01,
         status: SqlModelStatus.ACTIVE,
         ts: new Date(),
       },
@@ -81,7 +85,6 @@ describe('Blockchain endpoint tests', () => {
   afterAll(async () => {
     await releaseStage(stage);
   });
-
   describe('Wallets GET tests', () => {
     test('Get all wallets (as list)', async () => {
       const response = await request(stage.http)
@@ -100,15 +103,34 @@ describe('Blockchain endpoint tests', () => {
         .get(`/admin-panel/blockchain/wallets/${testWallet.id}`)
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.data?.id).toBeTruthy();
-
-      const serializedWallet = new Wallet(
-        response.body.data,
-        stage.blockchainContext,
-      ).serialize(SerializeFor.ADMIN);
-      for (const key of Object.keys(serializedWallet)) {
-        expect(serializedWallet[key]).toEqual(testWallet[key]);
-      }
+      const wallet = response.body.data;
+      expect(wallet?.id).toBeTruthy();
+      // Set update data for object comparison to work
+      wallet.createTime = testWallet.createTime;
+      wallet.updateTime = testWallet.updateTime;
+      wallet.updateUser = testWallet.updateUser;
+      expect(wallet).toMatchObject(testWallet);
+      const transactionSumDataProps: Array<keyof WalletTransactionSumData> = [
+        'totalFeeTransaction',
+        'totalAmountDeposit',
+        'totalAmountTransaction',
+        'totalPriceDeposit',
+        'totalValueDeposit',
+        'totalValueTransaction',
+      ];
+      transactionSumDataProps.forEach((prop) =>
+        expect(typeof wallet[prop]).toBe('number'),
+      );
+      expect(wallet.minTokenBalance).toEqual(
+        ethers.BigNumber.from(wallet.minBalance)
+          .div(10 ** wallet.decimals)
+          .toString(),
+      );
+      expect(wallet.currentTokenBalance).toEqual(
+        ethers.BigNumber.from(wallet.currentBalance)
+          .div(10 ** wallet.decimals)
+          .toString(),
+      );
     });
 
     test('Non-admin user should NOT be able to get a wallet', async () => {
@@ -121,18 +143,24 @@ describe('Blockchain endpoint tests', () => {
 
   describe('Update wallet tests', () => {
     test(`Update a wallet's minBalance`, async () => {
-      const minBalance = 10;
+      const minBalance = 100_000_000_000;
+      const decimals = 9;
+      const token = 'TEST';
       const response = await request(stage.http)
         .patch(`/admin-panel/blockchain/wallets/${testWallet.id}`)
         .set('Authorization', `Bearer ${adminTestUser.token}`)
-        .send({ minBalance });
+        .send({ minBalance, decimals, token });
       expect(response.status).toBe(200);
       expect(response.body.data.id).toBeTruthy();
       expect(+response.body.data.minBalance).toEqual(minBalance);
+      expect(response.body.data.decimals).toEqual(decimals);
+      expect(response.body.data.token).toEqual(token);
       const data = await stage.blockchainContext.mysql.paramExecute(
-        `SELECT minBalance from wallet WHERE id = '${testWallet.id}'`,
+        `SELECT token, decimals, minBalance from wallet WHERE id = '${testWallet.id}'`,
       );
-      expect(data[0].minBalance).toBe(minBalance);
+      expect(data[0].token).toEqual(token);
+      expect(data[0].decimals).toEqual(decimals);
+      expect(data[0].minBalance).toEqual(minBalance);
     });
 
     test('Non-admin user should NOT be able to update a wallet', async () => {
@@ -158,15 +186,14 @@ describe('Blockchain endpoint tests', () => {
 
   describe('Transactions PATCH tests', () => {
     test('Update a transaction', async () => {
+      const value = 1.05;
+      const description = 'test123';
       const response = await request(stage.http)
         .patch(
           `/admin-panel/blockchain/wallets/${testWallet.id}/transactions/${testTransaction.id}`,
         )
         .set('Authorization', `Bearer ${adminTestUser.token}`)
-        .send({
-          value: 1.05,
-          description: 'test123',
-        });
+        .send({ value, description });
       expect(response.status).toBe(200);
       expect(response.body.data.id).toEqual(testTransaction.id);
       expect(response.body.data.value).toBe(1.05);
@@ -175,8 +202,8 @@ describe('Blockchain endpoint tests', () => {
       const data = await stage.blockchainContext.mysql.paramExecute(
         `SELECT value, description from transaction_log WHERE id = '${testTransaction.id}'`,
       );
-      expect(data[0]?.value).toBe(1.05);
-      expect(data[0]?.description).toBe('test123');
+      expect(data[0]?.value).toBe(value);
+      expect(data[0]?.description).toBe(description);
     });
 
     test('Non-admin user should NOT be able to update a transaction', async () => {
