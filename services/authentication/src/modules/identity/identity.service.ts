@@ -323,6 +323,8 @@ export class IdentityMicroservice {
       attesterAcc.address,
     );
 
+    console.log('Transaction TX: ', attestationTx.toString());
+
     const bcsRequest = await attestationRequestBc(
       context,
       attestationTx,

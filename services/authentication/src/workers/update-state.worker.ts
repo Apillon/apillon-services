@@ -103,7 +103,7 @@ export class UpdateStateWorker extends BaseQueueWorker {
   }
 
   public async runExecutor(input: any): Promise<any> {
-    console.info('RUN EXECUTOR (UpdateCrustStatusWorker). data: ', input);
+    console.info('RUN EXECUTOR (UpdateKiltStatusWorker). data: ', input);
 
     await runWithWorkers(
       input.data,
