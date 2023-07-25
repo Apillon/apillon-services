@@ -75,6 +75,13 @@ export class TestBlockchain {
     await this._server.close();
   }
 
+  getTransactionReceipt(transactionHash: string) {
+    return this._server.provider.request({
+      method: 'eth_getTransactionReceipt',
+      params: [transactionHash],
+    });
+  }
+
   getWalletAddresses() {
     return this._accounts;
   }

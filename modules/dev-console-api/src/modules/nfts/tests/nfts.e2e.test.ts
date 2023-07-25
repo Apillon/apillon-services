@@ -170,6 +170,18 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
 
       newCollection.collectionStatus = CollectionStatus.DEPLOYED;
       await newCollection.update();
+      const transactions: Transaction[] = await new Transaction(
+        {},
+        stage.nftsContext,
+      ).getCollectionTransactions(newCollection.id);
+      const transaction = transactions.find(
+        (x) => x.transactionType == TransactionType.DEPLOY_CONTRACT,
+      );
+      expect(transaction).toBeTruthy();
+      const receipt = await blockchain.getTransactionReceipt(
+        transaction.transactionHash,
+      );
+      expect(receipt).toBeTruthy();
     });
 
     test('User should be able to get collection transactions', async () => {
@@ -192,26 +204,29 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       expect(response.status).toBe(201);
 
       //Check if new transactions exists
-      const transaction: Transaction[] = await new Transaction(
+      const transactions: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
       ).getCollectionTransactions(newCollection.id);
-
-      expect(
-        transaction.find((x) => x.transactionType == TransactionType.MINT_NFT),
-      ).toBeTruthy();
+      const transaction = transactions.find(
+        (x) => x.transactionType == TransactionType.MINT_NFT,
+      );
+      expect(transaction).toBeTruthy();
+      const receipt = await blockchain.getTransactionReceipt(
+        transaction.transactionHash,
+      );
+      expect(receipt).toBeTruthy();
     });
 
-    // TODO: fix test (contract is always set to isRevokable=false)
-    // test('User should be able to burn collection NFT', async () => {
-    //   const response = await request(stage.http)
-    //     .post(`/nfts/collections/${newCollection.collection_uuid}/burn`)
-    //     .send({ tokenId: 1 })
-    //     .set('Authorization', `Bearer ${testUser.token}`);
-    //
-    //   expect(response.status).toBe(201);
-    //   expect(response.body.data.success).toBe(true);
-    // });
+    test('User should be able to burn collection NFT', async () => {
+      const response = await request(stage.http)
+        .post(`/nfts/collections/${newCollection.collection_uuid}/burn`)
+        .send({ tokenId: 1 })
+        .set('Authorization', `Bearer ${testUser.token}`);
+
+      expect(response.status).toBe(201);
+      expect(response.body.data.success).toBe(true);
+    });
 
     test('User should be able to transfer NFT collection', async () => {
       const response = await request(stage.http)
@@ -225,17 +240,18 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       expect(response.status).toBe(201);
 
       //Check if new transactions exists
-      const transaction: Transaction[] = await new Transaction(
+      const transactions: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
       ).getCollectionTransactions(newCollection.id);
-
-      expect(
-        transaction.find(
-          (x) =>
-            x.transactionType == TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
-        ),
-      ).toBeTruthy();
+      const transaction = transactions.find(
+        (x) => x.transactionType == TransactionType.BURN_NFT,
+      );
+      expect(transaction).toBeTruthy();
+      const receipt = await blockchain.getTransactionReceipt(
+        transaction.transactionHash,
+      );
+      expect(receipt).toBeTruthy();
     });
 
     test('User should NOT be able to transfer NFT collection multiple times', async () => {
@@ -420,6 +436,18 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       expect(
         collectionMetadataFiles.find((x) => x.name == '1.json').directory_id,
       ).toBe(metadataDir.id);
+      const transactions: Transaction[] = await new Transaction(
+        {},
+        stage.nftsContext,
+      ).getCollectionTransactions(newCollection.id);
+      const transaction = transactions.find(
+        (x) => x.transactionType == TransactionType.DEPLOY_CONTRACT,
+      );
+      expect(transaction).toBeTruthy();
+      const receipt = await blockchain.getTransactionReceipt(
+        transaction.transactionHash,
+      );
+      expect(receipt).toBeTruthy();
     });
   });
 
@@ -495,6 +523,18 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       ).populateById(response.body.data.id);
 
       expect(nestableCollection.exists()).toBeTruthy();
+      const transactions: Transaction[] = await new Transaction(
+        {},
+        stage.nftsContext,
+      ).getCollectionTransactions(nestableCollection.id);
+      const transaction = transactions.find(
+        (x) => x.transactionType == TransactionType.DEPLOY_CONTRACT,
+      );
+      expect(transaction).toBeTruthy();
+      const receipt = await blockchain.getTransactionReceipt(
+        transaction.transactionHash,
+      );
+      expect(receipt).toBeTruthy();
 
       nestableCollection.collectionStatus = CollectionStatus.DEPLOYED;
       await nestableCollection.update();
@@ -522,14 +562,18 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       expect(response.status).toBe(201);
 
       //Check if new transactions exists
-      const transaction: Transaction[] = await new Transaction(
+      const transactions: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
       ).getCollectionTransactions(nestableCollection.id);
-
-      expect(
-        transaction.find((x) => x.transactionType == TransactionType.MINT_NFT),
-      ).toBeTruthy();
+      const transaction = transactions.find(
+        (x) => x.transactionType == TransactionType.MINT_NFT,
+      );
+      expect(transaction).toBeTruthy();
+      const receipt = await blockchain.getTransactionReceipt(
+        transaction.transactionHash,
+      );
+      expect(receipt).toBeTruthy();
     });
 
     test('User should be able to nest mint NFT for nestable NFT', async () => {
@@ -602,27 +646,41 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       expect(response.body.data.success).toBe(true);
 
       //Check if new transactions exists
-      const transaction: Transaction[] = await new Transaction(
+      const transactions: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
       ).getCollectionTransactions(childCollection.id);
-      expect(
-        transaction.find(
-          (x) => x.transactionType == TransactionType.NEST_MINT_NFT,
-        ),
-      ).toBeTruthy();
+      const transaction = transactions.find(
+        (x) => x.transactionType == TransactionType.NEST_MINT_NFT,
+      );
+      expect(transaction).toBeTruthy();
+      const receipt = await blockchain.getTransactionReceipt(
+        transaction.transactionHash,
+      );
+      expect(receipt).toBeTruthy();
     });
 
-    // TODO: fix test (contract is always set to isRevokable=false)
-    // test('User should be able to burn nestable collection NFT', async () => {
-    //   const response = await request(stage.http)
-    //     .post(`/nfts/collections/${nestableCollection.collection_uuid}/burn`)
-    //     .send({ tokenId: 1 })
-    //     .set('Authorization', `Bearer ${nestableUser.token}`);
-    //
-    //   expect(response.status).toBe(201);
-    //   expect(response.body.data.success).toBe(true);
-    // });
+    test('User should be able to burn nestable collection NFT', async () => {
+      const response = await request(stage.http)
+        .post(`/nfts/collections/${nestableCollection.collection_uuid}/burn`)
+        .send({ tokenId: 1 })
+        .set('Authorization', `Bearer ${nestableUser.token}`);
+
+      expect(response.status).toBe(201);
+      expect(response.body.data.success).toBe(true);
+      const transactions: Transaction[] = await new Transaction(
+        {},
+        stage.nftsContext,
+      ).getCollectionTransactions(nestableCollection.id);
+      const transaction = transactions.find(
+        (x) => x.transactionType == TransactionType.BURN_NFT,
+      );
+      expect(transaction).toBeTruthy();
+      const receipt = await blockchain.getTransactionReceipt(
+        transaction.transactionHash,
+      );
+      expect(receipt).toBeTruthy();
+    });
 
     test('User should be able to transfer nestable NFT collection', async () => {
       const response = await request(stage.http)
@@ -636,17 +694,18 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       expect(response.status).toBe(201);
 
       //Check if new transactions exists
-      const transaction: Transaction[] = await new Transaction(
+      const transactions: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
       ).getCollectionTransactions(nestableCollection.id);
-
-      expect(
-        transaction.find(
-          (x) =>
-            x.transactionType == TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
-        ),
-      ).toBeTruthy();
+      const transaction = transactions.find(
+        (x) => x.transactionType == TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
+      );
+      expect(transaction).toBeTruthy();
+      const receipt = await blockchain.getTransactionReceipt(
+        transaction.transactionHash,
+      );
+      expect(receipt).toBeTruthy();
     });
 
     test('User should NOT be able to Mint transferred nestable collection', async () => {

@@ -44,19 +44,17 @@ describe('Apillon API NFTs tests', () => {
   let testUser: TestUser;
   let testProject: Project, nestableProject: Project;
   let testService: Service;
-  let testCollection: Collection,
-    transferredCollection: Collection,
-    nestableCollection: Collection;
+  let genericCollection: Collection,
+    nestableCollection: Collection,
+    transferredCollection: Collection;
   let apiKey: ApiKey, nestableApiKey: ApiKey;
   let getRequest, postRequest;
-  let deployerAddress: string;
 
   beforeAll(async () => {
     stage = await setupTest();
 
     blockchain = new TestBlockchain(stage, CHAIN_ID);
     await blockchain.start();
-    deployerAddress = blockchain.getWalletAddress(0);
 
     //User 1 project & other data
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
@@ -72,14 +70,6 @@ describe('Apillon API NFTs tests', () => {
     testService = await createTestProjectService(
       stage.devConsoleContext,
       testProject,
-    );
-    testCollection = await createTestNFTCollection(
-      testUser,
-      stage.nftsContext,
-      testProject,
-      SqlModelStatus.ACTIVE,
-      CollectionStatus.CREATED,
-      { baseUri: TEST_COLLECTION_BASE_URI },
     );
 
     transferredCollection = await createTestNFTCollection(
@@ -162,21 +152,53 @@ describe('Apillon API NFTs tests', () => {
         serviceType_id: AttachedServiceType.NFT,
       }),
     );
-
-    nestableCollection = await createTestNFTCollection(
-      nestableUser,
-      stage.nftsContext,
-      nestableProject,
-      SqlModelStatus.INCOMPLETE,
-      0,
-      { collectionType: 2 },
-    );
   });
 
   describe('Moonbeam NFT Collection tests', () => {
+    test('User should be able to create new collection with existing baseURI', async () => {
+      const response = await postRequest('/nfts/collections', {
+        collectionType: 1,
+        symbol: 'TNFT',
+        name: 'Test NFT Collection',
+        maxSupply: 50,
+        project_uuid: testProject.project_uuid,
+        baseUri: TEST_COLLECTION_BASE_URI,
+        baseExtension: 'json',
+        drop: true,
+        dropStart: 123,
+        dropReserve: 5,
+        dropPrice: 1,
+        chain: 1287,
+        isRevokable: true,
+        isSoulbound: false,
+        royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
+        royaltiesFees: 0,
+      });
+
+      expect(response.status).toBe(201);
+      expect(response.body.data.contractAddress).toBeTruthy();
+      genericCollection = await new Collection(
+        {},
+        stage.nftsContext,
+      ).populateById(response.body.data.id);
+      expect(genericCollection.exists()).toBeTruthy();
+      const transactions: Transaction[] = await new Transaction(
+        {},
+        stage.nftsContext,
+      ).getCollectionTransactions(genericCollection.id);
+      const transaction = transactions.find(
+        (x) => x.transactionType == TransactionType.DEPLOY_CONTRACT,
+      );
+      expect(transaction).toBeTruthy();
+      const receipt = blockchain.getTransactionReceipt(
+        transaction.transactionHash,
+      );
+      expect(receipt).toBeTruthy();
+    });
+
     test('User should be able to get collection list', async () => {
       const response = await getRequest(
-        `/nfts/collections?status=${CollectionStatus.DEPLOY_INITIATED}&search=${testCollection.name}`,
+        `/nfts/collections?status=${CollectionStatus.DEPLOYING}&search=${genericCollection.name}`,
       );
 
       expect(response.status).toBe(200);
@@ -189,15 +211,15 @@ describe('Apillon API NFTs tests', () => {
       expect(firstCollection?.symbol).toBeTruthy();
       expect(firstCollection?.name).toBeTruthy();
       expect(firstCollection?.maxSupply).toBeTruthy();
-      expect(firstCollection?.dropPrice).toBe(0);
-      expect(firstCollection?.drop).toBe(0);
-      expect(firstCollection?.isSoulbound).toBe(0);
-      expect(firstCollection?.isRevokable).toBeTruthy();
+      expect(firstCollection?.drop).toBe(1);
       expect(firstCollection?.dropStart).toBeTruthy();
       expect(firstCollection?.dropReserve).toBeTruthy();
+      expect(firstCollection?.dropPrice).toBe(1);
+      expect(firstCollection?.isSoulbound).toBe(0);
+      expect(firstCollection?.isRevokable).toBeTruthy();
       expect(firstCollection?.royaltiesFees).toBe(0);
       expect(firstCollection?.royaltiesAddress).toBeTruthy();
-      expect(firstCollection?.collectionStatus).toBe(0);
+      expect(firstCollection?.collectionStatus).toBe(2);
       expect(firstCollection?.contractAddress).toBeTruthy();
       expect(firstCollection?.chain).toBeTruthy();
     });
@@ -237,54 +259,25 @@ describe('Apillon API NFTs tests', () => {
 
     test('User should be able to get collection by uuid', async () => {
       const response = await getRequest(
-        `/nfts/collections/${testCollection.collection_uuid}`,
+        `/nfts/collections/${genericCollection.collection_uuid}`,
       );
 
       const data = response.body.data;
       expect(response.status).toBe(200);
       expect(data.id).toBeTruthy();
-      expect(data.collectionUuid).toBe(testCollection.collection_uuid);
-      expect(data.symbol).toBe(testCollection.symbol);
-      expect(data.name).toBe(testCollection.name);
-      expect(data.maxSupply).toBe(testCollection.maxSupply);
-      expect(data.dropPrice).toBe(testCollection.dropPrice);
-      expect(data.baseUri).toBe(testCollection.baseUri);
-      expect(data.baseExtension).toBe(testCollection.baseExtension);
-      expect(data.drop).toBe(testCollection.drop);
-      expect(data.isSoulbound).toBe(testCollection.isSoulbound);
-      expect(data.isRevokable).toBe(testCollection.isRevokable);
-      expect(data.dropStart).toBe(testCollection.dropStart);
-      expect(data.dropReserve).toBe(testCollection.dropReserve);
-      expect(data.royaltiesFees).toBe(testCollection.royaltiesFees);
-    });
-
-    test('User should be able to create new collection with existing baseURI', async () => {
-      const response = await postRequest('/nfts/collections', {
-        collectionType: 1,
-        symbol: 'TNFT',
-        name: 'Test NFT Collection',
-        maxSupply: 50,
-        dropPrice: 0,
-        project_uuid: testProject.project_uuid,
-        baseUri: TEST_COLLECTION_BASE_URI,
-        baseExtension: 'json',
-        drop: false,
-        dropStart: 0,
-        dropReserve: 5,
-        chain: 1287,
-        isRevokable: true,
-        isSoulbound: false,
-        royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
-        royaltiesFees: 0,
-      });
-
-      expect(response.status).toBe(201);
-      expect(response.body.data.contractAddress).toBeTruthy();
-      const createdCollection = await new Collection(
-        {},
-        stage.nftsContext,
-      ).populateById(response.body.data.id);
-      expect(createdCollection.exists()).toBeTruthy();
+      expect(data.collectionUuid).toBe(genericCollection.collection_uuid);
+      expect(data.symbol).toBe(genericCollection.symbol);
+      expect(data.name).toBe(genericCollection.name);
+      expect(data.maxSupply).toBe(genericCollection.maxSupply);
+      expect(data.dropPrice).toBe(genericCollection.dropPrice);
+      expect(data.baseUri).toBe(genericCollection.baseUri);
+      expect(data.baseExtension).toBe(genericCollection.baseExtension);
+      expect(data.drop).toBe(genericCollection.drop);
+      expect(data.isSoulbound).toBe(genericCollection.isSoulbound);
+      expect(data.isRevokable).toBe(genericCollection.isRevokable);
+      expect(data.dropStart).toBe(genericCollection.dropStart);
+      expect(data.dropReserve).toBe(genericCollection.dropReserve);
+      expect(data.royaltiesFees).toBe(genericCollection.royaltiesFees);
     });
 
     test('User should be able to get collection transactions', async () => {
@@ -315,7 +308,7 @@ describe('Apillon API NFTs tests', () => {
 
     test('User should be able to mint NFT', async () => {
       const response = await postRequest(
-        `/nfts/collections/${testCollection.collection_uuid}/mint`,
+        `/nfts/collections/${genericCollection.collection_uuid}/mint`,
         {
           receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
           quantity: 1,
@@ -324,23 +317,40 @@ describe('Apillon API NFTs tests', () => {
 
       expect(response.status).toBe(201);
       //Check if new transactions exists
-      const transaction: Transaction[] = await new Transaction(
+      const transactions: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
-      ).getCollectionTransactions(testCollection.id);
-      expect(
-        transaction.find((x) => x.transactionType == TransactionType.MINT_NFT),
-      ).toBeTruthy();
+      ).getCollectionTransactions(genericCollection.id);
+      const transaction = transactions.find(
+        (x) => x.transactionType == TransactionType.MINT_NFT,
+      );
+      expect(transaction).toBeTruthy();
+      const receipt = blockchain.getTransactionReceipt(
+        transaction.transactionHash,
+      );
+      expect(receipt).toBeTruthy();
     });
 
-    test('User should be able to burn nestable collection NFT', async () => {
+    test('User should be able to burn collection NFT', async () => {
       const response = await postRequest(
-        `/nfts/collections/${testCollection.collection_uuid}/burn`,
+        `/nfts/collections/${genericCollection.collection_uuid}/burn`,
         { tokenId: 1 },
       );
 
       expect(response.status).toBe(201);
       expect(response.body.data.success).toBe(true);
+      const transactions: Transaction[] = await new Transaction(
+        {},
+        stage.nftsContext,
+      ).getCollectionTransactions(genericCollection.id);
+      const transaction = transactions.find(
+        (x) => x.transactionType == TransactionType.BURN_NFT,
+      );
+      expect(transaction).toBeTruthy();
+      const receipt = blockchain.getTransactionReceipt(
+        transaction.transactionHash,
+      );
+      expect(receipt).toBeTruthy();
     });
 
     test('User should be able to transfer NFT collection', async () => {
@@ -353,16 +363,22 @@ describe('Apillon API NFTs tests', () => {
 
       expect(response.status).toBe(201);
       //Check if new transactions exists
-      const transaction: Transaction[] = await new Transaction(
+      const transactions: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
       ).getCollectionTransactions(transferredCollection.id);
-      expect(
-        transaction.find(
-          (x) =>
-            x.transactionType == TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
-        ),
-      ).toBeTruthy();
+
+      const transaction = transactions.find(
+        (x) => x.transactionType == TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
+      );
+      expect(transaction).toBeTruthy();
+      const receipt = blockchain.getTransactionReceipt(
+        transaction.transactionHash,
+      );
+      expect(receipt).toBeTruthy();
+      //indexer is not running when testing so we have to manually update status
+      transferredCollection.collectionStatus = CollectionStatus.TRANSFERED;
+      await transferredCollection.update();
     });
 
     test('User should NOT be able to transfer NFT collection multiple times', async () => {
@@ -373,43 +389,13 @@ describe('Apillon API NFTs tests', () => {
         },
       );
 
-      expect(response.status).toBe(400);
-    });
-
-    test('User should NOT be able to Mint transferred collection', async () => {
-      const newCollection = await createTestNFTCollection(
-        testUser,
-        stage.nftsContext,
-        testProject,
-        SqlModelStatus.DRAFT,
-        CollectionStatus.CREATED,
-        { collectionStatus: CollectionStatus.TRANSFERED },
-      );
-
-      const response = await postRequest(
-        `/nfts/collections/${newCollection.collection_uuid}/mint`,
-        {
-          receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
-          quantity: 1,
-        },
-      );
-
       expect(response.status).toBe(500);
       expect(response.body.code).toBe(50012002);
     });
 
     test('User should NOT be able to Mint transferred collection', async () => {
-      const newCollection = await createTestNFTCollection(
-        testUser,
-        stage.nftsContext,
-        testProject,
-        SqlModelStatus.DRAFT,
-        CollectionStatus.CREATED,
-        { collectionStatus: CollectionStatus.TRANSFERED },
-      );
-
       const response = await postRequest(
-        `/nfts/collections/${newCollection.collection_uuid}/mint`,
+        `/nfts/collections/${transferredCollection.collection_uuid}/mint`,
         {
           receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
           quantity: 1,
@@ -426,12 +412,12 @@ describe('Apillon API NFTs tests', () => {
       const response = await postRequest('/nfts/collections', {
         symbol: 'TNFT',
         name: 'Test NFT Collection',
-        maxSupply: 2,
+        maxSupply: 4,
         dropPrice: 0,
         project_uuid: testProject.project_uuid,
         baseExtension: 'json',
-        drop: false,
-        dropStart: 0,
+        drop: true,
+        dropStart: 123,
         dropReserve: 2,
         chain: 1287,
         isRevokable: true,
@@ -444,37 +430,37 @@ describe('Apillon API NFTs tests', () => {
     });
 
     describe('NFT Collection limit tests', () => {
-      test('User should NOT be able to mint more NFTs that are supplyed in collection', async () => {
+      test('User should NOT be able to mint more NFTs that are supplied in collection', async () => {
         const response = await postRequest(
-          `/nfts/collections/${testCollection.collection_uuid}/mint`,
+          `/nfts/collections/${genericCollection.collection_uuid}/mint`,
           {
             receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
-            quantity: testCollection.maxSupply + 1,
+            quantity: genericCollection.maxSupply + 1,
           },
         );
 
-        expect(response.status).toBe(500);
-        expect(response.body.code).toBe(50012007);
+        expect(response.status).toBe(422);
+        expect(response.body.errors[0].code).toBe(42200123);
       });
     });
   });
 
   describe('NFT Collection tests for nestable type', () => {
     test('User should be able to create nestable collection with existing baseURI', async () => {
-      const testCollectionName = 'Nestable Created NFT Collection';
+      const testCollectionName = 'Nestable NFT Collection';
       const response = await postRequest(
         '/nfts/collections',
         {
           collectionType: 2,
-          symbol: 'ANFT',
+          symbol: 'NNFT',
           name: testCollectionName,
           maxSupply: 50,
           dropPrice: 0,
           project_uuid: nestableProject.project_uuid,
           baseUri: TEST_COLLECTION_BASE_URI,
           baseExtension: 'json',
-          drop: false,
-          dropStart: 0,
+          drop: true,
+          dropStart: 123,
           dropReserve: 5,
           chain: CHAIN_ID,
           isRevokable: true,
@@ -487,15 +473,27 @@ describe('Apillon API NFTs tests', () => {
 
       expect(response.status).toBe(201);
       expect(response.body.data.contractAddress).toBeTruthy();
-      const createdCollection = await new Collection(
+      nestableCollection = await new Collection(
         {},
         stage.nftsContext,
       ).populateById(response.body.data.id);
-      expect(createdCollection.exists()).toBeTruthy();
-      expect(createdCollection.name).toBe(testCollectionName);
-      expect(createdCollection.collectionStatus).toBe(
+      expect(nestableCollection.exists()).toBeTruthy();
+      expect(nestableCollection.name).toBe(testCollectionName);
+      expect(nestableCollection.collectionStatus).toBe(
         CollectionStatus.DEPLOYING,
       );
+      const transactions: Transaction[] = await new Transaction(
+        {},
+        stage.nftsContext,
+      ).getCollectionTransactions(nestableCollection.id);
+      const transaction = transactions.find(
+        (x) => x.transactionType == TransactionType.DEPLOY_CONTRACT,
+      );
+      expect(transaction).toBeTruthy();
+      const receipt = blockchain.getTransactionReceipt(
+        transaction.transactionHash,
+      );
+      expect(receipt).toBeTruthy();
     });
 
     test('User should be able to get nestable collection transactions', async () => {
@@ -540,49 +538,21 @@ describe('Apillon API NFTs tests', () => {
 
       expect(response.status).toBe(201);
       //Check if new transactions exists
-      const transaction: Transaction[] = await new Transaction(
+      const transactions: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
       ).getCollectionTransactions(nestableCollection.id);
-      expect(
-        transaction.find((x) => x.transactionType == TransactionType.MINT_NFT),
-      ).toBeTruthy();
+      const transaction = transactions.find(
+        (x) => x.transactionType == TransactionType.MINT_NFT,
+      );
+      expect(transaction).toBeTruthy();
+      const receipt = blockchain.getTransactionReceipt(
+        transaction.transactionHash,
+      );
+      expect(receipt).toBeTruthy();
     });
 
     test('User should be able to nest mint NFT for nestable NFT', async () => {
-      const parentCollectionResponse = await postRequest(
-        '/nfts/collections',
-        {
-          collectionType: 2,
-          symbol: 'PNFT',
-          name: 'Parent Collection',
-          maxSupply: 50,
-          dropPrice: 0,
-          project_uuid: nestableProject.project_uuid,
-          baseUri: TEST_COLLECTION_BASE_URI,
-          baseExtension: 'json',
-          drop: false,
-          dropStart: 0,
-          dropReserve: 5,
-          chain: CHAIN_ID,
-          isRevokable: true,
-          isSoulbound: false,
-          royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
-          royaltiesFees: 0,
-        },
-        nestableApiKey,
-      );
-      expect(parentCollectionResponse.status).toBe(201);
-      const parentCollection = parentCollectionResponse.body.data;
-      const parentCollectionMintResponse = await postRequest(
-        `/nfts/collections/${parentCollection.collectionUuid}/mint`,
-        {
-          receivingAddress: deployerAddress,
-          quantity: 1,
-        },
-        nestableApiKey,
-      );
-      expect(parentCollectionMintResponse.status).toBe(201);
       const childCollectionResponse = await postRequest(
         '/nfts/collections',
         {
@@ -611,7 +581,7 @@ describe('Apillon API NFTs tests', () => {
       const response = await postRequest(
         `/nfts/collections/${childCollection.collectionUuid}/nest-mint`,
         {
-          parentCollectionUuid: parentCollection.collectionUuid,
+          parentCollectionUuid: nestableCollection.collection_uuid,
           parentNftId: 1,
           quantity: 1,
         },
@@ -621,15 +591,18 @@ describe('Apillon API NFTs tests', () => {
       expect(response.status).toBe(201);
       expect(response.body.data.success).toBe(true);
       //Check if new transactions exists
-      const transaction: Transaction[] = await new Transaction(
+      const transactions: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
       ).getCollectionTransactions(childCollection.id);
-      expect(
-        transaction.find(
-          (x) => x.transactionType == TransactionType.NEST_MINT_NFT,
-        ),
-      ).toBeTruthy();
+      const transaction = transactions.find(
+        (x) => x.transactionType == TransactionType.NEST_MINT_NFT,
+      );
+      expect(transaction).toBeTruthy();
+      const receipt = blockchain.getTransactionReceipt(
+        transaction.transactionHash,
+      );
+      expect(receipt).toBeTruthy();
     });
 
     test('User should be able to transfer nestable NFT collection', async () => {
@@ -651,16 +624,18 @@ describe('Apillon API NFTs tests', () => {
 
       expect(response.status).toBe(201);
       //Check if new transactions exists
-      const transaction: Transaction[] = await new Transaction(
+      const transactions: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
       ).getCollectionTransactions(newCollection.id);
-      expect(
-        transaction.find(
-          (x) =>
-            x.transactionType == TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
-        ),
-      ).toBeTruthy();
+      const transaction = transactions.find(
+        (x) => x.transactionType == TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
+      );
+      expect(transaction).toBeTruthy();
+      const receipt = blockchain.getTransactionReceipt(
+        transaction.transactionHash,
+      );
+      expect(receipt).toBeTruthy();
     });
 
     test('User should NOT be able to Mint transferred nestable collection', async () => {
@@ -695,6 +670,19 @@ describe('Apillon API NFTs tests', () => {
 
       expect(response.status).toBe(201);
       expect(response.body.data.success).toBe(true);
+
+      const transactions: Transaction[] = await new Transaction(
+        {},
+        stage.nftsContext,
+      ).getCollectionTransactions(nestableCollection.id);
+      const transaction = transactions.find(
+        (x) => x.transactionType == TransactionType.BURN_NFT,
+      );
+      expect(transaction).toBeTruthy();
+      const receipt = blockchain.getTransactionReceipt(
+        transaction.transactionHash,
+      );
+      expect(receipt).toBeTruthy();
     });
   });
 

@@ -131,6 +131,18 @@ describe('Apillon API NFTs tests on Astar', () => {
       expect(createdCollection.collectionStatus).toBe(
         CollectionStatus.DEPLOYING,
       );
+      const transactions: Transaction[] = await new Transaction(
+        {},
+        stage.nftsContext,
+      ).getCollectionTransactions(createdCollection.id);
+      const transaction = transactions.find(
+        (x) => x.transactionType == TransactionType.DEPLOY_CONTRACT,
+      );
+      expect(transaction).toBeTruthy();
+      const receipt = blockchain.getTransactionReceipt(
+        transaction.transactionHash,
+      );
+      expect(receipt).toBeTruthy();
     });
 
     test('User should be able to get collection transactions', async () => {
@@ -182,13 +194,18 @@ describe('Apillon API NFTs tests on Astar', () => {
 
       expect(response.status).toBe(201);
       //Check if new transactions exists
-      const transaction: Transaction[] = await new Transaction(
+      const transactions: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
       ).getCollectionTransactions(newCollection.id);
-      expect(
-        transaction.find((x) => x.transactionType == TransactionType.MINT_NFT),
-      ).toBeTruthy();
+      const transaction = transactions.find(
+        (x) => x.transactionType == TransactionType.MINT_NFT,
+      );
+      expect(transaction).toBeTruthy();
+      const receipt = blockchain.getTransactionReceipt(
+        transaction.transactionHash,
+      );
+      expect(receipt).toBeTruthy();
     });
 
     test('User should be able to transfer NFT collection', async () => {
@@ -209,16 +226,18 @@ describe('Apillon API NFTs tests on Astar', () => {
 
       expect(response.status).toBe(201);
       //Check if new transactions exists
-      const transaction: Transaction[] = await new Transaction(
+      const transactions: Transaction[] = await new Transaction(
         {},
         stage.nftsContext,
       ).getCollectionTransactions(newCollection.id);
-      expect(
-        transaction.find(
-          (x) =>
-            x.transactionType == TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
-        ),
-      ).toBeTruthy();
+      const transaction = transactions.find(
+        (x) => x.transactionType == TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
+      );
+      expect(transaction).toBeTruthy();
+      const receipt = blockchain.getTransactionReceipt(
+        transaction.transactionHash,
+      );
+      expect(receipt).toBeTruthy();
     });
 
     test('User should NOT be able to Mint transferred collection', async () => {
