@@ -38,8 +38,8 @@ export async function identityCreateRequestBc(
       {
         chain: SubstrateChain.KILT,
         transaction: transaction.toHex(),
-        referenceTable: DbTables.IDENTITY,
-        referenceId: identity.id,
+        referenceTable: DbTables.IDENTITY_JOB,
+        referenceId: identityJob.id,
       },
       context,
     );
