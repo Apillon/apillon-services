@@ -15,7 +15,7 @@ function flatObject(obj: Record<any, any>, joinChar = '/') {
  * @param prefix unique per route cache prefix
  * @param query query params from request URL
  * @param params path params from request URL
- * @param userId user Id for per-user caching, pass null for global caching
+ * @param user_uuid user uuid for per-user caching, pass null for global caching
  * @param project_uuid project uuid for per-project caching
  */
 export function generateCacheKey(
@@ -23,10 +23,10 @@ export function generateCacheKey(
   path: string,
   query: any,
   params: any,
-  userId: number,
+  user_uuid: string,
   project_uuid: string,
 ) {
-  return `${prefix}#${path}@${userId ? `userId:${userId}` : ''}|${
+  return `${prefix}#${path}@${user_uuid ? `user_uuid:${user_uuid}` : ''}|${
     project_uuid ? `project_uuid:${project_uuid}` : ''
   }|${flatObject(params)}|${flatObject(query)}`;
 }
@@ -87,7 +87,7 @@ export async function runCachedFunction(
  */
 export async function invalidateCachePrefixes(
   prefixes: string[],
-  userId?: number,
+  user_uuid?: string,
   project_uuid?: string,
 ) {
   const promises = [];
@@ -95,7 +95,7 @@ export async function invalidateCachePrefixes(
   await cache.connect();
   for (const prefix of prefixes) {
     promises.push(
-      invalidateCacheMatch(prefix, { userId, project_uuid }, cache),
+      invalidateCacheMatch(prefix, { user_uuid, project_uuid }, cache),
     );
   }
   await Promise.all(promises);
@@ -106,14 +106,14 @@ export async function invalidateCachePrefixes(
  * Searches for appropriate key in cache and deletes it
  * @param keyPrefix cache key prefix
  * @param params parameters to match in key
- * @param userId user ID for users personal cache
+ * @param user_uuid user ID for users personal cache
  */
 export async function invalidateCacheMatch(
   keyPrefix: string,
   matchOptions?: {
     path?: string;
     params?: any;
-    userId?: number;
+    user_uuid?: string;
     project_uuid?: string;
   },
   cache: AppCache = null,
@@ -131,7 +131,7 @@ export async function invalidateCacheMatch(
       matchOptions?.path ? `${matchOptions?.path}:` : '*@'
     }${
       // user id
-      matchOptions?.userId ? `userId:${matchOptions?.userId}` : ''
+      matchOptions?.user_uuid ? `user_uuid:${matchOptions?.user_uuid}` : ''
     }*${
       // project uuid
       matchOptions?.project_uuid

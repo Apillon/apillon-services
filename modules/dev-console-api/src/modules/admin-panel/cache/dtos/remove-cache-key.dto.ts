@@ -27,7 +27,7 @@ export class RemoveCacheKeyDto extends ModelBase {
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.ADMIN],
   })
-  public userId: number;
+  public user_uuid: UUID;
 
   @prop({
     parser: { resolver: stringParser() },

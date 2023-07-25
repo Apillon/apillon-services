@@ -24,9 +24,9 @@ export class CacheController {
   @Validation({ dto: RemoveCacheKeyDto, populateFrom: PopulateFrom.ADMIN })
   @UseGuards(ValidationGuard)
   async removeCacheKey(
-    @Body() { cacheKey, userId, project_uuid }: RemoveCacheKeyDto,
+    @Body() { cacheKey, user_uuid, project_uuid }: RemoveCacheKeyDto,
   ): Promise<void> {
-    return await invalidateCachePrefixes([cacheKey], userId, project_uuid);
+    return await invalidateCachePrefixes([cacheKey], user_uuid, project_uuid);
   }
 
   /**
