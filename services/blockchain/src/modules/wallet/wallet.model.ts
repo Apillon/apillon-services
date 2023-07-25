@@ -559,11 +559,7 @@ export class Wallet extends AdvancedSQLModel {
     return {
       balance,
       minBalance: this.minBalance,
-      isBelowThreshold: this.minBalance
-        ? ethers.BigNumber.from(this.minBalance).gte(
-            ethers.BigNumber.from(balance),
-          )
-        : null,
+      isBelowThreshold: this.isBelowThreshold,
     };
   }
 
@@ -600,6 +596,15 @@ export class Wallet extends AdvancedSQLModel {
       sqlQuery,
       { ...params },
       't.id',
+    );
+  }
+
+  public get isBelowThreshold(): boolean {
+    return (
+      !!this.minBalance &&
+      ethers.BigNumber.from(this.minBalance).gte(
+        ethers.BigNumber.from(this.currentBalance),
+      )
     );
   }
 }

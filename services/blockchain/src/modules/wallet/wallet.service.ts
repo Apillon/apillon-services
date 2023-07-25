@@ -36,12 +36,11 @@ export class WalletService {
       context,
     ).getTransactionAggregateData();
 
-    const balanceData = await wallet.checkAndUpdateBalance();
     wallet.calculateTokenBalance();
 
     return {
       ...wallet,
-      ...balanceData,
+      isBelowThreshold: wallet.isBelowThreshold,
       ...transactionSumData,
     } as WalletWithBalanceDto;
   }

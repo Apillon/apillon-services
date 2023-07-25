@@ -2,13 +2,11 @@ import {
   AdvancedSQLModel,
   ChainType,
   Context,
-  EvmChain,
   PoolConnection,
   PopulateFrom,
   presenceValidator,
   prop,
   SerializeFor,
-  SubstrateChain,
 } from '@apillon/lib';
 import {
   dateParser,
@@ -28,7 +26,6 @@ import {
   TxToken,
 } from '../../config/types';
 import { getTokenFromChain } from '../../lib/utils';
-import { WalletTransactionSumData } from '../../common/dto/wallet-with-balance.dto';
 export class TransactionLog extends AdvancedSQLModel {
   public readonly tableName = DbTables.TRANSACTION_LOG;
 
