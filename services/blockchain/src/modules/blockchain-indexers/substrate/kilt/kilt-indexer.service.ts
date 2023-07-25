@@ -3,8 +3,9 @@ import { env } from '@apillon/lib';
 import { BaseBlockchainIndexer } from '../base-blockchain-indexer';
 import { KiltTransactionType } from '../../../../config/types';
 import {
-  AttestationTransation,
+  AttestationTransaction,
   DidTransaction,
+  SystemEvent,
   TransferTransaction,
 } from './data-models/kilt-transactions';
 import { KiltGQLQueries } from './queries/kilt-graphql-queries';
@@ -62,24 +63,23 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     };
   }
 
-  /* all transactions */
-  public async getAllAccountTransfers(
+  public async getAllSystemEvents(
     account: string,
     fromBlock: number,
-    limit: number,
-  ): Promise<TransferTransaction[]> {
+    toBlock: number,
+  ): Promise<SystemEvent[]> {
     const data: any = await this.graphQlClient.request(
       gql`
-        ${KiltGQLQueries.ACCOUNT_ALL_TRANSFERS_QUERY}
+        ${KiltGQLQueries.ACCOUNT_SYSTEM_EVENTS_QUERY}
       `,
       {
         account,
         fromBlock,
-        limit,
+        toBlock,
       },
     );
 
-    return data.transfers;
+    return data.systems;
   }
 
   /* These indicate a balance transfer from one account -> another */
@@ -227,7 +227,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     account: string,
     fromBlock: number,
     toBlock: number,
-  ): Promise<AttestationTransation[]> {
+  ): Promise<AttestationTransaction[]> {
     const data: any = await this.graphQlClient.request(
       gql`
         ${KiltGQLQueries.ACCOUNT_ATTESTATIONS_QUERY}
@@ -246,7 +246,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     account: string,
     fromBlock: number,
     toBlock: number,
-  ): Promise<AttestationTransation[]> {
+  ): Promise<AttestationTransaction[]> {
     const data: any = await this.graphQlClient.request(
       gql`
         ${KiltGQLQueries.ACCOUNT_ATTESTATIONS_QUERY}
@@ -265,7 +265,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     account: string,
     fromBlock: number,
     toBlock: number,
-  ): Promise<AttestationTransation[]> {
+  ): Promise<AttestationTransaction[]> {
     const data: any = await this.graphQlClient.request(
       gql`
         ${KiltGQLQueries.ACCOUNT_ATTESTATIONS_QUERY}

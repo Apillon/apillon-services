@@ -64,6 +64,28 @@ export class KiltGQLQueries {
     }
   }`;
 
+  /* Returns all SYSTEM events from a specific account in KILT */
+  static ACCOUNT_SYSTEM_EVENTS_QUERY = `query getAccountSystemEvents(
+    $account: String!
+    $fromBlock: Int!, 
+    $toBlock: Int!) {
+    systems(
+      where: {
+        AND: {
+          blockNumber_gte: $fromBlock,
+          blockNumber_lte: $toBlock,
+          account_eq: $account
+        }
+      }
+    )
+    {
+      ${this.BASE_SUBSTRATE_PARAMS}
+      account
+      error
+      fee
+    }
+  }`;
+
   /* Returns all transactions releated to DID from a specific account in KILT */
   static ACCOUNT_DID_QUERY = `query getAccountDidTransactions(
     $account: String!,
