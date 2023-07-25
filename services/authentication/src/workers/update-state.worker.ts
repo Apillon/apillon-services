@@ -16,12 +16,7 @@ import {
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { Transaction } from '../modules/transaction/models/transaction.model';
-import {
-  IdentityJobState,
-  IdentityState,
-  TransactionType,
-} from '../config/types';
+import { IdentityJobState, IdentityState } from '../config/types';
 import { Identity } from '../modules/identity/models/identity.model';
 import { IdentityMicroservice } from '../modules/identity/identity.service';
 import { IdentityJob } from '../modules/identity-job/models/identity-job.model';
@@ -40,6 +35,7 @@ export class UpdateStateWorker extends BaseQueueWorker {
     return [];
   }
 
+  // TODO: REMOVE and just use LMAS
   private async logAms(
     contex?: any,
     message?: any,
@@ -116,15 +112,7 @@ export class UpdateStateWorker extends BaseQueueWorker {
       this.context,
       async (result: any, ctx) => {
         const incomingTx = result;
-
-        const incomignTxData = incomingTx.data;
         const status = incomingTx.transactionStatus;
-        const txType = incomignTxData.transactionType;
-
-        const transaction: Transaction = await new Transaction(
-          {},
-          ctx,
-        ).populateByTransactionHash(incomingTx.transactionHash);
 
         // TODO: Perform a join here maybe?
         const identityJob: IdentityJob = await new IdentityJob(
@@ -134,41 +122,27 @@ export class UpdateStateWorker extends BaseQueueWorker {
 
         console.log('Identity JOB: ', identityJob);
 
-        if (!transaction.exists()) {
+        // TODO: Logging should be better. Transaction hash?????
+        if (!identityJob.exists()) {
           await this.logAms(
             ctx,
-            `Transaction for hash ${result.transactionHash} does not exist!`,
+            `Job for transaction ${result.transactionHash} does not exist!`,
             true,
           );
           return;
         }
 
-        status == TransactionStatus.CONFIRMED
-          ? await this.logAms(
-              ctx,
-              `Transaction ${transaction.transactionType} SUCCESS`,
-            )
-          : await this.logAms(
-              ctx,
-              `Transaction ${transaction.transactionType} FAILED`,
-              true,
-            );
-
-        // Update status
-        transaction.transactionStatus = status;
-        await transaction.update();
-
         console.log('Reference id: ', incomingTx.referenceId);
 
         const identity = await new Identity({}, ctx).populateById(
-          incomingTx.referenceId,
+          identityJob.identity_id,
         );
 
-        console.log('Transaction type: ', txType);
+        console.log('Transaction type: ', identityJob.state);
         console.log('Transaction status: ', status);
 
-        switch (txType) {
-          case TransactionType.DID_CREATE:
+        switch (identityJob.state) {
+          case IdentityJobState.DID_CREATE:
             if (status == TransactionStatus.CONFIRMED) {
               writeLog(LogType.INFO, 'DID CREATE step SUCCESS');
 
@@ -187,7 +161,11 @@ export class UpdateStateWorker extends BaseQueueWorker {
 
               if (await identityJob.identityJobRetry()) {
                 writeLog(LogType.INFO, `DID CREATE step FAILED. Retrying ...`);
-                await this.execIdentityGenerate(identity, incomignTxData);
+
+                await this.execIdentityGenerate(
+                  identity,
+                  identityJob.data.did_create_op,
+                );
               } else {
                 writeLog(
                   LogType.INFO,
@@ -197,7 +175,7 @@ export class UpdateStateWorker extends BaseQueueWorker {
               }
             }
             break;
-          case TransactionType.ATTESTATION:
+          case IdentityJobState.ATESTATION:
             writeLog(LogType.INFO, 'ATTESTATION RECEIVED ... ');
             if (status == TransactionStatus.CONFIRMED) {
               writeLog(LogType.INFO, 'ATTESTATION step SUCCESS');
@@ -233,7 +211,7 @@ export class UpdateStateWorker extends BaseQueueWorker {
             }
 
             break;
-          case TransactionType.DID_REVOKE:
+          case IdentityJobState.DID_REVOKE:
             if (status == TransactionStatus.CONFIRMED) {
               console.log('Step REVOKED: success');
               identity.state = IdentityState.REVOKED;

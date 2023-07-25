@@ -159,7 +159,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
 
           [SubstrateChain.KILT]: async () => {
             const res =
-              await new KiltBlockchainIndexer().getAllAccountTransfers(
+              await new KiltBlockchainIndexer().getAccountBalanceTransfers(
                 wallet.address,
                 lastBlock,
                 limit,
