@@ -61,6 +61,8 @@ export class UpdateStateWorker extends BaseQueueWorker {
       token: identity.token,
     });
     if (env.APP_ENV != AppEnvironment.TEST) {
+      console.log('Attestation DTO: ', attestationClaimDto);
+
       await IdentityMicroservice.attestClaim(
         { body: attestationClaimDto },
         this.context,
@@ -68,14 +70,11 @@ export class UpdateStateWorker extends BaseQueueWorker {
     }
   }
 
-  private async execIdentityGenerate(identity: Identity, incomignTxData: any) {
+  private async execIdentityGenerate(email: string, did_create_op: any) {
     const identityCreateDto = new IdentityCreateDto().populate({
-      email: incomignTxData.email,
-      did_create_op: incomignTxData.did_create_op,
+      email: email,
+      did_create_op: did_create_op,
     });
-
-    identity.state = IdentityState.SUBMITTED_DID_CREATE_REQ;
-    await identity.update();
 
     if (env.APP_ENV != AppEnvironment.TEST) {
       await IdentityMicroservice.generateIdentity(
@@ -163,9 +162,12 @@ export class UpdateStateWorker extends BaseQueueWorker {
                 writeLog(LogType.INFO, `DID CREATE step FAILED. Retrying ...`);
 
                 await this.execIdentityGenerate(
-                  identity,
+                  identity.email,
                   identityJob.data.did_create_op,
                 );
+
+                identity.state = IdentityState.SUBMITTED_DID_CREATE_REQ;
+                await identity.update();
               } else {
                 writeLog(
                   LogType.INFO,

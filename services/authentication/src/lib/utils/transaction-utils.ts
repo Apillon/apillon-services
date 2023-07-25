@@ -26,6 +26,7 @@ export async function identityCreateRequestBc(
     IdentityJobState.ATESTATION,
     {
       did_create_op: did_create_op,
+      didUri: identity.didUri,
     },
   );
 
