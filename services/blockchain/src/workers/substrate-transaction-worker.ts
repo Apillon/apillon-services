@@ -73,6 +73,8 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         toBlock,
       );
 
+      console.log('Fetched transactions: ', transactions);
+
       const conn = await this.context.mysql.start();
       try {
         await this.setTransactionsState(transactions, conn);
@@ -167,8 +169,10 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         t.status == TransactionIndexerStatus.FAIL;
       })
       .map((t: any): string => {
-        return t.transactionHash;
+        return t.extrinsicHash;
       });
+
+    console.log('Failed transactions ', failedTransactions);
 
     // Update SUCCESSFUL transactions
     await this.updateTransactions(

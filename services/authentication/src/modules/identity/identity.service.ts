@@ -291,8 +291,6 @@ export class IdentityMicroservice {
       null,
     );
 
-    const nextNonce = new BN(await getNextNonce(attesterDidUri));
-
     const claimerCredential = {
       credential: {
         ...credential,
@@ -323,7 +321,6 @@ export class IdentityMicroservice {
         keyType: attesterKeypairs.assertionMethod.type,
       }),
       attesterAcc.address,
-      { txCounter: nextNonce },
     );
 
     const bcsRequest = await attestationRequestBc(
