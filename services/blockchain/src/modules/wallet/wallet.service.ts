@@ -7,13 +7,14 @@ import {
   WalletTransactionsQueryFilter,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
-import { Wallet } from './wallet.model';
 import {
   BlockchainCodeException,
   BlockchainValidationException,
 } from '../../lib/exceptions';
 import { BlockchainErrorCode } from '../../config/types';
 import { TransactionLog } from '../accounting/transaction-log.model';
+import { WalletWithBalanceDto } from '../../common/dto/wallet-with-balance.dto';
+import { Wallet } from './wallet.model';
 
 export class WalletService {
   static async listWallets(
@@ -26,14 +27,20 @@ export class WalletService {
   static async getWallet(
     { walletId }: { walletId: number },
     context: ServiceContext,
-  ): Promise<any> {
+  ): Promise<WalletWithBalanceDto> {
     const wallet = await new Wallet({}, context).populateById(walletId);
     WalletService.checkExists(wallet);
 
-    await wallet.checkAndUpdateBalance();
-    wallet.calculateTokenBalance();
+    const transactionSumData = await new TransactionLog(
+      { wallet: wallet.address },
+      context,
+    ).getTransactionAggregateData();
 
-    return wallet.serialize(SerializeFor.ADMIN);
+    return {
+      ...wallet,
+      ...transactionSumData,
+      isBelowThreshold: wallet.isBelowThreshold,
+    } as WalletWithBalanceDto;
   }
 
   static async updateWallet(
@@ -103,7 +110,7 @@ export class WalletService {
       }
     }
     await transaction.update();
-    return transaction;
+    return transaction.serialize(SerializeFor.ADMIN) as TransactionLog;
   }
 
   static checkExists(wallet: Wallet) {

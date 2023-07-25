@@ -247,6 +247,7 @@ export class Wallet extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
       SerializeFor.WORKER,
     ],
@@ -308,6 +309,7 @@ export class Wallet extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
     ],
   })
@@ -327,6 +329,7 @@ export class Wallet extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
     ],
   })
@@ -524,7 +527,7 @@ export class Wallet extends AdvancedSQLModel {
       filter.serialize(),
     );
     const sqlQuery = {
-      qSelect: `SELECT 
+      qSelect: `SELECT
         ${this.generateSelectFields()},
         w.minBalance / POW(10, w.decimals) as minTokenBalance,
         w.currentBalance / POW(10, w.decimals) as currentTokenBalance
@@ -579,11 +582,7 @@ export class Wallet extends AdvancedSQLModel {
     return {
       balance,
       minBalance: this.minBalance,
-      isBelowThreshold: this.minBalance
-        ? ethers.BigNumber.from(this.minBalance).gte(
-            ethers.BigNumber.from(balance),
-          )
-        : null,
+      isBelowThreshold: this.isBelowThreshold,
     };
   }
 
@@ -610,7 +609,7 @@ export class Wallet extends AdvancedSQLModel {
         AND (@status IS NULL OR t.status = @status)
         `,
       qFilter: `
-          ORDER BY ${filters.orderStr}
+          ORDER BY ${filters.orderStr || 't.ts DESC'}
           LIMIT ${filters.limit} OFFSET ${filters.offset};
         `,
     };
@@ -620,6 +619,15 @@ export class Wallet extends AdvancedSQLModel {
       sqlQuery,
       { ...params },
       't.id',
+    );
+  }
+
+  public get isBelowThreshold(): boolean {
+    return (
+      !!this.minBalance &&
+      ethers.BigNumber.from(this.minBalance).gte(
+        ethers.BigNumber.from(this.currentBalance),
+      )
     );
   }
 }

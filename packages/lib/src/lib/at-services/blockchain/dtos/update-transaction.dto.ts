@@ -1,15 +1,15 @@
 import { prop } from '@rawmodel/core';
-import { stringParser } from '@rawmodel/parsers';
+import { floatParser, stringParser } from '@rawmodel/parsers';
 import { PopulateFrom, SerializeFor } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
 
 export class UpdateTransactionDto extends ModelBase {
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: floatParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
     serializable: [SerializeFor.ADMIN],
   })
-  public totalPrice: string;
+  public value: number;
 
   @prop({
     parser: { resolver: stringParser() },

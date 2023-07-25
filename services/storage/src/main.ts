@@ -77,6 +77,9 @@ export async function processEvent(event, context: Context): Promise<any> {
       NftStorageService.executePrepareBaseUriForCollectionWorker,
 
     [StorageEventType.TEST_CRUST_PROVIDER]: CrustService.testCrustProvider,
+
+    [StorageEventType.PROJECT_STORAGE_DETAILS]:
+      StorageService.getProjectStorageDetails,
   };
 
   return await processors[event.eventName](event, context);

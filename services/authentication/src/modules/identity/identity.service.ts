@@ -161,6 +161,7 @@ export class IdentityMicroservice {
   static async generateIdentity(event: { body: IdentityCreateDto }, context) {
     const did_create_op: DidCreateOp = event.body.did_create_op as DidCreateOp;
     const claimerEmail = event.body.email;
+    const claimerDidUri = event.body.didUri;
 
     // Check if correct identity + state exists -> IN_PROGRESS
     const identity = await new Identity({}, context).populateByUserEmail(
@@ -185,6 +186,7 @@ export class IdentityMicroservice {
 
     identity.populate({
       state: IdentityState.IDENTITY_VERIFIED,
+      didUri: claimerDidUri,
     });
 
     await identity.update();
@@ -240,6 +242,7 @@ export class IdentityMicroservice {
   }
 
   static async attestClaim(event: { body: AttestationDto }, context) {
+    console.log('BODY RECEIVED ', event.body);
     const claimerEmail = event.body.email;
     const claimerDidUri: DidUri = event.body.didUri as DidUri;
     // This parameter is optional, since we can only perform attestaion
