@@ -107,6 +107,14 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async getProjectStorageDetails(project_uuid: string) {
+    const data = {
+      eventName: StorageEventType.PROJECT_STORAGE_DETAILS,
+      project_uuid,
+    };
+    return await this.callService(data);
+  }
+
   //#endregion
 
   //#region Directory CRUD

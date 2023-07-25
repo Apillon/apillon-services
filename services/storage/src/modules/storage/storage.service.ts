@@ -40,6 +40,7 @@ import { HostingService } from '../hosting/hosting.service';
 import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
+import { Website } from '../hosting/models/website.model';
 
 export class StorageService {
   //#region file-upload functions
@@ -495,5 +496,25 @@ export class StorageService {
     );
   }
 
+  /**
+   * Get project storage details - num. of buckets, total bucket size, num. of websites
+   * @param {{ project_uuid: string }} - uuid of the project
+   * @param {ServiceContext} context
+   */
+  static async getProjectStorageDetails(
+    { project_uuid }: { project_uuid: string },
+    context: ServiceContext,
+  ): Promise<any> {
+    const bucketDetails = await new Bucket(
+      { project_uuid },
+      context,
+    ).getDetailsForProject();
+    const numOfWebsites = await new Website(
+      { project_uuid },
+      context,
+    ).getNumOfWebsites();
+
+    return { ...bucketDetails, numOfWebsites };
+  }
   //#endregion
 }

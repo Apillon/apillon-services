@@ -2,12 +2,11 @@ import {
   AdvancedSQLModel,
   ChainType,
   Context,
-  EvmChain,
+  PoolConnection,
   PopulateFrom,
   presenceValidator,
   prop,
   SerializeFor,
-  SubstrateChain,
 } from '@apillon/lib';
 import {
   dateParser,
@@ -303,7 +302,7 @@ export class TransactionLog extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
+    populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -318,12 +317,13 @@ export class TransactionLog extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: floatParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
     ],
   })
   public value: number;
@@ -339,6 +339,7 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
     ],
   })
   public description: string;
@@ -466,5 +467,26 @@ export class TransactionLog extends AdvancedSQLModel {
     this.amount = ethers.BigNumber.from(this.amount)
       .add(ethers.BigNumber.from(amount))
       .toString();
+  }
+
+  public async getTransactionAggregateData(conn?: PoolConnection) {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT
+      COALESCE(SUM(CASE WHEN t.action = '${TxAction.TRANSACTION}' THEN t.fee END), 0) AS totalFeeTransaction,
+      COALESCE(SUM(CASE WHEN t.action = '${TxAction.DEPOSIT}' THEN t.amount END), 0) AS totalAmountDeposit,
+      COALESCE(SUM(CASE WHEN t.action = '${TxAction.TRANSACTION}' THEN t.amount END), 0) AS totalAmountTransaction,
+      COALESCE(SUM(CASE WHEN t.action = '${TxAction.DEPOSIT}' THEN t.totalPrice END), 0) AS totalPriceDeposit,
+      COALESCE(SUM(CASE WHEN t.action = '${TxAction.TRANSACTION}' THEN t.totalPrice END), 0) AS totalPriceTransaction,
+      COALESCE(SUM(CASE WHEN t.action = '${TxAction.DEPOSIT}' THEN t.value END), 0) AS totalValueDeposit,
+      COALESCE(SUM(CASE WHEN t.action = '${TxAction.TRANSACTION}' THEN t.value END), 0) AS totalValueTransaction
+      FROM ${this.tableName} t
+      WHERE t.wallet = '${this.wallet}'
+      GROUP BY t.wallet;
+      `,
+      {},
+      conn,
+    );
+    return data[0];
   }
 }

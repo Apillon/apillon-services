@@ -102,7 +102,7 @@ export enum BlockchainErrorCode {
   // 404 - Not found
   API_KEY_NOT_FOUND = 40416001,
   TRANSACTION_NOT_FOUND = 40416002,
-  WALLET_NOT_FOUND = 40416002,
+  WALLET_NOT_FOUND = 40416003,
 
   // 405 - Method not allowed
   ONLY_FOR_LOCAL_DEV_AND_TEST = 40516001,

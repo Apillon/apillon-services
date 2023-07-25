@@ -120,6 +120,7 @@ export enum StorageEventType {
   DEPLOYMENT_LIST = 'list-deployment',
   EXECUTE_PREPARE_COLLECTION_BASE_URI_WORKER = 'execute-prepare-collection-base-uri-worker',
   TEST_CRUST_PROVIDER = 'test-crust-provider',
+  PROJECT_STORAGE_DETAILS = 'project-storage-details',
 }
 
 export enum AuthenticationEventType {
@@ -166,6 +167,7 @@ export enum NftsEventType {
   BURN_NFT = 'burn-nft',
   MAX_COLLECTIONS_QUOTA_REACHED = 'max-collections-quota-reached',
   EXECUTE_DEPLOY_COLLECTION_WORKER = 'execute-deploy-collection-worker',
+  PROJECT_COLLECTION_DETAILS = 'project-collections-details',
 }
 
 export enum ReferralEventType {
