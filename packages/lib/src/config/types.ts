@@ -520,6 +520,9 @@ export enum ValidatorErrorCode {
   EVM_CHAIN_NOT_PRESENT = 42200805,
   EVM_CHAIN_NOT_VALID = 42200806,
   //#endregion
+  //#region Caching
+  INVALID_CACHE_KEY = 42200900,
+  //#endregion
 }
 
 /**
@@ -577,6 +580,8 @@ export enum OauthLinkType {
 
 export enum CacheKeyPrefix {
   BUCKET_LIST = 'bucket-list',
+  ADMIN_USER_LIST = 'admin-user-list',
+  ADMIN_PROJECT_LIST = 'admin-project-list',
 }
 
 export enum CacheKeyTTL {

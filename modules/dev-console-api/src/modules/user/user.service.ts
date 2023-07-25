@@ -14,6 +14,8 @@ import {
   ValidationException,
   env,
   generateJwtToken,
+  invalidateCachePrefixes,
+  CacheKeyPrefix,
 } from '@apillon/lib';
 import { getDiscordProfile, verifyCaptcha } from '@apillon/modules-lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
@@ -481,6 +483,8 @@ export class UserService {
     try {
       await user.update(SerializeFor.UPDATE_DB, conn);
       await context.mysql.commit(conn);
+
+      await invalidateCachePrefixes([CacheKeyPrefix.ADMIN_USER_LIST]);
     } catch (err) {
       await context.mysql.rollback(conn);
       throw err;

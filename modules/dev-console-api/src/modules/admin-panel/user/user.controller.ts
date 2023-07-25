@@ -5,10 +5,16 @@ import {
   PopulateFrom,
   QuotaOverrideDto,
   ValidateFor,
+  CacheKeyPrefix,
 } from '@apillon/lib';
 import { GetQuotasDto } from '@apillon/lib/dist/lib/at-services/config/dtos/get-quotas.dto';
 import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
-import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
+import {
+  Ctx,
+  Permissions,
+  Validation,
+  CacheInterceptor,
+} from '@apillon/modules-lib';
 import {
   Body,
   Controller,
@@ -21,22 +27,26 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { UUID } from 'crypto';
-import { DevConsoleApiContext } from '../../../context';
-import { BaseQueryFilterValidator } from '../../../decorators/base-query-filter-validator';
 import { AuthGuard } from '../../../guards/auth.guard';
-import { ValidationGuard } from '../../../guards/validation.guard';
 import { UserService } from './user.service';
+import { DevConsoleApiContext } from '../../../context';
+import { ValidationGuard } from '../../../guards/validation.guard';
+import { UUID } from 'crypto';
+import { BaseQueryFilterValidator } from '../../../decorators/base-query-filter-validator';
+import { Cache } from '@apillon/modules-lib';
 
 @Controller('admin-panel/users')
 @Permissions({ role: DefaultUserRole.ADMIN })
 @UseGuards(AuthGuard)
+@UseInterceptors(CacheInterceptor)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
   @BaseQueryFilterValidator()
+  @Cache({ keyPrefix: CacheKeyPrefix.ADMIN_USER_LIST })
   async listUsers(
     @Ctx() context: DevConsoleApiContext,
     @Query() query: BaseQueryFilter,
