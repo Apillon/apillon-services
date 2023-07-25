@@ -1,7 +1,7 @@
 import ganache from 'ganache';
 import { Stage } from '../interfaces/stage.interface';
-import { Wallet } from '@apillon/blockchain/src/common/models/wallet';
-import { ChainType, EvmChain, SubstrateChain } from '@apillon/lib';
+import { Wallet } from '@apillon/blockchain/src/modules/wallet/wallet.model';
+import { ChainType, EvmChain } from '@apillon/lib';
 
 export async function startGanacheRPCServer(stage: Stage) {
   const server = ganache.server({
