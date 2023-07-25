@@ -95,6 +95,9 @@ export function generateJwtToken(
   expiresIn = '1d',
   secret?: string,
 ) {
+  if (!subject && !expiresIn) {
+    return sign({ ...data }, secret ? secret : env.APP_SECRET);
+  }
   return sign({ ...data }, secret ? secret : env.APP_SECRET, {
     subject,
     expiresIn,

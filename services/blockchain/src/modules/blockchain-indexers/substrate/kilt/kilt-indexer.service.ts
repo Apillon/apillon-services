@@ -3,8 +3,9 @@ import { env } from '@apillon/lib';
 import { BaseBlockchainIndexer } from '../base-blockchain-indexer';
 import { KiltTransactionType } from '../../../../config/types';
 import {
-  AttestationTransation,
+  AttestationTransaction,
   DidTransaction,
+  SystemEvent,
   TransferTransaction,
 } from './data-models/kilt-transactions';
 import { KiltGQLQueries } from './queries/kilt-graphql-queries';
@@ -25,32 +26,36 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     // state?: string,
   ) {
     return {
-      transfers: await this.getAccountTransfers(account, fromBlock, toBlock),
+      balanceTransfers: await this.getAccountBalanceTransfers(
+        account,
+        fromBlock,
+        toBlock,
+      ),
       withdrawals: await this.getAccountWithdrawals(
         account,
         fromBlock,
         toBlock,
       ),
       deposits: await this.getAccountDeposits(account, fromBlock, toBlock),
-      balance_reserve: await this.getAccountReserved(
+      balanceReserve: await this.getAccountReserved(
         account,
         fromBlock,
         toBlock,
       ),
-      did_create: await this.getAccountDidCreate(account, fromBlock, toBlock),
-      did_delete: await this.getAccountDidDelete(account, fromBlock, toBlock),
-      did_update: await this.getAccountDidUpdate(account, fromBlock, toBlock),
-      attest_create: await this.getAccountAttestCreate(
+      didCreate: await this.getAccountDidCreate(account, fromBlock, toBlock),
+      didDelete: await this.getAccountDidDelete(account, fromBlock, toBlock),
+      didUpdate: await this.getAccountDidUpdate(account, fromBlock, toBlock),
+      attestCreate: await this.getAccountAttestCreate(
         account,
         fromBlock,
         toBlock,
       ),
-      attest_remove: await this.getAccountAttestRemove(
+      attestRemove: await this.getAccountAttestRemove(
         account,
         fromBlock,
         toBlock,
       ),
-      attest_revoke: await this.getAccountAttestRevoke(
+      attestRevoke: await this.getAccountAttestRevoke(
         account,
         fromBlock,
         toBlock,
@@ -58,15 +63,34 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     };
   }
 
-  /* These indicate a transfer from one account -> another */
-  public async getAccountTransfers(
+  public async getAllSystemEvents(
+    account: string,
+    fromBlock: number,
+    toBlock: number,
+  ): Promise<SystemEvent[]> {
+    const data: any = await this.graphQlClient.request(
+      gql`
+        ${KiltGQLQueries.ACCOUNT_SYSTEM_EVENTS_QUERY}
+      `,
+      {
+        account,
+        fromBlock,
+        toBlock,
+      },
+    );
+
+    return data.systems;
+  }
+
+  /* These indicate a balance transfer from one account -> another */
+  public async getAccountBalanceTransfers(
     account: string,
     fromBlock: number,
     toBlock: number,
   ): Promise<TransferTransaction[]> {
     const data: any = await this.graphQlClient.request(
       gql`
-        ${KiltGQLQueries.ACCOUNT_TRANSFERS_Q}
+        ${KiltGQLQueries.ACCOUNT_TRANSFERS_BY_TYPE_QUERY}
       `,
       {
         account,
@@ -87,7 +111,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
   ): Promise<TransferTransaction[]> {
     const data: any = await this.graphQlClient.request(
       gql`
-        ${KiltGQLQueries.ACCOUNT_TRANSFERS_Q}
+        ${KiltGQLQueries.ACCOUNT_TRANSFERS_BY_TYPE_QUERY}
       `,
       {
         account,
@@ -107,7 +131,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
   ): Promise<TransferTransaction[]> {
     const data: any = await this.graphQlClient.request(
       gql`
-        ${KiltGQLQueries.ACCOUNT_TRANSFERS_Q}
+        ${KiltGQLQueries.ACCOUNT_TRANSFERS_BY_TYPE_QUERY}
       `,
       {
         account,
@@ -129,7 +153,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
   ): Promise<TransferTransaction[]> {
     const data: any = await this.graphQlClient.request(
       gql`
-        ${KiltGQLQueries.ACCOUNT_TRANSFERS_Q}
+        ${KiltGQLQueries.ACCOUNT_TRANSFERS_BY_TYPE_QUERY}
       `,
       {
         account,
@@ -149,7 +173,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
   ): Promise<DidTransaction[]> {
     const data: any = await this.graphQlClient.request(
       gql`
-        ${KiltGQLQueries.ACCOUNT_DID_Q}
+        ${KiltGQLQueries.ACCOUNT_DID_QUERY}
       `,
       {
         account,
@@ -168,7 +192,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
   ): Promise<DidTransaction[]> {
     const data: any = await this.graphQlClient.request(
       gql`
-        ${KiltGQLQueries.ACCOUNT_DID_Q}
+        ${KiltGQLQueries.ACCOUNT_DID_QUERY}
       `,
       {
         account,
@@ -187,7 +211,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
   ): Promise<DidTransaction[]> {
     const data: any = await this.graphQlClient.request(
       gql`
-        ${KiltGQLQueries.ACCOUNT_DID_Q}
+        ${KiltGQLQueries.ACCOUNT_DID_QUERY}
       `,
       {
         account,
@@ -203,10 +227,10 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     account: string,
     fromBlock: number,
     toBlock: number,
-  ): Promise<AttestationTransation[]> {
+  ): Promise<AttestationTransaction[]> {
     const data: any = await this.graphQlClient.request(
       gql`
-        ${KiltGQLQueries.ACCOUNT_ATTESTATIONS_Q}
+        ${KiltGQLQueries.ACCOUNT_ATTESTATIONS_QUERY}
       `,
       {
         account,
@@ -222,10 +246,10 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     account: string,
     fromBlock: number,
     toBlock: number,
-  ): Promise<AttestationTransation[]> {
+  ): Promise<AttestationTransaction[]> {
     const data: any = await this.graphQlClient.request(
       gql`
-        ${KiltGQLQueries.ACCOUNT_ATTESTATIONS_Q}
+        ${KiltGQLQueries.ACCOUNT_ATTESTATIONS_QUERY}
       `,
       {
         account,
@@ -241,10 +265,10 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     account: string,
     fromBlock: number,
     toBlock: number,
-  ): Promise<AttestationTransation[]> {
+  ): Promise<AttestationTransaction[]> {
     const data: any = await this.graphQlClient.request(
       gql`
-        ${KiltGQLQueries.ACCOUNT_ATTESTATIONS_Q}
+        ${KiltGQLQueries.ACCOUNT_ATTESTATIONS_QUERY}
       `,
       {
         account,

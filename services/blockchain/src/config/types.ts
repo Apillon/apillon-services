@@ -2,7 +2,7 @@ import { EvmChain, SubstrateChain } from '@apillon/lib';
 import {
   DidTransaction,
   TransferTransaction,
-  AttestationTransation,
+  AttestationTransaction,
 } from '../modules/blockchain-indexers/substrate/kilt/data-models/kilt-transactions';
 
 export type Chain = SubstrateChain | EvmChain;
@@ -31,6 +31,7 @@ export enum KiltTransactionType {
   ATTESTATION_CREATE = 'attestation-create',
   ATTESTATION_REMOVE = 'attestation-remove',
   ATTESTATION_REVOKE = 'attestation-revoke',
+  SYSTEM_EVENT = 'system-event-success',
 }
 
 export type TransfersTransactions = {
@@ -47,9 +48,9 @@ export type DidTransactions = {
 };
 
 export type AttestTransactions = {
-  CREATE: AttestationTransation[];
-  REMOVE: AttestationTransation[];
-  REVOKE: AttestationTransation[];
+  CREATE: AttestationTransaction[];
+  REMOVE: AttestationTransaction[];
+  REVOKE: AttestationTransaction[];
 };
 
 /**

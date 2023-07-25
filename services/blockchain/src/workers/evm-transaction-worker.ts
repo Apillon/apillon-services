@@ -15,7 +15,7 @@ import {
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { Transaction } from '../common/models/transaction';
-import { Wallet } from '../common/models/wallet';
+import { Wallet } from '../modules/wallet/wallet.model';
 import { BlockchainErrorCode, DbTables } from '../config/types';
 import { BlockchainCodeException } from '../lib/exceptions';
 import { BlockchainStatus } from '../modules/blockchain-indexers/blockchain-status';

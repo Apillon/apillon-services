@@ -5,6 +5,7 @@ import {
   Lmas,
   LogType,
   QuotaCode,
+  runWithWorkers,
   Scs,
   SerializeFor,
   ServiceName,
@@ -190,5 +191,19 @@ export class ApiKeyService {
 
     return true;
   }
+
+  static async updateApiKeysInProject(
+    event: { project_uuids: string[]; block: boolean },
+    context: ServiceContext,
+  ): Promise<any> {
+    //Update api keys status
+    await new ApiKey({}, context).updateApiKeysInProjects(
+      event.project_uuids,
+      event.block,
+    );
+
+    return true;
+  }
+
   //#endregion
 }

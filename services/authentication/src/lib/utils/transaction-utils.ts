@@ -1,22 +1,10 @@
-import {
-  CreateSubstrateTransactionDto,
-  SubstrateChain,
-  TransactionStatus,
-  writeLog,
-} from '@apillon/lib';
-import {
-  DbTables,
-  DidCreateOp,
-  IdentityJobState,
-  TransactionType,
-} from '../../config/types';
+import { CreateSubstrateTransactionDto, SubstrateChain } from '@apillon/lib';
+import { DbTables, DidCreateOp, IdentityJobState } from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { Identity } from '../../modules/identity/models/identity.model';
-import { SubmittableExtrinsic } from '@kiltprotocol/sdk-js';
-import { Transaction } from '../../modules/transaction/models/transaction.model';
-import { TransactionService } from '../../modules/transaction/transaction.service';
 import { IdentityJobService } from '../../modules/identity-job/identity-job.service';
 
+import { SubmittableExtrinsic } from '@kiltprotocol/sdk-js';
 /**
  * Creates identity create request for the blockchain service
  *
@@ -31,23 +19,18 @@ export async function identityCreateRequestBc(
   identity: Identity,
   did_create_op: DidCreateOp,
 ) {
-  const dbTxRecord: Transaction = new Transaction({}, context);
-  dbTxRecord.populate({
-    transactionHash: transaction.hash,
-    transactionType: TransactionType.DID_CREATE,
-    refTable: DbTables.IDENTITY,
-    refId: identity.id,
-    transactionStatus: TransactionStatus.PENDING,
-  });
-  await TransactionService.saveTransaction(dbTxRecord);
-
-  const identityJob = await IdentityJobService.initOrGetIdentityJob(
+  const identityJob = await IdentityJobService.createOrGetIdentityJob(
     context,
     identity.id,
+    // Final state
     IdentityJobState.ATESTATION,
+    {
+      did_create_op: did_create_op,
+    },
   );
 
-  await identityJob.setState(IdentityJobState.ATESTATION);
+  // Current state
+  await identityJob.setState(IdentityJobState.DID_CREATE);
 
   const bcServiceRequest: CreateSubstrateTransactionDto =
     new CreateSubstrateTransactionDto(
@@ -56,11 +39,6 @@ export async function identityCreateRequestBc(
         transaction: transaction.toHex(),
         referenceTable: DbTables.IDENTITY,
         referenceId: identity.id,
-        data: {
-          email: identity.email,
-          did_create_op: did_create_op,
-          transactionType: TransactionType.DID_CREATE,
-        },
       },
       context,
     );
@@ -80,37 +58,20 @@ export async function attestationRequestBc(
   transaction: SubmittableExtrinsic,
   identity: Identity,
 ) {
-  const dbTxRecord: Transaction = await new Transaction(
-    {},
+  const identityJob = await IdentityJobService.createOrGetIdentityJob(
     context,
-  ).populateByRefId(identity.id);
-
-  dbTxRecord.populate({
-    transactionHash: transaction.hash,
-    transactionType: TransactionType.ATTESTATION,
-    refTable: DbTables.IDENTITY,
-    refId: identity.id,
-    transactionStatus: TransactionStatus.PENDING,
-  });
-
-  if (dbTxRecord.exists()) {
-    await TransactionService.saveTransaction(dbTxRecord);
-  } else {
-    await dbTxRecord.update();
-  }
-
-  await IdentityJobService.initOrGetIdentityJob(context, identity.id);
+    identity.id,
+    IdentityJobState.ATESTATION,
+    {},
+  );
 
   const bcServiceRequest: CreateSubstrateTransactionDto =
     new CreateSubstrateTransactionDto(
       {
         chain: SubstrateChain.KILT,
         transaction: transaction.toHex(),
-        referenceTable: DbTables.IDENTITY,
-        referenceId: identity.id,
-        data: {
-          transactionType: TransactionType.ATTESTATION,
-        },
+        referenceTable: DbTables.IDENTITY_JOB,
+        referenceId: identityJob.id,
       },
       context,
     );
@@ -130,9 +91,7 @@ export async function didRevokeRequestBc(
   transaction: SubmittableExtrinsic,
   identity: Identity,
 ) {
-  const dbTxRecord: Transaction = new Transaction({}, context);
-
-  const identityJob = await IdentityJobService.initOrGetIdentityJob(
+  const identityJob = await IdentityJobService.createOrGetIdentityJob(
     context,
     identity.id,
     IdentityJobState.DID_REVOKE,
@@ -145,21 +104,11 @@ export async function didRevokeRequestBc(
       {
         chain: SubstrateChain.KILT,
         transaction: transaction,
-        referenceTable: DbTables.IDENTITY,
-        referenceId: identity.id,
+        referenceTable: DbTables.IDENTITY_JOB,
+        referenceId: identityJob.id,
       },
       context,
     );
-
-  dbTxRecord.populate({
-    chainId: SubstrateChain.KILT,
-    transactionType: TransactionType.DID_REVOKE,
-    refTable: DbTables.IDENTITY,
-    refId: identity.id,
-    transactionStatus: TransactionStatus.PENDING,
-  });
-
-  await TransactionService.saveTransaction(dbTxRecord);
 
   return bcServiceRequest;
 }

@@ -1,6 +1,7 @@
 import {
   AdvancedSQLModel,
   Context,
+  JSONParser,
   PopulateFrom,
   SerializeFor,
   prop,
@@ -87,6 +88,21 @@ export class IdentityJob extends AdvancedSQLModel {
     serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
   })
   public lastError: string;
+
+  /**
+   * Data needed for this job to execute
+   */
+  @prop({
+    parser: { resolver: JSONParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.WORKER],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+  })
+  public data: any;
 
   /**
    * Time of last successful run - set at the end of execution
