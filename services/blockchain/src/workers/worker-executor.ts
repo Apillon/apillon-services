@@ -119,6 +119,9 @@ export async function handleLambdaEvent(
     workerDefinition = new WorkerDefinition(serviceDef, WorkerName.SCHEDULER);
   }
 
+  console.log('Worker definition', workerDefinition);
+  console.log('workerName: ', workerDefinition.workerName);
+
   switch (workerDefinition.workerName) {
     case WorkerName.SCHEDULER:
       const scheduler = new Scheduler(serviceDef, context);
@@ -216,6 +219,9 @@ export async function handleSqsMessages(
         id,
         parameters,
       });
+
+      console.log('Worker definition', workerDefinition);
+      console.log('workerName: ', workerDefinition.workerName);
 
       // eslint-disable-next-line sonarjs/no-small-switch
       switch (workerName) {
