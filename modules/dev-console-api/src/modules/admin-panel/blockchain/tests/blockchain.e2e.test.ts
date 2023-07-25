@@ -145,7 +145,7 @@ describe('Blockchain endpoint tests', () => {
     test(`Update a wallet's minBalance`, async () => {
       const minBalance = 100_000_000_000;
       const decimals = 9;
-      const token = 'TEST';
+      const token = 'GLMR';
       const response = await request(stage.http)
         .patch(`/admin-panel/blockchain/wallets/${testWallet.id}`)
         .set('Authorization', `Bearer ${adminTestUser.token}`)

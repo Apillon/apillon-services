@@ -490,6 +490,6 @@ export class TransactionLog extends AdvancedSQLModel {
       {},
       conn,
     );
-    return (data?.[0] || {}) as WalletTransactionSumData;
+    return data[0];
   }
 }

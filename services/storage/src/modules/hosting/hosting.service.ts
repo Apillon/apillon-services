@@ -161,13 +161,6 @@ export class HostingService {
     return website.serialize(SerializeFor.PROFILE);
   }
 
-  static async getNumberOfWebsites(
-    { project_uuid }: { project_uuid: string },
-    context: ServiceContext,
-  ): Promise<any> {
-    return new Website({ project_uuid }, context).getNumOfWebsites();
-  }
-
   static async maxWebsitesQuotaReached(
     event: { query: WebsitesQuotaReachedQueryFilter },
     context: ServiceContext,

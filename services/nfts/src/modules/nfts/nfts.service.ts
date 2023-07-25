@@ -479,14 +479,21 @@ export class NftsService {
     }
   }
 
-  static async getCollectionsCount(
+  /**
+   * Get number of collections details for a project by project_uuid.
+   * @param {{ project_uuid: string }} - uuid of the project
+   * @param {ServiceContext} context
+   */
+  static async getProjectCollectionDetails(
     { project_uuid }: { project_uuid: string },
     context: ServiceContext,
-  ) {
-    return await new Collection(
+  ): Promise<any> {
+    const numOfCollections = await new Collection(
       { project_uuid },
       context,
     ).getCollectionsCount();
+
+    return { numOfCollections };
   }
 
   //#endregion

@@ -107,9 +107,9 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async getProjectBucketDetails(project_uuid: string) {
+  public async getProjectStorageDetails(project_uuid: string) {
     const data = {
-      eventName: StorageEventType.GET_BUCKET_DETAILS_FOR_PROJECT,
+      eventName: StorageEventType.PROJECT_STORAGE_DETAILS,
       project_uuid,
     };
     return await this.callService(data);
@@ -381,14 +381,6 @@ export class StorageMicroservice extends BaseService {
     const data = {
       eventName: StorageEventType.WEBSITE_DEPLOY,
       body: params.serialize(),
-    };
-    return await this.callService(data);
-  }
-
-  public async getNumOfProjectWebsites(project_uuid: string) {
-    const data = {
-      eventName: StorageEventType.GET_TOTAL_PROJECT_WEBSITES,
-      project_uuid,
     };
     return await this.callService(data);
   }

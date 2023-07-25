@@ -253,14 +253,6 @@ export class BucketService {
       ),
     };
   }
-
-  static async getBucketDetailsForProject(
-    { project_uuid }: { project_uuid: string },
-    context: ServiceContext,
-  ): Promise<any> {
-    return await new Bucket({ project_uuid }, context).getDetailsForProject();
-  }
-
   //#region bucket webhook functions
 
   static async getBucketWebhook(

@@ -57,23 +57,18 @@ export class ProjectService {
         errorCodes: ResourceNotFoundErrorCode,
       });
     }
-    const { data: projectBucketDetails } = await new StorageMicroservice(
+    const { data: projectStorageDetails } = await new StorageMicroservice(
       context,
-    ).getProjectBucketDetails(project_uuid);
+    ).getProjectStorageDetails(project_uuid);
 
-    const { data: numOfWebsites } = await new StorageMicroservice(
+    const { data: projectCollectionDetails } = await new NftsMicroservice(
       context,
-    ).getNumOfProjectWebsites(project_uuid);
-
-    const { data: numOfCollections } = await new NftsMicroservice(
-      context,
-    ).getProjectCollectionsCount(project_uuid);
+    ).getProjectCollectionDetails(project_uuid);
 
     return {
       ...project,
-      ...projectBucketDetails,
-      numOfWebsites,
-      numOfCollections,
+      ...projectStorageDetails,
+      ...projectCollectionDetails,
     };
   }
 

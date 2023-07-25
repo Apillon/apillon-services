@@ -501,12 +501,12 @@ export class Website extends AdvancedSQLModel {
    * Function to get count of active web pages inside project
    * @returns
    */
-  public async getNumOfWebsites() {
+  public async getNumOfWebsites(): Promise<number> {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT COUNT(*) as numOfPages
       FROM \`${this.tableName}\`
-      WHERE project_uuid = @project_uuid 
+      WHERE project_uuid = @project_uuid
       AND status <> ${SqlModelStatus.DELETED};
       `,
       { project_uuid: this.project_uuid },
