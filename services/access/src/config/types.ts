@@ -149,13 +149,3 @@ export type TokenData =
 export enum TokenExpiresInStr {
   EXPIRES_IN_1_DAY = '1d', // Set to one day - for internal usage mostly
 }
-
-//#region SQL stuff - TODO: Should be streamlined? This is part of the SQL lib, not access
-export enum SqlModelStatus {
-  DRAFT = 1,
-  INCOMPLETE = 2,
-  ACTIVE = 5,
-  DELETED = 9,
-}
-
-//#endregion

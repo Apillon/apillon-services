@@ -187,14 +187,18 @@ export class AuthUser extends AdvancedSQLModel {
     super(data, context);
   }
 
-  public async populateByUserUuid(user_uuid: string, conn?: PoolConnection) {
+  public async populateByUserUuid(
+    user_uuid: string,
+    conn?: PoolConnection,
+    status: SqlModelStatus = SqlModelStatus.ACTIVE,
+  ) {
     const res = await this.db().paramExecute(
       `
       SELECT * FROM authUser
       WHERE user_uuid = @user_uuid
-      AND status = @status
+      AND (@status IS NULL OR status = @status)
     `,
-      { user_uuid, status: SqlModelStatus.ACTIVE },
+      { user_uuid, status },
       conn,
     );
 
@@ -288,6 +292,29 @@ export class AuthUser extends AdvancedSQLModel {
       await context.mysql.commit(conn);
     } catch (err) {
       await context.mysql.rollback(conn);
+      throw await new AmsCodeException({
+        status: 500,
+        code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
+      }).writeToMonitor({ user_uuid: this.user_uuid });
+    }
+  }
+
+  public async logoutUser() {
+    const context = this.getContext();
+
+    try {
+      // Find old token
+      const oldToken = await new AuthToken({}, context).populateByUserAndType(
+        this.user_uuid,
+        JwtTokenType.USER_AUTHENTICATION,
+      );
+
+      if (oldToken.exists()) {
+        console.log('Deleting token ...');
+        oldToken.status = SqlModelStatus.DELETED;
+        await oldToken.update(SerializeFor.UPDATE_DB);
+      }
+    } catch (err) {
       throw await new AmsCodeException({
         status: 500,
         code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,

@@ -2,32 +2,32 @@ import {
   BaseQueryFilter,
   CreateQuotaOverrideDto,
   DefaultUserRole,
-  QuotaOverrideDto,
   PopulateFrom,
+  QuotaOverrideDto,
   ValidateFor,
 } from '@apillon/lib';
+import { GetQuotasDto } from '@apillon/lib/dist/lib/at-services/config/dtos/get-quotas.dto';
+import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   ParseIntPipe,
   ParseUUIDPipe,
-  Patch,
   Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
-import { AuthGuard } from '../../../guards/auth.guard';
-import { UserService } from './user.service';
-import { DevConsoleApiContext } from '../../../context';
-import { ValidationGuard } from '../../../guards/validation.guard';
-import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
-import { GetQuotasDto } from '@apillon/lib/dist/lib/at-services/config/dtos/get-quotas.dto';
 import { UUID } from 'crypto';
+import { DevConsoleApiContext } from '../../../context';
 import { BaseQueryFilterValidator } from '../../../decorators/base-query-filter-validator';
+import { AuthGuard } from '../../../guards/auth.guard';
+import { ValidationGuard } from '../../../guards/validation.guard';
+import { UserService } from './user.service';
 
 @Controller('admin-panel/users')
 @Permissions({ role: DefaultUserRole.ADMIN })
@@ -144,11 +144,21 @@ export class UserController {
     return this.userService.deleteUserQuota(context, data);
   }
 
-  @Patch(':user_uuid')
-  async updateUser(
+  @Post(':user_uuid/block')
+  @HttpCode(200)
+  async blockUser(
     @Ctx() context: DevConsoleApiContext,
     @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
   ) {
-    return; // TODO
+    return this.userService.blockUser(context, user_uuid);
+  }
+
+  @Post(':user_uuid/unblock')
+  @HttpCode(200)
+  async unblockUser(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
+  ) {
+    return this.userService.unblockUser(context, user_uuid);
   }
 }
