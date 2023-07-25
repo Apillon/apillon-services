@@ -61,6 +61,8 @@ export class UpdateStateWorker extends BaseQueueWorker {
       token: identity.token,
     });
     if (env.APP_ENV != AppEnvironment.TEST) {
+      console.log('Attestation DTO: ', attestationClaimDto);
+
       await IdentityMicroservice.attestClaim(
         { body: attestationClaimDto },
         this.context,
