@@ -40,9 +40,9 @@ describe('Substrate tests', () => {
     ).insert();
   });
 
-  // afterAll(async () => {
-  //   await releaseStage(stage);
-  // });
+  afterAll(async () => {
+    await releaseStage(stage);
+  });
 
   test('Single wallet transactions', async () => {
     const address = '4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn';
