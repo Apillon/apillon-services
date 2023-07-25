@@ -98,6 +98,7 @@ export * from './lib/database/mysql';
 export * from './lib/database/migrations';
 
 export * from './lib/base-models/advanced-sql.model';
+export * from './lib/base-models/access-control.model';
 export * from './lib/base-models/base-sql.model';
 export * from './lib/base-models/base';
 export * from './lib/context';

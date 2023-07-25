@@ -77,6 +77,7 @@ export class Context {
       //If call was made by user (dev-console)
       if (Array.isArray(role)) {
         if (this.user) {
+          // Admins are allowed to access items on any project
           if (this.user.userRoles.includes(DefaultUserRole.ADMIN)) {
             return true;
           }
