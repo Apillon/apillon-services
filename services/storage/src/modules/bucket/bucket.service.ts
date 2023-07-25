@@ -116,7 +116,7 @@ export class BucketService {
       data: b.serialize(),
     });
     await invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
-      projectUuid: b.project_uuid,
+      project_uuid: b.project_uuid,
     });
 
     return b.serialize(SerializeFor.PROFILE);
@@ -149,7 +149,7 @@ export class BucketService {
 
     await b.update();
     await invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
-      projectUuid: b.project_uuid,
+      project_uuid: b.project_uuid,
     });
     return b.serialize(SerializeFor.PROFILE);
   }
@@ -180,7 +180,7 @@ export class BucketService {
 
     await b.markForDeletion();
     await invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
-      projectUuid: b.project_uuid,
+      project_uuid: b.project_uuid,
     });
 
     return b.serialize(SerializeFor.PROFILE);

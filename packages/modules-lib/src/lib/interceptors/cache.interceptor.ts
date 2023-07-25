@@ -46,7 +46,7 @@ export class CacheInterceptor implements NestInterceptor {
     const context: Context = execCtx.getArgByIndex(0).context;
     const userId = context?.user?.id;
     // If caching by project_uuid, check for that property in any of the request's receiving parameters
-    const projectUuid =
+    const project_uuid =
       request.query?.project_uuid ||
       request.body?.project_uuid ||
       request.params?.project_uuid;
@@ -57,7 +57,7 @@ export class CacheInterceptor implements NestInterceptor {
       request.query,
       request.params,
       cacheOptions.byUser ? userId : null,
-      cacheOptions.byProject ? projectUuid : null,
+      cacheOptions.byProject ? project_uuid : null,
     );
 
     return this.runCachedInterception(key, next, cacheOptions.ttl);

@@ -15,7 +15,7 @@ import { ValidationGuard } from '../../../guards/validation.guard';
 @UseGuards(AuthGuard)
 export class CacheController {
   /**
-   * Deletes a cache key based on key prefix, projectUuid (optional) and userId (optional)
+   * Deletes a cache key based on key prefix, project_uuid (optional) and userId (optional)
    * @async
    * @param {RemoveCacheKeyDto} removeCacheKeyDto - Body data
    * @returns {Promise<void>}
@@ -24,9 +24,9 @@ export class CacheController {
   @Validation({ dto: RemoveCacheKeyDto, populateFrom: PopulateFrom.ADMIN })
   @UseGuards(ValidationGuard)
   async removeCacheKey(
-    @Body() { cacheKey, userId, projectUuid }: RemoveCacheKeyDto,
+    @Body() { cacheKey, userId, project_uuid }: RemoveCacheKeyDto,
   ): Promise<void> {
-    return await invalidateCachePrefixes([cacheKey], userId, projectUuid);
+    return await invalidateCachePrefixes([cacheKey], userId, project_uuid);
   }
 
   /**

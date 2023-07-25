@@ -33,5 +33,5 @@ export class RemoveCacheKeyDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.ADMIN],
   })
-  public projectUuid: UUID;
+  public project_uuid: UUID;
 }
