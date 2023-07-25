@@ -27,6 +27,7 @@ export enum AmsEventType {
   USER_REGISTER = 'user-register',
   USER_GET_AUTH = 'user-get-auth',
   USER_LOGIN = 'user-login',
+  USER_LOGOUT = 'user-logout',
   USER_LOGIN_KILT = 'user-login-kilt',
   USER_WALLET_LOGIN = 'user-wallet-login',
   USER_UPDATE = 'user-update',
@@ -35,6 +36,7 @@ export enum AmsEventType {
   USER_ROLE_REMOVE = 'user-role-remove',
   USER_GET_LOGINS = 'user-get-logins',
   USER_GET_ROLES = 'user-get-roles',
+  USER_SET_STATUS = 'user-set-status',
   AUTH_TOKEN_CREATE_UPDATE_TOKEN = 'auth-token-create-update-token',
   USER_EMAIL_EXISTS = 'user-email-exists',
   GET_AUTH_USER_BY_EMAIL = 'get-auth-user-by-email',
@@ -45,6 +47,7 @@ export enum AmsEventType {
   API_KEY_ROLE_REMOVE = 'api-key-role-remove',
   GET_API_KEY_ROLES = 'get-api-key-roles',
   GET_API_KEY = 'get-api-key',
+  API_KEYS_IN_PROJECT_UPDATE = 'update-api-keys-in-project',
   DISCORD_LINK = 'discord-link',
   DISCORD_UNLINK = 'discord-unlink',
   DISCORD_USER_LIST = 'discord-user-list',
@@ -240,7 +243,9 @@ export enum LogLevel {
 export enum SqlModelStatus {
   DRAFT = 1,
   INCOMPLETE = 2,
+  INACTIVE = 3,
   ACTIVE = 5,
+  BLOCKED = 7,
   MARKED_FOR_DELETION = 8,
   DELETED = 9,
 }
