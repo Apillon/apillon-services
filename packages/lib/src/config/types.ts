@@ -573,6 +573,8 @@ export enum OauthLinkType {
 
 export enum CacheKeyPrefix {
   BUCKET_LIST = 'bucket-list',
+  ADMIN_USER_LIST = 'admin-user-list',
+  ADMIN_PROJECT_LIST = 'admin-project-list',
 }
 
 export enum CacheKeyTTL {

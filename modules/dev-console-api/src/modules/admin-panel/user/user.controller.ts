@@ -5,6 +5,7 @@ import {
   QuotaOverrideDto,
   PopulateFrom,
   ValidateFor,
+  CacheKeyPrefix,
 } from '@apillon/lib';
 import {
   Body,
@@ -18,8 +19,14 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
+import {
+  CacheInterceptor,
+  Ctx,
+  Permissions,
+  Validation,
+} from '@apillon/modules-lib';
 import { AuthGuard } from '../../../guards/auth.guard';
 import { UserService } from './user.service';
 import { DevConsoleApiContext } from '../../../context';
@@ -28,15 +35,18 @@ import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dt
 import { GetQuotasDto } from '@apillon/lib/dist/lib/at-services/config/dtos/get-quotas.dto';
 import { UUID } from 'crypto';
 import { BaseQueryFilterValidator } from '../../../decorators/base-query-filter-validator';
+import { Cache } from '@apillon/modules-lib';
 
 @Controller('admin-panel/users')
 @Permissions({ role: DefaultUserRole.ADMIN })
 @UseGuards(AuthGuard)
+@UseInterceptors(CacheInterceptor)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
   @BaseQueryFilterValidator()
+  @Cache({ keyPrefix: CacheKeyPrefix.ADMIN_USER_LIST })
   async listUsers(
     @Ctx() context: DevConsoleApiContext,
     @Query() query: BaseQueryFilter,

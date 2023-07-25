@@ -22,7 +22,7 @@ import {
   CacheKeyPrefix,
   CacheKeyTTL,
 } from '@apillon/lib';
-import { Cache } from '@apillon/modules-lib';
+import { CacheByProject } from '@apillon/modules-lib';
 import { DevConsoleApiContext } from '../../../context';
 import {
   Ctx,
@@ -133,11 +133,9 @@ export class BucketController {
   )
   @Validation({ dto: BucketQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
-  @Cache({
+  @CacheByProject({
     keyPrefix: CacheKeyPrefix.BUCKET_LIST,
     ttl: CacheKeyTTL.EXTRA_LONG,
-    byUser: false,
-    byProject: true,
   })
   async getBucketList(
     @Ctx() context: DevConsoleApiContext,
