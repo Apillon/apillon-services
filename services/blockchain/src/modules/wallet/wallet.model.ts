@@ -417,13 +417,13 @@ export class Wallet extends AdvancedSQLModel {
     }
     try {
       this.minTokenBalance = ethers.BigNumber.from(this.minBalance)
-        .div(Math.pow(10, this.decimals))
+        .div(ethers.BigNumber.from(10).pow(this.decimals))
         .toNumber()
         .toFixed(4);
     } catch (err) {
       try {
         this.minTokenBalance = ethers.BigNumber.from(this.minBalance)
-          .div(Math.pow(10, this.decimals))
+          .div(ethers.BigNumber.from(10).pow(this.decimals))
           .toString();
       } catch (err) {
         console.log(err);
@@ -431,13 +431,13 @@ export class Wallet extends AdvancedSQLModel {
     }
     try {
       this.currentTokenBalance = ethers.BigNumber.from(this.currentBalance)
-        .div(Math.pow(10, this.decimals))
+        .div(ethers.BigNumber.from(10).pow(this.decimals))
         .toNumber()
         .toFixed(4);
     } catch (err) {
       try {
         this.currentTokenBalance = ethers.BigNumber.from(this.currentBalance)
-          .div(Math.pow(10, this.decimals))
+          .div(ethers.BigNumber.from(10).pow(this.decimals))
           .toString();
       } catch (err) {
         console.log(err);
