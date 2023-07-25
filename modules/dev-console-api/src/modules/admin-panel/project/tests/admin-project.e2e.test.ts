@@ -1,4 +1,4 @@
-import { DefaultUserRole, QuotaCode, SqlModelStatus, env } from '@apillon/lib';
+import { DefaultUserRole, QuotaCode, SerializeFor, env } from '@apillon/lib';
 import * as request from 'supertest';
 import {
   createTestProject,
@@ -8,6 +8,11 @@ import {
 import { releaseStage, Stage } from '@apillon/tests-lib';
 import { Project } from '../../../project/models/project.model';
 import { setupTest } from '../../../../../test/helpers/setup';
+import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
+import { Website } from '@apillon/storage/src/modules/hosting/models/website.model';
+import { Override } from '@apillon/config/src/modules/override/models/override.model';
+import { Collection } from '@apillon/nfts/src/modules/nfts/models/collection.model';
+import { randomUUID } from 'crypto';
 
 describe('Admin Project tests', () => {
   let stage: Stage;
@@ -22,40 +27,7 @@ describe('Admin Project tests', () => {
       env.ADMIN_CONSOLE_API_PORT_TEST,
       env.ADMIN_CONSOLE_API_HOST_TEST,
     );
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    adminTestUser = await createTestUser(
-      stage.devConsoleContext,
-      stage.amsContext,
-      DefaultUserRole.ADMIN,
-    );
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
-    await createTestProject(testUser, stage.devConsoleContext);
-
-    await stage.configContext.mysql.paramExecute(`
-    INSERT INTO override (status, quota_id, project_uuid, object_uuid, package_id, value)
-    VALUES
-      (
-        ${SqlModelStatus.ACTIVE},
-        ${QuotaCode.MAX_PROJECT_COUNT},
-        '${testProject.project_uuid}',
-        null,
-        null,
-        20
-      )
-    `);
-
-    await stage.configContext.mysql.paramExecute(`
-    INSERT INTO override (status, quota_id, project_uuid, object_uuid, package_id, value)
-    VALUES
-      (
-        ${SqlModelStatus.ACTIVE},
-        ${QuotaCode.MAX_USERS_ON_PROJECT},
-        '${testProject.project_uuid}',
-        null,
-        null,
-        40
-      )
-    `);
+    await createTestData();
   });
 
   afterAll(async () => {
@@ -95,11 +67,16 @@ describe('Admin Project tests', () => {
         .get(`/admin-panel/projects/${testProject.project_uuid}`)
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.data?.id).toBeTruthy();
-      expect(response.body.data?.project_uuid).toEqual(
-        testProject.project_uuid,
-      );
-      expect(response.body.data?.name).toBeTruthy();
+      const responseProject = response.body.data;
+      expect(responseProject?.id).toBeTruthy();
+      expect(responseProject?.project_uuid).toEqual(testProject.project_uuid);
+      expect(responseProject?.name).toEqual(testProject.name);
+
+      // Data inserted in createTestData() method
+      expect(responseProject.numOfBuckets).toEqual(1);
+      expect(responseProject.totalBucketSize).toEqual(2000);
+      expect(responseProject.numOfWebsites).toEqual(1);
+      expect(responseProject.numOfCollections).toEqual(1);
     });
   });
 
@@ -156,4 +133,76 @@ describe('Admin Project tests', () => {
       expect(data.length).toBe(0); // Override should be deleted
     });
   });
+
+  async function createTestData() {
+    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    adminTestUser = await createTestUser(
+      stage.devConsoleContext,
+      stage.amsContext,
+      DefaultUserRole.ADMIN,
+    );
+    testProject = await createTestProject(testUser, stage.devConsoleContext);
+    await createTestProject(testUser, stage.devConsoleContext);
+
+    await new Override(
+      {
+        project_uuid: testProject.project_uuid,
+        quota_id: QuotaCode.MAX_PROJECT_COUNT,
+        value: 20,
+      },
+      stage.configContext,
+    ).insert(SerializeFor.SELECT_DB); // Override properties are not marked as serializable for INSERT_DB
+
+    await new Override(
+      {
+        project_uuid: testProject.project_uuid,
+        quota_id: QuotaCode.MAX_USERS_ON_PROJECT,
+        value: 40,
+      },
+      stage.configContext,
+    ).insert(SerializeFor.SELECT_DB); // Override properties are not marked as serializable for INSERT_DB
+
+    const bucket = await new Bucket(
+      {
+        name: 'test bucket',
+        bucket_uuid: randomUUID(),
+        project_uuid: testProject.project_uuid,
+        bucketType: 1,
+        maxSize: 5_242_880,
+        size: 2000,
+      },
+      stage.storageContext,
+    ).insert();
+
+    await new Website(
+      {
+        project_uuid: testProject.project_uuid,
+        bucket_id: bucket.id,
+        stagingBucket_id: bucket.id,
+        productionBucket_id: bucket.id,
+        name: 'test',
+      },
+      stage.storageContext,
+    ).insert();
+
+    await new Collection(
+      {
+        collection_uuid: randomUUID(),
+        project_uuid: testProject.project_uuid,
+        symbol: 'PANDA',
+        name: 'Panda collection',
+        description: 'test',
+        maxSupply: 1000,
+        dropPrice: 50,
+        baseExtension: '',
+        isSoulbound: false,
+        isRevokable: false,
+        dropStart: 40,
+        dropReserve: 20,
+        royaltiesFees: 0,
+        royaltiesAddress: '',
+      },
+      stage.nftsContext,
+    ).insert();
+  }
 });
