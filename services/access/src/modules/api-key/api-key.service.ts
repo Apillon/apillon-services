@@ -196,18 +196,12 @@ export class ApiKeyService {
     event: { project_uuids: string[]; block: boolean },
     context: ServiceContext,
   ): Promise<any> {
-    await runWithWorkers(
+    //Update api keys status
+    await new ApiKey({}, context).updateApiKeysInProjects(
       event.project_uuids,
-      50,
-      context,
-      async (project_uuid: string) => {
-        //Update api keys status
-        await new ApiKey({}, context).updateApiKeysInProject(
-          project_uuid,
-          event.block,
-        );
-      },
+      event.block,
     );
+
     return true;
   }
 

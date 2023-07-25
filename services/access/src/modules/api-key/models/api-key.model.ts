@@ -335,15 +335,18 @@ export class ApiKey extends AdvancedSQLModel {
    * @param block true if block, false if unblock
    * @returns
    */
-  public async updateApiKeysInProject(project_uuid: string, block: boolean) {
+  public async updateApiKeysInProjects(
+    project_uuids: string[],
+    block: boolean,
+  ) {
     await this.getContext().mysql.paramExecute(
       `
       UPDATE \`${this.tableName}\`
       SET status = ${block ? SqlModelStatus.BLOCKED : SqlModelStatus.ACTIVE}
-      WHERE project_uuid = @project_uuid
+      WHERE project_uuid IN (@project_uuids)
       AND status = ${block ? SqlModelStatus.ACTIVE : SqlModelStatus.BLOCKED};
       `,
-      { project_uuid },
+      { project_uuids },
     );
     return true;
   }
