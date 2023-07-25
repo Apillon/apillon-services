@@ -52,7 +52,7 @@ export class WalletService {
         throw new BlockchainValidationException(wallet);
       }
     }
-    await wallet.update(SerializeFor.ADMIN);
+    await wallet.update();
     return wallet.serialize(SerializeFor.ADMIN);
   }
 
@@ -102,7 +102,7 @@ export class WalletService {
         throw new BlockchainValidationException(transaction);
       }
     }
-    await transaction.update(SerializeFor.ADMIN);
+    await transaction.update();
     return transaction;
   }
 
