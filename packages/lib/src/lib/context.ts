@@ -1,3 +1,4 @@
+import { DefaultUserRole } from '../config/types';
 import { MySql } from './database/mysql';
 import { v4 as uuid } from 'uuid';
 
@@ -76,6 +77,9 @@ export class Context {
       //If call was made by user (dev-console)
       if (Array.isArray(role)) {
         if (this.user) {
+          if (this.user.userRoles.includes(DefaultUserRole.ADMIN)) {
+            return true;
+          }
           //Check if user has one of required roles
           for (const r of role) {
             if (
