@@ -5,6 +5,7 @@ import { BlockHeight } from '../../block-height';
 import { BaseBlockchainIndexer } from '../base-blockchain-indexer';
 import { CrustStorageOrders } from './data-models/crust-storage-orders';
 import { CrustTransfers } from './data-models/crust-transfers';
+import { SystemEventTransaction } from '../kilt/data-models/kilt-transactions';
 
 export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
   constructor() {
@@ -178,6 +179,15 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
     //   orders: await this.getMarketFileOrders(address, fromBlock, toBlock),
     // };
     return await this.getMarketFileOrders(address, fromBlock, toBlock);
+  }
+
+  public async getAllSystemEvents(
+    account: string,
+    fromBlock: number,
+    toBlock: number,
+  ): Promise<SystemEventTransaction[]> {
+    // TODO: Must implement this if you want to use the substrate transaction worker.
+    return new Array<SystemEventTransaction>();
   }
 
   public async getMarketFileOrders(

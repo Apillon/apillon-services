@@ -7,6 +7,7 @@ import {
 import { Wallet } from '../common/models/wallet';
 import { BaseBlockchainIndexer } from '../modules/blockchain-indexers/substrate/base-blockchain-indexer';
 import {
+  AppEnvironment,
   ChainType,
   Context,
   LogType,
@@ -31,6 +32,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
   private chainName: string;
   private logPrefix: string;
   private wallets: Wallet[];
+  // Add as necessary
   private indexer: BaseBlockchainIndexer;
 
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
@@ -93,7 +95,12 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         );
         continue;
       }
-      if (transactions.length > 0) {
+
+      if (
+        transactions.length > 0 &&
+        env.APP_ENV !== AppEnvironment.TEST &&
+        env.APP_ENV !== AppEnvironment.LOCAL_DEV
+      ) {
         // Trigger webhook worker
         await sendToWorkerQueue(
           env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
@@ -127,11 +134,13 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     toBlock: number,
   ) {
     // Get all transactions from the
-    const transactions = await this.indexer.getAllTransactions(
+    const transactions = await this.indexer.getAllSystemEvents(
       address,
       fromBlock,
       toBlock,
     );
+
+    console.log('System transactions: ', transactions);
 
     const transactionsArray: Array<any> = Object.values(transactions);
     return transactionsArray.length > 0 ? transactionsArray.flat(Infinity) : [];

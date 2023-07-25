@@ -38,6 +38,28 @@ export enum KiltGQLQueries {
     }
   }`,
 
+  /* Returns all SYSTEM events from a specific account in KILT */
+  ACCOUNT_SYSTEM_EVENTS_QUERY = `query getAccountSystemEvents(
+    $account: String!
+    $fromBlock: Int!, 
+    $toBlock: Int!) {
+    systems(
+      where: {
+        AND: {
+          blockNumber_gte: $fromBlock,
+          blockNumber_lte: $toBlock,
+          account_eq: $account
+        }
+      }
+    )
+    {
+      ${BASE_SUBSTRATE_PARAMS_Q}
+      account
+      error
+      fee
+    }
+  }`,
+
   /* Returns all transactions releated to DID from a specific account in KILT */
   ACCOUNT_DID_Q = `query getAccountDidTransactions(
     $account: String!,
