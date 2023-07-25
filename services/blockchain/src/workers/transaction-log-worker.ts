@@ -15,7 +15,7 @@ import {
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { Wallet } from '../common/models/wallet';
+import { Wallet } from '../modules/wallet/wallet.model';
 import { DbTables, TxDirection } from '../config/types';
 import { formatTokenWithDecimals, formatWalletAddress } from '../lib/utils';
 
@@ -23,6 +23,7 @@ import { TransactionLog } from '../modules/accounting/transaction-log.model';
 
 import { EvmBlockchainIndexer } from '../modules/blockchain-indexers/evm/evm-indexer.service';
 import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
+import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/kilt-indexer.service';
 
 export class TransactionLogWorker extends BaseQueueWorker {
   private batchLimit: number;
@@ -61,7 +62,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
     // link with transaction queue && alert if no link
     await this.linkTransactions(transactions, wallet);
 
-    // check wallet ballance && alert if low
+    // check wallet balance && alert if low
     await this.checkWalletBalance(wallet);
 
     if (transactions.length) {
@@ -156,10 +157,34 @@ export class TransactionLogWorker extends BaseQueueWorker {
             );
           },
 
-          [SubstrateChain.KILT]: () => {
-            // TODO: Add KILT support!!!!!
-            // throw new Error('KILT is not supported yet!');
-            console.log(`KILT LOG HANDLE: !THIS IS A TEST!`);
+          [SubstrateChain.KILT]: async () => {
+            const res =
+              await new KiltBlockchainIndexer().getAllAccountTransfers(
+                wallet.address,
+                lastBlock,
+                limit,
+              );
+            console.log(`Got ${res.length} Kilt transfers!`);
+            return (
+              res
+                .map((x) =>
+                  new TransactionLog(
+                    {},
+                    this.context,
+                  ).createFromKiltIndexerData(x, wallet),
+                )
+                // merge transfers that has the same hash (not happening in kilt?)
+                .reduce((acc, tx) => {
+                  const found = acc.find((x) => x.hash === tx.hash);
+                  if (found) {
+                    found.addToAmount(tx.amount);
+                    found.calculateTotalPrice();
+                  } else {
+                    acc.push(tx);
+                  }
+                  return acc;
+                }, [] as TransactionLog[])
+            );
           },
           [SubstrateChain.PHALA]: () => {
             //
@@ -268,13 +293,13 @@ export class TransactionLogWorker extends BaseQueueWorker {
   }
 
   private async checkWalletBalance(wallet: Wallet) {
-    const balanceData = await wallet.checkBalance();
+    const balanceData = await wallet.checkAndUpdateBalance();
 
     if (!balanceData.minBalance) {
       await this.writeEventLog(
         {
           logType: LogType.WARN,
-          message: `MIN BALLANCE IS NOT SET! ${formatWalletAddress(
+          message: `MIN BALANCE IS NOT SET! ${formatWalletAddress(
             wallet,
           )}  ==> balance: ${formatTokenWithDecimals(
             balanceData.balance,

@@ -421,6 +421,13 @@ export interface IEnv {
    */
   NFTS_AWS_WORKER_SQS_URL: string;
   NFTS_AWS_WORKER_LAMBDA_NAME: string;
+
+  /**
+   * METABASE EMBED
+   */
+
+  METABASE_SECRET: string;
+  METABASE_URL: string;
 }
 
 // dotenv.config();
@@ -428,7 +435,7 @@ dotenv.config({ path: '../../.env' });
 
 export let env: IEnv = {
   APP_URL: process.env['APP_URL'] || 'https://app.apillon.io',
-  APP_ENV: process.env['APP_ENV'] || AppEnvironment.STG,
+  APP_ENV: process.env['APP_ENV'] || AppEnvironment.LOCAL_DEV,
   LOG_TARGET: process.env['LOG_TARGET'] || 'console',
   LOG_LEVEL: process.env['LOG_LEVEL'] || 'no-db',
   AWS_REGION: process.env['AWS_REGION'], // env var from lambda - can not be overwritten in lambda setting!
@@ -767,6 +774,10 @@ export let env: IEnv = {
   //** REDIS */
   REDIS_URL: process.env['REDIS_URL'],
   DEFAULT_CACHE_TTL: +process.env['DEFAULT_CACHE_TTL'] || 300, // 5 min
+
+  /** METABASE */
+  METABASE_SECRET: process.env['METABASE_SECRET'] || '',
+  METABASE_URL: process.env['METABASE_URL'] || 'https://metabase.apillon.io',
 };
 
 export let isEnvReady = false;

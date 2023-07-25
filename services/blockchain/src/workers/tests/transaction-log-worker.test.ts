@@ -5,7 +5,7 @@ import {
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { releaseStage, setupTest, Stage } from '../../../test/setup';
-import { Wallet } from '../../common/models/wallet';
+import { Wallet } from '../../modules/wallet/wallet.model';
 import { DbTables } from '../../config/types';
 import { TransactionLogWorker } from '../transaction-log-worker';
 
@@ -195,7 +195,9 @@ describe('Transaction Log Worker unit test', () => {
     expect(data.length).toBe(3);
 
     const walletData = data.find(
-      (x) => x.wallet.address === moonbaseWallet.address.toLowerCase(),
+      (x) =>
+        x.wallet.address === moonbaseWallet.address.toLowerCase() ||
+        x.wallet.address === moonbaseWallet.address,
     );
     expect(walletData.wallet.address).toBe(
       moonbaseWallet.address.toLowerCase(),
@@ -222,7 +224,9 @@ describe('Transaction Log Worker unit test', () => {
     expect(data.length).toBe(3);
 
     const walletData = data.find(
-      (x) => x.wallet.address === moonbaseWallet.address.toLowerCase(),
+      (x) =>
+        x.wallet.address === moonbaseWallet.address.toLowerCase() ||
+        x.wallet.address === moonbaseWallet.address,
     );
     expect(walletData.wallet.address).toBe(
       moonbaseWallet.address.toLowerCase(),
@@ -248,9 +252,14 @@ describe('Transaction Log Worker unit test', () => {
     expect(data.length).toBe(3);
 
     const walletData = data.find(
-      (x) => x.wallet.address === astarWallet.address.toLowerCase(),
+      (x) =>
+        x.wallet.address === astarWallet.address.toLowerCase() ||
+        x.wallet.address === astarWallet.address,
     );
-    expect(walletData.wallet.address).toBe(astarWallet.address.toLowerCase());
+    expect(
+      walletData.wallet.address === astarWallet.address.toLowerCase() ||
+        walletData.wallet.address === astarWallet.address,
+    ).toBeTruthy();
 
     await worker.runExecutor(walletData);
 

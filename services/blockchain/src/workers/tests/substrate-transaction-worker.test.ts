@@ -12,7 +12,7 @@ import {
 } from '@apillon/workers-lib';
 import { releaseStage, setupTest, Stage } from '../../../test/setup';
 import { Transaction } from '../../common/models/transaction';
-import { Wallet } from '../../common/models/wallet';
+import { Wallet } from '../../modules/wallet/wallet.model';
 import { SubstrateTransactionWorker } from '../substrate-transaction-worker';
 import { WorkerName } from '../worker-executor';
 

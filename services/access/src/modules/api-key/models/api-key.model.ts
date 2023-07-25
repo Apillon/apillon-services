@@ -246,7 +246,7 @@ export class ApiKey extends AdvancedSQLModel {
       `
       SELECT * 
       FROM \`${this.tableName}\`
-      WHERE apiKey = @apiKey AND status <> ${SqlModelStatus.DELETED};
+      WHERE apiKey = @apiKey AND status = ${SqlModelStatus.ACTIVE};
       `,
       { apiKey },
     );
@@ -263,7 +263,7 @@ export class ApiKey extends AdvancedSQLModel {
       `
       SELECT * 
       FROM \`${DbTables.API_KEY_ROLE}\`
-      WHERE apiKey_id = @id AND status <> ${SqlModelStatus.DELETED};
+      WHERE apiKey_id = @id AND status = ${SqlModelStatus.ACTIVE};
       `,
       { id: this.id },
     );
@@ -327,5 +327,27 @@ export class ApiKey extends AdvancedSQLModel {
     );
 
     return data[0].numOfApiKeys;
+  }
+
+  /**
+   * Sets all api keys in project to blocked/active
+   * @param project_uuid
+   * @param block true if block, false if unblock
+   * @returns
+   */
+  public async updateApiKeysInProjects(
+    project_uuids: string[],
+    block: boolean,
+  ) {
+    await this.getContext().mysql.paramExecute(
+      `
+      UPDATE \`${this.tableName}\`
+      SET status = ${block ? SqlModelStatus.BLOCKED : SqlModelStatus.ACTIVE}
+      WHERE project_uuid IN (@project_uuids)
+      AND status = ${block ? SqlModelStatus.ACTIVE : SqlModelStatus.BLOCKED};
+      `,
+      { project_uuids },
+    );
+    return true;
   }
 }

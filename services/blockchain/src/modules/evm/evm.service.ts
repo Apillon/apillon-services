@@ -14,7 +14,7 @@ import { LogOutput, sendToWorkerQueue } from '@apillon/workers-lib';
 import { ethers } from 'ethers';
 import { Endpoint } from '../../common/models/endpoint';
 import { Transaction } from '../../common/models/transaction';
-import { Wallet } from '../../common/models/wallet';
+import { Wallet } from '../wallet/wallet.model';
 import { BlockchainErrorCode } from '../../config/types';
 import { BlockchainCodeException } from '../../lib/exceptions';
 import { evmChainToJob } from '../../lib/helpers';

@@ -95,6 +95,14 @@ export class Ams extends BaseService {
     };
   }
 
+  public async logout(params: { user_uuid?: string }) {
+    const data = {
+      eventName: AmsEventType.USER_LOGOUT,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
   public async resetPassword(params: { token: string; password: string }) {
     const data = {
       eventName: AmsEventType.USER_PASSWORD_RESET,
@@ -266,6 +274,8 @@ export class Ams extends BaseService {
 
   //#endregion
 
+  //#region discord
+
   public async linkDiscord(params: CreateOauthLinkDto) {
     const data = {
       eventName: AmsEventType.DISCORD_LINK,
@@ -298,6 +308,9 @@ export class Ams extends BaseService {
     return await this.callService(data);
   }
 
+  //#endregion
+
+  //#region Admin panel functions
   public async getUserLogins(user_uuid: string, query: BaseQueryFilter) {
     const data = {
       eventName: AmsEventType.USER_GET_LOGINS,
@@ -315,4 +328,28 @@ export class Ams extends BaseService {
     };
     return await this.callService(data);
   }
+
+  public async updateAuthUserStatus(params: {
+    user_uuid: string;
+    status?: number;
+  }) {
+    const data = {
+      eventName: AmsEventType.USER_SET_STATUS,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
+  public async updateApiKeysInProject(params: {
+    project_uuids: string[];
+    block: boolean;
+  }) {
+    const data = {
+      eventName: AmsEventType.API_KEYS_IN_PROJECT_UPDATE,
+      ...params,
+    };
+    return await this.callService(data);
+  }
+
+  //#endregion
 }

@@ -197,11 +197,16 @@ export class Project extends AdvancedSQLModel {
 
   /**
    * Returns all user projects
+   * @param context
+   * @param user_id if null, projects of user in context are returned
+   * @returns
    */
-
-  public async getUserProjects(context: DevConsoleApiContext) {
+  public async getUserProjects(
+    context: DevConsoleApiContext,
+    user_id?: number,
+  ) {
     const params = {
-      user_id: context.user.id,
+      user_id: user_id || context.user.id,
     };
     const sqlQuery = {
       qSelect: `
@@ -215,6 +220,30 @@ export class Project extends AdvancedSQLModel {
     };
 
     return selectAndCountQuery(context.mysql, sqlQuery, params, 'p.id');
+  }
+
+  /**
+   * Update status (block, unblock) of all user projects
+   * @param userId
+   * @param status
+   * @returns
+   */
+  public async updateUserProjectsStatus(userId: number, status: number) {
+    await this.getContext().mysql.paramExecute(
+      `
+      UPDATE \`${this.tableName}\` p
+      SET p.status = @status
+      WHERE EXISTS (
+        SELECT 1 FROM \`${DbTables.PROJECT_USER}\` pu 
+        WHERE pu.user_id = @userId
+        AND pu.project_id = p.id
+      )
+      AND p.status IN ( ${SqlModelStatus.ACTIVE}, ${SqlModelStatus.BLOCKED} )
+      `,
+      { userId, status },
+    );
+
+    return true;
   }
 
   public async listProjects(

@@ -19,7 +19,7 @@ export class OverrideService {
     // If an override exists, update it, else create a new override
     if (override?.exists()) {
       override.populate(dto, PopulateFrom.ADMIN);
-      await override.update(SerializeFor.ADMIN);
+      await override.update();
       return override;
     }
     const newOverride = new Override(dto, context);

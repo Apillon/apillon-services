@@ -16,7 +16,7 @@ import {
   stringParser,
 } from '@rawmodel/parsers';
 import { ethers } from 'ethers';
-import { Wallet } from '../../common/models/wallet';
+import { Wallet } from '../wallet/wallet.model';
 
 import {
   BlockchainErrorCode,
@@ -371,6 +371,43 @@ export class TransactionLog extends AdvancedSQLModel {
       this.direction = TxDirection.INCOME;
       this.action =
         data.transactionType === 0 ? TxAction.DEPOSIT : TxAction.TRANSACTION;
+    } else {
+      throw new Error('Inconsistent transaction addresses!');
+    }
+
+    this.calculateTotalPrice();
+
+    return this;
+  }
+
+  public createFromKiltIndexerData(data: any, wallet: Wallet) {
+    this.ts = data?.createdAt;
+    this.blockId = data?.blockNumber;
+    this.addressFrom = data?.from;
+    this.addressTo = data?.to;
+    this.amount = data?.amount;
+
+    this.hash = data?.extrinsicHash;
+    this.wallet = wallet.address;
+
+    this.status = data?.status === 1 ? TxStatus.COMPLETED : TxStatus.FAILED;
+    this.chainType = wallet.chainType;
+    this.chain = wallet.chain;
+    this.token = TxToken.KILT_TOKEN;
+
+    if (this.addressFrom === this.wallet) {
+      this.direction = TxDirection.COST;
+      // TODO: determine action type!
+      // this.action =
+      //   data.transactionType === 0 ? TxAction.WITHDRAWAL : TxAction.TRANSACTION;
+      this.action = TxAction.TRANSACTION;
+      this.fee = data?.fee;
+    } else if (this.addressTo === this.wallet) {
+      this.direction = TxDirection.INCOME;
+      // TODO: determine action type!
+      // this.action =
+      //   data.transactionType === 0 ? TxAction.DEPOSIT : TxAction.TRANSACTION;
+      this.action = TxAction.DEPOSIT;
     } else {
       throw new Error('Inconsistent transaction addresses!');
     }
