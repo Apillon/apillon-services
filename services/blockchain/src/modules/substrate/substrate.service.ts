@@ -119,8 +119,8 @@ export class SubstrateService {
 
       // TODO: Determine the best era
       const signed = await unsignedTx.signAsync(pair, {
-        // nonce: wallet.nextNonce,
-        // era: 600, // number of blocks the transaction is valid - 6s per block * 6000 blocks / 60 = 600 minutes -> 10 hours
+        nonce: wallet.nextNonce,
+        era: 600, // number of blocks the transaction is valid - 6s per block * 6000 blocks / 60 = 600 minutes -> 10 hours
       });
 
       console.info('signAsync SUCCESSFULL. Saving transaction to DB.');
