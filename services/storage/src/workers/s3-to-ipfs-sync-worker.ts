@@ -131,7 +131,10 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
 
       let transferedFiles = [];
 
-      if (bucket.bucketType == BucketType.STORAGE) {
+      if (
+        bucket.bucketType == BucketType.STORAGE ||
+        bucket.bucketType == BucketType.NFT_METADATA
+      ) {
         transferedFiles = (
           await storageBucketSyncFilesToIPFS(
             this.context,

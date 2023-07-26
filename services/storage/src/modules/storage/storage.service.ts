@@ -207,7 +207,10 @@ export class StorageService {
       });
     }
 
-    if (bucket.bucketType == BucketType.STORAGE) {
+    if (
+      bucket.bucketType == BucketType.STORAGE ||
+      bucket.bucketType == BucketType.NFT_METADATA
+    ) {
       if (session.sessionStatus == FileUploadSessionStatus.CREATED) {
         await processSessionFiles(context, bucket, session, event.body);
       }
@@ -451,7 +454,10 @@ export class StorageService {
 
     //check bucket
     const b: Bucket = await new Bucket({}, context).populateById(f.bucket_id);
-    if (b.bucketType == BucketType.STORAGE) {
+    if (
+      b.bucketType == BucketType.STORAGE ||
+      b.bucketType == BucketType.NFT_METADATA
+    ) {
       await f.markForDeletion();
       return f.serialize(SerializeFor.PROFILE);
     } else if (b.bucketType == BucketType.HOSTING) {
