@@ -217,7 +217,7 @@ export class Task extends AdvancedSQLModel {
     this.reset();
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${DbTables.TASK}\`
       WHERE type = @type
       AND status <> ${SqlModelStatus.DELETED}
@@ -226,11 +226,9 @@ export class Task extends AdvancedSQLModel {
       conn,
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   public async confirmTask(
@@ -290,7 +288,7 @@ export class Task extends AdvancedSQLModel {
       `
         INSERT INTO ${DbTables.TRANSACTION}
           (player_id, direction, amount, realization_id, status)
-        VALUES 
+        VALUES
           (@player_id, ${TransactionDirection.DEPOSIT}, @reward ,@realization_id, ${SqlModelStatus.ACTIVE})
       `,
       { player_id, reward: this.reward, realization_id: realization?.id },

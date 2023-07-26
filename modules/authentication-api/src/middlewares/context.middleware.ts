@@ -12,11 +12,6 @@ export interface IRequest extends Request {
  * Returns a middleware which creates a context.
  */ @Injectable()
 export class ContextMiddleware implements NestMiddleware {
-  constructor(
-    @Inject('MYSQL_DB')
-    private mysql: MySql,
-  ) {}
-
   use(req: IRequest, res, next) {
     let requestId = null;
     try {
@@ -26,7 +21,6 @@ export class ContextMiddleware implements NestMiddleware {
     } catch (err) {}
 
     req.context = new AuthenticationApiContext(requestId);
-    req.context.setMySql(this.mysql);
 
     next();
   }

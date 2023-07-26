@@ -1,3 +1,4 @@
+import { Project } from './../../project/models/project.model';
 /* eslint-disable @typescript-eslint/member-ordering */
 import { faker } from '@faker-js/faker';
 import { prop } from '@rawmodel/core';
@@ -5,11 +6,16 @@ import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
   Context,
+  getQueryParams,
   PopulateFrom,
   presenceValidator,
+  selectAndCountQuery,
   SerializeFor,
+  SqlModelStatus,
 } from '@apillon/lib';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
+import { UUID } from 'crypto';
+import { BaseQueryFilter } from '@apillon/lib';
 
 /**
  * User model.
@@ -141,7 +147,7 @@ export class User extends AdvancedSQLModel {
   public userPermissions: number[];
 
   /**
-   * Auth user - info property used to pass to microservices - othervise serialization removes this object
+   * Auth user - info property used to pass to microservices - otherwise serialization removes this object
    */
   @prop({
     serializable: [SerializeFor.SERVICE],
@@ -165,6 +171,56 @@ export class User extends AdvancedSQLModel {
       return this.populate(data[0], PopulateFrom.DB);
     }
     return this.reset();
+  }
+
+  public async getUserDetail(user_uuid: string) {
+    const data = await this.db().paramExecute(
+      `
+        SELECT ${this.generateSelectFields()}
+        FROM \`${DbTables.USER}\` u
+        WHERE u.user_uuid = @user_uuid
+      `,
+      { user_uuid },
+    );
+    return data?.length ? data[0] : data;
+  }
+
+  public async listUsers(filter: BaseQueryFilter) {
+    const fieldMap = { id: 'u.id' };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'u',
+      fieldMap,
+      filter.serialize(),
+    );
+    const sqlQuery = {
+      qSelect: `SELECT ${this.generateSelectFields(
+        'u',
+      )}, COUNT(DISTINCT p.id) AS totalProjects, COUNT(s.id) AS totalServices`,
+      qFrom: `FROM \`${DbTables.USER}\` u
+        LEFT JOIN project_user pu ON u.id = pu.user_id
+        LEFT JOIN project p ON pu.project_id = p.id
+        LEFT JOIN service s ON p.id = s.project_id
+        WHERE (
+          @search IS null
+          OR u.name LIKE CONCAT('%', @search, '%')
+          OR u.email LIKE CONCAT('%', @search, '%')
+        )
+        AND u.status <> ${SqlModelStatus.DELETED}
+        `,
+      qFilter: `
+          ORDER BY ${filters.orderStr || 'u.createTime DESC'}
+          LIMIT ${filters.limit} OFFSET ${filters.offset};
+        `,
+      qGroup: `GROUP BY ${this.generateGroupByFields()}`,
+    };
+
+    return selectAndCountQuery(
+      this.getContext().mysql,
+      sqlQuery,
+      params,
+      'u.id',
+    );
   }
 
   public async populateByEmail(email: string) {
@@ -198,5 +254,39 @@ export class User extends AdvancedSQLModel {
         .filter((value, index, self) => self.indexOf(value) === index);
     }
     return this;
+  }
+
+  public async listProjects(user_uuid: UUID, filter: BaseQueryFilter) {
+    const fieldMap = { id: 'u.id' };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'u',
+      fieldMap,
+      filter.serialize(),
+    );
+    const sqlQuery = {
+      qSelect: `SELECT ${new Project(
+        {},
+        this.getContext(),
+      ).generateSelectFields('p')}`,
+      qFrom: `FROM \`${DbTables.USER}\` u
+        JOIN project_user pu ON u.id = pu.user_id
+        JOIN project p ON pu.project_id = p.id
+        WHERE u.user_uuid = @user_uuid
+        AND pu.status <> ${SqlModelStatus.DELETED}
+        AND (@search IS null OR p.name LIKE CONCAT('%', @search, '%'))
+        `,
+      qFilter: `
+          ORDER BY ${filters.orderStr || 'u.createTime DESC'}
+          LIMIT ${filters.limit} OFFSET ${filters.offset};
+        `,
+    };
+
+    return selectAndCountQuery(
+      this.getContext().mysql,
+      sqlQuery,
+      { ...params, user_uuid },
+      'u.id',
+    );
   }
 }

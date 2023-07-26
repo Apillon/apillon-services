@@ -1,17 +1,17 @@
 import {
-  BurnNftDto,
-  CollectionsQuotaReachedQueryFilter,
   CreateCollectionDTO,
-  DefaultPermission,
   DefaultUserRole,
-  DeployCollectionDTO,
   MintNftDTO,
   NestMintNftDTO,
   NFTCollectionQueryFilter,
+  DeployCollectionDTO,
   SetCollectionBaseUriDTO,
   TransactionQueryFilter,
   TransferCollectionDTO,
   ValidateFor,
+  BurnNftDto,
+  CollectionsQuotaReachedQueryFilter,
+  DefaultPermission,
 } from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
@@ -39,7 +39,7 @@ export class NftsController {
     return await this.nftsService.getHello(context);
   }
 
-  @Post('/collections')
+  @Post('collections')
   @Validation({ dto: CreateCollectionDTO })
   @UseGuards(ValidationGuard)
   @Permissions(
@@ -54,7 +54,7 @@ export class NftsController {
     return await this.nftsService.createCollection(context, body);
   }
 
-  @Get('/collections')
+  @Get('collections')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -83,7 +83,7 @@ export class NftsController {
     return await this.nftsService.isCollectionsQuotaReached(context, query);
   }
 
-  @Get('/collections/:uuid')
+  @Get('collections/:uuid')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -97,7 +97,7 @@ export class NftsController {
     return await this.nftsService.getNftCollection(context, uuid);
   }
 
-  @Post('/collections/:collectionUuid/transferOwnership')
+  @Post('collections/:collectionUuid/transferOwnership')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -116,7 +116,7 @@ export class NftsController {
     );
   }
 
-  @Post('/collections/:collectionUuid/mint')
+  @Post('collections/:collectionUuid/mint')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -148,7 +148,7 @@ export class NftsController {
     return await this.nftsService.nestMintNftTo(context, collectionUuid, body);
   }
 
-  @Post('/collections/:collectionUuid/set-base-uri')
+  @Post('collections/:collectionUuid/set-base-uri')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -167,13 +167,13 @@ export class NftsController {
     );
   }
 
-  @Post('/check-transactions-status')
+  @Post('check-transactions-status')
   @UseGuards(DevEnvGuard)
   async checkTransactionStatus(@Ctx() context: DevConsoleApiContext) {
     return await this.nftsService.checkTransactionStatus(context);
   }
 
-  @Get('/collections/:collectionUuid/transactions')
+  @Get('collections/:collectionUuid/transactions')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -193,7 +193,7 @@ export class NftsController {
     );
   }
 
-  @Post('/collections/:collectionUuid/burn')
+  @Post('collections/:collectionUuid/burn')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },

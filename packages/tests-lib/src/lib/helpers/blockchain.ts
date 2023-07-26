@@ -1,6 +1,6 @@
 import ganache, { Server } from 'ganache';
 import { Stage } from '../interfaces/stage.interface';
-import { Wallet } from '@apillon/blockchain/src/common/models/wallet';
+import { Wallet } from '@apillon/blockchain/src/modules/wallet/wallet.model';
 import { ChainType, EvmChain } from '@apillon/lib';
 import { TransactionType } from '@apillon/nfts/dist/config/types';
 import { Transaction as NftCollectionTx } from '@apillon/nfts/dist/modules/transaction/models/transaction.model';

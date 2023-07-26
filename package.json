@@ -17,10 +17,11 @@
     "test": "npx turbo run test --concurrency=1 --continue --filter=!@apillon/authentication-api --force",
     "test:logging": "npx turbo run test:logging --concurrency=1 --continue --filter=!@apillon/authentication-api --force",
     "test-server": "npx turbo run test-server",
+    "test-server-min": "npx turbo run test-server --filter=!@apillon/referral --filter=!@apillon/mailing --filter=!@apillon/blockchain  --filter=!@apillon/nfts --filter=!@apillon/authentication",
     "lint": "npx turbo run lint --force",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "deploy:dev": "npx turbo run deploy:dev -vvv --force --continue=false --filter=!@apillon/api --filter=!@apillon/authentication-api",
-    "watch-libs": "npx turbo run dev --filter=@apillon/lib --filter=@apillon/modules-lib",
+    "watch-libs": "npx turbo run dev --filter=@apillon/lib --filter=@apillon/modules-lib --filter=@apillon/service-lib",
     "db-upgrade:ci": "npx turbo run db-upgrade:ci"
   },
   "devDependencies": {

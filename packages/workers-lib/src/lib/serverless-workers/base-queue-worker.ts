@@ -1,11 +1,12 @@
 import { Context } from '@apillon/lib';
-import { ServerlessWorker, WorkerDefinition } from '.';
+import { WorkerDefinition } from '.';
 import { DbTables, WorkerLogStatus, QueueWorkerType } from '../../config/types';
 import { Job } from '../../modules/job/job.model';
 import { sendToWorkerQueue } from '../aws-sqs';
 import { writeWorkerLog } from '../logger';
+import { BaseWorker } from './base-worker';
 
-export abstract class BaseQueueWorker extends ServerlessWorker {
+export abstract class BaseQueueWorker extends BaseWorker {
   protected context: Context;
   protected workerType: QueueWorkerType;
   protected workerName: string;
@@ -17,7 +18,7 @@ export abstract class BaseQueueWorker extends ServerlessWorker {
     type: QueueWorkerType,
     queueUrl: string,
   ) {
-    super(workerDefinition);
+    super(workerDefinition, context);
     this.workerType = type;
     this.context = context;
     this.workerName = workerDefinition.workerName;

@@ -12,12 +12,13 @@ import {
 } from '@apillon/lib';
 import {
   WorkerDefinition,
-  WorkerLogStatus,
   sendToWorkerQueue,
   BaseQueueWorker,
   QueueWorkerType,
+  LogOutput,
 } from '@apillon/workers-lib';
 import { DbTables } from '../config/types';
+
 export class TransactionWebhookWorker extends BaseQueueWorker {
   public constructor(
     workerDefinition: WorkerDefinition,
@@ -29,8 +30,7 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
   public async runPlanner(): Promise<any[]> {
     return [];
   }
-  public async runExecutor(data: any): Promise<any> {
-    // console.info('RUN EXECUTOR (TransactionWebhookWorker). data: ', data);
+  public async runExecutor(params: any): Promise<any> {
     const conn = await this.context.mysql.start();
 
     try {
@@ -45,26 +45,25 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
         conn,
       );
 
-      console.log('transactions: ', transactions);
+      // console.log('transactions: ', transactions);
+
       const crustWebhooks: TransactionWebhookDataDto[] = [];
       const nftWebhooks: TransactionWebhookDataDto[] = [];
+      const kiltWebooks: TransactionWebhookDataDto[] = [];
+
       if (transactions && transactions.length > 0) {
         for (let i = 0; i < transactions.length; i++) {
           const transaction = transactions[i];
-          if (
-            transaction.chainType == ChainType.SUBSTRATE &&
-            transaction.chain == SubstrateChain.CRUST
-          ) {
-            crustWebhooks.push(
-              new TransactionWebhookDataDto().populate({
-                id: transaction.id,
-                transactionHash: transaction.transactionHash,
-                referenceTable: transaction.referenceTable,
-                referenceId: transaction.referenceId,
-                transactionStatus: transaction.transactionStatus,
-                data: transaction.data,
-              }),
-            );
+          if (transaction.chainType == ChainType.SUBSTRATE) {
+            if (transaction.chain == SubstrateChain.CRUST) {
+              const crustTWh =
+                this.createSubstrateTransactionWebhookDto(transaction);
+              crustWebhooks.push(crustTWh);
+            } else if (transaction.chain == SubstrateChain.KILT) {
+              const kiltTWh =
+                this.createSubstrateTransactionWebhookDto(transaction);
+              kiltWebooks.push(kiltTWh);
+            }
           } else if (
             transaction.chainType == ChainType.EVM &&
             (transaction.chain == EvmChain.MOONBEAM ||
@@ -94,11 +93,20 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
        * transactions otherwise we do nothing.
        */
       const updates = [
+        // SUBSTRATE
         ...(await this.processWebhook(
           crustWebhooks,
           env.STORAGE_AWS_WORKER_SQS_URL,
           'UpdateCrustStatusWorker',
         )),
+
+        ...(await this.processWebhook(
+          kiltWebooks,
+          env.AUTH_AWS_WORKER_SQS_URL,
+          'UpdateStateWorker',
+        )),
+
+        // Evm
         ...(await this.processWebhook(
           nftWebhooks,
           env.NFTS_AWS_WORKER_SQS_URL,
@@ -106,7 +114,7 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
         )),
       ];
 
-      console.log('updates: ', updates);
+      // console.log('updates: ', updates);
       if (updates.length > 0) {
         await this.context.mysql.paramExecute(
           `
@@ -117,29 +125,31 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
           null,
           conn,
         );
-        await this.writeLogToDb(
-          WorkerLogStatus.INFO,
-          `Triggered webhooks for ${updates.length} transactions!`,
+
+        await this.writeEventLog(
           {
-            updates,
+            logType: LogType.INFO,
+            message: `Triggered webhooks for ${updates.length} transactions!`,
+            service: ServiceName.BLOCKCHAIN,
+            data: { updates },
           },
+          LogOutput.EVENT_INFO,
         );
       }
       await conn.commit();
     } catch (err) {
-      console.log(err);
+      // console.log(err);
       await conn.rollback();
-      await new Lmas().writeLog({
-        context: this.context,
-        logType: LogType.ERROR,
-        message: 'Error in TransactionWebhookWorker',
-        location: `${this.constructor.name}/runExecutor`,
-        service: ServiceName.BLOCKCHAIN,
-        data: {
-          data,
+      await this.writeEventLog(
+        {
+          logType: LogType.ERROR,
+          message: 'Error in TransactionWebhookWorker',
+          service: ServiceName.BLOCKCHAIN,
+          data: { params, err },
           err,
         },
-      });
+        LogOutput.SYS_ERROR,
+      );
       throw err;
     }
 
@@ -180,21 +190,32 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
           console.log('pushed webhook');
           updates = [...updates, splits[i].map((a) => a.id)];
         } catch (e) {
-          console.log(e);
-          await new Lmas().writeLog({
-            context: this.context,
-            logType: LogType.ERROR,
-            message: 'Error in TransactionWebhookWorker sending webhook',
-            location: `${this.constructor.name}/runExecutor`,
-            service: ServiceName.BLOCKCHAIN,
-            data: {
-              splits,
-              e,
+          await this.writeEventLog(
+            {
+              logType: LogType.ERROR,
+              message: 'Error in TransactionWebhookWorker sending webhook',
+              service: ServiceName.BLOCKCHAIN,
+              data: { splits, e },
+              err: e,
             },
-          });
+            LogOutput.SYS_ERROR,
+          );
         }
       }
     }
     return updates;
+  }
+
+  private createSubstrateTransactionWebhookDto(
+    transaction,
+  ): TransactionWebhookDataDto {
+    return new TransactionWebhookDataDto().populate({
+      id: transaction.id,
+      transactionHash: transaction.transactionHash,
+      referenceTable: transaction.referenceTable,
+      referenceId: transaction.referenceId,
+      transactionStatus: transaction.transactionStatus,
+      data: transaction.data,
+    });
   }
 }

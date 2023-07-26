@@ -35,7 +35,7 @@ describe('Referral tests', () => {
   beforeAll(async () => {
     stage = await setupTest();
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    await createTestReferralTasks(stage.referralContext);
+    // await createTestReferralTasks(stage.referralContext);
     product = await createTestReferralProduct(stage.referralContext);
   });
 
@@ -150,7 +150,7 @@ describe('Referral tests', () => {
         .get(`/referral/products`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.data.items).toHaveLength(1);
+      expect(response.body.data.items).toHaveLength(2); // One from seed and one test product
     });
     test('User should not be able to order product with insufficient balance', async () => {
       const response = await request(stage.http)

@@ -712,7 +712,7 @@ export class Collection extends AdvancedSQLModel {
    * @param project_uuid
    * @returns Number of collections
    */
-  public async getCollectionsCount(project_uuid?: string) {
+  public async getCollectionsCount(project_uuid?: string): Promise<number> {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT COUNT(*) as collectionsCount

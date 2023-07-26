@@ -13,7 +13,6 @@ export enum TransactionStatus {
 export enum SubstrateChain {
   CRUST = 1,
   KILT = 2,
-  KILT_SPIRITNET = 3,
   PHALA = 4,
 }
 
@@ -35,12 +34,16 @@ export enum AmsEventType {
   USER_REGISTER = 'user-register',
   USER_GET_AUTH = 'user-get-auth',
   USER_LOGIN = 'user-login',
+  USER_LOGOUT = 'user-logout',
   USER_LOGIN_KILT = 'user-login-kilt',
   USER_WALLET_LOGIN = 'user-wallet-login',
   USER_UPDATE = 'user-update',
   USER_PASSWORD_RESET = 'user-password-reset',
   USER_ROLE_ASSIGN = 'user-role-assign',
   USER_ROLE_REMOVE = 'user-role-remove',
+  USER_GET_LOGINS = 'user-get-logins',
+  USER_GET_ROLES = 'user-get-roles',
+  USER_SET_STATUS = 'user-set-status',
   AUTH_TOKEN_CREATE_UPDATE_TOKEN = 'auth-token-create-update-token',
   USER_EMAIL_EXISTS = 'user-email-exists',
   GET_AUTH_USER_BY_EMAIL = 'get-auth-user-by-email',
@@ -51,6 +54,7 @@ export enum AmsEventType {
   API_KEY_ROLE_REMOVE = 'api-key-role-remove',
   GET_API_KEY_ROLES = 'get-api-key-roles',
   GET_API_KEY = 'get-api-key',
+  API_KEYS_IN_PROJECT_UPDATE = 'update-api-keys-in-project',
   DISCORD_LINK = 'discord-link',
   DISCORD_UNLINK = 'discord-unlink',
   DISCORD_USER_LIST = 'discord-user-list',
@@ -71,6 +75,11 @@ export enum BlockchainEventType {
   EVM_SIGN_TRANSACTION = 'evm-sign-transaction',
   EVM_GET_TRANSACTION = 'evm-get-transaction',
   GET_CHAIN_ENDPOINT = 'get-chain-endpoint',
+  LIST_WALLETS = 'list-wallets',
+  GET_WALLET = 'get-wallet',
+  UPDATE_WALLET = 'update-wallet',
+  GET_WALLET_TRANSACTIONS = 'get-wallet-transactions',
+  UPDATE_TRANSACTION = 'update-transaction',
 }
 
 export enum StorageEventType {
@@ -117,6 +126,8 @@ export enum StorageEventType {
   DEPLOYMENT_GET = 'get-deployment',
   DEPLOYMENT_LIST = 'list-deployment',
   EXECUTE_PREPARE_COLLECTION_BASE_URI_WORKER = 'execute-prepare-collection-base-uri-worker',
+  TEST_CRUST_PROVIDER = 'test-crust-provider',
+  PROJECT_STORAGE_DETAILS = 'project-storage-details',
 }
 
 export enum AuthenticationEventType {
@@ -142,6 +153,10 @@ export enum MailEventType {
 
 export enum ScsEventType {
   GET_QUOTA = 'get-quota',
+  GET_ALL_QUOTAS = 'get-all-quotas',
+  GET_ACTIVE_TERMS = 'get-active-terms',
+  CREATE_OVERRIDE = 'create-override',
+  DELETE_OVERRIDE = 'delete-override',
 }
 
 export enum NftsEventType {
@@ -160,6 +175,7 @@ export enum NftsEventType {
   BURN_NFT = 'burn-nft',
   MAX_COLLECTIONS_QUOTA_REACHED = 'max-collections-quota-reached',
   EXECUTE_DEPLOY_COLLECTION_WORKER = 'execute-deploy-collection-worker',
+  PROJECT_COLLECTION_DETAILS = 'project-collections-details',
 }
 
 export enum ReferralEventType {
@@ -235,7 +251,9 @@ export enum LogLevel {
 export enum SqlModelStatus {
   DRAFT = 1,
   INCOMPLETE = 2,
+  INACTIVE = 3,
   ACTIVE = 5,
+  BLOCKED = 7,
   MARKED_FOR_DELETION = 8,
   DELETED = 9,
 }
@@ -389,6 +407,7 @@ export enum BadRequestErrorCode {
   MISSING_AUTHORIZATION_HEADER = 40000003,
   INVALID_AUTHORIZATION_HEADER = 40000004,
   THIRD_PARTY_SERVICE_CONNECTION_FAILED = 40000005,
+  RESOURCE_DOES_NOT_EXISTS = 40000006,
 }
 
 export enum ValidatorErrorCode {
@@ -515,6 +534,9 @@ export enum ValidatorErrorCode {
   EVM_CHAIN_NOT_PRESENT = 42200805,
   EVM_CHAIN_NOT_VALID = 42200806,
   //#endregion
+  //#region Caching
+  INVALID_CACHE_KEY = 42200900,
+  //#endregion
 }
 
 /**
@@ -568,4 +590,19 @@ export enum OauthLinkType {
   DISCORD = 1,
   TWEETER = 2,
   GITHUB = 3,
+}
+
+export enum CacheKeyPrefix {
+  BUCKET_LIST = 'bucket-list',
+  ADMIN_USER_LIST = 'admin-user-list',
+  ADMIN_PROJECT_LIST = 'admin-project-list',
+}
+
+export enum CacheKeyTTL {
+  EXTRA_SHORT = 10, // 10 s
+  SHORT = 60, // 1 min
+  DEFAULT = 5 * 60, // 5 min
+  EXTENDED = 10 * 60, // 10 min
+  LONG = 30 * 60, // 30 min
+  EXTRA_LONG = 60 * 60, // 60 min
 }

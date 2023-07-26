@@ -10,9 +10,12 @@ import {
   SerializeFor,
   UnauthorizedErrorCodes,
   UserWalletAuthDto,
+  Scs,
   ValidationException,
   env,
   generateJwtToken,
+  invalidateCachePrefixes,
+  CacheKeyPrefix,
 } from '@apillon/lib';
 import { getDiscordProfile, verifyCaptcha } from '@apillon/modules-lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
@@ -24,7 +27,6 @@ import {
 } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
 import { ProjectService } from '../project/project.service';
-import { DiscordCodeDto } from './dtos/discord-code-dto';
 import { LoginUserKiltDto } from './dtos/login-user-kilt.dto';
 import { LoginUserDto } from './dtos/login-user.dto';
 import { RegisterUserDto } from './dtos/register-user.dto';
@@ -35,6 +37,8 @@ import { User } from './models/user.model';
 
 import { registerUser } from './utils/authentication-utils';
 import { getOauthSessionToken } from './utils/oauth-utils';
+import { UserConsentDto, UserConsentStatus } from './dtos/user-consent.dto';
+import { DiscordCodeDto } from './dtos/discord-code.dto';
 
 @Injectable()
 export class UserService {
@@ -48,7 +52,7 @@ export class UserService {
   async getUserProfile(context: DevConsoleApiContext) {
     const user = await new User({}, context).populateById(context.user.id);
 
-    if (!user.exists) {
+    if (!user.exists()) {
       throw new CodeException({
         status: HttpStatus.UNAUTHORIZED,
         code: ResourceNotFoundErrorCode.USER_DOES_NOT_EXISTS,
@@ -456,7 +460,7 @@ export class UserService {
   async updateUserProfile(context: DevConsoleApiContext, body: UpdateUserDto) {
     const user = await new User({}, context).populateById(context.user.id);
 
-    if (!user.exists) {
+    if (!user.exists()) {
       throw new CodeException({
         status: HttpStatus.UNAUTHORIZED,
         code: ResourceNotFoundErrorCode.USER_DOES_NOT_EXISTS,
@@ -479,6 +483,8 @@ export class UserService {
     try {
       await user.update(SerializeFor.UPDATE_DB, conn);
       await context.mysql.commit(conn);
+
+      await invalidateCachePrefixes([CacheKeyPrefix.ADMIN_USER_LIST]);
     } catch (err) {
       await context.mysql.rollback(conn);
       throw err;
@@ -537,6 +543,63 @@ export class UserService {
    */
   async getOauthLinks(context: DevConsoleApiContext) {
     return await new Ams(context).getOauthLinks(context.user.user_uuid);
+  }
+
+  /**
+   * Get terms that user needs to review and accept
+   * @param context - The API context with current user session.
+   * @returns new terms for user
+   */
+  async getPendingTermsForUser(context: DevConsoleApiContext) {
+    const terms = await new Scs(context).getActiveTerms();
+    const resp = terms.filter((x) => {
+      return !context.user?.authUser?.consents?.terms.find((c) => c.id == x.id);
+    });
+
+    console.log(resp);
+    return resp;
+  }
+
+  async setUserConsents(body: Array<any>, context: DevConsoleApiContext) {
+    const activeTerms = await new Scs(context).getActiveTerms();
+    const consents = [];
+    for (const data of body) {
+      const consent = new UserConsentDto(data);
+
+      consent.dateOfAgreement =
+        consent.status === UserConsentStatus.ACCEPTED ? new Date() : null;
+      try {
+        await consent.validate();
+      } catch (err) {
+        await consent.handle(err);
+        if (!consent.isValid()) {
+          throw new ValidationException(consent, ValidatorErrorCode);
+        }
+      }
+      const term = activeTerms.find(
+        (x) => x.id == consent.id && x.type == consent.type,
+      );
+      if (!term) {
+        throw new CodeException({
+          status: HttpStatus.BAD_REQUEST,
+          code: BadRequestErrorCode.RESOURCE_DOES_NOT_EXISTS,
+          errorCodes: BadRequestErrorCode,
+        });
+      }
+      if (!!term.isRequired && consent.status !== UserConsentStatus.ACCEPTED) {
+        throw new CodeException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          code: ValidatorErrorCode.USER_CONSENT_IS_REQUIRED,
+          errorCodes: ValidatorErrorCode,
+        });
+      }
+      consents.push(consent.serialize());
+    }
+
+    await new Ams(context).updateAuthUser({
+      user_uuid: context.user.user_uuid,
+      consents: { terms: consents },
+    });
   }
 
   /**

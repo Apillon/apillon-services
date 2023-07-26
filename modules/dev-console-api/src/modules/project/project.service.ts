@@ -1,10 +1,12 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import {
   Ams,
+  CacheKeyPrefix,
   CodeException,
   DefaultUserRole,
   env,
   generateJwtToken,
+  invalidateCachePrefixes,
   JwtTokenType,
   Lmas,
   LogType,
@@ -73,11 +75,13 @@ export class ProjectService {
         project_uuid: project.project_uuid,
         role_id: DefaultUserRole.PROJECT_OWNER,
       };
-      await new Ams(context).assignUserRoleOnProject(params);
+      await new Ams(context).assignUserRole(params);
       await context.mysql.commit(conn);
 
+      await invalidateCachePrefixes([CacheKeyPrefix.ADMIN_PROJECT_LIST]);
+
       await new Lmas().writeLog({
-        context: context,
+        context,
         project_uuid: project.project_uuid,
         logType: LogType.INFO,
         message: 'New project created',
@@ -157,6 +161,8 @@ export class ProjectService {
     }
 
     await project.update();
+    await invalidateCachePrefixes([CacheKeyPrefix.ADMIN_PROJECT_LIST]);
+
     return project;
   }
 
@@ -246,7 +252,7 @@ export class ProjectService {
           project_uuid: project.project_uuid,
           role_id: data.role_id,
         };
-        await new Ams(context).assignUserRoleOnProject(params);
+        await new Ams(context).assignUserRole(params);
 
         //send email
         await new Mailing(context).sendMail({
@@ -375,7 +381,7 @@ export class ProjectService {
         project_uuid: project.project_uuid,
         role_id: invitation.role_id,
       };
-      await new Ams(context).assignUserRoleOnProject(params);
+      await new Ams(context).assignUserRole(params);
 
       await invitation.delete();
     }
@@ -436,7 +442,7 @@ export class ProjectService {
       project_uuid: project.project_uuid,
       role_id: body.role_id,
     };
-    await new Ams(context).assignUserRoleOnProject(params);
+    await new Ams(context).assignUserRole(params);
 
     //ams - remove previous role
     params = {
@@ -445,7 +451,7 @@ export class ProjectService {
       project_uuid: project.project_uuid,
       role_id: project_user.role_id,
     };
-    await new Ams(context).removeUserRoleOnProject(params);
+    await new Ams(context).removeUserRole(params);
 
     project_user.populate({ role_id: body.role_id });
     await project_user.update();
@@ -500,7 +506,7 @@ export class ProjectService {
         project_uuid: project.project_uuid,
         role_id: project_user.role_id,
       };
-      await new Ams(context).removeUserRoleOnProject(params);
+      await new Ams(context).removeUserRole(params);
 
       await context.mysql.commit(conn);
     } catch (err) {

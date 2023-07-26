@@ -76,6 +76,7 @@ export enum AmsErrorCode {
   // 500 - Internal Error
   ERROR_WRITING_TO_DATABASE = 50002001,
   ERROR_READING_FROM_DATABASE = 50002002,
+  INVALID_EVENT_DATA = 50002003,
 }
 
 /**
@@ -148,13 +149,3 @@ export type TokenData =
 export enum TokenExpiresInStr {
   EXPIRES_IN_1_DAY = '1d', // Set to one day - for internal usage mostly
 }
-
-//#region SQL stuff - TODO: Should be streamlined? This is part of the SQL lib, not access
-export enum SqlModelStatus {
-  DRAFT = 1,
-  INCOMPLETE = 2,
-  ACTIVE = 5,
-  DELETED = 9,
-}
-
-//#endregion

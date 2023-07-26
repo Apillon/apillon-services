@@ -12,6 +12,49 @@ export enum ServiceDefinitionType {
   SQS,
 }
 
+export enum LogOutput {
+  /**
+   * output: console
+   */
+  DEBUG,
+  /**
+   * output: console, db, service
+   */
+  EVENT_INFO,
+  /**
+   * output: console, db, service
+   */
+  EVENT_WARN,
+  /**
+   * output: console, db, service
+   */
+  EVENT_ERROR,
+  /**
+   * output: console, db
+   */
+  SYS_INFO,
+  /**
+   * output: console, db
+   */
+  SYS_WARN,
+  /**
+   * output: console, db, service
+   */
+  SYS_ERROR,
+  /**
+   * output: console, db, service, slack
+   */
+  NOTIFY_MSG,
+  /**
+   * output: console, db, service, slack
+   */
+  NOTIFY_WARN,
+  /**
+   * output: console, db, service, slack
+   */
+  NOTIFY_ALERT,
+}
+
 export interface ServiceDefinition {
   type: ServiceDefinitionType;
   config: SQSClientConfig | LambdaClientConfig;

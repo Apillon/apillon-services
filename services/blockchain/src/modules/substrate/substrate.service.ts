@@ -1,6 +1,6 @@
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Keyring } from '@polkadot/keyring';
-import { Wallet } from '../../common/models/wallet';
+import { Wallet } from '../wallet/wallet.model';
 import {
   SubstrateChain,
   ChainType,
@@ -15,8 +15,9 @@ import { Endpoint } from '../../common/models/endpoint';
 import { BlockchainErrorCode } from '../../config/types';
 import { BlockchainCodeException } from '../../lib/exceptions';
 import { Transaction } from '../../common/models/transaction';
-import { typesBundleForPolkadot } from '@crustio/type-definitions';
-import { sendToWorkerQueue } from '@apillon/workers-lib';
+import { typesBundleForPolkadot as CrustTypesBundle } from '@crustio/type-definitions';
+import { typesBundle as KiltTypesBundle } from '@kiltprotocol/type-definitions';
+import { LogOutput, sendToWorkerQueue } from '@apillon/workers-lib';
 import { WorkerName } from '../../workers/worker-executor';
 import { ServiceContext } from '@apillon/service-lib';
 import { IsolationLevel } from '@apillon/lib';
@@ -57,11 +58,12 @@ export class SubstrateService {
     switch (_event.params.chain) {
       case SubstrateChain.KILT: {
         keyring = new Keyring({ ss58Format: 38, type: 'sr25519' });
+        typesBundle = KiltTypesBundle;
         break;
       }
       case SubstrateChain.CRUST: {
         keyring = new Keyring({ type: 'sr25519' });
-        typesBundle = typesBundleForPolkadot;
+        typesBundle = CrustTypesBundle;
         break;
       }
       default: {
@@ -111,6 +113,7 @@ export class SubstrateService {
 
       console.info('Generating unsigned transaction');
       const pair = keyring.addFromUri(seed);
+      console.log('Address: ', pair.address);
       const unsignedTx = api.tx(_event.params.transaction);
       // TODO: add validation service for transaction to detect and prevent weird transactions.
 
@@ -240,28 +243,31 @@ export class SubstrateService {
       address?: string;
     },
     context: ServiceContext,
+    eventLogger: (options: any, logOutput: LogOutput) => Promise<void>,
   ) {
-    console.log('chain: ', _event.chain);
-    console.log('address: ', _event.address);
-    const wallets = await new Wallet({}, context).getList(
+    // console.log('chain: ', _event.chain);
+    // console.log('address: ', _event.address);
+    const wallets = await new Wallet({}, context).getWallets(
       _event.chain,
       ChainType.SUBSTRATE,
       _event.address,
     );
-    console.log('wallets: ', wallets);
+    // console.log('wallets: ', wallets);
     const endpoint = await new Endpoint({}, context).populateByChain(
       _event.chain,
       ChainType.SUBSTRATE,
     );
-    console.log('endpoint: ', endpoint.url);
+    // console.log('endpoint: ', endpoint.url);
     const provider = new WsProvider(endpoint.url);
     let typesBundle = null;
+    // console.log('CHAIN  ', _event.chain);
     switch (_event.chain) {
       case SubstrateChain.KILT: {
+        typesBundle = KiltTypesBundle;
         break;
       }
       case SubstrateChain.CRUST: {
-        typesBundle = typesBundleForPolkadot;
+        typesBundle = CrustTypesBundle;
         break;
       }
       default: {
@@ -282,9 +288,15 @@ export class SubstrateService {
         wallets[i].address,
         wallets[i].lastProcessedNonce,
       );
+
+      // continue to next wallet if there is no transactions!
+      if (!transactions.length) {
+        continue;
+      }
+
       let latestSuccess = null;
-      let transmited = 0;
-      console.log('transactions: ', transactions);
+      let transmitted = 0;
+      // console.log('transactions: ', transactions);
       // TODO: consider batching transaction api.tx.utility.batch
       for (let j = 0; j < transactions.length; j++) {
         try {
@@ -292,18 +304,34 @@ export class SubstrateService {
           await signedTx.send();
           console.log('successfuly transmited');
           latestSuccess = transactions[j].nonce;
-          transmited++;
-        } catch (e) {
-          await new Lmas().writeLog({
-            logType: LogType.ERROR,
-            message: 'Error transmiting transaction',
-            location: 'SubstrateService.transmitTransactions',
-            service: ServiceName.BLOCKCHAIN,
-            data: {
-              error: e,
-              wallet: wallets[i].address,
-            },
-          });
+          transmitted++;
+        } catch (err) {
+          if (eventLogger) {
+            await eventLogger(
+              {
+                logType: LogType.ERROR,
+                message: 'Error transmitting transaction!',
+                service: ServiceName.BLOCKCHAIN,
+                data: {
+                  error: err,
+                  wallet: wallets[i].address,
+                },
+                err,
+              },
+              LogOutput.NOTIFY_WARN,
+            );
+          } else {
+            await new Lmas().writeLog({
+              logType: LogType.ERROR,
+              message: 'Error transmitting transaction',
+              location: 'SubstrateService.transmitTransactions',
+              service: ServiceName.BLOCKCHAIN,
+              data: {
+                error: err,
+                wallet: wallets[i].address,
+              },
+            });
+          }
           break;
         }
       }
@@ -311,19 +339,34 @@ export class SubstrateService {
         const wallet = new Wallet(wallets[i], context);
         await wallet.updateLastProcessedNonce(latestSuccess);
       }
-
-      await new Lmas().writeLog({
-        context: context,
-        logType: LogType.COST,
-        message: 'Substrate transactions submitted',
-        location: `SubstrateService/runExecutor`,
-        service: ServiceName.BLOCKCHAIN,
-        data: {
-          wallet: wallets[i],
-          numOfTransactions: transactions.length,
-          transmited: transmited,
-        },
-      });
+      if (eventLogger) {
+        await eventLogger(
+          {
+            logType: LogType.COST,
+            message: 'Substrate transactions submitted',
+            service: ServiceName.BLOCKCHAIN,
+            data: {
+              wallet: wallets[i],
+              numOfTransactions: transactions.length,
+              transmitted,
+            },
+          },
+          LogOutput.EVENT_INFO,
+        );
+      } else {
+        await new Lmas().writeLog({
+          context: context,
+          logType: LogType.COST,
+          message: 'Substrate transactions submitted',
+          location: `SubstrateService.transmitTransactions`,
+          service: ServiceName.BLOCKCHAIN,
+          data: {
+            wallet: wallets[i],
+            numOfTransactions: transactions.length,
+            transmitted,
+          },
+        });
+      }
     }
   }
   //#region

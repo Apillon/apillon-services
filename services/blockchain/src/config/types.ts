@@ -1,4 +1,9 @@
 import { EvmChain, SubstrateChain } from '@apillon/lib';
+import {
+  DidTransaction,
+  TransferTransaction,
+  AttestationTransaction,
+} from '../modules/blockchain-indexers/substrate/kilt/data-models/kilt-transactions';
 
 export type Chain = SubstrateChain | EvmChain;
 
@@ -13,6 +18,40 @@ export enum CrustTransferType {
   TRANSFER = 0,
   STORAGE_ORDER = 1,
 }
+
+// NOTE: Do not change!! These are mappings from the SQUID KILT service
+export enum KiltTransactionType {
+  BALANCE_TRANSFER = 'balance-transfer',
+  BALANCE_DEPOSIT = 'balance-deposit',
+  BALANCE_WITHDRAW = 'balance-withdraw',
+  BALANCE_RESERVE = 'balance-reserve',
+  DID_CREATE = 'did-create',
+  DID_DELETE = 'did-delete',
+  DID_UPDATE = 'did-update',
+  ATTESTATION_CREATE = 'attestation-create',
+  ATTESTATION_REMOVE = 'attestation-remove',
+  ATTESTATION_REVOKE = 'attestation-revoke',
+  SYSTEM_EVENT = 'system-event-success',
+}
+
+export type TransfersTransactions = {
+  TRANSFER: TransferTransaction[];
+  DEPOSIT: TransferTransaction[];
+  WITHDRAWAL: TransferTransaction[];
+  RESERVED_BALANCES: TransferTransaction[];
+};
+
+export type DidTransactions = {
+  CREATE: DidTransaction[];
+  DELETE: DidTransaction[];
+  UPDATE: DidTransaction[];
+};
+
+export type AttestTransactions = {
+  CREATE: AttestationTransaction[];
+  REMOVE: AttestationTransaction[];
+  REVOKE: AttestationTransaction[];
+};
 
 /**
  * Error codes
@@ -63,6 +102,7 @@ export enum BlockchainErrorCode {
   // 404 - Not found
   API_KEY_NOT_FOUND = 40416001,
   TRANSACTION_NOT_FOUND = 40416002,
+  WALLET_NOT_FOUND = 40416003,
 
   // 405 - Method not allowed
   ONLY_FOR_LOCAL_DEV_AND_TEST = 40516001,
@@ -116,4 +156,9 @@ export enum TxAction {
   WITHDRAWAL = 'WITHDRAWAL',
   TRANSACTION = 'TRANSACTION',
   UNKNOWN = 'UNKNOWN',
+}
+
+export enum TransactionIndexerStatus {
+  FAIL = 0,
+  SUCCESS = 1,
 }

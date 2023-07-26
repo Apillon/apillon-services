@@ -2,16 +2,14 @@ import {
   AppEnvironment,
   Context,
   env,
-  EvmChain,
-  Lmas,
   LogType,
   ServiceName,
 } from '@apillon/lib';
 import {
   WorkerDefinition,
-  WorkerLogStatus,
   BaseSingleThreadWorker,
   sendToWorkerQueue,
+  LogOutput,
 } from '@apillon/workers-lib';
 import { BlockchainErrorCode } from '../config/types';
 import { BlockchainCodeException } from '../lib/exceptions';
@@ -36,7 +34,7 @@ export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
     return [];
   }
   public async runExecutor(data: any): Promise<any> {
-    console.info('RUN EXECUTOR (TransmitEvmTransactionWorker). data: ', data);
+    // console.info('RUN EXECUTOR (TransmitEvmTransactionWorker). data: ', data);
     const chain = data?.chain; // todo: move to workerDefinition.parameters
     if (!chain) {
       throw new BlockchainCodeException({
@@ -47,30 +45,24 @@ export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
     }
 
     try {
-      await EvmService.transmitTransactions({ chain }, this.context);
-      await this.writeLogToDb(
-        WorkerLogStatus.INFO,
-        'EVM transactions submitted',
-        {
-          data,
-        },
+      await EvmService.transmitTransactions(
+        { chain },
+        this.context,
+        async (...args) => await this.writeEventLog.call(this, ...args),
       );
     } catch (err) {
-      await new Lmas().writeLog({
-        context: this.context,
-        logType: LogType.ERROR,
-        message: 'Error submitting transactions',
-        location: `${this.constructor.name}/runExecutor`,
-        service: ServiceName.BLOCKCHAIN,
-        data: {
-          data,
+      await this.writeEventLog(
+        {
+          logType: LogType.ERROR,
+          message: 'Error submitting transactions',
+          service: ServiceName.BLOCKCHAIN,
+          data: {
+            data,
+            err,
+          },
           err,
         },
-      });
-      await new Lmas().sendAdminAlert(
-        ' [Transmit Evm Transaction Worker]: Error submitting transactions',
-        ServiceName.BLOCKCHAIN,
-        'alert',
+        LogOutput.NOTIFY_ALERT,
       );
       throw err;
     }
@@ -88,16 +80,19 @@ export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
           null,
         );
       } catch (e) {
-        await new Lmas().writeLog({
-          logType: LogType.ERROR,
-          message: 'Error triggering EVM_TRANSACTIONS worker queue',
-          location: 'TransmitEvmTransactionWorker.runExecutor',
-          service: ServiceName.BLOCKCHAIN,
-          data: {
-            error: e,
-            chain: data?.chain,
+        await this.writeEventLog(
+          {
+            logType: LogType.ERROR,
+            message: 'Error sending messages to SQS',
+            service: ServiceName.BLOCKCHAIN,
+            data: {
+              data,
+              error: e,
+            },
+            err: e,
           },
-        });
+          LogOutput.SYS_ERROR,
+        );
       }
     }
     return true;

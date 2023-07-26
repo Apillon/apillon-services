@@ -10,11 +10,11 @@ import {
   TransactionStatus,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
-import { sendToWorkerQueue } from '@apillon/workers-lib';
+import { LogOutput, sendToWorkerQueue } from '@apillon/workers-lib';
 import { ethers } from 'ethers';
 import { Endpoint } from '../../common/models/endpoint';
 import { Transaction } from '../../common/models/transaction';
-import { Wallet } from '../../common/models/wallet';
+import { Wallet } from '../wallet/wallet.model';
 import { BlockchainErrorCode } from '../../config/types';
 import { BlockchainCodeException } from '../../lib/exceptions';
 import { evmChainToJob } from '../../lib/helpers';
@@ -130,7 +130,7 @@ export class EvmService {
       const unsignedTx = ethers.utils.parseTransaction(
         _event.params.transaction,
       );
-      // TODO: add transaction checker to detect annomalies.
+      // TODO: add transaction checker to detect anomalies.
       // Reject transaction sending value etc.
       unsignedTx.from = wallet.address;
       unsignedTx.maxPriorityFeePerGas =
@@ -273,9 +273,10 @@ export class EvmService {
       address?: string;
     },
     context: ServiceContext,
+    eventLogger: (options: any, output: LogOutput) => Promise<void>,
   ) {
-    console.log('transmitTransactions', _event);
-    const wallets = await new Wallet({}, context).getList(
+    // console.log('transmitTransactions', _event);
+    const wallets = await new Wallet({}, context).getWallets(
       _event.chain,
       ChainType.EVM,
       _event.address,
@@ -308,30 +309,52 @@ export class EvmService {
         wallets[i].address,
         wallets[i].lastProcessedNonce,
       );
+
+      // continue to next wallet if there is no transactions!
+      if (!transactions.length) {
+        continue;
+      }
+
       let latestSuccess = null;
-      let transmited = 0;
+      let transmitted = 0;
 
       for (let j = 0; j < transactions.length; j++) {
         try {
           await provider.sendTransaction(transactions[j].rawTransaction);
           latestSuccess = transactions[j].nonce;
-          transmited++;
-        } catch (e) {
-          await new Lmas().writeLog({
-            logType: LogType.ERROR,
-            message: 'Error transmiting transaction',
-            location: 'EvmService.transmitTransactions',
-            service: ServiceName.BLOCKCHAIN,
-            data: {
-              error: e,
-              wallet: wallets[i].address,
-            },
-          });
+          transmitted++;
+        } catch (err) {
+          if (eventLogger) {
+            await eventLogger(
+              {
+                logType: LogType.ERROR,
+                message: 'Error transmitting transaction!',
+                service: ServiceName.BLOCKCHAIN,
+                data: {
+                  error: err,
+                  wallet: wallets[i].address,
+                },
+                err,
+              },
+              LogOutput.NOTIFY_WARN,
+            );
+          } else {
+            await new Lmas().writeLog({
+              logType: LogType.ERROR,
+              message: 'Error transmitting transaction',
+              location: 'EvmService.transmitTransactions',
+              service: ServiceName.BLOCKCHAIN,
+              data: {
+                error: err,
+                wallet: wallets[i].address,
+              },
+            });
+          }
           if (
             env.APP_ENV === AppEnvironment.TEST ||
             env.APP_ENV === AppEnvironment.LOCAL_DEV
           ) {
-            throw e;
+            throw err;
           }
           break;
         }
@@ -342,18 +365,34 @@ export class EvmService {
         await wallet.updateLastProcessedNonce(latestSuccess);
       }
 
-      await new Lmas().writeLog({
-        context: context,
-        logType: LogType.COST,
-        message: 'EVM transactions submitted',
-        location: `EvmService/runExecutor`,
-        service: ServiceName.BLOCKCHAIN,
-        data: {
-          wallet: wallets[i],
-          numOfTransactions: transactions.length,
-          transmited: transmited,
-        },
-      });
+      if (eventLogger) {
+        await eventLogger(
+          {
+            logType: LogType.COST,
+            message: 'EVM transactions submitted',
+            service: ServiceName.BLOCKCHAIN,
+            data: {
+              wallet: wallets[i],
+              numOfTransactions: transactions.length,
+              transmitted: transmitted,
+            },
+          },
+          LogOutput.EVENT_INFO,
+        );
+      } else {
+        await new Lmas().writeLog({
+          context: context,
+          logType: LogType.COST,
+          message: 'EVM transactions submitted',
+          location: `EvmService.transmitTransactions`,
+          service: ServiceName.BLOCKCHAIN,
+          data: {
+            wallet: wallets[i],
+            numOfTransactions: transactions.length,
+            transmitted: transmitted,
+          },
+        });
+      }
     }
     // TODO: call transaction checker
   }

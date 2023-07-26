@@ -144,6 +144,15 @@ export interface IEnv {
   DEV_CONSOLE_API_HOST_TEST: string;
   DEV_CONSOLE_API_PORT_TEST: number;
 
+  /************************************************************
+   * ADMIN-CONSOLE-API - Apillon Admin Console API
+   ************************************************************/
+  ADMIN_CONSOLE_API_HOST: string;
+  ADMIN_CONSOLE_API_PORT: number;
+
+  ADMIN_CONSOLE_API_HOST_TEST: string;
+  ADMIN_CONSOLE_API_PORT_TEST: number;
+
   /**
    * Page size used in sql utils
    */
@@ -212,6 +221,7 @@ export interface IEnv {
   BLOCKCHAIN_AWS_WORKER_LAMBDA_NAME: string;
 
   BLOCKCHAIN_CRUST_GRAPHQL_SERVER: string;
+  BLOCKCHAIN_KILT_GRAPHQL_SERVER: string;
   BLOCKCHAIN_SECRETS: string;
 
   /**
@@ -360,6 +370,10 @@ export interface IEnv {
   DISCORD_CLIENT_SECRET: string;
   DISCORD_REDIRECT_URI: string;
 
+  /** REDIS */
+  REDIS_URL: string;
+  DEFAULT_CACHE_TTL: number;
+
   /************************************************************
    * NFTS - Apillon NFTs Service
    ************************************************************/
@@ -407,6 +421,13 @@ export interface IEnv {
    */
   NFTS_AWS_WORKER_SQS_URL: string;
   NFTS_AWS_WORKER_LAMBDA_NAME: string;
+
+  /**
+   * METABASE EMBED
+   */
+
+  METABASE_SECRET: string;
+  METABASE_URL: string;
 }
 
 // dotenv.config();
@@ -414,7 +435,7 @@ dotenv.config({ path: '../../.env' });
 
 export let env: IEnv = {
   APP_URL: process.env['APP_URL'] || 'https://app.apillon.io',
-  APP_ENV: process.env['APP_ENV'] || AppEnvironment.STG,
+  APP_ENV: process.env['APP_ENV'] || AppEnvironment.LOCAL_DEV,
   LOG_TARGET: process.env['LOG_TARGET'] || 'console',
   LOG_LEVEL: process.env['LOG_LEVEL'] || 'no-db',
   AWS_REGION: process.env['AWS_REGION'], // env var from lambda - can not be overwritten in lambda setting!
@@ -490,9 +511,17 @@ export let env: IEnv = {
   DEV_CONSOLE_API_HOST: process.env['DEV_CONSOLE_API_HOST'] || 'localhost',
   DEV_CONSOLE_API_PORT: parseInt(process.env['DEV_CONSOLE_API_PORT']) || 6001,
   DEV_CONSOLE_API_HOST_TEST:
-    process.env['DEV_CONSOLE_API_HOS_TEST'] || 'localhost',
+    process.env['DEV_CONSOLE_API_HOST_TEST'] || 'localhost',
   DEV_CONSOLE_API_PORT_TEST:
     parseInt(process.env['DEV_CONSOLE_API_PORT_TEST']) || 7001,
+
+  ADMIN_CONSOLE_API_HOST: process.env['ADMIN_CONSOLE_API_HOST'] || 'localhost',
+  ADMIN_CONSOLE_API_PORT:
+    parseInt(process.env['ADMIN_CONSOLE_API_PORT']) || 6004,
+  ADMIN_CONSOLE_API_HOST_TEST:
+    process.env['ADMIN_CONSOLE_API_HOST_TEST'] || 'localhost',
+  ADMIN_CONSOLE_API_PORT_TEST:
+    parseInt(process.env['ADMIN_CONSOLE_API_PORT_TEST']) || 7004,
 
   /** SQL UTILS */
   DEFAULT_PAGE_SIZE: parseInt(process.env['DEFAULT_PAGE_SIZE']) || 20,
@@ -555,6 +584,7 @@ export let env: IEnv = {
 
   BLOCKCHAIN_CRUST_GRAPHQL_SERVER:
     process.env['BLOCKCHAIN_CRUST_GRAPHQL_SERVER'],
+  BLOCKCHAIN_KILT_GRAPHQL_SERVER: process.env['BLOCKCHAIN_KILT_GRAPHQL_SERVER'],
   BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER:
     process.env['BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER'],
   BLOCKCHAIN_MOONBASE_GRAPHQL_SERVER:
@@ -740,6 +770,14 @@ export let env: IEnv = {
   DISCORD_CLIENT_ID: process.env['DISCORD_CLIENT_ID'] || '',
   DISCORD_CLIENT_SECRET: process.env['DISCORD_CLIENT_SECRET'] || '',
   DISCORD_REDIRECT_URI: process.env['DISCORD_REDIRECT_URI'] || '',
+
+  //** REDIS */
+  REDIS_URL: process.env['REDIS_URL'],
+  DEFAULT_CACHE_TTL: +process.env['DEFAULT_CACHE_TTL'] || 300, // 5 min
+
+  /** METABASE */
+  METABASE_SECRET: process.env['METABASE_SECRET'] || '',
+  METABASE_URL: process.env['METABASE_URL'] || 'https://metabase.apillon.io',
 };
 
 export let isEnvReady = false;

@@ -1,13 +1,13 @@
 import {
   Context,
   env,
-  Lmas,
   LogType,
   runWithWorkers,
   ServiceName,
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
+  LogOutput,
   QueueWorkerType,
   WorkerDefinition,
   WorkerLogStatus,
@@ -28,7 +28,7 @@ export class UpdateCrustStatusWorker extends BaseQueueWorker {
     return [];
   }
   public async runExecutor(input: any): Promise<any> {
-    console.info('RUN EXECUTOR (UpdateCrustStatusWorker). data: ', input);
+    // console.info('RUN EXECUTOR (UpdateCrustStatusWorker). data: ', input);
 
     await runWithWorkers(input.data, 50, this.context, async (data, ctx) => {
       if (data.referenceId && data.referenceTable == DbTables.FILE) {
@@ -45,63 +45,61 @@ export class UpdateCrustStatusWorker extends BaseQueueWorker {
             } else {
               // error
               // TODO:
-              await new Lmas().writeLog({
-                context: ctx,
-                logType: LogType.ERROR,
-                message: 'Crust pin transaction FAILED',
-                location: `${this.constructor.name}/runExecutor`,
+              await this.writeEventLog(
+                {
+                  logType: LogType.ERROR,
+                  message: 'Crust pin transaction FAILED',
+                  service: ServiceName.STORAGE,
+                  data: {
+                    data,
+                    file: file.serialize(),
+                  },
+                },
+                LogOutput.SYS_ERROR,
+              );
+            }
+          } else {
+            await this.writeEventLog(
+              {
+                logType: LogType.WARN,
+                message: 'No file matching reference found.',
                 service: ServiceName.STORAGE,
                 data: {
                   data,
-                  file: file.serialize(),
                 },
-              });
-            }
-          } else {
-            console.log('No file to update');
-            await new Lmas().writeLog({
-              context: ctx,
-              logType: LogType.WARN,
-              message: 'No file matching reference found.',
-              location: `${this.constructor.name}/runExecutor`,
+              },
+              LogOutput.SYS_WARN,
+            );
+          }
+        } catch (err) {
+          await this.writeEventLog(
+            {
+              logType: LogType.ERROR,
+              message: 'Error at updating status',
               service: ServiceName.STORAGE,
               data: {
                 data,
+                err,
               },
-            });
-          }
-        } catch (err) {
-          await new Lmas().writeLog({
-            context: ctx,
-            logType: LogType.ERROR,
-            message: 'Error at updating status',
-            location: `${this.constructor.name}/runExecutor`,
-            service: ServiceName.STORAGE,
-            data: {
-              data,
-              err,
             },
-          });
+            LogOutput.SYS_ERROR,
+          );
           throw err;
         }
       } else {
-        await new Lmas().writeLog({
-          context: ctx,
-          logType: LogType.WARN,
-          message: 'Got message without reference',
-          location: `${this.constructor.name}/runExecutor`,
-          service: ServiceName.STORAGE,
-          data: {
-            data,
+        await this.writeEventLog(
+          {
+            logType: LogType.WARN,
+            message: 'Got message without reference',
+            service: ServiceName.STORAGE,
+            data: {
+              data,
+            },
           },
-        });
+          LogOutput.SYS_WARN,
+        );
       }
     });
-
-    await this.writeLogToDb(
-      WorkerLogStatus.INFO,
-      `UpdateCrustStatusWorker worker has been completed!`,
-    );
 
     return true;
   }

@@ -2,9 +2,15 @@
 
 ## Debuging
 
-The easiest way to debug the whole set of microservices in VS Code is to enable `Debug:Auto Attach` to `smart` or to manually attach debugger on running services.
+The easiest way to debug the whole set of microservices in VS Code is to use the `Run and Debug` tab in the side-menu to launch the apps. You can run each Microservice and API separately, or run them all together by choosing any of the configurations "Microservices", "APIs" or "All configurations".
+Alternatively, you can enable `Debug: Auto Attach` to `smart` or to manually attach debugger on running services, although this may not always work as expected and you may need to restart your terminal or VS Code instance for it to work properly.
 
-### Set up debugger auto attach
+### Launch configurations
+
+**Important**: For this to work you need to have `nodemon` and `ts-node` packages installed globally.
+Each API and Microservice has its own corresponding `launch.json` file which contains the debug launch configuration for that program. After launching it through the Run and Debug menu, a debugger gets auto attached and you can add breakpoints anywhere the code should pause during the execution.
+
+### Alternative: Set up debugger auto attach
 
 Press `F1` and find in menu `Debugger: toggle auto attach` and set it to `smart`. You may need to restart integrated terminal for changes to take effect.
 
@@ -20,7 +26,7 @@ This will run NPM dev script in all workspaces.
 
 If you run this command in integrated terminal of VS Code and you have Debugger auto attach enabled, breakpoints in editor should be bind to the processes and you can debug all services at the same time.
 
-If auto attach does not work or it's not enabled, you can attach debugger with command F1 -> `Debug: Attach to node process`.
+If auto attach does not work or it's not enabled, you can attach debugger with command F1 -> `Debug: Attach to node process`. Search for the process PID through a terminal command (OS-specific) and then paste that PID in the search bar after clicking "Attach to node process". You can facilitate the search of the PID by making use of the `--inspect-brk` flag for each program. For example, the Access microservice contains the following flag: `--inspect-brk=60001`, therefore in the terminal you can look for processes that contain that flag at the end, or you can look for the process that contains that flag in the lookup menu in VS Code after opening the "Attach to node process" menu.
 
 ## Writing automated tests
 
@@ -38,7 +44,7 @@ For running tests, check if all environment variables with suffix `_TEST` are co
 ACCESS_FUNCTION_NAME_TEST: apillon-access-service-test
 MONITORING_FUNCTION_NAME_TEST: apillon-monitoring-service-test
 
-MONITORING_MONGO_SRV_TEST: 
+MONITORING_MONGO_SRV_TEST:
 
 ACCESS_MYSQL_HOST_TEST:
 ACCESS_MYSQL_PORT_TEST: 3306
@@ -46,11 +52,11 @@ ACCESS_MYSQL_DATABASE_TEST:
 ACCESS_MYSQL_USER_TEST:
 ACCESS_MYSQL_PASSWORD_TEST:
 
-DEV_CONSOLE_API_MYSQL_HOST_TEST: 
+DEV_CONSOLE_API_MYSQL_HOST_TEST:
 DEV_CONSOLE_API_MYSQL_PORT_TEST: 3306
 DEV_CONSOLE_API_MYSQL_DATABASE_TEST:
-DEV_CONSOLE_API_MYSQL_USER_TEST: 
-DEV_CONSOLE_API_MYSQL_PASSWORD_TEST: 
+DEV_CONSOLE_API_MYSQL_USER_TEST:
+DEV_CONSOLE_API_MYSQL_PASSWORD_TEST:
 ```
 
 ### Running test servers

@@ -1,14 +1,7 @@
-import {
-  Context,
-  env,
-  Lmas,
-  LogType,
-  SerializeFor,
-  ServiceName,
-  writeLog,
-} from '@apillon/lib';
+import { Context, env, LogType, SerializeFor, ServiceName } from '@apillon/lib';
 import {
   BaseQueueWorker,
+  LogOutput,
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
@@ -46,7 +39,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
     return [];
   }
   public async runExecutor(data: any): Promise<any> {
-    console.info('RUN EXECUTOR (DeployWebsiteWorker). data: ', data);
+    // console.info('RUN EXECUTOR (DeployWebsiteWorker). data: ', data);
 
     const deployment = await new Deployment({}, this.context).populateById(
       data?.deployment_id,
@@ -119,7 +112,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
           {
             files: sourceFiles,
             wrapWithDirectory: true,
-            wrappingDirectoryPath: 'Deployment_' + deployment.id,
+            wrappingDirectoryPath: `Deployment_${deployment.id}`,
           },
           this.context,
         );
@@ -248,42 +241,44 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         throw err;
       }
 
-      await new Lmas().writeLog({
-        context: this.context,
-        project_uuid: targetBucket.project_uuid,
+      await this.writeEventLog({
         logType: LogType.INFO,
         message: 'Web page deploy - success',
-        location: `${this.constructor.name}/runExecutor`,
         service: ServiceName.STORAGE,
         data: {
-          deployment: deployment,
-          data: data,
+          project_uuid: targetBucket.project_uuid,
+          deployment,
+          data,
         },
       });
     } catch (err) {
-      await new Lmas().writeLog({
-        context: this.context,
-        logType: LogType.INFO,
-        message: 'Web page deploy - failed',
-        location: `${this.constructor.name}/runExecutor`,
-        service: ServiceName.STORAGE,
-        data: {
-          deployment: deployment,
-          data: data,
-          error: err,
+      await this.writeEventLog(
+        {
+          logType: LogType.ERROR,
+          message: 'Web page deploy - failed',
+          service: ServiceName.STORAGE,
+          data: {
+            deployment,
+            data,
+            error: err,
+          },
         },
-      });
+        LogOutput.SYS_ERROR,
+      );
 
       try {
         deployment.deploymentStatus = DeploymentStatus.FAILED;
         await deployment.update();
       } catch (upgError) {
-        writeLog(
-          LogType.ERROR,
-          'Error updating deploymentStatus status to DeploymentStatus.FAILED',
-          'deploy-website-worker.ts',
-          'DeployWebsiteWorker.runExecutor',
-          upgError,
+        await this.writeEventLog(
+          {
+            logType: LogType.ERROR,
+            message:
+              'Error updating deploymentStatus status to DeploymentStatus.FAILED',
+            service: ServiceName.STORAGE,
+            err: upgError,
+          },
+          LogOutput.SYS_ERROR,
         );
       }
     }

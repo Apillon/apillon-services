@@ -2,12 +2,11 @@ import {
   AdvancedSQLModel,
   ChainType,
   Context,
-  EvmChain,
+  PoolConnection,
   PopulateFrom,
   presenceValidator,
   prop,
   SerializeFor,
-  SubstrateChain,
 } from '@apillon/lib';
 import {
   dateParser,
@@ -16,7 +15,7 @@ import {
   stringParser,
 } from '@rawmodel/parsers';
 import { ethers } from 'ethers';
-import { Wallet } from '../../common/models/wallet';
+import { Wallet } from '../wallet/wallet.model';
 
 import {
   BlockchainErrorCode,
@@ -27,6 +26,10 @@ import {
   TxToken,
 } from '../../config/types';
 import { getTokenFromChain } from '../../lib/utils';
+import {
+  SystemEvent,
+  TransferTransaction,
+} from '../blockchain-indexers/substrate/kilt/data-models/kilt-transactions';
 export class TransactionLog extends AdvancedSQLModel {
   public readonly tableName = DbTables.TRANSACTION_LOG;
 
@@ -318,15 +321,32 @@ export class TransactionLog extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: floatParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
     ],
   })
   public value: number;
+
+  /**
+   * Text describing the transaction, can be edited by admin
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+    ],
+  })
+  public description: string;
 
   public constructor(data?: any, context?: Context) {
     super(data, context);
@@ -356,6 +376,47 @@ export class TransactionLog extends AdvancedSQLModel {
       this.direction = TxDirection.INCOME;
       this.action =
         data.transactionType === 0 ? TxAction.DEPOSIT : TxAction.TRANSACTION;
+    } else {
+      throw new Error('Inconsistent transaction addresses!');
+    }
+
+    this.calculateTotalPrice();
+
+    return this;
+  }
+
+  public createFromKiltIndexerData(
+    data: { transfer: TransferTransaction; system: SystemEvent },
+    wallet: Wallet,
+  ) {
+    this.ts = data?.transfer?.createdAt;
+    this.blockId = data?.transfer?.blockNumber;
+    this.addressFrom = data?.transfer?.from;
+    this.addressTo = data?.transfer?.to;
+    this.amount = data?.transfer?.amount?.toString();
+
+    this.hash = data?.transfer?.extrinsicHash;
+    this.wallet = wallet.address;
+
+    this.status =
+      data?.system?.status === 1 ? TxStatus.COMPLETED : TxStatus.FAILED;
+    this.chainType = wallet.chainType;
+    this.chain = wallet.chain;
+    this.token = TxToken.KILT_TOKEN;
+
+    if (this.addressFrom === this.wallet) {
+      this.direction = TxDirection.COST;
+      // TODO: determine action type!
+      // this.action =
+      //   data.transactionType === 0 ? TxAction.WITHDRAWAL : TxAction.TRANSACTION;
+      this.action = TxAction.TRANSACTION;
+      this.fee = data?.transfer?.fee?.toString();
+    } else if (this.addressTo === this.wallet) {
+      this.direction = TxDirection.INCOME;
+      // TODO: determine action type!
+      // this.action =
+      //   data.transactionType === 0 ? TxAction.DEPOSIT : TxAction.TRANSACTION;
+      this.action = TxAction.DEPOSIT;
     } else {
       throw new Error('Inconsistent transaction addresses!');
     }
@@ -401,13 +462,12 @@ export class TransactionLog extends AdvancedSQLModel {
   }
 
   public calculateTotalPrice() {
-    if (this.direction == TxDirection.INCOME) {
-      this.totalPrice = this.amount;
-    } else {
-      this.totalPrice = ethers.BigNumber.from(this.amount)
-        .add(ethers.BigNumber.from(this.fee))
-        .toString();
-    }
+    this.totalPrice =
+      this.direction == TxDirection.INCOME
+        ? this.amount
+        : ethers.BigNumber.from(this.amount)
+            .add(ethers.BigNumber.from(this.fee))
+            .toString();
     return this;
   }
 
@@ -415,5 +475,26 @@ export class TransactionLog extends AdvancedSQLModel {
     this.amount = ethers.BigNumber.from(this.amount)
       .add(ethers.BigNumber.from(amount))
       .toString();
+  }
+
+  public async getTransactionAggregateData(conn?: PoolConnection) {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT
+      COALESCE(SUM(CASE WHEN t.action = '${TxAction.TRANSACTION}' THEN t.fee END), 0) AS totalFeeTransaction,
+      COALESCE(SUM(CASE WHEN t.action = '${TxAction.DEPOSIT}' THEN t.amount END), 0) AS totalAmountDeposit,
+      COALESCE(SUM(CASE WHEN t.action = '${TxAction.TRANSACTION}' THEN t.amount END), 0) AS totalAmountTransaction,
+      COALESCE(SUM(CASE WHEN t.action = '${TxAction.DEPOSIT}' THEN t.totalPrice END), 0) AS totalPriceDeposit,
+      COALESCE(SUM(CASE WHEN t.action = '${TxAction.TRANSACTION}' THEN t.totalPrice END), 0) AS totalPriceTransaction,
+      COALESCE(SUM(CASE WHEN t.action = '${TxAction.DEPOSIT}' THEN t.value END), 0) AS totalValueDeposit,
+      COALESCE(SUM(CASE WHEN t.action = '${TxAction.TRANSACTION}' THEN t.value END), 0) AS totalValueTransaction
+      FROM ${this.tableName} t
+      WHERE t.wallet = '${this.wallet}'
+      GROUP BY t.wallet;
+      `,
+      {},
+      conn,
+    );
+    return data[0];
   }
 }

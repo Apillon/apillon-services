@@ -1,0 +1,59 @@
+{
+  "version": "0.2.0",
+  "compounds": [
+    {
+      "name": "Microservices",
+      "configurations": [
+        "Access",
+        "Monitoring",
+        "Storage",
+        "Mailing",
+        "Config",
+        "Blockchain",
+        "NFTs",
+        "Referral",
+        "Authentication",
+      ],
+      "stopAll": true
+    },
+    {
+      "name": "APIs",
+      "configurations": [
+        "Dev Console API",
+        "Authentication API",
+        "Apillon API",
+      ]
+    },
+    {
+      "name": "All configurations",
+      "configurations": [
+        "Access",
+        "Monitoring",
+        "Storage",
+        "Mailing",
+        "Config",
+        "Blockchain",
+        "NFTs",
+        "Referral",
+        "Authentication",
+        "Dev Console API",
+        "Authentication API",
+        "Apillon API"
+      ]
+    },
+    {
+      "name": "BC dev",
+      "configurations": [
+        "Access",
+        "Monitoring",
+        "Config",
+        "Blockchain",
+        "NFTs",
+        "Dev Console API",
+        "Storage"
+      ],
+      "stopAll": true
+    },
+  ],
+  "configurations": []
+}

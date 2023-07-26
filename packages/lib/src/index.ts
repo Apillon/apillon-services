@@ -1,6 +1,9 @@
 //#REGION Config
 export * from './lib/at-services/config/scs';
 export * from './lib/at-services/config/dtos/get-quota.dto';
+export * from './lib/at-services/config/dtos/get-quotas.dto';
+export * from './lib/at-services/config/dtos/create-quota-override.dto';
+export * from './lib/at-services/config/dtos/quota-override.dto';
 export * from './config/types';
 export * from './config/env';
 
@@ -11,7 +14,6 @@ export * from './lib/at-services/referral/dtos/github-oauth.dto';
 export * from './lib/at-services/referral/dtos/twitter-oauth.dto';
 export * from './lib/at-services/referral/dtos/confirm-retweet.dto';
 export * from './lib/at-services/referral/dtos/product-order.dto';
-export * from './lib/at-services/referral/dtos/product-query-filter.dto';
 
 //#REGION Storage
 export * from './lib/at-services/storage/dtos/trashed-files-query-filter.dto';
@@ -45,6 +47,7 @@ export * from './lib/at-services/storage/dtos/create-s3-urls-for-upload.dto';
 //#REGION Authentication API
 export * from './lib/at-services/authentication/authentication';
 export * from './lib/at-services/authentication/dtos/identity-create.dto';
+export * from './lib/at-services/authentication/dtos/attestation.dto';
 export * from './lib/at-services/authentication/dtos/identity-did-revoke.dto';
 export * from './lib/at-services/authentication/dtos/identity-email.dto';
 export * from './lib/at-services/authentication/dtos/identity-verification-email.dto';
@@ -74,6 +77,9 @@ export * from './lib/at-services/blockchain/dtos/create-substrate-transaction.dt
 export * from './lib/at-services/blockchain/dtos/create-evm-transaction.dto';
 export * from './lib/at-services/blockchain/dtos/transaction.dto';
 export * from './lib/at-services/blockchain/dtos/transaction-webhook-data.dto';
+export * from './lib/at-services/blockchain/dtos/update-wallet.dto';
+export * from './lib/at-services/blockchain/dtos/update-transaction.dto';
+export * from './lib/at-services/blockchain/dtos/wallet-transactions-query-filter';
 
 //#REGION Mix
 export * from './lib/at-services/ams/dtos/create-oauth-link.dto';
@@ -109,3 +115,4 @@ export * from './lib/exceptions/exceptions';
 export * from './lib/exceptions/http-exception';
 export * from './lib/base-models/base-query-filter.model';
 export * from './lib/parsers';
+export * from './lib/cache';

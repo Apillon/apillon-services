@@ -1,0 +1,17 @@
+{
+    "projectName": "apillon-admin-staging",
+    "filterGroups": [
+        [
+            {
+                "pattern": "PUSH",
+                "type": "EVENT",
+                "excludeMatchedPattern": false
+            },
+            {
+                "pattern": "refs/heads/stage$",
+                "type": "HEAD_REF",
+                "excludeMatchedPattern": false
+            }
+        ]
+    ]
+}

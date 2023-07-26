@@ -1,4 +1,5 @@
 import {
+  BaseQueryFilter,
   decodeJwtToken,
   generateJwtToken,
   JwtTokenType,
@@ -9,10 +10,15 @@ import {
   SerializeFor,
   ServiceName,
   UserWalletAuthDto,
+  SqlModelStatus,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AmsErrorCode } from '../../config/types';
-import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
+import {
+  AmsBadRequestException,
+  AmsCodeException,
+  AmsValidationException,
+} from '../../lib/exceptions';
 import { AuthToken } from '../auth-token/auth-token.model';
 import { AuthUser } from './auth-user.model';
 
@@ -33,13 +39,9 @@ export class AuthUserService {
   static async register(event, context: ServiceContext) {
     if (!event?.user_uuid || !event.password || !event.email) {
       throw await new AmsCodeException({
-        status: 400,
-        code: AmsErrorCode.BAD_REQUEST,
-      }).writeToMonitor({
-        context,
-        user_uuid: event?.user_uuid,
-        data: event,
-      });
+        status: 500,
+        code: AmsErrorCode.INVALID_EVENT_DATA,
+      }).writeToMonitor();
     }
     //check if email already exists - user cannot register twice
     const checkEmailRes = await AuthUserService.emailExists(event, context);
@@ -204,6 +206,23 @@ export class AuthUserService {
   }
 
   /**
+   * Logout function. Used to logout specific user (logout by admin) or to logout user making the request
+   * @param event
+   * @param context
+   * @returns
+   */
+  static async logout(event: { user_uuid: string }, context: ServiceContext) {
+    const authUser = await new AuthUser({}, context).populateByUserUuid(
+      event.user_uuid || context.user.user_uuid,
+    );
+
+    if (authUser.exists()) {
+      await authUser.logoutUser();
+    }
+    return true;
+  }
+
+  /**
    * Retrieves an authenticated user's data using their token.
    * @param event An object containing the user's token.
    * @param context The ServiceContext instance for the current request.
@@ -356,10 +375,7 @@ export class AuthUserService {
    */
   static async resetPassword(event, context: ServiceContext) {
     if (!event?.token || !event.password) {
-      throw await new AmsCodeException({
-        status: 400,
-        code: AmsErrorCode.BAD_REQUEST,
-      }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
+      throw await new AmsBadRequestException(context, event).writeToMonitor();
     }
 
     //Decode JWT token to get email
@@ -423,14 +439,7 @@ export class AuthUserService {
    */
   static async emailExists(event, context: ServiceContext) {
     if (!event?.email) {
-      throw await new AmsCodeException({
-        status: 400,
-        code: AmsErrorCode.BAD_REQUEST,
-      }).writeToMonitor({
-        context,
-        user_uuid: event?.user_uuid,
-        data: event,
-      });
+      throw await new AmsBadRequestException(context, event).writeToMonitor();
     }
 
     const authUser = await new AuthUser({}, context).populateByEmail(
@@ -447,14 +456,7 @@ export class AuthUserService {
    */
   static async getAuthUserByEmail(event, context: ServiceContext) {
     if (!event?.email) {
-      throw await new AmsCodeException({
-        status: 400,
-        code: AmsErrorCode.BAD_REQUEST,
-      }).writeToMonitor({
-        context,
-        user_uuid: event?.user_uuid,
-        data: event,
-      });
+      throw await new AmsBadRequestException(context, event).writeToMonitor();
     }
 
     const authUser = await new AuthUser({}, context).populateByEmail(
@@ -479,14 +481,7 @@ export class AuthUserService {
     }
 
     if (!event?.message) {
-      throw await new AmsCodeException({
-        status: 400,
-        code: AmsErrorCode.BAD_REQUEST,
-      }).writeToMonitor({
-        context,
-        user_uuid: event?.user_uuid,
-        data: event,
-      });
+      throw await new AmsBadRequestException(context, event).writeToMonitor();
     }
 
     const { isValid } = signatureVerify(
@@ -548,6 +543,101 @@ export class AuthUserService {
       location: 'AMS/UserService/loginWithWalletAddress',
       user_uuid: authUser.user_uuid,
       service: ServiceName.AMS,
+    });
+
+    return authUser.serialize(SerializeFor.SERVICE);
+  }
+
+  /**
+   * Gets all logins for a user
+   * @param event An object containing the user's uuid and query parameters.
+   * @param context The ServiceContext instance for the current request.
+   * @returns An array of the user's logins
+   */
+  static async getUserLogins(
+    event: { user_uuid: string; query: BaseQueryFilter },
+    context: ServiceContext,
+  ) {
+    if (!event?.user_uuid) {
+      throw new AmsCodeException({
+        status: 500,
+        code: AmsErrorCode.INVALID_EVENT_DATA,
+      });
+    }
+
+    return await new AuthUser({}, context).listLogins(event);
+  }
+
+  /**
+   * Gets all roles for a user
+   * @param event An object containing the user's uuid and query parameters.
+   * @param context The ServiceContext instance for the current request.
+   * @returns An array of the user's roles
+   */
+  static async getUserRoles(
+    event: { user_uuid: string; query: BaseQueryFilter },
+    context: ServiceContext,
+  ) {
+    if (!event?.user_uuid) {
+      throw new AmsCodeException({
+        status: 500,
+        code: AmsErrorCode.INVALID_EVENT_DATA,
+      });
+    }
+
+    return await new AuthUser({}, context).listRoles(event);
+  }
+
+  /**
+   * Function for setting authUser status (blocking, ...)
+   * @param event user uuid & status to be set
+   * @param context
+   * @returns user
+   */
+  static async updateAuthUserStatus(
+    event: { user_uuid: string; status: SqlModelStatus },
+    context: ServiceContext,
+  ) {
+    const authUser = await new AuthUser({}, context).populateByUserUuid(
+      event.user_uuid,
+      undefined,
+      null,
+    );
+
+    if (!authUser.exists()) {
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.USER_DOES_NOT_EXISTS,
+      });
+    }
+
+    authUser.status = event.status;
+    try {
+      await authUser.validate();
+    } catch (err) {
+      throw new AmsValidationException(authUser);
+    }
+    try {
+      await authUser.update();
+    } catch (err) {
+      throw await new AmsCodeException({
+        status: 500,
+        code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
+      }).writeToMonitor({
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
+      });
+    }
+
+    // send log to monitoring service
+    await new Lmas().writeLog({
+      context,
+      logType: LogType.INFO,
+      message: 'AuthUser status updated!',
+      location: 'AMS/UserService/updateAuthUserStatus',
+      service: ServiceName.AMS,
+      data: event,
     });
 
     return authUser.serialize(SerializeFor.SERVICE);
