@@ -25,44 +25,51 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     // TODO: Filter by state as well
     // state?: string,
   ) {
-    const balanceAndSystems = await this.getAccountBalanceTransfers(
-      account,
-      fromBlock,
-      toBlock,
-    );
-    return {
-      balanceTransfers: balanceAndSystems.transfers,
-      systems: balanceAndSystems.systems,
-      withdrawals: await this.getAccountWithdrawals(
-        account,
-        fromBlock,
-        toBlock,
-      ),
-      deposits: await this.getAccountDeposits(account, fromBlock, toBlock),
-      balanceReserve: await this.getAccountReserved(
-        account,
-        fromBlock,
-        toBlock,
-      ),
-      didCreate: await this.getAccountDidCreate(account, fromBlock, toBlock),
-      didDelete: await this.getAccountDidDelete(account, fromBlock, toBlock),
-      didUpdate: await this.getAccountDidUpdate(account, fromBlock, toBlock),
-      attestCreate: await this.getAccountAttestCreate(
-        account,
-        fromBlock,
-        toBlock,
-      ),
-      attestRemove: await this.getAccountAttestRemove(
-        account,
-        fromBlock,
-        toBlock,
-      ),
-      attestRevoke: await this.getAccountAttestRevoke(
-        account,
-        fromBlock,
-        toBlock,
-      ),
-    };
+    try {
+      const [
+        balanceTransfers,
+        systems,
+        withdrawals,
+        deposits,
+        balanceReserve,
+        didCreate,
+        didDelete,
+        didUpdate,
+        attestCreate,
+        attestRemove,
+        attestRevoke,
+      ] = await Promise.all([
+        this.getAccountBalanceTransfers(account, fromBlock, toBlock),
+        this.getAllSystemEvents(account, fromBlock, toBlock),
+        this.getAccountWithdrawals(account, fromBlock, toBlock),
+        this.getAccountDeposits(account, fromBlock, toBlock),
+        this.getAccountReserved(account, fromBlock, toBlock),
+        this.getAccountDidCreate(account, fromBlock, toBlock),
+        this.getAccountDidDelete(account, fromBlock, toBlock),
+        this.getAccountDidUpdate(account, fromBlock, toBlock),
+        this.getAccountAttestCreate(account, fromBlock, toBlock),
+        this.getAccountAttestRemove(account, fromBlock, toBlock),
+        this.getAccountAttestRevoke(account, fromBlock, toBlock),
+      ]);
+
+      return {
+        balanceTransfers,
+        systems,
+        withdrawals,
+        deposits,
+        balanceReserve,
+        didCreate,
+        didDelete,
+        didUpdate,
+        attestCreate,
+        attestRemove,
+        attestRevoke,
+      };
+    } catch (error) {
+      // Handle error here
+      console.error('Error occurred while fetching transactions:', error);
+      throw error;
+    }
   }
 
   public async getAllSystemEvents(
@@ -84,15 +91,32 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     return data.systems;
   }
 
+  public async getSystemEventsForTx(
+    account: string,
+    hashes: string[],
+  ): Promise<SystemEvent[]> {
+    const data: any = await this.graphQlClient.request(
+      gql`
+        ${KiltGQLQueries.ACCOUNT_SYSTEM_EVENTS_FOR_TXS_QUERY}
+      `,
+      {
+        account,
+        hashes,
+      },
+    );
+
+    return data.systems;
+  }
+
   /* These indicate a balance transfer from one account -> another */
   public async getAccountBalanceTransfers(
     account: string,
     fromBlock: number,
     toBlock: number,
-  ): Promise<{ transfers: TransferTransaction[]; systems: SystemEvent[] }> {
+  ): Promise<TransferTransaction[]> {
     const data: any = await this.graphQlClient.request(
       gql`
-        ${KiltGQLQueries.ACCOUNT_TRANSFERS_AND_SYSTEMS_BY_TYPE_QUERY}
+        ${KiltGQLQueries.ACCOUNT_TRANSFERS_BY_TYPE_QUERY}
       `,
       {
         account,
@@ -102,7 +126,28 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
       },
     );
 
-    return data;
+    return data.transfers;
+  }
+
+  /* These indicate a balance transfer from one account -> another */
+  public async getAccountBalanceTransfersWithLimit(
+    account: string,
+    fromBlock: number,
+    limit: number,
+  ): Promise<TransferTransaction[]> {
+    const data: any = await this.graphQlClient.request(
+      gql`
+        ${KiltGQLQueries.ACCOUNT_TRANSFERS_BY_TYPE_WITH_LIMIT_QUERY}
+      `,
+      {
+        account,
+        fromBlock,
+        limit,
+        transactionType: KiltTransactionType.BALANCE_TRANSFER,
+      },
+    );
+
+    return data.transfers;
   }
 
   /* TODO: What is the difference between withdrawal and transfer FROM OUR_ACC -> X  ??? */
