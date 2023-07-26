@@ -149,6 +149,7 @@ describe('Transaction Log Worker unit test', () => {
       (x) => x.wallet.address === crustWallet.address,
     );
     expect(walletData.wallet.address).toBe(crustWallet.address);
+    expect(walletData.wallet.id).toBe(crustWallet.id);
 
     await worker.runExecutor(walletData);
 
@@ -174,6 +175,7 @@ describe('Transaction Log Worker unit test', () => {
       (x) => x.wallet.address === crustWallet.address,
     );
     expect(walletData.wallet.address).toBe(crustWallet.address);
+    expect(walletData.wallet.id).toBe(crustWallet.id);
 
     await worker.runExecutor(walletData);
 

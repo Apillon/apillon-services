@@ -39,14 +39,14 @@ export class TransactionLogWorker extends BaseQueueWorker {
     const wallets = await new Wallet({}, this.context).getWallets();
 
     return wallets.map((x) => ({
-      wallet_id: x.id,
+      wallet: { id: x.id, address: x.address },
       batchLimit: this.batchLimit,
     }));
   }
 
   async runExecutor(data: any): Promise<any> {
     const wallet = await new Wallet({}, this.context).populateById(
-      data.wallet_id,
+      data.wallet.id,
     );
 
     const lastBlock = await this.getLastLoggedBlockNumber(wallet);
