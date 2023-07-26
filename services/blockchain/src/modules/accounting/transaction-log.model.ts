@@ -424,7 +424,8 @@ export class TransactionLog extends AdvancedSQLModel {
           : TxAction.TRANSACTION;
       // this.action = TxAction.DEPOSIT;
     } else {
-      throw new Error('Inconsistent transaction addresses!');
+      // throw new Error('Inconsistent transaction addresses!');
+      this.action = TxAction.UNKNOWN;
     }
 
     this.calculateTotalPrice();
