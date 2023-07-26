@@ -35,25 +35,6 @@ export class UpdateStateWorker extends BaseQueueWorker {
     return [];
   }
 
-  // TODO: REMOVE and just use LMAS
-  private async logAms(
-    contex?: any,
-    message?: any,
-    error?: boolean,
-    data?: any,
-  ) {
-    await new Lmas().writeLog({
-      context: contex,
-      logType: error ? LogType.ERROR : LogType.INFO,
-      message: message,
-      location: `UpdateStateWorker`,
-      service: ServiceName.AUTHENTICATION_API,
-      data: {
-        ...data,
-      },
-    });
-  }
-
   private async execAttestClaim(identity: Identity) {
     const attestationClaimDto = new AttestationDto().populate({
       email: identity.email,
@@ -122,22 +103,20 @@ export class UpdateStateWorker extends BaseQueueWorker {
 
         // TODO: Logging should be better. Transaction hash?????
         if (!identityJob.exists()) {
-          await this.logAms(
-            ctx,
-            `Job for transaction ${result.transactionHash} does not exist!`,
-            true,
-          );
+          await new Lmas().writeLog({
+            context: this.context,
+            logType: LogType.ERROR,
+            message: `Job for transaction ${result.transactionHash} does not exist!`,
+            location: `UpdateStateWorker`,
+            service: ServiceName.AUTHENTICATION_API,
+            data: {},
+          });
           return;
         }
-
-        console.log('Reference id: ', incomingTx.referenceId);
 
         const identity = await new Identity({}, ctx).populateById(
           identityJob.identity_id,
         );
-
-        console.log('Transaction type: ', identityJob.state);
-        console.log('Transaction status: ', status);
 
         switch (identityJob.state) {
           case IdentityJobState.DID_CREATE:
@@ -158,7 +137,14 @@ export class UpdateStateWorker extends BaseQueueWorker {
               await identityJob.setFailed();
 
               if (await identityJob.identityJobRetry()) {
-                writeLog(LogType.INFO, `DID CREATE step FAILED. Retrying ...`);
+                await new Lmas().writeLog({
+                  context: this.context,
+                  logType: LogType.ERROR,
+                  message: `DID CREATE step for ${result.transactionHash} FAILED. Retrying transaction`,
+                  location: `UpdateStateWorker`,
+                  service: ServiceName.AUTHENTICATION_API,
+                  data: {},
+                });
 
                 await this.execIdentityGenerate(
                   identity.email,
@@ -168,11 +154,16 @@ export class UpdateStateWorker extends BaseQueueWorker {
                 identity.state = IdentityState.SUBMITTED_DID_CREATE_REQ;
                 await identity.update();
               } else {
-                writeLog(
-                  LogType.INFO,
-                  `DID CREATE step FAILED | Retry exceeded: STOPPING`,
-                );
                 // TODO: Notification logic
+
+                await new Lmas().writeLog({
+                  context: this.context,
+                  logType: LogType.ERROR,
+                  message: `DID CREATE step for ${result.transactionHash} FAILED. Retry exceeded: STOPPING`,
+                  location: `UpdateStateWorker`,
+                  service: ServiceName.AUTHENTICATION_API,
+                  data: {},
+                });
               }
             }
             break;
@@ -191,22 +182,24 @@ export class UpdateStateWorker extends BaseQueueWorker {
 
               if (await identityJob.identityJobRetry()) {
                 writeLog(LogType.INFO, `ATTESTATION step FAILED. Retrying ...`);
-                await this.logAms(
-                  ctx,
-                  `ATTESTATION step FAILED. Retrying ...`,
-                  true,
-                );
+                await new Lmas().writeLog({
+                  context: this.context,
+                  logType: LogType.ERROR,
+                  message: `ATTESTATION step for ${result.transactionHash} FAILED. Retrying transaction`,
+                  location: `UpdateStateWorker`,
+                  service: ServiceName.AUTHENTICATION_API,
+                  data: {},
+                });
                 await this.execAttestClaim(identity);
               } else {
-                writeLog(
-                  LogType.INFO,
-                  'ATTESTATION step FAILED | Retry exceeded: STOPPING',
-                );
-                await this.logAms(
-                  `ATTESTATION step FAILED | Retry exceeded: STOPPING`,
-                  true,
-                  incomingTx,
-                );
+                await new Lmas().writeLog({
+                  context: this.context,
+                  logType: LogType.ERROR,
+                  message: `ATTESTATION for ${result.transactionHash} step FAILED. Retry exceeded: STOPPING`,
+                  location: `UpdateStateWorker`,
+                  service: ServiceName.AUTHENTICATION_API,
+                  data: {},
+                });
                 // TODO: Notification logic
               }
             }
@@ -214,36 +207,44 @@ export class UpdateStateWorker extends BaseQueueWorker {
             break;
           case IdentityJobState.DID_REVOKE:
             if (status == TransactionStatus.CONFIRMED) {
-              console.log('Step REVOKED: success');
+              writeLog(LogType.INFO, 'Step REVOKED: success');
+
               identity.state = IdentityState.REVOKED;
               await identityJob.setCompleted();
               await identity.update();
             } else {
               if (await identityJob.identityJobRetry()) {
-                writeLog(LogType.INFO, 'REVOKE step FAILED. Retrying ...');
+                await new Lmas().writeLog({
+                  context: this.context,
+                  logType: LogType.ERROR,
+                  message: `REVOKE for ${result.transactionHash} step FAILED. Retrying transaction`,
+                  location: `UpdateStateWorker`,
+                  service: ServiceName.AUTHENTICATION_API,
+                  data: {},
+                });
                 await this.execIdentityRevoke(identity);
               } else {
-                writeLog(
-                  LogType.INFO,
-                  `REVOKE step FAILED | Retry exceeded: STOPPING`,
-                );
-                await this.logAms(
-                  ctx,
-                  'REVOKE step FAILED. Retrying ...',
-                  true,
-                  incomingTx,
-                );
+                await new Lmas().writeLog({
+                  context: this.context,
+                  logType: LogType.ERROR,
+                  message: `REVOKE for ${result.transactionHash} step FAILED. Retry exceeded: STOPPING`,
+                  location: `UpdateStateWorker`,
+                  service: ServiceName.AUTHENTICATION_API,
+                  data: {},
+                });
                 // TODO: Notification logic
               }
             }
             break;
           default:
-            await this.logAms(
-              ctx,
-              'Invalid transaction type',
-              true,
-              incomingTx,
-            );
+            await new Lmas().writeLog({
+              context: this.context,
+              logType: LogType.ERROR,
+              message: `Invalid transaction type`,
+              location: `UpdateStateWorker`,
+              service: ServiceName.AUTHENTICATION_API,
+              data: {},
+            });
             break;
         }
       },
