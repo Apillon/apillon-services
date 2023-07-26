@@ -157,23 +157,28 @@ export class TransactionLogWorker extends BaseQueueWorker {
           },
 
           [SubstrateChain.KILT]: async () => {
-            const res =
-              await new KiltBlockchainIndexer().getAccountBalanceTransfers(
-                wallet.address,
-                lastBlock,
-                limit,
-              );
-            console.log(`Got ${res.transfers.length} Kilt transfers!`);
+            const indexer = new KiltBlockchainIndexer();
+            const transfers = await indexer.getAccountBalanceTransfersWithLimit(
+              wallet.address,
+              lastBlock,
+              limit,
+            );
+            console.log(`Got ${transfers.length} Kilt transfers!`);
+            const systems = await indexer.getSystemEventsForTx(
+              wallet.address,
+              transfers.map((x) => x.extrinsicHash),
+            );
+            console.log(`Got ${systems.length} Kilt system events for TXs!`);
             // prepare transfer data
             const data = [];
-            for (const transfer of res.transfers) {
-              const system = res.systems.find(
-                (x) =>
-                  x.blockNumber === transfer.blockNumber &&
-                  x.extrinsicHash === transfer.extrinsicHash,
+            for (const t of transfers) {
+              const system = systems.find(
+                (s) =>
+                  s.blockNumber === t.blockNumber &&
+                  s.extrinsicHash === t.extrinsicHash,
               );
 
-              data.push({ transfer, system });
+              data.push({ transfer: t, system });
             }
             return (
               data
