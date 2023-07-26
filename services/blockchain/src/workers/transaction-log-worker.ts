@@ -1,7 +1,6 @@
 import {
   ChainType,
   EvmChain,
-  SerializeFor,
   SubstrateChain,
   dateToSqlString,
   Context,
@@ -37,18 +36,18 @@ export class TransactionLogWorker extends BaseQueueWorker {
     this.batchLimit = workerDefinition?.parameters?.batchLimit || 100;
   }
   async runPlanner(_data?: any): Promise<any[]> {
-    const wallets = (await new Wallet({}, this.context).getWallets()).map(
-      (x) => new Wallet(x, this.context),
-    );
+    const wallets = await new Wallet({}, this.context).getWallets();
 
     return wallets.map((x) => ({
-      wallet: x.serialize(SerializeFor.WORKER),
+      wallet: { id: x.id, address: x.address },
       batchLimit: this.batchLimit,
     }));
   }
 
   async runExecutor(data: any): Promise<any> {
-    const wallet = new Wallet(data.wallet, this.context);
+    const wallet = await new Wallet({}, this.context).populateById(
+      data.wallet.id,
+    );
 
     const lastBlock = await this.getLastLoggedBlockNumber(wallet);
     const transactions = await this.getTransactionsForWallet(
@@ -164,9 +163,20 @@ export class TransactionLogWorker extends BaseQueueWorker {
                 lastBlock,
                 limit,
               );
-            console.log(`Got ${res.length} Kilt transfers!`);
+            console.log(`Got ${res.transfers.length} Kilt transfers!`);
+            // prepare transfer data
+            const data = [];
+            for (const transfer of res.transfers) {
+              const system = res.systems.find(
+                (x) =>
+                  x.blockNumber === transfer.blockNumber &&
+                  x.extrinsicHash === transfer.extrinsicHash,
+              );
+
+              data.push({ transfer, system });
+            }
             return (
-              res
+              data
                 .map((x) =>
                   new TransactionLog(
                     {},
