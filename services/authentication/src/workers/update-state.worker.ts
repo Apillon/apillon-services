@@ -113,11 +113,10 @@ export class UpdateStateWorker extends BaseQueueWorker {
         const incomingTx = result;
         const status = incomingTx.transactionStatus;
 
-        // TODO: Perform a join here maybe?
         const identityJob: IdentityJob = await new IdentityJob(
           {},
           ctx,
-        ).populateByIdentityId(incomingTx.referenceId);
+        ).populateById(incomingTx.referenceId);
 
         console.log('Identity JOB: ', identityJob);
 

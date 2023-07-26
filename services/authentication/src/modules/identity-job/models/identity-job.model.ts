@@ -159,7 +159,7 @@ export class IdentityJob extends AdvancedSQLModel {
     const data = await this.getContext().mysql.paramExecute(
       `
         SELECT *
-        FROM \`${this.tableName}\`
+        FROM \`${DbTables.IDENTITY_JOB}\`
         WHERE identity_id = @identity_id;
         `,
       { identity_id },
