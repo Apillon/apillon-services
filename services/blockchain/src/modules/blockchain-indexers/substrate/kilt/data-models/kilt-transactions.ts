@@ -33,4 +33,5 @@ export interface TransferTransaction extends BaseTransaction {
 export interface SystemEvent extends BaseTransaction {
   account?: string | undefined;
   error?: string;
+  fee: bigint;
 }

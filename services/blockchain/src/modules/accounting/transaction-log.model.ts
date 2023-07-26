@@ -20,6 +20,7 @@ import { Wallet } from '../wallet/wallet.model';
 import {
   BlockchainErrorCode,
   DbTables,
+  KiltTransactionType,
   TxAction,
   TxDirection,
   TxStatus,
@@ -386,16 +387,16 @@ export class TransactionLog extends AdvancedSQLModel {
   }
 
   public createFromKiltIndexerData(
-    data: { transfer: TransferTransaction; system: SystemEvent },
+    data: { system: SystemEvent; transfer: TransferTransaction },
     wallet: Wallet,
   ) {
-    this.ts = data?.transfer?.createdAt;
-    this.blockId = data?.transfer?.blockNumber;
+    this.ts = data?.system?.createdAt;
+    this.blockId = data?.system?.blockNumber;
     this.addressFrom = data?.transfer?.from;
     this.addressTo = data?.transfer?.to;
     this.amount = data?.transfer?.amount?.toString();
 
-    this.hash = data?.transfer?.extrinsicHash;
+    this.hash = data?.system?.extrinsicHash;
     this.wallet = wallet.address;
 
     this.status =
@@ -407,16 +408,21 @@ export class TransactionLog extends AdvancedSQLModel {
     if (this.addressFrom === this.wallet) {
       this.direction = TxDirection.COST;
       // TODO: determine action type!
-      // this.action =
-      //   data.transactionType === 0 ? TxAction.WITHDRAWAL : TxAction.TRANSACTION;
-      this.action = TxAction.TRANSACTION;
-      this.fee = data?.transfer?.fee?.toString();
+      this.action =
+        data?.transfer?.transactionType === KiltTransactionType.BALANCE_TRANSFER
+          ? TxAction.WITHDRAWAL
+          : TxAction.TRANSACTION;
+      // this.action = TxAction.TRANSACTION;
+      this.fee =
+        data?.system?.fee?.toString() || data?.transfer?.fee?.toString();
     } else if (this.addressTo === this.wallet) {
       this.direction = TxDirection.INCOME;
       // TODO: determine action type!
-      // this.action =
-      //   data.transactionType === 0 ? TxAction.DEPOSIT : TxAction.TRANSACTION;
-      this.action = TxAction.DEPOSIT;
+      this.action =
+        data?.transfer?.transactionType === KiltTransactionType.BALANCE_TRANSFER
+          ? TxAction.DEPOSIT
+          : TxAction.TRANSACTION;
+      // this.action = TxAction.DEPOSIT;
     } else {
       throw new Error('Inconsistent transaction addresses!');
     }
@@ -465,15 +471,15 @@ export class TransactionLog extends AdvancedSQLModel {
     this.totalPrice =
       this.direction == TxDirection.INCOME
         ? this.amount
-        : ethers.BigNumber.from(this.amount)
-            .add(ethers.BigNumber.from(this.fee))
+        : ethers.BigNumber.from(this.amount || 0)
+            .add(ethers.BigNumber.from(this.fee || 0))
             .toString();
     return this;
   }
 
   public addToAmount(amount: string) {
-    this.amount = ethers.BigNumber.from(this.amount)
-      .add(ethers.BigNumber.from(amount))
+    this.amount = ethers.BigNumber.from(this.amount || 0)
+      .add(ethers.BigNumber.from(amount || 0))
       .toString();
   }
 

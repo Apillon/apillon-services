@@ -65,22 +65,19 @@ export class KiltGQLQueries {
   }`;
 
   /* Returns TRANSFERS and System events by TransactionType from a specific account in KILT */
-  static ACCOUNT_TRANSFERS_BY_TYPE_WITH_LIMIT_QUERY = `query getAccountTransfers(
-    $account: String!
-    $fromBlock: Int!, 
-    $limit: Int!,
-    $transactionType: String!) {
+  static ACCOUNT_TRANSFERS_BY_TX_HASHES_QUERY = `query getAccountTransfersByTxHashes(
+    $account: String!,
+    $hashes: [String!]!
+   ) {
     transfers(
       where: {
         AND: {
-          blockNumber_gte: $fromBlock,
-          transactionType_eq: $transactionType,
+          extrinsicHash_in: $hashes,
           AND: { 
             OR: [{from_eq: $account}, {to_eq: $account}]
           }
         }
-      },
-      limit: $limit
+      }
     )
     {
       ${this.BASE_SUBSTRATE_PARAMS}
@@ -114,16 +111,19 @@ export class KiltGQLQueries {
   }`;
 
   /* Returns SYSTEM events for specific extrinsic hashes */
-  static ACCOUNT_SYSTEM_EVENTS_FOR_TXS_QUERY = `query getAccountSystemEventsForTxs(
-    $account: String!
-    $hashes: [String!]!) {
+  static ACCOUNT_SYSTEM_EVENTS_WITH_LIMIT_QUERY = `query getAccountSystemEventsWithLimit(
+    $account: String!,
+    $fromBlock: Int!,
+    $limit: Int!
+    ) {
     systems(
       where: {
         AND: {
           account_eq: $account
-          extrinsicHash_in: $hashes
+          blockNumber_gte: $fromBlock,
         }
-      }
+      },
+      limit: $limit
     )
     {
       ${this.BASE_SUBSTRATE_PARAMS}
