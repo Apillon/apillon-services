@@ -1,10 +1,7 @@
 import {
-  AdvancedSQLModel,
-  CodeException,
+  AccessControlModel,
   Context,
-  DefaultUserRole,
   DeploymentQueryFilter,
-  ForbiddenErrorCodes,
   getQueryParams,
   PopulateFrom,
   presenceValidator,
@@ -23,7 +20,7 @@ import {
 import { ServiceContext } from '@apillon/service-lib';
 import { Website } from './website.model';
 
-export class Deployment extends AdvancedSQLModel {
+export class Deployment extends AccessControlModel {
   public readonly tableName = DbTables.DEPLOYMENT;
 
   public constructor(data: any, context: Context) {
@@ -183,23 +180,7 @@ export class Deployment extends AdvancedSQLModel {
     const website: Website = await new Website({}, context).populateById(
       this.website_id,
     );
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_USER,
-          DefaultUserRole.ADMIN,
-        ],
-        website.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to access this record',
-      });
-    }
+    return super.canAccess(context, website.project_uuid);
   }
 
   public async populateDeploymentByCid(cid: string): Promise<this> {
