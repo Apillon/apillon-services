@@ -25,41 +25,22 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     // TODO: Filter by state as well
     // state?: string,
   ) {
+    const data: any = await this.graphQlClient.request(
+      gql`
+        ${KiltGQLQueries.ACCOUNT_ALL_TRANSACTIONS_QUERY}
+      `,
+      {
+        account,
+        fromBlock,
+        toBlock,
+      },
+    );
+
     return {
-      balanceTransfers: await this.getAccountBalanceTransfers(
-        account,
-        fromBlock,
-        toBlock,
-      ),
-      withdrawals: await this.getAccountWithdrawals(
-        account,
-        fromBlock,
-        toBlock,
-      ),
-      deposits: await this.getAccountDeposits(account, fromBlock, toBlock),
-      balanceReserve: await this.getAccountReserved(
-        account,
-        fromBlock,
-        toBlock,
-      ),
-      didCreate: await this.getAccountDidCreate(account, fromBlock, toBlock),
-      didDelete: await this.getAccountDidDelete(account, fromBlock, toBlock),
-      didUpdate: await this.getAccountDidUpdate(account, fromBlock, toBlock),
-      attestCreate: await this.getAccountAttestCreate(
-        account,
-        fromBlock,
-        toBlock,
-      ),
-      attestRemove: await this.getAccountAttestRemove(
-        account,
-        fromBlock,
-        toBlock,
-      ),
-      attestRevoke: await this.getAccountAttestRevoke(
-        account,
-        fromBlock,
-        toBlock,
-      ),
+      transfers: data.transfers,
+      dids: data.dids,
+      attestations: data.attestations,
+      systems: data.systems,
     };
   }
 
