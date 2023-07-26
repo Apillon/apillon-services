@@ -22,8 +22,6 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     account: string,
     fromBlock: number,
     toBlock: number,
-    // TODO: Filter by state as well
-    // state?: string,
   ) {
     const data: any = await this.graphQlClient.request(
       gql`
@@ -63,15 +61,32 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     return data.systems;
   }
 
+  public async getSystemEventsForTx(
+    account: string,
+    hashes: string[],
+  ): Promise<SystemEvent[]> {
+    const data: any = await this.graphQlClient.request(
+      gql`
+        ${KiltGQLQueries.ACCOUNT_SYSTEM_EVENTS_FOR_TXS_QUERY}
+      `,
+      {
+        account,
+        hashes,
+      },
+    );
+
+    return data.systems;
+  }
+
   /* These indicate a balance transfer from one account -> another */
   public async getAccountBalanceTransfers(
     account: string,
     fromBlock: number,
     toBlock: number,
-  ): Promise<{ transfers: TransferTransaction[]; systems: SystemEvent[] }> {
+  ): Promise<TransferTransaction[]> {
     const data: any = await this.graphQlClient.request(
       gql`
-        ${KiltGQLQueries.ACCOUNT_TRANSFERS_AND_SYSTEMS_BY_TYPE_QUERY}
+        ${KiltGQLQueries.ACCOUNT_TRANSFERS_BY_TYPE_QUERY}
       `,
       {
         account,
@@ -81,7 +96,28 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
       },
     );
 
-    return data;
+    return data.transfers;
+  }
+
+  /* These indicate a balance transfer from one account -> another */
+  public async getAccountBalanceTransfersWithLimit(
+    account: string,
+    fromBlock: number,
+    limit: number,
+  ): Promise<TransferTransaction[]> {
+    const data: any = await this.graphQlClient.request(
+      gql`
+        ${KiltGQLQueries.ACCOUNT_TRANSFERS_BY_TYPE_WITH_LIMIT_QUERY}
+      `,
+      {
+        account,
+        fromBlock,
+        limit,
+        transactionType: KiltTransactionType.BALANCE_TRANSFER,
+      },
+    );
+
+    return data.transfers;
   }
 
   /* TODO: What is the difference between withdrawal and transfer FROM OUR_ACC -> X  ??? */
