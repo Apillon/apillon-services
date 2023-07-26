@@ -1,20 +1,16 @@
 import {
-  AdvancedSQLModel,
-  CodeException,
   Context,
-  DefaultUserRole,
-  ForbiddenErrorCodes,
   PopulateFrom,
   prop,
   SerializeFor,
   SqlModelStatus,
+  AccessControlModel,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { AmsErrorCode, DbTables } from '../../../config/types';
-import { ServiceContext } from '@apillon/service-lib';
 
-export class ApiKeyRole extends AdvancedSQLModel {
+export class ApiKeyRole extends AccessControlModel {
   public readonly tableName = DbTables.API_KEY_ROLE;
 
   public constructor(data: any, context: Context) {
@@ -141,49 +137,10 @@ export class ApiKeyRole extends AdvancedSQLModel {
   })
   public serviceType_id: number;
 
-  public canAccess(context: ServiceContext) {
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_USER,
-          DefaultUserRole.ADMIN,
-        ],
-        this.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to access this record',
-      });
-    }
-  }
-
-  public canModify(context: ServiceContext) {
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.ADMIN,
-        ],
-        this.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to modify this record',
-      });
-    }
-  }
-
   public async hasRole(role_id): Promise<boolean> {
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
       WHERE apiKey_id = @apiKey_id
       AND role_id = @role_id

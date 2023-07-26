@@ -12,7 +12,13 @@ import {
 } from '@nestjs/common';
 import { DefaultUserRole, SerializeFor, ValidateFor } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
-import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
+import {
+  Ctx,
+  Permissions,
+  UserAdminPermissions,
+  ProjectPermissions,
+  Validation,
+} from '@apillon/modules-lib';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { File } from '../file/models/file.model';
 import { ProjectUserInviteDto } from './dtos/project_user-invite.dto';
@@ -28,14 +34,14 @@ export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
   @Get('user-projects')
-  @Permissions({ role: DefaultUserRole.USER })
+  @UserAdminPermissions()
   @UseGuards(AuthGuard)
   async getUserProjects(@Ctx() context: DevConsoleApiContext) {
     return await this.projectService.getUserProjects(context);
   }
 
   @Get('qouta-reached')
-  @Permissions({ role: DefaultUserRole.USER })
+  @UserAdminPermissions()
   @UseGuards(AuthGuard)
   async isProjectsQuotaReached(@Ctx() context: DevConsoleApiContext) {
     return await this.projectService.isProjectsQuotaReached(context);
@@ -57,11 +63,7 @@ export class ProjectController {
   }
 
   @Get(':uuid/users')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
+  @ProjectPermissions()
   @Validation({ dto: ProjectUserFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(AuthGuard, ValidationGuard)
   async getProjectUsers(
@@ -139,12 +141,7 @@ export class ProjectController {
   }
 
   @Get(':uuid')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-    { role: DefaultUserRole.ADMIN },
-  )
+  @ProjectPermissions()
   @UseGuards(AuthGuard)
   async getProject(
     @Ctx() context: DevConsoleApiContext,
@@ -156,7 +153,7 @@ export class ProjectController {
   }
 
   @Post()
-  @Permissions({ role: DefaultUserRole.USER }, { role: DefaultUserRole.ADMIN })
+  @UserAdminPermissions()
   @UseGuards(AuthGuard)
   @Validation({ dto: Project })
   @UseGuards(ValidationGuard)

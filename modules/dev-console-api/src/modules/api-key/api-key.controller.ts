@@ -5,7 +5,12 @@ import {
   DefaultUserRole,
   ValidateFor,
 } from '@apillon/lib';
-import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
+import {
+  Ctx,
+  Permissions,
+  ProjectPermissions,
+  Validation,
+} from '@apillon/modules-lib';
 import {
   Body,
   Controller,
@@ -59,12 +64,7 @@ export class ApiKeyController {
   }
 
   @Get(':id/roles')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-    { role: DefaultUserRole.ADMIN },
-  )
+  @ProjectPermissions()
   @UseGuards(AuthGuard)
   async getApiKeyRoles(
     @Ctx() context: DevConsoleApiContext,

@@ -8,7 +8,13 @@ import {
   WebsiteQueryFilter,
   WebsitesQuotaReachedQueryFilter,
 } from '@apillon/lib';
-import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
+import {
+  Ctx,
+  Permissions,
+  UserAdminPermissions,
+  ProjectPermissions,
+  Validation,
+} from '@apillon/modules-lib';
 import {
   Body,
   Controller,
@@ -32,11 +38,7 @@ export class HostingController {
   constructor(private hostingService: HostingService) {}
 
   @Get('websites')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
+  @ProjectPermissions()
   @Validation({ dto: WebsiteQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
   async listWebsites(
@@ -47,7 +49,7 @@ export class HostingController {
   }
 
   @Get('websites/quota-reached')
-  @Permissions({ role: DefaultUserRole.USER })
+  @UserAdminPermissions()
   @Validation({
     dto: WebsitesQuotaReachedQueryFilter,
     validateFor: ValidateFor.QUERY,
@@ -61,11 +63,7 @@ export class HostingController {
   }
 
   @Get('websites/:id')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
+  @ProjectPermissions()
   @UseGuards(AuthGuard)
   async getWebsite(
     @Ctx() context: DevConsoleApiContext,
@@ -123,11 +121,7 @@ export class HostingController {
   }
 
   @Get('websites/:website_id/deployments')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
+  @ProjectPermissions()
   @Validation({
     dto: DeploymentQueryFilter,
     validateFor: ValidateFor.QUERY,
@@ -147,11 +141,7 @@ export class HostingController {
   }
 
   @Get('websites/:website_id/deployments/:id')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
+  @ProjectPermissions()
   @UseGuards(AuthGuard)
   async getDeployment(
     @Ctx() context: DevConsoleApiContext,
