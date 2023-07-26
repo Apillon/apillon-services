@@ -26,6 +26,7 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.WORKER,
     ],
     populatable: [PopulateFrom.DB],
   })

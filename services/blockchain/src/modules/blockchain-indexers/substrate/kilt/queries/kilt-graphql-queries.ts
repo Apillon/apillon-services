@@ -64,6 +64,49 @@ export class KiltGQLQueries {
     }
   }`;
 
+  /* Returns TRANSFERS and System events by TransactionType from a specific account in KILT */
+  static ACCOUNT_TRANSFERS_AND_SYSTEMS_BY_TYPE_QUERY = `query getAccountTransfers(
+    $account: String!
+    $fromBlock: Int!, 
+    $toBlock: Int!,
+    $transactionType: String!) {
+    transfers(
+      where: {
+        AND: {
+          blockNumber_gte: $fromBlock,
+          blockNumber_lte: $toBlock,
+          transactionType_eq: $transactionType,
+          AND: { 
+            OR: [{from_eq: $account}, {to_eq: $account}]
+          }
+        }
+      }
+    )
+    {
+      ${this.BASE_SUBSTRATE_PARAMS}
+      from
+      to
+      amount
+      fee
+    }
+    systems(
+      where: {
+        AND: {
+          blockNumber_gte: $fromBlock,
+          blockNumber_lte: $toBlock,
+          account_eq: $account
+        }
+      }
+    ){
+      extrinsicHash
+      status
+      transactionType
+      account
+      blockNumber
+      error
+  	}
+  }`;
+
   /* Returns all SYSTEM events from a specific account in KILT */
   static ACCOUNT_SYSTEM_EVENTS_QUERY = `query getAccountSystemEvents(
     $account: String!

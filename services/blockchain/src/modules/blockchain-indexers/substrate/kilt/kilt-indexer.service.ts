@@ -25,12 +25,14 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     // TODO: Filter by state as well
     // state?: string,
   ) {
+    const balanceAndSystems = await this.getAccountBalanceTransfers(
+      account,
+      fromBlock,
+      toBlock,
+    );
     return {
-      balanceTransfers: await this.getAccountBalanceTransfers(
-        account,
-        fromBlock,
-        toBlock,
-      ),
+      balanceTransfers: balanceAndSystems.transfers,
+      systems: balanceAndSystems.systems,
       withdrawals: await this.getAccountWithdrawals(
         account,
         fromBlock,
@@ -87,10 +89,10 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     account: string,
     fromBlock: number,
     toBlock: number,
-  ): Promise<TransferTransaction[]> {
+  ): Promise<{ transfers: TransferTransaction[]; systems: SystemEvent[] }> {
     const data: any = await this.graphQlClient.request(
       gql`
-        ${KiltGQLQueries.ACCOUNT_TRANSFERS_BY_TYPE_QUERY}
+        ${KiltGQLQueries.ACCOUNT_TRANSFERS_AND_SYSTEMS_BY_TYPE_QUERY}
       `,
       {
         account,
@@ -100,7 +102,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
       },
     );
 
-    return data.transfers;
+    return data;
   }
 
   /* TODO: What is the difference between withdrawal and transfer FROM OUR_ACC -> X  ??? */
