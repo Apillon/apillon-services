@@ -221,7 +221,7 @@ export class UpdateStateWorker extends BaseQueueWorker {
             } else {
               if (await identityJob.identityJobRetry()) {
                 writeLog(LogType.INFO, 'REVOKE step FAILED. Retrying ...');
-                await this.execAttestClaim(identity);
+                await this.execIdentityRevoke(identity);
               } else {
                 writeLog(
                   LogType.INFO,
