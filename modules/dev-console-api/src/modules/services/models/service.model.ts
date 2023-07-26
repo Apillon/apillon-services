@@ -4,10 +4,8 @@ import { stringParser, integerParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 
 import {
-  AdvancedSQLModel,
+  AccessControlModel,
   CodeException,
-  DefaultUserRole,
-  ForbiddenErrorCodes,
   getQueryParams,
   PopulateFrom,
   SerializeFor,
@@ -29,7 +27,7 @@ import { HttpStatus } from '@nestjs/common';
 /**
  * Service model.
  */
-export class Service extends AdvancedSQLModel {
+export class Service extends AccessControlModel {
   tableName = DbTables.SERVICE;
 
   @prop({
@@ -157,23 +155,7 @@ export class Service extends AdvancedSQLModel {
     const project = await new Project({}, context).populateById(
       this.project_id,
     );
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_USER,
-          DefaultUserRole.ADMIN,
-        ],
-        project.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: HttpStatus.FORBIDDEN,
-        errorMessage: 'Insufficient permissions to access this record',
-      });
-    }
+    return super.canAccess(context, project.project_uuid);
   }
   /**
    * ASYNCHROUNUOS method, to check roles for modifying this record
@@ -183,22 +165,7 @@ export class Service extends AdvancedSQLModel {
     const project = await new Project({}, context).populateById(
       this.project_id,
     );
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.ADMIN,
-        ],
-        project.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: HttpStatus.FORBIDDEN,
-        errorMessage: 'Insufficient permissions to modify this record',
-      });
-    }
+    return super.canModify(context, project.project_uuid);
   }
 
   public async populateByUUID(uuid: string): Promise<this> {

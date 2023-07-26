@@ -5,9 +5,12 @@ import { AdvancedSQLModel } from './advanced-sql.model';
 import { HttpStatus } from '@nestjs/common';
 
 export abstract class AccessControlModel extends AdvancedSQLModel {
-  public abstract project_uuid: string;
+  public project_uuid: string;
 
-  public canAccess(context: Context) {
+  public canAccess(
+    context: Context,
+    project_uuid = this.project_uuid,
+  ): boolean | Promise<boolean> {
     // Admins are allowed to access items on any project
     if (context.user.userRoles.includes(DefaultUserRole.ADMIN)) {
       return true;
@@ -20,7 +23,7 @@ export abstract class AccessControlModel extends AdvancedSQLModel {
           DefaultUserRole.PROJECT_USER,
           DefaultUserRole.ADMIN,
         ],
-        this.project_uuid,
+        project_uuid,
       )
     ) {
       throw new CodeException({
@@ -31,7 +34,10 @@ export abstract class AccessControlModel extends AdvancedSQLModel {
     }
   }
 
-  public canModify(context: Context) {
+  public canModify(
+    context: Context,
+    project_uuid = this.project_uuid,
+  ): boolean | Promise<boolean> {
     if (
       !context.hasRoleOnProject(
         [
@@ -39,7 +45,7 @@ export abstract class AccessControlModel extends AdvancedSQLModel {
           DefaultUserRole.PROJECT_OWNER,
           DefaultUserRole.ADMIN,
         ],
-        this.project_uuid,
+        project_uuid,
       )
     ) {
       throw new CodeException({
@@ -48,5 +54,6 @@ export abstract class AccessControlModel extends AdvancedSQLModel {
         errorMessage: 'Insufficient permissions to modify this record',
       });
     }
+    return true;
   }
 }

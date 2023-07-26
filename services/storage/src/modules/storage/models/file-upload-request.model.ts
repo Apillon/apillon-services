@@ -1,10 +1,7 @@
 import {
-  AdvancedSQLModel,
-  CodeException,
+  AccessControlModel,
   Context,
-  DefaultUserRole,
   FileUploadsQueryFilter,
-  ForbiddenErrorCodes,
   getQueryParams,
   PopulateFrom,
   presenceValidator,
@@ -20,7 +17,7 @@ import { ServiceContext } from '@apillon/service-lib';
 import { StorageCodeException } from '../../../lib/exceptions';
 import { Bucket } from '../../bucket/models/bucket.model';
 
-export class FileUploadRequest extends AdvancedSQLModel {
+export class FileUploadRequest extends AccessControlModel {
   public readonly tableName = DbTables.FILE_UPLOAD_REQUEST;
 
   public constructor(data: any, context: Context) {
@@ -255,23 +252,7 @@ export class FileUploadRequest extends AdvancedSQLModel {
     const bucket: Bucket = await new Bucket({}, context).populateById(
       this.bucket_id,
     );
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_USER,
-          DefaultUserRole.ADMIN,
-        ],
-        bucket.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to access this record',
-      });
-    }
+    return super.canAccess(context, bucket.project_uuid);
   }
 
   /**
@@ -282,22 +263,7 @@ export class FileUploadRequest extends AdvancedSQLModel {
     const bucket: Bucket = await new Bucket({}, context).populateById(
       this.bucket_id,
     );
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.ADMIN,
-        ],
-        bucket.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to modify this record',
-      });
-    }
+    return super.canModify(context, bucket.project_uuid);
   }
 
   public async populateFileUploadRequestsInSession(
