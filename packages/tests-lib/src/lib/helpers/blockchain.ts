@@ -2,6 +2,9 @@ import ganache, { Server } from 'ganache';
 import { Stage } from '../interfaces/stage.interface';
 import { Wallet } from '@apillon/blockchain/src/common/models/wallet';
 import { ChainType, EvmChain } from '@apillon/lib';
+import { TransactionType } from '@apillon/nfts/dist/config/types';
+import { Transaction as NftCollectionTx } from '@apillon/nfts/dist/modules/transaction/models/transaction.model';
+import { Transaction as BlockchainTx } from '@apillon/blockchain/dist/src/common/models/transaction';
 
 const KEYS = {
   '0x7756251cff23061ec0856f8ec8d7384a2d260aa2':
@@ -125,5 +128,24 @@ export class TestBlockchain {
       type: 1,
     });
     await wallet.insert();
+  }
+
+  async getNftTransactionStatus(
+    collectionId: number,
+    transactionType: TransactionType,
+  ) {
+    const collectionTxs = await new NftCollectionTx(
+      {},
+      this._stage.nftsContext,
+    ).getCollectionTransactions(collectionId);
+    const collectionTx = collectionTxs.find(
+      (x) => x.transactionType == transactionType,
+    );
+    const blockchainTx = await new BlockchainTx(
+      {},
+      this._stage.blockchainContext,
+    ).getTransactionByChainAndHash(this._chainId, collectionTx.transactionHash);
+
+    return blockchainTx.transactionStatus;
   }
 }

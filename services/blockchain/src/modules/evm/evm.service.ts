@@ -185,11 +185,7 @@ export class EvmService {
         env.APP_ENV == AppEnvironment.LOCAL_DEV ||
         env.APP_ENV == AppEnvironment.TEST
       ) {
-        await transmitAndProcessEvmTransaction(
-          context,
-          _event.params.chain,
-          transaction,
-        );
+        await transmitAndProcessEvmTransaction(context, provider, transaction);
       } else {
         try {
           await sendToWorkerQueue(

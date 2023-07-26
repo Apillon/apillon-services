@@ -17,6 +17,7 @@ import {
   DefaultApiKeyRole,
   QuotaCode,
   SqlModelStatus,
+  TransactionStatus,
 } from '@apillon/lib';
 import { ApiKey } from '@apillon/access/dist/modules/api-key/models/api-key.model';
 import { Project } from '@apillon/dev-console-api/src/modules/project/models/project.model';
@@ -182,18 +183,11 @@ describe('Apillon API NFTs tests', () => {
         stage.nftsContext,
       ).populateById(response.body.data.id);
       expect(genericCollection.exists()).toBeTruthy();
-      const transactions: Transaction[] = await new Transaction(
-        {},
-        stage.nftsContext,
-      ).getCollectionTransactions(genericCollection.id);
-      const transaction = transactions.find(
-        (x) => x.transactionType == TransactionType.DEPLOY_CONTRACT,
+      const transactionStatus = await blockchain.getNftTransactionStatus(
+        genericCollection.id,
+        TransactionType.DEPLOY_CONTRACT,
       );
-      expect(transaction).toBeTruthy();
-      const receipt = blockchain.getTransactionReceipt(
-        transaction.transactionHash,
-      );
-      expect(receipt).toBeTruthy();
+      expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
     });
 
     test('User should be able to get collection list', async () => {
@@ -316,19 +310,11 @@ describe('Apillon API NFTs tests', () => {
       );
 
       expect(response.status).toBe(201);
-      //Check if new transactions exists
-      const transactions: Transaction[] = await new Transaction(
-        {},
-        stage.nftsContext,
-      ).getCollectionTransactions(genericCollection.id);
-      const transaction = transactions.find(
-        (x) => x.transactionType == TransactionType.MINT_NFT,
+      const transactionStatus = await blockchain.getNftTransactionStatus(
+        genericCollection.id,
+        TransactionType.MINT_NFT,
       );
-      expect(transaction).toBeTruthy();
-      const receipt = blockchain.getTransactionReceipt(
-        transaction.transactionHash,
-      );
-      expect(receipt).toBeTruthy();
+      expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
     });
 
     test('User should be able to burn collection NFT', async () => {
@@ -339,18 +325,11 @@ describe('Apillon API NFTs tests', () => {
 
       expect(response.status).toBe(201);
       expect(response.body.data.success).toBe(true);
-      const transactions: Transaction[] = await new Transaction(
-        {},
-        stage.nftsContext,
-      ).getCollectionTransactions(genericCollection.id);
-      const transaction = transactions.find(
-        (x) => x.transactionType == TransactionType.BURN_NFT,
+      const transactionStatus = await blockchain.getNftTransactionStatus(
+        genericCollection.id,
+        TransactionType.BURN_NFT,
       );
-      expect(transaction).toBeTruthy();
-      const receipt = blockchain.getTransactionReceipt(
-        transaction.transactionHash,
-      );
-      expect(receipt).toBeTruthy();
+      expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
     });
 
     test('User should be able to transfer NFT collection', async () => {
@@ -362,21 +341,12 @@ describe('Apillon API NFTs tests', () => {
       );
 
       expect(response.status).toBe(201);
-      //Check if new transactions exists
-      const transactions: Transaction[] = await new Transaction(
-        {},
-        stage.nftsContext,
-      ).getCollectionTransactions(transferredCollection.id);
+      const transactionStatus = await blockchain.getNftTransactionStatus(
+        transferredCollection.id,
+        TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
+      );
+      expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
 
-      const transaction = transactions.find(
-        (x) => x.transactionType == TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
-      );
-      expect(transaction).toBeTruthy();
-      const receipt = blockchain.getTransactionReceipt(
-        transaction.transactionHash,
-      );
-      expect(receipt).toBeTruthy();
-      //indexer is not running when testing so we have to manually update status
       transferredCollection.collectionStatus = CollectionStatus.TRANSFERED;
       await transferredCollection.update();
     });
@@ -482,18 +452,11 @@ describe('Apillon API NFTs tests', () => {
       expect(nestableCollection.collectionStatus).toBe(
         CollectionStatus.DEPLOYING,
       );
-      const transactions: Transaction[] = await new Transaction(
-        {},
-        stage.nftsContext,
-      ).getCollectionTransactions(nestableCollection.id);
-      const transaction = transactions.find(
-        (x) => x.transactionType == TransactionType.DEPLOY_CONTRACT,
+      const transactionStatus = await blockchain.getNftTransactionStatus(
+        nestableCollection.id,
+        TransactionType.DEPLOY_CONTRACT,
       );
-      expect(transaction).toBeTruthy();
-      const receipt = blockchain.getTransactionReceipt(
-        transaction.transactionHash,
-      );
-      expect(receipt).toBeTruthy();
+      expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
     });
 
     test('User should be able to get nestable collection transactions', async () => {
@@ -537,19 +500,11 @@ describe('Apillon API NFTs tests', () => {
       );
 
       expect(response.status).toBe(201);
-      //Check if new transactions exists
-      const transactions: Transaction[] = await new Transaction(
-        {},
-        stage.nftsContext,
-      ).getCollectionTransactions(nestableCollection.id);
-      const transaction = transactions.find(
-        (x) => x.transactionType == TransactionType.MINT_NFT,
+      const transactionStatus = await blockchain.getNftTransactionStatus(
+        nestableCollection.id,
+        TransactionType.MINT_NFT,
       );
-      expect(transaction).toBeTruthy();
-      const receipt = blockchain.getTransactionReceipt(
-        transaction.transactionHash,
-      );
-      expect(receipt).toBeTruthy();
+      expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
     });
 
     test('User should be able to nest mint NFT for nestable NFT', async () => {
@@ -590,19 +545,11 @@ describe('Apillon API NFTs tests', () => {
 
       expect(response.status).toBe(201);
       expect(response.body.data.success).toBe(true);
-      //Check if new transactions exists
-      const transactions: Transaction[] = await new Transaction(
-        {},
-        stage.nftsContext,
-      ).getCollectionTransactions(childCollection.id);
-      const transaction = transactions.find(
-        (x) => x.transactionType == TransactionType.NEST_MINT_NFT,
+      const transactionStatus = await blockchain.getNftTransactionStatus(
+        childCollection.id,
+        TransactionType.NEST_MINT_NFT,
       );
-      expect(transaction).toBeTruthy();
-      const receipt = blockchain.getTransactionReceipt(
-        transaction.transactionHash,
-      );
-      expect(receipt).toBeTruthy();
+      expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
     });
 
     test('User should be able to transfer nestable NFT collection', async () => {
@@ -623,19 +570,11 @@ describe('Apillon API NFTs tests', () => {
       );
 
       expect(response.status).toBe(201);
-      //Check if new transactions exists
-      const transactions: Transaction[] = await new Transaction(
-        {},
-        stage.nftsContext,
-      ).getCollectionTransactions(newCollection.id);
-      const transaction = transactions.find(
-        (x) => x.transactionType == TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
+      const transactionStatus = await blockchain.getNftTransactionStatus(
+        newCollection.id,
+        TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
       );
-      expect(transaction).toBeTruthy();
-      const receipt = blockchain.getTransactionReceipt(
-        transaction.transactionHash,
-      );
-      expect(receipt).toBeTruthy();
+      expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
     });
 
     test('User should NOT be able to Mint transferred nestable collection', async () => {
@@ -670,19 +609,11 @@ describe('Apillon API NFTs tests', () => {
 
       expect(response.status).toBe(201);
       expect(response.body.data.success).toBe(true);
-
-      const transactions: Transaction[] = await new Transaction(
-        {},
-        stage.nftsContext,
-      ).getCollectionTransactions(nestableCollection.id);
-      const transaction = transactions.find(
-        (x) => x.transactionType == TransactionType.BURN_NFT,
+      const transactionStatus = await blockchain.getNftTransactionStatus(
+        nestableCollection.id,
+        TransactionType.BURN_NFT,
       );
-      expect(transaction).toBeTruthy();
-      const receipt = blockchain.getTransactionReceipt(
-        transaction.transactionHash,
-      );
-      expect(receipt).toBeTruthy();
+      expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
     });
   });
 

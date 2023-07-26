@@ -1,10 +1,9 @@
-import { EvmChain, QuotaCode } from '@apillon/lib';
+import { EvmChain, QuotaCode, TransactionStatus } from '@apillon/lib';
 import {
   CollectionStatus,
   TransactionType,
 } from '@apillon/nfts/src/config/types';
 import { Collection } from '@apillon/nfts/src/modules/nfts/models/collection.model';
-import { Transaction } from '@apillon/nfts/src/modules/transaction/models/transaction.model';
 import {
   createTestProject,
   createTestUser,
@@ -75,20 +74,12 @@ describe('Apillon Console NFTs tests for Astar', () => {
       newCollection = await new Collection({}, stage.nftsContext).populateById(
         response.body.data.id,
       );
-
       expect(newCollection.exists()).toBeTruthy();
-      const transactions: Transaction[] = await new Transaction(
-        {},
-        stage.nftsContext,
-      ).getCollectionTransactions(newCollection.id);
-      const transaction = transactions.find(
-        (x) => x.transactionType == TransactionType.DEPLOY_CONTRACT,
+      const transactionStatus = await blockchain.getNftTransactionStatus(
+        newCollection.id,
+        TransactionType.DEPLOY_CONTRACT,
       );
-      expect(transaction).toBeTruthy();
-      const receipt = await blockchain.getTransactionReceipt(
-        transaction.transactionHash,
-      );
-      expect(receipt).toBeTruthy();
+      expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
 
       newCollection.collectionStatus = CollectionStatus.DEPLOYED;
       await newCollection.update();
@@ -112,20 +103,11 @@ describe('Apillon Console NFTs tests for Astar', () => {
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
-
-      //Check if new transactions exists
-      const transactions: Transaction[] = await new Transaction(
-        {},
-        stage.nftsContext,
-      ).getCollectionTransactions(newCollection.id);
-      const transaction = transactions.find(
-        (x) => x.transactionType == TransactionType.MINT_NFT,
+      const transactionStatus = await blockchain.getNftTransactionStatus(
+        newCollection.id,
+        TransactionType.MINT_NFT,
       );
-      expect(transaction).toBeTruthy();
-      const receipt = await blockchain.getTransactionReceipt(
-        transaction.transactionHash,
-      );
-      expect(receipt).toBeTruthy();
+      expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
     });
 
     test('User should be able to transfer NFT collection', async () => {
@@ -138,20 +120,11 @@ describe('Apillon Console NFTs tests for Astar', () => {
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
-
-      //Check if new transactions exists
-      const transactions: Transaction[] = await new Transaction(
-        {},
-        stage.nftsContext,
-      ).getCollectionTransactions(newCollection.id);
-      const transaction = transactions.find(
-        (x) => x.transactionType == TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
+      const transactionStatus = await blockchain.getNftTransactionStatus(
+        newCollection.id,
+        TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
       );
-      expect(transaction).toBeTruthy();
-      const receipt = await blockchain.getTransactionReceipt(
-        transaction.transactionHash,
-      );
-      expect(receipt).toBeTruthy();
+      expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
     });
 
     test('User should NOT be able to Mint transferred collection', async () => {
