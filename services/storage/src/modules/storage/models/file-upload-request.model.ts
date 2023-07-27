@@ -259,7 +259,7 @@ export class FileUploadRequest extends ProjectAccessModel {
    * ASYNC canModify function
    * @param context
    */
-  public async canModify(context: ServiceContext) {
+  public override async canModify(context: ServiceContext) {
     const bucket: Bucket = await new Bucket({}, context).populateById(
       this.bucket_id,
     );

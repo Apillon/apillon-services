@@ -161,7 +161,7 @@ export class Service extends ProjectAccessModel {
    * ASYNCHROUNUOS method, to check roles for modifying this record
    * @param context
    */
-  public async canModify(context: DevConsoleApiContext) {
+  public override async canModify(context: DevConsoleApiContext) {
     const project = await new Project({}, context).populateById(
       this.project_id,
     );
