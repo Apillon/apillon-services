@@ -27,7 +27,7 @@ describe('Transaction Log Worker unit test', () => {
   let kiltLogCount: number;
 
   let worker: TransactionLogWorker;
-  const batchLimit = 100;
+  const batchLimit = 200;
 
   beforeAll(async () => {
     stage = await setupTest();
@@ -325,9 +325,23 @@ describe('Transaction Log Worker unit test', () => {
       { address: kiltWallet.address },
     );
 
-    astarLogCount = logs[0].cnt;
-    expect(astarLogCount).toBeGreaterThan(0);
-    expect(astarLogCount).toBeLessThanOrEqual(batchLimit);
-    console.log(astarLogCount);
+    kiltLogCount = logs[0].cnt;
+    expect(kiltLogCount).toBeGreaterThan(0);
+    expect(kiltLogCount).toBeLessThanOrEqual(batchLimit);
+    console.log(kiltLogCount);
+
+    const fees = await stage.db.paramExecute(
+      `
+      SELECT COUNT(*) AS cnt 
+      FROM \`${DbTables.TRANSACTION_LOG}\`
+      WHERE wallet = @address
+      AND fee = 0
+      AND status = 5
+      `,
+      { address: kiltWallet.address },
+    );
+
+    console.log(fees[0].cnt);
+    expect(fees[0].cnt).toBe(0);
   });
 });
