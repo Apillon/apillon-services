@@ -15,19 +15,19 @@ function flatObject(obj: Record<any, any>, joinChar = '/') {
  * @param prefix unique per route cache prefix
  * @param query query params from request URL
  * @param params path params from request URL
- * @param userId user Id for per-user caching, pass null for global caching
- * @param projectUuid project uuid for per-project caching
+ * @param user_uuid user uuid for per-user caching, pass null for global caching
+ * @param project_uuid project uuid for per-project caching
  */
 export function generateCacheKey(
   prefix: string,
   path: string,
   query: any,
   params: any,
-  userId: number,
-  projectUuid: string,
+  user_uuid: string,
+  project_uuid: string,
 ) {
-  return `${prefix}#${path}@${userId ? `userId:${userId}` : ''}|${
-    projectUuid ? `projectUuid:${projectUuid}` : ''
+  return `${prefix}#${path}@${user_uuid ? `user_uuid:${user_uuid}` : ''}|${
+    project_uuid ? `project_uuid:${project_uuid}` : ''
   }|${flatObject(params)}|${flatObject(query)}`;
 }
 
@@ -51,7 +51,7 @@ export async function runCachedFunction(
       await cache.connect();
       result = await cache.getKey(key);
       if (result) {
-        console.info('CACHE: Returning function results from CACHE!');
+        console.info('[CACHE]: Returning function results from CACHE!');
         await cache.disconnect();
         // console.timeEnd('CHECK_CACHE');
         return result;
@@ -63,7 +63,7 @@ export async function runCachedFunction(
   // console.time('ACTION_CACHE');
   result = await action.call(this);
   // console.timeEnd('ACTION_CACHE');
-  console.warn('CACHE: Missing key! Returning result from function!');
+  console.warn('[CACHE]: Missing key! Returning result from function!');
 
   if (cache) {
     // console.time('SET_CACHE');
@@ -75,7 +75,7 @@ export async function runCachedFunction(
     }
     // console.timeEnd('SET_CACHE');
   } else {
-    console.info('CACHE: Result is not saved to cache!');
+    console.info('[CACHE]: Result is not saved to cache!');
   }
 
   return result;
@@ -87,14 +87,16 @@ export async function runCachedFunction(
  */
 export async function invalidateCachePrefixes(
   prefixes: string[],
-  userId?: number,
-  projectUuid?: string,
+  user_uuid?: string,
+  project_uuid?: string,
 ) {
   const promises = [];
   const cache = new AppCache();
   await cache.connect();
   for (const prefix of prefixes) {
-    promises.push(invalidateCacheMatch(prefix, { userId, projectUuid }, cache));
+    promises.push(
+      invalidateCacheMatch(prefix, { user_uuid, project_uuid }, cache),
+    );
   }
   await Promise.all(promises);
   await cache.disconnect();
@@ -104,15 +106,15 @@ export async function invalidateCachePrefixes(
  * Searches for appropriate key in cache and deletes it
  * @param keyPrefix cache key prefix
  * @param params parameters to match in key
- * @param userId user ID for users personal cache
+ * @param user_uuid user ID for users personal cache
  */
 export async function invalidateCacheMatch(
   keyPrefix: string,
   matchOptions?: {
     path?: string;
     params?: any;
-    userId?: number;
-    projectUuid?: string;
+    user_uuid?: string;
+    project_uuid?: string;
   },
   cache: AppCache = null,
 ) {
@@ -129,11 +131,11 @@ export async function invalidateCacheMatch(
       matchOptions?.path ? `${matchOptions?.path}:` : '*@'
     }${
       // user id
-      matchOptions?.userId ? `userId:${matchOptions?.userId}` : ''
+      matchOptions?.user_uuid ? `user_uuid:${matchOptions?.user_uuid}` : ''
     }*${
       // project uuid
-      matchOptions?.projectUuid
-        ? `projectUuid:${matchOptions?.projectUuid}`
+      matchOptions?.project_uuid
+        ? `project_uuid:${matchOptions?.project_uuid}`
         : ''
     }*${
       // custom parameters (query + body)
@@ -166,7 +168,7 @@ export async function flushCache() {
     const cache = new AppCache();
     await cache.connect();
     await cache.flush();
-    await await cache.disconnect();
+    await cache.disconnect();
   } catch (err) {
     console.error(err);
   }
@@ -187,16 +189,7 @@ export class AppCache {
   }
 
   public async connect() {
-    // this.redisClient = redis.createClient({
-    //   password: 'gntF3mGEKxUNiqlykqcjSjzhm66zl5bw',
-    //   socket: {
-    //     host: 'redis-10228.c300.eu-central-1-1.ec2.cloud.redislabs.com',
-    //     port: 10228,
-    //   },
-    // });
-    this.redisClient = redis.createClient({
-      url: env.REDIS_URL,
-    });
+    this.redisClient = redis.createClient({ url: env.REDIS_URL });
     await this.redisClient.connect();
   }
 
@@ -216,10 +209,10 @@ export class AppCache {
   public async removeMatch(keyPattern: string) {
     const keys = await this.redisClient.keys(keyPattern);
     if (keys.length) {
-      console.info(`CACHE: Removing keys: ${keys.join(', ')}`);
+      // console.info(`[CACHE]: Removing keys: ${keys.join(', ')}`);
       await this.redisClient.del(keys);
     } else {
-      console.info(`CACHE: Found no keys to be removed.`);
+      console.warn(`[CACHE]: Found no keys to be removed.`);
     }
   }
 

@@ -7,6 +7,7 @@ import {
 import { Wallet } from '../modules/wallet/wallet.model';
 import { BaseBlockchainIndexer } from '../modules/blockchain-indexers/substrate/base-blockchain-indexer';
 import {
+  AppEnvironment,
   ChainType,
   Context,
   LogType,
@@ -31,6 +32,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
   private chainName: string;
   private logPrefix: string;
   private wallets: Wallet[];
+  // Add as necessary
   private indexer: BaseBlockchainIndexer;
 
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
@@ -71,6 +73,8 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         toBlock,
       );
 
+      console.log('Fetched transactions: ', transactions);
+
       const conn = await this.context.mysql.start();
       try {
         await this.setTransactionsState(transactions, conn);
@@ -93,7 +97,12 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         );
         continue;
       }
-      if (transactions.length > 0) {
+
+      if (
+        transactions.length > 0 &&
+        env.APP_ENV !== AppEnvironment.TEST &&
+        env.APP_ENV !== AppEnvironment.LOCAL_DEV
+      ) {
         // Trigger webhook worker
         await sendToWorkerQueue(
           env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
@@ -127,11 +136,13 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     toBlock: number,
   ) {
     // Get all transactions from the
-    const transactions = await this.indexer.getAllTransactions(
+    const transactions = await this.indexer.getAllSystemEvents(
       address,
       fromBlock,
       toBlock,
     );
+
+    console.log('System transactions: ', transactions);
 
     const transactionsArray: Array<any> = Object.values(transactions);
     return transactionsArray.length > 0 ? transactionsArray.flat(Infinity) : [];
@@ -158,8 +169,10 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         t.status == TransactionIndexerStatus.FAIL;
       })
       .map((t: any): string => {
-        return t.transactionHash;
+        return t.extrinsicHash;
       });
+
+    console.log('Failed transactions ', failedTransactions);
 
     // Update SUCCESSFUL transactions
     await this.updateTransactions(

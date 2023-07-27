@@ -1,10 +1,12 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import {
   Ams,
+  CacheKeyPrefix,
   CodeException,
   DefaultUserRole,
   env,
   generateJwtToken,
+  invalidateCachePrefixes,
   JwtTokenType,
   Lmas,
   LogType,
@@ -76,8 +78,10 @@ export class ProjectService {
       await new Ams(context).assignUserRole(params);
       await context.mysql.commit(conn);
 
+      await invalidateCachePrefixes([CacheKeyPrefix.ADMIN_PROJECT_LIST]);
+
       await new Lmas().writeLog({
-        context: context,
+        context,
         project_uuid: project.project_uuid,
         logType: LogType.INFO,
         message: 'New project created',
@@ -157,6 +161,8 @@ export class ProjectService {
     }
 
     await project.update();
+    await invalidateCachePrefixes([CacheKeyPrefix.ADMIN_PROJECT_LIST]);
+
     return project;
   }
 

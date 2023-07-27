@@ -22,7 +22,7 @@ describe('Substrate tests', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    env.BLOCKCHAIN_KILT_GRAPHQL_SERVER = 'http://18.203.251.180:8082/graphql';
+    env.BLOCKCHAIN_KILT_GRAPHQL_SERVER = 'http://3.251.2.33:8082/graphql';
     const address = '4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn';
     const chain = SubstrateChain.KILT;
     const chainType = ChainType.SUBSTRATE;
@@ -34,7 +34,7 @@ describe('Substrate tests', () => {
         address,
         // This is actually not correct - the seed should match the address
         seed: mnemonicGenerate(),
-        lastParsedBlock: 1,
+        lastParsedBlock: 3982289,
       },
       stage.context,
     ).insert();
@@ -72,7 +72,7 @@ describe('Substrate tests', () => {
         nonce: 2,
         rawTransaction: 'SOME_RAW_DATA_2',
         transactionHash:
-          '0x41a4ea4e792b7326e8d7fff275f2033b451b174994a44b5308b9ac4c1ddbf3df',
+          '0x9326781cd58ac4101316ab0d1dd4b587c2e375797bb2f298cddbad4ea63f3ec7',
       },
       stage.context,
     ).insert();
@@ -86,7 +86,7 @@ describe('Substrate tests', () => {
         nonce: 3,
         rawTransaction: 'SOME_RAW_DATA_3',
         transactionHash:
-          '0xcef2d10686fa042c01277ec898b0b75f2016b05e252205da7ec664d1fa5daef0',
+          '0x70233536bf9a7c825efb76e333af8752e30f433e265ab0222dab3570999d05bf',
       },
       stage.context,
     ).insert();
@@ -121,7 +121,12 @@ describe('Substrate tests', () => {
       0,
     );
 
+    console.log('TXS: ', txs);
+
     expect(txs.length).toBe(3);
+    console.log(
+      txs.find((x) => x.transactionStatus != TransactionStatus.CONFIRMED),
+    );
     expect(
       txs.find((x) => x.transactionStatus != TransactionStatus.CONFIRMED),
     ).toBeFalsy();

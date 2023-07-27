@@ -66,29 +66,29 @@ export class TransmitSubstrateTransactionWorker extends BaseSingleThreadWorker {
       throw err;
     }
 
-    try {
-      await sendToWorkerQueue(
-        env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
-        WorkerName.CRUST_TRANSACTIONS,
-        [{}],
-        null,
-        null,
-      );
-    } catch (e) {
-      await this.writeEventLog(
-        {
-          logType: LogType.ERROR,
-          message: 'Error sending messages to SQS',
-          service: ServiceName.BLOCKCHAIN,
-          data: {
-            data,
-            error: e,
-          },
-          err: e,
-        },
-        LogOutput.SYS_ERROR,
-      );
-    }
+    // try {
+    //   await sendToWorkerQueue(
+    //     env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
+    //     WorkerName.CRUST_TRANSACTIONS,
+    //     [{}],
+    //     null,
+    //     null,
+    //   );
+    // } catch (e) {
+    //   await this.writeEventLog(
+    //     {
+    //       logType: LogType.ERROR,
+    //       message: 'Error sending messages to SQS',
+    //       service: ServiceName.BLOCKCHAIN,
+    //       data: {
+    //         data,
+    //         error: e,
+    //       },
+    //       err: e,
+    //     },
+    //     LogOutput.SYS_ERROR,
+    //   );
+    // }
     return true;
   }
 }

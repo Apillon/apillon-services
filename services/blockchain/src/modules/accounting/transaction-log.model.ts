@@ -20,12 +20,17 @@ import { Wallet } from '../wallet/wallet.model';
 import {
   BlockchainErrorCode,
   DbTables,
+  KiltTransactionType,
   TxAction,
   TxDirection,
   TxStatus,
   TxToken,
 } from '../../config/types';
 import { getTokenFromChain } from '../../lib/utils';
+import {
+  SystemEvent,
+  TransferTransaction,
+} from '../blockchain-indexers/substrate/kilt/data-models/kilt-transactions';
 export class TransactionLog extends AdvancedSQLModel {
   public readonly tableName = DbTables.TRANSACTION_LOG;
 
@@ -381,36 +386,50 @@ export class TransactionLog extends AdvancedSQLModel {
     return this;
   }
 
-  public createFromKiltIndexerData(data: any, wallet: Wallet) {
-    this.ts = data?.createdAt;
-    this.blockId = data?.blockNumber;
-    this.addressFrom = data?.from;
-    this.addressTo = data?.to;
-    this.amount = data?.amount;
+  public createFromKiltIndexerData(
+    data: { system: SystemEvent; transfer: TransferTransaction },
+    wallet: Wallet,
+  ) {
+    this.ts = data?.system?.createdAt;
+    this.blockId = data?.system?.blockNumber;
+    this.addressFrom = data?.transfer?.from;
+    this.addressTo = data?.transfer?.to;
+    this.amount = data?.transfer?.amount?.toString() || '0';
 
-    this.hash = data?.extrinsicHash;
+    this.hash = data?.system?.extrinsicHash;
     this.wallet = wallet.address;
 
-    this.status = data?.status === 1 ? TxStatus.COMPLETED : TxStatus.FAILED;
+    this.status =
+      data?.system?.status === 1 ? TxStatus.COMPLETED : TxStatus.FAILED;
     this.chainType = wallet.chainType;
     this.chain = wallet.chain;
     this.token = TxToken.KILT_TOKEN;
+    this.fee = data?.system?.fee?.toString() || data?.transfer?.fee?.toString();
 
     if (this.addressFrom === this.wallet) {
       this.direction = TxDirection.COST;
-      // TODO: determine action type!
-      // this.action =
-      //   data.transactionType === 0 ? TxAction.WITHDRAWAL : TxAction.TRANSACTION;
-      this.action = TxAction.TRANSACTION;
-      this.fee = data?.fee;
+
+      this.action =
+        data?.transfer?.transactionType === KiltTransactionType.BALANCE_TRANSFER
+          ? TxAction.WITHDRAWAL
+          : TxAction.TRANSACTION;
     } else if (this.addressTo === this.wallet) {
       this.direction = TxDirection.INCOME;
-      // TODO: determine action type!
-      // this.action =
-      //   data.transactionType === 0 ? TxAction.DEPOSIT : TxAction.TRANSACTION;
-      this.action = TxAction.DEPOSIT;
+
+      this.action =
+        data?.transfer?.transactionType === KiltTransactionType.BALANCE_TRANSFER
+          ? TxAction.DEPOSIT
+          : TxAction.TRANSACTION;
+
+      if (this.action === TxAction.DEPOSIT) {
+        // income fee should not be logged (payed by other wallet)
+        this.fee = '0';
+      }
     } else {
-      throw new Error('Inconsistent transaction addresses!');
+      // throw new Error('Inconsistent transaction addresses!');
+      // some Kilt events does not have both addresses.
+      this.action = TxAction.UNKNOWN;
+      this.direction = TxDirection.UNKNOWN;
     }
 
     this.calculateTotalPrice();
@@ -457,15 +476,15 @@ export class TransactionLog extends AdvancedSQLModel {
     this.totalPrice =
       this.direction == TxDirection.INCOME
         ? this.amount
-        : ethers.BigNumber.from(this.amount)
-            .add(ethers.BigNumber.from(this.fee))
+        : ethers.BigNumber.from(this.amount || 0)
+            .add(ethers.BigNumber.from(this.fee || 0))
             .toString();
     return this;
   }
 
   public addToAmount(amount: string) {
-    this.amount = ethers.BigNumber.from(this.amount)
-      .add(ethers.BigNumber.from(amount))
+    this.amount = ethers.BigNumber.from(this.amount || 0)
+      .add(ethers.BigNumber.from(amount || 0))
       .toString();
   }
 

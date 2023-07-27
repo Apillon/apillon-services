@@ -1,6 +1,7 @@
 import {
   AdvancedSQLModel,
   Context,
+  JSONParser,
   PopulateFrom,
   SerializeFor,
   prop,
@@ -89,6 +90,21 @@ export class IdentityJob extends AdvancedSQLModel {
   public lastError: string;
 
   /**
+   * Data needed for this job to execute
+   */
+  @prop({
+    parser: { resolver: JSONParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.WORKER],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+  })
+  public data: any;
+
+  /**
    * Time of last successful run - set at the end of execution
    */
   @prop({
@@ -143,7 +159,7 @@ export class IdentityJob extends AdvancedSQLModel {
     const data = await this.getContext().mysql.paramExecute(
       `
         SELECT *
-        FROM \`${this.tableName}\`
+        FROM \`${DbTables.IDENTITY_JOB}\`
         WHERE identity_id = @identity_id;
         `,
       { identity_id },

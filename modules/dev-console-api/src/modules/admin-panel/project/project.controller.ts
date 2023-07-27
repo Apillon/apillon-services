@@ -6,6 +6,7 @@ import {
   QuotaOverrideDto,
   PopulateFrom,
   BaseQueryFilter,
+  CacheKeyPrefix,
 } from '@apillon/lib';
 import {
   Body,
@@ -17,8 +18,14 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
+import {
+  CacheInterceptor,
+  Ctx,
+  Permissions,
+  Validation,
+} from '@apillon/modules-lib';
 import { AuthGuard } from '../../../guards/auth.guard';
 import { ProjectService } from './project.service';
 import { DevConsoleApiContext } from '../../../context';
@@ -26,15 +33,18 @@ import { ValidationGuard } from '../../../guards/validation.guard';
 import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
 import { UUID } from 'crypto';
 import { BaseQueryFilterValidator } from '../../../decorators/base-query-filter-validator';
+import { Cache } from '@apillon/modules-lib';
 
 @Controller('admin-panel/projects')
 @Permissions({ role: DefaultUserRole.ADMIN })
 @UseGuards(AuthGuard)
+@UseInterceptors(CacheInterceptor)
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
   @Get()
   @BaseQueryFilterValidator()
+  @Cache({ keyPrefix: CacheKeyPrefix.ADMIN_PROJECT_LIST })
   async listProjects(
     @Ctx() context: DevConsoleApiContext,
     @Query() query: BaseQueryFilter,

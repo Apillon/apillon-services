@@ -5,6 +5,7 @@ import {
   Lmas,
   LogType,
   ServiceName,
+  writeLog,
 } from '@apillon/lib';
 import {
   Attestation,
@@ -32,14 +33,6 @@ export class VerificationMicroservice {
         await api.query.attestation.attestations(presentation.rootHash),
         presentation.rootHash,
       );
-
-      await new Lmas().writeLog({
-        context: context,
-        logType: LogType.INFO,
-        message: 'VERIFICATION SUCCESSFUL',
-        location: 'AUTHENTICATION-API/verification/verifyIdentity',
-        service: ServiceName.AUTHENTICATION_API,
-      });
     } catch (error) {
       return {
         verified: false,

@@ -11,6 +11,7 @@ export async function upgrade(
       \`state\` TEXT NULL,
       \`finalState\` TEXT NULL,
       \`identity_id\` INT NULL,
+      \`data\` JSON NULL DEFAULT NULL,
       \`completedAt\` DATETIME NULL,
       \`lastError\` TEXT NULL,
       \`lastFailed\` DATETIME NULL,

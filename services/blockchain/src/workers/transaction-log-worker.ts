@@ -1,7 +1,6 @@
 import {
   ChainType,
   EvmChain,
-  SerializeFor,
   SubstrateChain,
   dateToSqlString,
   Context,
@@ -37,18 +36,18 @@ export class TransactionLogWorker extends BaseQueueWorker {
     this.batchLimit = workerDefinition?.parameters?.batchLimit || 100;
   }
   async runPlanner(_data?: any): Promise<any[]> {
-    const wallets = (await new Wallet({}, this.context).getWallets()).map(
-      (x) => new Wallet(x, this.context),
-    );
+    const wallets = await new Wallet({}, this.context).getWallets();
 
     return wallets.map((x) => ({
-      wallet: x.serialize(SerializeFor.WORKER),
+      wallet: { id: x.id, address: x.address },
       batchLimit: this.batchLimit,
     }));
   }
 
   async runExecutor(data: any): Promise<any> {
-    const wallet = new Wallet(data.wallet, this.context);
+    const wallet = await new Wallet({}, this.context).populateById(
+      data.wallet.id,
+    );
 
     const lastBlock = await this.getLastLoggedBlockNumber(wallet);
     const transactions = await this.getTransactionsForWallet(
@@ -158,15 +157,32 @@ export class TransactionLogWorker extends BaseQueueWorker {
           },
 
           [SubstrateChain.KILT]: async () => {
-            const res =
-              await new KiltBlockchainIndexer().getAllAccountTransfers(
-                wallet.address,
-                lastBlock,
-                limit,
+            const indexer = new KiltBlockchainIndexer();
+
+            const systems = await indexer.getSystemEventsWithLimit(
+              wallet.address,
+              lastBlock,
+              limit,
+            );
+            console.log(`Got ${systems.length} Kilt system events!`);
+            const transfers = await indexer.getAccountBalanceTransfersForTxs(
+              wallet.address,
+              systems.map((x) => x.extrinsicHash),
+            );
+            console.log(`Got ${transfers.length} Kilt transfers!`);
+            // prepare transfer data
+            const data = [];
+            for (const s of systems) {
+              const transfer = transfers.find(
+                (t) =>
+                  t.blockNumber === s.blockNumber &&
+                  t.extrinsicHash === s.extrinsicHash,
               );
-            console.log(`Got ${res.length} Kilt transfers!`);
+
+              data.push({ system: s, transfer });
+            }
             return (
-              res
+              data
                 .map((x) =>
                   new TransactionLog(
                     {},
@@ -226,8 +242,10 @@ export class TransactionLogWorker extends BaseQueueWorker {
          (x) => `(
           '${dateToSqlString(x.ts)}', ${x.blockId}, ${x.status}, ${x.direction},
         '${x.action}', ${x.chain}, ${x.chainType}, '${x.wallet}',
-        '${x.addressFrom}', '${x.addressTo}', '${x.hash}', '${x.token}',
-        '${x.amount}', '${x.fee || '0'}', '${x.totalPrice}'
+        ${x.addressFrom ? `'${x.addressFrom}'` : null},
+        ${x.addressTo ? `'${x.addressTo}'` : null},
+        '${x.hash}', '${x.token}',
+        '${x.amount || 0}', '${x.fee || 0}', '${x.totalPrice}'
         )`,
        )
        .join(',')}
