@@ -1,7 +1,6 @@
 import {
   BaseSingleThreadWorker,
   WorkerDefinition,
-  sendToWorkerQueue,
   LogOutput,
 } from '@apillon/workers-lib';
 import { Wallet } from '../modules/wallet/wallet.model';
@@ -17,35 +16,35 @@ import {
   TransactionStatus,
   env,
 } from '@apillon/lib';
-import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/kilt-indexer.service';
-import { WorkerName } from './worker-executor';
 import { DbTables, TransactionIndexerStatus } from '../config/types';
-import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
+import {
+  createSubstrateTxWebhookDto,
+  processWebhooks,
+} from '../lib/webhook-procedures';
+import { SubstrateParachainConfig } from '../config/parachain.config';
 
-export enum SubstrateChainName {
-  KILT = 'KILT',
-  CRUST = 'CRUST',
-}
+type WebhookWorker = {
+  workerName: string;
+  sqsUrl: string;
+};
 
 export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
   private chainId: string;
   private chainName: string;
   private logPrefix: string;
   private wallets: Wallet[];
-  // Add as necessary
   private indexer: BaseBlockchainIndexer;
+  private webHookWorker: WebhookWorker;
 
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);
 
     // Kinda part of the worker definition, the chainId is
-    console.log('SUBSTRATEW: workerDefinition ', workerDefinition);
-    console.log('SUBSTRATEW: parameters', workerDefinition.parameters);
     this.chainId = workerDefinition.parameters.chainId;
 
     this.chainName = SubstrateChain[this.chainId];
     this.logPrefix = `[SUBSTRATE | ${this.chainName}]`;
-    this.setIndexer();
+    this.setParachainParams();
   }
 
   public async runExecutor(_data?: any): Promise<any> {
@@ -103,31 +102,51 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         env.APP_ENV !== AppEnvironment.TEST &&
         env.APP_ENV !== AppEnvironment.LOCAL_DEV
       ) {
-        // Trigger webhook worker
-        await sendToWorkerQueue(
-          env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
-          WorkerName.TRANSACTION_WEBHOOKS,
-          [{}],
-          null,
-          null,
-        );
+        const webhooks = transactions.map((t) => {
+          return createSubstrateTxWebhookDto(t);
+        });
+
+        try {
+          await processWebhooks(
+            webhooks,
+            this.webHookWorker.workerName,
+            this.webHookWorker.sqsUrl,
+            this.context,
+            conn,
+          );
+        } catch (error) {
+          await this.writeEventLog(
+            {
+              logType: LogType.ERROR,
+              message: 'Error in TransactionWebhookWorker sending webhook',
+              service: ServiceName.BLOCKCHAIN,
+              data: { transactions },
+              err: error,
+            },
+            // TODO: made by tadej. is this a system error? probably.
+            LogOutput.SYS_ERROR,
+          );
+        }
       }
     }
   }
 
   // NOTE: Sets the Substrate Indexer
-  private setIndexer() {
-    switch (this.chainName) {
-      case SubstrateChainName.KILT:
-        this.indexer = new KiltBlockchainIndexer();
-        break;
-      case SubstrateChainName.CRUST:
-        this.indexer = new CrustBlockchainIndexer();
-        break;
-      default:
-        // TODO: Proper error handling
-        console.error('Invalid chain');
+  private setParachainParams() {
+    const config = SubstrateParachainConfig[this.chainName];
+
+    if (config === undefined) {
+      // I don't want to log anything here. This should NEVER happen
+      // Another reason is to be able to call this function
+      // from the constructor -- no async allowed.
+      throw Error('Invalid parachain!');
     }
+
+    this.indexer = config.indexer;
+    this.webHookWorker = {
+      workerName: config.workerName,
+      sqsUrl: config.sqsUrl,
+    };
   }
 
   private async fetchAllResolvedTransactions(
@@ -141,8 +160,6 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       fromBlock,
       toBlock,
     );
-
-    console.log('System transactions: ', transactions);
 
     const transactionsArray: Array<any> = Object.values(transactions);
     return transactionsArray.length > 0 ? transactionsArray.flat(Infinity) : [];
@@ -171,8 +188,6 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       .map((t: any): string => {
         return t.extrinsicHash;
       });
-
-    console.log('Failed transactions ', failedTransactions);
 
     // Update SUCCESSFUL transactions
     await this.updateTransactions(
