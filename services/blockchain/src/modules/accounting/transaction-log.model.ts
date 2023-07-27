@@ -406,25 +406,24 @@ export class TransactionLog extends AdvancedSQLModel {
     this.chainType = wallet.chainType;
     this.chain = wallet.chain;
     this.token = TxToken.KILT_TOKEN;
+    this.fee = data?.system?.fee?.toString() || data?.transfer?.fee?.toString();
 
     if (this.addressFrom === this.wallet) {
       this.direction = TxDirection.COST;
-      // TODO: determine action type!
+
       this.action =
         data?.transfer?.transactionType === KiltTransactionType.BALANCE_TRANSFER
           ? TxAction.WITHDRAWAL
           : TxAction.TRANSACTION;
-      // this.action = TxAction.TRANSACTION;
-      this.fee =
-        data?.system?.fee?.toString() || data?.transfer?.fee?.toString();
     } else if (this.addressTo === this.wallet) {
       this.direction = TxDirection.INCOME;
-      // TODO: determine action type!
+
       this.action =
         data?.transfer?.transactionType === KiltTransactionType.BALANCE_TRANSFER
           ? TxAction.DEPOSIT
           : TxAction.TRANSACTION;
-      // this.action = TxAction.DEPOSIT;
+      // income fee should not be logged (payed by other wallet)
+      this.fee = '0';
     } else {
       // throw new Error('Inconsistent transaction addresses!');
       // some Kilt events does not have both addresses.
