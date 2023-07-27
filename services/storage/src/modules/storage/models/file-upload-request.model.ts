@@ -1,5 +1,5 @@
 import {
-  AccessControlModel,
+  ProjectAccessModel,
   Context,
   FileUploadsQueryFilter,
   getQueryParams,
@@ -17,7 +17,7 @@ import { ServiceContext } from '@apillon/service-lib';
 import { StorageCodeException } from '../../../lib/exceptions';
 import { Bucket } from '../../bucket/models/bucket.model';
 
-export class FileUploadRequest extends AccessControlModel {
+export class FileUploadRequest extends ProjectAccessModel {
   public readonly tableName = DbTables.FILE_UPLOAD_REQUEST;
 
   public constructor(data: any, context: Context) {

@@ -1,5 +1,5 @@
 import {
-  AccessControlModel,
+  ProjectAccessModel,
   Context,
   env,
   getQueryParams,
@@ -17,7 +17,7 @@ import { ServiceContext } from '@apillon/service-lib';
 import { StorageCodeException } from '../../../lib/exceptions';
 import { Bucket } from '../../bucket/models/bucket.model';
 
-export class Ipns extends AccessControlModel {
+export class Ipns extends ProjectAccessModel {
   public readonly tableName = DbTables.IPNS;
 
   public constructor(data: any, context: Context) {

@@ -15,17 +15,13 @@ import {
   DefaultPermission,
   DefaultUserRole,
   DirectoryContentQueryFilter,
+  RoleGroup,
   ValidateFor,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../../context';
 import { ValidationGuard } from '../../../guards/validation.guard';
 import { DirectoryService } from './directory.service';
-import {
-  Ctx,
-  Permissions,
-  ProjectPermissions,
-  Validation,
-} from '@apillon/modules-lib';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { AuthGuard } from '../../../guards/auth.guard';
 
 @Controller('directories')
@@ -93,7 +89,7 @@ export class DirectoryController {
   }
 
   @Get('directory-content')
-  @ProjectPermissions()
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({
     dto: DirectoryContentQueryFilter,
     validateFor: ValidateFor.QUERY,

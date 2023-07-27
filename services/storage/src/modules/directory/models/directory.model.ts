@@ -1,7 +1,7 @@
 import { integerParser, stringParser, dateParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
-  AccessControlModel,
+  ProjectAccessModel,
   Context,
   DirectoryContentQueryFilter,
   env,
@@ -18,7 +18,7 @@ import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
 import { File } from '../../storage/models/file.model';
 
-export class Directory extends AccessControlModel {
+export class Directory extends ProjectAccessModel {
   public readonly tableName = DbTables.DIRECTORY;
 
   public constructor(data: any, context: Context) {
