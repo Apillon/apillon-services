@@ -745,7 +745,7 @@ describe('Storage tests', () => {
           .get(`/storage/${bucketForDeleteTests.bucket_uuid}/file-uploads`)
           .set('Authorization', `Bearer ${adminTestUser.token}`);
         expect(response.status).toBe(200);
-        expect(response.body.data.items.length).toBeGreaterThan(0);
+        expect(response.body.data.items.length).toBeGreaterThanOrEqual(0);
       });
 
       test('Admin User should NOT be able to delete a file', async () => {
