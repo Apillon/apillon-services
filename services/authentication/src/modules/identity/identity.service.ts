@@ -397,9 +397,6 @@ export class IdentityMicroservice {
       });
     }
 
-    identity.state = IdentityState.REVOKED;
-    await identity.update();
-
     return { success: true };
   }
 }
