@@ -22,46 +22,23 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     account: string,
     fromBlock: number,
     toBlock: number,
-    // TODO: Filter by state as well
-    // state?: string,
   ) {
-    const balanceAndSystems = await this.getAccountBalanceTransfers(
-      account,
-      fromBlock,
-      toBlock,
+    const data: any = await this.graphQlClient.request(
+      gql`
+        ${KiltGQLQueries.ACCOUNT_ALL_TRANSACTIONS_QUERY}
+      `,
+      {
+        account,
+        fromBlock,
+        toBlock,
+      },
     );
+
     return {
-      balanceTransfers: balanceAndSystems.transfers,
-      systems: balanceAndSystems.systems,
-      withdrawals: await this.getAccountWithdrawals(
-        account,
-        fromBlock,
-        toBlock,
-      ),
-      deposits: await this.getAccountDeposits(account, fromBlock, toBlock),
-      balanceReserve: await this.getAccountReserved(
-        account,
-        fromBlock,
-        toBlock,
-      ),
-      didCreate: await this.getAccountDidCreate(account, fromBlock, toBlock),
-      didDelete: await this.getAccountDidDelete(account, fromBlock, toBlock),
-      didUpdate: await this.getAccountDidUpdate(account, fromBlock, toBlock),
-      attestCreate: await this.getAccountAttestCreate(
-        account,
-        fromBlock,
-        toBlock,
-      ),
-      attestRemove: await this.getAccountAttestRemove(
-        account,
-        fromBlock,
-        toBlock,
-      ),
-      attestRevoke: await this.getAccountAttestRevoke(
-        account,
-        fromBlock,
-        toBlock,
-      ),
+      transfers: data.transfers,
+      dids: data.dids,
+      attestations: data.attestations,
+      systems: data.systems,
     };
   }
 
@@ -84,15 +61,34 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     return data.systems;
   }
 
+  public async getSystemEventsWithLimit(
+    account: string,
+    fromBlock: number,
+    limit: number,
+  ): Promise<SystemEvent[]> {
+    const data: any = await this.graphQlClient.request(
+      gql`
+        ${KiltGQLQueries.ACCOUNT_SYSTEM_EVENTS_WITH_LIMIT_QUERY}
+      `,
+      {
+        account,
+        fromBlock,
+        limit,
+      },
+    );
+
+    return data.systems;
+  }
+
   /* These indicate a balance transfer from one account -> another */
   public async getAccountBalanceTransfers(
     account: string,
     fromBlock: number,
     toBlock: number,
-  ): Promise<{ transfers: TransferTransaction[]; systems: SystemEvent[] }> {
+  ): Promise<TransferTransaction[]> {
     const data: any = await this.graphQlClient.request(
       gql`
-        ${KiltGQLQueries.ACCOUNT_TRANSFERS_AND_SYSTEMS_BY_TYPE_QUERY}
+        ${KiltGQLQueries.ACCOUNT_TRANSFERS_BY_TYPE_QUERY}
       `,
       {
         account,
@@ -102,7 +98,25 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
       },
     );
 
-    return data;
+    return data.transfers;
+  }
+
+  /* These indicate a balance transfer from one account -> another */
+  public async getAccountBalanceTransfersForTxs(
+    account: string,
+    hashes: string[],
+  ): Promise<TransferTransaction[]> {
+    const data: any = await this.graphQlClient.request(
+      gql`
+        ${KiltGQLQueries.ACCOUNT_TRANSFERS_BY_TX_HASHES_QUERY}
+      `,
+      {
+        account,
+        hashes,
+      },
+    );
+
+    return data.transfers;
   }
 
   /* TODO: What is the difference between withdrawal and transfer FROM OUR_ACC -> X  ??? */
