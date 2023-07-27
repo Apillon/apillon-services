@@ -1,5 +1,7 @@
 import { MySql } from './database/mysql';
 import { v4 as uuid } from 'uuid';
+import { CodeException } from './exceptions/exceptions';
+import { ValidatorErrorCode } from '../config/types';
 
 export class Context {
   public mysql: MySql;

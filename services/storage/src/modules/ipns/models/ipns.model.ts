@@ -91,7 +91,7 @@ export class Ipns extends ProjectAccessModel {
         code: StorageErrorCode.IPNS_NAME_NOT_PRESENT,
       },
     ],
-    fakeValue: 'My fake IPNS',
+    fakeValue: `My fake IPNS ${Math.floor(Math.random() * 1_000_000)}`,
   })
   public name: string;
 
@@ -166,7 +166,7 @@ export class Ipns extends ProjectAccessModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
       WHERE project_uuid = @project_uuid and name = @name AND status <> ${SqlModelStatus.DELETED};
       `,

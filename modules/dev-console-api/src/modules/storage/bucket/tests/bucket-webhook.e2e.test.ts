@@ -70,7 +70,7 @@ describe('Storage bucket tests', () => {
       expect(response.body.data.url).toBeTruthy();
     });
 
-    test('User should recieve unprocessable entity error if CREATE webhooh request is missing required data', async () => {
+    test('User should recieve unprocessable entity error if CREATE webhook request is missing required data', async () => {
       const response = await request(stage.http)
         .post(`/buckets/${testBucket2.id}/webhook`)
         .send({})
@@ -147,6 +147,8 @@ describe('Storage bucket tests', () => {
 
   describe('Bucket webhook access tests', () => {
     let testUser3;
+    let adminTestUser: TestUser;
+
     beforeAll(async () => {
       //Insert new user with access to testProject as PROJECT_USER - can view, cannot modify
       testUser3 = await createTestUser(
@@ -155,6 +157,11 @@ describe('Storage bucket tests', () => {
         DefaultUserRole.PROJECT_USER,
         SqlModelStatus.ACTIVE,
         testProject.project_uuid,
+      );
+      adminTestUser = await createTestUser(
+        stage.devConsoleContext,
+        stage.amsContext,
+        DefaultUserRole.ADMIN,
       );
     });
 
@@ -167,13 +174,35 @@ describe('Storage bucket tests', () => {
       expect(response.body.data.url).toBeTruthy();
     });
 
-    test('User should not be able to update ANOTHER USER bucket webhook', async () => {
+    test('User should NOT be able to update ANOTHER USER bucket webhook', async () => {
       const response = await request(stage.http)
         .patch(`/buckets/${testBucket.id}/webhook/${testWebhook.id}`)
         .send({
           url: 'https://eob0hpm13hsj7sk.m.pipedream.net',
         })
         .set('Authorization', `Bearer ${testUser2.token}`);
+      expect(response.status).toBe(403);
+    });
+
+    test('Admin User should be able to get bucket webhook', async () => {
+      const response = await request(stage.http)
+        .get(`/buckets/${testBucket.id}/webhook`)
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.id).toBeTruthy();
+      expect(response.body.data.url).toBeTruthy();
+    });
+
+    test('Admin User should NOT be able to create bucket webhook', async () => {
+      const response = await request(stage.http)
+        .post(`/buckets/${testBucket2.id}/webhook`)
+        .send({
+          url: 'https://eob0hpm13hsj7sk.m.pipedream.net',
+          authMethod: 'bearerToken',
+          param1:
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX3V1aWQiOiIwMGYxNDdkZC1iNTAyLTQwZDQtYWJlYi1jNGVkNzNjN2I3ODMiLCJpYXQiOjE2NzAxNzQ3MDQsImV4cCI6MTY3MDI2MTEwNCwic3ViIjoiVVNFUl9BVVRIRU5USUNBVElPTiJ9.nZo3dD9YY_bjxyxmL0TBlQi5ckjXjU5m-9bf0ZCDvtY',
+        })
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(403);
     });
   });
