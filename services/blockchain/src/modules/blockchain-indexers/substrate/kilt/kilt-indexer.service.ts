@@ -205,7 +205,27 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
         account,
         fromBlock,
         toBlock,
-        transactionType: KiltTransactionType.BALANCE_RESERVE,
+        transactionType: KiltTransactionType.BALANCE_RESERVED,
+      },
+    );
+
+    return data.transfers;
+  }
+
+  public async getAccountUnreserved(
+    account: string,
+    fromBlock: number,
+    toBlock: number,
+  ): Promise<TransferTransaction[]> {
+    const data: any = await this.graphQlClient.request(
+      gql`
+        ${KiltGQLQueries.ACCOUNT_TRANSFERS_BY_TYPE_QUERY}
+      `,
+      {
+        account,
+        fromBlock,
+        toBlock,
+        transactionType: KiltTransactionType.BALANCE_UNRESERVED,
       },
     );
 
