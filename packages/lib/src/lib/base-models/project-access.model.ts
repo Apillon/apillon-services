@@ -2,7 +2,6 @@ import { DefaultUserRole, ForbiddenErrorCodes } from '../../config/types';
 import { Context } from '../context';
 import { CodeException } from '../exceptions/exceptions';
 import { AdvancedSQLModel } from './advanced-sql.model';
-import { HttpStatus } from '@nestjs/common';
 
 /**
  * Class which contains access control methods for a project.
@@ -46,7 +45,7 @@ export abstract class ProjectAccessModel extends AdvancedSQLModel {
     ) {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
-        status: HttpStatus.FORBIDDEN,
+        status: 403,
         errorMessage: 'Insufficient permissions to access this record',
       });
     }
@@ -78,7 +77,7 @@ export abstract class ProjectAccessModel extends AdvancedSQLModel {
     ) {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
-        status: HttpStatus.FORBIDDEN,
+        status: 403,
         errorMessage: 'Insufficient permissions to modify this record',
       });
     }
