@@ -38,6 +38,7 @@ export class NftTransaction {
       nftContractBytecode,
     );
 
+    const royaltiesFees = Math.round(params.royaltiesFees * 100);
     let txData;
     switch (params.collectionType) {
       case NFTCollectionType.GENERIC:
@@ -52,7 +53,7 @@ export class NftTransaction {
           params.maxSupply,
           params.dropReserve,
           params.royaltiesAddress,
-          params.royaltiesFees,
+          royaltiesFees,
         );
         break;
       case NFTCollectionType.NESTABLE:
@@ -68,7 +69,7 @@ export class NftTransaction {
             erc20TokenAddress: constants.AddressZero,
             tokenUriIsEnumerable: true,
             royaltyRecipient: params.royaltiesAddress,
-            royaltyPercentageBps: params.royaltiesFees,
+            royaltyPercentageBps: royaltiesFees,
             maxSupply: params.maxSupply,
             pricePerMint: TransactionUtils.convertBaseToGwei(params.dropPrice),
           },

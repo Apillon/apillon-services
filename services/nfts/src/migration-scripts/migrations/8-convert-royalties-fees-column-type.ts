@@ -4,8 +4,8 @@ export async function upgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    UPDATE \`${DbTables.COLLECTION}\`
-    SET royaltiesFees = royaltiesFees * 100;
+    ALTER TABLE \`${DbTables.COLLECTION}\`
+      MODIFY COLUMN royaltiesFees DECIMAL (5,2);
   `);
 }
 
@@ -13,7 +13,7 @@ export async function downgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    UPDATE \`${DbTables.COLLECTION}\`
-    SET royaltiesFees = royaltiesFees / 100;
+    ALTER TABLE \`${DbTables.COLLECTION}\`
+      MODIFY COLUMN royaltiesFees INT;
   `);
 }
