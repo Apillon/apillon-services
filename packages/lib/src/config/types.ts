@@ -554,10 +554,26 @@ export enum ForbiddenErrorCodes {
 
 //#endregion
 
+//#region Roles
+
 export enum RoleType {
   USER_ROLE = 1,
   API_KEY_ROLE = 2,
 }
+
+/**
+ * Groups of roles used for Permissions decorators in controllers
+ */
+export class RoleGroup {
+  static ProjectAccess = [
+    DefaultUserRole.PROJECT_OWNER,
+    DefaultUserRole.PROJECT_ADMIN,
+    DefaultUserRole.PROJECT_USER,
+    DefaultUserRole.ADMIN,
+  ];
+}
+
+//#endregion
 
 /**
  * JWT Token signing types.

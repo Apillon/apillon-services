@@ -4,6 +4,7 @@ import {
   DefaultUserRole,
   IpnsQueryFilter,
   PublishIpnsDto,
+  RoleGroup,
   ValidateFor,
 } from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
@@ -31,11 +32,7 @@ export class IpnsController {
   constructor(private ipnsService: IpnsService) {}
 
   @Get()
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: IpnsQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
   async getIpnsList(
@@ -47,11 +44,7 @@ export class IpnsController {
   }
 
   @Get(':id')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async getIpns(
     @Ctx() context: DevConsoleApiContext,

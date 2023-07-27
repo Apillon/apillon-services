@@ -1,11 +1,8 @@
 import {
-  AdvancedSQLModel,
-  CodeException,
+  ProjectAccessModel,
   Context,
-  DefaultUserRole,
   enumInclusionValidator,
   EvmChain,
-  ForbiddenErrorCodes,
   getQueryParams,
   NFTCollectionQueryFilter,
   NFTCollectionType,
@@ -25,7 +22,7 @@ import {
 } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 
-export class Collection extends AdvancedSQLModel {
+export class Collection extends ProjectAccessModel {
   public readonly tableName = DbTables.COLLECTION;
 
   public constructor(data: any, context: Context) {
@@ -576,45 +573,6 @@ export class Collection extends AdvancedSQLModel {
   /***************************************************
    * Info properties
    *****************************************************/
-
-  public canAccess(context: ServiceContext) {
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_USER,
-          DefaultUserRole.ADMIN,
-        ],
-        this.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to access this record',
-      });
-    }
-  }
-
-  public canModify(context: ServiceContext) {
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.ADMIN,
-        ],
-        this.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to modify this record',
-      });
-    }
-  }
 
   public async getList(
     context: ServiceContext,

@@ -201,6 +201,7 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
     ],
+    setter: (v) => (v?.toLowerCase() == 'null' ? null : v),
   })
   public addressFrom: string;
 
@@ -215,6 +216,7 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
     ],
+    setter: (v) => (v?.toLowerCase() == 'null' ? null : v),
   })
   public addressTo: string;
 
@@ -394,7 +396,7 @@ export class TransactionLog extends AdvancedSQLModel {
     this.blockId = data?.system?.blockNumber;
     this.addressFrom = data?.transfer?.from;
     this.addressTo = data?.transfer?.to;
-    this.amount = data?.transfer?.amount?.toString();
+    this.amount = data?.transfer?.amount?.toString() || '0';
 
     this.hash = data?.system?.extrinsicHash;
     this.wallet = wallet.address;
@@ -404,28 +406,29 @@ export class TransactionLog extends AdvancedSQLModel {
     this.chainType = wallet.chainType;
     this.chain = wallet.chain;
     this.token = TxToken.KILT_TOKEN;
+    this.fee = data?.system?.fee?.toString() || data?.transfer?.fee?.toString();
 
     if (this.addressFrom === this.wallet) {
       this.direction = TxDirection.COST;
-      // TODO: determine action type!
+
       this.action =
         data?.transfer?.transactionType === KiltTransactionType.BALANCE_TRANSFER
           ? TxAction.WITHDRAWAL
           : TxAction.TRANSACTION;
-      // this.action = TxAction.TRANSACTION;
-      this.fee =
-        data?.system?.fee?.toString() || data?.transfer?.fee?.toString();
     } else if (this.addressTo === this.wallet) {
       this.direction = TxDirection.INCOME;
-      // TODO: determine action type!
+
       this.action =
         data?.transfer?.transactionType === KiltTransactionType.BALANCE_TRANSFER
           ? TxAction.DEPOSIT
           : TxAction.TRANSACTION;
-      // this.action = TxAction.DEPOSIT;
+      // income fee should not be logged (payed by other wallet)
+      this.fee = '0';
     } else {
       // throw new Error('Inconsistent transaction addresses!');
+      // some Kilt events does not have both addresses.
       this.action = TxAction.UNKNOWN;
+      this.direction = TxDirection.UNKNOWN;
     }
 
     this.calculateTotalPrice();

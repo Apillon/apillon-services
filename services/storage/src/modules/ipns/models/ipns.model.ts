@@ -1,10 +1,7 @@
 import {
-  AdvancedSQLModel,
-  CodeException,
+  ProjectAccessModel,
   Context,
-  DefaultUserRole,
   env,
-  ForbiddenErrorCodes,
   getQueryParams,
   IpnsQueryFilter,
   PopulateFrom,
@@ -20,7 +17,7 @@ import { ServiceContext } from '@apillon/service-lib';
 import { StorageCodeException } from '../../../lib/exceptions';
 import { Bucket } from '../../bucket/models/bucket.model';
 
-export class Ipns extends AdvancedSQLModel {
+export class Ipns extends ProjectAccessModel {
   public readonly tableName = DbTables.IPNS;
 
   public constructor(data: any, context: Context) {
@@ -94,7 +91,7 @@ export class Ipns extends AdvancedSQLModel {
         code: StorageErrorCode.IPNS_NAME_NOT_PRESENT,
       },
     ],
-    fakeValue: 'My fake IPNS',
+    fakeValue: `My fake IPNS ${Math.floor(Math.random() * 1_000_000)}`,
   })
   public name: string;
 
@@ -159,45 +156,6 @@ export class Ipns extends AdvancedSQLModel {
   })
   public ipnsValue: string;
 
-  public canAccess(context: ServiceContext) {
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_USER,
-          DefaultUserRole.ADMIN,
-        ],
-        this.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to access this record',
-      });
-    }
-  }
-
-  public canModify(context: ServiceContext) {
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.ADMIN,
-        ],
-        this.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to modify this record',
-      });
-    }
-  }
-
   public async populateByProjectAndName(
     project_uuid: string,
     name: string,
@@ -208,7 +166,7 @@ export class Ipns extends AdvancedSQLModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
       WHERE project_uuid = @project_uuid and name = @name AND status <> ${SqlModelStatus.DELETED};
       `,

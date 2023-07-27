@@ -1,9 +1,6 @@
 import {
-  AdvancedSQLModel,
-  CodeException,
+  ProjectAccessModel,
   Context,
-  DefaultUserRole,
-  ForbiddenErrorCodes,
   PopulateFrom,
   presenceValidator,
   prop,
@@ -15,7 +12,7 @@ import { DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { Bucket } from './bucket.model';
 
-export class BucketWebhook extends AdvancedSQLModel {
+export class BucketWebhook extends ProjectAccessModel {
   public readonly tableName = DbTables.BUCKET_WEBHOOK;
 
   public constructor(data: any, context: Context) {
@@ -126,49 +123,18 @@ export class BucketWebhook extends AdvancedSQLModel {
   })
   public param2: string;
 
-  public async canAccess(context: ServiceContext) {
+  public override async canAccess(context: ServiceContext) {
     const b: Bucket = await new Bucket({}, context).populateById(
       this.bucket_id,
     );
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_USER,
-          DefaultUserRole.ADMIN,
-        ],
-        b.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to access this record',
-      });
-    }
+    return super.canAccess(context, b.project_uuid);
   }
 
-  public async canModify(context: ServiceContext) {
+  public override async canModify(context: ServiceContext) {
     const b: Bucket = await new Bucket({}, context).populateById(
       this.bucket_id,
     );
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.ADMIN,
-        ],
-        b.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to modify this record',
-      });
-    }
+    return super.canModify(context, b.project_uuid);
   }
 
   public async populateByBucketId(bucket_id: number): Promise<this> {

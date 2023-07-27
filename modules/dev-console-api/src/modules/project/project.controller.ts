@@ -10,7 +10,12 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { DefaultUserRole, SerializeFor, ValidateFor } from '@apillon/lib';
+import {
+  DefaultUserRole,
+  RoleGroup,
+  SerializeFor,
+  ValidateFor,
+} from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { ValidationGuard } from '../../guards/validation.guard';
@@ -57,11 +62,7 @@ export class ProjectController {
   }
 
   @Get(':uuid/users')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: ProjectUserFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(AuthGuard, ValidationGuard)
   async getProjectUsers(
@@ -139,12 +140,7 @@ export class ProjectController {
   }
 
   @Get(':uuid')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-    { role: DefaultUserRole.ADMIN },
-  )
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async getProject(
     @Ctx() context: DevConsoleApiContext,
@@ -156,7 +152,7 @@ export class ProjectController {
   }
 
   @Post()
-  @Permissions({ role: DefaultUserRole.USER }, { role: DefaultUserRole.ADMIN })
+  @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard)
   @Validation({ dto: Project })
   @UseGuards(ValidationGuard)

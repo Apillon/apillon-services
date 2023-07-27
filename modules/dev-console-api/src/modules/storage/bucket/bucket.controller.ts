@@ -21,6 +21,7 @@ import {
   ValidateFor,
   CacheKeyPrefix,
   CacheKeyTTL,
+  RoleGroup,
 } from '@apillon/lib';
 import { CacheByProject } from '@apillon/modules-lib';
 import { DevConsoleApiContext } from '../../../context';
@@ -41,11 +42,7 @@ export class BucketController {
   constructor(private bucketService: BucketService) {}
 
   @Get(':bucket_id/webhook')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async getBucketWebhook(
     @Ctx() context: DevConsoleApiContext,
@@ -126,11 +123,7 @@ export class BucketController {
   }
 
   @Get()
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: BucketQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
   @CacheByProject({
@@ -145,11 +138,7 @@ export class BucketController {
   }
 
   @Get(':id')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async getBucket(
     @Ctx() context: DevConsoleApiContext,
