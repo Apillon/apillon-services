@@ -3,6 +3,7 @@ import {
   ApiKeyRoleBaseDto,
   CreateApiKeyDto,
   DefaultUserRole,
+  RoleGroup,
   ValidateFor,
 } from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
@@ -59,12 +60,7 @@ export class ApiKeyController {
   }
 
   @Get(':id/roles')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-    { role: DefaultUserRole.ADMIN },
-  )
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async getApiKeyRoles(
     @Ctx() context: DevConsoleApiContext,

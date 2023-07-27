@@ -1,10 +1,7 @@
 import {
-  AdvancedSQLModel,
-  CodeException,
+  ProjectAccessModel,
   Context,
-  DefaultUserRole,
   FileUploadsQueryFilter,
-  ForbiddenErrorCodes,
   getQueryParams,
   PopulateFrom,
   presenceValidator,
@@ -20,7 +17,7 @@ import { ServiceContext } from '@apillon/service-lib';
 import { StorageCodeException } from '../../../lib/exceptions';
 import { Bucket } from '../../bucket/models/bucket.model';
 
-export class FileUploadRequest extends AdvancedSQLModel {
+export class FileUploadRequest extends ProjectAccessModel {
   public readonly tableName = DbTables.FILE_UPLOAD_REQUEST;
 
   public constructor(data: any, context: Context) {
@@ -251,53 +248,22 @@ export class FileUploadRequest extends AdvancedSQLModel {
    * ASYNC canAccess function
    * @param context
    */
-  public async canAccess(context: ServiceContext) {
+  public override async canAccess(context: ServiceContext) {
     const bucket: Bucket = await new Bucket({}, context).populateById(
       this.bucket_id,
     );
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_USER,
-          DefaultUserRole.ADMIN,
-        ],
-        bucket.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to access this record',
-      });
-    }
+    return super.canAccess(context, bucket.project_uuid);
   }
 
   /**
    * ASYNC canModify function
    * @param context
    */
-  public async canModify(context: ServiceContext) {
+  public override async canModify(context: ServiceContext) {
     const bucket: Bucket = await new Bucket({}, context).populateById(
       this.bucket_id,
     );
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.ADMIN,
-        ],
-        bucket.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to modify this record',
-      });
-    }
+    return super.canModify(context, bucket.project_uuid);
   }
 
   public async populateFileUploadRequestsInSession(

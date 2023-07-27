@@ -2,6 +2,7 @@ import {
   CreateS3UrlsForUploadDto,
   DefaultPermission,
   FileUploadsQueryFilter,
+  RoleGroup,
   TrashedFilesQueryFilter,
 } from '@apillon/lib';
 import { ValidateFor } from '@apillon/lib';
@@ -30,11 +31,7 @@ export class StorageController {
   constructor(private storageService: StorageService) {}
 
   @Get(':bucket_uuid/file-uploads')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   @Validation({ dto: FileUploadsQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
@@ -112,11 +109,7 @@ export class StorageController {
   }
 
   @Get(':bucket_uuid/file/:id/detail')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async getFileDetailsByCID(
     @Ctx() context: DevConsoleApiContext,
@@ -127,11 +120,7 @@ export class StorageController {
   }
 
   @Get(':bucket_uuid/trashed-files')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: TrashedFilesQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
   async listFilesMarkedForDeletion(

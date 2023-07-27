@@ -4,11 +4,9 @@ import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 
 import {
-  AdvancedSQLModel,
+  ProjectAccessModel,
   BaseQueryFilter,
-  CodeException,
   DefaultUserRole,
-  ForbiddenErrorCodes,
   getQueryParams,
   PopulateFrom,
   selectAndCountQuery,
@@ -17,14 +15,13 @@ import {
 } from '@apillon/lib';
 
 import { faker } from '@faker-js/faker';
-import { HttpStatus } from '@nestjs/common';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
 
 /**
  * Project model.
  */
-export class Project extends AdvancedSQLModel {
+export class Project extends ProjectAccessModel {
   tableName = DbTables.PROJECT;
 
   @prop({
@@ -136,45 +133,6 @@ export class Project extends AdvancedSQLModel {
   /*******************************************
    * Methods
    ********************************************/
-
-  public canAccess(context: DevConsoleApiContext) {
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_USER,
-          DefaultUserRole.ADMIN,
-        ],
-        this.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: HttpStatus.FORBIDDEN,
-        errorMessage: 'Insufficient permissions to access this record',
-      });
-    }
-  }
-
-  public canModify(context: DevConsoleApiContext) {
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.ADMIN,
-        ],
-        this.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: HttpStatus.FORBIDDEN,
-        errorMessage: 'Insufficient permissions to modify this record',
-      });
-    }
-  }
 
   public async populateByUUID(uuid: string): Promise<this> {
     if (!uuid) {
