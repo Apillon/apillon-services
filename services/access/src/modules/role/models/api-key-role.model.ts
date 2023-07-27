@@ -4,13 +4,13 @@ import {
   prop,
   SerializeFor,
   SqlModelStatus,
-  AccessControlModel,
+  ProjectAccessModel,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { AmsErrorCode, DbTables } from '../../../config/types';
 
-export class ApiKeyRole extends AccessControlModel {
+export class ApiKeyRole extends ProjectAccessModel {
   public readonly tableName = DbTables.API_KEY_ROLE;
 
   public constructor(data: any, context: Context) {

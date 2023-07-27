@@ -4,7 +4,7 @@ import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 
 import {
-  AccessControlModel,
+  ProjectAccessModel,
   BaseQueryFilter,
   DefaultUserRole,
   getQueryParams,
@@ -21,7 +21,7 @@ import { DevConsoleApiContext } from '../../../context';
 /**
  * Project model.
  */
-export class Project extends AccessControlModel {
+export class Project extends ProjectAccessModel {
   tableName = DbTables.PROJECT;
 
   @prop({

@@ -1,5 +1,5 @@
 import {
-  AccessControlModel,
+  ProjectAccessModel,
   Context,
   DeploymentQueryFilter,
   getQueryParams,
@@ -20,7 +20,7 @@ import {
 import { ServiceContext } from '@apillon/service-lib';
 import { Website } from './website.model';
 
-export class Deployment extends AccessControlModel {
+export class Deployment extends ProjectAccessModel {
   public readonly tableName = DbTables.DEPLOYMENT;
 
   public constructor(data: any, context: Context) {

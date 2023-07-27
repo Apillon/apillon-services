@@ -4,7 +4,7 @@ import { stringParser, integerParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 
 import {
-  AccessControlModel,
+  ProjectAccessModel,
   CodeException,
   getQueryParams,
   PopulateFrom,
@@ -27,7 +27,7 @@ import { HttpStatus } from '@nestjs/common';
 /**
  * Service model.
  */
-export class Service extends AccessControlModel {
+export class Service extends ProjectAccessModel {
   tableName = DbTables.SERVICE;
 
   @prop({
@@ -161,7 +161,7 @@ export class Service extends AccessControlModel {
    * ASYNCHROUNUOS method, to check roles for modifying this record
    * @param context
    */
-  public async canModify(context: DevConsoleApiContext) {
+  public override async canModify(context: DevConsoleApiContext) {
     const project = await new Project({}, context).populateById(
       this.project_id,
     );
