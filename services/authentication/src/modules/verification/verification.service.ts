@@ -40,9 +40,6 @@ export class VerificationMicroservice {
       };
     }
     const whitelist = env.KILT_ATTESTERS_WHITELIST.split(';');
-    writeLog(LogType.INFO, `${attestation.owner}`);
-    writeLog(LogType.INFO, `${env.KILT_ATTESTERS_WHITELIST}`);
-    writeLog(LogType.INFO, `${whitelist}`);
     if (!whitelist.includes(attestation.owner.split('did:kilt:')[1])) {
       await new Lmas().writeLog({
         context: context,
