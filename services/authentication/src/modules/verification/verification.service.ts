@@ -5,6 +5,7 @@ import {
   Lmas,
   LogType,
   ServiceName,
+  writeLog,
 } from '@apillon/lib';
 import {
   Attestation,
@@ -32,14 +33,6 @@ export class VerificationMicroservice {
         await api.query.attestation.attestations(presentation.rootHash),
         presentation.rootHash,
       );
-
-      await new Lmas().writeLog({
-        context: context,
-        logType: LogType.INFO,
-        message: 'VERIFICATION SUCCESSFUL',
-        location: 'AUTHENTICATION-API/verification/verifyIdentity',
-        service: ServiceName.AUTHENTICATION_API,
-      });
     } catch (error) {
       return {
         verified: false,
@@ -47,6 +40,9 @@ export class VerificationMicroservice {
       };
     }
     const whitelist = env.KILT_ATTESTERS_WHITELIST.split(';');
+    writeLog(LogType.INFO, `${attestation.owner}`);
+    writeLog(LogType.INFO, `${env.KILT_ATTESTERS_WHITELIST}`);
+    writeLog(LogType.INFO, `${whitelist}`);
     if (!whitelist.includes(attestation.owner.split('did:kilt:')[1])) {
       await new Lmas().writeLog({
         context: context,
