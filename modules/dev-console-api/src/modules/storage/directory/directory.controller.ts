@@ -15,6 +15,7 @@ import {
   DefaultPermission,
   DefaultUserRole,
   DirectoryContentQueryFilter,
+  RoleGroup,
   ValidateFor,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../../context';
@@ -88,11 +89,7 @@ export class DirectoryController {
   }
 
   @Get('directory-content')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({
     dto: DirectoryContentQueryFilter,
     validateFor: ValidateFor.QUERY,

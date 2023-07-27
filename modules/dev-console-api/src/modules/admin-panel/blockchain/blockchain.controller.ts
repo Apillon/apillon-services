@@ -70,6 +70,7 @@ export class BlockchainController {
   @Validation({
     dto: WalletTransactionsQueryFilter,
     validateFor: ValidateFor.QUERY,
+    populateFrom: PopulateFrom.ADMIN,
   })
   @UseGuards(ValidationGuard)
   async getWalletTransactions(

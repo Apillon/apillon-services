@@ -26,6 +26,7 @@ describe('Storage bucket tests', () => {
   let testUser: TestUser;
   let testUser2: TestUser;
   let testUser3: TestUser;
+  let adminTestUser: TestUser;
 
   let testProject: Project;
   let testProject2: Project;
@@ -194,6 +195,11 @@ describe('Storage bucket tests', () => {
         SqlModelStatus.ACTIVE,
         testProject.project_uuid,
       );
+      adminTestUser = await createTestUser(
+        stage.devConsoleContext,
+        stage.amsContext,
+        DefaultUserRole.ADMIN,
+      );
     });
 
     test('User with role "ProjectUser" should be able to get bucket list', async () => {
@@ -240,6 +246,59 @@ describe('Storage bucket tests', () => {
       const response = await request(stage.http)
         .delete(`/buckets/${tmpBucket.id}`)
         .set('Authorization', `Bearer ${testUser3.token}`);
+      expect(response.status).toBe(403);
+
+      const b: Bucket = await new Bucket(
+        {},
+        stage.storageContext,
+      ).populateByUUID(tmpBucket.bucket_uuid);
+      expect(b.exists()).toBe(true);
+    });
+
+    test('Admin User should be able to get bucket list', async () => {
+      const response = await request(stage.http)
+        .get(`/buckets?project_uuid=${testProject.project_uuid}`)
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.items.length).toBeGreaterThan(0);
+      expect(response.body.data.items[0]?.id).toBeTruthy();
+      expect(response.body.data.items[0]?.bucket_uuid).toBeTruthy();
+      expect(response.body.data.items[0]?.bucketType).toBeTruthy();
+    });
+
+    test('Admin User should NOT be able to create new bucket', async () => {
+      const response = await request(stage.http)
+        .post(`/buckets`)
+        .send({
+          project_uuid: testProject.project_uuid,
+          name: 'My test bucket 3',
+          bucketType: 1,
+        })
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
+      expect(response.status).toBe(403);
+    });
+
+    test('Admin User should NOT be able to update bucket', async () => {
+      const response = await request(stage.http)
+        .patch(`/buckets/${testBucket.id}`)
+        .send({
+          name: 'Bucket changed name',
+          bucketType: BucketType.HOSTING,
+        })
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
+      expect(response.status).toBe(403);
+    });
+
+    test('Admin User should NOT be able to delete bucket', async () => {
+      const tmpBucket = await createTestBucket(
+        testUser,
+        stage.storageContext,
+        testProject,
+      );
+
+      const response = await request(stage.http)
+        .delete(`/buckets/${tmpBucket.id}`)
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(403);
 
       const b: Bucket = await new Bucket(

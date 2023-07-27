@@ -1,4 +1,4 @@
-import { QuotaCode, SqlModelStatus } from '@apillon/lib';
+import { DefaultUserRole, QuotaCode, SqlModelStatus } from '@apillon/lib';
 import {
   CollectionStatus,
   TransactionType,
@@ -27,6 +27,7 @@ describe('Storage bucket tests', () => {
 
   let testUser: TestUser;
   let testUser2: TestUser;
+  let adminTestUser: TestUser;
 
   let testProject: Project;
 
@@ -38,6 +39,11 @@ describe('Storage bucket tests', () => {
     await startGanacheRPCServer(stage);
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    adminTestUser = await createTestUser(
+      stage.devConsoleContext,
+      stage.amsContext,
+      DefaultUserRole.ADMIN,
+    );
 
     testProject = await createTestProject(testUser, stage.devConsoleContext);
     await createTestProject(testUser2, stage.devConsoleContext);
@@ -240,6 +246,37 @@ describe('Storage bucket tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(500);
       expect(response.body.code).toBe(50012002);
+    });
+
+    test('Admin User should be able to get collection list', async () => {
+      const response = await request(stage.http)
+        .get(`/nfts/collections?project_uuid=${testProject.project_uuid}`)
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.items.length).toBeGreaterThan(0);
+    });
+
+    test('Admin User should NOT be able to create new collection', async () => {
+      const response = await request(stage.http)
+        .post(`/nfts/collections?project_uuid=${testProject.project_uuid}`)
+        .send({
+          symbol: 'TNFT2',
+          name: 'Test NFT Collection 2',
+          maxSupply: 2,
+          dropPrice: 0,
+          project_uuid: testProject.project_uuid,
+          baseExtension: 'json',
+          drop: false,
+          dropStart: 0,
+          dropReserve: 2,
+          chain: 1287,
+          isRevokable: true,
+          isSoulbound: false,
+          royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
+          royaltiesFees: 0,
+        })
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
+      expect(response.status).toBe(403);
     });
   });
 

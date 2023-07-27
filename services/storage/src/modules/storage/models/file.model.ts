@@ -3,11 +3,8 @@ import { prop } from '@rawmodel/core';
 import { stringParser, integerParser, dateParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
-  AdvancedSQLModel,
-  CodeException,
-  DefaultUserRole,
+  ProjectAccessModel,
   env,
-  ForbiddenErrorCodes,
   getQueryParams,
   PoolConnection,
   PopulateFrom,
@@ -28,7 +25,7 @@ import { Bucket } from '../../bucket/models/bucket.model';
 import { StorageCodeException } from '../../../lib/exceptions';
 import { Directory } from '../../directory/models/directory.model';
 
-export class File extends AdvancedSQLModel {
+export class File extends ProjectAccessModel {
   tableName = DbTables.FILE;
 
   @prop({
@@ -277,45 +274,6 @@ export class File extends AdvancedSQLModel {
     validators: [],
   })
   public path: string;
-
-  public canAccess(context: ServiceContext) {
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_USER,
-          DefaultUserRole.ADMIN,
-        ],
-        this.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to access this record',
-      });
-    }
-  }
-
-  public canModify(context: ServiceContext) {
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.ADMIN,
-        ],
-        this.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to modify this record',
-      });
-    }
-  }
 
   /**
    * Marks record in the database for deletion.

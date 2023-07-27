@@ -1,4 +1,9 @@
-import { env, SqlModelStatus, ValidatorErrorCode } from '@apillon/lib';
+import {
+  DefaultUserRole,
+  env,
+  SqlModelStatus,
+  ValidatorErrorCode,
+} from '@apillon/lib';
 import {
   FileStatus,
   FileUploadRequestFileStatus,
@@ -28,6 +33,7 @@ describe('Storage tests', () => {
 
   let testUser: TestUser;
   let testUser2: TestUser;
+  let adminTestUser: TestUser;
 
   let testProject: Project;
 
@@ -42,6 +48,11 @@ describe('Storage tests', () => {
     stage = await setupTest();
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    adminTestUser = await createTestUser(
+      stage.devConsoleContext,
+      stage.amsContext,
+      DefaultUserRole.ADMIN,
+    );
 
     testProject = await createTestProject(testUser, stage.devConsoleContext);
 
@@ -107,21 +118,6 @@ describe('Storage tests', () => {
         ).toBeTruthy();
       });
 
-      test('User should NOT be able to recieve S3 signed URL for ANOTHER USER project', async () => {
-        const response = await request(stage.http)
-          .post(`/storage/${testBucket.bucket_uuid}/files-upload`)
-          .send({
-            files: [
-              {
-                fileName: 'myTestFile.txt',
-                contentType: 'text/plain',
-              },
-            ],
-          })
-          .set('Authorization', `Bearer ${testUser2.token}`);
-        expect(response.status).toBe(403);
-      });
-
       test('Worker should transfer file from S3 to IPFS&CRUST', async () => {
         const response = await request(stage.http)
           .post(
@@ -176,15 +172,6 @@ describe('Storage tests', () => {
         expect(response.body.data.file.CID).toBe(testFile.CID);
         expect(response.body.data.file.name).toBe(testFile.name);
         expect(response.body.data.file.size).toBeGreaterThan(0);
-      });
-
-      test('User should NOT be able to get ANOTHER USER file details', async () => {
-        const response = await request(stage.http)
-          .get(
-            `/storage/${testBucket.bucket_uuid}/file/${testFile.file_uuid}/detail`,
-          )
-          .set('Authorization', `Bearer ${testUser2.token}`);
-        expect(response.status).toBe(403);
       });
     });
 
@@ -338,25 +325,6 @@ describe('Storage tests', () => {
           abcdUrlResponse.file_uuid,
         );
         expect(file.exists()).toBeTruthy();
-      });
-
-      test('User should NOT be able to recieve multiple s3 urls for upload for ANOTHER USER bucket', async () => {
-        testSession_uuid = uuidV4();
-
-        //Get urls for upload
-        const response = await request(stage.http)
-          .post(`/storage/${testBucket.bucket_uuid}/files-upload`)
-          .send({
-            session_uuid: testSession_uuid,
-            files: [
-              {
-                fileName: 'jjjj.txt',
-                path: '',
-              },
-            ],
-          })
-          .set('Authorization', `Bearer ${testUser2.token}`);
-        expect(response.status).toBe(403);
       });
     });
 
@@ -572,14 +540,8 @@ describe('Storage tests', () => {
         expect(response.body.data.items[0].fileName).toBe(fur2.fileName);
         expect(response.body.data.items[0].fileStatus).toBe(fur2.fileStatus);
       });
-
-      test('User should NOT be able to get list of ANOTHER USER file uploads', async () => {
-        const response = await request(stage.http)
-          .get(`/storage/${testBucket2.bucket_uuid}/file-uploads`)
-          .set('Authorization', `Bearer ${testUser2.token}`);
-        expect(response.status).toBe(403);
-      });
     });
+
     describe('Delete file tests', () => {
       let bucketForDeleteTests: Bucket = undefined;
       let deleteBucketTestFile1: File = undefined;
@@ -606,20 +568,6 @@ describe('Storage tests', () => {
           'text/plain',
           true,
         );
-      });
-
-      test('User should NOT be able to delete ANOTHER USER file', async () => {
-        const response = await request(stage.http)
-          .delete(
-            `/storage/${bucketForDeleteTests.bucket_uuid}/file/${deleteBucketTestFile1.id}`,
-          )
-          .set('Authorization', `Bearer ${testUser2.token}`);
-        expect(response.status).toBe(403);
-
-        const f: File = await new File({}, stage.storageContext).populateById(
-          deleteBucketTestFile1.id,
-        );
-        expect(f.exists()).toBeTruthy();
       });
 
       test('User should be able to mark file for deletion', async () => {
@@ -707,6 +655,111 @@ describe('Storage tests', () => {
         f = await new File({}, stage.storageContext).populateById(testFile2.id);
         expect(f.exists()).toBeTruthy();
         expect(await IPFSService.isCIDPinned(testFile2.CID)).toBeTruthy();
+      });
+    });
+
+    describe('Storage access tests', () => {
+      let bucketForDeleteTests: Bucket = undefined;
+      let deleteBucketTestFile1: File = undefined;
+      beforeAll(async () => {
+        bucketForDeleteTests = await createTestBucket(
+          testUser,
+          stage.storageContext,
+          testProject,
+        );
+
+        deleteBucketTestFile1 = await createTestBucketFile(
+          stage.storageContext,
+          bucketForDeleteTests,
+          'delete file test.txt',
+          'text/plain',
+          true,
+        );
+      });
+      test('User should NOT be able to recieve S3 signed URL for ANOTHER USER project', async () => {
+        const response = await request(stage.http)
+          .post(`/storage/${testBucket.bucket_uuid}/files-upload`)
+          .send({
+            files: [
+              {
+                fileName: 'myTestFile.txt',
+                contentType: 'text/plain',
+              },
+            ],
+          })
+          .set('Authorization', `Bearer ${testUser2.token}`);
+        expect(response.status).toBe(403);
+      });
+
+      test('User should NOT be able to get ANOTHER USER file details', async () => {
+        const response = await request(stage.http)
+          .get(
+            `/storage/${testBucket.bucket_uuid}/file/${testFile.file_uuid}/detail`,
+          )
+          .set('Authorization', `Bearer ${testUser2.token}`);
+        expect(response.status).toBe(403);
+      });
+
+      test('User should NOT be able to recieve multiple s3 urls for upload for ANOTHER USER bucket', async () => {
+        testSession_uuid = uuidV4();
+
+        //Get urls for upload
+        const response = await request(stage.http)
+          .post(`/storage/${testBucket.bucket_uuid}/files-upload`)
+          .send({
+            session_uuid: testSession_uuid,
+            files: [
+              {
+                fileName: 'jjjj.txt',
+                path: '',
+              },
+            ],
+          })
+          .set('Authorization', `Bearer ${testUser2.token}`);
+        expect(response.status).toBe(403);
+      });
+
+      test('User should NOT be able to get list of ANOTHER USER file uploads', async () => {
+        const response = await request(stage.http)
+          .get(`/storage/${bucketForDeleteTests.bucket_uuid}/file-uploads`)
+          .set('Authorization', `Bearer ${testUser2.token}`);
+        expect(response.status).toBe(403);
+      });
+
+      test('User should NOT be able to delete ANOTHER USER file', async () => {
+        const response = await request(stage.http)
+          .delete(
+            `/storage/${bucketForDeleteTests.bucket_uuid}/file/${deleteBucketTestFile1.id}`,
+          )
+          .set('Authorization', `Bearer ${testUser2.token}`);
+        expect(response.status).toBe(403);
+
+        const f: File = await new File({}, stage.storageContext).populateById(
+          deleteBucketTestFile1.id,
+        );
+        expect(f.exists()).toBeTruthy();
+      });
+
+      test('Admin User should be able to get list of file uploads', async () => {
+        const response = await request(stage.http)
+          .get(`/storage/${bucketForDeleteTests.bucket_uuid}/file-uploads`)
+          .set('Authorization', `Bearer ${adminTestUser.token}`);
+        expect(response.status).toBe(200);
+        expect(response.body.data.items.length).toBeGreaterThanOrEqual(0);
+      });
+
+      test('Admin User should NOT be able to delete a file', async () => {
+        const response = await request(stage.http)
+          .delete(
+            `/storage/${bucketForDeleteTests.bucket_uuid}/file/${deleteBucketTestFile1.id}`,
+          )
+          .set('Authorization', `Bearer ${adminTestUser.token}`);
+        expect(response.status).toBe(403);
+
+        const f: File = await new File({}, stage.storageContext).populateById(
+          deleteBucketTestFile1.id,
+        );
+        expect(f.exists()).toBeTruthy();
       });
     });
   });
