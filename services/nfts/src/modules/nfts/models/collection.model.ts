@@ -39,7 +39,6 @@ export class Collection extends ProjectAccessModel {
     ],
     serializable: [
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
