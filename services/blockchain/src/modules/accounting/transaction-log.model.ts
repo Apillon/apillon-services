@@ -201,7 +201,6 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
     ],
-    setter: (v) => (v?.toLowerCase() == 'null' ? null : v),
   })
   public addressFrom: string;
 
@@ -216,7 +215,6 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
     ],
-    setter: (v) => (v?.toLowerCase() == 'null' ? null : v),
   })
   public addressTo: string;
 
@@ -422,8 +420,11 @@ export class TransactionLog extends AdvancedSQLModel {
         data?.transfer?.transactionType === KiltTransactionType.BALANCE_TRANSFER
           ? TxAction.DEPOSIT
           : TxAction.TRANSACTION;
-      // income fee should not be logged (payed by other wallet)
-      this.fee = '0';
+
+      if (this.action === TxAction.DEPOSIT) {
+        // income fee should not be logged (payed by other wallet)
+        this.fee = '0';
+      }
     } else {
       // throw new Error('Inconsistent transaction addresses!');
       // some Kilt events does not have both addresses.
