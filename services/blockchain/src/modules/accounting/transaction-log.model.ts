@@ -201,6 +201,7 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
     ],
+    setter: (v) => (v?.toLowerCase() == 'null' ? null : v),
   })
   public addressFrom: string;
 
@@ -215,6 +216,7 @@ export class TransactionLog extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
     ],
+    setter: (v) => (v?.toLowerCase() == 'null' ? null : v),
   })
   public addressTo: string;
 
@@ -394,7 +396,7 @@ export class TransactionLog extends AdvancedSQLModel {
     this.blockId = data?.system?.blockNumber;
     this.addressFrom = data?.transfer?.from;
     this.addressTo = data?.transfer?.to;
-    this.amount = data?.transfer?.amount?.toString();
+    this.amount = data?.transfer?.amount?.toString() || '0';
 
     this.hash = data?.system?.extrinsicHash;
     this.wallet = wallet.address;
@@ -425,7 +427,9 @@ export class TransactionLog extends AdvancedSQLModel {
       // this.action = TxAction.DEPOSIT;
     } else {
       // throw new Error('Inconsistent transaction addresses!');
+      // some Kilt events does not have both addresses.
       this.action = TxAction.UNKNOWN;
+      this.direction = TxDirection.UNKNOWN;
     }
 
     this.calculateTotalPrice();

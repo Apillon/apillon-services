@@ -133,6 +133,7 @@ export enum TxStatus {
 }
 
 export enum TxDirection {
+  UNKNOWN = 0,
   INCOME = 1,
   COST = 2,
 }
