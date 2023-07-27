@@ -67,6 +67,9 @@ export class Context {
    * @returns
    */
   public hasRoleOnProject(role: number | number[], project_uuid: string) {
+    if (!project_uuid) {
+      throw new Error('project_uuid not present!');
+    }
     //If call is made through api key
     if (this.apiKey) {
       if (this.apiKey.project_uuid == project_uuid) {
