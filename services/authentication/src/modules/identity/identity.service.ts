@@ -31,7 +31,7 @@ import {
   DidUri,
   ICredential,
 } from '@kiltprotocol/sdk-js';
-import { BN, hexToU8a, u8aToHex } from '@polkadot/util';
+import { hexToU8a, u8aToHex } from '@polkadot/util';
 // Dtos
 import { IdentityCreateDto } from '@apillon/lib';
 import { IdentityDidRevokeDto } from '@apillon/lib';
@@ -42,7 +42,6 @@ import {
   generateKeypairs,
   getCtypeSchema,
   getFullDidDocument,
-  getNextNonce,
 } from '../../lib/kilt';
 import { AuthenticationCodeException } from '../../lib/exceptions';
 import { decryptAssymetric } from '../../lib/utils/crypto-utils';
@@ -378,6 +377,7 @@ export class IdentityMicroservice {
       identifier,
       endpointsCountForDid,
     );
+
     try {
       const bcsRequest = await didRevokeRequestBc(
         context,

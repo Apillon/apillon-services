@@ -31,7 +31,8 @@ export enum KiltTransactionType {
   ATTESTATION_CREATE = 'attestation-create',
   ATTESTATION_REMOVE = 'attestation-remove',
   ATTESTATION_REVOKE = 'attestation-revoke',
-  SYSTEM_EVENT = 'system-event-success',
+  SYSTEM_EVENTS_SUCCESS = 'system-event-success',
+  SYSTEM_EVENTS_FAIL = 'system-event-fail',
 }
 
 export type TransfersTransactions = {

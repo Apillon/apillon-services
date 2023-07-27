@@ -9,30 +9,77 @@ export class KiltGQLQueries {
     transactionType
     createdAt
     status
-    `;
+  `;
 
-  /* Returns all TRANSFERS from a specific account in KILT */
-  static ACCOUNT_ALL_TRANSFERS_QUERY = `query getAccountTransfers(
+  static ACCOUNT_ALL_TRANSACTIONS_QUERY = `query getAccountTransactions(
     $account: String!
     $fromBlock: Int!, 
-    $limit: Int!
+    $toBlock: Int!
    ) {
+    systems(
+      where: {
+        AND: {
+          blockNumber_gte: $fromBlock,
+          blockNumber_lt: $toBlock,
+          account_eq: $account
+        }
+      }
+    )
+    {
+      ${this.BASE_SUBSTRATE_PARAMS}
+      account
+      error
+      fee
+    },
     transfers(
       where: {
         AND: {
           blockNumber_gte: $fromBlock,
+          blockNumber_lt: $toBlock,
           AND: { 
             OR: [{from_eq: $account}, {to_eq: $account}]
           }
         }
       }
-      limit: $limit
-    )
+    ) 
     {
       ${this.BASE_SUBSTRATE_PARAMS}
       from
       to
       amount
+      fee
+    },
+    dids(
+      where: {
+        AND: {
+          blockNumber_gte: $fromBlock,
+          blockNumber_lt: $toBlock,
+          account_eq: $account
+        }
+      }
+    )
+    {
+      ${this.BASE_SUBSTRATE_PARAMS}
+      account
+      didId
+      fee
+    },
+    attestations(
+      where: {
+        AND: {
+          blockNumber_gte: $fromBlock,
+          blockNumber_lt: $toBlock,
+          AND: { 
+            OR: [{account_eq: $account}, {attesterId_eq: $account}]
+          }
+        }
+      }
+    )
+    {
+      ${this.BASE_SUBSTRATE_PARAMS}
+      account
+      attesterId
+      claimHash
       fee
     }
   }`;
@@ -175,7 +222,8 @@ export class KiltGQLQueries {
           }
         }
       }
-    ) {
+    ) 
+    {
       ${this.BASE_SUBSTRATE_PARAMS}
       account
       attesterId

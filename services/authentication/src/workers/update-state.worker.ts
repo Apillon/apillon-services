@@ -13,6 +13,7 @@ import {
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
+  LogOutput,
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
@@ -35,25 +36,6 @@ export class UpdateStateWorker extends BaseQueueWorker {
     return [];
   }
 
-  // TODO: REMOVE and just use LMAS
-  private async logAms(
-    contex?: any,
-    message?: any,
-    error?: boolean,
-    data?: any,
-  ) {
-    await new Lmas().writeLog({
-      context: contex,
-      logType: error ? LogType.ERROR : LogType.INFO,
-      message: message,
-      location: `UpdateStateWorker`,
-      service: ServiceName.AUTHENTICATION_API,
-      data: {
-        ...data,
-      },
-    });
-  }
-
   private async execAttestClaim(identity: Identity) {
     const attestationClaimDto = new AttestationDto().populate({
       email: identity.email,
@@ -61,8 +43,6 @@ export class UpdateStateWorker extends BaseQueueWorker {
       token: identity.token,
     });
     if (env.APP_ENV != AppEnvironment.TEST) {
-      console.log('Attestation DTO: ', attestationClaimDto);
-
       await IdentityMicroservice.attestClaim(
         { body: attestationClaimDto },
         this.context,
@@ -84,10 +64,10 @@ export class UpdateStateWorker extends BaseQueueWorker {
     }
   }
 
-  private async execIdentityRevoke(incomignTxData: any) {
+  private async execIdentityRevoke(params: any) {
     const identityRevokeDto = new IdentityDidRevokeDto().populate({
-      email: incomignTxData.email,
-      token: incomignTxData.token,
+      email: params.email,
+      token: params.token,
     });
     await IdentityMicroservice.revokeIdentity(
       { body: identityRevokeDto },
@@ -103,7 +83,14 @@ export class UpdateStateWorker extends BaseQueueWorker {
   }
 
   public async runExecutor(input: any): Promise<any> {
-    console.info('RUN EXECUTOR (UpdateKiltStatusWorker). data: ', input);
+    await this.writeEventLog(
+      {
+        logType: LogType.INFO,
+        message: `RUN EXECUTOR (UpdateKiltStatusWorker). data: ${input}`,
+        service: ServiceName.AUTHENTICATION_API,
+      },
+      LogOutput.DEBUG,
+    );
 
     await runWithWorkers(
       input.data,
@@ -118,36 +105,48 @@ export class UpdateStateWorker extends BaseQueueWorker {
           ctx,
         ).populateById(incomingTx.referenceId);
 
-        console.log('Identity JOB: ', identityJob);
-
         // TODO: Logging should be better. Transaction hash?????
         if (!identityJob.exists()) {
-          await this.logAms(
-            ctx,
-            `Job for transaction ${result.transactionHash} does not exist!`,
-            true,
-          );
+          await this.writeEventLog({
+            logType: LogType.ERROR,
+            message: `Job for transaction ${result.transactionHash} does not exist!`,
+            service: ServiceName.AUTHENTICATION_API,
+            data: {
+              identityJobId: incomingTx.referenceId,
+            },
+          });
           return;
         }
-
-        console.log('Reference id: ', incomingTx.referenceId);
 
         const identity = await new Identity({}, ctx).populateById(
           identityJob.identity_id,
         );
 
-        console.log('Transaction type: ', identityJob.state);
-        console.log('Transaction status: ', status);
-
         switch (identityJob.state) {
           case IdentityJobState.DID_CREATE:
             if (status == TransactionStatus.CONFIRMED) {
-              writeLog(LogType.INFO, 'DID CREATE step SUCCESS');
+              await this.writeEventLog({
+                logType: LogType.INFO,
+                message: 'DID CREATE step SUCCESS',
+                service: ServiceName.AUTHENTICATION_API,
+                data: {
+                  identity: identity.id,
+                  did: identity.didUri,
+                },
+              });
 
               if (await identityJob.isFinalState()) {
                 await identityJob.setCompleted();
               } else {
-                writeLog(LogType.INFO, 'Executing attestation ...');
+                await this.writeEventLog(
+                  {
+                    logType: LogType.INFO,
+                    message: 'Executing attestation ...',
+                    service: ServiceName.AUTHENTICATION_API,
+                  },
+                  LogOutput.DEBUG,
+                );
+
                 identity.state = IdentityState.DID_CREATED;
                 await identity.update();
                 await identityJob.setState(IdentityJobState.ATESTATION);
@@ -158,7 +157,15 @@ export class UpdateStateWorker extends BaseQueueWorker {
               await identityJob.setFailed();
 
               if (await identityJob.identityJobRetry()) {
-                writeLog(LogType.INFO, `DID CREATE step FAILED. Retrying ...`);
+                await this.writeEventLog({
+                  logType: LogType.ERROR,
+                  message: `DID CREATE step for ${result.transactionHash} FAILED. Retrying transaction`,
+                  service: ServiceName.AUTHENTICATION_API,
+                  data: {
+                    identityJob: identityJob.id,
+                    identity: identity.id,
+                  },
+                });
 
                 await this.execIdentityGenerate(
                   identity.email,
@@ -168,20 +175,41 @@ export class UpdateStateWorker extends BaseQueueWorker {
                 identity.state = IdentityState.SUBMITTED_DID_CREATE_REQ;
                 await identity.update();
               } else {
-                writeLog(
-                  LogType.INFO,
-                  `DID CREATE step FAILED | Retry exceeded: STOPPING`,
-                );
                 // TODO: Notification logic
+
+                await this.writeEventLog({
+                  logType: LogType.ERROR,
+                  message: `DID CREATE step for ${result.transactionHash} FAILED. Retry exceeded: STOPPING`,
+                  service: ServiceName.AUTHENTICATION_API,
+                  data: {
+                    identityJob: identityJob.id,
+                    identity: identity.id,
+                  },
+                });
               }
             }
             break;
           case IdentityJobState.ATESTATION:
-            writeLog(LogType.INFO, 'ATTESTATION RECEIVED ... ');
             if (status == TransactionStatus.CONFIRMED) {
-              writeLog(LogType.INFO, 'ATTESTATION step SUCCESS');
+              await this.writeEventLog({
+                logType: LogType.INFO,
+                message: 'ATTESTATION step SUCCESS',
+                service: ServiceName.AUTHENTICATION_API,
+                data: {
+                  identity: identity.id,
+                  did: identity.didUri,
+                },
+              });
               if (await identityJob.isFinalState()) {
-                writeLog(LogType.INFO, 'Final state reached!!');
+                await this.writeEventLog(
+                  {
+                    logType: LogType.INFO,
+                    message: 'ATTESTATION final stage REACHED',
+                    service: ServiceName.AUTHENTICATION_API,
+                  },
+                  LogOutput.DEBUG,
+                );
+
                 await identityJob.setCompleted();
               }
               identity.state = IdentityState.ATTESTED;
@@ -190,23 +218,26 @@ export class UpdateStateWorker extends BaseQueueWorker {
               await identityJob.setFailed();
 
               if (await identityJob.identityJobRetry()) {
-                writeLog(LogType.INFO, `ATTESTATION step FAILED. Retrying ...`);
-                await this.logAms(
-                  ctx,
-                  `ATTESTATION step FAILED. Retrying ...`,
-                  true,
-                );
+                await this.writeEventLog({
+                  logType: LogType.ERROR,
+                  message: `ATTESTATION step for ${result.transactionHash} FAILED. Retrying transaction`,
+                  service: ServiceName.AUTHENTICATION_API,
+                  data: {
+                    identityJob: identityJob.id,
+                    identity: identity.id,
+                  },
+                });
                 await this.execAttestClaim(identity);
               } else {
-                writeLog(
-                  LogType.INFO,
-                  'ATTESTATION step FAILED | Retry exceeded: STOPPING',
-                );
-                await this.logAms(
-                  `ATTESTATION step FAILED | Retry exceeded: STOPPING`,
-                  true,
-                  incomingTx,
-                );
+                await this.writeEventLog({
+                  logType: LogType.ERROR,
+                  message: `ATTESTATION for ${result.transactionHash} step FAILED. Retry exceeded: STOPPING`,
+                  service: ServiceName.AUTHENTICATION_API,
+                  data: {
+                    identityJob: identityJob.id,
+                    identity: identity.id,
+                  },
+                });
                 // TODO: Notification logic
               }
             }
@@ -214,36 +245,54 @@ export class UpdateStateWorker extends BaseQueueWorker {
             break;
           case IdentityJobState.DID_REVOKE:
             if (status == TransactionStatus.CONFIRMED) {
-              console.log('Step REVOKED: success');
+              await this.writeEventLog({
+                logType: LogType.INFO,
+                message: `REVOKED step SUCCESS`,
+                service: ServiceName.AUTHENTICATION_API,
+                data: {
+                  identity: identity.id,
+                  did: identity.didUri,
+                },
+              });
+
               identity.state = IdentityState.REVOKED;
               await identityJob.setCompleted();
               await identity.update();
             } else {
               if (await identityJob.identityJobRetry()) {
-                writeLog(LogType.INFO, 'REVOKE step FAILED. Retrying ...');
-                await this.execAttestClaim(identity);
+                await this.writeEventLog({
+                  logType: LogType.ERROR,
+                  message: `REVOKE for ${result.transactionHash} step FAILED. Retrying transaction`,
+                  service: ServiceName.AUTHENTICATION_API,
+                  data: {
+                    identityJob: identityJob.id,
+                    identity: identity.id,
+                  },
+                });
+                await this.execIdentityRevoke(identity);
               } else {
-                writeLog(
-                  LogType.INFO,
-                  `REVOKE step FAILED | Retry exceeded: STOPPING`,
-                );
-                await this.logAms(
-                  ctx,
-                  'REVOKE step FAILED. Retrying ...',
-                  true,
-                  incomingTx,
-                );
+                await this.writeEventLog({
+                  logType: LogType.ERROR,
+                  message: `REVOKE for ${result.transactionHash} step FAILED. Retry exceeded: STOPPING`,
+                  service: ServiceName.AUTHENTICATION_API,
+                  data: {
+                    identityJob: identityJob.id,
+                    identity: identity.id,
+                  },
+                });
                 // TODO: Notification logic
               }
             }
             break;
           default:
-            await this.logAms(
-              ctx,
-              'Invalid transaction type',
-              true,
-              incomingTx,
-            );
+            await this.writeEventLog({
+              logType: LogType.ERROR,
+              message: `Invalid transaction state`,
+              service: ServiceName.AUTHENTICATION_API,
+              data: {
+                incomingTx: incomingTx,
+              },
+            });
             break;
         }
       },

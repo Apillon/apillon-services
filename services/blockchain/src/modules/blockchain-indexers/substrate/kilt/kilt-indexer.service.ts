@@ -22,54 +22,24 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     account: string,
     fromBlock: number,
     toBlock: number,
-    // TODO: Filter by state as well
-    // state?: string,
   ) {
-    try {
-      const [
-        balanceTransfers,
-        systems,
-        withdrawals,
-        deposits,
-        balanceReserve,
-        didCreate,
-        didDelete,
-        didUpdate,
-        attestCreate,
-        attestRemove,
-        attestRevoke,
-      ] = await Promise.all([
-        this.getAccountBalanceTransfers(account, fromBlock, toBlock),
-        this.getAllSystemEvents(account, fromBlock, toBlock),
-        this.getAccountWithdrawals(account, fromBlock, toBlock),
-        this.getAccountDeposits(account, fromBlock, toBlock),
-        this.getAccountReserved(account, fromBlock, toBlock),
-        this.getAccountDidCreate(account, fromBlock, toBlock),
-        this.getAccountDidDelete(account, fromBlock, toBlock),
-        this.getAccountDidUpdate(account, fromBlock, toBlock),
-        this.getAccountAttestCreate(account, fromBlock, toBlock),
-        this.getAccountAttestRemove(account, fromBlock, toBlock),
-        this.getAccountAttestRevoke(account, fromBlock, toBlock),
-      ]);
+    const data: any = await this.graphQlClient.request(
+      gql`
+        ${KiltGQLQueries.ACCOUNT_ALL_TRANSACTIONS_QUERY}
+      `,
+      {
+        account,
+        fromBlock,
+        toBlock,
+      },
+    );
 
-      return {
-        balanceTransfers,
-        systems,
-        withdrawals,
-        deposits,
-        balanceReserve,
-        didCreate,
-        didDelete,
-        didUpdate,
-        attestCreate,
-        attestRemove,
-        attestRevoke,
-      };
-    } catch (error) {
-      // Handle error here
-      console.error('Error occurred while fetching transactions:', error);
-      throw error;
-    }
+    return {
+      transfers: data.transfers,
+      dids: data.dids,
+      attestations: data.attestations,
+      systems: data.systems,
+    };
   }
 
   public async getAllSystemEvents(
