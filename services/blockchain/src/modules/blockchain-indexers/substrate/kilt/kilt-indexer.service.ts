@@ -61,17 +61,19 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     return data.systems;
   }
 
-  public async getSystemEventsForTx(
+  public async getSystemEventsWithLimit(
     account: string,
-    hashes: string[],
+    fromBlock: number,
+    limit: number,
   ): Promise<SystemEvent[]> {
     const data: any = await this.graphQlClient.request(
       gql`
-        ${KiltGQLQueries.ACCOUNT_SYSTEM_EVENTS_FOR_TXS_QUERY}
+        ${KiltGQLQueries.ACCOUNT_SYSTEM_EVENTS_WITH_LIMIT_QUERY}
       `,
       {
         account,
-        hashes,
+        fromBlock,
+        limit,
       },
     );
 
@@ -100,20 +102,17 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
   }
 
   /* These indicate a balance transfer from one account -> another */
-  public async getAccountBalanceTransfersWithLimit(
+  public async getAccountBalanceTransfersForTxs(
     account: string,
-    fromBlock: number,
-    limit: number,
+    hashes: string[],
   ): Promise<TransferTransaction[]> {
     const data: any = await this.graphQlClient.request(
       gql`
-        ${KiltGQLQueries.ACCOUNT_TRANSFERS_BY_TYPE_WITH_LIMIT_QUERY}
+        ${KiltGQLQueries.ACCOUNT_TRANSFERS_BY_TX_HASHES_QUERY}
       `,
       {
         account,
-        fromBlock,
-        limit,
-        transactionType: KiltTransactionType.BALANCE_TRANSFER,
+        hashes,
       },
     );
 
