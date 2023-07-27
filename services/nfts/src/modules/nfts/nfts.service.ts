@@ -850,7 +850,19 @@ export class NftsService {
     childCollection: Collection,
     walletService: WalletService,
   ) {
-    // CHILD COLLECTION CHECKS
+    const isChildNestable = await walletService.implementsRmrkInterface(
+      childCollection.collectionType,
+      childCollection.contractAddress,
+    );
+    if (!isChildNestable) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.COLLECTION_NOT_NESTABLE,
+        context: context,
+        sourceFunction: 'nestMintNftTo()',
+      });
+    }
+
     if (childCollection.maxSupply == 0) {
       return true;
     }
@@ -873,19 +885,6 @@ export class NftsService {
       throw new NftsCodeException({
         status: 500,
         code: NftsErrorCode.MINT_NFT_RESERVE_ERROR,
-        context: context,
-        sourceFunction: 'nestMintNftTo()',
-      });
-    }
-
-    const isChildNestable = await walletService.implementsRmrkInterface(
-      childCollection.collectionType,
-      childCollection.contractAddress,
-    );
-    if (!isChildNestable) {
-      throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.COLLECTION_NOT_NESTABLE,
         context: context,
         sourceFunction: 'nestMintNftTo()',
       });
