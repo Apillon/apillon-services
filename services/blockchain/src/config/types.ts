@@ -115,16 +115,6 @@ export enum BlockchainErrorCode {
   WALLET_DOES_NOT_EXISTS = 50016006,
 }
 
-//#region SQL stuff - TODO: Should be streamlined? This is part of the SQL lib, not access
-export enum SqlModelStatus {
-  DRAFT = 1,
-  INCOMPLETE = 2,
-  ACTIVE = 5,
-  DELETED = 9,
-}
-
-//#endregion
-
 export enum TxStatus {
   PENDING = 1,
   COMPLETED = 5,

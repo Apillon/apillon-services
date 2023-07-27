@@ -1,7 +1,12 @@
 import { prop } from '@rawmodel/core';
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import { PopulateFrom } from '../../../../config/types';
+import {
+  ErrorCode,
+  PopulateFrom,
+  SqlModelStatus,
+} from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
+import { enumInclusionValidator } from '../../../validators';
 
 export class UpdateWalletDto extends ModelBase {
   @prop({
@@ -9,17 +14,29 @@ export class UpdateWalletDto extends ModelBase {
     populatable: [PopulateFrom.ADMIN],
   })
   // must be string (big number not supported)
-  public minBalance: string;
+  public minBalance?: string;
 
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.ADMIN],
   })
-  public token: string;
+  public token?: string;
 
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.ADMIN],
   })
-  public decimals: number;
+  public decimals?: number;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.ADMIN],
+    validators: [
+      {
+        resolver: enumInclusionValidator(SqlModelStatus, true),
+        code: ErrorCode.INVALID_STATUS,
+      },
+    ],
+  })
+  public status?: SqlModelStatus;
 }

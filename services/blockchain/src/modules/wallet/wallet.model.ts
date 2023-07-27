@@ -15,13 +15,9 @@ import {
   selectAndCountQuery,
   SerializeFor,
   SubstrateChain,
-} from '@apillon/lib';
-import {
-  BlockchainErrorCode,
-  Chain,
-  DbTables,
   SqlModelStatus,
-} from '../../config/types';
+} from '@apillon/lib';
+import { BlockchainErrorCode, Chain, DbTables } from '../../config/types';
 import { Endpoint } from '../../common/models/endpoint';
 import { ethers } from 'ethers';
 import { ApiPromise, WsProvider } from '@polkadot/api';
@@ -360,7 +356,7 @@ export class Wallet extends AdvancedSQLModel {
       WHERE
       chainType = @chainType
       AND chain = @chain
-      AND status <> ${SqlModelStatus.DELETED}
+      AND status = ${SqlModelStatus.ACTIVE}
       ORDER BY usageTimestamp ASC
       LIMIT 1
       FOR UPDATE;
@@ -398,7 +394,7 @@ export class Wallet extends AdvancedSQLModel {
         AND chain = @chain
         -- case insensitive comparison
         AND address like @address
-        AND status <> ${SqlModelStatus.DELETED}
+        AND status = ${SqlModelStatus.ACTIVE}
       ORDER BY usageTimestamp ASC
       LIMIT 1
       FOR UPDATE;
@@ -511,7 +507,7 @@ export class Wallet extends AdvancedSQLModel {
       `,
       qFrom: `FROM ${DbTables.WALLET} w
         WHERE (@search IS null OR w.address LIKE CONCAT('%', @search, '%'))
-        AND w.status <> ${SqlModelStatus.DELETED}`,
+        AND w.status = ${SqlModelStatus.ACTIVE}`,
       qFilter: `
           ORDER BY ${filters.orderStr}
           LIMIT ${filters.limit} OFFSET ${filters.offset};
