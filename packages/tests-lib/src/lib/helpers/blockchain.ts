@@ -30,24 +30,24 @@ const KEYS = {
 };
 
 export class TestBlockchain {
-  private readonly _stage: Stage;
-  private readonly _chainId: EvmChain;
-  private readonly _port: number;
-  private readonly _server: Server;
-  private readonly _accounts: string[] = [];
-  private readonly _keys = KEYS;
+  private readonly stage: Stage;
+  private readonly chainId: EvmChain;
+  private readonly port: number;
+  private readonly server: Server;
+  private readonly accounts: string[] = [];
+  private readonly keys = KEYS;
 
   constructor(stage: Stage, chainId: EvmChain, port = 8545) {
-    this._stage = stage;
-    this._chainId = chainId;
-    this._port = port;
+    this.stage = stage;
+    this.chainId = chainId;
+    this.port = port;
 
-    this._accounts = Object.keys(this._keys);
-    this._server = ganache.server({
+    this.accounts = Object.keys(this.keys);
+    this.server = ganache.server({
       chain: { chainId: chainId },
       wallet: {
-        accounts: this._accounts.map((account) => ({
-          secretKey: this._keys[account],
+        accounts: this.accounts.map((account) => ({
+          secretKey: this.keys[account],
           balance: 1000000000000000000,
         })),
       },
@@ -55,17 +55,17 @@ export class TestBlockchain {
   }
 
   async start() {
-    await this._server.listen(this._port);
-    const serverInfo = this._server.address();
+    await this.server.listen(this.port);
+    const serverInfo = this.server.address();
     const ganacheEndpoint = `${serverInfo.address}:${serverInfo.port}`;
     console.log(`ganache listening on ${ganacheEndpoint}...`);
     // update DB
     try {
-      await this._storeEndpoint(ganacheEndpoint);
+      await this.storeEndpoint(ganacheEndpoint);
 
       const deployerAddress = this.getWalletAddress(0);
-      const deployerPrivateKey = this._getPrivateKey(deployerAddress);
-      await this._storeWallet(deployerAddress, deployerPrivateKey);
+      const deployerPrivateKey = this.getPrivateKey(deployerAddress);
+      await this.storeWallet(deployerAddress, deployerPrivateKey);
       console.info('startGanacheRPCServer SUCCESS!');
     } catch (error) {
       console.error('ERROR configuring endpoints and wallets!');
@@ -75,54 +75,54 @@ export class TestBlockchain {
   }
 
   async stop() {
-    await this._server.close();
+    await this.server.close();
   }
 
   getTransactionReceipt(transactionHash: string) {
-    return this._server.provider.request({
+    return this.server.provider.request({
       method: 'eth_getTransactionReceipt',
       params: [transactionHash],
     });
   }
 
   getWalletAddresses() {
-    return this._accounts;
+    return this.accounts;
   }
 
   getWalletAddress(accountIndex: number) {
-    return accountIndex < this._accounts.length
-      ? this._accounts[accountIndex]
+    return accountIndex < this.accounts.length
+      ? this.accounts[accountIndex]
       : null;
   }
 
-  private _getPrivateKey(address: string) {
-    return address in this._keys ? this._keys[address] : null;
+  private getPrivateKey(address: string) {
+    return address in this.keys ? this.keys[address] : null;
   }
 
-  private async _storeEndpoint(ganacheEndpoint: string) {
-    await this._stage.blockchainSql.paramExecute(
+  private async storeEndpoint(ganacheEndpoint: string) {
+    await this.stage.blockchainSql.paramExecute(
       `DELETE
        FROM endpoint`,
       {},
     );
-    await this._stage.blockchainSql.paramExecute(
+    await this.stage.blockchainSql.paramExecute(
       `
         INSERT INTO endpoint (status, url, chain, chainType)
-        VALUES (5, 'http://${ganacheEndpoint}', ${this._chainId},
+        VALUES (5, 'http://${ganacheEndpoint}', ${this.chainId},
                 ${ChainType.EVM});
       `,
       {},
     );
   }
 
-  private async _storeWallet(address: string, privateKey: string) {
+  private async storeWallet(address: string, privateKey: string) {
     //Configure wallets
     const wallet: Wallet = new Wallet(
       {},
-      this._stage.blockchainContext,
+      this.stage.blockchainContext,
     ).populate({
       address: address,
-      chain: this._chainId,
+      chain: this.chainId,
       chainType: ChainType.EVM,
       seed: privateKey,
       type: 1,
@@ -136,15 +136,15 @@ export class TestBlockchain {
   ) {
     const collectionTxs = await new NftCollectionTx(
       {},
-      this._stage.nftsContext,
+      this.stage.nftsContext,
     ).getCollectionTransactions(collectionId);
     const collectionTx = collectionTxs.find(
       (x) => x.transactionType == transactionType,
     );
     const blockchainTx = await new BlockchainTx(
       {},
-      this._stage.blockchainContext,
-    ).getTransactionByChainAndHash(this._chainId, collectionTx.transactionHash);
+      this.stage.blockchainContext,
+    ).getTransactionByChainAndHash(this.chainId, collectionTx.transactionHash);
 
     return blockchainTx.transactionStatus;
   }
