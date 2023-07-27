@@ -1,5 +1,5 @@
 import {
-  AccessControlModel,
+  ProjectAccessModel,
   Context,
   PopulateFrom,
   presenceValidator,
@@ -12,7 +12,7 @@ import { DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { Bucket } from './bucket.model';
 
-export class BucketWebhook extends AccessControlModel {
+export class BucketWebhook extends ProjectAccessModel {
   public readonly tableName = DbTables.BUCKET_WEBHOOK;
 
   public constructor(data: any, context: Context) {
@@ -123,7 +123,7 @@ export class BucketWebhook extends AccessControlModel {
   })
   public param2: string;
 
-  public async canAccess(context: ServiceContext) {
+  public override async canAccess(context: ServiceContext) {
     const b: Bucket = await new Bucket({}, context).populateById(
       this.bucket_id,
     );

@@ -4,17 +4,12 @@ import {
   DefaultUserRole,
   DeploymentQueryFilter,
   DeployWebsiteDto,
+  RoleGroup,
   ValidateFor,
   WebsiteQueryFilter,
   WebsitesQuotaReachedQueryFilter,
 } from '@apillon/lib';
-import {
-  Ctx,
-  Permissions,
-  UserAdminPermissions,
-  ProjectPermissions,
-  Validation,
-} from '@apillon/modules-lib';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
@@ -38,7 +33,7 @@ export class HostingController {
   constructor(private hostingService: HostingService) {}
 
   @Get('websites')
-  @ProjectPermissions()
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: WebsiteQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
   async listWebsites(
@@ -49,7 +44,7 @@ export class HostingController {
   }
 
   @Get('websites/quota-reached')
-  @UserAdminPermissions()
+  @Permissions({ role: DefaultUserRole.USER })
   @Validation({
     dto: WebsitesQuotaReachedQueryFilter,
     validateFor: ValidateFor.QUERY,
@@ -63,7 +58,7 @@ export class HostingController {
   }
 
   @Get('websites/:id')
-  @ProjectPermissions()
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async getWebsite(
     @Ctx() context: DevConsoleApiContext,
@@ -121,7 +116,7 @@ export class HostingController {
   }
 
   @Get('websites/:website_id/deployments')
-  @ProjectPermissions()
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({
     dto: DeploymentQueryFilter,
     validateFor: ValidateFor.QUERY,
@@ -141,7 +136,7 @@ export class HostingController {
   }
 
   @Get('websites/:website_id/deployments/:id')
-  @ProjectPermissions()
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async getDeployment(
     @Ctx() context: DevConsoleApiContext,

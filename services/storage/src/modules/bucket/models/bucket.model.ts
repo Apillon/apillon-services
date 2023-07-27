@@ -1,7 +1,7 @@
 import { integerParser, stringParser, dateParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
-  AccessControlModel,
+  ProjectAccessModel,
   BucketQueryFilter,
   Context,
   enumInclusionValidator,
@@ -19,7 +19,7 @@ import { BucketType, DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
 
-export class Bucket extends AccessControlModel {
+export class Bucket extends ProjectAccessModel {
   public readonly tableName = DbTables.BUCKET;
 
   public constructor(data: any, context: Context) {

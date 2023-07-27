@@ -584,6 +584,9 @@ export class Wallet extends AdvancedSQLModel {
         WHERE t.wallet = '${walletAddress}'
         AND (@search IS null OR t.hash LIKE CONCAT('%', @search, '%'))
         AND (@status IS NULL OR t.status = @status)
+        AND (@action IS NULL OR t.action = @action)
+        AND (@tsFrom IS NULL OR t.ts >= @tsFrom)
+        AND (@tsTo IS NULL OR t.ts <= @tsTo)
         `,
       qFilter: `
           ORDER BY ${filters.orderStr || 't.ts DESC'}

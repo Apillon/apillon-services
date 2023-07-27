@@ -21,14 +21,13 @@ import {
   ValidateFor,
   CacheKeyPrefix,
   CacheKeyTTL,
+  RoleGroup,
 } from '@apillon/lib';
 import { Cache } from '@apillon/modules-lib';
 import { DevConsoleApiContext } from '../../../context';
 import {
   Ctx,
   Permissions,
-  UserAdminPermissions,
-  ProjectPermissions,
   Validation,
   CacheInterceptor,
 } from '@apillon/modules-lib';
@@ -43,7 +42,7 @@ export class BucketController {
   constructor(private bucketService: BucketService) {}
 
   @Get(':bucket_id/webhook')
-  @ProjectPermissions()
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async getBucketWebhook(
     @Ctx() context: DevConsoleApiContext,
@@ -110,7 +109,7 @@ export class BucketController {
   }
 
   @Get('quota-reached')
-  @UserAdminPermissions()
+  @Permissions({ role: DefaultUserRole.USER })
   @Validation({
     dto: BucketQuotaReachedQueryFilter,
     validateFor: ValidateFor.QUERY,
@@ -124,7 +123,7 @@ export class BucketController {
   }
 
   @Get()
-  @ProjectPermissions()
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: BucketQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
   @Cache({
@@ -141,7 +140,7 @@ export class BucketController {
   }
 
   @Get(':id')
-  @ProjectPermissions()
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async getBucket(
     @Ctx() context: DevConsoleApiContext,

@@ -10,7 +10,7 @@ import {
   SqlModelStatus,
   ApiKeyQueryFilterDto,
   ApiKeyRoleBaseDto,
-  AccessControlModel,
+  ProjectAccessModel,
 } from '@apillon/lib';
 import { DbTables, AmsErrorCode } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
@@ -18,7 +18,7 @@ import { ApiKeyRole } from '../../role/models/api-key-role.model';
 import * as bcrypt from 'bcryptjs';
 import { AmsValidationException } from '../../../lib/exceptions';
 
-export class ApiKey extends AccessControlModel {
+export class ApiKey extends ProjectAccessModel {
   public readonly tableName = DbTables.API_KEY;
 
   public constructor(data: any, context: Context) {

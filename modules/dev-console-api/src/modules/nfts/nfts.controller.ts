@@ -11,14 +11,9 @@ import {
   BurnNftDto,
   CollectionsQuotaReachedQueryFilter,
   DefaultPermission,
+  RoleGroup,
 } from '@apillon/lib';
-import {
-  Ctx,
-  Permissions,
-  UserAdminPermissions,
-  ProjectPermissions,
-  Validation,
-} from '@apillon/modules-lib';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
@@ -50,7 +45,6 @@ export class NftsController {
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.ADMIN },
   )
   @UseGuards(AuthGuard)
   async createCollection(
@@ -61,7 +55,7 @@ export class NftsController {
   }
 
   @Get('collections')
-  @ProjectPermissions()
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: NFTCollectionQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
   async listNftCollections(
@@ -72,7 +66,7 @@ export class NftsController {
   }
 
   @Get('collections/quota-reached')
-  @UserAdminPermissions()
+  @Permissions({ role: DefaultUserRole.USER })
   @Validation({
     dto: CollectionsQuotaReachedQueryFilter,
     validateFor: ValidateFor.QUERY,
@@ -86,7 +80,7 @@ export class NftsController {
   }
 
   @Get('collections/:uuid')
-  @ProjectPermissions()
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async getCollection(
     @Ctx() context: DevConsoleApiContext,
@@ -156,7 +150,7 @@ export class NftsController {
   }
 
   @Get('collections/:collectionUuid/transactions')
-  @ProjectPermissions()
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: TransactionQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
   async listCollectionTransactions(

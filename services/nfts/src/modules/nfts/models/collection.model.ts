@@ -1,5 +1,5 @@
 import {
-  AccessControlModel,
+  ProjectAccessModel,
   Context,
   EvmChain,
   getQueryParams,
@@ -20,7 +20,7 @@ import {
 } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 
-export class Collection extends AccessControlModel {
+export class Collection extends ProjectAccessModel {
   public readonly tableName = DbTables.COLLECTION;
 
   public constructor(data: any, context: Context) {

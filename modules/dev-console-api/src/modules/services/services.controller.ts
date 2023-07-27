@@ -10,14 +10,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
-import { DefaultUserRole, SerializeFor, ValidateFor } from '@apillon/lib';
 import {
-  Ctx,
-  Permissions,
-  UserAdminPermissions,
-  ProjectPermissions,
-  Validation,
-} from '@apillon/modules-lib';
+  DefaultUserRole,
+  RoleGroup,
+  SerializeFor,
+  ValidateFor,
+} from '@apillon/lib';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
@@ -30,14 +29,14 @@ export class ServicesController {
   constructor(private readonly serviceService: ServicesService) {}
 
   @Get('types')
-  @UserAdminPermissions()
+  @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard)
   async getServiceTypes(@Ctx() context: DevConsoleApiContext) {
     return await this.serviceService.getServiceTypes(context);
   }
 
   @Get()
-  @ProjectPermissions()
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: ServiceQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
   async getServiceList(
@@ -48,7 +47,7 @@ export class ServicesController {
   }
 
   @Get(':uuid')
-  @ProjectPermissions()
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async getService(
     @Ctx() context: DevConsoleApiContext,

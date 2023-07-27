@@ -1,5 +1,5 @@
 import {
-  AccessControlModel,
+  ProjectAccessModel,
   Context,
   env,
   getQueryParams,
@@ -22,7 +22,7 @@ import { Bucket } from '../../bucket/models/bucket.model';
 import { v4 as uuidV4 } from 'uuid';
 import { StorageValidationException } from '../../../lib/exceptions';
 
-export class Website extends AccessControlModel {
+export class Website extends ProjectAccessModel {
   public readonly tableName = DbTables.WEBSITE;
 
   public constructor(data: any, context: Context) {

@@ -10,15 +10,14 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { DefaultUserRole, SerializeFor, ValidateFor } from '@apillon/lib';
-import { DevConsoleApiContext } from '../../context';
 import {
-  Ctx,
-  Permissions,
-  UserAdminPermissions,
-  ProjectPermissions,
-  Validation,
-} from '@apillon/modules-lib';
+  DefaultUserRole,
+  RoleGroup,
+  SerializeFor,
+  ValidateFor,
+} from '@apillon/lib';
+import { DevConsoleApiContext } from '../../context';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { File } from '../file/models/file.model';
 import { ProjectUserInviteDto } from './dtos/project_user-invite.dto';
@@ -34,14 +33,14 @@ export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
   @Get('user-projects')
-  @UserAdminPermissions()
+  @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard)
   async getUserProjects(@Ctx() context: DevConsoleApiContext) {
     return await this.projectService.getUserProjects(context);
   }
 
   @Get('qouta-reached')
-  @UserAdminPermissions()
+  @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard)
   async isProjectsQuotaReached(@Ctx() context: DevConsoleApiContext) {
     return await this.projectService.isProjectsQuotaReached(context);
@@ -63,7 +62,7 @@ export class ProjectController {
   }
 
   @Get(':uuid/users')
-  @ProjectPermissions()
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: ProjectUserFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(AuthGuard, ValidationGuard)
   async getProjectUsers(
@@ -141,7 +140,7 @@ export class ProjectController {
   }
 
   @Get(':uuid')
-  @ProjectPermissions()
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async getProject(
     @Ctx() context: DevConsoleApiContext,
@@ -153,7 +152,7 @@ export class ProjectController {
   }
 
   @Post()
-  @UserAdminPermissions()
+  @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard)
   @Validation({ dto: Project })
   @UseGuards(ValidationGuard)

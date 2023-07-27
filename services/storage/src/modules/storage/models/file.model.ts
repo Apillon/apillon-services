@@ -3,7 +3,7 @@ import { prop } from '@rawmodel/core';
 import { stringParser, integerParser, dateParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
-  AccessControlModel,
+  ProjectAccessModel,
   env,
   getQueryParams,
   PoolConnection,
@@ -25,7 +25,7 @@ import { Bucket } from '../../bucket/models/bucket.model';
 import { StorageCodeException } from '../../../lib/exceptions';
 import { Directory } from '../../directory/models/directory.model';
 
-export class File extends AccessControlModel {
+export class File extends ProjectAccessModel {
   tableName = DbTables.FILE;
 
   @prop({

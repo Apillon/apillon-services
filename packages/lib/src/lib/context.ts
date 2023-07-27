@@ -1,4 +1,3 @@
-import { DefaultUserRole } from '../config/types';
 import { MySql } from './database/mysql';
 import { v4 as uuid } from 'uuid';
 

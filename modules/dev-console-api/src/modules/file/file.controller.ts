@@ -1,10 +1,5 @@
 import { DefaultUserRole } from '@apillon/lib';
-import {
-  Ctx,
-  Permissions,
-  UserAdminPermissions,
-  Validation,
-} from '@apillon/modules-lib';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
@@ -26,7 +21,7 @@ export class FileController {
   constructor(private fileService: FileService) {}
 
   @Get(':id')
-  @UserAdminPermissions()
+  @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard)
   async getFile(
     @Ctx() context: DevConsoleApiContext,

@@ -4,7 +4,7 @@ import { CodeException } from '../exceptions/exceptions';
 import { AdvancedSQLModel } from './advanced-sql.model';
 import { HttpStatus } from '@nestjs/common';
 
-export abstract class AccessControlModel extends AdvancedSQLModel {
+export abstract class ProjectAccessModel extends AdvancedSQLModel {
   public project_uuid: string;
 
   public canAccess(
