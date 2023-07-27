@@ -29,6 +29,9 @@ const KEYS = {
     '0x7d2c5e144625627c7c30ed5550aa2879971567d3fa673b9496a6c15359c6fed8',
 };
 
+/**
+ * Helper class for emulating blockchain and getting blockchain related data.
+ */
 export class TestBlockchain {
   private readonly stage: Stage;
   private readonly chainId: EvmChain;
