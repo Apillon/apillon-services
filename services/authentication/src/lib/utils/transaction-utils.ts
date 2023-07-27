@@ -104,7 +104,7 @@ export async function didRevokeRequestBc(
     new CreateSubstrateTransactionDto(
       {
         chain: SubstrateChain.KILT,
-        transaction: transaction,
+        transaction: transaction.toHex(),
         referenceTable: DbTables.IDENTITY_JOB,
         referenceId: identityJob.id,
       },
