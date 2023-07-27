@@ -28,8 +28,6 @@ export enum NFTCollectionType {
   NESTABLE = 2,
 }
 
-export enum BlockchainEventType {}
-
 export enum AmsEventType {
   USER_REGISTER = 'user-register',
   USER_GET_AUTH = 'user-get-auth',
