@@ -125,14 +125,15 @@ export class UpdateStateWorker extends BaseQueueWorker {
         switch (identityJob.state) {
           case IdentityJobState.DID_CREATE:
             if (status == TransactionStatus.CONFIRMED) {
-              await this.writeEventLog(
-                {
-                  logType: LogType.INFO,
-                  message: 'DID CREATE step SUCCESS',
-                  service: ServiceName.AUTHENTICATION_API,
+              await this.writeEventLog({
+                logType: LogType.INFO,
+                message: 'DID CREATE step SUCCESS',
+                service: ServiceName.AUTHENTICATION_API,
+                data: {
+                  identity: identity.id,
+                  did: identity.didUri,
                 },
-                LogOutput.DEBUG,
-              );
+              });
 
               if (await identityJob.isFinalState()) {
                 await identityJob.setCompleted();
@@ -190,14 +191,15 @@ export class UpdateStateWorker extends BaseQueueWorker {
             break;
           case IdentityJobState.ATESTATION:
             if (status == TransactionStatus.CONFIRMED) {
-              await this.writeEventLog(
-                {
-                  logType: LogType.INFO,
-                  message: 'ATTESTATION step SUCCESS',
-                  service: ServiceName.AUTHENTICATION_API,
+              await this.writeEventLog({
+                logType: LogType.INFO,
+                message: 'ATTESTATION step SUCCESS',
+                service: ServiceName.AUTHENTICATION_API,
+                data: {
+                  identity: identity.id,
+                  did: identity.didUri,
                 },
-                LogOutput.DEBUG,
-              );
+              });
               if (await identityJob.isFinalState()) {
                 await this.writeEventLog(
                   {
@@ -243,14 +245,15 @@ export class UpdateStateWorker extends BaseQueueWorker {
             break;
           case IdentityJobState.DID_REVOKE:
             if (status == TransactionStatus.CONFIRMED) {
-              await this.writeEventLog(
-                {
-                  logType: LogType.INFO,
-                  message: `REVOKED step SUCCESS`,
-                  service: ServiceName.AUTHENTICATION_API,
+              await this.writeEventLog({
+                logType: LogType.INFO,
+                message: `REVOKED step SUCCESS`,
+                service: ServiceName.AUTHENTICATION_API,
+                data: {
+                  identity: identity.id,
+                  did: identity.didUri,
                 },
-                LogOutput.DEBUG,
-              );
+              });
 
               identity.state = IdentityState.REVOKED;
               await identityJob.setCompleted();
@@ -286,7 +289,9 @@ export class UpdateStateWorker extends BaseQueueWorker {
               logType: LogType.ERROR,
               message: `Invalid transaction state`,
               service: ServiceName.AUTHENTICATION_API,
-              data: { transactionType: identityJob.state },
+              data: {
+                incomingTx: incomingTx,
+              },
             });
             break;
         }
