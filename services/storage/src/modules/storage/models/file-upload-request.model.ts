@@ -248,7 +248,7 @@ export class FileUploadRequest extends AccessControlModel {
    * ASYNC canAccess function
    * @param context
    */
-  public async canAccess(context: ServiceContext) {
+  public override async canAccess(context: ServiceContext) {
     const bucket: Bucket = await new Bucket({}, context).populateById(
       this.bucket_id,
     );

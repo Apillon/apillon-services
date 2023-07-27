@@ -123,7 +123,7 @@ export class BucketWebhook extends AccessControlModel {
   })
   public param2: string;
 
-  public async canAccess(context: ServiceContext) {
+  public override async canAccess(context: ServiceContext) {
     const b: Bucket = await new Bucket({}, context).populateById(
       this.bucket_id,
     );

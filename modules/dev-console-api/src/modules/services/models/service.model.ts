@@ -151,7 +151,7 @@ export class Service extends AccessControlModel {
    * ASYNCHROUNUOS method, to check roles for access to record
    * @param context
    */
-  public async canAccess(context: DevConsoleApiContext) {
+  public override async canAccess(context: DevConsoleApiContext) {
     const project = await new Project({}, context).populateById(
       this.project_id,
     );

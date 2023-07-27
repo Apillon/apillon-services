@@ -15,7 +15,6 @@ import { DevConsoleApiContext } from '../../context';
 import {
   Ctx,
   Permissions,
-  UserAdminPermissions,
   ProjectPermissions,
   Validation,
 } from '@apillon/modules-lib';
@@ -34,14 +33,14 @@ export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
   @Get('user-projects')
-  @UserAdminPermissions()
+  @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard)
   async getUserProjects(@Ctx() context: DevConsoleApiContext) {
     return await this.projectService.getUserProjects(context);
   }
 
   @Get('qouta-reached')
-  @UserAdminPermissions()
+  @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard)
   async isProjectsQuotaReached(@Ctx() context: DevConsoleApiContext) {
     return await this.projectService.isProjectsQuotaReached(context);
@@ -153,7 +152,7 @@ export class ProjectController {
   }
 
   @Post()
-  @UserAdminPermissions()
+  @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard)
   @Validation({ dto: Project })
   @UseGuards(ValidationGuard)

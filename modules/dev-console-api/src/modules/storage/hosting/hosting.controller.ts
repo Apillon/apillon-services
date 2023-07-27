@@ -11,7 +11,6 @@ import {
 import {
   Ctx,
   Permissions,
-  UserAdminPermissions,
   ProjectPermissions,
   Validation,
 } from '@apillon/modules-lib';
@@ -49,7 +48,7 @@ export class HostingController {
   }
 
   @Get('websites/quota-reached')
-  @UserAdminPermissions()
+  @Permissions({ role: DefaultUserRole.USER })
   @Validation({
     dto: WebsitesQuotaReachedQueryFilter,
     validateFor: ValidateFor.QUERY,

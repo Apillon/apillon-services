@@ -24,10 +24,3 @@ export const ProjectPermissions = () =>
       ],
     },
   ]);
-
-export const UserAdminPermissions = () =>
-  SetMetadata<string, PermissionPass[]>(PERMISSION_KEY, [
-    {
-      role: [DefaultUserRole.USER, DefaultUserRole.ADMIN],
-    },
-  ]);

@@ -27,7 +27,6 @@ import { DevConsoleApiContext } from '../../../context';
 import {
   Ctx,
   Permissions,
-  UserAdminPermissions,
   ProjectPermissions,
   Validation,
   CacheInterceptor,
@@ -110,7 +109,7 @@ export class BucketController {
   }
 
   @Get('quota-reached')
-  @UserAdminPermissions()
+  @Permissions({ role: DefaultUserRole.USER })
   @Validation({
     dto: BucketQuotaReachedQueryFilter,
     validateFor: ValidateFor.QUERY,

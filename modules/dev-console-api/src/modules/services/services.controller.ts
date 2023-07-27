@@ -14,7 +14,6 @@ import { DefaultUserRole, SerializeFor, ValidateFor } from '@apillon/lib';
 import {
   Ctx,
   Permissions,
-  UserAdminPermissions,
   ProjectPermissions,
   Validation,
 } from '@apillon/modules-lib';
@@ -30,7 +29,7 @@ export class ServicesController {
   constructor(private readonly serviceService: ServicesService) {}
 
   @Get('types')
-  @UserAdminPermissions()
+  @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard)
   async getServiceTypes(@Ctx() context: DevConsoleApiContext) {
     return await this.serviceService.getServiceTypes(context);

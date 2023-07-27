@@ -15,7 +15,6 @@ import {
 import {
   Ctx,
   Permissions,
-  UserAdminPermissions,
   ProjectPermissions,
   Validation,
 } from '@apillon/modules-lib';
@@ -50,7 +49,6 @@ export class NftsController {
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.ADMIN },
   )
   @UseGuards(AuthGuard)
   async createCollection(
@@ -72,7 +70,7 @@ export class NftsController {
   }
 
   @Get('collections/quota-reached')
-  @UserAdminPermissions()
+  @Permissions({ role: DefaultUserRole.USER })
   @Validation({
     dto: CollectionsQuotaReachedQueryFilter,
     validateFor: ValidateFor.QUERY,

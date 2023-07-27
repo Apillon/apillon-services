@@ -176,7 +176,7 @@ export class Deployment extends AccessControlModel {
   })
   public number: number;
 
-  public async canAccess(context: ServiceContext) {
+  public override async canAccess(context: ServiceContext) {
     const website: Website = await new Website({}, context).populateById(
       this.website_id,
     );
