@@ -62,7 +62,7 @@ export enum TransactionType {
   MINT_NFT = 3,
   SET_COLLECTION_BASE_URI = 4,
   BURN_NFT = 5,
-  NEST_MINT_NFT = 3,
+  NEST_MINT_NFT = 6,
 }
 
 export enum CollectionStatus {
