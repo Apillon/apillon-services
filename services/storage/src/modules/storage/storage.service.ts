@@ -67,7 +67,7 @@ export class StorageService {
         status: 404,
       });
     }
-    bucket.canAccess(context);
+    bucket.canModify(context);
 
     //get max size quota for Bucket and compare it with current bucket size
     const maxBucketSizeQuota = await new Scs(context).getQuota({

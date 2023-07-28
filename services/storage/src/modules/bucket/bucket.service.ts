@@ -208,7 +208,7 @@ export class BucketService {
     if (!b.exists()) {
       throw new StorageNotFoundException();
     }
-    b.canAccess(context);
+    b.canModify(context);
 
     if (b.bucketType == BucketType.HOSTING) {
       return await HostingService.clearBucketContent({ bucket: b }, context);
