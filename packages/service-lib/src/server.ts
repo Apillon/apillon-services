@@ -11,34 +11,51 @@ export function startDevServer(
 ) {
   console.log('starting Dev socket server...');
   const server = Net.createServer((socket) => {
+    let messageReceived = '';
     socket.on('data', async (chunk) => {
-      console.log(
-        `${serviceName} Socket server request: ${JSON.stringify(
-          JSON.parse(chunk.toString()),
-        )}`,
-      );
-      try {
-        const result = await handler(JSON.parse(chunk.toString()), {} as any);
-        socket.write(JSON.stringify(result));
-        socket.end();
+      messageReceived += chunk.toString();
+      if (messageReceived.endsWith('</EOF>')) {
+        messageReceived = messageReceived.replace('</EOF>', '');
         console.log(
-          `${serviceName} Socket server response: ${JSON.stringify(result)}`,
+          `${serviceName} Socket server request: ${JSON.stringify(
+            JSON.parse(messageReceived),
+          )}`,
         );
-      } catch (err) {
-        console.error(`${serviceName} Socket server ERROR:`);
-        console.error(err);
-        socket.end();
+
+        try {
+          const result = await handler(
+            JSON.parse(messageReceived.toString()),
+            {} as any,
+          );
+          socket.write(`${JSON.stringify(result)}</EOF>`);
+          messageReceived = '';
+          socket.end();
+          console.log(
+            `${serviceName} Socket server response: ${JSON.stringify(result)}`,
+          );
+        } catch (err) {
+          console.error(`${serviceName} Socket server ERROR:`);
+          console.error(err);
+          socket.end();
+          messageReceived = '';
+        }
+      } else {
+        console.log(
+          `${serviceName} Socket server partial data received: ${messageReceived} `,
+        );
       }
     });
     // When the client requests to end the TCP connection with the server, the server
     // ends the connection.
     socket.on('end', function () {
       console.log(`${serviceName}: Closing connection with the client`);
+      messageReceived = '';
     });
 
     // ERROR
     socket.on('error', function (err) {
       console.log(`${serviceName}: Error: ${err}`);
+      messageReceived = '';
     });
   });
 

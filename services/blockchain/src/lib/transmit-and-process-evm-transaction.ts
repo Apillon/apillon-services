@@ -1,9 +1,8 @@
 import {
   AppEnvironment,
   CodeException,
-  EvmChain,
-  TransactionStatus,
   env,
+  TransactionStatus,
 } from '@apillon/lib';
 import { BlockchainErrorCode } from '../config/types';
 import {
@@ -15,17 +14,17 @@ import { WorkerName } from '../workers/worker-executor';
 import { TransmitEvmTransactionWorker } from '../workers/transmit-evm-transaction-worker';
 import { ServiceContext } from '@apillon/service-lib';
 import { Transaction } from '../common/models/transaction';
-import { EvmTransactionWorker } from '../workers/evm-transaction-worker';
+import { ethers } from 'ethers';
 
 /**
  * Function is used to manually execute workers, which are on AWS executed via SQS and jobs
  * @param context
- * @param chain
+ * @param provider
  * @param transaction
  */
 export async function transmitAndProcessEvmTransaction(
   context: ServiceContext,
-  chain: EvmChain,
+  provider: ethers.providers.JsonRpcProvider,
   transaction: Transaction,
 ) {
   if (
@@ -49,45 +48,29 @@ export async function transmitAndProcessEvmTransaction(
     transmitWorkerServiceDef,
     WorkerName.TRANSMIT_EVM_TRANSACTION,
     {
-      parameters: { chain: chain },
+      parameters: { chain: transaction.chain },
     },
   );
 
   const transmitWorker = new TransmitEvmTransactionWorker(wd, context);
   await transmitWorker.runExecutor({
-    chain: chain,
+    chain: transaction.chain,
   });
 
-  //Check transaction status on indexer - in test environment this cant be performed - graphQl server does not exists for genache provider
-  /*if (env.APP_ENV != AppEnvironment.TEST) {
-    let tx: Transaction = await new Transaction({}, context).populateById(
-      transaction.id,
-    );
-    do {
-      const evnTransactionServiceDef: ServiceDefinition = {
-        type: ServiceDefinitionType.LAMBDA,
-        config: { region: 'test' },
-        params: { FunctionName: 'test' },
-      };
-
-      const wd = new WorkerDefinition(
-        evnTransactionServiceDef,
-        WorkerName.EVM_TRANSACTIONS,
-        {
-          parameters: { chain: chain },
-        },
-      );
-
-      const worker = new EvmTransactionWorker(wd, context);
-      await worker.runExecutor({
-        chain: chain,
-      });
-
-      tx = await new Transaction({}, context).populateById(transaction.id);
-
-      setTimeout(() => {
-        console.log('Delayed for 1 second.');
-      }, 1000);
-    } while (tx.transactionStatus == TransactionStatus.PENDING);
-  }*/
+  if (env.APP_ENV === AppEnvironment.TEST) {
+    const receipt = await provider.send('eth_getTransactionReceipt', [
+      transaction.transactionHash,
+    ]);
+    switch (receipt.status) {
+      case '0x1':
+        transaction.transactionStatus = TransactionStatus.CONFIRMED;
+        break;
+      case '0x0':
+        transaction.transactionStatus = TransactionStatus.FAILED;
+        break;
+      default:
+        transaction.transactionStatus = TransactionStatus.ERROR;
+    }
+    await transaction.update();
+  }
 }

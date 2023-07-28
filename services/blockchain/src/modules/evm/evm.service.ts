@@ -1,13 +1,13 @@
 import {
   AppEnvironment,
   ChainType,
+  env,
   EvmChain,
   Lmas,
   LogType,
   SerializeFor,
   ServiceName,
   TransactionStatus,
-  env,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { LogOutput, sendToWorkerQueue } from '@apillon/workers-lib';
@@ -154,7 +154,10 @@ export class EvmService {
       const rawTransaction = await signingWallet.signTransaction(unsignedTx);
 
       if (!unsignedTx.to) {
-        data = getContractAddress(wallet.address, wallet.nextNonce);
+        data = ethers.utils.getContractAddress({
+          from: wallet.address,
+          nonce: wallet.nextNonce,
+        });
       }
 
       // save transaction
@@ -181,11 +184,7 @@ export class EvmService {
         env.APP_ENV == AppEnvironment.LOCAL_DEV ||
         env.APP_ENV == AppEnvironment.TEST
       ) {
-        await transmitAndProcessEvmTransaction(
-          context,
-          _event.params.chain,
-          transaction,
-        );
+        await transmitAndProcessEvmTransaction(context, provider, transaction);
       } else {
         try {
           await sendToWorkerQueue(
@@ -350,11 +349,17 @@ export class EvmService {
               },
             });
           }
+          if (
+            env.APP_ENV === AppEnvironment.TEST ||
+            env.APP_ENV === AppEnvironment.LOCAL_DEV
+          ) {
+            throw err;
+          }
           break;
         }
       }
 
-      if (latestSuccess) {
+      if (latestSuccess >= 0) {
         const wallet = new Wallet(wallets[i], context);
         await wallet.updateLastProcessedNonce(latestSuccess);
       }
@@ -390,13 +395,4 @@ export class EvmService {
     }
     // TODO: call transaction checker
   }
-}
-function getContractAddress(address: string, nonce: number): string {
-  const rlp_encoded = ethers.utils.RLP.encode([
-    address,
-    ethers.BigNumber.from(nonce.toString()).toHexString(),
-  ]);
-  const contract_address_long = ethers.utils.keccak256(rlp_encoded);
-  const contract_address = '0x'.concat(contract_address_long.substring(26));
-  return ethers.utils.getAddress(contract_address);
 }
