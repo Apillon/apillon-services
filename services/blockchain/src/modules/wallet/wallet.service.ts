@@ -49,8 +49,13 @@ export class WalletService {
   ): Promise<any> {
     const wallet = await new Wallet({}, context).populateById(walletId);
     WalletService.checkExists(wallet);
+    // Workaround: rawmodel props are by default set to null, which overvwrites values in the DB
+    // TODO: Better way to do this?
+    const dataObj = Object.fromEntries(
+      Object.entries(data).filter(([_, value]) => !!value),
+    );
 
-    wallet.populate(data, PopulateFrom.ADMIN);
+    wallet.populate(dataObj, PopulateFrom.ADMIN);
     try {
       await wallet.validate();
     } catch (err) {
