@@ -2,9 +2,9 @@ import ganache, { Server } from 'ganache';
 import { Stage } from '../interfaces/stage.interface';
 import { Wallet } from '@apillon/blockchain/src/modules/wallet/wallet.model';
 import { ChainType, EvmChain } from '@apillon/lib';
-import { TransactionType } from '@apillon/nfts/dist/config/types';
-import { Transaction as NftCollectionTx } from '@apillon/nfts/dist/modules/transaction/models/transaction.model';
-import { Transaction as BlockchainTx } from '@apillon/blockchain/dist/src/common/models/transaction';
+import { Transaction as NftCollectionTx } from '@apillon/nfts/src/modules/transaction/models/transaction.model';
+import { Transaction as BlockchainTx } from '@apillon/blockchain/src/common/models/transaction';
+import { TransactionType } from '@apillon/nfts/src/config/types';
 
 const KEYS = {
   '0x7756251cff23061ec0856f8ec8d7384a2d260aa2':
@@ -81,13 +81,6 @@ export class TestBlockchain {
     await this.server.close();
   }
 
-  getTransactionReceipt(transactionHash: string) {
-    return this.server.provider.request({
-      method: 'eth_getTransactionReceipt',
-      params: [transactionHash],
-    });
-  }
-
   getWalletAddresses() {
     return this.accounts;
   }
@@ -96,6 +89,47 @@ export class TestBlockchain {
     return accountIndex < this.accounts.length
       ? this.accounts[accountIndex]
       : null;
+  }
+
+  async contractRead(to: string, data: string) {
+    try {
+      return await this.server.provider.request({
+        method: 'eth_call',
+        params: [
+          {
+            from: null,
+            to,
+            data,
+          },
+        ],
+      });
+    } catch (e: any) {
+      return null;
+    }
+  }
+
+  async contractWrite(fromIndex: number, to: string, data: string) {
+    try {
+      const from = this.accounts[fromIndex];
+      const signedTx = await this.server.provider.request({
+        method: 'eth_signTransaction',
+        params: [
+          { from, to, gas: '0x5b8d80', maxFeePerGas: '0xffffffff', data },
+        ],
+      });
+      return await this.server.provider.send('eth_sendRawTransaction', [
+        signedTx,
+      ]);
+    } catch (e: any) {
+      return null;
+    }
+  }
+
+  async getTransactionReceipt(transactionHash: string) {
+    return await this.server.provider.request({
+      method: 'eth_getTransactionReceipt',
+      params: [transactionHash],
+    });
   }
 
   private getPrivateKey(address: string) {
