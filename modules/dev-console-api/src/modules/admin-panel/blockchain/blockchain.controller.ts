@@ -1,7 +1,6 @@
 import {
   DefaultUserRole,
   BaseQueryFilter,
-  UpdateWalletDto,
   UpdateTransactionDto,
   ValidateFor,
   PopulateFrom,
@@ -48,16 +47,10 @@ export class BlockchainController {
   }
 
   @Patch('wallets/:id')
-  @Validation({
-    dto: UpdateWalletDto,
-    validateFor: ValidateFor.BODY,
-    populateFrom: PopulateFrom.ADMIN,
-  })
-  @UseGuards(ValidationGuard)
   async updateWallet(
     @Ctx() context: DevConsoleApiContext,
     @Param('id', ParseIntPipe) walletId: number,
-    @Body() updateWalletDto: UpdateWalletDto,
+    @Body() updateWalletDto: any,
   ) {
     return this.blockchainService.updateWallet(
       context,

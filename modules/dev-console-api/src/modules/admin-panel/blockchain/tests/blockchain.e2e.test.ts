@@ -59,7 +59,6 @@ describe('Blockchain endpoint tests', () => {
     await testWallet.checkAndUpdateBalance();
     testWallet.calculateTokenBalance();
     await testWallet.insert();
-
     testTransaction = new TransactionLog(
       {
         wallet: '0x25Cd0fE6953F5799AEbDa9ee445287CFb101972E',
@@ -105,11 +104,17 @@ describe('Blockchain endpoint tests', () => {
       expect(response.status).toBe(200);
       const wallet = response.body.data;
       expect(wallet?.id).toBeTruthy();
-      // Set update data for object comparison to work
-      wallet.createTime = testWallet.createTime;
-      wallet.updateTime = testWallet.updateTime;
-      wallet.updateUser = testWallet.updateUser;
+      // Set generic data for object comparison to work
+      [
+        'createTime',
+        'updateTime',
+        'createUser',
+        'updateUser',
+        'tableName',
+      ].forEach((prop) => (wallet[prop] = testWallet[prop]));
+      delete wallet.isBelowThreshold;
       expect(wallet).toMatchObject(testWallet);
+
       const transactionSumDataProps: Array<keyof WalletTransactionSumData> = [
         'totalFeeTransaction',
         'totalAmountDeposit',

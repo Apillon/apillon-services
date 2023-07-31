@@ -425,7 +425,7 @@ export class Wallet extends AdvancedSQLModel {
           .div(ethers.BigNumber.from(10).pow(this.decimals))
           .toString();
       } catch (err) {
-        console.log(err);
+        console.error(err);
       }
     }
     try {
