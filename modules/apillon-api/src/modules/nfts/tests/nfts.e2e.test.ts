@@ -19,22 +19,22 @@ import {
   SqlModelStatus,
   TransactionStatus,
 } from '@apillon/lib';
-import { ApiKey } from '@apillon/access/dist/modules/api-key/models/api-key.model';
+import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
 import { Project } from '@apillon/dev-console-api/src/modules/project/models/project.model';
 import { Service } from '@apillon/dev-console-api/src/modules/services/models/service.model';
 import { Collection } from '@apillon/nfts/src/modules/nfts/models/collection.model';
 import {
   CollectionStatus,
   TransactionType,
-} from '@apillon/nfts/dist/config/types';
+} from '@apillon/nfts/src/config/types';
 import { Transaction } from '@apillon/nfts/src/modules/transaction/models/transaction.model';
 import { EvmChain } from '@apillon/lib/src/config/types';
 import {
   getRequestFactory,
   postRequestFactory,
-} from '@apillon/tests-lib/dist/lib/helpers/requests';
+} from '@apillon/tests-lib/src/lib/helpers/requests';
 import { ethers } from 'ethers';
-import { EvmNftNestableABI } from '@apillon/nfts/dist/lib/contracts/deployed-nft-contract';
+import { EvmNftNestableABI } from '@apillon/nfts/src/lib/contracts/deployed-nft-contract';
 
 const TEST_COLLECTION_BASE_URI =
   'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/';
