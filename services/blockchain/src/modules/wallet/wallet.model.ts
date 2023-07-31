@@ -530,7 +530,7 @@ export class Wallet extends AdvancedSQLModel {
       `,
       qFrom: `FROM ${DbTables.WALLET} w
         WHERE (@search IS null OR w.address LIKE CONCAT('%', @search, '%'))
-        AND w.status = ${SqlModelStatus.ACTIVE}`,
+        AND w.status <> ${SqlModelStatus.DELETED}`,
       qFilter: `
           ORDER BY ${filters.orderStr}
           LIMIT ${filters.limit} OFFSET ${filters.offset};

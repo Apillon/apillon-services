@@ -50,13 +50,9 @@ export class BlockchainController {
   async updateWallet(
     @Ctx() context: DevConsoleApiContext,
     @Param('id', ParseIntPipe) walletId: number,
-    @Body() updateWalletDto: any,
+    @Body() data: any,
   ) {
-    return this.blockchainService.updateWallet(
-      context,
-      walletId,
-      updateWalletDto,
-    );
+    return this.blockchainService.updateWallet(context, walletId, data);
   }
 
   @Get('wallets/:id/transactions')
