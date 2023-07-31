@@ -620,7 +620,7 @@ describe('Apillon API NFTs tests', () => {
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
     });
 
-    test('User should be able to burn nestable collection NFT with nest-minted child', async () => {
+    test('User should not be able to burn nestable collection NFT with nest-minted child', async () => {
       //create parent collection
       const parentCollectionResponse = await postRequest(
         '/nfts/collections',
