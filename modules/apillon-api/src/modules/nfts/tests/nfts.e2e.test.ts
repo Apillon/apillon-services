@@ -19,23 +19,27 @@ import {
   SqlModelStatus,
   TransactionStatus,
 } from '@apillon/lib';
-import { ApiKey } from '@apillon/access/dist/modules/api-key/models/api-key.model';
+import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
 import { Project } from '@apillon/dev-console-api/src/modules/project/models/project.model';
 import { Service } from '@apillon/dev-console-api/src/modules/services/models/service.model';
 import { Collection } from '@apillon/nfts/src/modules/nfts/models/collection.model';
 import {
   CollectionStatus,
   TransactionType,
-} from '@apillon/nfts/dist/config/types';
+} from '@apillon/nfts/src/config/types';
 import { Transaction } from '@apillon/nfts/src/modules/transaction/models/transaction.model';
 import { EvmChain } from '@apillon/lib/src/config/types';
 import {
   getRequestFactory,
   postRequestFactory,
-} from '@apillon/tests-lib/dist/lib/helpers/requests';
+} from '@apillon/tests-lib/src/lib/helpers/requests';
+import { ethers } from 'ethers';
+import { EvmNftNestableABI } from '@apillon/nfts/src/lib/contracts/deployed-nft-contract';
 
 const TEST_COLLECTION_BASE_URI =
   'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/';
+
+const NESTABLE_NFT_INTERFACE = new ethers.utils.Interface(EvmNftNestableABI);
 
 describe('Apillon API NFTs tests', () => {
   const CHAIN_ID = EvmChain.MOONBASE;
@@ -614,6 +618,116 @@ describe('Apillon API NFTs tests', () => {
         TransactionType.BURN_NFT,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
+    });
+
+    test('User should not be able to burn nestable collection NFT with nest-minted child', async () => {
+      //create parent collection
+      const parentCollectionResponse = await postRequest(
+        '/nfts/collections',
+        {
+          collectionType: 2,
+          symbol: 'PNFT',
+          name: 'Parent Collection',
+          maxSupply: 50,
+          dropPrice: 0,
+          project_uuid: nestableProject.project_uuid,
+          baseUri: TEST_COLLECTION_BASE_URI,
+          baseExtension: 'json',
+          drop: false,
+          dropStart: 0,
+          dropReserve: 5,
+          chain: CHAIN_ID,
+          isRevokable: true,
+          isSoulbound: false,
+          royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
+          royaltiesFees: 0,
+        },
+        nestableApiKey,
+      );
+      expect(parentCollectionResponse.status).toBe(201);
+      const parentCollection = await new Collection(
+        {},
+        stage.nftsContext,
+      ).populateById(parentCollectionResponse.body.data.id);
+      //mint parent NFT
+      const parentOwnerIndex = 0;
+      const parentMintResponse = await postRequest(
+        `/nfts/collections/${parentCollection.collection_uuid}/mint`,
+        {
+          receivingAddress: blockchain.getWalletAddress(parentOwnerIndex),
+          quantity: 1,
+        },
+        nestableApiKey,
+      );
+      expect(parentMintResponse.status).toBe(201);
+      //create child collection
+      const childCollectionResponse = await postRequest(
+        '/nfts/collections',
+        {
+          collectionType: 2,
+          symbol: 'CNFT',
+          name: 'Child Collection',
+          maxSupply: 50,
+          dropPrice: 0,
+          project_uuid: nestableProject.project_uuid,
+          baseUri: TEST_COLLECTION_BASE_URI,
+          baseExtension: 'json',
+          drop: false,
+          dropStart: 0,
+          dropReserve: 5,
+          chain: CHAIN_ID,
+          isRevokable: true,
+          isSoulbound: false,
+          royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
+          royaltiesFees: 0,
+        },
+        nestableApiKey,
+      );
+      expect(childCollectionResponse.status).toBe(201);
+      const childCollection = await new Collection(
+        {},
+        stage.nftsContext,
+      ).populateById(childCollectionResponse.body.data.id);
+      //nest mint child under parent
+      const nestMintResponse = await postRequest(
+        `/nfts/collections/${childCollection.collection_uuid}/nest-mint`,
+        {
+          parentCollectionUuid: parentCollection.collection_uuid,
+          parentNftId: 1,
+          quantity: 1,
+        },
+        nestableApiKey,
+      );
+      expect(nestMintResponse.status).toBe(201);
+      //accept nesting child on parent
+      const acceptChildData = NESTABLE_NFT_INTERFACE.encodeFunctionData(
+        'acceptChild',
+        [
+          1, //uint256 parentId
+          0, //uint256 childIndex
+          childCollection.contractAddress, //address childAddress
+          1, //uint256 childId
+        ],
+      );
+      const acceptChildTxHash = await blockchain.contractWrite(
+        parentOwnerIndex,
+        parentCollection.contractAddress,
+        acceptChildData,
+      );
+      const acceptChildReceipt = await blockchain.getTransactionReceipt(
+        acceptChildTxHash,
+      );
+      expect(acceptChildReceipt.status).toBe('0x1');
+
+      const response = await postRequest(
+        `/nfts/collections/${parentCollection.collection_uuid}/burn`,
+        { tokenId: 1 },
+        nestableApiKey,
+      );
+
+      expect(response.status).toBe(500);
+      expect(response.body.code).toBe(50012012);
+      expect(response.body.message).toBe('Error burning NFT');
     });
   });
 
