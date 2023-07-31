@@ -3,7 +3,6 @@ import { DevConsoleApiContext } from '../../../context';
 import {
   BaseQueryFilter,
   BlockchainMicroservice,
-  UpdateWalletDto,
   UpdateTransactionDto,
   WalletTransactionsQueryFilter,
 } from '@apillon/lib';
@@ -41,13 +40,13 @@ export class BlockchainService {
    * @async
    * @param {DevConsoleApiContext} context - - The API context with current user session.
    * @param {number} walletId - The wallet's id
-   * @param {UpdateWalletDto} data - The wallet's update data
+   * @param {any} data - The wallet's update data
    * @returns {Promise<any>}
    */
   async updateWallet(
     context: DevConsoleApiContext,
     walletId: number,
-    data: UpdateWalletDto,
+    data: any,
   ): Promise<any> {
     return (
       await new BlockchainMicroservice(context).updateWallet(walletId, data)

@@ -11,7 +11,6 @@ import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import {
   UpdateTransactionDto,
-  UpdateWalletDto,
   CreateEvmTransactionDto,
   CreateSubstrateTransactionDto,
   TransactionDto,
@@ -106,7 +105,7 @@ export class BlockchainMicroservice extends BaseService {
     });
   }
 
-  public async updateWallet(walletId: number, data: UpdateWalletDto) {
+  public async updateWallet(walletId: number, data: any) {
     return await this.callService({
       eventName: BlockchainEventType.UPDATE_WALLET,
       walletId,

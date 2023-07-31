@@ -59,7 +59,6 @@ describe('Blockchain endpoint tests', () => {
     await testWallet.checkAndUpdateBalance();
     testWallet.calculateTokenBalance();
     await testWallet.insert();
-
     testTransaction = new TransactionLog(
       {
         wallet: '0x25Cd0fE6953F5799AEbDa9ee445287CFb101972E',
@@ -105,11 +104,17 @@ describe('Blockchain endpoint tests', () => {
       expect(response.status).toBe(200);
       const wallet = response.body.data;
       expect(wallet?.id).toBeTruthy();
-      // Set update data for object comparison to work
-      wallet.createTime = testWallet.createTime;
-      wallet.updateTime = testWallet.updateTime;
-      wallet.updateUser = testWallet.updateUser;
+      // Set generic data for object comparison to work
+      [
+        'createTime',
+        'updateTime',
+        'createUser',
+        'updateUser',
+        'tableName',
+      ].forEach((prop) => (wallet[prop] = testWallet[prop]));
+      delete wallet.isBelowThreshold;
       expect(wallet).toMatchObject(testWallet);
+
       const transactionSumDataProps: Array<keyof WalletTransactionSumData> = [
         'totalFeeTransaction',
         'totalAmountDeposit',
@@ -142,7 +147,7 @@ describe('Blockchain endpoint tests', () => {
   });
 
   describe('Update wallet tests', () => {
-    test(`Update a wallet's minBalance`, async () => {
+    test(`Update a wallet's data`, async () => {
       const minBalance = 100_000_000_000;
       const decimals = 9;
       const token = 'GLMR';
@@ -161,6 +166,21 @@ describe('Blockchain endpoint tests', () => {
       expect(data[0].token).toEqual(token);
       expect(data[0].decimals).toEqual(decimals);
       expect(data[0].minBalance).toEqual(minBalance);
+    });
+
+    test(`Set a wallet's status to inactive`, async () => {
+      const status = SqlModelStatus.INACTIVE;
+      const response = await request(stage.http)
+        .patch(`/admin-panel/blockchain/wallets/${testWallet.id}`)
+        .set('Authorization', `Bearer ${adminTestUser.token}`)
+        .send({ status });
+      expect(response.status).toBe(200);
+      expect(response.body.data.id).toBeTruthy();
+      expect(response.body.data.status).toEqual(status);
+      const data = await stage.blockchainContext.mysql.paramExecute(
+        `SELECT status from wallet WHERE id = '${testWallet.id}'`,
+      );
+      expect(data[0].status).toEqual(status);
     });
 
     test('Non-admin user should NOT be able to update a wallet', async () => {
