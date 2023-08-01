@@ -573,7 +573,7 @@ export enum JwtTokenType {
 
 /**
  * Quota codes
- * Must equal quote.id field in database!
+ * Must equal quota.id field in database!
  */
 export enum QuotaCode {
   MAX_PROJECT_COUNT = 1,
@@ -585,6 +585,16 @@ export enum QuotaCode {
   MAX_ATTESTED_USERS = 7,
   MAX_WEBSITES = 8,
   MAX_NFT_COLLECTIONS = 9,
+}
+
+/**
+ * Quota types
+ * Must equal quota.type field in database!
+ */
+export enum QuotaType {
+  FOR_OBJECT = 1,
+  FOR_PROJECT = 2,
+  FOR_PROJECT_AND_OBJECT = 3,
 }
 
 /* OAuth link type*/
