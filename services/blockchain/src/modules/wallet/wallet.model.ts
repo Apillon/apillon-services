@@ -15,13 +15,9 @@ import {
   selectAndCountQuery,
   SerializeFor,
   SubstrateChain,
-} from '@apillon/lib';
-import {
-  BlockchainErrorCode,
-  Chain,
-  DbTables,
   SqlModelStatus,
-} from '../../config/types';
+} from '@apillon/lib';
+import { BlockchainErrorCode, Chain, DbTables } from '../../config/types';
 import { Endpoint } from '../../common/models/endpoint';
 import { ethers } from 'ethers';
 import { ApiPromise, WsProvider } from '@polkadot/api';
@@ -361,7 +357,7 @@ export class Wallet extends AdvancedSQLModel {
       WHERE
       chainType = @chainType
       AND chain = @chain
-      AND status <> ${SqlModelStatus.DELETED}
+      AND status = ${SqlModelStatus.ACTIVE}
       ORDER BY usageTimestamp ASC
       LIMIT 1
       FOR UPDATE;
@@ -399,7 +395,7 @@ export class Wallet extends AdvancedSQLModel {
         AND chain = @chain
         -- case insensitive comparison
         AND address like @address
-        AND status <> ${SqlModelStatus.DELETED}
+        AND status = ${SqlModelStatus.ACTIVE}
       ORDER BY usageTimestamp ASC
       LIMIT 1
       FOR UPDATE;
@@ -429,7 +425,7 @@ export class Wallet extends AdvancedSQLModel {
           .div(ethers.BigNumber.from(10).pow(this.decimals))
           .toString();
       } catch (err) {
-        console.log(err);
+        console.error(err);
       }
     }
     try {

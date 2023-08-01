@@ -242,8 +242,10 @@ export class TransactionLogWorker extends BaseQueueWorker {
          (x) => `(
           '${dateToSqlString(x.ts)}', ${x.blockId}, ${x.status}, ${x.direction},
         '${x.action}', ${x.chain}, ${x.chainType}, '${x.wallet}',
-        '${x.addressFrom}', '${x.addressTo}', '${x.hash}', '${x.token}',
-        '${x.amount}', '${x.fee || '0'}', '${x.totalPrice}'
+        ${x.addressFrom ? `'${x.addressFrom}'` : null},
+        ${x.addressTo ? `'${x.addressTo}'` : null},
+        '${x.hash}', '${x.token}',
+        '${x.amount || 0}', '${x.fee || 0}', '${x.totalPrice}'
         )`,
        )
        .join(',')}
