@@ -7,9 +7,9 @@ import {
   prop,
   SerializeFor,
   SqlModelStatus,
+  QuotaDto,
 } from '@apillon/lib';
 import { DbTables } from '../../../config/types';
-import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
 
 export class Quota extends AdvancedSQLModel {
   public readonly tableName = DbTables.QUOTA;

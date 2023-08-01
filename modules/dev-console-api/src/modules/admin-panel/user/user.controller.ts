@@ -6,9 +6,9 @@ import {
   QuotaOverrideDto,
   ValidateFor,
   CacheKeyPrefix,
+  QuotaDto,
+  GetQuotasDto,
 } from '@apillon/lib';
-import { GetQuotasDto } from '@apillon/lib/dist/lib/at-services/config/dtos/get-quotas.dto';
-import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
 import {
   Ctx,
   Permissions,

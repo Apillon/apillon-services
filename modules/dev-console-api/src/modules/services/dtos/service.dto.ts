@@ -1,11 +1,11 @@
 // import { ApiProperty } from '@babel/core';
 import {
   AttachedServiceType,
+  ModelBase,
   PopulateFrom,
   SerializeFor,
   enumInclusionValidator,
 } from '@apillon/lib';
-import { ModelBase } from '@apillon/lib/dist/lib/base-models/base';
 import { prop } from '@rawmodel/core';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';

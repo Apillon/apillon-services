@@ -7,6 +7,7 @@ import {
   PopulateFrom,
   BaseQueryFilter,
   CacheKeyPrefix,
+  QuotaDto,
 } from '@apillon/lib';
 import {
   Body,
@@ -30,7 +31,6 @@ import { AuthGuard } from '../../../guards/auth.guard';
 import { ProjectService } from './project.service';
 import { DevConsoleApiContext } from '../../../context';
 import { ValidationGuard } from '../../../guards/validation.guard';
-import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
 import { UUID } from 'crypto';
 import { BaseQueryFilterValidator } from '../../../decorators/base-query-filter-validator';
 import { Cache } from '@apillon/modules-lib';

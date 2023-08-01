@@ -1,7 +1,7 @@
-import { PopulateFrom } from '@apillon/lib';
-import { ModelBase, prop } from '@apillon/lib/dist/lib/base-models/base';
+import { ModelBase, PopulateFrom } from '@apillon/lib';
 import { faker } from '@faker-js/faker';
 import { stringParser } from '@rawmodel/parsers';
+import { prop } from '@rawmodel/core';
 
 export class UpdateUserDto extends ModelBase {
   // WARNING: wallet should not be used here (without signature)

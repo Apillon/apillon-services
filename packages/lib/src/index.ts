@@ -1,5 +1,6 @@
 //#REGION Config
 export * from './lib/at-services/config/scs';
+export * from './lib/at-services/config/dtos/quota.dto';
 export * from './lib/at-services/config/dtos/get-quota.dto';
 export * from './lib/at-services/config/dtos/get-quotas.dto';
 export * from './lib/at-services/config/dtos/create-quota-override.dto';
@@ -54,6 +55,7 @@ export * from './lib/at-services/authentication/dtos/identity-verification-email
 export * from './lib/at-services/authentication/dtos/verify-identity.dto';
 export * from './lib/at-services/authentication/dtos/sporran/sporran-session.dto';
 export * from './lib/at-services/authentication/dtos/sporran/message/request-credential.dto';
+export * from './lib/at-services/authentication/dtos/sporran/message/verify-credential.dto';
 export * from './lib/at-services/authentication/dtos/sporran/message/submit-attestation.dto';
 export * from './lib/at-services/authentication/dtos/sporran/message/submit-terms.dto';
 export * from './lib/at-services/authentication/dtos/verify-session.dto';
