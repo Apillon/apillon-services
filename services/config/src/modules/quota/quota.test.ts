@@ -17,11 +17,6 @@ describe('Quota unit test', () => {
 
   /**
    * TODO: Write tests
-   * - default quotas
-   * - custom override per project
-   * - custom override per object
-   * - subscription override
-   * - expired subscription
    * - different types of value (1-max, 2-min, 3-boolean)
    **/
 
@@ -109,16 +104,6 @@ describe('Quota unit test', () => {
   afterAll(async () => {
     await releaseStage(stage);
   });
-
-  /**
-   * TODO: Write tests
-   * - default quotas
-   * - custom override per project
-   * - custom override per object
-   * - subscription override
-   * - expired subscription
-   * - different types of value (1-max, 2-min, 3-boolean)
-   **/
 
   test('Should get default quota for project', async () => {
     const input = new GetQuotaDto({

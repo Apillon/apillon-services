@@ -7,9 +7,9 @@ import {
   prop,
   SerializeFor,
   SqlModelStatus,
+  QuotaDto,
 } from '@apillon/lib';
 import { DbTables } from '../../../config/types';
-import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
 
 export class Quota extends AdvancedSQLModel {
   public readonly tableName = DbTables.QUOTA;
@@ -129,12 +129,14 @@ export class Quota extends AdvancedSQLModel {
         AND o2.status = ${SqlModelStatus.ACTIVE}
       WHERE q.status = ${SqlModelStatus.ACTIVE}
       AND (@quota_id is NULL OR q.id = @quota_id)
+      AND (@type is NULL OR q.type = @type)
       GROUP BY q.id
     `,
       {
         quota_id: data.quota_id || null,
         project_uuid: data.project_uuid || null,
         object_uuid: data.object_uuid || null,
+        type: data['type'] || null, // For admin panel - filter by quota type
       },
     );
   }

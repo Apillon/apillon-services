@@ -9,7 +9,7 @@ import { releaseStage, Stage } from '@apillon/tests-lib';
 import { Project } from '../../../project/models/project.model';
 import { setupTest } from '../../../../../test/helpers/setup';
 
-describe('Admin Project tests', () => {
+describe('Admin User tests', () => {
   let stage: Stage;
 
   let testUser: TestUser;
@@ -30,19 +30,6 @@ describe('Admin Project tests', () => {
       stage.amsContext,
       DefaultUserRole.ADMIN,
     );
-
-    await stage.configContext.mysql.paramExecute(`
-    INSERT INTO override (status, quota_id, project_uuid, object_uuid, package_id, value)
-    VALUES
-      (
-        ${SqlModelStatus.ACTIVE},
-        ${QuotaCode.MAX_PROJECT_COUNT},
-        null,
-        '${testUserUuid}',
-        null,
-        20
-      )
-    `);
 
     testProject = await createTestProject(testUser, stage.devConsoleContext);
   });
@@ -176,21 +163,21 @@ describe('Admin Project tests', () => {
         response.body.data.find(
           (quota) => quota.id === QuotaCode.MAX_PROJECT_COUNT,
         )?.value,
-      ).toBe(20); // From override inserted in beforeAll
+      ).toBe(1); // Default value for MAX_PROJECT_COUNT quota
     });
 
     test('Create a new user quota', async () => {
       const postResponse = await request(stage.http)
         .post(`/admin-panel/users/${testUserUuid}/quotas`)
         .send({
-          quota_id: QuotaCode.MAX_API_KEYS,
-          value: 20,
+          quota_id: QuotaCode.MAX_PROJECT_COUNT,
+          value: 10,
           description: 'testing123',
         })
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(postResponse.status).toBe(201);
-      expect(postResponse.body.data.quota_id).toBe(QuotaCode.MAX_API_KEYS);
-      expect(postResponse.body.data.value).toBe(20);
+      expect(postResponse.body.data.quota_id).toBe(QuotaCode.MAX_PROJECT_COUNT);
+      expect(postResponse.body.data.value).toBe(10);
       expect(postResponse.body.data.description).toBe('testing123');
 
       const getResponse = await request(stage.http)
@@ -199,15 +186,15 @@ describe('Admin Project tests', () => {
       expect(getResponse.status).toBe(200);
       expect(
         getResponse.body.data.find(
-          (quota) => quota.id === QuotaCode.MAX_API_KEYS,
+          (quota) => quota.id === QuotaCode.MAX_PROJECT_COUNT,
         )?.value,
-      ).toBe(20); // From previous POST request insert
+      ).toBe(10); // From previous POST request insert
     });
 
     test('Delete a project quota', async () => {
       const postResponse = await request(stage.http)
         .delete(`/admin-panel/users/${testUserUuid}/quotas`)
-        .send({ quota_id: QuotaCode.MAX_API_KEYS })
+        .send({ quota_id: QuotaCode.MAX_PROJECT_COUNT })
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(postResponse.status).toBe(200);
       expect(postResponse.body.data.data).toEqual(true);
@@ -218,9 +205,9 @@ describe('Admin Project tests', () => {
       expect(getResponse.status).toBe(200);
       expect(
         getResponse.body.data.find(
-          (quota) => quota.id === QuotaCode.MAX_API_KEYS,
+          (quota) => quota.id === QuotaCode.MAX_PROJECT_COUNT,
         )?.value,
-      ).toBe(10); // Default value for max api keys quota
+      ).toBe(1); // Default value for MAX_PROJECT_COUNT quota
     });
   });
 });
