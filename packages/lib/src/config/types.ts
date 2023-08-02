@@ -23,6 +23,11 @@ export enum EvmChain {
   ASTAR = 592,
 }
 
+export enum NFTCollectionType {
+  GENERIC = 1,
+  NESTABLE = 2,
+}
+
 export enum AmsEventType {
   USER_REGISTER = 'user-register',
   USER_GET_AUTH = 'user-get-auth',
@@ -160,6 +165,7 @@ export enum NftsEventType {
   GET_NFT_COLLECTION_BY_UUID = 'get-nft-collection-by-uuid',
   TRANSFER_OWNERSHIP = 'transfer-ownership',
   MINT_NFT = 'mint-nft',
+  NEST_MINT_NFT = 'nest-mint-nft',
   SET_BASE_URI = 'set-base-uri',
   CHECK_TRANSACTION_STATUS = 'check-transaction-status',
   NFT_COLLECTION_TRANSACTION_LIST = 'list-collection-transactions',
@@ -491,6 +497,14 @@ export enum ValidatorErrorCode {
   TRANSACTION_REF_TABLE_PARAM_NOT_PRESENT = 42200138,
   TRANSACTION_REF_ID_PARAM_NOT_PRESENT = 42200139,
   NFT_COLLECTION_BASE_URI_NOT_PRESENT = 42200140,
+  NFT_TYPE_NOT_PRESENT = 42200141,
+  NFT_TYPE_NOT_VALID = 42200142,
+  NFT_MINT_DESTINATION_COLLECTION_ID_NOT_PRESENT = 42200143,
+  NFT_MINT_DESTINATION_NFT_ID_NOT_PRESENT = 42200144,
+  NFT_DEPLOY_DROP_RESERVE_NOT_VALID = 42200145,
+  NFT_DEPLOY_DROP_RESERVE_GREATER_THAN_MAX_SUPPLY = 42200146,
+  NFT_BURN_TOKEN_ID_NOT_PRESENT = 42200147,
+  NFT_BURN_TOKEN_ID_NOT_VALID = 42200148,
 
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,

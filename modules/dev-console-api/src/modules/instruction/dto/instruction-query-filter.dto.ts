@@ -1,6 +1,5 @@
 // import { ApiProperty } from '@babel/core';
-import { PopulateFrom } from '@apillon/lib';
-import { ModelBase } from '@apillon/lib/dist/lib/base-models/base';
+import { ModelBase, PopulateFrom } from '@apillon/lib';
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 

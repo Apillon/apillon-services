@@ -10,6 +10,7 @@ import {
   SporranSessionVerifyDto,
   SubmitAttestationDto,
   SubmitTermsDto,
+  VerifyCredentialDto,
 } from '@apillon/lib';
 import { randomUUID } from 'crypto';
 import { HexString } from '@polkadot/util/types';
@@ -48,7 +49,6 @@ import {
 
 import { Identity } from '../identity/models/identity.model';
 import { prepareSignResources } from '../../lib/sporran';
-import { VerifyCredentialDto } from '@apillon/lib/dist/lib/at-services/authentication/dtos/sporran/message/verify-credential.dto';
 import { AuthenticationCodeException } from '../../lib/exceptions';
 
 export class SporranMicroservice {

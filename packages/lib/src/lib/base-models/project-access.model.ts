@@ -24,7 +24,7 @@ export abstract class ProjectAccessModel extends AdvancedSQLModel {
     project_uuid: string = null,
   ): boolean | Promise<boolean> {
     // Admins are allowed to access items on any project
-    if (context.user.userRoles.includes(DefaultUserRole.ADMIN)) {
+    if (context.user?.userRoles.includes(DefaultUserRole.ADMIN)) {
       return true;
     }
 
