@@ -42,7 +42,7 @@ export class Logger {
   }
 
   static async listLogs(event, context: ServiceContext) {
-    const query: LogsQueryFilter = event.query;
+    const query = new LogsQueryFilter(event.query);
     const mongoQuery = {} as any;
 
     // Text search properties of query

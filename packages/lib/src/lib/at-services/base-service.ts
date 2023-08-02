@@ -38,7 +38,7 @@ export abstract class BaseService {
     },
   ) {
     const queueUrl = options?.queueUrl || this.defaultQueueUrl;
-    const isAsync = options?.isAsync || queueUrl || this.isDefaultAsync;
+    const isAsync = options?.isAsync ?? (!!queueUrl || this.isDefaultAsync);
 
     const env = await getEnvSecrets();
     let result;
