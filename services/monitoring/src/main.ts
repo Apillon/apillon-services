@@ -15,6 +15,7 @@ export async function processEvent(event, context: Context): Promise<any> {
     [LmasEventType.WRITE_REQUEST_LOG]: Logger.writeRequestLog,
     [LmasEventType.SEND_ALERT]: Alerting.sendAlert,
     [LmasEventType.SEND_ADMIN_ALERT]: Alerting.sendAdminAlert,
+    [LmasEventType.LIST_LOGS]: Logger.listLogs,
   };
 
   return await processors[event.eventName](event, context);

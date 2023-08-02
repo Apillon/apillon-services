@@ -65,6 +65,7 @@ export enum LmasEventType {
   SEND_ALERT = 'send-alert',
   SEND_ADMIN_ALERT = 'send-admin-alert',
   NOTIFY = 'notify',
+  LIST_LOGS = 'list-logs',
 }
 
 export enum BlockchainEventType {
@@ -526,6 +527,7 @@ export enum ValidatorErrorCode {
   SPORRAN_NONCE_NOT_PRESENT = 42200717,
   AUTH_SESSION_TOKEN_NOT_PRESENT = 42200718,
   //#endregion
+
   //#region Blockchain
   SUBSTRATE_TRANSACTION_NOT_PRESENT = 42200801,
   SUBSTRATE_CHAIN_NOT_PRESENT = 42200802,
@@ -534,8 +536,13 @@ export enum ValidatorErrorCode {
   EVM_CHAIN_NOT_PRESENT = 42200805,
   EVM_CHAIN_NOT_VALID = 42200806,
   //#endregion
+
   //#region Caching
   INVALID_CACHE_KEY = 42200900,
+  //#endregion
+
+  //#region Logs
+  INVALID_LOG_TYPE = 42200901,
   //#endregion
 }
 
