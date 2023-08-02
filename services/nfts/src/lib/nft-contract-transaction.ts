@@ -39,6 +39,8 @@ export class NftTransaction {
     );
 
     const royaltiesFees = Math.round(params.royaltiesFees * 100);
+    const maxSupply =
+      params.maxSupply === 0 ? constants.MaxUint256 : params.maxSupply;
     let txData;
     switch (params.collectionType) {
       case NFTCollectionType.GENERIC:
@@ -50,7 +52,7 @@ export class NftTransaction {
           [params.drop, params.isSoulbound, params.isRevokable],
           TransactionUtils.convertBaseToGwei(params.dropPrice),
           params.dropStart,
-          params.maxSupply,
+          maxSupply,
           params.dropReserve,
           params.royaltiesAddress,
           royaltiesFees,
@@ -70,7 +72,7 @@ export class NftTransaction {
             tokenUriIsEnumerable: true,
             royaltyRecipient: params.royaltiesAddress,
             royaltyPercentageBps: royaltiesFees,
-            maxSupply: params.maxSupply,
+            maxSupply,
             pricePerMint: TransactionUtils.convertBaseToGwei(params.dropPrice),
           },
         );
