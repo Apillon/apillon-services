@@ -114,9 +114,9 @@ export class Lmas extends BaseService {
   }
 
   public async listMongoLogs(query: LogsQueryFilter) {
-    return await this.callService({
-      eventName: LmasEventType.LIST_LOGS,
-      query,
-    });
+    return await this.callService(
+      { eventName: LmasEventType.LIST_LOGS, query },
+      { isAsync: false },
+    );
   }
 }

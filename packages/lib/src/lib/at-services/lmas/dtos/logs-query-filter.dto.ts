@@ -15,13 +15,6 @@ export class LogsQueryFilter extends BaseQueryFilter {
     populatable: [PopulateFrom.ADMIN],
     serializable: [SerializeFor.ADMIN],
   })
-  public eventName: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.ADMIN],
-    serializable: [SerializeFor.ADMIN],
-  })
   public project_uuid: string;
 
   @prop({
