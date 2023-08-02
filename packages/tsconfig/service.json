@@ -16,7 +16,6 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": false,
     "noResolve": false,
-    "esModuleInterop": true,
     "allowJs": true
   },
   "exclude": [
