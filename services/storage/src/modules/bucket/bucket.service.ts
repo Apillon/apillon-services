@@ -245,7 +245,6 @@ export class BucketService {
           ? QuotaCode.MAX_FILE_BUCKETS
           : QuotaCode.MAX_HOSTING_BUCKETS,
       project_uuid: event.query.project_uuid,
-      object_uuid: context.user.user_uuid,
     });
     return {
       maxBucketsQuotaReached: !!(
