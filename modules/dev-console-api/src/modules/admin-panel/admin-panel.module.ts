@@ -4,6 +4,7 @@ import { ProjectModule } from './project/project.module';
 import { BlockchainModule } from './blockchain/blockchain.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { CacheModule } from './cache/cache.module';
+import { LogsModule } from './logs/logs.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { CacheModule } from './cache/cache.module';
     BlockchainModule,
     DashboardModule,
     CacheModule,
+    LogsModule,
   ],
   controllers: [],
   providers: [],
