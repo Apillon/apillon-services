@@ -7,13 +7,17 @@ import {
   ServiceName,
   SqlModelStatus,
 } from '@apillon/lib';
-import { Job, LogOutput, WorkerDefinition } from '@apillon/workers-lib';
+import {
+  BaseWorker,
+  Job,
+  LogOutput,
+  WorkerDefinition,
+} from '@apillon/workers-lib';
 import { DbTables } from '../config/types';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { deleteBucket } from '../lib/delete-bucket';
 import { deleteDirectory } from '../lib/delete-directory';
-import { BaseWorker } from '@apillon/workers-lib/dist/lib/serverless-workers/base-worker';
 
 export class DeleteBucketDirectoryFileWorker extends BaseWorker {
   protected context: Context;

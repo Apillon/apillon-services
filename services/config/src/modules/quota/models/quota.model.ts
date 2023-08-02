@@ -7,9 +7,9 @@ import {
   prop,
   SerializeFor,
   SqlModelStatus,
-  QuotaDto,
   QuotaType,
   enumInclusionValidator,
+  QuotaDto,
 } from '@apillon/lib';
 import { ConfigErrorCode, DbTables } from '../../../config/types';
 

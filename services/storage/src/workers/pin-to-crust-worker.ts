@@ -6,12 +6,16 @@ import {
   runWithWorkers,
   ServiceName,
 } from '@apillon/lib';
-import { Job, LogOutput, WorkerDefinition } from '@apillon/workers-lib';
+import {
+  BaseWorker,
+  Job,
+  LogOutput,
+  WorkerDefinition,
+} from '@apillon/workers-lib';
 import { CID } from 'ipfs-http-client';
 import { CrustPinningStatus } from '../config/types';
 import { CrustService } from '../modules/crust/crust.service';
 import { PinToCrustRequest } from '../modules/crust/models/pin-to-crust-request.model';
-import { BaseWorker } from '@apillon/workers-lib/dist/lib/serverless-workers/base-worker';
 
 export class PinToCrustWorker extends BaseWorker {
   protected context: Context;

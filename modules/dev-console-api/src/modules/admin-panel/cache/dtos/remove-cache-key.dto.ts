@@ -1,9 +1,9 @@
 // import { ApiProperty } from '@babel/core';
 import { prop } from '@rawmodel/core';
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import { ModelBase } from '@apillon/lib/dist/lib/base-models/base';
 import {
   CacheKeyPrefix,
+  ModelBase,
   PopulateFrom,
   ValidatorErrorCode,
   enumInclusionValidator,

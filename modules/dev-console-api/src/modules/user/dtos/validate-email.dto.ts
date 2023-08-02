@@ -1,8 +1,8 @@
 import { stringParser } from '@rawmodel/parsers';
 import { emailValidator, presenceValidator } from '@rawmodel/validators';
-import { JSONParser, PopulateFrom } from '@apillon/lib';
-import { ModelBase, prop } from '@apillon/lib/dist/lib/base-models/base';
+import { JSONParser, ModelBase, PopulateFrom } from '@apillon/lib';
 import { ValidatorErrorCode } from '../../../config/types';
+import { prop } from '@rawmodel/core';
 
 export class ValidateEmailDto extends ModelBase {
   @prop({

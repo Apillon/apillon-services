@@ -7,6 +7,8 @@ import {
   CodeException,
   CreateQuotaOverrideDto,
   DefaultUserRole,
+  GetQuotasDto,
+  QuotaDto,
   QuotaOverrideDto,
   Scs,
   SerializeFor,
@@ -15,8 +17,6 @@ import {
 } from '@apillon/lib';
 import { ResourceNotFoundErrorCode } from '../../../config/types';
 import { UUID } from 'crypto';
-import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
-import { GetQuotasDto } from '@apillon/lib/dist/lib/at-services/config/dtos/get-quotas.dto';
 import { Project } from '../../project/models/project.model';
 
 @Injectable()

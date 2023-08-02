@@ -10,9 +10,9 @@ import {
   Scs,
   StorageMicroservice,
   NftsMicroservice,
+  QuotaDto,
 } from '@apillon/lib';
 import { ResourceNotFoundErrorCode } from '../../../config/types';
-import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
 import { UUID } from 'crypto';
 
 @Injectable()
