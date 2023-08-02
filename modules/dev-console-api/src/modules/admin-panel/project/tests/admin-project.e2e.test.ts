@@ -1,4 +1,10 @@
-import { DefaultUserRole, QuotaCode, SerializeFor, env } from '@apillon/lib';
+import {
+  DefaultUserRole,
+  QuotaCode,
+  QuotaType,
+  SerializeFor,
+  env,
+} from '@apillon/lib';
 import * as request from 'supertest';
 import {
   createTestProject,
@@ -39,7 +45,7 @@ describe('Admin Project tests', () => {
     await new Override(
       {
         project_uuid: testProject.project_uuid,
-        quota_id: QuotaCode.MAX_PROJECT_COUNT,
+        quota_id: QuotaCode.MAX_WEBSITES,
         value: 20,
       },
       stage.configContext,
@@ -162,6 +168,7 @@ describe('Admin Project tests', () => {
           (quota) => quota.id === QuotaCode.MAX_USERS_ON_PROJECT,
         )?.value,
       ).toBe(40); // From override inserted in beforeAll
+      expect(response.body.data.every((q) => q.type === QuotaType.FOR_OBJECT));
     });
 
     test('Create a new project quota', async () => {
@@ -179,7 +186,7 @@ describe('Admin Project tests', () => {
       expect(response.body.data.description).toBe('testing123');
 
       const data = await stage.configContext.mysql.paramExecute(`
-      SELECT * from override WHERE project_uuid = '${testProject.project_uuid}' and quota_id = ${QuotaCode.MAX_API_KEYS}`);
+        SELECT * from override WHERE project_uuid = '${testProject.project_uuid}' and quota_id = ${QuotaCode.MAX_API_KEYS}`);
       expect(data[0].quota_id).toBe(QuotaCode.MAX_API_KEYS);
       expect(data[0].value).toBe(20); // From previous POST request insert
     });
@@ -192,13 +199,19 @@ describe('Admin Project tests', () => {
       expect(postResponse.status).toBe(200);
       expect(postResponse.body.data.data).toEqual(true);
 
+      const data = await stage.configContext.mysql.paramExecute(`
+        SELECT * from override WHERE project_uuid = '${testProject.project_uuid}' and quota_id = ${QuotaCode.MAX_API_KEYS}`);
+      expect(data).toHaveLength(0);
+
       const getResponse = await request(stage.http)
         .get(`/admin-panel/projects/${testProject.project_uuid}/quotas`)
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(getResponse.status).toBe(200);
-      const data = await stage.configContext.mysql.paramExecute(`
-      SELECT * from override WHERE project_uuid = '${testProject.project_uuid}' and quota_id = ${QuotaCode.MAX_API_KEYS}`);
-      expect(data.length).toBe(0); // Override should be deleted
+      expect(
+        getResponse.body.data.find(
+          (quota) => quota.id === QuotaCode.MAX_API_KEYS,
+        )?.value,
+      ).toBe(10); // Default value for MAX_API_KEYS quota
     });
   });
 });

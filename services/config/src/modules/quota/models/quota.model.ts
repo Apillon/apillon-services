@@ -8,8 +8,10 @@ import {
   SerializeFor,
   SqlModelStatus,
   QuotaDto,
+  QuotaType,
+  enumInclusionValidator,
 } from '@apillon/lib';
-import { DbTables } from '../../../config/types';
+import { ConfigErrorCode, DbTables } from '../../../config/types';
 
 export class Quota extends AdvancedSQLModel {
   public readonly tableName = DbTables.QUOTA;
@@ -19,9 +21,7 @@ export class Quota extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB, //
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -35,9 +35,7 @@ export class Quota extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB, //
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -51,9 +49,7 @@ export class Quota extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB, //
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -67,9 +63,7 @@ export class Quota extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB, //
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -83,9 +77,7 @@ export class Quota extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB, //
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -93,6 +85,26 @@ export class Quota extends AdvancedSQLModel {
     ],
   })
   public value: number;
+
+  /**
+   * type - QuotaType
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+    ],
+    validators: [
+      {
+        resolver: enumInclusionValidator(QuotaType, false),
+        code: ConfigErrorCode.INVALID_QUOTA_TYPE,
+      },
+    ],
+  })
+  public type: QuotaType;
 
   public async getQuotas(
     data: GetQuotaDto | GetQuotasDto,
