@@ -6,6 +6,7 @@ import {
   QuotaOverrideDto,
   ValidateFor,
   CacheKeyPrefix,
+  QuotaType,
   QuotaDto,
   GetQuotasDto,
 } from '@apillon/lib';
@@ -119,6 +120,7 @@ export class UserController {
     @Query() query: GetQuotasDto,
   ): Promise<QuotaDto[]> {
     query.object_uuid = user_uuid;
+    query.type = QuotaType.FOR_OBJECT;
     return this.userService.getUserQuotas(context, query);
   }
 

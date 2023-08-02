@@ -8,6 +8,7 @@ import {
   BaseQueryFilter,
   CacheKeyPrefix,
   QuotaDto,
+  QuotaType,
 } from '@apillon/lib';
 import {
   Body,
@@ -69,6 +70,7 @@ export class ProjectController {
     @Query() query: GetQuotasDto,
   ): Promise<QuotaDto[]> {
     query.project_uuid = project_uuid;
+    query.type = QuotaType.FOR_PROJECT;
     return this.projectService.getProjectQuotas(context, query);
   }
 

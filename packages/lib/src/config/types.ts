@@ -503,6 +503,8 @@ export enum ValidatorErrorCode {
   NFT_MINT_DESTINATION_NFT_ID_NOT_PRESENT = 42200144,
   NFT_DEPLOY_DROP_RESERVE_NOT_VALID = 42200145,
   NFT_DEPLOY_DROP_RESERVE_GREATER_THAN_MAX_SUPPLY = 42200146,
+  NFT_BURN_TOKEN_ID_NOT_PRESENT = 42200147,
+  NFT_BURN_TOKEN_ID_NOT_VALID = 42200148,
 
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,
@@ -585,7 +587,7 @@ export enum JwtTokenType {
 
 /**
  * Quota codes
- * Must equal quote.id field in database!
+ * Must equal quota.id field in database!
  */
 export enum QuotaCode {
   MAX_PROJECT_COUNT = 1,
@@ -597,6 +599,16 @@ export enum QuotaCode {
   MAX_ATTESTED_USERS = 7,
   MAX_WEBSITES = 8,
   MAX_NFT_COLLECTIONS = 9,
+}
+
+/**
+ * Quota types
+ * Must equal quota.type field in database!
+ */
+export enum QuotaType {
+  FOR_OBJECT = 1,
+  FOR_PROJECT = 2,
+  FOR_PROJECT_AND_OBJECT = 3,
 }
 
 /* OAuth link type*/

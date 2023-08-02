@@ -7,9 +7,11 @@ import {
   prop,
   SerializeFor,
   SqlModelStatus,
+  QuotaType,
+  enumInclusionValidator,
   QuotaDto,
 } from '@apillon/lib';
-import { DbTables } from '../../../config/types';
+import { ConfigErrorCode, DbTables } from '../../../config/types';
 
 export class Quota extends AdvancedSQLModel {
   public readonly tableName = DbTables.QUOTA;
@@ -20,7 +22,8 @@ export class Quota extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [
-      PopulateFrom.DB, //
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
     ],
     serializable: [
       SerializeFor.ADMIN,
@@ -36,7 +39,8 @@ export class Quota extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [
-      PopulateFrom.DB, //
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
     ],
     serializable: [
       SerializeFor.ADMIN,
@@ -52,7 +56,8 @@ export class Quota extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [
-      PopulateFrom.DB, //
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
     ],
     serializable: [
       SerializeFor.ADMIN,
@@ -68,7 +73,8 @@ export class Quota extends AdvancedSQLModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [
-      PopulateFrom.DB, //
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
     ],
     serializable: [
       SerializeFor.ADMIN,
@@ -84,7 +90,8 @@ export class Quota extends AdvancedSQLModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [
-      PopulateFrom.DB, //
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
     ],
     serializable: [
       SerializeFor.ADMIN,
@@ -93,6 +100,29 @@ export class Quota extends AdvancedSQLModel {
     ],
   })
   public value: number;
+
+  /**
+   * type - QuotaType
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+    ],
+    validators: [
+      {
+        resolver: enumInclusionValidator(QuotaType, false),
+        code: ConfigErrorCode.INVALID_QUOTA_TYPE,
+      },
+    ],
+  })
+  public type: QuotaType;
 
   public async getQuotas(
     data: GetQuotaDto | GetQuotasDto,
@@ -129,12 +159,14 @@ export class Quota extends AdvancedSQLModel {
         AND o2.status = ${SqlModelStatus.ACTIVE}
       WHERE q.status = ${SqlModelStatus.ACTIVE}
       AND (@quota_id is NULL OR q.id = @quota_id)
+      AND (@type is NULL OR q.type = @type)
       GROUP BY q.id
     `,
       {
         quota_id: data.quota_id || null,
         project_uuid: data.project_uuid || null,
         object_uuid: data.object_uuid || null,
+        type: data['type'] || null, // For admin panel - filter by quota type
       },
     );
   }
