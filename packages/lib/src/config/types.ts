@@ -66,6 +66,7 @@ export enum LmasEventType {
   SEND_ADMIN_ALERT = 'send-admin-alert',
   NOTIFY = 'notify',
   LIST_LOGS = 'list-logs',
+  GET_API_KEYS_USAGE_COUNT = 'get-api-keys-usage-count',
 }
 
 export enum BlockchainEventType {

@@ -17,6 +17,7 @@ import {
 import { ResourceNotFoundErrorCode } from '../../../config/types';
 import { UUID } from 'crypto';
 import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
+import { Lmas } from '@apillon/lib';
 
 @Injectable()
 export class ProjectService {
@@ -124,8 +125,14 @@ export class ProjectService {
   ) {
     const { data }: { data: { items: ApiKey[]; total: number } } =
       await new Ams(context).listApiKeys(query);
-    for (const apiKeyRow of data.items) {
-    }
-    // return apiKeys;
+
+    const { data: usageCounts } = await new Lmas().getApiKeysUsageCount(
+      data.items.map((i) => i.apiKey),
+    );
+
+    data.items.forEach(
+      (key: any) => (key.usageCount = usageCounts[key.apiKey]),
+    );
+    return data;
   }
 }

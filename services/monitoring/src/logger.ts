@@ -81,4 +81,36 @@ export class Logger {
       .limit(query.limit)
       .toArray();
   }
+
+  /**
+   * Given an array of API keys, return a record (dictionary) of API keys
+   * and their corresponding usage count obtained from API request logs stored in MongoDB.
+   * @static
+   * @async
+   * @param {{ apiKeys: string[] }} - array of string API keys
+   * @param {ServiceContext} context
+   * @returns {Promise<Record<string, number>>} - Record of API keys mapped to their usage count
+   */
+  static async getApiKeysUsageCount(
+    { apiKeys }: { apiKeys: string[] },
+    context: ServiceContext,
+  ): Promise<Record<string, number>> {
+    const countAggregations = await context.mongo.db
+      .collection(MongoCollections.API_REQUEST_LOGS)
+      .aggregate([
+        // Aggregate document count for each API key
+        { $match: { apiKey: { $in: apiKeys } } },
+        { $group: { _id: '$apiKey', count: { $sum: 1 } } },
+      ])
+      .toArray();
+
+    // Return record of API keys mapped to their respective usage count
+    return countAggregations.reduce(
+      (acc, doc: { _id: string; count: number }) => {
+        acc[doc._id] = doc.count;
+        return acc;
+      },
+      {},
+    );
+  }
 }
