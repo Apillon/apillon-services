@@ -11,9 +11,12 @@ import {
   StorageMicroservice,
   NftsMicroservice,
   QuotaDto,
+  ApiKeyQueryFilterDto,
+  Ams,
 } from '@apillon/lib';
 import { ResourceNotFoundErrorCode } from '../../../config/types';
 import { UUID } from 'crypto';
+import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
 
 @Injectable()
 export class ProjectService {
@@ -108,5 +111,21 @@ export class ProjectService {
     data: QuotaOverrideDto,
   ) {
     return await new Scs(context).deleteOverride(data);
+  }
+
+  /**
+   * Get all API keys for a project
+   * @param {DevConsoleApiContext} context
+   * @param {ApiKeyQueryFilterDto} query - API key query filter
+   */
+  async getProjectApiKeys(
+    context: DevConsoleApiContext,
+    query: ApiKeyQueryFilterDto,
+  ) {
+    const { data }: { data: { items: ApiKey[]; total: number } } =
+      await new Ams(context).listApiKeys(query);
+    for (const apiKeyRow of data.items) {
+    }
+    // return apiKeys;
   }
 }

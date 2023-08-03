@@ -9,6 +9,7 @@ import {
   CacheKeyPrefix,
   QuotaDto,
   QuotaType,
+  ApiKeyQueryFilterDto,
 } from '@apillon/lib';
 import {
   Body,
@@ -104,5 +105,16 @@ export class ProjectController {
   ): Promise<QuotaDto[]> {
     data.project_uuid = project_uuid;
     return this.projectService.deleteProjectQuota(context, data);
+  }
+
+  @Get(':project_uuid/api-keys')
+  @BaseQueryFilterValidator()
+  async getProjectApiKeys(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('project_uuid', ParseUUIDPipe) project_uuid: UUID,
+    @Query() query: ApiKeyQueryFilterDto,
+  ) {
+    const apiKeyQuery = new ApiKeyQueryFilterDto({ ...query, project_uuid });
+    return this.projectService.getProjectApiKeys(context, apiKeyQuery);
   }
 }
