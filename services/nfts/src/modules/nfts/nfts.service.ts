@@ -68,11 +68,6 @@ export class NftsService {
       params.body,
       context,
     ).populate({
-      isRevokable: params.body.isRevokable,
-      isSoulbound: params.body.isSoulbound,
-      chain: params.body.chain,
-      royaltiesFees: params.body.royaltiesFees,
-      royaltiesAddress: params.body.royaltiesAddress,
       collection_uuid: uuidV4(),
       status: SqlModelStatus.INCOMPLETE,
     });

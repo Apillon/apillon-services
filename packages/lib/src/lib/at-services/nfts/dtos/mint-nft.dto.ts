@@ -56,7 +56,7 @@ export class NestMintNftDTO extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_MINT_DESTINATION_COLLECTION_ID_NOT_PRESENT,
+        code: ValidatorErrorCode.NFT_MINT_PARENT_COLLECTION_ID_NOT_PRESENT,
       },
     ],
   })
@@ -68,7 +68,7 @@ export class NestMintNftDTO extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_MINT_DESTINATION_NFT_ID_NOT_PRESENT,
+        code: ValidatorErrorCode.NFT_MINT_PARENT_NFT_ID_NOT_PRESENT,
       },
     ],
   })
