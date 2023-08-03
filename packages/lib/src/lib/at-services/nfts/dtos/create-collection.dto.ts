@@ -24,11 +24,11 @@ export class CreateCollectionDTOBase extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_TYPE_NOT_PRESENT,
+        code: ValidatorErrorCode.NFT_COLLECTION_TYPE_NOT_PRESENT,
       },
       {
         resolver: enumInclusionValidator(NFTCollectionType),
-        code: ValidatorErrorCode.NFT_TYPE_NOT_VALID,
+        code: ValidatorErrorCode.NFT_COLLECTION_TYPE_NOT_VALID,
       },
     ],
   })
