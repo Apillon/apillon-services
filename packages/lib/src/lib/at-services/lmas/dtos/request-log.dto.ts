@@ -248,4 +248,12 @@ export class RequestLogDto extends ModelBase {
     ],
   })
   public collectionName: MongoCollections;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [SerializeFor.ADMIN],
+    fakeValue: uuid(),
+  })
+  public apiKey: string;
 }

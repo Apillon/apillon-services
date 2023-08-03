@@ -20,12 +20,23 @@ export function createRequestLogMiddleware(
       const context = req.context;
       const requestId = context?.requestId || '';
       let gatewayEvent = null as any;
+      let apiKey = null;
 
       try {
         gatewayEvent = JSON.parse(
           decodeURI(req.headers['x-apigateway-event'] as string),
         );
       } catch (err) {}
+
+      if (req.headers.authorization && apiName === ApiName.APILLON_API) {
+        try {
+          const base64Credentials = req.headers.authorization.split(' ')[1];
+          const credentials = Buffer.from(base64Credentials, 'base64').toString(
+            'ascii',
+          );
+          [apiKey] = credentials.split(':');
+        } catch (err) {}
+      }
 
       res.end = async function (...args) {
         try {
@@ -58,6 +69,7 @@ export function createRequestLogMiddleware(
               context?.user?.id ||
               context?.user?.uuid ||
               null,
+            apiKey,
             collectionName:
               apiName === ApiName.APILLON_API
                 ? MongoCollections.API_REQUEST_LOGS
