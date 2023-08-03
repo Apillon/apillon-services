@@ -1,6 +1,5 @@
-import { LogsQueryFilter } from '@apillon/lib';
+import { LogsQueryFilter, MongoCollections, RequestLogDto } from '@apillon/lib';
 import { ServiceContext } from './context';
-import { MongoCollections } from './config/types';
 
 /**
  * Logger class for logging events intodatabase.
@@ -29,15 +28,24 @@ export class Logger {
    * @param {any} context - The service context for database access.
    * @returns {Promise<any>} - The logged event data.
    */
-  static async writeRequestLog(event, context: ServiceContext) {
+  static async writeRequestLog(
+    { log }: { log: RequestLogDto },
+    context: ServiceContext,
+  ) {
+    if (!log.collectionName) {
+      throw new Error('Mongo collection name is required!');
+    }
     // console.log(`LOGGER: ${event?.message || JSON.stringify(event)}`);
-    event = {
-      ...event.log,
+    const event = {
+      ...log,
       ts: new Date(),
     };
-    await context.mongo.db
-      .collection(MongoCollections.REQUEST_LOGS)
-      .insertOne(event);
+    delete event.collectionName; // Unnecessary property
+    if (log.collectionName === MongoCollections.API_REQUEST_LOGS) {
+      delete event.apiName; // apiName is always same for API request
+    }
+
+    await context.mongo.db.collection(log.collectionName).insertOne(event);
     return event;
   }
 

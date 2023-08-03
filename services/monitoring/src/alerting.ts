@@ -1,4 +1,4 @@
-import { MongoCollections } from './config/types';
+import { MongoCollections } from '@apillon/lib';
 import { postToSlack } from './lib/slack';
 
 /**
