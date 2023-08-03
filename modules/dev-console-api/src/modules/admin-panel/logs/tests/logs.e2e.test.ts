@@ -5,7 +5,6 @@ import { releaseStage, Stage } from '@apillon/tests-lib';
 import { setupTest } from '../../../../../test/helpers/setup';
 import { MongoCollections } from '@apillon/monitoring/src/config/types';
 import { v4 as uuid } from 'uuid';
-import { UUID } from 'crypto';
 
 describe('Admin Logs', () => {
   let stage: Stage;
@@ -50,36 +49,43 @@ describe('Admin Logs', () => {
   describe('Admin logs query tests', () => {
     let project_uuid: string;
     let user_uuid: string;
+    let insertedIds: any[];
     beforeAll(async () => {
       project_uuid = uuid();
       user_uuid = uuid();
-      await stage.lmasContext.mongo.db
-        .collection(MongoCollections.LOGS)
-        .insertOne({
+      const records = await Promise.all([
+        stage.lmasContext.mongo.db.collection(MongoCollections.LOGS).insertOne({
           project_uuid,
           user_uuid,
           logType: LogType.INFO,
           service: ServiceName.BLOCKCHAIN,
-          ts: new Date(),
-        });
-      await stage.lmasContext.mongo.db
-        .collection(MongoCollections.LOGS)
-        .insertOne({
+          ts: new Date('2060-01-01'),
+        }),
+        stage.lmasContext.mongo.db.collection(MongoCollections.LOGS).insertOne({
           project_uuid: uuid(),
           user_uuid,
           logType: LogType.ERROR,
           service: ServiceName.STORAGE,
-          ts: new Date(),
-        });
-      await stage.lmasContext.mongo.db
-        .collection(MongoCollections.LOGS)
-        .insertOne({
+          ts: new Date('2060-02-02'),
+        }),
+        stage.lmasContext.mongo.db.collection(MongoCollections.LOGS).insertOne({
           project_uuid,
           user_uuid: uuid(),
           logType: LogType.INFO,
           service: ServiceName.BLOCKCHAIN,
-          ts: new Date(),
-        });
+          ts: new Date('2060-03-03'),
+        }),
+      ]);
+      insertedIds = records.map((r) => r.insertedId);
+    });
+
+    afterAll(async () => {
+      // Delete inserted records
+      for (const objectId of insertedIds) {
+        await stage.lmasContext.mongo.db
+          .collection(MongoCollections.LOGS)
+          .deleteOne({ _id: objectId });
+      }
     });
 
     test('Logs query filtering should properly filter results', async () => {
@@ -88,6 +94,9 @@ describe('Admin Logs', () => {
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data).toHaveLength(3);
+      ['logType', 'service', 'ts', '_id'].forEach((prop) =>
+        expect(response.body.data[0]).toHaveProperty(prop),
+      );
 
       response = await request(stage.http)
         .get(`/admin-panel/logs?logType=INFO`)
@@ -109,8 +118,7 @@ describe('Admin Logs', () => {
         .get(`/admin-panel/logs?user_uuid=${user_uuid}`)
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(200);
-      // TODO: No results returned?
-      // expect(response.body.data).toHaveLength(2);
+      expect(response.body.data).toHaveLength(2);
       expect(
         response.body.data.every((log) => log.user_uuid === user_uuid),
       ).toBe(true);
@@ -119,10 +127,22 @@ describe('Admin Logs', () => {
         .get(`/admin-panel/logs?project_uuid=${project_uuid}`)
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(200);
-      // expect(response.body.data).toHaveLength(2);
+      expect(response.body.data).toHaveLength(2);
       expect(
         response.body.data.every((log) => log.project_uuid === project_uuid),
       ).toBe(true);
+
+      response = await request(stage.http)
+        .get(`/admin-panel/logs?dateFrom=2060-02-01`)
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data).toHaveLength(2);
+
+      response = await request(stage.http)
+        .get(`/admin-panel/logs?dateFrom=2060-01-01&dateTo=2060-02-02`)
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data).toHaveLength(2);
     });
   });
 });
