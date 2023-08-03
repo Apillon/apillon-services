@@ -41,6 +41,7 @@ export async function setupTestContextAndSql(): Promise<Stage> {
       env.MONITORING_MONGO_DATABASE_TEST,
       10,
     );
+    await lmasMongo.connect();
 
     const lmasContext = new TestContext();
     lmasContext.mongo = lmasMongo;
