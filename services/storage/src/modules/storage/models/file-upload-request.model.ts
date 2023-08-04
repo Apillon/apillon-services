@@ -1,5 +1,4 @@
 import {
-  ProjectAccessModel,
   Context,
   FileUploadsQueryFilter,
   getQueryParams,
@@ -9,6 +8,10 @@ import {
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
+  DefaultUserRole,
+  CodeException,
+  ForbiddenErrorCodes,
+  AdvancedSQLModel,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { CID } from 'ipfs-http-client';
@@ -17,7 +20,7 @@ import { ServiceContext } from '@apillon/service-lib';
 import { StorageCodeException } from '../../../lib/exceptions';
 import { Bucket } from '../../bucket/models/bucket.model';
 
-export class FileUploadRequest extends ProjectAccessModel {
+export class FileUploadRequest extends AdvancedSQLModel {
   public readonly tableName = DbTables.FILE_UPLOAD_REQUEST;
 
   public constructor(data: any, context: Context) {
@@ -248,22 +251,59 @@ export class FileUploadRequest extends ProjectAccessModel {
    * ASYNC canAccess function
    * @param context
    */
-  public override async canAccess(context: ServiceContext) {
+  public async canAccess(context: ServiceContext) {
     const bucket: Bucket = await new Bucket({}, context).populateById(
       this.bucket_id,
     );
-    return super.canAccess(context, bucket.project_uuid);
+    // Admins are allowed to access items on any project
+    if (context.user?.userRoles.includes(DefaultUserRole.ADMIN)) {
+      return true;
+    }
+
+    if (
+      !context.hasRoleOnProject(
+        [
+          DefaultUserRole.PROJECT_OWNER,
+          DefaultUserRole.PROJECT_ADMIN,
+          DefaultUserRole.PROJECT_USER,
+          DefaultUserRole.ADMIN,
+        ],
+        bucket.project_uuid,
+      )
+    ) {
+      throw new CodeException({
+        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: 403,
+        errorMessage: 'Insufficient permissions to access this record',
+      });
+    }
   }
 
   /**
    * ASYNC canModify function
    * @param context
    */
-  public override async canModify(context: ServiceContext) {
+  public async canModify(context: ServiceContext) {
     const bucket: Bucket = await new Bucket({}, context).populateById(
       this.bucket_id,
     );
-    return super.canModify(context, bucket.project_uuid);
+    if (
+      !context.hasRoleOnProject(
+        [
+          DefaultUserRole.PROJECT_ADMIN,
+          DefaultUserRole.PROJECT_OWNER,
+          DefaultUserRole.ADMIN,
+        ],
+        bucket.project_uuid,
+      )
+    ) {
+      throw new CodeException({
+        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: 403,
+        errorMessage: 'Insufficient permissions to modify this record',
+      });
+    }
+    return true;
   }
 
   public async populateFileUploadRequestsInSession(

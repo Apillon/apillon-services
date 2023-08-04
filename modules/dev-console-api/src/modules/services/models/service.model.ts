@@ -2,17 +2,17 @@
 import { prop } from '@rawmodel/core';
 import { stringParser, integerParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
-
 import {
-  ProjectAccessModel,
   CodeException,
   getQueryParams,
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
+  DefaultUserRole,
+  ForbiddenErrorCodes,
+  AdvancedSQLModel,
+  selectAndCountQuery,
 } from '@apillon/lib';
-import { selectAndCountQuery } from '@apillon/lib';
-
 import { DevConsoleApiContext } from '../../../context';
 import {
   DbTables,
@@ -27,7 +27,7 @@ import { HttpStatus } from '@nestjs/common';
 /**
  * Service model.
  */
-export class Service extends ProjectAccessModel {
+export class Service extends AdvancedSQLModel {
   tableName = DbTables.SERVICE;
 
   @prop({
@@ -151,21 +151,58 @@ export class Service extends ProjectAccessModel {
    * ASYNCHROUNUOS method, to check roles for access to record
    * @param context
    */
-  public override async canAccess(context: DevConsoleApiContext) {
+  public async canAccess(context: DevConsoleApiContext) {
     const project = await new Project({}, context).populateById(
       this.project_id,
     );
-    return super.canAccess(context, project.project_uuid);
+    // Admins are allowed to access items on any project
+    if (context.user?.userRoles.includes(DefaultUserRole.ADMIN)) {
+      return true;
+    }
+
+    if (
+      !context.hasRoleOnProject(
+        [
+          DefaultUserRole.PROJECT_OWNER,
+          DefaultUserRole.PROJECT_ADMIN,
+          DefaultUserRole.PROJECT_USER,
+          DefaultUserRole.ADMIN,
+        ],
+        project.project_uuid,
+      )
+    ) {
+      throw new CodeException({
+        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: 403,
+        errorMessage: 'Insufficient permissions to access this record',
+      });
+    }
   }
   /**
    * ASYNCHROUNUOS method, to check roles for modifying this record
    * @param context
    */
-  public override async canModify(context: DevConsoleApiContext) {
+  public async canModify(context: DevConsoleApiContext) {
     const project = await new Project({}, context).populateById(
       this.project_id,
     );
-    return super.canModify(context, project.project_uuid);
+    if (
+      !context.hasRoleOnProject(
+        [
+          DefaultUserRole.PROJECT_ADMIN,
+          DefaultUserRole.PROJECT_OWNER,
+          DefaultUserRole.ADMIN,
+        ],
+        project.project_uuid,
+      )
+    ) {
+      throw new CodeException({
+        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: 403,
+        errorMessage: 'Insufficient permissions to modify this record',
+      });
+    }
+    return true;
   }
 
   public async populateByUUID(uuid: string): Promise<this> {

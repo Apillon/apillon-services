@@ -1,18 +1,21 @@
 import {
-  ProjectAccessModel,
   Context,
   PopulateFrom,
   presenceValidator,
   prop,
   SerializeFor,
   SqlModelStatus,
+  DefaultUserRole,
+  CodeException,
+  ForbiddenErrorCodes,
+  AdvancedSQLModel,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { Bucket } from './bucket.model';
 
-export class BucketWebhook extends ProjectAccessModel {
+export class BucketWebhook extends AdvancedSQLModel {
   public readonly tableName = DbTables.BUCKET_WEBHOOK;
 
   public constructor(data: any, context: Context) {
@@ -123,18 +126,55 @@ export class BucketWebhook extends ProjectAccessModel {
   })
   public param2: string;
 
-  public override async canAccess(context: ServiceContext) {
+  public async canAccess(context: ServiceContext) {
     const b: Bucket = await new Bucket({}, context).populateById(
       this.bucket_id,
     );
-    return super.canAccess(context, b.project_uuid);
+    // Admins are allowed to access items on any project
+    if (context.user?.userRoles.includes(DefaultUserRole.ADMIN)) {
+      return true;
+    }
+
+    if (
+      !context.hasRoleOnProject(
+        [
+          DefaultUserRole.PROJECT_OWNER,
+          DefaultUserRole.PROJECT_ADMIN,
+          DefaultUserRole.PROJECT_USER,
+          DefaultUserRole.ADMIN,
+        ],
+        b.project_uuid,
+      )
+    ) {
+      throw new CodeException({
+        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: 403,
+        errorMessage: 'Insufficient permissions to access this record',
+      });
+    }
   }
 
-  public override async canModify(context: ServiceContext) {
+  public async canModify(context: ServiceContext) {
     const b: Bucket = await new Bucket({}, context).populateById(
       this.bucket_id,
     );
-    return super.canModify(context, b.project_uuid);
+    if (
+      !context.hasRoleOnProject(
+        [
+          DefaultUserRole.PROJECT_ADMIN,
+          DefaultUserRole.PROJECT_OWNER,
+          DefaultUserRole.ADMIN,
+        ],
+        b.project_uuid,
+      )
+    ) {
+      throw new CodeException({
+        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: 403,
+        errorMessage: 'Insufficient permissions to modify this record',
+      });
+    }
+    return true;
   }
 
   public async populateByBucketId(bucket_id: number): Promise<this> {
