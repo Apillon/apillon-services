@@ -19,6 +19,7 @@ export abstract class BaseWorker extends ServerlessWorker {
       service: ServiceName | string;
       data?: any;
       err?: Error;
+      project_uuid?: string;
     },
     output = LogOutput.EVENT_INFO,
   ) {
@@ -74,6 +75,7 @@ export abstract class BaseWorker extends ServerlessWorker {
         location: this.workerName,
         service: options.service,
         data: options.data,
+        project_uuid: options.project_uuid,
       });
     }
 

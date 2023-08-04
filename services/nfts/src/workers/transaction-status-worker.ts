@@ -82,6 +82,7 @@ export class TransactionStatusWorker extends BaseQueueWorker {
 
       await this.writeEventLog({
         logType: LogType.INFO,
+        project_uuid: collection?.project_uuid,
         message: `Collection (id=${collection.id}) updated
         (
           contractAddress=${collection.contractAddress},

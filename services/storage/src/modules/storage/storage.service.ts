@@ -165,7 +165,7 @@ export class StorageService {
       context: context,
       project_uuid: bucket.project_uuid,
       logType: LogType.INFO,
-      message: 'Generate multiple file-request-log and S3 signed url - success',
+      message: 'Generate multiple file-request-log and S3 signed url',
       location: `${this.constructor.name}/runExecutor`,
       service: ServiceName.STORAGE,
     });
