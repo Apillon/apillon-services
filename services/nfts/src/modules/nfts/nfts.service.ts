@@ -11,7 +11,9 @@ import {
   Lmas,
   LogType,
   MintNftDTO,
+  NestMintNftDTO,
   NFTCollectionQueryFilter,
+  NFTCollectionType,
   QuotaCode,
   Scs,
   SerializeFor,
@@ -33,7 +35,6 @@ import {
 import { ethers, UnsignedTransaction } from 'ethers';
 import { v4 as uuidV4 } from 'uuid';
 import {
-  Chains,
   CollectionStatus,
   DbTables,
   NftsErrorCode,
@@ -67,11 +68,6 @@ export class NftsService {
       params.body,
       context,
     ).populate({
-      isRevokable: params.body.isRevokable,
-      isSoulbound: params.body.isSoulbound,
-      chain: params.body.chain,
-      royaltiesFees: params.body.royaltiesFees,
-      royaltiesAddress: params.body.royaltiesAddress,
       collection_uuid: uuidV4(),
       status: SqlModelStatus.INCOMPLETE,
     });
@@ -115,7 +111,6 @@ export class NftsService {
     }
 
     try {
-      console.log('collection123', collection);
       await collection.validate();
     } catch (err) {
       await collection.handle(err);
@@ -349,6 +344,7 @@ export class NftsService {
         await walletService.createTransferOwnershipTransaction(
           collection.contractAddress,
           params.body.address,
+          collection.collectionType,
         );
 
       const blockchainRequest: CreateEvmTransactionDto =
@@ -434,6 +430,7 @@ export class NftsService {
         await walletService.createSetNftBaseUriTransaction(
           collection.contractAddress,
           params.body.uri,
+          collection.collectionType,
         );
 
       const blockchainRequest: CreateEvmTransactionDto =
@@ -453,7 +450,7 @@ export class NftsService {
 
       //Populate DB transaction record with properties
       dbTxRecord.populate({
-        chainId: Chains.MOONBASE,
+        chainId: collection.chain,
         transactionType: TransactionType.SET_COLLECTION_BASE_URI,
         refTable: DbTables.COLLECTION,
         refId: collection.id,
@@ -477,6 +474,23 @@ export class NftsService {
         details: err,
       }).writeToMonitor({});
     }
+  }
+
+  /**
+   * Get number of collections details for a project by project_uuid.
+   * @param {{ project_uuid: string }} - uuid of the project
+   * @param {ServiceContext} context
+   */
+  static async getProjectCollectionDetails(
+    { project_uuid }: { project_uuid: string },
+    context: ServiceContext,
+  ): Promise<any> {
+    const numOfCollections = await new Collection(
+      { project_uuid },
+      context,
+    ).getCollectionsCount();
+
+    return { numOfCollections };
   }
 
   //#endregion
@@ -512,6 +526,7 @@ export class NftsService {
       const tx: UnsignedTransaction =
         await walletService.createMintToTransaction(
           collection.contractAddress,
+          collection.collectionType,
           params.body,
         );
 
@@ -532,7 +547,7 @@ export class NftsService {
 
       //Populate DB transaction record with properties
       dbTxRecord.populate({
-        chainId: Chains.MOONBASE,
+        chainId: collection.chain,
         transactionType: TransactionType.MINT_NFT,
         refTable: DbTables.COLLECTION,
         refId: collection.id,
@@ -572,6 +587,125 @@ export class NftsService {
     return { success: true };
   }
 
+  static async nestMintNftTo(
+    params: { body: NestMintNftDTO },
+    context: ServiceContext,
+  ) {
+    const sourceFunction = 'nestMintNftTo()';
+    console.log(
+      `Nest minting NFT collection with id ${params.body.collection_uuid} under collection with id ${params.body.parentCollectionUuid} and token id ${params.body.parentNftId}.`,
+    );
+    const parentCollection: Collection = await new Collection(
+      {},
+      context,
+    ).populateByUUID(params.body.parentCollectionUuid);
+    // only RMRK NFTs can be used for nesting
+    if (parentCollection.collectionType !== NFTCollectionType.NESTABLE) {
+      throw new NftsCodeException({
+        code: NftsErrorCode.COLLECTION_TYPE_NOT_VALID,
+        status: 422,
+      });
+    }
+
+    const childCollection: Collection = await new Collection(
+      {},
+      context,
+    ).populateByUUID(params.body.collection_uuid);
+    // only RMRK NFTs can be nest minted
+    if (childCollection.collectionType !== NFTCollectionType.NESTABLE) {
+      throw new NftsCodeException({
+        code: NftsErrorCode.COLLECTION_TYPE_NOT_VALID,
+        status: 422,
+      });
+    }
+
+    if (parentCollection.chain !== childCollection.chain) {
+      throw new NftsCodeException({
+        code: NftsErrorCode.COLLECTION_PARENT_AND_CHILD_NFT_CHAIN_MISMATCH,
+        status: 400,
+      });
+    }
+
+    const walletService = new WalletService(context, childCollection.chain);
+
+    await NftsService.checkCollection(childCollection, sourceFunction, context);
+
+    await NftsService.checkNestMintConditions(
+      params.body,
+      context,
+      childCollection,
+      walletService,
+    );
+
+    const conn = await context.mysql.start();
+    try {
+      const dbTxRecord: Transaction = new Transaction({}, context);
+      const tx: UnsignedTransaction =
+        await walletService.createNestMintToTransaction(
+          parentCollection.contractAddress,
+          params.body.parentNftId,
+          childCollection.contractAddress,
+          childCollection.collectionType,
+          params.body.quantity,
+        );
+
+      const blockchainRequest: CreateEvmTransactionDto =
+        new CreateEvmTransactionDto(
+          {
+            chain: childCollection.chain,
+            transaction: ethers.utils.serializeTransaction(tx),
+            fromAddress: childCollection.deployerAddress,
+            referenceTable: DbTables.COLLECTION,
+            referenceId: childCollection.id,
+          },
+          context,
+        );
+      const response = await new BlockchainMicroservice(
+        context,
+      ).createEvmTransaction(blockchainRequest);
+
+      //Populate DB transaction record with properties
+      dbTxRecord.populate({
+        chainId: childCollection.chain,
+        transactionType: TransactionType.NEST_MINT_NFT,
+        refTable: DbTables.COLLECTION,
+        refId: childCollection.id,
+        transactionHash: response.data.transactionHash,
+        transactionStatus: TransactionStatus.PENDING,
+      });
+      //Insert to DB
+      await TransactionService.saveTransaction(context, dbTxRecord, conn);
+
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+
+      throw await new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.MINT_NFT_ERROR,
+        context: context,
+        sourceFunction: sourceFunction,
+        errorMessage: 'Error nest minting NFT',
+        details: err,
+      }).writeToMonitor({});
+    }
+
+    await new Lmas().writeLog({
+      context,
+      project_uuid: childCollection.project_uuid,
+      logType: LogType.INFO,
+      message: 'NFT nest minted',
+      location: 'NftsService/nestMintNftTo',
+      service: ServiceName.NFTS,
+      data: {
+        collection: childCollection.serialize(SerializeFor.PROFILE),
+        body: params.body,
+      },
+    });
+
+    return { success: true };
+  }
+
   static async burnNftToken(
     params: { body: BurnNftDto },
     context: ServiceContext,
@@ -593,6 +727,7 @@ export class NftsService {
       const tx: UnsignedTransaction =
         await walletService.createBurnNftTransaction(
           collection.contractAddress,
+          collection.collectionType,
           params.body.tokenId,
         );
       const blockchainRequest: CreateEvmTransactionDto =
@@ -612,7 +747,7 @@ export class NftsService {
 
       //Populate DB transaction record with properties
       dbTxRecord.populate({
-        chainId: Chains.MOONBASE,
+        chainId: collection.chain,
         transactionType: TransactionType.BURN_NFT,
         refTable: DbTables.COLLECTION,
         refId: collection.id,
@@ -700,6 +835,53 @@ export class NftsService {
         code: NftsErrorCode.MINT_NFT_RESERVE_ERROR,
         context: context,
         sourceFunction: 'mintNftTo()',
+      });
+    }
+  }
+
+  private static async checkNestMintConditions(
+    params: NestMintNftDTO,
+    context: ServiceContext,
+    childCollection: Collection,
+    walletService: WalletService,
+  ) {
+    const isChildNestable = await walletService.implementsRmrkInterface(
+      childCollection.collectionType,
+      childCollection.contractAddress,
+    );
+    if (!isChildNestable) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.COLLECTION_NOT_NESTABLE,
+        context: context,
+        sourceFunction: 'nestMintNftTo()',
+      });
+    }
+
+    if (childCollection.maxSupply == 0) {
+      return true;
+    }
+
+    const minted = await walletService.getNumberOfMintedNfts(childCollection);
+
+    if (minted + params.quantity > childCollection.maxSupply) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.MINT_NFT_SUPPLY_ERROR,
+        context: context,
+        sourceFunction: 'nestMintNftTo()',
+      });
+    }
+
+    if (
+      childCollection.drop &&
+      childCollection.dropReserve - minted < params.quantity
+    ) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.MINT_NFT_RESERVE_ERROR,
+        context: context,
+        sourceFunction: 'nestMintNftTo()',
       });
     }
   }

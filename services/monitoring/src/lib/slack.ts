@@ -1,10 +1,11 @@
 import { env } from '@apillon/lib';
-import { WebClient, LogLevel } from '@slack/web-api';
+import { LogLevel, WebClient } from '@slack/web-api';
 
 export class Slack {
   private client: WebClient;
-  constructor() {
-    this.client = new WebClient(env.SLACK_TOKEN, {
+
+  constructor(token: string) {
+    this.client = new WebClient(token, {
       logLevel: LogLevel.DEBUG,
     });
   }
@@ -70,6 +71,12 @@ export async function postToSlack(
   serviceName: string,
   level: 'message' | 'warning' | 'alert' = 'message',
 ) {
+  const slackToken = env.SLACK_TOKEN;
+  if (!slackToken) {
+    return;
+  }
+  const slack = new Slack(slackToken);
+
   const severityText = {
     message: {
       emojis: ':loudspeaker:',
@@ -88,7 +95,6 @@ export async function postToSlack(
     },
   };
 
-  const slack = new Slack();
   try {
     const channelId = await slack.findChannel(env.SLACK_CHANNEL);
     await slack.publishMessage(

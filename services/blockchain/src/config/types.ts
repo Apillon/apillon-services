@@ -2,7 +2,7 @@ import { EvmChain, SubstrateChain } from '@apillon/lib';
 import {
   DidTransaction,
   TransferTransaction,
-  AttestationTransation,
+  AttestationTransaction,
 } from '../modules/blockchain-indexers/substrate/kilt/data-models/kilt-transactions';
 
 export type Chain = SubstrateChain | EvmChain;
@@ -24,13 +24,16 @@ export enum KiltTransactionType {
   BALANCE_TRANSFER = 'balance-transfer',
   BALANCE_DEPOSIT = 'balance-deposit',
   BALANCE_WITHDRAW = 'balance-withdraw',
-  BALANCE_RESERVE = 'balance-reserve',
+  BALANCE_RESERVED = 'balance-reserved',
+  BALANCE_UNRESERVED = 'balance-unreserved',
   DID_CREATE = 'did-create',
   DID_DELETE = 'did-delete',
   DID_UPDATE = 'did-update',
   ATTESTATION_CREATE = 'attestation-create',
   ATTESTATION_REMOVE = 'attestation-remove',
   ATTESTATION_REVOKE = 'attestation-revoke',
+  SYSTEM_EVENTS_SUCCESS = 'system-event-success',
+  SYSTEM_EVENTS_FAIL = 'system-event-fail',
 }
 
 export type TransfersTransactions = {
@@ -47,9 +50,9 @@ export type DidTransactions = {
 };
 
 export type AttestTransactions = {
-  CREATE: AttestationTransation[];
-  REMOVE: AttestationTransation[];
-  REVOKE: AttestationTransation[];
+  CREATE: AttestationTransaction[];
+  REMOVE: AttestationTransaction[];
+  REVOKE: AttestationTransaction[];
 };
 
 /**
@@ -101,6 +104,7 @@ export enum BlockchainErrorCode {
   // 404 - Not found
   API_KEY_NOT_FOUND = 40416001,
   TRANSACTION_NOT_FOUND = 40416002,
+  WALLET_NOT_FOUND = 40416003,
 
   // 405 - Method not allowed
   ONLY_FOR_LOCAL_DEV_AND_TEST = 40516001,
@@ -114,16 +118,6 @@ export enum BlockchainErrorCode {
   WALLET_DOES_NOT_EXISTS = 50016006,
 }
 
-//#region SQL stuff - TODO: Should be streamlined? This is part of the SQL lib, not access
-export enum SqlModelStatus {
-  DRAFT = 1,
-  INCOMPLETE = 2,
-  ACTIVE = 5,
-  DELETED = 9,
-}
-
-//#endregion
-
 export enum TxStatus {
   PENDING = 1,
   COMPLETED = 5,
@@ -131,6 +125,7 @@ export enum TxStatus {
 }
 
 export enum TxDirection {
+  UNKNOWN = 0,
   INCOME = 1,
   COST = 2,
 }

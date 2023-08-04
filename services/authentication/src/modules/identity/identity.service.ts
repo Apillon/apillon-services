@@ -31,7 +31,7 @@ import {
   DidUri,
   ICredential,
 } from '@kiltprotocol/sdk-js';
-import { BN, hexToU8a, u8aToHex } from '@polkadot/util';
+import { hexToU8a, u8aToHex } from '@polkadot/util';
 // Dtos
 import { IdentityCreateDto } from '@apillon/lib';
 import { IdentityDidRevokeDto } from '@apillon/lib';
@@ -42,7 +42,6 @@ import {
   generateKeypairs,
   getCtypeSchema,
   getFullDidDocument,
-  getNextNonce,
 } from '../../lib/kilt';
 import { AuthenticationCodeException } from '../../lib/exceptions';
 import { decryptAssymetric } from '../../lib/utils/crypto-utils';
@@ -161,6 +160,7 @@ export class IdentityMicroservice {
   static async generateIdentity(event: { body: IdentityCreateDto }, context) {
     const did_create_op: DidCreateOp = event.body.did_create_op as DidCreateOp;
     const claimerEmail = event.body.email;
+    const claimerDidUri = event.body.didUri;
 
     // Check if correct identity + state exists -> IN_PROGRESS
     const identity = await new Identity({}, context).populateByUserEmail(
@@ -185,6 +185,7 @@ export class IdentityMicroservice {
 
     identity.populate({
       state: IdentityState.IDENTITY_VERIFIED,
+      didUri: claimerDidUri,
     });
 
     await identity.update();
@@ -240,6 +241,7 @@ export class IdentityMicroservice {
   }
 
   static async attestClaim(event: { body: AttestationDto }, context) {
+    console.log('BODY RECEIVED ', event.body);
     const claimerEmail = event.body.email;
     const claimerDidUri: DidUri = event.body.didUri as DidUri;
     // This parameter is optional, since we can only perform attestaion
@@ -288,8 +290,6 @@ export class IdentityMicroservice {
       null,
     );
 
-    const nextNonce = new BN(await getNextNonce(attesterDidUri));
-
     const claimerCredential = {
       credential: {
         ...credential,
@@ -320,8 +320,9 @@ export class IdentityMicroservice {
         keyType: attesterKeypairs.assertionMethod.type,
       }),
       attesterAcc.address,
-      { txCounter: nextNonce },
     );
+
+    console.log('Transaction TX: ', attestationTx.toString());
 
     const bcsRequest = await attestationRequestBc(
       context,
@@ -376,6 +377,7 @@ export class IdentityMicroservice {
       identifier,
       endpointsCountForDid,
     );
+
     try {
       const bcsRequest = await didRevokeRequestBc(
         context,
@@ -394,9 +396,6 @@ export class IdentityMicroservice {
         data: { email: claimerEmail, didUri: identity.didUri },
       });
     }
-
-    identity.state = IdentityState.REVOKED;
-    await identity.update();
 
     return { success: true };
   }

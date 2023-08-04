@@ -107,6 +107,14 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async getProjectStorageDetails(project_uuid: string) {
+    const data = {
+      eventName: StorageEventType.PROJECT_STORAGE_DETAILS,
+      project_uuid,
+    };
+    return await this.callService(data);
+  }
+
   //#endregion
 
   //#region Directory CRUD
@@ -414,6 +422,18 @@ export class StorageMicroservice extends BaseService {
     const data = {
       eventName: StorageEventType.EXECUTE_PREPARE_COLLECTION_BASE_URI_WORKER,
       body: params,
+    };
+    return await this.callService(data);
+  }
+
+  //#endregion
+
+  //#region test/helper functions
+
+  public async testCrustProvider(providerEndpoint: string) {
+    const data = {
+      eventName: StorageEventType.TEST_CRUST_PROVIDER,
+      providerEndpoint,
     };
     return await this.callService(data);
   }

@@ -1,13 +1,10 @@
 import { integerParser, stringParser, dateParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
-  AdvancedSQLModel,
+  ProjectAccessModel,
   BucketQueryFilter,
-  CodeException,
   Context,
-  DefaultUserRole,
   enumInclusionValidator,
-  ForbiddenErrorCodes,
   getQueryParams,
   PoolConnection,
   PopulateFrom,
@@ -22,7 +19,7 @@ import { BucketType, DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
 
-export class Bucket extends AdvancedSQLModel {
+export class Bucket extends ProjectAccessModel {
   public readonly tableName = DbTables.BUCKET;
 
   public constructor(data: any, context: Context) {
@@ -245,45 +242,6 @@ export class Bucket extends AdvancedSQLModel {
   })
   public markedForDeletionTime?: Date;
 
-  public canAccess(context: ServiceContext) {
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_USER,
-          DefaultUserRole.ADMIN,
-        ],
-        this.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to access this record',
-      });
-    }
-  }
-
-  public canModify(context: ServiceContext) {
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.ADMIN,
-        ],
-        this.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to modify this record',
-      });
-    }
-  }
-
   public async populateById(
     id: number | string,
     conn?: PoolConnection,
@@ -429,24 +387,39 @@ export class Bucket extends AdvancedSQLModel {
   }
 
   /**
-   * Function to get count of active bucket inside project and for specific bucket type
-   * @param project_uuid
-   * @param bucketType
-   * @returns
+   * Function to get count of active bucket inside project
+   * @param {boolean} ofType - Query only buckets of this bucket's type
    */
-  public async getNumOfBuckets() {
+  public async getNumOfBuckets(ofType = true) {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT COUNT(*) as numOfBuckets
       FROM \`${this.tableName}\`
-      WHERE project_uuid = @project_uuid 
-      AND bucketType = @bucketType
+      WHERE project_uuid = @project_uuid
+      ${ofType ? `AND bucketType = @bucketType` : ''}
       AND status <> ${SqlModelStatus.DELETED};
       `,
       { project_uuid: this.project_uuid, bucketType: this.bucketType },
     );
 
     return data[0].numOfBuckets;
+  }
+
+  /**
+   * Function to get total size of all buckets inside a project
+   */
+  public async getTotalSizeUsedByProject() {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT SUM(size) as totalSize
+      FROM \`${this.tableName}\`
+      WHERE project_uuid = @project_uuid
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { project_uuid: this.project_uuid, bucketType: this.bucketType },
+    );
+
+    return data[0].totalSize;
   }
 
   /**
@@ -466,5 +439,14 @@ export class Bucket extends AdvancedSQLModel {
     );
 
     return data.length > 0;
+  }
+
+  /**
+   * Get number of buckets and total bucket size used for a project
+   */
+  public async getDetailsForProject() {
+    const numOfBuckets = await this.getNumOfBuckets(false);
+    const totalBucketSize = await this.getTotalSizeUsedByProject();
+    return { numOfBuckets, totalBucketSize };
   }
 }

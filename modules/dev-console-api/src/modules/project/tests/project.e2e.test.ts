@@ -18,6 +18,7 @@ describe('Project tests', () => {
   let testUser: TestUser;
   let testUser2: TestUser;
   let testUser3: TestUser;
+  let adminTestUser: TestUser;
 
   let testProject: Project;
   let testProject2: Project;
@@ -26,15 +27,20 @@ describe('Project tests', () => {
     stage = await setupTest();
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    adminTestUser = await createTestUser(
+      stage.devConsoleContext,
+      stage.amsContext,
+      DefaultUserRole.ADMIN,
+    );
 
     await stage.configContext.mysql.paramExecute(`
     INSERT INTO override (status, quota_id, project_uuid,  object_uuid, package_id, value)
-    VALUES 
+    VALUES
       (
         5,
         ${QuotaCode.MAX_PROJECT_COUNT},
         null,
-        '${testUser.user.user_uuid}', 
+        '${testUser.user.user_uuid}',
         null,
         '20'
       )
@@ -271,6 +277,11 @@ describe('Project tests', () => {
         SqlModelStatus.ACTIVE,
         testProject.project_uuid,
       );
+      adminTestUser = await createTestUser(
+        stage.devConsoleContext,
+        stage.amsContext,
+        DefaultUserRole.ADMIN,
+      );
     });
     test('User with role "ProjectUser" should NOT update project', async () => {
       //Only admin & owner can modify project
@@ -293,6 +304,32 @@ describe('Project tests', () => {
         })
         .set('Authorization', `Bearer ${testUser3.token}`);
       expect(response2.status).toBe(403);
+    });
+
+    test('Admin User should be able to get any project', async () => {
+      const response = await request(stage.http)
+        .get(`/projects/${testProject.project_uuid}`)
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.project_uuid).toBeTruthy();
+      expect(response.body.data.name).toBeTruthy();
+
+      const response2 = await request(stage.http)
+        .get(`/projects/${testProject2.project_uuid}`)
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
+      expect(response2.status).toBe(200);
+      expect(response2.body.data.project_uuid).toBeTruthy();
+      expect(response2.body.data.name).toBeTruthy();
+    });
+
+    test('Admin User should NOT be able to modify a project of ANOTHER user', async () => {
+      const response = await request(stage.http)
+        .patch(`/projects/${testProject.project_uuid}`)
+        .send({
+          name: 'Spremenjen naziv projekta',
+        })
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
+      expect(response.status).toBe(403);
     });
   });
 

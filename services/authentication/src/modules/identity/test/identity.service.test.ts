@@ -1,5 +1,3 @@
-import { Context } from '@apillon/lib';
-import { TransactionStatus } from '@apillon/lib/dist/config/types';
 import {
   ServiceDefinition,
   ServiceDefinitionType,
@@ -8,35 +6,12 @@ import {
 } from '@apillon/workers-lib';
 
 import { Stage, releaseStage, setupTest } from '../../../../test/setup';
-import {
-  DbTables,
-  IdentityJobState,
-  IdentityState,
-  TransactionType,
-} from '../../../config/types';
+import { IdentityJobState, IdentityState } from '../../../config/types';
 import { Identity } from '../models/identity.model';
-import { Transaction } from '../../transaction/models/transaction.model';
-import { TransactionService } from '../../transaction/transaction.service';
 import { UpdateStateWorker } from '../../../workers/update-state.worker';
 import { IdentityJob } from '../../identity-job/models/identity-job.model';
 import { IdentityJobService } from '../../identity-job/identity-job.service';
-
-async function insertIdentityServiceControlTx(
-  context: Context,
-  txHash: string,
-  identity_id: number,
-  transactionType = TransactionType.DID_CREATE,
-) {
-  const dbTxRecord: Transaction = new Transaction({}, context);
-  dbTxRecord.populate({
-    transactionHash: txHash,
-    transactionType: transactionType,
-    refTable: DbTables.IDENTITY,
-    refId: identity_id,
-    transactionStatus: TransactionStatus.PENDING,
-  });
-  await TransactionService.saveTransaction(dbTxRecord);
-}
+import { TransactionStatus } from '@apillon/lib';
 
 describe('Identity generate tests', () => {
   let stage: Stage;
@@ -69,17 +44,11 @@ describe('Identity generate tests', () => {
     ).insert();
 
     // Transaction 1 fails
-    await insertIdentityServiceControlTx(
-      stage.authApiContext,
-      controlTxHash1,
-      identity.id,
-      TransactionType.DID_CREATE,
-    );
-
-    const identityJob = await IdentityJobService.initOrGetIdentityJob(
+    const identityJob = await IdentityJobService.createOrGetIdentityJob(
       stage.authApiContext,
       identity.id,
       IdentityJobState.ATESTATION,
+      { did_create_op: 'He-he-he' },
     );
     await identityJob.setState(IdentityJobState.DID_CREATE);
 
@@ -99,12 +68,9 @@ describe('Identity generate tests', () => {
     await worker.runExecutor({
       data: [
         {
-          referenceId: identity.id,
+          referenceId: identityJob.id,
           transactionHash: controlTxHash1,
           transactionStatus: TransactionStatus.FAILED,
-          data: {
-            transactionType: TransactionType.DID_CREATE,
-          },
         },
       ],
     });
@@ -125,24 +91,13 @@ describe('Identity generate tests', () => {
     expect(identityJobCtrl.finalState).toEqual(IdentityJobState.ATESTATION);
     expect(identityJobCtrl.lastFailed).not.toBeNull();
 
-    // Repeate transaction DID_CREATE for identity.id
-    await insertIdentityServiceControlTx(
-      stage.authApiContext,
-      controlTxHash2,
-      identity.id,
-      TransactionType.DID_CREATE,
-    );
-
     // Call worker
     await worker.runExecutor({
       data: [
         {
-          referenceId: identity.id,
+          referenceId: identityJob.id,
           transactionHash: controlTxHash2,
           transactionStatus: TransactionStatus.CONFIRMED,
-          data: {
-            transactionType: TransactionType.DID_CREATE,
-          },
         },
       ],
     });
@@ -163,24 +118,13 @@ describe('Identity generate tests', () => {
     expect(identityJobCtrl2.lastFailed).not.toBeNull();
     expect(identityJobCtrl2.state).toEqual(IdentityJobState.ATESTATION);
 
-    // Now call attestation process FAILED
-    await insertIdentityServiceControlTx(
-      stage.authApiContext,
-      controlTxHash3,
-      identity.id,
-      TransactionType.ATTESTATION,
-    );
-
     // Call worker
     await worker.runExecutor({
       data: [
         {
-          referenceId: identity.id,
+          referenceId: identityJob.id,
           transactionHash: controlTxHash3,
           transactionStatus: TransactionStatus.FAILED,
-          data: {
-            transactionType: TransactionType.ATTESTATION,
-          },
         },
       ],
     });
@@ -201,24 +145,13 @@ describe('Identity generate tests', () => {
     expect(identityJobCtrl3.completedAt).toBeNull();
     expect(identityJobCtrl3.state).toEqual(IdentityJobState.ATESTATION);
 
-    // Now call attestation process FAILED
-    await insertIdentityServiceControlTx(
-      stage.authApiContext,
-      controlTxHash4,
-      identity.id,
-      TransactionType.ATTESTATION,
-    );
-
     // Call worker
     await worker.runExecutor({
       data: [
         {
-          referenceId: identity.id,
+          referenceId: identityJob.id,
           transactionHash: controlTxHash4,
           transactionStatus: TransactionStatus.CONFIRMED,
-          data: {
-            transactionType: TransactionType.ATTESTATION,
-          },
         },
       ],
     });

@@ -20,12 +20,14 @@ import { Project } from '../../../project/models/project.model';
 import { v4 as uuidV4 } from 'uuid';
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
+import { DefaultUserRole } from '@apillon/lib';
 
 describe('Hosting tests', () => {
   let stage: Stage;
 
   let testUser: TestUser;
   let testUser2: TestUser;
+  let adminTestUser: TestUser;
 
   let testProject: Project;
   let testProject2: Project;
@@ -37,6 +39,11 @@ describe('Hosting tests', () => {
     stage = await setupTest();
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    adminTestUser = await createTestUser(
+      stage.devConsoleContext,
+      stage.amsContext,
+      DefaultUserRole.ADMIN,
+    );
 
     testProject = await createTestProject(testUser, stage.devConsoleContext);
     testProject2 = await createTestProject(testUser2, stage.devConsoleContext);
@@ -69,15 +76,6 @@ describe('Hosting tests', () => {
       expect(response.body.data.items[0]?.domain).toBeTruthy();
     });
 
-    test('User should NOT be able to get ANOTHER USER web pages', async () => {
-      const response = await request(stage.http)
-        .get(
-          `/storage/hosting/websites?project_uuid=${testProject.project_uuid}`,
-        )
-        .set('Authorization', `Bearer ${testUser2.token}`);
-      expect(response.status).toBe(403);
-    });
-
     test('User should be able to get Website by id', async () => {
       const response = await request(stage.http)
         .get(`/storage/hosting/websites/${testWebsite.id}`)
@@ -89,21 +87,6 @@ describe('Hosting tests', () => {
       expect(response.body.data.bucket).toBeTruthy();
       expect(response.body.data.stagingBucket).toBeTruthy();
       expect(response.body.data.productionBucket).toBeTruthy();
-    });
-
-    test('User should NOT be able to create Website in ANOTHER user project', async () => {
-      const response = await request(stage.http)
-        .post(`/storage/hosting/website`)
-        .send({
-          project_uuid: testProject2.project_uuid,
-          name: 'My test Website',
-          domain: 'https://www.my-test-page.si',
-        })
-        .set('Authorization', `Bearer ${testUser.token}`);
-      expect(response.status).toBe(403);
-      expect(response.body.message).toBe(
-        'Insufficient permissions to modify this record',
-      );
     });
 
     test('User should recieve 422 if invalid body in POST method', async () => {
@@ -211,6 +194,54 @@ describe('Hosting tests', () => {
         response.body.data.id,
       );
       expect(wp.domain).toBe('https://www.my-test-page-2.si');
+    });
+  });
+
+  describe('Website Acess tests', () => {
+    test('User should NOT be able to get ANOTHER USER web pages', async () => {
+      const response = await request(stage.http)
+        .get(
+          `/storage/hosting/websites?project_uuid=${testProject.project_uuid}`,
+        )
+        .set('Authorization', `Bearer ${testUser2.token}`);
+      expect(response.status).toBe(403);
+    });
+
+    test('User should NOT be able to create Website in ANOTHER user project', async () => {
+      const response = await request(stage.http)
+        .post(`/storage/hosting/website`)
+        .send({
+          project_uuid: testProject2.project_uuid,
+          name: 'My test Website',
+          domain: 'https://www.my-test-page.si',
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(403);
+      expect(response.body.message).toBe(
+        'Insufficient permissions to modify this record',
+      );
+    });
+
+    test('Admin user should be able to get Website list', async () => {
+      const response = await request(stage.http)
+        .get(
+          `/storage/hosting/websites?project_uuid=${testProject.project_uuid}`,
+        )
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.items.length).toBeGreaterThan(0);
+    });
+
+    test('Admin User should NOT be able to create Website', async () => {
+      const response = await request(stage.http)
+        .post(`/storage/hosting/website`)
+        .send({
+          project_uuid: testProject2.project_uuid,
+          name: 'My test Website',
+          domain: 'https://www.my-test-page.si',
+        })
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
+      expect(response.status).toBe(403);
     });
   });
 

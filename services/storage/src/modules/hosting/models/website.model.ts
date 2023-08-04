@@ -1,10 +1,7 @@
 import {
-  AdvancedSQLModel,
-  CodeException,
+  ProjectAccessModel,
   Context,
-  DefaultUserRole,
   env,
-  ForbiddenErrorCodes,
   getQueryParams,
   Lmas,
   LogType,
@@ -25,7 +22,7 @@ import { Bucket } from '../../bucket/models/bucket.model';
 import { v4 as uuidV4 } from 'uuid';
 import { StorageValidationException } from '../../../lib/exceptions';
 
-export class Website extends AdvancedSQLModel {
+export class Website extends ProjectAccessModel {
   public readonly tableName = DbTables.WEBSITE;
 
   public constructor(data: any, context: Context) {
@@ -322,45 +319,6 @@ export class Website extends AdvancedSQLModel {
   })
   public productionBucket: Bucket;
 
-  public canAccess(context: ServiceContext) {
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_USER,
-          DefaultUserRole.ADMIN,
-        ],
-        this.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to access this record',
-      });
-    }
-  }
-
-  public canModify(context: ServiceContext) {
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.ADMIN,
-        ],
-        this.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to modify this record',
-      });
-    }
-  }
-
   public async populateById(
     id: number | string,
     conn?: PoolConnection,
@@ -499,16 +457,14 @@ export class Website extends AdvancedSQLModel {
 
   /**
    * Function to get count of active web pages inside project
-   * @param project_uuid
-   * @param bucketType
    * @returns
    */
-  public async getNumOfWebsites() {
+  public async getNumOfWebsites(): Promise<number> {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT COUNT(*) as numOfPages
       FROM \`${this.tableName}\`
-      WHERE project_uuid = @project_uuid 
+      WHERE project_uuid = @project_uuid
       AND status <> ${SqlModelStatus.DELETED};
       `,
       { project_uuid: this.project_uuid },

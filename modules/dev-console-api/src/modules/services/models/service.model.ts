@@ -4,10 +4,8 @@ import { stringParser, integerParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 
 import {
-  AdvancedSQLModel,
+  ProjectAccessModel,
   CodeException,
-  DefaultUserRole,
-  ForbiddenErrorCodes,
   getQueryParams,
   PopulateFrom,
   SerializeFor,
@@ -29,7 +27,7 @@ import { HttpStatus } from '@nestjs/common';
 /**
  * Service model.
  */
-export class Service extends AdvancedSQLModel {
+export class Service extends ProjectAccessModel {
   tableName = DbTables.SERVICE;
 
   @prop({
@@ -153,52 +151,21 @@ export class Service extends AdvancedSQLModel {
    * ASYNCHROUNUOS method, to check roles for access to record
    * @param context
    */
-  public async canAccess(context: DevConsoleApiContext) {
+  public override async canAccess(context: DevConsoleApiContext) {
     const project = await new Project({}, context).populateById(
       this.project_id,
     );
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_USER,
-          DefaultUserRole.ADMIN,
-        ],
-        project.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: HttpStatus.FORBIDDEN,
-        errorMessage: 'Insufficient permissions to access this record',
-      });
-    }
+    return super.canAccess(context, project.project_uuid);
   }
   /**
    * ASYNCHROUNUOS method, to check roles for modifying this record
    * @param context
    */
-  public async canModify(context: DevConsoleApiContext) {
+  public override async canModify(context: DevConsoleApiContext) {
     const project = await new Project({}, context).populateById(
       this.project_id,
     );
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.ADMIN,
-        ],
-        project.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: HttpStatus.FORBIDDEN,
-        errorMessage: 'Insufficient permissions to modify this record',
-      });
-    }
+    return super.canModify(context, project.project_uuid);
   }
 
   public async populateByUUID(uuid: string): Promise<this> {

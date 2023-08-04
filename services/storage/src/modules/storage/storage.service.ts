@@ -40,6 +40,7 @@ import { HostingService } from '../hosting/hosting.service';
 import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
+import { Website } from '../hosting/models/website.model';
 
 export class StorageService {
   //#region file-upload functions
@@ -206,7 +207,10 @@ export class StorageService {
       });
     }
 
-    if (bucket.bucketType == BucketType.STORAGE) {
+    if (
+      bucket.bucketType == BucketType.STORAGE ||
+      bucket.bucketType == BucketType.NFT_METADATA
+    ) {
       if (session.sessionStatus == FileUploadSessionStatus.CREATED) {
         await processSessionFiles(context, bucket, session, event.body);
       }
@@ -450,7 +454,10 @@ export class StorageService {
 
     //check bucket
     const b: Bucket = await new Bucket({}, context).populateById(f.bucket_id);
-    if (b.bucketType == BucketType.STORAGE) {
+    if (
+      b.bucketType == BucketType.STORAGE ||
+      b.bucketType == BucketType.NFT_METADATA
+    ) {
       await f.markForDeletion();
       return f.serialize(SerializeFor.PROFILE);
     } else if (b.bucketType == BucketType.HOSTING) {
@@ -495,5 +502,25 @@ export class StorageService {
     );
   }
 
+  /**
+   * Get project storage details - num. of buckets, total bucket size, num. of websites
+   * @param {{ project_uuid: string }} - uuid of the project
+   * @param {ServiceContext} context
+   */
+  static async getProjectStorageDetails(
+    { project_uuid }: { project_uuid: string },
+    context: ServiceContext,
+  ): Promise<any> {
+    const bucketDetails = await new Bucket(
+      { project_uuid },
+      context,
+    ).getDetailsForProject();
+    const numOfWebsites = await new Website(
+      { project_uuid },
+      context,
+    ).getNumOfWebsites();
+
+    return { ...bucketDetails, numOfWebsites };
+  }
   //#endregion
 }

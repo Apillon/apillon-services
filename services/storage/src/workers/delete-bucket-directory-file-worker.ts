@@ -2,24 +2,27 @@ import {
   AppEnvironment,
   Context,
   env,
-  Lmas,
   LogType,
   SerializeFor,
   ServiceName,
   SqlModelStatus,
 } from '@apillon/lib';
-import { Job, ServerlessWorker, WorkerDefinition } from '@apillon/workers-lib';
+import {
+  BaseWorker,
+  Job,
+  LogOutput,
+  WorkerDefinition,
+} from '@apillon/workers-lib';
 import { DbTables } from '../config/types';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { deleteBucket } from '../lib/delete-bucket';
 import { deleteDirectory } from '../lib/delete-directory';
 
-export class DeleteBucketDirectoryFileWorker extends ServerlessWorker {
-  private context: Context;
+export class DeleteBucketDirectoryFileWorker extends BaseWorker {
+  protected context: Context;
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
-    super(workerDefinition);
-    this.context = context;
+    super(workerDefinition, context);
   }
 
   public async before(_data?: any): Promise<any> {
@@ -31,9 +34,9 @@ export class DeleteBucketDirectoryFileWorker extends ServerlessWorker {
     //Get buckets that are marked for deletion more than x days (3 months = default) and delete them
     const bucketsToDelete = await this.context.mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${DbTables.BUCKET}\`
-      WHERE status = ${SqlModelStatus.MARKED_FOR_DELETION} 
+      WHERE status = ${SqlModelStatus.MARKED_FOR_DELETION}
       AND markedForDeletionTime < (NOW() - INTERVAL ${env.STORAGE_DELETE_AFTER_INTERVAL} DAY);
       `,
     );
@@ -43,12 +46,9 @@ export class DeleteBucketDirectoryFileWorker extends ServerlessWorker {
       try {
         await deleteBucket(this.context, bucket.id, conn);
         await this.context.mysql.commit(conn);
-        await new Lmas().writeLog({
-          context: this.context,
-          project_uuid: bucket.project_uuid,
+        await this.writeEventLog({
           logType: LogType.INFO,
           message: 'Delete bucket success',
-          location: 'DeleteBucketDirectoryFileWorker.execute',
           service: ServiceName.STORAGE,
           data: {
             bucket,
@@ -56,27 +56,25 @@ export class DeleteBucketDirectoryFileWorker extends ServerlessWorker {
         });
       } catch (err) {
         await this.context.mysql.rollback(conn);
-        await new Lmas().writeLog({
-          context: this.context,
-          project_uuid: bucket.project_uuid,
-          logType: LogType.ERROR,
-          message: 'Delete bucket error',
-          location: 'DeleteBucketDirectoryFileWorker.execute',
-          service: ServiceName.STORAGE,
-          data: {
-            bucket,
-            error: err,
+        await this.writeEventLog(
+          {
+            logType: LogType.ERROR,
+            message: 'Delete bucket error',
+            service: ServiceName.STORAGE,
+            data: { bucket, error: err },
+            err,
           },
-        });
+          LogOutput.SYS_ERROR,
+        );
       }
     }
 
     //Get directories that are marked for deletion more than x days (3 months = default) and delete them
     const directoriesToDelete = await this.context.mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${DbTables.DIRECTORY}\`
-      WHERE status = ${SqlModelStatus.MARKED_FOR_DELETION} 
+      WHERE status = ${SqlModelStatus.MARKED_FOR_DELETION}
       AND markedForDeletionTime < (NOW() - INTERVAL ${env.STORAGE_DELETE_AFTER_INTERVAL} DAY);
       `,
     );
@@ -95,12 +93,9 @@ export class DeleteBucketDirectoryFileWorker extends ServerlessWorker {
         await b.update(SerializeFor.UPDATE_DB, conn);
         await this.context.mysql.commit(conn);
 
-        await new Lmas().writeLog({
-          context: this.context,
-          project_uuid: b.project_uuid,
+        await this.writeEventLog({
           logType: LogType.INFO,
           message: 'Storage bucket size decreased',
-          location: 'DeleteBucketDirectoryFileWorker.execute',
           service: ServiceName.STORAGE,
           data: {
             bucket_uuid: b.bucket_uuid,
@@ -110,26 +105,28 @@ export class DeleteBucketDirectoryFileWorker extends ServerlessWorker {
         });
       } catch (err) {
         await this.context.mysql.rollback(conn);
-        await new Lmas().writeLog({
-          context: this.context,
-          logType: LogType.ERROR,
-          message: 'Delete directory error',
-          location: 'DeleteBucketDirectoryFileWorker.execute',
-          service: ServiceName.STORAGE,
-          data: {
-            directory,
-            error: err,
+        await this.writeEventLog(
+          {
+            logType: LogType.ERROR,
+            message: 'Delete directory error',
+            service: ServiceName.STORAGE,
+            data: {
+              directory,
+              err,
+            },
+            err,
           },
-        });
+          LogOutput.SYS_ERROR,
+        );
       }
     }
 
     //Get files that are marked for deletion more than x days (3 months = default) and delete them
     const filesToDelete = await this.context.mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${DbTables.FILE}\`
-      WHERE status = ${SqlModelStatus.MARKED_FOR_DELETION} 
+      WHERE status = ${SqlModelStatus.MARKED_FOR_DELETION}
       AND markedForDeletionTime < (NOW() - INTERVAL ${env.STORAGE_DELETE_AFTER_INTERVAL} DAY);
       `,
     );
@@ -147,17 +144,18 @@ export class DeleteBucketDirectoryFileWorker extends ServerlessWorker {
           decreasedSizeByBucket[file.bucket_id] = file.size;
         }
       } catch (err) {
-        await new Lmas().writeLog({
-          context: this.context,
-          logType: LogType.ERROR,
-          message: 'Unpin file error',
-          location: 'DeleteBucketDirectoryFileWorker.execute',
-          service: ServiceName.STORAGE,
-          data: {
-            file,
-            error: err,
+        await this.writeEventLog(
+          {
+            logType: LogType.ERROR,
+            message: 'Unpin file error',
+            service: ServiceName.STORAGE,
+            data: {
+              file,
+              err,
+            },
           },
-        });
+          LogOutput.SYS_ERROR,
+        );
       }
     }
     //Mark files as deleted
@@ -165,7 +163,7 @@ export class DeleteBucketDirectoryFileWorker extends ServerlessWorker {
       `
       UPDATE \`${DbTables.FILE}\`
       SET status = ${SqlModelStatus.DELETED}
-      WHERE status = ${SqlModelStatus.MARKED_FOR_DELETION} 
+      WHERE status = ${SqlModelStatus.MARKED_FOR_DELETION}
       AND markedForDeletionTime < (NOW() - INTERVAL ${env.STORAGE_DELETE_AFTER_INTERVAL} DAY);
       `,
     );
@@ -177,14 +175,12 @@ export class DeleteBucketDirectoryFileWorker extends ServerlessWorker {
       b.size -= decreasedSizeByBucket[bucket_id];
       await b.update();
 
-      await new Lmas().writeLog({
-        context: this.context,
-        project_uuid: b.project_uuid,
+      await this.writeEventLog({
         logType: LogType.INFO,
         message: 'Storage bucket size decreased',
-        location: 'DeleteBucketDirectoryFileWorker.execute',
         service: ServiceName.STORAGE,
         data: {
+          project_uuid: b.project_uuid,
           bucket_uuid: b.bucket_uuid,
           size: decreasedSizeByBucket[bucket_id],
           bucketSize: b.size,

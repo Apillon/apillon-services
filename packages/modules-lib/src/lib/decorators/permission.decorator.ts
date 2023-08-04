@@ -11,4 +11,4 @@ export interface PermissionPass {
 export const PERMISSION_KEY = 'permissions';
 
 export const Permissions = (...permissions: Array<PermissionPass>) =>
-  SetMetadata(PERMISSION_KEY, permissions);
+  SetMetadata<string, PermissionPass[]>(PERMISSION_KEY, permissions);

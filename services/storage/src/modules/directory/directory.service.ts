@@ -126,7 +126,10 @@ export class DirectoryService {
 
     //check directory bucket
     const b: Bucket = await new Bucket({}, context).populateById(d.bucket_id);
-    if (b.bucketType == BucketType.STORAGE) {
+    if (
+      b.bucketType == BucketType.STORAGE ||
+      b.bucketType == BucketType.NFT_METADATA
+    ) {
       await d.markForDeletion();
       return d.serialize(SerializeFor.PROFILE);
     } else if (b.bucketType == BucketType.HOSTING) {

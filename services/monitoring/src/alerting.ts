@@ -1,3 +1,4 @@
+import { MongoCollections } from './config/types';
 import { postToSlack } from './lib/slack';
 
 /**
@@ -13,7 +14,7 @@ export class Alerting {
   static async sendAlert(event, context) {
     console.log(`SENDING ALERT:${JSON.stringify(event)}`);
 
-    await context.mongo.db.collection('alert').insertOne(event);
+    await context.mongo.db.collection(MongoCollections.ALERT).insertOne(event);
     return event;
   }
 
@@ -26,7 +27,9 @@ export class Alerting {
   static async sendAdminAlert(event, context) {
     console.log(`SENDING ADMIN ALERT:${JSON.stringify(event)}`);
 
-    await context.mongo.db.collection('admin-alert').insertOne(event);
+    await context.mongo.db
+      .collection(MongoCollections.ADMIN_ALERT)
+      .insertOne(event);
 
     await postToSlack(event.message, event.serviceName, event.level);
 

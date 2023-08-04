@@ -4,7 +4,6 @@ import {
   CreateQuotaOverrideDto,
   QuotaOverrideDto,
   PopulateFrom,
-  SerializeFor,
 } from '@apillon/lib';
 import { ConfigErrorCode } from '../../config/types';
 import { ScsCodeException } from '../../lib/exceptions';
@@ -19,11 +18,11 @@ export class OverrideService {
     // If an override exists, update it, else create a new override
     if (override?.exists()) {
       override.populate(dto, PopulateFrom.ADMIN);
-      await override.update(SerializeFor.ADMIN);
+      await override.update();
       return override;
     }
     const newOverride = new Override(dto, context);
-    return await newOverride.insert(SerializeFor.ADMIN);
+    return await newOverride.insert();
   }
 
   static async deleteOverride(dto: QuotaOverrideDto, context: ServiceContext) {

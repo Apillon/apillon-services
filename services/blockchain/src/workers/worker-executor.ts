@@ -119,6 +119,9 @@ export async function handleLambdaEvent(
     workerDefinition = new WorkerDefinition(serviceDef, WorkerName.SCHEDULER);
   }
 
+  console.log('Worker definition', workerDefinition);
+  console.log('workerName: ', workerDefinition.workerName);
+
   switch (workerDefinition.workerName) {
     case WorkerName.SCHEDULER:
       const scheduler = new Scheduler(serviceDef, context);
@@ -146,9 +149,7 @@ export async function handleLambdaEvent(
 
     // !!!!WIP!!!! - SUBSTRATE TRANSACTION WORKER
     case WorkerName.SUBSTRATE_TRANSACTION:
-      await new SubstrateTransactionWorker(workerDefinition, context).run({
-        executeArg: JSON.stringify(workerDefinition.parameters),
-      });
+      await new SubstrateTransactionWorker(workerDefinition, context).run();
       break;
     // --- EVM ---
     case WorkerName.EVM_TRANSACTIONS:
@@ -218,6 +219,9 @@ export async function handleSqsMessages(
         id,
         parameters,
       });
+
+      console.log('Worker definition', workerDefinition);
+      console.log('workerName: ', workerDefinition.workerName);
 
       // eslint-disable-next-line sonarjs/no-small-switch
       switch (workerName) {

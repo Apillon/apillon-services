@@ -1,12 +1,11 @@
 import {
-  AdvancedSQLModel,
-  CodeException,
+  ProjectAccessModel,
   Context,
-  DefaultUserRole,
+  enumInclusionValidator,
   EvmChain,
-  ForbiddenErrorCodes,
   getQueryParams,
   NFTCollectionQueryFilter,
+  NFTCollectionType,
   PoolConnection,
   PopulateFrom,
   presenceValidator,
@@ -15,7 +14,12 @@ import {
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
-import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
+import {
+  booleanParser,
+  integerParser,
+  stringParser,
+  floatParser,
+} from '@rawmodel/parsers';
 import {
   CollectionStatus,
   DbTables,
@@ -23,12 +27,41 @@ import {
 } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 
-export class Collection extends AdvancedSQLModel {
+export class Collection extends ProjectAccessModel {
   public readonly tableName = DbTables.COLLECTION;
 
   public constructor(data: any, context: Context) {
     super(data, context);
   }
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: NftsErrorCode.COLLECTION_TYPE_NOT_PRESENT,
+      },
+      {
+        resolver: enumInclusionValidator(NFTCollectionType),
+        code: NftsErrorCode.COLLECTION_TYPE_NOT_VALID,
+      },
+    ],
+    fakeValue: NFTCollectionType.GENERIC,
+  })
+  public collectionType: NFTCollectionType;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -173,7 +206,7 @@ export class Collection extends AdvancedSQLModel {
   public maxSupply: number;
 
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: floatParser() },
     populatable: [
       PopulateFrom.DB,
       PopulateFrom.SERVICE,
@@ -542,45 +575,6 @@ export class Collection extends AdvancedSQLModel {
    * Info properties
    *****************************************************/
 
-  public canAccess(context: ServiceContext) {
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_USER,
-          DefaultUserRole.ADMIN,
-        ],
-        this.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to access this record',
-      });
-    }
-  }
-
-  public canModify(context: ServiceContext) {
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.ADMIN,
-        ],
-        this.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to modify this record',
-      });
-    }
-  }
-
   public async getList(
     context: ServiceContext,
     filter: NFTCollectionQueryFilter,
@@ -677,7 +671,7 @@ export class Collection extends AdvancedSQLModel {
    * @param project_uuid
    * @returns Number of collections
    */
-  public async getCollectionsCount(project_uuid?: string) {
+  public async getCollectionsCount(project_uuid?: string): Promise<number> {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT COUNT(*) as collectionsCount

@@ -1,5 +1,4 @@
 import {
-  AppEnvironment,
   CodeException,
   env,
   generateJwtToken,
@@ -11,6 +10,7 @@ import {
   SporranSessionVerifyDto,
   SubmitAttestationDto,
   SubmitTermsDto,
+  VerifyCredentialDto,
 } from '@apillon/lib';
 import { randomUUID } from 'crypto';
 import { HexString } from '@polkadot/util/types';
@@ -19,7 +19,6 @@ import {
   APILLON_DAPP_NAME,
   AuthenticationErrorCode,
   HttpStatus,
-  IdentityGenFlag,
   SporranMessageType,
 } from '../../config/types';
 import {
@@ -49,18 +48,8 @@ import {
 } from '@kiltprotocol/types';
 
 import { Identity } from '../identity/models/identity.model';
-import { WorkerName } from '../../workers/worker-executor';
 import { prepareSignResources } from '../../lib/sporran';
-import { VerifyCredentialDto } from '@apillon/lib/dist/lib/at-services/authentication/dtos/sporran/message/verify-credential.dto';
 import { AuthenticationCodeException } from '../../lib/exceptions';
-import {
-  ServiceDefinition,
-  ServiceDefinitionType,
-  WorkerDefinition,
-  QueueWorkerType,
-  sendToWorkerQueue,
-} from '@apillon/workers-lib';
-import { IdentityGenerateWorker } from '../../workers/generate-identity.worker';
 
 export class SporranMicroservice {
   static async getSessionValues(_context): Promise<any> {

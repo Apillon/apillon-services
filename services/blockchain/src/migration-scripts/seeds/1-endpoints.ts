@@ -1,4 +1,4 @@
-import { ChainType, SubstrateChain } from '@apillon/lib';
+import { ChainType, EvmChain, SubstrateChain } from '@apillon/lib';
 import { DbTables } from '../../config/types';
 
 export async function upgrade(
@@ -6,7 +6,7 @@ export async function upgrade(
 ): Promise<void> {
   await queryFn(`
     INSERT INTO ${DbTables.ENDPOINT} (status, url, chain, chainType)
-    VALUES 
+    VALUES
     (5, 'wss://rpc.crust.network', ${SubstrateChain.CRUST}, ${ChainType.SUBSTRATE}),
     (5, 'wss://spiritnet.kilt.io', ${SubstrateChain.KILT}, ${ChainType.SUBSTRATE})
     ;

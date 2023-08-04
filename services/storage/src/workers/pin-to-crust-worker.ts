@@ -2,22 +2,25 @@ import {
   AppEnvironment,
   Context,
   env,
-  Lmas,
   LogType,
   runWithWorkers,
   ServiceName,
 } from '@apillon/lib';
-import { Job, ServerlessWorker, WorkerDefinition } from '@apillon/workers-lib';
+import {
+  BaseWorker,
+  Job,
+  LogOutput,
+  WorkerDefinition,
+} from '@apillon/workers-lib';
 import { CID } from 'ipfs-http-client';
 import { CrustPinningStatus } from '../config/types';
 import { CrustService } from '../modules/crust/crust.service';
 import { PinToCrustRequest } from '../modules/crust/models/pin-to-crust-request.model';
 
-export class PinToCrustWorker extends ServerlessWorker {
-  private context: Context;
+export class PinToCrustWorker extends BaseWorker {
+  protected context: Context;
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
-    super(workerDefinition);
-    this.context = context;
+    super(workerDefinition, context);
   }
 
   public async before(_data?: any): Promise<any> {
@@ -32,7 +35,7 @@ export class PinToCrustWorker extends ServerlessWorker {
       this.context,
     ).getPendingRequest();
 
-    console.info('Num of pendingPinRequests: ' + pendingPinRequests.length);
+    console.info(`Num of pendingPinRequests: ${pendingPinRequests.length}`);
 
     await runWithWorkers(
       pendingPinRequests,
@@ -63,11 +66,9 @@ export class PinToCrustWorker extends ServerlessWorker {
 
           await pinToCrustRequest.update();
 
-          await new Lmas().writeLog({
-            context: this.context,
+          await this.writeEventLog({
             logType: LogType.COST,
             message: 'Success placing storage order to CRUST',
-            location: `PinToCrustWorker`,
             service: ServiceName.STORAGE,
             data: {
               pinToCrustRequest: pinToCrustRequest.serialize(),
@@ -84,19 +85,20 @@ export class PinToCrustWorker extends ServerlessWorker {
             console.error(err2);
           }
 
-          await new Lmas().writeLog({
-            context: this.context,
-            logType: LogType.ERROR,
-            message: 'Error at placing storage order to CRUST',
-            location: `PinToCrustWorker`,
-            service: ServiceName.STORAGE,
-            data: {
+          await this.writeEventLog(
+            {
+              logType: LogType.ERROR,
+              message: 'Error at placing storage order to CRUST',
+              service: ServiceName.STORAGE,
               data: {
-                pinToCrustRequest: pinToCrustRequest.serialize(),
+                data: {
+                  pinToCrustRequest: pinToCrustRequest.serialize(),
+                },
+                err,
               },
-              err,
             },
-          });
+            LogOutput.SYS_ERROR,
+          );
         }
       },
     );
@@ -111,7 +113,7 @@ export class PinToCrustWorker extends ServerlessWorker {
       await new PinToCrustRequest({}, this.context).getRequestForRenewal();
 
     console.info(
-      'Num of pins, that should be renewed: ' + pinRequestForRenowal.length,
+      `Num of pins, that should be renewed: ${pinRequestForRenowal.length}`,
     );
 
     await runWithWorkers(

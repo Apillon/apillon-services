@@ -1,6 +1,6 @@
 {
   "name": "@apillon/config",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "author": "Kalmia d.o.o.",
   "license": "UNLICENSED",
   "description": "System configuration service",

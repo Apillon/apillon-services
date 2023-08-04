@@ -4,7 +4,7 @@ import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { NFTCollectionQueryFilter } from './dtos/collection-query-filter.dto';
 import { CreateCollectionDTO } from './dtos/create-collection.dto';
-import { MintNftDTO } from './dtos/mint-nft.dto';
+import { MintNftDTO, NestMintNftDTO } from './dtos/mint-nft.dto';
 import { DeployCollectionDTO } from './dtos/deploy-collection.dto';
 import { SetCollectionBaseUriDTO } from './dtos/set-collection-base-uri.dto';
 import { TransactionQueryFilter } from './dtos/transaction-query-filter.dto';
@@ -75,6 +75,14 @@ export class NftsMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async nestMintNft(params: NestMintNftDTO) {
+    const data = {
+      eventName: NftsEventType.NEST_MINT_NFT,
+      body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
   public async setNftCollectionBaseUri(params: SetCollectionBaseUriDTO) {
     const data = {
       eventName: NftsEventType.SET_BASE_URI,
@@ -135,6 +143,14 @@ export class NftsMicroservice extends BaseService {
     const data = {
       eventName: NftsEventType.EXECUTE_DEPLOY_COLLECTION_WORKER,
       body: params,
+    };
+    return await this.callService(data);
+  }
+
+  public async getProjectCollectionDetails(project_uuid: string) {
+    const data = {
+      eventName: NftsEventType.PROJECT_COLLECTION_DETAILS,
+      project_uuid,
     };
     return await this.callService(data);
   }
