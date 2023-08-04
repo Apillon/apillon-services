@@ -178,7 +178,7 @@ export class CreateCollectionDTOBase extends ModelBase {
     validators: [
       {
         resolver: stringLengthValidator({ minOrEqual: 0, maxOrEqual: 1000 }),
-        code: ValidatorErrorCode.NFT_DEPLOY_COLLECTION_UUI_PARAM_NOT_VALID,
+        code: ValidatorErrorCode.NFT_DEPLOY_COLLECTION_DESCRIPTION_NOT_VALID,
       },
     ],
   })
