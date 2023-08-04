@@ -59,18 +59,31 @@ export class Logger {
       mongoQuery.ts.$lte = new Date(query.dateTo);
     }
 
+    if (query.search) {
+      // Search message by substring
+      mongoQuery.message = {
+        $regex: query.search,
+        $options: 'i',
+      };
+    }
+
     // Default sort is timestamp descending
     // -1 -> DESC, 1 -> ASC
     const sort = query.orderBy[0] || 'ts';
     const sortDir = !query.desc[0] ? -1 : query.desc[0] === 'true' ? 1 : -1;
 
-    return await context.mongo.db
-      .collection(MongoCollections.LOGS)
+    const logsCollection = context.mongo.db.collection(MongoCollections.LOGS);
+
+    const items = await logsCollection
       .find(mongoQuery)
-      .project({ data: 0, eventName: 0 }) // Exclude properties 'data' and 'eventName' from results
+      .project({ eventName: 0 }) // Exclude property 'eventName' from results
       .sort({ [sort]: sortDir })
       .skip((query.page - 1) * query.limit)
       .limit(query.limit)
       .toArray();
+
+    const total = await logsCollection.countDocuments(mongoQuery);
+
+    return { items, total };
   }
 }

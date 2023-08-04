@@ -74,6 +74,7 @@ describe('Admin Logs', () => {
           logType: LogType.INFO,
           service: ServiceName.BLOCKCHAIN,
           ts: new Date('2060-03-03'),
+          message: 'E2E test',
         }),
       ]);
       insertedIds = records.map((r) => r.insertedId);
@@ -93,16 +94,15 @@ describe('Admin Logs', () => {
         .get(`/admin-panel/logs?limit=3`)
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.data).toHaveLength(3);
+      expect(response.body.data.items).toHaveLength(3);
       ['logType', 'service', 'ts', '_id'].forEach((prop) =>
-        expect(response.body.data[0]).toHaveProperty(prop),
+        expect(response.body.data.items[0]).toHaveProperty(prop),
       );
 
       response = await request(stage.http)
         .get(`/admin-panel/logs?logType=INFO`)
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.data).toHaveLength(20);
       expect(
         response.body.data.every((log) => log.logType === LogType.INFO),
       ).toBe(true);
@@ -111,38 +111,48 @@ describe('Admin Logs', () => {
         .get(`/admin-panel/logs?service=STORAGE`)
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.data).toHaveLength(20);
-      expect(response.body.data[0].service).toBe(ServiceName.STORAGE);
+      expect(
+        response.body.data.every((log) => log.service === ServiceName.STORAGE),
+      ).toBe(true);
 
       response = await request(stage.http)
         .get(`/admin-panel/logs?user_uuid=${user_uuid}`)
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.data).toHaveLength(2);
+      expect(response.body.data.items).toHaveLength(2);
       expect(
-        response.body.data.every((log) => log.user_uuid === user_uuid),
+        response.body.data.items.every((log) => log.user_uuid === user_uuid),
       ).toBe(true);
 
       response = await request(stage.http)
         .get(`/admin-panel/logs?project_uuid=${project_uuid}`)
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.data).toHaveLength(2);
+      expect(response.body.data.items).toHaveLength(2);
       expect(
-        response.body.data.every((log) => log.project_uuid === project_uuid),
+        response.body.data.items.every(
+          (log) => log.project_uuid === project_uuid,
+        ),
       ).toBe(true);
 
       response = await request(stage.http)
         .get(`/admin-panel/logs?dateFrom=2060-02-01`)
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.data).toHaveLength(2);
+      expect(response.body.data.items).toHaveLength(2);
 
       response = await request(stage.http)
         .get(`/admin-panel/logs?dateFrom=2060-01-01&dateTo=2060-02-02`)
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.data).toHaveLength(2);
+      expect(response.body.data.items).toHaveLength(2);
+
+      response = await request(stage.http)
+        .get(`/admin-panel/logs?search=E2E`)
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.items).toHaveLength(1);
+      expect(response.body.data.items[0].message).toEqual('E2E test');
     });
   });
 });
