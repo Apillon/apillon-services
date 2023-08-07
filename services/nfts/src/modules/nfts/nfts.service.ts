@@ -273,7 +273,11 @@ export class NftsService {
     return await new Collection(
       { project_uuid: event.query.project_uuid },
       context,
-    ).getList(context, new NFTCollectionQueryFilter(event.query));
+    ).getList(
+      context,
+      new NFTCollectionQueryFilter(event.query),
+      SerializeFor.PROFILE,
+    );
   }
 
   static async getCollection(event: { id: any }, context: ServiceContext) {

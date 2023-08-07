@@ -579,6 +579,7 @@ export class Collection extends ProjectAccessModel {
   public async getList(
     context: ServiceContext,
     filter: NFTCollectionQueryFilter,
+    serializationStrategy: SerializeFor = SerializeFor.PROFILE,
   ) {
     this.canAccess(context);
     // Map url query with sql fields.
@@ -625,7 +626,7 @@ export class Collection extends ProjectAccessModel {
       items: collectionsResult.items.map((collection) =>
         new Collection({}, context)
           .populate(collection, PopulateFrom.DB)
-          .serialize(SerializeFor.PROFILE),
+          .serialize(serializationStrategy),
       ),
     };
   }
