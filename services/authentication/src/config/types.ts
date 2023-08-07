@@ -90,15 +90,16 @@ export enum KiltDerivationPaths {
 }
 
 export enum IdentityState {
-  IDENTITY_VERIFIED = 'identity-verified',
   IN_PROGRESS = 'in-progress',
+  IDENTITY_VERIFIED = 'identity-verified',
+  PENDING_VERIFICATION = 'pending-verification',
   SUBMITTED_DID_CREATE_REQ = 'submitted-did-create-req',
-  SUBMITTED_ATTESATION_REQ = 'submitted-attest-req',
+  SUBMITTED_ATTESATION_REQ = 'submitted-attestation-req',
+  SUBMITTED_REVOKE_REQ = 'submitted-revoke-req',
   DID_CREATED = 'did-created',
   ATTESTED = 'attested',
-  PENDING_VERIFICATION = 'pending-verification',
-  REJECTED = 'rejected',
   REVOKED = 'revoked',
+  REJECTED = 'rejected',
 }
 
 export enum CredentialAttestStatus {
