@@ -34,6 +34,7 @@ export enum AuthenticationErrorCode {
   IDENTITY_CAPTCHA_NOT_CONFIGURED = 422130116,
   IDENTITY_CAPTCHA_INVALID = 422130117,
   IDENTITY_CAPTCHA_NOT_PRESENT = 422130118,
+  IDENTITY_REQUEST_IN_PROGRESS = 422130119,
   DID_URI_NOT_PRESENT = 422130200,
   DID_URI_INVALID = 422130201,
   VERIFICATION_IDENTITY_NOT_PRESENT = 422130300,
@@ -90,15 +91,16 @@ export enum KiltDerivationPaths {
 }
 
 export enum IdentityState {
-  IDENTITY_VERIFIED = 'identity-verified',
   IN_PROGRESS = 'in-progress',
+  IDENTITY_VERIFIED = 'identity-verified',
+  PENDING_VERIFICATION = 'pending-verification',
   SUBMITTED_DID_CREATE_REQ = 'submitted-did-create-req',
-  SUBMITTED_ATTESATION_REQ = 'submitted-attest-req',
+  SUBMITTED_ATTESATION_REQ = 'submitted-attestation-req',
+  SUBMITTED_REVOKE_REQ = 'submitted-revoke-req',
   DID_CREATED = 'did-created',
   ATTESTED = 'attested',
-  PENDING_VERIFICATION = 'pending-verification',
-  REJECTED = 'rejected',
   REVOKED = 'revoked',
+  REJECTED = 'rejected',
 }
 
 export enum CredentialAttestStatus {
