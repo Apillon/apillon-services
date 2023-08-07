@@ -108,13 +108,20 @@ export class ProjectController {
   }
 
   @Get(':project_uuid/api-keys')
-  @BaseQueryFilterValidator()
+  @Validation({
+    dto: ApiKeyQueryFilterDto,
+    validateFor: ValidateFor.QUERY,
+    populateFrom: PopulateFrom.ADMIN,
+    // Skip validation since project_uuuid param comes from URL path, not query
+    skipValidation: true,
+  })
+  @UseGuards(ValidationGuard)
   async getProjectApiKeys(
     @Ctx() context: DevConsoleApiContext,
     @Param('project_uuid', ParseUUIDPipe) project_uuid: UUID,
     @Query() query: ApiKeyQueryFilterDto,
   ) {
-    const apiKeyQuery = new ApiKeyQueryFilterDto({ ...query, project_uuid });
-    return this.projectService.getProjectApiKeys(context, apiKeyQuery);
+    query.populate({ project_uuid });
+    return this.projectService.getProjectApiKeys(context, query);
   }
 }

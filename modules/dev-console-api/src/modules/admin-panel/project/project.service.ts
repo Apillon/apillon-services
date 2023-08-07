@@ -115,7 +115,7 @@ export class ProjectService {
   }
 
   /**
-   * Get all API keys for a project
+   * Get a list of all API keys for a project, along with their usage counts
    * @param {DevConsoleApiContext} context
    * @param {ApiKeyQueryFilterDto} query - API key query filter
    */

@@ -1,4 +1,10 @@
-import { LogsQueryFilter, MongoCollections, RequestLogDto } from '@apillon/lib';
+import {
+  CodeException,
+  LogsQueryFilter,
+  MongoCollections,
+  RequestLogDto,
+  SystemErrorCode,
+} from '@apillon/lib';
 import { ServiceContext } from './context';
 
 /**
@@ -33,7 +39,12 @@ export class Logger {
     context: ServiceContext,
   ) {
     if (!log.collectionName) {
-      throw new Error('Mongo collection name is required!');
+      throw new CodeException({
+        status: 500,
+        code: SystemErrorCode.MICROSERVICE_SYSTEM_ERROR,
+        errorCodes: SystemErrorCode,
+        errorMessage: 'Mongo collection name is required!',
+      });
     }
     // console.log(`LOGGER: ${event?.message || JSON.stringify(event)}`);
     const event = {
