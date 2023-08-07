@@ -127,14 +127,14 @@ export class BucketWebhook extends AdvancedSQLModel {
   public param2: string;
 
   public async canAccess(context: ServiceContext) {
-    const b: Bucket = await new Bucket({}, context).populateById(
-      this.bucket_id,
-    );
     // Admins are allowed to access items on any project
     if (context.user?.userRoles.includes(DefaultUserRole.ADMIN)) {
       return true;
     }
 
+    const b: Bucket = await new Bucket({}, context).populateById(
+      this.bucket_id,
+    );
     if (
       !context.hasRoleOnProject(
         [

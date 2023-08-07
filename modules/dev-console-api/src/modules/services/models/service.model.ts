@@ -152,14 +152,14 @@ export class Service extends AdvancedSQLModel {
    * @param context
    */
   public async canAccess(context: DevConsoleApiContext) {
-    const project = await new Project({}, context).populateById(
-      this.project_id,
-    );
     // Admins are allowed to access items on any project
     if (context.user?.userRoles.includes(DefaultUserRole.ADMIN)) {
       return true;
     }
 
+    const project = await new Project({}, context).populateById(
+      this.project_id,
+    );
     if (
       !context.hasRoleOnProject(
         [

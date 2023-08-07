@@ -180,14 +180,14 @@ export class Deployment extends AdvancedSQLModel {
   public number: number;
 
   public async canAccess(context: ServiceContext) {
-    const website: Website = await new Website({}, context).populateById(
-      this.website_id,
-    );
     // Admins are allowed to access items on any project
     if (context.user?.userRoles.includes(DefaultUserRole.ADMIN)) {
       return true;
     }
 
+    const website: Website = await new Website({}, context).populateById(
+      this.website_id,
+    );
     if (
       !context.hasRoleOnProject(
         [
