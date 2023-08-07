@@ -14,7 +14,12 @@ import {
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
-import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
+import {
+  booleanParser,
+  integerParser,
+  stringParser,
+  floatParser,
+} from '@rawmodel/parsers';
 import {
   CollectionStatus,
   DbTables,
@@ -201,7 +206,7 @@ export class Collection extends ProjectAccessModel {
   public maxSupply: number;
 
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: floatParser() },
     populatable: [
       PopulateFrom.DB,
       PopulateFrom.SERVICE,

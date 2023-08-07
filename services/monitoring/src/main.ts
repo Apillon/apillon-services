@@ -14,6 +14,7 @@ export async function processEvent(event, context: Context): Promise<any> {
     [LmasEventType.WRITE_LOG]: Logger.writeLog,
     [LmasEventType.WRITE_REQUEST_LOG]: Logger.writeRequestLog,
     [LmasEventType.LIST_LOGS]: Logger.listLogs,
+    [LmasEventType.GET_API_KEYS_USAGE_COUNT]: Logger.getApiKeysUsageCount,
     [LmasEventType.SEND_ALERT]: Alerting.sendAlert,
     [LmasEventType.SEND_ADMIN_ALERT]: Alerting.sendAdminAlert,
   };

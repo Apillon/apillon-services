@@ -76,7 +76,7 @@ export class DeployCollectionWorker extends BaseQueueWorker {
           sourceFunction: 'DeployCollectionWorker.runExecutor()',
           errorMessage: 'Error deploying Nft contract',
           details: err,
-        }).writeToMonitor({});
+        }).writeToMonitor({ project_uuid: collection.project_uuid });
       }
     } catch (err) {
       //Update collection status to error
@@ -87,9 +87,13 @@ export class DeployCollectionWorker extends BaseQueueWorker {
         await this.writeEventLog(
           {
             logType: LogType.ERROR,
+            project_uuid: collection?.project_uuid,
             message: 'Error updating collection status to FAILED.',
             service: ServiceName.NFTS,
             err: updateError,
+            data: {
+              collection: collection.serialize(),
+            },
           },
           LogOutput.SYS_ERROR,
         );

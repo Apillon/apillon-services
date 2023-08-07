@@ -68,11 +68,6 @@ export class NftsService {
       params.body,
       context,
     ).populate({
-      isRevokable: params.body.isRevokable,
-      isSoulbound: params.body.isSoulbound,
-      chain: params.body.chain,
-      royaltiesFees: params.body.royaltiesFees,
-      royaltiesAddress: params.body.royaltiesAddress,
       collection_uuid: uuidV4(),
       status: SqlModelStatus.INCOMPLETE,
     });
@@ -325,7 +320,7 @@ export class NftsService {
     context: ServiceContext,
   ) {
     console.log(
-      `Transfering NFT Collection (uuid=${params.body.collection_uuid}) ownership to wallet address: ${params.body.address}`,
+      `Transferring NFT Collection (uuid=${params.body.collection_uuid}) ownership to wallet address: ${params.body.address}`,
     );
 
     const collection: Collection = await new Collection(
@@ -627,7 +622,7 @@ export class NftsService {
     if (parentCollection.chain !== childCollection.chain) {
       throw new NftsCodeException({
         code: NftsErrorCode.COLLECTION_PARENT_AND_CHILD_NFT_CHAIN_MISMATCH,
-        status: 400,
+        status: 500,
       });
     }
 

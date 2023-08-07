@@ -1,5 +1,4 @@
-import { env } from '@apillon/lib';
-import { createRequestLogMiddleware } from '@apillon/modules-lib';
+import { ApiName, createRequestLogMiddleware } from '@apillon/modules-lib';
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -34,7 +33,7 @@ export class AppModule {
       .exclude({ path: '/', method: RequestMethod.ALL })
       .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer
-      .apply(createRequestLogMiddleware(`apillon-api (${env.APP_ENV})`))
+      .apply(createRequestLogMiddleware(ApiName.APILLON_API))
       .exclude(
         { path: '*', method: RequestMethod.HEAD },
         { path: '*', method: RequestMethod.OPTIONS },

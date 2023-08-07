@@ -1,12 +1,12 @@
 import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
 import { HttpServer } from '@nestjs/common';
-import supertest from 'supertest';
+import * as request from 'supertest';
 
 export function getRequestFactory(server: HttpServer, apiKey: ApiKey) {
   return async function (url: string, apiKeyOverride: ApiKey = undefined) {
     const apiKeyUsed = apiKeyOverride ? apiKeyOverride : apiKey;
 
-    return supertest(server)
+    return request(server)
       .get(url)
       .set(
         'Authorization',
@@ -25,7 +25,7 @@ export function postRequestFactory(server: HttpServer, apiKey: ApiKey) {
   ) {
     const apiKeyUsed = apiKeyOverride ? apiKeyOverride : apiKey;
 
-    return supertest(server)
+    return request(server)
       .post(url)
       .send(data)
       .set(
