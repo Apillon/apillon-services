@@ -114,6 +114,7 @@ export class Lmas extends BaseService {
   }
 
   public async listMongoLogs(query: LogsQueryFilter) {
+    this.defaultQueueUrl = null;
     return await this.callService(
       { eventName: LmasEventType.LIST_LOGS, query },
       { isAsync: false },

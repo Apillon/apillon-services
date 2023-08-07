@@ -69,7 +69,7 @@ export class Logger {
       .find(mongoQuery)
       .project({ data: 0, eventName: 0 }) // Exclude properties 'data' and 'eventName' from results
       .sort({ [sort]: sortDir })
-      .skip(query.page * query.limit)
+      .skip((query.page - 1) * query.limit)
       .limit(query.limit)
       .toArray();
   }

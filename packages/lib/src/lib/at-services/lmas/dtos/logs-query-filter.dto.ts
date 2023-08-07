@@ -5,6 +5,7 @@ import {
   LogType,
   PopulateFrom,
   SerializeFor,
+  ServiceName,
   ValidatorErrorCode,
 } from '../../../../config/types';
 import { enumInclusionValidator } from '../../../validators';
@@ -41,8 +42,14 @@ export class LogsQueryFilter extends BaseQueryFilter {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.ADMIN],
     serializable: [SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: enumInclusionValidator(ServiceName, true),
+        code: ValidatorErrorCode.INVALID_SERVICE_NAME,
+      },
+    ],
   })
-  public service: string;
+  public service: ServiceName;
 
   @prop({
     parser: { resolver: dateParser() },

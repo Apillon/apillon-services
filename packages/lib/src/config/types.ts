@@ -543,6 +543,7 @@ export enum ValidatorErrorCode {
 
   //#region Logs
   INVALID_LOG_TYPE = 42200901,
+  INVALID_SERVICE_NAME = 42200902,
   //#endregion
 }
 
