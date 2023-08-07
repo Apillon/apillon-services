@@ -63,7 +63,6 @@ export function createRequestLogMiddleware(
             referer: req.headers?.referer || null,
             body: JSON.stringify(bodyMap || []),
             responseTime: Date.now() - startTime,
-            createTime: new Date(),
             user_uuid:
               context?.user?.user_uuid ||
               context?.user?.id ||

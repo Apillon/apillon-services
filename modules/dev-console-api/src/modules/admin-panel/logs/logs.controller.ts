@@ -3,6 +3,8 @@ import {
   LogsQueryFilter,
   ValidateFor,
   PopulateFrom,
+  MongoCollections,
+  RequestLogsQueryFilter,
 } from '@apillon/lib';
 import { Permissions, Validation } from '@apillon/modules-lib';
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
@@ -23,7 +25,31 @@ export class LogsController {
     populateFrom: PopulateFrom.ADMIN,
   })
   @UseGuards(ValidationGuard)
-  async listUsers(@Query() query: LogsQueryFilter) {
+  async listLogs(@Query() query: LogsQueryFilter) {
+    query.collectionName = MongoCollections.LOGS;
     return this.logsService.listMongoLogs(query);
+  }
+
+  @Get('admin-alerts')
+  @Validation({
+    dto: LogsQueryFilter,
+    validateFor: ValidateFor.QUERY,
+    populateFrom: PopulateFrom.ADMIN,
+  })
+  @UseGuards(ValidationGuard)
+  async listAdminAlerts(@Query() query: LogsQueryFilter) {
+    query.collectionName = MongoCollections.ADMIN_ALERT;
+    return this.logsService.listMongoLogs(query);
+  }
+
+  @Get('request-logs')
+  @Validation({
+    dto: RequestLogsQueryFilter,
+    validateFor: ValidateFor.QUERY,
+    populateFrom: PopulateFrom.ADMIN,
+  })
+  @UseGuards(ValidationGuard)
+  async listRequestLogs(@Query() query: RequestLogsQueryFilter) {
+    return this.logsService.listMongoRequestLogs(query);
   }
 }

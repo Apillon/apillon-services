@@ -7,8 +7,11 @@ import {
 } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
-import { LogsQueryFilter } from './dtos/logs-query-filter.dto';
-import { RequestLogDto } from './dtos/request-log.dto';
+import {
+  RequestLogsQueryFilter,
+  LogsQueryFilter,
+  RequestLogDto,
+} from '../../..';
 
 /**
  * Logging / Monitoring / Alerting Service client
@@ -121,6 +124,13 @@ export class Lmas extends BaseService {
     );
   }
 
+  public async listMongoRequestLogs(query: RequestLogsQueryFilter) {
+    this.defaultQueueUrl = null;
+    return await this.callService(
+      { eventName: LmasEventType.LIST_REQUEST_LOGS, query },
+      { isAsync: false },
+    );
+  }
   public async getApiKeysUsageCount(apiKeys: string[]) {
     this.defaultQueueUrl = null;
     return await this.callService(

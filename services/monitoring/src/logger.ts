@@ -1,13 +1,14 @@
 import {
   CodeException,
-  LogType,
   LogsQueryFilter,
   MongoCollections,
   RequestLogDto,
+  RequestLogsQueryFilter,
   SystemErrorCode,
+  BaseLogsQueryFilter,
 } from '@apillon/lib';
 import { ServiceContext } from './context';
-
+import { Filter, Collection } from 'mongodb';
 /**
  * Logger class for logging events intodatabase.
  */
@@ -64,50 +65,38 @@ export class Logger {
     return event;
   }
 
-  static async listLogs(event, context: ServiceContext) {
+  /**
+   * Get a filtered and paginated list of logs from MongoDB logs or admin-alerts table
+   * @param {{ query: BaseLogsQueryFilter }} event
+   * @param {ServiceContext} context
+   */
+  static async listLogs(
+    event: { query: BaseLogsQueryFilter },
+    context: ServiceContext,
+  ) {
     const query = new LogsQueryFilter(event.query);
-    const mongoQuery = {} as any;
+    const logsCollection = context.mongo.db.collection(query.collectionName);
 
-    // Text search properties of query
-    ['project_uuid', 'user_uuid', 'logType', 'service'].forEach(
-      (field) => query[field] && (mongoQuery[field] = query[field]),
-    );
+    return Logger.executeMongoLogsQuery(logsCollection, query);
+  }
 
-    if (query.dateFrom) {
-      mongoQuery.ts = { $gte: new Date(query.dateFrom) };
-    }
+  /**
+   * Get a filtered and paginated list of logs from MongoDB request_logs or api_request_logs table
+   * @param {{ query: BaseLogsQueryFilter }} event
+   * @param {ServiceContext} context
+   */
+  static async listRequestLogs(
+    event: { query: BaseLogsQueryFilter },
+    context: ServiceContext,
+  ) {
+    const query = new RequestLogsQueryFilter(event.query);
 
-    if (query.dateTo) {
-      mongoQuery.ts ||= {};
-      mongoQuery.ts.$lte = new Date(query.dateTo);
-    }
+    const collectionName = query.apiLogs
+      ? MongoCollections.API_REQUEST_LOGS
+      : MongoCollections.REQUEST_LOGS;
+    const requestLogsCollection = context.mongo.db.collection(collectionName);
 
-    if (query.search) {
-      // Search message by substring
-      mongoQuery.message = {
-        $regex: query.search,
-        $options: 'i',
-      };
-    }
-
-    // Default sort is timestamp descending
-    // -1 -> DESC, 1 -> ASC
-    const sort = query.orderBy[0] || 'ts';
-    const sortDir = !query.desc[0] ? -1 : query.desc[0] === 'true' ? 1 : -1;
-
-    const logsCollection = context.mongo.db.collection(MongoCollections.LOGS);
-
-    const items = await logsCollection
-      .find(mongoQuery)
-      .project({ eventName: 0 }) // Exclude property 'eventName' from results
-      .sort({ [sort]: sortDir })
-      .skip((query.page - 1) * query.limit)
-      .limit(query.limit)
-      .toArray();
-
-    const total = await logsCollection.countDocuments(mongoQuery);
-
-    return { items, total };
+    return Logger.executeMongoLogsQuery(requestLogsCollection, query);
   }
 
   /**
@@ -140,5 +129,58 @@ export class Logger {
       },
       {},
     );
+  }
+
+  private static async generateMongoLogsQuery(
+    query: BaseLogsQueryFilter,
+  ): Promise<Filter<any>> {
+    const mongoQuery = {} as any;
+
+    // Text search properties of query
+    ['project_uuid', 'user_uuid', 'logType', 'service'].forEach(
+      (field) => query[field] && (mongoQuery[field] = query[field]),
+    );
+
+    if (query.dateFrom) {
+      mongoQuery.ts = { $gte: new Date(query.dateFrom) };
+    }
+
+    if (query.dateTo) {
+      mongoQuery.ts ||= {};
+      mongoQuery.ts.$lte = new Date(query.dateTo);
+    }
+
+    if (query.search) {
+      // Search message by substring
+      mongoQuery.message = {
+        $regex: query.search,
+        $options: 'i',
+      };
+    }
+
+    return mongoQuery;
+  }
+
+  private static async executeMongoLogsQuery(
+    collection: Collection<any>,
+    query: BaseLogsQueryFilter,
+  ) {
+    // Default sort is timestamp descending
+    // -1 -> DESC, 1 -> ASC
+    const sort = query.orderBy[0] || 'ts';
+    const sortDir = !query.desc[0] ? -1 : query.desc[0] === 'true' ? 1 : -1;
+
+    const mongoLogsQuery = await Logger.generateMongoLogsQuery(query);
+
+    const items = await collection
+      .find(mongoLogsQuery)
+      .sort({ [sort]: sortDir })
+      .skip((query.page - 1) * query.limit)
+      .limit(query.limit)
+      .toArray();
+
+    const total = await collection.countDocuments(mongoLogsQuery);
+
+    return { items, total };
   }
 }

@@ -1,29 +1,36 @@
 import { prop } from '@rawmodel/core';
-import { BaseQueryFilter } from '../../../base-models/base-query-filter.model';
-import { dateParser, stringParser } from '@rawmodel/parsers';
+import { stringParser } from '@rawmodel/parsers';
 import {
   LogType,
+  MongoCollections,
   PopulateFrom,
   SerializeFor,
   ServiceName,
   ValidatorErrorCode,
 } from '../../../../config/types';
 import { enumInclusionValidator } from '../../../validators';
+import { BaseLogsQueryFilter } from './base-logs-query-filter.dto';
 
-export class LogsQueryFilter extends BaseQueryFilter {
+export class LogsQueryFilter extends BaseLogsQueryFilter {
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.ADMIN],
+    serializable: [SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: enumInclusionValidator(MongoCollections, true),
+        code: ValidatorErrorCode.COLLECTION_NAME_NOT_VALID,
+      },
+    ],
+  })
+  public collectionName: MongoCollections;
+
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.ADMIN],
     serializable: [SerializeFor.ADMIN],
   })
   public project_uuid: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.ADMIN],
-    serializable: [SerializeFor.ADMIN],
-  })
-  public user_uuid: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -50,18 +57,4 @@ export class LogsQueryFilter extends BaseQueryFilter {
     ],
   })
   public service: ServiceName;
-
-  @prop({
-    parser: { resolver: dateParser() },
-    populatable: [PopulateFrom.ADMIN],
-    serializable: [SerializeFor.ADMIN],
-  })
-  public dateFrom: Date;
-
-  @prop({
-    parser: { resolver: dateParser() },
-    populatable: [PopulateFrom.ADMIN],
-    serializable: [SerializeFor.ADMIN],
-  })
-  public dateTo: Date;
 }
