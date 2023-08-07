@@ -109,7 +109,7 @@ export async function storageBucketSyncFilesToIPFS(
       await new Lmas().sendAdminAlert(
         `[Storage]: Error uploading to IPFS!`,
         ServiceName.STORAGE,
-        'alert',
+        LogType.ALERT,
       );
 
       throw err;
@@ -318,7 +318,7 @@ export async function storageBucketSyncFilesToIPFS(
             await new Lmas().sendAdminAlert(
               `[Storage]: Error uploading to IPFS!`,
               ServiceName.STORAGE,
-              'alert',
+              LogType.ALERT,
             );
             throw err;
           }

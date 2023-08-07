@@ -138,7 +138,7 @@ export class ReferralService {
       From: ${player.userEmail}
       `,
       ServiceName.REFERRAL,
-      'message',
+      LogType.MSG,
     );
 
     if (order.info) {

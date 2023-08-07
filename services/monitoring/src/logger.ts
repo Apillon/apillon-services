@@ -1,5 +1,6 @@
 import {
   CodeException,
+  LogType,
   LogsQueryFilter,
   MongoCollections,
   RequestLogDto,

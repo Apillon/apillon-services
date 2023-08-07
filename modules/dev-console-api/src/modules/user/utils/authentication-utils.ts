@@ -87,7 +87,7 @@ export async function registerUser(params: any, context: DevConsoleApiContext) {
     } as any).createPlayer(referralBody);
   } catch (err) {
     writeLog(
-      LogType.MSG,
+      LogType.ERROR,
       `Error creating referral player${
         params?.refCode ? ', refCode: ' + params?.refCode : ''
       }`,
@@ -110,7 +110,7 @@ export async function registerUser(params: any, context: DevConsoleApiContext) {
     }
   } catch (err) {
     writeLog(
-      LogType.MSG,
+      LogType.ERROR,
       'Error resolving project user pending invitations',
       'user.service.ts',
       'register',

@@ -205,6 +205,7 @@ export class User extends AdvancedSQLModel {
           @search IS null
           OR u.name LIKE CONCAT('%', @search, '%')
           OR u.email LIKE CONCAT('%', @search, '%')
+          OR u.user_uuid = @search
         )
         AND u.status <> ${SqlModelStatus.DELETED}
         `,

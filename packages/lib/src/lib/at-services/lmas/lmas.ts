@@ -94,14 +94,14 @@ export class Lmas extends BaseService {
 
   public async sendAdminAlert(
     message: string,
-    serviceName: ServiceName,
-    level: 'message' | 'warning' | 'alert',
+    service: ServiceName,
+    logType: LogType,
   ) {
     const data = {
       eventName: LmasEventType.SEND_ADMIN_ALERT,
       message,
-      level,
-      serviceName,
+      logType,
+      service,
     };
 
     // console.log(JSON.stringify(data));

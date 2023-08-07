@@ -1,4 +1,4 @@
-import { env } from '@apillon/lib';
+import { LogType, ServiceName, env } from '@apillon/lib';
 import { LogLevel, WebClient } from '@slack/web-api';
 
 export class Slack {
@@ -64,12 +64,12 @@ export class Slack {
  * Message is formatted and users are notified depending on severity level. Channel is set on env variable.
  * @param message Message to post on slack
  * @param serviceName Name of the origin service
- * @param level level of severity of the message
+ * @param logType level of severity of the message
  */
 export async function postToSlack(
   message: string,
-  serviceName: string,
-  level: 'message' | 'warning' | 'alert' = 'message',
+  serviceName: ServiceName,
+  logType: LogType,
 ) {
   const slackToken = env.SLACK_TOKEN;
   if (!slackToken) {
@@ -99,7 +99,7 @@ export async function postToSlack(
     const channelId = await slack.findChannel(env.SLACK_CHANNEL);
     await slack.publishMessage(
       channelId,
-      `${severityText[level].emojis}\n*${severityText[level].intro}:*\n\n${message}\n\n${severityText[level].target}`,
+      `${severityText[logType].emojis}\n*${severityText[logType].intro}:*\n\n${message}\n\n${severityText[logType].target}`,
     );
   } catch (err) {
     console.log('Failed to post to Slack :', err);
