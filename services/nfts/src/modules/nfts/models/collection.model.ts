@@ -100,6 +100,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -612,7 +613,21 @@ export class Collection extends ProjectAccessModel {
       `,
     };
 
-    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'c.id');
+    const collectionsResult = await selectAndCountQuery(
+      context.mysql,
+      sqlQuery,
+      params,
+      'c.id',
+    );
+
+    return {
+      ...collectionsResult,
+      items: collectionsResult.items.map((collection) =>
+        new Collection({}, context)
+          .populate(collection, PopulateFrom.DB)
+          .serialize(SerializeFor.PROFILE),
+      ),
+    };
   }
 
   public async populateById(
@@ -630,10 +645,10 @@ export class Collection extends ProjectAccessModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT *
-      FROM \`${this.tableName}\`
-      WHERE ( id LIKE @id OR collection_uuid LIKE @id)
-      AND status <> ${SqlModelStatus.DELETED};
+        SELECT *
+        FROM \`${this.tableName}\`
+        WHERE (id LIKE @id OR collection_uuid LIKE @id)
+          AND status <> ${SqlModelStatus.DELETED};
       `,
       { id },
       conn,
@@ -655,7 +670,7 @@ export class Collection extends ProjectAccessModel {
         SELECT *
         FROM \`${this.tableName}\`
         WHERE collection_uuid = @collection_uuid;
-        `,
+      `,
       { collection_uuid },
     );
 
@@ -674,11 +689,11 @@ export class Collection extends ProjectAccessModel {
   public async getCollectionsCount(project_uuid?: string): Promise<number> {
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT COUNT(*) as collectionsCount
-      FROM \`${DbTables.COLLECTION}\`
-      WHERE project_uuid = @project_uuid
-        AND collectionStatus <> ${CollectionStatus.FAILED}
-      AND status <> ${SqlModelStatus.DELETED};
+        SELECT COUNT(*) as collectionsCount
+        FROM \`${DbTables.COLLECTION}\`
+        WHERE project_uuid = @project_uuid
+          AND collectionStatus <> ${CollectionStatus.FAILED}
+          AND status <> ${SqlModelStatus.DELETED};
       `,
       {
         project_uuid: project_uuid || this.project_uuid,
