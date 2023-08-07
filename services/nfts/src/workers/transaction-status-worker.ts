@@ -83,13 +83,13 @@ export class TransactionStatusWorker extends BaseQueueWorker {
       await this.writeEventLog({
         logType: LogType.INFO,
         project_uuid: collection?.project_uuid,
-        message: `Collection (id=${collection.id}) updated
-        (
-          contractAddress=${collection.contractAddress},
-          txHash=${collection.transactionHash},
-          collectionStatus=${collection.collectionStatus}
-        )`,
+        message: `Collection ${collection.name} status updated`,
         service: ServiceName.NFTS,
+        data: {
+          collection_uuid: collection.collection_uuid,
+          collectionStatus: collection.collectionStatus,
+          updateTime: collection.updateTime,
+        },
       });
     }
   }

@@ -317,7 +317,7 @@ export class BucketService {
       location: 'BucketService/createBucket',
       service: ServiceName.STORAGE,
       data: {
-        bucket_uuid: b.bucket_uuid,
+        webhook: webhook.serialize(),
       },
     });
 
