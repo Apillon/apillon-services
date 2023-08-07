@@ -53,7 +53,10 @@ export class Logger {
     };
     delete event.collectionName; // Unnecessary property
     if (log.collectionName === MongoCollections.API_REQUEST_LOGS) {
+      delete event.user_uuid;
       delete event.apiName; // apiName is always same for API request
+    } else {
+      delete event.apiKey; // Not used for other collections
     }
 
     await context.mongo.db.collection(log.collectionName).insertOne(event);
