@@ -80,6 +80,17 @@ export class IdentityMicroservice {
             status: HttpStatus.BAD_REQUEST,
           });
         }
+
+        if (
+          identity.state == IdentityState.SUBMITTED_ATTESATION_REQ ||
+          identity.state == IdentityState.SUBMITTED_DID_CREATE_REQ ||
+          identity.state == IdentityState.SUBMITTED_REVOKE_REQ
+        ) {
+          throw new AuthenticationCodeException({
+            code: AuthenticationErrorCode.IDENTITY_REQUEST_IN_PROGRESS,
+            status: HttpStatus.BAD_REQUEST,
+          });
+        }
       } else {
         // If identity does not exist, create a new entry
         identity = new Identity({}, context);
