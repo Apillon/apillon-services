@@ -120,4 +120,12 @@ export class Lmas extends BaseService {
       { isAsync: false },
     );
   }
+
+  public async getApiKeysUsageCount(apiKeys: string[]) {
+    this.defaultQueueUrl = null;
+    return await this.callService(
+      { eventName: LmasEventType.GET_API_KEYS_USAGE_COUNT, apiKeys },
+      { isAsync: false },
+    );
+  }
 }

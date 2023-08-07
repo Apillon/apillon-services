@@ -1,9 +1,14 @@
-import { DefaultUserRole, LogType, ServiceName, env } from '@apillon/lib';
+import {
+  DefaultUserRole,
+  LogType,
+  MongoCollections,
+  ServiceName,
+  env,
+} from '@apillon/lib';
 import * as request from 'supertest';
 import { TestUser, createTestUser } from '@apillon/tests-lib';
 import { releaseStage, Stage } from '@apillon/tests-lib';
 import { setupTest } from '../../../../../test/helpers/setup';
-import { MongoCollections } from '@apillon/monitoring/src/config/types';
 import { v4 as uuid } from 'uuid';
 
 describe('Admin Logs', () => {
