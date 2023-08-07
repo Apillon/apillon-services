@@ -18,7 +18,7 @@ export async function decryptAssymetric(
       privateKey,
     );
   } catch (error) {
-    console.error('Error: error');
+    console.error(error);
   } finally {
     return decrypted;
   }
