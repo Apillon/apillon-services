@@ -154,6 +154,9 @@ export class NftsService {
       data: collection.serialize(),
     });
 
+    collection.updateTime = new Date();
+    collection.createTime = new Date();
+
     return collection.serialize(SerializeFor.PROFILE);
   }
 
