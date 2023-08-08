@@ -51,7 +51,10 @@ export class CaptchaGuard implements CanActivate {
         console.log('Captcha data: ', data.captcha);
 
         await verifyCaptcha(data.captcha?.token, env.CAPTCHA_SECRET).then(
-          (response) => (captchaResult = response),
+          (response) => {
+            console.log('Captcha response: ', response);
+            captchaResult = response;
+          },
         );
       } else {
         throw new CodeException({
@@ -60,6 +63,8 @@ export class CaptchaGuard implements CanActivate {
           errorCodes: AuthenticationErrorCode,
         });
       }
+
+      console.log('Captcha result: ', captchaResult);
 
       if (
         env.CAPTCHA_SECRET &&
