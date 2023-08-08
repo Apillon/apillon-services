@@ -46,6 +46,10 @@ export class CaptchaGuard implements CanActivate {
             errorCodes: AuthenticationErrorCode,
           });
         }
+
+        console.log('Data: ', data);
+        console.log('Captcha data: ', data.captcha);
+
         await verifyCaptcha(data.captcha?.token, env.CAPTCHA_SECRET).then(
           (response) => (captchaResult = response),
         );
