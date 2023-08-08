@@ -48,6 +48,7 @@ export class DeleteBucketDirectoryFileWorker extends BaseWorker {
         await this.context.mysql.commit(conn);
         await this.writeEventLog({
           logType: LogType.INFO,
+          project_uuid: bucket.project_uuid,
           message: 'Delete bucket success',
           service: ServiceName.STORAGE,
           data: {
@@ -59,6 +60,7 @@ export class DeleteBucketDirectoryFileWorker extends BaseWorker {
         await this.writeEventLog(
           {
             logType: LogType.ERROR,
+            project_uuid: bucket.project_uuid,
             message: 'Delete bucket error',
             service: ServiceName.STORAGE,
             data: { bucket, error: err },
@@ -95,6 +97,7 @@ export class DeleteBucketDirectoryFileWorker extends BaseWorker {
 
         await this.writeEventLog({
           logType: LogType.INFO,
+          project_uuid: b.project_uuid,
           message: 'Storage bucket size decreased',
           service: ServiceName.STORAGE,
           data: {
@@ -147,6 +150,7 @@ export class DeleteBucketDirectoryFileWorker extends BaseWorker {
         await this.writeEventLog(
           {
             logType: LogType.ERROR,
+            project_uuid: file.project_uuid,
             message: 'Unpin file error',
             service: ServiceName.STORAGE,
             data: {
@@ -177,6 +181,7 @@ export class DeleteBucketDirectoryFileWorker extends BaseWorker {
 
       await this.writeEventLog({
         logType: LogType.INFO,
+        project_uuid: b.project_uuid,
         message: 'Storage bucket size decreased',
         service: ServiceName.STORAGE,
         data: {

@@ -1,4 +1,9 @@
-import { AppEnvironment, CodeException, env } from '@apillon/lib';
+import {
+  AppEnvironment,
+  CodeException,
+  env,
+  getEnvSecrets,
+} from '@apillon/lib';
 import {
   VALIDATION_OPTIONS_KEY,
   IValidationOptions,
@@ -28,6 +33,11 @@ export class CaptchaGuard implements CanActivate {
       const data = request[options.validateFor];
       let captchaResult;
 
+      await getEnvSecrets();
+
+      console.log('Captcha secret: ', env.CAPTCHA_SECRET);
+      console.log('Test ENV: ', env.APP_ENV);
+
       if (env.CAPTCHA_SECRET && env.APP_ENV !== AppEnvironment.TEST) {
         if (!data.captcha) {
           throw new CodeException({
@@ -36,8 +46,15 @@ export class CaptchaGuard implements CanActivate {
             errorCodes: AuthenticationErrorCode,
           });
         }
+
+        console.log('Data: ', data);
+        console.log('Captcha data: ', data.captcha);
+
         await verifyCaptcha(data.captcha?.token, env.CAPTCHA_SECRET).then(
-          (response) => (captchaResult = response),
+          (response) => {
+            console.log('Captcha response: ', response);
+            captchaResult = response;
+          },
         );
       } else {
         throw new CodeException({
@@ -46,6 +63,8 @@ export class CaptchaGuard implements CanActivate {
           errorCodes: AuthenticationErrorCode,
         });
       }
+
+      console.log('Captcha result: ', captchaResult);
 
       if (
         env.CAPTCHA_SECRET &&

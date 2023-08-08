@@ -44,7 +44,7 @@ export class HostingService {
     }
     project.canModify(context);
 
-    //Check if storage service for this project already exists
+    //Check if hosting service for this project already exists
     const query: ServiceQueryFilter = new ServiceQueryFilter(
       {},
       context,
@@ -57,7 +57,7 @@ export class HostingService {
       //Create HOSTING service - "Attach"
       const storageService: ServiceDto = new ServiceDto({}, context).populate({
         project_uuid: project.project_uuid,
-        name: 'Storage service',
+        name: 'Hosting service',
         serviceType_id: AttachedServiceType.HOSTING,
       });
 

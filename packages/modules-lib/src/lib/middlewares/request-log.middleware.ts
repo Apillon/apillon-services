@@ -1,6 +1,6 @@
-import { Lmas } from '@apillon/lib';
-import { RequestLogDto } from '@apillon/lib';
+import { env, Lmas, MongoCollections, RequestLogDto } from '@apillon/lib';
 import { Injectable, mixin, NestMiddleware, Type } from '@nestjs/common';
+import { ApiName } from '../../config/types';
 
 /**
  * @param req Express request
@@ -9,7 +9,7 @@ import { Injectable, mixin, NestMiddleware, Type } from '@nestjs/common';
  */
 
 export function createRequestLogMiddleware(
-  apiName: string,
+  apiName: ApiName,
 ): Type<NestMiddleware> {
   @Injectable()
   class RequestLogMiddleware implements NestMiddleware {
@@ -20,12 +20,23 @@ export function createRequestLogMiddleware(
       const context = req.context;
       const requestId = context?.requestId || '';
       let gatewayEvent = null as any;
+      let apiKey = null;
 
       try {
         gatewayEvent = JSON.parse(
           decodeURI(req.headers['x-apigateway-event'] as string),
         );
       } catch (err) {}
+
+      if (req.headers.authorization && apiName === ApiName.APILLON_API) {
+        try {
+          const base64Credentials = req.headers.authorization.split(' ')[1];
+          const credentials = Buffer.from(base64Credentials, 'base64').toString(
+            'ascii',
+          );
+          [apiKey] = credentials.split(':');
+        } catch (err) {}
+      }
 
       res.end = async function (...args) {
         try {
@@ -34,7 +45,7 @@ export function createRequestLogMiddleware(
           const bodyMap = mapBody(body);
           const request = new RequestLogDto({}, context);
           request.populate({
-            apiName,
+            apiName: `${apiName} (${env.APP_ENV})`,
             requestId,
             host: req.hostname || null,
             ip:
@@ -47,10 +58,7 @@ export function createRequestLogMiddleware(
             method: req.method || 'NONE',
             url: req.originalUrl || null,
             endpoint: req.originalUrl.split(/[?#]/)[0] || null,
-            userAgent:
-              req.headers && req.headers['user-agent']
-                ? req.headers['user-agent']
-                : null,
+            userAgent: req.headers?.['user-agent'] || null,
             origin: req.headers?.origin || null,
             referer: req.headers?.referer || null,
             body: JSON.stringify(bodyMap || []),
@@ -61,11 +69,16 @@ export function createRequestLogMiddleware(
               context?.user?.id ||
               context?.user?.uuid ||
               null,
+            apiKey,
+            collectionName:
+              apiName === ApiName.APILLON_API
+                ? MongoCollections.API_REQUEST_LOGS
+                : MongoCollections.REQUEST_LOGS,
           });
           await new Lmas().writeRequestLog(request);
           // console.log(`HEADERS: ${JSON.stringify(req.headers)}`);
         } catch (error) {
-          console.log('error:', error);
+          console.error('Error writing request log:', error);
         }
       };
       next();

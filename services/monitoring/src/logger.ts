@@ -1,6 +1,11 @@
-import { LogsQueryFilter } from '@apillon/lib';
+import {
+  CodeException,
+  LogsQueryFilter,
+  MongoCollections,
+  RequestLogDto,
+  SystemErrorCode,
+} from '@apillon/lib';
 import { ServiceContext } from './context';
-import { MongoCollections } from './config/types';
 
 /**
  * Logger class for logging events intodatabase.
@@ -29,15 +34,32 @@ export class Logger {
    * @param {any} context - The service context for database access.
    * @returns {Promise<any>} - The logged event data.
    */
-  static async writeRequestLog(event, context: ServiceContext) {
+  static async writeRequestLog(
+    { log }: { log: RequestLogDto },
+    context: ServiceContext,
+  ) {
+    if (!log.collectionName) {
+      throw new CodeException({
+        status: 500,
+        code: SystemErrorCode.MICROSERVICE_SYSTEM_ERROR,
+        errorCodes: SystemErrorCode,
+        errorMessage: 'Mongo collection name is required!',
+      });
+    }
     // console.log(`LOGGER: ${event?.message || JSON.stringify(event)}`);
-    event = {
-      ...event.log,
+    const event = {
+      ...log,
       ts: new Date(),
     };
-    await context.mongo.db
-      .collection(MongoCollections.REQUEST_LOGS)
-      .insertOne(event);
+    delete event.collectionName; // Unnecessary property
+    if (log.collectionName === MongoCollections.API_REQUEST_LOGS) {
+      delete event.user_uuid;
+      delete event.apiName; // apiName is always same for API request
+    } else {
+      delete event.apiKey; // Not used for other collections
+    }
+
+    await context.mongo.db.collection(log.collectionName).insertOne(event);
     return event;
   }
 
@@ -59,18 +81,63 @@ export class Logger {
       mongoQuery.ts.$lte = new Date(query.dateTo);
     }
 
+    if (query.search) {
+      // Search message by substring
+      mongoQuery.message = {
+        $regex: query.search,
+        $options: 'i',
+      };
+    }
+
     // Default sort is timestamp descending
     // -1 -> DESC, 1 -> ASC
     const sort = query.orderBy[0] || 'ts';
     const sortDir = !query.desc[0] ? -1 : query.desc[0] === 'true' ? 1 : -1;
 
-    return await context.mongo.db
-      .collection(MongoCollections.LOGS)
+    const logsCollection = context.mongo.db.collection(MongoCollections.LOGS);
+
+    const items = await logsCollection
       .find(mongoQuery)
-      .project({ data: 0, eventName: 0 }) // Exclude properties 'data' and 'eventName' from results
+      .project({ eventName: 0 }) // Exclude property 'eventName' from results
       .sort({ [sort]: sortDir })
       .skip((query.page - 1) * query.limit)
       .limit(query.limit)
       .toArray();
+
+    const total = await logsCollection.countDocuments(mongoQuery);
+
+    return { items, total };
+  }
+
+  /**
+   * Given an array of API keys, return a record (dictionary) of API keys
+   * and their corresponding usage count obtained from API request logs stored in MongoDB.
+   * @static
+   * @async
+   * @param {{ apiKeys: string[] }} - array of string API keys
+   * @param {ServiceContext} context
+   * @returns {Promise<Record<string, number>>} - Record of API keys mapped to their usage count
+   */
+  static async getApiKeysUsageCount(
+    { apiKeys }: { apiKeys: string[] },
+    context: ServiceContext,
+  ): Promise<Record<string, number>> {
+    const countAggregations = await context.mongo.db
+      .collection(MongoCollections.API_REQUEST_LOGS)
+      .aggregate([
+        // Aggregate document count for each API key
+        { $match: { apiKey: { $in: apiKeys } } },
+        { $group: { _id: '$apiKey', count: { $sum: 1 } } },
+      ])
+      .toArray();
+
+    // Return record of API keys mapped to their respective usage count
+    return countAggregations.reduce(
+      (acc, doc: { _id: string; count: number }) => {
+        acc[doc._id] = doc.count;
+        return acc;
+      },
+      {},
+    );
   }
 }

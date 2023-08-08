@@ -166,6 +166,7 @@ export class PrepareBaseUriForCollectionWorker extends BaseQueueWorker {
 
     await this.writeEventLog({
       logType: LogType.INFO,
+      project_uuid: bucket.project_uuid,
       message: 'PrepareBaseUriForCollectionWorker worker has been completed!',
       service: ServiceName.STORAGE,
     });

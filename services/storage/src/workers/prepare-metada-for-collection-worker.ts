@@ -12,7 +12,6 @@ import {
   BaseQueueWorker,
   QueueWorkerType,
   WorkerDefinition,
-  WorkerLogStatus,
 } from '@apillon/workers-lib';
 import {
   BucketType,
@@ -23,9 +22,9 @@ import { StorageCodeException } from '../lib/exceptions';
 import { storageBucketSyncFilesToIPFS } from '../lib/storage-bucket-sync-files-to-ipfs';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
+import { Ipns } from '../modules/ipns/models/ipns.model';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
-import { Ipns } from '../modules/ipns/models/ipns.model';
 import { File } from '../modules/storage/models/file.model';
 
 export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
@@ -204,11 +203,6 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
     //#endregion
 
     //#region Publish to IPNS, Pin to IPFS, Remove from S3, ...
-    await this.writeEventLog({
-      logType: LogType.INFO,
-      message: 'pinning metadata and images to CRUST',
-      service: ServiceName.STORAGE,
-    });
 
     console.info(
       `pinning metadata CID (${metadataFiles.wrappedDirCid}) to IPNS`,
@@ -235,8 +229,13 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
 
     await this.writeEventLog({
       logType: LogType.INFO,
+      project_uuid: bucket.project_uuid,
       message: 'PrepareMetadataForCollectionWorker finished!',
       service: ServiceName.STORAGE,
+      data: {
+        data,
+        ipnsRecord,
+      },
     });
 
     //#endregion

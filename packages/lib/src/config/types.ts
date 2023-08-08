@@ -66,6 +66,7 @@ export enum LmasEventType {
   SEND_ADMIN_ALERT = 'send-admin-alert',
   NOTIFY = 'notify',
   LIST_LOGS = 'list-logs',
+  GET_API_KEYS_USAGE_COUNT = 'get-api-keys-usage-count',
 }
 
 export enum BlockchainEventType {
@@ -544,6 +545,8 @@ export enum ValidatorErrorCode {
   //#region Logs
   INVALID_LOG_TYPE = 42200901,
   INVALID_SERVICE_NAME = 42200902,
+  COLLECTION_NAME_NOT_PRESENT = 42200903,
+  COLLECTION_NAME_NOT_VALID = 42200904,
   //#endregion
 }
 
@@ -639,4 +642,12 @@ export enum CacheKeyTTL {
   EXTENDED = 10 * 60, // 10 min
   LONG = 30 * 60, // 30 min
   EXTRA_LONG = 60 * 60, // 60 min
+}
+
+export enum MongoCollections {
+  ALERT = 'alert',
+  ADMIN_ALERT = 'admin-alert',
+  LOGS = 'logs',
+  REQUEST_LOGS = 'request_logs',
+  API_REQUEST_LOGS = 'api_request_logs',
 }

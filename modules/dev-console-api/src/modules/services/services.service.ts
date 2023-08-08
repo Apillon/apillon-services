@@ -125,9 +125,12 @@ export class ServicesService {
       context: context,
       project_uuid: project.project_uuid,
       logType: LogType.INFO,
-      message: 'New project service created',
+      message: 'New project service attached',
       location: 'DEV-CONSOLE-API/ServicesService/createService',
       service: ServiceName.DEV_CONSOLE,
+      data: {
+        service: service.serialize(),
+      },
     });
 
     return service;

@@ -1,9 +1,16 @@
 // import { ApiProperty } from '@babel/core';
 import { prop } from '@rawmodel/core';
 import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
-import { PopulateFrom, SerializeFor } from '../../../../config/types';
+import {
+  MongoCollections,
+  PopulateFrom,
+  SerializeFor,
+  ValidatorErrorCode,
+} from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
 import { v4 as uuid } from 'uuid';
+import { presenceValidator } from '@rawmodel/validators';
+import { enumInclusionValidator } from '../../../validators';
 
 export class RequestLogDto extends ModelBase {
   /**
@@ -224,4 +231,29 @@ export class RequestLogDto extends ModelBase {
     serializable: [SerializeFor.ADMIN, SerializeFor.INSERT_DB],
   })
   public user_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.COLLECTION_NAME_NOT_PRESENT,
+      },
+      {
+        resolver: enumInclusionValidator(MongoCollections, false),
+        code: ValidatorErrorCode.COLLECTION_NAME_NOT_VALID,
+      },
+    ],
+  })
+  public collectionName: MongoCollections;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [SerializeFor.ADMIN],
+    fakeValue: uuid(),
+  })
+  public apiKey: string;
 }
