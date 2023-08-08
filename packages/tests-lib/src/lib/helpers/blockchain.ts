@@ -201,4 +201,23 @@ export class TestBlockchain {
 
     return blockchainTx.transactionStatus;
   }
+
+  async getNftTransactionStatusByCollectionUuid(
+    collectionUuid: string,
+    transactionType: TransactionType,
+  ) {
+    const collectionTxs = await new NftCollectionTx(
+      {},
+      this.stage.nftsContext,
+    ).getCollectionTransactionsByUuid(collectionUuid);
+    const collectionTx = collectionTxs.find(
+      (x) => x.transactionType == transactionType,
+    );
+    const blockchainTx = await new BlockchainTx(
+      {},
+      this.stage.blockchainContext,
+    ).getTransactionByChainAndHash(this.chainId, collectionTx.transactionHash);
+
+    return blockchainTx.transactionStatus;
+  }
 }

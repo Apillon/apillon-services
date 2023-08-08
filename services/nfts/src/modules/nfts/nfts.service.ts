@@ -24,7 +24,10 @@ import {
   TransactionStatus,
   TransferCollectionDTO,
 } from '@apillon/lib';
-import { ServiceContext } from '@apillon/service-lib';
+import {
+  ServiceContext,
+  getSerializerBasedOnContext,
+} from '@apillon/service-lib';
 import {
   QueueWorkerType,
   sendToWorkerQueue,
@@ -151,13 +154,13 @@ export class NftsService {
       message: 'New NFT collection created and submited to deployment',
       location: 'NftsService/deployNftContract',
       service: ServiceName.NFTS,
-      data: collection.serialize(),
+      data: { collection_uuid: collection.collection_uuid },
     });
 
     collection.updateTime = new Date();
     collection.createTime = new Date();
 
-    return collection.serialize(SerializeFor.PROFILE);
+    return collection.serialize(getSerializerBasedOnContext(context));
   }
 
   static async deployCollection(
@@ -228,7 +231,7 @@ export class NftsService {
       );
     }
 
-    return collection.serialize(SerializeFor.PROFILE);
+    return collection.serialize(getSerializerBasedOnContext(context));
   }
 
   /**
@@ -279,7 +282,7 @@ export class NftsService {
     ).getList(
       context,
       new NFTCollectionQueryFilter(event.query),
-      SerializeFor.PROFILE,
+      getSerializerBasedOnContext(context),
     );
   }
 
@@ -298,7 +301,7 @@ export class NftsService {
     }
     collection.canAccess(context);
 
-    return collection.serialize(SerializeFor.PROFILE);
+    return collection.serialize(getSerializerBasedOnContext(context));
   }
 
   static async getCollectionByUuid(
@@ -319,7 +322,7 @@ export class NftsService {
     }
     collection.canAccess(context);
 
-    return collection.serialize(SerializeFor.PROFILE);
+    return collection.serialize(getSerializerBasedOnContext(context));
   }
 
   static async transferCollectionOwnership(
@@ -402,10 +405,10 @@ export class NftsService {
       message: 'NFT collection ownership transfered',
       location: 'NftsService/transferCollectionOwnership',
       service: ServiceName.NFTS,
-      data: collection.serialize(),
+      data: { collection_uuid: collection.collection_uuid },
     });
 
-    return collection.serialize(SerializeFor.PROFILE);
+    return collection.serialize(getSerializerBasedOnContext(context));
   }
 
   static async setNftCollectionBaseUri(
@@ -586,7 +589,7 @@ export class NftsService {
       location: 'NftsService/mintNftTo',
       service: ServiceName.NFTS,
       data: {
-        collection: collection.serialize(SerializeFor.PROFILE),
+        collection_uuid: collection.collection_uuid,
         body: params.body,
       },
     });
@@ -705,7 +708,7 @@ export class NftsService {
       location: 'NftsService/nestMintNftTo',
       service: ServiceName.NFTS,
       data: {
-        collection: childCollection.serialize(SerializeFor.PROFILE),
+        collection_uuid: childCollection.collection_uuid,
         body: params.body,
       },
     });
@@ -786,7 +789,7 @@ export class NftsService {
       location: 'NftsService/burnNftToken',
       service: ServiceName.NFTS,
       data: {
-        collection: collection.serialize(SerializeFor.PROFILE),
+        collection_uuid: collection.collection_uuid,
         body: params.body,
       },
     });

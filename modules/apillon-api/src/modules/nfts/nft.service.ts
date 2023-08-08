@@ -12,13 +12,6 @@ import {
 import { Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
 
-function sanitizeCollection(collection: any) {
-  delete collection.imagesSession;
-  delete collection.metadataSession;
-
-  return collection;
-}
-
 @Injectable()
 export class NftService {
   async createCollection(
@@ -30,33 +23,18 @@ export class NftService {
       project_uuid: context.apiKey.project_uuid,
     });
 
-    const collection = (
-      await new NftsMicroservice(context).createCollection(dto)
-    ).data;
-
-    return sanitizeCollection(collection);
+    return (await new NftsMicroservice(context).createCollection(dto)).data;
   }
 
   async listNftCollections(
     context: ApillonApiContext,
     query: ApillonApiNFTCollectionQueryFilter,
   ) {
-    const collections = (
-      await new NftsMicroservice(context).listNftCollections(query)
-    ).data;
-
-    return {
-      ...collections,
-      items: collections.items.map(sanitizeCollection),
-    };
+    return (await new NftsMicroservice(context).listNftCollections(query)).data;
   }
 
   async getCollection(context: ApillonApiContext, uuid: string) {
-    const collection = (
-      await new NftsMicroservice(context).getNftCollection(uuid)
-    ).data;
-
-    return sanitizeCollection(collection);
+    return (await new NftsMicroservice(context).getNftCollection(uuid)).data;
   }
 
   async listCollectionTransactions(
@@ -108,11 +86,9 @@ export class NftService {
       collection_uuid,
     });
 
-    const collection = (
+    return (
       await new NftsMicroservice(context).transferCollectionOwnership(dto)
     ).data;
-
-    return sanitizeCollection(collection);
   }
 
   async burnNft(

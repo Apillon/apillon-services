@@ -293,6 +293,7 @@ export enum SerializeFor {
   ADMIN = 'admin',
   WORKER = 'worker',
   SERVICE = 'service',
+  APILLON_API = 'apillon_api',
   LOGGER = 'logger',
 }
 

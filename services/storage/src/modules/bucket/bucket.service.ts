@@ -16,7 +16,10 @@ import {
 } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
 import { BucketType, StorageErrorCode } from '../../config/types';
-import { ServiceContext } from '@apillon/service-lib';
+import {
+  getSerializerBasedOnContext,
+  ServiceContext,
+} from '@apillon/service-lib';
 import {
   StorageCodeException,
   StorageNotFoundException,
@@ -34,7 +37,11 @@ export class BucketService {
     return await new Bucket(
       { project_uuid: event.query.project_uuid },
       context,
-    ).getList(context, new BucketQueryFilter(event.query));
+    ).getList(
+      context,
+      new BucketQueryFilter(event.query),
+      getSerializerBasedOnContext(context),
+    );
   }
 
   static async getBucket(

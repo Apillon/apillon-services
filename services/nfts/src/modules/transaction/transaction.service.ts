@@ -9,7 +9,10 @@ import {
   TransactionWebhookDataDto,
 } from '@apillon/lib';
 import { DbTables, NftsErrorCode } from '../../config/types';
-import { ServiceContext } from '@apillon/service-lib';
+import {
+  ServiceContext,
+  getSerializerBasedOnContext,
+} from '@apillon/service-lib';
 import {
   NftsCodeException,
   NftsValidationException,
@@ -79,7 +82,10 @@ export class TransactionService {
       refId: collection.id,
     });
 
-    return await new Transaction({}, context).getList(query);
+    return await new Transaction({}, context).getList(
+      query,
+      getSerializerBasedOnContext(context),
+    );
   }
 
   /**
