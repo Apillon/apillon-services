@@ -106,8 +106,8 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       expect(response.body.data.items[0]?.name).toBeTruthy();
       expect(response.body.data.items[0]?.maxSupply).toBeTruthy();
       expect(response.body.data.items[0]?.dropPrice).toBe(0);
-      expect(response.body.data.items[0]?.drop).toBe(0);
-      expect(response.body.data.items[0]?.isSoulbound).toBe(0);
+      expect(response.body.data.items[0]?.drop).toBe(false);
+      expect(response.body.data.items[0]?.isSoulbound).toBe(false);
       expect(response.body.data.items[0]?.isRevokable).toBeTruthy();
       expect(response.body.data.items[0]?.dropStart).toBeTruthy();
       expect(response.body.data.items[0]?.dropReserve).toBeTruthy();
@@ -156,7 +156,7 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
           symbol: 'TNFT',
           name: 'Test NFT Collection',
           maxSupply: 50,
-          dropPrice: 0,
+          dropPrice: 0.00001,
           project_uuid: testProject.project_uuid,
           baseUri:
             'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/',

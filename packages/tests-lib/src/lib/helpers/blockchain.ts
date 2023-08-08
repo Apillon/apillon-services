@@ -5,6 +5,7 @@ import { ChainType, EvmChain } from '@apillon/lib';
 import { Transaction as NftCollectionTx } from '@apillon/nfts/src/modules/transaction/models/transaction.model';
 import { Transaction as BlockchainTx } from '@apillon/blockchain/src/common/models/transaction';
 import { TransactionType } from '@apillon/nfts/src/config/types';
+import { ethers } from 'ethers';
 
 const KEYS = {
   '0x7756251cff23061ec0856f8ec8d7384a2d260aa2':
@@ -108,14 +109,29 @@ export class TestBlockchain {
     }
   }
 
-  async contractWrite(fromIndex: number, to: string, data: string) {
+  async contractWrite(
+    fromIndex: number,
+    to: string,
+    data: string,
+    value: number = null,
+  ) {
     try {
       const from = this.accounts[fromIndex];
+      const param = {
+        from,
+        to,
+        gas: '0x5b8d80',
+        maxFeePerGas: '0xffffffff',
+        data,
+      };
+      if (value) {
+        param['value'] = ethers.utils
+          .parseUnits(`${value}`, 'ether')
+          .toNumber();
+      }
       const signedTx = await this.server.provider.request({
         method: 'eth_signTransaction',
-        params: [
-          { from, to, gas: '0x5b8d80', maxFeePerGas: '0xffffffff', data },
-        ],
+        params: [param],
       });
       return await this.server.provider.send('eth_sendRawTransaction', [
         signedTx,

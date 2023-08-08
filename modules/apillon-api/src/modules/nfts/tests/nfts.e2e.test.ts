@@ -172,7 +172,7 @@ describe('Apillon API NFTs tests', () => {
         drop: true,
         dropStart: 123,
         dropReserve: 5,
-        dropPrice: 1,
+        dropPrice: 0.00001,
         chain: 1287,
         isRevokable: true,
         isSoulbound: false,
@@ -209,11 +209,11 @@ describe('Apillon API NFTs tests', () => {
       expect(firstCollection?.symbol).toBeTruthy();
       expect(firstCollection?.name).toBeTruthy();
       expect(firstCollection?.maxSupply).toBeTruthy();
-      expect(firstCollection?.drop).toBe(1);
+      expect(firstCollection?.drop).toBe(true);
       expect(firstCollection?.dropStart).toBeTruthy();
       expect(firstCollection?.dropReserve).toBeTruthy();
-      expect(firstCollection?.dropPrice).toBe(1);
-      expect(firstCollection?.isSoulbound).toBe(0);
+      expect(firstCollection?.dropPrice).toBe(0.00001);
+      expect(firstCollection?.isSoulbound).toBe(false);
       expect(firstCollection?.isRevokable).toBeTruthy();
       expect(firstCollection?.royaltiesFees).toBe(0);
       expect(firstCollection?.royaltiesAddress).toBeTruthy();
@@ -429,7 +429,7 @@ describe('Apillon API NFTs tests', () => {
           symbol: 'NNFT',
           name: testCollectionName,
           maxSupply: 0,
-          dropPrice: 0,
+          dropPrice: 0.00001,
           project_uuid: nestableProject.project_uuid,
           baseUri: TEST_COLLECTION_BASE_URI,
           baseExtension: 'json',
@@ -728,6 +728,21 @@ describe('Apillon API NFTs tests', () => {
       expect(response.status).toBe(500);
       expect(response.body.code).toBe(50012012);
       expect(response.body.message).toBe('Error burning NFT');
+    });
+
+    test('Customer should be able to mint NFT', async () => {
+      const mintData = NESTABLE_NFT_INTERFACE.encodeFunctionData('mint', [
+        '0xcC765934f460bf4Ba43244a36f7561cBF618daCa', // to,
+        1, //numToMint
+      ]);
+      const mintTxHash = await blockchain.contractWrite(
+        0,
+        nestableCollection.contractAddress,
+        mintData,
+        nestableCollection.dropPrice,
+      );
+      const mintdReceipt = await blockchain.getTransactionReceipt(mintTxHash);
+      expect(mintdReceipt.status).toBe('0x1');
     });
   });
 
