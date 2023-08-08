@@ -33,28 +33,16 @@ export class LogsQueryFilter extends BaseLogsQueryFilter {
   public project_uuid: string;
 
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: stringParser(), array: true },
     populatable: [PopulateFrom.ADMIN],
     serializable: [SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: enumInclusionValidator(LogType, true),
-        code: ValidatorErrorCode.INVALID_LOG_TYPE,
-      },
-    ],
   })
-  public logType: LogType;
+  public logTypes: LogType[];
 
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: stringParser(), array: true },
     populatable: [PopulateFrom.ADMIN],
     serializable: [SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: enumInclusionValidator(ServiceName, true),
-        code: ValidatorErrorCode.INVALID_SERVICE_NAME,
-      },
-    ],
   })
-  public service: ServiceName;
+  public services: ServiceName[];
 }

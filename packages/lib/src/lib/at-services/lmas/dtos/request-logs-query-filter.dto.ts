@@ -1,6 +1,6 @@
 import { prop } from '@rawmodel/core';
 import { booleanParser, stringParser } from '@rawmodel/parsers';
-import { PopulateFrom, SerializeFor } from '../../../../config/types';
+import { ApiName, PopulateFrom, SerializeFor } from '../../../../config/types';
 import { BaseLogsQueryFilter } from './base-logs-query-filter.dto';
 
 export class RequestLogsQueryFilter extends BaseLogsQueryFilter {
@@ -21,4 +21,11 @@ export class RequestLogsQueryFilter extends BaseLogsQueryFilter {
     serializable: [SerializeFor.ADMIN],
   })
   public apiKey: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.ADMIN],
+    serializable: [SerializeFor.ADMIN],
+  })
+  public apiName: ApiName;
 }

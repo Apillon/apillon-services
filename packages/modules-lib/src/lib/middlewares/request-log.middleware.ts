@@ -1,6 +1,11 @@
-import { env, Lmas, MongoCollections, RequestLogDto } from '@apillon/lib';
+import {
+  env,
+  Lmas,
+  MongoCollections,
+  RequestLogDto,
+  ApiName,
+} from '@apillon/lib';
 import { Injectable, mixin, NestMiddleware, Type } from '@nestjs/common';
-import { ApiName } from '../../config/types';
 
 /**
  * @param req Express request

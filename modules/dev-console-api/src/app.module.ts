@@ -10,10 +10,10 @@ import { BucketModule } from './modules/storage/bucket/bucket.module';
 import { DirectoryModule } from './modules/storage/directory/directory.module';
 import { StorageModule } from './modules/storage/storage.module';
 import {
-  ApiName,
   AuthenticateUserMiddleware,
   createRequestLogMiddleware,
 } from '@apillon/modules-lib';
+import { ApiName } from '@apillon/lib';
 import { ApiKeyModule } from './modules/api-key/api-key.module';
 import { NftsModule } from './modules/nfts/nfts.module';
 import { IpnsModule } from './modules/storage/ipns/ipns.module';

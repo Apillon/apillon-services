@@ -136,9 +136,26 @@ export class Logger {
   ): Promise<Filter<any>> {
     const mongoQuery = {} as any;
 
-    // Text search properties of query
-    ['project_uuid', 'user_uuid', 'logType', 'service'].forEach(
+    // Exact match fields
+    ['project_uuid', 'user_uuid', 'apiKey'].forEach(
       (field) => query[field] && (mongoQuery[field] = query[field]),
+    );
+
+    // Multiselect fields
+    ['logType', 'service'].forEach(
+      (field) =>
+        query[`${field}s`] && (mongoQuery[field] = { $in: query[`${field}s`] }),
+    );
+
+    // Search by substring
+    query['message'] = query.search;
+    ['message', 'apiName'].forEach(
+      (field) =>
+        query[field] &&
+        (mongoQuery[field] = {
+          $regex: query[field],
+          $options: 'i', // global regex
+        }),
     );
 
     if (query.dateFrom) {
@@ -148,14 +165,6 @@ export class Logger {
     if (query.dateTo) {
       mongoQuery.ts ||= {};
       mongoQuery.ts.$lte = new Date(query.dateTo);
-    }
-
-    if (query.search) {
-      // Search message by substring
-      mongoQuery.message = {
-        $regex: query.search,
-        $options: 'i',
-      };
     }
 
     return mongoQuery;
