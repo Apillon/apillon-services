@@ -28,6 +28,9 @@ export class CaptchaGuard implements CanActivate {
       const data = request[options.validateFor];
       let captchaResult;
 
+      console.log('Captcha secret: ', env.CAPTCHA_SECRET);
+      console.log('Test ENV: ', env.APP_ENV);
+
       if (env.CAPTCHA_SECRET && env.APP_ENV !== AppEnvironment.TEST) {
         if (!data.captcha) {
           throw new CodeException({
