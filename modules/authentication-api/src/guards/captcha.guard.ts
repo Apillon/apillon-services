@@ -1,4 +1,9 @@
-import { AppEnvironment, CodeException, env } from '@apillon/lib';
+import {
+  AppEnvironment,
+  CodeException,
+  env,
+  getEnvSecrets,
+} from '@apillon/lib';
 import {
   VALIDATION_OPTIONS_KEY,
   IValidationOptions,
@@ -27,6 +32,8 @@ export class CaptchaGuard implements CanActivate {
       const request = execCtx.switchToHttp().getRequest<IRequest>();
       const data = request[options.validateFor];
       let captchaResult;
+
+      await getEnvSecrets();
 
       console.log('Captcha secret: ', env.CAPTCHA_SECRET);
       console.log('Test ENV: ', env.APP_ENV);
