@@ -87,7 +87,6 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
     ],
     validators: [],
@@ -106,7 +105,6 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
     ],
   })
