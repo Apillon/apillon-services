@@ -19,6 +19,7 @@ export enum CrustTransferType {
   STORAGE_ORDER = 1,
 }
 
+/* KILT */
 // NOTE: Do not change!! These are mappings from the SQUID KILT service
 export enum KiltTransactionType {
   BALANCE_TRANSFER = 'balance-transfer',
@@ -155,3 +156,8 @@ export enum TransactionIndexerStatus {
   FAIL = 0,
   SUCCESS = 1,
 }
+
+export type WebhookWorker = {
+  workerName: string;
+  sqsUrl: string;
+};

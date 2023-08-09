@@ -16,17 +16,16 @@ import {
   TransactionStatus,
   env,
 } from '@apillon/lib';
-import { DbTables, TransactionIndexerStatus } from '../config/types';
+import {
+  DbTables,
+  TransactionIndexerStatus,
+  WebhookWorker,
+} from '../config/types';
 import {
   createSubstrateTxWebhookDto,
   processWebhooks,
 } from '../lib/webhook-procedures';
-import { SubstrateParachainConfig } from '../config/parachain.config';
-
-type WebhookWorker = {
-  workerName: string;
-  sqsUrl: string;
-};
+import { ParachainConfig } from '../config/substrate-parachain';
 
 export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
   private chainId: string;
@@ -53,6 +52,8 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       SubstrateChain[this.chainName],
       ChainType.SUBSTRATE,
     );
+
+    console.log('Indexer: ', this.indexer);
 
     const blockHeight = await this.indexer.getBlockHeight();
 
@@ -123,7 +124,6 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
               data: { transactions },
               err: error,
             },
-            // TODO: made by tadej. is this a system error? probably.
             LogOutput.SYS_ERROR,
           );
         }
@@ -131,9 +131,8 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     }
   }
 
-  // NOTE: Sets the Substrate Indexer
   private setParachainParams() {
-    const config = SubstrateParachainConfig[this.chainName];
+    const config = ParachainConfig[this.chainName];
 
     if (config === undefined) {
       // I don't want to log anything here. This should NEVER happen
@@ -142,7 +141,10 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       throw Error('Invalid parachain!');
     }
 
-    this.indexer = config.indexer;
+    // Class in config must be instantiated
+    this.indexer = new config.indexer();
+
+    // Set webhook worker - from the service that triggered the transaction
     this.webHookWorker = {
       workerName: config.workerName,
       sqsUrl: config.sqsUrl,
