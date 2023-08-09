@@ -57,10 +57,11 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
     deployment.deploymentStatus = DeploymentStatus.IN_PROGRESS;
     await deployment.update();
 
+    const website: Website = await new Website({}, this.context).populateById(
+      deployment.website_id,
+    );
+
     try {
-      const website: Website = await new Website({}, this.context).populateById(
-        deployment.website_id,
-      );
       //according to environment, select source and target bucket
       const sourceBucket_id =
         deployment.environment == DeploymentEnvironment.STAGING ||
@@ -113,6 +114,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
             files: sourceFiles,
             wrapWithDirectory: true,
             wrappingDirectoryPath: `Deployment_${deployment.id}`,
+            project_uuid: website.project_uuid,
           },
           this.context,
         );
@@ -243,6 +245,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
 
       await this.writeEventLog({
         logType: LogType.INFO,
+        project_uuid: website.project_uuid,
         message: 'Web page deploy - success',
         service: ServiceName.STORAGE,
         data: {
@@ -255,6 +258,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
       await this.writeEventLog(
         {
           logType: LogType.ERROR,
+          project_uuid: website.project_uuid,
           message: 'Web page deploy - failed',
           service: ServiceName.STORAGE,
           data: {
@@ -273,6 +277,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         await this.writeEventLog(
           {
             logType: LogType.ERROR,
+            project_uuid: website.project_uuid,
             message:
               'Error updating deploymentStatus status to DeploymentStatus.FAILED',
             service: ServiceName.STORAGE,

@@ -59,10 +59,10 @@ export class PublishToIPNSWorker extends BaseQueueWorker {
       await this.writeEventLog(
         {
           logType: LogType.ERROR,
+          project_uuid: ipns.project_uuid,
           message: 'Error at publishing CID to IPNS',
           service: ServiceName.STORAGE,
           data: {
-            project_uuid: ipns.project_uuid,
             data,
             err,
           },
@@ -74,12 +74,12 @@ export class PublishToIPNSWorker extends BaseQueueWorker {
 
     await this.writeEventLog({
       logType: LogType.INFO,
+      project_uuid: ipns.project_uuid,
       message: 'Success publishing CID to IPNS',
       service: ServiceName.STORAGE,
       data: {
-        project_uuid: ipns.project_uuid,
         data,
-        ipns,
+        ipns: ipns.serialize(),
       },
     });
 

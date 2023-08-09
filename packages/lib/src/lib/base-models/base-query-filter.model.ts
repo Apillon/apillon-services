@@ -7,7 +7,7 @@ import { ModelBase } from './base';
 export class BaseQueryFilter extends ModelBase {
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.PROFILE],
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     setter(v) {
       return v < 0 ? 1 : v;
     },
@@ -17,7 +17,7 @@ export class BaseQueryFilter extends ModelBase {
 
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.PROFILE],
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     setter(v) {
       return v < 1 ? 20 : v;
     },
@@ -30,7 +30,7 @@ export class BaseQueryFilter extends ModelBase {
    */
   @prop({
     parser: { resolver: stringParser(), array: true },
-    populatable: [PopulateFrom.PROFILE],
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     defaultValue: [],
   })
   public orderBy: string[];
@@ -40,7 +40,7 @@ export class BaseQueryFilter extends ModelBase {
    */
   @prop({
     parser: { resolver: stringParser(), array: true },
-    populatable: [PopulateFrom.PROFILE],
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     defaultValue: [],
   })
   public desc: string[];

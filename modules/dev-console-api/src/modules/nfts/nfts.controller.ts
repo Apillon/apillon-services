@@ -2,6 +2,7 @@ import {
   CreateCollectionDTO,
   DefaultUserRole,
   MintNftDTO,
+  NestMintNftDTO,
   NFTCollectionQueryFilter,
   DeployCollectionDTO,
   SetCollectionBaseUriDTO,
@@ -124,6 +125,22 @@ export class NftsController {
     return await this.nftsService.mintNftTo(context, collectionUuid, body);
   }
 
+  @Post('/collections/:collectionUuid/nest-mint')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @Validation({ dto: NestMintNftDTO })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async nestMintNft(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('collectionUuid') collectionUuid: string,
+    @Body() body: NestMintNftDTO,
+  ) {
+    return await this.nftsService.nestMintNftTo(context, collectionUuid, body);
+  }
+
   @Post('collections/:collectionUuid/set-base-uri')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
@@ -165,7 +182,7 @@ export class NftsController {
     );
   }
 
-  @Get('collections/:collectionUuid/burn')
+  @Post('collections/:collectionUuid/burn')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -176,7 +193,7 @@ export class NftsController {
   async burnNftToken(
     @Ctx() context: DevConsoleApiContext,
     @Param('collectionUuid') collectionUuid: string,
-    @Query() body: BurnNftDto,
+    @Body() body: BurnNftDto,
   ) {
     return await this.nftsService.burnNftToken(context, collectionUuid, body);
   }

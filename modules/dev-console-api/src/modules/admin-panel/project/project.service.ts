@@ -10,10 +10,14 @@ import {
   Scs,
   StorageMicroservice,
   NftsMicroservice,
+  QuotaDto,
+  ApiKeyQueryFilterDto,
+  Ams,
 } from '@apillon/lib';
 import { ResourceNotFoundErrorCode } from '../../../config/types';
-import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
 import { UUID } from 'crypto';
+import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
+import { Lmas } from '@apillon/lib';
 
 @Injectable()
 export class ProjectService {
@@ -108,5 +112,27 @@ export class ProjectService {
     data: QuotaOverrideDto,
   ) {
     return await new Scs(context).deleteOverride(data);
+  }
+
+  /**
+   * Get a list of all API keys for a project, along with their usage counts
+   * @param {DevConsoleApiContext} context
+   * @param {ApiKeyQueryFilterDto} query - API key query filter
+   */
+  async getProjectApiKeys(
+    context: DevConsoleApiContext,
+    query: ApiKeyQueryFilterDto,
+  ) {
+    const { data }: { data: { items: ApiKey[]; total: number } } =
+      await new Ams(context).listApiKeys(query);
+
+    const { data: usageCounts } = await new Lmas().getApiKeysUsageCount(
+      data.items.map((i) => i.apiKey),
+    );
+
+    data.items.forEach(
+      (key: any) => (key.usageCount = usageCounts[key.apiKey]),
+    );
+    return data;
   }
 }

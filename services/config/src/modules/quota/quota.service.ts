@@ -1,8 +1,7 @@
-import { GetQuotasDto, GetQuotaDto } from '@apillon/lib';
+import { GetQuotasDto, GetQuotaDto, QuotaDto } from '@apillon/lib';
 import { ConfigErrorCode } from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { ScsCodeException } from '../../lib/exceptions';
-import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
 import { Quota } from './models/quota.model';
 /**
  * QuotaService class for handling quota requests

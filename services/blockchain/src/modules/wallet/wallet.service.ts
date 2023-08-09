@@ -2,9 +2,9 @@ import {
   BaseQueryFilter,
   PopulateFrom,
   SerializeFor,
-  UpdateWalletDto,
   UpdateTransactionDto,
   WalletTransactionsQueryFilter,
+  SqlModelStatus,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import {
@@ -37,14 +37,25 @@ export class WalletService {
     ).getTransactionAggregateData();
 
     return {
-      ...wallet,
+      ...wallet.serialize(SerializeFor.ADMIN),
       ...transactionSumData,
       isBelowThreshold: wallet.isBelowThreshold,
     } as WalletWithBalanceDto;
   }
 
   static async updateWallet(
-    { walletId, data }: { walletId: number; data: UpdateWalletDto },
+    {
+      walletId,
+      data,
+    }: {
+      walletId: number;
+      data: {
+        minBalance?: number;
+        token?: string;
+        decimals?: number;
+        status?: SqlModelStatus;
+      };
+    },
     context: ServiceContext,
   ): Promise<any> {
     const wallet = await new Wallet({}, context).populateById(walletId);

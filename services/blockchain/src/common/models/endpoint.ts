@@ -6,8 +6,9 @@ import {
   PopulateFrom,
   prop,
   SerializeFor,
+  SqlModelStatus,
 } from '@apillon/lib';
-import { Chain, DbTables, SqlModelStatus } from '../../config/types';
+import { Chain, DbTables } from '../../config/types';
 
 export class Endpoint extends AdvancedSQLModel {
   public readonly tableName = DbTables.ENDPOINT;

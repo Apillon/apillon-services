@@ -1,5 +1,6 @@
 //#REGION Config
 export * from './lib/at-services/config/scs';
+export * from './lib/at-services/config/dtos/quota.dto';
 export * from './lib/at-services/config/dtos/get-quota.dto';
 export * from './lib/at-services/config/dtos/get-quotas.dto';
 export * from './lib/at-services/config/dtos/create-quota-override.dto';
@@ -54,6 +55,7 @@ export * from './lib/at-services/authentication/dtos/identity-verification-email
 export * from './lib/at-services/authentication/dtos/verify-identity.dto';
 export * from './lib/at-services/authentication/dtos/sporran/sporran-session.dto';
 export * from './lib/at-services/authentication/dtos/sporran/message/request-credential.dto';
+export * from './lib/at-services/authentication/dtos/sporran/message/verify-credential.dto';
 export * from './lib/at-services/authentication/dtos/sporran/message/submit-attestation.dto';
 export * from './lib/at-services/authentication/dtos/sporran/message/submit-terms.dto';
 export * from './lib/at-services/authentication/dtos/verify-session.dto';
@@ -77,7 +79,6 @@ export * from './lib/at-services/blockchain/dtos/create-substrate-transaction.dt
 export * from './lib/at-services/blockchain/dtos/create-evm-transaction.dto';
 export * from './lib/at-services/blockchain/dtos/transaction.dto';
 export * from './lib/at-services/blockchain/dtos/transaction-webhook-data.dto';
-export * from './lib/at-services/blockchain/dtos/update-wallet.dto';
 export * from './lib/at-services/blockchain/dtos/update-transaction.dto';
 export * from './lib/at-services/blockchain/dtos/wallet-transactions-query-filter';
 
@@ -112,6 +113,7 @@ export * from './lib/at-services/ams/dtos/api-key-query-filter.dto';
 export * from './lib/at-services/ams/dtos/api-key-role.dto';
 export * from './lib/at-services/ams/dtos/api-key-role-base.dto';
 export * from './lib/at-services/lmas/dtos/request-log.dto';
+export * from './lib/at-services/lmas/dtos/logs-query-filter.dto';
 export * from './lib/exceptions/exceptions';
 export * from './lib/exceptions/http-exception';
 export * from './lib/base-models/base-query-filter.model';

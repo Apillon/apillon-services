@@ -48,6 +48,7 @@ export class UpdateCrustStatusWorker extends BaseQueueWorker {
               await this.writeEventLog(
                 {
                   logType: LogType.ERROR,
+                  project_uuid: file.project_uuid,
                   message: 'Crust pin transaction FAILED',
                   service: ServiceName.STORAGE,
                   data: {
@@ -75,6 +76,7 @@ export class UpdateCrustStatusWorker extends BaseQueueWorker {
           await this.writeEventLog(
             {
               logType: LogType.ERROR,
+              project_uuid: file.project_uuid,
               message: 'Error at updating status',
               service: ServiceName.STORAGE,
               data: {

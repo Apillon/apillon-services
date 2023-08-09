@@ -38,7 +38,7 @@ export abstract class BaseService {
     },
   ) {
     const queueUrl = options?.queueUrl || this.defaultQueueUrl;
-    const isAsync = options?.isAsync || queueUrl || this.isDefaultAsync;
+    const isAsync = options?.isAsync ?? (!!queueUrl || this.isDefaultAsync);
 
     const env = await getEnvSecrets();
     let result;
@@ -142,6 +142,7 @@ export abstract class BaseService {
     );
 
     return await new Promise((resolve, reject) => {
+      let messageReceived = '';
       devSocket.on('error', (e) => {
         devSocket.destroy();
         reject(e);
@@ -155,11 +156,17 @@ export abstract class BaseService {
         console.log(`Disconnected from ${this.serviceName} dev socket`);
         resolve(null);
       });
-      devSocket.on('data', (data) => {
-        devSocket.destroy();
-        resolve(JSON.parse(data.toString()));
+      devSocket.on('data', (chunk) => {
+        messageReceived += chunk.toString();
+        if (messageReceived.endsWith('</EOF>')) {
+          messageReceived = messageReceived.replace('</EOF>', '');
+          devSocket.destroy();
+          resolve(JSON.parse(messageReceived.toString()));
+        } else {
+          console.log(`Partial data received: ${messageReceived} `);
+        }
       });
-      devSocket.write(JSON.stringify(payload), (err) => {
+      devSocket.write(`${JSON.stringify(payload)}</EOF>`, (err) => {
         if (err) {
           reject(err);
         }

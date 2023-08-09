@@ -1,8 +1,8 @@
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
-import { PopulateFrom } from '@apillon/lib';
-import { ModelBase, prop } from '@apillon/lib/dist/lib/base-models/base';
+import { ModelBase, PopulateFrom } from '@apillon/lib';
 import { ValidatorErrorCode } from '../../../config/types';
+import { prop } from '@rawmodel/core';
 
 export class LoginUserKiltDto extends ModelBase {
   @prop({

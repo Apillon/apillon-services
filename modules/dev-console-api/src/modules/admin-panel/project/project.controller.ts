@@ -7,6 +7,9 @@ import {
   PopulateFrom,
   BaseQueryFilter,
   CacheKeyPrefix,
+  QuotaDto,
+  QuotaType,
+  ApiKeyQueryFilterDto,
 } from '@apillon/lib';
 import {
   Body,
@@ -30,7 +33,6 @@ import { AuthGuard } from '../../../guards/auth.guard';
 import { ProjectService } from './project.service';
 import { DevConsoleApiContext } from '../../../context';
 import { ValidationGuard } from '../../../guards/validation.guard';
-import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
 import { UUID } from 'crypto';
 import { BaseQueryFilterValidator } from '../../../decorators/base-query-filter-validator';
 import { Cache } from '@apillon/modules-lib';
@@ -69,6 +71,7 @@ export class ProjectController {
     @Query() query: GetQuotasDto,
   ): Promise<QuotaDto[]> {
     query.project_uuid = project_uuid;
+    query.type = QuotaType.FOR_PROJECT;
     return this.projectService.getProjectQuotas(context, query);
   }
 
@@ -102,5 +105,23 @@ export class ProjectController {
   ): Promise<QuotaDto[]> {
     data.project_uuid = project_uuid;
     return this.projectService.deleteProjectQuota(context, data);
+  }
+
+  @Get(':project_uuid/api-keys')
+  @Validation({
+    dto: ApiKeyQueryFilterDto,
+    validateFor: ValidateFor.QUERY,
+    populateFrom: PopulateFrom.ADMIN,
+    // Skip validation since project_uuuid param comes from URL path, not query
+    skipValidation: true,
+  })
+  @UseGuards(ValidationGuard)
+  async getProjectApiKeys(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('project_uuid', ParseUUIDPipe) project_uuid: UUID,
+    @Query() query: ApiKeyQueryFilterDto,
+  ) {
+    query.populate({ project_uuid });
+    return this.projectService.getProjectApiKeys(context, query);
   }
 }

@@ -1,8 +1,8 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { AdminPanelModule } from './modules/admin-panel/admin-panel.module';
 import { MySQLModule } from './modules/database/mysql.module';
-import { env } from '@apillon/lib';
 import {
+  ApiName,
   AuthenticateUserMiddleware,
   createRequestLogMiddleware,
 } from '@apillon/modules-lib';
@@ -22,7 +22,7 @@ export class AdminAppModule {
       .apply(AuthenticateUserMiddleware)
       .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer
-      .apply(createRequestLogMiddleware(`admin-console-api (${env.APP_ENV})`))
+      .apply(createRequestLogMiddleware(ApiName.ADMIN_CONSOLE_API))
       .exclude(
         { path: '*', method: RequestMethod.HEAD },
         { path: '*', method: RequestMethod.OPTIONS },

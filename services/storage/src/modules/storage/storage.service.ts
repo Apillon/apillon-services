@@ -165,9 +165,13 @@ export class StorageService {
       context: context,
       project_uuid: bucket.project_uuid,
       logType: LogType.INFO,
-      message: 'Generate multiple file-request-log and S3 signed url - success',
+      message: 'S3 urls for upload requested',
       location: `${this.constructor.name}/runExecutor`,
       service: ServiceName.STORAGE,
+      data: {
+        session: session.serialize(),
+        numOfFiles: event.body.files.length,
+      },
     });
 
     return {

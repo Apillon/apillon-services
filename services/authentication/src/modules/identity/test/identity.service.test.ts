@@ -1,4 +1,3 @@
-import { TransactionStatus } from '@apillon/lib/dist/config/types';
 import {
   ServiceDefinition,
   ServiceDefinitionType,
@@ -12,6 +11,7 @@ import { Identity } from '../models/identity.model';
 import { UpdateStateWorker } from '../../../workers/update-state.worker';
 import { IdentityJob } from '../../identity-job/models/identity-job.model';
 import { IdentityJobService } from '../../identity-job/identity-job.service';
+import { TransactionStatus } from '@apillon/lib';
 
 describe('Identity generate tests', () => {
   let stage: Stage;

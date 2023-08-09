@@ -25,7 +25,7 @@ module.exports = {
     node: true,
     jest: true,
   },
-  ignorePatterns: ['.eslintrc.js', 'webpack.config.js', 'dist/*', '**/*.js'],
+  ignorePatterns: ['.eslintrc.js', 'webpack.config.js', 'dist/*', '**/*.js', 'node_modules/*'],
   rules: {
     semi: [2, 'always'],
     quotes: [1, 'single', { allowTemplateLiterals: true }],
@@ -65,5 +65,8 @@ module.exports = {
         usePrettierrc: false,
       },
     ],
+    "no-restricted-imports": ["error", {
+      "patterns": ["**/dist/**"]
+    }]
   },
 };

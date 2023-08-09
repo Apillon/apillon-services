@@ -37,7 +37,7 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
    */
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.PROFILE,
       SerializeFor.ADMIN,

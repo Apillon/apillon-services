@@ -1,9 +1,11 @@
 import {
   ProjectAccessModel,
   Context,
+  enumInclusionValidator,
   EvmChain,
   getQueryParams,
   NFTCollectionQueryFilter,
+  NFTCollectionType,
   PoolConnection,
   PopulateFrom,
   presenceValidator,
@@ -12,7 +14,12 @@ import {
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
-import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
+import {
+  booleanParser,
+  integerParser,
+  stringParser,
+  floatParser,
+} from '@rawmodel/parsers';
 import {
   CollectionStatus,
   DbTables,
@@ -26,6 +33,35 @@ export class Collection extends ProjectAccessModel {
   public constructor(data: any, context: Context) {
     super(data, context);
   }
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: NftsErrorCode.COLLECTION_TYPE_NOT_PRESENT,
+      },
+      {
+        resolver: enumInclusionValidator(NFTCollectionType),
+        code: NftsErrorCode.COLLECTION_TYPE_NOT_VALID,
+      },
+    ],
+    fakeValue: NFTCollectionType.GENERIC,
+  })
+  public collectionType: NFTCollectionType;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -170,7 +206,7 @@ export class Collection extends ProjectAccessModel {
   public maxSupply: number;
 
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: floatParser() },
     populatable: [
       PopulateFrom.DB,
       PopulateFrom.SERVICE,

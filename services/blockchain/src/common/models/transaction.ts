@@ -2,12 +2,12 @@ import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
   ChainType,
-  TransactionStatus,
   Context,
   PoolConnection,
   PopulateFrom,
   prop,
   SerializeFor,
+  TransactionStatus,
 } from '@apillon/lib';
 import { Chain, DbTables } from '../../config/types';
 
@@ -211,11 +211,10 @@ export class Transaction extends AdvancedSQLModel {
       `
       SELECT *
       FROM \`${DbTables.TRANSACTION_QUEUE}\`
-      WHERE 
-      chainType = @chainType
-      AND chain = @chain
-      AND address = @address
-      AND nonce > @nonce
+      WHERE chainType = @chainType
+        AND chain = @chain
+        AND address = @address
+        AND nonce > @nonce
       order by nonce ASC;
       `,
       { chain, chainType, address, nonce },
@@ -233,13 +232,12 @@ export class Transaction extends AdvancedSQLModel {
   ) {
     const data = await this.getContext().mysql.paramExecute(
       `SELECT *
-      FROM \`${DbTables.TRANSACTION_QUEUE}\` 
-      WHERE 
-        transactionHash IN ('${hashes.join("','")}')
-        AND chain = @chain
-        AND chainType = @chainType
-        AND address = @address
-        AND transactionStatus = @status`,
+       FROM \`${DbTables.TRANSACTION_QUEUE}\`
+       WHERE transactionHash IN ('${hashes.join("','")}')
+         AND chain = @chain
+         AND chainType = @chainType
+         AND address = @address
+         AND transactionStatus = @status`,
       {
         status: transactionStatus,
         address,
@@ -257,5 +255,29 @@ export class Transaction extends AdvancedSQLModel {
     }
 
     return res;
+  }
+
+  public async getTransactionByChainAndHash(
+    chain: Chain,
+    transactionHash: string,
+    conn?: PoolConnection,
+  ) {
+    const data = await this.getContext().mysql.paramExecute(
+      `SELECT *
+       FROM \`${DbTables.TRANSACTION_QUEUE}\`
+       WHERE transactionHash = @transactionHash
+         AND chain = @chain`,
+      {
+        chain,
+        transactionHash,
+      },
+      conn,
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
   }
 }

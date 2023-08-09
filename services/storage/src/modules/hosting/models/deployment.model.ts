@@ -1,5 +1,4 @@
 import {
-  ProjectAccessModel,
   Context,
   DeploymentQueryFilter,
   getQueryParams,
@@ -9,6 +8,10 @@ import {
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
+  DefaultUserRole,
+  CodeException,
+  ForbiddenErrorCodes,
+  AdvancedSQLModel,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
@@ -20,7 +23,7 @@ import {
 import { ServiceContext } from '@apillon/service-lib';
 import { Website } from './website.model';
 
-export class Deployment extends ProjectAccessModel {
+export class Deployment extends AdvancedSQLModel {
   public readonly tableName = DbTables.DEPLOYMENT;
 
   public constructor(data: any, context: Context) {
@@ -176,11 +179,32 @@ export class Deployment extends ProjectAccessModel {
   })
   public number: number;
 
-  public override async canAccess(context: ServiceContext) {
+  public async canAccess(context: ServiceContext) {
+    // Admins are allowed to access items on any project
+    if (context.user?.userRoles.includes(DefaultUserRole.ADMIN)) {
+      return true;
+    }
+
     const website: Website = await new Website({}, context).populateById(
       this.website_id,
     );
-    return super.canAccess(context, website.project_uuid);
+    if (
+      !context.hasRoleOnProject(
+        [
+          DefaultUserRole.PROJECT_OWNER,
+          DefaultUserRole.PROJECT_ADMIN,
+          DefaultUserRole.PROJECT_USER,
+          DefaultUserRole.ADMIN,
+        ],
+        website.project_uuid,
+      )
+    ) {
+      throw new CodeException({
+        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: 403,
+        errorMessage: 'Insufficient permissions to access this record',
+      });
+    }
   }
 
   public async populateDeploymentByCid(cid: string): Promise<this> {

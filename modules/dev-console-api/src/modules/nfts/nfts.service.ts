@@ -1,15 +1,16 @@
 import {
+  BurnNftDto,
   CodeException,
+  CollectionsQuotaReachedQueryFilter,
+  CreateCollectionDTO,
+  DeployCollectionDTO,
   MintNftDTO,
+  NestMintNftDTO,
   NFTCollectionQueryFilter,
   NftsMicroservice,
-  DeployCollectionDTO,
   SetCollectionBaseUriDTO,
   TransactionQueryFilter,
   TransferCollectionDTO,
-  CreateCollectionDTO,
-  BurnNftDto,
-  CollectionsQuotaReachedQueryFilter,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ResourceNotFoundErrorCode } from '../../config/types';
@@ -72,6 +73,15 @@ export class NftsService {
   ) {
     body.collection_uuid = collection_uuid;
     return (await new NftsMicroservice(context).mintNft(body)).data;
+  }
+
+  async nestMintNftTo(
+    context: DevConsoleApiContext,
+    collection_uuid: string,
+    body: NestMintNftDTO,
+  ) {
+    body.collection_uuid = collection_uuid;
+    return (await new NftsMicroservice(context).nestMintNft(body)).data;
   }
 
   async setNftCollectionBaseUri(

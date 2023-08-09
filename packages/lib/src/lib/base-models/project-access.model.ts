@@ -17,14 +17,11 @@ export abstract class ProjectAccessModel extends AdvancedSQLModel {
    * project_uuid is optional if the inheriting class defines that property
    * @param {Context} context
    * @param {string} [project_uuid=null]
-   * @returns {(boolean | Promise<boolean>)}
+   * @returns {boolean}
    */
-  public canAccess(
-    context: Context,
-    project_uuid: string = null,
-  ): boolean | Promise<boolean> {
+  public canAccess(context: Context, project_uuid: string = null): boolean {
     // Admins are allowed to access items on any project
-    if (context.user.userRoles.includes(DefaultUserRole.ADMIN)) {
+    if (context.user?.userRoles.includes(DefaultUserRole.ADMIN)) {
       return true;
     }
 
@@ -56,12 +53,9 @@ export abstract class ProjectAccessModel extends AdvancedSQLModel {
    * project_uuid is optional if the inheriting class defines that property
    * @param {Context} context
    * @param {string} [project_uuid=null]
-   * @returns {(boolean | Promise<boolean>)}
+   * @returns {boolean}
    */
-  public canModify(
-    context: Context,
-    project_uuid: string = null,
-  ): boolean | Promise<boolean> {
+  public canModify(context: Context, project_uuid: string = null): boolean {
     if (this['project_uuid']) {
       project_uuid = this['project_uuid'];
     }

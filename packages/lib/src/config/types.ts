@@ -23,6 +23,11 @@ export enum EvmChain {
   ASTAR = 592,
 }
 
+export enum NFTCollectionType {
+  GENERIC = 1,
+  NESTABLE = 2,
+}
+
 export enum AmsEventType {
   USER_REGISTER = 'user-register',
   USER_GET_AUTH = 'user-get-auth',
@@ -60,6 +65,8 @@ export enum LmasEventType {
   SEND_ALERT = 'send-alert',
   SEND_ADMIN_ALERT = 'send-admin-alert',
   NOTIFY = 'notify',
+  LIST_LOGS = 'list-logs',
+  GET_API_KEYS_USAGE_COUNT = 'get-api-keys-usage-count',
 }
 
 export enum BlockchainEventType {
@@ -160,6 +167,7 @@ export enum NftsEventType {
   GET_NFT_COLLECTION_BY_UUID = 'get-nft-collection-by-uuid',
   TRANSFER_OWNERSHIP = 'transfer-ownership',
   MINT_NFT = 'mint-nft',
+  NEST_MINT_NFT = 'nest-mint-nft',
   SET_BASE_URI = 'set-base-uri',
   CHECK_TRANSACTION_STATUS = 'check-transaction-status',
   NFT_COLLECTION_TRANSACTION_LIST = 'list-collection-transactions',
@@ -465,7 +473,7 @@ export enum ValidatorErrorCode {
   NFT_DEPLOY_DROP_BOOL_NOT_PRESENT = 42200112,
   NFT_DEPLOY_DROP_TIMESTAMP_NOT_PRESENT = 42200113,
   NFT_DEPLOY_RESERVE_NOT_PRESENT = 42200114,
-  NFT_DEPLOY_COLLECTION_UUI_PARAM_NOT_VALID = 42200115,
+  NFT_DEPLOY_COLLECTION_DESCRIPTION_NOT_VALID = 42200115,
   NFT_DEPLOY_PROJECT_UUID_NOT_PRESENT = 42200116,
   NFT_TRANSFER_OWNERSHIP_ADDRESS_NOT_PRESENT = 42200117,
   NFT_TRANSFER_OWNERSHIP_ADDRESS_NOT_VALID = 42200118,
@@ -491,6 +499,14 @@ export enum ValidatorErrorCode {
   TRANSACTION_REF_TABLE_PARAM_NOT_PRESENT = 42200138,
   TRANSACTION_REF_ID_PARAM_NOT_PRESENT = 42200139,
   NFT_COLLECTION_BASE_URI_NOT_PRESENT = 42200140,
+  NFT_COLLECTION_TYPE_NOT_PRESENT = 42200141,
+  NFT_COLLECTION_TYPE_NOT_VALID = 42200142,
+  NFT_MINT_PARENT_COLLECTION_ID_NOT_PRESENT = 42200143,
+  NFT_MINT_PARENT_NFT_ID_NOT_PRESENT = 42200144,
+  NFT_DEPLOY_DROP_RESERVE_NOT_VALID = 42200145,
+  NFT_DEPLOY_DROP_RESERVE_GREATER_THAN_MAX_SUPPLY = 42200146,
+  NFT_BURN_TOKEN_ID_NOT_PRESENT = 42200147,
+  NFT_BURN_TOKEN_ID_NOT_VALID = 42200148,
 
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,
@@ -512,6 +528,7 @@ export enum ValidatorErrorCode {
   SPORRAN_NONCE_NOT_PRESENT = 42200717,
   AUTH_SESSION_TOKEN_NOT_PRESENT = 42200718,
   //#endregion
+
   //#region Blockchain
   SUBSTRATE_TRANSACTION_NOT_PRESENT = 42200801,
   SUBSTRATE_CHAIN_NOT_PRESENT = 42200802,
@@ -520,8 +537,16 @@ export enum ValidatorErrorCode {
   EVM_CHAIN_NOT_PRESENT = 42200805,
   EVM_CHAIN_NOT_VALID = 42200806,
   //#endregion
+
   //#region Caching
   INVALID_CACHE_KEY = 42200900,
+  //#endregion
+
+  //#region Logs
+  INVALID_LOG_TYPE = 42200901,
+  INVALID_SERVICE_NAME = 42200902,
+  COLLECTION_NAME_NOT_PRESENT = 42200903,
+  COLLECTION_NAME_NOT_VALID = 42200904,
   //#endregion
 }
 
@@ -573,7 +598,7 @@ export enum JwtTokenType {
 
 /**
  * Quota codes
- * Must equal quote.id field in database!
+ * Must equal quota.id field in database!
  */
 export enum QuotaCode {
   MAX_PROJECT_COUNT = 1,
@@ -585,6 +610,16 @@ export enum QuotaCode {
   MAX_ATTESTED_USERS = 7,
   MAX_WEBSITES = 8,
   MAX_NFT_COLLECTIONS = 9,
+}
+
+/**
+ * Quota types
+ * Must equal quota.type field in database!
+ */
+export enum QuotaType {
+  FOR_OBJECT = 1,
+  FOR_PROJECT = 2,
+  FOR_PROJECT_AND_OBJECT = 3,
 }
 
 /* OAuth link type*/
@@ -607,4 +642,12 @@ export enum CacheKeyTTL {
   EXTENDED = 10 * 60, // 10 min
   LONG = 30 * 60, // 30 min
   EXTRA_LONG = 60 * 60, // 60 min
+}
+
+export enum MongoCollections {
+  ALERT = 'alert',
+  ADMIN_ALERT = 'admin-alert',
+  LOGS = 'logs',
+  REQUEST_LOGS = 'request_logs',
+  API_REQUEST_LOGS = 'api_request_logs',
 }

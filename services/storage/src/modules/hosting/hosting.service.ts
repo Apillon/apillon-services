@@ -88,7 +88,6 @@ export class HostingService {
     const maxWebsitesQuota = await new Scs(context).getQuota({
       quota_id: QuotaCode.MAX_WEBSITES,
       project_uuid: website.project_uuid,
-      object_uuid: context.user.user_uuid,
     });
 
     if (numOfWebsites >= maxWebsitesQuota.value) {
@@ -174,7 +173,6 @@ export class HostingService {
     const maxWebsitesQuota = await new Scs(context).getQuota({
       quota_id: QuotaCode.MAX_WEBSITES,
       project_uuid: website.project_uuid,
-      object_uuid: context.user.user_uuid,
     });
 
     return { maxWebsitesQuotaReached: numOfWebsites >= maxWebsitesQuota.value };
