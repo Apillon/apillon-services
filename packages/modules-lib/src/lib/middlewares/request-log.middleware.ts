@@ -1,6 +1,11 @@
-import { env, Lmas, MongoCollections, RequestLogDto } from '@apillon/lib';
+import {
+  env,
+  Lmas,
+  MongoCollections,
+  RequestLogDto,
+  ApiName,
+} from '@apillon/lib';
 import { Injectable, mixin, NestMiddleware, Type } from '@nestjs/common';
-import { ApiName } from '../../config/types';
 
 /**
  * @param req Express request
@@ -63,7 +68,6 @@ export function createRequestLogMiddleware(
             referer: req.headers?.referer || null,
             body: JSON.stringify(bodyMap || []),
             responseTime: Date.now() - startTime,
-            createTime: new Date(),
             user_uuid:
               context?.user?.user_uuid ||
               context?.user?.id ||

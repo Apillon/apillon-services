@@ -66,6 +66,7 @@ export enum LmasEventType {
   SEND_ADMIN_ALERT = 'send-admin-alert',
   NOTIFY = 'notify',
   LIST_LOGS = 'list-logs',
+  LIST_REQUEST_LOGS = 'list-request-logs',
   GET_API_KEYS_USAGE_COUNT = 'get-api-keys-usage-count',
 }
 
@@ -238,6 +239,7 @@ export enum LogType {
   WARN = 'WARNING',
   ERROR = 'ERROR',
   COST = 'COST',
+  ALERT = 'ALERT',
 }
 
 export enum LogLevel {
@@ -650,4 +652,11 @@ export enum MongoCollections {
   LOGS = 'logs',
   REQUEST_LOGS = 'request_logs',
   API_REQUEST_LOGS = 'api_request_logs',
+}
+
+export enum ApiName {
+  ADMIN_CONSOLE_API = 'admin-console-api',
+  DEV_CONSOLE_API = 'dev-console-api',
+  APILLON_API = 'apillon-api',
+  AUTHENTICATION_API = 'authentication-api',
 }

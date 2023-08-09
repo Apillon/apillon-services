@@ -80,9 +80,9 @@ export abstract class BaseWorker extends ServerlessWorker {
     }
 
     const notifyType = {
-      [LogOutput.NOTIFY_ALERT]: 'alert',
-      [LogOutput.NOTIFY_WARN]: 'warning',
-      [LogOutput.NOTIFY_MSG]: 'message',
+      [LogOutput.NOTIFY_ALERT]: LogType.ALERT,
+      [LogOutput.NOTIFY_WARN]: LogType.WARN,
+      [LogOutput.NOTIFY_MSG]: LogType.MSG,
     };
 
     if (

@@ -1,4 +1,5 @@
-import { ApiName, createRequestLogMiddleware } from '@apillon/modules-lib';
+import { createRequestLogMiddleware } from '@apillon/modules-lib';
+import { ApiName } from '@apillon/lib';
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
