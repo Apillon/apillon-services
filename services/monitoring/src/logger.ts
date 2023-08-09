@@ -67,11 +67,11 @@ export class Logger {
 
   /**
    * Get a filtered and paginated list of logs from MongoDB logs or admin-alerts table
-   * @param {{ query: BaseLogsQueryFilter }} event
+   * @param {{ query: LogsQueryFilter }} event
    * @param {ServiceContext} context
    */
   static async listLogs(
-    event: { query: BaseLogsQueryFilter },
+    event: { query: LogsQueryFilter },
     context: ServiceContext,
   ) {
     const query = new LogsQueryFilter(event.query);
@@ -82,21 +82,17 @@ export class Logger {
 
   /**
    * Get a filtered and paginated list of logs from MongoDB request_logs or api_request_logs table
-   * @param {{ query: BaseLogsQueryFilter }} event
+   * @param {{ query: RequestLogsQueryFilter }} event
    * @param {ServiceContext} context
    */
   static async listRequestLogs(
-    event: { query: BaseLogsQueryFilter },
+    event: { query: RequestLogsQueryFilter },
     context: ServiceContext,
   ) {
     const query = new RequestLogsQueryFilter(event.query);
+    const requestLogsColl = context.mongo.db.collection(query.collectionName);
 
-    const collectionName = query.apiLogs
-      ? MongoCollections.API_REQUEST_LOGS
-      : MongoCollections.REQUEST_LOGS;
-    const requestLogsCollection = context.mongo.db.collection(collectionName);
-
-    return Logger.executeMongoLogsQuery(requestLogsCollection, query);
+    return Logger.executeMongoLogsQuery(requestLogsColl, query);
   }
 
   /**

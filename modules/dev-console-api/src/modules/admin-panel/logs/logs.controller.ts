@@ -50,6 +50,7 @@ export class LogsController {
   })
   @UseGuards(ValidationGuard)
   async listRequestLogs(@Query() query: RequestLogsQueryFilter) {
+    query.collectionName ||= MongoCollections.REQUEST_LOGS;
     return this.logsService.listMongoRequestLogs(query);
   }
 }

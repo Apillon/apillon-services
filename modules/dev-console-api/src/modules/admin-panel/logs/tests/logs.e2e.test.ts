@@ -246,7 +246,7 @@ describe('Admin Logs', () => {
 
       response = await request(stage.http)
         .get(
-          `/admin-panel/logs/request-logs?apiLogs=true&apiKey=${apiKey}&dateFrom=2060-01-01`,
+          `/admin-panel/logs/request-logs?collectionName=${MongoCollections.API_REQUEST_LOGS}&apiKey=${apiKey}&dateFrom=2060-01-01`,
         )
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(200);

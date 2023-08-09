@@ -1,9 +1,28 @@
 import { prop } from '@rawmodel/core';
 import { BaseQueryFilter } from '../../../base-models/base-query-filter.model';
 import { dateParser, stringParser } from '@rawmodel/parsers';
-import { PopulateFrom, SerializeFor } from '../../../../config/types';
+import {
+  MongoCollections,
+  PopulateFrom,
+  SerializeFor,
+  ValidatorErrorCode,
+} from '../../../../config/types';
+import { enumInclusionValidator } from '../../../validators';
 
 export class BaseLogsQueryFilter extends BaseQueryFilter {
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.ADMIN],
+    serializable: [SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: enumInclusionValidator(MongoCollections, true),
+        code: ValidatorErrorCode.COLLECTION_NAME_NOT_VALID,
+      },
+    ],
+  })
+  public collectionName: MongoCollections;
+
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.ADMIN],
