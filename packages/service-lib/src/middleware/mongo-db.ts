@@ -43,7 +43,7 @@ export function MongoDbConnect(
   const after = async (_response) => {
     if (autoDisconnect) {
       try {
-        await (instances[instanceName] as Mongo).close();
+        await (instances[instanceName] as Mongo)?.close();
         console.log(
           `Mongo client instance ${instanceName} is DISCONNECTED from server!`,
         );

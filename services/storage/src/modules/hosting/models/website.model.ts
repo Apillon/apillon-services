@@ -287,6 +287,66 @@ export class Website extends ProjectAccessModel {
     ],
     validators: [],
   })
+  public w3StagingLink: string;
+
+  @prop({
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public w3ProductionLink: string;
+
+  @prop({
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public ipnsStaging: string;
+
+  @prop({
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public ipnsProduction: string;
+
+  @prop({
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
   public bucket: Bucket;
 
   @prop({
@@ -520,6 +580,9 @@ export class Website extends ProjectAccessModel {
         this.ipnsStagingLink =
           env.STORAGE_IPFS_GATEWAY.replace('/ipfs/', '/ipns/') +
           this.stagingBucket.IPNS;
+
+        this.w3StagingLink = `https://${this.stagingBucket.IPNS}.ipns.web3approved.com/`;
+        this.ipnsStaging = this.stagingBucket.IPNS;
       }
     }
     if (this.productionBucket_id) {
@@ -531,6 +594,8 @@ export class Website extends ProjectAccessModel {
         this.ipnsProductionLink =
           env.STORAGE_IPFS_GATEWAY.replace('/ipfs/', '/ipns/') +
           this.productionBucket.IPNS;
+        this.w3ProductionLink = `https://${this.productionBucket.IPNS}.ipns.web3approved.com/`;
+        this.ipnsProduction = this.productionBucket.IPNS;
       }
     }
   }

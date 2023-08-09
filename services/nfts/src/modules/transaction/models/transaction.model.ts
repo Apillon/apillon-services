@@ -17,6 +17,7 @@ import {
   NftsErrorCode,
   TransactionType,
 } from '../../../config/types';
+import { ServiceContext } from '@apillon/service-lib';
 
 export class Transaction extends AdvancedSQLModel {
   public readonly tableName = DbTables.TRANSACTION;
@@ -37,6 +38,7 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -61,6 +63,7 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -121,6 +124,7 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -141,6 +145,7 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -159,7 +164,7 @@ export class Transaction extends AdvancedSQLModel {
         SELECT *
         FROM \`${this.tableName}\`
         WHERE transactionHash = @transactionHash;
-        `,
+      `,
       { transactionHash },
     );
 
@@ -171,20 +176,23 @@ export class Transaction extends AdvancedSQLModel {
   }
 
   public async getCollectionTransactions(
-    collection_id: number,
+    collection_uuid: string,
     transactionStatus: TransactionStatus = null,
     transactionType: TransactionType = null,
   ): Promise<Transaction[]> {
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT *
-      FROM \`${this.tableName}\`
-      WHERE status <> ${SqlModelStatus.DELETED}
-      AND (@transactionStatus IS NULL OR transactionStatus = @transactionStatus)
-      AND (@transactionType IS NULL OR transactionType = @transactionType)
-      AND refId = @collection_id
+        SELECT t.*
+        FROM \`${this.tableName}\` as t
+               JOIN collection as c ON (c.id = t.refId)
+        WHERE t.refTable = 'collection'
+          AND t.status <> ${SqlModelStatus.DELETED}
+          AND (@transactionStatus IS NULL OR
+               t.transactionStatus = @transactionStatus)
+          AND (@transactionType IS NULL OR t.transactionType = @transactionType)
+          AND c.collection_uuid = @collection_uuid
       `,
-      { transactionStatus, transactionType, collection_id },
+      { transactionStatus, transactionType, collection_uuid },
     );
 
     const res: Transaction[] = [];
@@ -202,9 +210,9 @@ export class Transaction extends AdvancedSQLModel {
   ): Promise<Transaction[]> {
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT *
-      FROM \`${this.tableName}\`
-      WHERE transactionHash in ('${hashes.join("','")}')`,
+        SELECT *
+        FROM \`${this.tableName}\`
+        WHERE transactionHash in ('${hashes.join("','")}')`,
     );
 
     const res: Transaction[] = [];
@@ -217,7 +225,11 @@ export class Transaction extends AdvancedSQLModel {
     return res;
   }
 
-  public async getList(filter: TransactionQueryFilter) {
+  public async getList(
+    context: ServiceContext,
+    filter: TransactionQueryFilter,
+    serializationStrategy: SerializeFor = SerializeFor.PROFILE,
+  ) {
     // Map url query with sql fields.
     const fieldMap = {
       id: 't.id',
@@ -229,9 +241,14 @@ export class Transaction extends AdvancedSQLModel {
       filter.serialize(),
     );
 
+    const selectFields = this.generateSelectFields(
+      't',
+      '',
+      serializationStrategy,
+    );
     const sqlQuery = {
       qSelect: `
-        SELECT ${this.generateSelectFields('t', '')}, t.updateTime
+        SELECT ${selectFields}
         `,
       qFrom: `
         FROM \`${this.tableName}\` t
@@ -239,6 +256,7 @@ export class Transaction extends AdvancedSQLModel {
         AND (@refId IS NULL or refId = @refId)
         AND status <> ${SqlModelStatus.DELETED}
         AND (@transactionStatus IS null OR t.transactionStatus = @transactionStatus)
+        AND (@transactionType IS null OR t.transactionType = @transactionType)
         AND (@search IS null OR transactionHash LIKE CONCAT('%', @search, '%'))
       `,
       qFilter: `
@@ -247,11 +265,20 @@ export class Transaction extends AdvancedSQLModel {
       `,
     };
 
-    return await selectAndCountQuery(
+    const transactionsResult = await selectAndCountQuery(
       this.getContext().mysql,
       sqlQuery,
       params,
       't.id',
     );
+
+    return {
+      ...transactionsResult,
+      items: transactionsResult.items.map((transaction) =>
+        new Transaction({}, context)
+          .populate(transaction, PopulateFrom.DB)
+          .serialize(serializationStrategy),
+      ),
+    };
   }
 }

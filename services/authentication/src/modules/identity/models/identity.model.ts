@@ -120,6 +120,16 @@ export class Identity extends AdvancedSQLModel {
   })
   public state: string;
 
+  /**
+   * Sets identity state
+   */
+  public async setState(state: string, update = true) {
+    this.state = state;
+    if (update) {
+      await this.update();
+    }
+  }
+
   public async populateByUserEmail(context: ServiceContext, email: string) {
     const data = await this.getContext().mysql.paramExecute(
       `

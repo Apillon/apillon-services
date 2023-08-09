@@ -7,8 +7,11 @@ import {
 } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
-import { LogsQueryFilter } from './dtos/logs-query-filter.dto';
-import { RequestLogDto } from './dtos/request-log.dto';
+import {
+  RequestLogsQueryFilter,
+  LogsQueryFilter,
+  RequestLogDto,
+} from '../../..';
 
 /**
  * Logging / Monitoring / Alerting Service client
@@ -94,14 +97,14 @@ export class Lmas extends BaseService {
 
   public async sendAdminAlert(
     message: string,
-    serviceName: ServiceName,
-    level: 'message' | 'warning' | 'alert',
+    service: ServiceName,
+    logType: LogType,
   ) {
     const data = {
       eventName: LmasEventType.SEND_ADMIN_ALERT,
       message,
-      level,
-      serviceName,
+      logType,
+      service,
     };
 
     // console.log(JSON.stringify(data));
@@ -117,6 +120,21 @@ export class Lmas extends BaseService {
     this.defaultQueueUrl = null;
     return await this.callService(
       { eventName: LmasEventType.LIST_LOGS, query },
+      { isAsync: false },
+    );
+  }
+
+  public async listMongoRequestLogs(query: RequestLogsQueryFilter) {
+    this.defaultQueueUrl = null;
+    return await this.callService(
+      { eventName: LmasEventType.LIST_REQUEST_LOGS, query },
+      { isAsync: false },
+    );
+  }
+  public async getApiKeysUsageCount(apiKeys: string[]) {
+    this.defaultQueueUrl = null;
+    return await this.callService(
+      { eventName: LmasEventType.GET_API_KEYS_USAGE_COUNT, apiKeys },
       { isAsync: false },
     );
   }

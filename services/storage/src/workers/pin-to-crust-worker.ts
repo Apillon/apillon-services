@@ -16,6 +16,7 @@ import { CID } from 'ipfs-http-client';
 import { CrustPinningStatus } from '../config/types';
 import { CrustService } from '../modules/crust/crust.service';
 import { PinToCrustRequest } from '../modules/crust/models/pin-to-crust-request.model';
+import { Bucket } from '../modules/bucket/models/bucket.model';
 
 export class PinToCrustWorker extends BaseWorker {
   protected context: Context;
@@ -49,6 +50,12 @@ export class PinToCrustWorker extends BaseWorker {
           data,
           this.context,
         );
+
+        const bucket: Bucket = await new Bucket(
+          {},
+          this.context,
+        ).populateByUUID(pinToCrustRequest.bucket_uuid);
+
         try {
           await CrustService.placeStorageOrderToCRUST(
             {
@@ -68,6 +75,7 @@ export class PinToCrustWorker extends BaseWorker {
 
           await this.writeEventLog({
             logType: LogType.COST,
+            project_uuid: bucket.project_uuid,
             message: 'Success placing storage order to CRUST',
             service: ServiceName.STORAGE,
             data: {
@@ -88,6 +96,7 @@ export class PinToCrustWorker extends BaseWorker {
           await this.writeEventLog(
             {
               logType: LogType.ERROR,
+              project_uuid: bucket.project_uuid,
               message: 'Error at placing storage order to CRUST',
               service: ServiceName.STORAGE,
               data: {

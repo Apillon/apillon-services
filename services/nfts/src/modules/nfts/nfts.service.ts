@@ -24,7 +24,7 @@ import {
   TransactionStatus,
   TransferCollectionDTO,
 } from '@apillon/lib';
-import { ServiceContext } from '@apillon/service-lib';
+import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
 import {
   QueueWorkerType,
   sendToWorkerQueue,
@@ -151,10 +151,13 @@ export class NftsService {
       message: 'New NFT collection created and submited to deployment',
       location: 'NftsService/deployNftContract',
       service: ServiceName.NFTS,
-      data: collection.serialize(),
+      data: { collection_uuid: collection.collection_uuid },
     });
 
-    return collection.serialize(SerializeFor.PROFILE);
+    collection.updateTime = new Date();
+    collection.createTime = new Date();
+
+    return collection.serialize(getSerializationStrategy(context));
   }
 
   static async deployCollection(
@@ -225,7 +228,7 @@ export class NftsService {
       );
     }
 
-    return collection.serialize(SerializeFor.PROFILE);
+    return collection.serialize(getSerializationStrategy(context));
   }
 
   /**
@@ -273,7 +276,11 @@ export class NftsService {
     return await new Collection(
       { project_uuid: event.query.project_uuid },
       context,
-    ).getList(context, new NFTCollectionQueryFilter(event.query));
+    ).getList(
+      context,
+      new NFTCollectionQueryFilter(event.query),
+      getSerializationStrategy(context),
+    );
   }
 
   static async getCollection(event: { id: any }, context: ServiceContext) {
@@ -291,7 +298,7 @@ export class NftsService {
     }
     collection.canAccess(context);
 
-    return collection.serialize(SerializeFor.PROFILE);
+    return collection.serialize(getSerializationStrategy(context));
   }
 
   static async getCollectionByUuid(
@@ -312,7 +319,7 @@ export class NftsService {
     }
     collection.canAccess(context);
 
-    return collection.serialize(SerializeFor.PROFILE);
+    return collection.serialize(getSerializationStrategy(context));
   }
 
   static async transferCollectionOwnership(
@@ -320,7 +327,7 @@ export class NftsService {
     context: ServiceContext,
   ) {
     console.log(
-      `Transfering NFT Collection (uuid=${params.body.collection_uuid}) ownership to wallet address: ${params.body.address}`,
+      `Transferring NFT Collection (uuid=${params.body.collection_uuid}) ownership to wallet address: ${params.body.address}`,
     );
 
     const collection: Collection = await new Collection(
@@ -395,10 +402,10 @@ export class NftsService {
       message: 'NFT collection ownership transfered',
       location: 'NftsService/transferCollectionOwnership',
       service: ServiceName.NFTS,
-      data: collection.serialize(),
+      data: { collection_uuid: collection.collection_uuid },
     });
 
-    return collection.serialize(SerializeFor.PROFILE);
+    return collection.serialize(getSerializationStrategy(context));
   }
 
   static async setNftCollectionBaseUri(
@@ -579,7 +586,7 @@ export class NftsService {
       location: 'NftsService/mintNftTo',
       service: ServiceName.NFTS,
       data: {
-        collection: collection.serialize(SerializeFor.PROFILE),
+        collection_uuid: collection.collection_uuid,
         body: params.body,
       },
     });
@@ -622,7 +629,7 @@ export class NftsService {
     if (parentCollection.chain !== childCollection.chain) {
       throw new NftsCodeException({
         code: NftsErrorCode.COLLECTION_PARENT_AND_CHILD_NFT_CHAIN_MISMATCH,
-        status: 400,
+        status: 500,
       });
     }
 
@@ -698,7 +705,7 @@ export class NftsService {
       location: 'NftsService/nestMintNftTo',
       service: ServiceName.NFTS,
       data: {
-        collection: childCollection.serialize(SerializeFor.PROFILE),
+        collection_uuid: childCollection.collection_uuid,
         body: params.body,
       },
     });
@@ -779,7 +786,7 @@ export class NftsService {
       location: 'NftsService/burnNftToken',
       service: ServiceName.NFTS,
       data: {
-        collection: collection.serialize(SerializeFor.PROFILE),
+        collection_uuid: collection.collection_uuid,
         body: params.body,
       },
     });
@@ -914,7 +921,7 @@ export class NftsService {
       {},
       context,
     ).getCollectionTransactions(
-      collection.id,
+      collection.collection_uuid,
       null,
       TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
     );

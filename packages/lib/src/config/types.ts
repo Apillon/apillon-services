@@ -66,6 +66,8 @@ export enum LmasEventType {
   SEND_ADMIN_ALERT = 'send-admin-alert',
   NOTIFY = 'notify',
   LIST_LOGS = 'list-logs',
+  LIST_REQUEST_LOGS = 'list-request-logs',
+  GET_API_KEYS_USAGE_COUNT = 'get-api-keys-usage-count',
 }
 
 export enum BlockchainEventType {
@@ -237,6 +239,7 @@ export enum LogType {
   WARN = 'WARNING',
   ERROR = 'ERROR',
   COST = 'COST',
+  ALERT = 'ALERT',
 }
 
 export enum LogLevel {
@@ -292,6 +295,7 @@ export enum SerializeFor {
   ADMIN = 'admin',
   WORKER = 'worker',
   SERVICE = 'service',
+  APILLON_API = 'apillon_api',
   LOGGER = 'logger',
 }
 
@@ -472,7 +476,7 @@ export enum ValidatorErrorCode {
   NFT_DEPLOY_DROP_BOOL_NOT_PRESENT = 42200112,
   NFT_DEPLOY_DROP_TIMESTAMP_NOT_PRESENT = 42200113,
   NFT_DEPLOY_RESERVE_NOT_PRESENT = 42200114,
-  NFT_DEPLOY_COLLECTION_UUI_PARAM_NOT_VALID = 42200115,
+  NFT_DEPLOY_COLLECTION_DESCRIPTION_NOT_VALID = 42200115,
   NFT_DEPLOY_PROJECT_UUID_NOT_PRESENT = 42200116,
   NFT_TRANSFER_OWNERSHIP_ADDRESS_NOT_PRESENT = 42200117,
   NFT_TRANSFER_OWNERSHIP_ADDRESS_NOT_VALID = 42200118,
@@ -544,6 +548,8 @@ export enum ValidatorErrorCode {
   //#region Logs
   INVALID_LOG_TYPE = 42200901,
   INVALID_SERVICE_NAME = 42200902,
+  COLLECTION_NAME_NOT_PRESENT = 42200903,
+  COLLECTION_NAME_NOT_VALID = 42200904,
   //#endregion
 }
 
@@ -639,4 +645,19 @@ export enum CacheKeyTTL {
   EXTENDED = 10 * 60, // 10 min
   LONG = 30 * 60, // 30 min
   EXTRA_LONG = 60 * 60, // 60 min
+}
+
+export enum MongoCollections {
+  ALERT = 'alert',
+  ADMIN_ALERT = 'admin-alert',
+  LOGS = 'logs',
+  REQUEST_LOGS = 'request_logs',
+  API_REQUEST_LOGS = 'api_request_logs',
+}
+
+export enum ApiName {
+  ADMIN_CONSOLE_API = 'admin-console-api',
+  DEV_CONSOLE_API = 'dev-console-api',
+  APILLON_API = 'apillon-api',
+  AUTHENTICATION_API = 'authentication-api',
 }

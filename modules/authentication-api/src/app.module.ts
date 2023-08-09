@@ -1,5 +1,5 @@
-import { env } from '@apillon/lib';
 import { createRequestLogMiddleware } from '@apillon/modules-lib';
+import { ApiName } from '@apillon/lib';
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -25,7 +25,7 @@ export class AppModule {
       .apply(ContextMiddleware)
       .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer
-      .apply(createRequestLogMiddleware(`authentication-api (${env.APP_ENV})`))
+      .apply(createRequestLogMiddleware(ApiName.AUTHENTICATION_API))
       .exclude(
         { path: '*', method: RequestMethod.HEAD },
         { path: '*', method: RequestMethod.OPTIONS },
