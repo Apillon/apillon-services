@@ -187,11 +187,10 @@ describe('Apillon API NFTs tests', () => {
         stage.nftsContext,
       ).populateByUUID(response.body.data.collectionUuid);
       expect(genericCollection.exists()).toBeTruthy();
-      const transactionStatus =
-        await blockchain.getNftTransactionStatusByCollectionUuid(
-          genericCollection.collection_uuid,
-          TransactionType.DEPLOY_CONTRACT,
-        );
+      const transactionStatus = await blockchain.getNftTransactionStatus(
+        genericCollection.collection_uuid,
+        TransactionType.DEPLOY_CONTRACT,
+      );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
     });
 
@@ -312,11 +311,10 @@ describe('Apillon API NFTs tests', () => {
       );
 
       expect(response.status).toBe(201);
-      const transactionStatus =
-        await blockchain.getNftTransactionStatusByCollectionUuid(
-          genericCollection.collection_uuid,
-          TransactionType.MINT_NFT,
-        );
+      const transactionStatus = await blockchain.getNftTransactionStatus(
+        genericCollection.collection_uuid,
+        TransactionType.MINT_NFT,
+      );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
     });
 
@@ -328,11 +326,10 @@ describe('Apillon API NFTs tests', () => {
 
       expect(response.status).toBe(201);
       expect(response.body.data.success).toBe(true);
-      const transactionStatus =
-        await blockchain.getNftTransactionStatusByCollectionUuid(
-          genericCollection.collection_uuid,
-          TransactionType.BURN_NFT,
-        );
+      const transactionStatus = await blockchain.getNftTransactionStatus(
+        genericCollection.collection_uuid,
+        TransactionType.BURN_NFT,
+      );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
     });
 
@@ -345,11 +342,10 @@ describe('Apillon API NFTs tests', () => {
       );
 
       expect(response.status).toBe(201);
-      const transactionStatus =
-        await blockchain.getNftTransactionStatusByCollectionUuid(
-          transferredCollection.collection_uuid,
-          TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
-        );
+      const transactionStatus = await blockchain.getNftTransactionStatus(
+        transferredCollection.collection_uuid,
+        TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
+      );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
 
       transferredCollection.collectionStatus = CollectionStatus.TRANSFERED;
@@ -457,11 +453,10 @@ describe('Apillon API NFTs tests', () => {
       expect(nestableCollection.collectionStatus).toBe(
         CollectionStatus.DEPLOYING,
       );
-      const transactionStatus =
-        await blockchain.getNftTransactionStatusByCollectionUuid(
-          nestableCollection.collection_uuid,
-          TransactionType.DEPLOY_CONTRACT,
-        );
+      const transactionStatus = await blockchain.getNftTransactionStatus(
+        nestableCollection.collection_uuid,
+        TransactionType.DEPLOY_CONTRACT,
+      );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
     });
 
@@ -506,11 +501,10 @@ describe('Apillon API NFTs tests', () => {
       );
 
       expect(response.status).toBe(201);
-      const transactionStatus =
-        await blockchain.getNftTransactionStatusByCollectionUuid(
-          nestableCollection.collection_uuid,
-          TransactionType.MINT_NFT,
-        );
+      const transactionStatus = await blockchain.getNftTransactionStatus(
+        nestableCollection.collection_uuid,
+        TransactionType.MINT_NFT,
+      );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
     });
 
@@ -552,11 +546,10 @@ describe('Apillon API NFTs tests', () => {
 
       expect(response.status).toBe(201);
       expect(response.body.data.success).toBe(true);
-      const transactionStatus =
-        await blockchain.getNftTransactionStatusByCollectionUuid(
-          childCollection.collectionUuid,
-          TransactionType.NEST_MINT_NFT,
-        );
+      const transactionStatus = await blockchain.getNftTransactionStatus(
+        childCollection.collectionUuid,
+        TransactionType.NEST_MINT_NFT,
+      );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
     });
 
@@ -578,11 +571,10 @@ describe('Apillon API NFTs tests', () => {
       );
 
       expect(response.status).toBe(201);
-      const transactionStatus =
-        await blockchain.getNftTransactionStatusByCollectionUuid(
-          newCollection.collection_uuid,
-          TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
-        );
+      const transactionStatus = await blockchain.getNftTransactionStatus(
+        newCollection.collection_uuid,
+        TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
+      );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
     });
 
@@ -618,11 +610,10 @@ describe('Apillon API NFTs tests', () => {
 
       expect(response.status).toBe(201);
       expect(response.body.data.success).toBe(true);
-      const transactionStatus =
-        await blockchain.getNftTransactionStatusByCollectionUuid(
-          nestableCollection.collection_uuid,
-          TransactionType.BURN_NFT,
-        );
+      const transactionStatus = await blockchain.getNftTransactionStatus(
+        nestableCollection.collection_uuid,
+        TransactionType.BURN_NFT,
+      );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
     });
 

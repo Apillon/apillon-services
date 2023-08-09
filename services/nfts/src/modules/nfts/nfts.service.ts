@@ -924,7 +924,7 @@ export class NftsService {
       {},
       context,
     ).getCollectionTransactions(
-      collection.id,
+      collection.collection_uuid,
       null,
       TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
     );

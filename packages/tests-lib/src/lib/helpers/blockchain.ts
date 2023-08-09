@@ -184,32 +184,13 @@ export class TestBlockchain {
   }
 
   async getNftTransactionStatus(
-    collectionId: number,
-    transactionType: TransactionType,
-  ) {
-    const collectionTxs = await new NftCollectionTx(
-      {},
-      this.stage.nftsContext,
-    ).getCollectionTransactions(collectionId);
-    const collectionTx = collectionTxs.find(
-      (x) => x.transactionType == transactionType,
-    );
-    const blockchainTx = await new BlockchainTx(
-      {},
-      this.stage.blockchainContext,
-    ).getTransactionByChainAndHash(this.chainId, collectionTx.transactionHash);
-
-    return blockchainTx.transactionStatus;
-  }
-
-  async getNftTransactionStatusByCollectionUuid(
     collectionUuid: string,
     transactionType: TransactionType,
   ) {
     const collectionTxs = await new NftCollectionTx(
       {},
       this.stage.nftsContext,
-    ).getCollectionTransactionsByUuid(collectionUuid);
+    ).getCollectionTransactions(collectionUuid);
     const collectionTx = collectionTxs.find(
       (x) => x.transactionType == transactionType,
     );
