@@ -529,7 +529,6 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
     ],
   })
@@ -548,7 +547,6 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
     ],
   })
