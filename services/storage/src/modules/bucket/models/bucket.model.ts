@@ -364,19 +364,23 @@ export class Bucket extends ProjectAccessModel {
       'b.id',
     );
 
-    for (const b of list.items) {
-      const maxBucketSizeQuota = await new Scs(context).getQuota({
-        quota_id: QuotaCode.MAX_BUCKET_SIZE,
-        project_uuid: filter.project_uuid,
-        object_uuid: b.bucket_uuid,
-      });
+    return {
+      ...list,
+      items: list.items.map(async (bucket) => {
+        const maxBucketSizeQuota = await new Scs(context).getQuota({
+          quota_id: QuotaCode.MAX_BUCKET_SIZE,
+          project_uuid: filter.project_uuid,
+          object_uuid: bucket.bucket_uuid,
+        });
+        if (maxBucketSizeQuota?.value) {
+          bucket.maxSize = Number(maxBucketSizeQuota?.value) * 1073741824;
+        }
 
-      if (maxBucketSizeQuota?.value) {
-        b.maxSize = Number(maxBucketSizeQuota?.value) * 1073741824;
-      }
-    }
-
-    return list;
+        return new Bucket({}, context)
+          .populate(bucket, PopulateFrom.DB)
+          .serialize(serializationStrategy);
+      }),
+    };
   }
 
   public async clearBucketContent(context: Context, conn: PoolConnection) {

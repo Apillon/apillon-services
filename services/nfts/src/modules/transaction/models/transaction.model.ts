@@ -17,6 +17,7 @@ import {
   NftsErrorCode,
   TransactionType,
 } from '../../../config/types';
+import { ServiceContext } from '@apillon/service-lib';
 
 export class Transaction extends AdvancedSQLModel {
   public readonly tableName = DbTables.TRANSACTION;
@@ -239,7 +240,7 @@ export class Transaction extends AdvancedSQLModel {
       `
         SELECT *
         FROM \`${this.tableName}\`
-        WHERE transactionHash in ('${hashes.join('\',\'')}')`,
+        WHERE transactionHash in ('${hashes.join("','")}')`,
     );
 
     const res: Transaction[] = [];
@@ -253,6 +254,7 @@ export class Transaction extends AdvancedSQLModel {
   }
 
   public async getList(
+    context: ServiceContext,
     filter: TransactionQueryFilter,
     serializationStrategy: SerializeFor = SerializeFor.PROFILE,
   ) {
@@ -290,11 +292,20 @@ export class Transaction extends AdvancedSQLModel {
       `,
     };
 
-    return await selectAndCountQuery(
+    const transactionsResult = await selectAndCountQuery(
       this.getContext().mysql,
       sqlQuery,
       params,
       't.id',
     );
+
+    return {
+      ...transactionsResult,
+      items: transactionsResult.items.map((transaction) =>
+        new Transaction({}, context)
+          .populate(transaction, PopulateFrom.DB)
+          .serialize(serializationStrategy),
+      ),
+    };
   }
 }

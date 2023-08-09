@@ -83,6 +83,7 @@ export class TransactionService {
     });
 
     return await new Transaction({}, context).getList(
+      context,
       query,
       getSerializerBasedOnContext(context),
     );
