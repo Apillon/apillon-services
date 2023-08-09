@@ -33,10 +33,9 @@ export class CaptchaGuard implements CanActivate {
       const data = request[options.validateFor];
       let captchaResult;
 
+      // TODO: This solves captcha not configured, but is a hack!!!
+      // TODO: Check if this is correct here, or why env is not loaded correctly.
       await getEnvSecrets();
-
-      console.log('Captcha secret: ', env.CAPTCHA_SECRET);
-      console.log('Test ENV: ', env.APP_ENV);
 
       if (env.CAPTCHA_SECRET && env.APP_ENV !== AppEnvironment.TEST) {
         if (!data.captcha) {
@@ -47,12 +46,8 @@ export class CaptchaGuard implements CanActivate {
           });
         }
 
-        console.log('Data: ', data);
-        console.log('Captcha data: ', data.captcha);
-
         await verifyCaptcha(data.captcha?.token, env.CAPTCHA_SECRET).then(
           (response) => {
-            console.log('Captcha response: ', response);
             captchaResult = response;
           },
         );
@@ -63,8 +58,6 @@ export class CaptchaGuard implements CanActivate {
           errorCodes: AuthenticationErrorCode,
         });
       }
-
-      console.log('Captcha result: ', captchaResult);
 
       if (
         env.CAPTCHA_SECRET &&
