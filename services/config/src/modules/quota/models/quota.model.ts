@@ -1,7 +1,6 @@
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
-  GetQuotasDto,
   GetQuotaDto,
   PopulateFrom,
   prop,
@@ -124,10 +123,8 @@ export class Quota extends AdvancedSQLModel {
   })
   public type: QuotaType;
 
-  public async getQuotas(
-    data: GetQuotaDto | GetQuotasDto,
-  ): Promise<QuotaDto[]> {
-    data['types'] ||= [
+  public async getQuotas(data: GetQuotaDto): Promise<QuotaDto[]> {
+    data.types ||= [
       QuotaType.FOR_OBJECT,
       QuotaType.FOR_PROJECT,
       QuotaType.FOR_PROJECT_AND_OBJECT,
@@ -144,6 +141,7 @@ export class Quota extends AdvancedSQLModel {
         END AS value,
         q.valueType,
         q.value AS defaultValue,
+        o1.object_uuid,
         o1.description AS overrideDescription
       FROM quota q
       LEFT JOIN override o1
@@ -165,14 +163,14 @@ export class Quota extends AdvancedSQLModel {
         AND o2.status = ${SqlModelStatus.ACTIVE}
       WHERE q.status = ${SqlModelStatus.ACTIVE}
       AND (@quota_id IS NULL OR q.id = @quota_id)
-      AND q.type IN (${data['types'].join(',')})
+      AND q.type IN (${data.types.join(',')})
       GROUP BY q.id, o1.object_uuid, o1.description
     `,
       {
         quota_id: data.quota_id || null,
         project_uuid: data.project_uuid || null,
         object_uuid: data.object_uuid || null,
-        types: data['types'],
+        types: data.types,
       },
     );
   }

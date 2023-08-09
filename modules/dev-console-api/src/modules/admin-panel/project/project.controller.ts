@@ -1,6 +1,5 @@
 import {
   DefaultUserRole,
-  GetQuotasDto,
   ValidateFor,
   CreateQuotaOverrideDto,
   QuotaOverrideDto,
@@ -10,6 +9,7 @@ import {
   QuotaDto,
   QuotaType,
   ApiKeyQueryFilterDto,
+  GetQuotaDto,
 } from '@apillon/lib';
 import {
   Body,
@@ -63,12 +63,16 @@ export class ProjectController {
   }
 
   @Get(':project_uuid/quotas')
-  @Validation({ dto: GetQuotasDto, validateFor: ValidateFor.QUERY })
+  @Validation({
+    dto: GetQuotaDto,
+    validateFor: ValidateFor.QUERY,
+    skipValidation: true,
+  })
   @UseGuards(ValidationGuard)
   async getProjectQuotas(
     @Ctx() context: DevConsoleApiContext,
     @Param('project_uuid', ParseUUIDPipe) project_uuid: UUID,
-    @Query() query: GetQuotasDto,
+    @Query() query: GetQuotaDto,
   ): Promise<QuotaDto[]> {
     query.project_uuid = project_uuid;
     query.types = [QuotaType.FOR_PROJECT, QuotaType.FOR_PROJECT_AND_OBJECT];
