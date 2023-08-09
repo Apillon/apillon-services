@@ -101,7 +101,6 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
