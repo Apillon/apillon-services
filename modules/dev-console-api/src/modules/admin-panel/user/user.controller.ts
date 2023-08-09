@@ -120,7 +120,7 @@ export class UserController {
     @Query() query: GetQuotasDto,
   ): Promise<QuotaDto[]> {
     query.object_uuid = user_uuid;
-    query.type = QuotaType.FOR_OBJECT;
+    query.types = [QuotaType.FOR_OBJECT];
     return this.userService.getUserQuotas(context, query);
   }
 

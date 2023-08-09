@@ -23,8 +23,9 @@ export class GetQuotasDto extends ModelBase {
   public object_uuid?: string;
 
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: integerParser(), array: true },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    defaultValue: null,
   })
-  public type?: QuotaType;
+  public types?: QuotaType[];
 }

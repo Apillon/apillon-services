@@ -71,7 +71,7 @@ export class ProjectController {
     @Query() query: GetQuotasDto,
   ): Promise<QuotaDto[]> {
     query.project_uuid = project_uuid;
-    query.type = QuotaType.FOR_PROJECT;
+    query.types = [QuotaType.FOR_PROJECT, QuotaType.FOR_PROJECT_AND_OBJECT];
     return this.projectService.getProjectQuotas(context, query);
   }
 
