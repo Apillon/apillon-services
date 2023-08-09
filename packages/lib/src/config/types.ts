@@ -295,6 +295,7 @@ export enum SerializeFor {
   ADMIN = 'admin',
   WORKER = 'worker',
   SERVICE = 'service',
+  APILLON_API = 'apillon_api',
   LOGGER = 'logger',
 }
 
@@ -509,6 +510,7 @@ export enum ValidatorErrorCode {
   NFT_DEPLOY_DROP_RESERVE_GREATER_THAN_MAX_SUPPLY = 42200146,
   NFT_BURN_TOKEN_ID_NOT_PRESENT = 42200147,
   NFT_BURN_TOKEN_ID_NOT_VALID = 42200148,
+  QUOTA_CODE_NOT_VALID = 42200149,
 
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,

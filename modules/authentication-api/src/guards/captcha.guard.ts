@@ -1,4 +1,9 @@
-import { AppEnvironment, CodeException, env } from '@apillon/lib';
+import {
+  AppEnvironment,
+  CodeException,
+  env,
+  getEnvSecrets,
+} from '@apillon/lib';
 import {
   VALIDATION_OPTIONS_KEY,
   IValidationOptions,
@@ -28,6 +33,10 @@ export class CaptchaGuard implements CanActivate {
       const data = request[options.validateFor];
       let captchaResult;
 
+      // TODO: This solves captcha not configured, but is a hack!!!
+      // TODO: Check if this is correct here, or why env is not loaded correctly.
+      await getEnvSecrets();
+
       if (env.CAPTCHA_SECRET && env.APP_ENV !== AppEnvironment.TEST) {
         if (!data.captcha) {
           throw new CodeException({
@@ -36,8 +45,11 @@ export class CaptchaGuard implements CanActivate {
             errorCodes: AuthenticationErrorCode,
           });
         }
+
         await verifyCaptcha(data.captcha?.token, env.CAPTCHA_SECRET).then(
-          (response) => (captchaResult = response),
+          (response) => {
+            captchaResult = response;
+          },
         );
       } else {
         throw new CodeException({

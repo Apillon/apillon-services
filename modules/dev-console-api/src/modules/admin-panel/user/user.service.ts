@@ -7,7 +7,7 @@ import {
   CodeException,
   CreateQuotaOverrideDto,
   DefaultUserRole,
-  GetQuotasDto,
+  GetQuotaDto,
   QuotaDto,
   QuotaOverrideDto,
   Scs,
@@ -138,12 +138,12 @@ export class UserService {
    * Retreives a list of all quotas for a user
    * @async
    * @param {DevConsoleApiContext} context
-   * @param {GetQuotasDto} query
+   * @param {GetQuotaDto} query
    * @returns {Promise<QuotaDto[]>}
    */
   async getUserQuotas(
     context: DevConsoleApiContext,
-    query: GetQuotasDto,
+    query: GetQuotaDto,
   ): Promise<QuotaDto[]> {
     return await new Scs(context).getQuotas(query);
   }
