@@ -8,7 +8,7 @@ export class ServiceContext extends Context {
  * Get serialization strategy based on service context
  * @param context ServiceContext
  */
-export function getSerializerBasedOnContext(
+export function getSerializationStrategy(
   context: ServiceContext,
 ): SerializeFor {
   return context.apiKey ? SerializeFor.APILLON_API : SerializeFor.PROFILE;
