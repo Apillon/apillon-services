@@ -76,7 +76,7 @@ describe('Apillon Console NFTs tests for Astar', () => {
       );
       expect(newCollection.exists()).toBeTruthy();
       const transactionStatus = await blockchain.getNftTransactionStatus(
-        newCollection.id,
+        newCollection.collection_uuid,
         TransactionType.DEPLOY_CONTRACT,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
@@ -104,7 +104,7 @@ describe('Apillon Console NFTs tests for Astar', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
       const transactionStatus = await blockchain.getNftTransactionStatus(
-        newCollection.id,
+        newCollection.collection_uuid,
         TransactionType.MINT_NFT,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
@@ -121,7 +121,7 @@ describe('Apillon Console NFTs tests for Astar', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
       const transactionStatus = await blockchain.getNftTransactionStatus(
-        newCollection.id,
+        newCollection.collection_uuid,
         TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);

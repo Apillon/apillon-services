@@ -172,7 +172,7 @@ describe('Apillon API NFTs tests', () => {
         drop: true,
         dropStart: 123,
         dropReserve: 5,
-        dropPrice: 1,
+        dropPrice: 0.00001,
         chain: 1287,
         isRevokable: true,
         isSoulbound: false,
@@ -185,10 +185,10 @@ describe('Apillon API NFTs tests', () => {
       genericCollection = await new Collection(
         {},
         stage.nftsContext,
-      ).populateById(response.body.data.id);
+      ).populateByUUID(response.body.data.collectionUuid);
       expect(genericCollection.exists()).toBeTruthy();
       const transactionStatus = await blockchain.getNftTransactionStatus(
-        genericCollection.id,
+        genericCollection.collection_uuid,
         TransactionType.DEPLOY_CONTRACT,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
@@ -203,17 +203,15 @@ describe('Apillon API NFTs tests', () => {
       const data = response.body.data;
       expect(data.items.length).toBe(1);
       const firstCollection = data.items[0];
-      expect(firstCollection?.id).toBeTruthy();
-      expect(firstCollection?.status).toBeTruthy();
       expect(firstCollection?.collectionUuid).toBeTruthy();
       expect(firstCollection?.symbol).toBeTruthy();
       expect(firstCollection?.name).toBeTruthy();
       expect(firstCollection?.maxSupply).toBeTruthy();
-      expect(firstCollection?.drop).toBe(1);
+      expect(firstCollection?.drop).toBe(true);
       expect(firstCollection?.dropStart).toBeTruthy();
       expect(firstCollection?.dropReserve).toBeTruthy();
-      expect(firstCollection?.dropPrice).toBe(1);
-      expect(firstCollection?.isSoulbound).toBe(0);
+      expect(firstCollection?.dropPrice).toBe(0.00001);
+      expect(firstCollection?.isSoulbound).toBe(false);
       expect(firstCollection?.isRevokable).toBeTruthy();
       expect(firstCollection?.royaltiesFees).toBe(0);
       expect(firstCollection?.royaltiesAddress).toBeTruthy();
@@ -262,7 +260,6 @@ describe('Apillon API NFTs tests', () => {
 
       const data = response.body.data;
       expect(response.status).toBe(200);
-      expect(data.id).toBeTruthy();
       expect(data.collectionUuid).toBe(genericCollection.collection_uuid);
       expect(data.symbol).toBe(genericCollection.symbol);
       expect(data.name).toBe(genericCollection.name);
@@ -315,7 +312,7 @@ describe('Apillon API NFTs tests', () => {
 
       expect(response.status).toBe(201);
       const transactionStatus = await blockchain.getNftTransactionStatus(
-        genericCollection.id,
+        genericCollection.collection_uuid,
         TransactionType.MINT_NFT,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
@@ -330,7 +327,7 @@ describe('Apillon API NFTs tests', () => {
       expect(response.status).toBe(201);
       expect(response.body.data.success).toBe(true);
       const transactionStatus = await blockchain.getNftTransactionStatus(
-        genericCollection.id,
+        genericCollection.collection_uuid,
         TransactionType.BURN_NFT,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
@@ -346,7 +343,7 @@ describe('Apillon API NFTs tests', () => {
 
       expect(response.status).toBe(201);
       const transactionStatus = await blockchain.getNftTransactionStatus(
-        transferredCollection.id,
+        transferredCollection.collection_uuid,
         TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
@@ -429,7 +426,7 @@ describe('Apillon API NFTs tests', () => {
           symbol: 'NNFT',
           name: testCollectionName,
           maxSupply: 0,
-          dropPrice: 0,
+          dropPrice: 0.00001,
           project_uuid: nestableProject.project_uuid,
           baseUri: TEST_COLLECTION_BASE_URI,
           baseExtension: 'json',
@@ -450,14 +447,14 @@ describe('Apillon API NFTs tests', () => {
       nestableCollection = await new Collection(
         {},
         stage.nftsContext,
-      ).populateById(response.body.data.id);
+      ).populateByUUID(response.body.data.collectionUuid);
       expect(nestableCollection.exists()).toBeTruthy();
       expect(nestableCollection.name).toBe(testCollectionName);
       expect(nestableCollection.collectionStatus).toBe(
         CollectionStatus.DEPLOYING,
       );
       const transactionStatus = await blockchain.getNftTransactionStatus(
-        nestableCollection.id,
+        nestableCollection.collection_uuid,
         TransactionType.DEPLOY_CONTRACT,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
@@ -505,7 +502,7 @@ describe('Apillon API NFTs tests', () => {
 
       expect(response.status).toBe(201);
       const transactionStatus = await blockchain.getNftTransactionStatus(
-        nestableCollection.id,
+        nestableCollection.collection_uuid,
         TransactionType.MINT_NFT,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
@@ -550,7 +547,7 @@ describe('Apillon API NFTs tests', () => {
       expect(response.status).toBe(201);
       expect(response.body.data.success).toBe(true);
       const transactionStatus = await blockchain.getNftTransactionStatus(
-        childCollection.id,
+        childCollection.collectionUuid,
         TransactionType.NEST_MINT_NFT,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
@@ -575,7 +572,7 @@ describe('Apillon API NFTs tests', () => {
 
       expect(response.status).toBe(201);
       const transactionStatus = await blockchain.getNftTransactionStatus(
-        newCollection.id,
+        newCollection.collection_uuid,
         TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
@@ -614,7 +611,7 @@ describe('Apillon API NFTs tests', () => {
       expect(response.status).toBe(201);
       expect(response.body.data.success).toBe(true);
       const transactionStatus = await blockchain.getNftTransactionStatus(
-        nestableCollection.id,
+        nestableCollection.collection_uuid,
         TransactionType.BURN_NFT,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
@@ -648,7 +645,7 @@ describe('Apillon API NFTs tests', () => {
       const parentCollection = await new Collection(
         {},
         stage.nftsContext,
-      ).populateById(parentCollectionResponse.body.data.id);
+      ).populateByUUID(parentCollectionResponse.body.data.collectionUuid);
       //mint parent NFT
       const parentOwnerIndex = 0;
       const parentMintResponse = await postRequest(
@@ -687,7 +684,7 @@ describe('Apillon API NFTs tests', () => {
       const childCollection = await new Collection(
         {},
         stage.nftsContext,
-      ).populateById(childCollectionResponse.body.data.id);
+      ).populateByUUID(childCollectionResponse.body.data.collectionUuid);
       //nest mint child under parent
       const nestMintResponse = await postRequest(
         `/nfts/collections/${childCollection.collection_uuid}/nest-mint`,
@@ -728,6 +725,21 @@ describe('Apillon API NFTs tests', () => {
       expect(response.status).toBe(500);
       expect(response.body.code).toBe(50012012);
       expect(response.body.message).toBe('Error burning NFT');
+    });
+
+    test('Customer should be able to mint NFT', async () => {
+      const mintData = NESTABLE_NFT_INTERFACE.encodeFunctionData('mint', [
+        '0xcC765934f460bf4Ba43244a36f7561cBF618daCa', // to,
+        1, //numToMint
+      ]);
+      const mintTxHash = await blockchain.contractWrite(
+        0,
+        nestableCollection.contractAddress,
+        mintData,
+        nestableCollection.dropPrice,
+      );
+      const mintdReceipt = await blockchain.getTransactionReceipt(mintTxHash);
+      expect(mintdReceipt.status).toBe('0x1');
     });
   });
 

@@ -66,8 +66,9 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
     parser: { resolver: dateParser() },
     serializable: [
       // SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
       // SerializeFor.ADMIN,
-      // SerializeFor.SELECT_DB
+      // SerializeFor.SELECT_DB,
     ],
     populatable: [PopulateFrom.DB],
   })
@@ -80,8 +81,9 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
     parser: { resolver: dateParser() },
     serializable: [
       // SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
       // SerializeFor.ADMIN,
-      // SerializeFor.SELECT_DB
+      // SerializeFor.SELECT_DB,
     ],
     populatable: [PopulateFrom.DB],
   })

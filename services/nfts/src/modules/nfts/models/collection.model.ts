@@ -46,6 +46,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -75,6 +76,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -100,6 +102,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -122,6 +125,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -148,6 +152,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -174,6 +179,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -192,6 +198,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -217,6 +224,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -243,6 +251,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -268,6 +277,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -288,6 +298,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -308,6 +319,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -329,6 +341,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -349,6 +362,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -369,6 +383,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -389,6 +404,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -409,6 +425,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -429,6 +446,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -449,6 +467,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -469,6 +488,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -489,6 +509,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
     ],
   })
@@ -543,6 +564,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -563,6 +585,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -578,6 +601,7 @@ export class Collection extends ProjectAccessModel {
   public async getList(
     context: ServiceContext,
     filter: NFTCollectionQueryFilter,
+    serializationStrategy = SerializeFor.PROFILE,
   ) {
     this.canAccess(context);
     // Map url query with sql fields.
@@ -591,9 +615,14 @@ export class Collection extends ProjectAccessModel {
       filter.serialize(),
     );
 
+    const selectFields = this.generateSelectFields(
+      'c',
+      '',
+      serializationStrategy,
+    );
     const sqlQuery = {
       qSelect: `
-        SELECT ${this.generateSelectFields('c', '')}, c.updateTime
+        SELECT ${selectFields}
         `,
       qFrom: `
         FROM \`${this.tableName}\` c
@@ -612,7 +641,21 @@ export class Collection extends ProjectAccessModel {
       `,
     };
 
-    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'c.id');
+    const collectionsResult = await selectAndCountQuery(
+      context.mysql,
+      sqlQuery,
+      params,
+      'c.id',
+    );
+
+    return {
+      ...collectionsResult,
+      items: collectionsResult.items.map((collection) =>
+        new Collection({}, context)
+          .populate(collection, PopulateFrom.DB)
+          .serialize(serializationStrategy),
+      ),
+    };
   }
 
   public async populateById(
@@ -630,10 +673,10 @@ export class Collection extends ProjectAccessModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT *
-      FROM \`${this.tableName}\`
-      WHERE ( id LIKE @id OR collection_uuid LIKE @id)
-      AND status <> ${SqlModelStatus.DELETED};
+        SELECT *
+        FROM \`${this.tableName}\`
+        WHERE (id LIKE @id OR collection_uuid LIKE @id)
+          AND status <> ${SqlModelStatus.DELETED};
       `,
       { id },
       conn,
@@ -655,7 +698,7 @@ export class Collection extends ProjectAccessModel {
         SELECT *
         FROM \`${this.tableName}\`
         WHERE collection_uuid = @collection_uuid;
-        `,
+      `,
       { collection_uuid },
     );
 
@@ -674,11 +717,11 @@ export class Collection extends ProjectAccessModel {
   public async getCollectionsCount(project_uuid?: string): Promise<number> {
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT COUNT(*) as collectionsCount
-      FROM \`${DbTables.COLLECTION}\`
-      WHERE project_uuid = @project_uuid
-        AND collectionStatus <> ${CollectionStatus.FAILED}
-      AND status <> ${SqlModelStatus.DELETED};
+        SELECT COUNT(*) as collectionsCount
+        FROM \`${DbTables.COLLECTION}\`
+        WHERE project_uuid = @project_uuid
+          AND collectionStatus <> ${CollectionStatus.FAILED}
+          AND status <> ${SqlModelStatus.DELETED};
       `,
       {
         project_uuid: project_uuid || this.project_uuid,
