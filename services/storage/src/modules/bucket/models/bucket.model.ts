@@ -454,7 +454,8 @@ export class Bucket extends ProjectAccessModel {
         SELECT f.id
         FROM \`${DbTables.FILE}\` f
         WHERE f.bucket_id = @bucket_id
-          AND status <> ${SqlModelStatus.DELETED} LIMIT 1;
+          AND status <> ${SqlModelStatus.DELETED}
+        LIMIT 1;
       `,
       { bucket_id: this.id },
     );
