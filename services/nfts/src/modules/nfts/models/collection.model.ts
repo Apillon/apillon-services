@@ -628,6 +628,7 @@ export class Collection extends ProjectAccessModel {
         FROM \`${this.tableName}\` c
         WHERE c.project_uuid = @project_uuid
         AND (@search IS null OR c.name LIKE CONCAT('%', @search, '%'))
+        AND (@collectionStatus IS null OR c.collectionStatus = @collectionStatus)
         AND
             (
                 (@status IS null AND c.status <> ${SqlModelStatus.DELETED})

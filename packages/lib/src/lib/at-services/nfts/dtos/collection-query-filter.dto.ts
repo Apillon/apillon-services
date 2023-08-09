@@ -31,6 +31,13 @@ export class NFTCollectionQueryFilter extends BaseQueryFilter {
     validators: [],
   })
   public status: number;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [],
+  })
+  public collectionStatus: number;
 }
 
 export class ApillonApiNFTCollectionQueryFilter extends NFTCollectionQueryFilter {

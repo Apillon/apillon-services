@@ -32,4 +32,11 @@ export class TransactionQueryFilter extends BaseQueryFilter {
     validators: [],
   })
   public transactionStatus: number;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [],
+  })
+  public transactionType: number;
 }

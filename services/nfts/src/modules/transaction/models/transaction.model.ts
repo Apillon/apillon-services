@@ -256,6 +256,7 @@ export class Transaction extends AdvancedSQLModel {
         AND (@refId IS NULL or refId = @refId)
         AND status <> ${SqlModelStatus.DELETED}
         AND (@transactionStatus IS null OR t.transactionStatus = @transactionStatus)
+        AND (@transactionType IS null OR t.transactionType = @transactionType)
         AND (@search IS null OR transactionHash LIKE CONCAT('%', @search, '%'))
       `,
       qFilter: `
