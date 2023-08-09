@@ -53,8 +53,6 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       ChainType.SUBSTRATE,
     );
 
-    console.log('Indexer: ', this.indexer);
-
     const blockHeight = await this.indexer.getBlockHeight();
 
     for (const w of this.wallets) {
@@ -72,8 +70,6 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         fromBlock,
         toBlock,
       );
-
-      console.log('Fetched transactions: ', transactions);
 
       const conn = await this.context.mysql.start();
       try {
