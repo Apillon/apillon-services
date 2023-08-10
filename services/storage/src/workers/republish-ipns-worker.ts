@@ -27,7 +27,7 @@ export class RepublishIpnsWorker extends BaseQueueWorker {
       WHERE IPNS IS NOT NULL 
     `);
 
-    const keys = (await axios.post(`${env.STORAGE_IPFS_API}key/list`)).data
+    const keys = (await axios.post(`${env.STORAGE_IPFS_API}/key/list`)).data
       ?.Keys as Array<any>;
 
     for (const ipns of ipnsRes) {
