@@ -363,7 +363,7 @@ export class Bucket extends ProjectAccessModel {
       params,
       'b.id',
     );
-    const serializedItems = await Promise.all(
+    const items = await Promise.all(
       list.items.map(async (bucket) => {
         const maxBucketSizeQuota = await new Scs(context).getQuota({
           quota_id: QuotaCode.MAX_BUCKET_SIZE,
@@ -382,7 +382,7 @@ export class Bucket extends ProjectAccessModel {
 
     return {
       ...list,
-      items: serializedItems,
+      items,
     };
   }
 
