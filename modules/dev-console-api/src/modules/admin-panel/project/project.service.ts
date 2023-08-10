@@ -6,7 +6,6 @@ import {
   CodeException,
   CreateQuotaOverrideDto,
   QuotaOverrideDto,
-  GetQuotasDto,
   Scs,
   StorageMicroservice,
   NftsMicroservice,
@@ -18,6 +17,7 @@ import { ResourceNotFoundErrorCode } from '../../../config/types';
 import { UUID } from 'crypto';
 import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
 import { Lmas } from '@apillon/lib';
+import { GetQuotaDto } from '@apillon/lib';
 
 @Injectable()
 export class ProjectService {
@@ -80,12 +80,12 @@ export class ProjectService {
    * Retreives a list of all quotas for a project
    * @async
    * @param {DevConsoleApiContext} context
-   * @param {GetQuotasDto} query
+   * @param {GetQuotaDto} query
    * @returns {Promise<QuotaDto[]>}
    */
   async getProjectQuotas(
     context: DevConsoleApiContext,
-    query: GetQuotasDto,
+    query: GetQuotaDto,
   ): Promise<QuotaDto[]> {
     return await new Scs(context).getQuotas(query);
   }
