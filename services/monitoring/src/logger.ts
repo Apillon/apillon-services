@@ -5,7 +5,6 @@ import {
   RequestLogDto,
   RequestLogsQueryFilter,
   SystemErrorCode,
-  BaseLogsQueryFilter,
 } from '@apillon/lib';
 import { ServiceContext } from './context';
 import { Filter, Collection } from 'mongodb';
@@ -128,7 +127,7 @@ export class Logger {
   }
 
   private static async generateMongoLogsQuery(
-    query: BaseLogsQueryFilter,
+    query: LogsQueryFilter | RequestLogsQueryFilter,
   ): Promise<Filter<any>> {
     const mongoQuery = {} as any;
 
@@ -143,9 +142,14 @@ export class Logger {
         query[`${field}s`] && (mongoQuery[field] = { $in: query[`${field}s`] }),
     );
 
+    // Request logs have search by url, others by message
+    const property = query.collectionName.includes('request_logs')
+      ? 'url'
+      : 'message';
+
     // Search by substring
-    query['message'] = query.search;
-    ['message', 'apiName'].forEach(
+    query[property] = query.search;
+    ['message', 'apiName', 'url'].forEach(
       (field) =>
         query[field] &&
         (mongoQuery[field] = {
@@ -168,7 +172,7 @@ export class Logger {
 
   private static async executeMongoLogsQuery(
     collection: Collection<any>,
-    query: BaseLogsQueryFilter,
+    query: LogsQueryFilter | RequestLogsQueryFilter,
   ) {
     // Default sort is timestamp descending
     // -1 -> DESC, 1 -> ASC
