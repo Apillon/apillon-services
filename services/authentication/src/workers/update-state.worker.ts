@@ -36,7 +36,7 @@ export class UpdateStateWorker extends BaseQueueWorker {
     return [];
   }
 
-  private async execAttestClaim(identity: Identity) {
+  private async execAttestClaim(identity: Identity, linkAccountToDid: boolean) {
     const attestationClaimDto = new AttestationDto().populate({
       email: identity.email,
       didUri: identity.didUri,
@@ -45,6 +45,7 @@ export class UpdateStateWorker extends BaseQueueWorker {
     if (env.APP_ENV != AppEnvironment.TEST) {
       await IdentityMicroservice.attestClaim(
         { body: attestationClaimDto },
+        linkAccountToDid,
         this.context,
       );
     }
@@ -150,7 +151,10 @@ export class UpdateStateWorker extends BaseQueueWorker {
                 identity.state = IdentityState.DID_CREATED;
                 await identity.update();
                 await identityJob.setState(IdentityJobState.ATESTATION);
-                await this.execAttestClaim(identity);
+                await this.execAttestClaim(
+                  identity,
+                  identityJob.data.linkAccountToDid,
+                );
               }
             } else {
               // Set identity job status to FAILED

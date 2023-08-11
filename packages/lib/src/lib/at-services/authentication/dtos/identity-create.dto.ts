@@ -69,6 +69,13 @@ export class IdentityCreateDto extends ModelBase {
   public didUri: string;
 
   @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.PROFILE],
+    validators: [],
+  })
+  public linkAccountToDid: boolean;
+
+  @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
     validators: [

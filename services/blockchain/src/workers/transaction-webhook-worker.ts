@@ -59,7 +59,7 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
               const crustTWh =
                 this.createSubstrateTransactionWebhookDto(transaction);
               crustWebhooks.push(crustTWh);
-            } else if (transaction.chain == SubstrateChain.KILT) {
+          } else if (transaction.chain == SubstrateChain.KILT) {
               const kiltTWh =
                 this.createSubstrateTransactionWebhookDto(transaction);
               kiltWebooks.push(kiltTWh);

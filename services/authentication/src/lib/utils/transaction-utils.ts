@@ -18,6 +18,7 @@ export async function identityCreateRequestBc(
   transaction: SubmittableExtrinsic,
   identity: Identity,
   did_create_op: DidCreateOp,
+  linkDidToAccount: boolean,
 ) {
   const identityJob = await IdentityJobService.createOrGetIdentityJob(
     context,
@@ -27,6 +28,7 @@ export async function identityCreateRequestBc(
     {
       did_create_op: did_create_op,
       didUri: identity.didUri,
+      linkDidToAccount: linkDidToAccount,
     },
   );
 

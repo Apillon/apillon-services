@@ -172,6 +172,7 @@ export class IdentityMicroservice {
     const did_create_op: DidCreateOp = event.body.did_create_op as DidCreateOp;
     const claimerEmail = event.body.email;
     const claimerDidUri = event.body.didUri;
+    const linkDidToAccount = event.body.linkAccountToDid;
 
     // Check if correct identity + state exists -> IN_PROGRESS
     const identity = await new Identity({}, context).populateByUserEmail(
@@ -241,6 +242,7 @@ export class IdentityMicroservice {
       fullDidCreationTx,
       identity,
       did_create_op,
+      linkDidToAccount,
     );
 
     // Don't update here, but in the request below
@@ -263,7 +265,11 @@ export class IdentityMicroservice {
     return { success: true };
   }
 
-  static async attestClaim(event: { body: AttestationDto }, context) {
+  static async attestClaim(
+    event: { body: AttestationDto },
+    linkAccountToDid: boolean,
+    context,
+  ) {
     const claimerEmail = event.body.email;
     const claimerDidUri: DidUri = event.body.didUri as DidUri;
     // This parameter is optional, since we can only perform attestaion
@@ -356,6 +362,28 @@ export class IdentityMicroservice {
       }),
       attesterAcc.address,
     );
+
+    if (linkAccountToDid) {
+      const accountLinkingParameters = await Did.associateAccountToChainArgs(
+        linkedAccount.address,
+        did,
+        async (payload) => linkedAccount.sign(payload),
+      );
+
+      // Afterwards we build the extrinsic using the parameters from above.
+      const accountLinkingTx = await api.tx.didLookup.associateAccount(
+        ...accountLinkingParameters,
+      );
+
+      // Next the DID signs the extrinsic.
+      // This signals the agreement of the DID owner to be linked to the account.
+      const authorizedAccountLinkingTx = await Kilt.Did.authorizeTx(
+        did,
+        accountLinkingTx,
+        signCallback,
+        submitterAccount.address,
+      );
+    }
 
     const bcsRequest = await attestationRequestBc(
       context,
