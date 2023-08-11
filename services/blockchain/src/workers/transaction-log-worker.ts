@@ -181,26 +181,23 @@ export class TransactionLogWorker extends BaseQueueWorker {
 
               data.push({ system: s, transfer });
             }
-            return (
-              data
-                .map((x) =>
-                  new TransactionLog(
-                    {},
-                    this.context,
-                  ).createFromKiltIndexerData(x, wallet),
-                )
-                // merge transfers that has the same hash (not happening in kilt?)
-                .reduce((acc, tx) => {
-                  const found = acc.find((x) => x.hash === tx.hash);
-                  if (found) {
-                    found.addToAmount(tx.amount);
-                    found.calculateTotalPrice();
-                  } else {
-                    acc.push(tx);
-                  }
-                  return acc;
-                }, [] as TransactionLog[])
+            return data.map((x) =>
+              new TransactionLog({}, this.context).createFromKiltIndexerData(
+                x,
+                wallet,
+              ),
             );
+            // merge transfers that has the same hash (not happening in kilt?)
+            // .reduce((acc, tx) => {
+            //   const found = acc.find((x) => x.hash === tx.hash);
+            //   if (found) {
+            //     found.addToAmount(tx.amount);
+            //     found.calculateTotalPrice();
+            //   } else {
+            //     acc.push(tx);
+            //   }
+            //   return acc;
+            // }, [] as TransactionLog[])
           },
           [SubstrateChain.PHALA]: () => {
             //
@@ -242,8 +239,8 @@ export class TransactionLogWorker extends BaseQueueWorker {
          (x) => `(
           '${dateToSqlString(x.ts)}', ${x.blockId}, ${x.status}, ${x.direction},
         '${x.action}', ${x.chain}, ${x.chainType}, '${x.wallet}',
-        ${x.addressFrom ? `'${x.addressFrom}'` : null},
-        ${x.addressTo ? `'${x.addressTo}'` : null},
+        ${x.addressFrom ? `'${x.addressFrom}'` : 'NULL'},
+        ${x.addressTo ? `'${x.addressTo}'` : 'NULL'},
         '${x.hash}', '${x.token}',
         '${x.amount || 0}', '${x.fee || 0}', '${x.totalPrice}'
         )`,

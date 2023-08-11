@@ -19,6 +19,7 @@ import { UpdateCrustStatusWorker } from './update-crust-status-worker';
 import { PrepareMetadataForCollectionWorker } from './prepare-metada-for-collection-worker';
 import { PrepareBaseUriForCollectionWorker } from './prepare-base-uri-for-collection-worker';
 import { PinToCrustWorker } from './pin-to-crust-worker';
+import { RepublishIpnsWorker } from './republish-ipns-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -34,6 +35,7 @@ export enum WorkerName {
   PREPARE_METADATA_FOR_COLLECTION_WORKER = 'PrepareMetadataForCollectionWorker',
   PREPARE_BASE_URI_FOR_COLLECTION_WORKER = 'PrepareBaseUriForCollectionWorker',
   PIN_TO_CRUST_WORKER = 'PinToCrustWorker',
+  REPUBLISH_IPNS_WORKER = 'RepublishIpnsWorker',
 }
 
 export async function handler(event: any) {
@@ -134,6 +136,13 @@ export async function handleLambdaEvent(
     case WorkerName.PIN_TO_CRUST_WORKER:
       const pinToCrustWorker = new PinToCrustWorker(workerDefinition, context);
       await pinToCrustWorker.run();
+      break;
+    case WorkerName.REPUBLISH_IPNS_WORKER:
+      await new RepublishIpnsWorker(
+        workerDefinition,
+        context,
+        QueueWorkerType.PLANNER,
+      ).run();
       break;
     default:
       console.log(
@@ -263,6 +272,15 @@ export async function handleSqsMessages(
           });
           break;
         }
+        case WorkerName.REPUBLISH_IPNS_WORKER:
+          await new RepublishIpnsWorker(
+            workerDefinition,
+            context,
+            QueueWorkerType.EXECUTOR,
+          ).run({
+            executeArg: message?.body,
+          });
+          break;
 
         default:
           console.log(

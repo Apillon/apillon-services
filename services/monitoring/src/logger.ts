@@ -148,7 +148,9 @@ export class Logger {
       : 'message';
 
     // Search by substring/regex
-    query[property] = new RegExp(query.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    query[property] = query.search
+      ? new RegExp(query.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      : null;
     ['message', 'apiName', 'url'].forEach(
       (field) =>
         query[field] &&
