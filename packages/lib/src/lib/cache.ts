@@ -90,6 +90,9 @@ export async function invalidateCachePrefixes(
   user_uuid?: string,
   project_uuid?: string,
 ) {
+  if (!env.REDIS_URL) {
+    return;
+  }
   const promises = [];
   const cache = new AppCache();
   await cache.connect();
