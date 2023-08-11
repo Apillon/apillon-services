@@ -42,11 +42,28 @@ export class RepublishIpnsWorker extends BaseQueueWorker {
       `Republishing ${filteredData.length} IPNS records!`,
     );
 
-    return filteredData;
+    // batch data
+    const batchedData = [];
+    let batch = [];
+    for (let i = 0; i < filteredData.length; i++) {
+      batch.push(filteredData[i]);
+      if (batch.length === 10) {
+        batchedData.push(batch);
+        batch = [];
+      }
+    }
+    if (batch.length) {
+      batchedData.push(batch);
+    }
+    console.log(JSON.stringify(batchedData));
+    return batchedData;
   }
   async runExecutor(data: any): Promise<any> {
-    await axios.post(
-      `${env.STORAGE_IPFS_API}/name/publish?arg=${data.cid}&key=${data.keyName}`,
-    );
+    console.log(data);
+    for (const item of data) {
+      await axios.post(
+        `${env.STORAGE_IPFS_API}/name/publish?arg=${item.cid}&key=${item.keyName}`,
+      );
+    }
   }
 }
