@@ -363,10 +363,8 @@ export class Bucket extends ProjectAccessModel {
       params,
       'b.id',
     );
-
-    return {
-      ...list,
-      items: list.items.map(async (bucket) => {
+    const items = await Promise.all(
+      list.items.map(async (bucket) => {
         const maxBucketSizeQuota = await new Scs(context).getQuota({
           quota_id: QuotaCode.MAX_BUCKET_SIZE,
           project_uuid: filter.project_uuid,
@@ -380,6 +378,11 @@ export class Bucket extends ProjectAccessModel {
           .populate(bucket, PopulateFrom.DB)
           .serialize(serializationStrategy);
       }),
+    );
+
+    return {
+      ...list,
+      items,
     };
   }
 
@@ -454,8 +457,7 @@ export class Bucket extends ProjectAccessModel {
         SELECT f.id
         FROM \`${DbTables.FILE}\` f
         WHERE f.bucket_id = @bucket_id
-          AND status <> ${SqlModelStatus.DELETED}
-        LIMIT 1;
+          AND status <> ${SqlModelStatus.DELETED} LIMIT 1;
       `,
       { bucket_id: this.id },
     );

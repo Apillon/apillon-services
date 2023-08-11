@@ -8,7 +8,7 @@ import {
   CacheKeyPrefix,
   QuotaType,
   QuotaDto,
-  GetQuotasDto,
+  GetQuotaDto,
 } from '@apillon/lib';
 import {
   Ctx,
@@ -112,15 +112,19 @@ export class UserController {
   }
 
   @Get(':user_uuid/quotas')
-  @Validation({ dto: GetQuotasDto, validateFor: ValidateFor.QUERY })
+  @Validation({
+    dto: GetQuotaDto,
+    validateFor: ValidateFor.QUERY,
+    skipValidation: true,
+  })
   @UseGuards(ValidationGuard, AuthGuard)
   async getUserQuotas(
     @Ctx() context: DevConsoleApiContext,
     @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
-    @Query() query: GetQuotasDto,
+    @Query() query: GetQuotaDto,
   ): Promise<QuotaDto[]> {
     query.object_uuid = user_uuid;
-    query.type = QuotaType.FOR_OBJECT;
+    query.types = [QuotaType.FOR_OBJECT];
     return this.userService.getUserQuotas(context, query);
   }
 
