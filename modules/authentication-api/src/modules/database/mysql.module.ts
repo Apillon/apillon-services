@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Inject, Module } from '@nestjs/common';
 import { AppEnvironment, env, getEnvSecrets, MySql } from '@apillon/lib';
 
 @Module({
@@ -25,10 +25,7 @@ import { AppEnvironment, env, getEnvSecrets, MySql } from '@apillon/lib';
               };
 
         try {
-          const mysql = new MySql(config);
-          await mysql.connect();
-
-          return mysql;
+          return new MySql(config);
         } catch (e) {
           console.error(e);
           throw e;
@@ -38,4 +35,10 @@ import { AppEnvironment, env, getEnvSecrets, MySql } from '@apillon/lib';
   ],
   exports: ['MYSQL_DB'],
 })
-export class MySQLModule {}
+export class MySQLModule {
+  constructor(@Inject('MYSQL_DB') private mysql: MySql) {}
+
+  async onModuleDestroy() {
+    await this.mysql.close();
+  }
+}
