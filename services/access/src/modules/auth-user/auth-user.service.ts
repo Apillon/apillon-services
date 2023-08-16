@@ -254,13 +254,13 @@ export class AuthUserService {
     try {
       tokenData = parseJwtToken(JwtTokenType.USER_AUTHENTICATION, event.token);
     } catch (err) {
-      if ((err.message = 'jwt expired')) {
-        throw await new AmsCodeException({
+      if (err.message === 'jwt expired') {
+        throw new AmsCodeException({
           status: 401,
           code: AmsErrorCode.AUTH_TOKEN_EXPIRED,
         });
       }
-      throw await new AmsCodeException({
+      throw new AmsCodeException({
         status: 400,
         code: AmsErrorCode.USER_AUTH_TOKEN_IS_INVALID,
       });
