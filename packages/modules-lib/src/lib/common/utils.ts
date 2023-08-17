@@ -4,7 +4,7 @@ import FormData from 'form-data';
 
 export async function verifyCaptcha(
   token: string,
-  secret: string,
+  secret: string = env.CAPTCHA_SECRET,
 ): Promise<boolean> {
   try {
     const req = axios.create({

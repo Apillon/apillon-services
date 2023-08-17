@@ -25,6 +25,7 @@ import { AuthGuard } from '../../guards/auth.guard';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { DiscordCodeDto } from './dtos/discord-code.dto';
+import { CaptchaGuard } from '../../guards/captcha.guard';
 
 @Controller('users')
 export class UserController {
@@ -79,7 +80,7 @@ export class UserController {
 
   @Post('validate-email')
   @Validation({ dto: ValidateEmailDto })
-  @UseGuards(ValidationGuard)
+  @UseGuards(ValidationGuard, CaptchaGuard)
   async validateEmail(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: ValidateEmailDto,
@@ -100,7 +101,7 @@ export class UserController {
   @Post('password-reset-request')
   @HttpCode(200)
   @Validation({ dto: ValidateEmailDto })
-  @UseGuards(ValidationGuard)
+  @UseGuards(ValidationGuard, CaptchaGuard)
   async passwordResetRequest(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: ValidateEmailDto,
