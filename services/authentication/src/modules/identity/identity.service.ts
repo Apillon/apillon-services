@@ -364,26 +364,7 @@ export class IdentityMicroservice {
     );
 
     if (linkAccountToDid) {
-      const accountLinkingParameters = await Did.associateAccountToChainArgs(
-        linkedAccount.address,
-        did,
-        async (payload) => linkedAccount.sign(payload),
-      );
-
-      // Afterwards we build the extrinsic using the parameters from above.
-      const accountLinkingTx = await api.tx.didLookup.associateAccount(
-        ...accountLinkingParameters,
-      );
-
-      // Next the DID signs the extrinsic.
-      // This signals the agreement of the DID owner to be linked to the account.
-      const authorizedAccountLinkingTx = await Kilt.Did.authorizeTx(
-        did,
-        accountLinkingTx,
-        signCallback,
-        submitterAccount.address,
-      );
-    }
+      
 
     const bcsRequest = await attestationRequestBc(
       context,
