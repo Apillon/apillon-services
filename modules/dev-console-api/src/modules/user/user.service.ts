@@ -372,7 +372,7 @@ export class UserService {
   async passwordResetRequest(context: Context, body: ValidateEmailDto) {
     const { email, captcha } = body;
     let emailResult;
-    let captchaResult;
+    let captchaResult: boolean;
 
     const promises = [];
     promises.push(
@@ -416,7 +416,7 @@ export class UserService {
     const token = generateJwtToken(
       JwtTokenType.USER_RESET_PASSWORD,
       {
-        email: email,
+        email,
       },
       '1h',
       emailResult.data.authUser.password

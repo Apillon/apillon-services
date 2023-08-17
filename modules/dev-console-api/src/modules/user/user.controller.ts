@@ -46,9 +46,8 @@ export class UserController {
 
   @Patch('me')
   @Permissions({ role: DefaultUserRole.USER })
-  @UseGuards(AuthGuard)
   @Validation({ dto: UpdateUserDto })
-  @UseGuards(ValidationGuard)
+  @UseGuards(AuthGuard, ValidationGuard)
   async updateUserProfile(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: UpdateUserDto,
