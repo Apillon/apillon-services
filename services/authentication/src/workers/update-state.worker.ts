@@ -36,16 +36,17 @@ export class UpdateStateWorker extends BaseQueueWorker {
     return [];
   }
 
-  private async execAttestClaim(identity: Identity, linkAccountToDid: boolean) {
+  private async execAttestClaim(identity: Identity, linkParameters: object) {
     const attestationClaimDto = new AttestationDto().populate({
       email: identity.email,
       didUri: identity.didUri,
       token: identity.token,
+      linkParameters: linkParameters,
     });
+
     if (env.APP_ENV != AppEnvironment.TEST) {
       await IdentityMicroservice.attestClaim(
         { body: attestationClaimDto },
-        linkAccountToDid,
         this.context,
       );
     }
@@ -153,7 +154,7 @@ export class UpdateStateWorker extends BaseQueueWorker {
                 await identityJob.setState(IdentityJobState.ATESTATION);
                 await this.execAttestClaim(
                   identity,
-                  identityJob.data.linkAccountToDid,
+                  identityJob.data.linkParameters,
                 );
               }
             } else {
@@ -231,7 +232,10 @@ export class UpdateStateWorker extends BaseQueueWorker {
                     identity: identity.id,
                   },
                 });
-                await this.execAttestClaim(identity);
+                await this.execAttestClaim(
+                  identity,
+                  identityJob.data.linkParameters,
+                );
               } else {
                 await this.writeEventLog({
                   logType: LogType.ERROR,

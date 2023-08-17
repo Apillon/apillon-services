@@ -329,22 +329,20 @@ export function toCredentialIRI(rootHash: string): string {
 }
 
 export async function linkAccountDid(
-  accountLinkingParameters: AssociateAccountToChainResult,
-  signCallback: SignCallback,
+  didUri: DidUri,
+  linkParameters: any,
+  signCallback: SignExtrinsicCallback,
 ) {
+  await connect(env.KILT_NETWORK);
   const api = ConfigService.get('api');
+  const account = generateAccount(
+    env.KILT_ATTESTER_MNEMONIC,
+  ) as KiltKeyringPair;
 
-  // const accountLinkingTx = api.tx.didLookup.associateAccount(
-  //   ...accountLinkingParameters,
-  // );
-
-  // const authorizedAccountLinkingTx = await Did.authorizeTx(
-  //   did,
-  //   accountLinkingTx,
-  //   signCallback,
-  //   // Submitter account
-  //   account.address,
-  // );
-
-  // return authorizedAccountLinkingTx;
+  return await Did.authorizeTx(
+    didUri,
+    linkParameters,
+    signCallback,
+    account.address,
+  );
 }
