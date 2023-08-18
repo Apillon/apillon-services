@@ -22,6 +22,19 @@ export class EvmBlockchainIndexer {
     this.graphQlClient = new GraphQLClient(graphqlServerUrl);
   }
 
+  // transactionHash: String! @index
+  // blockNumber: Int! @index
+  // blockHash: String! @index
+  // blockTimestamp: DateTime! @index
+  // from: String @index
+  // to: String @index
+  // value: BigInt!
+  // nonce: Int!
+  // gasUsed: BigInt!
+  // effectiveGasPrice: BigInt!
+  // status: Int @index
+  // createdAt: DateTime! @index
+
   public async getWalletOutgoingTxs(
     address: string,
     fromBlock: number,
@@ -35,22 +48,24 @@ export class EvmBlockchainIndexer {
       ) {
         transactions(
           where: {
-            from_eq: $address
+            to_eq: $address
             blockNumber_gt: $fromBlock
             blockNumber_lte: $toBlock
           }
         ) {
-          blockNumber
-          from
-          gas
-          gasPrice
-          hash
           id
-          nonce
-          status
-          timestamp
+          transactionHash
+          blockNumber
+          blockHash
+          blockTimestamp
+          from
           to
           value
+          nonce
+          gasUsed
+          effectiveGasPrice
+          status
+          createdAt
         }
       }
     `;
@@ -78,40 +93,36 @@ export class EvmBlockchainIndexer {
       ) {
         transactions(
           where: {
-            to_eq: $address
+            from_eq: $address
             blockNumber_gt: $fromBlock
             blockNumber_lte: $toBlock
           }
         ) {
-          blockNumber
-          from
-          gas
-          gasPrice
-          hash
           id
-          nonce
-          status
-          timestamp
+          transactionHash
+          blockNumber
+          blockHash
+          blockTimestamp
+          from
           to
           value
+          nonce
+          gasUsed
+          effectiveGasPrice
+          status
+          createdAt
         }
       }
     `;
 
     address = address.toLowerCase();
-    try {
-      const data: EvmTransfers = await this.graphQlClient.request(
-        GRAPHQL_QUERY,
-        {
-          address,
-          fromBlock,
-          toBlock,
-        },
-      );
-      return data;
-    } catch (err) {
-      console.log(err);
-    }
+    const data: EvmTransfers = await this.graphQlClient.request(GRAPHQL_QUERY, {
+      address,
+      fromBlock,
+      toBlock,
+    });
+    console.log(data);
+    return data;
   }
 
   public async getWalletTransactions(
@@ -131,17 +142,19 @@ export class EvmBlockchainIndexer {
           orderBy: blockNumber_ASC
           limit: $limit
         ) {
-          blockNumber
-          from
-          gas
-          gasPrice
-          hash
           id
-          nonce
-          status
-          timestamp
+          transactionHash
+          blockNumber
+          blockHash
+          blockTimestamp
+          from
           to
           value
+          nonce
+          gasUsed
+          effectiveGasPrice
+          status
+          createdAt
         }
       }
     `;
