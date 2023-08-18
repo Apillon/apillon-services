@@ -11,8 +11,6 @@ import {
   ServiceName,
   UserWalletAuthDto,
   SqlModelStatus,
-  env,
-  checkCaptcha,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AmsErrorCode } from '../../config/types';
@@ -138,17 +136,7 @@ export class AuthUserService {
       }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
     }
 
-    const captchaRememberDate = new Date(authUser.captchaSolveDate);
-    captchaRememberDate.setDate(
-      captchaRememberDate.getDate() + env.CAPTCHA_REMEMBER_DAYS,
-    );
-
-    // If remember date for last captcha solved is in the past, request captcha solve
-    if (captchaRememberDate <= new Date()) {
-      await checkCaptcha(event.captcha?.token);
-      await authUser.populate({ captchaSolveDate: new Date() }).update();
-    }
-
+    await authUser.checkLoginCaptcha(event.captcha?.token);
     await authUser.loginUser();
 
     await new Lmas().writeLog({

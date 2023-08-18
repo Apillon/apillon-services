@@ -9,6 +9,8 @@ import {
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
+  checkCaptcha,
+  env,
   generateJwtToken,
   getQueryParams,
   prop,
@@ -528,5 +530,18 @@ export class AuthUser extends AdvancedSQLModel {
       { ...params, user_uuid: event.user_uuid },
       'aur.createTime',
     );
+  }
+
+  public async checkLoginCaptcha(captchaToken: string) {
+    const captchaRememberDate = new Date(this.captchaSolveDate);
+    captchaRememberDate.setDate(
+      captchaRememberDate.getDate() + env.CAPTCHA_REMEMBER_DAYS,
+    );
+
+    // If remember date for last captcha solved is in the past, request captcha solve
+    if (captchaRememberDate <= new Date()) {
+      await checkCaptcha(captchaToken);
+      await this.populate({ captchaSolveDate: new Date() }).update();
+    }
   }
 }
