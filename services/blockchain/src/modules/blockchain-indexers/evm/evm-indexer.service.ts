@@ -57,6 +57,7 @@ export class EvmBlockchainIndexer {
       }
     `;
 
+    address = address.toLowerCase();
     const data: EvmTransfers = await this.graphQlClient.request(GRAPHQL_QUERY, {
       address,
       fromBlock,
