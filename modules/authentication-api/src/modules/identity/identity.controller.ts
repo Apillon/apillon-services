@@ -1,5 +1,5 @@
 import { ValidateFor, VerificationEmailDto } from '@apillon/lib';
-import { Ctx, Validation } from '@apillon/modules-lib';
+import { CaptchaGuard, Ctx, Validation } from '@apillon/modules-lib';
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthenticationApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
@@ -10,7 +10,6 @@ import { IdentityCreateDto } from './dtos/identity-create.dto';
 import { JwtTokenType } from '../../config/types';
 import { DevEnvGuard } from '../../guards/dev-env.guard';
 import { IdentityDidRevokeDto } from './dtos/identity-did-revoke.dto';
-import { CaptchaGuard } from '../../guards/captcha.guard';
 
 @Controller('identity')
 export class IdentityController {

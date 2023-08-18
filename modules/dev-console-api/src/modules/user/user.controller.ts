@@ -14,6 +14,7 @@ import {
   getDiscordAuthURL,
   Permissions,
   Validation,
+  CaptchaGuard,
 } from '@apillon/modules-lib';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { LoginUserDto } from './dtos/login-user.dto';
@@ -25,7 +26,6 @@ import { AuthGuard } from '../../guards/auth.guard';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { DiscordCodeDto } from './dtos/discord-code.dto';
-import { CaptchaGuard } from '../../guards/captcha.guard';
 
 @Controller('users')
 export class UserController {

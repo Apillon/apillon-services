@@ -1,0 +1,69 @@
+import {
+  AppEnvironment,
+  CodeException,
+  ValidatorErrorCode,
+  env,
+  getEnvSecrets,
+} from '@apillon/lib';
+import { HttpStatus } from '@nestjs/common';
+import axios, { AxiosResponse } from 'axios';
+import FormData from 'form-data';
+
+export async function checkCaptcha(captchaToken: string): Promise<boolean> {
+  if (
+    [AppEnvironment.LOCAL_DEV, AppEnvironment.TEST].includes(
+      env.APP_ENV as AppEnvironment,
+    )
+  ) {
+    return true;
+  }
+
+  await getEnvSecrets();
+
+  if (!env.CAPTCHA_SECRET) {
+    throwCodeException(ValidatorErrorCode.IDENTITY_CAPTCHA_NOT_CONFIGURED);
+  }
+
+  if (!captchaToken) {
+    throwCodeException(ValidatorErrorCode.IDENTITY_CAPTCHA_NOT_PRESENT);
+  }
+
+  if (!(await verifyCaptcha(captchaToken))) {
+    throwCodeException(ValidatorErrorCode.IDENTITY_CAPTCHA_INVALID);
+  }
+
+  return true;
+}
+
+async function verifyCaptcha(
+  token: string,
+  secret: string = env.CAPTCHA_SECRET,
+): Promise<boolean> {
+  try {
+    const req = axios.create({
+      baseURL: 'https://hcaptcha.com',
+      responseType: 'json',
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Accept-Encoding': 'gzip,deflate,compress',
+      },
+    });
+    const data = new FormData();
+    data.append('response', token);
+    data.append('secret', secret);
+    const captchaVerify: AxiosResponse = await req.post('/siteverify', data);
+
+    return captchaVerify.status === 200 && captchaVerify.data.success;
+  } catch (err) {
+    console.error('Error verifying captcha!', err);
+    throw err;
+  }
+}
+
+const throwCodeException = (code: ValidatorErrorCode) => {
+  throw new CodeException({
+    status: HttpStatus.UNPROCESSABLE_ENTITY,
+    code,
+    errorCodes: ValidatorErrorCode,
+  });
+};
