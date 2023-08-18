@@ -67,7 +67,11 @@ export class Ams extends BaseService {
     return amsResponse;
   }
 
-  public async login(params: { email: string; password: string }) {
+  public async login(params: {
+    email: string;
+    password: string;
+    captcha?: { token: string };
+  }) {
     const data = {
       eventName: AmsEventType.USER_LOGIN,
       ...params,

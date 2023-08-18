@@ -17,7 +17,7 @@ import {
   invalidateCachePrefixes,
   CacheKeyPrefix,
 } from '@apillon/lib';
-import { checkCaptcha, getDiscordProfile } from '@apillon/modules-lib';
+import { getDiscordProfile } from '@apillon/modules-lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { signatureVerify } from '@polkadot/util-crypto';
 import { v4 as uuidV4 } from 'uuid';
@@ -39,8 +39,6 @@ import { registerUser } from './utils/authentication-utils';
 import { getOauthSessionToken } from './utils/oauth-utils';
 import { UserConsentDto, UserConsentStatus } from './dtos/user-consent.dto';
 import { DiscordCodeDto } from './dtos/discord-code.dto';
-import { AuthUser } from '@apillon/access/src/modules/auth-user/auth-user.model';
-
 @Injectable()
 export class UserService {
   constructor(private readonly projectService: ProjectService) {}
@@ -79,23 +77,7 @@ export class UserService {
     context: DevConsoleApiContext,
   ): Promise<any> {
     try {
-      const { data: authUser }: { data: AuthUser } = await new Ams(
-        context,
-      ).login({
-        email: loginInfo.email,
-        password: loginInfo.password,
-      });
-
-      const maxCaptchaRememberDate = new Date(authUser.captchaSolveDate);
-      maxCaptchaRememberDate.setDate(
-        maxCaptchaRememberDate.getDate() + env.CAPTCHA_REMEMBER_DAYS,
-      );
-
-      if (new Date() > maxCaptchaRememberDate) {
-        // If remember date for last captcha solved is in the past, request captcha solve
-        await checkCaptcha(loginInfo.captcha?.token);
-        await authUser.populate({ captchaSolveDate: new Date() }).update();
-      }
+      const { data: authUser } = await new Ams(context).login(loginInfo);
 
       const user = await new User({}, context).populateByUUID(
         authUser.user_uuid,

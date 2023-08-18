@@ -37,5 +37,5 @@ export class LoginUserDto extends ModelBase {
     parser: { resolver: JSONParser() },
     populatable: [PopulateFrom.PROFILE],
   })
-  public captcha: { eKey: string; token: string };
+  public captcha?: { eKey: string; token: string };
 }

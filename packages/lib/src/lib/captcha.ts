@@ -1,13 +1,8 @@
-import {
-  AppEnvironment,
-  CodeException,
-  ValidatorErrorCode,
-  env,
-  getEnvSecrets,
-} from '@apillon/lib';
-import { HttpStatus } from '@nestjs/common';
 import axios, { AxiosResponse } from 'axios';
 import FormData from 'form-data';
+import { AppEnvironment, ValidatorErrorCode } from '../config/types';
+import { env, getEnvSecrets } from '../config/env';
+import { CodeException } from './exceptions/exceptions';
 
 /**
  * Given a captcha token, verify if the token is valid and the captcha has been successfully solved by the user
@@ -67,7 +62,7 @@ async function verifyCaptcha(
 
 const throwCodeException = (code: ValidatorErrorCode) => {
   throw new CodeException({
-    status: HttpStatus.UNPROCESSABLE_ENTITY,
+    status: 422,
     code,
     errorCodes: ValidatorErrorCode,
   });
