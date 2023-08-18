@@ -22,19 +22,6 @@ export class EvmBlockchainIndexer {
     this.graphQlClient = new GraphQLClient(graphqlServerUrl);
   }
 
-  // transactionHash: String! @index
-  // blockNumber: Int! @index
-  // blockHash: String! @index
-  // blockTimestamp: DateTime! @index
-  // from: String @index
-  // to: String @index
-  // value: BigInt!
-  // nonce: Int!
-  // gasUsed: BigInt!
-  // effectiveGasPrice: BigInt!
-  // status: Int @index
-  // createdAt: DateTime! @index
-
   public async getWalletOutgoingTxs(
     address: string,
     fromBlock: number,
