@@ -57,20 +57,12 @@ export class EvmBlockchainIndexer {
       }
     `;
 
-    address = address.toLowerCase();
-    try {
-      const data: EvmTransfers = await this.graphQlClient.request(
-        GRAPHQL_QUERY,
-        {
-          address,
-          fromBlock,
-          toBlock,
-        },
-      );
-      return data;
-    } catch (error) {
-      console.error(error);
-    }
+    const data: EvmTransfers = await this.graphQlClient.request(GRAPHQL_QUERY, {
+      address,
+      fromBlock,
+      toBlock,
+    });
+    return data;
   }
 
   public async getWalletIncomingTxs(
@@ -109,19 +101,12 @@ export class EvmBlockchainIndexer {
     `;
 
     address = address.toLowerCase();
-    try {
-      const data: EvmTransfers = await this.graphQlClient.request(
-        GRAPHQL_QUERY,
-        {
-          address,
-          fromBlock,
-          toBlock,
-        },
-      );
-      return data;
-    } catch (error) {
-      console.error(error);
-    }
+    const data: EvmTransfers = await this.graphQlClient.request(GRAPHQL_QUERY, {
+      address,
+      fromBlock,
+      toBlock,
+    });
+    return data;
   }
 
   public async getWalletTransactions(
@@ -159,19 +144,12 @@ export class EvmBlockchainIndexer {
     `;
 
     address = address.toLowerCase();
-    try {
-      const data: EvmTransfers = await this.graphQlClient.request(
-        GRAPHQL_QUERY,
-        {
-          address,
-          fromBlock,
-          limit,
-        },
-      );
-      return data;
-    } catch (err) {
-      console.log(err);
-    }
+    const data: EvmTransfers = await this.graphQlClient.request(GRAPHQL_QUERY, {
+      address,
+      fromBlock,
+      limit,
+    });
+    return data;
   }
 
   public async getBlockHeight(): Promise<number> {
