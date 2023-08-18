@@ -364,6 +364,7 @@ export interface IEnv {
    * hCAPTCHA
    */
   CAPTCHA_SECRET: string;
+  CAPTCHA_REMEMBER_DAYS: number;
 
   /** DISCORD */
   DISCORD_CLIENT_ID: string;
@@ -734,6 +735,7 @@ export let env: IEnv = {
 
   /** CAPTCHA */
   CAPTCHA_SECRET: process.env['CAPTCHA_SECRET'] || '',
+  CAPTCHA_REMEMBER_DAYS: +process.env['CAPTCHA_REMEMBER_DAYS'] || 7,
 
   /** AUTH MICROSERVICE */
   AUTH_FUNCTION_NAME: process.env['AUTH_FUNCTION_NAME'],

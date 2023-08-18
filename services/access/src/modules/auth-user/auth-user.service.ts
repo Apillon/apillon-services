@@ -11,6 +11,7 @@ import {
   ServiceName,
   UserWalletAuthDto,
   SqlModelStatus,
+  env,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AmsErrorCode } from '../../config/types';

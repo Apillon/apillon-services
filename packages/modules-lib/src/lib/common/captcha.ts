@@ -9,6 +9,11 @@ import { HttpStatus } from '@nestjs/common';
 import axios, { AxiosResponse } from 'axios';
 import FormData from 'form-data';
 
+/**
+ * Given a captcha token, verify if the token is valid and the captcha has been successfully solved by the user
+ * @param {string} captchaToken
+ * @returns {Promise<boolean>}
+ */
 export async function checkCaptcha(captchaToken: string): Promise<boolean> {
   if (
     [AppEnvironment.LOCAL_DEV, AppEnvironment.TEST].includes(

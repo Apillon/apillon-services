@@ -15,7 +15,7 @@ import {
   selectAndCountQuery,
   uniqueFieldValue,
 } from '@apillon/lib';
-import { stringParser } from '@rawmodel/parsers';
+import { dateParser, stringParser } from '@rawmodel/parsers';
 import { emailValidator, presenceValidator } from '@rawmodel/validators';
 import * as bcrypt from 'bcryptjs';
 import { AmsErrorCode, DbTables, TokenExpiresInStr } from '../../config/types';
@@ -182,6 +182,22 @@ export class AuthUser extends AdvancedSQLModel {
     ],
   })
   public consents: any;
+
+  @prop({
+    parser: { resolver: dateParser() },
+    populatable: [
+      PopulateFrom.SERVICE, //
+      PopulateFrom.DB, //
+      PopulateFrom.PROFILE, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+    ],
+  })
+  public captchaSolveDate: Date;
 
   public constructor(data: any, context: Context) {
     super(data, context);
