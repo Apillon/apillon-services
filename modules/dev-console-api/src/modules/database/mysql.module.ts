@@ -25,9 +25,7 @@ import { AppEnvironment, env, getEnvSecrets, MySql } from '@apillon/lib';
               };
 
         try {
-          const mysql = new MySql(config);
-          await mysql.connect();
-          return mysql;
+          return new MySql(config);
         } catch (e) {
           console.error(e);
           throw e;

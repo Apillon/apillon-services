@@ -302,7 +302,7 @@ describe('Auth tests', () => {
     );
 
     expect(sqlRes1.length).toBe(1);
-    expect(sqlRes1[0].id).toBe(resp1.body.data.id);
+    expect(sqlRes1[0].user_uuid).toBe(resp1.body.data.user_uuid);
 
     const sqlRes2 = await stage.amsSql.paramExecute(
       `SELECT * from authUser WHERE user_uuid = @uuid`,
