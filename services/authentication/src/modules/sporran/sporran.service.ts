@@ -32,6 +32,7 @@ import {
   Attestation,
   ISubmitAttestation,
   Credential,
+  IAttestation,
 } from '@kiltprotocol/sdk-js';
 import {
   encryptionSigner,
@@ -356,6 +357,8 @@ export class SporranMicroservice {
 
   static async verifyCredential(event: { body: VerifyCredentialDto }, context) {
     console.log('Verifying Sporran credential ...');
+    await connect(env.KILT_NETWORK);
+    const api = ConfigService.get('api');
 
     const decryptionSenderKey = await Did.resolveKey(
       event.body.message.senderKeyUri as DidResourceUri,
@@ -388,37 +391,21 @@ export class SporranMicroservice {
 
     const message = JSON.parse(decryptedMessage);
     const presentation = message.body.content[0] as ICredentialPresentation;
+    let attestation: IAttestation;
 
-    const email = presentation.claim.contents.Email as string;
-    const identity = await new Identity({}, context).populateByUserEmail(
-      context,
-      email,
-    );
+    try {
+      await Credential.verifyPresentation(presentation);
 
-    if (!identity.exists()) {
-      await new Lmas().writeLog({
-        context: context,
-        logType: LogType.INFO,
-        message: 'VERIFICATION FAILED',
-        location: 'AUTHENTICATION-API/sporran/verify-identity',
-        service: ServiceName.AUTHENTICATION_API,
-      });
-      return { verified: false, error: 'Identity does not exist' };
+      attestation = Attestation.fromChain(
+        await api.query.attestation.attestations(presentation.rootHash),
+        presentation.rootHash,
+      );
+    } catch (error) {
+      return {
+        verified: false,
+        error: error.message.replace(/['"]+/g, ''),
+      };
     }
-
-    await Credential.verifyPresentation(presentation);
-
-    await connect(env.KILT_NETWORK);
-    const api = ConfigService.get('api');
-
-    const attestationChain = await api.query.attestation.attestations(
-      presentation.rootHash,
-    );
-
-    const attestation = Attestation.fromChain(
-      attestationChain,
-      presentation.rootHash,
-    );
 
     if (attestation.revoked) {
       await new Lmas().writeLog({
@@ -429,6 +416,8 @@ export class SporranMicroservice {
       });
       return { verified: false };
     }
+
+    const email = presentation.claim.contents.Email as string;
 
     const token = generateJwtToken(
       JwtTokenType.USER_AUTHENTICATION,
