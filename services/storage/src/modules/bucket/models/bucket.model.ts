@@ -68,6 +68,7 @@ export class Bucket extends ProjectAccessModel {
         code: StorageErrorCode.BUCKET_PROJECT_UUID_NOT_PRESENT,
       },
     ],
+    fakeValue: () => uuidV4(),
   })
   public project_uuid: string;
 

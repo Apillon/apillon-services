@@ -53,6 +53,7 @@ export class PublishToIPNSWorker extends BaseQueueWorker {
       ipns.ipnsName = publishedIpns.name;
       ipns.ipnsValue = publishedIpns.value;
       ipns.key = `${ipns.project_uuid}_${ipns.bucket_id}_${ipns.id}`;
+      ipns.cid = cid;
       ipns.status = SqlModelStatus.ACTIVE;
 
       await ipns.update(SerializeFor.UPDATE_DB);

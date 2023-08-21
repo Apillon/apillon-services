@@ -164,6 +164,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
           ipnsName: ipns.name,
           ipnsValue: ipns.value,
           key: targetBucket.bucket_uuid,
+          cid: targetBucket.CID,
         });
 
         await ipnsDbRecord.insert();

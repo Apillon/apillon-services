@@ -83,6 +83,7 @@ export class PrepareBaseUriForCollectionWorker extends BaseQueueWorker {
     ipnsDbRecord.ipnsName = publishedIpns.name;
     ipnsDbRecord.ipnsValue = publishedIpns.value;
     ipnsDbRecord.key = `${ipnsDbRecord.project_uuid}_${ipnsDbRecord.bucket_id}_${ipnsDbRecord.id}`;
+    ipnsDbRecord.cid = ipfsRes.cidV0;
     ipnsDbRecord.status = SqlModelStatus.ACTIVE;
 
     await ipnsDbRecord.update(SerializeFor.UPDATE_DB);

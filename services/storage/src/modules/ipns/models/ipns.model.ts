@@ -170,6 +170,20 @@ export class Ipns extends ProjectAccessModel {
   })
   public key: string;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public cid: string;
+
   public async populateByProjectAndName(
     project_uuid: string,
     name: string,

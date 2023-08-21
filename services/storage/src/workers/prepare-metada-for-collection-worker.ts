@@ -218,6 +218,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
     );
     ipnsDbRecord.ipnsValue = ipnsRecord.value;
     ipnsDbRecord.key = `${ipnsDbRecord.project_uuid}_${ipnsDbRecord.bucket_id}_${ipnsDbRecord.id}`;
+    ipnsDbRecord.cid = metadataFiles.wrappedDirCid;
     await ipnsDbRecord.update(SerializeFor.UPDATE_DB);
 
     console.info(`IPNS sucessfully published. Removing files from s3`);
