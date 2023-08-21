@@ -156,6 +156,20 @@ export class Ipns extends ProjectAccessModel {
   })
   public ipnsValue: string;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public key: string;
+
   public async populateByProjectAndName(
     project_uuid: string,
     name: string,
@@ -171,6 +185,27 @@ export class Ipns extends ProjectAccessModel {
       WHERE project_uuid = @project_uuid and name = @name AND status <> ${SqlModelStatus.DELETED};
       `,
       { project_uuid, name },
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return this.reset();
+    }
+  }
+
+  public async populateByKey(key: string): Promise<this> {
+    if (!key) {
+      throw new Error('key should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT *
+      FROM \`${this.tableName}\`
+      WHERE key = @key AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { key },
     );
 
     if (data && data.length) {

@@ -108,13 +108,13 @@ export class IpnsService {
         details: err,
         status: 500,
       }).writeToMonitor({
-        project_uuid: event.body.project_uuid,
+        project_uuid: b.project_uuid,
       });
     }
 
     await new Lmas().writeLog({
       context,
-      project_uuid: event.body.project_uuid,
+      project_uuid: b.project_uuid,
       logType: LogType.INFO,
       message: 'New ipns record created',
       location: 'BucketService/createBucket',

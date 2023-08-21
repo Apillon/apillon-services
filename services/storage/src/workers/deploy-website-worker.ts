@@ -25,6 +25,7 @@ import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { File } from '../modules/storage/models/file.model';
 import { CID } from 'ipfs-http-client';
 import { uploadItemsToIPFSRes } from '../modules/ipfs/interfaces/upload-items-to-ipfs-res.interface';
+import { Ipns } from '../modules/ipns/models/ipns.model';
 
 export class DeployWebsiteWorker extends BaseQueueWorker {
   public constructor(
@@ -150,6 +151,24 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         targetBucket.bucket_uuid,
       );
       targetBucket.IPNS = ipns.name;
+
+      //create ipns record if it doesn't exists yet
+      const ipnsDbRecord: Ipns = await new Ipns({}, this.context).populateByKey(
+        targetBucket.bucket_uuid,
+      );
+      if (!ipnsDbRecord.exists()) {
+        ipnsDbRecord.populate({
+          project_uuid: targetBucket.project_uuid,
+          bucket_id: targetBucket.id,
+          name: targetBucket.name + ' IPNS',
+          ipnsName: ipns.name,
+          ipnsValue: ipns.value,
+          key: targetBucket.bucket_uuid,
+        });
+
+        await ipnsDbRecord.insert();
+      }
+
       const conn = await this.context.mysql.start();
 
       try {
