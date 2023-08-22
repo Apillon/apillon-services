@@ -27,7 +27,11 @@ export function createRequestLogMiddleware(
       let gatewayEvent = null as any;
       let apiKey = null;
       // Routes for which logging is skipped
-      const skipRoutes = ['/hosting/domains'];
+      const skipRoutes = [
+        '/hosting/domains',
+        '/auth/session-token',
+        '/discord-bot/user-list',
+      ];
 
       try {
         gatewayEvent = JSON.parse(
