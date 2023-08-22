@@ -68,7 +68,7 @@ export class WalletDeposit extends AdvancedSQLModel {
       },
     ],
   })
-  public purchaseAmount: string;
+  public depositAmount: number;
 
   /**
    * Amount of tokens left in current deposit
@@ -81,6 +81,7 @@ export class WalletDeposit extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
     ],
     validators: [
       {
@@ -89,7 +90,7 @@ export class WalletDeposit extends AdvancedSQLModel {
       },
     ],
   })
-  public currentAmount: string;
+  public currentAmount: number;
 
   /**
    * Purchase price for a single token in fiat terms (at time of deposit)
@@ -104,18 +105,19 @@ export class WalletDeposit extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
     ],
   })
-  public pricePerToken: string;
+  public pricePerToken: number;
 
-  public async getOldestWithBalance() {
+  public async getOldestWithBalance(wallet_id: number) {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT *
-      FROM '${this.tableName}'
-      WHERE currentBalance > 0
-      ORDER BY createdDate ASC
+      FROM \`${this.tableName}\`
+      WHERE wallet_id = @wallet_id
+      AND currentAmount > 0
+      ORDER BY createTime ASC
       LIMIT 1;
       `,
-      {},
+      { wallet_id },
     );
 
     return data?.length
