@@ -17,7 +17,7 @@ export class RepublishIpnsWorker extends BaseQueueWorker {
   }
   async runPlanner(data?: any): Promise<any[]> {
     const ipnsRes = await this.context.mysql.paramExecute(`
-      SELECT ipnsName as ipns, replace(ipnsValue, '/ipfs/', '') as cid, key as keyName
+      SELECT \`ipnsName\` as ipns, replace(ipnsValue, '/ipfs/', '') as cid, \`key\` as keyName
       FROM ipns
       WHERE ipnsName IS NOT NULL
     `);
@@ -44,7 +44,7 @@ export class RepublishIpnsWorker extends BaseQueueWorker {
     return batchedData;
   }
   async runExecutor(data: any): Promise<any> {
-    console.log(data);
+    console.log('RepublishIpnsWorker data: ', data);
     for (const item of data) {
       await axios.post(
         `${env.STORAGE_IPFS_API}/name/publish?arg=${item.cid}&key=${item.keyName}`,
