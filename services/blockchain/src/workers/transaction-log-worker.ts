@@ -350,4 +350,20 @@ export class TransactionLogWorker extends BaseQueueWorker {
       );
     }
   }
+
+  private async processWalletDeposits(
+    wallet: Wallet,
+    transactions: TransactionLog[],
+  ) {
+    const deposits = transactions.filter((t) => t.action === TxAction.DEPOSIT);
+    for (const deposit of deposits) {
+      await new WalletDeposit({
+        wallet_id: wallet.id,
+        transactionHash: deposit.hash,
+        purchaseAmount: deposit.amount,
+        currentAmount: deposit.amount,
+        pricePerToken: await getTokenPriceEur(wallet.token),
+      }).insert();
+    }
+  }
 }

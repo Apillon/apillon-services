@@ -105,4 +105,21 @@ export class WalletDeposit extends AdvancedSQLModel {
     ],
   })
   public pricePerToken: string;
+
+  public async getOldestWithBalance() {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT *
+      FROM '${this.tableName}'
+      WHERE currentBalance > 0
+      ORDER BY createdDate ASC
+      LIMIT 1;
+      `,
+      {},
+    );
+
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
+  }
 }
