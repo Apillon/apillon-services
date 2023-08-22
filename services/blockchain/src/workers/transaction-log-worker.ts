@@ -351,19 +351,63 @@ export class TransactionLogWorker extends BaseQueueWorker {
     }
   }
 
-  private async processWalletDeposits(
+  private async processWalletDepositAmounts(
     wallet: Wallet,
     transactions: TransactionLog[],
   ) {
-    const deposits = transactions.filter((t) => t.action === TxAction.DEPOSIT);
-    for (const deposit of deposits) {
-      await new WalletDeposit({
-        wallet_id: wallet.id,
-        transactionHash: deposit.hash,
-        purchaseAmount: deposit.amount,
-        currentAmount: deposit.amount,
-        pricePerToken: await getTokenPriceEur(wallet.token),
-      }).insert();
+    // Process wallet deposits
+    for (const deposit of transactions.filter(
+      (t) => t.action === TxAction.DEPOSIT && t.wallet === wallet.address,
+    )) {
+      const amount = ethers.BigNumber.from(deposit.amount)
+        .div(ethers.BigNumber.from(10).pow(wallet.decimals))
+        .toNumber();
+      const walletDeposit = new WalletDeposit(
+        {
+          wallet_id: wallet.id,
+          transactionHash: deposit.hash,
+          depositAmount: amount,
+          currentAmount: amount,
+          pricePerToken: await getTokenPriceEur(wallet.token),
+        },
+        this.context,
+      );
+      try {
+        await walletDeposit.validate();
+      } catch (err) {
+        await walletDeposit.handle(err);
+        if (!walletDeposit.isValid()) {
+          throw new BlockchainValidationException(walletDeposit);
+        }
+      }
+      await walletDeposit.insert();
+    }
+
+    // Process wallet token spends
+    for (const spend of transactions.filter(
+      (t) => t.action === TxAction.TRANSACTION && t.wallet === wallet.address,
+    )) {
+      const availableDeposit = await new WalletDeposit(
+        {},
+        this.context,
+      ).getOldestWithBalance(wallet.id);
+      if (!availableDeposit.exists()) {
+        await this.writeEventLog(
+          {
+            logType: LogType.WARN,
+            message: `NO AVAILABLE DEPOSIT! ${formatWalletAddress(wallet)}`,
+            service: ServiceName.BLOCKCHAIN,
+            data: { wallet: wallet.address },
+          },
+          LogOutput.NOTIFY_ALERT,
+        );
+        continue;
+      }
+      availableDeposit.currentAmount -= ethers.BigNumber.from(spend.amount)
+        .div(ethers.BigNumber.from(10).pow(wallet.decimals))
+        .toNumber();
+      await availableDeposit.update();
+      // TODO: what if tx amount is more than currentAmount of deposit? Move to next deposit
     }
   }
 }
