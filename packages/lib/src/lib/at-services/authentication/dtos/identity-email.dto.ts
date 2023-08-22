@@ -41,7 +41,7 @@ export class AttestationEmailDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.IDENTITY_CAPTCHA_NOT_PRESENT,
+        code: ValidatorErrorCode.CAPTCHA_NOT_PRESENT,
       },
     ],
   })

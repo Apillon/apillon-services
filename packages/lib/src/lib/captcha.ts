@@ -22,15 +22,15 @@ export async function checkCaptcha(captchaToken: string): Promise<boolean> {
   await getEnvSecrets();
 
   if (!env.CAPTCHA_SECRET) {
-    throwCodeException(ValidatorErrorCode.IDENTITY_CAPTCHA_NOT_CONFIGURED);
+    throwCodeException(ValidatorErrorCode.CAPTCHA_NOT_CONFIGURED);
   }
 
   if (!captchaToken) {
-    throwCodeException(ValidatorErrorCode.IDENTITY_CAPTCHA_NOT_PRESENT);
+    throwCodeException(ValidatorErrorCode.CAPTCHA_NOT_PRESENT);
   }
 
   if (!(await verifyCaptcha(captchaToken))) {
-    throwCodeException(ValidatorErrorCode.IDENTITY_CAPTCHA_INVALID);
+    throwCodeException(ValidatorErrorCode.CAPTCHA_INVALID);
   }
 
   return true;
