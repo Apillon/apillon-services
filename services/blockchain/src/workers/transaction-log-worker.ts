@@ -347,7 +347,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
     }
   }
 
-  private async processWalletDepositAmounts(
+  public async processWalletDepositAmounts(
     wallet: Wallet,
     transactions: TransactionLog[],
   ) {

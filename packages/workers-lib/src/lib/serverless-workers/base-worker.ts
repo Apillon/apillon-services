@@ -93,7 +93,7 @@ export abstract class BaseWorker extends ServerlessWorker {
       ].includes(output)
     ) {
       await new Lmas().sendAdminAlert(
-        `[${this.workerName}] ${options.message}`,
+        `[${this.workerName}] ${options.message} ${options.err}`,
         options.service as any,
         notifyType[output],
       );

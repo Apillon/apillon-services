@@ -40,6 +40,7 @@ describe('Transaction Log Worker unit test', () => {
         chainType: ChainType.SUBSTRATE,
         seed: '1',
         minBalance: '5000000000000',
+        decimals: 6,
       },
       stage.context,
     );
@@ -63,6 +64,7 @@ describe('Transaction Log Worker unit test', () => {
         chainType: ChainType.EVM,
         seed: '2',
         minBalance: '14549118925859030048',
+        decimals: 6,
       },
       stage.context,
     );
@@ -85,6 +87,7 @@ describe('Transaction Log Worker unit test', () => {
         chain: EvmChain.ASTAR,
         chainType: ChainType.EVM,
         seed: '3',
+        decimals: 6,
       },
       stage.context,
     );
@@ -107,6 +110,7 @@ describe('Transaction Log Worker unit test', () => {
         chain: SubstrateChain.KILT,
         chainType: ChainType.SUBSTRATE,
         seed: '4',
+        decimals: 6,
       },
       stage.context,
     );
