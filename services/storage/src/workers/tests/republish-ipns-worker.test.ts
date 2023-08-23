@@ -3,19 +3,18 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-
-import { v4 as uuidV4 } from 'uuid';
 import { Stage, releaseStage, setupTest } from '../../../test/setup';
 import { Bucket } from '../../modules/bucket/models/bucket.model';
+import { IpnsService } from '../../modules/ipns/ipns.service';
 import { Ipns } from '../../modules/ipns/models/ipns.model';
 import { RepublishIpnsWorker } from '../republish-ipns-worker';
-import { PublishToIPNSWorker } from '../publish-to-ipns-worker';
+import { IPFSService } from '../../modules/ipfs/ipfs.service';
+import { SerializeFor, SqlModelStatus } from '@apillon/lib';
 
 describe('RepublishIpnsWorker unit test', () => {
   let stage: Stage;
 
   let republishWorker: RepublishIpnsWorker;
-  let publishIpnsWorker: PublishToIPNSWorker;
   const batchLimit = 200;
   let ipns: Ipns;
 
@@ -35,21 +34,6 @@ describe('RepublishIpnsWorker unit test', () => {
       republishWorkerDefinition,
       stage.context,
       QueueWorkerType.PLANNER,
-    );
-
-    const publishToIpnsWorkerDefinition = new WorkerDefinition(
-      {
-        type: ServiceDefinitionType.SQS,
-        config: { region: 'test' },
-        params: { FunctionName: 'test' },
-      },
-      'test-publish-to-ipns-worker',
-      { parameters: { batchLimit } },
-    );
-    publishIpnsWorker = new PublishToIPNSWorker(
-      publishToIpnsWorkerDefinition,
-      stage.context,
-      QueueWorkerType.EXECUTOR,
     );
 
     //Insert data
@@ -72,11 +56,19 @@ describe('RepublishIpnsWorker unit test', () => {
     await releaseStage(stage);
   });
 
-  test('Test publish ipns worker', async () => {
-    await publishIpnsWorker.runExecutor({
-      cid: ipns.cid,
-      ipns_id: ipns.id,
-    });
+  test('Test publish ipns', async () => {
+    const publishedIpns = await IPFSService.publishToIPNS(
+      'QmRwVSB8Bfr6E5hgw78j12mu8Sr8K8CAqJqpjyaCzSPLm5',
+      `${ipns.project_uuid}_${ipns.bucket_id}_${ipns.id}`,
+    );
+
+    ipns.ipnsName = publishedIpns.name;
+    ipns.ipnsValue = publishedIpns.value;
+    ipns.key = `${ipns.project_uuid}_${ipns.bucket_id}_${ipns.id}`;
+    ipns.cid = 'QmRwVSB8Bfr6E5hgw78j12mu8Sr8K8CAqJqpjyaCzSPLm5';
+    ipns.status = SqlModelStatus.ACTIVE;
+
+    await ipns.update(SerializeFor.UPDATE_DB);
 
     ipns = await new Ipns({}, stage.context).populateById(ipns.id);
     expect(ipns.ipnsName).toBeTruthy();
