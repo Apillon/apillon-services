@@ -244,7 +244,7 @@ export class NftTransaction {
     const nftContract: Contract = new Contract(contractAddress, nftContractAbi);
 
     const txData: PopulatedTransaction =
-      await nftContract.populateTransaction.burn(tokenId);
+      await nftContract.populateTransaction.burn(tokenId, constants.MaxUint256);
 
     return {
       to: contractAddress,
