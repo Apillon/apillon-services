@@ -66,8 +66,12 @@ export async function getTokenPriceEur(token: string) {
     GLMR: 'moonbeam',
   };
   const networkName = networkTokenMap[token];
-  const { data } = await axios.get(
-    `https://api.coingecko.com/api/v3/simple/price/?ids=${networkName}&vs_currencies=EUR`,
-  );
-  return data?.[networkName]?.eur;
+  try {
+    const { data } = await axios.get(
+      `https://api.coingecko.com/api/v3/simple/price/?ids=${networkName}&vs_currencies=EUR`,
+    );
+    return data?.[networkName]?.eur;
+  } catch (err) {
+    return 0;
+  }
 }
