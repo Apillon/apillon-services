@@ -19,6 +19,7 @@ export abstract class BaseWorker extends ServerlessWorker {
       service: ServiceName | string;
       data?: any;
       err?: Error;
+      project_uuid?: string;
     },
     output = LogOutput.EVENT_INFO,
   ) {
@@ -74,13 +75,14 @@ export abstract class BaseWorker extends ServerlessWorker {
         location: this.workerName,
         service: options.service,
         data: options.data,
+        project_uuid: options.project_uuid,
       });
     }
 
     const notifyType = {
-      [LogOutput.NOTIFY_ALERT]: 'alert',
-      [LogOutput.NOTIFY_WARN]: 'warning',
-      [LogOutput.NOTIFY_MSG]: 'message',
+      [LogOutput.NOTIFY_ALERT]: LogType.ALERT,
+      [LogOutput.NOTIFY_WARN]: LogType.WARN,
+      [LogOutput.NOTIFY_MSG]: LogType.MSG,
     };
 
     if (

@@ -1,11 +1,7 @@
 import { booleanParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
-  AdvancedSQLModel,
-  CodeException,
   Context,
-  DefaultUserRole,
-  ForbiddenErrorCodes,
   getQueryParams,
   PopulateFrom,
   prop,
@@ -14,6 +10,7 @@ import {
   SqlModelStatus,
   ApiKeyQueryFilterDto,
   ApiKeyRoleBaseDto,
+  ProjectAccessModel,
 } from '@apillon/lib';
 import { DbTables, AmsErrorCode } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
@@ -21,7 +18,7 @@ import { ApiKeyRole } from '../../role/models/api-key-role.model';
 import * as bcrypt from 'bcryptjs';
 import { AmsValidationException } from '../../../lib/exceptions';
 
-export class ApiKey extends AdvancedSQLModel {
+export class ApiKey extends ProjectAccessModel {
   public readonly tableName = DbTables.API_KEY;
 
   public constructor(data: any, context: Context) {
@@ -146,45 +143,6 @@ export class ApiKey extends AdvancedSQLModel {
   })
   public apiKeyRoles: ApiKeyRole[];
 
-  public canAccess(context: ServiceContext) {
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_USER,
-          DefaultUserRole.ADMIN,
-        ],
-        this.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to access this record',
-      });
-    }
-  }
-
-  public canModify(context: ServiceContext) {
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.ADMIN,
-        ],
-        this.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to modify this record',
-      });
-    }
-  }
-
   public verifyApiKeySecret(apiKeySecret: string) {
     return (
       typeof apiKeySecret === 'string' &&
@@ -246,7 +204,7 @@ export class ApiKey extends AdvancedSQLModel {
       `
       SELECT * 
       FROM \`${this.tableName}\`
-      WHERE apiKey = @apiKey AND status <> ${SqlModelStatus.DELETED};
+      WHERE apiKey = @apiKey AND status = ${SqlModelStatus.ACTIVE};
       `,
       { apiKey },
     );
@@ -263,7 +221,7 @@ export class ApiKey extends AdvancedSQLModel {
       `
       SELECT * 
       FROM \`${DbTables.API_KEY_ROLE}\`
-      WHERE apiKey_id = @id AND status <> ${SqlModelStatus.DELETED};
+      WHERE apiKey_id = @id AND status = ${SqlModelStatus.ACTIVE};
       `,
       { id: this.id },
     );
@@ -327,5 +285,27 @@ export class ApiKey extends AdvancedSQLModel {
     );
 
     return data[0].numOfApiKeys;
+  }
+
+  /**
+   * Sets all api keys in project to blocked/active
+   * @param project_uuid
+   * @param block true if block, false if unblock
+   * @returns
+   */
+  public async updateApiKeysInProjects(
+    project_uuids: string[],
+    block: boolean,
+  ) {
+    await this.getContext().mysql.paramExecute(
+      `
+      UPDATE \`${this.tableName}\`
+      SET status = ${block ? SqlModelStatus.BLOCKED : SqlModelStatus.ACTIVE}
+      WHERE project_uuid IN (@project_uuids)
+      AND status = ${block ? SqlModelStatus.ACTIVE : SqlModelStatus.BLOCKED};
+      `,
+      { project_uuids },
+    );
+    return true;
   }
 }

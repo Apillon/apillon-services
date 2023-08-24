@@ -5,7 +5,7 @@ import {
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { releaseStage, setupTest, Stage } from '../../../test/setup';
-import { Wallet } from '../../common/models/wallet';
+import { Wallet } from '../../modules/wallet/wallet.model';
 import { DbTables } from '../../config/types';
 import { TransactionLogWorker } from '../transaction-log-worker';
 
@@ -23,8 +23,11 @@ describe('Transaction Log Worker unit test', () => {
   let astarWallet: Wallet;
   let astarLogCount: number;
 
+  let kiltWallet: Wallet;
+  let kiltLogCount: number;
+
   let worker: TransactionLogWorker;
-  const batchLimit = 100;
+  const batchLimit = 200;
 
   beforeAll(async () => {
     stage = await setupTest();
@@ -97,6 +100,28 @@ describe('Transaction Log Worker unit test', () => {
       stage.context,
     ).insert();
 
+    kiltWallet = new Wallet(
+      {
+        status: 5,
+        address: '4sAqndzGzNYtrdAWhSSnaGptrGY1TSJ99kf5ZRwAzcPUbaTN',
+        chain: SubstrateChain.KILT,
+        chainType: ChainType.SUBSTRATE,
+        seed: '4',
+      },
+      stage.context,
+    );
+
+    await kiltWallet.insert();
+
+    await new Endpoint(
+      {
+        url: 'wss://spiritnet.kilt.io/parachain-public-ws',
+        chain: SubstrateChain.KILT,
+        chainType: ChainType.SUBSTRATE,
+      },
+      stage.context,
+    ).insert();
+
     const txQSql = await fs.readFile('./test/insert_tx_q.sql');
     const queries = txQSql.toString().split('\n');
     for (const q of queries) {
@@ -143,12 +168,13 @@ describe('Transaction Log Worker unit test', () => {
 
   test('Test Crust Wallet Logging', async () => {
     const data = await worker.runPlanner();
-    expect(data.length).toBe(3);
+    expect(data.length).toBe(4);
 
     const walletData = data.find(
       (x) => x.wallet.address === crustWallet.address,
     );
     expect(walletData.wallet.address).toBe(crustWallet.address);
+    expect(walletData.wallet.id).toBe(crustWallet.id);
 
     await worker.runExecutor(walletData);
 
@@ -168,12 +194,13 @@ describe('Transaction Log Worker unit test', () => {
   });
   test('Test Crust Wallet Logging 2nd run', async () => {
     const data = await worker.runPlanner();
-    expect(data.length).toBe(3);
+    expect(data.length).toBe(4);
 
     const walletData = data.find(
       (x) => x.wallet.address === crustWallet.address,
     );
     expect(walletData.wallet.address).toBe(crustWallet.address);
+    expect(walletData.wallet.id).toBe(crustWallet.id);
 
     await worker.runExecutor(walletData);
 
@@ -192,10 +219,12 @@ describe('Transaction Log Worker unit test', () => {
 
   test('Test Moonbase Wallet Logging', async () => {
     const data = await worker.runPlanner();
-    expect(data.length).toBe(3);
+    expect(data.length).toBe(4);
 
     const walletData = data.find(
-      (x) => x.wallet.address === moonbaseWallet.address.toLowerCase(),
+      (x) =>
+        x.wallet.address === moonbaseWallet.address.toLowerCase() ||
+        x.wallet.address === moonbaseWallet.address,
     );
     expect(walletData.wallet.address).toBe(
       moonbaseWallet.address.toLowerCase(),
@@ -219,10 +248,12 @@ describe('Transaction Log Worker unit test', () => {
   });
   test('Test Moonbase Wallet Logging 2nd run', async () => {
     const data = await worker.runPlanner();
-    expect(data.length).toBe(3);
+    expect(data.length).toBe(4);
 
     const walletData = data.find(
-      (x) => x.wallet.address === moonbaseWallet.address.toLowerCase(),
+      (x) =>
+        x.wallet.address === moonbaseWallet.address.toLowerCase() ||
+        x.wallet.address === moonbaseWallet.address,
     );
     expect(walletData.wallet.address).toBe(
       moonbaseWallet.address.toLowerCase(),
@@ -245,12 +276,17 @@ describe('Transaction Log Worker unit test', () => {
 
   test('Test Astar Wallet Logging', async () => {
     const data = await worker.runPlanner();
-    expect(data.length).toBe(3);
+    expect(data.length).toBe(4);
 
     const walletData = data.find(
-      (x) => x.wallet.address === astarWallet.address.toLowerCase(),
+      (x) =>
+        x.wallet.address === astarWallet.address.toLowerCase() ||
+        x.wallet.address === astarWallet.address,
     );
-    expect(walletData.wallet.address).toBe(astarWallet.address.toLowerCase());
+    expect(
+      walletData.wallet.address === astarWallet.address.toLowerCase() ||
+        walletData.wallet.address === astarWallet.address,
+    ).toBeTruthy();
 
     await worker.runExecutor(walletData);
 
@@ -267,5 +303,45 @@ describe('Transaction Log Worker unit test', () => {
     expect(astarLogCount).toBeGreaterThan(0);
     expect(astarLogCount).toBeLessThanOrEqual(batchLimit);
     console.log(astarLogCount);
+  });
+
+  test('Test Kilt Wallet Logging', async () => {
+    const data = await worker.runPlanner();
+    expect(data.length).toBe(4);
+
+    const walletData = data.find(
+      (x) => x.wallet.address === kiltWallet.address,
+    );
+    expect(walletData.wallet.address === kiltWallet.address).toBeTruthy();
+
+    await worker.runExecutor(walletData);
+
+    const logs = await stage.db.paramExecute(
+      `
+      SELECT COUNT(*) AS cnt 
+      FROM \`${DbTables.TRANSACTION_LOG}\`
+      WHERE wallet = @address
+      `,
+      { address: kiltWallet.address },
+    );
+
+    kiltLogCount = logs[0].cnt;
+    expect(kiltLogCount).toBeGreaterThan(0);
+    expect(kiltLogCount).toBeLessThanOrEqual(batchLimit);
+    console.log(kiltLogCount);
+
+    const fees = await stage.db.paramExecute(
+      `
+      SELECT COUNT(*) AS cnt 
+      FROM \`${DbTables.TRANSACTION_LOG}\`
+      WHERE wallet = @address
+      AND fee = 0
+      AND status = 5
+      `,
+      { address: kiltWallet.address },
+    );
+
+    console.log(fees[0].cnt);
+    expect(fees[0].cnt).toBe(0);
   });
 });

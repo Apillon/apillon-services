@@ -1,10 +1,7 @@
 import {
-  AdvancedSQLModel,
-  CodeException,
+  ProjectAccessModel,
   Context,
-  DefaultUserRole,
   env,
-  ForbiddenErrorCodes,
   getQueryParams,
   Lmas,
   LogType,
@@ -25,7 +22,7 @@ import { Bucket } from '../../bucket/models/bucket.model';
 import { v4 as uuidV4 } from 'uuid';
 import { StorageValidationException } from '../../../lib/exceptions';
 
-export class Website extends AdvancedSQLModel {
+export class Website extends ProjectAccessModel {
   public readonly tableName = DbTables.WEBSITE;
 
   public constructor(data: any, context: Context) {
@@ -290,6 +287,66 @@ export class Website extends AdvancedSQLModel {
     ],
     validators: [],
   })
+  public w3StagingLink: string;
+
+  @prop({
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public w3ProductionLink: string;
+
+  @prop({
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public ipnsStaging: string;
+
+  @prop({
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public ipnsProduction: string;
+
+  @prop({
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
   public bucket: Bucket;
 
   @prop({
@@ -321,45 +378,6 @@ export class Website extends AdvancedSQLModel {
     validators: [],
   })
   public productionBucket: Bucket;
-
-  public canAccess(context: ServiceContext) {
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_USER,
-          DefaultUserRole.ADMIN,
-        ],
-        this.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to access this record',
-      });
-    }
-  }
-
-  public canModify(context: ServiceContext) {
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.ADMIN,
-        ],
-        this.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to modify this record',
-      });
-    }
-  }
 
   public async populateById(
     id: number | string,
@@ -499,16 +517,14 @@ export class Website extends AdvancedSQLModel {
 
   /**
    * Function to get count of active web pages inside project
-   * @param project_uuid
-   * @param bucketType
    * @returns
    */
-  public async getNumOfWebsites() {
+  public async getNumOfWebsites(): Promise<number> {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT COUNT(*) as numOfPages
       FROM \`${this.tableName}\`
-      WHERE project_uuid = @project_uuid 
+      WHERE project_uuid = @project_uuid
       AND status <> ${SqlModelStatus.DELETED};
       `,
       { project_uuid: this.project_uuid },
@@ -564,6 +580,9 @@ export class Website extends AdvancedSQLModel {
         this.ipnsStagingLink =
           env.STORAGE_IPFS_GATEWAY.replace('/ipfs/', '/ipns/') +
           this.stagingBucket.IPNS;
+
+        this.w3StagingLink = `https://${this.stagingBucket.IPNS}.ipns.web3approved.com/`;
+        this.ipnsStaging = this.stagingBucket.IPNS;
       }
     }
     if (this.productionBucket_id) {
@@ -575,6 +594,8 @@ export class Website extends AdvancedSQLModel {
         this.ipnsProductionLink =
           env.STORAGE_IPFS_GATEWAY.replace('/ipfs/', '/ipns/') +
           this.productionBucket.IPNS;
+        this.w3ProductionLink = `https://${this.productionBucket.IPNS}.ipns.web3approved.com/`;
+        this.ipnsProduction = this.productionBucket.IPNS;
       }
     }
   }

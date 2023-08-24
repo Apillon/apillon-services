@@ -2,19 +2,17 @@
 import { prop } from '@rawmodel/core';
 import { stringParser, integerParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
-
 import {
-  AdvancedSQLModel,
   CodeException,
-  DefaultUserRole,
-  ForbiddenErrorCodes,
   getQueryParams,
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
+  DefaultUserRole,
+  ForbiddenErrorCodes,
+  AdvancedSQLModel,
+  selectAndCountQuery,
 } from '@apillon/lib';
-import { selectAndCountQuery } from '@apillon/lib';
-
 import { DevConsoleApiContext } from '../../../context';
 import {
   DbTables,
@@ -154,6 +152,11 @@ export class Service extends AdvancedSQLModel {
    * @param context
    */
   public async canAccess(context: DevConsoleApiContext) {
+    // Admins are allowed to access items on any project
+    if (context.user?.userRoles.includes(DefaultUserRole.ADMIN)) {
+      return true;
+    }
+
     const project = await new Project({}, context).populateById(
       this.project_id,
     );
@@ -170,7 +173,7 @@ export class Service extends AdvancedSQLModel {
     ) {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
-        status: HttpStatus.FORBIDDEN,
+        status: 403,
         errorMessage: 'Insufficient permissions to access this record',
       });
     }
@@ -195,10 +198,11 @@ export class Service extends AdvancedSQLModel {
     ) {
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
-        status: HttpStatus.FORBIDDEN,
+        status: 403,
         errorMessage: 'Insufficient permissions to modify this record',
       });
     }
+    return true;
   }
 
   public async populateByUUID(uuid: string): Promise<this> {

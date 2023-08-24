@@ -13,8 +13,8 @@ import {
   AuthenticateUserMiddleware,
   createRequestLogMiddleware,
 } from '@apillon/modules-lib';
+import { ApiName } from '@apillon/lib';
 import { ApiKeyModule } from './modules/api-key/api-key.module';
-import { env } from '@apillon/lib';
 import { NftsModule } from './modules/nfts/nfts.module';
 import { IpnsModule } from './modules/storage/ipns/ipns.module';
 import { ReferralModule } from './modules/referral/referral.module';
@@ -57,7 +57,7 @@ export class AppModule {
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer
-      .apply(createRequestLogMiddleware(`dev-console-api (${env.APP_ENV})`))
+      .apply(createRequestLogMiddleware(ApiName.DEV_CONSOLE_API))
       .exclude(
         { path: '*', method: RequestMethod.HEAD },
         { path: '*', method: RequestMethod.OPTIONS },

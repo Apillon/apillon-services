@@ -185,7 +185,7 @@ export class User extends AdvancedSQLModel {
     return data?.length ? data[0] : data;
   }
 
-  public async listAllUsers(filter: BaseQueryFilter) {
+  public async listUsers(filter: BaseQueryFilter) {
     const fieldMap = { id: 'u.id' };
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
@@ -198,10 +198,15 @@ export class User extends AdvancedSQLModel {
         'u',
       )}, COUNT(DISTINCT p.id) AS totalProjects, COUNT(s.id) AS totalServices`,
       qFrom: `FROM \`${DbTables.USER}\` u
-        JOIN project_user pu ON u.id = pu.user_id
-        JOIN project p ON pu.project_id = p.id
+        LEFT JOIN project_user pu ON u.id = pu.user_id
+        LEFT JOIN project p ON pu.project_id = p.id
         LEFT JOIN service s ON p.id = s.project_id
-        WHERE (@search IS null OR u.name LIKE CONCAT('%', @search, '%'))
+        WHERE (
+          @search IS null
+          OR u.name LIKE CONCAT('%', @search, '%')
+          OR u.email LIKE CONCAT('%', @search, '%')
+          OR u.user_uuid = @search
+        )
         AND u.status <> ${SqlModelStatus.DELETED}
         `,
       qFilter: `

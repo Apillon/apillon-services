@@ -1,14 +1,14 @@
 import {
-  AdvancedSQLModel,
-  CodeException,
   Context,
-  DefaultUserRole,
-  ForbiddenErrorCodes,
   PopulateFrom,
   presenceValidator,
   prop,
   SerializeFor,
   SqlModelStatus,
+  DefaultUserRole,
+  CodeException,
+  ForbiddenErrorCodes,
+  AdvancedSQLModel,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { DbTables, StorageErrorCode } from '../../../config/types';
@@ -127,6 +127,11 @@ export class BucketWebhook extends AdvancedSQLModel {
   public param2: string;
 
   public async canAccess(context: ServiceContext) {
+    // Admins are allowed to access items on any project
+    if (context.user?.userRoles.includes(DefaultUserRole.ADMIN)) {
+      return true;
+    }
+
     const b: Bucket = await new Bucket({}, context).populateById(
       this.bucket_id,
     );
@@ -169,6 +174,7 @@ export class BucketWebhook extends AdvancedSQLModel {
         errorMessage: 'Insufficient permissions to modify this record',
       });
     }
+    return true;
   }
 
   public async populateByBucketId(bucket_id: number): Promise<this> {

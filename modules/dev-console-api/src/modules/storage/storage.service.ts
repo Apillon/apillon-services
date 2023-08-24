@@ -134,4 +134,13 @@ export class StorageService {
     return (await new StorageMicroservice(context).cancelFileDeletion({ id }))
       .data;
   }
+
+  async testCrustProvider(
+    context: DevConsoleApiContext,
+    providerEndpoint: string,
+  ) {
+    return (
+      await new StorageMicroservice(context).testCrustProvider(providerEndpoint)
+    ).data;
+  }
 }

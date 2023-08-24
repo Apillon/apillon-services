@@ -1,11 +1,15 @@
 import {
   DefaultUserRole,
-  GetQuotasDto,
   ValidateFor,
   CreateQuotaOverrideDto,
   QuotaOverrideDto,
   PopulateFrom,
   BaseQueryFilter,
+  CacheKeyPrefix,
+  QuotaDto,
+  QuotaType,
+  ApiKeyQueryFilterDto,
+  GetQuotaDto,
 } from '@apillon/lib';
 import {
   Body,
@@ -17,24 +21,32 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
+import {
+  CacheInterceptor,
+  Ctx,
+  Permissions,
+  Validation,
+} from '@apillon/modules-lib';
 import { AuthGuard } from '../../../guards/auth.guard';
 import { ProjectService } from './project.service';
 import { DevConsoleApiContext } from '../../../context';
 import { ValidationGuard } from '../../../guards/validation.guard';
-import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
 import { UUID } from 'crypto';
+import { BaseQueryFilterValidator } from '../../../decorators/base-query-filter-validator';
+import { Cache } from '@apillon/modules-lib';
 
 @Controller('admin-panel/projects')
 @Permissions({ role: DefaultUserRole.ADMIN })
 @UseGuards(AuthGuard)
+@UseInterceptors(CacheInterceptor)
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
   @Get()
-  @Validation({ dto: BaseQueryFilter, validateFor: ValidateFor.QUERY })
-  @UseGuards(ValidationGuard)
+  @BaseQueryFilterValidator()
+  @Cache({ keyPrefix: CacheKeyPrefix.ADMIN_PROJECT_LIST })
   async listProjects(
     @Ctx() context: DevConsoleApiContext,
     @Query() query: BaseQueryFilter,
@@ -51,14 +63,19 @@ export class ProjectController {
   }
 
   @Get(':project_uuid/quotas')
-  @Validation({ dto: GetQuotasDto, validateFor: ValidateFor.QUERY })
+  @Validation({
+    dto: GetQuotaDto,
+    validateFor: ValidateFor.QUERY,
+    skipValidation: true,
+  })
   @UseGuards(ValidationGuard)
   async getProjectQuotas(
     @Ctx() context: DevConsoleApiContext,
     @Param('project_uuid', ParseUUIDPipe) project_uuid: UUID,
-    @Query() query: GetQuotasDto,
+    @Query() query: GetQuotaDto,
   ): Promise<QuotaDto[]> {
     query.project_uuid = project_uuid;
+    query.types = [QuotaType.FOR_PROJECT, QuotaType.FOR_PROJECT_AND_OBJECT];
     return this.projectService.getProjectQuotas(context, query);
   }
 
@@ -92,5 +109,23 @@ export class ProjectController {
   ): Promise<QuotaDto[]> {
     data.project_uuid = project_uuid;
     return this.projectService.deleteProjectQuota(context, data);
+  }
+
+  @Get(':project_uuid/api-keys')
+  @Validation({
+    dto: ApiKeyQueryFilterDto,
+    validateFor: ValidateFor.QUERY,
+    populateFrom: PopulateFrom.ADMIN,
+    // Skip validation since project_uuuid param comes from URL path, not query
+    skipValidation: true,
+  })
+  @UseGuards(ValidationGuard)
+  async getProjectApiKeys(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('project_uuid', ParseUUIDPipe) project_uuid: UUID,
+    @Query() query: ApiKeyQueryFilterDto,
+  ) {
+    query.populate({ project_uuid });
+    return this.projectService.getProjectApiKeys(context, query);
   }
 }

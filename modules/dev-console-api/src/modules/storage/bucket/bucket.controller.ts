@@ -9,6 +9,7 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   BucketQueryFilter,
@@ -18,24 +19,30 @@ import {
   DefaultPermission,
   DefaultUserRole,
   ValidateFor,
+  CacheKeyPrefix,
+  CacheKeyTTL,
+  RoleGroup,
 } from '@apillon/lib';
+import { CacheByProject } from '@apillon/modules-lib';
 import { DevConsoleApiContext } from '../../../context';
-import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
+import {
+  Ctx,
+  Permissions,
+  Validation,
+  CacheInterceptor,
+} from '@apillon/modules-lib';
 import { ValidationGuard } from '../../../guards/validation.guard';
 import { BucketService } from './bucket.service';
 import { AuthGuard } from '../../../guards/auth.guard';
 
 @Controller('buckets')
 @Permissions({ permission: DefaultPermission.STORAGE })
+@UseInterceptors(CacheInterceptor)
 export class BucketController {
   constructor(private bucketService: BucketService) {}
 
   @Get(':bucket_id/webhook')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async getBucketWebhook(
     @Ctx() context: DevConsoleApiContext,
@@ -116,13 +123,13 @@ export class BucketController {
   }
 
   @Get()
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: BucketQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
+  @CacheByProject({
+    keyPrefix: CacheKeyPrefix.BUCKET_LIST,
+    ttl: CacheKeyTTL.EXTRA_LONG,
+  })
   async getBucketList(
     @Ctx() context: DevConsoleApiContext,
     @Query() query: BucketQueryFilter,
@@ -131,11 +138,7 @@ export class BucketController {
   }
 
   @Get(':id')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
+  @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async getBucket(
     @Ctx() context: DevConsoleApiContext,

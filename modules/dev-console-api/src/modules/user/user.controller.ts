@@ -181,7 +181,7 @@ export class UserController {
   async userConsents(@Body() body: any, @Ctx() context: DevConsoleApiContext) {
     return await this.userService.setUserConsents(body, context);
   }
-  
+
   @Get('/oauth-session')
   getOauthSession() {
     return this.userService.getOauthSession();

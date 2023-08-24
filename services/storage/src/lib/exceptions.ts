@@ -24,3 +24,9 @@ export class StorageValidationException extends ValidationException {
     super(model, StorageErrorCode);
   }
 }
+
+export class StorageNotFoundException extends StorageCodeException {
+  constructor(code: StorageErrorCode = StorageErrorCode.BUCKET_NOT_FOUND) {
+    super({ code, status: 404 });
+  }
+}

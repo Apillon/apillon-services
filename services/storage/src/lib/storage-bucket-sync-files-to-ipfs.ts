@@ -89,6 +89,7 @@ export async function storageBucketSyncFilesToIPFS(
           fileUploadRequests: files,
           wrapWithDirectory: wrapWithDirectory,
           wrappingDirectoryPath,
+          project_uuid: bucket.project_uuid,
         },
         context,
       );
@@ -108,7 +109,7 @@ export async function storageBucketSyncFilesToIPFS(
       await new Lmas().sendAdminAlert(
         `[Storage]: Error uploading to IPFS!`,
         ServiceName.STORAGE,
-        'alert',
+        LogType.ALERT,
       );
 
       throw err;
@@ -284,7 +285,7 @@ export async function storageBucketSyncFilesToIPFS(
         let ipfsRes = undefined;
         try {
           ipfsRes = await IPFSService.uploadFURToIPFSFromS3(
-            { fileUploadRequest: file },
+            { fileUploadRequest: file, project_uuid: bucket.project_uuid },
             context,
           );
         } catch (err) {
@@ -317,7 +318,7 @@ export async function storageBucketSyncFilesToIPFS(
             await new Lmas().sendAdminAlert(
               `[Storage]: Error uploading to IPFS!`,
               ServiceName.STORAGE,
-              'alert',
+              LogType.ALERT,
             );
             throw err;
           }

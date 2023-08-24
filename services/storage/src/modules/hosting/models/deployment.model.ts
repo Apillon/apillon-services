@@ -1,10 +1,6 @@
 import {
-  AdvancedSQLModel,
-  CodeException,
   Context,
-  DefaultUserRole,
   DeploymentQueryFilter,
-  ForbiddenErrorCodes,
   getQueryParams,
   PopulateFrom,
   presenceValidator,
@@ -12,6 +8,10 @@ import {
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
+  DefaultUserRole,
+  CodeException,
+  ForbiddenErrorCodes,
+  AdvancedSQLModel,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
@@ -180,6 +180,11 @@ export class Deployment extends AdvancedSQLModel {
   public number: number;
 
   public async canAccess(context: ServiceContext) {
+    // Admins are allowed to access items on any project
+    if (context.user?.userRoles.includes(DefaultUserRole.ADMIN)) {
+      return true;
+    }
+
     const website: Website = await new Website({}, context).populateById(
       this.website_id,
     );

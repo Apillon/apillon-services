@@ -6,12 +6,18 @@ import {
   CodeException,
   CreateQuotaOverrideDto,
   QuotaOverrideDto,
-  GetQuotasDto,
   Scs,
+  StorageMicroservice,
+  NftsMicroservice,
+  QuotaDto,
+  ApiKeyQueryFilterDto,
+  Ams,
 } from '@apillon/lib';
 import { ResourceNotFoundErrorCode } from '../../../config/types';
-import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
 import { UUID } from 'crypto';
+import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
+import { Lmas } from '@apillon/lib';
+import { GetQuotaDto } from '@apillon/lib';
 
 @Injectable()
 export class ProjectService {
@@ -37,7 +43,14 @@ export class ProjectService {
   async getProject(
     context: DevConsoleApiContext,
     project_uuid: UUID,
-  ): Promise<Project> {
+  ): Promise<
+    Project & {
+      totalBucketSize: number;
+      numOfWebsites: number;
+      numOfBuckets: number;
+      numOfCollections: number;
+    }
+  > {
     const project: Project = await new Project({}, context).populateByUUID(
       project_uuid,
     );
@@ -48,20 +61,31 @@ export class ProjectService {
         errorCodes: ResourceNotFoundErrorCode,
       });
     }
+    const { data: projectStorageDetails } = await new StorageMicroservice(
+      context,
+    ).getProjectStorageDetails(project_uuid);
 
-    return project;
+    const { data: projectCollectionDetails } = await new NftsMicroservice(
+      context,
+    ).getProjectCollectionDetails(project_uuid);
+
+    return {
+      ...project,
+      ...projectStorageDetails,
+      ...projectCollectionDetails,
+    };
   }
 
   /**
    * Retreives a list of all quotas for a project
    * @async
    * @param {DevConsoleApiContext} context
-   * @param {GetQuotasDto} query
+   * @param {GetQuotaDto} query
    * @returns {Promise<QuotaDto[]>}
    */
   async getProjectQuotas(
     context: DevConsoleApiContext,
-    query: GetQuotasDto,
+    query: GetQuotaDto,
   ): Promise<QuotaDto[]> {
     return await new Scs(context).getQuotas(query);
   }
@@ -88,5 +112,27 @@ export class ProjectService {
     data: QuotaOverrideDto,
   ) {
     return await new Scs(context).deleteOverride(data);
+  }
+
+  /**
+   * Get a list of all API keys for a project, along with their usage counts
+   * @param {DevConsoleApiContext} context
+   * @param {ApiKeyQueryFilterDto} query - API key query filter
+   */
+  async getProjectApiKeys(
+    context: DevConsoleApiContext,
+    query: ApiKeyQueryFilterDto,
+  ) {
+    const { data }: { data: { items: ApiKey[]; total: number } } =
+      await new Ams(context).listApiKeys(query);
+
+    const { data: usageCounts } = await new Lmas().getApiKeysUsageCount(
+      data.items.map((i) => i.apiKey),
+    );
+
+    data.items.forEach(
+      (key: any) => (key.usageCount = usageCounts[key.apiKey]),
+    );
+    return data;
   }
 }

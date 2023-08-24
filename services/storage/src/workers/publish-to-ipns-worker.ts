@@ -1,7 +1,6 @@
 import {
   Context,
   env,
-  Lmas,
   LogType,
   SerializeFor,
   ServiceName,
@@ -9,9 +8,9 @@ import {
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
+  LogOutput,
   QueueWorkerType,
   WorkerDefinition,
-  WorkerLogStatus,
 } from '@apillon/workers-lib';
 import { StorageErrorCode } from '../config/types';
 import { StorageCodeException } from '../lib/exceptions';
@@ -31,7 +30,7 @@ export class PublishToIPNSWorker extends BaseQueueWorker {
     return [];
   }
   public async runExecutor(data: any): Promise<any> {
-    console.info('RUN EXECUTOR (PublishToIPNSWorker). data: ', data);
+    // console.info('RUN EXECUTOR (PublishToIPNSWorker). data: ', data);
     const cid = data?.cid;
     const ipns_id = data?.ipns_id;
 
@@ -57,38 +56,32 @@ export class PublishToIPNSWorker extends BaseQueueWorker {
 
       await ipns.update(SerializeFor.UPDATE_DB);
     } catch (err) {
-      await new Lmas().writeLog({
-        context: this.context,
-        project_uuid: ipns.project_uuid,
-        logType: LogType.ERROR,
-        message: 'Error at publishing CID to IPNS',
-        location: `${this.constructor.name}/runExecutor`,
-        service: ServiceName.STORAGE,
-        data: {
-          data,
-          err,
+      await this.writeEventLog(
+        {
+          logType: LogType.ERROR,
+          project_uuid: ipns.project_uuid,
+          message: 'Error at publishing CID to IPNS',
+          service: ServiceName.STORAGE,
+          data: {
+            data,
+            err,
+          },
         },
-      });
+        LogOutput.SYS_ERROR,
+      );
       throw err;
     }
 
-    await new Lmas().writeLog({
-      context: this.context,
+    await this.writeEventLog({
+      logType: LogType.INFO,
       project_uuid: ipns.project_uuid,
-      logType: LogType.ERROR,
       message: 'Success publishing CID to IPNS',
-      location: `${this.constructor.name}/runExecutor`,
       service: ServiceName.STORAGE,
       data: {
         data,
-        ipns,
+        ipns: ipns.serialize(),
       },
     });
-
-    await this.writeLogToDb(
-      WorkerLogStatus.INFO,
-      `PublishToIPNSWorker worker has been completed!`,
-    );
 
     return true;
   }

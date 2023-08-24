@@ -5,14 +5,13 @@ import {
   LogType,
   runWithWorkers,
   SerializeFor,
+  ServiceName,
   streamToString,
-  writeLog,
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
   QueueWorkerType,
   WorkerDefinition,
-  WorkerLogStatus,
 } from '@apillon/workers-lib';
 import {
   BucketType,
@@ -23,9 +22,9 @@ import { StorageCodeException } from '../lib/exceptions';
 import { storageBucketSyncFilesToIPFS } from '../lib/storage-bucket-sync-files-to-ipfs';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
+import { Ipns } from '../modules/ipns/models/ipns.model';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
-import { Ipns } from '../modules/ipns/models/ipns.model';
 import { File } from '../modules/storage/models/file.model';
 
 export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
@@ -87,27 +86,26 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       this.context,
     ).populateFileUploadRequestsInSession(imagesSession.id, this.context);
 
-    /*Upload nft images to IPFS. Upload only FURs, that were not yed uploaded. 
+    /*Upload nft images to IPFS. Upload only FURs, that were not yed uploaded.
     Something may fail and it is possible, that some or all images were already uploaded to IPFS. In this case, retrieve existing uploaded images.*/
-    let imageFiles = { files: [], wrappedDirCid: undefined };
-    if (
+    const imageFiles =
       imageFURs.filter(
         (x) => x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED,
       ).length > 0
-    ) {
-      imageFiles = await storageBucketSyncFilesToIPFS(
-        this.context,
-        `${this.constructor.name}/runExecutor`,
-        bucket,
-        5368709120,
-        imageFURs.filter(
-          (x) => x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED,
-        ),
-        imagesSession,
-        false,
-        undefined,
-      );
-    }
+        ? await storageBucketSyncFilesToIPFS(
+            this.context,
+            `${this.constructor.name}/runExecutor`,
+            bucket,
+            5_368_709_120,
+            imageFURs.filter(
+              (x) =>
+                x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED,
+            ),
+            imagesSession,
+            false,
+            undefined,
+          )
+        : { files: [], wrappedDirCid: undefined };
     if (
       imageFURs.filter(
         (x) => x.fileStatus == FileUploadRequestFileStatus.UPLOAD_COMPLETED,
@@ -196,7 +194,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       this.context,
       `${this.constructor.name}/runExecutor`,
       bucket,
-      5368709120,
+      5_368_709_120,
       metadataFURs,
       metadataSession,
       true,
@@ -205,12 +203,6 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
     //#endregion
 
     //#region Publish to IPNS, Pin to IPFS, Remove from S3, ...
-    writeLog(
-      LogType.INFO,
-      'pinning metadata and images to CRUST',
-      'prepare-metadata-for-collection-worker.ts',
-      'runExecutor',
-    );
 
     console.info(
       `pinning metadata CID (${metadataFiles.wrappedDirCid}) to IPNS`,
@@ -235,19 +227,18 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       `${BucketType[bucket.bucketType]}_sessions/${bucket.id}`,
     );
 
-    writeLog(
-      LogType.INFO,
-      'PrepareMetadataForCollectionWorker finished!',
-      'prepare-metadata-for-collection-worker.ts',
-      'runExecutor',
-    );
+    await this.writeEventLog({
+      logType: LogType.INFO,
+      project_uuid: bucket.project_uuid,
+      message: 'PrepareMetadataForCollectionWorker finished!',
+      service: ServiceName.STORAGE,
+      data: {
+        data,
+        ipnsRecord,
+      },
+    });
 
-    //#region
-
-    await this.writeLogToDb(
-      WorkerLogStatus.INFO,
-      `PrepareMetadataForCollectionWorker worker has been completed!`,
-    );
+    //#endregion
 
     return true;
   }

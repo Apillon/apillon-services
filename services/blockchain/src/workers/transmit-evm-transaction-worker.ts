@@ -45,22 +45,16 @@ export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
     }
 
     try {
-      await EvmService.transmitTransactions({ chain }, this.context);
-      await this.writeEventLog(
-        {
-          logType: LogType.INFO,
-          message: 'EVM transaction submitted!',
-          service: ServiceName.BLOCKCHAIN,
-          data,
-        },
-        LogOutput.EVENT_INFO,
+      await EvmService.transmitTransactions(
+        { chain },
+        this.context,
+        async (...args) => await this.writeEventLog.call(this, ...args),
       );
     } catch (err) {
       await this.writeEventLog(
         {
           logType: LogType.ERROR,
-          message:
-            '[Transmit Evm Transaction Worker]: Error submitting transactions',
+          message: 'Error submitting transactions',
           service: ServiceName.BLOCKCHAIN,
           data: {
             data,

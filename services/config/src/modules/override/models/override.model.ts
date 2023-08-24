@@ -20,6 +20,7 @@ export class Override extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
     ],
   })
   public package_id: number;
@@ -31,6 +32,7 @@ export class Override extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
     ],
   })
   public quota_id: number;
@@ -42,6 +44,7 @@ export class Override extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
     ],
     fakeValue: () => uuidV4(),
   })
@@ -54,6 +57,7 @@ export class Override extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
     ],
     fakeValue: () => uuidV4(),
   })
@@ -66,6 +70,8 @@ export class Override extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
     ],
   })
   public description: string;
@@ -77,6 +83,8 @@ export class Override extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
     ],
   })
   public value: number;

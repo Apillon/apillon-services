@@ -6,7 +6,7 @@ import {
   GithubOauthDto,
   TwitterOauthDto,
   ProductOrderDto,
-  ProductQueryFilter,
+  BaseQueryFilter,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 
@@ -37,10 +37,10 @@ export class ReferralService {
    * Retrieves a list of referral products based on a query filter.
    *
    * @param {DevConsoleApiContext} context - Dev Console API context object.
-   * @param {ProductQueryFilter} query - Product query filter.
+   * @param {BaseQueryFilter} query - Product query filter.
    * @returns {Promise<any>} - List of referral products.
    */
-  async getProducts(context: DevConsoleApiContext, query: ProductQueryFilter) {
+  async getProducts(context: DevConsoleApiContext, query: BaseQueryFilter) {
     return (await new ReferralMicroservice(context).getProducts(query)).data;
   }
 

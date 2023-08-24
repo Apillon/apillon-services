@@ -25,6 +25,7 @@ export async function processEvent(
     [AmsEventType.USER_PASSWORD_RESET]: AuthUserService.resetPassword,
     [AmsEventType.USER_EMAIL_EXISTS]: AuthUserService.emailExists,
     [AmsEventType.GET_AUTH_USER_BY_EMAIL]: AuthUserService.getAuthUserByEmail,
+    [AmsEventType.USER_LOGOUT]: AuthUserService.logout,
 
     [AmsEventType.USER_WALLET_LOGIN]: AuthUserService.loginWithWalletAddress,
 
@@ -33,11 +34,14 @@ export async function processEvent(
 
     [AmsEventType.USER_GET_LOGINS]: AuthUserService.getUserLogins,
     [AmsEventType.USER_GET_ROLES]: AuthUserService.getUserRoles,
+    [AmsEventType.USER_SET_STATUS]: AuthUserService.updateAuthUserStatus,
 
     [AmsEventType.CREATE_API_KEY]: ApiKeyService.createApiKey,
     [AmsEventType.DELETE_API_KEY]: ApiKeyService.deleteApiKey,
     [AmsEventType.LIST_API_KEYS]: ApiKeyService.listApiKeys,
     [AmsEventType.GET_API_KEY]: ApiKeyService.getApiKey,
+    [AmsEventType.API_KEYS_IN_PROJECT_UPDATE]:
+      ApiKeyService.updateApiKeysInProject,
 
     [AmsEventType.API_KEY_ROLE_ASSIGN]: RoleService.assignRoleToApiKey,
     [AmsEventType.API_KEY_ROLE_REMOVE]: RoleService.removeApiKeyRole,

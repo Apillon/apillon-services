@@ -1,12 +1,11 @@
 import {
-  AdvancedSQLModel,
-  CodeException,
+  ProjectAccessModel,
   Context,
-  DefaultUserRole,
+  enumInclusionValidator,
   EvmChain,
-  ForbiddenErrorCodes,
   getQueryParams,
   NFTCollectionQueryFilter,
+  NFTCollectionType,
   PoolConnection,
   PopulateFrom,
   presenceValidator,
@@ -15,7 +14,12 @@ import {
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
-import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
+import {
+  booleanParser,
+  integerParser,
+  stringParser,
+  floatParser,
+} from '@rawmodel/parsers';
 import {
   CollectionStatus,
   DbTables,
@@ -23,12 +27,42 @@ import {
 } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 
-export class Collection extends AdvancedSQLModel {
+export class Collection extends ProjectAccessModel {
   public readonly tableName = DbTables.COLLECTION;
 
   public constructor(data: any, context: Context) {
     super(data, context);
   }
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: NftsErrorCode.COLLECTION_TYPE_NOT_PRESENT,
+      },
+      {
+        resolver: enumInclusionValidator(NFTCollectionType),
+        code: NftsErrorCode.COLLECTION_TYPE_NOT_VALID,
+      },
+    ],
+    fakeValue: NFTCollectionType.GENERIC,
+  })
+  public collectionType: NFTCollectionType;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -42,6 +76,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -67,6 +102,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -89,6 +125,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -115,6 +152,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -141,6 +179,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -159,6 +198,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -173,7 +213,7 @@ export class Collection extends AdvancedSQLModel {
   public maxSupply: number;
 
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: floatParser() },
     populatable: [
       PopulateFrom.DB,
       PopulateFrom.SERVICE,
@@ -184,6 +224,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -210,6 +251,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -235,6 +277,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -255,6 +298,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -275,6 +319,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -296,6 +341,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -316,6 +362,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -336,6 +383,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -356,6 +404,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -376,6 +425,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -396,6 +446,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -416,6 +467,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -436,6 +488,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -456,6 +509,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
     ],
   })
@@ -510,6 +564,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -530,6 +585,7 @@ export class Collection extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -542,48 +598,10 @@ export class Collection extends AdvancedSQLModel {
    * Info properties
    *****************************************************/
 
-  public canAccess(context: ServiceContext) {
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_USER,
-          DefaultUserRole.ADMIN,
-        ],
-        this.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to access this record',
-      });
-    }
-  }
-
-  public canModify(context: ServiceContext) {
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.ADMIN,
-        ],
-        this.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to modify this record',
-      });
-    }
-  }
-
   public async getList(
     context: ServiceContext,
     filter: NFTCollectionQueryFilter,
+    serializationStrategy = SerializeFor.PROFILE,
   ) {
     this.canAccess(context);
     // Map url query with sql fields.
@@ -597,14 +615,20 @@ export class Collection extends AdvancedSQLModel {
       filter.serialize(),
     );
 
+    const selectFields = this.generateSelectFields(
+      'c',
+      '',
+      serializationStrategy,
+    );
     const sqlQuery = {
       qSelect: `
-        SELECT ${this.generateSelectFields('c', '')}, c.updateTime
+        SELECT ${selectFields}
         `,
       qFrom: `
         FROM \`${this.tableName}\` c
         WHERE c.project_uuid = @project_uuid
         AND (@search IS null OR c.name LIKE CONCAT('%', @search, '%'))
+        AND (@collectionStatus IS null OR c.collectionStatus = @collectionStatus)
         AND
             (
                 (@status IS null AND c.status <> ${SqlModelStatus.DELETED})
@@ -618,7 +642,21 @@ export class Collection extends AdvancedSQLModel {
       `,
     };
 
-    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'c.id');
+    const collectionsResult = await selectAndCountQuery(
+      context.mysql,
+      sqlQuery,
+      params,
+      'c.id',
+    );
+
+    return {
+      ...collectionsResult,
+      items: collectionsResult.items.map((collection) =>
+        new Collection({}, context)
+          .populate(collection, PopulateFrom.DB)
+          .serialize(serializationStrategy),
+      ),
+    };
   }
 
   public async populateById(
@@ -636,10 +674,10 @@ export class Collection extends AdvancedSQLModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT *
-      FROM \`${this.tableName}\`
-      WHERE ( id LIKE @id OR collection_uuid LIKE @id)
-      AND status <> ${SqlModelStatus.DELETED};
+        SELECT *
+        FROM \`${this.tableName}\`
+        WHERE (id LIKE @id OR collection_uuid LIKE @id)
+          AND status <> ${SqlModelStatus.DELETED};
       `,
       { id },
       conn,
@@ -661,7 +699,7 @@ export class Collection extends AdvancedSQLModel {
         SELECT *
         FROM \`${this.tableName}\`
         WHERE collection_uuid = @collection_uuid;
-        `,
+      `,
       { collection_uuid },
     );
 
@@ -677,14 +715,14 @@ export class Collection extends AdvancedSQLModel {
    * @param project_uuid
    * @returns Number of collections
    */
-  public async getCollectionsCount(project_uuid?: string) {
+  public async getCollectionsCount(project_uuid?: string): Promise<number> {
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT COUNT(*) as collectionsCount
-      FROM \`${DbTables.COLLECTION}\`
-      WHERE project_uuid = @project_uuid
-        AND collectionStatus <> ${CollectionStatus.FAILED}
-      AND status <> ${SqlModelStatus.DELETED};
+        SELECT COUNT(*) as collectionsCount
+        FROM \`${DbTables.COLLECTION}\`
+        WHERE project_uuid = @project_uuid
+          AND collectionStatus <> ${CollectionStatus.FAILED}
+          AND status <> ${SqlModelStatus.DELETED};
       `,
       {
         project_uuid: project_uuid || this.project_uuid,

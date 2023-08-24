@@ -11,6 +11,7 @@ export abstract class BaseBlockchainIndexer {
   }
 
   public abstract getAllTransactions(...args: any[]): Promise<any>;
+  public abstract getAllSystemEvents(...args: any[]): Promise<any>;
 
   public async getBlockHeight(): Promise<number> {
     const GRAPHQL_QUERY = gql`

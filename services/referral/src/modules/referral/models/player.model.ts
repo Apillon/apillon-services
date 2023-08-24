@@ -281,7 +281,7 @@ export class Player extends AdvancedSQLModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${DbTables.PLAYER}\`
       WHERE user_uuid = @user_uuid AND status <> ${SqlModelStatus.DELETED};
       `,
@@ -322,7 +322,7 @@ export class Player extends AdvancedSQLModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${DbTables.PLAYER}\`
       WHERE twitter_id = @id AND status <> ${SqlModelStatus.DELETED};
       `,
@@ -330,11 +330,9 @@ export class Player extends AdvancedSQLModel {
       conn,
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   /**
@@ -353,7 +351,7 @@ export class Player extends AdvancedSQLModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${DbTables.PLAYER}\`
       WHERE github_id = @id AND status <> ${SqlModelStatus.DELETED};
       `,
@@ -361,11 +359,9 @@ export class Player extends AdvancedSQLModel {
       conn,
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   /**
@@ -385,33 +381,31 @@ export class Player extends AdvancedSQLModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${DbTables.PLAYER}\`
-      WHERE refCode = @refCode 
+      WHERE refCode = @refCode
       ${showDeleted ? '' : `AND status <> ${SqlModelStatus.DELETED}`};
       `,
       { refCode, showDeleted },
       conn,
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   public async populateTasks() {
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT 
+      SELECT
       ${new Task({}, null).generateSelectFields('t')},
       IF(r.id IS NOT NULL,
         JSON_ARRAYAGG(
           JSON_OBJECT(${new Realization({}, null).generateSelectJSONFields(
             'r',
           )})
-        ), 
+        ),
         JSON_ARRAY()
       ) AS realizations
       FROM \`${DbTables.TASK}\` t
@@ -433,7 +427,7 @@ export class Player extends AdvancedSQLModel {
   public async getBalance() {
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT 
+      SELECT
         player_id,
         balance,
         all_time
@@ -456,7 +450,7 @@ export class Player extends AdvancedSQLModel {
   public async getReferredUsers() {
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT 
+      SELECT
         CONCAT(
           LEFT(SUBSTRING_INDEX(ref.userEmail,'@',1),1),
           REPEAT('*', 4),
@@ -473,11 +467,7 @@ export class Player extends AdvancedSQLModel {
       { player_id: this.id },
     );
 
-    if (data.length) {
-      this.referrals = data;
-    } else {
-      this.referrals = [];
-    }
+    this.referrals = data.length ? data : [];
     return this.referrals;
   }
 

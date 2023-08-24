@@ -4,11 +4,9 @@ import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 
 import {
-  AdvancedSQLModel,
+  ProjectAccessModel,
   BaseQueryFilter,
-  CodeException,
   DefaultUserRole,
-  ForbiddenErrorCodes,
   getQueryParams,
   PopulateFrom,
   selectAndCountQuery,
@@ -17,14 +15,13 @@ import {
 } from '@apillon/lib';
 
 import { faker } from '@faker-js/faker';
-import { HttpStatus } from '@nestjs/common';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
 
 /**
  * Project model.
  */
-export class Project extends AdvancedSQLModel {
+export class Project extends ProjectAccessModel {
   tableName = DbTables.PROJECT;
 
   @prop({
@@ -137,45 +134,6 @@ export class Project extends AdvancedSQLModel {
    * Methods
    ********************************************/
 
-  public canAccess(context: DevConsoleApiContext) {
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_USER,
-          DefaultUserRole.ADMIN,
-        ],
-        this.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: HttpStatus.FORBIDDEN,
-        errorMessage: 'Insufficient permissions to access this record',
-      });
-    }
-  }
-
-  public canModify(context: DevConsoleApiContext) {
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.ADMIN,
-        ],
-        this.project_uuid,
-      )
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: HttpStatus.FORBIDDEN,
-        errorMessage: 'Insufficient permissions to modify this record',
-      });
-    }
-  }
-
   public async populateByUUID(uuid: string): Promise<this> {
     if (!uuid) {
       throw new Error('project uuid should not be null');
@@ -197,11 +155,16 @@ export class Project extends AdvancedSQLModel {
 
   /**
    * Returns all user projects
+   * @param context
+   * @param user_id if null, projects of user in context are returned
+   * @returns
    */
-
-  public async getUserProjects(context: DevConsoleApiContext) {
+  public async getUserProjects(
+    context: DevConsoleApiContext,
+    user_id?: number,
+  ) {
     const params = {
-      user_id: context.user.id,
+      user_id: user_id || context.user.id,
     };
     const sqlQuery = {
       qSelect: `
@@ -215,6 +178,30 @@ export class Project extends AdvancedSQLModel {
     };
 
     return selectAndCountQuery(context.mysql, sqlQuery, params, 'p.id');
+  }
+
+  /**
+   * Update status (block, unblock) of all user projects
+   * @param userId
+   * @param status
+   * @returns
+   */
+  public async updateUserProjectsStatus(userId: number, status: number) {
+    await this.getContext().mysql.paramExecute(
+      `
+      UPDATE \`${this.tableName}\` p
+      SET p.status = @status
+      WHERE EXISTS (
+        SELECT 1 FROM \`${DbTables.PROJECT_USER}\` pu 
+        WHERE pu.user_id = @userId
+        AND pu.project_id = p.id
+      )
+      AND p.status IN ( ${SqlModelStatus.ACTIVE}, ${SqlModelStatus.BLOCKED} )
+      `,
+      { userId, status },
+    );
+
+    return true;
   }
 
   public async listProjects(

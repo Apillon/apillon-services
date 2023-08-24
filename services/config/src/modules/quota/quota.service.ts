@@ -1,8 +1,7 @@
-import { GetQuotasDto, GetQuotaDto } from '@apillon/lib';
+import { GetQuotaDto, QuotaDto } from '@apillon/lib';
 import { ConfigErrorCode } from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { ScsCodeException } from '../../lib/exceptions';
-import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
 import { Quota } from './models/quota.model';
 /**
  * QuotaService class for handling quota requests
@@ -33,12 +32,12 @@ export class QuotaService {
 
   /**
    * Get all quotas for a specific project or object.
-   * @param {GetQuotasDto} data - The data containing quota ID, project UUID, and object UUID.
+   * @param {GetQuotaDto} data - The data containing quota ID, project UUID, and object UUID.
    * @param {ServiceContext} context - The service context for database access.
    * @returns {Promise<QuotaDto[]>} - The quota data.
    */
   static async getQuotas(
-    data: GetQuotasDto,
+    data: GetQuotaDto,
     context: ServiceContext,
   ): Promise<QuotaDto[]> {
     return await QuotaService.queryQuotas(data, context);
@@ -51,7 +50,7 @@ export class QuotaService {
    * @returns {Promise<QuotaDto[]>}
    */
   private static async queryQuotas(
-    data: GetQuotaDto | GetQuotasDto,
+    data: GetQuotaDto,
     context: ServiceContext,
   ): Promise<QuotaDto[]> {
     return await new Quota({}, context).getQuotas(data);

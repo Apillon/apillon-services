@@ -1,10 +1,6 @@
 import {
-  AdvancedSQLModel,
-  CodeException,
   Context,
-  DefaultUserRole,
   FileUploadsQueryFilter,
-  ForbiddenErrorCodes,
   getQueryParams,
   PopulateFrom,
   presenceValidator,
@@ -12,6 +8,10 @@ import {
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
+  DefaultUserRole,
+  CodeException,
+  ForbiddenErrorCodes,
+  AdvancedSQLModel,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { CID } from 'ipfs-http-client';
@@ -252,6 +252,11 @@ export class FileUploadRequest extends AdvancedSQLModel {
    * @param context
    */
   public async canAccess(context: ServiceContext) {
+    // Admins are allowed to access items on any project
+    if (context.user?.userRoles.includes(DefaultUserRole.ADMIN)) {
+      return true;
+    }
+
     const bucket: Bucket = await new Bucket({}, context).populateById(
       this.bucket_id,
     );
@@ -298,6 +303,7 @@ export class FileUploadRequest extends AdvancedSQLModel {
         errorMessage: 'Insufficient permissions to modify this record',
       });
     }
+    return true;
   }
 
   public async populateFileUploadRequestsInSession(

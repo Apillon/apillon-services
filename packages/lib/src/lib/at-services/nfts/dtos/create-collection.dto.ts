@@ -8,13 +8,33 @@ import {
 } from '@rawmodel/validators';
 import {
   EvmChain,
+  NFTCollectionType,
   PopulateFrom,
   SerializeFor,
   ValidatorErrorCode,
 } from '../../../../config/types';
 import { enumInclusionValidator } from '../../../validators';
+import { dropReserveLowerOrEqualToMaxSupplyValidator } from '../validators/create-collection-drop-reserve-validator';
+import { validateDropPriceIfDrop } from '../validators/create-collection-drop-price-validator';
 
 export class CreateCollectionDTOBase extends ModelBase {
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_COLLECTION_TYPE_NOT_PRESENT,
+      },
+      {
+        resolver: enumInclusionValidator(NFTCollectionType),
+        code: ValidatorErrorCode.NFT_COLLECTION_TYPE_NOT_VALID,
+      },
+    ],
+  })
+  public collectionType: NFTCollectionType;
+
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -75,7 +95,7 @@ export class CreateCollectionDTOBase extends ModelBase {
         code: ValidatorErrorCode.NFT_DEPLOY_MINT_PRICE_NOT_PRESENT,
       },
       {
-        resolver: numberSizeValidator({ minOrEqual: 0 }),
+        resolver: validateDropPriceIfDrop(0.00001, 10000000000),
         code: ValidatorErrorCode.NFT_DEPLOY_MINT_PRICE_NOT_VALID,
       },
     ],
@@ -140,6 +160,14 @@ export class CreateCollectionDTOBase extends ModelBase {
         resolver: presenceValidator(),
         code: ValidatorErrorCode.NFT_DEPLOY_RESERVE_NOT_PRESENT,
       },
+      {
+        resolver: numberSizeValidator({ minOrEqual: 0 }),
+        code: ValidatorErrorCode.NFT_DEPLOY_DROP_RESERVE_NOT_VALID,
+      },
+      {
+        resolver: dropReserveLowerOrEqualToMaxSupplyValidator(),
+        code: ValidatorErrorCode.NFT_DEPLOY_DROP_RESERVE_GREATER_THAN_MAX_SUPPLY,
+      },
     ],
   })
   public dropReserve: number;
@@ -151,7 +179,7 @@ export class CreateCollectionDTOBase extends ModelBase {
     validators: [
       {
         resolver: stringLengthValidator({ minOrEqual: 0, maxOrEqual: 1000 }),
-        code: ValidatorErrorCode.NFT_DEPLOY_COLLECTION_UUI_PARAM_NOT_VALID,
+        code: ValidatorErrorCode.NFT_DEPLOY_COLLECTION_DESCRIPTION_NOT_VALID,
       },
     ],
   })

@@ -44,7 +44,13 @@ Environment variables that has to be set:
   DEV_CONSOLE_API_HOST_TEST: string;
   DEV_CONSOLE_API_PORT_TEST: number;
 
-
+  /************************************************************
+   * ADMIN_CONSOLE-API - Apillon Admin Console API
+   ************************************************************/
+  ADMIN_CONSOLE_API_PORT: number;
+  ADMIN_CONSOLE_API_HOST: string;
+  ADMIN_CONSOLE_API_PORT_TEST: number;
+  ADMIN_CONSOLE_API_HOST_TEST: string;
 ```
 
 ## Environments

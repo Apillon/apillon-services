@@ -1,10 +1,11 @@
-import { env } from '@apillon/lib';
-import { WebClient, LogLevel } from '@slack/web-api';
+import { LogType, ServiceName, env } from '@apillon/lib';
+import { LogLevel, WebClient } from '@slack/web-api';
 
 export class Slack {
   private client: WebClient;
-  constructor() {
-    this.client = new WebClient(env.SLACK_TOKEN, {
+
+  constructor(token: string) {
+    this.client = new WebClient(token, {
       logLevel: LogLevel.DEBUG,
     });
   }
@@ -63,37 +64,42 @@ export class Slack {
  * Message is formatted and users are notified depending on severity level. Channel is set on env variable.
  * @param message Message to post on slack
  * @param serviceName Name of the origin service
- * @param level level of severity of the message
+ * @param logType level of severity of the message
  */
 export async function postToSlack(
   message: string,
-  serviceName: string,
-  level: 'message' | 'warning' | 'alert' = 'message',
+  serviceName: ServiceName,
+  logType: LogType,
 ) {
+  const slackToken = env.SLACK_TOKEN;
+  if (!slackToken) {
+    return;
+  }
+  const slack = new Slack(slackToken);
+
   const severityText = {
-    message: {
+    [LogType.MSG]: {
       emojis: ':loudspeaker:',
       target: '',
       intro: `Message from ${serviceName} (${env.APP_ENV})`,
     },
-    warning: {
+    [LogType.WARN]: {
       emojis: ':zap::warning::zap:',
       target: '@here',
       intro: `WARNING from ${serviceName} (${env.APP_ENV})`,
     },
-    alert: {
+    [LogType.ALERT]: {
       emojis: ':bangbang::rotating_light::bangbang:',
       target: '@channel',
       intro: `ALERT from ${serviceName} (${env.APP_ENV})`,
     },
   };
 
-  const slack = new Slack();
   try {
     const channelId = await slack.findChannel(env.SLACK_CHANNEL);
     await slack.publishMessage(
       channelId,
-      `${severityText[level].emojis}\n*${severityText[level].intro}:*\n\n${message}\n\n${severityText[level].target}`,
+      `${severityText[logType].emojis}\n*${severityText[logType].intro}:*\n\n${message}\n\n${severityText[logType].target}`,
     );
   } catch (err) {
     console.log('Failed to post to Slack :', err);

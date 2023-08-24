@@ -56,7 +56,7 @@ export class IPFSService {
    * @returns
    */
   static async uploadFURToIPFSFromS3(
-    event: { fileUploadRequest: FileUploadRequest },
+    event: { fileUploadRequest: FileUploadRequest; project_uuid?: string },
     context,
   ): Promise<{ CID: CID; cidV0: string; cidV1: string; size: number }> {
     //Get IPFS client
@@ -102,6 +102,7 @@ export class IPFSService {
 
     //Write log to LMAS
     await new Lmas().writeLog({
+      project_uuid: event.project_uuid,
       logType: LogType.INFO,
       message: 'File uploaded to IPFS',
       location: 'IPFSService.uploadFURsToIPFSFromS3',
@@ -135,6 +136,7 @@ export class IPFSService {
       fileUploadRequests: FileUploadRequest[];
       wrapWithDirectory: boolean;
       wrappingDirectoryPath: string;
+      project_uuid?: string;
     },
     context: Context,
   ): Promise<uploadItemsToIPFSRes> {
@@ -246,6 +248,7 @@ export class IPFSService {
 
     //Write log to LMAS
     await new Lmas().writeLog({
+      project_uuid: event.project_uuid,
       logType: LogType.INFO,
       message: 'Files uploaded to IPFS',
       location: 'IPFSService.uploadFilesToIPFSFromS3',
@@ -304,6 +307,7 @@ export class IPFSService {
       files: File[];
       wrapWithDirectory: boolean;
       wrappingDirectoryPath: string;
+      project_uuid?: string;
     },
     context: Context,
   ): Promise<uploadItemsToIPFSRes> {
@@ -325,6 +329,7 @@ export class IPFSService {
         fileUploadRequests: fileUploadRequests,
         wrapWithDirectory: event.wrapWithDirectory,
         wrappingDirectoryPath: event.wrappingDirectoryPath,
+        project_uuid: event.project_uuid,
       },
       context,
     );

@@ -1,15 +1,9 @@
-import {
-  Context,
-  env,
-  LogType,
-  StorageMicroservice,
-  writeLog,
-} from '@apillon/lib';
+import { Context, env, LogType, ServiceName } from '@apillon/lib';
 import {
   BaseQueueWorker,
+  LogOutput,
   QueueWorkerType,
   WorkerDefinition,
-  WorkerLogStatus,
 } from '@apillon/workers-lib';
 import { CollectionStatus, NftsErrorCode } from '../config/types';
 import { NftsCodeException } from '../lib/exceptions';
@@ -29,7 +23,7 @@ export class DeployCollectionWorker extends BaseQueueWorker {
     return [];
   }
   public async runExecutor(data: any): Promise<any> {
-    console.info('RUN EXECUTOR (DeployCollectionWorker). data: ', data);
+    // console.info('RUN EXECUTOR (DeployCollectionWorker). data: ', data);
     //Prepare data and execute validations
     if (!data?.collection_uuid || !data?.baseUri) {
       throw new NftsCodeException({
@@ -82,7 +76,7 @@ export class DeployCollectionWorker extends BaseQueueWorker {
           sourceFunction: 'DeployCollectionWorker.runExecutor()',
           errorMessage: 'Error deploying Nft contract',
           details: err,
-        }).writeToMonitor({});
+        }).writeToMonitor({ project_uuid: collection.project_uuid });
       }
     } catch (err) {
       //Update collection status to error
@@ -90,21 +84,22 @@ export class DeployCollectionWorker extends BaseQueueWorker {
         collection.collectionStatus = CollectionStatus.FAILED;
         await collection.update();
       } catch (updateError) {
-        writeLog(
-          LogType.ERROR,
-          'Error updating collection status to FAILED.',
-          'deploy-collection-worker.ts',
-          'runExecuter',
-          updateError,
+        await this.writeEventLog(
+          {
+            logType: LogType.ERROR,
+            project_uuid: collection?.project_uuid,
+            message: 'Error updating collection status to FAILED.',
+            service: ServiceName.NFTS,
+            err: updateError,
+            data: {
+              collection: collection.serialize(),
+            },
+          },
+          LogOutput.SYS_ERROR,
         );
       }
       throw err;
     }
-
-    await this.writeLogToDb(
-      WorkerLogStatus.INFO,
-      `DeployCollectionWorker worker has been completed!`,
-    );
 
     return true;
   }

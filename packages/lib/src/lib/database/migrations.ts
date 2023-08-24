@@ -154,6 +154,8 @@ async function initMigrations(
     connectionLimit: 1,
   };
 
+  console.log(`Initializing migrations for ${env.APP_ENV} environment!`);
+
   if (
     env.APP_ENV === AppEnvironment.TEST &&
     !/(test|testing)/i.test(poolConfig.database)

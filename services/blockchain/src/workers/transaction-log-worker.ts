@@ -1,7 +1,6 @@
 import {
   ChainType,
   EvmChain,
-  SerializeFor,
   SubstrateChain,
   dateToSqlString,
   Context,
@@ -15,7 +14,7 @@ import {
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { Wallet } from '../common/models/wallet';
+import { Wallet } from '../modules/wallet/wallet.model';
 import { DbTables, TxDirection } from '../config/types';
 import { formatTokenWithDecimals, formatWalletAddress } from '../lib/utils';
 
@@ -23,6 +22,7 @@ import { TransactionLog } from '../modules/accounting/transaction-log.model';
 
 import { EvmBlockchainIndexer } from '../modules/blockchain-indexers/evm/evm-indexer.service';
 import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
+import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/kilt-indexer.service';
 
 export class TransactionLogWorker extends BaseQueueWorker {
   private batchLimit: number;
@@ -36,18 +36,18 @@ export class TransactionLogWorker extends BaseQueueWorker {
     this.batchLimit = workerDefinition?.parameters?.batchLimit || 100;
   }
   async runPlanner(_data?: any): Promise<any[]> {
-    const wallets = await new Wallet({}, this.context).getAllWallets();
+    const wallets = await new Wallet({}, this.context).getWallets();
 
-    return wallets.map((x) => {
-      return {
-        wallet: x.serialize(SerializeFor.WORKER),
-        batchLimit: this.batchLimit,
-      };
-    });
+    return wallets.map((x) => ({
+      wallet: { id: x.id, address: x.address },
+      batchLimit: this.batchLimit,
+    }));
   }
 
   async runExecutor(data: any): Promise<any> {
-    const wallet = new Wallet(data.wallet, this.context);
+    const wallet = await new Wallet({}, this.context).populateById(
+      data.wallet.id,
+    );
 
     const lastBlock = await this.getLastLoggedBlockNumber(wallet);
     const transactions = await this.getTransactionsForWallet(
@@ -61,7 +61,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
     // link with transaction queue && alert if no link
     await this.linkTransactions(transactions, wallet);
 
-    // check wallet ballance && alert if low
+    // check wallet balance && alert if low
     await this.checkWalletBalance(wallet);
 
     if (transactions.length) {
@@ -156,10 +156,48 @@ export class TransactionLogWorker extends BaseQueueWorker {
             );
           },
 
-          [SubstrateChain.KILT]: () => {
-            // TODO: Add KILT support!!!!!
-            // throw new Error('KILT is not supported yet!');
-            console.log(`KILT LOG HANDLE: !THIS IS A TEST!`);
+          [SubstrateChain.KILT]: async () => {
+            const indexer = new KiltBlockchainIndexer();
+
+            const systems = await indexer.getSystemEventsWithLimit(
+              wallet.address,
+              lastBlock,
+              limit,
+            );
+            console.log(`Got ${systems.length} Kilt system events!`);
+            const transfers = await indexer.getAccountBalanceTransfersForTxs(
+              wallet.address,
+              systems.map((x) => x.extrinsicHash),
+            );
+            console.log(`Got ${transfers.length} Kilt transfers!`);
+            // prepare transfer data
+            const data = [];
+            for (const s of systems) {
+              const transfer = transfers.find(
+                (t) =>
+                  t.blockNumber === s.blockNumber &&
+                  t.extrinsicHash === s.extrinsicHash,
+              );
+
+              data.push({ system: s, transfer });
+            }
+            return data.map((x) =>
+              new TransactionLog({}, this.context).createFromKiltIndexerData(
+                x,
+                wallet,
+              ),
+            );
+            // merge transfers that has the same hash (not happening in kilt?)
+            // .reduce((acc, tx) => {
+            //   const found = acc.find((x) => x.hash === tx.hash);
+            //   if (found) {
+            //     found.addToAmount(tx.amount);
+            //     found.calculateTotalPrice();
+            //   } else {
+            //     acc.push(tx);
+            //   }
+            //   return acc;
+            // }, [] as TransactionLog[])
           },
           [SubstrateChain.PHALA]: () => {
             //
@@ -197,14 +235,16 @@ export class TransactionLogWorker extends BaseQueueWorker {
       amount, fee, totalPrice
     )
      VALUES ${transactions
-       .map((x) => {
-         return `(
+       .map(
+         (x) => `(
           '${dateToSqlString(x.ts)}', ${x.blockId}, ${x.status}, ${x.direction},
         '${x.action}', ${x.chain}, ${x.chainType}, '${x.wallet}',
-        '${x.addressFrom}', '${x.addressTo}', '${x.hash}', '${x.token}',
-        '${x.amount}', '${x.fee || '0'}', '${x.totalPrice}'
-        )`;
-       })
+        ${x.addressFrom ? `'${x.addressFrom}'` : 'NULL'},
+        ${x.addressTo ? `'${x.addressTo}'` : 'NULL'},
+        '${x.hash}', '${x.token}',
+        '${x.amount || 0}', '${x.fee || 0}', '${x.totalPrice}'
+        )`,
+       )
        .join(',')}
      `;
 
@@ -223,8 +263,8 @@ export class TransactionLogWorker extends BaseQueueWorker {
     // link transaction log and transaction queue
     await this.context.mysql.paramExecute(
       `
-      UPDATE 
-        transaction_log tl 
+      UPDATE
+        transaction_log tl
         LEFT JOIN transaction_queue tq
         ON tq.transactionHash = tl.hash
       SET
@@ -241,7 +281,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
     // find unlinked transactions
     const unlinked = await this.context.mysql.paramExecute(
       `
-      SELECT * FROM transaction_log 
+      SELECT * FROM transaction_log
       WHERE transactionQueue_id IS NULL
       AND direction = ${TxDirection.COST}
       AND hash IN (${transactions.map((x) => `'${x.hash}'`).join(',')})
@@ -268,13 +308,13 @@ export class TransactionLogWorker extends BaseQueueWorker {
   }
 
   private async checkWalletBalance(wallet: Wallet) {
-    const balanceData = await wallet.checkBallance();
+    const balanceData = await wallet.checkAndUpdateBalance();
 
     if (!balanceData.minBalance) {
       await this.writeEventLog(
         {
           logType: LogType.WARN,
-          message: `MIN BALLANCE IS NOT SET! ${formatWalletAddress(
+          message: `MIN BALANCE IS NOT SET! ${formatWalletAddress(
             wallet,
           )}  ==> balance: ${formatTokenWithDecimals(
             balanceData.balance,

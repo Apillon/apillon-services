@@ -25,6 +25,7 @@ describe('Storage directory tests', () => {
   let testUser: TestUser;
   let testUser2: TestUser;
   let testUser3: TestUser;
+  let adminTestUser: TestUser;
 
   let testProject: Project;
 
@@ -184,6 +185,11 @@ describe('Storage directory tests', () => {
         SqlModelStatus.ACTIVE,
         testProject.project_uuid,
       );
+      adminTestUser = await createTestUser(
+        stage.devConsoleContext,
+        stage.amsContext,
+        DefaultUserRole.ADMIN,
+      );
 
       testDirectory2 = await createTestBucketDirectory(
         stage.storageContext,
@@ -205,6 +211,27 @@ describe('Storage directory tests', () => {
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBe(2);
       expect(response.body.data.items[0]?.type).toBe(ObjectType.FILE);
+    });
+
+    test('Admin User should be able to get directory content', async () => {
+      const response = await request(stage.http)
+        .get(
+          `/directories/directory-content?bucket_uuid=${testBucket.bucket_uuid}&directory_id=${testDirectory2.id}`,
+        )
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.items.length).toBeGreaterThan(1);
+    });
+
+    test('Admin User should NOT be able to create new directory', async () => {
+      const response = await request(stage.http)
+        .post(`/directories`)
+        .send({
+          bucket_id: testBucket.id,
+          name: 'My test directory',
+        })
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
+      expect(response.status).toBe(403);
     });
 
     //TODO ! can user with role "ProjectUser" create/update/delete directory

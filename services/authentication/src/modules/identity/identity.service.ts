@@ -31,7 +31,7 @@ import {
   DidUri,
   ICredential,
 } from '@kiltprotocol/sdk-js';
-import { BN, hexToU8a, u8aToHex } from '@polkadot/util';
+import { hexToU8a, u8aToHex } from '@polkadot/util';
 // Dtos
 import { IdentityCreateDto } from '@apillon/lib';
 import { IdentityDidRevokeDto } from '@apillon/lib';
@@ -42,7 +42,6 @@ import {
   generateKeypairs,
   getCtypeSchema,
   getFullDidDocument,
-  getNextNonce,
 } from '../../lib/kilt';
 import { AuthenticationCodeException } from '../../lib/exceptions';
 import { decryptAssymetric } from '../../lib/utils/crypto-utils';
@@ -78,6 +77,17 @@ export class IdentityMicroservice {
         if (identity.state == IdentityState.ATTESTED) {
           throw new AuthenticationCodeException({
             code: AuthenticationErrorCode.IDENTITY_EMAIL_IS_ALREADY_ATTESTED,
+            status: HttpStatus.BAD_REQUEST,
+          });
+        }
+
+        if (
+          identity.state == IdentityState.SUBMITTED_ATTESATION_REQ ||
+          identity.state == IdentityState.SUBMITTED_DID_CREATE_REQ ||
+          identity.state == IdentityState.SUBMITTED_REVOKE_REQ
+        ) {
+          throw new AuthenticationCodeException({
+            code: AuthenticationErrorCode.IDENTITY_REQUEST_IN_PROGRESS,
             status: HttpStatus.BAD_REQUEST,
           });
         }
@@ -161,12 +171,15 @@ export class IdentityMicroservice {
   static async generateIdentity(event: { body: IdentityCreateDto }, context) {
     const did_create_op: DidCreateOp = event.body.did_create_op as DidCreateOp;
     const claimerEmail = event.body.email;
+    const claimerDidUri = event.body.didUri;
 
     // Check if correct identity + state exists -> IN_PROGRESS
     const identity = await new Identity({}, context).populateByUserEmail(
       context,
       claimerEmail,
     );
+
+    await identity.setState(IdentityState.IDENTITY_VERIFIED);
 
     if (
       !identity.exists() ||
@@ -184,10 +197,8 @@ export class IdentityMicroservice {
     }
 
     identity.populate({
-      state: IdentityState.IDENTITY_VERIFIED,
+      didUri: claimerDidUri,
     });
-
-    await identity.update();
 
     // Generate (retrieve) attester did data
     const attesterKeypairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
@@ -232,6 +243,19 @@ export class IdentityMicroservice {
       did_create_op,
     );
 
+    // Don't update here, but in the request below
+    await identity.setState(IdentityState.SUBMITTED_DID_CREATE_REQ, false);
+
+    try {
+      await identity.validate();
+      await identity.update();
+    } catch (error) {
+      throw new AuthenticationCodeException({
+        code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+
     writeLog(LogType.INFO, 'Sending blockchain request..');
     // Call blockchain server and submit batch request
     await sendBlockchainServiceRequest(context, bcsRequest);
@@ -249,6 +273,8 @@ export class IdentityMicroservice {
 
     // Generate (retrieve) attester did data
     const attesterKeypairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
+    // TODO: Account could be just saved in
+    // ENV, no need to generate it every time actually
     const attesterAcc = (await generateAccount(
       env.KILT_ATTESTER_MNEMONIC,
     )) as KiltKeyringPair;
@@ -288,8 +314,6 @@ export class IdentityMicroservice {
       null,
     );
 
-    const nextNonce = new BN(await getNextNonce(attesterDidUri));
-
     const claimerCredential = {
       credential: {
         ...credential,
@@ -309,7 +333,18 @@ export class IdentityMicroservice {
       didUri: claimerDidUri ? claimerDidUri : null,
       email: claimerEmail,
     });
-    await identity.update();
+    // Set state but don't update
+    await identity.setState(IdentityState.SUBMITTED_ATTESATION_REQ, false);
+
+    try {
+      await identity.validate();
+      await identity.update();
+    } catch (error) {
+      throw new AuthenticationCodeException({
+        code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
 
     writeLog(LogType.INFO, 'Creating attestation TX ..');
     const attestationTx = await Did.authorizeTx(
@@ -320,7 +355,6 @@ export class IdentityMicroservice {
         keyType: attesterKeypairs.assertionMethod.type,
       }),
       attesterAcc.address,
-      { txCounter: nextNonce },
     );
 
     const bcsRequest = await attestationRequestBc(
@@ -358,6 +392,13 @@ export class IdentityMicroservice {
     );
 
     if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
+      if (identity.state == IdentityState.SUBMITTED_REVOKE_REQ) {
+        // If a user tries to revoke the identity
+        // multiple times (while revocation in progress) like a
+        // maniac, just return true every time without actually doing anything.
+        return { success: true };
+      }
+
       throw new AuthenticationCodeException({
         code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
         status: HttpStatus.NOT_FOUND,
@@ -372,16 +413,20 @@ export class IdentityMicroservice {
     const endpointsCountForDid = await api.query.did.didEndpointsCount(
       identifier,
     );
+
     const depositReClaimExtrinsic = api.tx.did.reclaimDeposit(
       identifier,
       endpointsCountForDid,
     );
+
     try {
       const bcsRequest = await didRevokeRequestBc(
         context,
         depositReClaimExtrinsic,
         identity,
       );
+
+      await identity.setState(IdentityState.SUBMITTED_REVOKE_REQ);
 
       // Call blockchain server and submit batch request
       await sendBlockchainServiceRequest(context, bcsRequest);
@@ -394,9 +439,6 @@ export class IdentityMicroservice {
         data: { email: claimerEmail, didUri: identity.didUri },
       });
     }
-
-    identity.state = IdentityState.REVOKED;
-    await identity.update();
 
     return { success: true };
   }

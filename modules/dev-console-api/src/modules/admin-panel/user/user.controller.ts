@@ -2,41 +2,52 @@ import {
   BaseQueryFilter,
   CreateQuotaOverrideDto,
   DefaultUserRole,
-  QuotaOverrideDto,
   PopulateFrom,
+  QuotaOverrideDto,
   ValidateFor,
+  CacheKeyPrefix,
+  QuotaType,
+  QuotaDto,
+  GetQuotaDto,
 } from '@apillon/lib';
+import {
+  Ctx,
+  Permissions,
+  Validation,
+  CacheInterceptor,
+} from '@apillon/modules-lib';
 import {
   Body,
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   ParseIntPipe,
   ParseUUIDPipe,
-  Patch,
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { AuthGuard } from '../../../guards/auth.guard';
 import { UserService } from './user.service';
 import { DevConsoleApiContext } from '../../../context';
 import { ValidationGuard } from '../../../guards/validation.guard';
-import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
-import { GetQuotasDto } from '@apillon/lib/dist/lib/at-services/config/dtos/get-quotas.dto';
 import { UUID } from 'crypto';
+import { BaseQueryFilterValidator } from '../../../decorators/base-query-filter-validator';
+import { Cache } from '@apillon/modules-lib';
 
 @Controller('admin-panel/users')
 @Permissions({ role: DefaultUserRole.ADMIN })
 @UseGuards(AuthGuard)
+@UseInterceptors(CacheInterceptor)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  @Validation({ dto: BaseQueryFilter, validateFor: ValidateFor.QUERY })
-  @UseGuards(ValidationGuard, AuthGuard)
+  @BaseQueryFilterValidator()
+  @Cache({ keyPrefix: CacheKeyPrefix.ADMIN_USER_LIST })
   async listUsers(
     @Ctx() context: DevConsoleApiContext,
     @Query() query: BaseQueryFilter,
@@ -53,8 +64,7 @@ export class UserController {
   }
 
   @Get(':user_uuid/projects')
-  @Validation({ dto: BaseQueryFilter, validateFor: ValidateFor.QUERY })
-  @UseGuards(ValidationGuard, AuthGuard)
+  @BaseQueryFilterValidator()
   async getUserProjects(
     @Ctx() context: DevConsoleApiContext,
     @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
@@ -64,8 +74,7 @@ export class UserController {
   }
 
   @Get(':user_uuid/logins')
-  @Validation({ dto: BaseQueryFilter, validateFor: ValidateFor.QUERY })
-  @UseGuards(ValidationGuard, AuthGuard)
+  @BaseQueryFilterValidator()
   async getUserLogins(
     @Ctx() context: DevConsoleApiContext,
     @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
@@ -75,8 +84,7 @@ export class UserController {
   }
 
   @Get(':user_uuid/roles')
-  @Validation({ dto: BaseQueryFilter, validateFor: ValidateFor.QUERY })
-  @UseGuards(ValidationGuard, AuthGuard)
+  @BaseQueryFilterValidator()
   async getUserRoles(
     @Ctx() context: DevConsoleApiContext,
     @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
@@ -104,14 +112,19 @@ export class UserController {
   }
 
   @Get(':user_uuid/quotas')
-  @Validation({ dto: GetQuotasDto, validateFor: ValidateFor.QUERY })
+  @Validation({
+    dto: GetQuotaDto,
+    validateFor: ValidateFor.QUERY,
+    skipValidation: true,
+  })
   @UseGuards(ValidationGuard, AuthGuard)
   async getUserQuotas(
     @Ctx() context: DevConsoleApiContext,
     @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
-    @Query() query: GetQuotasDto,
+    @Query() query: GetQuotaDto,
   ): Promise<QuotaDto[]> {
     query.object_uuid = user_uuid;
+    query.types = [QuotaType.FOR_OBJECT];
     return this.userService.getUserQuotas(context, query);
   }
 
@@ -147,11 +160,21 @@ export class UserController {
     return this.userService.deleteUserQuota(context, data);
   }
 
-  @Patch(':user_uuid')
-  async updateUser(
+  @Post(':user_uuid/block')
+  @HttpCode(200)
+  async blockUser(
     @Ctx() context: DevConsoleApiContext,
     @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
   ) {
-    return; // TODO
+    return this.userService.blockUser(context, user_uuid);
+  }
+
+  @Post(':user_uuid/unblock')
+  @HttpCode(200)
+  async unblockUser(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
+  ) {
+    return this.userService.unblockUser(context, user_uuid);
   }
 }

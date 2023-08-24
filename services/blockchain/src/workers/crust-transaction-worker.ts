@@ -15,7 +15,7 @@ import {
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { Transaction } from '../common/models/transaction';
-import { Wallet } from '../common/models/wallet';
+import { Wallet } from '../modules/wallet/wallet.model';
 import { DbTables } from '../config/types';
 import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
 import { BlockchainStatus } from '../modules/blockchain-indexers/blockchain-status';
@@ -33,7 +33,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
   }
 
   public async runExecutor(_data: any): Promise<any> {
-    const wallets = await new Wallet({}, this.context).getList(
+    const wallets = await new Wallet({}, this.context).getWallets(
       SubstrateChain.CRUST,
       ChainType.SUBSTRATE,
     );
@@ -93,15 +93,12 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
             null,
             null,
           );
-          await this.writeEventLog(
-            {
-              logType: LogType.INFO,
-              message: `${this.logPrefix}: Processed ${crustTransactions.fileOrders.storageOrders.length} storage order transactions!`,
-              service: ServiceName.BLOCKCHAIN,
-              data: { wallet: wallet.address },
-            },
-            LogOutput.EVENT_INFO,
-          );
+          await this.writeEventLog({
+            logType: LogType.INFO,
+            message: `${this.logPrefix}: Processed ${crustTransactions.fileOrders.storageOrders.length} storage order transactions!`,
+            service: ServiceName.BLOCKCHAIN,
+            data: { wallet: wallet.address },
+          });
         }
       } catch (err) {
         await conn.rollback();
@@ -291,7 +288,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         chain = @chain
         AND chainType = @chainType
         AND address = @address
-        AND transactionHash in ('${bcHashes.join("','")}')`,
+        AND transactionHash in ('${bcHashes.join(`','`)}')`,
       {
         status,
         chain: wallet.chain,
@@ -310,9 +307,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         bcHashes,
         conn,
       )
-    ).map((tx) => {
-      return tx.transactionHash;
-    });
+    ).map((tx) => tx.transactionHash);
   }
 
   // public async updateWithdrawalsByStatus(
@@ -370,9 +365,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
 
     const storageOrders = new Map<string, CrustStorageOrder>(
       bcOrders.storageOrders
-        .filter((so) => {
-          return so.status == bcStatus;
-        })
+        .filter((so) => so.status == bcStatus)
         .map((so) => [so.extrinsicHash, so]),
     );
 

@@ -1,3 +1,5 @@
+import { isArray } from 'lodash';
+
 export function JSONParser(): any {
   return (value: string | any) => {
     try {
@@ -9,4 +11,16 @@ export function JSONParser(): any {
       return null;
     }
   };
+}
+
+// Not to be confused with arrayParser from rawmodel
+export function stringArrayParser(
+  separator = ',',
+): (value: string) => string | string[] {
+  return (value: string) =>
+    value?.includes(separator)
+      ? value.split(separator)
+      : isArray(value)
+      ? value
+      : [value];
 }

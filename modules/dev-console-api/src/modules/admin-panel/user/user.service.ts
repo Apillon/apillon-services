@@ -7,13 +7,17 @@ import {
   CodeException,
   CreateQuotaOverrideDto,
   DefaultUserRole,
+  GetQuotaDto,
+  QuotaDto,
   QuotaOverrideDto,
   Scs,
+  SerializeFor,
+  SqlModelStatus,
+  SystemErrorCode,
 } from '@apillon/lib';
 import { ResourceNotFoundErrorCode } from '../../../config/types';
 import { UUID } from 'crypto';
-import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
-import { GetQuotasDto } from '@apillon/lib/dist/lib/at-services/config/dtos/get-quotas.dto';
+import { Project } from '../../project/models/project.model';
 
 @Injectable()
 export class UserService {
@@ -47,7 +51,7 @@ export class UserService {
     context: DevConsoleApiContext,
     filter: BaseQueryFilter,
   ): Promise<any> {
-    return await new User({}, context).listAllUsers(filter);
+    return await new User({}, context).listUsers(filter);
   }
 
   /**
@@ -134,12 +138,12 @@ export class UserService {
    * Retreives a list of all quotas for a user
    * @async
    * @param {DevConsoleApiContext} context
-   * @param {GetQuotasDto} query
+   * @param {GetQuotaDto} query
    * @returns {Promise<QuotaDto[]>}
    */
   async getUserQuotas(
     context: DevConsoleApiContext,
-    query: GetQuotasDto,
+    query: GetQuotaDto,
   ): Promise<QuotaDto[]> {
     return await new Scs(context).getQuotas(query);
   }
@@ -163,5 +167,124 @@ export class UserService {
    */
   async deleteUserQuota(context: DevConsoleApiContext, data: QuotaOverrideDto) {
     return await new Scs(context).deleteOverride(data);
+  }
+
+  /**
+   * Block user and it's access to platform. Implemented as separate endpoint.
+   * Set status of user and authUser to blocked and block api keys, to restrict access via APIs
+   * @param context
+   * @param user_uuid
+   */
+  async blockUser(context: DevConsoleApiContext, user_uuid: string) {
+    const user = await new User({}, context).populateByUUID(user_uuid);
+
+    if (!user.exists()) {
+      throw new CodeException({
+        status: HttpStatus.NOT_FOUND,
+        code: ResourceNotFoundErrorCode.USER_DOES_NOT_EXISTS,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+
+    user.status = SqlModelStatus.BLOCKED;
+
+    const userProjects = await new Project({}).getUserProjects(
+      context,
+      user.id,
+    );
+
+    const conn = await context.mysql.start();
+    try {
+      //Update user status
+      await user.update(SerializeFor.UPDATE_DB, conn);
+
+      //Update user status in access MS + delete current login tokens (logout)
+      const ams: Ams = new Ams(context);
+      await ams.updateAuthUserStatus({
+        user_uuid,
+        status: SqlModelStatus.BLOCKED,
+      });
+      await ams.logout({ user_uuid: user.user_uuid });
+
+      //Block api keys
+      await new Ams(context).updateApiKeysInProject({
+        project_uuids: userProjects.items.map((x) => x.project_uuid),
+        block: true,
+      });
+
+      //Block projects
+      await new Project({}, context).updateUserProjectsStatus(
+        user.id,
+        SqlModelStatus.BLOCKED,
+      );
+
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+      throw new CodeException({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        code: SystemErrorCode.UNHANDLED_SYSTEM_ERROR,
+        errorCodes: SystemErrorCode,
+        details: err,
+      });
+    }
+
+    return user.serialize(SerializeFor.ADMIN);
+  }
+
+  /**
+   * Unblock user. Implemented as separate endpoint.
+   * Set status of user and authUser to active and unblock api keys, to enable access via APIs
+   * @param context
+   * @param user_uuid
+   */
+  async unblockUser(context: DevConsoleApiContext, user_uuid: string) {
+    const user = await new User({}, context).populateByUUID(user_uuid);
+
+    if (!user.exists()) {
+      throw new CodeException({
+        status: HttpStatus.NOT_FOUND,
+        code: ResourceNotFoundErrorCode.USER_DOES_NOT_EXISTS,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+
+    user.status = SqlModelStatus.ACTIVE;
+
+    const userProjects = await new Project({}).getUserProjects(
+      context,
+      user.id,
+    );
+
+    const conn = await context.mysql.start();
+    try {
+      await user.update(SerializeFor.UPDATE_DB, conn);
+      await new Ams(context).updateAuthUserStatus({
+        user_uuid,
+        status: SqlModelStatus.ACTIVE,
+      });
+
+      await new Ams(context).updateApiKeysInProject({
+        project_uuids: userProjects.items.map((x) => x.project_uuid),
+        block: false,
+      });
+
+      await new Project({}, context).updateUserProjectsStatus(
+        user.id,
+        SqlModelStatus.ACTIVE,
+      );
+
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+      throw new CodeException({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        code: SystemErrorCode.UNHANDLED_SYSTEM_ERROR,
+        errorCodes: SystemErrorCode,
+        details: err,
+      });
+    }
+
+    return user.serialize(SerializeFor.ADMIN);
   }
 }

@@ -1,15 +1,16 @@
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
-  GetQuotasDto,
   GetQuotaDto,
   PopulateFrom,
   prop,
   SerializeFor,
   SqlModelStatus,
+  QuotaType,
+  enumInclusionValidator,
+  QuotaDto,
 } from '@apillon/lib';
-import { DbTables } from '../../../config/types';
-import { QuotaDto } from '@apillon/lib/dist/lib/at-services/config/dtos/quota.dto';
+import { ConfigErrorCode, DbTables } from '../../../config/types';
 
 export class Quota extends AdvancedSQLModel {
   public readonly tableName = DbTables.QUOTA;
@@ -20,7 +21,8 @@ export class Quota extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [
-      PopulateFrom.DB, //
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
     ],
     serializable: [
       SerializeFor.ADMIN,
@@ -36,7 +38,8 @@ export class Quota extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [
-      PopulateFrom.DB, //
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
     ],
     serializable: [
       SerializeFor.ADMIN,
@@ -52,7 +55,8 @@ export class Quota extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [
-      PopulateFrom.DB, //
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
     ],
     serializable: [
       SerializeFor.ADMIN,
@@ -68,7 +72,8 @@ export class Quota extends AdvancedSQLModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [
-      PopulateFrom.DB, //
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
     ],
     serializable: [
       SerializeFor.ADMIN,
@@ -84,7 +89,8 @@ export class Quota extends AdvancedSQLModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [
-      PopulateFrom.DB, //
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
     ],
     serializable: [
       SerializeFor.ADMIN,
@@ -94,9 +100,35 @@ export class Quota extends AdvancedSQLModel {
   })
   public value: number;
 
-  public async getQuotas(
-    data: GetQuotaDto | GetQuotasDto,
-  ): Promise<QuotaDto[]> {
+  /**
+   * type - QuotaType
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+    ],
+    validators: [
+      {
+        resolver: enumInclusionValidator(QuotaType, false),
+        code: ConfigErrorCode.INVALID_QUOTA_TYPE,
+      },
+    ],
+  })
+  public type: QuotaType;
+
+  public async getQuotas(data: GetQuotaDto): Promise<QuotaDto[]> {
+    data.types ||= [
+      QuotaType.FOR_OBJECT,
+      QuotaType.FOR_PROJECT,
+      QuotaType.FOR_PROJECT_AND_OBJECT,
+    ]; // For admin panel - filter by quota type
     return await this.getContext().mysql.paramExecute(
       `
       SELECT q.id,
@@ -108,12 +140,14 @@ export class Quota extends AdvancedSQLModel {
           MAX(GREATEST(q.value, IFNULL(o1.value,0), IFNULL(o2.value,0)))
         END AS value,
         q.valueType,
-        q.value AS defaultValue
+        q.value AS defaultValue,
+        o1.object_uuid,
+        o1.description AS overrideDescription
       FROM quota q
       LEFT JOIN override o1
         ON o1.quota_id = q.id
         AND (o1.project_uuid IS NULL OR o1.project_uuid = @project_uuid)
-        AND (o1.object_uuid IS NULL OR o1.object_uuid = @object_uuid)
+        AND (o1.object_uuid IS NULL OR @object_uuid IS NULL OR o1.object_uuid = @object_uuid)
         AND o1.package_id IS NULL
         AND o1.status = ${SqlModelStatus.ACTIVE}
       LEFT JOIN override o2
@@ -128,13 +162,15 @@ export class Quota extends AdvancedSQLModel {
         ON o2.quota_id = q.id
         AND o2.status = ${SqlModelStatus.ACTIVE}
       WHERE q.status = ${SqlModelStatus.ACTIVE}
-      AND (@quota_id is NULL OR q.id = @quota_id)
-      GROUP BY q.id
+      AND (@quota_id IS NULL OR q.id = @quota_id)
+      AND q.type IN (${data.types.join(',')})
+      GROUP BY q.id, o1.object_uuid, o1.description
     `,
       {
         quota_id: data.quota_id || null,
         project_uuid: data.project_uuid || null,
         object_uuid: data.object_uuid || null,
+        types: data.types,
       },
     );
   }

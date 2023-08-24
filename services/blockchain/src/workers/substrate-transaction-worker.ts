@@ -4,9 +4,10 @@ import {
   sendToWorkerQueue,
   LogOutput,
 } from '@apillon/workers-lib';
-import { Wallet } from '../common/models/wallet';
+import { Wallet } from '../modules/wallet/wallet.model';
 import { BaseBlockchainIndexer } from '../modules/blockchain-indexers/substrate/base-blockchain-indexer';
 import {
+  AppEnvironment,
   ChainType,
   Context,
   LogType,
@@ -31,12 +32,15 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
   private chainName: string;
   private logPrefix: string;
   private wallets: Wallet[];
+  // Add as necessary
   private indexer: BaseBlockchainIndexer;
 
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);
 
     // Kinda part of the worker definition, the chainId is
+    console.log('SUBSTRATEW: workerDefinition ', workerDefinition);
+    console.log('SUBSTRATEW: parameters', workerDefinition.parameters);
     this.chainId = workerDefinition.parameters.chainId;
 
     this.chainName = SubstrateChain[this.chainId];
@@ -46,7 +50,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
 
   public async runExecutor(_data?: any): Promise<any> {
     // Wallets will be populated once the runExecutor method is called
-    this.wallets = await new Wallet({}, this.context).getList(
+    this.wallets = await new Wallet({}, this.context).getWallets(
       SubstrateChain[this.chainName],
       ChainType.SUBSTRATE,
     );
@@ -68,6 +72,8 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         fromBlock,
         toBlock,
       );
+
+      console.log('Fetched transactions: ', transactions);
 
       const conn = await this.context.mysql.start();
       try {
@@ -91,7 +97,12 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         );
         continue;
       }
-      if (transactions.length > 0) {
+
+      if (
+        transactions.length > 0 &&
+        env.APP_ENV !== AppEnvironment.TEST &&
+        env.APP_ENV !== AppEnvironment.LOCAL_DEV
+      ) {
         // Trigger webhook worker
         await sendToWorkerQueue(
           env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
@@ -125,11 +136,13 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     toBlock: number,
   ) {
     // Get all transactions from the
-    const transactions = await this.indexer.getAllTransactions(
+    const transactions = await this.indexer.getAllSystemEvents(
       address,
       fromBlock,
       toBlock,
     );
+
+    console.log('System transactions: ', transactions);
 
     const transactionsArray: Array<any> = Object.values(transactions);
     return transactionsArray.length > 0 ? transactionsArray.flat(Infinity) : [];
@@ -156,8 +169,10 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         t.status == TransactionIndexerStatus.FAIL;
       })
       .map((t: any): string => {
-        return t.transactionHash;
+        return t.extrinsicHash;
       });
+
+    console.log('Failed transactions ', failedTransactions);
 
     // Update SUCCESSFUL transactions
     await this.updateTransactions(
@@ -184,7 +199,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       SET transactionStatus = @status
       WHERE
         chain = @chain
-        AND transactionHash in ('${transactionHashes.join("','")}')`,
+        AND transactionHash in ('${transactionHashes.join(`','`)}')`,
       {
         chain: this.chainId,
         status: status,
@@ -198,7 +213,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         message: `${this.logPrefix}: ${transactionHashes.length} [${
           TransactionStatus[status]
         }] blockchain transactions matched (txHashes=${transactionHashes.join(
-          "','",
+          `','`,
         )}) in db.`,
         service: ServiceName.BLOCKCHAIN,
         data: {
