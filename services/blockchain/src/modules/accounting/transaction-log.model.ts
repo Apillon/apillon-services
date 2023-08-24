@@ -349,6 +349,19 @@ export class TransactionLog extends AdvancedSQLModel {
   })
   public description: string;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public project_uuid?: string;
+
   public constructor(data?: any, context?: Context) {
     super(data, context);
   }

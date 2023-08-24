@@ -64,6 +64,7 @@ export class PinToCrustWorker extends BaseWorker {
               isDirectory: pinToCrustRequest.isDirectory,
               refTable: pinToCrustRequest.refTable,
               refId: pinToCrustRequest.refId,
+              project_uuid: bucket.project_uuid,
             },
             this.context,
           );

@@ -31,6 +31,7 @@ export class EvmService {
         transaction: string;
         referenceTable?: string;
         referenceId?: string;
+        project_uuid: string;
       };
     },
     context: ServiceContext,
@@ -174,6 +175,7 @@ export class EvmService {
         data,
         transactionHash: ethers.utils.keccak256(rawTransaction),
         transactionStatus: TransactionStatus.PENDING,
+        project_uuid: _event.params.project_uuid,
       });
       await transaction.insert(SerializeFor.INSERT_DB, conn);
       await wallet.iterateNonce(conn);
