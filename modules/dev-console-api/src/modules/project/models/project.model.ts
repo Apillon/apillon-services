@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/member-ordering */
 import { prop } from '@rawmodel/core';
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 
 import {
@@ -119,6 +119,26 @@ export class Project extends ProjectAccessModel {
     ],
   })
   public imageFile_id: number;
+
+  /**
+   * Created at property definition.
+   */
+  @prop({
+    parser: { resolver: dateParser() },
+    serializable: [SerializeFor.APILLON_API, SerializeFor.SELECT_DB],
+    populatable: [PopulateFrom.DB],
+  })
+  public createTime?: Date;
+
+  /**
+   * Updated at property definition.
+   */
+  @prop({
+    parser: { resolver: dateParser() },
+    serializable: [SerializeFor.APILLON_API, SerializeFor.SELECT_DB],
+    populatable: [PopulateFrom.DB],
+  })
+  public updateTime?: Date;
 
   /*******************************************
    * INFO properties
