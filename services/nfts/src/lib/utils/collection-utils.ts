@@ -32,39 +32,44 @@ export async function deployNFTCollectionContract(
   conn: PoolConnection,
 ) {
   const walletService = new WalletService(context, collection.chain);
-  //Prepare transaction record
-  const dbTxRecord: Transaction = new Transaction({}, context);
 
   // Create transaction request to be sent on blockchain
   const tx: UnsignedTransaction = await walletService.createDeployTransaction(
     collection,
   );
 
-  const blockchainServiceRequest: CreateEvmTransactionDto =
+  const response = await new BlockchainMicroservice(
+    context,
+  ).createEvmTransaction(
     new CreateEvmTransactionDto(
       {
         chain: collection.chain,
         transaction: ethers.utils.serializeTransaction(tx),
         referenceTable: DbTables.COLLECTION,
         referenceId: collection.id,
+        project_uuid: collection.project_uuid,
       },
       context,
-    );
-  const response = await new BlockchainMicroservice(
-    context,
-  ).createEvmTransaction(blockchainServiceRequest);
-
-  dbTxRecord.populate({
-    chainId: collection.chain,
-    transactionType: TransactionType.DEPLOY_CONTRACT,
-    refTable: DbTables.COLLECTION,
-    refId: collection.id,
-    transactionHash: response.data.transactionHash,
-    transactionStatus: TransactionStatus.PENDING,
-  });
+    ),
+  );
 
   //Insert to DB
-  await TransactionService.saveTransaction(context, dbTxRecord, conn);
+  await TransactionService.saveTransaction(
+    context,
+    new Transaction(
+      {
+        chainId: collection.chain,
+        transactionType: TransactionType.DEPLOY_CONTRACT,
+        refTable: DbTables.COLLECTION,
+        refId: collection.id,
+        transactionHash: response.data.transactionHash,
+        transactionStatus: TransactionStatus.PENDING,
+      },
+      context,
+    ),
+    conn,
+  );
+
   //Update collection status
   collection.collectionStatus = CollectionStatus.DEPLOYING;
   collection.contractAddress = response.data.data;
