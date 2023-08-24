@@ -32,7 +32,7 @@ export class SubstrateService {
         fromAddress?: string;
         referenceTable?: string;
         referenceId?: string;
-        project_uuid: string;
+        project_uuid?: string;
       };
     },
     context: ServiceContext,

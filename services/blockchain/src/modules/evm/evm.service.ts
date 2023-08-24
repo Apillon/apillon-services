@@ -31,7 +31,7 @@ export class EvmService {
         transaction: string;
         referenceTable?: string;
         referenceId?: string;
-        project_uuid: string;
+        project_uuid?: string;
       };
     },
     context: ServiceContext,
