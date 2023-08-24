@@ -60,13 +60,16 @@ export class NftsService {
   // TODO: Remove send transaction from all functions bellow, as we are planing to
   // send those in different worker/job
   static async createCollection(
-    { body }: { body: CreateCollectionDTO },
+    params: { body: CreateCollectionDTO },
     context: ServiceContext,
   ) {
-    console.log(`Creating NFT collections: ${JSON.stringify(body)}`);
+    console.log(`Creating NFT collections: ${JSON.stringify(params.body)}`);
 
     //Create collection object
-    const collection: Collection = new Collection(body, context).populate({
+    const collection: Collection = new Collection(
+      params.body,
+      context,
+    ).populate({
       collection_uuid: uuidV4(),
       status: SqlModelStatus.INCOMPLETE,
     });
@@ -85,25 +88,29 @@ export class NftsService {
       });
     }
 
-    //Call storage MS, to create bucket used to upload NFT metadata
+    //Call storage MS, to create bucket used to upload NFT metadata. Bucket is not created if baseUri is provided.
     let nftMetadataBucket;
-    try {
-      const createBucketParams: CreateBucketDto =
-        new CreateBucketDto().populate({
-          project_uuid: body.project_uuid,
-          bucketType: 3,
-          name: `${collection.name} bucket`,
-        });
-      nftMetadataBucket = (
-        await new StorageMicroservice(context).createBucket(createBucketParams)
-      ).data;
-      collection.bucket_uuid = nftMetadataBucket.bucket_uuid;
-    } catch (err) {
-      throw await new NftsContractException(
-        NftsErrorCode.CREATE_BUCKET_FOR_NFT_METADATA_ERROR,
-        context,
-        err,
-      ).writeToMonitor({});
+    if (!collection.baseUri) {
+      try {
+        const createBucketParams: CreateBucketDto =
+          new CreateBucketDto().populate({
+            project_uuid: params.body.project_uuid,
+            bucketType: 3,
+            name: `${collection.name} bucket`,
+          });
+        nftMetadataBucket = (
+          await new StorageMicroservice(context).createBucket(
+            createBucketParams,
+          )
+        ).data;
+        collection.bucket_uuid = nftMetadataBucket.bucket_uuid;
+      } catch (err) {
+        throw await new NftsContractException(
+          NftsErrorCode.CREATE_BUCKET_FOR_NFT_METADATA_ERROR,
+          context,
+          err,
+        ).writeToMonitor({});
+      }
     }
 
     try {
