@@ -297,9 +297,7 @@ export class Wallet extends AdvancedSQLModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [
-      //
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN,
+      PopulateFrom.DB, //
     ],
     serializable: [
       SerializeFor.ADMIN,
@@ -317,9 +315,7 @@ export class Wallet extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [
-      //
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN,
+      PopulateFrom.DB, //
     ],
     serializable: [
       SerializeFor.ADMIN,
@@ -600,7 +596,7 @@ export class Wallet extends AdvancedSQLModel {
       qSelect: `SELECT ${new TransactionLog(
         {},
         this.getContext(),
-      ).generateSelectFields('t', '', SerializeFor.ADMIN)}, 
+      ).generateSelectFields('t', '', SerializeFor.ADMIN)},
         tq.nonce, tq.referenceTable, tq.referenceId`,
       qFrom: `FROM \`${DbTables.TRANSACTION_LOG}\` t
         LEFT JOIN \`${DbTables.TRANSACTION_QUEUE}\` tq ON tq.id = t.transactionQueue_id

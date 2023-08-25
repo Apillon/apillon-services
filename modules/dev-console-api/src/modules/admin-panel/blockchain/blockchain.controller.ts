@@ -4,6 +4,7 @@ import {
   UpdateTransactionDto,
   ValidateFor,
   PopulateFrom,
+  SqlModelStatus,
 } from '@apillon/lib';
 import {
   Body,
@@ -50,7 +51,7 @@ export class BlockchainController {
   async updateWallet(
     @Ctx() context: DevConsoleApiContext,
     @Param('id', ParseIntPipe) walletId: number,
-    @Body() data: any,
+    @Body() data: { minBalance: string; status: SqlModelStatus },
   ) {
     return this.blockchainService.updateWallet(context, walletId, data);
   }
