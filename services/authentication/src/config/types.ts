@@ -127,7 +127,7 @@ export enum AuthApiEmailType {
   GENERATE_IDENTITY = 'generate-identity',
   RESTORE_CREDENTIAL = 'restore-credential',
   REVOKE_DID = 'revoke-did',
-  IDENTITY_DELIVERY = 'identity-delivery',
+  DOWNLOAD_IDENTITY = 'download-identity',
 }
 
 export interface Presentation {

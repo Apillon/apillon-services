@@ -3,13 +3,13 @@ import {
   AttestationDto,
   IdentityCreateDto,
   IdentityDidRevokeDto,
-  Lmas,
   LogType,
+  Mailing,
   ServiceName,
   TransactionStatus,
   env,
+  generateJwtToken,
   runWithWorkers,
-  writeLog,
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
@@ -17,7 +17,12 @@ import {
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { IdentityJobState, IdentityState } from '../config/types';
+import {
+  AuthApiEmailType,
+  IdentityJobState,
+  IdentityState,
+  JwtTokenType,
+} from '../config/types';
 import { Identity } from '../modules/identity/models/identity.model';
 import { IdentityMicroservice } from '../modules/identity/identity.service';
 import { IdentityJob } from '../modules/identity-job/models/identity-job.model';
@@ -122,6 +127,8 @@ export class UpdateStateWorker extends BaseQueueWorker {
           identityJob.identity_id,
         );
 
+        const email = identity.email;
+
         switch (identityJob.state) {
           case IdentityJobState.DID_CREATE:
             if (status == TransactionStatus.CONFIRMED) {
@@ -168,7 +175,7 @@ export class UpdateStateWorker extends BaseQueueWorker {
                 });
 
                 await this.execIdentityGenerate(
-                  identity.email,
+                  email,
                   identityJob.data.did_create_op,
                 );
 
@@ -211,6 +218,21 @@ export class UpdateStateWorker extends BaseQueueWorker {
                 );
 
                 await identityJob.setCompleted();
+
+                const token = generateJwtToken(
+                  JwtTokenType.IDENTITY_VERIFICATION,
+                  {
+                    email,
+                  },
+                );
+
+                await new Mailing(ctx).sendMail({
+                  emails: [email],
+                  template: AuthApiEmailType.IDENTITY_DELIVERY,
+                  data: {
+                    actionUrl: `${env.AUTH_APP_URL}/identity-delivery/?token=${token}&email=${email}&type=${AuthApiEmailType.IDENTITY_DELIVERY}`,
+                  },
+                });
               }
               identity.state = IdentityState.ATTESTED;
               await identity.update();

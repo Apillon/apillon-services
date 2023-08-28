@@ -61,6 +61,7 @@ export class IdentityMicroservice {
     const token = generateJwtToken(JwtTokenType.IDENTITY_VERIFICATION, {
       email,
     });
+
     let auth_app_page = 'registration';
 
     let identity = await new Identity({}, context).populateByUserEmail(
@@ -133,15 +134,6 @@ export class IdentityMicroservice {
         });
       }
       auth_app_page = 'restore';
-    } else if (verificationEmailType == AuthApiEmailType.IDENTITY_DELIVERY) {
-      if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
-        throw new AuthenticationCodeException({
-          code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
-          status: HttpStatus.NOT_FOUND,
-        });
-      }
-
-      auth_app_page = 'identity_delivery';
     }
 
     await new Mailing(context).sendMail({
