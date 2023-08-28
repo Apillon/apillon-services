@@ -78,14 +78,6 @@ export class AuthenticationMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
-
-  public async generateDevResources(params: any) {
-    const data = {
-      eventName: AuthenticationEventType.GENERATE_DEV_RESOURCES,
-      body: params,
-    };
-    return await this.callService(data);
-  }
   //#END
 
   //#REGION Sporran Wallet
