@@ -1,8 +1,4 @@
-import {
-  Context,
-  PoolConnection,
-  TransactionWebhookDataDto,
-} from '@apillon/lib';
+import { Context, TransactionWebhookDataDto } from '@apillon/lib';
 import { sendToWorkerQueue } from '@apillon/workers-lib';
 import { DbTables } from '../config/types';
 

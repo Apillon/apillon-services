@@ -114,7 +114,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
           await this.writeEventLog(
             {
               logType: LogType.ERROR,
-              message: 'Error in TransactionWebhookWorker sending webhook',
+              message: `Error sending update to worker: ${this.webHookWorker.workerName}, url ${this.webHookWorker.sqsUrl}`,
               service: ServiceName.BLOCKCHAIN,
               data: { transactions },
               err: error,

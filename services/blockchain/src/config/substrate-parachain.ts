@@ -8,7 +8,7 @@ export const ParachainConfig = {
     id: SubstrateChain.CRUST,
     name: 'CRUST',
     webhookWorkerName: 'UpdateCrustStatusWorker',
-    sqsUrl: env.AUTH_AWS_WORKER_SQS_URL,
+    sqsUrl: env.STORAGE_AWS_WORKER_SQS_URL,
     indexer: CrustBlockchainIndexer,
   },
   KILT: {
