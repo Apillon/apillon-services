@@ -22,7 +22,7 @@ export class Scheduler extends WorkerScheduler {
     const jobs = await new Job({}, this.context).getPendingJobs();
 
     for (const job of jobs) {
-      // console.log(`JOB READY: ${JSON.stringify(job.serialize())}`);
+      console.log(`${job.name} scheduled to run`);
       // await this.writeLogToDb(
       //   WorkerLogStatus.INFO,
       //   `${job.name} scheduled to run`,

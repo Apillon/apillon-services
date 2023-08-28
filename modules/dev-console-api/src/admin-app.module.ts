@@ -2,10 +2,10 @@ import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { AdminPanelModule } from './modules/admin-panel/admin-panel.module';
 import { MySQLModule } from './modules/database/mysql.module';
 import {
-  ApiName,
   AuthenticateUserMiddleware,
   createRequestLogMiddleware,
 } from '@apillon/modules-lib';
+import { ApiName } from '@apillon/lib';
 import { ContextMiddleware } from './middlewares/context.middleware';
 
 @Module({

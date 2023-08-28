@@ -1,6 +1,6 @@
 // import { ApiProperty } from '@babel/core';
 import { prop } from '@rawmodel/core';
-import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
+import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
   MongoCollections,
   PopulateFrom,
@@ -210,17 +210,6 @@ export class RequestLogDto extends ModelBase {
     fakeValue: 0,
   })
   public responseTime: number;
-
-  /**
-   * Created at property definition.
-   */
-  @prop({
-    parser: { resolver: dateParser() },
-    populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.ADMIN],
-    fakeValue: new Date(),
-  })
-  public createTime: Date;
 
   /**
    * User id

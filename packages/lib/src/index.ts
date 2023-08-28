@@ -2,7 +2,6 @@
 export * from './lib/at-services/config/scs';
 export * from './lib/at-services/config/dtos/quota.dto';
 export * from './lib/at-services/config/dtos/get-quota.dto';
-export * from './lib/at-services/config/dtos/get-quotas.dto';
 export * from './lib/at-services/config/dtos/create-quota-override.dto';
 export * from './lib/at-services/config/dtos/quota-override.dto';
 export * from './config/types';
@@ -113,7 +112,9 @@ export * from './lib/at-services/ams/dtos/api-key-query-filter.dto';
 export * from './lib/at-services/ams/dtos/api-key-role.dto';
 export * from './lib/at-services/ams/dtos/api-key-role-base.dto';
 export * from './lib/at-services/lmas/dtos/request-log.dto';
+export * from './lib/at-services/lmas/dtos/base-logs-query-filter.dto';
 export * from './lib/at-services/lmas/dtos/logs-query-filter.dto';
+export * from './lib/at-services/lmas/dtos/request-logs-query-filter.dto';
 export * from './lib/exceptions/exceptions';
 export * from './lib/exceptions/http-exception';
 export * from './lib/base-models/base-query-filter.model';

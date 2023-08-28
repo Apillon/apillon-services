@@ -1,16 +1,15 @@
 import { prop } from '@rawmodel/core';
-import { BaseQueryFilter } from '../../../base-models/base-query-filter.model';
-import { dateParser, stringParser } from '@rawmodel/parsers';
+import { stringParser } from '@rawmodel/parsers';
 import {
   LogType,
   PopulateFrom,
   SerializeFor,
   ServiceName,
-  ValidatorErrorCode,
 } from '../../../../config/types';
-import { enumInclusionValidator } from '../../../validators';
+import { BaseLogsQueryFilter } from './base-logs-query-filter.dto';
+import { stringArrayParser } from '../../../parsers';
 
-export class LogsQueryFilter extends BaseQueryFilter {
+export class LogsQueryFilter extends BaseLogsQueryFilter {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.ADMIN],
@@ -19,49 +18,16 @@ export class LogsQueryFilter extends BaseQueryFilter {
   public project_uuid: string;
 
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: stringArrayParser() },
     populatable: [PopulateFrom.ADMIN],
     serializable: [SerializeFor.ADMIN],
   })
-  public user_uuid: string;
+  public logTypes: LogType[];
 
   @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.ADMIN],
-    serializable: [SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: enumInclusionValidator(LogType, true),
-        code: ValidatorErrorCode.INVALID_LOG_TYPE,
-      },
-    ],
-  })
-  public logType: LogType;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.ADMIN],
-    serializable: [SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: enumInclusionValidator(ServiceName, true),
-        code: ValidatorErrorCode.INVALID_SERVICE_NAME,
-      },
-    ],
-  })
-  public service: ServiceName;
-
-  @prop({
-    parser: { resolver: dateParser() },
+    parser: { resolver: stringArrayParser() },
     populatable: [PopulateFrom.ADMIN],
     serializable: [SerializeFor.ADMIN],
   })
-  public dateFrom: Date;
-
-  @prop({
-    parser: { resolver: dateParser() },
-    populatable: [PopulateFrom.ADMIN],
-    serializable: [SerializeFor.ADMIN],
-  })
-  public dateTo: Date;
+  public services: ServiceName[];
 }

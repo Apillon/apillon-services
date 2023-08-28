@@ -196,7 +196,7 @@ export class User extends AdvancedSQLModel {
     const sqlQuery = {
       qSelect: `SELECT ${this.generateSelectFields(
         'u',
-      )}, COUNT(DISTINCT p.id) AS totalProjects, COUNT(s.id) AS totalServices`,
+      )}, COUNT(DISTINCT p.id) AS totalProjects, COUNT(s.id) AS totalServices, u.createTime, u.updateTime`,
       qFrom: `FROM \`${DbTables.USER}\` u
         LEFT JOIN project_user pu ON u.id = pu.user_id
         LEFT JOIN project p ON pu.project_id = p.id
@@ -205,6 +205,7 @@ export class User extends AdvancedSQLModel {
           @search IS null
           OR u.name LIKE CONCAT('%', @search, '%')
           OR u.email LIKE CONCAT('%', @search, '%')
+          OR u.user_uuid = @search
         )
         AND u.status <> ${SqlModelStatus.DELETED}
         `,

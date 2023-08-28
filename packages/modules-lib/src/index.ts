@@ -10,4 +10,3 @@ export * from './lib/decorators/api-key-permission.decorator';
 export * from './lib/decorators/cache.decorator';
 export * from './lib/middlewares/request-log.middleware';
 export * from './lib/common/utils';
-export * from './config/types';

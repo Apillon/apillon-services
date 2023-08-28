@@ -31,7 +31,7 @@ export function getTokenDecimalsFromChain(chainType: ChainType, chain: Chain) {
     },
     [ChainType.SUBSTRATE]: {
       [SubstrateChain.CRUST]: 12,
-      [SubstrateChain.KILT]: 18,
+      [SubstrateChain.KILT]: 15,
       [SubstrateChain.PHALA]: 18,
     },
   };

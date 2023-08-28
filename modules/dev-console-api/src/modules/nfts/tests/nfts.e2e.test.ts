@@ -106,8 +106,8 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       expect(response.body.data.items[0]?.name).toBeTruthy();
       expect(response.body.data.items[0]?.maxSupply).toBeTruthy();
       expect(response.body.data.items[0]?.dropPrice).toBe(0);
-      expect(response.body.data.items[0]?.drop).toBe(0);
-      expect(response.body.data.items[0]?.isSoulbound).toBe(0);
+      expect(response.body.data.items[0]?.drop).toBe(false);
+      expect(response.body.data.items[0]?.isSoulbound).toBe(false);
       expect(response.body.data.items[0]?.isRevokable).toBeTruthy();
       expect(response.body.data.items[0]?.dropStart).toBeTruthy();
       expect(response.body.data.items[0]?.dropReserve).toBeTruthy();
@@ -156,7 +156,7 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
           symbol: 'TNFT',
           name: 'Test NFT Collection',
           maxSupply: 50,
-          dropPrice: 0,
+          dropPrice: 0.00001,
           project_uuid: testProject.project_uuid,
           baseUri:
             'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/',
@@ -184,7 +184,7 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       newCollection.collectionStatus = CollectionStatus.DEPLOYED;
       await newCollection.update();
       const transactionStatus = await blockchain.getNftTransactionStatus(
-        newCollection.id,
+        newCollection.collection_uuid,
         TransactionType.DEPLOY_CONTRACT,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
@@ -209,7 +209,7 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
       const transactionStatus = await blockchain.getNftTransactionStatus(
-        newCollection.id,
+        newCollection.collection_uuid,
         TransactionType.MINT_NFT,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
@@ -236,7 +236,7 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
       const transactionStatus = await blockchain.getNftTransactionStatus(
-        newCollection.id,
+        newCollection.collection_uuid,
         TransactionType.BURN_NFT,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
@@ -456,7 +456,7 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
         collectionMetadataFiles.find((x) => x.name == '1.json').directory_id,
       ).toBe(metadataDir.id);
       const transactionStatus = await blockchain.getNftTransactionStatus(
-        newCollection.id,
+        newCollection.collection_uuid,
         TransactionType.DEPLOY_CONTRACT,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
@@ -535,7 +535,7 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       ).populateById(response.body.data.id);
       expect(nestableCollection.exists()).toBeTruthy();
       const transactionStatus = await blockchain.getNftTransactionStatus(
-        nestableCollection.id,
+        nestableCollection.collection_uuid,
         TransactionType.DEPLOY_CONTRACT,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
@@ -565,7 +565,7 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
         .set('Authorization', `Bearer ${nestableUser.token}`);
       expect(response.status).toBe(201);
       const transactionStatus = await blockchain.getNftTransactionStatus(
-        nestableCollection.id,
+        nestableCollection.collection_uuid,
         TransactionType.MINT_NFT,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
@@ -640,7 +640,7 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       expect(response.status).toBe(201);
       expect(response.body.data.success).toBe(true);
       const transactionStatus = await blockchain.getNftTransactionStatus(
-        childCollection.id,
+        childCollection.collection_uuid,
         TransactionType.NEST_MINT_NFT,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
@@ -655,7 +655,7 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       expect(response.status).toBe(201);
       expect(response.body.data.success).toBe(true);
       const transactionStatus = await blockchain.getNftTransactionStatus(
-        nestableCollection.id,
+        nestableCollection.collection_uuid,
         TransactionType.BURN_NFT,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
@@ -672,7 +672,7 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
         .set('Authorization', `Bearer ${nestableUser.token}`);
       expect(response.status).toBe(201);
       const transactionStatus = await blockchain.getNftTransactionStatus(
-        nestableCollection.id,
+        nestableCollection.collection_uuid,
         TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);

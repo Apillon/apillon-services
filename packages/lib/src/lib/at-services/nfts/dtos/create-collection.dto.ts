@@ -15,6 +15,7 @@ import {
 } from '../../../../config/types';
 import { enumInclusionValidator } from '../../../validators';
 import { dropReserveLowerOrEqualToMaxSupplyValidator } from '../validators/create-collection-drop-reserve-validator';
+import { validateDropPriceIfDrop } from '../validators/create-collection-drop-price-validator';
 
 export class CreateCollectionDTOBase extends ModelBase {
   @prop({
@@ -94,7 +95,7 @@ export class CreateCollectionDTOBase extends ModelBase {
         code: ValidatorErrorCode.NFT_DEPLOY_MINT_PRICE_NOT_PRESENT,
       },
       {
-        resolver: numberSizeValidator({ minOrEqual: 0 }),
+        resolver: validateDropPriceIfDrop(0.00001, 10000000000),
         code: ValidatorErrorCode.NFT_DEPLOY_MINT_PRICE_NOT_VALID,
       },
     ],

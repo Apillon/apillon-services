@@ -1,6 +1,11 @@
-import { env, Lmas, MongoCollections, RequestLogDto } from '@apillon/lib';
+import {
+  env,
+  Lmas,
+  MongoCollections,
+  RequestLogDto,
+  ApiName,
+} from '@apillon/lib';
 import { Injectable, mixin, NestMiddleware, Type } from '@nestjs/common';
-import { ApiName } from '../../config/types';
 
 /**
  * @param req Express request
@@ -21,6 +26,12 @@ export function createRequestLogMiddleware(
       const requestId = context?.requestId || '';
       let gatewayEvent = null as any;
       let apiKey = null;
+      // Routes for which logging is skipped
+      const skipRoutes = [
+        '/hosting/domains',
+        '/auth/session-token',
+        '/discord-bot/user-list',
+      ];
 
       try {
         gatewayEvent = JSON.parse(
@@ -63,7 +74,6 @@ export function createRequestLogMiddleware(
             referer: req.headers?.referer || null,
             body: JSON.stringify(bodyMap || []),
             responseTime: Date.now() - startTime,
-            createTime: new Date(),
             user_uuid:
               context?.user?.user_uuid ||
               context?.user?.id ||
@@ -75,6 +85,9 @@ export function createRequestLogMiddleware(
                 ? MongoCollections.API_REQUEST_LOGS
                 : MongoCollections.REQUEST_LOGS,
           });
+          if (skipRoutes.includes(request.endpoint)) {
+            return;
+          }
           await new Lmas().writeRequestLog(request);
           // console.log(`HEADERS: ${JSON.stringify(req.headers)}`);
         } catch (error) {

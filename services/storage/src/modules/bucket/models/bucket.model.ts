@@ -39,6 +39,7 @@ export class Bucket extends ProjectAccessModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
       SerializeFor.SELECT_DB,
     ],
     validators: [],
@@ -58,6 +59,7 @@ export class Bucket extends ProjectAccessModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
     ],
     validators: [
@@ -83,6 +85,7 @@ export class Bucket extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
       SerializeFor.SELECT_DB,
     ],
     validators: [
@@ -113,6 +116,7 @@ export class Bucket extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
       SerializeFor.SELECT_DB,
     ],
     validators: [
@@ -138,6 +142,7 @@ export class Bucket extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
       SerializeFor.SELECT_DB,
     ],
     validators: [],
@@ -257,10 +262,10 @@ export class Bucket extends ProjectAccessModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
-      FROM \`${this.tableName}\`
-      WHERE ( id LIKE @id OR bucket_uuid LIKE @id)
-      AND status <> ${SqlModelStatus.DELETED};
+        SELECT *
+        FROM \`${this.tableName}\`
+        WHERE (id LIKE @id OR bucket_uuid LIKE @id)
+          AND status <> ${SqlModelStatus.DELETED};
       `,
       { id },
       conn,
@@ -280,9 +285,10 @@ export class Bucket extends ProjectAccessModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
-      FROM \`${this.tableName}\`
-      WHERE bucket_uuid = @uuid AND status <> ${SqlModelStatus.DELETED};
+        SELECT *
+        FROM \`${this.tableName}\`
+        WHERE bucket_uuid = @uuid
+          AND status <> ${SqlModelStatus.DELETED};
       `,
       { uuid },
     );
@@ -312,7 +318,11 @@ export class Bucket extends ProjectAccessModel {
     return this;
   }
 
-  public async getList(context: ServiceContext, filter: BucketQueryFilter) {
+  public async getList(
+    context: ServiceContext,
+    filter: BucketQueryFilter,
+    serializationStrategy = SerializeFor.PROFILE,
+  ) {
     this.canAccess(context);
     // Map url query with sql fields.
     const fieldMap = {
@@ -325,9 +335,14 @@ export class Bucket extends ProjectAccessModel {
       filter.serialize(),
     );
 
+    const selectFields = this.generateSelectFields(
+      'b',
+      '',
+      serializationStrategy,
+    );
     const sqlQuery = {
       qSelect: `
-        SELECT ${this.generateSelectFields('b', '')}, b.updateTime
+        SELECT ${selectFields}
         `,
       qFrom: `
         FROM \`${DbTables.BUCKET}\` b
@@ -348,28 +363,36 @@ export class Bucket extends ProjectAccessModel {
       params,
       'b.id',
     );
+    const items = await Promise.all(
+      list.items.map(async (bucket) => {
+        const maxBucketSizeQuota = await new Scs(context).getQuota({
+          quota_id: QuotaCode.MAX_BUCKET_SIZE,
+          project_uuid: filter.project_uuid,
+          object_uuid: bucket.bucket_uuid,
+        });
+        if (maxBucketSizeQuota?.value) {
+          bucket.maxSize = Number(maxBucketSizeQuota?.value) * 1073741824;
+        }
 
-    for (const b of list.items) {
-      const maxBucketSizeQuota = await new Scs(context).getQuota({
-        quota_id: QuotaCode.MAX_BUCKET_SIZE,
-        project_uuid: filter.project_uuid,
-        object_uuid: b.bucket_uuid,
-      });
+        return new Bucket({}, context)
+          .populate(bucket, PopulateFrom.DB)
+          .serialize(serializationStrategy);
+      }),
+    );
 
-      if (maxBucketSizeQuota?.value) {
-        b.maxSize = Number(maxBucketSizeQuota?.value) * 1073741824;
-      }
-    }
-
-    return list;
+    return {
+      ...list,
+      items,
+    };
   }
 
   public async clearBucketContent(context: Context, conn: PoolConnection) {
     await context.mysql.paramExecute(
       `
-      UPDATE \`${DbTables.DIRECTORY}\`
-      SET status = ${SqlModelStatus.DELETED}
-      WHERE bucket_id = @bucket_id AND status <> ${SqlModelStatus.DELETED};
+        UPDATE \`${DbTables.DIRECTORY}\`
+        SET status = ${SqlModelStatus.DELETED}
+        WHERE bucket_id = @bucket_id
+          AND status <> ${SqlModelStatus.DELETED};
       `,
       { bucket_id: this.id },
       conn,
@@ -377,9 +400,10 @@ export class Bucket extends ProjectAccessModel {
 
     await context.mysql.paramExecute(
       `
-      UPDATE \`${DbTables.FILE}\`
-      SET status = ${SqlModelStatus.DELETED} 
-      WHERE bucket_id = @bucket_id AND status <> ${SqlModelStatus.DELETED};
+        UPDATE \`${DbTables.FILE}\`
+        SET status = ${SqlModelStatus.DELETED}
+        WHERE bucket_id = @bucket_id
+          AND status <> ${SqlModelStatus.DELETED};
       `,
       { bucket_id: this.id },
       conn,
@@ -393,10 +417,11 @@ export class Bucket extends ProjectAccessModel {
   public async getNumOfBuckets(ofType = true) {
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT COUNT(*) as numOfBuckets
-      FROM \`${this.tableName}\`
-      WHERE project_uuid = @project_uuid
-      ${ofType ? `AND bucketType = @bucketType` : ''}
+        SELECT COUNT(*) as numOfBuckets
+        FROM \`${this.tableName}\`
+        WHERE project_uuid = @project_uuid ${
+          ofType ? `AND bucketType = @bucketType` : ''
+        }
       AND status <> ${SqlModelStatus.DELETED};
       `,
       { project_uuid: this.project_uuid, bucketType: this.bucketType },
@@ -411,10 +436,10 @@ export class Bucket extends ProjectAccessModel {
   public async getTotalSizeUsedByProject() {
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT SUM(size) as totalSize
-      FROM \`${this.tableName}\`
-      WHERE project_uuid = @project_uuid
-      AND status <> ${SqlModelStatus.DELETED};
+        SELECT SUM(size) as totalSize
+        FROM \`${this.tableName}\`
+        WHERE project_uuid = @project_uuid
+          AND status <> ${SqlModelStatus.DELETED};
       `,
       { project_uuid: this.project_uuid, bucketType: this.bucketType },
     );
@@ -429,11 +454,10 @@ export class Bucket extends ProjectAccessModel {
   public async containsFiles() {
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT f.id
-      FROM \`${DbTables.FILE}\` f
-      WHERE f.bucket_id = @bucket_id
-      AND status <> ${SqlModelStatus.DELETED}
-      LIMIT 1;
+        SELECT f.id
+        FROM \`${DbTables.FILE}\` f
+        WHERE f.bucket_id = @bucket_id
+          AND status <> ${SqlModelStatus.DELETED} LIMIT 1;
       `,
       { bucket_id: this.id },
     );

@@ -12,7 +12,7 @@ export class Alerting {
    * @returns {Promise<any>} - The sent alert data.
    */
   static async sendAlert(event, context) {
-    console.log(`SENDING ALERT:${JSON.stringify(event)}`);
+    console.info(`SENDING ALERT: ${JSON.stringify(event)}`);
 
     await context.mongo.db.collection(MongoCollections.ALERT).insertOne(event);
     return event;
@@ -25,13 +25,15 @@ export class Alerting {
    * @returns {Promise<any>} - The sent admin alert data.
    */
   static async sendAdminAlert(event, context) {
-    console.log(`SENDING ADMIN ALERT:${JSON.stringify(event)}`);
+    delete event.eventName; // Unnecessary property;
+    event.ts = new Date();
+    console.info(`SENDING ADMIN ALERT: ${JSON.stringify(event)}`);
 
     await context.mongo.db
       .collection(MongoCollections.ADMIN_ALERT)
       .insertOne(event);
 
-    await postToSlack(event.message, event.serviceName, event.level);
+    await postToSlack(event.message, event.service, event.logType);
 
     // TODO: send email ?
 
