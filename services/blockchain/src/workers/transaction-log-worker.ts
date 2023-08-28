@@ -372,6 +372,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
     )) {
       try {
         const amount = ethers.BigNumber.from(spend.amount)
+          .add(ethers.BigNumber.from(spend.fee || 0))
           .div(ethers.BigNumber.from(10).pow(wallet.decimals))
           .toNumber();
         await this.deductFromAvailableDeposit(wallet, amount);
@@ -388,6 +389,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
   private async createWalletDeposit(wallet: Wallet, deposit: TransactionLog) {
     const amount = deposit.amount
       ? ethers.BigNumber.from(deposit.amount)
+          .add(ethers.BigNumber.from(deposit.fee || 0))
           .div(ethers.BigNumber.from(10).pow(wallet.decimals))
           .toNumber()
       : null;
