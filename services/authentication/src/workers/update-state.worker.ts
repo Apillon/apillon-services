@@ -228,9 +228,9 @@ export class UpdateStateWorker extends BaseQueueWorker {
 
                 await new Mailing(ctx).sendMail({
                   emails: [email],
-                  template: AuthApiEmailType.IDENTITY_DELIVERY,
+                  template: AuthApiEmailType.DOWNLOAD_IDENTITY,
                   data: {
-                    actionUrl: `${env.AUTH_APP_URL}/identity-delivery/?token=${token}&email=${email}&type=${AuthApiEmailType.IDENTITY_DELIVERY}`,
+                    actionUrl: `${env.AUTH_APP_URL}/restore/?token=${token}&email=${email}&type=${AuthApiEmailType.DOWNLOAD_IDENTITY}`,
                   },
                 });
               }
