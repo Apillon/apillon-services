@@ -65,7 +65,7 @@ export class AuthenticationMicroservice extends BaseService {
 
   public async getUserIdentityCredential(email: string) {
     const data = {
-      eventName: AuthenticationEventType.GET_IDENTITY_USER_CREDENTIAL,
+      eventName: AuthenticationEventType.GET_USER_IDENTITY,
       query: email,
     };
     return await this.callService(data);

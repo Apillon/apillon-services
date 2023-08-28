@@ -136,7 +136,7 @@ export enum AuthenticationEventType {
   SEND_VERIFICATION_EMAIL = 'send-verification-email',
   GET_IDENTITY_GEN_PROCESS_STATE = 'get-identity-gen-process-state',
   GENERATE_IDENTITY = 'generate-identity',
-  GET_IDENTITY_USER_CREDENTIAL = 'get-identity-user-credential',
+  GET_USER_IDENTITY = 'get-user-identity',
   REVOKE_IDENTITY = 'revoke-identity',
   GENERATE_DEV_RESOURCES = 'generate-dev-resources',
   SPORRAN_GET_SESSION_VALUES = 'sporran-get-session-values',
