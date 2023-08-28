@@ -24,18 +24,20 @@ export async function processWebhooks(
   sqsUrl: string,
   workerName: string,
   context: Context,
-  conn: PoolConnection,
 ) {
   const transactionIds = [];
 
-  for (let i = 0; i < webhooks.length; i++) {
-    // TODO: There was some error checking here
+  // Configure as needed
+  const chunkSize = 10;
+  for (let i = 0; i < webhooks.length; i += chunkSize) {
+    const chunk = webhooks.slice(i, i + chunkSize);
+
     await sendToWorkerQueue(
       sqsUrl,
       workerName,
       [
         {
-          data: webhooks[i],
+          data: chunk,
         },
       ],
       null,
@@ -45,23 +47,14 @@ export async function processWebhooks(
   }
 
   if (transactionIds.length > 0) {
-    try {
-      await context.mysql.paramExecute(
-        `
-          UPDATE \`${DbTables.TRANSACTION_QUEUE}\` 
-          SET webhookTriggered = NOW()
-          WHERE
-            id in (${transactionIds.join(',')})`,
-        null,
-        conn,
-      );
-
-      await conn.commit();
-      return transactionIds;
-    } catch (e) {
-      await conn.rollback();
-      throw e;
-    }
+    await context.mysql.paramExecute(
+      `
+      UPDATE \`${DbTables.TRANSACTION_QUEUE}\` 
+      SET webhookTriggered = NOW()
+      WHERE
+        id in (${transactionIds.join(',')})`,
+      null,
+    );
   }
 
   return transactionIds;

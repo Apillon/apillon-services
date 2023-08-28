@@ -109,7 +109,6 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
             this.webHookWorker.workerName,
             this.webHookWorker.sqsUrl,
             this.context,
-            conn,
           );
         } catch (error) {
           await this.writeEventLog(
