@@ -12,11 +12,11 @@ export class ApillonApiContext extends Context {
    */
   async authenticate(apiKey: string, apiKeySecret: string) {
     const apiKeyData = await new Ams(this).getApiKey({
-      apiKey: apiKey,
-      apiKeySecret: apiKeySecret,
+      apiKey,
+      apiKeySecret,
     });
 
-    if (apiKeyData && apiKeyData.data.id) {
+    if (apiKeyData?.data.id) {
       this.apiKey = apiKeyData.data;
     } else {
       throw new CodeException({
@@ -28,6 +28,6 @@ export class ApillonApiContext extends Context {
   }
 
   isApiKeyValid() {
-    return this.apiKey && this.apiKey?.id;
+    return this.apiKey?.id;
   }
 }
