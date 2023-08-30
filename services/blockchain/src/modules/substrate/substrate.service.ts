@@ -300,6 +300,9 @@ export class SubstrateService {
       // TODO: consider batching transaction api.tx.utility.batch
       for (let j = 0; j < transactions.length; j++) {
         try {
+          if (!(await api.isConnected)) {
+            await api.connect();
+          }
           const signedTx = api.tx(transactions[j].rawTransaction);
           await signedTx.send();
           console.log('successfuly transmited');
@@ -368,6 +371,8 @@ export class SubstrateService {
         });
       }
     }
+
+    await api.disconnect();
   }
   //#region
 }
