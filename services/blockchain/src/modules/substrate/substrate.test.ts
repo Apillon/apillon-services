@@ -49,6 +49,7 @@ describe('Substrate service unit test', () => {
     const api = await ApiPromise.create({
       provider,
       typesBundle: typesBundleForPolkadot,
+      throwOnConnect: true,
     });
 
     let nonce, tx;

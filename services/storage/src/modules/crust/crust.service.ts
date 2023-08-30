@@ -32,6 +32,7 @@ export class CrustService {
     const api = await ApiPromise.create({
       provider: new WsProvider('wss://rpc.crust.network'),
       typesBundle: typesBundleForPolkadot,
+      throwOnConnect: true,
     });
     let tx;
     try {
@@ -67,6 +68,7 @@ export class CrustService {
     const api = await ApiPromise.create({
       provider,
       typesBundle: typesBundleForPolkadot,
+      throwOnConnect: true,
     });
     let balance;
     try {

@@ -565,6 +565,7 @@ export class Wallet extends AdvancedSQLModel {
       const provider = new WsProvider(endpoint.url);
       const api = await ApiPromise.create({
         provider,
+        throwOnConnect: true,
       });
       try {
         const account = (await api.query.system.account(this.address)) as any;

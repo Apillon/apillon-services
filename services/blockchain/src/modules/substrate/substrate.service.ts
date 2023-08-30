@@ -79,6 +79,7 @@ export class SubstrateService {
     const api = await ApiPromise.create({
       provider,
       typesBundle, // TODO: add
+      throwOnConnect: true,
     });
 
     console.info('Start db transaction.');
@@ -282,6 +283,7 @@ export class SubstrateService {
     const api = await ApiPromise.create({
       provider,
       typesBundle,
+      throwOnConnect: true,
     });
 
     for (let i = 0; i < wallets.length; i++) {
