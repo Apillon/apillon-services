@@ -164,9 +164,11 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         return t.extrinsicHash;
       });
 
+    console.log('Success transactions ', successTransactions);
+
     const failedTransactions: string[] = transactions
       .filter((t: any) => {
-        t.status == TransactionIndexerStatus.FAIL;
+        return t.status == TransactionIndexerStatus.FAIL;
       })
       .map((t: any): string => {
         return t.extrinsicHash;
