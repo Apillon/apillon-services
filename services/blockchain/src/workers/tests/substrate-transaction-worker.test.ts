@@ -2,7 +2,6 @@ import { mnemonicGenerate } from '@polkadot/util-crypto';
 import {
   ChainType,
   env,
-  SerializeFor,
   SubstrateChain,
   TransactionStatus,
 } from '@apillon/lib';
@@ -20,7 +19,6 @@ import { WorkerName } from '../worker-executor';
 describe('Substrate tests', () => {
   let stage: Stage;
   let wallet: Wallet;
-  let wallet_2: Wallet;
   const startBlock = 3982289;
 
   beforeAll(async () => {
