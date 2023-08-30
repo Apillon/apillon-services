@@ -331,7 +331,7 @@ export class Wallet extends AdvancedSQLModel {
   })
   public token: string;
 
-  public async populateById(
+  public override async populateById(
     id: string | number,
     conn?: PoolConnection,
     forUpdate?: boolean,
@@ -600,7 +600,7 @@ export class Wallet extends AdvancedSQLModel {
       qSelect: `SELECT ${new TransactionLog(
         {},
         this.getContext(),
-      ).generateSelectFields('t', '', SerializeFor.ADMIN)}, 
+      ).generateSelectFields('t', '', SerializeFor.ADMIN)},
         tq.nonce, tq.referenceTable, tq.referenceId`,
       qFrom: `FROM \`${DbTables.TRANSACTION_LOG}\` t
         LEFT JOIN \`${DbTables.TRANSACTION_QUEUE}\` tq ON tq.id = t.transactionQueue_id

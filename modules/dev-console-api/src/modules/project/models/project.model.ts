@@ -154,23 +154,8 @@ export class Project extends ProjectAccessModel {
    * Methods
    ********************************************/
 
-  public async populateByUUID(uuid: string): Promise<this> {
-    if (!uuid) {
-      throw new Error('project uuid should not be null');
-    }
-
-    const data = await this.getContext().mysql.paramExecute(
-      `
-      SELECT *
-      FROM \`${this.tableName}\`
-      WHERE project_uuid = @uuid AND status <> ${SqlModelStatus.DELETED};
-      `,
-      { uuid },
-    );
-
-    return data?.length
-      ? this.populate(data[0], PopulateFrom.DB)
-      : this.reset();
+  public override async populateByUUID(uuid: string): Promise<this> {
+    return super.populateByUUID(uuid, 'project_uuid');
   }
 
   /**
@@ -212,7 +197,7 @@ export class Project extends ProjectAccessModel {
       UPDATE \`${this.tableName}\` p
       SET p.status = @status
       WHERE EXISTS (
-        SELECT 1 FROM \`${DbTables.PROJECT_USER}\` pu 
+        SELECT 1 FROM \`${DbTables.PROJECT_USER}\` pu
         WHERE pu.user_id = @userId
         AND pu.project_id = p.id
       )

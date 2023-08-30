@@ -95,7 +95,7 @@ export class Endpoint extends AdvancedSQLModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${DbTables.ENDPOINT}\`
       WHERE
       chainType = @type
@@ -107,10 +107,8 @@ export class Endpoint extends AdvancedSQLModel {
       { chain, type, priority },
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 }

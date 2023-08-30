@@ -238,25 +238,8 @@ export class Directory extends ProjectAccessModel {
     return this;
   }
 
-  public async populateByUUID(uuid: string): Promise<this> {
-    if (!uuid) {
-      throw new Error('uuid should not be null');
-    }
-
-    const data = await this.getContext().mysql.paramExecute(
-      `
-      SELECT * 
-      FROM \`${this.tableName}\`
-      WHERE directory_uuid = @uuid AND status <> ${SqlModelStatus.DELETED};
-      `,
-      { uuid },
-    );
-
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+  public override async populateByUUID(uuid: string): Promise<this> {
+    return super.populateByUUID(uuid, 'directory_uuid');
   }
 
   public async populateByCid(cid: string): Promise<this> {
@@ -266,18 +249,16 @@ export class Directory extends ProjectAccessModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
       WHERE CID = @cid AND status <> ${SqlModelStatus.DELETED};
       `,
       { cid },
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   /**
@@ -296,7 +277,7 @@ export class Directory extends ProjectAccessModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
       WHERE bucket_id = @bucket_id AND status <> ${SqlModelStatus.DELETED};
       `,
@@ -332,8 +313,8 @@ export class Directory extends ProjectAccessModel {
     const qSelects = [
       {
         qSelect: `
-        SELECT ${ObjectType.DIRECTORY} as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime, 
-        NULL as contentType, NULL as size, d.parentDirectory_id as parentDirectoryId, 
+        SELECT ${ObjectType.DIRECTORY} as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime,
+        NULL as contentType, NULL as size, d.parentDirectory_id as parentDirectoryId,
         NULL as file_uuid, IF(d.CID IS NULL, NULL, CONCAT("${env.STORAGE_IPFS_GATEWAY}", d.CID)) as link, NULL as fileStatus
         `,
         qFrom: `
@@ -342,15 +323,15 @@ export class Directory extends ProjectAccessModel {
         WHERE b.bucket_uuid = @bucket_uuid
         AND (IFNULL(@directory_id, -1) = IFNULL(d.parentDirectory_id, -1))
         AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))
-        AND ( d.status = ${SqlModelStatus.ACTIVE} OR 
+        AND ( d.status = ${SqlModelStatus.ACTIVE} OR
           ( @markedForDeletion = 1 AND d.status = ${SqlModelStatus.MARKED_FOR_DELETION})
         )
       `,
       },
       {
         qSelect: `
-        SELECT ${ObjectType.FILE} as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime, 
-        d.contentType as contentType, d.size as size, d.directory_id as parentDirectoryId, 
+        SELECT ${ObjectType.FILE} as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime,
+        d.contentType as contentType, d.size as size, d.directory_id as parentDirectoryId,
         d.file_uuid as file_uuid, CONCAT("${env.STORAGE_IPFS_GATEWAY}", d.CID) as link, d.fileStatus as fileStatus
         `,
         qFrom: `
@@ -359,7 +340,7 @@ export class Directory extends ProjectAccessModel {
         WHERE b.bucket_uuid = @bucket_uuid
         AND (IFNULL(@directory_id, -1) = IFNULL(d.directory_id, -1))
         AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))
-        AND ( d.status = ${SqlModelStatus.ACTIVE} OR 
+        AND ( d.status = ${SqlModelStatus.ACTIVE} OR
           ( @markedForDeletion = 1 AND d.status = ${SqlModelStatus.MARKED_FOR_DELETION})
         )
       `,

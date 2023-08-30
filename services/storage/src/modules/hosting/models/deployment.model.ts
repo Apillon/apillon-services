@@ -214,9 +214,9 @@ export class Deployment extends AdvancedSQLModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
-      WHERE cid = @cid 
+      WHERE cid = @cid
       AND status <> ${SqlModelStatus.DELETED}
       ORDER BY createTime DESC
       LIMIT 1;
@@ -224,11 +224,9 @@ export class Deployment extends AdvancedSQLModel {
       { cid },
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   public async populateLastDeployment(
@@ -246,9 +244,9 @@ export class Deployment extends AdvancedSQLModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
-      WHERE website_id = @website_id 
+      WHERE website_id = @website_id
       AND ${environmentCondition}
       AND status <> ${SqlModelStatus.DELETED}
       ORDER BY number DESC
@@ -257,11 +255,9 @@ export class Deployment extends AdvancedSQLModel {
       { website_id },
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   public async getList(context: ServiceContext, filter: DeploymentQueryFilter) {
