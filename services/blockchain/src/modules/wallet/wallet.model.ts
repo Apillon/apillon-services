@@ -566,8 +566,12 @@ export class Wallet extends AdvancedSQLModel {
       const api = await ApiPromise.create({
         provider,
       });
-      const account = (await api.query.system.account(this.address)) as any;
-      balance = account.data.free.toString();
+      try {
+        const account = (await api.query.system.account(this.address)) as any;
+        balance = account.data.free.toString();
+      } finally {
+        await api.disconnect();
+      }
     }
 
     if (!balance && balance !== '0') {
@@ -600,7 +604,7 @@ export class Wallet extends AdvancedSQLModel {
       qSelect: `SELECT ${new TransactionLog(
         {},
         this.getContext(),
-      ).generateSelectFields('t', '', SerializeFor.ADMIN)}, 
+      ).generateSelectFields('t', '', SerializeFor.ADMIN)},
         tq.nonce, tq.referenceTable, tq.referenceId`,
       qFrom: `FROM \`${DbTables.TRANSACTION_LOG}\` t
         LEFT JOIN \`${DbTables.TRANSACTION_QUEUE}\` tq ON tq.id = t.transactionQueue_id

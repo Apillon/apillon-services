@@ -21,11 +21,6 @@ export class CrustService {
     context: Context,
   ) {
     console.info('placeStorageOrderToCRUST', params);
-    // Pin dist directory on Crust
-    const api = new ApiPromise({
-      provider: new WsProvider('wss://rpc.crust.network'),
-      typesBundle: typesBundleForPolkadot,
-    });
 
     // Construct place-storage-order tx
     const fileCid = params.cid.toV0().toString(); // IPFS CID, take `Qm123` as example
@@ -33,9 +28,18 @@ export class CrustService {
     const tips = 0;
     const memo = params.isDirectory ? 'folder' : '';
 
-    await api.isReady;
+    // Pin dist directory on Crust
+    const api = await ApiPromise.create({
+      provider: new WsProvider('wss://rpc.crust.network'),
+      typesBundle: typesBundleForPolkadot,
+    });
+    let tx;
+    try {
+      tx = api.tx.market.placeStorageOrder(fileCid, fileSize, tips, memo);
+    } finally {
+      await api.disconnect();
+    }
 
-    const tx = api.tx.market.placeStorageOrder(fileCid, fileSize, tips, memo);
     const dto = new CreateSubstrateTransactionDto(
       {
         chain: SubstrateChain.CRUST,
@@ -53,7 +57,7 @@ export class CrustService {
 
   static async testCrustProvider(
     event: { providerEndpoint: string },
-    context: ServiceContext,
+    _context: ServiceContext,
   ) {
     const provider = new WsProvider(
       event.providerEndpoint
@@ -64,11 +68,14 @@ export class CrustService {
       provider,
       typesBundle: typesBundleForPolkadot,
     });
-
-    await api.isReady;
-    const balance = await api.query.system.account(
-      'cTHA4D34PHTD5jkK68tbyLakwnC6mYWgUEq6pA1kSqAeUtpH1',
-    );
+    let balance;
+    try {
+      balance = await api.query.system.account(
+        'cTHA4D34PHTD5jkK68tbyLakwnC6mYWgUEq6pA1kSqAeUtpH1',
+      );
+    } finally {
+      await api.disconnect();
+    }
 
     console.log(balance.toHuman());
 
