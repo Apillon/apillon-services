@@ -407,6 +407,22 @@ export class SporranMicroservice {
       };
     }
 
+    const whitelist = env.KILT_ATTESTERS_WHITELIST.split(';');
+    if (!whitelist.includes(attestation.owner.split('did:kilt:')[1])) {
+      await new Lmas().writeLog({
+        context: context,
+        logType: LogType.INFO,
+        message: 'VERIFICATION FAILED: Unknown attester',
+        location: 'AUTHENTICATION-API/verification/verifyIdentity',
+        service: ServiceName.AUTHENTICATION_API,
+      });
+
+      return {
+        verified: false,
+        error: 'Verification failed',
+      };
+    }
+
     if (attestation.revoked) {
       await new Lmas().writeLog({
         logType: LogType.INFO,
