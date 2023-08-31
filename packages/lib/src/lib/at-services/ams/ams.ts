@@ -71,7 +71,6 @@ export class Ams extends BaseService {
   public async login(params: {
     email: string;
     password: string;
-    captcha?: Captcha;
     captchaChallengeSuccess: boolean;
   }) {
     const data = {
