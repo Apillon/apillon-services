@@ -7,6 +7,8 @@ import {
   ServiceName,
   env,
   LogType,
+  PoolConnection,
+  SerializeFor,
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
@@ -15,12 +17,8 @@ import {
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { Wallet } from '../modules/wallet/wallet.model';
-import { DbTables, TxAction, TxDirection } from '../config/types';
-import {
-  formatTokenWithDecimals,
-  formatWalletAddress,
-  getTokenPriceEur,
-} from '../lib/utils';
+import { DbTables, TxDirection } from '../config/types';
+import { formatTokenWithDecimals, formatWalletAddress } from '../lib/utils';
 import { TransactionLog } from '../modules/accounting/transaction-log.model';
 import { EvmBlockchainIndexer } from '../modules/blockchain-indexers/evm/evm-indexer.service';
 import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
@@ -353,10 +351,21 @@ export class TransactionLogWorker extends BaseQueueWorker {
   ) {
     // Process wallet deposits
     for (const deposit of transactions.filter(
-      (t) => t.action === TxAction.DEPOSIT && t.wallet === wallet.address,
+      (t) => t.direction === TxDirection.INCOME && t.wallet === wallet.address,
     )) {
       try {
-        await this.createWalletDeposit(wallet, deposit);
+        await new WalletDeposit({}, this.context).createWalletDeposit(
+          wallet,
+          deposit,
+          (walletDeposit) =>
+            this.sendErrorAlert(
+              `INVALID WALLET DEPOSIT! ${formatWalletAddress(wallet)}`,
+              {
+                walletDeposit,
+                error: walletDeposit.collectErrors().join(','),
+              },
+            ),
+        );
       } catch (err) {
         await this.sendErrorAlert(
           `Error creating deposit for ${formatWalletAddress(wallet)}`,
@@ -368,81 +377,54 @@ export class TransactionLogWorker extends BaseQueueWorker {
 
     // Process wallet token spends
     for (const spend of transactions.filter(
-      (t) => t.action === TxAction.TRANSACTION && t.wallet === wallet.address,
+      (t) => t.direction === TxDirection.COST && t.wallet === wallet.address,
     )) {
+      const conn = await this.context.mysql.start();
       try {
-        const amount = ethers.BigNumber.from(spend.amount)
-          .add(ethers.BigNumber.from(spend.fee || 0))
-          .div(ethers.BigNumber.from(10).pow(wallet.decimals))
-          .toNumber();
-        await this.deductFromAvailableDeposit(wallet, amount);
+        await this.deductFromAvailableDeposit(wallet, spend.totalPrice, conn);
+        await this.context.mysql.commit(conn);
       } catch (err) {
         await this.sendErrorAlert(
           `Error processing tx spend for ${formatWalletAddress(wallet)}`,
           { ...spend },
           err,
         );
+        await this.context.mysql.rollback(conn);
       }
     }
-  }
-
-  private async createWalletDeposit(wallet: Wallet, deposit: TransactionLog) {
-    const amount = deposit.amount
-      ? ethers.BigNumber.from(deposit.amount)
-          .add(ethers.BigNumber.from(deposit.fee || 0))
-          .div(ethers.BigNumber.from(10).pow(wallet.decimals))
-          .toNumber()
-      : null;
-    const walletDeposit = new WalletDeposit(
-      {
-        wallet_id: wallet.id,
-        transactionHash: deposit.hash,
-        depositAmount: amount,
-        currentAmount: amount,
-        pricePerToken: await getTokenPriceEur(wallet.token),
-      },
-      this.context,
-    );
-    try {
-      await walletDeposit.validate();
-    } catch (err) {
-      await walletDeposit.handle(err);
-      if (!walletDeposit.isValid()) {
-        await this.sendErrorAlert(
-          `INVALID WALLET DEPOSIT! ${formatWalletAddress(wallet)}`,
-          {
-            walletDeposit,
-            error: walletDeposit.collectErrors().join(','),
-          },
-        );
-      }
-      return;
-    }
-    await walletDeposit.insert();
   }
 
   private async deductFromAvailableDeposit(
     wallet: Wallet,
-    amount: number,
+    amount: string,
+    conn: PoolConnection,
   ): Promise<void> {
     const availableDeposit = await new WalletDeposit(
       {},
       this.context,
-    ).getOldestWithBalance(wallet.id);
+    ).getOldestWithBalance(wallet.id, conn);
     if (!availableDeposit.exists()) {
       return await this.sendErrorAlert(
         `NO AVAILABLE DEPOSIT! ${formatWalletAddress(wallet)}`,
         { wallet: wallet.address },
       );
     }
-    if (availableDeposit.currentAmount - amount < 0) {
-      amount -= availableDeposit.currentAmount;
-      availableDeposit.currentAmount = 0;
-      await availableDeposit.update();
-      return this.deductFromAvailableDeposit(wallet, amount);
+    if (
+      this.subtractAmount(availableDeposit.currentAmount, amount).startsWith(
+        '-',
+      )
+    ) {
+      // if amount is negative, set currentAmount to 0 and recursively deduct the remainder
+      amount = this.subtractAmount(amount, availableDeposit.currentAmount);
+      availableDeposit.currentAmount = ethers.BigNumber.from(0).toString();
+      await availableDeposit.update(SerializeFor.UPDATE_DB, conn);
+      return this.deductFromAvailableDeposit(wallet, amount, conn);
     }
-    availableDeposit.currentAmount -= amount;
-    await availableDeposit.update();
+    availableDeposit.currentAmount = this.subtractAmount(
+      availableDeposit.currentAmount,
+      amount,
+    );
+    await availableDeposit.update(SerializeFor.UPDATE_DB, conn);
   }
 
   private sendErrorAlert(
@@ -460,5 +442,11 @@ export class TransactionLogWorker extends BaseQueueWorker {
       },
       logOutput,
     );
+  }
+
+  private subtractAmount(amount1: string, amount2: string): string {
+    return ethers.BigNumber.from(amount1)
+      .sub(ethers.BigNumber.from(amount2))
+      .toString();
   }
 }

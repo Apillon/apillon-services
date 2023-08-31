@@ -58,7 +58,7 @@ export function formatWalletAddress(wallet: Wallet) {
   }: ${wallet.address}`;
 }
 
-export async function getTokenPriceEur(token: string) {
+export async function getTokenPriceUsd(token: string) {
   const networkTokenMap = {
     CRU: 'crust-network',
     ASTR: 'astar',
@@ -68,9 +68,9 @@ export async function getTokenPriceEur(token: string) {
   const networkName = networkTokenMap[token];
   try {
     const { data } = await axios.get(
-      `https://api.coingecko.com/api/v3/simple/price/?ids=${networkName}&vs_currencies=EUR`,
+      `https://api.coingecko.com/api/v3/simple/price/?ids=${networkName}&vs_currencies=USD`,
     );
-    return data?.[networkName]?.eur;
+    return data?.[networkName]?.usd;
   } catch (err) {
     return 0;
   }

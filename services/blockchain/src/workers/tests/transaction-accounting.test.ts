@@ -29,9 +29,9 @@ describe('Transaction Accounting unit tests', () => {
         chain: SubstrateChain.CRUST,
         chainType: ChainType.SUBSTRATE,
         seed: '1',
-        minBalance: '200000000000',
+        minBalance: '2000000000000',
         token: 'CRU',
-        decimals: 6,
+        decimals: 12,
       },
       stage.context,
     );
@@ -45,8 +45,9 @@ describe('Transaction Accounting unit tests', () => {
         chain: SubstrateChain.KILT,
         chainType: ChainType.SUBSTRATE,
         seed: '4',
+        minBalance: '2000000000000000',
         token: 'KILT',
-        decimals: 6,
+        decimals: 15,
       },
       stage.context,
     );

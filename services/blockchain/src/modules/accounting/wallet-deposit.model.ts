@@ -1,5 +1,6 @@
 import {
   AdvancedSQLModel,
+  PoolConnection,
   PopulateFrom,
   presenceValidator,
   prop,
@@ -8,6 +9,10 @@ import {
 import { floatParser, integerParser, stringParser } from '@rawmodel/parsers';
 
 import { BlockchainErrorCode, DbTables } from '../../config/types';
+import { Wallet } from '../wallet/wallet.model';
+import { TransactionLog } from './transaction-log.model';
+import { getTokenPriceUsd } from '../../lib/utils';
+import { BlockchainValidationException } from '../../lib/exceptions';
 export class WalletDeposit extends AdvancedSQLModel {
   public readonly tableName = DbTables.WALLET_DEPOSIT;
 
@@ -53,7 +58,7 @@ export class WalletDeposit extends AdvancedSQLModel {
    * Amount of tokens purchased (sent via deposit)
    */
   @prop({
-    parser: { resolver: floatParser() },
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
@@ -64,17 +69,17 @@ export class WalletDeposit extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: BlockchainErrorCode.WALLET_DEPOSIT_PURCHASE_AMOUNT_NOT_PRESENT,
+        code: BlockchainErrorCode.WALLET_DEPOSIT_CURRENT_AMOUNT_NOT_PRESENT,
       },
     ],
   })
-  public depositAmount: number;
+  public depositAmount: string;
 
   /**
    * Amount of tokens left in current deposit
    */
   @prop({
-    parser: { resolver: floatParser() },
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
@@ -90,7 +95,7 @@ export class WalletDeposit extends AdvancedSQLModel {
       },
     ],
   })
-  public currentAmount: number;
+  public currentAmount: string;
 
   /**
    * Purchase price for a single token in fiat terms (at time of deposit)
@@ -107,7 +112,7 @@ export class WalletDeposit extends AdvancedSQLModel {
   })
   public pricePerToken: number;
 
-  public async getOldestWithBalance(wallet_id: number) {
+  public async getOldestWithBalance(wallet_id: number, conn: PoolConnection) {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT *
@@ -118,10 +123,42 @@ export class WalletDeposit extends AdvancedSQLModel {
       LIMIT 1;
       `,
       { wallet_id },
+      conn,
     );
 
     return data?.length
       ? this.populate(data[0], PopulateFrom.DB)
       : this.reset();
+  }
+
+  public async createWalletDeposit(
+    wallet: Wallet,
+    deposit: TransactionLog,
+    validationErrorCallback?: (walletDeposit: WalletDeposit) => void,
+  ) {
+    const walletDeposit = new WalletDeposit(
+      {
+        wallet_id: wallet.id,
+        transactionHash: deposit.hash,
+        depositAmount: deposit.totalPrice,
+        currentAmount: deposit.totalPrice,
+        pricePerToken: await getTokenPriceUsd(wallet.token),
+      },
+      this.getContext(),
+    );
+    try {
+      await walletDeposit.validate();
+    } catch (err) {
+      await walletDeposit.handle(err);
+      if (!walletDeposit.isValid()) {
+        if (validationErrorCallback) {
+          validationErrorCallback(walletDeposit);
+        } else {
+          throw new BlockchainValidationException(wallet);
+        }
+      }
+      return;
+    }
+    await walletDeposit.insert();
   }
 }
