@@ -255,12 +255,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: NftsErrorCode.COLLECTION_MINT_PRICE_NOT_PRESENT,
-      },
-    ],
+    validators: [],
   })
   public bucket_uuid: string;
 

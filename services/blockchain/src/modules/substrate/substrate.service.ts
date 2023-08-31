@@ -82,6 +82,7 @@ export class SubstrateService {
     const api = await ApiPromise.create({
       provider,
       typesBundle, // TODO: add
+      throwOnConnect: true,
     });
 
     console.info('Start db transaction.');
@@ -214,6 +215,8 @@ export class SubstrateService {
         code: BlockchainErrorCode.ERROR_GENERATING_TRANSACTION,
         status: 500,
       });
+    } finally {
+      await api.disconnect();
     }
   }
 
@@ -240,6 +243,7 @@ export class SubstrateService {
    * Should be called from worker
    * @param _event chain for which we should process transaction
    * @param context Service context
+   * @param eventLogger Event logger
    */
   static async transmitTransactions(
     _event: {
@@ -283,6 +287,7 @@ export class SubstrateService {
     const api = await ApiPromise.create({
       provider,
       typesBundle,
+      throwOnConnect: true,
     });
 
     for (const wallet of wallets) {
@@ -304,6 +309,15 @@ export class SubstrateService {
       // TODO: consider batching transaction api.tx.utility.batch
       for (const transaction of transactions) {
         try {
+          if (!api.isConnected) {
+            await new Lmas().writeLog({
+              logType: LogType.INFO,
+              message: 'Reconnecting to RPC via ApiPromise',
+              location: 'SubstrateService.createTransaction',
+              service: ServiceName.BLOCKCHAIN,
+            });
+            await api.connect();
+          }
           const signedTx = api.tx(transaction.rawTransaction);
           await signedTx.send();
           console.log('successfuly transmited');
@@ -339,6 +353,8 @@ export class SubstrateService {
           break;
         }
       }
+      await api.disconnect();
+
       if (latestSuccess) {
         const dbWallet = new Wallet(wallet, context);
         await dbWallet.updateLastProcessedNonce(latestSuccess);

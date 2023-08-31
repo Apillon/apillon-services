@@ -6,6 +6,7 @@ import {
   OauthLinkType,
 } from '../../../config/types';
 import { BaseQueryFilter } from '../../base-models/base-query-filter.model';
+import { Captcha } from '../../captcha';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { ApiKeyQueryFilterDto } from './dtos/api-key-query-filter.dto';
@@ -67,7 +68,11 @@ export class Ams extends BaseService {
     return amsResponse;
   }
 
-  public async login(params: { email: string; password: string }) {
+  public async login(params: {
+    email: string;
+    password: string;
+    captcha?: Captcha;
+  }) {
     const data = {
       eventName: AmsEventType.USER_LOGIN,
       ...params,
