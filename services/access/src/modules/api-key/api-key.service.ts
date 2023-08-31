@@ -197,7 +197,7 @@ export class ApiKeyService {
     context: ServiceContext,
   ): Promise<any> {
     //Update api keys status
-    await new ApiKey({}, context).updateApiKeysInProjects(
+    await new ApiKey({}, context).updateApiKeysStatusInProjects(
       event.project_uuids,
       event.block,
     );

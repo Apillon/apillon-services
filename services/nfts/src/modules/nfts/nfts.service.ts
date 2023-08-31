@@ -86,28 +86,32 @@ export class NftsService {
       });
     }
 
-    //Call storage MS, to create bucket used to upload NFT metadata
+    //Call storage MS, to create bucket used to upload NFT metadata. Bucket is not created if baseUri is provided.
     let nftMetadataBucket;
-    try {
-      const createBucketParams: CreateBucketDto =
-        new CreateBucketDto().populate({
-          project_uuid: params.body.project_uuid,
-          bucketType: 3,
-          name: collection.name + ' bucket',
-        });
-      nftMetadataBucket = (
-        await new StorageMicroservice(context).createBucket(createBucketParams)
-      ).data;
-      collection.bucket_uuid = nftMetadataBucket.bucket_uuid;
-    } catch (err) {
-      throw await new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.CREATE_BUCKET_FOR_NFT_METADATA_ERROR,
-        context: context,
-        sourceFunction: 'deployNftContract()',
-        errorMessage: 'Error creating bucket',
-        details: err,
-      }).writeToMonitor({});
+    if (!collection.baseUri) {
+      try {
+        const createBucketParams: CreateBucketDto =
+          new CreateBucketDto().populate({
+            project_uuid: params.body.project_uuid,
+            bucketType: 3,
+            name: collection.name + ' bucket',
+          });
+        nftMetadataBucket = (
+          await new StorageMicroservice(context).createBucket(
+            createBucketParams,
+          )
+        ).data;
+        collection.bucket_uuid = nftMetadataBucket.bucket_uuid;
+      } catch (err) {
+        throw await new NftsCodeException({
+          status: 500,
+          code: NftsErrorCode.CREATE_BUCKET_FOR_NFT_METADATA_ERROR,
+          context: context,
+          sourceFunction: 'deployNftContract()',
+          errorMessage: 'Error creating bucket',
+          details: err,
+        }).writeToMonitor({});
+      }
     }
 
     try {

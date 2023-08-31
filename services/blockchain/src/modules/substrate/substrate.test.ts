@@ -49,12 +49,25 @@ describe('Substrate service unit test', () => {
     const api = await ApiPromise.create({
       provider,
       typesBundle: typesBundleForPolkadot,
+      throwOnConnect: true,
     });
 
-    const nonce = await api.rpc.system.accountNextIndex(
-      '5DjjQpgetdaYUN6YyDGNguM1oMMDnNHnVPwgZDWuc29LswBi',
-    );
-    console.log('NONCE: ', nonce);
+    let nonce, tx;
+    try {
+      nonce = await api.rpc.system.accountNextIndex(
+        '5DjjQpgetdaYUN6YyDGNguM1oMMDnNHnVPwgZDWuc29LswBi',
+      );
+      console.log('NONCE: ', nonce);
+      tx = await api.tx.market.placeStorageOrder(
+        'QmUQ6i2Njyktbtvb5vxnzynD9fTrAvYN1qYbSKjudCv8mB',
+        7390,
+        0,
+        '',
+      );
+    } finally {
+      await api.disconnect();
+    }
+
     await new Wallet(
       {
         chain: SubstrateChain.KILT,
@@ -76,12 +89,6 @@ describe('Substrate service unit test', () => {
       stage.context,
     ).insert();
 
-    const tx = await api.tx.market.placeStorageOrder(
-      'QmUQ6i2Njyktbtvb5vxnzynD9fTrAvYN1qYbSKjudCv8mB',
-      7390,
-      0,
-      '',
-    );
     const serialize = tx.toHex();
 
     const res = await SubstrateService.createTransaction(
