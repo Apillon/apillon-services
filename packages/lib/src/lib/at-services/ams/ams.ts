@@ -72,6 +72,7 @@ export class Ams extends BaseService {
     email: string;
     password: string;
     captcha?: Captcha;
+    captchaChallengeSuccess: boolean;
   }) {
     const data = {
       eventName: AmsEventType.USER_LOGIN,

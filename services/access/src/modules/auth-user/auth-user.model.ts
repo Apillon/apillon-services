@@ -529,7 +529,10 @@ export class AuthUser extends AdvancedSQLModel {
     );
   }
 
-  public async checkLoginCaptcha(captchaToken: string) {
+  public async checkLoginCaptcha(
+    captchaToken: string,
+    captchaChallengeSuccess: boolean,
+  ) {
     // If captchaSolveDate is null, captchaRememberDate is Date.min()
     const captchaRememberDate = new Date(this.captchaSolveDate);
     captchaRememberDate.setDate(
@@ -541,7 +544,10 @@ export class AuthUser extends AdvancedSQLModel {
       (captchaRememberDate <= new Date() && env.LOGIN_CAPTCHA_ENABLED) ||
       !!captchaToken
     ) {
-      await checkCaptcha(captchaToken);
+      // If captcha was already verified, skip this
+      if (!captchaChallengeSuccess) {
+        await checkCaptcha(captchaToken);
+      }
       await this.populate({ captchaSolveDate: new Date() }).update();
     }
   }

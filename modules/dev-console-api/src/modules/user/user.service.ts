@@ -16,6 +16,7 @@ import {
   generateJwtToken,
   invalidateCachePrefixes,
   CacheKeyPrefix,
+  checkCaptcha,
 } from '@apillon/lib';
 import { getDiscordProfile } from '@apillon/modules-lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
@@ -76,8 +77,16 @@ export class UserService {
     loginInfo: LoginUserDto,
     context: DevConsoleApiContext,
   ): Promise<any> {
+    let captchaChallengeSuccess = false; // set to true if captcha is sent and verified
+    if (loginInfo.captcha?.token) {
+      await checkCaptcha(loginInfo.captcha?.token);
+      captchaChallengeSuccess = true;
+    }
     try {
-      const { data: authUser } = await new Ams(context).login(loginInfo);
+      const { data: authUser } = await new Ams(context).login({
+        ...loginInfo,
+        captchaChallengeSuccess,
+      });
 
       const user = await new User({}, context).populateByUUID(
         authUser.user_uuid,

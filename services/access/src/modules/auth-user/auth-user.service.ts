@@ -136,7 +136,10 @@ export class AuthUserService {
       }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
     }
 
-    await authUser.checkLoginCaptcha(event.captcha?.token);
+    await authUser.checkLoginCaptcha(
+      event.captcha?.token,
+      event.captchaChallengeSuccess,
+    );
     await authUser.loginUser();
 
     await new Lmas().writeLog({
