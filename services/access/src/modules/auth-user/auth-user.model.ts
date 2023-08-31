@@ -10,7 +10,6 @@ import {
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
-  checkCaptcha,
   env,
   generateJwtToken,
   getQueryParams,
@@ -544,9 +543,12 @@ export class AuthUser extends AdvancedSQLModel {
       (captchaRememberDate <= new Date() && env.LOGIN_CAPTCHA_ENABLED) ||
       !!captchaToken
     ) {
-      // If captcha was already verified, skip this
+      // Throw an error if captcha was not solved
       if (!captchaChallengeSuccess) {
-        await checkCaptcha(captchaToken);
+        throw new AmsCodeException({
+          code: AmsErrorCode.INVALID_CAPTCHA,
+          status: 400,
+        });
       }
       await this.populate({ captchaSolveDate: new Date() }).update();
     }
