@@ -1,6 +1,6 @@
 import { stringParser } from '@rawmodel/parsers';
 import { emailValidator, presenceValidator } from '@rawmodel/validators';
-import { ModelBase, PopulateFrom } from '@apillon/lib';
+import { Captcha, JSONParser, ModelBase, PopulateFrom } from '@apillon/lib';
 import { ValidatorErrorCode } from '../../../config/types';
 import { prop } from '@rawmodel/core';
 
@@ -32,4 +32,10 @@ export class LoginUserDto extends ModelBase {
     ],
   })
   public password: string;
+
+  @prop({
+    parser: { resolver: JSONParser() },
+    populatable: [PopulateFrom.PROFILE],
+  })
+  public captcha?: Captcha;
 }

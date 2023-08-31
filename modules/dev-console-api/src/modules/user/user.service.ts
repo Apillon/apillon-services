@@ -17,7 +17,7 @@ import {
   invalidateCachePrefixes,
   CacheKeyPrefix,
 } from '@apillon/lib';
-import { getDiscordProfile, verifyCaptcha } from '@apillon/modules-lib';
+import { getDiscordProfile } from '@apillon/modules-lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { signatureVerify } from '@polkadot/util-crypto';
 import { v4 as uuidV4 } from 'uuid';
@@ -39,7 +39,6 @@ import { registerUser } from './utils/authentication-utils';
 import { getOauthSessionToken } from './utils/oauth-utils';
 import { UserConsentDto, UserConsentStatus } from './dtos/user-consent.dto';
 import { DiscordCodeDto } from './dtos/discord-code.dto';
-
 @Injectable()
 export class UserService {
   constructor(private readonly projectService: ProjectService) {}
@@ -78,13 +77,10 @@ export class UserService {
     context: DevConsoleApiContext,
   ): Promise<any> {
     try {
-      const resp = await new Ams(context).login({
-        email: loginInfo.email,
-        password: loginInfo.password,
-      });
+      const { data: authUser } = await new Ams(context).login(loginInfo);
 
       const user = await new User({}, context).populateByUUID(
-        resp.data.user_uuid,
+        authUser.user_uuid,
       );
 
       if (!user.exists()) {
@@ -95,13 +91,13 @@ export class UserService {
         });
       }
 
-      user.wallet = resp.data.wallet;
+      user.wallet = authUser.wallet;
 
-      user.setUserRolesAndPermissionsFromAmsResponse(resp);
+      user.setUserRolesAndPermissionsFromAmsResponse(authUser);
 
       return {
         ...user.serialize(SerializeFor.PROFILE),
-        token: resp.data.token,
+        token: authUser.token,
       };
     } catch (error) {
       throw new CodeException({
@@ -171,55 +167,22 @@ export class UserService {
   }
 
   /**
-   * Validates the email and captcha for the user registration process.
+   * Validates the email for the user registration process.
    * @param {Context} context - The API context
-   * @param {ValidateEmailDto} emailVal - The email and captcha data.
+   * @param {ValidateEmailDto} emailVal - The email data.
    * @returns {Promise<any>} The email validation result.
    */
   async validateEmail(
     context: Context,
     emailVal: ValidateEmailDto,
   ): Promise<any> {
-    const { email, captcha, refCode } = emailVal;
-    let emailResult;
-    let captchaResult;
-    // console.log(captcha);
+    const { email, refCode } = emailVal;
 
-    const promises = [];
-    promises.push(
-      new Ams(context)
-        .emailExists(email)
-        .then((response) => (emailResult = response)),
+    const { data: emailResult } = await new Ams(context).emailExists(
+      emailVal.email,
     );
-    if (env.CAPTCHA_SECRET && env.APP_ENV !== AppEnvironment.TEST) {
-      promises.push(
-        verifyCaptcha(captcha?.token, env.CAPTCHA_SECRET).then(
-          (response) => (captchaResult = response),
-        ),
-      );
-    } /*else {
-      throw new CodeException({
-        status: HttpStatus.INTERNAL_SERVER_ERROR,
-        code: ValidatorErrorCode.CAPTCHA_NOT_PRESENT,
-        errorCodes: ValidatorErrorCode,
-      });
-    }*/
 
-    await Promise.all(promises);
-
-    if (
-      env.CAPTCHA_SECRET &&
-      env.APP_ENV !== AppEnvironment.TEST &&
-      !captchaResult
-    ) {
-      throw new CodeException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        code: ValidatorErrorCode.CAPTCHA_CHALLENGE_INVALID,
-        errorCodes: ValidatorErrorCode,
-      });
-    }
-
-    if (emailResult.data.result === true) {
+    if (emailResult.result === true) {
       throw new CodeException({
         status: HttpStatus.UNPROCESSABLE_ENTITY,
         code: ValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
@@ -240,7 +203,7 @@ export class UserService {
       template: 'welcome',
       data: {
         actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}${
-          refCode ? '&REF=' + refCode : ''
+          refCode ? `&REF=${refCode}` : ''
         }`,
       },
     });
@@ -369,46 +332,10 @@ export class UserService {
    * @param {ValidateEmailDto} body - The email data.
    * @returns {Promise<boolean>} True if the email was sent successfully.
    */
-  async passwordResetRequest(context: Context, body: ValidateEmailDto) {
-    const { email, captcha } = body;
-    let emailResult;
-    let captchaResult;
+  async passwordResetRequest(context: Context, { email }: ValidateEmailDto) {
+    const { data: emailResult } = await new Ams(context).emailExists(email);
 
-    const promises = [];
-    promises.push(
-      new Ams(context)
-        .emailExists(email)
-        .then((response) => (emailResult = response)),
-    );
-    if (env.CAPTCHA_SECRET && env.APP_ENV !== AppEnvironment.TEST) {
-      promises.push(
-        verifyCaptcha(captcha?.token, env.CAPTCHA_SECRET).then(
-          (response) => (captchaResult = response),
-        ),
-      );
-    } /*else {
-      throw new CodeException({
-        status: HttpStatus.INTERNAL_SERVER_ERROR,
-        code: ValidatorErrorCode.CAPTCHA_NOT_PRESENT,
-        errorCodes: ValidatorErrorCode,
-      });
-    }*/
-
-    await Promise.all(promises);
-
-    if (
-      env.CAPTCHA_SECRET &&
-      env.APP_ENV !== AppEnvironment.TEST &&
-      !captchaResult
-    ) {
-      throw new CodeException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        code: ValidatorErrorCode.CAPTCHA_CHALLENGE_INVALID,
-        errorCodes: ValidatorErrorCode,
-      });
-    }
-
-    if (emailResult.data.result !== true) {
+    if (emailResult.result !== true) {
       // for security reason do not return error to FE
       return true;
     }
@@ -416,12 +343,10 @@ export class UserService {
     const token = generateJwtToken(
       JwtTokenType.USER_RESET_PASSWORD,
       {
-        email: email,
+        email,
       },
       '1h',
-      emailResult.data.authUser.password
-        ? emailResult.data.authUser.password
-        : undefined,
+      emailResult.authUser.password ? emailResult.authUser.password : undefined,
     );
 
     await new Mailing(context).sendMail({

@@ -10,6 +10,8 @@ import {
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
+  checkCaptcha,
+  env,
   generateJwtToken,
   getQueryParams,
   invalidateCacheKey,
@@ -17,7 +19,7 @@ import {
   selectAndCountQuery,
   uniqueFieldValue,
 } from '@apillon/lib';
-import { stringParser } from '@rawmodel/parsers';
+import { dateParser, stringParser } from '@rawmodel/parsers';
 import { emailValidator, presenceValidator } from '@rawmodel/validators';
 import * as bcrypt from 'bcryptjs';
 import { AmsErrorCode, DbTables, TokenExpiresInStr } from '../../config/types';
@@ -184,6 +186,22 @@ export class AuthUser extends AdvancedSQLModel {
     ],
   })
   public consents: any;
+
+  @prop({
+    parser: { resolver: dateParser() },
+    populatable: [
+      PopulateFrom.SERVICE, //
+      PopulateFrom.DB, //
+      PopulateFrom.PROFILE, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+    ],
+  })
+  public captchaSolveDate: Date;
 
   public constructor(data: any, context: Context) {
     super(data, context);
@@ -509,5 +527,21 @@ export class AuthUser extends AdvancedSQLModel {
     await invalidateCacheKey(
       `${CacheKeyPrefix.AUTH_USER_DATA}:${this.user_uuid}`,
     );
+  }
+
+  public async checkLoginCaptcha(captchaToken: string) {
+    // If captchaSolveDate is null, captchaRememberDate is Date.min()
+    const captchaRememberDate = new Date(this.captchaSolveDate);
+    captchaRememberDate.setDate(
+      captchaRememberDate.getDate() + env.CAPTCHA_REMEMBER_DAYS,
+    );
+
+    // If remember date for last captcha solved is in the past, request captcha solve
+    if (captchaRememberDate <= new Date() && env.LOGIN_CAPTCHA_ENABLED) {
+      await checkCaptcha(captchaToken);
+    }
+    if (captchaToken) {
+      await this.populate({ captchaSolveDate: new Date() }).update();
+    }
   }
 }
