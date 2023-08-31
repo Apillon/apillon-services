@@ -537,10 +537,11 @@ export class AuthUser extends AdvancedSQLModel {
     );
 
     // If remember date for last captcha solved is in the past, request captcha solve
-    if (captchaRememberDate <= new Date() && env.LOGIN_CAPTCHA_ENABLED) {
+    if (
+      (captchaRememberDate <= new Date() && env.LOGIN_CAPTCHA_ENABLED) ||
+      !!captchaToken
+    ) {
       await checkCaptcha(captchaToken);
-    }
-    if (captchaToken) {
       await this.populate({ captchaSolveDate: new Date() }).update();
     }
   }

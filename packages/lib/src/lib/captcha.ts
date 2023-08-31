@@ -1,5 +1,5 @@
-import axios, { AxiosResponse } from 'axios';
-import FormData from 'form-data';
+import { verify } from 'hcaptcha';
+
 import { AppEnvironment, ValidatorErrorCode } from '../config/types';
 import { env, getEnvSecrets } from '../config/env';
 import { CodeException } from './exceptions/exceptions';
@@ -41,20 +41,7 @@ async function verifyCaptcha(
   secret: string = env.CAPTCHA_SECRET,
 ): Promise<boolean> {
   try {
-    const req = axios.create({
-      baseURL: 'https://hcaptcha.com',
-      responseType: 'json',
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        'Accept-Encoding': 'gzip,deflate,compress',
-      },
-    });
-    const data = new FormData();
-    data.append('response', token);
-    data.append('secret', secret);
-    const captchaVerify: AxiosResponse = await req.post('/siteverify', data);
-
-    return captchaVerify.status === 200 && captchaVerify.data.success;
+    return (await verify(secret, token)).success;
   } catch (err) {
     console.error('Error verifying captcha!', err);
     throw err;
