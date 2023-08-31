@@ -365,6 +365,7 @@ export interface IEnv {
    */
   CAPTCHA_SECRET: string;
   CAPTCHA_REMEMBER_DAYS: number;
+  LOGIN_CAPTCHA_ENABLED: boolean;
 
   /** DISCORD */
   DISCORD_CLIENT_ID: string;
@@ -736,6 +737,7 @@ export let env: IEnv = {
   /** CAPTCHA */
   CAPTCHA_SECRET: process.env['CAPTCHA_SECRET'] || '',
   CAPTCHA_REMEMBER_DAYS: +process.env['CAPTCHA_REMEMBER_DAYS'] || 7,
+  LOGIN_CAPTCHA_ENABLED: process.env['LOGIN_CAPTCHA_ENABLED'] !== 'false',
 
   /** AUTH MICROSERVICE */
   AUTH_FUNCTION_NAME: process.env['AUTH_FUNCTION_NAME'],

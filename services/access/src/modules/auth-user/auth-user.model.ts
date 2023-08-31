@@ -530,13 +530,14 @@ export class AuthUser extends AdvancedSQLModel {
   }
 
   public async checkLoginCaptcha(captchaToken: string) {
+    // If captchaSolveDate is null, captchaRememberDate is Date.min()
     const captchaRememberDate = new Date(this.captchaSolveDate);
     captchaRememberDate.setDate(
       captchaRememberDate.getDate() + env.CAPTCHA_REMEMBER_DAYS,
     );
 
     // If remember date for last captcha solved is in the past, request captcha solve
-    if (captchaRememberDate <= new Date()) {
+    if (captchaRememberDate <= new Date() && env.LOGIN_CAPTCHA_ENABLED) {
       await checkCaptcha(captchaToken);
     }
     if (captchaToken) {
