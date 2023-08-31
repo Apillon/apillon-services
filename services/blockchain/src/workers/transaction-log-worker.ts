@@ -234,7 +234,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
     }
     // Write to transaction log
     const sql = `
-    INSERT INTO \`${DbTables.TRANSACTION_LOG}\`
+    INSERT IGNORE INTO \`${DbTables.TRANSACTION_LOG}\`
      (
       ts, blockId, status, direction,
       action, chain, chainType, wallet,

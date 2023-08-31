@@ -1,6 +1,6 @@
 import { getSecrets } from '../lib/aws/aws-secrets';
 import * as dotenv from 'dotenv';
-import { AppEnvironment } from './types';
+import { AppEnvironment, CacheKeyTTL } from './types';
 
 export interface IEnv {
   /**
@@ -773,7 +773,7 @@ export let env: IEnv = {
 
   //** REDIS */
   REDIS_URL: process.env['REDIS_URL'],
-  DEFAULT_CACHE_TTL: +process.env['DEFAULT_CACHE_TTL'] || 300, // 5 min
+  DEFAULT_CACHE_TTL: +process.env['DEFAULT_CACHE_TTL'] || CacheKeyTTL.DEFAULT, // 5 min
 
   /** METABASE */
   METABASE_SECRET: process.env['METABASE_SECRET'] || '',

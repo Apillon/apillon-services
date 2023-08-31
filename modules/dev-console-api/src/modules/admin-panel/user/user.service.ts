@@ -200,11 +200,11 @@ export class UserService {
 
       //Update user status in access MS + delete current login tokens (logout)
       const ams: Ams = new Ams(context);
+      await ams.logout({ user_uuid: user.user_uuid });
       await ams.updateAuthUserStatus({
         user_uuid,
         status: SqlModelStatus.BLOCKED,
       });
-      await ams.logout({ user_uuid: user.user_uuid });
 
       //Block api keys
       await new Ams(context).updateApiKeysInProject({
