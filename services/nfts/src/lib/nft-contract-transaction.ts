@@ -68,8 +68,6 @@ export class NftTransaction {
           params.dropStart,
           params.dropReserve,
           {
-            erc20TokenAddress: constants.AddressZero,
-            tokenUriIsEnumerable: true,
             royaltyRecipient: params.royaltiesAddress,
             royaltyPercentageBps: royaltiesFees,
             maxSupply,
