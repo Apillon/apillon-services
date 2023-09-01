@@ -18,6 +18,13 @@ export class RequestLogsQueryFilter extends BaseLogsQueryFilter {
   })
   public apiName: ApiName;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.ADMIN],
+    serializable: [SerializeFor.ADMIN],
+  })
+  public body: string;
+
   /**
    * Display also requests made by the system (e.g. workers, scheduled jobs etc.)
    */
