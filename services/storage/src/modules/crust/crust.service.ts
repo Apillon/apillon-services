@@ -17,6 +17,7 @@ export class CrustService {
       isDirectory: boolean;
       refTable?: string;
       refId?: string;
+      project_uuid: string;
     },
     context: Context,
   ) {
@@ -47,6 +48,7 @@ export class CrustService {
         transaction: tx.toHex(),
         referenceTable: params.refTable,
         referenceId: params.refId,
+        project_uuid: params.project_uuid,
       },
       context,
     );
