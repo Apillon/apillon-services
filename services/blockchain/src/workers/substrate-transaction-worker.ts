@@ -88,6 +88,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
             logType: LogType.ERROR,
             message: `${this.logPrefix}: Error confirming transactions`,
             service: ServiceName.BLOCKCHAIN,
+            err: err,
             data: {
               error: err,
               wallet: wallet.address,
