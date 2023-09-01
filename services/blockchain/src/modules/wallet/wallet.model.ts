@@ -268,7 +268,6 @@ export class Wallet extends AdvancedSQLModel {
     populatable: [
       //
       PopulateFrom.DB,
-      PopulateFrom.ADMIN,
     ],
     serializable: [
       SerializeFor.ADMIN,
@@ -297,9 +296,7 @@ export class Wallet extends AdvancedSQLModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [
-      //
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN,
+      PopulateFrom.DB, //
     ],
     serializable: [
       SerializeFor.ADMIN,
@@ -317,9 +314,7 @@ export class Wallet extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [
-      //
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN,
+      PopulateFrom.DB, //
     ],
     serializable: [
       SerializeFor.ADMIN,
@@ -565,9 +560,14 @@ export class Wallet extends AdvancedSQLModel {
       const provider = new WsProvider(endpoint.url);
       const api = await ApiPromise.create({
         provider,
+        throwOnConnect: true,
       });
-      const account = (await api.query.system.account(this.address)) as any;
-      balance = account.data.free.toString();
+      try {
+        const account = (await api.query.system.account(this.address)) as any;
+        balance = account.data.free.toString();
+      } finally {
+        await api.disconnect();
+      }
     }
 
     if (!balance && balance !== '0') {
@@ -600,7 +600,7 @@ export class Wallet extends AdvancedSQLModel {
       qSelect: `SELECT ${new TransactionLog(
         {},
         this.getContext(),
-      ).generateSelectFields('t', '', SerializeFor.ADMIN)},
+      ).generateSelectFields('t', '')},
         tq.nonce, tq.referenceTable, tq.referenceId`,
       qFrom: `FROM \`${DbTables.TRANSACTION_LOG}\` t
         LEFT JOIN \`${DbTables.TRANSACTION_QUEUE}\` tq ON tq.id = t.transactionQueue_id

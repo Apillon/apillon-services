@@ -32,7 +32,6 @@
     "@rawmodel/validators": "^3.3.4",
     "axios": "^1.2.1",
     "express": "^4.17.1",
-    "form-data": "^4.0.0",
     "rxjs": "^7.1.0"
   }
 }

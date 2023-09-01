@@ -14,6 +14,7 @@ import {
   getDiscordAuthURL,
   Permissions,
   Validation,
+  CaptchaGuard,
 } from '@apillon/modules-lib';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { LoginUserDto } from './dtos/login-user.dto';
@@ -46,9 +47,8 @@ export class UserController {
 
   @Patch('me')
   @Permissions({ role: DefaultUserRole.USER })
-  @UseGuards(AuthGuard)
   @Validation({ dto: UpdateUserDto })
-  @UseGuards(ValidationGuard)
+  @UseGuards(AuthGuard, ValidationGuard)
   async updateUserProfile(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: UpdateUserDto,
@@ -80,7 +80,7 @@ export class UserController {
 
   @Post('validate-email')
   @Validation({ dto: ValidateEmailDto })
-  @UseGuards(ValidationGuard)
+  @UseGuards(ValidationGuard, CaptchaGuard)
   async validateEmail(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: ValidateEmailDto,
@@ -101,7 +101,7 @@ export class UserController {
   @Post('password-reset-request')
   @HttpCode(200)
   @Validation({ dto: ValidateEmailDto })
-  @UseGuards(ValidationGuard)
+  @UseGuards(ValidationGuard, CaptchaGuard)
   async passwordResetRequest(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: ValidateEmailDto,

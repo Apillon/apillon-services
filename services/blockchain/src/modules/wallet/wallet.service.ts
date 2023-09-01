@@ -58,20 +58,28 @@ export class WalletService {
     },
     context: ServiceContext,
   ): Promise<any> {
-    const wallet = await new Wallet({}, context).populateById(walletId);
-    WalletService.checkExists(wallet);
+    const conn = await context.mysql.start();
 
-    wallet.populate(data, PopulateFrom.ADMIN);
     try {
-      await wallet.validate();
-    } catch (err) {
-      await wallet.handle(err);
-      if (!wallet.isValid()) {
-        throw new BlockchainValidationException(wallet);
+      const wallet = await new Wallet({}, context).populateById(walletId, conn);
+      WalletService.checkExists(wallet);
+
+      wallet.populate(data, PopulateFrom.ADMIN);
+      try {
+        await wallet.validate();
+      } catch (err) {
+        await wallet.handle(err);
+        if (!wallet.isValid()) {
+          throw new BlockchainValidationException(wallet);
+        }
       }
+      await wallet.update(SerializeFor.UPDATE_DB, conn);
+      await context.mysql.commit(conn);
+      return wallet.serialize(SerializeFor.ADMIN);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+      throw err;
     }
-    await wallet.update();
-    return wallet.serialize(SerializeFor.ADMIN);
   }
 
   static async getWalletTransactions(

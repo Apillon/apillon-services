@@ -11,6 +11,8 @@ import {
   ApiKeyQueryFilterDto,
   ApiKeyRoleBaseDto,
   ProjectAccessModel,
+  invalidateCacheKey,
+  CacheKeyPrefix,
 } from '@apillon/lib';
 import { DbTables, AmsErrorCode } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
@@ -286,24 +288,38 @@ export class ApiKey extends ProjectAccessModel {
   }
 
   /**
-   * Sets all api keys in project to blocked/active
+   * Sets all api keys in project to status blocked/active
    * @param project_uuid
    * @param block true if block, false if unblock
    * @returns
    */
-  public async updateApiKeysInProjects(
+  public async updateApiKeysStatusInProjects(
     project_uuids: string[],
     block: boolean,
   ) {
-    await this.getContext().mysql.paramExecute(
+    const apiKeyRows = await this.getContext().mysql.paramExecute(
       `
-      UPDATE \`${this.tableName}\`
-      SET status = ${block ? SqlModelStatus.BLOCKED : SqlModelStatus.ACTIVE}
+      SELECT * FROM \`${this.tableName}\`
       WHERE project_uuid IN (@project_uuids)
       AND status = ${block ? SqlModelStatus.ACTIVE : SqlModelStatus.BLOCKED};
       `,
       { project_uuids },
     );
+    const apiKeys = apiKeyRows.map((ak) => ak.apiKey);
+
+    await this.getContext().mysql.paramExecute(
+      `
+      UPDATE \`${this.tableName}\`
+      SET status = ${block ? SqlModelStatus.BLOCKED : SqlModelStatus.ACTIVE}
+      WHERE apiKey IN (@apiKeys)
+      `,
+      { apiKeys },
+    );
+
+    for (const apiKey of apiKeys) {
+      await invalidateCacheKey(`${CacheKeyPrefix.AUTH_USER_DATA}:${apiKey}`);
+    }
+
     return true;
   }
 }

@@ -4,6 +4,7 @@ import { presenceValidator, emailValidator } from '@rawmodel/validators';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
 import { JSONParser } from '../../../parsers';
+import { Captcha } from '../../../captcha';
 
 export class VerificationEmailDto extends ModelBase {
   @prop({
@@ -38,5 +39,5 @@ export class VerificationEmailDto extends ModelBase {
     parser: { resolver: JSONParser() },
     populatable: [PopulateFrom.PROFILE],
   })
-  public captcha: { eKey: string; token: string };
+  public captcha: Captcha;
 }
