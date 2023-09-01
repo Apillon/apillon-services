@@ -86,8 +86,8 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
         await conn.commit();
 
         if (
-          env.APP_ENV == AppEnvironment.TEST ||
-          env.APP_ENV == AppEnvironment.LOCAL_DEV
+          env.APP_ENV === AppEnvironment.TEST ||
+          env.APP_ENV === AppEnvironment.LOCAL_DEV
         ) {
           console.log(
             `${env.APP_ENV} => Skipping webhook trigger ... TODO: Handle properly`,
