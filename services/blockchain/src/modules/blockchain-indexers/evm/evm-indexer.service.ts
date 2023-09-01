@@ -36,7 +36,7 @@ export class EvmBlockchainIndexer {
         transactions(
           where: {
             from_eq: $address
-            blockNumber_gte: $fromBlock
+            blockNumber_gt: $fromBlock
             blockNumber_lte: $toBlock
           }
         ) {
@@ -80,7 +80,7 @@ export class EvmBlockchainIndexer {
         transactions(
           where: {
             to_eq: $address
-            blockNumber_gte: $fromBlock
+            blockNumber_gt: $fromBlock
             blockNumber_lte: $toBlock
           }
         ) {
