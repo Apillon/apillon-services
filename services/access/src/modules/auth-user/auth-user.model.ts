@@ -186,22 +186,6 @@ export class AuthUser extends AdvancedSQLModel {
   })
   public consents: any;
 
-  @prop({
-    parser: { resolver: dateParser() },
-    populatable: [
-      PopulateFrom.SERVICE, //
-      PopulateFrom.DB, //
-      PopulateFrom.PROFILE, //
-    ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-    ],
-  })
-  public captchaSolveDate: Date;
-
   public constructor(data: any, context: Context) {
     super(data, context);
   }
@@ -526,29 +510,5 @@ export class AuthUser extends AdvancedSQLModel {
     await invalidateCacheKey(
       `${CacheKeyPrefix.AUTH_USER_DATA}:${this.user_uuid}`,
     );
-  }
-
-  public async checkLoginCaptcha(captchaChallengeSuccess: boolean) {
-    if (!env.LOGIN_CAPTCHA_ENABLED) {
-      return;
-    }
-    // If captchaSolveDate is null, captchaRememberDate is Date.min()
-    const captchaRememberDate = new Date(this.captchaSolveDate);
-    captchaRememberDate.setDate(
-      captchaRememberDate.getDate() + env.CAPTCHA_REMEMBER_DAYS,
-    );
-
-    // If remember date for last captcha solved is in the past, request captcha solve
-    if (captchaRememberDate <= new Date() || captchaChallengeSuccess) {
-      // Throw an error if captcha was not solved
-      if (!captchaChallengeSuccess) {
-        throw new AmsCodeException({
-          code: AmsErrorCode.INVALID_CAPTCHA,
-          status: 400,
-        });
-      }
-      this.captchaSolveDate = new Date();
-      await this.update();
-    }
   }
 }
