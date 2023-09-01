@@ -26,7 +26,6 @@ import {
 } from '../modules/blockchain-indexers/evm/data-models/evm-transfer';
 import { EvmBlockchainIndexer } from '../modules/blockchain-indexers/evm/evm-indexer.service';
 import { WorkerName } from './worker-executor';
-import { bsonObjectIdStringParser } from '@rawmodel/parsers';
 
 export class EvmTransactionWorker extends BaseSingleThreadWorker {
   private logPrefix: string;
@@ -67,17 +66,11 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
         );
 
         const blockHeight = await evmIndexer.getBlockHeight();
-
-        console.log('Block-height ', blockHeight);
-
         const lastParsedBlock: number = wallet.lastParsedBlock;
         const toBlock: number =
           lastParsedBlock + wallet.blockParseSize < blockHeight
             ? lastParsedBlock + wallet.blockParseSize
             : blockHeight;
-
-        console.log('lastParsedBlock: ', lastParsedBlock);
-        console.log('toBlock: ', toBlock);
 
         const walletTxs = await this.fetchAllEvmTransactions(
           evmIndexer,
@@ -86,15 +79,11 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
           toBlock,
         );
 
-        console.log('WalletTxs: ', walletTxs);
-
         await this.handleOutgoingEvmTxs(wallet, walletTxs.outgoingTxs, conn);
         await this.handleIncomingEvmTxs(wallet, walletTxs.incomingTxs);
 
         await wallet.updateLastParsedBlock(toBlock, conn);
         await conn.commit();
-
-        console.log('WalletTxs: ', walletTxs);
 
         if (
           (walletTxs.incomingTxs.transactions.length > 0 ||
@@ -159,8 +148,6 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
       return;
     }
 
-    console.log('Transaction: ', outgoingTxs.transactions);
-
     const confirmedTxs: string[] = await this.updateEvmTransactionsByStatus(
       outgoingTxs,
       TransactionStatus.CONFIRMED,
@@ -189,8 +176,6 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
       },
       LogOutput.EVENT_INFO,
     );
-
-    console.log('updatedDbTxs: ', updatedDbTxs);
 
     // All transactions were matched with db
     if (outgoingTxs.transactions.length === updatedDbTxs.length) {
@@ -296,8 +281,6 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
     wallet: Wallet,
     conn: PoolConnection,
   ): Promise<string[]> {
-    console.log('transactionHashes ', bcHashes);
-
     await this.context.mysql.paramExecute(
       `UPDATE \`${DbTables.TRANSACTION_QUEUE}\`
       SET transactionStatus = @status
