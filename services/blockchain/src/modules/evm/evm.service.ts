@@ -264,6 +264,7 @@ export class EvmService {
    * Should be called from worker
    * @param _event chain for which we should process transaction
    * @param context Service context
+   * @param eventLogger Event logger
    */
   static async transmitTransactions(
     _event: {
@@ -358,7 +359,7 @@ export class EvmService {
         }
       }
 
-      if (latestSuccess >= 0) {
+      if (latestSuccess) {
         const dbWallet = new Wallet(wallet, context);
         await dbWallet.updateLastProcessedNonce(latestSuccess);
       }
