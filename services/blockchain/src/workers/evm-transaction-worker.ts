@@ -86,11 +86,13 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
         await conn.commit();
 
         if (
-          (walletTxs.incomingTxs.transactions.length > 0 ||
-            walletTxs.outgoingTxs.transactions.length > 0) &&
-          env.APP_ENV !== AppEnvironment.TEST &&
-          env.APP_ENV !== AppEnvironment.LOCAL_DEV
+          env.APP_ENV == AppEnvironment.TEST ||
+          env.APP_ENV == AppEnvironment.LOCAL_DEV
         ) {
+          console.log(
+            `${env.APP_ENV} => Skipping webhook trigger ... TODO: Implement for LOCAL`,
+          );
+        } else {
           await sendToWorkerQueue(
             env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
             WorkerName.TRANSACTION_WEBHOOKS,
