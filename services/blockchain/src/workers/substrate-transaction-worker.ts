@@ -88,6 +88,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
             logType: LogType.ERROR,
             message: `${this.logPrefix}: Error confirming transactions`,
             service: ServiceName.BLOCKCHAIN,
+            err: err,
             data: {
               error: err,
               wallet: wallet.address,
@@ -99,10 +100,13 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       }
 
       if (
-        transactions.length > 0 &&
-        env.APP_ENV !== AppEnvironment.TEST &&
-        env.APP_ENV !== AppEnvironment.LOCAL_DEV
+        env.APP_ENV === AppEnvironment.TEST ||
+        env.APP_ENV === AppEnvironment.LOCAL_DEV
       ) {
+        console.log(
+          `${env.APP_ENV} => Skipping webhook trigger ... TODO: Handle properly`,
+        );
+      } else if (transactions.length > 0) {
         // Trigger webhook worker
         await sendToWorkerQueue(
           env.BLOCKCHAIN_AWS_WORKER_SQS_URL,

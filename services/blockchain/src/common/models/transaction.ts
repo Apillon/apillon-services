@@ -200,6 +200,19 @@ export class Transaction extends AdvancedSQLModel {
   })
   public rawTransaction: string;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public project_uuid?: string;
+
   public async getList(
     chain: Chain,
     chainType: ChainType,
