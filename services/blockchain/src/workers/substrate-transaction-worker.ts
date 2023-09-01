@@ -104,7 +104,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         env.APP_ENV == AppEnvironment.LOCAL_DEV
       ) {
         console.log(
-          `${env.APP_ENV} => Skipping webhook trigger ... TODO: Implement for LOCAL`,
+          `${env.APP_ENV} => Skipping webhook trigger ... TODO: Handle properly`,
         );
       } else if (transactions.length > 0) {
         // Trigger webhook worker
