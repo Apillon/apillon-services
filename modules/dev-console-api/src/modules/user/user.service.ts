@@ -77,11 +77,10 @@ export class UserService {
     loginInfo: LoginUserDto,
     context: DevConsoleApiContext,
   ): Promise<any> {
-    let captchaChallengeSuccess = false; // set to true if captcha is sent and verified
-    if (loginInfo.captcha?.token) {
-      await checkCaptcha(loginInfo.captcha?.token);
-      captchaChallengeSuccess = true;
-    }
+    const captchaChallengeSuccess = loginInfo.captcha?.token
+      ? await checkCaptcha(loginInfo.captcha?.token)
+      : false;
+
     try {
       const { data: authUser } = await new Ams(context).login({
         ...loginInfo,
