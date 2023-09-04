@@ -555,11 +555,7 @@ export class UserService {
   async getCaptchaJwt(loginInfo: LoginUserDto) {
     const captchaJwt = loginInfo.captchaJwt;
     try {
-      parseJwtToken(
-        JwtTokenType.USER_LOGIN_CAPTCHA,
-        captchaJwt,
-        loginInfo.password,
-      );
+      parseJwtToken(JwtTokenType.USER_LOGIN_CAPTCHA, captchaJwt);
     } catch (error) {
       if (env.LOGIN_CAPTCHA_ENABLED) {
         // If there is no valid JWT token, request captcha solve
@@ -569,7 +565,6 @@ export class UserService {
         JwtTokenType.USER_LOGIN_CAPTCHA,
         { email: loginInfo.email },
         `${env.CAPTCHA_REMEMBER_DAYS}d`,
-        loginInfo.password,
       );
     }
     return captchaJwt;
