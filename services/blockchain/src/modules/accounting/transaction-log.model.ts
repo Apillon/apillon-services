@@ -451,7 +451,7 @@ export class TransactionLog extends AdvancedSQLModel {
   }
 
   public createFromEvmIndexerData(data: any, wallet: Wallet) {
-    this.ts = data?.timestamp;
+    this.ts = data?.createdAt;
     this.blockId = data?.blockNumber;
     this.addressFrom = data?.from?.toLowerCase();
     this.addressTo = data?.to?.toLowerCase();
