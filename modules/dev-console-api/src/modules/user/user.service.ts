@@ -16,6 +16,8 @@ import {
   generateJwtToken,
   invalidateCachePrefixes,
   CacheKeyPrefix,
+  checkCaptcha,
+  parseJwtToken,
 } from '@apillon/lib';
 import { getDiscordProfile } from '@apillon/modules-lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
@@ -76,8 +78,13 @@ export class UserService {
     loginInfo: LoginUserDto,
     context: DevConsoleApiContext,
   ): Promise<any> {
+    const captchaJwt = await this.getCaptchaJwt(loginInfo);
+
     try {
-      const { data: authUser } = await new Ams(context).login(loginInfo);
+      const { data: authUser } = await new Ams(context).login({
+        email: loginInfo.email,
+        password: loginInfo.password,
+      });
 
       const user = await new User({}, context).populateByUUID(
         authUser.user_uuid,
@@ -98,6 +105,7 @@ export class UserService {
       return {
         ...user.serialize(SerializeFor.PROFILE),
         token: authUser.token,
+        captchaJwt,
       };
     } catch (error) {
       throw new CodeException({
@@ -537,5 +545,28 @@ export class UserService {
       env.APILLON_API_SYSTEM_API_KEY,
       env.APILLON_API_SYSTEM_API_SECRET,
     );
+  }
+
+  /**
+   * Check if there is a valid captcha JWT token. If not, demand that the captcha is solved successfully.
+   * After solving the captcha, a jwt token which lasts for env.CAPTCHA_REMEMBER_DAYS is generated and sent to the client
+   * @param {LoginUserDto} loginInfo - User's login info sent from the client
+   */
+  async getCaptchaJwt(loginInfo: LoginUserDto) {
+    const captchaJwt = loginInfo.captchaJwt;
+    try {
+      parseJwtToken(JwtTokenType.USER_LOGIN_CAPTCHA, captchaJwt);
+    } catch (error) {
+      if (env.LOGIN_CAPTCHA_ENABLED) {
+        // If there is no valid JWT token, request captcha solve
+        await checkCaptcha(loginInfo.captcha?.token);
+      }
+      return generateJwtToken(
+        JwtTokenType.USER_LOGIN_CAPTCHA,
+        { email: loginInfo.email },
+        `${env.CAPTCHA_REMEMBER_DAYS}d`,
+      );
+    }
+    return captchaJwt;
   }
 }
