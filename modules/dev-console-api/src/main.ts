@@ -6,7 +6,7 @@ import helmet from 'helmet';
 import { AdminAppModule } from './admin-app.module';
 
 export async function bootstrapModule(module: any, envPrefix: string) {
-  const app = await NestFactory.create(module, { cors: true });
+  const app = await NestFactory.create(module, { cors: true, rawBody: true });
   app.useGlobalFilters(new ExceptionsFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.getHttpAdapter().getInstance().disable('x-powered-by');

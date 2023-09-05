@@ -1,17 +1,15 @@
-import { env } from '@apillon/lib';
-import { Injectable } from '@nestjs/common';
+import { BadRequestErrorCode, CodeException, env } from '@apillon/lib';
+import { Injectable, RawBodyRequest } from '@nestjs/common';
 import Stripe from 'stripe';
 
 @Injectable()
 export class PaymentsService {
+  constructor(private stripe: Stripe) {}
+
   async generatePaymentSession(): Promise<
     Stripe.Response<Stripe.Checkout.Session>
   > {
-    const stripe = new Stripe(env.STRIPE_SECRET_TEST, {
-      apiVersion: '2023-08-16',
-    });
-
-    return await stripe.checkout.sessions.create({
+    return await this.stripe.checkout.sessions.create({
       line_items: [
         {
           price: 'price_1NmcbNGlTglE98hYRiHlCOG7',
