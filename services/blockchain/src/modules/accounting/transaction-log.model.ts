@@ -451,13 +451,13 @@ export class TransactionLog extends AdvancedSQLModel {
   }
 
   public createFromEvmIndexerData(data: any, wallet: Wallet) {
-    this.ts = data?.timestamp;
+    this.ts = data?.createdAt;
     this.blockId = data?.blockNumber;
     this.addressFrom = data?.from?.toLowerCase();
     this.addressTo = data?.to?.toLowerCase();
     this.amount = data?.value;
 
-    this.hash = data?.hash;
+    this.hash = data?.transactionHash;
     this.wallet = wallet.address?.toLowerCase();
 
     this.status = data?.status === 0 ? TxStatus.COMPLETED : TxStatus.FAILED;

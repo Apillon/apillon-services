@@ -600,6 +600,7 @@ export enum JwtTokenType {
   USER_RESET_PASSWORD = 'user-reset-password',
   USER_RESET_EMAIL = 'user-reset-email',
   USER_CONFIRM_EMAIL = 'user-confirm-email',
+  USER_LOGIN_CAPTCHA = 'user-login-captcha',
 }
 
 /**
