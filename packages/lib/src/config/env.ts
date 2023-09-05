@@ -436,6 +436,7 @@ export interface IEnv {
    */
   STRIPE_API_KEY: string;
   STRIPE_SECRET: string;
+  STRIPE_WEBHOOK_SECRET: string;
 
   STRIPE_API_KEY_TEST: string;
   STRIPE_SECRET_TEST: string;
@@ -795,6 +796,7 @@ export let env: IEnv = {
   /** STRIPE */
   STRIPE_API_KEY: process.env['STRIPE_API_KEY'],
   STRIPE_SECRET: process.env['STRIPE_SECRET'],
+  STRIPE_WEBHOOK_SECRET: process.env['STRIPE_WEBHOOK_SECRET'],
 
   STRIPE_API_KEY_TEST: process.env['STRIPE_API_KEY_TEST'],
   STRIPE_SECRET_TEST: process.env['STRIPE_SECRET_TEST'],
