@@ -349,6 +349,19 @@ export class TransactionLog extends AdvancedSQLModel {
   })
   public description: string;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public project_uuid?: string;
+
   public constructor(data?: any, context?: Context) {
     super(data, context);
   }
@@ -438,7 +451,7 @@ export class TransactionLog extends AdvancedSQLModel {
   }
 
   public createFromEvmIndexerData(data: any, wallet: Wallet) {
-    this.ts = data?.timestamp;
+    this.ts = data?.createdAt;
     this.blockId = data?.blockNumber;
     this.addressFrom = data?.from?.toLowerCase();
     this.addressTo = data?.to?.toLowerCase();
