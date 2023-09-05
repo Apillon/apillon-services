@@ -24,22 +24,27 @@ export async function processWebhooks(
   const transactionIds = [];
 
   // Configure as needed
-  const chunkSize = 10;
-  for (let i = 0; i < webhooks.length; i += chunkSize) {
-    const chunk = webhooks.slice(i, i + chunkSize);
+  const processSize = 10;
 
-    await sendToWorkerQueue(
-      sqsUrl,
-      workerName,
-      [
-        {
-          data: chunk,
-        },
-      ],
-      null,
-      null,
-    );
-    transactionIds.push(webhooks[i].id);
+  for (let i = 0; i < webhooks.length; i += processSize) {
+    const chunk = webhooks.slice(i, i + processSize);
+
+    if (chunk.length > 0) {
+      await sendToWorkerQueue(
+        sqsUrl,
+        workerName,
+        [
+          {
+            data: chunk,
+          },
+        ],
+        null,
+        null,
+      );
+
+      // Extract ids from the transactions
+      transactionIds.push(chunk.map((x) => x.id));
+    }
   }
 
   if (transactionIds.length > 0) {

@@ -121,8 +121,6 @@ describe('Substrate tests', () => {
       0,
     );
 
-    console.log('TXS: ', txs);
-
     expect(txs.length).toBe(3);
     console.log(
       txs.find((x) => x.transactionStatus != TransactionStatus.CONFIRMED),
