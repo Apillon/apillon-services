@@ -1,3 +1,4 @@
+import { PaymentsModule } from './modules/payments/payments.module';
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { ContextMiddleware } from './middlewares/context.middleware';
 import { MySQLModule } from './modules/database/mysql.module';
@@ -35,6 +36,7 @@ import { ReferralModule } from './modules/referral/referral.module';
     IpnsModule,
     ReferralModule,
     NftsModule,
+    PaymentsModule,
   ],
   controllers: [],
   providers: [],
