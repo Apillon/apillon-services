@@ -29,7 +29,6 @@
   "dependencies": {
     "@apillon/lib": "*",
     "@apillon/modules-lib": "*",
-    "@faker-js/faker": "^7.5.0",
     "@kiltprotocol/sdk-js": "0.30.0",
     "@kiltprotocol/types": "0.29.0",
     "@nestjs/common": "^9.0.11",

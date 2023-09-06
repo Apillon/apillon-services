@@ -21,7 +21,7 @@ import {
   ReferralValidationException,
 } from '../../../lib/exceptions';
 
-import { faker } from '@faker-js/faker';
+import { faker } from '@apillon/lib';
 
 export enum TaskType {
   REFERRAL = 1,
@@ -77,7 +77,7 @@ export class Task extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue: () => faker.random.word(),
+    fakeValue: () => faker().random.word(),
   })
   public name: string;
 
@@ -97,7 +97,7 @@ export class Task extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue: () => faker.random.words(6),
+    fakeValue: () => faker().random.words(6),
   })
   public description: string;
 
@@ -183,7 +183,7 @@ export class Task extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue: faker.date.future(1),
+    fakeValue: faker().date.future(1),
     validators: [],
   })
   public activeTo: Date;

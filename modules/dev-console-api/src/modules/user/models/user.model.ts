@@ -1,6 +1,6 @@
 import { Project } from './../../project/models/project.model';
 /* eslint-disable @typescript-eslint/member-ordering */
-import { faker } from '@faker-js/faker';
+import { faker } from '@apillon/lib';
 import { prop } from '@rawmodel/core';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
@@ -72,7 +72,7 @@ export class User extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue: () => faker.internet.email(),
+    fakeValue: () => faker().internet.email(),
   })
   public email: string;
 
@@ -92,7 +92,7 @@ export class User extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue: () => faker.name.fullName(),
+    fakeValue: () => faker().name.fullName(),
   })
   public name: string;
 

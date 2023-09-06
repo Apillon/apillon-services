@@ -21,7 +21,7 @@ import {
   ReferralCodeException,
   ReferralValidationException,
 } from '../../../lib/exceptions';
-import { faker } from '@faker-js/faker';
+import { faker } from '@apillon/lib';
 import { Attribute } from './attribute.model';
 import { Player } from './player.model';
 
@@ -47,7 +47,7 @@ export class Product extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue: () => faker.random.word(),
+    fakeValue: () => faker().random.word(),
   })
   public name: string;
 
@@ -66,7 +66,7 @@ export class Product extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue: () => faker.random.words(6),
+    fakeValue: () => faker().random.words(6),
   })
   public description: string;
 
@@ -85,7 +85,7 @@ export class Product extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue: () => faker.image.imageUrl(),
+    fakeValue: () => faker().image.imageUrl(),
   })
   public imageUrl: string;
 
@@ -104,7 +104,7 @@ export class Product extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue: () => faker.datatype.number({ min: 1, max: 20 }),
+    fakeValue: () => faker().datatype.number({ min: 1, max: 20 }),
   })
   public price: number;
 
@@ -153,7 +153,7 @@ export class Product extends AdvancedSQLModel {
     }
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT 
+      SELECT
         COUNT(o.id) as count
       FROM \`${DbTables.ORDER}\` o
       WHERE o.product_id = @product_id
@@ -221,7 +221,7 @@ export class Product extends AdvancedSQLModel {
         `
         INSERT INTO ${DbTables.TRANSACTION}
           (player_id, direction, amount, status)
-        VALUES 
+        VALUES
           (@player_id, ${TransactionDirection.WITHDRAW}, @price, ${SqlModelStatus.ACTIVE})
       `,
         { player_id, price: this.price },
@@ -288,7 +288,7 @@ export class Product extends AdvancedSQLModel {
             JSON_OBJECT(${new Attribute({}, null).generateSelectJSONFields(
               'a',
             )})
-          ), 
+          ),
           JSON_ARRAY()
         ) as attributes,
         (

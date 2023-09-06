@@ -1,5 +1,5 @@
 import { ModelBase, PopulateFrom } from '@apillon/lib';
-import { faker } from '@faker-js/faker';
+import { faker } from '@apillon/lib';
 import { stringParser } from '@rawmodel/parsers';
 import { prop } from '@rawmodel/core';
 
@@ -9,7 +9,7 @@ export class UpdateUserDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
-    fakeValue: () => faker.internet.userName(),
+    fakeValue: () => faker().internet.userName(),
   })
   public name: string;
 }

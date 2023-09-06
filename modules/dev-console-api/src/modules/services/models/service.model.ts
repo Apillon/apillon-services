@@ -20,7 +20,7 @@ import {
   ValidatorErrorCode,
 } from '../../../config/types';
 import { ServiceQueryFilter } from '../dtos/services-query-filter.dto';
-import { faker } from '@faker-js/faker';
+import { faker } from '@apillon/lib';
 import { Project } from '../../project/models/project.model';
 import { HttpStatus } from '@nestjs/common';
 
@@ -89,7 +89,7 @@ export class Service extends AdvancedSQLModel {
         code: ValidatorErrorCode.SERVICE_NAME_NOT_PRESENT,
       },
     ],
-    fakeValue: faker.word.verb(),
+    fakeValue: faker().word.verb(),
   })
   public name: string;
 
