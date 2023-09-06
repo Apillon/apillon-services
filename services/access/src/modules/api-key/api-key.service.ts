@@ -1,7 +1,9 @@
 import {
   ApiKeyQueryFilterDto,
+  CacheKeyPrefix,
   CreateApiKeyDto,
   generatePassword,
+  invalidateCacheKey,
   Lmas,
   LogType,
   QuotaCode,
@@ -178,6 +180,7 @@ export class ApiKeyService {
     key.canModify(context);
 
     await key.markDeleted();
+    await invalidateCacheKey(`${CacheKeyPrefix.AUTH_USER_DATA}:${key.apiKey}`);
 
     await new Lmas().writeLog({
       context,
