@@ -28,7 +28,10 @@ export class PaymentsController {
     @Req() req: RawBodyRequest<Request>,
     @Headers('stripe-signature') stripeSignature: string,
   ): Promise<any> {
-    this.paymentsService.verifyWebhookSignature(req.rawBody, stripeSignature);
-    await this.paymentsService.onWebhookEvent(body);
+    const event = this.paymentsService.getStripeEventFromSignature(
+      req.rawBody,
+      stripeSignature,
+    );
+    await this.paymentsService.onWebhookEvent(event);
   }
 }
