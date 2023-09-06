@@ -22,6 +22,45 @@ import { getWalletSeed } from '../../lib/seed';
 import { transmitAndProcessEvmTransaction } from '../../lib/transmit-and-process-evm-transaction';
 import { WorkerName } from '../../workers/worker-executor';
 
+async function trySelfRepairNonce(
+  provider: ethers.providers.JsonRpcProvider,
+  context: ServiceContext,
+  wallet: Wallet,
+) {
+  const lastOnChainNonce = await provider.getTransactionCount(
+    wallet.address,
+    'pending',
+  );
+  if (!lastOnChainNonce) {
+    return;
+  }
+  const lastProcessedNonce = lastOnChainNonce - 1;
+  if (wallet.lastProcessedNonce > lastProcessedNonce) {
+    return;
+  }
+  const lastTx = await new Transaction(
+    {},
+    context,
+  ).getLastTransactionByChainWalletAndNonce(
+    wallet.chain,
+    wallet.address,
+    lastProcessedNonce,
+  );
+  if (!lastTx) {
+    return;
+  }
+
+  const lastOnChainTx = await provider.getTransaction(lastTx.transactionHash);
+  if (
+    lastOnChainTx.from !== wallet.address ||
+    lastOnChainTx.nonce !== lastProcessedNonce
+  ) {
+    return;
+  }
+
+  return lastProcessedNonce;
+}
+
 export class EvmService {
   static async createTransaction(
     {
@@ -323,39 +362,76 @@ export class EvmService {
           latestSuccess = transaction.nonce;
           transmitted++;
         } catch (err) {
-          if (eventLogger) {
-            await eventLogger(
-              {
+          if (
+            err?.reason === 'nonce has already been used' ||
+            err?.error?.message === 'already known'
+          ) {
+            latestSuccess = await trySelfRepairNonce(provider, context, wallet);
+            if (latestSuccess) {
+              const nonceRepairedMessage = latestSuccess
+                ? `Last processed nonce was repaired and set to ${latestSuccess}.`
+                : 'Could not repair last processed nonce.';
+              if (eventLogger) {
+                await eventLogger(
+                  {
+                    logType: LogType.INFO,
+                    message: nonceRepairedMessage,
+                    service: ServiceName.BLOCKCHAIN,
+                    data: {
+                      lastProcessedNonce: latestSuccess,
+                      wallet: wallet.address,
+                    },
+                  },
+                  LogOutput.NOTIFY_WARN,
+                );
+              } else {
+                await new Lmas().writeLog({
+                  logType: LogType.INFO,
+                  message: nonceRepairedMessage,
+                  location: 'EvmService.transmitTransactions',
+                  service: ServiceName.BLOCKCHAIN,
+                  data: {
+                    lastProcessedNonce: latestSuccess,
+                    wallet: wallet.address,
+                  },
+                });
+              }
+            }
+          } else {
+            if (eventLogger) {
+              await eventLogger(
+                {
+                  logType: LogType.ERROR,
+                  message: 'Error transmitting transaction!',
+                  service: ServiceName.BLOCKCHAIN,
+                  data: {
+                    error: err,
+                    wallet: wallet.address,
+                  },
+                  err,
+                },
+                LogOutput.NOTIFY_WARN,
+              );
+            } else {
+              await new Lmas().writeLog({
                 logType: LogType.ERROR,
-                message: 'Error transmitting transaction!',
+                message: 'Error transmitting transaction',
+                location: 'EvmService.transmitTransactions',
                 service: ServiceName.BLOCKCHAIN,
                 data: {
                   error: err,
                   wallet: wallet.address,
                 },
-                err,
-              },
-              LogOutput.NOTIFY_WARN,
-            );
-          } else {
-            await new Lmas().writeLog({
-              logType: LogType.ERROR,
-              message: 'Error transmitting transaction',
-              location: 'EvmService.transmitTransactions',
-              service: ServiceName.BLOCKCHAIN,
-              data: {
-                error: err,
-                wallet: wallet.address,
-              },
-            });
+              });
+            }
+            if (
+              env.APP_ENV === AppEnvironment.TEST ||
+              env.APP_ENV === AppEnvironment.LOCAL_DEV
+            ) {
+              throw err;
+            }
+            break;
           }
-          if (
-            env.APP_ENV === AppEnvironment.TEST ||
-            env.APP_ENV === AppEnvironment.LOCAL_DEV
-          ) {
-            throw err;
-          }
-          break;
         }
       }
 

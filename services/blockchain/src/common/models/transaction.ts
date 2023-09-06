@@ -293,4 +293,31 @@ export class Transaction extends AdvancedSQLModel {
       return this.reset();
     }
   }
+
+  public async getLastTransactionByChainWalletAndNonce(
+    chain: Chain,
+    walletAddress: string,
+    nonce: number,
+    conn?: PoolConnection,
+  ) {
+    const data = await this.getContext().mysql.paramExecute(
+      `SELECT *
+       FROM \`${DbTables.TRANSACTION_QUEUE}\`
+       WHERE address = @walletAddress
+         AND chain = @chain
+         AND nonce = @nonce LIMIT 1`,
+      {
+        chain,
+        walletAddress,
+        nonce,
+      },
+      conn,
+    );
+
+    if (data && data.length) {
+      return this.populate(data[0], PopulateFrom.DB);
+    } else {
+      return null;
+    }
+  }
 }
