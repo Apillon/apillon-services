@@ -27,6 +27,7 @@ export async function sendTransferredFilesToBucketWebhook(
           return {
             file_uuid: x.file_uuid,
             CID: x.CID,
+            CIDv1: x.CIDv1,
           };
         }),
       };
