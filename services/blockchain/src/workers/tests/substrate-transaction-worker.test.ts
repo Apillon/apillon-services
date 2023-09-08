@@ -16,7 +16,7 @@ import { Wallet } from '../../modules/wallet/wallet.model';
 import { SubstrateTransactionWorker } from '../substrate-transaction-worker';
 import { WorkerName } from '../worker-executor';
 
-describe('Substrate tests', () => {
+describe('Substrate tests | KILT', () => {
   let stage: Stage;
   let wallet: Wallet;
   const startBlock = 3982289;
@@ -220,5 +220,120 @@ describe('Substrate tests', () => {
       txs.find((x) => x.transactionStatus == TransactionStatus.FAILED),
     ).toBeTruthy();
     expect(txs.length).toEqual(3);
+  });
+});
+
+describe('Substrate tests | CRUST', () => {
+  let stage: Stage;
+  let wallet: Wallet;
+  const startBlock = 3982289;
+  const chain = SubstrateChain.CRUST;
+  const chainType = ChainType.SUBSTRATE;
+
+  beforeAll(async () => {
+    stage = await setupTest();
+    env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://3.251.2.33:8081/graphql';
+
+    wallet = await new Wallet(
+      {
+        chain,
+        chainType,
+        address: 'cTL1jk9CbHJAYz2hWDh3PprRCtrPAHUvSDw7gZbVWbUYt8SJU',
+        // This is actually not correct - the seed should match
+        // the address. Good enough for this test
+        seed: mnemonicGenerate(),
+        lastParsedBlock: startBlock,
+      },
+      stage.context,
+    ).insert();
+  });
+
+  afterAll(async () => {
+    await releaseStage(stage);
+  });
+
+  test('Single wallet transactions', async () => {
+    const address = 'cTL1jk9CbHJAYz2hWDh3PprRCtrPAHUvSDw7gZbVWbUYt8SJU';
+    const chain = SubstrateChain.KILT;
+    const chainType = ChainType.SUBSTRATE;
+
+    await new Transaction(
+      {
+        address,
+        chain,
+        chainType,
+        transactionStatus: TransactionStatus.PENDING,
+        nonce: 1,
+        rawTransaction: 'SOME_RAW_DATA',
+        transactionHash:
+          '0x743a3e8e255c5623da1b3e84ee28a671ada6ac92fd347215f2904b142d32a1fd',
+      },
+      stage.context,
+    ).insert();
+
+    await new Transaction(
+      {
+        address,
+        chain,
+        chainType,
+        transactionStatus: TransactionStatus.PENDING,
+        nonce: 2,
+        rawTransaction: 'SOME_RAW_DATA_2',
+        transactionHash:
+          '0x2cef26ef0ab429985cd9a6f7f7e4443bf16bbab387b696d940f1ecca87e62e88',
+      },
+      stage.context,
+    ).insert();
+
+    await new Transaction(
+      {
+        address,
+        chain,
+        chainType,
+        transactionStatus: TransactionStatus.PENDING,
+        nonce: 3,
+        rawTransaction: 'SOME_RAW_DATA_3',
+        transactionHash:
+          '0x676202a86bf27eeefdc10c7a1546800dd75912769f23247baae8abd5366cb93b',
+      },
+      stage.context,
+    ).insert();
+
+    const parameters = {
+      chainId: SubstrateChain.KILT,
+    };
+
+    const serviceDef: ServiceDefinition = {
+      type: ServiceDefinitionType.SQS,
+      config: { region: 'test' },
+      params: { FunctionName: 'test' },
+    };
+
+    const workerDefinition = new WorkerDefinition(
+      serviceDef,
+      WorkerName.SUBSTRATE_TRANSACTION,
+      {
+        parameters: { FunctionName: 'test', ...parameters },
+      },
+    );
+
+    await new SubstrateTransactionWorker(
+      workerDefinition,
+      stage.context,
+    ).runExecutor();
+
+    const txs: Transaction[] = await new Transaction({}, stage.context).getList(
+      chain,
+      chainType,
+      address,
+      0,
+    );
+
+    console.log('TXS: ', txs);
+
+    expect(txs.length).toBe(3);
+    expect(
+      txs.find((x) => x.transactionStatus != TransactionStatus.CONFIRMED),
+    ).toBeFalsy();
   });
 });
