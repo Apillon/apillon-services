@@ -3,7 +3,7 @@ import { CrustBlockchainIndexer } from './crust-indexer.service';
 import { CrustStorageOrders } from './data-models/crust-storage-orders';
 import { CrustTransfers } from './data-models/crust-transfers';
 
-describe.skip('Crust blockchain indexer - Wallet transfers', () => {
+describe('Crust blockchain indexer - Wallet transfers', () => {
   beforeAll(async () => {
     env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://18.203.251.180:8081/graphql';
   });
@@ -17,6 +17,7 @@ describe.skip('Crust blockchain indexer - Wallet transfers', () => {
       6465276,
       6465276 + 50,
     );
+
     console.log(`Obtained ${txs.transfers.length} Crust deposits `);
     expect(txs.transfers.length > 0).toBe(true);
   });
@@ -32,42 +33,42 @@ describe.skip('Crust blockchain indexer - Wallet transfers', () => {
   });
 });
 
-describe.skip('Crust blockchain indexer - File storage orders', () => {
-  beforeAll(async () => {
-    env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://18.203.251.180:8081/graphql';
-  });
+// describe('Crust blockchain indexer - File storage orders', () => {
+//   beforeAll(async () => {
+//     env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://18.203.251.180:8081/graphql';
+//   });
 
-  test('Crust file orders exists between blocks.', async () => {
-    const crustIndexer = new CrustBlockchainIndexer();
+//   test('Crust file orders exists between blocks.', async () => {
+//     const crustIndexer = new CrustBlockchainIndexer();
 
-    // Withdrawals from block to block
-    const txOrders: CrustStorageOrders = await crustIndexer.getMarketFileOrders(
-      'cTL1jk9CbHJAYz2hWDh3PprRCtrPAHUvSDw7gZbVWbUYt8SJU',
-      8686554,
-      8686557,
-    );
-    console.log(`Obtained ${txOrders.storageOrders.length} Crust file orders `);
-    expect(txOrders.storageOrders.length == 2).toBe(true);
-  });
+//     // Withdrawals from block to block
+//     const txOrders: CrustStorageOrders = await crustIndexer.getMarketFileOrders(
+//       'cTL1jk9CbHJAYz2hWDh3PprRCtrPAHUvSDw7gZbVWbUYt8SJU',
+//       8686554,
+//       8686557,
+//     );
+//     console.log(`Obtained ${txOrders.storageOrders.length} Crust file orders `);
+//     expect(txOrders.storageOrders.length == 2).toBe(true);
+//   });
 
-  test('Crust file orders highest block is last.', async () => {
-    const crustIndexer = new CrustBlockchainIndexer();
+//   test('Crust file orders highest block is last.', async () => {
+//     const crustIndexer = new CrustBlockchainIndexer();
 
-    // Withdrawals from block to block
-    const txOrders: CrustStorageOrders = await crustIndexer.getMarketFileOrders(
-      'cTL1jk9CbHJAYz2hWDh3PprRCtrPAHUvSDw7gZbVWbUYt8SJU',
-      8686554,
-      8686557,
-    );
-    console.log(`Obtained ${txOrders.storageOrders.length} Crust file orders `);
-    expect(txOrders.storageOrders.length == 2).toBe(true);
-    expect(
-      txOrders.storageOrders[0].blockNum < txOrders.storageOrders[1].blockNum,
-    ).toBe(true);
-  });
-});
+//     // Withdrawals from block to block
+//     const txOrders: CrustStorageOrders = await crustIndexer.getMarketFileOrders(
+//       'cTL1jk9CbHJAYz2hWDh3PprRCtrPAHUvSDw7gZbVWbUYt8SJU',
+//       8686554,
+//       8686557,
+//     );
+//     console.log(`Obtained ${txOrders.storageOrders.length} Crust file orders `);
+//     expect(txOrders.storageOrders.length == 2).toBe(true);
+//     expect(
+//       txOrders.storageOrders[0].blockNum < txOrders.storageOrders[1].blockNum,
+//     ).toBe(true);
+//   });
+// });
 
-describe.skip('Crust blockchain indexer err', () => {
+describe('Crust blockchain indexer err', () => {
   beforeAll(async () => {
     env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = null;
   });
@@ -78,7 +79,7 @@ describe.skip('Crust blockchain indexer err', () => {
   });
 });
 
-describe.skip('Crust blockchain indexer - block height', () => {
+describe('Crust blockchain indexer - block height', () => {
   beforeAll(async () => {
     env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://18.203.251.180:8081/graphql';
   });
@@ -90,7 +91,7 @@ describe.skip('Crust blockchain indexer - block height', () => {
   });
 });
 
-describe.skip('Hashes test', () => {
+describe('Hashes test', () => {
   test('Iterableiterator to string comma delimited.', () => {
     const test = new Map<string, number>();
     test.set(

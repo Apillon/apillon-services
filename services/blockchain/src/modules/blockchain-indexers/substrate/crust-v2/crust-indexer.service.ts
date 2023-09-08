@@ -3,10 +3,7 @@ import { gql } from 'graphql-request';
 
 import { BaseBlockchainIndexer } from '../base-blockchain-indexer';
 import { CrustGQLQueries } from './queries/crust-graphql-queries';
-import {
-  SystemEvent,
-  TransferTransaction,
-} from './data-models/crust-transactions';
+import { SystemEvent, TransferTransaction } from './data-models';
 import { CrustTransactionType } from '../../../../config/types';
 
 export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
@@ -36,6 +33,8 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
         toBlock,
       },
     );
+
+    console.log(data);
 
     return {
       transfers: data.transfers,

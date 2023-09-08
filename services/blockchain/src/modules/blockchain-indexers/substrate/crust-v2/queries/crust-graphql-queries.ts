@@ -21,7 +21,7 @@ export class CrustGQLQueries {
         where: {
           AND: {
             blockNumber_gte: $fromBlock,
-            blockNumber_lt: $toBlock,
+            blockNumber_lte: $toBlock,
             account_eq: $account
           }
         }
@@ -35,7 +35,7 @@ export class CrustGQLQueries {
         where: {
           AND: {
             blockNumber_gte: $fromBlock,
-            blockNumber_lt: $toBlock,
+            blockNumber_lte: $toBlock,
             AND: { 
               OR: [{from_eq: $account}, {to_eq: $account}]
             }
@@ -52,7 +52,7 @@ export class CrustGQLQueries {
         where: {
           AND: {
             blockNumber_gte: $fromBlock,
-            blockNumber_lt: $toBlock,
+            blockNumber_lte: $toBlock,
             AND: { 
               OR: [{account_eq: $account}]
             }
