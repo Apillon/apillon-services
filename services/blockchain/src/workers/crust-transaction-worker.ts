@@ -27,7 +27,6 @@ import { CrustTransfers } from '../modules/blockchain-indexers/substrate/crust/d
 import { WorkerName } from './worker-executor';
 
 export class CrustTransactionWorker extends BaseSingleThreadWorker {
-  private logPrefix: string;
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);
   }
@@ -44,6 +43,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
 
     for (const w of wallets) {
       const conn = await this.context.mysql.start();
+      let txHashes: string[] = [];
       try {
         const wallet: Wallet = new Wallet(w, this.context);
         const crustIndexer: CrustBlockchainIndexer =
@@ -66,11 +66,23 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
           lastParsedBlock,
           toBlock,
         );
+        txHashes = [
+          ...crustTransactions.deposits.transfers.map((t) => t.extrinsicHash),
+          ...crustTransactions.withdrawals.transfers.map(
+            (t) => t.extrinsicHash,
+          ),
+        ];
 
         await this.handleBlockchainTransfers(
           wallet,
           crustTransactions.withdrawals,
           crustTransactions.deposits,
+        );
+
+        txHashes.push(
+          ...crustTransactions.fileOrders.storageOrders.map(
+            (t) => t.extrinsicHash,
+          ),
         );
 
         await this.handleCrustFileOrders(
@@ -95,7 +107,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
           );
           await this.writeEventLog({
             logType: LogType.INFO,
-            message: `${this.logPrefix}: Processed ${crustTransactions.fileOrders.storageOrders.length} storage order transactions!`,
+            message: `Processed ${crustTransactions.fileOrders.storageOrders.length} storage order transactions!`,
             service: ServiceName.BLOCKCHAIN,
             data: { wallet: wallet.address },
           });
@@ -106,7 +118,9 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         await this.writeEventLog(
           {
             logType: LogType.ERROR,
-            message: `${this.logPrefix}: Error confirming transactions!`,
+            message: `Error confirming transactions for ${
+              w.address
+            }! Tx hashes: ${txHashes.join(', ')}`,
             service: ServiceName.BLOCKCHAIN,
             data: { wallet: w },
             err,
@@ -144,7 +158,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
     await this.writeEventLog(
       {
         logType: LogType.WARN,
-        message: `${this.logPrefix}: Detected ${withdrawals.transfers.length} withdrawals from ${wallet.address}!!!`,
+        message: `Detected ${withdrawals.transfers.length} withdrawals from ${wallet.address}!!!`,
         service: ServiceName.BLOCKCHAIN,
         data: { wallet: wallet.address },
       },
@@ -191,7 +205,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
     await this.writeEventLog(
       {
         logType: LogType.INFO,
-        message: `${this.logPrefix}: Detected ${deposits.transfers.length} deposits to ${wallet.address}.`,
+        message: `Detected ${deposits.transfers.length} deposits to ${wallet.address}.`,
         service: ServiceName.BLOCKCHAIN,
         data: { wallet: wallet.address },
       },
@@ -232,7 +246,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
     await this.writeEventLog(
       {
         logType: LogType.INFO,
-        message: `${this.logPrefix}: Processed ${updatedDbTxs.length} transactions.`,
+        message: `Processed ${updatedDbTxs.length} transactions.`,
         service: ServiceName.BLOCKCHAIN,
         data: {
           wallet: wallet.address,
@@ -254,7 +268,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         await this.writeEventLog(
           {
             logType: LogType.WARN,
-            message: `${this.logPrefix} Detected unknown transactions from ${wallet.address}!`,
+            message: `Detected unknown transactions from ${wallet.address}! Hash: ${bcTx.extrinsicHash}`,
             service: ServiceName.BLOCKCHAIN,
             data: {
               wallet: wallet.address,
@@ -381,7 +395,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
     await this.writeEventLog(
       {
         logType: LogType.INFO,
-        message: `${this.logPrefix}: ${updatedDbTxs.length} [${TransactionStatus[status]}] storage orders matched (txHashes=${txDbHashesString}) in db.`,
+        message: `${updatedDbTxs.length} [${TransactionStatus[status]}] storage orders matched (txHashes=${txDbHashesString}) in db.`,
         service: ServiceName.BLOCKCHAIN,
         data: {
           txDbHashesString,
