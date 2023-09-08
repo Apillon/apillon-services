@@ -57,6 +57,7 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
 
     for (const w of wallets) {
       const conn = await this.context.mysql.start();
+      const txHashes: string[] = [];
       try {
         const wallet: Wallet = new Wallet(w, this.context);
 
@@ -77,8 +78,13 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
           lastParsedBlock,
           toBlock,
         );
-
+        txHashes.push(
+          ...walletTxs.outgoingTxs.transactions.map((tx) => tx.transactionHash),
+        );
         await this.handleOutgoingEvmTxs(wallet, walletTxs.outgoingTxs, conn);
+        txHashes.push(
+          ...walletTxs.incomingTxs.transactions.map((tx) => tx.transactionHash),
+        );
         await this.handleIncomingEvmTxs(wallet, walletTxs.incomingTxs);
 
         await wallet.updateLastParsedBlock(toBlock, conn);
@@ -106,7 +112,9 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
         await this.writeEventLog(
           {
             logType: LogType.ERROR,
-            message: `Error confirming transactions`,
+            message: `Error confirming transactions for wallet ${
+              w.address
+            }! Tx hashes: ${txHashes.join(',')}`,
             service: ServiceName.BLOCKCHAIN,
             err,
             data: {

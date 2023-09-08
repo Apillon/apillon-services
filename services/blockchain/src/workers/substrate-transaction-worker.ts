@@ -85,7 +85,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         await this.writeEventLog(
           {
             logType: LogType.ERROR,
-            message: `Error confirming transactions`,
+            message: `Error confirming transactions for wallet ${w.address}`,
             service: ServiceName.BLOCKCHAIN,
             err,
             data: {

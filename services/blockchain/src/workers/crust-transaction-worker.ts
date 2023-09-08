@@ -43,6 +43,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
 
     for (const w of wallets) {
       const conn = await this.context.mysql.start();
+      let txHashes: string[] = [];
       try {
         const wallet: Wallet = new Wallet(w, this.context);
         const crustIndexer: CrustBlockchainIndexer =
@@ -65,11 +66,23 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
           lastParsedBlock,
           toBlock,
         );
+        txHashes = [
+          ...crustTransactions.deposits.transfers.map((t) => t.extrinsicHash),
+          ...crustTransactions.withdrawals.transfers.map(
+            (t) => t.extrinsicHash,
+          ),
+        ];
 
         await this.handleBlockchainTransfers(
           wallet,
           crustTransactions.withdrawals,
           crustTransactions.deposits,
+        );
+
+        txHashes.push(
+          ...crustTransactions.fileOrders.storageOrders.map(
+            (t) => t.extrinsicHash,
+          ),
         );
 
         await this.handleCrustFileOrders(
@@ -105,7 +118,9 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         await this.writeEventLog(
           {
             logType: LogType.ERROR,
-            message: `Error confirming transactions!`,
+            message: `Error confirming transactions for ${
+              w.address
+            }! Tx hashes: ${txHashes.join(', ')}`,
             service: ServiceName.BLOCKCHAIN,
             data: { wallet: w },
             err,
