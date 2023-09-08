@@ -18,6 +18,7 @@
     "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
   },
   "devDependencies": {
+    "@faker-js/faker": "^7.6.0",
     "@types/jsonwebtoken": "^8.5.9",
     "eslint-config-common": "*",
     "tsconfig": "*"
@@ -28,7 +29,6 @@
     "@aws-sdk/client-secrets-manager": "^3.241.0",
     "@aws-sdk/client-sqs": "^3.241.0",
     "@aws-sdk/s3-request-presigner": "^3.241.0",
-    "@faker-js/faker": "^7.6.0",
     "@rawmodel/core": "^3.3.4",
     "@rawmodel/parsers": "^3.3.4",
     "@rawmodel/validators": "^3.3.4",
