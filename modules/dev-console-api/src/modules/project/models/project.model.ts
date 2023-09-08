@@ -12,9 +12,8 @@ import {
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
+  getFaker,
 } from '@apillon/lib';
-
-import { faker } from '@apillon/lib';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
 
@@ -70,7 +69,7 @@ export class Project extends ProjectAccessModel {
         code: ValidatorErrorCode.PROJECT_NAME_NOT_PRESENT,
       },
     ],
-    fakeValue: () => faker().word.verb(),
+    fakeValue: () => getFaker().word.verb(),
   })
   public name: string;
 
@@ -103,7 +102,7 @@ export class Project extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue: () => faker().lorem.paragraph(5),
+    fakeValue: () => getFaker().lorem.paragraph(5),
   })
   public description: string;
 
@@ -212,7 +211,7 @@ export class Project extends ProjectAccessModel {
       UPDATE \`${this.tableName}\` p
       SET p.status = @status
       WHERE EXISTS (
-        SELECT 1 FROM \`${DbTables.PROJECT_USER}\` pu 
+        SELECT 1 FROM \`${DbTables.PROJECT_USER}\` pu
         WHERE pu.user_id = @userId
         AND pu.project_id = p.id
       )

@@ -3,11 +3,11 @@ import {
   Context,
   PopulateFrom,
   SerializeFor,
+  getFaker,
 } from '@apillon/lib';
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { DbTables } from '../../../config/types';
-import { faker } from '@apillon/lib';
 
 export class OauthTokenPair extends AdvancedSQLModel {
   tableName = DbTables.OAUTH_TOKEN_PAIR;
@@ -32,7 +32,7 @@ export class OauthTokenPair extends AdvancedSQLModel {
     ],
     validators: [],
     fakeValue() {
-      return faker().internet.userName();
+      return getFaker().internet.userName();
     },
   })
   public oauth_token: string;
@@ -57,7 +57,7 @@ export class OauthTokenPair extends AdvancedSQLModel {
     ],
     validators: [],
     fakeValue() {
-      return faker().internet.userName();
+      return getFaker().internet.userName();
     },
   })
   public oauth_secret: string;
@@ -76,7 +76,7 @@ export class OauthTokenPair extends AdvancedSQLModel {
     ],
     validators: [],
     fakeValue() {
-      return faker().internet.userName();
+      return getFaker().internet.userName();
     },
   })
   public url: string;

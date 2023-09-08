@@ -1,7 +1,6 @@
 import * as _ from 'lodash';
 import { sign, verify, decode } from 'jsonwebtoken';
 import { env } from '../config/env';
-import { Faker } from '@faker-js/faker';
 
 export function isPlainObject(testVar: any): boolean {
   // eslint-disable-next-line sonarjs/prefer-single-boolean-return
@@ -127,7 +126,7 @@ export function dateToSqlString(date: Date): string {
   return date.toISOString().replace(/T/, ' ').replace(/Z/, '');
 }
 
-export function faker(): Faker {
+export function getFaker(): typeof import('@faker-js/faker').faker {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   return require('@faker-js/faker').faker;
 }

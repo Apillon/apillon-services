@@ -12,6 +12,7 @@ import {
   ForbiddenErrorCodes,
   AdvancedSQLModel,
   selectAndCountQuery,
+  getFaker,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../../context';
 import {
@@ -20,7 +21,6 @@ import {
   ValidatorErrorCode,
 } from '../../../config/types';
 import { ServiceQueryFilter } from '../dtos/services-query-filter.dto';
-import { faker } from '@apillon/lib';
 import { Project } from '../../project/models/project.model';
 import { HttpStatus } from '@nestjs/common';
 
@@ -89,7 +89,7 @@ export class Service extends AdvancedSQLModel {
         code: ValidatorErrorCode.SERVICE_NAME_NOT_PRESENT,
       },
     ],
-    fakeValue: faker().word.verb(),
+    fakeValue: getFaker().word.verb(),
   })
   public name: string;
 
@@ -212,7 +212,7 @@ export class Service extends AdvancedSQLModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
       WHERE service_uuid = @uuid AND status <> ${SqlModelStatus.DELETED};
       `,

@@ -9,6 +9,7 @@ import {
   prop,
   SerializeFor,
   SqlModelStatus,
+  getFaker,
 } from '@apillon/lib';
 import {
   DbTables,
@@ -20,8 +21,6 @@ import {
   ReferralCodeException,
   ReferralValidationException,
 } from '../../../lib/exceptions';
-
-import { faker } from '@apillon/lib';
 
 export enum TaskType {
   REFERRAL = 1,
@@ -77,7 +76,7 @@ export class Task extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue: () => faker().random.word(),
+    fakeValue: () => getFaker().random.word(),
   })
   public name: string;
 
@@ -97,7 +96,7 @@ export class Task extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue: () => faker().random.words(6),
+    fakeValue: () => getFaker().random.words(6),
   })
   public description: string;
 
@@ -183,7 +182,7 @@ export class Task extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue: faker().date.future(1),
+    fakeValue: getFaker().date.future(1),
     validators: [],
   })
   public activeTo: Date;
