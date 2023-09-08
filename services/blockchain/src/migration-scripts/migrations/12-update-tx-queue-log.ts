@@ -1,30 +1,39 @@
+import { AppEnvironment, env, getEnvSecrets } from '@apillon/lib';
 import { DbTables } from '../../config/types';
 
 export async function upgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
+  await getEnvSecrets();
+  const dbEnvMap = {
+    [AppEnvironment.DEV]: 'dev',
+    [AppEnvironment.STG]: 'staging',
+    [AppEnvironment.PROD]: 'prod',
+  };
+  const StorageDB = `Apillon_storage_${dbEnvMap[env.APP_ENV]}`;
+  const NftsDB = `Apillon_nfts_${dbEnvMap[env.APP_ENV]}`;
   await queryFn(`
     UPDATE ${DbTables.TRANSACTION_QUEUE} AS tq
     SET tq.project_uuid =
       CASE
         WHEN tq.referenceTable = 'file' THEN (
           SELECT f.project_uuid
-          FROM ATv2_storage_dev.file AS f
+          FROM ${StorageDB}.file AS f
           WHERE f.id = tq.referenceId
         )
         WHEN tq.referenceTable = 'collection' THEN (
           SELECT c.project_uuid
-          FROM Apillon_nfts_dev.collection AS c
+          FROM ${NftsDB}.collection AS c
           WHERE c.id = tq.referenceId
         )
         WHEN tq.referenceTable = 'directory' THEN (
           SELECT d.project_uuid
-          FROM ATv2_storage_dev.directory AS d
+          FROM ${StorageDB}.directory AS d
           WHERE d.id = tq.referenceId
         )
         WHEN tq.referenceTable = 'bucket' THEN (
           SELECT b.project_uuid
-          FROM ATv2_storage_dev.bucket AS b
+          FROM ${StorageDB}.bucket AS b
           WHERE b.id = tq.referenceId
         )
         ELSE NULL
