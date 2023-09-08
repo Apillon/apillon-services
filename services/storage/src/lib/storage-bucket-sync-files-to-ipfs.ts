@@ -127,6 +127,7 @@ export async function storageBucketSyncFilesToIPFS(
       );
 
       wrappingDirectory.CID = ipfsRes.parentDirCID.toV0().toString();
+      wrappingDirectory.CIDv1 = ipfsRes.parentDirCID.toV1().toString();
       await wrappingDirectory.update();
 
       for (const fur of files) {
@@ -148,6 +149,7 @@ export async function storageBucketSyncFilesToIPFS(
       );
       if (dir.exists()) {
         dir.CID = ipfsDir.cid.toV0().toString();
+        dir.CIDv1 = ipfsDir.cid.toV1().toString();
         await dir.update();
       }
     }
