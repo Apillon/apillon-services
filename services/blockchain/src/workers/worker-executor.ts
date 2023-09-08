@@ -143,9 +143,9 @@ export async function handleLambdaEvent(
       break;
     // --- UPDATE TRANSACTIONS WORKERS ---
     // SUBSTRATE
-    case WorkerName.CRUST_TRANSACTIONS:
-      await new CrustTransactionWorker(workerDefinition, context).run();
-      break;
+    // case WorkerName.CRUST_TRANSACTIONS:
+    //   await new CrustTransactionWorker(workerDefinition, context).run();
+    //   break;
 
     // !!!!WIP!!!! - SUBSTRATE TRANSACTION WORKER
     case WorkerName.SUBSTRATE_TRANSACTION:
@@ -241,9 +241,9 @@ export async function handleSqsMessages(
             },
           );
           break;
-        case WorkerName.CRUST_TRANSACTIONS:
-          await new CrustTransactionWorker(workerDefinition, context).run();
-          break;
+        // case WorkerName.CRUST_TRANSACTIONS:
+        //   await new CrustTransactionWorker(workerDefinition, context).run();
+        //   break;
         case WorkerName.EVM_TRANSACTIONS:
           await new EvmTransactionWorker(workerDefinition, context).run({
             executeArg: message?.body,

@@ -15,6 +15,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     if (!env.BLOCKCHAIN_KILT_GRAPHQL_SERVER) {
       throw new Error('Missing GraphQL server url!');
     }
+
     super(env.BLOCKCHAIN_KILT_GRAPHQL_SERVER);
   }
 
