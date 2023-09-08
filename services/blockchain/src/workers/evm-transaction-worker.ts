@@ -28,7 +28,6 @@ import { EvmBlockchainIndexer } from '../modules/blockchain-indexers/evm/evm-ind
 import { WorkerName } from './worker-executor';
 
 export class EvmTransactionWorker extends BaseSingleThreadWorker {
-  private logPrefix: string;
   private evmChain: EvmChain;
 
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
@@ -58,6 +57,7 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
 
     for (const w of wallets) {
       const conn = await this.context.mysql.start();
+      const txHashes: string[] = [];
       try {
         const wallet: Wallet = new Wallet(w, this.context);
 
@@ -78,8 +78,13 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
           lastParsedBlock,
           toBlock,
         );
-
+        txHashes.push(
+          ...walletTxs.outgoingTxs.transactions.map((tx) => tx.transactionHash),
+        );
         await this.handleOutgoingEvmTxs(wallet, walletTxs.outgoingTxs, conn);
+        txHashes.push(
+          ...walletTxs.incomingTxs.transactions.map((tx) => tx.transactionHash),
+        );
         await this.handleIncomingEvmTxs(wallet, walletTxs.incomingTxs);
 
         await wallet.updateLastParsedBlock(toBlock, conn);
@@ -107,9 +112,11 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
         await this.writeEventLog(
           {
             logType: LogType.ERROR,
-            message: `${this.logPrefix}: Error confirming transactions`,
+            message: `Error confirming transactions for wallet ${
+              w.address
+            }! Tx hashes: ${txHashes.join(',')}`,
             service: ServiceName.BLOCKCHAIN,
-            err: err,
+            err,
             data: {
               error: err,
               wallet: wallets.address,
@@ -169,7 +176,7 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
     await this.writeEventLog(
       {
         logType: LogType.INFO,
-        message: `${this.logPrefix}: Processed ${outgoingTxs.transactions.length} outgoing transactions.`,
+        message: `Processed ${outgoingTxs.transactions.length} outgoing transactions.`,
         service: ServiceName.BLOCKCHAIN,
         data: {
           transactions: outgoingTxs.transactions,
@@ -211,7 +218,7 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
     await this.writeEventLog(
       {
         logType: LogType.INFO,
-        message: `${this.logPrefix}: Detected ${incomingTxs.transactions.length} deposits to ${wallet.address}.`,
+        message: `Detected ${incomingTxs.transactions.length} deposits to ${wallet.address}.`,
         service: ServiceName.BLOCKCHAIN,
         data: { wallet: wallet.address },
       },
@@ -232,9 +239,7 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
 
     const bcTxsByStatus = new Map<string, EvmTransfer>(
       bcTxs.transactions
-        .filter((tx) => {
-          return tx.status == bcStatus;
-        })
+        .filter((tx) => tx.status == bcStatus)
         .map((tx) => [tx.transactionHash, tx]),
     );
 
@@ -256,7 +261,7 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
     await this.writeEventLog(
       {
         logType: LogType.INFO,
-        message: `${this.logPrefix}: ${updatedDbTxs.length} [${TransactionStatus[status]}] blockchain transactions matched (txHashes=${txDbHashesString}) in db.`,
+        message: `${updatedDbTxs.length} [${TransactionStatus[status]}] blockchain transactions matched (txHashes=${txDbHashesString}) in db.`,
         service: ServiceName.BLOCKCHAIN,
         data: {
           updatedDbTxs,
@@ -309,8 +314,6 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
         bcHashes,
         conn,
       )
-    ).map((tx) => {
-      return tx.transactionHash;
-    });
+    ).map((tx) => tx.transactionHash);
   }
 }

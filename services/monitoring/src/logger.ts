@@ -151,7 +151,7 @@ export class Logger {
     query[property] = query.search
       ? new RegExp(query.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
       : null;
-    ['message', 'apiName', 'url'].forEach(
+    ['message', 'apiName', 'url', 'body'].forEach(
       (field) =>
         query[field] &&
         (mongoQuery[field] = {
