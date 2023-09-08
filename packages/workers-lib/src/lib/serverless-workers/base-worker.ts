@@ -11,6 +11,7 @@ export abstract class BaseWorker extends ServerlessWorker {
     super(workerDefinition);
     this.context = context;
     this.workerName = workerDefinition.workerName;
+    this.logPrefix ||= `[${this.workerName}]`;
   }
 
   protected async writeEventLog(
