@@ -327,7 +327,7 @@ export class EvmService {
             await eventLogger(
               {
                 logType: LogType.ERROR,
-                message: 'Error transmitting transaction!',
+                message: `Error transmitting transaction on chain ${_event.chain}!`,
                 service: ServiceName.BLOCKCHAIN,
                 data: {
                   error: err,

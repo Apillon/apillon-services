@@ -268,7 +268,7 @@ export class CrustTransactionWorker extends BaseSingleThreadWorker {
         await this.writeEventLog(
           {
             logType: LogType.WARN,
-            message: `Detected unknown transactions from ${wallet.address}! Hash: ${bcTx.extrinsicHash}`,
+            message: `Detected unknown transactions from ${wallet.address}! Tx Hash: ${bcTx.extrinsicHash}`,
             service: ServiceName.BLOCKCHAIN,
             data: {
               wallet: wallet.address,
