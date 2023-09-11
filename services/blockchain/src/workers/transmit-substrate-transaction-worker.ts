@@ -1,19 +1,17 @@
-import { Context, env, Lmas, LogType, ServiceName } from '@apillon/lib';
+import { Context, LogType, ServiceName } from '@apillon/lib';
 import {
   WorkerDefinition,
-  WorkerLogStatus,
   BaseSingleThreadWorker,
-  sendToWorkerQueue,
   LogOutput,
 } from '@apillon/workers-lib';
 import { BlockchainErrorCode } from '../config/types';
 import { BlockchainCodeException } from '../lib/exceptions';
 import { SubstrateService } from '../modules/substrate/substrate.service';
-import { WorkerName } from './worker-executor';
 
 export class TransmitSubstrateTransactionWorker extends BaseSingleThreadWorker {
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);
+    this.logPrefix = '[Transmit Substrate Transaction Worker]';
   }
 
   public async runPlanner(): Promise<any[]> {
@@ -52,8 +50,7 @@ export class TransmitSubstrateTransactionWorker extends BaseSingleThreadWorker {
       await this.writeEventLog(
         {
           logType: LogType.ERROR,
-          message:
-            '[Transmit Substrate Transaction Worker]: Error submitting transactions',
+          message: `Error submitting transactions on chain ${chain}`,
           service: ServiceName.BLOCKCHAIN,
           data: {
             data,

@@ -12,7 +12,6 @@
       "args": [
         "--runInBand",
         "--config=${workspaceFolder}/package.json",
-        "--detectOpenHandles",
         "--forceExit",
         "${fileBasename}"
       ],
@@ -32,7 +31,7 @@
         "--runInBand",
         "--config=${workspaceFolder}/package.json",
         "--detectOpenHandles",
-        "--forceExit",
+        "--forceExit"
       ],
       "env": {
         "LOG_TARGET": "none",

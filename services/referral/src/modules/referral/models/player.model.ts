@@ -9,11 +9,11 @@ import {
   prop,
   SerializeFor,
   SqlModelStatus,
+  getFaker,
 } from '@apillon/lib';
 import { DbTables, ReferralErrorCode } from '../../../config/types';
 import { Task, TaskType } from './task.model';
 import { Realization } from './realization.model';
-import { faker } from '@faker-js/faker';
 
 export class Player extends AdvancedSQLModel {
   public readonly tableName = DbTables.PLAYER;
@@ -91,7 +91,7 @@ export class Player extends AdvancedSQLModel {
         code: ReferralErrorCode.REFERRAL_CODE_NOT_PRESENT,
       },
     ],
-    fakeValue: () => faker.random.alphaNumeric(5),
+    fakeValue: () => getFaker().random.alphaNumeric(5),
   })
   public refCode: string;
 

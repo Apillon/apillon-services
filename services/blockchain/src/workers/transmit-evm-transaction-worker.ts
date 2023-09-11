@@ -17,17 +17,10 @@ import { EvmService } from '../modules/evm/evm.service';
 import { WorkerName } from './worker-executor';
 import { evmChainToJob } from '../lib/helpers';
 
-/**
- * TODO: error logging:
- * await new Lmas().sendAdminAlert(
-      ':wave: Hello from the other side!',
-      ServiceName.DEV_CONSOLE,
-      'message',
-    );
- */
 export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);
+    this.logPrefix = '[Transmit Evm Transaction Worker]';
   }
 
   public async runPlanner(): Promise<any[]> {
@@ -54,7 +47,7 @@ export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
       await this.writeEventLog(
         {
           logType: LogType.ERROR,
-          message: 'Error submitting transactions',
+          message: `Error submitting transactions on chain ${chain}`,
           service: ServiceName.BLOCKCHAIN,
           data: {
             data,
