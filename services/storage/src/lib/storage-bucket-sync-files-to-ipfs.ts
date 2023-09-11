@@ -170,6 +170,7 @@ export async function storageBucketSyncFilesToIPFS(
           //Update existing file
           existingFile.populate({
             CID: file.CID.toV0().toString(),
+            CIDv1: file.CID.toV1().toString(),
             s3FileKey: file.s3FileKey,
             name: file.fileName,
             contentType: file.contentType,
@@ -193,6 +194,7 @@ export async function storageBucketSyncFilesToIPFS(
             .populate({
               file_uuid: file.file_uuid,
               CID: file.CID.toV0().toString(),
+              CIDv1: file.CID.toV1().toString(),
               s3FileKey: file.s3FileKey,
               name: file.fileName,
               contentType: file.contentType,
@@ -336,6 +338,7 @@ export async function storageBucketSyncFilesToIPFS(
             //Update existing file
             existingFile.populate({
               CID: ipfsRes.cidV0,
+              CIDv1: ipfsRes.cidV1,
               s3FileKey: file.s3FileKey,
               name: file.fileName,
               contentType: file.contentType,
@@ -358,6 +361,7 @@ export async function storageBucketSyncFilesToIPFS(
               .populate({
                 file_uuid: file.file_uuid,
                 CID: ipfsRes.cidV0,
+                CIDv1: ipfsRes.cidV1,
                 s3FileKey: file.s3FileKey,
                 name: file.fileName,
                 contentType: file.contentType,

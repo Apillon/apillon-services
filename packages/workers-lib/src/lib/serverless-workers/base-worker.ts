@@ -94,11 +94,14 @@ export abstract class BaseWorker extends ServerlessWorker {
         [LogOutput.NOTIFY_WARN]: LogType.WARN,
         [LogOutput.NOTIFY_MSG]: LogType.MSG,
       };
-
+      let alert = `[${this.logPrefix ?? this.workerName}] ${options.message}`;
+      if (options.err) {
+        alert += `- ${
+          options.err.message ?? options.err.name ?? 'Unknown error'
+        }`;
+      }
       await new Lmas().sendAdminAlert(
-        `[${this.workerName}] ${options.message} - ${
-          options.err?.message ?? 'Unknown error'
-        }`,
+        alert,
         options.service as any,
         notifyType[output],
       );
