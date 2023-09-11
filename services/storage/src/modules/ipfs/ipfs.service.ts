@@ -338,6 +338,7 @@ export class IPFSService {
     for (const file of event.files) {
       const fur = fileUploadRequests.find((x) => x.file_uuid == file.file_uuid);
       file.CID = fur.CID.toV0().toString();
+      file.CIDv1 = fur.CID.toV1().toString();
       file.size = fur.size;
     }
 

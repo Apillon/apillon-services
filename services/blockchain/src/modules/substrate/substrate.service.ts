@@ -25,13 +25,16 @@ import { getWalletSeed } from '../../lib/seed';
 
 export class SubstrateService {
   static async createTransaction(
-    _event: {
+    {
+      params,
+    }: {
       params: {
         transaction: string;
         chain: SubstrateChain;
         fromAddress?: string;
         referenceTable?: string;
         referenceId?: string;
+        project_uuid?: string;
       };
     },
     context: ServiceContext,
@@ -39,7 +42,7 @@ export class SubstrateService {
     // connect to chain
     // TODO: Add logic if endpoint is unavailable to fetch the backup one.
     const endpoint = await new Endpoint({}, context).populateByChain(
-      _event.params.chain,
+      params.chain,
       ChainType.SUBSTRATE,
     );
 
@@ -55,7 +58,7 @@ export class SubstrateService {
 
     let keyring; // generate privatekey from mnemonic - different for different chains
     let typesBundle = null; // different types for different chains
-    switch (_event.params.chain) {
+    switch (params.chain) {
       case SubstrateChain.KILT: {
         keyring = new Keyring({ ss58Format: 38, type: 'sr25519' });
         typesBundle = KiltTypesBundle;
@@ -79,6 +82,7 @@ export class SubstrateService {
     const api = await ApiPromise.create({
       provider,
       typesBundle, // TODO: add
+      throwOnConnect: true,
     });
 
     console.info('Start db transaction.');
@@ -89,11 +93,11 @@ export class SubstrateService {
       let wallet = new Wallet({}, context);
 
       // if specific address is specified to be used for this transaction fetch the wallet
-      if (_event.params.fromAddress) {
+      if (params.fromAddress) {
         wallet = await wallet.populateByAddress(
-          _event.params.chain,
+          params.chain,
           ChainType.SUBSTRATE,
-          _event.params.fromAddress,
+          params.fromAddress,
           conn,
         );
       }
@@ -101,7 +105,7 @@ export class SubstrateService {
       // if address is not specified or not found then get the least used wallet
       if (!wallet.exists()) {
         wallet = await wallet.populateByLeastUsed(
-          _event.params.chain,
+          params.chain,
           ChainType.SUBSTRATE,
           conn,
         );
@@ -114,7 +118,7 @@ export class SubstrateService {
       console.info('Generating unsigned transaction');
       const pair = keyring.addFromUri(seed);
       console.log('Address: ', pair.address);
-      const unsignedTx = api.tx(_event.params.transaction);
+      const unsignedTx = api.tx(params.transaction);
       // TODO: add validation service for transaction to detect and prevent weird transactions.
 
       // TODO: Determine the best era
@@ -128,17 +132,18 @@ export class SubstrateService {
 
       const transaction = new Transaction({}, context);
       transaction.populate({
-        chain: _event.params.chain,
+        chain: params.chain,
         chainType: ChainType.SUBSTRATE,
         address: wallet.address,
         to: null,
         nonce: wallet.nextNonce,
-        referenceTable: _event.params.referenceTable,
-        referenceId: _event.params.referenceId,
+        referenceTable: params.referenceTable,
+        referenceId: params.referenceId,
         rawTransaction: signedSerialized,
         data: null,
         transactionHash: signed.hash.toString(),
         transactionStatus: TransactionStatus.PENDING,
+        project_uuid: params.project_uuid,
       });
 
       await transaction.insert(SerializeFor.INSERT_DB, conn);
@@ -153,12 +158,12 @@ export class SubstrateService {
         location: 'SubstrateService.createTransaction',
         service: ServiceName.BLOCKCHAIN,
         data: {
-          transaction: _event.params.transaction,
+          transaction: params.transaction,
           chainType: ChainType.SUBSTRATE,
-          chain: _event.params.chain,
-          address: _event.params.fromAddress,
-          referenceTable: _event.params.referenceTable,
-          referenceId: _event.params.referenceId,
+          chain: params.chain,
+          address: params.fromAddress,
+          referenceTable: params.referenceTable,
+          referenceId: params.referenceId,
         },
       });
 
@@ -168,7 +173,7 @@ export class SubstrateService {
           WorkerName.TRANSMIT_SUBSTRATE_TRANSACTION,
           [
             {
-              chain: _event.params.chain,
+              chain: params.chain,
             },
           ],
           null,
@@ -197,12 +202,12 @@ export class SubstrateService {
         service: ServiceName.BLOCKCHAIN,
         data: {
           error: e,
-          transaction: _event.params.transaction,
-          chain: _event.params.chain,
+          transaction: params.transaction,
+          chain: params.chain,
           chainType: ChainType.SUBSTRATE,
-          address: _event.params.fromAddress,
-          referenceTable: _event.params.referenceTable,
-          referenceId: _event.params.referenceId,
+          address: params.fromAddress,
+          referenceTable: params.referenceTable,
+          referenceId: params.referenceId,
         },
       });
       await conn.rollback();
@@ -210,6 +215,8 @@ export class SubstrateService {
         code: BlockchainErrorCode.ERROR_GENERATING_TRANSACTION,
         status: 500,
       });
+    } finally {
+      await api.disconnect();
     }
   }
 
@@ -236,6 +243,7 @@ export class SubstrateService {
    * Should be called from worker
    * @param _event chain for which we should process transaction
    * @param context Service context
+   * @param eventLogger Event logger
    */
   static async transmitTransactions(
     _event: {
@@ -279,14 +287,15 @@ export class SubstrateService {
     const api = await ApiPromise.create({
       provider,
       typesBundle,
+      throwOnConnect: true,
     });
 
-    for (let i = 0; i < wallets.length; i++) {
+    for (const wallet of wallets) {
       const transactions = await new Transaction({}, context).getList(
         _event.chain,
         ChainType.SUBSTRATE,
-        wallets[i].address,
-        wallets[i].lastProcessedNonce,
+        wallet.address,
+        wallet.lastProcessedNonce,
       );
 
       // continue to next wallet if there is no transactions!
@@ -298,12 +307,21 @@ export class SubstrateService {
       let transmitted = 0;
       // console.log('transactions: ', transactions);
       // TODO: consider batching transaction api.tx.utility.batch
-      for (let j = 0; j < transactions.length; j++) {
+      for (const transaction of transactions) {
         try {
-          const signedTx = api.tx(transactions[j].rawTransaction);
+          if (!api.isConnected) {
+            await new Lmas().writeLog({
+              logType: LogType.INFO,
+              message: 'Reconnecting to RPC via ApiPromise',
+              location: 'SubstrateService.createTransaction',
+              service: ServiceName.BLOCKCHAIN,
+            });
+            await api.connect();
+          }
+          const signedTx = api.tx(transaction.rawTransaction);
           await signedTx.send();
           console.log('successfuly transmited');
-          latestSuccess = transactions[j].nonce;
+          latestSuccess = transaction.nonce;
           transmitted++;
         } catch (err) {
           if (eventLogger) {
@@ -314,7 +332,7 @@ export class SubstrateService {
                 service: ServiceName.BLOCKCHAIN,
                 data: {
                   error: err,
-                  wallet: wallets[i].address,
+                  wallet: wallet.address,
                 },
                 err,
               },
@@ -328,16 +346,18 @@ export class SubstrateService {
               service: ServiceName.BLOCKCHAIN,
               data: {
                 error: err,
-                wallet: wallets[i].address,
+                wallet: wallet.address,
               },
             });
           }
           break;
         }
       }
+      await api.disconnect();
+
       if (latestSuccess) {
-        const wallet = new Wallet(wallets[i], context);
-        await wallet.updateLastProcessedNonce(latestSuccess);
+        const dbWallet = new Wallet(wallet, context);
+        await dbWallet.updateLastProcessedNonce(latestSuccess);
       }
       if (eventLogger) {
         await eventLogger(
@@ -346,7 +366,7 @@ export class SubstrateService {
             message: 'Substrate transactions submitted',
             service: ServiceName.BLOCKCHAIN,
             data: {
-              wallet: wallets[i],
+              wallet,
               numOfTransactions: transactions.length,
               transmitted,
             },
@@ -355,13 +375,13 @@ export class SubstrateService {
         );
       } else {
         await new Lmas().writeLog({
-          context: context,
+          context,
           logType: LogType.COST,
           message: 'Substrate transactions submitted',
           location: `SubstrateService.transmitTransactions`,
           service: ServiceName.BLOCKCHAIN,
           data: {
-            wallet: wallets[i],
+            wallet,
             numOfTransactions: transactions.length,
             transmitted,
           },

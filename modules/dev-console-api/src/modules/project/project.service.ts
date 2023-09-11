@@ -6,6 +6,7 @@ import {
   DefaultUserRole,
   env,
   generateJwtToken,
+  invalidateCacheKey,
   invalidateCachePrefixes,
   JwtTokenType,
   Lmas,
@@ -79,6 +80,9 @@ export class ProjectService {
       await context.mysql.commit(conn);
 
       await invalidateCachePrefixes([CacheKeyPrefix.ADMIN_PROJECT_LIST]);
+      await invalidateCacheKey(
+        `${CacheKeyPrefix.AUTH_USER_DATA}:${context.user.user_uuid}`,
+      );
 
       await new Lmas().writeLog({
         context,
@@ -507,6 +511,9 @@ export class ProjectService {
         role_id: project_user.role_id,
       };
       await new Ams(context).removeUserRole(params);
+      await invalidateCacheKey(
+        `${CacheKeyPrefix.AUTH_USER_DATA}:${removedUser.user_uuid}`,
+      );
 
       await context.mysql.commit(conn);
     } catch (err) {

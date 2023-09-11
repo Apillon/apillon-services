@@ -5,11 +5,13 @@ import { WorkerLogStatus } from '../../config/types';
 export abstract class BaseWorker extends ServerlessWorker {
   protected context: Context;
   protected workerName: string;
+  protected logPrefix: string;
 
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition);
     this.context = context;
     this.workerName = workerDefinition.workerName;
+    this.logPrefix ||= `[${this.workerName}]`;
   }
 
   protected async writeEventLog(
@@ -23,6 +25,7 @@ export abstract class BaseWorker extends ServerlessWorker {
     },
     output = LogOutput.EVENT_INFO,
   ) {
+    options.message = `${this.logPrefix}: ${options.message}`;
     switch (output) {
       case LogOutput.EVENT_WARN:
       case LogOutput.SYS_WARN:
@@ -79,12 +82,6 @@ export abstract class BaseWorker extends ServerlessWorker {
       });
     }
 
-    const notifyType = {
-      [LogOutput.NOTIFY_ALERT]: LogType.ALERT,
-      [LogOutput.NOTIFY_WARN]: LogType.WARN,
-      [LogOutput.NOTIFY_MSG]: LogType.MSG,
-    };
-
     if (
       [
         LogOutput.NOTIFY_MSG,
@@ -92,8 +89,19 @@ export abstract class BaseWorker extends ServerlessWorker {
         LogOutput.NOTIFY_WARN,
       ].includes(output)
     ) {
+      const notifyType = {
+        [LogOutput.NOTIFY_ALERT]: LogType.ALERT,
+        [LogOutput.NOTIFY_WARN]: LogType.WARN,
+        [LogOutput.NOTIFY_MSG]: LogType.MSG,
+      };
+      let alert = `[${this.logPrefix ?? this.workerName}] ${options.message}`;
+      if (options.err) {
+        alert += `- ${
+          options.err.message ?? options.err.name ?? 'Unknown error'
+        }`;
+      }
       await new Lmas().sendAdminAlert(
-        `[${this.workerName}] ${options.message}`,
+        alert,
         options.service as any,
         notifyType[output],
       );

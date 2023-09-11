@@ -1,6 +1,6 @@
 import { getSecrets } from '../lib/aws/aws-secrets';
 import * as dotenv from 'dotenv';
-import { AppEnvironment } from './types';
+import { AppEnvironment, CacheKeyTTL } from './types';
 
 export interface IEnv {
   /**
@@ -364,6 +364,8 @@ export interface IEnv {
    * hCAPTCHA
    */
   CAPTCHA_SECRET: string;
+  CAPTCHA_REMEMBER_DAYS: number;
+  LOGIN_CAPTCHA_ENABLED: boolean;
 
   /** DISCORD */
   DISCORD_CLIENT_ID: string;
@@ -734,6 +736,8 @@ export let env: IEnv = {
 
   /** CAPTCHA */
   CAPTCHA_SECRET: process.env['CAPTCHA_SECRET'] || '',
+  CAPTCHA_REMEMBER_DAYS: +process.env['CAPTCHA_REMEMBER_DAYS'] || 7,
+  LOGIN_CAPTCHA_ENABLED: process.env['LOGIN_CAPTCHA_ENABLED'] !== 'false',
 
   /** AUTH MICROSERVICE */
   AUTH_FUNCTION_NAME: process.env['AUTH_FUNCTION_NAME'],
@@ -773,7 +777,7 @@ export let env: IEnv = {
 
   //** REDIS */
   REDIS_URL: process.env['REDIS_URL'],
-  DEFAULT_CACHE_TTL: +process.env['DEFAULT_CACHE_TTL'] || 300, // 5 min
+  DEFAULT_CACHE_TTL: +process.env['DEFAULT_CACHE_TTL'] || CacheKeyTTL.DEFAULT, // 5 min
 
   /** METABASE */
   METABASE_SECRET: process.env['METABASE_SECRET'] || '',

@@ -78,17 +78,17 @@ export async function postToSlack(
   const slack = new Slack(slackToken);
 
   const severityText = {
-    message: {
+    [LogType.MSG]: {
       emojis: ':loudspeaker:',
       target: '',
       intro: `Message from ${serviceName} (${env.APP_ENV})`,
     },
-    warning: {
+    [LogType.WARN]: {
       emojis: ':zap::warning::zap:',
       target: '@here',
       intro: `WARNING from ${serviceName} (${env.APP_ENV})`,
     },
-    alert: {
+    [LogType.ALERT]: {
       emojis: ':bangbang::rotating_light::bangbang:',
       target: '@channel',
       intro: `ALERT from ${serviceName} (${env.APP_ENV})`,

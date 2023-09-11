@@ -121,6 +121,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         );
 
         targetBucket.CID = ipfsRes.parentDirCID.toV0().toString();
+        targetBucket.CIDv1 = ipfsRes.parentDirCID.toV1().toString();
 
         //Update bucket CID & Size
         targetBucket.size += ipfsRes.size;
@@ -131,6 +132,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
       } else if (deployment.environment == DeploymentEnvironment.PRODUCTION) {
         //Update bucket CID & size
         targetBucket.CID = sourceBucket.CID;
+        targetBucket.CIDv1 = sourceBucket.CIDv1;
 
         //Get CID size
         //Find deployment from preview to staging, to find CID size
@@ -195,6 +197,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
             .populate({
               file_uuid: uuidV4(),
               CID: srcFile.CID,
+              CIDv1: srcFile.CIDv1,
               s3FileKey: srcFile.s3FileKey,
               name: srcFile.name,
               contentType: srcFile.contentType,
@@ -217,6 +220,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
 
             if (sourceDirectory) {
               dir.CID = sourceDirectory.CID;
+              dir.CIDv1 = sourceDirectory.CIDv1;
               await dir.update(SerializeFor.UPDATE_DB, conn);
             }
           }
@@ -241,6 +245,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         //Update deployment - finished
         deployment.deploymentStatus = DeploymentStatus.SUCCESSFUL;
         deployment.cid = targetBucket.CID;
+        deployment.cidv1 = targetBucket.CIDv1;
         await deployment.update(SerializeFor.UPDATE_DB, conn);
 
         await this.context.mysql.commit(conn);

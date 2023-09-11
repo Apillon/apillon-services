@@ -1,6 +1,5 @@
 import { Project } from './../../project/models/project.model';
 /* eslint-disable @typescript-eslint/member-ordering */
-import { faker } from '@faker-js/faker';
 import { prop } from '@rawmodel/core';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
@@ -15,7 +14,7 @@ import {
 } from '@apillon/lib';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { UUID } from 'crypto';
-import { BaseQueryFilter } from '@apillon/lib';
+import { BaseQueryFilter, getFaker } from '@apillon/lib';
 
 /**
  * User model.
@@ -72,7 +71,7 @@ export class User extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue: () => faker.internet.email(),
+    fakeValue: () => getFaker().internet.email(),
   })
   public email: string;
 
@@ -92,7 +91,7 @@ export class User extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue: () => faker.name.fullName(),
+    fakeValue: () => getFaker().name.fullName(),
   })
   public name: string;
 
@@ -196,7 +195,7 @@ export class User extends AdvancedSQLModel {
     const sqlQuery = {
       qSelect: `SELECT ${this.generateSelectFields(
         'u',
-      )}, COUNT(DISTINCT p.id) AS totalProjects, COUNT(s.id) AS totalServices`,
+      )}, COUNT(DISTINCT p.id) AS totalProjects, COUNT(s.id) AS totalServices, u.createTime, u.updateTime`,
       qFrom: `FROM \`${DbTables.USER}\` u
         LEFT JOIN project_user pu ON u.id = pu.user_id
         LEFT JOIN project p ON pu.project_id = p.id

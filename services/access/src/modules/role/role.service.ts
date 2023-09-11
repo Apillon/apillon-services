@@ -1,4 +1,9 @@
-import { ApiKeyRoleBaseDto, SerializeFor } from '@apillon/lib';
+import {
+  ApiKeyRoleBaseDto,
+  CacheKeyPrefix,
+  SerializeFor,
+  invalidateCacheKey,
+} from '@apillon/lib';
 import { AmsErrorCode } from '../../config/types';
 import { AmsBadRequestException, AmsCodeException } from '../../lib/exceptions';
 import { ApiKey } from '../api-key/models/api-key.model';
@@ -97,7 +102,9 @@ export class RoleService {
 
     key.canModify(context);
 
-    return await key.assignRole(event.body);
+    const result = await key.assignRole(event.body);
+    await invalidateCacheKey(`${CacheKeyPrefix.AUTH_USER_DATA}:${key.apiKey}`);
+    return result;
   }
 
   /**
@@ -126,7 +133,9 @@ export class RoleService {
 
     key.canModify(context);
 
-    return await key.removeRole(event.body);
+    const result = await key.removeRole(event.body);
+    await invalidateCacheKey(`${CacheKeyPrefix.AUTH_USER_DATA}:${key.apiKey}`);
+    return result;
   }
 
   /**

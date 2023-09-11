@@ -1,4 +1,5 @@
 import {
+  AppEnvironment,
   ChainType,
   Context,
   env,
@@ -27,7 +28,6 @@ import { EvmBlockchainIndexer } from '../modules/blockchain-indexers/evm/evm-ind
 import { WorkerName } from './worker-executor';
 
 export class EvmTransactionWorker extends BaseSingleThreadWorker {
-  private logPrefix: string;
   private evmChain: EvmChain;
 
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
@@ -57,14 +57,15 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
 
     for (const w of wallets) {
       const conn = await this.context.mysql.start();
+      const txHashes: string[] = [];
       try {
         const wallet: Wallet = new Wallet(w, this.context);
 
         const evmIndexer: EvmBlockchainIndexer = new EvmBlockchainIndexer(
           this.evmChain,
         );
-        const blockHeight = await evmIndexer.getBlockHeight();
 
+        const blockHeight = await evmIndexer.getBlockHeight();
         const lastParsedBlock: number = wallet.lastParsedBlock;
         const toBlock: number =
           lastParsedBlock + wallet.blockParseSize < blockHeight
@@ -77,17 +78,26 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
           lastParsedBlock,
           toBlock,
         );
-
+        txHashes.push(
+          ...walletTxs.outgoingTxs.transactions.map((tx) => tx.transactionHash),
+        );
         await this.handleOutgoingEvmTxs(wallet, walletTxs.outgoingTxs, conn);
+        txHashes.push(
+          ...walletTxs.incomingTxs.transactions.map((tx) => tx.transactionHash),
+        );
         await this.handleIncomingEvmTxs(wallet, walletTxs.incomingTxs);
 
         await wallet.updateLastParsedBlock(toBlock, conn);
         await conn.commit();
 
         if (
-          walletTxs.incomingTxs.transactions.length > 0 ||
-          walletTxs.outgoingTxs.transactions.length > 0
+          env.APP_ENV === AppEnvironment.TEST ||
+          env.APP_ENV === AppEnvironment.LOCAL_DEV
         ) {
+          console.log(
+            `${env.APP_ENV} => Skipping webhook trigger ... TODO: Handle properly`,
+          );
+        } else {
           await sendToWorkerQueue(
             env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
             WorkerName.TRANSACTION_WEBHOOKS,
@@ -98,11 +108,15 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
         }
       } catch (err) {
         await conn.rollback();
+
         await this.writeEventLog(
           {
             logType: LogType.ERROR,
-            message: `${this.logPrefix}: Error confirming transactions`,
+            message: `Error confirming transactions for wallet ${
+              w.address
+            }! Tx hashes: ${txHashes.join(',')}`,
             service: ServiceName.BLOCKCHAIN,
+            err,
             data: {
               error: err,
               wallet: wallets.address,
@@ -125,6 +139,7 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
       fromBlock,
       toBlock,
     );
+
     const incomingTxs = await evmIndexer.getWalletIncomingTxs(
       address,
       fromBlock,
@@ -148,6 +163,7 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
       wallet,
       conn,
     );
+
     const failedTxs: string[] = await this.updateEvmTransactionsByStatus(
       outgoingTxs,
       TransactionStatus.FAILED,
@@ -160,7 +176,7 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
     await this.writeEventLog(
       {
         logType: LogType.INFO,
-        message: `${this.logPrefix}: Processed ${outgoingTxs.transactions.length} outgoing transactions.`,
+        message: `Processed ${outgoingTxs.transactions.length} outgoing transactions.`,
         service: ServiceName.BLOCKCHAIN,
         data: {
           transactions: outgoingTxs.transactions,
@@ -176,7 +192,7 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
     }
 
     outgoingTxs.transactions.forEach(async (bcTx) => {
-      if (!updatedDbTxs.includes(bcTx.hash)) {
+      if (!updatedDbTxs.includes(bcTx.transactionHash)) {
         // UNKNOWN TX!
         await this.writeEventLog(
           {
@@ -202,7 +218,7 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
     await this.writeEventLog(
       {
         logType: LogType.INFO,
-        message: `${this.logPrefix}: Detected ${incomingTxs.transactions.length} deposits to ${wallet.address}.`,
+        message: `Detected ${incomingTxs.transactions.length} deposits to ${wallet.address}.`,
         service: ServiceName.BLOCKCHAIN,
         data: { wallet: wallet.address },
       },
@@ -223,15 +239,16 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
 
     const bcTxsByStatus = new Map<string, EvmTransfer>(
       bcTxs.transactions
-        .filter((tx) => {
-          return tx.status == bcStatus;
-        })
-        .map((tx) => [tx.hash, tx]),
+        .filter((tx) => tx.status == bcStatus)
+        .map((tx) => [tx.transactionHash, tx]),
     );
+
     if (!bcTxsByStatus.size) {
       return;
     }
+
     const outgoingTxHashes: string[] = [...bcTxsByStatus.keys()];
+
     const updatedDbTxs: string[] = await this.updateTransactions(
       outgoingTxHashes,
       status,
@@ -240,10 +257,11 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
     );
 
     const txDbHashesString = updatedDbTxs.join(',');
+
     await this.writeEventLog(
       {
         logType: LogType.INFO,
-        message: `${this.logPrefix}: ${updatedDbTxs.length} [${TransactionStatus[status]}] blockchain transactions matched (txHashes=${txDbHashesString}) in db.`,
+        message: `${updatedDbTxs.length} [${TransactionStatus[status]}] blockchain transactions matched (txHashes=${txDbHashesString}) in db.`,
         service: ServiceName.BLOCKCHAIN,
         data: {
           updatedDbTxs,
@@ -252,6 +270,7 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
       },
       LogOutput.EVENT_INFO,
     );
+
     return updatedDbTxs;
   }
 
@@ -295,8 +314,6 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
         bcHashes,
         conn,
       )
-    ).map((tx) => {
-      return tx.transactionHash;
-    });
+    ).map((tx) => tx.transactionHash);
   }
 }
