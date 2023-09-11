@@ -30,27 +30,19 @@ export abstract class BaseWorker extends ServerlessWorker {
       case LogOutput.EVENT_WARN:
       case LogOutput.SYS_WARN:
         console.warn(
-          `[${this.workerName}] ${options.message} ${JSON.stringify(
-            options.data,
-          )}`,
+          `${options.message} ${JSON.stringify(options.data)}`,
           options.err,
         );
         break;
       case LogOutput.EVENT_ERROR:
       case LogOutput.SYS_ERROR:
         console.error(
-          `[${this.workerName}] ${options.message} ${JSON.stringify(
-            options.data,
-          )}`,
+          `${options.message} ${JSON.stringify(options.data)}`,
           options.err,
         );
         break;
       default:
-        console.log(
-          `[${this.workerName}] ${options.message} ${JSON.stringify(
-            options.data,
-          )}`,
-        );
+        console.log(`${options.message} ${JSON.stringify(options.data)}`);
     }
 
     const workerStatusDict = {
@@ -94,14 +86,13 @@ export abstract class BaseWorker extends ServerlessWorker {
         [LogOutput.NOTIFY_WARN]: LogType.WARN,
         [LogOutput.NOTIFY_MSG]: LogType.MSG,
       };
-      let alert = `[${this.logPrefix ?? this.workerName}] ${options.message}`;
-      if (options.err) {
-        alert += `- ${
-          options.err.message ?? options.err.name ?? 'Unknown error'
-        }`;
-      }
+      options.message = options.err
+        ? `${options.message} - ${
+            options.err.message ?? options.err.name ?? 'Unknown error'
+          }`
+        : options.message;
       await new Lmas().sendAdminAlert(
-        alert,
+        options.message,
         options.service as any,
         notifyType[output],
       );
