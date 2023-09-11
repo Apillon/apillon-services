@@ -46,9 +46,14 @@ export class RepublishIpnsWorker extends BaseQueueWorker {
   async runExecutor(data: any): Promise<any> {
     console.log('RepublishIpnsWorker data: ', data);
     for (const item of data) {
-      await axios.post(
-        `${env.STORAGE_IPFS_API}/name/publish?arg=${item.cid}&key=${item.keyName}`,
-      );
+      try {
+        await axios.post(
+          `${env.STORAGE_IPFS_API}/name/publish?arg=${item.cid}&key=${item.keyName}`,
+        );
+        console.info('IPNS republished', item);
+      } catch (error) {
+        console.error('Error republishing IPNS', error, item);
+      }
     }
   }
 }
