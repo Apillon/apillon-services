@@ -191,13 +191,13 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
       return;
     }
 
-    outgoingTxs.transactions.forEach(async (bcTx) => {
+    for (const bcTx of outgoingTxs.transactions) {
       if (!updatedDbTxs.includes(bcTx.transactionHash)) {
         // UNKNOWN TX!
         await this.writeEventLog(
           {
             logType: LogType.WARN,
-            message: `${this.logPrefix} Detecting unknown transaction from ${wallet.address}!`,
+            message: `${this.logPrefix} Detecting unknown transaction from ${wallet.address}! Tx Hash: ${bcTx.transactionHash}`,
             service: ServiceName.BLOCKCHAIN,
             data: {
               wallet: wallet.address,
@@ -207,7 +207,7 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
           LogOutput.NOTIFY_ALERT,
         );
       }
-    });
+    }
   }
 
   public async handleIncomingEvmTxs(wallet: Wallet, incomingTxs: EvmTransfers) {

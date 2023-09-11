@@ -50,7 +50,7 @@ export class TransmitSubstrateTransactionWorker extends BaseSingleThreadWorker {
       await this.writeEventLog(
         {
           logType: LogType.ERROR,
-          message: 'Error submitting transactions',
+          message: `Error submitting transactions on chain ${chain}`,
           service: ServiceName.BLOCKCHAIN,
           data: {
             data,
