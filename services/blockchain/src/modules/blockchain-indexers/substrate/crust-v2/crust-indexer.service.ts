@@ -34,8 +34,6 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
       },
     );
 
-    console.log(data);
-
     return {
       transfers: data.transfers,
       systems: data.systems,

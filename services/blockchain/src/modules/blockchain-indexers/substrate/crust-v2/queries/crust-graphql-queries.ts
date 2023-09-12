@@ -119,7 +119,8 @@ export class CrustGQLQueries {
   static ACCOUNT_SYSTEM_EVENTS_QUERY = `query getAccountSystemEvents(
       $account: String!
       $fromBlock: Int!, 
-      $toBlock: Int!) {
+      $toBlock: Int!
+    ) {
       systems(
         where: {
           AND: {
