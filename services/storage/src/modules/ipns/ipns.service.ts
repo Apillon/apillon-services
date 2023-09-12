@@ -1,7 +1,5 @@
 import {
-  AppEnvironment,
   CreateIpnsDto,
-  env,
   IpnsQueryFilter,
   Lmas,
   LogType,
@@ -11,22 +9,14 @@ import {
   ServiceName,
   SqlModelStatus,
 } from '@apillon/lib';
-import {
-  QueueWorkerType,
-  sendToWorkerQueue,
-  ServiceDefinition,
-  ServiceDefinitionType,
-  WorkerDefinition,
-} from '@apillon/workers-lib';
-import { StorageErrorCode } from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
+import { StorageErrorCode } from '../../config/types';
 import {
   StorageCodeException,
   StorageValidationException,
 } from '../../lib/exceptions';
-import { PublishToIPNSWorker } from '../../workers/publish-to-ipns-worker';
-import { WorkerName } from '../../workers/worker-executor';
 import { Bucket } from '../bucket/models/bucket.model';
+import { IPFSService } from '../ipfs/ipfs.service';
 import { Ipns } from './models/ipns.model';
 
 export class IpnsService {
@@ -108,13 +98,13 @@ export class IpnsService {
         details: err,
         status: 500,
       }).writeToMonitor({
-        project_uuid: event.body.project_uuid,
+        project_uuid: b.project_uuid,
       });
     }
 
     await new Lmas().writeLog({
       context,
-      project_uuid: event.body.project_uuid,
+      project_uuid: b.project_uuid,
       logType: LogType.INFO,
       message: 'New ipns record created',
       location: 'BucketService/createBucket',
@@ -149,52 +139,45 @@ export class IpnsService {
     ipns.status = SqlModelStatus.INCOMPLETE;
     await ipns.update();
 
-    if (
-      env.APP_ENV == AppEnvironment.LOCAL_DEV ||
-      env.APP_ENV == AppEnvironment.TEST
-    ) {
-      //Directly calls worker, to publish CID to IPNS
-      const serviceDef: ServiceDefinition = {
-        type: ServiceDefinitionType.SQS,
-        config: { region: 'test' },
-        params: { FunctionName: 'test' },
-      };
-      const parameters = {
-        cid: event.cid,
-        ipns_id: ipns.id,
-      };
-      const wd = new WorkerDefinition(
-        serviceDef,
-        WorkerName.PUBLISH_TO_IPNS_WORKER,
-        {
-          parameters,
-        },
+    try {
+      const publishedIpns = await IPFSService.publishToIPNS(
+        event.cid,
+        `${ipns.project_uuid}_${ipns.bucket_id}_${ipns.id}`,
       );
 
-      const worker = new PublishToIPNSWorker(
-        wd,
+      ipns.ipnsName = publishedIpns.name;
+      ipns.ipnsValue = publishedIpns.value;
+      ipns.key = `${ipns.project_uuid}_${ipns.bucket_id}_${ipns.id}`;
+      ipns.cid = event.cid;
+      ipns.status = SqlModelStatus.ACTIVE;
+
+      await ipns.update(SerializeFor.UPDATE_DB);
+    } catch (err) {
+      await new Lmas().writeLog({
         context,
-        QueueWorkerType.EXECUTOR,
-      );
-      await worker.runExecutor({
-        cid: event.cid,
-        ipns_id: ipns.id,
+        logType: LogType.ERROR,
+        project_uuid: ipns.project_uuid,
+        message: 'Error at publishing CID to IPNS',
+        service: ServiceName.STORAGE,
+        location: 'ipns.service.ts/publishIpns',
+        data: {
+          ipns: ipns.serialize(SerializeFor.PROFILE),
+          err,
+        },
       });
-    } else {
-      //send message to SQS
-      await sendToWorkerQueue(
-        env.STORAGE_AWS_WORKER_SQS_URL,
-        WorkerName.PUBLISH_TO_IPNS_WORKER,
-        [
-          {
-            cid: event.cid,
-            ipns_id: ipns.id,
-          },
-        ],
-        null,
-        null,
-      );
+      throw err;
     }
+
+    await new Lmas().writeLog({
+      context,
+      logType: LogType.INFO,
+      project_uuid: ipns.project_uuid,
+      message: 'Success publishing CID to IPNS',
+      service: ServiceName.STORAGE,
+      data: {
+        ipns: ipns.serialize(SerializeFor.PROFILE),
+      },
+    });
 
     return ipns.serialize(SerializeFor.PROFILE);
   }

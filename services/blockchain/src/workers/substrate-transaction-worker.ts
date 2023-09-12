@@ -30,7 +30,6 @@ import { ParachainConfig } from '../config/substrate-parachain';
 export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
   private chainId: string;
   private chainName: string;
-  private logPrefix: string;
   private wallets: Wallet[];
   private indexer: BaseBlockchainIndexer;
   private webHookWorker: WebhookWorker;
@@ -42,7 +41,6 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     this.chainId = workerDefinition.parameters.chainId;
 
     this.chainName = SubstrateChain[this.chainId];
-    this.logPrefix = `[SUBSTRATE | ${this.chainName}]`;
     this.setParachainParams();
   }
 
@@ -82,8 +80,9 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         await this.writeEventLog(
           {
             logType: LogType.ERROR,
-            message: `${this.logPrefix}: Error confirming transactions`,
+            message: `Error confirming transactions for wallet ${w.address}`,
             service: ServiceName.BLOCKCHAIN,
+            err,
             data: {
               error: err,
               wallet: wallet.address,
@@ -94,34 +93,28 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         continue;
       }
 
-      if (
-        transactions.length > 0 &&
-        env.APP_ENV !== AppEnvironment.TEST &&
-        env.APP_ENV !== AppEnvironment.LOCAL_DEV
-      ) {
-        const webhooks = transactions.map((t) => {
-          return createSubstrateTxWebhookDto(t);
-        });
+      const webhooks = transactions.map((t) => {
+        return createSubstrateTxWebhookDto(t);
+      });
 
-        try {
-          await processWebhooks(
-            webhooks,
-            this.webHookWorker.workerName,
-            this.webHookWorker.sqsUrl,
-            this.context,
-          );
-        } catch (error) {
-          await this.writeEventLog(
-            {
-              logType: LogType.ERROR,
-              message: `Error sending update to worker: ${this.webHookWorker.workerName}, url ${this.webHookWorker.sqsUrl}`,
-              service: ServiceName.BLOCKCHAIN,
-              data: { transactions },
-              err: error,
-            },
-            LogOutput.SYS_ERROR,
-          );
-        }
+      try {
+        await processWebhooks(
+          webhooks,
+          this.webHookWorker.workerName,
+          this.webHookWorker.sqsUrl,
+          this.context,
+        );
+      } catch (error) {
+        await this.writeEventLog(
+          {
+            logType: LogType.ERROR,
+            message: `Error sending update to worker: ${this.webHookWorker.workerName}, url ${this.webHookWorker.sqsUrl}`,
+            service: ServiceName.BLOCKCHAIN,
+            data: { transactions },
+            err: error,
+          },
+          LogOutput.SYS_ERROR,
+        );
       }
     }
   }
@@ -133,7 +126,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       // I don't want to log anything here. This should NEVER happen
       // Another reason is to be able to call this function
       // from the constructor -- no async allowed.
-      throw Error('Invalid parachain!');
+      throw Error(`Invalid parachain: ${this.chainName}!`);
     }
 
     // Class in config must be instantiated
@@ -171,20 +164,14 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     }
 
     const successTransactions: any = transactions
-      .filter((t: any) => {
-        return t.status == TransactionIndexerStatus.SUCCESS;
-      })
-      .map((t: any): string => {
-        return t.extrinsicHash;
-      });
+      .filter((t: any) => t.status == TransactionIndexerStatus.SUCCESS)
+      .map((t: any): string => t.extrinsicHash);
+
+    console.log('Success transactions ', successTransactions);
 
     const failedTransactions: string[] = transactions
-      .filter((t: any) => {
-        t.status == TransactionIndexerStatus.FAIL;
-      })
-      .map((t: any): string => {
-        return t.extrinsicHash;
-      });
+      .filter((t: any) => t.status == TransactionIndexerStatus.FAIL)
+      .map((t: any): string => t.extrinsicHash);
 
     // Update SUCCESSFUL transactions
     await this.updateTransactions(
@@ -214,7 +201,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         AND transactionHash in ('${transactionHashes.join(`','`)}')`,
       {
         chain: this.chainId,
-        status: status,
+        status,
       },
       conn,
     );
@@ -222,7 +209,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     await this.writeEventLog(
       {
         logType: LogType.INFO,
-        message: `${this.logPrefix}: ${transactionHashes.length} [${
+        message: `${transactionHashes.length} [${
           TransactionStatus[status]
         }] blockchain transactions matched (txHashes=${transactionHashes.join(
           `','`,

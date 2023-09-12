@@ -31,7 +31,7 @@ export class File extends AdvancedSQLModel {
         code: ValidatorErrorCode.FILE_NAME_NOT_PRESENT,
       },
     ],
-    //fakeValue: () => faker.lorem.word(),
+    //fakeValue: () => getFaker().lorem.word(),
   })
   public name: string;
 

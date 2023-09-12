@@ -1,7 +1,15 @@
-import { Context, PopulateFrom, Ams } from '@apillon/lib';
+import {
+  Context,
+  PopulateFrom,
+  Ams,
+  runCachedFunction,
+  CacheKeyPrefix,
+  decodeJwtToken,
+} from '@apillon/lib';
 import { User } from './modules/user/models/user.model';
 
 export class DevConsoleApiContext extends Context {
+  token: string;
   /**
    * Strategy that should be used, to populate model. TODO: In authenticate, fill this!!!!
    * @returns
@@ -17,19 +25,26 @@ export class DevConsoleApiContext extends Context {
     if (!token) {
       return;
     }
+    const { user_uuid } = decodeJwtToken(token);
 
-    const userData = await new Ams(this).getAuthUser({ token });
+    const user = await runCachedFunction(
+      `${CacheKeyPrefix.AUTH_USER_DATA}:${user_uuid}`,
+      async () => {
+        const userData = await new Ams(this).getAuthUser({ token });
 
-    if (userData?.data?.user_uuid) {
-      const user = await new User({}, this).populateByUUID(
-        userData.data.user_uuid,
-      );
+        if (userData?.data?.user_uuid) {
+          const user = await new User({}, this).populateByUUID(
+            userData.data.user_uuid,
+          );
 
-      if (user.exists()) {
-        user.authUser = userData.data;
-        user.setUserRolesAndPermissionsFromAmsResponse(userData);
-        this.user = user;
-      }
-    }
+          if (user.exists()) {
+            user.authUser = userData.data;
+            user.setUserRolesAndPermissionsFromAmsResponse(userData);
+            return user;
+          }
+        }
+      },
+    );
+    this.user = new User(user);
   }
 }

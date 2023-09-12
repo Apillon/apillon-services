@@ -6,7 +6,6 @@ import { ValidateEmailDto } from '../dtos/validate-email.dto';
 import { setupTest } from '../../../../test/helpers/setup';
 import { createTestKeyring } from '@polkadot/keyring';
 import { u8aToHex } from '@polkadot/util';
-import { userInfo } from 'os';
 
 describe('Auth tests', () => {
   let stage: Stage;
@@ -155,6 +154,7 @@ describe('Auth tests', () => {
       .post('/users/password-reset-request')
       .send({
         email: newUserData.email,
+        captcha: { token: 'test' },
       });
     expect(response.status).toBe(200);
   });

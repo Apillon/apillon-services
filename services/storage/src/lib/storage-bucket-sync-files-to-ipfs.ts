@@ -127,6 +127,7 @@ export async function storageBucketSyncFilesToIPFS(
       );
 
       wrappingDirectory.CID = ipfsRes.parentDirCID.toV0().toString();
+      wrappingDirectory.CIDv1 = ipfsRes.parentDirCID.toV1().toString();
       await wrappingDirectory.update();
 
       for (const fur of files) {
@@ -148,6 +149,7 @@ export async function storageBucketSyncFilesToIPFS(
       );
       if (dir.exists()) {
         dir.CID = ipfsDir.cid.toV0().toString();
+        dir.CIDv1 = ipfsDir.cid.toV1().toString();
         await dir.update();
       }
     }
@@ -168,6 +170,7 @@ export async function storageBucketSyncFilesToIPFS(
           //Update existing file
           existingFile.populate({
             CID: file.CID.toV0().toString(),
+            CIDv1: file.CID.toV1().toString(),
             s3FileKey: file.s3FileKey,
             name: file.fileName,
             contentType: file.contentType,
@@ -191,6 +194,7 @@ export async function storageBucketSyncFilesToIPFS(
             .populate({
               file_uuid: file.file_uuid,
               CID: file.CID.toV0().toString(),
+              CIDv1: file.CID.toV1().toString(),
               s3FileKey: file.s3FileKey,
               name: file.fileName,
               contentType: file.contentType,
@@ -334,6 +338,7 @@ export async function storageBucketSyncFilesToIPFS(
             //Update existing file
             existingFile.populate({
               CID: ipfsRes.cidV0,
+              CIDv1: ipfsRes.cidV1,
               s3FileKey: file.s3FileKey,
               name: file.fileName,
               contentType: file.contentType,
@@ -356,6 +361,7 @@ export async function storageBucketSyncFilesToIPFS(
               .populate({
                 file_uuid: file.file_uuid,
                 CID: ipfsRes.cidV0,
+                CIDv1: ipfsRes.cidV1,
                 s3FileKey: file.s3FileKey,
                 name: file.fileName,
                 contentType: file.contentType,

@@ -5,11 +5,13 @@ import { WorkerLogStatus } from '../../config/types';
 export abstract class BaseWorker extends ServerlessWorker {
   protected context: Context;
   protected workerName: string;
+  protected logPrefix: string;
 
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition);
     this.context = context;
     this.workerName = workerDefinition.workerName;
+    this.logPrefix ||= `[${this.workerName}]`;
   }
 
   protected async writeEventLog(
@@ -23,31 +25,24 @@ export abstract class BaseWorker extends ServerlessWorker {
     },
     output = LogOutput.EVENT_INFO,
   ) {
+    options.message = `${this.logPrefix}: ${options.message}`;
     switch (output) {
       case LogOutput.EVENT_WARN:
       case LogOutput.SYS_WARN:
         console.warn(
-          `[${this.workerName}] ${options.message} ${JSON.stringify(
-            options.data,
-          )}`,
+          `${options.message} ${JSON.stringify(options.data)}`,
           options.err,
         );
         break;
       case LogOutput.EVENT_ERROR:
       case LogOutput.SYS_ERROR:
         console.error(
-          `[${this.workerName}] ${options.message} ${JSON.stringify(
-            options.data,
-          )}`,
+          `${options.message} ${JSON.stringify(options.data)}`,
           options.err,
         );
         break;
       default:
-        console.log(
-          `[${this.workerName}] ${options.message} ${JSON.stringify(
-            options.data,
-          )}`,
-        );
+        console.log(`${options.message} ${JSON.stringify(options.data)}`);
     }
 
     const workerStatusDict = {
@@ -79,12 +74,6 @@ export abstract class BaseWorker extends ServerlessWorker {
       });
     }
 
-    const notifyType = {
-      [LogOutput.NOTIFY_ALERT]: LogType.ALERT,
-      [LogOutput.NOTIFY_WARN]: LogType.WARN,
-      [LogOutput.NOTIFY_MSG]: LogType.MSG,
-    };
-
     if (
       [
         LogOutput.NOTIFY_MSG,
@@ -92,8 +81,18 @@ export abstract class BaseWorker extends ServerlessWorker {
         LogOutput.NOTIFY_WARN,
       ].includes(output)
     ) {
+      const notifyType = {
+        [LogOutput.NOTIFY_ALERT]: LogType.ALERT,
+        [LogOutput.NOTIFY_WARN]: LogType.WARN,
+        [LogOutput.NOTIFY_MSG]: LogType.MSG,
+      };
+      options.message = options.err
+        ? `${options.message} - ${
+            options.err.message ?? options.err.name ?? 'Unknown error'
+          }`
+        : options.message;
       await new Lmas().sendAdminAlert(
-        `[${this.workerName}] ${options.message}`,
+        options.message,
         options.service as any,
         notifyType[output],
       );

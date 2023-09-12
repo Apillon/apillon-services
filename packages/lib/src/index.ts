@@ -120,3 +120,4 @@ export * from './lib/exceptions/http-exception';
 export * from './lib/base-models/base-query-filter.model';
 export * from './lib/parsers';
 export * from './lib/cache';
+export * from './lib/captcha';

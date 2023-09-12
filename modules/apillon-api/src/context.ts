@@ -1,8 +1,10 @@
 import {
   Ams,
+  CacheKeyPrefix,
   CodeException,
   Context,
   UnauthorizedErrorCodes,
+  runCachedFunction,
 } from '@apillon/lib';
 import { HttpStatus } from '@nestjs/common';
 
@@ -11,12 +13,16 @@ export class ApillonApiContext extends Context {
    * Validate API key and fill context apiKey property
    */
   async authenticate(apiKey: string, apiKeySecret: string) {
-    const apiKeyData = await new Ams(this).getApiKey({
-      apiKey: apiKey,
-      apiKeySecret: apiKeySecret,
-    });
+    const apiKeyData = await runCachedFunction(
+      `${CacheKeyPrefix.AUTH_USER_DATA}:${apiKey}`,
+      () =>
+        new Ams(this).getApiKey({
+          apiKey,
+          apiKeySecret,
+        }),
+    );
 
-    if (apiKeyData && apiKeyData.data.id) {
+    if (apiKeyData?.data.id) {
       this.apiKey = apiKeyData.data;
     } else {
       throw new CodeException({
@@ -28,6 +34,6 @@ export class ApillonApiContext extends Context {
   }
 
   isApiKeyValid() {
-    return this.apiKey && this.apiKey?.id;
+    return this.apiKey?.id;
   }
 }

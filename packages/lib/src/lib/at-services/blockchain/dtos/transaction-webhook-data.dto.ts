@@ -4,9 +4,10 @@ import {
   SerializeFor,
   TransactionStatus,
 } from '../../../../config/types';
-import { ModelBase, prop } from '../../../base-models/base';
+import { prop } from '../../../base-models/base';
+import { BaseTransactionDto } from './base-transaction.dto';
 
-export class TransactionWebhookDataDto extends ModelBase {
+export class TransactionWebhookDataDto extends BaseTransactionDto {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -20,20 +21,6 @@ export class TransactionWebhookDataDto extends ModelBase {
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
   })
   public transactionHash: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-  })
-  public referenceTable: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-  })
-  public referenceId: string;
 
   @prop({
     parser: { resolver: integerParser() },

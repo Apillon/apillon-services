@@ -6,7 +6,7 @@ import { Injectable } from '@nestjs/common';
 import { AuthenticationApiContext } from '../../context';
 import { W3nAssetsDto } from './dtos/w3n-assets.dto';
 import { callApillonApi } from '@apillon/modules-lib';
-import { CodeException, env } from '@apillon/lib';
+import { CodeException, env, getEnvSecrets } from '@apillon/lib';
 import axios from 'axios';
 import { v4 as uuidV4 } from 'uuid';
 import {
@@ -34,6 +34,8 @@ export class W3nAssetsService {
         });
       }
     }
+
+    await getEnvSecrets();
 
     if (
       !env.NOVA_WALLET_API_KEY ||
