@@ -1,4 +1,10 @@
-import { Context, LogType, ServiceName } from '@apillon/lib';
+import {
+  Context,
+  LogType,
+  ServiceName,
+  SubstrateChain,
+  getEnumKey,
+} from '@apillon/lib';
 import {
   WorkerDefinition,
   BaseSingleThreadWorker,
@@ -50,7 +56,10 @@ export class TransmitSubstrateTransactionWorker extends BaseSingleThreadWorker {
       await this.writeEventLog(
         {
           logType: LogType.ERROR,
-          message: `Error submitting transactions on chain ${chain}`,
+          message: `Error submitting transactions on chain ${getEnumKey(
+            SubstrateChain,
+            chain,
+          )}`,
           service: ServiceName.BLOCKCHAIN,
           data: {
             data,

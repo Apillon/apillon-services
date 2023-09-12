@@ -2,6 +2,8 @@ import {
   AppEnvironment,
   Context,
   env,
+  EvmChain,
+  getEnumKey,
   LogType,
   ServiceName,
 } from '@apillon/lib';
@@ -47,7 +49,10 @@ export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
       await this.writeEventLog(
         {
           logType: LogType.ERROR,
-          message: `Error submitting transactions on chain ${chain}`,
+          message: `Error submitting transactions on chain ${getEnumKey(
+            EvmChain,
+            chain,
+          )}`,
           service: ServiceName.BLOCKCHAIN,
           data: {
             data,
