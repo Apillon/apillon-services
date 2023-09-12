@@ -66,9 +66,6 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       const fromBlock: number = wallet.lastParsedBlock;
       const toBlock: number = blockHeight;
 
-      console.log('Wallet: ', w.address);
-      console.log('From block: ', fromBlock);
-      console.log('toBlock: ', toBlock);
       console.log(this.indexer.toString());
 
       // Get all transactions from the indexer
