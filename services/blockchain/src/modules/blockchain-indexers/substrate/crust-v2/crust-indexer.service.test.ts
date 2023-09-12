@@ -3,8 +3,9 @@ import { CrustBlockchainIndexer } from './crust-indexer.service';
 
 // TODO: Move to indexer, test with real wallet
 // TODO2: Add more test cases
+// TODO3: Once new indexer deployed to crust, modify this test.
 describe('Test all transactions', () => {
-  const address = 'cTGtJ8Ue4h1o7bC4i75uWLAF1sbJmuqmN6KAqB9hqssp1kCED';
+  const address = 'cTL1jk9CbHJAYz2hWDh3PprRCtrPAHUvSDw7gZbVWbUYt8SJU';
 
   beforeAll(async () => {
     env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://localhost:4351/graphql';
