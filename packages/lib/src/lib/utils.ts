@@ -130,3 +130,12 @@ export function getFaker(): typeof import('@faker-js/faker').faker {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   return require('@faker-js/faker').faker;
 }
+
+export function getEnumKey<TEnum>(
+  enumerator: TEnum,
+  value: TEnum[keyof TEnum],
+): string | TEnum[keyof TEnum] {
+  return (
+    Object.keys(enumerator).find((key) => enumerator[key] === value) ?? value
+  );
+}
