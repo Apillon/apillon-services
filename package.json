@@ -31,6 +31,7 @@
     "copyfiles": "^2.4.1",
     "cross-env": "^7.0.3",
     "eslint-config-common": "*",
+    "http-request-mock": "^1.8.17",
     "nodemon": "^2.0.19",
     "prettier": "latest",
     "serverless-webpack": "^5.9.1",
