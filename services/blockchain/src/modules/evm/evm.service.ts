@@ -347,8 +347,6 @@ export class EvmService {
         wallet.address,
         wallet.lastProcessedNonce,
       );
-
-      // continue to next wallet if there is no transactions!
       if (!transactions.length) {
         continue;
       }
@@ -388,21 +386,41 @@ export class EvmService {
             err?.reason === 'nonce has already been used' ||
             err?.error?.message === 'already known'
           ) {
-            latestSuccess = await trySelfRepairNonce(provider, context, wallet);
-            await eventLogger(
-              {
-                logType: LogType.INFO,
-                message: latestSuccess
-                  ? `Last processed nonce was repaired and set to ${latestSuccess}.`
-                  : 'Could not repair last processed nonce.',
-                service: ServiceName.BLOCKCHAIN,
-                data: {
-                  lastProcessedNonce: latestSuccess,
-                  wallet: wallet.address,
-                },
-              },
-              LogOutput.NOTIFY_WARN,
+            const selfRepairNonce = await trySelfRepairNonce(
+              provider,
+              context,
+              wallet,
             );
+            latestSuccess = selfRepairNonce;
+            if (selfRepairNonce) {
+              await eventLogger(
+                {
+                  logType: LogType.INFO,
+                  message: `Last success nonce was repaired and set to ${selfRepairNonce}.`,
+                  service: ServiceName.BLOCKCHAIN,
+                  data: {
+                    selfRepairNonce,
+                    wallet: wallet.address,
+                  },
+                },
+                LogOutput.EVENT_INFO,
+              );
+            } else {
+              await eventLogger(
+                {
+                  logType: LogType.ERROR,
+                  message: 'Could not repair last success nonce.',
+                  service: ServiceName.BLOCKCHAIN,
+                  data: {
+                    wallet: wallet.address,
+                    walletLastProcessedNonce: wallet.lastProcessedNonce,
+                    transactionNonce: transaction.nonce,
+                    selfRepairNonce,
+                  },
+                },
+                LogOutput.NOTIFY_WARN,
+              );
+            }
           } else {
             await eventLogger(
               {
