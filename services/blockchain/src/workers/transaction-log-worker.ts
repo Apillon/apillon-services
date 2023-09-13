@@ -7,6 +7,8 @@ import {
   ServiceName,
   env,
   LogType,
+  PoolConnection,
+  SerializeFor,
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
@@ -17,12 +19,12 @@ import {
 import { Wallet } from '../modules/wallet/wallet.model';
 import { DbTables, TxDirection } from '../config/types';
 import { formatTokenWithDecimals, formatWalletAddress } from '../lib/utils';
-
 import { TransactionLog } from '../modules/accounting/transaction-log.model';
-
 import { EvmBlockchainIndexer } from '../modules/blockchain-indexers/evm/evm-indexer.service';
 import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
 import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/kilt-indexer.service';
+import { WalletDeposit } from '../modules/accounting/wallet-deposit.model';
+import { ethers } from 'ethers';
 
 export class TransactionLogWorker extends BaseQueueWorker {
   private batchLimit: number;
@@ -60,6 +62,9 @@ export class TransactionLogWorker extends BaseQueueWorker {
 
     // link with transaction queue && alert if no link
     await this.linkTransactions(transactions, wallet);
+
+    // add new wallet deposits and subtract amount from existing
+    await this.processWalletDepositAmounts(wallet, transactions);
 
     // check wallet balance && alert if low
     await this.checkWalletBalance(wallet);
@@ -294,16 +299,12 @@ export class TransactionLogWorker extends BaseQueueWorker {
     );
 
     if (unlinked.length) {
-      await this.writeEventLog(
-        {
-          logType: LogType.WARN,
-          message: `${
-            unlinked.length
-          } UNLINKED TRANSACTIONS DETECTED! ${formatWalletAddress(wallet)}`,
-          service: ServiceName.BLOCKCHAIN,
-          data: { wallet: wallet.address, hashes: unlinked.map((x) => x.hash) },
-        },
-        LogOutput.NOTIFY_ALERT,
+      await this.sendErrorAlert(
+        `${
+          unlinked.length
+        } UNLINKED TRANSACTIONS DETECTED! ${formatWalletAddress(wallet)}`,
+        { wallet: wallet.address, hashes: unlinked.map((x) => x.hash) },
+        LogType.WARN,
       );
     }
   }
@@ -312,43 +313,141 @@ export class TransactionLogWorker extends BaseQueueWorker {
     const balanceData = await wallet.checkAndUpdateBalance();
 
     if (!balanceData.minBalance) {
-      await this.writeEventLog(
-        {
-          logType: LogType.WARN,
-          message: `MIN BALANCE IS NOT SET! ${formatWalletAddress(
-            wallet,
-          )}  ==> balance: ${formatTokenWithDecimals(
-            balanceData.balance,
-            wallet.chainType,
-            wallet.chain,
-          )}`,
-          service: ServiceName.BLOCKCHAIN,
-          data: { ...balanceData, wallet: wallet.address },
-        },
+      await this.sendErrorAlert(
+        `MIN BALANCE IS NOT SET! ${formatWalletAddress(
+          wallet,
+        )}  ==> balance: ${formatTokenWithDecimals(
+          balanceData.balance,
+          wallet.chainType,
+          wallet.chain,
+        )}`,
+        { ...balanceData, wallet: wallet.address },
+        LogType.WARN,
         LogOutput.NOTIFY_WARN,
       );
     }
 
     if (balanceData.isBelowThreshold) {
-      await this.writeEventLog(
-        {
-          logType: LogType.WARN,
-          message: `LOW WALLET BALANCE! ${formatWalletAddress(
-            wallet,
-          )} ==> balance: ${formatTokenWithDecimals(
-            balanceData.balance,
-            wallet.chainType,
-            wallet.chain,
-          )} / ${formatTokenWithDecimals(
-            balanceData.minBalance,
-            wallet.chainType,
-            wallet.chain,
-          )}`,
-          service: ServiceName.BLOCKCHAIN,
-          data: { ...balanceData, wallet: wallet.address },
-        },
-        LogOutput.NOTIFY_ALERT,
+      await this.sendErrorAlert(
+        `LOW WALLET BALANCE! ${formatWalletAddress(
+          wallet,
+        )} ==> balance: ${formatTokenWithDecimals(
+          balanceData.balance,
+          wallet.chainType,
+          wallet.chain,
+        )} / ${formatTokenWithDecimals(
+          balanceData.minBalance,
+          wallet.chainType,
+          wallet.chain,
+        )}`,
+        { ...balanceData, wallet: wallet.address },
+        LogType.WARN,
       );
     }
+  }
+
+  public async processWalletDepositAmounts(
+    wallet: Wallet,
+    transactions: TransactionLog[],
+  ) {
+    // Process wallet deposits
+    for (const deposit of transactions.filter(
+      (t) => t.direction === TxDirection.INCOME && t.wallet === wallet.address,
+    )) {
+      try {
+        await new WalletDeposit({}, this.context).createWalletDeposit(
+          wallet,
+          deposit,
+          (walletDeposit) =>
+            this.sendErrorAlert(
+              `INVALID WALLET DEPOSIT! ${formatWalletAddress(wallet)}`,
+              {
+                walletDeposit,
+                error: walletDeposit.collectErrors().join(','),
+              },
+            ),
+        );
+      } catch (err) {
+        await this.sendErrorAlert(
+          `Error creating deposit for ${formatWalletAddress(wallet)}`,
+          { ...deposit },
+          err,
+        );
+      }
+    }
+
+    // Process wallet token spends
+    for (const spend of transactions.filter(
+      (t) => t.direction === TxDirection.COST && t.wallet === wallet.address,
+    )) {
+      const conn = await this.context.mysql.start();
+      try {
+        await this.deductFromAvailableDeposit(wallet, spend.totalPrice, conn);
+        await this.context.mysql.commit(conn);
+      } catch (err) {
+        await this.sendErrorAlert(
+          `Error processing tx spend for ${formatWalletAddress(wallet)}`,
+          { ...spend },
+          err,
+        );
+        await this.context.mysql.rollback(conn);
+      }
+    }
+  }
+
+  private async deductFromAvailableDeposit(
+    wallet: Wallet,
+    amount: string,
+    conn: PoolConnection,
+  ): Promise<void> {
+    const availableDeposit = await new WalletDeposit(
+      {},
+      this.context,
+    ).getOldestWithBalance(wallet.id, conn);
+    if (!availableDeposit.exists()) {
+      return await this.sendErrorAlert(
+        `NO AVAILABLE DEPOSIT! ${formatWalletAddress(wallet)}`,
+        { wallet: wallet.address },
+      );
+    }
+    if (
+      this.subtractAmount(availableDeposit.currentAmount, amount).startsWith(
+        '-',
+      )
+    ) {
+      // if amount is negative, set currentAmount to 0 and recursively deduct the remainder
+      amount = this.subtractAmount(amount, availableDeposit.currentAmount);
+      availableDeposit.currentAmount = ethers.BigNumber.from(0).toString();
+      await availableDeposit.update(SerializeFor.UPDATE_DB, conn);
+      return this.deductFromAvailableDeposit(wallet, amount, conn);
+    }
+    availableDeposit.currentAmount = this.subtractAmount(
+      availableDeposit.currentAmount,
+      amount,
+    );
+    await availableDeposit.update(SerializeFor.UPDATE_DB, conn);
+  }
+
+  private sendErrorAlert(
+    message: string,
+    data: any,
+    logType = LogType.ERROR,
+    logOutput = LogOutput.NOTIFY_ALERT,
+  ) {
+    return this.writeEventLog(
+      {
+        logType,
+        message,
+        service: ServiceName.BLOCKCHAIN,
+        data,
+      },
+      logOutput,
+    );
+  }
+
+  private subtractAmount(amount1: string, amount2: string): string {
+    return ethers.BigNumber.from(amount1)
+      .sub(ethers.BigNumber.from(amount2))
+      .toString();
   }
 }

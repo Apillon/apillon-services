@@ -30,7 +30,6 @@ export enum SubstrateChainName {
 export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
   private chainId: string;
   private chainName: string;
-  private logPrefix: string;
   private wallets: Wallet[];
   // Add as necessary
   private indexer: BaseBlockchainIndexer;
@@ -88,9 +87,9 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         await this.writeEventLog(
           {
             logType: LogType.ERROR,
-            message: `${this.logPrefix}: Error confirming transactions`,
+            message: `Error confirming transactions for wallet ${w.address}`,
             service: ServiceName.BLOCKCHAIN,
-            err: err,
+            err,
             data: {
               error: err,
               wallet: wallet.address,
@@ -163,22 +162,14 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     }
 
     const successTransactions: any = transactions
-      .filter((t: any) => {
-        return t.status == TransactionIndexerStatus.SUCCESS;
-      })
-      .map((t: any): string => {
-        return t.extrinsicHash;
-      });
+      .filter((t: any) => t.status == TransactionIndexerStatus.SUCCESS)
+      .map((t: any): string => t.extrinsicHash);
 
     console.log('Success transactions ', successTransactions);
 
     const failedTransactions: string[] = transactions
-      .filter((t: any) => {
-        return t.status == TransactionIndexerStatus.FAIL;
-      })
-      .map((t: any): string => {
-        return t.extrinsicHash;
-      });
+      .filter((t: any) => t.status == TransactionIndexerStatus.FAIL)
+      .map((t: any): string => t.extrinsicHash);
 
     console.log('Failed transactions ', failedTransactions);
 
@@ -210,7 +201,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         AND transactionHash in ('${transactionHashes.join(`','`)}')`,
       {
         chain: this.chainId,
-        status: status,
+        status,
       },
       conn,
     );
@@ -218,7 +209,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     await this.writeEventLog(
       {
         logType: LogType.INFO,
-        message: `${this.logPrefix}: ${transactionHashes.length} [${
+        message: `${transactionHashes.length} [${
           TransactionStatus[status]
         }] blockchain transactions matched (txHashes=${transactionHashes.join(
           `','`,

@@ -457,7 +457,7 @@ export class TransactionLog extends AdvancedSQLModel {
     this.addressTo = data?.to?.toLowerCase();
     this.amount = data?.value;
 
-    this.hash = data?.hash;
+    this.hash = data?.transactionHash;
     this.wallet = wallet.address?.toLowerCase();
 
     this.status = data?.status === 0 ? TxStatus.COMPLETED : TxStatus.FAILED;
