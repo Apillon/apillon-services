@@ -487,20 +487,6 @@ export class Wallet extends AdvancedSQLModel {
     );
   }
 
-  public async setNonce(lastProcessedNonce: number, conn?: PoolConnection) {
-    await this.getContext().mysql.paramExecute(
-      `
-        UPDATE \`${DbTables.WALLET}\`
-        SET lastProcessedNonce = @lastProcessedNonce,
-            usageTimestamp     = now()
-        WHERE id = @id;
-      `,
-      { id: this.id, lastProcessedNonce },
-      conn,
-    );
-    this.lastProcessedNonce = lastProcessedNonce;
-  }
-
   public async getWallets(
     chain: Chain = null,
     chainType: ChainType = null,
