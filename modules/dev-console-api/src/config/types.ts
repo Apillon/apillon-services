@@ -1,3 +1,5 @@
+import { SubscriptionPackage } from '@apillon/lib';
+
 export enum DbTables {
   USER = 'user',
   PROJECT = 'project',
@@ -59,6 +61,8 @@ export enum ValidatorErrorCode {
   PROJECT_USER_ROLE_ID_NOT_PRESENT = 42204607,
   PROJECT_USER_ROLE_ID_NOT_VALID = 42204608,
   UPDATE_ROLE_ON_PROJECT_ROLE_ID_NOT_PRESENT = 42204611,
+  SUBSCRIPTION_OR_CREDIT_AMOUNT_NOT_PRESENT = 42204612,
+  SUBSCRIPTION_ID_NOT_VALID = 42204613,
 }
 
 /**
@@ -105,3 +109,16 @@ export enum InstructionType {
   VIDEO = 4,
   WIKI = 5,
 }
+
+export const PurchasePriceMapTest = {
+  credits: 'price_1NqBzzGlTglE98hYBZ2Xauqn',
+  [SubscriptionPackage.Larva]: 'price_1NqC4PGlTglE98hYkWZKuSl0',
+  [SubscriptionPackage.Cocoon]: 'price_1NqC55GlTglE98hYPCeH0gUr',
+};
+
+export const PurchasePriceMap = {
+  // TODO
+  credits: '',
+  [SubscriptionPackage.Larva]: '',
+  [SubscriptionPackage.Cocoon]: '',
+};

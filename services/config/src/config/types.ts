@@ -1,9 +1,9 @@
 export enum DbTables {
   QUOTA = 'quota',
   OVERRIDE = 'override',
-  QUOTA_TEMPLATE = 'quotaTemplate',
-  TEMPLATE_VALUE = 'templateValue',
   TERMS = 'terms',
+  SUBSCRIPTION = 'subscription',
+  SUBSCRIPTION_PACKAGE = 'subscription_package',
 }
 
 /**

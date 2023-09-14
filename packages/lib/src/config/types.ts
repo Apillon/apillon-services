@@ -666,3 +666,10 @@ export enum ApiName {
   APILLON_API = 'apillon-api',
   AUTHENTICATION_API = 'authentication-api',
 }
+
+export enum SubscriptionPackage {
+  Freemium = 1,
+  Larva = 2,
+  Cocoon = 3,
+  Butterfly = 4,
+}
