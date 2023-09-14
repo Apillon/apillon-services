@@ -20,7 +20,7 @@ import {
 import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/kilt-indexer.service';
 import { WorkerName } from './worker-executor';
 import { DbTables, TransactionIndexerStatus } from '../config/types';
-import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
+import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust-v2/crust-indexer.service';
 
 export enum SubstrateChainName {
   KILT = 'KILT',
@@ -64,6 +64,8 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       // a shitton transactions at once, this could break. Let's see
       const fromBlock: number = wallet.lastParsedBlock;
       const toBlock: number = blockHeight;
+
+      console.log(this.indexer.toString());
 
       // Get all transactions from the indexer
       const transactions = await this.fetchAllResolvedTransactions(
