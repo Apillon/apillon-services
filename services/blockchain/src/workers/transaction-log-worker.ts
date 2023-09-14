@@ -133,14 +133,18 @@ export class TransactionLogWorker extends BaseQueueWorker {
         // substrate chains has each own indexer
         const subOptions = {
           [SubstrateChain.CRUST]: async () => {
-            const res = await new CrustBlockchainIndexer().getWalletTransfers(
-              wallet.address,
-              lastBlock,
-              limit,
-            );
-            console.log(`Got ${res.transfers.length} Crust transfers!`);
+            const res =
+              await new CrustBlockchainIndexer().getAccountBalanceTransfers(
+                wallet.address,
+                // from block
+                lastBlock,
+                // to block
+                lastBlock + limit,
+              );
+
+            console.log(`Got ${res.length} Crust transfers!`);
             return (
-              res.transfers
+              res
                 .map((x) =>
                   new TransactionLog(
                     {},

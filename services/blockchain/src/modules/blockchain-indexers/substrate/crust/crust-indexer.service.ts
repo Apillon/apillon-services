@@ -109,7 +109,7 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
   ): Promise<TransferTransaction[]> {
     const data: any = await this.graphQlClient.request(
       gql`
-        ${CrustGQLQueries.ACCOUNT_TRANSFERS_BY_TYPE_QUERY}
+        ${CrustGQLQueries.ACCOUNT_STORAGE_ORDER_QUERY}
       `,
       {
         account,
@@ -129,7 +129,7 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
   ): Promise<TransferTransaction[]> {
     const data: any = await this.graphQlClient.request(
       gql`
-        ${CrustGQLQueries.ACCOUNT_TRANSFERS_BY_TYPE_QUERY}
+        ${CrustGQLQueries.ACCOUNT_STORAGE_ORDER_QUERY}
       `,
       {
         account,
@@ -140,5 +140,39 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
     );
 
     return data.marketFileOrders;
+  }
+
+  public async getWalletTransactionsByHash(
+    address: string,
+    extrinsicHash: string,
+  ): Promise<any> {
+    const data: any = await this.graphQlClient.request(
+      gql`
+        ${CrustGQLQueries.ACCOUNT_WALLET_TRANSACTION_BY_HASH}
+      `,
+      {
+        address,
+        extrinsicHash,
+      },
+    );
+
+    return data;
+  }
+
+  public async getWalletTransfers(
+    address: string,
+    extrinsicHash: string,
+  ): Promise<any> {
+    const data: any = await this.graphQlClient.request(
+      gql`
+        ${CrustGQLQueries.ACCOUNT_TRANSFERS_BY_TYPE_QUERY}
+      `,
+      {
+        address,
+        extrinsicHash,
+      },
+    );
+
+    return data;
   }
 }
