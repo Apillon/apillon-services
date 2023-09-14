@@ -1,8 +1,10 @@
+import { Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
   Get,
   Post,
+  Query,
   RawBodyRequest,
   Req,
   UseGuards,
@@ -10,21 +12,28 @@ import {
 import { AuthGuard } from '../../guards/auth.guard';
 import { PaymentsService } from './payments.service';
 import { Headers } from '@nestjs/common';
+import { ValidationGuard } from '../../guards/validation.guard';
+import { PaymentSessionDto } from './dto/payment-session.dto';
+import { ValidateFor } from '@apillon/lib';
 
 @Controller('payments')
 export class PaymentsController {
   constructor(private paymentsService: PaymentsService) {}
 
-  @Get('session-url')
-  @UseGuards(AuthGuard)
-  async getSessionUrl(): Promise<string> {
-    const session = await this.paymentsService.generatePaymentSession();
+  @Get('stripe-session-url')
+  @Validation({ dto: PaymentSessionDto, validateFor: ValidateFor.QUERY })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getStripeSessionUrl(
+    @Query() paymentSessionDto: PaymentSessionDto,
+  ): Promise<string> {
+    const session = await this.paymentsService.generateStripePaymentSession(
+      paymentSessionDto,
+    );
     return session.url;
   }
 
   @Post('/webhook')
   async postWebhook(
-    @Body() body: any,
     @Req() req: RawBodyRequest<Request>,
     @Headers('stripe-signature') stripeSignature: string,
   ): Promise<any> {
@@ -32,6 +41,6 @@ export class PaymentsController {
       req.rawBody,
       stripeSignature,
     );
-    await this.paymentsService.onWebhookEvent(event);
+    await this.paymentsService.stripeWebhookEventHandler(event);
   }
 }

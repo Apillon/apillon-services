@@ -1,51 +1,74 @@
-import { BadRequestErrorCode, CodeException, env } from '@apillon/lib';
+import {
+  BadRequestErrorCode,
+  CodeException,
+  env,
+  getEnumKey,
+} from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
+import { PaymentSessionDto } from './dto/payment-session.dto';
+import { PurchasePriceMap } from '../../config/types';
 
 @Injectable()
 export class PaymentsService {
   constructor(private stripe: Stripe) {}
 
-  async generatePaymentSession(): Promise<
-    Stripe.Response<Stripe.Checkout.Session>
-  > {
-    return await this.stripe.checkout.sessions.create({
-      line_items: [
-        {
-          price: 'price_1NmcbNGlTglE98hYRiHlCOG7',
-          quantity: 1,
-        },
-        {
-          price: 'price_1Nmxj3GlTglE98hYsNt7hm0V',
-          quantity: 1,
-          adjustable_quantity: {
+  async generateStripePaymentSession(
+    paymentSessionDto: PaymentSessionDto,
+  ): Promise<Stripe.Response<Stripe.Checkout.Session>> {
+    const isCreditPurchase = paymentSessionDto.credits;
+
+    const lineItem: Stripe.Checkout.SessionCreateParams.LineItem = {
+      price: isCreditPurchase
+        ? PurchasePriceMap.credits
+        : PurchasePriceMap[paymentSessionDto.subscription_id],
+      quantity: 1,
+      adjustable_quantity: isCreditPurchase
+        ? {
             enabled: true,
             minimum: 1,
-          },
-        },
-      ],
-      mode: 'subscription',
+          }
+        : undefined,
+    };
+    return await this.stripe.checkout.sessions.create({
+      line_items: [lineItem],
+      mode: isCreditPurchase ? 'payment' : 'subscription',
+      metadata: {
+        project_uuid: paymentSessionDto.project_uuid,
+        isCreditPurchase: `${isCreditPurchase}`,
+      },
+      // TODO
       success_url: `https://apillon.io/?success=true`,
       cancel_url: `https://apillon.io/?canceled=true`,
       automatic_tax: { enabled: true },
     });
   }
 
-  async onWebhookEvent(event: Stripe.Event) {
+  async stripeWebhookEventHandler(event: Stripe.Event) {
     switch (event.type) {
       case 'checkout.session.completed': {
+        // https://stripe.com/docs/api/checkout/sessions/object
         const session = event.data.object as any;
         if (session.payment_status !== 'paid') {
           return;
         }
-        // const sessionWithLineItems =
-        //   await this.stripe.checkout.sessions.retrieve(
-        //     event.data.object['id'],
-        //     { expand: ['line_items'] },
-        //   );
-        // const lineItems = sessionWithLineItems.line_items;
+        const project_uuid = session.metadata.project_uuid;
+        const isCreditPurchase = session.metadata.isCreditPurchase === 'true';
+        if (isCreditPurchase) {
+          // TODO: handle credit purchase
+          return;
+        }
+        const { line_items: lineItems } =
+          await this.stripe.checkout.sessions.retrieve(session.id, {
+            expand: ['line_items'],
+          });
+        const subscriptionPackageId = getEnumKey(
+          PurchasePriceMap,
+          lineItems.data[0].price.id,
+        );
         /* TODO:
          * - Save payment, customer and product info to DB
+         * - Save new subscription to DB
          * - Send invoice email
          * - Spend money
          */
