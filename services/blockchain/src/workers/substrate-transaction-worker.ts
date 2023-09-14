@@ -20,7 +20,7 @@ import {
 import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/kilt-indexer.service';
 import { WorkerName } from './worker-executor';
 import { DbTables, TransactionIndexerStatus } from '../config/types';
-import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust-v2/crust-indexer.service';
+import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
 
 export enum SubstrateChainName {
   KILT = 'KILT',

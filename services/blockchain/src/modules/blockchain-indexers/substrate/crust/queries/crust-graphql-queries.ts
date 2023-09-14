@@ -181,4 +181,27 @@ export class CrustGQLQueries {
         fileCid
       }
     }`;
+
+  static ACCOUNT_WALLET_TRANSACTION_BY_HASH = `
+    query getWalletTransactionsByHash(
+      $address: String!
+      $extrinsicHash: String!
+    ) {
+      storageOrders(
+        where: {
+          extrinsicHash_eq: $extrinsicHash
+          account: $address
+        }
+      ) {
+        account
+        extrinsicHash
+      }
+      transfers(
+        where: { extrinsicHash_eq: $extrinsicHash, from: $address }
+      ) {
+        extrinsicHash
+        from
+      }
+    }
+  `;
 }

@@ -231,4 +231,32 @@ export class KiltGQLQueries {
       fee
     }
   }`;
+
+  static ACCOUNT_WALLET_TRANSACTION_BY_HASH = `
+    query getWalletTransactionsByHash(
+      $address: String!
+      $blockHash: String!
+    ) {
+      attestations(
+        where: { account: { id_eq: $address }, extrinsicHash_eq: $blockHash }
+      ) {
+        extrinsicHash
+      }
+      dids(
+        where: { account: { id_eq: $address }, extrinsicHash_eq: $blockHash }
+      ) {
+        extrinsicHash
+      }
+      transfers(
+        where: { account: { id_eq: $address }, extrinsicHash_eq: $blockHash }
+      ) {
+        extrinsicHash
+      }
+      systems(
+        where: { account: { id_eq: $address }, extrinsicHash_eq: $blockHash }
+      ) {
+        extrinsicHash
+      }
+    }
+  `;
 }
