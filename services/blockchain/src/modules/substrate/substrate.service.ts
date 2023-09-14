@@ -403,21 +403,6 @@ export class SubstrateService {
           latestSuccess = transaction.nonce;
           transmitted++;
         } catch (err: any) {
-          //reconnect if connection is lost
-          if (
-            typeof err?.message === 'string' &&
-            (err.message.includes('No response received from RPC endpoint') ||
-              err.message.includes('disconnected from'))
-          ) {
-            // the only way to reconnect to RPC is to create a new ApiPromise instance
-            // since isConnected doesn't change to false and connect throws an error
-            try {
-              await api.send(transaction.rawTransaction);
-            } catch (e: any) {
-              err = e;
-            }
-          }
-
           //try self repair else error
           if (
             err?.data === 'Transaction is outdated' ||

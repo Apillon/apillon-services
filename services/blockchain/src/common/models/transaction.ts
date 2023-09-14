@@ -7,6 +7,7 @@ import {
   PopulateFrom,
   prop,
   SerializeFor,
+  SqlModelStatus,
   TransactionStatus,
 } from '@apillon/lib';
 import { Chain, DbTables } from '../../config/types';
@@ -305,11 +306,13 @@ export class Transaction extends AdvancedSQLModel {
        FROM \`${DbTables.TRANSACTION_QUEUE}\`
        WHERE address = @walletAddress
          AND chain = @chain
-         AND nonce = @nonce LIMIT 1`,
+         AND nonce = @nonce
+         AND status = @status LIMIT 1`,
       {
         chain,
         walletAddress,
         nonce,
+        status: SqlModelStatus.ACTIVE,
       },
       conn,
     );
