@@ -16,7 +16,7 @@ In this repository you will find source and documentation for microservices, API
 | Code | Short    | Service name                             | Package name                                          | path                      |
 | ---- | -------- | ---------------------------------------- | ----------------------------------------------------- | ------------------------- |
 | 00   | #        | Source repository root                   | [@apillon](/)                                         | /                         |
-| 01   | LIB      | Service Code Library                     | [@apillon/lib](/packages/lib/)                        | /packages/lib/            |
+| 01   | LIB      | Common Code Library                      | [@apillon/lib](/packages/lib/)                        | /packages/lib/            |
 | 02   | AMS      | Access Management Service                | [@apillon/access](/services/access/)                  | /services/access/         |
 | 03   | LMAS     | Logging, Monitoring and Alerting Service | [@apillon/monitoring](/services/monitoring/)          | /services/monitoring/     |
 | 04   | DEV-API  | Developer Console API                    | [@apillon/dev-console-api](/modules/dev-console-api/) | /modules/dev-console-api/ |
@@ -31,7 +31,8 @@ In this repository you will find source and documentation for microservices, API
 | 13   | AUTH     | Authentication Service                   | [@apillon/auth](/services/authentication/)            | /services/authentication/ |
 | 14   | TEST-LIB | Testing Library                          | [@apillon/tests-lib](/packages/tests-lib/)            | /packages/tests-lib/      |
 | 15   | WORK-LIB | Worker Library                           | [@apillon/worker-lib](/packages/worker-lib/)          | /packages/worker-lib/     |
-| 16   | BCS      | Blockchain service                       | [@apillon/blockchain](/packages/blockchain/)          | /packages/blockchain/     |
+| 16   | BCS      | Blockchain service                       | [@apillon/blockchain](/services/blockchain/)          | /services/blockchain/     |
+| 17   | SRV-LIB  | Service Code Library                     | [@apillon/service-lib](/packages/service-lib/)        | /packages/service-lib/    |
 
 ## Documentation
 

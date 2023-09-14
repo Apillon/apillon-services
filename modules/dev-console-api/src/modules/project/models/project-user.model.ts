@@ -94,11 +94,9 @@ export class ProjectUser extends AdvancedSQLModel {
       { project_id, user_id },
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   public async isUserOnProject(

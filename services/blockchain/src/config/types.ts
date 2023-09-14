@@ -1,9 +1,4 @@
 import { EvmChain, SubstrateChain } from '@apillon/lib';
-import {
-  DidTransaction,
-  TransferTransaction,
-  AttestationTransaction,
-} from '../modules/blockchain-indexers/substrate/kilt/data-models/kilt-transactions';
 
 export type Chain = SubstrateChain | EvmChain;
 
@@ -20,8 +15,13 @@ export enum CrustTransferType {
   STORAGE_ORDER = 1,
 }
 
-/* KILT */
-// NOTE: Do not change!! These are mappings from the SQUID KILT service
+/**
+ *  --- INDEXER DATA ---
+ * TODO: Consider moving to separate types file indexer related things
+ * NOTE: Do not change definitions unless you know what you are doing!!
+ *       These are mappings from the SQUID INDEXER service
+ **/
+/* KILT PARACHAIN */
 export enum KiltTransactionType {
   BALANCE_TRANSFER = 'balance-transfer',
   BALANCE_DEPOSIT = 'balance-deposit',
@@ -38,24 +38,15 @@ export enum KiltTransactionType {
   SYSTEM_EVENTS_FAIL = 'system-event-fail',
 }
 
-export type TransfersTransactions = {
-  TRANSFER: TransferTransaction[];
-  DEPOSIT: TransferTransaction[];
-  WITHDRAWAL: TransferTransaction[];
-  RESERVED_BALANCES: TransferTransaction[];
-};
-
-export type DidTransactions = {
-  CREATE: DidTransaction[];
-  DELETE: DidTransaction[];
-  UPDATE: DidTransaction[];
-};
-
-export type AttestTransactions = {
-  CREATE: AttestationTransaction[];
-  REMOVE: AttestationTransaction[];
-  REVOKE: AttestationTransaction[];
-};
+/* CRUST PARACHAIN */
+export enum CrustTransactionType {
+  BALANCE_TRANSFER = 'balance-transfer',
+  MARKET_ORDER_FILE_SUCCESS = 'market-order-file-success',
+  // Switched naming order. It's how Crust does it.
+  MARKET_FILE_RENEW_SUCCESS = 'market-file-renew-success',
+  SYSTEM_EVENTS_SUCCESS = 'system-event-success',
+  SYSTEM_EVENTS_FAIL = 'system-event-fail',
+}
 
 /**
  * Error codes

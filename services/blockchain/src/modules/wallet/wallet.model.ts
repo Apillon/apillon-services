@@ -326,7 +326,7 @@ export class Wallet extends AdvancedSQLModel {
   })
   public token: string;
 
-  public async populateById(
+  public override async populateById(
     id: string | number,
     conn?: PoolConnection,
     forUpdate?: boolean,

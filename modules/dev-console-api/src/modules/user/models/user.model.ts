@@ -157,19 +157,8 @@ export class User extends AdvancedSQLModel {
     super(data, context);
   }
 
-  public async populateByUUID(user_uuid: string) {
-    const data = await this.db().paramExecute(
-      `
-        SELECT *
-        FROM \`${DbTables.USER}\` u
-        WHERE u.user_uuid = @user_uuid
-      `,
-      { user_uuid },
-    );
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    }
-    return this.reset();
+  public override async populateByUUID(user_uuid: string) {
+    return super.populateByUUID(user_uuid, 'user_uuid');
   }
 
   public async getUserDetail(user_uuid: string) {

@@ -73,20 +73,18 @@ export class ProjectUserPendingInvitation extends AdvancedSQLModel {
   ): Promise<this> {
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
-      WHERE project_id = @project_id 
-      AND email = @email 
+      WHERE project_id = @project_id
+      AND email = @email
       AND status <> ${SqlModelStatus.DELETED};
       `,
       { project_id, email },
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   public async getListByEmail(
@@ -98,7 +96,7 @@ export class ProjectUserPendingInvitation extends AdvancedSQLModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
       WHERE email = @email AND status <> ${SqlModelStatus.DELETED};
       `,

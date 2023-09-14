@@ -316,9 +316,9 @@ export class FileUploadRequest extends AdvancedSQLModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
-      WHERE session_id = @session_id 
+      WHERE session_id = @session_id
       AND status <> ${SqlModelStatus.DELETED};
       `,
       { session_id },
@@ -342,39 +342,20 @@ export class FileUploadRequest extends AdvancedSQLModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
       WHERE s3FileKey = @s3FileKey AND status <> ${SqlModelStatus.DELETED};
       `,
       { s3FileKey },
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   public async populateByUUID(file_uuid: string): Promise<this> {
-    if (!file_uuid) {
-      throw new Error('file_uuid should not be null');
-    }
-
-    const data = await this.getContext().mysql.paramExecute(
-      `
-      SELECT * 
-      FROM \`${this.tableName}\`
-      WHERE file_uuid = @file_uuid AND status <> ${SqlModelStatus.DELETED};
-      `,
-      { file_uuid },
-    );
-
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return super.populateByUUID(file_uuid, 'file_uuid');
   }
 
   public async getList(

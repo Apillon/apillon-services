@@ -54,7 +54,7 @@ export class RepublishIpnsWorker extends BaseQueueWorker {
         console.info('IPNS republished', item);
       } catch (error) {
         console.error('Error republishing IPNS.', error, item);
-        if (error.data.Message === 'no key by the given name was found') {
+        if (error.Message === 'no key by the given name was found') {
           try {
             console.info(
               'Calling IPFSService.publishToIPNS so that new key will be generated...',

@@ -6,7 +6,6 @@ import {
 import { Wallet } from '../modules/wallet/wallet.model';
 import { BaseBlockchainIndexer } from '../modules/blockchain-indexers/substrate/base-blockchain-indexer';
 import {
-  AppEnvironment,
   ChainType,
   Context,
   LogType,
@@ -14,7 +13,6 @@ import {
   ServiceName,
   SubstrateChain,
   TransactionStatus,
-  env,
 } from '@apillon/lib';
 import {
   DbTables,
@@ -26,6 +24,11 @@ import {
   processWebhooks,
 } from '../lib/webhook-procedures';
 import { ParachainConfig } from '../config/substrate-parachain';
+
+export enum SubstrateChainName {
+  KILT = 'KILT',
+  CRUST = 'CRUST',
+}
 
 export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
   private chainId: string;
@@ -61,6 +64,8 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       // a shitton transactions at once, this could break. Let's see
       const fromBlock: number = wallet.lastParsedBlock;
       const toBlock: number = blockHeight;
+
+      console.log(this.indexer.toString());
 
       // Get all transactions from the indexer
       const transactions = await this.fetchAllResolvedTransactions(
