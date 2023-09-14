@@ -9,6 +9,7 @@ import { HostingModule } from './modules/hosting/hosting.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { SystemModule } from './modules/system/system.module';
 import { NftModule } from './modules/nfts/nft.module';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { NftModule } from './modules/nfts/nft.module';
     SystemModule,
     AuthModule,
   ],
-  controllers: [],
+  controllers: [AppController],
   providers: [],
 })
 export class AppModule {

@@ -29,7 +29,7 @@ module.exports = {
   rules: {
     semi: [2, 'always'],
     quotes: [1, 'single', { allowTemplateLiterals: true }],
-    curly: 'off',
+    curly: [2, 'all'],
     '@typescript-eslint/interface-name-prefix': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
