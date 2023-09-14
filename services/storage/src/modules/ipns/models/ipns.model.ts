@@ -201,11 +201,9 @@ export class Ipns extends ProjectAccessModel {
       { project_uuid, name },
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   public async populateByKey(key: string): Promise<this> {

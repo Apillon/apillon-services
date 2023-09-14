@@ -1,6 +1,5 @@
-import { Inject, Injectable, NestMiddleware } from '@nestjs/common';
+import { Injectable, NestMiddleware } from '@nestjs/common';
 import type { Request } from 'express';
-import { MySql } from '@apillon/lib';
 import { AuthenticationApiContext } from '../context';
 
 export interface IRequest extends Request {
@@ -10,7 +9,8 @@ export interface IRequest extends Request {
 
 /**
  * Returns a middleware which creates a context.
- */ @Injectable()
+ */
+@Injectable()
 export class ContextMiddleware implements NestMiddleware {
   use(req: IRequest, res, next) {
     let requestId = null;

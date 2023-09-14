@@ -198,11 +198,32 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
       conn,
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
+  }
+
+  public async populateByUUID(
+    uuid: string,
+    uuid_property?: string, // Nullable because not needed in derived classes
+  ): Promise<this> {
+    if (!uuid || !uuid_property) {
+      throw new Error(`uuid should not be null: ${uuid_property}: ${uuid}`);
     }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+        SELECT *
+        FROM \`${this.tableName}\`
+        WHERE ${uuid_property} = @uuid
+        AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { uuid },
+    );
+
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   /**

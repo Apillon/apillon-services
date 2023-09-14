@@ -82,24 +82,7 @@ export class FileUploadSession extends AdvancedSQLModel {
   })
   public sessionStatus: number;
 
-  public async populateByUUID(uuid: string): Promise<this> {
-    if (!uuid) {
-      throw new Error('uuid should not be null');
-    }
-
-    const data = await this.getContext().mysql.paramExecute(
-      `
-      SELECT * 
-      FROM \`${this.tableName}\`
-      WHERE session_uuid = @uuid AND status <> ${SqlModelStatus.DELETED};
-      `,
-      { uuid },
-    );
-
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+  public override async populateByUUID(uuid: string): Promise<this> {
+    return super.populateByUUID(uuid, 'session_uuid');
   }
 }

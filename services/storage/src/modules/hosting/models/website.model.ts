@@ -379,7 +379,7 @@ export class Website extends ProjectAccessModel {
   })
   public productionBucket: Bucket;
 
-  public async populateById(
+  public override async populateById(
     id: number | string,
     conn?: PoolConnection,
   ): Promise<this> {
@@ -395,7 +395,7 @@ export class Website extends ProjectAccessModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
       WHERE ( id LIKE @id OR website_uuid LIKE @id)
       AND status <> ${SqlModelStatus.DELETED};
@@ -404,11 +404,9 @@ export class Website extends ProjectAccessModel {
       conn,
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   /**
