@@ -158,6 +158,7 @@ export enum ScsEventType {
   GET_ACTIVE_TERMS = 'get-active-terms',
   CREATE_OVERRIDE = 'create-override',
   DELETE_OVERRIDE = 'delete-override',
+  CREATE_SUBSCRIPTION = 'create-subscription',
 }
 
 export enum NftsEventType {
@@ -205,6 +206,7 @@ export enum ServiceName {
   NFTS = 'NFTS',
   REFERRAL = 'REFERRAL',
   BLOCKCHAIN = 'BLOCKCHAIN',
+  SCS = 'SCS',
 }
 
 export enum ServiceCode {

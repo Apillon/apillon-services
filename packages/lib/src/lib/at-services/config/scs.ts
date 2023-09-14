@@ -1,5 +1,9 @@
 import { env } from '../../../config/env';
-import { AppEnvironment, ScsEventType } from '../../../config/types';
+import {
+  AppEnvironment,
+  ScsEventType,
+  SubscriptionPackage,
+} from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { CreateQuotaOverrideDto } from './dtos/create-quota-override.dto';
@@ -79,5 +83,16 @@ export class Scs extends BaseService {
     const scsResponse = await this.callService(data);
 
     return scsResponse.data.map((x) => new TermsDto().populate(x));
+  }
+
+  public async createSubscription(
+    subscriptionId: SubscriptionPackage,
+    project_uuid: string,
+  ) {
+    return await this.callService({
+      eventName: ScsEventType.CREATE_SUBSCRIPTION,
+      subscriptionId,
+      project_uuid,
+    });
   }
 }

@@ -1,6 +1,5 @@
 import { Validation } from '@apillon/modules-lib';
 import {
-  Body,
   Controller,
   Get,
   Post,

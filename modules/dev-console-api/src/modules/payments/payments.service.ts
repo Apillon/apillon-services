@@ -1,6 +1,7 @@
 import {
   BadRequestErrorCode,
   CodeException,
+  Scs,
   env,
   getEnumKey,
 } from '@apillon/lib';
@@ -62,13 +63,14 @@ export class PaymentsService {
           await this.stripe.checkout.sessions.retrieve(session.id, {
             expand: ['line_items'],
           });
-        const subscriptionPackageId = getEnumKey(
+        const subscriptionPackageId = +getEnumKey(
           PurchasePriceMap,
           lineItems.data[0].price.id,
         );
+
+        await new Scs().createSubscription(subscriptionPackageId, project_uuid);
         /* TODO:
          * - Save payment, customer and product info to DB
-         * - Save new subscription to DB
          * - Send invoice email
          * - Spend money
          */
