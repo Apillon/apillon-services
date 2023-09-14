@@ -2,13 +2,14 @@ import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Keyring } from '@polkadot/keyring';
 import { Wallet } from '../wallet/wallet.model';
 import {
-  SubstrateChain,
   ChainType,
+  env,
+  IsolationLevel,
   Lmas,
   LogType,
   SerializeFor,
   ServiceName,
-  env,
+  SubstrateChain,
   TransactionStatus,
   getEnumKey,
 } from '@apillon/lib';
@@ -21,8 +22,100 @@ import { typesBundle as KiltTypesBundle } from '@kiltprotocol/type-definitions';
 import { LogOutput, sendToWorkerQueue } from '@apillon/workers-lib';
 import { WorkerName } from '../../workers/worker-executor';
 import { ServiceContext } from '@apillon/service-lib';
-import { IsolationLevel } from '@apillon/lib';
 import { getWalletSeed } from '../../lib/seed';
+import { CrustBlockchainIndexer } from '../blockchain-indexers/substrate/crust/crust-indexer.service';
+import { KiltBlockchainIndexer } from '../blockchain-indexers/substrate/kilt/kilt-indexer.service';
+
+class Api {
+  protected endpointUrl: string = null;
+  protected apiPromise: ApiPromise = null;
+  protected provider: WsProvider = null;
+  protected typesBundle: any = null;
+  protected started: Date = null;
+
+  constructor(endpointUrl: string, typesBundle: any) {
+    this.endpointUrl = endpointUrl;
+    this.typesBundle = typesBundle;
+    this.started = new Date();
+  }
+
+  async destroy() {
+    if (this.provider) {
+      await this.provider.disconnect();
+      this.provider = null;
+      this.apiPromise = null;
+    }
+    console.log('Timing after destroy', this.getTiming(), 's');
+  }
+
+  async getUnsignedTransaction(transaction: string) {
+    console.log('Timing before unsigned transaction', this.getTiming(), 's');
+    return (await this.getApi()).tx(transaction);
+  }
+
+  async send(rawTransaction: string) {
+    console.log('Timing before send', this.getTiming(), 's');
+    return (await this.getApi()).tx(rawTransaction).send();
+  }
+
+  /**
+   * Tries to self repair nonce based on last on-chain nonce and indexer state.
+   * @param wallet Wallet
+   * @param transactionHash
+   */
+  async trySelfRepairNonce(wallet: Wallet, transactionHash: string) {
+    console.log('Timing before self repair', this.getTiming(), 's');
+    const nextOnChainNonce = (
+      await (await this.getApi()).query.system.account(wallet.address)
+    ).nonce.toNumber();
+    if (!nextOnChainNonce) {
+      return;
+    }
+    const lastProcessedNonce = nextOnChainNonce - 1;
+    if (wallet.lastProcessedNonce > lastProcessedNonce) {
+      return;
+    }
+
+    if (await isTransactionIndexed(wallet, transactionHash)) {
+      return lastProcessedNonce;
+    }
+  }
+
+  protected async getApi() {
+    console.log('Timing before get API', this.getTiming(), 's');
+    if (!this.provider) {
+      this.provider = new WsProvider(this.endpointUrl);
+      this.apiPromise = await ApiPromise.create({
+        provider: this.provider,
+        typesBundle: this.typesBundle,
+        throwOnConnect: true,
+      });
+      console.log('Timing after first connect', this.getTiming(), 's');
+      return this.apiPromise;
+    } else {
+      try {
+        await this.provider.send('health_check', null);
+        console.log('Timing after health check', this.getTiming(), 's');
+        return this.apiPromise;
+      } catch (e) {
+        this.apiPromise = await ApiPromise.create({
+          provider: this.provider,
+          typesBundle: this.typesBundle,
+          throwOnConnect: true,
+        });
+        console.log('Timing after reconnect', this.getTiming(), 's');
+        return this.apiPromise;
+      }
+    }
+  }
+
+  protected getTiming() {
+    if (!this.started) {
+      return null;
+    }
+    return (new Date().getTime() - this.started.getTime()) / 1000;
+  }
+}
 
 export class SubstrateService {
   static async createTransaction(
@@ -46,16 +139,13 @@ export class SubstrateService {
       params.chain,
       ChainType.SUBSTRATE,
     );
-
     if (!endpoint.exists()) {
       throw new BlockchainCodeException({
         code: BlockchainErrorCode.INVALID_CHAIN,
         status: 400,
       });
     }
-
     console.log('endpoint: ', endpoint.url);
-    const provider = new WsProvider(endpoint.url);
 
     let keyring; // generate privatekey from mnemonic - different for different chains
     let typesBundle = null; // different types for different chains
@@ -80,20 +170,13 @@ export class SubstrateService {
 
     console.info('Creating APIPromise');
     // TODO: Refactor to txwrapper when typesBundle supported
-    const api = await ApiPromise.create({
-      provider,
-      typesBundle, // TODO: add
-      throwOnConnect: true,
-    });
-
+    const api = new Api(endpoint.url, typesBundle);
     console.info('Start db transaction.');
     // Start connection to database at the beginning of the function
     const conn = await context.mysql.start(IsolationLevel.READ_COMMITTED);
 
     try {
       let wallet = new Wallet({}, context);
-
-      // if specific address is specified to be used for this transaction fetch the wallet
       if (params.fromAddress) {
         wallet = await wallet.populateByAddress(
           params.chain,
@@ -102,8 +185,6 @@ export class SubstrateService {
           conn,
         );
       }
-
-      // if address is not specified or not found then get the least used wallet
       if (!wallet.exists()) {
         wallet = await wallet.populateByLeastUsed(
           params.chain,
@@ -119,7 +200,7 @@ export class SubstrateService {
       console.info('Generating unsigned transaction');
       const pair = keyring.addFromUri(seed);
       console.log('Address: ', pair.address);
-      const unsignedTx = api.tx(params.transaction);
+      const unsignedTx = await api.getUnsignedTransaction(params.transaction);
       // TODO: add validation service for transaction to detect and prevent weird transactions.
 
       // TODO: Determine the best era
@@ -128,7 +209,7 @@ export class SubstrateService {
         era: 600, // number of blocks the transaction is valid - 6s per block * 6000 blocks / 60 = 600 minutes -> 10 hours
       });
 
-      console.info('signAsync SUCCESSFULL. Saving transaction to DB.');
+      console.info('signAsync SUCCESSFUL. Saving transaction to DB.');
       const signedSerialized = signed.toHex();
 
       const transaction = new Transaction({}, context);
@@ -146,11 +227,10 @@ export class SubstrateService {
         transactionStatus: TransactionStatus.PENDING,
         project_uuid: params.project_uuid,
       });
-
       await transaction.insert(SerializeFor.INSERT_DB, conn);
       console.info('Transaction inserted. Iterating nonce ...');
-      await wallet.iterateNonce(conn);
 
+      await wallet.iterateNonce(conn);
       await conn.commit();
 
       await new Lmas().writeLog({
@@ -217,7 +297,7 @@ export class SubstrateService {
         status: 500,
       });
     } finally {
-      await api.disconnect();
+      await api.destroy();
     }
   }
 
@@ -254,22 +334,16 @@ export class SubstrateService {
     context: ServiceContext,
     eventLogger: (options: any, logOutput: LogOutput) => Promise<void>,
   ) {
-    // console.log('chain: ', _event.chain);
-    // console.log('address: ', _event.address);
     const wallets = await new Wallet({}, context).getWallets(
       _event.chain,
       ChainType.SUBSTRATE,
       _event.address,
     );
-    // console.log('wallets: ', wallets);
     const endpoint = await new Endpoint({}, context).populateByChain(
       _event.chain,
       ChainType.SUBSTRATE,
     );
-    // console.log('endpoint: ', endpoint.url);
-    const provider = new WsProvider(endpoint.url);
     let typesBundle = null;
-    // console.log('CHAIN  ', _event.chain);
     switch (_event.chain) {
       case SubstrateChain.KILT: {
         typesBundle = KiltTypesBundle;
@@ -285,12 +359,7 @@ export class SubstrateService {
     }
 
     // TODO: Refactor to txwrapper when typesBundle supported
-    const api = await ApiPromise.create({
-      provider,
-      typesBundle,
-      throwOnConnect: true,
-    });
-
+    const api = new Api(endpoint.url, typesBundle);
     for (const wallet of wallets) {
       const transactions = await new Transaction({}, context).getList(
         _event.chain,
@@ -298,34 +367,84 @@ export class SubstrateService {
         wallet.address,
         wallet.lastProcessedNonce,
       );
-
-      // continue to next wallet if there is no transactions!
       if (!transactions.length) {
         continue;
       }
 
       let latestSuccess = null;
       let transmitted = 0;
-      // console.log('transactions: ', transactions);
       // TODO: consider batching transaction api.tx.utility.batch
       for (const transaction of transactions) {
-        try {
-          if (!api.isConnected) {
-            await new Lmas().writeLog({
+        if (
+          [
+            TransactionStatus.CONFIRMED,
+            TransactionStatus.FAILED,
+            TransactionStatus.ERROR,
+          ].includes(transaction.transactionStatus)
+        ) {
+          latestSuccess = transaction.nonce;
+          await eventLogger(
+            {
               logType: LogType.INFO,
-              message: 'Reconnecting to RPC via ApiPromise',
-              location: 'SubstrateService.createTransaction',
+              message: `Transaction with id ${transaction.id} was skipped since it had final status in DB (last success nonce was bumped to transaction nonce).`,
               service: ServiceName.BLOCKCHAIN,
-            });
-            await api.connect();
-          }
-          const signedTx = api.tx(transaction.rawTransaction);
-          await signedTx.send();
-          console.log('successfuly transmited');
+              data: {
+                transactionId: transaction.id,
+                latestSuccess,
+              },
+            },
+            LogOutput.EVENT_INFO,
+          );
+          continue;
+        }
+
+        try {
+          await api.send(transaction.rawTransaction);
+          console.log('successfully transmitted');
           latestSuccess = transaction.nonce;
           transmitted++;
-        } catch (err) {
-          if (eventLogger) {
+        } catch (err: any) {
+          //try self repair else error
+          if (
+            err?.data === 'Transaction is outdated' ||
+            (typeof err?.message === 'string' &&
+              err.message.includes('Transaction is temporarily banned'))
+          ) {
+            const selfRepairNonce = await api.trySelfRepairNonce(
+              wallet,
+              transaction.transactionHash,
+            );
+            latestSuccess = selfRepairNonce;
+            if (selfRepairNonce) {
+              await eventLogger(
+                {
+                  logType: LogType.INFO,
+                  message: `Last success nonce was repaired and set to ${selfRepairNonce}.`,
+                  service: ServiceName.BLOCKCHAIN,
+                  data: {
+                    wallet: wallet.address,
+                    selfRepairNonce,
+                  },
+                },
+                LogOutput.EVENT_INFO,
+              );
+            } else {
+              await eventLogger(
+                {
+                  logType: LogType.ERROR,
+                  message: 'Could not repair last success nonce.',
+                  service: ServiceName.BLOCKCHAIN,
+                  data: {
+                    wallet: wallet.address,
+                    walletLastProcessedNonce: wallet.lastProcessedNonce,
+                    transactionNonce: transaction.nonce,
+                    selfRepairNonce,
+                  },
+                },
+                LogOutput.NOTIFY_WARN,
+              );
+            }
+          } else {
             await eventLogger(
               {
                 logType: LogType.ERROR,
@@ -342,56 +461,74 @@ export class SubstrateService {
               },
               LogOutput.NOTIFY_WARN,
             );
-          } else {
-            await new Lmas().writeLog({
-              logType: LogType.ERROR,
-              message: 'Error transmitting transaction',
-              location: 'SubstrateService.transmitTransactions',
-              service: ServiceName.BLOCKCHAIN,
-              data: {
-                error: err,
-                wallet: wallet.address,
-              },
-            });
+            break;
           }
-          break;
         }
       }
-      await api.disconnect();
 
       if (latestSuccess) {
         const dbWallet = new Wallet(wallet, context);
         await dbWallet.updateLastProcessedNonce(latestSuccess);
       }
-      if (eventLogger) {
-        await eventLogger(
-          {
-            logType: LogType.COST,
-            message: 'Substrate transactions submitted',
-            service: ServiceName.BLOCKCHAIN,
-            data: {
-              wallet,
-              numOfTransactions: transactions.length,
-              transmitted,
-            },
-          },
-          LogOutput.EVENT_INFO,
-        );
-      } else {
-        await new Lmas().writeLog({
-          context,
+      await eventLogger(
+        {
           logType: LogType.COST,
           message: 'Substrate transactions submitted',
-          location: `SubstrateService.transmitTransactions`,
           service: ServiceName.BLOCKCHAIN,
           data: {
             wallet,
             numOfTransactions: transactions.length,
             transmitted,
           },
-        });
-      }
+        },
+        LogOutput.EVENT_INFO,
+      );
     }
+    await api.destroy();
   }
+
   //#region
+}
+
+/**
+ * Checks indexer to determine if transaction exists (is indexed).
+ * @param wallet Wallet
+ * @param transactionHash
+ */
+async function isTransactionIndexed(wallet: Wallet, transactionHash: string) {
+  if (wallet.chainType !== ChainType.SUBSTRATE) {
+    throw new BlockchainCodeException({
+      code: BlockchainErrorCode.INVALID_CHAIN,
+      status: 400,
+      errorMessage: 'Only substrate chain types supported',
+    });
+  }
+  let transactions = {};
+  switch (wallet.chain) {
+    case SubstrateChain.KILT:
+      transactions =
+        await new KiltBlockchainIndexer().getWalletTransactionsByHash(
+          wallet.address,
+          transactionHash,
+        );
+      break;
+    case SubstrateChain.CRUST:
+      transactions =
+        await new CrustBlockchainIndexer().getWalletTransactionsByHash(
+          wallet.address,
+          transactionHash,
+        );
+      break;
+    default:
+      throw new BlockchainCodeException({
+        code: BlockchainErrorCode.INVALID_CHAIN,
+        status: 400,
+        errorMessage: `Chain ${wallet.chain} is not supported.`,
+      });
+  }
+  return Object.values(transactions).reduce(
+    (transactionExists, transaction) =>
+      transactionExists || (Array.isArray(transaction) && transaction.length),
+    false,
+  );
 }

@@ -160,8 +160,8 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     return data.transfers;
   }
 
-  /* NOTE: An amount X of balance Y becomes reserved when a did submittion happens.
-          In this case, 2 KILT tokens are reserved for the creation of that DID document  
+  /* NOTE: An amount X of balance Y becomes reserved when a did submitting happens.
+     In this case, 2 KILT tokens are reserved for the creation of that DID document
   */
   public async getAccountReserved(
     account: string,
@@ -315,5 +315,43 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
       },
     );
     return data.attestations;
+  }
+
+  public async getWalletTransactionsByHash(
+    address: string,
+    blockHash: string,
+  ): Promise<any> {
+    const GRAPHQL_QUERY = gql`
+      query getWalletTransactionsByHash(
+        $address: String!
+        $blockHash: String!
+      ) {
+        attestations(
+          where: { account: { id_eq: $address }, extrinsicHash_eq: $blockHash }
+        ) {
+          extrinsicHash
+        }
+        dids(
+          where: { account: { id_eq: $address }, extrinsicHash_eq: $blockHash }
+        ) {
+          extrinsicHash
+        }
+        transfers(
+          where: { account: { id_eq: $address }, extrinsicHash_eq: $blockHash }
+        ) {
+          extrinsicHash
+        }
+        systems(
+          where: { account: { id_eq: $address }, extrinsicHash_eq: $blockHash }
+        ) {
+          extrinsicHash
+        }
+      }
+    `;
+
+    return await this.graphQlClient.request(GRAPHQL_QUERY, {
+      address,
+      blockHash,
+    });
   }
 }

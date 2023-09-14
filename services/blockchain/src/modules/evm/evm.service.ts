@@ -23,6 +23,45 @@ import { getWalletSeed } from '../../lib/seed';
 import { transmitAndProcessEvmTransaction } from '../../lib/transmit-and-process-evm-transaction';
 import { WorkerName } from '../../workers/worker-executor';
 
+async function trySelfRepairNonce(
+  provider: ethers.providers.JsonRpcProvider,
+  context: ServiceContext,
+  wallet: Wallet,
+) {
+  const lastOnChainNonce = await provider.getTransactionCount(
+    wallet.address,
+    'pending',
+  );
+  if (!lastOnChainNonce) {
+    return;
+  }
+  const lastProcessedNonce = lastOnChainNonce - 1;
+  if (wallet.lastProcessedNonce > lastProcessedNonce) {
+    return;
+  }
+  const lastTx = await new Transaction(
+    {},
+    context,
+  ).getLastTransactionByChainWalletAndNonce(
+    wallet.chain,
+    wallet.address,
+    lastProcessedNonce,
+  );
+  if (!lastTx) {
+    return;
+  }
+
+  const lastOnChainTx = await provider.getTransaction(lastTx.transactionHash);
+  if (
+    lastOnChainTx.from !== wallet.address ||
+    lastOnChainTx.nonce !== lastProcessedNonce
+  ) {
+    return;
+  }
+
+  return lastProcessedNonce;
+}
+
 export class EvmService {
   static async createTransaction(
     {
@@ -309,8 +348,6 @@ export class EvmService {
         wallet.address,
         wallet.lastProcessedNonce,
       );
-
-      // continue to next wallet if there is no transactions!
       if (!transactions.length) {
         continue;
       }
@@ -319,12 +356,73 @@ export class EvmService {
       let transmitted = 0;
 
       for (const transaction of transactions) {
+        if (
+          [
+            TransactionStatus.CONFIRMED,
+            TransactionStatus.FAILED,
+            TransactionStatus.ERROR,
+          ].includes(transaction.transactionStatus)
+        ) {
+          latestSuccess = transaction.nonce;
+          await eventLogger(
+            {
+              logType: LogType.INFO,
+              message: `Transaction with id ${transaction.id} was skipped since it had final status in DB (last success nonce was bumped to transaction nonce).`,
+              service: ServiceName.BLOCKCHAIN,
+              data: {
+                transactionId: transaction.id,
+                latestSuccess,
+              },
+            },
+            LogOutput.EVENT_INFO,
+          );
+          continue;
+        }
         try {
           await provider.sendTransaction(transaction.rawTransaction);
           latestSuccess = transaction.nonce;
           transmitted++;
         } catch (err) {
-          if (eventLogger) {
+          if (
+            err?.reason === 'nonce has already been used' ||
+            err?.error?.message === 'already known'
+          ) {
+            const selfRepairNonce = await trySelfRepairNonce(
+              provider,
+              context,
+              wallet,
+            );
+            latestSuccess = selfRepairNonce;
+            if (selfRepairNonce) {
+              await eventLogger(
+                {
+                  logType: LogType.INFO,
+                  message: `Last success nonce was repaired and set to ${selfRepairNonce}.`,
+                  service: ServiceName.BLOCKCHAIN,
+                  data: {
+                    selfRepairNonce,
+                    wallet: wallet.address,
+                  },
+                },
+                LogOutput.EVENT_INFO,
+              );
+            } else {
+              await eventLogger(
+                {
+                  logType: LogType.ERROR,
+                  message: 'Could not repair last success nonce.',
+                  service: ServiceName.BLOCKCHAIN,
+                  data: {
+                    wallet: wallet.address,
+                    walletLastProcessedNonce: wallet.lastProcessedNonce,
+                    transactionNonce: transaction.nonce,
+                    selfRepairNonce,
+                  },
+                },
+                LogOutput.NOTIFY_WARN,
+              );
+            }
+          } else {
             await eventLogger(
               {
                 logType: LogType.ERROR,
@@ -341,25 +439,14 @@ export class EvmService {
               },
               LogOutput.NOTIFY_WARN,
             );
-          } else {
-            await new Lmas().writeLog({
-              logType: LogType.ERROR,
-              message: 'Error transmitting transaction',
-              location: 'EvmService.transmitTransactions',
-              service: ServiceName.BLOCKCHAIN,
-              data: {
-                error: err,
-                wallet: wallet.address,
-              },
-            });
+            if (
+              env.APP_ENV === AppEnvironment.TEST ||
+              env.APP_ENV === AppEnvironment.LOCAL_DEV
+            ) {
+              throw err;
+            }
+            break;
           }
-          if (
-            env.APP_ENV === AppEnvironment.TEST ||
-            env.APP_ENV === AppEnvironment.LOCAL_DEV
-          ) {
-            throw err;
-          }
-          break;
         }
       }
 
@@ -368,34 +455,19 @@ export class EvmService {
         await dbWallet.updateLastProcessedNonce(latestSuccess);
       }
 
-      if (eventLogger) {
-        await eventLogger(
-          {
-            logType: LogType.COST,
-            message: 'EVM transactions submitted',
-            service: ServiceName.BLOCKCHAIN,
-            data: {
-              wallet,
-              numOfTransactions: transactions.length,
-              transmitted,
-            },
-          },
-          LogOutput.EVENT_INFO,
-        );
-      } else {
-        await new Lmas().writeLog({
-          context,
+      await eventLogger(
+        {
           logType: LogType.COST,
           message: 'EVM transactions submitted',
-          location: `EvmService.transmitTransactions`,
           service: ServiceName.BLOCKCHAIN,
           data: {
             wallet,
             numOfTransactions: transactions.length,
             transmitted,
           },
-        });
-      }
+        },
+        LogOutput.EVENT_INFO,
+      );
     }
     // TODO: call transaction checker
   }

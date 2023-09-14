@@ -239,4 +239,41 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
     const data: BlockHeight = await this.graphQlClient.request(GRAPHQL_QUERY);
     return data.squidStatus.height;
   }
+
+  public async getWalletTransactionsByHash(
+    address: string,
+    extrinsicHash: string,
+  ): Promise<any> {
+    const GRAPHQL_QUERY = gql`
+      query getWalletTransactionsByHash(
+        $address: String!
+        $extrinsicHash: String!
+      ) {
+        storageOrders(
+          where: {
+            extrinsicHash_eq: $extrinsicHash
+            account: { id_eq: $address }
+          }
+        ) {
+          account {
+            id
+          }
+          extrinsicHash
+        }
+        transfers(
+          where: { extrinsicHash_eq: $extrinsicHash, from: { id_eq: $address } }
+        ) {
+          extrinsicHash
+          from {
+            id
+          }
+        }
+      }
+    `;
+
+    return await this.graphQlClient.request(GRAPHQL_QUERY, {
+      address,
+      extrinsicHash,
+    });
+  }
 }

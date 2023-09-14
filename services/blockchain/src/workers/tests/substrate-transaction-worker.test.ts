@@ -15,6 +15,20 @@ import { Transaction } from '../../common/models/transaction';
 import { Wallet } from '../../modules/wallet/wallet.model';
 import { SubstrateTransactionWorker } from '../substrate-transaction-worker';
 import { WorkerName } from '../worker-executor';
+import { ApiPromise, WsProvider } from '@polkadot/api';
+import { SubstrateService } from '../../modules/substrate/substrate.service';
+import { Endpoint } from '../../common/models/endpoint';
+import { Keyring } from '@polkadot/keyring';
+import { typesBundleForPolkadot } from '@crustio/type-definitions';
+import HttpRequestMock from 'http-request-mock';
+import { KeyringPair } from '@polkadot/keyring/types';
+
+const CHAIN_TYPE = ChainType.SUBSTRATE;
+const CRUST_RPC_URL = 'wss://rpc.crust.network';
+const CRUST_WALLET_ADDRESS =
+  'cTJUoNhua1ymvD87wCLjBrHb8yZTYXy5Ru2kBoxhia8kddYCq';
+const CRUST_WALLET_SEED =
+  'fine circle fiction good shop hand canal approve over canal border mixed';
 
 describe('Substrate tests | KILT', () => {
   let stage: Stage;
@@ -25,12 +39,11 @@ describe('Substrate tests | KILT', () => {
     stage = await setupTest();
     env.BLOCKCHAIN_KILT_GRAPHQL_SERVER = 'http://3.251.2.33:8082/graphql';
     const chain = SubstrateChain.KILT;
-    const chainType = ChainType.SUBSTRATE;
 
     wallet = await new Wallet(
       {
         chain,
-        chainType,
+        chainType: CHAIN_TYPE,
         address: '4qb612mWyrA2Ga2WhXRgYE7tqo8rGs6f6UBZciqcJvfYUGTp',
         // This is actually not correct - the seed should match the address
         seed: mnemonicGenerate(),
@@ -42,6 +55,210 @@ describe('Substrate tests | KILT', () => {
 
   afterAll(async () => {
     await releaseStage(stage);
+  });
+
+  describe('crust tests', () => {
+    const chain = SubstrateChain.CRUST;
+    let api: ApiPromise,
+      lastProcessedNonceOnChain: number,
+      crustWallet: Wallet,
+      pair: KeyringPair;
+    const httpMocker = HttpRequestMock.setup();
+
+    beforeAll(async () => {
+      const endpoint = await new Endpoint(
+        {
+          url: CRUST_RPC_URL,
+          chain,
+          chainType: CHAIN_TYPE,
+        },
+        stage.context,
+      ).insert();
+      const provider = new WsProvider(endpoint.url);
+      api = await ApiPromise.create({
+        provider,
+        typesBundle: typesBundleForPolkadot,
+        throwOnConnect: true,
+      });
+      const lastNonceOnChain = (
+        await api.query.system.account(CRUST_WALLET_ADDRESS)
+      ).nonce.toNumber();
+      lastProcessedNonceOnChain = lastNonceOnChain - 1;
+      crustWallet = await new Wallet(
+        {
+          chain,
+          chainType: CHAIN_TYPE,
+          seed: CRUST_WALLET_SEED,
+          address: CRUST_WALLET_ADDRESS,
+          nextNonce: lastProcessedNonceOnChain,
+          lastProcessedNonce: lastProcessedNonceOnChain - 1,
+        },
+        stage.context,
+      ).insert();
+      const keyring = new Keyring({ type: 'sr25519' });
+      pair = keyring.addFromUri(crustWallet.seed);
+    });
+
+    afterAll(() => {
+      httpMocker.reset();
+    });
+
+    test('self repair nonce for transactions with final status in DB', async () => {
+      //TRANSACTION
+      const tx = api.tx.market.placeStorageOrder(
+        'QmUQ6i2Njyktbtvb5vxnzynD9fTrAvYN1qYbSKjudCv8mB',
+        7390,
+        0,
+        '',
+      );
+      const unsignedTx = api.tx(tx.toHex());
+      const signed = await unsignedTx.signAsync(pair, {
+        nonce: crustWallet.nextNonce - 1,
+        era: 600,
+      });
+      const transaction = await new Transaction(
+        {
+          address: crustWallet.address,
+          chain,
+          chainType: CHAIN_TYPE,
+          nonce: lastProcessedNonceOnChain,
+          rawTransaction: signed.toHex(),
+          transactionHash: signed.hash.toString(),
+          transactionStatus: TransactionStatus.CONFIRMED,
+        },
+        stage.context,
+      ).insert();
+
+      await SubstrateService.transmitTransactions(
+        { chain },
+        stage.context,
+        async () => {
+          return;
+        },
+      );
+
+      const updatedCrustWallet = await new Wallet(
+        {},
+        stage.context,
+      ).populateById(crustWallet.id);
+      expect(updatedCrustWallet.lastProcessedNonce).toEqual(transaction.nonce);
+      await transaction.delete();
+      await crustWallet
+        .populate({ lastProcessedNonce: lastProcessedNonceOnChain - 1 })
+        .update();
+    });
+
+    test('self repair nonce with indexer not having transaction details', async () => {
+      //TRANSACTION
+      const tx = api.tx.market.placeStorageOrder(
+        'QmUQ6i2Njyktbtvb5vxnzynD9fTrAvYN1qYbSKjudCv8mB',
+        7390,
+        0,
+        '',
+      );
+      const unsignedTx = api.tx(tx.toHex());
+      const signed = await unsignedTx.signAsync(pair, {
+        nonce: crustWallet.nextNonce - 1,
+        era: 600,
+      });
+      const transaction = await new Transaction(
+        {
+          address: crustWallet.address,
+          chain,
+          chainType: CHAIN_TYPE,
+          nonce: lastProcessedNonceOnChain,
+          rawTransaction: signed.toHex(),
+          transactionHash: signed.hash.toString(),
+          transactionStatus: TransactionStatus.PENDING,
+        },
+        stage.context,
+      ).insert();
+      httpMocker.post(
+        process.env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER,
+        {
+          data: {},
+        },
+        { header: { 'content-type': 'application/json' } },
+      );
+
+      await SubstrateService.transmitTransactions(
+        { chain },
+        stage.context,
+        async () => {
+          return;
+        },
+      );
+
+      const updatedCrustWallet = await new Wallet(
+        {},
+        stage.context,
+      ).populateById(crustWallet.id);
+      expect(updatedCrustWallet.lastProcessedNonce).toEqual(
+        crustWallet.lastProcessedNonce,
+      );
+      await transaction.delete();
+    });
+
+    test('self repair nonce with indexer having transaction details', async () => {
+      //TRANSACTION
+      const tx = api.tx.market.addPrepaid(
+        'QmUQ6i2Njyktbtvb5vxnzynD9fTrAvYN1qYbSKjudCv8mB',
+        100,
+      );
+      const unsignedTx = api.tx(tx.toHex());
+      const signed = await unsignedTx.signAsync(pair, {
+        nonce: crustWallet.nextNonce - 1,
+        era: 600,
+      });
+      await new Transaction(
+        {
+          address: crustWallet.address,
+          chain,
+          chainType: CHAIN_TYPE,
+          nonce: lastProcessedNonceOnChain,
+          rawTransaction: signed.toHex(),
+          transactionHash: signed.hash.toString(),
+          transactionStatus: TransactionStatus.PENDING,
+        },
+        stage.context,
+      ).insert();
+      httpMocker.post(
+        process.env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER,
+        {
+          data: {
+            storageOrders: [
+              {
+                account: { id: crustWallet.address },
+                extrinsicHash: 'some_hash',
+              },
+            ],
+            transfers: [
+              {
+                extrinsicHash: 'some_hash',
+                from: { id: crustWallet.address },
+              },
+            ],
+          },
+        },
+        { header: { 'content-type': 'application/json' } },
+      );
+
+      await SubstrateService.transmitTransactions(
+        { chain },
+        stage.context,
+        async () => {
+          return;
+        },
+      );
+
+      const updatedCrustWallet = await new Wallet(
+        {},
+        stage.context,
+      ).populateById(crustWallet.id);
+      expect(updatedCrustWallet.lastProcessedNonce).toEqual(
+        lastProcessedNonceOnChain,
+      );
+    });
   });
 
   test('Single wallet transactions', async () => {
