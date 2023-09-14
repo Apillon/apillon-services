@@ -25,13 +25,95 @@ import { getWalletSeed } from '../../lib/seed';
 import { CrustBlockchainIndexer } from '../blockchain-indexers/substrate/crust/crust-indexer.service';
 import { KiltBlockchainIndexer } from '../blockchain-indexers/substrate/kilt/kilt-indexer.service';
 
-async function getApiPromise(endpointUrl: string, typesBundle: any) {
-  const provider = new WsProvider(endpointUrl);
-  return await ApiPromise.create({
-    provider,
-    typesBundle,
-    throwOnConnect: true,
-  });
+class Api {
+  protected endpointUrl: string = null;
+  protected apiPromise: ApiPromise = null;
+  protected provider: WsProvider = null;
+  protected typesBundle: any = null;
+  protected started: Date = null;
+
+  constructor(endpointUrl: string, typesBundle: any) {
+    this.endpointUrl = endpointUrl;
+    this.typesBundle = typesBundle;
+    this.started = new Date();
+  }
+
+  async destroy() {
+    if (this.provider) {
+      await this.provider.disconnect();
+      this.provider = null;
+      this.apiPromise = null;
+    }
+    console.log('Timing after destroy', this.getTiming(), 's');
+  }
+
+  async getUnsignedTransaction(transaction: string) {
+    console.log('Timing before unsigned transaction', this.getTiming(), 's');
+    return (await this.getApi()).tx(transaction);
+  }
+
+  async send(rawTransaction: string) {
+    console.log('Timing before send', this.getTiming(), 's');
+    return (await this.getApi()).tx(rawTransaction).send();
+  }
+
+  /**
+   * Tries to self repair nonce based on last on-chain nonce and indexer state.
+   * @param wallet Wallet
+   * @param transactionHash
+   */
+  async trySelfRepairNonce(wallet: Wallet, transactionHash: string) {
+    console.log('Timing before self repair', this.getTiming(), 's');
+    const nextOnChainNonce = (
+      await (await this.getApi()).query.system.account(wallet.address)
+    ).nonce.toNumber();
+    if (!nextOnChainNonce) {
+      return;
+    }
+    const lastProcessedNonce = nextOnChainNonce - 1;
+    if (wallet.lastProcessedNonce > lastProcessedNonce) {
+      return;
+    }
+
+    if (await isTransactionIndexed(wallet, transactionHash)) {
+      return lastProcessedNonce;
+    }
+  }
+
+  protected async getApi() {
+    console.log('Timing before get API', this.getTiming(), 's');
+    if (!this.provider) {
+      this.provider = new WsProvider(this.endpointUrl);
+      this.apiPromise = await ApiPromise.create({
+        provider: this.provider,
+        typesBundle: this.typesBundle,
+        throwOnConnect: true,
+      });
+      console.log('Timing after first connect', this.getTiming(), 's');
+      return this.apiPromise;
+    } else {
+      try {
+        await this.provider.send('health_check', null);
+        console.log('Timing after health check', this.getTiming(), 's');
+        return this.apiPromise;
+      } catch (e) {
+        this.apiPromise = await ApiPromise.create({
+          provider: this.provider,
+          typesBundle: this.typesBundle,
+          throwOnConnect: true,
+        });
+        console.log('Timing after reconnect', this.getTiming(), 's');
+        return this.apiPromise;
+      }
+    }
+  }
+
+  protected getTiming() {
+    if (!this.started) {
+      return null;
+    }
+    return (new Date().getTime() - this.started.getTime()) / 1000;
+  }
 }
 
 export class SubstrateService {
@@ -87,8 +169,7 @@ export class SubstrateService {
 
     console.info('Creating APIPromise');
     // TODO: Refactor to txwrapper when typesBundle supported
-    const api = await getApiPromise(endpoint.url, typesBundle);
-
+    const api = new Api(endpoint.url, typesBundle);
     console.info('Start db transaction.');
     // Start connection to database at the beginning of the function
     const conn = await context.mysql.start(IsolationLevel.READ_COMMITTED);
@@ -118,7 +199,7 @@ export class SubstrateService {
       console.info('Generating unsigned transaction');
       const pair = keyring.addFromUri(seed);
       console.log('Address: ', pair.address);
-      const unsignedTx = api.tx(params.transaction);
+      const unsignedTx = await api.getUnsignedTransaction(params.transaction);
       // TODO: add validation service for transaction to detect and prevent weird transactions.
 
       // TODO: Determine the best era
@@ -215,7 +296,7 @@ export class SubstrateService {
         status: 500,
       });
     } finally {
-      await api.disconnect();
+      await api.destroy();
     }
   }
 
@@ -277,7 +358,7 @@ export class SubstrateService {
     }
 
     // TODO: Refactor to txwrapper when typesBundle supported
-    let api = await getApiPromise(endpoint.url, typesBundle);
+    const api = new Api(endpoint.url, typesBundle);
     for (const wallet of wallets) {
       const transactions = await new Transaction({}, context).getList(
         _event.chain,
@@ -317,11 +398,12 @@ export class SubstrateService {
         }
 
         try {
-          await api.tx(transaction.rawTransaction).send();
+          await api.send(transaction.rawTransaction);
           console.log('successfully transmitted');
           latestSuccess = transaction.nonce;
           transmitted++;
         } catch (err: any) {
+          //reconnect if connection is lost
           if (
             typeof err?.message === 'string' &&
             (err.message.includes('No response received from RPC endpoint') ||
@@ -329,20 +411,20 @@ export class SubstrateService {
           ) {
             // the only way to reconnect to RPC is to create a new ApiPromise instance
             // since isConnected doesn't change to false and connect throws an error
-            api = await getApiPromise(endpoint.url, typesBundle);
             try {
-              await api.tx(transaction.rawTransaction).send();
+              await api.send(transaction.rawTransaction);
             } catch (e: any) {
               err = e;
             }
           }
+
+          //try self repair else error
           if (
             err?.data === 'Transaction is outdated' ||
             (typeof err?.message === 'string' &&
               err.message.includes('Transaction is temporarily banned'))
           ) {
-            const selfRepairNonce = await trySelfRepairNonce(
-              api,
+            const selfRepairNonce = await api.trySelfRepairNonce(
               wallet,
               transaction.transactionHash,
             );
@@ -394,7 +476,6 @@ export class SubstrateService {
           }
         }
       }
-      await api.disconnect();
 
       if (latestSuccess) {
         const dbWallet = new Wallet(wallet, context);
@@ -414,36 +495,10 @@ export class SubstrateService {
         LogOutput.EVENT_INFO,
       );
     }
+    await api.destroy();
   }
 
   //#region
-}
-
-/**
- * Tryies to self repair nonce based on last on-chain nonce and indexer state.
- * @param api ApiPromise
- * @param wallet Wallet
- * @param transactionHash
- */
-async function trySelfRepairNonce(
-  api: ApiPromise,
-  wallet: Wallet,
-  transactionHash: string,
-) {
-  const nextOnChainNonce = (
-    await api.query.system.account(wallet.address)
-  ).nonce.toNumber();
-  if (!nextOnChainNonce) {
-    return;
-  }
-  const lastProcessedNonce = nextOnChainNonce - 1;
-  if (wallet.lastProcessedNonce > lastProcessedNonce) {
-    return;
-  }
-
-  if (await isTransactionIndexed(wallet, transactionHash)) {
-    return lastProcessedNonce;
-  }
 }
 
 /**
