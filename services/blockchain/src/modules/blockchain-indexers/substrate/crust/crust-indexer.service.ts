@@ -1,184 +1,44 @@
 import { env } from '@apillon/lib';
 import { gql } from 'graphql-request';
-import { CrustTransferType } from '../../../../config/types';
-import { BlockHeight } from '../../block-height';
+
 import { BaseBlockchainIndexer } from '../base-blockchain-indexer';
-import { CrustStorageOrders } from './data-models/crust-storage-orders';
-import { CrustTransfers } from './data-models/crust-transfers';
-import { SystemEvent } from '../kilt/data-models/kilt-transactions';
+import { CrustGQLQueries } from './queries/crust-graphql-queries';
+import { SystemEvent, TransferTransaction } from './data-models';
+import { CrustTransactionType } from '../../../../config/types';
 
 export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
   constructor() {
     if (!env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER) {
       throw new Error('Missing GraphQL server url!');
     }
-    // this.graphQlClient = new GraphQLClient(env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER);
+
     super(env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER);
   }
 
-  public async getWalletWithdrawals(
-    address: string,
-    fromBlock: number,
-    toBlock: number,
-  ): Promise<CrustTransfers> {
-    const GRAPHQL_QUERY = gql`
-      query getWithdrawals(
-        $address: String!
-        $fromBlock: Int!
-        $toBlock: Int!
-        $transactionType: Int!
-      ) {
-        transfers(
-          where: {
-            transactionType_eq: $transactionType
-            from: { id_eq: $address }
-            blockNumber_gt: $fromBlock
-            blockNumber_lte: $toBlock
-          }
-        ) {
-          amount
-          blockNumber
-          extrinsicHash
-          fee
-          id
-          timestamp
-          transactionType
-          status
-          from {
-            id
-          }
-          to {
-            id
-          }
-        }
-      }
-    `;
-
-    const data: CrustTransfers = await this.graphQlClient.request(
-      GRAPHQL_QUERY,
-      {
-        address,
-        fromBlock,
-        toBlock,
-        transactionType: CrustTransferType.TRANSFER,
-      },
-    );
-    return data;
-  }
-
-  public async getWalletDeposits(
-    address: string,
-    fromBlock: number,
-    toBlock: number,
-  ): Promise<CrustTransfers> {
-    const GRAPHQL_QUERY = gql`
-      query getDeposits(
-        $address: String!
-        $fromBlock: Int!
-        $toBlock: Int!
-        $transactionType: Int!
-      ) {
-        transfers(
-          where: {
-            transactionType_eq: $transactionType
-            to: { id_eq: $address }
-            blockNumber_gt: $fromBlock
-            blockNumber_lte: $toBlock
-          }
-        ) {
-          amount
-          blockNumber
-          extrinsicHash
-          fee
-          id
-          timestamp
-          transactionType
-          status
-          from {
-            id
-          }
-          to {
-            id
-          }
-        }
-      }
-    `;
-
-    const data: CrustTransfers = await this.graphQlClient.request(
-      GRAPHQL_QUERY,
-      {
-        address,
-        fromBlock,
-        toBlock,
-        transactionType: CrustTransferType.TRANSFER,
-      },
-    );
-
-    return data;
-  }
-
-  public async getWalletTransfers(
-    address: string,
-    fromBlock: number,
-    limit: number = null,
-  ): Promise<CrustTransfers> {
-    const GRAPHQL_QUERY = gql`
-      query getTransfers($address: String!, $fromBlock: Int!, $limit: Int) {
-        transfers(
-          where: {
-            AND: [
-              {
-                OR: [{ to: { id_eq: $address } }, { from: { id_eq: $address } }]
-              }
-              { blockNumber_gt: $fromBlock }
-            ]
-          }
-          orderBy: blockNumber_ASC
-          limit: $limit
-        ) {
-          amount
-          blockNumber
-          extrinsicHash
-          fee
-          id
-          timestamp
-          transactionType
-          status
-          from {
-            id
-          }
-          to {
-            id
-          }
-        }
-      }
-    `;
-
-    const data: CrustTransfers = await this.graphQlClient.request(
-      GRAPHQL_QUERY,
-      {
-        address,
-        fromBlock,
-        limit,
-      },
-    );
-    return data;
-  }
-
+  // NOTE: It would be better to transform abstract functions
+  // into generics inside base-blockchain-indexer. Similar to model methods
+  // such as getList, populateById etc
   public async getAllTransactions(
-    address: string,
+    account: string,
     fromBlock: number,
     toBlock: number,
-    // TODO: Filter by state as well
-    // state?: string,
   ) {
-    // return {
-    //   transfers: await this.getWalletTransfers(address, fromBlock, toBlock),
-    //   withdrawals: await this.getWalletWithdrawals(address, fromBlock, toBlock),
-    //   deposits: await this.getWalletDeposits(address, fromBlock, toBlock),
-    //   orders: await this.getMarketFileOrders(address, fromBlock, toBlock),
-    // };
-    return await this.getMarketFileOrders(address, fromBlock, toBlock);
+    const data: any = await this.graphQlClient.request(
+      gql`
+        ${CrustGQLQueries.ACCOUNT_ALL_TRANSACTIONS_QUERY}
+      `,
+      {
+        account,
+        fromBlock,
+        toBlock,
+      },
+    );
+
+    return {
+      transfers: data.transfers,
+      systems: data.systems,
+      storageOrders: data.storageOrders,
+    };
   }
 
   public async getAllSystemEvents(
@@ -186,94 +46,99 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
     fromBlock: number,
     toBlock: number,
   ): Promise<SystemEvent[]> {
-    // TODO: Must implement this if you want to use the substrate transaction worker.
-    return new Array<SystemEvent>();
+    const data: any = await this.graphQlClient.request(
+      gql`
+        ${CrustGQLQueries.ACCOUNT_SYSTEM_EVENTS_QUERY}
+      `,
+      {
+        account,
+        fromBlock,
+        toBlock,
+      },
+    );
+
+    return data.systems;
   }
 
-  public async getMarketFileOrders(
-    address: string,
+  /// TINE SPECIFICS -- PLEASE VERIFY ////
+  public async getSystemEventsWithLimit(
+    account: string,
+    fromBlock: number,
+    limit: number,
+  ): Promise<SystemEvent[]> {
+    const data: any = await this.graphQlClient.request(
+      gql`
+        ${CrustGQLQueries.ACCOUNT_SYSTEM_EVENTS_WITH_LIMIT_QUERY}
+      `,
+      {
+        account,
+        fromBlock,
+        limit,
+      },
+    );
+
+    return data.systems;
+  }
+
+  /* These indicate a balance transfer from one account -> another */
+  public async getAccountBalanceTransfers(
+    account: string,
     fromBlock: number,
     toBlock: number,
-  ): Promise<CrustStorageOrders> {
-    const GRAPHQL_QUERY = gql`
-      query getFileOrders($address: String!, $fromBlock: Int!, $toBlock: Int!) {
-        storageOrders(
-          where: {
-            account: { id_eq: $address }
-            blockNum_gt: $fromBlock
-            blockNum_lte: $toBlock
-          }
-        ) {
-          id
-          fileCid
-          fee
-          extrinsicHash
-          extrinisicId
-          createdAt
-          blockNum
-          blockHash
-          status
-          account {
-            id
-          }
-        }
-      }
-    `;
-
-    const data: CrustStorageOrders = await this.graphQlClient.request(
-      GRAPHQL_QUERY,
-      { address, fromBlock, toBlock },
+  ): Promise<TransferTransaction[]> {
+    const data: any = await this.graphQlClient.request(
+      gql`
+        ${CrustGQLQueries.ACCOUNT_TRANSFERS_BY_TYPE_QUERY}
+      `,
+      {
+        account,
+        fromBlock,
+        toBlock,
+        transactionType: CrustTransactionType.BALANCE_TRANSFER,
+      },
     );
-    return data;
+
+    return data.transfers;
   }
 
-  public async getBlockHeight(): Promise<number> {
-    const GRAPHQL_QUERY = gql`
-      query getBlockHeight {
-        squidStatus {
-          height
-        }
-      }
-    `;
+  // TODO Vinko: Add comments what these do.
+  public async getAccountMarketFileOrderSuccess(
+    account: string,
+    fromBlock: number,
+    toBlock: number,
+  ): Promise<TransferTransaction[]> {
+    const data: any = await this.graphQlClient.request(
+      gql`
+        ${CrustGQLQueries.ACCOUNT_TRANSFERS_BY_TYPE_QUERY}
+      `,
+      {
+        account,
+        fromBlock,
+        toBlock,
+        transactionType: CrustTransactionType.MARKET_ORDER_FILE_SUCCESS,
+      },
+    );
 
-    const data: BlockHeight = await this.graphQlClient.request(GRAPHQL_QUERY);
-    return data.squidStatus.height;
+    return data.marketFileOrders;
   }
 
-  public async getWalletTransactionsByHash(
-    address: string,
-    extrinsicHash: string,
-  ): Promise<any> {
-    const GRAPHQL_QUERY = gql`
-      query getWalletTransactionsByHash(
-        $address: String!
-        $extrinsicHash: String!
-      ) {
-        storageOrders(
-          where: {
-            extrinsicHash_eq: $extrinsicHash
-            account: { id_eq: $address }
-          }
-        ) {
-          account {
-            id
-          }
-          extrinsicHash
-        }
-        transfers(
-          where: { extrinsicHash_eq: $extrinsicHash, from: { id_eq: $address } }
-        ) {
-          extrinsicHash
-          from {
-            id
-          }
-        }
-      }
-    `;
+  public async getAccountMarketFileRenewSuccess(
+    account: string,
+    fromBlock: number,
+    toBlock: number,
+  ): Promise<TransferTransaction[]> {
+    const data: any = await this.graphQlClient.request(
+      gql`
+        ${CrustGQLQueries.ACCOUNT_TRANSFERS_BY_TYPE_QUERY}
+      `,
+      {
+        account,
+        fromBlock,
+        toBlock,
+        transactionType: CrustTransactionType.MARKET_FILE_RENEW_SUCCESS,
+      },
+    );
 
-    return await this.graphQlClient.request(GRAPHQL_QUERY, {
-      address,
-      extrinsicHash,
-    });
+    return data.marketFileOrders;
   }
 }
