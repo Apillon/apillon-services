@@ -97,7 +97,8 @@ class Api {
       return this.apiPromise;
     } else {
       try {
-        await this.provider.send('health_check', null);
+        const health = await this.provider.send('system_health', null);
+        console.log('Health check', health);
         console.log('Timing after health check', this.getTiming(), 's');
         return this.apiPromise;
       } catch (e) {
