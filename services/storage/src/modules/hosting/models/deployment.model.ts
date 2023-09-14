@@ -241,11 +241,9 @@ export class Deployment extends AdvancedSQLModel {
       { cid },
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   public async populateLastDeployment(
@@ -274,11 +272,9 @@ export class Deployment extends AdvancedSQLModel {
       { website_id },
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   public async getList(context: ServiceContext, filter: DeploymentQueryFilter) {

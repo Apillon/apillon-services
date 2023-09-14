@@ -35,11 +35,6 @@ import { NftsService } from './nfts.service';
 export class NftsController {
   constructor(private readonly nftsService: NftsService) {}
 
-  @Get()
-  async getHello(@Ctx() context: DevConsoleApiContext) {
-    return await this.nftsService.getHello(context);
-  }
-
   @Post('collections')
   @Validation({ dto: CreateCollectionDTO })
   @UseGuards(ValidationGuard)

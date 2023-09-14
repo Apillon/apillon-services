@@ -30,13 +30,6 @@ export class DirectoryContentQueryFilter extends BaseQueryFilter {
   public directory_id: number;
 
   @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [],
-  })
-  public search: string;
-
-  @prop({
     parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
@@ -51,14 +44,6 @@ export class ApillonApiDirectoryContentQueryFilter extends BaseQueryFilter {
     validators: [],
   })
   public directoryId: number;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.SERVICE],
-    validators: [],
-  })
-  public search: string;
 
   @prop({
     parser: { resolver: booleanParser() },

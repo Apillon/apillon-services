@@ -204,24 +204,22 @@ export class ApiKey extends ProjectAccessModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
       WHERE apiKey = @apiKey AND status = ${SqlModelStatus.ACTIVE};
       `,
       { apiKey },
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   public async populateApiKeyRoles(): Promise<this> {
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${DbTables.API_KEY_ROLE}\`
       WHERE apiKey_id = @id AND status = ${SqlModelStatus.ACTIVE};
       `,
@@ -280,7 +278,7 @@ export class ApiKey extends ProjectAccessModel {
       `
       SELECT COUNT(*) as numOfApiKeys
       FROM \`${this.tableName}\`
-      WHERE project_uuid = @project_uuid 
+      WHERE project_uuid = @project_uuid
       AND status <> ${SqlModelStatus.DELETED};
       `,
       { project_uuid: this.project_uuid },

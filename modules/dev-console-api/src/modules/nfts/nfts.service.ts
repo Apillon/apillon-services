@@ -1,4 +1,5 @@
 import {
+  AttachedServiceType,
   BurnNftDto,
   CodeException,
   CollectionsQuotaReachedQueryFilter,
@@ -16,12 +17,14 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { ResourceNotFoundErrorCode } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
 import { Project } from '../project/models/project.model';
+import { ServicesService } from '../services/services.service';
+import { Service } from '../services/models/service.model';
+import { ServiceQueryFilter } from '../services/dtos/services-query-filter.dto';
+import { ServiceDto } from '../services/dtos/service.dto';
 
 @Injectable()
 export class NftsService {
-  async getHello(context: DevConsoleApiContext) {
-    return (await new NftsMicroservice(context).getHello()).data;
-  }
+  constructor(private readonly serviceService: ServicesService) {}
 
   async createCollection(
     context: DevConsoleApiContext,
@@ -40,6 +43,30 @@ export class NftsService {
     }
 
     project.canModify(context);
+
+    // Check if NFT service for this project already exists
+    const { total } = await new Service({}).getServices(
+      context,
+      new ServiceQueryFilter(
+        {
+          project_uuid: project.project_uuid,
+          serviceType_id: AttachedServiceType.NFT,
+        },
+        context,
+      ),
+    );
+    if (total == 0) {
+      // Create NFT service - "Attach"
+      const nftService = new ServiceDto(
+        {
+          project_uuid: project.project_uuid,
+          name: 'NFTs service',
+          serviceType_id: AttachedServiceType.NFT,
+        },
+        context,
+      );
+      await this.serviceService.createService(context, nftService);
+    }
 
     return (await new NftsMicroservice(context).createCollection(body)).data;
   }
