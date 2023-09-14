@@ -101,6 +101,7 @@ class Api {
         console.log('Timing after health check', this.getTiming(), 's');
         return this.apiPromise;
       } catch (e) {
+        console.error('Error after health check', e);
         this.apiPromise = await ApiPromise.create({
           provider: this.provider,
           typesBundle: this.typesBundle,
