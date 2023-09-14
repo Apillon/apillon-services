@@ -70,19 +70,20 @@ export class CrustGQLQueries {
   static ACCOUNT_TRANSFERS_BY_TYPE_QUERY = `query getAccountTransfers(
       $account: String!
       $fromBlock: Int!, 
-      $toBlock: Int!,
-      $transactionType: String!) {
+      $transactionType: String!,
+      $limit: Int
+      ) {
       transfers(
         where: {
           AND: {
             blockNumber_gte: $fromBlock,
-            blockNumber_lte: $toBlock,
             transactionType_eq: $transactionType,
             AND: { 
               OR: [{from_eq: $account}, {to_eq: $account}]
             }
           }
-        }
+        },
+        limit: $limit
       )
       {
         ${this.BASE_SUBSTRATE_PARAMS}

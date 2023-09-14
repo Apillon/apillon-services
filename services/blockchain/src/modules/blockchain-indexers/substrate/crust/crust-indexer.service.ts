@@ -84,7 +84,7 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
   public async getAccountBalanceTransfers(
     account: string,
     fromBlock: number,
-    toBlock: number,
+    limit: number,
   ): Promise<TransferTransaction[]> {
     const data: any = await this.graphQlClient.request(
       gql`
@@ -93,7 +93,7 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
       {
         account,
         fromBlock,
-        toBlock,
+        limit,
         transactionType: CrustTransactionType.BALANCE_TRANSFER,
       },
     );

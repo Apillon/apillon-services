@@ -139,7 +139,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
                 // from block
                 lastBlock,
                 // to block
-                lastBlock + limit,
+                limit,
               );
 
             console.log(`Got ${res.length} Crust transfers!`);
