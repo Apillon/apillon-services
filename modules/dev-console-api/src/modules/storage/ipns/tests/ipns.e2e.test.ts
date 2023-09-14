@@ -246,6 +246,7 @@ describe('Ipns tests', () => {
       ipnsRecordToDelete = await new Ipns({}, stage.storageContext)
         .fake()
         .populate({
+          name: 'ipns to delete',
           project_uuid: testProject.project_uuid,
           bucket_id: testBucket.id,
         })

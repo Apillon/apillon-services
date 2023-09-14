@@ -40,6 +40,7 @@ describe('Transaction Log Worker unit test', () => {
         chainType: ChainType.SUBSTRATE,
         seed: '1',
         minBalance: '5000000000000',
+        decimals: 12,
       },
       stage.context,
     );
@@ -63,6 +64,7 @@ describe('Transaction Log Worker unit test', () => {
         chainType: ChainType.EVM,
         seed: '2',
         minBalance: '14549118925859030048',
+        decimals: 18,
       },
       stage.context,
     );
@@ -84,7 +86,9 @@ describe('Transaction Log Worker unit test', () => {
         address: '0x076396C9fcA4dc909DA0a53Fd264c587bEF52b48',
         chain: EvmChain.ASTAR,
         chainType: ChainType.EVM,
+        minBalance: '14549118925859030048',
         seed: '3',
+        decimals: 18,
       },
       stage.context,
     );
@@ -106,7 +110,9 @@ describe('Transaction Log Worker unit test', () => {
         address: '4sAqndzGzNYtrdAWhSSnaGptrGY1TSJ99kf5ZRwAzcPUbaTN',
         chain: SubstrateChain.KILT,
         chainType: ChainType.SUBSTRATE,
+        minBalance: '2000000000000000',
         seed: '4',
+        decimals: 12,
       },
       stage.context,
     );
@@ -180,7 +186,7 @@ describe('Transaction Log Worker unit test', () => {
 
     const logs = await stage.db.paramExecute(
       `
-      SELECT COUNT(*) AS cnt 
+      SELECT COUNT(*) AS cnt
       FROM \`${DbTables.TRANSACTION_LOG}\`
       WHERE wallet = @address
       `,
@@ -206,7 +212,7 @@ describe('Transaction Log Worker unit test', () => {
 
     const logs = await stage.db.paramExecute(
       `
-      SELECT COUNT(*) AS cnt 
+      SELECT COUNT(*) AS cnt
       FROM \`${DbTables.TRANSACTION_LOG}\`
       WHERE wallet = @address
       `,
@@ -234,7 +240,7 @@ describe('Transaction Log Worker unit test', () => {
 
     const logs = await stage.db.paramExecute(
       `
-      SELECT COUNT(*) AS cnt 
+      SELECT COUNT(*) AS cnt
       FROM \`${DbTables.TRANSACTION_LOG}\`
       WHERE wallet = @address
       `,
@@ -263,7 +269,7 @@ describe('Transaction Log Worker unit test', () => {
 
     const logs = await stage.db.paramExecute(
       `
-      SELECT COUNT(*) AS cnt 
+      SELECT COUNT(*) AS cnt
       FROM \`${DbTables.TRANSACTION_LOG}\`
       WHERE wallet = @address
       `,
@@ -292,7 +298,7 @@ describe('Transaction Log Worker unit test', () => {
 
     const logs = await stage.db.paramExecute(
       `
-      SELECT COUNT(*) AS cnt 
+      SELECT COUNT(*) AS cnt
       FROM \`${DbTables.TRANSACTION_LOG}\`
       WHERE wallet = @address
       `,
@@ -318,7 +324,7 @@ describe('Transaction Log Worker unit test', () => {
 
     const logs = await stage.db.paramExecute(
       `
-      SELECT COUNT(*) AS cnt 
+      SELECT COUNT(*) AS cnt
       FROM \`${DbTables.TRANSACTION_LOG}\`
       WHERE wallet = @address
       `,
@@ -332,7 +338,7 @@ describe('Transaction Log Worker unit test', () => {
 
     const fees = await stage.db.paramExecute(
       `
-      SELECT COUNT(*) AS cnt 
+      SELECT COUNT(*) AS cnt
       FROM \`${DbTables.TRANSACTION_LOG}\`
       WHERE wallet = @address
       AND fee = 0

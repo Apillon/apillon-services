@@ -14,7 +14,6 @@ import { TestWorker } from './test-worker';
 import { Scheduler } from './scheduler';
 import { DeployWebsiteWorker } from './deploy-website-worker';
 import { DeleteBucketDirectoryFileWorker } from './delete-bucket-directory-file-worker';
-import { PublishToIPNSWorker } from './publish-to-ipns-worker';
 import { UpdateCrustStatusWorker } from './update-crust-status-worker';
 import { PrepareMetadataForCollectionWorker } from './prepare-metada-for-collection-worker';
 import { PrepareBaseUriForCollectionWorker } from './prepare-base-uri-for-collection-worker';
@@ -30,7 +29,6 @@ export enum WorkerName {
   SYNC_TO_IPFS_WORKER = 'SyncToIpfsWorker',
   DELETE_BUCKET_DIRECTORY_FILE_WORKER = 'DeleteBucketDirectoryFileWorker',
   DEPLOY_WEBSITE_WORKER = 'DeployWebsiteWorker',
-  PUBLISH_TO_IPNS_WORKER = 'PublishToIPNSWorker',
   UPDATE_CRUST_STATUS_WORKER = 'UpdateCrustStatusWorker',
   PREPARE_METADATA_FOR_COLLECTION_WORKER = 'PrepareMetadataForCollectionWorker',
   PREPARE_BASE_URI_FOR_COLLECTION_WORKER = 'PrepareBaseUriForCollectionWorker',
@@ -224,16 +222,6 @@ export async function handleSqsMessages(
         }
         case WorkerName.DEPLOY_WEBSITE_WORKER: {
           await new DeployWebsiteWorker(
-            workerDefinition,
-            context,
-            QueueWorkerType.EXECUTOR,
-          ).run({
-            executeArg: message?.body,
-          });
-          break;
-        }
-        case WorkerName.PUBLISH_TO_IPNS_WORKER: {
-          await new PublishToIPNSWorker(
             workerDefinition,
             context,
             QueueWorkerType.EXECUTOR,

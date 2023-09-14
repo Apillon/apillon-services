@@ -3,6 +3,7 @@ import {
   ChainType,
   env,
   EvmChain,
+  getEnumKey,
   Lmas,
   LogType,
   SerializeFor,
@@ -327,7 +328,10 @@ export class EvmService {
             await eventLogger(
               {
                 logType: LogType.ERROR,
-                message: 'Error transmitting transaction!',
+                message: `Error transmitting transaction on chain ${getEnumKey(
+                  EvmChain,
+                  _event.chain,
+                )}! Hash: ${transaction.transactionHash}`,
                 service: ServiceName.BLOCKCHAIN,
                 data: {
                   error: err,

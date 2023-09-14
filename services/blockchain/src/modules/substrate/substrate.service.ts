@@ -10,6 +10,7 @@ import {
   ServiceName,
   env,
   TransactionStatus,
+  getEnumKey,
 } from '@apillon/lib';
 import { Endpoint } from '../../common/models/endpoint';
 import { BlockchainErrorCode } from '../../config/types';
@@ -328,7 +329,10 @@ export class SubstrateService {
             await eventLogger(
               {
                 logType: LogType.ERROR,
-                message: 'Error transmitting transaction!',
+                message: `Error transmitting transaction on chain ${getEnumKey(
+                  SubstrateChain,
+                  _event.chain,
+                )}! Hash: ${transaction.transactionHash}`,
                 service: ServiceName.BLOCKCHAIN,
                 data: {
                   error: err,

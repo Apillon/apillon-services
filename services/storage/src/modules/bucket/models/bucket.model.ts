@@ -68,6 +68,7 @@ export class Bucket extends ProjectAccessModel {
         code: StorageErrorCode.BUCKET_PROJECT_UUID_NOT_PRESENT,
       },
     ],
+    fakeValue: () => uuidV4(),
   })
   public project_uuid: string;
 
@@ -213,9 +214,27 @@ export class Bucket extends ProjectAccessModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    validators: [],
   })
   public CID: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+  })
+  public CIDv1: string;
 
   @prop({
     parser: { resolver: stringParser() },
