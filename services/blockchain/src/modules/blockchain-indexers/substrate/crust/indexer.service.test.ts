@@ -1,5 +1,5 @@
 import { env } from '@apillon/lib';
-import { CrustBlockchainIndexer } from './crust-indexer.service';
+import { CrustBlockchainIndexer } from './indexer.service';
 
 // TODO: Move to indexer, test with real wallet
 // TODO2: Add more test cases

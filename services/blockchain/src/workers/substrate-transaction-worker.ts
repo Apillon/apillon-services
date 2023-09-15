@@ -17,7 +17,7 @@ import {
   TransactionStatus,
   env,
 } from '@apillon/lib';
-import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/kilt-indexer.service';
+import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/indexer.service';
 import { WorkerName } from './worker-executor';
 import { DbTables, TransactionIndexerStatus } from '../config/types';
 import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/crust-indexer.service';

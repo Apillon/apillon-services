@@ -1,4 +1,4 @@
-import { BaseTransaction } from '../../base-transaction-model';
+import { BaseTransaction } from '../base-transaction-model';
 
 export interface DidTransaction extends BaseTransaction {
   readonly didId?: string | undefined;

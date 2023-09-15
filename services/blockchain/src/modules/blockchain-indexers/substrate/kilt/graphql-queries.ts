@@ -1,4 +1,4 @@
-import { BaseGQLQueries } from '../../base-queries';
+import { BaseGQLQueries } from '../base-queries';
 
 export class KiltGQLQueries extends BaseGQLQueries {
   // NOTE: These params are always present

@@ -1,5 +1,5 @@
 import { env } from '@apillon/lib';
-import { KiltBlockchainIndexer } from '../kilt-indexer.service';
+import { KiltBlockchainIndexer } from './indexer.service';
 
 // TODO: Move to indexer, test with real wallet
 // TODO2: Add more test cases

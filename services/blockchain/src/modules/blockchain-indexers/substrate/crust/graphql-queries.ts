@@ -1,4 +1,4 @@
-import { BaseGQLQueries } from '../../base-queries';
+import { BaseGQLQueries } from '../base-queries';
 export class CrustGQLQueries extends BaseGQLQueries {
   static ACCOUNT_ALL_TRANSACTIONS_QUERY = `query getAccountTransactions(
       $account: String!

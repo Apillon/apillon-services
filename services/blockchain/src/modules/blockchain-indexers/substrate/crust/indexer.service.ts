@@ -2,7 +2,7 @@ import { env } from '@apillon/lib';
 import { gql } from 'graphql-request';
 
 import { BaseBlockchainIndexer } from '../base-blockchain-indexer';
-import { CrustGQLQueries } from './queries/crust-graphql-queries';
+import { CrustGQLQueries } from './graphql-queries';
 import { SystemEvent, TransferTransaction } from './data-models';
 import { CrustTransactionType } from '../../../../config/types';
 

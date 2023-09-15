@@ -7,8 +7,8 @@ import {
   DidTransaction,
   SystemEvent,
   TransferTransaction,
-} from './data-models/kilt-transactions';
-import { KiltGQLQueries } from './queries/kilt-graphql-queries';
+} from './data-models';
+import { KiltGQLQueries } from './graphql-queries';
 
 export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
   constructor() {
