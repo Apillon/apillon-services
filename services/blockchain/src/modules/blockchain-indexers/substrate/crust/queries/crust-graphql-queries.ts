@@ -1,17 +1,5 @@
-export class CrustGQLQueries {
-  // NOTE: These params are always present
-  static BASE_SUBSTRATE_PARAMS = `
-      id
-      blockHash
-      blockNumber
-      extrinsicId
-      extrinsicHash
-      transactionType
-      fee
-      createdAt
-      status
-    `;
-
+import { BaseGQLQueries } from '../../base-queries';
+export class CrustGQLQueries extends BaseGQLQueries {
   static ACCOUNT_ALL_TRANSACTIONS_QUERY = `query getAccountTransactions(
       $account: String!
       $fromBlock: Int!, 
@@ -27,7 +15,7 @@ export class CrustGQLQueries {
         }
       )
       {
-        ${this.BASE_SUBSTRATE_PARAMS}
+        ${this.BASE_SUBSTRATE_FIELDS}
         account
         error
       },
@@ -43,7 +31,7 @@ export class CrustGQLQueries {
         }
       ) 
       {
-        ${this.BASE_SUBSTRATE_PARAMS}
+        ${this.BASE_SUBSTRATE_FIELDS}
         from
         to
         amount
@@ -60,105 +48,36 @@ export class CrustGQLQueries {
         }
       )
       {
-        ${this.BASE_SUBSTRATE_PARAMS}
+        ${this.BASE_SUBSTRATE_FIELDS}
         account
         fileCid
       }
     }`;
 
-  /* Returns TRANSFERS by TransactionType from a specific account in CRUST */
-  static ACCOUNT_TRANSFERS_BY_TYPE_QUERY = `query getAccountTransfers(
-      $account: String!
-      $fromBlock: Int!, 
-      $transactionType: String!,
-      $limit: Int
-      ) {
-      transfers(
-        where: {
-          AND: {
-            blockNumber_gte: $fromBlock,
-            transactionType_eq: $transactionType,
-            AND: { 
-              OR: [{from_eq: $account}, {to_eq: $account}]
-            }
-          }
-        },
-        limit: $limit
-      )
-      {
-        ${this.BASE_SUBSTRATE_PARAMS}
-        from
-        to
-        amount
-      }
-    }`;
-
-  /* Returns TRANSFERS and System events by TransactionType from a specific account in CRUST */
-  static ACCOUNT_TRANSFERS_BY_TX_HASHES_QUERY = `query getAccountTransfersByTxHashes(
-      $account: String!,
-      $hashes: [String!]!
-     ) {
-      transfers(
-        where: {
-          AND: {
-            extrinsicHash_in: $hashes,
-            AND: { 
-              OR: [{from_eq: $account}, {to_eq: $account}]
-            }
-          }
-        }
-      )
-      {
-        ${this.BASE_SUBSTRATE_PARAMS}
-        from
-        to
-        amount
-      }
-    }`;
-
   /* Returns all SYSTEM events from a specific account in CRUST */
   static ACCOUNT_SYSTEM_EVENTS_QUERY = `query getAccountSystemEvents(
-      $account: String!
-      $fromBlock: Int!, 
-      $toBlock: Int!
+    $account: String!
+    $fromBlock: Int!,
+    $toBlock: Int
+    $limit: Int
     ) {
-      systems(
-        where: {
-          AND: {
-            blockNumber_gte: $fromBlock,
-            blockNumber_lte: $toBlock,
-            account_eq: $account
-          }
+    systems(
+      where: {
+        AND: {
+          blockNumber_gte: $fromBlock,
+          blockNumber_lte: $toBlock,
+          account_eq: $account
         }
-      )
-      {
-        ${this.BASE_SUBSTRATE_PARAMS}
-        account
-        error
       }
-    }`;
-
-  /* Returns SYSTEM events for specific extrinsic hashes */
-  static ACCOUNT_SYSTEM_EVENTS_WITH_LIMIT_QUERY = `query getAccountSystemEventsWithLimit(
-      $account: String!,
-      $fromBlock: Int!,
-      $limit: Int!
-      ) {
-      systems(
-        where: {
-          AND: {
-            account_eq: $account
-            blockNumber_gte: $fromBlock,
-          }
-        },
-        limit: $limit
-      )
-      {
-        ${this.BASE_SUBSTRATE_PARAMS}
-        account
-        error
-      }
-    }`;
+      limit: $limit
+    )
+    {
+      ${this.BASE_SUBSTRATE_FIELDS}
+      account
+      error
+      fee
+    }
+  }`;
 
   /* Returns all transactions releated to STORAGE ORDER from a specific account in CRUST */
   static ACCOUNT_STORAGE_ORDER_QUERY = `query getAccountStorageOrderTransactions(
@@ -177,13 +96,13 @@ export class CrustGQLQueries {
         }
       )
       {
-        ${this.BASE_SUBSTRATE_PARAMS}
+        ${this.BASE_SUBSTRATE_FIELDS}
         account
         fileCid
       }
     }`;
 
-  static ACCOUNT_WALLET_TRANSACTION_BY_HASH = `
+  static ACCOUNT_TRANSACTION_BY_HASH = `
     query getWalletTransactionsByHash(
       $address: String!
       $extrinsicHash: String!

@@ -44,7 +44,8 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
   public async getAllSystemEvents(
     account: string,
     fromBlock: number,
-    toBlock: number,
+    toBlock?: number,
+    limit?: number,
   ): Promise<SystemEvent[]> {
     const data: any = await this.graphQlClient.request(
       gql`
@@ -54,25 +55,6 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
         account,
         fromBlock,
         toBlock,
-      },
-    );
-
-    return data.systems;
-  }
-
-  /// TINE SPECIFICS -- PLEASE VERIFY ////
-  public async getSystemEventsWithLimit(
-    account: string,
-    fromBlock: number,
-    limit: number,
-  ): Promise<SystemEvent[]> {
-    const data: any = await this.graphQlClient.request(
-      gql`
-        ${CrustGQLQueries.ACCOUNT_SYSTEM_EVENTS_WITH_LIMIT_QUERY}
-      `,
-      {
-        account,
-        fromBlock,
         limit,
       },
     );
@@ -148,7 +130,7 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
   ): Promise<any> {
     const data: any = await this.graphQlClient.request(
       gql`
-        ${CrustGQLQueries.ACCOUNT_WALLET_TRANSACTION_BY_HASH}
+        ${CrustGQLQueries.ACCOUNT_TRANSACTION_BY_HASH}
       `,
       {
         address,

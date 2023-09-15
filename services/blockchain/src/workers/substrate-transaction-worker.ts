@@ -144,7 +144,8 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     const transactions = await this.indexer.getAllSystemEvents(
       address,
       fromBlock,
-      toBlock,
+      null,
+      3,
     );
 
     console.log('System transactions: ', transactions);

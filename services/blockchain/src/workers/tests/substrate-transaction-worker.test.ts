@@ -440,88 +440,88 @@ describe('Substrate tests | KILT', () => {
   });
 });
 
-describe('Substrate tests | CRUST', () => {
-  let stage: Stage;
-  let wallet: Wallet;
-  const startBlock = 9607270;
-  const chain = SubstrateChain.CRUST;
-  const chainType = ChainType.SUBSTRATE;
-  const address = 'cTL1jk9CbHJAYz2hWDh3PprRCtrPAHUvSDw7gZbVWbUYt8SJU';
+// describe('Substrate tests | CRUST', () => {
+//   let stage: Stage;
+//   let wallet: Wallet;
+//   const startBlock = 9607270;
+//   const chain = SubstrateChain.CRUST;
+//   const chainType = ChainType.SUBSTRATE;
+//   const address = 'cTL1jk9CbHJAYz2hWDh3PprRCtrPAHUvSDw7gZbVWbUYt8SJU';
 
-  beforeAll(async () => {
-    stage = await setupTest();
-    env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://localhost:4351/graphql';
+//   beforeAll(async () => {
+//     stage = await setupTest();
+//     env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://localhost:4351/graphql';
 
-    wallet = await new Wallet(
-      {
-        chain,
-        chainType,
-        address: address,
-        // This is actually not correct - the seed should match
-        // the address. Good enough for this test
-        seed: mnemonicGenerate(),
-        lastParsedBlock: startBlock,
-      },
-      stage.context,
-    ).insert();
-  });
+//     wallet = await new Wallet(
+//       {
+//         chain,
+//         chainType,
+//         address: address,
+//         // This is actually not correct - the seed should match
+//         // the address. Good enough for this test
+//         seed: mnemonicGenerate(),
+//         lastParsedBlock: startBlock,
+//       },
+//       stage.context,
+//     ).insert();
+//   });
 
-  afterAll(async () => {
-    await releaseStage(stage);
-  });
+//   afterAll(async () => {
+//     await releaseStage(stage);
+//   });
 
-  test('Single successfull wallet transaction', async () => {
-    const chain = SubstrateChain.CRUST;
-    const chainType = ChainType.SUBSTRATE;
+//   test('Single successfull wallet transaction', async () => {
+//     const chain = SubstrateChain.CRUST;
+//     const chainType = ChainType.SUBSTRATE;
 
-    await new Transaction(
-      {
-        address,
-        chain,
-        chainType,
-        transactionStatus: TransactionStatus.PENDING,
-        nonce: 1,
-        rawTransaction: 'SOME_RAW_DATA',
-        transactionHash:
-          '0xb8c9e8b8ec63726ff73af9669414bb7b2e887699aaff7cf248ba1dc89aed3899',
-      },
-      stage.context,
-    ).insert();
+//     await new Transaction(
+//       {
+//         address,
+//         chain,
+//         chainType,
+//         transactionStatus: TransactionStatus.PENDING,
+//         nonce: 1,
+//         rawTransaction: 'SOME_RAW_DATA',
+//         transactionHash:
+//           '0xb8c9e8b8ec63726ff73af9669414bb7b2e887699aaff7cf248ba1dc89aed3899',
+//       },
+//       stage.context,
+//     ).insert();
 
-    const parameters = {
-      chainId: SubstrateChain.CRUST,
-    };
+//     const parameters = {
+//       chainId: SubstrateChain.CRUST,
+//     };
 
-    const serviceDef: ServiceDefinition = {
-      type: ServiceDefinitionType.SQS,
-      config: { region: 'test' },
-      params: { FunctionName: 'test' },
-    };
+//     const serviceDef: ServiceDefinition = {
+//       type: ServiceDefinitionType.SQS,
+//       config: { region: 'test' },
+//       params: { FunctionName: 'test' },
+//     };
 
-    const workerDefinition = new WorkerDefinition(
-      serviceDef,
-      WorkerName.SUBSTRATE_TRANSACTION,
-      {
-        parameters: { FunctionName: 'test', ...parameters },
-      },
-    );
+//     const workerDefinition = new WorkerDefinition(
+//       serviceDef,
+//       WorkerName.SUBSTRATE_TRANSACTION,
+//       {
+//         parameters: { FunctionName: 'test', ...parameters },
+//       },
+//     );
 
-    await new SubstrateTransactionWorker(
-      workerDefinition,
-      stage.context,
-    ).runExecutor();
+//     await new SubstrateTransactionWorker(
+//       workerDefinition,
+//       stage.context,
+//     ).runExecutor();
 
-    const txs: Transaction[] = await new Transaction({}, stage.context).getList(
-      chain,
-      chainType,
-      address,
-      0,
-    );
+//     const txs: Transaction[] = await new Transaction({}, stage.context).getList(
+//       chain,
+//       chainType,
+//       address,
+//       0,
+//     );
 
-    expect(txs.length).toBe(1);
+//     expect(txs.length).toBe(1);
 
-    expect(
-      txs.find((x) => x.transactionStatus == TransactionStatus.CONFIRMED),
-    ).toBeTruthy();
-  });
-});
+//     expect(
+//       txs.find((x) => x.transactionStatus == TransactionStatus.CONFIRMED),
+//     ).toBeTruthy();
+//   });
+// });

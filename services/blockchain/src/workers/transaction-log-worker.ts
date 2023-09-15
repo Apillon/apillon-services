@@ -168,7 +168,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
           [SubstrateChain.KILT]: async () => {
             const indexer = new KiltBlockchainIndexer();
 
-            const systems = await indexer.getSystemEventsWithLimit(
+            const systems = await indexer.getAllSystemEvents(
               wallet.address,
               lastBlock,
               limit,

@@ -46,7 +46,8 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
   public async getAllSystemEvents(
     account: string,
     fromBlock: number,
-    toBlock: number,
+    toBlock?: number,
+    limit?: number,
   ): Promise<SystemEvent[]> {
     const data: any = await this.graphQlClient.request(
       gql`
@@ -56,24 +57,6 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
         account,
         fromBlock,
         toBlock,
-      },
-    );
-
-    return data.systems;
-  }
-
-  public async getSystemEventsWithLimit(
-    account: string,
-    fromBlock: number,
-    limit: number,
-  ): Promise<SystemEvent[]> {
-    const data: any = await this.graphQlClient.request(
-      gql`
-        ${KiltGQLQueries.ACCOUNT_SYSTEM_EVENTS_WITH_LIMIT_QUERY}
-      `,
-      {
-        account,
-        fromBlock,
         limit,
       },
     );
@@ -323,7 +306,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
   ): Promise<any> {
     const data: any = await this.graphQlClient.request(
       gql`
-        ${KiltGQLQueries.ACCOUNT_WALLET_TRANSACTION_BY_HASH}
+        ${KiltGQLQueries.ACCOUNT_TRANSACTION_BY_HASH}
       `,
       {
         address,
