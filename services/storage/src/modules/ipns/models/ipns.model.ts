@@ -215,7 +215,7 @@ export class Ipns extends ProjectAccessModel {
       `
       SELECT *
       FROM \`${this.tableName}\`
-      WHERE key = @key AND status <> ${SqlModelStatus.DELETED};
+      WHERE \`key\` = @key AND status <> ${SqlModelStatus.DELETED};
       `,
       { key },
     );
