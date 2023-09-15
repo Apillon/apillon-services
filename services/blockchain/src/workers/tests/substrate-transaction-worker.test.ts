@@ -24,48 +24,230 @@ import HttpRequestMock from 'http-request-mock';
 import { KeyringPair } from '@polkadot/keyring/types';
 
 const CHAIN_TYPE = ChainType.SUBSTRATE;
-const CRUST_RPC_URL = 'wss://rpc.crust.network';
-const CRUST_WALLET_ADDRESS =
-  'cTJUoNhua1ymvD87wCLjBrHb8yZTYXy5Ru2kBoxhia8kddYCq';
-const CRUST_WALLET_SEED =
-  'fine circle fiction good shop hand canal approve over canal border mixed';
 
-describe('Substrate tests | KILT', () => {
+describe('Substrate tests ', () => {
   let stage: Stage;
-  let wallet: Wallet;
-  const startBlock = 3982289;
-
   beforeAll(async () => {
     stage = await setupTest();
-    env.BLOCKCHAIN_KILT_GRAPHQL_SERVER = 'http://3.251.2.33:8082/graphql';
-    const chain = SubstrateChain.KILT;
-
-    wallet = await new Wallet(
-      {
-        chain,
-        chainType: CHAIN_TYPE,
-        address: '4qb612mWyrA2Ga2WhXRgYE7tqo8rGs6f6UBZciqcJvfYUGTp',
-        // This is actually not correct - the seed should match the address
-        seed: mnemonicGenerate(),
-        lastParsedBlock: startBlock,
-      },
-      stage.context,
-    ).insert();
   });
 
   afterAll(async () => {
     await releaseStage(stage);
   });
 
-  describe('crust tests', () => {
-    const chain = SubstrateChain.CRUST;
+  describe('Substrate tests | KILT', () => {
+    let wallet: Wallet;
+    const startBlock = 3982289;
+
+    beforeAll(async () => {
+      env.BLOCKCHAIN_KILT_GRAPHQL_SERVER = 'http://3.251.2.33:8082/graphql';
+      const chain = SubstrateChain.KILT;
+
+      wallet = await new Wallet(
+        {
+          chain,
+          chainType: CHAIN_TYPE,
+          address: '4qb612mWyrA2Ga2WhXRgYE7tqo8rGs6f6UBZciqcJvfYUGTp',
+          // This is actually not correct - the seed should match the address
+          seed: mnemonicGenerate(),
+          lastParsedBlock: startBlock,
+        },
+        stage.context,
+      ).insert();
+    });
+
+    test('Single wallet transactions', async () => {
+      const address = '4qb612mWyrA2Ga2WhXRgYE7tqo8rGs6f6UBZciqcJvfYUGTp';
+      const chain = SubstrateChain.KILT;
+      const chainType = ChainType.SUBSTRATE;
+
+      await new Transaction(
+        {
+          address,
+          chain,
+          chainType,
+          transactionStatus: TransactionStatus.PENDING,
+          nonce: 1,
+          rawTransaction: 'SOME_RAW_DATA',
+          transactionHash:
+            '0x743a3e8e255c5623da1b3e84ee28a671ada6ac92fd347215f2904b142d32a1fd',
+        },
+        stage.context,
+      ).insert();
+
+      await new Transaction(
+        {
+          address,
+          chain,
+          chainType,
+          transactionStatus: TransactionStatus.PENDING,
+          nonce: 2,
+          rawTransaction: 'SOME_RAW_DATA_2',
+          transactionHash:
+            '0x2cef26ef0ab429985cd9a6f7f7e4443bf16bbab387b696d940f1ecca87e62e88',
+        },
+        stage.context,
+      ).insert();
+
+      await new Transaction(
+        {
+          address,
+          chain,
+          chainType,
+          transactionStatus: TransactionStatus.PENDING,
+          nonce: 3,
+          rawTransaction: 'SOME_RAW_DATA_3',
+          transactionHash:
+            '0x676202a86bf27eeefdc10c7a1546800dd75912769f23247baae8abd5366cb93b',
+        },
+        stage.context,
+      ).insert();
+
+      const parameters = {
+        chainId: SubstrateChain.KILT,
+      };
+
+      const serviceDef: ServiceDefinition = {
+        type: ServiceDefinitionType.SQS,
+        config: { region: 'test' },
+        params: { FunctionName: 'test' },
+      };
+
+      const workerDefinition = new WorkerDefinition(
+        serviceDef,
+        WorkerName.SUBSTRATE_TRANSACTION,
+        {
+          parameters: { FunctionName: 'test', ...parameters },
+        },
+      );
+
+      await new SubstrateTransactionWorker(
+        workerDefinition,
+        stage.context,
+      ).runExecutor();
+
+      const txs: Transaction[] = await new Transaction(
+        {},
+        stage.context,
+      ).getList(chain, chainType, address, 0);
+
+      console.log('TXS: ', txs);
+
+      expect(txs.length).toBe(3);
+      expect(
+        txs.find((x) => x.transactionStatus != TransactionStatus.CONFIRMED),
+      ).toBeFalsy();
+    });
+
+    test('Single wallet_2 failed transaction not accounted', async () => {
+      const chain = SubstrateChain.KILT;
+      const chainType = ChainType.SUBSTRATE;
+      const address = '4sAqndzGzNYtrdAWhSSnaGptrGY1TSJ99kf5ZRwAzcPUbaTN';
+
+      wallet.lastParsedBlock = 4476985;
+      await wallet.update();
+
+      // Failed 1
+      await new Transaction(
+        {
+          address,
+          chain,
+          chainType,
+          transactionStatus: TransactionStatus.PENDING,
+          nonce: 1,
+          rawTransaction: 'FAILED_TRANSACTION',
+          transactionHash:
+            '0x23a0b353374c195563a9708b2953a7c3467e80fc9f29f69358b8e1b7c8441478',
+        },
+        stage.context,
+      ).insert();
+
+      // Failed 2
+      await new Transaction(
+        {
+          address,
+          chain,
+          chainType,
+          transactionStatus: TransactionStatus.PENDING,
+          nonce: 1,
+          rawTransaction: 'FAILED_TRANSACTION',
+          transactionHash:
+            '0x882cf85d776dbc4a78edd189b976b4a67ae15f2a871e56f20d41242aa20d29d6',
+        },
+        stage.context,
+      ).insert();
+
+      // Failed 3
+      await new Transaction(
+        {
+          address,
+          chain,
+          chainType,
+          transactionStatus: TransactionStatus.PENDING,
+          nonce: 1,
+          rawTransaction: 'FAILED_TRANSACTION',
+          transactionHash:
+            '0x17ae03bc64d1b9c332b1874c864eae60dcdea040ecede965b4ccf8e9f3331432',
+        },
+        stage.context,
+      ).insert();
+
+      const parameters = {
+        chainId: SubstrateChain.KILT,
+      };
+
+      const serviceDef: ServiceDefinition = {
+        type: ServiceDefinitionType.SQS,
+        config: { region: 'test' },
+        params: { FunctionName: 'test' },
+      };
+
+      const workerDefinition = new WorkerDefinition(
+        serviceDef,
+        WorkerName.SUBSTRATE_TRANSACTION,
+        {
+          parameters: { FunctionName: 'test', ...parameters },
+        },
+      );
+
+      await new SubstrateTransactionWorker(
+        workerDefinition,
+        stage.context,
+      ).runExecutor();
+
+      console.log('Getting transactions: ');
+
+      const txs: Transaction[] = await new Transaction(
+        {},
+        stage.context,
+      ).getList(chain, chainType, address, 0);
+
+      console.log('Transactions: ', txs);
+
+      expect(
+        txs.find((x) => x.transactionStatus == TransactionStatus.FAILED),
+      ).toBeTruthy();
+      expect(txs.length).toEqual(3);
+    });
+  });
+
+  describe('Substrate tests | CRUST', () => {
     let api: ApiPromise,
       lastProcessedNonceOnChain: number,
-      crustWallet: Wallet,
+      wallet: Wallet,
       pair: KeyringPair;
+    const CRUST_RPC_URL = 'wss://rpc.crust.network';
+    const CRUST_WALLET_ADDRESS =
+      'cTJUoNhua1ymvD87wCLjBrHb8yZTYXy5Ru2kBoxhia8kddYCq';
+    const CRUST_WALLET_SEED =
+      'fine circle fiction good shop hand canal approve over canal border mixed';
+    const startBlock = 9607270;
+    const chain = SubstrateChain.CRUST;
     const httpMocker = HttpRequestMock.setup();
 
     beforeAll(async () => {
+      env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://localhost:4351/graphql';
+
       const endpoint = await new Endpoint(
         {
           url: CRUST_RPC_URL,
@@ -84,7 +266,7 @@ describe('Substrate tests | KILT', () => {
         await api.query.system.account(CRUST_WALLET_ADDRESS)
       ).nonce.toNumber();
       lastProcessedNonceOnChain = lastNonceOnChain - 1;
-      crustWallet = await new Wallet(
+      wallet = await new Wallet(
         {
           chain,
           chainType: CHAIN_TYPE,
@@ -92,14 +274,15 @@ describe('Substrate tests | KILT', () => {
           address: CRUST_WALLET_ADDRESS,
           nextNonce: lastProcessedNonceOnChain,
           lastProcessedNonce: lastProcessedNonceOnChain - 1,
+          lastParsedBlock: startBlock,
         },
         stage.context,
       ).insert();
       const keyring = new Keyring({ type: 'sr25519' });
-      pair = keyring.addFromUri(crustWallet.seed);
+      pair = keyring.addFromUri(wallet.seed);
     });
 
-    afterAll(() => {
+    afterAll(async () => {
       httpMocker.reset();
     });
 
@@ -113,12 +296,12 @@ describe('Substrate tests | KILT', () => {
       );
       const unsignedTx = api.tx(tx.toHex());
       const signed = await unsignedTx.signAsync(pair, {
-        nonce: crustWallet.nextNonce - 1,
+        nonce: wallet.nextNonce - 1,
         era: 600,
       });
       const transaction = await new Transaction(
         {
-          address: crustWallet.address,
+          address: wallet.address,
           chain,
           chainType: CHAIN_TYPE,
           nonce: lastProcessedNonceOnChain,
@@ -140,10 +323,10 @@ describe('Substrate tests | KILT', () => {
       const updatedCrustWallet = await new Wallet(
         {},
         stage.context,
-      ).populateById(crustWallet.id);
+      ).populateById(wallet.id);
       expect(updatedCrustWallet.lastProcessedNonce).toEqual(transaction.nonce);
       await transaction.delete();
-      await crustWallet
+      await wallet
         .populate({ lastProcessedNonce: lastProcessedNonceOnChain - 1 })
         .update();
     });
@@ -158,12 +341,12 @@ describe('Substrate tests | KILT', () => {
       );
       const unsignedTx = api.tx(tx.toHex());
       const signed = await unsignedTx.signAsync(pair, {
-        nonce: crustWallet.nextNonce - 1,
+        nonce: wallet.nextNonce - 1,
         era: 600,
       });
       const transaction = await new Transaction(
         {
-          address: crustWallet.address,
+          address: wallet.address,
           chain,
           chainType: CHAIN_TYPE,
           nonce: lastProcessedNonceOnChain,
@@ -174,7 +357,7 @@ describe('Substrate tests | KILT', () => {
         stage.context,
       ).insert();
       httpMocker.post(
-        process.env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER,
+        env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER,
         {
           data: {},
         },
@@ -192,9 +375,9 @@ describe('Substrate tests | KILT', () => {
       const updatedCrustWallet = await new Wallet(
         {},
         stage.context,
-      ).populateById(crustWallet.id);
+      ).populateById(wallet.id);
       expect(updatedCrustWallet.lastProcessedNonce).toEqual(
-        crustWallet.lastProcessedNonce,
+        wallet.lastProcessedNonce,
       );
       await transaction.delete();
     });
@@ -207,12 +390,12 @@ describe('Substrate tests | KILT', () => {
       );
       const unsignedTx = api.tx(tx.toHex());
       const signed = await unsignedTx.signAsync(pair, {
-        nonce: crustWallet.nextNonce - 1,
+        nonce: wallet.nextNonce - 1,
         era: 600,
       });
       await new Transaction(
         {
-          address: crustWallet.address,
+          address: wallet.address,
           chain,
           chainType: CHAIN_TYPE,
           nonce: lastProcessedNonceOnChain,
@@ -223,19 +406,19 @@ describe('Substrate tests | KILT', () => {
         stage.context,
       ).insert();
       httpMocker.post(
-        process.env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER,
+        env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER,
         {
           data: {
             storageOrders: [
               {
-                account: { id: crustWallet.address },
+                account: { id: wallet.address },
                 extrinsicHash: 'some_hash',
               },
             ],
             transfers: [
               {
                 extrinsicHash: 'some_hash',
-                from: { id: crustWallet.address },
+                from: { id: wallet.address },
               },
             ],
           },
@@ -254,274 +437,63 @@ describe('Substrate tests | KILT', () => {
       const updatedCrustWallet = await new Wallet(
         {},
         stage.context,
-      ).populateById(crustWallet.id);
+      ).populateById(wallet.id);
       expect(updatedCrustWallet.lastProcessedNonce).toEqual(
         lastProcessedNonceOnChain,
       );
     });
-  });
 
-  test('Single wallet transactions', async () => {
-    const address = '4qb612mWyrA2Ga2WhXRgYE7tqo8rGs6f6UBZciqcJvfYUGTp';
-    const chain = SubstrateChain.KILT;
-    const chainType = ChainType.SUBSTRATE;
+    test('Single successful wallet transaction', async () => {
+      const chain = SubstrateChain.CRUST;
+      const chainType = ChainType.SUBSTRATE;
 
-    await new Transaction(
-      {
-        address,
-        chain,
-        chainType,
-        transactionStatus: TransactionStatus.PENDING,
-        nonce: 1,
-        rawTransaction: 'SOME_RAW_DATA',
-        transactionHash:
-          '0x743a3e8e255c5623da1b3e84ee28a671ada6ac92fd347215f2904b142d32a1fd',
-      },
-      stage.context,
-    ).insert();
+      await new Transaction(
+        {
+          address: CRUST_WALLET_ADDRESS,
+          chain,
+          chainType,
+          transactionStatus: TransactionStatus.PENDING,
+          nonce: 1,
+          rawTransaction: 'SOME_RAW_DATA',
+          transactionHash:
+            '0xb8c9e8b8ec63726ff73af9669414bb7b2e887699aaff7cf248ba1dc89aed3899',
+        },
+        stage.context,
+      ).insert();
 
-    await new Transaction(
-      {
-        address,
-        chain,
-        chainType,
-        transactionStatus: TransactionStatus.PENDING,
-        nonce: 2,
-        rawTransaction: 'SOME_RAW_DATA_2',
-        transactionHash:
-          '0x2cef26ef0ab429985cd9a6f7f7e4443bf16bbab387b696d940f1ecca87e62e88',
-      },
-      stage.context,
-    ).insert();
+      const parameters = {
+        chainId: SubstrateChain.CRUST,
+      };
 
-    await new Transaction(
-      {
-        address,
-        chain,
-        chainType,
-        transactionStatus: TransactionStatus.PENDING,
-        nonce: 3,
-        rawTransaction: 'SOME_RAW_DATA_3',
-        transactionHash:
-          '0x676202a86bf27eeefdc10c7a1546800dd75912769f23247baae8abd5366cb93b',
-      },
-      stage.context,
-    ).insert();
+      const serviceDef: ServiceDefinition = {
+        type: ServiceDefinitionType.SQS,
+        config: { region: 'test' },
+        params: { FunctionName: 'test' },
+      };
 
-    const parameters = {
-      chainId: SubstrateChain.KILT,
-    };
+      const workerDefinition = new WorkerDefinition(
+        serviceDef,
+        WorkerName.SUBSTRATE_TRANSACTION,
+        {
+          parameters: { FunctionName: 'test', ...parameters },
+        },
+      );
 
-    const serviceDef: ServiceDefinition = {
-      type: ServiceDefinitionType.SQS,
-      config: { region: 'test' },
-      params: { FunctionName: 'test' },
-    };
+      await new SubstrateTransactionWorker(
+        workerDefinition,
+        stage.context,
+      ).runExecutor();
 
-    const workerDefinition = new WorkerDefinition(
-      serviceDef,
-      WorkerName.SUBSTRATE_TRANSACTION,
-      {
-        parameters: { FunctionName: 'test', ...parameters },
-      },
-    );
+      const txs: Transaction[] = await new Transaction(
+        {},
+        stage.context,
+      ).getList(chain, chainType, CRUST_WALLET_ADDRESS, 0);
 
-    await new SubstrateTransactionWorker(
-      workerDefinition,
-      stage.context,
-    ).runExecutor();
+      expect(txs.length).toBe(1);
 
-    const txs: Transaction[] = await new Transaction({}, stage.context).getList(
-      chain,
-      chainType,
-      address,
-      0,
-    );
-
-    console.log('TXS: ', txs);
-
-    expect(txs.length).toBe(3);
-    expect(
-      txs.find((x) => x.transactionStatus != TransactionStatus.CONFIRMED),
-    ).toBeFalsy();
-  });
-
-  test('Single wallet_2 failed transaction not accounted', async () => {
-    const chain = SubstrateChain.KILT;
-    const chainType = ChainType.SUBSTRATE;
-    const address = '4sAqndzGzNYtrdAWhSSnaGptrGY1TSJ99kf5ZRwAzcPUbaTN';
-
-    wallet.lastParsedBlock = 4476985;
-    await wallet.update();
-
-    // Failed 1
-    await new Transaction(
-      {
-        address,
-        chain,
-        chainType,
-        transactionStatus: TransactionStatus.PENDING,
-        nonce: 1,
-        rawTransaction: 'FAILED_TRANSACTION',
-        transactionHash:
-          '0x23a0b353374c195563a9708b2953a7c3467e80fc9f29f69358b8e1b7c8441478',
-      },
-      stage.context,
-    ).insert();
-
-    // Failed 2
-    await new Transaction(
-      {
-        address,
-        chain,
-        chainType,
-        transactionStatus: TransactionStatus.PENDING,
-        nonce: 1,
-        rawTransaction: 'FAILED_TRANSACTION',
-        transactionHash:
-          '0x882cf85d776dbc4a78edd189b976b4a67ae15f2a871e56f20d41242aa20d29d6',
-      },
-      stage.context,
-    ).insert();
-
-    // Failed 3
-    await new Transaction(
-      {
-        address,
-        chain,
-        chainType,
-        transactionStatus: TransactionStatus.PENDING,
-        nonce: 1,
-        rawTransaction: 'FAILED_TRANSACTION',
-        transactionHash:
-          '0x17ae03bc64d1b9c332b1874c864eae60dcdea040ecede965b4ccf8e9f3331432',
-      },
-      stage.context,
-    ).insert();
-
-    const parameters = {
-      chainId: SubstrateChain.KILT,
-    };
-
-    const serviceDef: ServiceDefinition = {
-      type: ServiceDefinitionType.SQS,
-      config: { region: 'test' },
-      params: { FunctionName: 'test' },
-    };
-
-    const workerDefinition = new WorkerDefinition(
-      serviceDef,
-      WorkerName.SUBSTRATE_TRANSACTION,
-      {
-        parameters: { FunctionName: 'test', ...parameters },
-      },
-    );
-
-    await new SubstrateTransactionWorker(
-      workerDefinition,
-      stage.context,
-    ).runExecutor();
-
-    console.log('Getting transactions: ');
-
-    const txs: Transaction[] = await new Transaction({}, stage.context).getList(
-      chain,
-      chainType,
-      address,
-      0,
-    );
-
-    console.log('Transactions: ', txs);
-
-    expect(
-      txs.find((x) => x.transactionStatus == TransactionStatus.FAILED),
-    ).toBeTruthy();
-    expect(txs.length).toEqual(3);
-  });
-});
-
-describe('Substrate tests | CRUST', () => {
-  let stage: Stage;
-  let wallet: Wallet;
-  const startBlock = 9607270;
-  const chain = SubstrateChain.CRUST;
-  const chainType = ChainType.SUBSTRATE;
-  const address = 'cTL1jk9CbHJAYz2hWDh3PprRCtrPAHUvSDw7gZbVWbUYt8SJU';
-
-  beforeAll(async () => {
-    stage = await setupTest();
-    env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://localhost:4351/graphql';
-
-    wallet = await new Wallet(
-      {
-        chain,
-        chainType,
-        address: address,
-        // This is actually not correct - the seed should match
-        // the address. Good enough for this test
-        seed: mnemonicGenerate(),
-        lastParsedBlock: startBlock,
-      },
-      stage.context,
-    ).insert();
-  });
-
-  afterAll(async () => {
-    await releaseStage(stage);
-  });
-
-  test('Single successfull wallet transaction', async () => {
-    const chain = SubstrateChain.CRUST;
-    const chainType = ChainType.SUBSTRATE;
-
-    await new Transaction(
-      {
-        address,
-        chain,
-        chainType,
-        transactionStatus: TransactionStatus.PENDING,
-        nonce: 1,
-        rawTransaction: 'SOME_RAW_DATA',
-        transactionHash:
-          '0xb8c9e8b8ec63726ff73af9669414bb7b2e887699aaff7cf248ba1dc89aed3899',
-      },
-      stage.context,
-    ).insert();
-
-    const parameters = {
-      chainId: SubstrateChain.CRUST,
-    };
-
-    const serviceDef: ServiceDefinition = {
-      type: ServiceDefinitionType.SQS,
-      config: { region: 'test' },
-      params: { FunctionName: 'test' },
-    };
-
-    const workerDefinition = new WorkerDefinition(
-      serviceDef,
-      WorkerName.SUBSTRATE_TRANSACTION,
-      {
-        parameters: { FunctionName: 'test', ...parameters },
-      },
-    );
-
-    await new SubstrateTransactionWorker(
-      workerDefinition,
-      stage.context,
-    ).runExecutor();
-
-    const txs: Transaction[] = await new Transaction({}, stage.context).getList(
-      chain,
-      chainType,
-      address,
-      0,
-    );
-
-    expect(txs.length).toBe(1);
-
-    expect(
-      txs.find((x) => x.transactionStatus == TransactionStatus.CONFIRMED),
-    ).toBeTruthy();
+      expect(
+        txs.find((x) => x.transactionStatus == TransactionStatus.CONFIRMED),
+      ).toBeTruthy();
+    });
   });
 });
