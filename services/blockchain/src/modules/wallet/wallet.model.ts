@@ -150,7 +150,6 @@ export class Wallet extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
     ],
     defaultValue: -1,
@@ -169,7 +168,6 @@ export class Wallet extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
     ],
   })
