@@ -1,9 +1,4 @@
 import { EvmChain, SubstrateChain } from '@apillon/lib';
-import {
-  DidTransaction,
-  TransferTransaction,
-  AttestationTransaction,
-} from '../modules/blockchain-indexers/substrate/kilt/data-models/kilt-transactions';
 
 export type Chain = SubstrateChain | EvmChain;
 

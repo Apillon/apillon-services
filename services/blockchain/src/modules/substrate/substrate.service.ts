@@ -23,7 +23,7 @@ import { LogOutput, sendToWorkerQueue } from '@apillon/workers-lib';
 import { WorkerName } from '../../workers/worker-executor';
 import { ServiceContext } from '@apillon/service-lib';
 import { getWalletSeed } from '../../lib/seed';
-import { CrustBlockchainIndexer } from '../blockchain-indexers/substrate/crust/crust-indexer.service';
+import { CrustBlockchainIndexer } from '../blockchain-indexers/substrate/crust/indexer.service';
 import { KiltBlockchainIndexer } from '../blockchain-indexers/substrate/kilt/indexer.service';
 import '@polkadot/api-augment';
 import '@polkadot/rpc-augment';

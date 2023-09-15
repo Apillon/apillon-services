@@ -21,7 +21,7 @@ import { DbTables, TxDirection } from '../config/types';
 import { formatTokenWithDecimals, formatWalletAddress } from '../lib/utils';
 import { TransactionLog } from '../modules/accounting/transaction-log.model';
 import { EvmBlockchainIndexer } from '../modules/blockchain-indexers/evm/evm-indexer.service';
-import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
+import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/indexer.service';
 import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/indexer.service';
 import { WalletDeposit } from '../modules/accounting/wallet-deposit.model';
 import { ethers } from 'ethers';

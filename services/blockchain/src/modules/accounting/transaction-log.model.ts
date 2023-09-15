@@ -30,7 +30,7 @@ import { getTokenFromChain } from '../../lib/utils';
 import {
   SystemEvent,
   TransferTransaction,
-} from '../blockchain-indexers/substrate/kilt/data-models/kilt-transactions';
+} from '../blockchain-indexers/substrate/kilt/data-models';
 export class TransactionLog extends AdvancedSQLModel {
   public readonly tableName = DbTables.TRANSACTION_LOG;
 
