@@ -25,7 +25,7 @@ import { KeyringPair } from '@polkadot/keyring/types';
 
 const CHAIN_TYPE = ChainType.SUBSTRATE;
 
-describe('Substrate tests ', () => {
+describe('Substrate tests', () => {
   let stage: Stage;
   beforeAll(async () => {
     stage = await setupTest();
@@ -35,7 +35,7 @@ describe('Substrate tests ', () => {
     await releaseStage(stage);
   });
 
-  describe('Substrate tests | KILT', () => {
+  describe('Kilt tests', () => {
     let wallet: Wallet;
     const startBlock = 3982289;
 
@@ -231,7 +231,7 @@ describe('Substrate tests ', () => {
     });
   });
 
-  describe('Substrate tests | CRUST', () => {
+  describe('Crust tests', () => {
     let api: ApiPromise,
       lastProcessedNonceOnChain: number,
       wallet: Wallet,
