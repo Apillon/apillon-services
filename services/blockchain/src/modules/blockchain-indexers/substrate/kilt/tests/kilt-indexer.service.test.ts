@@ -1,46 +1,80 @@
-// import { env } from '@apillon/lib';
-// import { KiltBlockchainIndexer } from '../kilt-indexer.service';
+import { env } from '@apillon/lib';
+import { KiltBlockchainIndexer } from '../kilt-indexer.service';
 
-// // TODO: Move to indexer, test with real wallet
-// // TODO2: Add more test cases
-// // TODO3: Once new indexer deployed to crust, modify this test.
-// describe.skip('Test all transactions', () => {
-//   const address = 'cTL1jk9CbHJAYz2hWDh3PprRCtrPAHUvSDw7gZbVWbUYt8SJU';
+// TODO: Move to indexer, test with real wallet
+// TODO2: Add more test cases
+// TODO3: Once new indexer deployed to crust, modify this test.
+describe('Testing indexer data-fetch', () => {
+  beforeAll(async () => {
+    const kiltIndexer = new KiltBlockchainIndexer();
+    const fromBlock = 4377705;
+    const toBlock = 4410572;
+    const address = '4qb612mWyrA2Ga2WhXRgYE7tqo8rGs6f6UBZciqcJvfYUGTp';
+    env.BLOCKCHAIN_KILT_GRAPHQL_SERVER = 'http://3.251.2.33:8082/graphql';
+  });
 
-//   beforeAll(async () => {
-//     env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://localhost:4351/graphql';
-//   });
+  test('Get all transactions', async () => {
+    const kiltIndexer = new KiltBlockchainIndexer();
+    const fromBlock = 4377705;
+    const toBlock = 4410572;
+    const address = '4qb612mWyrA2Ga2WhXRgYE7tqo8rGs6f6UBZciqcJvfYUGTp';
 
-//   test('Get all transactions', async () => {
-//     const crustIndexer = new KiltBlockchainIndexer();
+    // Get all systems without limit
+    const systems: any = await kiltIndexer.getAllSystemEvents(
+      address,
+      fromBlock,
+      toBlock,
+    );
 
-//     // Withdrawals from block to block
-//     const allTransactions: any = await crustIndexer.getAllSystemEvents(
-//       address,
-//       11280536,
-//       11280936,
-//       10,
-//     );
+    expect(systems.length).toEqual(8);
 
-//     // TODO: Does not check if any other element is present in the transaction
-//     expect(allTransactions.storageOrders.length).toEqual(1);
-//     expect(allTransactions.transfers.length).toEqual(3);
-//     expect(allTransactions.systems.length).toEqual(2);
-//   });
+    // Get all systems without limit
+    const systemsWithLimit: any = await kiltIndexer.getAllSystemEvents(
+      address,
+      fromBlock,
+      toBlock,
+      5,
+    );
+    expect(systemsWithLimit.length).toEqual(5);
+  });
 
-//   test('Get all system events', async () => {
-//     const crustIndexer = new KiltBlockchainIndexer();
+  test('Required parameters present', async () => {
+    const kiltIndexer = new KiltBlockchainIndexer();
+    const fromBlock = 4377705;
+    const toBlock = 4410572;
+    const address = '4qb612mWyrA2Ga2WhXRgYE7tqo8rGs6f6UBZciqcJvfYUGTp';
 
-//     // Withdrawals from block to block
-//     const systemTransactions: any = await crustIndexer.getAllSystemEvents(
-//       address,
-//       11281560,
-//       11281620,
-//     );
+    // Get all systems without limit
+    const systemEvents: any = await kiltIndexer.getAllSystemEvents(
+      address,
+      fromBlock,
+      toBlock,
+    );
 
-//     console.log('All transactions ', systemTransactions);
+    console.log('Params: ', address, fromBlock, toBlock);
+    expect(systemEvents.length).toEqual(8);
 
-//     // TODO: Does not check if any other element is present in the transaction
-//     expect(systemTransactions.length).toEqual(8);
-//   });
-// });
+    const requiredProperties = [
+      'id',
+      'blockHash',
+      'blockNumber',
+      'extrinsicId',
+      'extrinsicHash',
+      'transactionType',
+      'createdAt',
+      'status',
+      'account',
+      'error',
+      'fee',
+    ];
+
+    for (const event of systemEvents) {
+      const invalidValue = requiredProperties.reduce(
+        (isValid, currentValue) =>
+          (isValid = event.hasOwnProperty(currentValue)),
+        false,
+      );
+      expect(invalidValue).toEqual(true);
+    }
+  });
+});

@@ -300,7 +300,7 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     return data.attestations;
   }
 
-  public async getWalletTransactionsByHash(
+  public async getAccountTransactionsByHash(
     address: string,
     extrinsicHash: string,
   ): Promise<any> {

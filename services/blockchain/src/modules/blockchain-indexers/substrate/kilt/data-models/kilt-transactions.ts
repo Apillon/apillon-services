@@ -1,37 +1,23 @@
-interface BaseTransaction {
-  // TODO: I suggest we put this in a library and use in Crust as well
-  readonly id: string;
-  readonly blockNumber: number;
-  readonly blockHash: string;
-  readonly extrinsicId: string;
-  readonly extrinsicHash: string;
-  readonly transactionType: string;
-  readonly createdAt: Date;
-  readonly status: number;
-}
+import { BaseTransaction } from '../../base-transaction-model';
 
 export interface DidTransaction extends BaseTransaction {
-  didId?: string | undefined;
-  account?: string | undefined;
-  fee: bigint;
+  readonly didId?: string | undefined;
+  readonly account?: string | undefined;
 }
 
 export interface AttestationTransaction extends BaseTransaction {
-  account?: string | undefined;
-  attesterId?: string | undefined;
-  claimHash?: string;
-  fee: bigint;
+  readonly account?: string | undefined;
+  readonly attesterId?: string | undefined;
+  readonly claimHash?: string;
 }
 
 export interface TransferTransaction extends BaseTransaction {
-  from?: string;
-  to?: string;
-  amount?: bigint | undefined;
-  fee: bigint;
+  readonly from?: string;
+  readonly to?: string;
+  readonly amount?: bigint | undefined;
 }
 
 export interface SystemEvent extends BaseTransaction {
-  account?: string | undefined;
-  error?: string;
-  fee: bigint;
+  readonly account?: string | undefined;
+  readonly error?: string;
 }

@@ -103,7 +103,7 @@ export class CrustGQLQueries extends BaseGQLQueries {
     }`;
 
   static ACCOUNT_TRANSACTION_BY_HASH = `
-    query getWalletTransactionsByHash(
+    query getAccountTransactionsByHash(
       $address: String!
       $extrinsicHash: String!
     ) {

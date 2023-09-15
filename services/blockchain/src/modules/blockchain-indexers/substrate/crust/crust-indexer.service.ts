@@ -124,7 +124,7 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
     return data.marketFileOrders;
   }
 
-  public async getWalletTransactionsByHash(
+  public async getAccountTransactionsByHash(
     address: string,
     extrinsicHash: string,
   ): Promise<any> {
@@ -141,7 +141,7 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
     return data;
   }
 
-  public async getWalletTransfers(
+  public async getAccountTransfers(
     address: string,
     extrinsicHash: string,
   ): Promise<any> {

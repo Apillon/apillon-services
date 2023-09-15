@@ -512,14 +512,14 @@ async function isTransactionIndexed(wallet: Wallet, transactionHash: string) {
   switch (wallet.chain) {
     case SubstrateChain.KILT:
       transactions =
-        await new KiltBlockchainIndexer().getWalletTransactionsByHash(
+        await new KiltBlockchainIndexer().getAccountTransactionsByHash(
           wallet.address,
           transactionHash,
         );
       break;
     case SubstrateChain.CRUST:
       transactions =
-        await new CrustBlockchainIndexer().getWalletTransactionsByHash(
+        await new CrustBlockchainIndexer().getAccountTransactionsByHash(
           wallet.address,
           transactionHash,
         );
