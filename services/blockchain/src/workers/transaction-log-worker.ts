@@ -18,7 +18,11 @@ import {
 } from '@apillon/workers-lib';
 import { Wallet } from '../modules/wallet/wallet.model';
 import { DbTables, TxDirection } from '../config/types';
-import { formatTokenWithDecimals, formatWalletAddress } from '../lib/utils';
+import {
+  formatTokenWithDecimals,
+  formatWalletAddress,
+  getTokenPriceUsd,
+} from '../lib/utils';
 import { TransactionLog } from '../modules/accounting/transaction-log.model';
 import { EvmBlockchainIndexer } from '../modules/blockchain-indexers/evm/evm-indexer.service';
 import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/indexer.service';
@@ -40,8 +44,15 @@ export class TransactionLogWorker extends BaseQueueWorker {
   async runPlanner(_data?: any): Promise<any[]> {
     const wallets = await new Wallet({}, this.context).getWallets();
 
-    return wallets.map((x) => ({
-      wallet: { id: x.id, address: x.address },
+    return wallets.map((w) => ({
+      wallet: {
+        id: w.id,
+        address: w.address,
+        token: w.token,
+        decimals: w.decimals,
+        chain: w.chain,
+        chainType: w.chainType,
+      },
       batchLimit: this.batchLimit,
     }));
   }
@@ -354,14 +365,26 @@ export class TransactionLogWorker extends BaseQueueWorker {
     wallet: Wallet,
     transactions: TransactionLog[],
   ) {
+    const tokenPriceUsd = await getTokenPriceUsd(wallet.token);
     // Process wallet deposits
-    for (const deposit of transactions.filter(
-      (t) => t.direction === TxDirection.INCOME && t.wallet === wallet.address,
-    )) {
+    for (const deposit of transactions
+      .filter(
+        (t) =>
+          t.direction === TxDirection.INCOME && t.wallet === wallet.address,
+      )
+      .map((t) => new TransactionLog(t, this.context))) {
+      const conn = await this.context.mysql.start();
       try {
+        const valueUsd =
+          ethers.BigNumber.from(deposit.totalPrice)
+            .div(ethers.BigNumber.from(10).pow(wallet.decimals))
+            .toNumber() * tokenPriceUsd;
+
         await new WalletDeposit({}, this.context).createWalletDeposit(
           wallet,
           deposit,
+          tokenPriceUsd,
+          conn,
           (walletDeposit) =>
             this.sendErrorAlert(
               `INVALID WALLET DEPOSIT! ${formatWalletAddress(wallet)}`,
@@ -371,22 +394,43 @@ export class TransactionLogWorker extends BaseQueueWorker {
               },
             ),
         );
+        await deposit
+          .populate({ value: valueUsd })
+          .update(SerializeFor.UPDATE_DB, conn);
+
+        await this.context.mysql.commit(conn);
       } catch (err) {
         await this.sendErrorAlert(
           `Error creating deposit for ${formatWalletAddress(wallet)}`,
           { ...deposit },
           err,
         );
+        await this.context.mysql.rollback(conn);
       }
     }
 
     // Process wallet token spends
-    for (const spend of transactions.filter(
-      (t) => t.direction === TxDirection.COST && t.wallet === wallet.address,
-    )) {
+    for (const spend of transactions
+      .filter(
+        (t) => t.direction === TxDirection.COST && t.wallet === wallet.address,
+      )
+      .map((t) => new TransactionLog(t, this.context))) {
       const conn = await this.context.mysql.start();
       try {
-        await this.deductFromAvailableDeposit(wallet, spend.totalPrice, conn);
+        const pricePerToken = await this.deductFromAvailableDeposit(
+          wallet,
+          spend.totalPrice,
+          conn,
+        );
+        const valueUsd =
+          ethers.BigNumber.from(spend.totalPrice)
+            .div(ethers.BigNumber.from(10).pow(wallet.decimals))
+            .toNumber() * pricePerToken;
+
+        await spend
+          .populate({ value: valueUsd })
+          .update(SerializeFor.UPDATE_DB, conn);
+
         await this.context.mysql.commit(conn);
       } catch (err) {
         await this.sendErrorAlert(
@@ -403,16 +447,17 @@ export class TransactionLogWorker extends BaseQueueWorker {
     wallet: Wallet,
     amount: string,
     conn: PoolConnection,
-  ): Promise<void> {
+  ): Promise<number> {
     const availableDeposit = await new WalletDeposit(
       {},
       this.context,
     ).getOldestWithBalance(wallet.id, conn);
     if (!availableDeposit.exists()) {
-      return await this.sendErrorAlert(
+      await this.sendErrorAlert(
         `NO AVAILABLE DEPOSIT! ${formatWalletAddress(wallet)}`,
         { wallet: wallet.address },
       );
+      return;
     }
     if (
       this.subtractAmount(availableDeposit.currentAmount, amount).startsWith(
@@ -430,6 +475,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
       amount,
     );
     await availableDeposit.update(SerializeFor.UPDATE_DB, conn);
+    return availableDeposit.pricePerToken;
   }
 
   private sendErrorAlert(
