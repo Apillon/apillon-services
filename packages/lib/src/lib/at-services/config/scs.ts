@@ -1,8 +1,9 @@
+import { CreateSubscriptionDto } from './dtos/create-subscription.dto';
 import { env } from '../../../config/env';
 import {
   AppEnvironment,
   ScsEventType,
-  SubscriptionPackage,
+  SubscriptionPackages,
 } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
@@ -86,13 +87,18 @@ export class Scs extends BaseService {
   }
 
   public async createSubscription(
-    subscriptionId: SubscriptionPackage,
-    project_uuid: string,
+    createSubscriptionDto: CreateSubscriptionDto,
   ) {
     return await this.callService({
       eventName: ScsEventType.CREATE_SUBSCRIPTION,
-      subscriptionId,
-      project_uuid,
+      createSubscriptionDto,
+    });
+  }
+
+  public async getSubscriptionPackageById(id: number) {
+    return await this.callService({
+      eventName: ScsEventType.GET_SUBSCRIPTION_PACKAGE_BY_ID,
+      id,
     });
   }
 }

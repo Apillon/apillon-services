@@ -23,6 +23,8 @@ export async function processEvent(
     [ScsEventType.DELETE_OVERRIDE]: OverrideService.deleteOverride,
     [ScsEventType.GET_ACTIVE_TERMS]: TermsService.getActiveTerms,
     [ScsEventType.CREATE_SUBSCRIPTION]: SubscriptionService.createSubscription,
+    [ScsEventType.GET_SUBSCRIPTION_PACKAGE_BY_ID]:
+      SubscriptionService.getSubscriptionPackageById,
   };
 
   return await processors[event.eventName](event, context);

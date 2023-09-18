@@ -1,45 +1,26 @@
 import {
+  CreateSubscriptionDto,
   Lmas,
   LogType,
   SerializeFor,
   ServiceName,
-  SubscriptionPackage,
 } from '@apillon/lib';
 import { Subscription } from './models/subscription.model';
 import { ServiceContext } from '@apillon/service-lib';
+import { SubscriptionPackage } from './models/subscription-package.model';
 
 export class SubscriptionService {
   /**
    * Create a subscription for a project
-   * @param {{ subscriptionId: SubscriptionPackage; project_uuid: string }} {
-        subscriptionId,
-        project_uuid,
-      }
+   * @param {{ createSubscriptionDto: CreateSubscriptionDto }} createSubscriptionDto - subset DTO containing the subscription data
    * @param {ServiceContext} context
    * @returns {Promise<Subscription>}
    */
   static async createSubscription(
-    {
-      subscriptionId,
-      project_uuid,
-    }: {
-      subscriptionId: SubscriptionPackage;
-      project_uuid: string;
-    },
+    { createSubscriptionDto }: { createSubscriptionDto: CreateSubscriptionDto },
     context: ServiceContext,
   ): Promise<Subscription> {
-    const expiresOn = new Date();
-    // 1 month from now
-    expiresOn.setMonth(expiresOn.getMonth() + 1);
-
-    const subscription = new Subscription(
-      {
-        package_id: subscriptionId,
-        project_uuid,
-        expiresOn,
-      },
-      context,
-    );
+    const subscription = new Subscription(createSubscriptionDto, context);
 
     try {
       await subscription.validate();
@@ -48,7 +29,7 @@ export class SubscriptionService {
 
       if (!subscription.isValid()) {
         await new Lmas().sendAdminAlert(
-          `Invalid subscription received: ${subscriptionId} for project ${project_uuid}. Error: ${err.message}`,
+          `Invalid subscription received: ${createSubscriptionDto.package_id} for project ${createSubscriptionDto.project_uuid}. Error: ${err.message}`,
           ServiceName.SCS,
           LogType.ALERT,
         );
@@ -59,5 +40,12 @@ export class SubscriptionService {
     return (await subscription.insert()).serialize(
       SerializeFor.SERVICE,
     ) as Subscription;
+  }
+
+  static async getSubscriptionPackageById(
+    { id }: { id: number },
+    context: ServiceContext,
+  ): Promise<SubscriptionPackage> {
+    return await new SubscriptionPackage({}, context).populateById(id);
   }
 }

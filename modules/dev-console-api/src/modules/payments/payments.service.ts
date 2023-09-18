@@ -1,14 +1,15 @@
 import {
+  AppEnvironment,
   BadRequestErrorCode,
   CodeException,
+  CreateSubscriptionDto,
   Scs,
   env,
-  getEnumKey,
 } from '@apillon/lib';
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
 import { PaymentSessionDto } from './dto/payment-session.dto';
-import { PurchasePriceMap } from '../../config/types';
+import { ValidatorErrorCode } from '../../config/types';
 
 @Injectable()
 export class PaymentsService {
@@ -18,11 +19,22 @@ export class PaymentsService {
     paymentSessionDto: PaymentSessionDto,
   ): Promise<Stripe.Response<Stripe.Checkout.Session>> {
     const isCreditPurchase = paymentSessionDto.credits;
-
+    const { data } = await new Scs().getSubscriptionPackageById(
+      +paymentSessionDto.subscription_id,
+    );
+    const stripeApiId =
+      env.APP_ENV == AppEnvironment.PROD
+        ? data.stripeApiId
+        : data.stripeApiIdTest;
+    if (!stripeApiId) {
+      throw new CodeException({
+        code: ValidatorErrorCode.STRIPE_ID_NOT_VALID,
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        errorCodes: ValidatorErrorCode,
+      });
+    }
     const lineItem: Stripe.Checkout.SessionCreateParams.LineItem = {
-      price: isCreditPurchase
-        ? PurchasePriceMap.credits
-        : PurchasePriceMap[paymentSessionDto.subscription_id],
+      price: stripeApiId,
       quantity: 1,
       adjustable_quantity: isCreditPurchase
         ? {
@@ -36,6 +48,7 @@ export class PaymentsService {
       mode: isCreditPurchase ? 'payment' : 'subscription',
       metadata: {
         project_uuid: paymentSessionDto.project_uuid,
+        package_id: paymentSessionDto.subscription_id,
         isCreditPurchase: `${isCreditPurchase}`,
       },
       // TODO
@@ -53,22 +66,24 @@ export class PaymentsService {
         if (session.payment_status !== 'paid') {
           return;
         }
-        const project_uuid = session.metadata.project_uuid;
+        const { project_uuid, package_id } = session.metadata;
         const isCreditPurchase = session.metadata.isCreditPurchase === 'true';
         if (isCreditPurchase) {
           // TODO: handle credit purchase
           return;
         }
-        const { line_items: lineItems } =
-          await this.stripe.checkout.sessions.retrieve(session.id, {
-            expand: ['line_items'],
-          });
-        const subscriptionPackageId = +getEnumKey(
-          PurchasePriceMap,
-          lineItems.data[0].price.id,
+        const subscription = await this.stripe.subscriptions.retrieve(
+          session.subscription,
         );
 
-        await new Scs().createSubscription(subscriptionPackageId, project_uuid);
+        await new Scs().createSubscription(
+          new CreateSubscriptionDto({
+            project_uuid,
+            package_id,
+            expiresOn: new Date(subscription.current_period_end * 1000),
+            subscriberEmail: session.customer_details.email,
+          }),
+        );
         /* TODO:
          * - Save payment, customer and product info to DB
          * - Send invoice email
@@ -77,18 +92,10 @@ export class PaymentsService {
 
         break;
       }
-
-      case 'checkout.session.async_payment_succeeded': {
-        // const session = event.data.object;
-        // TODO
+      case 'customer.subscription.updated':
         break;
-      }
-
-      case 'checkout.session.async_payment_failed': {
-        // const session = event.data.object;
-        // TODO
+      case 'payout.canceled':
         break;
-      }
     }
   }
 
