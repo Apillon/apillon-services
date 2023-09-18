@@ -110,10 +110,9 @@ export class SubstrateService {
       const unsignedTx = await api.getUnsignedTransaction(params.transaction);
       // TODO: add validation service for transaction to detect and prevent weird transactions.
 
-      // TODO: Determine the best era
       const signed = await unsignedTx.signAsync(pair, {
         nonce: wallet.nextNonce,
-        era: 600, // number of blocks the transaction is valid - 6s per block * 6000 blocks / 60 = 600 minutes -> 10 hours
+        era: 0, // immortal transaction
       });
 
       console.info('signAsync SUCCESSFUL. Saving transaction to DB.');
