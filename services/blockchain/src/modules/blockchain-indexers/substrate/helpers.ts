@@ -1,9 +1,9 @@
 import { ChainType, SubstrateChain } from '@apillon/lib';
 import { BlockchainErrorCode } from '../../../config/types';
 import { BlockchainCodeException } from '../../../lib/exceptions';
-import { CrustBlockchainIndexer } from './crust/crust-indexer.service';
-import { KiltBlockchainIndexer } from './kilt/kilt-indexer.service';
 import { Wallet } from '../../wallet/wallet.model';
+import { CrustBlockchainIndexer } from './crust/indexer.service';
+import { KiltBlockchainIndexer } from './kilt/indexer.service';
 
 /**
  * Checks indexer to determine if transaction exists (is indexed).
@@ -25,14 +25,14 @@ export async function isTransactionIndexed(
   switch (wallet.chain) {
     case SubstrateChain.KILT:
       transactions =
-        await new KiltBlockchainIndexer().getWalletTransactionsByHash(
+        await new KiltBlockchainIndexer().getAccountTransactionsByHash(
           wallet.address,
           transactionHash,
         );
       break;
     case SubstrateChain.CRUST:
       transactions =
-        await new CrustBlockchainIndexer().getWalletTransactionsByHash(
+        await new CrustBlockchainIndexer().getAccountTransactionsByHash(
           wallet.address,
           transactionHash,
         );
