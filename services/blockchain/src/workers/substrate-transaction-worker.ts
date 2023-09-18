@@ -1,11 +1,4 @@
 import {
-  BaseSingleThreadWorker,
-  WorkerDefinition,
-  LogOutput,
-} from '@apillon/workers-lib';
-import { Wallet } from '../modules/wallet/wallet.model';
-import { BaseBlockchainIndexer } from '../modules/blockchain-indexers/substrate/base-blockchain-indexer';
-import {
   ChainType,
   Context,
   LogType,
@@ -15,15 +8,19 @@ import {
   TransactionStatus,
 } from '@apillon/lib';
 import {
+  BaseSingleThreadWorker,
+  LogOutput,
+  WorkerDefinition,
+} from '@apillon/workers-lib';
+import { ParachainConfig } from '../config/substrate-parachain';
+import {
   DbTables,
   TransactionIndexerStatus,
   WebhookWorker,
 } from '../config/types';
-import {
-  createSubstrateTxWebhookDto,
-  processWebhooks,
-} from '../lib/webhook-procedures';
-import { ParachainConfig } from '../config/substrate-parachain';
+import { executeWebhooksForTransmittedTransactionsInWallet } from '../lib/webhook-procedures';
+import { BaseBlockchainIndexer } from '../modules/blockchain-indexers/substrate/base-blockchain-indexer';
+import { Wallet } from '../modules/wallet/wallet.model';
 
 export enum SubstrateChainName {
   KILT = 'KILT',
@@ -98,24 +95,20 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         continue;
       }
 
-      const webhooks = transactions.map((t) => {
-        return createSubstrateTxWebhookDto(t);
-      });
-
+      //Execute webhooks
       try {
-        await processWebhooks(
-          webhooks,
+        await executeWebhooksForTransmittedTransactionsInWallet(
+          this.context,
+          wallet.address,
           this.webHookWorker.workerName,
           this.webHookWorker.sqsUrl,
-          this.context,
         );
       } catch (error) {
         await this.writeEventLog(
           {
             logType: LogType.ERROR,
-            message: `Error sending update to worker: ${this.webHookWorker.workerName}, url ${this.webHookWorker.sqsUrl}`,
+            message: `Error executing webhooks for wallet ${wallet.address}`,
             service: ServiceName.BLOCKCHAIN,
-            data: { transactions },
             err: error,
           },
           LogOutput.SYS_ERROR,
