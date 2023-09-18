@@ -44,9 +44,9 @@ export class PaymentsService {
       automatic_tax: { enabled: true },
     });
   }
-
   async stripeWebhookEventHandler(event: Stripe.Event) {
     switch (event.type) {
+      // customer.subscription.updated
       case 'checkout.session.completed': {
         // https://stripe.com/docs/api/checkout/sessions/object
         const session = event.data.object as any;

@@ -53,5 +53,5 @@ export class PaymentSessionDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
   })
-  public callbackUrl: string;
+  public returnUrl: string;
 }

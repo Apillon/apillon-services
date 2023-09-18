@@ -671,7 +671,7 @@ export enum ApiName {
 
 export enum SubscriptionPackage {
   Freemium = 1,
-  Larva = 2,
+  Caterpillar = 2,
   Cocoon = 3,
   Butterfly = 4,
 }

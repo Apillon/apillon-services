@@ -8,7 +8,7 @@ export async function upgrade(
     INSERT INTO ${DbTables.SUBSCRIPTION_PACKAGE} (id, status, name, description, isDefault)
       VALUES
       (${SubscriptionPackage.Freemium}, 5, 'Freemium', 'Freemium (Egg) plan', 1),
-      (${SubscriptionPackage.Larva}, 5, 'Larva', 'Larva plan', 0),
+      (${SubscriptionPackage.Larva}, 5, 'Caterpillar', 'Caterpillar plan', 0),
       (${SubscriptionPackage.Cocoon}, 5, 'Cocoon', 'Cocoon plan', 0),
       (${SubscriptionPackage.Butterfly}, 5, 'Butterfly', 'Butterfly plan', 0)
     ;

@@ -3,7 +3,7 @@ export enum DbTables {
   OVERRIDE = 'override',
   TERMS = 'terms',
   SUBSCRIPTION = 'subscription',
-  SUBSCRIPTION_PACKAGE = 'subscription_package',
+  SUBSCRIPTION_PACKAGE = 'subscriptionPackage',
 }
 
 /**
