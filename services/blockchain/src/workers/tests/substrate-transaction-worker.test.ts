@@ -338,8 +338,6 @@ describe('Substrate tests | KILT', () => {
       0,
     );
 
-    console.log('TXS: ', txs);
-
     expect(txs.length).toBe(3);
     expect(
       txs.find((x) => x.transactionStatus != TransactionStatus.CONFIRMED),
