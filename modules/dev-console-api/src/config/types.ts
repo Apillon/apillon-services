@@ -1,4 +1,4 @@
-import { AppEnvironment, SubscriptionPackage, env } from '@apillon/lib';
+import { AppEnvironment, SubscriptionPackages, env } from '@apillon/lib';
 
 export enum DbTables {
   USER = 'user',
@@ -63,6 +63,7 @@ export enum ValidatorErrorCode {
   UPDATE_ROLE_ON_PROJECT_ROLE_ID_NOT_PRESENT = 42204611,
   SUBSCRIPTION_OR_CREDITS_NOT_PRESENT = 42204612,
   SUBSCRIPTION_ID_NOT_VALID = 42204613,
+  STRIPE_ID_NOT_VALID = 42204614,
 }
 
 /**
@@ -109,17 +110,3 @@ export enum InstructionType {
   VIDEO = 4,
   WIKI = 5,
 }
-
-export const PurchasePriceMap =
-  env.APP_ENV === AppEnvironment.LOCAL_DEV
-    ? {
-        credits: 'price_1NqBzzGlTglE98hYBZ2Xauqn',
-        [SubscriptionPackage.Larva]: 'price_1NqC4PGlTglE98hYkWZKuSl0',
-        [SubscriptionPackage.Cocoon]: 'price_1NqC55GlTglE98hYPCeH0gUr',
-      }
-    : {
-        // TODO
-        credits: '',
-        [SubscriptionPackage.Larva]: '',
-        [SubscriptionPackage.Cocoon]: '',
-      };

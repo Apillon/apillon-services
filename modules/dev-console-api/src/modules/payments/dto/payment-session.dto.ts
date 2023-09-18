@@ -8,7 +8,7 @@ import {
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { ValidatorErrorCode } from '../../../config/types';
-import { SubscriptionPackage } from '@apillon/lib';
+import { SubscriptionPackages } from '@apillon/lib';
 
 export class PaymentSessionDto extends ModelBase {
   @prop({
@@ -32,12 +32,12 @@ export class PaymentSessionDto extends ModelBase {
         code: ValidatorErrorCode.SUBSCRIPTION_OR_CREDITS_NOT_PRESENT,
       },
       {
-        resolver: enumInclusionValidator(SubscriptionPackage, true),
+        resolver: enumInclusionValidator(SubscriptionPackages, true),
         code: ValidatorErrorCode.SUBSCRIPTION_ID_NOT_VALID,
       },
     ],
   })
-  public subscription_id: SubscriptionPackage;
+  public subscription_id: SubscriptionPackages;
 
   /**
    * If the user is initiating a credit purchase session, not a subscription
@@ -46,6 +46,7 @@ export class PaymentSessionDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
     validators: [],
+    defaultValue: false,
   })
   public credits: boolean;
 

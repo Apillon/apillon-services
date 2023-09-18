@@ -1,4 +1,9 @@
-import { dateParser, stringParser } from '@rawmodel/parsers';
+import {
+  booleanParser,
+  dateParser,
+  integerParser,
+  stringParser,
+} from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
   enumInclusionValidator,
@@ -6,7 +11,7 @@ import {
   presenceValidator,
   prop,
   SerializeFor,
-  SubscriptionPackage,
+  SubscriptionPackages,
 } from '@apillon/lib';
 import { ConfigErrorCode, DbTables } from '../../../config/types';
 
@@ -25,7 +30,7 @@ export class Subscription extends AdvancedSQLModel {
         code: ConfigErrorCode.SUBSCRIPTION_ID_NOT_PRESENT,
       },
       {
-        resolver: enumInclusionValidator(SubscriptionPackage, true),
+        resolver: enumInclusionValidator(SubscriptionPackages, true),
         code: ConfigErrorCode.SUBSCRIPTION_ID_NOT_VALID,
       },
     ],
@@ -70,4 +75,68 @@ export class Subscription extends AdvancedSQLModel {
     ],
   })
   public expiresOn: Date;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public subscriberEmail: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public paymentFailures: number;
+
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public isCanceled: boolean;
+
+  @prop({
+    parser: { resolver: dateParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public cancelDate: Date;
 }

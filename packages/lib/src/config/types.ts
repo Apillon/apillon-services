@@ -159,6 +159,8 @@ export enum ScsEventType {
   CREATE_OVERRIDE = 'create-override',
   DELETE_OVERRIDE = 'delete-override',
   CREATE_SUBSCRIPTION = 'create-subscription',
+  GET_SUBSCRIPTION_PACKAGE_BY_ID = 'get-subscription-package-by-id',
+  GET_SUBSCRIPTION_PACKAGE_BY_STRIPE_ID = 'get-subscription-package-by-stripe-id',
 }
 
 export enum NftsEventType {
@@ -669,7 +671,7 @@ export enum ApiName {
   AUTHENTICATION_API = 'authentication-api',
 }
 
-export enum SubscriptionPackage {
+export enum SubscriptionPackages {
   Freemium = 1,
   Caterpillar = 2,
   Cocoon = 3,
