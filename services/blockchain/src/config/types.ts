@@ -152,3 +152,8 @@ export enum TransactionIndexerStatus {
   FAIL = 0,
   SUCCESS = 1,
 }
+
+export type WebhookWorker = {
+  workerName: string;
+  sqsUrl: string;
+};

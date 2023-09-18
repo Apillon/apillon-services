@@ -49,7 +49,7 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
 
       const crustWebhooks: TransactionWebhookDataDto[] = [];
       const nftWebhooks: TransactionWebhookDataDto[] = [];
-      const kiltWebooks: TransactionWebhookDataDto[] = [];
+      // const kiltWebooks: TransactionWebhookDataDto[] = [];
 
       if (transactions && transactions.length > 0) {
         for (let i = 0; i < transactions.length; i++) {
@@ -60,9 +60,10 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
                 this.createSubstrateTransactionWebhookDto(transaction);
               crustWebhooks.push(crustTWh);
             } else if (transaction.chain == SubstrateChain.KILT) {
-              const kiltTWh =
-                this.createSubstrateTransactionWebhookDto(transaction);
-              kiltWebooks.push(kiltTWh);
+              // NOTE: Do nothing here.
+              // const kiltTWh =
+              //   this.createSubstrateTransactionWebhookDto(transaction);
+              // kiltWebooks.push(kiltTWh);
             }
           } else if (
             transaction.chainType == ChainType.EVM &&
@@ -100,11 +101,11 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
           'UpdateCrustStatusWorker',
         )),
 
-        ...(await this.processWebhook(
-          kiltWebooks,
-          env.AUTH_AWS_WORKER_SQS_URL,
-          'UpdateStateWorker',
-        )),
+        // ...(await this.processWebhook(
+        //   kiltWebooks,
+        //   env.AUTH_AWS_WORKER_SQS_URL,
+        //   'UpdateStateWorker',
+        // )),
 
         // Evm
         ...(await this.processWebhook(
