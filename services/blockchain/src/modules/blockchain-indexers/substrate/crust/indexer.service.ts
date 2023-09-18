@@ -2,8 +2,12 @@ import { env } from '@apillon/lib';
 import { gql } from 'graphql-request';
 
 import { BaseBlockchainIndexer } from '../base-blockchain-indexer';
-import { CrustGQLQueries } from './queries/crust-graphql-queries';
-import { SystemEvent, TransferTransaction } from './data-models';
+import { CrustGQLQueries } from './graphql-queries';
+import {
+  StorageOrderTransaction,
+  SystemEvent,
+  TransferTransaction,
+} from './data-models';
 import { CrustTransactionType } from '../../../../config/types';
 
 export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
@@ -44,7 +48,8 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
   public async getAllSystemEvents(
     account: string,
     fromBlock: number,
-    toBlock: number,
+    toBlock?: number,
+    limit?: number,
   ): Promise<SystemEvent[]> {
     const data: any = await this.graphQlClient.request(
       gql`
@@ -54,25 +59,6 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
         account,
         fromBlock,
         toBlock,
-      },
-    );
-
-    return data.systems;
-  }
-
-  /// TINE SPECIFICS -- PLEASE VERIFY ////
-  public async getSystemEventsWithLimit(
-    account: string,
-    fromBlock: number,
-    limit: number,
-  ): Promise<SystemEvent[]> {
-    const data: any = await this.graphQlClient.request(
-      gql`
-        ${CrustGQLQueries.ACCOUNT_SYSTEM_EVENTS_WITH_LIMIT_QUERY}
-      `,
-      {
-        account,
-        fromBlock,
         limit,
       },
     );
@@ -99,6 +85,27 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
     );
 
     return data.transfers;
+  }
+
+  /* These indicate a balance transfer from one account -> another */
+  public async getAccountBalanceTransfersForTxs(
+    account: string,
+    hashes: string[],
+  ): Promise<{
+    transfers: TransferTransaction[];
+    storageOrders: StorageOrderTransaction[];
+  }> {
+    const data: any = await this.graphQlClient.request(
+      gql`
+        ${CrustGQLQueries.ACCOUNT_TRANSFERS_BY_TX_HASHES_QUERY}
+      `,
+      {
+        account,
+        hashes,
+      },
+    );
+
+    return data;
   }
 
   // TODO Vinko: Add comments what these do.
@@ -142,13 +149,13 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
     return data.marketFileOrders;
   }
 
-  public async getWalletTransactionsByHash(
+  public async getAccountTransactionsByHash(
     address: string,
     extrinsicHash: string,
   ): Promise<any> {
     const data: any = await this.graphQlClient.request(
       gql`
-        ${CrustGQLQueries.ACCOUNT_WALLET_TRANSACTION_BY_HASH}
+        ${CrustGQLQueries.ACCOUNT_TRANSACTION_BY_HASH}
       `,
       {
         address,
@@ -159,7 +166,7 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
     return data;
   }
 
-  public async getWalletTransfers(
+  public async getAccountTransfers(
     address: string,
     extrinsicHash: string,
   ): Promise<any> {

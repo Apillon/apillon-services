@@ -143,6 +143,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     toBlock: number,
   ) {
     // Get all transactions from the
+    // TODO: Apply range calculation
     const transactions = await this.indexer.getAllSystemEvents(
       address,
       fromBlock,

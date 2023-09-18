@@ -1,6 +1,6 @@
 import { SubstrateChain, env } from '@apillon/lib';
-import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
-import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/kilt-indexer.service';
+import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/indexer.service';
+import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/indexer.service';
 
 // TODO: Maybe move worker name to env, so it can be configurable
 export const ParachainConfig = {

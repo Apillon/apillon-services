@@ -174,57 +174,57 @@ describe('Transaction Log Worker unit test', () => {
   //   expect(test1.id).toBe(test2.id);
   // });
 
-  // test('Test Crust Wallet Logging', async () => {
-  //   const data = await worker.runPlanner();
-  //   expect(data.length).toBe(4);
+  test('Test Crust Wallet Logging', async () => {
+    const data = await worker.runPlanner();
+    expect(data.length).toBe(4);
 
-  //   const walletData = data.find(
-  //     (x) => x.wallet.address === crustWallet.address,
-  //   );
-  //   expect(walletData.wallet.address).toBe(crustWallet.address);
-  //   expect(walletData.wallet.id).toBe(crustWallet.id);
+    const walletData = data.find(
+      (x) => x.wallet.address === crustWallet.address,
+    );
+    expect(walletData.wallet.address).toBe(crustWallet.address);
+    expect(walletData.wallet.id).toBe(crustWallet.id);
 
-  //   await worker.runExecutor(walletData);
+    await worker.runExecutor(walletData);
 
-  //   const logs = await stage.db.paramExecute(
-  //     `
-  //     SELECT COUNT(*) AS cnt
-  //     FROM \`${DbTables.TRANSACTION_LOG}\`
-  //     WHERE wallet = @address
-  //     `,
-  //     { address: crustWallet.address },
-  //   );
+    const logs = await stage.db.paramExecute(
+      `
+      SELECT COUNT(*) AS cnt
+      FROM \`${DbTables.TRANSACTION_LOG}\`
+      WHERE wallet = @address
+      `,
+      { address: crustWallet.address },
+    );
 
-  //   crustLogCount = logs[0].cnt;
-  //   expect(crustLogCount).toBeGreaterThan(0);
-  //   expect(crustLogCount).toBeLessThanOrEqual(batchLimit);
-  //   console.log(crustLogCount);
-  // });
+    crustLogCount = logs[0].cnt;
+    expect(crustLogCount).toBeGreaterThan(0);
+    expect(crustLogCount).toBeLessThanOrEqual(batchLimit);
+    console.log(crustLogCount);
+  });
 
-  // test('Test Crust Wallet Logging 2nd run', async () => {
-  //   const data = await worker.runPlanner();
-  //   expect(data.length).toBe(4);
+  test('Test Crust Wallet Logging 2nd run', async () => {
+    const data = await worker.runPlanner();
+    expect(data.length).toBe(4);
 
-  //   const walletData = data.find(
-  //     (x) => x.wallet.address === crustWallet.address,
-  //   );
-  //   expect(walletData.wallet.address).toBe(crustWallet.address);
-  //   expect(walletData.wallet.id).toBe(crustWallet.id);
+    const walletData = data.find(
+      (x) => x.wallet.address === crustWallet.address,
+    );
+    expect(walletData.wallet.address).toBe(crustWallet.address);
+    expect(walletData.wallet.id).toBe(crustWallet.id);
 
-  //   await worker.runExecutor(walletData);
+    await worker.runExecutor(walletData);
 
-  //   const logs = await stage.db.paramExecute(
-  //     `
-  //     SELECT COUNT(*) AS cnt
-  //     FROM \`${DbTables.TRANSACTION_LOG}\`
-  //     WHERE wallet = @address
-  //     `,
-  //     { address: crustWallet.address },
-  //   );
+    const logs = await stage.db.paramExecute(
+      `
+      SELECT COUNT(*) AS cnt
+      FROM \`${DbTables.TRANSACTION_LOG}\`
+      WHERE wallet = @address
+      `,
+      { address: crustWallet.address },
+    );
 
-  //   expect(logs[0].cnt).toBeGreaterThan(crustLogCount);
-  //   console.log(logs[0].cnt);
-  // });
+    expect(logs[0].cnt).toBeGreaterThan(crustLogCount);
+    console.log(logs[0].cnt);
+  });
 
   // test('Test Moonbase Wallet Logging', async () => {
   //   const data = await worker.runPlanner();

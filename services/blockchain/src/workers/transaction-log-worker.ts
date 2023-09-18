@@ -21,8 +21,8 @@ import { DbTables, TxDirection } from '../config/types';
 import { formatTokenWithDecimals, formatWalletAddress } from '../lib/utils';
 import { TransactionLog } from '../modules/accounting/transaction-log.model';
 import { EvmBlockchainIndexer } from '../modules/blockchain-indexers/evm/evm-indexer.service';
-import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
-import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/kilt-indexer.service';
+import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/indexer.service';
+import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/indexer.service';
 import { WalletDeposit } from '../modules/accounting/wallet-deposit.model';
 import { ethers } from 'ethers';
 
@@ -133,44 +133,55 @@ export class TransactionLogWorker extends BaseQueueWorker {
         // substrate chains has each own indexer
         const subOptions = {
           [SubstrateChain.CRUST]: async () => {
-            const res =
-              await new CrustBlockchainIndexer().getAccountBalanceTransfers(
+            const indexer = new CrustBlockchainIndexer();
+
+            const systems = await indexer.getAllSystemEvents(
+              wallet.address,
+              lastBlock,
+              undefined,
+              limit,
+            );
+
+            console.log(`Got ${systems.length} Crust system events!`);
+            const { transfers, storageOrders } =
+              await indexer.getAccountBalanceTransfersForTxs(
                 wallet.address,
-                // from block
-                lastBlock,
-                // to block
-                limit,
+                systems.map((x) => x.extrinsicHash),
+              );
+            console.log(
+              `Got ${transfers.length} Crust transfers and ${storageOrders.length} storage orders!`,
+            );
+            // prepare transfer data
+            const data = [];
+            for (const s of systems) {
+              const filteredTransfers = transfers.filter(
+                (t) =>
+                  t.blockNumber === s.blockNumber &&
+                  t.extrinsicHash === s.extrinsicHash,
+              );
+              const fileOrder = storageOrders.find(
+                (t) =>
+                  t.blockNumber === s.blockNumber &&
+                  t.extrinsicHash === s.extrinsicHash,
               );
 
-            console.log(`Got ${res.length} Crust transfers!`);
-            return (
-              res
-                .map((x) =>
-                  new TransactionLog(
-                    {},
-                    this.context,
-                  ).createFromCrustIndexerData(x, wallet),
-                )
-                // merge transfers that has the same hash
-                .reduce((acc, tx) => {
-                  const found = acc.find((x) => x.hash === tx.hash);
-                  if (found) {
-                    found.addToAmount(tx.amount);
-                    found.calculateTotalPrice();
-                  } else {
-                    acc.push(tx);
-                  }
-                  return acc;
-                }, [] as TransactionLog[])
+              data.push({ system: s, transfers: filteredTransfers, fileOrder });
+            }
+            return data.map((x) =>
+              new TransactionLog({}, this.context).createFromCrustIndexerData(
+                x,
+                wallet,
+              ),
             );
           },
 
           [SubstrateChain.KILT]: async () => {
             const indexer = new KiltBlockchainIndexer();
 
-            const systems = await indexer.getSystemEventsWithLimit(
+            const systems = await indexer.getAllSystemEvents(
               wallet.address,
               lastBlock,
+              undefined,
               limit,
             );
             console.log(`Got ${systems.length} Kilt system events!`);
@@ -196,17 +207,6 @@ export class TransactionLogWorker extends BaseQueueWorker {
                 wallet,
               ),
             );
-            // merge transfers that has the same hash (not happening in kilt?)
-            // .reduce((acc, tx) => {
-            //   const found = acc.find((x) => x.hash === tx.hash);
-            //   if (found) {
-            //     found.addToAmount(tx.amount);
-            //     found.calculateTotalPrice();
-            //   } else {
-            //     acc.push(tx);
-            //   }
-            //   return acc;
-            // }, [] as TransactionLog[])
           },
           [SubstrateChain.PHALA]: () => {
             //
