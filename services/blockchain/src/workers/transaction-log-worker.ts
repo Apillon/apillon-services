@@ -417,12 +417,15 @@ export class TransactionLogWorker extends BaseQueueWorker {
       .map((t) => new TransactionLog(t, this.context))) {
       const conn = await this.context.mysql.start();
       try {
+        const pricePerToken = await this.deductFromAvailableDeposit(
+          wallet,
+          spend.totalPrice,
+          conn,
+        );
         const valueUsd =
           ethers.BigNumber.from(spend.totalPrice)
             .div(ethers.BigNumber.from(10).pow(wallet.decimals))
-            .toNumber() * tokenPriceUsd;
-
-        await this.deductFromAvailableDeposit(wallet, spend.totalPrice, conn);
+            .toNumber() * pricePerToken;
 
         await spend
           .populate({ value: valueUsd })
@@ -444,16 +447,17 @@ export class TransactionLogWorker extends BaseQueueWorker {
     wallet: Wallet,
     amount: string,
     conn: PoolConnection,
-  ): Promise<void> {
+  ): Promise<number> {
     const availableDeposit = await new WalletDeposit(
       {},
       this.context,
     ).getOldestWithBalance(wallet.id, conn);
     if (!availableDeposit.exists()) {
-      return await this.sendErrorAlert(
+      await this.sendErrorAlert(
         `NO AVAILABLE DEPOSIT! ${formatWalletAddress(wallet)}`,
         { wallet: wallet.address },
       );
+      return;
     }
     if (
       this.subtractAmount(availableDeposit.currentAmount, amount).startsWith(
@@ -471,6 +475,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
       amount,
     );
     await availableDeposit.update(SerializeFor.UPDATE_DB, conn);
+    return availableDeposit.pricePerToken;
   }
 
   private sendErrorAlert(
