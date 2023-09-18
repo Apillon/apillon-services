@@ -40,7 +40,7 @@ export enum KiltTransactionType {
 
 /* CRUST PARACHAIN */
 export enum CrustTransactionType {
-  BALANCE_TRANSFER = 'balance-transfer',
+  BALANCE_TRANSFER = 'balances-transfer',
   MARKET_ORDER_FILE_SUCCESS = 'market-order-file-success',
   // Switched naming order. It's how Crust does it.
   MARKET_FILE_RENEW_SUCCESS = 'market-file-renew-success',

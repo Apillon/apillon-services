@@ -13,7 +13,7 @@ export class KiltGQLQueries {
 
   static ACCOUNT_ALL_TRANSACTIONS_QUERY = `query getAccountTransactions(
     $account: String!
-    $fromBlock: Int!, 
+    $fromBlock: Int!,
     $toBlock: Int!
    ) {
     systems(
@@ -36,12 +36,12 @@ export class KiltGQLQueries {
         AND: {
           blockNumber_gte: $fromBlock,
           blockNumber_lt: $toBlock,
-          AND: { 
+          AND: {
             OR: [{from_eq: $account}, {to_eq: $account}]
           }
         }
       }
-    ) 
+    )
     {
       ${this.BASE_SUBSTRATE_PARAMS}
       from
@@ -69,7 +69,7 @@ export class KiltGQLQueries {
         AND: {
           blockNumber_gte: $fromBlock,
           blockNumber_lt: $toBlock,
-          AND: { 
+          AND: {
             OR: [{account_eq: $account}, {attesterId_eq: $account}]
           }
         }
@@ -87,7 +87,7 @@ export class KiltGQLQueries {
   /* Returns TRANSFERS by TransactionType from a specific account in KILT */
   static ACCOUNT_TRANSFERS_BY_TYPE_QUERY = `query getAccountTransfers(
     $account: String!
-    $fromBlock: Int!, 
+    $fromBlock: Int!,
     $toBlock: Int!,
     $transactionType: String!) {
     transfers(
@@ -96,7 +96,7 @@ export class KiltGQLQueries {
           blockNumber_gte: $fromBlock,
           blockNumber_lte: $toBlock,
           transactionType_eq: $transactionType,
-          AND: { 
+          AND: {
             OR: [{from_eq: $account}, {to_eq: $account}]
           }
         }
@@ -120,7 +120,7 @@ export class KiltGQLQueries {
       where: {
         AND: {
           extrinsicHash_in: $hashes,
-          AND: { 
+          AND: {
             OR: [{from_eq: $account}, {to_eq: $account}]
           }
         }
@@ -138,7 +138,7 @@ export class KiltGQLQueries {
   /* Returns all SYSTEM events from a specific account in KILT */
   static ACCOUNT_SYSTEM_EVENTS_QUERY = `query getAccountSystemEvents(
     $account: String!
-    $fromBlock: Int!, 
+    $fromBlock: Int!,
     $toBlock: Int!) {
     systems(
       where: {
@@ -217,12 +217,12 @@ export class KiltGQLQueries {
           blockNumber_gte: $fromBlock,
           blockNumber_lte: $toBlock,
           transactionType_eq: $transactionType,
-          AND: { 
+          AND: {
             OR: [{attesterId_eq: $account}, {account_eq: $account}]
           }
         }
       }
-    ) 
+    )
     {
       ${this.BASE_SUBSTRATE_PARAMS}
       account
@@ -231,4 +231,21 @@ export class KiltGQLQueries {
       fee
     }
   }`;
+
+  static ACCOUNT_WALLET_TRANSACTION_BY_HASH = `
+    query getWalletTransactionsByHash($address: String!, $extrinsicHash: String!) {
+      attestations(where: {account_eq: $address, extrinsicHash_eq: $extrinsicHash}) {
+        extrinsicHash
+      }
+      dids(where: {account_eq: $address, extrinsicHash_eq: $extrinsicHash}) {
+        extrinsicHash
+      }
+      transfers(where: {from_eq: $address, extrinsicHash_eq: $extrinsicHash}) {
+        extrinsicHash
+      }
+      systems(where: {account_eq: $address, extrinsicHash_eq: $extrinsicHash}) {
+        extrinsicHash
+      }
+    }
+  `;
 }

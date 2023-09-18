@@ -70,19 +70,20 @@ export class CrustGQLQueries {
   static ACCOUNT_TRANSFERS_BY_TYPE_QUERY = `query getAccountTransfers(
       $account: String!
       $fromBlock: Int!, 
-      $toBlock: Int!,
-      $transactionType: String!) {
+      $transactionType: String!,
+      $limit: Int
+      ) {
       transfers(
         where: {
           AND: {
             blockNumber_gte: $fromBlock,
-            blockNumber_lte: $toBlock,
             transactionType_eq: $transactionType,
             AND: { 
               OR: [{from_eq: $account}, {to_eq: $account}]
             }
           }
-        }
+        },
+        limit: $limit
       )
       {
         ${this.BASE_SUBSTRATE_PARAMS}
@@ -181,4 +182,32 @@ export class CrustGQLQueries {
         fileCid
       }
     }`;
+
+  static ACCOUNT_WALLET_TRANSACTION_BY_HASH = `
+    query getWalletTransactionsByHash(
+      $address: String!
+      $extrinsicHash: String!
+    ) {
+      storageOrders(
+        where: {
+          extrinsicHash_eq: $extrinsicHash
+          account_eq: $address
+        }
+      ) {
+        account
+        extrinsicHash
+      }
+      transfers(
+        where: { extrinsicHash_eq: $extrinsicHash, from_eq: $address }
+      ) {
+        extrinsicHash
+        from
+      }
+      systems(
+        where: { account_eq: $address , extrinsicHash_eq: $extrinsicHash }
+      ) {
+        extrinsicHash
+      }
+    }
+  `;
 }

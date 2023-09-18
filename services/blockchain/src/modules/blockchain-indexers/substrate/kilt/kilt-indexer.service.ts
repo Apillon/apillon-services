@@ -319,39 +319,18 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
 
   public async getWalletTransactionsByHash(
     address: string,
-    blockHash: string,
+    extrinsicHash: string,
   ): Promise<any> {
-    const GRAPHQL_QUERY = gql`
-      query getWalletTransactionsByHash(
-        $address: String!
-        $blockHash: String!
-      ) {
-        attestations(
-          where: { account: { id_eq: $address }, extrinsicHash_eq: $blockHash }
-        ) {
-          extrinsicHash
-        }
-        dids(
-          where: { account: { id_eq: $address }, extrinsicHash_eq: $blockHash }
-        ) {
-          extrinsicHash
-        }
-        transfers(
-          where: { account: { id_eq: $address }, extrinsicHash_eq: $blockHash }
-        ) {
-          extrinsicHash
-        }
-        systems(
-          where: { account: { id_eq: $address }, extrinsicHash_eq: $blockHash }
-        ) {
-          extrinsicHash
-        }
-      }
-    `;
+    const data: any = await this.graphQlClient.request(
+      gql`
+        ${KiltGQLQueries.ACCOUNT_WALLET_TRANSACTION_BY_HASH}
+      `,
+      {
+        address,
+        extrinsicHash,
+      },
+    );
 
-    return await this.graphQlClient.request(GRAPHQL_QUERY, {
-      address,
-      blockHash,
-    });
+    return data;
   }
 }

@@ -1,9 +1,9 @@
-import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Keyring } from '@polkadot/keyring';
 import { Wallet } from '../wallet/wallet.model';
 import {
   ChainType,
   env,
+  getEnumKey,
   IsolationLevel,
   Lmas,
   LogType,
@@ -11,7 +11,6 @@ import {
   ServiceName,
   SubstrateChain,
   TransactionStatus,
-  getEnumKey,
 } from '@apillon/lib';
 import { Endpoint } from '../../common/models/endpoint';
 import { BlockchainErrorCode } from '../../config/types';
@@ -23,102 +22,7 @@ import { LogOutput, sendToWorkerQueue } from '@apillon/workers-lib';
 import { WorkerName } from '../../workers/worker-executor';
 import { ServiceContext } from '@apillon/service-lib';
 import { getWalletSeed } from '../../lib/seed';
-import { CrustBlockchainIndexer } from '../blockchain-indexers/substrate/crust/crust-indexer.service';
-import { KiltBlockchainIndexer } from '../blockchain-indexers/substrate/kilt/kilt-indexer.service';
-import '@polkadot/api-augment';
-import '@polkadot/rpc-augment';
-import '@polkadot/types-augment';
-
-class Api {
-  protected endpointUrl: string = null;
-  protected apiPromise: ApiPromise = null;
-  protected provider: WsProvider = null;
-  protected typesBundle: any = null;
-  protected started: Date = null;
-
-  constructor(endpointUrl: string, typesBundle: any) {
-    this.endpointUrl = endpointUrl;
-    this.typesBundle = typesBundle;
-    this.started = new Date();
-  }
-
-  async destroy() {
-    if (this.provider) {
-      await this.provider.disconnect();
-      this.provider = null;
-      this.apiPromise = null;
-    }
-    console.log('Timing after destroy', this.getTiming(), 's');
-  }
-
-  async getUnsignedTransaction(transaction: string) {
-    console.log('Timing before unsigned transaction', this.getTiming(), 's');
-    return (await this.getApi()).tx(transaction);
-  }
-
-  async send(rawTransaction: string) {
-    console.log('Timing before send', this.getTiming(), 's');
-    return (await this.getApi()).tx(rawTransaction).send();
-  }
-
-  /**
-   * Tries to self repair nonce based on last on-chain nonce and indexer state.
-   * @param wallet Wallet
-   * @param transactionHash
-   */
-  async trySelfRepairNonce(wallet: Wallet, transactionHash: string) {
-    console.log('Timing before self repair', this.getTiming(), 's');
-    const nextOnChainNonce = (
-      await (await this.getApi()).query.system.account(wallet.address)
-    ).nonce.toNumber();
-    if (!nextOnChainNonce) {
-      return;
-    }
-    const lastProcessedNonce = nextOnChainNonce - 1;
-    if (wallet.lastProcessedNonce > lastProcessedNonce) {
-      return;
-    }
-
-    if (await isTransactionIndexed(wallet, transactionHash)) {
-      return lastProcessedNonce;
-    }
-  }
-
-  protected async getApi() {
-    console.log('Timing before get API', this.getTiming(), 's');
-    if (!this.provider) {
-      this.provider = new WsProvider(this.endpointUrl);
-      this.apiPromise = await ApiPromise.create({
-        provider: this.provider,
-        typesBundle: this.typesBundle,
-        throwOnConnect: true,
-      });
-      console.log('Timing after first connect', this.getTiming(), 's');
-      return this.apiPromise;
-    } else {
-      try {
-        await this.provider.send('health_check', null);
-        console.log('Timing after health check', this.getTiming(), 's');
-        return this.apiPromise;
-      } catch (e) {
-        this.apiPromise = await ApiPromise.create({
-          provider: this.provider,
-          typesBundle: this.typesBundle,
-          throwOnConnect: true,
-        });
-        console.log('Timing after reconnect', this.getTiming(), 's');
-        return this.apiPromise;
-      }
-    }
-  }
-
-  protected getTiming() {
-    if (!this.started) {
-      return null;
-    }
-    return (new Date().getTime() - this.started.getTime()) / 1000;
-  }
-}
+import { SubstrateRpcApi } from './rpc-api';
 
 export class SubstrateService {
   static async createTransaction(
@@ -173,7 +77,7 @@ export class SubstrateService {
 
     console.info('Creating APIPromise');
     // TODO: Refactor to txwrapper when typesBundle supported
-    const api = new Api(endpoint.url, typesBundle);
+    const api = new SubstrateRpcApi(endpoint.url, typesBundle);
     console.info('Start db transaction.');
     // Start connection to database at the beginning of the function
     const conn = await context.mysql.start(IsolationLevel.READ_COMMITTED);
@@ -362,7 +266,7 @@ export class SubstrateService {
     }
 
     // TODO: Refactor to txwrapper when typesBundle supported
-    const api = new Api(endpoint.url, typesBundle);
+    const api = new SubstrateRpcApi(endpoint.url, typesBundle);
     for (const wallet of wallets) {
       const transactions = await new Transaction({}, context).getList(
         _event.chain,
@@ -378,6 +282,10 @@ export class SubstrateService {
       let transmitted = 0;
       // TODO: consider batching transaction api.tx.utility.batch
       for (const transaction of transactions) {
+        console.log(
+          `Processing transaction with id ${transaction.id} (status=${transaction.transactionStatus}, ` +
+            `nonce=${transaction.nonce},last updated=${transaction.updateTime}).`,
+        );
         if (
           [
             TransactionStatus.CONFIRMED,
@@ -491,47 +399,4 @@ export class SubstrateService {
   }
 
   //#region
-}
-
-/**
- * Checks indexer to determine if transaction exists (is indexed).
- * @param wallet Wallet
- * @param transactionHash
- */
-async function isTransactionIndexed(wallet: Wallet, transactionHash: string) {
-  if (wallet.chainType !== ChainType.SUBSTRATE) {
-    throw new BlockchainCodeException({
-      code: BlockchainErrorCode.INVALID_CHAIN,
-      status: 400,
-      errorMessage: 'Only substrate chain types supported',
-    });
-  }
-  let transactions = {};
-  switch (wallet.chain) {
-    case SubstrateChain.KILT:
-      transactions =
-        await new KiltBlockchainIndexer().getWalletTransactionsByHash(
-          wallet.address,
-          transactionHash,
-        );
-      break;
-    case SubstrateChain.CRUST:
-      transactions =
-        await new CrustBlockchainIndexer().getWalletTransactionsByHash(
-          wallet.address,
-          transactionHash,
-        );
-      break;
-    default:
-      throw new BlockchainCodeException({
-        code: BlockchainErrorCode.INVALID_CHAIN,
-        status: 400,
-        errorMessage: `Chain ${wallet.chain} is not supported.`,
-      });
-  }
-  return Object.values(transactions).reduce(
-    (transactionExists, transaction) =>
-      transactionExists || (Array.isArray(transaction) && transaction.length),
-    false,
-  );
 }
