@@ -3,7 +3,11 @@ import { gql } from 'graphql-request';
 
 import { BaseBlockchainIndexer } from '../base-blockchain-indexer';
 import { CrustGQLQueries } from './graphql-queries';
-import { SystemEvent, TransferTransaction } from './data-models';
+import {
+  StorageOrderTransaction,
+  SystemEvent,
+  TransferTransaction,
+} from './data-models';
 import { CrustTransactionType } from '../../../../config/types';
 
 export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
@@ -81,6 +85,27 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
     );
 
     return data.transfers;
+  }
+
+  /* These indicate a balance transfer from one account -> another */
+  public async getAccountBalanceTransfersForTxs(
+    account: string,
+    hashes: string[],
+  ): Promise<{
+    transfers: TransferTransaction[];
+    storageOrders: StorageOrderTransaction[];
+  }> {
+    const data: any = await this.graphQlClient.request(
+      gql`
+        ${CrustGQLQueries.ACCOUNT_TRANSFERS_BY_TX_HASHES_QUERY}
+      `,
+      {
+        account,
+        hashes,
+      },
+    );
+
+    return data;
   }
 
   // TODO Vinko: Add comments what these do.

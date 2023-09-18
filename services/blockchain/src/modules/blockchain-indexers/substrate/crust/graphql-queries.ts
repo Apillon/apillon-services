@@ -129,4 +129,40 @@ export class CrustGQLQueries extends BaseGQLQueries {
       }
     }
   `;
+
+  /* Returns TRANSFERS and System events by TransactionType from a specific account in KILT */
+  static ACCOUNT_TRANSFERS_BY_TX_HASHES_QUERY = `query getAccountTransfersByTxHashes(
+    $account: String!,
+    $hashes: [String!]!
+   ) {
+    transfers(
+      where: {
+        AND: {
+          extrinsicHash_in: $hashes,
+          OR: [{from_eq: $account}, {to_eq: $account}]          
+        }
+      }
+    )
+    {
+      ${this.BASE_SUBSTRATE_FIELDS}
+      from
+      to
+      amount
+      fee
+    }
+    storageOrders(
+      where: {
+        AND: {
+          extrinsicHash_in: $hashes,
+          account_eq: $account
+        }
+      }
+    )
+    {
+      ${this.BASE_SUBSTRATE_FIELDS}
+      fee
+      fileCid
+      account
+    }
+  }`;
 }
