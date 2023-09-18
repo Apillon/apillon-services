@@ -135,6 +135,8 @@ describe('Substrate tests', () => {
       expect(
         txs.find((x) => x.transactionStatus != TransactionStatus.CONFIRMED),
       ).toBeFalsy();
+
+      expect(txs.find((x) => !x['webhookTriggered'])).toBeFalsy();
     });
 
     test('Single wallet_2 failed transaction not accounted', async () => {
