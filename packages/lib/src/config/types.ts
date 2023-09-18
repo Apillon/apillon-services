@@ -205,6 +205,7 @@ export enum ServiceName {
   NFTS = 'NFTS',
   REFERRAL = 'REFERRAL',
   BLOCKCHAIN = 'BLOCKCHAIN',
+  CONFIG = 'CONFIG',
 }
 
 export enum ServiceCode {

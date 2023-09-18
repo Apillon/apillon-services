@@ -4,6 +4,10 @@ export enum DbTables {
   QUOTA_TEMPLATE = 'quotaTemplate',
   TEMPLATE_VALUE = 'templateValue',
   TERMS = 'terms',
+  CREDIT = 'credit',
+  CREDIT_TRANSACTION = 'creditTransaction',
+  PRODUCT = 'product',
+  PRODUCT_PRICE = 'productPrice',
 }
 
 /**
@@ -17,6 +21,7 @@ export enum ConfigErrorCode {
   INVALID_STATUS = 42210001,
   PROJECT_OR_OBJECT_UUID_NOT_PRESENT = 42210002,
   INVALID_QUOTA_TYPE = 42210003,
+  CREDIT_QUOTA_UUID_NOT_PRESENT = 42210004,
 
   // 400 - Bad request
   BAD_REQUEST = 40010001,
@@ -36,4 +41,5 @@ export enum ConfigErrorCode {
   // 500 - Internal Error
   ERROR_WRITING_TO_DATABASE = 50010001,
   ERROR_READING_FROM_DATABASE = 50010002,
+  ERROR_ADDING_CREDIT = 50010003,
 }
