@@ -297,7 +297,7 @@ describe('Substrate tests', () => {
       const unsignedTx = api.tx(tx.toHex());
       const signed = await unsignedTx.signAsync(pair, {
         nonce: wallet.nextNonce - 1,
-        era: 600,
+        era: 0,
       });
       const transaction = await new Transaction(
         {
@@ -342,7 +342,7 @@ describe('Substrate tests', () => {
       const unsignedTx = api.tx(tx.toHex());
       const signed = await unsignedTx.signAsync(pair, {
         nonce: wallet.nextNonce - 1,
-        era: 600,
+        era: 0,
       });
       const transaction = await new Transaction(
         {
@@ -391,7 +391,7 @@ describe('Substrate tests', () => {
       const unsignedTx = api.tx(tx.toHex());
       const signed = await unsignedTx.signAsync(pair, {
         nonce: wallet.nextNonce - 1,
-        era: 600,
+        era: 0,
       });
       await new Transaction(
         {
