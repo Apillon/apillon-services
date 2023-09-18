@@ -48,4 +48,15 @@ export class SubscriptionService {
   ): Promise<SubscriptionPackage> {
     return await new SubscriptionPackage({}, context).populateById(id);
   }
+
+  static async projectHasActiveSubscription(
+    { project_uuid }: { project_uuid: string },
+    context: ServiceContext,
+  ): Promise<boolean> {
+    const subscription = await new Subscription(
+      { project_uuid },
+      context,
+    ).getActiveSubscription();
+    return subscription.exists();
+  }
 }

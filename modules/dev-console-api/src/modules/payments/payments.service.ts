@@ -1,6 +1,5 @@
 import {
   AppEnvironment,
-  BadRequestErrorCode,
   CodeException,
   CreateSubscriptionDto,
   Scs,
@@ -9,16 +8,15 @@ import {
 import { HttpStatus, Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
 import { PaymentSessionDto } from './dto/payment-session.dto';
-import { ValidatorErrorCode } from '../../config/types';
+import { BadRequestErrorCode, ValidatorErrorCode } from '../../config/types';
 
 @Injectable()
 export class PaymentsService {
   constructor(private stripe: Stripe) {}
 
-  async generateStripePaymentSession(
+  async createStripePaymentSession(
     paymentSessionDto: PaymentSessionDto,
   ): Promise<Stripe.Response<Stripe.Checkout.Session>> {
-    const isCreditPurchase = paymentSessionDto.credits;
     const { data } = await new Scs().getSubscriptionPackageById(
       +paymentSessionDto.subscription_id,
     );
@@ -33,29 +31,22 @@ export class PaymentsService {
         errorCodes: ValidatorErrorCode,
       });
     }
-    const lineItem: Stripe.Checkout.SessionCreateParams.LineItem = {
-      price: stripeApiId,
-      quantity: 1,
-      adjustable_quantity: isCreditPurchase
-        ? {
-            enabled: true,
-            minimum: 1,
-          }
-        : undefined,
-    };
-    return await this.stripe.checkout.sessions.create({
-      line_items: [lineItem],
-      mode: isCreditPurchase ? 'payment' : 'subscription',
-      metadata: {
-        project_uuid: paymentSessionDto.project_uuid,
-        package_id: paymentSessionDto.subscription_id,
-        isCreditPurchase: `${isCreditPurchase}`,
-      },
-      // TODO
-      success_url: `https://apillon.io/?success=true`,
-      cancel_url: `https://apillon.io/?canceled=true`,
-      automatic_tax: { enabled: true },
-    });
+    const { data: hasActiveSubscription } =
+      await new Scs().projectHasActiveSubscription(
+        paymentSessionDto.project_uuid,
+      );
+
+    if (hasActiveSubscription) {
+      throw new CodeException({
+        code: BadRequestErrorCode.ACTIVE_SUBSCRIPTION_EXISTS,
+        status: HttpStatus.BAD_REQUEST,
+        errorCodes: BadRequestErrorCode,
+      });
+    }
+    return await this.generateStripePaymentSession(
+      paymentSessionDto,
+      stripeApiId,
+    );
   }
   async stripeWebhookEventHandler(event: Stripe.Event) {
     switch (event.type) {
@@ -112,10 +103,40 @@ export class PaymentsService {
     } catch (err) {
       throw new CodeException({
         status: 400,
-        code: BadRequestErrorCode.BAD_REQUEST,
+        code: BadRequestErrorCode.INVALID_WEBHOOK_SIGNATURE,
         errorCodes: BadRequestErrorCode,
         errorMessage: 'Invalid webhook signature',
       });
     }
+  }
+
+  generateStripePaymentSession(
+    paymentSessionDto: PaymentSessionDto,
+    stripeApiId: string,
+  ) {
+    const isCreditPurchase = paymentSessionDto.credits;
+    const lineItem: Stripe.Checkout.SessionCreateParams.LineItem = {
+      price: stripeApiId,
+      quantity: 1,
+      adjustable_quantity: isCreditPurchase
+        ? {
+            enabled: true,
+            minimum: 1,
+          }
+        : undefined,
+    };
+    return this.stripe.checkout.sessions.create({
+      line_items: [lineItem],
+      mode: isCreditPurchase ? 'payment' : 'subscription',
+      metadata: {
+        project_uuid: paymentSessionDto.project_uuid,
+        package_id: paymentSessionDto.subscription_id,
+        isCreditPurchase: `${isCreditPurchase}`,
+      },
+      // TODO
+      success_url: `https://apillon.io/?success=true`,
+      cancel_url: `https://apillon.io/?canceled=true`,
+      automatic_tax: { enabled: true },
+    });
   }
 }

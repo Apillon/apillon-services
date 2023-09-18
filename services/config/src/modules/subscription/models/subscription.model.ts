@@ -11,6 +11,7 @@ import {
   presenceValidator,
   prop,
   SerializeFor,
+  SqlModelStatus,
   SubscriptionPackages,
 } from '@apillon/lib';
 import { ConfigErrorCode, DbTables } from '../../../config/types';
@@ -139,4 +140,29 @@ export class Subscription extends AdvancedSQLModel {
     ],
   })
   public cancelDate: Date;
+
+  public async getActiveSubscription(
+    project_uuid = this.project_uuid,
+  ): Promise<this> {
+    if (!project_uuid) {
+      throw new Error('project_uuid should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT *
+      FROM \`${this.tableName}\`
+      WHERE project_uuid = @project_uuid
+      AND (expiresOn IS NULL OR expiresOn > NOW())
+      AND (isCanceled IS NULL OR isCanceled = 0)
+      AND status = ${SqlModelStatus.ACTIVE}
+      LIMIT 1;
+      `,
+      { project_uuid },
+    );
+
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
+  }
 }

@@ -25,7 +25,7 @@ export class PaymentsController {
   async getStripeSessionUrl(
     @Query() paymentSessionDto: PaymentSessionDto,
   ): Promise<string> {
-    const session = await this.paymentsService.generateStripePaymentSession(
+    const session = await this.paymentsService.createStripePaymentSession(
       paymentSessionDto,
     );
     return session.url;

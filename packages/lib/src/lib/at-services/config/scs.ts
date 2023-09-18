@@ -101,4 +101,11 @@ export class Scs extends BaseService {
       id,
     });
   }
+
+  public async projectHasActiveSubscription(project_uuid: string) {
+    return await this.callService({
+      eventName: ScsEventType.PROJECT_HAS_ACTIVE_SUBSCRIPTION,
+      project_uuid,
+    });
+  }
 }
