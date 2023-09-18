@@ -346,7 +346,7 @@ export class IPFSService {
   }
 
   /**
-   *
+   * Publish IPNS record. If key not exists new one is created.
    * @param cid CID which will be represented with IPNS
    * @param ipfsKey private key used to publish IPNS
    * @returns
@@ -378,6 +378,34 @@ export class IPFSService {
         throw err;
       }
     }
+    return ipnsRes;
+  }
+
+  /**
+   * Publish IPNS record.
+   * NOTE: Use this function if you are sure, that key does not exists on IPFS.
+   * @param cid CID which will be represented with IPNS
+   * @param ipfsKey private key used to publish IPNS
+   * @returns
+   */
+  static async generateKeyAndPublishToIPNS(
+    cid: string,
+    ipfsKey: string,
+  ): Promise<{ name: string; value: string }> {
+    //Get IPFS client
+    const client = await IPFSService.createIPFSClient();
+
+    await client.key.gen(ipfsKey, {
+      type: 'rsa',
+      size: 2048,
+    });
+
+    let ipnsRes = undefined;
+    ipnsRes = await client.name.publish(cid, {
+      key: ipfsKey,
+      resolve: false,
+    });
+
     return ipnsRes;
   }
 

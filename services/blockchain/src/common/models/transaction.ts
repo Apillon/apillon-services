@@ -220,7 +220,7 @@ export class Transaction extends AdvancedSQLModel {
     address: string,
     nonce: number,
     conn?: PoolConnection,
-  ) {
+  ): Promise<Transaction[]> {
     return await this.getContext().mysql.paramExecute(
       `
       SELECT *

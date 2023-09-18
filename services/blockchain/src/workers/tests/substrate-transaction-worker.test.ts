@@ -131,8 +131,6 @@ describe('Substrate tests', () => {
         stage.context,
       ).getList(chain, chainType, address, 0);
 
-      console.log('TXS: ', txs);
-
       expect(txs.length).toBe(3);
       expect(
         txs.find((x) => x.transactionStatus != TransactionStatus.CONFIRMED),

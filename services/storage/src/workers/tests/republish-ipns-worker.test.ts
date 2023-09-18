@@ -5,11 +5,11 @@ import {
 } from '@apillon/workers-lib';
 import { Stage, releaseStage, setupTest } from '../../../test/setup';
 import { Bucket } from '../../modules/bucket/models/bucket.model';
-import { IpnsService } from '../../modules/ipns/ipns.service';
 import { Ipns } from '../../modules/ipns/models/ipns.model';
 import { RepublishIpnsWorker } from '../republish-ipns-worker';
 import { IPFSService } from '../../modules/ipfs/ipfs.service';
 import { SerializeFor, SqlModelStatus } from '@apillon/lib';
+import { v4 as uuidV4 } from 'uuid';
 
 describe('RepublishIpnsWorker unit test', () => {
   let stage: Stage;
@@ -17,6 +17,7 @@ describe('RepublishIpnsWorker unit test', () => {
   let republishWorker: RepublishIpnsWorker;
   const batchLimit = 200;
   let ipns: Ipns;
+  let bucket: Bucket;
 
   beforeAll(async () => {
     stage = await setupTest();
@@ -37,7 +38,7 @@ describe('RepublishIpnsWorker unit test', () => {
     );
 
     //Insert data
-    const bucket: Bucket = await new Bucket({}, stage.context)
+    bucket = await new Bucket({}, stage.context)
       .fake()
       .populate({ name: 'Test bucket' })
       .insert();
@@ -87,6 +88,23 @@ describe('RepublishIpnsWorker unit test', () => {
     expect(ipnsData.cid).toBe(ipns.cid);
     expect(ipnsData.keyName).toBe(ipns.key);
 
+    await republishWorker.runExecutor(data[0]);
+  });
+
+  test('Test republish ipns worker with ipnses whoose key does not exists', async () => {
+    await new Ipns({}, stage.context)
+      .populate({
+        project_uuid: bucket.project_uuid,
+        bucket_id: bucket.id,
+        name: 'test ipns 2',
+        ipnsName: 'ipnsName',
+        ipnsValue: '/ipfs/QmRwVSB8Bfr6E5hgw78j12mu8Sr8K8CAqJqpjyaCzSPLm5',
+        key: uuidV4(), //Some test key, that does not exists on IPFS
+        cid: 'QmRwVSB8Bfr6E5hgw78j12mu8Sr8K8CAqJqpjyaCzSPLm5',
+      })
+      .insert();
+
+    const data = await republishWorker.runPlanner();
     await republishWorker.runExecutor(data[0]);
   });
 });
