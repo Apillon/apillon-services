@@ -29,7 +29,6 @@ export class ApillonApiResponseInterceptor implements NestInterceptor {
       map(async (data) => {
         const req = context.switchToHttp().getRequest<IRequest>();
         const res = context.switchToHttp().getResponse<IRequest>() as any;
-        const isAdmin = true; //req.context.isAuthenticated() && (await req.context.hasRole(DefaultUserRole.SUPER_ADMIN));
 
         const response: ApiResponse = {
           id: req?.context?.requestId,
@@ -42,24 +41,7 @@ export class ApillonApiResponseInterceptor implements NestInterceptor {
           response.meta = data.meta;
         }
 
-        if (responseData instanceof AdvancedSQLModel) {
-          response.data = isAdmin
-            ? responseData.serialize(SerializeFor.ADMIN)
-            : responseData.serialize(SerializeFor.PROFILE);
-        } else if (Array.isArray(responseData)) {
-          response.data = responseData.map((d) =>
-            d instanceof AdvancedSQLModel
-              ? {
-                  ...d.serialize(SerializeFor.PROFILE),
-                  ...(isAdmin ? d.serialize(SerializeFor.ADMIN) : {}),
-                }
-              : d,
-          );
-        } else {
-          response.data = responseData;
-        }
-
-        response.data = keysToCamel(response.data);
+        response.data = keysToCamel(responseData);
 
         return response;
       }),

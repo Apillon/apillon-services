@@ -30,7 +30,8 @@ import { getTokenFromChain } from '../../lib/utils';
 import {
   SystemEvent,
   TransferTransaction,
-} from '../blockchain-indexers/substrate/kilt/data-models/kilt-transactions';
+} from '../blockchain-indexers/substrate/kilt/data-models';
+import { StorageOrderTransaction } from '../blockchain-indexers/substrate/crust/data-models';
 export class TransactionLog extends AdvancedSQLModel {
   public readonly tableName = DbTables.TRANSACTION_LOG;
 
@@ -349,36 +350,72 @@ export class TransactionLog extends AdvancedSQLModel {
   })
   public description: string;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public project_uuid?: string;
+
   public constructor(data?: any, context?: Context) {
     super(data, context);
   }
 
-  public createFromCrustIndexerData(data: any, wallet: Wallet) {
-    this.ts = data?.timestamp;
-    this.blockId = data?.blockNumber;
-    this.addressFrom = data?.from?.id;
-    this.addressTo = data?.to?.id;
-    this.amount = data?.amount;
+  public createFromCrustIndexerData(
+    data: {
+      system: SystemEvent;
+      transfers: TransferTransaction[];
+      storageOrder: StorageOrderTransaction;
+    },
+    wallet: Wallet,
+  ) {
+    this.ts = data?.system?.createdAt;
+    this.blockId = data?.system?.blockNumber;
+    this.addressFrom = data?.transfers[0]?.from;
+    this.addressTo = data?.transfers[0]?.to;
+    this.amount = '0';
 
-    this.hash = data?.extrinsicHash;
+    for (const transfer of data?.transfers) {
+      this.addToAmount(transfer?.amount?.toString() || '0');
+    }
+
+    this.hash = data?.system?.extrinsicHash;
     this.wallet = wallet.address;
 
-    this.status = data?.status === 0 ? TxStatus.COMPLETED : TxStatus.FAILED;
+    this.status =
+      data?.system?.status === 1 ? TxStatus.COMPLETED : TxStatus.FAILED;
     this.chainType = wallet.chainType;
     this.chain = wallet.chain;
     this.token = TxToken.CRUST_TOKEN;
+    this.fee =
+      data?.system?.fee?.toString() || data?.transfers[0]?.fee?.toString();
 
     if (this.addressFrom === this.wallet) {
       this.direction = TxDirection.COST;
-      this.action =
-        data.transactionType === 0 ? TxAction.WITHDRAWAL : TxAction.TRANSACTION;
-      this.fee = data?.fee;
+
+      this.action = !!data?.storageOrder?.id
+        ? TxAction.TRANSACTION
+        : TxAction.WITHDRAWAL;
     } else if (this.addressTo === this.wallet) {
       this.direction = TxDirection.INCOME;
-      this.action =
-        data.transactionType === 0 ? TxAction.DEPOSIT : TxAction.TRANSACTION;
+
+      this.action = !!data?.storageOrder?.id
+        ? TxAction.TRANSACTION
+        : TxAction.DEPOSIT;
+
+      if (this.action === TxAction.DEPOSIT) {
+        // income fee should not be logged (payed by other wallet)
+        this.fee = '0';
+      }
     } else {
-      throw new Error('Inconsistent transaction addresses!');
+      this.action = TxAction.UNKNOWN;
+      this.direction = TxDirection.UNKNOWN;
     }
 
     this.calculateTotalPrice();
@@ -438,13 +475,13 @@ export class TransactionLog extends AdvancedSQLModel {
   }
 
   public createFromEvmIndexerData(data: any, wallet: Wallet) {
-    this.ts = data?.timestamp;
+    this.ts = data?.createdAt;
     this.blockId = data?.blockNumber;
     this.addressFrom = data?.from?.toLowerCase();
     this.addressTo = data?.to?.toLowerCase();
     this.amount = data?.value;
 
-    this.hash = data?.hash;
+    this.hash = data?.transactionHash;
     this.wallet = wallet.address?.toLowerCase();
 
     this.status = data?.status === 0 ? TxStatus.COMPLETED : TxStatus.FAILED;

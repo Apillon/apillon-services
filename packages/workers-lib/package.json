@@ -1,6 +1,6 @@
 {
   "name": "@apillon/workers-lib",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "description": "",
   "main": "./dist/index.js",
   "source": "./src/index.ts",
@@ -26,7 +26,6 @@
     "@apillon/lib": "*",
     "@aws-sdk/client-lambda": "^3.241.0",
     "@aws-sdk/client-sqs": "^3.241.0",
-    "@faker-js/faker": "^7.6.0",
     "@rawmodel/core": "^3.3.4",
     "@rawmodel/parsers": "^3.3.4",
     "@rawmodel/validators": "^3.3.4",

@@ -6,10 +6,11 @@ import {
   EvmChain,
   ValidatorErrorCode,
 } from '../../../../config/types';
-import { ModelBase, prop } from '../../../base-models/base';
+import { prop } from '../../../base-models/base';
 import { enumInclusionValidator } from '../../../validators';
+import { BaseTransactionDto } from './base-transaction.dto';
 
-export class CreateEvmTransactionDto extends ModelBase {
+export class CreateEvmTransactionDto extends BaseTransactionDto {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -46,20 +47,4 @@ export class CreateEvmTransactionDto extends ModelBase {
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
   })
   public fromAddress?: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [],
-  })
-  public referenceTable?: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [],
-  })
-  public referenceId?: string;
 }

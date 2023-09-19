@@ -68,6 +68,7 @@ export class Bucket extends ProjectAccessModel {
         code: StorageErrorCode.BUCKET_PROJECT_UUID_NOT_PRESENT,
       },
     ],
+    fakeValue: () => uuidV4(),
   })
   public project_uuid: string;
 
@@ -213,9 +214,27 @@ export class Bucket extends ProjectAccessModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    validators: [],
   })
   public CID: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+  })
+  public CIDv1: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -247,7 +266,7 @@ export class Bucket extends ProjectAccessModel {
   })
   public markedForDeletionTime?: Date;
 
-  public async populateById(
+  public override async populateById(
     id: number | string,
     conn?: PoolConnection,
   ): Promise<this> {
@@ -271,33 +290,13 @@ export class Bucket extends ProjectAccessModel {
       conn,
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
-  public async populateByUUID(uuid: string): Promise<this> {
-    if (!uuid) {
-      throw new Error('uuid should not be null');
-    }
-
-    const data = await this.getContext().mysql.paramExecute(
-      `
-        SELECT *
-        FROM \`${this.tableName}\`
-        WHERE bucket_uuid = @uuid
-          AND status <> ${SqlModelStatus.DELETED};
-      `,
-      { uuid },
-    );
-
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+  public override async populateByUUID(uuid: string): Promise<this> {
+    return super.populateByUUID(uuid, 'bucket_uuid');
   }
 
   /**

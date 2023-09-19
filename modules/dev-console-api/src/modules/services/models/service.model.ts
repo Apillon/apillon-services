@@ -12,6 +12,7 @@ import {
   ForbiddenErrorCodes,
   AdvancedSQLModel,
   selectAndCountQuery,
+  getFaker,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../../context';
 import {
@@ -20,7 +21,6 @@ import {
   ValidatorErrorCode,
 } from '../../../config/types';
 import { ServiceQueryFilter } from '../dtos/services-query-filter.dto';
-import { faker } from '@faker-js/faker';
 import { Project } from '../../project/models/project.model';
 import { HttpStatus } from '@nestjs/common';
 
@@ -89,7 +89,7 @@ export class Service extends AdvancedSQLModel {
         code: ValidatorErrorCode.SERVICE_NAME_NOT_PRESENT,
       },
     ],
-    fakeValue: faker.word.verb(),
+    fakeValue: getFaker().word.verb(),
   })
   public name: string;
 
@@ -205,25 +205,8 @@ export class Service extends AdvancedSQLModel {
     return true;
   }
 
-  public async populateByUUID(uuid: string): Promise<this> {
-    if (!uuid) {
-      throw new Error('uuid should not be null');
-    }
-
-    const data = await this.getContext().mysql.paramExecute(
-      `
-      SELECT * 
-      FROM \`${this.tableName}\`
-      WHERE service_uuid = @uuid AND status <> ${SqlModelStatus.DELETED};
-      `,
-      { uuid },
-    );
-
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+  public override async populateByUUID(uuid: string): Promise<this> {
+    return super.populateByUUID(uuid, 'service_uuid');
   }
 
   /**

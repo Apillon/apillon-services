@@ -3,6 +3,7 @@ import {
   ChainType,
   env,
   EvmChain,
+  getEnumKey,
   Lmas,
   LogType,
   SerializeFor,
@@ -22,24 +23,66 @@ import { getWalletSeed } from '../../lib/seed';
 import { transmitAndProcessEvmTransaction } from '../../lib/transmit-and-process-evm-transaction';
 import { WorkerName } from '../../workers/worker-executor';
 
+async function trySelfRepairNonce(
+  provider: ethers.providers.JsonRpcProvider,
+  context: ServiceContext,
+  wallet: Wallet,
+) {
+  const lastOnChainNonce = await provider.getTransactionCount(
+    wallet.address,
+    'pending',
+  );
+  if (!lastOnChainNonce) {
+    return;
+  }
+  const lastProcessedNonce = lastOnChainNonce - 1;
+  if (wallet.lastProcessedNonce > lastProcessedNonce) {
+    return;
+  }
+  const lastTx = await new Transaction(
+    {},
+    context,
+  ).getLastTransactionByChainWalletAndNonce(
+    wallet.chain,
+    wallet.address,
+    lastProcessedNonce,
+  );
+  if (!lastTx) {
+    return;
+  }
+
+  const lastOnChainTx = await provider.getTransaction(lastTx.transactionHash);
+  if (
+    lastOnChainTx.from !== wallet.address ||
+    lastOnChainTx.nonce !== lastProcessedNonce
+  ) {
+    return;
+  }
+
+  return lastProcessedNonce;
+}
+
 export class EvmService {
   static async createTransaction(
-    _event: {
+    {
+      params,
+    }: {
       params: {
         chain: EvmChain;
         fromAddress?: string;
         transaction: string;
         referenceTable?: string;
         referenceId?: string;
+        project_uuid?: string;
       };
     },
     context: ServiceContext,
   ) {
-    console.log('Params: ', _event.params);
+    console.log('Params: ', params);
     // connect to chain
     // TODO: Add logic if endpoint is unavailable to fetch the backup one.
     const endpoint = await new Endpoint({}, context).populateByChain(
-      _event.params.chain,
+      params.chain,
       ChainType.EVM,
     );
 
@@ -59,7 +102,7 @@ export class EvmService {
     let gasPrice;
     let data = null;
     // eslint-disable-next-line sonarjs/no-small-switch
-    switch (_event.params.chain) {
+    switch (params.chain) {
       case EvmChain.MOONBASE:
       case EvmChain.MOONBEAM: {
         maxPriorityFeePerGas = ethers.utils.parseUnits('3', 'gwei').toNumber();
@@ -100,11 +143,11 @@ export class EvmService {
       let wallet = new Wallet({}, context);
 
       // if specific address is specified to be used for this transaction fetch the wallet
-      if (_event.params.fromAddress) {
+      if (params.fromAddress) {
         wallet = await wallet.populateByAddress(
-          _event.params.chain,
+          params.chain,
           ChainType.EVM,
-          _event.params.fromAddress,
+          params.fromAddress,
           conn,
         );
       }
@@ -112,7 +155,7 @@ export class EvmService {
       // if address is not specified or not found then get the least used wallet
       if (!wallet.exists()) {
         wallet = await wallet.populateByLeastUsed(
-          _event.params.chain,
+          params.chain,
           ChainType.EVM,
           conn,
         );
@@ -126,9 +169,7 @@ export class EvmService {
       }
 
       // parse and set transaction information
-      const unsignedTx = ethers.utils.parseTransaction(
-        _event.params.transaction,
-      );
+      const unsignedTx = ethers.utils.parseTransaction(params.transaction);
       // TODO: add transaction checker to detect anomalies.
       // Reject transaction sending value etc.
       unsignedTx.from = wallet.address;
@@ -163,17 +204,18 @@ export class EvmService {
       // save transaction
       const transaction = new Transaction({}, context);
       transaction.populate({
-        chain: _event.params.chain,
+        chain: params.chain,
         chainType: ChainType.EVM,
         address: wallet.address,
         to: unsignedTx.to,
         nonce: wallet.nextNonce,
-        referenceTable: _event.params.referenceTable,
-        referenceId: _event.params.referenceId,
+        referenceTable: params.referenceTable,
+        referenceId: params.referenceId,
         rawTransaction,
         data,
         transactionHash: ethers.utils.keccak256(rawTransaction),
         transactionStatus: TransactionStatus.PENDING,
+        project_uuid: params.project_uuid,
       });
       await transaction.insert(SerializeFor.INSERT_DB, conn);
       await wallet.iterateNonce(conn);
@@ -192,13 +234,10 @@ export class EvmService {
             WorkerName.TRANSMIT_EVM_TRANSACTION,
             [
               {
-                chain: _event.params.chain,
+                chain: params.chain,
               },
             ],
-            evmChainToJob(
-              _event.params.chain,
-              WorkerName.TRANSMIT_EVM_TRANSACTION,
-            ),
+            evmChainToJob(params.chain, WorkerName.TRANSMIT_EVM_TRANSACTION),
             null,
           );
         } catch (e) {
@@ -225,12 +264,12 @@ export class EvmService {
         service: ServiceName.BLOCKCHAIN,
         data: {
           error: e,
-          transaction: _event.params.transaction,
-          chain: _event.params.chain,
+          transaction: params.transaction,
+          chain: params.chain,
           chainType: ChainType.EVM,
-          fromAddress: _event.params.fromAddress,
-          referenceTable: _event.params.referenceTable,
-          referenceId: _event.params.referenceId,
+          fromAddress: params.fromAddress,
+          referenceTable: params.referenceTable,
+          referenceId: params.referenceId,
         },
       });
       await conn.rollback();
@@ -265,6 +304,7 @@ export class EvmService {
    * Should be called from worker
    * @param _event chain for which we should process transaction
    * @param context Service context
+   * @param eventLogger Event logger
    */
   static async transmitTransactions(
     _event: {
@@ -301,15 +341,13 @@ export class EvmService {
       }
     }
 
-    for (let i = 0; i < wallets.length; i++) {
+    for (const wallet of wallets) {
       const transactions = await new Transaction({}, context).getList(
         _event.chain,
         ChainType.EVM,
-        wallets[i].address,
-        wallets[i].lastProcessedNonce,
+        wallet.address,
+        wallet.lastProcessedNonce,
       );
-
-      // continue to next wallet if there is no transactions!
       if (!transactions.length) {
         continue;
       }
@@ -317,81 +355,119 @@ export class EvmService {
       let latestSuccess = null;
       let transmitted = 0;
 
-      for (let j = 0; j < transactions.length; j++) {
+      for (const transaction of transactions) {
+        if (
+          [
+            TransactionStatus.CONFIRMED,
+            TransactionStatus.FAILED,
+            TransactionStatus.ERROR,
+          ].includes(transaction.transactionStatus)
+        ) {
+          latestSuccess = transaction.nonce;
+          await eventLogger(
+            {
+              logType: LogType.INFO,
+              message: `Transaction with id ${transaction.id} was skipped since it had final status in DB (last success nonce was bumped to transaction nonce).`,
+              service: ServiceName.BLOCKCHAIN,
+              data: {
+                transactionId: transaction.id,
+                latestSuccess,
+              },
+            },
+            LogOutput.EVENT_INFO,
+          );
+          continue;
+        }
         try {
-          await provider.sendTransaction(transactions[j].rawTransaction);
-          latestSuccess = transactions[j].nonce;
+          await provider.sendTransaction(transaction.rawTransaction);
+          latestSuccess = transaction.nonce;
           transmitted++;
         } catch (err) {
-          if (eventLogger) {
+          if (
+            err?.reason === 'nonce has already been used' ||
+            err?.error?.message === 'already known'
+          ) {
+            const selfRepairNonce = await trySelfRepairNonce(
+              provider,
+              context,
+              wallet,
+            );
+            latestSuccess = selfRepairNonce;
+            if (selfRepairNonce) {
+              await eventLogger(
+                {
+                  logType: LogType.INFO,
+                  message: `Last success nonce was repaired and set to ${selfRepairNonce}.`,
+                  service: ServiceName.BLOCKCHAIN,
+                  data: {
+                    selfRepairNonce,
+                    wallet: wallet.address,
+                  },
+                },
+                LogOutput.EVENT_INFO,
+              );
+            } else {
+              await eventLogger(
+                {
+                  logType: LogType.ERROR,
+                  message: 'Could not repair last success nonce.',
+                  service: ServiceName.BLOCKCHAIN,
+                  data: {
+                    wallet: wallet.address,
+                    walletLastProcessedNonce: wallet.lastProcessedNonce,
+                    transactionNonce: transaction.nonce,
+                    selfRepairNonce,
+                  },
+                },
+                LogOutput.NOTIFY_WARN,
+              );
+            }
+          } else {
             await eventLogger(
               {
                 logType: LogType.ERROR,
-                message: 'Error transmitting transaction!',
+                message: `Error transmitting transaction on chain ${getEnumKey(
+                  EvmChain,
+                  _event.chain,
+                )}! Hash: ${transaction.transactionHash}`,
                 service: ServiceName.BLOCKCHAIN,
                 data: {
                   error: err,
-                  wallet: wallets[i].address,
+                  wallet: wallet.address,
                 },
                 err,
               },
               LogOutput.NOTIFY_WARN,
             );
-          } else {
-            await new Lmas().writeLog({
-              logType: LogType.ERROR,
-              message: 'Error transmitting transaction',
-              location: 'EvmService.transmitTransactions',
-              service: ServiceName.BLOCKCHAIN,
-              data: {
-                error: err,
-                wallet: wallets[i].address,
-              },
-            });
+            if (
+              env.APP_ENV === AppEnvironment.TEST ||
+              env.APP_ENV === AppEnvironment.LOCAL_DEV
+            ) {
+              throw err;
+            }
+            break;
           }
-          if (
-            env.APP_ENV === AppEnvironment.TEST ||
-            env.APP_ENV === AppEnvironment.LOCAL_DEV
-          ) {
-            throw err;
-          }
-          break;
         }
       }
 
-      if (latestSuccess >= 0) {
-        const wallet = new Wallet(wallets[i], context);
-        await wallet.updateLastProcessedNonce(latestSuccess);
+      if (latestSuccess) {
+        const dbWallet = new Wallet(wallet, context);
+        await dbWallet.updateLastProcessedNonce(latestSuccess);
       }
 
-      if (eventLogger) {
-        await eventLogger(
-          {
-            logType: LogType.COST,
-            message: 'EVM transactions submitted',
-            service: ServiceName.BLOCKCHAIN,
-            data: {
-              wallet: wallets[i],
-              numOfTransactions: transactions.length,
-              transmitted: transmitted,
-            },
-          },
-          LogOutput.EVENT_INFO,
-        );
-      } else {
-        await new Lmas().writeLog({
-          context: context,
+      await eventLogger(
+        {
           logType: LogType.COST,
           message: 'EVM transactions submitted',
-          location: `EvmService.transmitTransactions`,
           service: ServiceName.BLOCKCHAIN,
           data: {
-            wallet: wallets[i],
+            wallet,
             numOfTransactions: transactions.length,
-            transmitted: transmitted,
+            transmitted,
           },
-        });
-      }
+        },
+        LogOutput.EVENT_INFO,
+      );
     }
     // TODO: call transaction checker
   }

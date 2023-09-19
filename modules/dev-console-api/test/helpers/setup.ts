@@ -32,6 +32,9 @@ export async function setupTest(
   env.AUTH_API_MYSQL_HOST = null; // safety
   env.BLOCKCHAIN_MYSQL_HOST = null; // safety
 
+  //Solve problem with certificates, when accessing ipfs gateway content through supertest request
+  process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
+
   try {
     await rebuildTestDatabases();
   } catch (err) {

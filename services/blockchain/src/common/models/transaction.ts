@@ -7,6 +7,7 @@ import {
   PopulateFrom,
   prop,
   SerializeFor,
+  SqlModelStatus,
   TransactionStatus,
 } from '@apillon/lib';
 import { Chain, DbTables } from '../../config/types';
@@ -200,13 +201,26 @@ export class Transaction extends AdvancedSQLModel {
   })
   public rawTransaction: string;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public project_uuid?: string;
+
   public async getList(
     chain: Chain,
     chainType: ChainType,
     address: string,
     nonce: number,
     conn?: PoolConnection,
-  ) {
+  ): Promise<Transaction[]> {
     return await this.getContext().mysql.paramExecute(
       `
       SELECT *
@@ -215,6 +229,7 @@ export class Transaction extends AdvancedSQLModel {
         AND chain = @chain
         AND address = @address
         AND nonce > @nonce
+        AND status = ${SqlModelStatus.ACTIVE}
       order by nonce ASC;
       `,
       { chain, chainType, address, nonce },
@@ -274,10 +289,37 @@ export class Transaction extends AdvancedSQLModel {
       conn,
     );
 
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
+  }
+
+  public async getLastTransactionByChainWalletAndNonce(
+    chain: Chain,
+    walletAddress: string,
+    nonce: number,
+    conn?: PoolConnection,
+  ) {
+    const data = await this.getContext().mysql.paramExecute(
+      `SELECT *
+       FROM \`${DbTables.TRANSACTION_QUEUE}\`
+       WHERE address = @walletAddress
+         AND chain = @chain
+         AND nonce = @nonce
+         AND status = @status LIMIT 1`,
+      {
+        chain,
+        walletAddress,
+        nonce,
+        status: SqlModelStatus.ACTIVE,
+      },
+      conn,
+    );
+
     if (data && data.length) {
       return this.populate(data[0], PopulateFrom.DB);
     } else {
-      return this.reset();
+      return null;
     }
   }
 }

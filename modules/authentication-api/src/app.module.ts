@@ -1,13 +1,12 @@
 import { createRequestLogMiddleware } from '@apillon/modules-lib';
 import { ApiName } from '@apillon/lib';
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ContextMiddleware } from './middlewares/context.middleware';
 import { IdentityModule } from './modules/identity/identity.module';
 import { NovaWalletModule } from './modules/nova-wallet/w3n-assets.module';
 import { SporranModule } from './modules/sporran/sporran.module';
 import { VerificationModule } from './modules/verification/verification.module';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -17,7 +16,7 @@ import { VerificationModule } from './modules/verification/verification.module';
     SporranModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {

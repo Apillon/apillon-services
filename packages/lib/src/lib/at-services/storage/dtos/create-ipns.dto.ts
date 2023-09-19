@@ -9,14 +9,6 @@ import { ModelBase, prop } from '../../../base-models/base';
 
 export class CreateIpnsDto extends ModelBase {
   @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [],
-  })
-  public project_uuid: string;
-
-  @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
