@@ -93,7 +93,7 @@ export class SubstrateRpcApi {
     }
   }
 
-  protected getTiming() {
+  getTiming() {
     if (!this.started) {
       return null;
     }
