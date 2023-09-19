@@ -31,23 +31,13 @@ export class PaymentsService {
         errorCodes: ValidatorErrorCode,
       });
     }
-    const { data: hasActiveSubscription } =
-      await new Scs().projectHasActiveSubscription(
-        paymentSessionDto.project_uuid,
-      );
-
-    if (hasActiveSubscription) {
-      throw new CodeException({
-        code: BadRequestErrorCode.ACTIVE_SUBSCRIPTION_EXISTS,
-        status: HttpStatus.BAD_REQUEST,
-        errorCodes: BadRequestErrorCode,
-      });
-    }
+    await this.checkActiveSubscription(paymentSessionDto.project_uuid);
     return await this.generateStripePaymentSession(
       paymentSessionDto,
       stripeApiId,
     );
   }
+
   async stripeWebhookEventHandler(event: Stripe.Event) {
     switch (event.type) {
       // customer.subscription.updated
@@ -84,8 +74,10 @@ export class PaymentsService {
         break;
       }
       case 'customer.subscription.updated':
+        // TODO - if customer changes subscription
         break;
       case 'payout.canceled':
+        // TODO - if customer cancels subscription
         break;
     }
   }
@@ -106,6 +98,19 @@ export class PaymentsService {
         code: BadRequestErrorCode.INVALID_WEBHOOK_SIGNATURE,
         errorCodes: BadRequestErrorCode,
         errorMessage: 'Invalid webhook signature',
+      });
+    }
+  }
+
+  async checkActiveSubscription(project_uuid: string) {
+    const { data: hasActiveSubscription } =
+      await new Scs().projectHasActiveSubscription(project_uuid);
+
+    if (hasActiveSubscription) {
+      throw new CodeException({
+        code: BadRequestErrorCode.ACTIVE_SUBSCRIPTION_EXISTS,
+        status: HttpStatus.BAD_REQUEST,
+        errorCodes: BadRequestErrorCode,
       });
     }
   }

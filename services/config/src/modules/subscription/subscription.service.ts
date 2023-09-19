@@ -8,6 +8,7 @@ import {
 import { Subscription } from './models/subscription.model';
 import { ServiceContext } from '@apillon/service-lib';
 import { SubscriptionPackage } from './models/subscription-package.model';
+import { ScsValidationException } from '../../lib/exceptions';
 
 export class SubscriptionService {
   /**
@@ -29,11 +30,12 @@ export class SubscriptionService {
 
       if (!subscription.isValid()) {
         await new Lmas().sendAdminAlert(
-          `Invalid subscription received: ${createSubscriptionDto.package_id} for project ${createSubscriptionDto.project_uuid}. Error: ${err.message}`,
+          `Invalid subscription received: ${createSubscriptionDto.package_id} for project ${createSubscriptionDto.project_uuid}
+          and customer ${createSubscriptionDto.subscriberEmail}. Error: ${err.message}`,
           ServiceName.SCS,
           LogType.ALERT,
         );
-        return;
+        throw new ScsValidationException(subscription);
       }
     }
 
