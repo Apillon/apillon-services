@@ -158,6 +158,8 @@ export enum ScsEventType {
   GET_ACTIVE_TERMS = 'get-active-terms',
   CREATE_OVERRIDE = 'create-override',
   DELETE_OVERRIDE = 'delete-override',
+  ADD_CREDIT = 'add-credit',
+  SPEND_CREDIT = 'spend-credit',
 }
 
 export enum NftsEventType {
@@ -666,4 +668,13 @@ export enum ApiName {
   DEV_CONSOLE_API = 'dev-console-api',
   APILLON_API = 'apillon-api',
   AUTHENTICATION_API = 'authentication-api',
+}
+
+/**
+ * List of products, that requires payment with credits
+ */
+export enum Products {
+  WEBSITE = 1,
+  DEPLOY_TO_STAGING = 2,
+  DEPLOY_TO_PRODUCTION = 3,
 }

@@ -4,7 +4,7 @@ export async function upgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    CREATE TABLE IF NOT EXISTS \`${DbTables.CREDIT}\` (
+    CREATE TABLE IF NOT EXISTS \`${DbTables.PRODUCT}\` (
       \`id\` INT NOT NULL,
       \`name\` VARCHAR(255) NOT NULL,
       \`description\` VARCHAR(1000) NULL,
@@ -21,6 +21,6 @@ export async function downgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-      DROP TABLE IF EXISTS \`${DbTables.CREDIT}\`;
+      DROP TABLE IF EXISTS \`${DbTables.PRODUCT}\`;
     `);
 }

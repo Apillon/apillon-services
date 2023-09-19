@@ -81,7 +81,7 @@ export class Credit extends ProjectAccessModel {
       `
           SELECT *
           FROM \`${this.tableName}\`
-          WHERE ${project_uuid} = @project_uuid
+          WHERE project_uuid = @project_uuid
           AND status <> ${SqlModelStatus.DELETED}
           FOR UPDATE;
         `,

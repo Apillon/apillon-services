@@ -4,6 +4,7 @@ import { ServiceContext } from '@apillon/service-lib';
 import { QuotaService } from './modules/quota/quota.service';
 import { TermsService } from './modules/terms/terms.service';
 import { OverrideService } from './modules/override/override.service';
+import { CreditService } from './modules/credit/credit.service';
 
 /**
  * Processing lambda event with appropriate service function based on event name
@@ -21,6 +22,8 @@ export async function processEvent(
     [ScsEventType.CREATE_OVERRIDE]: OverrideService.createOverride,
     [ScsEventType.DELETE_OVERRIDE]: OverrideService.deleteOverride,
     [ScsEventType.GET_ACTIVE_TERMS]: TermsService.getActiveTerms,
+    [ScsEventType.ADD_CREDIT]: CreditService.addCredit,
+    [ScsEventType.SPEND_CREDIT]: CreditService.spendCredit,
   };
 
   return await processors[event.eventName](event, context);
