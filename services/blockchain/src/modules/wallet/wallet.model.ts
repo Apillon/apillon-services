@@ -554,12 +554,14 @@ export class Wallet extends AdvancedSQLModel {
       const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
       balance = (await provider.getBalance(this.address)).toString();
     } else if (this.chainType === ChainType.SUBSTRATE) {
-      const api = await new SubstrateRpcApi(endpoint.url).getApi();
+      const apiHelper = new SubstrateRpcApi(endpoint.url);
+      const api = await apiHelper.getApi();
+      console.log('Timing before send', apiHelper.getTiming(), 's');
       try {
-        const account = (await api.query.system.account(this.address)) as any;
+        const account = await api.query.system.account(this.address);
         balance = account.data.free.toString();
       } finally {
-        await api.disconnect();
+        await apiHelper.destroy();
       }
     }
 
