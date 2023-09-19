@@ -7,6 +7,7 @@ import {
 import {
   AdvancedSQLModel,
   enumInclusionValidator,
+  PoolConnection,
   PopulateFrom,
   presenceValidator,
   prop,
@@ -94,6 +95,22 @@ export class Subscription extends AdvancedSQLModel {
   public subscriberEmail: string;
 
   @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public stripeId: string;
+
+  @prop({
     parser: { resolver: integerParser() },
     populatable: [
       PopulateFrom.DB,
@@ -159,6 +176,21 @@ export class Subscription extends AdvancedSQLModel {
       LIMIT 1;
       `,
       { project_uuid },
+    );
+
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
+  }
+
+  public async populateByStripeId(stripeId: string, conn?: PoolConnection) {
+    const data = await this.db().paramExecute(
+      `
+        SELECT * FROM \`${this.tableName}\`
+        WHERE stripeId = @stripeId
+      `,
+      { stripeId },
+      conn,
     );
 
     return data?.length

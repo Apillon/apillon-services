@@ -8,7 +8,11 @@ import {
 import { Subscription } from './models/subscription.model';
 import { ServiceContext } from '@apillon/service-lib';
 import { SubscriptionPackage } from './models/subscription-package.model';
-import { ScsValidationException } from '../../lib/exceptions';
+import {
+  ScsNotFoundException,
+  ScsValidationException,
+} from '../../lib/exceptions';
+import { ConfigErrorCode } from '../../config/types';
 
 export class SubscriptionService {
   /**
@@ -60,5 +64,28 @@ export class SubscriptionService {
       context,
     ).getActiveSubscription();
     return subscription.exists();
+  }
+
+  /**
+   * Update a subscription by stripe ID with given data
+   * @param {{ subscriptionStripeId: string; data: any }} { subscriptionStripeId, data }
+   * @param {ServiceContext} context
+   * @returns {Promise<Subscription>}
+   */
+  static async updateSubscription(
+    { subscriptionStripeId, data }: { subscriptionStripeId: string; data: any },
+    context: ServiceContext,
+  ): Promise<Subscription> {
+    const subscription = await new Subscription(
+      { subscriptionStripeId },
+      context,
+    ).populateByStripeId(subscriptionStripeId);
+
+    if (!subscription.exists()) {
+      throw new ScsNotFoundException(ConfigErrorCode.SUBSCRIPTION_NOT_FOUND);
+    }
+
+    subscription.populate(data);
+    return await subscription.update();
   }
 }

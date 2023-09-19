@@ -6,7 +6,11 @@ import { ModelBase } from '../../../base-models/base';
 export class CreateSubscriptionDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN, //
+    ],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -17,7 +21,11 @@ export class CreateSubscriptionDto extends ModelBase {
 
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN, //
+    ],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -28,7 +36,11 @@ export class CreateSubscriptionDto extends ModelBase {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN, //
+    ],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -39,7 +51,11 @@ export class CreateSubscriptionDto extends ModelBase {
 
   @prop({
     parser: { resolver: dateParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN, //
+    ],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -47,4 +63,19 @@ export class CreateSubscriptionDto extends ModelBase {
     ],
   })
   public expiresOn: Date;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public stripeId: string;
 }

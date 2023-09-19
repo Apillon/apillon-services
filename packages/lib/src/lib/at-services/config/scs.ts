@@ -108,4 +108,12 @@ export class Scs extends BaseService {
       project_uuid,
     });
   }
+
+  public async updateSubscription(subscriptionStripeId: string, data: any) {
+    return await this.callService({
+      eventName: ScsEventType.UPDATE_SUBSCRIPTION,
+      subscriptionStripeId,
+      data,
+    });
+  }
 }

@@ -9,6 +9,7 @@ export async function upgrade(
     ADD COLUMN \`isCanceled\` TINYINT NULL DEFAULT false,
     ADD COLUMN \`cancelDate\` DATETIME NULL,
     ADD COLUMN \`subscriberEmail\` VARCHAR(255) NOT NULL
+    ADD COLUMN \`stripeId\` VARCHAR(60) NOT NULL
   `);
 }
 

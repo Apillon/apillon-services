@@ -21,7 +21,7 @@ export class PaymentsService {
       +paymentSessionDto.subscription_id,
     );
     const stripeApiId =
-      env.APP_ENV == AppEnvironment.PROD
+      env.APP_ENV === AppEnvironment.PROD
         ? data.stripeApiId
         : data.stripeApiIdTest;
     if (!stripeApiId) {
@@ -31,7 +31,9 @@ export class PaymentsService {
         errorCodes: ValidatorErrorCode,
       });
     }
+
     await this.checkActiveSubscription(paymentSessionDto.project_uuid);
+
     return await this.generateStripePaymentSession(
       paymentSessionDto,
       stripeApiId,
@@ -39,11 +41,10 @@ export class PaymentsService {
   }
 
   async stripeWebhookEventHandler(event: Stripe.Event) {
+    const session = event.data.object as any;
     switch (event.type) {
-      // customer.subscription.updated
       case 'checkout.session.completed': {
         // https://stripe.com/docs/api/checkout/sessions/object
-        const session = event.data.object as any;
         if (session.payment_status !== 'paid') {
           return;
         }
@@ -63,21 +64,18 @@ export class PaymentsService {
             package_id,
             expiresOn: new Date(subscription.current_period_end * 1000),
             subscriberEmail: session.customer_details.email,
+            stripeId: subscription.id,
           }),
         );
-        /* TODO:
-         * - Save payment, customer and product info to DB
-         * - Send invoice email
-         * - Spend money
-         */
-
         break;
       }
       case 'customer.subscription.updated':
-        // TODO - if customer changes subscription
-        break;
-      case 'payout.canceled':
-        // TODO - if customer cancels subscription
+        // In case subscription is canceled
+        const { cancel_at_period_end, canceled_at } = session;
+        await new Scs().updateSubscription(session.id, {
+          isCanceled: cancel_at_period_end,
+          cancelDate: canceled_at ? new Date(canceled_at * 1000) : null,
+        });
         break;
     }
   }

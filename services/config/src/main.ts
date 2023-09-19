@@ -27,6 +27,7 @@ export async function processEvent(
       SubscriptionService.getSubscriptionPackageById,
     [ScsEventType.PROJECT_HAS_ACTIVE_SUBSCRIPTION]:
       SubscriptionService.projectHasActiveSubscription,
+    [ScsEventType.UPDATE_SUBSCRIPTION]: SubscriptionService.updateSubscription,
   };
 
   return await processors[event.eventName](event, context);
