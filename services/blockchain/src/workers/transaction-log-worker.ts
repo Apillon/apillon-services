@@ -170,13 +170,17 @@ export class TransactionLogWorker extends BaseQueueWorker {
                   t.blockNumber === s.blockNumber &&
                   t.extrinsicHash === s.extrinsicHash,
               );
-              const fileOrder = storageOrders.find(
+              const storageOrder = storageOrders.find(
                 (t) =>
                   t.blockNumber === s.blockNumber &&
                   t.extrinsicHash === s.extrinsicHash,
               );
 
-              data.push({ system: s, transfers: filteredTransfers, fileOrder });
+              data.push({
+                system: s,
+                transfers: filteredTransfers,
+                storageOrder,
+              });
             }
             return data.map((x) =>
               new TransactionLog({}, this.context).createFromCrustIndexerData(
