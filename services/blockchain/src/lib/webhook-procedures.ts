@@ -25,6 +25,9 @@ export async function executeWebhooksForTransmittedTransactionsInWallet(
   const conn = await context.mysql.start();
   try {
     const webhooks = await getWebhooksForTxsInWallet(context, address, conn);
+    console.info(
+      `Num of transmitted transaction that should be sent to webhook: ${webhooks.length}`,
+    );
     await processWebhooks(webhooks, sqsUrl, workerName, context, conn);
     await context.mysql.commit(conn);
   } catch (error) {
@@ -101,6 +104,7 @@ export async function processWebhooks(
           null,
           null,
         );
+        console.info('Data sent to webhook', chunk, sqsUrl, workerName);
       }
 
       // Extract ids from the transactions
