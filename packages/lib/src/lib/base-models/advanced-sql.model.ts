@@ -232,6 +232,7 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
   public async insert(
     strategy: SerializeFor = SerializeFor.INSERT_DB,
     conn?: PoolConnection,
+    insertIgnore?: boolean,
   ): Promise<this> {
     this.createUser = this.getContext()?.user?.id;
     this.updateUser = this.getContext()?.user?.id;
@@ -244,7 +245,7 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
     }
     try {
       const createQuery = `
-      INSERT INTO \`${this.tableName}\`
+      INSERT ${insertIgnore ? 'IGNORE' : ''} INTO \`${this.tableName}\`
       ( ${Object.keys(serializedModel)
         .map((x) => `\`${x}\``)
         .join(', ')} )

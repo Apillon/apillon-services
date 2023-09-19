@@ -134,15 +134,18 @@ export class WalletDeposit extends AdvancedSQLModel {
   public async createWalletDeposit(
     wallet: Wallet,
     deposit: TransactionLog,
+    pricePerToken?: number,
+    conn?: PoolConnection,
     validationErrorCallback?: (walletDeposit: WalletDeposit) => void,
   ) {
+    pricePerToken ||= await getTokenPriceUsd(wallet.token);
     const walletDeposit = new WalletDeposit(
       {
         wallet_id: wallet.id,
         transactionHash: deposit.hash,
         depositAmount: deposit.totalPrice,
         currentAmount: deposit.totalPrice,
-        pricePerToken: await getTokenPriceUsd(wallet.token),
+        pricePerToken,
       },
       this.getContext(),
     );
@@ -159,6 +162,6 @@ export class WalletDeposit extends AdvancedSQLModel {
       }
       return;
     }
-    await walletDeposit.insert();
+    await walletDeposit.insert(SerializeFor.INSERT_DB, conn, true);
   }
 }

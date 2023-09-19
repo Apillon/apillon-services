@@ -1,4 +1,11 @@
-import { Context, env, LogType, SerializeFor, ServiceName } from '@apillon/lib';
+import {
+  AppEnvironment,
+  Context,
+  env,
+  LogType,
+  SerializeFor,
+  ServiceName,
+} from '@apillon/lib';
 import {
   BaseQueueWorker,
   LogOutput,
@@ -310,6 +317,13 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
           },
           LogOutput.SYS_ERROR,
         );
+      }
+      if (
+        env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+        env.APP_ENV == AppEnvironment.TEST
+      ) {
+        //Throw error so that e2e test and local testing will fail if deploy failed
+        throw err;
       }
     }
   }
