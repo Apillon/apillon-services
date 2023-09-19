@@ -1,8 +1,14 @@
 import { BaseTransaction } from '../base-transaction-model';
 
-export interface StorageOrderTransaction extends BaseTransaction {
-  readonly fileCid: string | undefined;
-  readonly account: string | undefined;
+export interface DidTransaction extends BaseTransaction {
+  readonly didId?: string | undefined;
+  readonly account?: string | undefined;
+}
+
+export interface AttestationTransaction extends BaseTransaction {
+  readonly account?: string | undefined;
+  readonly attesterId?: string | undefined;
+  readonly claimHash?: string;
 }
 
 export interface TransferTransaction extends BaseTransaction {

@@ -7,21 +7,21 @@ import {
   enumInclusionValidator,
   EvmChain,
   getQueryParams,
-  WalletTransactionsQueryFilter,
   PoolConnection,
   PopulateFrom,
   presenceValidator,
   prop,
   selectAndCountQuery,
   SerializeFor,
-  SubstrateChain,
   SqlModelStatus,
+  SubstrateChain,
+  WalletTransactionsQueryFilter,
 } from '@apillon/lib';
 import { BlockchainErrorCode, Chain, DbTables } from '../../config/types';
 import { Endpoint } from '../../common/models/endpoint';
 import { ethers } from 'ethers';
-import { ApiPromise, WsProvider } from '@polkadot/api';
 import { TransactionLog } from '../accounting/transaction-log.model';
+import { SubstrateRpcApi } from '../substrate/rpc-api';
 
 // For enum inclusion validator
 const EvmOrSubstrateChain = { ...EvmChain, ...SubstrateChain };
@@ -553,18 +553,15 @@ export class Wallet extends AdvancedSQLModel {
     if (this.chainType === ChainType.EVM) {
       const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
       balance = (await provider.getBalance(this.address)).toString();
-    }
-    if (this.chainType === ChainType.SUBSTRATE) {
-      const provider = new WsProvider(endpoint.url);
-      const api = await ApiPromise.create({
-        provider,
-        throwOnConnect: true,
-      });
+    } else if (this.chainType === ChainType.SUBSTRATE) {
+      const apiHelper = new SubstrateRpcApi(endpoint.url);
+      const api = await apiHelper.getApi();
+      console.log('Timing before send', apiHelper.getTiming(), 's');
       try {
-        const account = (await api.query.system.account(this.address)) as any;
+        const account = await api.query.system.account(this.address);
         balance = account.data.free.toString();
       } finally {
-        await api.disconnect();
+        await apiHelper.destroy();
       }
     }
 

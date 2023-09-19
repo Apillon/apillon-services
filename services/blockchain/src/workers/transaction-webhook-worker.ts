@@ -40,31 +40,18 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
           WHERE
             transactionStatus > ${TransactionStatus.PENDING}
             AND webhookTriggered IS NULL
+            AND chainType = ${ChainType.EVM}
           FOR UPDATE SKIP LOCKED`,
         null,
         conn,
       );
 
-      // console.log('transactions: ', transactions);
-
-      const crustWebhooks: TransactionWebhookDataDto[] = [];
       const nftWebhooks: TransactionWebhookDataDto[] = [];
-      const kiltWebooks: TransactionWebhookDataDto[] = [];
 
       if (transactions && transactions.length > 0) {
         for (let i = 0; i < transactions.length; i++) {
           const transaction = transactions[i];
-          if (transaction.chainType == ChainType.SUBSTRATE) {
-            if (transaction.chain == SubstrateChain.CRUST) {
-              const crustTWh =
-                this.createSubstrateTransactionWebhookDto(transaction);
-              crustWebhooks.push(crustTWh);
-            } else if (transaction.chain == SubstrateChain.KILT) {
-              const kiltTWh =
-                this.createSubstrateTransactionWebhookDto(transaction);
-              kiltWebooks.push(kiltTWh);
-            }
-          } else if (
+          if (
             transaction.chainType == ChainType.EVM &&
             (transaction.chain == EvmChain.MOONBEAM ||
               transaction.chain == EvmChain.MOONBASE ||
@@ -93,19 +80,6 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
        * transactions otherwise we do nothing.
        */
       const updates = [
-        // SUBSTRATE
-        ...(await this.processWebhook(
-          crustWebhooks,
-          env.STORAGE_AWS_WORKER_SQS_URL,
-          'UpdateCrustStatusWorker',
-        )),
-
-        ...(await this.processWebhook(
-          kiltWebooks,
-          env.AUTH_AWS_WORKER_SQS_URL,
-          'UpdateStateWorker',
-        )),
-
         // Evm
         ...(await this.processWebhook(
           nftWebhooks,

@@ -1,20 +1,12 @@
-export class KiltGQLQueries {
-  // NOTE: These params are always present
-  static BASE_SUBSTRATE_PARAMS = `
-    id
-    blockHash
-    blockNumber
-    extrinsicId
-    extrinsicHash
-    transactionType
-    createdAt
-    status
-  `;
+import { BaseGQLQueries } from '../base-queries';
 
+export class KiltGQLQueries extends BaseGQLQueries {
+  // NOTE: These params are always present
   static ACCOUNT_ALL_TRANSACTIONS_QUERY = `query getAccountTransactions(
     $account: String!
     $fromBlock: Int!,
-    $toBlock: Int!
+    $toBlock: Int
+    $limit: Int
    ) {
     systems(
       where: {
@@ -24,9 +16,10 @@ export class KiltGQLQueries {
           account_eq: $account
         }
       }
+      limit: $limit
     )
     {
-      ${this.BASE_SUBSTRATE_PARAMS}
+      ${this.BASE_SUBSTRATE_FIELDS}
       account
       error
       fee
@@ -43,7 +36,7 @@ export class KiltGQLQueries {
       }
     )
     {
-      ${this.BASE_SUBSTRATE_PARAMS}
+      ${this.BASE_SUBSTRATE_FIELDS}
       from
       to
       amount
@@ -59,7 +52,7 @@ export class KiltGQLQueries {
       }
     )
     {
-      ${this.BASE_SUBSTRATE_PARAMS}
+      ${this.BASE_SUBSTRATE_FIELDS}
       account
       didId
       fee
@@ -76,106 +69,10 @@ export class KiltGQLQueries {
       }
     )
     {
-      ${this.BASE_SUBSTRATE_PARAMS}
+      ${this.BASE_SUBSTRATE_FIELDS}
       account
       attesterId
       claimHash
-      fee
-    }
-  }`;
-
-  /* Returns TRANSFERS by TransactionType from a specific account in KILT */
-  static ACCOUNT_TRANSFERS_BY_TYPE_QUERY = `query getAccountTransfers(
-    $account: String!
-    $fromBlock: Int!,
-    $toBlock: Int!,
-    $transactionType: String!) {
-    transfers(
-      where: {
-        AND: {
-          blockNumber_gte: $fromBlock,
-          blockNumber_lte: $toBlock,
-          transactionType_eq: $transactionType,
-          AND: {
-            OR: [{from_eq: $account}, {to_eq: $account}]
-          }
-        }
-      }
-    )
-    {
-      ${this.BASE_SUBSTRATE_PARAMS}
-      from
-      to
-      amount
-      fee
-    }
-  }`;
-
-  /* Returns TRANSFERS and System events by TransactionType from a specific account in KILT */
-  static ACCOUNT_TRANSFERS_BY_TX_HASHES_QUERY = `query getAccountTransfersByTxHashes(
-    $account: String!,
-    $hashes: [String!]!
-   ) {
-    transfers(
-      where: {
-        AND: {
-          extrinsicHash_in: $hashes,
-          AND: {
-            OR: [{from_eq: $account}, {to_eq: $account}]
-          }
-        }
-      }
-    )
-    {
-      ${this.BASE_SUBSTRATE_PARAMS}
-      from
-      to
-      amount
-      fee
-    }
-  }`;
-
-  /* Returns all SYSTEM events from a specific account in KILT */
-  static ACCOUNT_SYSTEM_EVENTS_QUERY = `query getAccountSystemEvents(
-    $account: String!
-    $fromBlock: Int!,
-    $toBlock: Int!) {
-    systems(
-      where: {
-        AND: {
-          blockNumber_gte: $fromBlock,
-          blockNumber_lte: $toBlock,
-          account_eq: $account
-        }
-      }
-    )
-    {
-      ${this.BASE_SUBSTRATE_PARAMS}
-      account
-      error
-      fee
-    }
-  }`;
-
-  /* Returns SYSTEM events for specific extrinsic hashes */
-  static ACCOUNT_SYSTEM_EVENTS_WITH_LIMIT_QUERY = `query getAccountSystemEventsWithLimit(
-    $account: String!,
-    $fromBlock: Int!,
-    $limit: Int!
-    ) {
-    systems(
-      where: {
-        AND: {
-          account_eq: $account
-          blockNumber_gte: $fromBlock,
-        }
-      },
-      limit: $limit
-    )
-    {
-      ${this.BASE_SUBSTRATE_PARAMS}
-      account
-      error
       fee
     }
   }`;
@@ -197,7 +94,7 @@ export class KiltGQLQueries {
       }
     )
     {
-      ${this.BASE_SUBSTRATE_PARAMS}
+      ${this.BASE_SUBSTRATE_FIELDS}
       account
       didId
       fee
@@ -224,7 +121,7 @@ export class KiltGQLQueries {
       }
     )
     {
-      ${this.BASE_SUBSTRATE_PARAMS}
+      ${this.BASE_SUBSTRATE_FIELDS}
       account
       attesterId
       claimHash
@@ -232,8 +129,8 @@ export class KiltGQLQueries {
     }
   }`;
 
-  static ACCOUNT_WALLET_TRANSACTION_BY_HASH = `
-    query getWalletTransactionsByHash($address: String!, $extrinsicHash: String!) {
+  static ACCOUNT_TRANSACTION_BY_HASH = `
+    query getAccountTransactionsByHash($address: String!, $extrinsicHash: String!) {
       attestations(where: {account_eq: $address, extrinsicHash_eq: $extrinsicHash}) {
         extrinsicHash
       }

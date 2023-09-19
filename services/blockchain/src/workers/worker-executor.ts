@@ -35,7 +35,6 @@ export enum WorkerName {
   EVM_TRANSACTIONS = 'EvmTransactions',
   TRANSACTION_WEBHOOKS = 'TransactionWebhooks',
   TRANSACTION_LOG = 'TransactionLog',
-  KILT_TRANSACTIONS = 'KiltTransactions',
   SUBSTRATE_TRANSACTION = 'SubstrateTransaction',
 }
 

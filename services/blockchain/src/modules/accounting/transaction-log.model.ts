@@ -30,7 +30,8 @@ import { getTokenFromChain } from '../../lib/utils';
 import {
   SystemEvent,
   TransferTransaction,
-} from '../blockchain-indexers/substrate/kilt/data-models/kilt-transactions';
+} from '../blockchain-indexers/substrate/kilt/data-models';
+import { StorageOrderTransaction } from '../blockchain-indexers/substrate/crust/data-models';
 export class TransactionLog extends AdvancedSQLModel {
   public readonly tableName = DbTables.TRANSACTION_LOG;
 
@@ -366,37 +367,55 @@ export class TransactionLog extends AdvancedSQLModel {
     super(data, context);
   }
 
-  public createFromCrustIndexerData(data: any, wallet: Wallet) {
-    this.ts = data?.createdAt;
-    this.blockId = data?.blockNumber;
-    this.addressFrom = data?.from;
-    this.addressTo = data?.to;
-    this.amount = data?.amount;
+  public createFromCrustIndexerData(
+    data: {
+      system: SystemEvent;
+      transfers: TransferTransaction[];
+      storageOrder: StorageOrderTransaction;
+    },
+    wallet: Wallet,
+  ) {
+    this.ts = data?.system?.createdAt;
+    this.blockId = data?.system?.blockNumber;
+    this.addressFrom = data?.transfers[0]?.from;
+    this.addressTo = data?.transfers[0]?.to;
+    this.amount = '0';
 
-    this.hash = data?.extrinsicHash;
+    for (const transfer of data?.transfers) {
+      this.addToAmount(transfer?.amount?.toString() || '0');
+    }
+
+    this.hash = data?.system?.extrinsicHash;
     this.wallet = wallet.address;
 
-    this.status = data?.status === 1 ? TxStatus.COMPLETED : TxStatus.FAILED;
+    this.status =
+      data?.system?.status === 1 ? TxStatus.COMPLETED : TxStatus.FAILED;
     this.chainType = wallet.chainType;
     this.chain = wallet.chain;
     this.token = TxToken.CRUST_TOKEN;
+    this.fee =
+      data?.system?.fee?.toString() || data?.transfers[0]?.fee?.toString();
 
     if (this.addressFrom === this.wallet) {
       this.direction = TxDirection.COST;
-      // TODO: fix this!
-      // this.action =
-      //   data.transactionType === 0 ? TxAction.WITHDRAWAL : TxAction.TRANSACTION;
-      this.action = TxAction.TRANSACTION;
-      this.fee = data?.fee;
+
+      this.action = !!data?.storageOrder?.id
+        ? TxAction.TRANSACTION
+        : TxAction.WITHDRAWAL;
     } else if (this.addressTo === this.wallet) {
       this.direction = TxDirection.INCOME;
 
-      // TODO: fix this!
-      // this.action =
-      //   data.transactionType === 0 ? TxAction.DEPOSIT : TxAction.TRANSACTION;
-      this.action = TxAction.DEPOSIT;
+      this.action = !!data?.storageOrder?.id
+        ? TxAction.TRANSACTION
+        : TxAction.DEPOSIT;
+
+      if (this.action === TxAction.DEPOSIT) {
+        // income fee should not be logged (payed by other wallet)
+        this.fee = '0';
+      }
     } else {
-      throw new Error('Inconsistent transaction addresses!');
+      this.action = TxAction.UNKNOWN;
+      this.direction = TxDirection.UNKNOWN;
     }
 
     this.calculateTotalPrice();

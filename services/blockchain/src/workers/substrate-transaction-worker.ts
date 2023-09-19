@@ -1,13 +1,4 @@
 import {
-  BaseSingleThreadWorker,
-  WorkerDefinition,
-  sendToWorkerQueue,
-  LogOutput,
-} from '@apillon/workers-lib';
-import { Wallet } from '../modules/wallet/wallet.model';
-import { BaseBlockchainIndexer } from '../modules/blockchain-indexers/substrate/base-blockchain-indexer';
-import {
-  AppEnvironment,
   ChainType,
   Context,
   LogType,
@@ -15,12 +6,21 @@ import {
   ServiceName,
   SubstrateChain,
   TransactionStatus,
-  env,
 } from '@apillon/lib';
-import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/kilt-indexer.service';
-import { WorkerName } from './worker-executor';
-import { DbTables, TransactionIndexerStatus } from '../config/types';
-import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/crust-indexer.service';
+import {
+  BaseSingleThreadWorker,
+  LogOutput,
+  WorkerDefinition,
+} from '@apillon/workers-lib';
+import { ParachainConfig } from '../config/substrate-parachain';
+import {
+  DbTables,
+  TransactionIndexerStatus,
+  WebhookWorker,
+} from '../config/types';
+import { executeWebhooksForTransmittedTransactionsInWallet } from '../lib/webhook-procedures';
+import { BaseBlockchainIndexer } from '../modules/blockchain-indexers/substrate/base-blockchain-indexer';
+import { Wallet } from '../modules/wallet/wallet.model';
 
 export enum SubstrateChainName {
   KILT = 'KILT',
@@ -31,20 +31,17 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
   private chainId: string;
   private chainName: string;
   private wallets: Wallet[];
-  // Add as necessary
   private indexer: BaseBlockchainIndexer;
+  private webHookWorker: WebhookWorker;
 
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);
 
     // Kinda part of the worker definition, the chainId is
-    console.log('SUBSTRATEW: workerDefinition ', workerDefinition);
-    console.log('SUBSTRATEW: parameters', workerDefinition.parameters);
     this.chainId = workerDefinition.parameters.chainId;
 
     this.chainName = SubstrateChain[this.chainId];
-    this.logPrefix = `[SUBSTRATE | ${this.chainName}]`;
-    this.setIndexer();
+    this.setParachainParams();
   }
 
   public async runExecutor(_data?: any): Promise<any> {
@@ -74,8 +71,6 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         toBlock,
       );
 
-      console.log('Fetched transactions: ', transactions);
-
       const conn = await this.context.mysql.start();
       try {
         await this.setTransactionsState(transactions, conn);
@@ -100,39 +95,46 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         continue;
       }
 
-      if (
-        env.APP_ENV === AppEnvironment.TEST ||
-        env.APP_ENV === AppEnvironment.LOCAL_DEV
-      ) {
-        console.log(
-          `${env.APP_ENV} => Skipping webhook trigger ... TODO: Handle properly`,
+      //Execute webhooks
+      try {
+        await executeWebhooksForTransmittedTransactionsInWallet(
+          this.context,
+          wallet.address,
+          this.webHookWorker.workerName,
+          this.webHookWorker.sqsUrl,
         );
-      } else if (transactions.length > 0) {
-        // Trigger webhook worker
-        await sendToWorkerQueue(
-          env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
-          WorkerName.TRANSACTION_WEBHOOKS,
-          [{}],
-          null,
-          null,
+      } catch (error) {
+        await this.writeEventLog(
+          {
+            logType: LogType.ERROR,
+            message: `Error executing webhooks for wallet ${wallet.address}`,
+            service: ServiceName.BLOCKCHAIN,
+            err: error,
+          },
+          LogOutput.SYS_ERROR,
         );
       }
     }
   }
 
-  // NOTE: Sets the Substrate Indexer
-  private setIndexer() {
-    switch (this.chainName) {
-      case SubstrateChainName.KILT:
-        this.indexer = new KiltBlockchainIndexer();
-        break;
-      case SubstrateChainName.CRUST:
-        this.indexer = new CrustBlockchainIndexer();
-        break;
-      default:
-        // TODO: Proper error handling
-        console.error('Invalid chain');
+  private setParachainParams() {
+    const config = ParachainConfig[this.chainName];
+
+    if (config === undefined) {
+      // I don't want to log anything here. This should NEVER happen
+      // Another reason is to be able to call this function
+      // from the constructor -- no async allowed.
+      throw Error(`Invalid parachain: ${this.chainName}!`);
     }
+
+    // Class in config must be instantiated
+    this.indexer = new config.indexer();
+
+    // Set webhook worker - from the service that triggered the transaction
+    this.webHookWorker = {
+      workerName: config.webhookWorkerName,
+      sqsUrl: config.sqsUrl,
+    };
   }
 
   private async fetchAllResolvedTransactions(
@@ -141,13 +143,12 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     toBlock: number,
   ) {
     // Get all transactions from the
+    // TODO: Apply range calculation
     const transactions = await this.indexer.getAllSystemEvents(
       address,
       fromBlock,
       toBlock,
     );
-
-    console.log('System transactions: ', transactions);
 
     const transactionsArray: Array<any> = Object.values(transactions);
     return transactionsArray.length > 0 ? transactionsArray.flat(Infinity) : [];
@@ -170,8 +171,6 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     const failedTransactions: string[] = transactions
       .filter((t: any) => t.status == TransactionIndexerStatus.FAIL)
       .map((t: any): string => t.extrinsicHash);
-
-    console.log('Failed transactions ', failedTransactions);
 
     // Update SUCCESSFUL transactions
     await this.updateTransactions(
