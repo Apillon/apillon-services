@@ -503,16 +503,16 @@ export class TransactionLogWorker extends BaseQueueWorker {
     pricePerToken: number,
   ) {
     const sliceAmount = Math.round(decimals / 2);
-    // Slice totalPrice length by 2 so it can be converted to decimal number
+    // remove half of decimal places to prevent number owerflows
     const totalPriceShort = totalPrice.substring(
       0,
       totalPrice.length - sliceAmount,
     );
     const value =
       ethers.FixedNumber.from(totalPriceShort)
-        .divUnsafe(ethers.FixedNumber.from(10 ** sliceAmount)) // div by 2 because length was sliced by 2
+        .divUnsafe(ethers.FixedNumber.from(10 ** (decimals - sliceAmount))) // divide by 10 to the power of the remainder of the decimal places
         .toUnsafeFloat() * pricePerToken;
-    return Math.round(value * 10_000) / 10_000; // Round to 4 decimals
+    return Math.round(value * 10_000) / 10_000; // Round value to 4 decimals
   }
 
   private subtractAmount(amount1: string, amount2: string): string {
