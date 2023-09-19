@@ -132,7 +132,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
 
     // Set webhook worker - from the service that triggered the transaction
     this.webHookWorker = {
-      workerName: config.workerName,
+      workerName: config.webhookWorkerName,
       sqsUrl: config.sqsUrl,
     };
   }
