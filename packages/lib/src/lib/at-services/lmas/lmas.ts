@@ -45,6 +45,7 @@ export class Lmas extends BaseService {
     location?: string;
     service?: string;
     data?: any;
+    sendAdminAlert?: boolean;
   }) {
     // hide some data from logging
     if (!!params.data?.password) {
@@ -77,6 +78,14 @@ export class Lmas extends BaseService {
       await this.callService(data);
     } catch (err) {
       console.error(`LMAS writeLog CALL SERVICE ERROR: ${err.message}`);
+    }
+
+    if (params.sendAdminAlert && data.message) {
+      await this.sendAdminAlert(
+        data.message,
+        ServiceName[data.service],
+        data.logType,
+      );
     }
   }
 
