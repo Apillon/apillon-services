@@ -64,6 +64,7 @@ export async function getTokenPriceUsd(token: string) {
     ASTR: 'astar',
     KILT: 'kilt-protocol',
     GLMR: 'moonbeam',
+    DEV: 'moonbeam',
   };
   const networkName = networkTokenMap[token];
   try {
