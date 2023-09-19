@@ -7,7 +7,7 @@ import {
 import { MySql, env, getEnvSecrets } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { TransactionLogWorker } from '../../workers/transaction-log-worker';
-import { DbTables } from '../../config/types';
+import { DbTables, TxStatus } from '../../config/types';
 
 void (async () => {
   const wd = new WorkerDefinition(
@@ -36,7 +36,7 @@ void (async () => {
 
   const wallets = await worker.runPlanner();
   const transactions = await db.paramExecute(
-    `SELECT * from ${DbTables.TRANSACTION_LOG};`,
+    `SELECT * from ${DbTables.TRANSACTION_LOG} WHERE status = ${TxStatus.COMPLETED};`,
   );
   for (const wallet of wallets) {
     await worker.processWalletDepositAmounts(wallet.wallet, transactions);

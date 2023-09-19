@@ -379,10 +379,11 @@ export class TransactionLogWorker extends BaseQueueWorker {
       .map((t) => new TransactionLog(t, this.context))) {
       const conn = await this.context.mysql.start();
       try {
-        const valueUsd =
-          ethers.BigNumber.from(deposit.totalPrice)
-            .div(ethers.BigNumber.from(10).pow(wallet.decimals))
-            .toNumber() * tokenPriceUsd;
+        const value = this.getTotalValue(
+          deposit.totalPrice,
+          wallet.decimals,
+          tokenPriceUsd,
+        );
 
         await new WalletDeposit({}, this.context).createWalletDeposit(
           wallet,
@@ -398,9 +399,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
               },
             ),
         );
-        await deposit
-          .populate({ value: valueUsd })
-          .update(SerializeFor.UPDATE_DB, conn);
+        await deposit.populate({ value }).update(SerializeFor.UPDATE_DB, conn);
 
         await this.context.mysql.commit(conn);
       } catch (err) {
@@ -426,14 +425,13 @@ export class TransactionLogWorker extends BaseQueueWorker {
           spend.totalPrice,
           conn,
         );
-        const valueUsd =
-          ethers.BigNumber.from(spend.totalPrice)
-            .div(ethers.BigNumber.from(10).pow(wallet.decimals))
-            .toNumber() * pricePerToken;
 
-        await spend
-          .populate({ value: valueUsd })
-          .update(SerializeFor.UPDATE_DB, conn);
+        const value = this.getTotalValue(
+          spend.totalPrice,
+          wallet.decimals,
+          pricePerToken,
+        );
+        await spend.populate({ value }).update(SerializeFor.UPDATE_DB, conn);
 
         await this.context.mysql.commit(conn);
       } catch (err) {
@@ -461,7 +459,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
         `NO AVAILABLE DEPOSIT! ${formatWalletAddress(wallet)}`,
         { wallet: wallet.address },
       );
-      return;
+      return 0;
     }
     if (
       this.subtractAmount(availableDeposit.currentAmount, amount).startsWith(
@@ -497,6 +495,24 @@ export class TransactionLogWorker extends BaseQueueWorker {
       },
       logOutput,
     );
+  }
+
+  private getTotalValue(
+    totalPrice: string,
+    decimals: number,
+    pricePerToken: number,
+  ) {
+    const sliceAmount = Math.round(decimals / 2);
+    // Slice totalPrice length by 2 so it can be converted to decimal number
+    const totalPriceShort = totalPrice.substring(
+      0,
+      totalPrice.length - sliceAmount,
+    );
+    const value =
+      ethers.FixedNumber.from(totalPriceShort)
+        .divUnsafe(ethers.FixedNumber.from(10 ** sliceAmount)) // div by 2 because length was sliced by 2
+        .toUnsafeFloat() * pricePerToken;
+    return Math.round(value * 10_000) / 10_000; // Round to 4 decimals
   }
 
   private subtractAmount(amount1: string, amount2: string): string {

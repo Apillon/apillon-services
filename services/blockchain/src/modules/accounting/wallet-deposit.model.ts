@@ -162,6 +162,6 @@ export class WalletDeposit extends AdvancedSQLModel {
       }
       return;
     }
-    await walletDeposit.insert(SerializeFor.INSERT_DB, conn);
+    await walletDeposit.insert(SerializeFor.INSERT_DB, conn, true);
   }
 }
