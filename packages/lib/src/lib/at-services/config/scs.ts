@@ -102,9 +102,13 @@ export class Scs extends BaseService {
     });
   }
 
-  public async projectHasActiveSubscription(project_uuid: string) {
+  public async getSubscriptionPackageStripeId(
+    package_id: number,
+    project_uuid: string,
+  ) {
     return await this.callService({
-      eventName: ScsEventType.PROJECT_HAS_ACTIVE_SUBSCRIPTION,
+      eventName: ScsEventType.GET_SUBSCRIPTION_PACKAGE_STRIPE_ID,
+      package_id,
       project_uuid,
     });
   }

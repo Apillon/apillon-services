@@ -25,8 +25,8 @@ export async function processEvent(
     [ScsEventType.CREATE_SUBSCRIPTION]: SubscriptionService.createSubscription,
     [ScsEventType.GET_SUBSCRIPTION_PACKAGE_BY_ID]:
       SubscriptionService.getSubscriptionPackageById,
-    [ScsEventType.PROJECT_HAS_ACTIVE_SUBSCRIPTION]:
-      SubscriptionService.projectHasActiveSubscription,
+    [ScsEventType.GET_SUBSCRIPTION_PACKAGE_STRIPE_ID]:
+      SubscriptionService.getSubscriptionPackageStripeId,
     [ScsEventType.UPDATE_SUBSCRIPTION]: SubscriptionService.updateSubscription,
   };
 

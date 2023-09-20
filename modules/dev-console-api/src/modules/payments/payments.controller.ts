@@ -1,4 +1,4 @@
-import { Validation } from '@apillon/modules-lib';
+import { Ctx, Validation } from '@apillon/modules-lib';
 import {
   Controller,
   Get,
@@ -14,6 +14,7 @@ import { Headers } from '@nestjs/common';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { PaymentSessionDto } from './dto/payment-session.dto';
 import { ValidateFor } from '@apillon/lib';
+import { DevConsoleApiContext } from '../../context';
 
 @Controller('payments')
 export class PaymentsController {
@@ -24,8 +25,10 @@ export class PaymentsController {
   @UseGuards(AuthGuard, ValidationGuard)
   async getStripeSessionUrl(
     @Query() paymentSessionDto: PaymentSessionDto,
+    @Ctx() context: DevConsoleApiContext,
   ): Promise<string> {
     const session = await this.paymentsService.createStripePaymentSession(
+      context,
       paymentSessionDto,
     );
     return session.url;

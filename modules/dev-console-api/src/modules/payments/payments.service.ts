@@ -11,36 +11,44 @@ import { PaymentSessionDto } from './dto/payment-session.dto';
 import {
   BadRequestErrorCode,
   CREDITS_STRIPE_ID,
-  ValidatorErrorCode,
+  ResourceNotFoundErrorCode,
 } from '../../config/types';
+import { Project } from '../project/models/project.model';
+import { DevConsoleApiContext } from '../../context';
 
 @Injectable()
 export class PaymentsService {
   constructor(private stripe: Stripe) {}
 
   async createStripePaymentSession(
+    context: DevConsoleApiContext,
     paymentSessionDto: PaymentSessionDto,
   ): Promise<Stripe.Response<Stripe.Checkout.Session>> {
-    const isProd = env.APP_ENV === AppEnvironment.PROD;
+    const project = await new Project({}, context).populateByUUID(
+      paymentSessionDto.project_uuid,
+    );
+    if (!project.exists()) {
+      throw new CodeException({
+        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
+        status: HttpStatus.NOT_FOUND,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+    project.canModify(context);
+
     if (paymentSessionDto.credits) {
       return await this.generateStripePaymentSession(
         paymentSessionDto,
-        isProd ? CREDITS_STRIPE_ID.PROD : CREDITS_STRIPE_ID.TEST,
+        env.APP_ENV === AppEnvironment.PROD
+          ? CREDITS_STRIPE_ID.PROD
+          : CREDITS_STRIPE_ID.TEST,
       );
     }
-    const { data } = await new Scs().getSubscriptionPackageById(
-      +paymentSessionDto.subscription_id,
-    );
-    const stripeApiId = isProd ? data.stripeApiId : data.stripeApiIdTest;
-    if (!stripeApiId) {
-      throw new CodeException({
-        code: ValidatorErrorCode.STRIPE_ID_NOT_VALID,
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errorCodes: ValidatorErrorCode,
-      });
-    }
-
-    await this.checkActiveSubscription(paymentSessionDto.project_uuid);
+    const { data: stripeApiId } =
+      await new Scs().getSubscriptionPackageStripeId(
+        +paymentSessionDto.subscription_id,
+        paymentSessionDto.project_uuid,
+      );
 
     return await this.generateStripePaymentSession(
       paymentSessionDto,
@@ -60,22 +68,22 @@ export class PaymentsService {
         const isCreditPurchase = session.metadata.isCreditPurchase === 'true';
         if (isCreditPurchase) {
           // TODO: handle credit purchase
-          return;
-        }
-        const subscription = await this.stripe.subscriptions.retrieve(
-          session.subscription,
-        );
+        } else {
+          const subscription = await this.stripe.subscriptions.retrieve(
+            session.subscription,
+          );
 
-        await new Scs().createSubscription(
-          new CreateSubscriptionDto({
-            project_uuid,
-            package_id,
-            expiresOn: new Date(subscription.current_period_end * 1000),
-            subscriberEmail: session.customer_details.email,
-            stripeId: subscription.id,
-          }),
-        );
-        break;
+          await new Scs().createSubscription(
+            new CreateSubscriptionDto({
+              project_uuid,
+              package_id,
+              expiresOn: new Date(subscription.current_period_end * 1000),
+              subscriberEmail: session.customer_details.email,
+              stripeId: subscription.id,
+            }),
+          );
+          break;
+        }
       }
       case 'customer.subscription.updated':
         // In case subscription is renewed or canceled
@@ -106,19 +114,6 @@ export class PaymentsService {
         code: BadRequestErrorCode.INVALID_WEBHOOK_SIGNATURE,
         errorCodes: BadRequestErrorCode,
         errorMessage: 'Invalid webhook signature',
-      });
-    }
-  }
-
-  async checkActiveSubscription(project_uuid: string) {
-    const { data: hasActiveSubscription } =
-      await new Scs().projectHasActiveSubscription(project_uuid);
-
-    if (hasActiveSubscription) {
-      throw new CodeException({
-        code: BadRequestErrorCode.ACTIVE_SUBSCRIPTION_EXISTS,
-        status: HttpStatus.BAD_REQUEST,
-        errorCodes: BadRequestErrorCode,
       });
     }
   }

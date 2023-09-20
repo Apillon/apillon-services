@@ -9,6 +9,7 @@ import { Subscription } from './models/subscription.model';
 import { ServiceContext } from '@apillon/service-lib';
 import { SubscriptionPackage } from './models/subscription-package.model';
 import {
+  ScsCodeException,
   ScsNotFoundException,
   ScsValidationException,
 } from '../../lib/exceptions';
@@ -46,6 +47,52 @@ export class SubscriptionService {
     return (await subscription.insert()).serialize(
       SerializeFor.SERVICE,
     ) as Subscription;
+  }
+
+  /**
+   * Checks if project has active subscription, if not returns stripe API ID for the subscription package
+   * Used to return the stripe API ID for generating a payment URL through the Stripe SDK
+   * @param {{ package_id: number; project_uuid: string }} { package_id, project_uuid }
+   * @param {ServiceContext} context
+   * @returns {Promise<string>}
+   */
+  static async getSubscriptionPackageStripeId(
+    { package_id, project_uuid }: { package_id: number; project_uuid: string },
+    context: ServiceContext,
+  ): Promise<string> {
+    const hasActiveSubscription =
+      await SubscriptionService.projectHasActiveSubscription(
+        { project_uuid },
+        context,
+      );
+
+    if (hasActiveSubscription) {
+      throw new ScsCodeException({
+        code: ConfigErrorCode.ACTIVE_SUBSCRIPTION_EXISTS,
+        status: 400,
+        errorCodes: ConfigErrorCode,
+        sourceFunction: 'getSubscriptionPackageStripeId',
+        sourceModule: ServiceName.SCS,
+      });
+    }
+
+    const subscriptionPackage =
+      await SubscriptionService.getSubscriptionPackageById(
+        { id: package_id },
+        context,
+      );
+
+    if (!subscriptionPackage.stripeApiId) {
+      throw new ScsCodeException({
+        code: ConfigErrorCode.STRIPE_ID_NOT_VALID,
+        status: 422,
+        errorCodes: ConfigErrorCode,
+        sourceFunction: 'getSubscriptionPackageStripeId',
+        sourceModule: ServiceName.SCS,
+      });
+    }
+
+    return subscriptionPackage.stripeApiId;
   }
 
   static async getSubscriptionPackageById(
