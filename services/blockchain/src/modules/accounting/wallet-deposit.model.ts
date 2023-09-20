@@ -143,8 +143,8 @@ export class WalletDeposit extends AdvancedSQLModel {
       {
         wallet_id: wallet.id,
         transactionHash: deposit.hash,
-        depositAmount: deposit.totalPrice,
-        currentAmount: deposit.totalPrice,
+        depositAmount: deposit.amount,
+        currentAmount: deposit.amount,
         pricePerToken,
       },
       this.getContext(),

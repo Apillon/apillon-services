@@ -7,9 +7,9 @@ import {
 import { MySql, env, getEnvSecrets } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { TransactionLogWorker } from '../../workers/transaction-log-worker';
-import { DbTables, TxStatus } from '../../config/types';
+import { DbTables } from '../../config/types';
 
-void (async () => {
+async function run() {
   const wd = new WorkerDefinition(
     {
       type: ServiceDefinitionType.SQS,
@@ -35,10 +35,25 @@ void (async () => {
   const worker = new TransactionLogWorker(wd, context, QueueWorkerType.PLANNER);
 
   const wallets = await worker.runPlanner();
-  const transactions = await db.paramExecute(
-    `SELECT * from ${DbTables.TRANSACTION_LOG} WHERE status = ${TxStatus.COMPLETED};`,
-  );
+
   for (const wallet of wallets) {
+    const transactions = await db.paramExecute(
+      `SELECT * from ${DbTables.TRANSACTION_LOG}
+      WHERE wallet = @address
+      ORDER BY id ASC
+      ;`,
+      { address: wallet.wallet.address },
+    );
     await worker.processWalletDepositAmounts(wallet.wallet, transactions);
   }
-})();
+}
+
+run()
+  .then(() => {
+    console.log('DONE!');
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
