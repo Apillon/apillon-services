@@ -112,3 +112,8 @@ export enum InstructionType {
   VIDEO = 4,
   WIKI = 5,
 }
+
+export const CREDITS_STRIPE_ID = {
+  TEST: 'price_1NsLNCGlTglE98hYnR85zIAr',
+  PROD: '',
+};

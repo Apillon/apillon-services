@@ -8,7 +8,11 @@ import {
 import { HttpStatus, Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
 import { PaymentSessionDto } from './dto/payment-session.dto';
-import { BadRequestErrorCode, ValidatorErrorCode } from '../../config/types';
+import {
+  BadRequestErrorCode,
+  CREDITS_STRIPE_ID,
+  ValidatorErrorCode,
+} from '../../config/types';
 
 @Injectable()
 export class PaymentsService {
@@ -17,13 +21,17 @@ export class PaymentsService {
   async createStripePaymentSession(
     paymentSessionDto: PaymentSessionDto,
   ): Promise<Stripe.Response<Stripe.Checkout.Session>> {
+    const isProd = env.APP_ENV === AppEnvironment.PROD;
+    if (paymentSessionDto.credits) {
+      return await this.generateStripePaymentSession(
+        paymentSessionDto,
+        isProd ? CREDITS_STRIPE_ID.PROD : CREDITS_STRIPE_ID.TEST,
+      );
+    }
     const { data } = await new Scs().getSubscriptionPackageById(
       +paymentSessionDto.subscription_id,
     );
-    const stripeApiId =
-      env.APP_ENV === AppEnvironment.PROD
-        ? data.stripeApiId
-        : data.stripeApiIdTest;
+    const stripeApiId = isProd ? data.stripeApiId : data.stripeApiIdTest;
     if (!stripeApiId) {
       throw new CodeException({
         code: ValidatorErrorCode.STRIPE_ID_NOT_VALID,
@@ -70,11 +78,13 @@ export class PaymentsService {
         break;
       }
       case 'customer.subscription.updated':
-        // In case subscription is canceled
-        const { cancel_at_period_end, canceled_at } = session;
+        // In case subscription is renewed or canceled
         await new Scs().updateSubscription(session.id, {
-          isCanceled: cancel_at_period_end,
-          cancelDate: canceled_at ? new Date(canceled_at * 1000) : null,
+          isCanceled: session.cancel_at_period_end,
+          cancelDate: session.canceled_at
+            ? new Date(session.canceled_at * 1000)
+            : null,
+          expiresOn: new Date(session.current_period_end * 1000),
         });
         break;
     }
