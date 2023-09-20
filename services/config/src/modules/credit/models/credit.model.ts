@@ -19,7 +19,7 @@ export class Credit extends ProjectAccessModel {
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.LOGGER,
@@ -45,7 +45,7 @@ export class Credit extends ProjectAccessModel {
     ],
     serializable: [
       SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,

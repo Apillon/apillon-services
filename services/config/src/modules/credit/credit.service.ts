@@ -1,6 +1,14 @@
 import { ServiceContext } from '@apillon/service-lib';
 import { Credit } from './models/credit.model';
-import { Lmas, LogType, SerializeFor, ServiceName } from '@apillon/lib';
+import {
+  AddCreditDto,
+  CreditTransactionQueryFilter,
+  Lmas,
+  LogType,
+  SerializeFor,
+  ServiceName,
+  SpendCreditDto,
+} from '@apillon/lib';
 import { ScsCodeException, ScsValidationException } from '../../lib/exceptions';
 import { ConfigErrorCode } from '../../config/types';
 import { CreditTransaction } from './models/credit-transaction.model';
@@ -10,27 +18,53 @@ import { Product } from './models/product.model';
  * CreditService class for handling credit requests
  */
 export class CreditService {
-  static async addCredit(data: any, context: ServiceContext): Promise<any> {
+  static async getCredit(
+    event: { project_uuid: string },
+    context: ServiceContext,
+  ): Promise<any> {
+    const credit: Credit = await new Credit({}, context).populateByUUID(
+      event.project_uuid,
+    );
+
+    await credit.canAccess(context, event.project_uuid);
+
+    return credit.serialize(SerializeFor.PROFILE);
+  }
+
+  static async listCreditTransactions(
+    event: { query: CreditTransactionQueryFilter },
+    context: ServiceContext,
+  ): Promise<any> {
+    return await new CreditTransaction(
+      { project_uuid: event.query.project_uuid },
+      context,
+    ).getList(new CreditTransactionQueryFilter(event.query, context));
+  }
+
+  static async addCredit(
+    event: { body: AddCreditDto },
+    context: ServiceContext,
+  ): Promise<any> {
     const conn = await context.mysql.start();
     try {
       let credit: Credit = await new Credit(
         {},
         context,
-      ).populateByProjectUUIDForUpdate(data.project_uuid, conn);
+      ).populateByProjectUUIDForUpdate(event.body.project_uuid, conn);
 
       if (!credit.exists()) {
         //Credit record for project does not yet exists - create one
         credit = new Credit(
           {
-            project_uuid: data.project_uuid,
-            balance: data.amount,
+            project_uuid: event.body.project_uuid,
+            balance: event.body.amount,
           },
           context,
         );
 
         await credit.insert(SerializeFor.INSERT_DB, conn);
       } else {
-        credit.balance += data.amount;
+        credit.balance += event.body.amount;
         await credit.update(SerializeFor.UPDATE_DB, conn);
       }
 
@@ -38,12 +72,12 @@ export class CreditService {
         {},
         context,
       ).populate({
-        project_uuid: data.project_uuid,
+        project_uuid: event.body.project_uuid,
         credit_id: credit.id,
         direction: 1,
-        amount: data.amount,
-        referenceTable: data.referenceTable,
-        referenceId: data.referenceId,
+        amount: event.body.amount,
+        referenceTable: event.body.referenceTable,
+        referenceId: event.body.referenceId,
       });
 
       try {
@@ -81,15 +115,18 @@ export class CreditService {
           context: context,
           sourceFunction: 'addCredit()',
           sourceModule: 'CreditService',
-        }).writeToMonitor({ project_uuid: data.project_uuid });
+        }).writeToMonitor({ project_uuid: event.body.project_uuid });
       }
     }
   }
 
-  static async spendCredit(data: any, context: ServiceContext): Promise<any> {
+  static async spendCredit(
+    event: { body: SpendCreditDto },
+    context: ServiceContext,
+  ): Promise<any> {
     //Check product and populate it's price
     const product: Product = await new Product({}, context).populateById(
-      data.product_id,
+      event.body.product_id,
     );
     if (!product.exists()) {
       throw await new ScsCodeException({
@@ -98,7 +135,7 @@ export class CreditService {
         context: context,
         sourceFunction: 'spendCredit()',
         sourceModule: 'CreditService',
-      }).writeToMonitor({ project_uuid: data.project_uuid });
+      }).writeToMonitor({ project_uuid: event.body.project_uuid });
     }
 
     await product.populateCurrentPrice();
@@ -110,7 +147,7 @@ export class CreditService {
         sourceFunction: 'spendCredit()',
         sourceModule: 'CreditService',
       }).writeToMonitor({
-        project_uuid: data.project_uuid,
+        project_uuid: event.body.project_uuid,
         data: product.serialize(SerializeFor.LOGGER),
       });
     }
@@ -120,7 +157,7 @@ export class CreditService {
       const credit: Credit = await new Credit(
         {},
         context,
-      ).populateByProjectUUIDForUpdate(data.project_uuid, conn);
+      ).populateByProjectUUIDForUpdate(event.body.project_uuid, conn);
 
       if (!credit.exists() || credit.balance < product.currentPrice) {
         throw await new ScsCodeException({
@@ -129,23 +166,23 @@ export class CreditService {
           context: context,
           sourceFunction: 'spendCredit()',
           sourceModule: 'CreditService',
-        }).writeToMonitor({ project_uuid: data.project_uuid });
+        }).writeToMonitor({ project_uuid: event.body.project_uuid });
       }
 
-      credit.balance -= data.amount;
+      credit.balance -= product.currentPrice;
       await credit.update(SerializeFor.UPDATE_DB, conn);
 
       const creditTransaction: CreditTransaction = new CreditTransaction(
         {},
         context,
       ).populate({
-        project_uuid: data.project_uuid,
+        project_uuid: event.body.project_uuid,
         credit_id: credit.id,
         product_id: product.id,
         direction: 2,
         amount: product.currentPrice,
-        referenceTable: data.referenceTable,
-        referenceId: data.referenceId,
+        referenceTable: event.body.referenceTable,
+        referenceId: event.body.referenceId,
       });
 
       try {
@@ -183,7 +220,7 @@ export class CreditService {
           context: context,
           sourceFunction: 'addCredit()',
           sourceModule: 'CreditService',
-        }).writeToMonitor({ project_uuid: data.project_uuid });
+        }).writeToMonitor({ project_uuid: event.body.project_uuid });
       }
     }
   }

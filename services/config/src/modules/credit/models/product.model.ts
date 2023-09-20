@@ -1,7 +1,6 @@
 import {
-  PoolConnection,
+  AdvancedSQLModel,
   PopulateFrom,
-  ProjectAccessModel,
   SerializeFor,
   SqlModelStatus,
   presenceValidator,
@@ -10,7 +9,7 @@ import {
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { ConfigErrorCode, DbTables } from '../../../config/types';
 
-export class Product extends ProjectAccessModel {
+export class Product extends AdvancedSQLModel {
   public readonly tableName = DbTables.PRODUCT;
 
   @prop({
@@ -67,7 +66,7 @@ export class Product extends ProjectAccessModel {
           FROM \`${DbTables.PRODUCT_PRICE}\`
           WHERE product_id = @product_id
           AND status <> ${SqlModelStatus.DELETED}
-          AND validFrom >= NOW()
+          AND (validFrom IS NULL OR validFrom >= NOW())
           ORDER BY validFrom DESC
           LIMIT 1;
         `,

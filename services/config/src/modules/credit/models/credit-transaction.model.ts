@@ -1,13 +1,18 @@
 import {
+  CreditTransactionQueryFilter,
   PopulateFrom,
   ProjectAccessModel,
   SerializeFor,
+  SqlModelStatus,
+  getQueryParams,
   presenceValidator,
   prop,
+  selectAndCountQuery,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { v4 as uuidV4 } from 'uuid';
 import { ConfigErrorCode, DbTables } from '../../../config/types';
+import { ServiceContext } from '@apillon/service-lib';
 
 export class CreditTransaction extends ProjectAccessModel {
   public readonly tableName = DbTables.CREDIT_TRANSACTION;
@@ -130,4 +135,40 @@ export class CreditTransaction extends ProjectAccessModel {
     ],
   })
   public referenceId: string;
+
+  public async getList(
+    filter: CreditTransactionQueryFilter,
+    serializationStrategy = SerializeFor.PROFILE,
+  ) {
+    const context = this.getContext();
+    this.canAccess(context);
+    // Map url query with sql fields.
+    const fieldMap = {
+      id: 'ct.id',
+    };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'ct',
+      fieldMap,
+      filter.serialize(),
+    );
+
+    const sqlQuery = {
+      qSelect: `
+        SELECT ${this.generateSelectFields('ct', '', serializationStrategy)}
+        `,
+      qFrom: `
+        FROM \`${this.tableName}\` ct
+        WHERE ct.project_uuid = @project_uuid
+        AND (@search IS null OR ct.referenceTable LIKE CONCAT('%', @search, '%'))
+        AND ct.status <> ${SqlModelStatus.DELETED}
+      `,
+      qFilter: `
+        ORDER BY ${filters.orderStr}
+        LIMIT ${filters.limit} OFFSET ${filters.offset};
+      `,
+    };
+
+    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'c.id');
+  }
 }

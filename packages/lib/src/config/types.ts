@@ -160,6 +160,8 @@ export enum ScsEventType {
   DELETE_OVERRIDE = 'delete-override',
   ADD_CREDIT = 'add-credit',
   SPEND_CREDIT = 'spend-credit',
+  GET_PROJECT_CREDIT = 'get-project-credit',
+  GET_CREDIT_TRANSACTIONS = 'get-project-transactions',
 }
 
 export enum NftsEventType {
@@ -556,6 +558,11 @@ export enum ValidatorErrorCode {
   INVALID_SERVICE_NAME = 42200902,
   COLLECTION_NAME_NOT_PRESENT = 42200903,
   COLLECTION_NAME_NOT_VALID = 42200904,
+  //#endregion
+
+  //#region config MS
+  ADD_CREDIT_REQUIRED_DATA_NOT_PRESENT = 422001001,
+  SPEND_CREDIT_REQUIRED_DATA_NOT_PRESENT = 422001002,
   //#endregion
 }
 

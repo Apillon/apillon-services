@@ -6,6 +6,9 @@ export * from './lib/at-services/config/dtos/create-quota-override.dto';
 export * from './lib/at-services/config/dtos/quota-override.dto';
 export * from './config/types';
 export * from './config/env';
+export * from './lib/at-services/config/dtos/spend-credit.dto';
+export * from './lib/at-services/config/dtos/add-credit.dto';
+export * from './lib/at-services/config/dtos/credit-transaction-query-filter.dto';
 
 //#REGION Referral
 export * from './lib/at-services/referral/referral';

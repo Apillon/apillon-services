@@ -24,6 +24,9 @@ export async function processEvent(
     [ScsEventType.GET_ACTIVE_TERMS]: TermsService.getActiveTerms,
     [ScsEventType.ADD_CREDIT]: CreditService.addCredit,
     [ScsEventType.SPEND_CREDIT]: CreditService.spendCredit,
+    [ScsEventType.GET_PROJECT_CREDIT]: CreditService.getCredit,
+    [ScsEventType.GET_CREDIT_TRANSACTIONS]:
+      CreditService.listCreditTransactions,
   };
 
   return await processors[event.eventName](event, context);

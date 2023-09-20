@@ -1,3 +1,4 @@
+import { SqlModelStatus } from '@apillon/lib';
 import { DbTables } from '../../config/types';
 
 export async function upgrade(
@@ -8,7 +9,7 @@ export async function upgrade(
       \`id\` INT NOT NULL,
       \`name\` VARCHAR(255) NOT NULL,
       \`description\` VARCHAR(1000) NULL,
-      \`status\` INT NULL,
+      \`status\` INT NULL DEFAULT ${SqlModelStatus.ACTIVE},
       \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
       \`createUser\` VARCHAR(36) NULL,
       \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
