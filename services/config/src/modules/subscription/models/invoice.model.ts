@@ -125,6 +125,23 @@ export class Invoice extends AdvancedSQLModel {
       SerializeFor.SERVICE,
     ],
   })
+  public clientName: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.PROFILE,
+      SerializeFor.SERVICE,
+    ],
+  })
   public currency: string;
 
   @prop({
@@ -142,5 +159,5 @@ export class Invoice extends AdvancedSQLModel {
       SerializeFor.SERVICE,
     ],
   })
-  public stripeReference: string;
+  public stripeId: string;
 }

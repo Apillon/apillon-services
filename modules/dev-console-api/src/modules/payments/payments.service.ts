@@ -1,6 +1,7 @@
 import {
   AppEnvironment,
   CodeException,
+  CreateInvoiceDto,
   CreateSubscriptionDto,
   Scs,
   env,
@@ -58,33 +59,44 @@ export class PaymentsService {
 
   async stripeWebhookEventHandler(event: Stripe.Event) {
     // https://stripe.com/docs/api/checkout/sessions/object
-    const session = event.data.object as any;
+    const subscription = event.data.object as any;
     switch (event.type) {
       case 'checkout.session.completed': {
-        if (session.payment_status !== 'paid') {
+        if (subscription.payment_status !== 'paid') {
           // In case payment session was canceled/exited
           return;
         }
-        const { project_uuid, package_id } = session.metadata;
-        const isCreditPurchase = session.metadata.isCreditPurchase === 'true';
+        const { project_uuid, package_id } = subscription.metadata;
+        const isCreditPurchase =
+          subscription.metadata.isCreditPurchase === 'true';
         if (isCreditPurchase) {
           // TODO: handle credit purchase
           const sessionWithLineItems =
-            await this.stripe.checkout.sessions.retrieve(session.id, {
+            await this.stripe.checkout.sessions.retrieve(subscription.id, {
               expand: ['line_items'],
             });
         } else {
-          const subscription = await this.stripe.subscriptions.retrieve(
-            session.subscription,
+          // Call Stripe API to fetch subscription data
+          const stripeSubscription = await this.stripe.subscriptions.retrieve(
+            subscription.subscription,
           );
 
           await new Scs().createSubscription(
             new CreateSubscriptionDto({
               project_uuid,
               package_id,
-              expiresOn: new Date(subscription.current_period_end * 1000),
-              subscriberEmail: session.customer_details.email,
-              stripeId: subscription.id,
+              expiresOn: new Date(stripeSubscription.current_period_end * 1000),
+              subscriberEmail: subscription.customer_details.email,
+              stripeId: stripeSubscription.id,
+            }),
+            new CreateInvoiceDto({
+              project_uuid,
+              subtotalAmount: subscription.amount_subtotal / 100,
+              totalAmount: subscription.amount_total / 100,
+              clientEmail: subscription.customer_details.email,
+              clientName: subscription.customer_details.name,
+              currency: subscription.currency,
+              stripeId: subscription.invoice,
             }),
           );
           break;
@@ -92,12 +104,12 @@ export class PaymentsService {
       }
       case 'customer.subscription.updated': {
         // In case subscription is renewed or canceled
-        await new Scs().updateSubscription(session.id, {
-          isCanceled: session.cancel_at_period_end,
-          cancelDate: session.canceled_at
-            ? new Date(session.canceled_at * 1000)
+        await new Scs().updateSubscription(subscription.id, {
+          isCanceled: subscription.cancel_at_period_end,
+          cancelDate: subscription.canceled_at
+            ? new Date(subscription.canceled_at * 1000)
             : null,
-          expiresOn: new Date(session.current_period_end * 1000),
+          expiresOn: new Date(subscription.current_period_end * 1000),
         });
         break;
       }

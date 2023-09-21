@@ -12,6 +12,7 @@ import { QuotaOverrideDto } from './dtos/quota-override.dto';
 import { QuotaDto } from './dtos/quota.dto';
 import { TermsDto } from './dtos/terms.dto';
 import { GetQuotaDto } from './dtos/get-quota.dto';
+import { CreateInvoiceDto } from './dtos/create-invoice.dto';
 
 /**
  * System config Service client
@@ -88,10 +89,12 @@ export class Scs extends BaseService {
 
   public async createSubscription(
     createSubscriptionDto: CreateSubscriptionDto,
+    createInvoiceDto: CreateInvoiceDto,
   ) {
     return await this.callService({
       eventName: ScsEventType.CREATE_SUBSCRIPTION,
       createSubscriptionDto,
+      createInvoiceDto,
     });
   }
 

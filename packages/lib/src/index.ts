@@ -5,6 +5,7 @@ export * from './lib/at-services/config/dtos/get-quota.dto';
 export * from './lib/at-services/config/dtos/create-quota-override.dto';
 export * from './lib/at-services/config/dtos/quota-override.dto';
 export * from './lib/at-services/config/dtos/create-subscription.dto';
+export * from './lib/at-services/config/dtos/create-invoice.dto';
 export * from './config/types';
 export * from './config/env';
 

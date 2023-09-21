@@ -34,7 +34,7 @@ export class PaymentsController {
     return session.url;
   }
 
-  @Post('/webhook')
+  @Post('/stripe-webhook')
   async postWebhook(
     @Req() req: RawBodyRequest<Request>,
     @Headers('stripe-signature') stripeSignature: string,

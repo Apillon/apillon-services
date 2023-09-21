@@ -1,4 +1,5 @@
 import {
+  CreateInvoiceDto,
   CreateSubscriptionDto,
   Lmas,
   LogType,
@@ -13,17 +14,25 @@ import {
   ScsNotFoundException,
   ScsValidationException,
 } from '../../lib/exceptions';
-import { ConfigErrorCode } from '../../config/types';
+import { ConfigErrorCode, DbTables } from '../../config/types';
+import { Invoice } from './models/invoice.model';
 
 export class SubscriptionService {
   /**
    * Create a subscription for a project
    * @param {{ createSubscriptionDto: CreateSubscriptionDto }} createSubscriptionDto - subset DTO containing the subscription data
+   * @param {{ createInvoiceDto: CreateInvoiceDto }} createInvoiceDto - DTO for creating an invoice for the subscription
    * @param {ServiceContext} context
    * @returns {Promise<Subscription>}
    */
   static async createSubscription(
-    { createSubscriptionDto }: { createSubscriptionDto: CreateSubscriptionDto },
+    {
+      createSubscriptionDto,
+      createInvoiceDto,
+    }: {
+      createSubscriptionDto: CreateSubscriptionDto;
+      createInvoiceDto: CreateInvoiceDto;
+    },
     context: ServiceContext,
   ): Promise<Subscription> {
     const subscription = new Subscription(createSubscriptionDto, context);
@@ -44,9 +53,28 @@ export class SubscriptionService {
       }
     }
 
-    return (await subscription.insert()).serialize(
-      SerializeFor.SERVICE,
-    ) as Subscription;
+    const conn = await context.mysql.start();
+    try {
+      const dbSubscription = await subscription.insert(
+        SerializeFor.INSERT_DB,
+        conn,
+      );
+
+      // Create an invoice after subscription has been stored
+      await new Invoice(
+        {
+          ...createInvoiceDto,
+          referenceTable: DbTables.SUBSCRIPTION,
+          referenceId: dbSubscription.id,
+        },
+        context,
+      ).insert(SerializeFor.INSERT_DB, conn);
+      await context.mysql.commit(conn);
+      return dbSubscription.serialize(SerializeFor.SERVICE) as Subscription;
+    } catch {
+      await context.mysql.rollback(conn);
+      // TODO: handle error
+    }
   }
 
   /**
