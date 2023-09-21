@@ -421,6 +421,8 @@ export class TransactionLogWorker extends BaseQueueWorker {
         await this.sendErrorAlert(
           `Error creating deposit for ${formatWalletAddress(wallet)}`,
           { ...deposit },
+          LogType.ERROR,
+          LogOutput.NOTIFY_ALERT,
           err,
         );
         await this.context.mysql.rollback(conn);
@@ -465,6 +467,8 @@ export class TransactionLogWorker extends BaseQueueWorker {
         await this.sendErrorAlert(
           `Error processing tx spend for ${formatWalletAddress(wallet)}`,
           { ...spend },
+          LogType.ERROR,
+          LogOutput.NOTIFY_ALERT,
           err,
         );
         await this.context.mysql.rollback(conn);
@@ -512,6 +516,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
     data: any,
     logType = LogType.ERROR,
     logOutput = LogOutput.NOTIFY_ALERT,
+    err?: Error,
   ) {
     return this.writeEventLog(
       {
@@ -519,6 +524,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
         message,
         service: ServiceName.BLOCKCHAIN,
         data,
+        err,
       },
       logOutput,
     );
