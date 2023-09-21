@@ -410,7 +410,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
         console.log(
           `Created wallet deposit for wallet ${wallet.seed}|${wallet.address} ==> ${deposit.amount}`,
         );
-        await deposit.populate({ value }).update(SerializeFor.UPDATE_DB, conn);
+        await deposit.updateValueByHash(value, conn);
 
         console.log(
           `Update transaction log for tx  ${deposit.id}|${deposit.hash}||${wallet.seed}|${wallet.address} ==> ${value}`,
@@ -456,7 +456,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
           wallet.decimals,
           pricePerToken,
         );
-        await spend.populate({ value }).update(SerializeFor.UPDATE_DB, conn);
+        await spend.updateValueByHash(value, conn);
 
         console.log(
           `Update transaction log for tx  ${spend.id}|${spend.hash}||${wallet.seed}|${wallet.address} ==> ${value}`,
