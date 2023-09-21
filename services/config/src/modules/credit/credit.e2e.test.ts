@@ -5,7 +5,6 @@ import { Credit } from './models/credit.model';
 import { AddCreditDto, Products, SpendCreditDto } from '@apillon/lib';
 import { Product } from './models/product.model';
 import { CreditTransaction } from './models/credit-transaction.model';
-import { ConfigErrorCode } from '../../config/types';
 import { ScsCodeException } from '../../lib/exceptions';
 
 describe('Quota unit test', () => {
@@ -168,7 +167,7 @@ describe('Quota unit test', () => {
       const fun = async () => {
         await CreditService.spendCredit({ body: data }, stage.context);
       };
-      expect(await fun).rejects.toThrowError(ScsCodeException);
+      await expect(fun).rejects.toThrowError(ScsCodeException);
 
       //Balance should stay the same
       const projectCredit: Credit = await new Credit(

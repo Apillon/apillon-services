@@ -558,7 +558,7 @@ export class ProjectService {
   //#region credit
 
   async getProjectCredit(context: DevConsoleApiContext, project_uuid: string) {
-    return await new Scs(context).getProjectCredit(project_uuid);
+    return (await new Scs(context).getProjectCredit(project_uuid)).data;
   }
 
   async getCreditTransactions(
@@ -567,7 +567,7 @@ export class ProjectService {
     query: CreditTransactionQueryFilter,
   ) {
     query.project_uuid = project_uuid;
-    return await new Scs(context).getCreditTransactions(query);
+    return (await new Scs(context).getCreditTransactions(query)).data;
   }
 
   //#endregion

@@ -20,7 +20,6 @@ export class Credit extends ProjectAccessModel {
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.LOGGER,
     ],
@@ -79,7 +78,7 @@ export class Credit extends ProjectAccessModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-          SELECT *
+          SELECT ${this.generateSelectFields()}
           FROM \`${this.tableName}\`
           WHERE project_uuid = @project_uuid
           AND status <> ${SqlModelStatus.DELETED}

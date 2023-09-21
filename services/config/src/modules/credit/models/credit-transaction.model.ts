@@ -12,7 +12,6 @@ import {
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { v4 as uuidV4 } from 'uuid';
 import { ConfigErrorCode, DbTables } from '../../../config/types';
-import { ServiceContext } from '@apillon/service-lib';
 
 export class CreditTransaction extends ProjectAccessModel {
   public readonly tableName = DbTables.CREDIT_TRANSACTION;
@@ -234,6 +233,6 @@ export class CreditTransaction extends ProjectAccessModel {
       `,
     };
 
-    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'c.id');
+    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'ct.id');
   }
 }
