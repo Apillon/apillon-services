@@ -1,3 +1,4 @@
+import { Chain } from './../../config/types';
 import {
   AdvancedSQLModel,
   ChainType,
@@ -544,5 +545,16 @@ export class TransactionLog extends AdvancedSQLModel {
       conn,
     );
     return data[0];
+  }
+
+  public async updateValueByHash(value: number, conn?: PoolConnection) {
+    await this.getContext().mysql.paramExecute(
+      `UPDATE ${this.tableName} SET value = @value
+      WHERE hash = @hash
+      AND chain = @chain
+      AND chainType = @chainType;`,
+      { value, hash: this.hash, chainType: this.chainType, chain: this.chain },
+      conn,
+    );
   }
 }
