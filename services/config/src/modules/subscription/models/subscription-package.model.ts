@@ -19,6 +19,7 @@ export class SubscriptionPackage extends AdvancedSQLModel {
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
       SerializeFor.SERVICE,
     ],
   })
@@ -33,6 +34,7 @@ export class SubscriptionPackage extends AdvancedSQLModel {
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
       SerializeFor.SERVICE,
     ],
   })
@@ -68,23 +70,6 @@ export class SubscriptionPackage extends AdvancedSQLModel {
     ],
   })
   public stripeApiId: string;
-
-  /**
-   * Same as stripeApiId, used in non-production environments
-   */
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN, //
-    ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.SELECT_DB,
-      SerializeFor.SERVICE,
-    ],
-  })
-  public stripeApiIdTest: string;
 
   @prop({
     parser: { resolver: dateParser() },

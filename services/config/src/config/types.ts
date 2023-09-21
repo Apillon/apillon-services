@@ -4,6 +4,7 @@ export enum DbTables {
   TERMS = 'terms',
   SUBSCRIPTION = 'subscription',
   SUBSCRIPTION_PACKAGE = 'subscriptionPackage',
+  INVOICE = 'invoice',
 }
 
 /**

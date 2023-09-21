@@ -1,51 +1,14 @@
-import {
-  booleanParser,
-  dateParser,
-  integerParser,
-  stringParser,
-} from '@rawmodel/parsers';
+import { floatParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
-  enumInclusionValidator,
-  PoolConnection,
   PopulateFrom,
-  presenceValidator,
   prop,
   SerializeFor,
-  SqlModelStatus,
-  SubscriptionPackages,
 } from '@apillon/lib';
-import { ConfigErrorCode, DbTables } from '../../../config/types';
+import { DbTables } from '../../../config/types';
 
-export class Subscription extends AdvancedSQLModel {
-  public readonly tableName = DbTables.SUBSCRIPTION;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN, //
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ConfigErrorCode.SUBSCRIPTION_ID_NOT_PRESENT,
-      },
-      {
-        resolver: enumInclusionValidator(SubscriptionPackages, true),
-        code: ConfigErrorCode.SUBSCRIPTION_ID_NOT_VALID,
-      },
-    ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.SELECT_DB,
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
-  })
-  public package_id: number;
+export class Invoice extends AdvancedSQLModel {
+  public readonly tableName = DbTables.INVOICE;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -65,7 +28,7 @@ export class Subscription extends AdvancedSQLModel {
   public project_uuid: string;
 
   @prop({
-    parser: { resolver: dateParser() },
+    parser: { resolver: floatParser() },
     populatable: [
       PopulateFrom.DB,
       PopulateFrom.ADMIN, //
@@ -79,7 +42,24 @@ export class Subscription extends AdvancedSQLModel {
       SerializeFor.SERVICE,
     ],
   })
-  public expiresOn: Date;
+  public subtotalAmount: number;
+
+  @prop({
+    parser: { resolver: floatParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.PROFILE,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public totalAmount: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -95,7 +75,7 @@ export class Subscription extends AdvancedSQLModel {
       SerializeFor.SERVICE,
     ],
   })
-  public subscriberEmail: string;
+  public referenceTable: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -111,10 +91,10 @@ export class Subscription extends AdvancedSQLModel {
       SerializeFor.SERVICE,
     ],
   })
-  public stripeId: string;
+  public referenceId: string;
 
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: stringParser() },
     populatable: [
       PopulateFrom.DB,
       PopulateFrom.ADMIN, //
@@ -128,10 +108,10 @@ export class Subscription extends AdvancedSQLModel {
       SerializeFor.SERVICE,
     ],
   })
-  public paymentFailures: number;
+  public clientEmail: string;
 
   @prop({
-    parser: { resolver: booleanParser() },
+    parser: { resolver: stringParser() },
     populatable: [
       PopulateFrom.DB,
       PopulateFrom.ADMIN, //
@@ -145,10 +125,10 @@ export class Subscription extends AdvancedSQLModel {
       SerializeFor.SERVICE,
     ],
   })
-  public isCanceled: boolean;
+  public currency: string;
 
   @prop({
-    parser: { resolver: dateParser() },
+    parser: { resolver: stringParser() },
     populatable: [
       PopulateFrom.DB,
       PopulateFrom.ADMIN, //
@@ -162,45 +142,5 @@ export class Subscription extends AdvancedSQLModel {
       SerializeFor.SERVICE,
     ],
   })
-  public cancelDate: Date;
-
-  public async getActiveSubscription(
-    project_uuid = this.project_uuid,
-  ): Promise<this> {
-    if (!project_uuid) {
-      throw new Error('project_uuid should not be null');
-    }
-
-    const data = await this.getContext().mysql.paramExecute(
-      `
-      SELECT *
-      FROM \`${this.tableName}\`
-      WHERE project_uuid = @project_uuid
-      AND (expiresOn IS NULL OR expiresOn > NOW())
-      AND (isCanceled IS NULL OR isCanceled = 0)
-      AND status = ${SqlModelStatus.ACTIVE}
-      LIMIT 1;
-      `,
-      { project_uuid },
-    );
-
-    return data?.length
-      ? this.populate(data[0], PopulateFrom.DB)
-      : this.reset();
-  }
-
-  public async populateByStripeId(stripeId: string, conn?: PoolConnection) {
-    const data = await this.db().paramExecute(
-      `
-        SELECT * FROM \`${this.tableName}\`
-        WHERE stripeId = @stripeId
-      `,
-      { stripeId },
-      conn,
-    );
-
-    return data?.length
-      ? this.populate(data[0], PopulateFrom.DB)
-      : this.reset();
-  }
+  public stripeReference: string;
 }

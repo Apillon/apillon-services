@@ -57,17 +57,22 @@ export class PaymentsService {
   }
 
   async stripeWebhookEventHandler(event: Stripe.Event) {
+    // https://stripe.com/docs/api/checkout/sessions/object
     const session = event.data.object as any;
     switch (event.type) {
       case 'checkout.session.completed': {
-        // https://stripe.com/docs/api/checkout/sessions/object
         if (session.payment_status !== 'paid') {
+          // In case payment session was canceled/exited
           return;
         }
         const { project_uuid, package_id } = session.metadata;
         const isCreditPurchase = session.metadata.isCreditPurchase === 'true';
         if (isCreditPurchase) {
           // TODO: handle credit purchase
+          const sessionWithLineItems =
+            await this.stripe.checkout.sessions.retrieve(session.id, {
+              expand: ['line_items'],
+            });
         } else {
           const subscription = await this.stripe.subscriptions.retrieve(
             session.subscription,
@@ -85,7 +90,7 @@ export class PaymentsService {
           break;
         }
       }
-      case 'customer.subscription.updated':
+      case 'customer.subscription.updated': {
         // In case subscription is renewed or canceled
         await new Scs().updateSubscription(session.id, {
           isCanceled: session.cancel_at_period_end,
@@ -95,6 +100,7 @@ export class PaymentsService {
           expiresOn: new Date(session.current_period_end * 1000),
         });
         break;
+      }
     }
   }
 
