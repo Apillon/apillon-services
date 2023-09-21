@@ -2,7 +2,7 @@ import { env, SubstrateChain, ChainType } from '@apillon/lib';
 import { mnemonicGenerate } from '@polkadot/util-crypto';
 import { Wallet } from '../../wallet/wallet.model';
 import { setupTest, releaseStage, Stage } from '../../../../test/setup';
-import { KiltBlockchainIndexer } from '../../blockchain-indexers/substrate/kilt/kilt-indexer.service';
+import { KiltBlockchainIndexer } from '../substrate/kilt/indexer.service';
 import { kiltIndexerTransactions } from './test-data/indexer-transactions';
 
 describe('Indexer tests', () => {

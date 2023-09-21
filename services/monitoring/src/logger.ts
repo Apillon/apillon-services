@@ -147,9 +147,11 @@ export class Logger {
       ? 'url'
       : 'message';
 
-    // Search by substring
-    query[property] = query.search;
-    ['message', 'apiName', 'url'].forEach(
+    // Search by substring/regex
+    query[property] = query.search
+      ? new RegExp(query.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      : null;
+    ['message', 'apiName', 'url', 'body'].forEach(
       (field) =>
         query[field] &&
         (mongoQuery[field] = {
@@ -157,6 +159,19 @@ export class Logger {
           $options: 'i', // global regex
         }),
     );
+
+    if (query instanceof RequestLogsQueryFilter && !query.showSystemRequests) {
+      // System routes, conditionally hide from results if showSystemRequests is false
+      const skipRoutes = [
+        '/hosting/domains',
+        '/auth/session-token',
+        '/discord-bot/user-list',
+      ];
+      mongoQuery[property] = {
+        ...(mongoQuery[property] || {}),
+        $nin: skipRoutes,
+      };
+    }
 
     if (query.dateFrom) {
       mongoQuery.ts = { $gte: new Date(query.dateFrom) };

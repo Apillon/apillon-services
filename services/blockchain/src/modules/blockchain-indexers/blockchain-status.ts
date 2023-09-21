@@ -1,4 +1,4 @@
 export enum BlockchainStatus {
-  CONFIRMED = 0,
-  FAILED = 1,
+  FAILED = 0,
+  CONFIRMED = 1,
 }

@@ -255,12 +255,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: NftsErrorCode.COLLECTION_MINT_PRICE_NOT_PRESENT,
-      },
-    ],
+    validators: [],
   })
   public bucket_uuid: string;
 
@@ -659,7 +654,7 @@ export class Collection extends ProjectAccessModel {
     };
   }
 
-  public async populateById(
+  public override async populateById(
     id: number | string,
     conn?: PoolConnection,
   ): Promise<this> {
@@ -683,31 +678,13 @@ export class Collection extends ProjectAccessModel {
       conn,
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
-  public async populateByUUID(collection_uuid: string): Promise<Collection> {
-    if (!collection_uuid) {
-      throw new Error('Uuid should not be null!');
-    }
-    const data = await this.getContext().mysql.paramExecute(
-      `
-        SELECT *
-        FROM \`${this.tableName}\`
-        WHERE collection_uuid = @collection_uuid;
-      `,
-      { collection_uuid },
-    );
-
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+  public override async populateByUUID(collection_uuid: string): Promise<this> {
+    return super.populateByUUID(collection_uuid, 'collection_uuid');
   }
 
   /**

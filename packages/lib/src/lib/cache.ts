@@ -90,6 +90,9 @@ export async function invalidateCachePrefixes(
   user_uuid?: string,
   project_uuid?: string,
 ) {
+  if (!env.REDIS_URL) {
+    return;
+  }
   const promises = [];
   const cache = new AppCache();
   await cache.connect();
@@ -157,6 +160,21 @@ export async function invalidateCacheMatch(
     console.error(err);
   }
 }
+
+export async function invalidateCacheKey(key: string) {
+  if (!env.REDIS_URL) {
+    return;
+  }
+  try {
+    const cache = new AppCache();
+    await cache.connect();
+    await cache.removeKey(key);
+    await cache.disconnect();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
 /**
  * Clears all cache
  */

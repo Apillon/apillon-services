@@ -7,21 +7,21 @@ import {
   enumInclusionValidator,
   EvmChain,
   getQueryParams,
-  WalletTransactionsQueryFilter,
   PoolConnection,
   PopulateFrom,
   presenceValidator,
   prop,
   selectAndCountQuery,
   SerializeFor,
-  SubstrateChain,
   SqlModelStatus,
+  SubstrateChain,
+  WalletTransactionsQueryFilter,
 } from '@apillon/lib';
 import { BlockchainErrorCode, Chain, DbTables } from '../../config/types';
 import { Endpoint } from '../../common/models/endpoint';
 import { ethers } from 'ethers';
-import { ApiPromise, WsProvider } from '@polkadot/api';
 import { TransactionLog } from '../accounting/transaction-log.model';
+import { SubstrateRpcApi } from '../substrate/rpc-api';
 
 // For enum inclusion validator
 const EvmOrSubstrateChain = { ...EvmChain, ...SubstrateChain };
@@ -150,7 +150,6 @@ export class Wallet extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
     ],
     defaultValue: -1,
@@ -169,7 +168,6 @@ export class Wallet extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
     ],
   })
@@ -268,7 +266,6 @@ export class Wallet extends AdvancedSQLModel {
     populatable: [
       //
       PopulateFrom.DB,
-      PopulateFrom.ADMIN,
     ],
     serializable: [
       SerializeFor.ADMIN,
@@ -297,9 +294,7 @@ export class Wallet extends AdvancedSQLModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [
-      //
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN,
+      PopulateFrom.DB, //
     ],
     serializable: [
       SerializeFor.ADMIN,
@@ -317,9 +312,7 @@ export class Wallet extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [
-      //
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN,
+      PopulateFrom.DB, //
     ],
     serializable: [
       SerializeFor.ADMIN,
@@ -331,7 +324,7 @@ export class Wallet extends AdvancedSQLModel {
   })
   public token: string;
 
-  public async populateById(
+  public override async populateById(
     id: string | number,
     conn?: PoolConnection,
     forUpdate?: boolean,
@@ -526,7 +519,9 @@ export class Wallet extends AdvancedSQLModel {
       qSelect: `SELECT
         ${this.generateSelectFields()},
         w.minBalance / POW(10, w.decimals) as minTokenBalance,
-        w.currentBalance / POW(10, w.decimals) as currentTokenBalance
+        w.currentBalance / POW(10, w.decimals) as currentTokenBalance,
+        w.createTime,
+        w.updateTime
       `,
       qFrom: `FROM ${DbTables.WALLET} w
         WHERE (@search IS null OR w.address LIKE CONCAT('%', @search, '%'))
@@ -558,14 +553,16 @@ export class Wallet extends AdvancedSQLModel {
     if (this.chainType === ChainType.EVM) {
       const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
       balance = (await provider.getBalance(this.address)).toString();
-    }
-    if (this.chainType === ChainType.SUBSTRATE) {
-      const provider = new WsProvider(endpoint.url);
-      const api = await ApiPromise.create({
-        provider,
-      });
-      const account = (await api.query.system.account(this.address)) as any;
-      balance = account.data.free.toString();
+    } else if (this.chainType === ChainType.SUBSTRATE) {
+      const apiHelper = new SubstrateRpcApi(endpoint.url);
+      const api = await apiHelper.getApi();
+      console.log('Timing before send', apiHelper.getTiming(), 's');
+      try {
+        const account = await api.query.system.account(this.address);
+        balance = account.data.free.toString();
+      } finally {
+        await apiHelper.destroy();
+      }
     }
 
     if (!balance && balance !== '0') {
@@ -598,8 +595,10 @@ export class Wallet extends AdvancedSQLModel {
       qSelect: `SELECT ${new TransactionLog(
         {},
         this.getContext(),
-      ).generateSelectFields('', '', SerializeFor.ADMIN)}`,
+      ).generateSelectFields('t', '')},
+        tq.nonce, tq.referenceTable, tq.referenceId`,
       qFrom: `FROM \`${DbTables.TRANSACTION_LOG}\` t
+        LEFT JOIN \`${DbTables.TRANSACTION_QUEUE}\` tq ON tq.id = t.transactionQueue_id
         WHERE t.wallet = '${walletAddress}'
         AND (@search IS null OR t.hash LIKE CONCAT('%', @search, '%'))
         AND (@status IS NULL OR t.status = @status)

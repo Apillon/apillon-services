@@ -111,6 +111,7 @@ export async function generateDirectoriesFromPath(
         );
         if (ipfsDirectory) {
           newDirectory.CID = ipfsDirectory.cid.toV0().toString();
+          newDirectory.CIDv1 = ipfsDirectory.cid.toV1().toString();
         }
 
         try {

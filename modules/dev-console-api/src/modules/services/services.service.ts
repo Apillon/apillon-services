@@ -92,22 +92,13 @@ export class ServicesService {
     }
     project.canModify(context);
 
-    //Check if user has permissions to use this service type - mapping with permissions need to be done
-    let requiredPermission = undefined;
-    switch (body.serviceType_id) {
-      case AttachedServiceType.AUTHENTICATION:
-        requiredPermission = DefaultPermission.AUTHENTICATION;
-        break;
-      case AttachedServiceType.STORAGE:
-        requiredPermission = DefaultPermission.STORAGE;
-        break;
-      case AttachedServiceType.HOSTING:
-        requiredPermission = DefaultPermission.HOSTING;
-        break;
-      case AttachedServiceType.NFT:
-        requiredPermission = DefaultPermission.NFTS;
-        break;
-    }
+    // Check if user has permissions to use this service type - mapping with permissions need to be done
+    const requiredPermission = {
+      [AttachedServiceType.AUTHENTICATION]: DefaultPermission.AUTHENTICATION,
+      [AttachedServiceType.STORAGE]: DefaultPermission.STORAGE,
+      [AttachedServiceType.HOSTING]: DefaultPermission.HOSTING,
+      [AttachedServiceType.NFT]: DefaultPermission.NFTS,
+    }[body.serviceType_id];
 
     if (requiredPermission && !context.hasPermission(requiredPermission)) {
       throw new CodeException({
@@ -122,7 +113,7 @@ export class ServicesService {
     await service.insert();
 
     await new Lmas().writeLog({
-      context: context,
+      context,
       project_uuid: project.project_uuid,
       logType: LogType.INFO,
       message: 'New project service attached',

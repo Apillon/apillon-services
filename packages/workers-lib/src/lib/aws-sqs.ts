@@ -1,4 +1,4 @@
-import { env } from '@apillon/lib';
+import { env, Lmas, LogType, ServiceName } from '@apillon/lib';
 import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
 import type { SendMessageCommandInput } from '@aws-sdk/client-sqs';
 
@@ -66,11 +66,17 @@ export async function sendToWorkerQueue(
   }
   await Promise.all(promises);
   if (errCount) {
-    //await writeWorkerLog(WorkerLogStatus.ERROR, 'Errors detected while sending messages to queue!', errMsgs, null);
-    console.warn(
-      'Errors detected while sending messages to queue!',
-      JSON.stringify(errMsgs),
-    );
+    await new Lmas().writeLog({
+      logType: LogType.ERROR,
+      message: 'Errors detected while sending messages to queue',
+      location: 'sendToWorkerQueue',
+      service: ServiceName.GENERAL,
+      data: {
+        errCount,
+        errMsgs: JSON.stringify(errMsgs),
+      },
+      sendAdminAlert: true,
+    });
   }
   return { errCount, errMsgs };
 }

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/member-ordering */
 import { prop } from '@rawmodel/core';
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 
 import {
@@ -12,9 +12,8 @@ import {
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
+  getFaker,
 } from '@apillon/lib';
-
-import { faker } from '@faker-js/faker';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
 
@@ -70,7 +69,7 @@ export class Project extends ProjectAccessModel {
         code: ValidatorErrorCode.PROJECT_NAME_NOT_PRESENT,
       },
     ],
-    fakeValue: () => faker.word.verb(),
+    fakeValue: () => getFaker().word.verb(),
   })
   public name: string;
 
@@ -103,7 +102,7 @@ export class Project extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue: () => faker.lorem.paragraph(5),
+    fakeValue: () => getFaker().lorem.paragraph(5),
   })
   public description: string;
 
@@ -120,6 +119,26 @@ export class Project extends ProjectAccessModel {
   })
   public imageFile_id: number;
 
+  /**
+   * Created at property definition.
+   */
+  @prop({
+    parser: { resolver: dateParser() },
+    serializable: [SerializeFor.APILLON_API, SerializeFor.SELECT_DB],
+    populatable: [PopulateFrom.DB],
+  })
+  public createTime?: Date;
+
+  /**
+   * Updated at property definition.
+   */
+  @prop({
+    parser: { resolver: dateParser() },
+    serializable: [SerializeFor.APILLON_API, SerializeFor.SELECT_DB],
+    populatable: [PopulateFrom.DB],
+  })
+  public updateTime?: Date;
+
   /*******************************************
    * INFO properties
    ***************************************/
@@ -134,23 +153,8 @@ export class Project extends ProjectAccessModel {
    * Methods
    ********************************************/
 
-  public async populateByUUID(uuid: string): Promise<this> {
-    if (!uuid) {
-      throw new Error('project uuid should not be null');
-    }
-
-    const data = await this.getContext().mysql.paramExecute(
-      `
-      SELECT *
-      FROM \`${this.tableName}\`
-      WHERE project_uuid = @uuid AND status <> ${SqlModelStatus.DELETED};
-      `,
-      { uuid },
-    );
-
-    return data?.length
-      ? this.populate(data[0], PopulateFrom.DB)
-      : this.reset();
+  public override async populateByUUID(uuid: string): Promise<this> {
+    return super.populateByUUID(uuid, 'project_uuid');
   }
 
   /**
@@ -192,7 +196,7 @@ export class Project extends ProjectAccessModel {
       UPDATE \`${this.tableName}\` p
       SET p.status = @status
       WHERE EXISTS (
-        SELECT 1 FROM \`${DbTables.PROJECT_USER}\` pu 
+        SELECT 1 FROM \`${DbTables.PROJECT_USER}\` pu
         WHERE pu.user_id = @userId
         AND pu.project_id = p.id
       )

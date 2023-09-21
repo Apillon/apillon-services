@@ -1,9 +1,4 @@
 import { EvmChain, SubstrateChain } from '@apillon/lib';
-import {
-  DidTransaction,
-  TransferTransaction,
-  AttestationTransaction,
-} from '../modules/blockchain-indexers/substrate/kilt/data-models/kilt-transactions';
 
 export type Chain = SubstrateChain | EvmChain;
 
@@ -12,6 +7,7 @@ export enum DbTables {
   ENDPOINT = 'endpoint',
   TRANSACTION_QUEUE = 'transaction_queue',
   TRANSACTION_LOG = 'transaction_log',
+  WALLET_DEPOSIT = 'wallet_deposit',
 }
 
 export enum CrustTransferType {
@@ -19,7 +15,13 @@ export enum CrustTransferType {
   STORAGE_ORDER = 1,
 }
 
-// NOTE: Do not change!! These are mappings from the SQUID KILT service
+/**
+ *  --- INDEXER DATA ---
+ * TODO: Consider moving to separate types file indexer related things
+ * NOTE: Do not change definitions unless you know what you are doing!!
+ *       These are mappings from the SQUID INDEXER service
+ **/
+/* KILT PARACHAIN */
 export enum KiltTransactionType {
   BALANCE_TRANSFER = 'balance-transfer',
   BALANCE_DEPOSIT = 'balance-deposit',
@@ -36,24 +38,15 @@ export enum KiltTransactionType {
   SYSTEM_EVENTS_FAIL = 'system-event-fail',
 }
 
-export type TransfersTransactions = {
-  TRANSFER: TransferTransaction[];
-  DEPOSIT: TransferTransaction[];
-  WITHDRAWAL: TransferTransaction[];
-  RESERVED_BALANCES: TransferTransaction[];
-};
-
-export type DidTransactions = {
-  CREATE: DidTransaction[];
-  DELETE: DidTransaction[];
-  UPDATE: DidTransaction[];
-};
-
-export type AttestTransactions = {
-  CREATE: AttestationTransaction[];
-  REMOVE: AttestationTransaction[];
-  REVOKE: AttestationTransaction[];
-};
+/* CRUST PARACHAIN */
+export enum CrustTransactionType {
+  BALANCE_TRANSFER = 'balances-transfer',
+  MARKET_ORDER_FILE_SUCCESS = 'market-order-file-success',
+  // Switched naming order. It's how Crust does it.
+  MARKET_FILE_RENEW_SUCCESS = 'market-file-renew-success',
+  SYSTEM_EVENTS_SUCCESS = 'system-event-success',
+  SYSTEM_EVENTS_FAIL = 'system-event-fail',
+}
 
 /**
  * Error codes
@@ -90,6 +83,10 @@ export enum BlockchainErrorCode {
   TRANSACTION_LOG_CHAIN_TYPE_NOT_PRESENT = 42214018,
   TRANSACTION_LOG_TX_HASH_NOT_PRESENT = 42214019,
   TRANSACTION_LOG_TIMESTAMP_NOT_PRESENT = 42214020,
+  WALLET_DEPOSIT_TX_HASH_NOT_PRESENT = 42214021,
+  WALLET_DEPOSIT_PURCHASE_AMOUNT_NOT_PRESENT = 42214022,
+  WALLET_DEPOSIT_CURRENT_AMOUNT_NOT_PRESENT = 42214023,
+  WALLET_DEPOSIT_WALLET_NOT_PRESENT = 42214023,
 
   // 400 - Bad request
   BAD_REQUEST = 40016001,
@@ -155,3 +152,8 @@ export enum TransactionIndexerStatus {
   FAIL = 0,
   SUCCESS = 1,
 }
+
+export type WebhookWorker = {
+  workerName: string;
+  sqsUrl: string;
+};
