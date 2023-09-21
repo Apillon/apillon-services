@@ -5,6 +5,8 @@ import {
   LogType,
   SerializeFor,
   ServiceName,
+  SubscriptionPackages,
+  getEnumKey,
 } from '@apillon/lib';
 import { Subscription } from './models/subscription.model';
 import { ServiceContext } from '@apillon/service-lib';
@@ -69,11 +71,40 @@ export class SubscriptionService {
         },
         context,
       ).insert(SerializeFor.INSERT_DB, conn);
+
       await context.mysql.commit(conn);
+
+      await new Lmas().sendAdminAlert(
+        `New subscription for package ${getEnumKey(
+          SubscriptionPackages,
+          subscription.package_id,
+        )} created!`,
+        ServiceName.SCS,
+        LogType.MSG,
+      );
+
       return dbSubscription.serialize(SerializeFor.SERVICE) as Subscription;
-    } catch {
+    } catch (err) {
       await context.mysql.rollback(conn);
-      // TODO: handle error
+
+      if (err instanceof ScsCodeException) {
+        throw err;
+      } else {
+        throw await new ScsCodeException({
+          code: ConfigErrorCode.ERROR_CREATING_SUBSCRIPTION,
+          status: 500,
+          context,
+          errorMessage: err?.message,
+          sourceFunction: 'createSubscription()',
+          sourceModule: 'SubscriptionService',
+        }).writeToMonitor({
+          project_uuid: createSubscriptionDto.project_uuid,
+          data: {
+            createSubscriptionDto,
+            createInvoiceDto,
+          },
+        });
+      }
     }
   }
 
@@ -95,13 +126,13 @@ export class SubscriptionService {
       );
 
     if (hasActiveSubscription) {
-      throw new ScsCodeException({
+      throw await new ScsCodeException({
         code: ConfigErrorCode.ACTIVE_SUBSCRIPTION_EXISTS,
         status: 400,
         errorCodes: ConfigErrorCode,
         sourceFunction: 'getSubscriptionPackageStripeId',
         sourceModule: ServiceName.SCS,
-      });
+      }).writeToMonitor({ project_uuid });
     }
 
     const subscriptionPackage =
@@ -111,12 +142,15 @@ export class SubscriptionService {
       );
 
     if (!subscriptionPackage.stripeApiId) {
-      throw new ScsCodeException({
+      throw await new ScsCodeException({
         code: ConfigErrorCode.STRIPE_ID_NOT_VALID,
-        status: 422,
+        status: 500,
         errorCodes: ConfigErrorCode,
         sourceFunction: 'getSubscriptionPackageStripeId',
         sourceModule: ServiceName.SCS,
+      }).writeToMonitor({
+        project_uuid,
+        data: { subscriptionPackage: subscriptionPackage.serialize() },
       });
     }
 
@@ -157,6 +191,13 @@ export class SubscriptionService {
     ).populateByStripeId(subscriptionStripeId);
 
     if (!subscription.exists()) {
+      await new Lmas().writeLog({
+        logType: LogType.ERROR,
+        message: `Subscription for stripe ID ${subscriptionStripeId} not found in database!`,
+        location: 'SubscriptionService.updateSubscription',
+        service: ServiceName.SCS,
+        data,
+      });
       throw new ScsNotFoundException(ConfigErrorCode.SUBSCRIPTION_NOT_FOUND);
     }
 
