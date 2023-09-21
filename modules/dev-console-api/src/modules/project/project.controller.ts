@@ -14,6 +14,7 @@ import {
   DefaultUserRole,
   RoleGroup,
   SerializeFor,
+  SubscriptionsQueryFilter,
   ValidateFor,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
@@ -179,5 +180,21 @@ export class ProjectController {
     return (
       await this.projectService.updateProject(context, uuid, body)
     ).serialize(SerializeFor.PROFILE);
+  }
+
+  @Get(':uuid/subscriptions')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({
+    dto: SubscriptionsQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getProjectSubscriptions(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') project_uuid: string,
+    @Query() query: SubscriptionsQueryFilter,
+  ) {
+    query.project_uuid = project_uuid;
+    return await this.projectService.getProjectSubscriptions(context, query);
   }
 }

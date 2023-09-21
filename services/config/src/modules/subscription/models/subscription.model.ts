@@ -7,15 +7,19 @@ import {
 import {
   AdvancedSQLModel,
   enumInclusionValidator,
+  getQueryParams,
   PoolConnection,
   PopulateFrom,
   presenceValidator,
   prop,
+  selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
   SubscriptionPackages,
+  SubscriptionsQueryFilter,
 } from '@apillon/lib';
 import { ConfigErrorCode, DbTables } from '../../../config/types';
+import { ServiceContext } from '@apillon/service-lib';
 
 export class Subscription extends AdvancedSQLModel {
   public readonly tableName = DbTables.SUBSCRIPTION;
@@ -202,5 +206,40 @@ export class Subscription extends AdvancedSQLModel {
     return data?.length
       ? this.populate(data[0], PopulateFrom.DB)
       : this.reset();
+  }
+
+  public async getList(
+    filter: SubscriptionsQueryFilter,
+    context: ServiceContext,
+    serializationStrategy = SerializeFor.PROFILE,
+  ) {
+    const query = new SubscriptionsQueryFilter(filter);
+    const fieldMap = {
+      id: 's.id',
+    };
+    const { params, filters } = getQueryParams(
+      query.getDefaultValues(),
+      's',
+      fieldMap,
+      query.serialize(),
+    );
+
+    const sqlQuery = {
+      qSelect: `
+        SELECT ${this.generateSelectFields('s', '', serializationStrategy)}
+        `,
+      qFrom: `
+        FROM \`${this.tableName}\` s
+        WHERE s.project_uuid = @project_uuid
+        AND (@search IS null OR s.subscriberEmail LIKE CONCAT('%', @search, '%'))
+        AND s.status <> ${SqlModelStatus.DELETED}
+      `,
+      qFilter: `
+        ORDER BY ${filters.orderStr}
+        LIMIT ${filters.limit} OFFSET ${filters.offset};
+      `,
+    };
+
+    return await selectAndCountQuery(context.mysql, sqlQuery, params, 's.id');
   }
 }

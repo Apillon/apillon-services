@@ -17,6 +17,7 @@ import {
   Scs,
   SerializeFor,
   ServiceName,
+  SubscriptionsQueryFilter,
   ValidationException,
 } from '@apillon/lib';
 import {
@@ -552,5 +553,12 @@ export class ProjectService {
     }
 
     return createdFile;
+  }
+
+  async getProjectSubscriptions(
+    context: DevConsoleApiContext,
+    query: SubscriptionsQueryFilter,
+  ) {
+    return (await new Scs(context).listSubscriptions(query)).data;
   }
 }

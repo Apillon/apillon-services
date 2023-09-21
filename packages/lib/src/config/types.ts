@@ -162,6 +162,7 @@ export enum ScsEventType {
   GET_SUBSCRIPTION_PACKAGE_BY_ID = 'get-subscription-package-by-id',
   GET_SUBSCRIPTION_PACKAGE_STRIPE_ID = 'get-subscription-package-stripe-id',
   UPDATE_SUBSCRIPTION = 'update-subscription',
+  LIST_SUBSCRIPTIONS = 'list-subscriptions',
 }
 
 export enum NftsEventType {

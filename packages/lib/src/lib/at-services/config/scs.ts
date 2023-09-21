@@ -13,6 +13,7 @@ import { QuotaDto } from './dtos/quota.dto';
 import { TermsDto } from './dtos/terms.dto';
 import { GetQuotaDto } from './dtos/get-quota.dto';
 import { CreateInvoiceDto } from './dtos/create-invoice.dto';
+import { SubscriptionsQueryFilter } from './dtos/subscriptions-query-filter.dto';
 
 /**
  * System config Service client
@@ -121,6 +122,13 @@ export class Scs extends BaseService {
       eventName: ScsEventType.UPDATE_SUBSCRIPTION,
       subscriptionStripeId,
       data,
+    });
+  }
+
+  public async listSubscriptions(query: SubscriptionsQueryFilter) {
+    return await this.callService({
+      eventName: ScsEventType.LIST_SUBSCRIPTIONS,
+      query,
     });
   }
 }

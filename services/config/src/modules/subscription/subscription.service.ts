@@ -6,6 +6,7 @@ import {
   SerializeFor,
   ServiceName,
   SubscriptionPackages,
+  SubscriptionsQueryFilter,
   getEnumKey,
 } from '@apillon/lib';
 import { Subscription } from './models/subscription.model';
@@ -203,5 +204,23 @@ export class SubscriptionService {
 
     subscription.populate(data);
     return await subscription.update();
+  }
+
+  /**
+   * Get all subscriptions, existing or for a single project
+   * @param {query: SubscriptionsQueryFilter} - Query filter for listing subscriptions
+   */
+  static async listSubscriptions(
+    {
+      query,
+    }: {
+      query: SubscriptionsQueryFilter;
+    },
+    context: ServiceContext,
+  ) {
+    return await new Subscription({ project_uuid: query.project_uuid }).getList(
+      query,
+      context,
+    );
   }
 }
