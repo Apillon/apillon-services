@@ -484,7 +484,7 @@ export class TransactionLog extends AdvancedSQLModel {
     this.hash = data?.transactionHash;
     this.wallet = wallet.address?.toLowerCase();
 
-    this.status = data?.status === 0 ? TxStatus.COMPLETED : TxStatus.FAILED;
+    this.status = data?.status === 1 ? TxStatus.COMPLETED : TxStatus.FAILED;
     this.chainType = wallet.chainType;
     this.chain = wallet.chain;
     this.token = getTokenFromChain(wallet.chainType, wallet.chain);
@@ -492,8 +492,8 @@ export class TransactionLog extends AdvancedSQLModel {
     if (this.addressFrom === this.wallet) {
       this.direction = TxDirection.COST;
       this.action = TxAction.TRANSACTION;
-      this.fee = ethers.BigNumber.from(data?.gas || 0)
-        .mul(ethers.BigNumber.from(data?.gasPrice || 0))
+      this.fee = ethers.BigNumber.from(data?.gasUsed || 0)
+        .mul(ethers.BigNumber.from(data?.effectiveGasPrice || 0))
         .toString();
     } else if (this.addressTo === this.wallet) {
       this.direction = TxDirection.INCOME;
