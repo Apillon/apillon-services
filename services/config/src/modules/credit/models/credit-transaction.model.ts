@@ -136,6 +136,71 @@ export class CreditTransaction extends ProjectAccessModel {
   })
   public referenceId: string;
 
+  /**
+   * Populate credit transaction which was not yet refunded, by reference
+   * @param referenceTable
+   * @param referenceId
+   * @returns
+   */
+  public async populateRefundableTransaction(
+    referenceTable: string,
+    referenceId: string,
+  ): Promise<this> {
+    if (!referenceTable || !referenceId) {
+      throw new Error(
+        `params should not be null: ${referenceTable}, ${referenceId}`,
+      );
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+          SELECT *
+          FROM \`${this.tableName}\` ct
+          WHERE ct.referenceTable = @referenceTable 
+          AND ct.referenceId = @referenceId
+          AND ct.direction = 1
+          AND NOT EXISTS (
+            SELECT 1 FROM \`${this.tableName}\` ct2
+            WHERE ct2.referenceTable = @referenceTable 
+            AND ct2.referenceId = @referenceId
+            AND ct2.direction = 2
+          )
+          AND ct.status <> ${SqlModelStatus.DELETED};
+        `,
+      { referenceTable, referenceId },
+    );
+
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
+  }
+
+  public async populateByReference(
+    referenceTable: string,
+    referenceId: string,
+  ): Promise<this> {
+    if (!referenceTable || !referenceId) {
+      throw new Error(
+        `params should not be null: ${referenceTable}, ${referenceId}`,
+      );
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+          SELECT *
+          FROM \`${this.tableName}\` ct
+          WHERE ct.referenceTable = @referenceTable 
+          AND ct.referenceId = @referenceId
+          AND ct.status <> ${SqlModelStatus.DELETED};
+        `,
+      { referenceTable, referenceId },
+    );
+
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
+  }
+
   public async getList(
     filter: CreditTransactionQueryFilter,
     serializationStrategy = SerializeFor.PROFILE,

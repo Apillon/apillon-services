@@ -18,6 +18,12 @@ import { Product } from './models/product.model';
  * CreditService class for handling credit requests
  */
 export class CreditService {
+  /**
+   * Return current credit (balance) for project
+   * @param event
+   * @param context
+   * @returns
+   */
   static async getCredit(
     event: { project_uuid: string },
     context: ServiceContext,
@@ -31,6 +37,12 @@ export class CreditService {
     return credit.serialize(SerializeFor.PROFILE);
   }
 
+  /**
+   * List transactions (credit traffic) for given project
+   * @param event
+   * @param context
+   * @returns
+   */
   static async listCreditTransactions(
     event: { query: CreditTransactionQueryFilter },
     context: ServiceContext,
@@ -41,6 +53,11 @@ export class CreditService {
     ).getList(new CreditTransactionQueryFilter(event.query, context));
   }
 
+  /**
+   * Add credit to project.
+   * @param event
+   * @param context
+   */
   static async addCredit(
     event: { body: AddCreditDto },
     context: ServiceContext,
@@ -120,6 +137,11 @@ export class CreditService {
     }
   }
 
+  /**
+   * Pay for product with credit.
+   * @param event
+   * @param context
+   */
   static async spendCredit(
     event: { body: SpendCreditDto },
     context: ServiceContext,
@@ -221,6 +243,108 @@ export class CreditService {
           sourceFunction: 'addCredit()',
           sourceModule: 'CreditService',
         }).writeToMonitor({ project_uuid: event.body.project_uuid });
+      }
+    }
+  }
+
+  /**
+   * If some action which was paid with credits fail, this function returns credits to project
+   * @param event referenceTable and referenceId
+   * @param context
+   */
+  static async refundCredit(
+    event: { referenceTable: string; referenceId: string },
+    context: ServiceContext,
+  ): Promise<any> {
+    //Check if spend creditTransaction exists for this reference
+    const creditTransaction: CreditTransaction = await new CreditTransaction(
+      {},
+      context,
+    ).populateRefundableTransaction(event.referenceTable, event.referenceId);
+
+    if (!creditTransaction.exists()) {
+      throw await new ScsCodeException({
+        code: ConfigErrorCode.CREDIT_TRANSACTION_FOR_REFUND_NOT_EXISTS_OR_REFUNDED,
+        status: 500,
+        context: context,
+        sourceFunction: 'refundCredit()',
+        sourceModule: 'CreditService',
+      }).writeToMonitor({
+        data: {
+          referenceTable: event.referenceTable,
+          referenceId: event.referenceId,
+        },
+      });
+    }
+
+    const conn = await context.mysql.start();
+    try {
+      const credit: Credit = await new Credit(
+        {},
+        context,
+      ).populateByProjectUUIDForUpdate(creditTransaction.project_uuid, conn);
+
+      credit.balance += creditTransaction.amount;
+      await credit.update(SerializeFor.UPDATE_DB, conn);
+
+      const refundCreditTransaction: CreditTransaction = new CreditTransaction(
+        {},
+        context,
+      ).populate({
+        project_uuid: creditTransaction.project_uuid,
+        credit_id: credit.id,
+        product_id: creditTransaction.product_id,
+        direction: 1,
+        amount: creditTransaction.amount,
+        referenceTable: creditTransaction.referenceTable,
+        referenceId: creditTransaction.referenceId,
+      });
+
+      try {
+        await refundCreditTransaction.validate();
+      } catch (err) {
+        await refundCreditTransaction.handle(err);
+        if (!refundCreditTransaction.isValid()) {
+          throw new ScsValidationException(refundCreditTransaction);
+        }
+      }
+      await refundCreditTransaction.insert(SerializeFor.INSERT_DB, conn);
+
+      await context.mysql.commit(conn);
+
+      await new Lmas().writeLog({
+        context: context,
+        project_uuid: credit.project_uuid,
+        logType: LogType.INFO,
+        message: 'Credit transaction refunded',
+        location: `CreditService.refundCredit()`,
+        service: ServiceName.CONFIG,
+        data: {
+          credit: credit.serialize(SerializeFor.LOGGER),
+          creditTransaction: refundCreditTransaction.serialize(
+            SerializeFor.LOGGER,
+          ),
+        },
+      });
+    } catch (err) {
+      await context.mysql.rollback(conn);
+
+      if (err instanceof ScsCodeException) {
+        throw err;
+      } else {
+        throw await new ScsCodeException({
+          code: ConfigErrorCode.ERROR_REFUNDING_CREDIT_TRANSACTION,
+          status: 500,
+          context: context,
+          sourceFunction: 'refundCredit()',
+          sourceModule: 'CreditService',
+        }).writeToMonitor({
+          project_uuid: creditTransaction?.project_uuid,
+          data: {
+            referenceTable: event.referenceTable,
+            referenceId: event.referenceId,
+          },
+        });
       }
     }
   }

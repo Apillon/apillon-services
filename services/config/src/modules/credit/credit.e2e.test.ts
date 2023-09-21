@@ -4,12 +4,17 @@ import { CreditService } from './credit.service';
 import { Credit } from './models/credit.model';
 import { AddCreditDto, Products, SpendCreditDto } from '@apillon/lib';
 import { Product } from './models/product.model';
+import { CreditTransaction } from './models/credit-transaction.model';
+import { ConfigErrorCode } from '../../config/types';
+import { ScsCodeException } from '../../lib/exceptions';
 
 describe('Quota unit test', () => {
   let stage: Stage;
 
   const project1_uuid = uuid();
   const project2_uuid = uuid();
+  const project3_uuid = uuid();
+  let project1Balance = 0;
   let project2Credit: Credit;
 
   /**
@@ -44,6 +49,7 @@ describe('Quota unit test', () => {
         referenceId: 1,
       });
 
+      project1Balance += 1000;
       await CreditService.addCredit({ body: data }, stage.context);
 
       const projectCredit: Credit = await new Credit(
@@ -52,7 +58,7 @@ describe('Quota unit test', () => {
       ).populateByUUID(project1_uuid);
 
       expect(projectCredit.exists()).toBeTruthy();
-      expect(projectCredit.balance).toBe(1000);
+      expect(projectCredit.balance).toBe(project1Balance);
     });
 
     test('Test AddCredit function for project with existing credit record', async () => {
@@ -60,7 +66,7 @@ describe('Quota unit test', () => {
         project_uuid: project2_uuid,
         amount: 1000,
         referenceTable: 'invoice',
-        referenceId: 1,
+        referenceId: 2,
       });
 
       await CreditService.addCredit({ body: data }, stage.context);
@@ -74,8 +80,32 @@ describe('Quota unit test', () => {
       expect(projectCredit.balance).toBe(1500);
     });
 
-    test('AddCredit should add record to creditTransaction table. Sum of amounts should match credit balance.', async () => {
-      //TODO
+    test('AddCredit should add record to creditTransaction table.', async () => {
+      const data = new AddCreditDto({
+        project_uuid: project1_uuid,
+        amount: 1000,
+        referenceTable: 'invoice',
+        referenceId: 3,
+      });
+
+      project1Balance += 1000;
+      await CreditService.addCredit({ body: data }, stage.context);
+
+      const projectCredit: Credit = await new Credit(
+        {},
+        stage.context,
+      ).populateByUUID(project1_uuid);
+
+      expect(projectCredit.exists()).toBeTruthy();
+      expect(projectCredit.balance).toBe(project1Balance);
+
+      const creditTransaction: CreditTransaction = await new CreditTransaction(
+        {},
+        stage.context,
+      ).populateByReference('invoice', '3');
+      expect(creditTransaction.exists()).toBeTruthy();
+      expect(creditTransaction.amount).toBe(1000);
+      expect(creditTransaction.direction).toBe(1);
     });
   });
   describe('Spend credit tests', () => {
@@ -90,9 +120,10 @@ describe('Quota unit test', () => {
         project_uuid: project1_uuid,
         product_id: Products.WEBSITE,
         referenceTable: 'website',
-        referenceId: 'uuid1',
+        referenceId: '1',
       });
 
+      project1Balance -= product.currentPrice;
       await CreditService.spendCredit({ body: data }, stage.context);
 
       const projectCredit: Credit = await new Credit(
@@ -100,7 +131,51 @@ describe('Quota unit test', () => {
         stage.context,
       ).populateByUUID(project1_uuid);
 
-      expect(projectCredit?.balance).toBe(1000 - product.currentPrice);
+      expect(projectCredit?.balance).toBe(project1Balance);
+
+      //Check credit transaction
+      const creditTransaction: CreditTransaction = await new CreditTransaction(
+        {},
+        stage.context,
+      ).populateByReference('website', '1');
+      expect(creditTransaction.exists()).toBeTruthy();
+      expect(creditTransaction.amount).toBe(product.currentPrice);
+      expect(creditTransaction.direction).toBe(2);
+    });
+
+    test('Test failed spend credit - balance too low', async () => {
+      await new Credit(
+        {
+          project_uuid: project3_uuid,
+          balance: 5,
+        },
+        stage.context,
+      ).insert();
+
+      const product: Product = await new Product(
+        {},
+        stage.context,
+      ).populateById(Products.WEBSITE);
+      await product.populateCurrentPrice();
+
+      const data = new SpendCreditDto({
+        project_uuid: project3_uuid,
+        product_id: Products.WEBSITE,
+        referenceTable: 'website',
+        referenceId: '2',
+      });
+
+      const fun = async () => {
+        await CreditService.spendCredit({ body: data }, stage.context);
+      };
+      expect(await fun).rejects.toThrowError(ScsCodeException);
+
+      //Balance should stay the same
+      const projectCredit: Credit = await new Credit(
+        {},
+        stage.context,
+      ).populateByUUID(project3_uuid);
+      expect(projectCredit?.balance).toBe(5);
     });
   });
 });
