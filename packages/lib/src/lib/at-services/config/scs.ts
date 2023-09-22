@@ -127,13 +127,11 @@ export class Scs extends BaseService {
   public async refundCredit(
     referenceTable: string,
     referenceId: string,
-    description?: string,
   ): Promise<any> {
     const data = {
       eventName: ScsEventType.REFUND_CREDIT,
       referenceTable,
       referenceId,
-      description,
     };
 
     return await this.callService(data);

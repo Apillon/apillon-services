@@ -103,13 +103,25 @@ export class HostingService {
     await new Scs(context).spendCredit(spendCredit);
 
     try {
-      throw new StorageCodeException({
-        code: 500,
-        status: 500,
-      });
       await website.createNewWebsite(context, website_uuid);
     } catch (err) {
-      await new Scs(context).refundCredit(DbTables.WEBSITE, website_uuid);
+      try {
+        await new Scs(context).refundCredit(DbTables.WEBSITE, website_uuid);
+      } catch (refoundError) {
+        await new Lmas().writeLog({
+          logType: LogType.ERROR,
+          message: 'Error refunding credit',
+          location: 'HostingService.createWebsite',
+          service: ServiceName.STORAGE,
+          data: {
+            referenceTable: DbTables.WEBSITE,
+            referenceId: website_uuid,
+          },
+          sendAdminAlert: true,
+        });
+      }
+
+      throw err;
     }
 
     await new Lmas().writeLog({
