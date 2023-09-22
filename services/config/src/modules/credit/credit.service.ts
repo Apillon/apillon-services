@@ -135,6 +135,7 @@ export class CreditService {
         }).writeToMonitor({ project_uuid: event.body.project_uuid });
       }
     }
+    return true;
   }
 
   /**
@@ -146,6 +147,16 @@ export class CreditService {
     event: { body: SpendCreditDto },
     context: ServiceContext,
   ): Promise<any> {
+    try {
+      event.body = new SpendCreditDto(event.body, context);
+      await event.body.validate();
+    } catch (err) {
+      await event.body.handle(err);
+      if (!event.body.isValid()) {
+        throw new ScsValidationException(event.body);
+      }
+    }
+
     //Check product and populate it's price
     const product: Product = await new Product({}, context).populateById(
       event.body.product_id,
@@ -245,6 +256,7 @@ export class CreditService {
         }).writeToMonitor({ project_uuid: event.body.project_uuid });
       }
     }
+    return true;
   }
 
   /**
@@ -347,5 +359,6 @@ export class CreditService {
         });
       }
     }
+    return true;
   }
 }

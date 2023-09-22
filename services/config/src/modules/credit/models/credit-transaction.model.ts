@@ -9,12 +9,23 @@ import {
   prop,
   selectAndCountQuery,
 } from '@apillon/lib';
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { v4 as uuidV4 } from 'uuid';
 import { ConfigErrorCode, DbTables } from '../../../config/types';
+import { Product } from './product.model';
 
 export class CreditTransaction extends ProjectAccessModel {
   public readonly tableName = DbTables.CREDIT_TRANSACTION;
+
+  /**
+   * Created at property definition.
+   */
+  @prop({
+    parser: { resolver: dateParser() },
+    serializable: [SerializeFor.APILLON_API, SerializeFor.SELECT_DB],
+    populatable: [PopulateFrom.DB],
+  })
+  public createTime?: Date;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -22,7 +33,6 @@ export class CreditTransaction extends ProjectAccessModel {
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.LOGGER,
     ],
@@ -157,12 +167,12 @@ export class CreditTransaction extends ProjectAccessModel {
           FROM \`${this.tableName}\` ct
           WHERE ct.referenceTable = @referenceTable 
           AND ct.referenceId = @referenceId
-          AND ct.direction = 1
+          AND ct.direction = 2
           AND NOT EXISTS (
             SELECT 1 FROM \`${this.tableName}\` ct2
             WHERE ct2.referenceTable = @referenceTable 
             AND ct2.referenceId = @referenceId
-            AND ct2.direction = 2
+            AND ct2.direction = 1
           )
           AND ct.status <> ${SqlModelStatus.DELETED};
         `,
@@ -200,10 +210,7 @@ export class CreditTransaction extends ProjectAccessModel {
       : this.reset();
   }
 
-  public async getList(
-    filter: CreditTransactionQueryFilter,
-    serializationStrategy = SerializeFor.PROFILE,
-  ) {
+  public async getList(filter: CreditTransactionQueryFilter) {
     const context = this.getContext();
     this.canAccess(context);
     // Map url query with sql fields.
@@ -219,10 +226,19 @@ export class CreditTransaction extends ProjectAccessModel {
 
     const sqlQuery = {
       qSelect: `
-        SELECT ${this.generateSelectFields('ct', '', serializationStrategy)}
+        SELECT ${this.generateSelectFields(
+          'ct',
+          '',
+          SerializeFor.SELECT_DB,
+        )}, ${new Product({}, context).generateSelectFields(
+        'p',
+        '',
+        SerializeFor.SELECT_DB,
+      )}
         `,
       qFrom: `
         FROM \`${this.tableName}\` ct
+        JOIN \`${DbTables.PRODUCT}\` p ON p.id = ct.product_id
         WHERE ct.project_uuid = @project_uuid
         AND (@search IS null OR ct.referenceTable LIKE CONCAT('%', @search, '%'))
         AND ct.status <> ${SqlModelStatus.DELETED}

@@ -160,6 +160,7 @@ export enum ScsEventType {
   DELETE_OVERRIDE = 'delete-override',
   ADD_CREDIT = 'add-credit',
   SPEND_CREDIT = 'spend-credit',
+  REFUND_CREDIT = 'refund-credit',
   GET_PROJECT_CREDIT = 'get-project-credit',
   GET_CREDIT_TRANSACTIONS = 'get-project-transactions',
 }

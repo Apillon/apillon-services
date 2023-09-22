@@ -7,12 +7,22 @@ import {
   presenceValidator,
   prop,
 } from '@apillon/lib';
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { v4 as uuidV4 } from 'uuid';
 import { ConfigErrorCode, DbTables } from '../../../config/types';
 
 export class Credit extends ProjectAccessModel {
   public readonly tableName = DbTables.CREDIT;
+
+  /**
+   * Updated at property definition.
+   */
+  @prop({
+    parser: { resolver: dateParser() },
+    serializable: [SerializeFor.PROFILE, SerializeFor.SELECT_DB],
+    populatable: [PopulateFrom.DB],
+  })
+  public updateTime?: Date;
 
   @prop({
     parser: { resolver: stringParser() },
