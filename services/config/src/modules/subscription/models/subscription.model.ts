@@ -131,6 +131,7 @@ export class Subscription extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
     ],
+    defaultValue: 0,
   })
   public paymentFailures: number;
 

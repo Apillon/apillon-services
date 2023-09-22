@@ -131,4 +131,11 @@ export class Scs extends BaseService {
       query,
     });
   }
+
+  public async listInvoices(query: SubscriptionsQueryFilter) {
+    return await this.callService({
+      eventName: ScsEventType.LIST_INVOICES,
+      query,
+    });
+  }
 }

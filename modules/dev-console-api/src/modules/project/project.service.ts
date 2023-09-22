@@ -561,4 +561,11 @@ export class ProjectService {
   ) {
     return (await new Scs(context).listSubscriptions(query)).data;
   }
+
+  async getProjectInvoices(
+    context: DevConsoleApiContext,
+    query: SubscriptionsQueryFilter,
+  ) {
+    return (await new Scs(context).listInvoices(query)).data;
+  }
 }

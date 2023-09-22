@@ -197,4 +197,20 @@ export class ProjectController {
     query.project_uuid = project_uuid;
     return await this.projectService.getProjectSubscriptions(context, query);
   }
+
+  @Get(':uuid/invoices')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({
+    dto: SubscriptionsQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getProjectInvoices(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') project_uuid: string,
+    @Query() query: SubscriptionsQueryFilter,
+  ) {
+    query.project_uuid = project_uuid;
+    return await this.projectService.getProjectInvoices(context, query);
+  }
 }

@@ -103,6 +103,9 @@ export class PaymentsService {
         }
       }
       case 'customer.subscription.updated': {
+        if (event.data?.previous_attributes?.['status'] === 'incomplete') {
+          return; // If update is only for a new subscription
+        }
         // In case subscription is renewed or canceled
         await new Scs().updateSubscription(subscription.id, {
           isCanceled: subscription.cancel_at_period_end,

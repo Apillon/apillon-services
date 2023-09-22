@@ -29,6 +29,7 @@ export async function processEvent(
       SubscriptionService.getSubscriptionPackageStripeId,
     [ScsEventType.UPDATE_SUBSCRIPTION]: SubscriptionService.updateSubscription,
     [ScsEventType.LIST_SUBSCRIPTIONS]: SubscriptionService.listSubscriptions,
+    [ScsEventType.LIST_INVOICES]: SubscriptionService.listInvoices,
   };
 
   return await processors[event.eventName](event, context);

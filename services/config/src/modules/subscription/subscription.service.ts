@@ -223,4 +223,22 @@ export class SubscriptionService {
       context,
     );
   }
+
+  /**
+   * Get all invoices, existing or for a single project
+   * @param {query: SubscriptionsQueryFilter} - Query filter for listing invoices
+   */
+  static async listInvoices(
+    {
+      query,
+    }: {
+      query: SubscriptionsQueryFilter;
+    },
+    context: ServiceContext,
+  ) {
+    return await new Invoice({ project_uuid: query.project_uuid }).getList(
+      query,
+      context,
+    );
+  }
 }

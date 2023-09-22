@@ -5,7 +5,7 @@ export async function upgrade(
 ): Promise<void> {
   await queryFn(`
     ALTER TABLE \`${DbTables.SUBSCRIPTION}\`
-    ADD COLUMN \`paymentFailures\` INT NULL,
+    ADD COLUMN \`paymentFailures\` INT NOT NULL DEFAULT 0,
     ADD COLUMN \`isCanceled\` TINYINT NULL DEFAULT false,
     ADD COLUMN \`cancelDate\` DATETIME NULL,
     ADD COLUMN \`subscriberEmail\` VARCHAR(255) NOT NULL

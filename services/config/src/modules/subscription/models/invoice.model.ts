@@ -1,11 +1,16 @@
 import { floatParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
+  getQueryParams,
   PopulateFrom,
   prop,
+  selectAndCountQuery,
   SerializeFor,
+  SqlModelStatus,
+  SubscriptionsQueryFilter,
 } from '@apillon/lib';
 import { DbTables } from '../../../config/types';
+import { ServiceContext } from '@apillon/service-lib';
 
 export class Invoice extends AdvancedSQLModel {
   public readonly tableName = DbTables.INVOICE;
@@ -72,6 +77,7 @@ export class Invoice extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.PROFILE,
       SerializeFor.SERVICE,
     ],
   })
@@ -88,6 +94,7 @@ export class Invoice extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.PROFILE,
       SerializeFor.SERVICE,
     ],
   })
@@ -155,9 +162,43 @@ export class Invoice extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
-      SerializeFor.PROFILE,
       SerializeFor.SERVICE,
     ],
   })
   public stripeId: string;
+
+  public async getList(
+    filter: SubscriptionsQueryFilter,
+    context: ServiceContext,
+    serializationStrategy = SerializeFor.PROFILE,
+  ) {
+    const query = new SubscriptionsQueryFilter(filter);
+    const fieldMap = {
+      id: 'i.id',
+    };
+    const { params, filters } = getQueryParams(
+      query.getDefaultValues(),
+      'i',
+      fieldMap,
+      query.serialize(),
+    );
+
+    const sqlQuery = {
+      qSelect: `
+        SELECT ${this.generateSelectFields('i', '', serializationStrategy)}
+        `,
+      qFrom: `
+        FROM \`${this.tableName}\` i
+        WHERE i.project_uuid = @project_uuid
+        AND (@search IS null OR i.clientEmail LIKE CONCAT('%', @search, '%'))
+        AND i.status <> ${SqlModelStatus.DELETED}
+      `,
+      qFilter: `
+        ORDER BY ${filters.orderStr}
+        LIMIT ${filters.limit} OFFSET ${filters.offset};
+      `,
+    };
+
+    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'i.id');
+  }
 }
