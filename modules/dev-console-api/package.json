@@ -1,6 +1,6 @@
 {
   "name": "@apillon/dev-console-api",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "description": "",
   "author": "",
   "private": true,
@@ -36,7 +36,6 @@
   "dependencies": {
     "@apillon/lib": "*",
     "@apillon/modules-lib": "*",
-    "@faker-js/faker": "^7.5.0",
     "@nestjs/common": "^9.0.11",
     "@nestjs/core": "^9.0.0",
     "@nestjs/platform-express": "^9.0.0",

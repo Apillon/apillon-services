@@ -3,6 +3,7 @@ import { ethers } from 'ethers';
 import { formatUnits } from 'ethers/lib/utils';
 import type { Wallet } from '../modules/wallet/wallet.model';
 import { Chain, TxToken } from '../config/types';
+import axios from 'axios';
 
 export function getTokenFromChain(chainType: ChainType, chain: Chain) {
   const options = {
@@ -31,7 +32,7 @@ export function getTokenDecimalsFromChain(chainType: ChainType, chain: Chain) {
     },
     [ChainType.SUBSTRATE]: {
       [SubstrateChain.CRUST]: 12,
-      [SubstrateChain.KILT]: 18,
+      [SubstrateChain.KILT]: 15,
       [SubstrateChain.PHALA]: 18,
     },
   };
@@ -55,4 +56,23 @@ export function formatWalletAddress(wallet: Wallet) {
       ? EvmChain[wallet.chain]
       : SubstrateChain[wallet.chain]
   }: ${wallet.address}`;
+}
+
+export async function getTokenPriceUsd(token: string) {
+  const networkTokenMap = {
+    CRU: 'crust-network',
+    ASTR: 'astar',
+    KILT: 'kilt-protocol',
+    GLMR: 'moonbeam',
+    DEV: 'moonbase',
+  };
+  const networkName = networkTokenMap[token];
+  try {
+    const { data } = await axios.get(
+      `https://api.coingecko.com/api/v3/simple/price/?ids=${networkName}&vs_currencies=USD`,
+    );
+    return data?.[networkName]?.usd;
+  } catch (err) {
+    return 0;
+  }
 }

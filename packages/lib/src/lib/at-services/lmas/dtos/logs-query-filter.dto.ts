@@ -7,6 +7,7 @@ import {
   ServiceName,
 } from '../../../../config/types';
 import { BaseLogsQueryFilter } from './base-logs-query-filter.dto';
+import { stringArrayParser } from '../../../parsers';
 
 export class LogsQueryFilter extends BaseLogsQueryFilter {
   @prop({
@@ -17,14 +18,14 @@ export class LogsQueryFilter extends BaseLogsQueryFilter {
   public project_uuid: string;
 
   @prop({
-    parser: { resolver: stringParser(), array: true },
+    parser: { resolver: stringArrayParser() },
     populatable: [PopulateFrom.ADMIN],
     serializable: [SerializeFor.ADMIN],
   })
   public logTypes: LogType[];
 
   @prop({
-    parser: { resolver: stringParser(), array: true },
+    parser: { resolver: stringArrayParser() },
     populatable: [PopulateFrom.ADMIN],
     serializable: [SerializeFor.ADMIN],
   })

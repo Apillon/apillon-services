@@ -338,6 +338,7 @@ export class IPFSService {
     for (const file of event.files) {
       const fur = fileUploadRequests.find((x) => x.file_uuid == file.file_uuid);
       file.CID = fur.CID.toV0().toString();
+      file.CIDv1 = fur.CID.toV1().toString();
       file.size = fur.size;
     }
 
@@ -345,7 +346,7 @@ export class IPFSService {
   }
 
   /**
-   *
+   * Publish IPNS record. If key not exists new one is created.
    * @param cid CID which will be represented with IPNS
    * @param ipfsKey private key used to publish IPNS
    * @returns
@@ -356,39 +357,56 @@ export class IPFSService {
   ): Promise<{ name: string; value: string }> {
     //Get IPFS client
     const client = await IPFSService.createIPFSClient();
-    let key = undefined;
-    let existingKeys = undefined;
-    try {
-      existingKeys = (await client.key.list()).filter((x) => x.name == ipfsKey);
-    } catch (err) {
-      writeLog(
-        LogType.ERROR,
-        `Error publishing to IPNS. Cid: ${cid}, Key: ${ipfsKey}`,
-        'ipfs.service.ts',
-        'createIPFSClient',
-        err,
-      );
-    }
 
-    //Generate new key or use existing
-    if (!existingKeys || existingKeys.length == 0) {
-      key = await client.key.gen(ipfsKey, {
-        type: 'rsa',
-        size: 2048,
+    let ipnsRes = undefined;
+    try {
+      ipnsRes = await client.name.publish(cid, {
+        key: ipfsKey,
+        resolve: false,
       });
-    } else {
-      key = existingKeys[0];
+    } catch (err) {
+      if (err.message == 'no key by the given name was found') {
+        await client.key.gen(ipfsKey, {
+          type: 'rsa',
+          size: 2048,
+        });
+        ipnsRes = await client.name.publish(cid, {
+          key: ipfsKey,
+          resolve: false,
+        });
+      } else {
+        throw err;
+      }
     }
-    //Check key
-    if (!key || key.length == 0) {
-      throw new CodeException({
-        status: 500,
-        code: StorageErrorCode.FAILED_TO_GENERATE_IPFS_KEYPAIR,
-      });
-    } else {
-    }
-    //Publish CID to IPNS
-    return await client.name.publish(cid, { key: key.id });
+    return ipnsRes;
+  }
+
+  /**
+   * Publish IPNS record.
+   * NOTE: Use this function if you are sure, that key does not exists on IPFS.
+   * @param cid CID which will be represented with IPNS
+   * @param ipfsKey private key used to publish IPNS
+   * @returns
+   */
+  static async generateKeyAndPublishToIPNS(
+    cid: string,
+    ipfsKey: string,
+  ): Promise<{ name: string; value: string }> {
+    //Get IPFS client
+    const client = await IPFSService.createIPFSClient();
+
+    await client.key.gen(ipfsKey, {
+      type: 'rsa',
+      size: 2048,
+    });
+
+    let ipnsRes = undefined;
+    ipnsRes = await client.name.publish(cid, {
+      key: ipfsKey,
+      resolve: false,
+    });
+
+    return ipnsRes;
   }
 
   static async getFileFromIPFS(params: { cid: string }) {

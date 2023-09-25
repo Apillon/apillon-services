@@ -7,14 +7,15 @@ import {
   DidTransaction,
   SystemEvent,
   TransferTransaction,
-} from './data-models/kilt-transactions';
-import { KiltGQLQueries } from './queries/kilt-graphql-queries';
+} from './data-models';
+import { KiltGQLQueries } from './graphql-queries';
 
 export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
   constructor() {
     if (!env.BLOCKCHAIN_KILT_GRAPHQL_SERVER) {
       throw new Error('Missing GraphQL server url!');
     }
+
     super(env.BLOCKCHAIN_KILT_GRAPHQL_SERVER);
   }
 
@@ -45,7 +46,8 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
   public async getAllSystemEvents(
     account: string,
     fromBlock: number,
-    toBlock: number,
+    toBlock?: number,
+    limit?: number,
   ): Promise<SystemEvent[]> {
     const data: any = await this.graphQlClient.request(
       gql`
@@ -55,24 +57,6 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
         account,
         fromBlock,
         toBlock,
-      },
-    );
-
-    return data.systems;
-  }
-
-  public async getSystemEventsWithLimit(
-    account: string,
-    fromBlock: number,
-    limit: number,
-  ): Promise<SystemEvent[]> {
-    const data: any = await this.graphQlClient.request(
-      gql`
-        ${KiltGQLQueries.ACCOUNT_SYSTEM_EVENTS_WITH_LIMIT_QUERY}
-      `,
-      {
-        account,
-        fromBlock,
         limit,
       },
     );
@@ -159,8 +143,8 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
     return data.transfers;
   }
 
-  /* NOTE: An amount X of balance Y becomes reserved when a did submittion happens.
-          In this case, 2 KILT tokens are reserved for the creation of that DID document  
+  /* NOTE: An amount X of balance Y becomes reserved when a did submitting happens.
+     In this case, 2 KILT tokens are reserved for the creation of that DID document
   */
   public async getAccountReserved(
     account: string,
@@ -314,5 +298,22 @@ export class KiltBlockchainIndexer extends BaseBlockchainIndexer {
       },
     );
     return data.attestations;
+  }
+
+  public async getAccountTransactionsByHash(
+    address: string,
+    extrinsicHash: string,
+  ): Promise<any> {
+    const data: any = await this.graphQlClient.request(
+      gql`
+        ${KiltGQLQueries.ACCOUNT_TRANSACTION_BY_HASH}
+      `,
+      {
+        address,
+        extrinsicHash,
+      },
+    );
+
+    return data;
   }
 }

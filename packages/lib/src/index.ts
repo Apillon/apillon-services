@@ -2,7 +2,6 @@
 export * from './lib/at-services/config/scs';
 export * from './lib/at-services/config/dtos/quota.dto';
 export * from './lib/at-services/config/dtos/get-quota.dto';
-export * from './lib/at-services/config/dtos/get-quotas.dto';
 export * from './lib/at-services/config/dtos/create-quota-override.dto';
 export * from './lib/at-services/config/dtos/quota-override.dto';
 export * from './config/types';
@@ -121,3 +120,4 @@ export * from './lib/exceptions/http-exception';
 export * from './lib/base-models/base-query-filter.model';
 export * from './lib/parsers';
 export * from './lib/cache';
+export * from './lib/captcha';

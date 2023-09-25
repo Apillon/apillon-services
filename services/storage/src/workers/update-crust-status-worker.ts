@@ -10,7 +10,6 @@ import {
   LogOutput,
   QueueWorkerType,
   WorkerDefinition,
-  WorkerLogStatus,
 } from '@apillon/workers-lib';
 import { DbTables, FileStatus } from '../config/types';
 import { File } from '../modules/storage/models/file.model';
@@ -28,7 +27,7 @@ export class UpdateCrustStatusWorker extends BaseQueueWorker {
     return [];
   }
   public async runExecutor(input: any): Promise<any> {
-    // console.info('RUN EXECUTOR (UpdateCrustStatusWorker). data: ', input);
+    console.info('RUN EXECUTOR (UpdateCrustStatusWorker). data: ', input);
 
     await runWithWorkers(input.data, 50, this.context, async (data, ctx) => {
       if (data.referenceId && data.referenceTable == DbTables.FILE) {

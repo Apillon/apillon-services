@@ -85,6 +85,24 @@ export class File extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public CIDv1: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
     ],
     validators: [],
   })
@@ -306,22 +324,20 @@ export class File extends ProjectAccessModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
-      WHERE 
+      WHERE
       bucket_id = @bucket_id
-      AND name = @name 
+      AND name = @name
       AND ((@directory_id IS NULL AND directory_id IS NULL) OR @directory_id = directory_id)
       AND status <> ${SqlModelStatus.DELETED};
       `,
       { bucket_id, name, directory_id },
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   /**
@@ -329,14 +345,14 @@ export class File extends ProjectAccessModel {
    * @param id internal id, cid or file_uuid
    * @returns
    */
-  public async populateById(id: string | number): Promise<this> {
+  public override async populateById(id: string | number): Promise<this> {
     if (!id) {
       throw new Error('id should not be null');
     }
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
       WHERE (id LIKE @id OR cid LIKE @id OR file_uuid LIKE @id)
       AND status <> ${SqlModelStatus.DELETED};
@@ -344,32 +360,13 @@ export class File extends ProjectAccessModel {
       { id },
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
-  public async populateByUUID(file_uuid: string): Promise<this> {
-    if (!file_uuid) {
-      throw new Error('file_uuid should not be null');
-    }
-
-    const data = await this.getContext().mysql.paramExecute(
-      `
-      SELECT * 
-      FROM \`${DbTables.FILE}\`
-      WHERE file_uuid = @file_uuid AND status <> ${SqlModelStatus.DELETED};
-      `,
-      { file_uuid },
-    );
-
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+  public override async populateByUUID(file_uuid: string): Promise<this> {
+    return super.populateByUUID(file_uuid, 'file_uuid');
   }
 
   public async getMarkedForDeletionList(
@@ -400,8 +397,8 @@ export class File extends ProjectAccessModel {
 
     const sqlQuery = {
       qSelect: `
-        SELECT ${ObjectType.FILE} as type, f.id, f.status, f.name, f.CID, f.createTime, f.updateTime, 
-        f.contentType as contentType, f.size as size, f.directory_id as parentDirectoryId, 
+        SELECT ${ObjectType.FILE} as type, f.id, f.status, f.name, f.CID, f.createTime, f.updateTime,
+        f.contentType as contentType, f.size as size, f.directory_id as parentDirectoryId,
         f.file_uuid as file_uuid, CONCAT("${env.STORAGE_IPFS_GATEWAY}", f.CID) as link
         `,
       qFrom: `
@@ -438,7 +435,7 @@ export class File extends ProjectAccessModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
       WHERE bucket_id = @bucket_id AND status <> ${SqlModelStatus.DELETED};
       `,

@@ -1,6 +1,7 @@
 import {
   AdvancedSQLModel,
   BaseQueryFilter,
+  CacheKeyPrefix,
   Context,
   DefaultUserRole,
   JSONParser,
@@ -9,13 +10,15 @@ import {
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
+  env,
   generateJwtToken,
   getQueryParams,
+  invalidateCacheKey,
   prop,
   selectAndCountQuery,
   uniqueFieldValue,
 } from '@apillon/lib';
-import { stringParser } from '@rawmodel/parsers';
+import { dateParser, stringParser } from '@rawmodel/parsers';
 import { emailValidator, presenceValidator } from '@rawmodel/validators';
 import * as bcrypt from 'bcryptjs';
 import { AmsErrorCode, DbTables, TokenExpiresInStr } from '../../config/types';
@@ -274,19 +277,7 @@ export class AuthUser extends AdvancedSQLModel {
     }
 
     try {
-      // Find old token
-      const oldToken = await new AuthToken({}, context).populateByUserAndType(
-        this.user_uuid,
-        JwtTokenType.USER_AUTHENTICATION,
-        conn,
-      );
-
-      if (oldToken.exists()) {
-        console.log('Deleting old token ...');
-        oldToken.status = SqlModelStatus.DELETED;
-        await oldToken.update(SerializeFor.UPDATE_DB, conn);
-      }
-
+      await this.invalidateOldToken();
       await authToken.insert(SerializeFor.INSERT_DB, conn);
 
       await context.mysql.commit(conn);
@@ -300,20 +291,8 @@ export class AuthUser extends AdvancedSQLModel {
   }
 
   public async logoutUser() {
-    const context = this.getContext();
-
     try {
-      // Find old token
-      const oldToken = await new AuthToken({}, context).populateByUserAndType(
-        this.user_uuid,
-        JwtTokenType.USER_AUTHENTICATION,
-      );
-
-      if (oldToken.exists()) {
-        console.log('Deleting token ...');
-        oldToken.status = SqlModelStatus.DELETED;
-        await oldToken.update(SerializeFor.UPDATE_DB);
-      }
+      await this.invalidateOldToken();
     } catch (err) {
       throw await new AmsCodeException({
         status: 500,
@@ -511,6 +490,25 @@ export class AuthUser extends AdvancedSQLModel {
       sqlQuery,
       { ...params, user_uuid: event.user_uuid },
       'aur.createTime',
+    );
+  }
+
+  private async invalidateOldToken() {
+    // Find and invalidate old token
+    const context = this.getContext();
+    const oldToken = await new AuthToken({}, context).populateByUserAndType(
+      this.user_uuid,
+      JwtTokenType.USER_AUTHENTICATION,
+    );
+
+    if (!oldToken.exists()) {
+      return;
+    }
+    console.info('Deleting token ...');
+    oldToken.status = SqlModelStatus.DELETED;
+    await oldToken.update(SerializeFor.UPDATE_DB);
+    await invalidateCacheKey(
+      `${CacheKeyPrefix.AUTH_USER_DATA}:${this.user_uuid}`,
     );
   }
 }

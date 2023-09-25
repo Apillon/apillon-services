@@ -248,18 +248,16 @@ export class PinToCrustRequest extends AdvancedSQLModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
       WHERE cid = @cid AND status <> ${SqlModelStatus.DELETED};
       `,
       { cid },
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   /**
@@ -270,7 +268,7 @@ export class PinToCrustRequest extends AdvancedSQLModel {
     const context = this.getContext();
     const data = await context.mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
       WHERE pinningStatus IN (${CrustPinningStatus.PENDING} , ${CrustPinningStatus.FAILED})
       AND numOfExecutions < 5
@@ -297,7 +295,7 @@ export class PinToCrustRequest extends AdvancedSQLModel {
     const context = this.getContext();
     const data = await context.mysql.paramExecute(
       `
-      SELECT * 
+      SELECT *
       FROM \`${this.tableName}\`
       WHERE pinningStatus = ${CrustPinningStatus.SUCCESSFULL}
       AND (

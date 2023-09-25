@@ -68,8 +68,6 @@ export class NftTransaction {
           params.dropStart,
           params.dropReserve,
           {
-            erc20TokenAddress: constants.AddressZero,
-            tokenUriIsEnumerable: true,
             royaltyRecipient: params.royaltiesAddress,
             royaltyPercentageBps: royaltiesFees,
             maxSupply,
@@ -243,8 +241,13 @@ export class NftTransaction {
     const nftContractAbi = getNftContractAbi(collectionType);
     const nftContract: Contract = new Contract(contractAddress, nftContractAbi);
 
-    const txData: PopulatedTransaction =
-      await nftContract.populateTransaction.burn(tokenId);
+    const txData =
+      collectionType === NFTCollectionType.NESTABLE
+        ? await nftContract.populateTransaction.burn(
+            tokenId,
+            constants.MaxUint256,
+          )
+        : await nftContract.populateTransaction.burn(tokenId);
 
     return {
       to: contractAddress,

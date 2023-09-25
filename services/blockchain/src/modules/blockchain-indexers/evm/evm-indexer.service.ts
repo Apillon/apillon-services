@@ -40,17 +40,19 @@ export class EvmBlockchainIndexer {
             blockNumber_lte: $toBlock
           }
         ) {
-          blockNumber
-          from
-          gas
-          gasPrice
-          hash
           id
-          nonce
-          status
-          timestamp
+          transactionHash
+          blockNumber
+          blockHash
+          blockTimestamp
+          from
           to
           value
+          nonce
+          gasUsed
+          effectiveGasPrice
+          status
+          createdAt
         }
       }
     `;
@@ -61,7 +63,6 @@ export class EvmBlockchainIndexer {
       fromBlock,
       toBlock,
     });
-    console.log(data);
     return data;
   }
 
@@ -83,35 +84,30 @@ export class EvmBlockchainIndexer {
             blockNumber_lte: $toBlock
           }
         ) {
-          blockNumber
-          from
-          gas
-          gasPrice
-          hash
           id
-          nonce
-          status
-          timestamp
+          transactionHash
+          blockNumber
+          blockHash
+          blockTimestamp
+          from
           to
           value
+          nonce
+          gasUsed
+          effectiveGasPrice
+          status
+          createdAt
         }
       }
     `;
 
     address = address.toLowerCase();
-    try {
-      const data: EvmTransfers = await this.graphQlClient.request(
-        GRAPHQL_QUERY,
-        {
-          address,
-          fromBlock,
-          toBlock,
-        },
-      );
-      return data;
-    } catch (err) {
-      console.log(err);
-    }
+    const data: EvmTransfers = await this.graphQlClient.request(GRAPHQL_QUERY, {
+      address,
+      fromBlock,
+      toBlock,
+    });
+    return data;
   }
 
   public async getWalletTransactions(
@@ -131,35 +127,30 @@ export class EvmBlockchainIndexer {
           orderBy: blockNumber_ASC
           limit: $limit
         ) {
-          blockNumber
-          from
-          gas
-          gasPrice
-          hash
           id
-          nonce
-          status
-          timestamp
+          transactionHash
+          blockNumber
+          blockHash
+          blockTimestamp
+          from
           to
           value
+          nonce
+          gasUsed
+          effectiveGasPrice
+          status
+          createdAt
         }
       }
     `;
 
     address = address.toLowerCase();
-    try {
-      const data: EvmTransfers = await this.graphQlClient.request(
-        GRAPHQL_QUERY,
-        {
-          address,
-          fromBlock,
-          limit,
-        },
-      );
-      return data;
-    } catch (err) {
-      console.log(err);
-    }
+    const data: EvmTransfers = await this.graphQlClient.request(GRAPHQL_QUERY, {
+      address,
+      fromBlock,
+      limit,
+    });
+    return data;
   }
 
   public async getBlockHeight(): Promise<number> {

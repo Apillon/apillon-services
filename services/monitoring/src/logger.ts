@@ -5,7 +5,6 @@ import {
   RequestLogDto,
   RequestLogsQueryFilter,
   SystemErrorCode,
-  BaseLogsQueryFilter,
 } from '@apillon/lib';
 import { ServiceContext } from './context';
 import { Filter, Collection } from 'mongodb';
@@ -128,7 +127,7 @@ export class Logger {
   }
 
   private static async generateMongoLogsQuery(
-    query: BaseLogsQueryFilter,
+    query: LogsQueryFilter | RequestLogsQueryFilter,
   ): Promise<Filter<any>> {
     const mongoQuery = {} as any;
 
@@ -143,9 +142,16 @@ export class Logger {
         query[`${field}s`] && (mongoQuery[field] = { $in: query[`${field}s`] }),
     );
 
-    // Search by substring
-    query['message'] = query.search;
-    ['message', 'apiName'].forEach(
+    // Request logs have search by url, others by message
+    const property = query.collectionName.includes('request_logs')
+      ? 'url'
+      : 'message';
+
+    // Search by substring/regex
+    query[property] = query.search
+      ? new RegExp(query.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      : null;
+    ['message', 'apiName', 'url', 'body'].forEach(
       (field) =>
         query[field] &&
         (mongoQuery[field] = {
@@ -153,6 +159,19 @@ export class Logger {
           $options: 'i', // global regex
         }),
     );
+
+    if (query instanceof RequestLogsQueryFilter && !query.showSystemRequests) {
+      // System routes, conditionally hide from results if showSystemRequests is false
+      const skipRoutes = [
+        '/hosting/domains',
+        '/auth/session-token',
+        '/discord-bot/user-list',
+      ];
+      mongoQuery[property] = {
+        ...(mongoQuery[property] || {}),
+        $nin: skipRoutes,
+      };
+    }
 
     if (query.dateFrom) {
       mongoQuery.ts = { $gte: new Date(query.dateFrom) };
@@ -168,7 +187,7 @@ export class Logger {
 
   private static async executeMongoLogsQuery(
     collection: Collection<any>,
-    query: BaseLogsQueryFilter,
+    query: LogsQueryFilter | RequestLogsQueryFilter,
   ) {
     // Default sort is timestamp descending
     // -1 -> DESC, 1 -> ASC

@@ -5,15 +5,17 @@ export interface EvmTransfers {
 }
 
 export interface EvmTransfer {
+  id: number;
+  transactionHash: string;
   blockNumber: number;
+  blockHash: string;
+  blockTimestamp: Date;
   from: string;
-  gas: string;
-  gasPrice: string;
-  hash: string;
-  id: string;
-  nonce: string;
-  status: BlockchainStatus;
-  timestamp: Date;
   to: string;
   value: string;
+  nonce: number;
+  gasUsed: string;
+  effectiveGasPrice: string;
+  status: BlockchainStatus;
+  createdAt: Date;
 }

@@ -6,6 +6,7 @@ import {
   OauthLinkType,
 } from '../../../config/types';
 import { BaseQueryFilter } from '../../base-models/base-query-filter.model';
+import { Captcha } from '../../captcha';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { ApiKeyQueryFilterDto } from './dtos/api-key-query-filter.dto';

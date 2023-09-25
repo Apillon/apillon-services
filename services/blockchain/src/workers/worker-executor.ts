@@ -21,8 +21,6 @@ import { TransactionWebhookWorker } from './transaction-webhook-worker';
 import { TransmitEvmTransactionWorker } from './transmit-evm-transaction-worker';
 import { TransmitSubstrateTransactionWorker } from './transmit-substrate-transaction-worker';
 
-import { CrustTransactionWorker } from './crust-transaction-worker';
-// import { KiltTransactionWorker } from './substrate/kilt/kilt-transaction-worker';
 import { EvmTransactionWorker } from './evm-transaction-worker';
 import { SubstrateTransactionWorker } from './substrate-transaction-worker';
 
@@ -37,7 +35,6 @@ export enum WorkerName {
   EVM_TRANSACTIONS = 'EvmTransactions',
   TRANSACTION_WEBHOOKS = 'TransactionWebhooks',
   TRANSACTION_LOG = 'TransactionLog',
-  KILT_TRANSACTIONS = 'KiltTransactions',
   SUBSTRATE_TRANSACTION = 'SubstrateTransaction',
 }
 
@@ -141,13 +138,8 @@ export async function handleLambdaEvent(
         executeArg: JSON.stringify({ chain: SubstrateChain.CRUST }),
       });
       break;
-    // --- UPDATE TRANSACTIONS WORKERS ---
-    // SUBSTRATE
-    case WorkerName.CRUST_TRANSACTIONS:
-      await new CrustTransactionWorker(workerDefinition, context).run();
-      break;
 
-    // !!!!WIP!!!! - SUBSTRATE TRANSACTION WORKER
+    // SUBSTRATE TRANSACTION WORKER
     case WorkerName.SUBSTRATE_TRANSACTION:
       await new SubstrateTransactionWorker(workerDefinition, context).run();
       break;
@@ -241,9 +233,9 @@ export async function handleSqsMessages(
             },
           );
           break;
-        case WorkerName.CRUST_TRANSACTIONS:
-          await new CrustTransactionWorker(workerDefinition, context).run();
-          break;
+        // case WorkerName.CRUST_TRANSACTIONS:
+        //   await new CrustTransactionWorker(workerDefinition, context).run();
+        //   break;
         case WorkerName.EVM_TRANSACTIONS:
           await new EvmTransactionWorker(workerDefinition, context).run({
             executeArg: message?.body,

@@ -6,7 +6,6 @@ import { ValidateEmailDto } from '../dtos/validate-email.dto';
 import { setupTest } from '../../../../test/helpers/setup';
 import { createTestKeyring } from '@polkadot/keyring';
 import { u8aToHex } from '@polkadot/util';
-import { userInfo } from 'os';
 
 describe('Auth tests', () => {
   let stage: Stage;
@@ -155,6 +154,7 @@ describe('Auth tests', () => {
       .post('/users/password-reset-request')
       .send({
         email: newUserData.email,
+        captcha: { token: 'test' },
       });
     expect(response.status).toBe(200);
   });
@@ -302,7 +302,7 @@ describe('Auth tests', () => {
     );
 
     expect(sqlRes1.length).toBe(1);
-    expect(sqlRes1[0].id).toBe(resp1.body.data.id);
+    expect(sqlRes1[0].user_uuid).toBe(resp1.body.data.user_uuid);
 
     const sqlRes2 = await stage.amsSql.paramExecute(
       `SELECT * from authUser WHERE user_uuid = @uuid`,

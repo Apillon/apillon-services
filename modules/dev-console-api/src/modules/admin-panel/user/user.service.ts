@@ -7,7 +7,7 @@ import {
   CodeException,
   CreateQuotaOverrideDto,
   DefaultUserRole,
-  GetQuotasDto,
+  GetQuotaDto,
   QuotaDto,
   QuotaOverrideDto,
   Scs,
@@ -138,12 +138,12 @@ export class UserService {
    * Retreives a list of all quotas for a user
    * @async
    * @param {DevConsoleApiContext} context
-   * @param {GetQuotasDto} query
+   * @param {GetQuotaDto} query
    * @returns {Promise<QuotaDto[]>}
    */
   async getUserQuotas(
     context: DevConsoleApiContext,
-    query: GetQuotasDto,
+    query: GetQuotaDto,
   ): Promise<QuotaDto[]> {
     return await new Scs(context).getQuotas(query);
   }
@@ -200,11 +200,11 @@ export class UserService {
 
       //Update user status in access MS + delete current login tokens (logout)
       const ams: Ams = new Ams(context);
+      await ams.logout({ user_uuid: user.user_uuid });
       await ams.updateAuthUserStatus({
         user_uuid,
         status: SqlModelStatus.BLOCKED,
       });
-      await ams.logout({ user_uuid: user.user_uuid });
 
       //Block api keys
       await new Ams(context).updateApiKeysInProject({

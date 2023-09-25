@@ -4,7 +4,9 @@ import { EvmService } from './modules/evm/evm.service';
 import { SubstrateService } from './modules/substrate/substrate.service';
 import { CommonService } from './modules/common/common.service';
 import { WalletService } from './modules/wallet/wallet.service';
-
+import '@polkadot/api-augment';
+import '@polkadot/rpc-augment';
+import '@polkadot/types-augment';
 /**
  * Processing lambda event with appropriate service function based on event name
  * @param event lambda event

@@ -1,8 +1,6 @@
 import { createRequestLogMiddleware } from '@apillon/modules-lib';
 import { ApiName } from '@apillon/lib';
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { AuthenticateApiKeyMiddleware } from './middlewares/authentication.middleware';
 import { ContextMiddleware } from './middlewares/context.middleware';
 import { AuthModule } from './modules/authentication/authentication.module';
@@ -11,6 +9,7 @@ import { HostingModule } from './modules/hosting/hosting.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { SystemModule } from './modules/system/system.module';
 import { NftModule } from './modules/nfts/nft.module';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -22,7 +21,7 @@ import { NftModule } from './modules/nfts/nft.module';
     AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {

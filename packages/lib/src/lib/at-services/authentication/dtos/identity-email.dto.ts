@@ -4,6 +4,7 @@ import { presenceValidator, emailValidator } from '@rawmodel/validators';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
 import { JSONParser } from '../../../parsers';
+import { Captcha } from '../../../captcha';
 
 export class AttestationEmailDto extends ModelBase {
   @prop({
@@ -40,9 +41,9 @@ export class AttestationEmailDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.IDENTITY_CAPTCHA_NOT_PRESENT,
+        code: ValidatorErrorCode.CAPTCHA_NOT_PRESENT,
       },
     ],
   })
-  public captcha: { eKey: string; token: string };
+  public captcha: Captcha;
 }
