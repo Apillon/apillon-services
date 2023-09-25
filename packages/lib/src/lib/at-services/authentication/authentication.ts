@@ -65,7 +65,7 @@ export class AuthenticationMicroservice extends BaseService {
 
   public async getUserIdentityCredential(email: string) {
     const data = {
-      eventName: AuthenticationEventType.GET_IDENTITY_USER_CREDENTIAL,
+      eventName: AuthenticationEventType.GET_USER_IDENTITY,
       query: email,
     };
     return await this.callService(data);
@@ -74,14 +74,6 @@ export class AuthenticationMicroservice extends BaseService {
   public async revokeIdentity(params: IdentityDidRevokeDto) {
     const data = {
       eventName: AuthenticationEventType.REVOKE_IDENTITY,
-      body: params,
-    };
-    return await this.callService(data);
-  }
-
-  public async generateDevResources(params: any) {
-    const data = {
-      eventName: AuthenticationEventType.GENERATE_DEV_RESOURCES,
       body: params,
     };
     return await this.callService(data);

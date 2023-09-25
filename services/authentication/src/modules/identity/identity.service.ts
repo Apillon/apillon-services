@@ -62,6 +62,7 @@ export class IdentityMicroservice {
     const token = generateJwtToken(JwtTokenType.IDENTITY_VERIFICATION, {
       email,
     });
+
     let auth_app_page = 'registration';
 
     let identity = await new Identity({}, context).populateByUserEmail(
@@ -402,7 +403,10 @@ export class IdentityMicroservice {
     await sendBlockchainServiceRequest(context, bcsRequest);
   }
 
-  static async getUserIdentityCredential(event: { query: string }, context) {
+  static async getUserIdentity(
+    event: { query: string; includeDidUri: boolean },
+    context,
+  ) {
     const identity = await new Identity({}, context).populateByUserEmail(
       context,
       event.query,
@@ -415,7 +419,10 @@ export class IdentityMicroservice {
       });
     }
 
-    return { credential: identity.credential };
+    return {
+      credential: identity.credential,
+      didUri: event.includeDidUri ? identity.didUri : null,
+    };
   }
 
   static async revokeIdentity(event: { body: IdentityDidRevokeDto }, context) {
@@ -441,7 +448,6 @@ export class IdentityMicroservice {
 
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
-    // This is the attesterAcc, used elsewhere in the code
 
     const identifier = Did.toChain(identity.didUri as DidUri);
     const endpointsCountForDid = await api.query.did.didEndpointsCount(
