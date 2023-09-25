@@ -90,12 +90,10 @@ export class Scs extends BaseService {
 
   public async createSubscription(
     createSubscriptionDto: CreateSubscriptionDto,
-    createInvoiceDto: CreateInvoiceDto,
   ) {
     return await this.callService({
       eventName: ScsEventType.CREATE_SUBSCRIPTION,
       createSubscriptionDto,
-      createInvoiceDto,
     });
   }
 

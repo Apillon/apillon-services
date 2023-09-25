@@ -88,15 +88,7 @@ export class PaymentsService {
               expiresOn: new Date(stripeSubscription.current_period_end * 1000),
               subscriberEmail: subscription.customer_details.email,
               stripeId: stripeSubscription.id,
-            }),
-            new CreateInvoiceDto({
-              project_uuid,
-              subtotalAmount: subscription.amount_subtotal / 100,
-              totalAmount: subscription.amount_total / 100,
-              clientEmail: subscription.customer_details.email,
-              clientName: subscription.customer_details.name,
-              currency: subscription.currency,
-              stripeId: subscription.invoice,
+              subscriptionData: subscription,
             }),
           );
           break;

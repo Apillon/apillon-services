@@ -8,6 +8,7 @@ export class CreateSubscriptionDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [
       PopulateFrom.ADMIN, //
+      PopulateFrom.PROFILE,
       PopulateFrom.SERVICE,
     ],
     serializable: [
@@ -21,10 +22,12 @@ export class CreateSubscriptionDto extends ModelBase {
     parser: { resolver: integerParser() },
     populatable: [
       PopulateFrom.ADMIN, //
+      PopulateFrom.PROFILE,
       PopulateFrom.SERVICE,
     ],
     serializable: [
       SerializeFor.ADMIN, //
+      PopulateFrom.PROFILE,
       SerializeFor.SERVICE,
     ],
   })
@@ -34,6 +37,7 @@ export class CreateSubscriptionDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [
       PopulateFrom.ADMIN, //
+      PopulateFrom.PROFILE,
       PopulateFrom.SERVICE,
     ],
     serializable: [
@@ -51,6 +55,7 @@ export class CreateSubscriptionDto extends ModelBase {
     ],
     serializable: [
       SerializeFor.ADMIN, //
+      PopulateFrom.PROFILE,
       SerializeFor.SERVICE,
     ],
   })
@@ -64,8 +69,26 @@ export class CreateSubscriptionDto extends ModelBase {
     ],
     serializable: [
       SerializeFor.ADMIN, //
+      PopulateFrom.PROFILE,
       SerializeFor.SERVICE,
     ],
   })
   public stripeId: string;
+
+  /**
+   * Used for creating subscription invoices
+   */
+  @prop({
+    parser: { resolver: Object },
+    populatable: [
+      PopulateFrom.ADMIN, //
+      PopulateFrom.PROFILE,
+      PopulateFrom.SERVICE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN, //
+      SerializeFor.SERVICE,
+    ],
+  })
+  public subscriptionData: any;
 }

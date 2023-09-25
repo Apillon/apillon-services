@@ -24,22 +24,19 @@ export class SubscriptionService {
   /**
    * Create a subscription for a project
    * @param {{ createSubscriptionDto: CreateSubscriptionDto }} createSubscriptionDto - subset DTO containing the subscription data
-   * @param {{ createInvoiceDto: CreateInvoiceDto }} createInvoiceDto - DTO for creating an invoice for the subscription
    * @param {ServiceContext} context
    * @returns {Promise<Subscription>}
    */
   static async createSubscription(
     {
       createSubscriptionDto,
-      createInvoiceDto,
     }: {
       createSubscriptionDto: CreateSubscriptionDto;
-      createInvoiceDto: CreateInvoiceDto;
     },
     context: ServiceContext,
   ): Promise<Subscription> {
     const subscription = new Subscription(createSubscriptionDto, context);
-
+    const stripeSubscription = createSubscriptionDto.subscriptionData;
     try {
       await subscription.validate();
     } catch (err) {
@@ -56,6 +53,17 @@ export class SubscriptionService {
       }
     }
 
+    const createInvoiceDto = new CreateInvoiceDto({
+      project_uuid: createSubscriptionDto.project_uuid,
+      subtotalAmount: stripeSubscription.amount_subtotal / 100,
+      totalAmount: stripeSubscription.amount_total / 100,
+      clientEmail: stripeSubscription.customer_details.email,
+      clientName: stripeSubscription.customer_details.name,
+      currency: stripeSubscription.currency,
+      stripeId: stripeSubscription.invoice,
+      referenceTable: DbTables.SUBSCRIPTION,
+    }).serialize(SerializeFor.SERVICE);
+
     const conn = await context.mysql.start();
     try {
       const dbSubscription = await subscription.insert(
@@ -65,11 +73,7 @@ export class SubscriptionService {
 
       // Create an invoice after subscription has been stored
       await new Invoice(
-        {
-          ...createInvoiceDto,
-          referenceTable: DbTables.SUBSCRIPTION,
-          referenceId: dbSubscription.id,
-        },
+        { ...createInvoiceDto, referenceId: dbSubscription.id },
         context,
       ).insert(SerializeFor.INSERT_DB, conn);
 
