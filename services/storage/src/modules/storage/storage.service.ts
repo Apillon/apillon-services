@@ -163,10 +163,6 @@ export class StorageService {
       },
     );
 
-    await invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
-      project_uuid: bucket.project_uuid,
-    });
-
     await new Lmas().writeLog({
       context: context,
       project_uuid: bucket.project_uuid,
