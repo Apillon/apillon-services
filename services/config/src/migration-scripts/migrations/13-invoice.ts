@@ -19,7 +19,7 @@ export async function upgrade(
     \`createUser\` VARCHAR(36) NULL,
     \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     \`updateUser\` VARCHAR(36) NULL,
-    PRIMARY KEY (\`id\`),
+    PRIMARY KEY (\`id\`);
   `);
 }
 

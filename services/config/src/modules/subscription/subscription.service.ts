@@ -35,8 +35,26 @@ export class SubscriptionService {
     },
     context: ServiceContext,
   ): Promise<Subscription> {
+    const subscriptionPackage =
+      await SubscriptionService.getSubscriptionPackageById(
+        { id: createSubscriptionDto.package_id },
+        context,
+      );
+
+    if (!subscriptionPackage?.exists()) {
+      throw await new ScsCodeException({
+        status: 400,
+        code: ConfigErrorCode.SUBSCRIPTION_PACKAGE_NOT_FOUND,
+        sourceFunction: 'createSubscription',
+        sourceModule: ServiceName.SCS,
+      }).writeToMonitor({
+        context,
+        data: { package_id: createSubscriptionDto.package_id },
+      });
+    }
+
     const subscription = new Subscription(createSubscriptionDto, context);
-    const stripeSubscription = createSubscriptionDto.subscriptionData;
+
     try {
       await subscription.validate();
     } catch (err) {
@@ -53,14 +71,15 @@ export class SubscriptionService {
       }
     }
 
+    const stripeSubscriptionData = createSubscriptionDto.subscriptionData;
     const createInvoiceDto = new CreateInvoiceDto({
       project_uuid: createSubscriptionDto.project_uuid,
-      subtotalAmount: stripeSubscription.amount_subtotal / 100,
-      totalAmount: stripeSubscription.amount_total / 100,
-      clientEmail: stripeSubscription.customer_details.email,
-      clientName: stripeSubscription.customer_details.name,
-      currency: stripeSubscription.currency,
-      stripeId: stripeSubscription.invoice,
+      subtotalAmount: stripeSubscriptionData.amount_subtotal / 100,
+      totalAmount: stripeSubscriptionData.amount_total / 100,
+      clientEmail: stripeSubscriptionData.customer_details.email,
+      clientName: stripeSubscriptionData.customer_details.name,
+      currency: stripeSubscriptionData.currency,
+      stripeId: stripeSubscriptionData.invoice,
       referenceTable: DbTables.SUBSCRIPTION,
       quantity: 1,
     }).serialize(SerializeFor.SERVICE);
@@ -77,6 +96,9 @@ export class SubscriptionService {
         { ...createInvoiceDto, referenceId: dbSubscription.id },
         context,
       ).insert(SerializeFor.INSERT_DB, conn);
+
+      const creditAmount = subscriptionPackage.creditAmount;
+      // TODO: give credit amount to project when subscription complete
 
       await context.mysql.commit(conn);
 
@@ -147,7 +169,7 @@ export class SubscriptionService {
         context,
       );
 
-    if (!subscriptionPackage.stripeApiId) {
+    if (!subscriptionPackage?.stripeApiId) {
       throw await new ScsCodeException({
         code: ConfigErrorCode.STRIPE_ID_NOT_VALID,
         status: 500,
@@ -213,37 +235,27 @@ export class SubscriptionService {
 
   /**
    * Get all subscriptions, existing or for a single project
-   * @param {query: SubscriptionsQueryFilter} - Query filter for listing subscriptions
+   * @param {event: {query: SubscriptionsQueryFilter}} - Query filter for listing subscriptions
    */
   static async listSubscriptions(
-    {
-      query,
-    }: {
-      query: SubscriptionsQueryFilter;
-    },
+    event: { query: SubscriptionsQueryFilter },
     context: ServiceContext,
   ) {
-    return await new Subscription({ project_uuid: query.project_uuid }).getList(
-      query,
-      context,
-    );
+    return await new Subscription({
+      project_uuid: event.query.project_uuid,
+    }).getList(event.query, context);
   }
 
   /**
    * Get all invoices, existing or for a single project
-   * @param {query: SubscriptionsQueryFilter} - Query filter for listing invoices
+   * @param {event: {query: SubscriptionsQueryFilter}} - Query filter for listing invoices
    */
   static async listInvoices(
-    {
-      query,
-    }: {
-      query: SubscriptionsQueryFilter;
-    },
+    event: { query: SubscriptionsQueryFilter },
     context: ServiceContext,
   ) {
-    return await new Invoice({ project_uuid: query.project_uuid }).getList(
-      query,
-      context,
-    );
+    return await new Invoice({
+      project_uuid: event.query.project_uuid,
+    }).getList(event.query, context);
   }
 }

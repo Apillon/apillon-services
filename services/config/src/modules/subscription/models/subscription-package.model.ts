@@ -1,4 +1,4 @@
-import { dateParser, stringParser } from '@rawmodel/parsers';
+import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
   PopulateFrom,
@@ -84,4 +84,21 @@ export class SubscriptionPackage extends AdvancedSQLModel {
     ],
   })
   public deactivationDate: Date;
+
+  /**
+   * Amount of credits given to project when subscribing to a package
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public creditAmount: number;
 }
