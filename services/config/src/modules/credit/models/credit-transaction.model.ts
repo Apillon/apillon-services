@@ -164,12 +164,12 @@ export class CreditTransaction extends ProjectAccessModel {
     const data = await this.getContext().mysql.paramExecute(
       `
           SELECT *
-          FROM \`${this.tableName}\` ct
+          FROM \`${DbTables.CREDIT_TRANSACTION}\` ct
           WHERE ct.referenceTable = @referenceTable 
           AND ct.referenceId = @referenceId
           AND ct.direction = 2
           AND NOT EXISTS (
-            SELECT 1 FROM \`${this.tableName}\` ct2
+            SELECT 1 FROM \`${DbTables.CREDIT_TRANSACTION}\` ct2
             WHERE ct2.referenceTable = @referenceTable 
             AND ct2.referenceId = @referenceId
             AND ct2.direction = 1
@@ -197,7 +197,7 @@ export class CreditTransaction extends ProjectAccessModel {
     const data = await this.getContext().mysql.paramExecute(
       `
           SELECT *
-          FROM \`${this.tableName}\` ct
+          FROM \`${DbTables.CREDIT_TRANSACTION}\` ct
           WHERE ct.referenceTable = @referenceTable 
           AND ct.referenceId = @referenceId
           AND ct.status <> ${SqlModelStatus.DELETED};
@@ -237,7 +237,7 @@ export class CreditTransaction extends ProjectAccessModel {
       )}
         `,
       qFrom: `
-        FROM \`${this.tableName}\` ct
+        FROM \`${DbTables.CREDIT_TRANSACTION}\` ct
         JOIN \`${DbTables.PRODUCT}\` p ON p.id = ct.product_id
         WHERE ct.project_uuid = @project_uuid
         AND (@search IS null OR ct.referenceTable LIKE CONCAT('%', @search, '%'))

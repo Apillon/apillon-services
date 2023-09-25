@@ -65,7 +65,7 @@ export class Product extends AdvancedSQLModel {
           SELECT price
           FROM \`${DbTables.PRODUCT_PRICE}\`
           WHERE product_id = @product_id
-          AND status <> ${SqlModelStatus.DELETED}
+          AND status = ${SqlModelStatus.ACTIVE}
           AND (validFrom IS NULL OR validFrom >= NOW())
           ORDER BY validFrom DESC
           LIMIT 1;

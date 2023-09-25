@@ -89,7 +89,7 @@ export class Credit extends ProjectAccessModel {
     const data = await this.getContext().mysql.paramExecute(
       `
           SELECT ${this.generateSelectFields()}
-          FROM \`${this.tableName}\`
+          FROM \`${DbTables.CREDIT}\`
           WHERE project_uuid = @project_uuid
           AND status <> ${SqlModelStatus.DELETED}
           FOR UPDATE;

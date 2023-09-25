@@ -1,5 +1,5 @@
 import { DbTables } from '../../config/types';
-import { Products, SqlModelStatus } from '@apillon/lib';
+import { ProductCode, SqlModelStatus } from '@apillon/lib';
 
 export async function upgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
@@ -7,15 +7,15 @@ export async function upgrade(
   await queryFn(`
     INSERT INTO ${DbTables.PRODUCT_PRICE} (product_id, price, status)
     VALUES 
-    (${Products.WEBSITE}, 100, ${SqlModelStatus.ACTIVE}),
-    (${Products.DEPLOY_TO_STAGING}, 10, ${SqlModelStatus.ACTIVE}),
-    (${Products.DEPLOY_TO_PRODUCTION}, 20, ${SqlModelStatus.ACTIVE}),
-    (${Products.CHANGE_WEBSITE_DOMAIN}, 50, ${SqlModelStatus.ACTIVE}),
-    (${Products.NFT_COLLECTION}, 1000, ${SqlModelStatus.ACTIVE}),
-    (${Products.MINT_NFT}, 4, ${SqlModelStatus.ACTIVE}),
-    (${Products.BURN_NFT}, 4, ${SqlModelStatus.ACTIVE}),
-    (${Products.TRANSFER_COLLECTION}, 4, ${SqlModelStatus.ACTIVE}),
-    (${Products.KILT_IDENTITY}, 4000, ${SqlModelStatus.ACTIVE})
+    (${ProductCode.HOSTING_WEBSITE}, 100, ${SqlModelStatus.ACTIVE}),
+    (${ProductCode.HOSTING_DEPLOY_TO_STAGING}, 10, ${SqlModelStatus.ACTIVE}),
+    (${ProductCode.HOSTING_DEPLOY_TO_PRODUCTION}, 20, ${SqlModelStatus.ACTIVE}),
+    (${ProductCode.HOSTING_CHANGE_WEBSITE_DOMAIN}, 50, ${SqlModelStatus.ACTIVE}),
+    (${ProductCode.NFT_COLLECTION}, 1000, ${SqlModelStatus.ACTIVE}),
+    (${ProductCode.NFT_MINT}, 4, ${SqlModelStatus.ACTIVE}),
+    (${ProductCode.NFT_BURN}, 4, ${SqlModelStatus.ACTIVE}),
+    (${ProductCode.NFT_TRANSFER_COLLECTION}, 4, ${SqlModelStatus.ACTIVE}),
+    (${ProductCode.KILT_IDENTITY}, 4000, ${SqlModelStatus.ACTIVE})
   `);
 }
 

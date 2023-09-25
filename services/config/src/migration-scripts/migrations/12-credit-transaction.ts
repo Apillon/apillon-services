@@ -6,6 +6,7 @@ export async function upgrade(
   await queryFn(`
     CREATE TABLE IF NOT EXISTS \`${DbTables.CREDIT_TRANSACTION}\` (
       \`id\` INT NOT NULL AUTO_INCREMENT,
+      \`status\` INT NULL,
       \`project_uuid\` VARCHAR(36) NULL,
       \`credit_id\` INT NOT NULL,
       \`product_id\` INT NULL,
@@ -14,7 +15,6 @@ export async function upgrade(
       \`referenceTable\` VARCHAR (50) NULL,
       \`referenceId\` VARCHAR (50) NULL,
       \`data\` VARCHAR (1000) NULL,
-      \`status\` INT NULL,
       \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
       \`createUser\` VARCHAR(36) NULL,
       \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

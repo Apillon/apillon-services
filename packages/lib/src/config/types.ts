@@ -679,16 +679,18 @@ export enum ApiName {
 }
 
 /**
- * List of products, that requires payment with credits
+ * List of products (codes), that requires payment with credits
  */
-export enum Products {
-  WEBSITE = 1,
-  DEPLOY_TO_STAGING = 2,
-  DEPLOY_TO_PRODUCTION = 3,
-  CHANGE_WEBSITE_DOMAIN = 4,
+export enum ProductCode {
+  HOSTING_WEBSITE = 1,
+  HOSTING_DEPLOY_TO_STAGING = 2,
+  HOSTING_DEPLOY_TO_PRODUCTION = 3,
+  HOSTING_CHANGE_WEBSITE_DOMAIN = 4,
+
   NFT_COLLECTION = 5,
-  MINT_NFT = 6,
-  BURN_NFT = 7,
-  TRANSFER_COLLECTION = 8,
+  NFT_MINT = 6,
+  NFT_BURN = 7,
+  NFT_TRANSFER_COLLECTION = 8,
+
   KILT_IDENTITY = 9,
 }

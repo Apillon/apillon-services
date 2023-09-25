@@ -123,7 +123,10 @@ export class CreditService {
     } catch (err) {
       await context.mysql.rollback(conn);
 
-      if (err instanceof ScsCodeException) {
+      if (
+        err instanceof ScsCodeException ||
+        err instanceof ScsValidationException
+      ) {
         throw err;
       } else {
         throw await new ScsCodeException({
@@ -244,7 +247,10 @@ export class CreditService {
     } catch (err) {
       await context.mysql.rollback(conn);
 
-      if (err instanceof ScsCodeException) {
+      if (
+        err instanceof ScsCodeException ||
+        err instanceof ScsValidationException
+      ) {
         throw err;
       } else {
         throw await new ScsCodeException({
@@ -341,7 +347,10 @@ export class CreditService {
     } catch (err) {
       await context.mysql.rollback(conn);
 
-      if (err instanceof ScsCodeException) {
+      if (
+        err instanceof ScsCodeException ||
+        err instanceof ScsValidationException
+      ) {
         throw err;
       } else {
         throw await new ScsCodeException({

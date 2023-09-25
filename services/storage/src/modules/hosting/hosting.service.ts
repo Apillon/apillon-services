@@ -10,7 +10,7 @@ import {
   Lmas,
   LogType,
   PopulateFrom,
-  Products,
+  ProductCode,
   QuotaCode,
   Scs,
   SerializeFor,
@@ -96,7 +96,7 @@ export class HostingService {
       context,
     ).populate({
       project_uuid: event.body.project_uuid,
-      product_id: Products.WEBSITE,
+      product_id: ProductCode.HOSTING_WEBSITE,
       referenceTable: DbTables.WEBSITE,
       referenceId: website_uuid,
     });

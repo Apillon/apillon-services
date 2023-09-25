@@ -2,7 +2,7 @@ import { v4 as uuid } from 'uuid';
 import { releaseStage, setupTest, Stage } from '../../../test/setup';
 import { CreditService } from './credit.service';
 import { Credit } from './models/credit.model';
-import { AddCreditDto, Products, SpendCreditDto } from '@apillon/lib';
+import { AddCreditDto, ProductCode, SpendCreditDto } from '@apillon/lib';
 import { Product } from './models/product.model';
 import { CreditTransaction } from './models/credit-transaction.model';
 import { ScsCodeException } from '../../lib/exceptions';
@@ -112,12 +112,12 @@ describe('Quota unit test', () => {
       const product: Product = await new Product(
         {},
         stage.context,
-      ).populateById(Products.WEBSITE);
+      ).populateById(ProductCode.HOSTING_WEBSITE);
       await product.populateCurrentPrice();
 
       const data = new SpendCreditDto({
         project_uuid: project1_uuid,
-        product_id: Products.WEBSITE,
+        product_id: ProductCode.HOSTING_WEBSITE,
         referenceTable: 'website',
         referenceId: '1',
       });
@@ -154,12 +154,12 @@ describe('Quota unit test', () => {
       const product: Product = await new Product(
         {},
         stage.context,
-      ).populateById(Products.WEBSITE);
+      ).populateById(ProductCode.HOSTING_WEBSITE);
       await product.populateCurrentPrice();
 
       const data = new SpendCreditDto({
         project_uuid: project3_uuid,
-        product_id: Products.WEBSITE,
+        product_id: ProductCode.HOSTING_WEBSITE,
         referenceTable: 'website',
         referenceId: '2',
       });

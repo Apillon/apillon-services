@@ -7,9 +7,9 @@ export async function upgrade(
   await queryFn(`
     CREATE TABLE IF NOT EXISTS \`${DbTables.PRODUCT}\` (
       \`id\` INT NOT NULL,
+      \`status\` INT NULL DEFAULT ${SqlModelStatus.ACTIVE},
       \`name\` VARCHAR(255) NOT NULL,
       \`description\` VARCHAR(1000) NULL,
-      \`status\` INT NULL DEFAULT ${SqlModelStatus.ACTIVE},
       \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
       \`createUser\` VARCHAR(36) NULL,
       \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

@@ -4,7 +4,7 @@ import { stringParser } from '@rawmodel/parsers';
 
 import {
   PopulateFrom,
-  Products,
+  ProductCode,
   ValidatorErrorCode,
 } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
@@ -33,7 +33,7 @@ export class SpendCreditDto extends ModelBase {
       },
     ],
   })
-  public product_id: Products;
+  public product_id: ProductCode;
 
   @prop({
     parser: { resolver: stringParser() },
