@@ -42,6 +42,7 @@ import {
   generateKeypairs,
   getCtypeSchema,
   getFullDidDocument,
+  linkAccountDid,
 } from '../../lib/kilt';
 import { AuthenticationCodeException } from '../../lib/exceptions';
 import { decryptAssymetric } from '../../lib/utils/crypto-utils';
@@ -172,6 +173,7 @@ export class IdentityMicroservice {
     const did_create_op: DidCreateOp = event.body.did_create_op as DidCreateOp;
     const claimerEmail = event.body.email;
     const claimerDidUri = event.body.didUri;
+    const linkDidToAccount = event.body.linkParameters;
 
     // Check if correct identity + state exists -> IN_PROGRESS
     const identity = await new Identity({}, context).populateByUserEmail(
@@ -241,6 +243,7 @@ export class IdentityMicroservice {
       fullDidCreationTx,
       identity,
       did_create_op,
+      linkDidToAccount,
     );
 
     // Don't update here, but in the request below
@@ -270,6 +273,8 @@ export class IdentityMicroservice {
     const credentialRequest: ICredential = JSON.parse(
       event.body.credential,
     ) as ICredential;
+
+    const linkParameters = event.body.linkParameters;
 
     // Generate (retrieve) attester did data
     const attesterKeypairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
@@ -357,9 +362,38 @@ export class IdentityMicroservice {
       attesterAcc.address,
     );
 
+    let authorizedAccountLinkingTx;
+    let authorizedBatchedTxs;
+    if (linkParameters !== undefined) {
+      writeLog(LogType.INFO, 'Linking account and did document ...');
+
+      // Create account link tx
+      authorizedAccountLinkingTx = await linkAccountDid(
+        attesterDidUri,
+        linkParameters,
+        async ({ data }) => ({
+          signature: attesterKeypairs.authentication.sign(data),
+          keyType: attesterKeypairs.authentication.type,
+        }),
+      );
+
+      // Batch transactions
+      authorizedBatchedTxs = await Did.authorizeBatch({
+        batchFunction: api.tx.utility.batchAll,
+        did: attesterDidUri,
+        extrinsics: [authorizedAccountLinkingTx, attestationTx],
+        sign: async ({ data }) => ({
+          signature: attesterKeypairs.authentication.sign(data),
+          keyType: attesterKeypairs.authentication.type,
+        }),
+        submitter: attesterAcc.address,
+      });
+    }
+
     const bcsRequest = await attestationRequestBc(
       context,
-      attestationTx,
+      // If batch was defined, send that, otherwise send just the attestation tx
+      authorizedBatchedTxs ? authorizedBatchedTxs : attestationTx,
       identity,
     );
 
