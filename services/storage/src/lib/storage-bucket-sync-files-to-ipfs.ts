@@ -1,6 +1,8 @@
 import {
   AWS_S3,
+  CacheKeyPrefix,
   env,
+  invalidateCacheMatch,
   Lmas,
   LogType,
   runWithWorkers,
@@ -491,6 +493,10 @@ export async function storageBucketSyncFilesToIPFS(
     'storage-bucket-sync-files-to-ipfsRes.ts',
     'storageBucketSyncFilesToIPFS',
   );
+
+  await invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
+    project_uuid: bucket.project_uuid,
+  });
 
   return { files: transferedFiles, wrappedDirCid: wrappedDirCid };
 }

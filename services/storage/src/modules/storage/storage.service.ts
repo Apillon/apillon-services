@@ -1,10 +1,12 @@
 import {
   AppEnvironment,
   AWS_S3,
+  CacheKeyPrefix,
   CreateS3UrlsForUploadDto,
   EndFileUploadSessionDto,
   env,
   FileUploadsQueryFilter,
+  invalidateCacheMatch,
   Lmas,
   LogType,
   QuotaCode,
@@ -458,6 +460,10 @@ export class StorageService {
 
     //check bucket
     const b: Bucket = await new Bucket({}, context).populateById(f.bucket_id);
+    await invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
+      project_uuid: b.project_uuid,
+    });
+
     if (
       b.bucketType == BucketType.STORAGE ||
       b.bucketType == BucketType.NFT_METADATA
