@@ -1,10 +1,5 @@
 import { prop } from '@rawmodel/core';
-import {
-  dateParser,
-  floatParser,
-  integerParser,
-  stringParser,
-} from '@rawmodel/parsers';
+import { floatParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { PopulateFrom, SerializeFor } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
 
@@ -125,4 +120,17 @@ export class CreateInvoiceDto extends ModelBase {
     ],
   })
   public stripeId: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.ADMIN, //
+      PopulateFrom.SERVICE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN, //
+      SerializeFor.SERVICE,
+    ],
+  })
+  public quantity: number;
 }

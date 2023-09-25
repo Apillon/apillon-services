@@ -62,6 +62,7 @@ export class SubscriptionService {
       currency: stripeSubscription.currency,
       stripeId: stripeSubscription.invoice,
       referenceTable: DbTables.SUBSCRIPTION,
+      quantity: 1,
     }).serialize(SerializeFor.SERVICE);
 
     const conn = await context.mysql.start();

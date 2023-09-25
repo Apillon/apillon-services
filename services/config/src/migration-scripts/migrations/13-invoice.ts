@@ -14,6 +14,7 @@ export async function upgrade(
     \`clientName\` VARCHAR(60) NULL,
     \`currency\` VARCHAR(10) NULL,
     \`stripeId\` VARCHAR(60) NULL,
+    \`quantity\` INT NOT NULL DEFAULT 0,
     \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
     \`createUser\` VARCHAR(36) NULL,
     \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
