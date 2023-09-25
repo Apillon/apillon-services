@@ -171,7 +171,11 @@ export class CreditService {
         context: context,
         sourceFunction: 'spendCredit()',
         sourceModule: 'CreditService',
-      }).writeToMonitor({ project_uuid: event.body.project_uuid });
+        errorMessage: 'Product does not exists',
+      }).writeToMonitor({
+        project_uuid: event.body.project_uuid,
+        sendAdminAlert: true,
+      });
     }
 
     await product.populateCurrentPrice();
@@ -185,6 +189,7 @@ export class CreditService {
       }).writeToMonitor({
         project_uuid: event.body.project_uuid,
         data: product.serialize(SerializeFor.LOGGER),
+        sendAdminAlert: true,
       });
     }
 
@@ -259,7 +264,10 @@ export class CreditService {
           context: context,
           sourceFunction: 'addCredit()',
           sourceModule: 'CreditService',
-        }).writeToMonitor({ project_uuid: event.body.project_uuid });
+        }).writeToMonitor({
+          project_uuid: event.body.project_uuid,
+          sendAdminAlert: true,
+        });
       }
     }
     return true;
@@ -292,6 +300,7 @@ export class CreditService {
           referenceTable: event.referenceTable,
           referenceId: event.referenceId,
         },
+        sendAdminAlert: true,
       });
     }
 
@@ -365,6 +374,7 @@ export class CreditService {
             referenceTable: event.referenceTable,
             referenceId: event.referenceId,
           },
+          sendAdminAlert: true,
         });
       }
     }
