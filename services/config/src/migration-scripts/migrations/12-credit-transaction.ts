@@ -20,6 +20,7 @@ export async function upgrade(
       \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       \`updateUser\` VARCHAR(36) NULL,
       PRIMARY KEY (\`id\`),
+      UNIQUE KEY \`transaction_key\` (\`direction\`,\`referenceTable\`, \`referenceId\`),
       CONSTRAINT \`fk_ct_credit\`
             FOREIGN KEY (\`credit_id\`)
             REFERENCES \`${DbTables.CREDIT}\` (\`id\`)
