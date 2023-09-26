@@ -9,7 +9,6 @@ import {
   AttestationDto,
   writeLog,
 } from '@apillon/lib';
-import axios from 'axios';
 import { Identity } from './models/identity.model';
 import {
   IdentityState,
@@ -30,6 +29,7 @@ import {
   Did,
   DidUri,
   ICredential,
+  SubmittableExtrinsic,
 } from '@kiltprotocol/sdk-js';
 import { hexToU8a, u8aToHex } from '@polkadot/util';
 // Dtos
@@ -42,7 +42,6 @@ import {
   generateKeypairs,
   getCtypeSchema,
   getFullDidDocument,
-  linkAccountDid,
 } from '../../lib/kilt';
 import { AuthenticationCodeException } from '../../lib/exceptions';
 import { decryptAssymetric } from '../../lib/utils/crypto-utils';
@@ -368,15 +367,21 @@ export class IdentityMicroservice {
     if (linkParameters !== undefined) {
       writeLog(LogType.INFO, 'Linking account and did document ...');
 
+      console.log('Link params: ', linkParameters);
+      console.log('did uri: ', attesterDidUri);
+
       // Create account link tx
-      authorizedAccountLinkingTx = await linkAccountDid(
-        attesterDidUri,
+      const authorizedAccountLinkingTx = await Did.authorizeTx(
+        claimerDidUri,
         linkParameters,
         async ({ data }) => ({
           signature: attesterKeypairs.authentication.sign(data),
           keyType: attesterKeypairs.authentication.type,
         }),
+        attesterAcc.address,
       );
+
+      console.log('did link tx: ', authorizedAccountLinkingTx);
 
       // Batch transactions
       authorizedBatchedTxs = await Did.authorizeBatch({
@@ -389,6 +394,8 @@ export class IdentityMicroservice {
         }),
         submitter: attesterAcc.address,
       });
+
+      console.log('authorizedBatchedTxs: ', authorizedBatchedTxs);
     }
 
     const bcsRequest = await attestationRequestBc(

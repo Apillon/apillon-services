@@ -89,6 +89,23 @@ export class UpdateStateWorker extends BaseQueueWorker {
     }
   }
 
+  private async execIdentityLinkAccToDid(params: any) {
+    // const identityRevokeDto = new IdentityDidRevokeDto().populate({
+    //   email: params.email,
+    //   token: params.token,
+    // });
+    // await IdentityMicroservice.revokeIdentity(
+    //   { body: identityRevokeDto },
+    //   this.context,
+    // );
+    // if (env.APP_ENV != AppEnvironment.TEST) {
+    //   await IdentityMicroservice.revokeIdentity(
+    //     { body: identityRevokeDto },
+    //     this.context,
+    //   );
+    // }
+  }
+
   public async runExecutor(input: any): Promise<any> {
     await this.writeEventLog(
       {
@@ -112,7 +129,6 @@ export class UpdateStateWorker extends BaseQueueWorker {
           ctx,
         ).populateById(incomingTx.referenceId);
 
-        // TODO: Logging should be better. Transaction hash?????
         if (!identityJob.exists()) {
           await this.writeEventLog({
             logType: LogType.ERROR,
@@ -273,6 +289,47 @@ export class UpdateStateWorker extends BaseQueueWorker {
             }
 
             break;
+
+          case IdentityJobState.ACC_LINK_DID:
+            if (status == TransactionStatus.CONFIRMED) {
+              await this.writeEventLog({
+                logType: LogType.INFO,
+                message: `Successfully linked ACCOUNT to DID`,
+                service: ServiceName.AUTHENTICATION_API,
+                data: {
+                  identity: identity.id,
+                  did: identity.didUri,
+                },
+              });
+
+              identity.state = IdentityState.ATTESTED_AND_LINKED;
+              await identityJob.setCompleted();
+              await identity.update();
+            } else {
+              if (await identityJob.identityJobRetry()) {
+                await this.writeEventLog({
+                  logType: LogType.ERROR,
+                  message: `ACC link to DID for ${result.transactionHash} step FAILED. Retrying transaction`,
+                  service: ServiceName.AUTHENTICATION_API,
+                  data: {
+                    identityJob: identityJob.id,
+                    identity: identity.id,
+                  },
+                });
+                await this.execIdentityLinkAccToDid(identity);
+              } else {
+                await this.writeEventLog({
+                  logType: LogType.ERROR,
+                  message: `ACC link to DID for ${result.transactionHash} step FAILED. Retry exceeded: STOPPING`,
+                  service: ServiceName.AUTHENTICATION_API,
+                  data: {
+                    identityJob: identityJob.id,
+                    identity: identity.id,
+                  },
+                });
+                // TODO: Notification logic
+              }
+            }
           case IdentityJobState.DID_REVOKE:
             if (status == TransactionStatus.CONFIRMED) {
               await this.writeEventLog({

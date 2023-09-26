@@ -327,22 +327,3 @@ export function toCredentialIRI(rootHash: string): string {
   }
   return KILT_CREDENTIAL_IRI_PREFIX + rootHash;
 }
-
-export async function linkAccountDid(
-  didUri: DidUri,
-  linkParameters: any,
-  signCallback: SignExtrinsicCallback,
-) {
-  await connect(env.KILT_NETWORK);
-  const api = ConfigService.get('api');
-  const account = generateAccount(
-    env.KILT_ATTESTER_MNEMONIC,
-  ) as KiltKeyringPair;
-
-  return await Did.authorizeTx(
-    didUri,
-    linkParameters,
-    signCallback,
-    account.address,
-  );
-}

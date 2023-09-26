@@ -173,4 +173,6 @@ describe('Identity generate tests', () => {
     expect(identityJobCtrl4.completedAt).not.toBeNull();
     expect(identityJobCtrl4.state).toEqual(IdentityJobState.ATESTATION);
   });
+
+  test('Linked did test', async () => {});
 });

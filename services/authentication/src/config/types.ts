@@ -87,19 +87,6 @@ export enum KiltDerivationPaths {
   KEY_AGREEMENT = '//did//keyAgreement//0',
 }
 
-export enum IdentityState {
-  IN_PROGRESS = 'in-progress',
-  IDENTITY_VERIFIED = 'identity-verified',
-  PENDING_VERIFICATION = 'pending-verification',
-  SUBMITTED_DID_CREATE_REQ = 'submitted-did-create-req',
-  SUBMITTED_ATTESATION_REQ = 'submitted-attestation-req',
-  SUBMITTED_REVOKE_REQ = 'submitted-revoke-req',
-  DID_CREATED = 'did-created',
-  ATTESTED = 'attested',
-  REVOKED = 'revoked',
-  REJECTED = 'rejected',
-}
-
 export enum CredentialAttestStatus {
   PENDING = 'pending',
   ATTESTED = 'attested',
@@ -203,6 +190,21 @@ export enum IdentityJobState {
   // State 1: DID_CREATE -> State 2: ATESTATION
   DID_CREATE = 'did-create',
   ATESTATION = 'attestation',
+  ACC_LINK_DID = 'account-link-did',
   // State 1: DID_REVOKE
   DID_REVOKE = 'did-revoke',
+}
+
+export class IdentityState {
+  static IN_PROGRESS = 'in-progress';
+  static IDENTITY_VERIFIED = 'identity-verified';
+  static PENDING_VERIFICATION = 'pending-verification';
+  static SUBMITTED_DID_CREATE_REQ = 'submitted-did-create-req';
+  static SUBMITTED_ATTESATION_REQ = 'submitted-attestation-req';
+  static SUBMITTED_REVOKE_REQ = 'submitted-revoke-req';
+  static DID_CREATED = 'did-created';
+  static ATTESTED = 'attested';
+  static ATTESTED_AND_LINKED = 'attested-and-linked';
+  static REVOKED = 'revoked';
+  static REJECTED = 'rejected';
 }
