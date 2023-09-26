@@ -36,6 +36,7 @@ import { hexToU8a, u8aToHex } from '@polkadot/util';
 import { IdentityCreateDto } from '@apillon/lib';
 import { IdentityDidRevokeDto } from '@apillon/lib';
 import { VerificationEmailDto } from '@apillon/lib';
+import { IdentityLinkAccountDidDto } from '@apillon/lib';
 import {
   createAttestationRequest,
   generateAccount,
@@ -362,7 +363,6 @@ export class IdentityMicroservice {
       attesterAcc.address,
     );
 
-    let authorizedAccountLinkingTx;
     let authorizedBatchedTxs;
     if (linkParameters !== undefined) {
       writeLog(LogType.INFO, 'Linking account and did document ...');
@@ -431,6 +431,11 @@ export class IdentityMicroservice {
       didUri: event.includeDidUri ? identity.didUri : null,
     };
   }
+
+  static async linkAccountDid(
+    event: { body: IdentityLinkAccountDid },
+    context,
+  ) {}
 
   static async revokeIdentity(event: { body: IdentityDidRevokeDto }, context) {
     const claimerEmail = event.body.email;
