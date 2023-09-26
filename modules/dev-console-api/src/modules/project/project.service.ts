@@ -3,6 +3,7 @@ import {
   Ams,
   CacheKeyPrefix,
   CodeException,
+  CreditTransactionQueryFilter,
   DefaultUserRole,
   env,
   generateJwtToken,
@@ -553,4 +554,21 @@ export class ProjectService {
 
     return createdFile;
   }
+
+  //#region credit
+
+  async getProjectCredit(context: DevConsoleApiContext, project_uuid: string) {
+    return (await new Scs(context).getProjectCredit(project_uuid)).data;
+  }
+
+  async getCreditTransactions(
+    context: DevConsoleApiContext,
+    project_uuid: string,
+    query: CreditTransactionQueryFilter,
+  ) {
+    query.project_uuid = project_uuid;
+    return (await new Scs(context).getCreditTransactions(query)).data;
+  }
+
+  //#endregion
 }

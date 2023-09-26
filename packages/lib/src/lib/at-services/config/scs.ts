@@ -7,6 +7,9 @@ import { QuotaOverrideDto } from './dtos/quota-override.dto';
 import { QuotaDto } from './dtos/quota.dto';
 import { TermsDto } from './dtos/terms.dto';
 import { GetQuotaDto } from './dtos/get-quota.dto';
+import { CreditTransactionQueryFilter } from './dtos/credit-transaction-query-filter.dto';
+import { AddCreditDto } from './dtos/add-credit.dto';
+import { SpendCreditDto } from './dtos/spend-credit.dto';
 
 /**
  * System config Service client
@@ -80,4 +83,59 @@ export class Scs extends BaseService {
 
     return scsResponse.data.map((x) => new TermsDto().populate(x));
   }
+
+  //#region credit
+
+  public async getProjectCredit(project_uuid: string): Promise<any> {
+    const data = {
+      eventName: ScsEventType.GET_PROJECT_CREDIT,
+      project_uuid,
+    };
+
+    return await this.callService(data);
+  }
+
+  public async getCreditTransactions(
+    query: CreditTransactionQueryFilter,
+  ): Promise<any> {
+    const data = {
+      eventName: ScsEventType.GET_CREDIT_TRANSACTIONS,
+      query,
+    };
+
+    return await this.callService(data);
+  }
+
+  public async addCredit(body: AddCreditDto): Promise<any> {
+    const data = {
+      eventName: ScsEventType.ADD_CREDIT,
+      body,
+    };
+
+    return await this.callService(data);
+  }
+
+  public async spendCredit(body: SpendCreditDto): Promise<any> {
+    const data = {
+      eventName: ScsEventType.SPEND_CREDIT,
+      body,
+    };
+
+    return await this.callService(data);
+  }
+
+  public async refundCredit(
+    referenceTable: string,
+    referenceId: string,
+  ): Promise<any> {
+    const data = {
+      eventName: ScsEventType.REFUND_CREDIT,
+      referenceTable,
+      referenceId,
+    };
+
+    return await this.callService(data);
+  }
+
+  //#endregion
 }

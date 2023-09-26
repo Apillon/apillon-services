@@ -414,7 +414,10 @@ export class Website extends ProjectAccessModel {
    * @param context
    * @returns created web site, populated with buckets
    */
-  public async createNewWebsite(context: ServiceContext): Promise<this> {
+  public async createNewWebsite(
+    context: ServiceContext,
+    website_uuid: string,
+  ): Promise<this> {
     //Initialize buckets
     const bucket: Bucket = new Bucket(
       {
@@ -479,7 +482,7 @@ export class Website extends ProjectAccessModel {
       ]);
       //Populate website
       this.populate({
-        website_uuid: uuidV4(),
+        website_uuid: website_uuid,
         bucket_id: bucket.id,
         stagingBucket_id: stagingBucket.id,
         productionBucket_id: productionBucket.id,
