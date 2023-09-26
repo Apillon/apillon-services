@@ -61,6 +61,7 @@ export class CodeException extends HttpException {
     logType?: LogType;
     service?: string;
     data?: any;
+    sendAdminAlert?: boolean;
   }) {
     await new Lmas().writeLog({
       context: params?.context || this.options.context,
@@ -73,6 +74,7 @@ export class CodeException extends HttpException {
       location: this.options.sourceFunction,
       service: params?.service || this.options.sourceModule,
       data: params?.data || this.options.details,
+      sendAdminAlert: params.sendAdminAlert,
     });
 
     return this;

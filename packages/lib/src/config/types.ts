@@ -136,7 +136,7 @@ export enum AuthenticationEventType {
   SEND_VERIFICATION_EMAIL = 'send-verification-email',
   GET_IDENTITY_GEN_PROCESS_STATE = 'get-identity-gen-process-state',
   GENERATE_IDENTITY = 'generate-identity',
-  GET_IDENTITY_USER_CREDENTIAL = 'get-identity-user-credential',
+  GET_USER_IDENTITY = 'get-user-identity',
   REVOKE_IDENTITY = 'revoke-identity',
   GENERATE_DEV_RESOURCES = 'generate-dev-resources',
   SPORRAN_GET_SESSION_VALUES = 'sporran-get-session-values',
@@ -158,6 +158,11 @@ export enum ScsEventType {
   GET_ACTIVE_TERMS = 'get-active-terms',
   CREATE_OVERRIDE = 'create-override',
   DELETE_OVERRIDE = 'delete-override',
+  ADD_CREDIT = 'add-credit',
+  SPEND_CREDIT = 'spend-credit',
+  REFUND_CREDIT = 'refund-credit',
+  GET_PROJECT_CREDIT = 'get-project-credit',
+  GET_CREDIT_TRANSACTIONS = 'get-project-transactions',
   CREATE_SUBSCRIPTION = 'create-subscription',
   GET_SUBSCRIPTION_PACKAGE_BY_ID = 'get-subscription-package-by-id',
   GET_SUBSCRIPTION_PACKAGE_STRIPE_ID = 'get-subscription-package-stripe-id',
@@ -211,7 +216,7 @@ export enum ServiceName {
   NFTS = 'NFTS',
   REFERRAL = 'REFERRAL',
   BLOCKCHAIN = 'BLOCKCHAIN',
-  SCS = 'SCS',
+  CONFIG = 'CONFIG',
 }
 
 export enum ServiceCode {
@@ -561,6 +566,11 @@ export enum ValidatorErrorCode {
   COLLECTION_NAME_NOT_PRESENT = 42200903,
   COLLECTION_NAME_NOT_VALID = 42200904,
   //#endregion
+
+  //#region config MS
+  ADD_CREDIT_REQUIRED_DATA_NOT_PRESENT = 422001001,
+  SPEND_CREDIT_REQUIRED_DATA_NOT_PRESENT = 422001002,
+  //#endregion
 }
 
 /**
@@ -672,6 +682,23 @@ export enum ApiName {
   DEV_CONSOLE_API = 'dev-console-api',
   APILLON_API = 'apillon-api',
   AUTHENTICATION_API = 'authentication-api',
+}
+
+/**
+ * List of products (codes), that requires payment with credits
+ */
+export enum ProductCode {
+  HOSTING_WEBSITE = 1,
+  HOSTING_DEPLOY_TO_STAGING = 2,
+  HOSTING_DEPLOY_TO_PRODUCTION = 3,
+  HOSTING_CHANGE_WEBSITE_DOMAIN = 4,
+
+  NFT_COLLECTION = 5,
+  NFT_MINT = 6,
+  NFT_BURN = 7,
+  NFT_TRANSFER_COLLECTION = 8,
+
+  KILT_IDENTITY = 9,
 }
 
 export enum SubscriptionPackages {

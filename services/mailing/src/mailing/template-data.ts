@@ -78,6 +78,26 @@ export function generateTemplateData(key: string, data: any) {
       </p>
       `,
     },
+    'download-identity': {
+      subject: 'Apillon Identity Delivery!',
+      title: 'Dear Apillon User',
+      text: `
+      <p>
+        Your decentralized identity is ready. You can download your identity by clicking on the following link at the bottom. 
+        Please note that the link is only valid for 24 hours. After that, you will have to initiate the recovery process.
+      </p>
+      `,
+      actionUrl: data.actionUrl,
+      actionText: 'Download your decentralized identity',
+      text2: `
+      <p>
+        If you need additional assistance, or you received this email in error, please contact <a href="mailto:info@apillon.io">info@apillon.io</a>.
+        <br/><br/><br/>
+        Cheers,<br/>
+        The Apillon team
+      </p>
+      `,
+    },
     'reset-password': {
       subject: 'Apillon password reset!',
       title: 'Dear Apillon User',

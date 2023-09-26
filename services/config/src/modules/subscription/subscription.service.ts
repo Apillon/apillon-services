@@ -46,7 +46,7 @@ export class SubscriptionService {
         status: 400,
         code: ConfigErrorCode.SUBSCRIPTION_PACKAGE_NOT_FOUND,
         sourceFunction: 'createSubscription',
-        sourceModule: ServiceName.SCS,
+        sourceModule: ServiceName.CONFIG,
       }).writeToMonitor({
         context,
         data: { package_id: createSubscriptionDto.package_id },
@@ -64,7 +64,7 @@ export class SubscriptionService {
         await new Lmas().sendAdminAlert(
           `Invalid subscription received: ${createSubscriptionDto.package_id} for project ${createSubscriptionDto.project_uuid}
           and customer ${createSubscriptionDto.subscriberEmail}. Error: ${err.message}`,
-          ServiceName.SCS,
+          ServiceName.CONFIG,
           LogType.ALERT,
         );
         throw new ScsValidationException(subscription);
@@ -107,7 +107,7 @@ export class SubscriptionService {
           SubscriptionPackages,
           subscription.package_id,
         )} created!`,
-        ServiceName.SCS,
+        ServiceName.CONFIG,
         LogType.MSG,
       );
 
@@ -159,7 +159,7 @@ export class SubscriptionService {
         status: 400,
         errorCodes: ConfigErrorCode,
         sourceFunction: 'getSubscriptionPackageStripeId',
-        sourceModule: ServiceName.SCS,
+        sourceModule: ServiceName.CONFIG,
       }).writeToMonitor({ project_uuid });
     }
 
@@ -175,7 +175,7 @@ export class SubscriptionService {
         status: 500,
         errorCodes: ConfigErrorCode,
         sourceFunction: 'getSubscriptionPackageStripeId',
-        sourceModule: ServiceName.SCS,
+        sourceModule: ServiceName.CONFIG,
       }).writeToMonitor({
         project_uuid,
         data: { subscriptionPackage: subscriptionPackage.serialize() },
@@ -223,7 +223,7 @@ export class SubscriptionService {
         logType: LogType.ERROR,
         message: `Subscription for stripe ID ${subscriptionStripeId} not found in database!`,
         location: 'SubscriptionService.updateSubscription',
-        service: ServiceName.SCS,
+        service: ServiceName.CONFIG,
         data,
       });
       throw new ScsNotFoundException(ConfigErrorCode.SUBSCRIPTION_NOT_FOUND);

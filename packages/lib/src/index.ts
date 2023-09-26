@@ -9,6 +9,9 @@ export * from './lib/at-services/config/dtos/create-invoice.dto';
 export * from './lib/at-services/config/dtos/subscriptions-query-filter.dto';
 export * from './config/types';
 export * from './config/env';
+export * from './lib/at-services/config/dtos/spend-credit.dto';
+export * from './lib/at-services/config/dtos/add-credit.dto';
+export * from './lib/at-services/config/dtos/credit-transaction-query-filter.dto';
 
 //#REGION Referral
 export * from './lib/at-services/referral/referral';

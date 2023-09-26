@@ -10,10 +10,12 @@ import {
   Lmas,
   LogType,
   PopulateFrom,
+  ProductCode,
   QuotaCode,
   Scs,
   SerializeFor,
   ServiceName,
+  SpendCreditDto,
   WebsiteQueryFilter,
   WebsitesQuotaReachedQueryFilter,
   writeLog,
@@ -25,7 +27,11 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { DeploymentEnvironment, StorageErrorCode } from '../../config/types';
+import {
+  DbTables,
+  DeploymentEnvironment,
+  StorageErrorCode,
+} from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { deleteDirectory } from '../../lib/delete-directory';
 import {
@@ -41,6 +47,7 @@ import { File } from '../storage/models/file.model';
 import { StorageService } from '../storage/storage.service';
 import { Deployment } from './models/deployment.model';
 import { Website } from './models/website.model';
+import { v4 as uuidV4 } from 'uuid';
 
 export class HostingService {
   //#region web page CRUD
@@ -83,21 +90,39 @@ export class HostingService {
   ): Promise<any> {
     const website: Website = new Website(event.body, context);
 
-    //check max web pages quota
-    const numOfWebsites = await website.getNumOfWebsites();
-    const maxWebsitesQuota = await new Scs(context).getQuota({
-      quota_id: QuotaCode.MAX_WEBSITES,
-      project_uuid: website.project_uuid,
+    const website_uuid = uuidV4();
+    const spendCredit: SpendCreditDto = new SpendCreditDto(
+      {},
+      context,
+    ).populate({
+      project_uuid: event.body.project_uuid,
+      product_id: ProductCode.HOSTING_WEBSITE,
+      referenceTable: DbTables.WEBSITE,
+      referenceId: website_uuid,
     });
+    await new Scs(context).spendCredit(spendCredit);
 
-    if (numOfWebsites >= maxWebsitesQuota.value) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.MAX_WEBSITES_REACHED,
-        status: 400,
-      });
+    try {
+      await website.createNewWebsite(context, website_uuid);
+    } catch (err) {
+      try {
+        await new Scs(context).refundCredit(DbTables.WEBSITE, website_uuid);
+      } catch (refoundError) {
+        await new Lmas().writeLog({
+          logType: LogType.ERROR,
+          message: 'Error refunding credit',
+          location: 'HostingService.createWebsite',
+          service: ServiceName.STORAGE,
+          data: {
+            referenceTable: DbTables.WEBSITE,
+            referenceId: website_uuid,
+          },
+          sendAdminAlert: true,
+        });
+      }
+
+      throw err;
     }
-
-    await website.createNewWebsite(context);
 
     await new Lmas().writeLog({
       context,

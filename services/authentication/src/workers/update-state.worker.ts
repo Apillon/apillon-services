@@ -3,13 +3,13 @@ import {
   AttestationDto,
   IdentityCreateDto,
   IdentityDidRevokeDto,
-  Lmas,
   LogType,
+  Mailing,
   ServiceName,
   TransactionStatus,
   env,
+  generateJwtToken,
   runWithWorkers,
-  writeLog,
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
@@ -17,7 +17,12 @@ import {
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { IdentityJobState, IdentityState } from '../config/types';
+import {
+  AuthApiEmailType,
+  IdentityJobState,
+  IdentityState,
+  JwtTokenType,
+} from '../config/types';
 import { Identity } from '../modules/identity/models/identity.model';
 import { IdentityMicroservice } from '../modules/identity/identity.service';
 import { IdentityJob } from '../modules/identity-job/models/identity-job.model';
@@ -36,12 +41,14 @@ export class UpdateStateWorker extends BaseQueueWorker {
     return [];
   }
 
-  private async execAttestClaim(identity: Identity) {
+  private async execAttestClaim(identity: Identity, linkParameters: object) {
     const attestationClaimDto = new AttestationDto().populate({
       email: identity.email,
       didUri: identity.didUri,
       token: identity.token,
+      linkParameters: linkParameters,
     });
+
     if (env.APP_ENV != AppEnvironment.TEST) {
       await IdentityMicroservice.attestClaim(
         { body: attestationClaimDto },
@@ -122,6 +129,8 @@ export class UpdateStateWorker extends BaseQueueWorker {
           identityJob.identity_id,
         );
 
+        const email = identity.email;
+
         switch (identityJob.state) {
           case IdentityJobState.DID_CREATE:
             if (status == TransactionStatus.CONFIRMED) {
@@ -150,7 +159,10 @@ export class UpdateStateWorker extends BaseQueueWorker {
                 identity.state = IdentityState.DID_CREATED;
                 await identity.update();
                 await identityJob.setState(IdentityJobState.ATESTATION);
-                await this.execAttestClaim(identity);
+                await this.execAttestClaim(
+                  identity,
+                  identityJob.data.linkParameters,
+                );
               }
             } else {
               // Set identity job status to FAILED
@@ -168,7 +180,7 @@ export class UpdateStateWorker extends BaseQueueWorker {
                 });
 
                 await this.execIdentityGenerate(
-                  identity.email,
+                  email,
                   identityJob.data.did_create_op,
                 );
 
@@ -211,6 +223,21 @@ export class UpdateStateWorker extends BaseQueueWorker {
                 );
 
                 await identityJob.setCompleted();
+
+                const token = generateJwtToken(
+                  JwtTokenType.IDENTITY_VERIFICATION,
+                  {
+                    email,
+                  },
+                );
+
+                await new Mailing(ctx).sendMail({
+                  emails: [email],
+                  template: AuthApiEmailType.DOWNLOAD_IDENTITY,
+                  data: {
+                    actionUrl: `${env.AUTH_APP_URL}/restore/?token=${token}&email=${email}&type=${AuthApiEmailType.DOWNLOAD_IDENTITY}`,
+                  },
+                });
               }
               identity.state = IdentityState.ATTESTED;
               await identity.update();
@@ -227,7 +254,10 @@ export class UpdateStateWorker extends BaseQueueWorker {
                     identity: identity.id,
                   },
                 });
-                await this.execAttestClaim(identity);
+                await this.execAttestClaim(
+                  identity,
+                  identityJob.data.linkParameters,
+                );
               } else {
                 await this.writeEventLog({
                   logType: LogType.ERROR,

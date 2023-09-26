@@ -52,6 +52,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
         decimals: w.decimals,
         chain: w.chain,
         chainType: w.chainType,
+        seed: w.seed,
       },
       batchLimit: this.batchLimit,
     }));
@@ -371,12 +372,19 @@ export class TransactionLogWorker extends BaseQueueWorker {
   ) {
     const tokenPriceUsd = await getTokenPriceUsd(wallet.token);
     // Process wallet deposits
-    for (const deposit of transactions
+    const deposits = transactions
       .filter(
         (t) =>
-          t.direction === TxDirection.INCOME && t.wallet === wallet.address,
+          t.direction === TxDirection.INCOME &&
+          t.wallet.toLowerCase() === wallet.address.toLowerCase(),
       )
-      .map((t) => new TransactionLog(t, this.context))) {
+      .map((t) => new TransactionLog(t, this.context));
+
+    console.log(
+      `Found ${deposits.length} deposits for wallet ${wallet.seed}|${wallet.address}`,
+    );
+
+    for (const deposit of deposits) {
       const conn = await this.context.mysql.start();
       try {
         const value = this.getTotalValue(
@@ -399,13 +407,22 @@ export class TransactionLogWorker extends BaseQueueWorker {
               },
             ),
         );
-        await deposit.populate({ value }).update(SerializeFor.UPDATE_DB, conn);
+        console.log(
+          `Created wallet deposit for wallet ${wallet.seed}|${wallet.address} ==> ${deposit.amount}`,
+        );
+        await deposit.updateValueByHash(value, conn);
+
+        console.log(
+          `Update transaction log for tx  ${deposit.id}|${deposit.hash}||${wallet.seed}|${wallet.address} ==> ${value}`,
+        );
 
         await this.context.mysql.commit(conn);
       } catch (err) {
         await this.sendErrorAlert(
           `Error creating deposit for ${formatWalletAddress(wallet)}`,
           { ...deposit },
+          LogType.ERROR,
+          LogOutput.NOTIFY_ALERT,
           err,
         );
         await this.context.mysql.rollback(conn);
@@ -413,11 +430,19 @@ export class TransactionLogWorker extends BaseQueueWorker {
     }
 
     // Process wallet token spends
-    for (const spend of transactions
+    const spends = transactions
       .filter(
-        (t) => t.direction === TxDirection.COST && t.wallet === wallet.address,
+        (t) =>
+          t.direction === TxDirection.COST &&
+          t.wallet.toLowerCase() === wallet.address.toLowerCase(),
       )
-      .map((t) => new TransactionLog(t, this.context))) {
+      .map((t) => new TransactionLog(t, this.context));
+
+    console.log(
+      `Found ${spends.length} spends for wallet ${wallet.seed}|${wallet.address}`,
+    );
+
+    for (const spend of spends) {
       const conn = await this.context.mysql.start();
       try {
         const pricePerToken = await this.deductFromAvailableDeposit(
@@ -431,13 +456,19 @@ export class TransactionLogWorker extends BaseQueueWorker {
           wallet.decimals,
           pricePerToken,
         );
-        await spend.populate({ value }).update(SerializeFor.UPDATE_DB, conn);
+        await spend.updateValueByHash(value, conn);
+
+        console.log(
+          `Update transaction log for tx  ${spend.id}|${spend.hash}||${wallet.seed}|${wallet.address} ==> ${value}`,
+        );
 
         await this.context.mysql.commit(conn);
       } catch (err) {
         await this.sendErrorAlert(
           `Error processing tx spend for ${formatWalletAddress(wallet)}`,
           { ...spend },
+          LogType.ERROR,
+          LogOutput.NOTIFY_ALERT,
           err,
         );
         await this.context.mysql.rollback(conn);
@@ -485,6 +516,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
     data: any,
     logType = LogType.ERROR,
     logOutput = LogOutput.NOTIFY_ALERT,
+    err?: Error,
   ) {
     return this.writeEventLog(
       {
@@ -492,6 +524,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
         message,
         service: ServiceName.BLOCKCHAIN,
         data,
+        err,
       },
       logOutput,
     );

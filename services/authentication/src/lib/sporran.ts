@@ -2,7 +2,8 @@ import { env } from '@apillon/lib';
 import { Did, DidUri, connect } from '@kiltprotocol/sdk-js';
 import { AuthenticationErrorCode, HttpStatus } from '../config/types';
 import { AuthenticationCodeException } from './exceptions';
-import { randomChallenge, generateKeypairs } from './kilt';
+import { generateKeypairs } from './kilt';
+import { randomChallenge } from './utils/crypto-utils';
 
 export async function prepareSignResources(encryptionKeyUri: string) {
   await connect(env.KILT_NETWORK);

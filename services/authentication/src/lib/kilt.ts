@@ -29,6 +29,7 @@ import {
   ICredentialPresentation,
   Blockchain,
   NewDidVerificationKey,
+  KeyringPair,
 } from '@kiltprotocol/sdk-js';
 import {
   ApillonSupportedCTypes,
@@ -100,6 +101,7 @@ export async function generateKeypairs(mnemonic: string) {
 export async function getFullDidDocument(keypairs: any) {
   await connect(env.KILT_NETWORK);
   const api = ConfigService.get('api');
+
   const didUri = Did.getFullDidUriFromKey(keypairs.authentication);
   const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
   const { document } = Did.linkedInfoFromChain(encodedFullDid);
@@ -316,10 +318,6 @@ export async function createPresentation(
   });
 }
 
-export function randomChallenge(size = 16) {
-  return randomAsHex(size);
-}
-
 export function toCredentialIRI(rootHash: string): string {
   if (rootHash.startsWith(KILT_CREDENTIAL_IRI_PREFIX)) {
     return rootHash;
@@ -328,4 +326,23 @@ export function toCredentialIRI(rootHash: string): string {
     throw new Error('Root hash is not a base16 / hex encoded string)');
   }
   return KILT_CREDENTIAL_IRI_PREFIX + rootHash;
+}
+
+export async function linkAccountDid(
+  didUri: DidUri,
+  linkParameters: any,
+  signCallback: SignExtrinsicCallback,
+) {
+  await connect(env.KILT_NETWORK);
+  const api = ConfigService.get('api');
+  const account = generateAccount(
+    env.KILT_ATTESTER_MNEMONIC,
+  ) as KiltKeyringPair;
+
+  return await Did.authorizeTx(
+    didUri,
+    linkParameters,
+    signCallback,
+    account.address,
+  );
 }

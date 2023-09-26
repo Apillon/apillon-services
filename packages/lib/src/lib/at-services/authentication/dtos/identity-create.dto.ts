@@ -7,6 +7,7 @@ import {
   didCreateCreateOpValidator,
   didUriValidator,
 } from '../validators/did-create.validator';
+import { JSONParser } from '../../../parsers';
 
 // const body = {
 //   did_create_op: {
@@ -67,6 +68,13 @@ export class IdentityCreateDto extends ModelBase {
     ],
   })
   public didUri: string;
+
+  @prop({
+    parser: { resolver: JSONParser() },
+    populatable: [PopulateFrom.PROFILE],
+    validators: [],
+  })
+  public linkParameters: any;
 
   @prop({
     parser: { resolver: stringParser() },

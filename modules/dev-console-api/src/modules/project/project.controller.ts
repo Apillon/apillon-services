@@ -11,6 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
+  CreditTransactionQueryFilter,
   DefaultUserRole,
   RoleGroup,
   SerializeFor,
@@ -180,6 +181,35 @@ export class ProjectController {
     return (
       await this.projectService.updateProject(context, uuid, body)
     ).serialize(SerializeFor.PROFILE);
+  }
+
+  @Get(':uuid/credit')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard)
+  async getProjectCredit(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') uuid: string,
+  ) {
+    return await this.projectService.getProjectCredit(context, uuid);
+  }
+
+  @Get(':uuid/credit/transactions')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({
+    dto: CreditTransactionQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getCreditTransactions(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') uuid: string,
+    @Query() query: CreditTransactionQueryFilter,
+  ) {
+    return await this.projectService.getCreditTransactions(
+      context,
+      uuid,
+      query,
+    );
   }
 
   @Get(':uuid/subscriptions')

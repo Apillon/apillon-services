@@ -4,6 +4,7 @@ import { presenceValidator, emailValidator } from '@rawmodel/validators';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
 import { didUriValidator } from '../validators/did-create.validator';
+import { JSONParser } from '../../../parsers';
 
 export class AttestationDto extends ModelBase {
   @prop({
@@ -49,6 +50,13 @@ export class AttestationDto extends ModelBase {
     ],
   })
   public token: string;
+
+  @prop({
+    parser: { resolver: JSONParser() },
+    populatable: [PopulateFrom.PROFILE],
+    validators: [],
+  })
+  public linkParameters: any;
 
   @prop({
     parser: { resolver: stringParser() },
