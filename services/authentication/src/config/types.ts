@@ -157,11 +157,6 @@ export enum SporranMessageType {
   REQUEST_CREDENTIAL = 'request-credential',
 }
 
-export enum IdentityGenFlag {
-  FULL_IDENTITY = 'full-identity-flag',
-  ATTESTATION = 'attestation-flag',
-}
-
 export interface EncryptedPayload {
   message: string;
   payload: string;
@@ -201,10 +196,24 @@ export class IdentityState {
   static PENDING_VERIFICATION = 'pending-verification';
   static SUBMITTED_DID_CREATE_REQ = 'submitted-did-create-req';
   static SUBMITTED_ATTESATION_REQ = 'submitted-attestation-req';
+  static SUBMITTED_ACC_DID_LINK_REQ = 'submitted-acc-did-link-req';
   static SUBMITTED_REVOKE_REQ = 'submitted-revoke-req';
   static DID_CREATED = 'did-created';
   static ATTESTED = 'attested';
   static ATTESTED_AND_LINKED = 'attested-and-linked';
   static REVOKED = 'revoked';
   static REJECTED = 'rejected';
+
+  static generateProcessInProgressStates() {
+    return [
+      IdentityState.SUBMITTED_ATTESATION_REQ,
+      IdentityState.SUBMITTED_DID_CREATE_REQ,
+      IdentityState.SUBMITTED_REVOKE_REQ,
+      IdentityState.SUBMITTED_ACC_DID_LINK_REQ,
+    ];
+  }
+
+  static generateStartValidStates() {
+    return [IdentityState.IN_PROGRESS, IdentityState.IDENTITY_VERIFIED];
+  }
 }

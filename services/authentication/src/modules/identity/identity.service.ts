@@ -62,8 +62,8 @@ export class IdentityMicroservice {
     const token = generateJwtToken(JwtTokenType.IDENTITY_VERIFICATION, {
       email,
     });
-
     let auth_app_page = 'registration';
+    const inProgressStates = IdentityState.generateProcessInProgressStates();
 
     let identity = await new Identity({}, context).populateByUserEmail(
       context,
@@ -83,11 +83,7 @@ export class IdentityMicroservice {
           });
         }
 
-        if (
-          identity.state == IdentityState.SUBMITTED_ATTESATION_REQ ||
-          identity.state == IdentityState.SUBMITTED_DID_CREATE_REQ ||
-          identity.state == IdentityState.SUBMITTED_REVOKE_REQ
-        ) {
+        if (inProgressStates.includes(identity.state)) {
           throw new AuthenticationCodeException({
             code: AuthenticationErrorCode.IDENTITY_REQUEST_IN_PROGRESS,
             status: HttpStatus.BAD_REQUEST,
@@ -176,6 +172,8 @@ export class IdentityMicroservice {
     const claimerDidUri = event.body.didUri;
     const linkDidToAccount = event.body.linkParameters;
 
+    const identityValidStates = IdentityState.generateProcessInProgressStates();
+
     // Check if correct identity + state exists -> IN_PROGRESS
     const identity = await new Identity({}, context).populateByUserEmail(
       context,
@@ -184,11 +182,7 @@ export class IdentityMicroservice {
 
     await identity.setState(IdentityState.IDENTITY_VERIFIED);
 
-    if (
-      !identity.exists() ||
-      (identity.state != IdentityState.IN_PROGRESS &&
-        identity.state != IdentityState.IDENTITY_VERIFIED)
-    ) {
+    if (!identity.exists() || !identityValidStates.includes(identity.state)) {
       // IDENTITY_VERIFIED just means that the process was broken before
       // the entity was successfully attested --> See a few lines below
       // This is done so we have better control of the process and for
@@ -433,9 +427,11 @@ export class IdentityMicroservice {
   }
 
   static async linkAccountDid(
-    event: { body: IdentityLinkAccountDid },
+    event: { body: IdentityLinkAccountDidDto },
     context,
-  ) {}
+  ) {
+    console.log('hehehe');
+  }
 
   static async revokeIdentity(event: { body: IdentityDidRevokeDto }, context) {
     const claimerEmail = event.body.email;
