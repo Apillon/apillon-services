@@ -2,6 +2,7 @@ import {
   FileStatus,
   FileUploadRequestFileStatus,
   FileUploadSessionStatus,
+  StorageErrorCode,
 } from '../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { Bucket } from '../modules/bucket/models/bucket.model';
@@ -21,10 +22,13 @@ import {
   env,
   Lmas,
   LogType,
+  QuotaCode,
   runWithWorkers,
+  Scs,
   ServiceName,
   writeLog,
 } from '@apillon/lib';
+import { StorageCodeException } from './exceptions';
 
 /**
  * This function is called on session end.
@@ -47,6 +51,20 @@ export async function processSessionFiles(
   ).populateFileUploadRequestsInSession(session.id, context);
   //Get files on s3 for this session
   const filesOnS3 = await getSessionFilesOnS3(bucket, session);
+
+  //Check used storage
+  const storageUsed = await bucket.getTotalSizeUsedByProject();
+  const maxStorageQuota = await new Scs(context).getQuota({
+    quota_id: QuotaCode.MAX_STORAGE,
+    project_uuid: bucket.project_uuid,
+  });
+  const maxStorage = (maxStorageQuota?.value || 3) * 1073741824;
+  if (storageUsed + filesOnS3.size > maxStorage) {
+    throw new StorageCodeException({
+      code: StorageErrorCode.NOT_ENOUGH_STORAGE_SPACE,
+      status: 400,
+    });
+  }
 
   //get directories in bucket
   const directories = await new Directory(

@@ -432,7 +432,7 @@ export class Bucket extends ProjectAccessModel {
   /**
    * Function to get total size of all buckets inside a project
    */
-  public async getTotalSizeUsedByProject() {
+  public async getTotalSizeUsedByProject(): Promise<number> {
     const data = await this.getContext().mysql.paramExecute(
       `
         SELECT SUM(size) as totalSize

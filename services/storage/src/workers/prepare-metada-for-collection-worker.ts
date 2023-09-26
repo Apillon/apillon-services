@@ -96,7 +96,6 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             this.context,
             `${this.constructor.name}/runExecutor`,
             bucket,
-            5_368_709_120,
             imageFURs.filter(
               (x) =>
                 x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED,
@@ -194,7 +193,6 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       this.context,
       `${this.constructor.name}/runExecutor`,
       bucket,
-      5_368_709_120,
       metadataFURs,
       metadataSession,
       true,

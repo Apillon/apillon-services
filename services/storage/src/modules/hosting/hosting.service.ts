@@ -292,6 +292,20 @@ export class HostingService {
       }
     }
 
+    //Check if enough storage available
+    const storageUsed = await sourceBucket.getTotalSizeUsedByProject();
+    const maxStorageQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_STORAGE,
+      project_uuid: sourceBucket.project_uuid,
+    });
+    const maxStorage = (maxStorageQuota?.value || 3) * 1073741824;
+    if (storageUsed + sourceBucket.size > maxStorage) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.NOT_ENOUGH_STORAGE_SPACE,
+        status: 400,
+      });
+    }
+
     //Create deployment record
     const d: Deployment = new Deployment({}, context).populate({
       website_id: website.id,
