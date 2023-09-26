@@ -333,11 +333,12 @@ export class Directory extends ProjectAccessModel {
         qSelect: `
         SELECT ${ObjectType.DIRECTORY} as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime,
         NULL as contentType, NULL as size, d.parentDirectory_id as parentDirectoryId,
-        NULL as file_uuid, IF(d.CID IS NULL, NULL, CONCAT("${env.STORAGE_IPFS_GATEWAY}", d.CID)) as link, NULL as fileStatus
+        NULL as file_uuid, IF(d.CID IS NULL, NULL, CONCAT(IFNULL(ipfs.ipfsGateway, "${env.STORAGE_IPFS_GATEWAY}"), d.CID)) as link, NULL as fileStatus
         `,
         qFrom: `
         FROM \`${DbTables.DIRECTORY}\` d
         INNER JOIN \`${DbTables.BUCKET}\` b ON d.bucket_id = b.id
+        LEFT JOIN \`${DbTables.IPFS_CONFIG}\` ipfs ON ipfs.project_uuid = b.project_uuid
         WHERE b.bucket_uuid = @bucket_uuid
         AND (IFNULL(@directory_id, -1) = IFNULL(d.parentDirectory_id, -1))
         AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))
@@ -350,11 +351,12 @@ export class Directory extends ProjectAccessModel {
         qSelect: `
         SELECT ${ObjectType.FILE} as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime,
         d.contentType as contentType, d.size as size, d.directory_id as parentDirectoryId,
-        d.file_uuid as file_uuid, CONCAT("${env.STORAGE_IPFS_GATEWAY}", d.CID) as link, d.fileStatus as fileStatus
+        d.file_uuid as file_uuid, CONCAT(IFNULL(ipfs.ipfsGateway, "${env.STORAGE_IPFS_GATEWAY}"), d.CID) as link, d.fileStatus as fileStatus
         `,
         qFrom: `
         FROM \`${DbTables.FILE}\` d
         INNER JOIN \`${DbTables.BUCKET}\` b ON d.bucket_id = b.id
+        LEFT JOIN \`${DbTables.IPFS_CONFIG}\` ipfs ON ipfs.project_uuid = b.project_uuid
         WHERE b.bucket_uuid = @bucket_uuid
         AND (IFNULL(@directory_id, -1) = IFNULL(d.directory_id, -1))
         AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))

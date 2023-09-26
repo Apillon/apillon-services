@@ -26,6 +26,7 @@ import { Ipns } from '../modules/ipns/models/ipns.model';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
 import { File } from '../modules/storage/models/file.model';
+import { IpfsConfig } from '../modules/ipfs/models/ipfs-config.model';
 
 export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
   public constructor(
@@ -144,6 +145,12 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       metadataFURs.map((x) => x.serialize()),
     );
 
+    //Get IPFS gateway
+    const ipfsGateway = await new IpfsConfig(
+      { project_uuid: bucket.project_uuid },
+      this.context,
+    ).getIpfsGateway();
+
     await runWithWorkers(
       metadataFURs,
       20,
@@ -170,7 +177,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           const imageFile = imageFiles.files.find(
             (x) => x.name == fileContent.image,
           );
-          fileContent.image = env.STORAGE_IPFS_GATEWAY + imageFile.CID;
+          fileContent.image = ipfsGateway + imageFile.CID;
         }
 
         await s3Client.upload(
@@ -212,7 +219,10 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
     const ipnsDbRecord: Ipns = await new Ipns({}, this.context).populateById(
       data.ipnsId,
     );
-    const ipnsRecord = await IPFSService.publishToIPNS(
+    const ipnsRecord = await new IPFSService(
+      this.context,
+      ipnsDbRecord.project_uuid,
+    ).publishToIPNS(
       metadataFiles.wrappedDirCid,
       `${ipnsDbRecord.project_uuid}_${ipnsDbRecord.bucket_id}_${ipnsDbRecord.id}`,
     );

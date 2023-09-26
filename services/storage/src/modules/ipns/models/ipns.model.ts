@@ -16,6 +16,7 @@ import { DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { StorageCodeException } from '../../../lib/exceptions';
 import { Bucket } from '../../bucket/models/bucket.model';
+import { IpfsConfig } from '../../ipfs/models/ipfs-config.model';
 
 export class Ipns extends ProjectAccessModel {
   public readonly tableName = DbTables.IPNS;
@@ -240,6 +241,15 @@ export class Ipns extends ProjectAccessModel {
     this.project_uuid = b.project_uuid;
 
     this.canAccess(context);
+
+    //Get IPFS-->IPNS gateway
+    let ipfsGateway = await new IpfsConfig(
+      { project_uuid: this.project_uuid },
+      this.getContext(),
+    ).getIpfsGateway();
+
+    ipfsGateway = ipfsGateway.replace('/ipfs/', '/ipns/');
+
     // Map url query with sql fields.
     const fieldMap = {
       id: 'b.id',
@@ -254,10 +264,7 @@ export class Ipns extends ProjectAccessModel {
     const sqlQuery = {
       qSelect: `
         SELECT ${this.generateSelectFields('i', '')},
-        IF(i.ipnsName IS NULL, NULL, CONCAT("${env.STORAGE_IPFS_GATEWAY.replace(
-          '/ipfs/',
-          '/ipns/',
-        )}", i.ipnsName)) as link,
+        IF(i.ipnsName IS NULL, NULL, CONCAT("${ipfsGateway}", i.ipnsName)) as link,
         i.updateTime
         `,
       qFrom: `

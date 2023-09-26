@@ -21,6 +21,7 @@ import { ServiceContext } from '@apillon/service-lib';
 import { Bucket } from '../../bucket/models/bucket.model';
 import { v4 as uuidV4 } from 'uuid';
 import { StorageValidationException } from '../../../lib/exceptions';
+import { IpfsConfig } from '../../ipfs/models/ipfs-config.model';
 
 export class Website extends ProjectAccessModel {
   public readonly tableName = DbTables.WEBSITE;
@@ -567,6 +568,15 @@ export class Website extends ProjectAccessModel {
   }
 
   public async populateBucketsAndLink() {
+    if (!this.project_uuid) {
+      throw new Error('project_uuid should not be null');
+    }
+
+    const ipfsGateway = await new IpfsConfig(
+      { project_uuid: this.project_uuid },
+      this.getContext(),
+    ).getIpfsGateway();
+
     if (this.bucket_id) {
       this.bucket = await new Bucket({}, this.getContext()).populateById(
         this.bucket_id,
@@ -579,8 +589,7 @@ export class Website extends ProjectAccessModel {
       );
       if (this.stagingBucket.IPNS) {
         this.ipnsStagingLink =
-          env.STORAGE_IPFS_GATEWAY.replace('/ipfs/', '/ipns/') +
-          this.stagingBucket.IPNS;
+          ipfsGateway.replace('/ipfs/', '/ipns/') + this.stagingBucket.IPNS;
 
         this.w3StagingLink = `https://${this.stagingBucket.IPNS}.ipns.web3approved.com/`;
         this.ipnsStaging = this.stagingBucket.IPNS;
@@ -593,8 +602,7 @@ export class Website extends ProjectAccessModel {
       ).populateById(this.productionBucket_id);
       if (this.productionBucket.IPNS) {
         this.ipnsProductionLink =
-          env.STORAGE_IPFS_GATEWAY.replace('/ipfs/', '/ipns/') +
-          this.productionBucket.IPNS;
+          ipfsGateway.replace('/ipfs/', '/ipns/') + this.productionBucket.IPNS;
         this.w3ProductionLink = `https://${this.productionBucket.IPNS}.ipns.web3approved.com/`;
         this.ipnsProduction = this.productionBucket.IPNS;
       }

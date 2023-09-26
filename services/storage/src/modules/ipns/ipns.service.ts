@@ -140,7 +140,10 @@ export class IpnsService {
     await ipns.update();
 
     try {
-      const publishedIpns = await IPFSService.publishToIPNS(
+      const publishedIpns = await new IPFSService(
+        context,
+        ipns.project_uuid,
+      ).publishToIPNS(
         event.cid,
         `${ipns.project_uuid}_${ipns.bucket_id}_${ipns.id}`,
       );

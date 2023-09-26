@@ -10,6 +10,7 @@ export enum DbTables {
   WEBSITE = 'website',
   DEPLOYMENT = 'deployment',
   PIN_TO_CRUST_REQUEST = 'pin_to_crust_request',
+  IPFS_CONFIG = 'ipfs_config',
 }
 
 export enum DbViews {
@@ -82,6 +83,7 @@ export enum StorageErrorCode {
   PIN_TO_CRUST_REQUEST_BUCKET_UUID_NOT_PRESENT = 42206040,
   PIN_TO_CRUST_REQUEST_CID_NOT_PRESENT = 42206041,
   PIN_TO_CRUST_REQUEST_SIZE_NOT_PRESENT = 42206042,
+  IPFS_CONFIG_REQUIRED_DATA_NOT_PRESENT = 42206043,
 
   //404
   DEFAULT_RESOURCE_NOT_FOUND_ERROR = 40406000,

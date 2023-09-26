@@ -43,6 +43,7 @@ import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
 import { Website } from '../hosting/models/website.model';
+import { IpfsConfig } from '../ipfs/models/ipfs-config.model';
 
 export class StorageService {
   //#region file-upload functions
@@ -428,10 +429,15 @@ export class StorageService {
 
     file.canAccess(context);
     fileStatus = FileStatus.UPLOADED_TO_IPFS;
-    //File exists on IPFS and probably on CRUST- get status from CRUST
     if (file.CID) {
+      //Get IPFS gateway
+      const ipfsGateway = await new IpfsConfig(
+        { project_uuid: file.project_uuid },
+        context,
+      ).getIpfsGateway();
+
       fileStatus = FileStatus.PINNED_TO_CRUST;
-      file.downloadLink = env.STORAGE_IPFS_GATEWAY + file.CID;
+      file.downloadLink = ipfsGateway + file.CID;
     }
 
     return {
