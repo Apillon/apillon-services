@@ -113,3 +113,6 @@ export const CREDITS_STRIPE_ID = {
   TEST: 'price_1NsLNCGlTglE98hYnR85zIAr',
   PROD: '',
 };
+
+// How many credits per credit product purchase
+export const CREDITS_PURCHASE_AMOUNT = 1500;

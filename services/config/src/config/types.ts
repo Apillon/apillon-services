@@ -62,3 +62,8 @@ export enum ConfigErrorCode {
   ERROR_REFUNDING_CREDIT_TRANSACTION = 50010007,
   ERROR_CREATING_SUBSCRIPTION = 50010008,
 }
+
+export enum CreditDirection {
+  RECEIVE = 1,
+  SPEND = 2,
+}

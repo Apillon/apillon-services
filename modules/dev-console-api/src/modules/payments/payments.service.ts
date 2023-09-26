@@ -1,8 +1,11 @@
 import {
+  AddCreditDto,
   AppEnvironment,
   CodeException,
+  CreateInvoiceDto,
   CreateSubscriptionDto,
   Scs,
+  SerializeFor,
   env,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
@@ -10,6 +13,7 @@ import Stripe from 'stripe';
 import { PaymentSessionDto } from './dto/payment-session.dto';
 import {
   BadRequestErrorCode,
+  CREDITS_PURCHASE_AMOUNT,
   CREDITS_STRIPE_ID,
   ResourceNotFoundErrorCode,
 } from '../../config/types';
@@ -69,23 +73,28 @@ export class PaymentsService {
         const isCreditPurchase =
           subscription.metadata.isCreditPurchase === 'true';
         if (isCreditPurchase) {
-          // TODO: handle credit purchase
-          // const sessionWithLineItems =
-          //   await this.stripe.checkout.sessions.retrieve(subscription.id, {
-          //     expand: ['line_items'],
-          //   });
-          // const creditPurchase = sessionWithLineItems.line_items.data[0];
-          // const createInvoiceDto = new CreateInvoiceDto({
-          //   project_uuid,
-          //   subtotalAmount: subscription.amount_subtotal / 100,
-          //   totalAmount: subscription.amount_total / 100,
-          //   clientEmail: subscription.customer_details.email,
-          //   clientName: subscription.customer_details.name,
-          //   currency: creditPurchase.currency,
-          //   stripeId: creditPurchase.price.id,
-          //   quantity: creditPurchase.quantity,
-          //   referenceTable: DbTables.CREDIT_TRANSACTION,
-          // });
+          const sessionWithLineItems =
+            await this.stripe.checkout.sessions.retrieve(subscription.id, {
+              expand: ['line_items'],
+            });
+          const creditPurchase = sessionWithLineItems.line_items.data[0];
+
+          await new Scs().addCredit(
+            new AddCreditDto({
+              project_uuid,
+              amount: creditPurchase.quantity * CREDITS_PURCHASE_AMOUNT,
+            }),
+            new CreateInvoiceDto({
+              project_uuid,
+              subtotalAmount: subscription.amount_subtotal / 100,
+              totalAmount: subscription.amount_total / 100,
+              clientEmail: subscription.customer_details.email,
+              clientName: subscription.customer_details.name,
+              currency: creditPurchase.currency,
+              stripeId: creditPurchase.price.id,
+              quantity: creditPurchase.quantity,
+            }).serialize(SerializeFor.SERVICE) as CreateInvoiceDto,
+          );
         } else {
           // Call Stripe API to fetch subscription data
           const stripeSubscription = await this.stripe.subscriptions.retrieve(

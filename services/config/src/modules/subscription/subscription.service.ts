@@ -1,4 +1,5 @@
 import {
+  AddCreditDto,
   CreateInvoiceDto,
   CreateSubscriptionDto,
   Lmas,
@@ -19,6 +20,7 @@ import {
 } from '../../lib/exceptions';
 import { ConfigErrorCode, DbTables } from '../../config/types';
 import { Invoice } from './models/invoice.model';
+import { CreditService } from '../credit/credit.service';
 
 export class SubscriptionService {
   /**
@@ -97,8 +99,24 @@ export class SubscriptionService {
         context,
       ).insert(SerializeFor.INSERT_DB, conn);
 
-      const creditAmount = subscriptionPackage.creditAmount;
-      // TODO: give credit amount to project when subscription complete
+      const previousSubscription = await subscription.getProjectSubscription(
+        createSubscriptionDto.package_id,
+        createSubscriptionDto.project_uuid,
+      );
+      if (!previousSubscription?.exists()) {
+        await CreditService.addCredit(
+          {
+            addCreditDto: new AddCreditDto({
+              project_uuid: createSubscriptionDto.project_uuid,
+              amount: subscriptionPackage.creditAmount,
+              referenceTable: DbTables.SUBSCRIPTION,
+              referenceId: dbSubscription.id,
+            }),
+          },
+          context,
+          conn,
+        );
+      }
 
       await context.mysql.commit(conn);
 

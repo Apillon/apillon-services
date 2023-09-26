@@ -6,7 +6,7 @@ export async function upgrade(
   await queryFn(`
     ALTER TABLE \`${DbTables.SUBSCRIPTION}\`
     ADD COLUMN \`paymentFailures\` INT NOT NULL DEFAULT 0,
-    ADD COLUMN \`isCanceled\` TINYINT NULL DEFAULT false,
+    ADD COLUMN \`isCanceled\` TINYINT NOT NULL DEFAULT 0,
     ADD COLUMN \`cancelDate\` DATETIME NULL,
     ADD COLUMN \`subscriberEmail\` VARCHAR(255) NOT NULL
     ADD COLUMN \`stripeId\` VARCHAR(60) NOT NULL

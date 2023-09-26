@@ -1,10 +1,6 @@
 import { CreateSubscriptionDto } from './dtos/create-subscription.dto';
 import { env } from '../../../config/env';
-import {
-  AppEnvironment,
-  ScsEventType,
-  SubscriptionPackages,
-} from '../../../config/types';
+import { AppEnvironment, ScsEventType } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { CreateQuotaOverrideDto } from './dtos/create-quota-override.dto';
@@ -113,10 +109,14 @@ export class Scs extends BaseService {
     return await this.callService(data);
   }
 
-  public async addCredit(body: AddCreditDto): Promise<any> {
+  public async addCredit(
+    addCreditDto: AddCreditDto,
+    createInvoiceDto?: CreateInvoiceDto,
+  ): Promise<any> {
     const data = {
       eventName: ScsEventType.ADD_CREDIT,
-      body,
+      addCreditDto,
+      createInvoiceDto,
     };
 
     return await this.callService(data);

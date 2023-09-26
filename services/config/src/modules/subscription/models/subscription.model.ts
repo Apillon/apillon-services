@@ -149,6 +149,7 @@ export class Subscription extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
     ],
+    defaultValue: 0,
   })
   public isCanceled: boolean;
 
@@ -187,6 +188,36 @@ export class Subscription extends AdvancedSQLModel {
       LIMIT 1;
       `,
       { project_uuid },
+    );
+
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
+  }
+
+  /**
+   * Check if project has ever had a subscription for a package
+   * @param {number} package_id
+   * @param {string} [project_uuid=this.project_uuid]
+   * @returns {Promise<this>}
+   */
+  public async getProjectSubscription(
+    package_id: number,
+    project_uuid = this.project_uuid,
+  ): Promise<this> {
+    if (!project_uuid) {
+      throw new Error('project_uuid should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT *
+      FROM \`${this.tableName}\`
+      WHERE project_uuid = @project_uuid
+      AND package_id = @package_id
+      LIMIT 1;
+      `,
+      { project_uuid, package_id },
     );
 
     return data?.length
