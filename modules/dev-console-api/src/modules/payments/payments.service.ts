@@ -52,8 +52,9 @@ export class PaymentsService {
           // In case payment session was canceled/exited
           return;
         }
-        const purchaseData = this.combinePaymentData(payment);
-        if (purchaseData.isCreditPurchase) {
+
+        const paymentData = this.combinePaymentData(payment);
+        if (paymentData.isCreditPurchase) {
           // Get purchased items from Stripe API
           const sessionWithLineItems =
             await this.stripe.checkout.sessions.retrieve(payment.id, {
@@ -62,7 +63,7 @@ export class PaymentsService {
           const creditPurchase = sessionWithLineItems.line_items.data[0];
 
           await new Scs().handleStripeWebhookData({
-            ...purchaseData,
+            ...paymentData,
             currency: creditPurchase.currency,
             invoiceStripeId: creditPurchase.price.id,
           });
@@ -73,7 +74,7 @@ export class PaymentsService {
           );
 
           await new Scs().handleStripeWebhookData({
-            ...purchaseData,
+            ...paymentData,
             expiresOn: new Date(subscription.current_period_end * 1000),
             stripeId: subscription.id,
             currency: payment.currency,
@@ -116,26 +117,6 @@ export class PaymentsService {
     };
   }
 
-  getStripeEventFromSignature(
-    rawRequest: Buffer,
-    signature: string,
-  ): Stripe.Event {
-    try {
-      return this.stripe.webhooks.constructEvent(
-        rawRequest,
-        signature,
-        env.STRIPE_WEBHOOK_SECRET,
-      );
-    } catch (err) {
-      throw new CodeException({
-        status: 400,
-        code: BadRequestErrorCode.INVALID_WEBHOOK_SIGNATURE,
-        errorCodes: BadRequestErrorCode,
-        errorMessage: 'Invalid webhook signature',
-      });
-    }
-  }
-
   generateStripePaymentSession(
     paymentSessionDto: PaymentSessionDto,
     stripeId: string,
@@ -160,5 +141,25 @@ export class PaymentsService {
       cancel_url: `https://apillon.io/?canceled=true`,
       automatic_tax: { enabled: true },
     });
+  }
+
+  getStripeEventFromSignature(
+    rawRequest: Buffer,
+    signature: string,
+  ): Stripe.Event {
+    try {
+      return this.stripe.webhooks.constructEvent(
+        rawRequest,
+        signature,
+        env.STRIPE_WEBHOOK_SECRET,
+      );
+    } catch (err) {
+      throw new CodeException({
+        status: 400,
+        code: BadRequestErrorCode.INVALID_WEBHOOK_SIGNATURE,
+        errorCodes: BadRequestErrorCode,
+        errorMessage: 'Invalid webhook signature',
+      });
+    }
   }
 }

@@ -79,6 +79,8 @@ export class SubscriptionService {
         createSubscriptionDto.package_id,
         createSubscriptionDto.project_uuid,
       );
+      // If this is the first time subscribing to this package for this project
+      // Give credits to the project based on the purchased package
       if (!previousSubscription?.exists()) {
         await CreditService.addCredit(
           new AddCreditDto({

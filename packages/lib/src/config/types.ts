@@ -166,7 +166,6 @@ export enum ScsEventType {
   GET_PROJECT_CREDIT = 'get-project-credit',
   GET_CREDIT_TRANSACTIONS = 'get-project-transactions',
   HANDLE_STRIPE_WEBHOOK_DATA = 'handle-stripe-webhook-data',
-  GET_SUBSCRIPTION_PACKAGE_BY_ID = 'get-subscription-package-by-id',
   GET_SUBSCRIPTION_PACKAGE_STRIPE_ID = 'get-subscription-package-stripe-id',
   GET_CREDIT_PACKAGE_STRIPE_ID = 'get-credit-package-stripe-id',
   UPDATE_SUBSCRIPTION = 'update-subscription',

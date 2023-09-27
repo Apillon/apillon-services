@@ -33,11 +33,11 @@ export class Subscription extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ConfigErrorCode.SUBSCRIPTION_ID_NOT_PRESENT,
+        code: ConfigErrorCode.SUBSCRIPTION_PACKAGE_ID_NOT_PRESENT,
       },
       {
         resolver: enumInclusionValidator(SubscriptionPackages, true),
-        code: ConfigErrorCode.SUBSCRIPTION_ID_NOT_VALID,
+        code: ConfigErrorCode.SUBSCRIPTION_PACKAGE_ID_NOT_VALID,
       },
     ],
     serializable: [
@@ -152,7 +152,7 @@ export class Subscription extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
     ],
-    defaultValue: 0,
+    defaultValue: false,
   })
   public isCanceled: boolean;
 

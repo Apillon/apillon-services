@@ -144,6 +144,17 @@ export class Scs extends BaseService {
     return await this.callService(data);
   }
 
+  public async getCreditPackageStripeId(
+    package_id: number,
+    project_uuid: string,
+  ) {
+    return await this.callService({
+      eventName: ScsEventType.GET_CREDIT_PACKAGE_STRIPE_ID,
+      package_id,
+      project_uuid,
+    });
+  }
+
   //#endregion
 
   //#region subscription
@@ -160,30 +171,12 @@ export class Scs extends BaseService {
     });
   }
 
-  public async getSubscriptionPackageById(id: number) {
-    return await this.callService({
-      eventName: ScsEventType.GET_SUBSCRIPTION_PACKAGE_BY_ID,
-      id,
-    });
-  }
-
   public async getSubscriptionPackageStripeId(
     package_id: number,
     project_uuid: string,
   ) {
     return await this.callService({
       eventName: ScsEventType.GET_SUBSCRIPTION_PACKAGE_STRIPE_ID,
-      package_id,
-      project_uuid,
-    });
-  }
-
-  public async getCreditPackageStripeId(
-    package_id: number,
-    project_uuid: string,
-  ) {
-    return await this.callService({
-      eventName: ScsEventType.GET_CREDIT_PACKAGE_STRIPE_ID,
       package_id,
       project_uuid,
     });

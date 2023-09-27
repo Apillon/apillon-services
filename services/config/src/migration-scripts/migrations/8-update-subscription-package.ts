@@ -6,7 +6,7 @@ export async function upgrade(
   await queryFn(`
     ALTER TABLE \`${DbTables.SUBSCRIPTION_PACKAGE}\`
     ADD COLUMN \`stripeId\` VARCHAR(60) NOT NULL,
-    ADD COLUMN \`deactivationDate\` DATETIME NULL
+    ADD COLUMN \`deactivationDate\` DATETIME NULL,
     ADD COLUMN \`creditAmount\` INT NULL;
   `);
 }
@@ -17,7 +17,7 @@ export async function downgrade(
   await queryFn(`
     ALTER TABLE \`${DbTables.SUBSCRIPTION}\`
     DROP COLUMN \`stripeId\`,
-    DROP COLUMN \`deactivationDate\`
+    DROP COLUMN \`deactivationDate\`,
     DROP COLUMN \`creditAmount\`;
   `);
 }

@@ -49,7 +49,7 @@ describe('Quota unit test', () => {
       });
 
       project1Balance += 1000;
-      await CreditService.addCredit({ addCreditDto: data }, stage.context);
+      await CreditService.addCredit(data, stage.context, null);
 
       const projectCredit: Credit = await new Credit(
         {},
@@ -68,7 +68,7 @@ describe('Quota unit test', () => {
         referenceId: 2,
       });
 
-      await CreditService.addCredit({ addCreditDto: data }, stage.context);
+      await CreditService.addCredit(data, stage.context, null);
 
       const projectCredit: Credit = await new Credit(
         {},
@@ -88,7 +88,7 @@ describe('Quota unit test', () => {
       });
 
       project1Balance += 1000;
-      await CreditService.addCredit({ addCreditDto: data }, stage.context);
+      await CreditService.addCredit(data, stage.context, null);
 
       const projectCredit: Credit = await new Credit(
         {},
