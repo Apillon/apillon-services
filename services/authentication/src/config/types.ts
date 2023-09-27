@@ -216,4 +216,11 @@ export class IdentityState {
   static generateStartValidStates() {
     return [IdentityState.IN_PROGRESS, IdentityState.IDENTITY_VERIFIED];
   }
+
+  static generationFinishedStates() {
+    // Could also be did created, if only attestation and did create service are
+    // supported. Currently we only support one flow - did and vc generation
+    // with an additional did acc link step
+    return [IdentityState.ATTESTED, IdentityState.ATTESTED_AND_LINKED];
+  }
 }

@@ -395,7 +395,7 @@ export class IdentityMicroservice {
   ) {
     const identity = await new Identity({}, context).populateByUserEmail(
       context,
-      event.email,
+      event.body.email,
     );
 
     if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
@@ -428,6 +428,9 @@ export class IdentityMicroservice {
       authorizedAccountLinkingTx,
       identity,
     );
+
+    writeLog(LogType.INFO, 'Sending blockchain request..');
+    await sendBlockchainServiceRequest(context, bcsRequest);
   }
 
   static async revokeIdentity(event: { body: IdentityDidRevokeDto }, context) {

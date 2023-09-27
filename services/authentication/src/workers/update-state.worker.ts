@@ -28,6 +28,12 @@ import { Identity } from '../modules/identity/models/identity.model';
 import { IdentityMicroservice } from '../modules/identity/identity.service';
 import { IdentityJob } from '../modules/identity-job/models/identity-job.model';
 
+// TODO: Consider managing by transaction status and not by identity job state
+// The diagram shoul be as follows: check if success and trigger correct operation. That's it.
+// TODO2: Ideally we would have a configuration
+// where we specify each flow and handle that based on the confi, current state and the
+// received transaction status.
+
 export class UpdateStateWorker extends BaseQueueWorker {
   public constructor(
     workerDefinition: WorkerDefinition,
@@ -287,7 +293,7 @@ export class UpdateStateWorker extends BaseQueueWorker {
 
             break;
 
-          case IdentityJobState.ACC_LINK_DID:
+          case IdentityJobState.ACC_DID_LINK:
             if (status == TransactionStatus.CONFIRMED) {
               await this.writeEventLog({
                 logType: LogType.INFO,
