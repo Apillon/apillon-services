@@ -5,9 +5,9 @@ export async function upgrade(
 ): Promise<void> {
   await queryFn(`
     ALTER TABLE \`${DbTables.SUBSCRIPTION_PACKAGE}\`
-    ADD COLUMN \`stripeApiId\` VARCHAR(45) NOT NULL,
-    ADD COLUMN \`stripeApiIdTest\` VARCHAR(45) NULL,
-    ADD COLUMN \`deactivationDate\` DATETIME NULL;
+    ADD COLUMN \`stripeId\` VARCHAR(60) NOT NULL,
+    ADD COLUMN \`deactivationDate\` DATETIME NULL
+    ADD COLUMN \`creditAmount\` INT NULL;
   `);
 }
 
@@ -16,8 +16,8 @@ export async function downgrade(
 ): Promise<void> {
   await queryFn(`
     ALTER TABLE \`${DbTables.SUBSCRIPTION}\`
-    DROP COLUMN \`stripeApiId\`,
+    DROP COLUMN \`stripeId\`,
     DROP COLUMN \`deactivationDate\`
-    ;
+    DROP COLUMN \`creditAmount\`;
   `);
 }

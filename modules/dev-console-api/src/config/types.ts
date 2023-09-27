@@ -60,7 +60,8 @@ export enum ValidatorErrorCode {
   PROJECT_USER_ROLE_ID_NOT_VALID = 42204608,
   UPDATE_ROLE_ON_PROJECT_ROLE_ID_NOT_PRESENT = 42204611,
   SUBSCRIPTION_OR_CREDITS_NOT_PRESENT = 42204612,
-  SUBSCRIPTION_ID_NOT_VALID = 42204613,
+  SUBSCRIPTION_PACKAGE_ID_NOT_VALID = 42204613,
+  CREDIT_PACKAGE_ID_NOT_VALID = 42204614,
 }
 
 /**
@@ -108,11 +109,3 @@ export enum InstructionType {
   VIDEO = 4,
   WIKI = 5,
 }
-
-export const CREDITS_STRIPE_ID = {
-  TEST: 'price_1NsLNCGlTglE98hYnR85zIAr',
-  PROD: '',
-};
-
-// How many credits per credit product purchase
-export const CREDITS_PURCHASE_AMOUNT = 1500;

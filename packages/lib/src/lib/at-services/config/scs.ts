@@ -178,6 +178,17 @@ export class Scs extends BaseService {
     });
   }
 
+  public async getCreditPackageStripeId(
+    package_id: number,
+    project_uuid: string,
+  ) {
+    return await this.callService({
+      eventName: ScsEventType.GET_CREDIT_PACKAGE_STRIPE_ID,
+      package_id,
+      project_uuid,
+    });
+  }
+
   public async updateSubscription(subscriptionStripeId: string, data: any) {
     return await this.callService({
       eventName: ScsEventType.UPDATE_SUBSCRIPTION,

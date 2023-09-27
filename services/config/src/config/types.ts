@@ -4,6 +4,7 @@ export enum DbTables {
   TERMS = 'terms',
   CREDIT = 'credit',
   CREDIT_TRANSACTION = 'creditTransaction',
+  CREDIT_PACKAGE = 'creditPackage',
   PRODUCT = 'product',
   PRODUCT_PRICE = 'productPrice',
   SUBSCRIPTION = 'subscription',
@@ -50,7 +51,8 @@ export enum ConfigErrorCode {
   QUOTA_NOT_FOUND = 404010002,
   OVERRIDE_NOT_FOUND = 404010003,
   SUBSCRIPTION_PACKAGE_NOT_FOUND = 404010004,
-  SUBSCRIPTION_NOT_FOUND = 404010005,
+  CREDIT_PACKAGE_NOT_FOUND = 404010005,
+  SUBSCRIPTION_NOT_FOUND = 404010006,
 
   // 500 - Internal Error
   ERROR_WRITING_TO_DATABASE = 50010001,

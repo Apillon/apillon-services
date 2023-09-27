@@ -14,6 +14,7 @@ import { ScsCodeException, ScsValidationException } from '../../lib/exceptions';
 import { ConfigErrorCode, CreditDirection } from '../../config/types';
 import { CreditTransaction } from './models/credit-transaction.model';
 import { Product } from './models/product.model';
+import { CreditPackage } from './models/credit-package.model';
 
 /**
  * CreditService class for handling credit requests
@@ -56,13 +57,13 @@ export class CreditService {
 
   /**
    * Add credit to project.
-   * @param {{ addCreditDto: AddCreditDto }} event
+   * @param {AddCreditDto} addCreditDto
    * @param {ServiceContext} context
    * @param {PoolConnection} conn
    * @returns {Promise<{ credit: Credit; creditTransaction: CreditTransaction }>}
    */
   static async addCredit(
-    { addCreditDto }: { addCreditDto: AddCreditDto },
+    addCreditDto: AddCreditDto,
     context: ServiceContext,
     conn: PoolConnection,
   ): Promise<{ credit: Credit; creditTransaction: CreditTransaction }> {
@@ -137,7 +138,12 @@ export class CreditService {
         }).writeToMonitor({ project_uuid: addCreditDto.project_uuid });
       }
     }
-    return { credit, creditTransaction };
+    return {
+      credit: credit.serialize(SerializeFor.SERVICE) as Credit,
+      creditTransaction: creditTransaction.serialize(
+        SerializeFor.SERVICE,
+      ) as CreditTransaction,
+    };
   }
 
   /**
@@ -378,5 +384,45 @@ export class CreditService {
       }
     }
     return true;
+  }
+
+  /**
+   * Returns the credit package's stripe API ID for generating a payment URL through the Stripe SDK
+   * @param {{ package_id: number; project_uuid: string }} { package_id, project_uuid }
+   * @param {ServiceContext} context
+   * @returns {Promise<string>}
+   */
+  static async getCreditPackageStripeId(
+    { package_id, project_uuid }: { package_id: number; project_uuid: string },
+    context: ServiceContext,
+  ): Promise<string> {
+    const creditPackage = await CreditService.getCreditPackageById(
+      { id: package_id },
+      context,
+    );
+
+    if (!creditPackage?.stripeId) {
+      throw await new ScsCodeException({
+        code: ConfigErrorCode.STRIPE_ID_NOT_VALID,
+        status: 500,
+        errorCodes: ConfigErrorCode,
+        sourceFunction: 'getCreditPackageStripeId',
+        sourceModule: ServiceName.CONFIG,
+      }).writeToMonitor({
+        project_uuid,
+        data: {
+          creditPackage: new CreditPackage(creditPackage).serialize(),
+        },
+      });
+    }
+
+    return creditPackage.stripeId;
+  }
+
+  static async getCreditPackageById(
+    { id }: { id: number },
+    context: ServiceContext,
+  ): Promise<CreditPackage> {
+    return await new CreditPackage({}, context).populateById(id);
   }
 }

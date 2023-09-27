@@ -101,6 +101,9 @@ export class Subscription extends AdvancedSQLModel {
   })
   public subscriberEmail: string;
 
+  /**
+   * Stipe Subscription Unique ID
+   */
   @prop({
     parser: { resolver: stringParser() },
     populatable: [

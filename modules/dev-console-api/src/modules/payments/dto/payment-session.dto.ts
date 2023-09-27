@@ -1,4 +1,5 @@
 import {
+  CreditPackages,
   ModelBase,
   PopulateFrom,
   anyPresenceValidator,
@@ -28,27 +29,38 @@ export class PaymentSessionDto extends ModelBase {
     populatable: [PopulateFrom.PROFILE],
     validators: [
       {
-        resolver: anyPresenceValidator(['subscription_id', 'credits']),
+        resolver: anyPresenceValidator([
+          'subscription_package_id',
+          'credit_package_id',
+        ]),
         code: ValidatorErrorCode.SUBSCRIPTION_OR_CREDITS_NOT_PRESENT,
       },
       {
         resolver: enumInclusionValidator(SubscriptionPackages, true),
-        code: ValidatorErrorCode.SUBSCRIPTION_ID_NOT_VALID,
+        code: ValidatorErrorCode.SUBSCRIPTION_PACKAGE_ID_NOT_VALID,
       },
     ],
   })
-  public subscription_id: SubscriptionPackages;
+  public subscription_package_id: SubscriptionPackages;
 
-  /**
-   * If the user is initiating a credit purchase session, not a subscription
-   */
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
-    validators: [],
-    defaultValue: false,
+    validators: [
+      {
+        resolver: anyPresenceValidator([
+          'subscription_package_id',
+          'credit_package_id',
+        ]),
+        code: ValidatorErrorCode.SUBSCRIPTION_OR_CREDITS_NOT_PRESENT,
+      },
+      {
+        resolver: enumInclusionValidator(CreditPackages, true),
+        code: ValidatorErrorCode.CREDIT_PACKAGE_ID_NOT_VALID,
+      },
+    ],
   })
-  public credits: boolean;
+  public credit_package_id: CreditPackages;
 
   @prop({
     parser: { resolver: stringParser() },

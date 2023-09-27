@@ -1,11 +1,9 @@
-import { AppEnvironment, CodeException, Scs, env } from '@apillon/lib';
+import { CodeException, Scs, env } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
 import { PaymentSessionDto } from './dto/payment-session.dto';
 import {
   BadRequestErrorCode,
-  CREDITS_PURCHASE_AMOUNT,
-  CREDITS_STRIPE_ID,
   ResourceNotFoundErrorCode,
 } from '../../config/types';
 import { Project } from '../project/models/project.model';
@@ -31,28 +29,22 @@ export class PaymentsService {
     }
     project.canModify(context);
 
-    if (paymentSessionDto.credits) {
-      return await this.generateStripePaymentSession(
-        paymentSessionDto,
-        env.APP_ENV === AppEnvironment.PROD
-          ? CREDITS_STRIPE_ID.PROD
-          : CREDITS_STRIPE_ID.TEST,
-      );
-    }
-    const { data: stripeApiId } =
-      await new Scs().getSubscriptionPackageStripeId(
-        +paymentSessionDto.subscription_id,
-        paymentSessionDto.project_uuid,
-      );
+    // Get stripe ID for either credit package or subscription package
+    const { data: stripeId } = paymentSessionDto.credit_package_id
+      ? await new Scs().getCreditPackageStripeId(
+          +paymentSessionDto.credit_package_id,
+          paymentSessionDto.project_uuid,
+        )
+      : await new Scs().getSubscriptionPackageStripeId(
+          +paymentSessionDto.subscription_package_id,
+          paymentSessionDto.project_uuid,
+        );
 
-    return await this.generateStripePaymentSession(
-      paymentSessionDto,
-      stripeApiId,
-    );
+    return await this.generateStripePaymentSession(paymentSessionDto, stripeId);
   }
 
   async stripeWebhookEventHandler(event: Stripe.Event) {
-    // https://stripe.com/docs/api/checkout/sessions/obje…ct
+    // https://stripe.com/docs/api/checkout/sessions/object
     const payment = event.data.object as any;
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -71,10 +63,8 @@ export class PaymentsService {
 
           await new Scs().handleStripeWebhookData({
             ...purchaseData,
-            amount: creditPurchase.quantity * CREDITS_PURCHASE_AMOUNT,
             currency: creditPurchase.currency,
             invoiceStripeId: creditPurchase.price.id,
-            quantity: creditPurchase.quantity,
           });
         } else {
           // Call Stripe API to fetch subscription data
@@ -88,7 +78,6 @@ export class PaymentsService {
             stripeId: subscription.id,
             currency: payment.currency,
             invoiceStripeId: payment.invoice,
-            quantity: 1,
           });
         }
         break;
@@ -149,25 +138,21 @@ export class PaymentsService {
 
   generateStripePaymentSession(
     paymentSessionDto: PaymentSessionDto,
-    stripeApiId: string,
+    stripeId: string,
   ) {
-    const isCreditPurchase = paymentSessionDto.credits;
+    const isCreditPurchase = !!paymentSessionDto.credit_package_id;
     const lineItem: Stripe.Checkout.SessionCreateParams.LineItem = {
-      price: stripeApiId,
+      price: stripeId,
       quantity: 1,
-      adjustable_quantity: isCreditPurchase
-        ? {
-            enabled: true,
-            minimum: 1,
-          }
-        : undefined,
     };
     return this.stripe.checkout.sessions.create({
       line_items: [lineItem],
       mode: isCreditPurchase ? 'payment' : 'subscription',
       metadata: {
         project_uuid: paymentSessionDto.project_uuid,
-        package_id: paymentSessionDto.subscription_id,
+        package_id: isCreditPurchase
+          ? +paymentSessionDto.credit_package_id
+          : +paymentSessionDto.subscription_package_id,
         isCreditPurchase: `${isCreditPurchase}`,
       },
       // TODO

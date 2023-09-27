@@ -13,8 +13,9 @@ import {
 import { ServiceContext } from '@apillon/service-lib';
 import { Invoice } from './models/invoice.model';
 import { SubscriptionService } from '../subscription/subscription.service';
-import { DbTables } from '../../config/types';
+import { ConfigErrorCode, DbTables } from '../../config/types';
 import { CreditService } from '../credit/credit.service';
+import { ScsCodeException } from '../../lib/exceptions';
 
 export class InvoiceService {
   /**
@@ -91,16 +92,39 @@ export class InvoiceService {
     context: ServiceContext,
     conn: PoolConnection,
   ) {
-    const { creditTransaction } = await CreditService.addCredit(
-      { addCreditDto: { ...webhookData, referenceTable: DbTables.INVOICE } },
+    const creditPackage = await CreditService.getCreditPackageById(
+      { id: webhookData.package_id },
+      context,
+    );
+
+    if (!creditPackage?.exists()) {
+      throw await new ScsCodeException({
+        status: 404,
+        code: ConfigErrorCode.SUBSCRIPTION_PACKAGE_NOT_FOUND,
+        sourceFunction: 'createSubscription',
+        sourceModule: ServiceName.CONFIG,
+      }).writeToMonitor({
+        context,
+        data: { package_id: webhookData.package_id },
+      });
+    }
+
+    const invoice = await InvoiceService.createInvoice(
+      {
+        ...webhookData,
+        referenceTable: DbTables.CREDIT_PACKAGE,
+        referenceId: creditPackage.id,
+      },
       context,
       conn,
     );
-    await InvoiceService.createInvoice(
+
+    await CreditService.addCredit(
       {
         ...webhookData,
-        referenceTable: DbTables.CREDIT_TRANSACTION,
-        referenceId: creditTransaction.id,
+        amount: creditPackage.creditAmount + creditPackage.bonusCredits,
+        referenceTable: DbTables.INVOICE,
+        referenceId: invoice.id,
       },
       context,
       conn,
@@ -142,12 +166,13 @@ export class InvoiceService {
     context: ServiceContext,
     conn: PoolConnection,
   ): Promise<Invoice> {
-    return await new Invoice(
+    const newInvoice = await new Invoice(
       {
         ...createInvoiceDto,
         stripeId: createInvoiceDto.invoiceStripeId,
       },
       context,
     ).insert(SerializeFor.INSERT_DB, conn);
+    return newInvoice.serialize(SerializeFor.SERVICE) as Invoice;
   }
 }

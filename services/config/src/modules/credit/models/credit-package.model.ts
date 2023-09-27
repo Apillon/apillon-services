@@ -1,4 +1,4 @@
-import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
+import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
   PopulateFrom,
@@ -7,8 +7,8 @@ import {
 } from '@apillon/lib';
 import { DbTables } from '../../../config/types';
 
-export class SubscriptionPackage extends AdvancedSQLModel {
-  public readonly tableName = DbTables.SUBSCRIPTION_PACKAGE;
+export class CreditPackage extends AdvancedSQLModel {
+  public readonly tableName = DbTables.CREDIT_PACKAGE;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -40,20 +40,6 @@ export class SubscriptionPackage extends AdvancedSQLModel {
   })
   public description: string;
 
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN, //
-    ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.SELECT_DB,
-      SerializeFor.SERVICE,
-    ],
-  })
-  public isDefault: boolean;
-
   /**
    * Stripe unique ID - determines package price
    */
@@ -71,22 +57,8 @@ export class SubscriptionPackage extends AdvancedSQLModel {
   })
   public stripeId: string;
 
-  @prop({
-    parser: { resolver: dateParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN, //
-    ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.SELECT_DB,
-      SerializeFor.SERVICE,
-    ],
-  })
-  public deactivationDate: Date;
-
   /**
-   * Amount of credits given to project when subscribing to a package
+   * Amount of credits given to project when purchasing a package
    */
   @prop({
     parser: { resolver: integerParser() },
@@ -101,4 +73,21 @@ export class SubscriptionPackage extends AdvancedSQLModel {
     ],
   })
   public creditAmount: number;
+
+  /**
+   * Bonus credits given when purchasing a package
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public bonusCredits: number;
 }

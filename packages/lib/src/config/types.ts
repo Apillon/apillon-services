@@ -168,6 +168,7 @@ export enum ScsEventType {
   HANDLE_STRIPE_WEBHOOK_DATA = 'handle-stripe-webhook-data',
   GET_SUBSCRIPTION_PACKAGE_BY_ID = 'get-subscription-package-by-id',
   GET_SUBSCRIPTION_PACKAGE_STRIPE_ID = 'get-subscription-package-stripe-id',
+  GET_CREDIT_PACKAGE_STRIPE_ID = 'get-credit-package-stripe-id',
   UPDATE_SUBSCRIPTION = 'update-subscription',
   LIST_SUBSCRIPTIONS = 'list-subscriptions',
   LIST_INVOICES = 'list-invoices',
@@ -704,8 +705,14 @@ export enum ProductCode {
 }
 
 export enum SubscriptionPackages {
-  Freemium = 1,
-  Caterpillar = 2,
-  Cocoon = 3,
-  Butterfly = 4,
+  FREEMIUM = 1,
+  CATERPILLAR = 2,
+  COCOON = 3,
+  BUTTERFLY = 4,
+}
+
+export enum CreditPackages {
+  TEN = 1,
+  TWENTY = 2,
+  FIFTY = 3,
 }

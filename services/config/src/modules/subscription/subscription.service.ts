@@ -41,7 +41,7 @@ export class SubscriptionService {
 
     if (!subscriptionPackage?.exists()) {
       throw await new ScsCodeException({
-        status: 400,
+        status: 404,
         code: ConfigErrorCode.SUBSCRIPTION_PACKAGE_NOT_FOUND,
         sourceFunction: 'createSubscription',
         sourceModule: ServiceName.CONFIG,
@@ -81,14 +81,12 @@ export class SubscriptionService {
       );
       if (!previousSubscription?.exists()) {
         await CreditService.addCredit(
-          {
-            addCreditDto: new AddCreditDto({
-              project_uuid: createSubscriptionDto.project_uuid,
-              amount: subscriptionPackage.creditAmount,
-              referenceTable: DbTables.SUBSCRIPTION,
-              referenceId: subscription.id,
-            }),
-          },
+          new AddCreditDto({
+            project_uuid: createSubscriptionDto.project_uuid,
+            amount: subscriptionPackage.creditAmount,
+            referenceTable: DbTables.SUBSCRIPTION,
+            referenceId: subscription.id,
+          }),
           context,
           conn,
         );
@@ -158,7 +156,7 @@ export class SubscriptionService {
         context,
       );
 
-    if (!subscriptionPackage?.stripeApiId) {
+    if (!subscriptionPackage?.stripeId) {
       throw await new ScsCodeException({
         code: ConfigErrorCode.STRIPE_ID_NOT_VALID,
         status: 500,
@@ -175,7 +173,7 @@ export class SubscriptionService {
       });
     }
 
-    return subscriptionPackage.stripeApiId;
+    return subscriptionPackage.stripeId;
   }
 
   static async getSubscriptionPackageById(
@@ -223,7 +221,9 @@ export class SubscriptionService {
     }
 
     subscription.populate(data);
-    return await subscription.update();
+    await subscription.update();
+
+    return subscription.serialize(SerializeFor.SERVICE) as Subscription;
   }
 
   /**
