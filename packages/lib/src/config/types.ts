@@ -1,3 +1,5 @@
+export type Merge<T, K> = Omit<T, keyof K> & K;
+
 export enum ChainType {
   SUBSTRATE = 1,
   EVM = 2,
@@ -163,7 +165,7 @@ export enum ScsEventType {
   REFUND_CREDIT = 'refund-credit',
   GET_PROJECT_CREDIT = 'get-project-credit',
   GET_CREDIT_TRANSACTIONS = 'get-project-transactions',
-  CREATE_SUBSCRIPTION = 'create-subscription',
+  HANDLE_STRIPE_WEBHOOK_DATA = 'handle-stripe-webhook-data',
   GET_SUBSCRIPTION_PACKAGE_BY_ID = 'get-subscription-package-by-id',
   GET_SUBSCRIPTION_PACKAGE_STRIPE_ID = 'get-subscription-package-stripe-id',
   UPDATE_SUBSCRIPTION = 'update-subscription',

@@ -2,7 +2,6 @@ import { ServiceContext } from '@apillon/service-lib';
 import { Credit } from './models/credit.model';
 import {
   AddCreditDto,
-  CreateInvoiceDto,
   CreditTransactionQueryFilter,
   Lmas,
   LogType,
@@ -12,10 +11,9 @@ import {
   SpendCreditDto,
 } from '@apillon/lib';
 import { ScsCodeException, ScsValidationException } from '../../lib/exceptions';
-import { ConfigErrorCode, CreditDirection, DbTables } from '../../config/types';
+import { ConfigErrorCode, CreditDirection } from '../../config/types';
 import { CreditTransaction } from './models/credit-transaction.model';
 import { Product } from './models/product.model';
-import { Invoice } from '../subscription/models/invoice.model';
 
 /**
  * CreditService class for handling credit requests
@@ -35,7 +33,7 @@ export class CreditService {
       event.project_uuid,
     );
 
-    await credit.canAccess(context, event.project_uuid);
+    credit.canAccess(context, event.project_uuid);
 
     return credit.serialize(SerializeFor.PROFILE);
   }
@@ -58,24 +56,24 @@ export class CreditService {
 
   /**
    * Add credit to project.
-   * @param {{ addCreditDto: AddCreditDto; createInvoiceDto?: CreateInvoiceDto }} event
+   * @param {{ addCreditDto: AddCreditDto }} event
    * @param {ServiceContext} context
-   * @returns {Promise<boolean>}
+   * @param {PoolConnection} conn
+   * @returns {Promise<{ credit: Credit; creditTransaction: CreditTransaction }>}
    */
   static async addCredit(
-    {
-      addCreditDto,
-      createInvoiceDto,
-    }: { addCreditDto: AddCreditDto; createInvoiceDto?: CreateInvoiceDto },
+    { addCreditDto }: { addCreditDto: AddCreditDto },
     context: ServiceContext,
-    poolConn?: PoolConnection,
-  ): Promise<boolean> {
-    const conn = poolConn || (await context.mysql.start());
+    conn: PoolConnection,
+  ): Promise<{ credit: Credit; creditTransaction: CreditTransaction }> {
+    let credit: Credit;
+    let creditTransaction: CreditTransaction;
+
     try {
-      let credit: Credit = await new Credit(
-        {},
-        context,
-      ).populateByProjectUUIDForUpdate(addCreditDto.project_uuid, conn);
+      credit = await new Credit({}, context).populateByProjectUUIDForUpdate(
+        addCreditDto.project_uuid,
+        conn,
+      );
 
       if (!credit.exists()) {
         //Credit record for project does not yet exists - create one
@@ -93,10 +91,7 @@ export class CreditService {
         await credit.update(SerializeFor.UPDATE_DB, conn);
       }
 
-      const creditTransaction: CreditTransaction = new CreditTransaction(
-        {},
-        context,
-      ).populate({
+      creditTransaction = new CreditTransaction({}, context).populate({
         project_uuid: addCreditDto.project_uuid,
         credit_id: credit.id,
         direction: CreditDirection.RECEIVE,
@@ -115,21 +110,6 @@ export class CreditService {
       }
       await creditTransaction.insert(SerializeFor.INSERT_DB, conn);
 
-      if (createInvoiceDto) {
-        await new Invoice(
-          {
-            ...createInvoiceDto,
-            referenceId: creditTransaction.id,
-            referenceTable: DbTables.CREDIT_TRANSACTION,
-          },
-          context,
-        ).insert(SerializeFor.INSERT_DB, conn);
-      }
-
-      if (!poolConn) {
-        await context.mysql.commit(conn);
-      }
-
       await new Lmas().writeLog({
         context,
         project_uuid: credit.project_uuid,
@@ -142,10 +122,6 @@ export class CreditService {
         },
       });
     } catch (err) {
-      if (!poolConn) {
-        await context.mysql.rollback(conn);
-      }
-
       if (
         err instanceof ScsCodeException ||
         err instanceof ScsValidationException
@@ -161,7 +137,7 @@ export class CreditService {
         }).writeToMonitor({ project_uuid: addCreditDto.project_uuid });
       }
     }
-    return true;
+    return { credit, creditTransaction };
   }
 
   /**

@@ -1,5 +1,10 @@
 import { prop } from '@rawmodel/core';
-import { floatParser, integerParser, stringParser } from '@rawmodel/parsers';
+import {
+  booleanParser,
+  floatParser,
+  integerParser,
+  stringParser,
+} from '@rawmodel/parsers';
 import { PopulateFrom, SerializeFor } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
 
@@ -41,7 +46,7 @@ export class CreateInvoiceDto extends ModelBase {
       SerializeFor.SERVICE,
     ],
   })
-  public totalAmount: string;
+  public totalAmount: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -119,7 +124,7 @@ export class CreateInvoiceDto extends ModelBase {
       SerializeFor.SERVICE,
     ],
   })
-  public stripeId: string;
+  public invoiceStripeId: string;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -133,4 +138,17 @@ export class CreateInvoiceDto extends ModelBase {
     ],
   })
   public quantity: number;
+
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [
+      PopulateFrom.ADMIN, //
+      PopulateFrom.SERVICE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN, //
+      SerializeFor.SERVICE,
+    ],
+  })
+  public isCreditPurchase: boolean;
 }

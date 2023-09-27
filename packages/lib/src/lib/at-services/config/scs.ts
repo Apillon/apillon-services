@@ -1,6 +1,6 @@
 import { CreateSubscriptionDto } from './dtos/create-subscription.dto';
 import { env } from '../../../config/env';
-import { AppEnvironment, ScsEventType } from '../../../config/types';
+import { AppEnvironment, Merge, ScsEventType } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { CreateQuotaOverrideDto } from './dtos/create-quota-override.dto';
@@ -146,14 +146,17 @@ export class Scs extends BaseService {
 
   //#endregion
 
-  //#region subscripiton
+  //#region subscription
 
-  public async createSubscription(
-    createSubscriptionDto: CreateSubscriptionDto,
+  public async handleStripeWebhookData(
+    data: Merge<
+      Partial<CreateSubscriptionDto> & Partial<AddCreditDto>,
+      Partial<CreateInvoiceDto>
+    >,
   ) {
     return await this.callService({
-      eventName: ScsEventType.CREATE_SUBSCRIPTION,
-      createSubscriptionDto,
+      eventName: ScsEventType.HANDLE_STRIPE_WEBHOOK_DATA,
+      data,
     });
   }
 

@@ -1,9 +1,9 @@
 import {
   AddCreditDto,
-  CreateInvoiceDto,
   CreateSubscriptionDto,
   Lmas,
   LogType,
+  PoolConnection,
   SerializeFor,
   ServiceName,
   SubscriptionPackages,
@@ -19,7 +19,6 @@ import {
   ScsValidationException,
 } from '../../lib/exceptions';
 import { ConfigErrorCode, DbTables } from '../../config/types';
-import { Invoice } from './models/invoice.model';
 import { CreditService } from '../credit/credit.service';
 
 export class SubscriptionService {
@@ -30,12 +29,9 @@ export class SubscriptionService {
    * @returns {Promise<Subscription>}
    */
   static async createSubscription(
-    {
-      createSubscriptionDto,
-    }: {
-      createSubscriptionDto: CreateSubscriptionDto;
-    },
+    createSubscriptionDto: CreateSubscriptionDto,
     context: ServiceContext,
+    conn: PoolConnection,
   ): Promise<Subscription> {
     const subscriptionPackage =
       await SubscriptionService.getSubscriptionPackageById(
@@ -55,7 +51,7 @@ export class SubscriptionService {
       });
     }
 
-    const subscription = new Subscription(createSubscriptionDto, context);
+    let subscription = new Subscription(createSubscriptionDto, context);
 
     try {
       await subscription.validate();
@@ -73,33 +69,13 @@ export class SubscriptionService {
       }
     }
 
-    const stripeSubscriptionData = createSubscriptionDto.subscriptionData;
-    const createInvoiceDto = new CreateInvoiceDto({
-      project_uuid: createSubscriptionDto.project_uuid,
-      subtotalAmount: stripeSubscriptionData.amount_subtotal / 100,
-      totalAmount: stripeSubscriptionData.amount_total / 100,
-      clientEmail: stripeSubscriptionData.customer_details.email,
-      clientName: stripeSubscriptionData.customer_details.name,
-      currency: stripeSubscriptionData.currency,
-      stripeId: stripeSubscriptionData.invoice,
-      referenceTable: DbTables.SUBSCRIPTION,
-      quantity: 1,
-    }).serialize(SerializeFor.SERVICE);
-
-    const conn = await context.mysql.start();
     try {
-      const dbSubscription = await subscription.insert(
-        SerializeFor.INSERT_DB,
-        conn,
-      );
+      subscription = await subscription.insert(SerializeFor.INSERT_DB, conn);
 
-      // Create an invoice after subscription has been stored
-      await new Invoice(
-        { ...createInvoiceDto, referenceId: dbSubscription.id },
+      const previousSubscription = await new Subscription(
+        {},
         context,
-      ).insert(SerializeFor.INSERT_DB, conn);
-
-      const previousSubscription = await subscription.getProjectSubscription(
+      ).getProjectSubscription(
         createSubscriptionDto.package_id,
         createSubscriptionDto.project_uuid,
       );
@@ -110,15 +86,13 @@ export class SubscriptionService {
               project_uuid: createSubscriptionDto.project_uuid,
               amount: subscriptionPackage.creditAmount,
               referenceTable: DbTables.SUBSCRIPTION,
-              referenceId: dbSubscription.id,
+              referenceId: subscription.id,
             }),
           },
           context,
           conn,
         );
       }
-
-      await context.mysql.commit(conn);
 
       await new Lmas().sendAdminAlert(
         `New subscription for package ${getEnumKey(
@@ -129,10 +103,8 @@ export class SubscriptionService {
         LogType.MSG,
       );
 
-      return dbSubscription.serialize(SerializeFor.SERVICE) as Subscription;
+      return subscription.serialize(SerializeFor.SERVICE) as Subscription;
     } catch (err) {
-      await context.mysql.rollback(conn);
-
       if (err instanceof ScsCodeException) {
         throw err;
       } else {
@@ -146,8 +118,7 @@ export class SubscriptionService {
         }).writeToMonitor({
           project_uuid: createSubscriptionDto.project_uuid,
           data: {
-            createSubscriptionDto,
-            createInvoiceDto,
+            ...new CreateSubscriptionDto(createSubscriptionDto).serialize(),
           },
         });
       }
@@ -196,7 +167,11 @@ export class SubscriptionService {
         sourceModule: ServiceName.CONFIG,
       }).writeToMonitor({
         project_uuid,
-        data: { subscriptionPackage: subscriptionPackage.serialize() },
+        data: {
+          subscriptionPackage: new SubscriptionPackage(
+            subscriptionPackage,
+          ).serialize(),
+        },
       });
     }
 
@@ -260,19 +235,6 @@ export class SubscriptionService {
     context: ServiceContext,
   ) {
     return await new Subscription({
-      project_uuid: event.query.project_uuid,
-    }).getList(event.query, context);
-  }
-
-  /**
-   * Get all invoices, existing or for a single project
-   * @param {event: {query: SubscriptionsQueryFilter}} - Query filter for listing invoices
-   */
-  static async listInvoices(
-    event: { query: SubscriptionsQueryFilter },
-    context: ServiceContext,
-  ) {
-    return await new Invoice({
       project_uuid: event.query.project_uuid,
     }).getList(event.query, context);
   }

@@ -74,21 +74,4 @@ export class CreateSubscriptionDto extends ModelBase {
     ],
   })
   public stripeId: string;
-
-  /**
-   * Used for creating subscription invoices
-   */
-  @prop({
-    parser: { resolver: Object },
-    populatable: [
-      PopulateFrom.ADMIN, //
-      PopulateFrom.PROFILE,
-      PopulateFrom.SERVICE,
-    ],
-    serializable: [
-      SerializeFor.ADMIN, //
-      SerializeFor.SERVICE,
-    ],
-  })
-  public subscriptionData: any;
 }
