@@ -37,7 +37,7 @@ export class ProjectConfig extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.BUCKET_PROJECT_UUID_NOT_PRESENT,
+        code: StorageErrorCode.PROJECT_CONFIG_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
     fakeValue: () => uuidV4(),
@@ -63,7 +63,7 @@ export class ProjectConfig extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.BUCKET_PROJECT_UUID_NOT_PRESENT,
+        code: StorageErrorCode.PROJECT_CONFIG_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
