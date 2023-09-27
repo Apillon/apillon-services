@@ -51,6 +51,7 @@ import {
   didRevokeRequestBc,
   attestationRequestBc,
   identityCreateRequestBc,
+  accDidLinkRequestBc,
 } from '../../lib/utils/transaction-utils';
 
 export class IdentityMicroservice {
@@ -269,8 +270,6 @@ export class IdentityMicroservice {
       event.body.credential,
     ) as ICredential;
 
-    const linkParameters = event.body.linkParameters;
-
     // Generate (retrieve) attester did data
     const attesterKeypairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
     // TODO: Account could be just saved in
@@ -357,45 +356,9 @@ export class IdentityMicroservice {
       attesterAcc.address,
     );
 
-    let authorizedBatchedTxs;
-    if (linkParameters !== undefined) {
-      writeLog(LogType.INFO, 'Linking account and did document ...');
-
-      console.log('Link params: ', linkParameters);
-      console.log('did uri: ', attesterDidUri);
-
-      // Create account link tx
-      const authorizedAccountLinkingTx = await Did.authorizeTx(
-        claimerDidUri,
-        linkParameters,
-        async ({ data }) => ({
-          signature: attesterKeypairs.authentication.sign(data),
-          keyType: attesterKeypairs.authentication.type,
-        }),
-        attesterAcc.address,
-      );
-
-      console.log('did link tx: ', authorizedAccountLinkingTx);
-
-      // Batch transactions
-      authorizedBatchedTxs = await Did.authorizeBatch({
-        batchFunction: api.tx.utility.batchAll,
-        did: attesterDidUri,
-        extrinsics: [authorizedAccountLinkingTx, attestationTx],
-        sign: async ({ data }) => ({
-          signature: attesterKeypairs.authentication.sign(data),
-          keyType: attesterKeypairs.authentication.type,
-        }),
-        submitter: attesterAcc.address,
-      });
-
-      console.log('authorizedBatchedTxs: ', authorizedBatchedTxs);
-    }
-
     const bcsRequest = await attestationRequestBc(
       context,
-      // If batch was defined, send that, otherwise send just the attestation tx
-      authorizedBatchedTxs ? authorizedBatchedTxs : attestationTx,
+      attestationTx,
       identity,
     );
 
@@ -430,7 +393,41 @@ export class IdentityMicroservice {
     event: { body: IdentityLinkAccountDidDto },
     context,
   ) {
-    console.log('hehehe');
+    const identity = await new Identity({}, context).populateByUserEmail(
+      context,
+      event.email,
+    );
+
+    if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
+      throw new AuthenticationCodeException({
+        code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
+        status: HttpStatus.NOT_FOUND,
+      });
+    }
+
+    const didUri = event.body.didUri as DidUri;
+    const linkParameters = event.body.linkParameters;
+    const attesterKeypairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
+    const attesterAcc = (await generateAccount(
+      env.KILT_ATTESTER_MNEMONIC,
+    )) as KiltKeyringPair;
+
+    // Create account link tx
+    const authorizedAccountLinkingTx = await Did.authorizeTx(
+      didUri,
+      linkParameters,
+      async ({ data }) => ({
+        signature: attesterKeypairs.authentication.sign(data),
+        keyType: attesterKeypairs.authentication.type,
+      }),
+      attesterAcc.address,
+    );
+
+    const bcsRequest = await accDidLinkRequestBc(
+      context,
+      authorizedAccountLinkingTx,
+      identity,
+    );
   }
 
   static async revokeIdentity(event: { body: IdentityDidRevokeDto }, context) {

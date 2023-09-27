@@ -3,6 +3,7 @@ import {
   AttestationDto,
   IdentityCreateDto,
   IdentityDidRevokeDto,
+  IdentityLinkAccountDidDto,
   LogType,
   Mailing,
   ServiceName,
@@ -76,10 +77,6 @@ export class UpdateStateWorker extends BaseQueueWorker {
       email: params.email,
       token: params.token,
     });
-    await IdentityMicroservice.revokeIdentity(
-      { body: identityRevokeDto },
-      this.context,
-    );
 
     if (env.APP_ENV != AppEnvironment.TEST) {
       await IdentityMicroservice.revokeIdentity(
@@ -90,20 +87,20 @@ export class UpdateStateWorker extends BaseQueueWorker {
   }
 
   private async execIdentityLinkAccToDid(params: any) {
-    // const identityRevokeDto = new IdentityDidRevokeDto().populate({
-    //   email: params.email,
-    //   token: params.token,
-    // });
-    // await IdentityMicroservice.revokeIdentity(
-    //   { body: identityRevokeDto },
-    //   this.context,
-    // );
-    // if (env.APP_ENV != AppEnvironment.TEST) {
-    //   await IdentityMicroservice.revokeIdentity(
-    //     { body: identityRevokeDto },
-    //     this.context,
-    //   );
-    // }
+    const identityLinkDto = new IdentityLinkAccountDidDto().populate({
+      email: params.email,
+      token: params.token,
+    });
+    await IdentityMicroservice.linkAccountDid(
+      { body: identityLinkDto },
+      this.context,
+    );
+    if (env.APP_ENV != AppEnvironment.TEST) {
+      await IdentityMicroservice.linkAccountDid(
+        { body: identityLinkDto },
+        this.context,
+      );
+    }
   }
 
   public async runExecutor(input: any): Promise<any> {

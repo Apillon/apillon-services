@@ -185,7 +185,7 @@ export enum IdentityJobState {
   // State 1: DID_CREATE -> State 2: ATESTATION
   DID_CREATE = 'did-create',
   ATESTATION = 'attestation',
-  ACC_LINK_DID = 'account-link-did',
+  ACC_DID_LINK = 'account-did-link',
   // State 1: DID_REVOKE
   DID_REVOKE = 'did-revoke',
 }
