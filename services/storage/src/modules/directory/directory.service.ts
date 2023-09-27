@@ -35,6 +35,7 @@ export class DirectoryService {
     return await new Directory({}, context).getDirectoryContent(
       context,
       new DirectoryContentQueryFilter(event.query, context),
+      b,
     );
   }
 

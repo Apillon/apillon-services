@@ -3,6 +3,8 @@ import {
   AWS_S3,
   Context,
   env,
+  generateJwtToken,
+  JwtTokenType,
   Lmas,
   LogType,
   runWithWorkers,
@@ -18,10 +20,10 @@ import {
 } from '../../config/types';
 import { StorageCodeException } from '../../lib/exceptions';
 import { Bucket } from '../bucket/models/bucket.model';
+import { ProjectConfig } from '../config/models/project-config.model';
 import { FileUploadRequest } from '../storage/models/file-upload-request.model';
 import { File } from '../storage/models/file.model';
 import { uploadItemsToIPFSRes } from './interfaces/upload-items-to-ipfs-res.interface';
-import { IpfsConfig } from './models/ipfs-config.model';
 
 export class IPFSService {
   private client: IPFSHTTPClient;
@@ -39,7 +41,7 @@ export class IPFSService {
       return;
     }
 
-    let ipfsApi = await new IpfsConfig(
+    let ipfsApi = await new ProjectConfig(
       { project_uuid: this.project_uuid },
       this.context,
     ).getIpfsApi();
@@ -455,7 +457,7 @@ export class IPFSService {
    * @param cid cid to be pinned
    */
   public async pinCidToCluster(cid: string) {
-    const clusterServer = await new IpfsConfig(
+    const clusterServer = await new ProjectConfig(
       { project_uuid: this.project_uuid },
       this.context,
     ).getIpfsClusterServer();

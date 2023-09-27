@@ -16,12 +16,13 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
+import { addJwtToIPFSUrl } from '../lib/ipfs-utils';
 import { Bucket } from '../modules/bucket/models/bucket.model';
+import { ProjectConfig } from '../modules/config/models/project-config.model';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { Ipns } from '../modules/ipns/models/ipns.model';
 import { PrepareMetadataForCollectionWorker } from './prepare-metada-for-collection-worker';
 import { WorkerName } from './worker-executor';
-import { IpfsConfig } from '../modules/ipfs/models/ipfs-config.model';
 
 export class PrepareBaseUriForCollectionWorker extends BaseQueueWorker {
   public constructor(
@@ -93,13 +94,17 @@ export class PrepareBaseUriForCollectionWorker extends BaseQueueWorker {
     await ipnsDbRecord.update(SerializeFor.UPDATE_DB);
 
     //Get IPFS gateway
-    const ipfsGateway = await new IpfsConfig(
+    const ipfsGateway = await new ProjectConfig(
       { project_uuid: bucket.project_uuid },
       this.context,
     ).getIpfsGateway();
 
-    const baseUri =
-      ipfsGateway.replace('/ipfs/', '/ipns/') + publishedIpns.name + '/';
+    let baseUri =
+      ipfsGateway.url.replace('/ipfs/', '/ipns/') + publishedIpns.name + '/';
+
+    if (ipfsGateway.private) {
+      baseUri = addJwtToIPFSUrl(baseUri, bucket.project_uuid);
+    }
 
     //Start worker which will prepare images and metadata and deploy contract
     if (

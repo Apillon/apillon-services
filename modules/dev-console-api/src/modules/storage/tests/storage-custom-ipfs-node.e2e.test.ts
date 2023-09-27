@@ -1,6 +1,6 @@
 import { FileStatus } from '@apillon/storage/src/config/types';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
-import { IpfsConfig } from '@apillon/storage/src/modules/ipfs/models/ipfs-config.model';
+import { IpfsCluster } from '@apillon/storage/src/modules/ipfs/models/ipfs-cluster.model';
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 import {
   createTestBucket,
@@ -14,38 +14,45 @@ import * as request from 'supertest';
 import { v4 as uuidV4 } from 'uuid';
 import { setupTest } from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
+import { ProjectConfig } from '@apillon/storage/src/modules/config/models/project-config.model';
+import { addJwtToIPFSUrl } from '@apillon/storage/src/lib/ipfs-utils';
 
-describe('Storage tests', () => {
+describe('Storage with custom IPFS node tests', () => {
   let stage: Stage;
-
   let testUser: TestUser;
-
   let testProject: Project;
-
   let testBucket: Bucket;
   let testSession_uuid: string = uuidV4();
-
   let testFile: File;
+  let customCluster: IpfsCluster;
 
   beforeAll(async () => {
     stage = await setupTest();
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-
     testProject = await createTestProject(testUser, stage.devConsoleContext);
-
     testBucket = await createTestBucket(
       testUser,
       stage.storageContext,
       testProject,
     );
 
-    //Insert project ipfsConfig record
-    await new IpfsConfig(
+    //Insert custom ipfs cluster
+    customCluster = await new IpfsCluster(
+      {
+        ipfsApi: 'http://34.253.247.44:5001/api/v0',
+        ipfsGateway: 'https://ipfs-staging.apillon.io/ipfs/',
+        private: false,
+        region: 'EU',
+        cloudProvider: 'AWS',
+        isDefault: false,
+      },
+      stage.storageContext,
+    ).insert();
+
+    await new ProjectConfig(
       {
         project_uuid: testProject.project_uuid,
-        ipfsApi: `http://34.253.247.44:5001/api/v0`,
-        ipfsGateway: `https://ipfs-staging.apillon.io/ipfs/`,
-        private: true,
+        ipfsCluster_id: customCluster.id,
       },
       stage.storageContext,
     ).insert();
@@ -55,7 +62,7 @@ describe('Storage tests', () => {
     await releaseStage(stage);
   });
 
-  describe('IPFS config tests - storage with custom IPFS', () => {
+  describe('IPFS config tests - storage with PUBLIC custom IPFS', () => {
     test('User should be able to upload files to custom IPFS node', async () => {
       testSession_uuid = uuidV4();
 
@@ -101,7 +108,7 @@ describe('Storage tests', () => {
       expect(testFile.exists()).toBeTruthy();
     });
 
-    test('User should be able to get file details with link to project IPFS', async () => {
+    test('User should be able to get file details with link to custom IPFS. ', async () => {
       const response = await request(stage.http)
         .get(
           `/storage/${testBucket.bucket_uuid}/file/${testFile.file_uuid}/detail`,
@@ -138,6 +145,64 @@ describe('Storage tests', () => {
       expect(response.body.data.items[0]?.name).toBe('myTestFile.txt');
       expect(response.body.data.items[0]?.link).toBe(
         `https://ipfs-staging.apillon.io/ipfs/${testFile.CID}`,
+      );
+    });
+  });
+
+  describe('IPFS config tests - storage with PRIVATE custom IPFS', () => {
+    beforeAll(async () => {
+      //Update cluster so that it will be private
+      customCluster.private = true;
+      await customCluster.update();
+    });
+
+    test('User should be able to get file details with link&token to project IPFS', async () => {
+      const response = await request(stage.http)
+        .get(
+          `/storage/${testBucket.bucket_uuid}/file/${testFile.file_uuid}/detail`,
+        )
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+
+      expect(response.body.data.fileStatus).toBe(FileStatus.PINNED_TO_CRUST);
+      expect(response.body.data.file.file_uuid).toBe(testFile.file_uuid);
+      expect(response.body.data.file.CID).toBe(testFile.CID);
+      expect(response.body.data.file.name).toBe(testFile.name);
+      expect(response.body.data.file.size).toBeGreaterThan(0);
+
+      expect(response.body.data.file.downloadLink).toBe(
+        addJwtToIPFSUrl(
+          `https://ipfs-staging.apillon.io/ipfs/${testFile.CID}`,
+          testProject.project_uuid,
+        ),
+      );
+    });
+
+    test('User should be able to download uploaded file from custom apillon ipfs gateway', async () => {
+      expect(testFile).toBeTruthy();
+      const response = await request(
+        addJwtToIPFSUrl(
+          `https://ipfs-staging.apillon.io/ipfs/${testFile.CID}`,
+          testProject.project_uuid,
+        ),
+      ).get('');
+      expect(response.status).toBe(200);
+    });
+
+    test('User should be able to get bucket content. Items download link&token should point to custom ipfs', async () => {
+      const response = await request(stage.http)
+        .get(
+          `/directories/directory-content?bucket_uuid=${testBucket.bucket_uuid}`,
+        )
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.items.length).toBe(1);
+      expect(response.body.data.items[0]?.name).toBe('myTestFile.txt');
+      expect(response.body.data.items[0]?.link).toBe(
+        addJwtToIPFSUrl(
+          `https://ipfs-staging.apillon.io/ipfs/${testFile.CID}`,
+          testProject.project_uuid,
+        ),
       );
     });
   });

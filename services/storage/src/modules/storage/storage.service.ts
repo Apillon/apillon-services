@@ -34,16 +34,17 @@ import {
 } from '../../config/types';
 import { createFURAndS3Url } from '../../lib/create-fur-and-s3-url';
 import { StorageCodeException } from '../../lib/exceptions';
+import { addJwtToIPFSUrl } from '../../lib/ipfs-utils';
 import { processSessionFiles } from '../../lib/process-session-files';
 import { SyncToIPFSWorker } from '../../workers/s3-to-ipfs-sync-worker';
 import { WorkerName } from '../../workers/worker-executor';
 import { Bucket } from '../bucket/models/bucket.model';
+import { ProjectConfig } from '../config/models/project-config.model';
 import { HostingService } from '../hosting/hosting.service';
+import { Website } from '../hosting/models/website.model';
 import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
-import { Website } from '../hosting/models/website.model';
-import { IpfsConfig } from '../ipfs/models/ipfs-config.model';
 
 export class StorageService {
   //#region file-upload functions
@@ -431,13 +432,20 @@ export class StorageService {
     fileStatus = FileStatus.UPLOADED_TO_IPFS;
     if (file.CID) {
       //Get IPFS gateway
-      const ipfsGateway = await new IpfsConfig(
+      const ipfsGateway = await new ProjectConfig(
         { project_uuid: file.project_uuid },
         context,
       ).getIpfsGateway();
 
       fileStatus = FileStatus.PINNED_TO_CRUST;
-      file.downloadLink = ipfsGateway + file.CID;
+      file.downloadLink = ipfsGateway.url + file.CID;
+
+      if (ipfsGateway.private) {
+        file.downloadLink = addJwtToIPFSUrl(
+          file.downloadLink,
+          file.project_uuid,
+        );
+      }
     }
 
     return {

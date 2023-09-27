@@ -1,27 +1,27 @@
 import {
-  ProjectAccessModel,
   Context,
-  env,
-  getQueryParams,
   Lmas,
   LogType,
   PoolConnection,
   PopulateFrom,
-  presenceValidator,
-  prop,
-  selectAndCountQuery,
+  ProjectAccessModel,
   SerializeFor,
   ServiceName,
   SqlModelStatus,
   WebsiteQueryFilter,
+  getQueryParams,
+  presenceValidator,
+  prop,
+  selectAndCountQuery,
 } from '@apillon/lib';
-import { integerParser, stringParser, dateParser } from '@rawmodel/parsers';
-import { BucketType, DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
-import { Bucket } from '../../bucket/models/bucket.model';
+import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { v4 as uuidV4 } from 'uuid';
+import { BucketType, DbTables, StorageErrorCode } from '../../../config/types';
 import { StorageValidationException } from '../../../lib/exceptions';
-import { IpfsConfig } from '../../ipfs/models/ipfs-config.model';
+import { addJwtToIPFSUrl } from '../../../lib/ipfs-utils';
+import { Bucket } from '../../bucket/models/bucket.model';
+import { ProjectConfig } from '../../config/models/project-config.model';
 
 export class Website extends ProjectAccessModel {
   public readonly tableName = DbTables.WEBSITE;
@@ -572,7 +572,7 @@ export class Website extends ProjectAccessModel {
       throw new Error('project_uuid should not be null');
     }
 
-    const ipfsGateway = await new IpfsConfig(
+    const ipfsGateway = await new ProjectConfig(
       { project_uuid: this.project_uuid },
       this.getContext(),
     ).getIpfsGateway();
@@ -589,9 +589,23 @@ export class Website extends ProjectAccessModel {
       );
       if (this.stagingBucket.IPNS) {
         this.ipnsStagingLink =
-          ipfsGateway.replace('/ipfs/', '/ipns/') + this.stagingBucket.IPNS;
+          ipfsGateway.url.replace('/ipfs/', '/ipns/') + this.stagingBucket.IPNS;
 
-        this.w3StagingLink = `https://${this.stagingBucket.IPNS}.ipns.web3approved.com/`;
+        this.ipnsStagingLink =
+          this.w3StagingLink = `https://${this.stagingBucket.IPNS}.ipns.web3approved.com/`;
+
+        if (ipfsGateway.private) {
+          this.ipnsStagingLink = addJwtToIPFSUrl(
+            this.ipnsStagingLink,
+            this.project_uuid,
+          );
+
+          this.w3StagingLink = addJwtToIPFSUrl(
+            this.w3StagingLink,
+            this.project_uuid,
+          );
+        }
+
         this.ipnsStaging = this.stagingBucket.IPNS;
       }
     }
@@ -602,8 +616,22 @@ export class Website extends ProjectAccessModel {
       ).populateById(this.productionBucket_id);
       if (this.productionBucket.IPNS) {
         this.ipnsProductionLink =
-          ipfsGateway.replace('/ipfs/', '/ipns/') + this.productionBucket.IPNS;
+          ipfsGateway.url.replace('/ipfs/', '/ipns/') +
+          this.productionBucket.IPNS;
+
         this.w3ProductionLink = `https://${this.productionBucket.IPNS}.ipns.web3approved.com/`;
+
+        if (ipfsGateway.private) {
+          this.ipnsProductionLink = addJwtToIPFSUrl(
+            this.ipnsProductionLink,
+            this.project_uuid,
+          );
+          this.w3ProductionLink = addJwtToIPFSUrl(
+            this.w3ProductionLink,
+            this.project_uuid,
+          );
+        }
+
         this.ipnsProduction = this.productionBucket.IPNS;
       }
     }

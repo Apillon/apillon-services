@@ -367,11 +367,13 @@ describe('Storage directory tests', () => {
         testDirectoryWithSubdirectories.id,
       );
 
+      const ipfsService = new IPFSService(
+        stage.storageContext,
+        testProject.project_uuid,
+      );
+
       expect(
-        await new IPFSService(
-          stage.storageContext,
-          deleteBucketTestFile1.project_uuid,
-        ).isCIDPinned(deleteBucketTestFile1.CID),
+        await ipfsService.isCIDPinned(deleteBucketTestFile1.CID),
       ).toBeTruthy();
 
       //Subdir
@@ -413,21 +415,14 @@ describe('Storage directory tests', () => {
         deleteBucketTestFile1.id,
       );
       expect(f.exists()).toBeFalsy();
-      expect(
-        await new IPFSService(stage.storageContext, f.project_uuid).isCIDPinned(
-          f.CID,
-        ),
-      ).toBeFalsy();
+      expect(await ipfsService.isCIDPinned(f.CID)).toBeFalsy();
 
       f = await new File({}, stage.storageContext).populateById(
         deleteBucketTestFile2.id,
       );
       expect(f.exists()).toBeFalsy();
       expect(
-        await new IPFSService(
-          stage.storageContext,
-          deleteBucketTestFile1.project_uuid,
-        ).isCIDPinned(deleteBucketTestFile1.CID),
+        await ipfsService.isCIDPinned(deleteBucketTestFile1.CID),
       ).toBeFalsy();
 
       //Check if bucket size was decreased
@@ -448,12 +443,7 @@ describe('Storage directory tests', () => {
         testDirectoryFile.id.toString(),
       );
       expect(f.exists()).toBeTruthy();
-      expect(
-        await new IPFSService(
-          stage.storageContext,
-          testDirectoryFile.project_uuid,
-        ).isCIDPinned(testDirectoryFile.CID),
-      ).toBeTruthy();
+      expect(await ipfsService.isCIDPinned(testDirectoryFile.CID)).toBeTruthy();
     });
   });
 });

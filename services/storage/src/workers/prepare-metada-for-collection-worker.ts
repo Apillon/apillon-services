@@ -19,14 +19,15 @@ import {
   StorageErrorCode,
 } from '../config/types';
 import { StorageCodeException } from '../lib/exceptions';
+import { addJwtToIPFSUrl } from '../lib/ipfs-utils';
 import { storageBucketSyncFilesToIPFS } from '../lib/storage-bucket-sync-files-to-ipfs';
 import { Bucket } from '../modules/bucket/models/bucket.model';
+import { ProjectConfig } from '../modules/config/models/project-config.model';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { Ipns } from '../modules/ipns/models/ipns.model';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
 import { File } from '../modules/storage/models/file.model';
-import { IpfsConfig } from '../modules/ipfs/models/ipfs-config.model';
 
 export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
   public constructor(
@@ -146,7 +147,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
     );
 
     //Get IPFS gateway
-    const ipfsGateway = await new IpfsConfig(
+    const ipfsGateway = await new ProjectConfig(
       { project_uuid: bucket.project_uuid },
       this.context,
     ).getIpfsGateway();
@@ -177,7 +178,13 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           const imageFile = imageFiles.files.find(
             (x) => x.name == fileContent.image,
           );
-          fileContent.image = ipfsGateway + imageFile.CID;
+          fileContent.image = ipfsGateway.url + imageFile.CID;
+          if (ipfsGateway.private) {
+            fileContent.image = addJwtToIPFSUrl(
+              fileContent.image,
+              bucket.project_uuid,
+            );
+          }
         }
 
         await s3Client.upload(
