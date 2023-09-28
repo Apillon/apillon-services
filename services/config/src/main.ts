@@ -35,6 +35,8 @@ export async function processEvent(
     [ScsEventType.GET_SUBSCRIPTION_PACKAGE_STRIPE_ID]:
       SubscriptionService.getSubscriptionPackageStripeId,
     [ScsEventType.UPDATE_SUBSCRIPTION]: SubscriptionService.updateSubscription,
+    [ScsEventType.GET_ACTIVE_SUBSCRIPTION]:
+      SubscriptionService.getProjectActiveSubscription,
     [ScsEventType.LIST_SUBSCRIPTIONS]: SubscriptionService.listSubscriptions,
     [ScsEventType.HANDLE_STRIPE_WEBHOOK_DATA]:
       InvoiceService.handleStripeWebhookData,

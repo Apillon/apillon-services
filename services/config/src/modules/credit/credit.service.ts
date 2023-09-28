@@ -59,21 +59,22 @@ export class CreditService {
    * Add credit to project.
    * @param {AddCreditDto} addCreditDto
    * @param {ServiceContext} context
-   * @param {PoolConnection} conn
+   * @param {PoolConnection} connection
    * @returns {Promise<{ credit: Credit; creditTransaction: CreditTransaction }>}
    */
   static async addCredit(
-    addCreditDto: AddCreditDto,
+    event: { body: AddCreditDto },
     context: ServiceContext,
-    conn: PoolConnection,
+    connection?: PoolConnection,
   ): Promise<{ credit: Credit; creditTransaction: CreditTransaction }> {
     let credit: Credit;
     let creditTransaction: CreditTransaction;
-
+    const addCreditDto = event.body;
+    const conn = connection || (await context.mysql.start());
     try {
       credit = await new Credit({}, context).populateByProjectUUIDForUpdate(
         addCreditDto.project_uuid,
-        conn,
+        connection,
       );
 
       if (!credit.exists()) {
@@ -86,10 +87,10 @@ export class CreditService {
           context,
         );
 
-        await credit.insert(SerializeFor.INSERT_DB, conn);
+        await credit.insert(SerializeFor.INSERT_DB, connection);
       } else {
         credit.balance += addCreditDto.amount;
-        await credit.update(SerializeFor.UPDATE_DB, conn);
+        await credit.update(SerializeFor.UPDATE_DB, connection);
       }
 
       creditTransaction = new CreditTransaction({}, context).populate({
@@ -109,7 +110,7 @@ export class CreditService {
           throw new ScsValidationException(creditTransaction);
         }
       }
-      await creditTransaction.insert(SerializeFor.INSERT_DB, conn);
+      await creditTransaction.insert(SerializeFor.INSERT_DB, connection);
 
       await new Lmas().writeLog({
         context,
@@ -122,7 +123,13 @@ export class CreditService {
           credit: credit.serialize(SerializeFor.LOGGER),
         },
       });
+      if (!connection) {
+        await context.mysql.commit(conn);
+      }
     } catch (err) {
+      if (!connection) {
+        await context.mysql.rollback(conn);
+      }
       if (
         err instanceof ScsCodeException ||
         err instanceof ScsValidationException
@@ -133,9 +140,13 @@ export class CreditService {
           code: ConfigErrorCode.ERROR_ADDING_CREDIT,
           status: 500,
           context,
+          errorMessage: err?.message,
           sourceFunction: 'addCredit()',
           sourceModule: 'CreditService',
-        }).writeToMonitor({ project_uuid: addCreditDto.project_uuid });
+        }).writeToMonitor({
+          project_uuid: addCreditDto.project_uuid,
+          data: new AddCreditDto(addCreditDto).serialize(SerializeFor.SERVICE),
+        });
       }
     }
     return {
@@ -264,13 +275,14 @@ export class CreditService {
         throw err;
       } else {
         throw await new ScsCodeException({
-          code: ConfigErrorCode.ERROR_ADDING_CREDIT,
+          code: ConfigErrorCode.ERROR_SPENDING_CREDIT,
           status: 500,
           context,
-          sourceFunction: 'addCredit()',
+          sourceFunction: 'spendCredit()',
           sourceModule: 'CreditService',
         }).writeToMonitor({
           project_uuid: event.body.project_uuid,
+          data: event.body,
           sendAdminAlert: true,
         });
       }
@@ -396,9 +408,8 @@ export class CreditService {
     { package_id, project_uuid }: { package_id: number; project_uuid: string },
     context: ServiceContext,
   ): Promise<string> {
-    const creditPackage = await CreditService.getCreditPackageById(
-      { id: package_id },
-      context,
+    const creditPackage = await new CreditPackage({}, context).populateById(
+      package_id,
     );
 
     if (!creditPackage?.stripeId) {
@@ -417,12 +428,5 @@ export class CreditService {
     }
 
     return creditPackage.stripeId;
-  }
-
-  static async getCreditPackageById(
-    { id }: { id: number },
-    context: ServiceContext,
-  ): Promise<CreditPackage> {
-    return await new CreditPackage({}, context).populateById(id);
   }
 }

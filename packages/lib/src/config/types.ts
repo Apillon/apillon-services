@@ -170,6 +170,7 @@ export enum ScsEventType {
   GET_CREDIT_PACKAGE_STRIPE_ID = 'get-credit-package-stripe-id',
   UPDATE_SUBSCRIPTION = 'update-subscription',
   LIST_SUBSCRIPTIONS = 'list-subscriptions',
+  GET_ACTIVE_SUBSCRIPTION = 'get-active-subscription',
   LIST_INVOICES = 'list-invoices',
 }
 
@@ -701,17 +702,4 @@ export enum ProductCode {
   NFT_TRANSFER_COLLECTION = 8,
 
   KILT_IDENTITY = 9,
-}
-
-export enum SubscriptionPackages {
-  FREEMIUM = 1,
-  CATERPILLAR = 2,
-  COCOON = 3,
-  BUTTERFLY = 4,
-}
-
-export enum CreditPackages {
-  TEN = 1,
-  TWENTY = 2,
-  FIFTY = 3,
 }

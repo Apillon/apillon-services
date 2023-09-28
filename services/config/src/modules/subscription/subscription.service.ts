@@ -6,9 +6,7 @@ import {
   PoolConnection,
   SerializeFor,
   ServiceName,
-  SubscriptionPackages,
   SubscriptionsQueryFilter,
-  getEnumKey,
 } from '@apillon/lib';
 import { Subscription } from './models/subscription.model';
 import { ServiceContext } from '@apillon/service-lib';
@@ -33,11 +31,16 @@ export class SubscriptionService {
     context: ServiceContext,
     conn: PoolConnection,
   ): Promise<Subscription> {
-    const subscriptionPackage =
-      await SubscriptionService.getSubscriptionPackageById(
-        { id: createSubscriptionDto.package_id },
-        context,
-      );
+    await SubscriptionService.checkForActiveSubscription(
+      createSubscriptionDto.project_uuid,
+      context,
+      conn,
+    );
+
+    const subscriptionPackage = await new SubscriptionPackage(
+      {},
+      context,
+    ).populateById(createSubscriptionDto.package_id, conn);
 
     if (!subscriptionPackage?.exists()) {
       throw await new ScsCodeException({
@@ -78,30 +81,33 @@ export class SubscriptionService {
       ).getProjectSubscription(
         createSubscriptionDto.package_id,
         createSubscriptionDto.project_uuid,
+        conn,
       );
       // If this is the first time subscribing to this package for this project
       // Give credits to the project based on the purchased package
       if (!previousSubscription?.exists()) {
         await CreditService.addCredit(
-          new AddCreditDto({
-            project_uuid: createSubscriptionDto.project_uuid,
-            amount: subscriptionPackage.creditAmount,
-            referenceTable: DbTables.SUBSCRIPTION,
-            referenceId: subscription.id,
-          }),
+          {
+            body: new AddCreditDto({
+              project_uuid: createSubscriptionDto.project_uuid,
+              amount: subscriptionPackage.creditAmount,
+              referenceTable: DbTables.SUBSCRIPTION,
+              referenceId: subscription.id,
+            }),
+          },
           context,
           conn,
         );
       }
 
-      await new Lmas().sendAdminAlert(
-        `New subscription for package ${getEnumKey(
-          SubscriptionPackages,
-          subscription.package_id,
-        )} created!`,
-        ServiceName.CONFIG,
-        LogType.MSG,
-      );
+      await new Lmas().writeLog({
+        context,
+        logType: LogType.INFO,
+        message: `New subscription for package ${subscriptionPackage.name} created!`,
+        location: 'SCS/SubscriptionService/createSubscription',
+        project_uuid: createSubscriptionDto.project_uuid,
+        service: ServiceName.CONFIG,
+      });
 
       return subscription.serialize(SerializeFor.SERVICE) as Subscription;
     } catch (err) {
@@ -120,6 +126,7 @@ export class SubscriptionService {
           data: {
             ...new CreateSubscriptionDto(createSubscriptionDto).serialize(),
           },
+          sendAdminAlert: true,
         });
       }
     }
@@ -136,27 +143,12 @@ export class SubscriptionService {
     { package_id, project_uuid }: { package_id: number; project_uuid: string },
     context: ServiceContext,
   ): Promise<string> {
-    const hasActiveSubscription =
-      await SubscriptionService.projectHasActiveSubscription(
-        { project_uuid },
-        context,
-      );
+    await SubscriptionService.checkForActiveSubscription(project_uuid, context);
 
-    if (hasActiveSubscription) {
-      throw await new ScsCodeException({
-        code: ConfigErrorCode.ACTIVE_SUBSCRIPTION_EXISTS,
-        status: 400,
-        errorCodes: ConfigErrorCode,
-        sourceFunction: 'getSubscriptionPackageStripeId',
-        sourceModule: ServiceName.CONFIG,
-      }).writeToMonitor({ project_uuid });
-    }
-
-    const subscriptionPackage =
-      await SubscriptionService.getSubscriptionPackageById(
-        { id: package_id },
-        context,
-      );
+    const subscriptionPackage = await new SubscriptionPackage(
+      {},
+      context,
+    ).populateById(package_id);
 
     if (!subscriptionPackage?.stripeId) {
       throw await new ScsCodeException({
@@ -168,6 +160,7 @@ export class SubscriptionService {
       }).writeToMonitor({
         project_uuid,
         data: {
+          package_id,
           subscriptionPackage: new SubscriptionPackage(
             subscriptionPackage,
           ).serialize(),
@@ -178,22 +171,15 @@ export class SubscriptionService {
     return subscriptionPackage.stripeId;
   }
 
-  static async getSubscriptionPackageById(
-    { id }: { id: number },
-    context: ServiceContext,
-  ): Promise<SubscriptionPackage> {
-    return await new SubscriptionPackage({}, context).populateById(id);
-  }
-
-  static async projectHasActiveSubscription(
+  static async getProjectActiveSubscription(
     { project_uuid }: { project_uuid: string },
     context: ServiceContext,
-  ): Promise<boolean> {
-    const subscription = await new Subscription(
+    conn?: PoolConnection,
+  ) {
+    return await new Subscription(
       { project_uuid },
       context,
-    ).getActiveSubscription();
-    return subscription.exists();
+    ).getActiveSubscription(project_uuid, conn);
   }
 
   /**
@@ -206,26 +192,65 @@ export class SubscriptionService {
     { subscriptionStripeId, data }: { subscriptionStripeId: string; data: any },
     context: ServiceContext,
   ): Promise<Subscription> {
-    const subscription = await new Subscription(
-      { subscriptionStripeId },
-      context,
-    ).populateByStripeId(subscriptionStripeId);
+    const conn = await context.mysql.start();
 
-    if (!subscription.exists()) {
-      await new Lmas().writeLog({
-        logType: LogType.ERROR,
-        message: `Subscription for stripe ID ${subscriptionStripeId} not found in database!`,
-        location: 'SubscriptionService.updateSubscription',
-        service: ServiceName.CONFIG,
-        data,
-      });
-      throw new ScsNotFoundException(ConfigErrorCode.SUBSCRIPTION_NOT_FOUND);
+    try {
+      const subscription = await new Subscription(
+        { subscriptionStripeId },
+        context,
+      ).populateByStripeId(subscriptionStripeId, conn);
+
+      if (!subscription.exists()) {
+        await new Lmas().writeLog({
+          logType: LogType.ERROR,
+          message: `Subscription for stripe ID ${subscriptionStripeId} not found in database!`,
+          location: 'SubscriptionService.updateSubscription',
+          service: ServiceName.CONFIG,
+          data,
+        });
+        throw new ScsNotFoundException(ConfigErrorCode.SUBSCRIPTION_NOT_FOUND);
+      }
+
+      subscription.populate(data);
+
+      try {
+        await subscription.validate();
+      } catch (err) {
+        await subscription.handle(err);
+
+        if (!subscription.isValid()) {
+          await new Lmas().sendAdminAlert(
+            `Invalid subscription data for update: package ID ${subscription.package_id} for project ${subscription.project_uuid}`,
+            ServiceName.CONFIG,
+            LogType.ALERT,
+          );
+          throw new ScsValidationException(subscription);
+        }
+      }
+
+      await subscription.update(SerializeFor.UPDATE_DB, conn);
+      await context.mysql.commit(conn);
+
+      return subscription.serialize(SerializeFor.SERVICE) as Subscription;
+    } catch (err) {
+      await context.mysql.rollback(conn);
+      if (err instanceof ScsCodeException) {
+        throw err;
+      } else {
+        throw await new ScsCodeException({
+          code: ConfigErrorCode.ERROR_UPDATING_SUBSCRIPTION,
+          status: 500,
+          context,
+          errorMessage: err?.message,
+          sourceFunction: 'updateSubscription()',
+          sourceModule: 'SubscriptionService',
+        }).writeToMonitor({
+          context,
+          data: { subscriptionStripeId },
+          sendAdminAlert: true,
+        });
+      }
     }
-
-    subscription.populate(data);
-    await subscription.update();
-
-    return subscription.serialize(SerializeFor.SERVICE) as Subscription;
   }
 
   /**
@@ -239,5 +264,28 @@ export class SubscriptionService {
     return await new Subscription({
       project_uuid: event.query.project_uuid,
     }).getList(event.query, context);
+  }
+
+  private static async checkForActiveSubscription(
+    project_uuid: string,
+    context: ServiceContext,
+    conn?: PoolConnection,
+  ) {
+    const activeSubscription =
+      await SubscriptionService.getProjectActiveSubscription(
+        { project_uuid },
+        context,
+        conn,
+      );
+
+    if (activeSubscription?.exists()) {
+      throw await new ScsCodeException({
+        code: ConfigErrorCode.ACTIVE_SUBSCRIPTION_EXISTS,
+        status: 400,
+        errorCodes: ConfigErrorCode,
+        sourceFunction: 'getSubscriptionPackageStripeId',
+        sourceModule: ServiceName.CONFIG,
+      }).writeToMonitor({ project_uuid });
+    }
   }
 }

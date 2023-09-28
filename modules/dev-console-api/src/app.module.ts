@@ -1,3 +1,4 @@
+import { StripeService } from './modules/payments/stripe.service';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { ContextMiddleware } from './middlewares/context.middleware';

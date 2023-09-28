@@ -1,4 +1,3 @@
-import { CreditPackages } from '@apillon/lib';
 import { DbTables } from '../../config/types';
 
 export async function upgrade(
@@ -7,9 +6,9 @@ export async function upgrade(
   await queryFn(`
     INSERT INTO ${DbTables.CREDIT_PACKAGE} (id, status, name, description, creditAmount, bonusCredits, stripeId)
       VALUES
-      (${CreditPackages.TEN}, 5, '10K', '10000 Credits', 10000, 0, ''),
-      (${CreditPackages.TWENTY}, 5, '20K', '20000 Credits', 20000, 2000, ''),
-      (${CreditPackages.FIFTY}, 5, '50K', '50000 Credits', 50000, 7500, '');
+      (1, 5, '10K', '10000 Credits', 10000, 0, ''),
+      (2, 5, '20K', '20000 Credits', 20000, 2000, ''),
+      (3, 5, '50K', '50000 Credits', 50000, 7500, '');
   `);
 }
 

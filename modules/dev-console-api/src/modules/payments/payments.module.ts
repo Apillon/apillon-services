@@ -3,11 +3,13 @@ import { PaymentsController } from './payments.controller';
 import { Module } from '@nestjs/common';
 import Stripe from 'stripe';
 import { AppEnvironment, env } from '@apillon/lib';
+import { StripeService } from './stripe.service';
 
 @Module({
   imports: [],
   controllers: [PaymentsController],
   providers: [
+    StripeService,
     PaymentsService,
     {
       provide: Stripe,

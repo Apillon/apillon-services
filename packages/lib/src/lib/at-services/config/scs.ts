@@ -13,6 +13,7 @@ import { AddCreditDto } from './dtos/add-credit.dto';
 import { SpendCreditDto } from './dtos/spend-credit.dto';
 import { CreateInvoiceDto } from './dtos/create-invoice.dto';
 import { SubscriptionsQueryFilter } from './dtos/subscriptions-query-filter.dto';
+import { InvoicesQueryFilter } from './dtos/invoices-query-filter.dto';
 
 /**
  * System config Service client
@@ -109,14 +110,10 @@ export class Scs extends BaseService {
     return await this.callService(data);
   }
 
-  public async addCredit(
-    addCreditDto: AddCreditDto,
-    createInvoiceDto?: CreateInvoiceDto,
-  ): Promise<any> {
+  public async addCredit(addCreditDto: AddCreditDto): Promise<any> {
     const data = {
       eventName: ScsEventType.ADD_CREDIT,
       addCreditDto,
-      createInvoiceDto,
     };
 
     return await this.callService(data);
@@ -157,7 +154,7 @@ export class Scs extends BaseService {
 
   //#endregion
 
-  //#region subscription
+  //#region subscriptions
 
   public async handleStripeWebhookData(
     data: Merge<
@@ -190,6 +187,13 @@ export class Scs extends BaseService {
     });
   }
 
+  public async getProjectActiveSubscription(project_uuid: string) {
+    return await this.callService({
+      eventName: ScsEventType.GET_ACTIVE_SUBSCRIPTION,
+      project_uuid,
+    });
+  }
+
   public async listSubscriptions(query: SubscriptionsQueryFilter) {
     return await this.callService({
       eventName: ScsEventType.LIST_SUBSCRIPTIONS,
@@ -197,7 +201,7 @@ export class Scs extends BaseService {
     });
   }
 
-  public async listInvoices(query: SubscriptionsQueryFilter) {
+  public async listInvoices(query: InvoicesQueryFilter) {
     return await this.callService({
       eventName: ScsEventType.LIST_INVOICES,
       query,

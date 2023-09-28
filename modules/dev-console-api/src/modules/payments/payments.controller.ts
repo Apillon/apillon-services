@@ -15,22 +15,41 @@ import { ValidationGuard } from '../../guards/validation.guard';
 import { PaymentSessionDto } from './dto/payment-session.dto';
 import { ValidateFor } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
+import { StripeService } from './stripe.service';
 
 @Controller('payments')
 export class PaymentsController {
-  constructor(private paymentsService: PaymentsService) {}
+  constructor(
+    private paymentsService: PaymentsService,
+    private stripeService: StripeService,
+  ) {}
 
-  @Get('stripe-session-url')
+  @Get('stripe-credit-session-url')
   @Validation({ dto: PaymentSessionDto, validateFor: ValidateFor.QUERY })
   @UseGuards(AuthGuard, ValidationGuard)
-  async getStripeSessionUrl(
+  async getStripeCreditSessionUrl(
     @Query() paymentSessionDto: PaymentSessionDto,
     @Ctx() context: DevConsoleApiContext,
   ): Promise<string> {
-    const session = await this.paymentsService.createStripePaymentSession(
+    const session = await this.paymentsService.createStripeCreditPaymentSession(
       context,
       paymentSessionDto,
     );
+    return session.url;
+  }
+
+  @Get('stripe-subscription-session-url')
+  @Validation({ dto: PaymentSessionDto, validateFor: ValidateFor.QUERY })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getStripeSubscriptionSessionUrl(
+    @Query() paymentSessionDto: PaymentSessionDto,
+    @Ctx() context: DevConsoleApiContext,
+  ): Promise<string> {
+    const session =
+      await this.paymentsService.createStripeSubscriptionPaymentSession(
+        context,
+        paymentSessionDto,
+      );
     return session.url;
   }
 
@@ -39,7 +58,7 @@ export class PaymentsController {
     @Req() req: RawBodyRequest<Request>,
     @Headers('stripe-signature') stripeSignature: string,
   ): Promise<any> {
-    const event = this.paymentsService.getStripeEventFromSignature(
+    const event = this.stripeService.getStripeEventFromSignature(
       req.rawBody,
       stripeSignature,
     );

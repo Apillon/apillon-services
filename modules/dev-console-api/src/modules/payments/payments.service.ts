@@ -1,46 +1,48 @@
-import { CodeException, Scs, env } from '@apillon/lib';
+import { CodeException, Scs, SqlModelStatus } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
 import { PaymentSessionDto } from './dto/payment-session.dto';
-import {
-  BadRequestErrorCode,
-  ResourceNotFoundErrorCode,
-} from '../../config/types';
+import { ResourceNotFoundErrorCode } from '../../config/types';
 import { Project } from '../project/models/project.model';
 import { DevConsoleApiContext } from '../../context';
+import { StripeService } from './stripe.service';
 
 @Injectable()
 export class PaymentsService {
-  constructor(private stripe: Stripe) {}
+  constructor(private stripe: Stripe, private stripeService: StripeService) {}
 
-  async createStripePaymentSession(
+  async createStripeCreditPaymentSession(
     context: DevConsoleApiContext,
     paymentSessionDto: PaymentSessionDto,
   ): Promise<Stripe.Response<Stripe.Checkout.Session>> {
-    const project = await new Project({}, context).populateByUUID(
+    await this.checkProjectExists(context, paymentSessionDto.project_uuid);
+
+    const { data: stripeId } = await new Scs().getCreditPackageStripeId(
+      +paymentSessionDto.package_id,
       paymentSessionDto.project_uuid,
     );
-    if (!project.exists()) {
-      throw new CodeException({
-        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
-        status: HttpStatus.NOT_FOUND,
-        errorCodes: ResourceNotFoundErrorCode,
-      });
-    }
-    project.canModify(context);
 
-    // Get stripe ID for either credit package or subscription package
-    const { data: stripeId } = paymentSessionDto.credit_package_id
-      ? await new Scs().getCreditPackageStripeId(
-          +paymentSessionDto.credit_package_id,
-          paymentSessionDto.project_uuid,
-        )
-      : await new Scs().getSubscriptionPackageStripeId(
-          +paymentSessionDto.subscription_package_id,
-          paymentSessionDto.project_uuid,
-        );
+    return await this.stripeService.generateStripeCreditPaymentSession(
+      paymentSessionDto,
+      stripeId,
+    );
+  }
 
-    return await this.generateStripePaymentSession(paymentSessionDto, stripeId);
+  async createStripeSubscriptionPaymentSession(
+    context: DevConsoleApiContext,
+    paymentSessionDto: PaymentSessionDto,
+  ): Promise<Stripe.Response<Stripe.Checkout.Session>> {
+    await this.checkProjectExists(context, paymentSessionDto.project_uuid);
+
+    const { data: stripeId } = await new Scs().getSubscriptionPackageStripeId(
+      +paymentSessionDto.package_id,
+      paymentSessionDto.project_uuid,
+    );
+
+    return await this.stripeService.generateStripeSubscriptionPaymentSession(
+      paymentSessionDto,
+      stripeId,
+    );
   }
 
   async stripeWebhookEventHandler(event: Stripe.Event) {
@@ -53,7 +55,7 @@ export class PaymentsService {
           return;
         }
 
-        const paymentData = this.combinePaymentData(payment);
+        const paymentData = this.stripeService.combinePaymentData(payment);
         if (paymentData.isCreditPurchase) {
           // Get purchased items from Stripe API
           const sessionWithLineItems =
@@ -89,7 +91,9 @@ export class PaymentsService {
         }
         // In case subscription is renewed or canceled
         await new Scs().updateSubscription(payment.id, {
-          isCanceled: payment.cancel_at_period_end,
+          status: payment.cancel_at_period_end // If user has canceled subscription
+            ? SqlModelStatus.INACTIVE
+            : SqlModelStatus.ACTIVE,
           cancelDate: payment.canceled_at
             ? new Date(payment.canceled_at * 1000)
             : null,
@@ -100,66 +104,18 @@ export class PaymentsService {
     }
   }
 
-  private combinePaymentData(paymentData: any) {
-    const { project_uuid, package_id } = paymentData.metadata;
-
-    const isCreditPurchase = paymentData.metadata.isCreditPurchase === 'true';
-
-    return {
-      package_id,
-      isCreditPurchase,
-      project_uuid,
-      subtotalAmount: paymentData.amount_subtotal / 100,
-      totalAmount: paymentData.amount_total / 100,
-      clientName: paymentData.customer_details.name,
-      clientEmail: paymentData.customer_details.email,
-      subscriberEmail: paymentData.customer_details.email,
-    };
-  }
-
-  generateStripePaymentSession(
-    paymentSessionDto: PaymentSessionDto,
-    stripeId: string,
+  private async checkProjectExists(
+    context: DevConsoleApiContext,
+    project_uuid: string,
   ) {
-    const isCreditPurchase = !!paymentSessionDto.credit_package_id;
-    const lineItem: Stripe.Checkout.SessionCreateParams.LineItem = {
-      price: stripeId,
-      quantity: 1,
-    };
-    return this.stripe.checkout.sessions.create({
-      line_items: [lineItem],
-      mode: isCreditPurchase ? 'payment' : 'subscription',
-      metadata: {
-        project_uuid: paymentSessionDto.project_uuid,
-        package_id: isCreditPurchase
-          ? +paymentSessionDto.credit_package_id
-          : +paymentSessionDto.subscription_package_id,
-        isCreditPurchase: `${isCreditPurchase}`,
-      },
-      // TODO
-      success_url: `https://apillon.io/?success=true`,
-      cancel_url: `https://apillon.io/?canceled=true`,
-      automatic_tax: { enabled: true },
-    });
-  }
-
-  getStripeEventFromSignature(
-    rawRequest: Buffer,
-    signature: string,
-  ): Stripe.Event {
-    try {
-      return this.stripe.webhooks.constructEvent(
-        rawRequest,
-        signature,
-        env.STRIPE_WEBHOOK_SECRET,
-      );
-    } catch (err) {
+    const project = await new Project({}, context).populateByUUID(project_uuid);
+    if (!project.exists()) {
       throw new CodeException({
-        status: 400,
-        code: BadRequestErrorCode.INVALID_WEBHOOK_SIGNATURE,
-        errorCodes: BadRequestErrorCode,
-        errorMessage: 'Invalid webhook signature',
+        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
+        status: HttpStatus.NOT_FOUND,
+        errorCodes: ResourceNotFoundErrorCode,
       });
     }
+    project.canModify(context);
   }
 }

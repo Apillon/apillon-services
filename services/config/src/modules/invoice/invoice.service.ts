@@ -2,28 +2,27 @@ import {
   AddCreditDto,
   CreateInvoiceDto,
   CreateSubscriptionDto,
-  Lmas,
-  LogType,
   Merge,
   PoolConnection,
   SerializeFor,
   ServiceName,
-  SubscriptionsQueryFilter,
+  InvoicesQueryFilter,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { Invoice } from './models/invoice.model';
 import { SubscriptionService } from '../subscription/subscription.service';
 import { ConfigErrorCode, DbTables } from '../../config/types';
 import { CreditService } from '../credit/credit.service';
-import { ScsCodeException } from '../../lib/exceptions';
+import { ScsCodeException, ScsValidationException } from '../../lib/exceptions';
+import { CreditPackage } from '../credit/models/credit-package.model';
 
 export class InvoiceService {
   /**
    * Get all invoices, existing or for a single project
-   * @param {event: {query: SubscriptionsQueryFilter}} - Query filter for listing invoices
+   * @param {event: {query: InvoicesQueryFilter}} - Query filter for listing invoices
    */
   static async listInvoices(
-    event: { query: SubscriptionsQueryFilter },
+    event: { query: InvoicesQueryFilter },
     context: ServiceContext,
   ) {
     return await new Invoice({
@@ -70,31 +69,39 @@ export class InvoiceService {
       await context.mysql.commit(conn);
     } catch (err) {
       await context.mysql.rollback(conn);
-
-      await new Lmas().writeLog({
-        context,
-        project_uuid: webhookData.project_uuid,
-        logType: LogType.ERROR,
-        message: 'Error while handling stripe webhook data',
-        location: 'InvoiceService.handleStripeWebhookData()',
-        service: ServiceName.CONFIG,
-        data: {
-          webhookData,
-          err,
-        },
-      });
+      if (
+        err instanceof ScsCodeException ||
+        err instanceof ScsValidationException
+      ) {
+        throw err;
+      } else {
+        throw await new ScsCodeException({
+          code: ConfigErrorCode.ERROR_HANDLING_STRIPE_WEBHOOK,
+          status: 500,
+          context,
+          errorMessage: err?.message,
+          sourceFunction: 'handleStripeWebhookData()',
+          sourceModule: 'InvoiceService',
+        }).writeToMonitor({
+          project_uuid: event.data.project_uuid,
+          data: webhookData,
+        });
+      }
     }
     return true;
   }
 
   static async handleCreditPurchase(
-    webhookData: any,
+    webhookData: Merge<
+      Partial<AddCreditDto> & { package_id: number },
+      Partial<CreateInvoiceDto>
+    >,
     context: ServiceContext,
     conn: PoolConnection,
   ) {
-    const creditPackage = await CreditService.getCreditPackageById(
-      { id: webhookData.package_id },
-      context,
+    const creditPackage = await new CreditPackage({}, context).populateById(
+      webhookData.package_id,
+      conn,
     );
 
     if (!creditPackage?.exists()) {
@@ -121,10 +128,12 @@ export class InvoiceService {
 
     await CreditService.addCredit(
       {
-        ...webhookData,
-        amount: creditPackage.creditAmount + creditPackage.bonusCredits,
-        referenceTable: DbTables.INVOICE,
-        referenceId: invoice.id,
+        body: new AddCreditDto({
+          ...webhookData,
+          amount: creditPackage.creditAmount + creditPackage.bonusCredits,
+          referenceTable: DbTables.INVOICE,
+          referenceId: invoice.id?.toString(),
+        }),
       },
       context,
       conn,
@@ -132,22 +141,25 @@ export class InvoiceService {
   }
 
   static async handleSubscriptionPurchase(
-    webhookData: any,
+    webhookData: Merge<
+      Partial<CreateSubscriptionDto>,
+      Partial<CreateInvoiceDto>
+    >,
     context: ServiceContext,
     conn: PoolConnection,
   ) {
     {
       const subscription = await SubscriptionService.createSubscription(
-        webhookData,
+        new CreateSubscriptionDto(webhookData),
         context,
         conn,
       );
       await InvoiceService.createInvoice(
-        {
+        new CreateInvoiceDto({
           ...webhookData,
           referenceTable: DbTables.SUBSCRIPTION,
           referenceId: subscription.id,
-        },
+        }),
         context,
         conn,
       );
@@ -166,13 +178,22 @@ export class InvoiceService {
     context: ServiceContext,
     conn: PoolConnection,
   ): Promise<Invoice> {
-    const newInvoice = await new Invoice(
+    const invoice = new Invoice(
       {
         ...createInvoiceDto,
         stripeId: createInvoiceDto.invoiceStripeId,
       },
       context,
-    ).insert(SerializeFor.INSERT_DB, conn);
-    return newInvoice.serialize(SerializeFor.SERVICE) as Invoice;
+    );
+    try {
+      await invoice.validate();
+    } catch (err) {
+      await invoice.handle(err);
+      if (!invoice.isValid()) {
+        throw new ScsValidationException(invoice);
+      }
+    }
+    await invoice.insert(SerializeFor.INSERT_DB, conn);
+    return invoice.serialize(SerializeFor.SERVICE) as Invoice;
   }
 }

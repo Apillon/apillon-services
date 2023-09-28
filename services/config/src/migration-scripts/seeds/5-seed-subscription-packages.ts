@@ -1,4 +1,3 @@
-import { SubscriptionPackages } from '@apillon/lib';
 import { DbTables } from '../../config/types';
 
 export async function upgrade(
@@ -7,10 +6,10 @@ export async function upgrade(
   await queryFn(`
     INSERT INTO ${DbTables.SUBSCRIPTION_PACKAGE} (id, status, name, description, isDefault, creditAmount, stripeId)
       VALUES
-      (${SubscriptionPackages.FREEMIUM}, 5, 'Freemium', 'Freemium (Egg) plan', 1, 1500, ''),
-      (${SubscriptionPackages.CATERPILLAR}, 5, 'Caterpillar', 'Caterpillar plan', 0, 5000, ''),
-      (${SubscriptionPackages.COCOON}, 5, 'Cocoon', 'Cocoon plan', 0, 20000, ''),
-      (${SubscriptionPackages.BUTTERFLY}, 5, 'Butterfly', 'Butterfly plan', 0, 0, '');
+      (1, 5, 'Freemium', 'Freemium (Egg) plan', 1, 1500, ''),
+      (2, 5, 'Caterpillar', 'Caterpillar plan', 0, 5000, ''),
+      (3, 5, 'Cocoon', 'Cocoon plan', 0, 20000, ''),
+      (4, 5, 'Butterfly', 'Butterfly plan', 0, 0, '');
   `);
 }
 

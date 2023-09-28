@@ -7,9 +7,10 @@ import {
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
-  SubscriptionsQueryFilter,
+  InvoicesQueryFilter,
+  presenceValidator,
 } from '@apillon/lib';
-import { DbTables } from '../../../config/types';
+import { ConfigErrorCode, DbTables } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 
 export class Invoice extends AdvancedSQLModel {
@@ -17,10 +18,7 @@ export class Invoice extends AdvancedSQLModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN, //
-    ],
+    populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -28,16 +26,19 @@ export class Invoice extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ConfigErrorCode.PROJECT_UUID_NOT_PRESENT,
+      },
     ],
   })
   public project_uuid: string;
 
   @prop({
     parser: { resolver: floatParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN, //
-    ],
+    populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -45,16 +46,19 @@ export class Invoice extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ConfigErrorCode.SUBTOTAL_AMOUNT_NOT_PRESENT,
+      },
     ],
   })
   public subtotalAmount: number;
 
   @prop({
     parser: { resolver: floatParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN, //
-    ],
+    populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -63,15 +67,18 @@ export class Invoice extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
     ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ConfigErrorCode.TOTAL_AMOUNT_NOT_PRESENT,
+      },
+    ],
   })
   public totalAmount: number;
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN, //
-    ],
+    populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -85,10 +92,7 @@ export class Invoice extends AdvancedSQLModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN, //
-    ],
+    populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -102,10 +106,7 @@ export class Invoice extends AdvancedSQLModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN, //
-    ],
+    populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -113,16 +114,19 @@ export class Invoice extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ConfigErrorCode.CLIENT_EMAIL_NOT_PRESENT,
+      },
     ],
   })
   public clientEmail: string;
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN, //
-    ],
+    populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -131,15 +135,18 @@ export class Invoice extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
     ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ConfigErrorCode.CLIENT_NAME_NOT_PRESENT,
+      },
+    ],
   })
   public clientName: string;
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN, //
-    ],
+    populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -153,10 +160,7 @@ export class Invoice extends AdvancedSQLModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN, //
-    ],
+    populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -164,15 +168,21 @@ export class Invoice extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
     ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ConfigErrorCode.STRIPE_ID_NOT_VALID,
+      },
+    ],
   })
   public stripeId: string;
 
   public async getList(
-    filter: SubscriptionsQueryFilter,
+    filter: InvoicesQueryFilter,
     context: ServiceContext,
     serializationStrategy = SerializeFor.PROFILE,
   ) {
-    const query = new SubscriptionsQueryFilter(filter);
+    const query = new InvoicesQueryFilter(filter);
     const fieldMap = {
       id: 'i.id',
     };

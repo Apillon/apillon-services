@@ -29,6 +29,7 @@ import { Project } from './models/project.model';
 import { ProjectService } from './project.service';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ProjectUserUninviteDto } from './dtos/project_user-uninvite.dto';
+import { InvoicesQueryFilter } from '@apillon/lib';
 
 @Controller('projects')
 export class ProjectController {
@@ -183,6 +184,8 @@ export class ProjectController {
     ).serialize(SerializeFor.PROFILE);
   }
 
+  //#region credits
+
   @Get(':uuid/credit')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
@@ -212,6 +215,23 @@ export class ProjectController {
     );
   }
 
+  //#endregion
+
+  //#region subscriptions
+
+  @Get(':uuid/active-subscription')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getProjectActiveSubscription(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') project_uuid: string,
+  ) {
+    return await this.projectService.getProjectActiveSubscription(
+      context,
+      project_uuid,
+    );
+  }
+
   @Get(':uuid/subscriptions')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({
@@ -231,16 +251,18 @@ export class ProjectController {
   @Get(':uuid/invoices')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({
-    dto: SubscriptionsQueryFilter,
+    dto: InvoicesQueryFilter,
     validateFor: ValidateFor.QUERY,
   })
   @UseGuards(AuthGuard, ValidationGuard)
   async getProjectInvoices(
     @Ctx() context: DevConsoleApiContext,
     @Param('uuid') project_uuid: string,
-    @Query() query: SubscriptionsQueryFilter,
+    @Query() query: InvoicesQueryFilter,
   ) {
     query.project_uuid = project_uuid;
     return await this.projectService.getProjectInvoices(context, query);
   }
+
+  //#endregion
 }

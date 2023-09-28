@@ -1,12 +1,6 @@
-import {
-  booleanParser,
-  dateParser,
-  integerParser,
-  stringParser,
-} from '@rawmodel/parsers';
+import { dateParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
-  enumInclusionValidator,
   getQueryParams,
   PoolConnection,
   PopulateFrom,
@@ -15,7 +9,6 @@ import {
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
-  SubscriptionPackages,
   SubscriptionsQueryFilter,
 } from '@apillon/lib';
 import { ConfigErrorCode, DbTables } from '../../../config/types';
@@ -26,18 +19,11 @@ export class Subscription extends AdvancedSQLModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN, //
-    ],
+    populatable: [PopulateFrom.DB],
     validators: [
       {
         resolver: presenceValidator(),
         code: ConfigErrorCode.SUBSCRIPTION_PACKAGE_ID_NOT_PRESENT,
-      },
-      {
-        resolver: enumInclusionValidator(SubscriptionPackages, true),
-        code: ConfigErrorCode.SUBSCRIPTION_PACKAGE_ID_NOT_VALID,
       },
     ],
     serializable: [
@@ -53,10 +39,7 @@ export class Subscription extends AdvancedSQLModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN, //
-    ],
+    populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -64,16 +47,19 @@ export class Subscription extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ConfigErrorCode.PROJECT_UUID_NOT_PRESENT,
+      },
     ],
   })
   public project_uuid: string;
 
   @prop({
     parser: { resolver: dateParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN, //
-    ],
+    populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -82,21 +68,30 @@ export class Subscription extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
     ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ConfigErrorCode.EXPIRATION_DATE_NOT_PRESENT,
+      },
+    ],
   })
   public expiresOn: Date;
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN, //
-    ],
+    populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ConfigErrorCode.CLIENT_EMAIL_NOT_PRESENT,
+      },
     ],
   })
   public subscriberEmail: string;
@@ -106,62 +101,26 @@ export class Subscription extends AdvancedSQLModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN, //
-    ],
+    populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ConfigErrorCode.STRIPE_ID_NOT_VALID,
+      },
     ],
   })
   public stripeId: string;
 
   @prop({
-    parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN, //
-    ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.SELECT_DB,
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.PROFILE,
-      SerializeFor.SERVICE,
-    ],
-    defaultValue: 0,
-  })
-  public paymentFailures: number;
-
-  @prop({
-    parser: { resolver: booleanParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN, //
-    ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.SELECT_DB,
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.PROFILE,
-      SerializeFor.SERVICE,
-    ],
-    defaultValue: false,
-  })
-  public isCanceled: boolean;
-
-  @prop({
     parser: { resolver: dateParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN, //
-    ],
+    populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -175,6 +134,7 @@ export class Subscription extends AdvancedSQLModel {
 
   public async getActiveSubscription(
     project_uuid = this.project_uuid,
+    conn?: PoolConnection,
   ): Promise<this> {
     if (!project_uuid) {
       throw new Error('project_uuid should not be null');
@@ -186,11 +146,11 @@ export class Subscription extends AdvancedSQLModel {
       FROM \`${this.tableName}\`
       WHERE project_uuid = @project_uuid
       AND (expiresOn IS NULL OR expiresOn > NOW())
-      AND (isCanceled IS NULL OR isCanceled = 0)
       AND status = ${SqlModelStatus.ACTIVE}
       LIMIT 1;
       `,
       { project_uuid },
+      conn,
     );
 
     return data?.length
@@ -207,6 +167,7 @@ export class Subscription extends AdvancedSQLModel {
   public async getProjectSubscription(
     package_id: number,
     project_uuid = this.project_uuid,
+    conn?: PoolConnection,
   ): Promise<this> {
     if (!project_uuid) {
       throw new Error('project_uuid should not be null');
@@ -221,6 +182,7 @@ export class Subscription extends AdvancedSQLModel {
       LIMIT 1;
       `,
       { project_uuid, package_id },
+      conn,
     );
 
     return data?.length
