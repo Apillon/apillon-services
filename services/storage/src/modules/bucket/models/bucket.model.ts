@@ -407,6 +407,9 @@ export class Bucket extends ProjectAccessModel {
       { bucket_id: this.id },
       conn,
     );
+
+    this.size = 0;
+    await this.update(SerializeFor.UPDATE_DB, conn);
   }
 
   /**

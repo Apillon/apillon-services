@@ -126,7 +126,7 @@ export enum StorageEventType {
   BUCKET_CLEAR_CONTENT = 'clear-bucket-content',
   DEPLOYMENT_GET = 'get-deployment',
   DEPLOYMENT_LIST = 'list-deployment',
-  EXECUTE_PREPARE_COLLECTION_BASE_URI_WORKER = 'execute-prepare-collection-base-uri-worker',
+  PREPARE_COLLECTION_BASE_URI = 'prepare-collection-base-uri',
   TEST_CRUST_PROVIDER = 'test-crust-provider',
   PROJECT_STORAGE_DETAILS = 'project-storage-details',
 }

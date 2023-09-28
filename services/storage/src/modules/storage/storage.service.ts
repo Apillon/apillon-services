@@ -41,6 +41,7 @@ import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
 import { Website } from '../hosting/models/website.model';
+import { getSessionFilesOnS3 } from '../../lib/file-upload-session-s3-files';
 
 export class StorageService {
   //#region file-upload functions
@@ -255,6 +256,13 @@ export class StorageService {
       }
     } else if (bucket.bucketType == BucketType.HOSTING) {
       await processSessionFiles(context, bucket, session, event.body);
+      //Increase size of bucket - files on website source bucket will never be transferred to ipfs, so the size of bucket won't be increased.
+      const filesOnS3 = await getSessionFilesOnS3(
+        bucket,
+        session?.session_uuid,
+      );
+      bucket.size += filesOnS3.size;
+      await bucket.update();
     }
 
     return true;

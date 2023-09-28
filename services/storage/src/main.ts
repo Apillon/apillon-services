@@ -73,8 +73,8 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.DEPLOYMENT_GET]: HostingService.getDeployment,
     [StorageEventType.DEPLOYMENT_LIST]: HostingService.listDeployments,
 
-    [StorageEventType.EXECUTE_PREPARE_COLLECTION_BASE_URI_WORKER]:
-      NftStorageService.executePrepareBaseUriForCollectionWorker,
+    [StorageEventType.PREPARE_COLLECTION_BASE_URI]:
+      NftStorageService.prepareBaseUriForCollection,
 
     [StorageEventType.TEST_CRUST_PROVIDER]: CrustService.testCrustProvider,
 

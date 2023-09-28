@@ -50,7 +50,7 @@ export async function processSessionFiles(
     context,
   ).populateFileUploadRequestsInSession(session.id, context);
   //Get files on s3 for this session
-  const filesOnS3 = await getSessionFilesOnS3(bucket, session);
+  const filesOnS3 = await getSessionFilesOnS3(bucket, session?.session_uuid);
 
   //Check used storage
   const storageUsed = await bucket.getTotalSizeUsedByProject();

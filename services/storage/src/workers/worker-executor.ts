@@ -16,7 +16,6 @@ import { DeployWebsiteWorker } from './deploy-website-worker';
 import { DeleteBucketDirectoryFileWorker } from './delete-bucket-directory-file-worker';
 import { UpdateCrustStatusWorker } from './update-crust-status-worker';
 import { PrepareMetadataForCollectionWorker } from './prepare-metada-for-collection-worker';
-import { PrepareBaseUriForCollectionWorker } from './prepare-base-uri-for-collection-worker';
 import { PinToCrustWorker } from './pin-to-crust-worker';
 import { RepublishIpnsWorker } from './republish-ipns-worker';
 
@@ -242,16 +241,6 @@ export async function handleSqsMessages(
         }
         case WorkerName.PREPARE_METADATA_FOR_COLLECTION_WORKER: {
           await new PrepareMetadataForCollectionWorker(
-            workerDefinition,
-            context,
-            QueueWorkerType.EXECUTOR,
-          ).run({
-            executeArg: message?.body,
-          });
-          break;
-        }
-        case WorkerName.PREPARE_BASE_URI_FOR_COLLECTION_WORKER: {
-          await new PrepareBaseUriForCollectionWorker(
             workerDefinition,
             context,
             QueueWorkerType.EXECUTOR,
