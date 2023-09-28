@@ -29,7 +29,6 @@ import {
   Did,
   DidUri,
   ICredential,
-  SubmittableExtrinsic,
 } from '@kiltprotocol/sdk-js';
 import { hexToU8a, u8aToHex } from '@polkadot/util';
 // Dtos
@@ -398,7 +397,7 @@ export class IdentityMicroservice {
       event.body.email,
     );
 
-    if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
+    if (!identity.exists() || identity.state != IdentityState.DID_CREATED) {
       throw new AuthenticationCodeException({
         code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
         status: HttpStatus.NOT_FOUND,

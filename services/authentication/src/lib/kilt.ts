@@ -5,7 +5,6 @@ import {
   mnemonicGenerate,
   mnemonicToMiniSecret,
   naclBoxPairFromSecret,
-  randomAsHex,
   sr25519PairFromSeed,
 } from '@polkadot/util-crypto';
 import { isHex } from '@polkadot/util';
@@ -29,7 +28,6 @@ import {
   ICredentialPresentation,
   Blockchain,
   NewDidVerificationKey,
-  KeyringPair,
 } from '@kiltprotocol/sdk-js';
 import {
   ApillonSupportedCTypes,
