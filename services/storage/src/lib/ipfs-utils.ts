@@ -11,10 +11,14 @@ export function addJwtToIPFSUrl(url: string, project_uuid: string) {
     return url;
   }
 
-  const jwt = generateJwtToken(JwtTokenType.IPFS_TOKEN, {
-    url,
-    project_uuid,
-  });
+  const jwt = generateJwtToken(
+    JwtTokenType.IPFS_TOKEN,
+    {
+      url: url.replace('http://', '').replace('https://', ''),
+      project_uuid,
+    },
+    'never',
+  );
 
   return `${url}?token=${jwt}`;
 }

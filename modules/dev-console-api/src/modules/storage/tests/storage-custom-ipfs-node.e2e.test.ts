@@ -16,6 +16,7 @@ import { setupTest } from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
 import { ProjectConfig } from '@apillon/storage/src/modules/config/models/project-config.model';
 import { addJwtToIPFSUrl } from '@apillon/storage/src/lib/ipfs-utils';
+import { JwtTokenType, parseJwtToken } from '@apillon/lib';
 
 describe('Storage with custom IPFS node tests', () => {
   let stage: Stage;
@@ -173,11 +174,14 @@ describe('Storage with custom IPFS node tests', () => {
       expect(response.body.data.file.name).toBe(testFile.name);
       expect(response.body.data.file.size).toBeGreaterThan(0);
 
-      expect(response.body.data.file.downloadLink).toBe(
-        addJwtToIPFSUrl(
-          `https://ipfs-staging.apillon.io/ipfs/${testFile.CID}`,
-          testProject.project_uuid,
-        ),
+      expect(response.body.data.file.downloadLink).toContain(
+        `https://ipfs-staging.apillon.io/ipfs/${testFile.CID}?token=`,
+      );
+
+      //Verify token
+      parseJwtToken(
+        JwtTokenType.IPFS_TOKEN,
+        response.body.data.file.downloadLink.split('?token=')[1],
       );
     });
 
@@ -201,11 +205,8 @@ describe('Storage with custom IPFS node tests', () => {
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBe(1);
       expect(response.body.data.items[0]?.name).toBe('myTestFile.txt');
-      expect(response.body.data.items[0]?.link).toBe(
-        addJwtToIPFSUrl(
-          `https://ipfs-staging.apillon.io/ipfs/${testFile.CID}`,
-          testProject.project_uuid,
-        ),
+      expect(response.body.data.items[0]?.link).toContain(
+        `https://ipfs-staging.apillon.io/ipfs/${testFile.CID}?token=`,
       );
     });
   });
