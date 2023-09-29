@@ -29,51 +29,50 @@ export class SubscriptionService {
   static async createSubscription(
     createSubscriptionDto: CreateSubscriptionDto,
     context: ServiceContext,
-    conn: PoolConnection,
+    connection: PoolConnection,
   ): Promise<Subscription> {
+    const conn = connection || (await context.mysql.start());
+
     await SubscriptionService.checkForActiveSubscription(
       createSubscriptionDto.project_uuid,
       context,
       conn,
     );
-
-    const subscriptionPackage = await new SubscriptionPackage(
-      {},
-      context,
-    ).populateById(createSubscriptionDto.package_id, conn);
-
-    if (!subscriptionPackage?.exists()) {
-      throw await new ScsCodeException({
-        status: 404,
-        code: ConfigErrorCode.SUBSCRIPTION_PACKAGE_NOT_FOUND,
-        sourceFunction: 'createSubscription',
-        sourceModule: ServiceName.CONFIG,
-      }).writeToMonitor({
+    try {
+      const subscriptionPackage = await new SubscriptionPackage(
+        {},
         context,
-        data: { package_id: createSubscriptionDto.package_id },
-      });
-    }
+      ).populateById(createSubscriptionDto.package_id, conn);
 
-    let subscription = new Subscription(createSubscriptionDto, context);
-
-    try {
-      await subscription.validate();
-    } catch (err) {
-      await subscription.handle(err);
-
-      if (!subscription.isValid()) {
-        await new Lmas().sendAdminAlert(
-          `Invalid subscription received: ${createSubscriptionDto.package_id} for project ${createSubscriptionDto.project_uuid}
-          and customer ${createSubscriptionDto.subscriberEmail}. Error: ${err.message}`,
-          ServiceName.CONFIG,
-          LogType.ALERT,
-        );
-        throw new ScsValidationException(subscription);
+      if (!subscriptionPackage?.exists()) {
+        throw await new ScsCodeException({
+          status: 404,
+          code: ConfigErrorCode.SUBSCRIPTION_PACKAGE_NOT_FOUND,
+          sourceFunction: 'createSubscription',
+          sourceModule: ServiceName.CONFIG,
+        }).writeToMonitor({
+          context,
+          data: { package_id: createSubscriptionDto.package_id },
+        });
       }
-    }
 
-    try {
-      subscription = await subscription.insert(SerializeFor.INSERT_DB, conn);
+      let subscription = new Subscription(createSubscriptionDto, context);
+
+      try {
+        await subscription.validate();
+      } catch (err) {
+        await subscription.handle(err);
+
+        if (!subscription.isValid()) {
+          await new Lmas().sendAdminAlert(
+            `Invalid subscription received: ${createSubscriptionDto.package_id} for project ${createSubscriptionDto.project_uuid}
+          and customer ${createSubscriptionDto.subscriberEmail}. Error: ${err.message}`,
+            ServiceName.CONFIG,
+            LogType.ALERT,
+          );
+          throw new ScsValidationException(subscription);
+        }
+      }
 
       const previousSubscription = await new Subscription(
         {},
@@ -100,6 +99,8 @@ export class SubscriptionService {
         );
       }
 
+      subscription = await subscription.insert(SerializeFor.INSERT_DB, conn);
+
       await new Lmas().writeLog({
         context,
         logType: LogType.INFO,
@@ -108,10 +109,18 @@ export class SubscriptionService {
         project_uuid: createSubscriptionDto.project_uuid,
         service: ServiceName.CONFIG,
       });
-
+      if (!connection) {
+        await context.mysql.commit(conn);
+      }
       return subscription.serialize(SerializeFor.SERVICE) as Subscription;
     } catch (err) {
-      if (err instanceof ScsCodeException) {
+      if (!connection) {
+        await context.mysql.rollback(conn);
+      }
+      if (
+        err instanceof ScsCodeException ||
+        err instanceof ScsValidationException
+      ) {
         throw err;
       } else {
         throw await new ScsCodeException({
@@ -234,7 +243,10 @@ export class SubscriptionService {
       return subscription.serialize(SerializeFor.SERVICE) as Subscription;
     } catch (err) {
       await context.mysql.rollback(conn);
-      if (err instanceof ScsCodeException) {
+      if (
+        err instanceof ScsCodeException ||
+        err instanceof ScsValidationException
+      ) {
         throw err;
       } else {
         throw await new ScsCodeException({

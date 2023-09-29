@@ -179,6 +179,7 @@ export class Subscription extends AdvancedSQLModel {
       FROM \`${this.tableName}\`
       WHERE project_uuid = @project_uuid
       AND package_id = @package_id
+      ORDER BY createTime ASC
       LIMIT 1;
       `,
       { project_uuid, package_id },
