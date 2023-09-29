@@ -7,8 +7,8 @@ export async function upgrade(
     INSERT INTO ${DbTables.SUBSCRIPTION_PACKAGE} (id, status, name, description, isDefault, creditAmount, stripeId)
       VALUES
       (1, 5, 'Freemium', 'Freemium (Egg) plan', 1, 1500, ''),
-      (2, 5, 'Caterpillar', 'Caterpillar plan', 0, 5000, ''),
-      (3, 5, 'Cocoon', 'Cocoon plan', 0, 20000, ''),
+      (2, 5, 'Caterpillar', 'Caterpillar plan', 0, 5000, 'price_1Nrgz4GlTglE98hYob7iAKQf'),
+      (3, 5, 'Cocoon', 'Cocoon plan', 0, 20000, 'price_1Nrg86GlTglE98hYQaizYCwB'),
       (4, 5, 'Butterfly', 'Butterfly plan', 0, 0, '');
   `);
 }

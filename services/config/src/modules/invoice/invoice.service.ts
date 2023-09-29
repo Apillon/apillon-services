@@ -107,8 +107,8 @@ export class InvoiceService {
     if (!creditPackage?.exists()) {
       throw await new ScsCodeException({
         status: 404,
-        code: ConfigErrorCode.SUBSCRIPTION_PACKAGE_NOT_FOUND,
-        sourceFunction: 'createSubscription',
+        code: ConfigErrorCode.CREDIT_PACKAGE_NOT_FOUND,
+        sourceFunction: 'handleCreditPurchase',
         sourceModule: ServiceName.CONFIG,
       }).writeToMonitor({
         context,
