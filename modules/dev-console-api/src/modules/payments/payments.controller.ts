@@ -53,7 +53,7 @@ export class PaymentsController {
     return session.url;
   }
 
-  @Post('/stripe-webhook')
+  @Post('stripe-webhook')
   async postWebhook(
     @Req() req: RawBodyRequest<Request>,
     @Headers('stripe-signature') stripeSignature: string,
@@ -63,5 +63,17 @@ export class PaymentsController {
       stripeSignature,
     );
     await this.paymentsService.stripeWebhookEventHandler(event);
+  }
+
+  @Get('subscription-packages')
+  @UseGuards(AuthGuard)
+  async getSubscriptionPackages(@Ctx() context: DevConsoleApiContext) {
+    return this.paymentsService.getSubscriptionPackages(context);
+  }
+
+  @Get('credit-packages')
+  @UseGuards(AuthGuard)
+  async getCreditPackages(@Ctx() context: DevConsoleApiContext) {
+    return this.paymentsService.getCreditPackages(context);
   }
 }

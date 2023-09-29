@@ -30,6 +30,7 @@ export async function processEvent(
     [ScsEventType.GET_PROJECT_CREDIT]: CreditService.getCredit,
     [ScsEventType.GET_CREDIT_TRANSACTIONS]:
       CreditService.listCreditTransactions,
+    [ScsEventType.GET_CREDIT_PACKAGES]: CreditService.getCreditPackages,
     [ScsEventType.GET_CREDIT_PACKAGE_STRIPE_ID]:
       CreditService.getCreditPackageStripeId,
     [ScsEventType.GET_SUBSCRIPTION_PACKAGE_STRIPE_ID]:
@@ -38,6 +39,8 @@ export async function processEvent(
     [ScsEventType.GET_ACTIVE_SUBSCRIPTION]:
       SubscriptionService.getProjectActiveSubscription,
     [ScsEventType.LIST_SUBSCRIPTIONS]: SubscriptionService.listSubscriptions,
+    [ScsEventType.GET_SUBSCRIPTION_PACKAGES]:
+      SubscriptionService.getSubscriptionPackages,
     [ScsEventType.HANDLE_STRIPE_WEBHOOK_DATA]:
       InvoiceService.handleStripeWebhookData,
     [ScsEventType.LIST_INVOICES]: InvoiceService.listInvoices,

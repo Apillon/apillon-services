@@ -4,6 +4,7 @@ import {
   PopulateFrom,
   prop,
   SerializeFor,
+  SqlModelStatus,
 } from '@apillon/lib';
 import { DbTables } from '../../../config/types';
 
@@ -72,7 +73,19 @@ export class CreditPackage extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
     ],
   })
   public bonusCredits: number;
+
+  public async getAll(serializationStrategy = SerializeFor.PROFILE) {
+    return await this.getContext().mysql.paramExecute(
+      `
+      SELECT ${this.generateSelectFields('cp', '', serializationStrategy)}
+      FROM \`${this.tableName}\` cp
+      WHERE cp.status = ${SqlModelStatus.ACTIVE}
+      `,
+      {},
+    );
+  }
 }

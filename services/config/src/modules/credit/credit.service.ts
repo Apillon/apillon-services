@@ -429,4 +429,16 @@ export class CreditService {
 
     return creditPackage.stripeId;
   }
+
+  /**
+   * Returns all active credit packages
+   * @param {ServiceContext} context
+   * @returns {Promise<string>}
+   */
+  static async getCreditPackages(
+    event: any,
+    context: ServiceContext,
+  ): Promise<string> {
+    return await new CreditPackage({}, context).getAll();
+  }
 }

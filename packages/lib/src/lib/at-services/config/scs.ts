@@ -152,6 +152,12 @@ export class Scs extends BaseService {
     });
   }
 
+  public async getCreditPackages() {
+    return await this.callService({
+      eventName: ScsEventType.GET_CREDIT_PACKAGES,
+    });
+  }
+
   //#endregion
 
   //#region subscriptions
@@ -205,6 +211,12 @@ export class Scs extends BaseService {
     return await this.callService({
       eventName: ScsEventType.LIST_INVOICES,
       query,
+    });
+  }
+
+  public async getSubscriptionPackages() {
+    return await this.callService({
+      eventName: ScsEventType.GET_SUBSCRIPTION_PACKAGES,
     });
   }
 

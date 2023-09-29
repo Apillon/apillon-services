@@ -17,7 +17,7 @@ export class PaymentsService {
   ): Promise<Stripe.Response<Stripe.Checkout.Session>> {
     await this.checkProjectExists(context, paymentSessionDto.project_uuid);
 
-    const { data: stripeId } = await new Scs().getCreditPackageStripeId(
+    const { data: stripeId } = await new Scs(context).getCreditPackageStripeId(
       +paymentSessionDto.package_id,
       paymentSessionDto.project_uuid,
     );
@@ -34,7 +34,9 @@ export class PaymentsService {
   ): Promise<Stripe.Response<Stripe.Checkout.Session>> {
     await this.checkProjectExists(context, paymentSessionDto.project_uuid);
 
-    const { data: stripeId } = await new Scs().getSubscriptionPackageStripeId(
+    const { data: stripeId } = await new Scs(
+      context,
+    ).getSubscriptionPackageStripeId(
       +paymentSessionDto.package_id,
       paymentSessionDto.project_uuid,
     );
@@ -117,5 +119,13 @@ export class PaymentsService {
       });
     }
     project.canModify(context);
+  }
+
+  async getSubscriptionPackages(context: DevConsoleApiContext) {
+    return (await new Scs(context).getSubscriptionPackages()).data;
+  }
+
+  async getCreditPackages(context: DevConsoleApiContext) {
+    return (await new Scs(context).getCreditPackages()).data;
   }
 }

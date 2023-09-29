@@ -288,4 +288,16 @@ export class SubscriptionService {
       }).writeToMonitor({ project_uuid });
     }
   }
+
+  /**
+   * Returns all active subscription packages
+   * @param {ServiceContext} context
+   * @returns {Promise<string>}
+   */
+  static async getSubscriptionPackages(
+    event: any,
+    context: ServiceContext,
+  ): Promise<string> {
+    return await new SubscriptionPackage({}, context).getAll();
+  }
 }
