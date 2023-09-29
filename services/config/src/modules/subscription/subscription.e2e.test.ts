@@ -29,7 +29,7 @@ describe('Subscriptions unit test', () => {
     await subscriptionPackage.insert();
   });
 
-  it('should get all subscription packages', async () => {
+  test('should get all subscription packages', async () => {
     const packages = await SubscriptionService.getSubscriptionPackages(
       null,
       stage.context,
@@ -37,7 +37,7 @@ describe('Subscriptions unit test', () => {
     expect(packages?.length).toBe(1); // Created in beforeAll method
   });
 
-  it('should throw when creating an invalid subscription', async () => {
+  test('should throw when creating an invalid subscription', async () => {
     const dto = new CreateSubscriptionDto(stage.context)
       .fake()
       .populate({ project_uuid });
@@ -57,7 +57,7 @@ describe('Subscriptions unit test', () => {
     ).rejects.toThrowError(ScsValidationException);
   });
 
-  it('should create a subscription', async () => {
+  test('should create a subscription', async () => {
     const newSubscription = await SubscriptionService.createSubscription(
       new CreateSubscriptionDto(stage.context)
         .fake()
@@ -96,7 +96,7 @@ describe('Subscriptions unit test', () => {
     expect(projectCredit.balance).toBe(subscriptionPackage.creditAmount);
   });
 
-  it('should not be able to create a subscription if already active', async () => {
+  test('should not be able to create a subscription if already active', async () => {
     const createSubscription = async () => {
       await SubscriptionService.createSubscription(
         new CreateSubscriptionDto(stage.context)
@@ -109,7 +109,7 @@ describe('Subscriptions unit test', () => {
     await expect(createSubscription).rejects.toThrowError(ScsCodeException);
   });
 
-  it('should update a subscription', async () => {
+  test('should update a subscription', async () => {
     let activeSubscription = await new Subscription(
       {},
       stage.context,
@@ -147,7 +147,7 @@ describe('Subscriptions unit test', () => {
     expect(activeSubscription.exists()).toBeFalsy();
   });
 
-  it('should be able to list subscriptions', async () => {
+  test('should be able to list subscriptions', async () => {
     const { items } = await SubscriptionService.listSubscriptions(
       {
         query: new SubscriptionsQueryFilter({ project_uuid }, stage.context),
