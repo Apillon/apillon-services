@@ -248,8 +248,6 @@ export class Ipns extends ProjectAccessModel {
       this.getContext(),
     ).getIpfsGateway();
 
-    const ipfsGatewayUrl = ipfsGateway.url.replace('/ipfs/', '/ipns/');
-
     // Map url query with sql fields.
     const fieldMap = {
       id: 'b.id',
@@ -264,7 +262,9 @@ export class Ipns extends ProjectAccessModel {
     const sqlQuery = {
       qSelect: `
         SELECT ${this.generateSelectFields('i', '')},
-        IF(i.ipnsName IS NULL, NULL, CONCAT("${ipfsGatewayUrl}", i.ipnsName)) as link,
+        IF(i.ipnsName IS NULL, NULL, CONCAT("${
+          ipfsGateway.ipnsUrl
+        }", i.ipnsName)) as link,
         i.updateTime
         `,
       qFrom: `

@@ -41,6 +41,9 @@ describe('Storage with custom IPFS node tests', () => {
       {
         ipfsApi: 'http://34.253.247.44:5001/api/v0',
         ipfsGateway: 'https://ipfs-staging.apillon.io/ipfs/',
+        ipnsGateway: 'https://ipfs-staging.apillon.io/ipns/',
+        subdomainGateway: 'web3approved.com/',
+        domain: 'ipfs.apillon.io',
         private: false,
         region: 'EU',
         cloudProvider: 'AWS',

@@ -78,10 +78,12 @@ export class ProjectConfig extends AdvancedSQLModel {
       `
         SELECT c.ipfsApi
         FROM \`${DbTables.IPFS_CLUSTER}\` c
-        LEFT JOIN \`${DbTables.PROJECT_CONFIG}\` pc ON pc.ipfsCluster_id = pc.id
+        LEFT JOIN \`${DbTables.PROJECT_CONFIG}\` pc 
+          ON pc.ipfsCluster_id = c.id
+          AND pc.project_uuid = @project_uuid
         WHERE (pc.project_uuid = @project_uuid OR c.isDefault = 1)
         AND c.status = ${SqlModelStatus.ACTIVE}
-        ORDER BY c.isDefault DESC
+        ORDER BY c.isDefault ASC
         LIMIT 1;
       `,
       { project_uuid: this.project_uuid },
@@ -107,15 +109,22 @@ export class ProjectConfig extends AdvancedSQLModel {
    * Get ipfsGateway for project otherwise default one
    * @returns ipfs gateway
    */
-  public async getIpfsGateway(): Promise<{ url: string; private: boolean }> {
+  public async getIpfsGateway(): Promise<{
+    url: string;
+    ipnsUrl: string;
+    subdomainGateway: string;
+    private: boolean;
+  }> {
     const data = await this.getContext().mysql.paramExecute(
       `
-        SELECT c.ipfsGateway, c.private
+        SELECT c.ipfsGateway, c.ipnsGateway, c.subdomainGateway, c.private
         FROM \`${DbTables.IPFS_CLUSTER}\` c
-        LEFT JOIN \`${DbTables.PROJECT_CONFIG}\` pc ON pc.ipfsCluster_id = pc.id
+        LEFT JOIN \`${DbTables.PROJECT_CONFIG}\` pc 
+          ON pc.ipfsCluster_id = c.id
+          AND pc.project_uuid = @project_uuid
         WHERE (pc.project_uuid = @project_uuid OR c.isDefault = 1)
         AND c.status = ${SqlModelStatus.ACTIVE}
-        ORDER BY c.isDefault DESC
+        ORDER BY c.isDefault ASC
         LIMIT 1;
       `,
       { project_uuid: this.project_uuid },
@@ -134,7 +143,12 @@ export class ProjectConfig extends AdvancedSQLModel {
       });
     }
 
-    return { url: data[0].ipfsGateway, private: data[0].private };
+    return {
+      url: data[0].ipfsGateway,
+      ipnsUrl: data[0].ipnsGateway,
+      subdomainGateway: data[0].subdomainGateway,
+      private: data[0].private,
+    };
   }
 
   /**
@@ -146,10 +160,12 @@ export class ProjectConfig extends AdvancedSQLModel {
       `
         SELECT c.clusterServer
         FROM \`${DbTables.IPFS_CLUSTER}\` c
-        LEFT JOIN \`${DbTables.PROJECT_CONFIG}\` pc ON pc.ipfsCluster_id = pc.id
+        LEFT JOIN \`${DbTables.PROJECT_CONFIG}\` pc 
+          ON pc.ipfsCluster_id = c.id
+          AND pc.project_uuid = @project_uuid
         WHERE (pc.project_uuid = @project_uuid OR c.isDefault = 1)
         AND c.status = ${SqlModelStatus.ACTIVE}
-        ORDER BY c.isDefault DESC
+        ORDER BY c.isDefault ASC
         LIMIT 1;
       `,
       { project_uuid: this.project_uuid },

@@ -99,8 +99,7 @@ export class PrepareBaseUriForCollectionWorker extends BaseQueueWorker {
       this.context,
     ).getIpfsGateway();
 
-    let baseUri =
-      ipfsGateway.url.replace('/ipfs/', '/ipns/') + publishedIpns.name + '/';
+    let baseUri = ipfsGateway.ipnsUrl + publishedIpns.name + '/';
 
     if (ipfsGateway.private) {
       baseUri = addJwtToIPFSUrl(baseUri, bucket.project_uuid);

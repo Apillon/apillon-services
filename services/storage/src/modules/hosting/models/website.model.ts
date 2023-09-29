@@ -588,11 +588,11 @@ export class Website extends ProjectAccessModel {
         this.stagingBucket_id,
       );
       if (this.stagingBucket.IPNS) {
-        this.ipnsStagingLink =
-          ipfsGateway.url.replace('/ipfs/', '/ipns/') + this.stagingBucket.IPNS;
+        this.ipnsStagingLink = ipfsGateway.ipnsUrl + this.stagingBucket.IPNS;
 
-        this.ipnsStagingLink =
-          this.w3StagingLink = `https://${this.stagingBucket.IPNS}.ipns.web3approved.com/`;
+        if (ipfsGateway.subdomainGateway) {
+          this.w3StagingLink = `https://${this.stagingBucket.IPNS}.ipns.${ipfsGateway.subdomainGateway}`;
+        }
 
         if (ipfsGateway.private) {
           this.ipnsStagingLink = addJwtToIPFSUrl(
@@ -616,10 +616,11 @@ export class Website extends ProjectAccessModel {
       ).populateById(this.productionBucket_id);
       if (this.productionBucket.IPNS) {
         this.ipnsProductionLink =
-          ipfsGateway.url.replace('/ipfs/', '/ipns/') +
-          this.productionBucket.IPNS;
+          ipfsGateway.ipnsUrl + this.productionBucket.IPNS;
 
-        this.w3ProductionLink = `https://${this.productionBucket.IPNS}.ipns.web3approved.com/`;
+        if (ipfsGateway.subdomainGateway) {
+          this.w3ProductionLink = `https://${this.productionBucket.IPNS}.ipns.${ipfsGateway.subdomainGateway}`;
+        }
 
         if (ipfsGateway.private) {
           this.ipnsProductionLink = addJwtToIPFSUrl(
