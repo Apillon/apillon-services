@@ -7,7 +7,7 @@ import { Product } from './models/product.model';
 import { CreditTransaction } from './models/credit-transaction.model';
 import { ScsCodeException } from '../../lib/exceptions';
 
-describe('Quota unit test', () => {
+describe('Credits unit test', () => {
   let stage: Stage;
 
   const project1_uuid = uuid();

@@ -2,6 +2,8 @@ import { prop } from '@rawmodel/core';
 import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { PopulateFrom, SerializeFor } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
+import { getFaker } from '../../../utils';
+import { v4 as uuid } from 'uuid';
 
 export class CreateSubscriptionDto extends ModelBase {
   @prop({
@@ -44,6 +46,7 @@ export class CreateSubscriptionDto extends ModelBase {
       SerializeFor.ADMIN, //
       SerializeFor.SERVICE,
     ],
+    fakeValue: getFaker().internet.email(),
   })
   public subscriberEmail: string;
 
@@ -58,6 +61,7 @@ export class CreateSubscriptionDto extends ModelBase {
       PopulateFrom.PROFILE,
       SerializeFor.SERVICE,
     ],
+    fakeValue: getFaker().date.soon(30),
   })
   public expiresOn: Date;
 
@@ -72,6 +76,7 @@ export class CreateSubscriptionDto extends ModelBase {
       PopulateFrom.PROFILE,
       SerializeFor.SERVICE,
     ],
+    fakeValue: uuid(),
   })
   public stripeId: string;
 }
