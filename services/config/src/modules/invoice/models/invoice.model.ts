@@ -1,4 +1,4 @@
-import { floatParser, stringParser } from '@rawmodel/parsers';
+import { floatParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
   getQueryParams,
@@ -91,7 +91,7 @@ export class Invoice extends AdvancedSQLModel {
   public referenceTable: string;
 
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
@@ -102,7 +102,7 @@ export class Invoice extends AdvancedSQLModel {
       SerializeFor.SERVICE,
     ],
   })
-  public referenceId: string;
+  public referenceId: number;
 
   @prop({
     parser: { resolver: stringParser() },

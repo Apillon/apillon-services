@@ -44,7 +44,7 @@ export class AddCreditDto extends ModelBase {
   public referenceTable: string;
 
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [
       {
@@ -53,5 +53,5 @@ export class AddCreditDto extends ModelBase {
       },
     ],
   })
-  public referenceId: string;
+  public referenceId: number;
 }

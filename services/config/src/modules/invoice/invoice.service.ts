@@ -132,7 +132,7 @@ export class InvoiceService {
           ...webhookData,
           amount: creditPackage.creditAmount + creditPackage.bonusCredits,
           referenceTable: DbTables.INVOICE,
-          referenceId: invoice.id?.toString(),
+          referenceId: invoice.id,
         }),
       },
       context,

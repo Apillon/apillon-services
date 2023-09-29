@@ -1,4 +1,4 @@
-import { dateParser, stringParser } from '@rawmodel/parsers';
+import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
   getQueryParams,
@@ -18,7 +18,7 @@ export class Subscription extends AdvancedSQLModel {
   public readonly tableName = DbTables.SUBSCRIPTION;
 
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB],
     validators: [
       {
