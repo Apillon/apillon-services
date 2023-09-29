@@ -17,6 +17,9 @@ import { DbTables, ObjectType, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
 import { File } from '../../storage/models/file.model';
+import { ProjectConfig } from '../../config/models/project-config.model';
+import { Bucket } from '../../bucket/models/bucket.model';
+import { addJwtToIPFSUrl } from '../../../lib/ipfs-utils';
 
 export class Directory extends ProjectAccessModel {
   public readonly tableName = DbTables.DIRECTORY;
@@ -320,6 +323,7 @@ export class Directory extends ProjectAccessModel {
   public async getDirectoryContent(
     context: ServiceContext,
     filter: DirectoryContentQueryFilter,
+    bucket: Bucket,
   ) {
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
@@ -328,12 +332,18 @@ export class Directory extends ProjectAccessModel {
       filter.serialize(),
     );
 
+    //Get IPFS gateway
+    const ipfsGateway = await new ProjectConfig(
+      { project_uuid: bucket.project_uuid },
+      this.getContext(),
+    ).getIpfsGateway();
+
     const qSelects = [
       {
         qSelect: `
         SELECT ${ObjectType.DIRECTORY} as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime,
         NULL as contentType, NULL as size, d.parentDirectory_id as parentDirectoryId,
-        NULL as file_uuid, IF(d.CID IS NULL, NULL, CONCAT("${env.STORAGE_IPFS_GATEWAY}", d.CID)) as link, NULL as fileStatus
+        NULL as file_uuid, IF(d.CID IS NULL, NULL, CONCAT("${ipfsGateway.url}", d.CID)) as link, NULL as fileStatus
         `,
         qFrom: `
         FROM \`${DbTables.DIRECTORY}\` d
@@ -350,7 +360,7 @@ export class Directory extends ProjectAccessModel {
         qSelect: `
         SELECT ${ObjectType.FILE} as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime,
         d.contentType as contentType, d.size as size, d.directory_id as parentDirectoryId,
-        d.file_uuid as file_uuid, CONCAT("${env.STORAGE_IPFS_GATEWAY}", d.CID) as link, d.fileStatus as fileStatus
+        d.file_uuid as file_uuid, CONCAT("${ipfsGateway.url}", d.CID) as link, d.fileStatus as fileStatus
         `,
         qFrom: `
         FROM \`${DbTables.FILE}\` d
@@ -364,7 +374,7 @@ export class Directory extends ProjectAccessModel {
       `,
       },
     ];
-    return unionSelectAndCountQuery(
+    const data = await unionSelectAndCountQuery(
       context.mysql,
       {
         qSelects: qSelects,
@@ -373,6 +383,14 @@ export class Directory extends ProjectAccessModel {
       params,
       'd.name',
     );
+
+    if (ipfsGateway.private) {
+      for (const item of data.items) {
+        item.link = addJwtToIPFSUrl(item.link, bucket.project_uuid);
+      }
+    }
+
+    return data;
   }
 
   public async populateFullPath(directories?: Directory[]): Promise<this> {

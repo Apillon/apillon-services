@@ -89,6 +89,14 @@ export function checkEmail(email: string) {
   return regex.test(email);
 }
 
+/**
+ * JWT token
+ * @param subject
+ * @param data
+ * @param expiresIn default 1d, 'never', or pass numeric or string representation of timestamp
+ * @param secret
+ * @returns
+ */
 export function generateJwtToken(
   subject: string,
   data: any,
@@ -97,6 +105,10 @@ export function generateJwtToken(
 ) {
   if (!subject && !expiresIn) {
     return sign({ ...data }, secret ? secret : env.APP_SECRET);
+  } else if (expiresIn == 'never') {
+    return sign({ ...data }, secret ? secret : env.APP_SECRET, {
+      subject,
+    });
   }
   return sign({ ...data }, secret ? secret : env.APP_SECRET, {
     subject,
