@@ -430,6 +430,16 @@ export interface IEnv {
 
   METABASE_SECRET: string;
   METABASE_URL: string;
+
+  /**
+   * STRIPE API
+   */
+  STRIPE_API_KEY: string;
+  STRIPE_SECRET: string;
+  STRIPE_WEBHOOK_SECRET: string;
+
+  STRIPE_API_KEY_TEST: string;
+  STRIPE_SECRET_TEST: string;
 }
 
 // dotenv.config();
@@ -782,6 +792,14 @@ export let env: IEnv = {
   /** METABASE */
   METABASE_SECRET: process.env['METABASE_SECRET'] || '',
   METABASE_URL: process.env['METABASE_URL'] || 'https://metabase.apillon.io',
+
+  /** STRIPE */
+  STRIPE_API_KEY: process.env['STRIPE_API_KEY'],
+  STRIPE_SECRET: process.env['STRIPE_SECRET'],
+  STRIPE_WEBHOOK_SECRET: process.env['STRIPE_WEBHOOK_SECRET'],
+
+  STRIPE_API_KEY_TEST: process.env['STRIPE_API_KEY_TEST'],
+  STRIPE_SECRET_TEST: process.env['STRIPE_SECRET_TEST'],
 };
 
 export let isEnvReady = false;

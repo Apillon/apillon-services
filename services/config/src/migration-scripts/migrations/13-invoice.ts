@@ -2,23 +2,23 @@ export async function upgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    CREATE TABLE IF NOT EXISTS \`subscription\` (
+    CREATE TABLE IF NOT EXISTS \`invoice\` (
     \`id\` INT NOT NULL AUTO_INCREMENT,
-    \`package_id\` INT NULL,
-    \`project_uuid\` VARCHAR(36) NULL,
+    \`project_uuid\` VARCHAR(36) NOT NULL,
     \`status\` INT NULL,
-    \`expiresOn\` DATETIME NULL,
+    \`subtotalAmount\` DECIMAL(12,2) NOT NULL,
+    \`totalAmount\` DECIMAL(12,2) NOT NULL,
+    \`referenceTable\` VARCHAR(36) NULL,
+    \`referenceId\` VARCHAR(36) NULL,
+    \`clientEmail\` VARCHAR(60) NOT NULL,
+    \`clientName\` VARCHAR(60) NOT NULL,
+    \`currency\` VARCHAR(10) NULL,
+    \`stripeId\` VARCHAR(60) NOT NULL,
     \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
     \`createUser\` VARCHAR(36) NULL,
     \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     \`updateUser\` VARCHAR(36) NULL,
-    PRIMARY KEY (\`id\`),
-    INDEX \`fk_subscription_subscriptionPackage1_idx\` (\`package_id\` ASC) VISIBLE,
-    CONSTRAINT \`fk_subscription_subscriptionPackage1\`
-      FOREIGN KEY (\`package_id\`)
-      REFERENCES \`subscriptionPackage\` (\`id\`)
-      ON DELETE CASCADE
-      ON UPDATE NO ACTION);
+    PRIMARY KEY (\`id\`));
   `);
 }
 
@@ -26,6 +26,6 @@ export async function downgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    DROP TABLE IF EXISTS \`subscription\`;
+    DROP TABLE IF EXISTS \`invoice\`;
   `);
 }

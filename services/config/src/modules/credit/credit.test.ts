@@ -7,7 +7,7 @@ import { Product } from './models/product.model';
 import { CreditTransaction } from './models/credit-transaction.model';
 import { ScsCodeException } from '../../lib/exceptions';
 
-describe('Quota unit test', () => {
+describe('Credits unit test', () => {
   let stage: Stage;
 
   const project1_uuid = uuid();
@@ -49,7 +49,7 @@ describe('Quota unit test', () => {
       });
 
       project1Balance += 1000;
-      await CreditService.addCredit({ body: data }, stage.context);
+      await CreditService.addCredit({ body: data }, stage.context, null);
 
       const projectCredit: Credit = await new Credit(
         {},
@@ -68,7 +68,7 @@ describe('Quota unit test', () => {
         referenceId: 2,
       });
 
-      await CreditService.addCredit({ body: data }, stage.context);
+      await CreditService.addCredit({ body: data }, stage.context, null);
 
       const projectCredit: Credit = await new Credit(
         {},
@@ -88,7 +88,7 @@ describe('Quota unit test', () => {
       });
 
       project1Balance += 1000;
-      await CreditService.addCredit({ body: data }, stage.context);
+      await CreditService.addCredit({ body: data }, stage.context, null);
 
       const projectCredit: Credit = await new Credit(
         {},

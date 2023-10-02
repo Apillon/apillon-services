@@ -147,7 +147,5 @@ export function getEnumKey<TEnum>(
   enumerator: TEnum,
   value: TEnum[keyof TEnum],
 ): string | TEnum[keyof TEnum] {
-  return (
-    Object.keys(enumerator).find((key) => enumerator[key] === value) ?? value
-  );
+  return Object.keys(enumerator).find((key) => enumerator[key] === value);
 }
