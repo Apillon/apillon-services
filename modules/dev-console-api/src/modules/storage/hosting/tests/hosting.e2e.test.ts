@@ -55,7 +55,7 @@ describe('Hosting tests', () => {
         name: 'Test Website',
         domain: 'https://hosting-e2e-tests.si',
       })
-      .createNewWebsite(stage.storageContext);
+      .createNewWebsite(stage.storageContext, uuidV4());
   });
 
   afterAll(async () => {

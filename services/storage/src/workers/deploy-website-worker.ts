@@ -69,6 +69,8 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
       deployment.website_id,
     );
 
+    const ipfsService = new IPFSService(this.context, website.project_uuid);
+
     try {
       //according to environment, select source and target bucket
       const sourceBucket_id =
@@ -117,12 +119,11 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         deployment.environment == DeploymentEnvironment.STAGING ||
         deployment.environment == DeploymentEnvironment.DIRECT_TO_PRODUCTION
       ) {
-        ipfsRes = await IPFSService.uploadFilesToIPFSFromS3(
+        ipfsRes = await ipfsService.uploadFilesToIPFSFromS3(
           {
             files: sourceFiles,
             wrapWithDirectory: true,
             wrappingDirectoryPath: `Deployment_${deployment.id}`,
-            project_uuid: website.project_uuid,
           },
           this.context,
         );
@@ -155,7 +156,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         }
       }
       //publish IPNS and update target bucket
-      const ipns = await IPFSService.publishToIPNS(
+      const ipns = await ipfsService.publishToIPNS(
         targetBucket.CID,
         targetBucket.bucket_uuid,
       );

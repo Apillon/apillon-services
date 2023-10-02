@@ -18,6 +18,8 @@ import {
   Scs,
   SerializeFor,
   ServiceName,
+  SubscriptionsQueryFilter,
+  InvoicesQueryFilter,
   ValidationException,
 } from '@apillon/lib';
 import {
@@ -571,4 +573,30 @@ export class ProjectService {
   }
 
   //#endregion
+
+  //#region subscriptions
+
+  async getProjectActiveSubscription(
+    context: DevConsoleApiContext,
+    project_uuid: string,
+  ) {
+    return (await new Scs(context).getProjectActiveSubscription(project_uuid))
+      .data;
+  }
+
+  async getProjectSubscriptions(
+    context: DevConsoleApiContext,
+    query: SubscriptionsQueryFilter,
+  ) {
+    return (await new Scs(context).listSubscriptions(query)).data;
+  }
+
+  async getProjectInvoices(
+    context: DevConsoleApiContext,
+    query: InvoicesQueryFilter,
+  ) {
+    return (await new Scs(context).listInvoices(query)).data;
+  }
+
+  // #endregion
 }

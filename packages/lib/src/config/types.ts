@@ -1,3 +1,5 @@
+export type Merge<T, K> = Omit<T, keyof K> & K;
+
 export enum ChainType {
   SUBSTRATE = 1,
   EVM = 2,
@@ -163,6 +165,15 @@ export enum ScsEventType {
   REFUND_CREDIT = 'refund-credit',
   GET_PROJECT_CREDIT = 'get-project-credit',
   GET_CREDIT_TRANSACTIONS = 'get-project-transactions',
+  GET_CREDIT_PACKAGES = 'get-credit-packages',
+  HANDLE_STRIPE_WEBHOOK_DATA = 'handle-stripe-webhook-data',
+  GET_SUBSCRIPTION_PACKAGE_STRIPE_ID = 'get-subscription-package-stripe-id',
+  GET_CREDIT_PACKAGE_STRIPE_ID = 'get-credit-package-stripe-id',
+  UPDATE_SUBSCRIPTION = 'update-subscription',
+  LIST_SUBSCRIPTIONS = 'list-subscriptions',
+  GET_ACTIVE_SUBSCRIPTION = 'get-active-subscription',
+  GET_SUBSCRIPTION_PACKAGES = 'get-subscription-packages',
+  LIST_INVOICES = 'list-invoices',
 }
 
 export enum NftsEventType {
@@ -612,6 +623,7 @@ export enum JwtTokenType {
   USER_RESET_EMAIL = 'user-reset-email',
   USER_CONFIRM_EMAIL = 'user-confirm-email',
   USER_LOGIN_CAPTCHA = 'user-login-captcha',
+  IPFS_TOKEN = 'IPFS-token',
 }
 
 /**

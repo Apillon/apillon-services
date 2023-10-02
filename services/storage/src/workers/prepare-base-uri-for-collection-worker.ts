@@ -16,7 +16,9 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
+import { addJwtToIPFSUrl } from '../lib/ipfs-utils';
 import { Bucket } from '../modules/bucket/models/bucket.model';
+import { ProjectConfig } from '../modules/config/models/project-config.model';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { Ipns } from '../modules/ipns/models/ipns.model';
 import { PrepareMetadataForCollectionWorker } from './prepare-metada-for-collection-worker';
@@ -41,21 +43,24 @@ export class PrepareBaseUriForCollectionWorker extends BaseQueueWorker {
     imagesSession: string;
     metadataSession: string;
   }): Promise<any> {
-    // console.info(
-    //   'RUN EXECUTOR (PrepareBaseUriForCollectionWorker). data: ',
-    //   data,
-    // );
+    console.info(
+      'RUN EXECUTOR (PrepareBaseUriForCollectionWorker). data: ',
+      data,
+    );
+
+    const bucket: Bucket = await new Bucket({}, this.context).populateByUUID(
+      data.bucket_uuid,
+    );
+
+    const ipfsService = new IPFSService(this.context, bucket.project_uuid);
+
     //Create initial CID for this collection - IPNS Publish does not work otherwise
-    const ipfsRes = await IPFSService.addFileToIPFS({
+    const ipfsRes = await ipfsService.addFileToIPFS({
       path: '',
       content: `NFT Collection metadata. Collection uuid: ${data.collection_uuid}`,
     });
 
     //Add IPNS record to bucket
-    const bucket: Bucket = await new Bucket({}, this.context).populateByUUID(
-      data.bucket_uuid,
-    );
-
     let ipnsDbRecord = await new Ipns(
       {},
       this.context,
@@ -75,7 +80,7 @@ export class PrepareBaseUriForCollectionWorker extends BaseQueueWorker {
     }
 
     //Publish IPNS
-    const publishedIpns = await IPFSService.publishToIPNS(
+    const publishedIpns = await ipfsService.publishToIPNS(
       ipfsRes.cidV0,
       `${ipnsDbRecord.project_uuid}_${ipnsDbRecord.bucket_id}_${ipnsDbRecord.id}`,
     );
@@ -88,10 +93,17 @@ export class PrepareBaseUriForCollectionWorker extends BaseQueueWorker {
 
     await ipnsDbRecord.update(SerializeFor.UPDATE_DB);
 
-    const baseUri =
-      env.STORAGE_IPFS_GATEWAY.replace('/ipfs/', '/ipns/') +
-      publishedIpns.name +
-      '/';
+    //Get IPFS gateway
+    const ipfsGateway = await new ProjectConfig(
+      { project_uuid: bucket.project_uuid },
+      this.context,
+    ).getIpfsGateway();
+
+    let baseUri = ipfsGateway.ipnsUrl + publishedIpns.name + '/';
+
+    if (ipfsGateway.private) {
+      baseUri = addJwtToIPFSUrl(baseUri, bucket.project_uuid);
+    }
 
     //Start worker which will prepare images and metadata and deploy contract
     if (
