@@ -177,6 +177,15 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         });
 
         await ipnsDbRecord.insert();
+      } else {
+        //Update db ipns record with new values
+        ipnsDbRecord.populate({
+          ipnsValue: ipns.value,
+          key: targetBucket.bucket_uuid,
+          cid: targetBucket.CID,
+        });
+
+        await ipnsDbRecord.update();
       }
 
       const conn = await this.context.mysql.start();
