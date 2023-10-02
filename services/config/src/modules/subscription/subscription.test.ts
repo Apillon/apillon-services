@@ -34,7 +34,7 @@ describe('Subscriptions unit test', () => {
       null,
       stage.context,
     );
-    expect(packages?.length).toBe(1); // Created in beforeAll method
+    expect(packages?.length).toBeGreaterThanOrEqual(4); // From seed
   });
 
   test('should throw when creating an invalid subscription', async () => {

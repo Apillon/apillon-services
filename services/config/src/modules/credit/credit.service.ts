@@ -74,7 +74,7 @@ export class CreditService {
     try {
       credit = await new Credit({}, context).populateByProjectUUIDForUpdate(
         addCreditDto.project_uuid,
-        connection,
+        conn,
       );
 
       if (!credit.exists()) {
@@ -87,10 +87,10 @@ export class CreditService {
           context,
         );
 
-        await credit.insert(SerializeFor.INSERT_DB, connection);
+        await credit.insert(SerializeFor.INSERT_DB, conn);
       } else {
         credit.balance += addCreditDto.amount;
-        await credit.update(SerializeFor.UPDATE_DB, connection);
+        await credit.update(SerializeFor.UPDATE_DB, conn);
       }
 
       creditTransaction = new CreditTransaction({}, context).populate({
@@ -110,7 +110,7 @@ export class CreditService {
           throw new ScsValidationException(creditTransaction);
         }
       }
-      await creditTransaction.insert(SerializeFor.INSERT_DB, connection);
+      await creditTransaction.insert(SerializeFor.INSERT_DB, conn);
 
       await new Lmas().writeLog({
         context,

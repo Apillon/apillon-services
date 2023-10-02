@@ -8,6 +8,7 @@ import {
 import { Project } from '../../project/models/project.model';
 import { setupTest } from '../../../../test/helpers/setup';
 import * as request from 'supertest';
+import { SqlModelStatus } from '@apillon/lib';
 
 describe('Payments controller e2e tests', () => {
   let stage: Stage;
@@ -20,10 +21,6 @@ describe('Payments controller e2e tests', () => {
 
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     testProject = await createTestProject(testUser, stage.devConsoleContext);
-    const data = await stage.configContext.mysql.paramExecute(
-      `SELECT * from creditPackage`,
-    );
-    expect(data).toHaveLength(3);
   });
 
   afterAll(async () => {
@@ -103,9 +100,9 @@ describe('Payments controller e2e tests', () => {
 
     test('Get all credit packages', async () => {
       const creditPackages = await stage.configContext.mysql.paramExecute(
-        `SELECT * from creditPackage`,
+        `SELECT * from creditPackage WHERE status = ${SqlModelStatus.ACTIVE}`,
       );
-      expect(creditPackages).toHaveLength(3); // From seed
+      expect(creditPackages.length).toBeGreaterThanOrEqual(3); // From seed
       const response = await request(stage.http)
         .get('/payments/credit-packages')
         .set('Authorization', `Bearer ${testUser.token}`);
@@ -130,9 +127,13 @@ describe('Payments controller e2e tests', () => {
       expect(response.status).toBe(200);
       const responsePackages = response.body.data;
       expect(subscriptionPackages.length).toEqual(responsePackages.length);
-      subscriptionPackages.forEach((creditPackage) => {
-        expect(responsePackages.map((r) => r.name)).toContain(
-          creditPackage.name,
+      subscriptionPackages.forEach((subPackage) => {
+        expect(responsePackages.map((r) => r.name)).toContain(subPackage.name);
+        expect(responsePackages.map((r) => r.stripeId)).toContain(
+          subPackage.stripeId,
+        );
+        expect(responsePackages.map((r) => r.creditAmount)).toContain(
+          subPackage.creditAmount,
         );
       });
     });

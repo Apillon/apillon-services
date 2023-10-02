@@ -85,6 +85,7 @@ export class InvoiceService {
         }).writeToMonitor({
           project_uuid: event.data.project_uuid,
           data: webhookData,
+          sendAdminAlert: true,
         });
       }
     }

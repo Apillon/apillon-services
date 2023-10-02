@@ -91,7 +91,7 @@ export class Invoice extends AdvancedSQLModel {
   public referenceTable: string;
 
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
@@ -102,7 +102,7 @@ export class Invoice extends AdvancedSQLModel {
       SerializeFor.SERVICE,
     ],
   })
-  public referenceId: number;
+  public referenceId: string;
 
   @prop({
     parser: { resolver: stringParser() },

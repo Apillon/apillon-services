@@ -196,6 +196,7 @@ export class Subscription extends AdvancedSQLModel {
       `
         SELECT * FROM \`${this.tableName}\`
         WHERE stripeId = @stripeId
+        AND status = ${SqlModelStatus.ACTIVE}
       `,
       { stripeId },
       conn,

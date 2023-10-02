@@ -15,7 +15,7 @@ export async function downgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    ALTER TABLE \`${DbTables.SUBSCRIPTION}\`
+    ALTER TABLE \`${DbTables.SUBSCRIPTION_PACKAGE}\`
     DROP COLUMN \`stripeId\`,
     DROP COLUMN \`deactivationDate\`,
     DROP COLUMN \`creditAmount\`;

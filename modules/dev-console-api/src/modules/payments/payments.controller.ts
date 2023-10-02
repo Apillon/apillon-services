@@ -24,7 +24,7 @@ export class PaymentsController {
     private stripeService: StripeService,
   ) {}
 
-  @Get('stripe-credit-session-url')
+  @Get('stripe/credit-session-url')
   @Validation({ dto: PaymentSessionDto, validateFor: ValidateFor.QUERY })
   @UseGuards(AuthGuard, ValidationGuard)
   async getStripeCreditSessionUrl(
@@ -38,7 +38,7 @@ export class PaymentsController {
     return session.url;
   }
 
-  @Get('stripe-subscription-session-url')
+  @Get('stripe/subscription-session-url')
   @Validation({ dto: PaymentSessionDto, validateFor: ValidateFor.QUERY })
   @UseGuards(AuthGuard, ValidationGuard)
   async getStripeSubscriptionSessionUrl(
@@ -53,7 +53,7 @@ export class PaymentsController {
     return session.url;
   }
 
-  @Post('stripe-webhook')
+  @Post('stripe/webhook')
   async postWebhook(
     @Req() req: RawBodyRequest<Request>,
     @Headers('stripe-signature') stripeSignature: string,
