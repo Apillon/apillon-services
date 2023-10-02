@@ -64,7 +64,7 @@ export class AppModule {
         { path: 'users/password-reset', method: RequestMethod.POST },
         { path: 'users/password-reset-request', method: RequestMethod.POST },
         { path: 'payments/stripe-webhook', method: RequestMethod.POST },
-        { path: 'public/contact-form', method: RequestMethod.POST },
+        { path: 'public/contact-us', method: RequestMethod.POST },
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer

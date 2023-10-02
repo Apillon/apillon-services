@@ -155,7 +155,7 @@ export function generateTemplateData(key: string, data: any) {
       </p>
       `,
     },
-    'contact-form': {
+    'contact-us-form': {
       subject: `Contact Form Entry by ${data.firstName} ${data.lastName}`,
       title: 'Contact Form Entry',
       text: `

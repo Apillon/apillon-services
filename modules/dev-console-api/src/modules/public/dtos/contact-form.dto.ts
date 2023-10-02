@@ -13,12 +13,12 @@ import { ValidatorErrorCode } from '../../../config/types';
 export class ContactFormDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    populatable: [PopulateFrom.PROFILE],
+    serializable: [SerializeFor.PROFILE],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.INVALID_CONTACT_FORM_DATA,
+        code: ValidatorErrorCode.CONTACT_FORM_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -26,12 +26,12 @@ export class ContactFormDto extends ModelBase {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    populatable: [PopulateFrom.PROFILE],
+    serializable: [SerializeFor.PROFILE],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.INVALID_CONTACT_FORM_DATA,
+        code: ValidatorErrorCode.CONTACT_FORM_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -39,12 +39,12 @@ export class ContactFormDto extends ModelBase {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    populatable: [PopulateFrom.PROFILE],
+    serializable: [SerializeFor.PROFILE],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.INVALID_CONTACT_FORM_DATA,
+        code: ValidatorErrorCode.CONTACT_FORM_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -52,12 +52,12 @@ export class ContactFormDto extends ModelBase {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    populatable: [PopulateFrom.PROFILE],
+    serializable: [SerializeFor.PROFILE],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.INVALID_CONTACT_FORM_DATA,
+        code: ValidatorErrorCode.CONTACT_FORM_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -65,12 +65,12 @@ export class ContactFormDto extends ModelBase {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    populatable: [PopulateFrom.PROFILE],
+    serializable: [SerializeFor.PROFILE],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.INVALID_CONTACT_FORM_DATA,
+        code: ValidatorErrorCode.CONTACT_FORM_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -78,12 +78,12 @@ export class ContactFormDto extends ModelBase {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    populatable: [PopulateFrom.PROFILE],
+    serializable: [SerializeFor.PROFILE],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.INVALID_CONTACT_FORM_DATA,
+        code: ValidatorErrorCode.CONTACT_FORM_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -91,14 +91,8 @@ export class ContactFormDto extends ModelBase {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.INVALID_CONTACT_FORM_DATA,
-      },
-    ],
+    populatable: [PopulateFrom.PROFILE],
+    serializable: [SerializeFor.PROFILE],
   })
   additionalInfo: string;
 

@@ -4,10 +4,10 @@ import { Mailing, env } from '@apillon/lib';
 
 @Injectable()
 export class PublicService {
-  async sendContactFormEmail(data: ContactFormDto) {
+  async sendContactUsEmail(data: ContactFormDto) {
     await new Mailing(null).sendMail({
       emails: [env.CONTACT_EMAIL_TO],
-      template: 'contact-form',
+      template: 'contact-us-form',
       data,
     });
   }

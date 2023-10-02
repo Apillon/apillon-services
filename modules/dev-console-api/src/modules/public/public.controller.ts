@@ -8,10 +8,10 @@ import { ContactFormDto } from './dtos/contact-form.dto';
 export class PublicController {
   constructor(private publicService: PublicService) {}
 
-  @Post('contact-form')
+  @Post('contact-us')
   @UseGuards(CaptchaGuard, ValidationGuard)
   @Validation({ dto: ContactFormDto })
-  async createPlayer(@Body() body: ContactFormDto) {
-    return await this.publicService.sendContactFormEmail(body);
+  async sendContactUsEmail(@Body() body: ContactFormDto) {
+    return await this.publicService.sendContactUsEmail(body);
   }
 }
