@@ -147,6 +147,37 @@ describe('Subscriptions unit test', () => {
     expect(activeSubscription.exists()).toBeFalsy();
   });
 
+  test('should not receive credits when renewing subscription', async () => {
+    const newSubscription = await SubscriptionService.createSubscription(
+      new CreateSubscriptionDto(stage.context)
+        .fake()
+        .populate({ project_uuid, package_id: subscriptionPackage.id }),
+      stage.context,
+      null,
+    );
+    expect(newSubscription).toBeDefined();
+
+    // Check if subscription saved to DB
+    const subscription = await new Subscription({}, stage.context).populateById(
+      newSubscription.id,
+    );
+    expect(subscription.exists()).toBeTruthy();
+    expect(subscription.project_uuid).toEqual(project_uuid);
+    expect(subscription.subscriberEmail).toEqual(
+      newSubscription.subscriberEmail,
+    );
+    expect(subscription.stripeId).toEqual(newSubscription.stripeId);
+
+    // Check if project has received credits for new subscription
+    const projectCredit = await new Credit({}, stage.context).populateByUUID(
+      project_uuid,
+    );
+
+    expect(projectCredit.exists()).toBeTruthy();
+    // Balance is same as before, not increased
+    expect(projectCredit.balance).toBe(subscriptionPackage.creditAmount);
+  });
+
   test('should be able to list subscriptions', async () => {
     const { items } = await SubscriptionService.listSubscriptions(
       {
