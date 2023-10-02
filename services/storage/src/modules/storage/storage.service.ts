@@ -70,6 +70,20 @@ export class StorageService {
     }
     bucket.canAccess(context);
 
+    //Check if enough storage is available
+    const storageUsed = await bucket.getTotalSizeUsedByProject();
+    const maxStorageQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_STORAGE,
+      project_uuid: bucket.project_uuid,
+    });
+    const maxStorage = (maxStorageQuota?.value || 3) * 1073741824;
+    if (storageUsed >= maxStorage) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.NOT_ENOUGH_STORAGE_SPACE,
+        status: 400,
+      });
+    }
+
     //Get existing or create new fileUploadSession
     let session: FileUploadSession;
     if (event.body.session_uuid) {
