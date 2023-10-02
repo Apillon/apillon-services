@@ -82,6 +82,9 @@ export class SubscriptionService {
         createSubscriptionDto.project_uuid,
         conn,
       );
+      // Insert subscription here so it is not included in getProjectSubscription call
+      subscription = await subscription.insert(SerializeFor.INSERT_DB, conn);
+
       // If this is the first time subscribing to this package for this project
       // Give credits to the project based on the purchased package
       if (!previousSubscription?.exists()) {
@@ -98,8 +101,6 @@ export class SubscriptionService {
           conn,
         );
       }
-
-      subscription = await subscription.insert(SerializeFor.INSERT_DB, conn);
 
       await new Lmas().writeLog({
         context,
