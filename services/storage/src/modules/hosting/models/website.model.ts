@@ -227,6 +227,19 @@ export class Website extends ProjectAccessModel {
   })
   public domainChangeDate: Date;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    validators: [],
+  })
+  public cdnId: string;
+
   /***************************************************
    * Info properties
    *****************************************************/
