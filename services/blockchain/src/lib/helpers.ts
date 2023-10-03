@@ -13,18 +13,18 @@ export function evmChainToWorkerName(
   switch (chain) {
     case EvmChain.MOONBEAM: {
       return type == WorkerType.TRANSMIT
-        ? WorkerName.TRANSMIT_MOONBEAM_TRANSACTION
-        : WorkerName.MOONBEAM_TRANSACTIONS;
+        ? WorkerName.TRANSMIT_MOONBEAM_TRANSACTIONS
+        : WorkerName.VERIFY_MOONBEAM_TRANSACTIONS;
     }
     case EvmChain.MOONBASE: {
       return type == WorkerType.TRANSMIT
-        ? WorkerName.TRANSMIT_MOONBASE_TRANSACTION
-        : WorkerName.MOONBASE_TRANSACTIONS;
+        ? WorkerName.TRANSMIT_MOONBASE_TRANSACTIONS
+        : WorkerName.VERIFY_MOONBASE_TRANSACTIONS;
     }
     case EvmChain.ASTAR: {
       return type == WorkerType.TRANSMIT
-        ? WorkerName.TRANSMIT_ASTAR_TRANSACTION
-        : WorkerName.ASTAR_TRANSACTIONS;
+        ? WorkerName.TRANSMIT_ASTAR_TRANSACTIONS
+        : WorkerName.VERIFY_ASTAR_TRANSACTIONS;
     }
     default: {
       throw new Error('Unsupported');
@@ -35,10 +35,10 @@ export function evmChainToWorkerName(
 export function substrateChainToWorkerName(chain: SubstrateChain): string {
   switch (chain) {
     case SubstrateChain.CRUST: {
-      return WorkerName.TRANSMIT_CRUST_TRANSACTION;
+      return WorkerName.TRANSMIT_CRUST_TRANSACTIONS;
     }
     case SubstrateChain.KILT: {
-      return WorkerName.TRANSMIT_KILT_TRANSACTION;
+      return WorkerName.TRANSMIT_KILT_TRANSACTIONS;
     }
     default: {
       throw new Error('Unsupported');

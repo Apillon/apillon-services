@@ -29,19 +29,18 @@ import { SubstrateTransactionWorker } from './substrate-transaction-worker';
 
 export enum WorkerName {
   SCHEDULER = 'scheduler',
-  TRANSMIT_CRUST_TRANSACTION = 'TransmitCrustTransaction',
-  TRANSMIT_KILT_TRANSACTION = 'TransmitKiltTransaction',
-  TRANSMIT_MOONBEAM_TRANSACTION = 'TransmitMoonbeamTransaction',
-  TRANSMIT_MOONBASE_TRANSACTION = 'TransmitMoonbaseTransaction',
-  TRANSMIT_ASTAR_TRANSACTION = 'TransmitAstarTransaction',
-  CRUST_TRANSACTIONS = 'CrustTransactions',
-  MOONBEAM_TRANSACTIONS = 'MoonbeamTransactions',
-  MOONBASE_TRANSACTIONS = 'MoonbaseTransactions',
-  ASTAR_TRANSACTIONS = 'AstarTransactions',
+  TRANSMIT_CRUST_TRANSACTIONS = 'TransmitCrustTransactions',
+  TRANSMIT_KILT_TRANSACTIONS = 'TransmitKiltTransactions',
+  TRANSMIT_MOONBEAM_TRANSACTIONS = 'TransmitMoonbeamTransactions',
+  TRANSMIT_MOONBASE_TRANSACTIONS = 'TransmitMoonbaseTransactions',
+  TRANSMIT_ASTAR_TRANSACTIONS = 'TransmitAstarTransactions',
+  VERIFY_CRUST_TRANSACTIONS = 'VerifyCrustTransactions',
+  VERIFY_KILT_TRANSACTIONS = 'VerifyKiltTransactions',
+  VERIFY_MOONBEAM_TRANSACTIONS = 'VerifyMoonbeamTransactions',
+  VERIFY_MOONBASE_TRANSACTIONS = 'VerifyMoonbaseTransactions',
+  VERIFY_ASTAR_TRANSACTIONS = 'VerifyAstarTransactions',
   TRANSACTION_WEBHOOKS = 'TransactionWebhooks',
   TRANSACTION_LOG = 'TransactionLog',
-  CRUST_TRANSACTION = 'CrustTransaction',
-  KILT_TRANSACTION = 'KiltTransaction',
 }
 
 export async function handler(event: any) {
@@ -131,15 +130,15 @@ export async function handleLambdaEvent(
       await scheduler.run();
       break;
     // --- TRANSMIT TRANSACTION WORKERS ---
-    case WorkerName.TRANSMIT_MOONBEAM_TRANSACTION:
-    case WorkerName.TRANSMIT_MOONBASE_TRANSACTION:
-    case WorkerName.TRANSMIT_ASTAR_TRANSACTION:
+    case WorkerName.TRANSMIT_MOONBEAM_TRANSACTIONS:
+    case WorkerName.TRANSMIT_MOONBASE_TRANSACTIONS:
+    case WorkerName.TRANSMIT_ASTAR_TRANSACTIONS:
       await new TransmitEvmTransactionWorker(workerDefinition, context).run({
         executeArg: JSON.stringify(workerDefinition.parameters),
       });
       break;
-    case WorkerName.TRANSMIT_CRUST_TRANSACTION:
-    case WorkerName.TRANSMIT_KILT_TRANSACTION:
+    case WorkerName.TRANSMIT_CRUST_TRANSACTIONS:
+    case WorkerName.TRANSMIT_KILT_TRANSACTIONS:
       await new TransmitSubstrateTransactionWorker(
         workerDefinition,
         context,
@@ -149,14 +148,14 @@ export async function handleLambdaEvent(
       break;
 
     // SUBSTRATE TRANSACTION WORKER
-    case WorkerName.CRUST_TRANSACTION:
-    case WorkerName.KILT_TRANSACTION:
+    case WorkerName.VERIFY_CRUST_TRANSACTIONS:
+    case WorkerName.VERIFY_KILT_TRANSACTIONS:
       await new SubstrateTransactionWorker(workerDefinition, context).run();
       break;
     // --- EVM ---
-    case WorkerName.MOONBEAM_TRANSACTIONS:
-    case WorkerName.MOONBASE_TRANSACTIONS:
-    case WorkerName.ASTAR_TRANSACTIONS:
+    case WorkerName.VERIFY_MOONBEAM_TRANSACTIONS:
+    case WorkerName.VERIFY_MOONBASE_TRANSACTIONS:
+    case WorkerName.VERIFY_ASTAR_TRANSACTIONS:
       await new EvmTransactionWorker(workerDefinition, context).run({
         executeArg: JSON.stringify(workerDefinition.parameters),
       });
@@ -230,8 +229,8 @@ export async function handleSqsMessages(
       // eslint-disable-next-line sonarjs/no-small-switch
       switch (workerName) {
         // -- TRANSMIT TRANSACTION WORKERS --
-        case WorkerName.TRANSMIT_CRUST_TRANSACTION:
-        case WorkerName.TRANSMIT_KILT_TRANSACTION:
+        case WorkerName.TRANSMIT_CRUST_TRANSACTIONS:
+        case WorkerName.TRANSMIT_KILT_TRANSACTIONS:
           await new TransmitSubstrateTransactionWorker(
             workerDefinition,
             context,
@@ -239,9 +238,9 @@ export async function handleSqsMessages(
             executeArg: message?.body,
           });
           break;
-        case WorkerName.TRANSMIT_MOONBEAM_TRANSACTION:
-        case WorkerName.TRANSMIT_MOONBASE_TRANSACTION:
-        case WorkerName.TRANSMIT_ASTAR_TRANSACTION:
+        case WorkerName.TRANSMIT_MOONBEAM_TRANSACTIONS:
+        case WorkerName.TRANSMIT_MOONBASE_TRANSACTIONS:
+        case WorkerName.TRANSMIT_ASTAR_TRANSACTIONS:
           await new TransmitEvmTransactionWorker(workerDefinition, context).run(
             {
               executeArg: message?.body,
@@ -251,16 +250,16 @@ export async function handleSqsMessages(
         // case WorkerName.CRUST_TRANSACTIONS:
         //   await new CrustTransactionWorker(workerDefinition, context).run();
         //   break;
-        case WorkerName.MOONBEAM_TRANSACTIONS:
-        case WorkerName.MOONBASE_TRANSACTIONS:
-        case WorkerName.ASTAR_TRANSACTIONS:
+        case WorkerName.VERIFY_MOONBEAM_TRANSACTIONS:
+        case WorkerName.VERIFY_MOONBASE_TRANSACTIONS:
+        case WorkerName.VERIFY_ASTAR_TRANSACTIONS:
           await new EvmTransactionWorker(workerDefinition, context).run({
             executeArg: message?.body,
           });
           break;
 
-        case WorkerName.CRUST_TRANSACTION:
-        case WorkerName.KILT_TRANSACTION:
+        case WorkerName.VERIFY_CRUST_TRANSACTIONS:
+        case WorkerName.VERIFY_KILT_TRANSACTIONS:
           await new SubstrateTransactionWorker(workerDefinition, context).run();
           break;
         case WorkerName.TRANSACTION_WEBHOOKS:
