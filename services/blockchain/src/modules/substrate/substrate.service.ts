@@ -23,6 +23,7 @@ import { WorkerName } from '../../workers/worker-executor';
 import { ServiceContext } from '@apillon/service-lib';
 import { getWalletSeed } from '../../lib/seed';
 import { SubstrateRpcApi } from './rpc-api';
+import { types as PhalaTypesBundle } from '@phala/sdk';
 
 export class SubstrateService {
   static async createTransaction(
@@ -40,8 +41,6 @@ export class SubstrateService {
     },
     context: ServiceContext,
   ) {
-    // connect to chain
-    // TODO: Add logic if endpoint is unavailable to fetch the backup one.
     const endpoint = await new Endpoint({}, context).populateByChain(
       params.chain,
       ChainType.SUBSTRATE,
@@ -67,6 +66,11 @@ export class SubstrateService {
         typesBundle = CrustTypesBundle;
         break;
       }
+      case SubstrateChain.PHALA: {
+        keyring = new Keyring({ type: 'sr25519' });
+        typesBundle = PhalaTypesBundle;
+        break;
+      }
       default: {
         throw new BlockchainCodeException({
           code: BlockchainErrorCode.INVALID_CHAIN,
@@ -76,7 +80,6 @@ export class SubstrateService {
     }
 
     console.info('Creating APIPromise');
-    // TODO: Refactor to txwrapper when typesBundle supported
     const api = new SubstrateRpcApi(endpoint.url, typesBundle);
     console.info('Start db transaction.');
     // Start connection to database at the beginning of the function
@@ -103,13 +106,10 @@ export class SubstrateService {
       console.log('Wallet', wallet.serialize());
       console.info('Getting wallet seed, ...');
       const seed = await getWalletSeed(wallet.seed);
-
-      console.info('Generating unsigned transaction');
       const pair = keyring.addFromUri(seed);
-      console.log('Address: ', pair.address);
+      console.info('Generating unsigned transaction');
       const unsignedTx = await api.getUnsignedTransaction(params.transaction);
-      // TODO: add validation service for transaction to detect and prevent weird transactions.
-
+      console.log('signing transaction with key from address: ', pair.address);
       const signed = await unsignedTx.signAsync(pair, {
         nonce: wallet.nextNonce,
         era: 0, // immortal transaction
@@ -170,7 +170,7 @@ export class SubstrateService {
         await new Lmas().writeLog({
           logType: LogType.ERROR,
           message:
-            'Error triggering TRANSMIT_SUBSTRATE_TRANSACTIO worker queue',
+            'Error triggering TRANSMIT_SUBSTRATE_TRANSACTION worker queue',
           location: 'SubstrateService.createTransaction',
           service: ServiceName.BLOCKCHAIN,
           data: {
@@ -264,7 +264,6 @@ export class SubstrateService {
       }
     }
 
-    // TODO: Refactor to txwrapper when typesBundle supported
     const api = new SubstrateRpcApi(endpoint.url, typesBundle);
     for (const wallet of wallets) {
       const transactions = await new Transaction({}, context).getList(
@@ -279,7 +278,6 @@ export class SubstrateService {
 
       let latestSuccess = null;
       let transmitted = 0;
-      // TODO: consider batching transaction api.tx.utility.batch
       for (const transaction of transactions) {
         console.log(
           `Processing transaction with id ${transaction.id} (status=${transaction.transactionStatus}, ` +

@@ -23,12 +23,16 @@ let dbReferralSeed: Migration = null;
 let dbNftsMigration: Migration = null;
 let dbNftsSeed: Migration = null;
 
+let dbComputingMigration: Migration = null;
+let dbComputingSeed: Migration = null;
+
 let dbBcsMigration: Migration = null;
 let dbBcsSeed: Migration = null;
 
 export async function setupTestDatabase(): Promise<void> {
   await upgradeTestDatabases();
 }
+
 async function initMigrations() {
   if (!dbConsoleMigration) {
     await initDevConsoleTestMigrations();
@@ -55,6 +59,10 @@ async function initMigrations() {
 
   if (!dbNftsMigration) {
     await initNftsTestMigrations();
+  }
+
+  if (!dbComputingMigration) {
+    await initComputingTestMigrations();
   }
 
   if (!dbBcsMigration) {
@@ -86,6 +94,9 @@ async function initSeeds() {
   if (!dbNftsSeed) {
     await initNftsTestSeed();
   }
+  if (!dbComputingSeed) {
+    await initComputingTestSeed();
+  }
   if (!dbBcsSeed) {
     await initBcsTestSeed();
   }
@@ -102,6 +113,7 @@ export async function upgradeTestDatabases(): Promise<void> {
       dbAuthApiMigration.up(),
       dbReferralMigration.up(),
       dbNftsMigration.up(),
+      dbComputingMigration.up(),
       dbBcsMigration.up(),
     ]);
   } catch (err) {
@@ -123,6 +135,7 @@ export async function downgradeTestDatabases(): Promise<void> {
       dbAuthApiMigration.down(-1),
       dbReferralMigration.down(-1),
       dbNftsMigration.down(-1),
+      dbComputingMigration.down(-1),
       dbBcsMigration.down(-1),
     ]);
   } catch (err) {
@@ -144,6 +157,7 @@ export async function seedTestDatabases(): Promise<void> {
       dbAuthApiSeed.up(),
       dbReferralSeed.up(),
       dbNftsSeed.up(),
+      dbComputingSeed.up(),
       dbBcsSeed.up(),
     ]);
   } catch (err) {
@@ -164,6 +178,7 @@ export async function unseedTestDatabases(): Promise<void> {
       dbAuthApiSeed.down(-1),
       dbReferralSeed.down(-1),
       dbNftsSeed.down(-1),
+      dbComputingSeed.down(-1),
       dbBcsSeed.down(-1),
     ]);
   } catch (err) {
@@ -196,6 +211,9 @@ export async function destroyTestMigrations(): Promise<void> {
   if (dbNftsMigration) {
     promises.push(dbNftsMigration.destroy());
   }
+  if (dbComputingMigration) {
+    promises.push(dbComputingMigration.destroy());
+  }
   if (dbBcsMigration) {
     promises.push(dbBcsMigration.destroy());
   }
@@ -208,6 +226,7 @@ export async function destroyTestMigrations(): Promise<void> {
   dbAuthApiMigration = null;
   dbReferralMigration = null;
   dbNftsMigration = null;
+  dbComputingMigration = null;
   dbBcsMigration = null;
 }
 
@@ -238,6 +257,10 @@ export async function destroyTestSeeds(): Promise<void> {
     promises.push(dbNftsSeed.destroy());
   }
 
+  if (dbComputingSeed) {
+    promises.push(dbComputingSeed.destroy());
+  }
+
   if (dbBcsSeed) {
     promises.push(dbBcsSeed.destroy());
   }
@@ -250,6 +273,7 @@ export async function destroyTestSeeds(): Promise<void> {
   dbAuthApiSeed = null;
   dbReferralSeed = null;
   dbNftsSeed = null;
+  dbComputingSeed = null;
   dbBcsSeed = null;
 }
 
@@ -266,6 +290,7 @@ export async function rebuildTestDatabases(): Promise<void> {
       dbAuthApiMigration.reset(),
       dbReferralMigration.reset(),
       dbNftsMigration.reset(),
+      dbComputingMigration.reset(),
       dbBcsMigration.reset(),
     ]);
     for (const res of migrationResults) {
@@ -288,6 +313,7 @@ export async function rebuildTestDatabases(): Promise<void> {
       dbAuthApiSeed.reset(),
       dbReferralSeed.reset(),
       dbNftsSeed.reset(),
+      dbComputingSeed.reset(),
       dbBcsSeed.reset(),
     ]);
     for (const res of migrationResults) {
@@ -623,6 +649,69 @@ async function initNftsTestSeed() {
     });
 
     await dbNftsSeed.initialize();
+  } catch (err) {
+    console.error('Error at initConfigTestSeed', err);
+    throw err;
+  }
+}
+
+async function initComputingTestMigrations() {
+  env.APP_ENV = AppEnvironment.TEST;
+
+  const poolNfts: ConnectionOptions = {
+    host: env.COMPUTING_MYSQL_HOST_TEST,
+    database: env.COMPUTING_MYSQL_DATABASE_TEST,
+    password: env.COMPUTING_MYSQL_PASSWORD_TEST,
+    port: env.COMPUTING_MYSQL_PORT_TEST,
+    user: env.COMPUTING_MYSQL_USER_TEST,
+    // debug: true,
+    connectionLimit: 1,
+  };
+
+  if (!/(test|testing)/i.test(poolNfts.database)) {
+    throw new Error(`Nfts: NO TEST DATABASE!`);
+  }
+
+  const pool = createPool(poolNfts);
+
+  dbComputingMigration = new Migration({
+    conn: pool as unknown as MigrationConnection,
+    tableName: 'migrations',
+    dir: '../../services/computing/src/migration-scripts/migrations',
+    silent: env.APP_ENV === AppEnvironment.TEST,
+  });
+
+  await dbComputingMigration.initialize();
+}
+
+async function initComputingTestSeed() {
+  try {
+    env.APP_ENV = AppEnvironment.TEST;
+
+    const poolOptions: ConnectionOptions = {
+      host: env.COMPUTING_MYSQL_HOST_TEST,
+      database: env.COMPUTING_MYSQL_DATABASE_TEST,
+      password: env.COMPUTING_MYSQL_PASSWORD_TEST,
+      port: env.COMPUTING_MYSQL_PORT_TEST,
+      user: env.COMPUTING_MYSQL_USER_TEST,
+      // debug: true,
+      connectionLimit: 1,
+    };
+
+    if (!/(test|testing)/i.test(poolOptions.database)) {
+      throw new Error(`COMPUTING: NO TEST DATABASE!`);
+    }
+
+    const pool = createPool(poolOptions);
+
+    dbComputingSeed = new Migration({
+      conn: pool as unknown as MigrationConnection,
+      tableName: 'seeds',
+      dir: '../../services/computing/src/migration-scripts/seeds',
+      silent: env.APP_ENV === AppEnvironment.TEST,
+    });
+
+    await dbComputingSeed.initialize();
   } catch (err) {
     console.error('Error at initConfigTestSeed', err);
     throw err;

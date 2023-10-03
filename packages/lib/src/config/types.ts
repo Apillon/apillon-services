@@ -28,6 +28,10 @@ export enum NFTCollectionType {
   NESTABLE = 2,
 }
 
+export enum ComputingContractType {
+  SCHRODINGER = 1,
+}
+
 export enum AmsEventType {
   USER_REGISTER = 'user-register',
   USER_GET_AUTH = 'user-get-auth',
@@ -184,6 +188,12 @@ export enum NftsEventType {
   PROJECT_COLLECTION_DETAILS = 'project-collections-details',
 }
 
+export enum ComputingEventType {
+  CREATE_CONTRACT = 'create-contract',
+  LIST_CONTRACTS = 'list-contract',
+  GET_CONTRACT_BY_UUID = 'get-contract-by-uuid',
+}
+
 export enum ReferralEventType {
   CREATE_PLAYER = 'create-referral',
   GET_PLAYER = 'get-referral',
@@ -211,6 +221,7 @@ export enum ServiceName {
   REFERRAL = 'REFERRAL',
   BLOCKCHAIN = 'BLOCKCHAIN',
   CONFIG = 'CONFIG',
+  COMPUTING = 'COMPUTING',
 }
 
 export enum ServiceCode {
@@ -274,6 +285,7 @@ export enum AttachedServiceType {
   STORAGE = 2,
   NFT = 3,
   HOSTING = 4,
+  COMPUTING = 5,
   SYSTEM = 999,
 }
 
@@ -518,6 +530,15 @@ export enum ValidatorErrorCode {
   NFT_BURN_TOKEN_ID_NOT_VALID = 42200148,
   QUOTA_CODE_NOT_VALID = 42200149,
 
+  //#region Computing
+  COMPUTING_PROJECT_UUID_NOT_PRESENT = 42200201,
+  COMPUTING_CONTRACT_TYPE_NOT_PRESENT = 42200202,
+  COMPUTING_CONTRACT_TYPE_NOT_VALID = 42200203,
+  COMPUTING_NAME_NOT_PRESENT = 42200204,
+  COMPUTING_NAME_NOT_VALID = 42200205,
+  COMPUTING_DESCRIPTION_NOT_VALID = 42200206,
+  COMPUTING_RESTRICT_TO_OWNER_NOT_PRESENT = 42200207,
+
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,
   USER_EMAIL_NOT_PRESENT = 42200702,
@@ -628,6 +649,7 @@ export enum QuotaCode {
   MAX_ATTESTED_USERS = 7,
   MAX_WEBSITES = 8,
   MAX_NFT_COLLECTIONS = 9,
+  MAX_COMPUTING_CONTRACTS = 10,
 }
 
 /**
