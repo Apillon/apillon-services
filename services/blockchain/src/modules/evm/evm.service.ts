@@ -18,7 +18,11 @@ import { Transaction } from '../../common/models/transaction';
 import { Wallet } from '../wallet/wallet.model';
 import { BlockchainErrorCode } from '../../config/types';
 import { BlockchainCodeException } from '../../lib/exceptions';
-import { evmChainToJob } from '../../lib/helpers';
+import {
+  evmChainToJob,
+  evmChainToWorkerName,
+  WorkerType,
+} from '../../lib/helpers';
 import { getWalletSeed } from '../../lib/seed';
 import { transmitAndProcessEvmTransaction } from '../../lib/transmit-and-process-evm-transaction';
 import { WorkerName } from '../../workers/worker-executor';
@@ -231,13 +235,13 @@ export class EvmService {
         try {
           await sendToWorkerQueue(
             env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
-            WorkerName.TRANSMIT_EVM_TRANSACTION,
+            evmChainToWorkerName(params.chain, WorkerType.TRANSMIT),
             [
               {
                 chain: params.chain,
               },
             ],
-            evmChainToJob(params.chain, WorkerName.TRANSMIT_EVM_TRANSACTION),
+            null,
             null,
           );
         } catch (e) {

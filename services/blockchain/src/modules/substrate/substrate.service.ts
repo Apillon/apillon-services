@@ -23,6 +23,7 @@ import { WorkerName } from '../../workers/worker-executor';
 import { ServiceContext } from '@apillon/service-lib';
 import { getWalletSeed } from '../../lib/seed';
 import { SubstrateRpcApi } from './rpc-api';
+import { substrateChainToWorkerName } from '../../lib/helpers';
 
 export class SubstrateService {
   static async createTransaction(
@@ -157,7 +158,7 @@ export class SubstrateService {
       try {
         await sendToWorkerQueue(
           env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
-          WorkerName.TRANSMIT_SUBSTRATE_TRANSACTION,
+          substrateChainToWorkerName(params.chain),
           [
             {
               chain: params.chain,

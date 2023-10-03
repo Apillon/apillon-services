@@ -29,13 +29,18 @@ import { SubstrateTransactionWorker } from './substrate-transaction-worker';
 
 export enum WorkerName {
   SCHEDULER = 'scheduler',
-  TRANSMIT_SUBSTRATE_TRANSACTION = 'TransmitSubstrateTransaction',
-  TRANSMIT_EVM_TRANSACTION = 'TransmitEVMTransaction',
-  CRUST_TRANSACTIONS = 'CrustTransactions',
-  EVM_TRANSACTIONS = 'EvmTransactions',
+  TRANSMIT_CRUST_TRANSACTIONS = 'TransmitCrustTransactions',
+  TRANSMIT_KILT_TRANSACTIONS = 'TransmitKiltTransactions',
+  TRANSMIT_MOONBEAM_TRANSACTIONS = 'TransmitMoonbeamTransactions',
+  TRANSMIT_MOONBASE_TRANSACTIONS = 'TransmitMoonbaseTransactions',
+  TRANSMIT_ASTAR_TRANSACTIONS = 'TransmitAstarTransactions',
+  VERIFY_CRUST_TRANSACTIONS = 'VerifyCrustTransactions',
+  VERIFY_KILT_TRANSACTIONS = 'VerifyKiltTransactions',
+  VERIFY_MOONBEAM_TRANSACTIONS = 'VerifyMoonbeamTransactions',
+  VERIFY_MOONBASE_TRANSACTIONS = 'VerifyMoonbaseTransactions',
+  VERIFY_ASTAR_TRANSACTIONS = 'VerifyAstarTransactions',
   TRANSACTION_WEBHOOKS = 'TransactionWebhooks',
   TRANSACTION_LOG = 'TransactionLog',
-  SUBSTRATE_TRANSACTION = 'SubstrateTransaction',
 }
 
 export async function handler(event: any) {
@@ -125,26 +130,32 @@ export async function handleLambdaEvent(
       await scheduler.run();
       break;
     // --- TRANSMIT TRANSACTION WORKERS ---
-    case WorkerName.TRANSMIT_EVM_TRANSACTION:
+    case WorkerName.TRANSMIT_MOONBEAM_TRANSACTIONS:
+    case WorkerName.TRANSMIT_MOONBASE_TRANSACTIONS:
+    case WorkerName.TRANSMIT_ASTAR_TRANSACTIONS:
       await new TransmitEvmTransactionWorker(workerDefinition, context).run({
         executeArg: JSON.stringify(workerDefinition.parameters),
       });
       break;
-    case WorkerName.TRANSMIT_SUBSTRATE_TRANSACTION:
+    case WorkerName.TRANSMIT_CRUST_TRANSACTIONS:
+    case WorkerName.TRANSMIT_KILT_TRANSACTIONS:
       await new TransmitSubstrateTransactionWorker(
         workerDefinition,
         context,
       ).run({
-        executeArg: JSON.stringify({ chain: SubstrateChain.CRUST }),
+        executeArg: JSON.stringify(workerDefinition.parameters),
       });
       break;
 
     // SUBSTRATE TRANSACTION WORKER
-    case WorkerName.SUBSTRATE_TRANSACTION:
+    case WorkerName.VERIFY_CRUST_TRANSACTIONS:
+    case WorkerName.VERIFY_KILT_TRANSACTIONS:
       await new SubstrateTransactionWorker(workerDefinition, context).run();
       break;
     // --- EVM ---
-    case WorkerName.EVM_TRANSACTIONS:
+    case WorkerName.VERIFY_MOONBEAM_TRANSACTIONS:
+    case WorkerName.VERIFY_MOONBASE_TRANSACTIONS:
+    case WorkerName.VERIFY_ASTAR_TRANSACTIONS:
       await new EvmTransactionWorker(workerDefinition, context).run({
         executeArg: JSON.stringify(workerDefinition.parameters),
       });
@@ -218,7 +229,8 @@ export async function handleSqsMessages(
       // eslint-disable-next-line sonarjs/no-small-switch
       switch (workerName) {
         // -- TRANSMIT TRANSACTION WORKERS --
-        case WorkerName.TRANSMIT_SUBSTRATE_TRANSACTION:
+        case WorkerName.TRANSMIT_CRUST_TRANSACTIONS:
+        case WorkerName.TRANSMIT_KILT_TRANSACTIONS:
           await new TransmitSubstrateTransactionWorker(
             workerDefinition,
             context,
@@ -226,7 +238,9 @@ export async function handleSqsMessages(
             executeArg: message?.body,
           });
           break;
-        case WorkerName.TRANSMIT_EVM_TRANSACTION:
+        case WorkerName.TRANSMIT_MOONBEAM_TRANSACTIONS:
+        case WorkerName.TRANSMIT_MOONBASE_TRANSACTIONS:
+        case WorkerName.TRANSMIT_ASTAR_TRANSACTIONS:
           await new TransmitEvmTransactionWorker(workerDefinition, context).run(
             {
               executeArg: message?.body,
@@ -236,10 +250,17 @@ export async function handleSqsMessages(
         // case WorkerName.CRUST_TRANSACTIONS:
         //   await new CrustTransactionWorker(workerDefinition, context).run();
         //   break;
-        case WorkerName.EVM_TRANSACTIONS:
+        case WorkerName.VERIFY_MOONBEAM_TRANSACTIONS:
+        case WorkerName.VERIFY_MOONBASE_TRANSACTIONS:
+        case WorkerName.VERIFY_ASTAR_TRANSACTIONS:
           await new EvmTransactionWorker(workerDefinition, context).run({
             executeArg: message?.body,
           });
+          break;
+
+        case WorkerName.VERIFY_CRUST_TRANSACTIONS:
+        case WorkerName.VERIFY_KILT_TRANSACTIONS:
+          await new SubstrateTransactionWorker(workerDefinition, context).run();
           break;
         case WorkerName.TRANSACTION_WEBHOOKS:
           await new TransactionWebhookWorker(
