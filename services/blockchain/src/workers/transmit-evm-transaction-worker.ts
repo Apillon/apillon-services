@@ -16,12 +16,7 @@ import {
 import { BlockchainErrorCode } from '../config/types';
 import { BlockchainCodeException } from '../lib/exceptions';
 import { EvmService } from '../modules/evm/evm.service';
-import { WorkerName } from './worker-executor';
-import {
-  evmChainToJob,
-  evmChainToWorkerName,
-  WorkerType,
-} from '../lib/helpers';
+import { evmChainToWorkerName, WorkerType } from '../lib/helpers';
 
 export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
   public constructor(workerDefinition: WorkerDefinition, context: Context) {

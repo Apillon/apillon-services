@@ -18,14 +18,9 @@ import { Transaction } from '../../common/models/transaction';
 import { Wallet } from '../wallet/wallet.model';
 import { BlockchainErrorCode } from '../../config/types';
 import { BlockchainCodeException } from '../../lib/exceptions';
-import {
-  evmChainToJob,
-  evmChainToWorkerName,
-  WorkerType,
-} from '../../lib/helpers';
+import { evmChainToWorkerName, WorkerType } from '../../lib/helpers';
 import { getWalletSeed } from '../../lib/seed';
 import { transmitAndProcessEvmTransaction } from '../../lib/transmit-and-process-evm-transaction';
-import { WorkerName } from '../../workers/worker-executor';
 
 async function trySelfRepairNonce(
   provider: ethers.providers.JsonRpcProvider,
