@@ -26,7 +26,7 @@ import * as procedures from './procedures';
 // TODO: Consider managing by transaction status and not by identity job state
 // The diagram shoul be as follows: check if success and trigger correct operation. That's it.
 // TODO2: Ideally we would have a configuration
-// where we specify each flow and handle that based on the confi, current state and the
+// where we specify each flow and handle that based on the config, current state and the
 // received transaction status.
 
 export class UpdateStateWorker extends BaseQueueWorker {
@@ -198,7 +198,9 @@ export class UpdateStateWorker extends BaseQueueWorker {
                     actionUrl: `${env.AUTH_APP_URL}/restore/?token=${token}&email=${email}&type=${AuthApiEmailType.DOWNLOAD_IDENTITY}`,
                   },
                 });
-              } else {
+              } else if (
+                identityJob.finalState == IdentityJobState.ACC_DID_LINK
+              ) {
                 // we assume this is the link operation, but it might not always be the case - look at the TODOs
                 // at the beginning of this file for some ideas.
                 await procedures.linkAccToDid(this.context, identityJob.data);

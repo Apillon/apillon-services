@@ -204,7 +204,7 @@ export class IdentityState {
   static REVOKED = 'revoked';
   static REJECTED = 'rejected';
 
-  static generateProcessInProgressStates() {
+  static getProcessInProgressStates() {
     return [
       IdentityState.SUBMITTED_ATTESATION_REQ,
       IdentityState.SUBMITTED_DID_CREATE_REQ,
@@ -213,11 +213,11 @@ export class IdentityState {
     ];
   }
 
-  static generateStartValidStates() {
+  static getStartValidStates() {
     return [IdentityState.IN_PROGRESS, IdentityState.IDENTITY_VERIFIED];
   }
 
-  static generationFinishedStates() {
+  static getFinishedStates() {
     // Could also be did created, if only attestation and did create service are
     // supported. Currently we only support one flow - did and vc generation
     // with an additional did acc link step
