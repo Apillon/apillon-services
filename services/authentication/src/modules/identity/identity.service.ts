@@ -63,7 +63,7 @@ export class IdentityMicroservice {
       email,
     });
     let auth_app_page = 'registration';
-    const inProgressStates = IdentityState.generateProcessInProgressStates();
+    const inProgressStates = IdentityState.getProcessInProgressStates();
 
     let identity = await new Identity({}, context).populateByUserEmail(
       context,
@@ -172,7 +172,7 @@ export class IdentityMicroservice {
     const claimerDidUri = event.body.didUri;
     const linkDidToAccount = event.body.linkParameters;
 
-    const identityValidStates = IdentityState.generateProcessInProgressStates();
+    const inProgressStates = IdentityState.getProcessInProgressStates();
 
     // Check if correct identity + state exists -> IN_PROGRESS
     const identity = await new Identity({}, context).populateByUserEmail(
@@ -180,9 +180,7 @@ export class IdentityMicroservice {
       claimerEmail,
     );
 
-    await identity.setState(IdentityState.IDENTITY_VERIFIED);
-
-    if (!identity.exists() || !identityValidStates.includes(identity.state)) {
+    if (!identity.exists() || !inProgressStates.includes(identity.state)) {
       // IDENTITY_VERIFIED just means that the process was broken before
       // the entity was successfully attested --> See a few lines below
       // This is done so we have better control of the process and for
@@ -192,6 +190,8 @@ export class IdentityMicroservice {
         status: HttpStatus.BAD_REQUEST,
       });
     }
+
+    await identity.setState(IdentityState.IDENTITY_VERIFIED);
 
     identity.populate({
       didUri: claimerDidUri,
