@@ -43,7 +43,7 @@ export async function createCloudfrontInvalidationCommand(
         // InvalidationBatch
         Paths: {
           // Paths
-          Quantity: Number('int'), // required
+          Quantity: 1, // required
           Items: [
             // PathList
             '/*',
