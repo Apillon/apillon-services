@@ -33,6 +33,7 @@ import { File } from '../modules/storage/models/file.model';
 import { CID } from 'ipfs-http-client';
 import { uploadItemsToIPFSRes } from '../modules/ipfs/interfaces/upload-items-to-ipfs-res.interface';
 import { Ipns } from '../modules/ipns/models/ipns.model';
+import { createCloudfrontInvalidationCommand } from '../lib/aws-cloudfront';
 
 export class DeployWebsiteWorker extends BaseQueueWorker {
   public constructor(
@@ -256,6 +257,9 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
             targetBucket.bucket_uuid,
             DbTables.BUCKET,
           );
+
+          //Invalidate cache if cdnId is set for this website
+          await createCloudfrontInvalidationCommand(this.context, website);
         }
 
         //Update deployment - finished
