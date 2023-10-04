@@ -1,5 +1,6 @@
 //#REGION Config
 export * from './lib/at-services/config/scs';
+export * from './lib/at-services/config/dtos/active-subscription-query-filter.dto';
 export * from './lib/at-services/config/dtos/quota.dto';
 export * from './lib/at-services/config/dtos/get-quota.dto';
 export * from './lib/at-services/config/dtos/create-quota-override.dto';

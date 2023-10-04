@@ -11,6 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
+  ActiveSubscriptionQueryFilter,
   CreditTransactionQueryFilter,
   DefaultUserRole,
   RoleGroup,
@@ -221,6 +222,10 @@ export class ProjectController {
 
   @Get(':uuid/active-subscription')
   @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({
+    dto: ActiveSubscriptionQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
   @UseGuards(AuthGuard, ValidationGuard)
   async getProjectActiveSubscription(
     @Ctx() context: DevConsoleApiContext,
