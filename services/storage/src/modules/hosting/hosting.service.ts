@@ -168,6 +168,9 @@ export class HostingService {
           });
         }
       }
+
+      //Spend credit
+
       website.domainChangeDate = new Date();
     }
 
@@ -341,19 +344,24 @@ export class HostingService {
     await deployment.insert();
 
     //Spend credit
-    const spendCredit: SpendCreditDto = new SpendCreditDto(
-      {},
-      context,
-    ).populate({
-      project_uuid: website.project_uuid,
-      product_id:
-        event.body.environment == DeploymentEnvironment.STAGING
-          ? ProductCode.HOSTING_DEPLOY_TO_STAGING
-          : ProductCode.HOSTING_DEPLOY_TO_PRODUCTION,
-      referenceTable: DbTables.DEPLOYMENT,
-      referenceId: deployment.id,
-    });
-    await new Scs(context).spendCredit(spendCredit);
+    try {
+      const spendCredit: SpendCreditDto = new SpendCreditDto(
+        {},
+        context,
+      ).populate({
+        project_uuid: website.project_uuid,
+        product_id:
+          event.body.environment == DeploymentEnvironment.STAGING
+            ? ProductCode.HOSTING_DEPLOY_TO_STAGING
+            : ProductCode.HOSTING_DEPLOY_TO_PRODUCTION,
+        referenceTable: DbTables.DEPLOYMENT,
+        referenceId: deployment.id,
+      });
+      await new Scs(context).spendCredit(spendCredit);
+    } catch (error) {
+      await deployment.delete();
+      throw error;
+    }
 
     //Execute deploy or Send message to SQS
     if (
