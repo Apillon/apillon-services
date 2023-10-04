@@ -29,13 +29,21 @@ export async function createCloudfrontInvalidationCommand(
   }
 
   try {
-    const client = new CloudFrontClient({
-      region: env.AWS_REGION,
-      credentials: {
-        accessKeyId: env.AWS_KEY,
-        secretAccessKey: env.AWS_SECRET,
-      },
-    });
+    let client: CloudFrontClient;
+
+    if (env.AWS_KEY && env.AWS_SECRET) {
+      client = new CloudFrontClient({
+        region: env.AWS_REGION,
+        credentials: {
+          accessKeyId: env.AWS_KEY,
+          secretAccessKey: env.AWS_SECRET,
+        },
+      });
+    } else {
+      client = new CloudFrontClient({
+        region: env.AWS_REGION,
+      });
+    }
     const input = {
       // CreateInvalidationRequest
       DistributionId: website.cdnId,
