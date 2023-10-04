@@ -5,6 +5,7 @@ import {
   CreateSubscriptionDto,
   SqlModelStatus,
   SubscriptionsQueryFilter,
+  UpdateSubscriptionDto,
 } from '@apillon/lib';
 import { SubscriptionPackage } from './models/subscription-package.model';
 import { Subscription } from './models/subscription.model';
@@ -124,7 +125,10 @@ describe('Subscriptions unit test', () => {
     const updatedSubscription = await SubscriptionService.updateSubscription(
       {
         subscriptionStripeId: activeSubscription.stripeId,
-        data: { expiresOn },
+        data: new UpdateSubscriptionDto({
+          expiresOn,
+          status: SqlModelStatus.ACTIVE,
+        }),
       },
       stage.context,
     );
@@ -132,14 +136,24 @@ describe('Subscriptions unit test', () => {
     expect(updatedSubscription.expiresOn).toEqual(expiresOn);
 
     // Cancel a subscription
+    const cancellationReason = 'too_good';
+    const cancellationComment = 'too good for me';
     const canceledSubscription = await SubscriptionService.updateSubscription(
       {
         subscriptionStripeId: activeSubscription.stripeId,
-        data: { status: SqlModelStatus.INACTIVE, cancelDate: new Date() },
+        data: new UpdateSubscriptionDto({
+          expiresOn,
+          status: SqlModelStatus.INACTIVE,
+          cancelDate: new Date(),
+          cancellationReason,
+          cancellationComment,
+        }),
       },
       stage.context,
     );
     expect(canceledSubscription.status).toBe(SqlModelStatus.INACTIVE);
+    expect(canceledSubscription.cancellationReason).toBe(cancellationReason);
+    expect(canceledSubscription.cancellationComment).toBe(cancellationComment);
 
     activeSubscription = await new Subscription(
       {},

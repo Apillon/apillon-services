@@ -118,18 +118,10 @@ export class ProjectService {
     context: DevConsoleApiContext,
     uuid: string,
   ): Promise<Project> {
-    const project: Project = await new Project({}, context).populateByUUID(
-      uuid,
-    );
-    if (!project.exists()) {
-      throw new CodeException({
-        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
-        status: HttpStatus.NOT_FOUND,
-        errorCodes: ResourceNotFoundErrorCode,
-      });
-    }
-
-    project.canAccess(context);
+    const project: Project = await new Project(
+      {},
+      context,
+    ).populateByUUIDAndCheckAccess(uuid, context);
 
     //Populate user role on this project
     await project.populateMyRoleOnProject(context);
@@ -580,6 +572,11 @@ export class ProjectService {
     context: DevConsoleApiContext,
     project_uuid: string,
   ) {
+    await new Project({}, context).populateByUUIDAndCheckAccess(
+      project_uuid,
+      context,
+    );
+
     return (await new Scs(context).getProjectActiveSubscription(project_uuid))
       .data;
   }
@@ -588,6 +585,11 @@ export class ProjectService {
     context: DevConsoleApiContext,
     query: SubscriptionsQueryFilter,
   ) {
+    await new Project({}, context).populateByUUIDAndCheckAccess(
+      query.project_uuid,
+      context,
+    );
+
     return (await new Scs(context).listSubscriptions(query)).data;
   }
 
@@ -595,6 +597,11 @@ export class ProjectService {
     context: DevConsoleApiContext,
     query: InvoicesQueryFilter,
   ) {
+    await new Project({}, context).populateByUUIDAndCheckAccess(
+      query.project_uuid,
+      context,
+    );
+
     return (await new Scs(context).listInvoices(query)).data;
   }
 

@@ -1,10 +1,10 @@
 import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
-  AdvancedSQLModel,
   getQueryParams,
   PoolConnection,
   PopulateFrom,
   presenceValidator,
+  ProjectAccessModel,
   prop,
   selectAndCountQuery,
   SerializeFor,
@@ -14,7 +14,7 @@ import {
 import { ConfigErrorCode, DbTables } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 
-export class Subscription extends AdvancedSQLModel {
+export class Subscription extends ProjectAccessModel {
   public readonly tableName = DbTables.SUBSCRIPTION;
 
   @prop({
