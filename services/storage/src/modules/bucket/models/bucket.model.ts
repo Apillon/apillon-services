@@ -282,7 +282,7 @@ export class Bucket extends ProjectAccessModel {
     const data = await this.getContext().mysql.paramExecute(
       `
         SELECT *
-        FROM \`${this.tableName}\`
+        FROM \`${DbTables.BUCKET}\`
         WHERE (id LIKE @id OR bucket_uuid LIKE @id)
           AND status <> ${SqlModelStatus.DELETED};
       `,
@@ -417,7 +417,7 @@ export class Bucket extends ProjectAccessModel {
     const data = await this.getContext().mysql.paramExecute(
       `
         SELECT COUNT(*) as numOfBuckets
-        FROM \`${this.tableName}\`
+        FROM \`${DbTables.BUCKET}\`
         WHERE project_uuid = @project_uuid ${
           ofType ? `AND bucketType = @bucketType` : ''
         }
@@ -436,7 +436,7 @@ export class Bucket extends ProjectAccessModel {
     const data = await this.getContext().mysql.paramExecute(
       `
         SELECT SUM(size) as totalSize
-        FROM \`${this.tableName}\`
+        FROM \`${DbTables.BUCKET}\`
         WHERE project_uuid = @project_uuid
           AND status <> ${SqlModelStatus.DELETED};
       `,

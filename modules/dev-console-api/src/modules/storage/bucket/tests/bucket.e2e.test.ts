@@ -467,7 +467,10 @@ describe('Storage bucket tests', () => {
       );
 
       expect(
-        await IPFSService.isCIDPinned(deleteBucketTestFile1.CID),
+        await new IPFSService(
+          stage.storageContext,
+          deleteBucketTestBucket.project_uuid,
+        ).isCIDPinned(deleteBucketTestFile1.CID),
       ).toBeTruthy();
 
       //Mark bucket for deletion
@@ -491,7 +494,10 @@ describe('Storage bucket tests', () => {
       );
       expect(f.exists()).toBeFalsy();
       expect(
-        await IPFSService.isCIDPinned(deleteBucketTestFile1.CID),
+        await new IPFSService(
+          stage.storageContext,
+          deleteBucketTestBucket.project_uuid,
+        ).isCIDPinned(deleteBucketTestFile1.CID),
       ).toBeFalsy();
     });
   });

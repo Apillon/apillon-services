@@ -1,21 +1,22 @@
 import {
-  ProjectAccessModel,
   Context,
-  env,
-  getQueryParams,
   IpnsQueryFilter,
   PopulateFrom,
-  prop,
-  selectAndCountQuery,
+  ProjectAccessModel,
   SerializeFor,
   SqlModelStatus,
+  getQueryParams,
+  prop,
+  selectAndCountQuery,
 } from '@apillon/lib';
+import { ServiceContext } from '@apillon/service-lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { DbTables, StorageErrorCode } from '../../../config/types';
-import { ServiceContext } from '@apillon/service-lib';
 import { StorageCodeException } from '../../../lib/exceptions';
+import { addJwtToIPFSUrl } from '../../../lib/ipfs-utils';
 import { Bucket } from '../../bucket/models/bucket.model';
+import { ProjectConfig } from '../../config/models/project-config.model';
 
 export class Ipns extends ProjectAccessModel {
   public readonly tableName = DbTables.IPNS;
@@ -240,6 +241,13 @@ export class Ipns extends ProjectAccessModel {
     this.project_uuid = b.project_uuid;
 
     this.canAccess(context);
+
+    //Get IPFS-->IPNS gateway
+    const ipfsGateway = await new ProjectConfig(
+      { project_uuid: this.project_uuid },
+      this.getContext(),
+    ).getIpfsGateway();
+
     // Map url query with sql fields.
     const fieldMap = {
       id: 'b.id',
@@ -254,10 +262,9 @@ export class Ipns extends ProjectAccessModel {
     const sqlQuery = {
       qSelect: `
         SELECT ${this.generateSelectFields('i', '')},
-        IF(i.ipnsName IS NULL, NULL, CONCAT("${env.STORAGE_IPFS_GATEWAY.replace(
-          '/ipfs/',
-          '/ipns/',
-        )}", i.ipnsName)) as link,
+        IF(i.ipnsName IS NULL, NULL, CONCAT("${
+          ipfsGateway.ipnsUrl
+        }", i.ipnsName)) as link,
         i.updateTime
         `,
       qFrom: `
@@ -273,11 +280,19 @@ export class Ipns extends ProjectAccessModel {
       `,
     };
 
-    return await selectAndCountQuery(
+    const data = await selectAndCountQuery(
       context.mysql,
       sqlQuery,
       { ...params, project_uuid: this.project_uuid },
       'i.id',
     );
+
+    if (ipfsGateway.private) {
+      for (const ipns of data.items) {
+        ipns.link = addJwtToIPFSUrl(ipns.link, this.project_uuid);
+      }
+    }
+
+    return data;
   }
 }

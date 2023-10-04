@@ -58,7 +58,10 @@ describe('RepublishIpnsWorker unit test', () => {
   });
 
   test('Test publish ipns', async () => {
-    const publishedIpns = await IPFSService.publishToIPNS(
+    const publishedIpns = await new IPFSService(
+      stage.context,
+      ipns.project_uuid,
+    ).publishToIPNS(
       'QmRwVSB8Bfr6E5hgw78j12mu8Sr8K8CAqJqpjyaCzSPLm5',
       `${ipns.project_uuid}_${ipns.bucket_id}_${ipns.id}`,
     );
