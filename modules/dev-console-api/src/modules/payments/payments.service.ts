@@ -14,7 +14,7 @@ export class PaymentsService {
   async createStripeCreditPaymentSession(
     context: DevConsoleApiContext,
     paymentSessionDto: PaymentSessionDto,
-  ): Promise<Stripe.Response<Stripe.Checkout.Session>> {
+  ): Promise<Stripe.Checkout.Session> {
     await this.checkProjectExists(context, paymentSessionDto.project_uuid);
 
     const { data: stripeId } = await new Scs(context).getCreditPackageStripeId(
@@ -22,16 +22,17 @@ export class PaymentsService {
       paymentSessionDto.project_uuid,
     );
 
-    return await this.stripeService.generateStripeCreditPaymentSession(
-      paymentSessionDto,
+    return await this.stripeService.generateStripePaymentSession(
       stripeId,
+      paymentSessionDto,
+      'payment',
     );
   }
 
   async createStripeSubscriptionPaymentSession(
     context: DevConsoleApiContext,
     paymentSessionDto: PaymentSessionDto,
-  ): Promise<Stripe.Response<Stripe.Checkout.Session>> {
+  ): Promise<Stripe.Checkout.Session> {
     await this.checkProjectExists(context, paymentSessionDto.project_uuid);
 
     const { data: stripeId } = await new Scs(
@@ -41,9 +42,10 @@ export class PaymentsService {
       paymentSessionDto.project_uuid,
     );
 
-    return await this.stripeService.generateStripeSubscriptionPaymentSession(
-      paymentSessionDto,
+    return await this.stripeService.generateStripePaymentSession(
       stripeId,
+      paymentSessionDto,
+      'subscription',
     );
   }
 
