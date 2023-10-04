@@ -83,6 +83,40 @@ export async function attestationRequestBc(
 }
 
 /**
+ * Creates an account did linking transaction request
+ * for the blockchain service
+ *
+ * @param context
+ * @param SubmittableExtrinsic with did creation details
+ * @param identity Identity
+ */
+export async function accDidLinkRequestBc(
+  context: ServiceContext,
+  transaction: SubmittableExtrinsic,
+  identity: Identity,
+) {
+  const identityJob = await IdentityJobService.createOrGetIdentityJob(
+    context,
+    identity.id,
+    IdentityJobState.ACC_DID_LINK,
+    {},
+  );
+
+  const bcServiceRequest: CreateSubstrateTransactionDto =
+    new CreateSubstrateTransactionDto(
+      {
+        chain: SubstrateChain.KILT,
+        transaction: transaction.toHex(),
+        referenceTable: DbTables.IDENTITY_JOB,
+        referenceId: identityJob.id,
+      },
+      context,
+    );
+
+  return bcServiceRequest;
+}
+
+/**
  * Creates did revoke request for the blockchain service
  *
  * @param context

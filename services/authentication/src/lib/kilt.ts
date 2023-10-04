@@ -5,7 +5,6 @@ import {
   mnemonicGenerate,
   mnemonicToMiniSecret,
   naclBoxPairFromSecret,
-  randomAsHex,
   sr25519PairFromSeed,
 } from '@polkadot/util-crypto';
 import { isHex } from '@polkadot/util';
@@ -29,7 +28,6 @@ import {
   ICredentialPresentation,
   Blockchain,
   NewDidVerificationKey,
-  KeyringPair,
 } from '@kiltprotocol/sdk-js';
 import {
   ApillonSupportedCTypes,
@@ -326,23 +324,4 @@ export function toCredentialIRI(rootHash: string): string {
     throw new Error('Root hash is not a base16 / hex encoded string)');
   }
   return KILT_CREDENTIAL_IRI_PREFIX + rootHash;
-}
-
-export async function linkAccountDid(
-  didUri: DidUri,
-  linkParameters: any,
-  signCallback: SignExtrinsicCallback,
-) {
-  await connect(env.KILT_NETWORK);
-  const api = ConfigService.get('api');
-  const account = generateAccount(
-    env.KILT_ATTESTER_MNEMONIC,
-  ) as KiltKeyringPair;
-
-  return await Did.authorizeTx(
-    didUri,
-    linkParameters,
-    signCallback,
-    account.address,
-  );
 }
