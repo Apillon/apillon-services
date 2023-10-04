@@ -16,6 +16,7 @@ import {
   SerializeFor,
   ServiceName,
   SpendCreditDto,
+  SqlModelStatus,
   WebsiteQueryFilter,
   WebsitesQuotaReachedQueryFilter,
   writeLog,
@@ -318,7 +319,7 @@ export class HostingService {
     }
 
     //Create deployment record
-    const d: Deployment = new Deployment({}, context).populate({
+    const deployment: Deployment = new Deployment({}, context).populate({
       website_id: website.id,
       bucket_id:
         event.body.environment == DeploymentEnvironment.STAGING
@@ -329,15 +330,30 @@ export class HostingService {
     });
 
     try {
-      await d.validate();
+      await deployment.validate();
     } catch (err) {
-      await d.handle(err);
-      if (!d.isValid()) {
-        throw new StorageValidationException(d);
+      await deployment.handle(err);
+      if (!deployment.isValid()) {
+        throw new StorageValidationException(deployment);
       }
     }
 
-    await d.insert();
+    await deployment.insert();
+
+    //Spend credit
+    const spendCredit: SpendCreditDto = new SpendCreditDto(
+      {},
+      context,
+    ).populate({
+      project_uuid: website.project_uuid,
+      product_id:
+        event.body.environment == DeploymentEnvironment.STAGING
+          ? ProductCode.HOSTING_DEPLOY_TO_STAGING
+          : ProductCode.HOSTING_DEPLOY_TO_PRODUCTION,
+      referenceTable: DbTables.DEPLOYMENT,
+      referenceId: deployment.id,
+    });
+    await new Scs(context).spendCredit(spendCredit);
 
     //Execute deploy or Send message to SQS
     if (
@@ -352,7 +368,7 @@ export class HostingService {
         params: { FunctionName: 'test' },
       };
       const parameters = {
-        deployment_id: d.id,
+        deployment_id: deployment.id,
         clearBucketForUpload: event.body.clearBucketForUpload,
       };
       const wd = new WorkerDefinition(
@@ -369,7 +385,7 @@ export class HostingService {
         QueueWorkerType.EXECUTOR,
       );
       await worker.runExecutor({
-        deployment_id: d.id,
+        deployment_id: deployment.id,
         clearBucketForUpload: event.body.clearBucketForUpload,
       });
     } else {
@@ -379,7 +395,7 @@ export class HostingService {
         WorkerName.DEPLOY_WEBSITE_WORKER,
         [
           {
-            deployment_id: d.id,
+            deployment_id: deployment.id,
             clearBucketForUpload: event.body.clearBucketForUpload,
           },
         ],
@@ -388,7 +404,7 @@ export class HostingService {
       );
     }
 
-    return d.serialize(SerializeFor.PROFILE);
+    return deployment.serialize(SerializeFor.PROFILE);
   }
 
   //#endregion
