@@ -3,6 +3,7 @@ import {
   Scs,
   SqlModelStatus,
   UpdateSubscriptionDto,
+  env,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
@@ -59,8 +60,12 @@ export class PaymentsService {
     const payment = event.data.object as any;
     switch (event.type) {
       case 'checkout.session.completed': {
-        if (payment.payment_status !== 'paid') {
+        if (
+          payment.payment_status !== 'paid' ||
+          payment.metadata.environment !== env.APP_ENV
+        ) {
           // In case payment session was canceled/exited
+          // or the session is in a different environment
           return;
         }
 

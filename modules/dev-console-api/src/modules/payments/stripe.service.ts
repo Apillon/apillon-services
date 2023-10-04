@@ -58,6 +58,7 @@ export class StripeService {
         project_uuid: paymentSessionDto.project_uuid,
         package_id: +paymentSessionDto.package_id,
         isCreditPurchase: `${mode === 'payment'}`,
+        environment: env.APP_ENV,
       },
       success_url: paymentSessionDto.returnUrl,
       cancel_url: paymentSessionDto.returnUrl,

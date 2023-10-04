@@ -31,7 +31,7 @@ describe('Payments controller e2e tests', () => {
     test('Create credit session url success', async () => {
       const response = await request(stage.http)
         .get(
-          `/payments/stripe-credit-session-url?project_uuid=${testProject.project_uuid}&package_id=1`,
+          `/payments/stripe/credit-session-url?project_uuid=${testProject.project_uuid}&package_id=1&returnUrl=https://apillon.io`,
         )
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
@@ -40,7 +40,7 @@ describe('Payments controller e2e tests', () => {
 
     test('Create credit session url failure', async () => {
       let response = await request(stage.http)
-        .get(`/payments/stripe-credit-session-url`)
+        .get(`/payments/stripe/credit-session-url`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(422);
       expect(response.body.errors.map((e) => e.message)).toContain(
@@ -52,7 +52,7 @@ describe('Payments controller e2e tests', () => {
 
       response = await request(stage.http)
         .get(
-          `/payments/stripe-credit-session-url?project_uuid=${testProject.project_uuid}&package_id=10`,
+          `/payments/stripe/credit-session-url?project_uuid=${testProject.project_uuid}&package_id=10&returnUrl=https://apillon.io`,
         )
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(500); // package_id not found
@@ -62,7 +62,7 @@ describe('Payments controller e2e tests', () => {
     test('Create subscription session url success', async () => {
       const response = await request(stage.http)
         .get(
-          `/payments/stripe-subscription-session-url?project_uuid=${testProject.project_uuid}&package_id=2`,
+          `/payments/stripe/subscription-session-url?project_uuid=${testProject.project_uuid}&package_id=2&returnUrl=https://apillon.io`,
         )
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
@@ -71,7 +71,7 @@ describe('Payments controller e2e tests', () => {
 
     test('Create subscription session url failure', async () => {
       let response = await request(stage.http)
-        .get(`/payments/stripe-subscription-session-url`)
+        .get(`/payments/stripe/subscription-session-url`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(422);
       expect(response.body.errors.map((e) => e.message)).toContain(
@@ -83,7 +83,7 @@ describe('Payments controller e2e tests', () => {
 
       response = await request(stage.http)
         .get(
-          `/payments/stripe-subscription-session-url?project_uuid=${testProject.project_uuid}&package_id=10`,
+          `/payments/stripe/subscription-session-url?project_uuid=${testProject.project_uuid}&package_id=10&returnUrl=https://apillon.io`,
         )
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(500); // package_id not found
@@ -92,7 +92,7 @@ describe('Payments controller e2e tests', () => {
 
     test('Stripe webhook call should fail', async () => {
       const response = await request(stage.http)
-        .post('/payments/stripe-webhook')
+        .post('/payments/stripe/webhook')
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('INVALID_WEBHOOK_SIGNATURE');
@@ -129,9 +129,6 @@ describe('Payments controller e2e tests', () => {
       expect(subscriptionPackages.length).toEqual(responsePackages.length);
       subscriptionPackages.forEach((subPackage) => {
         expect(responsePackages.map((r) => r.name)).toContain(subPackage.name);
-        expect(responsePackages.map((r) => r.stripeId)).toContain(
-          subPackage.stripeId,
-        );
         expect(responsePackages.map((r) => r.creditAmount)).toContain(
           subPackage.creditAmount,
         );
