@@ -1,23 +1,14 @@
-import {
-  ChainType,
-  EvmChain,
-  SubstrateChain,
-  TransactionStatus,
-  env,
-} from '@apillon/lib';
-import { EvmBlockchainIndexer } from './evm-indexer.service';
-import { EvmTransfers } from './data-models/evm-transfer';
+import { ChainType, EvmChain, TransactionStatus, env } from '@apillon/lib';
 import { Transaction } from '../../../common/models/transaction';
-import { Stage, releaseStage, setupTest } from '../../../../test/setup';
+import { Stage, setupTest } from '../../../../test/setup';
 import {
   ServiceDefinition,
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { SubstrateTransactionWorker } from '../../../workers/substrate-transaction-worker';
-import { WorkerName } from '../../../workers/worker-executor';
 import { EvmTransactionWorker } from '../../../workers/evm-transaction-worker';
 import { Wallet } from '../../wallet/wallet.model';
+import { WorkerType, evmChainToWorkerName } from '../../../lib/helpers';
 
 describe('MOONBASE', () => {
   const address = '0xba01526c6d80378a9a95f1687e9960857593983b';
@@ -100,7 +91,7 @@ describe('MOONBASE', () => {
 
     const workerDefinition = new WorkerDefinition(
       serviceDef,
-      WorkerName.EVM_TRANSACTIONS,
+      evmChainToWorkerName(chain, WorkerType.PROCESS),
       {
         parameters: { FunctionName: 'test' },
       },
