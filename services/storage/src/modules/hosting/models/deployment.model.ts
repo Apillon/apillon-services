@@ -299,7 +299,14 @@ export class Deployment extends AdvancedSQLModel {
         JOIN \`${DbTables.WEBSITE}\` wp ON wp.id = d.website_id
         WHERE wp.id = @website_id
         AND d.status = ${SqlModelStatus.ACTIVE}
-        AND (@environment IS NULL OR d.environment = @environment)
+        AND (
+          @environment IS NULL 
+          OR d.environment = ${
+            filter.environment == DeploymentEnvironment.DIRECT_TO_PRODUCTION
+              ? DeploymentEnvironment.PRODUCTION
+              : filter.environment
+          }
+        )
       `,
       qFilter: `
         ORDER BY ${filters.orderStr ? filters.orderStr : 'd.updateTime DESC'}
