@@ -172,7 +172,7 @@ export class IdentityMicroservice {
     const claimerDidUri = event.body.didUri;
     const linkDidToAccount = event.body.linkParameters;
 
-    const inProgressStates = IdentityState.getProcessInProgressStates();
+    const validStartStates = IdentityState.getStartValidStates();
 
     // Check if correct identity + state exists -> IN_PROGRESS
     const identity = await new Identity({}, context).populateByUserEmail(
@@ -180,7 +180,7 @@ export class IdentityMicroservice {
       claimerEmail,
     );
 
-    if (!identity.exists() || !inProgressStates.includes(identity.state)) {
+    if (!identity.exists() || !validStartStates.includes(identity.state)) {
       // IDENTITY_VERIFIED just means that the process was broken before
       // the entity was successfully attested --> See a few lines below
       // This is done so we have better control of the process and for
