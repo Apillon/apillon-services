@@ -124,8 +124,8 @@ describe('Subscriptions unit test', () => {
 
     const updatedSubscription = await SubscriptionService.updateSubscription(
       {
-        subscriptionStripeId: activeSubscription.stripeId,
-        data: new UpdateSubscriptionDto({
+        updateSubscriptionDto: new UpdateSubscriptionDto({
+          subscriptionStripeId: activeSubscription.stripeId,
           expiresOn,
           status: SqlModelStatus.ACTIVE,
         }),
@@ -140,8 +140,8 @@ describe('Subscriptions unit test', () => {
     const cancellationComment = 'too good for me';
     const canceledSubscription = await SubscriptionService.updateSubscription(
       {
-        subscriptionStripeId: activeSubscription.stripeId,
-        data: new UpdateSubscriptionDto({
+        updateSubscriptionDto: new UpdateSubscriptionDto({
+          subscriptionStripeId: activeSubscription.stripeId,
           expiresOn,
           status: SqlModelStatus.INACTIVE,
           cancelDate: new Date(),

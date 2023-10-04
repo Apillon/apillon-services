@@ -187,13 +187,11 @@ export class Scs extends BaseService {
   }
 
   public async updateSubscription(
-    subscriptionStripeId: string,
-    data: UpdateSubscriptionDto,
+    updateSubscriptionDto: UpdateSubscriptionDto,
   ) {
     return await this.callService({
       eventName: ScsEventType.UPDATE_SUBSCRIPTION,
-      subscriptionStripeId,
-      data,
+      updateSubscriptionDto,
     });
   }
 

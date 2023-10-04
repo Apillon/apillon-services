@@ -105,8 +105,8 @@ export class PaymentsService {
         }
         // In case subscription is renewed or canceled
         await new Scs().updateSubscription(
-          payment.id,
           new UpdateSubscriptionDto({
+            subscriptionStripeId: payment.id,
             status: payment.cancel_at_period_end // If user has canceled subscription
               ? SqlModelStatus.INACTIVE
               : SqlModelStatus.ACTIVE,

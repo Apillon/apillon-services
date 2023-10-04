@@ -195,18 +195,16 @@ export class SubscriptionService {
 
   /**
    * Update a subscription by stripe ID with given data
-   * @param {{ subscriptionStripeId: string; data: UpdateSubscriptionDto }} { subscriptionStripeId, data }
+   * @param {{ updateSubscriptionDto: UpdateSubscriptionDto }} { updateSubscriptionDto }
    * @param {ServiceContext} context
    * @returns {Promise<Subscription>}
    */
   static async updateSubscription(
-    {
-      subscriptionStripeId,
-      data,
-    }: { subscriptionStripeId: string; data: UpdateSubscriptionDto },
+    { updateSubscriptionDto }: { updateSubscriptionDto: UpdateSubscriptionDto },
     context: ServiceContext,
   ): Promise<Subscription> {
     const conn = await context.mysql.start();
+    const subscriptionStripeId = updateSubscriptionDto.subscriptionStripeId;
 
     try {
       const subscription = await new Subscription(
@@ -220,12 +218,14 @@ export class SubscriptionService {
           message: `Subscription for stripe ID ${subscriptionStripeId} not found in database!`,
           location: 'SubscriptionService.updateSubscription',
           service: ServiceName.CONFIG,
-          data,
+          data: new UpdateSubscriptionDto(updateSubscriptionDto).serialize(
+            SerializeFor.SERVICE,
+          ),
         });
         throw new ScsNotFoundException(ConfigErrorCode.SUBSCRIPTION_NOT_FOUND);
       }
 
-      subscription.populate(data);
+      subscription.populate(updateSubscriptionDto);
 
       try {
         await subscription.validate();
