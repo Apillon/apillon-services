@@ -16,8 +16,7 @@ import {
 import { BlockchainErrorCode } from '../config/types';
 import { BlockchainCodeException } from '../lib/exceptions';
 import { EvmService } from '../modules/evm/evm.service';
-import { WorkerName } from './worker-executor';
-import { evmChainToJob } from '../lib/helpers';
+import { evmChainToWorkerName, WorkerType } from '../lib/helpers';
 
 export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
@@ -72,9 +71,9 @@ export class TransmitEvmTransactionWorker extends BaseSingleThreadWorker {
       try {
         await sendToWorkerQueue(
           env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
-          WorkerName.EVM_TRANSACTIONS,
+          evmChainToWorkerName(data?.chain, WorkerType.PROCESS),
           [{ chain: data?.chain }],
-          evmChainToJob(data?.chain, WorkerName.EVM_TRANSACTIONS),
+          null,
           null,
         );
       } catch (e) {

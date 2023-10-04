@@ -2,6 +2,7 @@ import {
   AppEnvironment,
   CodeException,
   env,
+  EvmChain,
   TransactionStatus,
 } from '@apillon/lib';
 import { BlockchainErrorCode } from '../config/types';
@@ -15,6 +16,7 @@ import { TransmitEvmTransactionWorker } from '../workers/transmit-evm-transactio
 import { ServiceContext } from '@apillon/service-lib';
 import { Transaction } from '../common/models/transaction';
 import { ethers } from 'ethers';
+import { evmChainToWorkerName, WorkerType } from './helpers';
 
 /**
  * Function is used to manually execute workers, which are on AWS executed via SQS and jobs
@@ -46,7 +48,7 @@ export async function transmitAndProcessEvmTransaction(
   };
   const wd = new WorkerDefinition(
     transmitWorkerServiceDef,
-    WorkerName.TRANSMIT_EVM_TRANSACTION,
+    evmChainToWorkerName(transaction.chain as EvmChain, WorkerType.TRANSMIT),
     {
       parameters: { chain: transaction.chain },
     },
