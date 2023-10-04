@@ -115,7 +115,7 @@ describe('Substrate tests', () => {
 
       const workerDefinition = new WorkerDefinition(
         serviceDef,
-        WorkerName.SUBSTRATE_TRANSACTION,
+        WorkerName.VERIFY_KILT_TRANSACTIONS,
         {
           parameters: { FunctionName: 'test', ...parameters },
         },
@@ -204,7 +204,7 @@ describe('Substrate tests', () => {
 
       const workerDefinition = new WorkerDefinition(
         serviceDef,
-        WorkerName.SUBSTRATE_TRANSACTION,
+        WorkerName.VERIFY_KILT_TRANSACTIONS,
         {
           parameters: { FunctionName: 'test', ...parameters },
         },
@@ -473,7 +473,7 @@ describe('Substrate tests', () => {
 
       const workerDefinition = new WorkerDefinition(
         serviceDef,
-        WorkerName.SUBSTRATE_TRANSACTION,
+        WorkerName.VERIFY_CRUST_TRANSACTIONS,
         {
           parameters: { FunctionName: 'test', ...parameters },
         },

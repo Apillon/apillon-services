@@ -17,7 +17,12 @@ import {
 import { ServiceContext } from '@apillon/service-lib';
 import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { v4 as uuidV4 } from 'uuid';
-import { BucketType, DbTables, StorageErrorCode } from '../../../config/types';
+import {
+  BucketType,
+  DbTables,
+  DeploymentEnvironment,
+  StorageErrorCode,
+} from '../../../config/types';
 import { StorageValidationException } from '../../../lib/exceptions';
 import { addJwtToIPFSUrl } from '../../../lib/ipfs-utils';
 import { Bucket } from '../../bucket/models/bucket.model';
@@ -226,6 +231,19 @@ export class Website extends ProjectAccessModel {
     validators: [],
   })
   public domainChangeDate: Date;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    validators: [],
+  })
+  public cdnId: string;
 
   /***************************************************
    * Info properties
@@ -641,13 +659,21 @@ export class Website extends ProjectAccessModel {
   public async listDomains(context: ServiceContext) {
     return await context.mysql.paramExecute(
       `
-        SELECT wp.domain
-        FROM \`${this.tableName}\` wp
-        JOIN \`${DbTables.BUCKET}\` b ON b.id = wp.productionBucket_id
-        WHERE wp.domain IS NOT NULL
-        AND wp.domain <> ''
+        SELECT w.domain, (
+          SELECT d.updateTime 
+          FROM \`${DbTables.DEPLOYMENT}\` d 
+          WHERE d.website_id = w.id
+          AND d.environment IN (${DeploymentEnvironment.PRODUCTION}, ${DeploymentEnvironment.DIRECT_TO_PRODUCTION})
+          AND d.deploymentStatus = 10
+          ORDER BY d.updateTime DESC
+          LIMIT 1
+        ) as lastDeploymentDate
+        FROM \`${DbTables.WEBSITE}\` w
+        JOIN \`${DbTables.BUCKET}\` b ON b.id = w.productionBucket_id
+        WHERE w.domain IS NOT NULL
+        AND w.domain <> ''
         AND b.CID IS NOT NULL
-        AND wp.status <> ${SqlModelStatus.DELETED};
+        AND w.status <> ${SqlModelStatus.DELETED};
         `,
       {},
     );
