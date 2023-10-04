@@ -1,5 +1,5 @@
 import { v4 as uuid } from 'uuid';
-import { setupTest, Stage } from '../../../test/setup';
+import { releaseStage, setupTest, Stage } from '../../../test/setup';
 import { InvoiceService } from './invoice.service';
 import { getFaker, InvoicesQueryFilter } from '@apillon/lib';
 import { SubscriptionPackage } from '../subscription/models/subscription-package.model';
@@ -34,11 +34,15 @@ describe('Invoice unit tests', () => {
     await creditPackage.insert();
   });
 
+  afterAll(async () => {
+    await releaseStage(stage);
+  });
+
   describe('Handling stripe webhook data', () => {
     test('should handle credit purchase data', async () => {
       const event = {
         data: {
-          package_id: subscriptionPackage.id,
+          package_id: creditPackage.id,
           isCreditPurchase: true,
           project_uuid,
           subtotalAmount: 20,

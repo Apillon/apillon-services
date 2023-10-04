@@ -29,16 +29,16 @@ export class SubscriptionService {
   static async createSubscription(
     createSubscriptionDto: CreateSubscriptionDto,
     context: ServiceContext,
-    connection: PoolConnection,
+    connection?: PoolConnection,
   ): Promise<Subscription> {
     const conn = connection || (await context.mysql.start());
 
-    await SubscriptionService.checkForActiveSubscription(
-      createSubscriptionDto.project_uuid,
-      context,
-      conn,
-    );
     try {
+      await SubscriptionService.checkForActiveSubscription(
+        createSubscriptionDto.project_uuid,
+        context,
+        conn,
+      );
       const subscriptionPackage = await new SubscriptionPackage(
         {},
         context,

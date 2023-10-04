@@ -1,5 +1,5 @@
 import { v4 as uuid } from 'uuid';
-import { setupTest, Stage } from '../../../test/setup';
+import { releaseStage, setupTest, Stage } from '../../../test/setup';
 import { SubscriptionService } from './subscription.service';
 import {
   CreateSubscriptionDto,
@@ -20,13 +20,14 @@ describe('Subscriptions unit test', () => {
   beforeAll(async () => {
     stage = await setupTest();
 
-    subscriptionPackage = new SubscriptionPackage({}, stage.context)
-      .fake()
-      .populate({
-        creditAmount: 2000,
-      });
+    subscriptionPackage = await new SubscriptionPackage(
+      {},
+      stage.context,
+    ).populateById(2); // Caterpillar plan
+  });
 
-    await subscriptionPackage.insert();
+  afterAll(async () => {
+    await releaseStage(stage);
   });
 
   test('should get all subscription packages', async () => {
