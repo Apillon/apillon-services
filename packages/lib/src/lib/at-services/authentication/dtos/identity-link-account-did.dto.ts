@@ -45,4 +45,16 @@ export class IdentityLinkAccountDidDto extends ModelBase {
     validators: [],
   })
   public linkParameters: any;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.IDENTITY_VERIFICATION_TOKEN_NOT_PRESENT,
+      },
+    ],
+  })
+  public token: string;
 }
