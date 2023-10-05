@@ -201,8 +201,6 @@ export class UpdateStateWorker extends BaseQueueWorker {
               } else if (
                 identityJob.finalState == IdentityJobState.ACC_DID_LINK
               ) {
-                // we assume this is the link operation, but it might not always be the case - look at the TODOs
-                // at the beginning of this file for some ideas.
                 await procedures.linkAccToDid(this.context, identityJob.data);
               }
             } else if (status == TransactionStatus.FAILED) {
