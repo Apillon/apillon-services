@@ -59,6 +59,26 @@ export class ApiKeyController {
     return await this.apiKeyService.removeApiKeyRole(context, id, body);
   }
 
+  @Delete(':id/role')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  @Validation({ dto: ApiKeyRoleBaseDto })
+  @UseGuards(ValidationGuard)
+  async removeApiKeyRolesByService(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: ApiKeyRoleBaseDto,
+  ) {
+    return await this.apiKeyService.removeApiKeyRolesByService(
+      context,
+      id,
+      body,
+    );
+  }
+
   @Get(':id/roles')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)

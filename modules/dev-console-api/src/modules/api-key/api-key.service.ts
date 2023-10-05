@@ -150,6 +150,22 @@ export class ApiKeyService {
   }
 
   /**
+   * Remove roles from an API key by service type
+   * @param {DevConsoleApiContext} context - The API context
+   * @param {number} apiKey_id - The ID of the API key.
+   * @param {ApiKeyRoleBaseDto} body - The data for removing a role from the API key.
+   * @returns {Promise<any>} - The AMS service response
+   */
+  async removeApiKeyRolesByService(
+    context: DevConsoleApiContext,
+    apiKey_id: number,
+    body: ApiKeyRoleBaseDto,
+  ) {
+    return (await new Ams(context).removeApiKeyRolesByService(apiKey_id, body))
+      .data;
+  }
+
+  /**
    * Get the roles assigned to an API key.
    * @param {DevConsoleApiContext} context - The API context
    * @param {number} id - The ID of the API key.

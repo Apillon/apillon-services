@@ -197,6 +197,27 @@ export class ApiKey extends ProjectAccessModel {
     return true;
   }
 
+  public async removeRoleByServiceType(
+    apiKeyRole: ApiKeyRoleBaseDto,
+  ): Promise<boolean> {
+    await this.getContext().mysql.paramExecute(
+      `
+      DELETE
+      FROM \`${DbTables.API_KEY_ROLE}\`
+      WHERE apiKey_id = @apiKey_id
+      AND serviceType_id = serviceType_id
+      AND project_uuid = @project_uuid;
+      `,
+      {
+        apiKey_id: this.id,
+        serviceType_id: apiKeyRole.serviceType_id,
+        project_uuid: apiKeyRole.project_uuid,
+      },
+    );
+
+    return true;
+  }
+
   public async populateByApiKey(apiKey: string): Promise<this> {
     if (!apiKey) {
       throw new Error('apiKey should not be null');

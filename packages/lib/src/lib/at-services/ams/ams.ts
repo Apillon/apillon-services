@@ -265,6 +265,18 @@ export class Ams extends BaseService {
     return await this.callService(data);
   }
 
+  public async removeApiKeyRolesByService(
+    apiKey_id: number,
+    body: ApiKeyRoleBaseDto,
+  ) {
+    const data = {
+      eventName: AmsEventType.API_KEY_ROLES_REMOVE_BY_SERVICE,
+      body: body.serialize(),
+      apiKey_id,
+    };
+    return await this.callService(data);
+  }
+
   public async getApiKeyRoles(params: { apiKey_id: number }) {
     const data = {
       eventName: AmsEventType.GET_API_KEY_ROLES,

@@ -6,9 +6,10 @@ import {
 } from '@apillon/lib';
 import { AmsErrorCode } from '../../config/types';
 import { AmsBadRequestException, AmsCodeException } from '../../lib/exceptions';
-import { ApiKey } from '../api-key/models/api-key.model';
 import { AuthUser } from '../auth-user/auth-user.model';
 import { ApiKeyRole } from './models/api-key-role.model';
+import { ServiceContext } from '@apillon/service-lib';
+import { ApiKeyService } from '../api-key/api-key.service';
 
 /**
  * RoleService class for handling user and API key roles in a project.
@@ -84,26 +85,14 @@ export class RoleService {
    */
   static async assignRoleToApiKey(
     event: { apiKey_id: number; body: ApiKeyRoleBaseDto },
-    context,
+    context: ServiceContext,
   ) {
-    const key: ApiKey = await new ApiKey({}, context).populateById(
-      event.apiKey_id,
-    );
-
-    if (!key.exists()) {
-      throw await new AmsCodeException({
-        status: 400,
-        code: AmsErrorCode.API_KEY_NOT_FOUND,
-      }).writeToMonitor({
-        context,
-        data: event,
-      });
-    }
-
+    const key = await ApiKeyService.getApiKeyById(event.apiKey_id, context);
     key.canModify(context);
 
     const result = await key.assignRole(event.body);
     await invalidateCacheKey(`${CacheKeyPrefix.AUTH_USER_DATA}:${key.apiKey}`);
+
     return result;
   }
 
@@ -115,26 +104,33 @@ export class RoleService {
    */
   static async removeApiKeyRole(
     event: { apiKey_id: number; body: ApiKeyRoleBaseDto },
-    context,
+    context: ServiceContext,
   ) {
-    const key: ApiKey = await new ApiKey({}, context).populateById(
-      event.apiKey_id,
-    );
-
-    if (!key.exists()) {
-      throw await new AmsCodeException({
-        status: 400,
-        code: AmsErrorCode.API_KEY_NOT_FOUND,
-      }).writeToMonitor({
-        context,
-        data: event,
-      });
-    }
-
+    const key = await ApiKeyService.getApiKeyById(event.apiKey_id, context);
     key.canModify(context);
 
     const result = await key.removeRole(event.body);
     await invalidateCacheKey(`${CacheKeyPrefix.AUTH_USER_DATA}:${key.apiKey}`);
+
+    return result;
+  }
+
+  /**
+   * Remove roles from an API key based on the service type
+   * @param {{ apiKey_id: number; body: ApiKeyRoleBaseDto }} event - The data needed to remove a role from an API key.
+   * @param {any} context - The service context for database access.
+   * @returns {Promise<any>} - The result of the role removal operation.
+   */
+  static async removeApiKeyRolesByService(
+    event: { apiKey_id: number; body: ApiKeyRoleBaseDto },
+    context: ServiceContext,
+  ) {
+    const key = await ApiKeyService.getApiKeyById(event.apiKey_id, context);
+    key.canModify(context);
+
+    const result = await key.removeRoleByServiceType(event.body);
+    await invalidateCacheKey(`${CacheKeyPrefix.AUTH_USER_DATA}:${key.apiKey}`);
+
     return result;
   }
 
@@ -145,20 +141,7 @@ export class RoleService {
    * @returns {Promise<any[]>} - An array of roles assigned to the API key.
    */
   static async getApiKeyRoles(event: { apiKey_id: number }, context) {
-    const key: ApiKey = await new ApiKey({}, context).populateById(
-      event.apiKey_id,
-    );
-
-    if (!key.exists()) {
-      throw await new AmsCodeException({
-        status: 400,
-        code: AmsErrorCode.API_KEY_NOT_FOUND,
-      }).writeToMonitor({
-        context,
-        data: event,
-      });
-    }
-
+    const key = await ApiKeyService.getApiKeyById(event.apiKey_id, context);
     key.canAccess(context);
 
     return await new ApiKeyRole({}, context).getApiKeyRoles(event.apiKey_id);
