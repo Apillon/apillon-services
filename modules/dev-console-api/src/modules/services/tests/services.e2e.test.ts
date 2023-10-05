@@ -27,12 +27,12 @@ describe('Project services tests', () => {
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
 
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
     testProjectService = await createTestProjectService(
       stage.devConsoleContext,
       testProject,
     );
-    testProject2 = await createTestProject(testUser2, stage.devConsoleContext);
+    testProject2 = await createTestProject(testUser2, stage);
   });
 
   afterAll(async () => {

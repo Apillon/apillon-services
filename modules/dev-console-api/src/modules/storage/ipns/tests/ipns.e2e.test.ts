@@ -38,7 +38,7 @@ describe('Ipns tests', () => {
       stage.amsContext,
       DefaultUserRole.ADMIN,
     );
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
     testBucket = await createTestBucket(
       testUser,
       stage.storageContext,
@@ -55,7 +55,7 @@ describe('Ipns tests', () => {
       .insert();
 
     testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testProject2 = await createTestProject(testUser2, stage.devConsoleContext);
+    testProject2 = await createTestProject(testUser2, stage);
 
     console.info(
       'testProject2 is needed so that user has permisions. ',

@@ -77,7 +77,7 @@ describe('Blockchain endpoint tests', () => {
       stage.blockchainContext,
     );
     await testTransaction.insert();
-    await createTestProject(testUser, stage.devConsoleContext);
+    await createTestProject(testUser, stage);
   });
   afterAll(async () => {
     await blockchain.stop();

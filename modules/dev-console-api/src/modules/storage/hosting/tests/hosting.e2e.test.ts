@@ -45,8 +45,8 @@ describe('Hosting tests', () => {
       DefaultUserRole.ADMIN,
     );
 
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
-    testProject2 = await createTestProject(testUser2, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
+    testProject2 = await createTestProject(testUser2, stage);
 
     //Create test Website record
     testWebsite = await new Website({}, stage.storageContext)

@@ -30,7 +30,7 @@ describe('Storage with custom IPFS node tests', () => {
   beforeAll(async () => {
     stage = await setupTest();
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
     testBucket = await createTestBucket(
       testUser,
       stage.storageContext,
