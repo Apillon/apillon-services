@@ -223,4 +223,8 @@ export class IdentityState {
     // with an additional did acc link step
     return [IdentityState.ATTESTED, IdentityState.ATTESTED_AND_LINKED];
   }
+
+  static getAllowLinkStates() {
+    return [IdentityState.ATTESTED, IdentityState.DID_CREATED];
+  }
 }

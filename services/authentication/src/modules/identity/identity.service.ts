@@ -397,7 +397,9 @@ export class IdentityMicroservice {
       event.body.email,
     );
 
-    if (!identity.exists() || identity.state != IdentityState.DID_CREATED) {
+    const validStates = IdentityState.getAllowLinkStates();
+
+    if (!identity.exists() || !validStates.includes(identity.state)) {
       throw new AuthenticationCodeException({
         code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
         status: HttpStatus.NOT_FOUND,
