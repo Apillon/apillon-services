@@ -397,14 +397,14 @@ export class IdentityMicroservice {
       event.body.email,
     );
 
-    const validStates = IdentityState.getAllowLinkStates();
+    // const validStates = IdentityState.getAllowLinkStates();
 
-    if (!identity.exists() || !validStates.includes(identity.state)) {
-      throw new AuthenticationCodeException({
-        code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
-        status: HttpStatus.NOT_FOUND,
-      });
-    }
+    // if (!identity.exists() || !validStates.includes(identity.state)) {
+    //   throw new AuthenticationCodeException({
+    //     code: AuthenticationErrorCode.IDENTITY_DOES_NOT_EXIST,
+    //     status: HttpStatus.NOT_FOUND,
+    //   });
+    // }
 
     const didUri = event.body.didUri as DidUri;
     const linkParameters = event.body.linkParameters;
