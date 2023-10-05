@@ -2,6 +2,8 @@ import {
   Context,
   env,
   LogType,
+  ProductCode,
+  refundCredit,
   runWithWorkers,
   ServiceName,
   SqlModelStatus,
@@ -13,7 +15,7 @@ import {
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { CollectionStatus, TransactionType } from '../config/types';
+import { CollectionStatus, DbTables, TransactionType } from '../config/types';
 import { Collection } from '../modules/nfts/models/collection.model';
 import { Transaction } from '../modules/transaction/models/transaction.model';
 
@@ -57,6 +59,44 @@ export class TransactionStatusWorker extends BaseQueueWorker {
           ) {
             //Update collection
             await this.updateCollectionStatus(nftTransaction);
+          }
+
+          //Refund credit if transaction failed
+          if (res.transactionStatus > 2) {
+            let product_id;
+            switch (nftTransaction.transactionType) {
+              case TransactionType.DEPLOY_CONTRACT:
+                product_id = ProductCode.NFT_COLLECTION;
+                break;
+              case TransactionType.TRANSFER_CONTRACT_OWNERSHIP:
+                product_id = ProductCode.NFT_TRANSFER_COLLECTION;
+                break;
+              case TransactionType.BURN_NFT:
+                product_id = ProductCode.NFT_BURN;
+                break;
+              case TransactionType.MINT_NFT:
+              case TransactionType.NEST_MINT_NFT:
+                product_id = ProductCode.NFT_COLLECTION;
+                break;
+            }
+
+            const referenceTable =
+              nftTransaction.transactionType == TransactionType.DEPLOY_CONTRACT
+                ? DbTables.COLLECTION
+                : DbTables.TRANSACTION;
+            const referenceId =
+              nftTransaction.transactionType == TransactionType.DEPLOY_CONTRACT
+                ? nftTransaction.refId
+                : nftTransaction.id;
+
+            await refundCredit(
+              this.context,
+              referenceTable,
+              referenceId.toString(),
+              'TransactionStatusWorker.runExecutor',
+              ServiceName.NFTS,
+              product_id,
+            );
           }
         }
       },

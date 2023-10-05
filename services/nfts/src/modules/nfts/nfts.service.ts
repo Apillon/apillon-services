@@ -14,11 +14,14 @@ import {
   NestMintNftDTO,
   NFTCollectionQueryFilter,
   NFTCollectionType,
+  ProductCode,
   QuotaCode,
+  refundCredit,
   Scs,
   SerializeFor,
   ServiceName,
   SetCollectionBaseUriDTO,
+  SpendCreditDto,
   SqlModelStatus,
   StorageMicroservice,
   TransactionDto,
@@ -74,74 +77,86 @@ export class NftsService {
       status: SqlModelStatus.INCOMPLETE,
     });
 
-    //check max collections quota
-    const collectionsCount = await collection.getCollectionsCount();
-    const maxCollectionsQuota = await new Scs(context).getQuota({
-      quota_id: QuotaCode.MAX_NFT_COLLECTIONS,
+    //Spend credit
+    const spendCredit: SpendCreditDto = new SpendCreditDto(
+      {},
+      context,
+    ).populate({
       project_uuid: collection.project_uuid,
+      product_id: ProductCode.NFT_COLLECTION,
+      referenceTable: DbTables.COLLECTION,
+      referenceId: collection.collection_uuid,
     });
+    await new Scs(context).spendCredit(spendCredit);
 
-    if (collectionsCount >= maxCollectionsQuota.value) {
-      throw new NftsCodeException({
-        code: NftsErrorCode.MAX_COLLECTIONS_REACHED,
-        status: 400,
-      });
-    }
+    try {
+      //Call storage MS, to create bucket used to upload NFT metadata. Bucket is not created if baseUri is provided.
+      let nftMetadataBucket;
+      if (!collection.baseUri) {
+        try {
+          const createBucketParams: CreateBucketDto =
+            new CreateBucketDto().populate({
+              project_uuid: params.body.project_uuid,
+              bucketType: 3,
+              name: `${collection.name} bucket`,
+            });
+          nftMetadataBucket = (
+            await new StorageMicroservice(context).createBucket(
+              createBucketParams,
+            )
+          ).data;
+          collection.bucket_uuid = nftMetadataBucket.bucket_uuid;
+        } catch (err) {
+          throw await new NftsContractException(
+            NftsErrorCode.CREATE_BUCKET_FOR_NFT_METADATA_ERROR,
+            context,
+            err,
+          ).writeToMonitor({});
+        }
+      }
 
-    //Call storage MS, to create bucket used to upload NFT metadata. Bucket is not created if baseUri is provided.
-    let nftMetadataBucket;
-    if (!collection.baseUri) {
       try {
-        const createBucketParams: CreateBucketDto =
-          new CreateBucketDto().populate({
-            project_uuid: params.body.project_uuid,
-            bucketType: 3,
-            name: `${collection.name} bucket`,
-          });
-        nftMetadataBucket = (
-          await new StorageMicroservice(context).createBucket(
-            createBucketParams,
-          )
-        ).data;
-        collection.bucket_uuid = nftMetadataBucket.bucket_uuid;
+        await collection.validate();
       } catch (err) {
+        await collection.handle(err);
+        if (!collection.isValid()) {
+          throw new NftsValidationException(collection);
+        }
+      }
+
+      const conn = await context.mysql.start();
+
+      try {
+        //Insert collection record to DB
+        await collection.insert(SerializeFor.INSERT_DB, conn);
+
+        //If baseUri is present, deploy nft collection contract
+        if (collection.baseUri) {
+          await deployNFTCollectionContract(context, collection, conn);
+        }
+
+        await context.mysql.commit(conn);
+      } catch (err) {
+        await context.mysql.rollback(conn);
+
         throw await new NftsContractException(
-          NftsErrorCode.CREATE_BUCKET_FOR_NFT_METADATA_ERROR,
+          NftsErrorCode.DEPLOY_NFT_CONTRACT_ERROR,
           context,
           err,
         ).writeToMonitor({});
       }
-    }
-
-    try {
-      await collection.validate();
-    } catch (err) {
-      await collection.handle(err);
-      if (!collection.isValid()) {
-        throw new NftsValidationException(collection);
-      }
-    }
-
-    const conn = await context.mysql.start();
-
-    try {
-      //Insert collection record to DB
-      await collection.insert(SerializeFor.INSERT_DB, conn);
-
-      //If baseUri is present, deploy nft collection contract
-      if (collection.baseUri) {
-        await deployNFTCollectionContract(context, collection, conn);
-      }
-
-      await context.mysql.commit(conn);
-    } catch (err) {
-      await context.mysql.rollback(conn);
-
-      throw await new NftsContractException(
-        NftsErrorCode.DEPLOY_NFT_CONTRACT_ERROR,
+    } catch (error) {
+      //Collection was not successfully created or deployed - refund credit
+      await refundCredit(
         context,
-        err,
-      ).writeToMonitor({});
+        DbTables.COLLECTION,
+        collection.collection_uuid,
+        'NftsService.createCollection',
+        ServiceName.NFTS,
+        ProductCode.NFT_COLLECTION,
+      );
+
+      throw error;
     }
 
     await new Lmas().writeLog({
@@ -344,16 +359,42 @@ export class NftsService {
 
     await NftsService.checkTransferConditions(body, context, collection);
 
-    await NftsService.sendEvmTransaction(
+    //Spend credit
+    const spendCredit: SpendCreditDto = new SpendCreditDto(
+      {},
       context,
-      collection,
-      TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
-      await walletService.createTransferOwnershipTransaction(
-        collection.contractAddress,
-        body.address,
-        collection.collectionType,
-      ),
-    );
+    ).populate({
+      project_uuid: collection.project_uuid,
+      product_id: ProductCode.NFT_TRANSFER_COLLECTION,
+      referenceTable: DbTables.COLLECTION,
+      referenceId: collection.collection_uuid,
+    });
+    await new Scs(context).spendCredit(spendCredit);
+
+    try {
+      await NftsService.sendEvmTransaction(
+        context,
+        collection,
+        TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
+        await walletService.createTransferOwnershipTransaction(
+          collection.contractAddress,
+          body.address,
+          collection.collectionType,
+        ),
+        uuidV4(),
+      );
+    } catch (error) {
+      //Collection was not successfully transferred - refund credit
+      await refundCredit(
+        context,
+        spendCredit.referenceTable,
+        spendCredit.referenceId,
+        'NftsService.createCollection',
+        ServiceName.NFTS,
+        ProductCode.NFT_TRANSFER_COLLECTION,
+      );
+      throw error;
+    }
 
     await new Lmas().writeLog({
       context,
@@ -401,6 +442,7 @@ export class NftsService {
         body.uri,
         collection.collectionType,
       ),
+      uuidV4(),
     );
     return collection;
   }
@@ -449,16 +491,41 @@ export class NftsService {
       walletService,
     );
 
-    await NftsService.sendEvmTransaction(
+    //Spend credit
+    const spendCredit: SpendCreditDto = new SpendCreditDto(
+      {
+        project_uuid: collection.project_uuid,
+        product_id: ProductCode.NFT_MINT,
+        referenceTable: DbTables.TRANSACTION,
+        referenceId: uuidV4(),
+      },
       context,
-      collection,
-      TransactionType.MINT_NFT,
-      await walletService.createMintToTransaction(
-        collection.contractAddress,
-        collection.collectionType,
-        body,
-      ),
     );
+    await new Scs(context).spendCredit(spendCredit);
+
+    try {
+      await NftsService.sendEvmTransaction(
+        context,
+        collection,
+        TransactionType.MINT_NFT,
+        await walletService.createMintToTransaction(
+          collection.contractAddress,
+          collection.collectionType,
+          body,
+        ),
+        spendCredit.referenceId,
+      );
+    } catch (error) {
+      //NFT was not minted - refund credit
+      await refundCredit(
+        context,
+        spendCredit.referenceTable,
+        spendCredit.referenceId,
+        'NftsService.mintNftTo',
+        ServiceName.NFTS,
+      );
+      throw error;
+    }
 
     await new Lmas().writeLog({
       context,
@@ -526,18 +593,43 @@ export class NftsService {
       walletService,
     );
 
-    await NftsService.sendEvmTransaction(
+    //Spend credit
+    const spendCredit: SpendCreditDto = new SpendCreditDto(
+      {
+        project_uuid: parentCollection.project_uuid,
+        product_id: ProductCode.NFT_MINT,
+        referenceTable: DbTables.TRANSACTION,
+        referenceId: uuidV4(),
+      },
       context,
-      childCollection,
-      TransactionType.NEST_MINT_NFT,
-      await walletService.createNestMintToTransaction(
-        parentCollection.contractAddress,
-        body.parentNftId,
-        childCollection.contractAddress,
-        childCollection.collectionType,
-        body.quantity,
-      ),
     );
+    await new Scs(context).spendCredit(spendCredit);
+
+    try {
+      await NftsService.sendEvmTransaction(
+        context,
+        childCollection,
+        TransactionType.NEST_MINT_NFT,
+        await walletService.createNestMintToTransaction(
+          parentCollection.contractAddress,
+          body.parentNftId,
+          childCollection.contractAddress,
+          childCollection.collectionType,
+          body.quantity,
+        ),
+        spendCredit.referenceId,
+      );
+    } catch (error) {
+      //NFT was not minted - refund credit
+      await refundCredit(
+        context,
+        spendCredit.referenceTable,
+        spendCredit.referenceId,
+        'NftsService.nestMintNftTo',
+        ServiceName.NFTS,
+      );
+      throw error;
+    }
 
     await new Lmas().writeLog({
       context,
@@ -570,16 +662,40 @@ export class NftsService {
 
     await NftsService.checkCollection(collection, 'burnNftToken()', context);
 
-    await NftsService.sendEvmTransaction(
+    //Spend credit
+    const spendCredit: SpendCreditDto = new SpendCreditDto(
+      {
+        project_uuid: collection.project_uuid,
+        product_id: ProductCode.NFT_BURN,
+        referenceTable: DbTables.TRANSACTION,
+        referenceId: uuidV4(),
+      },
       context,
-      collection,
-      TransactionType.BURN_NFT,
-      await walletService.createBurnNftTransaction(
-        collection.contractAddress,
-        collection.collectionType,
-        body.tokenId,
-      ),
     );
+    await new Scs(context).spendCredit(spendCredit);
+
+    try {
+      await NftsService.sendEvmTransaction(
+        context,
+        collection,
+        TransactionType.BURN_NFT,
+        await walletService.createBurnNftTransaction(
+          collection.contractAddress,
+          collection.collectionType,
+          body.tokenId,
+        ),
+        spendCredit.referenceId,
+      );
+    } catch (err) {
+      await refundCredit(
+        context,
+        spendCredit.referenceTable,
+        spendCredit.referenceId,
+        'NftsService.burnNftToken',
+        ServiceName.NFTS,
+      );
+      throw err;
+    }
 
     await new Lmas().writeLog({
       context,
@@ -772,6 +888,7 @@ export class NftsService {
     collection: Collection,
     transactionType: TransactionType,
     tx: UnsignedTransaction,
+    transaction_uuid: string,
   ): Promise<{ data: TransactionDto }> {
     const conn = await context.mysql.start();
     try {
@@ -798,6 +915,7 @@ export class NftsService {
             refId: collection.id,
             transactionHash: response.data.transactionHash,
             transactionStatus: TransactionStatus.PENDING,
+            transaction_uuid,
           },
           context,
         ),

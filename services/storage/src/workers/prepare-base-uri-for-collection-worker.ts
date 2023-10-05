@@ -4,6 +4,7 @@ import {
   env,
   LogType,
   NftsMicroservice,
+  refundCredit,
   SerializeFor,
   ServiceName,
   SqlModelStatus,
@@ -186,5 +187,19 @@ export class PrepareBaseUriForCollectionWorker extends BaseQueueWorker {
     });
 
     return true;
+  }
+
+  public override async onError(error, data): Promise<any> {
+    if (data.collection_uuid) {
+      //Refund credit
+      await refundCredit(
+        this.context,
+        'collection',
+        data.collection_uuid,
+        'PrepareBaseUriForCollectionWorker.runExecutor',
+        ServiceName.STORAGE,
+      );
+    }
+    await super.onError(error, data);
   }
 }

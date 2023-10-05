@@ -1,4 +1,11 @@
-import { Context, env, LogType, ServiceName } from '@apillon/lib';
+import {
+  AppEnvironment,
+  Context,
+  env,
+  LogType,
+  Scs,
+  ServiceName,
+} from '@apillon/lib';
 import {
   BaseQueueWorker,
   LogOutput,
@@ -39,21 +46,29 @@ export class DeployCollectionWorker extends BaseQueueWorker {
     ).populateByUUID(data.collection_uuid);
 
     if (!collection.exists()) {
-      throw new NftsCodeException({
-        status: 404,
-        code: NftsErrorCode.COLLECTION_NOT_FOUND,
-        context: this.context,
-      });
+      await this.writeEventLog(
+        {
+          logType: LogType.ERROR,
+          message: 'Collection does not exists.',
+          service: ServiceName.STORAGE,
+        },
+        LogOutput.SYS_ERROR,
+      );
+      return;
     }
     if (
       collection.collectionStatus == CollectionStatus.DEPLOYING ||
       collection.collectionStatus == CollectionStatus.DEPLOYED
     ) {
-      throw new NftsCodeException({
-        status: 400,
-        code: NftsErrorCode.COLLECTION_ALREADY_DEPLOYED,
-        context: this.context,
-      });
+      await this.writeEventLog(
+        {
+          logType: LogType.ERROR,
+          message: 'Collection already deployed.',
+          service: ServiceName.STORAGE,
+        },
+        LogOutput.SYS_ERROR,
+      );
+      return;
     }
 
     collection.collectionStatus = CollectionStatus.DEPLOYING;
@@ -98,9 +113,33 @@ export class DeployCollectionWorker extends BaseQueueWorker {
           LogOutput.SYS_ERROR,
         );
       }
-      throw err;
-    }
 
+      //Refund credit
+      try {
+        await new Scs(this.context).refundCredit(
+          'collection',
+          data.collection_uuid,
+        );
+      } catch (refoundError) {
+        await this.writeEventLog(
+          {
+            logType: LogType.ERROR,
+            message: 'Error refunding credit',
+            service: ServiceName.STORAGE,
+            err: refoundError,
+            data: data,
+          },
+          LogOutput.NOTIFY_ALERT,
+        );
+      }
+
+      if (
+        env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+        env.APP_ENV == AppEnvironment.TEST
+      ) {
+        throw err;
+      }
+    }
     return true;
   }
 }

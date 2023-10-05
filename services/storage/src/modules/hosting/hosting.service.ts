@@ -12,11 +12,11 @@ import {
   PopulateFrom,
   ProductCode,
   QuotaCode,
+  refundCredit,
   Scs,
   SerializeFor,
   ServiceName,
   SpendCreditDto,
-  SqlModelStatus,
   WebsiteQueryFilter,
   WebsitesQuotaReachedQueryFilter,
   writeLog,
@@ -106,22 +106,13 @@ export class HostingService {
     try {
       await website.createNewWebsite(context, website_uuid);
     } catch (err) {
-      try {
-        await new Scs(context).refundCredit(DbTables.WEBSITE, website_uuid);
-      } catch (refoundError) {
-        await new Lmas().writeLog({
-          logType: LogType.ERROR,
-          message: 'Error refunding credit',
-          location: 'HostingService.createWebsite',
-          service: ServiceName.STORAGE,
-          data: {
-            referenceTable: DbTables.WEBSITE,
-            referenceId: website_uuid,
-          },
-          sendAdminAlert: true,
-        });
-      }
-
+      await refundCredit(
+        context,
+        DbTables.WEBSITE,
+        website_uuid,
+        'HostingService.createWebsite',
+        ServiceName.STORAGE,
+      );
       throw err;
     }
 
@@ -169,7 +160,7 @@ export class HostingService {
         }
       }
 
-      //Spend credit
+      //TODO: Spend credit ?
 
       website.domainChangeDate = new Date();
     }
@@ -359,6 +350,7 @@ export class HostingService {
       });
       await new Scs(context).spendCredit(spendCredit);
     } catch (error) {
+      //If not enough credit or spend fails, delete deployment and throw error.
       await deployment.delete();
       throw error;
     }
