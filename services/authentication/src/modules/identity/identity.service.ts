@@ -413,6 +413,8 @@ export class IdentityMicroservice {
       env.KILT_ATTESTER_MNEMONIC,
     )) as KiltKeyringPair;
 
+    writeLog(LogType.INFO, 'RECEIVED: ', didUri, linkParameters);
+    writeLog(LogType.INFO, 'Authorizing transaction ...');
     // Create account link tx
     const authorizedAccountLinkingTx = await Did.authorizeTx(
       didUri,
@@ -424,6 +426,7 @@ export class IdentityMicroservice {
       attesterAcc.address,
     );
 
+    writeLog(LogType.INFO, 'Prepareing BC request ...');
     const bcsRequest = await accDidLinkRequestBc(
       context,
       authorizedAccountLinkingTx,
