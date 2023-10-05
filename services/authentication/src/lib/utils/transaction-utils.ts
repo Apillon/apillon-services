@@ -24,7 +24,9 @@ export async function identityCreateRequestBc(
     context,
     identity.id,
     // Final state
-    IdentityJobState.ATESTATION,
+    linkParameters
+      ? IdentityJobState.ACC_DID_LINK
+      : IdentityJobState.ATESTATION,
     {
       did_create_op: did_create_op,
       didUri: identity.didUri,
