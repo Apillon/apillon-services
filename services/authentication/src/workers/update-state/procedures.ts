@@ -51,7 +51,8 @@ export async function linkAccToDid(context: any, params: any) {
   const identityLinkDto = new IdentityLinkAccountDidDto().populate({
     email: params.email,
     token: params.token,
-    link_params: params.link_params,
+    link_params: params.linkParameters,
+    didUri: params.didUri,
   });
 
   if (env.APP_ENV != AppEnvironment.TEST) {
