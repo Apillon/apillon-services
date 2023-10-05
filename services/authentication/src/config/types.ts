@@ -225,9 +225,6 @@ export class IdentityState {
   }
 
   static getAllowLinkStates() {
-    // Could also be did created, if only attestation and did create service are
-    // supported. Currently we only support one flow - did and vc generation
-    // with an additional did acc link step
     return [IdentityState.ATTESTED, IdentityState.DID_CREATED];
   }
 }
