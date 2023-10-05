@@ -356,7 +356,7 @@ describe('Project tests', () => {
 
       //create 10 test projects - so max project quota is reached
       for (let i = 0; i < 10; i++) {
-        await createTestProject(quotaTestsUser, stage.devConsoleContext);
+        await createTestProject(quotaTestsUser, stage);
       }
     });
 
