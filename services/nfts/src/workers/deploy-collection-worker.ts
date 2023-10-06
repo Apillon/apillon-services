@@ -3,6 +3,7 @@ import {
   Context,
   env,
   LogType,
+  refundCredit,
   Scs,
   ServiceName,
 } from '@apillon/lib';
@@ -12,7 +13,7 @@ import {
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { CollectionStatus, NftsErrorCode } from '../config/types';
+import { CollectionStatus, DbTables, NftsErrorCode } from '../config/types';
 import { NftsCodeException } from '../lib/exceptions';
 import { deployNFTCollectionContract } from '../lib/utils/collection-utils';
 import { Collection } from '../modules/nfts/models/collection.model';
@@ -33,11 +34,16 @@ export class DeployCollectionWorker extends BaseQueueWorker {
     // console.info('RUN EXECUTOR (DeployCollectionWorker). data: ', data);
     //Prepare data and execute validations
     if (!data?.collection_uuid || !data?.baseUri) {
-      throw new NftsCodeException({
-        code: NftsErrorCode.INVALID_DATA_PASSED_TO_WORKER,
-        status: 500,
-        details: data,
-      });
+      await this.writeEventLog(
+        {
+          logType: LogType.ERROR,
+          message: 'Invalid data passed to DeployCollectionWorker.',
+          service: ServiceName.NFTS,
+          data: data,
+        },
+        LogOutput.SYS_ERROR,
+      );
+      return;
     }
 
     const collection: Collection = await new Collection(
@@ -50,7 +56,7 @@ export class DeployCollectionWorker extends BaseQueueWorker {
         {
           logType: LogType.ERROR,
           message: 'Collection does not exists.',
-          service: ServiceName.STORAGE,
+          service: ServiceName.NFTS,
         },
         LogOutput.SYS_ERROR,
       );
@@ -95,10 +101,8 @@ export class DeployCollectionWorker extends BaseQueueWorker {
       }
     } catch (err) {
       //Update collection status to error
-      try {
-        collection.collectionStatus = CollectionStatus.FAILED;
-        await collection.update();
-      } catch (updateError) {
+      collection.collectionStatus = CollectionStatus.FAILED;
+      await collection.update().catch(async (updateError) => {
         await this.writeEventLog(
           {
             logType: LogType.ERROR,
@@ -112,26 +116,16 @@ export class DeployCollectionWorker extends BaseQueueWorker {
           },
           LogOutput.SYS_ERROR,
         );
-      }
+      });
 
       //Refund credit
-      try {
-        await new Scs(this.context).refundCredit(
-          'collection',
-          data.collection_uuid,
-        );
-      } catch (refoundError) {
-        await this.writeEventLog(
-          {
-            logType: LogType.ERROR,
-            message: 'Error refunding credit',
-            service: ServiceName.STORAGE,
-            err: refoundError,
-            data: data,
-          },
-          LogOutput.NOTIFY_ALERT,
-        );
-      }
+      await refundCredit(
+        this.context,
+        DbTables.COLLECTION,
+        data.collection_uuid,
+        'DeployCollectionWorker.runExecutor',
+        ServiceName.NFTS,
+      );
 
       if (
         env.APP_ENV == AppEnvironment.LOCAL_DEV ||

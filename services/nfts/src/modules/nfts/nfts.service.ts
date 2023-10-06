@@ -149,11 +149,10 @@ export class NftsService {
       //Collection was not successfully created or deployed - refund credit
       await refundCredit(
         context,
-        DbTables.COLLECTION,
-        collection.collection_uuid,
+        spendCredit.referenceTable,
+        spendCredit.referenceId,
         'NftsService.createCollection',
         ServiceName.NFTS,
-        ProductCode.NFT_COLLECTION,
       );
 
       throw error;
