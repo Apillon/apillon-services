@@ -5,7 +5,7 @@ export async function upgrade(
 ): Promise<void> {
   await queryFn(`
     ALTER TABLE \`${DbTables.TRANSACTION}\`
-    ADD COLUMN \`transaction_uuid\` VARCHAR(36) NULL;
+    ADD COLUMN \`transaction_uuid\` VARCHAR(36) NULL AFTER id;
     `);
 }
 

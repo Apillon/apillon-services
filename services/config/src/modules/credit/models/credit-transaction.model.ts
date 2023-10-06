@@ -11,7 +11,11 @@ import {
 } from '@apillon/lib';
 import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { v4 as uuidV4 } from 'uuid';
-import { ConfigErrorCode, DbTables } from '../../../config/types';
+import {
+  ConfigErrorCode,
+  CreditDirection,
+  DbTables,
+} from '../../../config/types';
 import { Product } from './product.model';
 
 export class CreditTransaction extends ProjectAccessModel {
@@ -169,14 +173,14 @@ export class CreditTransaction extends ProjectAccessModel {
           WHERE 
             ct.referenceTable = @referenceTable 
             AND ct.referenceId = @referenceId
-            AND ct.direction = 2
+            AND ct.direction = ${CreditDirection.SPEND}
             AND (@product_id IS NULL OR ct.product_id = @product_id)
             AND NOT EXISTS (
               SELECT 1 FROM \`${DbTables.CREDIT_TRANSACTION}\` ct2
               WHERE 
                 ct2.referenceTable = @referenceTable 
                 AND ct2.referenceId = @referenceId
-                AND ct2.direction = 1
+                AND ct2.direction = ${CreditDirection.RECEIVE}
                 AND (@product_id IS NULL OR ct2.product_id = @product_id)
             )
           AND ct.status <> ${SqlModelStatus.DELETED};
