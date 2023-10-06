@@ -2,7 +2,6 @@ import {
   Context,
   env,
   LogType,
-  ProductCode,
   refundCredit,
   runWithWorkers,
   ServiceName,
