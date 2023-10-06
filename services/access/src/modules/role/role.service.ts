@@ -116,7 +116,7 @@ export class RoleService {
   }
 
   /**
-   * Remove roles from an API key based on the service type
+   * Remove roles from an API key based on the service uuid
    * @param {{ apiKey_id: number; body: ApiKeyRoleBaseDto }} event - The data needed to remove a role from an API key.
    * @param {any} context - The service context for database access.
    * @returns {Promise<any>} - The result of the role removal operation.
@@ -128,7 +128,7 @@ export class RoleService {
     const key = await ApiKeyService.getApiKeyById(event.apiKey_id, context);
     key.canModify(context);
 
-    const result = await key.removeRoleByServiceType(event.body);
+    const result = await key.removeRolesByService(event.body);
     await invalidateCacheKey(`${CacheKeyPrefix.AUTH_USER_DATA}:${key.apiKey}`);
 
     return result;

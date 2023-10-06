@@ -59,7 +59,7 @@ export class ApiKeyController {
     return await this.apiKeyService.removeApiKeyRole(context, id, body);
   }
 
-  @Delete(':id/role')
+  @Delete(':id/service-roles')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },

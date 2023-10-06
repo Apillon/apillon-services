@@ -150,7 +150,7 @@ export class ApiKeyService {
   }
 
   /**
-   * Remove roles from an API key by service type
+   * Remove roles from an API key by service uuid
    * @param {DevConsoleApiContext} context - The API context
    * @param {number} apiKey_id - The ID of the API key.
    * @param {ApiKeyRoleBaseDto} body - The data for removing a role from the API key.

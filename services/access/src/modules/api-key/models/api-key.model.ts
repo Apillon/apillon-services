@@ -197,7 +197,7 @@ export class ApiKey extends ProjectAccessModel {
     return true;
   }
 
-  public async removeRoleByServiceType(
+  public async removeRolesByService(
     apiKeyRole: ApiKeyRoleBaseDto,
   ): Promise<boolean> {
     await this.getContext().mysql.paramExecute(
@@ -205,12 +205,12 @@ export class ApiKey extends ProjectAccessModel {
       DELETE
       FROM \`${DbTables.API_KEY_ROLE}\`
       WHERE apiKey_id = @apiKey_id
-      AND serviceType_id = serviceType_id
+      AND service_uuid = @service_uuid
       AND project_uuid = @project_uuid;
       `,
       {
         apiKey_id: this.id,
-        serviceType_id: apiKeyRole.serviceType_id,
+        service_uuid: apiKeyRole.service_uuid,
         project_uuid: apiKeyRole.project_uuid,
       },
     );

@@ -7,10 +7,7 @@ import {
   ValidatorErrorCode,
 } from '../../../../config/types';
 import { ModelBase, prop } from '../../../base-models/base';
-import {
-  anyPresenceValidator,
-  enumInclusionValidator,
-} from '../../../validators';
+import { enumInclusionValidator } from '../../../validators';
 
 /**
  * DTO class with basic properties to assign role to ApiKey
@@ -23,7 +20,7 @@ export class ApiKeyRoleBaseDto extends ModelBase {
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
       {
-        resolver: anyPresenceValidator(['role_id', 'serviceType_id']),
+        resolver: presenceValidator(),
         code: ValidatorErrorCode.API_KEY_ROLE_ROLE_ID_NOT_PRESENT,
       },
       {
@@ -64,12 +61,6 @@ export class ApiKeyRoleBaseDto extends ModelBase {
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: anyPresenceValidator(['role_id', 'serviceType_id']),
-        code: ValidatorErrorCode.API_KEY_ROLE_SERVICE_TYPE_NOT_PRESENT,
-      },
-    ],
   })
   public serviceType_id: number;
 }
