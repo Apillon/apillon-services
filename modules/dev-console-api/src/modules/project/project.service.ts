@@ -80,6 +80,9 @@ export class ProjectService {
         role_id: DefaultUserRole.PROJECT_OWNER,
       };
       await new Ams(context).assignUserRole(params);
+
+      await new Scs(context).addFreemiumCredits(project.project_uuid);
+
       await context.mysql.commit(conn);
 
       await invalidateCachePrefixes([CacheKeyPrefix.ADMIN_PROJECT_LIST]);

@@ -159,6 +159,13 @@ export class Scs extends BaseService {
     });
   }
 
+  public async addFreemiumCredits(project_uuid: string) {
+    return await this.callService({
+      eventName: ScsEventType.ADD_FREEMIUM_CREDITS,
+      project_uuid,
+    });
+  }
+
   //#endregion
 
   //#region subscriptions
