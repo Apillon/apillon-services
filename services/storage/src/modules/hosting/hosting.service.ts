@@ -12,10 +12,10 @@ import {
   PopulateFrom,
   ProductCode,
   QuotaCode,
-  refundCredit,
   Scs,
   SerializeFor,
   ServiceName,
+  spendCreditAction,
   SpendCreditDto,
   WebsiteQueryFilter,
   WebsitesQuotaReachedQueryFilter,
@@ -93,28 +93,20 @@ export class HostingService {
 
     const website_uuid = uuidV4();
     const spendCredit: SpendCreditDto = new SpendCreditDto(
-      {},
+      {
+        project_uuid: event.body.project_uuid,
+        product_id: ProductCode.HOSTING_WEBSITE,
+        referenceTable: DbTables.WEBSITE,
+        referenceId: website_uuid,
+        location: 'HostingService/createWebsite',
+        service: ServiceName.STORAGE,
+      },
       context,
-    ).populate({
-      project_uuid: event.body.project_uuid,
-      product_id: ProductCode.HOSTING_WEBSITE,
-      referenceTable: DbTables.WEBSITE,
-      referenceId: website_uuid,
-    });
-    await new Scs(context).spendCredit(spendCredit);
+    );
 
-    try {
-      await website.createNewWebsite(context, website_uuid);
-    } catch (err) {
-      await refundCredit(
-        context,
-        DbTables.WEBSITE,
-        website_uuid,
-        'HostingService.createWebsite',
-        ServiceName.STORAGE,
-      );
-      throw err;
-    }
+    await spendCreditAction(context, spendCredit, () =>
+      website.createNewWebsite(context, website_uuid),
+    );
 
     await new Lmas().writeLog({
       context,
@@ -336,18 +328,19 @@ export class HostingService {
 
     //Spend credit
     try {
+      //TODO: Deployment will be refactored to uuids, and it will be possible to use that uuid as a reference!
       const spendCredit: SpendCreditDto = new SpendCreditDto(
-        {},
+        {
+          project_uuid: website.project_uuid,
+          product_id:
+            event.body.environment == DeploymentEnvironment.STAGING
+              ? ProductCode.HOSTING_DEPLOY_TO_STAGING
+              : ProductCode.HOSTING_DEPLOY_TO_PRODUCTION,
+          referenceTable: DbTables.DEPLOYMENT,
+          referenceId: deployment.id,
+        },
         context,
-      ).populate({
-        project_uuid: website.project_uuid,
-        product_id:
-          event.body.environment == DeploymentEnvironment.STAGING
-            ? ProductCode.HOSTING_DEPLOY_TO_STAGING
-            : ProductCode.HOSTING_DEPLOY_TO_PRODUCTION,
-        referenceTable: DbTables.DEPLOYMENT,
-        referenceId: deployment.id,
-      });
+      );
       await new Scs(context).spendCredit(spendCredit);
     } catch (error) {
       //If not enough credit or spend fails, delete deployment and throw error.

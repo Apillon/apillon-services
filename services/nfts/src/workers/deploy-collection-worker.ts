@@ -4,7 +4,6 @@ import {
   env,
   LogType,
   refundCredit,
-  Scs,
   ServiceName,
 } from '@apillon/lib';
 import {

@@ -321,10 +321,8 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         LogOutput.SYS_ERROR,
       );
 
-      try {
-        deployment.deploymentStatus = DeploymentStatus.FAILED;
-        await deployment.update();
-      } catch (upgError) {
+      deployment.deploymentStatus = DeploymentStatus.FAILED;
+      await deployment.update().catch(async (upgError) => {
         await this.writeEventLog(
           {
             logType: LogType.ERROR,
@@ -336,7 +334,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
           },
           LogOutput.SYS_ERROR,
         );
-      }
+      });
 
       //deployment failed - refund credit
       await refundCredit(

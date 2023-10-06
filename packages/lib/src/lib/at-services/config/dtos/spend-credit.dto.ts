@@ -5,6 +5,7 @@ import { stringParser } from '@rawmodel/parsers';
 import {
   PopulateFrom,
   ProductCode,
+  ServiceName,
   ValidatorErrorCode,
 } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
@@ -45,7 +46,7 @@ export class SpendCreditDto extends ModelBase {
       },
     ],
   })
-  public referenceTable?: string;
+  public referenceTable: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -57,5 +58,29 @@ export class SpendCreditDto extends ModelBase {
       },
     ],
   })
-  public referenceId?: string;
+  public referenceId: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.SPEND_CREDIT_REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
+  })
+  public location: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.SPEND_CREDIT_REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
+  })
+  public service: ServiceName;
 }
