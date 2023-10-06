@@ -367,7 +367,7 @@ export class NftsService {
       project_uuid: collection.project_uuid,
       product_id: ProductCode.NFT_TRANSFER_COLLECTION,
       referenceTable: DbTables.COLLECTION,
-      referenceId: collection.collection_uuid,
+      referenceId: uuidV4(),
     });
     await new Scs(context).spendCredit(spendCredit);
 
@@ -381,7 +381,7 @@ export class NftsService {
           body.address,
           collection.collectionType,
         ),
-        uuidV4(),
+        spendCredit.referenceId,
       );
     } catch (error) {
       //Collection was not successfully transferred - refund credit
@@ -391,7 +391,6 @@ export class NftsService {
         spendCredit.referenceId,
         'NftsService.createCollection',
         ServiceName.NFTS,
-        ProductCode.NFT_TRANSFER_COLLECTION,
       );
       throw error;
     }
@@ -433,17 +432,42 @@ export class NftsService {
       context,
     );
 
-    await NftsService.sendEvmTransaction(
+    //Spend credit
+    const spendCredit: SpendCreditDto = new SpendCreditDto(
+      {
+        project_uuid: collection.project_uuid,
+        product_id: ProductCode.NFT_SET_BASE_URI,
+        referenceTable: DbTables.TRANSACTION,
+        referenceId: uuidV4(),
+      },
       context,
-      collection,
-      TransactionType.SET_COLLECTION_BASE_URI,
-      await walletService.createSetNftBaseUriTransaction(
-        collection.contractAddress,
-        body.uri,
-        collection.collectionType,
-      ),
-      uuidV4(),
     );
+    await new Scs(context).spendCredit(spendCredit);
+
+    try {
+      await NftsService.sendEvmTransaction(
+        context,
+        collection,
+        TransactionType.SET_COLLECTION_BASE_URI,
+        await walletService.createSetNftBaseUriTransaction(
+          collection.contractAddress,
+          body.uri,
+          collection.collectionType,
+        ),
+        spendCredit.referenceId,
+      );
+    } catch (error) {
+      //set base uri failed - refund credit
+      await refundCredit(
+        context,
+        spendCredit.referenceTable,
+        spendCredit.referenceId,
+        'NftsService.setNftCollectionBaseUri',
+        ServiceName.NFTS,
+      );
+      throw error;
+    }
+
     return collection;
   }
 

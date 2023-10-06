@@ -63,31 +63,15 @@ export class TransactionStatusWorker extends BaseQueueWorker {
 
           //Refund credit if transaction failed
           if (res.transactionStatus > 2) {
-            let product_id;
-            switch (nftTransaction.transactionType) {
-              case TransactionType.DEPLOY_CONTRACT:
-                product_id = ProductCode.NFT_COLLECTION;
-                break;
-              case TransactionType.TRANSFER_CONTRACT_OWNERSHIP:
-                product_id = ProductCode.NFT_TRANSFER_COLLECTION;
-                break;
-              case TransactionType.BURN_NFT:
-                product_id = ProductCode.NFT_BURN;
-                break;
-              case TransactionType.MINT_NFT:
-              case TransactionType.NEST_MINT_NFT:
-                product_id = ProductCode.NFT_COLLECTION;
-                break;
-            }
-
+            //For ContractDeploy, reference for credit is collection. For other transaction_uuid se set as reference.
             const referenceTable =
               nftTransaction.transactionType == TransactionType.DEPLOY_CONTRACT
                 ? DbTables.COLLECTION
                 : DbTables.TRANSACTION;
             const referenceId =
               nftTransaction.transactionType == TransactionType.DEPLOY_CONTRACT
-                ? nftTransaction.refId
-                : nftTransaction.id;
+                ? nftTransaction.refId // this is collection_uuid
+                : nftTransaction.transaction_uuid;
 
             await refundCredit(
               this.context,
@@ -95,7 +79,6 @@ export class TransactionStatusWorker extends BaseQueueWorker {
               referenceId.toString(),
               'TransactionStatusWorker.runExecutor',
               ServiceName.NFTS,
-              product_id,
             );
           }
         }
