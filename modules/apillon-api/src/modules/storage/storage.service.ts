@@ -1,6 +1,8 @@
 import {
+  ApillonApiBucketQueryFilter,
   ApillonApiCreateS3UrlsForUploadDto,
   ApillonApiDirectoryContentQueryFilter,
+  CreateBucketDto,
   CreateS3UrlsForUploadDto,
   DirectoryContentQueryFilter,
   EndFileUploadSessionDto,
@@ -13,6 +15,19 @@ import { ApillonApiContext } from '../../context';
 
 @Injectable()
 export class StorageService {
+  async listBuckets(
+    context: ApillonApiContext,
+    query: ApillonApiBucketQueryFilter,
+  ) {
+    return (await new StorageMicroservice(context).listBuckets(query)).data;
+  }
+
+  async createBucket(context: ApillonApiContext, body: CreateBucketDto) {
+    body.bucketType = 1;
+    //Call Storage microservice, to create bucket
+    return (await new StorageMicroservice(context).createBucket(body)).data;
+  }
+
   async createS3SignedUrlsForUpload(
     context: ApillonApiContext,
     bucket_uuid: string,

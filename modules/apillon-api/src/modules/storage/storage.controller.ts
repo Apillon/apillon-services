@@ -1,4 +1,6 @@
 import {
+  ApillonApiBucketQueryFilter,
+  ApillonApiCreateBucketDto,
   ApillonApiCreateS3UrlsForUploadDto,
   ApillonApiDirectoryContentQueryFilter,
   AttachedServiceType,
@@ -27,7 +29,43 @@ import { StorageService } from './storage.service';
 export class StorageController {
   constructor(private storageService: StorageService) {}
 
-  @Post(':bucketUuid/upload')
+  @Get('buckets')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_READ,
+    serviceType: AttachedServiceType.STORAGE,
+  })
+  @Validation({
+    dto: ApillonApiBucketQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(AuthGuard, ValidationGuard)
+  @HttpCode(200)
+  async listBuckets(
+    @Ctx() context: ApillonApiContext,
+    @Query() query: ApillonApiBucketQueryFilter,
+  ) {
+    query.project_uuid = context.apiKey.project_uuid;
+    return await this.storageService.listBuckets(context, query);
+  }
+
+  @Post('buckets')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_WRITE,
+    serviceType: AttachedServiceType.STORAGE,
+  })
+  @Validation({ dto: ApillonApiCreateBucketDto })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async createCollection(
+    @Ctx() context: ApillonApiContext,
+    @Body() body: ApillonApiCreateBucketDto,
+  ) {
+    body.project_uuid = context.apiKey.project_uuid;
+    return await this.storageService.createBucket(context, body);
+  }
+
+  //#region legacy routes
+
+  @Post([':bucketUuid/upload', 'buckets/:bucketUuid/upload'])
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_EXECUTE,
     serviceType: AttachedServiceType.STORAGE,
@@ -48,7 +86,10 @@ export class StorageController {
     );
   }
 
-  @Post(':bucketUuid/upload/:sessionUuid/end')
+  @Post([
+    ':bucketUuid/upload/:sessionUuid/end',
+    'buckets/:bucketUuid/upload/:sessionUuid/end',
+  ])
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_EXECUTE,
     serviceType: AttachedServiceType.STORAGE,
@@ -71,7 +112,7 @@ export class StorageController {
     );
   }
 
-  @Get(':bucketUuid/file/:id/detail')
+  @Get([':bucketUuid/file/:id/detail', 'buckets/:bucketUuid/file/:id/detail'])
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_READ,
     serviceType: AttachedServiceType.STORAGE,
@@ -85,7 +126,7 @@ export class StorageController {
     return await this.storageService.getFileDetails(context, bucket_uuid, id);
   }
 
-  @Delete(':bucketUuid/file/:id')
+  @Delete([':bucketUuid/file/:id', 'buckets/:bucketUuid/file/:id'])
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_WRITE,
     serviceType: AttachedServiceType.STORAGE,
@@ -95,7 +136,7 @@ export class StorageController {
     return await this.storageService.deleteFile(context, id);
   }
 
-  @Get(':bucketUuid/content')
+  @Get([':bucketUuid/content', 'buckets/:bucketUuid/content'])
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_READ,
     serviceType: AttachedServiceType.STORAGE,

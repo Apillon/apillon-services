@@ -32,3 +32,11 @@ export class BucketQueryFilter extends BaseQueryFilter {
   })
   public bucketType: number;
 }
+
+export class ApillonApiBucketQueryFilter extends BucketQueryFilter {
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+  })
+  public project_uuid: string;
+}
