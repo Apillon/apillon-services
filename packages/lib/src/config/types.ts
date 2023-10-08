@@ -703,6 +703,7 @@ export enum ProductCode {
   NFT_MINT = 6,
   NFT_BURN = 7,
   NFT_TRANSFER_COLLECTION = 8,
+  NFT_SET_BASE_URI = 10,
 
   KILT_IDENTITY = 9,
 }

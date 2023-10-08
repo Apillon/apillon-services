@@ -28,7 +28,7 @@ describe('Admin Block user tests', () => {
       env.ADMIN_CONSOLE_API_HOST_TEST,
     );
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
     testApiKey = await createTestApiKey(
       stage.amsContext,
       testProject.project_uuid,

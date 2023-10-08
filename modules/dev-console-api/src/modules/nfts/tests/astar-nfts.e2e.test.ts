@@ -33,7 +33,7 @@ describe('Apillon Console NFTs tests for Astar', () => {
     await blockchain.start();
 
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
 
     await overrideDefaultQuota(
       stage,

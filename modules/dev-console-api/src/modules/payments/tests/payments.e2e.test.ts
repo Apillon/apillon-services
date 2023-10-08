@@ -20,7 +20,7 @@ describe('Payments controller e2e tests', () => {
     stage = await setupTest();
 
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
   });
 
   afterAll(async () => {

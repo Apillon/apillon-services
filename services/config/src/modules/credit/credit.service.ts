@@ -296,14 +296,18 @@ export class CreditService {
    * @param context
    */
   static async refundCredit(
-    event: { referenceTable: string; referenceId: string },
+    event: { referenceTable: string; referenceId: string; product_id?: number },
     context: ServiceContext,
   ): Promise<any> {
     //Check if spend creditTransaction exists for this reference
     const creditTransaction: CreditTransaction = await new CreditTransaction(
       {},
       context,
-    ).populateRefundableTransaction(event.referenceTable, event.referenceId);
+    ).populateRefundableTransaction(
+      event.referenceTable,
+      event.referenceId,
+      event.product_id,
+    );
 
     if (!creditTransaction.exists()) {
       throw await new ScsCodeException({

@@ -30,7 +30,7 @@ describe('Discord bot APIs', () => {
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
     testUser3 = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
 
     await stage.amsContext.mysql.paramExecute(`
     INSERT INTO oauthLink (authUser_id, type, status, externalUserId, externalUsername)
