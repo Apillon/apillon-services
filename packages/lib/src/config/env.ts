@@ -120,6 +120,7 @@ export interface IEnv {
   SMTP_NAME_FROM: string;
   SMTP_EMAIL_FROM: string;
   ADMIN_EMAILS: string;
+  CONTACT_EMAIL_TO: string;
 
   /************************************************************
    * DEV-CONSOLE-API -Apillon Developer Console API
@@ -430,6 +431,14 @@ export interface IEnv {
 
   METABASE_SECRET: string;
   METABASE_URL: string;
+
+  /**
+   * STRIPE API
+   */
+  STRIPE_SECRET: string;
+  STRIPE_WEBHOOK_SECRET: string;
+
+  STRIPE_SECRET_TEST: string;
 }
 
 // dotenv.config();
@@ -620,6 +629,7 @@ export let env: IEnv = {
   SMTP_NAME_FROM: process.env['SMTP_NAME_FROM'] || 'Apillon.io',
   SMTP_EMAIL_FROM: process.env['SMTP_EMAIL_FROM'] || 'info@apillon.io',
   ADMIN_EMAILS: process.env['ADMIN_EMAILS'] || 'info@apillon.io',
+  CONTACT_EMAIL_TO: process.env['CONTACT_EMAIL_TO'] || 'info@apillon.io',
 
   /** --- SECTION: APILLON API --- */
   APILLON_API_HOST: process.env['APILLON_API_HOST'] || 'localhost',
@@ -782,6 +792,11 @@ export let env: IEnv = {
   /** METABASE */
   METABASE_SECRET: process.env['METABASE_SECRET'] || '',
   METABASE_URL: process.env['METABASE_URL'] || 'https://metabase.apillon.io',
+
+  /** STRIPE */
+  STRIPE_SECRET: process.env['STRIPE_SECRET'],
+  STRIPE_SECRET_TEST: process.env['STRIPE_SECRET_TEST'],
+  STRIPE_WEBHOOK_SECRET: process.env['STRIPE_WEBHOOK_SECRET'],
 };
 
 export let isEnvReady = false;

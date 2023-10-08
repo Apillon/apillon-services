@@ -50,7 +50,7 @@ describe('Apillon API hosting tests', () => {
     //User 1 project & other data
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
 
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
     testService = await createTestProjectService(
       stage.devConsoleContext,
       testProject,
@@ -59,12 +59,11 @@ describe('Apillon API hosting tests', () => {
     //Create test web page record
     testWebsite = await new Website({}, stage.storageContext)
       .populate({
-        website_uuid: uuidV4(),
         project_uuid: testProject.project_uuid,
         name: 'Test web page',
         domain: 'https://hosting-e2e-tests.si',
       })
-      .createNewWebsite(stage.storageContext);
+      .createNewWebsite(stage.storageContext, uuidV4());
 
     apiKey = await createTestApiKey(stage.amsContext, testProject.project_uuid);
     await apiKey.assignRole(
@@ -94,7 +93,7 @@ describe('Apillon API hosting tests', () => {
 
     //User 2 project & other data
     testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testProject2 = await createTestProject(testUser2, stage.devConsoleContext);
+    testProject2 = await createTestProject(testUser2, stage);
     testService2 = await createTestProjectService(
       stage.devConsoleContext,
       testProject2,
@@ -569,11 +568,10 @@ describe('Apillon API hosting tests', () => {
       //create new website
       directDeployTestWebsite = await new Website({}, stage.storageContext)
         .populate({
-          website_uuid: uuidV4(),
           project_uuid: testProject.project_uuid,
           name: 'Direct deploy test website',
         })
-        .createNewWebsite(stage.storageContext);
+        .createNewWebsite(stage.storageContext, uuidV4());
     });
     test('Application (through Apillon API) should be able to deploy directly to production', async () => {
       let response = await request(stage.http)

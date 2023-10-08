@@ -17,7 +17,7 @@ export function enumInclusionValidator(enumerator: any, allowNull = false) {
     }
 
     for (const key in enumerator) {
-      if (enumerator.hasOwnProperty(key) && value === enumerator[key]) {
+      if (enumerator.hasOwnProperty(key) && value == enumerator[key]) {
         return true;
       }
     }

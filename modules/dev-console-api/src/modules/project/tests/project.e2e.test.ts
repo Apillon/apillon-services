@@ -46,8 +46,8 @@ describe('Project tests', () => {
       )
     `);
 
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
-    testProject2 = await createTestProject(testUser2, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
+    testProject2 = await createTestProject(testUser2, stage);
   });
 
   afterAll(async () => {
@@ -342,10 +342,7 @@ describe('Project tests', () => {
         stage.devConsoleContext,
         stage.amsContext,
       );
-      quotaTestProject = await createTestProject(
-        quotaTestsUser,
-        stage.devConsoleContext,
-      );
+      quotaTestProject = await createTestProject(quotaTestsUser, stage);
       //add 10 users to quotaTestProject - max users on project quota reached
       for (let i = 0; i < 10; i++) {
         await createTestUser(
@@ -359,7 +356,7 @@ describe('Project tests', () => {
 
       //create 10 test projects - so max project quota is reached
       for (let i = 0; i < 10; i++) {
-        await createTestProject(quotaTestsUser, stage.devConsoleContext);
+        await createTestProject(quotaTestsUser, stage);
       }
     });
 

@@ -10,10 +10,13 @@ import {
   Lmas,
   LogType,
   PopulateFrom,
+  ProductCode,
   QuotaCode,
   Scs,
   SerializeFor,
   ServiceName,
+  spendCreditAction,
+  SpendCreditDto,
   WebsiteQueryFilter,
   WebsitesQuotaReachedQueryFilter,
   writeLog,
@@ -25,7 +28,11 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { DeploymentEnvironment, StorageErrorCode } from '../../config/types';
+import {
+  DbTables,
+  DeploymentEnvironment,
+  StorageErrorCode,
+} from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { deleteDirectory } from '../../lib/delete-directory';
 import {
@@ -41,6 +48,7 @@ import { File } from '../storage/models/file.model';
 import { StorageService } from '../storage/storage.service';
 import { Deployment } from './models/deployment.model';
 import { Website } from './models/website.model';
+import { v4 as uuidV4 } from 'uuid';
 
 export class HostingService {
   //#region web page CRUD
@@ -83,21 +91,22 @@ export class HostingService {
   ): Promise<any> {
     const website: Website = new Website(event.body, context);
 
-    //check max web pages quota
-    const numOfWebsites = await website.getNumOfWebsites();
-    const maxWebsitesQuota = await new Scs(context).getQuota({
-      quota_id: QuotaCode.MAX_WEBSITES,
-      project_uuid: website.project_uuid,
-    });
+    const website_uuid = uuidV4();
+    const spendCredit: SpendCreditDto = new SpendCreditDto(
+      {
+        project_uuid: event.body.project_uuid,
+        product_id: ProductCode.HOSTING_WEBSITE,
+        referenceTable: DbTables.WEBSITE,
+        referenceId: website_uuid,
+        location: 'HostingService/createWebsite',
+        service: ServiceName.STORAGE,
+      },
+      context,
+    );
 
-    if (numOfWebsites >= maxWebsitesQuota.value) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.MAX_WEBSITES_REACHED,
-        status: 400,
-      });
-    }
-
-    await website.createNewWebsite(context);
+    await spendCreditAction(context, spendCredit, () =>
+      website.createNewWebsite(context, website_uuid),
+    );
 
     await new Lmas().writeLog({
       context,
@@ -142,6 +151,9 @@ export class HostingService {
           });
         }
       }
+
+      //TODO: Spend credit ?
+
       website.domainChangeDate = new Date();
     }
 
@@ -309,7 +321,7 @@ export class HostingService {
     }
 
     //Create deployment record
-    const d: Deployment = new Deployment({}, context).populate({
+    const deployment: Deployment = new Deployment({}, context).populate({
       website_id: website.id,
       bucket_id:
         event.body.environment == DeploymentEnvironment.STAGING
@@ -320,15 +332,37 @@ export class HostingService {
     });
 
     try {
-      await d.validate();
+      await deployment.validate();
     } catch (err) {
-      await d.handle(err);
-      if (!d.isValid()) {
-        throw new StorageValidationException(d);
+      await deployment.handle(err);
+      if (!deployment.isValid()) {
+        throw new StorageValidationException(deployment);
       }
     }
 
-    await d.insert();
+    await deployment.insert();
+
+    //Spend credit
+    try {
+      //TODO: Deployment will be refactored to uuids, and it will be possible to use that uuid as a reference!
+      const spendCredit: SpendCreditDto = new SpendCreditDto(
+        {
+          project_uuid: website.project_uuid,
+          product_id:
+            event.body.environment == DeploymentEnvironment.STAGING
+              ? ProductCode.HOSTING_DEPLOY_TO_STAGING
+              : ProductCode.HOSTING_DEPLOY_TO_PRODUCTION,
+          referenceTable: DbTables.DEPLOYMENT,
+          referenceId: deployment.id,
+        },
+        context,
+      );
+      await new Scs(context).spendCredit(spendCredit);
+    } catch (error) {
+      //If not enough credit or spend fails, delete deployment and throw error.
+      await deployment.delete();
+      throw error;
+    }
 
     //Execute deploy or Send message to SQS
     if (
@@ -343,7 +377,7 @@ export class HostingService {
         params: { FunctionName: 'test' },
       };
       const parameters = {
-        deployment_id: d.id,
+        deployment_id: deployment.id,
         clearBucketForUpload: event.body.clearBucketForUpload,
       };
       const wd = new WorkerDefinition(
@@ -360,7 +394,7 @@ export class HostingService {
         QueueWorkerType.EXECUTOR,
       );
       await worker.runExecutor({
-        deployment_id: d.id,
+        deployment_id: deployment.id,
         clearBucketForUpload: event.body.clearBucketForUpload,
       });
     } else {
@@ -370,7 +404,7 @@ export class HostingService {
         WorkerName.DEPLOY_WEBSITE_WORKER,
         [
           {
-            deployment_id: d.id,
+            deployment_id: deployment.id,
             clearBucketForUpload: event.body.clearBucketForUpload,
           },
         ],
@@ -379,7 +413,7 @@ export class HostingService {
       );
     }
 
-    return d.serialize(SerializeFor.PROFILE);
+    return deployment.serialize(SerializeFor.PROFILE);
   }
 
   //#endregion

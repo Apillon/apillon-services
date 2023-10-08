@@ -1,26 +1,32 @@
 import {
-  ProjectAccessModel,
   Context,
-  env,
-  getQueryParams,
   Lmas,
   LogType,
   PoolConnection,
   PopulateFrom,
-  presenceValidator,
-  prop,
-  selectAndCountQuery,
+  ProjectAccessModel,
   SerializeFor,
   ServiceName,
   SqlModelStatus,
   WebsiteQueryFilter,
+  getQueryParams,
+  presenceValidator,
+  prop,
+  selectAndCountQuery,
 } from '@apillon/lib';
-import { integerParser, stringParser, dateParser } from '@rawmodel/parsers';
-import { BucketType, DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
-import { Bucket } from '../../bucket/models/bucket.model';
+import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { v4 as uuidV4 } from 'uuid';
+import {
+  BucketType,
+  DbTables,
+  DeploymentEnvironment,
+  StorageErrorCode,
+} from '../../../config/types';
 import { StorageValidationException } from '../../../lib/exceptions';
+import { addJwtToIPFSUrl } from '../../../lib/ipfs-utils';
+import { Bucket } from '../../bucket/models/bucket.model';
+import { ProjectConfig } from '../../config/models/project-config.model';
 
 export class Website extends ProjectAccessModel {
   public readonly tableName = DbTables.WEBSITE;
@@ -226,6 +232,19 @@ export class Website extends ProjectAccessModel {
   })
   public domainChangeDate: Date;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
+    validators: [],
+  })
+  public cdnId: string;
+
   /***************************************************
    * Info properties
    *****************************************************/
@@ -414,7 +433,10 @@ export class Website extends ProjectAccessModel {
    * @param context
    * @returns created web site, populated with buckets
    */
-  public async createNewWebsite(context: ServiceContext): Promise<this> {
+  public async createNewWebsite(
+    context: ServiceContext,
+    website_uuid: string,
+  ): Promise<this> {
     //Initialize buckets
     const bucket: Bucket = new Bucket(
       {
@@ -479,7 +501,7 @@ export class Website extends ProjectAccessModel {
       ]);
       //Populate website
       this.populate({
-        website_uuid: uuidV4(),
+        website_uuid: website_uuid,
         bucket_id: bucket.id,
         stagingBucket_id: stagingBucket.id,
         productionBucket_id: productionBucket.id,
@@ -564,6 +586,15 @@ export class Website extends ProjectAccessModel {
   }
 
   public async populateBucketsAndLink() {
+    if (!this.project_uuid) {
+      throw new Error('project_uuid should not be null');
+    }
+
+    const ipfsGateway = await new ProjectConfig(
+      { project_uuid: this.project_uuid },
+      this.getContext(),
+    ).getIpfsGateway();
+
     if (this.bucket_id) {
       this.bucket = await new Bucket({}, this.getContext()).populateById(
         this.bucket_id,
@@ -575,11 +606,24 @@ export class Website extends ProjectAccessModel {
         this.stagingBucket_id,
       );
       if (this.stagingBucket.IPNS) {
-        this.ipnsStagingLink =
-          env.STORAGE_IPFS_GATEWAY.replace('/ipfs/', '/ipns/') +
-          this.stagingBucket.IPNS;
+        this.ipnsStagingLink = ipfsGateway.ipnsUrl + this.stagingBucket.IPNS;
 
-        this.w3StagingLink = `https://${this.stagingBucket.IPNS}.ipns.web3approved.com/`;
+        if (ipfsGateway.subdomainGateway) {
+          this.w3StagingLink = `https://${this.stagingBucket.IPNS}.ipns.${ipfsGateway.subdomainGateway}`;
+        }
+
+        if (ipfsGateway.private) {
+          this.ipnsStagingLink = addJwtToIPFSUrl(
+            this.ipnsStagingLink,
+            this.project_uuid,
+          );
+
+          this.w3StagingLink = addJwtToIPFSUrl(
+            this.w3StagingLink,
+            this.project_uuid,
+          );
+        }
+
         this.ipnsStaging = this.stagingBucket.IPNS;
       }
     }
@@ -590,9 +634,23 @@ export class Website extends ProjectAccessModel {
       ).populateById(this.productionBucket_id);
       if (this.productionBucket.IPNS) {
         this.ipnsProductionLink =
-          env.STORAGE_IPFS_GATEWAY.replace('/ipfs/', '/ipns/') +
-          this.productionBucket.IPNS;
-        this.w3ProductionLink = `https://${this.productionBucket.IPNS}.ipns.web3approved.com/`;
+          ipfsGateway.ipnsUrl + this.productionBucket.IPNS;
+
+        if (ipfsGateway.subdomainGateway) {
+          this.w3ProductionLink = `https://${this.productionBucket.IPNS}.ipns.${ipfsGateway.subdomainGateway}`;
+        }
+
+        if (ipfsGateway.private) {
+          this.ipnsProductionLink = addJwtToIPFSUrl(
+            this.ipnsProductionLink,
+            this.project_uuid,
+          );
+          this.w3ProductionLink = addJwtToIPFSUrl(
+            this.w3ProductionLink,
+            this.project_uuid,
+          );
+        }
+
         this.ipnsProduction = this.productionBucket.IPNS;
       }
     }
@@ -601,13 +659,21 @@ export class Website extends ProjectAccessModel {
   public async listDomains(context: ServiceContext) {
     return await context.mysql.paramExecute(
       `
-        SELECT wp.domain
-        FROM \`${this.tableName}\` wp
-        JOIN \`${DbTables.BUCKET}\` b ON b.id = wp.productionBucket_id
-        WHERE wp.domain IS NOT NULL
-        AND wp.domain <> ''
+        SELECT w.domain, (
+          SELECT d.updateTime 
+          FROM \`${DbTables.DEPLOYMENT}\` d 
+          WHERE d.website_id = w.id
+          AND d.environment IN (${DeploymentEnvironment.PRODUCTION}, ${DeploymentEnvironment.DIRECT_TO_PRODUCTION})
+          AND d.deploymentStatus = 10
+          ORDER BY d.updateTime DESC
+          LIMIT 1
+        ) as lastDeploymentDate
+        FROM \`${DbTables.WEBSITE}\` w
+        JOIN \`${DbTables.BUCKET}\` b ON b.id = w.productionBucket_id
+        WHERE w.domain IS NOT NULL
+        AND w.domain <> ''
         AND b.CID IS NOT NULL
-        AND wp.status <> ${SqlModelStatus.DELETED};
+        AND w.status <> ${SqlModelStatus.DELETED};
         `,
       {},
     );

@@ -21,6 +21,7 @@ import { v4 as uuidV4 } from 'uuid';
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
 import { DefaultUserRole } from '@apillon/lib';
+import { Credit } from '@apillon/config/src/modules/credit/models/credit.model';
 
 describe('Hosting tests', () => {
   let stage: Stage;
@@ -45,8 +46,8 @@ describe('Hosting tests', () => {
       DefaultUserRole.ADMIN,
     );
 
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
-    testProject2 = await createTestProject(testUser2, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
+    testProject2 = await createTestProject(testUser2, stage);
 
     //Create test Website record
     testWebsite = await new Website({}, stage.storageContext)
@@ -55,7 +56,7 @@ describe('Hosting tests', () => {
         name: 'Test Website',
         domain: 'https://hosting-e2e-tests.si',
       })
-      .createNewWebsite(stage.storageContext);
+      .createNewWebsite(stage.storageContext, uuidV4());
   });
 
   afterAll(async () => {
@@ -536,7 +537,14 @@ describe('Hosting tests', () => {
           .insert();
       }
     });
-    test('User should recieve status 400 when max website quota is reached', async () => {
+    test('User should receive status 402 when not enough credits is available for project', async () => {
+      const projectCredit: Credit = await new Credit(
+        {},
+        stage.configContext,
+      ).populateByUUID(testProject2.project_uuid);
+      projectCredit.balance = 1;
+      await projectCredit.update();
+
       const response = await request(stage.http)
         .post(`/storage/hosting/website`)
         .send({
@@ -545,10 +553,7 @@ describe('Hosting tests', () => {
           domain: 'https://www.my-test-page.si',
         })
         .set('Authorization', `Bearer ${testUser2.token}`);
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        StorageErrorCode[StorageErrorCode.MAX_WEBSITES_REACHED],
-      );
+      expect(response.status).toBe(402);
     });
   });
 });

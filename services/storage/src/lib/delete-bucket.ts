@@ -30,7 +30,7 @@ export async function deleteBucket(
 
   for (const file of filesInBucket) {
     if (file.CID) {
-      await IPFSService.unpinFile(file.CID);
+      await new IPFSService(context, b.project_uuid).unpinFile(file.CID);
     }
   }
 

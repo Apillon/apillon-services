@@ -1,6 +1,8 @@
 import {
   AWS_S3,
+  CacheKeyPrefix,
   env,
+  invalidateCacheMatch,
   Lmas,
   LogType,
   runWithWorkers,
@@ -63,12 +65,14 @@ export async function storageBucketSyncFilesToIPFS(
 
     let ipfsRes: uploadItemsToIPFSRes = undefined;
     try {
-      ipfsRes = await IPFSService.uploadFURsToIPFSFromS3(
+      ipfsRes = await new IPFSService(
+        context,
+        bucket.project_uuid,
+      ).uploadFURsToIPFSFromS3(
         {
           fileUploadRequests: files,
           wrapWithDirectory: wrapWithDirectory,
           wrappingDirectoryPath,
-          project_uuid: bucket.project_uuid,
         },
         context,
       );
@@ -255,7 +259,10 @@ export async function storageBucketSyncFilesToIPFS(
 
         let ipfsRes = undefined;
         try {
-          ipfsRes = await IPFSService.uploadFURToIPFSFromS3(
+          ipfsRes = await new IPFSService(
+            context,
+            bucket.project_uuid,
+          ).uploadFURToIPFSFromS3(
             { fileUploadRequest: file, project_uuid: bucket.project_uuid },
             context,
           );
@@ -440,6 +447,10 @@ export async function storageBucketSyncFilesToIPFS(
     'storage-bucket-sync-files-to-ipfsRes.ts',
     'storageBucketSyncFilesToIPFS',
   );
+
+  await invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
+    project_uuid: bucket.project_uuid,
+  });
 
   return { files: transferedFiles, wrappedDirCid: wrappedDirCid };
 }

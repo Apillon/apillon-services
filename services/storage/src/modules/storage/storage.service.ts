@@ -1,10 +1,12 @@
 import {
   AppEnvironment,
   AWS_S3,
+  CacheKeyPrefix,
   CreateS3UrlsForUploadDto,
   EndFileUploadSessionDto,
   env,
   FileUploadsQueryFilter,
+  invalidateCacheMatch,
   Lmas,
   LogType,
   QuotaCode,
@@ -32,15 +34,17 @@ import {
 } from '../../config/types';
 import { createFURAndS3Url } from '../../lib/create-fur-and-s3-url';
 import { StorageCodeException } from '../../lib/exceptions';
+import { addJwtToIPFSUrl } from '../../lib/ipfs-utils';
 import { processSessionFiles } from '../../lib/process-session-files';
 import { SyncToIPFSWorker } from '../../workers/s3-to-ipfs-sync-worker';
 import { WorkerName } from '../../workers/worker-executor';
 import { Bucket } from '../bucket/models/bucket.model';
+import { ProjectConfig } from '../config/models/project-config.model';
 import { HostingService } from '../hosting/hosting.service';
+import { Website } from '../hosting/models/website.model';
 import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
-import { Website } from '../hosting/models/website.model';
 import { getSessionFilesOnS3 } from '../../lib/file-upload-session-s3-files';
 
 export class StorageService {
@@ -432,10 +436,22 @@ export class StorageService {
 
     file.canAccess(context);
     fileStatus = FileStatus.UPLOADED_TO_IPFS;
-    //File exists on IPFS and probably on CRUST- get status from CRUST
     if (file.CID) {
+      //Get IPFS gateway
+      const ipfsGateway = await new ProjectConfig(
+        { project_uuid: file.project_uuid },
+        context,
+      ).getIpfsGateway();
+
       fileStatus = FileStatus.PINNED_TO_CRUST;
-      file.downloadLink = env.STORAGE_IPFS_GATEWAY + file.CID;
+      file.downloadLink = ipfsGateway.url + file.CID;
+
+      if (ipfsGateway.private) {
+        file.downloadLink = addJwtToIPFSUrl(
+          file.downloadLink,
+          file.project_uuid,
+        );
+      }
     }
 
     return {
@@ -464,6 +480,10 @@ export class StorageService {
 
     //check bucket
     const b: Bucket = await new Bucket({}, context).populateById(f.bucket_id);
+    await invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
+      project_uuid: b.project_uuid,
+    });
+
     if (
       b.bucketType == BucketType.STORAGE ||
       b.bucketType == BucketType.NFT_METADATA

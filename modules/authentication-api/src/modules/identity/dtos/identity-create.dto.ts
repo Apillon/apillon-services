@@ -1,4 +1,9 @@
-import { ModelBase, PopulateFrom, presenceValidator } from '@apillon/lib';
+import {
+  JSONParser,
+  ModelBase,
+  PopulateFrom,
+  presenceValidator,
+} from '@apillon/lib';
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { emailValidator } from '@rawmodel/validators';
@@ -56,6 +61,13 @@ export class IdentityCreateDto extends ModelBase {
     ],
   })
   public didUri: string;
+
+  @prop({
+    parser: { resolver: JSONParser() },
+    populatable: [PopulateFrom.PROFILE],
+    validators: [],
+  })
+  public linkParameters: any;
 
   @prop({
     parser: { resolver: stringParser() },

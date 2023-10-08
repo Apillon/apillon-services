@@ -1,7 +1,7 @@
 import { releaseStage, setupTest, Stage } from '../../../test/setup';
 import { v4 as uuid } from 'uuid';
 import { QuotaService } from './quota.service';
-import { GetQuotaDto, QuotaCode } from '@apillon/lib';
+import { getFaker, GetQuotaDto, QuotaCode } from '@apillon/lib';
 
 describe('Quota unit test', () => {
   let stage: Stage;
@@ -26,24 +26,15 @@ describe('Quota unit test', () => {
     // get defaults
     defaultQuotas = await stage.db.paramExecute(`SELECT * FROM quota`);
 
-    // setup subscription packages
-    await stage.db.paramExecute(`
-    INSERT INTO subscriptionPackage (id, status, name, description, isDefault)
-    VALUES 
-      (1, 5, 'Freemium', 'Free subscription package', 1),
-      (2, 5, 'Basic', 'Basic subscription package', 0),
-      (3, 5, 'Extra', 'Super subscription package', 0)
-    `);
-
     // setup overrides
     await stage.db.paramExecute(`
     INSERT INTO override (status, quota_id, project_uuid,  object_uuid, package_id, value)
-    VALUES 
+    VALUES
       (
         5,
         ${QuotaCode.MAX_PROJECT_COUNT},
         '${project2_uuid}',
-        null, 
+        null,
         null,
         '${
           defaultQuotas.find((x) => x.id == QuotaCode.MAX_PROJECT_COUNT).value +
@@ -91,13 +82,13 @@ describe('Quota unit test', () => {
     `);
 
     await stage.db.paramExecute(`
-      INSERT INTO subscription (package_id, status, project_uuid)
-      VALUES (2, 5, '${projectWithSubscription_uuid}')
+      INSERT INTO subscription (package_id, status, project_uuid, subscriberEmail, stripeId)
+      VALUES (2, 5, '${projectWithSubscription_uuid}', '${getFaker().internet.email()}', '${uuid()}')
     `);
 
     await stage.db.paramExecute(`
-      INSERT INTO subscription (package_id, status, project_uuid, expiresOn)
-      VALUES (2, 5, '${projectWithExpiredSubscription_uuid}', DATE_ADD(NOW(), INTERVAL -1 DAY))
+      INSERT INTO subscription (package_id, status, project_uuid, expiresOn, subscriberEmail, stripeId)
+      VALUES (2, 5, '${projectWithExpiredSubscription_uuid}', DATE_ADD(NOW(), INTERVAL -1 DAY), '${getFaker().internet.email()}', '${uuid()}')
     `);
   });
 

@@ -101,7 +101,10 @@ export async function createTestBucketFile(
   let cid = undefined;
   if (addToIPFS) {
     //Add fake file to IPFS
-    const deleteBucketTestFIle1CID = await IPFSService.addFileToIPFS({
+    const deleteBucketTestFIle1CID = await new IPFSService(
+      storageCtx,
+      bucket.project_uuid,
+    ).addFileToIPFS({
       path: fileName,
       content: new Date().toString() + uuidV4(),
     });

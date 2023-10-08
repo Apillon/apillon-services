@@ -18,8 +18,10 @@ import {
 import { File } from '../modules/storage/models/file.model';
 import {
   AWS_S3,
+  CacheKeyPrefix,
   EndFileUploadSessionDto,
   env,
+  invalidateCacheMatch,
   Lmas,
   LogType,
   QuotaCode,
@@ -210,6 +212,10 @@ export async function processSessionFiles(
   //update session
   session.sessionStatus = FileUploadSessionStatus.PROCESSED;
   await session.update();
+
+  await invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
+    project_uuid: bucket.project_uuid,
+  });
 
   return true;
 }

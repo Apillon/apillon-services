@@ -67,14 +67,4 @@ export class IdentityController {
   ) {
     return await this.identityService.sendVerificationEmail(context, body);
   }
-
-  @Post('dev/create-did')
-  // NOTE: If this is used in production, there will be blood!!!
-  @UseGuards(DevEnvGuard)
-  async attestationGenerateDevDid(
-    @Ctx() context: AuthenticationApiContext,
-    @Body() body: any,
-  ) {
-    return await this.identityService.generateDevResources(context, body);
-  }
 }

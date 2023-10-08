@@ -138,7 +138,9 @@ export class DeleteBucketDirectoryFileWorker extends BaseWorker {
     for (const file of filesToDelete) {
       try {
         if (file.CID) {
-          await IPFSService.unpinFile(file.CID);
+          await new IPFSService(this.context, file.project_uuid).unpinFile(
+            file.CID,
+          );
         }
         //Increase size of files, that were deleted per bucket
         if (decreasedSizeByBucket[file.bucket_id]) {

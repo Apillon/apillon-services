@@ -1,5 +1,6 @@
 import { Utils } from '@kiltprotocol/sdk-js';
 import { hexToU8a } from '@polkadot/util';
+import { randomAsHex } from '@polkadot/util-crypto';
 
 export async function decryptAssymetric(
   payload: any,
@@ -22,4 +23,8 @@ export async function decryptAssymetric(
   } finally {
     return decrypted;
   }
+}
+
+export function randomChallenge(size = 16) {
+  return randomAsHex(size);
 }

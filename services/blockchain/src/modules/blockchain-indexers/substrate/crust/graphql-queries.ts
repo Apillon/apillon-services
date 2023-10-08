@@ -64,7 +64,7 @@ export class CrustGQLQueries extends BaseGQLQueries {
     systems(
       where: {
         AND: {
-          blockNumber_gte: $fromBlock,
+          blockNumber_gt: $fromBlock,
           blockNumber_lte: $toBlock,
           account_eq: $account
         }
