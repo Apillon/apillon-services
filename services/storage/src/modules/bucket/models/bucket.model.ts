@@ -1,23 +1,21 @@
-import { integerParser, stringParser, dateParser } from '@rawmodel/parsers';
-import { presenceValidator } from '@rawmodel/validators';
 import {
-  ProjectAccessModel,
   BucketQueryFilter,
   Context,
-  enumInclusionValidator,
-  getQueryParams,
   PoolConnection,
   PopulateFrom,
-  prop,
-  QuotaCode,
-  Scs,
-  selectAndCountQuery,
+  ProjectAccessModel,
   SerializeFor,
   SqlModelStatus,
+  enumInclusionValidator,
+  getQueryParams,
+  prop,
+  selectAndCountQuery,
 } from '@apillon/lib';
-import { BucketType, DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
+import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
+import { presenceValidator } from '@rawmodel/validators';
 import { v4 as uuidV4 } from 'uuid';
+import { BucketType, DbTables, StorageErrorCode } from '../../../config/types';
 
 export class Bucket extends ProjectAccessModel {
   public readonly tableName = DbTables.BUCKET;
@@ -59,7 +57,6 @@ export class Bucket extends ProjectAccessModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
     ],
     validators: [
@@ -176,6 +173,7 @@ export class Bucket extends ProjectAccessModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
     defaultValue: 0,
@@ -364,15 +362,6 @@ export class Bucket extends ProjectAccessModel {
     );
     const items = await Promise.all(
       list.items.map(async (bucket) => {
-        const maxBucketSizeQuota = await new Scs(context).getQuota({
-          quota_id: QuotaCode.MAX_BUCKET_SIZE,
-          project_uuid: filter.project_uuid,
-          object_uuid: bucket.bucket_uuid,
-        });
-        if (maxBucketSizeQuota?.value) {
-          bucket.maxSize = Number(maxBucketSizeQuota?.value) * 1073741824;
-        }
-
         return new Bucket({}, context)
           .populate(bucket, PopulateFrom.DB)
           .serialize(serializationStrategy);
