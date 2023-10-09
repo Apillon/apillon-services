@@ -454,48 +454,23 @@ export class CreditService {
     { project_uuid }: { project_uuid: string },
     context: ServiceContext,
   ): Promise<boolean> {
-    const conn = await context.mysql.start();
-    try {
-      // Freemium package is always first, has ID=1
-      const freemiumPackage = await new SubscriptionPackage(
-        {},
-        context,
-      ).populateById(1, conn);
+    // Freemium package is always first, has ID=1
+    const freemiumPackage = await new SubscriptionPackage(
+      {},
+      context,
+    ).populateById(1);
 
-      await CreditService.addCredit(
-        {
-          body: new AddCreditDto({
-            project_uuid,
-            amount: freemiumPackage.creditAmount,
-            referenceTable: DbTables.SUBSCRIPTION,
-            referenceId: freemiumPackage.id,
-          }),
-        },
-        context,
-        conn,
-      );
-      await context.mysql.commit(conn);
-    } catch (err) {
-      await context.mysql.rollback(conn);
-      if (
-        err instanceof ScsCodeException ||
-        err instanceof ScsValidationException
-      ) {
-        throw err;
-      } else {
-        throw await new ScsCodeException({
-          code: ConfigErrorCode.ERROR_ADDING_CREDIT,
-          status: 500,
-          context,
-          errorMessage: err?.message,
-          sourceFunction: 'addFreemiumCredits()',
-          sourceModule: 'CreditService',
-        }).writeToMonitor({
+    await CreditService.addCredit(
+      {
+        body: new AddCreditDto({
           project_uuid,
-          sendAdminAlert: true,
-        });
-      }
-    }
+          amount: freemiumPackage.creditAmount,
+          referenceTable: DbTables.SUBSCRIPTION,
+          referenceId: freemiumPackage.id,
+        }),
+      },
+      context,
+    );
     return true;
   }
 }

@@ -116,6 +116,12 @@ export class CreditTransaction extends ProjectAccessModel {
       SerializeFor.INSERT_DB,
       SerializeFor.LOGGER,
     ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ConfigErrorCode.CREDIT_TRANSACTION_REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
   })
   public amount: number;
 
