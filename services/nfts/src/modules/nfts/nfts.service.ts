@@ -8,6 +8,7 @@ import {
   CreateEvmTransactionDto,
   DeployCollectionDTO,
   env,
+  EvmChain,
   Lmas,
   LogType,
   MintNftDTO,
@@ -77,11 +78,17 @@ export class NftsService {
       status: SqlModelStatus.INCOMPLETE,
     });
 
+    const product_id = {
+      [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_COLLECTION,
+      [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_COLLECTION,
+      [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_COLLECTION,
+    }[params.body.chain];
+
     //Spend credit
     const spendCredit: SpendCreditDto = new SpendCreditDto(
       {
         project_uuid: collection.project_uuid,
-        product_id: ProductCode.NFT_COLLECTION,
+        product_id,
         referenceTable: DbTables.COLLECTION,
         referenceId: collection.collection_uuid,
         location: 'NftsService.createCollection',
@@ -364,11 +371,17 @@ export class NftsService {
       collection.collectionType,
     );
 
+    const product_id = {
+      [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_TRANSFER_COLLECTION,
+      [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_TRANSFER_COLLECTION,
+      [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_TRANSFER_COLLECTION,
+    }[collection.chain];
+
     //Spend credit
     const spendCredit: SpendCreditDto = new SpendCreditDto(
       {
         project_uuid: collection.project_uuid,
-        product_id: ProductCode.NFT_TRANSFER_COLLECTION,
+        product_id,
         referenceTable: DbTables.COLLECTION,
         referenceId: uuidV4(),
         location: 'NftsService.transferCollectionOwnership',
@@ -430,11 +443,17 @@ export class NftsService {
       collection.collectionType,
     );
 
+    const product_id = {
+      [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_SET_BASE_URI,
+      [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_SET_BASE_URI,
+      [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_SET_BASE_URI,
+    }[collection.chain];
+
     //Spend credit
     const spendCredit: SpendCreditDto = new SpendCreditDto(
       {
         project_uuid: collection.project_uuid,
-        product_id: ProductCode.NFT_SET_BASE_URI,
+        product_id,
         referenceTable: DbTables.TRANSACTION,
         referenceId: uuidV4(),
         location: 'NftsService.setNftCollectionBaseUri',
@@ -506,11 +525,17 @@ export class NftsService {
       body,
     );
 
+    const product_id = {
+      [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_MINT,
+      [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_MINT,
+      [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_MINT,
+    }[collection.chain];
+
     //Spend credit
     const spendCredit: SpendCreditDto = new SpendCreditDto(
       {
         project_uuid: collection.project_uuid,
-        product_id: ProductCode.NFT_MINT,
+        product_id,
         referenceTable: DbTables.TRANSACTION,
         referenceId: uuidV4(),
         location: 'NftsService.mintNftTo',
@@ -603,11 +628,17 @@ export class NftsService {
       body.quantity,
     );
 
+    const product_id = {
+      [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_MINT,
+      [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_MINT,
+      [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_MINT,
+    }[childCollection.chain];
+
     //Spend credit
     const spendCredit: SpendCreditDto = new SpendCreditDto(
       {
         project_uuid: parentCollection.project_uuid,
-        product_id: ProductCode.NFT_MINT,
+        product_id,
         referenceTable: DbTables.TRANSACTION,
         referenceId: uuidV4(),
         location: 'NftsService.nestMintNftTo',
@@ -662,11 +693,17 @@ export class NftsService {
       body.tokenId,
     );
 
+    const product_id = {
+      [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_BURN,
+      [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_BURN,
+      [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_BURN,
+    }[collection.chain];
+
     //Spend credit
     const spendCredit: SpendCreditDto = new SpendCreditDto(
       {
         project_uuid: collection.project_uuid,
-        product_id: ProductCode.NFT_BURN,
+        product_id,
         referenceTable: DbTables.TRANSACTION,
         referenceId: uuidV4(),
         location: 'NftsService.burnNftToken',
