@@ -725,3 +725,17 @@ export enum ProductCode {
 
   KILT_IDENTITY = 20,
 }
+
+export enum ProductService {
+  HOSTING = 'HOSTING',
+  NFT = 'NFT',
+  IDENTITY = 'IDENTITY',
+}
+
+export enum ProductCategory {
+  WEBSITE = 'WEBSITE',
+  MOONBASE_NFT = 'MOONBASE_NFT',
+  MOONBEAM_NFT = 'MOONBEAM_NFT',
+  ASTAR_NFT = 'ASTAR_NFT',
+  KILT_IDENTITY = 'KILT_IDENTITY',
+}

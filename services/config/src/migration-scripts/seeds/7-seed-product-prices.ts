@@ -13,20 +13,20 @@ export async function upgrade(
     (${ProductCode.HOSTING_CHANGE_WEBSITE_DOMAIN}, 50, ${SqlModelStatus.ACTIVE}),
 
     (${ProductCode.NFT_MOONBEAM_COLLECTION}, 1000, ${SqlModelStatus.ACTIVE}),
-    (${ProductCode.NFT_MOONBASE_COLLECTION}, 100, ${SqlModelStatus.ACTIVE}),
-    (${ProductCode.NFT_ASTAR_COLLECTION}, 100, ${SqlModelStatus.ACTIVE}),
+    (${ProductCode.NFT_MOONBASE_COLLECTION}, 1, ${SqlModelStatus.ACTIVE}),
+    (${ProductCode.NFT_ASTAR_COLLECTION}, 500, ${SqlModelStatus.ACTIVE}),
 
     (${ProductCode.NFT_MOONBEAM_MINT}, 4, ${SqlModelStatus.ACTIVE}),
-    (${ProductCode.NFT_MOONBASE_MINT}, 1, ${SqlModelStatus.ACTIVE}),
-    (${ProductCode.NFT_ASTAR_MINT}, 1, ${SqlModelStatus.ACTIVE}),
+    (${ProductCode.NFT_MOONBASE_MINT}, 0, ${SqlModelStatus.ACTIVE}),
+    (${ProductCode.NFT_ASTAR_MINT}, 2, ${SqlModelStatus.ACTIVE}),
 
     (${ProductCode.NFT_MOONBEAM_BURN}, 4, ${SqlModelStatus.ACTIVE}),
-    (${ProductCode.NFT_MOONBASE_BURN}, 1, ${SqlModelStatus.ACTIVE}),
-    (${ProductCode.NFT_ASTAR_BURN}, 1, ${SqlModelStatus.ACTIVE}),
+    (${ProductCode.NFT_MOONBASE_BURN}, 0, ${SqlModelStatus.ACTIVE}),
+    (${ProductCode.NFT_ASTAR_BURN}, 2, ${SqlModelStatus.ACTIVE}),
 
     (${ProductCode.NFT_MOONBEAM_TRANSFER_COLLECTION}, 4, ${SqlModelStatus.ACTIVE}),
-    (${ProductCode.NFT_MOONBASE_TRANSFER_COLLECTION}, 1, ${SqlModelStatus.ACTIVE}),
-    (${ProductCode.NFT_ASTAR_TRANSFER_COLLECTION}, 1, ${SqlModelStatus.ACTIVE}),
+    (${ProductCode.NFT_MOONBASE_TRANSFER_COLLECTION}, 0, ${SqlModelStatus.ACTIVE}),
+    (${ProductCode.NFT_ASTAR_TRANSFER_COLLECTION}, 2, ${SqlModelStatus.ACTIVE}),
 
     (${ProductCode.KILT_IDENTITY}, 4000, ${SqlModelStatus.ACTIVE})
   ;`);
