@@ -53,6 +53,17 @@ export class PaymentsController {
     return session.url;
   }
 
+  @Get('stripe/customer-portal-session-url')
+  @UseGuards(AuthGuard)
+  async getCustomerPortalSession(
+    @Ctx() context: DevConsoleApiContext,
+  ): Promise<any> {
+    const session = await this.stripeService.generateCustomerPortalSession(
+      context,
+    );
+    return session.url;
+  }
+
   @Post('stripe/webhook')
   async postWebhook(
     @Req() req: RawBodyRequest<Request>,

@@ -1,8 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
 import { PaymentSessionDto } from './dto/payment-session.dto';
 import { CodeException, env } from '@apillon/lib';
-import { BadRequestErrorCode } from '../../config/types';
+import {
+  BadRequestErrorCode,
+  ResourceNotFoundErrorCode,
+} from '../../config/types';
+import { DevConsoleApiContext } from '../../context';
 
 @Injectable()
 export class StripeService {
@@ -26,7 +30,7 @@ export class StripeService {
       );
     } catch (err) {
       throw new CodeException({
-        status: 400,
+        status: HttpStatus.BAD_REQUEST,
         code: BadRequestErrorCode.INVALID_WEBHOOK_SIGNATURE,
         errorCodes: BadRequestErrorCode,
         errorMessage: 'Invalid webhook signature',
@@ -63,6 +67,25 @@ export class StripeService {
       success_url: paymentSessionDto.returnUrl,
       cancel_url: paymentSessionDto.returnUrl,
       automatic_tax: { enabled: true },
+    });
+  }
+
+  async generateCustomerPortalSession(context: DevConsoleApiContext) {
+    const email = context.user.email;
+    const customer = await this.stripe.customers.list({ email, limit: 1 });
+
+    if (customer.data.length === 0) {
+      throw new CodeException({
+        status: HttpStatus.NOT_FOUND,
+        code: ResourceNotFoundErrorCode.STRIPE_CUSTOMER_DOES_NOT_EXIST,
+        errorCodes: ResourceNotFoundErrorCode,
+        errorMessage: `Stripe customer with email ${email} not found`,
+      });
+    }
+
+    return this.stripe.billingPortal.sessions.create({
+      customer: customer.data[0].id,
+      return_url: 'https://example.com', // Replace with your desired return URL
     });
   }
 

@@ -139,10 +139,27 @@ export class PaymentsService {
   }
 
   async getSubscriptionPackages(context: DevConsoleApiContext) {
-    return (await new Scs(context).getSubscriptionPackages()).data;
+    const { data: subscriptionPackages } = await new Scs(
+      context,
+    ).getSubscriptionPackages();
+
+    return this.assignPrices(subscriptionPackages);
   }
 
   async getCreditPackages(context: DevConsoleApiContext) {
-    return (await new Scs(context).getCreditPackages()).data;
+    const { data: creditPackages } = await new Scs(context).getCreditPackages();
+
+    return this.assignPrices(creditPackages);
+  }
+
+  private async assignPrices(items: { stripeId: string; price: number }[]) {
+    for (const item of items) {
+      if (item.stripeId) {
+        const price = await this.stripe.prices.retrieve(item.stripeId);
+        item.price = price.unit_amount / 100;
+      }
+      delete item.stripeId;
+    }
+    return items;
   }
 }
