@@ -2,11 +2,7 @@
 import { prop } from '@rawmodel/core';
 import { booleanParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
-import {
-  PopulateFrom,
-  SerializeFor,
-  ValidatorErrorCode,
-} from '../../../../config/types';
+import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { BaseQueryFilter } from '../../../base-models/base-query-filter.model';
 
 export class DirectoryContentQueryFilter extends BaseQueryFilter {

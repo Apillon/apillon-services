@@ -6,6 +6,7 @@ import {
   CreateWebsiteDto,
   DeploymentQueryFilter,
   DeployWebsiteDto,
+  DomainQueryFilter,
   env,
   Lmas,
   LogType,
@@ -62,8 +63,11 @@ export class HostingService {
     ).getList(context, new WebsiteQueryFilter(event.query));
   }
 
-  static async listDomains(event: any, context: ServiceContext) {
-    return await new Website({}, context).listDomains(context);
+  static async listDomains(
+    event: { query: DomainQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new Website({}, context).listDomains(event.query);
   }
 
   static async getWebsite(event: { id: any }, context: ServiceContext) {

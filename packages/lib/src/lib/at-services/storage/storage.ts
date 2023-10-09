@@ -24,6 +24,7 @@ import {
   ApillonHostingApiCreateS3UrlsForUploadDto,
   CreateS3UrlsForUploadDto,
 } from './dtos/create-s3-urls-for-upload.dto';
+import { DomainQueryFilter } from './dtos/domain-query-filter.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -385,9 +386,10 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async listDomains() {
+  public async listDomains(query: DomainQueryFilter) {
     const data = {
       eventName: StorageEventType.WEBSITE_LIST_DOMAINS,
+      query: query.serialize(),
     };
     return await this.callService(data);
   }
