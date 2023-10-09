@@ -127,6 +127,7 @@ export * from './lib/at-services/lmas/dtos/request-logs-query-filter.dto';
 export * from './lib/exceptions/exceptions';
 export * from './lib/exceptions/http-exception';
 export * from './lib/base-models/base-query-filter.model';
+export * from './lib/base-models/base-project-query-filter.model';
 export * from './lib/parsers';
 export * from './lib/cache';
 export * from './lib/captcha';
