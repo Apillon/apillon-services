@@ -54,7 +54,7 @@ describe('Storage tests', () => {
       DefaultUserRole.ADMIN,
     );
 
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
 
     testBucket = await createTestBucket(
       testUser,

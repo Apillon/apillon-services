@@ -29,7 +29,7 @@ describe('Authentication tests', () => {
     stage = await setupTest();
 
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
     testService = await createTestProjectService(
       stage.devConsoleContext,
       testProject,

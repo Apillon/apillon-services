@@ -39,8 +39,8 @@ describe('Admin Project tests', () => {
       stage.amsContext,
       DefaultUserRole.ADMIN,
     );
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
-    await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
+    await createTestProject(testUser, stage);
 
     await new Override(
       {

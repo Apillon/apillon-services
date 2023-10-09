@@ -1,6 +1,11 @@
 import { CreateSubscriptionDto } from './dtos/create-subscription.dto';
 import { env } from '../../../config/env';
-import { AppEnvironment, Merge, ScsEventType } from '../../../config/types';
+import {
+  AppEnvironment,
+  Merge,
+  ProductCode,
+  ScsEventType,
+} from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { CreateQuotaOverrideDto } from './dtos/create-quota-override.dto';
@@ -128,14 +133,23 @@ export class Scs extends BaseService {
     return await this.callService(data);
   }
 
+  /**
+   * Refund credit for failed operation
+   * @param referenceTable
+   * @param referenceId
+   * @param product_id Optional specification of product_id. Mandatory where multiple products can point to the same reference.
+   * @returns
+   */
   public async refundCredit(
     referenceTable: string,
     referenceId: string,
+    product_id?: ProductCode,
   ): Promise<any> {
     const data = {
       eventName: ScsEventType.REFUND_CREDIT,
       referenceTable,
       referenceId,
+      product_id,
     };
 
     return await this.callService(data);

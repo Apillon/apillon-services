@@ -40,7 +40,7 @@ describe('Storage directory tests', () => {
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
 
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
 
     testBucket = await createTestBucket(
       testUser,

@@ -28,7 +28,7 @@ describe('API key tests', () => {
   beforeAll(async () => {
     stage = await setupTest();
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
     testProjectService = await createTestProjectService(
       stage.devConsoleContext,
       testProject,
@@ -178,10 +178,7 @@ describe('API key tests', () => {
         stage.devConsoleContext,
         stage.amsContext,
       );
-      quotaTestProject = await createTestProject(
-        quotaTestsUser,
-        stage.devConsoleContext,
-      );
+      quotaTestProject = await createTestProject(quotaTestsUser, stage);
       //add 20 api keys to quotaTestProject - max api keys on project quota reached
       for (let i = 0; i < 20; i++) {
         await createTestApiKey(stage.amsContext, quotaTestProject.project_uuid);
