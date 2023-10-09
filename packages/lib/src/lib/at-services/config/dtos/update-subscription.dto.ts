@@ -34,6 +34,13 @@ export class UpdateSubscriptionDto extends ModelBase {
     populatable: [PopulateFrom.PROFILE, PopulateFrom.SERVICE],
     serializable: [SerializeFor.PROFILE, SerializeFor.SERVICE],
   })
+  public subscriptionStripeId: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.SERVICE],
+    serializable: [SerializeFor.PROFILE, SerializeFor.SERVICE],
+  })
   public cancellationReason: string;
 
   @prop({

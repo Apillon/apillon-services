@@ -173,6 +173,13 @@ export class Scs extends BaseService {
     });
   }
 
+  public async addFreemiumCredits(project_uuid: string) {
+    return await this.callService({
+      eventName: ScsEventType.ADD_FREEMIUM_CREDITS,
+      project_uuid,
+    });
+  }
+
   //#endregion
 
   //#region subscriptions
@@ -201,13 +208,11 @@ export class Scs extends BaseService {
   }
 
   public async updateSubscription(
-    subscriptionStripeId: string,
-    data: UpdateSubscriptionDto,
+    updateSubscriptionDto: UpdateSubscriptionDto,
   ) {
     return await this.callService({
       eventName: ScsEventType.UPDATE_SUBSCRIPTION,
-      subscriptionStripeId,
-      data,
+      updateSubscriptionDto,
     });
   }
 

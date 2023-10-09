@@ -3,6 +3,7 @@ import {
   Scs,
   SqlModelStatus,
   UpdateSubscriptionDto,
+  env,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
@@ -19,7 +20,7 @@ export class PaymentsService {
   async createStripeCreditPaymentSession(
     context: DevConsoleApiContext,
     paymentSessionDto: PaymentSessionDto,
-  ): Promise<Stripe.Response<Stripe.Checkout.Session>> {
+  ): Promise<Stripe.Checkout.Session> {
     await this.checkProjectExists(context, paymentSessionDto.project_uuid);
 
     const { data: stripeId } = await new Scs(context).getCreditPackageStripeId(
@@ -27,16 +28,17 @@ export class PaymentsService {
       paymentSessionDto.project_uuid,
     );
 
-    return await this.stripeService.generateStripeCreditPaymentSession(
-      paymentSessionDto,
+    return await this.stripeService.generateStripePaymentSession(
       stripeId,
+      paymentSessionDto,
+      'payment',
     );
   }
 
   async createStripeSubscriptionPaymentSession(
     context: DevConsoleApiContext,
     paymentSessionDto: PaymentSessionDto,
-  ): Promise<Stripe.Response<Stripe.Checkout.Session>> {
+  ): Promise<Stripe.Checkout.Session> {
     await this.checkProjectExists(context, paymentSessionDto.project_uuid);
 
     const { data: stripeId } = await new Scs(
@@ -46,9 +48,10 @@ export class PaymentsService {
       paymentSessionDto.project_uuid,
     );
 
-    return await this.stripeService.generateStripeSubscriptionPaymentSession(
-      paymentSessionDto,
+    return await this.stripeService.generateStripePaymentSession(
       stripeId,
+      paymentSessionDto,
+      'subscription',
     );
   }
 
@@ -57,8 +60,12 @@ export class PaymentsService {
     const payment = event.data.object as any;
     switch (event.type) {
       case 'checkout.session.completed': {
-        if (payment.payment_status !== 'paid') {
+        if (
+          payment.payment_status !== 'paid' ||
+          payment.metadata.environment !== env.APP_ENV
+        ) {
           // In case payment session was canceled/exited
+          // or the session is in a different environment
           return;
         }
 
@@ -98,8 +105,8 @@ export class PaymentsService {
         }
         // In case subscription is renewed or canceled
         await new Scs().updateSubscription(
-          payment.id,
           new UpdateSubscriptionDto({
+            subscriptionStripeId: payment.id,
             status: payment.cancel_at_period_end // If user has canceled subscription
               ? SqlModelStatus.INACTIVE
               : SqlModelStatus.ACTIVE,
