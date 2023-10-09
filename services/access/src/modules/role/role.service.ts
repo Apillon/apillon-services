@@ -1,5 +1,5 @@
 import {
-  ApiKeyRoleBaseDto,
+  ApiKeyRoleDto,
   CacheKeyPrefix,
   SerializeFor,
   invalidateCacheKey,
@@ -79,15 +79,18 @@ export class RoleService {
 
   /**
    * Assign a role to an API key.
-   * @param {{ apiKey_id: number; body: ApiKeyRoleBaseDto }} event - The data needed to assign a role to an API key.
+   * @param {{ body: ApiKeyRoleDto }} event - The data needed to assign a role to an API key.
    * @param {any} context - The service context for database access.
    * @returns {Promise<any>} - The result of the role assignment operation.
    */
   static async assignRoleToApiKey(
-    event: { apiKey_id: number; body: ApiKeyRoleBaseDto },
+    event: { body: ApiKeyRoleDto },
     context: ServiceContext,
   ) {
-    const key = await ApiKeyService.getApiKeyById(event.apiKey_id, context);
+    const key = await ApiKeyService.getApiKeyById(
+      event.body.apiKey_id,
+      context,
+    );
     key.canModify(context);
 
     const result = await key.assignRole(event.body);
@@ -98,15 +101,18 @@ export class RoleService {
 
   /**
    * Remove a role from an API key.
-   * @param {{ apiKey_id: number; body: ApiKeyRoleBaseDto }} event - The data needed to remove a role from an API key.
+   * @param {{ body: ApiKeyRoleDto }} event - The data needed to remove a role from an API key.
    * @param {any} context - The service context for database access.
    * @returns {Promise<any>} - The result of the role removal operation.
    */
   static async removeApiKeyRole(
-    event: { apiKey_id: number; body: ApiKeyRoleBaseDto },
+    event: { body: ApiKeyRoleDto },
     context: ServiceContext,
   ) {
-    const key = await ApiKeyService.getApiKeyById(event.apiKey_id, context);
+    const key = await ApiKeyService.getApiKeyById(
+      event.body.apiKey_id,
+      context,
+    );
     key.canModify(context);
 
     const result = await key.removeRole(event.body);
@@ -117,15 +123,18 @@ export class RoleService {
 
   /**
    * Remove roles from an API key based on the service uuid
-   * @param {{ apiKey_id: number; body: ApiKeyRoleBaseDto }} event - The data needed to remove a role from an API key.
+   * @param {{ body: ApiKeyRoleDto }} event - The data needed to remove a role from an API key.
    * @param {any} context - The service context for database access.
    * @returns {Promise<any>} - The result of the role removal operation.
    */
   static async removeApiKeyRolesByService(
-    event: { apiKey_id: number; body: ApiKeyRoleBaseDto },
+    event: { body: ApiKeyRoleDto },
     context: ServiceContext,
   ) {
-    const key = await ApiKeyService.getApiKeyById(event.apiKey_id, context);
+    const key = await ApiKeyService.getApiKeyById(
+      event.body.apiKey_id,
+      context,
+    );
     key.canModify(context);
 
     const result = await key.removeRolesByService(event.body);

@@ -1,6 +1,7 @@
 import {
   ApiKeyQueryFilterDto,
   ApiKeyRoleBaseDto,
+  ApiKeyRoleDto,
   CreateApiKeyDto,
   DefaultUserRole,
   RoleGroup,
@@ -40,7 +41,10 @@ export class ApiKeyController {
     @Param('id', ParseIntPipe) id: number,
     @Body() body: ApiKeyRoleBaseDto,
   ) {
-    return await this.apiKeyService.assignRoleToApiKey(context, id, body);
+    return await this.apiKeyService.assignRoleToApiKey(
+      context,
+      new ApiKeyRoleDto({ ...body, apiKey_id: id }, context),
+    );
   }
 
   @Delete(':id/role')
@@ -56,7 +60,10 @@ export class ApiKeyController {
     @Param('id', ParseIntPipe) id: number,
     @Body() body: ApiKeyRoleBaseDto,
   ) {
-    return await this.apiKeyService.removeApiKeyRole(context, id, body);
+    return await this.apiKeyService.removeApiKeyRole(
+      context,
+      new ApiKeyRoleDto({ ...body, apiKey_id: id }, context),
+    );
   }
 
   @Delete(':id/service-roles')
@@ -74,8 +81,7 @@ export class ApiKeyController {
   ) {
     return await this.apiKeyService.removeApiKeyRolesByService(
       context,
-      id,
-      body,
+      new ApiKeyRoleDto({ ...body, apiKey_id: id }, context),
     );
   }
 

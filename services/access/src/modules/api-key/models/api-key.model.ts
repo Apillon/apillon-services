@@ -13,6 +13,7 @@ import {
   ProjectAccessModel,
   invalidateCacheKey,
   CacheKeyPrefix,
+  ApiKeyRoleDto,
 } from '@apillon/lib';
 import { DbTables, AmsErrorCode } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
@@ -198,7 +199,7 @@ export class ApiKey extends ProjectAccessModel {
   }
 
   public async removeRolesByService(
-    apiKeyRole: ApiKeyRoleBaseDto,
+    apiKeyRole: ApiKeyRoleDto,
   ): Promise<boolean> {
     await this.getContext().mysql.paramExecute(
       `
