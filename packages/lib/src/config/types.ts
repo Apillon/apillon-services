@@ -642,6 +642,7 @@ export enum QuotaCode {
   MAX_WEBSITES = 8,
   MAX_NFT_COLLECTIONS = 9,
   MAX_STORAGE = 10,
+  MAX_BANDWIDTH = 11,
 }
 
 /**
