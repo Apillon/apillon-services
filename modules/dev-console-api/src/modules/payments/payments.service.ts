@@ -1,4 +1,9 @@
-import { CodeException, Scs, SqlModelStatus } from '@apillon/lib';
+import {
+  CodeException,
+  Scs,
+  SqlModelStatus,
+  UpdateSubscriptionDto,
+} from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
 import { PaymentSessionDto } from './dto/payment-session.dto';
@@ -92,15 +97,20 @@ export class PaymentsService {
           return; // If update is only for a new subscription
         }
         // In case subscription is renewed or canceled
-        await new Scs().updateSubscription(payment.id, {
-          status: payment.cancel_at_period_end // If user has canceled subscription
-            ? SqlModelStatus.INACTIVE
-            : SqlModelStatus.ACTIVE,
-          cancelDate: payment.canceled_at
-            ? new Date(payment.canceled_at * 1000)
-            : null,
-          expiresOn: new Date(payment.current_period_end * 1000),
-        });
+        await new Scs().updateSubscription(
+          payment.id,
+          new UpdateSubscriptionDto({
+            status: payment.cancel_at_period_end // If user has canceled subscription
+              ? SqlModelStatus.INACTIVE
+              : SqlModelStatus.ACTIVE,
+            cancelDate: payment.canceled_at
+              ? new Date(payment.canceled_at * 1000)
+              : null,
+            expiresOn: new Date(payment.current_period_end * 1000),
+            cancellationReason: payment.cancellation_details?.feedback,
+            cancellationComment: payment.cancellation_details?.comment,
+          }),
+        );
         break;
       }
     }

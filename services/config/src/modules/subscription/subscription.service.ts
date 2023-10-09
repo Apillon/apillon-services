@@ -7,6 +7,7 @@ import {
   SerializeFor,
   ServiceName,
   SubscriptionsQueryFilter,
+  UpdateSubscriptionDto,
 } from '@apillon/lib';
 import { Subscription } from './models/subscription.model';
 import { ServiceContext } from '@apillon/service-lib';
@@ -194,12 +195,15 @@ export class SubscriptionService {
 
   /**
    * Update a subscription by stripe ID with given data
-   * @param {{ subscriptionStripeId: string; data: any }} { subscriptionStripeId, data }
+   * @param {{ subscriptionStripeId: string; data: UpdateSubscriptionDto }} { subscriptionStripeId, data }
    * @param {ServiceContext} context
    * @returns {Promise<Subscription>}
    */
   static async updateSubscription(
-    { subscriptionStripeId, data }: { subscriptionStripeId: string; data: any },
+    {
+      subscriptionStripeId,
+      data,
+    }: { subscriptionStripeId: string; data: UpdateSubscriptionDto },
     context: ServiceContext,
   ): Promise<Subscription> {
     const conn = await context.mysql.start();
