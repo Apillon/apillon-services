@@ -7,6 +7,7 @@ import {
   SerializeFor,
   ServiceName,
   SubscriptionsQueryFilter,
+  UpdateSubscriptionDto,
 } from '@apillon/lib';
 import { Subscription } from './models/subscription.model';
 import { ServiceContext } from '@apillon/service-lib';
@@ -29,16 +30,16 @@ export class SubscriptionService {
   static async createSubscription(
     createSubscriptionDto: CreateSubscriptionDto,
     context: ServiceContext,
-    connection: PoolConnection,
+    connection?: PoolConnection,
   ): Promise<Subscription> {
     const conn = connection || (await context.mysql.start());
 
-    await SubscriptionService.checkForActiveSubscription(
-      createSubscriptionDto.project_uuid,
-      context,
-      conn,
-    );
     try {
+      await SubscriptionService.checkForActiveSubscription(
+        createSubscriptionDto.project_uuid,
+        context,
+        conn,
+      );
       const subscriptionPackage = await new SubscriptionPackage(
         {},
         context,
@@ -194,15 +195,16 @@ export class SubscriptionService {
 
   /**
    * Update a subscription by stripe ID with given data
-   * @param {{ subscriptionStripeId: string; data: any }} { subscriptionStripeId, data }
+   * @param {{ updateSubscriptionDto: UpdateSubscriptionDto }} { updateSubscriptionDto }
    * @param {ServiceContext} context
    * @returns {Promise<Subscription>}
    */
   static async updateSubscription(
-    { subscriptionStripeId, data }: { subscriptionStripeId: string; data: any },
+    { updateSubscriptionDto }: { updateSubscriptionDto: UpdateSubscriptionDto },
     context: ServiceContext,
   ): Promise<Subscription> {
     const conn = await context.mysql.start();
+    const subscriptionStripeId = updateSubscriptionDto.subscriptionStripeId;
 
     try {
       const subscription = await new Subscription(
@@ -216,12 +218,14 @@ export class SubscriptionService {
           message: `Subscription for stripe ID ${subscriptionStripeId} not found in database!`,
           location: 'SubscriptionService.updateSubscription',
           service: ServiceName.CONFIG,
-          data,
+          data: new UpdateSubscriptionDto(updateSubscriptionDto).serialize(
+            SerializeFor.SERVICE,
+          ),
         });
         throw new ScsNotFoundException(ConfigErrorCode.SUBSCRIPTION_NOT_FOUND);
       }
 
-      subscription.populate(data);
+      subscription.populate(updateSubscriptionDto);
 
       try {
         await subscription.validate();

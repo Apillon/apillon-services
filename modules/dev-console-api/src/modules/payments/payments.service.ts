@@ -1,4 +1,10 @@
-import { CodeException, Scs, SqlModelStatus } from '@apillon/lib';
+import {
+  CodeException,
+  Scs,
+  SqlModelStatus,
+  UpdateSubscriptionDto,
+  env,
+} from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
 import { PaymentSessionDto } from './dto/payment-session.dto';
@@ -14,7 +20,7 @@ export class PaymentsService {
   async createStripeCreditPaymentSession(
     context: DevConsoleApiContext,
     paymentSessionDto: PaymentSessionDto,
-  ): Promise<Stripe.Response<Stripe.Checkout.Session>> {
+  ): Promise<Stripe.Checkout.Session> {
     await this.checkProjectExists(context, paymentSessionDto.project_uuid);
 
     const { data: stripeId } = await new Scs(context).getCreditPackageStripeId(
@@ -22,16 +28,17 @@ export class PaymentsService {
       paymentSessionDto.project_uuid,
     );
 
-    return await this.stripeService.generateStripeCreditPaymentSession(
-      paymentSessionDto,
+    return await this.stripeService.generateStripePaymentSession(
       stripeId,
+      paymentSessionDto,
+      'payment',
     );
   }
 
   async createStripeSubscriptionPaymentSession(
     context: DevConsoleApiContext,
     paymentSessionDto: PaymentSessionDto,
-  ): Promise<Stripe.Response<Stripe.Checkout.Session>> {
+  ): Promise<Stripe.Checkout.Session> {
     await this.checkProjectExists(context, paymentSessionDto.project_uuid);
 
     const { data: stripeId } = await new Scs(
@@ -41,9 +48,10 @@ export class PaymentsService {
       paymentSessionDto.project_uuid,
     );
 
-    return await this.stripeService.generateStripeSubscriptionPaymentSession(
-      paymentSessionDto,
+    return await this.stripeService.generateStripePaymentSession(
       stripeId,
+      paymentSessionDto,
+      'subscription',
     );
   }
 
@@ -52,8 +60,12 @@ export class PaymentsService {
     const payment = event.data.object as any;
     switch (event.type) {
       case 'checkout.session.completed': {
-        if (payment.payment_status !== 'paid') {
+        if (
+          payment.payment_status !== 'paid' ||
+          payment.metadata.environment !== env.APP_ENV
+        ) {
           // In case payment session was canceled/exited
+          // or the session is in a different environment
           return;
         }
 
@@ -92,15 +104,20 @@ export class PaymentsService {
           return; // If update is only for a new subscription
         }
         // In case subscription is renewed or canceled
-        await new Scs().updateSubscription(payment.id, {
-          status: payment.cancel_at_period_end // If user has canceled subscription
-            ? SqlModelStatus.INACTIVE
-            : SqlModelStatus.ACTIVE,
-          cancelDate: payment.canceled_at
-            ? new Date(payment.canceled_at * 1000)
-            : null,
-          expiresOn: new Date(payment.current_period_end * 1000),
-        });
+        await new Scs().updateSubscription(
+          new UpdateSubscriptionDto({
+            subscriptionStripeId: payment.id,
+            status: payment.cancel_at_period_end // If user has canceled subscription
+              ? SqlModelStatus.INACTIVE
+              : SqlModelStatus.ACTIVE,
+            cancelDate: payment.canceled_at
+              ? new Date(payment.canceled_at * 1000)
+              : null,
+            expiresOn: new Date(payment.current_period_end * 1000),
+            cancellationReason: payment.cancellation_details?.feedback,
+            cancellationComment: payment.cancellation_details?.comment,
+          }),
+        );
         break;
       }
     }

@@ -88,6 +88,7 @@ export class SubscriptionPackage extends AdvancedSQLModel {
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
     ],

@@ -1,11 +1,4 @@
-import {
-  Context,
-  env,
-  LogType,
-  QuotaCode,
-  Scs,
-  ServiceName,
-} from '@apillon/lib';
+import { Context, env, LogType, ServiceName } from '@apillon/lib';
 import {
   BaseQueueWorker,
   QueueWorkerType,
@@ -111,17 +104,6 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
     }
 
     if (files.length > 0) {
-      let maxBucketSize = 5_368_709_120;
-      //get max bucket size quota and check if bucket is at max size
-      const maxBucketSizeQuota = await new Scs(this.context).getQuota({
-        quota_id: QuotaCode.MAX_BUCKET_SIZE,
-        project_uuid: bucket.project_uuid,
-        object_uuid: bucket.bucket_uuid,
-      });
-      if (maxBucketSizeQuota?.value) {
-        maxBucketSize = maxBucketSizeQuota.value * 1_073_741_824; //quota is in GB - convert to bytes
-      }
-
       let transferedFiles = [];
 
       if (
@@ -133,7 +115,6 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
             this.context,
             `${this.constructor.name}/runExecutor`,
             bucket,
-            maxBucketSize,
             files,
             session,
             data?.wrapWithDirectory,

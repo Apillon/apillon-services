@@ -33,6 +33,7 @@ export async function processEvent(
     [ScsEventType.GET_CREDIT_PACKAGES]: CreditService.getCreditPackages,
     [ScsEventType.GET_CREDIT_PACKAGE_STRIPE_ID]:
       CreditService.getCreditPackageStripeId,
+    [ScsEventType.ADD_FREEMIUM_CREDITS]: CreditService.addFreemiumCredits,
     [ScsEventType.GET_SUBSCRIPTION_PACKAGE_STRIPE_ID]:
       SubscriptionService.getSubscriptionPackageStripeId,
     [ScsEventType.UPDATE_SUBSCRIPTION]: SubscriptionService.updateSubscription,

@@ -138,7 +138,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         targetBucket.CIDv1 = ipfsRes.parentDirCID.toV1().toString();
 
         //Update bucket CID & Size
-        targetBucket.size += ipfsRes.size;
+        targetBucket.size = ipfsRes.size;
         targetBucket.uploadedSize += ipfsRes.size;
 
         deployment.size = ipfsRes.size;
@@ -155,7 +155,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
           this.context,
         ).populateDeploymentByCid(targetBucket.CID);
         if (stagingDeployment.exists() && stagingDeployment.size) {
-          targetBucket.size += stagingDeployment.size;
+          targetBucket.size = stagingDeployment.size;
           targetBucket.uploadedSize += stagingDeployment.size;
           deployment.size = stagingDeployment.size;
           cidSize = stagingDeployment.size;

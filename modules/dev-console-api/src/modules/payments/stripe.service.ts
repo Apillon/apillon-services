@@ -8,28 +8,12 @@ import { BadRequestErrorCode } from '../../config/types';
 export class StripeService {
   constructor(private stripe: Stripe) {}
 
-  generateStripeCreditPaymentSession(
-    paymentSessionDto: PaymentSessionDto,
-    stripeId: string,
-  ) {
-    return this.genericStripeSession(stripeId, 'payment', {
-      project_uuid: paymentSessionDto.project_uuid,
-      package_id: +paymentSessionDto.package_id,
-      isCreditPurchase: `${true}`,
-    });
-  }
-
-  generateStripeSubscriptionPaymentSession(
-    paymentSessionDto: PaymentSessionDto,
-    stripeId: string,
-  ) {
-    return this.genericStripeSession(stripeId, 'subscription', {
-      project_uuid: paymentSessionDto.project_uuid,
-      package_id: +paymentSessionDto.package_id,
-      isCreditPurchase: `${false}`,
-    });
-  }
-
+  /**
+   * Verifies stripe webhook signature and returns an event object if valid
+   * @param {Buffer} rawRequest
+   * @param {string} signature
+   * @returns {Stripe.Event}
+   */
   getStripeEventFromSignature(
     rawRequest: Buffer,
     signature: string,
@@ -50,6 +34,38 @@ export class StripeService {
     }
   }
 
+  /**
+   * Constructs a generic stripe payment session from the given data
+   * @param {string} stripeId - Stripe price ID for the package to be purchased
+   * @param {PaymentSessionDto} paymentSessionDto - DTO containing all required payment metadata
+   * @param {Stripe.Checkout.SessionCreateParams.Mode} mode - single payment or subscription
+   * @returns {Promise<Stripe.Checkout.Session>}
+   */
+  generateStripePaymentSession(
+    stripeId: string,
+    paymentSessionDto: PaymentSessionDto,
+    mode: Stripe.Checkout.SessionCreateParams.Mode,
+  ): Promise<Stripe.Checkout.Session> {
+    return this.stripe.checkout.sessions.create({
+      line_items: [
+        {
+          price: stripeId,
+          quantity: 1,
+        },
+      ],
+      mode,
+      metadata: {
+        project_uuid: paymentSessionDto.project_uuid,
+        package_id: +paymentSessionDto.package_id,
+        isCreditPurchase: `${mode === 'payment'}`,
+        environment: env.APP_ENV,
+      },
+      success_url: paymentSessionDto.returnUrl,
+      cancel_url: paymentSessionDto.returnUrl,
+      automatic_tax: { enabled: true },
+    });
+  }
+
   combinePaymentData(paymentData: any) {
     const { project_uuid, package_id } = paymentData.metadata;
 
@@ -65,26 +81,5 @@ export class StripeService {
       clientEmail: paymentData.customer_details.email,
       subscriberEmail: paymentData.customer_details.email,
     };
-  }
-
-  private genericStripeSession(
-    stripeId: string,
-    mode: Stripe.Checkout.SessionCreateParams.Mode,
-    metadata: Stripe.MetadataParam,
-  ) {
-    return this.stripe.checkout.sessions.create({
-      line_items: [
-        {
-          price: stripeId,
-          quantity: 1,
-        },
-      ],
-      mode,
-      metadata,
-      // TODO
-      success_url: `https://apillon.io/?success=true`,
-      cancel_url: `https://apillon.io/?canceled=true`,
-      automatic_tax: { enabled: true },
-    });
   }
 }

@@ -221,7 +221,7 @@ export class ProjectController {
 
   @Get(':uuid/active-subscription')
   @Permissions({ role: RoleGroup.ProjectAccess })
-  @UseGuards(AuthGuard, ValidationGuard)
+  @UseGuards(AuthGuard)
   async getProjectActiveSubscription(
     @Ctx() context: DevConsoleApiContext,
     @Param('uuid') project_uuid: string,

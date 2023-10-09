@@ -1,10 +1,10 @@
 import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
-  AdvancedSQLModel,
   getQueryParams,
   PoolConnection,
   PopulateFrom,
   presenceValidator,
+  ProjectAccessModel,
   prop,
   selectAndCountQuery,
   SerializeFor,
@@ -14,7 +14,7 @@ import {
 import { ConfigErrorCode, DbTables } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 
-export class Subscription extends AdvancedSQLModel {
+export class Subscription extends ProjectAccessModel {
   public readonly tableName = DbTables.SUBSCRIPTION;
 
   @prop({
@@ -132,6 +132,34 @@ export class Subscription extends AdvancedSQLModel {
   })
   public cancelDate: Date;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.PROFILE,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public cancellationReason: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.PROFILE,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public cancellationComment: string;
+
   public async getActiveSubscription(
     project_uuid = this.project_uuid,
     conn?: PoolConnection,
@@ -192,11 +220,15 @@ export class Subscription extends AdvancedSQLModel {
   }
 
   public async populateByStripeId(stripeId: string, conn?: PoolConnection) {
+    if (!stripeId) {
+      throw new Error('stripeId should not be null');
+    }
+    // Only active status is not considered here because this should also find subscriptions with status inactive
+    // In case somebody wants to renew a canceled subscription
     const data = await this.db().paramExecute(
       `
         SELECT * FROM \`${this.tableName}\`
         WHERE stripeId = @stripeId
-        AND status = ${SqlModelStatus.ACTIVE}
       `,
       { stripeId },
       conn,

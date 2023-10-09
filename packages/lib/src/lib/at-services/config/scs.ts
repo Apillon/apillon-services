@@ -19,6 +19,7 @@ import { SpendCreditDto } from './dtos/spend-credit.dto';
 import { CreateInvoiceDto } from './dtos/create-invoice.dto';
 import { SubscriptionsQueryFilter } from './dtos/subscriptions-query-filter.dto';
 import { InvoicesQueryFilter } from './dtos/invoices-query-filter.dto';
+import { UpdateSubscriptionDto } from './dtos/update-subscription.dto';
 
 /**
  * System config Service client
@@ -172,6 +173,13 @@ export class Scs extends BaseService {
     });
   }
 
+  public async addFreemiumCredits(project_uuid: string) {
+    return await this.callService({
+      eventName: ScsEventType.ADD_FREEMIUM_CREDITS,
+      project_uuid,
+    });
+  }
+
   //#endregion
 
   //#region subscriptions
@@ -199,11 +207,12 @@ export class Scs extends BaseService {
     });
   }
 
-  public async updateSubscription(subscriptionStripeId: string, data: any) {
+  public async updateSubscription(
+    updateSubscriptionDto: UpdateSubscriptionDto,
+  ) {
     return await this.callService({
       eventName: ScsEventType.UPDATE_SUBSCRIPTION,
-      subscriptionStripeId,
-      data,
+      updateSubscriptionDto,
     });
   }
 

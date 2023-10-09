@@ -51,16 +51,6 @@ export class BucketService {
     }
     b.canAccess(context);
 
-    //get bucket max size quota from config service
-    const maxBucketSizeQuota = await new Scs(context).getQuota({
-      quota_id: QuotaCode.MAX_BUCKET_SIZE,
-      project_uuid: b.project_uuid,
-      object_uuid: b.bucket_uuid,
-    });
-    if (maxBucketSizeQuota?.value) {
-      b.maxSize = maxBucketSizeQuota.value * 1073741824; //quota is in GB - convert to bytes
-    }
-
     return b.serialize(SerializeFor.PROFILE);
   }
 
@@ -72,8 +62,6 @@ export class BucketService {
       { ...event.body, bucket_uuid: uuidV4() },
       context,
     );
-    //set default bucket size in bytes - NOTE this is not used in application. Max size is set in config MS
-    b.maxSize = 5368709120;
 
     try {
       await b.validate();

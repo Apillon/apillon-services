@@ -1,10 +1,11 @@
 import { v4 as uuid } from 'uuid';
-import { setupTest, Stage } from '../../../test/setup';
+import { releaseStage, setupTest, Stage } from '../../../test/setup';
 import { SubscriptionService } from './subscription.service';
 import {
   CreateSubscriptionDto,
   SqlModelStatus,
   SubscriptionsQueryFilter,
+  UpdateSubscriptionDto,
 } from '@apillon/lib';
 import { SubscriptionPackage } from './models/subscription-package.model';
 import { Subscription } from './models/subscription.model';
@@ -20,13 +21,14 @@ describe('Subscriptions unit test', () => {
   beforeAll(async () => {
     stage = await setupTest();
 
-    subscriptionPackage = new SubscriptionPackage({}, stage.context)
-      .fake()
-      .populate({
-        creditAmount: 2000,
-      });
+    subscriptionPackage = await new SubscriptionPackage(
+      {},
+      stage.context,
+    ).populateById(2); // Caterpillar plan
+  });
 
-    await subscriptionPackage.insert();
+  afterAll(async () => {
+    await releaseStage(stage);
   });
 
   test('should get all subscription packages', async () => {
@@ -122,8 +124,11 @@ describe('Subscriptions unit test', () => {
 
     const updatedSubscription = await SubscriptionService.updateSubscription(
       {
-        subscriptionStripeId: activeSubscription.stripeId,
-        data: { expiresOn },
+        updateSubscriptionDto: new UpdateSubscriptionDto({
+          subscriptionStripeId: activeSubscription.stripeId,
+          expiresOn,
+          status: SqlModelStatus.ACTIVE,
+        }),
       },
       stage.context,
     );
@@ -131,14 +136,24 @@ describe('Subscriptions unit test', () => {
     expect(updatedSubscription.expiresOn).toEqual(expiresOn);
 
     // Cancel a subscription
+    const cancellationReason = 'too_good';
+    const cancellationComment = 'too good for me';
     const canceledSubscription = await SubscriptionService.updateSubscription(
       {
-        subscriptionStripeId: activeSubscription.stripeId,
-        data: { status: SqlModelStatus.INACTIVE, cancelDate: new Date() },
+        updateSubscriptionDto: new UpdateSubscriptionDto({
+          subscriptionStripeId: activeSubscription.stripeId,
+          expiresOn,
+          status: SqlModelStatus.INACTIVE,
+          cancelDate: new Date(),
+          cancellationReason,
+          cancellationComment,
+        }),
       },
       stage.context,
     );
     expect(canceledSubscription.status).toBe(SqlModelStatus.INACTIVE);
+    expect(canceledSubscription.cancellationReason).toBe(cancellationReason);
+    expect(canceledSubscription.cancellationComment).toBe(cancellationComment);
 
     activeSubscription = await new Subscription(
       {},

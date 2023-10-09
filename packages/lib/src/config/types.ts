@@ -128,9 +128,10 @@ export enum StorageEventType {
   BUCKET_CLEAR_CONTENT = 'clear-bucket-content',
   DEPLOYMENT_GET = 'get-deployment',
   DEPLOYMENT_LIST = 'list-deployment',
-  EXECUTE_PREPARE_COLLECTION_BASE_URI_WORKER = 'execute-prepare-collection-base-uri-worker',
+  PREPARE_COLLECTION_BASE_URI = 'prepare-collection-base-uri',
   TEST_CRUST_PROVIDER = 'test-crust-provider',
   PROJECT_STORAGE_DETAILS = 'project-storage-details',
+  STORAGE_INFO = 'get-storage-info',
 }
 
 export enum AuthenticationEventType {
@@ -166,6 +167,7 @@ export enum ScsEventType {
   GET_PROJECT_CREDIT = 'get-project-credit',
   GET_CREDIT_TRANSACTIONS = 'get-project-transactions',
   GET_CREDIT_PACKAGES = 'get-credit-packages',
+  ADD_FREEMIUM_CREDITS = 'add-freemium-credits',
   HANDLE_STRIPE_WEBHOOK_DATA = 'handle-stripe-webhook-data',
   GET_SUBSCRIPTION_PACKAGE_STRIPE_ID = 'get-subscription-package-stripe-id',
   GET_CREDIT_PACKAGE_STRIPE_ID = 'get-credit-package-stripe-id',
@@ -640,6 +642,8 @@ export enum QuotaCode {
   MAX_ATTESTED_USERS = 7,
   MAX_WEBSITES = 8,
   MAX_NFT_COLLECTIONS = 9,
+  MAX_STORAGE = 10,
+  MAX_BANDWIDTH = 11,
 }
 
 /**

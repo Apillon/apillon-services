@@ -149,22 +149,6 @@ export class Bucket extends ProjectAccessModel {
 
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
-    validators: [],
-    fakeValue: 5368709120,
-    defaultValue: 5368709120,
-  })
-  public maxSize: number;
-
-  @prop({
-    parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
@@ -396,6 +380,9 @@ export class Bucket extends ProjectAccessModel {
       { bucket_id: this.id },
       conn,
     );
+
+    this.size = 0;
+    await this.update(SerializeFor.UPDATE_DB, conn);
   }
 
   /**
@@ -421,7 +408,7 @@ export class Bucket extends ProjectAccessModel {
   /**
    * Function to get total size of all buckets inside a project
    */
-  public async getTotalSizeUsedByProject() {
+  public async getTotalSizeUsedByProject(): Promise<number> {
     const data = await this.getContext().mysql.paramExecute(
       `
         SELECT SUM(size) as totalSize

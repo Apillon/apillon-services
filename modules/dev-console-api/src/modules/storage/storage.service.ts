@@ -1,4 +1,5 @@
 import {
+  BaseProjectQueryFilter,
   CreateS3UrlsForUploadDto,
   EndFileUploadSessionDto,
   FileDetailsQueryFilter,
@@ -10,6 +11,15 @@ import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 @Injectable()
 export class StorageService {
+  async getStorageInfo(
+    context: DevConsoleApiContext,
+    query: BaseProjectQueryFilter,
+  ) {
+    return (
+      await new StorageMicroservice(context).getStorageInfo(query.project_uuid)
+    ).data;
+  }
+
   /**
    * Retrieves a list of file uploads for a given bucket based on provided filters.
    * @param {DevConsoleApiContext} context - An object containing information about user session.
