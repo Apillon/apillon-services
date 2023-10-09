@@ -41,6 +41,14 @@ export class StorageMicroservice extends BaseService {
     this.isDefaultAsync = false;
   }
 
+  public async getStorageInfo(project_uuid: string) {
+    const data = {
+      eventName: StorageEventType.STORAGE_INFO,
+      project_uuid,
+    };
+    return await this.callService(data);
+  }
+
   //#region bucket CRUD
 
   public async listBuckets(params: BucketQueryFilter) {

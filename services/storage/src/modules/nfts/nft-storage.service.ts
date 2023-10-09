@@ -25,6 +25,7 @@ import { StorageCodeException } from '../../lib/exceptions';
 import { StorageErrorCode } from '../../config/types';
 import { ProjectConfig } from '../config/models/project-config.model';
 import { addJwtToIPFSUrl } from '../../lib/ipfs-utils';
+import { StorageService } from '../storage/storage.service';
 
 export class NftStorageService {
   static async prepareBaseUriForCollection(
@@ -44,11 +45,10 @@ export class NftStorageService {
     );
 
     //Check if enough storage is available
-    const storageUsed = await bucket.getTotalSizeUsedByProject();
-    const maxStorageQuota = await new Scs(context).getQuota({
-      quota_id: QuotaCode.MAX_STORAGE,
-      project_uuid: bucket.project_uuid,
-    });
+    const storageInfo = await StorageService.getStorageInfo(
+      { project_uuid: bucket.project_uuid },
+      context,
+    );
 
     //Size of images and metadata for collection.
     const imagesOnS3 = await getSessionFilesOnS3(
@@ -59,8 +59,11 @@ export class NftStorageService {
       bucket,
       event.body.metadataSession,
     );
-    const maxStorage = (maxStorageQuota?.value || 3) * 1073741824;
-    if (storageUsed + imagesOnS3.size + metadataOnS3.size > maxStorage) {
+
+    if (
+      storageInfo.usedStorage + imagesOnS3.size + metadataOnS3.size >
+      storageInfo.availableStorage
+    ) {
       throw new StorageCodeException({
         code: StorageErrorCode.NOT_ENOUGH_STORAGE_SPACE,
         status: 400,

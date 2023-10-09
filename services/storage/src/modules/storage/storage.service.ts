@@ -48,6 +48,31 @@ import { File } from './models/file.model';
 import { getSessionFilesOnS3 } from '../../lib/file-upload-session-s3-files';
 
 export class StorageService {
+  /**
+   * Get storage info for project
+   * @param event
+   * @param context
+   * @returns available storage, used storage
+   */
+  static async getStorageInfo(
+    event: { project_uuid: string },
+    context: ServiceContext,
+  ): Promise<{ availableStorage: number; usedStorage: number }> {
+    const maxStorageQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_STORAGE,
+      project_uuid: event.project_uuid,
+    });
+    const availableStorage = (maxStorageQuota?.value || 3) * 1073741824;
+
+    const bucket = new Bucket({ project_uuid: event.project_uuid }, context);
+    const usedStorage = await bucket.getTotalSizeUsedByProject();
+
+    return {
+      availableStorage,
+      usedStorage,
+    };
+  }
+
   //#region file-upload functions
 
   static async generateMultipleS3UrlsForUpload(
@@ -75,13 +100,12 @@ export class StorageService {
     bucket.canAccess(context);
 
     //Check if enough storage is available
-    const storageUsed = await bucket.getTotalSizeUsedByProject();
-    const maxStorageQuota = await new Scs(context).getQuota({
-      quota_id: QuotaCode.MAX_STORAGE,
-      project_uuid: bucket.project_uuid,
-    });
-    const maxStorage = (maxStorageQuota?.value || 3) * 1073741824;
-    if (storageUsed >= maxStorage) {
+    const storageInfo = await StorageService.getStorageInfo(
+      { project_uuid: bucket.project_uuid },
+      context,
+    );
+
+    if (storageInfo.usedStorage >= storageInfo.availableStorage) {
       throw new StorageCodeException({
         code: StorageErrorCode.NOT_ENOUGH_STORAGE_SPACE,
         status: 400,
@@ -534,6 +558,7 @@ export class StorageService {
 
   /**
    * Get project storage details - num. of buckets, total bucket size, num. of websites
+   * Used in admin panel
    * @param {{ project_uuid: string }} - uuid of the project
    * @param {ServiceContext} context
    */

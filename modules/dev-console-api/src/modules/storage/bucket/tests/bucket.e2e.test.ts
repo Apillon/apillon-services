@@ -101,7 +101,6 @@ describe('Storage bucket tests', () => {
       expect(response.body.data.project_uuid).toBeTruthy();
       expect(response.body.data.bucketType).toBeTruthy();
       expect(response.body.data.name).toBeTruthy();
-      expect(response.body.data.maxSize).toBeTruthy();
     });
 
     test('User should recieve 404 if bucket does not exists', async () => {

@@ -152,22 +152,6 @@ export class Bucket extends ProjectAccessModel {
 
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
-    validators: [],
-    fakeValue: 5368709120,
-    defaultValue: 5368709120,
-  })
-  public maxSize: number;
-
-  @prop({
-    parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
@@ -364,15 +348,6 @@ export class Bucket extends ProjectAccessModel {
     );
     const items = await Promise.all(
       list.items.map(async (bucket) => {
-        const maxBucketSizeQuota = await new Scs(context).getQuota({
-          quota_id: QuotaCode.MAX_BUCKET_SIZE,
-          project_uuid: filter.project_uuid,
-          object_uuid: bucket.bucket_uuid,
-        });
-        if (maxBucketSizeQuota?.value) {
-          bucket.maxSize = Number(maxBucketSizeQuota?.value) * 1073741824;
-        }
-
         return new Bucket({}, context)
           .populate(bucket, PopulateFrom.DB)
           .serialize(serializationStrategy);

@@ -80,6 +80,7 @@ export async function processEvent(event, context: Context): Promise<any> {
 
     [StorageEventType.PROJECT_STORAGE_DETAILS]:
       StorageService.getProjectStorageDetails,
+    [StorageEventType.STORAGE_INFO]: StorageService.getStorageInfo,
   };
 
   return await processors[event.eventName](event, context);

@@ -131,6 +131,7 @@ export enum StorageEventType {
   PREPARE_COLLECTION_BASE_URI = 'prepare-collection-base-uri',
   TEST_CRUST_PROVIDER = 'test-crust-provider',
   PROJECT_STORAGE_DETAILS = 'project-storage-details',
+  STORAGE_INFO = 'get-storage-info',
 }
 
 export enum AuthenticationEventType {
