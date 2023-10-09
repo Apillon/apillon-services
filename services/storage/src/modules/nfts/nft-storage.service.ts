@@ -23,6 +23,8 @@ import { Ipns } from '../ipns/models/ipns.model';
 import { getSessionFilesOnS3 } from '../../lib/file-upload-session-s3-files';
 import { StorageCodeException } from '../../lib/exceptions';
 import { StorageErrorCode } from '../../config/types';
+import { ProjectConfig } from '../config/models/project-config.model';
+import { addJwtToIPFSUrl } from '../../lib/ipfs-utils';
 
 export class NftStorageService {
   static async prepareBaseUriForCollection(
@@ -37,7 +39,6 @@ export class NftStorageService {
     },
     context: ServiceContext,
   ) {
-    //Add IPNS record to bucket
     const bucket: Bucket = await new Bucket({}, context).populateByUUID(
       event.body.bucket_uuid,
     );
@@ -66,12 +67,15 @@ export class NftStorageService {
       });
     }
 
+    const ipfsService = new IPFSService(context, bucket.project_uuid);
+
     //Create initial CID for this collection - IPNS Publish does not work otherwise
-    const ipfsRes = await IPFSService.addFileToIPFS({
+    const ipfsRes = await ipfsService.addFileToIPFS({
       path: '',
-      content: `NFT Collection metaevent.body. Collection uuid: ${event.body.collection_uuid}`,
+      content: `NFT Collection metadata. Collection uuid: ${event.body.collection_uuid}`,
     });
 
+    //Add IPNS record to bucket
     let ipnsDbRecord = await new Ipns({}, context).populateByProjectAndName(
       bucket.project_uuid,
       `${event.body.collectionName} IPNS Record`,
@@ -88,7 +92,7 @@ export class NftStorageService {
     }
 
     //Publish IPNS
-    const publishedIpns = await IPFSService.publishToIPNS(
+    const publishedIpns = await ipfsService.publishToIPNS(
       ipfsRes.cidV0,
       `${ipnsDbRecord.project_uuid}_${ipnsDbRecord.bucket_id}_${ipnsDbRecord.id}`,
     );
@@ -101,10 +105,17 @@ export class NftStorageService {
 
     await ipnsDbRecord.update(SerializeFor.UPDATE_DB);
 
-    const baseUri =
-      env.STORAGE_IPFS_GATEWAY.replace('/ipfs/', '/ipns/') +
-      publishedIpns.name +
-      '/';
+    //Get IPFS gateway
+    const ipfsGateway = await new ProjectConfig(
+      { project_uuid: bucket.project_uuid },
+      context,
+    ).getIpfsGateway();
+
+    let baseUri = ipfsGateway.ipnsUrl + publishedIpns.name + '/';
+
+    if (ipfsGateway.private) {
+      baseUri = addJwtToIPFSUrl(baseUri, bucket.project_uuid);
+    }
 
     //Start worker which will prepare images and metadata and deploy contract
     if (
