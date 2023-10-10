@@ -120,6 +120,8 @@ describe('Credits unit test', () => {
         product_id: ProductCode.HOSTING_WEBSITE,
         referenceTable: 'website',
         referenceId: '1',
+        location: 'creditTest',
+        service: 'TEST',
       });
 
       project1Balance -= product.currentPrice;
@@ -162,6 +164,8 @@ describe('Credits unit test', () => {
         product_id: ProductCode.HOSTING_WEBSITE,
         referenceTable: 'website',
         referenceId: '2',
+        location: 'creditTest',
+        service: 'TEST',
       });
 
       const fun = async () => {

@@ -93,7 +93,6 @@ export class StripeService {
 
     return await this.stripe.billingPortal.sessions.create({
       customer: customer.data[0].id,
-      return_url: 'https://example.com', // Replace with your desired return URL
     });
   }
 
