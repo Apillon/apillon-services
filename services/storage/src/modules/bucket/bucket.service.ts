@@ -51,7 +51,7 @@ export class BucketService {
     }
     b.canAccess(context);
 
-    return b.serialize(SerializeFor.PROFILE);
+    return b.serialize(getSerializationStrategy(context));
   }
 
   static async createBucket(
@@ -72,27 +72,6 @@ export class BucketService {
       }
     }
 
-    //check max bucket quota
-    if (
-      b.bucketType == BucketType.STORAGE &&
-      (
-        await BucketService.maxBucketsQuotaReached(
-          {
-            query: new BucketQuotaReachedQueryFilter().populate({
-              bucketType: b.bucketType,
-              project_uuid: b.project_uuid,
-            }),
-          },
-          context,
-        )
-      ).maxBucketsQuotaReached
-    ) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.MAX_BUCKETS_REACHED,
-        status: 400,
-      });
-    }
-
     //Insert
     await b.insert();
 
@@ -109,7 +88,7 @@ export class BucketService {
       project_uuid: b.project_uuid,
     });
 
-    return b.serialize(SerializeFor.PROFILE);
+    return b.serialize(getSerializationStrategy(context));
   }
 
   static async updateBucket(

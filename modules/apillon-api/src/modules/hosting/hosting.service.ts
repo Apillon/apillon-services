@@ -1,7 +1,9 @@
 import {
   ApillonHostingApiCreateS3UrlsForUploadDto,
+  CreateWebsiteDto,
   DomainQueryFilter,
   EndFileUploadSessionDto,
+  WebsiteQueryFilter,
 } from '@apillon/lib';
 import {
   DeployWebsiteDto,
@@ -16,6 +18,15 @@ import { ApillonApiContext } from '../../context';
 export class HostingService {
   async listDomains(context: ApillonApiContext, query: DomainQueryFilter) {
     return (await new StorageMicroservice(context).listDomains(query)).data;
+  }
+
+  async listWebsites(context: ApillonApiContext, query: WebsiteQueryFilter) {
+    return (await new StorageMicroservice(context).listWebsites(query)).data;
+  }
+
+  async createWebsite(context: ApillonApiContext, body: CreateWebsiteDto) {
+    //Call Storage microservice, to create website
+    return (await new StorageMicroservice(context).createWebsite(body)).data;
   }
 
   async getWebsite(context: ApillonApiContext, id: any) {

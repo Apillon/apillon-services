@@ -1,8 +1,10 @@
 import {
   ApillonHostingApiCreateS3UrlsForUploadDto,
+  CreateWebsiteDto,
   DomainQueryFilter,
   EndFileUploadSessionDto,
   ValidateFor,
+  WebsiteQueryFilter,
 } from '@apillon/lib';
 import {
   AttachedServiceType,
@@ -42,6 +44,35 @@ export class HostingController {
     @Query() query: DomainQueryFilter,
   ) {
     return await this.hostingService.listDomains(context, query);
+  }
+
+  @Get('websites')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_READ,
+    serviceType: AttachedServiceType.HOSTING,
+  })
+  @Validation({ dto: WebsiteQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async listWebsites(
+    @Ctx() context: ApillonApiContext,
+    @Query() query: WebsiteQueryFilter,
+  ) {
+    return await this.hostingService.listWebsites(context, query);
+  }
+
+  @Post('websites')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_WRITE,
+    serviceType: AttachedServiceType.HOSTING,
+  })
+  @UseGuards(AuthGuard)
+  @Validation({ dto: CreateWebsiteDto })
+  @UseGuards(ValidationGuard)
+  async createWebsite(
+    @Ctx() context: ApillonApiContext,
+    @Body() body: CreateWebsiteDto,
+  ) {
+    return await this.hostingService.createWebsite(context, body);
   }
 
   @Get('websites/:id')

@@ -1,6 +1,7 @@
 import {
   Context,
   DomainQueryFilter,
+  ErrorCode,
   Lmas,
   LogType,
   PoolConnection,
@@ -36,6 +37,44 @@ export class Website extends ProjectAccessModel {
     super(data, context);
   }
 
+  /**
+   * id
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.WORKER,
+    ],
+    populatable: [PopulateFrom.DB],
+  })
+  public id: number;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ErrorCode.STATUS_NOT_PRESENT,
+      },
+    ],
+    defaultValue: SqlModelStatus.ACTIVE,
+    fakeValue() {
+      return SqlModelStatus.ACTIVE;
+    },
+  })
+  public status?: number;
+
   @prop({
     parser: { resolver: stringParser() },
     populatable: [
@@ -50,6 +89,7 @@ export class Website extends ProjectAccessModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [
       {
@@ -163,6 +203,7 @@ export class Website extends ProjectAccessModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [
       {
@@ -188,6 +229,7 @@ export class Website extends ProjectAccessModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
@@ -208,6 +250,7 @@ export class Website extends ProjectAccessModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
@@ -227,7 +270,6 @@ export class Website extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
     ],
     validators: [],
   })
@@ -259,6 +301,7 @@ export class Website extends ProjectAccessModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
@@ -334,6 +377,7 @@ export class Website extends ProjectAccessModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
@@ -349,6 +393,7 @@ export class Website extends ProjectAccessModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
@@ -503,6 +548,7 @@ export class Website extends ProjectAccessModel {
       //Populate website
       this.populate({
         website_uuid: website_uuid,
+        bucket_uuid: bucket.bucket_uuid,
         bucket_id: bucket.id,
         stagingBucket_id: stagingBucket.id,
         productionBucket_id: productionBucket.id,
@@ -510,6 +556,8 @@ export class Website extends ProjectAccessModel {
         stagingBucket: stagingBucket,
         productionBucket: productionBucket,
         domainChangeDate: this.domain ? new Date() : undefined,
+        createTime: new Date(),
+        updateTime: new Date(),
       });
       //Insert web page record
       await this.insert(SerializeFor.INSERT_DB, conn);
@@ -569,7 +617,10 @@ export class Website extends ProjectAccessModel {
 
     const sqlQuery = {
       qSelect: `
-        SELECT ${this.generateSelectFields('wp', '')}, wp.updateTime
+        SELECT ${this.generateSelectFields(
+          'wp',
+          '',
+        )}, wp.createTime, wp.updateTime
         `,
       qFrom: `
         FROM \`${DbTables.WEBSITE}\` wp

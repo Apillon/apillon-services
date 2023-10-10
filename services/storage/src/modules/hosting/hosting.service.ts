@@ -34,7 +34,7 @@ import {
   DeploymentEnvironment,
   StorageErrorCode,
 } from '../../config/types';
-import { ServiceContext } from '@apillon/service-lib';
+import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
 import { deleteDirectory } from '../../lib/delete-directory';
 import {
   StorageCodeException,
@@ -86,7 +86,7 @@ export class HostingService {
     //Get buckets
     await website.populateBucketsAndLink();
 
-    return website.serialize(SerializeFor.PROFILE);
+    return website.serialize(getSerializationStrategy(context));
   }
 
   static async createWebsite(
@@ -122,7 +122,7 @@ export class HostingService {
       data: website.serialize(),
     });
 
-    return website.serialize(SerializeFor.PROFILE);
+    return website.serialize(getSerializationStrategy(context));
   }
 
   static async updateWebsite(
