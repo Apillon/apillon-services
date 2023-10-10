@@ -2,6 +2,8 @@ import { Ctx, Validation } from '@apillon/modules-lib';
 import {
   Controller,
   Get,
+  Param,
+  ParseIntPipe,
   Post,
   Query,
   RawBodyRequest,
@@ -13,7 +15,7 @@ import { PaymentsService } from './payments.service';
 import { Headers } from '@nestjs/common';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { PaymentSessionDto } from './dto/payment-session.dto';
-import { ValidateFor } from '@apillon/lib';
+import { PricelistQueryFilter, ValidateFor } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { StripeService } from './stripe.service';
 
@@ -76,15 +78,34 @@ export class PaymentsController {
     await this.paymentsService.stripeWebhookEventHandler(event);
   }
 
-  @Get('subscription-packages')
+  @Get('subscription/packages')
   @UseGuards(AuthGuard)
   async getSubscriptionPackages(@Ctx() context: DevConsoleApiContext) {
     return this.paymentsService.getSubscriptionPackages(context);
   }
 
-  @Get('credit-packages')
+  @Get('credit/packages')
   @UseGuards(AuthGuard)
   async getCreditPackages(@Ctx() context: DevConsoleApiContext) {
     return this.paymentsService.getCreditPackages(context);
+  }
+
+  @Get('product')
+  @Validation({ dto: PricelistQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getProductPricelist(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: PricelistQueryFilter,
+  ) {
+    return this.paymentsService.getProductPricelist(context, query);
+  }
+
+  @Get('product/:id')
+  @UseGuards(AuthGuard)
+  async getProductPrice(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id', ParseIntPipe) product_id: number,
+  ) {
+    return this.paymentsService.getProductPrice(context, product_id);
   }
 }

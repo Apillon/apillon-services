@@ -176,6 +176,8 @@ export enum ScsEventType {
   GET_ACTIVE_SUBSCRIPTION = 'get-active-subscription',
   GET_SUBSCRIPTION_PACKAGES = 'get-subscription-packages',
   LIST_INVOICES = 'list-invoices',
+  GET_PRODUCT_PRICELIST = 'get-product-pricelist',
+  GET_PRODUCT_PRICE = 'get-product-price',
 }
 
 export enum NftsEventType {
@@ -577,6 +579,8 @@ export enum ValidatorErrorCode {
   //#region config MS
   ADD_CREDIT_REQUIRED_DATA_NOT_PRESENT = 422001001,
   SPEND_CREDIT_REQUIRED_DATA_NOT_PRESENT = 422001002,
+  PRODUCT_SERVICE_NOT_VALID = 422001003,
+  PRODUCT_CATEGORY_NOT_VALID = 422001004,
   //#endregion
 }
 

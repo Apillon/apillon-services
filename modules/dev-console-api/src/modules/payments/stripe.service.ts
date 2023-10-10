@@ -45,12 +45,12 @@ export class StripeService {
    * @param {Stripe.Checkout.SessionCreateParams.Mode} mode - single payment or subscription
    * @returns {Promise<Stripe.Checkout.Session>}
    */
-  generateStripePaymentSession(
+  async generateStripePaymentSession(
     stripeId: string,
     paymentSessionDto: PaymentSessionDto,
     mode: Stripe.Checkout.SessionCreateParams.Mode,
-  ): Promise<Stripe.Checkout.Session> {
-    return this.stripe.checkout.sessions.create({
+  ): Promise<Stripe.Response<Stripe.Checkout.Session>> {
+    return await this.stripe.checkout.sessions.create({
       line_items: [
         {
           price: stripeId,
@@ -70,7 +70,15 @@ export class StripeService {
     });
   }
 
-  async generateCustomerPortalSession(context: DevConsoleApiContext) {
+  /**
+   * Generates a customer portal session for the user by their email
+   * Session is used to edit, cancel or renew subscriptions
+   * @param {DevConsoleApiContext} context
+   * @returns {Promise<Stripe.Response<Stripe.BillingPortal.Session>>}
+   */
+  async generateCustomerPortalSession(
+    context: DevConsoleApiContext,
+  ): Promise<Stripe.Response<Stripe.BillingPortal.Session>> {
     const email = context.user.email;
     const customer = await this.stripe.customers.list({ email, limit: 1 });
 
@@ -83,7 +91,7 @@ export class StripeService {
       });
     }
 
-    return this.stripe.billingPortal.sessions.create({
+    return await this.stripe.billingPortal.sessions.create({
       customer: customer.data[0].id,
       return_url: 'https://example.com', // Replace with your desired return URL
     });

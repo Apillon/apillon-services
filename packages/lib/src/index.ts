@@ -14,6 +14,7 @@ export * from './config/env';
 export * from './lib/at-services/config/dtos/spend-credit.dto';
 export * from './lib/at-services/config/dtos/add-credit.dto';
 export * from './lib/at-services/config/dtos/credit-transaction-query-filter.dto';
+export * from './lib/at-services/config/dtos/pricelist-query-filter.dto';
 
 //#REGION Referral
 export * from './lib/at-services/referral/referral';
