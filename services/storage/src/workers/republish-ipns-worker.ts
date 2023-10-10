@@ -18,7 +18,7 @@ export class RepublishIpnsWorker extends BaseQueueWorker {
   }
   async runPlanner(data?: any): Promise<any[]> {
     const ipnsRes = await this.context.mysql.paramExecute(`
-      SELECT \`ipnsName\` as ipns, replace(ipnsValue, '/ipfs/', '') as cid, \`key\` as keyName
+      SELECT \`ipnsName\` as ipns, replace(ipnsValue, '/ipfs/', '') as cid, \`key\` as keyName, \`project_uuid\`
       FROM ipns
       WHERE ipnsName IS NOT NULL
     `);
@@ -61,10 +61,10 @@ export class RepublishIpnsWorker extends BaseQueueWorker {
             console.info(
               'Calling IPFSService.publishToIPNS so that new key will be generated...',
             );
-            await IPFSService.generateKeyAndPublishToIPNS(
-              item.cid,
-              item.keyName,
-            );
+            await new IPFSService(
+              this.context,
+              item.project_uuid,
+            ).generateKeyAndPublishToIPNS(item.cid, item.keyName);
           } catch (error2) {
             console.error('Error in IPFSService.publishToIPNS', error2);
           }

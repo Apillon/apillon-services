@@ -9,7 +9,7 @@ let dbAmsMigration: Migration = null;
 let dbAmsSeed: Migration = null;
 
 let dbStorageMigration: Migration = null;
-// let dbStorageSeed: Migration = null;
+let dbStorageSeed: Migration = null;
 
 let dbConfigMigration: Migration = null;
 let dbConfigSeed: Migration = null;
@@ -77,9 +77,9 @@ async function initSeeds() {
   if (!dbAmsSeed) {
     await initAmsTestSeed();
   }
-  // if (!dbStorageSeed) {
-  //   await initStorageTestSeed();
-  // }
+  if (!dbStorageSeed) {
+    await initStorageTestSeed();
+  }
   if (!dbConfigSeed) {
     await initConfigTestSeed();
   }
@@ -152,7 +152,7 @@ export async function seedTestDatabases(): Promise<void> {
     await Promise.all([
       dbAmsSeed.up(),
       dbConsoleSeed.up(),
-      // dbStorageSeed.up(),
+      dbStorageSeed.up(),
       dbConfigSeed.up(),
       dbAuthApiSeed.up(),
       dbReferralSeed.up(),
@@ -173,7 +173,7 @@ export async function unseedTestDatabases(): Promise<void> {
     await Promise.all([
       dbAmsSeed.down(-1),
       dbConsoleSeed.down(-1),
-      // dbStorageSeed.down(-1),
+      dbStorageSeed.down(-1),
       dbConfigSeed.down(-1),
       dbAuthApiSeed.down(-1),
       dbReferralSeed.down(-1),
@@ -238,9 +238,9 @@ export async function destroyTestSeeds(): Promise<void> {
   if (dbAmsSeed) {
     promises.push(dbAmsSeed.destroy());
   }
-  // if (dbStorageSeed) {
-  //   promises.push(dbStorageSeed.destroy());
-  // }
+  if (dbStorageSeed) {
+    promises.push(dbStorageSeed.destroy());
+  }
   if (dbConfigSeed) {
     promises.push(dbConfigSeed.destroy());
   }
@@ -268,7 +268,7 @@ export async function destroyTestSeeds(): Promise<void> {
   await Promise.all(promises);
   dbConsoleSeed = null;
   dbAmsSeed = null;
-  // dbStorageSeed = null;
+  dbStorageSeed = null;
   dbConfigSeed = null;
   dbAuthApiSeed = null;
   dbReferralSeed = null;
@@ -308,7 +308,7 @@ export async function rebuildTestDatabases(): Promise<void> {
     const migrationResults = await Promise.allSettled([
       dbAmsSeed.reset(),
       dbConsoleSeed.reset(),
-      // dbStorageSeed.reset(),
+      dbStorageSeed.reset(),
       dbConfigSeed.reset(),
       dbAuthApiSeed.reset(),
       dbReferralSeed.reset(),
@@ -471,34 +471,34 @@ async function initStorageTestMigrations() {
   }
 }
 
-// async function initStorageTestSeed() {
-//   env.APP_ENV = AppEnvironment.TEST;
+async function initStorageTestSeed() {
+  env.APP_ENV = AppEnvironment.TEST;
 
-//   const poolConfig: ConnectionOptions = {
-//     host: env.STORAGE_MYSQL_HOST_TEST,
-//     database: env.STORAGE_MYSQL_DATABASE_TEST,
-//     password: env.STORAGE_MYSQL_PASSWORD_TEST,
-//     port: env.STORAGE_MYSQL_PORT_TEST,
-//     user: env.STORAGE_MYSQL_USER_TEST,
-//     // debug: true,
-//     connectionLimit: 1,
-//   };
+  const poolConfig: ConnectionOptions = {
+    host: env.STORAGE_MYSQL_HOST_TEST,
+    database: env.STORAGE_MYSQL_DATABASE_TEST,
+    password: env.STORAGE_MYSQL_PASSWORD_TEST,
+    port: env.STORAGE_MYSQL_PORT_TEST,
+    user: env.STORAGE_MYSQL_USER_TEST,
+    // debug: true,
+    connectionLimit: 1,
+  };
 
-//   if (!/(test|testing)/i.test(poolConfig.database)) {
-//     throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
-//   }
+  if (!/(test|testing)/i.test(poolConfig.database)) {
+    throw new Error(`!!! ${poolConfig.database} NOT TEST DATABASE? !!!`);
+  }
 
-//   const pool = createPool(poolConfig);
+  const pool = createPool(poolConfig);
 
-//   dbStorageMigration = new Migration({
-//     conn: pool as unknown as MigrationConnection,
-//     tableName: 'seeds',
-//     dir: '../../services/storage/src/migration-scripts/seeds',
-//     silent: env.APP_ENV === AppEnvironment.TEST,
-//   });
+  dbStorageSeed = new Migration({
+    conn: pool as unknown as MigrationConnection,
+    tableName: 'seeds',
+    dir: '../../services/storage/src/migration-scripts/seeds',
+    silent: env.APP_ENV === AppEnvironment.TEST,
+  });
 
-//   await dbStorageSeed.initialize();
-// }
+  await dbStorageSeed.initialize();
+}
 
 async function initConfigTestMigrations() {
   try {

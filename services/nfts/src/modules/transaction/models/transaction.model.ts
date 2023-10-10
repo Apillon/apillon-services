@@ -153,6 +153,13 @@ export class Transaction extends AdvancedSQLModel {
   })
   public transactionHash: string;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [SerializeFor.INSERT_DB],
+  })
+  public transaction_uuid: string;
+
   public async populateByTransactionHash(
     transactionHash: string,
   ): Promise<Transaction> {

@@ -43,7 +43,7 @@ describe('Storage access (api keys, api keys permissions, ...) tests', () => {
     //User 1 project & other data
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
 
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
     testService = await createTestProjectService(
       stage.devConsoleContext,
       testProject,
@@ -62,7 +62,7 @@ describe('Storage access (api keys, api keys permissions, ...) tests', () => {
     testFile = await createTestBucketFile(stage.storageContext, testBucket);
     apiKey = await createTestApiKey(stage.amsContext, testProject.project_uuid);
 
-    testProject2 = await createTestProject(testUser, stage.devConsoleContext);
+    testProject2 = await createTestProject(testUser, stage);
     testBucket2 = await createTestBucket(
       testUser,
       stage.storageContext,

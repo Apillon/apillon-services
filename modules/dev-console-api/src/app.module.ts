@@ -1,3 +1,6 @@
+import { StripeService } from './modules/payments/stripe.service';
+import { PaymentsModule } from './modules/payments/payments.module';
+import { PublicModule } from './modules/public/public.module';
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { ContextMiddleware } from './middlewares/context.middleware';
 import { MySQLModule } from './modules/database/mysql.module';
@@ -36,6 +39,8 @@ import { ComputingModule } from './modules/computing/computing.module';
     ReferralModule,
     NftsModule,
     ComputingModule,
+    PaymentsModule,
+    PublicModule,
   ],
   controllers: [],
   providers: [],
@@ -59,6 +64,8 @@ export class AppModule {
         { path: 'users/validate-email', method: RequestMethod.POST },
         { path: 'users/password-reset', method: RequestMethod.POST },
         { path: 'users/password-reset-request', method: RequestMethod.POST },
+        { path: 'payments/stripe-webhook', method: RequestMethod.POST },
+        { path: 'public/contact-us', method: RequestMethod.POST },
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer

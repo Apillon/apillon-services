@@ -1,6 +1,8 @@
 import {
   ApillonHostingApiCreateS3UrlsForUploadDto,
+  DomainQueryFilter,
   EndFileUploadSessionDto,
+  ValidateFor,
 } from '@apillon/lib';
 import {
   AttachedServiceType,
@@ -16,6 +18,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
@@ -32,9 +35,13 @@ export class HostingController {
     role: DefaultApiKeyRole.KEY_READ,
     serviceType: AttachedServiceType.SYSTEM,
   })
-  @UseGuards(AuthGuard)
-  async listDomains(@Ctx() context: ApillonApiContext) {
-    return await this.hostingService.listDomains(context);
+  @Validation({ dto: DomainQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async listDomains(
+    @Ctx() context: ApillonApiContext,
+    @Query() query: DomainQueryFilter,
+  ) {
+    return await this.hostingService.listDomains(context, query);
   }
 
   @Get('websites/:id')

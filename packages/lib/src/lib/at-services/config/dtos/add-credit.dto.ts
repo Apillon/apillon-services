@@ -41,7 +41,7 @@ export class AddCreditDto extends ModelBase {
       },
     ],
   })
-  public referenceTable?: string;
+  public referenceTable: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -53,5 +53,5 @@ export class AddCreditDto extends ModelBase {
       },
     ],
   })
-  public referenceId?: string;
+  public referenceId: string;
 }

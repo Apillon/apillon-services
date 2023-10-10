@@ -54,7 +54,7 @@ describe('Storage tests', () => {
       DefaultUserRole.ADMIN,
     );
 
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
 
     testBucket = await createTestBucket(
       testUser,
@@ -159,6 +159,7 @@ describe('Storage tests', () => {
         expect(response.body.data.file.CID).toBe(testFile.CID);
         expect(response.body.data.file.name).toBe(testFile.name);
         expect(response.body.data.file.size).toBeGreaterThan(0);
+        expect(response.body.data.file.downloadLink).toBeTruthy();
       });
 
       test('User should be able to get file details by CID', async () => {
@@ -172,6 +173,7 @@ describe('Storage tests', () => {
         expect(response.body.data.file.CID).toBe(testFile.CID);
         expect(response.body.data.file.name).toBe(testFile.name);
         expect(response.body.data.file.size).toBeGreaterThan(0);
+        expect(response.body.data.file.downloadLink).toBeTruthy();
       });
     });
 
@@ -640,7 +642,10 @@ describe('Storage tests', () => {
         );
         expect(f.exists()).toBeFalsy();
         expect(
-          await IPFSService.isCIDPinned(deleteBucketTestFile1.CID),
+          await new IPFSService(
+            stage.storageContext,
+            deleteBucketTestFile1.project_uuid,
+          ).isCIDPinned(deleteBucketTestFile1.CID),
         ).toBeFalsy();
 
         //Check if bucket size was decreased
@@ -654,7 +659,12 @@ describe('Storage tests', () => {
         //Check that other files were not affected / deleted
         f = await new File({}, stage.storageContext).populateById(testFile2.id);
         expect(f.exists()).toBeTruthy();
-        expect(await IPFSService.isCIDPinned(testFile2.CID)).toBeTruthy();
+        expect(
+          await new IPFSService(
+            stage.storageContext,
+            testFile2.project_uuid,
+          ).isCIDPinned(testFile2.CID),
+        ).toBeTruthy();
       });
     });
 

@@ -18,6 +18,8 @@ import {
   Scs,
   SerializeFor,
   ServiceName,
+  SubscriptionsQueryFilter,
+  InvoicesQueryFilter,
   ValidationException,
 } from '@apillon/lib';
 import {
@@ -78,6 +80,9 @@ export class ProjectService {
         role_id: DefaultUserRole.PROJECT_OWNER,
       };
       await new Ams(context).assignUserRole(params);
+
+      await new Scs(context).addFreemiumCredits(project.project_uuid);
+
       await context.mysql.commit(conn);
 
       await invalidateCachePrefixes([CacheKeyPrefix.ADMIN_PROJECT_LIST]);
@@ -116,18 +121,10 @@ export class ProjectService {
     context: DevConsoleApiContext,
     uuid: string,
   ): Promise<Project> {
-    const project: Project = await new Project({}, context).populateByUUID(
-      uuid,
-    );
-    if (!project.exists()) {
-      throw new CodeException({
-        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
-        status: HttpStatus.NOT_FOUND,
-        errorCodes: ResourceNotFoundErrorCode,
-      });
-    }
-
-    project.canAccess(context);
+    const project: Project = await new Project(
+      {},
+      context,
+    ).populateByUUIDAndCheckAccess(uuid, context);
 
     //Populate user role on this project
     await project.populateMyRoleOnProject(context);
@@ -571,4 +568,45 @@ export class ProjectService {
   }
 
   //#endregion
+
+  //#region subscriptions
+
+  async getProjectActiveSubscription(
+    context: DevConsoleApiContext,
+    project_uuid: string,
+  ) {
+    await new Project({}, context).populateByUUIDAndCheckAccess(
+      project_uuid,
+      context,
+    );
+
+    return (await new Scs(context).getProjectActiveSubscription(project_uuid))
+      .data;
+  }
+
+  async getProjectSubscriptions(
+    context: DevConsoleApiContext,
+    query: SubscriptionsQueryFilter,
+  ) {
+    await new Project({}, context).populateByUUIDAndCheckAccess(
+      query.project_uuid,
+      context,
+    );
+
+    return (await new Scs(context).listSubscriptions(query)).data;
+  }
+
+  async getProjectInvoices(
+    context: DevConsoleApiContext,
+    query: InvoicesQueryFilter,
+  ) {
+    await new Project({}, context).populateByUUIDAndCheckAccess(
+      query.project_uuid,
+      context,
+    );
+
+    return (await new Scs(context).listInvoices(query)).data;
+  }
+
+  // #endregion
 }

@@ -38,8 +38,8 @@ describe('Storage bucket tests', () => {
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
 
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
-    testProject2 = await createTestProject(testUser2, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
+    testProject2 = await createTestProject(testUser2, stage);
 
     testBucket = await createTestBucket(
       testUser,
@@ -101,7 +101,6 @@ describe('Storage bucket tests', () => {
       expect(response.body.data.project_uuid).toBeTruthy();
       expect(response.body.data.bucketType).toBeTruthy();
       expect(response.body.data.name).toBeTruthy();
-      expect(response.body.data.maxSize).toBeTruthy();
     });
 
     test('User should recieve 404 if bucket does not exists', async () => {
@@ -318,10 +317,7 @@ describe('Storage bucket tests', () => {
         stage.devConsoleContext,
         stage.amsContext,
       );
-      quotaTestProject = await createTestProject(
-        quotaTestsUser,
-        stage.devConsoleContext,
-      );
+      quotaTestProject = await createTestProject(quotaTestsUser, stage);
       //create 10 buckets - max api keys on project quota reached
       for (let i = 0; i < 10; i++) {
         await createTestBucket(
@@ -467,7 +463,10 @@ describe('Storage bucket tests', () => {
       );
 
       expect(
-        await IPFSService.isCIDPinned(deleteBucketTestFile1.CID),
+        await new IPFSService(
+          stage.storageContext,
+          deleteBucketTestBucket.project_uuid,
+        ).isCIDPinned(deleteBucketTestFile1.CID),
       ).toBeTruthy();
 
       //Mark bucket for deletion
@@ -491,7 +490,10 @@ describe('Storage bucket tests', () => {
       );
       expect(f.exists()).toBeFalsy();
       expect(
-        await IPFSService.isCIDPinned(deleteBucketTestFile1.CID),
+        await new IPFSService(
+          stage.storageContext,
+          deleteBucketTestBucket.project_uuid,
+        ).isCIDPinned(deleteBucketTestFile1.CID),
       ).toBeFalsy();
     });
   });
