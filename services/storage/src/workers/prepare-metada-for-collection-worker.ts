@@ -19,8 +19,10 @@ import {
   StorageErrorCode,
 } from '../config/types';
 import { StorageCodeException } from '../lib/exceptions';
+import { addJwtToIPFSUrl } from '../lib/ipfs-utils';
 import { storageBucketSyncFilesToIPFS } from '../lib/storage-bucket-sync-files-to-ipfs';
 import { Bucket } from '../modules/bucket/models/bucket.model';
+import { ProjectConfig } from '../modules/config/models/project-config.model';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { Ipns } from '../modules/ipns/models/ipns.model';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
@@ -96,7 +98,6 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             this.context,
             `${this.constructor.name}/runExecutor`,
             bucket,
-            5_368_709_120,
             imageFURs.filter(
               (x) =>
                 x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED,
@@ -144,6 +145,12 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       metadataFURs.map((x) => x.serialize()),
     );
 
+    //Get IPFS gateway
+    const ipfsGateway = await new ProjectConfig(
+      { project_uuid: bucket.project_uuid },
+      this.context,
+    ).getIpfsGateway();
+
     await runWithWorkers(
       metadataFURs,
       20,
@@ -170,7 +177,13 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           const imageFile = imageFiles.files.find(
             (x) => x.name == fileContent.image,
           );
-          fileContent.image = env.STORAGE_IPFS_GATEWAY + imageFile.CID;
+          fileContent.image = ipfsGateway.url + imageFile.CID;
+          if (ipfsGateway.private) {
+            fileContent.image = addJwtToIPFSUrl(
+              fileContent.image,
+              bucket.project_uuid,
+            );
+          }
         }
 
         await s3Client.upload(
@@ -194,7 +207,6 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       this.context,
       `${this.constructor.name}/runExecutor`,
       bucket,
-      5_368_709_120,
       metadataFURs,
       metadataSession,
       true,
@@ -212,7 +224,10 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
     const ipnsDbRecord: Ipns = await new Ipns({}, this.context).populateById(
       data.ipnsId,
     );
-    const ipnsRecord = await IPFSService.publishToIPNS(
+    const ipnsRecord = await new IPFSService(
+      this.context,
+      ipnsDbRecord.project_uuid,
+    ).publishToIPNS(
       metadataFiles.wrappedDirCid,
       `${ipnsDbRecord.project_uuid}_${ipnsDbRecord.bucket_id}_${ipnsDbRecord.id}`,
     );

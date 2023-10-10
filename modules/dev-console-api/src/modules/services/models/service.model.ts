@@ -216,17 +216,10 @@ export class Service extends AdvancedSQLModel {
     context: DevConsoleApiContext,
     filter: ServiceQueryFilter,
   ) {
-    const project: Project = await new Project({}, context).populateByUUID(
+    await new Project({}, context).populateByUUIDAndCheckAccess(
       filter.project_uuid,
+      context,
     );
-    if (!project.exists()) {
-      throw new CodeException({
-        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
-        status: HttpStatus.NOT_FOUND,
-        errorCodes: ResourceNotFoundErrorCode,
-      });
-    }
-    project.canAccess(context);
 
     // Map url query with sql fields.
     const fieldMap = {

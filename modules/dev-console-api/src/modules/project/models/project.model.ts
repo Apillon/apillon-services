@@ -13,8 +13,13 @@ import {
   SerializeFor,
   SqlModelStatus,
   getFaker,
+  CodeException,
 } from '@apillon/lib';
-import { DbTables, ValidatorErrorCode } from '../../../config/types';
+import {
+  DbTables,
+  ResourceNotFoundErrorCode,
+  ValidatorErrorCode,
+} from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
 
 /**
@@ -155,6 +160,25 @@ export class Project extends ProjectAccessModel {
 
   public override async populateByUUID(uuid: string): Promise<this> {
     return super.populateByUUID(uuid, 'project_uuid');
+  }
+
+  public async populateByUUIDAndCheckAccess(
+    uuid: string,
+    context: DevConsoleApiContext,
+  ): Promise<this> {
+    const project = await this.populateByUUID(uuid);
+
+    if (!project.exists()) {
+      throw new CodeException({
+        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
+        status: 404,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+
+    project.canAccess(context);
+
+    return project;
   }
 
   /**

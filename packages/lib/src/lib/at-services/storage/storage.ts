@@ -24,6 +24,7 @@ import {
   ApillonHostingApiCreateS3UrlsForUploadDto,
   CreateS3UrlsForUploadDto,
 } from './dtos/create-s3-urls-for-upload.dto';
+import { DomainQueryFilter } from './dtos/domain-query-filter.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -39,6 +40,14 @@ export class StorageMicroservice extends BaseService {
   constructor(context: Context) {
     super(context);
     this.isDefaultAsync = false;
+  }
+
+  public async getStorageInfo(project_uuid: string) {
+    const data = {
+      eventName: StorageEventType.STORAGE_INFO,
+      project_uuid,
+    };
+    return await this.callService(data);
   }
 
   //#region bucket CRUD
@@ -385,9 +394,10 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async listDomains() {
+  public async listDomains(query: DomainQueryFilter) {
     const data = {
       eventName: StorageEventType.WEBSITE_LIST_DOMAINS,
+      query: query.serialize(),
     };
     return await this.callService(data);
   }
@@ -412,7 +422,7 @@ export class StorageMicroservice extends BaseService {
 
   //#region nfts storage functions
 
-  public async executePrepareCollectionBaseUriWorker(params: {
+  public async prepareCollectionBaseUri(params: {
     bucket_uuid: string;
     collection_uuid: string;
     collectionName: string;
@@ -420,7 +430,7 @@ export class StorageMicroservice extends BaseService {
     metadataSession: string;
   }): Promise<{ data: { baseUri: string } }> {
     const data = {
-      eventName: StorageEventType.EXECUTE_PREPARE_COLLECTION_BASE_URI_WORKER,
+      eventName: StorageEventType.PREPARE_COLLECTION_BASE_URI,
       body: params,
     };
     return await this.callService(data);

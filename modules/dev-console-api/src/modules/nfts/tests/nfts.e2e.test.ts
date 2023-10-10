@@ -57,8 +57,8 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       DefaultUserRole.ADMIN,
     );
 
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
-    await createTestProject(testUser2, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
+    await createTestProject(testUser2, stage);
     testCollection = await createTestNFTCollection(
       testUser,
       stage.nftsContext,
@@ -79,10 +79,7 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       stage.devConsoleContext,
       stage.amsContext,
     );
-    nestableProject = await createTestProject(
-      nestableUser,
-      stage.devConsoleContext,
-    );
+    nestableProject = await createTestProject(nestableUser, stage);
     await overrideDefaultQuota(
       stage,
       nestableProject.project_uuid,

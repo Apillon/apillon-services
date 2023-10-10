@@ -5,14 +5,17 @@ import {
   CreditTransactionQueryFilter,
   Lmas,
   LogType,
+  PoolConnection,
   SerializeFor,
   ServiceName,
   SpendCreditDto,
 } from '@apillon/lib';
 import { ScsCodeException, ScsValidationException } from '../../lib/exceptions';
-import { ConfigErrorCode } from '../../config/types';
+import { ConfigErrorCode, CreditDirection, DbTables } from '../../config/types';
 import { CreditTransaction } from './models/credit-transaction.model';
 import { Product } from './models/product.model';
+import { CreditPackage } from './models/credit-package.model';
+import { SubscriptionPackage } from '../subscription/models/subscription-package.model';
 
 /**
  * CreditService class for handling credit requests
@@ -32,7 +35,7 @@ export class CreditService {
       event.project_uuid,
     );
 
-    await credit.canAccess(context, event.project_uuid);
+    credit.canAccess(context, event.project_uuid);
 
     return credit.serialize(SerializeFor.PROFILE);
   }
@@ -55,46 +58,49 @@ export class CreditService {
 
   /**
    * Add credit to project.
-   * @param event
-   * @param context
+   * @param {AddCreditDto} addCreditDto
+   * @param {ServiceContext} context
+   * @param {PoolConnection} connection
+   * @returns {Promise<{ credit: Credit; creditTransaction: CreditTransaction }>}
    */
   static async addCredit(
     event: { body: AddCreditDto },
     context: ServiceContext,
-  ): Promise<any> {
-    const conn = await context.mysql.start();
+    connection?: PoolConnection,
+  ): Promise<{ credit: Credit; creditTransaction: CreditTransaction }> {
+    let credit: Credit;
+    let creditTransaction: CreditTransaction;
+    const addCreditDto = event.body;
+    const conn = connection || (await context.mysql.start());
     try {
-      let credit: Credit = await new Credit(
-        {},
-        context,
-      ).populateByProjectUUIDForUpdate(event.body.project_uuid, conn);
+      credit = await new Credit({}, context).populateByProjectUUIDForUpdate(
+        addCreditDto.project_uuid,
+        conn,
+      );
 
       if (!credit.exists()) {
         //Credit record for project does not yet exists - create one
         credit = new Credit(
           {
-            project_uuid: event.body.project_uuid,
-            balance: event.body.amount,
+            project_uuid: addCreditDto.project_uuid,
+            balance: addCreditDto.amount,
           },
           context,
         );
 
         await credit.insert(SerializeFor.INSERT_DB, conn);
       } else {
-        credit.balance += event.body.amount;
+        credit.balance += addCreditDto.amount;
         await credit.update(SerializeFor.UPDATE_DB, conn);
       }
 
-      const creditTransaction: CreditTransaction = new CreditTransaction(
-        {},
-        context,
-      ).populate({
-        project_uuid: event.body.project_uuid,
+      creditTransaction = new CreditTransaction({}, context).populate({
+        project_uuid: addCreditDto.project_uuid,
         credit_id: credit.id,
-        direction: 1,
-        amount: event.body.amount,
-        referenceTable: event.body.referenceTable,
-        referenceId: event.body.referenceId,
+        direction: CreditDirection.RECEIVE,
+        amount: addCreditDto.amount,
+        referenceTable: addCreditDto.referenceTable,
+        referenceId: addCreditDto.referenceId,
       });
 
       try {
@@ -107,10 +113,8 @@ export class CreditService {
       }
       await creditTransaction.insert(SerializeFor.INSERT_DB, conn);
 
-      await context.mysql.commit(conn);
-
       await new Lmas().writeLog({
-        context: context,
+        context,
         project_uuid: credit.project_uuid,
         logType: LogType.INFO,
         message: 'Credit balance increased',
@@ -120,9 +124,13 @@ export class CreditService {
           credit: credit.serialize(SerializeFor.LOGGER),
         },
       });
+      if (!connection) {
+        await context.mysql.commit(conn);
+      }
     } catch (err) {
-      await context.mysql.rollback(conn);
-
+      if (!connection) {
+        await context.mysql.rollback(conn);
+      }
       if (
         err instanceof ScsCodeException ||
         err instanceof ScsValidationException
@@ -132,13 +140,23 @@ export class CreditService {
         throw await new ScsCodeException({
           code: ConfigErrorCode.ERROR_ADDING_CREDIT,
           status: 500,
-          context: context,
+          context,
+          errorMessage: err?.message,
           sourceFunction: 'addCredit()',
           sourceModule: 'CreditService',
-        }).writeToMonitor({ project_uuid: event.body.project_uuid });
+        }).writeToMonitor({
+          project_uuid: addCreditDto.project_uuid,
+          data: new AddCreditDto(addCreditDto).serialize(SerializeFor.SERVICE),
+          sendAdminAlert: true,
+        });
       }
     }
-    return true;
+    return {
+      credit: credit.serialize(SerializeFor.SERVICE) as Credit,
+      creditTransaction: creditTransaction.serialize(
+        SerializeFor.SERVICE,
+      ) as CreditTransaction,
+    };
   }
 
   /**
@@ -168,7 +186,7 @@ export class CreditService {
       throw await new ScsCodeException({
         code: ConfigErrorCode.PRODUCT_DOES_NOT_EXISTS,
         status: 500,
-        context: context,
+        context,
         sourceFunction: 'spendCredit()',
         sourceModule: 'CreditService',
         errorMessage: 'Product does not exists',
@@ -183,7 +201,7 @@ export class CreditService {
       throw await new ScsCodeException({
         code: ConfigErrorCode.PRODUCT_PRICE_DOES_NOT_EXISTS,
         status: 500,
-        context: context,
+        context,
         sourceFunction: 'spendCredit()',
         sourceModule: 'CreditService',
       }).writeToMonitor({
@@ -204,7 +222,7 @@ export class CreditService {
         throw await new ScsCodeException({
           code: ConfigErrorCode.CREDIT_BALANCE_TOO_LOW,
           status: 402,
-          context: context,
+          context,
           sourceFunction: 'spendCredit()',
           sourceModule: 'CreditService',
         }).writeToMonitor({ project_uuid: event.body.project_uuid });
@@ -220,7 +238,7 @@ export class CreditService {
         project_uuid: event.body.project_uuid,
         credit_id: credit.id,
         product_id: product.id,
-        direction: 2,
+        direction: CreditDirection.SPEND,
         amount: product.currentPrice,
         referenceTable: event.body.referenceTable,
         referenceId: event.body.referenceId,
@@ -239,7 +257,7 @@ export class CreditService {
       await context.mysql.commit(conn);
 
       await new Lmas().writeLog({
-        context: context,
+        context,
         project_uuid: credit.project_uuid,
         logType: LogType.INFO,
         message: 'Credit balance reduced',
@@ -259,13 +277,14 @@ export class CreditService {
         throw err;
       } else {
         throw await new ScsCodeException({
-          code: ConfigErrorCode.ERROR_ADDING_CREDIT,
+          code: ConfigErrorCode.ERROR_SPENDING_CREDIT,
           status: 500,
-          context: context,
-          sourceFunction: 'addCredit()',
+          context,
+          sourceFunction: 'spendCredit()',
           sourceModule: 'CreditService',
         }).writeToMonitor({
           project_uuid: event.body.project_uuid,
+          data: event.body,
           sendAdminAlert: true,
         });
       }
@@ -279,20 +298,24 @@ export class CreditService {
    * @param context
    */
   static async refundCredit(
-    event: { referenceTable: string; referenceId: string },
+    event: { referenceTable: string; referenceId: string; product_id?: number },
     context: ServiceContext,
   ): Promise<any> {
     //Check if spend creditTransaction exists for this reference
     const creditTransaction: CreditTransaction = await new CreditTransaction(
       {},
       context,
-    ).populateRefundableTransaction(event.referenceTable, event.referenceId);
+    ).populateRefundableTransaction(
+      event.referenceTable,
+      event.referenceId,
+      event.product_id,
+    );
 
     if (!creditTransaction.exists()) {
       throw await new ScsCodeException({
         code: ConfigErrorCode.CREDIT_TRANSACTION_FOR_REFUND_NOT_EXISTS_OR_REFUNDED,
         status: 500,
-        context: context,
+        context,
         sourceFunction: 'refundCredit()',
         sourceModule: 'CreditService',
       }).writeToMonitor({
@@ -321,7 +344,7 @@ export class CreditService {
         project_uuid: creditTransaction.project_uuid,
         credit_id: credit.id,
         product_id: creditTransaction.product_id,
-        direction: 1,
+        direction: CreditDirection.RECEIVE,
         amount: creditTransaction.amount,
         referenceTable: creditTransaction.referenceTable,
         referenceId: creditTransaction.referenceId,
@@ -340,7 +363,7 @@ export class CreditService {
       await context.mysql.commit(conn);
 
       await new Lmas().writeLog({
-        context: context,
+        context,
         project_uuid: credit.project_uuid,
         logType: LogType.INFO,
         message: 'Credit transaction refunded',
@@ -365,7 +388,7 @@ export class CreditService {
         throw await new ScsCodeException({
           code: ConfigErrorCode.ERROR_REFUNDING_CREDIT_TRANSACTION,
           status: 500,
-          context: context,
+          context,
           sourceFunction: 'refundCredit()',
           sourceModule: 'CreditService',
         }).writeToMonitor({
@@ -378,6 +401,80 @@ export class CreditService {
         });
       }
     }
+    return true;
+  }
+
+  /**
+   * Returns the credit package's stripe API ID for generating a payment URL through the Stripe SDK
+   * @param {{ package_id: number; project_uuid: string }} { package_id, project_uuid }
+   * @param {ServiceContext} context
+   * @returns {Promise<string>}
+   */
+  static async getCreditPackageStripeId(
+    { package_id, project_uuid }: { package_id: number; project_uuid: string },
+    context: ServiceContext,
+  ): Promise<string> {
+    const creditPackage = await new CreditPackage({}, context).populateById(
+      package_id,
+    );
+
+    if (!creditPackage?.stripeId) {
+      throw await new ScsCodeException({
+        code: ConfigErrorCode.STRIPE_ID_NOT_VALID,
+        status: 500,
+        errorCodes: ConfigErrorCode,
+        sourceFunction: 'getCreditPackageStripeId',
+        sourceModule: ServiceName.CONFIG,
+      }).writeToMonitor({
+        project_uuid,
+        data: {
+          creditPackage: new CreditPackage(creditPackage).serialize(),
+        },
+      });
+    }
+
+    return creditPackage.stripeId;
+  }
+
+  /**
+   * Returns all active credit packages
+   * @param {ServiceContext} context
+   * @returns {Promise<string>}
+   */
+  static async getCreditPackages(
+    event: any,
+    context: ServiceContext,
+  ): Promise<string> {
+    return await new CreditPackage({}, context).getAll();
+  }
+
+  /**
+   * Add credits to a new project from the freemium sub. package
+   * @param {{ project_uuid: string }} { project_uuid }
+   * @param {ServiceContext} context
+   * @returns {Promise<boolean>}
+   */
+  static async addFreemiumCredits(
+    { project_uuid }: { project_uuid: string },
+    context: ServiceContext,
+  ): Promise<boolean> {
+    // Freemium package is always first, has ID=1
+    const freemiumPackage = await new SubscriptionPackage(
+      {},
+      context,
+    ).populateById(1);
+
+    await CreditService.addCredit(
+      {
+        body: new AddCreditDto({
+          project_uuid,
+          amount: freemiumPackage.creditAmount,
+          referenceTable: DbTables.SUBSCRIPTION,
+          referenceId: freemiumPackage.id,
+        }),
+      },
+      context,
+    );
     return true;
   }
 }

@@ -24,6 +24,7 @@ import { ServiceContext } from '@apillon/service-lib';
 import { getWalletSeed } from '../../lib/seed';
 import { SubstrateRpcApi } from './rpc-api';
 import { types as PhalaTypesBundle } from '@phala/sdk';
+import { substrateChainToWorkerName } from '../../lib/helpers';
 
 export class SubstrateService {
   static async createTransaction(
@@ -41,6 +42,8 @@ export class SubstrateService {
     },
     context: ServiceContext,
   ) {
+    // connect to chain
+    // TODO: Add logic if endpoint is unavailable to fetch the backup one.
     const endpoint = await new Endpoint({}, context).populateByChain(
       params.chain,
       ChainType.SUBSTRATE,
@@ -80,6 +83,7 @@ export class SubstrateService {
     }
 
     console.info('Creating APIPromise');
+    // TODO: Refactor to txwrapper when typesBundle supported
     const api = new SubstrateRpcApi(endpoint.url, typesBundle);
     console.info('Start db transaction.');
     // Start connection to database at the beginning of the function
@@ -109,6 +113,7 @@ export class SubstrateService {
       const pair = keyring.addFromUri(seed);
       console.info('Generating unsigned transaction');
       const unsignedTx = await api.getUnsignedTransaction(params.transaction);
+      // TODO: add validation service for transaction to detect and prevent weird transactions.
       console.log('signing transaction with key from address: ', pair.address);
       const signed = await unsignedTx.signAsync(pair, {
         nonce: wallet.nextNonce,
@@ -157,7 +162,7 @@ export class SubstrateService {
       try {
         await sendToWorkerQueue(
           env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
-          WorkerName.TRANSMIT_SUBSTRATE_TRANSACTION,
+          substrateChainToWorkerName(params.chain),
           [
             {
               chain: params.chain,
@@ -264,6 +269,7 @@ export class SubstrateService {
       }
     }
 
+    // TODO: Refactor to txwrapper when typesBundle supported
     const api = new SubstrateRpcApi(endpoint.url, typesBundle);
     for (const wallet of wallets) {
       const transactions = await new Transaction({}, context).getList(
@@ -278,6 +284,7 @@ export class SubstrateService {
 
       let latestSuccess = null;
       let transmitted = 0;
+      // TODO: consider batching transaction api.tx.utility.batch
       for (const transaction of transactions) {
         console.log(
           `Processing transaction with id ${transaction.id} (status=${transaction.transactionStatus}, ` +

@@ -24,3 +24,9 @@ export class ScsValidationException extends ValidationException {
     super(model, ConfigErrorCode);
   }
 }
+
+export class ScsNotFoundException extends ScsCodeException {
+  constructor(code: ConfigErrorCode) {
+    super({ code, status: 404 });
+  }
+}

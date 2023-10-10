@@ -1,28 +1,29 @@
 /* eslint-disable @typescript-eslint/member-ordering */
-import { prop } from '@rawmodel/core';
-import { stringParser, integerParser, dateParser } from '@rawmodel/parsers';
-import { presenceValidator } from '@rawmodel/validators';
 import {
-  ProjectAccessModel,
-  env,
-  getQueryParams,
   PoolConnection,
   PopulateFrom,
-  selectAndCountQuery,
+  ProjectAccessModel,
   SerializeFor,
   SqlModelStatus,
   TrashedFilesQueryFilter,
+  getQueryParams,
+  selectAndCountQuery,
 } from '@apillon/lib';
+import { ServiceContext } from '@apillon/service-lib';
+import { prop } from '@rawmodel/core';
+import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
+import { presenceValidator } from '@rawmodel/validators';
+import { v4 as uuidV4 } from 'uuid';
 import {
   DbTables,
   FileStatus,
   ObjectType,
   StorageErrorCode,
 } from '../../../config/types';
-import { ServiceContext } from '@apillon/service-lib';
-import { v4 as uuidV4 } from 'uuid';
-import { Bucket } from '../../bucket/models/bucket.model';
 import { StorageCodeException } from '../../../lib/exceptions';
+import { addJwtToIPFSUrl } from '../../../lib/ipfs-utils';
+import { Bucket } from '../../bucket/models/bucket.model';
+import { ProjectConfig } from '../../config/models/project-config.model';
 import { Directory } from '../../directory/models/directory.model';
 
 export class File extends ProjectAccessModel {
@@ -269,7 +270,11 @@ export class File extends ProjectAccessModel {
       PopulateFrom.ADMIN,
       PopulateFrom.PROFILE,
     ],
-    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
     validators: [],
   })
   public downloadLink: string;
@@ -395,11 +400,17 @@ export class File extends ProjectAccessModel {
       filter.serialize(),
     );
 
+    //Get IPFS gateway
+    const ipfsGateway = await new ProjectConfig(
+      { project_uuid: b.project_uuid },
+      this.getContext(),
+    ).getIpfsGateway();
+
     const sqlQuery = {
       qSelect: `
         SELECT ${ObjectType.FILE} as type, f.id, f.status, f.name, f.CID, f.createTime, f.updateTime,
         f.contentType as contentType, f.size as size, f.directory_id as parentDirectoryId,
-        f.file_uuid as file_uuid, CONCAT("${env.STORAGE_IPFS_GATEWAY}", f.CID) as link
+        f.file_uuid as file_uuid, CONCAT("${ipfsGateway.url}", f.CID) as link
         `,
       qFrom: `
         FROM \`${DbTables.FILE}\` f
@@ -416,7 +427,20 @@ export class File extends ProjectAccessModel {
       `,
     };
 
-    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'f.id');
+    const data = await selectAndCountQuery(
+      context.mysql,
+      sqlQuery,
+      params,
+      'f.id',
+    );
+
+    if (ipfsGateway.private) {
+      for (const item of data.items) {
+        item.link = addJwtToIPFSUrl(item.link, b.project_uuid);
+      }
+    }
+
+    return data;
   }
 
   /**

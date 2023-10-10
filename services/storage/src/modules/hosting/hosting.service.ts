@@ -6,6 +6,7 @@ import {
   CreateWebsiteDto,
   DeploymentQueryFilter,
   DeployWebsiteDto,
+  DomainQueryFilter,
   env,
   Lmas,
   LogType,
@@ -15,6 +16,7 @@ import {
   Scs,
   SerializeFor,
   ServiceName,
+  spendCreditAction,
   SpendCreditDto,
   WebsiteQueryFilter,
   WebsitesQuotaReachedQueryFilter,
@@ -61,8 +63,11 @@ export class HostingService {
     ).getList(context, new WebsiteQueryFilter(event.query));
   }
 
-  static async listDomains(event: any, context: ServiceContext) {
-    return await new Website({}, context).listDomains(context);
+  static async listDomains(
+    event: { query: DomainQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new Website({}, context).listDomains(event.query);
   }
 
   static async getWebsite(event: { id: any }, context: ServiceContext) {
@@ -92,37 +97,20 @@ export class HostingService {
 
     const website_uuid = uuidV4();
     const spendCredit: SpendCreditDto = new SpendCreditDto(
-      {},
+      {
+        project_uuid: event.body.project_uuid,
+        product_id: ProductCode.HOSTING_WEBSITE,
+        referenceTable: DbTables.WEBSITE,
+        referenceId: website_uuid,
+        location: 'HostingService/createWebsite',
+        service: ServiceName.STORAGE,
+      },
       context,
-    ).populate({
-      project_uuid: event.body.project_uuid,
-      product_id: ProductCode.HOSTING_WEBSITE,
-      referenceTable: DbTables.WEBSITE,
-      referenceId: website_uuid,
-    });
-    await new Scs(context).spendCredit(spendCredit);
+    );
 
-    try {
-      await website.createNewWebsite(context, website_uuid);
-    } catch (err) {
-      try {
-        await new Scs(context).refundCredit(DbTables.WEBSITE, website_uuid);
-      } catch (refoundError) {
-        await new Lmas().writeLog({
-          logType: LogType.ERROR,
-          message: 'Error refunding credit',
-          location: 'HostingService.createWebsite',
-          service: ServiceName.STORAGE,
-          data: {
-            referenceTable: DbTables.WEBSITE,
-            referenceId: website_uuid,
-          },
-          sendAdminAlert: true,
-        });
-      }
-
-      throw err;
-    }
+    await spendCreditAction(context, spendCredit, () =>
+      website.createNewWebsite(context, website_uuid),
+    );
 
     await new Lmas().writeLog({
       context,
@@ -167,6 +155,9 @@ export class HostingService {
           });
         }
       }
+
+      //TODO: Spend credit ?
+
       website.domainChangeDate = new Date();
     }
 
@@ -297,6 +288,7 @@ export class HostingService {
       context,
     ).populateLastDeployment(website.id, DeploymentEnvironment.PRODUCTION);
 
+    //Get deployment number
     let deploymentNumber = 1;
     if (event.body.environment == DeploymentEnvironment.STAGING) {
       if (lastStagingDeployment.exists()) {
@@ -317,8 +309,24 @@ export class HostingService {
       }
     }
 
+    //Check if enough storage available
+    //Check used storage
+    const storageInfo = await StorageService.getStorageInfo(
+      { project_uuid: sourceBucket.project_uuid },
+      context,
+    );
+    if (
+      storageInfo.usedStorage + sourceBucket.size >
+      storageInfo.availableStorage
+    ) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.NOT_ENOUGH_STORAGE_SPACE,
+        status: 400,
+      });
+    }
+
     //Create deployment record
-    const d: Deployment = new Deployment({}, context).populate({
+    const deployment: Deployment = new Deployment({}, context).populate({
       website_id: website.id,
       bucket_id:
         event.body.environment == DeploymentEnvironment.STAGING
@@ -329,15 +337,37 @@ export class HostingService {
     });
 
     try {
-      await d.validate();
+      await deployment.validate();
     } catch (err) {
-      await d.handle(err);
-      if (!d.isValid()) {
-        throw new StorageValidationException(d);
+      await deployment.handle(err);
+      if (!deployment.isValid()) {
+        throw new StorageValidationException(deployment);
       }
     }
 
-    await d.insert();
+    await deployment.insert();
+
+    //Spend credit
+    try {
+      //TODO: Deployment will be refactored to uuids, and it will be possible to use that uuid as a reference!
+      const spendCredit: SpendCreditDto = new SpendCreditDto(
+        {
+          project_uuid: website.project_uuid,
+          product_id:
+            event.body.environment == DeploymentEnvironment.STAGING
+              ? ProductCode.HOSTING_DEPLOY_TO_STAGING
+              : ProductCode.HOSTING_DEPLOY_TO_PRODUCTION,
+          referenceTable: DbTables.DEPLOYMENT,
+          referenceId: deployment.id,
+        },
+        context,
+      );
+      await new Scs(context).spendCredit(spendCredit);
+    } catch (error) {
+      //If not enough credit or spend fails, delete deployment and throw error.
+      await deployment.delete();
+      throw error;
+    }
 
     //Execute deploy or Send message to SQS
     if (
@@ -352,7 +382,7 @@ export class HostingService {
         params: { FunctionName: 'test' },
       };
       const parameters = {
-        deployment_id: d.id,
+        deployment_id: deployment.id,
         clearBucketForUpload: event.body.clearBucketForUpload,
       };
       const wd = new WorkerDefinition(
@@ -369,7 +399,7 @@ export class HostingService {
         QueueWorkerType.EXECUTOR,
       );
       await worker.runExecutor({
-        deployment_id: d.id,
+        deployment_id: deployment.id,
         clearBucketForUpload: event.body.clearBucketForUpload,
       });
     } else {
@@ -379,7 +409,7 @@ export class HostingService {
         WorkerName.DEPLOY_WEBSITE_WORKER,
         [
           {
-            deployment_id: d.id,
+            deployment_id: deployment.id,
             clearBucketForUpload: event.body.clearBucketForUpload,
           },
         ],
@@ -388,7 +418,7 @@ export class HostingService {
       );
     }
 
-    return d.serialize(SerializeFor.PROFILE);
+    return deployment.serialize(SerializeFor.PROFILE);
   }
 
   //#endregion

@@ -2,6 +2,7 @@ import {
   Context,
   env,
   LogType,
+  refundCredit,
   runWithWorkers,
   ServiceName,
   SqlModelStatus,
@@ -13,7 +14,7 @@ import {
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { CollectionStatus, TransactionType } from '../config/types';
+import { CollectionStatus, DbTables, TransactionType } from '../config/types';
 import { Collection } from '../modules/nfts/models/collection.model';
 import { Transaction } from '../modules/transaction/models/transaction.model';
 
@@ -57,6 +58,27 @@ export class TransactionStatusWorker extends BaseQueueWorker {
           ) {
             //Update collection
             await this.updateCollectionStatus(nftTransaction);
+          }
+
+          //Refund credit if transaction failed
+          if (res.transactionStatus > 2) {
+            //For ContractDeploy, reference for credit is collection. For other transaction_uuid se set as reference.
+            const referenceTable =
+              nftTransaction.transactionType == TransactionType.DEPLOY_CONTRACT
+                ? DbTables.COLLECTION
+                : DbTables.TRANSACTION;
+            const referenceId =
+              nftTransaction.transactionType == TransactionType.DEPLOY_CONTRACT
+                ? nftTransaction.refId // this is collection_uuid
+                : nftTransaction.transaction_uuid;
+
+            await refundCredit(
+              this.context,
+              referenceTable,
+              referenceId.toString(),
+              'TransactionStatusWorker.runExecutor',
+              ServiceName.NFTS,
+            );
           }
         }
       },

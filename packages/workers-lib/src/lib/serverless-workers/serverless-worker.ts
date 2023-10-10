@@ -44,7 +44,7 @@ export abstract class ServerlessWorker {
    * Code to execute in case of error
    * @param error mandatory error data
    */
-  public abstract onError(error: Error): Promise<any>;
+  public abstract onError(error: Error, data?: any): Promise<any>;
 
   public abstract onUpdateWorkerDefinition(): Promise<void>;
 
@@ -169,7 +169,7 @@ export abstract class ServerlessWorker {
       await this.onSuccess(data.afterArg, successData);
       await this.updateOnCompleted();
     } catch (error) {
-      await this.onError(error);
+      await this.onError(error, data.executeArg);
       try {
         await this.updateOnError(error);
       } catch (err) {

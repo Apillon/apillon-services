@@ -57,7 +57,7 @@ describe('Apillon API storage tests', () => {
     //User 1 project & other data
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
 
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
     testService = await createTestProjectService(
       stage.devConsoleContext,
       testProject,
@@ -96,7 +96,7 @@ describe('Apillon API storage tests', () => {
 
     //User 2 project & other data
     testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testProject2 = await createTestProject(testUser2, stage.devConsoleContext);
+    testProject2 = await createTestProject(testUser2, stage);
     testService2 = await createTestProjectService(
       stage.devConsoleContext,
       testProject2,
