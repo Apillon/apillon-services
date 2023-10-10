@@ -1,4 +1,4 @@
-import { SubstrateChain, env } from '@apillon/lib';
+import { env, SubstrateChain } from '@apillon/lib';
 import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/indexer.service';
 import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/indexer.service';
 
@@ -18,4 +18,12 @@ export const ParachainConfig = {
     sqsUrl: env.AUTH_AWS_WORKER_SQS_URL,
     indexer: KiltBlockchainIndexer,
   },
+  // currently we don't have worker to perform state update
+  // PHALA: {
+  //   id: SubstrateChain.PHALA,
+  //   name: 'PHALA',
+  //   webhookWorkerName: 'UpdatePhalaStateWorker',
+  //   sqsUrl: env.AUTH_AWS_WORKER_SQS_URL,
+  //   indexer: PhalaBlockchainIndexer,
+  // },
 };

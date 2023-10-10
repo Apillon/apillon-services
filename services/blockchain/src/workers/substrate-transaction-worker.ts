@@ -22,11 +22,6 @@ import { executeWebhooksForTransmittedTransactionsInWallet } from '../lib/webhoo
 import { BaseBlockchainIndexer } from '../modules/blockchain-indexers/substrate/base-blockchain-indexer';
 import { Wallet } from '../modules/wallet/wallet.model';
 
-export enum SubstrateChainName {
-  KILT = 'KILT',
-  CRUST = 'CRUST',
-}
-
 export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
   private chainId: string;
   private chainName: string;

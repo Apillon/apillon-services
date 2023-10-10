@@ -1,4 +1,3 @@
-import { Chain } from './../../config/types';
 import {
   AdvancedSQLModel,
   ChainType,
@@ -31,8 +30,9 @@ import { getTokenFromChain } from '../../lib/utils';
 import {
   SystemEvent,
   TransferTransaction,
-} from '../blockchain-indexers/substrate/kilt/data-models';
+} from '../blockchain-indexers/substrate/data-models';
 import { StorageOrderTransaction } from '../blockchain-indexers/substrate/crust/data-models';
+
 export class TransactionLog extends AdvancedSQLModel {
   public readonly tableName = DbTables.TRANSACTION_LOG;
 
@@ -469,6 +469,39 @@ export class TransactionLog extends AdvancedSQLModel {
       this.action = TxAction.UNKNOWN;
       this.direction = TxDirection.UNKNOWN;
     }
+
+    this.calculateTotalPrice();
+
+    return this;
+  }
+
+  public createFromPhalaIndexerData(
+    data: {
+      system: SystemEvent;
+      transfers: TransferTransaction[];
+    },
+    wallet: Wallet,
+  ) {
+    this.ts = data?.system?.createdAt;
+    this.blockId = data?.system?.blockNumber;
+    this.addressFrom = data?.transfers[0]?.from;
+    this.addressTo = data?.transfers[0]?.to;
+    this.amount = '0';
+
+    for (const transfer of data?.transfers) {
+      this.addToAmount(transfer?.amount?.toString() || '0');
+    }
+
+    this.hash = data?.system?.extrinsicHash;
+    this.wallet = wallet.address;
+
+    this.status =
+      data?.system?.status === 1 ? TxStatus.COMPLETED : TxStatus.FAILED;
+    this.chainType = wallet.chainType;
+    this.chain = wallet.chain;
+    this.token = TxToken.PHALA_TOKEN;
+    this.fee =
+      data?.system?.fee?.toString() || data?.transfers[0]?.fee?.toString();
 
     this.calculateTotalPrice();
 

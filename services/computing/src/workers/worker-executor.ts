@@ -20,6 +20,7 @@ export enum WorkerName {
   TEST_WORKER = 'TestWorker',
   SCHEDULER = 'scheduler',
   TRANSACTION_STATUS = 'TransactionStatusWorker',
+  UPDATE_PHALA_STATUS_WORKER = 'UpdatePhalaStatusWorker',
 }
 
 export async function handler(event: any) {
@@ -118,10 +119,6 @@ export async function handleLambdaEvent(
         `ERROR - INVALID WORKER NAME: ${workerDefinition.workerName}`,
       );
   }
-
-  // if ([WorkerName.SYNC_OLD_API, WorkerName.SYNC_DELETED].includes(event.workerName)) {
-  //   await context.closeMongo();
-  // }
 }
 
 /**

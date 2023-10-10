@@ -1,14 +1,14 @@
 import {
   ChainType,
-  EvmChain,
-  SubstrateChain,
-  dateToSqlString,
   Context,
-  ServiceName,
+  dateToSqlString,
   env,
+  EvmChain,
   LogType,
   PoolConnection,
   SerializeFor,
+  ServiceName,
+  SubstrateChain,
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
@@ -29,6 +29,11 @@ import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate
 import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/indexer.service';
 import { WalletDeposit } from '../modules/accounting/wallet-deposit.model';
 import { ethers } from 'ethers';
+import { PhalaBlockchainIndexer } from '../modules/blockchain-indexers/substrate/phala/indexer.service';
+import {
+  SystemEvent,
+  TransferTransaction,
+} from '../modules/blockchain-indexers/substrate/data-models';
 
 export class TransactionLogWorker extends BaseQueueWorker {
   private batchLimit: number;
@@ -224,9 +229,43 @@ export class TransactionLogWorker extends BaseQueueWorker {
               ),
             );
           },
-          [SubstrateChain.PHALA]: () => {
-            //
-            throw new Error('PHALA is not supported yet!');
+          [SubstrateChain.PHALA]: async () => {
+            const indexer = new PhalaBlockchainIndexer();
+            const systems = await indexer.getAllSystemEvents(
+              wallet.address,
+              lastBlock,
+              undefined,
+              limit,
+            );
+            console.log(`Got ${systems.length} Phala system events!`);
+            const { transfers } =
+              await indexer.getAccountBalanceTransfersForTxs(
+                wallet.address,
+                systems.map((x) => x.extrinsicHash),
+              );
+            console.log(`Got ${transfers.length} Phala transfers!`);
+            // prepare transfer data
+            const data: {
+              system: SystemEvent;
+              transfers: TransferTransaction[];
+            }[] = [];
+            for (const s of systems) {
+              const filteredTransfers = transfers.filter(
+                (t) =>
+                  t.blockNumber === s.blockNumber &&
+                  t.extrinsicHash === s.extrinsicHash,
+              );
+              data.push({
+                system: s,
+                transfers: filteredTransfers,
+              });
+            }
+            return data.map((x) =>
+              new TransactionLog({}, this.context).createFromPhalaIndexerData(
+                x,
+                wallet,
+              ),
+            );
           },
         };
         return (await subOptions[wallet.chain]()) || false;

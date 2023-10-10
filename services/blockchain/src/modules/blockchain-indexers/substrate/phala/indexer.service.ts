@@ -2,7 +2,8 @@ import { gql } from 'graphql-request';
 import { env } from '@apillon/lib';
 import { BaseBlockchainIndexer } from '../base-blockchain-indexer';
 import { PhalaGqlQueries } from './graphql-queries';
-import { SystemEvent } from '../kilt/data-models';
+import { SystemEvent, TransferTransaction } from '../data-models';
+import { PhatContractsInstantiatingTransaction } from './data-models';
 
 export class PhalaBlockchainIndexer extends BaseBlockchainIndexer {
   constructor() {
@@ -14,24 +15,78 @@ export class PhalaBlockchainIndexer extends BaseBlockchainIndexer {
   }
 
   public async getAllSystemEvents(
-    _account: string,
-    _fromBlock: number,
-    _toBlock?: number,
-    _limit?: number,
+    account: string,
+    fromBlock: number,
+    toBlock?: number,
+    limit?: number,
   ): Promise<SystemEvent[]> {
-    throw Error('Not implemented');
+    const data = await this.graphQlClient.request<{ systems: SystemEvent[] }>(
+      gql`
+        ${PhalaGqlQueries.ACCOUNT_SYSTEM_EVENTS_QUERY}
+      `,
+      {
+        account,
+        fromBlock,
+        toBlock,
+        limit,
+      },
+    );
+
+    return data.systems;
   }
 
+  /**
+   * Method is not used in code, only used in tests
+   * @param account
+   * @param fromBlock
+   * @param toBlock
+   */
   public async getAllTransactions(
-    _account: string,
-    _fromBlock: number,
-    _toBlock: number,
+    account: string,
+    fromBlock: number,
+    toBlock: number,
   ) {
-    throw Error('Not implemented');
+    const data = await this.graphQlClient.request<{
+      systems: SystemEvent;
+      transfers: TransferTransaction[];
+      phatContractsInstantiatings: PhatContractsInstantiatingTransaction[];
+    }>(
+      gql`
+        ${PhalaGqlQueries.ACCOUNT_ALL_TRANSACTIONS_QUERY}
+      `,
+      {
+        account,
+        fromBlock,
+        toBlock,
+      },
+    );
+
+    return {
+      transfers: data.transfers,
+      systems: data.systems,
+      phatContractsInstantiatings: data.phatContractsInstantiatings,
+    };
+  }
+
+  public async getAccountBalanceTransfersForTxs(
+    account: string,
+    hashes: string[],
+  ): Promise<{
+    transfers: TransferTransaction[];
+  }> {
+    return await this.graphQlClient.request(
+      gql`
+        ${PhalaGqlQueries.ACCOUNT_TRANSFERS_BY_TX_HASHES_QUERY}
+      `,
+      {
+        account,
+        hashes,
+      },
+    );
   }
 
   public async getAccountTransactionsByHash(
-    address: string,
+    account: string,
     extrinsicHash: string,
   ): Promise<any> {
     return await this.graphQlClient.request(
@@ -39,7 +94,7 @@ export class PhalaBlockchainIndexer extends BaseBlockchainIndexer {
         ${PhalaGqlQueries.ACCOUNT_TRANSACTION_BY_HASH}
       `,
       {
-        address,
+        account,
         extrinsicHash,
       },
     );
