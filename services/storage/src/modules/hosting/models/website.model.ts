@@ -1,5 +1,6 @@
 import {
   Context,
+  DomainQueryFilter,
   Lmas,
   LogType,
   PoolConnection,
@@ -656,10 +657,12 @@ export class Website extends ProjectAccessModel {
     }
   }
 
-  public async listDomains(context: ServiceContext) {
-    return await context.mysql.paramExecute(
+  public async listDomains(query: DomainQueryFilter) {
+    return await this.getContext().mysql.paramExecute(
       `
-        SELECT w.domain, (
+      SELECT domain, lastDeploymentDate FROM (
+        SELECT w.domain, 
+        (
           SELECT d.updateTime 
           FROM \`${DbTables.DEPLOYMENT}\` d 
           WHERE d.website_id = w.id
@@ -667,15 +670,28 @@ export class Website extends ProjectAccessModel {
           AND d.deploymentStatus = 10
           ORDER BY d.updateTime DESC
           LIMIT 1
-        ) as lastDeploymentDate
+        ) as lastDeploymentDate,
+        (
+          SELECT c.domain
+          FROM \`${DbTables.IPFS_CLUSTER}\` c
+          LEFT JOIN \`${DbTables.PROJECT_CONFIG}\` pc 
+            ON pc.ipfsCluster_id = c.id
+            AND pc.project_uuid = w.project_uuid
+          WHERE (pc.project_uuid = w.project_uuid OR c.isDefault = 1)
+          AND c.status = ${SqlModelStatus.ACTIVE}
+          ORDER BY c.isDefault ASC
+          LIMIT 1
+        ) as ipfsClusterDomain
         FROM \`${DbTables.WEBSITE}\` w
         JOIN \`${DbTables.BUCKET}\` b ON b.id = w.productionBucket_id
         WHERE w.domain IS NOT NULL
         AND w.domain <> ''
         AND b.CID IS NOT NULL
-        AND w.status <> ${SqlModelStatus.DELETED};
+        AND w.status <> ${SqlModelStatus.DELETED}
+      ) t
+      WHERE (@ipfsClusterDomain IS NULL OR ipfsClusterDomain = @ipfsClusterDomain)
         `,
-      {},
+      { ipfsClusterDomain: query.ipfsClusterDomain },
     );
   }
 }

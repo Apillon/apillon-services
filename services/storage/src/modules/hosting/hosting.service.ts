@@ -6,6 +6,7 @@ import {
   CreateWebsiteDto,
   DeploymentQueryFilter,
   DeployWebsiteDto,
+  DomainQueryFilter,
   env,
   Lmas,
   LogType,
@@ -62,8 +63,11 @@ export class HostingService {
     ).getList(context, new WebsiteQueryFilter(event.query));
   }
 
-  static async listDomains(event: any, context: ServiceContext) {
-    return await new Website({}, context).listDomains(context);
+  static async listDomains(
+    event: { query: DomainQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new Website({}, context).listDomains(event.query);
   }
 
   static async getWebsite(event: { id: any }, context: ServiceContext) {
@@ -284,6 +288,7 @@ export class HostingService {
       context,
     ).populateLastDeployment(website.id, DeploymentEnvironment.PRODUCTION);
 
+    //Get deployment number
     let deploymentNumber = 1;
     if (event.body.environment == DeploymentEnvironment.STAGING) {
       if (lastStagingDeployment.exists()) {
@@ -302,6 +307,22 @@ export class HostingService {
       if (lastProductionDeployment.exists()) {
         deploymentNumber = lastProductionDeployment.number + 1;
       }
+    }
+
+    //Check if enough storage available
+    //Check used storage
+    const storageInfo = await StorageService.getStorageInfo(
+      { project_uuid: sourceBucket.project_uuid },
+      context,
+    );
+    if (
+      storageInfo.usedStorage + sourceBucket.size >
+      storageInfo.availableStorage
+    ) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.NOT_ENOUGH_STORAGE_SPACE,
+        status: 400,
+      });
     }
 
     //Create deployment record

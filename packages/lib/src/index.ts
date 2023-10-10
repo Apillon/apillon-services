@@ -51,6 +51,7 @@ export * from './lib/at-services/storage/dtos/deploy-website.dto';
 export * from './lib/at-services/storage/dtos/deployment-query-filter.dto';
 export * from './lib/at-services/storage/dtos/websites-quota-reached-query-filter.dto';
 export * from './lib/at-services/storage/dtos/create-s3-urls-for-upload.dto';
+export * from './lib/at-services/storage/dtos/domain-query-filter.dto';
 
 //#REGION Authentication API
 export * from './lib/at-services/authentication/authentication';
@@ -126,6 +127,7 @@ export * from './lib/at-services/lmas/dtos/request-logs-query-filter.dto';
 export * from './lib/exceptions/exceptions';
 export * from './lib/exceptions/http-exception';
 export * from './lib/base-models/base-query-filter.model';
+export * from './lib/base-models/base-project-query-filter.model';
 export * from './lib/parsers';
 export * from './lib/cache';
 export * from './lib/captcha';

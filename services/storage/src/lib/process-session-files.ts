@@ -1,32 +1,35 @@
 import {
+  AWS_S3,
+  CacheKeyPrefix,
+  EndFileUploadSessionDto,
+  Lmas,
+  LogType,
+  ServiceName,
+  env,
+  invalidateCacheMatch,
+  runWithWorkers,
+  writeLog,
+} from '@apillon/lib';
+import { ServiceContext } from '@apillon/service-lib';
+import {
   FileStatus,
   FileUploadRequestFileStatus,
   FileUploadSessionStatus,
+  StorageErrorCode,
 } from '../config/types';
-import { ServiceContext } from '@apillon/service-lib';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { Directory } from '../modules/directory/models/directory.model';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
+import { File } from '../modules/storage/models/file.model';
+import { StorageService } from '../modules/storage/storage.service';
+import { StorageCodeException } from './exceptions';
 import { getSessionFilesOnS3 } from './file-upload-session-s3-files';
 import {
   generateDirectoriesForFUR,
   generateDirectoriesForFURs,
   generateDirectoriesFromPath,
 } from './generate-directories-from-path';
-import { File } from '../modules/storage/models/file.model';
-import {
-  AWS_S3,
-  CacheKeyPrefix,
-  EndFileUploadSessionDto,
-  env,
-  invalidateCacheMatch,
-  Lmas,
-  LogType,
-  runWithWorkers,
-  ServiceName,
-  writeLog,
-} from '@apillon/lib';
 
 /**
  * This function is called on session end.
@@ -48,7 +51,19 @@ export async function processSessionFiles(
     context,
   ).populateFileUploadRequestsInSession(session.id, context);
   //Get files on s3 for this session
-  const filesOnS3 = await getSessionFilesOnS3(bucket, session);
+  const filesOnS3 = await getSessionFilesOnS3(bucket, session?.session_uuid);
+
+  //Check used storage
+  const storageInfo = await StorageService.getStorageInfo(
+    { project_uuid: bucket.project_uuid },
+    context,
+  );
+  if (storageInfo.usedStorage + filesOnS3.size > storageInfo.availableStorage) {
+    throw new StorageCodeException({
+      code: StorageErrorCode.NOT_ENOUGH_STORAGE_SPACE,
+      status: 400,
+    });
+  }
 
   //get directories in bucket
   const directories = await new Directory(

@@ -215,39 +215,16 @@ export class NftsService {
     collection.collectionStatus = CollectionStatus.DEPLOY_INITIATED;
     await collection.update();
 
-    //Send message to SQS or run directly for local and test environments
-    if (
-      env.APP_ENV == AppEnvironment.LOCAL_DEV ||
-      env.APP_ENV == AppEnvironment.TEST
-    ) {
-      //Call Storage MS function, which will trigger worker
-      await new StorageMicroservice(
-        context,
-      ).executePrepareCollectionBaseUriWorker({
-        bucket_uuid: collection.bucket_uuid,
-        collection_uuid: collection.collection_uuid,
-        collectionName: collection.name,
-        imagesSession: collection.imagesSession,
-        metadataSession: collection.metadataSession,
-      });
-    } else {
-      //send message to SQS
-      await sendToWorkerQueue(
-        env.STORAGE_AWS_WORKER_SQS_URL,
-        'PrepareBaseUriForCollectionWorker',
-        [
-          {
-            bucket_uuid: collection.bucket_uuid,
-            collection_uuid: collection.collection_uuid,
-            collectionName: collection.name,
-            imagesSession: collection.imagesSession,
-            metadataSession: collection.metadataSession,
-          },
-        ],
-        null,
-        null,
-      );
-    }
+    //Call Storage MS function, which will prepareBase uri.
+    //At the end, this function will trigger workers: DeployCollectionWorker, PrepareMetadataForCollectionWorker
+
+    await new StorageMicroservice(context).prepareCollectionBaseUri({
+      bucket_uuid: collection.bucket_uuid,
+      collection_uuid: collection.collection_uuid,
+      collectionName: collection.name,
+      imagesSession: collection.imagesSession,
+      metadataSession: collection.metadataSession,
+    });
 
     return collection.serialize(getSerializationStrategy(context));
   }

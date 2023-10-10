@@ -1,5 +1,6 @@
 import {
   ApillonHostingApiCreateS3UrlsForUploadDto,
+  DomainQueryFilter,
   EndFileUploadSessionDto,
 } from '@apillon/lib';
 import {
@@ -13,8 +14,8 @@ import { ApillonApiContext } from '../../context';
 
 @Injectable()
 export class HostingService {
-  async listDomains(context: ApillonApiContext) {
-    return (await new StorageMicroservice(context).listDomains()).data;
+  async listDomains(context: ApillonApiContext, query: DomainQueryFilter) {
+    return (await new StorageMicroservice(context).listDomains(query)).data;
   }
 
   async getWebsite(context: ApillonApiContext, id: any) {
