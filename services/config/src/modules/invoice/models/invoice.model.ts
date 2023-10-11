@@ -84,7 +84,6 @@ export class Invoice extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
-      SerializeFor.PROFILE,
       SerializeFor.SERVICE,
     ],
   })
@@ -98,7 +97,6 @@ export class Invoice extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
-      SerializeFor.PROFILE,
       SerializeFor.SERVICE,
     ],
   })

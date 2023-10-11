@@ -186,11 +186,12 @@ export class SubscriptionService {
     { project_uuid }: { project_uuid: string },
     context: ServiceContext,
     conn?: PoolConnection,
-  ) {
-    return await new Subscription(
+  ): Promise<Subscription> {
+    const subscription = await new Subscription(
       { project_uuid },
       context,
     ).getActiveSubscription(project_uuid, conn);
+    return subscription.serialize(SerializeFor.PROFILE) as Subscription;
   }
 
   /**
@@ -222,7 +223,15 @@ export class SubscriptionService {
             SerializeFor.SERVICE,
           ),
         });
-        throw new ScsNotFoundException(ConfigErrorCode.SUBSCRIPTION_NOT_FOUND);
+        throw await new ScsNotFoundException(
+          ConfigErrorCode.SUBSCRIPTION_NOT_FOUND,
+        ).writeToMonitor({
+          context,
+          data: { subscriptionStripeId },
+          service: ServiceName.CONFIG,
+          sendAdminAlert: true,
+          logType: LogType.ERROR,
+        });
       }
 
       subscription.populate(updateSubscriptionDto);

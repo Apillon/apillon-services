@@ -16,7 +16,7 @@ import {
   CreditDirection,
   DbTables,
 } from '../../../config/types';
-import { Product } from './product.model';
+import { Product } from '../../product/models/product.model';
 
 export class CreditTransaction extends ProjectAccessModel {
   public readonly tableName = DbTables.CREDIT_TRANSACTION;
@@ -176,15 +176,15 @@ export class CreditTransaction extends ProjectAccessModel {
       `
           SELECT *
           FROM \`${DbTables.CREDIT_TRANSACTION}\` ct
-          WHERE 
-            ct.referenceTable = @referenceTable 
+          WHERE
+            ct.referenceTable = @referenceTable
             AND ct.referenceId = @referenceId
             AND ct.direction = ${CreditDirection.SPEND}
             AND (@product_id IS NULL OR ct.product_id = @product_id)
             AND NOT EXISTS (
               SELECT 1 FROM \`${DbTables.CREDIT_TRANSACTION}\` ct2
-              WHERE 
-                ct2.referenceTable = @referenceTable 
+              WHERE
+                ct2.referenceTable = @referenceTable
                 AND ct2.referenceId = @referenceId
                 AND ct2.direction = ${CreditDirection.RECEIVE}
                 AND (@product_id IS NULL OR ct2.product_id = @product_id)
@@ -213,7 +213,7 @@ export class CreditTransaction extends ProjectAccessModel {
       `
           SELECT *
           FROM \`${DbTables.CREDIT_TRANSACTION}\` ct
-          WHERE ct.referenceTable = @referenceTable 
+          WHERE ct.referenceTable = @referenceTable
           AND ct.referenceId = @referenceId
           AND ct.status <> ${SqlModelStatus.DELETED};
         `,

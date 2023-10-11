@@ -3,7 +3,7 @@ import { releaseStage, setupTest, Stage } from '../../../test/setup';
 import { CreditService } from './credit.service';
 import { Credit } from './models/credit.model';
 import { AddCreditDto, ProductCode, SpendCreditDto } from '@apillon/lib';
-import { Product } from './models/product.model';
+import { Product } from '../product/models/product.model';
 import { CreditTransaction } from './models/credit-transaction.model';
 import { ScsCodeException } from '../../lib/exceptions';
 
@@ -120,6 +120,8 @@ describe('Credits unit test', () => {
         product_id: ProductCode.HOSTING_WEBSITE,
         referenceTable: 'website',
         referenceId: '1',
+        location: 'creditTest',
+        service: 'TEST',
       });
 
       project1Balance -= product.currentPrice;
@@ -162,6 +164,8 @@ describe('Credits unit test', () => {
         product_id: ProductCode.HOSTING_WEBSITE,
         referenceTable: 'website',
         referenceId: '2',
+        location: 'creditTest',
+        service: 'TEST',
       });
 
       const fun = async () => {
