@@ -129,6 +129,7 @@ export enum StorageEventType {
   EXECUTE_PREPARE_COLLECTION_BASE_URI_WORKER = 'execute-prepare-collection-base-uri-worker',
   TEST_CRUST_PROVIDER = 'test-crust-provider',
   PROJECT_STORAGE_DETAILS = 'project-storage-details',
+  GET_BLACKLIST = 'get-blacklist',
 }
 
 export enum AuthenticationEventType {

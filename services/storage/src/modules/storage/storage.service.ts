@@ -26,6 +26,7 @@ import {
 import { v4 as uuidV4 } from 'uuid';
 import {
   BucketType,
+  DbTables,
   FileStatus,
   FileUploadSessionStatus,
   StorageErrorCode,
@@ -527,4 +528,13 @@ export class StorageService {
     return { ...bucketDetails, numOfWebsites };
   }
   //#endregion
+
+  /**
+   * Return CIDs and IPNS that are blacklisted
+   */
+  static async getBlacklist(_event: any, context: ServiceContext) {
+    return await context.mysql.paramExecute(`
+      SELECT DISTINCT cid FROM ${DbTables.BLACKLIST};
+    `);
+  }
 }

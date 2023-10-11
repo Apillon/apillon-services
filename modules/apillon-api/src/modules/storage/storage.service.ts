@@ -90,4 +90,8 @@ export class StorageService {
       )
     ).data;
   }
+
+  async getBlacklist(context: ApillonApiContext) {
+    return await new StorageMicroservice(context).getBlacklist();
+  }
 }
