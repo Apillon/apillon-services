@@ -353,10 +353,10 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async getWebsite(id: number) {
+  public async getWebsite(website_uuid: string) {
     const data = {
       eventName: StorageEventType.WEBSITE_GET,
-      id: id,
+      id: website_uuid,
     };
     return await this.callService(data);
   }
@@ -368,7 +368,7 @@ export class StorageMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
-  public async updateWebsite(params: { id: number; data: any }) {
+  public async updateWebsite(params: { website_uuid: string; data: any }) {
     const data = {
       eventName: StorageEventType.WEBSITE_UPDATE,
       ...params,

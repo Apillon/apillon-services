@@ -20,7 +20,7 @@ import {
   DeploymentStatus,
   StorageErrorCode,
 } from '../../../config/types';
-import { ServiceContext } from '@apillon/service-lib';
+import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
 import { Website } from './website.model';
 
 export class Deployment extends AdvancedSQLModel {
@@ -42,7 +42,6 @@ export class Deployment extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -91,6 +90,7 @@ export class Deployment extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [
       {
@@ -116,6 +116,7 @@ export class Deployment extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     defaultValue: DeploymentStatus.INITIATED,
     fakeValue: DeploymentStatus.INITIATED,
@@ -136,6 +137,7 @@ export class Deployment extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
   })
   public cid: string;
@@ -154,6 +156,7 @@ export class Deployment extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
   })
   public cidv1: string;
@@ -172,6 +175,7 @@ export class Deployment extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
@@ -191,6 +195,7 @@ export class Deployment extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
@@ -278,7 +283,6 @@ export class Deployment extends AdvancedSQLModel {
   }
 
   public async getList(context: ServiceContext, filter: DeploymentQueryFilter) {
-    await this.canAccess(context);
     // Map url query with sql fields.
     const fieldMap = {
       id: 'wp.id',
@@ -292,12 +296,16 @@ export class Deployment extends AdvancedSQLModel {
 
     const sqlQuery = {
       qSelect: `
-        SELECT ${this.generateSelectFields('d', '')}, d.updateTime
+        SELECT ${this.generateSelectFields(
+          'd',
+          '',
+          getSerializationStrategy(context),
+        )}, d.updateTime
         `,
       qFrom: `
-        FROM \`${this.tableName}\` d
+        FROM \`${DbTables.DEPLOYMENT}\` d
         JOIN \`${DbTables.WEBSITE}\` wp ON wp.id = d.website_id
-        WHERE wp.id = @website_id
+        WHERE wp.website_uuid = @website_uuid
         AND d.status = ${SqlModelStatus.ACTIVE}
         AND (
           @environment IS NULL 

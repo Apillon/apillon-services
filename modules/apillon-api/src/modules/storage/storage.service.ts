@@ -2,6 +2,7 @@ import {
   ApillonApiBucketQueryFilter,
   ApillonApiCreateS3UrlsForUploadDto,
   ApillonApiDirectoryContentQueryFilter,
+  BaseProjectQueryFilter,
   CreateBucketDto,
   CreateS3UrlsForUploadDto,
   DirectoryContentQueryFilter,
@@ -15,6 +16,15 @@ import { ApillonApiContext } from '../../context';
 
 @Injectable()
 export class StorageService {
+  async getStorageInfo(
+    context: ApillonApiContext,
+    query: BaseProjectQueryFilter,
+  ) {
+    return (
+      await new StorageMicroservice(context).getStorageInfo(query.project_uuid)
+    ).data;
+  }
+
   async listBuckets(
     context: ApillonApiContext,
     query: ApillonApiBucketQueryFilter,

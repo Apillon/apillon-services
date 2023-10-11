@@ -4,6 +4,7 @@ import {
   ApillonApiCreateS3UrlsForUploadDto,
   ApillonApiDirectoryContentQueryFilter,
   AttachedServiceType,
+  BaseProjectQueryFilter,
   DefaultApiKeyRole,
   EndFileUploadSessionDto,
   ValidateFor,
@@ -28,6 +29,20 @@ import { StorageService } from './storage.service';
 @Controller('storage')
 export class StorageController {
   constructor(private storageService: StorageService) {}
+
+  @Get('info')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_READ,
+    serviceType: AttachedServiceType.STORAGE,
+  })
+  @Validation({ dto: BaseProjectQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getStorageInfo(
+    @Ctx() context: ApillonApiContext,
+    @Query() query: BaseProjectQueryFilter,
+  ) {
+    return await this.storageService.getStorageInfo(context, query);
+  }
 
   @Get('buckets')
   @ApiKeyPermissions({

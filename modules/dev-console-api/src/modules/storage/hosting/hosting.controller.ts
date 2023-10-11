@@ -57,14 +57,14 @@ export class HostingController {
     return await this.hostingService.isWebsitesQuotaReached(context, query);
   }
 
-  @Get('websites/:id')
+  @Get('websites/:website_uuid')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async getWebsite(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('website_uuid') website_uuid: string,
   ) {
-    return await this.hostingService.getWebsite(context, id);
+    return await this.hostingService.getWebsite(context, website_uuid);
   }
 
   @Post('website')
@@ -83,7 +83,7 @@ export class HostingController {
     return await this.hostingService.createWebsite(context, body);
   }
 
-  @Patch('websites/:id')
+  @Patch('websites/:website_uuid')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -91,13 +91,13 @@ export class HostingController {
   @UseGuards(AuthGuard)
   async updateWebsite(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('website_uuid') website_uuid: string,
     @Body() body: any,
   ) {
-    return await this.hostingService.updateWebsite(context, id, body);
+    return await this.hostingService.updateWebsite(context, website_uuid, body);
   }
 
-  @Post('websites/:id/deploy')
+  @Post('websites/:website_uuid/deploy')
   @HttpCode(200)
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
@@ -109,33 +109,32 @@ export class HostingController {
   @UseGuards(ValidationGuard)
   async deployWebsite(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('website_uuid', ParseIntPipe) id: number,
     @Body() body: DeployWebsiteDto,
   ) {
     return await this.hostingService.deployWebsite(context, id, body);
   }
 
-  @Get('websites/:website_id/deployments')
+  @Get('websites/:website_uuid/deployments')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({
     dto: DeploymentQueryFilter,
     validateFor: ValidateFor.QUERY,
-    skipValidation: true,
   })
   @UseGuards(ValidationGuard, AuthGuard)
   async listDeployments(
     @Ctx() context: DevConsoleApiContext,
-    @Param('website_id', ParseIntPipe) website_id: number,
+    @Param('website_uuid') website_uuid: string,
     @Query() query: DeploymentQueryFilter,
   ) {
     return await this.hostingService.listDeployments(
       context,
-      website_id,
+      website_uuid,
       query,
     );
   }
 
-  @Get('websites/:website_id/deployments/:id')
+  @Get('websites/:website_uuid/deployments/:id')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async getDeployment(

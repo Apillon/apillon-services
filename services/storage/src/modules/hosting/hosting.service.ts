@@ -126,11 +126,11 @@ export class HostingService {
   }
 
   static async updateWebsite(
-    event: { id: number; data: any },
+    event: { website_uuid: string; data: any },
     context: ServiceContext,
   ): Promise<any> {
     const website: Website = await new Website({}, context).populateById(
-      event.id,
+      event.website_uuid,
     );
 
     if (!website.exists()) {
@@ -334,6 +334,8 @@ export class HostingService {
           : website.productionBucket_id,
       environment: event.body.environment,
       number: deploymentNumber,
+      createTime: new Date(),
+      updateTime: new Date(),
     });
 
     try {
@@ -359,6 +361,8 @@ export class HostingService {
               : ProductCode.HOSTING_DEPLOY_TO_PRODUCTION,
           referenceTable: DbTables.DEPLOYMENT,
           referenceId: deployment.id,
+          location: 'HostingService.deployWebsite',
+          service: ServiceName.STORAGE,
         },
         context,
       );
@@ -418,7 +422,7 @@ export class HostingService {
       );
     }
 
-    return deployment.serialize(SerializeFor.PROFILE);
+    return deployment.serialize(getSerializationStrategy(context));
   }
 
   //#endregion
@@ -439,17 +443,29 @@ export class HostingService {
     }
     await deployment.canAccess(context);
 
-    return deployment.serialize(SerializeFor.PROFILE);
+    return deployment.serialize(getSerializationStrategy(context));
   }
 
   static async listDeployments(
     event: { query: DeploymentQueryFilter },
     context: ServiceContext,
   ) {
-    return await new Deployment(
-      { website_id: event.query.website_id },
+    const website = await new Website({}, context).populateByUUID(
+      event.query.website_uuid,
+      'website_uuid',
+    );
+    if (!website.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.WEBSITE_NOT_FOUND,
+        status: 404,
+      });
+    }
+    website.canAccess(context);
+
+    return await new Deployment({}, context).getList(
       context,
-    ).getList(context, new DeploymentQueryFilter(event.query));
+      new DeploymentQueryFilter(event.query),
+    );
   }
 
   //#endregion

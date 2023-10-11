@@ -27,8 +27,9 @@ export class HostingService {
     return (await new StorageMicroservice(context).listWebsites(query)).data;
   }
 
-  async getWebsite(context: DevConsoleApiContext, id: number) {
-    return (await new StorageMicroservice(context).getWebsite(id)).data;
+  async getWebsite(context: DevConsoleApiContext, website_uuid: string) {
+    return (await new StorageMicroservice(context).getWebsite(website_uuid))
+      .data;
   }
 
   async createWebsite(context: DevConsoleApiContext, body: CreateWebsiteDto) {
@@ -68,10 +69,14 @@ export class HostingService {
     return (await new StorageMicroservice(context).createWebsite(body)).data;
   }
 
-  async updateWebsite(context: DevConsoleApiContext, id: number, body: any) {
+  async updateWebsite(
+    context: DevConsoleApiContext,
+    website_uuid: string,
+    body: any,
+  ) {
     return (
       await new StorageMicroservice(context).updateWebsite({
-        id: id,
+        website_uuid,
         data: body,
       })
     ).data;
@@ -105,19 +110,10 @@ export class HostingService {
 
   async listDeployments(
     context: DevConsoleApiContext,
-    website_id: number,
+    website_uuid: string,
     query: DeploymentQueryFilter,
   ) {
-    query.website_id = website_id;
-    try {
-      await query.validate();
-    } catch (err) {
-      await query.handle(err);
-      if (!query.isValid()) {
-        throw new ValidationException(query, ValidatorErrorCode);
-      }
-    }
-
+    query.website_uuid = website_uuid;
     return (await new StorageMicroservice(context).listDeployments(query)).data;
   }
 

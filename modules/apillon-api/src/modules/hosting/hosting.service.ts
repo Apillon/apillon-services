@@ -1,6 +1,7 @@
 import {
   ApillonHostingApiCreateS3UrlsForUploadDto,
   CreateWebsiteDto,
+  DeploymentQueryFilter,
   DomainQueryFilter,
   EndFileUploadSessionDto,
   WebsiteQueryFilter,
@@ -29,13 +30,9 @@ export class HostingService {
     return (await new StorageMicroservice(context).createWebsite(body)).data;
   }
 
-  async getWebsite(context: ApillonApiContext, id: any) {
-    const wp = (await new StorageMicroservice(context).getWebsite(id)).data;
-    delete wp['bucket'];
-    delete wp['stagingBucket'];
-    delete wp['productionBucket'];
-
-    return wp;
+  async getWebsite(context: ApillonApiContext, website_uuid: string) {
+    return (await new StorageMicroservice(context).getWebsite(website_uuid))
+      .data;
   }
 
   async createS3SignedUrlsForWebsiteUpload(
@@ -95,6 +92,15 @@ export class HostingService {
       }
     }
     return (await new StorageMicroservice(context).deployWebsite(body)).data;
+  }
+
+  async listDeployments(
+    context: ApillonApiContext,
+    website_uuid: string,
+    query: DeploymentQueryFilter,
+  ) {
+    query.website_uuid = website_uuid;
+    return (await new StorageMicroservice(context).listDeployments(query)).data;
   }
 
   async getDeployment(context: ApillonApiContext, id: number) {
