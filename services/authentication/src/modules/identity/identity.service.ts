@@ -21,6 +21,7 @@ import {
   DidCreateOp,
   Attester,
   KiltSignAlgorithm,
+  IdentityConfigKey,
 } from '../../config/types';
 
 import { KiltKeyringPair } from '@kiltprotocol/types';
@@ -31,7 +32,7 @@ import {
   DidUri,
   ICredential,
 } from '@kiltprotocol/sdk-js';
-import { hexToU8a, u8aToHex } from '@polkadot/util';
+import { BN, hexToU8a, u8aToHex } from '@polkadot/util';
 // Dtos
 import { IdentityCreateDto } from '@apillon/lib';
 import { IdentityDidRevokeDto } from '@apillon/lib';
@@ -52,6 +53,7 @@ import {
   attestationRequestBc,
   identityCreateRequestBc,
 } from '../../lib/utils/transaction-utils';
+import { IdentityConfig } from './models/identity-config.model';
 
 export class IdentityMicroservice {
   static async sendVerificationEmail(
@@ -352,6 +354,11 @@ export class IdentityMicroservice {
       });
     }
 
+    const { value: txCounter } = await new IdentityConfig(
+      {},
+      context,
+    ).populateByKey(IdentityConfigKey.ATTESTER_DID_TX_COUNTER);
+
     writeLog(LogType.INFO, 'Creating attestation TX ..');
     const attestationTx = await Did.authorizeTx(
       attesterDidUri,
@@ -361,6 +368,7 @@ export class IdentityMicroservice {
         keyType: attesterKeypairs.assertionMethod.type,
       }),
       attesterAcc.address,
+      { txCounter: new BN(txCounter) },
     );
 
     let authorizedAccountLinkingTx;
@@ -401,6 +409,10 @@ export class IdentityMicroservice {
     writeLog(LogType.INFO, 'Sending blockchain request..');
     // Call blockchain server and submit batch request
     await sendBlockchainServiceRequest(context, bcsRequest);
+    await new IdentityConfig({}, context).modifyKeyValue(
+      IdentityConfigKey.ATTESTER_DID_TX_COUNTER,
+      +txCounter + 1,
+    );
   }
 
   static async getUserIdentity(

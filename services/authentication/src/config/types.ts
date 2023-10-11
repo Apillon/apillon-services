@@ -5,6 +5,7 @@ export enum DbTables {
   IDENTITY = 'identity',
   IDENTITY_JOB = 'identity_job',
   TRANSACTION = 'transaction',
+  IDENTITY_CONFIG = 'identity_config',
 }
 
 /**
@@ -205,4 +206,8 @@ export enum IdentityJobState {
   ATESTATION = 'attestation',
   // State 1: DID_REVOKE
   DID_REVOKE = 'did-revoke',
+}
+
+export enum IdentityConfigKey {
+  ATTESTER_DID_TX_COUNTER = 'ATTESTER_DID_TX_COUNTER',
 }
