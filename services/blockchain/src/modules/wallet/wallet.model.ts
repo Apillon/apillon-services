@@ -173,6 +173,20 @@ export class Wallet extends AdvancedSQLModel {
   })
   public lastParsedBlock: number;
 
+  @prop({
+    parser: { resolver: dateParser() },
+    populatable: [
+      PopulateFrom.DB, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public lastParsedBlockUpdateTime: Date;
+
   /**
    * maxParsedBlock
    */
@@ -462,7 +476,11 @@ export class Wallet extends AdvancedSQLModel {
     await this.getContext().mysql.paramExecute(
       `
       UPDATE \`${DbTables.WALLET}\`
-      SET lastParsedBlock = @lastParsedBlock
+      SET lastParsedBlockUpdateTime = CASE
+        WHEN lastParsedBlock <> @lastParsedBlock THEN NOW()
+        ELSE lastParsedBlockUpdateTime
+      END,
+      lastParsedBlock = @lastParsedBlock
       WHERE id = @id;
       `,
       { lastParsedBlock, id: this.id },
@@ -626,6 +644,16 @@ export class Wallet extends AdvancedSQLModel {
       ethers.BigNumber.from(this.minBalance).gte(
         ethers.BigNumber.from(this.currentBalance),
       )
+    );
+  }
+
+  public get minutesSinceLastParsedBlock(): number {
+    const lastParsedBlockUpdateTime =
+      this.lastParsedBlockUpdateTime || new Date();
+
+    return (
+      (new Date().getTime() - new Date(lastParsedBlockUpdateTime).getTime()) /
+      60_000
     );
   }
 }
