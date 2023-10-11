@@ -97,15 +97,7 @@ export class Product extends AdvancedSQLModel {
 
   public async populateCurrentPrice() {
     const data = await this.getContext().mysql.paramExecute(
-      `
-          SELECT price
-          FROM \`${DbTables.PRODUCT_PRICE}\`
-          WHERE product_id = @product_id
-          AND status = ${SqlModelStatus.ACTIVE}
-          AND (validFrom IS NULL OR validFrom >= NOW())
-          ORDER BY validFrom DESC
-          LIMIT 1;
-        `,
+      this.productPriceSqlSelect('@product_id'),
       { product_id: this.id },
     );
 
@@ -128,16 +120,14 @@ export class Product extends AdvancedSQLModel {
 
     const sqlQuery = {
       qSelect: `
-        SELECT ${this.generateSelectFields('p')}, pr.price as currentPrice
+        SELECT ${this.generateSelectFields('p')},
+        (${this.productPriceSqlSelect('p.id')}) as currentPrice
         `,
       qFrom: `
         FROM \`${this.tableName}\` p
-        INNER JOIN \`${DbTables.PRODUCT_PRICE}\` pr ON pr.product_id = p.id
-        AND (pr.validFrom IS NULL OR pr.validFrom >= NOW())
-        AND (@search IS null OR p.name LIKE CONCAT('%', @search, '%'))
-        AND (@service IS null OR p.service = @service)
-        AND (@category IS null OR p.category = @category)
-        AND pr.status = ${SqlModelStatus.ACTIVE}
+        WHERE (@search IS NULL OR p.name LIKE CONCAT('%', @search, '%'))
+        AND (@service IS NULL OR p.service = @service)
+        AND (@category IS NULL OR p.category = @category)
         AND p.status = ${SqlModelStatus.ACTIVE}
       `,
       qFilter: `
@@ -148,4 +138,14 @@ export class Product extends AdvancedSQLModel {
 
     return await selectAndCountQuery(context.mysql, sqlQuery, params, 'p.id');
   }
+
+  productPriceSqlSelect = (param: string) => `
+    SELECT price
+    FROM \`${DbTables.PRODUCT_PRICE}\`
+    WHERE product_id = ${param}
+    AND status = ${SqlModelStatus.ACTIVE}
+    AND (validFrom IS NULL OR validFrom < NOW())
+    ORDER BY validFrom DESC
+    LIMIT 1
+  `;
 }

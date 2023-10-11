@@ -90,7 +90,7 @@ export class PaymentsController {
     return this.paymentsService.getCreditPackages(context);
   }
 
-  @Get('product')
+  @Get('products/price-list')
   @Validation({ dto: PricelistQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(AuthGuard, ValidationGuard)
   async getProductPricelist(
@@ -100,7 +100,7 @@ export class PaymentsController {
     return this.paymentsService.getProductPricelist(context, query);
   }
 
-  @Get('product/:id')
+  @Get('products/:id/price')
   @UseGuards(AuthGuard)
   async getProductPrice(
     @Ctx() context: DevConsoleApiContext,

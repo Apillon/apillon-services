@@ -223,7 +223,15 @@ export class SubscriptionService {
             SerializeFor.SERVICE,
           ),
         });
-        throw new ScsNotFoundException(ConfigErrorCode.SUBSCRIPTION_NOT_FOUND);
+        throw await new ScsNotFoundException(
+          ConfigErrorCode.SUBSCRIPTION_NOT_FOUND,
+        ).writeToMonitor({
+          context,
+          data: { subscriptionStripeId },
+          service: ServiceName.CONFIG,
+          sendAdminAlert: true,
+          logType: LogType.ERROR,
+        });
       }
 
       subscription.populate(updateSubscriptionDto);
