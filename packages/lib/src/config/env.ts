@@ -120,6 +120,7 @@ export interface IEnv {
   SMTP_NAME_FROM: string;
   SMTP_EMAIL_FROM: string;
   ADMIN_EMAILS: string;
+  CONTACT_EMAIL_TO: string;
 
   /************************************************************
    * DEV-CONSOLE-API -Apillon Developer Console API
@@ -620,6 +621,7 @@ export let env: IEnv = {
   SMTP_NAME_FROM: process.env['SMTP_NAME_FROM'] || 'Apillon.io',
   SMTP_EMAIL_FROM: process.env['SMTP_EMAIL_FROM'] || 'info@apillon.io',
   ADMIN_EMAILS: process.env['ADMIN_EMAILS'] || 'info@apillon.io',
+  CONTACT_EMAIL_TO: process.env['CONTACT_EMAIL_TO'] || 'info@apillon.io',
 
   /** --- SECTION: APILLON API --- */
   APILLON_API_HOST: process.env['APILLON_API_HOST'] || 'localhost',
