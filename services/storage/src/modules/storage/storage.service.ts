@@ -5,6 +5,7 @@ import {
   CreateS3UrlsForUploadDto,
   EndFileUploadSessionDto,
   env,
+  FilesQueryFilter,
   FileUploadsQueryFilter,
   invalidateCacheMatch,
   Lmas,
@@ -15,7 +16,6 @@ import {
   SerializeFor,
   ServiceName,
   SqlModelStatus,
-  TrashedFilesQueryFilter,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import {
@@ -34,6 +34,7 @@ import {
 } from '../../config/types';
 import { createFURAndS3Url } from '../../lib/create-fur-and-s3-url';
 import { StorageCodeException } from '../../lib/exceptions';
+import { getSessionFilesOnS3 } from '../../lib/file-upload-session-s3-files';
 import { addJwtToIPFSUrl } from '../../lib/ipfs-utils';
 import { processSessionFiles } from '../../lib/process-session-files';
 import { SyncToIPFSWorker } from '../../workers/s3-to-ipfs-sync-worker';
@@ -45,7 +46,6 @@ import { Website } from '../hosting/models/website.model';
 import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
-import { getSessionFilesOnS3 } from '../../lib/file-upload-session-s3-files';
 
 export class StorageService {
   /**
@@ -411,6 +411,16 @@ export class StorageService {
 
   //#region file functions
 
+  static async listFiles(
+    event: { query: FilesQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new File({}, context).listFiles(
+      context,
+      new FilesQueryFilter(event.query),
+    );
+  }
+
   static async getFileDetails(event: { id: string }, context: ServiceContext) {
     let file: File = undefined;
     let fileStatus: FileStatus = undefined;
@@ -544,16 +554,6 @@ export class StorageService {
     await f.update();
 
     return f.serialize(SerializeFor.PROFILE);
-  }
-
-  static async listFilesMarkedForDeletion(
-    event: { query: TrashedFilesQueryFilter },
-    context: ServiceContext,
-  ) {
-    return await new File({}, context).getMarkedForDeletionList(
-      context,
-      new TrashedFilesQueryFilter(event.query, context),
-    );
   }
 
   /**

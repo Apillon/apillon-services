@@ -12,7 +12,6 @@ import { DirectoryContentQueryFilter } from './dtos/directory-content-query-filt
 import { EndFileUploadSessionDto } from './dtos/end-file-upload-session.dto';
 import { FileDetailsQueryFilter } from './dtos/file-details-query-filter.dto';
 import { FileUploadsQueryFilter } from './dtos/file-uploads-query-filter.dto';
-import { TrashedFilesQueryFilter } from './dtos/trashed-files-query-filter.dto';
 import { IpnsQueryFilter } from './dtos/ipns-query-filter.dto';
 import { PublishIpnsDto } from './dtos/publish-ipns.dto';
 import { WebsiteQueryFilter } from './dtos/website-query-filter.dto';
@@ -25,6 +24,7 @@ import {
   CreateS3UrlsForUploadDto,
 } from './dtos/create-s3-urls-for-upload.dto';
 import { DomainQueryFilter } from './dtos/domain-query-filter.dto';
+import { FilesQueryFilter } from './dtos/files-query-filter.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -60,10 +60,10 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async getBucket(id: string | number) {
+  public async getBucket(bucket_uuid: string) {
     const data = {
       eventName: StorageEventType.GET_BUCKET,
-      id: id,
+      bucket_uuid,
     };
     return await this.callService(data);
   }
@@ -219,9 +219,9 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async listFilesMarkedForDeletion(params: TrashedFilesQueryFilter) {
+  public async listFiles(params: FilesQueryFilter) {
     const data = {
-      eventName: StorageEventType.LIST_FILES_MARKED_FOR_DELETION,
+      eventName: StorageEventType.LIST_FILES,
       query: params.serialize(),
     };
     return await this.callService(data);

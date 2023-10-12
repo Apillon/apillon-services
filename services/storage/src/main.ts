@@ -44,8 +44,7 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.GET_FILE_DETAILS]: StorageService.getFileDetails,
     [StorageEventType.FILE_DELETE]: StorageService.deleteFile,
     [StorageEventType.CANCEL_FILE_DELETE]: StorageService.unmarkFileForDeletion,
-    [StorageEventType.LIST_FILES_MARKED_FOR_DELETION]:
-      StorageService.listFilesMarkedForDeletion,
+    [StorageEventType.LIST_FILES]: StorageService.listFiles,
 
     [StorageEventType.BUCKET_WEBHOOK_GET]: BucketService.getBucketWebhook,
     [StorageEventType.BUCKET_WEBHOOK_CREATE]: BucketService.createBucketWebhook,

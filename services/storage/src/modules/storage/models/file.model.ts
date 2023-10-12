@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/member-ordering */
 import {
+  FilesQueryFilter,
   PoolConnection,
   PopulateFrom,
   ProjectAccessModel,
   SerializeFor,
   SqlModelStatus,
-  TrashedFilesQueryFilter,
+  UuidSqlModel,
   getQueryParams,
   selectAndCountQuery,
 } from '@apillon/lib';
@@ -14,19 +15,12 @@ import { prop } from '@rawmodel/core';
 import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { v4 as uuidV4 } from 'uuid';
-import {
-  DbTables,
-  FileStatus,
-  ObjectType,
-  StorageErrorCode,
-} from '../../../config/types';
-import { StorageCodeException } from '../../../lib/exceptions';
+import { DbTables, FileStatus, StorageErrorCode } from '../../../config/types';
 import { addJwtToIPFSUrl } from '../../../lib/ipfs-utils';
 import { Bucket } from '../../bucket/models/bucket.model';
 import { ProjectConfig } from '../../config/models/project-config.model';
-import { Directory } from '../../directory/models/directory.model';
 
-export class File extends ProjectAccessModel {
+export class File extends UuidSqlModel {
   tableName = DbTables.FILE;
 
   @prop({
@@ -43,6 +37,7 @@ export class File extends ProjectAccessModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
     fakeValue: () => uuidV4(),
@@ -63,6 +58,8 @@ export class File extends ProjectAccessModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [
       {
@@ -87,6 +84,8 @@ export class File extends ProjectAccessModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
   })
   public CIDv1: string;
@@ -122,6 +121,8 @@ export class File extends ProjectAccessModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [
       {
@@ -145,6 +146,8 @@ export class File extends ProjectAccessModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
@@ -195,6 +198,27 @@ export class File extends ProjectAccessModel {
   public bucket_id: number;
 
   @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
+    ],
+    validators: [],
+  })
+  public path: string;
+
+  @prop({
     parser: { resolver: integerParser() },
     populatable: [
       PopulateFrom.DB,
@@ -204,8 +228,12 @@ export class File extends ProjectAccessModel {
     ],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
@@ -224,6 +252,8 @@ export class File extends ProjectAccessModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
@@ -242,7 +272,9 @@ export class File extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
     fakeValue: FileStatus.PINNED_TO_CRUST,
@@ -278,25 +310,6 @@ export class File extends ProjectAccessModel {
     validators: [],
   })
   public downloadLink: string;
-
-  /**
-   * Path without name
-   */
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
-    validators: [],
-  })
-  public path: string;
 
   /**
    * Marks record in the database for deletion.
@@ -374,20 +387,11 @@ export class File extends ProjectAccessModel {
     return super.populateByUUID(file_uuid, 'file_uuid');
   }
 
-  public async getMarkedForDeletionList(
-    context: ServiceContext,
-    filter: TrashedFilesQueryFilter,
-  ) {
-    const b: Bucket = await new Bucket({}, context).populateByUUID(
-      filter.bucket_uuid,
-    );
-    if (!b.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.BUCKET_NOT_FOUND,
-        status: 404,
-      });
-    }
-    b.canAccess(context);
+  public async listFiles(context: ServiceContext, filter: FilesQueryFilter) {
+    const b: Bucket = await new Bucket(
+      {},
+      context,
+    ).populateByUuidAndCheckAccess(filter.bucket_uuid);
 
     // Map url query with sql fields.
     const fieldMap = {
@@ -406,23 +410,26 @@ export class File extends ProjectAccessModel {
       this.getContext(),
     ).getIpfsGateway();
 
+    const defaultOrderStr =
+      filter.status == SqlModelStatus.ACTIVE
+        ? 'f.createTime DESC'
+        : 'f.markedForDeletionTime DESC';
+
     const sqlQuery = {
       qSelect: `
-        SELECT ${ObjectType.FILE} as type, f.id, f.status, f.name, f.CID, f.createTime, f.updateTime,
-        f.contentType as contentType, f.size as size, f.directory_id as parentDirectoryId,
-        f.file_uuid as file_uuid, CONCAT("${ipfsGateway.url}", f.CID) as link
+        SELECT ${this.generateSelectFields('f')}, CONCAT("${
+        ipfsGateway.url
+      }", f.CID) as link
         `,
       qFrom: `
         FROM \`${DbTables.FILE}\` f
         INNER JOIN \`${DbTables.BUCKET}\` b ON f.bucket_id = b.id
         WHERE b.bucket_uuid = @bucket_uuid
-        AND (@search IS null OR f.name LIKE CONCAT('%', @search, '%'))
-        AND f.status = ${SqlModelStatus.MARKED_FOR_DELETION}
+        AND (@search IS null OR CONCAT(IFNULL(f.path, ""), f.name) LIKE CONCAT('%', @search, '%'))
+        AND f.status = @status
         `,
       qFilter: `
-        ORDER BY ${
-          filters.orderStr ? filters.orderStr : 'f.markedForDeletionTime DESC'
-        }
+        ORDER BY ${filters.orderStr || defaultOrderStr}
         LIMIT ${filters.limit} OFFSET ${filters.offset};
       `,
     };
@@ -473,21 +480,5 @@ export class File extends ProjectAccessModel {
     }
 
     return res;
-  }
-
-  public populatePath(directories: Directory[]) {
-    this.path = '';
-    if (!this.directory_id) {
-      return;
-    } else {
-      let tmpDir: Directory = undefined;
-      do {
-        tmpDir = directories.find(
-          (x) =>
-            x.id == (tmpDir ? tmpDir.parentDirectory_id : this.directory_id),
-        );
-        this.path = tmpDir.name + '/' + this.path;
-      } while (tmpDir?.parentDirectory_id);
-    }
   }
 }

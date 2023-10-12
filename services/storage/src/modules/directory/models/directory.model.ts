@@ -12,6 +12,7 @@ import {
   SerializeFor,
   SqlModelStatus,
   unionSelectAndCountQuery,
+  UuidSqlModel,
 } from '@apillon/lib';
 import { DbTables, ObjectType, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
@@ -21,7 +22,7 @@ import { ProjectConfig } from '../../config/models/project-config.model';
 import { Bucket } from '../../bucket/models/bucket.model';
 import { addJwtToIPFSUrl } from '../../../lib/ipfs-utils';
 
-export class Directory extends ProjectAccessModel {
+export class Directory extends UuidSqlModel {
   public readonly tableName = DbTables.DIRECTORY;
 
   public constructor(data: any, context: Context) {
@@ -341,15 +342,16 @@ export class Directory extends ProjectAccessModel {
     const qSelects = [
       {
         qSelect: `
-        SELECT ${ObjectType.DIRECTORY} as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime,
-        NULL as contentType, NULL as size, d.parentDirectory_id as parentDirectoryId,
-        NULL as file_uuid, IF(d.CID IS NULL, NULL, CONCAT("${ipfsGateway.url}", d.CID)) as link, NULL as fileStatus
+        SELECT d.directory_uuid as uuid, ${ObjectType.DIRECTORY} as type, d.name, d.CID, d.createTime, d.updateTime,
+        NULL as contentType, NULL as size, pd.directory_uuid as directoryUuid,
+        IF(d.CID IS NULL, NULL, CONCAT("${ipfsGateway.url}", d.CID)) as link, NULL as fileStatus
         `,
         qFrom: `
         FROM \`${DbTables.DIRECTORY}\` d
         INNER JOIN \`${DbTables.BUCKET}\` b ON d.bucket_id = b.id
+        LEFT JOIN \`${DbTables.DIRECTORY}\` pd ON pd.id = d.parentDirectory_id
         WHERE b.bucket_uuid = @bucket_uuid
-        AND (IFNULL(@directory_id, -1) = IFNULL(d.parentDirectory_id, -1))
+        AND (IFNULL(@directory_uuid, -1) = IFNULL(pd.directory_uuid, -1))
         AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))
         AND ( d.status = ${SqlModelStatus.ACTIVE} OR
           ( @markedForDeletion = 1 AND d.status = ${SqlModelStatus.MARKED_FOR_DELETION})
@@ -358,15 +360,15 @@ export class Directory extends ProjectAccessModel {
       },
       {
         qSelect: `
-        SELECT ${ObjectType.FILE} as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime,
-        d.contentType as contentType, d.size as size, d.directory_id as parentDirectoryId,
-        d.file_uuid as file_uuid, CONCAT("${ipfsGateway.url}", d.CID) as link, d.fileStatus as fileStatus
+        SELECT d.file_uuid as uuid, ${ObjectType.FILE} as type, d.name, d.CID, d.createTime, d.updateTime,
+        d.contentType as contentType, d.size as size, pd.directory_uuid as directoryUuid, CONCAT("${ipfsGateway.url}", d.CID) as link, d.fileStatus as fileStatus
         `,
         qFrom: `
         FROM \`${DbTables.FILE}\` d
         INNER JOIN \`${DbTables.BUCKET}\` b ON d.bucket_id = b.id
+        LEFT JOIN \`${DbTables.DIRECTORY}\` pd ON pd.id = d.directory_id
         WHERE b.bucket_uuid = @bucket_uuid
-        AND (IFNULL(@directory_id, -1) = IFNULL(d.directory_id, -1))
+        AND (IFNULL(@directory_uuid, -1) = IFNULL(pd.directory_uuid, -1))
         AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))
         AND ( d.status = ${SqlModelStatus.ACTIVE} OR
           ( @markedForDeletion = 1 AND d.status = ${SqlModelStatus.MARKED_FOR_DELETION})

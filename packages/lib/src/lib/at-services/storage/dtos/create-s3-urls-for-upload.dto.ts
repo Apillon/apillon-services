@@ -1,5 +1,5 @@
 import { stringParser } from '@rawmodel/parsers';
-import { presenceValidator } from '@rawmodel/validators';
+import { arrayLengthValidator, presenceValidator } from '@rawmodel/validators';
 import {
   PopulateFrom,
   SerializeFor,
@@ -90,6 +90,10 @@ export class CreateS3UrlsForUploadDto extends ModelBase {
         resolver: presenceValidator(),
         code: ValidatorErrorCode.FILES_PROPERTY_NOT_PRESENT,
       },
+      {
+        resolver: arrayLengthValidator({ min: 1, max: 200 }),
+        code: ValidatorErrorCode.INVALID_FILES_LENGTH,
+      },
     ],
   })
   public files: UploadFileMetadataDto[];
@@ -121,6 +125,10 @@ export class ApillonApiCreateS3UrlsForUploadDto extends ModelBase {
         resolver: presenceValidator(),
         code: ValidatorErrorCode.FILES_PROPERTY_NOT_PRESENT,
       },
+      {
+        resolver: arrayLengthValidator({ min: 1, max: 200 }),
+        code: ValidatorErrorCode.INVALID_FILES_LENGTH,
+      },
     ],
   })
   public files: UploadFileMetadataDto[];
@@ -151,6 +159,10 @@ export class ApillonHostingApiCreateS3UrlsForUploadDto extends ModelBase {
       {
         resolver: presenceValidator(),
         code: ValidatorErrorCode.FILES_PROPERTY_NOT_PRESENT,
+      },
+      {
+        resolver: arrayLengthValidator({ min: 1, max: 200 }),
+        code: ValidatorErrorCode.INVALID_FILES_LENGTH,
       },
     ],
   })

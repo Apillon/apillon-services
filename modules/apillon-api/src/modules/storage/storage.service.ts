@@ -110,7 +110,7 @@ export class StorageService {
         new DirectoryContentQueryFilter().populate({
           ...query.serialize(),
           bucket_uuid: bucket_uuid,
-          directory_id: query.directoryId,
+          directory_uuid: query.directoryUuid,
         }),
       )
     ).data;

@@ -114,9 +114,6 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         {},
         this.context,
       ).populateFilesInBucket(sourceBucket_id, this.context);
-      for (const srcFile of sourceFiles) {
-        srcFile.populatePath(sourceDirectories);
-      }
 
       //Add files to IPFS
       let ipfsRes: uploadItemsToIPFSRes = undefined;
@@ -205,8 +202,6 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
 
         const directories: Directory[] = [];
         for (const srcFile of sourceFiles) {
-          srcFile.populatePath(sourceDirectories);
-
           const fileDirectory = await generateDirectoriesFromPath(
             this.context,
             directories,

@@ -34,22 +34,17 @@ export class BucketService {
     return await new Bucket(
       { project_uuid: event.query.project_uuid },
       context,
-    ).getList(
-      context,
-      new BucketQueryFilter(event.query),
-      getSerializationStrategy(context),
-    );
+    ).getList(context, new BucketQueryFilter(event.query));
   }
 
   static async getBucket(
-    event: { id: string | number },
+    event: { bucket_uuid: string },
     context: ServiceContext,
   ) {
-    const b = await new Bucket({}, context).populateById(event.id);
-    if (!b.exists()) {
-      throw new StorageNotFoundException();
-    }
-    b.canAccess(context);
+    const b: Bucket = await new Bucket(
+      {},
+      context,
+    ).populateByUuidAndCheckAccess(event.bucket_uuid);
 
     return b.serialize(getSerializationStrategy(context));
   }
@@ -59,7 +54,12 @@ export class BucketService {
     context: ServiceContext,
   ): Promise<any> {
     const b: Bucket = new Bucket(
-      { ...event.body, bucket_uuid: uuidV4() },
+      {
+        ...event.body,
+        bucket_uuid: uuidV4(),
+        createTime: new Date(),
+        updateTime: new Date(),
+      },
       context,
     );
 

@@ -1,18 +1,20 @@
 import {
+  AdvancedSQLModel,
+  CodeException,
   Context,
+  DefaultUserRole,
   DeploymentQueryFilter,
-  getQueryParams,
+  ErrorCode,
+  ForbiddenErrorCodes,
   PopulateFrom,
+  SerializeFor,
+  SqlModelStatus,
+  getQueryParams,
   presenceValidator,
   prop,
   selectAndCountQuery,
-  SerializeFor,
-  SqlModelStatus,
-  DefaultUserRole,
-  CodeException,
-  ForbiddenErrorCodes,
-  AdvancedSQLModel,
 } from '@apillon/lib';
+import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
   DbTables,
@@ -20,7 +22,6 @@ import {
   DeploymentStatus,
   StorageErrorCode,
 } from '../../../config/types';
-import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
 import { Website } from './website.model';
 
 export class Deployment extends AdvancedSQLModel {
@@ -29,6 +30,20 @@ export class Deployment extends AdvancedSQLModel {
   public constructor(data: any, context: Context) {
     super(data, context);
   }
+
+  @prop({
+    parser: { resolver: integerParser() },
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.WORKER,
+      SerializeFor.APILLON_API,
+    ],
+    populatable: [PopulateFrom.DB],
+  })
+  public id: number;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -65,7 +80,6 @@ export class Deployment extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -156,7 +170,6 @@ export class Deployment extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
-      SerializeFor.APILLON_API,
     ],
   })
   public cidv1: string;
@@ -300,7 +313,7 @@ export class Deployment extends AdvancedSQLModel {
           'd',
           '',
           getSerializationStrategy(context),
-        )}, d.updateTime
+        )}
         `,
       qFrom: `
         FROM \`${DbTables.DEPLOYMENT}\` d

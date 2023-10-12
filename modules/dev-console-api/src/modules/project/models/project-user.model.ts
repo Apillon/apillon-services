@@ -1,26 +1,65 @@
 import {
   AdvancedSQLModel,
-  CodeException,
+  ErrorCode,
   getQueryParams,
   PopulateFrom,
   SerializeFor,
+  SqlModelStatus,
   unionSelectAndCountQuery,
 } from '@apillon/lib';
 import { prop } from '@rawmodel/core';
-import { presenceValidator } from '@rawmodel/validators';
-import {
-  DbTables,
-  ResourceNotFoundErrorCode,
-  ValidatorErrorCode,
-} from '../../../config/types';
 import { integerParser } from '@rawmodel/parsers';
+import { presenceValidator } from '@rawmodel/validators';
+import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
 import { ProjectUserFilter } from '../dtos/project_user-query-filter.dto';
 import { Project } from './project.model';
-import { HttpStatus } from '@nestjs/common';
 
 export class ProjectUser extends AdvancedSQLModel {
   tableName = DbTables.PROJECT_USER;
+
+  /**
+   * id
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.WORKER,
+    ],
+    populatable: [PopulateFrom.DB],
+  })
+  public id: number;
+
+  /**
+   * status
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ErrorCode.STATUS_NOT_PRESENT,
+      },
+    ],
+    defaultValue: SqlModelStatus.ACTIVE,
+    fakeValue() {
+      return SqlModelStatus.ACTIVE;
+    },
+  })
+  public status?: number;
 
   // TODO: Implement ForeignKey constraints / verification
   @prop({

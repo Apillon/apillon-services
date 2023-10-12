@@ -102,6 +102,7 @@ export enum StorageEventType {
   DELETE_DIRECTORY = 'delete-directory',
   CANCEL_DELETE_DIRECTORY = 'cancel-delete-directory',
   LIST_DIRECTORY_CONTENT = 'list-directory-content',
+  LIST_FILES = 'list-files',
   GET_FILE_DETAILS = 'get-file-details',
   FILE_DELETE = 'delete-file',
   CANCEL_FILE_DELETE = 'cancel-delete-file',
@@ -111,7 +112,6 @@ export enum StorageEventType {
   BUCKET_WEBHOOK_DELETE = 'delete-bucket-webhook',
   LIST_FILE_UPLOAD = 'list-file-upload',
   MAX_BUCKETS_QUOTA_REACHED = 'max-buckets-quota-reached',
-  LIST_FILES_MARKED_FOR_DELETION = 'list-files-marked-for-deletion',
   IPNS_LIST = 'list-ipns',
   IPNS_CREATE = 'create-ipns',
   IPNS_UPDATE = 'update-ipns',
@@ -530,6 +530,7 @@ export enum ValidatorErrorCode {
   NFT_BURN_TOKEN_ID_NOT_PRESENT = 42200147,
   NFT_BURN_TOKEN_ID_NOT_VALID = 42200148,
   QUOTA_CODE_NOT_VALID = 42200149,
+  INVALID_FILES_LENGTH = 42200150,
 
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,

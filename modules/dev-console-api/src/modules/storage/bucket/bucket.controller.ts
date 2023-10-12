@@ -137,14 +137,14 @@ export class BucketController {
     return await this.bucketService.getBucketList(context, query);
   }
 
-  @Get(':id')
+  @Get(':bucket_uuid')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async getBucket(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id') id: number | string,
+    @Param('bucket_uuid') bucket_uuid: string,
   ) {
-    return await this.bucketService.getBucket(context, id);
+    return await this.bucketService.getBucket(context, bucket_uuid);
   }
 
   @Post()

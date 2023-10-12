@@ -24,8 +24,8 @@ export class BucketService {
     return (await new StorageMicroservice(context).listBuckets(query)).data;
   }
 
-  async getBucket(context: DevConsoleApiContext, id: number | string) {
-    return (await new StorageMicroservice(context).getBucket(id)).data;
+  async getBucket(context: DevConsoleApiContext, bucket_uuid: string) {
+    return (await new StorageMicroservice(context).getBucket(bucket_uuid)).data;
   }
 
   async isMaxBucketQuotaReached(
