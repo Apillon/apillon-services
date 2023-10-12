@@ -132,6 +132,7 @@ export enum StorageEventType {
   TEST_CRUST_PROVIDER = 'test-crust-provider',
   PROJECT_STORAGE_DETAILS = 'project-storage-details',
   STORAGE_INFO = 'get-storage-info',
+  GET_BLACKLIST = 'get-blacklist',
 }
 
 export enum AuthenticationEventType {
