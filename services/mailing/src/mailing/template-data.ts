@@ -155,6 +155,33 @@ export function generateTemplateData(key: string, data: any) {
       </p>
       `,
     },
+    'contact-us-form': {
+      subject: `Contact Form Entry by ${data.firstName} ${data.lastName}`,
+      title: 'Contact Form Entry',
+      text: `
+      <p>
+        <b>First name:</b> ${data.firstName}
+      </p>
+      <p>
+        <b>Last name:</b> ${data.lastName}
+      </p>
+      <p>
+        <b>E-mail:</b> ${data.email}
+      </p>
+      <p>
+        <b>Company website:</b> ${data.website}
+      </p>
+      <p>
+        <b>Country:</b> ${data.firstName}
+      </p>
+      <p>
+        <b>Product of interest:</b> ${data.product}
+      </p>
+      <p>
+        <b>Additional info:</b> ${data.additionalInfo}
+      </p>
+      `,
+    },
   };
 
   return templateData[key];
