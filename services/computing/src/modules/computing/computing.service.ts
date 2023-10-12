@@ -1,6 +1,7 @@
 import {
   ContractQueryFilter,
   CreateContractDto,
+  DepositToClusterDto,
   Lmas,
   LogType,
   SerializeFor,
@@ -14,7 +15,10 @@ import {
   ComputingCodeException,
   ComputingValidationException,
 } from '../../lib/exceptions';
-import { deployPhalaContract } from '../../lib/utils/contract-utils';
+import {
+  deployPhalaContract,
+  depositToPhalaContractCluster,
+} from '../../lib/utils/contract-utils';
 import { Contract } from './models/contract.model';
 import { SchrodingerContractABI } from '../../lib/contracts/deployed-phala-contracts';
 
@@ -105,5 +109,56 @@ export class ComputingService {
     contract.canAccess(context);
 
     return contract.serialize(getSerializationStrategy(context));
+  }
+
+  static async depositToContractCluster(
+    params: { body: DepositToClusterDto },
+    context: ServiceContext,
+  ) {
+    console.log(`Funding contract cluster: ${JSON.stringify(params.body)}`);
+    const contract = await new Contract({}, context).populateByUUID(
+      params.body.contract_uuid,
+    );
+    const amount = params.body.amount;
+    const accountAddress = params.body.accountAddress;
+    const conn = await context.mysql.start();
+    try {
+      await depositToPhalaContractCluster(
+        context,
+        contract,
+        accountAddress,
+        amount,
+        conn,
+      );
+      await context.mysql.commit(conn);
+    } catch (e: any) {
+      await context.mysql.rollback(conn);
+
+      throw await new ComputingCodeException({
+        status: 500,
+        code: ComputingErrorCode.FUND_CONTRACT_CLUSTER_ERROR,
+        context: context,
+        sourceFunction: 'fundContractCluster()',
+        errorMessage: 'Error funding contract cluster',
+        details: e,
+      }).writeToMonitor({});
+    }
+
+    await new Lmas().writeLog({
+      context,
+      project_uuid: contract.project_uuid,
+      logType: LogType.INFO,
+      message: `${amount}PHA deposited to address ${accountAddress} in cluster ${contract.clusterId}`,
+      location: 'ComputingService/depositToContractCluster',
+      service: ServiceName.COMPUTING,
+      data: {
+        contract_uuid: contract.contract_uuid,
+        clusterId: contract.clusterId,
+        accountAddress,
+        amount,
+      },
+    });
+
+    return { success: true };
   }
 }

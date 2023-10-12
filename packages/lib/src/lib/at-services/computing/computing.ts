@@ -4,6 +4,7 @@ import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { CreateContractDto } from './dtos/create-contract.dto';
 import { ContractQueryFilter } from './dtos/contract-query-filter.dto';
+import { DepositToClusterDto } from './dtos/deposit-to-cluster.dto';
 
 export class ComputingMicroservice extends BaseService {
   lambdaFunctionName =
@@ -41,6 +42,14 @@ export class ComputingMicroservice extends BaseService {
     const data = {
       eventName: ComputingEventType.GET_CONTRACT_BY_UUID,
       uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async depositToContractCluster(body: DepositToClusterDto) {
+    const data = {
+      eventName: ComputingEventType.DEPOSIT_TO_CONTRACT_CLUSTER,
+      body: body.serialize(),
     };
     return await this.callService(data);
   }

@@ -4,6 +4,7 @@ import {
   ComputingMicroservice,
   ContractQueryFilter,
   CreateContractDto,
+  DepositToClusterDto,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ResourceNotFoundErrorCode } from '../../config/types';
@@ -72,5 +73,14 @@ export class ComputingService {
   async getContract(context: DevConsoleApiContext, uuid: string) {
     return (await new ComputingMicroservice(context).getComputingContract(uuid))
       .data;
+  }
+
+  async depositToContractCluster(
+    context: DevConsoleApiContext,
+    body: DepositToClusterDto,
+  ) {
+    return (
+      await new ComputingMicroservice(context).depositToContractCluster(body)
+    ).data;
   }
 }

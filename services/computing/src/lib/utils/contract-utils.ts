@@ -55,3 +55,41 @@ export async function deployPhalaContract(
   contract.deployerAddress = response.data.address;
   await contract.update(SerializeFor.UPDATE_DB, conn);
 }
+
+export async function depositToPhalaContractCluster(
+  context: ServiceContext,
+  contract: Contract,
+  accountAddress: string,
+  amount: number,
+  conn: PoolConnection,
+) {
+  const walletService = new WalletService(context);
+  const transaction = await walletService.createFundPhalaClusterTransaction(
+    contract.clusterId,
+    accountAddress,
+    amount,
+  );
+  const blockchainServiceRequest = new CreateSubstrateTransactionDto(
+    {
+      chain: SubstrateChain.PHALA,
+      transaction: transaction.toHex(),
+      referenceTable: DbTables.CONTRACT,
+      referenceId: contract.id,
+    },
+    context,
+  );
+  const response = await new BlockchainMicroservice(
+    context,
+  ).createSubstrateTransaction(blockchainServiceRequest);
+  const dbTxRecord = new Transaction(
+    {
+      transactionType: TransactionType.DEPOSIT_TO_CONTRACT_CLUSTER,
+      refTable: DbTables.CONTRACT,
+      refId: contract.id,
+      transactionHash: response.data.transactionHash,
+      transactionStatus: TransactionStatus.PENDING,
+    },
+    context,
+  );
+  await TransactionService.saveTransaction(context, dbTxRecord, conn);
+}

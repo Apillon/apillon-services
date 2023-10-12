@@ -76,6 +76,20 @@ export class WalletService {
     );
   }
 
+  async createFundPhalaClusterTransaction(
+    clusterId: string,
+    accountAddress: string,
+    amount: number,
+  ) {
+    await this.initializeProvider();
+    const roundedAmount = Number((amount * 1e12).toFixed(0)) + 1;
+    return this.api.tx.phalaPhatContracts.transferToCluster(
+      roundedAmount,
+      clusterId,
+      accountAddress,
+    );
+  }
+
   // async createTransferOwnershipTransaction(
   //   contract: string,
   //   newOwner: string,

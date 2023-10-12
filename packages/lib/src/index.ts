@@ -84,6 +84,7 @@ export * from './lib/at-services/nfts/dtos/collections-quota-reached-query-filte
 export * from './lib/at-services/computing/computing';
 export * from './lib/at-services/computing/dtos/create-contract.dto';
 export * from './lib/at-services/computing/dtos/contract-query-filter.dto';
+export * from './lib/at-services/computing/dtos/deposit-to-cluster.dto';
 
 //#REGION Blockchain
 export * from './lib/at-services/blockchain/blockchain';

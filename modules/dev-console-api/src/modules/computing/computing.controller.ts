@@ -3,6 +3,7 @@ import {
   CreateContractDto,
   DefaultPermission,
   DefaultUserRole,
+  DepositToClusterDto,
   RoleGroup,
   ValidateFor,
 } from '@apillon/lib';
@@ -60,5 +61,22 @@ export class ComputingController {
     @Param('uuid') uuid: string,
   ) {
     return await this.computingService.getContract(context, uuid);
+  }
+
+  @Post('contracts/:uuid/deposit-to-cluster')
+  @Validation({ dto: DepositToClusterDto })
+  @UseGuards(ValidationGuard)
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async depositToCluster(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') uuid: string,
+    @Body() body: DepositToClusterDto,
+  ) {
+    body.contract_uuid = uuid;
+    return await this.computingService.depositToContractCluster(context, body);
   }
 }
