@@ -143,11 +143,11 @@ Are located in authentication module in apillon-api.
 
 ### Registration flow
 Is divided into several steps
-0. Email verification (This is actually the attestation step)
-1. Create an account (a wallet) - on the FE side. This generates a BIP39 mnemonic.
-2. Create a DID document (identity.service - generate identity). A blockchain service request is created an identity job process started
-3. Attestation step. Once the DID was created, an attestation request is created and sent to the blocchain.
-4. Link account and DID is the optional last step, if the user selected this option on the FE.
+1. Email verification (This is actually the attestation step)
+2. Create an account (a wallet) - on the FE side. This generates a BIP39 mnemonic.
+3. Create a DID document (identity.service - generate identity). A blockchain service request is created an identity job process started
+4. Attestation step. Once the DID was created, an attestation request is created and sent to the blocchain.
+5. Link account and DID is the optional last step, if the user selected this option on the FE.
 
 
 ### Verification flow
