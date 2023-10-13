@@ -231,9 +231,6 @@ export class File extends UuidSqlModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
@@ -306,10 +303,29 @@ export class File extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
-  public downloadLink: string;
+  public link: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+    ],
+    validators: [],
+  })
+  public directory_uuid: string;
 
   /**
    * Marks record in the database for deletion.
@@ -342,13 +358,14 @@ export class File extends UuidSqlModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT *
-      FROM \`${this.tableName}\`
+      SELECT f.*, d.directory_uuid
+      FROM \`${DbTables.FILE}\` f
+      LEFT JOIN \`${DbTables.DIRECTORY}\` d on d.id = f.directory_id
       WHERE
-      bucket_id = @bucket_id
-      AND name = @name
-      AND ((@directory_id IS NULL AND directory_id IS NULL) OR @directory_id = directory_id)
-      AND status <> ${SqlModelStatus.DELETED};
+      f.bucket_id = @bucket_id
+      AND f.name = @name
+      AND ((@directory_id IS NULL AND f.directory_id IS NULL) OR @directory_id = f.directory_id)
+      AND f.status <> ${SqlModelStatus.DELETED};
       `,
       { bucket_id, name, directory_id },
     );
@@ -370,10 +387,11 @@ export class File extends UuidSqlModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT *
-      FROM \`${this.tableName}\`
-      WHERE (id LIKE @id OR cid LIKE @id OR file_uuid LIKE @id)
-      AND status <> ${SqlModelStatus.DELETED};
+      SELECT f.*, d.directory_uuid
+      FROM \`${DbTables.FILE}\` f
+      LEFT JOIN \`${DbTables.DIRECTORY}\` d on d.id = f.directory_id
+      WHERE (f.id LIKE @id OR f.cid LIKE @id OR f.file_uuid LIKE @id)
+      AND f.status <> ${SqlModelStatus.DELETED};
       `,
       { id },
     );

@@ -7,6 +7,7 @@ import {
   BaseProjectQueryFilter,
   DefaultApiKeyRole,
   EndFileUploadSessionDto,
+  FilesQueryFilter,
   ValidateFor,
 } from '@apillon/lib';
 import { ApiKeyPermissions, Ctx, Validation } from '@apillon/modules-lib';
@@ -78,8 +79,6 @@ export class StorageController {
     return await this.storageService.createBucket(context, body);
   }
 
-  //#region legacy routes
-
   @Post([':bucketUuid/upload', 'buckets/:bucketUuid/upload'])
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_EXECUTE,
@@ -127,7 +126,7 @@ export class StorageController {
     );
   }
 
-  @Get([':bucketUuid/file/:id/detail', 'buckets/:bucketUuid/file/:id/detail'])
+  @Get([':bucketUuid/file/:id/detail', 'buckets/:bucketUuid/files/:id'])
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_READ,
     serviceType: AttachedServiceType.STORAGE,
@@ -141,14 +140,17 @@ export class StorageController {
     return await this.storageService.getFileDetails(context, bucket_uuid, id);
   }
 
-  @Delete([':bucketUuid/file/:id', 'buckets/:bucketUuid/file/:id'])
+  @Delete([':bucketUuid/file/:id', 'buckets/:bucketUuid/files/:file_uuid'])
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_WRITE,
     serviceType: AttachedServiceType.STORAGE,
   })
   @UseGuards(AuthGuard)
-  async deleteFile(@Ctx() context: ApillonApiContext, @Param('id') id: string) {
-    return await this.storageService.deleteFile(context, id);
+  async deleteFile(
+    @Ctx() context: ApillonApiContext,
+    @Param('file_uuid') file_uuid: string,
+  ) {
+    return await this.storageService.deleteFile(context, file_uuid);
   }
 
   @Get([':bucketUuid/content', 'buckets/:bucketUuid/content'])
@@ -168,5 +170,24 @@ export class StorageController {
     @Query() query: ApillonApiDirectoryContentQueryFilter,
   ) {
     return await this.storageService.listContent(context, bucket_uuid, query);
+  }
+
+  @Get('buckets/:bucketUuid/files')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_READ,
+    serviceType: AttachedServiceType.STORAGE,
+  })
+  @UseGuards(AuthGuard)
+  @Validation({
+    dto: FilesQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(ValidationGuard)
+  async listFiles(
+    @Ctx() context: ApillonApiContext,
+    @Param('bucketUuid') bucket_uuid: string,
+    @Query() query: FilesQueryFilter,
+  ) {
+    return await this.storageService.listFiles(context, bucket_uuid, query);
   }
 }

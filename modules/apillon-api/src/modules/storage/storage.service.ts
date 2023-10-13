@@ -8,6 +8,8 @@ import {
   DirectoryContentQueryFilter,
   EndFileUploadSessionDto,
   FileDetailsQueryFilter,
+  FilesQueryFilter,
+  SqlModelStatus,
   StorageMicroservice,
   ValidationException,
 } from '@apillon/lib';
@@ -88,10 +90,19 @@ export class StorageService {
     return (await new StorageMicroservice(context).getFileDetails(filter)).data;
   }
 
-  async deleteFile(context: ApillonApiContext, id: string) {
-    return (await new StorageMicroservice(context).deleteFile({ id })).data;
+  async deleteFile(context: ApillonApiContext, file_uuid: string) {
+    return (
+      await new StorageMicroservice(context).deleteFile({ id: file_uuid })
+    ).data;
   }
 
+  /**
+   * List bucket content in folder structure
+   * @param context
+   * @param bucket_uuid
+   * @param query
+   * @returns
+   */
   async listContent(
     context: ApillonApiContext,
     bucket_uuid: string,
@@ -114,5 +125,21 @@ export class StorageService {
         }),
       )
     ).data;
+  }
+
+  /**
+   * List files in flat structure
+   * @param context
+   * @param bucket_uuid
+   * @param query
+   * @returns
+   */
+  async listFiles(
+    context: ApillonApiContext,
+    bucket_uuid: string,
+    query: FilesQueryFilter,
+  ) {
+    query.populate({ bucket_uuid, status: SqlModelStatus.ACTIVE });
+    return (await new StorageMicroservice(context).listFiles(query)).data;
   }
 }

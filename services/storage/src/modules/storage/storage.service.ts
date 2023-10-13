@@ -17,7 +17,7 @@ import {
   ServiceName,
   SqlModelStatus,
 } from '@apillon/lib';
-import { ServiceContext } from '@apillon/service-lib';
+import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
 import {
   QueueWorkerType,
   sendToWorkerQueue,
@@ -456,9 +456,8 @@ export class StorageService {
         }
 
         return {
+          ...fur.serialize(SerializeFor.PROFILE),
           fileStatus: fileStatus,
-          file: fur.serialize(SerializeFor.PROFILE),
-          crustStatus: undefined,
         };
       }
 
@@ -469,7 +468,6 @@ export class StorageService {
     }
 
     file.canAccess(context);
-    fileStatus = FileStatus.UPLOADED_TO_IPFS;
     if (file.CID) {
       //Get IPFS gateway
       const ipfsGateway = await new ProjectConfig(
@@ -477,21 +475,14 @@ export class StorageService {
         context,
       ).getIpfsGateway();
 
-      fileStatus = FileStatus.PINNED_TO_CRUST;
-      file.downloadLink = ipfsGateway.url + file.CID;
+      file.link = ipfsGateway.url + file.CID;
 
       if (ipfsGateway.private) {
-        file.downloadLink = addJwtToIPFSUrl(
-          file.downloadLink,
-          file.project_uuid,
-        );
+        file.link = addJwtToIPFSUrl(file.link, file.project_uuid);
       }
     }
 
-    return {
-      fileStatus: fileStatus,
-      file: file.serialize(SerializeFor.PROFILE),
-    };
+    return file.serialize(getSerializationStrategy(context));
   }
 
   static async deleteFile(
@@ -523,9 +514,10 @@ export class StorageService {
       b.bucketType == BucketType.NFT_METADATA
     ) {
       await f.markForDeletion();
-      return f.serialize(SerializeFor.PROFILE);
+      return true;
     } else if (b.bucketType == BucketType.HOSTING) {
-      return await HostingService.deleteFile({ file: f }, context);
+      await HostingService.deleteFile({ file: f }, context);
+      return true;
     } else {
       return false;
     }
