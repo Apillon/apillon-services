@@ -631,6 +631,9 @@ export enum JwtTokenType {
   USER_CONFIRM_EMAIL = 'user-confirm-email',
   USER_LOGIN_CAPTCHA = 'user-login-captcha',
   IPFS_TOKEN = 'IPFS-token',
+  SPORRAN_SESSION = 'sporran-session',
+  IDENTITY_VERIFICATION = 'identity-verification',
+  AUTH_SESSION = 'auth-session',
 }
 
 /**

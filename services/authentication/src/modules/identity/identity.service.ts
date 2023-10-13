@@ -9,11 +9,11 @@ import {
   AttestationDto,
   writeLog,
   parseJwtToken,
+  JwtTokenType,
 } from '@apillon/lib';
 import { Identity } from './models/identity.model';
 import {
   IdentityState,
-  JwtTokenType,
   AuthenticationErrorCode,
   AuthApiEmailType,
   ApillonSupportedCTypes,

@@ -1,8 +1,7 @@
 import * as request from 'supertest';
-import { generateJwtToken, SerializeFor } from '@apillon/lib';
+import { generateJwtToken, JwtTokenType, SerializeFor } from '@apillon/lib';
 import { releaseStage, Stage } from '@apillon/tests-lib';
 import { setupTest } from '../../../../test/helpers/setup';
-import { JwtTokenType } from '../../../config/types';
 import { AuthenticationApiContext } from '../../../context';
 import * as mock from './mock-data';
 import {

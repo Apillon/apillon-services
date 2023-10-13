@@ -3,6 +3,7 @@ import {
   AttestationDto,
   IdentityCreateDto,
   IdentityDidRevokeDto,
+  JwtTokenType,
   LogType,
   Mailing,
   ServiceName,
@@ -21,7 +22,6 @@ import {
   AuthApiEmailType,
   IdentityJobState,
   IdentityState,
-  JwtTokenType,
 } from '../config/types';
 import { Identity } from '../modules/identity/models/identity.model';
 import { IdentityService } from '../modules/identity/identity.service';

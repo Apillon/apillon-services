@@ -4,11 +4,11 @@ import { AuthenticationApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { AuthGuard } from '../../guards/auth.guard';
 import { IdentityService } from './identity.service';
-import { JwtTokenType } from '../../config/types';
 import {
   BaseIdentityDto,
   IdentityCreateDto,
   IdentityDidRevokeDto,
+  JwtTokenType,
   ValidateFor,
   VerificationEmailDto,
 } from '@apillon/lib';

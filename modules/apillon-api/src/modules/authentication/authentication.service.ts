@@ -1,5 +1,4 @@
-import { generateJwtToken, parseJwtToken } from '@apillon/lib';
-import { JwtTokenType } from '../../config/types';
+import { JwtTokenType, generateJwtToken, parseJwtToken } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
 import { VerifyLoginDto } from '@apillon/lib';

@@ -1,4 +1,3 @@
-import { JwtTokenType } from '../../../config/types';
 import {
   ICredential,
   ICredentialPresentation,
@@ -11,7 +10,7 @@ import {
   ConfigService,
   Did,
 } from '@kiltprotocol/sdk-js';
-import { env, generateJwtToken } from '@apillon/lib';
+import { JwtTokenType, env, generateJwtToken } from '@apillon/lib';
 import * as mock from './mock-data';
 import { u8aToHex } from '@polkadot/util';
 import {

@@ -107,16 +107,6 @@ export enum CredentialAttestStatus {
   REVOKED = 'revoked',
 }
 
-/**
- * JWT Token signing types.
- */
-export enum JwtTokenType {
-  SPORRAN_SESSION = 'sporran-session',
-  IDENTITY_VERIFICATION = 'identity-verification',
-  USER_AUTHENTICATION = 'user-authentication',
-  AUTH_SESSION = 'auth-session',
-}
-
 export enum IdentityEventType {
   CREATE_DECENTRALIZED_IDENTITY = 'create-decentralized-identity',
 }

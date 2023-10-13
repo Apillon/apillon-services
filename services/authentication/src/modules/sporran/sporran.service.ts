@@ -2,6 +2,7 @@ import {
   CodeException,
   env,
   generateJwtToken,
+  JwtTokenType,
   Lmas,
   LogType,
   parseJwtToken,
@@ -39,7 +40,6 @@ import {
   generateKeypairs,
   getCtypeSchema,
 } from '../../lib/kilt';
-import { JwtTokenType } from '../../config/types';
 import {
   DidUri,
   ICredentialPresentation,

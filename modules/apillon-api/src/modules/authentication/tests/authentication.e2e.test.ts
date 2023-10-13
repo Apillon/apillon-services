@@ -3,6 +3,7 @@ import {
   DefaultApiKeyRole,
   AttachedServiceType,
   generateJwtToken,
+  JwtTokenType,
 } from '@apillon/lib';
 import {
   Stage,
@@ -14,7 +15,6 @@ import {
 } from '@apillon/tests-lib';
 import { setupTest } from '../../../../test/helpers/setup';
 import * as request from 'supertest';
-import { JwtTokenType } from '../../../config/types';
 
 describe('Authentication tests', () => {
   let stage: Stage;
