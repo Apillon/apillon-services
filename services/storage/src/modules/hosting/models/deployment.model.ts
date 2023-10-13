@@ -15,7 +15,7 @@ import {
   selectAndCountQuery,
 } from '@apillon/lib';
 import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
   DbTables,
   DeploymentEnvironment,
@@ -31,19 +31,104 @@ export class Deployment extends AdvancedSQLModel {
     super(data, context);
   }
 
+  //# region overrides of basic properties for model with uuid property
+
+  /**
+   * id
+   */
   @prop({
     parser: { resolver: integerParser() },
     serializable: [
-      SerializeFor.PROFILE,
-      SerializeFor.ADMIN,
-      SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
       SerializeFor.WORKER,
-      SerializeFor.APILLON_API,
+      SerializeFor.LOGGER,
     ],
     populatable: [PopulateFrom.DB],
   })
   public id: number;
+
+  /**
+   * status
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.LOGGER,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ErrorCode.STATUS_NOT_PRESENT,
+      },
+    ],
+    defaultValue: SqlModelStatus.ACTIVE,
+    fakeValue() {
+      return SqlModelStatus.ACTIVE;
+    },
+  })
+  public status?: number;
+
+  /**
+   * Created at property definition.
+   */
+  @prop({
+    parser: { resolver: dateParser() },
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+    ],
+    populatable: [PopulateFrom.DB],
+    defaultValue: new Date(),
+  })
+  public createTime?: Date;
+
+  /**
+   * Updated at property definition.
+   */
+  @prop({
+    parser: { resolver: dateParser() },
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+    ],
+    populatable: [PopulateFrom.DB],
+  })
+  public updateTime?: Date;
+
+  //# endregion
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: StorageErrorCode.DEPLOYMENT_REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
+  })
+  public deployment_uuid: string;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -61,7 +146,7 @@ export class Deployment extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.DEPLOYMENT_WEBSITE_ID_NOT_PRESENT,
+        code: StorageErrorCode.DEPLOYMENT_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -79,12 +164,11 @@ export class Deployment extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
     ],
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.DEPLOYMENT_BUCKET_ID_NOT_PRESENT,
+        code: StorageErrorCode.DEPLOYMENT_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -109,7 +193,7 @@ export class Deployment extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.DEPLOYMENT_ENVIRONMENT_NOT_PRESENT,
+        code: StorageErrorCode.DEPLOYMENT_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -170,6 +254,7 @@ export class Deployment extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
   })
   public cidv1: string;

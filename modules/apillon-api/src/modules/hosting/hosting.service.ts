@@ -79,10 +79,10 @@ export class HostingService {
 
   async deployWebsite(
     context: ApillonApiContext,
-    id: any,
+    website_uuid: string,
     body: DeployWebsiteDto,
   ) {
-    body.populate({ website_id: id, clearBucketForUpload: true });
+    body.populate({ website_uuid, clearBucketForUpload: true });
     try {
       await body.validate();
     } catch (err) {
@@ -103,7 +103,9 @@ export class HostingService {
     return (await new StorageMicroservice(context).listDeployments(query)).data;
   }
 
-  async getDeployment(context: ApillonApiContext, id: number) {
-    return (await new StorageMicroservice(context).getDeployment(id)).data;
+  async getDeployment(context: ApillonApiContext, deployment_uuid: string) {
+    return (
+      await new StorageMicroservice(context).getDeployment(deployment_uuid)
+    ).data;
   }
 }

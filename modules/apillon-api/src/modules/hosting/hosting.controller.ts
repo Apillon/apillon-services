@@ -173,7 +173,7 @@ export class HostingController {
     );
   }
 
-  @Get('websites/:website_id/deployments/:id')
+  @Get('websites/:website_id/deployments/:deployment_uuid')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_READ,
     serviceType: AttachedServiceType.HOSTING,
@@ -181,8 +181,8 @@ export class HostingController {
   @UseGuards(AuthGuard)
   async getDeployment(
     @Ctx() context: ApillonApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('deployment_uuid') deployment_uuid: string,
   ) {
-    return await this.hostingService.getDeployment(context, id);
+    return await this.hostingService.getDeployment(context, deployment_uuid);
   }
 }

@@ -1,15 +1,14 @@
 import {
   Context,
   DomainQueryFilter,
-  ErrorCode,
   Lmas,
   LogType,
   PoolConnection,
   PopulateFrom,
-  ProjectAccessModel,
   SerializeFor,
   ServiceName,
   SqlModelStatus,
+  UuidSqlModel,
   WebsiteQueryFilter,
   getQueryParams,
   presenceValidator,
@@ -30,50 +29,12 @@ import { addJwtToIPFSUrl } from '../../../lib/ipfs-utils';
 import { Bucket } from '../../bucket/models/bucket.model';
 import { ProjectConfig } from '../../config/models/project-config.model';
 
-export class Website extends ProjectAccessModel {
+export class Website extends UuidSqlModel {
   public readonly tableName = DbTables.WEBSITE;
 
   public constructor(data: any, context: Context) {
     super(data, context);
   }
-
-  /**
-   * id
-   */
-  @prop({
-    parser: { resolver: integerParser() },
-    serializable: [
-      SerializeFor.PROFILE,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.WORKER,
-    ],
-    populatable: [PopulateFrom.DB],
-  })
-  public id: number;
-
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
-    serializable: [
-      SerializeFor.PROFILE,
-      SerializeFor.ADMIN,
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.SERVICE,
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ErrorCode.STATUS_NOT_PRESENT,
-      },
-    ],
-    defaultValue: SqlModelStatus.ACTIVE,
-    fakeValue() {
-      return SqlModelStatus.ACTIVE;
-    },
-  })
-  public status?: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -606,11 +567,11 @@ export class Website extends ProjectAccessModel {
     this.canAccess(context);
     // Map url query with sql fields.
     const fieldMap = {
-      id: 'wp.id',
+      id: 'w.id',
     };
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
-      'wp',
+      'w',
       fieldMap,
       filter.serialize(),
     );
@@ -618,15 +579,18 @@ export class Website extends ProjectAccessModel {
     const sqlQuery = {
       qSelect: `
         SELECT ${this.generateSelectFields(
-          'wp',
+          'w',
           '',
-        )}, wp.createTime, wp.updateTime
+        )}, uploadBucket.bucket_uuid, stgBucket.ipns as ipnsStaging, prodBucket.ipns as ipnsProduction
         `,
       qFrom: `
-        FROM \`${DbTables.WEBSITE}\` wp
-        WHERE wp.project_uuid = @project_uuid
-        AND (@search IS null OR wp.name LIKE CONCAT('%', @search, '%'))
-        AND IFNULL(@status, ${SqlModelStatus.ACTIVE}) = status
+        FROM \`${DbTables.WEBSITE}\` w
+        JOIN \`${DbTables.BUCKET}\` uploadBucket ON uploadBucket.id = w.bucket_id
+        JOIN \`${DbTables.BUCKET}\` stgBucket ON stgBucket.id = w.stagingBucket_id
+        JOIN \`${DbTables.BUCKET}\` prodBucket ON prodBucket.id = w.productionBucket_id
+        WHERE w.project_uuid = @project_uuid
+        AND (@search IS null OR w.name LIKE CONCAT('%', @search, '%'))
+        AND IFNULL(@status, ${SqlModelStatus.ACTIVE}) = w.status
       `,
       qFilter: `
         ORDER BY ${filters.orderStr}
@@ -634,7 +598,7 @@ export class Website extends ProjectAccessModel {
       `,
     };
 
-    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'wp.id');
+    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'w.id');
   }
 
   public async populateBucketsAndLink() {

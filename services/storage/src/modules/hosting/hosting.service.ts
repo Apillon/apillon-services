@@ -243,8 +243,9 @@ export class HostingService {
     event: { body: DeployWebsiteDto },
     context: ServiceContext,
   ): Promise<any> {
-    const website: Website = await new Website({}, context).populateById(
-      event.body.website_id,
+    const website: Website = await new Website({}, context).populateByUUID(
+      event.body.website_uuid,
+      'website_uuid',
     );
 
     if (!website.exists()) {
@@ -327,6 +328,7 @@ export class HostingService {
 
     //Create deployment record
     const deployment: Deployment = new Deployment({}, context).populate({
+      deployment_uuid: uuidV4(),
       website_id: website.id,
       bucket_id:
         event.body.environment == DeploymentEnvironment.STAGING
@@ -429,11 +431,14 @@ export class HostingService {
 
   //#region get, list deployments
 
-  static async getDeployment(event: { id: number }, context: ServiceContext) {
+  static async getDeployment(
+    event: { deployment_uuid: string },
+    context: ServiceContext,
+  ) {
     const deployment: Deployment = await new Deployment(
       {},
       context,
-    ).populateById(event.id);
+    ).populateByUUID(event.deployment_uuid, 'deployment_uuid');
 
     if (!deployment.exists()) {
       throw new StorageCodeException({

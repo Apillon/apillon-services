@@ -410,10 +410,10 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async getDeployment(id: number) {
+  public async getDeployment(deployment_uuid: string) {
     const data = {
       eventName: StorageEventType.DEPLOYMENT_GET,
-      id: id,
+      deployment_uuid,
     };
     return await this.callService(data);
   }

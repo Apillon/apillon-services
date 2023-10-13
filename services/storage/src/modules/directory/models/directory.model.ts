@@ -1,26 +1,24 @@
-import { integerParser, stringParser, dateParser } from '@rawmodel/parsers';
-import { presenceValidator } from '@rawmodel/validators';
 import {
-  ProjectAccessModel,
   Context,
   DirectoryContentQueryFilter,
-  env,
-  getQueryParams,
   PoolConnection,
   PopulateFrom,
-  prop,
   SerializeFor,
   SqlModelStatus,
-  unionSelectAndCountQuery,
   UuidSqlModel,
+  getQueryParams,
+  prop,
+  unionSelectAndCountQuery,
 } from '@apillon/lib';
-import { DbTables, ObjectType, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
+import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
+import { presenceValidator } from '@rawmodel/validators';
 import { v4 as uuidV4 } from 'uuid';
-import { File } from '../../storage/models/file.model';
-import { ProjectConfig } from '../../config/models/project-config.model';
-import { Bucket } from '../../bucket/models/bucket.model';
+import { DbTables, ObjectType, StorageErrorCode } from '../../../config/types';
 import { addJwtToIPFSUrl } from '../../../lib/ipfs-utils';
+import { Bucket } from '../../bucket/models/bucket.model';
+import { ProjectConfig } from '../../config/models/project-config.model';
+import { File } from '../../storage/models/file.model';
 
 export class Directory extends UuidSqlModel {
   public readonly tableName = DbTables.DIRECTORY;

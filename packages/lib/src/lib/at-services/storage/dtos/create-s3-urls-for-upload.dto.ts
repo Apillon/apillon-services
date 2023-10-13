@@ -91,7 +91,7 @@ export class CreateS3UrlsForUploadDto extends ModelBase {
         code: ValidatorErrorCode.FILES_PROPERTY_NOT_PRESENT,
       },
       {
-        resolver: arrayLengthValidator({ min: 1, max: 200 }),
+        resolver: arrayLengthValidator({ minOrEqual: 1, maxOrEqual: 200 }),
         code: ValidatorErrorCode.INVALID_FILES_LENGTH,
       },
     ],
@@ -126,7 +126,7 @@ export class ApillonApiCreateS3UrlsForUploadDto extends ModelBase {
         code: ValidatorErrorCode.FILES_PROPERTY_NOT_PRESENT,
       },
       {
-        resolver: arrayLengthValidator({ min: 1, max: 200 }),
+        resolver: arrayLengthValidator({ minOrEqual: 1, maxOrEqual: 200 }),
         code: ValidatorErrorCode.INVALID_FILES_LENGTH,
       },
     ],
@@ -161,7 +161,7 @@ export class ApillonHostingApiCreateS3UrlsForUploadDto extends ModelBase {
         code: ValidatorErrorCode.FILES_PROPERTY_NOT_PRESENT,
       },
       {
-        resolver: arrayLengthValidator({ min: 1, max: 200 }),
+        resolver: arrayLengthValidator({ minOrEqual: 1, maxOrEqual: 200 }),
         code: ValidatorErrorCode.INVALID_FILES_LENGTH,
       },
     ],

@@ -134,13 +134,13 @@ export class HostingController {
     );
   }
 
-  @Get('websites/:website_uuid/deployments/:id')
+  @Get('websites/:website_uuid/deployments/:deployment_uuid')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async getDeployment(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('deployment_uuid') deployment_uuid: string,
   ) {
-    return await this.hostingService.getDeployment(context, id);
+    return await this.hostingService.getDeployment(context, deployment_uuid);
   }
 }

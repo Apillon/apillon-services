@@ -117,7 +117,9 @@ export class HostingService {
     return (await new StorageMicroservice(context).listDeployments(query)).data;
   }
 
-  async getDeployment(context: DevConsoleApiContext, id: number) {
-    return (await new StorageMicroservice(context).getDeployment(id)).data;
+  async getDeployment(context: DevConsoleApiContext, deployment_uuid: string) {
+    return (
+      await new StorageMicroservice(context).getDeployment(deployment_uuid)
+    ).data;
   }
 }
