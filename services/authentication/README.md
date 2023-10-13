@@ -1,4 +1,4 @@
-# Apillon Authentication Service - AUTH
+# Apillon Authentication Service
 
 Authentication Service provides functionality for Apillon OAUTH application. It enables developers to use Apillon OAUTH service on their websites. End users can then login to ther websites with help of Kilt blockchain protocol.
 
@@ -56,15 +56,7 @@ Environment variables that has to be set:
   AUTH_AWS_WORKER_SQS_URL: string;
   AUTH_AWS_WORKER_LAMBDA_NAME: string;
 ```
-
-## Deployment
-
-Please read [Deployment](../../docs/deployment.md) documentation.
-
-## License
-
-Copyright (c) Apillon - all rights reserved
-
+## Architecture and logic
 
 * **DID** - Decentralized Identity
 W3C standard, basically an address accessible with a master key (mnemonic), which unlocks the other utility keys - authentication, encryption, assertion, delegation.
@@ -127,7 +119,7 @@ The identity entry is updated with IDENTITY_VERIFIED and the IdentityGenerateWor
 > This message submits the attestation object from the BE if it was successfully attested.
 
 
- ### modules/apillon-api/modules/authentication
+### modules/apillon-api/modules/authentication
 GET auth/session-token
 > Returns the session token, which can then be used with all subsequential requests.
 
@@ -143,3 +135,39 @@ Are located in authentication module in apillon-api.
 **POST**	sporran/verify-session
 
 > Verifies the sporran session
+
+## Flows
+* Registration flow
+* Verification flow
+* Sporran specifics
+
+### Registration flow
+Is divided into several steps
+0. Email verification (This is actually the attestation step)
+1. Create an account (a wallet) - on the FE side. This generates a BIP39 mnemonic.
+2. Create a DID document (identity.service - generate identity). A blockchain service request is created an identity job process started
+3. Attestation step. Once the DID was created, an attestation request is created and sent to the blocchain.
+4. Link account and DID is the optional last step, if the user selected this option on the FE.
+
+
+### Verification flow
+Composed of one step and multiple sub-steps
+1. Verifies the integrity of the presentation
+2. Check if presentation attestation object is present on chain (rootHash).
+3. Check if the owner (attester is valid). **IMPORTANT**: Only SocialKYC and Apillon attesters currently supported.
+4. Check if attestation object was revoked.
+5. Return verify result to caller.
+
+### Sporran flow
+Sporran has two supported flows for now, verification and registation with sporran (feature currently disabled but implemted). Verification has multiple steps
+1. Initiate Sporran session. Generates app specific data such as dApp name, dApp URI, challenge.
+2. Verify sporran session - parses JWT token from FE (apillon specific), verifies the corrent dApp URI and check if the provided challenge, signed by the public sporran key (a light did is used for the session) is corrent, and the challenge is the same as generated in the first step.
+3. Communication can now start with the use of iMessage structures defined by Sporran (Check sporran.service for more details)
+
+## Deployment
+
+Please read [Deployment](../../docs/deployment.md) documentation.
+
+## License
+
+Copyright (c) Apillon - all rights reserved
