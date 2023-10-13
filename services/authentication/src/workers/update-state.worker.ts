@@ -24,7 +24,7 @@ import {
   JwtTokenType,
 } from '../config/types';
 import { Identity } from '../modules/identity/models/identity.model';
-import { IdentityMicroservice } from '../modules/identity/identity.service';
+import { IdentityService } from '../modules/identity/identity.service';
 import { IdentityJob } from '../modules/identity-job/models/identity-job.model';
 
 export class UpdateStateWorker extends BaseQueueWorker {
@@ -50,7 +50,7 @@ export class UpdateStateWorker extends BaseQueueWorker {
     });
 
     if (env.APP_ENV != AppEnvironment.TEST) {
-      await IdentityMicroservice.attestClaim(
+      await IdentityService.attestClaim(
         { body: attestationClaimDto },
         this.context,
       );
@@ -64,7 +64,7 @@ export class UpdateStateWorker extends BaseQueueWorker {
     });
 
     if (env.APP_ENV != AppEnvironment.TEST) {
-      await IdentityMicroservice.generateIdentity(
+      await IdentityService.generateIdentity(
         { body: identityCreateDto },
         this.context,
       );
@@ -76,13 +76,13 @@ export class UpdateStateWorker extends BaseQueueWorker {
       email: params.email,
       token: params.token,
     });
-    await IdentityMicroservice.revokeIdentity(
+    await IdentityService.revokeIdentity(
       { body: identityRevokeDto },
       this.context,
     );
 
     if (env.APP_ENV != AppEnvironment.TEST) {
-      await IdentityMicroservice.revokeIdentity(
+      await IdentityService.revokeIdentity(
         { body: identityRevokeDto },
         this.context,
       );

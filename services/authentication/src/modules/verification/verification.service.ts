@@ -5,7 +5,6 @@ import {
   Lmas,
   LogType,
   ServiceName,
-  writeLog,
 } from '@apillon/lib';
 import {
   Attestation,
@@ -16,7 +15,7 @@ import {
   ICredentialPresentation,
 } from '@kiltprotocol/sdk-js';
 
-export class VerificationMicroservice {
+export class VerificationService {
   static async verifyIdentity(event, context): Promise<any> {
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');

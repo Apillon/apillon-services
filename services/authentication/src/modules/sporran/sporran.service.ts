@@ -52,7 +52,7 @@ import { Identity } from '../identity/models/identity.model';
 import { prepareSignResources } from '../../lib/sporran';
 import { AuthenticationCodeException } from '../../lib/exceptions';
 
-export class SporranMicroservice {
+export class SporranService {
   static async getSessionValues(_context): Promise<any> {
     // generate keypairs
     await connect(env.KILT_NETWORK);

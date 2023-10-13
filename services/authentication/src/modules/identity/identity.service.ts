@@ -9,7 +9,6 @@ import {
   AttestationDto,
   writeLog,
 } from '@apillon/lib';
-import axios from 'axios';
 import { Identity } from './models/identity.model';
 import {
   IdentityState,
@@ -53,7 +52,7 @@ import {
   identityCreateRequestBc,
 } from '../../lib/utils/transaction-utils';
 
-export class IdentityMicroservice {
+export class IdentityService {
   static async sendVerificationEmail(
     event: { body: VerificationEmailDto },
     context,
@@ -100,9 +99,9 @@ export class IdentityMicroservice {
 
       // Lock email to identity object
       identity.populate({
-        email: email,
+        email,
         state: IdentityState.IN_PROGRESS,
-        token: token,
+        token,
       });
 
       try {
@@ -115,7 +114,7 @@ export class IdentityMicroservice {
         }
       } catch (err) {
         await new Lmas().writeLog({
-          context: context,
+          context,
           logType: LogType.ERROR,
           message: `Error creating identity state for user with email ${email}'`,
           location: 'Authentication-API/identity/sendVerificationEmail',
