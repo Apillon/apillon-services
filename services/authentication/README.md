@@ -2,13 +2,6 @@
 
 Authentication Service provides functionality for Apillon OAUTH application. It enables developers to use Apillon OAUTH service on their websites. End users can then login to ther websites with help of Kilt blockchain protocol.
 
-## Table of Contents
-
-1. [Getting Started](#getting-started)
-2. [Configuration](#configuration)
-3. [Deployment](#deployment)
-4. [License](#license)
-
 ## Getting Started
 
 Please read [Development](../../docs/development.md) and [Debug and Test](../../docs/debug-and-test.md) documentation. These instructions will help you set up the development environment and run the microservice locally.
@@ -56,7 +49,6 @@ Environment variables that has to be set:
    ************************************************************/
   KILT_NETWORK: string;
   KILT_ATTESTER_MNEMONIC: string;
-  KILT_DERIVATION_ALGORITHM: string;
 
   /************************************************************
    * Authentication config (Uses Kilt module)
@@ -72,3 +64,82 @@ Please read [Deployment](../../docs/deployment.md) documentation.
 ## License
 
 Copyright (c) Apillon - all rights reserved
+
+
+* **DID** - Decentralized Identity
+W3C standard, basically an address accessible with a master key (mnemonic), which unlocks the other utility keys - authentication, encryption, assertion, delegation.
+A DID defines the subject - the Kilt account, is tied to it, but not linked. The account holds tokens and uses the DID to perform operations. A DID requires a deposit ob 2 KILT, which is returned upon did revokation (minus the transaction fees).
+* **VC** - Verifiable Credentail
+Is a JSON (can also be a different representation, as defined the VC standard), which holds information about an entity. It is composed of data, rootHash, nonce map, which is used for selective disclosure (minimization)
+* **CLAIM** - 
+A claim object by the claimer. It holds no value inside the Kilt network.
+* **CREDENTIAL** - 
+A credential is a verified set of one or more claims. It is written to the blockchain.
+* **PRESENTATION** - 
+A presentation is an objected created from one or more credential fields. It can be combined from multiple credentials. A presentation holds the rootHash, which is checked by the verifier.
+
+> 1. The verification process verifies the **presentation** of an entity
+> 2. The registration process issues an **account**, a **did** and a **credential** for a set of properties of a subject.
+
+## MODULES
+* Identity generate
+* Verification
+* Sporran
+
+### REGISTRATION
+
+Endpoints
+
+IdentityController:
+
+**POST** 	identity/verification/email:
+> Send a verification mail to the provided email with a JWT token of type IDENTITY_VERIFICATION, signed by Apillon.
+This endpoint servers two main purposes - to verify the client via email, and to trigger the identity generation process, if that is the wish of the caller.  If an identity already exists and it's status in ATTESTED | REVOKED, then the function should trigger an error message to the client -> Invalid request, identity exists etc. We use this endpoint to send different kinds of verification emails:
+Supported type:
+
+**POST** 	identity/generate/identity
+> Issues a request to the SQS queue for identity generation. It can be either a full identity generation (DID create and attestation), or just attestion.
+This call will fail, if the identity table entry for the given email does not exist OE the identity state is not IN_PROGRESS AND not IDENTITY_VERIFIED.
+The identity entry is updated with IDENTITY_VERIFIED and the IdentityGenerateWorker is executed, which is elaborated further below under the worker section.
+
+**GET** 	identity/generate/state/query
+> Used to fetch the state of the generation process, which can take several minutes. This is used so the client and adequately update it's state, once the generation is done, as well as to mitigate any time-out problems.
+
+**GET** 	identity/credential/query
+> Used in credential restore operation to fetch the saved credential for the provided email. A verification JWT token is required. A credential JSON file is returned to the client for the provided email address.
+
+**POST** 	identity/did/revoke
+> Issues a DID revoke operation request - calls the IdentityRevokeWorker. If the identity does not exist OR it's status is not ATTESTED for the given email, this endpoint should fail.
+
+## VERIFICATION
+**POST** 	verification/verify
+> Verification is only composed of one endpoint, which is the verification process.
+
+## SPORRAN
+
+**POST** 	sporran/message/submit-terms
+> BE creates a message of type submit-terms, which is sent to Sporran. This message is submits the actual terms of attestation (ctype) to the sporran user
+
+**POST** 	sporran/message/request-credentials
+> BE creates a message of type request-credentials. This message is then sent to sporran, where the user can select the requested credential (required by the application and specified in the request-credential message), signs it, then sends it to BE for verification.
+
+**POST** sporran/message/submit-attestation
+> This message submits the attestation object from the BE if it was successfully attested.
+
+
+ ### modules/apillon-api/modules/authentication
+GET auth/session-token
+> Returns the session token, which can then be used with all subsequential requests.
+
+GET auth/verify-long
+> Verifies the credential against the blockchain. Revoked property is checked and the rootHash is compared to the blockchain (if it exists). No additional checks are performed in this step.
+
+## OAuth 2.0 controllers
+Are located in authentication module in apillon-api.
+
+**GET** 	sporran/session-values
+> Returns the session values for the Sporran connection
+
+**POST**	sporran/verify-session
+
+> Verifies the sporran session
