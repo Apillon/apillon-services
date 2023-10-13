@@ -304,7 +304,7 @@ export class SubscriptionService {
         conn,
       );
 
-    if (activeSubscription?.exists()) {
+    if (new Subscription(activeSubscription, context).exists()) {
       throw await new ScsCodeException({
         code: ConfigErrorCode.ACTIVE_SUBSCRIPTION_EXISTS,
         status: 400,

@@ -37,6 +37,7 @@ export class PaymentsService {
 
     return await this.stripeService.generateStripePaymentSession(
       stripeId,
+      context.user.email,
       paymentSessionDto,
       'payment',
     );
@@ -63,6 +64,7 @@ export class PaymentsService {
 
     return await this.stripeService.generateStripePaymentSession(
       stripeId,
+      context.user.email,
       paymentSessionDto,
       'subscription',
     );
