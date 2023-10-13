@@ -22,7 +22,7 @@ export class IdentityController {
   @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.IDENTITY_VERIFICATION))
   async attestationGenerateIdentity(
     @Ctx() context: AuthenticationApiContext,
-    @Body() body: any,
+    @Body() body: IdentityCreateDto,
   ) {
     return await this.identityService.generateIdentity(context, body);
   }
@@ -55,7 +55,7 @@ export class IdentityController {
   @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.IDENTITY_VERIFICATION))
   async identityRevoke(
     @Ctx() context: AuthenticationApiContext,
-    @Body() body: any,
+    @Body() body: IdentityDidRevokeDto,
   ) {
     return await this.identityService.revokeIdentity(context, body);
   }
@@ -69,7 +69,7 @@ export class IdentityController {
   )
   async identityVerification(
     @Ctx() context: AuthenticationApiContext,
-    @Body() body: any,
+    @Body() body: VerificationEmailDto,
   ) {
     return await this.identityService.sendVerificationEmail(context, body);
   }

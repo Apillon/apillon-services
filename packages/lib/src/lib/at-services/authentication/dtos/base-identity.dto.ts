@@ -27,7 +27,7 @@ export class BaseIdentityDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.IDENTITY_TOKEN_NOT_PRESENT,
+        code: ValidatorErrorCode.IDENTITY_VERIFICATION_TOKEN_NOT_PRESENT,
       },
     ],
   })

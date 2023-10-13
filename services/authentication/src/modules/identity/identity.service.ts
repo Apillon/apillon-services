@@ -8,6 +8,7 @@ import {
   ServiceName,
   AttestationDto,
   writeLog,
+  parseJwtToken,
 } from '@apillon/lib';
 import { Identity } from './models/identity.model';
 import {
@@ -51,15 +52,29 @@ import {
   attestationRequestBc,
   identityCreateRequestBc,
 } from '../../lib/utils/transaction-utils';
+import { ServiceContext } from '@apillon/service-lib';
 
 export class IdentityService {
+  /**
+   * Sends an email with a newly generated token and creates a new identity entry
+   * @param {{ body: VerificationEmailDto }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<any>}
+   */
   static async sendVerificationEmail(
     event: { body: VerificationEmailDto },
-    context,
+    context: ServiceContext,
   ): Promise<any> {
     const email = event.body.email;
+
+    const { project_uuid } = parseJwtToken(
+      JwtTokenType.IDENTITY_VERIFICATION,
+      event.body.token,
+    );
+
     const token = generateJwtToken(JwtTokenType.IDENTITY_VERIFICATION, {
       email,
+      project_uuid,
     });
 
     let auth_app_page = 'registration';
@@ -102,6 +117,7 @@ export class IdentityService {
         email,
         state: IdentityState.IN_PROGRESS,
         token,
+        project_uuid,
       });
 
       try {

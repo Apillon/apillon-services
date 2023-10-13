@@ -120,6 +120,19 @@ export class Identity extends AdvancedSQLModel {
   })
   public state: string;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
+    ],
+  })
+  public project_uuid: string;
+
   /**
    * Sets identity state
    */

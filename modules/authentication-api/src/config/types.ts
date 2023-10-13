@@ -62,6 +62,7 @@ export enum InternalErrorErrorCode {
 export enum JwtTokenType {
   SPORRAN_SESSION = 'SPORRAN_SESSION',
   IDENTITY_VERIFICATION = 'identity-verification',
+  AUTH_SESSION = 'auth-session',
 }
 
 export enum AuthAppErrors {
