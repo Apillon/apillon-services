@@ -44,7 +44,10 @@ import {
   getFullDidDocument,
   linkAccountDid,
 } from '../../lib/kilt';
-import { AuthenticationCodeException } from '../../lib/exceptions';
+import {
+  AuthenticationCodeException,
+  AuthenticationValidationException,
+} from '../../lib/exceptions';
 import { decryptAssymetric } from '../../lib/utils/crypto-utils';
 import { sendBlockchainServiceRequest } from '../../lib/utils/blockchain-utils';
 import {
@@ -68,7 +71,7 @@ export class IdentityService {
     const email = event.body.email;
 
     const { project_uuid } = parseJwtToken(
-      JwtTokenType.IDENTITY_VERIFICATION,
+      JwtTokenType.AUTH_SESSION,
       event.body.token,
     );
 
@@ -267,13 +270,13 @@ export class IdentityService {
 
     try {
       await identity.validate();
-      await identity.update();
-    } catch (error) {
-      throw new AuthenticationCodeException({
-        code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
-        status: HttpStatus.BAD_REQUEST,
-      });
+    } catch (err) {
+      await identity.handle(err);
+      if (!identity.isValid()) {
+        throw new AuthenticationValidationException(identity);
+      }
     }
+    await identity.update();
 
     writeLog(LogType.INFO, 'Sending blockchain request..');
     // Call blockchain server and submit batch request
@@ -359,13 +362,13 @@ export class IdentityService {
 
     try {
       await identity.validate();
-      await identity.update();
-    } catch (error) {
-      throw new AuthenticationCodeException({
-        code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
-        status: HttpStatus.BAD_REQUEST,
-      });
+    } catch (err) {
+      await identity.handle(err);
+      if (!identity.isValid()) {
+        throw new AuthenticationValidationException(identity);
+      }
     }
+    await identity.update();
 
     writeLog(LogType.INFO, 'Creating attestation TX ..');
     const attestationTx = await Did.authorizeTx(

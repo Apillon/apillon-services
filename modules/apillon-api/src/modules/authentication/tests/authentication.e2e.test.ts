@@ -95,7 +95,11 @@ describe('Authentication tests', () => {
   });
 
   test('Valid token should be verified', async () => {
-    const token = generateJwtToken(JwtTokenType.USER_AUTHENTICATION, '10min');
+    const token = generateJwtToken(
+      JwtTokenType.USER_AUTHENTICATION,
+      {},
+      '10min',
+    );
     const response = await request(stage.http)
       .get(`/auth/verify-login?token=${token}`)
       .set(

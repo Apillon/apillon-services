@@ -1,8 +1,7 @@
 import * as request from 'supertest';
-import { Stage, releaseStage } from '@apillon/tests-lib';
+import { releaseStage, Stage } from '@apillon/tests-lib';
 import { setupTest } from '../../../../test/helpers/setup';
 import { generateJwtToken, JwtTokenType, SerializeFor } from '@apillon/lib';
-import { AuthenticationApiContext } from '../../../context';
 import * as mock from './mock-data';
 import { u8aToHex } from '@polkadot/util';
 import {
@@ -15,6 +14,7 @@ import {
   DbTables,
   IdentityState,
 } from '@apillon/authentication/src/config/types';
+import { v4 as uuidV4 } from 'uuid';
 
 // !!!! NOTE !!!!: Some tests are commented out - Mostly valid ones, because we need a proper
 // test environment, which we do not as have as of now. In the future, a test node of the KILT
@@ -23,7 +23,6 @@ import {
 
 describe('Identity', () => {
   let stage: Stage;
-  let context: AuthenticationApiContext;
   jest.setTimeout(100000); // Set timeout to 100 seconds
   const testEmail = 'test@mailinator.com';
   const token = generateJwtToken(JwtTokenType.IDENTITY_VERIFICATION, {
@@ -32,16 +31,14 @@ describe('Identity', () => {
 
   // CONTROL PARAMETERS
   const controlMailInvalid = 'INVALIDMAIL';
-  const controlMailInvalidDomain = 'test@123@#.www';
 
   beforeAll(async () => {
     stage = await setupTest();
-    context = new AuthenticationApiContext();
   });
 
   afterAll(async () => {
     jest.setTimeout(5000); // 5 seconds -> revert
-    // await releaseStage(stage);
+    await releaseStage(stage);
   });
 
   describe('Test init identity generation process', () => {
@@ -78,7 +75,7 @@ describe('Identity', () => {
         .send({});
       expect(resp.status).toBe(422);
       const errors = resp.body.errors;
-      expect(errors.length).toEqual(2);
+      expect(errors.length).toEqual(3);
 
       const errorCodes = errors.map((x) =>
         x.message == 'USER_EMAIL_NOT_PRESENT' ||
@@ -99,7 +96,7 @@ describe('Identity', () => {
       identity.populate({
         email: testEmail,
         state: IdentityState.ATTESTED,
-        token: token,
+        token,
         credential: { props: 'I am a credential lalala' },
         status: 5,
       });
@@ -109,7 +106,10 @@ describe('Identity', () => {
         .post('/identity/verification/email')
         .send({
           email: testEmail,
-          token: token,
+          token: generateJwtToken(JwtTokenType.AUTH_SESSION, {
+            email: testEmail,
+            project_uuid: uuidV4(),
+          }),
           type: 'generate-identity',
         });
 
@@ -257,7 +257,7 @@ describe('Identity', () => {
 
       const errors2 = resp2.body.errors[0];
       expect(resp2.status).toBe(422);
-      expect(errors2.code).toEqual(422070111);
+      expect(errors2.code).toEqual(42200709);
       expect(errors2.message).toEqual(
         'IDENTITY_VERIFICATION_TOKEN_NOT_PRESENT',
       );
@@ -292,7 +292,7 @@ describe('Identity', () => {
           ...controlRequestBody,
         });
       expect(resp4.status).toBe(400);
-      expect(resp4.body.message).toEqual('IDENTITY_INVALID_STATE');
+      expect(resp4.body.message).toEqual('IDENTITY_INVALID_REQUEST');
     });
 
     test('Combinatorics - didUri', async () => {
@@ -309,7 +309,7 @@ describe('Identity', () => {
       const data = resp.body;
       expect(data.errors.length).toEqual(1);
       const error = data.errors[0];
-      expect(error.code).toEqual(422070200);
+      expect(error.code).toEqual(42200711);
       expect(error.message).toEqual('DID_URI_NOT_PRESENT');
       expect(error.property).toEqual('didUri');
       // EMPTY DID 2
@@ -325,7 +325,7 @@ describe('Identity', () => {
       const error1 = data1.errors[0];
       expect(error1.message).toEqual('DID_URI_NOT_PRESENT');
       expect(error1.property).toEqual('didUri');
-      expect(error1.code).toEqual(422070200);
+      expect(error1.code).toEqual(42200711);
       // INVALID DID
       controlRequestBody.didUri = 'did:klt:123asdasdasd';
       const resp2 = await request(stage.http)
@@ -339,7 +339,7 @@ describe('Identity', () => {
       const error2 = data2.errors[0];
       expect(error2.message).toEqual('DID_URI_INVALID');
       expect(error2.property).toEqual('didUri');
-      expect(error2.code).toEqual(422070201);
+      expect(error2.code).toEqual(42200712);
     });
 
     // input parameters combinations (did_create_op, email, didUri), token data combinations
@@ -349,25 +349,25 @@ describe('Identity', () => {
       // INVALID EMAIL
       controlRequestBody.email = controlMailInvalid;
       const resp = await request(stage.http)
-        .post('/identity/generate/identity')
+        .post('/identity/generate')
         .send({
           ...controlRequestBody,
         });
       const error = resp.body.errors[0];
       expect(resp.status).toBe(422);
-      expect(error.code).toEqual(422070003);
+      expect(error.code).toEqual(42200703);
       expect(error.message).toEqual('USER_EMAIL_NOT_VALID');
       // EMPTY EMAIL
       controlRequestBody.email = '';
       const resp2 = await request(stage.http)
-        .post('/identity/generate/identity')
+        .post('/identity/generate')
         .send({
           ...controlRequestBody,
         });
       const error2 = resp2.body.errors[0];
       expect(resp2.status).toBe(422);
       expect(error2.message).toEqual('USER_EMAIL_NOT_PRESENT');
-      expect(error2.code).toEqual(422070002);
+      expect(error2.code).toEqual(42200702);
       // ATTESTED EMAIL
       controlRequestBody.email = testEmailAttested;
       // Generate a new token with the correct data
@@ -378,7 +378,7 @@ describe('Identity', () => {
         },
       );
       const resp3 = await request(stage.http)
-        .post('/identity/generate/identity')
+        .post('/identity/generate')
         .send({
           ...controlRequestBody,
         });
@@ -386,7 +386,7 @@ describe('Identity', () => {
       expect(resp3.body.message).toEqual('IDENTITY_INVALID_STATE');
       // VALID EMAIL
       // const resp4 = await request(stage.http)
-      //   .post('/identity/generate/identity')
+      //   .post('/identity/generate')
       //   .send({
       //     ...mockData.body_mock,
       //   });
@@ -399,7 +399,7 @@ describe('Identity', () => {
       // 1. DID_CREATE_OP is null
       controlRequestBody.did_create_op = null;
       const resp = await request(stage.http)
-        .post('/identity/generate/identity')
+        .post('/identity/generate')
         .send({
           ...controlRequestBody,
         });
@@ -410,12 +410,12 @@ describe('Identity', () => {
         'IDENTITY_CREATE_DID_CREATE_OP_NOT_PRESENT',
       );
       expect(error1.property).toEqual('did_create_op');
-      expect(error1.code).toEqual(422070112);
+      expect(error1.code).toEqual(42200707);
       // 2. DID_CREATE_OP payload nonce is null
       const controlRequestBody2 = { ...mockData.body_mock };
       controlRequestBody2.did_create_op.payload.nonce = null;
       const resp2 = await request(stage.http)
-        .post('/identity/generate/identity')
+        .post('/identity/generate')
         .send({
           ...controlRequestBody2,
         });
@@ -427,7 +427,7 @@ describe('Identity', () => {
       };
       controlRequestBody3.did_create_op.payload.message = null;
       const resp3 = await request(stage.http)
-        .post('/identity/generate/identity')
+        .post('/identity/generate')
         .send({
           ...controlRequestBody3,
         });
@@ -464,7 +464,7 @@ describe('Identity', () => {
         }),
       };
       const resp4 = await request(stage.http)
-        .post('/identity/generate/identity')
+        .post('/identity/generate')
         .send({
           ...params,
         });
@@ -476,26 +476,26 @@ describe('Identity', () => {
         u8aToHex(controlRequestBody4.claimer_encryption_key.secretKey),
       );
       // 5. DID_CREATE_OP VALID
-      // params.did_create_op = {
-      //   payload: {
-      //     message: u8aToHex(encryptedData2.box),
-      //     nonce: u8aToHex(encryptedData2.nonce),
-      //   },
-      //   senderPubKey: u8aToHex(
-      //     controlRequestBody4.claimer_encryption_key.publicKey,
-      //   ),
-      // };
-      // const resp5 = await request(stage.http)
-      //   .post('/identity/generate/identity')
-      //   .send({
-      //     ...params,
-      //   });
-      // expect(resp5.status).toEqual(201);
+      params.did_create_op = {
+        payload: {
+          message: u8aToHex(encryptedData2.box),
+          nonce: u8aToHex(encryptedData2.nonce),
+        },
+        senderPubKey: u8aToHex(
+          controlRequestBody4.claimer_encryption_key.publicKey,
+        ),
+      };
+      const resp5 = await request(stage.http)
+        .post('/identity/generate')
+        .send({
+          ...params,
+        });
+      expect(resp5.status).toEqual(201);
     });
 
     test('Combinatorics - empty body', async () => {
       const resp = await request(stage.http)
-        .post('/identity/generate/identity')
+        .post('/identity/generate')
         .send({});
       expect(resp.status).toEqual(422);
       const errors = resp.body.errors;
@@ -530,7 +530,7 @@ describe('Identity', () => {
     //   );
     //   // VALID EMAIL
     //   const resp = await request(stage.http)
-    //     .post('/identity/generate/identity')
+    //     .post('/identity/generate')
     //     .send({
     //       ...controlRequestBody,
     //     });

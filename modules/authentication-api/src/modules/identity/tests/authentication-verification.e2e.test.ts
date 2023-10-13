@@ -2,7 +2,6 @@ import * as request from 'supertest';
 import { generateJwtToken, JwtTokenType, SerializeFor } from '@apillon/lib';
 import { releaseStage, Stage } from '@apillon/tests-lib';
 import { setupTest } from '../../../../test/helpers/setup';
-import { AuthenticationApiContext } from '../../../context';
 import * as mock from './mock-data';
 import {
   DidDocument,
@@ -22,18 +21,16 @@ import {
 
 describe('VERFICATION', () => {
   let stage: Stage;
-  let context: AuthenticationApiContext;
 
   beforeAll(async () => {
     console.log('Setup stage ...');
     stage = await setupTest();
-    context = new AuthenticationApiContext();
     jest.setTimeout(10000); // Set timeout to 10 seconds
   });
 
   afterAll(async () => {
-    // await releaseStage(stage);
     jest.setTimeout(5000);
+    await releaseStage(stage);
   });
 
   beforeEach(async () => {
@@ -53,7 +50,7 @@ describe('VERFICATION', () => {
       context: stage.authApiContext,
       email: testEmail,
       state: IdentityState.ATTESTED,
-      token: token,
+      token,
       credential: {},
       status: 5,
     });
@@ -69,7 +66,7 @@ describe('VERFICATION', () => {
     expect(identityAttestedDb.state).toEqual(IdentityState.ATTESTED);
 
     const resp1 = await request(stage.http)
-      .get(`/identity/generate/state/query?email=${testEmail}&token=${token}`)
+      .get(`/identity/state/query?email=${testEmail}&token=${token}`)
       .send();
     expect(resp1.status).toBe(200);
 
@@ -106,7 +103,7 @@ describe('VERFICATION', () => {
       );
 
       const resp = await request(stage.http).post('/verification/verify').send({
-        presentation: presentation,
+        presentation,
       });
       expect(resp.status).toBe(201);
       const response = resp.body.data;

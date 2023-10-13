@@ -639,7 +639,7 @@ export let env: IEnv = {
   APILLON_API_SYSTEM_API_KEY: process.env['APILLON_API_SYSTEM_API_KEY'] || '',
   APILLON_API_SYSTEM_API_SECRET:
     process.env['APILLON_API_SYSTEM_API_SECRET'] || '',
-  APILLON_API_URL: process.env['APILLON_API_URL'] || 'http://localhost',
+  APILLON_API_URL: process.env['APILLON_API_URL'] || 'http://localhost:6002',
 
   /** --- SECTION: APILLON AUTHENTICATION API --- */
   AUTH_API_HOST: process.env['AUTH_API_HOST'] || 'localhost',
