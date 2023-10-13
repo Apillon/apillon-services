@@ -3,7 +3,7 @@ import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { VerificationService } from './verification.service';
 import { AuthenticationApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
-import { VerificationIdentityDto } from './dtos/verify-identity.dto';
+import { VerificationIdentityDto } from '@apillon/lib';
 
 @Controller('verification')
 export class VerificationController {

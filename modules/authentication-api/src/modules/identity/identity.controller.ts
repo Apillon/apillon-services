@@ -1,15 +1,17 @@
-import { ValidateFor, VerificationEmailDto } from '@apillon/lib';
 import { CaptchaGuard, Ctx, Validation } from '@apillon/modules-lib';
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthenticationApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { AuthGuard } from '../../guards/auth.guard';
 import { IdentityService } from './identity.service';
-import { AttestationEmailDto } from './dtos/identity-email.dto';
-import { IdentityCreateDto } from './dtos/identity-create.dto';
 import { JwtTokenType } from '../../config/types';
-import { DevEnvGuard } from '../../guards/dev-env.guard';
-import { IdentityDidRevokeDto } from './dtos/identity-did-revoke.dto';
+import {
+  BaseIdentityDto,
+  IdentityCreateDto,
+  IdentityDidRevokeDto,
+  ValidateFor,
+  VerificationEmailDto,
+} from '@apillon/lib';
 
 @Controller('identity')
 export class IdentityController {
@@ -26,7 +28,7 @@ export class IdentityController {
   }
 
   @Get('state/query')
-  @Validation({ dto: AttestationEmailDto, validateFor: ValidateFor.QUERY })
+  @Validation({ dto: BaseIdentityDto, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard)
   async attestationGetIdentityState(
     @Ctx() context: AuthenticationApiContext,
@@ -39,7 +41,7 @@ export class IdentityController {
   }
 
   @Get('credential/query')
-  @Validation({ dto: AttestationEmailDto, validateFor: ValidateFor.QUERY })
+  @Validation({ dto: BaseIdentityDto, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.IDENTITY_VERIFICATION))
   async identityGetUserCredential(
     @Ctx() context: AuthenticationApiContext,
@@ -60,7 +62,11 @@ export class IdentityController {
 
   @Post('verification/email')
   @Validation({ dto: VerificationEmailDto })
-  @UseGuards(ValidationGuard, CaptchaGuard)
+  @UseGuards(
+    ValidationGuard,
+    CaptchaGuard,
+    AuthGuard(JwtTokenType.AUTH_SESSION),
+  )
   async identityVerification(
     @Ctx() context: AuthenticationApiContext,
     @Body() body: any,
