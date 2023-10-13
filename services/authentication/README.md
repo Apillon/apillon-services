@@ -49,6 +49,7 @@ Environment variables that has to be set:
    ************************************************************/
   KILT_NETWORK: string;
   KILT_ATTESTER_MNEMONIC: string;
+  KILT_WHITELIST: array, separated by floating point
 
   /************************************************************
    * Authentication config (Uses Kilt module)
@@ -136,6 +137,9 @@ Are located in authentication module in apillon-api.
 
 > Verifies the sporran session
 
+## Update worker
+Localted in workers/update-state.worker.ts. Is used to update the state of transactions received from the blockchain service. It can be thought of as a state machine,that executes next steps, depending on the final state of the identity job.
+
 ## Flows
 * Registration flow
 * Verification flow
@@ -163,6 +167,9 @@ Sporran has two supported flows for now, verification and registation with sporr
 1. Initiate Sporran session. Generates app specific data such as dApp name, dApp URI, challenge.
 2. Verify sporran session - parses JWT token from FE (apillon specific), verifies the corrent dApp URI and check if the provided challenge, signed by the public sporran key (a light did is used for the session) is corrent, and the challenge is the same as generated in the first step.
 3. Communication can now start with the use of iMessage structures defined by Sporran (Check sporran.service for more details)
+
+### Well known did
+A well known did must be created for the sporran session communication and placed in public/.well-known/did-configration.json. There is a script file in scripts/ folder.
 
 ## Deployment
 
