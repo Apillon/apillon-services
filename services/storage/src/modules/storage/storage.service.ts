@@ -462,19 +462,21 @@ export class StorageService {
     file.canAccess(context);
     fileStatus = FileStatus.UPLOADED_TO_IPFS;
     if (file.CID) {
-      //Get IPFS gateway
-      const ipfsGateway = await new ProjectConfig(
+      //Get IPFS cluster
+      const ipfsCluster = await new ProjectConfig(
         { project_uuid: file.project_uuid },
         context,
-      ).getIpfsGateway();
+      ).getIpfsCluster();
 
       fileStatus = FileStatus.PINNED_TO_CRUST;
-      file.downloadLink = ipfsGateway.url + file.CID;
+      file.downloadLink = ipfsCluster.ipfsGateway + file.CID;
 
-      if (ipfsGateway.private) {
+      if (ipfsCluster.private) {
         file.downloadLink = addJwtToIPFSUrl(
           file.downloadLink,
           file.project_uuid,
+          file.CID,
+          ipfsCluster,
         );
       }
     }

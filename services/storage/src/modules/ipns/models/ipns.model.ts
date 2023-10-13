@@ -243,10 +243,10 @@ export class Ipns extends ProjectAccessModel {
     this.canAccess(context);
 
     //Get IPFS-->IPNS gateway
-    const ipfsGateway = await new ProjectConfig(
+    const ipfsCluster = await new ProjectConfig(
       { project_uuid: this.project_uuid },
       this.getContext(),
-    ).getIpfsGateway();
+    ).getIpfsCluster();
 
     // Map url query with sql fields.
     const fieldMap = {
@@ -263,7 +263,7 @@ export class Ipns extends ProjectAccessModel {
       qSelect: `
         SELECT ${this.generateSelectFields('i', '')},
         IF(i.ipnsName IS NULL, NULL, CONCAT("${
-          ipfsGateway.ipnsUrl
+          ipfsCluster.ipnsGateway
         }", i.ipnsName)) as link,
         i.updateTime
         `,
@@ -287,9 +287,14 @@ export class Ipns extends ProjectAccessModel {
       'i.id',
     );
 
-    if (ipfsGateway.private) {
+    if (ipfsCluster.private) {
       for (const ipns of data.items) {
-        ipns.link = addJwtToIPFSUrl(ipns.link, this.project_uuid);
+        ipns.link = addJwtToIPFSUrl(
+          ipns.link,
+          this.project_uuid,
+          ipns.ipnsName,
+          ipfsCluster,
+        );
       }
     }
 

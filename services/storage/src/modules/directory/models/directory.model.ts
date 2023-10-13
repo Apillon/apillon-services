@@ -1,25 +1,24 @@
-import { integerParser, stringParser, dateParser } from '@rawmodel/parsers';
-import { presenceValidator } from '@rawmodel/validators';
 import {
-  ProjectAccessModel,
   Context,
   DirectoryContentQueryFilter,
-  env,
-  getQueryParams,
   PoolConnection,
   PopulateFrom,
-  prop,
+  ProjectAccessModel,
   SerializeFor,
   SqlModelStatus,
+  getQueryParams,
+  prop,
   unionSelectAndCountQuery,
 } from '@apillon/lib';
-import { DbTables, ObjectType, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
+import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
+import { presenceValidator } from '@rawmodel/validators';
 import { v4 as uuidV4 } from 'uuid';
-import { File } from '../../storage/models/file.model';
-import { ProjectConfig } from '../../config/models/project-config.model';
-import { Bucket } from '../../bucket/models/bucket.model';
+import { DbTables, ObjectType, StorageErrorCode } from '../../../config/types';
 import { addJwtToIPFSUrl } from '../../../lib/ipfs-utils';
+import { Bucket } from '../../bucket/models/bucket.model';
+import { ProjectConfig } from '../../config/models/project-config.model';
+import { File } from '../../storage/models/file.model';
 
 export class Directory extends ProjectAccessModel {
   public readonly tableName = DbTables.DIRECTORY;
@@ -333,17 +332,17 @@ export class Directory extends ProjectAccessModel {
     );
 
     //Get IPFS gateway
-    const ipfsGateway = await new ProjectConfig(
+    const ipfsCluster = await new ProjectConfig(
       { project_uuid: bucket.project_uuid },
       this.getContext(),
-    ).getIpfsGateway();
+    ).getIpfsCluster();
 
     const qSelects = [
       {
         qSelect: `
         SELECT ${ObjectType.DIRECTORY} as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime,
         NULL as contentType, NULL as size, d.parentDirectory_id as parentDirectoryId,
-        NULL as file_uuid, IF(d.CID IS NULL, NULL, CONCAT("${ipfsGateway.url}", d.CID)) as link, NULL as fileStatus
+        NULL as file_uuid, IF(d.CID IS NULL, NULL, CONCAT("${ipfsCluster.ipfsGateway}", d.CID)) as link, NULL as fileStatus
         `,
         qFrom: `
         FROM \`${DbTables.DIRECTORY}\` d
@@ -360,7 +359,7 @@ export class Directory extends ProjectAccessModel {
         qSelect: `
         SELECT ${ObjectType.FILE} as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime,
         d.contentType as contentType, d.size as size, d.directory_id as parentDirectoryId,
-        d.file_uuid as file_uuid, CONCAT("${ipfsGateway.url}", d.CID) as link, d.fileStatus as fileStatus
+        d.file_uuid as file_uuid, CONCAT("${ipfsCluster.ipfsGateway}", d.CID) as link, d.fileStatus as fileStatus
         `,
         qFrom: `
         FROM \`${DbTables.FILE}\` d
@@ -384,9 +383,14 @@ export class Directory extends ProjectAccessModel {
       'd.name',
     );
 
-    if (ipfsGateway.private) {
+    if (ipfsCluster.private) {
       for (const item of data.items) {
-        item.link = addJwtToIPFSUrl(item.link, bucket.project_uuid);
+        item.link = addJwtToIPFSUrl(
+          item.link,
+          bucket.project_uuid,
+          item.CID,
+          ipfsCluster,
+        );
       }
     }
 
