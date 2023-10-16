@@ -5,7 +5,7 @@ export async function upgrade(
 ): Promise<void> {
   await queryFn(`
     ALTER TABLE \`${DbTables.IPFS_CLUSTER}\`
-    ADD COLUMN \`secret\` VARCHAR(255) NULL;
+    ADD COLUMN \`secret\` VARCHAR(255) NULL AFTER \`private\`;
     `);
 }
 
