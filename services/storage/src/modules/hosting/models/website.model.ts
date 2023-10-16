@@ -606,10 +606,10 @@ export class Website extends UuidSqlModel {
       throw new Error('project_uuid should not be null');
     }
 
-    const ipfsGateway = await new ProjectConfig(
+    const ipfsCluster = await new ProjectConfig(
       { project_uuid: this.project_uuid },
       this.getContext(),
-    ).getIpfsGateway();
+    ).getIpfsCluster();
 
     if (this.bucket_id) {
       this.bucket = await new Bucket({}, this.getContext()).populateById(
@@ -622,21 +622,26 @@ export class Website extends UuidSqlModel {
         this.stagingBucket_id,
       );
       if (this.stagingBucket.IPNS) {
-        this.ipnsStagingLink = ipfsGateway.ipnsUrl + this.stagingBucket.IPNS;
+        this.ipnsStagingLink =
+          ipfsCluster.ipnsGateway + this.stagingBucket.IPNS;
 
-        if (ipfsGateway.subdomainGateway) {
-          this.w3StagingLink = `https://${this.stagingBucket.IPNS}.ipns.${ipfsGateway.subdomainGateway}`;
+        if (ipfsCluster.subdomainGateway) {
+          this.w3StagingLink = `https://${this.stagingBucket.IPNS}.ipns.${ipfsCluster.subdomainGateway}`;
         }
 
-        if (ipfsGateway.private) {
+        if (ipfsCluster.private) {
           this.ipnsStagingLink = addJwtToIPFSUrl(
             this.ipnsStagingLink,
             this.project_uuid,
+            this.stagingBucket.IPNS,
+            ipfsCluster,
           );
 
           this.w3StagingLink = addJwtToIPFSUrl(
             this.w3StagingLink,
             this.project_uuid,
+            this.stagingBucket.IPNS,
+            ipfsCluster,
           );
         }
 
@@ -650,20 +655,24 @@ export class Website extends UuidSqlModel {
       ).populateById(this.productionBucket_id);
       if (this.productionBucket.IPNS) {
         this.ipnsProductionLink =
-          ipfsGateway.ipnsUrl + this.productionBucket.IPNS;
+          ipfsCluster.ipnsGateway + this.productionBucket.IPNS;
 
-        if (ipfsGateway.subdomainGateway) {
-          this.w3ProductionLink = `https://${this.productionBucket.IPNS}.ipns.${ipfsGateway.subdomainGateway}`;
+        if (ipfsCluster.subdomainGateway) {
+          this.w3ProductionLink = `https://${this.productionBucket.IPNS}.ipns.${ipfsCluster.subdomainGateway}`;
         }
 
-        if (ipfsGateway.private) {
+        if (ipfsCluster.private) {
           this.ipnsProductionLink = addJwtToIPFSUrl(
             this.ipnsProductionLink,
             this.project_uuid,
+            this.productionBucket.IPNS,
+            ipfsCluster,
           );
           this.w3ProductionLink = addJwtToIPFSUrl(
             this.w3ProductionLink,
             this.project_uuid,
+            this.productionBucket.IPNS,
+            ipfsCluster,
           );
         }
 

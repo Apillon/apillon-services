@@ -470,16 +470,22 @@ export class StorageService {
 
     file.canAccess(context);
     if (file.CID) {
-      //Get IPFS gateway
-      const ipfsGateway = await new ProjectConfig(
+      //Get IPFS cluster
+      const ipfsCluster = await new ProjectConfig(
         { project_uuid: file.project_uuid },
         context,
-      ).getIpfsGateway();
+      ).getIpfsCluster();
 
-      file.link = ipfsGateway.url + file.CID;
+      fileStatus = FileStatus.PINNED_TO_CRUST;
+      file.link = ipfsCluster.ipfsGateway + file.CID;
 
-      if (ipfsGateway.private) {
-        file.link = addJwtToIPFSUrl(file.link, file.project_uuid);
+      if (ipfsCluster.private) {
+        file.link = addJwtToIPFSUrl(
+          file.link,
+          file.project_uuid,
+          file.CID,
+          ipfsCluster,
+        );
       }
     }
 

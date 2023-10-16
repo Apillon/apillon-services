@@ -23,6 +23,7 @@ import * as request from 'supertest';
 import { v4 as uuidV4 } from 'uuid';
 import { setupTest } from '../../../../test/helpers/setup';
 import { run as generateSystemApiKey } from '@apillon/access/src/scripts/utils/generate-system-api-key';
+import { ProjectConfig } from '@apillon/storage/src/modules/config/models/project-config.model';
 
 describe('Apillon API hosting tests', () => {
   let stage: Stage;
@@ -551,9 +552,14 @@ describe('Apillon API hosting tests', () => {
         tmpWebsite.productionBucket.CID,
       );
 
+      const ipfsCluster = await new ProjectConfig(
+        { project_uuid: tmpWebsite.project_uuid },
+        stage.storageContext,
+      ).getIpfsCluster();
+
       //Check, that index.html page was updated
       response = await request(
-        env.STORAGE_IPFS_GATEWAY +
+        ipfsCluster.ipfsGateway +
           tmpWebsite.productionBucket.CID +
           '/index.html',
       ).get('');

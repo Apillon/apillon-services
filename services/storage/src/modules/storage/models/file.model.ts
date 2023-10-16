@@ -422,11 +422,11 @@ export class File extends UuidSqlModel {
       filter.serialize(),
     );
 
-    //Get IPFS gateway
-    const ipfsGateway = await new ProjectConfig(
+    //Get IPFS cluster
+    const ipfsCluster = await new ProjectConfig(
       { project_uuid: b.project_uuid },
       this.getContext(),
-    ).getIpfsGateway();
+    ).getIpfsCluster();
 
     const defaultOrderStr =
       filter.status == SqlModelStatus.ACTIVE
@@ -436,7 +436,7 @@ export class File extends UuidSqlModel {
     const sqlQuery = {
       qSelect: `
         SELECT ${this.generateSelectFields('f')}, CONCAT("${
-        ipfsGateway.url
+        ipfsCluster.ipfsGateway
       }", f.CID) as link
         `,
       qFrom: `
@@ -459,9 +459,14 @@ export class File extends UuidSqlModel {
       'f.id',
     );
 
-    if (ipfsGateway.private) {
+    if (ipfsCluster.private) {
       for (const item of data.items) {
-        item.link = addJwtToIPFSUrl(item.link, b.project_uuid);
+        item.link = addJwtToIPFSUrl(
+          item.link,
+          b.project_uuid,
+          item.CID,
+          ipfsCluster,
+        );
       }
     }
 
