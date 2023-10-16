@@ -15,8 +15,8 @@ export function addJwtToIPFSUrl(
   cid: string,
   ipfsCluster: IpfsCluster,
 ) {
-  if (!cid || !project_uuid) {
-    return cid;
+  if (!cid || !project_uuid || !ipfsCluster) {
+    return url;
   }
 
   const jwt = generateJwtToken(
