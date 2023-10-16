@@ -32,7 +32,7 @@ export function addJwtToIPFSUrl(
   return `${url}?token=${jwt}`;
 }
 
-function generateJwtSecret(project_uuid, secret) {
+export function generateJwtSecret(project_uuid, secret) {
   return crypto
     .createHmac('sha256', secret)
     .update(project_uuid)

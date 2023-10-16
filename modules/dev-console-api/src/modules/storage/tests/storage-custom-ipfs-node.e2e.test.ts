@@ -15,7 +15,10 @@ import { v4 as uuidV4 } from 'uuid';
 import { setupTest } from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
 import { ProjectConfig } from '@apillon/storage/src/modules/config/models/project-config.model';
-import { addJwtToIPFSUrl } from '@apillon/storage/src/lib/ipfs-utils';
+import {
+  addJwtToIPFSUrl,
+  generateJwtSecret,
+} from '@apillon/storage/src/lib/ipfs-utils';
 import { JwtTokenType, parseJwtToken } from '@apillon/lib';
 
 describe('Storage with custom IPFS node tests', () => {
@@ -49,6 +52,7 @@ describe('Storage with custom IPFS node tests', () => {
         region: 'EU',
         cloudProvider: 'AWS',
         isDefault: false,
+        secret: 'secret123',
       },
       stage.storageContext,
     ).insert();
@@ -182,6 +186,7 @@ describe('Storage with custom IPFS node tests', () => {
       parseJwtToken(
         JwtTokenType.IPFS_TOKEN,
         response.body.data.file.downloadLink.split('?token=')[1],
+        generateJwtSecret(testProject.project_uuid, customCluster.secret),
       );
     });
 
@@ -191,6 +196,8 @@ describe('Storage with custom IPFS node tests', () => {
         addJwtToIPFSUrl(
           `https://ipfs-staging.apillon.io/ipfs/${testFile.CID}`,
           testProject.project_uuid,
+          testFile.CID,
+          customCluster,
         ),
       ).get('');
       expect(response.status).toBe(200);

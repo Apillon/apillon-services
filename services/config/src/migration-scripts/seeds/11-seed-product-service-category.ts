@@ -30,7 +30,6 @@ export async function downgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    UPDATE \`${DbTables.PRODUCT}\` SET service = NULL;
-    UPDATE \`${DbTables.PRODUCT}\` SET category = NULL;
+    UPDATE \`${DbTables.PRODUCT}\` SET service = NULL, category = NULL;
   `);
 }

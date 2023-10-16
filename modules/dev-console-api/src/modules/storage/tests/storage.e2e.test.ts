@@ -27,6 +27,7 @@ import { Project } from '../../project/models/project.model';
 import { setupTest } from '../../../../test/helpers/setup';
 import { executeDeleteBucketDirectoryFileWorker } from '@apillon/storage/src/scripts/serverless-workers/execute-delete-bucket-dir-file-worker';
 import { IPFSService } from '@apillon/storage/src/modules/ipfs/ipfs.service';
+import { ProjectConfig } from '@apillon/storage/src/modules/config/models/project-config.model';
 
 describe('Storage tests', () => {
   let stage: Stage;
@@ -137,9 +138,14 @@ describe('Storage tests', () => {
       });
 
       test('User should be able to download uploaded file from apillon ipfs gateway', async () => {
+        const ipfsCluster = await new ProjectConfig(
+          { project_uuid: testFile.project_uuid },
+          stage.storageContext,
+        ).getIpfsCluster();
+
         expect(testFile).toBeTruthy();
         const response = await request(
-          env.STORAGE_IPFS_GATEWAY + testFile.CID,
+          ipfsCluster.ipfsGateway + testFile.CID,
         ).get('');
         expect(response.status).toBe(200);
       });
