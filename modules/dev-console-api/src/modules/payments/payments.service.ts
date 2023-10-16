@@ -1,5 +1,6 @@
 import {
   CodeException,
+  PricelistQueryFilter,
   Scs,
   SqlModelStatus,
   UpdateSubscriptionDto,
@@ -17,6 +18,12 @@ import { StripeService } from './stripe.service';
 export class PaymentsService {
   constructor(private stripe: Stripe, private stripeService: StripeService) {}
 
+  /**
+   * Creates a stripe payment session for purchasing a credit package
+   * @param {DevConsoleApiContext} context
+   * @param {PaymentSessionDto} paymentSessionDto - containing the credit package data and paymentmetadata
+   * @returns {Promise<Stripe.Checkout.Session>}
+   */
   async createStripeCreditPaymentSession(
     context: DevConsoleApiContext,
     paymentSessionDto: PaymentSessionDto,
@@ -30,11 +37,18 @@ export class PaymentsService {
 
     return await this.stripeService.generateStripePaymentSession(
       stripeId,
+      context.user.email,
       paymentSessionDto,
       'payment',
     );
   }
 
+  /**
+   * Creates a stripe payment session for purchasing a subscription package
+   * @param {DevConsoleApiContext} context
+   * @param {PaymentSessionDto} paymentSessionDto - containing the subscription package data and paymentmetadata
+   * @returns {Promise<Stripe.Checkout.Session>}
+   */
   async createStripeSubscriptionPaymentSession(
     context: DevConsoleApiContext,
     paymentSessionDto: PaymentSessionDto,
@@ -50,11 +64,16 @@ export class PaymentsService {
 
     return await this.stripeService.generateStripePaymentSession(
       stripeId,
+      context.user.email,
       paymentSessionDto,
       'subscription',
     );
   }
 
+  /**
+   * Handler function for webhooks sent from stripe, when user subscribes, changes subscription or purchases credits
+   * @param {Stripe.Event} event - verified event sent by Stripe
+   */
   async stripeWebhookEventHandler(event: Stripe.Event) {
     // https://stripe.com/docs/api/checkout/sessions/object
     const payment = event.data.object as any;
@@ -138,11 +157,59 @@ export class PaymentsService {
     project.canModify(context);
   }
 
+  /**
+   * Get all active subscription packages from the database, assign prices through Stripe API
+   * @param {DevConsoleApiContext} context
+   */
   async getSubscriptionPackages(context: DevConsoleApiContext) {
-    return (await new Scs(context).getSubscriptionPackages()).data;
+    const { data: subscriptionPackages } = await new Scs(
+      context,
+    ).getSubscriptionPackages();
+
+    return await this.assignPrices(subscriptionPackages);
   }
 
+  /**
+   * Get all active credit packages from the database, assign prices through Stripe API
+   * @param {DevConsoleApiContext} context
+   */
   async getCreditPackages(context: DevConsoleApiContext) {
-    return (await new Scs(context).getCreditPackages()).data;
+    const { data: creditPackages } = await new Scs(context).getCreditPackages();
+
+    return await this.assignPrices(creditPackages);
+  }
+
+  private async assignPrices(items: { stripeId: string; price: number }[]) {
+    for (const item of items) {
+      if (item.stripeId) {
+        const price = await this.stripe.prices.retrieve(item.stripeId);
+        item.price = price.unit_amount / 100;
+      }
+      delete item.stripeId;
+    }
+    return items;
+  }
+
+  /**
+   * Get all active products with their respective prices for displaying on the UI
+   * @param {DevConsoleApiContext} context
+   * @param {PricelistQueryFilter} query - Filter by name, service or category
+   * @returns {Product[]}
+   */
+  async getProductPricelist(
+    context: DevConsoleApiContext,
+    query: PricelistQueryFilter,
+  ) {
+    return (await new Scs(context).getProductPricelist(query)).data;
+  }
+
+  /**
+   * Get a product and its price by product_id
+   * @param {DevConsoleApiContext} context
+   * @param {number} product_id
+   * @returns {Product}
+   */
+  async getProductPrice(context: DevConsoleApiContext, product_id: number) {
+    return (await new Scs(context).getProductPrice(product_id)).data;
   }
 }

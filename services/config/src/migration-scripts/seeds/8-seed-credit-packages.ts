@@ -16,7 +16,7 @@ export async function downgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    DELETE FROM ${DbTables.SUBSCRIPTION_PACKAGE}
+    DELETE FROM ${DbTables.CREDIT_PACKAGE}
     WHERE id <= 3;
   `);
 }

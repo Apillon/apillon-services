@@ -142,4 +142,8 @@ export class StorageService {
     query.populate({ bucket_uuid, status: SqlModelStatus.ACTIVE });
     return (await new StorageMicroservice(context).listFiles(query)).data;
   }
+
+  async getBlacklist(context: ApillonApiContext) {
+    return (await new StorageMicroservice(context).getBlacklist()).data;
+  }
 }

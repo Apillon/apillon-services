@@ -10,6 +10,7 @@ export enum DbTables {
   WEBSITE = 'website',
   DEPLOYMENT = 'deployment',
   PIN_TO_CRUST_REQUEST = 'pin_to_crust_request',
+  BLACKLIST = 'blacklist',
   IPFS_CLUSTER = 'ipfs_cluster',
   PROJECT_CONFIG = 'project_config',
 }

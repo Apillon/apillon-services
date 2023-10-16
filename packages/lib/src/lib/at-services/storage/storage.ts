@@ -449,4 +449,11 @@ export class StorageMicroservice extends BaseService {
   }
 
   //#endregion
+
+  public async getBlacklist() {
+    const data = {
+      eventName: StorageEventType.GET_BLACKLIST,
+    };
+    return await this.callService(data);
+  }
 }

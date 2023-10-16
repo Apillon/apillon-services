@@ -363,7 +363,7 @@ export class HostingService {
               : ProductCode.HOSTING_DEPLOY_TO_PRODUCTION,
           referenceTable: DbTables.DEPLOYMENT,
           referenceId: deployment.id,
-          location: 'HostingService.deployWebsite',
+          location: 'HostingService/deployWebsite',
           service: ServiceName.STORAGE,
         },
         context,

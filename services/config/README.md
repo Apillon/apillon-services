@@ -53,8 +53,21 @@ When querying for a particular quota or a list of quotas, the override values re
 
 Quotas have two kinds of value types (determined by the valueType column) - 1 (MAX) or 2 (MIN). If the valueType is 1, the higher value between the quota value and override value is considered. If the valueType is 2, the lower value between the quota value and override value is considered.
 
-### Subscriptions & Packages
-TODO: Update this section when the subscriptions logic is fully defined and implemented
+### Subscriptions & Subscription Packages
+Subscriptions are meant to offer higher project limits depending on which package a project is subscribed to. They are meant to upgrade limits for recurring costs, such as storage and bandwidth.
+Users can subscribe to existing subscription packages defined in the subscriptionPackage table. For each package, there exist overrides for each quota which define the limits a project can reach when being subscribed
+to a particular package. Subscription payment is handled through Stripe and a new subscription record is inserted in the database, denoting that project currently has an active subscription,
+as well as an invoice, serving as a proof of payment and containing customer data. The quota overrides stop being valid for a subscription when the 'expiresOn' property is in the past.
+A subscription can be canceled through the Stripe customer portal, meaning that it will not be renewed. The quota overrides are still valid until a subscription is not expired, even if it has been cancelled.
+
+### Credits & Credit Packages
+Unlike subscriptions, credits are used to pay for actions and services which are not a recurring cost, for example creating an NFT collection, deploying a website, creating a Kilt identity and so on.
+Credits can be obtained by purchasing a credit package, all of which are stored in the creditPackage table. Each package grants a fixed number of credits,
+as well as bonus credits when purchasing a higher-level package. Subscriptions also provide users with a certain amount of credits, however only when a project subscribes to a package for the first time.
+When a fixed-cost action is executed, a project's credit balance is reduced by the credit cost of that action. If the action is asynchronous (e.g. deploy NFT collection) and the action fails later on,
+the credit cost is refunded to the project's balance. For each credit action (deposit or spend), a new creditTransaction record is created, as well as an invoice record when purchasing a package.
+
+All current existing actions for spending credits are defined in the 'product' table, while their respective credit costs (prices) are defined in the productPrice table.
 
 ## Configuration
 

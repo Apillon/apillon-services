@@ -190,4 +190,14 @@ export class StorageController {
   ) {
     return await this.storageService.listFiles(context, bucket_uuid, query);
   }
+
+  @Get('blacklist')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_READ,
+    serviceType: AttachedServiceType.SYSTEM,
+  })
+  @UseGuards(AuthGuard)
+  async listDomains(@Ctx() context: ApillonApiContext) {
+    return await this.storageService.getBlacklist(context);
+  }
 }

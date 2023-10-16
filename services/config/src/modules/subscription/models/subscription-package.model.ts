@@ -63,6 +63,7 @@ export class SubscriptionPackage extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
     ],
     fakeValue: uuid(),
   })
