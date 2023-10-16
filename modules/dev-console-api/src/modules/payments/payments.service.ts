@@ -46,7 +46,7 @@ export class PaymentsService {
   /**
    * Creates a stripe payment session for purchasing a subscription package
    * @param {DevConsoleApiContext} context
-   * @param {PaymentSessionDto} paymentSessionDto - containing the subscription package data and paymentmetadata
+   * @param {PaymentSessionDto} paymentSessionDto - containing the subscription package data and metadata
    * @returns {Promise<Stripe.Checkout.Session>}
    */
   async createStripeSubscriptionPaymentSession(
@@ -135,6 +135,7 @@ export class PaymentsService {
             expiresOn: new Date(payment.current_period_end * 1000),
             cancellationReason: payment.cancellation_details?.feedback,
             cancellationComment: payment.cancellation_details?.comment,
+            stripePackageId: payment.plan.id,
           }),
         );
         break;

@@ -2,6 +2,7 @@ import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
   getFaker,
+  PoolConnection,
   PopulateFrom,
   prop,
   SerializeFor,
@@ -105,5 +106,24 @@ export class SubscriptionPackage extends AdvancedSQLModel {
       `,
       {},
     );
+  }
+
+  public async populateByStripeId(stripeId: string, conn?: PoolConnection) {
+    if (!stripeId) {
+      throw new Error('stripeId should not be null');
+    }
+    const data = await this.db().paramExecute(
+      `
+        SELECT * FROM \`${this.tableName}\`
+        WHERE stripeId = @stripeId
+        AND status = ${SqlModelStatus.ACTIVE}
+      `,
+      { stripeId },
+      conn,
+    );
+
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 }
