@@ -145,11 +145,11 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       metadataFURs.map((x) => x.serialize()),
     );
 
-    //Get IPFS gateway
-    const ipfsGateway = await new ProjectConfig(
+    //Get IPFS cluster
+    const ipfsCluster = await new ProjectConfig(
       { project_uuid: bucket.project_uuid },
       this.context,
-    ).getIpfsGateway();
+    ).getIpfsCluster();
 
     await runWithWorkers(
       metadataFURs,
@@ -177,11 +177,13 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           const imageFile = imageFiles.files.find(
             (x) => x.name == fileContent.image,
           );
-          fileContent.image = ipfsGateway.url + imageFile.CID;
-          if (ipfsGateway.private) {
+          fileContent.image = ipfsCluster.ipfsGateway + imageFile.CID;
+          if (ipfsCluster.private) {
             fileContent.image = addJwtToIPFSUrl(
               fileContent.image,
               bucket.project_uuid,
+              imageFile.CID,
+              ipfsCluster,
             );
           }
         }

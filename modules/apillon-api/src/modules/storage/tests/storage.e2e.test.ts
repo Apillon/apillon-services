@@ -30,6 +30,7 @@ import {
 import * as request from 'supertest';
 import { v4 as uuidV4 } from 'uuid';
 import { setupTest } from '../../../../test/helpers/setup';
+import { ProjectConfig } from '@apillon/storage/src/modules/config/models/project-config.model';
 
 describe('Apillon API storage tests', () => {
   let stage: Stage;
@@ -261,8 +262,14 @@ describe('Apillon API storage tests', () => {
 
       test('Application should be able to download uploaded file from apillon ipfs gateway', async () => {
         expect(testFile).toBeTruthy();
+
+        const ipfsCluster = await new ProjectConfig(
+          { project_uuid: testFile.project_uuid },
+          stage.storageContext,
+        ).getIpfsCluster();
+
         const response = await request(
-          env.STORAGE_IPFS_GATEWAY + testFile.CID,
+          ipfsCluster.ipfsGateway + testFile.CID,
         ).get('');
         expect(response.status).toBe(200);
         expect(response.text).toBe(testFileContent);

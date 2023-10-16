@@ -15,6 +15,7 @@ import { setupTest } from '../../../../../test/helpers/setup';
 import { Project } from '../../../project/models/project.model';
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 import { DefaultUserRole, env, SqlModelStatus } from '@apillon/lib';
+import { ProjectConfig } from '@apillon/storage/src/modules/config/models/project-config.model';
 
 describe('Ipns tests', () => {
   let stage: Stage;
@@ -231,10 +232,14 @@ describe('Ipns tests', () => {
     });
 
     test('User should be able to download file from apillon ipns gateway', async () => {
+      const ipfsCluster = await new ProjectConfig(
+        { project_uuid: ipnsRecord.project_uuid },
+        stage.storageContext,
+      ).getIpfsCluster();
+
       expect(publishedIpnsName).toBeTruthy();
       const response = await request(
-        env.STORAGE_IPFS_GATEWAY.replace('/ipfs/', '/ipns/') +
-          publishedIpnsName,
+        ipfsCluster.ipnsGateway + publishedIpnsName,
       ).get('');
       expect(response.status).toBe(200);
     });
