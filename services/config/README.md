@@ -57,7 +57,7 @@ Quotas have two kinds of value types (determined by the valueType column) - 1 (M
 Subscriptions are meant to offer higher project limits depending on which package a project is subscribed to. They are meant to upgrade limits for recurring costs, such as storage and bandwidth.
 Users can subscribe to existing subscription packages defined in the subscriptionPackage table. For each package, there exist overrides for each quota which define the limits a project can reach when being subscribed
 to a particular package. Subscription payment is handled through Stripe and a new subscription record is inserted in the database, denoting that project currently has an active subscription,
-as well as an invoice, serving as a proof of payment and containing customer data. The quota overrides stop being valid for a subscription when the 'expiresOn' property is in the past.
+as well as an invoice, serving as a proof of payment and containing customer data. The quota overrides stop being valid for a subscription when the 'expiresOn' property is more than 7 days in the past.
 A subscription can be canceled through the Stripe customer portal, meaning that it will not be renewed. The quota overrides are still valid until a subscription is not expired, even if it has been cancelled.
 
 ### Credits & Credit Packages

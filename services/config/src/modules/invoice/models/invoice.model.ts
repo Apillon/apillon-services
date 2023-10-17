@@ -1,4 +1,4 @@
-import { floatParser, integerParser, stringParser } from '@rawmodel/parsers';
+import { dateParser, floatParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
   getQueryParams,
@@ -84,6 +84,7 @@ export class Invoice extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.PROFILE,
       SerializeFor.SERVICE,
     ],
   })
@@ -174,6 +175,17 @@ export class Invoice extends AdvancedSQLModel {
     ],
   })
   public stripeId: string;
+
+  @prop({
+    parser: { resolver: dateParser() },
+    serializable: [
+      SerializeFor.APILLON_API,
+      SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
+    ],
+    populatable: [PopulateFrom.DB],
+  })
+  public override createTime?: Date;
 
   public async getList(
     filter: InvoicesQueryFilter,
