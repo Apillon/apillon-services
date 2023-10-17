@@ -235,6 +235,12 @@ export class SubscriptionService {
       }
 
       subscription.populate(updateSubscriptionDto);
+      subscription.package_id = (
+        await new SubscriptionPackage({}, context).populateByStripeId(
+          updateSubscriptionDto.stripePackageId,
+          conn,
+        )
+      )?.id;
 
       try {
         await subscription.validate();
@@ -303,7 +309,6 @@ export class SubscriptionService {
         context,
         conn,
       );
-
     if (new Subscription(activeSubscription, context).exists()) {
       throw await new ScsCodeException({
         code: ConfigErrorCode.ACTIVE_SUBSCRIPTION_EXISTS,
