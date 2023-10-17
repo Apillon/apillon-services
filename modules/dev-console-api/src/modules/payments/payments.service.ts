@@ -2,7 +2,6 @@ import {
   CodeException,
   PricelistQueryFilter,
   Scs,
-  SqlModelStatus,
   UpdateSubscriptionDto,
   env,
 } from '@apillon/lib';
@@ -126,9 +125,6 @@ export class PaymentsService {
         await new Scs().updateSubscription(
           new UpdateSubscriptionDto({
             subscriptionStripeId: payment.id,
-            status: payment.cancel_at_period_end // If user has canceled subscription
-              ? SqlModelStatus.INACTIVE
-              : SqlModelStatus.ACTIVE,
             cancelDate: payment.canceled_at
               ? new Date(payment.canceled_at * 1000)
               : null,

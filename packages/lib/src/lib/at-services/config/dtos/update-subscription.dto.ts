@@ -1,20 +1,9 @@
 import { prop } from '@rawmodel/core';
-import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
-import {
-  PopulateFrom,
-  SerializeFor,
-  SqlModelStatus,
-} from '../../../../config/types';
+import { dateParser, stringParser } from '@rawmodel/parsers';
+import { PopulateFrom, SerializeFor } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
 
 export class UpdateSubscriptionDto extends ModelBase {
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.SERVICE],
-    serializable: [SerializeFor.PROFILE, SerializeFor.SERVICE],
-  })
-  public status: SqlModelStatus;
-
   @prop({
     parser: { resolver: dateParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.SERVICE],
