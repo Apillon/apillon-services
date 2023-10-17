@@ -178,11 +178,7 @@ export class Invoice extends AdvancedSQLModel {
 
   @prop({
     parser: { resolver: dateParser() },
-    serializable: [
-      SerializeFor.APILLON_API,
-      SerializeFor.SELECT_DB,
-      SerializeFor.PROFILE,
-    ],
+    serializable: [SerializeFor.SELECT_DB, SerializeFor.PROFILE],
     populatable: [PopulateFrom.DB],
   })
   public override createTime?: Date;
@@ -208,7 +204,7 @@ export class Invoice extends AdvancedSQLModel {
         SELECT ${this.generateSelectFields('i', '', serializationStrategy)}
         `,
       qFrom: `
-        FROM \`${this.tableName}\` i
+        FROM \`${DbTables.INVOICE}\` i
         WHERE i.project_uuid = @project_uuid
         AND (@search IS null OR i.clientEmail LIKE CONCAT('%', @search, '%'))
         AND i.status <> ${SqlModelStatus.DELETED}

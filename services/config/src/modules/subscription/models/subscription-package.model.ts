@@ -101,7 +101,7 @@ export class SubscriptionPackage extends AdvancedSQLModel {
     return await this.getContext().mysql.paramExecute(
       `
       SELECT ${this.generateSelectFields('sp', '', serializationStrategy)}
-      FROM \`${this.tableName}\` sp
+      FROM \`${DbTables.SUBSCRIPTION_PACKAGE}\` sp
       WHERE sp.status = ${SqlModelStatus.ACTIVE}
       `,
       {},
