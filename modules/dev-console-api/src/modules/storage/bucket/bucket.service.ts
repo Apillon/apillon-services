@@ -74,10 +74,14 @@ export class BucketService {
     return (await new StorageMicroservice(context).createBucket(body)).data;
   }
 
-  async updateBucket(context: DevConsoleApiContext, id: number, body: any) {
+  async updateBucket(
+    context: DevConsoleApiContext,
+    bucket_uuid: string,
+    body: any,
+  ) {
     return (
       await new StorageMicroservice(context).updateBucket({
-        id: id,
+        bucket_uuid,
         data: body,
       })
     ).data;

@@ -476,7 +476,6 @@ export class StorageService {
         context,
       ).getIpfsCluster();
 
-      fileStatus = FileStatus.PINNED_TO_CRUST;
       file.link = ipfsCluster.ipfsGateway + file.CID;
 
       if (ipfsCluster.private) {

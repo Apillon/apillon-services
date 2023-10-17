@@ -160,12 +160,12 @@ describe('Storage tests', () => {
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(200);
 
-        expect(response.body.data.fileStatus).toBe(FileStatus.PINNED_TO_CRUST);
-        expect(response.body.data.file.file_uuid).toBe(testFile.file_uuid);
-        expect(response.body.data.file.CID).toBe(testFile.CID);
-        expect(response.body.data.file.name).toBe(testFile.name);
-        expect(response.body.data.file.size).toBeGreaterThan(0);
-        expect(response.body.data.file.downloadLink).toBeTruthy();
+        expect(response.body.data.fileStatus).toBe(FileStatus.UPLOADED_TO_IPFS);
+        expect(response.body.data.file_uuid).toBe(testFile.file_uuid);
+        expect(response.body.data.CID).toBe(testFile.CID);
+        expect(response.body.data.name).toBe(testFile.name);
+        expect(response.body.data.size).toBeGreaterThan(0);
+        expect(response.body.data.link).toBeTruthy();
       });
 
       test('User should be able to get file details by CID', async () => {
@@ -174,12 +174,12 @@ describe('Storage tests', () => {
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(200);
 
-        expect(response.body.data.fileStatus).toBe(FileStatus.PINNED_TO_CRUST);
-        expect(response.body.data.file.file_uuid).toBe(testFile.file_uuid);
-        expect(response.body.data.file.CID).toBe(testFile.CID);
-        expect(response.body.data.file.name).toBe(testFile.name);
-        expect(response.body.data.file.size).toBeGreaterThan(0);
-        expect(response.body.data.file.downloadLink).toBeTruthy();
+        expect(response.body.data.fileStatus).toBe(FileStatus.UPLOADED_TO_IPFS);
+        expect(response.body.data.file_uuid).toBe(testFile.file_uuid);
+        expect(response.body.data.CID).toBe(testFile.CID);
+        expect(response.body.data.name).toBe(testFile.name);
+        expect(response.body.data.size).toBeGreaterThan(0);
+        expect(response.body.data.link).toBeTruthy();
       });
     });
 
@@ -598,7 +598,9 @@ describe('Storage tests', () => {
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(200);
         expect(response.body.data.items.length).toBe(1);
-        expect(response.body.data.items[0].id).toBe(deleteBucketTestFile1.id);
+        expect(response.body.data.items[0].file_uuid).toBe(
+          deleteBucketTestFile1.file_uuid,
+        );
       });
 
       test('User should be able to unmark file for deletion', async () => {

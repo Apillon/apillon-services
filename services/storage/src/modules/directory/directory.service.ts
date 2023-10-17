@@ -78,11 +78,11 @@ export class DirectoryService {
   }
 
   static async updateDirectory(
-    event: { id: number; data: any },
+    event: { directory_uuid: string; data: any },
     context: ServiceContext,
   ): Promise<any> {
-    const d: Directory = await new Directory({}, context).populateById(
-      event.id,
+    const d: Directory = await new Directory({}, context).populateByUUID(
+      event.directory_uuid,
     );
 
     if (!d.exists()) {
@@ -109,12 +109,13 @@ export class DirectoryService {
   }
 
   static async deleteDirectory(
-    event: { id: number },
+    event: { directory_uuid: string },
     context: ServiceContext,
   ): Promise<any> {
-    const directory: Directory = await new Directory({}, context).populateById(
-      event.id,
-    );
+    const directory: Directory = await new Directory(
+      {},
+      context,
+    ).populateByUUID(event.directory_uuid);
 
     if (!directory.exists()) {
       throw new StorageCodeException({
@@ -145,12 +146,13 @@ export class DirectoryService {
   }
 
   static async unmarkDirectoryForDeletion(
-    event: { id: number },
+    event: { directory_uuid: string },
     context: ServiceContext,
   ): Promise<any> {
-    const directory: Directory = await new Directory({}, context).populateById(
-      event.id,
-    );
+    const directory: Directory = await new Directory(
+      {},
+      context,
+    ).populateByUUID(event.directory_uuid);
 
     if (!directory.exists()) {
       throw new StorageCodeException({

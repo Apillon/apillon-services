@@ -76,7 +76,7 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async updateBucket(params: { id: number; data: any }) {
+  public async updateBucket(params: { bucket_uuid: string; data: any }) {
     const data = {
       eventName: StorageEventType.UPDATE_BUCKET,
       ...params,
@@ -136,7 +136,7 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async updateDirectory(params: { id: number; data: any }) {
+  public async updateDirectory(params: { directory_uuid: string; data: any }) {
     const data = {
       eventName: StorageEventType.UPDATE_DIRECTROY,
       ...params,
@@ -144,7 +144,7 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async deleteDirectory(params: { id: number }) {
+  public async deleteDirectory(params: { directory_uuid: string }) {
     const data = {
       eventName: StorageEventType.DELETE_DIRECTORY,
       ...params,
@@ -152,7 +152,7 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async cancelDirectoryDeletion(params: { id: number }) {
+  public async cancelDirectoryDeletion(params: { directory_uuid: string }) {
     const data = {
       eventName: StorageEventType.CANCEL_DELETE_DIRECTORY,
       ...params,

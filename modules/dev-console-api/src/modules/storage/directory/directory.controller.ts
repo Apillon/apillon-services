@@ -45,7 +45,7 @@ export class DirectoryController {
     return await this.directoryService.createDirectory(context, body);
   }
 
-  @Patch(':id')
+  @Patch(':directory_uuid')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -54,13 +54,17 @@ export class DirectoryController {
   @UseGuards(AuthGuard)
   async updateDirectory(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('directory_uuid') directory_uuid: string,
     @Body() body: any,
   ) {
-    return await this.directoryService.updateDirectory(context, id, body);
+    return await this.directoryService.updateDirectory(
+      context,
+      directory_uuid,
+      body,
+    );
   }
 
-  @Patch(':id/cancel-deletion')
+  @Patch(':directory_uuid/cancel-deletion')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -69,12 +73,15 @@ export class DirectoryController {
   @UseGuards(AuthGuard)
   async cancelDirectoryDeletion(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('directory_uuid') directory_uuid: string,
   ) {
-    return await this.directoryService.cancelDirectoryDeletion(context, id);
+    return await this.directoryService.cancelDirectoryDeletion(
+      context,
+      directory_uuid,
+    );
   }
 
-  @Delete(':id')
+  @Delete(':directory_uuid')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -83,9 +90,9 @@ export class DirectoryController {
   @UseGuards(AuthGuard)
   async deleteDirectory(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('directory_uuid') directory_uuid: string,
   ) {
-    return await this.directoryService.deleteDirectory(context, id);
+    return await this.directoryService.deleteDirectory(context, directory_uuid);
   }
 
   @Get('directory-content')

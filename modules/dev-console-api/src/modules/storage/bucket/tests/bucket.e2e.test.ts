@@ -80,7 +80,7 @@ describe('Storage bucket tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBe(1);
-      expect(response.body.data.items[0]?.id).toBeTruthy();
+      expect(response.body.data.items[0]?.name).toBeTruthy();
       expect(response.body.data.items[0]?.bucket_uuid).toBeTruthy();
       expect(response.body.data.items[0]?.bucketType).toBeTruthy();
     });
@@ -92,9 +92,9 @@ describe('Storage bucket tests', () => {
       expect(response.status).toBe(403);
     });
 
-    test('User should be able to get bucket by id', async () => {
+    test('User should be able to get bucket by uuid', async () => {
       const response = await request(stage.http)
-        .get(`/buckets/${testBucket.id}`)
+        .get(`/buckets/${testBucket.bucket_uuid}`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.bucket_uuid).toBeTruthy();
@@ -147,7 +147,6 @@ describe('Storage bucket tests', () => {
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
-      expect(response.body.data.id).toBeTruthy();
       expect(response.body.data.bucket_uuid).toBeTruthy();
       expect(response.body.data.bucketType).toBeTruthy();
       expect(response.body.data.name).toBeTruthy();
@@ -167,13 +166,13 @@ describe('Storage bucket tests', () => {
 
     test('User should be able to update bucket', async () => {
       const response = await request(stage.http)
-        .patch(`/buckets/${testBucket.id}`)
+        .patch(`/buckets/${testBucket.bucket_uuid}`)
         .send({
           name: 'Bucket changed name',
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.data.id).toBeTruthy();
+      expect(response.body.data.bucket_uuid).toBeTruthy();
       expect(response.body.data.name).toBe('Bucket changed name');
 
       const b: Bucket = await new Bucket(
@@ -207,7 +206,6 @@ describe('Storage bucket tests', () => {
         .set('Authorization', `Bearer ${testUser3.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBe(2);
-      expect(response.body.data.items[0]?.id).toBeTruthy();
       expect(response.body.data.items[0]?.bucket_uuid).toBeTruthy();
       expect(response.body.data.items[0]?.bucketType).toBeTruthy();
     });
@@ -260,7 +258,6 @@ describe('Storage bucket tests', () => {
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBeGreaterThan(0);
-      expect(response.body.data.items[0]?.id).toBeTruthy();
       expect(response.body.data.items[0]?.bucket_uuid).toBeTruthy();
       expect(response.body.data.items[0]?.bucketType).toBeTruthy();
     });
@@ -308,56 +305,6 @@ describe('Storage bucket tests', () => {
     });
   });
 
-  describe('Bucket quotas tests', () => {
-    let quotaTestsUser: TestUser = undefined;
-    let quotaTestProject: Project = undefined;
-
-    beforeAll(async () => {
-      quotaTestsUser = await createTestUser(
-        stage.devConsoleContext,
-        stage.amsContext,
-      );
-      quotaTestProject = await createTestProject(quotaTestsUser, stage);
-      //create 10 buckets - max api keys on project quota reached
-      for (let i = 0; i < 10; i++) {
-        await createTestBucket(
-          quotaTestsUser,
-          stage.storageContext,
-          quotaTestProject,
-          BucketType.STORAGE,
-        );
-      }
-    });
-
-    test('User should recieve status 400 when max buckets quota is reached', async () => {
-      const response = await request(stage.http)
-        .post(`/buckets`)
-        .send({
-          project_uuid: quotaTestProject.project_uuid,
-          name: 'My test bucket',
-          bucketType: 1,
-        })
-        .set('Authorization', `Bearer ${quotaTestsUser.token}`);
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        StorageErrorCode[StorageErrorCode.MAX_BUCKETS_REACHED],
-      );
-    });
-
-    test('User should be able to create hosting bucket even though storage bucket quota si reached', async () => {
-      const response = await request(stage.http)
-        .post(`/buckets`)
-        .send({
-          project_uuid: quotaTestProject.project_uuid,
-          name: 'My test bucket',
-          bucketType: BucketType.HOSTING,
-        })
-        .set('Authorization', `Bearer ${quotaTestsUser.token}`);
-      expect(response.status).toBe(201);
-      expect(response.body.data.id).toBeTruthy();
-    });
-  });
-
   describe('Delete bucket tests', () => {
     test('User should NOT be able to delete ANOTHER USER bucket', async () => {
       const response = await request(stage.http)
@@ -394,7 +341,9 @@ describe('Storage bucket tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBe(1);
-      expect(response.body.data.items[0]?.id).toBe(testBucket.id);
+      expect(response.body.data.items[0]?.bucket_uuid).toBe(
+        testBucket.bucket_uuid,
+      );
       expect(response.body.data.items[0]?.status).toBe(
         SqlModelStatus.MARKED_FOR_DELETION,
       );

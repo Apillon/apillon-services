@@ -92,10 +92,12 @@ export class BucketService {
   }
 
   static async updateBucket(
-    event: { id: number; data: any },
+    event: { bucket_uuid: string; data: any },
     context: ServiceContext,
   ): Promise<any> {
-    const b: Bucket = await new Bucket({}, context).populateById(event.id);
+    const b: Bucket = await new Bucket({}, context).populateByUUID(
+      event.bucket_uuid,
+    );
 
     if (!b.exists()) {
       throw new StorageNotFoundException();
