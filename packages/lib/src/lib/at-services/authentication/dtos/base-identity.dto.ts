@@ -21,15 +21,12 @@ export class BaseIdentityDto extends ModelBase {
   })
   public email: string;
 
+  /**
+   * Sent as header, added to body in AuthGuard
+   */
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.IDENTITY_VERIFICATION_TOKEN_NOT_PRESENT,
-      },
-    ],
   })
   public token: string;
 }

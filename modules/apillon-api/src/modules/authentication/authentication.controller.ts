@@ -1,14 +1,8 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { ApiKeyPermissions, Ctx, Validation } from '@apillon/modules-lib';
+import { ApiKeyPermissions, Ctx } from '@apillon/modules-lib';
 import { ApillonApiContext } from '../../context';
 import { AuthService } from './authentication.service';
-import { ValidationGuard } from '../../guards/validation.guard';
-import {
-  AttachedServiceType,
-  DefaultApiKeyRole,
-  ValidateFor,
-} from '@apillon/lib';
-import { VerifyLoginDto } from '@apillon/lib';
+import { AttachedServiceType, DefaultApiKeyRole } from '@apillon/lib';
 import { AuthGuard } from '../../guards/auth.guard';
 
 @Controller('auth')
@@ -37,15 +31,10 @@ export class AuthController {
     serviceType: AttachedServiceType.AUTHENTICATION,
   })
   @UseGuards(AuthGuard)
-  @Validation({
-    dto: VerifyLoginDto,
-    validateFor: ValidateFor.QUERY,
-  })
-  @UseGuards(ValidationGuard)
   async verifyLogin(
     @Ctx() context: ApillonApiContext,
-    @Query() query: VerifyLoginDto,
+    @Query() query: { token: string },
   ) {
-    return await this.authService.verifyLogin(context, query);
+    return await this.authService.verifyLogin(context, query.token);
   }
 }

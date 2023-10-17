@@ -29,7 +29,7 @@ export class IdentityController {
 
   @Get('state/query')
   @Validation({ dto: BaseIdentityDto, validateFor: ValidateFor.QUERY })
-  @UseGuards(ValidationGuard)
+  @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.IDENTITY_VERIFICATION))
   async attestationGetIdentityState(
     @Ctx() context: AuthenticationApiContext,
     @Query('email') email: string,

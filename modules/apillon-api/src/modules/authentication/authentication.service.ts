@@ -1,7 +1,8 @@
 import { JwtTokenType, generateJwtToken, parseJwtToken } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
-import { VerifyLoginDto } from '@apillon/lib';
+import { ApiCodeException } from '../../lib/exceptions';
+import { ApiErrorCode } from '../../config/types';
 
 @Injectable()
 export class AuthService {
@@ -15,12 +16,14 @@ export class AuthService {
     return { session: token };
   }
 
-  async verifyLogin(_context: ApillonApiContext, query: VerifyLoginDto) {
+  async verifyLogin(_context: ApillonApiContext, token: string) {
     try {
-      parseJwtToken(JwtTokenType.USER_AUTHENTICATION, query.token);
+      return parseJwtToken(JwtTokenType.USER_AUTHENTICATION, token);
     } catch (error) {
-      return { verified: false };
+      throw new ApiCodeException({
+        status: 401,
+        code: ApiErrorCode.INVALID_AUTH_TOKEN,
+      });
     }
-    return { verified: true };
   }
 }

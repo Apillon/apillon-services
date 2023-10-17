@@ -1,4 +1,4 @@
-import { ValidateFor } from '@apillon/lib';
+import { JwtTokenType, ValidateFor } from '@apillon/lib';
 import { VerifyCredentialDto } from './dtos/message/verify-credential.dto';
 import { Ctx, Validation } from '@apillon/modules-lib';
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
@@ -9,6 +9,7 @@ import { SubmitAttestationDto } from './dtos/message/submit-attestation.dto';
 import { SubmitTermsDto } from './dtos/message/submit-terms.dto';
 import { SporranSessionVerifyDto } from './dtos/sporran-session.dto';
 import { SporranService } from './sporran.service';
+import { AuthGuard } from '../../guards/auth.guard';
 
 // NOTE: Messages are a way of communcation with the Sporran extension,
 // once the session has been established
@@ -18,15 +19,14 @@ export class SporranController {
   constructor(private sporranService: SporranService) {}
 
   @Get('session-values')
+  @UseGuards(AuthGuard(JwtTokenType.AUTH_SESSION))
   async sporranGetSessionValues(@Ctx() context: AuthenticationApiContext) {
     return await this.sporranService.getSessionValues(context);
   }
 
   @Post('verify-session')
-  @Validation({
-    dto: SporranSessionVerifyDto,
-    validateFor: ValidateFor.QUERY,
-  })
+  @Validation({ dto: SporranSessionVerifyDto, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.AUTH_SESSION))
   async sporranVerifySession(
     @Ctx() context: AuthenticationApiContext,
     @Body() body: any,
@@ -35,10 +35,8 @@ export class SporranController {
   }
 
   @Post('message/submit-terms')
-  @Validation({
-    dto: SubmitTermsDto,
-  })
-  @UseGuards(ValidationGuard)
+  @Validation({ dto: SubmitTermsDto })
+  @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.AUTH_SESSION))
   async sporranSubmitTerms(
     @Ctx() context: AuthenticationApiContext,
     @Body() body: SubmitTermsDto,
@@ -49,10 +47,8 @@ export class SporranController {
   }
 
   @Post('message/request-credential')
-  @Validation({
-    dto: RequestCredentialDto,
-  })
-  @UseGuards(ValidationGuard)
+  @Validation({ dto: RequestCredentialDto })
+  @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.AUTH_SESSION))
   async sporranRequestCredential(
     @Ctx() context: AuthenticationApiContext,
     @Body() body: RequestCredentialDto,
@@ -63,10 +59,8 @@ export class SporranController {
   }
 
   @Post('message/verify-credential')
-  @Validation({
-    dto: VerifyCredentialDto,
-  })
-  @UseGuards(ValidationGuard)
+  @Validation({ dto: VerifyCredentialDto })
+  @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.AUTH_SESSION))
   async sporranVerifyAttestation(
     @Ctx() context: AuthenticationApiContext,
     @Body() body: VerifyCredentialDto,
@@ -75,10 +69,8 @@ export class SporranController {
   }
 
   @Post('message/submit-attestation')
-  @Validation({
-    dto: SubmitAttestationDto,
-  })
-  @UseGuards(ValidationGuard)
+  @Validation({ dto: SubmitAttestationDto })
+  @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.AUTH_SESSION))
   async sporranSubmitAttestation(
     @Ctx() context: AuthenticationApiContext,
     @Body() body: SubmitAttestationDto,

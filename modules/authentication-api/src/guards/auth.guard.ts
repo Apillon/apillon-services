@@ -27,11 +27,13 @@ export const AuthGuard = (tokenType: string) => {
       const request = execCtx.switchToHttp().getRequest<IRequest>();
       const data = request[options.validateFor];
 
-      const token = data.token;
-
       let tokenData: any;
       try {
+        const token = extractTokenFromHeader(request);
         tokenData = parseJwtToken(tokenType, token);
+        if (options.validateFor) {
+          request[options.validateFor].token = token;
+        }
       } catch (error) {
         throw new CodeException({
           status: HttpStatus.BAD_REQUEST,
@@ -40,7 +42,7 @@ export const AuthGuard = (tokenType: string) => {
         });
       }
 
-      if (tokenData.email && tokenData.email !== data.email) {
+      if (tokenData.email && tokenData.email !== data?.email) {
         throw new CodeException({
           status: HttpStatus.BAD_REQUEST,
           code: AuthenticationErrorCode.IDENTITY_INVALID_TOKEN_DATA,
@@ -50,6 +52,11 @@ export const AuthGuard = (tokenType: string) => {
 
       return true;
     }
+  }
+
+  function extractTokenFromHeader(request: IRequest): string | undefined {
+    const [type, token] = request.headers.authorization?.split(' ') ?? [];
+    return type === 'Bearer' ? token : undefined;
   }
 
   return mixin(AuthGuardMixin);
