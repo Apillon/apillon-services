@@ -41,7 +41,12 @@ export class Directory extends UuidSqlModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
     ],
-    validators: [],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: StorageErrorCode.DIRECTORY_REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
     fakeValue: () => uuidV4(),
   })
   public directory_uuid: string;
@@ -59,7 +64,6 @@ export class Directory extends UuidSqlModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
     ],
     validators: [],
   })
@@ -82,7 +86,7 @@ export class Directory extends UuidSqlModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.BUCKET_PROJECT_UUID_NOT_PRESENT,
+        code: StorageErrorCode.DIRECTORY_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -100,13 +104,11 @@ export class Directory extends UuidSqlModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.DIRECTORY_BUCKET_ID_NOT_PRESENT,
+        code: StorageErrorCode.DIRECTORY_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -169,7 +171,7 @@ export class Directory extends UuidSqlModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.DIRECTORY_NAME_NOT_PRESENT,
+        code: StorageErrorCode.DIRECTORY_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -240,6 +242,20 @@ export class Directory extends UuidSqlModel {
   })
   public files: File;
 
+  /************************************INFO properties */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [SerializeFor.SERVICE, SerializeFor.PROFILE],
+    validators: [],
+  })
+  public parentDirectory_uuid: string;
+
   /**
    * Marks record in the database for deletion.
    */
@@ -259,7 +275,24 @@ export class Directory extends UuidSqlModel {
   }
 
   public override async populateByUUID(uuid: string): Promise<this> {
-    return super.populateByUUID(uuid, 'directory_uuid');
+    if (!uuid) {
+      throw new Error(`uuid should not be null: directory_uuid: ${uuid}`);
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+        SELECT d.*, pd.directory_uuid as parentDirectory_uuid
+        FROM \`${DbTables.DIRECTORY}\` d
+        LEFT JOIN \`${DbTables.DIRECTORY}\` pd ON d.parentDirectory_id = pd.id
+        WHERE d.directory_uuid = @uuid
+        AND d.status <> ${SqlModelStatus.DELETED};
+      `,
+      { uuid },
+    );
+
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   public async populateByCid(cid: string): Promise<this> {

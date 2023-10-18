@@ -1,8 +1,8 @@
 import {
-  ApillonApiBucketQueryFilter,
   ApillonApiCreateS3UrlsForUploadDto,
   ApillonApiDirectoryContentQueryFilter,
   BaseProjectQueryFilter,
+  BucketQueryFilter,
   CreateBucketDto,
   CreateS3UrlsForUploadDto,
   DirectoryContentQueryFilter,
@@ -27,10 +27,7 @@ export class StorageService {
     ).data;
   }
 
-  async listBuckets(
-    context: ApillonApiContext,
-    query: ApillonApiBucketQueryFilter,
-  ) {
+  async listBuckets(context: ApillonApiContext, query: BucketQueryFilter) {
     return (await new StorageMicroservice(context).listBuckets(query)).data;
   }
 

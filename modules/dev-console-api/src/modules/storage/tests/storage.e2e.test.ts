@@ -138,15 +138,8 @@ describe('Storage tests', () => {
       });
 
       test('User should be able to download uploaded file from apillon ipfs gateway', async () => {
-        const ipfsCluster = await new ProjectConfig(
-          { project_uuid: testFile.project_uuid },
-          stage.storageContext,
-        ).getIpfsCluster();
-
         expect(testFile).toBeTruthy();
-        const response = await request(
-          ipfsCluster.ipfsGateway + testFile.CID,
-        ).get('');
+        const response = await request(testFile.link).get('');
         expect(response.status).toBe(200);
       });
     });

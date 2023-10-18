@@ -61,6 +61,7 @@ export class HostingController {
     return await this.hostingService.listWebsites(context, query);
   }
 
+  /*
   @Post('websites')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_WRITE,
@@ -74,7 +75,7 @@ export class HostingController {
     @Body() body: CreateWebsiteDto,
   ) {
     return await this.hostingService.createWebsite(context, body);
-  }
+  }*/
 
   @Get('websites/:website_uuid')
   @ApiKeyPermissions({

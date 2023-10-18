@@ -115,7 +115,7 @@ describe('Storage directory tests', () => {
       const response = await request(stage.http)
         .post(`/directories`)
         .send({
-          bucket_id: testBucket.id,
+          bucket_uuid: testBucket.bucket_uuid,
           name: 'My test directory',
         })
         .set('Authorization', `Bearer ${testUser.token}`);
@@ -126,7 +126,7 @@ describe('Storage directory tests', () => {
       const d: Directory = await new Directory(
         {},
         stage.storageContext,
-      ).populateByUUID(response.body.data.id);
+      ).populateByUUID(response.body.data.directory_uuid);
       expect(d.exists()).toBeTruthy();
       try {
         await d.validate();
@@ -172,6 +172,27 @@ describe('Storage directory tests', () => {
       expect(d.name).toBe('Some new directory name');
       expect(d.CID).toBe('some imaginary CID');
       expect(d.description).toBe('my test description');
+    });
+
+    test('User should be able to create new directory inside another directory', async () => {
+      const response = await request(stage.http)
+        .post(`/directories`)
+        .send({
+          bucket_uuid: testBucket.bucket_uuid,
+          name: 'My sub directory',
+          parentDirectory_uuid: testDirectory.directory_uuid,
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(201);
+      expect(response.body.data.name).toBeTruthy();
+      expect(response.body.data.directory_uuid).toBeTruthy();
+
+      const d: Directory = await new Directory(
+        {},
+        stage.storageContext,
+      ).populateByUUID(response.body.data.directory_uuid);
+      expect(d.exists()).toBeTruthy();
+      expect(d.parentDirectory_uuid).toBe(testDirectory.directory_uuid);
     });
   });
 
@@ -227,7 +248,7 @@ describe('Storage directory tests', () => {
       const response = await request(stage.http)
         .post(`/directories`)
         .send({
-          bucket_id: testBucket.id,
+          bucket_uuid: testBucket.bucket_uuid,
           name: 'My test directory',
         })
         .set('Authorization', `Bearer ${adminTestUser.token}`);

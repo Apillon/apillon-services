@@ -228,13 +228,13 @@ export class BucketService {
   //#region bucket webhook functions
 
   static async getBucketWebhook(
-    event: { bucket_id: number },
+    event: { bucket_uuid: string },
     context: ServiceContext,
   ): Promise<any> {
     const webhook: BucketWebhook = await new BucketWebhook(
       {},
       context,
-    ).populateByBucketId(event.bucket_id);
+    ).populateByBucketUuid(event.bucket_uuid);
 
     if (!webhook.exists()) {
       throw new StorageNotFoundException(
@@ -250,8 +250,8 @@ export class BucketService {
     event: { body: CreateBucketWebhookDto },
     context: ServiceContext,
   ): Promise<any> {
-    const b: Bucket = await new Bucket({}, context).populateById(
-      event.body.bucket_id,
+    const b: Bucket = await new Bucket({}, context).populateByUUID(
+      event.body.bucket_uuid,
     );
 
     if (!b.exists()) {
@@ -260,7 +260,10 @@ export class BucketService {
 
     b.canModify(context);
 
-    const webhook: BucketWebhook = new BucketWebhook(event.body, context);
+    const webhook: BucketWebhook = new BucketWebhook(
+      { ...event.body, bucket_id: b.id },
+      context,
+    );
     try {
       await webhook.validate();
     } catch (err) {
@@ -272,7 +275,9 @@ export class BucketService {
 
     //Check if webhook for this bucket already exists
     if (
-      (await new BucketWebhook({}, context).populateByBucketId(b.id)).exists()
+      (
+        await new BucketWebhook({}, context).populateByBucketUuid(b.bucket_uuid)
+      ).exists()
     ) {
       throw new StorageCodeException({
         code: StorageErrorCode.WEBHOOK_ALREADY_EXISTS_FOR_PROJECT,

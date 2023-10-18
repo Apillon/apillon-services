@@ -1,10 +1,10 @@
 import {
-  ApillonApiBucketQueryFilter,
   ApillonApiCreateBucketDto,
   ApillonApiCreateS3UrlsForUploadDto,
   ApillonApiDirectoryContentQueryFilter,
   AttachedServiceType,
   BaseProjectQueryFilter,
+  BucketQueryFilter,
   DefaultApiKeyRole,
   EndFileUploadSessionDto,
   FilesQueryFilter,
@@ -51,14 +51,14 @@ export class StorageController {
     serviceType: AttachedServiceType.STORAGE,
   })
   @Validation({
-    dto: ApillonApiBucketQueryFilter,
+    dto: BucketQueryFilter,
     validateFor: ValidateFor.QUERY,
   })
   @UseGuards(AuthGuard, ValidationGuard)
   @HttpCode(200)
   async listBuckets(
     @Ctx() context: ApillonApiContext,
-    @Query() query: ApillonApiBucketQueryFilter,
+    @Query() query: BucketQueryFilter,
   ) {
     query.project_uuid = context.apiKey.project_uuid;
     return await this.storageService.listBuckets(context, query);
@@ -108,9 +108,8 @@ export class StorageController {
     role: DefaultApiKeyRole.KEY_EXECUTE,
     serviceType: AttachedServiceType.STORAGE,
   })
-  @UseGuards(AuthGuard)
   @Validation({ dto: EndFileUploadSessionDto })
-  @UseGuards(ValidationGuard)
+  @UseGuards(AuthGuard, ValidationGuard)
   @HttpCode(200)
   async endFileUploadSession(
     @Ctx() context: ApillonApiContext,
@@ -158,12 +157,11 @@ export class StorageController {
     role: DefaultApiKeyRole.KEY_READ,
     serviceType: AttachedServiceType.STORAGE,
   })
-  @UseGuards(AuthGuard)
   @Validation({
     dto: ApillonApiDirectoryContentQueryFilter,
     validateFor: ValidateFor.QUERY,
   })
-  @UseGuards(ValidationGuard)
+  @UseGuards(AuthGuard, ValidationGuard)
   async listContent(
     @Ctx() context: ApillonApiContext,
     @Param('bucketUuid') bucket_uuid: string,
@@ -177,12 +175,11 @@ export class StorageController {
     role: DefaultApiKeyRole.KEY_READ,
     serviceType: AttachedServiceType.STORAGE,
   })
-  @UseGuards(AuthGuard)
   @Validation({
     dto: FilesQueryFilter,
     validateFor: ValidateFor.QUERY,
   })
-  @UseGuards(ValidationGuard)
+  @UseGuards(AuthGuard, ValidationGuard)
   async listFiles(
     @Ctx() context: ApillonApiContext,
     @Param('bucketUuid') bucket_uuid: string,

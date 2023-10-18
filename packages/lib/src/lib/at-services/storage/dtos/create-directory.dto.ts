@@ -1,4 +1,4 @@
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   PopulateFrom,
@@ -9,25 +9,25 @@ import { ModelBase, prop } from '../../../base-models/base';
 
 export class CreateDirectoryDto extends ModelBase {
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [],
   })
-  public parentDirectory_id: number;
+  public parentDirectory_uuid: string;
 
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.DIRECTORY_BUCKET_ID_NOT_PRESENT,
+        code: ValidatorErrorCode.DIRECTORY_BUCKET_UUID_NOT_PRESENT,
       },
     ],
   })
-  public bucket_id: number;
+  public bucket_uuid: string;
 
   @prop({
     parser: { resolver: stringParser() },

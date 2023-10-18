@@ -247,10 +247,10 @@ export class StorageMicroservice extends BaseService {
 
   //#region bucket webhook
 
-  public async getBucketWebhook(bucket_id: number) {
+  public async getBucketWebhook(bucket_uuid: string) {
     const data = {
       eventName: StorageEventType.BUCKET_WEBHOOK_GET,
-      bucket_id: bucket_id,
+      bucket_uuid,
     };
     return await this.callService(data);
   }

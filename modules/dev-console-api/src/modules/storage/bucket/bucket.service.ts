@@ -106,28 +106,28 @@ export class BucketService {
 
   //#region bucket webhook
 
-  async getBucketWebhook(context: DevConsoleApiContext, bucket_id: number) {
-    return (await new StorageMicroservice(context).getBucketWebhook(bucket_id))
-      .data;
+  async getBucketWebhook(context: DevConsoleApiContext, bucket_uuid: string) {
+    return (
+      await new StorageMicroservice(context).getBucketWebhook(bucket_uuid)
+    ).data;
   }
 
   async createBucketWebhook(
     context: DevConsoleApiContext,
-    bucket_id: number,
+    bucket_uuid: string,
     body: CreateBucketWebhookDto,
   ) {
-    body.populate({ bucket_id: bucket_id });
+    body.populate({ bucket_uuid });
     return (await new StorageMicroservice(context).createBucketWebhook(body))
       .data;
   }
 
   async updateBucketWebhook(
     context: DevConsoleApiContext,
-    bucket_id: number,
+    bucket_uuid: string,
     id: number,
     body: any,
   ) {
-    body.bucket_id = bucket_id;
     return (
       await new StorageMicroservice(context).updateBucketWebhook({
         id: id,

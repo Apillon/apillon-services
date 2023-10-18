@@ -396,13 +396,37 @@ export class File extends UuidSqlModel {
       { id },
     );
 
-    return data?.length
-      ? this.populate(data[0], PopulateFrom.DB)
-      : this.reset();
+    data?.length ? this.populate(data[0], PopulateFrom.DB) : this.reset();
+    await this.populateLink();
+
+    return this;
   }
 
-  public override async populateByUUID(file_uuid: string): Promise<this> {
-    return super.populateByUUID(file_uuid, 'file_uuid');
+  public override async populateByUUID(uuid: string): Promise<this> {
+    return this.populateById(uuid);
+  }
+
+  public async populateLink() {
+    if (!this.CID) {
+      return;
+    }
+
+    //Get IPFS cluster
+    const ipfsCluster = await new ProjectConfig(
+      { project_uuid: this.project_uuid },
+      this.getContext(),
+    ).getIpfsCluster();
+
+    this.link = ipfsCluster.ipfsGateway + this.CID;
+
+    if (ipfsCluster.private) {
+      this.link = addJwtToIPFSUrl(
+        this.link,
+        this.project_uuid,
+        this.CID,
+        ipfsCluster,
+      );
+    }
   }
 
   public async listFiles(context: ServiceContext, filter: FilesQueryFilter) {

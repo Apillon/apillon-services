@@ -41,17 +41,17 @@ import { AuthGuard } from '../../../guards/auth.guard';
 export class BucketController {
   constructor(private bucketService: BucketService) {}
 
-  @Get(':bucket_id/webhook')
+  @Get(':bucket_uuid/webhook')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async getBucketWebhook(
     @Ctx() context: DevConsoleApiContext,
-    @Param('bucket_id', ParseIntPipe) bucket_id: number,
+    @Param('bucket_uuid') bucket_uuid: string,
   ) {
-    return await this.bucketService.getBucketWebhook(context, bucket_id);
+    return await this.bucketService.getBucketWebhook(context, bucket_uuid);
   }
 
-  @Post(':bucket_id/webhook')
+  @Post(':bucket_uuid/webhook')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -62,17 +62,17 @@ export class BucketController {
   @UseGuards(ValidationGuard)
   async createBucketWebhook(
     @Ctx() context: DevConsoleApiContext,
-    @Param('bucket_id', ParseIntPipe) bucket_id: number,
+    @Param('bucket_uuid') bucket_uuid: string,
     @Body() body: CreateBucketWebhookDto,
   ) {
     return await this.bucketService.createBucketWebhook(
       context,
-      bucket_id,
+      bucket_uuid,
       body,
     );
   }
 
-  @Patch(':bucket_id/webhook/:id')
+  @Patch(':bucket_uuid/webhook/:id')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -83,19 +83,19 @@ export class BucketController {
   @UseGuards(ValidationGuard)
   async updateBucketWebhook(
     @Ctx() context: DevConsoleApiContext,
-    @Param('bucket_id', ParseIntPipe) bucket_id: number,
+    @Param('bucket_uuid') bucket_uuid: string,
     @Param('id', ParseIntPipe) id: number,
     @Body() body: CreateBucketWebhookDto,
   ) {
     return await this.bucketService.updateBucketWebhook(
       context,
-      bucket_id,
+      bucket_uuid,
       id,
       body,
     );
   }
 
-  @Delete(':bucket_id/webhook/:id')
+  @Delete(':bucket_uuid/webhook/:id')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },

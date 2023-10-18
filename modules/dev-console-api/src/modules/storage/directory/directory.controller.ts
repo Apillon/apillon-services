@@ -1,16 +1,4 @@
 import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  ParseIntPipe,
-  Patch,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
-import {
   CreateDirectoryDto,
   DefaultPermission,
   DefaultUserRole,
@@ -18,11 +6,22 @@ import {
   RoleGroup,
   ValidateFor,
 } from '@apillon/lib';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { DevConsoleApiContext } from '../../../context';
+import { AuthGuard } from '../../../guards/auth.guard';
 import { ValidationGuard } from '../../../guards/validation.guard';
 import { DirectoryService } from './directory.service';
-import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
-import { AuthGuard } from '../../../guards/auth.guard';
 
 @Controller('directories')
 @Permissions({ permission: DefaultPermission.STORAGE })

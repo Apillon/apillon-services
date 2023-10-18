@@ -18,50 +18,6 @@ import { Project } from './project.model';
 export class ProjectUser extends AdvancedSQLModel {
   tableName = DbTables.PROJECT_USER;
 
-  /**
-   * id
-   */
-  @prop({
-    parser: { resolver: integerParser() },
-    serializable: [
-      SerializeFor.PROFILE,
-      SerializeFor.ADMIN,
-      SerializeFor.SELECT_DB,
-      SerializeFor.SERVICE,
-      SerializeFor.WORKER,
-    ],
-    populatable: [PopulateFrom.DB],
-  })
-  public id: number;
-
-  /**
-   * status
-   */
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
-    serializable: [
-      SerializeFor.PROFILE,
-      SerializeFor.ADMIN,
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.SELECT_DB,
-      SerializeFor.SERVICE,
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ErrorCode.STATUS_NOT_PRESENT,
-      },
-    ],
-    defaultValue: SqlModelStatus.ACTIVE,
-    fakeValue() {
-      return SqlModelStatus.ACTIVE;
-    },
-  })
-  public status?: number;
-
-  // TODO: Implement ForeignKey constraints / verification
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],

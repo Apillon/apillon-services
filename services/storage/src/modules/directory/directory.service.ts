@@ -43,8 +43,8 @@ export class DirectoryService {
     event: { body: CreateDirectoryDto },
     context: ServiceContext,
   ): Promise<any> {
-    const bucket: Bucket = await new Bucket({}, context).populateById(
-      event.body.bucket_id,
+    const bucket: Bucket = await new Bucket({}, context).populateByUUID(
+      event.body.bucket_uuid,
     );
     if (!bucket.exists()) {
       throw new StorageCodeException({
@@ -55,11 +55,20 @@ export class DirectoryService {
 
     bucket.canModify(context);
 
+    let parentDirectory: Directory;
+    if (event.body.parentDirectory_uuid) {
+      parentDirectory = await new Directory({}, context).populateByUUID(
+        event.body.parentDirectory_uuid,
+      );
+    }
+
     const d: Directory = new Directory(
       {
         ...event.body,
         directory_uuid: uuidV4(),
+        bucket_id: bucket.id,
         project_uuid: bucket.project_uuid,
+        parentDirectory_id: parentDirectory?.id,
       },
       context,
     );
@@ -74,7 +83,10 @@ export class DirectoryService {
     }
 
     await d.insert();
-    return d.serialize(SerializeFor.PROFILE);
+    return {
+      ...d.serialize(SerializeFor.PROFILE),
+      parentDirectory_uuid: parentDirectory?.directory_uuid,
+    };
   }
 
   static async updateDirectory(

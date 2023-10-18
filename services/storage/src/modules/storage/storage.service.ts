@@ -469,24 +469,8 @@ export class StorageService {
     }
 
     file.canAccess(context);
-    if (file.CID) {
-      //Get IPFS cluster
-      const ipfsCluster = await new ProjectConfig(
-        { project_uuid: file.project_uuid },
-        context,
-      ).getIpfsCluster();
 
-      file.link = ipfsCluster.ipfsGateway + file.CID;
-
-      if (ipfsCluster.private) {
-        file.link = addJwtToIPFSUrl(
-          file.link,
-          file.project_uuid,
-          file.CID,
-          ipfsCluster,
-        );
-      }
-    }
+    await file.populateLink();
 
     return file.serialize(getSerializationStrategy(context));
   }
