@@ -41,7 +41,7 @@ export async function upgrade(
     ) NULL,
       \`contractAddress\` CHAR
     (
-      50
+      66
     ) NULL,
       \`deployerAddress\` CHAR
     (

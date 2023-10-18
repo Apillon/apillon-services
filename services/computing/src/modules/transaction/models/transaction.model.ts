@@ -12,7 +12,11 @@ import {
   TransactionStatus,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import { ComputingErrorCode, DbTables } from '../../../config/types';
+import {
+  ComputingErrorCode,
+  DbTables,
+  TransactionType,
+} from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 
 export class Transaction extends AdvancedSQLModel {
@@ -144,6 +148,36 @@ export class Transaction extends AdvancedSQLModel {
     } else {
       return this.reset();
     }
+  }
+
+  public async getContractTransactions(
+    contract_uuid: string,
+    transactionStatus: TransactionStatus = null,
+    transactionType: TransactionType = null,
+  ): Promise<Transaction[]> {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+        SELECT t.*
+        FROM \`${this.tableName}\` as t
+               JOIN contract as c ON (c.id = t.refId)
+        WHERE t.refTable = 'contract'
+          AND t.status <> ${SqlModelStatus.DELETED}
+          AND (@transactionStatus IS NULL OR
+               t.transactionStatus = @transactionStatus)
+          AND (@transactionType IS NULL OR t.transactionType = @transactionType)
+          AND c.contract_uuid = @contract_uuid
+      `,
+      { transactionStatus, transactionType, contract_uuid },
+    );
+
+    const res: Transaction[] = [];
+    if (data && data.length) {
+      for (const t of data) {
+        res.push(new Transaction({}, this.getContext()).populate(t));
+      }
+    }
+
+    return res;
   }
 
   public async getList(

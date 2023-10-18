@@ -5,6 +5,7 @@ import {
   DefaultUserRole,
   DepositToClusterDto,
   RoleGroup,
+  TransferOwnershipDto,
   ValidateFor,
 } from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
@@ -78,5 +79,22 @@ export class ComputingController {
   ) {
     body.contract_uuid = uuid;
     return await this.computingService.depositToContractCluster(context, body);
+  }
+
+  @Post('contracts/:uuid/transfer-ownership')
+  @Validation({ dto: TransferOwnershipDto })
+  @UseGuards(ValidationGuard)
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async transferOwnership(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') uuid: string,
+    @Body() body: TransferOwnershipDto,
+  ) {
+    body.contract_uuid = uuid;
+    return await this.computingService.transferContractOwnership(context, body);
   }
 }

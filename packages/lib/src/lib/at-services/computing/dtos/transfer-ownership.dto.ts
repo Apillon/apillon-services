@@ -1,4 +1,4 @@
-import { ModelBase, prop } from '../../../base-models/base';
+import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
@@ -6,11 +6,11 @@ import {
   SerializeFor,
   ValidatorErrorCode,
 } from '../../../../config/types';
-import { numberSizeValidator } from '../../../validators';
+import { ModelBase } from '../../../base-models/base';
 import { substrateAddressValidator } from '../validators/substrate-address-validator';
 import { ChainPrefix } from '../../substrate/constants/chain-prefix';
 
-export class DepositToContractClusterDtoBase extends ModelBase {
+export class TransferOwnershipDtoBase extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -21,7 +21,6 @@ export class DepositToContractClusterDtoBase extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
@@ -34,24 +33,9 @@ export class DepositToContractClusterDtoBase extends ModelBase {
     ],
   })
   public accountAddress: string;
-
-  @prop({
-    // parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: numberSizeValidator({
-          minOrEqual: 0.01,
-        }),
-        code: ValidatorErrorCode.COMPUTING_DEPOSIT_AMOUNT_NOT_VALID,
-      },
-    ],
-  })
-  public amount: number;
 }
 
-export class DepositToClusterDto extends DepositToContractClusterDtoBase {
+export class TransferOwnershipDto extends TransferOwnershipDtoBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -66,4 +50,4 @@ export class DepositToClusterDto extends DepositToContractClusterDtoBase {
   public project_uuid: string;
 }
 
-export class ApillonApiDepositToClusterDto extends DepositToContractClusterDtoBase {}
+export class ApillonApiTransferOwnershipDto extends TransferOwnershipDtoBase {}

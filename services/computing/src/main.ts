@@ -16,6 +16,8 @@ export async function processEvent(event: any, context: Context): Promise<any> {
       ComputingService.getContractByUuid,
     [ComputingEventType.DEPOSIT_TO_CONTRACT_CLUSTER]:
       ComputingService.depositToContractCluster,
+    [ComputingEventType.TRANSFER_CONTRACT_OWNERSHIP]:
+      ComputingService.transferContractOwnership,
   };
 
   return await processors[event.eventName](event, context);

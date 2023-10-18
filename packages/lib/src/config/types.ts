@@ -206,6 +206,7 @@ export enum ComputingEventType {
   LIST_CONTRACTS = 'list-contract',
   GET_CONTRACT_BY_UUID = 'get-contract-by-uuid',
   DEPOSIT_TO_CONTRACT_CLUSTER = 'fund-contract-cluster',
+  TRANSFER_CONTRACT_OWNERSHIP = 'transfer-contract-ownership',
 }
 
 export enum ReferralEventType {
@@ -555,6 +556,7 @@ export enum ValidatorErrorCode {
   COMPUTING_ACCOUNT_ADDRESS_NOT_PRESENT = 42200208,
   COMPUTING_ACCOUNT_ADDRESS_NOT_VALID = 42200209,
   COMPUTING_DEPOSIT_AMOUNT_NOT_VALID = 42200210,
+  COMPUTING_NFT_CONTRACT_ADDRESS_NOT_VALID = 42200211,
 
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,
