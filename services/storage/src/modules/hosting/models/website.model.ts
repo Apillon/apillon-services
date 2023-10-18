@@ -405,6 +405,29 @@ export class Website extends UuidSqlModel {
   })
   public productionBucket: Bucket;
 
+  @prop({
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+    ],
+    validators: [],
+  })
+  public lastDeployment_uuid: string;
+
+  /**
+   * Populate by id or by uuid
+   * @param id id or uuid.
+   * @param conn
+   * @returns
+   */
   public override async populateById(
     id: number | string,
     conn?: PoolConnection,
@@ -421,10 +444,16 @@ export class Website extends UuidSqlModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT *
-      FROM \`${this.tableName}\`
-      WHERE ( id LIKE @id OR website_uuid LIKE @id)
-      AND status <> ${SqlModelStatus.DELETED};
+      SELECT *, 
+      (
+        SELECT deployment_uuid from \`${DbTables.DEPLOYMENT}\` d
+        WHERE d.website_id = w.id
+        ORDER BY d.createTime DESC
+        LIMIT 1
+      ) as lastDeployment_uuid
+      FROM \`${DbTables.WEBSITE}\` w
+      WHERE ( w.id LIKE @id OR w.website_uuid LIKE @id)
+      AND w.status <> ${SqlModelStatus.DELETED};
       `,
       { id },
       conn,
