@@ -68,6 +68,25 @@ export class PhalaBlockchainIndexer extends BaseBlockchainIndexer {
     };
   }
 
+  public async getContractInstantiatingTransactions(
+    account: string,
+    hashes: string[],
+  ) {
+    const data = await this.graphQlClient.request<{
+      phatContractsInstantiatings: PhatContractsInstantiatingTransaction[];
+    }>(
+      gql`
+        ${PhalaGqlQueries.INSTANTIATED_CONTRACTS_BY_HASH_QUERY}
+      `,
+      {
+        account,
+        hashes,
+      },
+    );
+
+    return data.phatContractsInstantiatings;
+  }
+
   public async getAccountBalanceTransfersForTxs(
     account: string,
     hashes: string[],
