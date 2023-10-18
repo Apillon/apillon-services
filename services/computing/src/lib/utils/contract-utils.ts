@@ -19,12 +19,11 @@ export async function deployPhalaContract(
   conn: PoolConnection,
 ) {
   const walletService = new WalletService(context);
-  //Prepare transaction record
-  const dbTxRecord = new Transaction({}, context);
-
-  // Create transaction request to be sent on blockchain
   contract.clusterId = await walletService.getClusterId();
-  const transaction = await walletService.createDeployTransaction(contract);
+  const transaction = await walletService.createDeployTransaction(
+    contract,
+    'https://ipfs.apillon.io/ipfs/',
+  );
 
   const blockchainServiceRequest = new CreateSubstrateTransactionDto(
     {
@@ -39,6 +38,7 @@ export async function deployPhalaContract(
     context,
   ).createSubstrateTransaction(blockchainServiceRequest);
 
+  const dbTxRecord = new Transaction({}, context);
   dbTxRecord.populate({
     transactionType: TransactionType.DEPLOY_CONTRACT,
     refTable: DbTables.CONTRACT,
@@ -51,7 +51,80 @@ export async function deployPhalaContract(
   await TransactionService.saveTransaction(context, dbTxRecord, conn);
   //Update collection status
   contract.contractStatus = ContractStatus.DEPLOYING;
-  contract.contractAddress = response.data.data;
   contract.deployerAddress = response.data.address;
   await contract.update(SerializeFor.UPDATE_DB, conn);
+}
+
+export async function depositToPhalaContractCluster(
+  context: ServiceContext,
+  contract: Contract,
+  accountAddress: string,
+  amount: number,
+  conn: PoolConnection,
+) {
+  const walletService = new WalletService(context);
+  const transaction = await walletService.createFundPhalaClusterTransaction(
+    contract.clusterId,
+    accountAddress,
+    amount,
+  );
+  const blockchainServiceRequest = new CreateSubstrateTransactionDto(
+    {
+      chain: SubstrateChain.PHALA,
+      transaction: transaction.toHex(),
+      referenceTable: DbTables.CONTRACT,
+      referenceId: contract.id,
+    },
+    context,
+  );
+  const response = await new BlockchainMicroservice(
+    context,
+  ).createSubstrateTransaction(blockchainServiceRequest);
+  const dbTxRecord = new Transaction(
+    {
+      transactionType: TransactionType.DEPOSIT_TO_CONTRACT_CLUSTER,
+      refTable: DbTables.CONTRACT,
+      refId: contract.id,
+      transactionHash: response.data.transactionHash,
+      transactionStatus: TransactionStatus.PENDING,
+    },
+    context,
+  );
+  await TransactionService.saveTransaction(context, dbTxRecord, conn);
+}
+
+export async function transferContractOwnership(
+  context: ServiceContext,
+  contract: Contract,
+  newOwnerAddress: string,
+  conn: PoolConnection,
+) {
+  const walletService = new WalletService(context);
+  const transaction = await walletService.createTransferOwnershipTransaction(
+    contract.contractAddress,
+    newOwnerAddress,
+  );
+  const blockchainServiceRequest = new CreateSubstrateTransactionDto(
+    {
+      chain: SubstrateChain.PHALA,
+      transaction: transaction.toHex(),
+      referenceTable: DbTables.CONTRACT,
+      referenceId: contract.id,
+    },
+    context,
+  );
+  const response = await new BlockchainMicroservice(
+    context,
+  ).createSubstrateTransaction(blockchainServiceRequest);
+  const dbTxRecord = new Transaction(
+    {
+      transactionType: TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
+      refTable: DbTables.CONTRACT,
+      refId: contract.id,
+      transactionHash: response.data.transactionHash,
+      transactionStatus: TransactionStatus.PENDING,
+    },
+    context,
+  );
+  await TransactionService.saveTransaction(context, dbTxRecord, conn);
 }

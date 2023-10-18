@@ -1,10 +1,9 @@
 import {
   AppEnvironment,
-  getEnvSecrets,
-  MySql,
-  SubstrateChain,
   Context,
   env,
+  getEnvSecrets,
+  MySql,
 } from '@apillon/lib';
 import {
   QueueWorkerType,
@@ -31,11 +30,13 @@ export enum WorkerName {
   SCHEDULER = 'scheduler',
   TRANSMIT_CRUST_TRANSACTIONS = 'TransmitCrustTransactions',
   TRANSMIT_KILT_TRANSACTIONS = 'TransmitKiltTransactions',
+  TRANSMIT_PHALA_TRANSACTIONS = 'TransmitPhalaTransactions',
   TRANSMIT_MOONBEAM_TRANSACTIONS = 'TransmitMoonbeamTransactions',
   TRANSMIT_MOONBASE_TRANSACTIONS = 'TransmitMoonbaseTransactions',
   TRANSMIT_ASTAR_TRANSACTIONS = 'TransmitAstarTransactions',
   VERIFY_CRUST_TRANSACTIONS = 'VerifyCrustTransactions',
   VERIFY_KILT_TRANSACTIONS = 'VerifyKiltTransactions',
+  VERIFY_PHALA_TRANSACTIONS = 'VerifyPhalaTransactions',
   VERIFY_MOONBEAM_TRANSACTIONS = 'VerifyMoonbeamTransactions',
   VERIFY_MOONBASE_TRANSACTIONS = 'VerifyMoonbaseTransactions',
   VERIFY_ASTAR_TRANSACTIONS = 'VerifyAstarTransactions',
@@ -139,6 +140,7 @@ export async function handleLambdaEvent(
       break;
     case WorkerName.TRANSMIT_CRUST_TRANSACTIONS:
     case WorkerName.TRANSMIT_KILT_TRANSACTIONS:
+    case WorkerName.TRANSMIT_PHALA_TRANSACTIONS:
       await new TransmitSubstrateTransactionWorker(
         workerDefinition,
         context,
@@ -150,6 +152,7 @@ export async function handleLambdaEvent(
     // SUBSTRATE TRANSACTION WORKER
     case WorkerName.VERIFY_CRUST_TRANSACTIONS:
     case WorkerName.VERIFY_KILT_TRANSACTIONS:
+    case WorkerName.VERIFY_PHALA_TRANSACTIONS:
       await new SubstrateTransactionWorker(workerDefinition, context).run();
       break;
     // --- EVM ---
@@ -231,6 +234,7 @@ export async function handleSqsMessages(
         // -- TRANSMIT TRANSACTION WORKERS --
         case WorkerName.TRANSMIT_CRUST_TRANSACTIONS:
         case WorkerName.TRANSMIT_KILT_TRANSACTIONS:
+        case WorkerName.TRANSMIT_PHALA_TRANSACTIONS:
           await new TransmitSubstrateTransactionWorker(
             workerDefinition,
             context,
@@ -260,6 +264,7 @@ export async function handleSqsMessages(
 
         case WorkerName.VERIFY_CRUST_TRANSACTIONS:
         case WorkerName.VERIFY_KILT_TRANSACTIONS:
+        case WorkerName.VERIFY_PHALA_TRANSACTIONS:
           await new SubstrateTransactionWorker(workerDefinition, context).run();
           break;
         case WorkerName.TRANSACTION_WEBHOOKS:

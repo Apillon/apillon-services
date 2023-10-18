@@ -5,16 +5,16 @@ import {
   SubstrateChain,
 } from '@apillon/lib';
 import { Contract } from '../computing/models/contract.model';
-import { ApiPromise } from '@polkadot/api';
-import { types } from '@phala/sdk';
 import type { SubmittableExtrinsic } from '@polkadot/api/submittable/types';
 import { SchrodingerContractABI } from '../../lib/contracts/deployed-phala-contracts';
 import { SubstrateRpcApi } from '@apillon/blockchain/src/modules/substrate/rpc-api';
 import { Abi } from '@polkadot/api-contract';
+import { OnChainRegistry, PinkContractPromise, types } from '@phala/sdk';
 
+// TODO: better types instead of any
 export class WalletService {
   private context: Context;
-  private api: ApiPromise;
+  private api: any;
 
   constructor(context: Context) {
     this.context = context;
@@ -48,12 +48,18 @@ export class WalletService {
 
   async createDeployTransaction(
     contract: Contract,
+    ipfsGatewayUrl: string,
   ): Promise<SubmittableExtrinsic<'promise'>> {
     await this.initializeProvider();
     const abi = new Abi(SchrodingerContractABI);
     const callData = abi
       .findConstructor('new')
-      .toU8a([contract.sourceHash, contract.data.restrictToOwner]);
+      .toU8a([
+        contract.data.nftContractAddress.slice(2),
+        contract.data.nftChainRpcUrl,
+        ipfsGatewayUrl,
+        contract.data.restrictToOwner,
+      ]);
     const options = {
       salt: 1000000000 + Math.round(Math.random() * 8999999999),
       transfer: 0,
@@ -76,17 +82,35 @@ export class WalletService {
     );
   }
 
-  // async createTransferOwnershipTransaction(
-  //   contract: string,
-  //   newOwner: string,
-  //   collectionType: NFTContractType,
-  // ): Promise<UnsignedTransaction> {
-  //   await this.initializeProvider();
-  //   return await ComputingTransaction.createTransferOwnershipTransaction(
-  //     this.evmChain,
-  //     contract,
-  //     newOwner,
-  //     collectionType,
-  //   );
-  // }
+  async createFundPhalaClusterTransaction(
+    clusterId: string,
+    accountAddress: string,
+    amount: number,
+  ) {
+    await this.initializeProvider();
+    const roundedAmount = Number((amount * 1e12).toFixed(0)) + 1;
+    return this.api.tx.phalaPhatContracts.transferToCluster(
+      roundedAmount,
+      clusterId,
+      accountAddress,
+    );
+  }
+
+  async createTransferOwnershipTransaction(
+    contractId: string,
+    newOwnerAddress: string,
+  ): Promise<any> {
+    await this.initializeProvider();
+    const phatRegistry = await OnChainRegistry.create(this.api);
+    const contractKey = await phatRegistry.getContractKeyOrFail(contractId);
+    const contract = new PinkContractPromise(
+      this.api,
+      phatRegistry,
+      SchrodingerContractABI,
+      contractId,
+      contractKey,
+    );
+
+    return contract.tx.setOwner({}, newOwnerAddress);
+  }
 }
