@@ -400,17 +400,17 @@ export class File extends ProjectAccessModel {
       filter.serialize(),
     );
 
-    //Get IPFS gateway
-    const ipfsGateway = await new ProjectConfig(
+    //Get IPFS cluster
+    const ipfsCluster = await new ProjectConfig(
       { project_uuid: b.project_uuid },
       this.getContext(),
-    ).getIpfsGateway();
+    ).getIpfsCluster();
 
     const sqlQuery = {
       qSelect: `
         SELECT ${ObjectType.FILE} as type, f.id, f.status, f.name, f.CID, f.createTime, f.updateTime,
         f.contentType as contentType, f.size as size, f.directory_id as parentDirectoryId,
-        f.file_uuid as file_uuid, CONCAT("${ipfsGateway.url}", f.CID) as link
+        f.file_uuid as file_uuid, CONCAT("${ipfsCluster.ipfsGateway}", f.CID) as link
         `,
       qFrom: `
         FROM \`${DbTables.FILE}\` f
@@ -434,9 +434,14 @@ export class File extends ProjectAccessModel {
       'f.id',
     );
 
-    if (ipfsGateway.private) {
+    if (ipfsCluster.private) {
       for (const item of data.items) {
-        item.link = addJwtToIPFSUrl(item.link, b.project_uuid);
+        item.link = addJwtToIPFSUrl(
+          item.link,
+          b.project_uuid,
+          item.CID,
+          ipfsCluster,
+        );
       }
     }
 

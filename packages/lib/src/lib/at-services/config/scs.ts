@@ -20,6 +20,7 @@ import { CreateInvoiceDto } from './dtos/create-invoice.dto';
 import { SubscriptionsQueryFilter } from './dtos/subscriptions-query-filter.dto';
 import { InvoicesQueryFilter } from './dtos/invoices-query-filter.dto';
 import { UpdateSubscriptionDto } from './dtos/update-subscription.dto';
+import { PricelistQueryFilter } from './dtos/pricelist-query-filter.dto';
 
 /**
  * System config Service client
@@ -240,6 +241,23 @@ export class Scs extends BaseService {
   public async getSubscriptionPackages() {
     return await this.callService({
       eventName: ScsEventType.GET_SUBSCRIPTION_PACKAGES,
+    });
+  }
+  //#endregion
+
+  //#region products
+
+  public async getProductPricelist(query: PricelistQueryFilter) {
+    return await this.callService({
+      eventName: ScsEventType.GET_PRODUCT_PRICELIST,
+      query,
+    });
+  }
+
+  public async getProductPrice(product_id: number) {
+    return await this.callService({
+      eventName: ScsEventType.GET_PRODUCT_PRICE,
+      product_id,
     });
   }
 

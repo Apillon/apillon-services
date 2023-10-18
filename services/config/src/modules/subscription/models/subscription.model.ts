@@ -171,7 +171,7 @@ export class Subscription extends ProjectAccessModel {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT *
-      FROM \`${this.tableName}\`
+      FROM \`${DbTables.SUBSCRIPTION}\`
       WHERE project_uuid = @project_uuid
       AND (expiresOn IS NULL OR expiresOn > NOW())
       AND status = ${SqlModelStatus.ACTIVE}
@@ -204,7 +204,7 @@ export class Subscription extends ProjectAccessModel {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT *
-      FROM \`${this.tableName}\`
+      FROM \`${DbTables.SUBSCRIPTION}\`
       WHERE project_uuid = @project_uuid
       AND package_id = @package_id
       ORDER BY createTime ASC
@@ -227,7 +227,7 @@ export class Subscription extends ProjectAccessModel {
     // In case somebody wants to renew a canceled subscription
     const data = await this.db().paramExecute(
       `
-        SELECT * FROM \`${this.tableName}\`
+        SELECT * FROM \`${DbTables.SUBSCRIPTION}\`
         WHERE stripeId = @stripeId
       `,
       { stripeId },
@@ -260,7 +260,7 @@ export class Subscription extends ProjectAccessModel {
         SELECT ${this.generateSelectFields('s', '', serializationStrategy)}
         `,
       qFrom: `
-        FROM \`${this.tableName}\` s
+        FROM \`${DbTables.SUBSCRIPTION}\` s
         WHERE s.project_uuid = @project_uuid
         AND (@search IS null OR s.subscriberEmail LIKE CONCAT('%', @search, '%'))
         AND s.status <> ${SqlModelStatus.DELETED}

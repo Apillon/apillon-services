@@ -136,6 +136,7 @@ export enum StorageEventType {
   TEST_CRUST_PROVIDER = 'test-crust-provider',
   PROJECT_STORAGE_DETAILS = 'project-storage-details',
   STORAGE_INFO = 'get-storage-info',
+  GET_BLACKLIST = 'get-blacklist',
 }
 
 export enum AuthenticationEventType {
@@ -180,6 +181,8 @@ export enum ScsEventType {
   GET_ACTIVE_SUBSCRIPTION = 'get-active-subscription',
   GET_SUBSCRIPTION_PACKAGES = 'get-subscription-packages',
   LIST_INVOICES = 'list-invoices',
+  GET_PRODUCT_PRICELIST = 'get-product-pricelist',
+  GET_PRODUCT_PRICE = 'get-product-price',
 }
 
 export enum NftsEventType {
@@ -604,6 +607,8 @@ export enum ValidatorErrorCode {
   //#region config MS
   ADD_CREDIT_REQUIRED_DATA_NOT_PRESENT = 422001001,
   SPEND_CREDIT_REQUIRED_DATA_NOT_PRESENT = 422001002,
+  PRODUCT_SERVICE_NOT_VALID = 422001003,
+  PRODUCT_CATEGORY_NOT_VALID = 422001004,
   //#endregion
 }
 
@@ -731,11 +736,39 @@ export enum ProductCode {
   HOSTING_DEPLOY_TO_PRODUCTION = 3,
   HOSTING_CHANGE_WEBSITE_DOMAIN = 4,
 
-  NFT_COLLECTION = 5,
-  NFT_MINT = 6,
-  NFT_BURN = 7,
-  NFT_TRANSFER_COLLECTION = 8,
-  NFT_SET_BASE_URI = 10,
+  NFT_MOONBEAM_COLLECTION = 5,
+  NFT_MOONBASE_COLLECTION = 6,
+  NFT_ASTAR_COLLECTION = 7,
 
-  KILT_IDENTITY = 9,
+  NFT_MOONBEAM_MINT = 8,
+  NFT_MOONBASE_MINT = 9,
+  NFT_ASTAR_MINT = 10,
+
+  NFT_MOONBEAM_BURN = 11,
+  NFT_MOONBASE_BURN = 12,
+  NFT_ASTAR_BURN = 13,
+
+  NFT_MOONBEAM_TRANSFER_COLLECTION = 14,
+  NFT_MOONBASE_TRANSFER_COLLECTION = 15,
+  NFT_ASTAR_TRANSFER_COLLECTION = 16,
+
+  NFT_MOONBEAM_SET_BASE_URI = 17,
+  NFT_MOONBASE_SET_BASE_URI = 18,
+  NFT_ASTAR_SET_BASE_URI = 19,
+
+  KILT_IDENTITY = 20,
+}
+
+export enum ProductService {
+  HOSTING = 'HOSTING',
+  NFT = 'NFT',
+  IDENTITY = 'IDENTITY',
+}
+
+export enum ProductCategory {
+  WEBSITE = 'WEBSITE',
+  MOONBASE_NFT = 'MOONBASE_NFT',
+  MOONBEAM_NFT = 'MOONBEAM_NFT',
+  ASTAR_NFT = 'ASTAR_NFT',
+  KILT_IDENTITY = 'KILT_IDENTITY',
 }

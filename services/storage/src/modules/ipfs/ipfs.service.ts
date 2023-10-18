@@ -3,8 +3,6 @@ import {
   AWS_S3,
   Context,
   env,
-  generateJwtToken,
-  JwtTokenType,
   Lmas,
   LogType,
   runWithWorkers,
@@ -41,24 +39,17 @@ export class IPFSService {
       return;
     }
 
-    let ipfsApi = await new ProjectConfig(
+    //Get IPFS gateway
+
+    const ipfsCluster = await new ProjectConfig(
       { project_uuid: this.project_uuid },
       this.context,
-    ).getIpfsApi();
+    ).getIpfsCluster();
 
-    //Kalmia IPFS Gateway
-    if (!ipfsApi) {
-      throw new StorageCodeException({
-        status: 500,
-        code: StorageErrorCode.STORAGE_IPFS_API_NOT_SET,
-        sourceFunction: `IPFSService/createIPFSClient`,
-      });
+    if (ipfsCluster.ipfsApi.endsWith('/')) {
+      ipfsCluster.ipfsApi = ipfsCluster.ipfsApi.slice(0, -1);
     }
-
-    if (ipfsApi.endsWith('/')) {
-      ipfsApi = ipfsApi.slice(0, -1);
-    }
-    this.client = await create({ url: ipfsApi });
+    this.client = await create({ url: ipfsCluster.ipfsApi });
   }
 
   /**
@@ -457,13 +448,13 @@ export class IPFSService {
    * @param cid cid to be pinned
    */
   public async pinCidToCluster(cid: string) {
-    const clusterServer = await new ProjectConfig(
+    const ipfsCluster = await new ProjectConfig(
       { project_uuid: this.project_uuid },
       this.context,
-    ).getIpfsClusterServer();
+    ).getIpfsCluster();
 
     try {
-      await axios.post(clusterServer + `pins/ipfs/${cid}`, {}, {});
+      await axios.post(ipfsCluster.clusterServer + `pins/ipfs/${cid}`, {}, {});
     } catch (err) {
       writeLog(
         LogType.ERROR,
