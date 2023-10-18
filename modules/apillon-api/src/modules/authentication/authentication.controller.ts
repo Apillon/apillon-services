@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiKeyPermissions, Ctx } from '@apillon/modules-lib';
 import { ApillonApiContext } from '../../context';
 import { AuthService } from './authentication.service';
@@ -25,7 +25,7 @@ export class AuthController {
     return await this.authService.generateSessionToken(context);
   }
 
-  @Get('verify-login')
+  @Post('verify-login')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_EXECUTE,
     serviceType: AttachedServiceType.AUTHENTICATION,
@@ -33,8 +33,8 @@ export class AuthController {
   @UseGuards(AuthGuard)
   async verifyLogin(
     @Ctx() context: ApillonApiContext,
-    @Query() query: { token: string },
+    @Body() body: { token: string },
   ) {
-    return await this.authService.verifyLogin(context, query.token);
+    return await this.authService.verifyLogin(context, body.token);
   }
 }

@@ -18,7 +18,8 @@ export class AuthService {
 
   async verifyLogin(_context: ApillonApiContext, token: string) {
     try {
-      return parseJwtToken(JwtTokenType.USER_AUTHENTICATION, token);
+      const { email } = parseJwtToken(JwtTokenType.USER_AUTHENTICATION, token);
+      return email;
     } catch (error) {
       throw new ApiCodeException({
         status: 401,
