@@ -8,7 +8,7 @@ import {
 import { Project } from '../../project/models/project.model';
 import { setupTest } from '../../../../test/helpers/setup';
 import * as request from 'supertest';
-import { SqlModelStatus } from '@apillon/lib';
+import { ProductCategory, ProductService, SqlModelStatus } from '@apillon/lib';
 
 describe('Payments controller e2e tests', () => {
   let stage: Stage;
@@ -97,14 +97,16 @@ describe('Payments controller e2e tests', () => {
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('INVALID_WEBHOOK_SIGNATURE');
     });
+  });
 
+  describe('Credit and subscription packages tests', () => {
     test('Get all credit packages', async () => {
       const creditPackages = await stage.configContext.mysql.paramExecute(
         `SELECT * from creditPackage WHERE status = ${SqlModelStatus.ACTIVE}`,
       );
       expect(creditPackages.length).toBeGreaterThanOrEqual(3); // From seed
       const response = await request(stage.http)
-        .get('/payments/credit-packages')
+        .get('/payments/credit/packages')
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       const responsePackages = response.body.data;
@@ -122,7 +124,7 @@ describe('Payments controller e2e tests', () => {
       );
       expect(subscriptionPackages).toHaveLength(4); // From seed
       const response = await request(stage.http)
-        .get('/payments/subscription-packages')
+        .get('/payments/subscription/packages')
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       const responsePackages = response.body.data;
@@ -133,6 +135,69 @@ describe('Payments controller e2e tests', () => {
           subPackage.creditAmount,
         );
       });
+    });
+  });
+
+  describe('Product pricelist tests', () => {
+    test('Get all product prices', async () => {
+      const response = await request(stage.http)
+        .get('/payments/product')
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      const products = response.body.data.items;
+      expect(products.length).toBeGreaterThanOrEqual(20); // From seed
+      products.forEach((item) => {
+        expect(item.name).toBeTruthy();
+        expect(item.description).toBeTruthy();
+        expect(item.service).toBeTruthy();
+        expect(item.category).toBeTruthy();
+        expect(item.currentPrice).toBeGreaterThanOrEqual(0);
+      });
+    });
+
+    test('Get filtered product pricelist', async () => {
+      let response = await request(stage.http)
+        .get(`/payments/product?service=${ProductService.NFT}`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      let products = response.body.data.items;
+
+      expect(products.length).toBeLessThan(20);
+      products.forEach((item) => {
+        expect(item.service).toBe(ProductService.NFT);
+      });
+
+      response = await request(stage.http)
+        .get(`/payments/product?category=${ProductCategory.WEBSITE}`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      products = response.body.data.items;
+
+      expect(products.length).toBeLessThan(20);
+      products.forEach((item) => {
+        expect(item.category).toBe(ProductCategory.WEBSITE);
+      });
+    });
+
+    test('Get a single product', async () => {
+      const response = await request(stage.http)
+        .get(`/payments/product/1`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+
+      const product = response.body.data;
+      expect(product.name).toBeTruthy();
+      expect(product.description).toBeTruthy();
+      expect(product.service).toBe(ProductService.HOSTING);
+      expect(product.category).toBe(ProductCategory.WEBSITE);
+      expect(product.currentPrice).toBeGreaterThanOrEqual(100);
+    });
+
+    test('Throw error when product not found', async () => {
+      const response = await request(stage.http)
+        .get(`/payments/product/1612`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(404);
     });
   });
 });

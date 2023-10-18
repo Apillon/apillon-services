@@ -157,7 +157,7 @@ export class Quota extends AdvancedSQLModel {
         JOIN subscription s
           ON s.package_id = sp.id
           AND s.project_uuid = @project_uuid
-          AND (s.expiresOn IS NULL OR s.expiresOn > NOW())
+          AND (s.expiresOn IS NULL OR s.expiresOn > (NOW() - INTERVAL 1 DAY))
           AND s.status = ${SqlModelStatus.ACTIVE}
         ON o2.quota_id = q.id
         AND o2.status = ${SqlModelStatus.ACTIVE}

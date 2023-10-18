@@ -108,16 +108,21 @@ export class NftStorageService {
 
     await ipnsDbRecord.update(SerializeFor.UPDATE_DB);
 
-    //Get IPFS gateway
-    const ipfsGateway = await new ProjectConfig(
+    //Get IPFS cluster
+    const ipfsCluster = await new ProjectConfig(
       { project_uuid: bucket.project_uuid },
       context,
-    ).getIpfsGateway();
+    ).getIpfsCluster();
 
-    let baseUri = ipfsGateway.ipnsUrl + publishedIpns.name + '/';
+    let baseUri = ipfsCluster.ipnsGateway + publishedIpns.name + '/';
 
-    if (ipfsGateway.private) {
-      baseUri = addJwtToIPFSUrl(baseUri, bucket.project_uuid);
+    if (ipfsCluster.private) {
+      baseUri = addJwtToIPFSUrl(
+        baseUri,
+        bucket.project_uuid,
+        publishedIpns.name,
+        ipfsCluster,
+      );
     }
 
     //Start worker which will prepare images and metadata and deploy contract

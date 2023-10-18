@@ -13,7 +13,7 @@ import {
 import { ScsCodeException, ScsValidationException } from '../../lib/exceptions';
 import { ConfigErrorCode, CreditDirection, DbTables } from '../../config/types';
 import { CreditTransaction } from './models/credit-transaction.model';
-import { Product } from './models/product.model';
+import { Product } from '../product/models/product.model';
 import { CreditPackage } from './models/credit-package.model';
 import { SubscriptionPackage } from '../subscription/models/subscription-package.model';
 
@@ -197,7 +197,7 @@ export class CreditService {
     }
 
     await product.populateCurrentPrice();
-    if (!product.currentPrice) {
+    if (product.currentPrice == null) {
       throw await new ScsCodeException({
         code: ConfigErrorCode.PRODUCT_PRICE_DOES_NOT_EXISTS,
         status: 500,

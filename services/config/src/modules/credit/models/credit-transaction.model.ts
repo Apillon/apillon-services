@@ -4,6 +4,7 @@ import {
   ProjectAccessModel,
   SerializeFor,
   SqlModelStatus,
+  enumInclusionValidator,
   getQueryParams,
   presenceValidator,
   prop,
@@ -16,7 +17,7 @@ import {
   CreditDirection,
   DbTables,
 } from '../../../config/types';
-import { Product } from './product.model';
+import { Product } from '../../product/models/product.model';
 
 export class CreditTransaction extends ProjectAccessModel {
   public readonly tableName = DbTables.CREDIT_TRANSACTION;
@@ -104,8 +105,14 @@ export class CreditTransaction extends ProjectAccessModel {
       SerializeFor.INSERT_DB,
       SerializeFor.LOGGER,
     ],
+    validators: [
+      {
+        resolver: enumInclusionValidator(CreditDirection, true),
+        code: ConfigErrorCode.INVALID_CREDIT_DIRECTION,
+      },
+    ],
   })
-  public direction: number;
+  public direction: CreditDirection;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -176,15 +183,15 @@ export class CreditTransaction extends ProjectAccessModel {
       `
           SELECT *
           FROM \`${DbTables.CREDIT_TRANSACTION}\` ct
-          WHERE 
-            ct.referenceTable = @referenceTable 
+          WHERE
+            ct.referenceTable = @referenceTable
             AND ct.referenceId = @referenceId
             AND ct.direction = ${CreditDirection.SPEND}
             AND (@product_id IS NULL OR ct.product_id = @product_id)
             AND NOT EXISTS (
               SELECT 1 FROM \`${DbTables.CREDIT_TRANSACTION}\` ct2
-              WHERE 
-                ct2.referenceTable = @referenceTable 
+              WHERE
+                ct2.referenceTable = @referenceTable
                 AND ct2.referenceId = @referenceId
                 AND ct2.direction = ${CreditDirection.RECEIVE}
                 AND (@product_id IS NULL OR ct2.product_id = @product_id)
@@ -213,7 +220,7 @@ export class CreditTransaction extends ProjectAccessModel {
       `
           SELECT *
           FROM \`${DbTables.CREDIT_TRANSACTION}\` ct
-          WHERE ct.referenceTable = @referenceTable 
+          WHERE ct.referenceTable = @referenceTable
           AND ct.referenceId = @referenceId
           AND ct.status <> ${SqlModelStatus.DELETED};
         `,
@@ -253,7 +260,7 @@ export class CreditTransaction extends ProjectAccessModel {
         `,
       qFrom: `
         FROM \`${DbTables.CREDIT_TRANSACTION}\` ct
-        JOIN \`${DbTables.PRODUCT}\` p ON p.id = ct.product_id
+        LEFT JOIN \`${DbTables.PRODUCT}\` p ON p.id = ct.product_id
         WHERE ct.project_uuid = @project_uuid
         AND (@search IS null OR ct.referenceTable LIKE CONCAT('%', @search, '%'))
         AND ct.status <> ${SqlModelStatus.DELETED}

@@ -28,6 +28,7 @@ import {
 import { v4 as uuidV4 } from 'uuid';
 import {
   BucketType,
+  DbTables,
   FileStatus,
   FileUploadSessionStatus,
   StorageErrorCode,
@@ -461,19 +462,21 @@ export class StorageService {
     file.canAccess(context);
     fileStatus = FileStatus.UPLOADED_TO_IPFS;
     if (file.CID) {
-      //Get IPFS gateway
-      const ipfsGateway = await new ProjectConfig(
+      //Get IPFS cluster
+      const ipfsCluster = await new ProjectConfig(
         { project_uuid: file.project_uuid },
         context,
-      ).getIpfsGateway();
+      ).getIpfsCluster();
 
       fileStatus = FileStatus.PINNED_TO_CRUST;
-      file.downloadLink = ipfsGateway.url + file.CID;
+      file.downloadLink = ipfsCluster.ipfsGateway + file.CID;
 
-      if (ipfsGateway.private) {
+      if (ipfsCluster.private) {
         file.downloadLink = addJwtToIPFSUrl(
           file.downloadLink,
           file.project_uuid,
+          file.CID,
+          ipfsCluster,
         );
       }
     }
@@ -578,4 +581,13 @@ export class StorageService {
     return { ...bucketDetails, numOfWebsites };
   }
   //#endregion
+
+  /**
+   * Return CIDs and IPNS that are blacklisted
+   */
+  static async getBlacklist(_event: any, context: ServiceContext) {
+    return await context.mysql.paramExecute(`
+      SELECT DISTINCT cid FROM ${DbTables.BLACKLIST};
+    `);
+  }
 }
