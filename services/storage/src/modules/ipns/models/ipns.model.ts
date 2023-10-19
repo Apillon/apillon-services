@@ -229,8 +229,8 @@ export class Ipns extends ProjectAccessModel {
   }
 
   public async getList(context: ServiceContext, filter: IpnsQueryFilter) {
-    const b: Bucket = await new Bucket({}, context).populateById(
-      filter.bucket_id,
+    const b: Bucket = await new Bucket({}, context).populateByUUID(
+      filter.bucket_uuid,
     );
     if (!b.exists()) {
       throw new StorageCodeException({
@@ -269,10 +269,10 @@ export class Ipns extends ProjectAccessModel {
         `,
       qFrom: `
         FROM \`${DbTables.IPNS}\` i
-        WHERE i.project_uuid = @project_uuid
-        AND i.bucket_id = @bucket_id
+        JOIN \`${DbTables.BUCKET}\` b on b.id = i.bucket_id
+        WHERE b.bucket_uuid = @bucket_uuid
         AND (@search IS null OR i.name LIKE CONCAT('%', @search, '%'))
-        AND status <> ${SqlModelStatus.DELETED}
+        AND i.status <> ${SqlModelStatus.DELETED}
       `,
       qFilter: `
         ORDER BY ${filters.orderStr}

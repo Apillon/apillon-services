@@ -1,4 +1,4 @@
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   PopulateFrom,
@@ -9,12 +9,12 @@ import { ModelBase, prop } from '../../../base-models/base';
 
 export class CreateBucketWebhookDto extends ModelBase {
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [],
   })
-  public bucket_id: number;
+  public bucket_uuid: string;
 
   @prop({
     parser: { resolver: stringParser() },

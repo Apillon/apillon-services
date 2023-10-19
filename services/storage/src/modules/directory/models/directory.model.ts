@@ -3,9 +3,9 @@ import {
   DirectoryContentQueryFilter,
   PoolConnection,
   PopulateFrom,
-  ProjectAccessModel,
   SerializeFor,
   SqlModelStatus,
+  UuidSqlModel,
   getQueryParams,
   prop,
   unionSelectAndCountQuery,
@@ -20,7 +20,7 @@ import { Bucket } from '../../bucket/models/bucket.model';
 import { ProjectConfig } from '../../config/models/project-config.model';
 import { File } from '../../storage/models/file.model';
 
-export class Directory extends ProjectAccessModel {
+export class Directory extends UuidSqlModel {
   public readonly tableName = DbTables.DIRECTORY;
 
   public constructor(data: any, context: Context) {
@@ -41,7 +41,12 @@ export class Directory extends ProjectAccessModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
     ],
-    validators: [],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: StorageErrorCode.DIRECTORY_REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
     fakeValue: () => uuidV4(),
   })
   public directory_uuid: string;
@@ -59,7 +64,6 @@ export class Directory extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
     ],
     validators: [],
   })
@@ -82,7 +86,7 @@ export class Directory extends ProjectAccessModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.BUCKET_PROJECT_UUID_NOT_PRESENT,
+        code: StorageErrorCode.DIRECTORY_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -100,13 +104,11 @@ export class Directory extends ProjectAccessModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.DIRECTORY_BUCKET_ID_NOT_PRESENT,
+        code: StorageErrorCode.DIRECTORY_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -169,7 +171,7 @@ export class Directory extends ProjectAccessModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.DIRECTORY_NAME_NOT_PRESENT,
+        code: StorageErrorCode.DIRECTORY_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -240,6 +242,20 @@ export class Directory extends ProjectAccessModel {
   })
   public files: File;
 
+  /************************************INFO properties */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [SerializeFor.SERVICE, SerializeFor.PROFILE],
+    validators: [],
+  })
+  public parentDirectory_uuid: string;
+
   /**
    * Marks record in the database for deletion.
    */
@@ -259,7 +275,24 @@ export class Directory extends ProjectAccessModel {
   }
 
   public override async populateByUUID(uuid: string): Promise<this> {
-    return super.populateByUUID(uuid, 'directory_uuid');
+    if (!uuid) {
+      throw new Error(`uuid should not be null: directory_uuid: ${uuid}`);
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+        SELECT d.*, pd.directory_uuid as parentDirectory_uuid
+        FROM \`${DbTables.DIRECTORY}\` d
+        LEFT JOIN \`${DbTables.DIRECTORY}\` pd ON d.parentDirectory_id = pd.id
+        WHERE d.directory_uuid = @uuid
+        AND d.status <> ${SqlModelStatus.DELETED};
+      `,
+      { uuid },
+    );
+
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   public async populateByCid(cid: string): Promise<this> {
@@ -340,15 +373,16 @@ export class Directory extends ProjectAccessModel {
     const qSelects = [
       {
         qSelect: `
-        SELECT ${ObjectType.DIRECTORY} as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime,
-        NULL as contentType, NULL as size, d.parentDirectory_id as parentDirectoryId,
-        NULL as file_uuid, IF(d.CID IS NULL, NULL, CONCAT("${ipfsCluster.ipfsGateway}", d.CID)) as link, NULL as fileStatus
+        SELECT d.directory_uuid as uuid, ${ObjectType.DIRECTORY} as type, d.name, d.CID, d.createTime, d.updateTime,
+        NULL as contentType, NULL as size, pd.directory_uuid as directoryUuid,
+        IF(d.CID IS NULL, NULL, CONCAT("${ipfsCluster.ipfsGateway}", d.CID)) as link, NULL as fileStatus
         `,
         qFrom: `
         FROM \`${DbTables.DIRECTORY}\` d
         INNER JOIN \`${DbTables.BUCKET}\` b ON d.bucket_id = b.id
+        LEFT JOIN \`${DbTables.DIRECTORY}\` pd ON pd.id = d.parentDirectory_id
         WHERE b.bucket_uuid = @bucket_uuid
-        AND (IFNULL(@directory_id, -1) = IFNULL(d.parentDirectory_id, -1))
+        AND (IFNULL(@directory_uuid, -1) = IFNULL(pd.directory_uuid, -1))
         AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))
         AND ( d.status = ${SqlModelStatus.ACTIVE} OR
           ( @markedForDeletion = 1 AND d.status = ${SqlModelStatus.MARKED_FOR_DELETION})
@@ -357,15 +391,15 @@ export class Directory extends ProjectAccessModel {
       },
       {
         qSelect: `
-        SELECT ${ObjectType.FILE} as type, d.id, d.status, d.name, d.CID, d.createTime, d.updateTime,
-        d.contentType as contentType, d.size as size, d.directory_id as parentDirectoryId,
-        d.file_uuid as file_uuid, CONCAT("${ipfsCluster.ipfsGateway}", d.CID) as link, d.fileStatus as fileStatus
+        SELECT d.file_uuid as uuid, ${ObjectType.FILE} as type, d.name, d.CID, d.createTime, d.updateTime,
+        d.contentType as contentType, d.size as size, pd.directory_uuid as directoryUuid, CONCAT("${ipfsCluster.ipfsGateway}", d.CID) as link, d.fileStatus as fileStatus
         `,
         qFrom: `
         FROM \`${DbTables.FILE}\` d
         INNER JOIN \`${DbTables.BUCKET}\` b ON d.bucket_id = b.id
+        LEFT JOIN \`${DbTables.DIRECTORY}\` pd ON pd.id = d.directory_id
         WHERE b.bucket_uuid = @bucket_uuid
-        AND (IFNULL(@directory_id, -1) = IFNULL(d.directory_id, -1))
+        AND (IFNULL(@directory_uuid, -1) = IFNULL(pd.directory_uuid, -1))
         AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))
         AND ( d.status = ${SqlModelStatus.ACTIVE} OR
           ( @markedForDeletion = 1 AND d.status = ${SqlModelStatus.MARKED_FOR_DELETION})

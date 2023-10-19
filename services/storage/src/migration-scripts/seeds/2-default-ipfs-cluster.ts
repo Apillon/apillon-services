@@ -4,14 +4,14 @@ export async function upgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    INSERT INTO \`${DbTables.IPFS_CLUSTER}\` (\`status\`, \`clusterServer\`, \`ipfsApi\`, \`ipfsGateway\`, \`ipnsGateway\`, \`subdomainGateway\`, \`domain\`, \`private\`, \`region\`, \`cloudProvider\`, \`performanceLevel\`, \`isDefault\`) 
-    VALUES ('5', 'http://3.249.187.48:9094/', 'http://54.228.71.63:5001/api/v0', 'https://ipfs-dev.apillon.io/ipfs/', 'https://ipfs-dev.apillon.io/ipns/', 'web3approved.com/', 'ipfs.apillon.io', 0, 'EU', 'AWS', 1, 1); `);
+    INSERT INTO \`${DbTables.IPFS_CLUSTER}\` (\`status\`, \`clusterServer\`, \`ipfsApi\`, \`ipfsGateway\`, \`ipnsGateway\`, \`subdomainGateway\`, \`domain\`, \`private\`, \`secret\`, \`region\`, \`cloudProvider\`, \`performanceLevel\`, \`isDefault\`) 
+    VALUES ('5', 'http://ipfs-eu1-0.apillon.io:9094/', 'http://ipfs-eu1-0.apillon.io:5001/api/v0', 'https://ipfs-eu1.apillon.io/ipfs/', 'https://ipfs-eu1.apillon.io/ipns/', '', 'ipfs-eu1.apillon.io', 1,'DINcikf6gf', 'EU', 'GCP', 1, 1); `);
 }
 
 export async function downgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    DELETE FROM \`${DbTables.IPFS_CLUSTER}\` WHERE clusterServer = 'http://3.249.187.48:9094/';
+    DELETE FROM \`${DbTables.IPFS_CLUSTER}\` WHERE clusterServer = 'http://ipfs-eu1-0.apillon.io:9094/';
   `);
 }
