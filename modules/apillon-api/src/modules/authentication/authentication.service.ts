@@ -13,12 +13,12 @@ export class AuthService {
       '10min',
     );
 
-    return { session: token };
+    return { sessionToken: token };
   }
 
-  async verifyLogin(_context: ApillonApiContext, token: string) {
+  async verifyOauthLogin(_context: ApillonApiContext, token: string) {
     try {
-      const { email } = parseJwtToken(JwtTokenType.USER_AUTHENTICATION, token);
+      const { email } = parseJwtToken(JwtTokenType.OAUTH_TOKEN, token);
       return email;
     } catch (error) {
       throw new ApiCodeException({

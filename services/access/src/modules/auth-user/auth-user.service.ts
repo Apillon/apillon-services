@@ -160,7 +160,7 @@ export class AuthUserService {
     // does not belong to us
     let tokenData;
     try {
-      tokenData = parseJwtToken(JwtTokenType.USER_AUTHENTICATION, event.token);
+      tokenData = parseJwtToken(JwtTokenType.OAUTH_TOKEN, event.token);
     } catch (error) {
       throw await new AmsCodeException({
         status: 401,

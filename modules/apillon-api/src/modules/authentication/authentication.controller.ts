@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { ApiKeyPermissions, Ctx } from '@apillon/modules-lib';
 import { ApillonApiContext } from '../../context';
 import { AuthService } from './authentication.service';
@@ -31,10 +31,10 @@ export class AuthController {
     serviceType: AttachedServiceType.AUTHENTICATION,
   })
   @UseGuards(AuthGuard)
-  async verifyLogin(
+  async verifyOauthLogin(
     @Ctx() context: ApillonApiContext,
     @Body() body: { token: string },
   ) {
-    return await this.authService.verifyLogin(context, body.token);
+    return await this.authService.verifyOauthLogin(context, body.token);
   }
 }

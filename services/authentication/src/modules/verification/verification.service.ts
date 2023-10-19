@@ -56,7 +56,7 @@ export class VerificationService {
     }
 
     const token = generateJwtToken(
-      JwtTokenType.USER_AUTHENTICATION,
+      JwtTokenType.OAUTH_TOKEN,
       { email: presentation.claim.contents.Email },
       '10min',
     );

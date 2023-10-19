@@ -36,7 +36,7 @@ export const AuthGuard = (tokenType: string) => {
         }
       } catch (error) {
         throw new CodeException({
-          status: HttpStatus.BAD_REQUEST,
+          status: HttpStatus.UNAUTHORIZED,
           code: AuthenticationErrorCode.IDENTITY_INVALID_VERIFICATION_TOKEN,
           errorCodes: AuthenticationErrorCode,
         });

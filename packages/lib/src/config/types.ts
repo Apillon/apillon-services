@@ -634,6 +634,7 @@ export enum JwtTokenType {
   SPORRAN_SESSION = 'sporran-session',
   IDENTITY_VERIFICATION = 'identity-verification',
   AUTH_SESSION = 'auth-session',
+  OAUTH_TOKEN = 'oauth-token',
 }
 
 /**

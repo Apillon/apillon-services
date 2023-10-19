@@ -168,7 +168,7 @@ export class UserService {
       token: loginInfo.token,
       password: uuidV4(),
       projectService: this.projectService,
-      tokenType: JwtTokenType.USER_AUTHENTICATION,
+      tokenType: JwtTokenType.OAUTH_TOKEN,
     };
 
     return registerUser(params, context);
