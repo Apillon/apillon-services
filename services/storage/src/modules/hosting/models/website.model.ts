@@ -464,6 +464,10 @@ export class Website extends UuidSqlModel {
       : this.reset();
   }
 
+  public override async populateByUUID(uuid: string): Promise<this> {
+    return this.populateById(uuid);
+  }
+
   /**
    * Generates buckets for hosting, executes validation and inserts new records
    * @param context

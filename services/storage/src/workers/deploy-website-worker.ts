@@ -224,6 +224,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
               directory_id: fileDirectory?.id,
               size: srcFile.size,
               fileStatus: FileStatus.UPLOADED_TO_IPFS,
+              path: srcFile.path,
             })
             .insert(SerializeFor.INSERT_DB, conn);
         }
