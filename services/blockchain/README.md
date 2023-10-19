@@ -70,11 +70,10 @@ The substrate-transaction-worker runs at an interval of 1 minute and fetches all
 
 The substrate log worker runs exactly the same as the update worker, but updates wallet balances (these two should be merged..).
 
-
 ## Typical flow
-A caller, let's say the authentication micro-service, creates a blockchain service request - it passes in a serialized transaction, the raw transaction hash, a reference table and reference id, and optionally some arbitrary data. The reference fields point to the table and the row number of the microservice and is needed when an update is triggered. The blockchain service then creates its own entry of the transaction-request, and transmits the transaction to the blockchain. 
+A caller, let's say the authentication microservice, creates a blockchain service request - it passes in a serialized transaction (the raw transaction hash), a reference table and reference id, and optionally some arbitrary data. The reference fields point to the table and the row number of the microservice and is needed when an update is triggered. The blockchain service then creates its own entry of the transaction-request, and transmits the transaction to the blockchain.
 
-Once the transaction was sucessfully transmited (we call this propagation), the blockchain service waits for a response from the blockchain - either the transction was successfull, or it failed. The substrate-transaction-worker is in charge of this. It fetches all the transactions from the relevant blockchain indexer, and triggers the webhook. 
+Once the transaction was sucessfully transmited (we call this propagation), the blockchain service waits for a response from the blockchain - either the transction was successfull, or it failed. The substrate-transaction-worker is in charge of this. It fetches all the transactions from the relevant blockchain indexer, and triggers the webhook.
 
 ![Flow](images/bcs_flow.png "Flow")
 
