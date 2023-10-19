@@ -57,15 +57,16 @@ Please read [Deployment](../../docs/deployment.md) documentation.
 * **Substrate**
 * **Wallet**
 
-**Substrate** contains the substrate service, which is responsible for creating and storing transactions into the database, based on the rawTransaction provided by the caller. It also takes care for transmitting transactions to the blockchain, depending on the chainId provided (Currently supported: Crust, Kilt, Phala)
+#### **Substrate** 
+Contains the substrate service, which is responsible for creating and storing transactions into the database, based on the rawTransaction provided by the caller. It also takes care for transmitting transactions to the blockchain, depending on the chainId provided (Currently supported: Crust, Kilt, Phala)
 
-**EVM**
+#### **EVM**
 TODO
 
-**Wallet**
+#### **Wallet**
 TODO
 
-**Blockchain-indexers**
+#### **Blockchain-indexers**
 Are divided into **substrate** and **evm**
 
 **Substrate** indexers contain base files at the root of the folder. All common functions should be added to these files.
@@ -108,6 +109,8 @@ Example provided from Kilt.
 
 
 **evm** TODO
+
+#### 
 
 ### Workers
 * **substrate-transaction-worker** - The transmit substrate and evm transaction workers are single threded workers, that are executed either via an sqs message or run at an interval (check serverless.yml). They run the transmit transaction function inside evm / substrate.service and transmit all pending transaction in the database.
