@@ -47,8 +47,8 @@ export class IpnsService {
     event: { body: CreateIpnsDto },
     context: ServiceContext,
   ): Promise<any> {
-    const b: Bucket = await new Bucket({}, context).populateById(
-      event.body.bucket_id,
+    const b: Bucket = await new Bucket({}, context).populateByUUID(
+      event.body.bucket_uuid,
     );
     if (!b.exists()) {
       throw new StorageCodeException({
@@ -61,6 +61,7 @@ export class IpnsService {
     const ipns: Ipns = new Ipns(event.body, context);
     ipns.populate({
       project_uuid: b.project_uuid,
+      bucket_id: b.id,
       status: SqlModelStatus.INCOMPLETE,
     });
     try {

@@ -1,7 +1,10 @@
 import {
   ApillonHostingApiCreateS3UrlsForUploadDto,
+  CreateWebsiteDto,
+  DeploymentQueryFilter,
   DomainQueryFilter,
   EndFileUploadSessionDto,
+  WebsiteQueryFilter,
 } from '@apillon/lib';
 import {
   DeployWebsiteDto,
@@ -18,13 +21,18 @@ export class HostingService {
     return (await new StorageMicroservice(context).listDomains(query)).data;
   }
 
-  async getWebsite(context: ApillonApiContext, id: any) {
-    const wp = (await new StorageMicroservice(context).getWebsite(id)).data;
-    delete wp['bucket'];
-    delete wp['stagingBucket'];
-    delete wp['productionBucket'];
+  async listWebsites(context: ApillonApiContext, query: WebsiteQueryFilter) {
+    return (await new StorageMicroservice(context).listWebsites(query)).data;
+  }
 
-    return wp;
+  async createWebsite(context: ApillonApiContext, body: CreateWebsiteDto) {
+    //Call Storage microservice, to create website
+    return (await new StorageMicroservice(context).createWebsite(body)).data;
+  }
+
+  async getWebsite(context: ApillonApiContext, website_uuid: string) {
+    return (await new StorageMicroservice(context).getWebsite(website_uuid))
+      .data;
   }
 
   async createS3SignedUrlsForWebsiteUpload(
@@ -71,10 +79,10 @@ export class HostingService {
 
   async deployWebsite(
     context: ApillonApiContext,
-    id: any,
+    website_uuid: string,
     body: DeployWebsiteDto,
   ) {
-    body.populate({ website_id: id, clearBucketForUpload: true });
+    body.populate({ website_uuid, clearBucketForUpload: true });
     try {
       await body.validate();
     } catch (err) {
@@ -86,7 +94,18 @@ export class HostingService {
     return (await new StorageMicroservice(context).deployWebsite(body)).data;
   }
 
-  async getDeployment(context: ApillonApiContext, id: number) {
-    return (await new StorageMicroservice(context).getDeployment(id)).data;
+  async listDeployments(
+    context: ApillonApiContext,
+    website_uuid: string,
+    query: DeploymentQueryFilter,
+  ) {
+    query.website_uuid = website_uuid;
+    return (await new StorageMicroservice(context).listDeployments(query)).data;
+  }
+
+  async getDeployment(context: ApillonApiContext, deployment_uuid: string) {
+    return (
+      await new StorageMicroservice(context).getDeployment(deployment_uuid)
+    ).data;
   }
 }

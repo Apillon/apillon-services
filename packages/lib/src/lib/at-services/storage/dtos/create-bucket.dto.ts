@@ -55,3 +55,19 @@ export class CreateBucketDto extends ModelBase {
   })
   public description: string;
 }
+
+export class ApillonApiCreateBucketDto extends CreateBucketDto {
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+  })
+  public project_uuid: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+  })
+  public bucketType: number;
+}

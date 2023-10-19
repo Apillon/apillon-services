@@ -16,6 +16,7 @@ import { Project } from '../../../project/models/project.model';
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 import { DefaultUserRole, env, SqlModelStatus } from '@apillon/lib';
 import { ProjectConfig } from '@apillon/storage/src/modules/config/models/project-config.model';
+import { addJwtToIPFSUrl } from '@apillon/storage/src/lib/ipfs-utils';
 
 describe('Ipns tests', () => {
   let stage: Stage;
@@ -71,7 +72,7 @@ describe('Ipns tests', () => {
   describe('IPNS CRU tests', () => {
     test('User should be able to list ipns records inside bucket', async () => {
       const response = await request(stage.http)
-        .get(`/buckets/${testBucket.id}/ipns`)
+        .get(`/buckets/${testBucket.bucket_uuid}/ipns`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBe(1);
@@ -80,7 +81,7 @@ describe('Ipns tests', () => {
 
     test('User should recieve 422 if invalid body', async () => {
       const response = await request(stage.http)
-        .post(`/buckets/${testBucket.id}/ipns`)
+        .post(`/buckets/${testBucket.bucket_uuid}/ipns`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(422);
       expect(response.body.errors.length).toBe(1);
@@ -89,7 +90,7 @@ describe('Ipns tests', () => {
 
     test('User should be able to create IPNS record', async () => {
       const response = await request(stage.http)
-        .post(`/buckets/${testBucket.id}/ipns`)
+        .post(`/buckets/${testBucket.bucket_uuid}/ipns`)
         .send({ name: 'My new IPNS' })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
@@ -106,7 +107,7 @@ describe('Ipns tests', () => {
 
     test('User should be able to update IPNS record', async () => {
       const response = await request(stage.http)
-        .patch(`/buckets/${testBucket.id}/ipns/${ipnsRecord.id}`)
+        .patch(`/buckets/${testBucket.bucket_uuid}/ipns/${ipnsRecord.id}`)
         .send({
           name: 'My updated IPNS record',
           description: 'This is new description',
@@ -136,7 +137,9 @@ describe('Ipns tests', () => {
     });
     test('User should NOT be able to delete ANOTHER project IPNS record', async () => {
       const response = await request(stage.http)
-        .delete(`/buckets/${testBucket.id}/ipns/${ipnsRecordToDelete.id}`)
+        .delete(
+          `/buckets/${testBucket.bucket_uuid}/ipns/${ipnsRecordToDelete.id}`,
+        )
         .set('Authorization', `Bearer ${testUser2.token}`);
       expect(response.status).toBe(403);
       expect(response.body.message).toBe(
@@ -152,7 +155,7 @@ describe('Ipns tests', () => {
 
     test('User should NOT be able to list ipns records inside ANOTHER bucket', async () => {
       const response = await request(stage.http)
-        .get(`/buckets/${testBucket.id}/ipns`)
+        .get(`/buckets/${testBucket.bucket_uuid}/ipns`)
         .set('Authorization', `Bearer ${testUser2.token}`);
       expect(response.status).toBe(403);
       expect(response.body.message).toBe(
@@ -162,7 +165,7 @@ describe('Ipns tests', () => {
 
     test('User should NOT be able to create IPNS record for ANOTHER bucket', async () => {
       const response = await request(stage.http)
-        .post(`/buckets/${testBucket.id}/ipns`)
+        .post(`/buckets/${testBucket.bucket_uuid}/ipns`)
         .send({ name: 'My new IPNS' })
         .set('Authorization', `Bearer ${testUser2.token}`);
       expect(response.status).toBe(403);
@@ -173,7 +176,7 @@ describe('Ipns tests', () => {
 
     test('Admin User should be able to list ipns records inside bucket', async () => {
       const response = await request(stage.http)
-        .get(`/buckets/${testBucket.id}/ipns`)
+        .get(`/buckets/${testBucket.bucket_uuid}/ipns`)
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBeGreaterThan(0);
@@ -181,7 +184,7 @@ describe('Ipns tests', () => {
 
     test('Admin User should NOT be able to create IPNS record', async () => {
       const response = await request(stage.http)
-        .post(`/buckets/${testBucket.id}/ipns`)
+        .post(`/buckets/${testBucket.bucket_uuid}/ipns`)
         .send({ name: 'My new IPNS' })
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(403);
@@ -205,7 +208,9 @@ describe('Ipns tests', () => {
 
     test('User should recieve 422 unprocessable entity status, if passing invalid body', async () => {
       const response = await request(stage.http)
-        .post(`/buckets/${testBucket.id}/ipns/${ipnsRecord.id}/publish`)
+        .post(
+          `/buckets/${testBucket.bucket_uuid}/ipns/${ipnsRecord.id}/publish`,
+        )
         .send()
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(422);
@@ -213,7 +218,9 @@ describe('Ipns tests', () => {
     });
     test('User should be able to publish CID to IPNS', async () => {
       const response = await request(stage.http)
-        .post(`/buckets/${testBucket.id}/ipns/${ipnsRecord.id}/publish`)
+        .post(
+          `/buckets/${testBucket.bucket_uuid}/ipns/${ipnsRecord.id}/publish`,
+        )
         .send({ cid: file.CID })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
@@ -239,7 +246,12 @@ describe('Ipns tests', () => {
 
       expect(publishedIpnsName).toBeTruthy();
       const response = await request(
-        ipfsCluster.ipnsGateway + publishedIpnsName,
+        addJwtToIPFSUrl(
+          ipfsCluster.ipnsGateway + publishedIpnsName,
+          testProject.project_uuid,
+          publishedIpnsName,
+          ipfsCluster,
+        ),
       ).get('');
       expect(response.status).toBe(200);
     });
@@ -260,7 +272,9 @@ describe('Ipns tests', () => {
 
     test('User should be able to delete IPNS record', async () => {
       const response = await request(stage.http)
-        .delete(`/buckets/${testBucket.id}/ipns/${ipnsRecordToDelete.id}`)
+        .delete(
+          `/buckets/${testBucket.bucket_uuid}/ipns/${ipnsRecordToDelete.id}`,
+        )
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.id).toBe(ipnsRecordToDelete.id);

@@ -1,26 +1,27 @@
 import {
+  AdvancedSQLModel,
+  CodeException,
   Context,
+  DefaultUserRole,
   DeploymentQueryFilter,
-  getQueryParams,
+  ErrorCode,
+  ForbiddenErrorCodes,
   PopulateFrom,
+  SerializeFor,
+  SqlModelStatus,
+  getQueryParams,
   presenceValidator,
   prop,
   selectAndCountQuery,
-  SerializeFor,
-  SqlModelStatus,
-  DefaultUserRole,
-  CodeException,
-  ForbiddenErrorCodes,
-  AdvancedSQLModel,
 } from '@apillon/lib';
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
+import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
   DbTables,
   DeploymentEnvironment,
   DeploymentStatus,
   StorageErrorCode,
 } from '../../../config/types';
-import { ServiceContext } from '@apillon/service-lib';
 import { Website } from './website.model';
 
 export class Deployment extends AdvancedSQLModel {
@@ -29,6 +30,105 @@ export class Deployment extends AdvancedSQLModel {
   public constructor(data: any, context: Context) {
     super(data, context);
   }
+
+  //# region overrides of basic properties for model with uuid property
+
+  /**
+   * id
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    serializable: [
+      SerializeFor.SERVICE,
+      SerializeFor.WORKER,
+      SerializeFor.LOGGER,
+    ],
+    populatable: [PopulateFrom.DB],
+  })
+  public id: number;
+
+  /**
+   * status
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.LOGGER,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ErrorCode.STATUS_NOT_PRESENT,
+      },
+    ],
+    defaultValue: SqlModelStatus.ACTIVE,
+    fakeValue() {
+      return SqlModelStatus.ACTIVE;
+    },
+  })
+  public status?: number;
+
+  /**
+   * Created at property definition.
+   */
+  @prop({
+    parser: { resolver: dateParser() },
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+    ],
+    populatable: [PopulateFrom.DB],
+    defaultValue: new Date(),
+  })
+  public createTime?: Date;
+
+  /**
+   * Updated at property definition.
+   */
+  @prop({
+    parser: { resolver: dateParser() },
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+    ],
+    populatable: [PopulateFrom.DB],
+  })
+  public updateTime?: Date;
+
+  //# endregion
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: StorageErrorCode.DEPLOYMENT_REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
+  })
+  public deployment_uuid: string;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -42,12 +142,11 @@ export class Deployment extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.DEPLOYMENT_WEBSITE_ID_NOT_PRESENT,
+        code: StorageErrorCode.DEPLOYMENT_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -65,13 +164,11 @@ export class Deployment extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.DEPLOYMENT_BUCKET_ID_NOT_PRESENT,
+        code: StorageErrorCode.DEPLOYMENT_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -91,11 +188,12 @@ export class Deployment extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.DEPLOYMENT_ENVIRONMENT_NOT_PRESENT,
+        code: StorageErrorCode.DEPLOYMENT_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -116,6 +214,7 @@ export class Deployment extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     defaultValue: DeploymentStatus.INITIATED,
     fakeValue: DeploymentStatus.INITIATED,
@@ -136,6 +235,7 @@ export class Deployment extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
   })
   public cid: string;
@@ -154,6 +254,7 @@ export class Deployment extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
   })
   public cidv1: string;
@@ -172,6 +273,7 @@ export class Deployment extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
@@ -191,6 +293,7 @@ export class Deployment extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
@@ -278,7 +381,6 @@ export class Deployment extends AdvancedSQLModel {
   }
 
   public async getList(context: ServiceContext, filter: DeploymentQueryFilter) {
-    await this.canAccess(context);
     // Map url query with sql fields.
     const fieldMap = {
       id: 'wp.id',
@@ -292,12 +394,16 @@ export class Deployment extends AdvancedSQLModel {
 
     const sqlQuery = {
       qSelect: `
-        SELECT ${this.generateSelectFields('d', '')}, d.updateTime
+        SELECT ${this.generateSelectFields(
+          'd',
+          '',
+          getSerializationStrategy(context),
+        )}
         `,
       qFrom: `
-        FROM \`${this.tableName}\` d
+        FROM \`${DbTables.DEPLOYMENT}\` d
         JOIN \`${DbTables.WEBSITE}\` wp ON wp.id = d.website_id
-        WHERE wp.id = @website_id
+        WHERE wp.website_uuid = @website_uuid
         AND d.status = ${SqlModelStatus.ACTIVE}
         AND (
           @environment IS NULL 

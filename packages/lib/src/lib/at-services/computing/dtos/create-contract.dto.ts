@@ -13,7 +13,20 @@ import {
 } from '../../../../config/types';
 import { enumInclusionValidator } from '../../../validators';
 
-export class CreateContractDtoBase extends ModelBase {
+export class CreateContractDto extends ModelBase {
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.COMPUTING_PROJECT_UUID_NOT_PRESENT,
+      },
+    ],
+  })
+  public project_uuid: string;
+
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -95,20 +108,3 @@ export class CreateContractDtoBase extends ModelBase {
   })
   public restrictToOwner: boolean;
 }
-
-export class CreateContractDto extends CreateContractDtoBase {
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.COMPUTING_PROJECT_UUID_NOT_PRESENT,
-      },
-    ],
-  })
-  public project_uuid: string;
-}
-
-export class ApillonApiCreateContractDto extends CreateContractDtoBase {}

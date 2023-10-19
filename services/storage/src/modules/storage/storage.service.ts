@@ -5,6 +5,7 @@ import {
   CreateS3UrlsForUploadDto,
   EndFileUploadSessionDto,
   env,
+  FilesQueryFilter,
   FileUploadsQueryFilter,
   invalidateCacheMatch,
   Lmas,
@@ -15,9 +16,8 @@ import {
   SerializeFor,
   ServiceName,
   SqlModelStatus,
-  TrashedFilesQueryFilter,
 } from '@apillon/lib';
-import { ServiceContext } from '@apillon/service-lib';
+import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
 import {
   QueueWorkerType,
   sendToWorkerQueue,
@@ -35,6 +35,7 @@ import {
 } from '../../config/types';
 import { createFURAndS3Url } from '../../lib/create-fur-and-s3-url';
 import { StorageCodeException } from '../../lib/exceptions';
+import { getSessionFilesOnS3 } from '../../lib/file-upload-session-s3-files';
 import { addJwtToIPFSUrl } from '../../lib/ipfs-utils';
 import { processSessionFiles } from '../../lib/process-session-files';
 import { SyncToIPFSWorker } from '../../workers/s3-to-ipfs-sync-worker';
@@ -46,7 +47,6 @@ import { Website } from '../hosting/models/website.model';
 import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
-import { getSessionFilesOnS3 } from '../../lib/file-upload-session-s3-files';
 
 export class StorageService {
   /**
@@ -412,6 +412,16 @@ export class StorageService {
 
   //#region file functions
 
+  static async listFiles(
+    event: { query: FilesQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new File({}, context).listFiles(
+      context,
+      new FilesQueryFilter(event.query),
+    );
+  }
+
   static async getFileDetails(event: { id: string }, context: ServiceContext) {
     let file: File = undefined;
     let fileStatus: FileStatus = undefined;
@@ -447,9 +457,8 @@ export class StorageService {
         }
 
         return {
+          ...fur.serialize(SerializeFor.PROFILE),
           fileStatus: fileStatus,
-          file: fur.serialize(SerializeFor.PROFILE),
-          crustStatus: undefined,
         };
       }
 
@@ -460,31 +469,10 @@ export class StorageService {
     }
 
     file.canAccess(context);
-    fileStatus = FileStatus.UPLOADED_TO_IPFS;
-    if (file.CID) {
-      //Get IPFS cluster
-      const ipfsCluster = await new ProjectConfig(
-        { project_uuid: file.project_uuid },
-        context,
-      ).getIpfsCluster();
 
-      fileStatus = FileStatus.PINNED_TO_CRUST;
-      file.downloadLink = ipfsCluster.ipfsGateway + file.CID;
+    await file.populateLink();
 
-      if (ipfsCluster.private) {
-        file.downloadLink = addJwtToIPFSUrl(
-          file.downloadLink,
-          file.project_uuid,
-          file.CID,
-          ipfsCluster,
-        );
-      }
-    }
-
-    return {
-      fileStatus: fileStatus,
-      file: file.serialize(SerializeFor.PROFILE),
-    };
+    return file.serialize(getSerializationStrategy(context));
   }
 
   static async deleteFile(
@@ -516,9 +504,10 @@ export class StorageService {
       b.bucketType == BucketType.NFT_METADATA
     ) {
       await f.markForDeletion();
-      return f.serialize(SerializeFor.PROFILE);
+      return true;
     } else if (b.bucketType == BucketType.HOSTING) {
-      return await HostingService.deleteFile({ file: f }, context);
+      await HostingService.deleteFile({ file: f }, context);
+      return true;
     } else {
       return false;
     }
@@ -547,16 +536,6 @@ export class StorageService {
     await f.update();
 
     return f.serialize(SerializeFor.PROFILE);
-  }
-
-  static async listFilesMarkedForDeletion(
-    event: { query: TrashedFilesQueryFilter },
-    context: ServiceContext,
-  ) {
-    return await new File({}, context).getMarkedForDeletionList(
-      context,
-      new TrashedFilesQueryFilter(event.query, context),
-    );
   }
 
   /**

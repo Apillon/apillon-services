@@ -13,10 +13,10 @@ import { DevConsoleApiContext } from '../../../context';
 export class IpnsService {
   async getIpnsList(
     context: DevConsoleApiContext,
-    bucket_id: number,
+    bucket_uuid: string,
     query: IpnsQueryFilter,
   ) {
-    query.populate({ bucket_id: bucket_id });
+    query.populate({ bucket_uuid });
     return (await new StorageMicroservice(context).listIpnses(query)).data;
   }
 
@@ -26,10 +26,10 @@ export class IpnsService {
 
   async createIpns(
     context: DevConsoleApiContext,
-    bucket_id: number,
+    bucket_uuid: string,
     body: CreateIpnsDto,
   ) {
-    body.populate({ bucket_id: bucket_id });
+    body.populate({ bucket_uuid: bucket_uuid });
     return (await new StorageMicroservice(context).createIpns(body)).data;
   }
 

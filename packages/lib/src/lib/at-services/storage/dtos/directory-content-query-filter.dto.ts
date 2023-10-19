@@ -23,7 +23,7 @@ export class DirectoryContentQueryFilter extends BaseQueryFilter {
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
   })
-  public directory_id: number;
+  public directory_uuid: number;
 
   @prop({
     parser: { resolver: booleanParser() },
@@ -39,7 +39,7 @@ export class ApillonApiDirectoryContentQueryFilter extends BaseQueryFilter {
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
   })
-  public directoryId: number;
+  public directoryUuid: string;
 
   @prop({
     parser: { resolver: booleanParser() },

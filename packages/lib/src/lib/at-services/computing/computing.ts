@@ -31,7 +31,7 @@ export class ComputingMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async listComputingContracts(params: ContractQueryFilter) {
+  public async listContracts(params: ContractQueryFilter) {
     const data = {
       eventName: ComputingEventType.LIST_CONTRACTS,
       query: params.serialize(),
@@ -39,7 +39,7 @@ export class ComputingMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async getComputingContract(uuid: string) {
+  public async getContract(uuid: string) {
     const data = {
       eventName: ComputingEventType.GET_CONTRACT_BY_UUID,
       uuid,

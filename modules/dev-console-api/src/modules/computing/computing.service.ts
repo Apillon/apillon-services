@@ -66,14 +66,11 @@ export class ComputingService {
     context: DevConsoleApiContext,
     query: ContractQueryFilter,
   ) {
-    return (
-      await new ComputingMicroservice(context).listComputingContracts(query)
-    ).data;
+    return (await new ComputingMicroservice(context).listContracts(query)).data;
   }
 
   async getContract(context: DevConsoleApiContext, uuid: string) {
-    return (await new ComputingMicroservice(context).getComputingContract(uuid))
-      .data;
+    return (await new ComputingMicroservice(context).getContract(uuid)).data;
   }
 
   async depositToContractCluster(

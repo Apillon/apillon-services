@@ -1,22 +1,23 @@
 // import { ApiProperty } from '@babel/core';
 import { prop } from '@rawmodel/core';
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import { presenceValidator } from '@rawmodel/validators';
-import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
+import { PopulateFrom } from '../../../../config/types';
 import { BaseQueryFilter } from '../../../base-models/base-query-filter.model';
 
-export class ContractQueryFilter extends BaseQueryFilter {
+export class FilesQueryFilter extends BaseQueryFilter {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.PROJECT_UUID_QUERY_PARAM_NOT_PRESENT,
-      },
-    ],
+    validators: [],
   })
-  public project_uuid: string;
+  public bucket_uuid: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [],
+  })
+  public fileStatus: number;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -24,11 +25,4 @@ export class ContractQueryFilter extends BaseQueryFilter {
     validators: [],
   })
   public status: number;
-
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [],
-  })
-  public contractStatus: number;
 }
