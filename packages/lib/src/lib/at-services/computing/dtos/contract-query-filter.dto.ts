@@ -32,12 +32,3 @@ export class ContractQueryFilter extends BaseQueryFilter {
   })
   public contractStatus: number;
 }
-
-export class ApillonApiContractQueryFilter extends ContractQueryFilter {
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [],
-  })
-  public project_uuid: string;
-}
