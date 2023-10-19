@@ -48,7 +48,7 @@ export async function deployPhalaContract(
   });
 
   //Insert to DB
-  await TransactionService.saveTransaction(context, dbTxRecord, conn);
+  await TransactionService.saveTransaction(dbTxRecord, conn);
   //Update collection status
   contract.contractStatus = ContractStatus.DEPLOYING;
   contract.deployerAddress = response.data.address;
@@ -60,7 +60,6 @@ export async function depositToPhalaContractCluster(
   contract: Contract,
   accountAddress: string,
   amount: number,
-  conn: PoolConnection,
 ) {
   const walletService = new WalletService(context);
   const transaction = await walletService.createFundPhalaClusterTransaction(
@@ -90,14 +89,13 @@ export async function depositToPhalaContractCluster(
     },
     context,
   );
-  await TransactionService.saveTransaction(context, dbTxRecord, conn);
+  await TransactionService.saveTransaction(dbTxRecord);
 }
 
 export async function transferContractOwnership(
   context: ServiceContext,
   contract: Contract,
   newOwnerAddress: string,
-  conn: PoolConnection,
 ) {
   const walletService = new WalletService(context);
   const transaction = await walletService.createTransferOwnershipTransaction(
@@ -126,5 +124,5 @@ export async function transferContractOwnership(
     },
     context,
   );
-  await TransactionService.saveTransaction(context, dbTxRecord, conn);
+  await TransactionService.saveTransaction(dbTxRecord);
 }

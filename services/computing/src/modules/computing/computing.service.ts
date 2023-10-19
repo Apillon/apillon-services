@@ -141,19 +141,14 @@ export class ComputingService {
 
     const amount = params.body.amount;
     const accountAddress = params.body.accountAddress;
-    const conn = await context.mysql.start();
     try {
       await depositToPhalaContractCluster(
         context,
         contract,
         accountAddress,
         amount,
-        conn,
       );
-      await context.mysql.commit(conn);
     } catch (e: any) {
-      await context.mysql.rollback(conn);
-
       throw await new ComputingCodeException({
         status: 500,
         code: ComputingErrorCode.FUND_CONTRACT_CLUSTER_ERROR,
@@ -199,13 +194,9 @@ export class ComputingService {
       contract,
     );
 
-    const conn = await context.mysql.start();
     try {
-      await transferContractOwnership(context, contract, newOwnerAddress, conn);
-      await context.mysql.commit(conn);
+      await transferContractOwnership(context, contract, newOwnerAddress);
     } catch (e: any) {
-      await context.mysql.rollback(conn);
-
       throw await new ComputingCodeException({
         status: 500,
         code: ComputingErrorCode.TRANSFER_CONTRACT_ERROR,
