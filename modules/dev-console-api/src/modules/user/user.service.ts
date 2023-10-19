@@ -153,7 +153,8 @@ export class UserService {
         token: resp.data.token,
       };
     } catch (error) {
-      if (error.code != 40102100) {
+      // If not error USER_IS_NOT_AUTHENTICATED, meaning some other error occurred
+      if (error.code != 401021000) {
         throw new CodeException({
           status: HttpStatus.UNAUTHORIZED,
           code: ValidatorErrorCode.USER_INVALID_LOGIN,

@@ -4,7 +4,9 @@ import {
   JwtTokenType,
   Lmas,
   LogType,
+  parseJwtToken,
   ServiceName,
+  VerificationIdentityDto,
 } from '@apillon/lib';
 import {
   Attestation,
@@ -16,7 +18,10 @@ import {
 } from '@kiltprotocol/sdk-js';
 
 export class VerificationService {
-  static async verifyIdentity(event, context): Promise<any> {
+  static async verifyIdentity(
+    event: { body: VerificationIdentityDto },
+    context,
+  ): Promise<any> {
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
 
@@ -32,6 +37,9 @@ export class VerificationService {
         await api.query.attestation.attestations(presentation.rootHash),
         presentation.rootHash,
       );
+      if (attestation.revoked) {
+        return { verified: false, error: 'Credential was revoked!' };
+      }
     } catch (error) {
       return {
         verified: false,
@@ -42,7 +50,7 @@ export class VerificationService {
     const whitelist = env.KILT_ATTESTERS_WHITELIST.split(';');
     if (!whitelist.includes(attestation.owner.split('did:kilt:')[1])) {
       await new Lmas().writeLog({
-        context: context,
+        context,
         logType: LogType.INFO,
         message: 'VERIFICATION FAILED: Unknown attester',
         location: 'AUTHENTICATION-API/verification/verifyIdentity',
@@ -55,14 +63,19 @@ export class VerificationService {
       };
     }
 
+    const { project_uuid } = parseJwtToken(
+      JwtTokenType.AUTH_SESSION,
+      event.body.token,
+    );
+
+    const email = presentation.claim.contents.Email;
+
     const token = generateJwtToken(
       JwtTokenType.OAUTH_TOKEN,
-      { email: presentation.claim.contents.Email },
+      { email, project_uuid },
       '10min',
     );
 
-    return attestation.revoked
-      ? { verified: false, error: 'Credential was revoked!' }
-      : { verified: true, data: token };
+    return { verified: true, data: token };
   }
 }

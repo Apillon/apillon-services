@@ -434,10 +434,13 @@ export class SporranService {
     }
 
     const email = presentation.claim.contents.Email as string;
-
+    const { project_uuid } = parseJwtToken(
+      JwtTokenType.AUTH_SESSION,
+      event.body.token,
+    );
     const token = generateJwtToken(
       JwtTokenType.OAUTH_TOKEN,
-      { email: email },
+      { email, project_uuid },
       '10min',
     );
 
