@@ -51,11 +51,11 @@ Please read [Deployment](../../docs/deployment.md) documentation.
 
 ## Structure
 ### Modules
-* Accounting
-* Blockchain-indexers -> Updates transactions 
-* Evm
-* Substrate
-* Wallet
+* **Accounting**
+* **Blockchain-indexers** -> Updates transactions 
+* **Evm**
+* **Substrate**
+* **Wallet**
 
 **Substrate** contains the substrate service, which is responsible for creating and storing transactions into the database, based on the rawTransaction provided by the caller. It also takes care for transmitting transactions to the blockchain, depending on the chainId provided (Currently supported: Crust, Kilt, Phala)
 
@@ -98,12 +98,6 @@ export class KiltGQLQueries extends BaseGQLQueries {
 * **base-transaction-model.ts** - Contains the BaseTransaction model, which must be extended in each respective model, such as 
 
 ```
-export interface TransferTransaction extends BaseTransaction {
-  readonly from?: string;
-  readonly to?: string;
-  readonly amount?: bigint | undefined;
-}
-
 export interface DidTransaction extends BaseTransaction {
   readonly didId?: string | undefined;
   readonly account?: string | undefined;
@@ -117,7 +111,6 @@ Example provided from Kilt.
 
 ### Workers
 * **substrate-transaction-worker** - The transmit substrate and evm transaction workers are single threded workers, that are executed either via an sqs message or run at an interval (check serverless.yml). They run the transmit transaction function inside evm / substrate.service and transmit all pending transaction in the database.
-
 * **transmit-substrate-transaction-worker** - The substrate-transaction-worker runs at an interval of 1 minute and fetches all transactions from the blockchain indexers, on a different repo. GraphQL nodes query-nodes are running on an EC2 machine (each per environmnt - dev, stage, production). The transactions are then updated, depending on the state received from the indexer. Only SystemEvents types are necessary to match to the transaction hash, since each extrinsic will always trigger either a SystemSuccess or SystemFailed event.
 * **transaction-log-worker** - The substrate log worker runs exactly the same as the update worker, but updates wallet balances (these two should be merged..).
 * **transmit-evm-transaction-worker** - TODO
@@ -126,10 +119,11 @@ Example provided from Kilt.
 ### worker-executor
 Takes care to execute correct workers based on event type - lambda event, or sqs message event.
 
-## Typical flow
-A caller, let's say the authentication microservice, creates a blockchain service request - it passes in a serialized transaction (the raw transaction hash), a reference table and reference id, and optionally some arbitrary data. The reference fields point to the table and the row number of the microservice and is needed when an update is triggered. The blockchain service then creates its own entry of the transaction-request, and transmits the transaction to the blockchain.
-
-Once the transaction was sucessfully transmited (we call this propagation), the blockchain service waits for a response from the blockchain - either the transction was successfull, or it failed. The substrate-transaction-worker is in charge of this. It fetches all the transactions from the relevant blockchain indexer, and triggers the webhook.
+## FLOW
+1. **Transmit** - A caller, let's say the authentication microservice, creates a blockchain service request - it passes in a serialized transaction (the raw transaction hash), a reference table and reference id, and optionally some arbitrary data, which can be returned to the calling service. The reference fields point to the table and the row number of the microservice and is needed when an update is triggered. The blockchain service then creates its own entry of the transaction-request, and transmits the transaction to the blockchain.
+2. **update** - Once the transaction was sucessfully transmited (we call this propagation), the blockchain service waits for a response from the blockchain - either the transction was successfull, or it failed. The substrate-transaction-worker is in charge of this. It fetches all the transactions from the relevant blockchain indexer, then updates the state of the hash inside the transaction database. This step is performed by the substrate-transaction-worker.
+3. **Trigger webhook** - This steps triggers the webhook, as defined in the **substrate-parachain.ts (ParachainConfig)** file. This is performed by the substrate-transaction-worker.
+4. In parellel, **transaction-log** worker again fetches all the transactions from the blockchain indexer and updates the wallet balances.
 
 
 ![Flow](images/bcs_flow.png "Flow")
