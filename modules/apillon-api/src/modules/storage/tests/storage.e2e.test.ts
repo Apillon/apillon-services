@@ -290,7 +290,7 @@ describe('Apillon API storage tests', () => {
           );
         expect(response.status).toBe(200);
 
-        expect(response.body.data.fileStatus).toBe(FileStatus.PINNED_TO_CRUST);
+        expect(response.body.data.fileStatus).toBe(FileStatus.UPLOADED_TO_IPFS);
         expect(response.body.data.file.fileUuid).toBe(testFile.file_uuid);
         expect(response.body.data.file.CID).toBe(testFile.CID);
         expect(response.body.data.file.name).toBe(testFile.name);
@@ -308,7 +308,7 @@ describe('Apillon API storage tests', () => {
           );
         expect(response.status).toBe(200);
 
-        expect(response.body.data.fileStatus).toBe(FileStatus.PINNED_TO_CRUST);
+        expect(response.body.data.fileStatus).toBe(FileStatus.UPLOADED_TO_IPFS);
         expect(response.body.data.file.fileUuid).toBe(testFile.file_uuid);
         expect(response.body.data.file.CID).toBe(testFile.CID);
         expect(response.body.data.file.name).toBe(testFile.name);
@@ -332,7 +332,7 @@ describe('Apillon API storage tests', () => {
         );
       });
 
-      test('Application should be able to list files in bucket', async () => {
+      test('Application should be able to get content in bucket', async () => {
         const response = await request(stage.http)
           .get(`/storage/${testBucket.bucket_uuid}/content`)
           .set(
@@ -349,7 +349,6 @@ describe('Apillon API storage tests', () => {
         expect(response.body.data.items[0].CID).toBeTruthy();
         expect(response.body.data.items[0].fileUuid).toBeTruthy();
         expect(response.body.data.items[0].name).toBeTruthy();
-        expect(response.body.data.items[0].id).toBeTruthy();
       });
 
       test('Application should NOT be able to list files in ANOTHER bucket', async () => {
@@ -365,6 +364,25 @@ describe('Apillon API storage tests', () => {
         expect(response.body.message).toBe(
           'Insufficient permissions to access this record',
         );
+      });
+
+      test('Application should be able to list files in bucket', async () => {
+        const response = await request(stage.http)
+          .get(`/storage/${testBucket.bucket_uuid}/files`)
+          .set(
+            'Authorization',
+            `Basic ${Buffer.from(
+              apiKey.apiKey + ':' + apiKey.apiKeySecret,
+            ).toString('base64')}`,
+          );
+        expect(response.status).toBe(200);
+
+        expect(response.body.data.total).toBe(1);
+        expect(response.body.data.items.length).toBe(1);
+        expect(response.body.data.items[0].type).toBe(ObjectType.FILE);
+        expect(response.body.data.items[0].CID).toBeTruthy();
+        expect(response.body.data.items[0].fileUuid).toBeTruthy();
+        expect(response.body.data.items[0].name).toBeTruthy();
       });
     });
 

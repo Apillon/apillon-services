@@ -183,6 +183,7 @@ export async function storageBucketSyncFilesToIPFS(
               contentType: file.contentType,
               project_uuid: bucket.project_uuid,
               bucket_id: file.bucket_id,
+              path: file.path,
               directory_id: fileDirectory?.id,
               size: file.size,
               fileStatus: FileStatus.UPLOADED_TO_IPFS,
@@ -342,6 +343,7 @@ export async function storageBucketSyncFilesToIPFS(
                 project_uuid: bucket.project_uuid,
                 bucket_id: file.bucket_id,
                 directory_id: fileDirectory?.id,
+                path: file.path,
                 size: ipfsRes.size,
                 fileStatus: FileStatus.UPLOADED_TO_IPFS,
               })
