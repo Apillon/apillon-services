@@ -76,7 +76,7 @@ A caller, let's say the authentication micro-service, creates a blockchain servi
 
 Once the transaction was sucessfully transmited (we call this propagation), the blockchain service waits for a response from the blockchain - either the transction was successfull, or it failed. The substrate-transaction-worker is in charge of this. It fetches all the transactions from the relevant blockchain indexer, and triggers the webhook. 
 
-![Flow](relative%20path/to/bcs_flow.png?raw=true "Flow")
+![Flow](images/bcs_flow.png?raw=true "Flow")
 
 ## License
 
