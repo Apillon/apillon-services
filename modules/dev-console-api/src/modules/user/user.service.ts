@@ -541,10 +541,12 @@ export class UserService {
    * @returns Session info for the oauth module
    */
   async getOauthSession() {
-    return await getOauthSessionToken(
-      env.APILLON_API_SYSTEM_API_KEY,
-      env.APILLON_API_SYSTEM_API_SECRET,
-    );
+    return (
+      await getOauthSessionToken(
+        env.APILLON_API_SYSTEM_API_KEY,
+        env.APILLON_API_SYSTEM_API_SECRET,
+      )
+    ).data;
   }
 
   /**

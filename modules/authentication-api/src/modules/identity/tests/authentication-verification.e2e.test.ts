@@ -21,6 +21,8 @@ import {
 
 describe('VERFICATION', () => {
   let stage: Stage;
+  let identityToken: string;
+  let testEmail: string;
 
   beforeAll(async () => {
     console.log('Setup stage ...');
@@ -34,44 +36,15 @@ describe('VERFICATION', () => {
   });
 
   beforeEach(async () => {
-    const testEmail = mock.CREATE_IDENTITY_MOCK.email;
+    testEmail = mock.CREATE_IDENTITY_MOCK.email;
 
-    const token = generateJwtToken(
+    identityToken = generateJwtToken(
       JwtTokenType.IDENTITY_VERIFICATION,
       {
         email: testEmail,
       },
       '1d',
     );
-
-    // IDENTITY 1 - ATTESTED
-    const identityAttested = new Identity({}, stage.authApiContext);
-    identityAttested.populate({
-      context: stage.authApiContext,
-      email: testEmail,
-      state: IdentityState.ATTESTED,
-      token,
-      credential: {},
-      status: 5,
-    });
-    await identityAttested.insert(SerializeFor.INSERT_DB);
-
-    const identityAttestedDb = await new Identity(
-      {},
-      stage.authApiContext,
-    ).populateByUserEmail(stage.authApiContext, testEmail);
-
-    expect(identityAttestedDb).not.toBeUndefined();
-    expect(identityAttestedDb.email).toEqual(testEmail);
-    expect(identityAttestedDb.state).toEqual(IdentityState.ATTESTED);
-
-    const resp1 = await request(stage.http)
-      .get(`/identity/state/query?email=${testEmail}&token=${token}`)
-      .send();
-    expect(resp1.status).toBe(200);
-
-    const data1 = resp1.body.data;
-    expect(data1.state).toEqual('attested');
   });
 
   afterEach(async () => {
@@ -80,6 +53,40 @@ describe('VERFICATION', () => {
         DELETE FROM \`${DbTables.IDENTITY}\` i
       `,
     );
+  });
+
+  describe('Identity test', () => {
+    test('Identity attestation', async () => {
+      // IDENTITY 1 - ATTESTED
+      const identityAttested = new Identity({}, stage.authApiContext);
+      identityAttested.populate({
+        context: stage.authApiContext,
+        email: testEmail,
+        state: IdentityState.ATTESTED,
+        identityToken,
+        credential: {},
+        status: 5,
+      });
+      await identityAttested.insert(SerializeFor.INSERT_DB);
+
+      const identityAttestedDb = await new Identity(
+        {},
+        stage.authApiContext,
+      ).populateByUserEmail(stage.authApiContext, testEmail);
+
+      expect(identityAttestedDb).not.toBeUndefined();
+      expect(identityAttestedDb.email).toEqual(testEmail);
+      expect(identityAttestedDb.state).toEqual(IdentityState.ATTESTED);
+
+      const resp1 = await request(stage.http)
+        .get(`/identity/state/query?email=${testEmail}`)
+        .set('Authorization', `Bearer ${identityToken}`)
+        .send();
+      expect(resp1.status).toBe(200);
+
+      const data1 = resp1.body.data;
+      expect(data1.state).toEqual('attested');
+    });
   });
 
   describe('VERIFICATION', () => {

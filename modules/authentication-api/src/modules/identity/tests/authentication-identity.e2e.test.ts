@@ -37,7 +37,7 @@ describe('Identity', () => {
   });
 
   afterAll(async () => {
-    jest.setTimeout(5000); // 5 seconds -> revert
+    // jest.setTimeout(5000); // 5 seconds -> revert
     await releaseStage(stage);
   });
 
@@ -49,7 +49,7 @@ describe('Identity', () => {
       // SUBCASE 1: EMPTY BODY
       expect(resp.status).toBe(422);
       const errors = resp.body.errors;
-      expect(errors.length).toEqual(4);
+      expect(errors.length).toEqual(3);
 
       const errorCodes = errors.map((x) =>
         x.message == 'IDENTITY_CREATE_DID_CREATE_OP_NOT_PRESENT' ||
@@ -64,9 +64,6 @@ describe('Identity', () => {
       ).toBeTruthy();
       expect(errorCodes.includes('USER_EMAIL_NOT_PRESENT')).toBeTruthy();
       expect(errorCodes.includes('DID_URI_NOT_PRESENT')).toBeTruthy();
-      expect(
-        errorCodes.includes('IDENTITY_VERIFICATION_TOKEN_NOT_PRESENT'),
-      ).toBeTruthy();
     });
 
     test('Send verification email invalid cases', async () => {
@@ -75,7 +72,7 @@ describe('Identity', () => {
         .send({});
       expect(resp.status).toBe(422);
       const errors = resp.body.errors;
-      expect(errors.length).toEqual(3);
+      expect(errors.length).toEqual(2);
 
       const errorCodes = errors.map((x) =>
         x.message == 'USER_EMAIL_NOT_PRESENT' ||
@@ -104,31 +101,36 @@ describe('Identity', () => {
 
       const resp = await request(stage.http)
         .post('/identity/verification/email')
-        .send({
-          email: testEmail,
-          token: generateJwtToken(JwtTokenType.AUTH_SESSION, {
+        .set(
+          'Authorization',
+          `Bearer ${generateJwtToken(JwtTokenType.AUTH_SESSION, {
             email: testEmail,
             project_uuid: uuidV4(),
-          }),
+          })}`,
+        )
+        .send({
+          email: testEmail,
           type: 'generate-identity',
         });
 
-      expect(resp.status).toBe(422);
-      expect(resp.body.message).toEqual('IDENTITY_CREATE_INVALID_REQUEST');
+      expect(resp.status).toBe(400);
+      expect(resp.body.message).toEqual('IDENTITY_EMAIL_IS_ALREADY_ATTESTED');
     });
   });
 
   describe('Test GET identity generation process STATE', () => {
     test('Test INVALID email', async () => {
       const resp = await request(stage.http)
-        .get(`/identity/state/query?email=${controlMailInvalid}&token=${token}`)
+        .get(`/identity/state/query?email=${controlMailInvalid}`)
+        .set('Authorization', `Bearer ${token}`)
         .send();
       expect(resp.status).toBe(422);
     });
 
     test('Test INVALID email domain', async () => {
       const resp = await request(stage.http)
-        .get(`/identity/state/query?email=${controlMailInvalid}&token=${token}`)
+        .get(`/identity/state/query?email=${controlMailInvalid}`)
+        .set('Authorization', `Bearer ${token}`)
         .send();
       expect(resp.status).toBe(422);
     });
@@ -140,7 +142,8 @@ describe('Identity', () => {
       });
       // STATE --> No entry for this email
       const resp = await request(stage.http)
-        .get(`/identity/state/query?email=${mail}&token=${tokenT}`)
+        .get(`/identity/state/query?email=${mail}`)
+        .set('Authorization', `Bearer ${tokenT}`)
         .send();
       expect(resp.status).toBe(400);
       expect(resp.body.message).toEqual('IDENTITY_DOES_NOT_EXIST');
@@ -161,7 +164,8 @@ describe('Identity', () => {
       await identity.insert(SerializeFor.INSERT_DB);
 
       const resp = await request(stage.http)
-        .get(`/identity/state/query?email=${testEmail4}&token=${token}`)
+        .get(`/identity/state/query?email=${testEmail4}`)
+        .set('Authorization', `Bearer ${token}`)
         .send();
       expect(resp.status).toBe(200);
       const data = resp.body.data;
@@ -195,7 +199,8 @@ describe('Identity', () => {
       expect(identityDb.email).toEqual(testEmail);
       expect(identityDb.state).toEqual(IdentityState.IN_PROGRESS);
       const resp = await request(stage.http)
-        .get(`/identity/state/query?email=${testEmail}&token=${token}`)
+        .get(`/identity/state/query?email=${testEmail}`)
+        .set('Authorization', `Bearer ${token}`)
         .send();
       expect(resp.status).toBe(200);
       const data = resp.body.data;
@@ -219,7 +224,8 @@ describe('Identity', () => {
       expect(identityAttestedDb.email).toEqual(testEmailAttested);
       expect(identityAttestedDb.state).toEqual(IdentityState.ATTESTED);
       const resp1 = await request(stage.http)
-        .get(`/identity/state/query?email=${testEmailAttested}&token=${token}`)
+        .get(`/identity/state/query?email=${testEmailAttested}`)
+        .set('Authorization', `Bearer ${token}`)
         .send();
       expect(resp1.status).toBe(200);
       const data1 = resp1.body.data;
@@ -245,22 +251,9 @@ describe('Identity', () => {
         .send({
           ...controlRequestBody,
         });
+      expect(resp.status).toBe(401);
       expect(resp.body.message).toEqual('IDENTITY_INVALID_VERIFICATION_TOKEN');
-      expect(resp.status).toBe(400);
-      // EMPTY TOKEN
-      controlRequestBody.token = null;
-      const resp2 = await request(stage.http)
-        .post('/identity/generate')
-        .send({
-          ...controlRequestBody,
-        });
 
-      const errors2 = resp2.body.errors[0];
-      expect(resp2.status).toBe(422);
-      expect(errors2.code).toEqual(42200709);
-      expect(errors2.message).toEqual(
-        'IDENTITY_VERIFICATION_TOKEN_NOT_PRESENT',
-      );
       // EXPIRED TOKEN
       controlRequestBody.token = generateJwtToken(
         JwtTokenType.IDENTITY_VERIFICATION,
@@ -274,7 +267,7 @@ describe('Identity', () => {
         .send({
           ...controlRequestBody,
         });
-      expect(resp3.status).toBe(400);
+      expect(resp3.status).toBe(401);
       expect(resp3.body.message).toEqual('IDENTITY_INVALID_VERIFICATION_TOKEN');
       // NOTE: VALID TOKEN, but we set identity to attested, since
       // we don't want to go through the whole process -> Identity state
@@ -288,6 +281,7 @@ describe('Identity', () => {
       controlRequestBody.email = testEmailAttested;
       const resp4 = await request(stage.http)
         .post('/identity/generate')
+        .set('Authorization', `Bearer ${token}`)
         .send({
           ...controlRequestBody,
         });
@@ -379,11 +373,12 @@ describe('Identity', () => {
       );
       const resp3 = await request(stage.http)
         .post('/identity/generate')
+        .set('Authorization', `Bearer ${token}`)
         .send({
           ...controlRequestBody,
         });
       expect(resp3.status).toBe(400);
-      expect(resp3.body.message).toEqual('IDENTITY_INVALID_STATE');
+      expect(resp3.body.message).toEqual('IDENTITY_INVALID_REQUEST');
       // VALID EMAIL
       // const resp4 = await request(stage.http)
       //   .post('/identity/generate')
@@ -416,6 +411,7 @@ describe('Identity', () => {
       controlRequestBody2.did_create_op.payload.nonce = null;
       const resp2 = await request(stage.http)
         .post('/identity/generate')
+        .set('Authorization', `Bearer ${token}`)
         .send({
           ...controlRequestBody2,
         });
@@ -428,6 +424,7 @@ describe('Identity', () => {
       controlRequestBody3.did_create_op.payload.message = null;
       const resp3 = await request(stage.http)
         .post('/identity/generate')
+        .set('Authorization', `Bearer ${token}`)
         .send({
           ...controlRequestBody3,
         });
@@ -465,6 +462,7 @@ describe('Identity', () => {
       };
       const resp4 = await request(stage.http)
         .post('/identity/generate')
+        .set('Authorization', `Bearer ${token}`)
         .send({
           ...params,
         });
@@ -487,6 +485,7 @@ describe('Identity', () => {
       };
       const resp5 = await request(stage.http)
         .post('/identity/generate')
+        .set('Authorization', `Bearer ${token}`)
         .send({
           ...params,
         });
@@ -513,9 +512,6 @@ describe('Identity', () => {
       ).toBeTruthy();
       expect(errorCodes.includes('USER_EMAIL_NOT_PRESENT')).toBeTruthy();
       expect(errorCodes.includes('DID_URI_NOT_PRESENT')).toBeTruthy();
-      expect(
-        errorCodes.includes('IDENTITY_VERIFICATION_TOKEN_NOT_PRESENT'),
-      ).toBeTruthy();
     });
 
     // test('Correct credential structure', async () => {
