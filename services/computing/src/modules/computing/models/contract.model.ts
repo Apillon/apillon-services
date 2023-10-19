@@ -6,12 +6,12 @@ import {
   getQueryParams,
   PopulateFrom,
   presenceValidator,
-  ProjectAccessModel,
   prop,
   safeJsonParse,
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
+  UuidSqlModel,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
@@ -25,7 +25,7 @@ function jsonSerializer() {
   return (value: any) => (value ? JSON.stringify(value) : null);
 }
 
-export class Contract extends ProjectAccessModel {
+export class Contract extends UuidSqlModel {
   public readonly tableName = DbTables.CONTRACT;
 
   @prop({
@@ -307,10 +307,6 @@ export class Contract extends ProjectAccessModel {
   public constructor(data: any, context: Context) {
     super(data, context);
   }
-
-  /***************************************************
-   * Info properties
-   *****************************************************/
 
   public async getList(
     context: ServiceContext,

@@ -239,7 +239,7 @@ export class ComputingService {
     ) {
       throw new ComputingCodeException({
         status: 500,
-        code: ComputingErrorCode.CONTRACT_OWNER_ERROR,
+        code: ComputingErrorCode.CONTRACT_DOES_NOT_EXIST,
         context,
         sourceFunction,
       });
