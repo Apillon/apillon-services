@@ -66,7 +66,7 @@ Please read [Deployment](../../docs/deployment.md) documentation.
 
 The transmit substrate and evm transaction workers are single threded workers, that are executed either via an sqs message or run at an interval (check serverless.yml). They run the transmit transaction function inside evm / substrate.service and transmit all pending transaction in the database.
 
-The substrate-transaction-worker runs at an interval of 1 minute and fetches all transactions from the blockchain indexers, on a different repo. GraphQL nodes query-nodes are running on an EC2 machine (each per environmnt - dev, stage, production).
+The substrate-transaction-worker runs at an interval of 1 minute and fetches all transactions from the blockchain indexers, on a different repo. GraphQL nodes query-nodes are running on an EC2 machine (each per environmnt - dev, stage, production). The transactions are then update, depending on the state received from the indexer. Only SystemEvents types are necessary to match to the transaction hash.
 
 The substrate log worker runs exactly the same as the update worker, but updates wallet balances (these two should be merged..).
 
