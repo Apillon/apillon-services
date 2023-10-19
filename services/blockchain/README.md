@@ -62,17 +62,66 @@ Please read [Deployment](../../docs/deployment.md) documentation.
 **EVM**
 TODO
 
+**Wallet**
+TODO
+
+**Blockchain-indexers**
+Are divided into **substrate** and **evm**
+
+**Substrate** indexers contain base files at the root of the folder. All common functions should be added to these files.
+* **base-blockchain-indexer.ts** - is the abstract class, that implemenets the necessary functions of each substrate indexer such as **getAllTransactions**, **getAllSystemEvents**, **getBlockHeight**, **setGraphQlUrl** etc.
+* **base-queries.ts** - Implements the basic queries that are common for all the substrate indexers. Chain specific queries should be defined in chain-queries.ts file or the likes, and should extend base queries.
+
+```
+export class KiltGQLQueries extends BaseGQLQueries {
+  ...
+  static ACCOUNT_TRANSACTION_BY_HASH = `
+    query getAccountTransactionsByHash($address: String!, $extrinsicHash: String!) {
+      attestations(where: {account_eq: $address, extrinsicHash_eq: $extrinsicHash}) {
+        extrinsicHash
+      }
+      dids(where: {account_eq: $address, extrinsicHash_eq: $extrinsicHash}) {
+        extrinsicHash
+      }
+      transfers(where: {from_eq: $address, extrinsicHash_eq: $extrinsicHash}) {
+        extrinsicHash
+      }
+      systems(where: {account_eq: $address, extrinsicHash_eq: $extrinsicHash}) {
+        extrinsicHash
+      }
+    }
+  `;
+  ...
+}
+```
+
+* **base-transaction-model.ts** - Contains the BaseTransaction model, which must be extended in each respective model, such as 
+
+```
+export interface TransferTransaction extends BaseTransaction {
+  readonly from?: string;
+  readonly to?: string;
+  readonly amount?: bigint | undefined;
+}
+
+export interface DidTransaction extends BaseTransaction {
+  readonly didId?: string | undefined;
+  readonly account?: string | undefined;
+}
+```
+
+Example provided from Kilt.
+
+
+**evm** TODO
+
 ### Workers
-* substrate-transaction-worker
-* transmit-substrate-transaction-worker
-* transaction-log-worker
-* transmit-evm-transaction-worker
+* **substrate-transaction-worker** - The transmit substrate and evm transaction workers are single threded workers, that are executed either via an sqs message or run at an interval (check serverless.yml). They run the transmit transaction function inside evm / substrate.service and transmit all pending transaction in the database.
 
-The transmit substrate and evm transaction workers are single threded workers, that are executed either via an sqs message or run at an interval (check serverless.yml). They run the transmit transaction function inside evm / substrate.service and transmit all pending transaction in the database.
+* **transmit-substrate-transaction-worker** - The substrate-transaction-worker runs at an interval of 1 minute and fetches all transactions from the blockchain indexers, on a different repo. GraphQL nodes query-nodes are running on an EC2 machine (each per environmnt - dev, stage, production). The transactions are then updated, depending on the state received from the indexer. Only SystemEvents types are necessary to match to the transaction hash, since each extrinsic will always trigger either a SystemSuccess or SystemFailed event.
+* **transaction-log-worker** - The substrate log worker runs exactly the same as the update worker, but updates wallet balances (these two should be merged..).
+* **transmit-evm-transaction-worker** - TODO
 
-The substrate-transaction-worker runs at an interval of 1 minute and fetches all transactions from the blockchain indexers, on a different repo. GraphQL nodes query-nodes are running on an EC2 machine (each per environmnt - dev, stage, production). The transactions are then updated, depending on the state received from the indexer. Only SystemEvents types are necessary to match to the transaction hash, since each extrinsic will always trigger either a SystemSuccess or SystemFailed event.
-
-The substrate log worker runs exactly the same as the update worker, but updates wallet balances (these two should be merged..).
 
 ### worker-executor
 Takes care to execute correct workers based on event type - lambda event, or sqs message event.
@@ -92,3 +141,4 @@ It has two functions: createTransation and transmitTransaction
 ## License
 
 Copyright (c) Apillon - all rights reserved
+
