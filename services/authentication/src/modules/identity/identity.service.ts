@@ -10,6 +10,9 @@ import {
   writeLog,
   parseJwtToken,
   JwtTokenType,
+  SpendCreditDto,
+  ProductCode,
+  spendCreditAction,
 } from '@apillon/lib';
 import { Identity } from './models/identity.model';
 import {
@@ -21,6 +24,7 @@ import {
   DidCreateOp,
   Attester,
   KiltSignAlgorithm,
+  DbTables,
 } from '../../config/types';
 
 import { KiltKeyringPair } from '@kiltprotocol/types';
@@ -280,7 +284,21 @@ export class IdentityService {
 
     writeLog(LogType.INFO, 'Sending blockchain request..');
     // Call blockchain server and submit batch request
-    await sendBlockchainServiceRequest(context, bcsRequest);
+    const spendCredit = new SpendCreditDto(
+      {
+        project_uuid: identity.project_uuid,
+        product_id: ProductCode.KILT_IDENTITY,
+        referenceTable: DbTables.IDENTITY,
+        referenceId: identity.id,
+        location: 'IdentityService/generateIdentity',
+        service: ServiceName.AUTHENTICATION_API,
+      },
+      context,
+    );
+
+    await spendCreditAction(context, spendCredit, () =>
+      sendBlockchainServiceRequest(context, bcsRequest),
+    );
 
     return { success: true };
   }

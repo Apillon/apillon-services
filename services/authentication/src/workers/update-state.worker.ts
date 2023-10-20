@@ -10,6 +10,7 @@ import {
   TransactionStatus,
   env,
   generateJwtToken,
+  refundCredit,
   runWithWorkers,
 } from '@apillon/lib';
 import {
@@ -20,6 +21,7 @@ import {
 } from '@apillon/workers-lib';
 import {
   AuthApiEmailType,
+  DbTables,
   IdentityJobState,
   IdentityState,
 } from '../config/types';
@@ -198,6 +200,14 @@ export class UpdateStateWorker extends BaseQueueWorker {
                     identity: identity.id,
                   },
                 });
+
+                await refundCredit(
+                  this.context,
+                  DbTables.IDENTITY,
+                  identity.id?.toString(),
+                  'UpdateStateWorker.runExecutor',
+                  ServiceName.AUTHENTICATION_API,
+                );
               }
             }
             break;
