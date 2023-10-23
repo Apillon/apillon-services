@@ -229,6 +229,8 @@ export class Subscription extends ProjectAccessModel {
       `
         SELECT * FROM \`${DbTables.SUBSCRIPTION}\`
         WHERE stripeId = @stripeId
+        ORDER BY createTime DESC
+        LIMIT 1;
       `,
       { stripeId },
       conn,
