@@ -287,6 +287,7 @@ export interface IEnv {
   KILT_ATTESTER_MNEMONIC: string;
   KILT_DERIVATION_ALGORITHM: string;
   KILT_ATTESTERS_WHITELIST: string;
+  KILT_ORIGIN_DOMAIN: string;
 
   /************************************************************
    * Authentication config (Uses Kilt module)
@@ -666,6 +667,7 @@ export let env: IEnv = {
     'wss://peregrine.kilt.io/parachain-public-ws',
   KILT_ATTESTER_MNEMONIC: process.env['KILT_ATTESTER_MNEMONIC'] || '',
   KILT_ATTESTERS_WHITELIST: process.env['KILT_ATTESTERS_WHITELIST'] || '',
+  KILT_ORIGIN_DOMAIN: process.env['KILT_ORIGIN_DOMAIN'] || '',
   // TODO: Unused -> Left here because we might introduce it later as configurable algorithm
   // because it depends where you use this mnemonic
   KILT_DERIVATION_ALGORITHM:
