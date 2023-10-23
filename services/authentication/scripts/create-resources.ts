@@ -1,10 +1,8 @@
-import { env, Lmas, LogType, ServiceName } from '@apillon/lib';
 import {
   connect,
   ConfigService,
   KiltKeyringPair,
   Did,
-  DidUri,
   SignExtrinsicCallback,
   Claim,
   Utils,
@@ -20,28 +18,23 @@ import {
   APILLON_VERIFIABLECREDENTIAL_TYPE,
 } from '../src/config/types';
 import {
-  generateMnemonic,
   generateKeypairs,
   generateAccount,
   createCompleteFullDid,
   getCtypeSchema,
   createPresentation,
   assertionSigner,
-  getFullDidDocument,
-  toCredentialIRI,
 } from '../src/lib/kilt';
-import { sendBlockchainServiceRequest } from '../src/lib/utils/blockchain-utils';
-import { didRevokeRequestBc } from '../src/lib/utils/transaction-utils';
+import { env, getEnvSecrets } from '@apillon/lib';
 
 async function generateWellKnownDid() {
-  const network = 'wss://spiritnet.kilt.io/parachain-public-ws';
+  await getEnvSecrets();
+  const network = env.KILT_NETWORK;
   await connect(network);
   const api = ConfigService.get('api');
   // Which domain you want to attest
-  const origin = 'https://oauth-staging.apillon.io';
-  const mnemonic =
-    'steak sunset sorry marriage consider better call cradle fall hidden torch dice'; // generateMnemonic();
-  let wellKnownDidconfig;
+  const origin = env.KILT_ORIGIN_DOMAIN; // 'https://oauth.apillon.io';
+  const mnemonic = env.KILT_ATTESTER_MNEMONIC;
 
   const {
     authentication,
@@ -71,11 +64,9 @@ async function generateWellKnownDid() {
         .then((resp: any) => {
           console.log('Response ', resp.status);
         })
-        .catch((error: any) => {
-          return {
-            error: `Error when requesting token from peregrine faucet: ${error}`,
-          };
-        });
+        .catch((error: any) => ({
+          error: `Error when requesting token from peregrine faucet: ${error}`,
+        }));
     })();
 
     while (balance < 3) {
@@ -90,10 +81,10 @@ async function generateWellKnownDid() {
   await createCompleteFullDid(
     account,
     {
-      authentication: authentication,
-      keyAgreement: keyAgreement,
-      assertionMethod: assertionMethod,
-      capabilityDelegation: capabilityDelegation,
+      authentication,
+      keyAgreement,
+      assertionMethod,
+      capabilityDelegation,
     },
     (async ({ data }) => ({
       signature: authentication.sign(data),
@@ -146,7 +137,7 @@ async function generateWellKnownDid() {
 
   const credentialSubject = {
     id: didUri,
-    origin: origin,
+    origin,
     rootHash: domainLinkageCredential.rootHash,
   };
 
@@ -194,7 +185,7 @@ async function generateWellKnownDid() {
         },
       ],
     }),
-    mnemonic: mnemonic,
+    mnemonic,
     encryptionPubKey: u8aToHex(keyAgreement.publicKey),
   });
 }
