@@ -625,6 +625,7 @@ export class RoleGroup {
  * JWT Token signing types.
  */
 export enum JwtTokenType {
+  // For regular login
   USER_AUTHENTICATION = 'user-authentication',
   USER_RESET_PASSWORD = 'user-reset-password',
   USER_RESET_EMAIL = 'user-reset-email',
@@ -633,7 +634,9 @@ export enum JwtTokenType {
   IPFS_TOKEN = 'IPFS-token',
   SPORRAN_SESSION = 'sporran-session',
   IDENTITY_VERIFICATION = 'identity-verification',
+  // For initiating an auth session (OAuth window)
   AUTH_SESSION = 'auth-session',
+  // Sent after OAuth flow has been completed, contains user email
   OAUTH_TOKEN = 'oauth-token',
 }
 

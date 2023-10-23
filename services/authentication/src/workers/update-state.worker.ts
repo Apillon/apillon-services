@@ -279,6 +279,13 @@ export class UpdateStateWorker extends BaseQueueWorker {
                   },
                 });
                 // TODO: Notification logic
+                await refundCredit(
+                  this.context,
+                  DbTables.IDENTITY,
+                  identity.id?.toString(),
+                  'UpdateStateWorker.runExecutor',
+                  ServiceName.AUTHENTICATION_API,
+                );
               }
             }
 

@@ -1,5 +1,4 @@
-import { JwtTokenType, ValidateFor } from '@apillon/lib';
-import { VerifyCredentialDto } from './dtos/message/verify-credential.dto';
+import { JwtTokenType, ValidateFor, VerifyCredentialDto } from '@apillon/lib';
 import { Ctx, Validation } from '@apillon/modules-lib';
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { AuthenticationApiContext } from '../../context';

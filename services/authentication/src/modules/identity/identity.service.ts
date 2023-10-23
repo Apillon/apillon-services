@@ -139,6 +139,7 @@ export class IdentityService {
         await new Lmas().writeLog({
           context,
           logType: LogType.ERROR,
+          project_uuid: identity.project_uuid,
           message: `Error creating identity state for user with email ${email}'`,
           location: 'Authentication-API/identity/sendVerificationEmail',
           service: ServiceName.AUTHENTICATION_API,

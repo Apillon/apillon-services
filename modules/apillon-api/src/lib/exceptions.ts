@@ -10,7 +10,7 @@ import { ApiErrorCode } from '../config/types';
 export class ApiCodeException extends CodeException {
   constructor(options: ErrorOptions) {
     options = {
-      sourceModule: ServiceName.AUTHENTICATION_API,
+      sourceModule: ServiceName.APILLON_API,
       errorCodes: ApiErrorCode,
       errorMessage: options.errorMessage || ApiErrorCode[options.code],
       ...options,
