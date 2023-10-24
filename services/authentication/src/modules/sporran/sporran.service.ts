@@ -444,6 +444,6 @@ export class SporranService {
       '10min',
     );
 
-    return { verified: true, data: token };
+    return { verified: true, token };
   }
 }
