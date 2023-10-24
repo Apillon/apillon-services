@@ -11,6 +11,7 @@ import {
   ServiceName,
   UserWalletAuthDto,
   SqlModelStatus,
+  env,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AmsErrorCode } from '../../config/types';
@@ -25,6 +26,7 @@ import { AuthUser } from './auth-user.model';
 import { signatureVerify } from '@polkadot/util-crypto';
 import { TokenExpiresInStr } from '../../config/types';
 import { CryptoHash } from '../../lib/hash-with-crypto';
+import { ApiKeyService } from '../api-key/api-key.service';
 
 /**
  * AuthUserService class handles user authentication and related operations, such as registration, login, password reset, and email verification.
@@ -160,7 +162,20 @@ export class AuthUserService {
     // does not belong to us
     let tokenData;
     try {
-      tokenData = parseJwtToken(JwtTokenType.USER_AUTHENTICATION, event.token);
+      tokenData = parseJwtToken(JwtTokenType.OAUTH_TOKEN, event.token);
+      // This API key was used to generate an OAuth session token (JwtTokenType.AUTH_SESSION)
+      // So we need to check if the same project_uuid is used to call this method
+      // Without this check anybody with a valid OAuth token can call this method and log in to Apillon
+      const apiKey = await ApiKeyService.getApiKey(
+        {
+          apiKey: env.APILLON_API_SYSTEM_API_KEY,
+          apiKeySecret: env.APILLON_API_SYSTEM_API_SECRET,
+        },
+        context,
+      );
+      if (apiKey.project_uuid !== tokenData.project_uuid) {
+        throw new Error('Invalid OAuth token project_uuid');
+      }
     } catch (error) {
       throw await new AmsCodeException({
         status: 401,

@@ -64,7 +64,7 @@ export enum AmsErrorCode {
   WALLET_SIGNATURE_ALREADY_USED = 40002700,
 
   // 401 - Unauthorized (Not authenticated)
-  USER_IS_NOT_AUTHENTICATED = 40102100,
+  USER_IS_NOT_AUTHENTICATED = 401021000,
   AUTH_TOKEN_EXPIRED = 401021001,
 
   // 403 - Forbidden

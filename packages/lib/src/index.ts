@@ -55,10 +55,10 @@ export * from './lib/at-services/storage/dtos/files-query-filter.dto';
 
 //#REGION Authentication API
 export * from './lib/at-services/authentication/authentication';
+export * from './lib/at-services/authentication/dtos/base-identity.dto';
 export * from './lib/at-services/authentication/dtos/identity-create.dto';
 export * from './lib/at-services/authentication/dtos/attestation.dto';
 export * from './lib/at-services/authentication/dtos/identity-did-revoke.dto';
-export * from './lib/at-services/authentication/dtos/identity-email.dto';
 export * from './lib/at-services/authentication/dtos/identity-verification-email.dto';
 export * from './lib/at-services/authentication/dtos/verify-identity.dto';
 export * from './lib/at-services/authentication/dtos/identity-link-account-did.dto';
@@ -67,7 +67,6 @@ export * from './lib/at-services/authentication/dtos/sporran/message/request-cre
 export * from './lib/at-services/authentication/dtos/sporran/message/verify-credential.dto';
 export * from './lib/at-services/authentication/dtos/sporran/message/submit-attestation.dto';
 export * from './lib/at-services/authentication/dtos/sporran/message/submit-terms.dto';
-export * from './lib/at-services/authentication/dtos/verify-session.dto';
 
 //#REGION NTFS
 export * from './lib/at-services/nfts/nfts';

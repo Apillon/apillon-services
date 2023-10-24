@@ -1,24 +1,30 @@
-import { generateJwtToken, parseJwtToken } from '@apillon/lib';
-import { JwtTokenType } from '../../config/types';
+import { JwtTokenType, generateJwtToken, parseJwtToken } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
-import { VerifyLoginDto } from '@apillon/lib';
+import { ApiCodeException } from '../../lib/exceptions';
+import { ApiErrorCode } from '../../config/types';
 
 @Injectable()
 export class AuthService {
-  async generateSessionToken(_context: ApillonApiContext) {
-    const token = generateJwtToken(JwtTokenType.AUTH_SESSION, '10min');
-    return {
-      session: token,
-    };
+  async generateSessionToken(context: ApillonApiContext) {
+    const token = generateJwtToken(
+      JwtTokenType.AUTH_SESSION,
+      { project_uuid: context.apiKey.project_uuid },
+      '10min',
+    );
+
+    return { sessionToken: token };
   }
 
-  async verifyLogin(_context: ApillonApiContext, query: VerifyLoginDto) {
+  async verifyOauthLogin(_context: ApillonApiContext, token: string) {
     try {
-      parseJwtToken(JwtTokenType.USER_AUTHENTICATION, query.token);
+      const { email } = parseJwtToken(JwtTokenType.OAUTH_TOKEN, token);
+      return email;
     } catch (error) {
-      return { verified: false };
+      throw new ApiCodeException({
+        status: 401,
+        code: ApiErrorCode.INVALID_AUTH_TOKEN,
+      });
     }
-    return { verified: true };
   }
 }

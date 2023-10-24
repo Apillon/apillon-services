@@ -8,11 +8,15 @@ import {
   ServiceName,
   AttestationDto,
   writeLog,
+  parseJwtToken,
+  JwtTokenType,
+  SpendCreditDto,
+  ProductCode,
+  spendCreditAction,
 } from '@apillon/lib';
 import { Identity } from './models/identity.model';
 import {
   IdentityState,
-  JwtTokenType,
   AuthenticationErrorCode,
   AuthApiEmailType,
   ApillonSupportedCTypes,
@@ -20,6 +24,7 @@ import {
   DidCreateOp,
   Attester,
   KiltSignAlgorithm,
+  DbTables,
 } from '../../config/types';
 
 import { KiltKeyringPair } from '@kiltprotocol/types';
@@ -43,7 +48,10 @@ import {
   getCtypeSchema,
   getFullDidDocument,
 } from '../../lib/kilt';
-import { AuthenticationCodeException } from '../../lib/exceptions';
+import {
+  AuthenticationCodeException,
+  AuthenticationValidationException,
+} from '../../lib/exceptions';
 import { decryptAssymetric } from '../../lib/utils/crypto-utils';
 import { sendBlockchainServiceRequest } from '../../lib/utils/blockchain-utils';
 import {
@@ -52,15 +60,29 @@ import {
   identityCreateRequestBc,
   accDidLinkRequestBc,
 } from '../../lib/utils/transaction-utils';
+import { ServiceContext } from '@apillon/service-lib';
 
-export class IdentityMicroservice {
+export class IdentityService {
+  /**
+   * Sends an email with a newly generated token and creates a new identity entry
+   * @param {{ body: VerificationEmailDto }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<any>}
+   */
   static async sendVerificationEmail(
     event: { body: VerificationEmailDto },
-    context,
+    context: ServiceContext,
   ): Promise<any> {
     const email = event.body.email;
+
+    const { project_uuid } = parseJwtToken(
+      JwtTokenType.AUTH_SESSION,
+      event.body.token,
+    );
+
     const token = generateJwtToken(JwtTokenType.IDENTITY_VERIFICATION, {
       email,
+      project_uuid,
     });
     let auth_app_page = 'registration';
     const inProgressStates = IdentityState.getProcessInProgressStates();
@@ -96,9 +118,10 @@ export class IdentityMicroservice {
 
       // Lock email to identity object
       identity.populate({
-        email: email,
+        email,
         state: IdentityState.IN_PROGRESS,
-        token: token,
+        token,
+        project_uuid,
       });
 
       try {
@@ -111,8 +134,9 @@ export class IdentityMicroservice {
         }
       } catch (err) {
         await new Lmas().writeLog({
-          context: context,
+          context,
           logType: LogType.ERROR,
+          project_uuid: identity.project_uuid,
           message: `Error creating identity state for user with email ${email}'`,
           location: 'Authentication-API/identity/sendVerificationEmail',
           service: ServiceName.AUTHENTICATION_API,
@@ -246,17 +270,31 @@ export class IdentityMicroservice {
 
     try {
       await identity.validate();
-      await identity.update();
-    } catch (error) {
-      throw new AuthenticationCodeException({
-        code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
-        status: HttpStatus.BAD_REQUEST,
-      });
+    } catch (err) {
+      await identity.handle(err);
+      if (!identity.isValid()) {
+        throw new AuthenticationValidationException(identity);
+      }
     }
+    await identity.update();
 
     writeLog(LogType.INFO, 'Sending blockchain request..');
     // Call blockchain server and submit batch request
-    await sendBlockchainServiceRequest(context, bcsRequest);
+    const spendCredit = new SpendCreditDto(
+      {
+        project_uuid: identity.project_uuid,
+        product_id: ProductCode.KILT_IDENTITY,
+        referenceTable: DbTables.IDENTITY,
+        referenceId: identity.id,
+        location: 'IdentityService/generateIdentity',
+        service: ServiceName.AUTHENTICATION_API,
+      },
+      context,
+    );
+
+    await spendCreditAction(context, spendCredit, () =>
+      sendBlockchainServiceRequest(context, bcsRequest),
+    );
 
     return { success: true };
   }
@@ -336,13 +374,13 @@ export class IdentityMicroservice {
 
     try {
       await identity.validate();
-      await identity.update();
-    } catch (error) {
-      throw new AuthenticationCodeException({
-        code: AuthenticationErrorCode.IDENTITY_INVALID_REQUEST,
-        status: HttpStatus.BAD_REQUEST,
-      });
+    } catch (err) {
+      await identity.handle(err);
+      if (!identity.isValid()) {
+        throw new AuthenticationValidationException(identity);
+      }
     }
+    await identity.update();
 
     writeLog(LogType.INFO, 'Creating attestation TX ..');
     const attestationTx = await Did.authorizeTx(

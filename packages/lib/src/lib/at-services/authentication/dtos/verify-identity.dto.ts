@@ -16,4 +16,13 @@ export class VerificationIdentityDto extends ModelBase {
     ],
   })
   public presentation: string;
+
+  /**
+   * Sent as header, added to body in AuthGuard
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE],
+  })
+  public token: string;
 }
