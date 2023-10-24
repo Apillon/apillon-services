@@ -1,4 +1,4 @@
-import { JwtTokenType, ValidateFor, VerifyCredentialDto } from '@apillon/lib';
+import { JwtTokenType, VerifyCredentialDto } from '@apillon/lib';
 import { Ctx, Validation } from '@apillon/modules-lib';
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { AuthenticationApiContext } from '../../context';
@@ -24,7 +24,7 @@ export class SporranController {
   }
 
   @Post('verify-session')
-  @Validation({ dto: SporranSessionVerifyDto, validateFor: ValidateFor.QUERY })
+  @Validation({ dto: SporranSessionVerifyDto })
   @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.AUTH_SESSION))
   async sporranVerifySession(
     @Ctx() context: AuthenticationApiContext,
