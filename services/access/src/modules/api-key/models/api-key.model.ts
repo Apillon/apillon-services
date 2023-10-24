@@ -13,6 +13,7 @@ import {
   ProjectAccessModel,
   invalidateCacheKey,
   CacheKeyPrefix,
+  ApiKeyRoleDto,
 } from '@apillon/lib';
 import { DbTables, AmsErrorCode } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
@@ -189,6 +190,27 @@ export class ApiKey extends ProjectAccessModel {
       {
         apiKey_id: this.id,
         role_id: apiKeyRole.role_id,
+        service_uuid: apiKeyRole.service_uuid,
+        project_uuid: apiKeyRole.project_uuid,
+      },
+    );
+
+    return true;
+  }
+
+  public async removeRolesByService(
+    apiKeyRole: ApiKeyRoleDto,
+  ): Promise<boolean> {
+    await this.getContext().mysql.paramExecute(
+      `
+      DELETE
+      FROM \`${DbTables.API_KEY_ROLE}\`
+      WHERE apiKey_id = @apiKey_id
+      AND service_uuid = @service_uuid
+      AND project_uuid = @project_uuid;
+      `,
+      {
+        apiKey_id: this.id,
         service_uuid: apiKeyRole.service_uuid,
         project_uuid: apiKeyRole.project_uuid,
       },
