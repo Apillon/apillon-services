@@ -13,6 +13,8 @@ export enum DbTables {
   BLACKLIST = 'blacklist',
   IPFS_CLUSTER = 'ipfs_cluster',
   PROJECT_CONFIG = 'project_config',
+  IPFS_BANDWITH = 'ipfs_bandwith',
+  IPFS_BANDWITH_SYNC = 'ipfs_bandwith_sync',
 }
 
 export enum DbViews {
