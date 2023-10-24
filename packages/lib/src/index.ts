@@ -61,6 +61,7 @@ export * from './lib/at-services/authentication/dtos/identity-did-revoke.dto';
 export * from './lib/at-services/authentication/dtos/identity-email.dto';
 export * from './lib/at-services/authentication/dtos/identity-verification-email.dto';
 export * from './lib/at-services/authentication/dtos/verify-identity.dto';
+export * from './lib/at-services/authentication/dtos/identity-link-account-did.dto';
 export * from './lib/at-services/authentication/dtos/sporran/sporran-session.dto';
 export * from './lib/at-services/authentication/dtos/sporran/message/request-credential.dto';
 export * from './lib/at-services/authentication/dtos/sporran/message/verify-credential.dto';

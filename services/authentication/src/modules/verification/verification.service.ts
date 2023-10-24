@@ -5,7 +5,6 @@ import {
   Lmas,
   LogType,
   ServiceName,
-  writeLog,
 } from '@apillon/lib';
 import {
   Attestation,
@@ -27,8 +26,10 @@ export class VerificationMicroservice {
     let attestation: IAttestation;
 
     try {
+      // Offline the
       await Credential.verifyPresentation(presentation);
 
+      // Onchain
       attestation = Attestation.fromChain(
         await api.query.attestation.attestations(presentation.rootHash),
         presentation.rootHash,
@@ -62,6 +63,7 @@ export class VerificationMicroservice {
       '10min',
     );
 
+    // offline, but needs on chain data
     return attestation.revoked
       ? { verified: false, error: 'Credential was revoked!' }
       : { verified: true, data: token };

@@ -87,19 +87,6 @@ export enum KiltDerivationPaths {
   KEY_AGREEMENT = '//did//keyAgreement//0',
 }
 
-export enum IdentityState {
-  IN_PROGRESS = 'in-progress',
-  IDENTITY_VERIFIED = 'identity-verified',
-  PENDING_VERIFICATION = 'pending-verification',
-  SUBMITTED_DID_CREATE_REQ = 'submitted-did-create-req',
-  SUBMITTED_ATTESATION_REQ = 'submitted-attestation-req',
-  SUBMITTED_REVOKE_REQ = 'submitted-revoke-req',
-  DID_CREATED = 'did-created',
-  ATTESTED = 'attested',
-  REVOKED = 'revoked',
-  REJECTED = 'rejected',
-}
-
 export enum CredentialAttestStatus {
   PENDING = 'pending',
   ATTESTED = 'attested',
@@ -170,11 +157,6 @@ export enum SporranMessageType {
   REQUEST_CREDENTIAL = 'request-credential',
 }
 
-export enum IdentityGenFlag {
-  FULL_IDENTITY = 'full-identity-flag',
-  ATTESTATION = 'attestation-flag',
-}
-
 export interface EncryptedPayload {
   message: string;
   payload: string;
@@ -203,6 +185,46 @@ export enum IdentityJobState {
   // State 1: DID_CREATE -> State 2: ATESTATION
   DID_CREATE = 'did-create',
   ATESTATION = 'attestation',
+  ACC_DID_LINK = 'account-did-link',
   // State 1: DID_REVOKE
   DID_REVOKE = 'did-revoke',
+}
+
+export class IdentityState {
+  static IN_PROGRESS = 'in-progress';
+  static IDENTITY_VERIFIED = 'identity-verified';
+  static PENDING_VERIFICATION = 'pending-verification';
+  static SUBMITTED_DID_CREATE_REQ = 'submitted-did-create-req';
+  static SUBMITTED_ATTESATION_REQ = 'submitted-attestation-req';
+  static SUBMITTED_ACC_DID_LINK_REQ = 'submitted-acc-did-link-req';
+  static SUBMITTED_REVOKE_REQ = 'submitted-revoke-req';
+  static DID_CREATED = 'did-created';
+  static ATTESTED = 'attested';
+  static ATTESTED_AND_LINKED = 'attested-and-linked';
+  static REVOKED = 'revoked';
+  static REJECTED = 'rejected';
+
+  static getProcessInProgressStates() {
+    return [
+      IdentityState.SUBMITTED_ATTESATION_REQ,
+      IdentityState.SUBMITTED_DID_CREATE_REQ,
+      IdentityState.SUBMITTED_REVOKE_REQ,
+      IdentityState.SUBMITTED_ACC_DID_LINK_REQ,
+    ];
+  }
+
+  static getStartValidStates() {
+    return [IdentityState.IN_PROGRESS, IdentityState.IDENTITY_VERIFIED];
+  }
+
+  static getFinishedStates() {
+    // Could also be did created, if only attestation and did create service are
+    // supported. Currently we only support one flow - did and vc generation
+    // with an additional did acc link step
+    return [IdentityState.ATTESTED, IdentityState.ATTESTED_AND_LINKED];
+  }
+
+  static getAllowLinkStates() {
+    return [IdentityState.ATTESTED, IdentityState.DID_CREATED];
+  }
 }
