@@ -177,18 +177,19 @@ export class BucketWebhook extends AdvancedSQLModel {
     return true;
   }
 
-  public async populateByBucketId(bucket_id: number): Promise<this> {
-    if (!bucket_id) {
-      throw new Error('bucket_id should not be null');
+  public async populateByBucketUuid(bucket_uuid: string): Promise<this> {
+    if (!bucket_uuid) {
+      throw new Error('bucket_uuid should not be null');
     }
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT *
-      FROM \`${this.tableName}\`
-      WHERE bucket_id = @bucket_id AND status <> ${SqlModelStatus.DELETED};
+      SELECT bw.*
+      FROM \`${DbTables.BUCKET_WEBHOOK}\` bw
+      JOIN \`${DbTables.BUCKET}\` b on b.id = bw.bucket_id
+      WHERE b.bucket_uuid = @bucket_uuid AND bw.status <> ${SqlModelStatus.DELETED};
       `,
-      { bucket_id },
+      { bucket_uuid },
     );
 
     return data?.length

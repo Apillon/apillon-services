@@ -6,6 +6,7 @@ import {
   PoolConnection,
   SerializeFor,
   ServiceName,
+  SqlModelStatus,
   SubscriptionsQueryFilter,
   UpdateSubscriptionDto,
 } from '@apillon/lib';
@@ -53,11 +54,12 @@ export class SubscriptionService {
           sourceModule: ServiceName.CONFIG,
         }).writeToMonitor({
           context,
+          sendAdminAlert: true,
           data: { package_id: createSubscriptionDto.package_id },
         });
       }
 
-      let subscription = new Subscription(createSubscriptionDto, context);
+      const subscription = new Subscription(createSubscriptionDto, context);
 
       try {
         await subscription.validate();
@@ -75,33 +77,16 @@ export class SubscriptionService {
         }
       }
 
-      const previousSubscription = await new Subscription(
-        {},
-        context,
-      ).getProjectSubscription(
-        createSubscriptionDto.package_id,
-        createSubscriptionDto.project_uuid,
-        conn,
-      );
-      // Insert subscription here so it is not included in getProjectSubscription call
-      subscription = await subscription.insert(SerializeFor.INSERT_DB, conn);
-
-      // If this is the first time subscribing to this package for this project
-      // Give credits to the project based on the purchased package
-      if (!previousSubscription?.exists()) {
-        await CreditService.addCredit(
-          {
-            body: new AddCreditDto({
-              project_uuid: createSubscriptionDto.project_uuid,
-              amount: subscriptionPackage.creditAmount,
-              referenceTable: DbTables.SUBSCRIPTION,
-              referenceId: subscription.id,
-            }),
-          },
-          context,
-          conn,
-        );
-      }
+      await SubscriptionService.giveCreditsForSubscription(context, {
+        package_id: createSubscriptionDto.package_id,
+        project_uuid: createSubscriptionDto.project_uuid,
+        // Insert subscription here so referenceId can be filled in, but also pass previousSubscription check
+        subscriptionId: async () =>
+          (
+            await subscription.insert(SerializeFor.INSERT_DB, conn)
+          ).id,
+        creditAmount: subscriptionPackage.creditAmount,
+      });
 
       await new Lmas().writeLog({
         context,
@@ -234,8 +219,26 @@ export class SubscriptionService {
         });
       }
 
-      subscription.populate(updateSubscriptionDto);
+      const subscriptionPackage = await new SubscriptionPackage(
+        {},
+        context,
+      ).populateByStripeId(updateSubscriptionDto.stripePackageId, conn);
+      const package_id = subscriptionPackage?.id;
 
+      if (!package_id) {
+        throw await new ScsCodeException({
+          status: 404,
+          code: ConfigErrorCode.SUBSCRIPTION_PACKAGE_NOT_FOUND,
+          sourceFunction: 'updateSubscription',
+          sourceModule: ServiceName.CONFIG,
+        }).writeToMonitor({
+          context,
+          sendAdminAlert: true,
+          data: { stripePackageId: updateSubscriptionDto.stripePackageId },
+        });
+      }
+
+      subscription.populate(updateSubscriptionDto);
       try {
         await subscription.validate();
       } catch (err) {
@@ -251,7 +254,42 @@ export class SubscriptionService {
         }
       }
 
+      if (package_id !== subscription.package_id) {
+        const newSubscription = new Subscription(
+          subscription.serialize(SerializeFor.INSERT_DB),
+          context,
+        );
+        newSubscription.package_id = package_id;
+
+        subscription.status = SqlModelStatus.INACTIVE;
+
+        if (package_id > subscription.package_id) {
+          const previousPackage = await new SubscriptionPackage(
+            {},
+            context,
+          ).populateById(subscription.package_id);
+          // Subscription package upgraded, give additional credits from higher package
+          await SubscriptionService.giveCreditsForSubscription(
+            context,
+            {
+              package_id,
+              project_uuid: newSubscription.project_uuid,
+              subscriptionId: async () =>
+                (
+                  await newSubscription.insert(SerializeFor.INSERT_DB, conn)
+                ).id,
+              creditAmount:
+                subscriptionPackage.creditAmount - previousPackage.creditAmount,
+            },
+            conn,
+          );
+        } else {
+          await newSubscription.insert(SerializeFor.INSERT_DB, conn);
+        }
+      }
+
       await subscription.update(SerializeFor.UPDATE_DB, conn);
+
       await context.mysql.commit(conn);
 
       return subscription.serialize(SerializeFor.SERVICE) as Subscription;
@@ -303,7 +341,6 @@ export class SubscriptionService {
         context,
         conn,
       );
-
     if (new Subscription(activeSubscription, context).exists()) {
       throw await new ScsCodeException({
         code: ConfigErrorCode.ACTIVE_SUBSCRIPTION_EXISTS,
@@ -312,6 +349,42 @@ export class SubscriptionService {
         sourceFunction: 'getSubscriptionPackageStripeId',
         sourceModule: ServiceName.CONFIG,
       }).writeToMonitor({ project_uuid });
+    }
+  }
+
+  private static async giveCreditsForSubscription(
+    context: ServiceContext,
+    data: {
+      package_id: number;
+      project_uuid: string;
+      subscriptionId: () => Promise<number>;
+      creditAmount: number;
+    },
+    conn?: PoolConnection,
+  ) {
+    const previousSubscription = await new Subscription(
+      {},
+      context,
+    ).getProjectSubscription(data.package_id, data.project_uuid, conn);
+
+    // Resolve referenceId here so the subscription can be inserted after the object above is fetched from DB
+    const referenceId = await data.subscriptionId();
+
+    // If this is the first time subscribing to this package for this project
+    // Give credits to the project based on the purchased package
+    if (!previousSubscription?.exists()) {
+      await CreditService.addCredit(
+        {
+          body: new AddCreditDto({
+            project_uuid: data.project_uuid,
+            amount: data.creditAmount,
+            referenceTable: DbTables.SUBSCRIPTION,
+            referenceId,
+          }),
+        },
+        context,
+        conn,
+      );
     }
   }
 

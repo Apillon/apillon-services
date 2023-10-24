@@ -15,7 +15,7 @@ export async function sendTransferredFilesToBucketWebhook(
   const bucketWebhook: BucketWebhook = await new BucketWebhook(
     {},
     context,
-  ).populateByBucketId(bucket.id);
+  ).populateByBucketUuid(bucket.bucket_uuid);
 
   if (bucketWebhook.exists() && files.length > 0) {
     let config = {};

@@ -8,7 +8,7 @@ import {
 import { Stage, releaseStage, setupTest } from '../../../../test/setup';
 import { IdentityJobState, IdentityState } from '../../../config/types';
 import { Identity } from '../models/identity.model';
-import { UpdateStateWorker } from '../../../workers/update-state.worker';
+import { UpdateStateWorker } from '../../../workers/update-state/update-state.worker';
 import { IdentityJob } from '../../identity-job/models/identity-job.model';
 import { IdentityJobService } from '../../identity-job/identity-job.service';
 import { TransactionStatus } from '@apillon/lib';

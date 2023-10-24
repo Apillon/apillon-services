@@ -11,7 +11,7 @@ import {
 import { TestWorker } from './test-worker';
 import { Scheduler } from './scheduler';
 import { ServiceContext } from '@apillon/service-lib';
-import { UpdateStateWorker } from './update-state.worker';
+import { UpdateStateWorker } from './update-state/update-state.worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);

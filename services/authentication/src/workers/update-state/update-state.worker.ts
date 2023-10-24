@@ -1,16 +1,10 @@
 import {
-  AppEnvironment,
-  AttestationDto,
-  IdentityCreateDto,
-  IdentityDidRevokeDto,
-  JwtTokenType,
   LogType,
   Mailing,
   ServiceName,
   TransactionStatus,
   env,
   generateJwtToken,
-  refundCredit,
   runWithWorkers,
 } from '@apillon/lib';
 import {
@@ -21,13 +15,19 @@ import {
 } from '@apillon/workers-lib';
 import {
   AuthApiEmailType,
-  DbTables,
   IdentityJobState,
   IdentityState,
-} from '../config/types';
-import { Identity } from '../modules/identity/models/identity.model';
-import { IdentityService } from '../modules/identity/identity.service';
-import { IdentityJob } from '../modules/identity-job/models/identity-job.model';
+} from '../../config/types';
+import { Identity } from '../../modules/identity/models/identity.model';
+import { IdentityJob } from '../../modules/identity-job/models/identity-job.model';
+import * as procedures from './procedures';
+import { JwtTokenType } from '@apillon/lib';
+
+// TODO: Consider managing by transaction status and not by identity job state
+// The diagram shoul be as follows: check if success and trigger correct operation. That's it.
+// TODO2: Ideally we would have a configuration
+// where we specify each flow and handle that based on the config, current state and the
+// received transaction status.
 
 export class UpdateStateWorker extends BaseQueueWorker {
   public constructor(
@@ -41,54 +41,6 @@ export class UpdateStateWorker extends BaseQueueWorker {
 
   public async runPlanner(): Promise<any[]> {
     return [];
-  }
-
-  private async execAttestClaim(identity: Identity, linkParameters: object) {
-    const attestationClaimDto = new AttestationDto().populate({
-      email: identity.email,
-      didUri: identity.didUri,
-      token: identity.token,
-      linkParameters: linkParameters,
-    });
-
-    if (env.APP_ENV != AppEnvironment.TEST) {
-      await IdentityService.attestClaim(
-        { body: attestationClaimDto },
-        this.context,
-      );
-    }
-  }
-
-  private async execIdentityGenerate(email: string, did_create_op: any) {
-    const identityCreateDto = new IdentityCreateDto().populate({
-      email: email,
-      did_create_op: did_create_op,
-    });
-
-    if (env.APP_ENV != AppEnvironment.TEST) {
-      await IdentityService.generateIdentity(
-        { body: identityCreateDto },
-        this.context,
-      );
-    }
-  }
-
-  private async execIdentityRevoke(params: any) {
-    const identityRevokeDto = new IdentityDidRevokeDto().populate({
-      email: params.email,
-      token: params.token,
-    });
-    await IdentityService.revokeIdentity(
-      { body: identityRevokeDto },
-      this.context,
-    );
-
-    if (env.APP_ENV != AppEnvironment.TEST) {
-      await IdentityService.revokeIdentity(
-        { body: identityRevokeDto },
-        this.context,
-      );
-    }
   }
 
   public async runExecutor(input: any): Promise<any> {
@@ -114,7 +66,6 @@ export class UpdateStateWorker extends BaseQueueWorker {
           ctx,
         ).populateById(incomingTx.referenceId);
 
-        // TODO: Logging should be better. Transaction hash?????
         if (!identityJob.exists()) {
           await this.writeEventLog({
             logType: LogType.ERROR,
@@ -161,7 +112,8 @@ export class UpdateStateWorker extends BaseQueueWorker {
                 identity.state = IdentityState.DID_CREATED;
                 await identity.update();
                 await identityJob.setState(IdentityJobState.ATESTATION);
-                await this.execAttestClaim(
+                await procedures.attestClaim(
+                  this.context,
                   identity,
                   identityJob.data.linkParameters,
                 );
@@ -181,7 +133,8 @@ export class UpdateStateWorker extends BaseQueueWorker {
                   },
                 });
 
-                await this.execIdentityGenerate(
+                await procedures.identityGenerate(
+                  this.context,
                   email,
                   identityJob.data.did_create_op,
                 );
@@ -200,14 +153,6 @@ export class UpdateStateWorker extends BaseQueueWorker {
                     identity: identity.id,
                   },
                 });
-
-                await refundCredit(
-                  this.context,
-                  DbTables.IDENTITY,
-                  identity.id?.toString(),
-                  'UpdateStateWorker.runExecutor',
-                  ServiceName.AUTHENTICATION_API,
-                );
               }
             }
             break;
@@ -222,6 +167,11 @@ export class UpdateStateWorker extends BaseQueueWorker {
                   did: identity.didUri,
                 },
               });
+
+              // Update identity
+              identity.state = IdentityState.ATTESTED;
+              await identity.update();
+
               if (await identityJob.isFinalState()) {
                 await this.writeEventLog(
                   {
@@ -248,9 +198,11 @@ export class UpdateStateWorker extends BaseQueueWorker {
                     actionUrl: `${env.AUTH_APP_URL}/restore/?token=${token}&email=${email}&type=${AuthApiEmailType.DOWNLOAD_IDENTITY}`,
                   },
                 });
+              } else if (
+                identityJob.finalState == IdentityJobState.ACC_DID_LINK
+              ) {
+                await procedures.linkAccToDid(this.context, identityJob.data);
               }
-              identity.state = IdentityState.ATTESTED;
-              await identity.update();
             } else if (status == TransactionStatus.FAILED) {
               await identityJob.setFailed();
 
@@ -264,10 +216,6 @@ export class UpdateStateWorker extends BaseQueueWorker {
                     identity: identity.id,
                   },
                 });
-                await this.execAttestClaim(
-                  identity,
-                  identityJob.data.linkParameters,
-                );
               } else {
                 await this.writeEventLog({
                   logType: LogType.ERROR,
@@ -279,17 +227,51 @@ export class UpdateStateWorker extends BaseQueueWorker {
                   },
                 });
                 // TODO: Notification logic
-                await refundCredit(
-                  this.context,
-                  DbTables.IDENTITY,
-                  identity.id?.toString(),
-                  'UpdateStateWorker.runExecutor',
-                  ServiceName.AUTHENTICATION_API,
-                );
               }
             }
 
             break;
+
+          case IdentityJobState.ACC_DID_LINK:
+            if (status == TransactionStatus.CONFIRMED) {
+              await this.writeEventLog({
+                logType: LogType.INFO,
+                message: `Successfully linked ACCOUNT to DID`,
+                service: ServiceName.AUTHENTICATION_API,
+                data: {
+                  identity: identity.id,
+                  did: identity.didUri,
+                },
+              });
+
+              identity.state = IdentityState.ATTESTED_AND_LINKED;
+              await identityJob.setCompleted();
+              await identity.update();
+            } else {
+              if (await identityJob.identityJobRetry()) {
+                await this.writeEventLog({
+                  logType: LogType.ERROR,
+                  message: `ACC link to DID for ${result.transactionHash} step FAILED. Retrying transaction`,
+                  service: ServiceName.AUTHENTICATION_API,
+                  data: {
+                    identityJob: identityJob.id,
+                    identity: identity.id,
+                  },
+                });
+                await procedures.linkAccToDid(this.context, identityJob.data);
+              } else {
+                await this.writeEventLog({
+                  logType: LogType.ERROR,
+                  message: `ACC link to DID for ${result.transactionHash} step FAILED. Retry exceeded: STOPPING`,
+                  service: ServiceName.AUTHENTICATION_API,
+                  data: {
+                    identityJob: identityJob.id,
+                    identity: identity.id,
+                  },
+                });
+                // TODO: Notification logic
+              }
+            }
           case IdentityJobState.DID_REVOKE:
             if (status == TransactionStatus.CONFIRMED) {
               await this.writeEventLog({
@@ -316,7 +298,7 @@ export class UpdateStateWorker extends BaseQueueWorker {
                     identity: identity.id,
                   },
                 });
-                await this.execIdentityRevoke(identity);
+                await procedures.identityRevoke(identity);
               } else {
                 await this.writeEventLog({
                   logType: LogType.ERROR,

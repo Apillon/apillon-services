@@ -24,8 +24,8 @@ export class BucketService {
     return (await new StorageMicroservice(context).listBuckets(query)).data;
   }
 
-  async getBucket(context: DevConsoleApiContext, id: number | string) {
-    return (await new StorageMicroservice(context).getBucket(id)).data;
+  async getBucket(context: DevConsoleApiContext, bucket_uuid: string) {
+    return (await new StorageMicroservice(context).getBucket(bucket_uuid)).data;
   }
 
   async isMaxBucketQuotaReached(
@@ -74,10 +74,14 @@ export class BucketService {
     return (await new StorageMicroservice(context).createBucket(body)).data;
   }
 
-  async updateBucket(context: DevConsoleApiContext, id: number, body: any) {
+  async updateBucket(
+    context: DevConsoleApiContext,
+    bucket_uuid: string,
+    body: any,
+  ) {
     return (
       await new StorageMicroservice(context).updateBucket({
-        id: id,
+        bucket_uuid,
         data: body,
       })
     ).data;
@@ -102,28 +106,28 @@ export class BucketService {
 
   //#region bucket webhook
 
-  async getBucketWebhook(context: DevConsoleApiContext, bucket_id: number) {
-    return (await new StorageMicroservice(context).getBucketWebhook(bucket_id))
-      .data;
+  async getBucketWebhook(context: DevConsoleApiContext, bucket_uuid: string) {
+    return (
+      await new StorageMicroservice(context).getBucketWebhook(bucket_uuid)
+    ).data;
   }
 
   async createBucketWebhook(
     context: DevConsoleApiContext,
-    bucket_id: number,
+    bucket_uuid: string,
     body: CreateBucketWebhookDto,
   ) {
-    body.populate({ bucket_id: bucket_id });
+    body.populate({ bucket_uuid });
     return (await new StorageMicroservice(context).createBucketWebhook(body))
       .data;
   }
 
   async updateBucketWebhook(
     context: DevConsoleApiContext,
-    bucket_id: number,
+    bucket_uuid: string,
     id: number,
     body: any,
   ) {
-    body.bucket_id = bucket_id;
     return (
       await new StorageMicroservice(context).updateBucketWebhook({
         id: id,

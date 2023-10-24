@@ -69,6 +69,7 @@ export class StripeService {
       success_url: paymentSessionDto.returnUrl,
       cancel_url: paymentSessionDto.returnUrl,
       automatic_tax: { enabled: true },
+      allow_promotion_codes: true,
     });
   }
 

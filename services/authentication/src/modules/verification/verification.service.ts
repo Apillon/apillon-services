@@ -1,3 +1,4 @@
+import { VerificationIdentityDto } from '@apillon/lib';
 import {
   env,
   generateJwtToken,
@@ -6,7 +7,6 @@ import {
   LogType,
   parseJwtToken,
   ServiceName,
-  VerificationIdentityDto,
 } from '@apillon/lib';
 import {
   Attestation,
@@ -31,8 +31,10 @@ export class VerificationService {
     let attestation: IAttestation;
 
     try {
+      // Offline the
       await Credential.verifyPresentation(presentation);
 
+      // Onchain
       attestation = Attestation.fromChain(
         await api.query.attestation.attestations(presentation.rootHash),
         presentation.rootHash,

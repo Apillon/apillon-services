@@ -53,6 +53,7 @@ export async function createTestBucketDirectory(
   status = SqlModelStatus.ACTIVE,
 ): Promise<Directory> {
   const directory: Directory = new Directory({}, storageCtx).fake().populate({
+    directory_uuid: uuidV4(),
     project_uuid: project.project_uuid,
     parentDirectory_id: parentDirectoryId,
     bucket_id: bucket.id,
