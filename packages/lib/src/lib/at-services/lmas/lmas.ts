@@ -147,4 +147,22 @@ export class Lmas extends BaseService {
       { isAsync: false },
     );
   }
+
+  public async getIpfsTraffic(dateFrom: Date): Promise<{
+    data: {
+      _id: {
+        host?: string;
+        project_uuid?: string;
+        month: number;
+        year: number;
+      };
+      respBytes: number;
+    }[];
+  }> {
+    this.defaultQueueUrl = null;
+    return await this.callService(
+      { eventName: LmasEventType.GET_IPFS_TRAFFIC, dateFrom },
+      { isAsync: false },
+    );
+  }
 }

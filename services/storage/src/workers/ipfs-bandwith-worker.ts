@@ -2,21 +2,12 @@ import {
   AppEnvironment,
   Context,
   env,
-  LogType,
+  Lmas,
   runWithWorkers,
-  ServiceName,
 } from '@apillon/lib';
-import {
-  BaseWorker,
-  Job,
-  LogOutput,
-  WorkerDefinition,
-} from '@apillon/workers-lib';
-import { CID } from 'ipfs-http-client';
-import { CrustPinningStatus, DbTables } from '../config/types';
-import { CrustService } from '../modules/crust/crust.service';
-import { PinToCrustRequest } from '../modules/crust/models/pin-to-crust-request.model';
-import { Bucket } from '../modules/bucket/models/bucket.model';
+import { BaseWorker, Job, WorkerDefinition } from '@apillon/workers-lib';
+import { DbTables } from '../config/types';
+import { IpfsBandwith } from '../modules/ipfs/models/ipfs-bandwith';
 
 export class IpfsBandwithWorker extends BaseWorker {
   protected context: Context;
@@ -52,6 +43,51 @@ export class IpfsBandwithWorker extends BaseWorker {
     if (tmpQueryData.length && tmpQueryData[0].ipfsTrafficTo) {
       ipfsTrafficFrom = tmpQueryData[0].ipfsTrafficTo;
     }
+
+    //Call monitoring service to get ipfs traffic data
+    const ipfsTraffic = await new Lmas().getIpfsTraffic(ipfsTrafficFrom);
+
+    //For each project increase or insert used bandwith record
+    await runWithWorkers(
+      ipfsTraffic.data.filter((x) => x._id.project_uuid),
+      env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+        env.APP_ENV == AppEnvironment.TEST
+        ? 1
+        : 5,
+      this.context,
+      async (data: {
+        _id: {
+          project_uuid?: string;
+          month: number;
+          year: number;
+        };
+        respBytes: number;
+      }) => {
+        let ipfsBandwith: IpfsBandwith = await new IpfsBandwith(
+          {},
+          this.context,
+        ).populateByProjectAndDate(
+          data._id.project_uuid,
+          data._id.month,
+          data._id.year,
+        );
+
+        if (ipfsBandwith.exists()) {
+          ipfsBandwith.bandwith += data.respBytes;
+          await ipfsBandwith.update();
+        } else {
+          ipfsBandwith = new IpfsBandwith(
+            {
+              ...data._id,
+              bandwith: data.respBytes,
+            },
+            this.context,
+          );
+
+          await ipfsBandwith.insert();
+        }
+      },
+    );
 
     return true;
   }
