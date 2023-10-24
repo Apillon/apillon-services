@@ -22,6 +22,7 @@ import {
 describe('VERFICATION', () => {
   let stage: Stage;
   let identityToken: string;
+  let authSessionToken: string;
   let testEmail: string;
 
   beforeAll(async () => {
@@ -44,6 +45,14 @@ describe('VERFICATION', () => {
         email: testEmail,
       },
       '1d',
+    );
+
+    authSessionToken = generateJwtToken(
+      JwtTokenType.AUTH_SESSION,
+      {
+        email: testEmail,
+      },
+      '10m',
     );
   });
 
@@ -109,9 +118,12 @@ describe('VERFICATION', () => {
           } as SignResponseData),
       );
 
-      const resp = await request(stage.http).post('/verification/verify').send({
-        presentation,
-      });
+      const resp = await request(stage.http)
+        .post('/verification/verify')
+        .set('Authorization', `Bearer ${authSessionToken}`)
+        .send({
+          presentation,
+        });
       expect(resp.status).toBe(201);
       const response = resp.body.data;
       expect(response.verified).toBeFalsy();
@@ -145,9 +157,10 @@ describe('VERFICATION', () => {
           } as SignResponseData),
       );
 
-      const resp = await request(stage.http).post('/verification/verify').send({
-        presentation: presentationInvalid,
-      });
+      const resp = await request(stage.http)
+        .post('/verification/verify')
+        .set('Authorization', `Bearer ${authSessionToken}`)
+        .send({ presentation: presentationInvalid });
       expect(resp.status).toBe(201);
       const response = resp.body.data;
       expect(response.verified).toBeFalsy();

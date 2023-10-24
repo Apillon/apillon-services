@@ -12,7 +12,7 @@ export class VerificationController {
 
   @Post('verify')
   @Validation({ dto: VerificationIdentityDto })
-  @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.AUTH_SESSION))
+  @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.AUTH_SESSION, false))
   async verifyIdentity(
     @Ctx() context: AuthenticationApiContext,
     @Body() body: VerificationIdentityDto,

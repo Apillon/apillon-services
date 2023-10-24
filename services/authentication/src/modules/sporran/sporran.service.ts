@@ -78,13 +78,13 @@ export class SporranService {
 
     const challenge = randomUUID();
     const token = generateJwtToken(JwtTokenType.SPORRAN_SESSION, {
-      challenge: challenge,
+      challenge,
     });
 
     return {
       dAppName: APILLON_DAPP_NAME,
-      dAppEncryptionKeyUri: dAppEncryptionKeyUri,
-      challenge: challenge,
+      dAppEncryptionKeyUri,
+      challenge,
       sessionId: token,
     };
   }
@@ -130,7 +130,7 @@ export class SporranService {
       decryptedChallenge = Utils.Crypto.decryptAsymmetricAsStr(
         {
           box: encryptedChallenge,
-          nonce: nonce,
+          nonce,
         },
         encryptionKey.publicKey,
         keyAgreement.secretKey,
@@ -410,10 +410,10 @@ export class SporranService {
     const whitelist = env.KILT_ATTESTERS_WHITELIST.split(';');
     if (!whitelist.includes(attestation.owner.split('did:kilt:')[1])) {
       await new Lmas().writeLog({
-        context: context,
+        context,
         logType: LogType.INFO,
         message: 'VERIFICATION FAILED: Unknown attester',
-        location: 'AUTHENTICATION-API/verification/verifyIdentity',
+        location: 'AUTHENTICATION/sporran/verifyCredential',
         service: ServiceName.AUTHENTICATION_API,
       });
 

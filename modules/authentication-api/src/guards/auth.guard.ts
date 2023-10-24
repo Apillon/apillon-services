@@ -14,7 +14,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { AuthenticationErrorCode } from '../config/types';
 
-export const AuthGuard = (tokenType: string) => {
+export const AuthGuard = (tokenType: string, verifyEmail = true) => {
   @Injectable()
   class AuthGuardMixin implements CanActivate {
     constructor(public reflector: Reflector) {}
@@ -42,7 +42,7 @@ export const AuthGuard = (tokenType: string) => {
         });
       }
 
-      if (tokenData.email && tokenData.email !== data?.email) {
+      if (tokenData.email && verifyEmail && tokenData.email !== data?.email) {
         throw new CodeException({
           status: HttpStatus.BAD_REQUEST,
           code: AuthenticationErrorCode.IDENTITY_INVALID_TOKEN_DATA,
