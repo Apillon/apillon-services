@@ -168,8 +168,8 @@ export class AuthUserService {
       // Without this check anybody with a valid OAuth token can call this method and log in to Apillon
       const apiKey = await ApiKeyService.getApiKey(
         {
-          apiKey: env.APILLON_API_SYSTEM_API_KEY,
-          apiKeySecret: env.APILLON_API_SYSTEM_API_SECRET,
+          apiKey: env.APILLON_API_INTEGRATION_API_KEY,
+          apiKeySecret: env.APILLON_API_INTEGRATION_API_SECRET,
         },
         context,
       );
