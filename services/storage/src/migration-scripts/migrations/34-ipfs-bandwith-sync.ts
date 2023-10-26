@@ -9,6 +9,7 @@ export async function upgrade(
   \`status\` INT NULL,
   \`ipfsTrafficFrom\` DATETIME NOT NULL,
   \`ipfsTrafficTo\` DATETIME NOT NULL,
+  \`message\` TEXT NULL,
   \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
   \`createUser\` INT NULL,
   \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

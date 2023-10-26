@@ -59,13 +59,25 @@ export class IpfsBandwith extends AdvancedSQLModel {
   })
   public bandwith: number;
 
+  /**
+   * Populates used ipfs bandwith for project
+   * @param project_uuid
+   * @param month If not specified, current month is used
+   * @param year
+   * @returns
+   */
   public async populateByProjectAndDate(
     project_uuid: string,
-    month: number,
-    year: number,
+    month?: number,
+    year?: number,
   ): Promise<this> {
-    if (!project_uuid || !month || !year) {
-      throw new Error('ID should not be null');
+    if (!project_uuid) {
+      throw new Error('project_uuid should not be null');
+    }
+    if (!month || !year) {
+      const currDate = new Date();
+      month = currDate.getMonth() + 1;
+      year = currDate.getFullYear();
     }
     this.reset();
 

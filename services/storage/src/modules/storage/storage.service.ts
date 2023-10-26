@@ -47,6 +47,7 @@ import { Website } from '../hosting/models/website.model';
 import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
+import { IpfsBandwith } from '../ipfs/models/ipfs-bandwith';
 
 export class StorageService {
   /**
@@ -58,7 +59,13 @@ export class StorageService {
   static async getStorageInfo(
     event: { project_uuid: string },
     context: ServiceContext,
-  ): Promise<{ availableStorage: number; usedStorage: number }> {
+  ): Promise<{
+    availableStorage: number;
+    usedStorage: number;
+    availableBandwith: number;
+    usedBandwith: number;
+  }> {
+    //Storage space
     const maxStorageQuota = await new Scs(context).getQuota({
       quota_id: QuotaCode.MAX_STORAGE,
       project_uuid: event.project_uuid,
@@ -68,9 +75,23 @@ export class StorageService {
     const bucket = new Bucket({ project_uuid: event.project_uuid }, context);
     const usedStorage = await bucket.getTotalSizeUsedByProject();
 
+    //Bandwith
+    const bandwithQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_BANDWIDTH,
+      project_uuid: event.project_uuid,
+    });
+    const availableBandwith = (bandwithQuota?.value || 20) * 1073741824;
+
+    const usedBandwith = await new IpfsBandwith(
+      {},
+      context,
+    ).populateByProjectAndDate(event.project_uuid);
+
     return {
       availableStorage,
       usedStorage,
+      availableBandwith,
+      usedBandwith: usedBandwith.exists() ? usedBandwith.bandwith : 0,
     };
   }
 

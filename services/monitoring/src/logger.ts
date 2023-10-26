@@ -151,7 +151,7 @@ export class Logger {
   }
 
   static async getIpfsTrafficLog(
-    event: { dateFrom: Date },
+    event: { dateFrom: Date; dateTo: Date },
     context: ServiceContext,
   ) {
     const projectIpfsTrafficLogs = await context.mongo.db
@@ -159,14 +159,17 @@ export class Logger {
       .aggregate([
         {
           $match: {
-            ts: { $gte: new Date(event.dateFrom) },
+            ts: { $gt: new Date(event.dateFrom), $lte: new Date(event.dateTo) },
             project_uuid: { $exists: true, $nin: [null, ''] },
           },
         },
         {
           $group: {
-            _id: '$project_uuid',
-            project_uuid: { $first: '$project_uuid' },
+            _id: {
+              project_uuid: '$project_uuid',
+              month: { $month: '$ts' },
+              year: { $year: '$ts' },
+            },
             respBytes: { $sum: '$respBytes' },
           },
         },
@@ -178,14 +181,20 @@ export class Logger {
       .aggregate([
         {
           $match: {
-            ts: { $gte: new Date(event.dateFrom) },
+            ts: {
+              $gte: new Date(event.dateFrom),
+              $lte: new Date(event.dateTo),
+            },
             project_uuid: { $exists: true, $in: [null, ''] },
           },
         },
         {
           $group: {
-            _id: '$host',
-            host: { $first: '$host' },
+            _id: {
+              host: '$host',
+              month: { $month: '$ts' },
+              year: { $year: '$ts' },
+            },
             respBytes: { $sum: '$respBytes' },
           },
         },
