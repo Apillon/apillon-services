@@ -1,12 +1,13 @@
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
+  DefaultApiKeyRole,
   PopulateFrom,
   SerializeFor,
   ValidatorErrorCode,
 } from '../../../../config/types';
 import { ModelBase, prop } from '../../../base-models/base';
-import { apiKeyRolesValidator } from '../validators/api-key-role.validator';
+import { enumInclusionValidator } from '../../../validators';
 
 /**
  * DTO class with basic properties to assign role to ApiKey
@@ -23,12 +24,12 @@ export class ApiKeyRoleBaseDto extends ModelBase {
         code: ValidatorErrorCode.API_KEY_ROLE_ROLE_ID_NOT_PRESENT,
       },
       {
-        resolver: apiKeyRolesValidator(),
+        resolver: enumInclusionValidator(DefaultApiKeyRole),
         code: ValidatorErrorCode.API_KEY_ROLE_ROLE_ID_NOT_VALID,
       },
     ],
   })
-  public role_id: number;
+  public role_id: DefaultApiKeyRole;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -60,7 +61,6 @@ export class ApiKeyRoleBaseDto extends ModelBase {
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [],
   })
   public serviceType_id: number;
 }

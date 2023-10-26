@@ -224,6 +224,7 @@ export class NftsService {
       collectionName: collection.name,
       imagesSession: collection.imagesSession,
       metadataSession: collection.metadataSession,
+      useApillonIpfsGateway: body.useApillonIpfsGateway,
     });
 
     return collection.serialize(getSerializationStrategy(context));
