@@ -8,8 +8,8 @@ import {
 import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { DbTables } from '../../../config/types';
 
-export class IpfsBandwithSync extends AdvancedSQLModel {
-  public readonly tableName = DbTables.IPFS_BANDWITH_SYNC;
+export class IpfsBandwidthSync extends AdvancedSQLModel {
+  public readonly tableName = DbTables.IPFS_BANDWIDTH_SYNC;
 
   public constructor(data: any, context: Context) {
     super(data, context);

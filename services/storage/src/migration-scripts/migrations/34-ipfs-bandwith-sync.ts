@@ -4,7 +4,7 @@ export async function upgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    CREATE TABLE IF NOT EXISTS \`${DbTables.IPFS_BANDWITH_SYNC}\` (
+    CREATE TABLE IF NOT EXISTS \`${DbTables.IPFS_BANDWIDTH_SYNC}\` (
   \`id\` INT NOT NULL AUTO_INCREMENT,
   \`status\` INT NULL,
   \`ipfsTrafficFrom\` DATETIME NOT NULL,
@@ -22,6 +22,6 @@ export async function downgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    DROP TABLE IF EXISTS \`${DbTables.IPFS_BANDWITH_SYNC}\`;
+    DROP TABLE IF EXISTS \`${DbTables.IPFS_BANDWIDTH_SYNC}\`;
   `);
 }

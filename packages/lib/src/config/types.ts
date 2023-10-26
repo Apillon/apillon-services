@@ -135,6 +135,7 @@ export enum StorageEventType {
   PROJECT_STORAGE_DETAILS = 'project-storage-details',
   STORAGE_INFO = 'get-storage-info',
   GET_BLACKLIST = 'get-blacklist',
+  PROJECTS_OVER_BANDWIDTH_QUOTA = 'projects-over-bandwidth-quota',
 }
 
 export enum AuthenticationEventType {

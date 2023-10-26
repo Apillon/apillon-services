@@ -47,7 +47,7 @@ import { Website } from '../hosting/models/website.model';
 import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
-import { IpfsBandwith } from '../ipfs/models/ipfs-bandwith';
+import { IpfsBandwidth } from '../ipfs/models/ipfs-bandwidth';
 
 export class StorageService {
   /**
@@ -62,8 +62,8 @@ export class StorageService {
   ): Promise<{
     availableStorage: number;
     usedStorage: number;
-    availableBandwith: number;
-    usedBandwith: number;
+    availableBandwidth: number;
+    usedBandwidth: number;
   }> {
     //Storage space
     const maxStorageQuota = await new Scs(context).getQuota({
@@ -75,14 +75,14 @@ export class StorageService {
     const bucket = new Bucket({ project_uuid: event.project_uuid }, context);
     const usedStorage = await bucket.getTotalSizeUsedByProject();
 
-    //Bandwith
-    const bandwithQuota = await new Scs(context).getQuota({
+    //Bandwidth
+    const bandwidthQuota = await new Scs(context).getQuota({
       quota_id: QuotaCode.MAX_BANDWIDTH,
       project_uuid: event.project_uuid,
     });
-    const availableBandwith = (bandwithQuota?.value || 20) * 1073741824;
+    const availableBandwidth = (bandwidthQuota?.value || 20) * 1073741824;
 
-    const usedBandwith = await new IpfsBandwith(
+    const usedBandwidth = await new IpfsBandwidth(
       {},
       context,
     ).populateByProjectAndDate(event.project_uuid);
@@ -90,9 +90,16 @@ export class StorageService {
     return {
       availableStorage,
       usedStorage,
-      availableBandwith,
-      usedBandwith: usedBandwith.exists() ? usedBandwith.bandwith : 0,
+      availableBandwidth,
+      usedBandwidth: usedBandwidth.exists() ? usedBandwidth.bandwidth : 0,
     };
+  }
+
+  static async getProjectsOverBandwidthQuota(
+    event,
+    context: ServiceContext,
+  ): Promise<string[]> {
+    return await new IpfsBandwidth({}, context).getProjectsOverBandwidthQuota();
   }
 
   //#region file-upload functions

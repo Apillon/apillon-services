@@ -1,16 +1,16 @@
 import { ServiceDefinitionType, WorkerDefinition } from '@apillon/workers-lib';
 import { Stage, releaseStage, setupTest } from '../../../test/setup';
-import { IpfsBandwithWorker } from '../ipfs-bandwith-worker';
+import { IpfsBandwidthWorker } from '../ipfs-bandwidth-worker';
 import { MongoCollections } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
-import { IpfsBandwith } from '../../modules/ipfs/models/ipfs-bandwith';
+import { IpfsBandwidth } from '../../modules/ipfs/models/ipfs-bandwidth';
 import { DbTables } from '../../config/types';
 import { Website } from '../../modules/hosting/models/website.model';
 
-describe('IpfsBandwithWorker integration test', () => {
+describe('IpfsBandwidthWorker integration test', () => {
   let stage: Stage;
 
-  let ipfsBandwithWorker: IpfsBandwithWorker;
+  let ipfsBandwidthWorker: IpfsBandwidthWorker;
   const project_uuid = uuidV4();
 
   let testWebsite: Website;
@@ -27,17 +27,17 @@ describe('IpfsBandwithWorker integration test', () => {
       stage.context,
     ).createNewWebsite(stage.context, uuidV4());
 
-    const ipfsBandwithWorkerDefinition = new WorkerDefinition(
+    const ipfsBandwidthWorkerDefinition = new WorkerDefinition(
       {
         type: ServiceDefinitionType.LAMBDA,
         config: { region: 'test' },
         params: { FunctionName: 'test' },
       },
-      'test-ipfs-bandwith-worker',
+      'test-ipfs-bandwidth-worker',
       { parameters: {} },
     );
-    ipfsBandwithWorker = new IpfsBandwithWorker(
-      ipfsBandwithWorkerDefinition,
+    ipfsBandwidthWorker = new IpfsBandwidthWorker(
+      ipfsBandwidthWorkerDefinition,
       stage.context,
     );
 
@@ -99,10 +99,10 @@ describe('IpfsBandwithWorker integration test', () => {
     await releaseStage(stage);
   });
 
-  test('Ipfs bandwith worker should create ipfsBandwith record for project, month and year. ', async () => {
-    await ipfsBandwithWorker.run();
+  test('Ipfs bandwidth worker should create ipfsBandwidth record for project, month and year. ', async () => {
+    await ipfsBandwidthWorker.run();
 
-    const ipfsBandwith: IpfsBandwith = await new IpfsBandwith(
+    const ipfsBandwidth: IpfsBandwidth = await new IpfsBandwidth(
       {},
       stage.context,
     ).populateByProjectAndDate(
@@ -110,15 +110,15 @@ describe('IpfsBandwithWorker integration test', () => {
       new Date().getMonth() + 1,
       new Date().getFullYear(),
     );
-    expect(ipfsBandwith.exists()).toBe(true);
-    expect(ipfsBandwith.bandwith).toBe(7000);
+    expect(ipfsBandwidth.exists()).toBe(true);
+    expect(ipfsBandwidth.bandwidth).toBe(7000);
   });
 
-  test('Ipfs bandwith worker should create ipfsBandwithSync record', async () => {
+  test('Ipfs bandwidth worker should create ipfsBandwidthSync record', async () => {
     const tmpQueryData = await stage.context.mysql.paramExecute(
       `
         SELECT * 
-        FROM \`${DbTables.IPFS_BANDWITH_SYNC}\`
+        FROM \`${DbTables.IPFS_BANDWIDTH_SYNC}\`
         ORDER BY ipfsTrafficTo DESC
         LIMIT 1
         `,
@@ -129,7 +129,7 @@ describe('IpfsBandwithWorker integration test', () => {
     expect(tmpQueryData[0].ipfsTrafficFrom).toBeTruthy();
   });
 
-  test('Ipfs bandwith worker should add bandwith to existing ipfsBandwith record for project, month and year. ', async () => {
+  test('Ipfs bandwidth worker should add bandwidth to existing ipfsBandwidth record for project, month and year. ', async () => {
     await stage.lmasMongo.db
       .collection(MongoCollections.IPFS_TRAFFIC_LOG)
       .insertOne({
@@ -144,9 +144,9 @@ describe('IpfsBandwithWorker integration test', () => {
         ts: new Date(),
       });
 
-    await ipfsBandwithWorker.run();
+    await ipfsBandwidthWorker.run();
 
-    const ipfsBandwith: IpfsBandwith = await new IpfsBandwith(
+    const ipfsBandwidth: IpfsBandwidth = await new IpfsBandwidth(
       {},
       stage.context,
     ).populateByProjectAndDate(
@@ -154,12 +154,12 @@ describe('IpfsBandwithWorker integration test', () => {
       new Date().getMonth() + 1,
       new Date().getFullYear(),
     );
-    expect(ipfsBandwith.exists()).toBe(true);
-    expect(ipfsBandwith.bandwith).toBe(12000);
+    expect(ipfsBandwidth.exists()).toBe(true);
+    expect(ipfsBandwidth.bandwidth).toBe(12000);
   });
 
-  test('Ipfs bandwith worker should account bandwith based on host - website traffic', async () => {
-    const ipfsBandwith: IpfsBandwith = await new IpfsBandwith(
+  test('Ipfs bandwidth worker should account bandwidth based on host - website traffic', async () => {
+    const ipfsBandwidth: IpfsBandwidth = await new IpfsBandwidth(
       {},
       stage.context,
     ).populateByProjectAndDate(
@@ -167,7 +167,7 @@ describe('IpfsBandwithWorker integration test', () => {
       new Date().getMonth() + 1,
       new Date().getFullYear(),
     );
-    expect(ipfsBandwith.exists()).toBe(true);
-    expect(ipfsBandwith.bandwith).toBe(2700);
+    expect(ipfsBandwidth.exists()).toBe(true);
+    expect(ipfsBandwidth.bandwidth).toBe(2700);
   });
 });

@@ -19,6 +19,7 @@ import { AppController } from './app.controller';
     HostingModule,
     SystemModule,
     AuthModule,
+    SystemModule,
   ],
   controllers: [AppController],
   providers: [],

@@ -9,11 +9,11 @@ import {
 } from '@apillon/lib';
 import { BaseWorker, Job, WorkerDefinition } from '@apillon/workers-lib';
 import { DbTables, StorageErrorCode } from '../config/types';
-import { IpfsBandwith } from '../modules/ipfs/models/ipfs-bandwith';
-import { IpfsBandwithSync } from '../modules/ipfs/models/ipfs-bandwith-sync';
+import { IpfsBandwidth } from '../modules/ipfs/models/ipfs-bandwidth';
+import { IpfsBandwidthSync } from '../modules/ipfs/models/ipfs-bandwidth-sync';
 import { Website } from '../modules/hosting/models/website.model';
 
-export class IpfsBandwithWorker extends BaseWorker {
+export class IpfsBandwidthWorker extends BaseWorker {
   protected context: Context;
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);
@@ -23,7 +23,7 @@ export class IpfsBandwithWorker extends BaseWorker {
     // No used
   }
   public async execute(data?: any): Promise<any> {
-    this.logFn(`IpfsBandwithWorker - execute BEGIN: ${data}`);
+    this.logFn(`IpfsBandwidthWorker - execute BEGIN: ${data}`);
 
     const currDate = new Date();
     //Date, from where worker will fetch ipfs traffic data.
@@ -38,7 +38,7 @@ export class IpfsBandwithWorker extends BaseWorker {
     const tmpQueryData = await this.context.mysql.paramExecute(
       `
         SELECT * 
-        FROM \`${DbTables.IPFS_BANDWITH_SYNC}\`
+        FROM \`${DbTables.IPFS_BANDWIDTH_SYNC}\`
         ORDER BY ipfsTrafficTo DESC
         LIMIT 1
         `,
@@ -56,7 +56,7 @@ export class IpfsBandwithWorker extends BaseWorker {
         ipfsTrafficTo,
       );
 
-      //For each project increase or insert used bandwith record
+      //For each project increase or insert used bandwidth record
       await runWithWorkers(
         ipfsTraffic.data,
         env.APP_ENV == AppEnvironment.LOCAL_DEV ||
@@ -90,7 +90,7 @@ export class IpfsBandwithWorker extends BaseWorker {
             }
           }
 
-          let ipfsBandwith: IpfsBandwith = await new IpfsBandwith(
+          let ipfsBandwidth: IpfsBandwidth = await new IpfsBandwidth(
             {},
             this.context,
           ).populateByProjectAndDate(
@@ -99,25 +99,25 @@ export class IpfsBandwithWorker extends BaseWorker {
             data._id.year,
           );
 
-          if (ipfsBandwith.exists()) {
-            ipfsBandwith.bandwith += data.respBytes;
-            await ipfsBandwith.update();
+          if (ipfsBandwidth.exists()) {
+            ipfsBandwidth.bandwidth += data.respBytes;
+            await ipfsBandwidth.update();
           } else {
-            ipfsBandwith = new IpfsBandwith(
+            ipfsBandwidth = new IpfsBandwidth(
               {
                 ...data._id,
-                bandwith: data.respBytes,
+                bandwidth: data.respBytes,
               },
               this.context,
             );
 
-            await ipfsBandwith.insert();
+            await ipfsBandwidth.insert();
           }
         },
       );
 
       //Success
-      await new IpfsBandwithSync(
+      await new IpfsBandwidthSync(
         {
           ipfsTrafficFrom,
           ipfsTrafficTo,
@@ -125,23 +125,23 @@ export class IpfsBandwithWorker extends BaseWorker {
         this.context,
       ).insert();
     } catch (err) {
-      await new IpfsBandwithSync(
+      await new IpfsBandwidthSync(
         {
           ipfsTrafficFrom,
           ipfsTrafficTo,
-          message: 'Ipfs bandwith worker error: ' + err.message,
+          message: 'Ipfs bandwidth worker error: ' + err.message,
         },
         this.context,
       ).insert();
 
       await new CodeException({
-        code: StorageErrorCode.IPFS_BANDWITH_WORKER_UNHANDLED_EXCEPTION,
+        code: StorageErrorCode.IPFS_BANDWIDTH_WORKER_UNHANDLED_EXCEPTION,
         status: 500,
         context: this.context,
         errorCodes: StorageErrorCode,
-        errorMessage: 'Ipfs bandwith worker error.',
+        errorMessage: 'Ipfs bandwidth worker error.',
         details: err,
-        sourceFunction: 'IpfsBandwithWorker.execute',
+        sourceFunction: 'IpfsBandwidthWorker.execute',
         sourceModule: ServiceName.STORAGE,
       }).writeToMonitor({
         sendAdminAlert: true,
@@ -156,7 +156,7 @@ export class IpfsBandwithWorker extends BaseWorker {
   }
 
   public async onError(error: Error): Promise<any> {
-    this.logFn(`IpfsBandwithWorker - error: ${error}`);
+    this.logFn(`IpfsBandwidthWorker - error: ${error}`);
   }
 
   public async onUpdateWorkerDefinition(): Promise<void> {

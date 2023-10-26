@@ -1,15 +1,20 @@
 import {
   AdvancedSQLModel,
+  AppEnvironment,
   Context,
   PopulateFrom,
+  QuotaCode,
+  Scs,
   SerializeFor,
+  env,
   prop,
+  runWithWorkers,
 } from '@apillon/lib';
 import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
-import { DbTables } from '../../../config/types';
+import { DbTables, Defaults } from '../../../config/types';
 
-export class IpfsBandwith extends AdvancedSQLModel {
-  public readonly tableName = DbTables.IPFS_BANDWITH;
+export class IpfsBandwidth extends AdvancedSQLModel {
+  public readonly tableName = DbTables.IPFS_BANDWIDTH;
 
   public constructor(data: any, context: Context) {
     super(data, context);
@@ -57,10 +62,10 @@ export class IpfsBandwith extends AdvancedSQLModel {
       SerializeFor.SERVICE,
     ],
   })
-  public bandwith: number;
+  public bandwidth: number;
 
   /**
-   * Populates used ipfs bandwith for project
+   * Populates used ipfs bandwidth for project
    * @param project_uuid
    * @param month If not specified, current month is used
    * @param year
@@ -84,7 +89,7 @@ export class IpfsBandwith extends AdvancedSQLModel {
     const data = await this.getContext().mysql.paramExecute(
       `
         SELECT *
-        FROM \`${DbTables.IPFS_BANDWITH}\`
+        FROM \`${DbTables.IPFS_BANDWIDTH}\`
         WHERE project_uuid = @project_uuid
         AND month = @month
         AND year = @year;
@@ -95,5 +100,45 @@ export class IpfsBandwith extends AdvancedSQLModel {
     return data?.length
       ? this.populate(data[0], PopulateFrom.DB)
       : this.reset();
+  }
+
+  public async getProjectsOverBandwidthQuota() {
+    const currDate = new Date();
+
+    //Get all projects, that have reached max bandwidth on freemium
+    const data = await this.getContext().mysql.paramExecute(
+      `
+        SELECT project_uuid, bandwidth
+        FROM \`${DbTables.IPFS_BANDWIDTH}\`
+        WHERE month = @month
+        AND year = @year
+        AND bandwidth > ${Defaults.DEFAULT_BANDWIDTH}
+      `,
+      { month: currDate.getMonth() + 1, year: currDate.getFullYear() },
+    );
+
+    const projectsOverBandwidthQuota = [];
+
+    //Check quota for this projects
+    await runWithWorkers(
+      data,
+      env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+        env.APP_ENV == AppEnvironment.TEST
+        ? 1
+        : 20,
+      this.getContext(),
+      async (data: { project_uuid: string; bandwidth: number }) => {
+        const bandwidthQuota = await new Scs(this.getContext()).getQuota({
+          quota_id: QuotaCode.MAX_BANDWIDTH,
+          project_uuid: data.project_uuid,
+        });
+
+        if (data.bandwidth > (bandwidthQuota?.value || 20) * 1073741824) {
+          projectsOverBandwidthQuota.push(data.project_uuid);
+        }
+      },
+    );
+
+    return projectsOverBandwidthQuota;
   }
 }
