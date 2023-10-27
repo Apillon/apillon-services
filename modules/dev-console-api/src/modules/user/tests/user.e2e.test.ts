@@ -269,7 +269,7 @@ describe('Auth tests', () => {
 
   test('Kilt login: Existing user should be able to login', async () => {
     const tokenKilt = generateJwtToken(
-      JwtTokenType.USER_AUTHENTICATION,
+      JwtTokenType.OAUTH_TOKEN,
       { email: newUserData.email },
       '10min',
     );
@@ -283,7 +283,7 @@ describe('Auth tests', () => {
   test('Kilt login: New user should be able to login', async () => {
     const controlEmail = 'dims.okniv@kalmia.si';
     const tokenKiltNew = generateJwtToken(
-      JwtTokenType.USER_AUTHENTICATION,
+      JwtTokenType.OAUTH_TOKEN,
       { email: controlEmail },
       '10min',
     );

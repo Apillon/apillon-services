@@ -4,8 +4,8 @@ import {
   SporranSessionVerifyDto,
   SubmitAttestationDto,
   SubmitTermsDto,
+  VerifyCredentialDto,
 } from '@apillon/lib';
-import { VerifyCredentialDto } from './dtos/message/verify-credential.dto';
 import { Injectable } from '@nestjs/common';
 import { AuthenticationApiContext } from '../../context';
 

@@ -109,10 +109,10 @@ export class HostingController {
   @UseGuards(ValidationGuard)
   async deployWebsite(
     @Ctx() context: DevConsoleApiContext,
-    @Param('website_uuid', ParseIntPipe) id: number,
+    @Param('website_uuid') website_uuid: string,
     @Body() body: DeployWebsiteDto,
   ) {
-    return await this.hostingService.deployWebsite(context, id, body);
+    return await this.hostingService.deployWebsite(context, website_uuid, body);
   }
 
   @Get('websites/:website_uuid/deployments')

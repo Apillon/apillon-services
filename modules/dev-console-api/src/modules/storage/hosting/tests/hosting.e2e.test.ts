@@ -72,14 +72,14 @@ describe('Hosting tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBe(1);
-      expect(response.body.data.items[0]?.id).toBeTruthy();
+      expect(response.body.data.items[0]?.website_uuid).toBeTruthy();
       expect(response.body.data.items[0]?.name).toBeTruthy();
       expect(response.body.data.items[0]?.domain).toBeTruthy();
     });
 
-    test('User should be able to get Website by id', async () => {
+    test('User should be able to get Website by uuid', async () => {
       const response = await request(stage.http)
-        .get(`/storage/hosting/websites/${testWebsite.id}`)
+        .get(`/storage/hosting/websites/${testWebsite.website_uuid}`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.name).toBeTruthy();
@@ -108,14 +108,14 @@ describe('Hosting tests', () => {
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
-      expect(response.body.data.id).toBeTruthy();
+      expect(response.body.data.website_uuid).toBeTruthy();
       expect(response.body.data.name).toBe('My test Website');
       expect(response.body.data.domain).toBe('https://www.my-test-page.si');
 
       const wp: Website = await new Website(
         {},
         stage.storageContext,
-      ).populateById(response.body.data.id);
+      ).populateByUUID(response.body.data.website_uuid);
       expect(wp.exists()).toBeTruthy();
       try {
         await wp.validate();
@@ -144,21 +144,21 @@ describe('Hosting tests', () => {
 
     test('User should be able to update website', async () => {
       const response = await request(stage.http)
-        .patch(`/storage/hosting/websites/${testWebsite.id}`)
+        .patch(`/storage/hosting/websites/${testWebsite.website_uuid}`)
         .send({
           name: 'Updated Website name',
           description: 'Some awesome descirption',
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.data.id).toBeTruthy();
+      expect(response.body.data.website_uuid).toBeTruthy();
       expect(response.body.data.name).toBe('Updated Website name');
       expect(response.body.data.description).toBe('Some awesome descirption');
 
       const wp: Website = await new Website(
         {},
         stage.storageContext,
-      ).populateById(response.body.data.id);
+      ).populateByUUID(response.body.data.website_uuid);
       expect(wp.exists()).toBeTruthy();
       expect(wp.name).toBe('Updated Website name');
       expect(wp.description).toBe('Some awesome descirption');
@@ -166,7 +166,7 @@ describe('Hosting tests', () => {
 
     test('User should NOT be able to update website domain in less than 15 minutes', async () => {
       const response = await request(stage.http)
-        .patch(`/storage/hosting/websites/${testWebsite.id}`)
+        .patch(`/storage/hosting/websites/${testWebsite.website_uuid}`)
         .send({
           domain: 'https://www.my-test-page-2.si',
         })
@@ -184,7 +184,7 @@ describe('Hosting tests', () => {
       await wp.update();
 
       const response = await request(stage.http)
-        .patch(`/storage/hosting/websites/${testWebsite.id}`)
+        .patch(`/storage/hosting/websites/${testWebsite.website_uuid}`)
         .send({
           domain: 'https://www.my-test-page-2.si',
         })
@@ -192,7 +192,7 @@ describe('Hosting tests', () => {
       expect(response.status).toBe(200);
 
       wp = await new Website({}, stage.storageContext).populateById(
-        response.body.data.id,
+        response.body.data.website_uuid,
       );
       expect(wp.domain).toBe('https://www.my-test-page-2.si');
     });
@@ -315,7 +315,7 @@ describe('Hosting tests', () => {
 
     test('User should be able to deploy Website to staging', async () => {
       const response = await request(stage.http)
-        .post(`/storage/hosting/websites/${testWebsite.id}/deploy`)
+        .post(`/storage/hosting/websites/${testWebsite.website_uuid}/deploy`)
         .send({
           environment: 1,
           directDeploy: true,
@@ -347,7 +347,7 @@ describe('Hosting tests', () => {
 
     test('User should be able to deploy Website to production', async () => {
       const response = await request(stage.http)
-        .post(`/storage/hosting/websites/${testWebsite.id}/deploy`)
+        .post(`/storage/hosting/websites/${testWebsite.website_uuid}/deploy`)
         .send({
           environment: 2,
           directDeploy: true,
@@ -379,7 +379,7 @@ describe('Hosting tests', () => {
 
     test('User should NOT be able to deploy Website to production if no changes were made', async () => {
       const response = await request(stage.http)
-        .post(`/storage/hosting/websites/${testWebsite.id}/deploy`)
+        .post(`/storage/hosting/websites/${testWebsite.website_uuid}/deploy`)
         .send({
           environment: 2,
           directDeploy: true,
@@ -393,7 +393,9 @@ describe('Hosting tests', () => {
 
     test('User should be able to list deployments', async () => {
       const response = await request(stage.http)
-        .get(`/storage/hosting/websites/${testWebsite.id}/deployments`)
+        .get(
+          `/storage/hosting/websites/${testWebsite.website_uuid}/deployments`,
+        )
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBeGreaterThan(0);
@@ -406,7 +408,7 @@ describe('Hosting tests', () => {
     test('User should be able to list deployments with filter', async () => {
       const response = await request(stage.http)
         .get(
-          `/storage/hosting/websites/${testWebsite.id}/deployments?environment=1`,
+          `/storage/hosting/websites/${testWebsite.website_uuid}/deployments?environment=1`,
         )
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
@@ -456,7 +458,7 @@ describe('Hosting tests', () => {
 
     test('User should NOT be able to delete ANOTHER USER directory from Website preview bucket', async () => {
       const response = await request(stage.http)
-        .delete(`/directories/${dirToDelete.id}`)
+        .delete(`/directories/${dirToDelete.directory_uuid}`)
         .set('Authorization', `Bearer ${testUser2.token}`);
       expect(response.status).toBe(403);
 
@@ -469,7 +471,7 @@ describe('Hosting tests', () => {
 
     test('User should be able to delete directory from Website preview bucket', async () => {
       const response = await request(stage.http)
-        .delete(`/directories/${dirToDelete.id}`)
+        .delete(`/directories/${dirToDelete.directory_uuid}`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
 

@@ -53,6 +53,31 @@ export class ApiKeyService {
     return apiKey;
   }
 
+  /**
+   * Retreives an API key by ID
+   * @param {number} apiKey_id - ID of the api key
+   * @param {ServiceContext} context - Service context
+   * @returns {Promise<ApiKey>}
+   */
+  static async getApiKeyById(
+    apiKey_id: number,
+    context: ServiceContext,
+  ): Promise<ApiKey> {
+    const key: ApiKey = await new ApiKey({}, context).populateById(apiKey_id);
+
+    if (!key.exists()) {
+      throw await new AmsCodeException({
+        status: 400,
+        code: AmsErrorCode.API_KEY_NOT_FOUND,
+      }).writeToMonitor({
+        context,
+        data: { apiKey_id },
+      });
+    }
+
+    return key;
+  }
+
   //#region Api-key CRUD
 
   /**

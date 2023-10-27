@@ -245,7 +245,6 @@ export class HostingService {
   ): Promise<any> {
     const website: Website = await new Website({}, context).populateByUUID(
       event.body.website_uuid,
-      'website_uuid',
     );
 
     if (!website.exists()) {
@@ -457,7 +456,6 @@ export class HostingService {
   ) {
     const website = await new Website({}, context).populateByUUID(
       event.query.website_uuid,
-      'website_uuid',
     );
     if (!website.exists()) {
       throw new StorageCodeException({

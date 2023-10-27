@@ -93,10 +93,10 @@ export class HostingService {
 
   async deployWebsite(
     context: DevConsoleApiContext,
-    id: number,
+    website_uuid: string,
     body: DeployWebsiteDto,
   ) {
-    body.populate({ website_id: id });
+    body.populate({ website_uuid });
     try {
       await body.validate();
     } catch (err) {

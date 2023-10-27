@@ -2,6 +2,7 @@ import {
   CodeException,
   env,
   generateJwtToken,
+  JwtTokenType,
   Lmas,
   LogType,
   parseJwtToken,
@@ -39,7 +40,6 @@ import {
   generateKeypairs,
   getCtypeSchema,
 } from '../../lib/kilt';
-import { JwtTokenType } from '../../config/types';
 import {
   DidUri,
   ICredentialPresentation,
@@ -52,7 +52,7 @@ import { Identity } from '../identity/models/identity.model';
 import { prepareSignResources } from '../../lib/sporran';
 import { AuthenticationCodeException } from '../../lib/exceptions';
 
-export class SporranMicroservice {
+export class SporranService {
   static async getSessionValues(_context): Promise<any> {
     // generate keypairs
     await connect(env.KILT_NETWORK);
@@ -78,13 +78,13 @@ export class SporranMicroservice {
 
     const challenge = randomUUID();
     const token = generateJwtToken(JwtTokenType.SPORRAN_SESSION, {
-      challenge: challenge,
+      challenge,
     });
 
     return {
       dAppName: APILLON_DAPP_NAME,
-      dAppEncryptionKeyUri: dAppEncryptionKeyUri,
-      challenge: challenge,
+      dAppEncryptionKeyUri,
+      challenge,
       sessionId: token,
     };
   }
@@ -130,7 +130,7 @@ export class SporranMicroservice {
       decryptedChallenge = Utils.Crypto.decryptAsymmetricAsStr(
         {
           box: encryptedChallenge,
-          nonce: nonce,
+          nonce,
         },
         encryptionKey.publicKey,
         keyAgreement.secretKey,
@@ -410,10 +410,10 @@ export class SporranMicroservice {
     const whitelist = env.KILT_ATTESTERS_WHITELIST.split(';');
     if (!whitelist.includes(attestation.owner.split('did:kilt:')[1])) {
       await new Lmas().writeLog({
-        context: context,
+        context,
         logType: LogType.INFO,
         message: 'VERIFICATION FAILED: Unknown attester',
-        location: 'AUTHENTICATION-API/verification/verifyIdentity',
+        location: 'AUTHENTICATION/sporran/verifyCredential',
         service: ServiceName.AUTHENTICATION_API,
       });
 
@@ -434,13 +434,16 @@ export class SporranMicroservice {
     }
 
     const email = presentation.claim.contents.Email as string;
-
+    const { project_uuid } = parseJwtToken(
+      JwtTokenType.AUTH_SESSION,
+      event.body.token,
+    );
     const token = generateJwtToken(
-      JwtTokenType.USER_AUTHENTICATION,
-      { email: email },
+      JwtTokenType.OAUTH_TOKEN,
+      { email, project_uuid },
       '10min',
     );
 
-    return { verified: true, data: token };
+    return { verified: true, token };
   }
 }

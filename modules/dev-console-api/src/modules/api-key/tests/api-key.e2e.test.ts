@@ -92,13 +92,11 @@ describe('API key tests', () => {
 
     expect(ap.exists()).toBeTruthy();
     //Check APIkey roles
-    const apr: ApiKeyRole = await new ApiKeyRole({}, stage.amsContext).populate(
-      {
-        apiKey_id: response.body.data.id,
-        service_uuid: testProjectService.service_uuid,
-        project_uuid: testProject.project_uuid,
-      },
-    );
+    const apr: ApiKeyRole = new ApiKeyRole({}, stage.amsContext).populate({
+      apiKey_id: response.body.data.id,
+      service_uuid: testProjectService.service_uuid,
+      project_uuid: testProject.project_uuid,
+    });
 
     expect(await apr.hasRole(51)).toBe(true);
     expect(await apr.hasRole(52)).toBe(false);
@@ -112,8 +110,23 @@ describe('API key tests', () => {
     expect(response.body.data.items.length).toBe(2);
   });
 
-  test('User should be able to assign role to api key', async () => {
+  test('User should be able to assign roles to api key', async () => {
     const response = await request(stage.http)
+      .post(`/api-keys/${apiKey.id}/role`)
+      .send({
+        role_id: 50,
+        project_uuid: testProject.project_uuid,
+        service_uuid: testProjectService.service_uuid,
+      })
+      .set('Authorization', `Bearer ${testUser.token}`);
+    expect(response.status).toBe(201);
+    expect(response.body.data.id).toBeTruthy();
+    expect(response.body.data.role_id).toBe(50);
+    expect(response.body.data.serviceType_id).toBe(
+      testProjectService.serviceType_id,
+    );
+
+    await request(stage.http)
       .post(`/api-keys/${apiKey.id}/role`)
       .send({
         role_id: 51,
@@ -121,21 +134,25 @@ describe('API key tests', () => {
         service_uuid: testProjectService.service_uuid,
       })
       .set('Authorization', `Bearer ${testUser.token}`);
-    expect(response.status).toBe(201);
-    expect(response.body.data.id).toBeTruthy();
-    expect(response.body.data.role_id).toBe(51);
-    expect(response.body.data.serviceType_id).toBe(
-      testProjectService.serviceType_id,
-    );
 
-    const apr: ApiKeyRole = await new ApiKeyRole({}, stage.amsContext).populate(
-      {
-        apiKey_id: response.body.data.id,
-        service_uuid: testProjectService.service_uuid,
+    await request(stage.http)
+      .post(`/api-keys/${apiKey.id}/role`)
+      .send({
+        role_id: 52,
         project_uuid: testProject.project_uuid,
-      },
-    );
+        service_uuid: testProjectService.service_uuid,
+      })
+      .set('Authorization', `Bearer ${testUser.token}`);
+
+    const apr: ApiKeyRole = new ApiKeyRole({}, stage.amsContext).populate({
+      apiKey_id: response.body.data.id,
+      service_uuid: testProjectService.service_uuid,
+      project_uuid: testProject.project_uuid,
+    });
+
+    expect(await apr.hasRole(50)).toBe(true);
     expect(await apr.hasRole(51)).toBe(true);
+    expect(await apr.hasRole(52)).toBe(true);
   });
 
   test('User should be able to get api key roles', async () => {
@@ -143,7 +160,51 @@ describe('API key tests', () => {
       .get(`/api-keys/${apiKey.id}/roles`)
       .set('Authorization', `Bearer ${testUser.token}`);
     expect(response.status).toBe(200);
-    expect(response.body.data.length).toBe(1);
+    expect(response.body.data.length).toBe(3);
+  });
+
+  test('User should be able to delete api key role', async () => {
+    const response = await request(stage.http)
+      .delete(`/api-keys/${apiKey.id}/role`)
+      .send({
+        role_id: 52,
+        project_uuid: testProject.project_uuid,
+        service_uuid: testProjectService.service_uuid,
+      })
+      .set('Authorization', `Bearer ${testUser.token}`);
+    expect(response.body.data).toBeTruthy();
+
+    const apr: ApiKeyRole = new ApiKeyRole({}, stage.amsContext).populate({
+      apiKey_id: apiKey.id,
+      service_uuid: testProjectService.service_uuid,
+      project_uuid: testProject.project_uuid,
+    });
+
+    expect(await apr.hasRole(50)).toBe(true);
+    expect(await apr.hasRole(51)).toBe(true);
+    expect(await apr.hasRole(52)).toBe(false);
+  });
+
+  test('User should be able to delete api key roles by service', async () => {
+    const response = await request(stage.http)
+      .delete(`/api-keys/${apiKey.id}/service-roles`)
+      .send({
+        role_id: 52,
+        project_uuid: testProject.project_uuid,
+        service_uuid: testProjectService.service_uuid,
+      })
+      .set('Authorization', `Bearer ${testUser.token}`);
+    expect(response.body.data).toBeTruthy();
+
+    const apr: ApiKeyRole = new ApiKeyRole({}, stage.amsContext).populate({
+      apiKey_id: apiKey.id,
+      service_uuid: testProjectService.service_uuid,
+      project_uuid: testProject.project_uuid,
+    });
+
+    expect(await apr.hasRole(50)).toBe(false);
+    expect(await apr.hasRole(51)).toBe(false);
+    expect(await apr.hasRole(52)).toBe(false);
   });
 
   test('User should be able to delete api key', async () => {

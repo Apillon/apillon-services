@@ -25,4 +25,12 @@ UPDATE transaction_queue AS tq
           WHERE b.bucket_uuid = tq.referenceId
         )
         ELSE NULL
-      END;
+      END
+  WHERE tq.project_uuid IS NULL;
+
+  UPDATE transaction_log tl
+  JOIN transaction_queue tq 
+  ON tq.id = tl.transactionQueue_id
+  SET tl.project_uuid = tq.project_uuid
+  WHERE tl.project_uuid IS NULL
+  

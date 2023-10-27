@@ -422,6 +422,23 @@ export class Website extends UuidSqlModel {
   })
   public lastDeployment_uuid: string;
 
+  @prop({
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+    ],
+    validators: [],
+  })
+  public lastDeploymentStatus: number;
+
   /**
    * Populate by id or by uuid
    * @param id id or uuid.
@@ -444,16 +461,17 @@ export class Website extends UuidSqlModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT *, 
-      (
-        SELECT deployment_uuid from \`${DbTables.DEPLOYMENT}\` d
-        WHERE d.website_id = w.id
-        ORDER BY d.createTime DESC
-        LIMIT 1
-      ) as lastDeployment_uuid
+      SELECT w.*, 
+      lastDeployment.deployment_uuid as lastDeployment_uuid, 
+      lastDeployment.deploymentStatus as lastDeploymentStatus
       FROM \`${DbTables.WEBSITE}\` w
+      LEFT JOIN (
+        SELECT  website_id, deployment_uuid, deploymentStatus from \`${DbTables.DEPLOYMENT}\` d
+        ORDER BY d.createTime DESC
+      ) as lastDeployment ON lastDeployment.website_id = w.id
       WHERE ( w.id LIKE @id OR w.website_uuid LIKE @id)
-      AND w.status <> ${SqlModelStatus.DELETED};
+      AND w.status <> ${SqlModelStatus.DELETED}
+      LIMIT 1;
       `,
       { id },
       conn,
@@ -462,6 +480,10 @@ export class Website extends UuidSqlModel {
     return data?.length
       ? this.populate(data[0], PopulateFrom.DB)
       : this.reset();
+  }
+
+  public override async populateByUUID(uuid: string): Promise<this> {
+    return this.populateById(uuid);
   }
 
   /**

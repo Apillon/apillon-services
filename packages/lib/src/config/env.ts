@@ -243,6 +243,9 @@ export interface IEnv {
   APILLON_API_SYSTEM_API_KEY: string;
   APILLON_API_SYSTEM_API_SECRET: string;
 
+  APILLON_API_INTEGRATION_API_KEY: string;
+  APILLON_API_INTEGRATION_API_SECRET: string;
+
   /************************************************************
    * AUTH - Apillon Authentication Service
    ************************************************************/
@@ -288,6 +291,7 @@ export interface IEnv {
   KILT_ATTESTER_MNEMONIC: string;
   KILT_DERIVATION_ALGORITHM: string;
   KILT_ATTESTERS_WHITELIST: string;
+  KILT_ORIGIN_DOMAIN: string;
 
   /************************************************************
    * Authentication config (Uses Kilt module)
@@ -676,7 +680,11 @@ export let env: IEnv = {
   APILLON_API_SYSTEM_API_KEY: process.env['APILLON_API_SYSTEM_API_KEY'] || '',
   APILLON_API_SYSTEM_API_SECRET:
     process.env['APILLON_API_SYSTEM_API_SECRET'] || '',
-  APILLON_API_URL: process.env['APILLON_API_URL'] || 'http://localhost',
+  APILLON_API_INTEGRATION_API_KEY:
+    process.env['APILLON_API_INTEGRATION_API_KEY'] || '',
+  APILLON_API_INTEGRATION_API_SECRET:
+    process.env['APILLON_API_INTEGRATION_API_SECRET'] || '',
+  APILLON_API_URL: process.env['APILLON_API_URL'] || 'http://localhost:6002',
 
   /** --- SECTION: APILLON AUTHENTICATION API --- */
   AUTH_API_HOST: process.env['AUTH_API_HOST'] || 'localhost',
@@ -709,6 +717,7 @@ export let env: IEnv = {
     'wss://peregrine.kilt.io/parachain-public-ws',
   KILT_ATTESTER_MNEMONIC: process.env['KILT_ATTESTER_MNEMONIC'] || '',
   KILT_ATTESTERS_WHITELIST: process.env['KILT_ATTESTERS_WHITELIST'] || '',
+  KILT_ORIGIN_DOMAIN: process.env['KILT_ORIGIN_DOMAIN'] || '',
   // TODO: Unused -> Left here because we might introduce it later as configurable algorithm
   // because it depends where you use this mnemonic
   KILT_DERIVATION_ALGORITHM:
