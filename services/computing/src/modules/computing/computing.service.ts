@@ -38,7 +38,6 @@ export class ComputingService {
   ) {
     console.log(`Creating computing contract: ${JSON.stringify(params.body)}`);
 
-    //TODO: add type
     const ipfsCluster = (
       await new StorageMicroservice(context).getProjectIpfsCluster(
         params.body.project_uuid,

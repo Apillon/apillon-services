@@ -19,7 +19,8 @@ export async function upgrade(
       INT
       NULL,
       \`transactionStatus\` INT NULL,
-      \`transactionHash\` VARCHAR
+      \`transactionHash\`
+      VARCHAR
     (
       255
     ) NULL,

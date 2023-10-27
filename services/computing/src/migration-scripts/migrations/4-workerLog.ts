@@ -20,23 +20,24 @@ export async function upgrade(
         NULL,
         \`worker\`
         VARCHAR
-       (
+     (
         100
-       ) NULL,
-        \`type\` VARCHAR
-       (
-         100
-       ) NULL,
+     ) NULL,
+      \`type\` VARCHAR
+     (
+       100
+     ) NULL,
         \`message\` TEXT NULL,
         \`data\` JSON NULL,
-        \`uuid\` VARCHAR
-       (
-         45
-       ) NULL,
-        PRIMARY KEY
-       (
-         \`id\`
-       ));`,
+      \`uuid\` VARCHAR
+     (
+       45
+     ) NULL,
+      PRIMARY KEY
+     (
+       \`id\`
+     )
+      );`,
   );
 }
 
