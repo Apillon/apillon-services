@@ -6,35 +6,18 @@ export async function upgrade(
   await queryFn(`
     CREATE TABLE IF NOT EXISTS \`${DbTables.TRANSACTION}\`
     (
-      \`id\`
-      INT
-      NOT
-      NULL
-      AUTO_INCREMENT,
-      \`transactionType\`
-      INT
-      NOT
-      NULL,
-      \`contractId\`
-      INT
-      NULL,
+      \`id\` INT NOT NULL AUTO_INCREMENT,
+      \`transactionType\` INT NOT NULL,
+      \`contractId\` INT NULL,
       \`transactionStatus\` INT NULL,
-      \`transactionHash\`
-      VARCHAR
-    (
-      255
-    ) NULL,
+      \`transactionHash\` VARCHAR (255) NULL,
       \`errorMessage\` TEXT NULL,
       \`status\` INT NULL,
       \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
       \`createUser\` INT NULL,
-      \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP
-      ON UPDATE CURRENT_TIMESTAMP,
+      \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       \`updateUser\` INT NULL,
-      PRIMARY KEY
-    (
-      \`id\`
-    )
+      PRIMARY KEY ( \`id\`)
       );
   `);
 }
