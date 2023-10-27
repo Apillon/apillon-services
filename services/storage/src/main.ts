@@ -82,6 +82,8 @@ export async function processEvent(event, context: Context): Promise<any> {
 
     [StorageEventType.GET_BLACKLIST]: StorageService.getBlacklist,
     [StorageEventType.STORAGE_INFO]: StorageService.getStorageInfo,
+
+    [StorageEventType.GET_PROJECT_IPFS_CLUSTER]: StorageService.getIpfsCluster,
   };
 
   return await processors[event.eventName](event, context);

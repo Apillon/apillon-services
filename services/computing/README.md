@@ -1,6 +1,8 @@
 # Apillon Computing Service - Computing
 
-Computing Service provides functionality for creating contracts on blockchains.
+Computing Service provides functionality for deploying and interaction with
+secure execution environments (SEE). For Phala this is done by Deploying a
+smart contract and calling it's methods which are then executed in SEE.
 
 ## Table of Contents
 

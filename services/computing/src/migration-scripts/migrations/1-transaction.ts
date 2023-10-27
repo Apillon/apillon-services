@@ -15,12 +15,9 @@ export async function upgrade(
       INT
       NOT
       NULL,
-      \`refTable\`
-      VARCHAR
-    (
-      100
-    ) NULL,
-      \`refId\` INT NULL,
+      \`contractId\`
+      INT
+      NULL,
       \`transactionStatus\` INT NULL,
       \`transactionHash\` VARCHAR
     (

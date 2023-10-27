@@ -28,14 +28,10 @@ export async function upgrade(
     (
       255
     ) NULL,
-      \`contractType\` INT NULL,
+      \`contractType\` INT NOT NULL,
       \`data\` JSON NULL,
       \`contractStatus\` INT NOT NULL,
       \`sourceHash\` CHAR
-    (
-      70
-    ) NULL,
-      \`clusterId\` CHAR
     (
       70
     ) NULL,

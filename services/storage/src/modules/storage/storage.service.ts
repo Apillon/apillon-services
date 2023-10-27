@@ -36,7 +36,6 @@ import {
 import { createFURAndS3Url } from '../../lib/create-fur-and-s3-url';
 import { StorageCodeException } from '../../lib/exceptions';
 import { getSessionFilesOnS3 } from '../../lib/file-upload-session-s3-files';
-import { addJwtToIPFSUrl } from '../../lib/ipfs-utils';
 import { processSessionFiles } from '../../lib/process-session-files';
 import { SyncToIPFSWorker } from '../../workers/s3-to-ipfs-sync-worker';
 import { WorkerName } from '../../workers/worker-executor';
@@ -568,5 +567,15 @@ export class StorageService {
     return await context.mysql.paramExecute(`
       SELECT DISTINCT cid FROM ${DbTables.BLACKLIST};
     `);
+  }
+
+  static async getIpfsCluster(
+    event: { project_uuid: string },
+    context: ServiceContext,
+  ) {
+    return await new ProjectConfig(
+      { project_uuid: event.project_uuid },
+      context,
+    ).getIpfsCluster();
   }
 }

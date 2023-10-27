@@ -64,7 +64,7 @@ export class TransactionStatusWorker extends BaseQueueWorker {
       const contract: Contract = await new Contract(
         {},
         this.context,
-      ).populateById(tx.refId);
+      ).populateById(tx.contractId);
 
       if (tx.transactionType === TransactionType.DEPLOY_CONTRACT) {
         contract.contractStatus = ContractStatus.DEPLOYED;

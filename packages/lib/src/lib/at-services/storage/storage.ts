@@ -124,6 +124,14 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async getProjectIpfsCluster(project_uuid: string) {
+    const data = {
+      eventName: StorageEventType.GET_PROJECT_IPFS_CLUSTER,
+      project_uuid,
+    };
+    return await this.callService(data);
+  }
+
   //#endregion
 
   //#region Directory CRUD

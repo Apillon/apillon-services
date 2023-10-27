@@ -7,6 +7,7 @@ import {
   SerializeFor,
   ServiceName,
   SqlModelStatus,
+  StorageMicroservice,
   TransactionStatus,
   TransferOwnershipDto,
 } from '@apillon/lib';
@@ -37,6 +38,13 @@ export class ComputingService {
   ) {
     console.log(`Creating computing contract: ${JSON.stringify(params.body)}`);
 
+    //TODO: add type
+    const ipfsCluster = (
+      await new StorageMicroservice(context).getProjectIpfsCluster(
+        params.body.project_uuid,
+      )
+    ).data;
+
     const contract = new Contract(params.body, context).populate({
       contract_uuid: uuidV4(),
       status: SqlModelStatus.INCOMPLETE,
@@ -45,6 +53,7 @@ export class ComputingService {
         nftContractAddress: params.body.nftContractAddress,
         nftChainRpcUrl: params.body.nftChainRpcUrl,
         restrictToOwner: params.body.restrictToOwner,
+        ipfsGatewayUrl: ipfsCluster.ipfsGateway,
       },
     });
 
@@ -163,12 +172,12 @@ export class ComputingService {
       context,
       project_uuid: contract.project_uuid,
       logType: LogType.INFO,
-      message: `${amount}PHA deposited to address ${accountAddress} in cluster ${contract.clusterId}`,
+      message: `${amount}PHA deposited to address ${accountAddress} in cluster ${contract.data.clusterId}`,
       location: 'ComputingService/depositToContractCluster',
       service: ServiceName.COMPUTING,
       data: {
         contract_uuid: contract.contract_uuid,
-        clusterId: contract.clusterId,
+        clusterId: contract.data.clusterId,
         accountAddress,
         amount,
       },

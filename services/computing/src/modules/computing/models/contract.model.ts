@@ -214,28 +214,6 @@ export class Contract extends UuidSqlModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue:
-      '0x0000000000000000000000000000000000000000000000000000000000000001',
-  })
-  public clusterId: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-    ],
     fakeValue: '0xCD60e2534f80cF917ed45A62d7C29aD3BE2CaAc3',
   })
   public contractAddress: string;
@@ -302,7 +280,13 @@ export class Contract extends UuidSqlModel {
       SerializeFor.PROFILE,
     ],
   })
-  public data: any;
+  public data: {
+    nftContractAddress: string;
+    nftChainRpcUrl: string;
+    restrictToOwner: string;
+    ipfsGatewayUrl: string;
+    clusterId: string;
+  };
 
   public constructor(data: any, context: Context) {
     super(data, context);
