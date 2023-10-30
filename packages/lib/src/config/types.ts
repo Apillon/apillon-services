@@ -134,6 +134,7 @@ export enum StorageEventType {
   PROJECT_STORAGE_DETAILS = 'project-storage-details',
   STORAGE_INFO = 'get-storage-info',
   GET_BLACKLIST = 'get-blacklist',
+  BLACKLIST_PROJECT = 'blacklist-project',
 }
 
 export enum AuthenticationEventType {

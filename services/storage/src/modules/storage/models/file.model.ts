@@ -551,6 +551,17 @@ export class File extends UuidSqlModel {
 
     await this.getContext().mysql.paramExecute(
       `
+    INSERT INTO \`${DbTables.BLACKLIST}\` (cid)
+    SELECT f.CID
+    FROM \`${DbTables.FILE}\` f
+    WHERE f.project_uuid = @project_uuid 
+    AND f.status NOT IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.BLOCKED})
+    `,
+      { project_uuid },
+    );
+
+    await this.getContext().mysql.paramExecute(
+      `
     UPDATE \`${DbTables.FILE}\`
     SET status = ${SqlModelStatus.BLOCKED}
     WHERE project_uuid = @project_uuid 

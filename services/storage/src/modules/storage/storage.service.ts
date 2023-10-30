@@ -579,6 +579,7 @@ export class StorageService {
     event: { project_uuid: string },
     context: ServiceContext,
   ) {
+    //Unpin files from IPFS
     const projectFiles = await new File({}, context).populateFilesForProject(
       event.project_uuid,
     );

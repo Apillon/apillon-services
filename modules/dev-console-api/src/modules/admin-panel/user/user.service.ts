@@ -1,6 +1,3 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { DevConsoleApiContext } from '../../../context';
-import { User } from '../../user/models/user.model';
 import {
   Ams,
   BaseQueryFilter,
@@ -13,11 +10,15 @@ import {
   Scs,
   SerializeFor,
   SqlModelStatus,
+  StorageMicroservice,
   SystemErrorCode,
 } from '@apillon/lib';
-import { ResourceNotFoundErrorCode } from '../../../config/types';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { UUID } from 'crypto';
+import { ResourceNotFoundErrorCode } from '../../../config/types';
+import { DevConsoleApiContext } from '../../../context';
 import { Project } from '../../project/models/project.model';
+import { User } from '../../user/models/user.model';
 
 @Injectable()
 export class UserService {
@@ -211,6 +212,13 @@ export class UserService {
         project_uuids: userProjects.items.map((x) => x.project_uuid),
         block: true,
       });
+
+      //Block project storage data
+      for (const project of userProjects.items) {
+        await new StorageMicroservice(context).blacklistProject(
+          project.project_uuid,
+        );
+      }
 
       //Block projects
       await new Project({}, context).updateUserProjectsStatus(
