@@ -285,7 +285,11 @@ export class Ipns extends ProjectAccessModel {
 
     for (const item of data.items) {
       if (item.ipnsName) {
-        item.link = ipfsCluster.generateLink(b.project_uuid, item.ipnsName);
+        item.link = ipfsCluster.generateLink(
+          b.project_uuid,
+          item.ipnsName,
+          true,
+        );
       }
     }
 
