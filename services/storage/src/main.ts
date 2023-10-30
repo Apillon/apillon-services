@@ -79,6 +79,7 @@ export async function processEvent(event, context: Context): Promise<any> {
 
     [StorageEventType.PROJECT_STORAGE_DETAILS]:
       StorageService.getProjectStorageDetails,
+    [StorageEventType.BLACKLIST_PROJECT]: StorageService.blacklistProjectData,
 
     [StorageEventType.GET_BLACKLIST]: StorageService.getBlacklist,
     [StorageEventType.STORAGE_INFO]: StorageService.getStorageInfo,
