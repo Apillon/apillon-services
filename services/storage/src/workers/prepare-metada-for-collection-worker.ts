@@ -243,7 +243,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
 
       console.info(`IPNS sucessfully published. Removing files from s3`);
     } else {
-      //Metadata is prepared. It wont use apillon gateway ipns as base uri, so run nft deploy with wrapping cid as base URI
+      //Metadata is prepared. It won't use apillon gateway ipns as base uri, so run nft deploy with wrapping cid as base URI
       if (
         env.APP_ENV == AppEnvironment.LOCAL_DEV ||
         env.APP_ENV == AppEnvironment.TEST
