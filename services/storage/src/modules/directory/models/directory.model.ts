@@ -375,7 +375,7 @@ export class Directory extends UuidSqlModel {
         qSelect: `
         SELECT d.directory_uuid as uuid, ${ObjectType.DIRECTORY} as type, d.name, d.CID, d.createTime, d.updateTime,
         NULL as contentType, NULL as size, pd.directory_uuid as directoryUuid,
-        IF(d.CID IS NULL, NULL, CONCAT("${ipfsCluster.ipfsGateway}", d.CID)) as link, NULL as fileStatus
+        NULL as fileStatus
         `,
         qFrom: `
         FROM \`${DbTables.DIRECTORY}\` d
@@ -392,7 +392,8 @@ export class Directory extends UuidSqlModel {
       {
         qSelect: `
         SELECT d.file_uuid as uuid, ${ObjectType.FILE} as type, d.name, d.CID, d.createTime, d.updateTime,
-        d.contentType as contentType, d.size as size, pd.directory_uuid as directoryUuid, CONCAT("${ipfsCluster.ipfsGateway}", d.CID) as link, d.fileStatus as fileStatus
+        d.contentType as contentType, d.size as size, pd.directory_uuid as directoryUuid, 
+        d.fileStatus as fileStatus
         `,
         qFrom: `
         FROM \`${DbTables.FILE}\` d
@@ -417,14 +418,10 @@ export class Directory extends UuidSqlModel {
       'd.name',
     );
 
-    if (ipfsCluster.private) {
-      for (const item of data.items) {
-        item.link = addJwtToIPFSUrl(
-          item.link,
-          bucket.project_uuid,
-          item.CID,
-          ipfsCluster,
-        );
+    //Populate link
+    for (const item of data.items) {
+      if (item.CID) {
+        item.link = ipfsCluster.generateLink(bucket.project_uuid, item.CID);
       }
     }
 

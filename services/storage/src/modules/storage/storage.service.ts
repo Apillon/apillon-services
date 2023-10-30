@@ -36,7 +36,6 @@ import {
 import { createFURAndS3Url } from '../../lib/create-fur-and-s3-url';
 import { StorageCodeException } from '../../lib/exceptions';
 import { getSessionFilesOnS3 } from '../../lib/file-upload-session-s3-files';
-import { addJwtToIPFSUrl } from '../../lib/ipfs-utils';
 import { processSessionFiles } from '../../lib/process-session-files';
 import { SyncToIPFSWorker } from '../../workers/s3-to-ipfs-sync-worker';
 import { WorkerName } from '../../workers/worker-executor';
@@ -44,6 +43,7 @@ import { Bucket } from '../bucket/models/bucket.model';
 import { ProjectConfig } from '../config/models/project-config.model';
 import { HostingService } from '../hosting/hosting.service';
 import { Website } from '../hosting/models/website.model';
+import { IPFSService } from '../ipfs/ipfs.service';
 import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
@@ -561,6 +561,8 @@ export class StorageService {
   }
   //#endregion
 
+  //#region system functions
+
   /**
    * Return CIDs and IPNS that are blacklisted
    */
@@ -569,4 +571,47 @@ export class StorageService {
       SELECT DISTINCT cid FROM ${DbTables.BLACKLIST};
     `);
   }
+
+  /**
+   * Add all project files to blacklist and unpin them from IPFS
+   */
+  static async blacklistProjectData(
+    event: { project_uuid: string },
+    context: ServiceContext,
+  ) {
+    const projectFiles = await new File({}, context).populateFilesForProject(
+      event.project_uuid,
+    );
+
+    const ipfsCluster = await new ProjectConfig(
+      { project_uuid: event.project_uuid },
+      context,
+    ).getIpfsCluster();
+
+    const ipfsService = new IPFSService(context, event.project_uuid);
+
+    await runWithWorkers(
+      projectFiles,
+      [AppEnvironment.LOCAL_DEV, AppEnvironment.TEST].includes(
+        env.APP_ENV as AppEnvironment,
+      )
+        ? 1
+        : 20,
+      context,
+      async (file: File) => {
+        if (ipfsCluster.clusterServer) {
+          await ipfsService.unpinCidFromCluster(file.CID);
+        } else {
+          await ipfsService.unpinFile(file.CID);
+        }
+      },
+    );
+
+    //Block files
+    await new File({}, context).blockFilesForProject(event.project_uuid);
+
+    return true;
+  }
+
+  //#endregion
 }
