@@ -154,53 +154,58 @@ export class Logger {
     event: { dateFrom: Date; dateTo: Date },
     context: ServiceContext,
   ) {
-    const projectIpfsTrafficLogs = await context.mongo.db
-      .collection(MongoCollections.IPFS_TRAFFIC_LOG)
-      .aggregate([
-        {
-          $match: {
-            ts: { $gt: new Date(event.dateFrom), $lte: new Date(event.dateTo) },
-            project_uuid: { $exists: true, $nin: [null, ''] },
-          },
-        },
-        {
-          $group: {
-            _id: {
-              project_uuid: '$project_uuid',
-              month: { $month: '$ts' },
-              year: { $year: '$ts' },
+    const traffic = await Promise.all([
+      context.mongo.db
+        .collection(MongoCollections.IPFS_TRAFFIC_LOG)
+        .aggregate([
+          {
+            $match: {
+              ts: {
+                $gt: new Date(event.dateFrom),
+                $lte: new Date(event.dateTo),
+              },
+              project_uuid: { $exists: true, $nin: [null, ''] },
             },
-            respBytes: { $sum: '$respBytes' },
           },
-        },
-      ])
-      .toArray();
+          {
+            $group: {
+              _id: {
+                project_uuid: '$project_uuid',
+                month: { $month: '$ts' },
+                year: { $year: '$ts' },
+              },
+              respBytes: { $sum: '$respBytes' },
+            },
+          },
+        ])
+        .toArray(),
 
-    const hostingIpfsTrafficLogs = await context.mongo.db
-      .collection(MongoCollections.IPFS_TRAFFIC_LOG)
-      .aggregate([
-        {
-          $match: {
-            ts: {
-              $gte: new Date(event.dateFrom),
-              $lte: new Date(event.dateTo),
+      context.mongo.db
+        .collection(MongoCollections.IPFS_TRAFFIC_LOG)
+        .aggregate([
+          {
+            $match: {
+              ts: {
+                $gte: new Date(event.dateFrom),
+                $lte: new Date(event.dateTo),
+              },
+              project_uuid: { $exists: true, $in: [null, ''] },
             },
-            project_uuid: { $exists: true, $in: [null, ''] },
           },
-        },
-        {
-          $group: {
-            _id: {
-              host: '$host',
-              month: { $month: '$ts' },
-              year: { $year: '$ts' },
+          {
+            $group: {
+              _id: {
+                host: '$host',
+                month: { $month: '$ts' },
+                year: { $year: '$ts' },
+              },
+              respBytes: { $sum: '$respBytes' },
             },
-            respBytes: { $sum: '$respBytes' },
           },
-        },
-      ])
-      .toArray();
+        ])
+        .toArray(),
+    ]);
 
-    return [...projectIpfsTrafficLogs, ...hostingIpfsTrafficLogs];
+    return [...traffic[0], ...traffic[1]];
   }
 }

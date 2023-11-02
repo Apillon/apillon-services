@@ -2,10 +2,13 @@ import {
   AdvancedSQLModel,
   AppEnvironment,
   Context,
+  DomainQueryFilter,
+  PoolConnection,
   PopulateFrom,
   QuotaCode,
   Scs,
   SerializeFor,
+  SqlModelStatus,
   env,
   prop,
   runWithWorkers,
@@ -75,6 +78,7 @@ export class IpfsBandwidth extends AdvancedSQLModel {
     project_uuid: string,
     month?: number,
     year?: number,
+    conn?: PoolConnection,
   ): Promise<this> {
     if (!project_uuid) {
       throw new Error('project_uuid should not be null');
@@ -95,6 +99,7 @@ export class IpfsBandwidth extends AdvancedSQLModel {
         AND year = @year;
       `,
       { project_uuid, month, year },
+      conn,
     );
 
     return data?.length
@@ -102,19 +107,34 @@ export class IpfsBandwidth extends AdvancedSQLModel {
       : this.reset();
   }
 
-  public async getProjectsOverBandwidthQuota() {
+  public async getProjectsOverBandwidthQuota(query: DomainQueryFilter) {
     const currDate = new Date();
 
     //Get all projects, that have reached max bandwidth on freemium
     const data = await this.getContext().mysql.paramExecute(
       `
-        SELECT project_uuid, bandwidth
-        FROM \`${DbTables.IPFS_BANDWIDTH}\`
-        WHERE month = @month
-        AND year = @year
-        AND bandwidth > ${Defaults.DEFAULT_BANDWIDTH}
+        SELECT b.project_uuid, b.bandwidth
+        FROM \`${DbTables.IPFS_BANDWIDTH}\` b
+        WHERE b.month = @month
+        AND b.year = @year
+        AND b.bandwidth > ${Defaults.DEFAULT_BANDWIDTH_IN_BYTES}
+        AND ( @clusterDomain IS NULL or @clusterDomain LIKE (
+          SELECT c.domain
+          FROM \`${DbTables.IPFS_CLUSTER}\` c
+          LEFT JOIN \`${DbTables.PROJECT_CONFIG}\` pc 
+            ON pc.ipfsCluster_id = c.id
+            AND pc.project_uuid = b.project_uuid
+          WHERE (pc.project_uuid = b.project_uuid OR c.isDefault = 1)
+          AND c.status = ${SqlModelStatus.ACTIVE}
+          ORDER BY c.isDefault ASC
+          LIMIT 1
+        ))
       `,
-      { month: currDate.getMonth() + 1, year: currDate.getFullYear() },
+      {
+        month: currDate.getMonth() + 1,
+        year: currDate.getFullYear(),
+        clusterDomain: query.ipfsClusterDomain,
+      },
     );
 
     const projectsOverBandwidthQuota = [];
@@ -133,7 +153,10 @@ export class IpfsBandwidth extends AdvancedSQLModel {
           project_uuid: data.project_uuid,
         });
 
-        if (data.bandwidth > (bandwidthQuota?.value || 20) * 1073741824) {
+        if (
+          data.bandwidth >
+          (bandwidthQuota?.value || Defaults.DEFAULT_BANDWIDTH) * 1073741824
+        ) {
           projectsOverBandwidthQuota.push(data.project_uuid);
         }
       },

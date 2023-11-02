@@ -2,6 +2,7 @@ import {
   ApillonHostingApiCreateS3UrlsForUploadDto,
   AppEnvironment,
   AWS_S3,
+  CodeException,
   CreateS3UrlsForUploadDto,
   CreateWebsiteDto,
   DeploymentQueryFilter,
@@ -95,6 +96,19 @@ export class HostingService {
   ): Promise<any> {
     const website: Website = new Website(event.body, context);
 
+    if (website.domain) {
+      //Check if domain already exists
+      const tmpWebsite = await new Website({}, context).populateByDomain(
+        website.domain,
+      );
+      if (tmpWebsite.exists()) {
+        throw new StorageCodeException({
+          code: StorageErrorCode.WEBSITE_WITH_THAT_DOMAIN_ALREADY_EXISTS,
+          status: 409,
+        });
+      }
+    }
+
     const website_uuid = uuidV4();
     const spendCredit: SpendCreditDto = new SpendCreditDto(
       {
@@ -156,7 +170,16 @@ export class HostingService {
         }
       }
 
-      //TODO: Spend credit ?
+      //Check if domain already exists
+      const tmpWebsite = await new Website({}, context).populateByDomain(
+        website.domain,
+      );
+      if (tmpWebsite.exists()) {
+        throw new StorageCodeException({
+          code: StorageErrorCode.WEBSITE_WITH_THAT_DOMAIN_ALREADY_EXISTS,
+          status: 409,
+        });
+      }
 
       website.domainChangeDate = new Date();
     }

@@ -1,4 +1,4 @@
-import { SqlModelStatus, env } from '@apillon/lib';
+import { DomainQueryFilter, SqlModelStatus, env } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
 import { getConsoleApiMysql } from '../../lib/mysql-utils';
@@ -11,7 +11,10 @@ export class SystemService {
    * @param context
    * @returns
    */
-  async getProjectsBlockedOnIpfs(context: ApillonApiContext) {
+  async getProjectsBlockedOnIpfs(
+    context: ApillonApiContext,
+    query: DomainQueryFilter,
+  ) {
     let blockedProjects = [];
     //Get blocked projects
     const mysql = getConsoleApiMysql();
@@ -33,7 +36,9 @@ export class SystemService {
 
     //Get projects that have reached bandwidth quota
     const projectsOverBandwidthQouta = (
-      await new StorageMicroservice(context).getProjectsOverBandwidthQuota()
+      await new StorageMicroservice(context).getProjectsOverBandwidthQuota(
+        query,
+      )
     ).data;
 
     projectsOverBandwidthQouta.forEach((projectOverQuota) => {

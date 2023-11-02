@@ -50,9 +50,10 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async getProjectsOverBandwidthQuota() {
+  public async getProjectsOverBandwidthQuota(query: DomainQueryFilter) {
     const data = {
       eventName: StorageEventType.PROJECTS_OVER_BANDWIDTH_QUOTA,
+      query: query.serialize(),
     };
     return await this.callService(data);
   }

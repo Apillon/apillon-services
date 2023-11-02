@@ -4,8 +4,11 @@ import {
   Context,
   env,
   Lmas,
+  LogType,
   runWithWorkers,
+  SerializeFor,
   ServiceName,
+  SqlModelStatus,
 } from '@apillon/lib';
 import { BaseWorker, Job, WorkerDefinition } from '@apillon/workers-lib';
 import { DbTables, StorageErrorCode } from '../config/types';
@@ -33,30 +36,51 @@ export class IpfsBandwidthWorker extends BaseWorker {
       1,
     );
     const ipfsTrafficTo = new Date();
-
-    //Get last sync date from job table
-    const tmpQueryData = await this.context.mysql.paramExecute(
-      `
-        SELECT * 
-        FROM \`${DbTables.IPFS_BANDWIDTH_SYNC}\`
-        ORDER BY ipfsTrafficTo DESC
-        LIMIT 1
-        `,
-      {},
-    );
-
-    if (tmpQueryData.length && tmpQueryData[0].ipfsTrafficTo) {
-      ipfsTrafficFrom = tmpQueryData[0].ipfsTrafficTo;
-    }
+    let ipfsTraffic = undefined;
 
     try {
+      //Get last sync date from job table
+      const tmpQueryData = await this.context.mysql.paramExecute(
+        `
+          SELECT * 
+          FROM \`${DbTables.IPFS_BANDWIDTH_SYNC}\`
+          WHERE status = ${SqlModelStatus.ACTIVE}
+          ORDER BY ipfsTrafficTo DESC
+          LIMIT 1
+          `,
+        {},
+      );
+
+      if (tmpQueryData.length && tmpQueryData[0].ipfsTrafficTo) {
+        ipfsTrafficFrom = tmpQueryData[0].ipfsTrafficTo;
+      }
+
       //Call monitoring service to get ipfs traffic data
-      const ipfsTraffic = await new Lmas().getIpfsTraffic(
+      ipfsTraffic = await new Lmas().getIpfsTraffic(
         ipfsTrafficFrom,
         ipfsTrafficTo,
       );
+    } catch (err) {
+      await new CodeException({
+        code: StorageErrorCode.IPFS_BANDWIDTH_WORKER_UNHANDLED_EXCEPTION,
+        status: 500,
+        context: this.context,
+        errorCodes: StorageErrorCode,
+        errorMessage:
+          'Ipfs bandwidth worker error. Error at getting ipfs traffic',
+        details: err,
+        sourceFunction: 'IpfsBandwidthWorker.execute',
+        sourceModule: ServiceName.STORAGE,
+      }).writeToMonitor({
+        sendAdminAlert: true,
+      });
+      return false;
+    }
 
-      //For each project increase or insert used bandwidth record
+    const conn = await this.context.mysql.start();
+
+    try {
+      //For each project increase or insert used bandwidth record;
       await runWithWorkers(
         ipfsTraffic.data,
         env.APP_ENV == AppEnvironment.LOCAL_DEV ||
@@ -76,12 +100,21 @@ export class IpfsBandwidthWorker extends BaseWorker {
           if (!data._id.project_uuid) {
             //If project_uuid is not specified, then traffic is from hosting. Try to get project by host (host = website.domain)
             if (!data._id.host) {
+              await new Lmas().writeLog({
+                context: this.context,
+                data,
+                location: 'IpfsBandwidthWorker.execute',
+                service: ServiceName.STORAGE,
+                logType: LogType.INFO,
+                message:
+                  'Ipfs traffic without project_uuid and host property has been received.',
+              });
               return;
             }
             const website = await new Website(
               {},
               this.context,
-            ).populateByDomain(data._id.host);
+            ).populateByDomain(data._id.host, conn);
 
             if (website.exists()) {
               data._id.project_uuid = website.project_uuid;
@@ -97,11 +130,12 @@ export class IpfsBandwidthWorker extends BaseWorker {
             data._id.project_uuid,
             data._id.month,
             data._id.year,
+            conn,
           );
 
           if (ipfsBandwidth.exists()) {
             ipfsBandwidth.bandwidth += data.respBytes;
-            await ipfsBandwidth.update();
+            await ipfsBandwidth.update(SerializeFor.UPDATE_DB, conn);
           } else {
             ipfsBandwidth = new IpfsBandwidth(
               {
@@ -111,7 +145,7 @@ export class IpfsBandwidthWorker extends BaseWorker {
               this.context,
             );
 
-            await ipfsBandwidth.insert();
+            await ipfsBandwidth.insert(SerializeFor.INSERT_DB, conn);
           }
         },
       );
@@ -121,15 +155,20 @@ export class IpfsBandwidthWorker extends BaseWorker {
         {
           ipfsTrafficFrom,
           ipfsTrafficTo,
+          status: SqlModelStatus.ACTIVE,
         },
         this.context,
-      ).insert();
+      ).insert(SerializeFor.INSERT_DB, conn);
+
+      await this.context.mysql.commit(conn);
     } catch (err) {
+      await this.context.mysql.rollback(conn);
       await new IpfsBandwidthSync(
         {
           ipfsTrafficFrom,
           ipfsTrafficTo,
           message: 'Ipfs bandwidth worker error: ' + err.message,
+          status: SqlModelStatus.INCOMPLETE,
         },
         this.context,
       ).insert();
@@ -139,13 +178,16 @@ export class IpfsBandwidthWorker extends BaseWorker {
         status: 500,
         context: this.context,
         errorCodes: StorageErrorCode,
-        errorMessage: 'Ipfs bandwidth worker error.',
+        errorMessage:
+          'Ipfs bandwidth worker error. Error at aggregating ipfs traffic',
         details: err,
         sourceFunction: 'IpfsBandwidthWorker.execute',
         sourceModule: ServiceName.STORAGE,
       }).writeToMonitor({
         sendAdminAlert: true,
       });
+
+      return false;
     }
 
     return true;

@@ -3,6 +3,7 @@ import {
   AWS_S3,
   CacheKeyPrefix,
   CreateS3UrlsForUploadDto,
+  DomainQueryFilter,
   EndFileUploadSessionDto,
   env,
   FilesQueryFilter,
@@ -29,6 +30,7 @@ import { v4 as uuidV4 } from 'uuid';
 import {
   BucketType,
   DbTables,
+  Defaults,
   FileStatus,
   FileUploadSessionStatus,
   StorageErrorCode,
@@ -80,7 +82,8 @@ export class StorageService {
       quota_id: QuotaCode.MAX_BANDWIDTH,
       project_uuid: event.project_uuid,
     });
-    const availableBandwidth = (bandwidthQuota?.value || 20) * 1073741824;
+    const availableBandwidth =
+      (bandwidthQuota?.value || Defaults.DEFAULT_BANDWIDTH) * 1073741824;
 
     const usedBandwidth = await new IpfsBandwidth(
       {},
@@ -96,10 +99,12 @@ export class StorageService {
   }
 
   static async getProjectsOverBandwidthQuota(
-    event,
+    event: { query: DomainQueryFilter },
     context: ServiceContext,
   ): Promise<string[]> {
-    return await new IpfsBandwidth({}, context).getProjectsOverBandwidthQuota();
+    return await new IpfsBandwidth({}, context).getProjectsOverBandwidthQuota(
+      event.query,
+    );
   }
 
   //#region file-upload functions

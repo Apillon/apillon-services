@@ -1,9 +1,15 @@
-import { AttachedServiceType, DefaultApiKeyRole } from '@apillon/lib';
-import { ApiKeyPermissions, Ctx } from '@apillon/modules-lib';
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import {
+  AttachedServiceType,
+  DefaultApiKeyRole,
+  DomainQueryFilter,
+  ValidateFor,
+} from '@apillon/lib';
+import { ApiKeyPermissions, Ctx, Validation } from '@apillon/modules-lib';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { SystemService } from './system.service';
+import { ValidationGuard } from '../../guards/validation.guard';
 
 @Controller('system')
 export class SystemController {
@@ -14,8 +20,12 @@ export class SystemController {
     role: DefaultApiKeyRole.KEY_EXECUTE,
     serviceType: AttachedServiceType.SYSTEM,
   })
-  @UseGuards(AuthGuard)
-  async getProjectsBlockedOnIpfs(@Ctx() context: ApillonApiContext) {
-    return await this.systemService.getProjectsBlockedOnIpfs(context);
+  @Validation({ dto: DomainQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getProjectsBlockedOnIpfs(
+    @Ctx() context: ApillonApiContext,
+    @Query() query: DomainQueryFilter,
+  ) {
+    return await this.systemService.getProjectsBlockedOnIpfs(context, query);
   }
 }
