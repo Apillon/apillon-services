@@ -455,6 +455,7 @@ export class File extends UuidSqlModel {
         INNER JOIN \`${DbTables.BUCKET}\` b ON f.bucket_id = b.id
         WHERE b.bucket_uuid = @bucket_uuid
         AND (@search IS null OR CONCAT(IFNULL(f.path, ""), f.name) LIKE CONCAT('%', @search, '%'))
+        AND (@fileStatus IS NULL OR f.fileStatus = @fileStatus)
         AND f.status = @status
         `,
       qFilter: `
