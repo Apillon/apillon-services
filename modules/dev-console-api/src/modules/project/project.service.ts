@@ -125,8 +125,9 @@ export class ProjectService {
     );
 
     if (!activeSubscriptions.every((s) => !!s.id)) {
-      // If existing projects do not all have an active subscription,
-      // disallow creating a new project
+      // Only allow creating new project if all existing projects
+      // have an active subscription.
+      // Otherwise show that quota has been reached
       return true;
     }
 
