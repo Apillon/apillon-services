@@ -107,13 +107,36 @@ export class ProjectService {
   }
 
   async isProjectsQuotaReached(context: DevConsoleApiContext) {
-    const numOfProjects = await new Project({}, context).getNumOfUserProjects();
+    const { items: projects } = await new Project({}, context).getUserProjects(
+      context,
+      context.user.id,
+      DefaultUserRole.PROJECT_OWNER,
+    );
+
+    const activeSubscriptions = await Promise.all(
+      projects.map(
+        async (project) =>
+          (
+            await new Scs(context).getProjectActiveSubscription(
+              project.project_uuid,
+            )
+          ).data,
+      ),
+    );
+
+    if (!activeSubscriptions.every((s) => !!s.id)) {
+      // If existing projects do not all have an active subscription,
+      // disallow creating a new project
+      return true;
+    }
+
     const maxProjectsQuota = await new Scs(context).getQuota({
       quota_id: QuotaCode.MAX_PROJECT_COUNT,
       object_uuid: context.user.user_uuid,
     });
+
     return !!(
-      maxProjectsQuota?.value && numOfProjects >= maxProjectsQuota?.value
+      maxProjectsQuota?.value && projects.length >= maxProjectsQuota?.value
     );
   }
 
@@ -368,7 +391,7 @@ export class ProjectService {
       await new ProjectUser({}, context)
         .populate({
           ...invitation,
-          user_id: user_id,
+          user_id,
         })
         .insert(SerializeFor.INSERT_DB);
 
@@ -379,7 +402,7 @@ export class ProjectService {
       //assign user role on project
       const params: any = {
         user: context.user,
-        user_uuid: user_uuid,
+        user_uuid,
         project_uuid: project.project_uuid,
         role_id: invitation.role_id,
       };
