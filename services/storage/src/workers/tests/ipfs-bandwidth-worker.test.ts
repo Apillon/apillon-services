@@ -130,6 +130,7 @@ describe('IpfsBandwidthWorker integration test', () => {
   });
 
   test('Ipfs bandwidth worker should add bandwidth to existing ipfsBandwidth record for project, month and year. ', async () => {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     await stage.lmasMongo.db
       .collection(MongoCollections.IPFS_TRAFFIC_LOG)
       .insertOne({
