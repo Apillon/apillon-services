@@ -7,7 +7,6 @@ import {
   PopulateFrom,
   presenceValidator,
   prop,
-  safeJsonParse,
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
@@ -20,10 +19,6 @@ import {
   DbTables,
 } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
-
-function jsonSerializer() {
-  return (value: any) => (value ? JSON.stringify(value) : null);
-}
 
 export class Contract extends UuidSqlModel {
   public readonly tableName = DbTables.CONTRACT;
@@ -176,7 +171,7 @@ export class Contract extends UuidSqlModel {
   public contractStatus: number;
 
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: integerParser() },
     populatable: [
       PopulateFrom.DB,
       PopulateFrom.SERVICE,
@@ -192,10 +187,8 @@ export class Contract extends UuidSqlModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue:
-      '0x225793450b6441e92d321388f2e2b5d1fb3ec7bef18a0885ecedd9d439186cb8',
   })
-  public sourceHash: string;
+  public contractAbi_id: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -259,12 +252,6 @@ export class Contract extends UuidSqlModel {
   public transactionHash: string;
 
   @prop({
-    parser: {
-      resolver: jsonSerializer(),
-    },
-    getter(value: string | null) {
-      return safeJsonParse(value);
-    },
     populatable: [
       PopulateFrom.DB,
       PopulateFrom.SERVICE,

@@ -1,4 +1,5 @@
 import {
+  ComputingContractType,
   ContractQueryFilter,
   CreateContractDto,
   DepositToClusterDto,
@@ -28,8 +29,8 @@ import {
   transferContractOwnership,
 } from '../../lib/utils/contract-utils';
 import { Contract } from './models/contract.model';
-import { SchrodingerContractABI } from '../../lib/contracts/deployed-phala-contracts';
 import { Transaction } from '../transaction/models/transaction.model';
+import { ContractAbi } from './models/contractAbi.model';
 
 export class ComputingService {
   static async createContract(
@@ -44,10 +45,24 @@ export class ComputingService {
       )
     ).data;
 
+    const contractType = ComputingContractType.SCHRODINGER;
+    const contractAbi = await new ContractAbi({}, context).getLatest(
+      contractType,
+    );
+    if (!contractAbi || !contractAbi.exists()) {
+      throw await new ComputingCodeException({
+        status: 500,
+        code: ComputingErrorCode.DEPLOY_CONTRACT_ERROR,
+        context: context,
+        sourceFunction: 'createContract()',
+        errorMessage: `Contract ABI not found for contract type ${contractType}.`,
+      }).writeToMonitor({});
+    }
+
     const contract = new Contract(params.body, context).populate({
       contract_uuid: uuidV4(),
       status: SqlModelStatus.INCOMPLETE,
-      sourceHash: SchrodingerContractABI.source.hash,
+      contractAbi_id: contractAbi.id,
       data: {
         nftContractAddress: params.body.nftContractAddress,
         nftChainRpcUrl: params.body.nftChainRpcUrl,
@@ -68,7 +83,7 @@ export class ComputingService {
     const conn = await context.mysql.start();
     try {
       await contract.insert(SerializeFor.INSERT_DB, conn);
-      await deployPhalaContract(context, contract, conn);
+      await deployPhalaContract(context, contract, contractAbi, conn);
       await context.mysql.commit(conn);
     } catch (err) {
       await context.mysql.rollback(conn);
@@ -194,6 +209,9 @@ export class ComputingService {
     const contract = await new Contract({}, context).populateByUUID(
       body.contract_uuid,
     );
+    const contractAbi = await new ContractAbi({}, context).populateById(
+      contract.contractAbi_id,
+    );
     const sourceFunction = 'transferContractOwnership()';
     await ComputingService.checkContract(contract, sourceFunction, context);
     await ComputingService.checkTransferConditions(
@@ -203,7 +221,13 @@ export class ComputingService {
     );
 
     try {
-      await transferContractOwnership(context, contract, newOwnerAddress);
+      await transferContractOwnership(
+        context,
+        contract.id,
+        contractAbi.abi,
+        contract.contractAddress,
+        newOwnerAddress,
+      );
     } catch (e: any) {
       throw await new ComputingCodeException({
         status: 500,

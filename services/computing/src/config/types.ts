@@ -1,6 +1,7 @@
 export enum DbTables {
   TRANSACTION = 'transaction',
   CONTRACT = 'contract',
+  CONTRACT_ABI = 'contract_abi',
 }
 
 export enum ComputingErrorCode {
@@ -26,6 +27,7 @@ export enum ComputingErrorCode {
   CONTRACT_TYPE_NOT_PRESENT = 42212010,
   CONTRACT_TYPE_NOT_VALID = 42212011,
   CONTRACT_DATA_NOT_VALID_JSON = 42212012,
+  CONTRACT_REQUIRED_DATA_NOT_PRESENT = 42212013,
 
   //500
   GENERAL_SERVER_ERROR = 50012000,

@@ -14,16 +14,21 @@ export async function upgrade(
       \`contractType\` INT NOT NULL,
       \`data\` JSON NULL,
       \`contractStatus\` INT NOT NULL,
-      \`sourceHash\` CHAR (70) NULL,
       \`contractAddress\` CHAR (66) NULL,
       \`deployerAddress\` CHAR (50) NULL,
       \`transactionHash\` CHAR (66) NULL,
+      \`contractAbi_id\` INT NOT NULL,
       \`status\` INT NULL,
       \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
       \`createUser\` INT NULL,
       \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       \`updateUser\` INT NULL,
-      PRIMARY KEY(\`id\`)
+      PRIMARY KEY(\`id\`),
+      CONSTRAINT \`fk_contract_abi\`
+      FOREIGN KEY (\`contractAbi_id\`)
+      REFERENCES \`${DbTables.CONTRACT_ABI}\` (\`id\`)
+      ON DELETE NO ACTION
+      ON UPDATE NO ACTION
       );
   `);
 }
