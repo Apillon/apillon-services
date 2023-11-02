@@ -608,8 +608,9 @@ export class StorageService {
       },
     );
 
-    //Block files
-    await new File({}, context).blockFilesForProject(event.project_uuid);
+    //Block files - This is not necessary, because ipfs proxy checks if project is blocked.
+    //Blacklist is edited directly in database
+    //await new File({}, context).blockFilesForProject(event.project_uuid);
 
     return true;
   }
