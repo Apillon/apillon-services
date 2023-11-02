@@ -469,8 +469,8 @@ export class CreditService {
         body: new AddCreditDto({
           project_uuid,
           amount: freemiumPackage.creditAmount,
-          referenceTable: DbTables.SUBSCRIPTION,
-          referenceId: freemiumPackage.id,
+          referenceTable: 'project',
+          referenceId: project_uuid,
         }),
       },
       context,
