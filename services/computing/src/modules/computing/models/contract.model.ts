@@ -20,6 +20,7 @@ import {
   DbTables,
 } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
+import { ComputingCodeException } from '../../../lib/exceptions';
 
 function jsonSerializer() {
   return (value: any) => (value ? JSON.stringify(value) : null);
@@ -292,13 +293,28 @@ export class Contract extends UuidSqlModel {
     super(data, context);
   }
 
-  public async getList(
-    context: ServiceContext,
-    filter: ContractQueryFilter,
-    serializationStrategy = SerializeFor.PROFILE,
-  ) {
+  verifyStatusAndAccess(sourceFunction: string, context: ServiceContext) {
+    if (!this.exists()) {
+      throw new ComputingCodeException({
+        status: 500,
+        code: ComputingErrorCode.CONTRACT_DOES_NOT_EXIST,
+        context,
+        sourceFunction,
+      });
+    }
+    if (this.contractAddress == null) {
+      throw new ComputingCodeException({
+        status: 500,
+        code: ComputingErrorCode.CONTRACT_ADDRESS_IS_MISSING,
+        context,
+        sourceFunction,
+      });
+    }
     this.canAccess(context);
-    // Map url query with sql fields.
+  }
+
+  public async getList(context: ServiceContext, filter: ContractQueryFilter) {
+    this.canAccess(context);
     const fieldMap = {
       id: 'c.id',
     };
@@ -308,11 +324,10 @@ export class Contract extends UuidSqlModel {
       fieldMap,
       filter.serialize(),
     );
-
     const selectFields = this.generateSelectFields(
       'c',
       '',
-      serializationStrategy,
+      SerializeFor.SELECT_DB,
     );
     const sqlQuery = {
       qSelect: `
@@ -336,21 +351,7 @@ export class Contract extends UuidSqlModel {
       `,
     };
 
-    const contractsResult = await selectAndCountQuery(
-      context.mysql,
-      sqlQuery,
-      params,
-      'c.id',
-    );
-
-    return {
-      ...contractsResult,
-      items: contractsResult.items.map((contract) =>
-        new Contract({}, context)
-          .populate(contract, PopulateFrom.DB)
-          .serialize(serializationStrategy),
-      ),
-    };
+    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'c.id');
   }
 
   public override async populateByUUID(contract_uuid: string): Promise<this> {
