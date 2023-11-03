@@ -1,29 +1,31 @@
 import {
-  Ams,
   AttachedServiceType,
   DefaultApiKeyRole,
-  OauthListFilterDto,
+  DomainQueryFilter,
   ValidateFor,
 } from '@apillon/lib';
 import { ApiKeyPermissions, Ctx, Validation } from '@apillon/modules-lib';
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
+import { SystemService } from './system.service';
 import { ValidationGuard } from '../../guards/validation.guard';
 
-@Controller('discord-bot')
-export class DiscordBotController {
-  @Get('user-list')
+@Controller('system')
+export class SystemController {
+  constructor(private systemService: SystemService) {}
+
+  @Get('blocked-on-ipfs')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_EXECUTE,
     serviceType: AttachedServiceType.SYSTEM,
   })
-  @Validation({ dto: OauthListFilterDto, validateFor: ValidateFor.QUERY })
-  @UseGuards(ValidationGuard, AuthGuard)
-  async getDiscordUserList(
+  @Validation({ dto: DomainQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getProjectsBlockedOnIpfs(
     @Ctx() context: ApillonApiContext,
-    @Query() filter: OauthListFilterDto,
+    @Query() query: DomainQueryFilter,
   ) {
-    return await new Ams(context).getDiscordUserList(filter);
+    return await this.systemService.getProjectsBlockedOnIpfs(context, query);
   }
 }

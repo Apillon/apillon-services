@@ -271,6 +271,27 @@ export class CreditTransaction extends ProjectAccessModel {
       `,
     };
 
-    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'ct.id');
+    const data = await selectAndCountQuery(
+      context.mysql,
+      sqlQuery,
+      params,
+      'ct.id',
+    );
+
+    const txDescriptionMap = {
+      [DbTables.INVOICE]: 'Credit purchase',
+      [DbTables.SUBSCRIPTION]: 'Subscription for a new plan',
+      project: 'Creation of a new project',
+    };
+
+    data.items
+      .filter((ct) => ct.direction === CreditDirection.RECEIVE)
+      .forEach((ct) => {
+        ct.category = ct.referenceTable?.toUpperCase();
+        ct.description =
+          txDescriptionMap[ct.referenceTable] ||
+          `Refund for credits spent in ${ct.category} category`;
+      });
+    return data;
   }
 }

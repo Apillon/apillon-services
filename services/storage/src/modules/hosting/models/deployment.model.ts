@@ -398,7 +398,7 @@ export class Deployment extends AdvancedSQLModel {
           'd',
           '',
           getSerializationStrategy(context),
-        )}
+        )}, wp.website_uuid
         `,
       qFrom: `
         FROM \`${DbTables.DEPLOYMENT}\` d
@@ -406,13 +406,14 @@ export class Deployment extends AdvancedSQLModel {
         WHERE wp.website_uuid = @website_uuid
         AND d.status = ${SqlModelStatus.ACTIVE}
         AND (
-          @environment IS NULL 
+          @environment IS NULL
           OR d.environment = ${
             filter.environment == DeploymentEnvironment.DIRECT_TO_PRODUCTION
               ? DeploymentEnvironment.PRODUCTION
               : filter.environment
           }
         )
+        AND (@deploymentStatus IS NULL OR d.deploymentStatus = @deploymentStatus)
       `,
       qFilter: `
         ORDER BY ${filters.orderStr ? filters.orderStr : 'd.updateTime DESC'}
