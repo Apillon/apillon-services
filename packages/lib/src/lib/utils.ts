@@ -99,7 +99,7 @@ export function checkEmail(email: string) {
  */
 export function generateJwtToken(
   subject: string,
-  data: any,
+  data: object,
   expiresIn = '1d',
   secret?: string,
 ) {

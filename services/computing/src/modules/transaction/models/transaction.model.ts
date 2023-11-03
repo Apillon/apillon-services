@@ -1,14 +1,11 @@
 import {
   AdvancedSQLModel,
   Context,
-  getQueryParams,
   PopulateFrom,
   presenceValidator,
   prop,
-  selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
-  TransactionQueryFilter,
   TransactionStatus,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
@@ -17,7 +14,6 @@ import {
   DbTables,
   TransactionType,
 } from '../../../config/types';
-import { ServiceContext } from '@apillon/service-lib';
 
 export class Transaction extends AdvancedSQLModel {
   public readonly tableName = DbTables.TRANSACTION;
@@ -48,24 +44,6 @@ export class Transaction extends AdvancedSQLModel {
   public transactionType: number;
 
   @prop({
-    parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
-    validators: [],
-  })
-  public refTable: string;
-
-  @prop({
     parser: { resolver: integerParser() },
     populatable: [
       PopulateFrom.DB,
@@ -80,7 +58,7 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.PROFILE,
     ],
   })
-  public refId: number;
+  public contractId: number;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -159,9 +137,8 @@ export class Transaction extends AdvancedSQLModel {
       `
         SELECT t.*
         FROM \`${this.tableName}\` as t
-               JOIN contract as c ON (c.id = t.refId)
-        WHERE t.refTable = 'contract'
-          AND t.status <> ${SqlModelStatus.DELETED}
+               JOIN contract as c ON (c.id = t.contractId)
+        WHERE t.status <> ${SqlModelStatus.DELETED}
           AND (@transactionStatus IS NULL OR
                t.transactionStatus = @transactionStatus)
           AND (@transactionType IS NULL OR t.transactionType = @transactionType)
@@ -178,62 +155,5 @@ export class Transaction extends AdvancedSQLModel {
     }
 
     return res;
-  }
-
-  public async getList(
-    context: ServiceContext,
-    filter: TransactionQueryFilter,
-    serializationStrategy: SerializeFor = SerializeFor.PROFILE,
-  ) {
-    // Map url query with sql fields.
-    const fieldMap = {
-      id: 't.id',
-    };
-    const { params, filters } = getQueryParams(
-      filter.getDefaultValues(),
-      't',
-      fieldMap,
-      filter.serialize(),
-    );
-
-    const selectFields = this.generateSelectFields(
-      't',
-      '',
-      serializationStrategy,
-    );
-    const sqlQuery = {
-      qSelect: `
-        SELECT ${selectFields}
-        `,
-      qFrom: `
-        FROM \`${this.tableName}\` t
-        WHERE (@refTable IS null OR refTable = @refTable)
-        AND (@refId IS NULL or refId = @refId)
-        AND status <> ${SqlModelStatus.DELETED}
-        AND (@transactionStatus IS null OR t.transactionStatus = @transactionStatus)
-        AND (@transactionType IS null OR t.transactionType = @transactionType)
-        AND (@search IS null OR transactionHash LIKE CONCAT('%', @search, '%'))
-      `,
-      qFilter: `
-        ORDER BY ${filters.orderStr}
-        LIMIT ${filters.limit} OFFSET ${filters.offset};
-      `,
-    };
-
-    const transactionsResult = await selectAndCountQuery(
-      this.getContext().mysql,
-      sqlQuery,
-      params,
-      't.id',
-    );
-
-    return {
-      ...transactionsResult,
-      items: transactionsResult.items.map((transaction) =>
-        new Transaction({}, context)
-          .populate(transaction, PopulateFrom.DB)
-          .serialize(serializationStrategy),
-      ),
-    };
   }
 }

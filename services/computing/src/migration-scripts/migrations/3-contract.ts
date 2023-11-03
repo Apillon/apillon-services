@@ -6,60 +6,24 @@ export async function upgrade(
   await queryFn(`
     CREATE TABLE IF NOT EXISTS \`${DbTables.CONTRACT}\`
     (
-      \`id\`
-      INT
-      NOT
-      NULL
-      AUTO_INCREMENT,
-      \`contract_uuid\`
-      VARCHAR
-    (
-      36
-    ) NOT NULL,
-      \`project_uuid\` VARCHAR
-    (
-      36
-    ) NOT NULL,
-      \`name\` VARCHAR
-    (
-      255
-    ) NOT NULL,
-      \`description\` VARCHAR
-    (
-      255
-    ) NULL,
-      \`contractType\` INT NULL,
+      \`id\` INT NOT NULL AUTO_INCREMENT,
+      \`contract_uuid\` VARCHAR (36) NOT NULL,
+      \`project_uuid\` VARCHAR (36) NOT NULL,
+      \`name\` VARCHAR (255) NOT NULL,
+      \`description\` VARCHAR (255) NULL,
+      \`contractType\` INT NOT NULL,
       \`data\` JSON NULL,
       \`contractStatus\` INT NOT NULL,
-      \`sourceHash\` CHAR
-    (
-      70
-    ) NULL,
-      \`clusterId\` CHAR
-    (
-      70
-    ) NULL,
-      \`contractAddress\` CHAR
-    (
-      66
-    ) NULL,
-      \`deployerAddress\` CHAR
-    (
-      50
-    ) NULL,
-      \`transactionHash\` CHAR
-    (
-      66
-    ) NULL,
+      \`sourceHash\` CHAR (70) NULL,
+      \`contractAddress\` CHAR (66) NULL,
+      \`deployerAddress\` CHAR (50) NULL,
+      \`transactionHash\` CHAR (66) NULL,
       \`status\` INT NULL,
       \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
       \`createUser\` INT NULL,
       \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       \`updateUser\` INT NULL,
-      PRIMARY KEY
-    (
-      \`id\`
-    )
+      PRIMARY KEY(\`id\`)
       );
   `);
 }

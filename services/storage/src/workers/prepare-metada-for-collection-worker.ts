@@ -1,8 +1,10 @@
 import {
+  AppEnvironment,
   AWS_S3,
   Context,
   env,
   LogType,
+  NftsMicroservice,
   runWithWorkers,
   SerializeFor,
   ServiceName,
@@ -11,6 +13,7 @@ import {
 import {
   BaseQueueWorker,
   QueueWorkerType,
+  sendToWorkerQueue,
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import {
@@ -19,7 +22,6 @@ import {
   StorageErrorCode,
 } from '../config/types';
 import { StorageCodeException } from '../lib/exceptions';
-import { addJwtToIPFSUrl } from '../lib/ipfs-utils';
 import { storageBucketSyncFilesToIPFS } from '../lib/storage-bucket-sync-files-to-ipfs';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { ProjectConfig } from '../modules/config/models/project-config.model';
@@ -177,14 +179,14 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           const imageFile = imageFiles.files.find(
             (x) => x.name == fileContent.image,
           );
-          fileContent.image = ipfsCluster.ipfsGateway + imageFile.CID;
-          if (ipfsCluster.private) {
-            fileContent.image = addJwtToIPFSUrl(
-              fileContent.image,
+
+          if (data.useApillonIpfsGateway) {
+            fileContent.image = ipfsCluster.generateLink(
               bucket.project_uuid,
               imageFile.CID,
-              ipfsCluster,
             );
+          } else {
+            fileContent.image = 'ipfs://' + imageFile.CID;
           }
         }
 
@@ -222,23 +224,49 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       `pinning metadata CID (${metadataFiles.wrappedDirCid}) to IPNS`,
     );
 
-    //Pin to IPNS
-    const ipnsDbRecord: Ipns = await new Ipns({}, this.context).populateById(
-      data.ipnsId,
-    );
-    const ipnsRecord = await new IPFSService(
-      this.context,
-      ipnsDbRecord.project_uuid,
-    ).publishToIPNS(
-      metadataFiles.wrappedDirCid,
-      `${ipnsDbRecord.project_uuid}_${ipnsDbRecord.bucket_id}_${ipnsDbRecord.id}`,
-    );
-    ipnsDbRecord.ipnsValue = ipnsRecord.value;
-    ipnsDbRecord.key = `${ipnsDbRecord.project_uuid}_${ipnsDbRecord.bucket_id}_${ipnsDbRecord.id}`;
-    ipnsDbRecord.cid = metadataFiles.wrappedDirCid;
-    await ipnsDbRecord.update(SerializeFor.UPDATE_DB);
+    if (data.useApillonIpfsGateway) {
+      //Pin to IPNS
+      const ipnsDbRecord: Ipns = await new Ipns({}, this.context).populateById(
+        data.ipnsId,
+      );
+      const ipnsRecord = await new IPFSService(
+        this.context,
+        ipnsDbRecord.project_uuid,
+      ).publishToIPNS(
+        metadataFiles.wrappedDirCid,
+        `${ipnsDbRecord.project_uuid}_${ipnsDbRecord.bucket_id}_${ipnsDbRecord.id}`,
+      );
+      ipnsDbRecord.ipnsValue = ipnsRecord.value;
+      ipnsDbRecord.key = `${ipnsDbRecord.project_uuid}_${ipnsDbRecord.bucket_id}_${ipnsDbRecord.id}`;
+      ipnsDbRecord.cid = metadataFiles.wrappedDirCid;
+      await ipnsDbRecord.update(SerializeFor.UPDATE_DB);
 
-    console.info(`IPNS sucessfully published. Removing files from s3`);
+      console.info(`IPNS sucessfully published. Removing files from s3`);
+    } else {
+      //Metadata is prepared. It won't use apillon gateway ipns as base uri, so run nft deploy with wrapping cid as base URI
+      if (
+        env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+        env.APP_ENV == AppEnvironment.TEST
+      ) {
+        await new NftsMicroservice(this.context).executeDeployCollectionWorker({
+          collection_uuid: data.collection_uuid,
+          baseUri: 'ipfs://' + metadataFiles.wrappedDirCid,
+        });
+      } else {
+        await sendToWorkerQueue(
+          env.NFTS_AWS_WORKER_SQS_URL,
+          'DeployCollectionWorker',
+          [
+            {
+              collection_uuid: data.collection_uuid,
+              baseUri: 'ipfs://' + metadataFiles.wrappedDirCid,
+            },
+          ],
+          null,
+          null,
+        );
+      }
+    }
 
     //Remove all files of this bucket in S3
     await s3Client.removeDirectory(
@@ -253,7 +281,6 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       service: ServiceName.STORAGE,
       data: {
         data,
-        ipnsRecord,
       },
     });
 

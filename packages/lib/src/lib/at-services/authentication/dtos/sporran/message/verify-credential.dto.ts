@@ -44,4 +44,13 @@ export class VerifyCredentialDto extends ModelBase {
     ],
   })
   public sessionId: string;
+
+  /**
+   * Sent as header, added to body in AuthGuard
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE],
+  })
+  public token: string;
 }

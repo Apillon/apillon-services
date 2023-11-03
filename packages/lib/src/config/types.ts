@@ -56,6 +56,7 @@ export enum AmsEventType {
   LIST_API_KEYS = 'list-api-keys',
   API_KEY_ROLE_ASSIGN = 'api-key-role-assign',
   API_KEY_ROLE_REMOVE = 'api-key-role-remove',
+  API_KEY_ROLES_REMOVE_BY_SERVICE = 'api-key-roles-remove-by-service',
   GET_API_KEY_ROLES = 'get-api-key-roles',
   GET_API_KEY = 'get-api-key',
   API_KEYS_IN_PROJECT_UPDATE = 'update-api-keys-in-project',
@@ -74,6 +75,7 @@ export enum LmasEventType {
   LIST_LOGS = 'list-logs',
   LIST_REQUEST_LOGS = 'list-request-logs',
   GET_API_KEYS_USAGE_COUNT = 'get-api-keys-usage-count',
+  GET_IPFS_TRAFFIC = 'get-ipfs-traffic',
 }
 
 export enum BlockchainEventType {
@@ -137,6 +139,9 @@ export enum StorageEventType {
   PROJECT_STORAGE_DETAILS = 'project-storage-details',
   STORAGE_INFO = 'get-storage-info',
   GET_BLACKLIST = 'get-blacklist',
+  PROJECTS_OVER_BANDWIDTH_QUOTA = 'projects-over-bandwidth-quota',
+  BLACKLIST_PROJECT = 'blacklist-project',
+  GET_PROJECT_IPFS_CLUSTER = 'get-project-ipfs-cluster',
 }
 
 export enum AuthenticationEventType {
@@ -497,6 +502,7 @@ export enum ValidatorErrorCode {
   USER_WALLET_ADDRESS_NOT_PRESENT = 42200050,
   USER_AUTH_SIGNATURE_NOT_PRESENT = 42200051,
   USER_AUTH_TIMESTAMP_NOT_PRESENT = 42200052,
+  API_KEY_ROLE_SERVICE_TYPE_NOT_PRESENT = 42200053,
   NFT_DEPLOY_SYMBOL_NOT_PRESENT = 42200100,
   NFT_DEPLOY_SYMBOL_NOT_VALID = 42200101,
   NFT_DEPLOY_NAME_NOT_PRESENT = 42200102,
@@ -653,12 +659,19 @@ export class RoleGroup {
  * JWT Token signing types.
  */
 export enum JwtTokenType {
+  // For regular login
   USER_AUTHENTICATION = 'user-authentication',
   USER_RESET_PASSWORD = 'user-reset-password',
   USER_RESET_EMAIL = 'user-reset-email',
   USER_CONFIRM_EMAIL = 'user-confirm-email',
   USER_LOGIN_CAPTCHA = 'user-login-captcha',
   IPFS_TOKEN = 'IPFS-token',
+  SPORRAN_SESSION = 'sporran-session',
+  IDENTITY_VERIFICATION = 'identity-verification',
+  // For initiating an auth session (OAuth window)
+  AUTH_SESSION = 'auth-session',
+  // Sent after OAuth flow has been completed, contains user email
+  OAUTH_TOKEN = 'oauth-token',
 }
 
 /**
@@ -719,6 +732,7 @@ export enum MongoCollections {
   LOGS = 'logs',
   REQUEST_LOGS = 'request_logs',
   API_REQUEST_LOGS = 'api_request_logs',
+  IPFS_TRAFFIC_LOG = 'ipfs-traffic-log',
 }
 
 export enum ApiName {

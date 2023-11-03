@@ -12,7 +12,7 @@ import { Abi } from '@polkadot/api-contract';
 import { OnChainRegistry, PinkContractPromise, types } from '@phala/sdk';
 
 // TODO: better types instead of any
-export class WalletService {
+export class PhalaClient {
   private context: Context;
   private api: any;
 
@@ -48,7 +48,6 @@ export class WalletService {
 
   async createDeployTransaction(
     contract: Contract,
-    ipfsGatewayUrl: string,
   ): Promise<SubmittableExtrinsic<'promise'>> {
     await this.initializeProvider();
     const abi = new Abi(SchrodingerContractABI);
@@ -57,7 +56,7 @@ export class WalletService {
       .toU8a([
         contract.data.nftContractAddress.slice(2),
         contract.data.nftChainRpcUrl,
-        ipfsGatewayUrl,
+        contract.data.ipfsGatewayUrl,
         contract.data.restrictToOwner,
       ]);
     const options = {
@@ -74,7 +73,7 @@ export class WalletService {
       { WasmCode: SchrodingerContractABI.source.hash },
       callData,
       options.salt,
-      contract.clusterId,
+      contract.data.clusterId,
       options.transfer,
       options.gasLimit,
       options.storageDepositLimit,
@@ -82,7 +81,7 @@ export class WalletService {
     );
   }
 
-  async createFundPhalaClusterTransaction(
+  async createFundClusterTransaction(
     clusterId: string,
     accountAddress: string,
     amount: number,

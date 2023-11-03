@@ -6,12 +6,12 @@ import {
   getQueryParams,
   PopulateFrom,
   presenceValidator,
-  ProjectAccessModel,
   prop,
   safeJsonParse,
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
+  UuidSqlModel,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
@@ -20,12 +20,13 @@ import {
   DbTables,
 } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
+import { ComputingCodeException } from '../../../lib/exceptions';
 
 function jsonSerializer() {
   return (value: any) => (value ? JSON.stringify(value) : null);
 }
 
-export class Contract extends ProjectAccessModel {
+export class Contract extends UuidSqlModel {
   public readonly tableName = DbTables.CONTRACT;
 
   @prop({
@@ -214,28 +215,6 @@ export class Contract extends ProjectAccessModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue:
-      '0x0000000000000000000000000000000000000000000000000000000000000001',
-  })
-  public clusterId: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-    ],
     fakeValue: '0xCD60e2534f80cF917ed45A62d7C29aD3BE2CaAc3',
   })
   public contractAddress: string;
@@ -302,23 +281,40 @@ export class Contract extends ProjectAccessModel {
       SerializeFor.PROFILE,
     ],
   })
-  public data: any;
+  public data: {
+    nftContractAddress: string;
+    nftChainRpcUrl: string;
+    restrictToOwner: string;
+    ipfsGatewayUrl: string;
+    clusterId: string;
+  };
 
   public constructor(data: any, context: Context) {
     super(data, context);
   }
 
-  /***************************************************
-   * Info properties
-   *****************************************************/
-
-  public async getList(
-    context: ServiceContext,
-    filter: ContractQueryFilter,
-    serializationStrategy = SerializeFor.PROFILE,
-  ) {
+  verifyStatusAndAccess(sourceFunction: string, context: ServiceContext) {
+    if (!this.exists()) {
+      throw new ComputingCodeException({
+        status: 500,
+        code: ComputingErrorCode.CONTRACT_DOES_NOT_EXIST,
+        context,
+        sourceFunction,
+      });
+    }
+    if (this.contractAddress == null) {
+      throw new ComputingCodeException({
+        status: 500,
+        code: ComputingErrorCode.CONTRACT_ADDRESS_IS_MISSING,
+        context,
+        sourceFunction,
+      });
+    }
     this.canAccess(context);
-    // Map url query with sql fields.
+  }
+
+  public async getList(context: ServiceContext, filter: ContractQueryFilter) {
+    this.canAccess(context);
     const fieldMap = {
       id: 'c.id',
     };
@@ -328,11 +324,10 @@ export class Contract extends ProjectAccessModel {
       fieldMap,
       filter.serialize(),
     );
-
     const selectFields = this.generateSelectFields(
       'c',
       '',
-      serializationStrategy,
+      SerializeFor.SELECT_DB,
     );
     const sqlQuery = {
       qSelect: `
@@ -356,21 +351,7 @@ export class Contract extends ProjectAccessModel {
       `,
     };
 
-    const contractsResult = await selectAndCountQuery(
-      context.mysql,
-      sqlQuery,
-      params,
-      'c.id',
-    );
-
-    return {
-      ...contractsResult,
-      items: contractsResult.items.map((contract) =>
-        new Contract({}, context)
-          .populate(contract, PopulateFrom.DB)
-          .serialize(serializationStrategy),
-      ),
-    };
+    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'c.id');
   }
 
   public override async populateByUUID(contract_uuid: string): Promise<this> {

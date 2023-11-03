@@ -190,9 +190,11 @@ export class Project extends ProjectAccessModel {
   public async getUserProjects(
     context: DevConsoleApiContext,
     user_id?: number,
+    role_id?: DefaultUserRole,
   ) {
     const params = {
       user_id: user_id || context.user.id,
+      role_id: role_id || null,
     };
     const sqlQuery = {
       qSelect: `
@@ -202,6 +204,7 @@ export class Project extends ProjectAccessModel {
         FROM ${DbTables.PROJECT} p
         INNER JOIN ${DbTables.PROJECT_USER} pu ON pu.project_id = p.id
         WHERE pu.user_id = ${params.user_id}
+        AND (@role_id IS NULL OR pu.role_id = @role_id)
         `,
     };
 

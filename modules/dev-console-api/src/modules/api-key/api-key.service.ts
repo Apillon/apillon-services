@@ -1,7 +1,7 @@
 import {
   Ams,
   ApiKeyQueryFilterDto,
-  ApiKeyRoleBaseDto,
+  ApiKeyRoleDto,
   CodeException,
   CreateApiKeyDto,
 } from '@apillon/lib';
@@ -89,22 +89,17 @@ export class ApiKeyService {
    * @returns {Promise<any>} - The AMS service response
    */
   async deleteApiKey(context: DevConsoleApiContext, id: number) {
-    return (await new Ams(context).deleteApiKey({ id: id })).data;
+    return (await new Ams(context).deleteApiKey({ id })).data;
   }
 
   /**
    * Assign a role to an API key.
    * @param {DevConsoleApiContext} context - The API context
-   * @param {number} apiKey_id - The ID of the API key.
-   * @param {ApiKeyRoleBaseDto} body - The data for assigning a role to the API key.
+   * @param {ApiKeyRoleDto} body - The data for assigning a role to the API key.
    * @returns {Promise<any>} - The AMS service response
    * @throws {CodeException} - If the project or service does not exist.
    */
-  async assignRoleToApiKey(
-    context: DevConsoleApiContext,
-    apiKey_id: number,
-    body: ApiKeyRoleBaseDto,
-  ) {
+  async assignRoleToApiKey(context: DevConsoleApiContext, body: ApiKeyRoleDto) {
     //Check project
     const project: Project = await new Project({}, context).populateByUUID(
       body.project_uuid,
@@ -131,22 +126,30 @@ export class ApiKeyService {
     }
     body.serviceType_id = service.serviceType_id;
 
-    return (await new Ams(context).assignRoleToApiKey(apiKey_id, body)).data;
+    return (await new Ams(context).assignRoleToApiKey(body)).data;
   }
 
   /**
    * Remove a role from an API key.
    * @param {DevConsoleApiContext} context - The API context
-   * @param {number} apiKey_id - The ID of the API key.
-   * @param {ApiKeyRoleBaseDto} body - The data for removing a role from the API key.
+   * @param {ApiKeyRoleDto} body - The data for removing a role from the API key.
    * @returns {Promise<any>} - The AMS service response
    */
-  async removeApiKeyRole(
+  async removeApiKeyRole(context: DevConsoleApiContext, body: ApiKeyRoleDto) {
+    return (await new Ams(context).removeApiKeyRole(body)).data;
+  }
+
+  /**
+   * Remove roles from an API key by service uuid
+   * @param {DevConsoleApiContext} context - The API context
+   * @param {ApiKeyRoleDto} body - The data for removing a role from the API key.
+   * @returns {Promise<any>} - The AMS service response
+   */
+  async removeApiKeyRolesByService(
     context: DevConsoleApiContext,
-    apiKey_id: number,
-    body: ApiKeyRoleBaseDto,
+    body: ApiKeyRoleDto,
   ) {
-    return (await new Ams(context).removeApiKeyRole(apiKey_id, body)).data;
+    return (await new Ams(context).removeApiKeyRolesByService(body)).data;
   }
 
   /**

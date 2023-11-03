@@ -6,11 +6,10 @@ import {
   OauthLinkType,
 } from '../../../config/types';
 import { BaseQueryFilter } from '../../base-models/base-query-filter.model';
-import { Captcha } from '../../captcha';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { ApiKeyQueryFilterDto } from './dtos/api-key-query-filter.dto';
-import { ApiKeyRoleBaseDto } from './dtos/api-key-role-base.dto';
+import { ApiKeyRoleDto } from './dtos/api-key-role.dto';
 import { CreateApiKeyDto } from './dtos/create-api-key.dto';
 import { CreateOauthLinkDto } from './dtos/create-oauth-link.dto';
 import { OauthListFilterDto } from './dtos/discord-user-list-filter.dto';
@@ -247,20 +246,26 @@ export class Ams extends BaseService {
     return await this.callService(data);
   }
 
-  public async assignRoleToApiKey(apiKey_id: number, body: ApiKeyRoleBaseDto) {
+  public async assignRoleToApiKey(body: ApiKeyRoleDto) {
     const data = {
       eventName: AmsEventType.API_KEY_ROLE_ASSIGN,
       body: body.serialize(),
-      apiKey_id,
     };
     return await this.callService(data);
   }
 
-  public async removeApiKeyRole(apiKey_id: number, body: ApiKeyRoleBaseDto) {
+  public async removeApiKeyRole(body: ApiKeyRoleDto) {
     const data = {
       eventName: AmsEventType.API_KEY_ROLE_REMOVE,
       body: body.serialize(),
-      apiKey_id,
+    };
+    return await this.callService(data);
+  }
+
+  public async removeApiKeyRolesByService(body: ApiKeyRoleDto) {
+    const data = {
+      eventName: AmsEventType.API_KEY_ROLES_REMOVE_BY_SERVICE,
+      body: body.serialize(),
     };
     return await this.callService(data);
   }

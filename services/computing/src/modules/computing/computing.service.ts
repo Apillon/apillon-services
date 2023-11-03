@@ -7,6 +7,7 @@ import {
   SerializeFor,
   ServiceName,
   SqlModelStatus,
+  StorageMicroservice,
   TransactionStatus,
   TransferOwnershipDto,
 } from '@apillon/lib';
@@ -37,6 +38,12 @@ export class ComputingService {
   ) {
     console.log(`Creating computing contract: ${JSON.stringify(params.body)}`);
 
+    const ipfsCluster = (
+      await new StorageMicroservice(context).getProjectIpfsCluster(
+        params.body.project_uuid,
+      )
+    ).data;
+
     const contract = new Contract(params.body, context).populate({
       contract_uuid: uuidV4(),
       status: SqlModelStatus.INCOMPLETE,
@@ -45,6 +52,7 @@ export class ComputingService {
         nftContractAddress: params.body.nftContractAddress,
         nftChainRpcUrl: params.body.nftChainRpcUrl,
         restrictToOwner: params.body.restrictToOwner,
+        ipfsGatewayUrl: ipfsCluster.ipfsGateway,
       },
     });
 
@@ -98,11 +106,7 @@ export class ComputingService {
     return await new Contract(
       { project_uuid: event.query.project_uuid },
       context,
-    ).getList(
-      context,
-      new ContractQueryFilter(event.query),
-      getSerializationStrategy(context),
-    );
+    ).getList(context, new ContractQueryFilter(event.query));
   }
 
   static async getContractByUuid(
@@ -132,28 +136,18 @@ export class ComputingService {
       params.body.contract_uuid,
     );
     const sourceFunction = 'depositToContractCluster()';
-    await ComputingService.checkContract(
-      contract,
-      sourceFunction,
-      context,
-      false,
-    );
+    contract.verifyStatusAndAccess(sourceFunction, context);
 
     const amount = params.body.amount;
     const accountAddress = params.body.accountAddress;
-    const conn = await context.mysql.start();
     try {
       await depositToPhalaContractCluster(
         context,
         contract,
         accountAddress,
         amount,
-        conn,
       );
-      await context.mysql.commit(conn);
     } catch (e: any) {
-      await context.mysql.rollback(conn);
-
       throw await new ComputingCodeException({
         status: 500,
         code: ComputingErrorCode.FUND_CONTRACT_CLUSTER_ERROR,
@@ -168,12 +162,12 @@ export class ComputingService {
       context,
       project_uuid: contract.project_uuid,
       logType: LogType.INFO,
-      message: `${amount}PHA deposited to address ${accountAddress} in cluster ${contract.clusterId}`,
+      message: `${amount}PHA deposited to address ${accountAddress} in cluster ${contract.data.clusterId}`,
       location: 'ComputingService/depositToContractCluster',
       service: ServiceName.COMPUTING,
       data: {
         contract_uuid: contract.contract_uuid,
-        clusterId: contract.clusterId,
+        clusterId: contract.data.clusterId,
         accountAddress,
         amount,
       },
@@ -192,20 +186,17 @@ export class ComputingService {
       body.contract_uuid,
     );
     const sourceFunction = 'transferContractOwnership()';
-    await ComputingService.checkContract(contract, sourceFunction, context);
+    contract.verifyStatusAndAccess(sourceFunction, context);
     await ComputingService.checkTransferConditions(
-      newOwnerAddress,
       context,
+      sourceFunction,
       contract,
+      newOwnerAddress,
     );
 
-    const conn = await context.mysql.start();
     try {
-      await transferContractOwnership(context, contract, newOwnerAddress, conn);
-      await context.mysql.commit(conn);
+      await transferContractOwnership(context, contract, newOwnerAddress);
     } catch (e: any) {
-      await context.mysql.rollback(conn);
-
       throw await new ComputingCodeException({
         status: 500,
         code: ComputingErrorCode.TRANSFER_CONTRACT_ERROR,
@@ -234,39 +225,26 @@ export class ComputingService {
     return { success: true };
   }
 
-  private static async checkContract(
-    contract: Contract,
-    sourceFunction: string,
+  private static async checkTransferConditions(
     context: ServiceContext,
-    checkContractState = true,
+    sourceFunction: string,
+    contract: Contract,
+    newOwnerAddress: string,
   ) {
-    if (
-      !contract.exists() ||
-      (checkContractState &&
-        (contract.contractAddress == null ||
-          contract.contractStatus == ContractStatus.TRANSFERRED))
-    ) {
+    if (contract.contractStatus == ContractStatus.TRANSFERRED) {
       throw new ComputingCodeException({
         status: 500,
-        code: ComputingErrorCode.CONTRACT_OWNER_ERROR,
+        code: ComputingErrorCode.CONTRACT_ALREADY_TRANSFERED,
         context,
         sourceFunction,
       });
     }
-    contract.canAccess(context);
-  }
-
-  private static async checkTransferConditions(
-    newOwnerAddress: string,
-    context: ServiceContext,
-    contract: Contract,
-  ) {
     if (contract.deployerAddress == newOwnerAddress) {
       throw new ComputingCodeException({
         status: 400,
         code: ComputingErrorCode.INVALID_ADDRESS_FOR_TRANSFER_TO,
         context,
-        sourceFunction: 'checkTransferConditions()',
+        sourceFunction,
       });
     }
 
