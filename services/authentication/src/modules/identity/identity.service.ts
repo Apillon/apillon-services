@@ -80,10 +80,14 @@ export class IdentityService {
       event.body.token,
     );
 
-    const token = generateJwtToken(JwtTokenType.IDENTITY_VERIFICATION, {
-      email,
-      project_uuid,
-    });
+    const token = generateJwtToken(
+      JwtTokenType.IDENTITY_VERIFICATION,
+      {
+        email,
+        project_uuid,
+      },
+      '10min',
+    );
     let auth_app_page = 'registration';
     const inProgressStates = IdentityState.getProcessInProgressStates();
 
