@@ -678,6 +678,8 @@ export class Website extends UuidSqlModel {
       if (this.stagingBucket.IPNS) {
         if (ipfsCluster.subdomainGateway) {
           this.w3StagingLink = `https://${this.stagingBucket.IPNS}.ipns.${ipfsCluster.subdomainGateway}`;
+        } else {
+          this.w3StagingLink = `${ipfsCluster.ipnsGateway}${this.stagingBucket.IPNS}`;
         }
 
         if (ipfsCluster.private) {
@@ -700,6 +702,8 @@ export class Website extends UuidSqlModel {
       if (this.productionBucket.IPNS) {
         if (ipfsCluster.subdomainGateway) {
           this.w3ProductionLink = `https://${this.productionBucket.IPNS}.ipns.${ipfsCluster.subdomainGateway}`;
+        } else {
+          this.w3ProductionLink = `${ipfsCluster.ipnsGateway}${this.productionBucket.IPNS}`;
         }
 
         if (ipfsCluster.private) {
