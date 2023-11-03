@@ -189,6 +189,7 @@ export class UpdateStateWorker extends BaseQueueWorker {
                   {
                     email,
                   },
+                  '10min',
                 );
 
                 await new Mailing(ctx).sendMail({
