@@ -465,4 +465,12 @@ export class StorageMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
+
+  public async blacklistProject(project_uuid) {
+    const data = {
+      eventName: StorageEventType.BLACKLIST_PROJECT,
+      project_uuid,
+    };
+    return await this.callService(data);
+  }
 }

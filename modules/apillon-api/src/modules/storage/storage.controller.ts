@@ -139,7 +139,10 @@ export class StorageController {
     return await this.storageService.getFileDetails(context, bucket_uuid, id);
   }
 
-  @Delete([':bucketUuid/file/:id', 'buckets/:bucketUuid/files/:file_uuid'])
+  @Delete([
+    ':bucketUuid/file/:file_uuid',
+    'buckets/:bucketUuid/files/:file_uuid',
+  ])
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_WRITE,
     serviceType: AttachedServiceType.STORAGE,

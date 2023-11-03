@@ -14,7 +14,6 @@ import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { DbTables, StorageErrorCode } from '../../../config/types';
 import { StorageCodeException } from '../../../lib/exceptions';
-import { addJwtToIPFSUrl } from '../../../lib/ipfs-utils';
 import { Bucket } from '../../bucket/models/bucket.model';
 import { ProjectConfig } from '../../config/models/project-config.model';
 
@@ -262,9 +261,6 @@ export class Ipns extends ProjectAccessModel {
     const sqlQuery = {
       qSelect: `
         SELECT ${this.generateSelectFields('i', '')},
-        IF(i.ipnsName IS NULL, NULL, CONCAT("${
-          ipfsCluster.ipnsGateway
-        }", i.ipnsName)) as link,
         i.updateTime
         `,
       qFrom: `
@@ -287,13 +283,12 @@ export class Ipns extends ProjectAccessModel {
       'i.id',
     );
 
-    if (ipfsCluster.private) {
-      for (const ipns of data.items) {
-        ipns.link = addJwtToIPFSUrl(
-          ipns.link,
-          this.project_uuid,
-          ipns.ipnsName,
-          ipfsCluster,
+    for (const item of data.items) {
+      if (item.ipnsName) {
+        item.link = ipfsCluster.generateLink(
+          b.project_uuid,
+          item.ipnsName,
+          true,
         );
       }
     }

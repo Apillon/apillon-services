@@ -75,6 +75,25 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       try {
         await this.setTransactionsState(transactions, conn);
 
+        // If block height is the same and not updated for the past 5 minutes
+        if (
+          wallet.lastParsedBlock === toBlock &&
+          wallet.minutesSinceLastParsedBlock >= 5
+        ) {
+          await this.writeEventLog(
+            {
+              logType: LogType.ERROR,
+              message: `Last parsed block has not been updated in the past ${
+                wallet.minutesSinceLastParsedBlock
+              } minutes for wallet ${wallet.address} (chain ${
+                SubstrateChain[wallet.chain]
+              })`,
+              service: ServiceName.BLOCKCHAIN,
+              data: { wallet: wallet.address },
+            },
+            LogOutput.NOTIFY_ALERT,
+          );
+        }
         await wallet.updateLastParsedBlock(toBlock, conn);
         await conn.commit();
       } catch (err) {

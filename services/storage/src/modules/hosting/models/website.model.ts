@@ -281,36 +281,6 @@ export class Website extends UuidSqlModel {
     ],
     validators: [],
   })
-  public ipnsStagingLink: string;
-
-  @prop({
-    populatable: [
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
-    validators: [],
-  })
-  public ipnsProductionLink: string;
-
-  @prop({
-    populatable: [
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
-    validators: [],
-  })
   public w3StagingLink: string;
 
   @prop({
@@ -706,21 +676,11 @@ export class Website extends UuidSqlModel {
         this.stagingBucket_id,
       );
       if (this.stagingBucket.IPNS) {
-        this.ipnsStagingLink =
-          ipfsCluster.ipnsGateway + this.stagingBucket.IPNS;
-
         if (ipfsCluster.subdomainGateway) {
           this.w3StagingLink = `https://${this.stagingBucket.IPNS}.ipns.${ipfsCluster.subdomainGateway}`;
         }
 
         if (ipfsCluster.private) {
-          this.ipnsStagingLink = addJwtToIPFSUrl(
-            this.ipnsStagingLink,
-            this.project_uuid,
-            this.stagingBucket.IPNS,
-            ipfsCluster,
-          );
-
           this.w3StagingLink = addJwtToIPFSUrl(
             this.w3StagingLink,
             this.project_uuid,
@@ -738,20 +698,11 @@ export class Website extends UuidSqlModel {
         this.getContext(),
       ).populateById(this.productionBucket_id);
       if (this.productionBucket.IPNS) {
-        this.ipnsProductionLink =
-          ipfsCluster.ipnsGateway + this.productionBucket.IPNS;
-
         if (ipfsCluster.subdomainGateway) {
           this.w3ProductionLink = `https://${this.productionBucket.IPNS}.ipns.${ipfsCluster.subdomainGateway}`;
         }
 
         if (ipfsCluster.private) {
-          this.ipnsProductionLink = addJwtToIPFSUrl(
-            this.ipnsProductionLink,
-            this.project_uuid,
-            this.productionBucket.IPNS,
-            ipfsCluster,
-          );
           this.w3ProductionLink = addJwtToIPFSUrl(
             this.w3ProductionLink,
             this.project_uuid,

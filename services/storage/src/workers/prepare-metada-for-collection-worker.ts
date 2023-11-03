@@ -1,8 +1,10 @@
 import {
+  AppEnvironment,
   AWS_S3,
   Context,
   env,
   LogType,
+  NftsMicroservice,
   runWithWorkers,
   SerializeFor,
   ServiceName,
@@ -20,7 +22,6 @@ import {
   StorageErrorCode,
 } from '../config/types';
 import { StorageCodeException } from '../lib/exceptions';
-import { addJwtToIPFSUrl } from '../lib/ipfs-utils';
 import { storageBucketSyncFilesToIPFS } from '../lib/storage-bucket-sync-files-to-ipfs';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { ProjectConfig } from '../modules/config/models/project-config.model';
@@ -29,8 +30,6 @@ import { Ipns } from '../modules/ipns/models/ipns.model';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
 import { File } from '../modules/storage/models/file.model';
-import { AppEnvironment } from '@apillon/lib';
-import { NftsMicroservice } from '@apillon/lib';
 
 export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
   public constructor(
@@ -182,15 +181,10 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           );
 
           if (data.useApillonIpfsGateway) {
-            fileContent.image = ipfsCluster.ipfsGateway + imageFile.CID;
-            if (ipfsCluster.private) {
-              fileContent.image = addJwtToIPFSUrl(
-                fileContent.image,
-                bucket.project_uuid,
-                imageFile.CID,
-                ipfsCluster,
-              );
-            }
+            fileContent.image = ipfsCluster.generateLink(
+              bucket.project_uuid,
+              imageFile.CID,
+            );
           } else {
             fileContent.image = 'ipfs://' + imageFile.CID;
           }
@@ -249,7 +243,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
 
       console.info(`IPNS sucessfully published. Removing files from s3`);
     } else {
-      //Metadata is prepared. It wont use apillon gateway ipns as base uri, so run nft deploy with wrapping cid as base URI
+      //Metadata is prepared. It won't use apillon gateway ipns as base uri, so run nft deploy with wrapping cid as base URI
       if (
         env.APP_ENV == AppEnvironment.LOCAL_DEV ||
         env.APP_ENV == AppEnvironment.TEST

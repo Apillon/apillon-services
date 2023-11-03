@@ -1,6 +1,5 @@
 import {
   DefaultUserRole,
-  env,
   SqlModelStatus,
   ValidatorErrorCode,
 } from '@apillon/lib';
@@ -10,24 +9,24 @@ import {
 } from '@apillon/storage/src/config/types';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
 import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
+import { IPFSService } from '@apillon/storage/src/modules/ipfs/ipfs.service';
 import { FileUploadRequest } from '@apillon/storage/src/modules/storage/models/file-upload-request.model';
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';
+import { executeDeleteBucketDirectoryFileWorker } from '@apillon/storage/src/scripts/serverless-workers/execute-delete-bucket-dir-file-worker';
 import {
   createTestBucket,
   createTestBucketFile,
   createTestBucketWebhook,
   createTestProject,
   createTestUser,
+  releaseStage,
+  Stage,
   TestUser,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
 import { v4 as uuidV4 } from 'uuid';
-import { releaseStage, Stage } from '@apillon/tests-lib';
-import { Project } from '../../project/models/project.model';
 import { setupTest } from '../../../../test/helpers/setup';
-import { executeDeleteBucketDirectoryFileWorker } from '@apillon/storage/src/scripts/serverless-workers/execute-delete-bucket-dir-file-worker';
-import { IPFSService } from '@apillon/storage/src/modules/ipfs/ipfs.service';
-import { ProjectConfig } from '@apillon/storage/src/modules/config/models/project-config.model';
+import { Project } from '../../project/models/project.model';
 
 describe('Storage tests', () => {
   let stage: Stage;
