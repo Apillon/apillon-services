@@ -457,6 +457,39 @@ export class Website extends UuidSqlModel {
   }
 
   /**
+   * Populates only basic website properties from website table. For additional info, call populate by uuid or id.
+   * @param domain
+   * @param conn
+   * @returns
+   */
+  public async populateByDomain(
+    domain: string,
+    conn?: PoolConnection,
+  ): Promise<this> {
+    if (!domain) {
+      throw new Error('domain should not be null');
+    }
+
+    this.reset();
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT w.* 
+      FROM \`${DbTables.WEBSITE}\` w
+      WHERE w.domain LIKE @domain
+      AND w.status <> ${SqlModelStatus.DELETED}
+      LIMIT 1;
+      `,
+      { domain },
+      conn,
+    );
+
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
+  }
+
+  /**
    * Generates buckets for hosting, executes validation and inserts new records
    * @param context
    * @returns created web site, populated with buckets

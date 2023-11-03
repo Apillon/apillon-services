@@ -83,6 +83,8 @@ export async function processEvent(event, context: Context): Promise<any> {
 
     [StorageEventType.GET_BLACKLIST]: StorageService.getBlacklist,
     [StorageEventType.STORAGE_INFO]: StorageService.getStorageInfo,
+    [StorageEventType.PROJECTS_OVER_BANDWIDTH_QUOTA]:
+      StorageService.getProjectsOverBandwidthQuota,
   };
 
   return await processors[event.eventName](event, context);

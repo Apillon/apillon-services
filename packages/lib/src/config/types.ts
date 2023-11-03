@@ -71,6 +71,7 @@ export enum LmasEventType {
   LIST_LOGS = 'list-logs',
   LIST_REQUEST_LOGS = 'list-request-logs',
   GET_API_KEYS_USAGE_COUNT = 'get-api-keys-usage-count',
+  GET_IPFS_TRAFFIC = 'get-ipfs-traffic',
 }
 
 export enum BlockchainEventType {
@@ -134,6 +135,7 @@ export enum StorageEventType {
   PROJECT_STORAGE_DETAILS = 'project-storage-details',
   STORAGE_INFO = 'get-storage-info',
   GET_BLACKLIST = 'get-blacklist',
+  PROJECTS_OVER_BANDWIDTH_QUOTA = 'projects-over-bandwidth-quota',
   BLACKLIST_PROJECT = 'blacklist-project',
 }
 
@@ -701,6 +703,7 @@ export enum MongoCollections {
   LOGS = 'logs',
   REQUEST_LOGS = 'request_logs',
   API_REQUEST_LOGS = 'api_request_logs',
+  IPFS_TRAFFIC_LOG = 'ipfs-traffic-log',
 }
 
 export enum ApiName {

@@ -3,6 +3,7 @@ import {
   AWS_S3,
   CacheKeyPrefix,
   CreateS3UrlsForUploadDto,
+  DomainQueryFilter,
   EndFileUploadSessionDto,
   env,
   FilesQueryFilter,
@@ -29,6 +30,7 @@ import { v4 as uuidV4 } from 'uuid';
 import {
   BucketType,
   DbTables,
+  Defaults,
   FileStatus,
   FileUploadSessionStatus,
   StorageErrorCode,
@@ -47,6 +49,7 @@ import { IPFSService } from '../ipfs/ipfs.service';
 import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
+import { IpfsBandwidth } from '../ipfs/models/ipfs-bandwidth';
 
 export class StorageService {
   /**
@@ -58,7 +61,13 @@ export class StorageService {
   static async getStorageInfo(
     event: { project_uuid: string },
     context: ServiceContext,
-  ): Promise<{ availableStorage: number; usedStorage: number }> {
+  ): Promise<{
+    availableStorage: number;
+    usedStorage: number;
+    availableBandwidth: number;
+    usedBandwidth: number;
+  }> {
+    //Storage space
     const maxStorageQuota = await new Scs(context).getQuota({
       quota_id: QuotaCode.MAX_STORAGE,
       project_uuid: event.project_uuid,
@@ -68,10 +77,34 @@ export class StorageService {
     const bucket = new Bucket({ project_uuid: event.project_uuid }, context);
     const usedStorage = await bucket.getTotalSizeUsedByProject();
 
+    //Bandwidth
+    const bandwidthQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_BANDWIDTH,
+      project_uuid: event.project_uuid,
+    });
+    const availableBandwidth =
+      (bandwidthQuota?.value || Defaults.DEFAULT_BANDWIDTH) * 1073741824;
+
+    const usedBandwidth = await new IpfsBandwidth(
+      {},
+      context,
+    ).populateByProjectAndDate(event.project_uuid);
+
     return {
       availableStorage,
       usedStorage,
+      availableBandwidth,
+      usedBandwidth: usedBandwidth.exists() ? usedBandwidth.bandwidth : 0,
     };
+  }
+
+  static async getProjectsOverBandwidthQuota(
+    event: { query: DomainQueryFilter },
+    context: ServiceContext,
+  ): Promise<string[]> {
+    return await new IpfsBandwidth({}, context).getProjectsOverBandwidthQuota(
+      event.query,
+    );
   }
 
   //#region file-upload functions
