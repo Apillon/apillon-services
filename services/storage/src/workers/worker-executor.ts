@@ -18,6 +18,7 @@ import { UpdateCrustStatusWorker } from './update-crust-status-worker';
 import { PrepareMetadataForCollectionWorker } from './prepare-metada-for-collection-worker';
 import { PinToCrustWorker } from './pin-to-crust-worker';
 import { RepublishIpnsWorker } from './republish-ipns-worker';
+import { IpfsBandwidthWorker } from './ipfs-bandwidth-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -33,6 +34,7 @@ export enum WorkerName {
   PREPARE_BASE_URI_FOR_COLLECTION_WORKER = 'PrepareBaseUriForCollectionWorker',
   PIN_TO_CRUST_WORKER = 'PinToCrustWorker',
   REPUBLISH_IPNS_WORKER = 'RepublishIpnsWorker',
+  IPFS_BANDWIDTH_WORKER = 'IpfsBandwidthWorker',
 }
 
 export async function handler(event: any) {
@@ -140,6 +142,13 @@ export async function handleLambdaEvent(
         context,
         QueueWorkerType.PLANNER,
       ).run();
+      break;
+    case WorkerName.IPFS_BANDWIDTH_WORKER:
+      const ipfsBandwidthWorker = new IpfsBandwidthWorker(
+        workerDefinition,
+        context,
+      );
+      await ipfsBandwidthWorker.run();
       break;
     default:
       console.log(

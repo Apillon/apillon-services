@@ -3,7 +3,6 @@ import {
   FilesQueryFilter,
   PoolConnection,
   PopulateFrom,
-  ProjectAccessModel,
   SerializeFor,
   SqlModelStatus,
   UuidSqlModel,
@@ -16,7 +15,6 @@ import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { v4 as uuidV4 } from 'uuid';
 import { DbTables, FileStatus, StorageErrorCode } from '../../../config/types';
-import { addJwtToIPFSUrl } from '../../../lib/ipfs-utils';
 import { Bucket } from '../../bucket/models/bucket.model';
 import { ProjectConfig } from '../../config/models/project-config.model';
 
@@ -417,16 +415,7 @@ export class File extends UuidSqlModel {
       this.getContext(),
     ).getIpfsCluster();
 
-    this.link = ipfsCluster.ipfsGateway + this.CID;
-
-    if (ipfsCluster.private) {
-      this.link = addJwtToIPFSUrl(
-        this.link,
-        this.project_uuid,
-        this.CID,
-        ipfsCluster,
-      );
-    }
+    this.link = ipfsCluster.generateLink(this.project_uuid, this.CID);
   }
 
   public async listFiles(context: ServiceContext, filter: FilesQueryFilter) {
@@ -459,15 +448,14 @@ export class File extends UuidSqlModel {
 
     const sqlQuery = {
       qSelect: `
-        SELECT ${this.generateSelectFields('f')}, CONCAT("${
-        ipfsCluster.ipfsGateway
-      }", f.CID) as link
+        SELECT ${this.generateSelectFields('f')}
         `,
       qFrom: `
         FROM \`${DbTables.FILE}\` f
         INNER JOIN \`${DbTables.BUCKET}\` b ON f.bucket_id = b.id
         WHERE b.bucket_uuid = @bucket_uuid
         AND (@search IS null OR CONCAT(IFNULL(f.path, ""), f.name) LIKE CONCAT('%', @search, '%'))
+        AND (@fileStatus IS NULL OR f.fileStatus = @fileStatus)
         AND f.status = @status
         `,
       qFilter: `
@@ -483,14 +471,10 @@ export class File extends UuidSqlModel {
       'f.id',
     );
 
-    if (ipfsCluster.private) {
-      for (const item of data.items) {
-        item.link = addJwtToIPFSUrl(
-          item.link,
-          b.project_uuid,
-          item.CID,
-          ipfsCluster,
-        );
+    //Populate link
+    for (const item of data.items) {
+      if (item.CID) {
+        item.link = ipfsCluster.generateLink(b.project_uuid, item.CID);
       }
     }
 
@@ -514,7 +498,7 @@ export class File extends UuidSqlModel {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT *
-      FROM \`${this.tableName}\`
+      FROM \`${DbTables.FILE}\`
       WHERE bucket_id = @bucket_id AND status <> ${SqlModelStatus.DELETED};
       `,
       { bucket_id },
@@ -525,7 +509,67 @@ export class File extends UuidSqlModel {
         res.push(new File({}, context).populate(d, PopulateFrom.DB));
       }
     }
-
     return res;
+  }
+
+  /**
+   * Get all files for project
+   * @param project_uuid
+   * @returns array of files
+   */
+  public async populateFilesForProject(project_uuid: string): Promise<this[]> {
+    if (!project_uuid) {
+      throw new Error('project_uuid should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT *
+      FROM \`${DbTables.FILE}\`
+      WHERE project_uuid = @project_uuid 
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { project_uuid },
+    );
+    const res = [];
+    if (data && data.length) {
+      for (const d of data) {
+        res.push(new File({}, this.getContext()).populate(d, PopulateFrom.DB));
+      }
+    }
+    return res;
+  }
+
+  /**
+   * Update status of all project files to BLOCKED
+   * @param project_uuid
+   * @returns
+   */
+  public async blockFilesForProject(project_uuid: string): Promise<boolean> {
+    if (!project_uuid) {
+      throw new Error('project_uuid should not be null');
+    }
+
+    await this.getContext().mysql.paramExecute(
+      `
+    INSERT INTO \`${DbTables.BLACKLIST}\` (cid)
+    SELECT f.CID
+    FROM \`${DbTables.FILE}\` f
+    WHERE f.project_uuid = @project_uuid 
+    AND f.status NOT IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.BLOCKED})
+    `,
+      { project_uuid },
+    );
+
+    await this.getContext().mysql.paramExecute(
+      `
+    UPDATE \`${DbTables.FILE}\`
+    SET status = ${SqlModelStatus.BLOCKED}
+    WHERE project_uuid = @project_uuid 
+    AND status NOT IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.BLOCKED})
+    `,
+      { project_uuid },
+    );
+    return true;
   }
 }

@@ -50,6 +50,14 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async getProjectsOverBandwidthQuota(query: DomainQueryFilter) {
+    const data = {
+      eventName: StorageEventType.PROJECTS_OVER_BANDWIDTH_QUOTA,
+      query: query.serialize(),
+    };
+    return await this.callService(data);
+  }
+
   //#region bucket CRUD
 
   public async listBuckets(params: BucketQueryFilter) {
@@ -462,6 +470,14 @@ export class StorageMicroservice extends BaseService {
   public async getBlacklist() {
     const data = {
       eventName: StorageEventType.GET_BLACKLIST,
+    };
+    return await this.callService(data);
+  }
+
+  public async blacklistProject(project_uuid) {
+    const data = {
+      eventName: StorageEventType.BLACKLIST_PROJECT,
+      project_uuid,
     };
     return await this.callService(data);
   }

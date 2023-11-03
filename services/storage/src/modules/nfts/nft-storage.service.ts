@@ -1,8 +1,6 @@
 import {
   AppEnvironment,
   NftsMicroservice,
-  QuotaCode,
-  Scs,
   SerializeFor,
   SqlModelStatus,
   env,
@@ -15,16 +13,15 @@ import {
   WorkerDefinition,
   sendToWorkerQueue,
 } from '@apillon/workers-lib';
+import { StorageErrorCode } from '../../config/types';
+import { StorageCodeException } from '../../lib/exceptions';
+import { getSessionFilesOnS3 } from '../../lib/file-upload-session-s3-files';
 import { PrepareMetadataForCollectionWorker } from '../../workers/prepare-metada-for-collection-worker';
 import { WorkerName } from '../../workers/worker-executor';
 import { Bucket } from '../bucket/models/bucket.model';
+import { ProjectConfig } from '../config/models/project-config.model';
 import { IPFSService } from '../ipfs/ipfs.service';
 import { Ipns } from '../ipns/models/ipns.model';
-import { getSessionFilesOnS3 } from '../../lib/file-upload-session-s3-files';
-import { StorageCodeException } from '../../lib/exceptions';
-import { StorageErrorCode } from '../../config/types';
-import { ProjectConfig } from '../config/models/project-config.model';
-import { addJwtToIPFSUrl } from '../../lib/ipfs-utils';
 import { StorageService } from '../storage/storage.service';
 
 export class NftStorageService {
@@ -118,16 +115,11 @@ export class NftStorageService {
         context,
       ).getIpfsCluster();
 
-      baseUri = ipfsCluster.ipnsGateway + publishedIpns.name + '/';
-
-      if (ipfsCluster.private) {
-        baseUri = addJwtToIPFSUrl(
-          baseUri,
-          bucket.project_uuid,
-          publishedIpns.name,
-          ipfsCluster,
-        );
-      }
+      baseUri = ipfsCluster.generateLink(
+        bucket.project_uuid,
+        publishedIpns.name,
+        true,
+      );
     }
 
     //Start worker which will prepare images and metadata and deploy contract

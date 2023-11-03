@@ -13,6 +13,8 @@ export enum DbTables {
   BLACKLIST = 'blacklist',
   IPFS_CLUSTER = 'ipfs_cluster',
   PROJECT_CONFIG = 'project_config',
+  IPFS_BANDWIDTH = 'ipfs_bandwidth',
+  IPFS_BANDWIDTH_SYNC = 'ipfs_bandwidth_sync',
 }
 
 export enum DbViews {
@@ -101,6 +103,7 @@ export enum StorageErrorCode {
   IPNS_NOT_FOUND = 40406012,
   //409
   WEBHOOK_ALREADY_EXISTS_FOR_PROJECT = 40906001,
+  WEBSITE_WITH_THAT_DOMAIN_ALREADY_EXISTS = 40906002,
   //500
   STORAGE_IPFS_API_NOT_SET = 50006001,
   STORAGE_CRUST_SEED_NOT_SET = 50006002,
@@ -111,6 +114,7 @@ export enum StorageErrorCode {
   INVALID_PARAMETERS_FOR_DEPLOYMENT_WORKER = 50006007,
   FAILED_TO_GENERATE_IPFS_KEYPAIR = 5006008,
   IPFS_CLUSTER_NOT_SET = 5006009,
+  IPFS_BANDWIDTH_WORKER_UNHANDLED_EXCEPTION = 50060010,
 }
 
 export enum FileUploadRequestFileStatus {
@@ -185,4 +189,9 @@ export enum CrustPinningStatus {
   PENDING = 0,
   SUCCESSFULL = 10,
   FAILED = 20,
+}
+
+export enum Defaults {
+  DEFAULT_BANDWIDTH = 20,
+  DEFAULT_BANDWIDTH_IN_BYTES = Defaults.DEFAULT_BANDWIDTH * 1073741824,
 }

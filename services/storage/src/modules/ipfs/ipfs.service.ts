@@ -22,6 +22,7 @@ import { ProjectConfig } from '../config/models/project-config.model';
 import { FileUploadRequest } from '../storage/models/file-upload-request.model';
 import { File } from '../storage/models/file.model';
 import { uploadItemsToIPFSRes } from './interfaces/upload-items-to-ipfs-res.interface';
+import { IpfsCluster } from './models/ipfs-cluster.model';
 
 export class IPFSService {
   private client: IPFSHTTPClient;
@@ -455,6 +456,31 @@ export class IPFSService {
 
     try {
       await axios.post(ipfsCluster.clusterServer + `pins/ipfs/${cid}`, {}, {});
+    } catch (err) {
+      writeLog(
+        LogType.ERROR,
+        `Error pinning cid to cluster server`,
+        'ipfs.service.ts',
+        'pinCidToCluster',
+        err,
+      );
+    }
+  }
+
+  /**
+   * Call cluster API to UNPIN specific CID from child nodes
+   * @param cid cid to be unpinned
+   */
+  public async unpinCidFromCluster(cid: string, ipfsCluster?: IpfsCluster) {
+    if (!ipfsCluster) {
+      ipfsCluster = await new ProjectConfig(
+        { project_uuid: this.project_uuid },
+        this.context,
+      ).getIpfsCluster();
+    }
+
+    try {
+      await axios.delete(ipfsCluster.clusterServer + `pins/ipfs/${cid}`);
     } catch (err) {
       writeLog(
         LogType.ERROR,

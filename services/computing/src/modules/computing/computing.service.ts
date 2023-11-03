@@ -121,11 +121,7 @@ export class ComputingService {
     return await new Contract(
       { project_uuid: event.query.project_uuid },
       context,
-    ).getList(
-      context,
-      new ContractQueryFilter(event.query),
-      getSerializationStrategy(context),
-    );
+    ).getList(context, new ContractQueryFilter(event.query));
   }
 
   static async getContractByUuid(
@@ -155,12 +151,7 @@ export class ComputingService {
       params.body.contract_uuid,
     );
     const sourceFunction = 'depositToContractCluster()';
-    await ComputingService.checkContract(
-      contract,
-      sourceFunction,
-      context,
-      false,
-    );
+    contract.verifyStatusAndAccess(sourceFunction, context);
 
     const amount = params.body.amount;
     const accountAddress = params.body.accountAddress;
@@ -213,11 +204,12 @@ export class ComputingService {
       contract.contractAbi_id,
     );
     const sourceFunction = 'transferContractOwnership()';
-    await ComputingService.checkContract(contract, sourceFunction, context);
+    contract.verifyStatusAndAccess(sourceFunction, context);
     await ComputingService.checkTransferConditions(
-      newOwnerAddress,
       context,
+      sourceFunction,
       contract,
+      newOwnerAddress,
     );
 
     try {
@@ -257,39 +249,26 @@ export class ComputingService {
     return { success: true };
   }
 
-  private static async checkContract(
-    contract: Contract,
-    sourceFunction: string,
+  private static async checkTransferConditions(
     context: ServiceContext,
-    checkContractState = true,
+    sourceFunction: string,
+    contract: Contract,
+    newOwnerAddress: string,
   ) {
-    if (
-      !contract.exists() ||
-      (checkContractState &&
-        (contract.contractAddress == null ||
-          contract.contractStatus == ContractStatus.TRANSFERRED))
-    ) {
+    if (contract.contractStatus == ContractStatus.TRANSFERRED) {
       throw new ComputingCodeException({
         status: 500,
-        code: ComputingErrorCode.CONTRACT_DOES_NOT_EXIST,
+        code: ComputingErrorCode.CONTRACT_ALREADY_TRANSFERED,
         context,
         sourceFunction,
       });
     }
-    contract.canAccess(context);
-  }
-
-  private static async checkTransferConditions(
-    newOwnerAddress: string,
-    context: ServiceContext,
-    contract: Contract,
-  ) {
     if (contract.deployerAddress == newOwnerAddress) {
       throw new ComputingCodeException({
         status: 400,
         code: ComputingErrorCode.INVALID_ADDRESS_FOR_TRANSFER_TO,
         context,
-        sourceFunction: 'checkTransferConditions()',
+        sourceFunction,
       });
     }
 

@@ -11,7 +11,7 @@ import { IPFSService } from '../../modules/ipfs/ipfs.service';
 import { SerializeFor, SqlModelStatus } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
 
-describe('RepublishIpnsWorker unit test', () => {
+describe('RepublishIpnsWorker integration test', () => {
   let stage: Stage;
 
   let republishWorker: RepublishIpnsWorker;
