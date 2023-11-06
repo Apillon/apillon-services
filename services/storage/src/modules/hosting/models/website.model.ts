@@ -5,10 +5,10 @@ import {
   LogType,
   PoolConnection,
   PopulateFrom,
-  ProjectAccessModel,
   SerializeFor,
   ServiceName,
   SqlModelStatus,
+  UuidSqlModel,
   WebsiteQueryFilter,
   getQueryParams,
   presenceValidator,
@@ -29,7 +29,7 @@ import { addJwtToIPFSUrl } from '../../../lib/ipfs-utils';
 import { Bucket } from '../../bucket/models/bucket.model';
 import { ProjectConfig } from '../../config/models/project-config.model';
 
-export class Website extends ProjectAccessModel {
+export class Website extends UuidSqlModel {
   public readonly tableName = DbTables.WEBSITE;
 
   public constructor(data: any, context: Context) {
@@ -50,6 +50,7 @@ export class Website extends ProjectAccessModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [
       {
@@ -163,6 +164,7 @@ export class Website extends ProjectAccessModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [
       {
@@ -188,6 +190,7 @@ export class Website extends ProjectAccessModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
@@ -208,6 +211,7 @@ export class Website extends ProjectAccessModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
@@ -227,7 +231,6 @@ export class Website extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
     ],
     validators: [],
   })
@@ -259,40 +262,11 @@ export class Website extends ProjectAccessModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
   public bucket_uuid: string;
-
-  @prop({
-    populatable: [
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
-    validators: [],
-  })
-  public ipnsStagingLink: string;
-
-  @prop({
-    populatable: [
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
-    validators: [],
-  })
-  public ipnsProductionLink: string;
 
   @prop({
     populatable: [
@@ -334,6 +308,7 @@ export class Website extends ProjectAccessModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
@@ -349,6 +324,7 @@ export class Website extends ProjectAccessModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
@@ -399,6 +375,46 @@ export class Website extends ProjectAccessModel {
   })
   public productionBucket: Bucket;
 
+  @prop({
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+    ],
+    validators: [],
+  })
+  public lastDeployment_uuid: string;
+
+  @prop({
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+    ],
+    validators: [],
+  })
+  public lastDeploymentStatus: number;
+
+  /**
+   * Populate by id or by uuid
+   * @param id id or uuid.
+   * @param conn
+   * @returns
+   */
   public override async populateById(
     id: number | string,
     conn?: PoolConnection,
@@ -415,12 +431,56 @@ export class Website extends ProjectAccessModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT *
-      FROM \`${this.tableName}\`
-      WHERE ( id LIKE @id OR website_uuid LIKE @id)
-      AND status <> ${SqlModelStatus.DELETED};
+      SELECT w.*, 
+      lastDeployment.deployment_uuid as lastDeployment_uuid, 
+      lastDeployment.deploymentStatus as lastDeploymentStatus
+      FROM \`${DbTables.WEBSITE}\` w
+      LEFT JOIN (
+        SELECT  website_id, deployment_uuid, deploymentStatus from \`${DbTables.DEPLOYMENT}\` d
+        ORDER BY d.createTime DESC
+      ) as lastDeployment ON lastDeployment.website_id = w.id
+      WHERE ( w.id LIKE @id OR w.website_uuid LIKE @id)
+      AND w.status <> ${SqlModelStatus.DELETED}
+      LIMIT 1;
       `,
       { id },
+      conn,
+    );
+
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
+  }
+
+  public override async populateByUUID(uuid: string): Promise<this> {
+    return this.populateById(uuid);
+  }
+
+  /**
+   * Populates only basic website properties from website table. For additional info, call populate by uuid or id.
+   * @param domain
+   * @param conn
+   * @returns
+   */
+  public async populateByDomain(
+    domain: string,
+    conn?: PoolConnection,
+  ): Promise<this> {
+    if (!domain) {
+      throw new Error('domain should not be null');
+    }
+
+    this.reset();
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT w.* 
+      FROM \`${DbTables.WEBSITE}\` w
+      WHERE w.domain LIKE @domain
+      AND w.status <> ${SqlModelStatus.DELETED}
+      LIMIT 1;
+      `,
+      { domain },
       conn,
     );
 
@@ -503,6 +563,7 @@ export class Website extends ProjectAccessModel {
       //Populate website
       this.populate({
         website_uuid: website_uuid,
+        bucket_uuid: bucket.bucket_uuid,
         bucket_id: bucket.id,
         stagingBucket_id: stagingBucket.id,
         productionBucket_id: productionBucket.id,
@@ -510,6 +571,8 @@ export class Website extends ProjectAccessModel {
         stagingBucket: stagingBucket,
         productionBucket: productionBucket,
         domainChangeDate: this.domain ? new Date() : undefined,
+        createTime: new Date(),
+        updateTime: new Date(),
       });
       //Insert web page record
       await this.insert(SerializeFor.INSERT_DB, conn);
@@ -558,24 +621,30 @@ export class Website extends ProjectAccessModel {
     this.canAccess(context);
     // Map url query with sql fields.
     const fieldMap = {
-      id: 'wp.id',
+      id: 'w.id',
     };
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
-      'wp',
+      'w',
       fieldMap,
       filter.serialize(),
     );
 
     const sqlQuery = {
       qSelect: `
-        SELECT ${this.generateSelectFields('wp', '')}, wp.updateTime
+        SELECT ${this.generateSelectFields(
+          'w',
+          '',
+        )}, uploadBucket.bucket_uuid, stgBucket.ipns as ipnsStaging, prodBucket.ipns as ipnsProduction
         `,
       qFrom: `
-        FROM \`${DbTables.WEBSITE}\` wp
-        WHERE wp.project_uuid = @project_uuid
-        AND (@search IS null OR wp.name LIKE CONCAT('%', @search, '%'))
-        AND IFNULL(@status, ${SqlModelStatus.ACTIVE}) = status
+        FROM \`${DbTables.WEBSITE}\` w
+        JOIN \`${DbTables.BUCKET}\` uploadBucket ON uploadBucket.id = w.bucket_id
+        JOIN \`${DbTables.BUCKET}\` stgBucket ON stgBucket.id = w.stagingBucket_id
+        JOIN \`${DbTables.BUCKET}\` prodBucket ON prodBucket.id = w.productionBucket_id
+        WHERE w.project_uuid = @project_uuid
+        AND (@search IS null OR w.name LIKE CONCAT('%', @search, '%'))
+        AND IFNULL(@status, ${SqlModelStatus.ACTIVE}) = w.status
       `,
       qFilter: `
         ORDER BY ${filters.orderStr}
@@ -583,7 +652,7 @@ export class Website extends ProjectAccessModel {
       `,
     };
 
-    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'wp.id');
+    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'w.id');
   }
 
   public async populateBucketsAndLink() {
@@ -591,10 +660,10 @@ export class Website extends ProjectAccessModel {
       throw new Error('project_uuid should not be null');
     }
 
-    const ipfsGateway = await new ProjectConfig(
+    const ipfsCluster = await new ProjectConfig(
       { project_uuid: this.project_uuid },
       this.getContext(),
-    ).getIpfsGateway();
+    ).getIpfsCluster();
 
     if (this.bucket_id) {
       this.bucket = await new Bucket({}, this.getContext()).populateById(
@@ -607,21 +676,18 @@ export class Website extends ProjectAccessModel {
         this.stagingBucket_id,
       );
       if (this.stagingBucket.IPNS) {
-        this.ipnsStagingLink = ipfsGateway.ipnsUrl + this.stagingBucket.IPNS;
-
-        if (ipfsGateway.subdomainGateway) {
-          this.w3StagingLink = `https://${this.stagingBucket.IPNS}.ipns.${ipfsGateway.subdomainGateway}`;
+        if (ipfsCluster.subdomainGateway) {
+          this.w3StagingLink = `https://${this.stagingBucket.IPNS}.ipns.${ipfsCluster.subdomainGateway}`;
+        } else {
+          this.w3StagingLink = `${ipfsCluster.ipnsGateway}${this.stagingBucket.IPNS}`;
         }
 
-        if (ipfsGateway.private) {
-          this.ipnsStagingLink = addJwtToIPFSUrl(
-            this.ipnsStagingLink,
-            this.project_uuid,
-          );
-
+        if (ipfsCluster.private) {
           this.w3StagingLink = addJwtToIPFSUrl(
             this.w3StagingLink,
             this.project_uuid,
+            this.stagingBucket.IPNS,
+            ipfsCluster,
           );
         }
 
@@ -634,21 +700,18 @@ export class Website extends ProjectAccessModel {
         this.getContext(),
       ).populateById(this.productionBucket_id);
       if (this.productionBucket.IPNS) {
-        this.ipnsProductionLink =
-          ipfsGateway.ipnsUrl + this.productionBucket.IPNS;
-
-        if (ipfsGateway.subdomainGateway) {
-          this.w3ProductionLink = `https://${this.productionBucket.IPNS}.ipns.${ipfsGateway.subdomainGateway}`;
+        if (ipfsCluster.subdomainGateway) {
+          this.w3ProductionLink = `https://${this.productionBucket.IPNS}.ipns.${ipfsCluster.subdomainGateway}`;
+        } else {
+          this.w3ProductionLink = `${ipfsCluster.ipnsGateway}${this.productionBucket.IPNS}`;
         }
 
-        if (ipfsGateway.private) {
-          this.ipnsProductionLink = addJwtToIPFSUrl(
-            this.ipnsProductionLink,
-            this.project_uuid,
-          );
+        if (ipfsCluster.private) {
           this.w3ProductionLink = addJwtToIPFSUrl(
             this.w3ProductionLink,
             this.project_uuid,
+            this.productionBucket.IPNS,
+            ipfsCluster,
           );
         }
 

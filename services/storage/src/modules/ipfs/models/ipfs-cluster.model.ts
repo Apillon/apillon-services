@@ -3,13 +3,14 @@ import {
   Context,
   PopulateFrom,
   SerializeFor,
-  env,
   presenceValidator,
   prop,
 } from '@apillon/lib';
-import { booleanParser, stringParser, integerParser } from '@rawmodel/parsers';
+import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
+import { CID } from 'ipfs-http-client';
 import { v4 as uuidV4 } from 'uuid';
 import { DbTables, StorageErrorCode } from '../../../config/types';
+import { addJwtToIPFSUrl } from '../../../lib/ipfs-utils';
 
 export class IpfsCluster extends AdvancedSQLModel {
   public readonly tableName = DbTables.IPFS_CLUSTER;
@@ -273,4 +274,57 @@ export class IpfsCluster extends AdvancedSQLModel {
     defaultValue: false,
   })
   public isDefault: boolean;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: StorageErrorCode.IPFS_CLUSTER_REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
+  })
+  public secret: string;
+
+  /**
+   * Generate link to CID/IPNS on IPFS gateway for this project
+   * @param project_uuid
+   * @param cid cid / ipns name
+   * @param isIpns
+   * @returns url
+   */
+  public generateLink(project_uuid: string, cid: string, isIpns = false) {
+    let link = '';
+    cid = isIpns ? cid : CID.parse(cid).toV1().toString();
+
+    if (this.subdomainGateway) {
+      link =
+        'https://' +
+        cid +
+        (isIpns ? '.ipns.' : '.ipfs.') +
+        this.subdomainGateway;
+    } else {
+      link = (isIpns ? this.ipnsGateway : this.ipfsGateway) + cid;
+    }
+
+    if (this.private) {
+      link = addJwtToIPFSUrl(link, project_uuid, cid, this);
+    }
+
+    return link;
+  }
 }

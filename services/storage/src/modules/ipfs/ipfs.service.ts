@@ -3,8 +3,6 @@ import {
   AWS_S3,
   Context,
   env,
-  generateJwtToken,
-  JwtTokenType,
   Lmas,
   LogType,
   runWithWorkers,
@@ -24,6 +22,7 @@ import { ProjectConfig } from '../config/models/project-config.model';
 import { FileUploadRequest } from '../storage/models/file-upload-request.model';
 import { File } from '../storage/models/file.model';
 import { uploadItemsToIPFSRes } from './interfaces/upload-items-to-ipfs-res.interface';
+import { IpfsCluster } from './models/ipfs-cluster.model';
 
 export class IPFSService {
   private client: IPFSHTTPClient;
@@ -41,24 +40,17 @@ export class IPFSService {
       return;
     }
 
-    let ipfsApi = await new ProjectConfig(
+    //Get IPFS gateway
+
+    const ipfsCluster = await new ProjectConfig(
       { project_uuid: this.project_uuid },
       this.context,
-    ).getIpfsApi();
+    ).getIpfsCluster();
 
-    //Kalmia IPFS Gateway
-    if (!ipfsApi) {
-      throw new StorageCodeException({
-        status: 500,
-        code: StorageErrorCode.STORAGE_IPFS_API_NOT_SET,
-        sourceFunction: `IPFSService/createIPFSClient`,
-      });
+    if (ipfsCluster.ipfsApi.endsWith('/')) {
+      ipfsCluster.ipfsApi = ipfsCluster.ipfsApi.slice(0, -1);
     }
-
-    if (ipfsApi.endsWith('/')) {
-      ipfsApi = ipfsApi.slice(0, -1);
-    }
-    this.client = await create({ url: ipfsApi });
+    this.client = await create({ url: ipfsCluster.ipfsApi });
   }
 
   /**
@@ -457,13 +449,38 @@ export class IPFSService {
    * @param cid cid to be pinned
    */
   public async pinCidToCluster(cid: string) {
-    const clusterServer = await new ProjectConfig(
+    const ipfsCluster = await new ProjectConfig(
       { project_uuid: this.project_uuid },
       this.context,
-    ).getIpfsClusterServer();
+    ).getIpfsCluster();
 
     try {
-      await axios.post(clusterServer + `pins/ipfs/${cid}`, {}, {});
+      await axios.post(ipfsCluster.clusterServer + `pins/ipfs/${cid}`, {}, {});
+    } catch (err) {
+      writeLog(
+        LogType.ERROR,
+        `Error pinning cid to cluster server`,
+        'ipfs.service.ts',
+        'pinCidToCluster',
+        err,
+      );
+    }
+  }
+
+  /**
+   * Call cluster API to UNPIN specific CID from child nodes
+   * @param cid cid to be unpinned
+   */
+  public async unpinCidFromCluster(cid: string, ipfsCluster?: IpfsCluster) {
+    if (!ipfsCluster) {
+      ipfsCluster = await new ProjectConfig(
+        { project_uuid: this.project_uuid },
+        this.context,
+      ).getIpfsCluster();
+    }
+
+    try {
+      await axios.delete(ipfsCluster.clusterServer + `pins/ipfs/${cid}`);
     } catch (err) {
       writeLog(
         LogType.ERROR,

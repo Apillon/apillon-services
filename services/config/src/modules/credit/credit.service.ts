@@ -197,7 +197,7 @@ export class CreditService {
     }
 
     await product.populateCurrentPrice();
-    if (!product.currentPrice) {
+    if (product.currentPrice == null) {
       throw await new ScsCodeException({
         code: ConfigErrorCode.PRODUCT_PRICE_DOES_NOT_EXISTS,
         status: 500,
@@ -469,8 +469,8 @@ export class CreditService {
         body: new AddCreditDto({
           project_uuid,
           amount: freemiumPackage.creditAmount,
-          referenceTable: DbTables.SUBSCRIPTION,
-          referenceId: freemiumPackage.id,
+          referenceTable: 'project',
+          referenceId: project_uuid,
         }),
       },
       context,

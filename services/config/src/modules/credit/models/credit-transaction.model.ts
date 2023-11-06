@@ -4,6 +4,7 @@ import {
   ProjectAccessModel,
   SerializeFor,
   SqlModelStatus,
+  enumInclusionValidator,
   getQueryParams,
   presenceValidator,
   prop,
@@ -104,8 +105,14 @@ export class CreditTransaction extends ProjectAccessModel {
       SerializeFor.INSERT_DB,
       SerializeFor.LOGGER,
     ],
+    validators: [
+      {
+        resolver: enumInclusionValidator(CreditDirection, true),
+        code: ConfigErrorCode.INVALID_CREDIT_DIRECTION,
+      },
+    ],
   })
-  public direction: number;
+  public direction: CreditDirection;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -253,7 +260,7 @@ export class CreditTransaction extends ProjectAccessModel {
         `,
       qFrom: `
         FROM \`${DbTables.CREDIT_TRANSACTION}\` ct
-        JOIN \`${DbTables.PRODUCT}\` p ON p.id = ct.product_id
+        LEFT JOIN \`${DbTables.PRODUCT}\` p ON p.id = ct.product_id
         WHERE ct.project_uuid = @project_uuid
         AND (@search IS null OR ct.referenceTable LIKE CONCAT('%', @search, '%'))
         AND ct.status <> ${SqlModelStatus.DELETED}
@@ -264,6 +271,27 @@ export class CreditTransaction extends ProjectAccessModel {
       `,
     };
 
-    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'ct.id');
+    const data = await selectAndCountQuery(
+      context.mysql,
+      sqlQuery,
+      params,
+      'ct.id',
+    );
+
+    const txDescriptionMap = {
+      [DbTables.INVOICE]: 'Credit purchase',
+      [DbTables.SUBSCRIPTION]: 'Subscription for a new plan',
+      project: 'Creation of a new project',
+    };
+
+    data.items
+      .filter((ct) => ct.direction === CreditDirection.RECEIVE)
+      .forEach((ct) => {
+        ct.category = ct.referenceTable?.toUpperCase();
+        ct.description =
+          txDescriptionMap[ct.referenceTable] ||
+          `Refund for credits spent in ${ct.category} category`;
+      });
+    return data;
   }
 }

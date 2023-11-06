@@ -1,12 +1,12 @@
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
-import { presenceValidator, emailValidator } from '@rawmodel/validators';
-import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
+import { emailValidator, presenceValidator } from '@rawmodel/validators';
 import { ModelBase } from '../../../base-models/base';
+import { didUriValidator } from '../validators/did-create.validator';
 import { JSONParser } from '../../../parsers';
-import { Captcha } from '../../../captcha';
+import { ValidatorErrorCode, PopulateFrom } from '../../../../config/types';
 
-export class AttestationEmailDto extends ModelBase {
+export class IdentityLinkAccountDidDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
@@ -29,21 +29,32 @@ export class AttestationEmailDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.IDENTITY_TOKEN_NOT_PRESENT,
+        code: ValidatorErrorCode.DID_URI_NOT_PRESENT,
+      },
+      {
+        resolver: didUriValidator(),
+        code: ValidatorErrorCode.DID_URI_INVALID,
       },
     ],
   })
-  public token: string;
+  public didUri: string;
 
   @prop({
     parser: { resolver: JSONParser() },
     populatable: [PopulateFrom.PROFILE],
+    validators: [],
+  })
+  public linkParameters: any;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.CAPTCHA_NOT_PRESENT,
+        code: ValidatorErrorCode.IDENTITY_VERIFICATION_TOKEN_NOT_PRESENT,
       },
     ],
   })
-  public captcha: Captcha;
+  public token: string;
 }

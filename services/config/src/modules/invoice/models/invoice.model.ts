@@ -1,4 +1,4 @@
-import { floatParser, integerParser, stringParser } from '@rawmodel/parsers';
+import { dateParser, floatParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
   getQueryParams,
@@ -84,6 +84,7 @@ export class Invoice extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
+      SerializeFor.PROFILE,
       SerializeFor.SERVICE,
     ],
   })
@@ -175,6 +176,13 @@ export class Invoice extends AdvancedSQLModel {
   })
   public stripeId: string;
 
+  @prop({
+    parser: { resolver: dateParser() },
+    serializable: [SerializeFor.SELECT_DB, SerializeFor.PROFILE],
+    populatable: [PopulateFrom.DB],
+  })
+  public override createTime?: Date;
+
   public async getList(
     filter: InvoicesQueryFilter,
     context: ServiceContext,
@@ -196,7 +204,7 @@ export class Invoice extends AdvancedSQLModel {
         SELECT ${this.generateSelectFields('i', '', serializationStrategy)}
         `,
       qFrom: `
-        FROM \`${this.tableName}\` i
+        FROM \`${DbTables.INVOICE}\` i
         WHERE i.project_uuid = @project_uuid
         AND (@search IS null OR i.clientEmail LIKE CONCAT('%', @search, '%'))
         AND i.status <> ${SqlModelStatus.DELETED}

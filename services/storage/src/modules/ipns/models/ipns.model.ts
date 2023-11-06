@@ -14,7 +14,6 @@ import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { DbTables, StorageErrorCode } from '../../../config/types';
 import { StorageCodeException } from '../../../lib/exceptions';
-import { addJwtToIPFSUrl } from '../../../lib/ipfs-utils';
 import { Bucket } from '../../bucket/models/bucket.model';
 import { ProjectConfig } from '../../config/models/project-config.model';
 
@@ -229,8 +228,8 @@ export class Ipns extends ProjectAccessModel {
   }
 
   public async getList(context: ServiceContext, filter: IpnsQueryFilter) {
-    const b: Bucket = await new Bucket({}, context).populateById(
-      filter.bucket_id,
+    const b: Bucket = await new Bucket({}, context).populateByUUID(
+      filter.bucket_uuid,
     );
     if (!b.exists()) {
       throw new StorageCodeException({
@@ -243,10 +242,10 @@ export class Ipns extends ProjectAccessModel {
     this.canAccess(context);
 
     //Get IPFS-->IPNS gateway
-    const ipfsGateway = await new ProjectConfig(
+    const ipfsCluster = await new ProjectConfig(
       { project_uuid: this.project_uuid },
       this.getContext(),
-    ).getIpfsGateway();
+    ).getIpfsCluster();
 
     // Map url query with sql fields.
     const fieldMap = {
@@ -262,17 +261,14 @@ export class Ipns extends ProjectAccessModel {
     const sqlQuery = {
       qSelect: `
         SELECT ${this.generateSelectFields('i', '')},
-        IF(i.ipnsName IS NULL, NULL, CONCAT("${
-          ipfsGateway.ipnsUrl
-        }", i.ipnsName)) as link,
         i.updateTime
         `,
       qFrom: `
         FROM \`${DbTables.IPNS}\` i
-        WHERE i.project_uuid = @project_uuid
-        AND i.bucket_id = @bucket_id
+        JOIN \`${DbTables.BUCKET}\` b on b.id = i.bucket_id
+        WHERE b.bucket_uuid = @bucket_uuid
         AND (@search IS null OR i.name LIKE CONCAT('%', @search, '%'))
-        AND status <> ${SqlModelStatus.DELETED}
+        AND i.status <> ${SqlModelStatus.DELETED}
       `,
       qFilter: `
         ORDER BY ${filters.orderStr}
@@ -287,9 +283,13 @@ export class Ipns extends ProjectAccessModel {
       'i.id',
     );
 
-    if (ipfsGateway.private) {
-      for (const ipns of data.items) {
-        ipns.link = addJwtToIPFSUrl(ipns.link, this.project_uuid);
+    for (const item of data.items) {
+      if (item.ipnsName) {
+        item.link = ipfsCluster.generateLink(
+          b.project_uuid,
+          item.ipnsName,
+          true,
+        );
       }
     }
 

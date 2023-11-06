@@ -2,6 +2,7 @@ import {
   ApillonHostingApiCreateS3UrlsForUploadDto,
   AppEnvironment,
   AWS_S3,
+  CodeException,
   CreateS3UrlsForUploadDto,
   CreateWebsiteDto,
   DeploymentQueryFilter,
@@ -34,7 +35,7 @@ import {
   DeploymentEnvironment,
   StorageErrorCode,
 } from '../../config/types';
-import { ServiceContext } from '@apillon/service-lib';
+import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
 import { deleteDirectory } from '../../lib/delete-directory';
 import {
   StorageCodeException,
@@ -86,7 +87,7 @@ export class HostingService {
     //Get buckets
     await website.populateBucketsAndLink();
 
-    return website.serialize(SerializeFor.PROFILE);
+    return website.serialize(getSerializationStrategy(context));
   }
 
   static async createWebsite(
@@ -94,6 +95,19 @@ export class HostingService {
     context: ServiceContext,
   ): Promise<any> {
     const website: Website = new Website(event.body, context);
+
+    if (website.domain) {
+      //Check if domain already exists
+      const tmpWebsite = await new Website({}, context).populateByDomain(
+        website.domain,
+      );
+      if (tmpWebsite.exists()) {
+        throw new StorageCodeException({
+          code: StorageErrorCode.WEBSITE_WITH_THAT_DOMAIN_ALREADY_EXISTS,
+          status: 409,
+        });
+      }
+    }
 
     const website_uuid = uuidV4();
     const spendCredit: SpendCreditDto = new SpendCreditDto(
@@ -122,15 +136,15 @@ export class HostingService {
       data: website.serialize(),
     });
 
-    return website.serialize(SerializeFor.PROFILE);
+    return website.serialize(getSerializationStrategy(context));
   }
 
   static async updateWebsite(
-    event: { id: number; data: any },
+    event: { website_uuid: string; data: any },
     context: ServiceContext,
   ): Promise<any> {
     const website: Website = await new Website({}, context).populateById(
-      event.id,
+      event.website_uuid,
     );
 
     if (!website.exists()) {
@@ -156,7 +170,16 @@ export class HostingService {
         }
       }
 
-      //TODO: Spend credit ?
+      //Check if domain already exists
+      const tmpWebsite = await new Website({}, context).populateByDomain(
+        website.domain,
+      );
+      if (tmpWebsite.exists()) {
+        throw new StorageCodeException({
+          code: StorageErrorCode.WEBSITE_WITH_THAT_DOMAIN_ALREADY_EXISTS,
+          status: 409,
+        });
+      }
 
       website.domainChangeDate = new Date();
     }
@@ -243,8 +266,8 @@ export class HostingService {
     event: { body: DeployWebsiteDto },
     context: ServiceContext,
   ): Promise<any> {
-    const website: Website = await new Website({}, context).populateById(
-      event.body.website_id,
+    const website: Website = await new Website({}, context).populateByUUID(
+      event.body.website_uuid,
     );
 
     if (!website.exists()) {
@@ -327,6 +350,7 @@ export class HostingService {
 
     //Create deployment record
     const deployment: Deployment = new Deployment({}, context).populate({
+      deployment_uuid: uuidV4(),
       website_id: website.id,
       bucket_id:
         event.body.environment == DeploymentEnvironment.STAGING
@@ -334,6 +358,8 @@ export class HostingService {
           : website.productionBucket_id,
       environment: event.body.environment,
       number: deploymentNumber,
+      createTime: new Date(),
+      updateTime: new Date(),
     });
 
     try {
@@ -359,6 +385,8 @@ export class HostingService {
               : ProductCode.HOSTING_DEPLOY_TO_PRODUCTION,
           referenceTable: DbTables.DEPLOYMENT,
           referenceId: deployment.id,
+          location: 'HostingService/deployWebsite',
+          service: ServiceName.STORAGE,
         },
         context,
       );
@@ -418,18 +446,21 @@ export class HostingService {
       );
     }
 
-    return deployment.serialize(SerializeFor.PROFILE);
+    return deployment.serialize(getSerializationStrategy(context));
   }
 
   //#endregion
 
   //#region get, list deployments
 
-  static async getDeployment(event: { id: number }, context: ServiceContext) {
+  static async getDeployment(
+    event: { deployment_uuid: string },
+    context: ServiceContext,
+  ) {
     const deployment: Deployment = await new Deployment(
       {},
       context,
-    ).populateById(event.id);
+    ).populateByUUID(event.deployment_uuid, 'deployment_uuid');
 
     if (!deployment.exists()) {
       throw new StorageCodeException({
@@ -439,17 +470,28 @@ export class HostingService {
     }
     await deployment.canAccess(context);
 
-    return deployment.serialize(SerializeFor.PROFILE);
+    return deployment.serialize(getSerializationStrategy(context));
   }
 
   static async listDeployments(
     event: { query: DeploymentQueryFilter },
     context: ServiceContext,
   ) {
-    return await new Deployment(
-      { website_id: event.query.website_id },
+    const website = await new Website({}, context).populateByUUID(
+      event.query.website_uuid,
+    );
+    if (!website.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.WEBSITE_NOT_FOUND,
+        status: 404,
+      });
+    }
+    website.canAccess(context);
+
+    return await new Deployment({}, context).getList(
       context,
-    ).getList(context, new DeploymentQueryFilter(event.query));
+      new DeploymentQueryFilter(event.query),
+    );
   }
 
   //#endregion

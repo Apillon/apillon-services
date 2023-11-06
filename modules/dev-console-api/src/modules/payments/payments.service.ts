@@ -2,7 +2,6 @@ import {
   CodeException,
   PricelistQueryFilter,
   Scs,
-  SqlModelStatus,
   UpdateSubscriptionDto,
   env,
 } from '@apillon/lib';
@@ -37,6 +36,7 @@ export class PaymentsService {
 
     return await this.stripeService.generateStripePaymentSession(
       stripeId,
+      context.user.email,
       paymentSessionDto,
       'payment',
     );
@@ -45,7 +45,7 @@ export class PaymentsService {
   /**
    * Creates a stripe payment session for purchasing a subscription package
    * @param {DevConsoleApiContext} context
-   * @param {PaymentSessionDto} paymentSessionDto - containing the subscription package data and paymentmetadata
+   * @param {PaymentSessionDto} paymentSessionDto - containing the subscription package data and metadata
    * @returns {Promise<Stripe.Checkout.Session>}
    */
   async createStripeSubscriptionPaymentSession(
@@ -63,6 +63,7 @@ export class PaymentsService {
 
     return await this.stripeService.generateStripePaymentSession(
       stripeId,
+      context.user.email,
       paymentSessionDto,
       'subscription',
     );
@@ -124,15 +125,13 @@ export class PaymentsService {
         await new Scs().updateSubscription(
           new UpdateSubscriptionDto({
             subscriptionStripeId: payment.id,
-            status: payment.cancel_at_period_end // If user has canceled subscription
-              ? SqlModelStatus.INACTIVE
-              : SqlModelStatus.ACTIVE,
             cancelDate: payment.canceled_at
               ? new Date(payment.canceled_at * 1000)
               : null,
             expiresOn: new Date(payment.current_period_end * 1000),
             cancellationReason: payment.cancellation_details?.feedback,
             cancellationComment: payment.cancellation_details?.comment,
+            stripePackageId: payment.plan.id,
           }),
         );
         break;

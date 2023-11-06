@@ -45,6 +45,8 @@ export async function processEvent(
 
     [AmsEventType.API_KEY_ROLE_ASSIGN]: RoleService.assignRoleToApiKey,
     [AmsEventType.API_KEY_ROLE_REMOVE]: RoleService.removeApiKeyRole,
+    [AmsEventType.API_KEY_ROLES_REMOVE_BY_SERVICE]:
+      RoleService.removeApiKeyRolesByService,
     [AmsEventType.GET_API_KEY_ROLES]: RoleService.getApiKeyRoles,
 
     [AmsEventType.DISCORD_LINK]: OauthLinkService.linkDiscord,

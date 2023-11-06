@@ -47,6 +47,7 @@ export class StripeService {
    */
   async generateStripePaymentSession(
     stripeId: string,
+    customer_email: string,
     paymentSessionDto: PaymentSessionDto,
     mode: Stripe.Checkout.SessionCreateParams.Mode,
   ): Promise<Stripe.Response<Stripe.Checkout.Session>> {
@@ -58,6 +59,7 @@ export class StripeService {
         },
       ],
       mode,
+      customer_email,
       metadata: {
         project_uuid: paymentSessionDto.project_uuid,
         package_id: +paymentSessionDto.package_id,
@@ -67,6 +69,7 @@ export class StripeService {
       success_url: paymentSessionDto.returnUrl,
       cancel_url: paymentSessionDto.returnUrl,
       automatic_tax: { enabled: true },
+      allow_promotion_codes: true,
     });
   }
 
