@@ -11,7 +11,7 @@ export async function upgrade(
       \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
       \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       PRIMARY KEY (\`key\`)
-    ;`,
+    );`,
   );
 }
 
