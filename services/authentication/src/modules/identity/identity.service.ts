@@ -200,7 +200,7 @@ export class IdentityService {
     const did_create_op: DidCreateOp = event.body.did_create_op as DidCreateOp;
     const claimerEmail = event.body.email;
     const claimerDidUri = event.body.didUri;
-    const linkDidToAccount = event.body.linkParameters;
+    const linkParameters = event.body.linkParameters;
 
     const validStartStates = IdentityState.getStartValidStates();
 
@@ -268,7 +268,7 @@ export class IdentityService {
       fullDidCreationTx,
       identity,
       did_create_op,
-      linkDidToAccount,
+      linkParameters,
     );
 
     // Don't update here, but in the request below
@@ -467,8 +467,14 @@ export class IdentityService {
       env.KILT_ATTESTER_MNEMONIC,
     ) as KiltKeyringPair;
 
+    const { value: txCounter } = await new IdentityConfig(
+      {},
+      context,
+    ).populateByKey(IdentityConfigKey.ATTESTER_DID_TX_COUNTER);
+
     writeLog(LogType.INFO, 'RECEIVED: ', didUri, linkParameters);
     writeLog(LogType.INFO, 'Authorizing transaction ...');
+
     // Create account link tx
     const authorizedAccountLinkingTx = await Did.authorizeTx(
       didUri,
@@ -478,6 +484,7 @@ export class IdentityService {
         keyType: attesterKeypairs.authentication.type,
       }),
       attesterAcc.address,
+      { txCounter: new BN(txCounter) },
     );
 
     writeLog(LogType.INFO, 'Prepareing BC request ...');
@@ -489,6 +496,10 @@ export class IdentityService {
 
     writeLog(LogType.INFO, 'Sending blockchain request..');
     await sendBlockchainServiceRequest(context, bcsRequest);
+    await new IdentityConfig({}, context).modifyKeyValue(
+      IdentityConfigKey.ATTESTER_DID_TX_COUNTER,
+      +txCounter + 1,
+    );
   }
 
   static async revokeIdentity(event: { body: IdentityDidRevokeDto }, context) {

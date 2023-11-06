@@ -2,7 +2,6 @@ import { Context } from '@apillon/lib';
 import { BaseSQLModel, PopulateFrom, prop, SerializeFor } from '@apillon/lib';
 import { stringParser } from '@rawmodel/parsers';
 import { DbTables, IdentityConfigKey } from '../../../config/types';
-import { ServiceContext } from '@apillon/service-lib';
 
 /**
  * Identity Config table containing key-value pairs
@@ -51,6 +50,7 @@ export class IdentityConfig extends BaseSQLModel {
         SELECT *
         FROM \`${this.tableName}\`
         WHERE key = @key
+        FOR UPDATE;
       `,
       { key },
     );
@@ -68,6 +68,21 @@ export class IdentityConfig extends BaseSQLModel {
         WHERE key = @key
       `,
       { key, value },
+    );
+
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
+  }
+
+  public async updateNumericKeyValue(key: IdentityConfigKey, amount: number) {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+        UPDATE \`${this.tableName}\`
+        SET value = value + @amount
+        WHERE key = @key
+      `,
+      { key, amount },
     );
 
     return data?.length
