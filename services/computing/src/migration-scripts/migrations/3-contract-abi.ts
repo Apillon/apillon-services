@@ -7,12 +7,12 @@ export async function upgrade(
     `CREATE TABLE IF NOT EXISTS \`${DbTables.CONTRACT_ABI}\`
       (
         \`id\` INT NOT NULL AUTO_INCREMENT,
+        \`status\` INT NULL,
 
         \`contractType\` VARCHAR(100) NOT NULL,
         \`version\` INT NOT NULL,
         \`abi\` JSON NOT NULL,
 
-        \`status\` INT NULL,
         \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
         \`createUser\` INT NULL,
         \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP
