@@ -53,6 +53,7 @@ export async function createTestBucketDirectory(
   status = SqlModelStatus.ACTIVE,
 ): Promise<Directory> {
   const directory: Directory = new Directory({}, storageCtx).fake().populate({
+    directory_uuid: uuidV4(),
     project_uuid: project.project_uuid,
     parentDirectory_id: parentDirectoryId,
     bucket_id: bucket.id,
@@ -101,7 +102,10 @@ export async function createTestBucketFile(
   let cid = undefined;
   if (addToIPFS) {
     //Add fake file to IPFS
-    const deleteBucketTestFIle1CID = await IPFSService.addFileToIPFS({
+    const deleteBucketTestFIle1CID = await new IPFSService(
+      storageCtx,
+      bucket.project_uuid,
+    ).addFileToIPFS({
       path: fileName,
       content: new Date().toString() + uuidV4(),
     });

@@ -6,8 +6,8 @@ import {
   IdentityLinkAccountDidDto,
   IdentityDidRevokeDto,
 } from '@apillon/lib';
-import { IdentityMicroservice } from '../../modules/identity/identity.service';
 import { Identity } from '../../modules/identity/models/identity.model';
+import { IdentityService } from '../../modules/identity/identity.service';
 
 export async function attestClaim(
   context: any,
@@ -18,14 +18,11 @@ export async function attestClaim(
     email: identity.email,
     didUri: identity.didUri,
     token: identity.token,
-    linkParameters: linkParameters,
+    linkParameters,
   });
 
   if (env.APP_ENV != AppEnvironment.TEST) {
-    await IdentityMicroservice.attestClaim(
-      { body: attestationClaimDto },
-      context,
-    );
+    await IdentityService.attestClaim({ body: attestationClaimDto }, context);
   }
 }
 
@@ -35,12 +32,12 @@ export async function identityGenerate(
   did_create_op: any,
 ) {
   const identityCreateDto = new IdentityCreateDto().populate({
-    email: email,
-    did_create_op: did_create_op,
+    email,
+    did_create_op,
   });
 
   if (env.APP_ENV != AppEnvironment.TEST) {
-    await IdentityMicroservice.generateIdentity(
+    await IdentityService.generateIdentity(
       { body: identityCreateDto },
       context,
     );
@@ -56,10 +53,7 @@ export async function linkAccToDid(context: any, params: any) {
   });
 
   if (env.APP_ENV != AppEnvironment.TEST) {
-    await IdentityMicroservice.linkAccountDid(
-      { body: identityLinkDto },
-      context,
-    );
+    await IdentityService.linkAccountDid({ body: identityLinkDto }, context);
   }
 }
 
@@ -70,7 +64,7 @@ export async function identityRevoke(params: any) {
   });
 
   if (env.APP_ENV != AppEnvironment.TEST) {
-    await IdentityMicroservice.revokeIdentity(
+    await IdentityService.revokeIdentity(
       { body: identityRevokeDto },
       this.context,
     );

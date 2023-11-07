@@ -2,7 +2,7 @@ export async function upgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-   CREATE TABLE IF NOT EXISTS \`subscription\` (
+    CREATE TABLE IF NOT EXISTS \`subscription\` (
     \`id\` INT NOT NULL AUTO_INCREMENT,
     \`package_id\` INT NULL,
     \`project_uuid\` VARCHAR(36) NULL,

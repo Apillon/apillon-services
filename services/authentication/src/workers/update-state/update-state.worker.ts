@@ -17,11 +17,11 @@ import {
   AuthApiEmailType,
   IdentityJobState,
   IdentityState,
-  JwtTokenType,
 } from '../../config/types';
 import { Identity } from '../../modules/identity/models/identity.model';
 import { IdentityJob } from '../../modules/identity-job/models/identity-job.model';
 import * as procedures from './procedures';
+import { JwtTokenType } from '@apillon/lib';
 
 // TODO: Consider managing by transaction status and not by identity job state
 // The diagram shoul be as follows: check if success and trigger correct operation. That's it.
@@ -189,6 +189,7 @@ export class UpdateStateWorker extends BaseQueueWorker {
                   {
                     email,
                   },
+                  '10min',
                 );
 
                 await new Mailing(ctx).sendMail({

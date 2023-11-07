@@ -11,7 +11,7 @@ import { IPFSService } from '../../modules/ipfs/ipfs.service';
 import { SerializeFor, SqlModelStatus } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
 
-describe('RepublishIpnsWorker unit test', () => {
+describe('RepublishIpnsWorker integration test', () => {
   let stage: Stage;
 
   let republishWorker: RepublishIpnsWorker;
@@ -58,7 +58,10 @@ describe('RepublishIpnsWorker unit test', () => {
   });
 
   test('Test publish ipns', async () => {
-    const publishedIpns = await IPFSService.publishToIPNS(
+    const publishedIpns = await new IPFSService(
+      stage.context,
+      ipns.project_uuid,
+    ).publishToIPNS(
       'QmRwVSB8Bfr6E5hgw78j12mu8Sr8K8CAqJqpjyaCzSPLm5',
       `${ipns.project_uuid}_${ipns.bucket_id}_${ipns.id}`,
     );

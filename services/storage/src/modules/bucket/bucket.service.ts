@@ -34,34 +34,19 @@ export class BucketService {
     return await new Bucket(
       { project_uuid: event.query.project_uuid },
       context,
-    ).getList(
-      context,
-      new BucketQueryFilter(event.query),
-      getSerializationStrategy(context),
-    );
+    ).getList(context, new BucketQueryFilter(event.query));
   }
 
   static async getBucket(
-    event: { id: string | number },
+    event: { bucket_uuid: string },
     context: ServiceContext,
   ) {
-    const b = await new Bucket({}, context).populateById(event.id);
-    if (!b.exists()) {
-      throw new StorageNotFoundException();
-    }
-    b.canAccess(context);
+    const b: Bucket = await new Bucket(
+      {},
+      context,
+    ).populateByUuidAndCheckAccess(event.bucket_uuid);
 
-    //get bucket max size quota from config service
-    const maxBucketSizeQuota = await new Scs(context).getQuota({
-      quota_id: QuotaCode.MAX_BUCKET_SIZE,
-      project_uuid: b.project_uuid,
-      object_uuid: b.bucket_uuid,
-    });
-    if (maxBucketSizeQuota?.value) {
-      b.maxSize = maxBucketSizeQuota.value * 1073741824; //quota is in GB - convert to bytes
-    }
-
-    return b.serialize(SerializeFor.PROFILE);
+    return b.serialize(getSerializationStrategy(context));
   }
 
   static async createBucket(
@@ -69,11 +54,14 @@ export class BucketService {
     context: ServiceContext,
   ): Promise<any> {
     const b: Bucket = new Bucket(
-      { ...event.body, bucket_uuid: uuidV4() },
+      {
+        ...event.body,
+        bucket_uuid: uuidV4(),
+        createTime: new Date(),
+        updateTime: new Date(),
+      },
       context,
     );
-    //set default bucket size in bytes - NOTE this is not used in application. Max size is set in config MS
-    b.maxSize = 5368709120;
 
     try {
       await b.validate();
@@ -82,27 +70,6 @@ export class BucketService {
       if (!b.isValid()) {
         throw new StorageValidationException(b);
       }
-    }
-
-    //check max bucket quota
-    if (
-      b.bucketType == BucketType.STORAGE &&
-      (
-        await BucketService.maxBucketsQuotaReached(
-          {
-            query: new BucketQuotaReachedQueryFilter().populate({
-              bucketType: b.bucketType,
-              project_uuid: b.project_uuid,
-            }),
-          },
-          context,
-        )
-      ).maxBucketsQuotaReached
-    ) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.MAX_BUCKETS_REACHED,
-        status: 400,
-      });
     }
 
     //Insert
@@ -121,14 +88,16 @@ export class BucketService {
       project_uuid: b.project_uuid,
     });
 
-    return b.serialize(SerializeFor.PROFILE);
+    return b.serialize(getSerializationStrategy(context));
   }
 
   static async updateBucket(
-    event: { id: number; data: any },
+    event: { bucket_uuid: string; data: any },
     context: ServiceContext,
   ): Promise<any> {
-    const b: Bucket = await new Bucket({}, context).populateById(event.id);
+    const b: Bucket = await new Bucket({}, context).populateByUUID(
+      event.bucket_uuid,
+    );
 
     if (!b.exists()) {
       throw new StorageNotFoundException();
@@ -259,13 +228,13 @@ export class BucketService {
   //#region bucket webhook functions
 
   static async getBucketWebhook(
-    event: { bucket_id: number },
+    event: { bucket_uuid: string },
     context: ServiceContext,
   ): Promise<any> {
     const webhook: BucketWebhook = await new BucketWebhook(
       {},
       context,
-    ).populateByBucketId(event.bucket_id);
+    ).populateByBucketUuid(event.bucket_uuid);
 
     if (!webhook.exists()) {
       throw new StorageNotFoundException(
@@ -281,8 +250,8 @@ export class BucketService {
     event: { body: CreateBucketWebhookDto },
     context: ServiceContext,
   ): Promise<any> {
-    const b: Bucket = await new Bucket({}, context).populateById(
-      event.body.bucket_id,
+    const b: Bucket = await new Bucket({}, context).populateByUUID(
+      event.body.bucket_uuid,
     );
 
     if (!b.exists()) {
@@ -291,7 +260,10 @@ export class BucketService {
 
     b.canModify(context);
 
-    const webhook: BucketWebhook = new BucketWebhook(event.body, context);
+    const webhook: BucketWebhook = new BucketWebhook(
+      { ...event.body, bucket_id: b.id },
+      context,
+    );
     try {
       await webhook.validate();
     } catch (err) {
@@ -303,7 +275,9 @@ export class BucketService {
 
     //Check if webhook for this bucket already exists
     if (
-      (await new BucketWebhook({}, context).populateByBucketId(b.id)).exists()
+      (
+        await new BucketWebhook({}, context).populateByBucketUuid(b.bucket_uuid)
+      ).exists()
     ) {
       throw new StorageCodeException({
         code: StorageErrorCode.WEBHOOK_ALREADY_EXISTS_FOR_PROJECT,

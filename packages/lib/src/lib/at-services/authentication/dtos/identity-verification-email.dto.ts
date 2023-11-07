@@ -1,28 +1,12 @@
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
-import { presenceValidator, emailValidator } from '@rawmodel/validators';
+import { presenceValidator } from '@rawmodel/validators';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
-import { ModelBase } from '../../../base-models/base';
 import { JSONParser } from '../../../parsers';
 import { Captcha } from '../../../captcha';
+import { BaseIdentityDto } from './base-identity.dto';
 
-export class VerificationEmailDto extends ModelBase {
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.USER_EMAIL_NOT_PRESENT,
-      },
-      {
-        resolver: emailValidator(),
-        code: ValidatorErrorCode.USER_EMAIL_NOT_VALID,
-      },
-    ],
-  })
-  public email: string;
-
+export class VerificationEmailDto extends BaseIdentityDto {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],

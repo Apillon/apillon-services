@@ -1,31 +1,24 @@
 /* eslint-disable @typescript-eslint/member-ordering */
-import { prop } from '@rawmodel/core';
-import { stringParser, integerParser, dateParser } from '@rawmodel/parsers';
-import { presenceValidator } from '@rawmodel/validators';
 import {
-  ProjectAccessModel,
-  env,
-  getQueryParams,
+  FilesQueryFilter,
   PoolConnection,
   PopulateFrom,
-  selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
-  TrashedFilesQueryFilter,
+  UuidSqlModel,
+  getQueryParams,
+  selectAndCountQuery,
 } from '@apillon/lib';
-import {
-  DbTables,
-  FileStatus,
-  ObjectType,
-  StorageErrorCode,
-} from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
+import { prop } from '@rawmodel/core';
+import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
+import { presenceValidator } from '@rawmodel/validators';
 import { v4 as uuidV4 } from 'uuid';
+import { DbTables, FileStatus, StorageErrorCode } from '../../../config/types';
 import { Bucket } from '../../bucket/models/bucket.model';
-import { StorageCodeException } from '../../../lib/exceptions';
-import { Directory } from '../../directory/models/directory.model';
+import { ProjectConfig } from '../../config/models/project-config.model';
 
-export class File extends ProjectAccessModel {
+export class File extends UuidSqlModel {
   tableName = DbTables.FILE;
 
   @prop({
@@ -42,6 +35,7 @@ export class File extends ProjectAccessModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
     fakeValue: () => uuidV4(),
@@ -62,6 +56,8 @@ export class File extends ProjectAccessModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [
       {
@@ -86,6 +82,8 @@ export class File extends ProjectAccessModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
   })
   public CIDv1: string;
@@ -121,6 +119,8 @@ export class File extends ProjectAccessModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [
       {
@@ -144,6 +144,8 @@ export class File extends ProjectAccessModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
@@ -194,6 +196,27 @@ export class File extends ProjectAccessModel {
   public bucket_id: number;
 
   @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
+    ],
+    validators: [],
+  })
+  public path: string;
+
+  @prop({
     parser: { resolver: integerParser() },
     populatable: [
       PopulateFrom.DB,
@@ -203,6 +226,7 @@ export class File extends ProjectAccessModel {
     ],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
     ],
@@ -223,6 +247,8 @@ export class File extends ProjectAccessModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
@@ -241,7 +267,9 @@ export class File extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
     fakeValue: FileStatus.PINNED_TO_CRUST,
@@ -269,17 +297,20 @@ export class File extends ProjectAccessModel {
       PopulateFrom.ADMIN,
       PopulateFrom.PROFILE,
     ],
-    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+    ],
     validators: [],
   })
-  public downloadLink: string;
+  public link: string;
 
-  /**
-   * Path without name
-   */
   @prop({
     parser: { resolver: stringParser() },
     populatable: [
+      PopulateFrom.DB,
       PopulateFrom.SERVICE,
       PopulateFrom.ADMIN,
       PopulateFrom.PROFILE,
@@ -288,10 +319,11 @@ export class File extends ProjectAccessModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
-  public path: string;
+  public directory_uuid: string;
 
   /**
    * Marks record in the database for deletion.
@@ -324,13 +356,14 @@ export class File extends ProjectAccessModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT *
-      FROM \`${this.tableName}\`
+      SELECT f.*, d.directory_uuid
+      FROM \`${DbTables.FILE}\` f
+      LEFT JOIN \`${DbTables.DIRECTORY}\` d on d.id = f.directory_id
       WHERE
-      bucket_id = @bucket_id
-      AND name = @name
-      AND ((@directory_id IS NULL AND directory_id IS NULL) OR @directory_id = directory_id)
-      AND status <> ${SqlModelStatus.DELETED};
+      f.bucket_id = @bucket_id
+      AND f.name = @name
+      AND ((@directory_id IS NULL AND f.directory_id IS NULL) OR @directory_id = f.directory_id)
+      AND f.status <> ${SqlModelStatus.DELETED};
       `,
       { bucket_id, name, directory_id },
     );
@@ -352,37 +385,44 @@ export class File extends ProjectAccessModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT *
-      FROM \`${this.tableName}\`
-      WHERE (id LIKE @id OR cid LIKE @id OR file_uuid LIKE @id)
-      AND status <> ${SqlModelStatus.DELETED};
+      SELECT f.*, d.directory_uuid
+      FROM \`${DbTables.FILE}\` f
+      LEFT JOIN \`${DbTables.DIRECTORY}\` d on d.id = f.directory_id
+      WHERE (f.id LIKE @id OR f.cid LIKE @id OR f.file_uuid LIKE @id)
+      AND f.status <> ${SqlModelStatus.DELETED};
       `,
       { id },
     );
 
-    return data?.length
-      ? this.populate(data[0], PopulateFrom.DB)
-      : this.reset();
+    data?.length ? this.populate(data[0], PopulateFrom.DB) : this.reset();
+    await this.populateLink();
+
+    return this;
   }
 
-  public override async populateByUUID(file_uuid: string): Promise<this> {
-    return super.populateByUUID(file_uuid, 'file_uuid');
+  public override async populateByUUID(uuid: string): Promise<this> {
+    return this.populateById(uuid);
   }
 
-  public async getMarkedForDeletionList(
-    context: ServiceContext,
-    filter: TrashedFilesQueryFilter,
-  ) {
-    const b: Bucket = await new Bucket({}, context).populateByUUID(
-      filter.bucket_uuid,
-    );
-    if (!b.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.BUCKET_NOT_FOUND,
-        status: 404,
-      });
+  public async populateLink() {
+    if (!this.CID) {
+      return;
     }
-    b.canAccess(context);
+
+    //Get IPFS cluster
+    const ipfsCluster = await new ProjectConfig(
+      { project_uuid: this.project_uuid },
+      this.getContext(),
+    ).getIpfsCluster();
+
+    this.link = ipfsCluster.generateLink(this.project_uuid, this.CID);
+  }
+
+  public async listFiles(context: ServiceContext, filter: FilesQueryFilter) {
+    const b: Bucket = await new Bucket(
+      {},
+      context,
+    ).populateByUuidAndCheckAccess(filter.bucket_uuid);
 
     // Map url query with sql fields.
     const fieldMap = {
@@ -395,28 +435,50 @@ export class File extends ProjectAccessModel {
       filter.serialize(),
     );
 
+    //Get IPFS cluster
+    const ipfsCluster = await new ProjectConfig(
+      { project_uuid: b.project_uuid },
+      this.getContext(),
+    ).getIpfsCluster();
+
+    const defaultOrderStr =
+      filter.status == SqlModelStatus.ACTIVE
+        ? 'f.createTime DESC'
+        : 'f.markedForDeletionTime DESC';
+
     const sqlQuery = {
       qSelect: `
-        SELECT ${ObjectType.FILE} as type, f.id, f.status, f.name, f.CID, f.createTime, f.updateTime,
-        f.contentType as contentType, f.size as size, f.directory_id as parentDirectoryId,
-        f.file_uuid as file_uuid, CONCAT("${env.STORAGE_IPFS_GATEWAY}", f.CID) as link
+        SELECT ${this.generateSelectFields('f')}
         `,
       qFrom: `
         FROM \`${DbTables.FILE}\` f
         INNER JOIN \`${DbTables.BUCKET}\` b ON f.bucket_id = b.id
         WHERE b.bucket_uuid = @bucket_uuid
-        AND (@search IS null OR f.name LIKE CONCAT('%', @search, '%'))
-        AND f.status = ${SqlModelStatus.MARKED_FOR_DELETION}
+        AND (@search IS null OR CONCAT(IFNULL(f.path, ""), f.name) LIKE CONCAT('%', @search, '%'))
+        AND (@fileStatus IS NULL OR f.fileStatus = @fileStatus)
+        AND f.status = @status
         `,
       qFilter: `
-        ORDER BY ${
-          filters.orderStr ? filters.orderStr : 'f.markedForDeletionTime DESC'
-        }
+        ORDER BY ${filters.orderStr || defaultOrderStr}
         LIMIT ${filters.limit} OFFSET ${filters.offset};
       `,
     };
 
-    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'f.id');
+    const data = await selectAndCountQuery(
+      context.mysql,
+      sqlQuery,
+      params,
+      'f.id',
+    );
+
+    //Populate link
+    for (const item of data.items) {
+      if (item.CID) {
+        item.link = ipfsCluster.generateLink(b.project_uuid, item.CID);
+      }
+    }
+
+    return data;
   }
 
   /**
@@ -436,7 +498,7 @@ export class File extends ProjectAccessModel {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT *
-      FROM \`${this.tableName}\`
+      FROM \`${DbTables.FILE}\`
       WHERE bucket_id = @bucket_id AND status <> ${SqlModelStatus.DELETED};
       `,
       { bucket_id },
@@ -447,23 +509,67 @@ export class File extends ProjectAccessModel {
         res.push(new File({}, context).populate(d, PopulateFrom.DB));
       }
     }
-
     return res;
   }
 
-  public populatePath(directories: Directory[]) {
-    this.path = '';
-    if (!this.directory_id) {
-      return;
-    } else {
-      let tmpDir: Directory = undefined;
-      do {
-        tmpDir = directories.find(
-          (x) =>
-            x.id == (tmpDir ? tmpDir.parentDirectory_id : this.directory_id),
-        );
-        this.path = tmpDir.name + '/' + this.path;
-      } while (tmpDir?.parentDirectory_id);
+  /**
+   * Get all files for project
+   * @param project_uuid
+   * @returns array of files
+   */
+  public async populateFilesForProject(project_uuid: string): Promise<this[]> {
+    if (!project_uuid) {
+      throw new Error('project_uuid should not be null');
     }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT *
+      FROM \`${DbTables.FILE}\`
+      WHERE project_uuid = @project_uuid 
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { project_uuid },
+    );
+    const res = [];
+    if (data && data.length) {
+      for (const d of data) {
+        res.push(new File({}, this.getContext()).populate(d, PopulateFrom.DB));
+      }
+    }
+    return res;
+  }
+
+  /**
+   * Update status of all project files to BLOCKED
+   * @param project_uuid
+   * @returns
+   */
+  public async blockFilesForProject(project_uuid: string): Promise<boolean> {
+    if (!project_uuid) {
+      throw new Error('project_uuid should not be null');
+    }
+
+    await this.getContext().mysql.paramExecute(
+      `
+    INSERT INTO \`${DbTables.BLACKLIST}\` (cid)
+    SELECT f.CID
+    FROM \`${DbTables.FILE}\` f
+    WHERE f.project_uuid = @project_uuid 
+    AND f.status NOT IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.BLOCKED})
+    `,
+      { project_uuid },
+    );
+
+    await this.getContext().mysql.paramExecute(
+      `
+    UPDATE \`${DbTables.FILE}\`
+    SET status = ${SqlModelStatus.BLOCKED}
+    WHERE project_uuid = @project_uuid 
+    AND status NOT IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.BLOCKED})
+    `,
+      { project_uuid },
+    );
+    return true;
   }
 }

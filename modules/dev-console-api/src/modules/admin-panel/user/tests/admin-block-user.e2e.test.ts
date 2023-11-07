@@ -1,17 +1,23 @@
-import { DefaultUserRole, QuotaCode, SqlModelStatus, env } from '@apillon/lib';
-import * as request from 'supertest';
+import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
+import { AuthUser } from '@apillon/access/src/modules/auth-user/auth-user.model';
+import { DefaultUserRole, SqlModelStatus, env } from '@apillon/lib';
 import {
+  Stage,
+  TestUser,
   createTestApiKey,
+  createTestBucket,
+  createTestBucketFile,
   createTestProject,
   createTestUser,
-  TestUser,
+  releaseStage,
 } from '@apillon/tests-lib';
-import { releaseStage, Stage } from '@apillon/tests-lib';
-import { Project } from '../../../project/models/project.model';
+import * as request from 'supertest';
 import { setupTest } from '../../../../../test/helpers/setup';
-import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
+import { Project } from '../../../project/models/project.model';
 import { User } from '../../../user/models/user.model';
-import { AuthUser } from '@apillon/access/src/modules/auth-user/auth-user.model';
+import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
+import { File } from '@apillon/storage/src/modules/storage/models/file.model';
+import exp from 'constants';
 
 describe('Admin Block user tests', () => {
   let stage: Stage;
@@ -21,6 +27,8 @@ describe('Admin Block user tests', () => {
 
   let testProject: Project;
   let testApiKey: ApiKey;
+  let testBucket: Bucket;
+  let testFile: File;
 
   beforeAll(async () => {
     stage = await setupTest(
@@ -28,7 +36,7 @@ describe('Admin Block user tests', () => {
       env.ADMIN_CONSOLE_API_HOST_TEST,
     );
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
     testApiKey = await createTestApiKey(
       stage.amsContext,
       testProject.project_uuid,
@@ -38,6 +46,21 @@ describe('Admin Block user tests', () => {
       stage.devConsoleContext,
       stage.amsContext,
       DefaultUserRole.ADMIN,
+    );
+
+    //Insert storage data for project
+    testBucket = await createTestBucket(
+      testUser,
+      stage.storageContext,
+      testProject,
+    );
+
+    testFile = await createTestBucketFile(
+      stage.storageContext,
+      testBucket,
+      'testFile.txt',
+      'text/plain',
+      true,
     );
   });
 
@@ -97,6 +120,12 @@ describe('Admin Block user tests', () => {
         stage.amsContext,
       ).populateById(testApiKey.id);
       expect(apiKey.status).toBe(SqlModelStatus.BLOCKED);
+
+      //Check if files were blocked and if files were added to blacklist
+      const tmpFile = await new File({}, stage.storageContext).populateById(
+        testFile.file_uuid,
+      );
+      expect(tmpFile.status).toBe(SqlModelStatus.BLOCKED);
     });
 
     test('Blocked user should not be able to login', async () => {

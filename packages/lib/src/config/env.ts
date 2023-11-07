@@ -160,7 +160,7 @@ export interface IEnv {
   DEFAULT_PAGE_SIZE: number;
 
   /************************************************************
-   * IPFS - Apillon Storage Service
+   * Apillon Storage Service
    ************************************************************/
   STORAGE_FUNCTION_NAME: string;
   STORAGE_FUNCTION_NAME_TEST: string;
@@ -169,9 +169,6 @@ export interface IEnv {
   STORAGE_CRUST_SEED_PHRASE: string;
   STORAGE_CRUST_SEED_PHRASE_TEST: string;
   STORAGE_AWS_IPFS_QUEUE_BUCKET: string;
-  STORAGE_IPFS_API: string;
-  STORAGE_IPFS_GATEWAY: string;
-  STORAGE_IPFS_CLUSTER_SERVER: string;
   STORAGE_DELETE_AFTER_INTERVAL: number;
 
   STORAGE_MYSQL_HOST: string;
@@ -245,6 +242,9 @@ export interface IEnv {
   APILLON_API_SYSTEM_API_KEY: string;
   APILLON_API_SYSTEM_API_SECRET: string;
 
+  APILLON_API_INTEGRATION_API_KEY: string;
+  APILLON_API_INTEGRATION_API_SECRET: string;
+
   /************************************************************
    * AUTH - Apillon Authentication Service
    ************************************************************/
@@ -290,6 +290,7 @@ export interface IEnv {
   KILT_ATTESTER_MNEMONIC: string;
   KILT_DERIVATION_ALGORITHM: string;
   KILT_ATTESTERS_WHITELIST: string;
+  KILT_ORIGIN_DOMAIN: string;
 
   /************************************************************
    * Authentication config (Uses Kilt module)
@@ -431,6 +432,14 @@ export interface IEnv {
 
   METABASE_SECRET: string;
   METABASE_URL: string;
+
+  /**
+   * STRIPE API
+   */
+  STRIPE_SECRET: string;
+  STRIPE_WEBHOOK_SECRET: string;
+
+  STRIPE_SECRET_TEST: string;
 }
 
 // dotenv.config();
@@ -538,9 +547,6 @@ export let env: IEnv = {
   STORAGE_CRUST_SEED_PHRASE: process.env['STORAGE_CRUST_SEED_PHRASE'],
   STORAGE_CRUST_SEED_PHRASE_TEST: process.env['STORAGE_CRUST_SEED_PHRASE_TEST'],
   STORAGE_AWS_IPFS_QUEUE_BUCKET: process.env['STORAGE_AWS_IPFS_QUEUE_BUCKET'],
-  STORAGE_IPFS_API: process.env['STORAGE_IPFS_API'],
-  STORAGE_IPFS_GATEWAY: process.env['STORAGE_IPFS_GATEWAY'],
-  STORAGE_IPFS_CLUSTER_SERVER: process.env['STORAGE_IPFS_CLUSTER_SERVER'],
   STORAGE_DELETE_AFTER_INTERVAL:
     parseInt(process.env['STORAGE_DELETE_AFTER_INTERVAL']) || 90,
 
@@ -631,7 +637,11 @@ export let env: IEnv = {
   APILLON_API_SYSTEM_API_KEY: process.env['APILLON_API_SYSTEM_API_KEY'] || '',
   APILLON_API_SYSTEM_API_SECRET:
     process.env['APILLON_API_SYSTEM_API_SECRET'] || '',
-  APILLON_API_URL: process.env['APILLON_API_URL'] || 'http://localhost',
+  APILLON_API_INTEGRATION_API_KEY:
+    process.env['APILLON_API_INTEGRATION_API_KEY'] || '',
+  APILLON_API_INTEGRATION_API_SECRET:
+    process.env['APILLON_API_INTEGRATION_API_SECRET'] || '',
+  APILLON_API_URL: process.env['APILLON_API_URL'] || 'http://localhost:6002',
 
   /** --- SECTION: APILLON AUTHENTICATION API --- */
   AUTH_API_HOST: process.env['AUTH_API_HOST'] || 'localhost',
@@ -664,6 +674,7 @@ export let env: IEnv = {
     'wss://peregrine.kilt.io/parachain-public-ws',
   KILT_ATTESTER_MNEMONIC: process.env['KILT_ATTESTER_MNEMONIC'] || '',
   KILT_ATTESTERS_WHITELIST: process.env['KILT_ATTESTERS_WHITELIST'] || '',
+  KILT_ORIGIN_DOMAIN: process.env['KILT_ORIGIN_DOMAIN'] || '',
   // TODO: Unused -> Left here because we might introduce it later as configurable algorithm
   // because it depends where you use this mnemonic
   KILT_DERIVATION_ALGORITHM:
@@ -784,6 +795,11 @@ export let env: IEnv = {
   /** METABASE */
   METABASE_SECRET: process.env['METABASE_SECRET'] || '',
   METABASE_URL: process.env['METABASE_URL'] || 'https://metabase.apillon.io',
+
+  /** STRIPE */
+  STRIPE_SECRET: process.env['STRIPE_SECRET'],
+  STRIPE_SECRET_TEST: process.env['STRIPE_SECRET_TEST'],
+  STRIPE_WEBHOOK_SECRET: process.env['STRIPE_WEBHOOK_SECRET'],
 };
 
 export let isEnvReady = false;

@@ -3,8 +3,10 @@ import {
   AWS_S3,
   CacheKeyPrefix,
   CreateS3UrlsForUploadDto,
+  DomainQueryFilter,
   EndFileUploadSessionDto,
   env,
+  FilesQueryFilter,
   FileUploadsQueryFilter,
   invalidateCacheMatch,
   Lmas,
@@ -15,9 +17,8 @@ import {
   SerializeFor,
   ServiceName,
   SqlModelStatus,
-  TrashedFilesQueryFilter,
 } from '@apillon/lib';
-import { ServiceContext } from '@apillon/service-lib';
+import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
 import {
   QueueWorkerType,
   sendToWorkerQueue,
@@ -29,23 +30,83 @@ import { v4 as uuidV4 } from 'uuid';
 import {
   BucketType,
   DbTables,
+  Defaults,
   FileStatus,
   FileUploadSessionStatus,
   StorageErrorCode,
 } from '../../config/types';
 import { createFURAndS3Url } from '../../lib/create-fur-and-s3-url';
 import { StorageCodeException } from '../../lib/exceptions';
+import { getSessionFilesOnS3 } from '../../lib/file-upload-session-s3-files';
 import { processSessionFiles } from '../../lib/process-session-files';
 import { SyncToIPFSWorker } from '../../workers/s3-to-ipfs-sync-worker';
 import { WorkerName } from '../../workers/worker-executor';
 import { Bucket } from '../bucket/models/bucket.model';
+import { ProjectConfig } from '../config/models/project-config.model';
 import { HostingService } from '../hosting/hosting.service';
+import { Website } from '../hosting/models/website.model';
+import { IPFSService } from '../ipfs/ipfs.service';
 import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
-import { Website } from '../hosting/models/website.model';
+import { IpfsBandwidth } from '../ipfs/models/ipfs-bandwidth';
 
 export class StorageService {
+  /**
+   * Get storage info for project
+   * @param event
+   * @param context
+   * @returns available storage, used storage
+   */
+  static async getStorageInfo(
+    event: { project_uuid: string },
+    context: ServiceContext,
+  ): Promise<{
+    availableStorage: number;
+    usedStorage: number;
+    availableBandwidth: number;
+    usedBandwidth: number;
+  }> {
+    //Storage space
+    const maxStorageQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_STORAGE,
+      project_uuid: event.project_uuid,
+    });
+    const availableStorage = (maxStorageQuota?.value || 3) * 1073741824;
+
+    const bucket = new Bucket({ project_uuid: event.project_uuid }, context);
+    const usedStorage = await bucket.getTotalSizeUsedByProject();
+
+    //Bandwidth
+    const bandwidthQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_BANDWIDTH,
+      project_uuid: event.project_uuid,
+    });
+    const availableBandwidth =
+      (bandwidthQuota?.value || Defaults.DEFAULT_BANDWIDTH) * 1073741824;
+
+    const usedBandwidth = await new IpfsBandwidth(
+      {},
+      context,
+    ).populateByProjectAndDate(event.project_uuid);
+
+    return {
+      availableStorage,
+      usedStorage,
+      availableBandwidth,
+      usedBandwidth: usedBandwidth.exists() ? usedBandwidth.bandwidth : 0,
+    };
+  }
+
+  static async getProjectsOverBandwidthQuota(
+    event: { query: DomainQueryFilter },
+    context: ServiceContext,
+  ): Promise<string[]> {
+    return await new IpfsBandwidth({}, context).getProjectsOverBandwidthQuota(
+      event.query,
+    );
+  }
+
   //#region file-upload functions
 
   static async generateMultipleS3UrlsForUpload(
@@ -72,18 +133,15 @@ export class StorageService {
     }
     bucket.canAccess(context);
 
-    //get max size quota for Bucket and compare it with current bucket size
-    const maxBucketSizeQuota = await new Scs(context).getQuota({
-      quota_id: QuotaCode.MAX_BUCKET_SIZE,
-      project_uuid: bucket.project_uuid,
-      object_uuid: bucket.bucket_uuid,
-    });
-    if (
-      maxBucketSizeQuota?.value &&
-      bucket.size > maxBucketSizeQuota?.value * 1073741824 //quota is in GB - size is in bytes
-    ) {
+    //Check if enough storage is available
+    const storageInfo = await StorageService.getStorageInfo(
+      { project_uuid: bucket.project_uuid },
+      context,
+    );
+
+    if (storageInfo.usedStorage >= storageInfo.availableStorage) {
       throw new StorageCodeException({
-        code: StorageErrorCode.MAX_BUCKET_SIZE_REACHED,
+        code: StorageErrorCode.NOT_ENOUGH_STORAGE_SPACE,
         status: 400,
       });
     }
@@ -274,6 +332,13 @@ export class StorageService {
       }
     } else if (bucket.bucketType == BucketType.HOSTING) {
       await processSessionFiles(context, bucket, session, event.body);
+      //Increase size of bucket - files on website source bucket will never be transferred to ipfs, so the size of bucket won't be increased.
+      const filesOnS3 = await getSessionFilesOnS3(
+        bucket,
+        session?.session_uuid,
+      );
+      bucket.size += filesOnS3.size;
+      await bucket.update();
     }
 
     return true;
@@ -380,6 +445,16 @@ export class StorageService {
 
   //#region file functions
 
+  static async listFiles(
+    event: { query: FilesQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new File({}, context).listFiles(
+      context,
+      new FilesQueryFilter(event.query),
+    );
+  }
+
   static async getFileDetails(event: { id: string }, context: ServiceContext) {
     let file: File = undefined;
     let fileStatus: FileStatus = undefined;
@@ -415,9 +490,8 @@ export class StorageService {
         }
 
         return {
+          ...fur.serialize(SerializeFor.PROFILE),
           fileStatus: fileStatus,
-          file: fur.serialize(SerializeFor.PROFILE),
-          crustStatus: undefined,
         };
       }
 
@@ -428,17 +502,10 @@ export class StorageService {
     }
 
     file.canAccess(context);
-    fileStatus = FileStatus.UPLOADED_TO_IPFS;
-    //File exists on IPFS and probably on CRUST- get status from CRUST
-    if (file.CID) {
-      fileStatus = FileStatus.PINNED_TO_CRUST;
-      file.downloadLink = env.STORAGE_IPFS_GATEWAY + file.CID;
-    }
 
-    return {
-      fileStatus: fileStatus,
-      file: file.serialize(SerializeFor.PROFILE),
-    };
+    await file.populateLink();
+
+    return file.serialize(getSerializationStrategy(context));
   }
 
   static async deleteFile(
@@ -470,9 +537,10 @@ export class StorageService {
       b.bucketType == BucketType.NFT_METADATA
     ) {
       await f.markForDeletion();
-      return f.serialize(SerializeFor.PROFILE);
+      return true;
     } else if (b.bucketType == BucketType.HOSTING) {
-      return await HostingService.deleteFile({ file: f }, context);
+      await HostingService.deleteFile({ file: f }, context);
+      return true;
     } else {
       return false;
     }
@@ -503,18 +571,9 @@ export class StorageService {
     return f.serialize(SerializeFor.PROFILE);
   }
 
-  static async listFilesMarkedForDeletion(
-    event: { query: TrashedFilesQueryFilter },
-    context: ServiceContext,
-  ) {
-    return await new File({}, context).getMarkedForDeletionList(
-      context,
-      new TrashedFilesQueryFilter(event.query, context),
-    );
-  }
-
   /**
    * Get project storage details - num. of buckets, total bucket size, num. of websites
+   * Used in admin panel
    * @param {{ project_uuid: string }} - uuid of the project
    * @param {ServiceContext} context
    */
@@ -535,6 +594,8 @@ export class StorageService {
   }
   //#endregion
 
+  //#region system functions
+
   /**
    * Return CIDs and IPNS that are blacklisted
    */
@@ -543,4 +604,49 @@ export class StorageService {
       SELECT DISTINCT cid FROM ${DbTables.BLACKLIST};
     `);
   }
+
+  /**
+   * Add all project files to blacklist and unpin them from IPFS
+   */
+  static async blacklistProjectData(
+    event: { project_uuid: string },
+    context: ServiceContext,
+  ) {
+    //Unpin files from IPFS
+    const projectFiles = await new File({}, context).populateFilesForProject(
+      event.project_uuid,
+    );
+
+    const ipfsCluster = await new ProjectConfig(
+      { project_uuid: event.project_uuid },
+      context,
+    ).getIpfsCluster();
+
+    const ipfsService = new IPFSService(context, event.project_uuid);
+
+    await runWithWorkers(
+      projectFiles,
+      [AppEnvironment.LOCAL_DEV, AppEnvironment.TEST].includes(
+        env.APP_ENV as AppEnvironment,
+      )
+        ? 1
+        : 20,
+      context,
+      async (file: File) => {
+        if (ipfsCluster.clusterServer) {
+          await ipfsService.unpinCidFromCluster(file.CID);
+        } else {
+          await ipfsService.unpinFile(file.CID);
+        }
+      },
+    );
+
+    //Block files - This is not necessary, because ipfs proxy checks if project is blocked.
+    //Blacklist is edited directly in database
+    //await new File({}, context).blockFilesForProject(event.project_uuid);
+
+    return true;
+  }
+
+  //#endregion
 }

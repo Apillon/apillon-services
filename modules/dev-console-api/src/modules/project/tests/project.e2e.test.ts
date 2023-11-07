@@ -22,6 +22,7 @@ describe('Project tests', () => {
 
   let testProject: Project;
   let testProject2: Project;
+  let createdProject: Project; // To test added credits
 
   beforeAll(async () => {
     stage = await setupTest();
@@ -46,8 +47,8 @@ describe('Project tests', () => {
       )
     `);
 
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
-    testProject2 = await createTestProject(testUser2, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
+    testProject2 = await createTestProject(testUser2, stage);
   });
 
   afterAll(async () => {
@@ -109,6 +110,7 @@ describe('Project tests', () => {
         stage.devConsoleContext,
       ).populateByUUID(response.body.data.project_uuid);
       expect(p.exists()).toBe(true);
+      createdProject = p;
     });
 
     test('User should NOT be able to create new project if required body data is not present', async () => {
@@ -119,6 +121,16 @@ describe('Project tests', () => {
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(422);
+    });
+
+    test('Project should have received freemium credits when being created', async () => {
+      const response = await request(stage.http)
+        .get(`/projects/${createdProject.project_uuid}/credit`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      // WARNING: below number is obtained from config -> subscription -> freemium subscription -> creditAmount
+      // subject to change
+      expect(response.body.data.balance).toBe(1200);
     });
 
     test('User should be able to update existing project', async () => {
@@ -342,10 +354,7 @@ describe('Project tests', () => {
         stage.devConsoleContext,
         stage.amsContext,
       );
-      quotaTestProject = await createTestProject(
-        quotaTestsUser,
-        stage.devConsoleContext,
-      );
+      quotaTestProject = await createTestProject(quotaTestsUser, stage);
       //add 10 users to quotaTestProject - max users on project quota reached
       for (let i = 0; i < 10; i++) {
         await createTestUser(
@@ -359,7 +368,7 @@ describe('Project tests', () => {
 
       //create 10 test projects - so max project quota is reached
       for (let i = 0; i < 10; i++) {
-        await createTestProject(quotaTestsUser, stage.devConsoleContext);
+        await createTestProject(quotaTestsUser, stage);
       }
     });
 

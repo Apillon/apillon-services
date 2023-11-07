@@ -11,7 +11,7 @@ import { ExceptionsFilter, ResponseInterceptor } from '@apillon/modules-lib';
 export async function bootstrapModule(module: any) {
   const expressApp = express();
   const adapter = new ExpressAdapter(expressApp);
-  const app = await NestFactory.create(module, adapter);
+  const app = await NestFactory.create(module, adapter, { rawBody: true });
   app.enableCors({ origin: '*' });
   app.useGlobalFilters(new ExceptionsFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());

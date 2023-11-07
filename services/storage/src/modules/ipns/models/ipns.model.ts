@@ -1,21 +1,21 @@
 import {
-  ProjectAccessModel,
   Context,
-  env,
-  getQueryParams,
   IpnsQueryFilter,
   PopulateFrom,
-  prop,
-  selectAndCountQuery,
+  ProjectAccessModel,
   SerializeFor,
   SqlModelStatus,
+  getQueryParams,
+  prop,
+  selectAndCountQuery,
 } from '@apillon/lib';
+import { ServiceContext } from '@apillon/service-lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { DbTables, StorageErrorCode } from '../../../config/types';
-import { ServiceContext } from '@apillon/service-lib';
 import { StorageCodeException } from '../../../lib/exceptions';
 import { Bucket } from '../../bucket/models/bucket.model';
+import { ProjectConfig } from '../../config/models/project-config.model';
 
 export class Ipns extends ProjectAccessModel {
   public readonly tableName = DbTables.IPNS;
@@ -228,8 +228,8 @@ export class Ipns extends ProjectAccessModel {
   }
 
   public async getList(context: ServiceContext, filter: IpnsQueryFilter) {
-    const b: Bucket = await new Bucket({}, context).populateById(
-      filter.bucket_id,
+    const b: Bucket = await new Bucket({}, context).populateByUUID(
+      filter.bucket_uuid,
     );
     if (!b.exists()) {
       throw new StorageCodeException({
@@ -240,6 +240,13 @@ export class Ipns extends ProjectAccessModel {
     this.project_uuid = b.project_uuid;
 
     this.canAccess(context);
+
+    //Get IPFS-->IPNS gateway
+    const ipfsCluster = await new ProjectConfig(
+      { project_uuid: this.project_uuid },
+      this.getContext(),
+    ).getIpfsCluster();
+
     // Map url query with sql fields.
     const fieldMap = {
       id: 'b.id',
@@ -254,18 +261,14 @@ export class Ipns extends ProjectAccessModel {
     const sqlQuery = {
       qSelect: `
         SELECT ${this.generateSelectFields('i', '')},
-        IF(i.ipnsName IS NULL, NULL, CONCAT("${env.STORAGE_IPFS_GATEWAY.replace(
-          '/ipfs/',
-          '/ipns/',
-        )}", i.ipnsName)) as link,
         i.updateTime
         `,
       qFrom: `
         FROM \`${DbTables.IPNS}\` i
-        WHERE i.project_uuid = @project_uuid
-        AND i.bucket_id = @bucket_id
+        JOIN \`${DbTables.BUCKET}\` b on b.id = i.bucket_id
+        WHERE b.bucket_uuid = @bucket_uuid
         AND (@search IS null OR i.name LIKE CONCAT('%', @search, '%'))
-        AND status <> ${SqlModelStatus.DELETED}
+        AND i.status <> ${SqlModelStatus.DELETED}
       `,
       qFilter: `
         ORDER BY ${filters.orderStr}
@@ -273,11 +276,23 @@ export class Ipns extends ProjectAccessModel {
       `,
     };
 
-    return await selectAndCountQuery(
+    const data = await selectAndCountQuery(
       context.mysql,
       sqlQuery,
       { ...params, project_uuid: this.project_uuid },
       'i.id',
     );
+
+    for (const item of data.items) {
+      if (item.ipnsName) {
+        item.link = ipfsCluster.generateLink(
+          b.project_uuid,
+          item.ipnsName,
+          true,
+        );
+      }
+    }
+
+    return data;
   }
 }

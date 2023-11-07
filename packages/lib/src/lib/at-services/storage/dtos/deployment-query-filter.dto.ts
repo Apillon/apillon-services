@@ -1,22 +1,15 @@
 // import { ApiProperty } from '@babel/core';
 import { prop } from '@rawmodel/core';
-import { integerParser } from '@rawmodel/parsers';
-import { presenceValidator } from '@rawmodel/validators';
-import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
+import { integerParser, stringParser } from '@rawmodel/parsers';
+import { PopulateFrom } from '../../../../config/types';
 import { BaseQueryFilter } from '../../../base-models/base-query-filter.model';
 
 export class DeploymentQueryFilter extends BaseQueryFilter {
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.BUCKET_PROJECT_UUID_NOT_PRESENT,
-      },
-    ],
   })
-  public website_id: number;
+  public website_uuid: string;
 
   @prop({
     parser: { resolver: integerParser() },

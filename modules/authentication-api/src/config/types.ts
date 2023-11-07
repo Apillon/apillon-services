@@ -56,14 +56,6 @@ export enum InternalErrorErrorCode {
   NOVA_WALLET_ENV_VARIABLES_NOT_SET = 50007001,
 }
 
-/**
- * JWT Token signing types.
- */
-export enum JwtTokenType {
-  SPORRAN_SESSION = 'SPORRAN_SESSION',
-  IDENTITY_VERIFICATION = 'identity-verification',
-}
-
 export enum AuthAppErrors {
   IDENTITY_EMAIL_IS_ALREADY_ATTESTED = 'Email already attested',
 }

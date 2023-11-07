@@ -23,6 +23,7 @@ import * as request from 'supertest';
 import { v4 as uuidV4 } from 'uuid';
 import { setupTest } from '../../../../test/helpers/setup';
 import { run as generateSystemApiKey } from '@apillon/access/src/scripts/utils/generate-system-api-key';
+import { ProjectConfig } from '@apillon/storage/src/modules/config/models/project-config.model';
 
 describe('Apillon API hosting tests', () => {
   let stage: Stage;
@@ -50,7 +51,7 @@ describe('Apillon API hosting tests', () => {
     //User 1 project & other data
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
 
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
     testService = await createTestProjectService(
       stage.devConsoleContext,
       testProject,
@@ -59,12 +60,11 @@ describe('Apillon API hosting tests', () => {
     //Create test web page record
     testWebsite = await new Website({}, stage.storageContext)
       .populate({
-        website_uuid: uuidV4(),
         project_uuid: testProject.project_uuid,
         name: 'Test web page',
         domain: 'https://hosting-e2e-tests.si',
       })
-      .createNewWebsite(stage.storageContext);
+      .createNewWebsite(stage.storageContext, uuidV4());
 
     apiKey = await createTestApiKey(stage.amsContext, testProject.project_uuid);
     await apiKey.assignRole(
@@ -94,7 +94,7 @@ describe('Apillon API hosting tests', () => {
 
     //User 2 project & other data
     testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testProject2 = await createTestProject(testUser2, stage.devConsoleContext);
+    testProject2 = await createTestProject(testUser2, stage);
     testService2 = await createTestProjectService(
       stage.devConsoleContext,
       testProject2,
@@ -552,9 +552,14 @@ describe('Apillon API hosting tests', () => {
         tmpWebsite.productionBucket.CID,
       );
 
+      const ipfsCluster = await new ProjectConfig(
+        { project_uuid: tmpWebsite.project_uuid },
+        stage.storageContext,
+      ).getIpfsCluster();
+
       //Check, that index.html page was updated
       response = await request(
-        env.STORAGE_IPFS_GATEWAY +
+        ipfsCluster.ipfsGateway +
           tmpWebsite.productionBucket.CID +
           '/index.html',
       ).get('');
@@ -569,11 +574,10 @@ describe('Apillon API hosting tests', () => {
       //create new website
       directDeployTestWebsite = await new Website({}, stage.storageContext)
         .populate({
-          website_uuid: uuidV4(),
           project_uuid: testProject.project_uuid,
           name: 'Direct deploy test website',
         })
-        .createNewWebsite(stage.storageContext);
+        .createNewWebsite(stage.storageContext, uuidV4());
     });
     test('Application (through Apillon API) should be able to deploy directly to production', async () => {
       let response = await request(stage.http)

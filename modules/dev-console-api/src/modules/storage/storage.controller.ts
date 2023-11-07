@@ -3,7 +3,7 @@ import {
   DefaultPermission,
   FileUploadsQueryFilter,
   RoleGroup,
-  TrashedFilesQueryFilter,
+  FilesQueryFilter,
 } from '@apillon/lib';
 import { ValidateFor } from '@apillon/lib';
 import { DefaultUserRole, EndFileUploadSessionDto } from '@apillon/lib';
@@ -24,15 +24,26 @@ import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { StorageService } from './storage.service';
+import { BaseProjectQueryFilter } from '@apillon/lib';
 
 @Controller('storage')
 @Permissions({ permission: DefaultPermission.STORAGE })
 export class StorageController {
   constructor(private storageService: StorageService) {}
 
+  @Get('info')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({ dto: BaseProjectQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getStorageInfo(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: BaseProjectQueryFilter,
+  ) {
+    return await this.storageService.getStorageInfo(context, query);
+  }
+
   @Get(':bucket_uuid/file-uploads')
   @Permissions({ role: RoleGroup.ProjectAccess })
-  @UseGuards(AuthGuard)
   @Validation({ dto: FileUploadsQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
   async listFileUploads(
@@ -53,7 +64,6 @@ export class StorageController {
     { role: DefaultUserRole.PROJECT_ADMIN },
     { role: DefaultUserRole.PROJECT_USER },
   )
-  @UseGuards(AuthGuard)
   @Validation({ dto: CreateS3UrlsForUploadDto })
   @UseGuards(ValidationGuard, AuthGuard)
   async createS3SignedUrlsForUpload(
@@ -75,9 +85,8 @@ export class StorageController {
     { role: DefaultUserRole.PROJECT_ADMIN },
     { role: DefaultUserRole.PROJECT_USER },
   )
-  @UseGuards(AuthGuard)
   @Validation({ dto: EndFileUploadSessionDto })
-  @UseGuards(ValidationGuard)
+  @UseGuards(AuthGuard, ValidationGuard)
   @HttpCode(200)
   async endFileUploadSession(
     @Ctx() context: DevConsoleApiContext,
@@ -108,6 +117,18 @@ export class StorageController {
     return await this.storageService.syncFileToIPFS(context, id);
   }
 
+  @Get(':bucket_uuid/files')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({ dto: FilesQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async listFiles(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('bucket_uuid') bucket_uuid: string,
+    @Query() query: FilesQueryFilter,
+  ) {
+    return await this.storageService.listFiles(context, bucket_uuid, query);
+  }
+
   @Get(':bucket_uuid/file/:id/detail')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
@@ -121,12 +142,12 @@ export class StorageController {
 
   @Get(':bucket_uuid/trashed-files')
   @Permissions({ role: RoleGroup.ProjectAccess })
-  @Validation({ dto: TrashedFilesQueryFilter, validateFor: ValidateFor.QUERY })
+  @Validation({ dto: FilesQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
   async listFilesMarkedForDeletion(
     @Ctx() context: DevConsoleApiContext,
     @Param('bucket_uuid') bucket_uuid: string,
-    @Query() query: TrashedFilesQueryFilter,
+    @Query() query: FilesQueryFilter,
   ) {
     return await this.storageService.listFilesMarkedForDeletion(
       context,

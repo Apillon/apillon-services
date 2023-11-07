@@ -12,7 +12,6 @@ import { DirectoryContentQueryFilter } from './dtos/directory-content-query-filt
 import { EndFileUploadSessionDto } from './dtos/end-file-upload-session.dto';
 import { FileDetailsQueryFilter } from './dtos/file-details-query-filter.dto';
 import { FileUploadsQueryFilter } from './dtos/file-uploads-query-filter.dto';
-import { TrashedFilesQueryFilter } from './dtos/trashed-files-query-filter.dto';
 import { IpnsQueryFilter } from './dtos/ipns-query-filter.dto';
 import { PublishIpnsDto } from './dtos/publish-ipns.dto';
 import { WebsiteQueryFilter } from './dtos/website-query-filter.dto';
@@ -24,6 +23,8 @@ import {
   ApillonHostingApiCreateS3UrlsForUploadDto,
   CreateS3UrlsForUploadDto,
 } from './dtos/create-s3-urls-for-upload.dto';
+import { DomainQueryFilter } from './dtos/domain-query-filter.dto';
+import { FilesQueryFilter } from './dtos/files-query-filter.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -41,6 +42,22 @@ export class StorageMicroservice extends BaseService {
     this.isDefaultAsync = false;
   }
 
+  public async getStorageInfo(project_uuid: string) {
+    const data = {
+      eventName: StorageEventType.STORAGE_INFO,
+      project_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async getProjectsOverBandwidthQuota(query: DomainQueryFilter) {
+    const data = {
+      eventName: StorageEventType.PROJECTS_OVER_BANDWIDTH_QUOTA,
+      query: query.serialize(),
+    };
+    return await this.callService(data);
+  }
+
   //#region bucket CRUD
 
   public async listBuckets(params: BucketQueryFilter) {
@@ -51,10 +68,10 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async getBucket(id: string | number) {
+  public async getBucket(bucket_uuid: string) {
     const data = {
       eventName: StorageEventType.GET_BUCKET,
-      id: id,
+      bucket_uuid,
     };
     return await this.callService(data);
   }
@@ -67,7 +84,7 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async updateBucket(params: { id: number; data: any }) {
+  public async updateBucket(params: { bucket_uuid: string; data: any }) {
     const data = {
       eventName: StorageEventType.UPDATE_BUCKET,
       ...params,
@@ -127,7 +144,7 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async updateDirectory(params: { id: number; data: any }) {
+  public async updateDirectory(params: { directory_uuid: string; data: any }) {
     const data = {
       eventName: StorageEventType.UPDATE_DIRECTROY,
       ...params,
@@ -135,7 +152,7 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async deleteDirectory(params: { id: number }) {
+  public async deleteDirectory(params: { directory_uuid: string }) {
     const data = {
       eventName: StorageEventType.DELETE_DIRECTORY,
       ...params,
@@ -143,7 +160,7 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async cancelDirectoryDeletion(params: { id: number }) {
+  public async cancelDirectoryDeletion(params: { directory_uuid: string }) {
     const data = {
       eventName: StorageEventType.CANCEL_DELETE_DIRECTORY,
       ...params,
@@ -210,9 +227,9 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async listFilesMarkedForDeletion(params: TrashedFilesQueryFilter) {
+  public async listFiles(params: FilesQueryFilter) {
     const data = {
-      eventName: StorageEventType.LIST_FILES_MARKED_FOR_DELETION,
+      eventName: StorageEventType.LIST_FILES,
       query: params.serialize(),
     };
     return await this.callService(data);
@@ -238,10 +255,10 @@ export class StorageMicroservice extends BaseService {
 
   //#region bucket webhook
 
-  public async getBucketWebhook(bucket_id: number) {
+  public async getBucketWebhook(bucket_uuid: string) {
     const data = {
       eventName: StorageEventType.BUCKET_WEBHOOK_GET,
-      bucket_id: bucket_id,
+      bucket_uuid,
     };
     return await this.callService(data);
   }
@@ -344,10 +361,10 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async getWebsite(id: number) {
+  public async getWebsite(website_uuid: string) {
     const data = {
       eventName: StorageEventType.WEBSITE_GET,
-      id: id,
+      id: website_uuid,
     };
     return await this.callService(data);
   }
@@ -359,7 +376,7 @@ export class StorageMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
-  public async updateWebsite(params: { id: number; data: any }) {
+  public async updateWebsite(params: { website_uuid: string; data: any }) {
     const data = {
       eventName: StorageEventType.WEBSITE_UPDATE,
       ...params,
@@ -385,9 +402,10 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async listDomains() {
+  public async listDomains(query: DomainQueryFilter) {
     const data = {
       eventName: StorageEventType.WEBSITE_LIST_DOMAINS,
+      query: query.serialize(),
     };
     return await this.callService(data);
   }
@@ -400,10 +418,10 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async getDeployment(id: number) {
+  public async getDeployment(deployment_uuid: string) {
     const data = {
       eventName: StorageEventType.DEPLOYMENT_GET,
-      id: id,
+      deployment_uuid,
     };
     return await this.callService(data);
   }
@@ -412,15 +430,16 @@ export class StorageMicroservice extends BaseService {
 
   //#region nfts storage functions
 
-  public async executePrepareCollectionBaseUriWorker(params: {
+  public async prepareCollectionBaseUri(params: {
     bucket_uuid: string;
     collection_uuid: string;
     collectionName: string;
     imagesSession: string;
     metadataSession: string;
+    useApillonIpfsGateway: boolean;
   }): Promise<{ data: { baseUri: string } }> {
     const data = {
-      eventName: StorageEventType.EXECUTE_PREPARE_COLLECTION_BASE_URI_WORKER,
+      eventName: StorageEventType.PREPARE_COLLECTION_BASE_URI,
       body: params,
     };
     return await this.callService(data);
@@ -443,6 +462,14 @@ export class StorageMicroservice extends BaseService {
   public async getBlacklist() {
     const data = {
       eventName: StorageEventType.GET_BLACKLIST,
+    };
+    return await this.callService(data);
+  }
+
+  public async blacklistProject(project_uuid) {
+    const data = {
+      eventName: StorageEventType.BLACKLIST_PROJECT,
+      project_uuid,
     };
     return await this.callService(data);
   }

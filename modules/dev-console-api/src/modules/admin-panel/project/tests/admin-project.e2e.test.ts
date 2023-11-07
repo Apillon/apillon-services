@@ -39,8 +39,8 @@ describe('Admin Project tests', () => {
       stage.amsContext,
       DefaultUserRole.ADMIN,
     );
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
-    await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
+    await createTestProject(testUser, stage);
 
     await new Override(
       {
@@ -66,7 +66,6 @@ describe('Admin Project tests', () => {
         bucket_uuid: randomUUID(),
         project_uuid: testProject.project_uuid,
         bucketType: 1,
-        maxSize: 5_242_880,
         size: 2000,
       },
       stage.storageContext,

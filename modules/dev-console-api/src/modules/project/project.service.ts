@@ -3,6 +3,7 @@ import {
   Ams,
   CacheKeyPrefix,
   CodeException,
+  CreditTransactionQueryFilter,
   DefaultUserRole,
   env,
   generateJwtToken,
@@ -17,6 +18,8 @@ import {
   Scs,
   SerializeFor,
   ServiceName,
+  SubscriptionsQueryFilter,
+  InvoicesQueryFilter,
   ValidationException,
 } from '@apillon/lib';
 import {
@@ -77,6 +80,9 @@ export class ProjectService {
         role_id: DefaultUserRole.PROJECT_OWNER,
       };
       await new Ams(context).assignUserRole(params);
+
+      await new Scs(context).addFreemiumCredits(project.project_uuid);
+
       await context.mysql.commit(conn);
 
       await invalidateCachePrefixes([CacheKeyPrefix.ADMIN_PROJECT_LIST]);
@@ -101,13 +107,37 @@ export class ProjectService {
   }
 
   async isProjectsQuotaReached(context: DevConsoleApiContext) {
-    const numOfProjects = await new Project({}, context).getNumOfUserProjects();
+    const { items: projects } = await new Project({}, context).getUserProjects(
+      context,
+      context.user.id,
+      DefaultUserRole.PROJECT_OWNER,
+    );
+
+    const activeSubscriptions = await Promise.all(
+      projects.map(
+        async (project) =>
+          (
+            await new Scs(context).getProjectActiveSubscription(
+              project.project_uuid,
+            )
+          ).data,
+      ),
+    );
+
+    if (!activeSubscriptions.every((s) => !!s.id)) {
+      // Only allow creating new project if all existing projects
+      // have an active subscription.
+      // Otherwise show that quota has been reached
+      return true;
+    }
+
     const maxProjectsQuota = await new Scs(context).getQuota({
       quota_id: QuotaCode.MAX_PROJECT_COUNT,
       object_uuid: context.user.user_uuid,
     });
+
     return !!(
-      maxProjectsQuota?.value && numOfProjects >= maxProjectsQuota?.value
+      maxProjectsQuota?.value && projects.length >= maxProjectsQuota?.value
     );
   }
 
@@ -115,18 +145,10 @@ export class ProjectService {
     context: DevConsoleApiContext,
     uuid: string,
   ): Promise<Project> {
-    const project: Project = await new Project({}, context).populateByUUID(
-      uuid,
-    );
-    if (!project.exists()) {
-      throw new CodeException({
-        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
-        status: HttpStatus.NOT_FOUND,
-        errorCodes: ResourceNotFoundErrorCode,
-      });
-    }
-
-    project.canAccess(context);
+    const project: Project = await new Project(
+      {},
+      context,
+    ).populateByUUIDAndCheckAccess(uuid, context);
 
     //Populate user role on this project
     await project.populateMyRoleOnProject(context);
@@ -370,7 +392,7 @@ export class ProjectService {
       await new ProjectUser({}, context)
         .populate({
           ...invitation,
-          user_id: user_id,
+          user_id,
         })
         .insert(SerializeFor.INSERT_DB);
 
@@ -381,7 +403,7 @@ export class ProjectService {
       //assign user role on project
       const params: any = {
         user: context.user,
-        user_uuid: user_uuid,
+        user_uuid,
         project_uuid: project.project_uuid,
         role_id: invitation.role_id,
       };
@@ -553,4 +575,62 @@ export class ProjectService {
 
     return createdFile;
   }
+
+  //#region credit
+
+  async getProjectCredit(context: DevConsoleApiContext, project_uuid: string) {
+    return (await new Scs(context).getProjectCredit(project_uuid)).data;
+  }
+
+  async getCreditTransactions(
+    context: DevConsoleApiContext,
+    project_uuid: string,
+    query: CreditTransactionQueryFilter,
+  ) {
+    query.project_uuid = project_uuid;
+    return (await new Scs(context).getCreditTransactions(query)).data;
+  }
+
+  //#endregion
+
+  //#region subscriptions
+
+  async getProjectActiveSubscription(
+    context: DevConsoleApiContext,
+    project_uuid: string,
+  ) {
+    await new Project({}, context).populateByUUIDAndCheckAccess(
+      project_uuid,
+      context,
+    );
+
+    return (await new Scs(context).getProjectActiveSubscription(project_uuid))
+      .data;
+  }
+
+  async getProjectSubscriptions(
+    context: DevConsoleApiContext,
+    query: SubscriptionsQueryFilter,
+  ) {
+    await new Project({}, context).populateByUUIDAndCheckAccess(
+      query.project_uuid,
+      context,
+    );
+
+    return (await new Scs(context).listSubscriptions(query)).data;
+  }
+
+  async getProjectInvoices(
+    context: DevConsoleApiContext,
+    query: InvoicesQueryFilter,
+  ) {
+    await new Project({}, context).populateByUUIDAndCheckAccess(
+      query.project_uuid,
+      context,
+    );
+
+    return (await new Scs(context).listInvoices(query)).data;
+  }
+
+  // #endregion
 }

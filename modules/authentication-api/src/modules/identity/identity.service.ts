@@ -1,13 +1,11 @@
 import { Injectable } from '@nestjs/common';
-
-import { AuthenticationMicroservice } from '@apillon/lib';
-
+import {
+  AuthenticationMicroservice,
+  IdentityCreateDto,
+  IdentityDidRevokeDto,
+  VerificationEmailDto,
+} from '@apillon/lib';
 import { AuthenticationApiContext } from '../../context';
-
-// Dtos
-import { IdentityCreateDto } from './dtos/identity-create.dto';
-import { IdentityDidRevokeDto } from './dtos/identity-did-revoke.dto';
-import { VerificationEmailDto } from './dtos/identity-verification-email.dto';
 
 @Injectable()
 export class IdentityService {

@@ -2,18 +2,23 @@ import {
   ApillonHostingApiCreateS3UrlsForUploadDto,
   AppEnvironment,
   AWS_S3,
+  CodeException,
   CreateS3UrlsForUploadDto,
   CreateWebsiteDto,
   DeploymentQueryFilter,
   DeployWebsiteDto,
+  DomainQueryFilter,
   env,
   Lmas,
   LogType,
   PopulateFrom,
+  ProductCode,
   QuotaCode,
   Scs,
   SerializeFor,
   ServiceName,
+  spendCreditAction,
+  SpendCreditDto,
   WebsiteQueryFilter,
   WebsitesQuotaReachedQueryFilter,
   writeLog,
@@ -25,8 +30,12 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { DeploymentEnvironment, StorageErrorCode } from '../../config/types';
-import { ServiceContext } from '@apillon/service-lib';
+import {
+  DbTables,
+  DeploymentEnvironment,
+  StorageErrorCode,
+} from '../../config/types';
+import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
 import { deleteDirectory } from '../../lib/delete-directory';
 import {
   StorageCodeException,
@@ -41,6 +50,7 @@ import { File } from '../storage/models/file.model';
 import { StorageService } from '../storage/storage.service';
 import { Deployment } from './models/deployment.model';
 import { Website } from './models/website.model';
+import { v4 as uuidV4 } from 'uuid';
 
 export class HostingService {
   //#region web page CRUD
@@ -54,8 +64,11 @@ export class HostingService {
     ).getList(context, new WebsiteQueryFilter(event.query));
   }
 
-  static async listDomains(event: any, context: ServiceContext) {
-    return await new Website({}, context).listDomains(context);
+  static async listDomains(
+    event: { query: DomainQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new Website({}, context).listDomains(event.query);
   }
 
   static async getWebsite(event: { id: any }, context: ServiceContext) {
@@ -74,7 +87,7 @@ export class HostingService {
     //Get buckets
     await website.populateBucketsAndLink();
 
-    return website.serialize(SerializeFor.PROFILE);
+    return website.serialize(getSerializationStrategy(context));
   }
 
   static async createWebsite(
@@ -83,21 +96,35 @@ export class HostingService {
   ): Promise<any> {
     const website: Website = new Website(event.body, context);
 
-    //check max web pages quota
-    const numOfWebsites = await website.getNumOfWebsites();
-    const maxWebsitesQuota = await new Scs(context).getQuota({
-      quota_id: QuotaCode.MAX_WEBSITES,
-      project_uuid: website.project_uuid,
-    });
-
-    if (numOfWebsites >= maxWebsitesQuota.value) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.MAX_WEBSITES_REACHED,
-        status: 400,
-      });
+    if (website.domain) {
+      //Check if domain already exists
+      const tmpWebsite = await new Website({}, context).populateByDomain(
+        website.domain,
+      );
+      if (tmpWebsite.exists()) {
+        throw new StorageCodeException({
+          code: StorageErrorCode.WEBSITE_WITH_THAT_DOMAIN_ALREADY_EXISTS,
+          status: 409,
+        });
+      }
     }
 
-    await website.createNewWebsite(context);
+    const website_uuid = uuidV4();
+    const spendCredit: SpendCreditDto = new SpendCreditDto(
+      {
+        project_uuid: event.body.project_uuid,
+        product_id: ProductCode.HOSTING_WEBSITE,
+        referenceTable: DbTables.WEBSITE,
+        referenceId: website_uuid,
+        location: 'HostingService/createWebsite',
+        service: ServiceName.STORAGE,
+      },
+      context,
+    );
+
+    await spendCreditAction(context, spendCredit, () =>
+      website.createNewWebsite(context, website_uuid),
+    );
 
     await new Lmas().writeLog({
       context,
@@ -109,15 +136,15 @@ export class HostingService {
       data: website.serialize(),
     });
 
-    return website.serialize(SerializeFor.PROFILE);
+    return website.serialize(getSerializationStrategy(context));
   }
 
   static async updateWebsite(
-    event: { id: number; data: any },
+    event: { website_uuid: string; data: any },
     context: ServiceContext,
   ): Promise<any> {
     const website: Website = await new Website({}, context).populateById(
-      event.id,
+      event.website_uuid,
     );
 
     if (!website.exists()) {
@@ -142,6 +169,18 @@ export class HostingService {
           });
         }
       }
+
+      //Check if domain already exists
+      const tmpWebsite = await new Website({}, context).populateByDomain(
+        website.domain,
+      );
+      if (tmpWebsite.exists()) {
+        throw new StorageCodeException({
+          code: StorageErrorCode.WEBSITE_WITH_THAT_DOMAIN_ALREADY_EXISTS,
+          status: 409,
+        });
+      }
+
       website.domainChangeDate = new Date();
     }
 
@@ -227,8 +266,8 @@ export class HostingService {
     event: { body: DeployWebsiteDto },
     context: ServiceContext,
   ): Promise<any> {
-    const website: Website = await new Website({}, context).populateById(
-      event.body.website_id,
+    const website: Website = await new Website({}, context).populateByUUID(
+      event.body.website_uuid,
     );
 
     if (!website.exists()) {
@@ -272,6 +311,7 @@ export class HostingService {
       context,
     ).populateLastDeployment(website.id, DeploymentEnvironment.PRODUCTION);
 
+    //Get deployment number
     let deploymentNumber = 1;
     if (event.body.environment == DeploymentEnvironment.STAGING) {
       if (lastStagingDeployment.exists()) {
@@ -292,8 +332,25 @@ export class HostingService {
       }
     }
 
+    //Check if enough storage available
+    //Check used storage
+    const storageInfo = await StorageService.getStorageInfo(
+      { project_uuid: sourceBucket.project_uuid },
+      context,
+    );
+    if (
+      storageInfo.usedStorage + sourceBucket.size >
+      storageInfo.availableStorage
+    ) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.NOT_ENOUGH_STORAGE_SPACE,
+        status: 400,
+      });
+    }
+
     //Create deployment record
-    const d: Deployment = new Deployment({}, context).populate({
+    const deployment: Deployment = new Deployment({}, context).populate({
+      deployment_uuid: uuidV4(),
       website_id: website.id,
       bucket_id:
         event.body.environment == DeploymentEnvironment.STAGING
@@ -301,18 +358,44 @@ export class HostingService {
           : website.productionBucket_id,
       environment: event.body.environment,
       number: deploymentNumber,
+      createTime: new Date(),
+      updateTime: new Date(),
     });
 
     try {
-      await d.validate();
+      await deployment.validate();
     } catch (err) {
-      await d.handle(err);
-      if (!d.isValid()) {
-        throw new StorageValidationException(d);
+      await deployment.handle(err);
+      if (!deployment.isValid()) {
+        throw new StorageValidationException(deployment);
       }
     }
 
-    await d.insert();
+    await deployment.insert();
+
+    //Spend credit
+    try {
+      //TODO: Deployment will be refactored to uuids, and it will be possible to use that uuid as a reference!
+      const spendCredit: SpendCreditDto = new SpendCreditDto(
+        {
+          project_uuid: website.project_uuid,
+          product_id:
+            event.body.environment == DeploymentEnvironment.STAGING
+              ? ProductCode.HOSTING_DEPLOY_TO_STAGING
+              : ProductCode.HOSTING_DEPLOY_TO_PRODUCTION,
+          referenceTable: DbTables.DEPLOYMENT,
+          referenceId: deployment.id,
+          location: 'HostingService/deployWebsite',
+          service: ServiceName.STORAGE,
+        },
+        context,
+      );
+      await new Scs(context).spendCredit(spendCredit);
+    } catch (error) {
+      //If not enough credit or spend fails, delete deployment and throw error.
+      await deployment.delete();
+      throw error;
+    }
 
     //Execute deploy or Send message to SQS
     if (
@@ -327,7 +410,7 @@ export class HostingService {
         params: { FunctionName: 'test' },
       };
       const parameters = {
-        deployment_id: d.id,
+        deployment_id: deployment.id,
         clearBucketForUpload: event.body.clearBucketForUpload,
       };
       const wd = new WorkerDefinition(
@@ -344,7 +427,7 @@ export class HostingService {
         QueueWorkerType.EXECUTOR,
       );
       await worker.runExecutor({
-        deployment_id: d.id,
+        deployment_id: deployment.id,
         clearBucketForUpload: event.body.clearBucketForUpload,
       });
     } else {
@@ -354,7 +437,7 @@ export class HostingService {
         WorkerName.DEPLOY_WEBSITE_WORKER,
         [
           {
-            deployment_id: d.id,
+            deployment_id: deployment.id,
             clearBucketForUpload: event.body.clearBucketForUpload,
           },
         ],
@@ -363,18 +446,21 @@ export class HostingService {
       );
     }
 
-    return d.serialize(SerializeFor.PROFILE);
+    return deployment.serialize(getSerializationStrategy(context));
   }
 
   //#endregion
 
   //#region get, list deployments
 
-  static async getDeployment(event: { id: number }, context: ServiceContext) {
+  static async getDeployment(
+    event: { deployment_uuid: string },
+    context: ServiceContext,
+  ) {
     const deployment: Deployment = await new Deployment(
       {},
       context,
-    ).populateById(event.id);
+    ).populateByUUID(event.deployment_uuid, 'deployment_uuid');
 
     if (!deployment.exists()) {
       throw new StorageCodeException({
@@ -384,17 +470,28 @@ export class HostingService {
     }
     await deployment.canAccess(context);
 
-    return deployment.serialize(SerializeFor.PROFILE);
+    return deployment.serialize(getSerializationStrategy(context));
   }
 
   static async listDeployments(
     event: { query: DeploymentQueryFilter },
     context: ServiceContext,
   ) {
-    return await new Deployment(
-      { website_id: event.query.website_id },
+    const website = await new Website({}, context).populateByUUID(
+      event.query.website_uuid,
+    );
+    if (!website.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.WEBSITE_NOT_FOUND,
+        status: 404,
+      });
+    }
+    website.canAccess(context);
+
+    return await new Deployment({}, context).getList(
       context,
-    ).getList(context, new DeploymentQueryFilter(event.query));
+      new DeploymentQueryFilter(event.query),
+    );
   }
 
   //#endregion

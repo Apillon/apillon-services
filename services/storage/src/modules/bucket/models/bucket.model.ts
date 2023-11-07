@@ -1,25 +1,24 @@
-import { integerParser, stringParser, dateParser } from '@rawmodel/parsers';
-import { presenceValidator } from '@rawmodel/validators';
 import {
-  ProjectAccessModel,
   BucketQueryFilter,
   Context,
-  enumInclusionValidator,
-  getQueryParams,
   PoolConnection,
   PopulateFrom,
-  prop,
-  QuotaCode,
-  Scs,
-  selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
+  UuidSqlModel,
+  enumInclusionValidator,
+  getQueryParams,
+  prop,
+  selectAndCountQuery,
 } from '@apillon/lib';
-import { BucketType, DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
+import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
+import { presenceValidator } from '@rawmodel/validators';
 import { v4 as uuidV4 } from 'uuid';
+import { BucketType, DbTables, StorageErrorCode } from '../../../config/types';
+import { StorageCodeException } from '../../../lib/exceptions';
 
-export class Bucket extends ProjectAccessModel {
+export class Bucket extends UuidSqlModel {
   public readonly tableName = DbTables.BUCKET;
 
   public constructor(data: any, context: Context) {
@@ -59,7 +58,6 @@ export class Bucket extends ProjectAccessModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
     ],
     validators: [
@@ -152,22 +150,6 @@ export class Bucket extends ProjectAccessModel {
 
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
-    validators: [],
-    fakeValue: 5368709120,
-    defaultValue: 5368709120,
-  })
-  public maxSize: number;
-
-  @prop({
-    parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
@@ -176,6 +158,7 @@ export class Bucket extends ProjectAccessModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
     defaultValue: 0,
@@ -190,8 +173,6 @@ export class Bucket extends ProjectAccessModel {
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
     ],
     validators: [],
     defaultValue: 0,
@@ -211,8 +192,6 @@ export class Bucket extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
     ],
   })
   public CID: string;
@@ -230,8 +209,6 @@ export class Bucket extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
     ],
   })
   public CIDv1: string;
@@ -249,8 +226,6 @@ export class Bucket extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
     ],
     validators: [],
   })
@@ -282,7 +257,7 @@ export class Bucket extends ProjectAccessModel {
     const data = await this.getContext().mysql.paramExecute(
       `
         SELECT *
-        FROM \`${this.tableName}\`
+        FROM \`${DbTables.BUCKET}\`
         WHERE (id LIKE @id OR bucket_uuid LIKE @id)
           AND status <> ${SqlModelStatus.DELETED};
       `,
@@ -297,6 +272,20 @@ export class Bucket extends ProjectAccessModel {
 
   public override async populateByUUID(uuid: string): Promise<this> {
     return super.populateByUUID(uuid, 'bucket_uuid');
+  }
+
+  public async populateByUuidAndCheckAccess(uuid: string): Promise<this> {
+    const bucket: Bucket = await this.populateByUUID(uuid);
+
+    if (!bucket.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.BUCKET_NOT_FOUND,
+        status: 404,
+      });
+    }
+    bucket.canAccess(this.getContext());
+
+    return this;
   }
 
   /**
@@ -317,11 +306,7 @@ export class Bucket extends ProjectAccessModel {
     return this;
   }
 
-  public async getList(
-    context: ServiceContext,
-    filter: BucketQueryFilter,
-    serializationStrategy = SerializeFor.PROFILE,
-  ) {
+  public async getList(context: ServiceContext, filter: BucketQueryFilter) {
     this.canAccess(context);
     // Map url query with sql fields.
     const fieldMap = {
@@ -334,11 +319,7 @@ export class Bucket extends ProjectAccessModel {
       filter.serialize(),
     );
 
-    const selectFields = this.generateSelectFields(
-      'b',
-      '',
-      serializationStrategy,
-    );
+    const selectFields = this.generateSelectFields('b', '');
     const sqlQuery = {
       qSelect: `
         SELECT ${selectFields}
@@ -356,33 +337,7 @@ export class Bucket extends ProjectAccessModel {
       `,
     };
 
-    const list = await selectAndCountQuery(
-      context.mysql,
-      sqlQuery,
-      params,
-      'b.id',
-    );
-    const items = await Promise.all(
-      list.items.map(async (bucket) => {
-        const maxBucketSizeQuota = await new Scs(context).getQuota({
-          quota_id: QuotaCode.MAX_BUCKET_SIZE,
-          project_uuid: filter.project_uuid,
-          object_uuid: bucket.bucket_uuid,
-        });
-        if (maxBucketSizeQuota?.value) {
-          bucket.maxSize = Number(maxBucketSizeQuota?.value) * 1073741824;
-        }
-
-        return new Bucket({}, context)
-          .populate(bucket, PopulateFrom.DB)
-          .serialize(serializationStrategy);
-      }),
-    );
-
-    return {
-      ...list,
-      items,
-    };
+    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'b.id');
   }
 
   public async clearBucketContent(context: Context, conn: PoolConnection) {
@@ -407,6 +362,9 @@ export class Bucket extends ProjectAccessModel {
       { bucket_id: this.id },
       conn,
     );
+
+    this.size = 0;
+    await this.update(SerializeFor.UPDATE_DB, conn);
   }
 
   /**
@@ -417,7 +375,7 @@ export class Bucket extends ProjectAccessModel {
     const data = await this.getContext().mysql.paramExecute(
       `
         SELECT COUNT(*) as numOfBuckets
-        FROM \`${this.tableName}\`
+        FROM \`${DbTables.BUCKET}\`
         WHERE project_uuid = @project_uuid ${
           ofType ? `AND bucketType = @bucketType` : ''
         }
@@ -432,11 +390,11 @@ export class Bucket extends ProjectAccessModel {
   /**
    * Function to get total size of all buckets inside a project
    */
-  public async getTotalSizeUsedByProject() {
+  public async getTotalSizeUsedByProject(): Promise<number> {
     const data = await this.getContext().mysql.paramExecute(
       `
         SELECT SUM(size) as totalSize
-        FROM \`${this.tableName}\`
+        FROM \`${DbTables.BUCKET}\`
         WHERE project_uuid = @project_uuid
           AND status <> ${SqlModelStatus.DELETED};
       `,

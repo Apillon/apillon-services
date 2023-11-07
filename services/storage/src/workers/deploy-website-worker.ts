@@ -3,6 +3,7 @@ import {
   Context,
   env,
   LogType,
+  refundCredit,
   SerializeFor,
   ServiceName,
 } from '@apillon/lib';
@@ -12,15 +13,14 @@ import {
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
+import { CID } from 'ipfs-http-client';
 import { v4 as uuidV4 } from 'uuid';
 import {
   DbTables,
   DeploymentEnvironment,
   DeploymentStatus,
   FileStatus,
-  StorageErrorCode,
 } from '../config/types';
-import { StorageCodeException } from '../lib/exceptions';
 import { generateDirectoriesFromPath } from '../lib/generate-directories-from-path';
 import { pinFileToCRUST } from '../lib/pin-file-to-crust';
 import { Bucket } from '../modules/bucket/models/bucket.model';
@@ -28,11 +28,10 @@ import { Directory } from '../modules/directory/models/directory.model';
 import { HostingService } from '../modules/hosting/hosting.service';
 import { Deployment } from '../modules/hosting/models/deployment.model';
 import { Website } from '../modules/hosting/models/website.model';
-import { IPFSService } from '../modules/ipfs/ipfs.service';
-import { File } from '../modules/storage/models/file.model';
-import { CID } from 'ipfs-http-client';
 import { uploadItemsToIPFSRes } from '../modules/ipfs/interfaces/upload-items-to-ipfs-res.interface';
+import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { Ipns } from '../modules/ipns/models/ipns.model';
+import { File } from '../modules/storage/models/file.model';
 import { createCloudfrontInvalidationCommand } from '../lib/aws-cloudfront';
 
 export class DeployWebsiteWorker extends BaseQueueWorker {
@@ -54,12 +53,18 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
       data?.deployment_id,
     );
     if (!deployment.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.INVALID_PARAMETERS_FOR_DEPLOYMENT_WORKER,
-        status: 500,
-        context: this.context,
-        details: data,
-      });
+      await this.writeEventLog(
+        {
+          logType: LogType.ERROR,
+          message: 'Invalid parameters for deployment worker',
+          service: ServiceName.STORAGE,
+          data: {
+            data,
+          },
+        },
+        LogOutput.SYS_ERROR,
+      );
+      return;
     }
 
     //Update deployment - in progress
@@ -69,6 +74,8 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
     const website: Website = await new Website({}, this.context).populateById(
       deployment.website_id,
     );
+
+    const ipfsService = new IPFSService(this.context, website.project_uuid);
 
     try {
       //according to environment, select source and target bucket
@@ -107,9 +114,6 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         {},
         this.context,
       ).populateFilesInBucket(sourceBucket_id, this.context);
-      for (const srcFile of sourceFiles) {
-        srcFile.populatePath(sourceDirectories);
-      }
 
       //Add files to IPFS
       let ipfsRes: uploadItemsToIPFSRes = undefined;
@@ -118,12 +122,11 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         deployment.environment == DeploymentEnvironment.STAGING ||
         deployment.environment == DeploymentEnvironment.DIRECT_TO_PRODUCTION
       ) {
-        ipfsRes = await IPFSService.uploadFilesToIPFSFromS3(
+        ipfsRes = await ipfsService.uploadFilesToIPFSFromS3(
           {
             files: sourceFiles,
             wrapWithDirectory: true,
             wrappingDirectoryPath: `Deployment_${deployment.id}`,
-            project_uuid: website.project_uuid,
           },
           this.context,
         );
@@ -132,7 +135,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         targetBucket.CIDv1 = ipfsRes.parentDirCID.toV1().toString();
 
         //Update bucket CID & Size
-        targetBucket.size += ipfsRes.size;
+        targetBucket.size = ipfsRes.size;
         targetBucket.uploadedSize += ipfsRes.size;
 
         deployment.size = ipfsRes.size;
@@ -149,14 +152,14 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
           this.context,
         ).populateDeploymentByCid(targetBucket.CID);
         if (stagingDeployment.exists() && stagingDeployment.size) {
-          targetBucket.size += stagingDeployment.size;
+          targetBucket.size = stagingDeployment.size;
           targetBucket.uploadedSize += stagingDeployment.size;
           deployment.size = stagingDeployment.size;
           cidSize = stagingDeployment.size;
         }
       }
       //publish IPNS and update target bucket
-      const ipns = await IPFSService.publishToIPNS(
+      const ipns = await ipfsService.publishToIPNS(
         targetBucket.CID,
         targetBucket.bucket_uuid,
       );
@@ -199,8 +202,6 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
 
         const directories: Directory[] = [];
         for (const srcFile of sourceFiles) {
-          srcFile.populatePath(sourceDirectories);
-
           const fileDirectory = await generateDirectoriesFromPath(
             this.context,
             directories,
@@ -223,6 +224,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
               directory_id: fileDirectory?.id,
               size: srcFile.size,
               fileStatus: FileStatus.UPLOADED_TO_IPFS,
+              path: srcFile.path,
             })
             .insert(SerializeFor.INSERT_DB, conn);
         }
@@ -315,10 +317,8 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         LogOutput.SYS_ERROR,
       );
 
-      try {
-        deployment.deploymentStatus = DeploymentStatus.FAILED;
-        await deployment.update();
-      } catch (upgError) {
+      deployment.deploymentStatus = DeploymentStatus.FAILED;
+      await deployment.update().catch(async (upgError) => {
         await this.writeEventLog(
           {
             logType: LogType.ERROR,
@@ -330,7 +330,17 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
           },
           LogOutput.SYS_ERROR,
         );
-      }
+      });
+
+      //deployment failed - refund credit
+      await refundCredit(
+        this.context,
+        DbTables.DEPLOYMENT,
+        data?.deployment_id,
+        'DeployWebsiteWorker.runExecutor',
+        ServiceName.STORAGE,
+      );
+
       if (
         env.APP_ENV == AppEnvironment.LOCAL_DEV ||
         env.APP_ENV == AppEnvironment.TEST
