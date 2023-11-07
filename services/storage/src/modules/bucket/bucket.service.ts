@@ -123,10 +123,12 @@ export class BucketService {
   }
 
   static async markBucketForDeletion(
-    event: { id: number },
+    event: { bucket_uuid: string },
     context: ServiceContext,
   ): Promise<any> {
-    const b: Bucket = await new Bucket({}, context).populateById(event.id);
+    const b: Bucket = await new Bucket({}, context).populateById(
+      event.bucket_uuid,
+    );
 
     if (!b.exists()) {
       throw new StorageNotFoundException();
@@ -152,10 +154,12 @@ export class BucketService {
   }
 
   static async unmarkBucketForDeletion(
-    event: { id: number },
+    event: { bucket_uuid: string },
     context: ServiceContext,
   ): Promise<any> {
-    const b: Bucket = await new Bucket({}, context).populateById(event.id);
+    const b: Bucket = await new Bucket({}, context).populateById(
+      event.bucket_uuid,
+    );
 
     if (!b.exists()) {
       throw new StorageNotFoundException();
@@ -173,10 +177,12 @@ export class BucketService {
   }
 
   static async clearBucketContent(
-    event: { id: number },
+    event: { bucket_uuid: string },
     context: ServiceContext,
   ): Promise<any> {
-    const b: Bucket = await new Bucket({}, context).populateById(event.id);
+    const b: Bucket = await new Bucket({}, context).populateById(
+      event.bucket_uuid,
+    );
 
     if (!b.exists()) {
       throw new StorageNotFoundException();

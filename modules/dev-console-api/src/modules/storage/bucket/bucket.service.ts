@@ -87,20 +87,26 @@ export class BucketService {
     ).data;
   }
 
-  async deleteBucket(context: DevConsoleApiContext, id: number) {
-    return (await new StorageMicroservice(context).deleteBucket({ id: id }))
-      .data;
-  }
-
-  async cancelBucketDeletion(context: DevConsoleApiContext, id: number) {
+  async deleteBucket(context: DevConsoleApiContext, bucket_uuid: string) {
     return (
-      await new StorageMicroservice(context).cancelBucketDeletion({ id: id })
+      await new StorageMicroservice(context).deleteBucket({ bucket_uuid })
     ).data;
   }
 
-  async clearBucketContent(context: DevConsoleApiContext, id: number) {
+  async cancelBucketDeletion(
+    context: DevConsoleApiContext,
+    bucket_uuid: string,
+  ) {
     return (
-      await new StorageMicroservice(context).clearBucketContent({ id: id })
+      await new StorageMicroservice(context).cancelBucketDeletion({
+        bucket_uuid,
+      })
+    ).data;
+  }
+
+  async clearBucketContent(context: DevConsoleApiContext, bucket_uuid: string) {
+    return (
+      await new StorageMicroservice(context).clearBucketContent({ bucket_uuid })
     ).data;
   }
 
