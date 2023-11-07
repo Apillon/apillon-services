@@ -176,7 +176,7 @@ export class BucketController {
     return await this.bucketService.updateBucket(context, bucket_uuid, body);
   }
 
-  @Patch(':id/cancel-deletion')
+  @Patch(':bucket_uuid/cancel-deletion')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -184,12 +184,12 @@ export class BucketController {
   @UseGuards(AuthGuard)
   async cancelBucketDeletion(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('bucket_uuid') bucket_uuid: string,
   ) {
-    return await this.bucketService.cancelBucketDeletion(context, id);
+    return await this.bucketService.cancelBucketDeletion(context, bucket_uuid);
   }
 
-  @Delete(':id')
+  @Delete(':bucket_uuid')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -197,12 +197,12 @@ export class BucketController {
   @UseGuards(AuthGuard)
   async deleteBucket(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('bucket_uuid') bucket_uuid: string,
   ) {
-    return await this.bucketService.deleteBucket(context, id);
+    return await this.bucketService.deleteBucket(context, bucket_uuid);
   }
 
-  @Delete(':id/content')
+  @Delete(':bucket_uuid/content')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -211,8 +211,8 @@ export class BucketController {
   @UseGuards(AuthGuard)
   async clearBucketContent(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('bucket_uuid') bucket_uuid: string,
   ) {
-    return await this.bucketService.clearBucketContent(context, id);
+    return await this.bucketService.clearBucketContent(context, bucket_uuid);
   }
 }

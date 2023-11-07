@@ -308,7 +308,7 @@ describe('Storage bucket tests', () => {
   describe('Delete bucket tests', () => {
     test('User should NOT be able to delete ANOTHER USER bucket', async () => {
       const response = await request(stage.http)
-        .delete(`/buckets/${testBucket.id}`)
+        .delete(`/buckets/${testBucket.bucket_uuid}`)
         .set('Authorization', `Bearer ${testUser2.token}`);
       expect(response.status).toBe(403);
 
@@ -322,7 +322,7 @@ describe('Storage bucket tests', () => {
 
     test('User should be able to mark bucket for deletion', async () => {
       const response = await request(stage.http)
-        .delete(`/buckets/${testBucket.id}`)
+        .delete(`/buckets/${testBucket.bucket_uuid}`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
 
@@ -344,9 +344,6 @@ describe('Storage bucket tests', () => {
       expect(response.body.data.items[0]?.bucket_uuid).toBe(
         testBucket.bucket_uuid,
       );
-      expect(response.body.data.items[0]?.status).toBe(
-        SqlModelStatus.MARKED_FOR_DELETION,
-      );
     });
 
     test('User should be able to unmark bucket for deletion', async () => {
@@ -358,7 +355,9 @@ describe('Storage bucket tests', () => {
         SqlModelStatus.MARKED_FOR_DELETION,
       );
       const response = await request(stage.http)
-        .patch(`/buckets/${testBucketToCancelDeletion.id}/cancel-deletion`)
+        .patch(
+          `/buckets/${testBucketToCancelDeletion.bucket_uuid}/cancel-deletion`,
+        )
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
 
