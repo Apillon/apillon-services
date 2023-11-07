@@ -15,6 +15,7 @@ import {
 } from '@apillon/workers-lib';
 import {
   AuthApiEmailType,
+  IdentityConfigKey,
   IdentityJobState,
   IdentityState,
 } from '../../config/types';
@@ -22,6 +23,7 @@ import { Identity } from '../../modules/identity/models/identity.model';
 import { IdentityJob } from '../../modules/identity-job/models/identity-job.model';
 import * as procedures from './procedures';
 import { JwtTokenType } from '@apillon/lib';
+import { IdentityConfig } from '../../modules/identity/models/identity-config.model';
 
 // TODO: Consider managing by transaction status and not by identity job state
 // The diagram shoul be as follows: check if success and trigger correct operation. That's it.
@@ -142,8 +144,6 @@ export class UpdateStateWorker extends BaseQueueWorker {
                 identity.state = IdentityState.SUBMITTED_DID_CREATE_REQ;
                 await identity.update();
               } else {
-                // TODO: Notification logic
-
                 await this.writeEventLog({
                   logType: LogType.ERROR,
                   message: `DID CREATE step for ${result.transactionHash} FAILED. Retry exceeded: STOPPING`,
@@ -227,7 +227,11 @@ export class UpdateStateWorker extends BaseQueueWorker {
                     identity: identity.id,
                   },
                 });
-                // TODO: Notification logic
+                // Decrease DID tx counter by 1 since attestation failed
+                await new IdentityConfig({}, ctx).updateNumericKeyValue(
+                  IdentityConfigKey.ATTESTER_DID_TX_COUNTER,
+                  -1,
+                );
               }
             }
 
@@ -270,7 +274,6 @@ export class UpdateStateWorker extends BaseQueueWorker {
                     identity: identity.id,
                   },
                 });
-                // TODO: Notification logic
               }
             }
           case IdentityJobState.DID_REVOKE:
@@ -310,7 +313,6 @@ export class UpdateStateWorker extends BaseQueueWorker {
                     identity: identity.id,
                   },
                 });
-                // TODO: Notification logic
               }
             }
             break;

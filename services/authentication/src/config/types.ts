@@ -5,6 +5,7 @@ export enum DbTables {
   IDENTITY = 'identity',
   IDENTITY_JOB = 'identity_job',
   TRANSACTION = 'transaction',
+  IDENTITY_CONFIG = 'identity_config',
 }
 
 /**
@@ -218,4 +219,8 @@ export class IdentityState {
   static getAllowLinkStates() {
     return [IdentityState.ATTESTED, IdentityState.DID_CREATED];
   }
+}
+
+export enum IdentityConfigKey {
+  ATTESTER_DID_TX_COUNTER = 'ATTESTER_DID_TX_COUNTER',
 }
