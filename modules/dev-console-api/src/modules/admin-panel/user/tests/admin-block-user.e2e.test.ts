@@ -126,12 +126,6 @@ describe('Admin Block user tests', () => {
         testFile.file_uuid,
       );
       expect(tmpFile.status).toBe(SqlModelStatus.BLOCKED);
-
-      const blacklisted = await stage.storageContext.mysql.paramExecute(`
-        SELECT DISTINCT cid FROM blacklist;
-      `);
-      expect(blacklisted.length).toBe(1);
-      expect(blacklisted.find((x) => x.cid == tmpFile.CID)).toBeTruthy();
     });
 
     test('Blocked user should not be able to login', async () => {

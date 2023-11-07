@@ -7,19 +7,19 @@ import { ApiErrorCode } from '../../config/types';
 @Injectable()
 export class AuthService {
   async generateSessionToken(context: ApillonApiContext) {
-    const token = generateJwtToken(
+    const sessionToken = generateJwtToken(
       JwtTokenType.AUTH_SESSION,
       { project_uuid: context.apiKey.project_uuid },
       '10min',
     );
 
-    return { sessionToken: token };
+    return { sessionToken };
   }
 
   async verifyOauthLogin(_context: ApillonApiContext, token: string) {
     try {
       const { email } = parseJwtToken(JwtTokenType.OAUTH_TOKEN, token);
-      return email;
+      return { email };
     } catch (error) {
       throw new ApiCodeException({
         status: 401,
