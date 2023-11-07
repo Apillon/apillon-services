@@ -48,6 +48,15 @@ export enum CrustTransactionType {
   SYSTEM_EVENTS_FAIL = 'system-event-fail',
 }
 
+/* PHALA PARACHAIN */
+export enum PhalaTransactionType {
+  BALANCE_TRANSFER = 'balances-transfer',
+  // TRANSFER_TO_CLUSTER = 'transfer-to-cluster',
+  // CONTRACT_INSTANTIATE = 'contract-instantiate',
+  // SYSTEM_EVENTS_SUCCESS = 'system-event-success',
+  // SYSTEM_EVENTS_FAIL = 'system-event-fail',
+}
+
 /**
  * Error codes
  * code format : HTTPCODE|MODULE_CODE|MODULE_INTERNAL_ERROR_CODE

@@ -21,6 +21,7 @@ import {
   BlockchainErrorCode,
   DbTables,
   KiltTransactionType,
+  PhalaTransactionType,
   TxAction,
   TxDirection,
   TxStatus,
@@ -478,21 +479,17 @@ export class TransactionLog extends AdvancedSQLModel {
   public createFromPhalaIndexerData(
     data: {
       system: SystemEvent;
-      transfers: TransferTransaction[];
+      transfer: TransferTransaction;
     },
     wallet: Wallet,
   ) {
-    this.ts = data?.system?.createdAt;
+    this.ts = data?.system?.createdAt ?? data.transfer.createdAt;
     this.blockId = data?.system?.blockNumber;
-    this.addressFrom = data?.transfers[0]?.from;
-    this.addressTo = data?.transfers[0]?.to;
-    this.amount = '0';
+    this.addressFrom = data?.transfer?.from ?? data?.system?.account;
+    this.addressTo = data?.transfer?.to;
+    this.amount = data?.transfer?.amount?.toString() || '0';
 
-    for (const transfer of data?.transfers) {
-      this.addToAmount(transfer?.amount?.toString() || '0');
-    }
-
-    this.hash = data?.system?.extrinsicHash;
+    this.hash = data?.system?.extrinsicHash ?? data?.transfer?.extrinsicHash;
     this.wallet = wallet.address;
 
     this.status =
@@ -500,8 +497,33 @@ export class TransactionLog extends AdvancedSQLModel {
     this.chainType = wallet.chainType;
     this.chain = wallet.chain;
     this.token = TxToken.PHALA_TOKEN;
-    this.fee =
-      data?.system?.fee?.toString() || data?.transfers[0]?.fee?.toString();
+    this.fee = data?.system?.fee?.toString() || data?.transfer?.fee?.toString();
+
+    if (this.addressFrom === this.wallet) {
+      this.direction = TxDirection.COST;
+
+      this.action =
+        data?.transfer?.transactionType ===
+        PhalaTransactionType.BALANCE_TRANSFER
+          ? TxAction.WITHDRAWAL
+          : TxAction.TRANSACTION;
+    } else if (this.addressTo === this.wallet) {
+      this.direction = TxDirection.INCOME;
+
+      this.action =
+        data?.transfer?.transactionType ===
+        PhalaTransactionType.BALANCE_TRANSFER
+          ? TxAction.DEPOSIT
+          : TxAction.TRANSACTION;
+
+      if (this.action === TxAction.DEPOSIT) {
+        // income fee should not be logged (payed by other wallet)
+        this.fee = '0';
+      }
+    } else {
+      this.action = TxAction.UNKNOWN;
+      this.direction = TxDirection.UNKNOWN;
+    }
 
     this.calculateTotalPrice();
 
