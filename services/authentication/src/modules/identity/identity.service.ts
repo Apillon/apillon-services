@@ -388,36 +388,60 @@ export class IdentityService {
     }
     await identity.update();
 
-    const { value: txCounter } = await new IdentityConfig(
-      {},
-      context,
-    ).populateByKey(IdentityConfigKey.ATTESTER_DID_TX_COUNTER);
+    const conn = await context.mysql.start();
+    let logCounter: string; // Used for logging
+    try {
+      const { value: txCounter } = await new IdentityConfig(
+        {},
+        context,
+      ).populateByKey(IdentityConfigKey.ATTESTER_DID_TX_COUNTER, conn);
+      logCounter = txCounter;
 
-    writeLog(LogType.INFO, 'Creating attestation TX ..');
-    const attestationTx = await Did.authorizeTx(
-      attesterDidUri,
-      attestation,
-      async ({ data }) => ({
-        signature: attesterKeypairs.assertionMethod.sign(data),
-        keyType: attesterKeypairs.assertionMethod.type,
-      }),
-      attesterAcc.address,
-      { txCounter: new BN(txCounter) },
-    );
+      writeLog(LogType.INFO, 'Creating attestation TX ..');
+      const attestationTx = await Did.authorizeTx(
+        attesterDidUri,
+        attestation,
+        async ({ data }) => ({
+          signature: attesterKeypairs.assertionMethod.sign(data),
+          keyType: attesterKeypairs.assertionMethod.type,
+        }),
+        attesterAcc.address,
+        { txCounter: new BN(txCounter) },
+      );
 
-    const bcsRequest = await attestationRequestBc(
-      context,
-      attestationTx,
-      identity,
-    );
+      const bcsRequest = await attestationRequestBc(
+        context,
+        attestationTx,
+        identity,
+      );
 
-    writeLog(LogType.INFO, 'Sending blockchain request..');
-    // Call blockchain server and submit batch request
-    await sendBlockchainServiceRequest(context, bcsRequest);
-    await new IdentityConfig({}, context).modifyKeyValue(
-      IdentityConfigKey.ATTESTER_DID_TX_COUNTER,
-      +txCounter + 1,
-    );
+      writeLog(LogType.INFO, 'Sending blockchain request..');
+      // Call blockchain server and submit batch request
+      await sendBlockchainServiceRequest(context, bcsRequest);
+      await new IdentityConfig({}, context).modifyKeyValue(
+        IdentityConfigKey.ATTESTER_DID_TX_COUNTER,
+        +txCounter + 1,
+        conn,
+      );
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+      await new Lmas().writeLog({
+        context,
+        project_uuid: identity.project_uuid,
+        logType: LogType.ERROR,
+        message: `Error sending Kilt attestation request with tx counter ${logCounter}`,
+        location: 'IdentityService.attestClaim()',
+        service: ServiceName.AUTHENTICATION_API,
+        data: {
+          identity: identity.serialize(),
+          txCounter: logCounter,
+          error: err,
+        },
+        sendAdminAlert: true,
+      });
+      throw err;
+    }
   }
 
   static async getUserIdentity(
@@ -467,39 +491,61 @@ export class IdentityService {
       env.KILT_ATTESTER_MNEMONIC,
     ) as KiltKeyringPair;
 
-    const { value: txCounter } = await new IdentityConfig(
-      {},
-      context,
-    ).populateByKey(IdentityConfigKey.ATTESTER_DID_TX_COUNTER);
-
     writeLog(LogType.INFO, 'RECEIVED: ', didUri, linkParameters);
     writeLog(LogType.INFO, 'Authorizing transaction ...');
 
-    // Create account link tx
-    const authorizedAccountLinkingTx = await Did.authorizeTx(
-      didUri,
-      linkParameters,
-      async ({ data }) => ({
-        signature: attesterKeypairs.authentication.sign(data),
-        keyType: attesterKeypairs.authentication.type,
-      }),
-      attesterAcc.address,
-      { txCounter: new BN(txCounter) },
-    );
+    const conn = await context.mysql.start();
+    let logCounter: string; // Used for logging
+    try {
+      const { value: txCounter } = await new IdentityConfig(
+        {},
+        context,
+      ).populateByKey(IdentityConfigKey.ATTESTER_DID_TX_COUNTER, conn);
+      // Create account link tx
+      const authorizedAccountLinkingTx = await Did.authorizeTx(
+        didUri,
+        linkParameters,
+        async ({ data }) => ({
+          signature: attesterKeypairs.authentication.sign(data),
+          keyType: attesterKeypairs.authentication.type,
+        }),
+        attesterAcc.address,
+        { txCounter: new BN(txCounter) },
+      );
 
-    writeLog(LogType.INFO, 'Prepareing BC request ...');
-    const bcsRequest = await accDidLinkRequestBc(
-      context,
-      authorizedAccountLinkingTx,
-      identity,
-    );
+      writeLog(LogType.INFO, 'Prepareing BC request ...');
+      const bcsRequest = await accDidLinkRequestBc(
+        context,
+        authorizedAccountLinkingTx,
+        identity,
+      );
 
-    writeLog(LogType.INFO, 'Sending blockchain request..');
-    await sendBlockchainServiceRequest(context, bcsRequest);
-    await new IdentityConfig({}, context).modifyKeyValue(
-      IdentityConfigKey.ATTESTER_DID_TX_COUNTER,
-      +txCounter + 1,
-    );
+      writeLog(LogType.INFO, 'Sending blockchain request..');
+      await sendBlockchainServiceRequest(context, bcsRequest);
+      await new IdentityConfig({}, context).modifyKeyValue(
+        IdentityConfigKey.ATTESTER_DID_TX_COUNTER,
+        +txCounter + 1,
+        conn,
+      );
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+      await new Lmas().writeLog({
+        context,
+        project_uuid: identity.project_uuid,
+        logType: LogType.ERROR,
+        message: `Error sending Kilt linking request with tx counter ${logCounter}`,
+        location: 'IdentityService.linkAccountDid()',
+        service: ServiceName.AUTHENTICATION_API,
+        data: {
+          identity: identity.serialize(),
+          txCounter: logCounter,
+          error: err,
+        },
+        sendAdminAlert: true,
+      });
+      throw err;
+    }
   }
 
   static async revokeIdentity(event: { body: IdentityDidRevokeDto }, context) {

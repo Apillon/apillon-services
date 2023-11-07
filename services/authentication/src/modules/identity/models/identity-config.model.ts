@@ -1,4 +1,4 @@
-import { Context } from '@apillon/lib';
+import { Context, PoolConnection } from '@apillon/lib';
 import { BaseSQLModel, PopulateFrom, prop, SerializeFor } from '@apillon/lib';
 import { stringParser } from '@rawmodel/parsers';
 import { DbTables, IdentityConfigKey } from '../../../config/types';
@@ -44,7 +44,7 @@ export class IdentityConfig extends BaseSQLModel {
     return !!this.key;
   }
 
-  public async populateByKey(key: IdentityConfigKey) {
+  public async populateByKey(key: IdentityConfigKey, conn?: PoolConnection) {
     const data = await this.getContext().mysql.paramExecute(
       `
         SELECT *
@@ -53,6 +53,7 @@ export class IdentityConfig extends BaseSQLModel {
         FOR UPDATE;
       `,
       { key },
+      conn,
     );
 
     return data?.length
@@ -60,7 +61,11 @@ export class IdentityConfig extends BaseSQLModel {
       : this.reset();
   }
 
-  public async modifyKeyValue(key: IdentityConfigKey, value: any) {
+  public async modifyKeyValue(
+    key: IdentityConfigKey,
+    value: any,
+    conn?: PoolConnection,
+  ) {
     const data = await this.getContext().mysql.paramExecute(
       `
         UPDATE \`${this.tableName}\`
@@ -68,6 +73,7 @@ export class IdentityConfig extends BaseSQLModel {
         WHERE key = @key
       `,
       { key, value },
+      conn,
     );
 
     return data?.length
@@ -75,7 +81,11 @@ export class IdentityConfig extends BaseSQLModel {
       : this.reset();
   }
 
-  public async updateNumericKeyValue(key: IdentityConfigKey, amount: number) {
+  public async updateNumericKeyValue(
+    key: IdentityConfigKey,
+    amount: number,
+    conn?: PoolConnection,
+  ) {
     const data = await this.getContext().mysql.paramExecute(
       `
         UPDATE \`${this.tableName}\`
@@ -83,6 +93,7 @@ export class IdentityConfig extends BaseSQLModel {
         WHERE key = @key
       `,
       { key, amount },
+      conn,
     );
 
     return data?.length
