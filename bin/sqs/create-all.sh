@@ -25,6 +25,21 @@ aws sqs create-queue --queue-name apillon-nfts-queue-test-dlq --attributes file:
 aws sqs create-queue --queue-name apillon-nfts-queue-test --attributes file://test/nfts-queue-test.json  --region eu-west-1
 
 
+
+aws sqs create-queue --queue-name apillon-computing-queue-dev-dlq --attributes file://dev/computing-queue-dev-dlq.json --region eu-west-1
+aws sqs create-queue --queue-name apillon-computing-queue-dev --attributes file://dev/computing-queue-dev.json  --region eu-west-1
+
+aws sqs create-queue --queue-name apillon-computing-queue-staging-dlq --attributes file://staging/computing-queue-staging-dlq.json  --region eu-west-1
+aws sqs create-queue --queue-name apillon-computing-queue-staging --attributes file://staging/computing-queue-staging.json  --region eu-west-1
+
+aws sqs create-queue --queue-name apillon-computing-queue-production-dlq --attributes file://production/computing-queue-production-dlq.json  --region eu-west-1
+aws sqs create-queue --queue-name apillon-computing-queue-production --attributes file://production/computing-queue-production.json  --region eu-west-1
+
+aws sqs create-queue --queue-name apillon-computing-queue-test-dlq --attributes file://test/computing-queue-test-dlq.json --region eu-west-1
+aws sqs create-queue --queue-name apillon-computing-queue-test --attributes file://test/computing-queue-test.json  --region eu-west-1
+
+
+
 aws sqs create-queue --queue-name apillon-auth-queue-dev-dlq --attributes file://dev/auth-queue-dev-dlq.json --region eu-west-1
 aws sqs create-queue --queue-name apillon-auth-queue-dev --attributes file://dev/auth-queue-dev.json  --region eu-west-1
 
