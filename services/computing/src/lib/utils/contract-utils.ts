@@ -12,15 +12,20 @@ import { Contract } from '../../modules/computing/models/contract.model';
 import { Transaction } from '../../modules/transaction/models/transaction.model';
 import { TransactionService } from '../../modules/transaction/transaction.service';
 import { PhalaClient } from '../../modules/services/phala.client';
+import { ContractAbi } from '../../modules/computing/models/contractAbi.model';
 
 export async function deployPhalaContract(
   context: ServiceContext,
   contract: Contract,
+  contractAbi: ContractAbi,
   conn: PoolConnection,
 ) {
   const phalaClient = new PhalaClient(context);
   contract.data['clusterId'] = await phalaClient.getClusterId();
-  const transaction = await phalaClient.createDeployTransaction(contract);
+  const transaction = await phalaClient.createDeployTransaction(
+    contract,
+    contractAbi,
+  );
 
   const blockchainServiceRequest = new CreateSubstrateTransactionDto(
     {
@@ -88,12 +93,15 @@ export async function depositToPhalaContractCluster(
 
 export async function transferContractOwnership(
   context: ServiceContext,
-  contract: Contract,
+  contractId: number,
+  contractAbi: { [key: string]: any },
+  contractAddress: string,
   newOwnerAddress: string,
 ) {
   const phalaClient = new PhalaClient(context);
   const transaction = await phalaClient.createTransferOwnershipTransaction(
-    contract.contractAddress,
+    contractAbi,
+    contractAddress,
     newOwnerAddress,
   );
   const blockchainServiceRequest = new CreateSubstrateTransactionDto(
@@ -101,7 +109,7 @@ export async function transferContractOwnership(
       chain: SubstrateChain.PHALA,
       transaction: transaction.toHex(),
       referenceTable: DbTables.CONTRACT,
-      referenceId: contract.id,
+      referenceId: contractId,
     },
     context,
   );
@@ -111,7 +119,7 @@ export async function transferContractOwnership(
   const dbTxRecord = new Transaction(
     {
       transactionType: TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
-      contractId: contract.id,
+      contractId,
       transactionHash: response.data.transactionHash,
       transactionStatus: TransactionStatus.PENDING,
     },
