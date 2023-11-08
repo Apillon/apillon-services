@@ -9,7 +9,7 @@ export async function upgrade(
         \`id\` INT NOT NULL AUTO_INCREMENT,
         \`status\` INT NULL,
 
-        \`contractType\` VARCHAR(100) NOT NULL,
+        \`contractType\` INT NOT NULL,
         \`version\` INT NOT NULL,
         \`abi\` JSON NOT NULL,
 

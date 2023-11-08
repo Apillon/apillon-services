@@ -59,10 +59,6 @@ export class ContractAbi extends AdvancedSQLModel {
     super(data, context);
   }
 
-  public override async populateById(id: number): Promise<this> {
-    return super.populateById(id);
-  }
-
   /**
    * Returns latest version of contract
    * @param contractType type of contract
@@ -77,12 +73,7 @@ export class ContractAbi extends AdvancedSQLModel {
           FROM \`${DbTables.CONTRACT_ABI}\`
           WHERE contractType = @contractType
             AND status <> ${SqlModelStatus.DELETED}
-            AND version IN (
-                SELECT MAX(version)
-                FROM \`${DbTables.CONTRACT_ABI}\`
-                WHERE contractType = @contractType
-                  AND status <> ${SqlModelStatus.DELETED}
-            )
+          ORDER BY version DESC LIMIT 1
           ;
         `,
       {
