@@ -326,7 +326,8 @@ export class TransactionLogWorker extends BaseQueueWorker {
           LEFT JOIN transaction_queue tq
         ON tq.transactionHash = tl.hash
           SET
-            tl.transactionQueue_id = tq.id, tl.project_uuid = tq.project_uuid
+            tl.transactionQueue_id = tq.id,
+            tl.project_uuid = tq.project_uuid
         WHERE tq.id IS NOT NULL
           AND tl.hash IN (${transactions.map((x) => `'${x.hash}'`).join(',')})
           AND tl.chain = @chain
