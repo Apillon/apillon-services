@@ -1,4 +1,3 @@
-import { Chain } from './../../config/types';
 import {
   AdvancedSQLModel,
   ChainType,
@@ -22,6 +21,7 @@ import {
   BlockchainErrorCode,
   DbTables,
   KiltTransactionType,
+  PhalaTransactionType,
   TxAction,
   TxDirection,
   TxStatus,
@@ -31,8 +31,9 @@ import { getTokenFromChain } from '../../lib/utils';
 import {
   SystemEvent,
   TransferTransaction,
-} from '../blockchain-indexers/substrate/kilt/data-models';
+} from '../blockchain-indexers/substrate/data-models';
 import { StorageOrderTransaction } from '../blockchain-indexers/substrate/crust/data-models';
+
 export class TransactionLog extends AdvancedSQLModel {
   public readonly tableName = DbTables.TRANSACTION_LOG;
 
@@ -466,6 +467,60 @@ export class TransactionLog extends AdvancedSQLModel {
     } else {
       // throw new Error('Inconsistent transaction addresses!');
       // some Kilt events does not have both addresses.
+      this.action = TxAction.UNKNOWN;
+      this.direction = TxDirection.UNKNOWN;
+    }
+
+    this.calculateTotalPrice();
+
+    return this;
+  }
+
+  public createFromPhalaIndexerData(
+    data: {
+      system: SystemEvent;
+      transfer: TransferTransaction;
+    },
+    wallet: Wallet,
+  ) {
+    this.ts = data?.system?.createdAt ?? data.transfer.createdAt;
+    this.blockId = data?.system?.blockNumber;
+    this.addressFrom = data?.transfer?.from ?? data?.system?.account;
+    this.addressTo = data?.transfer?.to;
+    this.amount = data?.transfer?.amount?.toString() || '0';
+
+    this.hash = data?.system?.extrinsicHash ?? data?.transfer?.extrinsicHash;
+    this.wallet = wallet.address;
+
+    this.status =
+      data?.system?.status === 1 ? TxStatus.COMPLETED : TxStatus.FAILED;
+    this.chainType = wallet.chainType;
+    this.chain = wallet.chain;
+    this.token = TxToken.PHALA_TOKEN;
+    this.fee = data?.system?.fee?.toString() || data?.transfer?.fee?.toString();
+
+    if (this.addressFrom === this.wallet) {
+      this.direction = TxDirection.COST;
+
+      this.action =
+        data?.transfer?.transactionType ===
+        PhalaTransactionType.BALANCE_TRANSFER
+          ? TxAction.WITHDRAWAL
+          : TxAction.TRANSACTION;
+    } else if (this.addressTo === this.wallet) {
+      this.direction = TxDirection.INCOME;
+
+      this.action =
+        data?.transfer?.transactionType ===
+        PhalaTransactionType.BALANCE_TRANSFER
+          ? TxAction.DEPOSIT
+          : TxAction.TRANSACTION;
+
+      if (this.action === TxAction.DEPOSIT) {
+        // income fee should not be logged (payed by other wallet)
+        this.fee = '0';
+      }
+    } else {
       this.action = TxAction.UNKNOWN;
       this.direction = TxDirection.UNKNOWN;
     }

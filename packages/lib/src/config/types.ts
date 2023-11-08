@@ -30,6 +30,10 @@ export enum NFTCollectionType {
   NESTABLE = 2,
 }
 
+export enum ComputingContractType {
+  SCHRODINGER = 1,
+}
+
 export enum AmsEventType {
   USER_REGISTER = 'user-register',
   USER_GET_AUTH = 'user-get-auth',
@@ -137,6 +141,7 @@ export enum StorageEventType {
   GET_BLACKLIST = 'get-blacklist',
   PROJECTS_OVER_BANDWIDTH_QUOTA = 'projects-over-bandwidth-quota',
   BLACKLIST_PROJECT = 'blacklist-project',
+  GET_PROJECT_IPFS_CLUSTER = 'get-project-ipfs-cluster',
 }
 
 export enum AuthenticationEventType {
@@ -204,6 +209,14 @@ export enum NftsEventType {
   PROJECT_COLLECTION_DETAILS = 'project-collections-details',
 }
 
+export enum ComputingEventType {
+  CREATE_CONTRACT = 'create-contract',
+  LIST_CONTRACTS = 'list-contract',
+  GET_CONTRACT_BY_UUID = 'get-contract-by-uuid',
+  DEPOSIT_TO_CONTRACT_CLUSTER = 'fund-contract-cluster',
+  TRANSFER_CONTRACT_OWNERSHIP = 'transfer-contract-ownership',
+}
+
 export enum ReferralEventType {
   CREATE_PLAYER = 'create-referral',
   GET_PLAYER = 'get-referral',
@@ -231,6 +244,7 @@ export enum ServiceName {
   REFERRAL = 'REFERRAL',
   BLOCKCHAIN = 'BLOCKCHAIN',
   CONFIG = 'CONFIG',
+  COMPUTING = 'COMPUTING',
 }
 
 export enum ServiceCode {
@@ -294,6 +308,7 @@ export enum AttachedServiceType {
   STORAGE = 2,
   NFT = 3,
   HOSTING = 4,
+  COMPUTING = 5,
   SYSTEM = 999,
 }
 
@@ -540,6 +555,19 @@ export enum ValidatorErrorCode {
   QUOTA_CODE_NOT_VALID = 42200149,
   INVALID_FILES_LENGTH = 42200150,
 
+  //#region Computing
+  COMPUTING_PROJECT_UUID_NOT_PRESENT = 42200201,
+  COMPUTING_CONTRACT_TYPE_NOT_PRESENT = 42200202,
+  COMPUTING_CONTRACT_TYPE_NOT_VALID = 42200203,
+  COMPUTING_NAME_NOT_PRESENT = 42200204,
+  COMPUTING_NAME_NOT_VALID = 42200205,
+  COMPUTING_DESCRIPTION_NOT_VALID = 42200206,
+  COMPUTING_RESTRICT_TO_OWNER_NOT_PRESENT = 42200207,
+  COMPUTING_ACCOUNT_ADDRESS_NOT_PRESENT = 42200208,
+  COMPUTING_ACCOUNT_ADDRESS_NOT_VALID = 42200209,
+  COMPUTING_DEPOSIT_AMOUNT_NOT_VALID = 42200210,
+  COMPUTING_NFT_CONTRACT_ADDRESS_NOT_VALID = 42200211,
+
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,
   USER_EMAIL_NOT_PRESENT = 42200702,
@@ -662,6 +690,7 @@ export enum QuotaCode {
   MAX_NFT_COLLECTIONS = 9,
   MAX_STORAGE = 10,
   MAX_BANDWIDTH = 11,
+  MAX_COMPUTING_CONTRACTS = 12,
 }
 
 /**

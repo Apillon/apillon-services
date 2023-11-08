@@ -4,6 +4,7 @@ import { BlockchainCodeException } from '../../../lib/exceptions';
 import { Wallet } from '../../wallet/wallet.model';
 import { CrustBlockchainIndexer } from './crust/indexer.service';
 import { KiltBlockchainIndexer } from './kilt/indexer.service';
+import { PhalaBlockchainIndexer } from './phala/indexer.service';
 
 /**
  * Checks indexer to determine if transaction exists (is indexed).
@@ -33,6 +34,13 @@ export async function isTransactionIndexed(
     case SubstrateChain.CRUST:
       transactions =
         await new CrustBlockchainIndexer().getAccountTransactionsByHash(
+          wallet.address,
+          transactionHash,
+        );
+      break;
+    case SubstrateChain.PHALA:
+      transactions =
+        await new PhalaBlockchainIndexer().getAccountTransactionsByHash(
           wallet.address,
           transactionHash,
         );

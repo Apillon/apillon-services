@@ -3,11 +3,8 @@ import { gql } from 'graphql-request';
 
 import { BaseBlockchainIndexer } from '../base-blockchain-indexer';
 import { CrustGQLQueries } from './graphql-queries';
-import {
-  StorageOrderTransaction,
-  SystemEvent,
-  TransferTransaction,
-} from './data-models';
+import { StorageOrderTransaction } from './data-models';
+import { SystemEvent, TransferTransaction } from '../data-models';
 import { CrustTransactionType } from '../../../../config/types';
 
 export class CrustBlockchainIndexer extends BaseBlockchainIndexer {

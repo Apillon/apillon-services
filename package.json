@@ -30,6 +30,7 @@
     "@types/jest": "^29.5.1",
     "copyfiles": "^2.4.1",
     "cross-env": "^7.0.3",
+    "esbuild": "^0.19.5",
     "eslint-config-common": "*",
     "http-request-mock": "^1.8.17",
     "nodemon": "^2.0.19",
