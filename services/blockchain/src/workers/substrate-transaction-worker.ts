@@ -21,11 +21,7 @@ import {
 import { executeWebhooksForTransmittedTransactionsInWallet } from '../lib/webhook-procedures';
 import { BaseBlockchainIndexer } from '../modules/blockchain-indexers/substrate/base-blockchain-indexer';
 import { Wallet } from '../modules/wallet/wallet.model';
-
-export enum SubstrateChainName {
-  KILT = 'KILT',
-  CRUST = 'CRUST',
-}
+import { PhalaBlockchainIndexer } from '../modules/blockchain-indexers/substrate/phala/indexer.service';
 
 export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
   private chainId: string;
@@ -73,7 +69,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
 
       const conn = await this.context.mysql.start();
       try {
-        await this.setTransactionsState(transactions, conn);
+        await this.setTransactionsState(transactions, wallet.address, conn);
 
         // If block height is the same and not updated for the past 5 minutes
         if (
@@ -175,34 +171,93 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
 
   private async setTransactionsState(
     transactions: any[],
+    walletAddress: string,
     conn: PoolConnection,
   ) {
     if (!transactions?.length) {
       return;
     }
 
-    const successTransactions: any = transactions
+    // SUCCESS transactions
+    const successTransactions = transactions
       .filter((t: any) => t.status == TransactionIndexerStatus.SUCCESS)
       .map((t: any): string => t.extrinsicHash);
-
     console.log('Success transactions ', successTransactions);
+    // Update SUCCESS CONTRACT transactions
+    if (this.indexer instanceof PhalaBlockchainIndexer) {
+      const contractTransactions =
+        await this.indexer.getContractInstantiatingTransactions(
+          walletAddress,
+          successTransactions,
+        );
+      // Update SUCCESSFUL CONTRACT transactions
+      for (const contractTransaction of contractTransactions) {
+        await this.updateContractInstantiatedTransaction(
+          contractTransaction.extrinsicHash,
+          contractTransaction.contract,
+          conn,
+        );
+        delete successTransactions[
+          successTransactions.indexOf(contractTransaction.extrinsicHash)
+        ];
+      }
+    }
+    // Update remaining SUCCESSFUL transactions
+    if (successTransactions.length > 0) {
+      await this.updateTransactions(
+        successTransactions,
+        TransactionStatus.CONFIRMED,
+        conn,
+      );
+    }
 
-    const failedTransactions: string[] = transactions
+    // Update FAILED transactions
+    const failedTransactions = transactions
       .filter((t: any) => t.status == TransactionIndexerStatus.FAIL)
       .map((t: any): string => t.extrinsicHash);
+    if (failedTransactions.length > 0) {
+      await this.updateTransactions(
+        failedTransactions,
+        TransactionStatus.FAILED,
+        conn,
+      );
+    }
+  }
 
-    // Update SUCCESSFUL transactions
-    await this.updateTransactions(
-      successTransactions,
-      TransactionStatus.CONFIRMED,
+  private async updateContractInstantiatedTransaction(
+    transactionHash: string,
+    contractAddress: string,
+    conn: PoolConnection,
+  ) {
+    await this.context.mysql.paramExecute(
+      `UPDATE \`${DbTables.TRANSACTION_QUEUE}\`
+       SET transactionStatus = @status,
+           data              = @contractAddress
+       WHERE chain = @chain
+         AND transactionHash = @transactionHash`,
+      {
+        chain: this.chainId,
+        transactionHash,
+        status: TransactionStatus.CONFIRMED,
+        contractAddress,
+      },
       conn,
     );
 
-    // Update FAILED transactions
-    await this.updateTransactions(
-      failedTransactions,
-      TransactionStatus.FAILED,
-      conn,
+    await this.writeEventLog(
+      {
+        logType: LogType.INFO,
+        message:
+          `CONFIRMED blockchain transactions matched (txHash=${transactionHash})` +
+          ` in db and got contract id ${contractAddress} assigned.`,
+        service: ServiceName.BLOCKCHAIN,
+        data: {
+          chain: this.chainId,
+          transactionHash,
+          contractAddress,
+        },
+      },
+      LogOutput.EVENT_INFO,
     );
   }
 
@@ -213,10 +268,9 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
   ) {
     await this.context.mysql.paramExecute(
       `UPDATE \`${DbTables.TRANSACTION_QUEUE}\`
-      SET transactionStatus = @status
-      WHERE
-        chain = @chain
-        AND transactionHash in ('${transactionHashes.join(`','`)}')`,
+       SET transactionStatus = @status
+       WHERE chain = @chain
+         AND transactionHash in ('${transactionHashes.join(`','`)}')`,
       {
         chain: this.chainId,
         status,
