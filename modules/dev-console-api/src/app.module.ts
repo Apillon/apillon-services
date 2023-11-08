@@ -21,6 +21,7 @@ import { ApiKeyModule } from './modules/api-key/api-key.module';
 import { NftsModule } from './modules/nfts/nfts.module';
 import { IpnsModule } from './modules/storage/ipns/ipns.module';
 import { ReferralModule } from './modules/referral/referral.module';
+import { ComputingModule } from './modules/computing/computing.module';
 
 @Module({
   imports: [
@@ -34,10 +35,10 @@ import { ReferralModule } from './modules/referral/referral.module';
     DirectoryModule,
     StorageModule,
     ApiKeyModule,
-    NftsModule,
     IpnsModule,
     ReferralModule,
     NftsModule,
+    ComputingModule,
     PaymentsModule,
     PublicModule,
   ],

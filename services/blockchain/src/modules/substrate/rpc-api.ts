@@ -44,9 +44,9 @@ export class SubstrateRpcApi {
    */
   async trySelfRepairNonce(wallet: Wallet, transactionHash: string) {
     console.log('Timing before self repair', this.getTiming(), 's');
-    const nextOnChainNonce = (
-      await (await this.getApi()).query.system.account(wallet.address)
-    ).nonce.toNumber();
+    const api = await this.getApi();
+    const accountInfo = await api.query.system.account(wallet.address);
+    const nextOnChainNonce = accountInfo.nonce.toNumber();
     if (!nextOnChainNonce) {
       return;
     }
@@ -69,7 +69,7 @@ export class SubstrateRpcApi {
         throwOnConnect: true,
       };
       if (this.typesBundle) {
-        options['typesBundle'] = this.typesBundle;
+        options['types'] = this.typesBundle;
       }
       this.apiPromise = await ApiPromise.create(options);
       console.log('Timing after first connect', this.getTiming(), 's');

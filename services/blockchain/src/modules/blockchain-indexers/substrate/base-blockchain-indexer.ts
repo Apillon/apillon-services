@@ -1,4 +1,4 @@
-import { GraphQLClient, gql } from 'graphql-request';
+import { gql, GraphQLClient } from 'graphql-request';
 import { BlockHeight } from '../block-height';
 
 export abstract class BaseBlockchainIndexer {
@@ -12,6 +12,8 @@ export abstract class BaseBlockchainIndexer {
 
   public abstract getAllTransactions(...args: any[]): Promise<any>;
   public abstract getAllSystemEvents(...args: any[]): Promise<any>;
+
+  public abstract getAccountTransactionsByHash(...args: any[]): Promise<any>;
 
   public async getBlockHeight(): Promise<number> {
     const GRAPHQL_QUERY = gql`

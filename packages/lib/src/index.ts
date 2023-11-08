@@ -70,7 +70,6 @@ export * from './lib/at-services/authentication/dtos/sporran/message/submit-term
 
 //#REGION NTFS
 export * from './lib/at-services/nfts/nfts';
-export * from './lib/at-services/nfts/nfts';
 export * from './lib/at-services/nfts/dtos/deploy-collection.dto';
 export * from './lib/at-services/nfts/dtos/collection-query-filter.dto';
 export * from './lib/at-services/nfts/dtos/transaction-query-filter.dto';
@@ -80,6 +79,13 @@ export * from './lib/at-services/nfts/dtos/transfer-collection.dto';
 export * from './lib/at-services/nfts/dtos/create-collection.dto';
 export * from './lib/at-services/nfts/dtos/burn-nft.dto';
 export * from './lib/at-services/nfts/dtos/collections-quota-reached-query-filter.dto';
+
+//#REGION COMPUTING
+export * from './lib/at-services/computing/computing';
+export * from './lib/at-services/computing/dtos/create-contract.dto';
+export * from './lib/at-services/computing/dtos/contract-query-filter.dto';
+export * from './lib/at-services/computing/dtos/deposit-to-cluster.dto';
+export * from './lib/at-services/computing/dtos/transfer-ownership.dto';
 
 //#REGION Blockchain
 export * from './lib/at-services/blockchain/blockchain';
