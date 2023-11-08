@@ -42,7 +42,14 @@ export class StorageMicroservice extends BaseService {
     this.isDefaultAsync = false;
   }
 
-  public async getStorageInfo(project_uuid: string) {
+  public async getStorageInfo(project_uuid: string): Promise<{
+    data: {
+      availableStorage: number;
+      usedStorage: number;
+      availableBandwidth: number;
+      usedBandwidth: number;
+    };
+  }> {
     const data = {
       eventName: StorageEventType.STORAGE_INFO,
       project_uuid,

@@ -275,4 +275,24 @@ export class Subscription extends ProjectAccessModel {
 
     return await selectAndCountQuery(context.mysql, sqlQuery, params, 's.id');
   }
+
+  public async getExpiredSubscriptions(
+    daysAgo: number,
+    conn?: PoolConnection,
+  ): Promise<this[]> {
+    if (!Number.isInteger(daysAgo) || daysAgo < 0) {
+      throw new Error('daysAgo should be a non-negative integer');
+    }
+
+    return await this.getContext().mysql.paramExecute(
+      `
+      SELECT ${this.generateSelectFields()}
+      FROM \`${DbTables.SUBSCRIPTION}\`
+      WHERE expiresOn BETWEEN DATE_SUB(CURRENT_DATE, INTERVAL @daysAgo DAY) AND CURRENT_DATE
+      AND status = ${SqlModelStatus.ACTIVE};
+      `,
+      { daysAgo },
+      conn,
+    );
+  }
 }

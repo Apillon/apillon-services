@@ -83,7 +83,7 @@ export function generateTemplateData(key: string, data: any) {
       title: 'Dear Apillon User',
       text: `
       <p>
-        Your decentralized identity is ready. You can download your identity by clicking on the following link at the bottom. 
+        Your decentralized identity is ready. You can download your identity by clicking on the following link at the bottom.
         Please note that the link is only valid for 24 hours. After that, you will have to initiate the recovery process.
       </p>
       `,
@@ -181,6 +181,30 @@ export function generateTemplateData(key: string, data: any) {
         <b>Additional info:</b> ${data.additionalInfo}
       </p>
       `,
+    },
+    'storage-quota-exceeded': {
+      subject: `Important Notice: Your Storage Quota is Approaching Limit`,
+      title: `Your Storage Quota is Approaching Limit`,
+      text: `
+      <p>Dear Apillon User</p><br>
+
+      <p>As you may know, your subscription to our platform has expired and has not been renewed. We understand that you continue to use our service and we appreciate your continued interest. However, as your subscription is no longer active, we have reduced your storage quota.</p><br>
+
+      <p>We want to ensure that you are aware of the implications of this change. If your current usage continues to exceed the reduced quota, we will be unable to accommodate your storage needs. To prevent any loss of data, we will automatically delete your excess storage files 30 days after your subscription expires.</p><br>
+
+      <p>We understand that this may not be the news you were hoping for. However, we encourage you to take immediate action to prevent any potential data loss. Here are a few options:</p><br>
+
+      <ul>
+        <li>Renew your subscription to restore your full storage quota.</li>
+        <li>Free up storage space by deleting unnecessary files.</li>
+      </ul>
+      <p>Renewing your subscription is the quickest and easiest solution. It will not only restore your full storage quota but also provide you with all the premium features that come with an active subscription.</p><br>
+
+      <p>On the other hand, if you choose not to renew, please ensure that you have enough storage space to accommodate your current usage. You can do this by regularly deleting unnecessary files from your storage.</p><br>
+
+      <p>We hope that you will consider these options and take action soon. Your satisfaction is our top priority, and we are here to assist you in any way we can.</p><br>
+
+      <p>Thank you for choosing Apillon. We appreciate your understanding and cooperation.</p><br>`,
     },
   };
 
