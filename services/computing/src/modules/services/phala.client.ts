@@ -6,10 +6,10 @@ import {
 } from '@apillon/lib';
 import { Contract } from '../computing/models/contract.model';
 import type { SubmittableExtrinsic } from '@polkadot/api/submittable/types';
-import { SchrodingerContractABI } from '../../lib/contracts/deployed-phala-contracts';
 import { SubstrateRpcApi } from '@apillon/blockchain/src/modules/substrate/rpc-api';
 import { Abi } from '@polkadot/api-contract';
 import { OnChainRegistry, PinkContractPromise, types } from '@phala/sdk';
+import { ContractAbi } from '../computing/models/contractAbi.model';
 
 // TODO: better types instead of any
 export class PhalaClient {
@@ -48,9 +48,11 @@ export class PhalaClient {
 
   async createDeployTransaction(
     contract: Contract,
+    contractAbi: ContractAbi,
   ): Promise<SubmittableExtrinsic<'promise'>> {
     await this.initializeProvider();
-    const abi = new Abi(SchrodingerContractABI);
+
+    const abi = new Abi(contractAbi.abi);
     const callData = abi
       .findConstructor('new')
       .toU8a([
@@ -70,7 +72,7 @@ export class PhalaClient {
     };
 
     return this.api.tx.phalaPhatContracts.instantiateContract(
-      { WasmCode: SchrodingerContractABI.source.hash },
+      { WasmCode: contractAbi.abi.source.hash },
       callData,
       options.salt,
       contract.data.clusterId,
@@ -96,6 +98,7 @@ export class PhalaClient {
   }
 
   async createTransferOwnershipTransaction(
+    contractAbi: { [key: string]: any },
     contractId: string,
     newOwnerAddress: string,
   ): Promise<any> {
@@ -105,7 +108,7 @@ export class PhalaClient {
     const contract = new PinkContractPromise(
       this.api,
       phatRegistry,
-      SchrodingerContractABI,
+      contractAbi,
       contractId,
       contractKey,
     );
