@@ -77,7 +77,13 @@ export class DeployCollectionWorker extends BaseQueueWorker {
     }
 
     collection.collectionStatus = CollectionStatus.DEPLOYING;
-    collection.baseUri = data.baseUri;
+    collection.baseUri = data.baseUri.split('?token=')[0];
+    if (data.baseUri.includes('?token=')) {
+      collection.baseExtension += data.baseUri.substring(
+        data.baseUri.indexOf('?'),
+        data.baseUri.length,
+      );
+    }
     await collection.update();
 
     try {

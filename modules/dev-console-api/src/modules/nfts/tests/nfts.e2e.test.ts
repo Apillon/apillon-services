@@ -425,7 +425,9 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       expect(newCollection.baseUri).toBeTruthy();
 
       //1.json should be available in baseUri
-      const response2 = await request(newCollection.baseUri + '1.json').get('');
+      const response2 = await request(
+        newCollection.baseUri + '1' + newCollection.baseExtension,
+      ).get('');
       expect(response2.status).toBe(200);
 
       //Bucket should contain 2 directories
