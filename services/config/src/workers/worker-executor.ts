@@ -10,13 +10,13 @@ import {
 
 import { Context, env } from '@apillon/lib';
 import { Scheduler } from './scheduler';
-import { SubscriptionQuotaWorker } from './subscription-quota-worker';
+import { ExpiredSubscriptionsWorker } from './expired-subscriptions-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
 
 export enum WorkerName {
-  SUBSCRIPTION_QUOTA_WORKER = 'SubscriptionQuotaWorker',
+  SUBSCRIPTION_QUOTA_WORKER = 'ExpiredSubscriptionsWorker',
   SCHEDULER = 'scheduler',
 }
 
@@ -101,7 +101,7 @@ export async function handleLambdaEvent(
   // eslint-disable-next-line sonarjs/no-small-switch
   switch (workerDefinition.workerName) {
     case WorkerName.SUBSCRIPTION_QUOTA_WORKER:
-      const subscriptionQuotaWorker = new SubscriptionQuotaWorker(
+      const subscriptionQuotaWorker = new ExpiredSubscriptionsWorker(
         workerDefinition,
         context,
       );

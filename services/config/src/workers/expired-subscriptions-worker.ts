@@ -11,9 +11,9 @@ import {
 import { BaseWorker, Job, WorkerDefinition } from '@apillon/workers-lib';
 import { Subscription } from '../modules/subscription/models/subscription.model';
 import { uniqBy } from 'lodash';
-import { ConfigErrorCode } from '../config/types';
+import { ConfigErrorCode, QuotaWarningLevel } from '../config/types';
 
-export class SubscriptionQuotaWorker extends BaseWorker {
+export class ExpiredSubscriptionsWorker extends BaseWorker {
   protected context: Context;
 
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
@@ -26,7 +26,7 @@ export class SubscriptionQuotaWorker extends BaseWorker {
 
   public async execute(_data?: any): Promise<any> {
     const projectsExceedingStorage = await this.getProjectsExceedingStorage();
-    if (!projectsExceedingStorage.length) {
+    if (!projectsExceedingStorage?.length) {
       return;
     }
 
@@ -38,27 +38,62 @@ export class SubscriptionQuotaWorker extends BaseWorker {
 
     for (const project of projectsExceedingStorage) {
       const expiresOn = new Date(project.expiresOn);
-      expiresOn.setHours(0, 0, 0, 0);
 
       if (!project?.subscriberEmail) {
         return await this.writeEventLog({
           logType: LogType.WARN,
-          message: `Subscriber email for project${project.project_uuid} not found or does not have a valid email`,
+          message: `Subscriber email for project ${project.project_uuid} not found or does not have a valid email`,
           service: ServiceName.CONFIG,
           project_uuid: project.project_uuid,
           data: { project },
         });
       }
 
-      if (+expiresOn === +this.daysAgo(3)) {
+      if (
+        +expiresOn <= +this.daysAgo(3) &&
+        (!project.quotaWarningLevel ||
+          project.quotaWarningLevel < QuotaWarningLevel.THREE_DAYS)
+      ) {
         await new Mailing(this.context).sendMail({
           emails: [project.subscriberEmail],
           template: 'storage-quota-exceeded',
           data: project,
         });
-      } //else if (+expiresOn === +this.daysAgo(15)) {
-      // } else if (+expiresOn === +this.daysAgo(30)) {
-      // }
+        await new Subscription(project, this.context).updateQuotaWarningLevel(
+          QuotaWarningLevel.THREE_DAYS,
+        );
+      } else if (
+        +expiresOn <= +this.daysAgo(15) &&
+        project.quotaWarningLevel < QuotaWarningLevel.FIFTEEN_DAYS
+      ) {
+        // TODO: change email template or parameters
+        // await new Mailing(this.context).sendMail({
+        //   emails: [project.subscriberEmail],
+        //   template: 'storage-quota-exceeded',
+        //   data: project,
+        // });
+        await new Subscription(project, this.context).updateQuotaWarningLevel(
+          QuotaWarningLevel.FIFTEEN_DAYS,
+        );
+      } else if (
+        +expiresOn <= +this.daysAgo(30) &&
+        project.quotaWarningLevel < QuotaWarningLevel.THIRTY_DAYS
+      ) {
+        // TODO: change email template or parameters
+        // await new Mailing(this.context).sendMail({
+        //   emails: [project.subscriberEmail],
+        //   template: 'storage-quota-exceeded',
+        //   data: project,
+        // });
+        await new Subscription(project, this.context).updateQuotaWarningLevel(
+          QuotaWarningLevel.THIRTY_DAYS,
+        );
+      } else if (project.quotaWarningLevel === QuotaWarningLevel.THIRTY_DAYS) {
+        // TODO: File deletion logic
+        await new Subscription(project, this.context).updateQuotaWarningLevel(
+          QuotaWarningLevel.RESOURCES_RELEASED,
+        );
+      }
     }
   }
 
@@ -67,11 +102,11 @@ export class SubscriptionQuotaWorker extends BaseWorker {
   }
 
   public async onError(error: Error): Promise<any> {
-    this.logFn(`SubscriptionQuotaWorker - error: ${error}`);
+    this.logFn(`ExpiredSubscriptionsWorker - error: ${error}`);
   }
 
   public async onUpdateWorkerDefinition(): Promise<void> {
-    // this.logFn(`SubscriptionQuotaWorker - update definition: ${this.workerDefinition}`);
+    // this.logFn(`ExpiredSubscriptionsWorker - update definition: ${this.workerDefinition}`);
     if (
       env.APP_ENV != AppEnvironment.LOCAL_DEV &&
       env.APP_ENV != AppEnvironment.TEST
@@ -80,7 +115,7 @@ export class SubscriptionQuotaWorker extends BaseWorker {
         this.workerDefinition,
       );
     }
-    // this.logFn('SubscriptionQuotaWorker - update definition COMPLETE');
+    // this.logFn('ExpiredSubscriptionsWorker - update definition COMPLETE');
   }
 
   public onAutoRemove(): Promise<void> {
@@ -89,7 +124,6 @@ export class SubscriptionQuotaWorker extends BaseWorker {
 
   private daysAgo = (days: number) => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
 
     const daysAgo = new Date(today);
     daysAgo.setDate(today.getDate() - days);
@@ -102,20 +136,18 @@ export class SubscriptionQuotaWorker extends BaseWorker {
       const expiredSubscriptions = await new Subscription(
         {},
         this.context,
-      ).getExpiredSubscriptions(35);
+      ).getExpiredSubscriptions(35, false);
 
       const projectsStorage = await Promise.all(
         uniqBy(expiredSubscriptions, 'project_uuid').map(
-          async ({ project_uuid, expiresOn, subscriberEmail }) => {
+          async (subscription) => {
             const { data } = await new StorageMicroservice(
               this.context,
-            ).getStorageInfo(project_uuid);
+            ).getStorageInfo(subscription.project_uuid);
 
             return {
               ...data,
-              project_uuid,
-              expiresOn,
-              subscriberEmail,
+              ...subscription,
             };
           },
         ),
@@ -130,7 +162,8 @@ export class SubscriptionQuotaWorker extends BaseWorker {
         errorCodes: ConfigErrorCode,
         errorMessage: `Subscription quota worker error while getting projects and storage: ${err?.message}`,
         details: err,
-        sourceFunction: 'SubscriptionQuotaWorker.getProjectsExceedingStorage',
+        sourceFunction:
+          'ExpiredSubscriptionsWorker.getProjectsExceedingStorage',
         sourceModule: ServiceName.CONFIG,
       }).writeToMonitor({ sendAdminAlert: true });
     }
