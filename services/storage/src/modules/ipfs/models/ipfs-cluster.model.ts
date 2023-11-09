@@ -316,9 +316,10 @@ export class IpfsCluster extends AdvancedSQLModel {
         'https://' +
         cid +
         (isIpns ? '.ipns.' : '.ipfs.') +
-        this.subdomainGateway;
+        this.subdomainGateway +
+        '/';
     } else {
-      link = (isIpns ? this.ipnsGateway : this.ipfsGateway) + cid;
+      link = (isIpns ? this.ipnsGateway : this.ipfsGateway) + cid + '/';
     }
 
     if (this.private) {
