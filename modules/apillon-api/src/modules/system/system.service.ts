@@ -1,11 +1,8 @@
-import {
-  DomainQueryFilter,
-  SqlModelStatus,
-  StorageMicroservice,
-  getConsoleApiMysql,
-} from '@apillon/lib';
+import { DomainQueryFilter, SqlModelStatus, env } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
+import { getConsoleApiMysql } from '../../lib/mysql-utils';
+import { StorageMicroservice } from '@apillon/lib';
 
 @Injectable()
 export class SystemService {
