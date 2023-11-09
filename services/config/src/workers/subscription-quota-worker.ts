@@ -14,23 +14,22 @@ import {
 } from '@apillon/lib';
 import { BaseWorker, Job, WorkerDefinition } from '@apillon/workers-lib';
 import { Subscription } from '../modules/subscription/models/subscription.model';
-import _ from 'lodash';
+import { uniqBy } from 'lodash';
 import { ConfigErrorCode } from '../config/types';
 
 export class SubscriptionQuotaWorker extends BaseWorker {
   protected context: Context;
+  private consoleDb: MySql;
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);
   }
 
   public async before(_data?: any): Promise<any> {
-    // Not used
+    this.consoleDb = getConsoleApiMysql();
+    await this.consoleDb.connect();
   }
 
-  public async execute(data?: any): Promise<any> {
-    const consoleDb = getConsoleApiMysql();
-    await consoleDb.connect();
-
+  public async execute(_data?: any): Promise<any> {
     const projectsExceedingStorage = await this.getProjectsExceedingStorage();
     if (!projectsExceedingStorage.length) {
       return;
@@ -46,10 +45,7 @@ export class SubscriptionQuotaWorker extends BaseWorker {
       const expiresOn = new Date(project.expiresOn);
       expiresOn.setHours(0, 0, 0, 0);
 
-      const projectOwner = await this.getProjectOwner(
-        consoleDb,
-        project.project_uuid,
-      );
+      const projectOwner = await this.getProjectOwner(project.project_uuid);
 
       if (!projectOwner?.email) {
         return await this.writeEventLog({
@@ -116,7 +112,7 @@ export class SubscriptionQuotaWorker extends BaseWorker {
       ).getExpiredSubscriptions(35);
 
       const projectsStorage = await Promise.all(
-        _.uniqBy(subs, 'project_uuid').map(
+        uniqBy(subs, 'project_uuid').map(
           async ({ project_uuid, expiresOn }) => {
             const { data } = await new StorageMicroservice(
               this.context,
@@ -145,9 +141,9 @@ export class SubscriptionQuotaWorker extends BaseWorker {
     }
   }
 
-  private async getProjectOwner(consoleDb: MySql, project_uuid: string) {
+  private async getProjectOwner(project_uuid: string) {
     try {
-      const { 0: projectOwner } = await consoleDb.paramExecute(
+      const { 0: projectOwner } = await this.consoleDb.paramExecute(
         `
         SELECT p.project_uuid, pu.user_id, u.user_uuid, u.name, u.email
         FROM \`project\` p
