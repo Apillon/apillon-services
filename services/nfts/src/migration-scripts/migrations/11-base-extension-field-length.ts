@@ -13,6 +13,7 @@ export async function downgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-        ALTER TABLE \`${DbTables.TRANSACTION}\` DROP COLUMN transaction_uuid;
+    ALTER TABLE \`${DbTables.COLLECTION}\`
+    MODIFY COLUMN \`baseExtension\` VARCHAR(10) NOT NULL;
     `);
 }
