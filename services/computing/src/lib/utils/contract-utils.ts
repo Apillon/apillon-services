@@ -33,6 +33,7 @@ export async function deployPhalaContract(
       transaction: transaction.toHex(),
       referenceTable: DbTables.CONTRACT,
       referenceId: contract.id,
+      project_uuid: contract.project_uuid,
     },
     context,
   );
