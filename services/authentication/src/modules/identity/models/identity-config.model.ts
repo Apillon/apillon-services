@@ -49,7 +49,7 @@ export class IdentityConfig extends BaseSQLModel {
       `
         SELECT *
         FROM \`${this.tableName}\`
-        WHERE key = @key
+        WHERE \`key\` = @key
         FOR UPDATE;
       `,
       { key },
@@ -70,7 +70,7 @@ export class IdentityConfig extends BaseSQLModel {
       `
         UPDATE \`${this.tableName}\`
         SET value = @value
-        WHERE key = @key
+        WHERE \`key\` = @key
       `,
       { key, value },
       conn,
@@ -90,7 +90,7 @@ export class IdentityConfig extends BaseSQLModel {
       `
         UPDATE \`${this.tableName}\`
         SET value = value + @amount
-        WHERE key = @key
+        WHERE \`key\` = @key
       `,
       { key, amount },
       conn,
