@@ -54,11 +54,11 @@ export class ExpiredSubscriptionsWorker extends BaseWorker {
         (!project.quotaWarningLevel ||
           project.quotaWarningLevel < QuotaWarningLevel.THREE_DAYS)
       ) {
-        await new Mailing(this.context).sendMail({
-          emails: [project.subscriberEmail],
-          template: 'storage-quota-exceeded',
-          data: project,
-        });
+        // await new Mailing(this.context).sendMail({
+        //   emails: [project.subscriberEmail],
+        //   template: 'storage-quota-exceeded',
+        //   data: project,
+        // });
         await new Subscription(project, this.context).updateQuotaWarningLevel(
           QuotaWarningLevel.THREE_DAYS,
         );
@@ -122,16 +122,7 @@ export class ExpiredSubscriptionsWorker extends BaseWorker {
     throw new Error('Method not implemented.');
   }
 
-  private daysAgo = (days: number) => {
-    const today = new Date();
-
-    const daysAgo = new Date(today);
-    daysAgo.setDate(today.getDate() - days);
-
-    return daysAgo;
-  };
-
-  private async getProjectsExceedingStorage() {
+  public async getProjectsExceedingStorage() {
     try {
       const expiredSubscriptions = await new Subscription(
         {},
@@ -168,4 +159,13 @@ export class ExpiredSubscriptionsWorker extends BaseWorker {
       }).writeToMonitor({ sendAdminAlert: true });
     }
   }
+
+  private daysAgo = (days: number) => {
+    const today = new Date();
+
+    const daysAgo = new Date(today);
+    daysAgo.setDate(today.getDate() - days);
+
+    return daysAgo;
+  };
 }

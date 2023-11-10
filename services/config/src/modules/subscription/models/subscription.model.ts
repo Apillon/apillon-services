@@ -139,7 +139,7 @@ export class Subscription extends ProjectAccessModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.SERVICE],
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.SERVICE, PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -153,7 +153,7 @@ export class Subscription extends ProjectAccessModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.SERVICE],
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.SERVICE, PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -170,7 +170,7 @@ export class Subscription extends ProjectAccessModel {
    */
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.SERVICE],
+    populatable: [PopulateFrom.SERVICE, PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -254,7 +254,7 @@ export class Subscription extends ProjectAccessModel {
     // In case somebody wants to renew a canceled subscription
     const data = await this.db().paramExecute(
       `
-        SELECT * FROM \`${DbTables.SUBSCRIPTION}\`
+        SELECT ${this.generateSelectFields()} FROM \`${DbTables.SUBSCRIPTION}\`
         WHERE stripeId = @stripeId
         ORDER BY createTime DESC
         LIMIT 1;
