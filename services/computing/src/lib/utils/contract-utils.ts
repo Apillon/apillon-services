@@ -74,6 +74,7 @@ export async function depositToPhalaContractCluster(
       transaction: transaction.toHex(),
       referenceTable: DbTables.CONTRACT,
       referenceId: contract.id,
+      project_uuid: contract.project_uuid,
     },
     context,
   );
@@ -94,6 +95,7 @@ export async function depositToPhalaContractCluster(
 
 export async function transferContractOwnership(
   context: ServiceContext,
+  projectUuid: string,
   contractId: number,
   contractAbi: { [key: string]: any },
   contractAddress: string,
@@ -111,6 +113,7 @@ export async function transferContractOwnership(
       transaction: transaction.toHex(),
       referenceTable: DbTables.CONTRACT,
       referenceId: contractId,
+      project_uuid: projectUuid,
     },
     context,
   );

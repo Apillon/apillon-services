@@ -215,6 +215,7 @@ export class ComputingService {
     try {
       await transferContractOwnership(
         context,
+        contract.project_uuid,
         contract.id,
         contractAbi.abi,
         contract.contractAddress,
