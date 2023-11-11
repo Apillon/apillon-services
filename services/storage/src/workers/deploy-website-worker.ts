@@ -4,6 +4,7 @@ import {
   env,
   LogType,
   refundCredit,
+  Scs,
   SerializeFor,
   ServiceName,
 } from '@apillon/lib';
@@ -130,6 +131,39 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
           },
           this.context,
         );
+
+        //if project is on freemium, website goes to review
+        const subscriptionId = (
+          await new Scs(this.context).getProjectActiveSubscription(
+            website.project_uuid,
+          )
+        ).data.data.id;
+
+        if (!subscriptionId) {
+          //Send website to review
+          deployment.deploymentStatus = DeploymentStatus.IN_REVIEW;
+          deployment.cid = ipfsRes.parentDirCID.toV0().toString();
+          deployment.cidv1 = ipfsRes.parentDirCID.toV1().toString();
+          deployment.size = ipfsRes.size;
+
+          await deployment.update();
+
+          //TODO: Send message to slack
+
+          await this.writeEventLog({
+            logType: LogType.INFO,
+            project_uuid: website.project_uuid,
+            message: 'Website sent to review',
+            service: ServiceName.STORAGE,
+            data: {
+              project_uuid: targetBucket.project_uuid,
+              deployment: deployment.serialize(),
+              data,
+            },
+          });
+
+          return;
+        }
 
         targetBucket.CID = ipfsRes.parentDirCID.toV0().toString();
         targetBucket.CIDv1 = ipfsRes.parentDirCID.toV1().toString();
@@ -297,7 +331,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         service: ServiceName.STORAGE,
         data: {
           project_uuid: targetBucket.project_uuid,
-          deployment,
+          deployment: deployment.serialize(),
           data,
         },
       });

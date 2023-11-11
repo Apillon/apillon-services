@@ -76,6 +76,7 @@ export enum LmasEventType {
   LIST_REQUEST_LOGS = 'list-request-logs',
   GET_API_KEYS_USAGE_COUNT = 'get-api-keys-usage-count',
   GET_IPFS_TRAFFIC = 'get-ipfs-traffic',
+  SEND_MESSAGE_TO_SLACK = 'send-message-to-slack',
 }
 
 export enum BlockchainEventType {

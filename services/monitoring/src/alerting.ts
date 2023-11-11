@@ -1,4 +1,4 @@
-import { MongoCollections } from '@apillon/lib';
+import { LogType, MongoCollections, ServiceName, env } from '@apillon/lib';
 import { postToSlack } from './lib/slack';
 
 /**
@@ -36,6 +36,33 @@ export class Alerting {
     await postToSlack(event.message, event.service, event.logType);
 
     // TODO: send email ?
+
+    return event;
+  }
+
+  static async sendMessageToSlack(
+    event: {
+      message: string;
+      service: ServiceName;
+      attachments: { imageUrl: string }[];
+      channel?: string;
+    },
+    context,
+  ) {
+    console.info(`SENDING MESSAGE TO SLACK: ${JSON.stringify(event)}`);
+
+    const attachments =
+      event.attachments?.map((x) => ({
+        image_url: x.imageUrl,
+      })) || [];
+
+    await postToSlack(
+      event.message,
+      event.service,
+      LogType.MSG,
+      event.channel || env.SLACK_CHANNEL,
+      attachments,
+    );
 
     return event;
   }

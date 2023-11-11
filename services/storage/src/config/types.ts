@@ -173,6 +173,7 @@ export enum DeploymentEnvironment {
 export enum DeploymentStatus {
   INITIATED = 0,
   IN_PROGRESS = 1,
+  IN_REVIEW = 2,
   SUCCESSFUL = 10,
   FAILED = 100,
 }
