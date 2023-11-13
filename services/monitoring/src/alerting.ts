@@ -1,5 +1,6 @@
 import { LogType, MongoCollections, ServiceName, env } from '@apillon/lib';
 import { postToSlack } from './lib/slack';
+import { Block, KnownBlock } from '@slack/web-api';
 
 /**
  * Alerting class for sending alerts and admin alerts.
@@ -44,24 +45,19 @@ export class Alerting {
     event: {
       message: string;
       service: ServiceName;
-      attachments: { imageUrl: string }[];
+      blocks: (Block | KnownBlock)[];
       channel?: string;
     },
     context,
   ) {
     console.info(`SENDING MESSAGE TO SLACK: ${JSON.stringify(event)}`);
 
-    const attachments =
-      event.attachments?.map((x) => ({
-        image_url: x.imageUrl,
-      })) || [];
-
     await postToSlack(
       event.message,
       event.service,
       LogType.MSG,
       event.channel || env.SLACK_CHANNEL,
-      attachments,
+      event.blocks && event.blocks.length ? event.blocks : [],
     );
 
     return event;

@@ -125,6 +125,26 @@ export class Lmas extends BaseService {
     }
   }
 
+  public async sendMessageToSlack(params: {
+    message: string;
+    service: ServiceName;
+    blocks: any[];
+    channel?: string;
+  }) {
+    const data = {
+      eventName: LmasEventType.SEND_MESSAGE_TO_SLACK,
+      ...params,
+    };
+
+    // console.log(JSON.stringify(data));
+
+    try {
+      await this.callService(data);
+    } catch (err) {
+      console.error(`LMAS sendAdminAlert CALL SERVICE ERROR: ${err.message}`);
+    }
+  }
+
   public async listMongoLogs(query: LogsQueryFilter) {
     this.defaultQueueUrl = null;
     return await this.callService(

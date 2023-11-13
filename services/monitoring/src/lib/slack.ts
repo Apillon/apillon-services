@@ -1,11 +1,5 @@
 import { LogType, ServiceName, env } from '@apillon/lib';
-import {
-  Block,
-  KnownBlock,
-  LogLevel,
-  MessageAttachment,
-  WebClient,
-} from '@slack/web-api';
+import { Block, KnownBlock, LogLevel, WebClient } from '@slack/web-api';
 
 export class Slack {
   private client: WebClient;
@@ -45,13 +39,11 @@ export class Slack {
   async publishMessage(
     channelId: string,
     text: string,
-    attachments: MessageAttachment[],
+    blocks: (Block | KnownBlock)[],
   ) {
     try {
-      const blocks: (Block | KnownBlock)[] = [
-        { type: 'section', text: { type: 'mrkdwn', text } },
-      ];
-      if (attachments?.length) {
+      blocks = [{ type: 'section', text: { type: 'mrkdwn', text } }, ...blocks];
+      /*if (attachments?.length) {
         //image blocks
         attachments
           .filter((x) => x.image_url)
@@ -62,7 +54,7 @@ export class Slack {
               image_url: attachment.image_url,
             });
           });
-      }
+      }*/
       // Call the chat.postMessage method using the built-in WebClient
       // const result =
       await this.client.chat.postMessage({
@@ -70,7 +62,6 @@ export class Slack {
         channel: channelId,
         blocks,
         text: text,
-        attachments: attachments,
         // You could also use a blocks[] array to send richer content
       });
 
@@ -97,7 +88,7 @@ export async function postToSlack(
   serviceName: ServiceName,
   logType: LogType,
   channel = env.SLACK_CHANNEL,
-  attachments: MessageAttachment[] = [],
+  blocks: (Block | KnownBlock)[] = [],
 ) {
   const slackToken = env.SLACK_TOKEN;
   if (!slackToken) {
@@ -128,7 +119,7 @@ export async function postToSlack(
     await slack.publishMessage(
       channelId,
       `${severityText[logType].emojis}\n*${severityText[logType].intro}:*\n\n${message}\n\n${severityText[logType].target}`,
-      attachments,
+      blocks,
     );
   } catch (err) {
     console.log('Failed to post to Slack :', err);

@@ -18,23 +18,42 @@ describe('Alerting integration test', () => {
       {
         message: 'Testing sending message to slack',
         service: ServiceName.LMAS,
-        attachments: undefined,
+        blocks: undefined,
       },
       stage.context,
     );
   });
 
-  test.only('Alerting.sendMessageToSlack should send message with image attachment to slack', async () => {
+  test.only('Alerting.sendMessageToSlack should send message with image and buttons to slack', async () => {
     await Alerting.sendMessageToSlack(
       {
         message: 'Testing sending message with attached image to slack',
         service: ServiceName.LMAS,
-        attachments: [
+        blocks: [
           {
-            imageUrl:
+            type: 'image',
+            alt_text:
+              'https://apillon-url-screenshots.s3.eu-west-1.amazonaws.com/https%3A__apillon.io_',
+            image_url:
               'https://apillon-url-screenshots.s3.eu-west-1.amazonaws.com/https%3A__apillon.io_',
           },
+          {
+            type: 'actions',
+            elements: [
+              {
+                type: 'button',
+                text: { text: 'Approve', type: 'plain_text' },
+                url: 'https://console-api-dev.apillon.io/',
+              },
+              {
+                type: 'button',
+                text: { text: 'Deny', type: 'plain_text' },
+                url: 'https://console-api-dev.apillon.io/',
+              },
+            ],
+          },
         ],
+        channel: 'website-reviews',
       },
       stage.context,
     );

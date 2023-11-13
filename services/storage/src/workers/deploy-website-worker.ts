@@ -2,6 +2,7 @@ import {
   AppEnvironment,
   Context,
   env,
+  Lmas,
   LogType,
   refundCredit,
   Scs,
@@ -34,6 +35,8 @@ import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { Ipns } from '../modules/ipns/models/ipns.model';
 import { File } from '../modules/storage/models/file.model';
 import { createCloudfrontInvalidationCommand } from '../lib/aws-cloudfront';
+import { ProjectConfig } from '../modules/config/models/project-config.model';
+import { UrlScreenshotMicroservice } from '../lib/url-screenshot';
 
 export class DeployWebsiteWorker extends BaseQueueWorker {
   public constructor(
@@ -148,7 +151,58 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
 
           await deployment.update();
 
-          //TODO: Send message to slack
+          //Get IPFS-->IPNS gateway
+          const ipfsCluster = await new ProjectConfig(
+            { project_uuid: website.project_uuid },
+            this.context,
+          ).getIpfsCluster();
+
+          //Call url-screenshot lambda/api, to get S3 url link:
+          const linkToScreenshot: string = await new UrlScreenshotMicroservice(
+            this.context,
+          ).getUrlScreenshot(
+            website.project_uuid,
+            ipfsCluster.generateLink(website.project_uuid, deployment.cid),
+            website.website_uuid,
+          );
+
+          //Send message to slack
+          const blocks = [];
+          if (linkToScreenshot) {
+            blocks.push({
+              type: 'image',
+              alt_text: linkToScreenshot,
+              image_url: linkToScreenshot,
+            });
+          }
+          blocks.push({
+            type: 'actions',
+            elements: [
+              {
+                type: 'button',
+                text: { text: 'Approve', type: 'plain_text' },
+                url: 'https://console-api-dev.apillon.io/',
+              },
+              {
+                type: 'button',
+                text: { text: 'Deny', type: 'plain_text' },
+                url: 'https://console-api-dev.apillon.io/',
+              },
+            ],
+          });
+
+          const msgParams = {
+            message: `New website deployment for review. 
+            URL: ${ipfsCluster.generateLink(
+              website.project_uuid,
+              deployment.cid,
+            )}
+            `,
+            service: ServiceName.STORAGE,
+            blocks,
+          };
+
+          await new Lmas().sendMessageToSlack(msgParams);
 
           await this.writeEventLog({
             logType: LogType.INFO,
