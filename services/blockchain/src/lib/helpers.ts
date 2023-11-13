@@ -40,6 +40,9 @@ export function substrateChainToWorkerName(chain: SubstrateChain): string {
     case SubstrateChain.KILT: {
       return WorkerName.TRANSMIT_KILT_TRANSACTIONS;
     }
+    case SubstrateChain.PHALA: {
+      return WorkerName.TRANSMIT_PHALA_TRANSACTIONS;
+    }
     default: {
       throw new Error('Unsupported');
     }

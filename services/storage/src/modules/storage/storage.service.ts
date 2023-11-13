@@ -649,4 +649,14 @@ export class StorageService {
   }
 
   //#endregion
+
+  static async getIpfsCluster(
+    event: { project_uuid: string },
+    context: ServiceContext,
+  ) {
+    return await new ProjectConfig(
+      { project_uuid: event.project_uuid },
+      context,
+    ).getIpfsCluster();
+  }
 }

@@ -85,6 +85,8 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.STORAGE_INFO]: StorageService.getStorageInfo,
     [StorageEventType.PROJECTS_OVER_BANDWIDTH_QUOTA]:
       StorageService.getProjectsOverBandwidthQuota,
+
+    [StorageEventType.GET_PROJECT_IPFS_CLUSTER]: StorageService.getIpfsCluster,
   };
 
   return await processors[event.eventName](event, context);

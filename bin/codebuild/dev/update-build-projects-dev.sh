@@ -34,3 +34,6 @@ aws codebuild update-webhook --cli-input-json file://nfts-webhook-dev.json --pro
 aws codebuild update-project --cli-input-json file://blockchain-config-dev.json --profile apillon
 aws codebuild update-webhook --cli-input-json file://blockchain-webhook-dev.json --profile apillon
 
+aws codebuild update-project --cli-input-json file://computing-config-dev.json --profile apillon
+aws codebuild update-webhook --cli-input-json file://computing-webhook-dev.json --profile apillon
+

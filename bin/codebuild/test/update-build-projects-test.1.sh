@@ -23,6 +23,9 @@ aws codebuild update-webhook --cli-input-json file://nfts-webhook-test.json  --p
 aws codebuild update-project --cli-input-json file://referral-config-test.json  --profile apillon
 aws codebuild update-webhook --cli-input-json file://referral-webhook-test.json  --profile apillon
 
+aws codebuild update-project --cli-input-json file://computing-config-test.json  --profile apillon
+aws codebuild update-webhook --cli-input-json file://computing-webhook-test.json  --profile apillon
+
 # run tests
 aws codebuild update-project --cli-input-json file://run-test-config.json  --profile apillon
 

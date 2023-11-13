@@ -63,13 +63,14 @@ export async function getTokenPriceUsd(token: string) {
     CRU: 'crust-network',
     ASTR: 'astar',
     KILT: 'kilt-protocol',
+    PHA: 'pha',
     GLMR: 'moonbeam',
     DEV: 'moonbase',
   };
   const networkName = networkTokenMap[token];
   try {
     const { data } = await axios.get(
-      `https://api.coingecko.com/api/v3/simple/price/?ids=${networkName}&vs_currencies=USD`,
+      `https://api.coingecko.com/api/v3/simple/price?ids=${networkName}&vs_currencies=USD`,
     );
     return data?.[networkName]?.usd;
   } catch (err) {
