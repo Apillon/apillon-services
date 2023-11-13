@@ -107,7 +107,7 @@ describe('Credits unit test', () => {
       expect(creditTransaction.direction).toBe(1);
     });
   });
-  describe('Spend credit tests', () => {
+  describe('Spend/refund credit tests', () => {
     test('Test successful spend credit', async () => {
       const product: Product = await new Product(
         {},
@@ -179,6 +179,27 @@ describe('Credits unit test', () => {
         stage.context,
       ).populateByUUID(project3_uuid);
       expect(projectCredit?.balance).toBe(5);
+    });
+
+    test('Test refund credit', async () => {
+      const product: Product = await new Product(
+        {},
+        stage.context,
+      ).populateById(ProductCode.HOSTING_WEBSITE);
+      await product.populateCurrentPrice();
+      project1Balance += product.currentPrice;
+
+      await CreditService.refundCredit(
+        { referenceId: '1', referenceTable: 'website' },
+        stage.context,
+      );
+
+      const projectCredit: Credit = await new Credit(
+        {},
+        stage.context,
+      ).populateByUUID(project1_uuid);
+
+      expect(projectCredit?.balance).toBe(project1Balance);
     });
   });
 });
