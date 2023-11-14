@@ -1,45 +1,45 @@
 {
-  "name": "@apillon/computing",
-  "version": "0.7.4",
-  "author": "Kalmia d.o.o.",
-  "license": "UNLICENSED",
-  "description": "",
-  "private": true,
-  "scripts": {
-    "prebuild": "rimraf dist",
-    "test-service": "jest --passWithNoTests",
-    "test-server": "cross-env APP_ENV=test nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60014",
-    "build": "tsc",
-    "dev": "nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60014",
-    "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "deploy:prod": "serverless deploy --stage production",
-    "deploy:staging": "serverless deploy --stage staging",
-    "deploy:dev": "serverless deploy --stage dev",
-    "deploy:test": "serverless deploy --stage test",
-    "db-upgrade": "node -r ts-node/register ./src/scripts/db/upgrade-db",
-    "db-downgrade": "node -r ts-node/register ./src/scripts/db/downgrade-db",
-    "db-seed": "node -r ts-node/register ./src/scripts/db/seed-db",
-    "db-unseed": "node -r ts-node/register ./src/scripts/db/unseed-db",
-    "db-rebuild": "node -r ts-node/register ./src/scripts/db/rebuild-db",
-    "db-rebuild-test": "node -r ts-node/register ./src/scripts/db/rebuild-test-db",
-    "db-upgrade:ci": "node -r ts-node/register ./src/scripts/db/upgrade-db --F && node -r ts-node/register ./src/scripts/db/seed-db --F "
-  },
-  "dependencies": {
-    "@apillon/lib": "*",
-    "@apillon/service-lib": "*",
-    "@apillon/workers-lib": "*",
-    "@middy/core": "^2.5.7",
-    "@phala/sdk": "^0.5.5",
-    "node-fetch": "2.6.7"
-  },
-  "devDependencies": {
-    "@phala/typedefs": "^0.2.33",
-    "@types/uuid": "^8.3.4",
-    "eslint-config-common": "*",
-    "tsconfig": "*",
-    "webpack-cli": "^5.1.4"
-  },
-  "overrides": {
-    "ipfs-utils": "9.0.6"
-  }
+    "name": "@apillon/computing",
+    "version": "0.7.4",
+    "author": "Kalmia d.o.o.",
+    "license": "UNLICENSED",
+    "description": "",
+    "private": true,
+    "scripts": {
+        "prebuild": "rimraf dist",
+        "test-service": "jest --passWithNoTests",
+        "test-server": "cross-env APP_ENV=test nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60014",
+        "build": "tsc",
+        "dev": "nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60014",
+        "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+        "deploy:prod": "serverless deploy --stage production",
+        "deploy:staging": "serverless deploy --stage staging",
+        "deploy:dev": "serverless deploy --stage dev",
+        "deploy:test": "serverless deploy --stage test",
+        "db-upgrade": "node -r ts-node/register ./src/scripts/db/upgrade-db",
+        "db-downgrade": "node -r ts-node/register ./src/scripts/db/downgrade-db",
+        "db-seed": "node -r ts-node/register ./src/scripts/db/seed-db",
+        "db-unseed": "node -r ts-node/register ./src/scripts/db/unseed-db",
+        "db-rebuild": "node -r ts-node/register ./src/scripts/db/rebuild-db",
+        "db-rebuild-test": "node -r ts-node/register ./src/scripts/db/rebuild-test-db",
+        "db-upgrade:ci": "node -r ts-node/register ./src/scripts/db/upgrade-db --F && node -r ts-node/register ./src/scripts/db/seed-db --F "
+    },
+    "dependencies": {
+        "@apillon/lib": "*",
+        "@apillon/service-lib": "*",
+        "@apillon/workers-lib": "*",
+        "@middy/core": "^2.5.7",
+        "@phala/sdk": "^0.5.5",
+        "node-fetch": "2.6.7"
+    },
+    "devDependencies": {
+        "@phala/typedefs": "^0.2.33",
+        "@types/uuid": "^8.3.4",
+        "eslint-config-common": "*",
+        "tsconfig": "*",
+        "webpack-cli": "^5.1.4"
+    },
+    "overrides": {
+        "ipfs-utils": "9.0.6"
+    }
 }
