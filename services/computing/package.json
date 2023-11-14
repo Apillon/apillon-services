@@ -30,11 +30,11 @@
         "@apillon/workers-lib": "*",
         "@middy/core": "^2.5.7",
         "@phala/sdk": "^0.5.5",
-        "@phala/typedefs": "^0.2.33",
-        "@types/uuid": "^8.3.4",
         "node-fetch": "2.6.7"
     },
     "devDependencies": {
+        "@phala/typedefs": "^0.2.33",
+        "@types/uuid": "^8.3.4",
         "eslint-config-common": "*",
         "tsconfig": "*"
     },
