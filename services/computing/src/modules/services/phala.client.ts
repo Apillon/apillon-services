@@ -5,16 +5,21 @@ import {
   SubstrateChain,
 } from '@apillon/lib';
 import { Contract } from '../computing/models/contract.model';
-import type { SubmittableExtrinsic } from '@polkadot/api/submittable/types';
 import { SubstrateRpcApi } from '@apillon/blockchain/src/modules/substrate/rpc-api';
-import { Abi } from '@polkadot/api-contract';
-import { OnChainRegistry, PinkContractPromise, types } from '@phala/sdk';
+import {
+  OnChainRegistry,
+  PinkBlueprintPromise,
+  PinkContractPromise,
+  types,
+} from '@phala/sdk';
 import { ContractAbi } from '../computing/models/contractAbi.model';
+import { SubmittableExtrinsic } from '@polkadot/api-base/types';
+import { ApiPromise } from '@polkadot/api';
 
-// TODO: better types instead of any
 export class PhalaClient {
   private context: Context;
-  private api: any;
+  private api: ApiPromise;
+  private registry: OnChainRegistry;
 
   constructor(context: Context) {
     this.context = context;
@@ -34,16 +39,14 @@ export class PhalaClient {
       ).data.url;
 
       this.api = await new SubstrateRpcApi(rpcEndpoint, types).getApi();
+      this.registry = await OnChainRegistry.create(this.api);
       console.log(`RPC initialization ${rpcEndpoint}`);
     }
   }
 
   async getClusterId() {
-    // TODO: there is only one cluster so it's hardcoded but later we may retrieve it
-    // await this.initializeProvider();
-    // const phatRegistry = await OnChainRegistry.create(this.api);
-    // return phatRegistry.clusterId;
-    return '0x0000000000000000000000000000000000000000000000000000000000000001';
+    await this.initializeProvider();
+    return this.registry.clusterId;
   }
 
   async createDeployTransaction(
@@ -52,17 +55,14 @@ export class PhalaClient {
   ): Promise<SubmittableExtrinsic<'promise'>> {
     await this.initializeProvider();
 
-    const abi = new Abi(contractAbi.abi);
-    const callData = abi
-      .findConstructor('new')
-      .toU8a([
-        contract.data.nftContractAddress.slice(2),
-        contract.data.nftChainRpcUrl,
-        contract.data.ipfsGatewayUrl,
-        contract.data.restrictToOwner,
-      ]);
+    const blueprintPromise = new PinkBlueprintPromise(
+      this.api,
+      this.registry,
+      contractAbi.abi,
+      contractAbi.abi.source.hash,
+    );
+
     const options = {
-      salt: 1000000000 + Math.round(Math.random() * 8999999999),
       transfer: 0,
       gasLimit: 1e12,
       storageDepositLimit: null,
@@ -70,16 +70,12 @@ export class PhalaClient {
       transferToCluster: 1e12,
       adjustStake: 1e12,
     };
-
-    return this.api.tx.phalaPhatContracts.instantiateContract(
-      { WasmCode: contractAbi.abi.source.hash },
-      callData,
-      options.salt,
-      contract.data.clusterId,
-      options.transfer,
-      options.gasLimit,
-      options.storageDepositLimit,
-      options.deposit,
+    return blueprintPromise.tx.new(
+      options,
+      contract.data.nftContractAddress.slice(2),
+      contract.data.nftChainRpcUrl,
+      contract.data.ipfsGatewayUrl,
+      contract.data.restrictToOwner,
     );
   }
 
@@ -101,18 +97,23 @@ export class PhalaClient {
     contractAbi: { [key: string]: any },
     contractId: string,
     newOwnerAddress: string,
-  ): Promise<any> {
+  ): Promise<SubmittableExtrinsic<'promise'>> {
     await this.initializeProvider();
-    const phatRegistry = await OnChainRegistry.create(this.api);
-    const contractKey = await phatRegistry.getContractKeyOrFail(contractId);
+    const contractKey = await this.registry.getContractKeyOrFail(contractId);
     const contract = new PinkContractPromise(
       this.api,
-      phatRegistry,
+      this.registry,
       contractAbi,
       contractId,
       contractKey,
     );
 
-    return contract.tx.setOwner({}, newOwnerAddress);
+    const options = {
+      transfer: 0,
+      gasLimit: 1e12,
+      storageDepositLimit: null,
+      deposit: 0,
+    };
+    return contract.tx.setOwner(options, newOwnerAddress);
   }
 }
