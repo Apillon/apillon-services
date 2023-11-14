@@ -2,7 +2,6 @@ import {
   AppEnvironment,
   Context,
   env,
-  Lmas,
   LogType,
   refundCredit,
   Scs,
@@ -23,6 +22,7 @@ import {
   DeploymentStatus,
   FileStatus,
 } from '../config/types';
+import { createCloudfrontInvalidationCommand } from '../lib/aws-cloudfront';
 import { generateDirectoriesFromPath } from '../lib/generate-directories-from-path';
 import { pinFileToCRUST } from '../lib/pin-file-to-crust';
 import { Bucket } from '../modules/bucket/models/bucket.model';
@@ -34,10 +34,13 @@ import { uploadItemsToIPFSRes } from '../modules/ipfs/interfaces/upload-items-to
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { Ipns } from '../modules/ipns/models/ipns.model';
 import { File } from '../modules/storage/models/file.model';
-import { createCloudfrontInvalidationCommand } from '../lib/aws-cloudfront';
-import { ProjectConfig } from '../modules/config/models/project-config.model';
-import { UrlScreenshotMicroservice } from '../lib/url-screenshot';
 
+/**
+ * Worker uploads files from source bucket to IPFS, acquired CID is published to website ipns record.
+ * Files from source bucket are copied to target bucket, so that user can see what is published in specific environment.
+ * Deployment and website are updated based on executed steps.
+ * If project doesn't have subscription package, deployment is first sent to review.
+ */
 export class DeployWebsiteWorker extends BaseQueueWorker {
   public constructor(
     workerDefinition: WorkerDefinition,
@@ -51,10 +54,11 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
     return [];
   }
   public async runExecutor(data: any): Promise<any> {
-    // console.info('RUN EXECUTOR (DeployWebsiteWorker). data: ', data);
+    console.info('RUN EXECUTOR (DeployWebsiteWorker). data: ', data);
 
-    const deployment = await new Deployment({}, this.context).populateById(
-      data?.deployment_id,
+    const deployment = await new Deployment({}, this.context).populateByUUID(
+      data?.deployment_uuid,
+      'deployment_uuid',
     );
     if (!deployment.exists()) {
       await this.writeEventLog(
@@ -70,6 +74,9 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
       );
       return;
     }
+
+    const deploymentReviewed =
+      deployment.deploymentStatus == DeploymentStatus.APPROVED;
 
     //Update deployment - in progress
     deployment.deploymentStatus = DeploymentStatus.IN_PROGRESS;
@@ -135,88 +142,24 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
           this.context,
         );
 
-        //if project is on freemium, website goes to review
-        const subscriptionId = (
-          await new Scs(this.context).getProjectActiveSubscription(
-            website.project_uuid,
-          )
-        ).data.data.id;
+        //Set ipfsRes data to deployment
+        deployment.cid = ipfsRes.parentDirCID.toV0().toString();
+        deployment.cidv1 = ipfsRes.parentDirCID.toV1().toString();
+        deployment.size = ipfsRes.size;
 
-        if (!subscriptionId) {
-          //Send website to review
-          deployment.deploymentStatus = DeploymentStatus.IN_REVIEW;
-          deployment.cid = ipfsRes.parentDirCID.toV0().toString();
-          deployment.cidv1 = ipfsRes.parentDirCID.toV1().toString();
-          deployment.size = ipfsRes.size;
-
-          await deployment.update();
-
-          //Get IPFS-->IPNS gateway
-          const ipfsCluster = await new ProjectConfig(
-            { project_uuid: website.project_uuid },
-            this.context,
-          ).getIpfsCluster();
-
-          //Call url-screenshot lambda/api, to get S3 url link:
-          const linkToScreenshot: string = await new UrlScreenshotMicroservice(
-            this.context,
-          ).getUrlScreenshot(
-            website.project_uuid,
-            ipfsCluster.generateLink(website.project_uuid, deployment.cid),
-            website.website_uuid,
-          );
-
-          //Send message to slack
-          const blocks = [];
-          if (linkToScreenshot) {
-            blocks.push({
-              type: 'image',
-              alt_text: linkToScreenshot,
-              image_url: linkToScreenshot,
-            });
-          }
-          blocks.push({
-            type: 'actions',
-            elements: [
-              {
-                type: 'button',
-                text: { text: 'Approve', type: 'plain_text' },
-                url: 'https://console-api-dev.apillon.io/',
-              },
-              {
-                type: 'button',
-                text: { text: 'Deny', type: 'plain_text' },
-                url: 'https://console-api-dev.apillon.io/',
-              },
-            ],
-          });
-
-          const msgParams = {
-            message: `New website deployment for review. 
-            URL: ${ipfsCluster.generateLink(
+        //If deployment was not already reviewed
+        if (!deploymentReviewed) {
+          //if project is on freemium, website goes to review
+          const subscription = (
+            await new Scs(this.context).getProjectActiveSubscription(
               website.project_uuid,
-              deployment.cid,
-            )}
-            `,
-            service: ServiceName.STORAGE,
-            blocks,
-          };
+            )
+          ).data;
 
-          await new Lmas().sendMessageToSlack(msgParams);
-
-          await this.writeEventLog({
-            logType: LogType.INFO,
-            project_uuid: website.project_uuid,
-            message: 'Website sent to review',
-            service: ServiceName.STORAGE,
-            data: {
-              project_uuid: targetBucket.project_uuid,
-              deployment: deployment.serialize(),
-              data,
-            },
-          });
-
-          return;
+          if (!subscription.id) {
+            await deployment.sendToReview(website);
+            return;
+          }
         }
 
         targetBucket.CID = ipfsRes.parentDirCID.toV0().toString();
@@ -424,7 +367,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
       await refundCredit(
         this.context,
         DbTables.DEPLOYMENT,
-        data?.deployment_id,
+        data?.deployment_uuid,
         'DeployWebsiteWorker.runExecutor',
         ServiceName.STORAGE,
       );

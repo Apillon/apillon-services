@@ -42,12 +42,12 @@ describe('Alerting integration test', () => {
             elements: [
               {
                 type: 'button',
-                text: { text: 'Approve', type: 'plain_text' },
+                text: { text: 'Button 1', type: 'plain_text' },
                 url: 'https://console-api-dev.apillon.io/',
               },
               {
                 type: 'button',
-                text: { text: 'Deny', type: 'plain_text' },
+                text: { text: 'Button 2', type: 'plain_text' },
                 url: 'https://console-api-dev.apillon.io/',
               },
             ],

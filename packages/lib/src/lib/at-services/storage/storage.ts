@@ -434,6 +434,22 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async approveWebsiteDeployment(deployment_uuid: string) {
+    const data = {
+      eventName: StorageEventType.DEPLOYMENT_APPROVE,
+      deployment_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async rejectWebsiteDeployment(deployment_uuid: string) {
+    const data = {
+      eventName: StorageEventType.DEPLOYMENT_REJECT,
+      deployment_uuid,
+    };
+    return await this.callService(data);
+  }
+
   //#endregion
 
   //#region nfts storage functions

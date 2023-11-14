@@ -10,6 +10,7 @@ export interface IEnv {
   APP_ENV: string;
   LOG_TARGET: string;
   LOG_LEVEL: string;
+  CONSOLE_API_URL: string;
 
   /**
    * env var from lambda - current region - can not be overwritten in lambda settings!
@@ -88,6 +89,7 @@ export interface IEnv {
    */
   SLACK_TOKEN: string;
   SLACK_CHANNEL: string;
+  SLACK_CHANNEL_FOR_WEBSITE_REVIEWS: string;
 
   /**
    * MONITORING SQS
@@ -499,6 +501,8 @@ export let env: IEnv = {
   AWS_BUCKET: process.env['AWS_BUCKET'],
   AWS_ENDPOINT: process.env['AWS_ENDPOINT'],
   APP_SECRET: process.env['APP_SECRET'] || 'Du7Rvyqt7u38naZ2',
+  CONSOLE_API_URL:
+    process.env['CONSOLE_API_URL'] || 'https://console-api-dev.apillon.io/',
 
   /** AMS */
   ACCESS_FUNCTION_NAME: process.env['ACCESS_FUNCTION_NAME'],
@@ -539,6 +543,8 @@ export let env: IEnv = {
 
   SLACK_TOKEN: process.env['SLACK_TOKEN'],
   SLACK_CHANNEL: process.env['SLACK_CHANNEL'] || 'monitoring',
+  SLACK_CHANNEL_FOR_WEBSITE_REVIEWS:
+    process.env['SLACK_CHANNEL'] || 'website-reviews',
   /** DEV CONSOLE API DB conn*/
   DEV_CONSOLE_API_MYSQL_HOST: process.env['DEV_CONSOLE_API_MYSQL_HOST'],
   DEV_CONSOLE_API_MYSQL_PORT:
