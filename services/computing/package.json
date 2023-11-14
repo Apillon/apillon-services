@@ -36,8 +36,7 @@
         "@phala/typedefs": "^0.2.33",
         "@types/uuid": "^8.3.4",
         "eslint-config-common": "*",
-        "tsconfig": "*",
-        "webpack-cli": "^5.1.4"
+        "tsconfig": "*"
     },
     "overrides": {
         "ipfs-utils": "9.0.6"
