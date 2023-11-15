@@ -14,19 +14,6 @@ export class DepositToClusterDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.COMPUTING_PROJECT_UUID_NOT_PRESENT,
-      },
-    ],
-  })
-  public project_uuid: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
   })
   public contract_uuid: string;

@@ -220,7 +220,7 @@ describe('Phala transaction Log Worker unit test', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    env.BLOCKCHAIN_PHALA_GRAPHQL_SERVER = 'http://3.251.2.33:8085/graphql';
+    env.BLOCKCHAIN_PHALA_GRAPHQL_SERVER = 'http://3.251.2.33:8086/graphql';
 
     wallet = new Wallet(
       {
