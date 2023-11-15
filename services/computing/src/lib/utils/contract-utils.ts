@@ -101,12 +101,14 @@ export async function transferContractOwnership(
   contractAddress: string,
   newOwnerAddress: string,
 ) {
+  console.log('transferContractOwnership', projectUuid);
   const phalaClient = new PhalaClient(context);
   const transaction = await phalaClient.createTransferOwnershipTransaction(
     contractAbi,
     contractAddress,
     newOwnerAddress,
   );
+  console.log('transaction', transaction);
   const blockchainServiceRequest = new CreateSubstrateTransactionDto(
     {
       chain: SubstrateChain.PHALA,
@@ -117,9 +119,11 @@ export async function transferContractOwnership(
     },
     context,
   );
+  console.log('blockchainServiceRequest', blockchainServiceRequest);
   const response = await new BlockchainMicroservice(
     context,
   ).createSubstrateTransaction(blockchainServiceRequest);
+  console.log('response', response);
   const dbTxRecord = new Transaction(
     {
       transactionType: TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
@@ -129,5 +133,6 @@ export async function transferContractOwnership(
     },
     context,
   );
+  console.log('dbTxRecord', dbTxRecord);
   await TransactionService.saveTransaction(dbTxRecord);
 }

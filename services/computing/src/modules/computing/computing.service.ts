@@ -213,6 +213,8 @@ export class ComputingService {
         newOwnerAddress,
       );
     } catch (e: any) {
+      console.log('error', e?.message);
+      console.error(e);
       throw await new ComputingCodeException({
         status: 500,
         code: ComputingErrorCode.TRANSFER_CONTRACT_ERROR,

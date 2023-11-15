@@ -37,7 +37,7 @@ export class PhalaClient {
           ChainType.SUBSTRATE,
         )
       ).data.url;
-
+      console.log('rpcEndpoint', rpcEndpoint);
       this.api = await new SubstrateRpcApi(rpcEndpoint, types).getApi();
       this.registry = await OnChainRegistry.create(this.api);
       console.log(`RPC initialization ${rpcEndpoint}`);
@@ -95,18 +95,25 @@ export class PhalaClient {
 
   async createTransferOwnershipTransaction(
     contractAbi: { [key: string]: any },
-    contractId: string,
+    contractAddress: string,
     newOwnerAddress: string,
   ): Promise<SubmittableExtrinsic<'promise'>> {
     await this.initializeProvider();
-    const contractKey = await this.registry.getContractKeyOrFail(contractId);
+    console.log('contractId', contractAddress);
+    console.log('contractAbi', contractAbi);
+    console.log('newOwnerAddress', newOwnerAddress);
+    const contractKey = await this.registry.getContractKeyOrFail(
+      contractAddress,
+    );
+    console.log('contractKey', contractKey);
     const contract = new PinkContractPromise(
       this.api,
       this.registry,
       contractAbi,
-      contractId,
+      contractAddress,
       contractKey,
     );
+    console.log('contract', contract);
 
     const options = {
       transfer: 0,
