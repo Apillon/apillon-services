@@ -37,8 +37,5 @@
         "@types/uuid": "^8.3.4",
         "eslint-config-common": "*",
         "tsconfig": "*"
-    },
-    "overrides": {
-        "ipfs-utils": "9.0.6"
     }
 }
