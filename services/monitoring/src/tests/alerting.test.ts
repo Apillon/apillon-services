@@ -24,7 +24,7 @@ describe('Alerting integration test', () => {
     );
   });
 
-  test.only('Alerting.sendMessageToSlack should send message with image and buttons to slack', async () => {
+  test('Alerting.sendMessageToSlack should send message with image and buttons to slack', async () => {
     await Alerting.sendMessageToSlack(
       {
         message: 'Testing sending message with attached image to slack',

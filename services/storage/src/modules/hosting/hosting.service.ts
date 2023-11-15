@@ -163,7 +163,7 @@ export class HostingService {
 
       //Check if domain already exists
       const tmpWebsite = await new Website({}, context).populateByDomain(
-        website.domain,
+        event.data.domain,
       );
       if (tmpWebsite.exists()) {
         throw new StorageCodeException({

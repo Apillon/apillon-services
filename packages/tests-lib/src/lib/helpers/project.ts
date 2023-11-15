@@ -7,12 +7,15 @@ import { TestContext } from './context';
 import { TestUser } from './user';
 import * as bcrypt from 'bcryptjs';
 import { Credit } from '@apillon/config/src/modules/credit/models/credit.model';
+import { Subscription } from '@apillon/config/src/modules/subscription/models/subscription.model';
+
 import { Stage } from '../interfaces/stage.interface';
 
 export async function createTestProject(
   user: TestUser,
   stage: Stage,
   credit = 20000,
+  subscriptionPackage_id?: number,
 ): Promise<Project> {
   const project = new Project({}, stage.devConsoleContext)
     .fake()
@@ -42,6 +45,18 @@ export async function createTestProject(
     {
       project_uuid: project.project_uuid,
       balance: credit,
+    },
+    stage.configContext,
+  ).insert();
+
+  //If subscription package is specified, subscribe project to that subscription package
+  await new Subscription(
+    {
+      package_id: subscriptionPackage_id,
+      project_uuid: project.project_uuid,
+      expiresOn: new Date(2050, 1, 1),
+      subscriberEmail: 'subscriber@gmail.com',
+      stripeId: 1,
     },
     stage.configContext,
   ).insert();
