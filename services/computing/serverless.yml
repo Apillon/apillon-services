@@ -6,6 +6,7 @@ frameworkVersion: '3'
 
 custom:
   webpack:
+    mode: 'production'
     webpackConfig: ./webpack.config.js
     includeModules:
       modeModulesRelativeDir: '../../'

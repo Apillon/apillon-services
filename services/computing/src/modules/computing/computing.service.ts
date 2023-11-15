@@ -14,7 +14,11 @@ import {
 } from '@apillon/lib';
 import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
-import { ComputingErrorCode, TransactionType } from '../../config/types';
+import {
+  ComputingErrorCode,
+  ContractStatus,
+  TransactionType,
+} from '../../config/types';
 import {
   ComputingCodeException,
   ComputingValidationException,
@@ -201,7 +205,12 @@ export class ComputingService {
     );
     const sourceFunction = 'transferContractOwnership()';
     contract.verifyStatusAndAccess(sourceFunction, context);
-    await ComputingService.checkTransferConditions(context, contract);
+    await ComputingService.checkTransferConditions(
+      context,
+      sourceFunction,
+      contract,
+      newOwnerAddress,
+    );
 
     try {
       await transferContractOwnership(
@@ -245,8 +254,27 @@ export class ComputingService {
 
   private static async checkTransferConditions(
     context: ServiceContext,
+    sourceFunction: string,
     contract: Contract,
+    newOwnerAddress: string,
   ) {
+    if (contract.contractStatus == ContractStatus.TRANSFERRED) {
+      throw new ComputingCodeException({
+        status: 500,
+        code: ComputingErrorCode.CONTRACT_ALREADY_TRANSFERED,
+        context,
+        sourceFunction,
+      });
+    }
+    if (contract.deployerAddress == newOwnerAddress) {
+      throw new ComputingCodeException({
+        status: 400,
+        code: ComputingErrorCode.INVALID_ADDRESS_FOR_TRANSFER_TO,
+        context,
+        sourceFunction,
+      });
+    }
+
     const transactions = await new Transaction(
       {},
       context,
@@ -256,13 +284,17 @@ export class ComputingService {
       TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
     );
     if (
-      transactions.find((x) => x.transactionStatus == TransactionStatus.PENDING)
+      transactions.find(
+        (x) =>
+          x.transactionStatus == TransactionStatus.PENDING ||
+          x.transactionStatus == TransactionStatus.CONFIRMED,
+      )
     ) {
       throw new ComputingCodeException({
         status: 400,
         code: ComputingErrorCode.TRANSACTION_FOR_TRANSFER_ALREADY_EXISTS,
         context,
-        sourceFunction: 'checkTransferConditions()',
+        sourceFunction,
       });
     }
   }
