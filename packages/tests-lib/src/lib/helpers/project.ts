@@ -50,16 +50,18 @@ export async function createTestProject(
   ).insert();
 
   //If subscription package is specified, subscribe project to that subscription package
-  await new Subscription(
-    {
-      package_id: subscriptionPackage_id,
-      project_uuid: project.project_uuid,
-      expiresOn: new Date(2050, 1, 1),
-      subscriberEmail: 'subscriber@gmail.com',
-      stripeId: 1,
-    },
-    stage.configContext,
-  ).insert();
+  if (subscriptionPackage_id) {
+    await new Subscription(
+      {
+        package_id: subscriptionPackage_id,
+        project_uuid: project.project_uuid,
+        expiresOn: new Date(2050, 1, 1),
+        subscriberEmail: 'subscriber@gmail.com',
+        stripeId: 1,
+      },
+      stage.configContext,
+    ).insert();
+  }
 
   return project;
 }

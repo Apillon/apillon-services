@@ -460,7 +460,26 @@ export class Deployment extends AdvancedSQLModel {
       `,
     };
 
-    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'd.id');
+    const data = await selectAndCountQuery(
+      context.mysql,
+      sqlQuery,
+      params,
+      'd.id',
+    );
+
+    data.items.forEach((item) => {
+      if (
+        [DeploymentStatus.REJECTED, DeploymentStatus.IN_REVIEW].includes(
+          item.deploymentStatus as DeploymentStatus,
+        )
+      ) {
+        item.cid = undefined;
+        item.cidv1 = undefined;
+        item.size = undefined;
+      }
+    });
+
+    return data;
   }
 
   /**

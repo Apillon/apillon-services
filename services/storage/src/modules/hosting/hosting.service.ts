@@ -415,6 +415,17 @@ export class HostingService {
     }
     await deployment.canAccess(context);
 
+    if (
+      [DeploymentStatus.REJECTED, DeploymentStatus.IN_REVIEW].includes(
+        deployment.deploymentStatus as DeploymentStatus,
+      )
+    ) {
+      //This properties should not be passed to user if deployment is in review
+      deployment.cid = undefined;
+      deployment.cidv1 = undefined;
+      deployment.size = undefined;
+    }
+
     return deployment.serialize(getSerializationStrategy(context));
   }
 
@@ -493,7 +504,7 @@ export class HostingService {
       });
     }
 
-    deployment.deploymentStatus = DeploymentStatus.APPROVED;
+    deployment.deploymentStatus = DeploymentStatus.REJECTED;
     await deployment.update();
 
     const website: Website = await new Website({}, context).populateById(
