@@ -12,4 +12,5 @@ aws codebuild start-build --project-name apillon-auth-api-production
 aws codebuild start-build --project-name apillon-auth-production
 
 aws codebuild start-build --project-name apillon-app-production
+aws codebuild start-build --project-name apillon-admin-production
 

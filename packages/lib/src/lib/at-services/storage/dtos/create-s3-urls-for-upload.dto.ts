@@ -90,10 +90,10 @@ export class CreateS3UrlsForUploadDto extends ModelBase {
         resolver: presenceValidator(),
         code: ValidatorErrorCode.FILES_PROPERTY_NOT_PRESENT,
       },
-      {
-        resolver: arrayLengthValidator({ minOrEqual: 1, maxOrEqual: 200 }),
-        code: ValidatorErrorCode.INVALID_FILES_LENGTH,
-      },
+      // {
+      //   resolver: arrayLengthValidator({ minOrEqual: 1, maxOrEqual: 200 }),
+      //   code: ValidatorErrorCode.INVALID_FILES_LENGTH,
+      // },
     ],
   })
   public files: UploadFileMetadataDto[];
@@ -125,10 +125,10 @@ export class ApillonApiCreateS3UrlsForUploadDto extends ModelBase {
         resolver: presenceValidator(),
         code: ValidatorErrorCode.FILES_PROPERTY_NOT_PRESENT,
       },
-      {
-        resolver: arrayLengthValidator({ minOrEqual: 1, maxOrEqual: 200 }),
-        code: ValidatorErrorCode.INVALID_FILES_LENGTH,
-      },
+      // {
+      //   resolver: arrayLengthValidator({ minOrEqual: 1, maxOrEqual: 200 }),
+      //   code: ValidatorErrorCode.INVALID_FILES_LENGTH,
+      // },
     ],
   })
   public files: UploadFileMetadataDto[];
@@ -160,10 +160,10 @@ export class ApillonHostingApiCreateS3UrlsForUploadDto extends ModelBase {
         resolver: presenceValidator(),
         code: ValidatorErrorCode.FILES_PROPERTY_NOT_PRESENT,
       },
-      {
-        resolver: arrayLengthValidator({ minOrEqual: 1, maxOrEqual: 200 }),
-        code: ValidatorErrorCode.INVALID_FILES_LENGTH,
-      },
+      // {
+      //   resolver: arrayLengthValidator({ minOrEqual: 1, maxOrEqual: 200 }),
+      //   code: ValidatorErrorCode.INVALID_FILES_LENGTH,
+      // },
     ],
   })
   public files: UploadFileMetadataDto[];
