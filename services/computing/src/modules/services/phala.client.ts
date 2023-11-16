@@ -79,7 +79,7 @@ export class PhalaClient {
     );
   }
 
-  async createFundClusterTransaction(
+  async createDepositToClusterTransaction(
     clusterId: string,
     accountAddress: string,
     amount: number,

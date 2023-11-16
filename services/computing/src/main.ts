@@ -14,8 +14,8 @@ export async function processEvent(event: any, context: Context): Promise<any> {
     [ComputingEventType.LIST_CONTRACTS]: ComputingService.listContracts,
     [ComputingEventType.GET_CONTRACT_BY_UUID]:
       ComputingService.getContractByUuid,
-    [ComputingEventType.DEPOSIT_TO_CONTRACT_CLUSTER]:
-      ComputingService.depositToContractCluster,
+    [ComputingEventType.DEPOSIT_TO_PHALA_CLUSTER]:
+      ComputingService.depositToPhalaCluster,
     [ComputingEventType.TRANSFER_CONTRACT_OWNERSHIP]:
       ComputingService.transferContractOwnership,
   };

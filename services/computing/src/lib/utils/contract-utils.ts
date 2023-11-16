@@ -56,15 +56,15 @@ export async function deployPhalaContract(
   await contract.update(SerializeFor.UPDATE_DB, conn);
 }
 
-export async function depositToPhalaContractCluster(
+export async function depositToPhalaCluster(
   context: ServiceContext,
-  contract: Contract,
+  clusterId: string,
   accountAddress: string,
   amount: number,
 ) {
   const phalaClient = new PhalaClient(context);
-  const transaction = await phalaClient.createFundClusterTransaction(
-    contract.data.clusterId,
+  const transaction = await phalaClient.createDepositToClusterTransaction(
+    clusterId,
     accountAddress,
     amount,
   );
@@ -72,9 +72,6 @@ export async function depositToPhalaContractCluster(
     {
       chain: SubstrateChain.PHALA,
       transaction: transaction.toHex(),
-      referenceTable: DbTables.CONTRACT,
-      referenceId: contract.id,
-      project_uuid: contract.project_uuid,
     },
     context,
   );
@@ -84,7 +81,6 @@ export async function depositToPhalaContractCluster(
   const dbTxRecord = new Transaction(
     {
       transactionType: TransactionType.DEPOSIT_TO_CONTRACT_CLUSTER,
-      contractId: contract.id,
       transactionHash: response.data.transactionHash,
       transactionStatus: TransactionStatus.PENDING,
     },
