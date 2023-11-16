@@ -64,6 +64,7 @@ export enum AmsEventType {
   DISCORD_UNLINK = 'discord-unlink',
   DISCORD_USER_LIST = 'discord-user-list',
   GET_OAUTH_LINKS = 'get-oauth-links',
+  GET_PROJECT_OWNER = 'get-project-owner',
 }
 
 export enum LmasEventType {

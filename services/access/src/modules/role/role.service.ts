@@ -1,10 +1,11 @@
 import {
   ApiKeyRoleDto,
   CacheKeyPrefix,
+  DefaultUserRole,
   SerializeFor,
   invalidateCacheKey,
 } from '@apillon/lib';
-import { AmsErrorCode } from '../../config/types';
+import { AmsErrorCode, DbTables } from '../../config/types';
 import { AmsBadRequestException, AmsCodeException } from '../../lib/exceptions';
 import { AuthUser } from '../auth-user/auth-user.model';
 import { ApiKeyRole } from './models/api-key-role.model';
@@ -154,5 +155,26 @@ export class RoleService {
     key.canAccess(context);
 
     return await new ApiKeyRole({}, context).getApiKeyRoles(event.apiKey_id);
+  }
+
+  static async getProjectOwner(
+    event: { project_uuid: string },
+    context: ServiceContext,
+  ) {
+    const data = context.mysql.paramExecute(
+      `
+      SELECT au.* 
+      FROM \`${DbTables.AUTH_USER_ROLE}\` aur
+      JOIN \`${DbTables.AUTH_USER}\` au ON au.id = aur.authUser_id
+      WHERE aur.project_uuid = @project_uuid
+      AND aur.role_id = ${DefaultUserRole.PROJECT_OWNER}
+    `,
+      { project_uuid: event.project_uuid },
+    );
+    //TODO IMPLEMENT!!
+    /*const key = await ApiKeyService.getApiKeyById(event.apiKey_id, context);
+    key.canAccess(context);
+
+    return await new ApiKeyRole({}, context).getApiKeyRoles(event.apiKey_id);*/
   }
 }
