@@ -16,7 +16,7 @@ export class DepositToClusterDto extends ModelBase {
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
   })
-  public contract_uuid: string;
+  public clusterId: string;
 
   @prop({
     parser: { resolver: stringParser() },
