@@ -1,30 +1,35 @@
 import {
+  AWS_S3,
+  CacheKeyPrefix,
+  EndFileUploadSessionDto,
+  Lmas,
+  LogType,
+  ServiceName,
+  env,
+  invalidateCacheMatch,
+  runWithWorkers,
+  writeLog,
+} from '@apillon/lib';
+import { ServiceContext } from '@apillon/service-lib';
+import {
   FileStatus,
   FileUploadRequestFileStatus,
   FileUploadSessionStatus,
+  StorageErrorCode,
 } from '../config/types';
-import { ServiceContext } from '@apillon/service-lib';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { Directory } from '../modules/directory/models/directory.model';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
+import { File } from '../modules/storage/models/file.model';
+import { StorageService } from '../modules/storage/storage.service';
+import { StorageCodeException } from './exceptions';
 import { getSessionFilesOnS3 } from './file-upload-session-s3-files';
 import {
   generateDirectoriesForFUR,
   generateDirectoriesForFURs,
   generateDirectoriesFromPath,
 } from './generate-directories-from-path';
-import { File } from '../modules/storage/models/file.model';
-import {
-  AWS_S3,
-  EndFileUploadSessionDto,
-  env,
-  Lmas,
-  LogType,
-  runWithWorkers,
-  ServiceName,
-  writeLog,
-} from '@apillon/lib';
 
 /**
  * This function is called on session end.
@@ -46,7 +51,19 @@ export async function processSessionFiles(
     context,
   ).populateFileUploadRequestsInSession(session.id, context);
   //Get files on s3 for this session
-  const filesOnS3 = await getSessionFilesOnS3(bucket, session);
+  const filesOnS3 = await getSessionFilesOnS3(bucket, session?.session_uuid);
+
+  //Check used storage
+  const storageInfo = await StorageService.getStorageInfo(
+    { project_uuid: bucket.project_uuid },
+    context,
+  );
+  if (storageInfo.usedStorage + filesOnS3.size > storageInfo.availableStorage) {
+    throw new StorageCodeException({
+      code: StorageErrorCode.NOT_ENOUGH_STORAGE_SPACE,
+      status: 400,
+    });
+  }
 
   //get directories in bucket
   const directories = await new Directory(
@@ -78,98 +95,105 @@ export async function processSessionFiles(
   );
 
   //Loop through FURs
-  await runWithWorkers(fileUploadRequests, 20, context, async (fur) => {
-    fur = new FileUploadRequest(fur, context);
-    const s3File = filesOnS3.files.find((x) => x.Key == fur.s3FileKey);
-    //Check if file exists on s3
-    if (!s3File) {
-      //update fur
-      fur.fileStatus = FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3;
-      await fur.update();
-    } else {
-      try {
-        const fileDirectory = await generateDirectoriesForFUR(
-          context,
-          directories,
-          fur,
-          bucket,
-        );
+  await runWithWorkers(
+    fileUploadRequests,
+    20,
+    context,
+    async (fur: FileUploadRequest) => {
+      fur = new FileUploadRequest(fur, context);
+      const s3File = filesOnS3.files.find((x) => x.Key == fur.s3FileKey);
+      //Check if file exists on s3
+      if (!s3File) {
+        //update fur
+        fur.fileStatus =
+          FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3;
+        await fur.update();
+      } else {
+        try {
+          const fileDirectory = await generateDirectoriesForFUR(
+            context,
+            directories,
+            fur,
+            bucket,
+          );
 
-        //check if file already exists
-        const existingFile = await new File(
-          {},
-          context,
-        ).populateByNameAndDirectory(
-          bucket.id,
-          fur.fileName,
-          fileDirectory?.id,
-        );
+          //check if file already exists
+          const existingFile = await new File(
+            {},
+            context,
+          ).populateByNameAndDirectory(
+            bucket.id,
+            fur.fileName,
+            fileDirectory?.id,
+          );
 
-        if (existingFile.exists()) {
-          if (existingFile.s3FileKey != fur.s3FileKey) {
-            s3FilesToDelete.push(existingFile.s3FileKey);
-          }
-          //Update existing file
-          existingFile.populate({
-            s3FileKey: fur.s3FileKey,
-            name: fur.fileName,
-            contentType: fur.contentType,
-            size: s3File.Size,
-            fileStatus: FileStatus.UPLOADED_TO_S3,
-          });
-
-          await existingFile.update();
-        } else {
-          //Create new file
-          await new File({}, context)
-            .populate({
-              file_uuid: fur.file_uuid,
+          if (existingFile.exists()) {
+            if (existingFile.s3FileKey != fur.s3FileKey) {
+              s3FilesToDelete.push(existingFile.s3FileKey);
+            }
+            //Update existing file
+            existingFile.populate({
               s3FileKey: fur.s3FileKey,
               name: fur.fileName,
               contentType: fur.contentType,
-              project_uuid: bucket.project_uuid,
-              bucket_id: bucket.id,
-              directory_id: fileDirectory?.id,
               size: s3File.Size,
               fileStatus: FileStatus.UPLOADED_TO_S3,
-            })
-            .insert();
-        }
-      } catch (err) {
-        await new Lmas().writeLog({
-          context: context,
-          project_uuid: bucket.project_uuid,
-          logType: LogType.ERROR,
-          message: 'Error creating directory or file',
-          location: 'hostingBucketProcessSessionFiles',
-          service: ServiceName.STORAGE,
-          data: {
-            fileUploadRequest: fur.serialize(),
-            error: err,
-          },
-        });
+            });
 
-        try {
-          fur.fileStatus =
-            FileUploadRequestFileStatus.ERROR_CREATING_FILE_OBJECT;
-          await fur.update();
-        } catch (err2) {
-          writeLog(
-            LogType.ERROR,
-            'Error updating fileUploadRequest status to ERROR_CREATING_FILE_OBJECT',
-            'hosting-bucket-process-session-files.ts',
-            'hostingBucketProcessSessionFiles',
-            err2,
-          );
-        }
+            await existingFile.update();
+          } else {
+            //Create new file
+            await new File({}, context)
+              .populate({
+                file_uuid: fur.file_uuid,
+                s3FileKey: fur.s3FileKey,
+                name: fur.fileName,
+                contentType: fur.contentType,
+                project_uuid: bucket.project_uuid,
+                bucket_id: bucket.id,
+                path: fur.path,
+                directory_id: fileDirectory?.id,
+                size: s3File.Size,
+                fileStatus: FileStatus.UPLOADED_TO_S3,
+              })
+              .insert();
+          }
+        } catch (err) {
+          await new Lmas().writeLog({
+            context: context,
+            project_uuid: bucket.project_uuid,
+            logType: LogType.ERROR,
+            message: 'Error creating directory or file',
+            location: 'hostingBucketProcessSessionFiles',
+            service: ServiceName.STORAGE,
+            data: {
+              fileUploadRequest: fur.serialize(),
+              error: err,
+            },
+          });
 
-        throw err;
+          try {
+            fur.fileStatus =
+              FileUploadRequestFileStatus.ERROR_CREATING_FILE_OBJECT;
+            await fur.update();
+          } catch (err2) {
+            writeLog(
+              LogType.ERROR,
+              'Error updating fileUploadRequest status to ERROR_CREATING_FILE_OBJECT',
+              'hosting-bucket-process-session-files.ts',
+              'hostingBucketProcessSessionFiles',
+              err2,
+            );
+          }
+
+          throw err;
+        }
+        //update file-upload-request status
+        fur.fileStatus = FileUploadRequestFileStatus.UPLOADED_TO_S3;
+        await fur.update();
       }
-      //update file-upload-request status
-      fur.fileStatus = FileUploadRequestFileStatus.UPLOADED_TO_S3;
-      await fur.update();
-    }
-  });
+    },
+  );
 
   try {
     const s3Client: AWS_S3 = new AWS_S3();
@@ -192,6 +216,10 @@ export async function processSessionFiles(
   //update session
   session.sessionStatus = FileUploadSessionStatus.PROCESSED;
   await session.update();
+
+  await invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
+    project_uuid: bucket.project_uuid,
+  });
 
   return true;
 }

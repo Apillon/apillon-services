@@ -1,15 +1,26 @@
 import {
+  BaseProjectQueryFilter,
   CreateS3UrlsForUploadDto,
   EndFileUploadSessionDto,
   FileDetailsQueryFilter,
   FileUploadsQueryFilter,
+  FilesQueryFilter,
+  SqlModelStatus,
   StorageMicroservice,
-  TrashedFilesQueryFilter,
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 @Injectable()
 export class StorageService {
+  async getStorageInfo(
+    context: DevConsoleApiContext,
+    query: BaseProjectQueryFilter,
+  ) {
+    return (
+      await new StorageMicroservice(context).getStorageInfo(query.project_uuid)
+    ).data;
+  }
+
   /**
    * Retrieves a list of file uploads for a given bucket based on provided filters.
    * @param {DevConsoleApiContext} context - An object containing information about user session.
@@ -78,6 +89,22 @@ export class StorageService {
   }
 
   /**
+   * Retrieves list of files in bucket
+   * @param {DevConsoleApiContext} context - An object containing information about user session.
+   * @param {string} bucket_uuid - An UUID of the bucket the files are in.
+   * @param {FilesQueryFilter} query - An object for filtering the results.
+   * @returns - A list of files
+   */
+  async listFiles(
+    context: DevConsoleApiContext,
+    bucket_uuid: string,
+    query: FilesQueryFilter,
+  ) {
+    query.populate({ bucket_uuid, status: SqlModelStatus.ACTIVE });
+    return (await new StorageMicroservice(context).listFiles(query)).data;
+  }
+
+  /**
    * Retrieves details about a file.
    * @param {DevConsoleApiContext} context - An object containing information about user session.
    * @param {string} bucket_uuid - An UUID of the bucket the file is in.
@@ -100,18 +127,16 @@ export class StorageService {
    * Retrieves list of files that are going to be removed from storage
    * @param {DevConsoleApiContext} context - An object containing information about user session.
    * @param {string} bucket_uuid - An UUID of the bucket the files are in.
-   * @param {TrashedFilesQueryFilter} query - An object for filtering the results.
+   * @param {FilesQueryFilter} query - An object for filtering the results.
    * @returns - A list of files marked for deletion
    */
   async listFilesMarkedForDeletion(
     context: DevConsoleApiContext,
     bucket_uuid: string,
-    query: TrashedFilesQueryFilter,
+    query: FilesQueryFilter,
   ) {
-    query.populate({ bucket_uuid });
-    return (
-      await new StorageMicroservice(context).listFilesMarkedForDeletion(query)
-    ).data;
+    query.populate({ bucket_uuid, status: SqlModelStatus.MARKED_FOR_DELETION });
+    return (await new StorageMicroservice(context).listFiles(query)).data;
   }
 
   /**

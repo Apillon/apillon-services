@@ -26,7 +26,7 @@ export class ExceptionsFilter implements ExceptionFilter {
     //   'ExceptionsFilter',
     //   error,
     // );
-    console.error(error);
+    console.error(error, 'exception.filter.ts');
 
     if (error instanceof CodeException) {
       res.status(error.getStatus()).json({

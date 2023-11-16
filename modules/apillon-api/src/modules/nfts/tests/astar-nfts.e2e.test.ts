@@ -56,7 +56,7 @@ describe('Apillon API NFTs tests on Astar', () => {
     //User 1 project & other data
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
 
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
     await overrideDefaultQuota(
       stage,
       testProject.project_uuid,

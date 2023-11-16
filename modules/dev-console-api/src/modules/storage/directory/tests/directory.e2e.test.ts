@@ -40,7 +40,7 @@ describe('Storage directory tests', () => {
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
 
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
 
     testBucket = await createTestBucket(
       testUser,
@@ -89,7 +89,7 @@ describe('Storage directory tests', () => {
     test('User should be able to get directory content', async () => {
       const response = await request(stage.http)
         .get(
-          `/directories/directory-content?bucket_uuid=${testBucket.bucket_uuid}&directory_id=${testDirectory.id}`,
+          `/directories/directory-content?bucket_uuid=${testBucket.bucket_uuid}&directory_uuid=${testDirectory.directory_uuid}`,
         )
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
@@ -115,18 +115,18 @@ describe('Storage directory tests', () => {
       const response = await request(stage.http)
         .post(`/directories`)
         .send({
-          bucket_id: testBucket.id,
+          bucket_uuid: testBucket.bucket_uuid,
           name: 'My test directory',
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
-      expect(response.body.data.id).toBeTruthy();
+      expect(response.body.data.name).toBeTruthy();
       expect(response.body.data.directory_uuid).toBeTruthy();
 
       const d: Directory = await new Directory(
         {},
         stage.storageContext,
-      ).populateById(response.body.data.id);
+      ).populateByUUID(response.body.data.directory_uuid);
       expect(d.exists()).toBeTruthy();
       try {
         await d.validate();
@@ -148,7 +148,7 @@ describe('Storage directory tests', () => {
 
     test('User should be able to update directory', async () => {
       const response = await request(stage.http)
-        .patch(`/directories/${testDirectory.id}`)
+        .patch(`/directories/${testDirectory.directory_uuid}`)
         .send({
           name: 'Some new directory name',
           CID: 'some imaginary CID',
@@ -161,7 +161,7 @@ describe('Storage directory tests', () => {
       const d: Directory = await new Directory(
         {},
         stage.storageContext,
-      ).populateById(testDirectory.id);
+      ).populateByUUID(testDirectory.directory_uuid);
       expect(d.exists()).toBeTruthy();
       try {
         await d.validate();
@@ -172,6 +172,27 @@ describe('Storage directory tests', () => {
       expect(d.name).toBe('Some new directory name');
       expect(d.CID).toBe('some imaginary CID');
       expect(d.description).toBe('my test description');
+    });
+
+    test('User should be able to create new directory inside another directory', async () => {
+      const response = await request(stage.http)
+        .post(`/directories`)
+        .send({
+          bucket_uuid: testBucket.bucket_uuid,
+          name: 'My sub directory',
+          parentDirectory_uuid: testDirectory.directory_uuid,
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(201);
+      expect(response.body.data.name).toBeTruthy();
+      expect(response.body.data.directory_uuid).toBeTruthy();
+
+      const d: Directory = await new Directory(
+        {},
+        stage.storageContext,
+      ).populateByUUID(response.body.data.directory_uuid);
+      expect(d.exists()).toBeTruthy();
+      expect(d.parentDirectory_uuid).toBe(testDirectory.directory_uuid);
     });
   });
 
@@ -205,7 +226,7 @@ describe('Storage directory tests', () => {
     test('User with role "ProjectUser" should be able to get directory content', async () => {
       const response = await request(stage.http)
         .get(
-          `/directories/directory-content?bucket_uuid=${testBucket.bucket_uuid}&directory_id=${testDirectory2.id}`,
+          `/directories/directory-content?bucket_uuid=${testBucket.bucket_uuid}&directory_uuid=${testDirectory2.directory_uuid}`,
         )
         .set('Authorization', `Bearer ${testUser3.token}`);
       expect(response.status).toBe(200);
@@ -216,7 +237,7 @@ describe('Storage directory tests', () => {
     test('Admin User should be able to get directory content', async () => {
       const response = await request(stage.http)
         .get(
-          `/directories/directory-content?bucket_uuid=${testBucket.bucket_uuid}&directory_id=${testDirectory2.id}`,
+          `/directories/directory-content?bucket_uuid=${testBucket.bucket_uuid}&directory_uuid=${testDirectory2.directory_uuid}`,
         )
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(200);
@@ -227,7 +248,7 @@ describe('Storage directory tests', () => {
       const response = await request(stage.http)
         .post(`/directories`)
         .send({
-          bucket_id: testBucket.id,
+          bucket_uuid: testBucket.bucket_uuid,
           name: 'My test directory',
         })
         .set('Authorization', `Bearer ${adminTestUser.token}`);
@@ -238,7 +259,7 @@ describe('Storage directory tests', () => {
   });
 
   describe('Delete directory tests', () => {
-    let testDirectoryToDelete;
+    let testDirectoryToDelete: Directory;
     beforeAll(async () => {
       //Create new directories, to test delete functions
       testDirectoryToDelete = await createTestBucketDirectory(
@@ -253,28 +274,28 @@ describe('Storage directory tests', () => {
 
     test('User should NOT be able to delete ANOTHER USER directory', async () => {
       const response = await request(stage.http)
-        .delete(`/directories/${testDirectoryToDelete.id}`)
+        .delete(`/directories/${testDirectoryToDelete.directory_uuid}`)
         .set('Authorization', `Bearer ${testUser2.token}`);
       expect(response.status).toBe(403);
 
       const d: Directory = await new Directory(
         {},
         stage.storageContext,
-      ).populateById(testDirectoryToDelete.id);
+      ).populateByUUID(testDirectoryToDelete.directory_uuid);
       expect(d.exists()).toBeTruthy();
       expect(d.status).toBe(SqlModelStatus.ACTIVE);
     });
 
     test('User should be able to delete directory', async () => {
       const response = await request(stage.http)
-        .delete(`/directories/${testDirectoryToDelete.id}`)
+        .delete(`/directories/${testDirectoryToDelete.directory_uuid}`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
 
       const d: Directory = await new Directory(
         {},
         stage.storageContext,
-      ).populateById(response.body.data.id);
+      ).populateByUUID(response.body.data.directory_uuid);
       expect(d.exists()).toBeTruthy();
       expect(d.status).toBe(SqlModelStatus.MARKED_FOR_DELETION);
     });
@@ -293,7 +314,7 @@ describe('Storage directory tests', () => {
 
       const response = await request(stage.http)
         .patch(
-          `/directories/${testDirectoryToCancelDeletion.id}/cancel-deletion`,
+          `/directories/${testDirectoryToCancelDeletion.directory_uuid}/cancel-deletion`,
         )
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
@@ -301,7 +322,7 @@ describe('Storage directory tests', () => {
       const d: Directory = await new Directory(
         {},
         stage.storageContext,
-      ).populateById(testDirectoryToCancelDeletion.id);
+      ).populateByUUID(testDirectoryToCancelDeletion.directory_uuid);
       expect(d.exists()).toBeTruthy();
       expect(d.status).toBe(SqlModelStatus.ACTIVE);
     });
@@ -367,8 +388,13 @@ describe('Storage directory tests', () => {
         testDirectoryWithSubdirectories.id,
       );
 
+      const ipfsService = new IPFSService(
+        stage.storageContext,
+        testProject.project_uuid,
+      );
+
       expect(
-        await IPFSService.isCIDPinned(deleteBucketTestFile1.CID),
+        await ipfsService.isCIDPinned(deleteBucketTestFile1.CID),
       ).toBeTruthy();
 
       //Subdir
@@ -410,14 +436,14 @@ describe('Storage directory tests', () => {
         deleteBucketTestFile1.id,
       );
       expect(f.exists()).toBeFalsy();
-      expect(await IPFSService.isCIDPinned(f.CID)).toBeFalsy();
+      expect(await ipfsService.isCIDPinned(f.CID)).toBeFalsy();
 
       f = await new File({}, stage.storageContext).populateById(
         deleteBucketTestFile2.id,
       );
       expect(f.exists()).toBeFalsy();
       expect(
-        await IPFSService.isCIDPinned(deleteBucketTestFile1.CID),
+        await ipfsService.isCIDPinned(deleteBucketTestFile1.CID),
       ).toBeFalsy();
 
       //Check if bucket size was decreased
@@ -438,7 +464,7 @@ describe('Storage directory tests', () => {
         testDirectoryFile.id.toString(),
       );
       expect(f.exists()).toBeTruthy();
-      expect(await IPFSService.isCIDPinned(testDirectoryFile.CID)).toBeTruthy();
+      expect(await ipfsService.isCIDPinned(testDirectoryFile.CID)).toBeTruthy();
     });
   });
 });

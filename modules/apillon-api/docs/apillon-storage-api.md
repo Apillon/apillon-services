@@ -50,7 +50,7 @@ For example `images/icons`, creates `images` directory in bucket and `icons` dir
 | 40406002 | Bucket does not exists.                                                       |
 | 42200008 | Request body is missing `fileName` field                                      |
 | 42200009 | Request body is missing `contentType` field                                   |
-| 40006002 | Bucket has reached max size limit                                             |
+| 40006002 | Storage limit reached                                                         |
 | 40406009 | Bucket is marked for deletion. It is no longer possible to upload files to it |
 | 50006003 | Internal error - Apillon was unable to generate S3 signed URL                 |
 

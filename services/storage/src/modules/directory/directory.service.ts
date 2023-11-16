@@ -21,20 +21,21 @@ export class DirectoryService {
     event: { query: DirectoryContentQueryFilter },
     context: ServiceContext,
   ) {
-    const b: Bucket = await new Bucket({}, context).populateByUUID(
+    const bucket: Bucket = await new Bucket({}, context).populateByUUID(
       event.query.bucket_uuid,
     );
-    if (!b.exists()) {
+    if (!bucket.exists()) {
       throw new StorageCodeException({
         code: StorageErrorCode.BUCKET_NOT_FOUND,
         status: 404,
       });
     }
-    b.canAccess(context);
+    bucket.canAccess(context);
 
     return await new Directory({}, context).getDirectoryContent(
       context,
       new DirectoryContentQueryFilter(event.query, context),
+      bucket,
     );
   }
 
@@ -42,20 +43,33 @@ export class DirectoryService {
     event: { body: CreateDirectoryDto },
     context: ServiceContext,
   ): Promise<any> {
-    const b: Bucket = await new Bucket({}, context).populateById(
-      event.body.bucket_id,
+    const bucket: Bucket = await new Bucket({}, context).populateByUUID(
+      event.body.bucket_uuid,
     );
-    if (!b.exists()) {
+    if (!bucket.exists()) {
       throw new StorageCodeException({
         code: StorageErrorCode.BUCKET_NOT_FOUND,
         status: 404,
       });
     }
 
-    b.canModify(context);
+    bucket.canModify(context);
+
+    let parentDirectory: Directory;
+    if (event.body.parentDirectory_uuid) {
+      parentDirectory = await new Directory({}, context).populateByUUID(
+        event.body.parentDirectory_uuid,
+      );
+    }
 
     const d: Directory = new Directory(
-      { ...event.body, directory_uuid: uuidV4(), project_uuid: b.project_uuid },
+      {
+        ...event.body,
+        directory_uuid: uuidV4(),
+        bucket_id: bucket.id,
+        project_uuid: bucket.project_uuid,
+        parentDirectory_id: parentDirectory?.id,
+      },
       context,
     );
 
@@ -69,15 +83,18 @@ export class DirectoryService {
     }
 
     await d.insert();
-    return d.serialize(SerializeFor.PROFILE);
+    return {
+      ...d.serialize(SerializeFor.PROFILE),
+      parentDirectory_uuid: parentDirectory?.directory_uuid,
+    };
   }
 
   static async updateDirectory(
-    event: { id: number; data: any },
+    event: { directory_uuid: string; data: any },
     context: ServiceContext,
   ): Promise<any> {
-    const d: Directory = await new Directory({}, context).populateById(
-      event.id,
+    const d: Directory = await new Directory({}, context).populateByUUID(
+      event.directory_uuid,
     );
 
     if (!d.exists()) {
@@ -104,63 +121,67 @@ export class DirectoryService {
   }
 
   static async deleteDirectory(
-    event: { id: number },
+    event: { directory_uuid: string },
     context: ServiceContext,
   ): Promise<any> {
-    const d: Directory = await new Directory({}, context).populateById(
-      event.id,
-    );
+    const directory: Directory = await new Directory(
+      {},
+      context,
+    ).populateByUUID(event.directory_uuid);
 
-    if (!d.exists()) {
+    if (!directory.exists()) {
       throw new StorageCodeException({
         code: StorageErrorCode.DIRECTORY_NOT_FOUND,
         status: 404,
       });
-    } else if (d.status == SqlModelStatus.MARKED_FOR_DELETION) {
+    } else if (directory.status == SqlModelStatus.MARKED_FOR_DELETION) {
       throw new StorageCodeException({
         code: StorageErrorCode.DIRECTORY_ALREADY_MARKED_FOR_DELETION,
         status: 400,
       });
     }
-    d.canModify(context);
+    directory.canModify(context);
 
     //check directory bucket
-    const b: Bucket = await new Bucket({}, context).populateById(d.bucket_id);
+    const bucket: Bucket = await new Bucket({}, context).populateById(
+      directory.bucket_id,
+    );
     if (
-      b.bucketType == BucketType.STORAGE ||
-      b.bucketType == BucketType.NFT_METADATA
+      bucket.bucketType == BucketType.STORAGE ||
+      bucket.bucketType == BucketType.NFT_METADATA
     ) {
-      await d.markForDeletion();
-      return d.serialize(SerializeFor.PROFILE);
-    } else if (b.bucketType == BucketType.HOSTING) {
-      return await HostingService.deleteDirectory({ directory: d }, context);
+      await directory.markForDeletion();
+      return directory.serialize(SerializeFor.PROFILE);
+    } else if (bucket.bucketType == BucketType.HOSTING) {
+      return await HostingService.deleteDirectory({ directory }, context);
     }
   }
 
   static async unmarkDirectoryForDeletion(
-    event: { id: number },
+    event: { directory_uuid: string },
     context: ServiceContext,
   ): Promise<any> {
-    const d: Directory = await new Directory({}, context).populateById(
-      event.id,
-    );
+    const directory: Directory = await new Directory(
+      {},
+      context,
+    ).populateByUUID(event.directory_uuid);
 
-    if (!d.exists()) {
+    if (!directory.exists()) {
       throw new StorageCodeException({
         code: StorageErrorCode.DIRECTORY_NOT_FOUND,
         status: 404,
       });
-    } else if (d.status != SqlModelStatus.MARKED_FOR_DELETION) {
+    } else if (directory.status != SqlModelStatus.MARKED_FOR_DELETION) {
       throw new StorageCodeException({
         code: StorageErrorCode.DIRECTORY_NOT_MARKED_FOR_DELETION,
         status: 400,
       });
     }
-    d.canModify(context);
+    directory.canModify(context);
 
-    d.status = SqlModelStatus.ACTIVE;
+    directory.status = SqlModelStatus.ACTIVE;
 
-    await d.update();
-    return d.serialize(SerializeFor.PROFILE);
+    await directory.update();
+    return directory.serialize(SerializeFor.PROFILE);
   }
 }

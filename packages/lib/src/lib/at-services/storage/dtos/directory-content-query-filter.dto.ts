@@ -2,11 +2,7 @@
 import { prop } from '@rawmodel/core';
 import { booleanParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
-import {
-  PopulateFrom,
-  SerializeFor,
-  ValidatorErrorCode,
-} from '../../../../config/types';
+import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { BaseQueryFilter } from '../../../base-models/base-query-filter.model';
 
 export class DirectoryContentQueryFilter extends BaseQueryFilter {
@@ -27,7 +23,7 @@ export class DirectoryContentQueryFilter extends BaseQueryFilter {
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
   })
-  public directory_id: number;
+  public directory_uuid: number;
 
   @prop({
     parser: { resolver: booleanParser() },
@@ -43,7 +39,7 @@ export class ApillonApiDirectoryContentQueryFilter extends BaseQueryFilter {
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
   })
-  public directoryId: number;
+  public directoryUuid: string;
 
   @prop({
     parser: { resolver: booleanParser() },

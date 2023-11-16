@@ -14,11 +14,11 @@ export class DeployWebsiteDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.DEPLOY_WEBSITE_ID_NOT_PRESENT,
+        code: ValidatorErrorCode.DEPLOY_WEBSITE_UUID_NOT_PRESENT,
       },
     ],
   })
-  public website_id: number | string;
+  public website_uuid: string;
 
   @prop({
     parser: { resolver: integerParser() },

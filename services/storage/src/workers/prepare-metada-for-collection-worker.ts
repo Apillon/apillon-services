@@ -1,8 +1,10 @@
 import {
+  AppEnvironment,
   AWS_S3,
   Context,
   env,
   LogType,
+  NftsMicroservice,
   runWithWorkers,
   SerializeFor,
   ServiceName,
@@ -11,6 +13,7 @@ import {
 import {
   BaseQueueWorker,
   QueueWorkerType,
+  sendToWorkerQueue,
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import {
@@ -21,6 +24,7 @@ import {
 import { StorageCodeException } from '../lib/exceptions';
 import { storageBucketSyncFilesToIPFS } from '../lib/storage-bucket-sync-files-to-ipfs';
 import { Bucket } from '../modules/bucket/models/bucket.model';
+import { ProjectConfig } from '../modules/config/models/project-config.model';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { Ipns } from '../modules/ipns/models/ipns.model';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
@@ -96,7 +100,6 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             this.context,
             `${this.constructor.name}/runExecutor`,
             bucket,
-            5_368_709_120,
             imageFURs.filter(
               (x) =>
                 x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED,
@@ -144,6 +147,12 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       metadataFURs.map((x) => x.serialize()),
     );
 
+    //Get IPFS cluster
+    const ipfsCluster = await new ProjectConfig(
+      { project_uuid: bucket.project_uuid },
+      this.context,
+    ).getIpfsCluster();
+
     await runWithWorkers(
       metadataFURs,
       20,
@@ -170,7 +179,15 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           const imageFile = imageFiles.files.find(
             (x) => x.name == fileContent.image,
           );
-          fileContent.image = env.STORAGE_IPFS_GATEWAY + imageFile.CID;
+
+          if (data.useApillonIpfsGateway) {
+            fileContent.image = ipfsCluster.generateLink(
+              bucket.project_uuid,
+              imageFile.CID,
+            );
+          } else {
+            fileContent.image = 'ipfs://' + imageFile.CID;
+          }
         }
 
         await s3Client.upload(
@@ -194,7 +211,6 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       this.context,
       `${this.constructor.name}/runExecutor`,
       bucket,
-      5_368_709_120,
       metadataFURs,
       metadataSession,
       true,
@@ -208,20 +224,49 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       `pinning metadata CID (${metadataFiles.wrappedDirCid}) to IPNS`,
     );
 
-    //Pin to IPNS
-    const ipnsDbRecord: Ipns = await new Ipns({}, this.context).populateById(
-      data.ipnsId,
-    );
-    const ipnsRecord = await IPFSService.publishToIPNS(
-      metadataFiles.wrappedDirCid,
-      `${ipnsDbRecord.project_uuid}_${ipnsDbRecord.bucket_id}_${ipnsDbRecord.id}`,
-    );
-    ipnsDbRecord.ipnsValue = ipnsRecord.value;
-    ipnsDbRecord.key = `${ipnsDbRecord.project_uuid}_${ipnsDbRecord.bucket_id}_${ipnsDbRecord.id}`;
-    ipnsDbRecord.cid = metadataFiles.wrappedDirCid;
-    await ipnsDbRecord.update(SerializeFor.UPDATE_DB);
+    if (data.useApillonIpfsGateway) {
+      //Pin to IPNS
+      const ipnsDbRecord: Ipns = await new Ipns({}, this.context).populateById(
+        data.ipnsId,
+      );
+      const ipnsRecord = await new IPFSService(
+        this.context,
+        ipnsDbRecord.project_uuid,
+      ).publishToIPNS(
+        metadataFiles.wrappedDirCid,
+        `${ipnsDbRecord.project_uuid}_${ipnsDbRecord.bucket_id}_${ipnsDbRecord.id}`,
+      );
+      ipnsDbRecord.ipnsValue = ipnsRecord.value;
+      ipnsDbRecord.key = `${ipnsDbRecord.project_uuid}_${ipnsDbRecord.bucket_id}_${ipnsDbRecord.id}`;
+      ipnsDbRecord.cid = metadataFiles.wrappedDirCid;
+      await ipnsDbRecord.update(SerializeFor.UPDATE_DB);
 
-    console.info(`IPNS sucessfully published. Removing files from s3`);
+      console.info(`IPNS sucessfully published. Removing files from s3`);
+    } else {
+      //Metadata is prepared. It won't use apillon gateway ipns as base uri, so run nft deploy with wrapping cid as base URI
+      if (
+        env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+        env.APP_ENV == AppEnvironment.TEST
+      ) {
+        await new NftsMicroservice(this.context).executeDeployCollectionWorker({
+          collection_uuid: data.collection_uuid,
+          baseUri: 'ipfs://' + metadataFiles.wrappedDirCid,
+        });
+      } else {
+        await sendToWorkerQueue(
+          env.NFTS_AWS_WORKER_SQS_URL,
+          'DeployCollectionWorker',
+          [
+            {
+              collection_uuid: data.collection_uuid,
+              baseUri: 'ipfs://' + metadataFiles.wrappedDirCid,
+            },
+          ],
+          null,
+          null,
+        );
+      }
+    }
 
     //Remove all files of this bucket in S3
     await s3Client.removeDirectory(
@@ -236,7 +281,6 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       service: ServiceName.STORAGE,
       data: {
         data,
-        ipnsRecord,
       },
     });
 

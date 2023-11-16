@@ -1,28 +1,23 @@
 import {
   AdvancedSQLModel,
-  CodeException,
+  ErrorCode,
   getQueryParams,
   PopulateFrom,
   SerializeFor,
+  SqlModelStatus,
   unionSelectAndCountQuery,
 } from '@apillon/lib';
 import { prop } from '@rawmodel/core';
-import { presenceValidator } from '@rawmodel/validators';
-import {
-  DbTables,
-  ResourceNotFoundErrorCode,
-  ValidatorErrorCode,
-} from '../../../config/types';
 import { integerParser } from '@rawmodel/parsers';
+import { presenceValidator } from '@rawmodel/validators';
+import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
 import { ProjectUserFilter } from '../dtos/project_user-query-filter.dto';
 import { Project } from './project.model';
-import { HttpStatus } from '@nestjs/common';
 
 export class ProjectUser extends AdvancedSQLModel {
   tableName = DbTables.PROJECT_USER;
 
-  // TODO: Implement ForeignKey constraints / verification
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -130,17 +125,10 @@ export class ProjectUser extends AdvancedSQLModel {
     project_uuid: string,
     filter: ProjectUserFilter,
   ) {
-    const project: Project = await new Project({}, context).populateByUUID(
-      project_uuid,
-    );
-    if (!project.exists()) {
-      throw new CodeException({
-        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
-        status: HttpStatus.NOT_FOUND,
-        errorCodes: ResourceNotFoundErrorCode,
-      });
-    }
-    project.canAccess(context);
+    const project: Project = await new Project(
+      {},
+      context,
+    ).populateByUUIDAndCheckAccess(project_uuid, context);
 
     const { params, filters } = getQueryParams(
       { ...filter.getDefaultValues(), project_id: project.id },

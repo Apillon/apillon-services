@@ -22,23 +22,35 @@ export class DirectoryService {
     return (await new StorageMicroservice(context).createDirectory(body)).data;
   }
 
-  async updateDirectory(context: DevConsoleApiContext, id: number, body: any) {
+  async updateDirectory(
+    context: DevConsoleApiContext,
+    directory_uuid: string,
+    body: any,
+  ) {
     return (
       await new StorageMicroservice(context).updateDirectory({
-        id: id,
+        directory_uuid,
         data: body,
       })
     ).data;
   }
 
-  async cancelDirectoryDeletion(context: DevConsoleApiContext, id: number) {
+  async cancelDirectoryDeletion(
+    context: DevConsoleApiContext,
+    directory_uuid: string,
+  ) {
     return (
-      await new StorageMicroservice(context).cancelDirectoryDeletion({ id: id })
+      await new StorageMicroservice(context).cancelDirectoryDeletion({
+        directory_uuid,
+      })
     ).data;
   }
 
-  async deleteDirectory(context: DevConsoleApiContext, id: number) {
-    return (await new StorageMicroservice(context).deleteDirectory({ id: id }))
-      .data;
+  async deleteDirectory(context: DevConsoleApiContext, directory_uuid: string) {
+    return (
+      await new StorageMicroservice(context).deleteDirectory({
+        directory_uuid,
+      })
+    ).data;
   }
 }

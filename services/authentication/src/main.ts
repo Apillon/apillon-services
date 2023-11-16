@@ -1,9 +1,9 @@
 import type { Context } from 'aws-lambda/handler';
 import { AuthenticationEventType } from '@apillon/lib';
 
-import { VerificationMicroservice } from './modules/verification/verification.service';
-import { IdentityMicroservice } from './modules/identity/identity.service';
-import { SporranMicroservice } from './modules/sporran/sporran.service';
+import { VerificationService } from './modules/verification/verification.service';
+import { IdentityService } from './modules/identity/identity.service';
+import { SporranService } from './modules/sporran/sporran.service';
 
 /**
  * Processing lambda event with appropriate service function based on event name
@@ -15,31 +15,29 @@ export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
     // VERIFICATION
     [AuthenticationEventType.IDENTITY_VERIFICATION]:
-      VerificationMicroservice.verifyIdentity,
+      VerificationService.verifyIdentity,
     // IDENTITY
     [AuthenticationEventType.SEND_VERIFICATION_EMAIL]:
-      IdentityMicroservice.sendVerificationEmail,
+      IdentityService.sendVerificationEmail,
     [AuthenticationEventType.GET_IDENTITY_GEN_PROCESS_STATE]:
-      IdentityMicroservice.getIdentityGenProcessState,
+      IdentityService.getIdentityGenProcessState,
     [AuthenticationEventType.GENERATE_IDENTITY]:
-      IdentityMicroservice.generateIdentity,
-    [AuthenticationEventType.GET_IDENTITY_USER_CREDENTIAL]:
-      IdentityMicroservice.getUserIdentityCredential,
-    [AuthenticationEventType.REVOKE_IDENTITY]:
-      IdentityMicroservice.revokeIdentity,
+      IdentityService.generateIdentity,
+    [AuthenticationEventType.GET_USER_IDENTITY]:
+      IdentityService.getUserIdentity,
+    [AuthenticationEventType.REVOKE_IDENTITY]: IdentityService.revokeIdentity,
     // SPORRAN
     [AuthenticationEventType.SPORRAN_GET_SESSION_VALUES]:
-      SporranMicroservice.getSessionValues,
-    [AuthenticationEventType.SPORRAN_SUBMIT_TERMS]:
-      SporranMicroservice.submitTerms,
+      SporranService.getSessionValues,
+    [AuthenticationEventType.SPORRAN_SUBMIT_TERMS]: SporranService.submitTerms,
     [AuthenticationEventType.SPORRAN_SUBMIT_ATTESTATION]:
-      SporranMicroservice.submitAttestation,
+      SporranService.submitAttestation,
     [AuthenticationEventType.SPORRAN_REQUEST_CREDENTIAL]:
-      SporranMicroservice.requestCredential,
+      SporranService.requestCredential,
     [AuthenticationEventType.SPORRAN_VERIFY_SESSION]:
-      SporranMicroservice.verifySession,
+      SporranService.verifySession,
     [AuthenticationEventType.SPORRAN_VERIFY_CREDENTIAL]:
-      SporranMicroservice.verifyCredential,
+      SporranService.verifyCredential,
   };
 
   return await processors[event.eventName](event, context);

@@ -153,7 +153,8 @@ export class UserService {
         token: resp.data.token,
       };
     } catch (error) {
-      if (error.code != 40102100) {
+      // If not error USER_IS_NOT_AUTHENTICATED, meaning some other error occurred
+      if (error.code != 401021000) {
         throw new CodeException({
           status: HttpStatus.UNAUTHORIZED,
           code: ValidatorErrorCode.USER_INVALID_LOGIN,
@@ -168,7 +169,7 @@ export class UserService {
       token: loginInfo.token,
       password: uuidV4(),
       projectService: this.projectService,
-      tokenType: JwtTokenType.USER_AUTHENTICATION,
+      tokenType: JwtTokenType.OAUTH_TOKEN,
     };
 
     return registerUser(params, context);
@@ -541,10 +542,12 @@ export class UserService {
    * @returns Session info for the oauth module
    */
   async getOauthSession() {
-    return await getOauthSessionToken(
-      env.APILLON_API_SYSTEM_API_KEY,
-      env.APILLON_API_SYSTEM_API_SECRET,
-    );
+    return (
+      await getOauthSessionToken(
+        env.APILLON_API_INTEGRATION_API_KEY,
+        env.APILLON_API_INTEGRATION_API_SECRET,
+      )
+    ).data;
   }
 
   /**

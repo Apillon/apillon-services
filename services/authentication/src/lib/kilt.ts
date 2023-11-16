@@ -5,7 +5,6 @@ import {
   mnemonicGenerate,
   mnemonicToMiniSecret,
   naclBoxPairFromSecret,
-  randomAsHex,
   sr25519PairFromSeed,
 } from '@polkadot/util-crypto';
 import { isHex } from '@polkadot/util';
@@ -100,6 +99,7 @@ export async function generateKeypairs(mnemonic: string) {
 export async function getFullDidDocument(keypairs: any) {
   await connect(env.KILT_NETWORK);
   const api = ConfigService.get('api');
+
   const didUri = Did.getFullDidUriFromKey(keypairs.authentication);
   const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
   const { document } = Did.linkedInfoFromChain(encodedFullDid);
@@ -314,10 +314,6 @@ export async function createPresentation(
     signCallback,
     challenge,
   });
-}
-
-export function randomChallenge(size = 16) {
-  return randomAsHex(size);
 }
 
 export function toCredentialIRI(rootHash: string): string {

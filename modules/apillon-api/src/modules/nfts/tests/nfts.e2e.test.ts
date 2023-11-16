@@ -64,7 +64,7 @@ describe('Apillon API NFTs tests', () => {
     //User 1 project & other data
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
 
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
     await overrideDefaultQuota(
       stage,
       testProject.project_uuid,
@@ -119,10 +119,7 @@ describe('Apillon API NFTs tests', () => {
       stage.devConsoleContext,
       stage.amsContext,
     );
-    nestableProject = await createTestProject(
-      nestableUser,
-      stage.devConsoleContext,
-    );
+    nestableProject = await createTestProject(nestableUser, stage);
     await overrideDefaultQuota(
       stage,
       nestableProject.project_uuid,
@@ -225,10 +222,7 @@ describe('Apillon API NFTs tests', () => {
         stage.devConsoleContext,
         stage.amsContext,
       );
-      const otherProject = await createTestProject(
-        otherUser,
-        stage.devConsoleContext,
-      );
+      const otherProject = await createTestProject(otherUser, stage);
       const otherService = await createTestProjectService(
         stage.devConsoleContext,
         otherProject,

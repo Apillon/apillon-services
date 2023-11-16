@@ -1,40 +1,37 @@
 import {
   AWS_S3,
+  CacheKeyPrefix,
   env,
+  invalidateCacheMatch,
   Lmas,
   LogType,
   runWithWorkers,
   ServiceName,
   writeLog,
 } from '@apillon/lib';
+import { CID } from 'ipfs-http-client';
 import {
   DbTables,
   FileStatus,
   FileUploadRequestFileStatus,
   StorageErrorCode,
 } from '../config/types';
-import { StorageCodeException } from '../lib/exceptions';
-import { Bucket } from '../modules/bucket/models/bucket.model';
-import { Directory } from '../modules/directory/models/directory.model';
-import { IPFSService } from '../modules/ipfs/ipfs.service';
-import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
-import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
-import { File } from '../modules/storage/models/file.model';
 import {
   generateDirectoriesForFUR,
   generateDirectoriesForFURs,
   generateDirectoriesFromPath,
 } from '../lib/generate-directories-from-path';
-import { pinFileToCRUST } from './pin-file-to-crust';
-import { getSessionFilesOnS3 } from './file-upload-session-s3-files';
-import { CID } from 'ipfs-http-client';
+import { Bucket } from '../modules/bucket/models/bucket.model';
+import { Directory } from '../modules/directory/models/directory.model';
 import { uploadItemsToIPFSRes } from '../modules/ipfs/interfaces/upload-items-to-ipfs-res.interface';
+import { IPFSService } from '../modules/ipfs/ipfs.service';
+import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
+import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
+import { File } from '../modules/storage/models/file.model';
+import { pinFileToCRUST } from './pin-file-to-crust';
 
 /**
  * Transfers file from s3 to IPFS & CRUST
- * @param bucket STORAGE bucket
- * @param maxBucketSize
- * @param files
  * @returns
  */
 // eslint-disable-next-line sonarjs/cognitive-complexity
@@ -42,7 +39,6 @@ export async function storageBucketSyncFilesToIPFS(
   context,
   location,
   bucket: Bucket,
-  maxBucketSize,
   files: FileUploadRequest[],
   session: FileUploadSession,
   wrapWithDirectory: boolean,
@@ -66,30 +62,17 @@ export async function storageBucketSyncFilesToIPFS(
 
     //Check if size of files is greater than allowed bucket size.
     const s3Client: AWS_S3 = new AWS_S3();
-    const filesOnS3 = await getSessionFilesOnS3(bucket, session);
-
-    if (filesOnS3.size + bucket.size > maxBucketSize) {
-      //Update all file upload requests with max bucket size reached error status
-      for (const fur of files) {
-        fur.fileStatus = FileUploadRequestFileStatus.ERROR_BUCKET_FULL;
-        await fur.update();
-      }
-
-      //TODO - define flow. What happens in that case
-      throw new StorageCodeException({
-        code: StorageErrorCode.NOT_ENOUGH_SPACE_IN_BUCKET,
-        status: 400,
-      });
-    }
 
     let ipfsRes: uploadItemsToIPFSRes = undefined;
     try {
-      ipfsRes = await IPFSService.uploadFURsToIPFSFromS3(
+      ipfsRes = await new IPFSService(
+        context,
+        bucket.project_uuid,
+      ).uploadFURsToIPFSFromS3(
         {
           fileUploadRequests: files,
           wrapWithDirectory: wrapWithDirectory,
           wrappingDirectoryPath,
-          project_uuid: bucket.project_uuid,
         },
         context,
       );
@@ -200,6 +183,7 @@ export async function storageBucketSyncFilesToIPFS(
               contentType: file.contentType,
               project_uuid: bucket.project_uuid,
               bucket_id: file.bucket_id,
+              path: file.path,
               directory_id: fileDirectory?.id,
               size: file.size,
               fileStatus: FileStatus.UPLOADED_TO_IPFS,
@@ -273,22 +257,13 @@ export async function storageBucketSyncFilesToIPFS(
       context,
       async (file) => {
         file = new FileUploadRequest(file, context);
-        if (bucket.size >= maxBucketSize) {
-          //max size was reached - mark files that will not be transfered to IPFS
-          file.fileStatus = FileUploadRequestFileStatus.ERROR_BUCKET_FULL;
-          await file.update();
-          //delete file from s3
-          const s3Client: AWS_S3 = new AWS_S3();
-          await s3Client.remove(
-            env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-            file.s3FileKey,
-          );
-          return;
-        }
 
         let ipfsRes = undefined;
         try {
-          ipfsRes = await IPFSService.uploadFURToIPFSFromS3(
+          ipfsRes = await new IPFSService(
+            context,
+            bucket.project_uuid,
+          ).uploadFURToIPFSFromS3(
             { fileUploadRequest: file, project_uuid: bucket.project_uuid },
             context,
           );
@@ -368,6 +343,7 @@ export async function storageBucketSyncFilesToIPFS(
                 project_uuid: bucket.project_uuid,
                 bucket_id: file.bucket_id,
                 directory_id: fileDirectory?.id,
+                path: file.path,
                 size: ipfsRes.size,
                 fileStatus: FileStatus.UPLOADED_TO_IPFS,
               })
@@ -421,24 +397,6 @@ export async function storageBucketSyncFilesToIPFS(
           env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
           file.s3FileKey,
         );
-
-        //Check if bucket max size reached. Write message to monitoring -
-        //all following files will not be transfered to IPFS. Their status will update to error and they will be deleted from S3.
-        if (bucket.size >= maxBucketSize) {
-          await new Lmas().writeLog({
-            context: context,
-            project_uuid: bucket.project_uuid,
-            logType: LogType.INFO,
-            message: 'MAX Storage bucket size reached',
-            location: location,
-            service: ServiceName.STORAGE,
-            data: {
-              bucket_uuid: bucket.bucket_uuid,
-              bucketSize: bucket.size,
-              bucketUploadedSize: bucket.uploadedSize,
-            },
-          });
-        }
       },
     );
 
@@ -491,6 +449,10 @@ export async function storageBucketSyncFilesToIPFS(
     'storage-bucket-sync-files-to-ipfsRes.ts',
     'storageBucketSyncFilesToIPFS',
   );
+
+  await invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
+    project_uuid: bucket.project_uuid,
+  });
 
   return { files: transferedFiles, wrappedDirCid: wrappedDirCid };
 }

@@ -1,12 +1,13 @@
 import { prop } from '@rawmodel/core';
-import { booleanParser, stringParser } from '@rawmodel/parsers';
-import { emailValidator, presenceValidator } from '@rawmodel/validators';
+import { stringParser } from '@rawmodel/parsers';
+import { presenceValidator } from '@rawmodel/validators';
 import { ValidatorErrorCode, PopulateFrom } from '../../../../config/types';
-import { ModelBase } from '../../../base-models/base';
 import {
   didCreateCreateOpValidator,
   didUriValidator,
 } from '../validators/did-create.validator';
+import { JSONParser } from '../../../parsers';
+import { BaseIdentityDto } from './base-identity.dto';
 
 // const body = {
 //   did_create_op: {
@@ -19,7 +20,7 @@ import {
 //   claimerEmail: string,
 //   didUri: string,
 // };
-export class IdentityCreateDto extends ModelBase {
+export class IdentityCreateDto extends BaseIdentityDto {
   @prop({
     // TODO: parser -> This is an object, so do we really need to parse anything?
     populatable: [PopulateFrom.PROFILE],
@@ -42,22 +43,6 @@ export class IdentityCreateDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.USER_EMAIL_NOT_PRESENT,
-      },
-      {
-        resolver: emailValidator(),
-        code: ValidatorErrorCode.USER_EMAIL_NOT_VALID,
-      },
-    ],
-  })
-  public email: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE],
-    validators: [
-      {
-        resolver: presenceValidator(),
         code: ValidatorErrorCode.DID_URI_NOT_PRESENT,
       },
       {
@@ -69,14 +54,9 @@ export class IdentityCreateDto extends ModelBase {
   public didUri: string;
 
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: JSONParser() },
     populatable: [PopulateFrom.PROFILE],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.IDENTITY_VERIFICATION_TOKEN_NOT_PRESENT,
-      },
-    ],
+    validators: [],
   })
-  public token: string;
+  public linkParameters: any;
 }

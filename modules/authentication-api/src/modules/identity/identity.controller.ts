@@ -1,15 +1,17 @@
-import { ValidateFor, VerificationEmailDto } from '@apillon/lib';
 import { CaptchaGuard, Ctx, Validation } from '@apillon/modules-lib';
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthenticationApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { AuthGuard } from '../../guards/auth.guard';
 import { IdentityService } from './identity.service';
-import { AttestationEmailDto } from './dtos/identity-email.dto';
-import { IdentityCreateDto } from './dtos/identity-create.dto';
-import { JwtTokenType } from '../../config/types';
-import { DevEnvGuard } from '../../guards/dev-env.guard';
-import { IdentityDidRevokeDto } from './dtos/identity-did-revoke.dto';
+import {
+  BaseIdentityDto,
+  IdentityCreateDto,
+  IdentityDidRevokeDto,
+  JwtTokenType,
+  ValidateFor,
+  VerificationEmailDto,
+} from '@apillon/lib';
 
 @Controller('identity')
 export class IdentityController {
@@ -20,14 +22,14 @@ export class IdentityController {
   @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.IDENTITY_VERIFICATION))
   async attestationGenerateIdentity(
     @Ctx() context: AuthenticationApiContext,
-    @Body() body: any,
+    @Body() body: IdentityCreateDto,
   ) {
     return await this.identityService.generateIdentity(context, body);
   }
 
   @Get('state/query')
-  @Validation({ dto: AttestationEmailDto, validateFor: ValidateFor.QUERY })
-  @UseGuards(ValidationGuard)
+  @Validation({ dto: BaseIdentityDto, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.IDENTITY_VERIFICATION))
   async attestationGetIdentityState(
     @Ctx() context: AuthenticationApiContext,
     @Query('email') email: string,
@@ -39,7 +41,7 @@ export class IdentityController {
   }
 
   @Get('credential/query')
-  @Validation({ dto: AttestationEmailDto, validateFor: ValidateFor.QUERY })
+  @Validation({ dto: BaseIdentityDto, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.IDENTITY_VERIFICATION))
   async identityGetUserCredential(
     @Ctx() context: AuthenticationApiContext,
@@ -53,28 +55,22 @@ export class IdentityController {
   @UseGuards(ValidationGuard, AuthGuard(JwtTokenType.IDENTITY_VERIFICATION))
   async identityRevoke(
     @Ctx() context: AuthenticationApiContext,
-    @Body() body: any,
+    @Body() body: IdentityDidRevokeDto,
   ) {
     return await this.identityService.revokeIdentity(context, body);
   }
 
   @Post('verification/email')
   @Validation({ dto: VerificationEmailDto })
-  @UseGuards(ValidationGuard, CaptchaGuard)
+  @UseGuards(
+    ValidationGuard,
+    CaptchaGuard,
+    AuthGuard(JwtTokenType.AUTH_SESSION),
+  )
   async identityVerification(
     @Ctx() context: AuthenticationApiContext,
-    @Body() body: any,
+    @Body() body: VerificationEmailDto,
   ) {
     return await this.identityService.sendVerificationEmail(context, body);
-  }
-
-  @Post('dev/create-did')
-  // NOTE: If this is used in production, there will be blood!!!
-  @UseGuards(DevEnvGuard)
-  async attestationGenerateDevDid(
-    @Ctx() context: AuthenticationApiContext,
-    @Body() body: any,
-  ) {
-    return await this.identityService.generateDevResources(context, body);
   }
 }

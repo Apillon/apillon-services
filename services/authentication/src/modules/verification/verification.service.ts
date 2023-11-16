@@ -1,11 +1,12 @@
+import { VerificationIdentityDto } from '@apillon/lib';
 import {
   env,
   generateJwtToken,
   JwtTokenType,
   Lmas,
   LogType,
+  parseJwtToken,
   ServiceName,
-  writeLog,
 } from '@apillon/lib';
 import {
   Attestation,
@@ -16,8 +17,11 @@ import {
   ICredentialPresentation,
 } from '@kiltprotocol/sdk-js';
 
-export class VerificationMicroservice {
-  static async verifyIdentity(event, context): Promise<any> {
+export class VerificationService {
+  static async verifyIdentity(
+    event: { body: VerificationIdentityDto },
+    context,
+  ): Promise<any> {
     await connect(env.KILT_NETWORK);
     const api = ConfigService.get('api');
 
@@ -27,22 +31,28 @@ export class VerificationMicroservice {
     let attestation: IAttestation;
 
     try {
+      // Offline the
       await Credential.verifyPresentation(presentation);
 
+      // Onchain
       attestation = Attestation.fromChain(
         await api.query.attestation.attestations(presentation.rootHash),
         presentation.rootHash,
       );
+      if (attestation.revoked) {
+        return { verified: false, error: 'Credential was revoked!' };
+      }
     } catch (error) {
       return {
         verified: false,
         error: error.message.replace(/['"]+/g, ''),
       };
     }
+
     const whitelist = env.KILT_ATTESTERS_WHITELIST.split(';');
     if (!whitelist.includes(attestation.owner.split('did:kilt:')[1])) {
       await new Lmas().writeLog({
-        context: context,
+        context,
         logType: LogType.INFO,
         message: 'VERIFICATION FAILED: Unknown attester',
         location: 'AUTHENTICATION-API/verification/verifyIdentity',
@@ -55,14 +65,19 @@ export class VerificationMicroservice {
       };
     }
 
+    const { project_uuid } = parseJwtToken(
+      JwtTokenType.AUTH_SESSION,
+      event.body.token,
+    );
+
+    const email = presentation.claim.contents.Email;
+
     const token = generateJwtToken(
-      JwtTokenType.USER_AUTHENTICATION,
-      { email: presentation.claim.contents.Email },
+      JwtTokenType.OAUTH_TOKEN,
+      { email, project_uuid },
       '10min',
     );
 
-    return attestation.revoked
-      ? { verified: false, error: 'Credential was revoked!' }
-      : { verified: true, data: token };
+    return { verified: true, data: token };
   }
 }

@@ -3,6 +3,7 @@ import {
   DefaultApiKeyRole,
   AttachedServiceType,
   generateJwtToken,
+  JwtTokenType,
 } from '@apillon/lib';
 import {
   Stage,
@@ -14,7 +15,6 @@ import {
 } from '@apillon/tests-lib';
 import { setupTest } from '../../../../test/helpers/setup';
 import * as request from 'supertest';
-import { JwtTokenType } from '../../../config/types';
 
 describe('Authentication tests', () => {
   let stage: Stage;
@@ -29,7 +29,7 @@ describe('Authentication tests', () => {
     stage = await setupTest();
 
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
     testService = await createTestProjectService(
       stage.devConsoleContext,
       testProject,
@@ -72,7 +72,7 @@ describe('Authentication tests', () => {
       .set(
         'Authorization',
         `Basic ${Buffer.from(
-          apiKey.apiKey + ':' + apiKey.apiKeySecret,
+          `${apiKey.apiKey}:${apiKey.apiKeySecret}`,
         ).toString('base64')}`,
       );
     expect(response.status).toBe(200);
@@ -82,47 +82,54 @@ describe('Authentication tests', () => {
 
   test('Invalid token should not be verified', async () => {
     const response = await request(stage.http)
-      .get(`/auth/verify-login?token=${token}`)
+      .post(`/auth/verify-login`)
       .set(
         'Authorization',
         `Basic ${Buffer.from(
-          apiKey.apiKey + ':' + apiKey.apiKeySecret,
+          `${apiKey.apiKey}:${apiKey.apiKeySecret}`,
         ).toString('base64')}`,
-      );
-    expect(response.status).toBe(200);
-    // This does not verify the same token
-    expect(response.body.data.verified).toBeFalsy();
+      )
+      .send({ token });
+    expect(response.status).toBe(401);
+    expect(response.body.message).toBe('INVALID_AUTH_TOKEN');
   });
 
   test('Valid token should be verified', async () => {
-    const token = generateJwtToken(JwtTokenType.USER_AUTHENTICATION, '10min');
+    const email = 'oauthemail@apillon.io';
+    const token = generateJwtToken(
+      JwtTokenType.OAUTH_TOKEN,
+      { email },
+      '10min',
+    );
     const response = await request(stage.http)
-      .get(`/auth/verify-login?token=${token}`)
+      .post(`/auth/verify-login`)
       .set(
         'Authorization',
         `Basic ${Buffer.from(
-          apiKey.apiKey + ':' + apiKey.apiKeySecret,
+          `${apiKey.apiKey}:${apiKey.apiKeySecret}`,
         ).toString('base64')}`,
-      );
+      )
+      .send({ token });
 
-    expect(response.status).toBe(200);
-    expect(response.body.data.verified).toBeTruthy();
+    expect(response.status).toBe(201);
+    expect(response.body.data).toEqual(email);
   });
 
   test('Expired token should not be verified', async () => {
-    const token2 = generateJwtToken(JwtTokenType.USER_AUTHENTICATION, {}, '1');
+    const token2 = generateJwtToken(JwtTokenType.OAUTH_TOKEN, {}, '1');
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
     const response = await request(stage.http)
-      .get(`/auth/verify-login?token=${token2}`)
+      .post(`/auth/verify-login`)
       .set(
         'Authorization',
         `Basic ${Buffer.from(
-          apiKey.apiKey + ':' + apiKey.apiKeySecret,
+          `${apiKey.apiKey}:${apiKey.apiKeySecret}`,
         ).toString('base64')}`,
-      );
+      )
+      .send({ token: token2 });
 
-    expect(response.status).toBe(200);
-    expect(response.body.data.verified).toBeFalsy();
+    expect(response.status).toBe(401);
+    expect(response.body.message).toBe('INVALID_AUTH_TOKEN');
   });
 });

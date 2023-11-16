@@ -18,7 +18,6 @@ export class DiscordBotController {
     role: DefaultApiKeyRole.KEY_EXECUTE,
     serviceType: AttachedServiceType.SYSTEM,
   })
-  @UseGuards(AuthGuard)
   @Validation({ dto: OauthListFilterDto, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
   async getDiscordUserList(

@@ -12,7 +12,7 @@ import { FileUploadSession } from '../modules/storage/models/file-upload-session
  */
 export async function getSessionFilesOnS3(
   bucket: Bucket,
-  session: FileUploadSession,
+  session_uuid: string,
 ): Promise<{ size: number; files: any[] }> {
   const s3Client: AWS_S3 = new AWS_S3();
   /**
@@ -24,9 +24,9 @@ export async function getSessionFilesOnS3(
   do {
     s3FileList = await s3Client.listFiles(
       env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-      `${BucketType[bucket.bucketType]}${
-        session?.session_uuid ? '_sessions' : ''
-      }/${bucket.id}/${session?.session_uuid}`,
+      `${BucketType[bucket.bucketType]}${session_uuid ? '_sessions' : ''}/${
+        bucket.id
+      }/${session_uuid}`,
       lastS3Key,
     );
     if (s3FileList.Contents?.length > 0) {

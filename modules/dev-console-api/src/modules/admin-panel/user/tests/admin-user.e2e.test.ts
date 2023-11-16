@@ -31,7 +31,7 @@ describe('Admin User tests', () => {
       DefaultUserRole.ADMIN,
     );
 
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
   });
 
   afterAll(async () => {

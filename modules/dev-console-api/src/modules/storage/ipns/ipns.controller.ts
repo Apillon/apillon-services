@@ -26,7 +26,7 @@ import { AuthGuard } from '../../../guards/auth.guard';
 import { ValidationGuard } from '../../../guards/validation.guard';
 import { IpnsService } from './ipns.service';
 
-@Controller('buckets/:bucket_id/ipns')
+@Controller('buckets/:bucket_uuid/ipns')
 @Permissions({ permission: DefaultPermission.STORAGE })
 export class IpnsController {
   constructor(private ipnsService: IpnsService) {}
@@ -37,10 +37,10 @@ export class IpnsController {
   @UseGuards(ValidationGuard, AuthGuard)
   async getIpnsList(
     @Ctx() context: DevConsoleApiContext,
-    @Param('bucket_id', ParseIntPipe) bucket_id: number,
+    @Param('bucket_uuid') bucket_uuid: string,
     @Query() query: IpnsQueryFilter,
   ) {
-    return await this.ipnsService.getIpnsList(context, bucket_id, query);
+    return await this.ipnsService.getIpnsList(context, bucket_uuid, query);
   }
 
   @Get(':id')
@@ -64,10 +64,10 @@ export class IpnsController {
   @UseGuards(ValidationGuard)
   async createIpnsRecord(
     @Ctx() context: DevConsoleApiContext,
-    @Param('bucket_id', ParseIntPipe) bucket_id: number,
+    @Param('bucket_uuid') bucket_uuid: string,
     @Body() body: CreateIpnsDto,
   ) {
-    return await this.ipnsService.createIpns(context, bucket_id, body);
+    return await this.ipnsService.createIpns(context, bucket_uuid, body);
   }
 
   @Patch(':id')

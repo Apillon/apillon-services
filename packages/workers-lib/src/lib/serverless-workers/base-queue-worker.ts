@@ -96,8 +96,8 @@ export abstract class BaseQueueWorker extends BaseWorker {
     await this.writeLogToDb(WorkerLogStatus.SUCCESS, 'Job completed!');
   }
 
-  public async onError(error): Promise<any> {
-    await this.writeLogToDb(WorkerLogStatus.ERROR, 'Error!', null, error);
+  public async onError(error, data?): Promise<any> {
+    await this.writeLogToDb(WorkerLogStatus.ERROR, 'Error!', data, error);
     throw error;
   }
 

@@ -57,8 +57,8 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       DefaultUserRole.ADMIN,
     );
 
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
-    await createTestProject(testUser2, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
+    await createTestProject(testUser2, stage);
     testCollection = await createTestNFTCollection(
       testUser,
       stage.nftsContext,
@@ -79,10 +79,7 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       stage.devConsoleContext,
       stage.amsContext,
     );
-    nestableProject = await createTestProject(
-      nestableUser,
-      stage.devConsoleContext,
-    );
+    nestableProject = await createTestProject(nestableUser, stage);
     await overrideDefaultQuota(
       stage,
       nestableProject.project_uuid,
@@ -428,7 +425,9 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       expect(newCollection.baseUri).toBeTruthy();
 
       //1.json should be available in baseUri
-      const response2 = await request(newCollection.baseUri + '1.json').get('');
+      const response2 = await request(
+        newCollection.baseUri + '1' + newCollection.baseExtension,
+      ).get('');
       expect(response2.status).toBe(200);
 
       //Bucket should contain 2 directories

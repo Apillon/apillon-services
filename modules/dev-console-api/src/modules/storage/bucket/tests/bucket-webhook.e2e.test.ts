@@ -36,7 +36,7 @@ describe('Storage bucket tests', () => {
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
 
-    testProject = await createTestProject(testUser, stage.devConsoleContext);
+    testProject = await createTestProject(testUser, stage);
     // testProject2 = await createTestProject(testUser2, stage.devConsoleContext);
 
     testBucket = await createTestBucket(
@@ -63,7 +63,7 @@ describe('Storage bucket tests', () => {
   describe('Bucket webhook CRUD tests', () => {
     test('User should be able to get bucket webhook', async () => {
       const response = await request(stage.http)
-        .get(`/buckets/${testBucket.id}/webhook`)
+        .get(`/buckets/${testBucket.bucket_uuid}/webhook`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.id).toBeTruthy();
@@ -80,7 +80,7 @@ describe('Storage bucket tests', () => {
 
     test('User should NOT be able to create 2 webhooks in one bucket', async () => {
       const response = await request(stage.http)
-        .post(`/buckets/${testBucket.id}/webhook`)
+        .post(`/buckets/${testBucket.bucket_uuid}/webhook`)
         .send({
           url: 'https://eob0hpm13hsj7sk.m.pipedream.net',
           authMethod: 'bearerToken',
@@ -96,7 +96,7 @@ describe('Storage bucket tests', () => {
 
     test('User should be able to create bucket webhook', async () => {
       const response = await request(stage.http)
-        .post(`/buckets/${testBucket2.id}/webhook`)
+        .post(`/buckets/${testBucket2.bucket_uuid}/webhook`)
         .send({
           url: 'https://eob0hpm13hsj7sk.m.pipedream.net',
           authMethod: 'bearerToken',
@@ -122,7 +122,7 @@ describe('Storage bucket tests', () => {
 
     test('User should be able to update bucket webhook', async () => {
       const response = await request(stage.http)
-        .patch(`/buckets/${testBucket.id}/webhook/${testWebhook.id}`)
+        .patch(`/buckets/${testBucket.bucket_uuid}/webhook/${testWebhook.id}`)
         .send({
           url: 'https://eob0hpm13hsj7sk.m.pipedream.net',
           authMethod: BucketWebhookAuthMethod.TOKEN,
@@ -167,7 +167,7 @@ describe('Storage bucket tests', () => {
 
     test('User with role Project user, should be able to get bucket webhook', async () => {
       const response = await request(stage.http)
-        .get(`/buckets/${testBucket.id}/webhook`)
+        .get(`/buckets/${testBucket.bucket_uuid}/webhook`)
         .set('Authorization', `Bearer ${testUser3.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.id).toBeTruthy();
@@ -176,7 +176,7 @@ describe('Storage bucket tests', () => {
 
     test('User should NOT be able to update ANOTHER USER bucket webhook', async () => {
       const response = await request(stage.http)
-        .patch(`/buckets/${testBucket.id}/webhook/${testWebhook.id}`)
+        .patch(`/buckets/${testBucket.bucket_uuid}/webhook/${testWebhook.id}`)
         .send({
           url: 'https://eob0hpm13hsj7sk.m.pipedream.net',
         })
@@ -186,7 +186,7 @@ describe('Storage bucket tests', () => {
 
     test('Admin User should be able to get bucket webhook', async () => {
       const response = await request(stage.http)
-        .get(`/buckets/${testBucket.id}/webhook`)
+        .get(`/buckets/${testBucket.bucket_uuid}/webhook`)
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.id).toBeTruthy();
@@ -210,7 +210,7 @@ describe('Storage bucket tests', () => {
   describe('Bucket webhook DELETE tests', () => {
     test('User should NOT be able to delete ANOTHER USER bucket webhook', async () => {
       const response = await request(stage.http)
-        .delete(`/buckets/${testBucket.id}/webhook/${testWebhook.id}`)
+        .delete(`/buckets/${testBucket.bucket_uuid}/webhook/${testWebhook.id}`)
         .set('Authorization', `Bearer ${testUser2.token}`);
       expect(response.status).toBe(403);
 
@@ -223,7 +223,7 @@ describe('Storage bucket tests', () => {
 
     test('User should be able to delete bucket webhook', async () => {
       const response = await request(stage.http)
-        .delete(`/buckets/${testBucket.id}/webhook/${testWebhook.id}`)
+        .delete(`/buckets/${testBucket.bucket_uuid}/webhook/${testWebhook.id}`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
 

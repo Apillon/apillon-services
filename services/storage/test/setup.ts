@@ -2,6 +2,7 @@ import {
   AppEnvironment,
   dropDatabase,
   env,
+  Mongo,
   MySql,
   rebuildDatabase,
 } from '@apillon/lib';
@@ -17,6 +18,7 @@ export interface DatabaseState {
 export interface Stage {
   db: MySql;
   context: ServiceContext;
+  lmasMongo: Mongo;
 }
 
 export async function setupTest(): Promise<Stage> {
@@ -46,9 +48,17 @@ export async function setupTest(): Promise<Stage> {
     const context = new ServiceContext();
     context.mysql = db;
 
+    const lmasMongo = new Mongo(
+      env.MONITORING_MONGO_SRV_TEST,
+      env.MONITORING_MONGO_DATABASE_TEST,
+      10,
+    );
+    await lmasMongo.connect();
+
     return {
       db,
       context,
+      lmasMongo,
     };
   } catch (e) {
     console.error(e);
