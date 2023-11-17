@@ -29,9 +29,14 @@ export class SystemService {
       `,
         {},
       );
-    } catch (e) {
-      console.error(e);
-      throw e;
+      await mysql.close();
+    } catch (err) {
+      await mysql
+        .close()
+        .catch((err2) => console.error('Error closing connection', err2));
+
+      console.error(err);
+      throw err;
     }
 
     //Get projects that have reached bandwidth quota
