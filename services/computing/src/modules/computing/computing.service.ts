@@ -25,7 +25,7 @@ import {
 } from '../../lib/exceptions';
 import {
   deployPhalaContract,
-  depositToPhalaContractCluster,
+  depositToPhalaCluster,
   transferContractOwnership,
 } from '../../lib/utils/contract-utils';
 import { Contract } from './models/contract.model';
@@ -142,47 +142,37 @@ export class ComputingService {
     return contract.serialize(getSerializationStrategy(context));
   }
 
-  static async depositToContractCluster(
+  static async depositToPhalaCluster(
     params: { body: DepositToClusterDto },
     context: ServiceContext,
   ) {
-    console.log(`Funding contract cluster: ${JSON.stringify(params.body)}`);
-    const contract = await new Contract({}, context).populateByUUID(
-      params.body.contract_uuid,
-    );
-    const sourceFunction = 'depositToContractCluster()';
-    contract.verifyStatusAndAccess(sourceFunction, context);
+    console.log(`Depositing to cluster: ${JSON.stringify(params.body)}`);
+    const sourceFunction = 'depositToCluster()';
 
+    const clusterId = params.body.clusterId;
     const amount = params.body.amount;
     const accountAddress = params.body.accountAddress;
     try {
-      await depositToPhalaContractCluster(
-        context,
-        contract,
-        accountAddress,
-        amount,
-      );
+      await depositToPhalaCluster(context, clusterId, accountAddress, amount);
     } catch (e: any) {
       throw await new ComputingCodeException({
         status: 500,
-        code: ComputingErrorCode.FUND_CONTRACT_CLUSTER_ERROR,
+        code: ComputingErrorCode.DEPOSIT_TO_PHALA_CLUSTER_ERROR,
         context: context,
         sourceFunction,
-        errorMessage: 'Error depositing to contract cluster',
+        errorMessage: 'Error depositing to Phala cluster',
         details: e,
       }).writeToMonitor({});
     }
 
     await new Lmas().writeLog({
       context,
-      project_uuid: contract.project_uuid,
       logType: LogType.INFO,
-      message: `${amount}PHA deposited to address ${accountAddress} in cluster ${contract.data.clusterId}`,
-      location: 'ComputingService/depositToContractCluster',
+      message: `${amount}PHA deposited to address ${accountAddress} in cluster ${clusterId}`,
+      location: 'ComputingService/depositToCluster',
       service: ServiceName.COMPUTING,
       data: {
-        contract_uuid: contract.contract_uuid,
-        clusterId: contract.data.clusterId,
+        clusterId,
         accountAddress,
         amount,
       },
@@ -215,12 +205,15 @@ export class ComputingService {
     try {
       await transferContractOwnership(
         context,
+        contract.project_uuid,
         contract.id,
         contractAbi.abi,
         contract.contractAddress,
         newOwnerAddress,
       );
     } catch (e: any) {
+      console.log('error', e?.message);
+      console.error(e);
       throw await new ComputingCodeException({
         status: 500,
         code: ComputingErrorCode.TRANSFER_CONTRACT_ERROR,
@@ -291,7 +284,7 @@ export class ComputingService {
         status: 400,
         code: ComputingErrorCode.TRANSACTION_FOR_TRANSFER_ALREADY_EXISTS,
         context,
-        sourceFunction: 'checkTransferConditions()',
+        sourceFunction,
       });
     }
   }
