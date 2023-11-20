@@ -1,4 +1,5 @@
 import {
+  Ams,
   ApillonHostingApiCreateS3UrlsForUploadDto,
   AWS_S3,
   CreateS3UrlsForUploadDto,
@@ -9,6 +10,7 @@ import {
   env,
   Lmas,
   LogType,
+  Mailing,
   PopulateFrom,
   ProductCode,
   QuotaCode,
@@ -514,7 +516,19 @@ export class HostingService {
     const ipfsService = new IPFSService(context, website.project_uuid);
     await ipfsService.unpinCidFromCluster(deployment.cid);
 
-    //TODO send email!
+    //Get project owner
+    const projectOwner = (
+      await new Ams(context).getProjectOwner(website.project_uuid)
+    ).data;
+
+    if (projectOwner?.email) {
+      //send email
+      await new Mailing(context).sendMail({
+        emails: [projectOwner.email],
+        template: 'website-deployment-rejected',
+        data: {},
+      });
+    }
 
     return true;
   }

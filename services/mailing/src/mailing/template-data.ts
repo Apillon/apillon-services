@@ -182,6 +182,38 @@ export function generateTemplateData(key: string, data: any) {
       </p>
       `,
     },
+    'website-deployment-rejected': {
+      subject:
+        'Urgent: Action Required Regarding Your Recent Apillon Deployment',
+      title: 'Website deployment has been rejected',
+      text: `
+      <p>
+        Dear Apillon user,
+        <br/><br/>
+        We hope this email finds you well. We regret to inform you that one of your recent deployments to the Apillon hosting and storage service has been automatically blocked due to a violation of our general terms and conditions.
+      </p>
+      <p>
+        <br/>
+        What to Do:
+        <br/>
+        We kindly request that you promptly review the content of your last deployment. If you believe this action was taken in error, please respond to this email or reach out to us on Discord at your earliest convenience.
+      </p>
+      <p>
+        <br/>
+        Preventing Future Incidents:
+        <br/>
+        To ensure the continued use of our platform, we urge you to refrain from deploying any content that may be considered potentially malicious or otherwise unacceptable. Failure to comply with our terms and conditions may result in the disabling of your account.
+      </p>
+      <p>
+        <br/><br/>
+        We value the security and integrity of our platform, and we appreciate your cooperation in maintaining a safe environment for all Apillon users.
+        <br/><br/>
+        Thank you for your immediate attention to this matter.
+        <br/>
+        Apillon Support Team
+      </p>
+      `,
+    },
   };
 
   return templateData[key];
