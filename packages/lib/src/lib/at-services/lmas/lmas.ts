@@ -141,7 +141,9 @@ export class Lmas extends BaseService {
     try {
       await this.callService(data);
     } catch (err) {
-      console.error(`LMAS sendAdminAlert CALL SERVICE ERROR: ${err.message}`);
+      console.error(
+        `LMAS sendMessageToSlack CALL SERVICE ERROR: ${err.message}`,
+      );
     }
   }
 

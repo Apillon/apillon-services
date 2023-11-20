@@ -57,7 +57,7 @@ export class Alerting {
       event.service,
       LogType.MSG,
       event.channel || env.SLACK_CHANNEL,
-      event.blocks && event.blocks.length ? event.blocks : [],
+      event.blocks?.length ? event.blocks : [],
     );
 
     return event;

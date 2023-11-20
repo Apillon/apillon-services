@@ -43,18 +43,6 @@ export class Slack {
   ) {
     try {
       blocks = [{ type: 'section', text: { type: 'mrkdwn', text } }, ...blocks];
-      /*if (attachments?.length) {
-        //image blocks
-        attachments
-          .filter((x) => x.image_url)
-          .forEach((attachment) => {
-            blocks.push({
-              type: 'image',
-              alt_text: attachment.image_url,
-              image_url: attachment.image_url,
-            });
-          });
-      }*/
       // Call the chat.postMessage method using the built-in WebClient
       // const result =
       await this.client.chat.postMessage({

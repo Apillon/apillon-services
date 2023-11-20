@@ -1,5 +1,4 @@
-import { AppEnvironment, CodeException, Context } from '@apillon/lib';
-import { BaseService, env } from '@apillon/lib';
+import { AppEnvironment, BaseService, Context, env } from '@apillon/lib';
 import axios from 'axios';
 import { StorageErrorCode } from '../config/types';
 import { StorageCodeException } from './exceptions';
@@ -15,7 +14,7 @@ export class UrlScreenshotMicroservice extends BaseService {
   }
 
   /**
-   *
+   * Call function (lambda/api), which creates screenshot of website and puts it on S3
    * @param project_uuid project
    * @param url url of website for screenshot
    * @param key aws s3 key - used for file naming
