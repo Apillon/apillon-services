@@ -29,6 +29,7 @@ export class SystemService {
       `,
         {},
       );
+      await mysql.close();
     } catch (e) {
       console.error(e);
       throw e;
