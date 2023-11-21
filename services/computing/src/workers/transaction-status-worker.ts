@@ -1,7 +1,6 @@
 import {
   Context,
   env,
-  InstantiatedTransactionWebhookDataDto,
   LogType,
   runWithWorkers,
   ServiceName,
@@ -39,16 +38,13 @@ export class TransactionStatusWorker extends BaseQueueWorker {
       input.data,
       50,
       this.context,
-      async (
-        res: TransactionWebhookDataDto | InstantiatedTransactionWebhookDataDto,
-        ctx,
-      ) => {
-        if (res instanceof InstantiatedTransactionWebhookDataDto) {
+      async (res: TransactionWebhookDataDto, ctx) => {
+        if (!res.transactionHash) {
           //update instantiated contracts
           console.log(
-            `Updating instantiated contract with address ${res.contractAddress}.`,
+            `Updating instantiated contract with address ${res.data}.`,
           );
-          await this.updateInstantiatedContract(res.contractAddress);
+          await this.updateInstantiatedContract(res.data);
         } else {
           console.log(
             `Updating instantiating contract with hash ${res.transactionHash}.`,

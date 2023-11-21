@@ -1,11 +1,11 @@
 import {
   ChainType,
-  InstantiatedTransactionWebhookDataDto,
   LogType,
   PoolConnection,
   ServiceName,
   SubstrateChain,
   TransactionStatus,
+  TransactionWebhookDataDto,
 } from '@apillon/lib';
 import { LogOutput } from '@apillon/workers-lib';
 import {
@@ -46,9 +46,8 @@ export class PhalaTransactionWorker extends SubstrateTransactionWorker {
           );
         const instantiatedTransactionsDtos = instantiatedTransactions.map(
           (tx) =>
-            new InstantiatedTransactionWebhookDataDto().populate({
-              deployerAddress: tx.deployer,
-              contractAddress: tx.contract,
+            new TransactionWebhookDataDto().populate({
+              data: tx.contract,
             }),
         );
         await processInstantiatedTransactionsWebhooks(

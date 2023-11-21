@@ -2,7 +2,6 @@ import {
   AppEnvironment,
   Context,
   env,
-  InstantiatedTransactionWebhookDataDto,
   PoolConnection,
   TransactionStatus,
   TransactionWebhookDataDto,
@@ -136,7 +135,7 @@ export async function processWebhooks(
  * @returns
  */
 export async function processInstantiatedTransactionsWebhooks(
-  transactions: InstantiatedTransactionWebhookDataDto[],
+  transactions: TransactionWebhookDataDto[],
   sqsUrl: string,
   workerName: string,
 ) {

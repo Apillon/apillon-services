@@ -7,15 +7,6 @@ import {
 import { prop } from '../../../base-models/base';
 import { BaseTransactionDto } from './base-transaction.dto';
 
-export class InstantiatedTransactionWebhookDataDto extends BaseTransactionDto {
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-  })
-  public contractAddress: string;
-}
-
 export class TransactionWebhookDataDto extends BaseTransactionDto {
   @prop({
     parser: { resolver: integerParser() },
