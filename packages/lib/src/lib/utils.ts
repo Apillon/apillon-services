@@ -149,3 +149,18 @@ export function getEnumKey<TEnum>(
 ): string | TEnum[keyof TEnum] {
   return Object.keys(enumerator).find((key) => enumerator[key] === value);
 }
+
+/**
+ * Split array into multiple arrays (chunks)
+ * @param arr source array
+ * @param splitBy num of elements in chunk
+ * @returns
+ */
+export function splitArray(arr, splitBy) {
+  const cache = [];
+  const tmp = [...arr];
+  while (tmp.length) {
+    cache.push(tmp.splice(0, splitBy));
+  }
+  return cache;
+}
