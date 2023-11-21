@@ -479,8 +479,12 @@ export interface IEnv {
    */
   STRIPE_SECRET: string;
   STRIPE_WEBHOOK_SECRET: string;
-
   STRIPE_SECRET_TEST: string;
+
+  /**
+   * MAILERLITE
+   */
+  MAILERLITE_API_KEY: string;
 }
 
 // dotenv.config();
@@ -870,6 +874,9 @@ export let env: IEnv = {
   STRIPE_SECRET: process.env['STRIPE_SECRET'],
   STRIPE_SECRET_TEST: process.env['STRIPE_SECRET_TEST'],
   STRIPE_WEBHOOK_SECRET: process.env['STRIPE_WEBHOOK_SECRET'],
+
+  /** MAILERLITE */
+  MAILERLITE_API_KEY: process.env['MAILERLITE_API_KEY'],
 };
 
 export let isEnvReady = false;
