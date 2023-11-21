@@ -92,7 +92,7 @@ export class PhalaBlockchainIndexer extends BaseBlockchainIndexer {
     return data.phatContractsInstantiatings;
   }
 
-  public async getContractsInstantiatedEvents(
+  public async getContractsInstantiatedTransactions(
     deployer: string,
     fromBlock: number,
     toBlock: number,

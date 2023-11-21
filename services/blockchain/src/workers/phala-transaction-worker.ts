@@ -39,7 +39,7 @@ export class PhalaTransactionWorker extends SubstrateTransactionWorker {
       //Execute webhooks for instantiated contracts
       try {
         const instantiatedTransactions =
-          await this.indexer.getContractsInstantiatedEvents(
+          await this.indexer.getContractsInstantiatedTransactions(
             wallet.address,
             fromBlock,
             toBlock,

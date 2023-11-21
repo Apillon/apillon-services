@@ -26,12 +26,12 @@ export abstract class BaseBlockchainIndexer {
     throw new Error('getContractInstantiatingTransactions not implemented');
   }
 
-  public async getContractsInstantiatedEvents(
+  public async getContractsInstantiatedTransactions(
     _deployer: string,
     _fromBlock: number,
     _toBlock: number,
   ): Promise<PhatContractsInstantiatedTransaction[]> {
-    throw new Error('getContractsInstantiatedEvents not implemented');
+    throw new Error('getContractsInstantiatedTransactions not implemented');
   }
 
   public async getBlockHeight(): Promise<number> {
