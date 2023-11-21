@@ -8,7 +8,12 @@ import {
   StorageMicroservice,
   env,
 } from '@apillon/lib';
-import { BaseWorker, Job, WorkerDefinition } from '@apillon/workers-lib';
+import {
+  BaseWorker,
+  Job,
+  WorkerDefinition,
+  sendToWorkerQueue,
+} from '@apillon/workers-lib';
 import { Subscription } from '../modules/subscription/models/subscription.model';
 import { uniqBy } from 'lodash';
 import { ConfigErrorCode, QuotaWarningLevel } from '../config/types';
@@ -89,7 +94,20 @@ export class ExpiredSubscriptionsWorker extends BaseWorker {
           QuotaWarningLevel.THIRTY_DAYS,
         );
       } else if (project.quotaWarningLevel === QuotaWarningLevel.THIRTY_DAYS) {
-        // TODO: File deletion logic
+        //Send message to storage queue
+        await sendToWorkerQueue(
+          env.STORAGE_AWS_WORKER_SQS_URL,
+          'FreeProjectResourcesWorker',
+          [
+            {
+              project_uuid: project.project_uuid,
+              maxStorageQuota: project.availableStorage,
+            },
+          ],
+          null,
+          null,
+        );
+
         await new Subscription(project, this.context).updateQuotaWarningLevel(
           QuotaWarningLevel.RESOURCES_RELEASED,
         );
