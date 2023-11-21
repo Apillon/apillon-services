@@ -51,8 +51,8 @@ export enum TransactionType {
 export enum ContractStatus {
   CREATED = 0,
   DEPLOY_INITIATED = 1,
-  DEPLOYING = 2,
-  DEPLOYED = 3,
+  DEPLOYING = 2, //INSTANTIATING
+  DEPLOYED = 3, //INSTANTIATED
   TRANSFERRED = 4,
   FAILED = 5,
 }

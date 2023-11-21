@@ -51,7 +51,7 @@ export async function deployPhalaContract(
 
   //Insert to DB
   await TransactionService.saveTransaction(dbTxRecord, conn);
-  contract.contractStatus = ContractStatus.DEPLOYING;
+  contract.contractStatus = ContractStatus.DEPLOY_INITIATED;
   contract.deployerAddress = response.data.address;
   await contract.update(SerializeFor.UPDATE_DB, conn);
 }

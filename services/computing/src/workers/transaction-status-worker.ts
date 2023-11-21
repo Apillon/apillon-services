@@ -1,6 +1,7 @@
 import {
   Context,
   env,
+  InstantiatedTransactionWebhookDataDto,
   LogType,
   runWithWorkers,
   ServiceName,
@@ -38,28 +39,48 @@ export class TransactionStatusWorker extends BaseQueueWorker {
       input.data,
       50,
       this.context,
-      async (res: TransactionWebhookDataDto, ctx) => {
-        const computingTransaction = await new Transaction(
-          {},
-          ctx,
-        ).populateByTransactionHash(res.transactionHash);
-        if (computingTransaction.exists()) {
-          computingTransaction.transactionStatus = res.transactionStatus;
-          await computingTransaction.update();
-          if (
-            computingTransaction.transactionType ==
-              TransactionType.DEPLOY_CONTRACT ||
-            computingTransaction.transactionType ==
-              TransactionType.TRANSFER_CONTRACT_OWNERSHIP
-          ) {
-            await this.updateContract(computingTransaction, res.data);
+      async (
+        res: TransactionWebhookDataDto | InstantiatedTransactionWebhookDataDto,
+        ctx,
+      ) => {
+        if (res instanceof InstantiatedTransactionWebhookDataDto) {
+          //update instantiated contracts
+          console.log(
+            `Updating instantiated contract with address ${res.contractAddress}.`,
+          );
+          await this.updateInstantiatedContract(res.contractAddress);
+        } else {
+          console.log(
+            `Updating instantiating contract with hash ${res.transactionHash}.`,
+          );
+          const computingTransaction = await new Transaction(
+            {},
+            ctx,
+          ).populateByTransactionHash(res.transactionHash);
+          if (computingTransaction.exists()) {
+            computingTransaction.transactionStatus = res.transactionStatus;
+            await computingTransaction.update();
+            if (
+              computingTransaction.transactionType ==
+                TransactionType.DEPLOY_CONTRACT ||
+              computingTransaction.transactionType ==
+                TransactionType.TRANSFER_CONTRACT_OWNERSHIP
+            ) {
+              await this.updateInstantiatingContract(
+                computingTransaction,
+                res.data,
+              );
+            }
           }
         }
       },
     );
   }
 
-  private async updateContract(tx: Transaction, contractAddress: string) {
+  private async updateInstantiatingContract(
+    tx: Transaction,
+    contractAddress: string,
+  ) {
     if (tx.transactionStatus === TransactionStatus.CONFIRMED) {
       const contract: Contract = await new Contract(
         {},
@@ -67,7 +88,7 @@ export class TransactionStatusWorker extends BaseQueueWorker {
       ).populateById(tx.contractId);
 
       if (tx.transactionType === TransactionType.DEPLOY_CONTRACT) {
-        contract.contractStatus = ContractStatus.DEPLOYED;
+        contract.contractStatus = ContractStatus.DEPLOYING;
         contract.contractAddress = contractAddress;
       } else if (
         tx.transactionType === TransactionType.TRANSFER_CONTRACT_OWNERSHIP
@@ -90,5 +111,24 @@ export class TransactionStatusWorker extends BaseQueueWorker {
         },
       });
     }
+  }
+
+  private async updateInstantiatedContract(contractAddress: string) {
+    const status = ContractStatus.DEPLOYED;
+    await new Contract({}, this.context).updateStatusByAddresses(
+      contractAddress,
+      status,
+    );
+
+    await this.writeEventLog({
+      logType: LogType.INFO,
+      // project_uuid: contract?.project_uuid,
+      message: `Contract with address ${contractAddress} status updated to ${status}.`,
+      service: ServiceName.COMPUTING,
+      data: {
+        contractAddress,
+        status,
+      },
+    });
   }
 }

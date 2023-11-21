@@ -1,10 +1,11 @@
 import {
   AppEnvironment,
   Context,
+  env,
+  InstantiatedTransactionWebhookDataDto,
   PoolConnection,
   TransactionStatus,
   TransactionWebhookDataDto,
-  env,
 } from '@apillon/lib';
 import { sendToWorkerQueue } from '@apillon/workers-lib';
 import { DbTables } from '../config/types';
@@ -115,7 +116,7 @@ export async function processWebhooks(
   if (transactionIds.length > 0) {
     await context.mysql.paramExecute(
       `
-      UPDATE \`${DbTables.TRANSACTION_QUEUE}\` 
+      UPDATE \`${DbTables.TRANSACTION_QUEUE}\`
       SET webhookTriggered = NOW()
       WHERE
         id in (${transactionIds.join(',')})`,
@@ -125,4 +126,37 @@ export async function processWebhooks(
   }
 
   return transactionIds;
+}
+
+/**
+ * Send instantiated transactions to sqs
+ * @param transactions
+ * @param sqsUrl
+ * @param workerName
+ * @returns
+ */
+export async function processInstantiatedTransactionsWebhooks(
+  transactions: InstantiatedTransactionWebhookDataDto[],
+  sqsUrl: string,
+  workerName: string,
+) {
+  const processSize = 10;
+  for (let i = 0; i < transactions.length; i += processSize) {
+    const chunk = transactions.slice(i, i + processSize);
+
+    if (chunk.length > 0 && env.APP_ENV != AppEnvironment.TEST) {
+      await sendToWorkerQueue(
+        sqsUrl,
+        workerName,
+        [
+          {
+            data: chunk,
+          },
+        ],
+        null,
+        null,
+      );
+      console.info('Data sent to webhook', chunk, sqsUrl, workerName);
+    }
+  }
 }
