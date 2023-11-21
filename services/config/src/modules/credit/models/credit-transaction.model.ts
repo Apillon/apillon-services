@@ -179,6 +179,8 @@ export class CreditTransaction extends ProjectAccessModel {
       );
     }
 
+    product_id = product_id || null;
+
     const data = await this.getContext().mysql.paramExecute(
       `
           SELECT *

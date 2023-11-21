@@ -1,5 +1,7 @@
 import {
   CodeException,
+  DefaultUserRole,
+  ForbiddenErrorCodes,
   PricelistQueryFilter,
   Scs,
   UpdateSubscriptionDto,
@@ -151,7 +153,16 @@ export class PaymentsService {
         errorCodes: ResourceNotFoundErrorCode,
       });
     }
-    project.canModify(context);
+
+    if (
+      !context.hasRoleOnProject([DefaultUserRole.PROJECT_OWNER], project_uuid)
+    ) {
+      throw new CodeException({
+        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: HttpStatus.FORBIDDEN,
+        errorMessage: 'Insufficient permissions to perform this action',
+      });
+    }
   }
 
   /**
