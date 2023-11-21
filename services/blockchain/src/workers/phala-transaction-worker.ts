@@ -17,7 +17,9 @@ import { SubstrateTransactionWorker } from './substrate-transaction-worker';
 import { DbTables, TransactionIndexerStatus } from '../config/types';
 
 /**
- * Phala has its own worker because we need to fetch "Instantiated" events from TX that we didn't emit
+ * Phala has its own worker because beside normal transactions (transmitted by our wallet) we also need to fetch
+ * "Instantiated" events from TX that we didn't emit (these transactions are emitted by Phala workers on successful
+ * instantiation)
  */
 export class PhalaTransactionWorker extends SubstrateTransactionWorker {
   public async runExecutor(_data?: any): Promise<any> {
@@ -36,20 +38,23 @@ export class PhalaTransactionWorker extends SubstrateTransactionWorker {
 
       console.log(this.indexer.toString());
 
-      //Execute webhooks for instantiated contracts
+      // INSTANTIATED CONTRACT TRANSACTION INDEXING (for contracts that were instantiated by Phala workers)
       try {
+        // get instantiated contract transactions
         const instantiatedTransactions =
           await this.indexer.getContractsInstantiatedTransactions(
             wallet.address,
             fromBlock,
             toBlock,
           );
+        // convert transactions to DTO
         const instantiatedTransactionsDtos = instantiatedTransactions.map(
           (tx) =>
             new TransactionWebhookDataDto().populate({
               data: tx.contract,
             }),
         );
+        // execute webhooks for INSTANTIATED CONTRACT TRANSACTIONS
         await processInstantiatedTransactionsWebhooks(
           instantiatedTransactionsDtos,
           this.webHookWorker.sqsUrl,
@@ -65,10 +70,12 @@ export class PhalaTransactionWorker extends SubstrateTransactionWorker {
           },
           LogOutput.SYS_ERROR,
         );
+        //try to process next wallet if we fail
         continue;
       }
 
-      // Get all transactions from the indexer
+      // OTHER TRANSACTION INDEXING (transmitted to chain by our wallets)
+      // get all transactions from the indexer
       const transactions = await this.fetchAllResolvedTransactions(
         wallet.address,
         fromBlock,
@@ -77,6 +84,7 @@ export class PhalaTransactionWorker extends SubstrateTransactionWorker {
 
       const conn = await this.context.mysql.start();
       try {
+        // update transactions in DB
         await this.setPhalaTransactionsState(
           transactions,
           wallet.address,
@@ -122,7 +130,7 @@ export class PhalaTransactionWorker extends SubstrateTransactionWorker {
         continue;
       }
 
-      //Execute webhooks
+      // execute webhooks for OTHER TRANSACTIONS
       try {
         await executeWebhooksForTransmittedTransactionsInWallet(
           this.context,
@@ -152,29 +160,31 @@ export class PhalaTransactionWorker extends SubstrateTransactionWorker {
       return;
     }
 
-    // SUCCESS transactions
+    // get all SUCCESS transactions
     const successTransactions = transactions
       .filter((t: any) => t.status == TransactionIndexerStatus.SUCCESS)
       .map((t: any): string => t.extrinsicHash);
     console.log('Success transactions ', successTransactions);
-    // Update SUCCESS CONTRACT transactions
+
+    // SUCCESS CONTRACT transactions
     const contractTransactions =
       await this.indexer.getContractInstantiatingTransactions(
         walletAddress,
         successTransactions,
       );
-    // Update SUCCESSFUL CONTRACT transactions
     for (const contractTransaction of contractTransactions) {
+      //update status of transaction and contract address
       await this.updateContractInstantiatedTransaction(
         contractTransaction.extrinsicHash,
         contractTransaction.contract,
         conn,
       );
+      // remove transaction so we don't update it again bellow
       delete successTransactions[
         successTransactions.indexOf(contractTransaction.extrinsicHash)
       ];
     }
-    // Update remaining SUCCESSFUL transactions
+    // Update OTHER SUCCESSFUL transactions (excluding contract deploys)
     if (successTransactions.length > 0) {
       await this.updateTransactions(
         successTransactions,
