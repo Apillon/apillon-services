@@ -173,6 +173,7 @@ export interface IEnv {
   STORAGE_AWS_IPFS_QUEUE_BUCKET: string;
   STORAGE_DELETE_AFTER_INTERVAL: number;
   URL_SCREENSHOT_FUNCTION_NAME: string;
+  URL_SCREENSHOT_API_URL: string;
 
   STORAGE_MYSQL_HOST: string;
   STORAGE_MYSQL_PORT: number;
@@ -544,7 +545,7 @@ export let env: IEnv = {
   SLACK_TOKEN: process.env['SLACK_TOKEN'],
   SLACK_CHANNEL: process.env['SLACK_CHANNEL'] || 'monitoring',
   SLACK_CHANNEL_FOR_WEBSITE_REVIEWS:
-    process.env['SLACK_CHANNEL'] || 'website-reviews',
+    process.env['SLACK_CHANNEL_FOR_WEBSITE_REVIEWS'] || 'website-reviews',
   /** DEV CONSOLE API DB conn*/
   DEV_CONSOLE_API_MYSQL_HOST: process.env['DEV_CONSOLE_API_MYSQL_HOST'],
   DEV_CONSOLE_API_MYSQL_PORT:
@@ -598,6 +599,7 @@ export let env: IEnv = {
   STORAGE_DELETE_AFTER_INTERVAL:
     parseInt(process.env['STORAGE_DELETE_AFTER_INTERVAL']) || 90,
   URL_SCREENSHOT_FUNCTION_NAME: process.env['URL_SCREENSHOT_FUNCTION_NAME'],
+  URL_SCREENSHOT_API_URL: process.env['URL_SCREENSHOT_API_URL'],
 
   /**STORAGE microservice DB*/
   STORAGE_MYSQL_HOST: process.env['STORAGE_MYSQL_HOST'],
