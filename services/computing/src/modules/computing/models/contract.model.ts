@@ -366,4 +366,22 @@ export class Contract extends UuidSqlModel {
 
     return data[0].contractCount;
   }
+
+  public async updateStatusByAddresses(
+    contractAddress: string,
+    contractStatus: ContractStatus,
+    context?: Context,
+  ): Promise<void> {
+    await (context ?? this.getContext()).mysql.paramExecute(
+      `
+          UPDATE \`${DbTables.CONTRACT}\`
+          SET contractStatus = @contractStatus
+          WHERE contractAddress =@contractAddresses;
+        `,
+      {
+        contractAddress,
+        contractStatus,
+      },
+    );
+  }
 }

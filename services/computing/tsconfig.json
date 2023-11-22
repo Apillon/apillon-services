@@ -5,8 +5,6 @@
         "rootDir": "./src",
         "sourceMap": false,
         "removeComments": true,
-        "incremental": true,
-        "watch": true
     },
     "include": [
         "**/*.ts",

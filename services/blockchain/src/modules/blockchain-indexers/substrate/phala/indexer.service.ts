@@ -3,7 +3,10 @@ import { env } from '@apillon/lib';
 import { BaseBlockchainIndexer } from '../base-blockchain-indexer';
 import { PhalaGqlQueries } from './graphql-queries';
 import { SystemEvent, TransferTransaction } from '../data-models';
-import { PhatContractsInstantiatingTransaction } from './data-models';
+import {
+  PhatContractsInstantiatedTransaction,
+  PhatContractsInstantiatingTransaction,
+} from './data-models';
 
 export class PhalaBlockchainIndexer extends BaseBlockchainIndexer {
   constructor() {
@@ -50,6 +53,7 @@ export class PhalaBlockchainIndexer extends BaseBlockchainIndexer {
       systems: SystemEvent;
       transfers: TransferTransaction[];
       phatContractsInstantiatings: PhatContractsInstantiatingTransaction[];
+      phatContractsInstantiateds: PhatContractsInstantiatedTransaction[];
     }>(
       gql`
         ${PhalaGqlQueries.ACCOUNT_ALL_TRANSACTIONS_QUERY}
@@ -65,6 +69,7 @@ export class PhalaBlockchainIndexer extends BaseBlockchainIndexer {
       transfers: data.transfers,
       systems: data.systems,
       phatContractsInstantiatings: data.phatContractsInstantiatings,
+      phatContractsInstantiateds: data.phatContractsInstantiateds,
     };
   }
 
@@ -76,7 +81,7 @@ export class PhalaBlockchainIndexer extends BaseBlockchainIndexer {
       phatContractsInstantiatings: PhatContractsInstantiatingTransaction[];
     }>(
       gql`
-        ${PhalaGqlQueries.INSTANTIATED_CONTRACTS_BY_HASH_QUERY}
+        ${PhalaGqlQueries.INSTANTIATING_CONTRACTS_BY_HASH_QUERY}
       `,
       {
         account,
@@ -85,6 +90,27 @@ export class PhalaBlockchainIndexer extends BaseBlockchainIndexer {
     );
 
     return data.phatContractsInstantiatings;
+  }
+
+  public async getContractsInstantiatedTransactions(
+    deployer: string,
+    fromBlock: number,
+    toBlock: number,
+  ) {
+    const data = await this.graphQlClient.request<{
+      phatContractsInstantiateds: PhatContractsInstantiatedTransaction[];
+    }>(
+      gql`
+        ${PhalaGqlQueries.INSTANTIATED_CONTRACTS_BY_DEPLOYER_AND_BLOCK}
+      `,
+      {
+        deployer,
+        fromBlock,
+        toBlock,
+      },
+    );
+
+    return data.phatContractsInstantiateds;
   }
 
   public async getAccountBalanceTransfersForTxs(
