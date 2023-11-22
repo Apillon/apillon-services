@@ -42,7 +42,9 @@ export class UrlScreenshotMicroservice extends BaseService {
         //Call lambda
         const lambdaResponse = await this.callService({ urls: [{ url, key }] });
         console.info('Response from url screenshot lambda', lambdaResponse);
-        return lambdaResponse.data;
+        return lambdaResponse.data?.length
+          ? lambdaResponse.data[0].s3Link
+          : undefined;
       }
     } catch (err) {
       await new StorageCodeException({
