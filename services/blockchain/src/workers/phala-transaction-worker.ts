@@ -38,42 +38,6 @@ export class PhalaTransactionWorker extends SubstrateTransactionWorker {
 
       console.log(this.indexer.toString());
 
-      // INSTANTIATED CONTRACT TRANSACTION INDEXING (for contracts that were instantiated by Phala workers)
-      try {
-        // get instantiated contract transactions
-        const instantiatedTransactions =
-          await this.indexer.getContractsInstantiatedTransactions(
-            wallet.address,
-            fromBlock,
-            toBlock,
-          );
-        // convert transactions to DTO
-        const instantiatedTransactionsDtos = instantiatedTransactions.map(
-          (tx) =>
-            new TransactionWebhookDataDto().populate({
-              data: tx.contract,
-            }),
-        );
-        // execute webhooks for INSTANTIATED CONTRACT TRANSACTIONS
-        await processInstantiatedTransactionsWebhooks(
-          instantiatedTransactionsDtos,
-          this.webHookWorker.sqsUrl,
-          this.webHookWorker.workerName,
-        );
-      } catch (error) {
-        await this.writeEventLog(
-          {
-            logType: LogType.ERROR,
-            message: `Error executing instantiated transactions webhooks for wallet ${wallet.address}`,
-            service: ServiceName.BLOCKCHAIN,
-            err: error,
-          },
-          LogOutput.SYS_ERROR,
-        );
-        //try to process next wallet if we fail
-        continue;
-      }
-
       // OTHER TRANSACTION INDEXING (transmitted to chain by our wallets)
       // get all transactions from the indexer
       const transactions = await this.fetchAllResolvedTransactions(
@@ -110,6 +74,29 @@ export class PhalaTransactionWorker extends SubstrateTransactionWorker {
             LogOutput.NOTIFY_ALERT,
           );
         }
+
+        // INSTANTIATED CONTRACT TRANSACTION INDEXING (for contracts that were instantiated by Phala workers)
+        // get instantiated contract transactions
+        const instantiatedTransactions =
+          await this.indexer.getContractsInstantiatedTransactions(
+            wallet.address,
+            fromBlock,
+            toBlock,
+          );
+        // convert transactions to DTO
+        const instantiatedTransactionsDtos = instantiatedTransactions.map(
+          (tx) =>
+            new TransactionWebhookDataDto().populate({
+              data: tx.contract,
+            }),
+        );
+        // execute webhooks for INSTANTIATED CONTRACT TRANSACTIONS
+        await processInstantiatedTransactionsWebhooks(
+          instantiatedTransactionsDtos,
+          this.webHookWorker.sqsUrl,
+          this.webHookWorker.workerName,
+        );
+
         await wallet.updateLastParsedBlock(toBlock, conn);
         await conn.commit();
       } catch (err) {
@@ -117,7 +104,7 @@ export class PhalaTransactionWorker extends SubstrateTransactionWorker {
         await this.writeEventLog(
           {
             logType: LogType.ERROR,
-            message: `Error confirming transactions for wallet ${w.address}`,
+            message: `Error indexing transactions for wallet ${w.address}`,
             service: ServiceName.BLOCKCHAIN,
             err,
             data: {
