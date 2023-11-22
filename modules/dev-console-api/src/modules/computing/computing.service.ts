@@ -4,7 +4,6 @@ import {
   ComputingMicroservice,
   ContractQueryFilter,
   CreateContractDto,
-  DepositToClusterDto,
   TransferOwnershipDto,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
@@ -71,15 +70,6 @@ export class ComputingService {
 
   async getContract(context: DevConsoleApiContext, uuid: string) {
     return (await new ComputingMicroservice(context).getContract(uuid)).data;
-  }
-
-  async depositToContractCluster(
-    context: DevConsoleApiContext,
-    body: DepositToClusterDto,
-  ) {
-    return (
-      await new ComputingMicroservice(context).depositToContractCluster(body)
-    ).data;
   }
 
   async transferContractOwnership(

@@ -47,9 +47,9 @@ export class ComputingMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async depositToContractCluster(body: DepositToClusterDto) {
+  public async depositToPhalaCluster(body: DepositToClusterDto) {
     const data = {
-      eventName: ComputingEventType.DEPOSIT_TO_CONTRACT_CLUSTER,
+      eventName: ComputingEventType.DEPOSIT_TO_PHALA_CLUSTER,
       body: body.serialize(),
     };
     return await this.callService(data);

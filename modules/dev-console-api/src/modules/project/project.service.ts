@@ -123,21 +123,16 @@ export class ProjectService {
           ).data,
       ),
     );
-
-    if (!activeSubscriptions.every((s) => !!s.id)) {
-      // Only allow creating new project if all existing projects
-      // have an active subscription.
-      // Otherwise show that quota has been reached
-      return true;
-    }
+    const totalSubscriptions = activeSubscriptions.filter((s) => s.id).length;
 
     const maxProjectsQuota = await new Scs(context).getQuota({
       quota_id: QuotaCode.MAX_PROJECT_COUNT,
       object_uuid: context.user.user_uuid,
     });
 
-    return !!(
-      maxProjectsQuota?.value && projects.length >= maxProjectsQuota?.value
+    return (
+      maxProjectsQuota?.value &&
+      projects.length - totalSubscriptions >= maxProjectsQuota.value
     );
   }
 

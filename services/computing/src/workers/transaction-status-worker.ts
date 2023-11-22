@@ -52,14 +52,14 @@ export class TransactionStatusWorker extends BaseQueueWorker {
             computingTransaction.transactionType ==
               TransactionType.TRANSFER_CONTRACT_OWNERSHIP
           ) {
-            await this.updateContractStatus(computingTransaction, res.data);
+            await this.updateContract(computingTransaction, res.data);
           }
         }
       },
     );
   }
 
-  private async updateContractStatus(tx: Transaction, contractAddress: string) {
+  private async updateContract(tx: Transaction, contractAddress: string) {
     if (tx.transactionStatus === TransactionStatus.CONFIRMED) {
       const contract: Contract = await new Contract(
         {},
@@ -74,6 +74,7 @@ export class TransactionStatusWorker extends BaseQueueWorker {
       ) {
         contract.contractStatus = ContractStatus.TRANSFERRED;
       }
+      contract.transactionHash = tx.transactionHash;
       contract.status = SqlModelStatus.ACTIVE;
       await contract.update();
 

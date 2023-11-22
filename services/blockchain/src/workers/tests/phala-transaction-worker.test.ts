@@ -26,7 +26,7 @@ describe('Phala tests', () => {
   const startBlock = 3513452;
   beforeAll(async () => {
     stage = await setupTest();
-    env.BLOCKCHAIN_PHALA_GRAPHQL_SERVER = 'http://3.251.2.33:8085/graphql';
+    env.BLOCKCHAIN_PHALA_GRAPHQL_SERVER = 'http://3.251.2.33:8086/graphql';
 
     wallet = await new Wallet(
       {
