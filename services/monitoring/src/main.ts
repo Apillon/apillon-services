@@ -19,6 +19,7 @@ export async function processEvent(event, context: Context): Promise<any> {
     [LmasEventType.GET_IPFS_TRAFFIC]: Logger.getIpfsTrafficLog,
     [LmasEventType.SEND_ALERT]: Alerting.sendAlert,
     [LmasEventType.SEND_ADMIN_ALERT]: Alerting.sendAdminAlert,
+    [LmasEventType.SEND_MESSAGE_TO_SLACK]: Alerting.sendMessageToSlack,
   };
 
   return await processors[event.eventName](event, context);

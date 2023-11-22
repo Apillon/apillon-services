@@ -210,6 +210,15 @@ export class Ams extends BaseService {
     return await this.callService(data);
   }
 
+  public async getProjectOwner(project_uuid: string) {
+    const data = {
+      eventName: AmsEventType.GET_PROJECT_OWNER,
+      project_uuid,
+    };
+
+    return await this.callService(data);
+  }
+
   //#region API-key functions
 
   public async getApiKey(params: { apiKey: string; apiKeySecret: string }) {

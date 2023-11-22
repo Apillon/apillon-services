@@ -1,27 +1,28 @@
+import { Credit } from '@apillon/config/src/modules/credit/models/credit.model';
+import { DefaultUserRole, JwtTokenType, generateJwtToken } from '@apillon/lib';
 import {
-  BucketType,
+  DeploymentStatus,
   StorageErrorCode,
 } from '@apillon/storage/src/config/types';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
+import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
 import { Website } from '@apillon/storage/src/modules/hosting/models/website.model';
+import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 import {
-  createTestBucket,
+  Stage,
+  TestUser,
   createTestBucketDirectory,
   createTestBucketFile,
   createTestProject,
   createTestUser,
   releaseStage,
-  Stage,
-  TestUser,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
+import { v4 as uuidV4 } from 'uuid';
 import { setupTest } from '../../../../../test/helpers/setup';
 import { Project } from '../../../project/models/project.model';
-import { v4 as uuidV4 } from 'uuid';
-import { File } from '@apillon/storage/src/modules/storage/models/file.model';
-import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
-import { DefaultUserRole } from '@apillon/lib';
-import { Credit } from '@apillon/config/src/modules/credit/models/credit.model';
+import { Deployment } from '@apillon/storage/src/modules/hosting/models/deployment.model';
+import { ProjectConfig } from '@apillon/storage/src/modules/config/models/project-config.model';
 
 describe('Hosting tests', () => {
   let stage: Stage;
@@ -46,15 +47,15 @@ describe('Hosting tests', () => {
       DefaultUserRole.ADMIN,
     );
 
-    testProject = await createTestProject(testUser, stage);
-    testProject2 = await createTestProject(testUser2, stage);
+    testProject = await createTestProject(testUser, stage, 1200, 2);
+    testProject2 = await createTestProject(testUser2, stage, 1200, 2);
 
     //Create test Website record
     testWebsite = await new Website({}, stage.storageContext)
       .populate({
         project_uuid: testProject.project_uuid,
         name: 'Test Website',
-        domain: 'https://hosting-e2e-tests.si',
+        domain: 'https://tests.si',
       })
       .createNewWebsite(stage.storageContext, uuidV4());
   });
@@ -168,7 +169,7 @@ describe('Hosting tests', () => {
       const response = await request(stage.http)
         .patch(`/storage/hosting/websites/${testWebsite.website_uuid}`)
         .send({
-          domain: 'https://www.my-test-page-2.si',
+          domain: 'https://tests-2.si',
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(400);
@@ -186,7 +187,7 @@ describe('Hosting tests', () => {
       const response = await request(stage.http)
         .patch(`/storage/hosting/websites/${testWebsite.website_uuid}`)
         .send({
-          domain: 'https://www.my-test-page-2.si',
+          domain: 'https://tests-2.si',
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
@@ -194,7 +195,7 @@ describe('Hosting tests', () => {
       wp = await new Website({}, stage.storageContext).populateById(
         response.body.data.website_uuid,
       );
-      expect(wp.domain).toBe('https://www.my-test-page-2.si');
+      expect(wp.domain).toBe('https://tests-2.si');
     });
   });
 
@@ -214,7 +215,6 @@ describe('Hosting tests', () => {
         .send({
           project_uuid: testProject2.project_uuid,
           name: 'My test Website',
-          domain: 'https://www.my-test-page.si',
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(403);
@@ -239,7 +239,6 @@ describe('Hosting tests', () => {
         .send({
           project_uuid: testProject2.project_uuid,
           name: 'My test Website',
-          domain: 'https://www.my-test-page.si',
         })
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(403);
@@ -502,43 +501,7 @@ describe('Hosting tests', () => {
       expect(response.status).toBe(403);
     });
   });
-  describe('Website quota tests', () => {
-    beforeAll(async () => {
-      //Insert dummy web pages
-      for (let i = 0; i < 10; i++) {
-        const websiteBucket = await createTestBucket(
-          testUser,
-          stage.storageContext,
-          testProject2,
-          BucketType.HOSTING,
-        );
-        const websiteStagingBucket = await createTestBucket(
-          testUser,
-          stage.storageContext,
-          testProject2,
-          BucketType.HOSTING,
-        );
-        const websiteProductionBucket = await createTestBucket(
-          testUser,
-          stage.storageContext,
-          testProject2,
-          BucketType.HOSTING,
-        );
-        await new Website({}, stage.storageContext)
-          .populate({
-            project_uuid: testProject2.project_uuid,
-            bucket_id: websiteBucket.id,
-            stagingBucket_id: websiteStagingBucket.id,
-            productionBucket_id: websiteProductionBucket.id,
-            name: 'Test Website' + i.toString(),
-            domain: 'https://hosting-e2e-tests.si',
-            bucket: websiteBucket,
-            stagingBucket: websiteStagingBucket,
-            productionBucket: websiteProductionBucket,
-          })
-          .insert();
-      }
-    });
+  describe('Website credit payment tests', () => {
     test('User should receive status 402 when not enough credits is available for project', async () => {
       const projectCredit: Credit = await new Credit(
         {},
@@ -552,10 +515,195 @@ describe('Hosting tests', () => {
         .send({
           project_uuid: testProject2.project_uuid,
           name: 'My test Website',
-          domain: 'https://www.my-test-page.si',
         })
         .set('Authorization', `Bearer ${testUser2.token}`);
       expect(response.status).toBe(402);
+    });
+  });
+
+  describe('Review website tests', () => {
+    let freemiumProject: Project;
+    let testWebsite: Website;
+    let deployment_uuid: string;
+    beforeAll(async () => {
+      freemiumProject = await createTestProject(testUser, stage);
+
+      //Create test Website record
+      testWebsite = await new Website({}, stage.storageContext)
+        .populate({
+          project_uuid: freemiumProject.project_uuid,
+          name: 'Test Website',
+        })
+        .createNewWebsite(stage.storageContext, uuidV4());
+    });
+
+    test('User should be able to upload files to website', async () => {
+      testSession_uuid = uuidV4();
+
+      let response = await request(stage.http)
+        .post(`/storage/${testWebsite.bucket.bucket_uuid}/files-upload`)
+        .send({
+          session_uuid: testSession_uuid,
+          files: [
+            {
+              fileName: 'index.html',
+              contentType: 'text/html',
+              path: '',
+            },
+          ],
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(201);
+
+      expect(response.status).toBe(201);
+      const file1Fur = response.body.data.files.find(
+        (x) => x.fileName == 'index.html',
+      );
+
+      response = await request(file1Fur.url)
+        .put(``)
+        .send(
+          `<h1>This is test page, that will go to review. Curr date: ${new Date().toString()}</h1>`,
+        );
+      expect(response.status).toBe(200);
+
+      response = await request(stage.http)
+        .post(
+          `/storage/${testWebsite.bucket.bucket_uuid}/file-upload/${testSession_uuid}/end`,
+        )
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+    });
+
+    test('User should be able to deploy Website to staging', async () => {
+      const response = await request(stage.http)
+        .post(`/storage/hosting/websites/${testWebsite.website_uuid}/deploy`)
+        .send({
+          environment: 1,
+          directDeploy: true,
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.deployment_uuid).toBeTruthy();
+      deployment_uuid = response.body.data.deployment_uuid;
+
+      //deployment should be in review
+      const deployment = await new Deployment(
+        {},
+        stage.storageContext,
+      ).populateByUUID(response.body.data.deployment_uuid, 'deployment_uuid');
+
+      expect(deployment.exists()).toBeTruthy();
+      expect(deployment.deploymentStatus).toBe(DeploymentStatus.IN_REVIEW);
+    });
+
+    test('Until website deployment is not confirmed, CID and other website properties should be null or still on previous deployment version', async () => {
+      const response = await request(stage.http)
+        .get(`/storage/hosting/websites/${testWebsite.website_uuid}`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.ipnsStaging).toBeFalsy();
+
+      const stagingBucket = await new Bucket(
+        {},
+        stage.storageContext,
+      ).populateById(testWebsite.stagingBucket_id);
+
+      expect(stagingBucket.exists()).toBeTruthy();
+      expect(stagingBucket.CID).toBeFalsy();
+    });
+
+    test('User should be able to approve website deployment', async () => {
+      const token = generateJwtToken(JwtTokenType.WEBSITE_REVIEW_TOKEN, {
+        deployment_uuid,
+      });
+      const response = await request(stage.http)
+        .get(
+          `/storage/hosting/websites/${testWebsite.website_uuid}/deployments/${deployment_uuid}/approve?token=${token}`,
+        )
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+
+      const deployment = await new Deployment(
+        {},
+        stage.storageContext,
+      ).populateByUUID(deployment_uuid, 'deployment_uuid');
+      expect(deployment.deploymentStatus).toBe(DeploymentStatus.SUCCESSFUL);
+    });
+
+    test('User should recieve error if deployment was already approved or rejected', async () => {
+      const token = generateJwtToken(JwtTokenType.WEBSITE_REVIEW_TOKEN, {
+        deployment_uuid,
+      });
+      const response = await request(stage.http)
+        .get(
+          `/storage/hosting/websites/${testWebsite.website_uuid}/deployments/${deployment_uuid}/approve?token=${token}`,
+        )
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(409);
+    });
+
+    test('If deployment is confirmed, CID and other website properties should have value, and website should be accessible through ipns address', async () => {
+      const response = await request(stage.http)
+        .get(`/storage/hosting/websites/${testWebsite.website_uuid}`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.ipnsStaging).toBeTruthy();
+
+      const stagingBucket = await new Bucket(
+        {},
+        stage.storageContext,
+      ).populateById(testWebsite.stagingBucket_id);
+
+      expect(stagingBucket.exists()).toBeTruthy();
+      expect(stagingBucket.CID).toBeTruthy();
+
+      //Test if website is accessible on ipfs
+      const ipfsCluster = await new ProjectConfig(
+        { project_uuid: testWebsite.project_uuid },
+        stage.storageContext,
+      ).getIpfsCluster();
+
+      const ipnsLink = ipfsCluster.generateLink(
+        testWebsite.project_uuid,
+        response.body.data.ipnsStaging,
+        true,
+      );
+
+      const websiteResponse = await request(ipnsLink).get('');
+      expect(websiteResponse.status).toBe(200);
+    });
+
+    test('User should be able to reject website deployment', async () => {
+      //Create another deployment
+      const response = await request(stage.http)
+        .post(`/storage/hosting/websites/${testWebsite.website_uuid}/deploy`)
+        .send({
+          environment: 1,
+          directDeploy: true,
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.deployment_uuid).toBeTruthy();
+      deployment_uuid = response.body.data.deployment_uuid;
+
+      //Reject deployment
+      const token = generateJwtToken(JwtTokenType.WEBSITE_REVIEW_TOKEN, {
+        deployment_uuid,
+      });
+      const rejectWebsiteResponse = await request(stage.http)
+        .get(
+          `/storage/hosting/websites/${testWebsite.website_uuid}/deployments/${deployment_uuid}/reject?token=${token}`,
+        )
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(rejectWebsiteResponse.status).toBe(200);
+
+      //Check deployment status
+      const deployment = await new Deployment(
+        {},
+        stage.storageContext,
+      ).populateByUUID(response.body.data.deployment_uuid, 'deployment_uuid');
+      expect(deployment.deploymentStatus).toBe(DeploymentStatus.REJECTED);
     });
   });
 });
