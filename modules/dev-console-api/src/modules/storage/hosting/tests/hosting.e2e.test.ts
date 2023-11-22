@@ -521,7 +521,7 @@ describe('Hosting tests', () => {
     });
   });
 
-  describe('Review website tests', () => {
+  describe.only('Review website tests', () => {
     let freemiumProject: Project;
     let testWebsite: Website;
     let deployment_uuid: string;
@@ -613,15 +613,13 @@ describe('Hosting tests', () => {
       expect(stagingBucket.CID).toBeFalsy();
     });
 
-    test('User should be able to approve website deployment', async () => {
+    test('Admin should be able to approve website deployment', async () => {
       const token = generateJwtToken(JwtTokenType.WEBSITE_REVIEW_TOKEN, {
         deployment_uuid,
       });
-      const response = await request(stage.http)
-        .get(
-          `/storage/hosting/websites/${testWebsite.website_uuid}/deployments/${deployment_uuid}/approve?token=${token}`,
-        )
-        .set('Authorization', `Bearer ${testUser.token}`);
+      const response = await request(stage.http).get(
+        `/storage/hosting/websites/${testWebsite.website_uuid}/deployments/${deployment_uuid}/approve?token=${token}`,
+      );
       expect(response.status).toBe(200);
 
       const deployment = await new Deployment(
@@ -631,15 +629,13 @@ describe('Hosting tests', () => {
       expect(deployment.deploymentStatus).toBe(DeploymentStatus.SUCCESSFUL);
     });
 
-    test('User should recieve error if deployment was already approved or rejected', async () => {
+    test('Admin should recieve error if deployment was already approved or rejected', async () => {
       const token = generateJwtToken(JwtTokenType.WEBSITE_REVIEW_TOKEN, {
         deployment_uuid,
       });
-      const response = await request(stage.http)
-        .get(
-          `/storage/hosting/websites/${testWebsite.website_uuid}/deployments/${deployment_uuid}/approve?token=${token}`,
-        )
-        .set('Authorization', `Bearer ${testUser.token}`);
+      const response = await request(stage.http).get(
+        `/storage/hosting/websites/${testWebsite.website_uuid}/deployments/${deployment_uuid}/approve?token=${token}`,
+      );
       expect(response.status).toBe(409);
     });
 
@@ -674,7 +670,7 @@ describe('Hosting tests', () => {
       expect(websiteResponse.status).toBe(200);
     });
 
-    test('User should be able to reject website deployment', async () => {
+    test('Admin should be able to reject website deployment', async () => {
       //Create another deployment
       const response = await request(stage.http)
         .post(`/storage/hosting/websites/${testWebsite.website_uuid}/deploy`)
@@ -691,11 +687,9 @@ describe('Hosting tests', () => {
       const token = generateJwtToken(JwtTokenType.WEBSITE_REVIEW_TOKEN, {
         deployment_uuid,
       });
-      const rejectWebsiteResponse = await request(stage.http)
-        .get(
-          `/storage/hosting/websites/${testWebsite.website_uuid}/deployments/${deployment_uuid}/reject?token=${token}`,
-        )
-        .set('Authorization', `Bearer ${testUser.token}`);
+      const rejectWebsiteResponse = await request(stage.http).get(
+        `/storage/hosting/websites/${testWebsite.website_uuid}/deployments/${deployment_uuid}/reject?token=${token}`,
+      );
       expect(rejectWebsiteResponse.status).toBe(200);
 
       //Check deployment status

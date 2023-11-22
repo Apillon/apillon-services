@@ -32,10 +32,9 @@ export class UrlScreenshotMicroservice extends BaseService {
         )
       ) {
         //Call API
-        const urlScreenshotRes = await axios.post(
-          'https://qxpmy330v3.execute-api.eu-west-1.amazonaws.com/dev/',
-          { urls: [{ url, key }] },
-        );
+        const urlScreenshotRes = await axios.post(env.URL_SCREENSHOT_API_URL, {
+          urls: [{ url, key }],
+        });
         if (urlScreenshotRes.data?.length && urlScreenshotRes.data[0].s3Link) {
           return urlScreenshotRes.data[0].s3Link;
         }
@@ -43,7 +42,7 @@ export class UrlScreenshotMicroservice extends BaseService {
         //Call lambda
         const lambdaResponse = await this.callService({ urls: [{ url, key }] });
         console.info('Response from url screenshot lambda', lambdaResponse);
-        return lambdaResponse;
+        return lambdaResponse.data;
       }
     } catch (err) {
       await new StorageCodeException({
