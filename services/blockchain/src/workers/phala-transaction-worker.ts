@@ -58,7 +58,7 @@ export class PhalaTransactionWorker extends SubstrateTransactionWorker {
         await this.writeEventLog(
           {
             logType: LogType.ERROR,
-            message: `Error executing instantiated transactions webhooks for wallet ${wallet.address}`,
+            message: `Error fetching instantiated transactions for wallet ${wallet.address}`,
             service: ServiceName.BLOCKCHAIN,
             err: error,
           },
