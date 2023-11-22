@@ -74,6 +74,13 @@ export class PhalaTransactionWorker extends SubstrateTransactionWorker {
             LogOutput.NOTIFY_ALERT,
           );
         }
+        // execute webhooks for OTHER TRANSACTIONS
+        await executeWebhooksForTransmittedTransactionsInWallet(
+          this.context,
+          wallet.address,
+          this.webHookWorker.workerName,
+          this.webHookWorker.sqsUrl,
+        );
 
         // INSTANTIATED CONTRACT TRANSACTION INDEXING (for contracts that were instantiated by Phala workers)
         // get instantiated contract transactions
@@ -113,27 +120,6 @@ export class PhalaTransactionWorker extends SubstrateTransactionWorker {
             },
           },
           LogOutput.NOTIFY_ALERT,
-        );
-        continue;
-      }
-
-      // execute webhooks for OTHER TRANSACTIONS
-      try {
-        await executeWebhooksForTransmittedTransactionsInWallet(
-          this.context,
-          wallet.address,
-          this.webHookWorker.workerName,
-          this.webHookWorker.sqsUrl,
-        );
-      } catch (error) {
-        await this.writeEventLog(
-          {
-            logType: LogType.ERROR,
-            message: `Error executing webhooks for wallet ${wallet.address}`,
-            service: ServiceName.BLOCKCHAIN,
-            err: error,
-          },
-          LogOutput.SYS_ERROR,
         );
       }
     }
