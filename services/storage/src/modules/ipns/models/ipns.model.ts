@@ -1,10 +1,11 @@
 import {
   Context,
   IpnsQueryFilter,
+  PoolConnection,
   PopulateFrom,
-  ProjectAccessModel,
   SerializeFor,
   SqlModelStatus,
+  UuidSqlModel,
   getQueryParams,
   prop,
   selectAndCountQuery,
@@ -12,17 +13,46 @@ import {
 import { ServiceContext } from '@apillon/service-lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
+import { v4 as uuidV4 } from 'uuid';
 import { DbTables, StorageErrorCode } from '../../../config/types';
-import { StorageCodeException } from '../../../lib/exceptions';
+import {
+  StorageCodeException,
+  StorageValidationException,
+} from '../../../lib/exceptions';
 import { Bucket } from '../../bucket/models/bucket.model';
 import { ProjectConfig } from '../../config/models/project-config.model';
 
-export class Ipns extends ProjectAccessModel {
+export class Ipns extends UuidSqlModel {
   public readonly tableName = DbTables.IPNS;
 
   public constructor(data: any, context: Context) {
     super(data, context);
   }
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.SELECT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: StorageErrorCode.IPNS_REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
+  })
+  public ipns_uuid: string;
+
   @prop({
     parser: { resolver: stringParser() },
     populatable: [
@@ -184,6 +214,14 @@ export class Ipns extends ProjectAccessModel {
   })
   public cid: string;
 
+  public override async populateByUUID(
+    uuid: string,
+    uuid_property = 'ipns_uuid',
+    conn?: PoolConnection,
+  ): Promise<this> {
+    return super.populateByUUID(uuid, uuid_property, conn);
+  }
+
   public async populateByProjectAndName(
     project_uuid: string,
     name: string,
@@ -225,6 +263,24 @@ export class Ipns extends ProjectAccessModel {
     } else {
       return this.reset();
     }
+  }
+
+  public override async insert(
+    strategy?: SerializeFor,
+    conn?: PoolConnection,
+    insertIgnore?: boolean,
+  ): Promise<this> {
+    this.ipns_uuid = this.ipns_uuid || uuidV4();
+    try {
+      await this.validate();
+    } catch (err) {
+      await this.handle(err);
+      if (!this.isValid()) {
+        throw new StorageValidationException(this);
+      }
+    }
+
+    return super.insert(strategy, conn, insertIgnore);
   }
 
   public async getList(context: ServiceContext, filter: IpnsQueryFilter) {

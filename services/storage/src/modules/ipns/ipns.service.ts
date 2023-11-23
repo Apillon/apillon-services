@@ -30,8 +30,11 @@ export class IpnsService {
     );
   }
 
-  static async getIpns(event: { id: number }, context: ServiceContext) {
-    const ipns: Ipns = await new Ipns({}, context).populateById(event.id);
+  static async getIpns(event: { ipns_uuid: string }, context: ServiceContext) {
+    const ipns: Ipns = await new Ipns({}, context).populateByUUID(
+      event.ipns_uuid,
+      'ipns_uuid',
+    );
     if (!ipns.exists()) {
       throw new StorageCodeException({
         code: StorageErrorCode.IPNS_NOT_FOUND,
@@ -64,14 +67,6 @@ export class IpnsService {
       bucket_id: b.id,
       status: SqlModelStatus.INCOMPLETE,
     });
-    try {
-      await ipns.validate();
-    } catch (err) {
-      await ipns.handle(err);
-      if (!ipns.isValid()) {
-        throw new StorageValidationException(ipns);
-      }
-    }
     const conn = await context.mysql.start();
     try {
       //Insert
@@ -81,7 +76,7 @@ export class IpnsService {
       if (event.body.cid) {
         await IpnsService.publishIpns(
           {
-            ipns_id: ipns.id,
+            ipns_uuid: ipns.ipns_uuid,
             cid: event.body.cid,
             ipns: ipns,
             conn: conn,
@@ -122,12 +117,21 @@ export class IpnsService {
    * @param context
    */
   static async publishIpns(
-    event: { ipns_id: number; cid: string; ipns?: Ipns; conn?: PoolConnection },
+    event: {
+      ipns_uuid: string;
+      cid: string;
+      ipns?: Ipns;
+      conn?: PoolConnection;
+    },
     context: ServiceContext,
   ) {
     const ipns: Ipns = event.ipns
       ? event.ipns
-      : await new Ipns({}, context).populateById(event.ipns_id, event.conn);
+      : await new Ipns({}, context).populateByUUID(
+          event.ipns_uuid,
+          undefined,
+          event.conn,
+        );
 
     if (!ipns.exists()) {
       throw new StorageCodeException({
@@ -187,10 +191,12 @@ export class IpnsService {
   }
 
   static async updateIpns(
-    event: { id: number; data: any },
+    event: { ipns_uuid: string; data: any },
     context: ServiceContext,
   ): Promise<any> {
-    const ipns: Ipns = await new Ipns({}, context).populateById(event.id);
+    const ipns: Ipns = await new Ipns({}, context).populateByUUID(
+      event.ipns_uuid,
+    );
 
     if (!ipns.exists()) {
       throw new StorageCodeException({
@@ -216,10 +222,12 @@ export class IpnsService {
   }
 
   static async deleteIpns(
-    event: { id: number },
+    event: { ipns_uuid: string },
     context: ServiceContext,
   ): Promise<any> {
-    const ipns: Ipns = await new Ipns({}, context).populateById(event.id);
+    const ipns: Ipns = await new Ipns({}, context).populateByUUID(
+      event.ipns_uuid,
+    );
 
     if (!ipns.exists()) {
       throw new StorageCodeException({

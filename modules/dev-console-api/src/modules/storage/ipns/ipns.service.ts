@@ -20,8 +20,8 @@ export class IpnsService {
     return (await new StorageMicroservice(context).listIpnses(query)).data;
   }
 
-  async getIpns(context: DevConsoleApiContext, id: number) {
-    return (await new StorageMicroservice(context).getIpns(id)).data;
+  async getIpns(context: DevConsoleApiContext, ipns_uuid: string) {
+    return (await new StorageMicroservice(context).getIpns(ipns_uuid)).data;
   }
 
   async createIpns(
@@ -33,22 +33,30 @@ export class IpnsService {
     return (await new StorageMicroservice(context).createIpns(body)).data;
   }
 
-  async updateIpns(context: DevConsoleApiContext, id: number, body: any) {
+  async updateIpns(
+    context: DevConsoleApiContext,
+    ipns_uuid: string,
+    body: any,
+  ) {
     return (
-      await new StorageMicroservice(context).updateIpns({ id: id, data: body })
+      await new StorageMicroservice(context).updateIpns({
+        ipns_uuid,
+        data: body,
+      })
     ).data;
   }
 
-  async deleteIpns(context: DevConsoleApiContext, id: number) {
-    return (await new StorageMicroservice(context).deleteIpns({ id: id })).data;
+  async deleteIpns(context: DevConsoleApiContext, ipns_uuid: string) {
+    return (await new StorageMicroservice(context).deleteIpns({ ipns_uuid }))
+      .data;
   }
 
   async publishIpns(
     context: DevConsoleApiContext,
-    id: number,
+    ipns_uuid: string,
     body: PublishIpnsDto,
   ) {
-    body.populate({ ipns_id: id });
+    body.populate({ ipns_uuid });
     try {
       await body.validate();
     } catch (err) {
