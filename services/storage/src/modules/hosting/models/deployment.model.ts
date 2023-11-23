@@ -446,11 +446,15 @@ export class Deployment extends AdvancedSQLModel {
         AND d.status = ${SqlModelStatus.ACTIVE}
         AND (
           @environment IS NULL
-          OR d.environment = ${
-            filter.environment == DeploymentEnvironment.DIRECT_TO_PRODUCTION
-              ? DeploymentEnvironment.PRODUCTION
+          OR d.environment IN (${
+            filter.environment == DeploymentEnvironment.PRODUCTION
+              ? [
+                  DeploymentEnvironment.PRODUCTION,
+                  DeploymentEnvironment.DIRECT_TO_PRODUCTION,
+                ].join(',')
               : filter.environment
           }
+          )
         )
         AND (@deploymentStatus IS NULL OR d.deploymentStatus = @deploymentStatus)
       `,
