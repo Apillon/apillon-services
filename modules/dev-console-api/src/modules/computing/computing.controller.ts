@@ -81,7 +81,7 @@ export class ComputingController {
     return await this.computingService.transferContractOwnership(context, body);
   }
 
-  @Post('contracts/:uuid/encrypt-and-upload')
+  @Post('contracts/:uuid/encrypt')
   @Validation({ dto: EncryptContentDto })
   @UseGuards(ValidationGuard)
   @Permissions(
