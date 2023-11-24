@@ -132,3 +132,16 @@ export async function transferContractOwnership(
   console.log('dbTxRecord', dbTxRecord);
   await TransactionService.saveTransaction(dbTxRecord);
 }
+
+export async function encryptContent(
+  context: ServiceContext,
+  contractAbi: { [key: string]: any },
+  contractAddress: string,
+  content: string,
+) {
+  return await new PhalaClient(context).encryptContent(
+    contractAbi,
+    contractAddress,
+    content,
+  );
+}

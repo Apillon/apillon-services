@@ -6,6 +6,7 @@ import { CreateContractDto } from './dtos/create-contract.dto';
 import { ContractQueryFilter } from './dtos/contract-query-filter.dto';
 import { DepositToClusterDto } from './dtos/deposit-to-cluster.dto';
 import { TransferOwnershipDto } from './dtos/transfer-ownership.dto';
+import { EncryptContentDto } from './dtos/encrypt-content.dto';
 
 export class ComputingMicroservice extends BaseService {
   lambdaFunctionName =
@@ -58,6 +59,14 @@ export class ComputingMicroservice extends BaseService {
   public async transferContractOwnership(body: TransferOwnershipDto) {
     const data = {
       eventName: ComputingEventType.TRANSFER_CONTRACT_OWNERSHIP,
+      body: body.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async encryptContent(body: EncryptContentDto) {
+    const data = {
+      eventName: ComputingEventType.ENCRYPT_CONTENT,
       body: body.serialize(),
     };
     return await this.callService(data);

@@ -3,6 +3,7 @@ import {
   CreateContractDto,
   DefaultPermission,
   DefaultUserRole,
+  EncryptContentDto,
   RoleGroup,
   TransferOwnershipDto,
   ValidateFor,
@@ -78,5 +79,22 @@ export class ComputingController {
   ) {
     body.contract_uuid = uuid;
     return await this.computingService.transferContractOwnership(context, body);
+  }
+
+  @Post('contracts/:uuid/encrypt-and-upload')
+  @Validation({ dto: EncryptContentDto })
+  @UseGuards(ValidationGuard)
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async encryptContent(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') uuid: string,
+    @Body() body: EncryptContentDto,
+  ) {
+    body.contract_uuid = uuid;
+    return await this.computingService.encryptContent(context, body);
   }
 }

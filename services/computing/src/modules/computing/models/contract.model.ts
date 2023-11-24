@@ -289,6 +289,14 @@ export class Contract extends UuidSqlModel {
         sourceFunction,
       });
     }
+    if (this.contractStatus !== ContractStatus.DEPLOYED) {
+      throw new ComputingCodeException({
+        status: 500,
+        code: ComputingErrorCode.CONTRACT_NOT_DEPLOYED,
+        context,
+        sourceFunction,
+      });
+    }
     if (this.contractAddress == null) {
       throw new ComputingCodeException({
         status: 500,

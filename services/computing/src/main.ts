@@ -18,6 +18,7 @@ export async function processEvent(event: any, context: Context): Promise<any> {
       ComputingService.depositToPhalaCluster,
     [ComputingEventType.TRANSFER_CONTRACT_OWNERSHIP]:
       ComputingService.transferContractOwnership,
+    [ComputingEventType.ENCRYPT_CONTENT]: ComputingService.encryptContent,
   };
 
   return await processors[event.eventName](event, context);

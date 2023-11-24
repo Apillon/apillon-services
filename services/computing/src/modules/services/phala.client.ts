@@ -10,11 +10,12 @@ import {
   OnChainRegistry,
   PinkBlueprintPromise,
   PinkContractPromise,
+  signCertificate,
   types,
 } from '@phala/sdk';
 import { ContractAbi } from '../computing/models/contractAbi.model';
 import { SubmittableExtrinsic } from '@polkadot/api-base/types';
-import { ApiPromise } from '@polkadot/api';
+import { ApiPromise, Keyring } from '@polkadot/api';
 
 export class PhalaClient {
   private context: Context;
@@ -42,6 +43,34 @@ export class PhalaClient {
       this.registry = await OnChainRegistry.create(this.api);
       console.log(`RPC initialization ${rpcEndpoint}`);
     }
+  }
+
+  async encryptContent(
+    contractAbi: { [key: string]: any },
+    contractAddress: string,
+    content: string,
+  ) {
+    await this.initializeProvider();
+    const contractKey = await this.registry.getContractKeyOrFail(
+      contractAddress,
+    );
+    const contract = new PinkContractPromise(
+      this.api,
+      this.registry,
+      contractAbi,
+      contractAddress,
+      contractKey,
+    );
+    const { account, certificate } = await this.getAccountAndCertificate();
+
+    const response = await contract.query.encryptContent(
+      account.address,
+      {
+        cert: certificate,
+      },
+      content,
+    );
+    return response.output.toJSON()['ok'].ok;
   }
 
   async getClusterId() {
@@ -122,5 +151,13 @@ export class PhalaClient {
       deposit: 0,
     };
     return contract.tx.setOwner(options, newOwnerAddress);
+  }
+
+  private async getAccountAndCertificate() {
+    const keyring = new Keyring({ type: 'sr25519' });
+    const account = keyring.addFromUri('//Alice');
+    const certificate = await signCertificate({ api: this.api, pair: account });
+
+    return { account, certificate };
   }
 }

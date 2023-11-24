@@ -3,6 +3,7 @@ import {
   ContractQueryFilter,
   CreateContractDto,
   DepositToClusterDto,
+  EncryptContentDto,
   Lmas,
   LogType,
   SerializeFor,
@@ -26,6 +27,7 @@ import {
 import {
   deployPhalaContract,
   depositToPhalaCluster,
+  encryptContent,
   transferContractOwnership,
 } from '../../lib/utils/contract-utils';
 import { Contract } from './models/contract.model';
@@ -286,6 +288,38 @@ export class ComputingService {
         context,
         sourceFunction,
       });
+    }
+  }
+
+  static async encryptContent(
+    { body }: { body: EncryptContentDto },
+    context: ServiceContext,
+  ) {
+    const sourceFunction = 'encryptContent()';
+    const contract = await new Contract({}, context).populateByUUID(
+      body.contract_uuid,
+    );
+    contract.verifyStatusAndAccess(sourceFunction, context);
+    const contractAbi = await new ContractAbi({}, context).populateById(
+      contract.contractAbi_id,
+    );
+    try {
+      return await encryptContent(
+        context,
+        contractAbi.abi,
+        contract.contractAddress,
+        body.data,
+      );
+    } catch (e: any) {
+      console.error(e);
+      throw await new ComputingCodeException({
+        status: 500,
+        code: ComputingErrorCode.FAILED_TO_ENCRYPTING_CONTENT,
+        context: context,
+        sourceFunction,
+        errorMessage: 'Error encrypting content',
+        details: e,
+      }).writeToMonitor({});
     }
   }
 }

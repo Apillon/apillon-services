@@ -87,6 +87,7 @@ export * from './lib/at-services/computing/dtos/create-contract.dto';
 export * from './lib/at-services/computing/dtos/contract-query-filter.dto';
 export * from './lib/at-services/computing/dtos/deposit-to-cluster.dto';
 export * from './lib/at-services/computing/dtos/transfer-ownership.dto';
+export * from './lib/at-services/computing/dtos/encrypt-content.dto';
 
 //#REGION Blockchain
 export * from './lib/at-services/blockchain/blockchain';
