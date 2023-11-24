@@ -57,4 +57,4 @@ async function populateMailerliteFields() {
   }
 }
 
-populateMailerliteFields();
+void populateMailerliteFields();

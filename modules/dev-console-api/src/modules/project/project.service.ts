@@ -40,6 +40,7 @@ import { ProjectUser } from './models/project-user.model';
 import { Project } from './models/project.model';
 import { v4 as uuidV4 } from 'uuid';
 import { ProjectUserUninviteDto } from './dtos/project_user-uninvite.dto';
+import { setMailerliteField } from '../user/utils/mailing-utils';
 
 @Injectable()
 export class ProjectService {
@@ -89,6 +90,9 @@ export class ProjectService {
       await invalidateCacheKey(
         `${CacheKeyPrefix.AUTH_USER_DATA}:${context.user.user_uuid}`,
       );
+
+      // Set mailerlite field indicating the user owns a project
+      await setMailerliteField(context.user.email, 'project_owner', true);
 
       await new Lmas().writeLog({
         context,
