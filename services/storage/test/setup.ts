@@ -100,4 +100,12 @@ export const releaseStage = async (stage: Stage): Promise<void> => {
       throw new Error('Error when releasing database: ' + error);
     }
   }
+
+  if (stage.lmasMongo) {
+    try {
+      await stage.lmasMongo.close();
+    } catch (error) {
+      throw new Error('Error when releasing mongo: ' + error);
+    }
+  }
 };

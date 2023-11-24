@@ -2,7 +2,9 @@
     "extends": "tsconfig/service.json",
     "compilerOptions": {
         "outDir": "./dist",
-        "rootDir": "./src"
+        "rootDir": "./src",
+        "sourceMap": false,
+        "removeComments": true,
     },
     "include": [
         "**/*.ts",
@@ -10,6 +12,8 @@
     ],
     "exclude": [
         "node_modules",
-        "dist"
+        "dist",
+        ".serverless/**/*",
+        ".webpack/**/*"
     ]
 }

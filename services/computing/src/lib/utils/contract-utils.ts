@@ -33,6 +33,7 @@ export async function deployPhalaContract(
       transaction: transaction.toHex(),
       referenceTable: DbTables.CONTRACT,
       referenceId: contract.id,
+      project_uuid: contract.project_uuid,
     },
     context,
   );
@@ -50,20 +51,20 @@ export async function deployPhalaContract(
 
   //Insert to DB
   await TransactionService.saveTransaction(dbTxRecord, conn);
-  contract.contractStatus = ContractStatus.DEPLOYING;
+  contract.contractStatus = ContractStatus.DEPLOY_INITIATED;
   contract.deployerAddress = response.data.address;
   await contract.update(SerializeFor.UPDATE_DB, conn);
 }
 
-export async function depositToPhalaContractCluster(
+export async function depositToPhalaCluster(
   context: ServiceContext,
-  contract: Contract,
+  clusterId: string,
   accountAddress: string,
   amount: number,
 ) {
   const phalaClient = new PhalaClient(context);
-  const transaction = await phalaClient.createFundClusterTransaction(
-    contract.data.clusterId,
+  const transaction = await phalaClient.createDepositToClusterTransaction(
+    clusterId,
     accountAddress,
     amount,
   );
@@ -71,8 +72,6 @@ export async function depositToPhalaContractCluster(
     {
       chain: SubstrateChain.PHALA,
       transaction: transaction.toHex(),
-      referenceTable: DbTables.CONTRACT,
-      referenceId: contract.id,
     },
     context,
   );
@@ -82,7 +81,6 @@ export async function depositToPhalaContractCluster(
   const dbTxRecord = new Transaction(
     {
       transactionType: TransactionType.DEPOSIT_TO_CONTRACT_CLUSTER,
-      contractId: contract.id,
       transactionHash: response.data.transactionHash,
       transactionStatus: TransactionStatus.PENDING,
     },
@@ -93,29 +91,35 @@ export async function depositToPhalaContractCluster(
 
 export async function transferContractOwnership(
   context: ServiceContext,
+  projectUuid: string,
   contractId: number,
   contractAbi: { [key: string]: any },
   contractAddress: string,
   newOwnerAddress: string,
 ) {
+  console.log('transferContractOwnership', projectUuid);
   const phalaClient = new PhalaClient(context);
   const transaction = await phalaClient.createTransferOwnershipTransaction(
     contractAbi,
     contractAddress,
     newOwnerAddress,
   );
+  console.log('transaction', transaction);
   const blockchainServiceRequest = new CreateSubstrateTransactionDto(
     {
       chain: SubstrateChain.PHALA,
       transaction: transaction.toHex(),
       referenceTable: DbTables.CONTRACT,
       referenceId: contractId,
+      project_uuid: projectUuid,
     },
     context,
   );
+  console.log('blockchainServiceRequest', blockchainServiceRequest);
   const response = await new BlockchainMicroservice(
     context,
   ).createSubstrateTransaction(blockchainServiceRequest);
+  console.log('response', response);
   const dbTxRecord = new Transaction(
     {
       transactionType: TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
@@ -125,5 +129,6 @@ export async function transferContractOwnership(
     },
     context,
   );
+  console.log('dbTxRecord', dbTxRecord);
   await TransactionService.saveTransaction(dbTxRecord);
 }

@@ -4,6 +4,7 @@ import {
   env,
   LogType,
   refundCredit,
+  Scs,
   SerializeFor,
   ServiceName,
 } from '@apillon/lib';
@@ -21,6 +22,7 @@ import {
   DeploymentStatus,
   FileStatus,
 } from '../config/types';
+import { createCloudfrontInvalidationCommand } from '../lib/aws-cloudfront';
 import { generateDirectoriesFromPath } from '../lib/generate-directories-from-path';
 import { pinFileToCRUST } from '../lib/pin-file-to-crust';
 import { Bucket } from '../modules/bucket/models/bucket.model';
@@ -32,8 +34,13 @@ import { uploadItemsToIPFSRes } from '../modules/ipfs/interfaces/upload-items-to
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { Ipns } from '../modules/ipns/models/ipns.model';
 import { File } from '../modules/storage/models/file.model';
-import { createCloudfrontInvalidationCommand } from '../lib/aws-cloudfront';
 
+/**
+ * Worker uploads files from source bucket to IPFS, acquired CID is published to website ipns record.
+ * Files from source bucket are copied to target bucket, so that user can see what is published in specific environment.
+ * Deployment and website are updated based on executed steps.
+ * If project doesn't have subscription package, deployment is first sent to review.
+ */
 export class DeployWebsiteWorker extends BaseQueueWorker {
   public constructor(
     workerDefinition: WorkerDefinition,
@@ -47,10 +54,11 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
     return [];
   }
   public async runExecutor(data: any): Promise<any> {
-    // console.info('RUN EXECUTOR (DeployWebsiteWorker). data: ', data);
+    console.info('RUN EXECUTOR (DeployWebsiteWorker). data: ', data);
 
-    const deployment = await new Deployment({}, this.context).populateById(
-      data?.deployment_id,
+    const deployment = await new Deployment({}, this.context).populateByUUID(
+      data?.deployment_uuid,
+      'deployment_uuid',
     );
     if (!deployment.exists()) {
       await this.writeEventLog(
@@ -66,6 +74,9 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
       );
       return;
     }
+
+    const deploymentReviewed =
+      deployment.deploymentStatus == DeploymentStatus.APPROVED;
 
     //Update deployment - in progress
     deployment.deploymentStatus = DeploymentStatus.IN_PROGRESS;
@@ -130,6 +141,26 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
           },
           this.context,
         );
+
+        //Set ipfsRes data to deployment
+        deployment.cid = ipfsRes.parentDirCID.toV0().toString();
+        deployment.cidv1 = ipfsRes.parentDirCID.toV1().toString();
+        deployment.size = ipfsRes.size;
+
+        //If deployment was not already reviewed
+        if (!deploymentReviewed) {
+          //if project is on freemium, website goes to review
+          const subscription = (
+            await new Scs(this.context).getProjectActiveSubscription(
+              website.project_uuid,
+            )
+          ).data;
+
+          if (!subscription.id) {
+            await deployment.sendToReview(website);
+            return;
+          }
+        }
 
         targetBucket.CID = ipfsRes.parentDirCID.toV0().toString();
         targetBucket.CIDv1 = ipfsRes.parentDirCID.toV1().toString();
@@ -297,7 +328,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         service: ServiceName.STORAGE,
         data: {
           project_uuid: targetBucket.project_uuid,
-          deployment,
+          deployment: deployment.serialize(),
           data,
         },
       });
@@ -336,7 +367,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
       await refundCredit(
         this.context,
         DbTables.DEPLOYMENT,
-        data?.deployment_id,
+        data?.deployment_uuid,
         'DeployWebsiteWorker.runExecutor',
         ServiceName.STORAGE,
       );

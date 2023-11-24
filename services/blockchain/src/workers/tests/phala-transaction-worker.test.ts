@@ -13,8 +13,8 @@ import {
 import { releaseStage, setupTest, Stage } from '../../../test/setup';
 import { Transaction } from '../../common/models/transaction';
 import { Wallet } from '../../modules/wallet/wallet.model';
-import { SubstrateTransactionWorker } from '../substrate-transaction-worker';
 import { WorkerName } from '../worker-executor';
+import { PhalaTransactionWorker } from '../phala-transaction-worker';
 
 const CHAIN_TYPE = ChainType.SUBSTRATE;
 const CHAIN = SubstrateChain.PHALA;
@@ -26,7 +26,7 @@ describe('Phala tests', () => {
   const startBlock = 3513452;
   beforeAll(async () => {
     stage = await setupTest();
-    env.BLOCKCHAIN_PHALA_GRAPHQL_SERVER = 'http://3.251.2.33:8085/graphql';
+    env.BLOCKCHAIN_PHALA_GRAPHQL_SERVER = 'http://3.251.2.33:8086/graphql';
 
     wallet = await new Wallet(
       {
@@ -84,7 +84,7 @@ describe('Phala tests', () => {
       },
     );
 
-    await new SubstrateTransactionWorker(
+    await new PhalaTransactionWorker(
       workerDefinition,
       stage.context,
     ).runExecutor();

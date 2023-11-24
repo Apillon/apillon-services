@@ -22,8 +22,8 @@ export const ParachainConfig = {
   PHALA: {
     id: SubstrateChain.PHALA,
     name: 'PHALA',
-    webhookWorkerName: 'UpdatePhalaStateWorker',
-    sqsUrl: env.AUTH_AWS_WORKER_SQS_URL,
+    webhookWorkerName: 'TransactionStatusWorker',
+    sqsUrl: env.COMPUTING_AWS_WORKER_SQS_URL,
     indexer: PhalaBlockchainIndexer,
   },
 };

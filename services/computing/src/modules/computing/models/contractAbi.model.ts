@@ -12,7 +12,7 @@ import { integerParser } from '@rawmodel/parsers';
 import { ComputingErrorCode, DbTables } from '../../../config/types';
 
 export class ContractAbi extends AdvancedSQLModel {
-  public readonly tableName = DbTables.CONTRACT;
+  public readonly tableName = DbTables.CONTRACT_ABI;
 
   @prop({
     parser: { resolver: integerParser() },
