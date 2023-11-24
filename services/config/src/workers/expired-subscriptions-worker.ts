@@ -18,6 +18,13 @@ import { Subscription } from '../modules/subscription/models/subscription.model'
 import { uniqBy } from 'lodash';
 import { ConfigErrorCode, QuotaWarningLevel } from '../config/types';
 
+/**
+ * Checks all expired subscriptions and identifies projects with expired subscriptions which are exceeding quotas
+ * Sends warnings to all project owners to release resources (currently storage) on the 3rd, 15th and 30th day after subscription ends
+ * If no action has been taken, automatically frees up all exceeded resources by calling FreeProjectResourcesWorker
+ * @typedef {ExpiredSubscriptionsWorker}
+ * @extends {BaseWorker}
+ */
 export class ExpiredSubscriptionsWorker extends BaseWorker {
   protected context: Context;
 
