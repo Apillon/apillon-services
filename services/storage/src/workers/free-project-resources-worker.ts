@@ -126,11 +126,13 @@ export class FreeProjectResourcesWorker extends BaseQueueWorker {
             //Unpin files from ipfs
             const ipfsService = new IPFSService(ctx, input.project_uuid);
             await ipfsService.initializeIPFSClient();
-            files
-              .filter((x) => x.CID)
-              .forEach(async (file) => {
-                await ipfsService.unpinCidFromCluster(file.CID, ipfsCluster);
-              });
+            await Promise.all(
+              files
+                .filter((x) => x.CID)
+                .map((file) =>
+                  ipfsService.unpinCidFromCluster(file.CID, ipfsCluster),
+                ),
+            );
 
             await this.context.mysql.commit(conn);
           } catch (err) {
