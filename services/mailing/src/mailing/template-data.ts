@@ -215,28 +215,32 @@ export function generateTemplateData(key: string, data: any) {
       `,
     },
     'storage-quota-exceeded': {
-      subject: `Important Notice: Your Storage Quota is Approaching Limit`,
-      title: `Your Storage Quota is Approaching Limit`,
+      subject: `Important Notice: Your Account Quota is Exceeding Limit`,
+      title: `Your Account Quota is Exceeding Limit`,
       text: `
-      <p>Dear Apillon User</p><br>
+      <p>Dear Apillon User,</p><br>
 
-      <p>As you may know, your subscription to our platform has expired and has not been renewed. We understand that you continue to use our service and we appreciate your continued interest. However, as your subscription is no longer active, we have reduced your storage quota.</p><br>
+      <p>Your subscription to our platform has expired and has not been automatically renewed, or has been downgraded.</p><br>
 
-      <p>We want to ensure that you are aware of the implications of this change. If your current usage continues to exceed the reduced quota, we will be unable to accommodate your storage needs. To prevent any loss of data, we will automatically delete your excess storage files 30 days after your subscription expires.</p><br>
+      <p>The change in the subscription plan directly affects your account’s limits and quotas and may lead to breaking changes on your services, so please review the current status.</p><br>
 
+      <p><strong>What does this change mean?</strong></p><br>
+      <p>If your current usage continues to exceed the reduced quota, we will be unable to accommodate your storage or hosting needs. We will automatically remove and unpin your excess storage files 30 days after your subscription expires. To prevent any loss of data, please review the status of your files and limits.</p><br>
+
+      <p><strong>What can you do to prevent data loss?</strong></p><br>
       <p>We understand that this may not be the news you were hoping for. However, we encourage you to take immediate action to prevent any potential data loss. Here are a few options:</p><br>
-
       <ul>
-        <li>Renew your subscription to restore your full storage quota.</li>
+        <li>Renew your subscription to restore your previous quota amount.</li>
         <li>Free up storage space by deleting unnecessary files.</li>
-      </ul>
+      </ul><br>
       <p>Renewing your subscription is the quickest and easiest solution. It will not only restore your full storage quota but also provide you with all the premium features that come with an active subscription.</p><br>
 
       <p>On the other hand, if you choose not to renew, please ensure that you have enough storage space to accommodate your current usage. You can do this by regularly deleting unnecessary files from your storage.</p><br>
 
       <p>We hope that you will consider these options and take action soon. Your satisfaction is our top priority, and we are here to assist you in any way we can.</p><br>
 
-      <p>Thank you for choosing Apillon. We appreciate your understanding and cooperation.</p><br>`,
+      <p>Thank you for choosing Apillon. We appreciate your understanding and cooperation.</p>
+`,
     },
   };
 

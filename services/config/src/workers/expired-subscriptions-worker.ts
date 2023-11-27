@@ -66,11 +66,11 @@ export class ExpiredSubscriptionsWorker extends BaseWorker {
         (!project.quotaWarningLevel ||
           project.quotaWarningLevel < QuotaWarningLevel.THREE_DAYS)
       ) {
-        // await new Mailing(this.context).sendMail({
-        //   emails: [project.subscriberEmail],
-        //   template: 'storage-quota-exceeded',
-        //   data: project,
-        // });
+        await new Mailing(this.context).sendMail({
+          emails: [project.subscriberEmail],
+          template: 'storage-quota-exceeded',
+          data: project,
+        });
         await new Subscription(project, this.context).updateQuotaWarningLevel(
           QuotaWarningLevel.THREE_DAYS,
         );
@@ -78,12 +78,11 @@ export class ExpiredSubscriptionsWorker extends BaseWorker {
         +expiresOn <= +this.daysAgo(15) &&
         project.quotaWarningLevel < QuotaWarningLevel.FIFTEEN_DAYS
       ) {
-        // TODO: change email template or parameters
-        // await new Mailing(this.context).sendMail({
-        //   emails: [project.subscriberEmail],
-        //   template: 'storage-quota-exceeded',
-        //   data: project,
-        // });
+        await new Mailing(this.context).sendMail({
+          emails: [project.subscriberEmail],
+          template: 'storage-quota-exceeded',
+          data: project,
+        });
         await new Subscription(project, this.context).updateQuotaWarningLevel(
           QuotaWarningLevel.FIFTEEN_DAYS,
         );
@@ -91,12 +90,11 @@ export class ExpiredSubscriptionsWorker extends BaseWorker {
         +expiresOn <= +this.daysAgo(30) &&
         project.quotaWarningLevel < QuotaWarningLevel.THIRTY_DAYS
       ) {
-        // TODO: change email template or parameters
-        // await new Mailing(this.context).sendMail({
-        //   emails: [project.subscriberEmail],
-        //   template: 'storage-quota-exceeded',
-        //   data: project,
-        // });
+        await new Mailing(this.context).sendMail({
+          emails: [project.subscriberEmail],
+          template: 'storage-quota-exceeded',
+          data: project,
+        });
         await new Subscription(project, this.context).updateQuotaWarningLevel(
           QuotaWarningLevel.THIRTY_DAYS,
         );
