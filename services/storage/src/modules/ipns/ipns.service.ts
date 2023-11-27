@@ -9,7 +9,7 @@ import {
   ServiceName,
   SqlModelStatus,
 } from '@apillon/lib';
-import { ServiceContext } from '@apillon/service-lib';
+import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
 import { StorageErrorCode } from '../../config/types';
 import {
   StorageCodeException,
@@ -42,8 +42,9 @@ export class IpnsService {
       });
     }
     ipns.canAccess(context);
+    await ipns.populateLink();
 
-    return ipns.serialize(SerializeFor.PROFILE);
+    return ipns.serialize(getSerializationStrategy(context));
   }
 
   static async createIpns(
@@ -108,7 +109,8 @@ export class IpnsService {
       data: ipns.serialize(),
     });
 
-    return ipns.serialize(SerializeFor.PROFILE);
+    await ipns.populateLink();
+    return ipns.serialize(getSerializationStrategy(context));
   }
 
   /**
@@ -135,14 +137,11 @@ export class IpnsService {
 
     if (!ipns.exists()) {
       throw new StorageCodeException({
-        code: StorageErrorCode.IPNS_RECORD_NOT_FOUND,
+        code: StorageErrorCode.IPNS_NOT_FOUND,
         status: 404,
       });
     }
     ipns.canModify(context);
-
-    ipns.status = SqlModelStatus.INCOMPLETE;
-    await ipns.update();
 
     try {
       const publishedIpns = await new IPFSService(
@@ -159,7 +158,7 @@ export class IpnsService {
       ipns.cid = event.cid;
       ipns.status = SqlModelStatus.ACTIVE;
 
-      await ipns.update(SerializeFor.UPDATE_DB);
+      await ipns.update(SerializeFor.UPDATE_DB, event.conn);
     } catch (err) {
       await new Lmas().writeLog({
         context,
@@ -187,7 +186,8 @@ export class IpnsService {
       },
     });
 
-    return ipns.serialize(SerializeFor.PROFILE);
+    await ipns.populateLink();
+    return ipns.serialize(getSerializationStrategy(context));
   }
 
   static async updateIpns(
@@ -200,7 +200,7 @@ export class IpnsService {
 
     if (!ipns.exists()) {
       throw new StorageCodeException({
-        code: StorageErrorCode.IPNS_RECORD_NOT_FOUND,
+        code: StorageErrorCode.IPNS_NOT_FOUND,
         status: 404,
       });
     }
@@ -218,7 +218,8 @@ export class IpnsService {
     }
 
     await ipns.update();
-    return ipns.serialize(SerializeFor.PROFILE);
+    await ipns.populateLink();
+    return ipns.serialize(getSerializationStrategy(context));
   }
 
   static async deleteIpns(
@@ -231,13 +232,13 @@ export class IpnsService {
 
     if (!ipns.exists()) {
       throw new StorageCodeException({
-        code: StorageErrorCode.IPNS_RECORD_NOT_FOUND,
+        code: StorageErrorCode.IPNS_NOT_FOUND,
         status: 404,
       });
     }
     ipns.canModify(context);
 
     await ipns.delete();
-    return ipns.serialize(SerializeFor.PROFILE);
+    return ipns.serialize(getSerializationStrategy(context));
   }
 }

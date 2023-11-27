@@ -43,6 +43,7 @@ export class Ipns extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
     ],
     validators: [
       {
@@ -114,6 +115,7 @@ export class Ipns extends UuidSqlModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [
       {
@@ -140,6 +142,7 @@ export class Ipns extends UuidSqlModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
     fakeValue: 'Ipns record description',
@@ -161,6 +164,7 @@ export class Ipns extends UuidSqlModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
@@ -181,6 +185,7 @@ export class Ipns extends UuidSqlModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
@@ -213,6 +218,20 @@ export class Ipns extends UuidSqlModel {
     validators: [],
   })
   public cid: string;
+
+  /*************************************INFO Properties */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+    ],
+    validators: [],
+  })
+  public link: string;
 
   public override async populateByUUID(
     uuid: string,
@@ -324,6 +343,8 @@ export class Ipns extends UuidSqlModel {
         JOIN \`${DbTables.BUCKET}\` b on b.id = i.bucket_id
         WHERE b.bucket_uuid = @bucket_uuid
         AND (@search IS null OR i.name LIKE CONCAT('%', @search, '%'))
+        AND (@ipnsName IS null OR i.ipnsName LIKE CONCAT('%', @ipnsName, '%'))
+        AND (@ipnsValue IS null OR i.ipnsValue LIKE CONCAT('%', @ipnsValue, '%'))
         AND i.status <> ${SqlModelStatus.DELETED}
       `,
       qFilter: `
@@ -350,5 +371,20 @@ export class Ipns extends UuidSqlModel {
     }
 
     return data;
+  }
+
+  public async populateLink() {
+    if (this.ipnsName) {
+      const ipfsCluster = await new ProjectConfig(
+        { project_uuid: this.project_uuid },
+        this.getContext(),
+      ).getIpfsCluster();
+
+      this.link = ipfsCluster.generateLink(
+        this.project_uuid,
+        this.ipnsName,
+        true,
+      );
+    }
   }
 }
