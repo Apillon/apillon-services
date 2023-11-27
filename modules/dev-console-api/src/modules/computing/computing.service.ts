@@ -1,4 +1,5 @@
 import {
+  AssignCidToNft,
   AttachedServiceType,
   CodeException,
   ComputingMicroservice,
@@ -83,6 +84,10 @@ export class ComputingService {
   }
 
   async encryptContent(context: DevConsoleApiContext, body: EncryptContentDto) {
-    return await new ComputingMicroservice(context).encryptContent(body);
+    return (await new ComputingMicroservice(context).encryptContent(body)).data;
+  }
+
+  async assignCidToNft(context: DevConsoleApiContext, body: AssignCidToNft) {
+    return (await new ComputingMicroservice(context).assignCidToNft(body)).data;
   }
 }

@@ -220,6 +220,7 @@ export enum ComputingEventType {
   DEPOSIT_TO_PHALA_CLUSTER = 'fund-contract-cluster',
   TRANSFER_CONTRACT_OWNERSHIP = 'transfer-contract-ownership',
   ENCRYPT_CONTENT = 'encrypt-content',
+  ASSIGN_CID_TO_NFT = 'assign-cid-to-nft',
 }
 
 export enum ReferralEventType {

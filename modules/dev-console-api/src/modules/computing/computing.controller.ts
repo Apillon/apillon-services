@@ -1,4 +1,5 @@
 import {
+  AssignCidToNft,
   ContractQueryFilter,
   CreateContractDto,
   DefaultPermission,
@@ -96,5 +97,22 @@ export class ComputingController {
   ) {
     body.contract_uuid = uuid;
     return await this.computingService.encryptContent(context, body);
+  }
+
+  @Post('contracts/:uuid/assign-cid-to-nft')
+  @Validation({ dto: AssignCidToNft })
+  @UseGuards(ValidationGuard)
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async assignCidToNft(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') uuid: string,
+    @Body() body: AssignCidToNft,
+  ) {
+    body.contract_uuid = uuid;
+    return await this.computingService.assignCidToNft(context, body);
   }
 }

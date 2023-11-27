@@ -1,4 +1,5 @@
 import {
+  AssignCidToNft,
   ComputingContractType,
   ContractQueryFilter,
   CreateContractDto,
@@ -25,6 +26,7 @@ import {
   ComputingValidationException,
 } from '../../lib/exceptions';
 import {
+  assignCidToNft,
   deployPhalaContract,
   depositToPhalaCluster,
   encryptContent,
@@ -303,12 +305,13 @@ export class ComputingService {
     const contractAbi = await new ContractAbi({}, context).populateById(
       contract.contractAbi_id,
     );
+    let encryptedContent: string;
     try {
-      return await encryptContent(
+      encryptedContent = await encryptContent(
         context,
         contractAbi.abi,
         contract.contractAddress,
-        body.data,
+        body.content,
       );
     } catch (e: any) {
       console.error(e);
@@ -321,5 +324,72 @@ export class ComputingService {
         details: e,
       }).writeToMonitor({});
     }
+
+    await new Lmas().writeLog({
+      context,
+      project_uuid: contract.project_uuid,
+      logType: LogType.INFO,
+      message: `Encrypted content on contract with uuid ${contract.contract_uuid}.`,
+      location: 'ComputingService/encryptContent',
+      service: ServiceName.COMPUTING,
+      data: {
+        contract_uuid: contract.contract_uuid,
+      },
+    });
+
+    return { encryptedContent };
+  }
+
+  static async assignCidToNft(
+    { body }: { body: AssignCidToNft },
+    context: ServiceContext,
+  ) {
+    const sourceFunction = 'assignCidToNft()';
+    const contract = await new Contract({}, context).populateByUUID(
+      body.contract_uuid,
+    );
+    contract.verifyStatusAndAccess(sourceFunction, context);
+    const contractAbi = await new ContractAbi({}, context).populateById(
+      contract.contractAbi_id,
+    );
+    try {
+      await assignCidToNft(
+        context,
+        contract.project_uuid,
+        contract.id,
+        contractAbi.abi,
+        contract.contractAddress,
+        body.cid,
+        body.nftId,
+      );
+    } catch (e: any) {
+      console.error(e);
+      throw await new ComputingCodeException({
+        status: 500,
+        code: ComputingErrorCode.FAILED_TO_ASSIGN_CID_TO_NFT,
+        context: context,
+        sourceFunction,
+        errorMessage: 'Error assigning CID to NFT',
+        details: e,
+      }).writeToMonitor({});
+    }
+
+    await new Lmas().writeLog({
+      context,
+      project_uuid: contract.project_uuid,
+      logType: LogType.INFO,
+      message:
+        `Assigned CID ${body.cid} to NFT with id ${body.nftId} for contract ` +
+        `with uuid ${contract.contract_uuid}.`,
+      location: 'ComputingService/assignCidToNft',
+      service: ServiceName.COMPUTING,
+      data: {
+        contract_uuid: contract.contract_uuid,
+        cid: body.cid,
+        nftId: body.nftId,
+      },
+    });
+
+    return { success: true };
   }
 }

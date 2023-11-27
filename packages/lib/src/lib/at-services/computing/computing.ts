@@ -7,6 +7,7 @@ import { ContractQueryFilter } from './dtos/contract-query-filter.dto';
 import { DepositToClusterDto } from './dtos/deposit-to-cluster.dto';
 import { TransferOwnershipDto } from './dtos/transfer-ownership.dto';
 import { EncryptContentDto } from './dtos/encrypt-content.dto';
+import { AssignCidToNft } from './dtos/assign-cid-to-nft.dto';
 
 export class ComputingMicroservice extends BaseService {
   lambdaFunctionName =
@@ -67,6 +68,14 @@ export class ComputingMicroservice extends BaseService {
   public async encryptContent(body: EncryptContentDto) {
     const data = {
       eventName: ComputingEventType.ENCRYPT_CONTENT,
+      body: body.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async assignCidToNft(body: AssignCidToNft) {
+    const data = {
+      eventName: ComputingEventType.ASSIGN_CID_TO_NFT,
       body: body.serialize(),
     };
     return await this.callService(data);
