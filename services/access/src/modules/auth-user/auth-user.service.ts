@@ -116,9 +116,7 @@ export class AuthUserService {
       service: ServiceName.AMS,
     });
 
-    const res = authUser.serialize(SerializeFor.SERVICE);
-    console.log(res);
-    return res;
+    return authUser.serialize(SerializeFor.SERVICE);
   }
   /**
    * Authenticates a user using their email and password.
