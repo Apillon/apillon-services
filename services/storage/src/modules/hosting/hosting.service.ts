@@ -2,7 +2,6 @@ import {
   ApillonHostingApiCreateS3UrlsForUploadDto,
   AppEnvironment,
   AWS_S3,
-  CodeException,
   CreateS3UrlsForUploadDto,
   CreateWebsiteDto,
   DeploymentQueryFilter,
@@ -245,6 +244,7 @@ export class HostingService {
       new CreateS3UrlsForUploadDto().populate({
         ...event.body,
         bucket_uuid: website.bucket.bucket_uuid,
+        session_uuid: event.body.sessionUuid,
       });
     return await StorageService.generateMultipleS3UrlsForUpload(
       { body: param },
