@@ -175,6 +175,13 @@ export class PhalaClient {
     );
   }
 
+  /**
+   * Gets dummy account for querying smart contract.
+   * In computing service we don't have access to wallet private key that is why
+   * we use a dummy/test account for querying contract which doesn't mind which
+   * account query is sent for.
+   * @private
+   */
   private async getDummyAccountAndCertificate() {
     const keyring = new Keyring({ type: 'sr25519' });
     const account = keyring.addFromUri('//Alice');

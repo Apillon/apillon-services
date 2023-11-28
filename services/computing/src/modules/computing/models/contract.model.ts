@@ -20,6 +20,7 @@ import {
 } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { ComputingCodeException } from '../../../lib/exceptions';
+import { ContractAbi } from './contractAbi.model';
 
 export class Contract extends UuidSqlModel {
   public readonly tableName = DbTables.CONTRACT;
@@ -390,6 +391,12 @@ export class Contract extends UuidSqlModel {
         contractAddress,
         contractStatus,
       },
+    );
+  }
+
+  public async getAbi() {
+    return await new ContractAbi({}, this.getContext()).populateById(
+      this.contractAbi_id,
     );
   }
 }

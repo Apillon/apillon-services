@@ -194,9 +194,7 @@ export class ComputingService {
     const contract = await new Contract({}, context).populateByUUID(
       body.contract_uuid,
     );
-    const contractAbi = await new ContractAbi({}, context).populateById(
-      contract.contractAbi_id,
-    );
+    const contractAbi = await contract.getAbi();
     const sourceFunction = 'transferContractOwnership()';
     contract.verifyStatusAndAccess(sourceFunction, context);
     await ComputingService.checkTransferConditions(
@@ -216,8 +214,6 @@ export class ComputingService {
         newOwnerAddress,
       );
     } catch (e: any) {
-      console.log('error', e?.message);
-      console.error(e);
       throw await new ComputingCodeException({
         status: 500,
         code: ComputingErrorCode.TRANSFER_CONTRACT_ERROR,
@@ -302,9 +298,8 @@ export class ComputingService {
       body.contract_uuid,
     );
     contract.verifyStatusAndAccess(sourceFunction, context);
-    const contractAbi = await new ContractAbi({}, context).populateById(
-      contract.contractAbi_id,
-    );
+    const contractAbi = await contract.getAbi();
+
     let encryptedContent: string;
     try {
       encryptedContent = await encryptContent(
@@ -314,10 +309,9 @@ export class ComputingService {
         body.content,
       );
     } catch (e: any) {
-      console.error(e);
       throw await new ComputingCodeException({
         status: 500,
-        code: ComputingErrorCode.FAILED_TO_ENCRYPTING_CONTENT,
+        code: ComputingErrorCode.FAILED_TO_ENCRYPT_CONTENT,
         context: context,
         sourceFunction,
         errorMessage: 'Error encrypting content',
@@ -349,9 +343,7 @@ export class ComputingService {
       body.contract_uuid,
     );
     contract.verifyStatusAndAccess(sourceFunction, context);
-    const contractAbi = await new ContractAbi({}, context).populateById(
-      contract.contractAbi_id,
-    );
+    const contractAbi = await contract.getAbi();
     try {
       await assignCidToNft(
         context,
@@ -363,7 +355,6 @@ export class ComputingService {
         body.nftId,
       );
     } catch (e: any) {
-      console.error(e);
       throw await new ComputingCodeException({
         status: 500,
         code: ComputingErrorCode.FAILED_TO_ASSIGN_CID_TO_NFT,
