@@ -50,3 +50,19 @@ functions:
     description: Apillon System configuration Service (SCS)
     memorySize: 512
     timeout: 30
+  config-service-worker:
+    handler: ./src/workers/worker-executor.handler
+    name: apillon-config-service-worker-${self:provider.stage}
+    description: Serverless workers for Apillon config microservice
+    memorySize: 512
+    timeout: 900
+    reservedConcurrency: 30
+    environment:
+      AWS_WORKER_LAMBDA_NAME: ${self:functions.config-service-worker.name}
+    events:
+      - schedule: cron(${env:CRON_SCHEDULE, '0/1 * * * ? *'})
+      - sqs:
+          arn: ${env:WORKER_SQS_ARN} #arn:aws:sqs:eu-west-1:018021943180:apillon-config-queue-dev
+          batchSize: 4
+          maximumBatchingWindow: 5
+          functionResponseType: ReportBatchItemFailures

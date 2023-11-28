@@ -1,5 +1,6 @@
 import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
+  enumInclusionValidator,
   getQueryParams,
   PoolConnection,
   PopulateFrom,
@@ -11,7 +12,11 @@ import {
   SqlModelStatus,
   SubscriptionsQueryFilter,
 } from '@apillon/lib';
-import { ConfigErrorCode, DbTables } from '../../../config/types';
+import {
+  ConfigErrorCode,
+  DbTables,
+  QuotaWarningLevel,
+} from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 
 export class Subscription extends ProjectAccessModel {
@@ -134,7 +139,7 @@ export class Subscription extends ProjectAccessModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.SERVICE],
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.SERVICE, PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -148,7 +153,7 @@ export class Subscription extends ProjectAccessModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.SERVICE],
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.SERVICE, PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
@@ -159,6 +164,28 @@ export class Subscription extends ProjectAccessModel {
     ],
   })
   public cancellationComment: string;
+
+  /**
+   * Shows which level of warning for exceeding a quota has been sent
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.SERVICE, PopulateFrom.DB],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+    ],
+    validators: [
+      {
+        resolver: enumInclusionValidator(QuotaWarningLevel, true),
+        code: ConfigErrorCode.INVALID_QUOTA_WARNING_LEVEL,
+      },
+    ],
+  })
+  public quotaWarningLevel: QuotaWarningLevel;
 
   public async getActiveSubscription(
     project_uuid = this.project_uuid,
@@ -227,7 +254,7 @@ export class Subscription extends ProjectAccessModel {
     // In case somebody wants to renew a canceled subscription
     const data = await this.db().paramExecute(
       `
-        SELECT * FROM \`${DbTables.SUBSCRIPTION}\`
+        SELECT ${this.generateSelectFields()} FROM \`${DbTables.SUBSCRIPTION}\`
         WHERE stripeId = @stripeId
         ORDER BY createTime DESC
         LIMIT 1;
@@ -274,5 +301,41 @@ export class Subscription extends ProjectAccessModel {
     };
 
     return await selectAndCountQuery(context.mysql, sqlQuery, params, 's.id');
+  }
+
+  public async getExpiredSubscriptions(
+    daysAgo: number,
+    activeOnly = true,
+    conn?: PoolConnection,
+  ): Promise<this[]> {
+    if (!Number.isInteger(daysAgo) || daysAgo < 0) {
+      throw new Error('daysAgo should be a non-negative integer');
+    }
+
+    return await this.getContext().mysql.paramExecute(
+      `
+      SELECT ${this.generateSelectFields()}
+      FROM \`${DbTables.SUBSCRIPTION}\`
+      WHERE expiresOn BETWEEN DATE_SUB(CURRENT_DATE, INTERVAL @daysAgo DAY) AND CURRENT_DATE
+      ${activeOnly ? `AND status = ${SqlModelStatus.ACTIVE}` : ''}
+      `,
+      { daysAgo },
+      conn,
+    );
+  }
+
+  public async updateQuotaWarningLevel(
+    quotaWarningLevel: QuotaWarningLevel,
+    conn?: PoolConnection,
+  ) {
+    await this.db().paramExecute(
+      `
+        UPDATE \`${DbTables.SUBSCRIPTION}\`
+        SET \`quotaWarningLevel\` = @quotaWarningLevel
+        WHERE stripeId = @stripeId
+      `,
+      { stripeId: this.stripeId, quotaWarningLevel },
+      conn,
+    );
   }
 }
