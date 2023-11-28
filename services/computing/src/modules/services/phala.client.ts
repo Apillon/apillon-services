@@ -71,7 +71,7 @@ export class PhalaClient {
     contractAddress: string,
     cid: string,
     nftId: number,
-  ) {
+  ): Promise<any> {
     await this.initializeProvider();
     const contract = await this.getContract(contractAddress, contractAbi);
     const { account, certificate } = await this.getDummyAccountAndCertificate();
@@ -127,7 +127,7 @@ export class PhalaClient {
     clusterId: string,
     accountAddress: string,
     amount: number,
-  ) {
+  ): Promise<SubmittableExtrinsic<'promise'>> {
     await this.initializeProvider();
     const roundedAmount = Number((amount * 1e12).toFixed(0)) + 1;
     return this.api.tx.phalaPhatContracts.transferToCluster(
@@ -163,9 +163,8 @@ export class PhalaClient {
       [p: string]: any;
     },
   ) {
-    const contractKey = await this.registry.getContractKeyOrFail(
-      contractAddress,
-    );
+    const contractKey =
+      await this.registry.getContractKeyOrFail(contractAddress);
     return new PinkContractPromise(
       this.api,
       this.registry,
