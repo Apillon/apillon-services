@@ -326,7 +326,7 @@ export class Bucket extends UuidSqlModel {
         `,
       qFrom: `
         FROM \`${DbTables.BUCKET}\` b
-        WHERE b.project_uuid = @project_uuid
+        WHERE b.project_uuid = IFNULL(@project_uuid, b.project_uuid)
         AND ((@bucketType IS null AND b.bucketType IN (1,3)) OR b.bucketType = @bucketType)
         AND (@search IS null OR b.name LIKE CONCAT('%', @search, '%'))
         AND IFNULL(@status, ${SqlModelStatus.ACTIVE}) = status
