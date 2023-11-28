@@ -374,17 +374,19 @@ export class Ipns extends UuidSqlModel {
   }
 
   public async populateLink() {
-    if (this.ipnsName) {
-      const ipfsCluster = await new ProjectConfig(
-        { project_uuid: this.project_uuid },
-        this.getContext(),
-      ).getIpfsCluster();
-
-      this.link = ipfsCluster.generateLink(
-        this.project_uuid,
-        this.ipnsName,
-        true,
-      );
+    if (!this.ipnsName) {
+      return;
     }
+
+    const ipfsCluster = await new ProjectConfig(
+      { project_uuid: this.project_uuid },
+      this.getContext(),
+    ).getIpfsCluster();
+
+    this.link = ipfsCluster.generateLink(
+      this.project_uuid,
+      this.ipnsName,
+      true,
+    );
   }
 }
