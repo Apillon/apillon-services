@@ -22,6 +22,8 @@ import { DbTables, ReferralErrorCode } from '../../config/types';
 import { Task, TaskType } from './models/task.model';
 import { Twitter } from '../../lib/twitter';
 import { Product } from './models/product.model';
+import { PromoCodeUser } from '../promo-code/models/promo-code-user.model';
+import { PromoCode } from '../promo-code/models/promo-code.model';
 
 export class ReferralService {
   static async createPlayer(
@@ -33,6 +35,7 @@ export class ReferralService {
     const player: Player = await new Player({}, context).populateByUserUuid(
       user_uuid,
     );
+    const refCode = event.body.refCode;
 
     if (!player.exists()) {
       player.populate({
@@ -42,8 +45,8 @@ export class ReferralService {
         status: SqlModelStatus.INCOMPLETE,
       });
     }
-    const referrer: Player = event.body.refCode
-      ? await new Player({}, context).populateByRefCode(event.body.refCode)
+    const referrer: Player = refCode
+      ? await new Player({}, context).populateByRefCode(refCode)
       : null;
 
     player.referrer_id = referrer?.id;
@@ -70,8 +73,59 @@ export class ReferralService {
     } else {
       await player.insert();
     }
+
     await player.populateSubmodels();
+
+    if (refCode) {
+      // Create new record that a user has used this promo code
+      // Later used for giving promo credits to the user's project
+      await ReferralService.createPromoCodeUser(refCode, userEmail, context);
+    }
+
     return player.serialize(SerializeFor.PROFILE);
+  }
+
+  static async createPromoCodeUser(
+    code: string,
+    email: string,
+    context: ServiceContext,
+  ) {
+    try {
+      const promoCode = await new PromoCode({}, context).populateByCode(code);
+
+      // If used code does not exist, skip execution
+      if (!promoCode.exists()) {
+        return;
+      }
+      const existingPromoCodeUser = await new PromoCodeUser(
+        {},
+        context,
+      ).populateByEmail(email);
+
+      // If user has already used a promo code, skip execution
+      if (existingPromoCodeUser.exists()) {
+        return;
+      }
+
+      await new PromoCodeUser(
+        {
+          code_id: promoCode.id,
+          user_uuid: context.user.user_uuid,
+          user_email: email,
+        },
+        context,
+      ).insert();
+    } catch (err) {
+      await new Lmas().writeLog({
+        context,
+        logType: LogType.ERROR,
+        message: 'Error creating promo code user',
+        location: 'ReferralService/createPromoCodeUser',
+        user_uuid: context.user?.user_uuid,
+        service: ServiceName.REFERRAL,
+        data: { err, email, code },
+      });
+    }
   }
 
   static async getPlayer(_event: any, context: ServiceContext): Promise<any> {

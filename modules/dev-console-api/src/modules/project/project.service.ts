@@ -21,6 +21,7 @@ import {
   SubscriptionsQueryFilter,
   InvoicesQueryFilter,
   ValidationException,
+  ReferralMicroservice,
 } from '@apillon/lib';
 import {
   BadRequestErrorCode,
@@ -49,8 +50,13 @@ export class ProjectService {
     context: DevConsoleApiContext,
     body: Project,
   ): Promise<Project> {
-    //Check max project quota
-    if (await this.isProjectsQuotaReached(context)) {
+    // Check max project quota
+    const { items: projects } = await new Project({}, context).getUserProjects(
+      context,
+      context.user.id,
+      DefaultUserRole.PROJECT_OWNER,
+    );
+    if (await this.isProjectsQuotaReached(context, projects)) {
       throw new CodeException({
         code: BadRequestErrorCode.MAX_NUMBER_OF_PROJECTS_REACHED,
         status: HttpStatus.BAD_REQUEST,
@@ -90,6 +96,13 @@ export class ProjectService {
         `${CacheKeyPrefix.AUTH_USER_DATA}:${context.user.user_uuid}`,
       );
 
+      if (projects.length === 0) {
+        await new ReferralMicroservice(context).useCreditsPromoCode(
+          project.project_uuid,
+          context.user.email,
+        );
+      }
+
       await new Lmas().writeLog({
         context,
         project_uuid: project.project_uuid,
@@ -106,13 +119,18 @@ export class ProjectService {
     }
   }
 
-  async isProjectsQuotaReached(context: DevConsoleApiContext) {
-    const { items: projects } = await new Project({}, context).getUserProjects(
-      context,
-      context.user.id,
-      DefaultUserRole.PROJECT_OWNER,
-    );
-
+  async isProjectsQuotaReached(
+    context: DevConsoleApiContext,
+    projects?: Project[],
+  ) {
+    if (!projects) {
+      const { items } = await new Project({}, context).getUserProjects(
+        context,
+        context.user.id,
+        DefaultUserRole.PROJECT_OWNER,
+      );
+      projects = items;
+    }
     const activeSubscriptions = await Promise.all(
       projects.map(
         async (project) =>

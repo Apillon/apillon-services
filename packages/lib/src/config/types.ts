@@ -233,6 +233,8 @@ export enum ReferralEventType {
   GET_TWITTER_LINK = 'get-twitter-link',
   GET_TWEETS = 'get-tweets',
   CONFIRM_RETWEET = 'confirm-retweet',
+
+  USE_PROMO_CODE = 'use-promo-code',
 }
 
 export enum ServiceName {

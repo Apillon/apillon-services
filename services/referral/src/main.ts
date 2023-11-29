@@ -2,6 +2,7 @@ import { ReferralEventType } from '@apillon/lib';
 import type { Context } from 'aws-lambda/handler';
 import { ReferralService } from './modules/referral/referral.service';
 import { OauthService } from './modules/oauth/oauth.service';
+import { PromoCodeService } from './modules/promo-code/promo-code.service';
 
 /**
  * Processing lambda event with appropriate service function based on event name
@@ -23,6 +24,7 @@ export async function processEvent(event, context: Context): Promise<any> {
       ReferralService.getTwitterAuthenticationLink,
     [ReferralEventType.GET_TWEETS]: ReferralService.getTweets,
     [ReferralEventType.CONFIRM_RETWEET]: ReferralService.confirmRetweet,
+    [ReferralEventType.USE_PROMO_CODE]: PromoCodeService.assignPromoCodeCredits,
   };
 
   return await processors[event.eventName](event, context);

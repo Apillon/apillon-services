@@ -2,6 +2,7 @@ import {
   AdvancedSQLModel,
   PopulateFrom,
   SerializeFor,
+  SqlModelStatus,
   presenceValidator,
   prop,
 } from '@apillon/lib';
@@ -70,4 +71,25 @@ export class PromoCode extends AdvancedSQLModel {
     ],
   })
   public maxUses: number;
+
+  public async populateByCode(code: string): Promise<this> {
+    if (!code) {
+      throw new Error('code should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT *
+      FROM \`${this.tableName}\`
+      WHERE \`code\` = @code
+      AND validUntil > NOW()
+      AND status = ${SqlModelStatus.ACTIVE};
+      `,
+      { code },
+    );
+
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
+  }
 }

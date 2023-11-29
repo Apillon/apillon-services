@@ -132,6 +132,7 @@ async function createReferralPlayer(
     });
   }
 }
+
 async function resolvePendingProjectInvitations(
   projectService: ProjectService,
   user: User,
