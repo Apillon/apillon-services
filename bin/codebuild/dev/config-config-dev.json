@@ -23,6 +23,11 @@
       },
       {
         "type": "PLAINTEXT",
+        "name": "WORKERS_LIB",
+        "value": "true"
+      },
+      {
+        "type": "PLAINTEXT",
         "name": "DB_MIGRATIONS",
         "value": "true"
       },
