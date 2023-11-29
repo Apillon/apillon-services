@@ -621,7 +621,7 @@ export class Collection extends ProjectAccessModel {
         `,
       qFrom: `
         FROM \`${this.tableName}\` c
-        WHERE c.project_uuid = @project_uuid
+        WHERE c.project_uuid = IFNULL(@project_uuid, c.project_uuid)
         AND (@search IS null OR c.name LIKE CONCAT('%', @search, '%'))
         AND (@collectionStatus IS null OR c.collectionStatus = @collectionStatus)
         AND

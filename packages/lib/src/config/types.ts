@@ -723,6 +723,7 @@ export enum CacheKeyPrefix {
   AUTH_USER_DATA = 'auth-user-data',
   ADMIN_BUCKET_LIST = 'admin-bucket-list',
   ADMIN_WEBSITE_LIST = 'admin-website-list',
+  ADMIN_NFTS_COLLECTION_LIST = 'admin-nfts-collection-list',
 }
 
 export enum CacheKeyTTL {

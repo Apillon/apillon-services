@@ -6,6 +6,8 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { CacheModule } from './cache/cache.module';
 import { LogsModule } from './logs/logs.module';
 import { ComputingModule } from './computing/computing.module';
+import { NftsModule } from './nfts/nfts.module';
+import { StorageModule } from './storage/storage.module';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { ComputingModule } from './computing/computing.module';
     DashboardModule,
     CacheModule,
     LogsModule,
+    NftsModule,
+    StorageModule,
   ],
   controllers: [],
   providers: [],
