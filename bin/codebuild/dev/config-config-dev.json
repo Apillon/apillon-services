@@ -28,6 +28,11 @@
       },
       {
         "type": "PLAINTEXT",
+        "name": "WORKER_SQS_ARN",
+        "value": "arn:aws:sqs:eu-west-1:018021943180:apillon-config-queue-dev"
+      },
+      {
+        "type": "PLAINTEXT",
         "name": "DB_MIGRATIONS",
         "value": "true"
       },
@@ -79,8 +84,6 @@
       "subnet-0ed148d48e931f5fa"
     ],
     "vpcId": "vpc-077437e060881265d",
-    "securityGroupIds": [
-      "sg-091bc1ce7424a7921"
-    ]
+    "securityGroupIds": ["sg-091bc1ce7424a7921"]
   }
 }
