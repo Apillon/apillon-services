@@ -278,6 +278,7 @@ export class Website extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
@@ -293,6 +294,7 @@ export class Website extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })

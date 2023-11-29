@@ -206,6 +206,7 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
   public async populateByUUID(
     uuid: string,
     uuid_property?: string, // Nullable because not needed in derived classes
+    conn?: PoolConnection,
   ): Promise<this> {
     if (!uuid || !uuid_property) {
       throw new Error(`uuid should not be null: ${uuid_property}: ${uuid}`);
@@ -219,6 +220,7 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
         AND status <> ${SqlModelStatus.DELETED};
       `,
       { uuid },
+      conn,
     );
 
     return data?.length

@@ -40,7 +40,7 @@ export class HostingService {
     website_uuid: string,
     body: ApillonHostingApiCreateS3UrlsForUploadDto,
   ) {
-    body.populate(website_uuid);
+    body.populate({ website_uuid });
     try {
       await body.validate();
     } catch (err) {
@@ -53,13 +53,7 @@ export class HostingService {
     return (
       await new StorageMicroservice(
         context,
-      ).requestS3SignedURLsForWebsiteUpload(
-        new ApillonHostingApiCreateS3UrlsForUploadDto().populate({
-          ...body.serialize(),
-          website_uuid: website_uuid,
-          session_uuid: body.sessionUuid,
-        }),
-      )
+      ).requestS3SignedURLsForWebsiteUpload(body)
     ).data;
   }
 
