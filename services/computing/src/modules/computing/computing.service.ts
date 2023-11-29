@@ -194,7 +194,6 @@ export class ComputingService {
     const contract = await new Contract({}, context).populateByUUID(
       body.contract_uuid,
     );
-    const contractAbi = await contract.getAbi();
     const sourceFunction = 'transferContractOwnership()';
     contract.verifyStatusAndAccess(sourceFunction, context);
     await ComputingService.checkTransferConditions(
@@ -204,12 +203,13 @@ export class ComputingService {
       newOwnerAddress,
     );
 
+    await contract.populateAbi();
     try {
       await transferContractOwnership(
         context,
         contract.project_uuid,
         contract.id,
-        contractAbi.abi,
+        contract.contractAbi.abi,
         contract.contractAddress,
         newOwnerAddress,
       );
@@ -298,13 +298,13 @@ export class ComputingService {
       body.contract_uuid,
     );
     contract.verifyStatusAndAccess(sourceFunction, context);
-    const contractAbi = await contract.getAbi();
 
+    await contract.populateAbi();
     let encryptedContent: string;
     try {
       encryptedContent = await encryptContent(
         context,
-        contractAbi.abi,
+        contract.contractAbi.abi,
         contract.contractAddress,
         body.content,
       );
@@ -343,13 +343,13 @@ export class ComputingService {
       body.contract_uuid,
     );
     contract.verifyStatusAndAccess(sourceFunction, context);
-    const contractAbi = await contract.getAbi();
+    await contract.populateAbi();
     try {
       await assignCidToNft(
         context,
         contract.project_uuid,
         contract.id,
-        contractAbi.abi,
+        contract.contractAbi.abi,
         contract.contractAddress,
         body.cid,
         body.nftId,
