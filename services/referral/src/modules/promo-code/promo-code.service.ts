@@ -1,6 +1,6 @@
 import { ServiceContext } from '@apillon/service-lib';
 import { PromoCode } from './models/promo-code.model';
-import { AddCreditDto, LogType, Scs, writeLog } from '@apillon/lib';
+import { AddCreditDto, Lmas, LogType, Scs, ServiceName } from '@apillon/lib';
 import { PromoCodeUser } from './models/promo-code-user.model';
 import { DbTables } from '../../config/types';
 
@@ -16,6 +16,17 @@ export class PromoCodeService {
     },
     context: ServiceContext,
   ) {
+    const writeLmasLog = async (message: string, logType = LogType.ERROR) =>
+      await new Lmas().writeLog({
+        context,
+        project_uuid: event.project_uuid,
+        logType,
+        message,
+        user_uuid: context.user?.user_uuid,
+        location: 'ReferralMS/PromoCodeService/assignPromoCodeCredits',
+        service: ServiceName.REFERRAL,
+      });
+
     const promoCodeUser = await new PromoCodeUser({}, context).populateByEmail(
       event.email,
     );
@@ -30,7 +41,7 @@ export class PromoCodeService {
     );
 
     if (!promoCode.exists()) {
-      writeLog(LogType.ERROR, `Promo code ${promoCodeUser.code_id} not found`);
+      await writeLmasLog(`Promo code ID=${promoCodeUser.code_id} not found`);
       return false;
     }
 
@@ -39,23 +50,25 @@ export class PromoCodeService {
     );
 
     if (totalUses > promoCode.maxUses) {
-      writeLog(
-        LogType.INFO,
+      await writeLmasLog(
         `Promo code ${promoCode.code} has already reached max usage`,
       );
       return false;
     }
 
-    if (promoCodeUser.exists()) {
-      await new Scs(context).addCredit(
-        new AddCreditDto({
-          project_uuid: event.project_uuid,
-          amount: promoCode.creditAmount,
-          referenceTable: `${DbTables.PROMO_CODE}`,
-          referenceId: promoCode.code,
-        }),
-      );
-      return true;
-    }
+    await writeLmasLog(
+      `Assigning ${promoCode.creditAmount} credits to ${event.email} for using promo code ${promoCode.code}`,
+      LogType.INFO,
+    );
+
+    await new Scs(context).addCredit(
+      new AddCreditDto({
+        project_uuid: event.project_uuid,
+        amount: promoCode.creditAmount,
+        referenceTable: `${DbTables.PROMO_CODE}`,
+        referenceId: promoCode.code,
+      }),
+    );
+    return true;
   }
 }
