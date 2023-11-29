@@ -3,6 +3,7 @@ import {
   CacheKeyPrefix,
   DefaultUserRole,
   ValidateFor,
+  WebsiteQueryFilter,
 } from '@apillon/lib';
 import {
   CacheInterceptor,
@@ -41,5 +42,19 @@ export class StorageController {
     @Query() query: BucketQueryFilter,
   ) {
     return await this.storageService.getBucketList(context, query);
+  }
+
+  @Get()
+  @Validation({
+    dto: WebsiteQueryFilter,
+    validateFor: ValidateFor.QUERY,
+    skipValidation: true,
+  })
+  @Cache({ keyPrefix: CacheKeyPrefix.WEBSITE_BUCKET_LIST })
+  async getWebsiteList(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: WebsiteQueryFilter,
+  ) {
+    return await this.storageService.getWebsiteList(context, query);
   }
 }

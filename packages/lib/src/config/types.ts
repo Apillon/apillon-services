@@ -722,6 +722,7 @@ export enum CacheKeyPrefix {
   ADMIN_PROJECT_LIST = 'admin-project-list',
   AUTH_USER_DATA = 'auth-user-data',
   ADMIN_BUCKET_LIST = 'admin-bucket-list',
+  ADMIN_WEBSITE_LIST = 'admin-website-list',
 }
 
 export enum CacheKeyTTL {

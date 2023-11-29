@@ -642,7 +642,7 @@ export class Website extends UuidSqlModel {
         JOIN \`${DbTables.BUCKET}\` uploadBucket ON uploadBucket.id = w.bucket_id
         JOIN \`${DbTables.BUCKET}\` stgBucket ON stgBucket.id = w.stagingBucket_id
         JOIN \`${DbTables.BUCKET}\` prodBucket ON prodBucket.id = w.productionBucket_id
-        WHERE w.project_uuid = @project_uuid
+        WHERE w.project_uuid = IFNULL(@project_uuid, w.project_uuid)
         AND (@search IS null OR w.name LIKE CONCAT('%', @search, '%'))
         AND IFNULL(@status, ${SqlModelStatus.ACTIVE}) = w.status
       `,
