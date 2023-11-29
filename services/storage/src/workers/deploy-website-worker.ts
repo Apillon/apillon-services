@@ -147,8 +147,8 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         deployment.cidv1 = ipfsRes.parentDirCID.toV1().toString();
         deployment.size = ipfsRes.size;
 
-        //If deployment was not already reviewed
-        if (!deploymentReviewed) {
+        //If deployment was not already reviewed, and env variable for sending websites to review is set to 1
+        if (!deploymentReviewed && env.SEND_WEBSITES_TO_REVIEW) {
           //if project is on freemium, website goes to review
           const subscription = (
             await new Scs(this.context).getProjectActiveSubscription(
