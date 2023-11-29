@@ -44,7 +44,8 @@
   },
   "devDependencies": {
     "eslint-config-common": "*",
-    "tsconfig": "*"
+    "tsconfig": "*",
+    "@apillon/tests-lib": "*"
   },
   "overrides": {
     "ipfs-utils": "9.0.6"
