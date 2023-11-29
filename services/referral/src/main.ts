@@ -24,7 +24,7 @@ export async function processEvent(event, context: Context): Promise<any> {
       ReferralService.getTwitterAuthenticationLink,
     [ReferralEventType.GET_TWEETS]: ReferralService.getTweets,
     [ReferralEventType.CONFIRM_RETWEET]: ReferralService.confirmRetweet,
-    [ReferralEventType.USE_PROMO_CODE]: PromoCodeService.assignPromoCodeCredits,
+    [ReferralEventType.USE_PROMO_CODE]: PromoCodeService.addPromoCodeCredits,
   };
 
   return await processors[event.eventName](event, context);

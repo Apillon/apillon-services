@@ -107,23 +107,35 @@ export class ReferralService {
         return;
       }
 
-      await new PromoCodeUser(
+      const promoCodeUser = new PromoCodeUser(
         {
           code_id: promoCode.id,
           user_uuid: context.user.user_uuid,
           user_email: email,
         },
         context,
-      ).insert();
+      );
+
+      try {
+        await promoCodeUser.validate();
+      } catch (err) {
+        await promoCodeUser.handle(err);
+        if (!promoCodeUser.isValid()) {
+          throw new ReferralValidationException(promoCodeUser);
+        }
+      }
+
+      await promoCodeUser.insert();
     } catch (err) {
       await new Lmas().writeLog({
         context,
         logType: LogType.ERROR,
-        message: 'Error creating promo code user',
+        message: `Error creating promo code user: ${err.message}`,
         location: 'ReferralService/createPromoCodeUser',
         user_uuid: context.user?.user_uuid,
         service: ServiceName.REFERRAL,
         data: { err, email, code },
+        sendAdminAlert: true,
       });
     }
   }

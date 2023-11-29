@@ -96,11 +96,11 @@ export class ProjectService {
         `${CacheKeyPrefix.AUTH_USER_DATA}:${context.user.user_uuid}`,
       );
 
+      // If it's the user's first project, add credits if using promo code
       if (projects.length === 0) {
-        await new ReferralMicroservice(context).useCreditsPromoCode(
-          project.project_uuid,
-          context.user.email,
-        );
+        await new ReferralMicroservice(context)
+          .useCreditsPromoCode(project.project_uuid, context.user.email)
+          .catch((err) => err);
       }
 
       await new Lmas().writeLog({
