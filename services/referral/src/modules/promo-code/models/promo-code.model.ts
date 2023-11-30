@@ -81,7 +81,7 @@ export class PromoCode extends AdvancedSQLModel {
       `
       SELECT *
       FROM \`${DbTables.PROMO_CODE}\`
-      WHERE \`code\` = @code
+      WHERE UPPER(\`code\`) = UPPER(@code)
       AND validUntil > NOW()
       AND status = ${SqlModelStatus.ACTIVE};
       `,
