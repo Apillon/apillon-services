@@ -99,7 +99,7 @@ export class ProjectService {
       // If it's the user's first project, add credits if using promo code
       if (projects.length === 0) {
         await new ReferralMicroservice(context)
-          .useCreditsPromoCode(project.project_uuid, context.user.email)
+          .addPromoCodeCredits(project.project_uuid, context.user.email)
           .catch((err) => err);
       }
 

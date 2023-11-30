@@ -15,6 +15,8 @@ export async function upgrade(
       \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       \`updateUser\` INT NULL,
       PRIMARY KEY (\`id\`),
+      UNIQUE (user_uuid),
+      UNIQUE (user_email),
       CONSTRAINT \`fk_promo_code\`
         FOREIGN KEY (\`code_id\`)
         REFERENCES \`${DbTables.PROMO_CODE}\` (\`id\`)

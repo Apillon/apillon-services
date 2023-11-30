@@ -115,9 +115,9 @@ export class ReferralMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async useCreditsPromoCode(project_uuid: string, email: string) {
+  public async addPromoCodeCredits(project_uuid: string, email: string) {
     return await this.callService({
-      eventName: ReferralEventType.USE_PROMO_CODE,
+      eventName: ReferralEventType.ADD_PROMO_CODE_CREDITS,
       project_uuid,
       email,
     });

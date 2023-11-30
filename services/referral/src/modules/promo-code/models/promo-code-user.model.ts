@@ -18,7 +18,6 @@ export class PromoCodeUser extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
     ],
     validators: [
       {
@@ -36,7 +35,6 @@ export class PromoCodeUser extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
     ],
     validators: [
       {
@@ -54,7 +52,6 @@ export class PromoCodeUser extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
     ],
     validators: [
       {
@@ -73,7 +70,7 @@ export class PromoCodeUser extends AdvancedSQLModel {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT COUNT(code_id) AS totalUses
-      FROM \`${this.tableName}\`
+      FROM \`${DbTables.PROMO_CODE_USER}\`
       WHERE \`code_id\` = @code_id;
       `,
       { code_id },
@@ -88,7 +85,7 @@ export class PromoCodeUser extends AdvancedSQLModel {
     }
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT * FROM \`${this.tableName}\`
+      SELECT * FROM \`${DbTables.PROMO_CODE_USER}\`
       WHERE user_email = @email
       LIMIT 1;
       `,

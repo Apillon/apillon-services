@@ -80,7 +80,7 @@ export class PromoCode extends AdvancedSQLModel {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT *
-      FROM \`${this.tableName}\`
+      FROM \`${DbTables.PROMO_CODE}\`
       WHERE \`code\` = @code
       AND validUntil > NOW()
       AND status = ${SqlModelStatus.ACTIVE};

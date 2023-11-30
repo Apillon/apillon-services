@@ -72,8 +72,9 @@ export class PromoCodeService {
       }
 
       await writeLmasLog(
-        `Assigning ${promoCode.creditAmount} credits to ${event.email} for using promo code ${promoCode.code}`,
+        `Adding ${promoCode.creditAmount} credits to ${event.project_uuid} and email ${event.email} for using promo code ${promoCode.code}`,
         LogType.INFO,
+        { ...promoCode.serialize(), ...event },
       );
 
       await new Scs(context).addCredit(
