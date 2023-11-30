@@ -91,6 +91,7 @@ export enum BlockchainEventType {
   UPDATE_WALLET = 'update-wallet',
   GET_WALLET_TRANSACTIONS = 'get-wallet-transactions',
   UPDATE_TRANSACTION = 'update-transaction',
+  GET_WALLET_IDENTITY = 'get-wallet-identity',
 }
 
 export enum StorageEventType {
@@ -564,6 +565,9 @@ export enum ValidatorErrorCode {
   NFT_BURN_TOKEN_ID_NOT_VALID = 42200148,
   QUOTA_CODE_NOT_VALID = 42200149,
   INVALID_FILES_LENGTH = 42200150,
+
+  SIGNING_MESSAGE_NOT_PRESENT = 42200151,
+  WALLET_SIGNATURE_NOT_PRESENT = 42200152,
 
   //#region Computing
   COMPUTING_PROJECT_UUID_NOT_PRESENT = 42200201,

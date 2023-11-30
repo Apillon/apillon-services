@@ -5,6 +5,7 @@ import {
   UpdateTransactionDto,
   WalletTransactionsQueryFilter,
   SqlModelStatus,
+  WalletIdentityDto,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import {
