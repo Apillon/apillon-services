@@ -82,7 +82,7 @@ export class PromoCodeService {
           project_uuid: event.project_uuid,
           amount: promoCode.creditAmount,
           referenceTable: `${DbTables.PROMO_CODE}`,
-          referenceId: promoCode.code,
+          referenceId: `${promoCode.code}-${promoCodeUser.id}`,
         }),
       );
       return true;
