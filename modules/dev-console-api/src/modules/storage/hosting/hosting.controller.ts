@@ -16,7 +16,6 @@ import {
   Get,
   HttpCode,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -142,5 +141,31 @@ export class HostingController {
     @Param('deployment_uuid') deployment_uuid: string,
   ) {
     return await this.hostingService.getDeployment(context, deployment_uuid);
+  }
+
+  @Get('websites/:website_uuid/deployments/:deployment_uuid/approve')
+  async approveDeployment(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('deployment_uuid') deployment_uuid: string,
+    @Query('token') token: string,
+  ) {
+    return await this.hostingService.approveWebsiteDeployment(
+      context,
+      deployment_uuid,
+      token,
+    );
+  }
+
+  @Get('websites/:website_uuid/deployments/:deployment_uuid/reject')
+  async rejectDeployment(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('deployment_uuid') deployment_uuid: string,
+    @Query('token') token: string,
+  ) {
+    return await this.hostingService.rejectWebsiteDeployment(
+      context,
+      deployment_uuid,
+      token,
+    );
   }
 }

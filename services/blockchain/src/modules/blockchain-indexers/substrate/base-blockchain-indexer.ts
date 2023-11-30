@@ -1,5 +1,9 @@
-import { GraphQLClient, gql } from 'graphql-request';
+import { gql, GraphQLClient } from 'graphql-request';
 import { BlockHeight } from '../block-height';
+import {
+  PhatContractsInstantiatedTransaction,
+  PhatContractsInstantiatingTransaction,
+} from './phala/data-models';
 
 export abstract class BaseBlockchainIndexer {
   protected graphQlClient: GraphQLClient;
@@ -12,6 +16,23 @@ export abstract class BaseBlockchainIndexer {
 
   public abstract getAllTransactions(...args: any[]): Promise<any>;
   public abstract getAllSystemEvents(...args: any[]): Promise<any>;
+
+  public abstract getAccountTransactionsByHash(...args: any[]): Promise<any>;
+
+  public async getContractInstantiatingTransactions(
+    _account: string,
+    _hashes: string[],
+  ): Promise<PhatContractsInstantiatingTransaction[]> {
+    throw new Error('getContractInstantiatingTransactions not implemented');
+  }
+
+  public async getContractsInstantiatedTransactions(
+    _deployer: string,
+    _fromBlock: number,
+    _toBlock: number,
+  ): Promise<PhatContractsInstantiatedTransaction[]> {
+    throw new Error('getContractsInstantiatedTransactions not implemented');
+  }
 
   public async getBlockHeight(): Promise<number> {
     const GRAPHQL_QUERY = gql`

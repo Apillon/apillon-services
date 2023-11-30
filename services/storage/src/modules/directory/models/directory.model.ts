@@ -15,7 +15,6 @@ import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { v4 as uuidV4 } from 'uuid';
 import { DbTables, ObjectType, StorageErrorCode } from '../../../config/types';
-import { addJwtToIPFSUrl } from '../../../lib/ipfs-utils';
 import { Bucket } from '../../bucket/models/bucket.model';
 import { ProjectConfig } from '../../config/models/project-config.model';
 import { File } from '../../storage/models/file.model';

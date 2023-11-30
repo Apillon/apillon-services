@@ -5,9 +5,12 @@ import {
   AttachedServiceType,
   BaseProjectQueryFilter,
   BucketQueryFilter,
+  CreateIpnsDto,
   DefaultApiKeyRole,
   EndFileUploadSessionDto,
   FilesQueryFilter,
+  IpnsQueryFilter,
+  PublishIpnsDto,
   ValidateFor,
 } from '@apillon/lib';
 import { ApiKeyPermissions, Ctx, Validation } from '@apillon/modules-lib';
@@ -18,6 +21,7 @@ import {
   Get,
   HttpCode,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -200,4 +204,96 @@ export class StorageController {
   async listDomains(@Ctx() context: ApillonApiContext) {
     return await this.storageService.getBlacklist(context);
   }
+
+  //#region ipns endpoints
+
+  @Get('buckets/:bucketUuid/ipns')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_READ,
+    serviceType: AttachedServiceType.STORAGE,
+  })
+  @Validation({ dto: IpnsQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async getIpnsList(
+    @Ctx() context: ApillonApiContext,
+    @Param('bucketUuid') bucket_uuid: string,
+    @Query() query: IpnsQueryFilter,
+  ) {
+    return await this.storageService.getIpnsList(context, bucket_uuid, query);
+  }
+
+  @Get('buckets/:bucketUuid/ipns/:ipnsUuid')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_READ,
+    serviceType: AttachedServiceType.STORAGE,
+  })
+  @UseGuards(AuthGuard)
+  async getIpns(
+    @Ctx() context: ApillonApiContext,
+    @Param('ipnsUuid') ipns_uuid: string,
+  ) {
+    return await this.storageService.getIpns(context, ipns_uuid);
+  }
+
+  @Post('buckets/:bucketUuid/ipns')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_WRITE,
+    serviceType: AttachedServiceType.STORAGE,
+  })
+  @UseGuards(AuthGuard)
+  @Validation({ dto: CreateIpnsDto })
+  @UseGuards(ValidationGuard)
+  async createIpnsRecord(
+    @Ctx() context: ApillonApiContext,
+    @Param('bucketUuid') bucket_uuid: string,
+    @Body() body: CreateIpnsDto,
+  ) {
+    return await this.storageService.createIpns(context, bucket_uuid, body);
+  }
+
+  @Patch('buckets/:bucketUuid/ipns/:ipnsUuid')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_WRITE,
+    serviceType: AttachedServiceType.STORAGE,
+  })
+  @UseGuards(AuthGuard)
+  async updateIpns(
+    @Ctx() context: ApillonApiContext,
+    @Param('ipnsUuid') ipns_uuid: string,
+    @Body() body: any,
+  ) {
+    return await this.storageService.updateIpns(context, ipns_uuid, body);
+  }
+
+  @Delete('buckets/:bucketUuid/ipns/:ipnsUuid')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_WRITE,
+    serviceType: AttachedServiceType.STORAGE,
+  })
+  @UseGuards(AuthGuard)
+  async deleteIpns(
+    @Ctx() context: ApillonApiContext,
+    @Param('ipnsUuid') ipns_uuid: string,
+  ) {
+    return await this.storageService.deleteIpns(context, ipns_uuid);
+  }
+
+  @Post('buckets/:bucketUuid/ipns/:ipnsUuid/publish')
+  @HttpCode(200)
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_EXECUTE,
+    serviceType: AttachedServiceType.STORAGE,
+  })
+  @UseGuards(AuthGuard)
+  @Validation({ dto: PublishIpnsDto, skipValidation: true })
+  @UseGuards(ValidationGuard)
+  async publishIpns(
+    @Ctx() context: ApillonApiContext,
+    @Param('ipnsUuid') ipns_uuid: string,
+    @Body() body: PublishIpnsDto,
+  ) {
+    return await this.storageService.publishIpns(context, ipns_uuid, body);
+  }
+
+  //#endregion
 }

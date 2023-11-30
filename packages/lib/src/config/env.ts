@@ -10,6 +10,7 @@ export interface IEnv {
   APP_ENV: string;
   LOG_TARGET: string;
   LOG_LEVEL: string;
+  CONSOLE_API_URL: string;
 
   /**
    * env var from lambda - current region - can not be overwritten in lambda settings!
@@ -88,6 +89,7 @@ export interface IEnv {
    */
   SLACK_TOKEN: string;
   SLACK_CHANNEL: string;
+  SLACK_CHANNEL_FOR_WEBSITE_REVIEWS: string;
 
   /**
    * MONITORING SQS
@@ -170,6 +172,9 @@ export interface IEnv {
   STORAGE_CRUST_SEED_PHRASE_TEST: string;
   STORAGE_AWS_IPFS_QUEUE_BUCKET: string;
   STORAGE_DELETE_AFTER_INTERVAL: number;
+  URL_SCREENSHOT_FUNCTION_NAME: string;
+  URL_SCREENSHOT_API_URL: string;
+  SEND_WEBSITES_TO_REVIEW: number;
 
   STORAGE_MYSQL_HOST: string;
   STORAGE_MYSQL_PORT: number;
@@ -220,6 +225,7 @@ export interface IEnv {
 
   BLOCKCHAIN_CRUST_GRAPHQL_SERVER: string;
   BLOCKCHAIN_KILT_GRAPHQL_SERVER: string;
+  BLOCKCHAIN_PHALA_GRAPHQL_SERVER: string;
   BLOCKCHAIN_SECRETS: string;
 
   /**
@@ -332,6 +338,12 @@ export interface IEnv {
   CONFIG_MYSQL_USER_TEST: string;
   CONFIG_MYSQL_PASSWORD_TEST: string;
 
+  /**
+   * Config workers config
+   */
+  CONFIG_AWS_WORKER_SQS_URL: string;
+  CONFIG_AWS_WORKER_LAMBDA_NAME: string;
+
   /************************************************************
    * REF - Apillon Referral Service
    ************************************************************/
@@ -426,6 +438,46 @@ export interface IEnv {
   NFTS_AWS_WORKER_SQS_URL: string;
   NFTS_AWS_WORKER_LAMBDA_NAME: string;
 
+  /************************************************************
+   * COMPUTING - Apillon Computing Service
+   ************************************************************/
+  /**
+   *  function name
+   */
+  COMPUTING_FUNCTION_NAME: string;
+  COMPUTING_FUNCTION_NAME_TEST: string;
+
+  /**
+   * COMPUTING dev server port
+   */
+  COMPUTING_SOCKET_PORT: number;
+  COMPUTING_SOCKET_PORT_TEST: number;
+
+  /**
+   * COMPUTING Database config
+   */
+
+  COMPUTING_MYSQL_HOST: string;
+  COMPUTING_MYSQL_PORT: number;
+  COMPUTING_MYSQL_USER: string;
+  COMPUTING_MYSQL_PASSWORD: string;
+  COMPUTING_MYSQL_DEPLOY_USER: string;
+  COMPUTING_MYSQL_DEPLOY_PASSWORD: string;
+  COMPUTING_MYSQL_DATABASE: string;
+
+  // TEST
+  COMPUTING_MYSQL_HOST_TEST: string;
+  COMPUTING_MYSQL_PORT_TEST: number;
+  COMPUTING_MYSQL_USER_TEST: string;
+  COMPUTING_MYSQL_PASSWORD_TEST: string;
+  COMPUTING_MYSQL_DATABASE_TEST: string;
+
+  /**
+   * COMPUTING workers config
+   */
+  COMPUTING_AWS_WORKER_SQS_URL: string;
+  COMPUTING_AWS_WORKER_LAMBDA_NAME: string;
+
   /**
    * METABASE EMBED
    */
@@ -457,6 +509,8 @@ export let env: IEnv = {
   AWS_BUCKET: process.env['AWS_BUCKET'],
   AWS_ENDPOINT: process.env['AWS_ENDPOINT'],
   APP_SECRET: process.env['APP_SECRET'] || 'Du7Rvyqt7u38naZ2',
+  CONSOLE_API_URL:
+    process.env['CONSOLE_API_URL'] || 'https://console-api-dev.apillon.io/',
 
   /** AMS */
   ACCESS_FUNCTION_NAME: process.env['ACCESS_FUNCTION_NAME'],
@@ -497,6 +551,8 @@ export let env: IEnv = {
 
   SLACK_TOKEN: process.env['SLACK_TOKEN'],
   SLACK_CHANNEL: process.env['SLACK_CHANNEL'] || 'monitoring',
+  SLACK_CHANNEL_FOR_WEBSITE_REVIEWS:
+    process.env['SLACK_CHANNEL_FOR_WEBSITE_REVIEWS'] || 'website-reviews',
   /** DEV CONSOLE API DB conn*/
   DEV_CONSOLE_API_MYSQL_HOST: process.env['DEV_CONSOLE_API_MYSQL_HOST'],
   DEV_CONSOLE_API_MYSQL_PORT:
@@ -549,6 +605,10 @@ export let env: IEnv = {
   STORAGE_AWS_IPFS_QUEUE_BUCKET: process.env['STORAGE_AWS_IPFS_QUEUE_BUCKET'],
   STORAGE_DELETE_AFTER_INTERVAL:
     parseInt(process.env['STORAGE_DELETE_AFTER_INTERVAL']) || 90,
+  URL_SCREENSHOT_FUNCTION_NAME: process.env['URL_SCREENSHOT_FUNCTION_NAME'],
+  URL_SCREENSHOT_API_URL: process.env['URL_SCREENSHOT_API_URL'],
+  SEND_WEBSITES_TO_REVIEW:
+    parseInt(process.env['SEND_WEBSITES_TO_REVIEW']) || 1,
 
   /**STORAGE microservice DB*/
   STORAGE_MYSQL_HOST: process.env['STORAGE_MYSQL_HOST'],
@@ -594,6 +654,8 @@ export let env: IEnv = {
   BLOCKCHAIN_CRUST_GRAPHQL_SERVER:
     process.env['BLOCKCHAIN_CRUST_GRAPHQL_SERVER'],
   BLOCKCHAIN_KILT_GRAPHQL_SERVER: process.env['BLOCKCHAIN_KILT_GRAPHQL_SERVER'],
+  BLOCKCHAIN_PHALA_GRAPHQL_SERVER:
+    process.env['BLOCKCHAIN_PHALA_GRAPHQL_SERVER'],
   BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER:
     process.env['BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER'],
   BLOCKCHAIN_MOONBASE_GRAPHQL_SERVER:
@@ -716,6 +778,12 @@ export let env: IEnv = {
   CONFIG_MYSQL_USER_TEST: process.env['CONFIG_MYSQL_USER_TEST'],
   CONFIG_MYSQL_PASSWORD_TEST: process.env['CONFIG_MYSQL_PASSWORD_TEST'],
 
+  /**
+   * AWS SQS url for worker communications
+   */
+  CONFIG_AWS_WORKER_SQS_URL: process.env['CONFIG_AWS_WORKER_SQS_URL'],
+  CONFIG_AWS_WORKER_LAMBDA_NAME: process.env['CONFIG_AWS_WORKER_LAMBDA_NAME'],
+
   /**REFERRAL microservice */
   REFERRAL_FUNCTION_NAME: process.env['REFERRAL_FUNCTION_NAME'],
   REFERRAL_FUNCTION_NAME_TEST: process.env['REFERRAL_FUNCTION_NAME_TEST'],
@@ -783,6 +851,33 @@ export let env: IEnv = {
   NFTS_ASTAR_MAINNET_RPC: process.env['NFTS_ASTAR_MAINNET_RPC'],
   NFTS_AWS_WORKER_SQS_URL: process.env['NFTS_AWS_WORKER_SQS_URL'],
   NFTS_AWS_WORKER_LAMBDA_NAME: process.env['NFTS_AWS_WORKER_LAMBDA_NAME'],
+
+  /** COMPUTING */
+  COMPUTING_FUNCTION_NAME: process.env['COMPUTING_FUNCTION_NAME'],
+  COMPUTING_FUNCTION_NAME_TEST: process.env['COMPUTING_FUNCTION_NAME_TEST'],
+  COMPUTING_SOCKET_PORT: parseInt(process.env['COMPUTING_SOCKET_PORT']) || 7001,
+  COMPUTING_MYSQL_HOST: process.env['COMPUTING_MYSQL_HOST'],
+  COMPUTING_MYSQL_PORT: parseInt(process.env['COMPUTING_MYSQL_PORT']) || 3306,
+  COMPUTING_MYSQL_DATABASE: process.env['COMPUTING_MYSQL_DATABASE'],
+  COMPUTING_MYSQL_USER: process.env['COMPUTING_MYSQL_USER'],
+  COMPUTING_MYSQL_PASSWORD: process.env['COMPUTING_MYSQL_PASSWORD'],
+  COMPUTING_MYSQL_DEPLOY_USER: process.env['COMPUTING_MYSQL_DEPLOY_USER'],
+  COMPUTING_MYSQL_DEPLOY_PASSWORD:
+    process.env['COMPUTING_MYSQL_DEPLOY_PASSWORD'],
+
+  COMPUTING_SOCKET_PORT_TEST:
+    parseInt(process.env['COMPUTING_SOCKET_PORT_TEST']) || 7701,
+  COMPUTING_MYSQL_HOST_TEST: process.env['COMPUTING_MYSQL_HOST_TEST'],
+  COMPUTING_MYSQL_PORT_TEST:
+    parseInt(process.env['COMPUTING_MYSQL_PORT_TEST']) || 3306,
+  COMPUTING_MYSQL_DATABASE_TEST: process.env['COMPUTING_MYSQL_DATABASE_TEST'],
+  COMPUTING_MYSQL_USER_TEST: process.env['COMPUTING_MYSQL_USER_TEST'],
+  COMPUTING_MYSQL_PASSWORD_TEST: process.env['COMPUTING_MYSQL_PASSWORD_TEST'],
+
+  COMPUTING_AWS_WORKER_SQS_URL: process.env['COMPUTING_AWS_WORKER_SQS_URL'],
+  COMPUTING_AWS_WORKER_LAMBDA_NAME:
+    process.env['COMPUTING_AWS_WORKER_LAMBDA_NAME'],
+
   /** DISCORD */
   DISCORD_CLIENT_ID: process.env['DISCORD_CLIENT_ID'] || '',
   DISCORD_CLIENT_SECRET: process.env['DISCORD_CLIENT_SECRET'] || '',

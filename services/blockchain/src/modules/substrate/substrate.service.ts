@@ -23,6 +23,7 @@ import { WorkerName } from '../../workers/worker-executor';
 import { ServiceContext } from '@apillon/service-lib';
 import { getWalletSeed } from '../../lib/seed';
 import { SubstrateRpcApi } from './rpc-api';
+import { types as PhalaTypesBundle } from '@phala/sdk';
 import { substrateChainToWorkerName } from '../../lib/helpers';
 
 export class SubstrateService {
@@ -68,6 +69,11 @@ export class SubstrateService {
         typesBundle = CrustTypesBundle;
         break;
       }
+      case SubstrateChain.PHALA: {
+        keyring = new Keyring({ type: 'sr25519' });
+        typesBundle = PhalaTypesBundle;
+        break;
+      }
       default: {
         throw new BlockchainCodeException({
           code: BlockchainErrorCode.INVALID_CHAIN,
@@ -104,13 +110,11 @@ export class SubstrateService {
       console.log('Wallet', wallet.serialize());
       console.info('Getting wallet seed, ...');
       const seed = await getWalletSeed(wallet.seed);
-
-      console.info('Generating unsigned transaction');
       const pair = keyring.addFromUri(seed);
-      console.log('Address: ', pair.address);
+      console.info('Generating unsigned transaction');
       const unsignedTx = await api.getUnsignedTransaction(params.transaction);
       // TODO: add validation service for transaction to detect and prevent weird transactions.
-
+      console.log('signing transaction with key from address: ', pair.address);
       const signed = await unsignedTx.signAsync(pair, {
         nonce: wallet.nextNonce,
         era: 0, // immortal transaction
@@ -171,7 +175,7 @@ export class SubstrateService {
         await new Lmas().writeLog({
           logType: LogType.ERROR,
           message:
-            'Error triggering TRANSMIT_SUBSTRATE_TRANSACTIO worker queue',
+            'Error triggering TRANSMIT_SUBSTRATE_TRANSACTION worker queue',
           location: 'SubstrateService.createTransaction',
           service: ServiceName.BLOCKCHAIN,
           data: {

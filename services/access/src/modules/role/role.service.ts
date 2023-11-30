@@ -1,10 +1,11 @@
 import {
   ApiKeyRoleDto,
   CacheKeyPrefix,
+  DefaultUserRole,
   SerializeFor,
   invalidateCacheKey,
 } from '@apillon/lib';
-import { AmsErrorCode } from '../../config/types';
+import { AmsErrorCode, DbTables } from '../../config/types';
 import { AmsBadRequestException, AmsCodeException } from '../../lib/exceptions';
 import { AuthUser } from '../auth-user/auth-user.model';
 import { ApiKeyRole } from './models/api-key-role.model';
@@ -154,5 +155,30 @@ export class RoleService {
     key.canAccess(context);
 
     return await new ApiKeyRole({}, context).getApiKeyRoles(event.apiKey_id);
+  }
+
+  /**
+   * Return AuthUser which has owner permission on given project
+   * @param event
+   * @param context
+   * @returns
+   */
+  static async getProjectOwner(
+    event: { project_uuid: string },
+    context: ServiceContext,
+  ) {
+    const data = await context.mysql.paramExecute(
+      `
+      SELECT au.* 
+      FROM \`${DbTables.AUTH_USER_ROLE}\` aur
+      JOIN \`${DbTables.AUTH_USER}\` au ON au.id = aur.authUser_id
+      WHERE aur.project_uuid = @project_uuid
+      AND aur.role_id = ${DefaultUserRole.PROJECT_OWNER}
+      LIMIT 1;
+    `,
+      { project_uuid: event.project_uuid },
+    );
+
+    return new AuthUser(data.length ? data[0] : {}, context).serialize();
   }
 }

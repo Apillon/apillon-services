@@ -479,16 +479,21 @@ export class IPFSService {
       ).getIpfsCluster();
     }
 
-    try {
-      await axios.delete(ipfsCluster.clusterServer + `pins/ipfs/${cid}`);
-    } catch (err) {
-      writeLog(
-        LogType.ERROR,
-        `Error pinning cid to cluster server`,
-        'ipfs.service.ts',
-        'pinCidToCluster',
-        err,
-      );
+    //If cluster server is not set, unpin directly from node
+    if (!ipfsCluster.clusterServer) {
+      await this.unpinFile(cid);
+    } else {
+      try {
+        await axios.delete(ipfsCluster.clusterServer + `pins/ipfs/${cid}`);
+      } catch (err) {
+        writeLog(
+          LogType.ERROR,
+          `Error pinning cid to cluster server`,
+          'ipfs.service.ts',
+          'pinCidToCluster',
+          err,
+        );
+      }
     }
   }
 

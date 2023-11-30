@@ -53,6 +53,8 @@ export async function processEvent(
     [AmsEventType.DISCORD_UNLINK]: OauthLinkService.unlinkDiscord,
     [AmsEventType.DISCORD_USER_LIST]: OauthLinkService.getDiscordUserList,
     [AmsEventType.GET_OAUTH_LINKS]: OauthLinkService.getUserOauthLinks,
+
+    [AmsEventType.GET_PROJECT_OWNER]: RoleService.getProjectOwner,
   };
 
   return await processors[event.eventName](event, context);

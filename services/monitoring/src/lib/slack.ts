@@ -1,5 +1,5 @@
 import { LogType, ServiceName, env } from '@apillon/lib';
-import { LogLevel, WebClient } from '@slack/web-api';
+import { Block, KnownBlock, LogLevel, WebClient } from '@slack/web-api';
 
 export class Slack {
   private client: WebClient;
@@ -36,14 +36,19 @@ export class Slack {
   }
 
   // Post a message to a channel your app is in using ID and message text
-  async publishMessage(channelId: string, text: string) {
+  async publishMessage(
+    channelId: string,
+    text: string,
+    blocks: (Block | KnownBlock)[],
+  ) {
     try {
+      blocks = [{ type: 'section', text: { type: 'mrkdwn', text } }, ...blocks];
       // Call the chat.postMessage method using the built-in WebClient
       // const result =
       await this.client.chat.postMessage({
         token: env.SLACK_TOKEN,
         channel: channelId,
-        blocks: [{ type: 'section', text: { type: 'mrkdwn', text } }],
+        blocks,
         text: text,
         // You could also use a blocks[] array to send richer content
       });
@@ -70,6 +75,8 @@ export async function postToSlack(
   message: string,
   serviceName: ServiceName,
   logType: LogType,
+  channel = env.SLACK_CHANNEL,
+  blocks: (Block | KnownBlock)[] = [],
 ) {
   const slackToken = env.SLACK_TOKEN;
   if (!slackToken) {
@@ -96,10 +103,11 @@ export async function postToSlack(
   };
 
   try {
-    const channelId = await slack.findChannel(env.SLACK_CHANNEL);
+    const channelId = await slack.findChannel(channel);
     await slack.publishMessage(
       channelId,
       `${severityText[logType].emojis}\n*${severityText[logType].intro}:*\n\n${message}\n\n${severityText[logType].target}`,
+      blocks,
     );
   } catch (err) {
     console.log('Failed to post to Slack :', err);

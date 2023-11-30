@@ -19,6 +19,7 @@ import { PrepareMetadataForCollectionWorker } from './prepare-metada-for-collect
 import { PinToCrustWorker } from './pin-to-crust-worker';
 import { RepublishIpnsWorker } from './republish-ipns-worker';
 import { IpfsBandwidthWorker } from './ipfs-bandwidth-worker';
+import { FreeProjectResourcesWorker } from './free-project-resources-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -35,6 +36,7 @@ export enum WorkerName {
   PIN_TO_CRUST_WORKER = 'PinToCrustWorker',
   REPUBLISH_IPNS_WORKER = 'RepublishIpnsWorker',
   IPFS_BANDWIDTH_WORKER = 'IpfsBandwidthWorker',
+  FREE_PROJECT_RESOURCES_WORKER = 'FreeProjectResourcesWorker',
 }
 
 export async function handler(event: any) {
@@ -260,6 +262,15 @@ export async function handleSqsMessages(
         }
         case WorkerName.REPUBLISH_IPNS_WORKER:
           await new RepublishIpnsWorker(
+            workerDefinition,
+            context,
+            QueueWorkerType.EXECUTOR,
+          ).run({
+            executeArg: message?.body,
+          });
+          break;
+        case WorkerName.FREE_PROJECT_RESOURCES_WORKER:
+          await new FreeProjectResourcesWorker(
             workerDefinition,
             context,
             QueueWorkerType.EXECUTOR,

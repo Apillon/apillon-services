@@ -13,7 +13,6 @@ import {
   SqlModelStatus,
 } from '@apillon/lib';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
-import { UUID } from 'crypto';
 import { BaseQueryFilter, getFaker } from '@apillon/lib';
 
 /**
@@ -245,7 +244,7 @@ export class User extends AdvancedSQLModel {
     return this;
   }
 
-  public async listProjects(user_uuid: UUID, filter: BaseQueryFilter) {
+  public async listProjects(user_uuid: string, filter: BaseQueryFilter) {
     const fieldMap = { id: 'u.id' };
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),

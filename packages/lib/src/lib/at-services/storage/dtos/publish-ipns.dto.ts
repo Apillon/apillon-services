@@ -1,4 +1,4 @@
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   PopulateFrom,
@@ -9,17 +9,17 @@ import { ModelBase, prop } from '../../../base-models/base';
 
 export class PublishIpnsDto extends ModelBase {
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.PUBLISH_IPNS_IPNS_ID_NOT_PRESENT,
+        code: ValidatorErrorCode.PUBLISH_IPNS_IPNS_UUID_NOT_PRESENT,
       },
     ],
   })
-  public ipns_id: number;
+  public ipns_uuid: string;
 
   @prop({
     parser: { resolver: stringParser() },

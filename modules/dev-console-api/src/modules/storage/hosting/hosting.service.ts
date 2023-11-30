@@ -4,6 +4,8 @@ import {
   CreateWebsiteDto,
   DeploymentQueryFilter,
   DeployWebsiteDto,
+  JwtTokenType,
+  parseJwtToken,
   StorageMicroservice,
   ValidationException,
   ValidatorErrorCode,
@@ -11,7 +13,10 @@ import {
   WebsitesQuotaReachedQueryFilter,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { ResourceNotFoundErrorCode } from '../../../config/types';
+import {
+  BadRequestErrorCode,
+  ResourceNotFoundErrorCode,
+} from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
 import { Project } from '../../project/models/project.model';
 import { ServiceQueryFilter } from '../../services/dtos/services-query-filter.dto';
@@ -121,5 +126,51 @@ export class HostingService {
     return (
       await new StorageMicroservice(context).getDeployment(deployment_uuid)
     ).data;
+  }
+
+  async approveWebsiteDeployment(
+    context: DevConsoleApiContext,
+    deployment_uuid: string,
+    token: string,
+  ) {
+    //validate token
+    const tokenData = parseJwtToken(JwtTokenType.WEBSITE_REVIEW_TOKEN, token);
+
+    if (tokenData.deployment_uuid != deployment_uuid) {
+      throw new CodeException({
+        code: BadRequestErrorCode.INVALID_TOKEN_PAYLOAD,
+        status: 400,
+        errorCodes: BadRequestErrorCode,
+      });
+    }
+
+    await new StorageMicroservice(context).approveWebsiteDeployment(
+      deployment_uuid,
+    );
+
+    return 'Website APPROVED!';
+  }
+
+  async rejectWebsiteDeployment(
+    context: DevConsoleApiContext,
+    deployment_uuid: string,
+    token: string,
+  ) {
+    //validate token
+    const tokenData = parseJwtToken(JwtTokenType.WEBSITE_REVIEW_TOKEN, token);
+
+    if (tokenData.deployment_uuid != deployment_uuid) {
+      throw new CodeException({
+        code: BadRequestErrorCode.INVALID_TOKEN_PAYLOAD,
+        status: 400,
+        errorCodes: BadRequestErrorCode,
+      });
+    }
+
+    await new StorageMicroservice(context).rejectWebsiteDeployment(
+      deployment_uuid,
+    );
+
+    return 'Website REJECTED!.';
   }
 }
