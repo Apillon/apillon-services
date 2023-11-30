@@ -43,14 +43,14 @@ export class IpnsController {
     return await this.ipnsService.getIpnsList(context, bucket_uuid, query);
   }
 
-  @Get(':id')
+  @Get(':ipns_uuid')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async getIpns(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('ipns_uuid') ipns_uuid: string,
   ) {
-    return await this.ipnsService.getIpns(context, id);
+    return await this.ipnsService.getIpns(context, ipns_uuid);
   }
 
   @Post()
@@ -70,7 +70,7 @@ export class IpnsController {
     return await this.ipnsService.createIpns(context, bucket_uuid, body);
   }
 
-  @Patch(':id')
+  @Patch(':ipns_uuid')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -78,13 +78,13 @@ export class IpnsController {
   @UseGuards(AuthGuard)
   async updateIpns(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('ipns_uuid') ipns_uuid: string,
     @Body() body: any,
   ) {
-    return await this.ipnsService.updateIpns(context, id, body);
+    return await this.ipnsService.updateIpns(context, ipns_uuid, body);
   }
 
-  @Delete(':id')
+  @Delete(':ipns_uuid')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -92,12 +92,12 @@ export class IpnsController {
   @UseGuards(AuthGuard)
   async deleteIpns(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('ipns_uuid') ipns_uuid: string,
   ) {
-    return await this.ipnsService.deleteIpns(context, id);
+    return await this.ipnsService.deleteIpns(context, ipns_uuid);
   }
 
-  @Post(':id/publish')
+  @Post(':ipns_uuid/publish')
   @HttpCode(200)
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
@@ -109,9 +109,9 @@ export class IpnsController {
   @UseGuards(ValidationGuard)
   async publishIpns(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('ipns_uuid') ipns_uuid: string,
     @Body() body: PublishIpnsDto,
   ) {
-    return await this.ipnsService.publishIpns(context, id, body);
+    return await this.ipnsService.publishIpns(context, ipns_uuid, body);
   }
 }

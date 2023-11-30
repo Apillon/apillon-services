@@ -174,6 +174,7 @@ export interface IEnv {
   STORAGE_DELETE_AFTER_INTERVAL: number;
   URL_SCREENSHOT_FUNCTION_NAME: string;
   URL_SCREENSHOT_API_URL: string;
+  SEND_WEBSITES_TO_REVIEW: number;
 
   STORAGE_MYSQL_HOST: string;
   STORAGE_MYSQL_PORT: number;
@@ -336,6 +337,12 @@ export interface IEnv {
   CONFIG_MYSQL_DATABASE_TEST: string;
   CONFIG_MYSQL_USER_TEST: string;
   CONFIG_MYSQL_PASSWORD_TEST: string;
+
+  /**
+   * Config workers config
+   */
+  CONFIG_AWS_WORKER_SQS_URL: string;
+  CONFIG_AWS_WORKER_LAMBDA_NAME: string;
 
   /************************************************************
    * REF - Apillon Referral Service
@@ -600,6 +607,8 @@ export let env: IEnv = {
     parseInt(process.env['STORAGE_DELETE_AFTER_INTERVAL']) || 90,
   URL_SCREENSHOT_FUNCTION_NAME: process.env['URL_SCREENSHOT_FUNCTION_NAME'],
   URL_SCREENSHOT_API_URL: process.env['URL_SCREENSHOT_API_URL'],
+  SEND_WEBSITES_TO_REVIEW:
+    parseInt(process.env['SEND_WEBSITES_TO_REVIEW']) || 1,
 
   /**STORAGE microservice DB*/
   STORAGE_MYSQL_HOST: process.env['STORAGE_MYSQL_HOST'],
@@ -768,6 +777,12 @@ export let env: IEnv = {
   CONFIG_MYSQL_DATABASE_TEST: process.env['CONFIG_MYSQL_DATABASE_TEST'],
   CONFIG_MYSQL_USER_TEST: process.env['CONFIG_MYSQL_USER_TEST'],
   CONFIG_MYSQL_PASSWORD_TEST: process.env['CONFIG_MYSQL_PASSWORD_TEST'],
+
+  /**
+   * AWS SQS url for worker communications
+   */
+  CONFIG_AWS_WORKER_SQS_URL: process.env['CONFIG_AWS_WORKER_SQS_URL'],
+  CONFIG_AWS_WORKER_LAMBDA_NAME: process.env['CONFIG_AWS_WORKER_LAMBDA_NAME'],
 
   /**REFERRAL microservice */
   REFERRAL_FUNCTION_NAME: process.env['REFERRAL_FUNCTION_NAME'],

@@ -4,14 +4,18 @@ import {
   BaseProjectQueryFilter,
   BucketQueryFilter,
   CreateBucketDto,
+  CreateIpnsDto,
   CreateS3UrlsForUploadDto,
   DirectoryContentQueryFilter,
   EndFileUploadSessionDto,
   FileDetailsQueryFilter,
   FilesQueryFilter,
+  IpnsQueryFilter,
+  PublishIpnsDto,
   SqlModelStatus,
   StorageMicroservice,
   ValidationException,
+  ValidatorErrorCode,
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
@@ -143,4 +147,58 @@ export class StorageService {
   async getBlacklist(context: ApillonApiContext) {
     return (await new StorageMicroservice(context).getBlacklist()).data;
   }
+
+  //#region ipns methods
+  async getIpnsList(
+    context: ApillonApiContext,
+    bucket_uuid: string,
+    query: IpnsQueryFilter,
+  ) {
+    query.populate({ bucket_uuid });
+    return (await new StorageMicroservice(context).listIpnses(query)).data;
+  }
+  async getIpns(context: ApillonApiContext, ipns_uuid: string) {
+    return (await new StorageMicroservice(context).getIpns(ipns_uuid)).data;
+  }
+
+  async createIpns(
+    context: ApillonApiContext,
+    bucket_uuid: string,
+    body: CreateIpnsDto,
+  ) {
+    body.populate({ bucket_uuid: bucket_uuid });
+    return (await new StorageMicroservice(context).createIpns(body)).data;
+  }
+  async updateIpns(context: ApillonApiContext, ipns_uuid: string, body: any) {
+    return (
+      await new StorageMicroservice(context).updateIpns({
+        ipns_uuid,
+        data: body,
+      })
+    ).data;
+  }
+  async deleteIpns(context: ApillonApiContext, ipns_uuid: string) {
+    return (await new StorageMicroservice(context).deleteIpns({ ipns_uuid }))
+      .data;
+  }
+
+  async publishIpns(
+    context: ApillonApiContext,
+    ipns_uuid: string,
+    body: PublishIpnsDto,
+  ) {
+    body.populate({ ipns_uuid });
+    try {
+      await body.validate();
+    } catch (err) {
+      await body.handle(err);
+      if (!body.isValid()) {
+        throw new ValidationException(body, ValidatorErrorCode);
+      }
+    }
+
+    return (await new StorageMicroservice(context).publishIpns(body)).data;
+  }
+
+  //#endregion
 }

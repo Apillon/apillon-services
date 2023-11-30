@@ -27,12 +27,18 @@
       "request": "launch",
       "name": "Config",
       "runtimeExecutable": "nodemon",
-      "runtimeArgs": [
-        "./src/scripts/dev/run-server.ts",
-        "--inspect=9233",
-      ],
+      "runtimeArgs": ["./src/scripts/dev/run-server.ts", "--inspect=9233"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
     },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Run current file",
+      "runtimeExecutable": "nodemon",
+      "runtimeArgs": ["${relativeFile}"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    }
   ]
 }

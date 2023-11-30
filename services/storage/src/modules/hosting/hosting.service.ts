@@ -38,12 +38,12 @@ import {
 } from '../../lib/exceptions';
 import { Bucket } from '../bucket/models/bucket.model';
 import { Directory } from '../directory/models/directory.model';
+import { IPFSService } from '../ipfs/ipfs.service';
 import { FileUploadRequest } from '../storage/models/file-upload-request.model';
 import { File } from '../storage/models/file.model';
 import { StorageService } from '../storage/storage.service';
 import { Deployment } from './models/deployment.model';
 import { Website } from './models/website.model';
-import { IPFSService } from '../ipfs/ipfs.service';
 
 export class HostingService {
   //#region web page CRUD
@@ -238,6 +238,7 @@ export class HostingService {
       new CreateS3UrlsForUploadDto().populate({
         ...event.body,
         bucket_uuid: website.bucket.bucket_uuid,
+        session_uuid: event.body.sessionUuid,
       });
     return await StorageService.generateMultipleS3UrlsForUpload(
       { body: param },
