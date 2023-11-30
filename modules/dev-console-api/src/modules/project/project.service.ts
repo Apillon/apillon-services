@@ -22,6 +22,7 @@ import {
   InvoicesQueryFilter,
   ValidationException,
   ReferralMicroservice,
+  writeLog,
 } from '@apillon/lib';
 import {
   BadRequestErrorCode,
@@ -97,10 +98,18 @@ export class ProjectService {
       );
 
       // If it's the user's first project, add credits if using promo code
+      writeLog(LogType.MSG, `Total user projects: ${projects.length}`);
       if (projects.length === 0) {
         await new ReferralMicroservice(context)
           .addPromoCodeCredits(project.project_uuid, context.user.email)
-          .catch((err) => err);
+          .catch(async (err) =>
+            writeLog(
+              LogType.ERROR,
+              err.message,
+              'project.service.ts',
+              'createProject',
+            ),
+          );
       }
 
       await new Lmas().writeLog({
