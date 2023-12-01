@@ -1,14 +1,14 @@
 import {
   ChainType,
-  EvmChain,
-  SubstrateChain,
-  dateToSqlString,
   Context,
-  ServiceName,
+  dateToSqlString,
   env,
+  EvmChain,
   LogType,
   PoolConnection,
   SerializeFor,
+  ServiceName,
+  SubstrateChain,
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
@@ -29,6 +29,7 @@ import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate
 import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/indexer.service';
 import { WalletDeposit } from '../modules/accounting/wallet-deposit.model';
 import { ethers } from 'ethers';
+import { PhalaBlockchainIndexer } from '../modules/blockchain-indexers/substrate/phala/indexer.service';
 
 export class TransactionLogWorker extends BaseQueueWorker {
   private batchLimit: number;
@@ -103,12 +104,12 @@ export class TransactionLogWorker extends BaseQueueWorker {
   private async getLastLoggedBlockNumber(wallet: Wallet) {
     const res = await this.context.mysql.paramExecute(
       `
-      SELECT MAX(blockId) as maxBlockId
-      FROM \`${DbTables.TRANSACTION_LOG}\`
-      WHERE chain = @chain
-      AND chainType = @chainType
-      AND wallet = @wallet
-    `,
+        SELECT MAX(blockId) as maxBlockId
+        FROM \`${DbTables.TRANSACTION_LOG}\`
+        WHERE chain = @chain
+          AND chainType = @chainType
+          AND wallet = @wallet
+      `,
       {
         wallet: wallet.address,
         chain: wallet.chain,
@@ -224,9 +225,40 @@ export class TransactionLogWorker extends BaseQueueWorker {
               ),
             );
           },
-          [SubstrateChain.PHALA]: () => {
-            //
-            throw new Error('PHALA is not supported yet!');
+          [SubstrateChain.PHALA]: async () => {
+            const indexer = new PhalaBlockchainIndexer();
+            const systems = await indexer.getAllSystemEvents(
+              wallet.address,
+              lastBlock,
+              undefined,
+              limit,
+            );
+            console.log(`Got ${systems.length} Phala system events!`);
+            const { transfers } =
+              await indexer.getAccountBalanceTransfersForTxs(
+                wallet.address,
+                systems.map((x) => x.extrinsicHash),
+              );
+            console.log(`Got ${transfers.length} Phala transfers!`);
+            // prepare transfer data
+            const transactionLogs: TransactionLog[] = [];
+            for (const s of systems) {
+              const transfer = transfers.find(
+                (t) =>
+                  t.blockNumber === s.blockNumber &&
+                  t.extrinsicHash === s.extrinsicHash,
+              );
+              transactionLogs.push(
+                new TransactionLog({}, this.context).createFromPhalaIndexerData(
+                  {
+                    system: s,
+                    transfer,
+                  },
+                  wallet,
+                ),
+              );
+            }
+            return transactionLogs;
           },
         };
         return (await subOptions[wallet.chain]()) || false;
@@ -252,16 +284,17 @@ export class TransactionLogWorker extends BaseQueueWorker {
     }
     // Write to transaction log
     const sql = `
-    INSERT IGNORE INTO \`${DbTables.TRANSACTION_LOG}\`
+      INSERT IGNORE INTO \`${DbTables.TRANSACTION_LOG}\`
      (
       ts, blockId, status, direction,
       action, chain, chainType, wallet,
       addressFrom, addressTo, hash, token,
       amount, fee, totalPrice
     )
-     VALUES ${transactions
-       .map(
-         (x) => `(
+     VALUES
+      ${transactions
+        .map(
+          (x) => `(
           '${dateToSqlString(x.ts)}', ${x.blockId}, ${x.status}, ${x.direction},
         '${x.action}', ${x.chain}, ${x.chainType}, '${x.wallet}',
         ${x.addressFrom ? `'${x.addressFrom}'` : 'NULL'},
@@ -269,9 +302,9 @@ export class TransactionLogWorker extends BaseQueueWorker {
         '${x.hash}', '${x.token}',
         '${x.amount || 0}', '${x.fee || 0}', '${x.totalPrice}'
         )`,
-       )
-       .join(',')}
-     `;
+        )
+        .join(',')}
+    `;
 
     await this.context.mysql.paramExecute(sql);
   }
@@ -288,33 +321,33 @@ export class TransactionLogWorker extends BaseQueueWorker {
     // link transaction log and transaction queue
     await this.context.mysql.paramExecute(
       `
-      UPDATE
-        transaction_log tl
-        LEFT JOIN transaction_queue tq
+        UPDATE
+          transaction_log tl
+          LEFT JOIN transaction_queue tq
         ON tq.transactionHash = tl.hash
-      SET
-        tl.transactionQueue_id = tq.id,
-        tl.project_uuid = tq.project_uuid
-      WHERE tq.id IS NOT NULL
-      AND tl.hash IN (${transactions.map((x) => `'${x.hash}'`).join(',')})
-      AND tl.chain = @chain
-      AND tl.chainType = @chainType
-      ;
-    `,
+          SET
+            tl.transactionQueue_id = tq.id,
+            tl.project_uuid = tq.project_uuid
+        WHERE tq.id IS NOT NULL
+          AND tl.hash IN (${transactions.map((x) => `'${x.hash}'`).join(',')})
+          AND tl.chain = @chain
+          AND tl.chainType = @chainType
+        ;
+      `,
       { chain: wallet.chain, chainType: wallet.chainType },
     );
 
     // find unlinked transactions
     const unlinked = await this.context.mysql.paramExecute(
       `
-      SELECT * FROM transaction_log
-      WHERE transactionQueue_id IS NULL
-      AND direction = ${TxDirection.COST}
-      AND hash IN (${transactions.map((x) => `'${x.hash}'`).join(',')})
-      AND chain = @chain
-      AND chainType = @chainType
-      ;
-    `,
+        SELECT * FROM transaction_log
+        WHERE transactionQueue_id IS NULL
+          AND direction = ${TxDirection.COST}
+          AND hash IN (${transactions.map((x) => `'${x.hash}'`).join(',')})
+          AND chain = @chain
+          AND chainType = @chainType
+        ;
+      `,
       { chain: wallet.chain, chainType: wallet.chainType },
     );
 

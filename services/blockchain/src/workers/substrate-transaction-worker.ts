@@ -22,17 +22,12 @@ import { executeWebhooksForTransmittedTransactionsInWallet } from '../lib/webhoo
 import { BaseBlockchainIndexer } from '../modules/blockchain-indexers/substrate/base-blockchain-indexer';
 import { Wallet } from '../modules/wallet/wallet.model';
 
-export enum SubstrateChainName {
-  KILT = 'KILT',
-  CRUST = 'CRUST',
-}
-
 export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
-  private chainId: string;
-  private chainName: string;
-  private wallets: Wallet[];
-  private indexer: BaseBlockchainIndexer;
-  private webHookWorker: WebhookWorker;
+  protected chainId: string;
+  protected chainName: string;
+  protected wallets: Wallet[];
+  protected indexer: BaseBlockchainIndexer;
+  protected webHookWorker: WebhookWorker;
 
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);
@@ -83,9 +78,9 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
           await this.writeEventLog(
             {
               logType: LogType.ERROR,
-              message: `Last parsed block has not been updated in the past ${
-                wallet.minutesSinceLastParsedBlock
-              } minutes for wallet ${wallet.address} (chain ${
+              message: `Last parsed block has not been updated in the past ${Math.round(
+                wallet.minutesSinceLastParsedBlock,
+              )} minutes for wallet ${wallet.address} (chain ${
                 SubstrateChain[wallet.chain]
               })`,
               service: ServiceName.BLOCKCHAIN,
@@ -156,7 +151,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     };
   }
 
-  private async fetchAllResolvedTransactions(
+  protected async fetchAllResolvedTransactions(
     address: string,
     fromBlock: number,
     toBlock: number,
@@ -171,6 +166,41 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
 
     const transactionsArray: Array<any> = Object.values(transactions);
     return transactionsArray.length > 0 ? transactionsArray.flat(Infinity) : [];
+  }
+
+  protected async updateTransactions(
+    transactionHashes: string[],
+    status: TransactionStatus,
+    conn: PoolConnection,
+  ) {
+    await this.context.mysql.paramExecute(
+      `UPDATE \`${DbTables.TRANSACTION_QUEUE}\`
+       SET transactionStatus = @status
+       WHERE chain = @chain
+         AND transactionHash in ('${transactionHashes.join(`','`)}')`,
+      {
+        chain: this.chainId,
+        status,
+      },
+      conn,
+    );
+
+    await this.writeEventLog(
+      {
+        logType: LogType.INFO,
+        message: `${transactionHashes.length} [${
+          TransactionStatus[status]
+        }] blockchain transactions matched (txHashes=${transactionHashes.join(
+          `','`,
+        )}) in db.`,
+        service: ServiceName.BLOCKCHAIN,
+        data: {
+          transactionHashes,
+          chain: this.chainId,
+        },
+      },
+      LogOutput.EVENT_INFO,
+    );
   }
 
   private async setTransactionsState(
@@ -203,42 +233,6 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       failedTransactions,
       TransactionStatus.FAILED,
       conn,
-    );
-  }
-
-  private async updateTransactions(
-    transactionHashes: string[],
-    status: TransactionStatus,
-    conn: PoolConnection,
-  ) {
-    await this.context.mysql.paramExecute(
-      `UPDATE \`${DbTables.TRANSACTION_QUEUE}\`
-      SET transactionStatus = @status
-      WHERE
-        chain = @chain
-        AND transactionHash in ('${transactionHashes.join(`','`)}')`,
-      {
-        chain: this.chainId,
-        status,
-      },
-      conn,
-    );
-
-    await this.writeEventLog(
-      {
-        logType: LogType.INFO,
-        message: `${transactionHashes.length} [${
-          TransactionStatus[status]
-        }] blockchain transactions matched (txHashes=${transactionHashes.join(
-          `','`,
-        )}) in db.`,
-        service: ServiceName.BLOCKCHAIN,
-        data: {
-          transactionHashes,
-          chain: this.chainId,
-        },
-      },
-      LogOutput.EVENT_INFO,
     );
   }
 }

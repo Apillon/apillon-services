@@ -1,21 +1,33 @@
 import {
   AdvancedSQLModel,
+  AppEnvironment,
   CodeException,
   Context,
   DefaultUserRole,
   DeploymentQueryFilter,
   ErrorCode,
   ForbiddenErrorCodes,
+  JwtTokenType,
+  Lmas,
+  LogType,
   PopulateFrom,
   SerializeFor,
+  ServiceName,
   SqlModelStatus,
+  env,
+  generateJwtToken,
   getQueryParams,
   presenceValidator,
   prop,
   selectAndCountQuery,
 } from '@apillon/lib';
 import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
-import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
+import {
+  dateParser,
+  integerParser,
+  stringParser,
+  booleanParser,
+} from '@rawmodel/parsers';
 import {
   DbTables,
   DeploymentEnvironment,
@@ -23,6 +35,17 @@ import {
   StorageErrorCode,
 } from '../../../config/types';
 import { Website } from './website.model';
+import {
+  QueueWorkerType,
+  ServiceDefinition,
+  ServiceDefinitionType,
+  WorkerDefinition,
+  sendToWorkerQueue,
+} from '@apillon/workers-lib';
+import { WorkerName } from '../../../workers/worker-executor';
+import { DeployWebsiteWorker } from '../../../workers/deploy-website-worker';
+import { ProjectConfig } from '../../config/models/project-config.model';
+import { UrlScreenshotMicroservice } from '../../../lib/url-screenshot';
 
 export class Deployment extends AdvancedSQLModel {
   public readonly tableName = DbTables.DEPLOYMENT;
@@ -299,6 +322,22 @@ export class Deployment extends AdvancedSQLModel {
   })
   public number: number;
 
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [SerializeFor.INSERT_DB],
+    validators: [],
+  })
+  public directDeploy: boolean;
+
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [SerializeFor.INSERT_DB],
+    validators: [],
+  })
+  public clearBucketForUpload: boolean;
+
   public async canAccess(context: ServiceContext) {
     // Admins are allowed to access items on any project
     if (context.user?.userRoles.includes(DefaultUserRole.ADMIN)) {
@@ -407,11 +446,15 @@ export class Deployment extends AdvancedSQLModel {
         AND d.status = ${SqlModelStatus.ACTIVE}
         AND (
           @environment IS NULL
-          OR d.environment = ${
-            filter.environment == DeploymentEnvironment.DIRECT_TO_PRODUCTION
-              ? DeploymentEnvironment.PRODUCTION
+          OR d.environment IN (${
+            filter.environment == DeploymentEnvironment.PRODUCTION
+              ? [
+                  DeploymentEnvironment.PRODUCTION,
+                  DeploymentEnvironment.DIRECT_TO_PRODUCTION,
+                ].join(',')
               : filter.environment
           }
+          )
         )
         AND (@deploymentStatus IS NULL OR d.deploymentStatus = @deploymentStatus)
       `,
@@ -421,6 +464,157 @@ export class Deployment extends AdvancedSQLModel {
       `,
     };
 
-    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'd.id');
+    const data = await selectAndCountQuery(
+      context.mysql,
+      sqlQuery,
+      params,
+      'd.id',
+    );
+
+    data.items.forEach((item) => {
+      if (
+        [DeploymentStatus.REJECTED, DeploymentStatus.IN_REVIEW].includes(
+          item.deploymentStatus as DeploymentStatus,
+        )
+      ) {
+        item.cid = undefined;
+        item.cidv1 = undefined;
+        item.size = undefined;
+      }
+    });
+
+    return data;
+  }
+
+  /**
+   * Execute deploy or Send message to SQS - depending on the environment
+   * @param directDeploy if true and env in [local dev, test], then DeployWebsiteWorker will bi executed directly
+   * @param clearBucketForUpload If deployment succeed source bucket will be cleared
+   */
+  public async deploy() {
+    if (
+      this.directDeploy &&
+      (env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+        env.APP_ENV == AppEnvironment.TEST)
+    ) {
+      //Directly calls worker, to deploy web page - USED ONLY FOR DEVELOPMENT!!
+      const serviceDef: ServiceDefinition = {
+        type: ServiceDefinitionType.SQS,
+        config: { region: 'test' },
+        params: { FunctionName: 'test' },
+      };
+      const parameters = {
+        deployment_uuid: this.deployment_uuid,
+        clearBucketForUpload: this.clearBucketForUpload,
+      };
+      const wd = new WorkerDefinition(
+        serviceDef,
+        WorkerName.DEPLOY_WEBSITE_WORKER,
+        {
+          parameters,
+        },
+      );
+
+      const worker = new DeployWebsiteWorker(
+        wd,
+        this.getContext(),
+        QueueWorkerType.EXECUTOR,
+      );
+      await worker.runExecutor({
+        deployment_uuid: this.deployment_uuid,
+        clearBucketForUpload: this.clearBucketForUpload,
+      });
+    } else {
+      //send message to SQS
+      await sendToWorkerQueue(
+        env.STORAGE_AWS_WORKER_SQS_URL,
+        WorkerName.DEPLOY_WEBSITE_WORKER,
+        [
+          {
+            deployment_uuid: this.deployment_uuid,
+            clearBucketForUpload: this.clearBucketForUpload,
+          },
+        ],
+        null,
+        null,
+      );
+    }
+  }
+
+  /**
+   * Update deployment status, get deployment(hosted on IPFS) screenshot and send message to slack (screenshot + url + approve/reject button)
+   * @param website
+   */
+  public async sendToReview(website: Website) {
+    //Send website to review
+    this.deploymentStatus = DeploymentStatus.IN_REVIEW;
+
+    await this.update();
+
+    //Get IPFS-->IPNS gateway
+    const ipfsCluster = await new ProjectConfig(
+      { project_uuid: website.project_uuid },
+      this.getContext(),
+    ).getIpfsCluster();
+
+    //Call url-screenshot lambda/api, to get S3 url link:
+    const linkToScreenshot: string = await new UrlScreenshotMicroservice(
+      this.getContext(),
+    ).getUrlScreenshot(
+      website.project_uuid,
+      ipfsCluster.generateLink(website.project_uuid, this.cid),
+      website.website_uuid,
+    );
+
+    //Send message to slack
+    const jwt = generateJwtToken(JwtTokenType.WEBSITE_REVIEW_TOKEN, {
+      deployment_uuid: this.deployment_uuid,
+    });
+    const blocks = [];
+    if (linkToScreenshot) {
+      blocks.push({
+        type: 'image',
+        alt_text: linkToScreenshot,
+        image_url: linkToScreenshot,
+      });
+    }
+    blocks.push({
+      type: 'actions',
+      elements: [
+        {
+          type: 'button',
+          text: { text: 'Approve', type: 'plain_text' },
+          url: `${env.CONSOLE_API_URL}/storage/hosting/websites/${website.website_uuid}/deployments/${this.deployment_uuid}/approve?token=${jwt}`,
+        },
+        {
+          type: 'button',
+          text: { text: 'Reject', type: 'plain_text' },
+          url: `${env.CONSOLE_API_URL}/storage/hosting/websites/${website.website_uuid}/deployments/${this.deployment_uuid}/reject?token=${jwt}`,
+        },
+      ],
+    });
+
+    const msgParams = {
+      message: `
+      New website deployment for review.       
+      URL: ${ipfsCluster.generateLink(website.project_uuid, this.cid)}
+      `,
+      service: ServiceName.STORAGE,
+      blocks,
+      channel: env.SLACK_CHANNEL_FOR_WEBSITE_REVIEWS,
+    };
+
+    await new Lmas().sendMessageToSlack(msgParams);
+
+    await new Lmas().writeLog({
+      logType: LogType.INFO,
+      project_uuid: website.project_uuid,
+      message: 'Website sent to review',
+      service: ServiceName.STORAGE,
+      data: {
+        project_uuid: website.project_uuid,
+        deployment: this.serialize(),
+      },
+    });
   }
 }

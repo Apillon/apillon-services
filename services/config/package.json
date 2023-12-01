@@ -1,6 +1,6 @@
 {
   "name": "@apillon/config",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Kalmia d.o.o.",
   "license": "UNLICENSED",
   "description": "System configuration service",
@@ -29,6 +29,7 @@
   "dependencies": {
     "@apillon/lib": "*",
     "@apillon/service-lib": "*",
+    "@apillon/workers-lib": "*",
     "@middy/core": "^3.3.1",
     "@rawmodel/core": "^3.3.4",
     "@rawmodel/parsers": "^3.3.4",

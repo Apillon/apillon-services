@@ -3,19 +3,17 @@ import {
   Context,
   env,
   EvmChain,
-  Lmas,
   LogType,
   ServiceName,
-  SubstrateChain,
   TransactionStatus,
   TransactionWebhookDataDto,
 } from '@apillon/lib';
 import {
-  WorkerDefinition,
-  sendToWorkerQueue,
   BaseQueueWorker,
-  QueueWorkerType,
   LogOutput,
+  QueueWorkerType,
+  sendToWorkerQueue,
+  WorkerDefinition,
 } from '@apillon/workers-lib';
 import { DbTables } from '../config/types';
 
@@ -92,7 +90,7 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
       if (updates.length > 0) {
         await this.context.mysql.paramExecute(
           `
-            UPDATE \`${DbTables.TRANSACTION_QUEUE}\` 
+            UPDATE \`${DbTables.TRANSACTION_QUEUE}\`
             SET webhookTriggered = NOW()
             WHERE
               id in (${updates.join(',')})`,
@@ -178,18 +176,5 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
       }
     }
     return updates;
-  }
-
-  private createSubstrateTransactionWebhookDto(
-    transaction,
-  ): TransactionWebhookDataDto {
-    return new TransactionWebhookDataDto().populate({
-      id: transaction.id,
-      transactionHash: transaction.transactionHash,
-      referenceTable: transaction.referenceTable,
-      referenceId: transaction.referenceId,
-      transactionStatus: transaction.transactionStatus,
-      data: transaction.data,
-    });
   }
 }

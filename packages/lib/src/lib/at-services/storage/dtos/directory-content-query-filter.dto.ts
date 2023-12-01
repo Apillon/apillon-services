@@ -23,7 +23,7 @@ export class DirectoryContentQueryFilter extends BaseQueryFilter {
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
   })
-  public directory_uuid: number;
+  public directory_uuid: string;
 
   @prop({
     parser: { resolver: booleanParser() },

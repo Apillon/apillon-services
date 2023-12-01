@@ -307,7 +307,12 @@ export class IpfsCluster extends AdvancedSQLModel {
    * @param isIpns
    * @returns url
    */
-  public generateLink(project_uuid: string, cid: string, isIpns = false) {
+  public generateLink(
+    project_uuid: string,
+    cid: string,
+    isIpns = false,
+    path?: string,
+  ) {
     let link = '';
     cid = isIpns ? cid : CID.parse(cid).toV1().toString();
 
@@ -320,6 +325,10 @@ export class IpfsCluster extends AdvancedSQLModel {
         '/';
     } else {
       link = (isIpns ? this.ipnsGateway : this.ipfsGateway) + cid + '/';
+    }
+
+    if (path) {
+      link += path;
     }
 
     if (this.private) {

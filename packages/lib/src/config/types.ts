@@ -30,6 +30,10 @@ export enum NFTCollectionType {
   NESTABLE = 2,
 }
 
+export enum ComputingContractType {
+  SCHRODINGER = 1,
+}
+
 export enum AmsEventType {
   USER_REGISTER = 'user-register',
   USER_GET_AUTH = 'user-get-auth',
@@ -60,6 +64,7 @@ export enum AmsEventType {
   DISCORD_UNLINK = 'discord-unlink',
   DISCORD_USER_LIST = 'discord-user-list',
   GET_OAUTH_LINKS = 'get-oauth-links',
+  GET_PROJECT_OWNER = 'get-project-owner',
 }
 
 export enum LmasEventType {
@@ -72,6 +77,7 @@ export enum LmasEventType {
   LIST_REQUEST_LOGS = 'list-request-logs',
   GET_API_KEYS_USAGE_COUNT = 'get-api-keys-usage-count',
   GET_IPFS_TRAFFIC = 'get-ipfs-traffic',
+  SEND_MESSAGE_TO_SLACK = 'send-message-to-slack',
 }
 
 export enum BlockchainEventType {
@@ -130,6 +136,8 @@ export enum StorageEventType {
   BUCKET_CLEAR_CONTENT = 'clear-bucket-content',
   DEPLOYMENT_GET = 'get-deployment',
   DEPLOYMENT_LIST = 'list-deployment',
+  DEPLOYMENT_APPROVE = 'deployment-approve',
+  DEPLOYMENT_REJECT = 'deployment-reject',
   PREPARE_COLLECTION_BASE_URI = 'prepare-collection-base-uri',
   TEST_CRUST_PROVIDER = 'test-crust-provider',
   PROJECT_STORAGE_DETAILS = 'project-storage-details',
@@ -137,6 +145,7 @@ export enum StorageEventType {
   GET_BLACKLIST = 'get-blacklist',
   PROJECTS_OVER_BANDWIDTH_QUOTA = 'projects-over-bandwidth-quota',
   BLACKLIST_PROJECT = 'blacklist-project',
+  GET_PROJECT_IPFS_CLUSTER = 'get-project-ipfs-cluster',
 }
 
 export enum AuthenticationEventType {
@@ -204,6 +213,14 @@ export enum NftsEventType {
   PROJECT_COLLECTION_DETAILS = 'project-collections-details',
 }
 
+export enum ComputingEventType {
+  CREATE_CONTRACT = 'create-contract',
+  LIST_CONTRACTS = 'list-contract',
+  GET_CONTRACT_BY_UUID = 'get-contract-by-uuid',
+  DEPOSIT_TO_PHALA_CLUSTER = 'fund-contract-cluster',
+  TRANSFER_CONTRACT_OWNERSHIP = 'transfer-contract-ownership',
+}
+
 export enum ReferralEventType {
   CREATE_PLAYER = 'create-referral',
   GET_PLAYER = 'get-referral',
@@ -216,6 +233,8 @@ export enum ReferralEventType {
   GET_TWITTER_LINK = 'get-twitter-link',
   GET_TWEETS = 'get-tweets',
   CONFIRM_RETWEET = 'confirm-retweet',
+
+  ADD_PROMO_CODE_CREDITS = 'add-promo-code-credits',
 }
 
 export enum ServiceName {
@@ -231,6 +250,7 @@ export enum ServiceName {
   REFERRAL = 'REFERRAL',
   BLOCKCHAIN = 'BLOCKCHAIN',
   CONFIG = 'CONFIG',
+  COMPUTING = 'COMPUTING',
 }
 
 export enum ServiceCode {
@@ -294,6 +314,7 @@ export enum AttachedServiceType {
   STORAGE = 2,
   NFT = 3,
   HOSTING = 4,
+  COMPUTING = 5,
   SYSTEM = 999,
 }
 
@@ -469,7 +490,7 @@ export enum ValidatorErrorCode {
   IPNS_NAME_NOT_PRESENT = 42200026,
   IPNS_IPNS_NAME_NOT_PRESENT = 42200027,
   IPNS_IPNS_VALUE_NOT_PRESENT = 42200028,
-  PUBLISH_IPNS_IPNS_ID_NOT_PRESENT = 42200029,
+  PUBLISH_IPNS_IPNS_UUID_NOT_PRESENT = 42200029,
   PUBLISH_IPNS_CID_NOT_PRESENT = 42200030,
   TASK_ID_NOT_PRESENT = 42200031,
   USER_OAUTH_TOKEN_NOT_PRESENT = 42200032,
@@ -539,6 +560,19 @@ export enum ValidatorErrorCode {
   NFT_BURN_TOKEN_ID_NOT_VALID = 42200148,
   QUOTA_CODE_NOT_VALID = 42200149,
   INVALID_FILES_LENGTH = 42200150,
+
+  //#region Computing
+  COMPUTING_PROJECT_UUID_NOT_PRESENT = 42200201,
+  COMPUTING_CONTRACT_TYPE_NOT_PRESENT = 42200202,
+  COMPUTING_CONTRACT_TYPE_NOT_VALID = 42200203,
+  COMPUTING_NAME_NOT_PRESENT = 42200204,
+  COMPUTING_NAME_NOT_VALID = 42200205,
+  COMPUTING_DESCRIPTION_NOT_VALID = 42200206,
+  COMPUTING_RESTRICT_TO_OWNER_NOT_PRESENT = 42200207,
+  COMPUTING_ACCOUNT_ADDRESS_NOT_PRESENT = 42200208,
+  COMPUTING_ACCOUNT_ADDRESS_NOT_VALID = 42200209,
+  COMPUTING_DEPOSIT_AMOUNT_NOT_VALID = 42200210,
+  COMPUTING_NFT_CONTRACT_ADDRESS_NOT_VALID = 42200211,
 
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,
@@ -644,6 +678,8 @@ export enum JwtTokenType {
   AUTH_SESSION = 'auth-session',
   // Sent after OAuth flow has been completed, contains user email
   OAUTH_TOKEN = 'oauth-token',
+  // Website review token
+  WEBSITE_REVIEW_TOKEN = 'website-review',
 }
 
 /**
@@ -662,6 +698,7 @@ export enum QuotaCode {
   MAX_NFT_COLLECTIONS = 9,
   MAX_STORAGE = 10,
   MAX_BANDWIDTH = 11,
+  MAX_COMPUTING_CONTRACTS = 12,
 }
 
 /**

@@ -10,3 +10,4 @@ aws codebuild start-build --project-name apillon-auth-dev
 aws codebuild start-build --project-name apillon-referral-dev
 aws codebuild start-build --project-name apillon-nfts-dev
 aws codebuild start-build --project-name apillon-blockchain-dev
+aws codebuild start-build --project-name apillon-computing-dev

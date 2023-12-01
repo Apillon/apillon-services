@@ -1,0 +1,19 @@
+{
+    "extends": "tsconfig/service.json",
+    "compilerOptions": {
+        "outDir": "./dist",
+        "rootDir": "./src",
+        "sourceMap": false,
+        "removeComments": true,
+    },
+    "include": [
+        "**/*.ts",
+        "**/*.tsx"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist",
+        ".serverless/**/*",
+        ".webpack/**/*"
+    ]
+}

@@ -21,6 +21,7 @@ import { ApiKeyModule } from './modules/api-key/api-key.module';
 import { NftsModule } from './modules/nfts/nfts.module';
 import { IpnsModule } from './modules/storage/ipns/ipns.module';
 import { ReferralModule } from './modules/referral/referral.module';
+import { ComputingModule } from './modules/computing/computing.module';
 
 @Module({
   imports: [
@@ -34,10 +35,10 @@ import { ReferralModule } from './modules/referral/referral.module';
     DirectoryModule,
     StorageModule,
     ApiKeyModule,
-    NftsModule,
     IpnsModule,
     ReferralModule,
     NftsModule,
+    ComputingModule,
     PaymentsModule,
     PublicModule,
   ],
@@ -65,6 +66,14 @@ export class AppModule {
         { path: 'users/password-reset-request', method: RequestMethod.POST },
         { path: 'payments/stripe-webhook', method: RequestMethod.POST },
         { path: 'public/contact-us', method: RequestMethod.POST },
+        {
+          path: 'websites/:website_uuid/deployments/:deployment_uuid/approve',
+          method: RequestMethod.GET,
+        },
+        {
+          path: 'websites/:website_uuid/deployments/:deployment_uuid/reject',
+          method: RequestMethod.POST,
+        },
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer

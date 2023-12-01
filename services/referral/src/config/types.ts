@@ -8,6 +8,8 @@ export enum DbTables {
   ATTRIBUTE = 'attribute',
   OAUTH_TOKEN_PAIR = 'oauth_token_pair',
   BALANCE = 'balance',
+  PROMO_CODE = 'promo_code',
+  PROMO_CODE_USER = 'promo_code_user',
 }
 
 export enum ReferralErrorCode {
@@ -37,6 +39,9 @@ export enum ReferralErrorCode {
   REWARD_NOT_PRESENT = 42211007,
   TASK_TYPE_NOT_PRESENT = 42211008,
   PRODUCT_ID_NOT_PRESENT = 42211009,
+
+  PROMO_CODE_NOT_PRESENT = 42211009,
+  PROMO_CODE_CREDIT_AMOUNT_NOT_PRESENT = 42211010,
   //404
   DEFAULT_RESOURCE_NOT_FOUND_ERROR = 40411000,
   //409

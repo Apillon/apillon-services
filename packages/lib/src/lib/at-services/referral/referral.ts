@@ -114,4 +114,12 @@ export class ReferralMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
+
+  public async addPromoCodeCredits(project_uuid: string, email: string) {
+    return await this.callService({
+      eventName: ReferralEventType.ADD_PROMO_CODE_CREDITS,
+      project_uuid,
+      email,
+    });
+  }
 }

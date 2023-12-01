@@ -38,6 +38,7 @@ export enum ConfigErrorCode {
   TOTAL_AMOUNT_NOT_PRESENT = 42210015,
   SUBTOTAL_AMOUNT_NOT_PRESENT = 42210016,
   INVALID_CREDIT_DIRECTION = 42210017,
+  INVALID_QUOTA_WARNING_LEVEL = 42210018,
 
   // 400 - Bad request
   BAD_REQUEST = 40010001,
@@ -73,9 +74,21 @@ export enum ConfigErrorCode {
   ERROR_CREATING_SUBSCRIPTION = 50010009,
   ERROR_UPDATING_SUBSCRIPTION = 500100010,
   ERROR_HANDLING_STRIPE_WEBHOOK = 50010011,
+  SUBSCRIPTION_QUOTA_WORKER_UNHANDLED_EXCEPTION = 50010012,
 }
 
 export enum CreditDirection {
   RECEIVE = 1,
   SPEND = 2,
+}
+
+/**
+ * If a project exceeds a quota after a subscription has expired
+ * define levels at which warnings are sent to the user via email
+ */
+export enum QuotaWarningLevel {
+  THREE_DAYS = 3,
+  FIFTEEN_DAYS = 15,
+  THIRTY_DAYS = 30,
+  RESOURCES_RELEASED = 100, // Resources forcefully released due to no response
 }

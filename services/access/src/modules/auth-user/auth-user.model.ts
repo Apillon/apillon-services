@@ -10,7 +10,6 @@ import {
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
-  env,
   generateJwtToken,
   getQueryParams,
   invalidateCacheKey,
@@ -18,7 +17,7 @@ import {
   selectAndCountQuery,
   uniqueFieldValue,
 } from '@apillon/lib';
-import { dateParser, stringParser } from '@rawmodel/parsers';
+import { stringParser } from '@rawmodel/parsers';
 import { emailValidator, presenceValidator } from '@rawmodel/validators';
 import * as bcrypt from 'bcryptjs';
 import { AmsErrorCode, DbTables, TokenExpiresInStr } from '../../config/types';

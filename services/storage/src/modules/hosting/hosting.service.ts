@@ -1,6 +1,6 @@
 import {
+  Ams,
   ApillonHostingApiCreateS3UrlsForUploadDto,
-  AppEnvironment,
   AWS_S3,
   CreateS3UrlsForUploadDto,
   CreateWebsiteDto,
@@ -10,6 +10,7 @@ import {
   env,
   Lmas,
   LogType,
+  Mailing,
   PopulateFrom,
   ProductCode,
   QuotaCode,
@@ -22,34 +23,27 @@ import {
   WebsitesQuotaReachedQueryFilter,
   writeLog,
 } from '@apillon/lib';
-import {
-  QueueWorkerType,
-  sendToWorkerQueue,
-  ServiceDefinition,
-  ServiceDefinitionType,
-  WorkerDefinition,
-} from '@apillon/workers-lib';
+import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
+import { v4 as uuidV4 } from 'uuid';
 import {
   DbTables,
   DeploymentEnvironment,
+  DeploymentStatus,
   StorageErrorCode,
 } from '../../config/types';
-import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
 import { deleteDirectory } from '../../lib/delete-directory';
 import {
   StorageCodeException,
   StorageValidationException,
 } from '../../lib/exceptions';
-import { DeployWebsiteWorker } from '../../workers/deploy-website-worker';
-import { WorkerName } from '../../workers/worker-executor';
 import { Bucket } from '../bucket/models/bucket.model';
 import { Directory } from '../directory/models/directory.model';
+import { IPFSService } from '../ipfs/ipfs.service';
 import { FileUploadRequest } from '../storage/models/file-upload-request.model';
 import { File } from '../storage/models/file.model';
 import { StorageService } from '../storage/storage.service';
 import { Deployment } from './models/deployment.model';
 import { Website } from './models/website.model';
-import { v4 as uuidV4 } from 'uuid';
 
 export class HostingService {
   //#region web page CRUD
@@ -358,6 +352,8 @@ export class HostingService {
           : website.productionBucket_id,
       environment: event.body.environment,
       number: deploymentNumber,
+      directDeploy: event.body.directDeploy,
+      clearBucketForUpload: event.body.clearBucketForUpload,
       createTime: new Date(),
       updateTime: new Date(),
     });
@@ -375,7 +371,6 @@ export class HostingService {
 
     //Spend credit
     try {
-      //TODO: Deployment will be refactored to uuids, and it will be possible to use that uuid as a reference!
       const spendCredit: SpendCreditDto = new SpendCreditDto(
         {
           project_uuid: website.project_uuid,
@@ -384,7 +379,7 @@ export class HostingService {
               ? ProductCode.HOSTING_DEPLOY_TO_STAGING
               : ProductCode.HOSTING_DEPLOY_TO_PRODUCTION,
           referenceTable: DbTables.DEPLOYMENT,
-          referenceId: deployment.id,
+          referenceId: deployment.deployment_uuid,
           location: 'HostingService/deployWebsite',
           service: ServiceName.STORAGE,
         },
@@ -397,54 +392,7 @@ export class HostingService {
       throw error;
     }
 
-    //Execute deploy or Send message to SQS
-    if (
-      event.body.directDeploy &&
-      (env.APP_ENV == AppEnvironment.LOCAL_DEV ||
-        env.APP_ENV == AppEnvironment.TEST)
-    ) {
-      //Directly calls worker, to deploy web page - USED ONLY FOR DEVELOPMENT!!
-      const serviceDef: ServiceDefinition = {
-        type: ServiceDefinitionType.SQS,
-        config: { region: 'test' },
-        params: { FunctionName: 'test' },
-      };
-      const parameters = {
-        deployment_id: deployment.id,
-        clearBucketForUpload: event.body.clearBucketForUpload,
-      };
-      const wd = new WorkerDefinition(
-        serviceDef,
-        WorkerName.DEPLOY_WEBSITE_WORKER,
-        {
-          parameters,
-        },
-      );
-
-      const worker = new DeployWebsiteWorker(
-        wd,
-        context,
-        QueueWorkerType.EXECUTOR,
-      );
-      await worker.runExecutor({
-        deployment_id: deployment.id,
-        clearBucketForUpload: event.body.clearBucketForUpload,
-      });
-    } else {
-      //send message to SQS
-      await sendToWorkerQueue(
-        env.STORAGE_AWS_WORKER_SQS_URL,
-        WorkerName.DEPLOY_WEBSITE_WORKER,
-        [
-          {
-            deployment_id: deployment.id,
-            clearBucketForUpload: event.body.clearBucketForUpload,
-          },
-        ],
-        null,
-        null,
-      );
-    }
+    await deployment.deploy();
 
     return deployment.serialize(getSerializationStrategy(context));
   }
@@ -470,6 +418,17 @@ export class HostingService {
     }
     await deployment.canAccess(context);
 
+    if (
+      [DeploymentStatus.REJECTED, DeploymentStatus.IN_REVIEW].includes(
+        deployment.deploymentStatus as DeploymentStatus,
+      )
+    ) {
+      //This properties should not be passed to user if deployment is in review
+      deployment.cid = undefined;
+      deployment.cidv1 = undefined;
+      deployment.size = undefined;
+    }
+
     return deployment.serialize(getSerializationStrategy(context));
   }
 
@@ -492,6 +451,87 @@ export class HostingService {
       context,
       new DeploymentQueryFilter(event.query),
     );
+  }
+
+  static async approveDeployment(
+    event: { deployment_uuid: string },
+    context: ServiceContext,
+  ) {
+    const deployment: Deployment = await new Deployment(
+      {},
+      context,
+    ).populateByUUID(event.deployment_uuid, 'deployment_uuid');
+
+    if (!deployment.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.DEPLOYMENT_NOT_FOUND,
+        status: 404,
+      });
+    }
+
+    if (deployment.deploymentStatus != DeploymentStatus.IN_REVIEW) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.DEPLOYMENT_ALREADY_REVIEWED,
+        status: 409,
+      });
+    }
+
+    deployment.deploymentStatus = DeploymentStatus.APPROVED;
+    await deployment.update();
+
+    await deployment.deploy();
+
+    return true;
+  }
+
+  static async rejectDeployment(
+    event: { deployment_uuid: string },
+    context: ServiceContext,
+  ) {
+    const deployment: Deployment = await new Deployment(
+      {},
+      context,
+    ).populateByUUID(event.deployment_uuid, 'deployment_uuid');
+
+    if (!deployment.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.DEPLOYMENT_NOT_FOUND,
+        status: 404,
+      });
+    }
+
+    if (deployment.deploymentStatus != DeploymentStatus.IN_REVIEW) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.DEPLOYMENT_ALREADY_REVIEWED,
+        status: 409,
+      });
+    }
+
+    deployment.deploymentStatus = DeploymentStatus.REJECTED;
+    await deployment.update();
+
+    const website: Website = await new Website({}, context).populateById(
+      deployment.website_id,
+    );
+    //Unpin CID from IPFS
+    const ipfsService = new IPFSService(context, website.project_uuid);
+    await ipfsService.unpinCidFromCluster(deployment.cid);
+
+    //Get project owner
+    const projectOwner = (
+      await new Ams(context).getProjectOwner(website.project_uuid)
+    ).data;
+
+    if (projectOwner?.email) {
+      //send email
+      await new Mailing(context).sendMail({
+        emails: [projectOwner.email],
+        template: 'website-deployment-rejected',
+        data: {},
+      });
+    }
+
+    return true;
   }
 
   //#endregion

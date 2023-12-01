@@ -10,4 +10,18 @@ export class IpnsQueryFilter extends BaseQueryFilter {
     validators: [],
   })
   public bucket_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [],
+  })
+  public ipnsName: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [],
+  })
+  public ipnsValue: string;
 }

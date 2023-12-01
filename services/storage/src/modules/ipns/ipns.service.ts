@@ -9,7 +9,7 @@ import {
   ServiceName,
   SqlModelStatus,
 } from '@apillon/lib';
-import { ServiceContext } from '@apillon/service-lib';
+import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
 import { StorageErrorCode } from '../../config/types';
 import {
   StorageCodeException,
@@ -30,8 +30,11 @@ export class IpnsService {
     );
   }
 
-  static async getIpns(event: { id: number }, context: ServiceContext) {
-    const ipns: Ipns = await new Ipns({}, context).populateById(event.id);
+  static async getIpns(event: { ipns_uuid: string }, context: ServiceContext) {
+    const ipns: Ipns = await new Ipns({}, context).populateByUUID(
+      event.ipns_uuid,
+      'ipns_uuid',
+    );
     if (!ipns.exists()) {
       throw new StorageCodeException({
         code: StorageErrorCode.IPNS_NOT_FOUND,
@@ -39,8 +42,9 @@ export class IpnsService {
       });
     }
     ipns.canAccess(context);
+    await ipns.populateLink();
 
-    return ipns.serialize(SerializeFor.PROFILE);
+    return ipns.serialize(getSerializationStrategy(context));
   }
 
   static async createIpns(
@@ -64,14 +68,6 @@ export class IpnsService {
       bucket_id: b.id,
       status: SqlModelStatus.INCOMPLETE,
     });
-    try {
-      await ipns.validate();
-    } catch (err) {
-      await ipns.handle(err);
-      if (!ipns.isValid()) {
-        throw new StorageValidationException(ipns);
-      }
-    }
     const conn = await context.mysql.start();
     try {
       //Insert
@@ -81,7 +77,7 @@ export class IpnsService {
       if (event.body.cid) {
         await IpnsService.publishIpns(
           {
-            ipns_id: ipns.id,
+            ipns_uuid: ipns.ipns_uuid,
             cid: event.body.cid,
             ipns: ipns,
             conn: conn,
@@ -113,7 +109,8 @@ export class IpnsService {
       data: ipns.serialize(),
     });
 
-    return ipns.serialize(SerializeFor.PROFILE);
+    await ipns.populateLink();
+    return ipns.serialize(getSerializationStrategy(context));
   }
 
   /**
@@ -122,23 +119,29 @@ export class IpnsService {
    * @param context
    */
   static async publishIpns(
-    event: { ipns_id: number; cid: string; ipns?: Ipns; conn?: PoolConnection },
+    event: {
+      ipns_uuid: string;
+      cid: string;
+      ipns?: Ipns;
+      conn?: PoolConnection;
+    },
     context: ServiceContext,
   ) {
     const ipns: Ipns = event.ipns
       ? event.ipns
-      : await new Ipns({}, context).populateById(event.ipns_id, event.conn);
+      : await new Ipns({}, context).populateByUUID(
+          event.ipns_uuid,
+          undefined,
+          event.conn,
+        );
 
     if (!ipns.exists()) {
       throw new StorageCodeException({
-        code: StorageErrorCode.IPNS_RECORD_NOT_FOUND,
+        code: StorageErrorCode.IPNS_NOT_FOUND,
         status: 404,
       });
     }
     ipns.canModify(context);
-
-    ipns.status = SqlModelStatus.INCOMPLETE;
-    await ipns.update();
 
     try {
       const publishedIpns = await new IPFSService(
@@ -155,7 +158,7 @@ export class IpnsService {
       ipns.cid = event.cid;
       ipns.status = SqlModelStatus.ACTIVE;
 
-      await ipns.update(SerializeFor.UPDATE_DB);
+      await ipns.update(SerializeFor.UPDATE_DB, event.conn);
     } catch (err) {
       await new Lmas().writeLog({
         context,
@@ -183,18 +186,21 @@ export class IpnsService {
       },
     });
 
-    return ipns.serialize(SerializeFor.PROFILE);
+    await ipns.populateLink();
+    return ipns.serialize(getSerializationStrategy(context));
   }
 
   static async updateIpns(
-    event: { id: number; data: any },
+    event: { ipns_uuid: string; data: any },
     context: ServiceContext,
   ): Promise<any> {
-    const ipns: Ipns = await new Ipns({}, context).populateById(event.id);
+    const ipns: Ipns = await new Ipns({}, context).populateByUUID(
+      event.ipns_uuid,
+    );
 
     if (!ipns.exists()) {
       throw new StorageCodeException({
-        code: StorageErrorCode.IPNS_RECORD_NOT_FOUND,
+        code: StorageErrorCode.IPNS_NOT_FOUND,
         status: 404,
       });
     }
@@ -212,24 +218,27 @@ export class IpnsService {
     }
 
     await ipns.update();
-    return ipns.serialize(SerializeFor.PROFILE);
+    await ipns.populateLink();
+    return ipns.serialize(getSerializationStrategy(context));
   }
 
   static async deleteIpns(
-    event: { id: number },
+    event: { ipns_uuid: string },
     context: ServiceContext,
   ): Promise<any> {
-    const ipns: Ipns = await new Ipns({}, context).populateById(event.id);
+    const ipns: Ipns = await new Ipns({}, context).populateByUUID(
+      event.ipns_uuid,
+    );
 
     if (!ipns.exists()) {
       throw new StorageCodeException({
-        code: StorageErrorCode.IPNS_RECORD_NOT_FOUND,
+        code: StorageErrorCode.IPNS_NOT_FOUND,
         status: 404,
       });
     }
     ipns.canModify(context);
 
     await ipns.delete();
-    return ipns.serialize(SerializeFor.PROFILE);
+    return ipns.serialize(getSerializationStrategy(context));
   }
 }

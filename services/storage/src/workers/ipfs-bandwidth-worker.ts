@@ -16,6 +16,10 @@ import { IpfsBandwidth } from '../modules/ipfs/models/ipfs-bandwidth';
 import { IpfsBandwidthSync } from '../modules/ipfs/models/ipfs-bandwidth-sync';
 import { Website } from '../modules/hosting/models/website.model';
 
+/**
+ * Acquire aggregated IPFS traffic by project and websites.
+ * Increase project used bandwith (IpfsBandwidth) for this month.
+ */
 export class IpfsBandwidthWorker extends BaseWorker {
   protected context: Context;
   public constructor(workerDefinition: WorkerDefinition, context: Context) {

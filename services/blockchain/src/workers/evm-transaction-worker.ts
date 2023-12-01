@@ -95,9 +95,9 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
           await this.writeEventLog(
             {
               logType: LogType.ERROR,
-              message: `Last parsed block has not been updated in the past ${
-                wallet.minutesSinceLastParsedBlock
-              } minutes for wallet ${wallet.address} (chain ${
+              message: `Last parsed block has not been updated in the past ${Math.round(
+                wallet.minutesSinceLastParsedBlock,
+              )} minutes for wallet ${wallet.address} (chain ${
                 EvmChain[wallet.chain]
               })`,
               service: ServiceName.BLOCKCHAIN,

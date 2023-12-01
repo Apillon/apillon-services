@@ -2,12 +2,8 @@ import { gql } from 'graphql-request';
 import { env } from '@apillon/lib';
 import { BaseBlockchainIndexer } from '../base-blockchain-indexer';
 import { KiltTransactionType } from '../../../../config/types';
-import {
-  AttestationTransaction,
-  DidTransaction,
-  SystemEvent,
-  TransferTransaction,
-} from './data-models';
+import { AttestationTransaction, DidTransaction } from './data-models';
+import { SystemEvent, TransferTransaction } from '../data-models';
 import { KiltGQLQueries } from './graphql-queries';
 
 export class KiltBlockchainIndexer extends BaseBlockchainIndexer {

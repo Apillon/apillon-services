@@ -398,7 +398,7 @@ export class Bucket extends UuidSqlModel {
         WHERE project_uuid = @project_uuid
           AND status <> ${SqlModelStatus.DELETED};
       `,
-      { project_uuid: this.project_uuid, bucketType: this.bucketType },
+      { project_uuid: this.project_uuid },
     );
 
     return data[0].totalSize;
