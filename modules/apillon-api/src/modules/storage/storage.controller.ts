@@ -195,6 +195,19 @@ export class StorageController {
     return await this.storageService.listFiles(context, bucket_uuid, query);
   }
 
+  @Delete('buckets/:bucketUuid/directories/:directoryUuid')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_WRITE,
+    serviceType: AttachedServiceType.STORAGE,
+  })
+  @UseGuards(AuthGuard)
+  async deleteDirectory(
+    @Ctx() context: ApillonApiContext,
+    @Param('directoryUuid') directory_uuid: string,
+  ) {
+    return await this.storageService.deleteDirectory(context, directory_uuid);
+  }
+
   @Get('blacklist')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_READ,
