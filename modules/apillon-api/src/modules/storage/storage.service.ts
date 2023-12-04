@@ -144,6 +144,14 @@ export class StorageService {
     return (await new StorageMicroservice(context).listFiles(query)).data;
   }
 
+  async deleteDirectory(context: ApillonApiContext, directory_uuid: string) {
+    return (
+      await new StorageMicroservice(context).deleteDirectory({
+        directory_uuid,
+      })
+    ).data;
+  }
+
   async getBlacklist(context: ApillonApiContext) {
     return (await new StorageMicroservice(context).getBlacklist()).data;
   }
