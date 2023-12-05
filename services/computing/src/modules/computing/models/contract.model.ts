@@ -20,6 +20,7 @@ import {
 } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { ComputingCodeException } from '../../../lib/exceptions';
+import { ContractAbi } from './contractAbi.model';
 
 export class Contract extends UuidSqlModel {
   public readonly tableName = DbTables.CONTRACT;
@@ -192,6 +193,20 @@ export class Contract extends UuidSqlModel {
   public contractAbi_id: number;
 
   @prop({
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public contractAbi: ContractAbi;
+
+  @prop({
     parser: { resolver: stringParser() },
     populatable: [
       PopulateFrom.DB,
@@ -289,6 +304,14 @@ export class Contract extends UuidSqlModel {
         sourceFunction,
       });
     }
+    if (this.contractStatus !== ContractStatus.DEPLOYED) {
+      throw new ComputingCodeException({
+        status: 500,
+        code: ComputingErrorCode.CONTRACT_NOT_DEPLOYED,
+        context,
+        sourceFunction,
+      });
+    }
     if (this.contractAddress == null) {
       throw new ComputingCodeException({
         status: 500,
@@ -353,12 +376,12 @@ export class Contract extends UuidSqlModel {
   public async getContractsCount(project_uuid?: string): Promise<number> {
     const data = await this.getContext().mysql.paramExecute(
       `
-          SELECT COUNT(*) as contractCount
-          FROM \`${DbTables.CONTRACT}\`
-          WHERE project_uuid = @project_uuid
-            AND contractStatus <> ${ContractStatus.FAILED}
-            AND status <> ${SqlModelStatus.DELETED};
-        `,
+        SELECT COUNT(*) as contractCount
+        FROM \`${DbTables.CONTRACT}\`
+        WHERE project_uuid = @project_uuid
+          AND contractStatus <> ${ContractStatus.FAILED}
+          AND status <> ${SqlModelStatus.DELETED};
+      `,
       {
         project_uuid: project_uuid || this.project_uuid,
       },
@@ -374,14 +397,21 @@ export class Contract extends UuidSqlModel {
   ): Promise<void> {
     await (context ?? this.getContext()).mysql.paramExecute(
       `
-          UPDATE \`${DbTables.CONTRACT}\`
-          SET contractStatus = @contractStatus
-          WHERE contractAddress =@contractAddresses;
-        `,
+        UPDATE \`${DbTables.CONTRACT}\`
+        SET contractStatus = @contractStatus
+        WHERE contractAddress =@contractAddresses;
+      `,
       {
         contractAddress,
         contractStatus,
       },
     );
+  }
+
+  public async populateAbi() {
+    this.contractAbi = await new ContractAbi(
+      {},
+      this.getContext(),
+    ).populateById(this.contractAbi_id);
   }
 }
