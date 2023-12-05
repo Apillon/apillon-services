@@ -4,6 +4,7 @@ import {
   FileUploadsQueryFilter,
   RoleGroup,
   FilesQueryFilter,
+  LinkOnIpfsQueryFilter,
 } from '@apillon/lib';
 import { ValidateFor } from '@apillon/lib';
 import { DefaultUserRole, EndFileUploadSessionDto } from '@apillon/lib';
@@ -40,6 +41,28 @@ export class StorageController {
     @Query() query: BaseProjectQueryFilter,
   ) {
     return await this.storageService.getStorageInfo(context, query);
+  }
+
+  @Get('ipfs-cluster-info')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({ dto: BaseProjectQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getIpfsClusterInfo(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: BaseProjectQueryFilter,
+  ) {
+    return await this.storageService.getIpfsClusterInfo(context, query);
+  }
+
+  @Get('link')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({ dto: LinkOnIpfsQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getLinkOnIpfs(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: LinkOnIpfsQueryFilter,
+  ) {
+    return await this.storageService.getLink(context, query);
   }
 
   @Get(':bucket_uuid/file-uploads')

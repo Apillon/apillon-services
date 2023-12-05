@@ -26,11 +26,6 @@ export * from './lib/at-services/referral/dtos/confirm-retweet.dto';
 export * from './lib/at-services/referral/dtos/product-order.dto';
 
 //#REGION Storage
-export * from './lib/at-services/storage/dtos/create-ipns.dto';
-export * from './lib/at-services/storage/dtos/ipns-query-filter.dto';
-export * from './lib/at-services/storage/dtos/publish-ipns.dto';
-export * from './lib/at-services/storage/dtos/file-uploads-query-filter.dto';
-export * from './lib/at-services/storage/dtos/bucket-qouta-reached-query-filter.dto';
 export * from './lib/at-services/storage/dtos/end-file-upload-session.dto';
 export * from './lib/at-services/storage/dtos/create-bucket-webhook.dto';
 export * from './lib/at-services/storage/dtos/file-uploads-query-filter.dto';
@@ -53,6 +48,7 @@ export * from './lib/at-services/storage/dtos/websites-quota-reached-query-filte
 export * from './lib/at-services/storage/dtos/create-s3-urls-for-upload.dto';
 export * from './lib/at-services/storage/dtos/domain-query-filter.dto';
 export * from './lib/at-services/storage/dtos/files-query-filter.dto';
+export * from './lib/at-services/storage/dtos/link-on-ipfs-query-filter.dto';
 
 //#REGION Authentication API
 export * from './lib/at-services/authentication/authentication';

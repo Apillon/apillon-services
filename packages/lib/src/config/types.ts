@@ -146,6 +146,8 @@ export enum StorageEventType {
   PROJECTS_OVER_BANDWIDTH_QUOTA = 'projects-over-bandwidth-quota',
   BLACKLIST_PROJECT = 'blacklist-project',
   GET_PROJECT_IPFS_CLUSTER = 'get-project-ipfs-cluster',
+  GET_IPFS_CLUSTER_INFO = 'get-ipfs-cluster-info',
+  GET_LINK = 'get-link',
 }
 
 export enum AuthenticationEventType {

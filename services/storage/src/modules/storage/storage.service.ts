@@ -50,6 +50,8 @@ import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
 import { IpfsBandwidth } from '../ipfs/models/ipfs-bandwidth';
+import { generateJwtSecret } from '../../lib/ipfs-utils';
+import { CID } from 'ipfs-http-client';
 
 export class StorageService {
   /**
@@ -658,5 +660,60 @@ export class StorageService {
       { project_uuid: event.project_uuid },
       context,
     ).getIpfsCluster();
+  }
+
+  /**
+   * Return secret which is unique for each project
+   * @param event
+   * @param context
+   * @returns secret + basic ipfs cluster properties
+   */
+  static async getIpfsClusterInfo(
+    event: { project_uuid: string },
+    context: ServiceContext,
+  ) {
+    const ipfsCluster = await new ProjectConfig(
+      { project_uuid: event.project_uuid },
+      context,
+    ).getIpfsCluster();
+
+    const ipfsClusterJwtSecretForProject = generateJwtSecret(
+      event.project_uuid,
+      ipfsCluster.secret,
+    );
+
+    return {
+      secret: ipfsClusterJwtSecretForProject,
+      ipfsGateway: ipfsCluster.ipfsGateway,
+      ipnsGateway: ipfsCluster.ipnsGateway,
+      subdomainGateway: ipfsCluster.subdomainGateway,
+    };
+  }
+
+  /**
+   * Generate link for given CID/IPNS
+   * @param event
+   * @param context
+   * @returns link on ipfs gateway
+   */
+  static async getLink(
+    event: { cid: string; project_uuid: string },
+    context: ServiceContext,
+  ) {
+    let isIpns = false;
+    try {
+      CID.parse(event.cid);
+    } catch (err) {
+      isIpns = true;
+    }
+
+    const ipfsCluster = await new ProjectConfig(
+      { project_uuid: event.project_uuid },
+      context,
+    ).getIpfsCluster();
+
+    return {
+      link: ipfsCluster.generateLink(event.project_uuid, event.cid, isIpns),
+    };
   }
 }
