@@ -1,4 +1,4 @@
-import { env } from '@apillon/lib';
+import { LogType, env, writeLog } from '@apillon/lib';
 import axios from 'axios';
 
 export async function setMailerliteField(
@@ -12,10 +12,18 @@ export async function setMailerliteField(
       { fields: { [field]: value } },
       { headers: { 'X-MailerLite-ApiKey': env.MAILERLITE_API_KEY } },
     );
-    console.log(`Field ${field} set for email ${email}`);
+    writeLog(
+      LogType.INFO,
+      `Field ${field} set for email ${email}`,
+      'mailing-utils',
+      'setMailerliteField',
+    );
   } catch (err) {
-    console.error(
+    writeLog(
+      LogType.ERROR,
       `Error setting ${field} mailerlite field for ${email}: ${err.message}`,
+      'mailing-utils',
+      'setMailerliteField',
     );
   }
 }

@@ -58,6 +58,8 @@ export class ProjectService {
       context.user.id,
       DefaultUserRole.PROJECT_OWNER,
     );
+    writeLog(LogType.MSG, `Total user projects: ${projects.length}`);
+
     if (await this.isProjectsQuotaReached(context, projects)) {
       throw new CodeException({
         code: BadRequestErrorCode.MAX_NUMBER_OF_PROJECTS_REACHED,
@@ -67,9 +69,9 @@ export class ProjectService {
     }
 
     const conn = await context.mysql.start();
-
+    let project: Project;
     try {
-      const project: Project = await body
+      project = await body
         .populate({ project_uuid: uuidV4() })
         .insert(SerializeFor.INSERT_DB, conn);
       const projectUser: ProjectUser = new ProjectUser({}, context).populate({
@@ -80,28 +82,37 @@ export class ProjectService {
       });
       await projectUser.insert(SerializeFor.INSERT_DB, conn);
 
-      //assign user role on project
-      const params: any = {
+      // Add project owner role
+      await new Ams(context).assignUserRole({
         user: context.user,
         user_uuid: context.user.user_uuid,
         project_uuid: project.project_uuid,
         role_id: DefaultUserRole.PROJECT_OWNER,
-      };
-      await new Ams(context).assignUserRole(params);
-
-      await new Scs(context).addFreemiumCredits(project.project_uuid);
+      });
 
       await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+      throw err;
+    }
 
-      await invalidateCachePrefixes([CacheKeyPrefix.ADMIN_PROJECT_LIST]);
-      await invalidateCacheKey(
+    await Promise.all([
+      // Add freemium credits to project
+      new Scs(context).addFreemiumCredits(project.project_uuid),
+
+      // Invalidate project list cache and auth user data cache
+      invalidateCachePrefixes([CacheKeyPrefix.ADMIN_PROJECT_LIST]),
+      invalidateCacheKey(
         `${CacheKeyPrefix.AUTH_USER_DATA}:${context.user.user_uuid}`,
-      );
+      ),
+
+      // Set mailerlite field indicating the user owns a project
+      setMailerliteField(context.user.email, 'project_owner', true),
 
       // If it's the user's first project, add credits if using promo code
-      writeLog(LogType.MSG, `Total user projects: ${projects.length}`);
-      if (projects.length === 0) {
-        await new ReferralMicroservice(context)
+      async () =>
+        projects.length === 0 &&
+        (await new ReferralMicroservice(context)
           .addPromoCodeCredits(project.project_uuid, context.user.email)
           .catch(async (err) =>
             writeLog(
@@ -110,26 +121,19 @@ export class ProjectService {
               'project.service.ts',
               'createProject',
             ),
-          );
-      }
+          )),
 
-      // Set mailerlite field indicating the user owns a project
-      await setMailerliteField(context.user.email, 'project_owner', true);
-
-      await new Lmas().writeLog({
+      new Lmas().writeLog({
         context,
         project_uuid: project.project_uuid,
         logType: LogType.INFO,
         message: 'New project created',
         location: 'DEV-CONSOLE-API/ProjectService/createProject',
         service: ServiceName.DEV_CONSOLE,
-      });
+      }),
+    ]);
 
-      return project;
-    } catch (err) {
-      await context.mysql.rollback(conn);
-      throw err;
-    }
+    return project;
   }
 
   async isProjectsQuotaReached(
