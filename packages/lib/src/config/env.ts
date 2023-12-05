@@ -10,6 +10,7 @@ export interface IEnv {
   APP_ENV: string;
   LOG_TARGET: string;
   LOG_LEVEL: string;
+  CONSOLE_API_URL: string;
 
   /**
    * env var from lambda - current region - can not be overwritten in lambda settings!
@@ -88,6 +89,7 @@ export interface IEnv {
    */
   SLACK_TOKEN: string;
   SLACK_CHANNEL: string;
+  SLACK_CHANNEL_FOR_WEBSITE_REVIEWS: string;
 
   /**
    * MONITORING SQS
@@ -170,6 +172,9 @@ export interface IEnv {
   STORAGE_CRUST_SEED_PHRASE_TEST: string;
   STORAGE_AWS_IPFS_QUEUE_BUCKET: string;
   STORAGE_DELETE_AFTER_INTERVAL: number;
+  URL_SCREENSHOT_FUNCTION_NAME: string;
+  URL_SCREENSHOT_API_URL: string;
+  SEND_WEBSITES_TO_REVIEW: number;
 
   STORAGE_MYSQL_HOST: string;
   STORAGE_MYSQL_PORT: number;
@@ -332,6 +337,12 @@ export interface IEnv {
   CONFIG_MYSQL_DATABASE_TEST: string;
   CONFIG_MYSQL_USER_TEST: string;
   CONFIG_MYSQL_PASSWORD_TEST: string;
+
+  /**
+   * Config workers config
+   */
+  CONFIG_AWS_WORKER_SQS_URL: string;
+  CONFIG_AWS_WORKER_LAMBDA_NAME: string;
 
   /************************************************************
    * REF - Apillon Referral Service
@@ -502,6 +513,8 @@ export let env: IEnv = {
   AWS_BUCKET: process.env['AWS_BUCKET'],
   AWS_ENDPOINT: process.env['AWS_ENDPOINT'],
   APP_SECRET: process.env['APP_SECRET'] || 'Du7Rvyqt7u38naZ2',
+  CONSOLE_API_URL:
+    process.env['CONSOLE_API_URL'] || 'https://console-api-dev.apillon.io/',
 
   /** AMS */
   ACCESS_FUNCTION_NAME: process.env['ACCESS_FUNCTION_NAME'],
@@ -542,6 +555,8 @@ export let env: IEnv = {
 
   SLACK_TOKEN: process.env['SLACK_TOKEN'],
   SLACK_CHANNEL: process.env['SLACK_CHANNEL'] || 'monitoring',
+  SLACK_CHANNEL_FOR_WEBSITE_REVIEWS:
+    process.env['SLACK_CHANNEL_FOR_WEBSITE_REVIEWS'] || 'website-reviews',
   /** DEV CONSOLE API DB conn*/
   DEV_CONSOLE_API_MYSQL_HOST: process.env['DEV_CONSOLE_API_MYSQL_HOST'],
   DEV_CONSOLE_API_MYSQL_PORT:
@@ -594,6 +609,10 @@ export let env: IEnv = {
   STORAGE_AWS_IPFS_QUEUE_BUCKET: process.env['STORAGE_AWS_IPFS_QUEUE_BUCKET'],
   STORAGE_DELETE_AFTER_INTERVAL:
     parseInt(process.env['STORAGE_DELETE_AFTER_INTERVAL']) || 90,
+  URL_SCREENSHOT_FUNCTION_NAME: process.env['URL_SCREENSHOT_FUNCTION_NAME'],
+  URL_SCREENSHOT_API_URL: process.env['URL_SCREENSHOT_API_URL'],
+  SEND_WEBSITES_TO_REVIEW:
+    parseInt(process.env['SEND_WEBSITES_TO_REVIEW']) || 1,
 
   /**STORAGE microservice DB*/
   STORAGE_MYSQL_HOST: process.env['STORAGE_MYSQL_HOST'],
@@ -762,6 +781,12 @@ export let env: IEnv = {
   CONFIG_MYSQL_DATABASE_TEST: process.env['CONFIG_MYSQL_DATABASE_TEST'],
   CONFIG_MYSQL_USER_TEST: process.env['CONFIG_MYSQL_USER_TEST'],
   CONFIG_MYSQL_PASSWORD_TEST: process.env['CONFIG_MYSQL_PASSWORD_TEST'],
+
+  /**
+   * AWS SQS url for worker communications
+   */
+  CONFIG_AWS_WORKER_SQS_URL: process.env['CONFIG_AWS_WORKER_SQS_URL'],
+  CONFIG_AWS_WORKER_LAMBDA_NAME: process.env['CONFIG_AWS_WORKER_LAMBDA_NAME'],
 
   /**REFERRAL microservice */
   REFERRAL_FUNCTION_NAME: process.env['REFERRAL_FUNCTION_NAME'],

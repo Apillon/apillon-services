@@ -1,6 +1,10 @@
+import { DefaultUserRole, SqlModelStatus } from '@apillon/lib';
 import { BucketType } from '@apillon/storage/src/config/types';
+import { addJwtToIPFSUrl } from '@apillon/storage/src/lib/ipfs-utils';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
+import { ProjectConfig } from '@apillon/storage/src/modules/config/models/project-config.model';
 import { Ipns } from '@apillon/storage/src/modules/ipns/models/ipns.model';
+import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 import {
   createTestBucket,
   createTestBucketFile,
@@ -13,10 +17,6 @@ import {
 import * as request from 'supertest';
 import { setupTest } from '../../../../../test/helpers/setup';
 import { Project } from '../../../project/models/project.model';
-import { File } from '@apillon/storage/src/modules/storage/models/file.model';
-import { DefaultUserRole, env, SqlModelStatus } from '@apillon/lib';
-import { ProjectConfig } from '@apillon/storage/src/modules/config/models/project-config.model';
-import { addJwtToIPFSUrl } from '@apillon/storage/src/lib/ipfs-utils';
 
 describe('Ipns tests', () => {
   let stage: Stage;
@@ -94,32 +94,33 @@ describe('Ipns tests', () => {
         .send({ name: 'My new IPNS' })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
-      expect(response.body.data.id).toBeTruthy();
+      expect(response.body.data.ipns_uuid).toBeTruthy();
       expect(response.body.data.name).toBeTruthy();
-      expect(response.body.data.status).toBe(SqlModelStatus.INCOMPLETE);
 
       const newIpns: Ipns = await new Ipns(
         {},
         stage.storageContext,
-      ).populateById(response.body.data.id);
+      ).populateByUUID(response.body.data.ipns_uuid);
       expect(newIpns.exists()).toBeTruthy();
     });
 
     test('User should be able to update IPNS record', async () => {
       const response = await request(stage.http)
-        .patch(`/buckets/${testBucket.bucket_uuid}/ipns/${ipnsRecord.id}`)
+        .patch(
+          `/buckets/${testBucket.bucket_uuid}/ipns/${ipnsRecord.ipns_uuid}`,
+        )
         .send({
           name: 'My updated IPNS record',
           description: 'This is new description',
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.data.id).toBeTruthy();
+      expect(response.body.data.ipns_uuid).toBeTruthy();
       expect(response.body.data.name).toBe('My updated IPNS record');
       const updatedIpns: Ipns = await new Ipns(
         {},
         stage.storageContext,
-      ).populateById(ipnsRecord.id);
+      ).populateByUUID(ipnsRecord.ipns_uuid);
       expect(updatedIpns.exists()).toBeTruthy();
     });
   });
@@ -138,7 +139,7 @@ describe('Ipns tests', () => {
     test('User should NOT be able to delete ANOTHER project IPNS record', async () => {
       const response = await request(stage.http)
         .delete(
-          `/buckets/${testBucket.bucket_uuid}/ipns/${ipnsRecordToDelete.id}`,
+          `/buckets/${testBucket.bucket_uuid}/ipns/${ipnsRecordToDelete.ipns_uuid}`,
         )
         .set('Authorization', `Bearer ${testUser2.token}`);
       expect(response.status).toBe(403);
@@ -149,7 +150,7 @@ describe('Ipns tests', () => {
       const tmpIpns: Ipns = await new Ipns(
         {},
         stage.storageContext,
-      ).populateById(ipnsRecordToDelete.id);
+      ).populateByUUID(ipnsRecordToDelete.ipns_uuid);
       expect(tmpIpns.exists()).toBeTruthy();
     });
 
@@ -209,7 +210,7 @@ describe('Ipns tests', () => {
     test('User should recieve 422 unprocessable entity status, if passing invalid body', async () => {
       const response = await request(stage.http)
         .post(
-          `/buckets/${testBucket.bucket_uuid}/ipns/${ipnsRecord.id}/publish`,
+          `/buckets/${testBucket.bucket_uuid}/ipns/${ipnsRecord.ipns_uuid}/publish`,
         )
         .send()
         .set('Authorization', `Bearer ${testUser.token}`);
@@ -219,17 +220,17 @@ describe('Ipns tests', () => {
     test('User should be able to publish CID to IPNS', async () => {
       const response = await request(stage.http)
         .post(
-          `/buckets/${testBucket.bucket_uuid}/ipns/${ipnsRecord.id}/publish`,
+          `/buckets/${testBucket.bucket_uuid}/ipns/${ipnsRecord.ipns_uuid}/publish`,
         )
         .send({ cid: file.CID })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.data.id).toBeTruthy();
+      expect(response.body.data.ipns_uuid).toBeTruthy();
 
       const publishedIpns: Ipns = await new Ipns(
         {},
         stage.storageContext,
-      ).populateById(response.body.data.id);
+      ).populateByUUID(response.body.data.ipns_uuid);
       expect(publishedIpns.exists()).toBeTruthy();
       expect(publishedIpns.ipnsName).toBeTruthy();
       expect(publishedIpns.ipnsValue).toBeTruthy();
@@ -273,16 +274,15 @@ describe('Ipns tests', () => {
     test('User should be able to delete IPNS record', async () => {
       const response = await request(stage.http)
         .delete(
-          `/buckets/${testBucket.bucket_uuid}/ipns/${ipnsRecordToDelete.id}`,
+          `/buckets/${testBucket.bucket_uuid}/ipns/${ipnsRecordToDelete.ipns_uuid}`,
         )
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.data.id).toBe(ipnsRecordToDelete.id);
 
       const tmpIpns: Ipns = await new Ipns(
         {},
         stage.storageContext,
-      ).populateById(ipnsRecordToDelete.id);
+      ).populateByUUID(ipnsRecordToDelete.ipns_uuid);
       expect(tmpIpns.exists()).toBeFalsy();
     });
   });

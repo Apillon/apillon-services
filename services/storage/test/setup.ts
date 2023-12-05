@@ -5,6 +5,7 @@ import {
   Mongo,
   MySql,
   rebuildDatabase,
+  seedDatabase,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 
@@ -28,6 +29,14 @@ export async function setupTest(): Promise<Stage> {
 
   try {
     await rebuildDatabase(
+      env.STORAGE_MYSQL_DATABASE_TEST,
+      env.STORAGE_MYSQL_HOST_TEST,
+      env.STORAGE_MYSQL_PORT_TEST,
+      env.STORAGE_MYSQL_USER_TEST,
+      env.STORAGE_MYSQL_PASSWORD_TEST,
+    );
+
+    await seedDatabase(
       env.STORAGE_MYSQL_DATABASE_TEST,
       env.STORAGE_MYSQL_HOST_TEST,
       env.STORAGE_MYSQL_PORT_TEST,
@@ -89,6 +98,14 @@ export const releaseStage = async (stage: Stage): Promise<void> => {
       await stage.db.close();
     } catch (error) {
       throw new Error('Error when releasing database: ' + error);
+    }
+  }
+
+  if (stage.lmasMongo) {
+    try {
+      await stage.lmasMongo.close();
+    } catch (error) {
+      throw new Error('Error when releasing mongo: ' + error);
     }
   }
 };

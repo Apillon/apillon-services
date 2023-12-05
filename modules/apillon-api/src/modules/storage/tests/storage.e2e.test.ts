@@ -5,7 +5,6 @@ import {
   ApiKeyRoleBaseDto,
   AttachedServiceType,
   DefaultApiKeyRole,
-  env,
   SqlModelStatus,
   ValidatorErrorCode,
 } from '@apillon/lib';
@@ -15,6 +14,7 @@ import {
   StorageErrorCode,
 } from '@apillon/storage/src/config/types';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
+import { ProjectConfig } from '@apillon/storage/src/modules/config/models/project-config.model';
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 import { StorageService as StrageMSService } from '@apillon/storage/src/modules/storage/storage.service';
 import {
@@ -30,7 +30,6 @@ import {
 import * as request from 'supertest';
 import { v4 as uuidV4 } from 'uuid';
 import { setupTest } from '../../../../test/helpers/setup';
-import { ProjectConfig } from '@apillon/storage/src/modules/config/models/project-config.model';
 
 describe('Apillon API storage tests', () => {
   let stage: Stage;

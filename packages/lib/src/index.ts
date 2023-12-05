@@ -15,6 +15,7 @@ export * from './lib/at-services/config/dtos/spend-credit.dto';
 export * from './lib/at-services/config/dtos/add-credit.dto';
 export * from './lib/at-services/config/dtos/credit-transaction-query-filter.dto';
 export * from './lib/at-services/config/dtos/pricelist-query-filter.dto';
+export * from './lib/at-services/base-service';
 
 //#REGION Referral
 export * from './lib/at-services/referral/referral';
@@ -86,6 +87,8 @@ export * from './lib/at-services/computing/dtos/create-contract.dto';
 export * from './lib/at-services/computing/dtos/contract-query-filter.dto';
 export * from './lib/at-services/computing/dtos/deposit-to-cluster.dto';
 export * from './lib/at-services/computing/dtos/transfer-ownership.dto';
+export * from './lib/at-services/computing/dtos/encrypt-content.dto';
+export * from './lib/at-services/computing/dtos/assign-cid-to-nft.dto';
 
 //#REGION Blockchain
 export * from './lib/at-services/blockchain/blockchain';

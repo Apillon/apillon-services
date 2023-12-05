@@ -71,6 +71,8 @@ export async function processEvent(event, context: Context): Promise<any> {
 
     [StorageEventType.DEPLOYMENT_GET]: HostingService.getDeployment,
     [StorageEventType.DEPLOYMENT_LIST]: HostingService.listDeployments,
+    [StorageEventType.DEPLOYMENT_APPROVE]: HostingService.approveDeployment,
+    [StorageEventType.DEPLOYMENT_REJECT]: HostingService.rejectDeployment,
 
     [StorageEventType.PREPARE_COLLECTION_BASE_URI]:
       NftStorageService.prepareBaseUriForCollection,

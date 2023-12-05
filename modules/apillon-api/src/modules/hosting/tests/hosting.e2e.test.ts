@@ -1,29 +1,28 @@
 import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
+import { run as generateSystemApiKey } from '@apillon/access/src/scripts/utils/generate-system-api-key';
 import { Project } from '@apillon/dev-console-api/src/modules/project/models/project.model';
 import { Service } from '@apillon/dev-console-api/src/modules/services/models/service.model';
 import {
   ApiKeyRoleBaseDto,
   AttachedServiceType,
   DefaultApiKeyRole,
-  env,
 } from '@apillon/lib';
+import { ProjectConfig } from '@apillon/storage/src/modules/config/models/project-config.model';
 import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
 import { Website } from '@apillon/storage/src/modules/hosting/models/website.model';
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 import {
+  Stage,
+  TestUser,
   createTestApiKey,
   createTestProject,
   createTestProjectService,
   createTestUser,
   releaseStage,
-  Stage,
-  TestUser,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
 import { v4 as uuidV4 } from 'uuid';
 import { setupTest } from '../../../../test/helpers/setup';
-import { run as generateSystemApiKey } from '@apillon/access/src/scripts/utils/generate-system-api-key';
-import { ProjectConfig } from '@apillon/storage/src/modules/config/models/project-config.model';
 
 describe('Apillon API hosting tests', () => {
   let stage: Stage;
@@ -51,7 +50,7 @@ describe('Apillon API hosting tests', () => {
     //User 1 project & other data
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
 
-    testProject = await createTestProject(testUser, stage);
+    testProject = await createTestProject(testUser, stage, 1200, 2);
     testService = await createTestProjectService(
       stage.devConsoleContext,
       testProject,
@@ -94,7 +93,7 @@ describe('Apillon API hosting tests', () => {
 
     //User 2 project & other data
     testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testProject2 = await createTestProject(testUser2, stage);
+    testProject2 = await createTestProject(testUser2, stage, 1200, 2);
     testService2 = await createTestProjectService(
       stage.devConsoleContext,
       testProject2,
@@ -235,7 +234,7 @@ describe('Apillon API hosting tests', () => {
     });
   });
   describe('Apillon API deploy page and get deployments tests', () => {
-    let deploymentId;
+    let deploymentUuid;
     test('Application (through Apillon API) should be able to deploy web page to staging', async () => {
       const response = await request(stage.http)
         .post(`/hosting/websites/${testWebsite.website_uuid}/deploy`)
@@ -294,11 +293,11 @@ describe('Apillon API hosting tests', () => {
           ).toString('base64')}`,
         );
       expect(response.status).toBe(200);
-      expect(response.body.data.id).toBeTruthy();
+      expect(response.body.data.deploymentUuid).toBeTruthy();
       expect(response.body.data.deploymentStatus).toBe(0);
       expect(response.body.data.number).toBe(1);
 
-      deploymentId = response.body.data.id;
+      deploymentUuid = response.body.data.deploymentUuid;
 
       //check if files were created in production bucket and have CID
       const filesInBucket = await new File(
@@ -341,7 +340,7 @@ describe('Apillon API hosting tests', () => {
     test('Application (through Apillon API) should be able to get deployment', async () => {
       const response = await request(stage.http)
         .get(
-          `/hosting/websites/${testWebsite.website_uuid}/deployments/${deploymentId}`,
+          `/hosting/websites/${testWebsite.website_uuid}/deployments/${deploymentUuid}`,
         )
         .set(
           'Authorization',
@@ -350,8 +349,7 @@ describe('Apillon API hosting tests', () => {
           ).toString('base64')}`,
         );
       expect(response.status).toBe(200);
-      expect(response.body.data.id).toBeTruthy();
-      expect(response.body.data.status).toBe(5);
+      expect(response.body.data.deploymentUuid).toBeTruthy();
       expect(response.body.data.environment).toBe(2);
       expect(response.body.data.deploymentStatus).toBe(10);
       expect(response.body.data.cid).toBeTruthy();
@@ -363,6 +361,8 @@ describe('Apillon API hosting tests', () => {
     let ipnsStagingLink;
     let ipnsProductionLink;
 
+    //Get IPFS cluster
+
     test('Application (through Apillon API) should be able to get web page', async () => {
       const response = await request(stage.http)
         .get(`/hosting/websites/${testWebsite.website_uuid}`)
@@ -373,28 +373,40 @@ describe('Apillon API hosting tests', () => {
           ).toString('base64')}`,
         );
       expect(response.status).toBe(200);
-      expect(response.body.data.id).toBeTruthy();
-      expect(response.body.data.status).toBe(5);
+      expect(response.body.data.websiteUuid).toBeTruthy();
       expect(response.body.data.name).toBe('Test web page');
       expect(response.body.data.domain).toBe('https://hosting-e2e-tests.si');
       expect(response.body.data.bucketUuid).toBeTruthy();
-      expect(response.body.data.ipnsStagingLink).toBeTruthy();
-      expect(response.body.data.ipnsProductionLink).toBeTruthy();
+      expect(response.body.data.ipnsStaging).toBeTruthy();
+      expect(response.body.data.ipnsProduction).toBeTruthy();
 
-      ipnsStagingLink = response.body.data.ipnsStagingLink;
-      ipnsProductionLink = response.body.data.ipnsProductionLink;
+      const ipfsCluster = await new ProjectConfig(
+        { project_uuid: testWebsite.project_uuid },
+        stage.storageContext,
+      ).getIpfsCluster();
+
+      ipnsStagingLink = ipfsCluster.generateLink(
+        testWebsite.project_uuid,
+        response.body.data.ipnsStaging,
+        true,
+      );
+      ipnsProductionLink = ipfsCluster.generateLink(
+        testWebsite.project_uuid,
+        response.body.data.ipnsProduction,
+        true,
+      );
     });
 
     test('Application (through Apillon API) should be able to view staging web page via IPNS', async () => {
       expect(ipnsStagingLink).toBeTruthy();
       const response = await request(ipnsStagingLink).get('');
-      expect(response.status).toBe(301);
+      expect(response.status).toBe(200);
     });
 
     test('Application (through Apillon API) should be able to view production web page via IPNS', async () => {
       expect(ipnsProductionLink).toBeTruthy();
       const response = await request(ipnsProductionLink).get('');
-      expect(response.status).toBe(301);
+      expect(response.status).toBe(200);
     });
   });
 
@@ -559,9 +571,12 @@ describe('Apillon API hosting tests', () => {
 
       //Check, that index.html page was updated
       response = await request(
-        ipfsCluster.ipfsGateway +
-          tmpWebsite.productionBucket.CID +
-          '/index.html',
+        ipfsCluster.generateLink(
+          tmpWebsite.project_uuid,
+          tmpWebsite.productionBucket.CID,
+          false,
+          'index.html/',
+        ),
       ).get('');
       expect(response.status).toBe(200);
       expect(response.text).toBe(indexPageContent);

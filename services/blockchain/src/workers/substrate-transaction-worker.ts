@@ -21,14 +21,13 @@ import {
 import { executeWebhooksForTransmittedTransactionsInWallet } from '../lib/webhook-procedures';
 import { BaseBlockchainIndexer } from '../modules/blockchain-indexers/substrate/base-blockchain-indexer';
 import { Wallet } from '../modules/wallet/wallet.model';
-import { PhalaBlockchainIndexer } from '../modules/blockchain-indexers/substrate/phala/indexer.service';
 
 export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
-  private chainId: string;
-  private chainName: string;
-  private wallets: Wallet[];
-  private indexer: BaseBlockchainIndexer;
-  private webHookWorker: WebhookWorker;
+  protected chainId: string;
+  protected chainName: string;
+  protected wallets: Wallet[];
+  protected indexer: BaseBlockchainIndexer;
+  protected webHookWorker: WebhookWorker;
 
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);
@@ -69,7 +68,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
 
       const conn = await this.context.mysql.start();
       try {
-        await this.setTransactionsState(transactions, wallet.address, conn);
+        await this.setTransactionsState(transactions, conn);
 
         // If block height is the same and not updated for the past 5 minutes
         if (
@@ -79,9 +78,9 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
           await this.writeEventLog(
             {
               logType: LogType.ERROR,
-              message: `Last parsed block has not been updated in the past ${
-                wallet.minutesSinceLastParsedBlock
-              } minutes for wallet ${wallet.address} (chain ${
+              message: `Last parsed block has not been updated in the past ${Math.round(
+                wallet.minutesSinceLastParsedBlock,
+              )} minutes for wallet ${wallet.address} (chain ${
                 SubstrateChain[wallet.chain]
               })`,
               service: ServiceName.BLOCKCHAIN,
@@ -152,7 +151,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     };
   }
 
-  private async fetchAllResolvedTransactions(
+  protected async fetchAllResolvedTransactions(
     address: string,
     fromBlock: number,
     toBlock: number,
@@ -169,99 +168,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     return transactionsArray.length > 0 ? transactionsArray.flat(Infinity) : [];
   }
 
-  private async setTransactionsState(
-    transactions: any[],
-    walletAddress: string,
-    conn: PoolConnection,
-  ) {
-    if (!transactions?.length) {
-      return;
-    }
-
-    // SUCCESS transactions
-    const successTransactions = transactions
-      .filter((t: any) => t.status == TransactionIndexerStatus.SUCCESS)
-      .map((t: any): string => t.extrinsicHash);
-    console.log('Success transactions ', successTransactions);
-    // Update SUCCESS CONTRACT transactions
-    if (this.indexer instanceof PhalaBlockchainIndexer) {
-      const contractTransactions =
-        await this.indexer.getContractInstantiatingTransactions(
-          walletAddress,
-          successTransactions,
-        );
-      // Update SUCCESSFUL CONTRACT transactions
-      for (const contractTransaction of contractTransactions) {
-        await this.updateContractInstantiatedTransaction(
-          contractTransaction.extrinsicHash,
-          contractTransaction.contract,
-          conn,
-        );
-        delete successTransactions[
-          successTransactions.indexOf(contractTransaction.extrinsicHash)
-        ];
-      }
-    }
-    // Update remaining SUCCESSFUL transactions
-    if (successTransactions.length > 0) {
-      await this.updateTransactions(
-        successTransactions,
-        TransactionStatus.CONFIRMED,
-        conn,
-      );
-    }
-
-    // Update FAILED transactions
-    const failedTransactions = transactions
-      .filter((t: any) => t.status == TransactionIndexerStatus.FAIL)
-      .map((t: any): string => t.extrinsicHash);
-    if (failedTransactions.length > 0) {
-      await this.updateTransactions(
-        failedTransactions,
-        TransactionStatus.FAILED,
-        conn,
-      );
-    }
-  }
-
-  private async updateContractInstantiatedTransaction(
-    transactionHash: string,
-    contractAddress: string,
-    conn: PoolConnection,
-  ) {
-    await this.context.mysql.paramExecute(
-      `UPDATE \`${DbTables.TRANSACTION_QUEUE}\`
-       SET transactionStatus = @status,
-           data              = @contractAddress
-       WHERE chain = @chain
-         AND transactionHash = @transactionHash`,
-      {
-        chain: this.chainId,
-        transactionHash,
-        status: TransactionStatus.CONFIRMED,
-        contractAddress,
-      },
-      conn,
-    );
-
-    await this.writeEventLog(
-      {
-        logType: LogType.INFO,
-        message:
-          `CONFIRMED blockchain transactions matched (txHash=${transactionHash})` +
-          ` in db and got contract id ${contractAddress} assigned.`,
-        service: ServiceName.BLOCKCHAIN,
-        data: {
-          chain: this.chainId,
-          transactionHash,
-          contractAddress,
-        },
-      },
-      LogOutput.EVENT_INFO,
-    );
-  }
-
-  private async updateTransactions(
+  protected async updateTransactions(
     transactionHashes: string[],
     status: TransactionStatus,
     conn: PoolConnection,
@@ -293,6 +200,39 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         },
       },
       LogOutput.EVENT_INFO,
+    );
+  }
+
+  private async setTransactionsState(
+    transactions: any[],
+    conn: PoolConnection,
+  ) {
+    if (!transactions?.length) {
+      return;
+    }
+
+    const successTransactions: any = transactions
+      .filter((t: any) => t.status == TransactionIndexerStatus.SUCCESS)
+      .map((t: any): string => t.extrinsicHash);
+
+    console.log('Success transactions ', successTransactions);
+
+    const failedTransactions: string[] = transactions
+      .filter((t: any) => t.status == TransactionIndexerStatus.FAIL)
+      .map((t: any): string => t.extrinsicHash);
+
+    // Update SUCCESSFUL transactions
+    await this.updateTransactions(
+      successTransactions,
+      TransactionStatus.CONFIRMED,
+      conn,
+    );
+
+    // Update FAILED transactions
+    await this.updateTransactions(
+      failedTransactions,
+      TransactionStatus.FAILED,
+      conn,
     );
   }
 }

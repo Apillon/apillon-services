@@ -70,3 +70,16 @@ aws sqs create-queue --queue-name apillon-monitoring-queue-staging --attributes 
 
 aws sqs create-queue --queue-name apillon-monitoring-queue-production-dlq --attributes file://production/monitoring-queue-production-dlq.json --region eu-west-1
 aws sqs create-queue --queue-name apillon-monitoring-queue-production --attributes file://production/monitoring-queue-production.json  --region eu-west-1
+
+
+aws sqs create-queue --queue-name apillon-config-queue-dev-dlq --attributes file://dev/config-queue-dev-dlq.json --region eu-west-1
+aws sqs create-queue --queue-name apillon-config-queue-dev --attributes file://dev/config-queue-dev.json  --region eu-west-1
+
+aws sqs create-queue --queue-name apillon-config-queue-staging-dlq --attributes file://staging/config-queue-staging-dlq.json  --region eu-west-1
+aws sqs create-queue --queue-name apillon-config-queue-staging --attributes file://staging/config-queue-staging.json  --region eu-west-1
+
+aws sqs create-queue --queue-name apillon-config-queue-production-dlq --attributes file://production/config-queue-production-dlq.json  --region eu-west-1
+aws sqs create-queue --queue-name apillon-config-queue-production --attributes file://production/config-queue-production.json  --region eu-west-1
+
+aws sqs create-queue --queue-name apillon-config-queue-test-dlq --attributes file://test/config-queue-test-dlq.json --region eu-west-1
+aws sqs create-queue --queue-name apillon-config-queue-test --attributes file://test/config-queue-test.json  --region eu-west-1

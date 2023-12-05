@@ -42,7 +42,14 @@ export class StorageMicroservice extends BaseService {
     this.isDefaultAsync = false;
   }
 
-  public async getStorageInfo(project_uuid: string) {
+  public async getStorageInfo(project_uuid: string): Promise<{
+    data: {
+      availableStorage: number;
+      usedStorage: number;
+      availableBandwidth: number;
+      usedBandwidth: number;
+    };
+  }> {
     const data = {
       eventName: StorageEventType.STORAGE_INFO,
       project_uuid,
@@ -307,10 +314,10 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async getIpns(id: number) {
+  public async getIpns(ipns_uuid: string) {
     const data = {
       eventName: StorageEventType.IPNS_GET,
-      id: id,
+      ipns_uuid,
     };
     return await this.callService(data);
   }
@@ -331,7 +338,7 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async updateIpns(params: { id: number; data: any }) {
+  public async updateIpns(params: { ipns_uuid: string; data: any }) {
     const data = {
       eventName: StorageEventType.IPNS_UPDATE,
       ...params,
@@ -339,7 +346,7 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async deleteIpns(params: { id: number }) {
+  public async deleteIpns(params: { ipns_uuid: string }) {
     const data = {
       eventName: StorageEventType.IPNS_DELETE,
       ...params,
@@ -429,6 +436,22 @@ export class StorageMicroservice extends BaseService {
   public async getDeployment(deployment_uuid: string) {
     const data = {
       eventName: StorageEventType.DEPLOYMENT_GET,
+      deployment_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async approveWebsiteDeployment(deployment_uuid: string) {
+    const data = {
+      eventName: StorageEventType.DEPLOYMENT_APPROVE,
+      deployment_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async rejectWebsiteDeployment(deployment_uuid: string) {
+    const data = {
+      eventName: StorageEventType.DEPLOYMENT_REJECT,
       deployment_uuid,
     };
     return await this.callService(data);

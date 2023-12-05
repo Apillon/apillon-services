@@ -21,6 +21,8 @@ import {
   SubscriptionsQueryFilter,
   InvoicesQueryFilter,
   ValidationException,
+  ReferralMicroservice,
+  writeLog,
 } from '@apillon/lib';
 import {
   BadRequestErrorCode,
@@ -50,8 +52,13 @@ export class ProjectService {
     context: DevConsoleApiContext,
     body: Project,
   ): Promise<Project> {
-    //Check max project quota
-    if (await this.isProjectsQuotaReached(context)) {
+    // Check max project quota
+    const { items: projects } = await new Project({}, context).getUserProjects(
+      context,
+      context.user.id,
+      DefaultUserRole.PROJECT_OWNER,
+    );
+    if (await this.isProjectsQuotaReached(context, projects)) {
       throw new CodeException({
         code: BadRequestErrorCode.MAX_NUMBER_OF_PROJECTS_REACHED,
         status: HttpStatus.BAD_REQUEST,
@@ -91,6 +98,21 @@ export class ProjectService {
         `${CacheKeyPrefix.AUTH_USER_DATA}:${context.user.user_uuid}`,
       );
 
+      // If it's the user's first project, add credits if using promo code
+      writeLog(LogType.MSG, `Total user projects: ${projects.length}`);
+      if (projects.length === 0) {
+        await new ReferralMicroservice(context)
+          .addPromoCodeCredits(project.project_uuid, context.user.email)
+          .catch(async (err) =>
+            writeLog(
+              LogType.ERROR,
+              err.message,
+              'project.service.ts',
+              'createProject',
+            ),
+          );
+      }
+
       // Set mailerlite field indicating the user owns a project
       await setMailerliteField(context.user.email, 'project_owner', true);
 
@@ -110,13 +132,18 @@ export class ProjectService {
     }
   }
 
-  async isProjectsQuotaReached(context: DevConsoleApiContext) {
-    const { items: projects } = await new Project({}, context).getUserProjects(
-      context,
-      context.user.id,
-      DefaultUserRole.PROJECT_OWNER,
-    );
-
+  async isProjectsQuotaReached(
+    context: DevConsoleApiContext,
+    projects?: Project[],
+  ) {
+    if (!projects) {
+      const { items } = await new Project({}, context).getUserProjects(
+        context,
+        context.user.id,
+        DefaultUserRole.PROJECT_OWNER,
+      );
+      projects = items;
+    }
     const activeSubscriptions = await Promise.all(
       projects.map(
         async (project) =>

@@ -15,7 +15,6 @@ import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { v4 as uuidV4 } from 'uuid';
 import { DbTables, ObjectType, StorageErrorCode } from '../../../config/types';
-import { addJwtToIPFSUrl } from '../../../lib/ipfs-utils';
 import { Bucket } from '../../bucket/models/bucket.model';
 import { ProjectConfig } from '../../config/models/project-config.model';
 import { File } from '../../storage/models/file.model';
@@ -382,7 +381,7 @@ export class Directory extends UuidSqlModel {
         INNER JOIN \`${DbTables.BUCKET}\` b ON d.bucket_id = b.id
         LEFT JOIN \`${DbTables.DIRECTORY}\` pd ON pd.id = d.parentDirectory_id
         WHERE b.bucket_uuid = @bucket_uuid
-        AND (IFNULL(@directory_uuid, -1) = IFNULL(pd.directory_uuid, -1))
+        AND (IFNULL(@directory_uuid, '-1') = IFNULL(pd.directory_uuid, '-1'))
         AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))
         AND ( d.status = ${SqlModelStatus.ACTIVE} OR
           ( @markedForDeletion = 1 AND d.status = ${SqlModelStatus.MARKED_FOR_DELETION})
@@ -400,7 +399,7 @@ export class Directory extends UuidSqlModel {
         INNER JOIN \`${DbTables.BUCKET}\` b ON d.bucket_id = b.id
         LEFT JOIN \`${DbTables.DIRECTORY}\` pd ON pd.id = d.directory_id
         WHERE b.bucket_uuid = @bucket_uuid
-        AND (IFNULL(@directory_uuid, -1) = IFNULL(pd.directory_uuid, -1))
+        AND (IFNULL(@directory_uuid, '-1') = IFNULL(pd.directory_uuid, '-1'))
         AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))
         AND ( d.status = ${SqlModelStatus.ACTIVE} OR
           ( @markedForDeletion = 1 AND d.status = ${SqlModelStatus.MARKED_FOR_DELETION})

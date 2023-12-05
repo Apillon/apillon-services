@@ -1,6 +1,6 @@
 {
   "name": "@apillon/storage",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Kalmia d.o.o.",
   "license": "UNLICENSED",
   "description": "",
@@ -44,7 +44,8 @@
   },
   "devDependencies": {
     "eslint-config-common": "*",
-    "tsconfig": "*"
+    "tsconfig": "*",
+    "@apillon/tests-lib": "*"
   },
   "overrides": {
     "ipfs-utils": "9.0.6"

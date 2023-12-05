@@ -83,7 +83,7 @@ export function generateTemplateData(key: string, data: any) {
       title: 'Dear Apillon User',
       text: `
       <p>
-        Your decentralized identity is ready. You can download your identity by clicking on the following link at the bottom. 
+        Your decentralized identity is ready. You can download your identity by clicking on the following link at the bottom.
         Please note that the link is only valid for 24 hours. After that, you will have to initiate the recovery process.
       </p>
       `,
@@ -172,7 +172,7 @@ export function generateTemplateData(key: string, data: any) {
         <b>Company website:</b> ${data.website}
       </p>
       <p>
-        <b>Country:</b> ${data.firstName}
+        <b>Country:</b> ${data.country}
       </p>
       <p>
         <b>Product of interest:</b> ${data.product}
@@ -181,6 +181,66 @@ export function generateTemplateData(key: string, data: any) {
         <b>Additional info:</b> ${data.additionalInfo}
       </p>
       `,
+    },
+    'website-deployment-rejected': {
+      subject:
+        'Urgent: Action Required Regarding Your Recent Apillon Deployment',
+      title: 'Website deployment has been rejected',
+      text: `
+      <p>
+        Dear Apillon user,
+        <br/><br/>
+        We hope this email finds you well. We regret to inform you that one of your recent deployments to the Apillon hosting and storage service has been automatically blocked due to a violation of our general terms and conditions.
+      </p>
+      <p>
+        <br/>
+        What to Do:
+        <br/>
+        We kindly request that you promptly review the content of your last deployment. If you believe this action was taken in error, please respond to this email or reach out to us on Discord at your earliest convenience.
+      </p>
+      <p>
+        <br/>
+        Preventing Future Incidents:
+        <br/>
+        To ensure the continued use of our platform, we urge you to refrain from deploying any content that may be considered potentially malicious or otherwise unacceptable. Failure to comply with our terms and conditions may result in the disabling of your account.
+      </p>
+      <p>
+        <br/><br/>
+        We value the security and integrity of our platform, and we appreciate your cooperation in maintaining a safe environment for all Apillon users.
+        <br/><br/>
+        Thank you for your immediate attention to this matter.
+        <br/>
+        Apillon Support Team
+      </p>
+      `,
+    },
+    'storage-quota-exceeded': {
+      subject: `Important Notice: Your Account Quota is Exceeding Limit`,
+      title: `Your Account Quota is Exceeding Limit`,
+      text: `
+      <p>Dear Apillon User,</p><br>
+
+      <p>Your subscription to our platform has expired and has not been automatically renewed, or has been downgraded.</p><br>
+
+      <p>The change in the subscription plan directly affects your account’s limits and quotas and may lead to breaking changes on your services, so please review the current status.</p><br>
+
+      <p><strong>What does this change mean?</strong></p><br>
+      <p>If your current usage continues to exceed the reduced quota, we will be unable to accommodate your storage or hosting needs. We will automatically remove and unpin your excess storage files 30 days after your subscription expires. To prevent any loss of data, please review the status of your files and limits.</p><br>
+
+      <p><strong>What can you do to prevent data loss?</strong></p><br>
+      <p>We understand that this may not be the news you were hoping for. However, we encourage you to take immediate action to prevent any potential data loss. Here are a few options:</p><br>
+      <ul>
+        <li>Renew your subscription to restore your previous quota amount.</li>
+        <li>Free up storage space by deleting unnecessary files.</li>
+      </ul><br>
+      <p>Renewing your subscription is the quickest and easiest solution. It will not only restore your full storage quota but also provide you with all the premium features that come with an active subscription.</p><br>
+
+      <p>On the other hand, if you choose not to renew, please ensure that you have enough storage space to accommodate your current usage. You can do this by regularly deleting unnecessary files from your storage.</p><br>
+
+      <p>We hope that you will consider these options and take action soon. Your satisfaction is our top priority, and we are here to assist you in any way we can.</p><br>
+
+      <p>Thank you for choosing Apillon. We appreciate your understanding and cooperation.</p>
+`,
     },
   };
 

@@ -37,6 +37,10 @@
       "path": "services/authentication"
     },
     {
+      "name": "🌐@services/computing [@apillon/computing]",
+      "path": "services/computing"
+    },
+    {
       "name": "🌐@services/nfts [@apillon/nfts]",
       "path": "services/nfts"
     },
