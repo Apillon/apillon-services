@@ -6,6 +6,7 @@ import {
   SerializeFor,
   SqlModelStatus,
   UuidSqlModel,
+  env,
   getQueryParams,
   selectAndCountQuery,
 } from '@apillon/lib';
@@ -23,15 +24,11 @@ export class File extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
@@ -44,16 +41,12 @@ export class File extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
@@ -70,16 +63,12 @@ export class File extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
@@ -90,16 +79,12 @@ export class File extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.SERVICE,
     ],
     validators: [],
@@ -108,15 +93,11 @@ export class File extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
@@ -133,15 +114,11 @@ export class File extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
@@ -153,15 +130,11 @@ export class File extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.SERVICE,
     ],
     validators: [
@@ -175,15 +148,11 @@ export class File extends UuidSqlModel {
 
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.SERVICE,
     ],
     validators: [
@@ -197,16 +166,12 @@ export class File extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
@@ -218,16 +183,12 @@ export class File extends UuidSqlModel {
 
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.SERVICE,
     ],
     validators: [],
@@ -236,15 +197,11 @@ export class File extends UuidSqlModel {
 
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
@@ -256,16 +213,12 @@ export class File extends UuidSqlModel {
 
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
@@ -291,14 +244,8 @@ export class File extends UuidSqlModel {
   ********************************************************************************/
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
-      SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.APILLON_API,
@@ -309,14 +256,8 @@ export class File extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
-      SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.APILLON_API,
@@ -418,6 +359,12 @@ export class File extends UuidSqlModel {
     this.link = ipfsCluster.generateLink(this.project_uuid, this.CID);
   }
 
+  /**
+   * Listing of files inside specific bucket
+   * @param context
+   * @param filter
+   * @returns
+   */
   public async listFiles(context: ServiceContext, filter: FilesQueryFilter) {
     const b: Bucket = await new Bucket(
       {},
@@ -454,7 +401,7 @@ export class File extends UuidSqlModel {
         FROM \`${DbTables.FILE}\` f
         INNER JOIN \`${DbTables.BUCKET}\` b ON f.bucket_id = b.id
         WHERE b.bucket_uuid = @bucket_uuid
-        AND (@search IS null OR CONCAT(IFNULL(f.path, ""), f.name) LIKE CONCAT('%', @search, '%'))
+        AND (@search IS null OR CONCAT(IFNULL(f.path, ""), f.name) LIKE CONCAT('%', @search, '%') OR @search = f.CID)
         AND (@fileStatus IS NULL OR f.fileStatus = @fileStatus)
         AND f.status = @status
         `,
@@ -475,6 +422,76 @@ export class File extends UuidSqlModel {
     for (const item of data.items) {
       if (item.CID) {
         item.link = ipfsCluster.generateLink(b.project_uuid, item.CID);
+      }
+    }
+
+    return data;
+  }
+
+  /**
+   * File listing for admin panel
+   * @param context
+   * @param filter
+   * @returns files from all buckets which matches given filter
+   */
+  public async listAllFiles(context: ServiceContext, filter: FilesQueryFilter) {
+    // Map url query with sql fields.
+    const fieldMap = {
+      id: 'f.id',
+    };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'f',
+      fieldMap,
+      filter.serialize(),
+    );
+
+    //Get IPFS cluster
+    const ipfsCluster = await new ProjectConfig(
+      { project_uuid: env.DEV_CONSOLE_API_DEFAULT_PROJECT_UUID },
+      this.getContext(),
+    ).getIpfsCluster();
+
+    const defaultOrderStr =
+      filter.status == SqlModelStatus.ACTIVE
+        ? 'f.createTime DESC'
+        : 'f.markedForDeletionTime DESC';
+
+    const sqlQuery = {
+      qSelect: `
+        SELECT ${this.generateSelectFields(
+          'f',
+          undefined,
+          SerializeFor.ADMIN_SELECT_DB,
+        )}
+        `,
+      qFrom: `
+        FROM \`${DbTables.FILE}\` f
+        INNER JOIN \`${DbTables.BUCKET}\` b ON f.bucket_id = b.id
+        AND (@search IS null OR CONCAT(IFNULL(f.path, ""), f.name) LIKE CONCAT('%', @search, '%') OR @search = f.CID OR @search = f.file_uuid)
+        AND (@fileStatus IS NULL OR f.fileStatus = @fileStatus)
+        AND f.status = @status
+        `,
+      qFilter: `
+        ORDER BY ${filters.orderStr || defaultOrderStr}
+        LIMIT ${filters.limit} OFFSET ${filters.offset};
+      `,
+    };
+
+    const data = await selectAndCountQuery(
+      context.mysql,
+      sqlQuery,
+      params,
+      'f.id',
+    );
+
+    //Populate link
+    for (const item of data.items) {
+      if (item.CID) {
+        item.link = ipfsCluster.generateLink(
+          env.DEV_CONSOLE_API_DEFAULT_PROJECT_UUID,
+          item.CID,
+        );
       }
     }
 

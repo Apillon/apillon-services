@@ -257,7 +257,7 @@ export class Project extends ProjectAccessModel {
         DbTables.SERVICE
       } WHERE project_id = p.id) AS totalServices`,
       qFrom: `FROM \`${DbTables.PROJECT}\` p
-        WHERE (@search IS null OR p.name LIKE CONCAT('%', @search, '%'))
+        WHERE (@search IS null OR p.name LIKE CONCAT('%', @search, '%') OR p.project_uuid LIKE @search)
         AND status <> ${SqlModelStatus.DELETED}`,
       qFilter: `
           ORDER BY ${filters.orderStr}

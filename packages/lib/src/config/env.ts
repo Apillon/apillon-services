@@ -147,6 +147,11 @@ export interface IEnv {
   DEV_CONSOLE_API_HOST_TEST: string;
   DEV_CONSOLE_API_PORT_TEST: number;
 
+  /**
+   * Project, which is used for admin panel (access to ipfs, generation of tokens ...)
+   */
+  DEV_CONSOLE_API_DEFAULT_PROJECT_UUID: string;
+
   /************************************************************
    * ADMIN-CONSOLE-API - Apillon Admin Console API
    ************************************************************/
@@ -581,6 +586,9 @@ export let env: IEnv = {
     process.env['DEV_CONSOLE_API_HOST_TEST'] || 'localhost',
   DEV_CONSOLE_API_PORT_TEST:
     parseInt(process.env['DEV_CONSOLE_API_PORT_TEST']) || 7001,
+  DEV_CONSOLE_API_DEFAULT_PROJECT_UUID:
+    process.env['DEV_CONSOLE_API_DEFAULT_PROJECT_UUID'] ||
+    '22a9788a-f043-4d4c-8f47-d07a0509c645',
 
   ADMIN_CONSOLE_API_HOST: process.env['ADMIN_CONSOLE_API_HOST'] || 'localhost',
   ADMIN_CONSOLE_API_PORT:

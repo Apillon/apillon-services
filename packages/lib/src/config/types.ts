@@ -337,6 +337,7 @@ export enum SerializeFor {
   INSERT_DB = 'insert_db',
   UPDATE_DB = 'update_db',
   SELECT_DB = 'select_db',
+  ADMIN_SELECT_DB = 'admin_select_db',
   ADMIN = 'admin',
   WORKER = 'worker',
   SERVICE = 'service',
@@ -724,6 +725,7 @@ export enum CacheKeyPrefix {
   ADMIN_BUCKET_LIST = 'admin-bucket-list',
   ADMIN_WEBSITE_LIST = 'admin-website-list',
   ADMIN_NFTS_COLLECTION_LIST = 'admin-nfts-collection-list',
+  ADMIN_GENERAL_SEARCH = 'admin-general-search',
 }
 
 export enum CacheKeyTTL {

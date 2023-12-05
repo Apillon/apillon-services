@@ -1,4 +1,5 @@
 import {
+  ApiName,
   BucketQueryFilter,
   Context,
   PoolConnection,
@@ -27,15 +28,11 @@ export class Bucket extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.APILLON_API,
@@ -48,15 +45,11 @@ export class Bucket extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
     ],
@@ -72,14 +65,10 @@ export class Bucket extends UuidSqlModel {
 
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
@@ -103,14 +92,10 @@ export class Bucket extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
@@ -129,14 +114,10 @@ export class Bucket extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
@@ -153,6 +134,7 @@ export class Bucket extends UuidSqlModel {
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
@@ -170,6 +152,7 @@ export class Bucket extends UuidSqlModel {
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
@@ -181,16 +164,12 @@ export class Bucket extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.SERVICE,
     ],
   })
@@ -198,16 +177,12 @@ export class Bucket extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.SERVICE,
     ],
   })
@@ -215,16 +190,12 @@ export class Bucket extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.SERVICE,
     ],
     validators: [],
@@ -319,7 +290,13 @@ export class Bucket extends UuidSqlModel {
       filter.serialize(),
     );
 
-    const selectFields = this.generateSelectFields('b', '');
+    const selectFields = this.generateSelectFields(
+      'b',
+      '',
+      context.apiName == ApiName.ADMIN_CONSOLE_API
+        ? SerializeFor.ADMIN_SELECT_DB
+        : SerializeFor.SELECT_DB,
+    );
     const sqlQuery = {
       qSelect: `
         SELECT ${selectFields}
@@ -328,7 +305,7 @@ export class Bucket extends UuidSqlModel {
         FROM \`${DbTables.BUCKET}\` b
         WHERE b.project_uuid = IFNULL(@project_uuid, b.project_uuid)
         AND ((@bucketType IS null AND b.bucketType IN (1,3)) OR b.bucketType = @bucketType)
-        AND (@search IS null OR b.name LIKE CONCAT('%', @search, '%'))
+        AND (@search IS null OR b.name LIKE CONCAT('%', @search, '%') OR b.bucket_uuid = @search)
         AND IFNULL(@status, ${SqlModelStatus.ACTIVE}) = status
       `,
       qFilter: `

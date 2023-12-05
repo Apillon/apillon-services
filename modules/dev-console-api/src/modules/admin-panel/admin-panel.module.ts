@@ -8,6 +8,8 @@ import { LogsModule } from './logs/logs.module';
 import { ComputingModule } from './computing/computing.module';
 import { NftsModule } from './nfts/nfts.module';
 import { StorageModule } from './storage/storage.module';
+import { AdminPanelController } from './admin-panel.controller';
+import { AdminPanelService } from './admin-panel.service';
 
 @Module({
   imports: [
@@ -21,7 +23,7 @@ import { StorageModule } from './storage/storage.module';
     NftsModule,
     StorageModule,
   ],
-  controllers: [],
-  providers: [],
+  controllers: [AdminPanelController],
+  providers: [AdminPanelService],
 })
 export class AdminPanelModule {}
