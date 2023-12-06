@@ -140,10 +140,10 @@ export class BlockchainMicroservice extends BaseService {
   //#endregion
 
   //#region wallet-identity
-  public async getWalletIdentity(body: WalletIdentityDto) {
+  public async getWalletIdentity(query: WalletIdentityDto) {
     return await this.callService({
       eventName: BlockchainEventType.GET_WALLET_IDENTITY,
-      body,
+      query,
     });
   }
   //#endregion

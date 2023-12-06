@@ -1,8 +1,9 @@
-import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common';
-import { IdentityService } from './identity.service';
+import { Controller, Get, UseGuards, Query } from '@nestjs/common';
+import { WalletIdentityService } from './wallet-identity.service';
 import {
   DefaultApiKeyRole,
   AttachedServiceType,
+  ValidateFor,
   WalletIdentityDto,
 } from '@apillon/lib';
 import { ApiKeyPermissions, Validation, Ctx } from '@apillon/modules-lib';
@@ -10,23 +11,21 @@ import { ApillonApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 
-@Controller('identity')
-export class IdentityController {
-  constructor(private identityService: IdentityService) {}
+@Controller('wallet-identity')
+export class WalletIdentityController {
+  constructor(private walletIdentityService: WalletIdentityService) {}
 
-  @Post(':wallet_address')
+  @Get()
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_READ,
     serviceType: AttachedServiceType.AUTHENTICATION,
   })
-  @Validation({ dto: WalletIdentityDto })
+  @Validation({ dto: WalletIdentityDto, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
   async getWalletIdentity(
     @Ctx() context: ApillonApiContext,
-    @Param('wallet_address') wallet_address: string,
-    @Body() body: WalletIdentityDto,
+    @Query() query: WalletIdentityDto,
   ) {
-    body.walletAddress = wallet_address;
-    return await this.identityService.getWalletIdentity(context, body);
+    return await this.walletIdentityService.getWalletIdentity(context, query);
   }
 }
