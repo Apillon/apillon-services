@@ -775,7 +775,7 @@ describe('Storage tests', () => {
       });
     });
 
-    describe.only('Tests for storage info endpoints (info, cluster info, ipfs-link)', () => {
+    describe('Tests for storage info endpoints (info, cluster info, ipfs-link)', () => {
       test('User should be able to get storage info', async () => {
         testBucket.size = 5000;
         await testBucket.update();
