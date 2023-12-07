@@ -1,4 +1,4 @@
-import { LogType, env, writeLog } from '@apillon/lib';
+import { AppEnvironment, LogType, env, writeLog } from '@apillon/lib';
 import axios from 'axios';
 
 export async function setMailerliteField(
@@ -6,6 +6,9 @@ export async function setMailerliteField(
   field: string,
   value: any,
 ) {
+  if (env.APP_ENV != AppEnvironment.PROD) {
+    return;
+  }
   try {
     await axios.put(
       `https://api.mailerlite.com/api/v2/subscribers/${email}`,

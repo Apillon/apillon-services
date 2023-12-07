@@ -95,7 +95,10 @@ export class ProjectService {
       await context.mysql.rollback(conn);
       throw err;
     }
-
+    // await new ReferralMicroservice(context).addPromoCodeCredits(
+    //   project.project_uuid,
+    //   context.user.email,
+    // );
     await Promise.all([
       // Add freemium credits to project
       new Scs(context).addFreemiumCredits(project.project_uuid),
@@ -110,8 +113,7 @@ export class ProjectService {
       setMailerliteField(context.user.email, 'project_owner', true),
 
       // If it's the user's first project, add credits if using promo code
-      async () =>
-        projects.length === 0 &&
+      projects.length === 0 &&
         (await new ReferralMicroservice(context)
           .addPromoCodeCredits(project.project_uuid, context.user.email)
           .catch(async (err) =>
