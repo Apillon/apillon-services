@@ -58,6 +58,7 @@ export function getQueryParams(
       : parseInt(urlQuery.limit) || env.DEFAULT_PAGE_SIZE || 20;
   const offset =
     Number(urlQuery?.skip) || ((parseInt(urlQuery.page) || 1) - 1) * limit;
+  const page = parseInt(urlQuery.page) || 1;
   const order = [];
   if (urlQuery.orderBy) {
     if (Array.isArray(urlQuery.orderBy)) {
@@ -96,6 +97,10 @@ export function getQueryParams(
     params: {
       ...defaultParameters,
       ...urlQuery,
+      urlQuery: {
+        limit: limit,
+        page,
+      },
     },
     filters: {
       limit,
@@ -158,7 +163,7 @@ export async function selectAndCountQuery(
   params: any,
   countByField: string,
   conn?: PoolConnection,
-): Promise<{ items: Array<any>; total: number }> {
+): Promise<{ items: Array<any>; total: number; page: number; limit: number }> {
   const querySelect = [
     queryObj.qSelect,
     queryObj.qFrom,
@@ -205,7 +210,12 @@ export async function selectAndCountQuery(
   }
   const total = totalResults.length ? totalResults[0].total : 0;
 
-  return { items, total };
+  return {
+    items,
+    total,
+    page: params.urlQuery.page,
+    limit: params.urlQuery.limit,
+  };
 }
 
 export async function unionSelectAndCountQuery(
@@ -213,7 +223,7 @@ export async function unionSelectAndCountQuery(
   queryObj: any,
   params: any,
   countByField: string,
-): Promise<{ items: Array<any>; total: number }> {
+): Promise<{ items: Array<any>; total: number; page: number; limit: number }> {
   let querySelectAll = '';
   let queryCountAll = '';
 
@@ -273,7 +283,12 @@ export async function unionSelectAndCountQuery(
   }
   const total = totalResults.length ? totalResults[0].total : 0;
 
-  return { items, total };
+  return {
+    items,
+    total,
+    page: params.urlQuery.page,
+    limit: params.urlQuery.limit,
+  };
 }
 
 export function buildWhereCondition(
