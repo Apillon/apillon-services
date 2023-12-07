@@ -49,6 +49,33 @@ export class StorageController {
     return await this.storageService.getStorageInfo(context, query);
   }
 
+  @Get('ipfs-cluster-info')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_READ,
+    serviceType: AttachedServiceType.STORAGE,
+  })
+  @Validation({ dto: BaseProjectQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getIpfsClusterInfo(
+    @Ctx() context: ApillonApiContext,
+    @Query() query: BaseProjectQueryFilter,
+  ) {
+    return await this.storageService.getIpfsClusterInfo(context, query);
+  }
+
+  @Get('link-on-ipfs/:cid')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_EXECUTE,
+    serviceType: AttachedServiceType.STORAGE,
+  })
+  @UseGuards(AuthGuard)
+  async getLinkOnIpfs(
+    @Ctx() context: ApillonApiContext,
+    @Param('cid') cid: string,
+  ) {
+    return await this.storageService.getLink(context, cid);
+  }
+
   @Get('buckets')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_READ,
