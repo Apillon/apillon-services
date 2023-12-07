@@ -700,6 +700,7 @@ export class StorageService {
 
     return {
       secret: ipfsClusterJwtSecretForProject,
+      project_uuid: event.project_uuid,
       ipfsGateway: ipfsCluster.ipfsGateway,
       ipnsGateway: ipfsCluster.ipnsGateway,
       subdomainGateway: ipfsCluster.subdomainGateway,
