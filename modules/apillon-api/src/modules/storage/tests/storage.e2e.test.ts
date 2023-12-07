@@ -30,6 +30,7 @@ import {
 import * as request from 'supertest';
 import { v4 as uuidV4 } from 'uuid';
 import { setupTest } from '../../../../test/helpers/setup';
+import { generateJwtSecret } from '@apillon/storage/src/lib/ipfs-utils';
 
 describe('Apillon API storage tests', () => {
   let stage: Stage;
@@ -268,7 +269,7 @@ describe('Apillon API storage tests', () => {
         ).getIpfsCluster();
 
         const response = await request(
-          ipfsCluster.ipfsGateway + testFile.CID,
+          ipfsCluster.generateLink(testFile.project_uuid, testFile.CID),
         ).get('');
         expect(response.status).toBe(200);
         expect(response.text).toBe(testFileContent);
@@ -276,7 +277,7 @@ describe('Apillon API storage tests', () => {
     });
 
     describe('File details & list files tests', () => {
-      test('Application should be able to get file details by file_uuid', async () => {
+      test('Application should be able to get file details by fileUuid', async () => {
         const response = await request(stage.http)
           .get(
             `/storage/${testBucket.bucket_uuid}/file/${testFile.file_uuid}/detail`,
@@ -290,10 +291,11 @@ describe('Apillon API storage tests', () => {
         expect(response.status).toBe(200);
 
         expect(response.body.data.fileStatus).toBe(FileStatus.UPLOADED_TO_IPFS);
-        expect(response.body.data.file.fileUuid).toBe(testFile.file_uuid);
-        expect(response.body.data.file.CID).toBe(testFile.CID);
-        expect(response.body.data.file.name).toBe(testFile.name);
-        expect(response.body.data.file.size).toBeGreaterThan(0);
+        expect(response.body.data.fileUuid).toBe(testFile.file_uuid);
+        expect(response.body.data.CID).toBe(testFile.CID);
+        expect(response.body.data.name).toBe(testFile.name);
+        expect(response.body.data.size).toBeGreaterThan(0);
+        expect(response.body.data.link).toBeTruthy();
       });
 
       test('Application should be able to get file details by CID', async () => {
@@ -308,10 +310,10 @@ describe('Apillon API storage tests', () => {
         expect(response.status).toBe(200);
 
         expect(response.body.data.fileStatus).toBe(FileStatus.UPLOADED_TO_IPFS);
-        expect(response.body.data.file.fileUuid).toBe(testFile.file_uuid);
-        expect(response.body.data.file.CID).toBe(testFile.CID);
-        expect(response.body.data.file.name).toBe(testFile.name);
-        expect(response.body.data.file.size).toBeGreaterThan(0);
+        expect(response.body.data.fileUuid).toBe(testFile.file_uuid);
+        expect(response.body.data.CID).toBe(testFile.CID);
+        expect(response.body.data.name).toBe(testFile.name);
+        expect(response.body.data.size).toBeGreaterThan(0);
       });
 
       test('Application should NOT be able to get ANOTHER USER file details', async () => {
@@ -346,7 +348,7 @@ describe('Apillon API storage tests', () => {
         expect(response.body.data.items.length).toBe(1);
         expect(response.body.data.items[0].type).toBe(ObjectType.FILE);
         expect(response.body.data.items[0].CID).toBeTruthy();
-        expect(response.body.data.items[0].fileUuid).toBeTruthy();
+        expect(response.body.data.items[0].uuid).toBeTruthy();
         expect(response.body.data.items[0].name).toBeTruthy();
       });
 
@@ -367,7 +369,7 @@ describe('Apillon API storage tests', () => {
 
       test('Application should be able to list files in bucket', async () => {
         const response = await request(stage.http)
-          .get(`/storage/${testBucket.bucket_uuid}/files`)
+          .get(`/storage/buckets/${testBucket.bucket_uuid}/files`)
           .set(
             'Authorization',
             `Basic ${Buffer.from(
@@ -378,10 +380,14 @@ describe('Apillon API storage tests', () => {
 
         expect(response.body.data.total).toBe(1);
         expect(response.body.data.items.length).toBe(1);
-        expect(response.body.data.items[0].type).toBe(ObjectType.FILE);
         expect(response.body.data.items[0].CID).toBeTruthy();
+        expect(response.body.data.items[0].CIDv1).toBeTruthy();
         expect(response.body.data.items[0].fileUuid).toBeTruthy();
         expect(response.body.data.items[0].name).toBeTruthy();
+        expect(response.body.data.items[0].createTime).toBeTruthy();
+        expect(response.body.data.items[0].updateTime).toBeTruthy();
+        expect(response.body.data.items[0].size).toBeTruthy();
+        expect(response.body.data.items[0].fileStatus).toBeTruthy();
       });
     });
 
@@ -495,6 +501,87 @@ describe('Apillon API storage tests', () => {
           abcdUrlResponse.fileUuid,
         );
         expect(file.exists()).toBeTruthy();
+      });
+    });
+
+    describe('Tests for storage info endpoints (info, cluster info, ipfs-link)', () => {
+      test('Application should be able to get storage info', async () => {
+        const response = await request(stage.http)
+          .get(`/storage/info`)
+          .set(
+            'Authorization',
+            `Basic ${Buffer.from(
+              apiKey.apiKey + ':' + apiKey.apiKeySecret,
+            ).toString('base64')}`,
+          );
+        expect(response.status).toBe(200);
+        expect(response.body.data.availableStorage).toBeGreaterThan(0);
+        expect(response.body.data.usedStorage).toBeGreaterThan(0);
+        expect(response.body.data.availableBandwidth).toBeGreaterThan(0);
+      });
+
+      test('Application should be able to get ipfs cluster info', async () => {
+        const ipfsCluster = await new ProjectConfig(
+          { project_uuid: apiKey.project_uuid },
+          stage.storageContext,
+        ).getIpfsCluster();
+
+        const response = await request(stage.http)
+          .get(`/storage/ipfs-cluster-info`)
+          .set(
+            'Authorization',
+            `Basic ${Buffer.from(
+              apiKey.apiKey + ':' + apiKey.apiKeySecret,
+            ).toString('base64')}`,
+          );
+
+        expect(response.status).toBe(200);
+        expect(response.body.data.secret).toBe(
+          generateJwtSecret(apiKey.project_uuid, ipfsCluster.secret),
+        );
+        expect(response.body.data.ipfsGateway).toBe(ipfsCluster.ipfsGateway);
+        expect(response.body.data.ipnsGateway).toBe(ipfsCluster.ipnsGateway);
+        expect(response.body.data.subdomainGateway).toBe(
+          ipfsCluster.subdomainGateway ? ipfsCluster.subdomainGateway : '',
+        );
+      });
+
+      test('Application should be able to get link on ipfs for CID', async () => {
+        const response = await request(stage.http)
+          .get(
+            `/storage/link-on-ipfs/k2k4r8plzxzg7eji9ucbr1trn9teesc72h1odfsjjggf4nmmm6rjosiu`,
+          )
+          .set(
+            'Authorization',
+            `Basic ${Buffer.from(
+              apiKey.apiKey + ':' + apiKey.apiKeySecret,
+            ).toString('base64')}`,
+          );
+        expect(response.status).toBe(200);
+        expect(response.body.data.link).toBeTruthy();
+        expect(response.body.data.link).toMatch(
+          'k2k4r8plzxzg7eji9ucbr1trn9teesc72h1odfsjjggf4nmmm6rjosiu',
+        );
+        expect(response.body.data.link).toMatch('ipfs');
+      });
+
+      test('Application should be able to get link on ipfs for IPNS', async () => {
+        const response = await request(stage.http)
+          .get(
+            `/storage/link-on-ipfs/k2k4r8lqt07ls9uyz141ofqcl99k4b8e63ns1fh52ib1bwh09z0k6vjk`,
+          )
+          .set(
+            'Authorization',
+            `Basic ${Buffer.from(
+              apiKey.apiKey + ':' + apiKey.apiKeySecret,
+            ).toString('base64')}`,
+          );
+        expect(response.status).toBe(200);
+        expect(response.body.data.link).toBeTruthy();
+        expect(response.body.data.link).toMatch(
+          'k2k4r8lqt07ls9uyz141ofqcl99k4b8e63ns1fh52ib1bwh09z0k6vjk',
+        );
+        expect(response.body.data.link).toMatch('ipns');
       });
     });
   });
