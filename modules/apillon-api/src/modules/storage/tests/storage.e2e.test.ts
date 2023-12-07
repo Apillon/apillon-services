@@ -539,6 +539,7 @@ describe('Apillon API storage tests', () => {
         expect(response.body.data.secret).toBe(
           generateJwtSecret(apiKey.project_uuid, ipfsCluster.secret),
         );
+        expect(response.body.data.projectUuid).toBe(apiKey.project_uuid);
         expect(response.body.data.ipfsGateway).toBe(ipfsCluster.ipfsGateway);
         expect(response.body.data.ipnsGateway).toBe(ipfsCluster.ipnsGateway);
         expect(response.body.data.subdomainGateway).toBe(

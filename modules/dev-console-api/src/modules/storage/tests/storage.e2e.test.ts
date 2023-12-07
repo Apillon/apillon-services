@@ -805,6 +805,7 @@ describe('Storage tests', () => {
         expect(response.body.data.secret).toBe(
           generateJwtSecret(testProject.project_uuid, ipfsCluster.secret),
         );
+        expect(response.body.data.project_uuid).toBe(testProject.project_uuid);
         expect(response.body.data.ipfsGateway).toBe(ipfsCluster.ipfsGateway);
         expect(response.body.data.ipnsGateway).toBe(ipfsCluster.ipnsGateway);
         expect(response.body.data.subdomainGateway).toBe(
