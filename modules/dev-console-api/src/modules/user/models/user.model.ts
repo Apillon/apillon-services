@@ -6,6 +6,7 @@ import {
   AdvancedSQLModel,
   Context,
   getQueryParams,
+  JSONParser,
   PopulateFrom,
   presenceValidator,
   selectAndCountQuery,
@@ -151,6 +152,23 @@ export class User extends AdvancedSQLModel {
     serializable: [SerializeFor.SERVICE],
   })
   public authUser: any;
+
+  @prop({
+    parser: { resolver: JSONParser() },
+    populatable: [
+      PopulateFrom.DB, //
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+  })
+  public metadata: any;
 
   public constructor(data?: unknown, context?: Context) {
     super(data, context);

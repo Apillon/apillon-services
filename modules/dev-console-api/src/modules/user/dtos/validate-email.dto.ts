@@ -33,4 +33,11 @@ export class ValidateEmailDto extends ModelBase {
     populatable: [PopulateFrom.PROFILE],
   })
   public refCode: string;
+
+  @prop({
+    parser: { resolver: JSONParser() },
+    populatable: [PopulateFrom.PROFILE],
+    validators: [],
+  })
+  public metadata: object;
 }
