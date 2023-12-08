@@ -88,8 +88,6 @@ export function getQueryParams(
     orderStr += `${o.by} ${o.desc ? 'DESC' : 'ASC'}`;
   }
 
-  delete urlQuery.page;
-  delete urlQuery.limit;
   delete urlQuery.orderBy;
   delete urlQuery.desc;
 
@@ -97,10 +95,6 @@ export function getQueryParams(
     params: {
       ...defaultParameters,
       ...urlQuery,
-      urlQuery: {
-        limit: limit,
-        page,
-      },
     },
     filters: {
       limit,
@@ -213,8 +207,8 @@ export async function selectAndCountQuery(
   return {
     items,
     total,
-    page: params.urlQuery.page,
-    limit: params.urlQuery.limit,
+    page: params.page,
+    limit: params.limit,
   };
 }
 
@@ -286,8 +280,8 @@ export async function unionSelectAndCountQuery(
   return {
     items,
     total,
-    page: params.urlQuery.page,
-    limit: params.urlQuery.limit,
+    page: params.page,
+    limit: params.limit,
   };
 }
 
