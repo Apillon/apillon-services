@@ -56,7 +56,7 @@ describe('Storage tests', () => {
       DefaultUserRole.ADMIN,
     );
 
-    testProject = await createTestProject(testUser, stage);
+    testProject = await createTestProject(testUser, stage, 5000, 1);
 
     testBucket = await createTestBucket(
       testUser,
@@ -142,6 +142,33 @@ describe('Storage tests', () => {
         expect(testFile).toBeTruthy();
         const response = await request(testFile.link).get('');
         expect(response.status).toBe(200);
+      });
+
+      test('User should not be able to recieve S3 signed URL for html files (for project WO subscription)', async () => {
+        const testProjectWOSubscription = await createTestProject(
+          testUser,
+          stage,
+        );
+
+        const tmpTestBucket = await createTestBucket(
+          testUser,
+          stage.storageContext,
+          testProjectWOSubscription,
+        );
+
+        const response = await request(stage.http)
+          .post(`/storage/${tmpTestBucket.bucket_uuid}/files-upload`)
+          .send({
+            files: [
+              {
+                fileName: 'index.html',
+                contentType: 'text/html',
+              },
+            ],
+          })
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(400);
+        expect(response.body.code).toBe(40006020);
       });
     });
 
