@@ -1,10 +1,13 @@
 import {
   AdvancedSQLModel,
+  getQueryParams,
   PoolConnection,
   PopulateFrom,
   presenceValidator,
   prop,
+  selectAndCountQuery,
   SerializeFor,
+  WalletDepositsQueryFilter,
 } from '@apillon/lib';
 import { floatParser, integerParser, stringParser } from '@rawmodel/parsers';
 
@@ -23,7 +26,6 @@ export class WalletDeposit extends AdvancedSQLModel {
     ],
     serializable: [
       SerializeFor.ADMIN,
-      SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
     ],
@@ -163,5 +165,36 @@ export class WalletDeposit extends AdvancedSQLModel {
       return;
     }
     await walletDeposit.insert(SerializeFor.INSERT_DB, conn, true);
+  }
+
+  public async listDeposits(filter: WalletDepositsQueryFilter) {
+    const fieldMap = { id: 'wd.id' };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'wd',
+      fieldMap,
+      filter.serialize(),
+    );
+
+    const sqlQuery = {
+      qSelect: `SELECT ${this.generateSelectFields()}, wd.createTime`,
+      qFrom: `FROM \`${DbTables.WALLET_DEPOSIT}\` wd
+        WHERE wd.wallet_id = @walletId
+        AND (@search IS null OR wd.transactionHash LIKE CONCAT('%', @search, '%'))
+        AND (@tsFrom IS NULL OR wd.createTime >= @tsFrom)
+        AND (@tsTo IS NULL OR wd.createTime <= @tsTo)
+        `,
+      qFilter: `
+          ORDER BY ${filters.orderStr || 'wd.createTime DESC'}
+          LIMIT ${filters.limit} OFFSET ${filters.offset};
+        `,
+    };
+
+    return selectAndCountQuery(
+      this.getContext().mysql,
+      sqlQuery,
+      { ...params },
+      'wd.id',
+    );
   }
 }

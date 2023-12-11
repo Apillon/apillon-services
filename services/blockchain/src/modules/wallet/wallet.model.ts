@@ -597,7 +597,7 @@ export class Wallet extends AdvancedSQLModel {
     };
   }
 
-  public async getTransactions(
+  public async listTransactions(
     walletAddress: string,
     filter: WalletTransactionsQueryFilter,
   ) {
