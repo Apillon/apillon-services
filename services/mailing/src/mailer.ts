@@ -3,7 +3,15 @@ import {
   SMTPsendTemplate,
   SMTPsendDefaultTemplate,
 } from './mailing/smtp-mailer';
-import { env, AppEnvironment, writeLog, LogType } from '@apillon/lib';
+import {
+  env,
+  AppEnvironment,
+  writeLog,
+  LogType,
+  CodeException,
+  Lmas,
+  ServiceName,
+} from '@apillon/lib';
 import axios from 'axios';
 
 /**
@@ -67,10 +75,16 @@ export class Mailer {
         `mailerlite field ${field} set for email ${email}`,
       );
     } catch (err) {
-      writeLog(
-        LogType.ERROR,
-        `Error setting ${field} mailerlite field for ${email}: ${err.message}`,
-      );
+      await new Lmas().writeLog({
+        context,
+        logType: LogType.ERROR,
+        message: `Error setting mailerlite field ${field} for email ${email}: ${err.message}`,
+        user_uuid: context.user?.user_uuid,
+        location: 'Mailer/setMailerliteField',
+        service: ServiceName.MAIL,
+        data: { email, field, value },
+        sendAdminAlert: true,
+      });
     }
   }
 }
