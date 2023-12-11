@@ -16,6 +16,8 @@ export enum SubstrateChain {
   CRUST = 1,
   KILT = 2,
   PHALA = 4,
+  POLKADOT = 5,
+  SUBSOCIAL = 6,
 }
 
 export enum EvmChain {
