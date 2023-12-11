@@ -240,11 +240,9 @@ export class Project extends ProjectAccessModel {
     context: DevConsoleApiContext,
     filter: ProjectsQueryFilter,
   ) {
-    const projectsWithActiveSubscription = (
-      await new Scs(context).getProjectsWithActiveSubscription(
-        filter.subscriptionPackageId,
-      )
-    ).data;
+    const { data: projectsWithActiveSubscription } = await new Scs(
+      context,
+    ).getProjectsWithActiveSubscription(filter.subscriptionPackageId);
 
     //If filter was applied, but without results return empty response and skip additional db queries
     if (

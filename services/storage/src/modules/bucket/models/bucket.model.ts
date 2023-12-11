@@ -18,6 +18,7 @@ import { presenceValidator } from '@rawmodel/validators';
 import { v4 as uuidV4 } from 'uuid';
 import { BucketType, DbTables, StorageErrorCode } from '../../../config/types';
 import { StorageCodeException } from '../../../lib/exceptions';
+import { StorageService } from '../../storage/storage.service';
 
 export class Bucket extends UuidSqlModel {
   public readonly tableName = DbTables.BUCKET;
@@ -404,7 +405,10 @@ export class Bucket extends UuidSqlModel {
    */
   public async getDetailsForProject() {
     const numOfBuckets = await this.getNumOfBuckets(false);
-    const totalBucketSize = await this.getTotalSizeUsedByProject();
-    return { numOfBuckets, totalBucketSize };
+    const storageInfo = await StorageService.getStorageInfo(
+      { project_uuid: this.project_uuid },
+      this.getContext(),
+    );
+    return { numOfBuckets, ...storageInfo };
   }
 }

@@ -1,23 +1,28 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { DevConsoleApiContext } from '../../../context';
-import { Project } from '../../project/models/project.model';
+import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
 import {
-  BaseQueryFilter,
+  AddCreditDto,
+  Ams,
+  ApiKeyQueryFilterDto,
   CodeException,
   CreateQuotaOverrideDto,
+  GetQuotaDto,
+  Lmas,
+  NftsMicroservice,
+  QuotaDto,
   QuotaOverrideDto,
   Scs,
   StorageMicroservice,
-  NftsMicroservice,
-  QuotaDto,
-  ApiKeyQueryFilterDto,
-  Ams,
+  ValidationException,
 } from '@apillon/lib';
-import { ResourceNotFoundErrorCode } from '../../../config/types';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { UUID } from 'crypto';
-import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
-import { Lmas } from '@apillon/lib';
-import { GetQuotaDto } from '@apillon/lib';
+import { v4 as uuidV4 } from 'uuid';
+import {
+  ResourceNotFoundErrorCode,
+  ValidatorErrorCode,
+} from '../../../config/types';
+import { DevConsoleApiContext } from '../../../context';
+import { Project } from '../../project/models/project.model';
 import { ProjectsQueryFilter } from './dtos/projects-query-filter.dto';
 
 @Injectable()
@@ -70,10 +75,15 @@ export class ProjectService {
       context,
     ).getProjectCollectionDetails(project_uuid);
 
+    const { data: projectCredit } = await new Scs(context).getProjectCredit(
+      project_uuid,
+    );
+
     return {
       ...project,
       ...projectStorageDetails,
       ...projectCollectionDetails,
+      creditBalance: projectCredit.balance,
     };
   }
 
@@ -135,5 +145,19 @@ export class ProjectService {
       (key: any) => (key.usageCount = usageCounts[key.apiKey]),
     );
     return data;
+  }
+
+  async addCreditsToProject(context: DevConsoleApiContext, data: AddCreditDto) {
+    data.referenceTable = 'MANUALLY ADDED';
+    data.referenceId = uuidV4();
+    try {
+      await data.validate();
+    } catch (err) {
+      await data.handle(err);
+      if (!data.isValid()) {
+        throw new ValidationException(data, ValidatorErrorCode);
+      }
+    }
+    return (await new Scs(context).addCredit(data)).data;
   }
 }

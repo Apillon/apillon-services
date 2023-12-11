@@ -2,9 +2,9 @@
 import { prop } from '@rawmodel/core';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 
+import { presenceValidator } from '@rawmodel/validators';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
-import { presenceValidator } from '@rawmodel/validators';
 
 export class AddCreditDto extends ModelBase {
   @prop({

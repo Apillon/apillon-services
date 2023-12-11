@@ -1,21 +1,29 @@
 import {
-  DefaultUserRole,
-  ValidateFor,
-  CreateQuotaOverrideDto,
-  QuotaOverrideDto,
-  PopulateFrom,
-  BaseQueryFilter,
-  CacheKeyPrefix,
-  QuotaDto,
-  QuotaType,
+  AddCreditDto,
   ApiKeyQueryFilterDto,
+  CacheKeyPrefix,
+  CreateQuotaOverrideDto,
+  DefaultUserRole,
   GetQuotaDto,
+  PopulateFrom,
+  QuotaDto,
+  QuotaOverrideDto,
+  QuotaType,
+  ValidateFor,
 } from '@apillon/lib';
+import {
+  Cache,
+  CacheInterceptor,
+  Ctx,
+  Permissions,
+  Validation,
+} from '@apillon/modules-lib';
 import {
   Body,
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   ParseUUIDPipe,
   Post,
@@ -23,19 +31,12 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import {
-  CacheInterceptor,
-  Ctx,
-  Permissions,
-  Validation,
-} from '@apillon/modules-lib';
-import { AuthGuard } from '../../../guards/auth.guard';
-import { ProjectService } from './project.service';
-import { DevConsoleApiContext } from '../../../context';
-import { ValidationGuard } from '../../../guards/validation.guard';
 import { UUID } from 'crypto';
-import { Cache } from '@apillon/modules-lib';
+import { DevConsoleApiContext } from '../../../context';
+import { AuthGuard } from '../../../guards/auth.guard';
+import { ValidationGuard } from '../../../guards/validation.guard';
 import { ProjectsQueryFilter } from './dtos/projects-query-filter.dto';
+import { ProjectService } from './project.service';
 
 @Controller('admin-panel/projects')
 @Permissions({ role: DefaultUserRole.ADMIN })
@@ -132,5 +133,23 @@ export class ProjectController {
   ) {
     query.populate({ project_uuid });
     return this.projectService.getProjectApiKeys(context, query);
+  }
+
+  @Post(':project_uuid/add-credit')
+  @HttpCode(200)
+  @Validation({
+    dto: AddCreditDto,
+    validateFor: ValidateFor.BODY,
+    populateFrom: PopulateFrom.ADMIN,
+    skipValidation: true,
+  })
+  @UseGuards(ValidationGuard)
+  async addCreditsToProject(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('project_uuid', ParseUUIDPipe) project_uuid: UUID,
+    @Body() data: AddCreditDto,
+  ): Promise<any> {
+    data.project_uuid = project_uuid;
+    return this.projectService.addCreditsToProject(context, data);
   }
 }

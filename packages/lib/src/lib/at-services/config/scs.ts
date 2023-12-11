@@ -120,7 +120,7 @@ export class Scs extends BaseService {
   public async addCredit(addCreditDto: AddCreditDto): Promise<any> {
     const data = {
       eventName: ScsEventType.ADD_CREDIT,
-      addCreditDto,
+      body: addCreditDto.serialize(),
     };
 
     return await this.callService(data);
