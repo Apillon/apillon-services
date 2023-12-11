@@ -4,6 +4,11 @@ import { ApiPromise, WsProvider } from '@polkadot/api';
 import { SubsocialApi } from '@subsocial/api';
 
 export class WalletIdentityService {
+  /**
+   * Retreive and return on-chain polkadot identity data from different sources
+   * @param {{ query: WalletIdentityDto }} event
+   * @param {ServiceContext} _context
+   */
   static async getWalletIdentityData(
     event: { query: WalletIdentityDto },
     _context: ServiceContext,
@@ -24,6 +29,10 @@ export class WalletIdentityService {
     };
   }
 
+  /**
+   * Query subsocial's API to retreive profile data for a wallet address
+   * @param {string} walletAddress
+   */
   private static async getSubsocialData(walletAddress: string) {
     try {
       const api = await SubsocialApi.create({
@@ -46,6 +55,10 @@ export class WalletIdentityService {
     }
   }
 
+  /**
+   * Query polkadot's on-chain identity data for a wallet address
+   * @param {string} walletAddress
+   */
   private static async getPolkadotIdentityData(walletAddress: string) {
     try {
       const provider = new WsProvider('wss://rpc.polkadot.io');
