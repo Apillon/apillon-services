@@ -42,7 +42,6 @@ import { ProjectUser } from './models/project-user.model';
 import { Project } from './models/project.model';
 import { v4 as uuidV4 } from 'uuid';
 import { ProjectUserUninviteDto } from './dtos/project_user-uninvite.dto';
-import { setMailerliteField } from '../user/utils/mailing-utils';
 
 @Injectable()
 export class ProjectService {
@@ -69,18 +68,17 @@ export class ProjectService {
     }
 
     const conn = await context.mysql.start();
-    let project: Project;
+    const project = body.populate({ project_uuid: uuidV4() });
     try {
-      project = await body
-        .populate({ project_uuid: uuidV4() })
+      await project.insert(SerializeFor.INSERT_DB, conn);
+      await new ProjectUser({}, context)
+        .populate({
+          project_id: project.id,
+          user_id: context.user.id,
+          pendingInvitation: false,
+          role_id: DefaultUserRole.PROJECT_OWNER,
+        })
         .insert(SerializeFor.INSERT_DB, conn);
-      const projectUser: ProjectUser = new ProjectUser({}, context).populate({
-        project_id: project.id,
-        user_id: context.user.id,
-        pendingInvitation: false,
-        role_id: DefaultUserRole.PROJECT_OWNER,
-      });
-      await projectUser.insert(SerializeFor.INSERT_DB, conn);
 
       // Add project owner role
       await new Ams(context).assignUserRole({
@@ -110,7 +108,7 @@ export class ProjectService {
       ),
 
       // Set mailerlite field indicating the user owns a project
-      setMailerliteField(context.user.email, 'project_owner', true),
+      new Mailing(context).setMailerliteField('project_owner', true),
 
       // If it's the user's first project, add credits if using promo code
       projects.length === 0 &&

@@ -23,7 +23,6 @@ import { ServiceQueryFilter } from '../../services/dtos/services-query-filter.dt
 import { Service } from '../../services/models/service.model';
 import { ServicesService } from '../../services/services.service';
 import { ServiceDto } from '../../services/dtos/service.dto';
-import { setMailerliteField } from '../../user/utils/mailing-utils';
 
 @Injectable()
 export class HostingService {
@@ -72,12 +71,7 @@ export class HostingService {
     }
 
     //Call Storage microservice, to create website
-    const data = (await new StorageMicroservice(context).createWebsite(body))
-      .data;
-    // Set mailerlite field indicating the user has a website
-    await setMailerliteField(context.user.email, 'has_website', true);
-
-    return data;
+    return (await new StorageMicroservice(context).createWebsite(body)).data;
   }
 
   async updateWebsite(

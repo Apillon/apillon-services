@@ -1,12 +1,14 @@
 import {
   DefaultUserRole,
+  LogType,
   MySql,
   SqlModelStatus,
   env,
   getEnvSecrets,
+  writeLog,
 } from '@apillon/lib';
 import { DbTables } from '../../config/types';
-import { setMailerliteField } from '../../modules/user/utils/mailing-utils';
+import axios from 'axios';
 
 /*
  * Script used for populating mailerlite field backwards
@@ -105,6 +107,22 @@ async function mapProjectOwnerEmails() {
     projectOwnerEmailMap[row.project_uuid] = row.email;
   });
   return projectOwnerEmailMap;
+}
+
+async function setMailerliteField(email: string, field: string, value: any) {
+  try {
+    await axios.put(
+      `https://api.mailerlite.com/api/v2/subscribers/${email}`,
+      { fields: { [field]: value } },
+      { headers: { 'X-MailerLite-ApiKey': env.MAILERLITE_API_KEY } },
+    );
+    writeLog(LogType.INFO, `mailerlite field ${field} set for email ${email}`);
+  } catch (err) {
+    writeLog(
+      LogType.ERROR,
+      `Error setting ${field} mailerlite field for ${email}: ${err.message}`,
+    );
+  }
 }
 
 void initializeDb()

@@ -1,7 +1,10 @@
+import { ServiceContext } from '@apillon/service-lib';
 import {
   SMTPsendTemplate,
   SMTPsendDefaultTemplate,
 } from './mailing/smtp-mailer';
+import { env, AppEnvironment, writeLog, LogType } from '@apillon/lib';
+import axios from 'axios';
 
 /**
  * Mailer class for sending default and custom emails using SMTP.
@@ -39,5 +42,35 @@ export class Mailer {
       event.template,
       event.data,
     );
+  }
+
+  /**
+   * Set a custom field value to a mailerlite subscriber by email
+   * @param {{ field: string; value: any }}
+   */
+  static async setMailerliteField(
+    { field, value }: { field: string; value: any },
+    context: ServiceContext,
+  ) {
+    if (env.APP_ENV !== AppEnvironment.PROD) {
+      return;
+    }
+    const email = context.user.email;
+    try {
+      await axios.put(
+        `https://api.mailerlite.com/api/v2/subscribers/${email}`,
+        { fields: { [field]: value } },
+        { headers: { 'X-MailerLite-ApiKey': env.MAILERLITE_API_KEY } },
+      );
+      writeLog(
+        LogType.INFO,
+        `mailerlite field ${field} set for email ${email}`,
+      );
+    } catch (err) {
+      writeLog(
+        LogType.ERROR,
+        `Error setting ${field} mailerlite field for ${email}: ${err.message}`,
+      );
+    }
   }
 }

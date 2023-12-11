@@ -1,5 +1,4 @@
 import {
-  AppEnvironment,
   BlockchainMicroservice,
   BurnNftDto,
   CollectionsQuotaReachedQueryFilter,
@@ -7,10 +6,10 @@ import {
   CreateCollectionDTO,
   CreateEvmTransactionDto,
   DeployCollectionDTO,
-  env,
   EvmChain,
   Lmas,
   LogType,
+  Mailing,
   MintNftDTO,
   NestMintNftDTO,
   NFTCollectionQueryFilter,
@@ -32,7 +31,6 @@ import {
 import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
 import {
   QueueWorkerType,
-  sendToWorkerQueue,
   ServiceDefinition,
   ServiceDefinitionType,
   WorkerDefinition,
@@ -165,15 +163,20 @@ export class NftsService {
         }),
     );
 
-    await new Lmas().writeLog({
-      context,
-      project_uuid: collection.project_uuid,
-      logType: LogType.INFO,
-      message: 'New NFT collection created and submited to deployment',
-      location: 'NftsService/deployNftContract',
-      service: ServiceName.NFTS,
-      data: { collection_uuid: collection.collection_uuid },
-    });
+    await Promise.all([
+      new Lmas().writeLog({
+        context,
+        project_uuid: collection.project_uuid,
+        logType: LogType.INFO,
+        message: 'New NFT collection created and submited to deployment',
+        location: 'NftsService/deployNftContract',
+        service: ServiceName.NFTS,
+        data: { collection_uuid: collection.collection_uuid },
+      }),
+
+      // Set mailerlite field indicating the user has an nft collection
+      new Mailing(context).setMailerliteField('has_nft', true),
+    ]);
 
     collection.updateTime = new Date();
     collection.createTime = new Date();

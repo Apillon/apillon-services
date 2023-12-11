@@ -21,7 +21,6 @@ import { ServicesService } from '../services/services.service';
 import { Service } from '../services/models/service.model';
 import { ServiceQueryFilter } from '../services/dtos/services-query-filter.dto';
 import { ServiceDto } from '../services/dtos/service.dto';
-import { setMailerliteField } from '../user/utils/mailing-utils';
 
 @Injectable()
 export class NftsService {
@@ -69,12 +68,7 @@ export class NftsService {
       await this.serviceService.createService(context, nftService);
     }
 
-    const data = (await new NftsMicroservice(context).createCollection(body))
-      .data;
-    // Set mailerlite field indicating the user has an nft collection
-    await setMailerliteField(context.user.email, 'has_nft', true);
-
-    return data;
+    return (await new NftsMicroservice(context).createCollection(body)).data;
   }
 
   async listNftCollections(

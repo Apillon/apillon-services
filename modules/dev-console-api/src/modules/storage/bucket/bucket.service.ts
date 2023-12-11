@@ -15,7 +15,6 @@ import { Service } from '../../services/models/service.model';
 import { ServiceQueryFilter } from '../../services/dtos/services-query-filter.dto';
 import { ServicesService } from '../../services/services.service';
 import { ServiceDto } from '../../services/dtos/service.dto';
-import { setMailerliteField } from '../../user/utils/mailing-utils';
 
 @Injectable()
 export class BucketService {
@@ -72,12 +71,7 @@ export class BucketService {
     }
 
     //Call Storage microservice, to create bucket
-    const data = (await new StorageMicroservice(context).createBucket(body))
-      .data;
-    // Set mailerlite field indicating the user has a storage bucket
-    await setMailerliteField(context.user.email, 'has_bucket', true);
-
-    return data;
+    return (await new StorageMicroservice(context).createBucket(body)).data;
   }
 
   async updateBucket(
