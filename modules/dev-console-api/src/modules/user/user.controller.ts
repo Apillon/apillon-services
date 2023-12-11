@@ -26,6 +26,7 @@ import { AuthGuard } from '../../guards/auth.guard';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { DiscordCodeDto } from './dtos/discord-code.dto';
+import { Headers } from '@nestjs/common';
 
 @Controller('users')
 export class UserController {
@@ -84,7 +85,11 @@ export class UserController {
   async validateEmail(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: ValidateEmailDto,
+    @Headers('cloudfront-viewer-country') country: string,
   ) {
+    if (country) {
+      body.metadata.country = country;
+    }
     return await this.userService.validateEmail(context, body);
   }
 

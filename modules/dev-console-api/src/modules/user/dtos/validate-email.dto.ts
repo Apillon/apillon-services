@@ -39,5 +39,5 @@ export class ValidateEmailDto extends ModelBase {
     populatable: [PopulateFrom.PROFILE],
     validators: [],
   })
-  public metadata: object;
+  public metadata: any;
 }
