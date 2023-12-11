@@ -172,6 +172,7 @@ export enum AuthenticationEventType {
 export enum MailEventType {
   SEND_MAIL = 'send-mail',
   SEND_CUSTOM_MAIL = 'send-custom-mail',
+  SET_MAILERLITE_FIELD = 'set-mailerlite-field',
 }
 
 export enum ScsEventType {
