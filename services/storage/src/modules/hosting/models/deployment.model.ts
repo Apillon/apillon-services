@@ -567,9 +567,13 @@ export class Deployment extends AdvancedSQLModel {
     );
 
     //Send message to slack
-    const jwt = generateJwtToken(JwtTokenType.WEBSITE_REVIEW_TOKEN, {
-      deployment_uuid: this.deployment_uuid,
-    });
+    const jwt = generateJwtToken(
+      JwtTokenType.WEBSITE_REVIEW_TOKEN,
+      {
+        deployment_uuid: this.deployment_uuid,
+      },
+      'never',
+    );
     const blocks = [];
     if (linkToScreenshot) {
       blocks.push({
