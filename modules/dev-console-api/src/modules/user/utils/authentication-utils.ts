@@ -51,7 +51,7 @@ export async function registerUser(params: any, context: DevConsoleApiContext) {
     );
   }
 
-  await createReferralPlayer(params, user, context);
+  await createReferralPlayer(tokenData.refCode, user, context);
 
   return {
     ...user.serialize(SerializeFor.PROFILE),
@@ -86,6 +86,7 @@ async function createUser(
   const user: User = new User({}, context).populate({
     user_uuid: uuidV4(),
     email: tokenData.email,
+    metadata: tokenData.metadata,
   });
 
   try {
@@ -101,16 +102,13 @@ async function createUser(
 }
 
 async function createReferralPlayer(
-  params: any,
+  refCode: string,
   user: User,
   context: DevConsoleApiContext,
 ) {
   try {
     // Create referral player - is inactive until accepts terms
-    const referralBody = new CreateReferralDto(
-      { refCode: params.refCode },
-      context,
-    );
+    const referralBody = new CreateReferralDto({ refCode }, context);
 
     await new ReferralMicroservice({
       ...context,
@@ -120,9 +118,7 @@ async function createReferralPlayer(
     await new Lmas().writeLog({
       context,
       logType: LogType.ERROR,
-      message: `Error creating referral player${
-        params.refCode ? `, refCode: ${params.refCode}` : ''
-      }`,
+      message: `Error creating referral player for ref code ${refCode}`,
       location: 'DevConsoleApi/authentication-utils/user.service.ts',
       user_uuid: user.user_uuid,
       data: {
