@@ -16,6 +16,8 @@ export enum SubstrateChain {
   CRUST = 1,
   KILT = 2,
   PHALA = 4,
+  POLKADOT = 5,
+  SUBSOCIAL = 6,
 }
 
 export enum EvmChain {
@@ -91,6 +93,7 @@ export enum BlockchainEventType {
   UPDATE_WALLET = 'update-wallet',
   GET_WALLET_TRANSACTIONS = 'get-wallet-transactions',
   UPDATE_TRANSACTION = 'update-transaction',
+  GET_WALLET_IDENTITY = 'get-wallet-identity',
 }
 
 export enum StorageEventType {
