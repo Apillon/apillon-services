@@ -16,6 +16,7 @@ import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 import { User } from '../user/models/user.model';
 import { Project } from '../project/models/project.model';
+import { ProjectsQueryFilter } from './project/dtos/projects-query-filter.dto';
 
 @Injectable()
 export class AdminPanelService {
@@ -51,7 +52,7 @@ export class AdminPanelService {
     //Search projects
     const projects = await new Project({}, context).listProjects(
       context,
-      query,
+      new ProjectsQueryFilter(query),
     );
 
     return {

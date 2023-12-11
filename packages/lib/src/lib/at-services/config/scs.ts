@@ -231,6 +231,15 @@ export class Scs extends BaseService {
     });
   }
 
+  public async getProjectsWithActiveSubscription(
+    subscriptionPackageId?: number,
+  ) {
+    return await this.callService({
+      eventName: ScsEventType.GET_PROJECTS_WITH_ACTIVE_SUBSCRIPTION,
+      subscriptionPackageId,
+    });
+  }
+
   public async listInvoices(query: InvoicesQueryFilter) {
     return await this.callService({
       eventName: ScsEventType.LIST_INVOICES,

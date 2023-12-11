@@ -193,6 +193,7 @@ export enum ScsEventType {
   LIST_INVOICES = 'list-invoices',
   GET_PRODUCT_PRICELIST = 'get-product-pricelist',
   GET_PRODUCT_PRICE = 'get-product-price',
+  GET_PROJECTS_WITH_ACTIVE_SUBSCRIPTION = 'get-projects-with-active-subscription',
 }
 
 export enum NftsEventType {

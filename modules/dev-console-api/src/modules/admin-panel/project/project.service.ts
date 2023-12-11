@@ -18,6 +18,7 @@ import { UUID } from 'crypto';
 import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
 import { Lmas } from '@apillon/lib';
 import { GetQuotaDto } from '@apillon/lib';
+import { ProjectsQueryFilter } from './dtos/projects-query-filter.dto';
 
 @Injectable()
 export class ProjectService {
@@ -28,7 +29,7 @@ export class ProjectService {
    */
   async getProjectList(
     context: DevConsoleApiContext,
-    filter: BaseQueryFilter,
+    filter: ProjectsQueryFilter,
   ): Promise<any> {
     return await new Project({}, context).listProjects(context, filter);
   }

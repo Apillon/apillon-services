@@ -34,8 +34,8 @@ import { ProjectService } from './project.service';
 import { DevConsoleApiContext } from '../../../context';
 import { ValidationGuard } from '../../../guards/validation.guard';
 import { UUID } from 'crypto';
-import { BaseQueryFilterValidator } from '../../../decorators/base-query-filter-validator';
 import { Cache } from '@apillon/modules-lib';
+import { ProjectsQueryFilter } from './dtos/projects-query-filter.dto';
 
 @Controller('admin-panel/projects')
 @Permissions({ role: DefaultUserRole.ADMIN })
@@ -45,11 +45,16 @@ export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
   @Get()
-  @BaseQueryFilterValidator()
+  @Validation({
+    dto: ProjectsQueryFilter,
+    validateFor: ValidateFor.QUERY,
+    skipValidation: true,
+  })
+  @UseGuards(ValidationGuard)
   @Cache({ keyPrefix: CacheKeyPrefix.ADMIN_PROJECT_LIST })
   async listProjects(
     @Ctx() context: DevConsoleApiContext,
-    @Query() query: BaseQueryFilter,
+    @Query() query: ProjectsQueryFilter,
   ) {
     return this.projectService.getProjectList(context, query);
   }
