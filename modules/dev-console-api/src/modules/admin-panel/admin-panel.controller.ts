@@ -32,7 +32,7 @@ export class AdminPanelController {
   @Get('search')
   @BaseQueryFilterValidator()
   @UseGuards(ValidationGuard)
-  @Cache({ keyPrefix: CacheKeyPrefix.ADMIN_BUCKET_LIST })
+  @Cache({ keyPrefix: CacheKeyPrefix.ADMIN_GENERAL_SEARCH })
   async generalSearch(
     @Ctx() context: DevConsoleApiContext,
     @Query() query: BucketQueryFilter,
