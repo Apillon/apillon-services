@@ -6,3 +6,4 @@ export * from './middleware/mongo-db';
 export * from './middleware/mysql';
 export * from './middleware/response';
 export * from './middleware/partial-batch-failure';
+export * from './middleware/event-logger';
