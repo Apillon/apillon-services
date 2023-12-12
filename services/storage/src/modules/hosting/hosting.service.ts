@@ -119,15 +119,19 @@ export class HostingService {
       website.createNewWebsite(context, website_uuid),
     );
 
-    await new Lmas().writeLog({
-      context,
-      project_uuid: event.body.project_uuid,
-      logType: LogType.INFO,
-      message: 'New web page created',
-      location: 'HostingService/createWebsite',
-      service: ServiceName.STORAGE,
-      data: website.serialize(),
-    });
+    await Promise.all([
+      new Lmas().writeLog({
+        context,
+        project_uuid: event.body.project_uuid,
+        logType: LogType.INFO,
+        message: 'New web page created',
+        location: 'HostingService/createWebsite',
+        service: ServiceName.STORAGE,
+        data: website.serialize(),
+      }),
+      // Set mailerlite field indicating the user has a website
+      new Mailing(context).setMailerliteField('has_website', true),
+    ]);
 
     return website.serialize(getSerializationStrategy(context));
   }

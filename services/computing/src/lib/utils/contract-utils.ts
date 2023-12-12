@@ -97,14 +97,12 @@ export async function transferContractOwnership(
   contractAddress: string,
   newOwnerAddress: string,
 ) {
-  console.log('transferContractOwnership', projectUuid);
   const phalaClient = new PhalaClient(context);
   const transaction = await phalaClient.createTransferOwnershipTransaction(
     contractAbi,
     contractAddress,
     newOwnerAddress,
   );
-  console.log('transaction', transaction);
   const blockchainServiceRequest = new CreateSubstrateTransactionDto(
     {
       chain: SubstrateChain.PHALA,
@@ -115,11 +113,9 @@ export async function transferContractOwnership(
     },
     context,
   );
-  console.log('blockchainServiceRequest', blockchainServiceRequest);
   const response = await new BlockchainMicroservice(
     context,
   ).createSubstrateTransaction(blockchainServiceRequest);
-  console.log('response', response);
   const dbTxRecord = new Transaction(
     {
       transactionType: TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
@@ -129,6 +125,55 @@ export async function transferContractOwnership(
     },
     context,
   );
-  console.log('dbTxRecord', dbTxRecord);
+  await TransactionService.saveTransaction(dbTxRecord);
+}
+
+export async function encryptContent(
+  context: ServiceContext,
+  contractAbi: { [key: string]: any },
+  contractAddress: string,
+  content: string,
+) {
+  return await new PhalaClient(context).encryptContent(
+    contractAbi,
+    contractAddress,
+    content,
+  );
+}
+
+export async function assignCidToNft(
+  context: ServiceContext,
+  projectUuid: string,
+  contractId: number,
+  contractAbi: { [key: string]: any },
+  contractAddress: string,
+  cid: string,
+  nftId: number,
+) {
+  const transaction = await new PhalaClient(
+    context,
+  ).createAssignCidToNftTransaction(contractAbi, contractAddress, cid, nftId);
+  const blockchainServiceRequest = new CreateSubstrateTransactionDto(
+    {
+      chain: SubstrateChain.PHALA,
+      transaction: transaction.toHex(),
+      referenceTable: DbTables.CONTRACT,
+      referenceId: contractId,
+      project_uuid: projectUuid,
+    },
+    context,
+  );
+  const response = await new BlockchainMicroservice(
+    context,
+  ).createSubstrateTransaction(blockchainServiceRequest);
+  const dbTxRecord = new Transaction(
+    {
+      transactionType: TransactionType.ASSIGN_CID_TO_NFT,
+      contractId,
+      transactionHash: response.data.transactionHash,
+      transactionStatus: TransactionStatus.PENDING,
+    },
+    context,
+  );
   await TransactionService.saveTransaction(dbTxRecord);
 }

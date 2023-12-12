@@ -6,6 +6,7 @@ import {
   AdvancedSQLModel,
   Context,
   getQueryParams,
+  JSONParser,
   PopulateFrom,
   presenceValidator,
   selectAndCountQuery,
@@ -13,7 +14,6 @@ import {
   SqlModelStatus,
 } from '@apillon/lib';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
-import { UUID } from 'crypto';
 import { BaseQueryFilter, getFaker } from '@apillon/lib';
 
 /**
@@ -153,6 +153,23 @@ export class User extends AdvancedSQLModel {
   })
   public authUser: any;
 
+  @prop({
+    parser: { resolver: JSONParser() },
+    populatable: [
+      PopulateFrom.DB, //
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+  })
+  public metadata: any;
+
   public constructor(data?: unknown, context?: Context) {
     super(data, context);
   }
@@ -245,7 +262,7 @@ export class User extends AdvancedSQLModel {
     return this;
   }
 
-  public async listProjects(user_uuid: UUID, filter: BaseQueryFilter) {
+  public async listProjects(user_uuid: string, filter: BaseQueryFilter) {
     const fieldMap = { id: 'u.id' };
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),

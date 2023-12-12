@@ -21,6 +21,8 @@ import {
   SubscriptionsQueryFilter,
   InvoicesQueryFilter,
   ValidationException,
+  ReferralMicroservice,
+  writeLog,
 } from '@apillon/lib';
 import {
   BadRequestErrorCode,
@@ -49,8 +51,15 @@ export class ProjectService {
     context: DevConsoleApiContext,
     body: Project,
   ): Promise<Project> {
-    //Check max project quota
-    if (await this.isProjectsQuotaReached(context)) {
+    // Check max project quota
+    const { items: projects } = await new Project({}, context).getUserProjects(
+      context,
+      context.user.id,
+      DefaultUserRole.PROJECT_OWNER,
+    );
+    writeLog(LogType.MSG, `Total user projects: ${projects.length}`);
+
+    if (await this.isProjectsQuotaReached(context, projects)) {
       throw new CodeException({
         code: BadRequestErrorCode.MAX_NUMBER_OF_PROJECTS_REACHED,
         status: HttpStatus.BAD_REQUEST,
@@ -59,60 +68,86 @@ export class ProjectService {
     }
 
     const conn = await context.mysql.start();
-
+    const project = body.populate({ project_uuid: uuidV4() });
     try {
-      const project: Project = await body
-        .populate({ project_uuid: uuidV4() })
+      await project.insert(SerializeFor.INSERT_DB, conn);
+      await new ProjectUser({}, context)
+        .populate({
+          project_id: project.id,
+          user_id: context.user.id,
+          pendingInvitation: false,
+          role_id: DefaultUserRole.PROJECT_OWNER,
+        })
         .insert(SerializeFor.INSERT_DB, conn);
-      const projectUser: ProjectUser = new ProjectUser({}, context).populate({
-        project_id: project.id,
-        user_id: context.user.id,
-        pendingInvitation: false,
-        role_id: DefaultUserRole.PROJECT_OWNER,
-      });
-      await projectUser.insert(SerializeFor.INSERT_DB, conn);
 
-      //assign user role on project
-      const params: any = {
+      // Add project owner role
+      await new Ams(context).assignUserRole({
         user: context.user,
         user_uuid: context.user.user_uuid,
         project_uuid: project.project_uuid,
         role_id: DefaultUserRole.PROJECT_OWNER,
-      };
-      await new Ams(context).assignUserRole(params);
-
-      await new Scs(context).addFreemiumCredits(project.project_uuid);
+      });
 
       await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+      throw err;
+    }
+    // await new ReferralMicroservice(context).addPromoCodeCredits(
+    //   project.project_uuid,
+    //   context.user.email,
+    // );
+    await Promise.all([
+      // Add freemium credits to project
+      new Scs(context).addFreemiumCredits(project.project_uuid),
 
-      await invalidateCachePrefixes([CacheKeyPrefix.ADMIN_PROJECT_LIST]);
-      await invalidateCacheKey(
+      // Invalidate project list cache and auth user data cache
+      invalidateCachePrefixes([CacheKeyPrefix.ADMIN_PROJECT_LIST]),
+      invalidateCacheKey(
         `${CacheKeyPrefix.AUTH_USER_DATA}:${context.user.user_uuid}`,
-      );
+      ),
 
-      await new Lmas().writeLog({
+      // Set mailerlite field indicating the user owns a project
+      new Mailing(context).setMailerliteField('project_owner', true),
+
+      // If it's the user's first project, add credits if using promo code
+      projects.length === 0 &&
+        (await new ReferralMicroservice(context)
+          .addPromoCodeCredits(project.project_uuid, context.user.email)
+          .catch(async (err) =>
+            writeLog(
+              LogType.ERROR,
+              err.message,
+              'project.service.ts',
+              'createProject',
+            ),
+          )),
+
+      new Lmas().writeLog({
         context,
         project_uuid: project.project_uuid,
         logType: LogType.INFO,
         message: 'New project created',
         location: 'DEV-CONSOLE-API/ProjectService/createProject',
         service: ServiceName.DEV_CONSOLE,
-      });
+      }),
+    ]);
 
-      return project;
-    } catch (err) {
-      await context.mysql.rollback(conn);
-      throw err;
-    }
+    return project;
   }
 
-  async isProjectsQuotaReached(context: DevConsoleApiContext) {
-    const { items: projects } = await new Project({}, context).getUserProjects(
-      context,
-      context.user.id,
-      DefaultUserRole.PROJECT_OWNER,
-    );
-
+  async isProjectsQuotaReached(
+    context: DevConsoleApiContext,
+    projects?: Project[],
+  ) {
+    if (!projects) {
+      const { items } = await new Project({}, context).getUserProjects(
+        context,
+        context.user.id,
+        DefaultUserRole.PROJECT_OWNER,
+      );
+      projects = items;
+    }
     const activeSubscriptions = await Promise.all(
       projects.map(
         async (project) =>

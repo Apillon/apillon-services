@@ -179,6 +179,7 @@ export interface IEnv {
   STORAGE_DELETE_AFTER_INTERVAL: number;
   URL_SCREENSHOT_FUNCTION_NAME: string;
   URL_SCREENSHOT_API_URL: string;
+  SEND_WEBSITES_TO_REVIEW: number;
 
   STORAGE_MYSQL_HOST: string;
   STORAGE_MYSQL_PORT: number;
@@ -494,8 +495,12 @@ export interface IEnv {
    */
   STRIPE_SECRET: string;
   STRIPE_WEBHOOK_SECRET: string;
-
   STRIPE_SECRET_TEST: string;
+
+  /**
+   * MAILERLITE
+   */
+  MAILERLITE_API_KEY: string;
 }
 
 // dotenv.config();
@@ -614,6 +619,8 @@ export let env: IEnv = {
     parseInt(process.env['STORAGE_DELETE_AFTER_INTERVAL']) || 90,
   URL_SCREENSHOT_FUNCTION_NAME: process.env['URL_SCREENSHOT_FUNCTION_NAME'],
   URL_SCREENSHOT_API_URL: process.env['URL_SCREENSHOT_API_URL'],
+  SEND_WEBSITES_TO_REVIEW:
+    parseInt(process.env['SEND_WEBSITES_TO_REVIEW']) || 1,
 
   /**STORAGE microservice DB*/
   STORAGE_MYSQL_HOST: process.env['STORAGE_MYSQL_HOST'],
@@ -900,6 +907,9 @@ export let env: IEnv = {
   STRIPE_SECRET: process.env['STRIPE_SECRET'],
   STRIPE_SECRET_TEST: process.env['STRIPE_SECRET_TEST'],
   STRIPE_WEBHOOK_SECRET: process.env['STRIPE_WEBHOOK_SECRET'],
+
+  /** MAILERLITE */
+  MAILERLITE_API_KEY: process.env['MAILERLITE_API_KEY'],
 };
 
 export let isEnvReady = false;

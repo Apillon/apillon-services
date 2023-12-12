@@ -6,6 +6,7 @@ import {
   CreateBucketWebhookDto,
   Lmas,
   LogType,
+  Mailing,
   PopulateFrom,
   QuotaCode,
   Scs,
@@ -75,18 +76,22 @@ export class BucketService {
     //Insert
     await b.insert();
 
-    await new Lmas().writeLog({
-      context,
-      project_uuid: event.body.project_uuid,
-      logType: LogType.INFO,
-      message: 'New bucket created',
-      location: 'BucketService/createBucket',
-      service: ServiceName.STORAGE,
-      data: b.serialize(),
-    });
-    await invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
-      project_uuid: b.project_uuid,
-    });
+    await Promise.all([
+      new Lmas().writeLog({
+        context,
+        project_uuid: event.body.project_uuid,
+        logType: LogType.INFO,
+        message: 'New bucket created',
+        location: 'BucketService/createBucket',
+        service: ServiceName.STORAGE,
+        data: b.serialize(),
+      }),
+      invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
+        project_uuid: b.project_uuid,
+      }),
+      // Set mailerlite field indicating the user created a bucket
+      new Mailing(context).setMailerliteField('has_bucket', true),
+    ]);
 
     return b.serialize(getSerializationStrategy(context));
   }

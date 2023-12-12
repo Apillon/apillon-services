@@ -185,7 +185,7 @@ export class UserService {
     context: Context,
     emailVal: ValidateEmailDto,
   ): Promise<any> {
-    const { email, refCode } = emailVal;
+    const { email, refCode, metadata } = emailVal;
 
     const { data: emailResult } = await new Ams(context).emailExists(
       emailVal.email,
@@ -203,6 +203,8 @@ export class UserService {
       JwtTokenType.USER_CONFIRM_EMAIL,
       {
         email,
+        refCode,
+        metadata,
       },
       '1h',
     );
@@ -211,9 +213,7 @@ export class UserService {
       emails: [email],
       template: 'welcome',
       data: {
-        actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}${
-          refCode ? `&REF=${refCode}` : ''
-        }`,
+        actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}`,
       },
     });
 

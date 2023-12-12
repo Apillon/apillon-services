@@ -5,6 +5,7 @@ import {
   FileDetailsQueryFilter,
   FileUploadsQueryFilter,
   FilesQueryFilter,
+  LinkOnIpfsQueryFilter,
   SqlModelStatus,
   StorageMicroservice,
 } from '@apillon/lib';
@@ -18,6 +19,26 @@ export class StorageService {
   ) {
     return (
       await new StorageMicroservice(context).getStorageInfo(query.project_uuid)
+    ).data;
+  }
+
+  async getIpfsClusterInfo(
+    context: DevConsoleApiContext,
+    query: BaseProjectQueryFilter,
+  ) {
+    return (
+      await new StorageMicroservice(context).getIpfsClusterInfo(
+        query.project_uuid,
+      )
+    ).data;
+  }
+
+  async getLink(context: DevConsoleApiContext, query: LinkOnIpfsQueryFilter) {
+    return (
+      await new StorageMicroservice(context).getLink(
+        query.project_uuid,
+        query.cid,
+      )
     ).data;
   }
 

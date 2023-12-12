@@ -284,6 +284,7 @@ export class CreditTransaction extends ProjectAccessModel {
       [DbTables.INVOICE]: 'Credit purchase',
       [DbTables.SUBSCRIPTION]: 'Subscription for a new plan',
       project: 'Creation of a new project',
+      promo_code: 'Promo code used',
     };
 
     data.items

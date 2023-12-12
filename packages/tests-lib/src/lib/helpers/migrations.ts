@@ -606,7 +606,7 @@ async function initNftsTestMigrations() {
   };
 
   if (!/(test|testing)/i.test(poolNfts.database)) {
-    throw new Error(`Nfts: NO TEST DATABASE!`);
+    throw new Error(`NFTS: NO TEST DATABASE!`);
   }
 
   const pool = createPool(poolNfts);
@@ -669,7 +669,7 @@ async function initComputingTestMigrations() {
   };
 
   if (!/(test|testing)/i.test(poolNfts.database)) {
-    throw new Error(`Nfts: NO TEST DATABASE!`);
+    throw new Error(`COMPUTING: NO TEST DATABASE!`);
   }
 
   const pool = createPool(poolNfts);
@@ -835,7 +835,7 @@ async function initAuthApiTestSeed() {
     };
 
     if (!/(test|testing)/i.test(poolAuthApi.database)) {
-      throw new Error(`AuthApi: NO TEST DATABASE!`);
+      throw new Error(`AUTH-API: NO TEST DATABASE!`);
     }
 
     const pool = createPool(poolAuthApi);

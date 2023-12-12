@@ -7,6 +7,7 @@ import { WalletService } from './modules/wallet/wallet.service';
 import '@polkadot/api-augment';
 import '@polkadot/rpc-augment';
 import '@polkadot/types-augment';
+import { WalletIdentityService } from './modules/wallet/wallet-identity.service';
 /**
  * Processing lambda event with appropriate service function based on event name
  * @param event lambda event
@@ -33,6 +34,8 @@ export async function processEvent(
     [BlockchainEventType.UPDATE_TRANSACTION]: WalletService.updateTransaction,
     [BlockchainEventType.LIST_WALLET_DEPOSITS]:
       WalletService.listWalletDeposits,
+    [BlockchainEventType.GET_WALLET_IDENTITY]:
+      WalletIdentityService.getWalletIdentityData,
   };
 
   return await processors[event.eventName](event, context);

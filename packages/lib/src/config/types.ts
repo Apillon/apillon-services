@@ -16,6 +16,8 @@ export enum SubstrateChain {
   CRUST = 1,
   KILT = 2,
   PHALA = 4,
+  POLKADOT = 5,
+  SUBSOCIAL = 6,
 }
 
 export enum EvmChain {
@@ -92,6 +94,7 @@ export enum BlockchainEventType {
   GET_WALLET_TRANSACTIONS = 'get-wallet-transactions',
   UPDATE_TRANSACTION = 'update-transaction',
   LIST_WALLET_DEPOSITS = 'list-wallet-deposits',
+  GET_WALLET_IDENTITY = 'get-wallet-identity',
 }
 
 export enum StorageEventType {
@@ -147,6 +150,8 @@ export enum StorageEventType {
   PROJECTS_OVER_BANDWIDTH_QUOTA = 'projects-over-bandwidth-quota',
   BLACKLIST_PROJECT = 'blacklist-project',
   GET_PROJECT_IPFS_CLUSTER = 'get-project-ipfs-cluster',
+  GET_IPFS_CLUSTER_INFO = 'get-ipfs-cluster-info',
+  GET_LINK = 'get-link',
 }
 
 export enum AuthenticationEventType {
@@ -168,6 +173,7 @@ export enum AuthenticationEventType {
 export enum MailEventType {
   SEND_MAIL = 'send-mail',
   SEND_CUSTOM_MAIL = 'send-custom-mail',
+  SET_MAILERLITE_FIELD = 'set-mailerlite-field',
 }
 
 export enum ScsEventType {
@@ -221,6 +227,8 @@ export enum ComputingEventType {
   GET_CONTRACT_BY_UUID = 'get-contract-by-uuid',
   DEPOSIT_TO_PHALA_CLUSTER = 'fund-contract-cluster',
   TRANSFER_CONTRACT_OWNERSHIP = 'transfer-contract-ownership',
+  ENCRYPT_CONTENT = 'encrypt-content',
+  ASSIGN_CID_TO_NFT = 'assign-cid-to-nft',
 }
 
 export enum ReferralEventType {
@@ -235,6 +243,8 @@ export enum ReferralEventType {
   GET_TWITTER_LINK = 'get-twitter-link',
   GET_TWEETS = 'get-tweets',
   CONFIRM_RETWEET = 'confirm-retweet',
+
+  ADD_PROMO_CODE_CREDITS = 'add-promo-code-credits',
 }
 
 export enum ServiceName {
@@ -561,6 +571,7 @@ export enum ValidatorErrorCode {
   NFT_BURN_TOKEN_ID_NOT_VALID = 42200148,
   QUOTA_CODE_NOT_VALID = 42200149,
   INVALID_FILES_LENGTH = 42200150,
+  CID_NOT_PRESENT = 42200160,
 
   //#region Computing
   COMPUTING_PROJECT_UUID_NOT_PRESENT = 42200201,
