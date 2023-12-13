@@ -496,6 +496,11 @@ export interface IEnv {
    * MAILERLITE
    */
   MAILERLITE_API_KEY: string;
+
+  /**
+   * NOWPAYMENTS
+   */
+  NOWPAYMENTS_API_KEY: string;
 }
 
 // dotenv.config();
@@ -902,6 +907,9 @@ export let env: IEnv = {
 
   /** MAILERLITE */
   MAILERLITE_API_KEY: process.env['MAILERLITE_API_KEY'],
+
+  /** NOWPAYMENTS */
+  NOWPAYMENTS_API_KEY: process.env['NOWPAYMENTS_API_KEY'],
 };
 
 export let isEnvReady = false;

@@ -1,3 +1,4 @@
+import { CryptoPaymentsService } from './crypto-payments.service';
 import { Ctx, Validation } from '@apillon/modules-lib';
 import {
   Controller,
@@ -24,6 +25,7 @@ export class PaymentsController {
   constructor(
     private paymentsService: PaymentsService,
     private stripeService: StripeService,
+    private cryptoPaymentsService: CryptoPaymentsService,
   ) {}
 
   @Get('stripe/credit-session-url')
@@ -107,5 +109,18 @@ export class PaymentsController {
     @Param('id', ParseIntPipe) product_id: number,
   ) {
     return this.paymentsService.getProductPrice(context, product_id);
+  }
+
+  @Get('crypto/payment-session')
+  @Validation({ dto: PaymentSessionDto, validateFor: ValidateFor.QUERY })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getCryptoPaymentSession(
+    @Query() paymentSessionDto: PaymentSessionDto,
+    @Ctx() context: DevConsoleApiContext,
+  ): Promise<any> {
+    return await this.cryptoPaymentsService.createCryptoPaymentSession(
+      context,
+      paymentSessionDto,
+    );
   }
 }

@@ -141,7 +141,7 @@ export class PaymentsService {
     }
   }
 
-  private async checkProjectExists(
+  async checkProjectExists(
     context: DevConsoleApiContext,
     project_uuid: string,
   ) {
@@ -187,7 +187,7 @@ export class PaymentsService {
     return await this.assignPrices(creditPackages);
   }
 
-  private async assignPrices(items: { stripeId: string; price: number }[]) {
+  private async assignPrices(items: any[]) {
     for (const item of items) {
       if (item.stripeId) {
         const price = await this.stripe.prices.retrieve(item.stripeId);
