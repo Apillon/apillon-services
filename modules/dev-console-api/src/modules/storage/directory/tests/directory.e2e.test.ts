@@ -4,7 +4,6 @@ import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model'
 import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
 import { IPFSService } from '@apillon/storage/src/modules/ipfs/ipfs.service';
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';
-import { executeDeleteBucketDirectoryFileWorker } from '@apillon/storage/src/scripts/serverless-workers/execute-delete-bucket-dir-file-worker';
 import {
   createTestBucket,
   createTestBucketDirectory,
@@ -292,65 +291,10 @@ describe('Storage directory tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
 
-      const d: Directory = await new Directory(
-        {},
-        stage.storageContext,
-      ).populateByUUID(response.body.data.directory_uuid);
-      expect(d.exists()).toBeTruthy();
-      expect(d.status).toBe(SqlModelStatus.MARKED_FOR_DELETION);
-    });
-
-    test('User should be able to cancel directory deletion', async () => {
-      const testDirectoryToCancelDeletion = await createTestBucketDirectory(
-        stage.storageContext,
-        testProject,
-        testBucket,
-        true,
-        undefined,
-        'My directory to delete',
-        undefined,
-        SqlModelStatus.MARKED_FOR_DELETION,
-      );
-
-      const response = await request(stage.http)
-        .patch(
-          `/directories/${testDirectoryToCancelDeletion.directory_uuid}/cancel-deletion`,
-        )
-        .set('Authorization', `Bearer ${testUser.token}`);
-      expect(response.status).toBe(200);
-
-      const d: Directory = await new Directory(
-        {},
-        stage.storageContext,
-      ).populateByUUID(testDirectoryToCancelDeletion.directory_uuid);
-      expect(d.exists()).toBeTruthy();
-      expect(d.status).toBe(SqlModelStatus.ACTIVE);
-    });
-
-    test('Storage delete worker should NOT delete directory if directory is not long enough in status 8 (marked for delete)', async () => {
-      await executeDeleteBucketDirectoryFileWorker(stage.storageContext);
-      const d: Directory = await new Directory(
-        {},
-        stage.storageContext,
-      ).populateById(testDirectoryToDelete.id);
-      expect(d.status).toBe(SqlModelStatus.MARKED_FOR_DELETION);
-    });
-
-    test('Storage delete worker should delete directory if directory is long enough in status 8 (marked for delete)', async () => {
       let d: Directory = await new Directory(
         {},
         stage.storageContext,
-      ).populateById(testDirectoryToDelete.id);
-      d.markedForDeletionTime = new Date();
-      d.markedForDeletionTime.setFullYear(
-        d.markedForDeletionTime.getFullYear() - 1,
-      );
-      await d.update();
-
-      await executeDeleteBucketDirectoryFileWorker(stage.storageContext);
-      d = await new Directory({}, stage.storageContext).populateById(
-        testDirectoryToDelete.id,
-      );
+      ).populateByUUID(response.body.data.directory_uuid);
       expect(d.exists()).toBeFalsy();
 
       //Check if other directories and files are still active
@@ -360,7 +304,7 @@ describe('Storage directory tests', () => {
       expect(d.exists()).toBeTruthy();
     });
 
-    test('Storage delete worker should delete directory and subdirectories and files in directory', async () => {
+    test('User should be able to delete directory and subdirectories and files in directory', async () => {
       //Dir with subdirs and files in it
       const date = new Date();
       date.setDate(date.getDate() - env.STORAGE_DELETE_AFTER_INTERVAL - 1);
@@ -416,8 +360,13 @@ describe('Storage directory tests', () => {
         testDirectorySubDir.id,
       );
 
-      //Execute worker
-      await executeDeleteBucketDirectoryFileWorker(stage.storageContext);
+      //Execute delete
+      const response = await request(stage.http)
+        .delete(
+          `/directories/${testDirectoryWithSubdirectories.directory_uuid}`,
+        )
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
 
       //Test variables
       let d = await new Directory({}, stage.storageContext).populateById(

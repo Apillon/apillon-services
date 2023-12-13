@@ -156,29 +156,6 @@ export class BucketService {
     return true;
   }
 
-  static async unmarkBucketForDeletion(
-    event: { bucket_uuid: string },
-    context: ServiceContext,
-  ): Promise<any> {
-    const b: Bucket = await new Bucket({}, context).populateById(
-      event.bucket_uuid,
-    );
-
-    if (!b.exists()) {
-      throw new StorageNotFoundException();
-    } else if (b.status != SqlModelStatus.MARKED_FOR_DELETION) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.BUCKET_NOT_MARKED_FOR_DELETION,
-        status: 400,
-      });
-    }
-    b.canModify(context);
-
-    b.status = SqlModelStatus.ACTIVE;
-    await b.update();
-    return b.serialize(SerializeFor.PROFILE);
-  }
-
   static async clearBucketContent(
     event: { bucket_uuid: string },
     context: ServiceContext,
