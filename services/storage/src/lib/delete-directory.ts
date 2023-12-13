@@ -5,7 +5,9 @@ import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { ProjectConfig } from '../modules/config/models/project-config.model';
 
 /**
- * Function, to recursive delete directories and all subdirectories. DB transaction should be handled in calling function!
+ * Function to delete directories, subdirectories and files. All files are unpinned from ipfs.
+ * DB transaction should be handled in calling function!
+ * Bucket size should also be decreased in calling function.
  * @param context
  * @param directory_id
  * @param conn

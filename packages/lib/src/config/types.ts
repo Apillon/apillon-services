@@ -116,7 +116,7 @@ export enum StorageEventType {
   LIST_FILES = 'list-files',
   GET_FILE_DETAILS = 'get-file-details',
   FILE_DELETE = 'delete-file',
-  CANCEL_FILE_DELETE = 'cancel-delete-file',
+  RESTORE_FILE = 'restore-file',
   BUCKET_WEBHOOK_GET = 'get-bucket-webhook',
   BUCKET_WEBHOOK_CREATE = 'create-bucket-webhook',
   BUCKET_WEBHOOK_UPDATE = 'update-bucket-webhook',

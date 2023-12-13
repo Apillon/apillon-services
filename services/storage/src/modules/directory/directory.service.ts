@@ -124,6 +124,12 @@ export class DirectoryService {
     return d.serialize(SerializeFor.PROFILE);
   }
 
+  /**
+   * Delete directory, it's subdirectories and files. Remove files from S3(for hosting) and update bucket size.
+   * @param event
+   * @param context
+   * @returns
+   */
   static async deleteDirectory(
     event: { directory_uuid: string },
     context: ServiceContext,
@@ -167,6 +173,9 @@ export class DirectoryService {
         }
       }
 
+      bucket.size -= deleteDirRes.sizeOfDeletedFiles;
+      await bucket.update(SerializeFor.UPDATE_DB, conn);
+
       await context.mysql.commit(conn);
     } catch (err) {
       await context.mysql.rollback(conn);
@@ -175,33 +184,7 @@ export class DirectoryService {
         status: 500,
       }).writeToMonitor({ sendAdminAlert: true });
     }
-  }
 
-  static async unmarkDirectoryForDeletion(
-    event: { directory_uuid: string },
-    context: ServiceContext,
-  ): Promise<any> {
-    const directory: Directory = await new Directory(
-      {},
-      context,
-    ).populateByUUID(event.directory_uuid);
-
-    if (!directory.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.DIRECTORY_NOT_FOUND,
-        status: 404,
-      });
-    } else if (directory.status != SqlModelStatus.MARKED_FOR_DELETION) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.DIRECTORY_NOT_MARKED_FOR_DELETION,
-        status: 400,
-      });
-    }
-    directory.canModify(context);
-
-    directory.status = SqlModelStatus.ACTIVE;
-
-    await directory.update();
-    return directory.serialize(SerializeFor.PROFILE);
+    return true;
   }
 }

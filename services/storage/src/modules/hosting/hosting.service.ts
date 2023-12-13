@@ -598,9 +598,6 @@ export class HostingService {
         err,
       );
     }
-    await invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
-      project_uuid: event.file.project_uuid,
-    });
 
     return event.file.serialize(SerializeFor.PROFILE);
   }

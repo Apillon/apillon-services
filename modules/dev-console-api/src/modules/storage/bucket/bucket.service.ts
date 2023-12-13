@@ -93,17 +93,6 @@ export class BucketService {
     ).data;
   }
 
-  async cancelBucketDeletion(
-    context: DevConsoleApiContext,
-    bucket_uuid: string,
-  ) {
-    return (
-      await new StorageMicroservice(context).cancelBucketDeletion({
-        bucket_uuid,
-      })
-    ).data;
-  }
-
   async clearBucketContent(context: DevConsoleApiContext, bucket_uuid: string) {
     return (
       await new StorageMicroservice(context).clearBucketContent({ bucket_uuid })
