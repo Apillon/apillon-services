@@ -67,6 +67,9 @@ export class NftsService {
   ) {
     console.log(`Creating NFT collections: ${JSON.stringify(params.body)}`);
 
+    // If royalties address is not defined, set it to 0 address.
+    params.body.royaltiesAddress ||=
+      '0x0000000000000000000000000000000000000000';
     //Create collection object
     const collection: Collection = new Collection(
       params.body,
@@ -154,7 +157,17 @@ export class NftsService {
                 NftsErrorCode.DEPLOY_NFT_CONTRACT_ERROR,
                 context,
                 err,
-              ).writeToMonitor({});
+              ).writeToMonitor({
+                logType: LogType.ERROR,
+                service: ServiceName.NFTS,
+                project_uuid: collection.project_uuid,
+                user_uuid: context.user?.user_uuid,
+                data: {
+                  collection: collection.serialize(),
+                  err,
+                },
+                sendAdminAlert: true,
+              });
             }
             resolve(true);
           } catch (err) {
