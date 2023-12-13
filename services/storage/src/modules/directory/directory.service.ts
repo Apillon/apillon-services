@@ -1,9 +1,12 @@
 import {
+  AWS_S3,
+  CodeException,
   CreateDirectoryDto,
   DirectoryContentQueryFilter,
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
+  env,
 } from '@apillon/lib';
 import { BucketType, StorageErrorCode } from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
@@ -15,6 +18,7 @@ import { Directory } from './models/directory.model';
 import { v4 as uuidV4 } from 'uuid';
 import { Bucket } from '../bucket/models/bucket.model';
 import { HostingService } from '../hosting/hosting.service';
+import { deleteDirectory } from '../../lib/delete-directory';
 
 export class DirectoryService {
   static async listDirectoryContent(
@@ -134,11 +138,6 @@ export class DirectoryService {
         code: StorageErrorCode.DIRECTORY_NOT_FOUND,
         status: 404,
       });
-    } else if (directory.status == SqlModelStatus.MARKED_FOR_DELETION) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.DIRECTORY_ALREADY_MARKED_FOR_DELETION,
-        status: 400,
-      });
     }
     directory.canModify(context);
 
@@ -146,14 +145,35 @@ export class DirectoryService {
     const bucket: Bucket = await new Bucket({}, context).populateById(
       directory.bucket_id,
     );
-    if (
-      bucket.bucketType == BucketType.STORAGE ||
-      bucket.bucketType == BucketType.NFT_METADATA
-    ) {
-      await directory.markForDeletion();
-      return directory.serialize(SerializeFor.PROFILE);
-    } else if (bucket.bucketType == BucketType.HOSTING) {
-      return await HostingService.deleteDirectory({ directory }, context);
+
+    const conn = await context.mysql.start();
+
+    try {
+      const deleteDirRes = await deleteDirectory(context, directory, conn);
+
+      if (bucket.bucketType == BucketType.HOSTING) {
+        //For hosting bucket, delete files from S3
+        const s3Client: AWS_S3 = new AWS_S3();
+
+        if (deleteDirRes.deletedFiles.filter((x) => x.s3FileKey).length > 0) {
+          await s3Client.removeFiles(
+            env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+            deleteDirRes.deletedFiles
+              .filter((x) => x.s3FileKey)
+              .map((x) => {
+                return { Key: x.s3FileKey };
+              }),
+          );
+        }
+      }
+
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+      throw await new CodeException({
+        code: StorageErrorCode.ERROR_DELETING_DIRECTORY,
+        status: 500,
+      }).writeToMonitor({ sendAdminAlert: true });
     }
   }
 

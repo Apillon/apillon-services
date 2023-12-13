@@ -2,6 +2,7 @@ import { Context, PoolConnection, SqlModelStatus } from '@apillon/lib';
 import { DbTables } from '../config/types';
 import { Directory } from '../modules/directory/models/directory.model';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
+import { ProjectConfig } from '../modules/config/models/project-config.model';
 
 /**
  * Function, to recursive delete directories and all subdirectories. DB transaction should be handled in calling function!
@@ -11,14 +12,9 @@ import { IPFSService } from '../modules/ipfs/ipfs.service';
  */
 export async function deleteDirectory(
   context: Context,
-  directory_id: number,
+  directory: Directory,
   conn: PoolConnection,
 ): Promise<{ sizeOfDeletedFiles: number; deletedFiles: any[] }> {
-  const d: Directory = await new Directory({}, context).populateById(
-    directory_id,
-    conn,
-  );
-
   let sizeOfDeletedFiles = 0;
   const deletedFiles: any[] = [];
 
@@ -29,19 +25,17 @@ export async function deleteDirectory(
       FROM \`${DbTables.DIRECTORY}\`
       WHERE status = ${SqlModelStatus.ACTIVE} AND parentDirectory_id = @directory_id
       `,
-    { directory_id },
+    { directory_id: directory.id },
     conn,
   );
 
   for (const subDirectory of subDirectories) {
-    const delSubDirectoriesRes = await deleteDirectory(
-      context,
-      subDirectory.id,
-      conn,
-    );
+    const subDir = new Directory(subDirectory, context);
+    const delSubDirectoriesRes = await deleteDirectory(context, subDir, conn);
     sizeOfDeletedFiles += delSubDirectoriesRes.sizeOfDeletedFiles;
   }
-  //Get all files in directory, unpin them from IPFS
+
+  //Get all files in directory, unpin them from IPFS and mark them as deleted
   const filesInDirectory = await context.mysql.paramExecute(
     `
       SELECT * 
@@ -49,13 +43,21 @@ export async function deleteDirectory(
       WHERE status <> ${SqlModelStatus.DELETED}
       AND directory_id = @directory_id
       `,
-    { directory_id },
+    { directory_id: directory.id },
     conn,
   );
 
+  const ipfsCluster = await new ProjectConfig(
+    { project_uuid: this.project_uuid },
+    this.context,
+  ).getIpfsCluster();
+
   for (const file of filesInDirectory) {
     if (file.CID) {
-      await new IPFSService(context, d.project_uuid).unpinFile(file.CID);
+      await new IPFSService(
+        context,
+        directory.project_uuid,
+      ).unpinCidFromCluster(file.CID, ipfsCluster);
     }
     sizeOfDeletedFiles += file.size;
     deletedFiles.push(file);
@@ -68,11 +70,11 @@ export async function deleteDirectory(
       WHERE status <> ${SqlModelStatus.DELETED} 
       AND directory_id = @directory_id
       `,
-    { directory_id },
+    { directory_id: directory.id },
     conn,
   );
 
-  await d.markDeleted(conn);
+  await directory.markDeleted(conn);
 
   return { sizeOfDeletedFiles, deletedFiles };
 }

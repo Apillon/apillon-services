@@ -536,57 +536,74 @@ export class StorageService {
         code: StorageErrorCode.FILE_NOT_FOUND,
         status: 404,
       });
-    } else if (f.status == SqlModelStatus.MARKED_FOR_DELETION) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.FILE_ALREADY_MARKED_FOR_DELETION,
-        status: 400,
-      });
     }
     f.canModify(context);
 
     //check bucket
     const b: Bucket = await new Bucket({}, context).populateById(f.bucket_id);
-    await invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
-      project_uuid: b.project_uuid,
-    });
 
     if (
       b.bucketType == BucketType.STORAGE ||
       b.bucketType == BucketType.NFT_METADATA
     ) {
-      await f.markForDeletion();
-      return true;
+      await f.markDeleted();
     } else if (b.bucketType == BucketType.HOSTING) {
       await HostingService.deleteFile({ file: f }, context);
-      return true;
-    } else {
-      return false;
     }
+
+    b.size -= f.size;
+    await b.update();
+
+    await invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
+      project_uuid: b.project_uuid,
+    });
+
+    return true;
   }
 
-  static async unmarkFileForDeletion(
+  static async restoreFile(
     event: { id: string },
     context: ServiceContext,
   ): Promise<any> {
-    const f: File = await new File({}, context).populateById(event.id);
+    const f: File = await new File({}, context).populateDeletedById(event.id);
     if (!f.exists()) {
       throw new StorageCodeException({
         code: StorageErrorCode.FILE_NOT_FOUND,
         status: 404,
       });
-    } else if (f.status != SqlModelStatus.MARKED_FOR_DELETION) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.FILE_NOT_MARKED_FOR_DELETION,
-        status: 400,
-      });
     }
     f.canModify(context);
 
-    f.status = SqlModelStatus.ACTIVE;
+    const bucket = await new Bucket({}, context).populateById(f.bucket_id);
 
-    await f.update();
+    const conn = await context.mysql.start();
+    try {
+      f.status = SqlModelStatus.ACTIVE;
+      //Increase bucket size
+      bucket.size += f.size;
 
-    return f.serialize(SerializeFor.PROFILE);
+      await f.update(SerializeFor.UPDATE_DB, conn);
+      await bucket.update(SerializeFor.UPDATE_DB, conn);
+
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+      throw new StorageCodeException({
+        code: StorageErrorCode.ERROR_RESTORING_FILE,
+        status: 500,
+      });
+    }
+
+    //Send request to pin file back to IPFS cluster
+    if (f.CID) {
+      await new IPFSService(context, f.project_uuid).pinCidToCluster(f.CID);
+    }
+
+    await invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
+      project_uuid: f.project_uuid,
+    });
+
+    return f.serialize(getSerializationStrategy(context));
   }
 
   /**

@@ -400,6 +400,33 @@ export class File extends UuidSqlModel {
     return this;
   }
 
+  /**
+   * Populate file which has status 8 or 9 (MARKED_FOR_DELETION or DELETED) and matches query
+   * @param id id, cid or uuid
+   * @returns
+   */
+  public async populateDeletedById(id: string | number): Promise<this> {
+    if (!id) {
+      throw new Error('id should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT f.*, d.directory_uuid
+      FROM \`${DbTables.FILE}\` f
+      LEFT JOIN \`${DbTables.DIRECTORY}\` d on d.id = f.directory_id
+      WHERE (f.id LIKE @id OR f.cid LIKE @id OR f.file_uuid LIKE @id)
+      AND f.status IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.MARKED_FOR_DELETION});
+      `,
+      { id },
+    );
+
+    data?.length ? this.populate(data[0], PopulateFrom.DB) : this.reset();
+    await this.populateLink();
+
+    return this;
+  }
+
   public override async populateByUUID(uuid: string): Promise<this> {
     return this.populateById(uuid);
   }
