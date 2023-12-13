@@ -1,5 +1,4 @@
 import {
-  AppEnvironment,
   BlockchainMicroservice,
   BurnNftDto,
   CollectionsQuotaReachedQueryFilter,
@@ -7,10 +6,10 @@ import {
   CreateCollectionDTO,
   CreateEvmTransactionDto,
   DeployCollectionDTO,
-  env,
   EvmChain,
   Lmas,
   LogType,
+  Mailing,
   MintNftDTO,
   NestMintNftDTO,
   NFTCollectionQueryFilter,
@@ -32,7 +31,6 @@ import {
 import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
 import {
   QueueWorkerType,
-  sendToWorkerQueue,
   ServiceDefinition,
   ServiceDefinitionType,
   WorkerDefinition,
@@ -69,6 +67,9 @@ export class NftsService {
   ) {
     console.log(`Creating NFT collections: ${JSON.stringify(params.body)}`);
 
+    // If royalties address is not defined, set it to 0 address.
+    params.body.royaltiesAddress ||=
+      '0x0000000000000000000000000000000000000000';
     //Create collection object
     const collection: Collection = new Collection(
       params.body,
@@ -156,7 +157,17 @@ export class NftsService {
                 NftsErrorCode.DEPLOY_NFT_CONTRACT_ERROR,
                 context,
                 err,
-              ).writeToMonitor({});
+              ).writeToMonitor({
+                logType: LogType.ERROR,
+                service: ServiceName.NFTS,
+                project_uuid: collection.project_uuid,
+                user_uuid: context.user?.user_uuid,
+                data: {
+                  collection: collection.serialize(),
+                  err,
+                },
+                sendAdminAlert: true,
+              });
             }
             resolve(true);
           } catch (err) {
@@ -165,15 +176,20 @@ export class NftsService {
         }),
     );
 
-    await new Lmas().writeLog({
-      context,
-      project_uuid: collection.project_uuid,
-      logType: LogType.INFO,
-      message: 'New NFT collection created and submited to deployment',
-      location: 'NftsService/deployNftContract',
-      service: ServiceName.NFTS,
-      data: { collection_uuid: collection.collection_uuid },
-    });
+    await Promise.all([
+      new Lmas().writeLog({
+        context,
+        project_uuid: collection.project_uuid,
+        logType: LogType.INFO,
+        message: 'New NFT collection created and submited to deployment',
+        location: 'NftsService/deployNftContract',
+        service: ServiceName.NFTS,
+        data: { collection_uuid: collection.collection_uuid },
+      }),
+
+      // Set mailerlite field indicating the user has an nft collection
+      new Mailing(context).setMailerliteField('has_nft', true),
+    ]);
 
     collection.updateTime = new Date();
     collection.createTime = new Date();

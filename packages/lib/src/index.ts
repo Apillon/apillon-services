@@ -26,11 +26,6 @@ export * from './lib/at-services/referral/dtos/confirm-retweet.dto';
 export * from './lib/at-services/referral/dtos/product-order.dto';
 
 //#REGION Storage
-export * from './lib/at-services/storage/dtos/create-ipns.dto';
-export * from './lib/at-services/storage/dtos/ipns-query-filter.dto';
-export * from './lib/at-services/storage/dtos/publish-ipns.dto';
-export * from './lib/at-services/storage/dtos/file-uploads-query-filter.dto';
-export * from './lib/at-services/storage/dtos/bucket-qouta-reached-query-filter.dto';
 export * from './lib/at-services/storage/dtos/end-file-upload-session.dto';
 export * from './lib/at-services/storage/dtos/create-bucket-webhook.dto';
 export * from './lib/at-services/storage/dtos/file-uploads-query-filter.dto';
@@ -53,6 +48,7 @@ export * from './lib/at-services/storage/dtos/websites-quota-reached-query-filte
 export * from './lib/at-services/storage/dtos/create-s3-urls-for-upload.dto';
 export * from './lib/at-services/storage/dtos/domain-query-filter.dto';
 export * from './lib/at-services/storage/dtos/files-query-filter.dto';
+export * from './lib/at-services/storage/dtos/link-on-ipfs-query-filter.dto';
 
 //#REGION Authentication API
 export * from './lib/at-services/authentication/authentication';
@@ -68,6 +64,7 @@ export * from './lib/at-services/authentication/dtos/sporran/message/request-cre
 export * from './lib/at-services/authentication/dtos/sporran/message/verify-credential.dto';
 export * from './lib/at-services/authentication/dtos/sporran/message/submit-attestation.dto';
 export * from './lib/at-services/authentication/dtos/sporran/message/submit-terms.dto';
+export * from './lib/at-services/authentication/dtos/wallet-identity.dto';
 
 //#REGION NTFS
 export * from './lib/at-services/nfts/nfts';
@@ -87,6 +84,8 @@ export * from './lib/at-services/computing/dtos/create-contract.dto';
 export * from './lib/at-services/computing/dtos/contract-query-filter.dto';
 export * from './lib/at-services/computing/dtos/deposit-to-cluster.dto';
 export * from './lib/at-services/computing/dtos/transfer-ownership.dto';
+export * from './lib/at-services/computing/dtos/encrypt-content.dto';
+export * from './lib/at-services/computing/dtos/assign-cid-to-nft.dto';
 
 //#REGION Blockchain
 export * from './lib/at-services/blockchain/blockchain';
@@ -139,4 +138,4 @@ export * from './lib/base-models/base-project-query-filter.model';
 export * from './lib/parsers';
 export * from './lib/cache';
 export * from './lib/captcha';
-export * from './lib/credit';
+export * from './lib/credit-and-subscription';

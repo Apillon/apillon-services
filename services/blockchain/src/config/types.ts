@@ -100,6 +100,7 @@ export enum BlockchainErrorCode {
   // 400 - Bad request
   BAD_REQUEST = 40016001,
   INVALID_CHAIN = 40016002,
+  INVALID_SIGNATURE = 40016003,
 
   // 401 - Unauthorized (Not authenticated)
   USER_IS_NOT_AUTHENTICATED = 40116100,

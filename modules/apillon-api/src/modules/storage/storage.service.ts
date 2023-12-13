@@ -31,6 +31,26 @@ export class StorageService {
     ).data;
   }
 
+  async getIpfsClusterInfo(
+    context: ApillonApiContext,
+    query: BaseProjectQueryFilter,
+  ) {
+    return (
+      await new StorageMicroservice(context).getIpfsClusterInfo(
+        query.project_uuid,
+      )
+    ).data;
+  }
+
+  async getLink(context: ApillonApiContext, cid: string) {
+    return (
+      await new StorageMicroservice(context).getLink(
+        context.apiKey.project_uuid,
+        cid,
+      )
+    ).data;
+  }
+
   async listBuckets(context: ApillonApiContext, query: BucketQueryFilter) {
     return (await new StorageMicroservice(context).listBuckets(query)).data;
   }
@@ -142,6 +162,14 @@ export class StorageService {
   ) {
     query.populate({ bucket_uuid, status: SqlModelStatus.ACTIVE });
     return (await new StorageMicroservice(context).listFiles(query)).data;
+  }
+
+  async deleteDirectory(context: ApillonApiContext, directory_uuid: string) {
+    return (
+      await new StorageMicroservice(context).deleteDirectory({
+        directory_uuid,
+      })
+    ).data;
   }
 
   async getBlacklist(context: ApillonApiContext) {

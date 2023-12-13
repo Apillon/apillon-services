@@ -89,3 +89,20 @@ export async function spendCreditAction(
     throw err;
   }
 }
+
+/**
+ * Check if project has subscription
+ * @param context
+ * @param project_uuid
+ * @returns id of subscription. Undefined if project doesn't have subscription.
+ */
+export async function checkProjectSubscription(
+  context: any,
+  project_uuid: string,
+): Promise<boolean> {
+  const subscription = (
+    await new Scs(context).getProjectActiveSubscription(project_uuid)
+  ).data;
+
+  return subscription.id;
+}

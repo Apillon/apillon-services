@@ -10,11 +10,12 @@ import {
   OnChainRegistry,
   PinkBlueprintPromise,
   PinkContractPromise,
+  signCertificate,
   types,
 } from '@phala/sdk';
 import { ContractAbi } from '../computing/models/contractAbi.model';
 import { SubmittableExtrinsic } from '@polkadot/api-base/types';
-import { ApiPromise } from '@polkadot/api';
+import { ApiPromise, Keyring } from '@polkadot/api';
 
 export class PhalaClient {
   private context: Context;
@@ -42,6 +43,49 @@ export class PhalaClient {
       this.registry = await OnChainRegistry.create(this.api);
       console.log(`RPC initialization ${rpcEndpoint}`);
     }
+  }
+
+  //CONTRACT TRANSACTIONS
+  async createTransferOwnershipTransaction(
+    contractAbi: { [key: string]: any },
+    contractAddress: string,
+    newOwnerAddress: string,
+  ): Promise<SubmittableExtrinsic<'promise'>> {
+    await this.initializeProvider();
+    const contract = await this.getContract(contractAddress, contractAbi);
+    const { account, certificate } = await this.getDummyAccountAndCertificate();
+    const { gasRequired, storageDeposit } = await contract.query.setOwner(
+      account.address,
+      { cert: certificate },
+      newOwnerAddress,
+    );
+    const options = {
+      gasLimit: gasRequired.refTime.toString(),
+      storageDepositLimit: storageDeposit.asCharge,
+    };
+    return contract.tx.setOwner(options, newOwnerAddress);
+  }
+
+  async createAssignCidToNftTransaction(
+    contractAbi: { [key: string]: any },
+    contractAddress: string,
+    cid: string,
+    nftId: number,
+  ): Promise<any> {
+    await this.initializeProvider();
+    const contract = await this.getContract(contractAddress, contractAbi);
+    const { account, certificate } = await this.getDummyAccountAndCertificate();
+    const { gasRequired, storageDeposit } = await contract.query.setCid(
+      account.address,
+      { cert: certificate },
+      nftId,
+      cid,
+    );
+    const options = {
+      gasLimit: gasRequired.refTime.toString(),
+      storageDepositLimit: storageDeposit.asCharge,
+    };
+    return contract.tx.setCid(options, nftId, cid);
   }
 
   async getClusterId() {
@@ -83,7 +127,7 @@ export class PhalaClient {
     clusterId: string,
     accountAddress: string,
     amount: number,
-  ) {
+  ): Promise<SubmittableExtrinsic<'promise'>> {
     await this.initializeProvider();
     const roundedAmount = Number((amount * 1e12).toFixed(0)) + 1;
     return this.api.tx.phalaPhatContracts.transferToCluster(
@@ -93,34 +137,55 @@ export class PhalaClient {
     );
   }
 
-  async createTransferOwnershipTransaction(
+  //CONTRACT QUERIES
+  async encryptContent(
     contractAbi: { [key: string]: any },
     contractAddress: string,
-    newOwnerAddress: string,
-  ): Promise<SubmittableExtrinsic<'promise'>> {
+    content: string,
+  ) {
     await this.initializeProvider();
-    console.log('contractId', contractAddress);
-    console.log('contractAbi', contractAbi);
-    console.log('newOwnerAddress', newOwnerAddress);
-    const contractKey = await this.registry.getContractKeyOrFail(
-      contractAddress,
+    const contract = await this.getContract(contractAddress, contractAbi);
+    const { account, certificate } = await this.getDummyAccountAndCertificate();
+
+    const response = await contract.query.encryptContent(
+      account.address,
+      {
+        cert: certificate,
+      },
+      content,
     );
-    console.log('contractKey', contractKey);
-    const contract = new PinkContractPromise(
+    return response.output.toJSON()['ok'].ok;
+  }
+
+  private async getContract(
+    contractAddress: string,
+    contractAbi: {
+      [p: string]: any;
+    },
+  ) {
+    const contractKey =
+      await this.registry.getContractKeyOrFail(contractAddress);
+    return new PinkContractPromise(
       this.api,
       this.registry,
       contractAbi,
       contractAddress,
       contractKey,
     );
-    console.log('contract', contract);
+  }
 
-    const options = {
-      transfer: 0,
-      gasLimit: 1e12,
-      storageDepositLimit: null,
-      deposit: 0,
-    };
-    return contract.tx.setOwner(options, newOwnerAddress);
+  /**
+   * Gets dummy account for querying smart contract.
+   * In computing service we don't have access to wallet private key that is why
+   * we use a dummy/test account for querying contract which doesn't mind which
+   * account query is sent for.
+   * @private
+   */
+  private async getDummyAccountAndCertificate() {
+    const keyring = new Keyring({ type: 'sr25519' });
+    const account = keyring.addFromUri('//Alice');
+    const certificate = await signCertificate({ api: this.api, pair: account });
+
+    return { account, certificate };
   }
 }

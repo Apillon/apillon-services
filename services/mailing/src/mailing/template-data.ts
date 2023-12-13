@@ -172,7 +172,7 @@ export function generateTemplateData(key: string, data: any) {
         <b>Company website:</b> ${data.website}
       </p>
       <p>
-        <b>Country:</b> ${data.firstName}
+        <b>Country:</b> ${data.country}
       </p>
       <p>
         <b>Product of interest:</b> ${data.product}
