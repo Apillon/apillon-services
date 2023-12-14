@@ -306,8 +306,6 @@ describe('Storage directory tests', () => {
 
     test('User should be able to delete directory and subdirectories and files in directory', async () => {
       //Dir with subdirs and files in it
-      const date = new Date();
-      date.setDate(date.getDate() - env.STORAGE_DELETE_AFTER_INTERVAL - 1);
       const testDirectoryWithSubdirectories: Directory = new Directory(
         {},
         stage.storageContext,
@@ -317,7 +315,6 @@ describe('Storage directory tests', () => {
           project_uuid: testProject.project_uuid,
           bucket_id: testBucket.id,
           name: 'dir with subdirs',
-          markedForDeletionTime: date,
           status: SqlModelStatus.MARKED_FOR_DELETION,
         });
 

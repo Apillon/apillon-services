@@ -20,6 +20,7 @@ import { StorageService as StrageMSService } from '@apillon/storage/src/modules/
 import {
   createTestApiKey,
   createTestBucket,
+  createTestBucketFile,
   createTestProject,
   createTestProjectService,
   createTestUser,
@@ -31,6 +32,7 @@ import * as request from 'supertest';
 import { v4 as uuidV4 } from 'uuid';
 import { setupTest } from '../../../../test/helpers/setup';
 import { generateJwtSecret } from '@apillon/storage/src/lib/ipfs-utils';
+import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
 
 describe('Apillon API storage tests', () => {
   let stage: Stage;
@@ -391,7 +393,7 @@ describe('Apillon API storage tests', () => {
       });
     });
 
-    describe('Delete file tests', () => {
+    describe('Delete file and directory tests', () => {
       test('Application should NOT be able to delete ANOTHER application uploaded file', async () => {
         expect(testFile).toBeTruthy();
         const response = await request(stage.http)
@@ -418,11 +420,57 @@ describe('Apillon API storage tests', () => {
             ).toString('base64')}`,
           );
         expect(response.status).toBe(200);
-        testFile = await new File({}, stage.storageContext).populateByUUID(
+        testFile = await new File({}, stage.storageContext).populateDeletedById(
           testS3FileUUID,
         );
-        expect(testFile.exists()).toBeTruthy();
-        expect(testFile.status).toBe(SqlModelStatus.MARKED_FOR_DELETION);
+        expect(testFile.exists()).toBeFalsy();
+      });
+
+      test('Application should be able to delete directory', async () => {
+        const testDirectory: Directory = await new Directory(
+          {},
+          stage.storageContext,
+        )
+          .fake()
+          .populate({
+            project_uuid: testProject.project_uuid,
+            bucket_id: testBucket.id,
+            name: 'Test directory',
+          })
+          .insert();
+
+        //Add files
+        const testDirectoryFile = await createTestBucketFile(
+          stage.storageContext,
+          testBucket,
+          'xyz.txt',
+          'text/plain',
+          true,
+          testDirectory.id,
+        );
+
+        expect(testFile).toBeTruthy();
+        const response = await request(stage.http)
+          .delete(
+            `/storage/buckets/${testBucket.bucket_uuid}/directories/${testDirectory.directory_uuid}`,
+          )
+          .set(
+            'Authorization',
+            `Basic ${Buffer.from(
+              apiKey.apiKey + ':' + apiKey.apiKeySecret,
+            ).toString('base64')}`,
+          );
+        expect(response.status).toBe(200);
+
+        const d = await new Directory({}, stage.storageContext).populateById(
+          testDirectory.id,
+        );
+        expect(d.exists()).toBeFalsy();
+
+        const f = await new File({}, stage.storageContext).populateById(
+          testDirectoryFile.id,
+        );
+        expect(f.exists()).toBeFalsy();
       });
     });
 

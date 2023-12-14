@@ -570,7 +570,7 @@ describe('Storage tests', () => {
       });
     });
 
-    describe.only('Delete file tests', () => {
+    describe('Delete file tests', () => {
       let bucketForDeleteTests: Bucket = undefined;
       let deleteBucketTestFile1: File = undefined;
       let testFile2: File = undefined;
