@@ -69,6 +69,7 @@ export class SubstrateRpcApi {
         throwOnConnect: true,
       };
       if (this.typesBundle) {
+        options['typesBundle'] = this.typesBundle;
         options['types'] = this.typesBundle;
       }
       this.apiPromise = await ApiPromise.create(options);
