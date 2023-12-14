@@ -540,10 +540,15 @@ describe('Apillon API storage tests', () => {
           generateJwtSecret(apiKey.project_uuid, ipfsCluster.secret),
         );
         expect(response.body.data.projectUuid).toBe(apiKey.project_uuid);
-        expect(response.body.data.ipfsGateway).toBe(ipfsCluster.ipfsGateway);
-        expect(response.body.data.ipnsGateway).toBe(ipfsCluster.ipnsGateway);
-        expect(response.body.data.subdomainGateway).toBe(
-          ipfsCluster.subdomainGateway ? ipfsCluster.subdomainGateway : '',
+        expect(response.body.data.ipfsGateway).toBe(
+          ipfsCluster.subdomainGateway
+            ? `https://<CIDv1>.${ipfsCluster.subdomainGateway}`
+            : ipfsCluster.ipfsGateway,
+        );
+        expect(response.body.data.ipnsGateway).toBe(
+          ipfsCluster.subdomainGateway
+            ? `https://<IPNS>.${ipfsCluster.subdomainGateway}`
+            : ipfsCluster.ipnsGateway,
         );
       });
 
