@@ -1,11 +1,11 @@
-import { ChainType, EvmChain, SubstrateChain } from '@apillon/lib';
-import { releaseStage, setupTest, Stage } from '../../../test/setup';
+import { ChainType, EvmChain } from '@apillon/lib';
+import { UnsignedTransaction, ethers } from 'ethers';
+import { Stage, releaseStage, setupTest } from '../../../test/setup';
 import { Endpoint } from '../../common/models/endpoint';
 import { Wallet } from '../wallet/wallet.model';
 import { EvmService } from './evm.service';
-import { ethers, UnsignedTransaction } from 'ethers';
 
-describe.only('Evm service unit test', () => {
+describe('Evm service unit test', () => {
   let stage: Stage;
 
   beforeAll(async () => {

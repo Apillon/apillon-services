@@ -27,6 +27,8 @@ import * as request from 'supertest';
 import { v4 as uuidV4 } from 'uuid';
 import { setupTest } from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
+import { ProjectConfig } from '@apillon/storage/src/modules/config/models/project-config.model';
+import { generateJwtSecret } from '@apillon/storage/src/lib/ipfs-utils';
 
 describe('Storage tests', () => {
   let stage: Stage;
@@ -54,7 +56,7 @@ describe('Storage tests', () => {
       DefaultUserRole.ADMIN,
     );
 
-    testProject = await createTestProject(testUser, stage);
+    testProject = await createTestProject(testUser, stage, 5000, 1);
 
     testBucket = await createTestBucket(
       testUser,
@@ -140,6 +142,33 @@ describe('Storage tests', () => {
         expect(testFile).toBeTruthy();
         const response = await request(testFile.link).get('');
         expect(response.status).toBe(200);
+      });
+
+      test('User should not be able to recieve S3 signed URL for html files (for project WO subscription)', async () => {
+        const testProjectWOSubscription = await createTestProject(
+          testUser,
+          stage,
+        );
+
+        const tmpTestBucket = await createTestBucket(
+          testUser,
+          stage.storageContext,
+          testProjectWOSubscription,
+        );
+
+        const response = await request(stage.http)
+          .post(`/storage/${tmpTestBucket.bucket_uuid}/files-upload`)
+          .send({
+            files: [
+              {
+                fileName: 'index.html',
+                contentType: 'text/html',
+              },
+            ],
+          })
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(400);
+        expect(response.body.code).toBe(40006020);
       });
     });
 
@@ -770,6 +799,78 @@ describe('Storage tests', () => {
           deleteBucketTestFile1.id,
         );
         expect(f.exists()).toBeTruthy();
+      });
+    });
+
+    describe('Tests for storage info endpoints (info, cluster info, ipfs-link)', () => {
+      test('User should be able to get storage info', async () => {
+        testBucket.size = 5000;
+        await testBucket.update();
+
+        const response = await request(stage.http)
+          .get(`/storage/info?project_uuid=${testProject.project_uuid}`)
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(200);
+        expect(response.body.data.availableStorage).toBeGreaterThan(0);
+        expect(response.body.data.usedStorage).toBeGreaterThan(0);
+        expect(response.body.data.availableBandwidth).toBeGreaterThan(0);
+      });
+
+      test('User should be able to get ipfs cluster info', async () => {
+        const ipfsCluster = await new ProjectConfig(
+          { project_uuid: testProject.project_uuid },
+          stage.storageContext,
+        ).getIpfsCluster();
+
+        const response = await request(stage.http)
+          .get(
+            `/storage/ipfs-cluster-info?project_uuid=${testProject.project_uuid}`,
+          )
+          .set('Authorization', `Bearer ${testUser.token}`);
+
+        expect(response.status).toBe(200);
+        expect(response.body.data.secret).toBe(
+          generateJwtSecret(testProject.project_uuid, ipfsCluster.secret),
+        );
+        expect(response.body.data.project_uuid).toBe(testProject.project_uuid);
+        expect(response.body.data.ipfsGateway).toBe(
+          ipfsCluster.subdomainGateway
+            ? `https://<CIDv1>.${ipfsCluster.subdomainGateway}`
+            : ipfsCluster.ipfsGateway,
+        );
+        expect(response.body.data.ipnsGateway).toBe(
+          ipfsCluster.subdomainGateway
+            ? `https://<IPNS>.${ipfsCluster.subdomainGateway}`
+            : ipfsCluster.ipnsGateway,
+        );
+      });
+
+      test('User should be able to get link on ipfs for CID', async () => {
+        const response = await request(stage.http)
+          .get(
+            `/storage/link-on-ipfs?project_uuid=${testProject.project_uuid}&cid=k2k4r8plzxzg7eji9ucbr1trn9teesc72h1odfsjjggf4nmmm6rjosiu`,
+          )
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(200);
+        expect(response.body.data.link).toBeTruthy();
+        expect(response.body.data.link).toMatch(
+          'k2k4r8plzxzg7eji9ucbr1trn9teesc72h1odfsjjggf4nmmm6rjosiu',
+        );
+        expect(response.body.data.link).toMatch('ipfs');
+      });
+
+      test('User should be able to get link on ipfs for IPNS', async () => {
+        const response = await request(stage.http)
+          .get(
+            `/storage/link-on-ipfs?project_uuid=${testProject.project_uuid}&cid=k2k4r8lqt07ls9uyz141ofqcl99k4b8e63ns1fh52ib1bwh09z0k6vjk`,
+          )
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(200);
+        expect(response.body.data.link).toBeTruthy();
+        expect(response.body.data.link).toMatch(
+          'k2k4r8lqt07ls9uyz141ofqcl99k4b8e63ns1fh52ib1bwh09z0k6vjk',
+        );
+        expect(response.body.data.link).toMatch('ipns');
       });
     });
   });

@@ -31,6 +31,26 @@ export class StorageService {
     ).data;
   }
 
+  async getIpfsClusterInfo(
+    context: ApillonApiContext,
+    query: BaseProjectQueryFilter,
+  ) {
+    return (
+      await new StorageMicroservice(context).getIpfsClusterInfo(
+        query.project_uuid,
+      )
+    ).data;
+  }
+
+  async getLink(context: ApillonApiContext, cid: string) {
+    return (
+      await new StorageMicroservice(context).getLink(
+        context.apiKey.project_uuid,
+        cid,
+      )
+    ).data;
+  }
+
   async listBuckets(context: ApillonApiContext, query: BucketQueryFilter) {
     return (await new StorageMicroservice(context).listBuckets(query)).data;
   }

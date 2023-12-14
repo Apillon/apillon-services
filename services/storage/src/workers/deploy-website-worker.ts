@@ -4,7 +4,6 @@ import {
   env,
   LogType,
   refundCredit,
-  Scs,
   SerializeFor,
   ServiceName,
 } from '@apillon/lib';
@@ -34,6 +33,7 @@ import { uploadItemsToIPFSRes } from '../modules/ipfs/interfaces/upload-items-to
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { Ipns } from '../modules/ipns/models/ipns.model';
 import { File } from '../modules/storage/models/file.model';
+import { checkProjectSubscription } from '@apillon/lib/src';
 
 /**
  * Worker uploads files from source bucket to IPFS, acquired CID is published to website ipns record.
@@ -148,18 +148,14 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         deployment.size = ipfsRes.size;
 
         //If deployment was not already reviewed, and env variable for sending websites to review is set to 1
-        if (!deploymentReviewed && env.SEND_WEBSITES_TO_REVIEW) {
+        if (
+          !deploymentReviewed &&
+          env.SEND_WEBSITES_TO_REVIEW &&
+          !(await checkProjectSubscription(this.context, website.project_uuid))
+        ) {
           //if project is on freemium, website goes to review
-          const subscription = (
-            await new Scs(this.context).getProjectActiveSubscription(
-              website.project_uuid,
-            )
-          ).data;
-
-          if (!subscription.id) {
-            await deployment.sendToReview(website);
-            return;
-          }
+          await deployment.sendToReview(website);
+          return;
         }
 
         targetBucket.CID = ipfsRes.parentDirCID.toV0().toString();

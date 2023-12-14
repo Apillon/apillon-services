@@ -10,7 +10,7 @@ export class AuthService {
     const sessionToken = generateJwtToken(
       JwtTokenType.AUTH_SESSION,
       { project_uuid: context.apiKey.project_uuid },
-      '10min',
+      '20min',
     );
 
     return { sessionToken };

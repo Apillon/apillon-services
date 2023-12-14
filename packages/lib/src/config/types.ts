@@ -16,6 +16,8 @@ export enum SubstrateChain {
   CRUST = 1,
   KILT = 2,
   PHALA = 4,
+  POLKADOT = 5,
+  SUBSOCIAL = 6,
 }
 
 export enum EvmChain {
@@ -93,6 +95,7 @@ export enum BlockchainEventType {
   UPDATE_WALLET = 'update-wallet',
   GET_WALLET_TRANSACTIONS = 'get-wallet-transactions',
   UPDATE_TRANSACTION = 'update-transaction',
+  GET_WALLET_IDENTITY = 'get-wallet-identity',
 }
 
 export enum StorageEventType {
@@ -171,6 +174,7 @@ export enum AuthenticationEventType {
 export enum MailEventType {
   SEND_MAIL = 'send-mail',
   SEND_CUSTOM_MAIL = 'send-custom-mail',
+  SET_MAILERLITE_FIELD = 'set-mailerlite-field',
 }
 
 export enum ScsEventType {
@@ -566,6 +570,7 @@ export enum ValidatorErrorCode {
   NFT_BURN_TOKEN_ID_NOT_VALID = 42200148,
   QUOTA_CODE_NOT_VALID = 42200149,
   INVALID_FILES_LENGTH = 42200150,
+  CID_NOT_PRESENT = 42200160,
 
   //#region Computing
   COMPUTING_PROJECT_UUID_NOT_PRESENT = 42200201,

@@ -2,6 +2,7 @@ import {
   AppEnvironment,
   AWS_S3,
   CacheKeyPrefix,
+  checkProjectSubscription,
   CreateS3UrlsForUploadDto,
   DomainQueryFilter,
   EndFileUploadSessionDto,
@@ -146,6 +147,21 @@ export class StorageService {
         code: StorageErrorCode.NOT_ENOUGH_STORAGE_SPACE,
         status: 400,
       });
+    }
+
+    //Validate content / filenames
+    //Freemium projects should't be able to upload html files to non hosting buckets
+    if (
+      bucket.bucketType != BucketType.HOSTING &&
+      !(await checkProjectSubscription(context, bucket.project_uuid))
+    ) {
+      console.info('Project WO subscription. Checking fileNames for upload');
+      if (event.body.files.find((x) => x.fileName.includes('.html'))) {
+        throw new StorageCodeException({
+          code: StorageErrorCode.HTML_FILES_NOT_ALLOWED,
+          status: 400,
+        });
+      }
     }
 
     //Get existing or create new fileUploadSession
@@ -684,9 +700,13 @@ export class StorageService {
 
     return {
       secret: ipfsClusterJwtSecretForProject,
-      ipfsGateway: ipfsCluster.ipfsGateway,
-      ipnsGateway: ipfsCluster.ipnsGateway,
-      subdomainGateway: ipfsCluster.subdomainGateway,
+      project_uuid: event.project_uuid,
+      ipfsGateway: ipfsCluster.subdomainGateway
+        ? `https://<CIDv1>.${ipfsCluster.subdomainGateway}`
+        : ipfsCluster.ipfsGateway,
+      ipnsGateway: ipfsCluster.subdomainGateway
+        ? `https://<IPNS>.${ipfsCluster.subdomainGateway}`
+        : ipfsCluster.ipnsGateway,
     };
   }
 

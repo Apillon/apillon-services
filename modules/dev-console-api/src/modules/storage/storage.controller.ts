@@ -54,7 +54,7 @@ export class StorageController {
     return await this.storageService.getIpfsClusterInfo(context, query);
   }
 
-  @Get('link')
+  @Get('link-on-ipfs')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: LinkOnIpfsQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(AuthGuard, ValidationGuard)
