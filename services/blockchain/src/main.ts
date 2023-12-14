@@ -7,6 +7,7 @@ import { WalletService } from './modules/wallet/wallet.service';
 import '@polkadot/api-augment';
 import '@polkadot/rpc-augment';
 import '@polkadot/types-augment';
+
 /**
  * Processing lambda event with appropriate service function based on event name
  * @param event lambda event
@@ -22,6 +23,9 @@ export async function processEvent(
       SubstrateService.createTransaction,
     [BlockchainEventType.SUBSTRATE_GET_TRANSACTION]:
       SubstrateService.getTransactionById,
+    [BlockchainEventType.GET_PHALA_LOGS]: SubstrateService.getPhalaLogs,
+    [BlockchainEventType.GET_PHALA_CLUSTER_WALLET_BALANCE]:
+      SubstrateService.getPhalaClusterWalletBalance,
     [BlockchainEventType.EVM_SIGN_TRANSACTION]: EvmService.createTransaction,
     [BlockchainEventType.EVM_GET_TRANSACTION]: EvmService.getTransactionById,
     [BlockchainEventType.GET_CHAIN_ENDPOINT]: CommonService.getChainEndpoint,

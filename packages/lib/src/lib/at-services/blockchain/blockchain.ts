@@ -10,12 +10,14 @@ import { BaseQueryFilter } from '../../base-models/base-query-filter.model';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import {
-  UpdateTransactionDto,
   CreateEvmTransactionDto,
   CreateSubstrateTransactionDto,
+  PhalaClusterWalletDto,
   TransactionDto,
+  UpdateTransactionDto,
   WalletTransactionsQueryFilter,
 } from '../../..';
+import { PhalaLogFilterDto } from '../computing/dtos/phala-log-filter.dto';
 
 export class BlockchainMicroservice extends BaseService {
   lambdaFunctionName =
@@ -135,6 +137,26 @@ export class BlockchainMicroservice extends BaseService {
       transactionId,
       data,
     });
+  }
+  //#endregion
+
+  //#region computing on phala
+  public async getPhalaLogs(phalaLogFilter: PhalaLogFilterDto) {
+    const data = {
+      eventName: BlockchainEventType.GET_PHALA_LOGS,
+      phalaLogFilter,
+    };
+    return await this.callService(data);
+  }
+
+  public async getPhalaClusterWalletBalance(
+    phalaClusterWallet: PhalaClusterWalletDto,
+  ) {
+    const data = {
+      eventName: BlockchainEventType.GET_PHALA_CLUSTER_WALLET_BALANCE,
+      phalaClusterWallet,
+    };
+    return await this.callService(data);
   }
   //#endregion
 }

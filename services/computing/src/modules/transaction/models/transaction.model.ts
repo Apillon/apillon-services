@@ -30,6 +30,23 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public contract_id?: number;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
       SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
@@ -53,12 +70,16 @@ export class Transaction extends AdvancedSQLModel {
     ],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
+    defaultValue: TransactionStatus.PENDING,
   })
-  public contractId: number;
+  public transactionStatus: number;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -77,9 +98,8 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    defaultValue: TransactionStatus.PENDING,
   })
-  public transactionStatus: number;
+  public transactionExecutedSuccessfully: boolean;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -102,6 +122,27 @@ export class Transaction extends AdvancedSQLModel {
   })
   public transactionHash: string;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+  })
+  public nonce: string;
+
   public constructor(data: any, context: Context) {
     super(data, context);
   }
@@ -116,7 +157,7 @@ export class Transaction extends AdvancedSQLModel {
       `
         SELECT *
         FROM \`${this.tableName}\`
-        WHERE transactionHash = @transactionHash;
+        WHERE contract_id IS NOT NULL AND transactionHash = @transactionHash;
       `,
       { transactionHash },
     );
@@ -137,7 +178,7 @@ export class Transaction extends AdvancedSQLModel {
       `
         SELECT t.*
         FROM \`${this.tableName}\` as t
-               JOIN contract as c ON (c.id = t.contractId)
+               JOIN contract as c ON (c.id = t.contract_id)
         WHERE t.status <> ${SqlModelStatus.DELETED}
           AND (@transactionStatus IS NULL OR
                t.transactionStatus = @transactionStatus)
@@ -155,5 +196,36 @@ export class Transaction extends AdvancedSQLModel {
     }
 
     return res;
+  }
+
+  public async getNonExecutedTransactionsAndContracts(clusterId: string) {
+    return (await this.getContext().mysql.paramExecute(
+      `
+        SELECT t.id AS transaction_id,
+               t.transactionType AS transactionType,
+               t.transactionHash AS transactionHash,
+               t.nonce AS transactionNonce,
+               c.id               AS contract_id,
+               c.project_uuid     AS project_uuid,
+               c.contractAddress  AS contractAddress,
+               c.data             AS contractData
+        FROM \`${this.tableName}\` as t
+               JOIN contract as c ON (c.id = t.contract_id)
+        WHERE t.status <> ${SqlModelStatus.DELETED}
+          AND t.transactionExecutedSuccessfully IS NULL
+          AND t.transactionStatus = @transactionStatus
+          AND JSON_EXTRACT(c.data, "$.clusterId") = @clusterId
+      `,
+      { clusterId, transactionStatus: TransactionStatus.CONFIRMED },
+    )) as {
+      project_uuid: string;
+      transaction_id: number;
+      transactionType: TransactionType;
+      transactionHash: string;
+      transactionNonce: string;
+      contract_id: number;
+      contractAddress: string;
+      contractData: { clusterId: string };
+    }[];
   }
 }

@@ -1,5 +1,6 @@
 import {
   AdvancedSQLModel,
+  getTokenPriceUsd,
   PoolConnection,
   PopulateFrom,
   presenceValidator,
@@ -11,8 +12,8 @@ import { floatParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { BlockchainErrorCode, DbTables } from '../../config/types';
 import { Wallet } from '../wallet/wallet.model';
 import { TransactionLog } from './transaction-log.model';
-import { getTokenPriceUsd } from '../../lib/utils';
 import { BlockchainValidationException } from '../../lib/exceptions';
+
 export class WalletDeposit extends AdvancedSQLModel {
   public readonly tableName = DbTables.WALLET_DEPOSIT;
 
