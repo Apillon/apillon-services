@@ -43,7 +43,7 @@ export class AuthUserService {
       throw await new AmsCodeException({
         status: 500,
         code: AmsErrorCode.INVALID_EVENT_DATA,
-      }).writeToMonitor();
+      }).writeToMonitor({ data: event });
     }
     //check if email already exists - user cannot register twice
     const checkEmailRes = await AuthUserService.emailExists(event, context);
