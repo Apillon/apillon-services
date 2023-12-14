@@ -1,6 +1,7 @@
 import { CryptoPaymentsService } from './crypto-payments.service';
 import { Ctx, Validation } from '@apillon/modules-lib';
 import {
+  Body,
   Controller,
   Get,
   Param,
@@ -19,6 +20,7 @@ import { PaymentSessionDto } from './dto/payment-session.dto';
 import { PricelistQueryFilter, ValidateFor } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { StripeService } from './stripe.service';
+import { CryptoPayment } from './dto/crypto-payment';
 
 @Controller('payments')
 export class PaymentsController {
@@ -69,7 +71,7 @@ export class PaymentsController {
   }
 
   @Post('stripe/webhook')
-  async postWebhook(
+  async handleStripeWebhook(
     @Req() req: RawBodyRequest<Request>,
     @Headers('stripe-signature') stripeSignature: string,
   ): Promise<any> {
@@ -121,6 +123,17 @@ export class PaymentsController {
     return await this.cryptoPaymentsService.createCryptoPaymentSession(
       context,
       paymentSessionDto,
+    );
+  }
+
+  @Post('crypto/webhook')
+  async handleCryptoWebhook(
+    @Body() body: CryptoPayment,
+    @Headers('x-nowpayments-sig') cryptoSignature: string,
+  ): Promise<any> {
+    await this.cryptoPaymentsService.handlePaymentWebhook(
+      body,
+      cryptoSignature,
     );
   }
 }

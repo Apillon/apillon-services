@@ -185,7 +185,7 @@ export class Scs extends BaseService {
 
   //#region subscriptions
 
-  public async handleStripeWebhookData(
+  public async handlePaymentWebhookData(
     data: Merge<
       Partial<CreateSubscriptionDto> & Partial<AddCreditDto>,
       Partial<CreateInvoiceDto>

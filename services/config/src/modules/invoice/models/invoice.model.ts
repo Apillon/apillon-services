@@ -114,12 +114,6 @@ export class Invoice extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
     ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ConfigErrorCode.CLIENT_EMAIL_NOT_PRESENT,
-      },
-    ],
   })
   public clientEmail: string;
 
@@ -133,12 +127,6 @@ export class Invoice extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ConfigErrorCode.CLIENT_NAME_NOT_PRESENT,
-      },
     ],
   })
   public clientName: string;
@@ -166,12 +154,6 @@ export class Invoice extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ConfigErrorCode.STRIPE_ID_NOT_VALID,
-      },
     ],
   })
   public stripeId: string;

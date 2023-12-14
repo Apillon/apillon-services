@@ -64,7 +64,8 @@ export class AppModule {
         { path: 'users/validate-email', method: RequestMethod.POST },
         { path: 'users/password-reset', method: RequestMethod.POST },
         { path: 'users/password-reset-request', method: RequestMethod.POST },
-        { path: 'payments/stripe-webhook', method: RequestMethod.POST },
+        { path: 'payments/stripe/webhook', method: RequestMethod.POST },
+        { path: 'payments/crypto/webhook', method: RequestMethod.POST },
         { path: 'public/contact-us', method: RequestMethod.POST },
         {
           path: 'websites/:website_uuid/deployments/:deployment_uuid/approve',

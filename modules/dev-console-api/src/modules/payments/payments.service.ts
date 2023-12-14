@@ -98,7 +98,7 @@ export class PaymentsService {
             });
           const creditPurchase = sessionWithLineItems.line_items.data[0];
 
-          await new Scs().handleStripeWebhookData({
+          await new Scs().handlePaymentWebhookData({
             ...paymentData,
             currency: creditPurchase.currency,
             invoiceStripeId: creditPurchase.price.id,
@@ -109,7 +109,7 @@ export class PaymentsService {
             payment.subscription,
           );
 
-          await new Scs().handleStripeWebhookData({
+          await new Scs().handlePaymentWebhookData({
             ...paymentData,
             expiresOn: new Date(subscription.current_period_end * 1000),
             stripeId: subscription.id,
