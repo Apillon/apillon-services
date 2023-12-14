@@ -88,7 +88,7 @@ export class UserController {
     @Headers('cloudfront-viewer-country') country: string,
   ) {
     if (country) {
-      body.metadata.country = country;
+      body.metadata = { ...body.metadata, country };
     }
     return await this.userService.validateEmail(context, body);
   }
