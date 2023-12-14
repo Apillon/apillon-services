@@ -18,18 +18,19 @@
     "deploy:test": "serverless deploy --stage test"
   },
   "dependencies": {
-    "@middy/core": "^2.5.7",
     "@apillon/lib": "*",
     "@apillon/service-lib": "*",
-    "nodemailer": "^6.8.0",
-    "handlebars": "^4.7.7"
+    "@middy/core": "^2.5.7",
+    "axios": "^1.6.2",
+    "handlebars": "^4.7.7",
+    "nodemailer": "^6.8.0"
   },
   "devDependencies": {
+    "copy-webpack-plugin": "^9.0.1",
     "eslint-config-common": "*",
-    "tsconfig": "*",
     "ts-loader": "^9.2.3",
+    "tsconfig": "*",
     "webpack": "^5.41.1",
-    "webpack-node-externals": "^3.0.0",
-    "copy-webpack-plugin": "^9.0.1"
+    "webpack-node-externals": "^3.0.0"
   }
 }

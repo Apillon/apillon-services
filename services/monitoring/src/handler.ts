@@ -4,6 +4,7 @@ import {
   MongoDbConnect,
   ResponseFormat,
   SqsPartialBatchFailure,
+  logLambdaEvent,
 } from '@apillon/service-lib';
 import * as middy from '@middy/core';
 import type { Callback, Context, Handler } from 'aws-lambda/handler';
@@ -28,17 +29,11 @@ const lambdaHandler: Handler = async (
     }
     return await Promise.allSettled(promises);
   }
-  const res = await handleMessage(event, context);
-  console.log(res);
-  return res;
+  return await handleMessage(event, context);
 };
 
 async function handleMessage(event: any, context: Context) {
-  //TODO: handle security token and remove it form event.
-
-  // remove security token
-  delete event.securityToken;
-  console.log(event);
+  logLambdaEvent(event);
 
   return await processEvent(event, context);
 }

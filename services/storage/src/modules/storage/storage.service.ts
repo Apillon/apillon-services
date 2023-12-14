@@ -2,6 +2,7 @@ import {
   AppEnvironment,
   AWS_S3,
   CacheKeyPrefix,
+  checkProjectSubscription,
   CreateS3UrlsForUploadDto,
   DomainQueryFilter,
   EndFileUploadSessionDto,
@@ -50,6 +51,8 @@ import { FileUploadRequest } from './models/file-upload-request.model';
 import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
 import { IpfsBandwidth } from '../ipfs/models/ipfs-bandwidth';
+import { generateJwtSecret } from '../../lib/ipfs-utils';
+import { CID } from 'ipfs-http-client';
 
 export class StorageService {
   /**
@@ -144,6 +147,21 @@ export class StorageService {
         code: StorageErrorCode.NOT_ENOUGH_STORAGE_SPACE,
         status: 400,
       });
+    }
+
+    //Validate content / filenames
+    //Freemium projects should't be able to upload html files to non hosting buckets
+    if (
+      bucket.bucketType != BucketType.HOSTING &&
+      !(await checkProjectSubscription(context, bucket.project_uuid))
+    ) {
+      console.info('Project WO subscription. Checking fileNames for upload');
+      if (event.body.files.find((x) => x.fileName.includes('.html'))) {
+        throw new StorageCodeException({
+          code: StorageErrorCode.HTML_FILES_NOT_ALLOWED,
+          status: 400,
+        });
+      }
     }
 
     //Get existing or create new fileUploadSession
@@ -658,5 +676,64 @@ export class StorageService {
       { project_uuid: event.project_uuid },
       context,
     ).getIpfsCluster();
+  }
+
+  /**
+   * Return secret which is unique for each project
+   * @param event
+   * @param context
+   * @returns secret + basic ipfs cluster properties
+   */
+  static async getIpfsClusterInfo(
+    event: { project_uuid: string },
+    context: ServiceContext,
+  ) {
+    const ipfsCluster = await new ProjectConfig(
+      { project_uuid: event.project_uuid },
+      context,
+    ).getIpfsCluster();
+
+    const ipfsClusterJwtSecretForProject = generateJwtSecret(
+      event.project_uuid,
+      ipfsCluster.secret,
+    );
+
+    return {
+      secret: ipfsClusterJwtSecretForProject,
+      project_uuid: event.project_uuid,
+      ipfsGateway: ipfsCluster.subdomainGateway
+        ? `https://<CIDv1>.${ipfsCluster.subdomainGateway}`
+        : ipfsCluster.ipfsGateway,
+      ipnsGateway: ipfsCluster.subdomainGateway
+        ? `https://<IPNS>.${ipfsCluster.subdomainGateway}`
+        : ipfsCluster.ipnsGateway,
+    };
+  }
+
+  /**
+   * Generate link for given CID/IPNS
+   * @param event
+   * @param context
+   * @returns link on ipfs gateway
+   */
+  static async getLink(
+    event: { cid: string; project_uuid: string },
+    context: ServiceContext,
+  ) {
+    let isIpns = false;
+    try {
+      CID.parse(event.cid);
+    } catch (err) {
+      isIpns = true;
+    }
+
+    const ipfsCluster = await new ProjectConfig(
+      { project_uuid: event.project_uuid },
+      context,
+    ).getIpfsCluster();
+
+    return {
+      link: ipfsCluster.generateLink(event.project_uuid, event.cid, isIpns),
+    };
   }
 }

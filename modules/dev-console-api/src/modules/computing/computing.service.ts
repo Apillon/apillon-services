@@ -1,9 +1,11 @@
 import {
+  AssignCidToNft,
   AttachedServiceType,
   CodeException,
   ComputingMicroservice,
   ContractQueryFilter,
   CreateContractDto,
+  EncryptContentDto,
   TransferOwnershipDto,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
@@ -79,5 +81,13 @@ export class ComputingService {
     return (
       await new ComputingMicroservice(context).transferContractOwnership(body)
     ).data;
+  }
+
+  async encryptContent(context: DevConsoleApiContext, body: EncryptContentDto) {
+    return (await new ComputingMicroservice(context).encryptContent(body)).data;
+  }
+
+  async assignCidToNft(context: DevConsoleApiContext, body: AssignCidToNft) {
+    return (await new ComputingMicroservice(context).assignCidToNft(body)).data;
   }
 }

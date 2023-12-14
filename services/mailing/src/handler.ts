@@ -2,6 +2,7 @@ import {
   ErrorHandler,
   InitializeContextAndFillUser,
   ResponseFormat,
+  logLambdaEvent,
 } from '@apillon/service-lib';
 import * as middy from '@middy/core';
 import type { Callback, Context, Handler } from 'aws-lambda/handler';
@@ -18,7 +19,7 @@ const lambdaHandler: Handler = async (
   context: Context,
   _callback: Callback,
 ) => {
-  console.log(event);
+  logLambdaEvent(event);
 
   return await processEvent(event, context);
 };

@@ -4,6 +4,7 @@ import {
   InitializeContextAndFillUser,
   MySqlConnect,
   ResponseFormat,
+  logLambdaEvent,
 } from '@apillon/service-lib';
 import * as middy from '@middy/core';
 import type { Callback, Handler } from 'aws-lambda/handler';
@@ -20,7 +21,7 @@ export const lambdaHandler: Handler = async (
   context: any,
   _callback: Callback,
 ) => {
-  console.log(event);
+  logLambdaEvent(event);
 
   return await processEvent(event, context.serviceContext);
 };

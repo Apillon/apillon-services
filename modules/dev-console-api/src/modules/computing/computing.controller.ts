@@ -1,8 +1,10 @@
 import {
+  AssignCidToNft,
   ContractQueryFilter,
   CreateContractDto,
   DefaultPermission,
   DefaultUserRole,
+  EncryptContentDto,
   RoleGroup,
   TransferOwnershipDto,
   ValidateFor,
@@ -78,5 +80,41 @@ export class ComputingController {
   ) {
     body.contract_uuid = uuid;
     return await this.computingService.transferContractOwnership(context, body);
+  }
+
+  @Post('contracts/:uuid/encrypt')
+  @Validation({ dto: EncryptContentDto })
+  @UseGuards(ValidationGuard)
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @UseGuards(AuthGuard)
+  async encryptContent(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') uuid: string,
+    @Body() body: EncryptContentDto,
+  ) {
+    body.contract_uuid = uuid;
+    return await this.computingService.encryptContent(context, body);
+  }
+
+  @Post('contracts/:uuid/assign-cid-to-nft')
+  @Validation({ dto: AssignCidToNft })
+  @UseGuards(ValidationGuard)
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @UseGuards(AuthGuard)
+  async assignCidToNft(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') uuid: string,
+    @Body() body: AssignCidToNft,
+  ) {
+    body.contract_uuid = uuid;
+    return await this.computingService.assignCidToNft(context, body);
   }
 }

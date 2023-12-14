@@ -10,6 +10,7 @@ import { StorageModule } from './modules/storage/storage.module';
 import { SystemModule } from './modules/system/system.module';
 import { NftModule } from './modules/nfts/nft.module';
 import { AppController } from './app.controller';
+import { IdentityModule } from './modules/wallet-identity/wallet-identity.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AppController } from './app.controller';
     SystemModule,
     AuthModule,
     SystemModule,
+    IdentityModule,
   ],
   controllers: [AppController],
   providers: [],

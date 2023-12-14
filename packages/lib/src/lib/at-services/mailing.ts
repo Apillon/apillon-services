@@ -60,4 +60,12 @@ export class Mailing extends BaseService {
       ...mailResponse,
     };
   }
+
+  public async setMailerliteField(field: string, value: any) {
+    return await this.callService({
+      eventName: MailEventType.SET_MAILERLITE_FIELD,
+      field,
+      value,
+    });
+  }
 }
