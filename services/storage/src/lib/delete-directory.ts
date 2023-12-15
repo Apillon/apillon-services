@@ -50,8 +50,8 @@ export async function deleteDirectory(
   );
 
   const ipfsCluster = await new ProjectConfig(
-    { project_uuid: this.project_uuid },
-    this.context,
+    { project_uuid: directory.project_uuid },
+    context,
   ).getIpfsCluster();
 
   for (const file of filesInDirectory) {
