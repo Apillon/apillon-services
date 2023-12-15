@@ -397,7 +397,9 @@ describe('Apillon API storage tests', () => {
       test('Application should NOT be able to delete ANOTHER application uploaded file', async () => {
         expect(testFile).toBeTruthy();
         const response = await request(stage.http)
-          .delete(`/storage/${testBucket.bucket_uuid}/file/${testFile.CID}`)
+          .delete(
+            `/storage/${testBucket.bucket_uuid}/file/${testFile.file_uuid}`,
+          )
           .set(
             'Authorization',
             `Basic ${Buffer.from(
@@ -412,7 +414,9 @@ describe('Apillon API storage tests', () => {
       test('Application should be able to delete uploaded file', async () => {
         expect(testFile).toBeTruthy();
         const response = await request(stage.http)
-          .delete(`/storage/${testBucket.bucket_uuid}/file/${testFile.CID}`)
+          .delete(
+            `/storage/${testBucket.bucket_uuid}/file/${testFile.file_uuid}`,
+          )
           .set(
             'Authorization',
             `Basic ${Buffer.from(
@@ -420,8 +424,8 @@ describe('Apillon API storage tests', () => {
             ).toString('base64')}`,
           );
         expect(response.status).toBe(200);
-        testFile = await new File({}, stage.storageContext).populateDeletedById(
-          testS3FileUUID,
+        testFile = await new File({}, stage.storageContext).populateById(
+          testFile.file_uuid,
         );
         expect(testFile.exists()).toBeFalsy();
       });
@@ -449,7 +453,6 @@ describe('Apillon API storage tests', () => {
           testDirectory.id,
         );
 
-        expect(testFile).toBeTruthy();
         const response = await request(stage.http)
           .delete(
             `/storage/buckets/${testBucket.bucket_uuid}/directories/${testDirectory.directory_uuid}`,

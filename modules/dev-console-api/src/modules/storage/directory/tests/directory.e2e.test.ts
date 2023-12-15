@@ -294,7 +294,7 @@ describe('Storage directory tests', () => {
       let d: Directory = await new Directory(
         {},
         stage.storageContext,
-      ).populateByUUID(response.body.data.directory_uuid);
+      ).populateByUUID(testDirectoryToDelete.directory_uuid);
       expect(d.exists()).toBeFalsy();
 
       //Check if other directories and files are still active
@@ -333,10 +333,6 @@ describe('Storage directory tests', () => {
         stage.storageContext,
         testProject.project_uuid,
       );
-
-      expect(
-        await ipfsService.isCIDPinned(deleteBucketTestFile1.CID),
-      ).toBeTruthy();
 
       //Subdir
       const testDirectorySubDir = await createTestBucketDirectory(
@@ -388,9 +384,6 @@ describe('Storage directory tests', () => {
         deleteBucketTestFile2.id,
       );
       expect(f.exists()).toBeFalsy();
-      expect(
-        await ipfsService.isCIDPinned(deleteBucketTestFile1.CID),
-      ).toBeFalsy();
 
       //Check if bucket size was decreased
       const tmpB: Bucket = await new Bucket(

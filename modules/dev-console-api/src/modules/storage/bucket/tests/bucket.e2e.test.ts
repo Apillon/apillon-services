@@ -329,12 +329,12 @@ describe('Storage bucket tests', () => {
       const response = await request(stage.http)
         .delete(`/buckets/${deleteBucketTestBucket.bucket_uuid}`)
         .set('Authorization', `Bearer ${testUser.token}`);
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(200);
 
       const b: Bucket = await new Bucket(
         {},
         stage.storageContext,
-      ).populateByUUID(testBucket.bucket_uuid);
+      ).populateByUUID(deleteBucketTestBucket.bucket_uuid);
       expect(b.exists()).toBeFalsy();
     });
   });
