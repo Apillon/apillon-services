@@ -345,7 +345,7 @@ export class Subscription extends ProjectAccessModel {
    * @returns array of objects with project_uuid and package_id property
    */
   public async getProjectsWithActiveSubscription(
-    subscriptionPackageId?: number,
+    subscriptionPackageId: number = null,
   ): Promise<this[]> {
     return await this.getContext().mysql.paramExecute(
       `
@@ -356,9 +356,7 @@ export class Subscription extends ProjectAccessModel {
       AND status = ${SqlModelStatus.ACTIVE}
       `,
       {
-        subscriptionPackageId: subscriptionPackageId
-          ? subscriptionPackageId
-          : null,
+        subscriptionPackageId,
       },
     );
   }

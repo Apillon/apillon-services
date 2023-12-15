@@ -148,7 +148,7 @@ export class ProjectService {
   }
 
   async addCreditsToProject(context: DevConsoleApiContext, data: AddCreditDto) {
-    data.referenceTable = 'MANUALLY ADDED';
+    data.referenceTable = 'manually_added';
     data.referenceId = uuidV4();
     try {
       await data.validate();

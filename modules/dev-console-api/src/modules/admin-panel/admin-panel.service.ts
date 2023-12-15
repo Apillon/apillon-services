@@ -22,29 +22,32 @@ import { ProjectsQueryFilter } from './project/dtos/projects-query-filter.dto';
 export class AdminPanelService {
   async generalSearch(context: DevConsoleApiContext, query: BaseQueryFilter) {
     //Search files (uuid & CID)
-    const filesQuery: FilesQueryFilter = new FilesQueryFilter({
-      ...query,
-      status: SqlModelStatus.ACTIVE,
-    });
-
-    const files = (await new StorageMicroservice(context).listFiles(filesQuery))
-      .data;
+    const files = (
+      await new StorageMicroservice(context).listFiles(
+        new FilesQueryFilter({
+          ...query,
+          status: SqlModelStatus.ACTIVE,
+        }),
+      )
+    ).data;
 
     //Search buckets
-    const bucketQuery: BucketQueryFilter = new BucketQueryFilter(query);
     const buckets = (
-      await new StorageMicroservice(context).listBuckets(bucketQuery)
+      await new StorageMicroservice(context).listBuckets(
+        new BucketQueryFilter(query),
+      )
     ).data;
     //Search websites
-    const websiteQuery: WebsiteQueryFilter = new WebsiteQueryFilter(query);
     const websites = (
-      await new StorageMicroservice(context).listWebsites(websiteQuery)
+      await new StorageMicroservice(context).listWebsites(
+        new WebsiteQueryFilter(query),
+      )
     ).data;
     //Search collections
-    const collectionQuery: NFTCollectionQueryFilter =
-      new NFTCollectionQueryFilter(query);
     const collections = (
-      await new NftsMicroservice(context).listNftCollections(collectionQuery)
+      await new NftsMicroservice(context).listNftCollections(
+        new NFTCollectionQueryFilter(query),
+      )
     ).data;
     //Search users (email & uuid)
     const users = await new User({}, context).listUsers(query);
