@@ -63,7 +63,7 @@ export class Mailer {
     if (env.APP_ENV !== AppEnvironment.PROD) {
       return;
     }
-    const email = context.user.email;
+    const email = context.user?.email;
     try {
       await axios.put(
         `https://api.mailerlite.com/api/v2/subscribers/${email}`,
