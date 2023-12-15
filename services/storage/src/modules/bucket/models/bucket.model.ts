@@ -1,4 +1,5 @@
 import {
+  ApiName,
   BucketQueryFilter,
   Context,
   PoolConnection,
@@ -17,6 +18,7 @@ import { presenceValidator } from '@rawmodel/validators';
 import { v4 as uuidV4 } from 'uuid';
 import { BucketType, DbTables, StorageErrorCode } from '../../../config/types';
 import { StorageCodeException } from '../../../lib/exceptions';
+import { StorageService } from '../../storage/storage.service';
 
 export class Bucket extends UuidSqlModel {
   public readonly tableName = DbTables.BUCKET;
@@ -27,15 +29,11 @@ export class Bucket extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.APILLON_API,
@@ -48,15 +46,11 @@ export class Bucket extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
     ],
@@ -72,14 +66,10 @@ export class Bucket extends UuidSqlModel {
 
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
@@ -103,14 +93,10 @@ export class Bucket extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
@@ -129,14 +115,10 @@ export class Bucket extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
@@ -153,6 +135,7 @@ export class Bucket extends UuidSqlModel {
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
@@ -170,6 +153,7 @@ export class Bucket extends UuidSqlModel {
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
@@ -181,16 +165,12 @@ export class Bucket extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.SERVICE,
     ],
   })
@@ -198,16 +178,12 @@ export class Bucket extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.SERVICE,
     ],
   })
@@ -215,16 +191,12 @@ export class Bucket extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.SERVICE,
     ],
     validators: [],
@@ -319,16 +291,22 @@ export class Bucket extends UuidSqlModel {
       filter.serialize(),
     );
 
-    const selectFields = this.generateSelectFields('b', '');
+    const selectFields = this.generateSelectFields(
+      'b',
+      '',
+      context.apiName == ApiName.ADMIN_CONSOLE_API
+        ? SerializeFor.ADMIN_SELECT_DB
+        : SerializeFor.SELECT_DB,
+    );
     const sqlQuery = {
       qSelect: `
         SELECT ${selectFields}
         `,
       qFrom: `
         FROM \`${DbTables.BUCKET}\` b
-        WHERE b.project_uuid = @project_uuid
+        WHERE b.project_uuid = IFNULL(@project_uuid, b.project_uuid)
         AND ((@bucketType IS null AND b.bucketType IN (1,3)) OR b.bucketType = @bucketType)
-        AND (@search IS null OR b.name LIKE CONCAT('%', @search, '%'))
+        AND (@search IS null OR b.name LIKE CONCAT('%', @search, '%') OR b.bucket_uuid = @search)
         AND IFNULL(@status, ${SqlModelStatus.ACTIVE}) = status
       `,
       qFilter: `
@@ -427,7 +405,10 @@ export class Bucket extends UuidSqlModel {
    */
   public async getDetailsForProject() {
     const numOfBuckets = await this.getNumOfBuckets(false);
-    const totalBucketSize = await this.getTotalSizeUsedByProject();
-    return { numOfBuckets, totalBucketSize };
+    const storageInfo = await StorageService.getStorageInfo(
+      { project_uuid: this.project_uuid },
+      this.getContext(),
+    );
+    return { numOfBuckets, ...storageInfo };
   }
 }

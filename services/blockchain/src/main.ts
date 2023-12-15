@@ -30,8 +30,10 @@ export async function processEvent(
     [BlockchainEventType.GET_WALLET]: WalletService.getWallet,
     [BlockchainEventType.UPDATE_WALLET]: WalletService.updateWallet,
     [BlockchainEventType.GET_WALLET_TRANSACTIONS]:
-      WalletService.getWalletTransactions,
+      WalletService.listWalletTransactions,
     [BlockchainEventType.UPDATE_TRANSACTION]: WalletService.updateTransaction,
+    [BlockchainEventType.LIST_WALLET_DEPOSITS]:
+      WalletService.listWalletDeposits,
     [BlockchainEventType.GET_WALLET_IDENTITY]:
       WalletIdentityService.getWalletIdentityData,
   };

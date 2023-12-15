@@ -4,16 +4,16 @@ import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 
 import {
-  ProjectAccessModel,
-  BaseQueryFilter,
+  CodeException,
   DefaultUserRole,
-  getQueryParams,
   PopulateFrom,
-  selectAndCountQuery,
+  ProjectAccessModel,
+  Scs,
   SerializeFor,
   SqlModelStatus,
   getFaker,
-  CodeException,
+  getQueryParams,
+  selectAndCountQuery,
 } from '@apillon/lib';
 import {
   DbTables,
@@ -21,6 +21,7 @@ import {
   ValidatorErrorCode,
 } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
+import { ProjectsQueryFilter } from '../../admin-panel/project/dtos/projects-query-filter.dto';
 
 /**
  * Project model.
@@ -237,8 +238,25 @@ export class Project extends ProjectAccessModel {
 
   public async listProjects(
     context: DevConsoleApiContext,
-    filter: BaseQueryFilter,
+    filter: ProjectsQueryFilter,
   ) {
+    const { data: projectsWithActiveSubscription } = await new Scs(
+      context,
+    ).getProjectsWithActiveSubscription(filter.subscriptionPackageId);
+
+    //If filter was applied, but without results return empty response and skip additional db queries
+    if (
+      filter.subscriptionPackageId &&
+      projectsWithActiveSubscription.length == 0
+    ) {
+      return {
+        items: [],
+        total: 0,
+        limit: 20,
+        page: 1,
+      };
+    }
+
     // Map url query with sql fields.
     const fieldMap = { id: 'p.d' };
     const { params, filters } = getQueryParams(
@@ -257,15 +275,39 @@ export class Project extends ProjectAccessModel {
         DbTables.SERVICE
       } WHERE project_id = p.id) AS totalServices`,
       qFrom: `FROM \`${DbTables.PROJECT}\` p
-        WHERE (@search IS null OR p.name LIKE CONCAT('%', @search, '%'))
-        AND status <> ${SqlModelStatus.DELETED}`,
+        WHERE (@search IS null OR p.name LIKE CONCAT('%', @search, '%') OR p.project_uuid LIKE @search)
+        AND status <> ${SqlModelStatus.DELETED}
+        ${
+          filter.subscriptionPackageId
+            ? ' AND p.project_uuid IN (' +
+              projectsWithActiveSubscription
+                .map((x) => '"' + x.project_uuid + '"')
+                .join(',') +
+              ') '
+            : ''
+        }`,
       qFilter: `
           ORDER BY ${filters.orderStr}
           LIMIT ${filters.limit} OFFSET ${filters.offset}
         `,
     };
 
-    return selectAndCountQuery(context.mysql, sqlQuery, params, 'p.id');
+    const projects = await selectAndCountQuery(
+      context.mysql,
+      sqlQuery,
+      params,
+      'p.id',
+    );
+
+    //Set subscriptionPackageId to project item if exists in projectsWithActiveSubscription
+    projects.items.forEach(
+      (item) =>
+        (item.subscriptionPackageId = projectsWithActiveSubscription.find(
+          (x) => x.project_uuid == item.project_uuid,
+        )?.package_id),
+    );
+
+    return projects;
   }
 
   public async getNumOfUserProjects() {
