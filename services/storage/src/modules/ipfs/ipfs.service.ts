@@ -5,7 +5,9 @@ import {
   env,
   Lmas,
   LogType,
+  PoolConnection,
   runWithWorkers,
+  SerializeFor,
   ServiceName,
   writeLog,
 } from '@apillon/lib';
@@ -23,6 +25,7 @@ import { FileUploadRequest } from '../storage/models/file-upload-request.model';
 import { File } from '../storage/models/file.model';
 import { uploadItemsToIPFSRes } from './interfaces/upload-items-to-ipfs-res.interface';
 import { IpfsCluster } from './models/ipfs-cluster.model';
+import { IpfsBandwidth } from './models/ipfs-bandwidth';
 
 export class IPFSService {
   private client: IPFSHTTPClient;
@@ -575,5 +578,45 @@ export class IPFSService {
     }
 
     return 0;
+  }
+
+  /**
+   * Increase used bandwidth for project in month
+   * @param project_uuid
+   * @param month
+   * @param year
+   * @param bytes used bandwidth
+   * @param conn
+   * @returns
+   */
+  public async increaseUsedBandwidth(
+    month: number,
+    year: number,
+    bytes: number,
+    conn?: PoolConnection,
+  ) {
+    let ipfsBandwidth: IpfsBandwidth = await new IpfsBandwidth(
+      {},
+      this.context,
+    ).populateByProjectAndDate(this.project_uuid, month, year, conn);
+
+    if (ipfsBandwidth.exists()) {
+      ipfsBandwidth.bandwidth += bytes;
+      await ipfsBandwidth.update(SerializeFor.UPDATE_DB, conn);
+    } else {
+      ipfsBandwidth = new IpfsBandwidth(
+        {
+          project_uuid: this.project_uuid,
+          month,
+          year,
+          bandwidth: bytes,
+        },
+        this.context,
+      );
+
+      await ipfsBandwidth.insert(SerializeFor.INSERT_DB, conn);
+    }
+
+    return ipfsBandwidth;
   }
 }

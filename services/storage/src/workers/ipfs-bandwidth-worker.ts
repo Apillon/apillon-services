@@ -12,9 +12,9 @@ import {
 } from '@apillon/lib';
 import { BaseWorker, Job, WorkerDefinition } from '@apillon/workers-lib';
 import { DbTables, StorageErrorCode } from '../config/types';
-import { IpfsBandwidth } from '../modules/ipfs/models/ipfs-bandwidth';
-import { IpfsBandwidthSync } from '../modules/ipfs/models/ipfs-bandwidth-sync';
 import { Website } from '../modules/hosting/models/website.model';
+import { IPFSService } from '../modules/ipfs/ipfs.service';
+import { IpfsBandwidthSync } from '../modules/ipfs/models/ipfs-bandwidth-sync';
 
 /**
  * Acquire aggregated IPFS traffic by project and websites.
@@ -127,30 +127,15 @@ export class IpfsBandwidthWorker extends BaseWorker {
             }
           }
 
-          let ipfsBandwidth: IpfsBandwidth = await new IpfsBandwidth(
-            {},
+          await new IPFSService(
             this.context,
-          ).populateByProjectAndDate(
             data._id.project_uuid,
+          ).increaseUsedBandwidth(
             data._id.month,
             data._id.year,
+            data.respBytes,
             conn,
           );
-
-          if (ipfsBandwidth.exists()) {
-            ipfsBandwidth.bandwidth += data.respBytes;
-            await ipfsBandwidth.update(SerializeFor.UPDATE_DB, conn);
-          } else {
-            ipfsBandwidth = new IpfsBandwidth(
-              {
-                ...data._id,
-                bandwidth: data.respBytes,
-              },
-              this.context,
-            );
-
-            await ipfsBandwidth.insert(SerializeFor.INSERT_DB, conn);
-          }
         },
       );
 

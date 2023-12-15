@@ -1,6 +1,7 @@
 import {
   AWS_S3,
   CacheKeyPrefix,
+  CodeException,
   env,
   invalidateCacheMatch,
   Lmas,
@@ -442,6 +443,30 @@ export async function storageBucketSyncFilesToIPFS(
       totalUploadedToBucket: bucket.uploadedSize,
     },
   });
+
+  //increase used bandwidth
+  const currDate = new Date();
+  try {
+    await new IPFSService(context, bucket.project_uuid).increaseUsedBandwidth(
+      currDate.getMonth() + 1,
+      currDate.getFullYear(),
+      tmpSize,
+    );
+  } catch (err) {
+    await new CodeException({
+      context,
+      code: StorageErrorCode.ERROR_INCREASING_USED_BANDWIDTH,
+      status: 500,
+      sourceFunction: 'storageBucketSyncFilesToIPFS',
+    }).writeToMonitor({
+      project_uuid: bucket.project_uuid,
+      data: {
+        month: currDate.getMonth(),
+        year: currDate.getFullYear(),
+        bytes: tmpSize,
+      },
+    });
+  }
 
   writeLog(
     LogType.INFO,

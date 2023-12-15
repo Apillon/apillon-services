@@ -708,9 +708,12 @@ export class StorageService {
     return {
       secret: ipfsClusterJwtSecretForProject,
       project_uuid: event.project_uuid,
-      ipfsGateway: ipfsCluster.ipfsGateway,
-      ipnsGateway: ipfsCluster.ipnsGateway,
-      subdomainGateway: ipfsCluster.subdomainGateway,
+      ipfsGateway: ipfsCluster.subdomainGateway
+        ? `https://<CIDv1>.${ipfsCluster.subdomainGateway}`
+        : ipfsCluster.ipfsGateway,
+      ipnsGateway: ipfsCluster.subdomainGateway
+        ? `https://<IPNS>.${ipfsCluster.subdomainGateway}`
+        : ipfsCluster.ipnsGateway,
     };
   }
 

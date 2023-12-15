@@ -6,6 +6,7 @@ import {
   MySqlConnect,
   ResponseFormat,
   ErrorHandler,
+  logLambdaEvent,
 } from '@apillon/service-lib';
 import { AppEnvironment, env } from '@apillon/lib';
 
@@ -20,12 +21,9 @@ const lambdaHandler: Handler = async (
   context: any,
   _callback: Callback,
 ) => {
-  console.log(event);
+  logLambdaEvent(event);
 
-  const res = await processEvent(event, context.serviceContext);
-  console.log('LAMBDA RESPONSE');
-  console.log(res);
-  return res;
+  return await processEvent(event, context.serviceContext);
 };
 
 /**
