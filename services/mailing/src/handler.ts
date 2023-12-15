@@ -16,12 +16,12 @@ import { processEvent } from './main';
  */
 const lambdaHandler: Handler = async (
   event: any,
-  context: Context,
+  context: any,
   _callback: Callback,
 ) => {
   logLambdaEvent(event);
 
-  return await processEvent(event, context);
+  return await processEvent(event, context.serviceContext);
 };
 
 /**
