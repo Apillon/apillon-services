@@ -231,7 +231,7 @@ export class SubstrateService {
     return transaction.serialize(SerializeFor.PROFILE);
   }
 
-  static async getPhalaLogs(
+  static async getPhalaLogRecordsAndGasPrice(
     event: {
       phalaLogFilter: PhalaLogFilterDto;
     },

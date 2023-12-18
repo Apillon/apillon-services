@@ -16,8 +16,14 @@ import axios from 'axios';
 import { Transaction } from '../../modules/transaction/models/transaction.model';
 import { Contract } from '../../modules/computing/models/contract.model';
 import { ContractAbi } from '../../modules/computing/models/contractAbi.model';
-import { DbTables, TransactionType } from '../../config/types';
+import {
+  DbTables,
+  TransactionType,
+  TxAction,
+  TxDirection,
+} from '../../config/types';
 import { expect } from '@jest/globals';
+import { ClusterTransactionLog } from '../../modules/accounting/cluster-transaction-log.model';
 
 const mockAxios = new MockAdapter(axios);
 
@@ -102,11 +108,11 @@ describe('Log worker tests', () => {
       });
     getPhalaLogsMock = jest.spyOn(
       BlockchainMicroservice.prototype,
-      'getPhalaLogs',
+      'getPhalaLogRecordsAndGasPrice',
     );
     getClusterWalletBalanceMock = jest.spyOn(
       BlockchainMicroservice.prototype,
-      'getClusterWalletBalance',
+      'getPhalaClusterWalletBalance',
     );
   });
 
@@ -158,53 +164,31 @@ describe('Log worker tests', () => {
           walletAddress: WALLET_ADDRESS,
         }),
       );
-      expect(await getTransaction(stage, transaction.id)).toEqual({
-        contract_id: 1,
-        createUser: null,
-        errorMessage: null,
-        nonce: null,
-        status: 5,
-        transactionExecutedSuccessfully: 1,
-        transactionHash,
-        transactionStatus: 2,
-        transactionType: 1,
-        updateUser: null,
-      });
-      expect(await getTransactionLog(stage, transaction.id)).toEqual({
-        action: 'TRANSACTION',
-        addressFrom: null,
-        addressTo: null,
-        amount: null,
-        blockId: 2176820,
-        chain: 4,
-        chainType: 1,
-        clusterId: null,
-        createUser: null,
-        direction: 2,
-        fee: null,
-        hash: transactionHash,
-        project_uuid: 'project_uuid',
-        status: 2,
-        token: 'PHA',
-        totalPrice: null,
-        transactionExecutedSuccessfully: 1,
-        ts: null,
-        updateUser: null,
-        value: null,
-        wallet: null,
-      });
-      expect(await getClusterWallet(stage, clusterWallet.id)).toEqual({
-        clusterId: CLUSTER_ID,
-        createUser: null,
-        currentBalance: CLUSTER_FREE_BALANCE,
-        decimals: 12,
-        minBalance: 200000000000,
-        status: 5,
-        token: 'PHA',
-        totalBalance: CLUSTER_TOTAL_BALANCE,
-        updateUser: null,
-        walletAddress: WALLET_ADDRESS,
-      });
+      const updatedTransaction = await getTransaction(stage, transaction.id);
+      expect(updatedTransaction.transactionStatus).toEqual(
+        TransactionStatus.WORKER_SUCCESS,
+      );
+      const transactionLog = await getClusterTransactionLog(
+        stage,
+        transaction.id,
+      );
+      expect(transactionLog.project_uuid).toEqual('project_uuid');
+      expect(transactionLog.status).toEqual(TransactionStatus.WORKER_SUCCESS);
+      expect(transactionLog.action).toEqual(TxAction.TRANSACTION);
+      expect(transactionLog.blockId).toEqual(2176820);
+      expect(transactionLog.direction).toEqual(TxDirection.COST);
+      expect(transactionLog.hash).toEqual(transactionHash);
+      expect(transactionLog.transaction_id).toEqual(transaction.id);
+      const updatedClusterWallet = await getClusterWallet(
+        stage,
+        clusterWallet.id,
+      );
+      expect(updatedClusterWallet.currentBalance).toEqual(
+        `${CLUSTER_FREE_BALANCE}`,
+      );
+      expect(updatedClusterWallet.totalBalance).toEqual(
+        `${CLUSTER_TOTAL_BALANCE}`,
+      );
     });
     test('phala log worker should update failed contract deploy transactions and balance', async () => {
       mockGetPhalaLogsForDeploy(getPhalaLogsMock, 'uninstantiated');
@@ -244,53 +228,31 @@ describe('Log worker tests', () => {
           walletAddress: WALLET_ADDRESS,
         }),
       );
-      expect(await getTransaction(stage, transaction.id)).toEqual({
-        contract_id: 1,
-        createUser: null,
-        errorMessage: null,
-        nonce: null,
-        status: 5,
-        transactionExecutedSuccessfully: 0,
-        transactionHash,
-        transactionStatus: 2,
-        transactionType: 1,
-        updateUser: null,
-      });
-      expect(await getTransactionLog(stage, transaction.id)).toEqual({
-        action: 'TRANSACTION',
-        addressFrom: null,
-        addressTo: null,
-        amount: null,
-        blockId: 2176820,
-        chain: 4,
-        chainType: 1,
-        clusterId: null,
-        createUser: null,
-        direction: 2,
-        fee: null,
-        hash: transactionHash,
-        project_uuid: 'project_uuid',
-        status: 2,
-        token: 'PHA',
-        totalPrice: null,
-        transactionExecutedSuccessfully: 0,
-        ts: null,
-        updateUser: null,
-        value: null,
-        wallet: null,
-      });
-      expect(await getClusterWallet(stage, clusterWallet.id)).toEqual({
-        clusterId: CLUSTER_ID,
-        createUser: null,
-        currentBalance: CLUSTER_FREE_BALANCE,
-        decimals: 12,
-        minBalance: 200000000000,
-        status: 5,
-        token: 'PHA',
-        totalBalance: CLUSTER_TOTAL_BALANCE,
-        updateUser: null,
-        walletAddress: WALLET_ADDRESS,
-      });
+      const updatedTransaction = await getTransaction(stage, transaction.id);
+      expect(updatedTransaction.transactionStatus).toEqual(
+        TransactionStatus.WORKER_FAILED,
+      );
+      const transactionLog = await getClusterTransactionLog(
+        stage,
+        transaction.id,
+      );
+      expect(transactionLog.project_uuid).toEqual('project_uuid');
+      expect(transactionLog.status).toEqual(TransactionStatus.WORKER_FAILED);
+      expect(transactionLog.action).toEqual(TxAction.TRANSACTION);
+      expect(transactionLog.blockId).toEqual(2176820);
+      expect(transactionLog.direction).toEqual(TxDirection.COST);
+      expect(transactionLog.hash).toEqual(transactionHash);
+      expect(transactionLog.transaction_id).toEqual(transaction.id);
+      const updatedClusterWallet = await getClusterWallet(
+        stage,
+        clusterWallet.id,
+      );
+      expect(updatedClusterWallet.currentBalance).toEqual(
+        `${CLUSTER_FREE_BALANCE}`,
+      );
+      expect(updatedClusterWallet.totalBalance).toEqual(
+        `${CLUSTER_TOTAL_BALANCE}`,
+      );
     });
   });
   describe('Contract call transactions', () => {
@@ -333,53 +295,31 @@ describe('Log worker tests', () => {
           walletAddress: WALLET_ADDRESS,
         }),
       );
-      expect(await getTransaction(stage, transaction.id)).toEqual({
-        contract_id: 1,
-        createUser: null,
-        errorMessage: null,
-        nonce: 'nonce',
-        status: 5,
-        transactionExecutedSuccessfully: 1,
-        transactionHash,
-        transactionStatus: 2,
-        transactionType: 4,
-        updateUser: null,
-      });
-      expect(await getTransactionLog(stage, transaction.id)).toEqual({
-        action: 'TRANSACTION',
-        addressFrom: WALLET_ADDRESS,
-        addressTo: null,
-        amount: 7489062865,
-        blockId: 2146342,
-        chain: 4,
-        chainType: 1,
-        clusterId: CLUSTER_ID,
-        createUser: null,
-        direction: 2,
-        fee: 7489062865,
-        hash: transactionHash,
-        project_uuid: 'project_uuid',
-        status: 2,
-        token: 'PHA',
-        totalPrice: 7489062865,
-        transactionExecutedSuccessfully: 1,
-        ts: null,
-        updateUser: null,
-        value: 7489062865,
-        wallet: WALLET_ADDRESS,
-      });
-      expect(await getClusterWallet(stage, clusterWallet.id)).toEqual({
-        clusterId: CLUSTER_ID,
-        createUser: null,
-        currentBalance: CLUSTER_FREE_BALANCE,
-        decimals: 12,
-        minBalance: 200000000000,
-        status: 5,
-        token: 'PHA',
-        totalBalance: CLUSTER_TOTAL_BALANCE,
-        updateUser: null,
-        walletAddress: WALLET_ADDRESS,
-      });
+      const updatedTransaction = await getTransaction(stage, transaction.id);
+      expect(updatedTransaction.transactionStatus).toEqual(
+        TransactionStatus.WORKER_SUCCESS,
+      );
+      const transactionLog = await getClusterTransactionLog(
+        stage,
+        transaction.id,
+      );
+      expect(transactionLog.project_uuid).toEqual('project_uuid');
+      expect(transactionLog.status).toEqual(TransactionStatus.WORKER_SUCCESS);
+      expect(transactionLog.action).toEqual(TxAction.TRANSACTION);
+      expect(transactionLog.blockId).toEqual(2146342);
+      expect(transactionLog.direction).toEqual(TxDirection.COST);
+      expect(transactionLog.hash).toEqual(transactionHash);
+      expect(transactionLog.transaction_id).toEqual(transaction.id);
+      const updatedClusterWallet = await getClusterWallet(
+        stage,
+        clusterWallet.id,
+      );
+      expect(updatedClusterWallet.currentBalance).toEqual(
+        `${CLUSTER_FREE_BALANCE}`,
+      );
+      expect(updatedClusterWallet.totalBalance).toEqual(
+        `${CLUSTER_TOTAL_BALANCE}`,
+      );
     });
 
     test('Phala log worker should update failed transactions and balance', async () => {
@@ -421,53 +361,31 @@ describe('Log worker tests', () => {
           walletAddress: WALLET_ADDRESS,
         }),
       );
-      expect(await getTransaction(stage, transaction.id)).toEqual({
-        contract_id: 1,
-        createUser: null,
-        errorMessage: null,
-        nonce: 'nonce',
-        status: 5,
-        transactionExecutedSuccessfully: 0,
-        transactionHash,
-        transactionStatus: 2,
-        transactionType: 4,
-        updateUser: null,
-      });
-      expect(await getTransactionLog(stage, transaction.id)).toEqual({
-        action: 'TRANSACTION',
-        addressFrom: WALLET_ADDRESS,
-        addressTo: null,
-        amount: 7489062865,
-        blockId: 2146342,
-        chain: 4,
-        chainType: 1,
-        clusterId: CLUSTER_ID,
-        createUser: null,
-        direction: 2,
-        fee: 7489062865,
-        hash: transactionHash,
-        project_uuid: 'project_uuid',
-        status: 2,
-        token: 'PHA',
-        totalPrice: 7489062865,
-        transactionExecutedSuccessfully: 0,
-        ts: null,
-        updateUser: null,
-        value: 7489062865,
-        wallet: WALLET_ADDRESS,
-      });
-      expect(await getClusterWallet(stage, clusterWallet.id)).toEqual({
-        clusterId: CLUSTER_ID,
-        createUser: null,
-        currentBalance: CLUSTER_FREE_BALANCE,
-        decimals: 12,
-        minBalance: 200000000000,
-        status: 5,
-        token: 'PHA',
-        totalBalance: CLUSTER_TOTAL_BALANCE,
-        updateUser: null,
-        walletAddress: WALLET_ADDRESS,
-      });
+      const updatedTransaction = await getTransaction(stage, transaction.id);
+      expect(updatedTransaction.transactionStatus).toEqual(
+        TransactionStatus.WORKER_FAILED,
+      );
+      const transactionLog = await getClusterTransactionLog(
+        stage,
+        transaction.id,
+      );
+      expect(transactionLog.project_uuid).toEqual('project_uuid');
+      expect(transactionLog.status).toEqual(TransactionStatus.WORKER_FAILED);
+      expect(transactionLog.action).toEqual(TxAction.TRANSACTION);
+      expect(transactionLog.blockId).toEqual(2146342);
+      expect(transactionLog.direction).toEqual(TxDirection.COST);
+      expect(transactionLog.hash).toEqual(transactionHash);
+      expect(transactionLog.transaction_id).toEqual(transaction.id);
+      const updatedClusterWallet = await getClusterWallet(
+        stage,
+        clusterWallet.id,
+      );
+      expect(updatedClusterWallet.currentBalance).toEqual(
+        `${CLUSTER_FREE_BALANCE}`,
+      );
+      expect(updatedClusterWallet.totalBalance).toEqual(
+        `${CLUSTER_TOTAL_BALANCE}`,
+      );
     });
   });
 });
@@ -540,31 +458,30 @@ function mockGetClusterWalletBalance(
 }
 
 async function getClusterWallet(stage: Stage, clusterWalletId: number) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { id, createTime, updateTime, ...clusterWallet } = (
+  const data = (
     await stage.context.mysql.paramExecute(
       `SELECT * FROM ${DbTables.CLUSTER_WALLET} WHERE id=${clusterWalletId}`,
     )
   )[0];
-  return clusterWallet;
+
+  return new ClusterWallet(data, stage.context);
 }
 
-async function getTransactionLog(stage: Stage, transactionId: number) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { id, transaction_id, createTime, updateTime, ...transactionLog } = (
+async function getClusterTransactionLog(stage: Stage, transactionId: number) {
+  const data = (
     await stage.context.mysql.paramExecute(
       `SELECT * FROM ${DbTables.CLUSTER_TRANSACTION_LOG} WHERE transaction_id=${transactionId}`,
     )
   )[0];
-  return transactionLog;
+
+  return new ClusterTransactionLog(data, stage.context);
 }
 
 async function getTransaction(stage: Stage, transactionId: number) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { id, createTime, updateTime, ...transaction } = (
+  const data = (
     await stage.context.mysql.paramExecute(
       `SELECT * FROM ${DbTables.TRANSACTION} WHERE id=${transactionId}`,
     )
   )[0];
-  return transaction;
+  return new Transaction(data, stage.context);
 }

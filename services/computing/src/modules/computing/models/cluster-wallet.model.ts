@@ -182,10 +182,10 @@ export class ClusterWallet extends AdvancedSQLModel {
     );
   }
 
-  public async getWalletClusters(conn?: PoolConnection) {
+  public async getClusterWalletIds(conn?: PoolConnection) {
     return await this.getContext().mysql.paramExecute(
       `
-      SELECT *
+      SELECT id
       FROM \`${DbTables.CLUSTER_WALLET}\`
       WHERE
       status = ${SqlModelStatus.ACTIVE};

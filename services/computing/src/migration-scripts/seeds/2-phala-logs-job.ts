@@ -16,7 +16,7 @@ export async function upgrade(
     VALUES ('PhalaLogsWorker', 0, '*/2 * * * *',
             '2023-01-25 10:00:00',
             '{"chain": ${SubstrateChain.PHALA}}',
-            '{"chain": ${SubstrateChain.PHALA}, "channel": 0}', 5, 900);
+            '{"chain": ${SubstrateChain.PHALA}, "channel": 0}', 9, 900);
   `);
 }
 

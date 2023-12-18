@@ -13,7 +13,6 @@ import {
   TransactionStatus,
 } from '@apillon/lib';
 import {
-  booleanParser,
   dateParser,
   floatParser,
   integerParser,
@@ -81,19 +80,6 @@ export class ClusterTransactionLog extends AdvancedSQLModel {
     ],
   })
   public status: TransactionStatus;
-
-  @prop({
-    parser: { resolver: booleanParser() },
-    populatable: [PopulateFrom.DB],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.SELECT_DB,
-      SerializeFor.SERVICE,
-      SerializeFor.INSERT_DB,
-    ],
-    validators: [],
-  })
-  public transactionExecutedSuccessfully: boolean;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -361,7 +347,7 @@ export class ClusterTransactionLog extends AdvancedSQLModel {
 
   public async updateValueByHash(value: number, conn?: PoolConnection) {
     await this.getContext().mysql.paramExecute(
-      `UPDATE ${this.tableName} SET value = @value
+      `UPDATE ${DbTables.CLUSTER_TRANSACTION_LOG} SET value = @value
       WHERE hash = @hash
       AND chain = @chain
       AND chainType = @chainType;`,
