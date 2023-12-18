@@ -53,7 +53,7 @@ export class PhalaLogWorker extends BaseSingleThreadWorker {
     const transactions = await new Transaction(
       {},
       this.context,
-    ).getNonExecutedTransactionsAndContracts(clusterWallet.clusterId);
+    ).getNonExecutedTransactions(clusterWallet.clusterId);
 
     if (transactions.length <= 0) {
       await this.writeEventLog(

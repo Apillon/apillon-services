@@ -178,7 +178,7 @@ export class Transaction extends AdvancedSQLModel {
     return res;
   }
 
-  public async getNonExecutedTransactionsAndContracts(clusterId: string) {
+  public async getNonExecutedTransactions(clusterId: string) {
     return (await this.getContext().mysql.paramExecute(
       `
         SELECT t.id AS transaction_id,
