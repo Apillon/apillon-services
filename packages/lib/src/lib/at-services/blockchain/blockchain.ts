@@ -16,6 +16,7 @@ import {
   TransactionDto,
   UpdateTransactionDto,
   WalletTransactionsQueryFilter,
+  WalletDepositsQueryFilter,
   WalletIdentityDto,
 } from '../../..';
 import { PhalaLogFilterDto } from '../computing/dtos/phala-log-filter.dto';
@@ -137,6 +138,13 @@ export class BlockchainMicroservice extends BaseService {
       walletId,
       transactionId,
       data,
+    });
+  }
+
+  public async listWalletDeposits(query: WalletDepositsQueryFilter) {
+    return await this.callService({
+      eventName: BlockchainEventType.LIST_WALLET_DEPOSITS,
+      ...query,
     });
   }
   //#endregion

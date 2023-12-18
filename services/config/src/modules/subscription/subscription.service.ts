@@ -330,6 +330,22 @@ export class SubscriptionService {
     }).getList(event.query, context);
   }
 
+  /**
+   * Get all active subscriptions
+   * @param event
+   * @param context
+   * @returns
+   */
+  static async getProjectsWithActiveSubscription(
+    event: { subscriptionPackageId?: number },
+    context: ServiceContext,
+  ) {
+    return await new Subscription(
+      {},
+      context,
+    ).getProjectsWithActiveSubscription(event.subscriptionPackageId);
+  }
+
   private static async checkForActiveSubscription(
     project_uuid: string,
     context: ServiceContext,

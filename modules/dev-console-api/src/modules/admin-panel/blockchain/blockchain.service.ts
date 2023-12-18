@@ -4,6 +4,7 @@ import {
   BaseQueryFilter,
   BlockchainMicroservice,
   UpdateTransactionDto,
+  WalletDepositsQueryFilter,
   WalletTransactionsQueryFilter,
 } from '@apillon/lib';
 
@@ -71,6 +72,23 @@ export class BlockchainService {
         walletId,
       )
     ).data;
+  }
+
+  /**
+   * List wallet deposits
+   * @param context
+   * @param query query parameters (tsFrom, tsTo, ...)
+   * @param walletId
+   * @returns
+   */
+  async listWalletDeposits(
+    context: DevConsoleApiContext,
+    query: WalletDepositsQueryFilter,
+    walletId: number,
+  ): Promise<any[]> {
+    query.populate({ walletId });
+    return (await new BlockchainMicroservice(context).listWalletDeposits(query))
+      .data;
   }
 
   /**

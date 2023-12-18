@@ -1,4 +1,5 @@
 import {
+  ApiName,
   AppEnvironment,
   AWS_S3,
   CacheKeyPrefix,
@@ -467,6 +468,12 @@ export class StorageService {
     event: { query: FilesQueryFilter },
     context: ServiceContext,
   ) {
+    if (context.apiName == ApiName.ADMIN_CONSOLE_API) {
+      return await new File({}, context).listAllFiles(
+        context,
+        new FilesQueryFilter(event.query),
+      );
+    }
     return await new File({}, context).listFiles(
       context,
       new FilesQueryFilter(event.query),
