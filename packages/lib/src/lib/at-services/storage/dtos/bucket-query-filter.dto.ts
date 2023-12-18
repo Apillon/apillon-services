@@ -23,12 +23,5 @@ export class BucketQueryFilter extends BaseQueryFilter {
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
   })
-  public status: number;
-
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [],
-  })
   public bucketType: number;
 }

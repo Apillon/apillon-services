@@ -23,12 +23,5 @@ export class ContractQueryFilter extends BaseQueryFilter {
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
   })
-  public status: number;
-
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [],
-  })
   public contractStatus: number;
 }
