@@ -113,25 +113,31 @@ export class PaymentsController {
     return this.paymentsService.getProductPrice(context, product_id);
   }
 
-  @Get('crypto/payment-session')
-  @Validation({ dto: PaymentSessionDto, validateFor: ValidateFor.QUERY })
+  @Post('crypto/payment')
+  @Validation({ dto: PaymentSessionDto, validateFor: ValidateFor.BODY })
   @UseGuards(AuthGuard, ValidationGuard)
-  async getCryptoPaymentSession(
-    @Query() paymentSessionDto: PaymentSessionDto,
+  async createCryptoPayment(
+    @Body() paymentSessionDto: PaymentSessionDto,
     @Ctx() context: DevConsoleApiContext,
   ): Promise<any> {
-    return await this.cryptoPaymentsService.createCryptoPaymentSession(
+    return await this.cryptoPaymentsService.createCryptoPayment(
       context,
       paymentSessionDto,
     );
   }
 
+  @Get('crypto/payment/:id')
+  @UseGuards(AuthGuard)
+  async getCryptoPayment(@Param('id') paymentId: string): Promise<any> {
+    return await this.cryptoPaymentsService.getCryptoPayment(paymentId);
+  }
+
   @Post('crypto/webhook')
-  async handleCryptoWebhook(
+  async handleCryptoPaymentWebhook(
     @Body() body: CryptoPayment,
     @Headers('x-nowpayments-sig') cryptoSignature: string,
   ): Promise<any> {
-    await this.cryptoPaymentsService.handlePaymentWebhook(
+    await this.cryptoPaymentsService.handleCryptoPaymentWebhook(
       body,
       cryptoSignature,
     );

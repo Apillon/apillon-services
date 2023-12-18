@@ -501,6 +501,7 @@ export interface IEnv {
    * NOWPAYMENTS
    */
   NOWPAYMENTS_API_KEY: string;
+  IPN_CALLBACK_URL: string;
   IPN_SECRET_KEY: string;
 }
 
@@ -911,6 +912,7 @@ export let env: IEnv = {
 
   /** NOWPAYMENTS */
   NOWPAYMENTS_API_KEY: process.env['NOWPAYMENTS_API_KEY'],
+  IPN_CALLBACK_URL: process.env['IPN_CALLBACK_URL'],
   IPN_SECRET_KEY: process.env['IPN_SECRET_KEY'],
 };
 

@@ -7,6 +7,7 @@ export interface CryptoPayment {
     | 'confirming'
     | 'confirmed'
     | 'finished'
+    | 'sending'
     | 'partially_paid'
     | 'failed';
   pay_address: string;
@@ -29,4 +30,24 @@ export interface CryptoPayment {
     withdrawalFee: number;
     serviceFee: number;
   };
+}
+
+export interface CryptoInvoicePayment {
+  id: string;
+  token_id: string;
+  order_id: string;
+  order_description: string;
+  price_amount: string;
+  price_currency: string;
+  pay_currency: string;
+  ipn_callback_url: string;
+  invoice_url: string;
+  success_url: string;
+  cancel_url: string;
+  partially_paid_url: string | null;
+  payout_currency: string | null;
+  created_at: string;
+  updated_at: string;
+  is_fixed_rate: boolean;
+  is_fee_paid_by_user: boolean;
 }

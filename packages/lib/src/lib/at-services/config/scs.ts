@@ -192,7 +192,7 @@ export class Scs extends BaseService {
     >,
   ) {
     return await this.callService({
-      eventName: ScsEventType.HANDLE_STRIPE_WEBHOOK_DATA,
+      eventName: ScsEventType.HANDLE_PAYMENT_WEBHOOK_DATA,
       data,
     });
   }
