@@ -233,10 +233,6 @@ export class CreateCollectionDTOBase extends ModelBase {
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [
       {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_COLLECTION_ROYALTIES_ADDRESS_NOT_PRESENT,
-      },
-      {
         resolver: ethAddressValidator(),
         code: ValidatorErrorCode.NFT_COLLECTION_ROYALTIES_ADDRESS_NOT_VALID,
       },
@@ -248,10 +244,6 @@ export class CreateCollectionDTOBase extends ModelBase {
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_COLLECTION_ROYALTIES_FEES_NOT_PRESENT,
-      },
       {
         resolver: numberSizeValidator({ minOrEqual: 0, maxOrEqual: 100 }),
         code: ValidatorErrorCode.NFT_COLLECTION_ROYALTIES_FEES_NOT_VALID,

@@ -74,7 +74,7 @@ export class CodeException extends HttpException {
       location: this.options.sourceFunction,
       service: params?.service || this.options.sourceModule,
       data: params?.data || this.options.details,
-      sendAdminAlert: params.sendAdminAlert,
+      sendAdminAlert: params?.sendAdminAlert,
     });
 
     return this;

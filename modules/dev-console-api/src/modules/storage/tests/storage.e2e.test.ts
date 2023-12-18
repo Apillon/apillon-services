@@ -801,10 +801,15 @@ describe('Storage tests', () => {
           generateJwtSecret(testProject.project_uuid, ipfsCluster.secret),
         );
         expect(response.body.data.project_uuid).toBe(testProject.project_uuid);
-        expect(response.body.data.ipfsGateway).toBe(ipfsCluster.ipfsGateway);
-        expect(response.body.data.ipnsGateway).toBe(ipfsCluster.ipnsGateway);
-        expect(response.body.data.subdomainGateway).toBe(
-          ipfsCluster.subdomainGateway ? ipfsCluster.subdomainGateway : '',
+        expect(response.body.data.ipfsGateway).toBe(
+          ipfsCluster.subdomainGateway
+            ? `https://<CIDv1>.${ipfsCluster.subdomainGateway}`
+            : ipfsCluster.ipfsGateway,
+        );
+        expect(response.body.data.ipnsGateway).toBe(
+          ipfsCluster.subdomainGateway
+            ? `https://<IPNS>.${ipfsCluster.subdomainGateway}`
+            : ipfsCluster.ipnsGateway,
         );
       });
 
