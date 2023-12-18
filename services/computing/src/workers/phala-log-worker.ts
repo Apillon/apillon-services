@@ -9,11 +9,11 @@ import {
   PhalaLogFilterDto,
   ServiceName,
   SubstrateChain,
-  TransactionStatus,
 } from '@apillon/lib';
 import { BaseSingleThreadWorker, LogOutput } from '@apillon/workers-lib';
 import { Transaction } from '../modules/transaction/models/transaction.model';
 import {
+  ComputingTransactionStatus,
   ContractStatus,
   DbTables,
   TransactionType,
@@ -21,13 +21,9 @@ import {
   TxDirection,
 } from '../config/types';
 import { SerMessage, SerMessageLog, SerMessageMessageOutput } from '@phala/sdk';
-import {
-  ClusterTransactionLog
-} from '../modules/accounting/cluster-transaction-log.model';
+import { ClusterTransactionLog } from '../modules/accounting/cluster-transaction-log.model';
 import { Keyring } from '@polkadot/api';
-import {
-  ClusterWallet
-} from '../modules/computing/models/cluster-wallet.model';
+import { ClusterWallet } from '../modules/computing/models/cluster-wallet.model';
 
 /**
  * Phala has its own worker because beside normal transactions (transmitted by our wallet) we also need to fetch
@@ -159,7 +155,6 @@ export class PhalaLogWorker extends BaseSingleThreadWorker {
     }
 
     // update contract and transaction status
-    // transaction.transactionStatus = TransactionStatus.CONFIRMED;
     const isInstantiated = record.message === 'instantiated';
 
     await this.updateContract(
@@ -167,8 +162,8 @@ export class PhalaLogWorker extends BaseSingleThreadWorker {
       isInstantiated ? ContractStatus.DEPLOYED : ContractStatus.FAILED,
     );
     const transactionStatus = isInstantiated
-      ? TransactionStatus.WORKER_SUCCESS
-      : TransactionStatus.WORKER_FAILED;
+      ? ComputingTransactionStatus.WORKER_SUCCESS
+      : ComputingTransactionStatus.WORKER_FAILED;
     await this.updateTransaction(transaction_id, transactionStatus);
     await new ClusterTransactionLog(
       {
@@ -219,12 +214,12 @@ export class PhalaLogWorker extends BaseSingleThreadWorker {
     }
 
     // update transaction status in computing
-    let transactionStatus = TransactionStatus.WORKER_FAILED;
+    let transactionStatus = ComputingTransactionStatus.WORKER_FAILED;
     if (
       'ok' in record.output.result &&
       record.output.result.ok.flags.length === 0
     ) {
-      transactionStatus = TransactionStatus.WORKER_SUCCESS;
+      transactionStatus = ComputingTransactionStatus.WORKER_SUCCESS;
     }
     await this.updateTransaction(transaction_id, transactionStatus);
 
@@ -293,7 +288,7 @@ export class PhalaLogWorker extends BaseSingleThreadWorker {
 
   private async updateTransaction(
     transaction_id: number,
-    transactionStatus: TransactionStatus,
+    transactionStatus: ComputingTransactionStatus,
   ) {
     await this.context.mysql.paramExecute(
       `UPDATE \`${DbTables.TRANSACTION}\`

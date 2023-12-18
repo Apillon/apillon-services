@@ -10,7 +10,6 @@ import {
   prop,
   SerializeFor,
   SubstrateChain,
-  TransactionStatus,
 } from '@apillon/lib';
 import {
   dateParser,
@@ -20,6 +19,7 @@ import {
 } from '@rawmodel/parsers';
 import {
   ComputingErrorCode,
+  ComputingTransactionStatus,
   DbTables,
   TxAction,
   TxDirection,
@@ -74,12 +74,12 @@ export class ClusterTransactionLog extends AdvancedSQLModel {
         code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
       {
-        resolver: enumInclusionValidator(TransactionStatus),
+        resolver: enumInclusionValidator(ComputingTransactionStatus),
         code: ComputingErrorCode.DATA_TYPE_INVALID,
       },
     ],
   })
-  public status: TransactionStatus;
+  public status: ComputingTransactionStatus;
 
   @prop({
     parser: { resolver: integerParser() },

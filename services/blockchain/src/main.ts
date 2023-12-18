@@ -24,7 +24,8 @@ export async function processEvent(
       SubstrateService.createTransaction,
     [BlockchainEventType.SUBSTRATE_GET_TRANSACTION]:
       SubstrateService.getTransactionById,
-    [BlockchainEventType.GET_PHALA_LOGS]: SubstrateService.getPhalaLogs,
+    [BlockchainEventType.GET_PHALA_LOG_RECORDS_AND_GAS_PRICE]:
+      SubstrateService.getPhalaLogRecordsAndGasPrice,
     [BlockchainEventType.GET_PHALA_CLUSTER_WALLET_BALANCE]:
       SubstrateService.getPhalaClusterWalletBalance,
     [BlockchainEventType.EVM_SIGN_TRANSACTION]: EvmService.createTransaction,

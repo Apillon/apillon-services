@@ -4,7 +4,6 @@ import {
   PhalaClusterWalletDto,
   PhalaLogFilterDto,
   SubstrateChain,
-  TransactionStatus,
 } from '@apillon/lib';
 import { releaseStage, setupTest, Stage } from '../../../test/setup';
 import { ClusterWallet } from '../../modules/computing/models/cluster-wallet.model';
@@ -17,6 +16,7 @@ import { Transaction } from '../../modules/transaction/models/transaction.model'
 import { Contract } from '../../modules/computing/models/contract.model';
 import { ContractAbi } from '../../modules/computing/models/contractAbi.model';
 import {
+  ComputingTransactionStatus,
   DbTables,
   TransactionType,
   TxAction,
@@ -135,7 +135,7 @@ describe('Log worker tests', () => {
           contract_id: contract.id,
           transactionType: TransactionType.DEPLOY_CONTRACT,
           transactionHash,
-          transactionStatus: TransactionStatus.CONFIRMED,
+          transactionStatus: ComputingTransactionStatus.CONFIRMED,
         },
         stage.context,
       ).insert();
@@ -166,14 +166,16 @@ describe('Log worker tests', () => {
       );
       const updatedTransaction = await getTransaction(stage, transaction.id);
       expect(updatedTransaction.transactionStatus).toEqual(
-        TransactionStatus.WORKER_SUCCESS,
+        ComputingTransactionStatus.WORKER_SUCCESS,
       );
       const transactionLog = await getClusterTransactionLog(
         stage,
         transaction.id,
       );
       expect(transactionLog.project_uuid).toEqual('project_uuid');
-      expect(transactionLog.status).toEqual(TransactionStatus.WORKER_SUCCESS);
+      expect(transactionLog.status).toEqual(
+        ComputingTransactionStatus.WORKER_SUCCESS,
+      );
       expect(transactionLog.action).toEqual(TxAction.TRANSACTION);
       expect(transactionLog.blockId).toEqual(2176820);
       expect(transactionLog.direction).toEqual(TxDirection.COST);
@@ -199,7 +201,7 @@ describe('Log worker tests', () => {
           contract_id: contract.id,
           transactionType: TransactionType.DEPLOY_CONTRACT,
           transactionHash,
-          transactionStatus: TransactionStatus.CONFIRMED,
+          transactionStatus: ComputingTransactionStatus.CONFIRMED,
         },
         stage.context,
       ).insert();
@@ -230,14 +232,16 @@ describe('Log worker tests', () => {
       );
       const updatedTransaction = await getTransaction(stage, transaction.id);
       expect(updatedTransaction.transactionStatus).toEqual(
-        TransactionStatus.WORKER_FAILED,
+        ComputingTransactionStatus.WORKER_FAILED,
       );
       const transactionLog = await getClusterTransactionLog(
         stage,
         transaction.id,
       );
       expect(transactionLog.project_uuid).toEqual('project_uuid');
-      expect(transactionLog.status).toEqual(TransactionStatus.WORKER_FAILED);
+      expect(transactionLog.status).toEqual(
+        ComputingTransactionStatus.WORKER_FAILED,
+      );
       expect(transactionLog.action).toEqual(TxAction.TRANSACTION);
       expect(transactionLog.blockId).toEqual(2176820);
       expect(transactionLog.direction).toEqual(TxDirection.COST);
@@ -265,7 +269,7 @@ describe('Log worker tests', () => {
           contract_id: contract.id,
           transactionType: TransactionType.ASSIGN_CID_TO_NFT,
           transactionHash,
-          transactionStatus: TransactionStatus.CONFIRMED,
+          transactionStatus: ComputingTransactionStatus.CONFIRMED,
           nonce: 'nonce',
         },
         stage.context,
@@ -297,14 +301,16 @@ describe('Log worker tests', () => {
       );
       const updatedTransaction = await getTransaction(stage, transaction.id);
       expect(updatedTransaction.transactionStatus).toEqual(
-        TransactionStatus.WORKER_SUCCESS,
+        ComputingTransactionStatus.WORKER_SUCCESS,
       );
       const transactionLog = await getClusterTransactionLog(
         stage,
         transaction.id,
       );
       expect(transactionLog.project_uuid).toEqual('project_uuid');
-      expect(transactionLog.status).toEqual(TransactionStatus.WORKER_SUCCESS);
+      expect(transactionLog.status).toEqual(
+        ComputingTransactionStatus.WORKER_SUCCESS,
+      );
       expect(transactionLog.action).toEqual(TxAction.TRANSACTION);
       expect(transactionLog.blockId).toEqual(2146342);
       expect(transactionLog.direction).toEqual(TxDirection.COST);
@@ -331,7 +337,7 @@ describe('Log worker tests', () => {
           contract_id: contract.id,
           transactionType: TransactionType.ASSIGN_CID_TO_NFT,
           transactionHash,
-          transactionStatus: TransactionStatus.CONFIRMED,
+          transactionStatus: ComputingTransactionStatus.CONFIRMED,
           nonce: 'nonce',
         },
         stage.context,
@@ -363,14 +369,16 @@ describe('Log worker tests', () => {
       );
       const updatedTransaction = await getTransaction(stage, transaction.id);
       expect(updatedTransaction.transactionStatus).toEqual(
-        TransactionStatus.WORKER_FAILED,
+        ComputingTransactionStatus.WORKER_FAILED,
       );
       const transactionLog = await getClusterTransactionLog(
         stage,
         transaction.id,
       );
       expect(transactionLog.project_uuid).toEqual('project_uuid');
-      expect(transactionLog.status).toEqual(TransactionStatus.WORKER_FAILED);
+      expect(transactionLog.status).toEqual(
+        ComputingTransactionStatus.WORKER_FAILED,
+      );
       expect(transactionLog.action).toEqual(TxAction.TRANSACTION);
       expect(transactionLog.blockId).toEqual(2146342);
       expect(transactionLog.direction).toEqual(TxDirection.COST);

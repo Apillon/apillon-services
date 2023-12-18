@@ -4,9 +4,13 @@ import {
   PoolConnection,
   SerializeFor,
   SubstrateChain,
-  TransactionStatus,
 } from '@apillon/lib';
-import { ContractStatus, DbTables, TransactionType } from '../../config/types';
+import {
+  ComputingTransactionStatus,
+  ContractStatus,
+  DbTables,
+  TransactionType,
+} from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { Contract } from '../../modules/computing/models/contract.model';
 import { Transaction } from '../../modules/transaction/models/transaction.model';
@@ -46,7 +50,7 @@ export async function deployPhalaContract(
     transactionType: TransactionType.DEPLOY_CONTRACT,
     contractId: contract.id,
     transactionHash: response.data.transactionHash,
-    transactionStatus: TransactionStatus.PENDING,
+    transactionStatus: ComputingTransactionStatus.PENDING,
   });
 
   //Insert to DB
@@ -82,7 +86,7 @@ export async function depositToPhalaCluster(
     {
       transactionType: TransactionType.DEPOSIT_TO_CONTRACT_CLUSTER,
       transactionHash: response.data.transactionHash,
-      transactionStatus: TransactionStatus.PENDING,
+      transactionStatus: ComputingTransactionStatus.PENDING,
     },
     context,
   );
@@ -125,7 +129,7 @@ export async function transferContractOwnership(
       contractId,
       transactionHash: response.data.transactionHash,
       nonce,
-      transactionStatus: TransactionStatus.PENDING,
+      transactionStatus: ComputingTransactionStatus.PENDING,
     },
     context,
   );
@@ -182,7 +186,7 @@ export async function assignCidToNft(
       transactionType: TransactionType.ASSIGN_CID_TO_NFT,
       contractId,
       transactionHash: response.data.transactionHash,
-      transactionStatus: TransactionStatus.PENDING,
+      transactionStatus: ComputingTransactionStatus.PENDING,
     },
     context,
   );

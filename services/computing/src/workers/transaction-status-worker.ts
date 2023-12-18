@@ -13,9 +13,30 @@ import {
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { ContractStatus, TransactionType } from '../config/types';
+import {
+  ComputingTransactionStatus,
+  ContractStatus,
+  TransactionType,
+} from '../config/types';
 import { Contract } from '../modules/computing/models/contract.model';
 import { Transaction } from '../modules/transaction/models/transaction.model';
+
+function mapTransactionStatus(transactionStatus: TransactionStatus) {
+  switch (transactionStatus) {
+    case TransactionStatus.PENDING:
+      return ComputingTransactionStatus.PENDING;
+    case TransactionStatus.CONFIRMED:
+      return ComputingTransactionStatus.CONFIRMED;
+    case TransactionStatus.FAILED:
+      return ComputingTransactionStatus.FAILED;
+    case TransactionStatus.ERROR:
+      return ComputingTransactionStatus.ERROR;
+    default:
+      throw new Error(
+        `Cant map TransactionStatus ${transactionStatus} to ComputingTransactionStatus.`,
+      );
+  }
+}
 
 export class TransactionStatusWorker extends BaseQueueWorker {
   public constructor(
@@ -54,7 +75,9 @@ export class TransactionStatusWorker extends BaseQueueWorker {
             ctx,
           ).populateByTransactionHash(res.transactionHash);
           if (computingTransaction.exists()) {
-            computingTransaction.transactionStatus = res.transactionStatus;
+            computingTransaction.transactionStatus = mapTransactionStatus(
+              res.transactionStatus,
+            );
             await computingTransaction.update();
             if (
               computingTransaction.transactionType ==
@@ -77,7 +100,7 @@ export class TransactionStatusWorker extends BaseQueueWorker {
     tx: Transaction,
     contractAddress: string,
   ) {
-    if (tx.transactionStatus === TransactionStatus.CONFIRMED) {
+    if (tx.transactionStatus === ComputingTransactionStatus.CONFIRMED) {
       const contract: Contract = await new Contract(
         {},
         this.context,

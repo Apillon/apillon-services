@@ -76,3 +76,12 @@ export enum TxAction {
   TRANSACTION = 'TRANSACTION',
   UNKNOWN = 'UNKNOWN',
 }
+
+export enum ComputingTransactionStatus {
+  PENDING = 1,
+  CONFIRMED = 2,
+  FAILED = 3,
+  ERROR = 4,
+  WORKER_SUCCESS = 5,
+  WORKER_FAILED = 6,
+}

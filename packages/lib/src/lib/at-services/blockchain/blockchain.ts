@@ -15,9 +15,9 @@ import {
   PhalaClusterWalletDto,
   TransactionDto,
   UpdateTransactionDto,
-  WalletTransactionsQueryFilter,
   WalletDepositsQueryFilter,
   WalletIdentityDto,
+  WalletTransactionsQueryFilter,
 } from '../../..';
 import { PhalaLogFilterDto } from '../computing/dtos/phala-log-filter.dto';
 
@@ -159,9 +159,11 @@ export class BlockchainMicroservice extends BaseService {
   //#endregion
 
   //#region computing on phala
-  public async getPhalaLogs(phalaLogFilter: PhalaLogFilterDto) {
+  public async getPhalaLogRecordsAndGasPrice(
+    phalaLogFilter: PhalaLogFilterDto,
+  ) {
     const data = {
-      eventName: BlockchainEventType.GET_PHALA_LOGS,
+      eventName: BlockchainEventType.GET_PHALA_LOG_RECORDS_AND_GAS_PRICE,
       phalaLogFilter,
     };
     return await this.callService(data);

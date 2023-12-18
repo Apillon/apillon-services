@@ -6,11 +6,11 @@ import {
   prop,
   SerializeFor,
   SqlModelStatus,
-  TransactionStatus,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
   ComputingErrorCode,
+  ComputingTransactionStatus,
   DbTables,
   TransactionType,
 } from '../../../config/types';
@@ -77,9 +77,9 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    defaultValue: TransactionStatus.PENDING,
+    defaultValue: ComputingTransactionStatus.PENDING,
   })
-  public transactionStatus: TransactionStatus;
+  public transactionStatus: ComputingTransactionStatus;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -151,7 +151,7 @@ export class Transaction extends AdvancedSQLModel {
 
   public async getContractTransactions(
     contract_uuid: string,
-    transactionStatus: TransactionStatus = null,
+    transactionStatus: ComputingTransactionStatus = null,
     transactionType: TransactionType = null,
   ): Promise<Transaction[]> {
     const data = await this.getContext().mysql.paramExecute(
@@ -196,7 +196,7 @@ export class Transaction extends AdvancedSQLModel {
           AND t.transactionStatus = @transactionStatus
           AND JSON_EXTRACT(c.data, "$.clusterId") = @clusterId
       `,
-      { clusterId, transactionStatus: TransactionStatus.CONFIRMED },
+      { clusterId, transactionStatus: ComputingTransactionStatus.CONFIRMED },
     )) as {
       project_uuid: string;
       transaction_id: number;
