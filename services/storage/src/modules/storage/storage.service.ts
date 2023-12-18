@@ -53,6 +53,7 @@ import { File } from './models/file.model';
 import { IpfsBandwidth } from '../ipfs/models/ipfs-bandwidth';
 import { generateJwtSecret } from '../../lib/ipfs-utils';
 import { CID } from 'ipfs-http-client';
+import { Directory } from '../directory/models/directory.model';
 
 export class StorageService {
   /**
@@ -101,6 +102,30 @@ export class StorageService {
     };
   }
 
+  /**
+   * Check if enough storage available
+   * @param context
+   * @param project_uuid
+   * @param size
+   */
+  static async checkStorageSpace(
+    context: ServiceContext,
+    project_uuid: string,
+    size: number,
+  ) {
+    const storageInfo = await StorageService.getStorageInfo(
+      { project_uuid },
+      context,
+    );
+
+    if (storageInfo.usedStorage + size >= storageInfo.availableStorage) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.NOT_ENOUGH_STORAGE_SPACE,
+        status: 400,
+      });
+    }
+  }
+
   static async getProjectsOverBandwidthQuota(
     event: { query: DomainQueryFilter },
     context: ServiceContext,
@@ -137,17 +162,7 @@ export class StorageService {
     bucket.canAccess(context);
 
     //Check if enough storage is available
-    const storageInfo = await StorageService.getStorageInfo(
-      { project_uuid: bucket.project_uuid },
-      context,
-    );
-
-    if (storageInfo.usedStorage >= storageInfo.availableStorage) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.NOT_ENOUGH_STORAGE_SPACE,
-        status: 400,
-      });
-    }
+    await StorageService.checkStorageSpace(context, bucket.project_uuid, 0);
 
     //Validate content / filenames
     //Freemium projects should't be able to upload html files to non hosting buckets
@@ -576,6 +591,13 @@ export class StorageService {
 
     const bucket = await new Bucket({}, context).populateById(f.bucket_id);
 
+    //Check available space
+    await StorageService.checkStorageSpace(
+      context,
+      bucket.project_uuid,
+      f.size,
+    );
+
     const conn = await context.mysql.start();
     try {
       f.status = SqlModelStatus.ACTIVE;
@@ -584,6 +606,32 @@ export class StorageService {
 
       await f.update(SerializeFor.UPDATE_DB, conn);
       await bucket.update(SerializeFor.UPDATE_DB, conn);
+
+      //Restore parent directories
+      if (f.directory_id) {
+        let parentDir = await new Directory({}, context).populateById(
+          f.directory_id,
+          conn,
+          false,
+          true,
+        );
+
+        if (parentDir && parentDir.status != SqlModelStatus.ACTIVE) {
+          do {
+            parentDir.status = SqlModelStatus.ACTIVE;
+            await parentDir.update(SerializeFor.UPDATE_DB, conn);
+
+            if (parentDir.parentDirectory_id) {
+              parentDir = await new Directory({}, context).populateById(
+                parentDir.parentDirectory_id,
+                conn,
+              );
+            } else {
+              parentDir.reset();
+            }
+          } while (parentDir.exists());
+        }
+      }
 
       await context.mysql.commit(conn);
     } catch (err) {

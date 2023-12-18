@@ -570,7 +570,7 @@ describe('Storage tests', () => {
       });
     });
 
-    describe('Delete file tests', () => {
+    describe('Delete and restore file tests', () => {
       let bucketForDeleteTests: Bucket = undefined;
       let deleteBucketTestFile1: File = undefined;
       let testFile2: File = undefined;
@@ -640,6 +640,28 @@ describe('Storage tests', () => {
         expect(response.body.data.items[0].file_uuid).toBe(
           deleteBucketTestFile1.file_uuid,
         );
+      });
+
+      test('User should be able to restore file', async () => {
+        const response = await request(stage.http)
+          .patch(
+            `/storage/${bucketForDeleteTests.bucket_uuid}/file/${deleteBucketTestFile1.id}/restore`,
+          )
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(200);
+
+        const f: File = await new File({}, stage.storageContext).populateById(
+          deleteBucketTestFile1.id,
+        );
+        expect(f.exists()).toBeTruthy();
+
+        //Check if bucket size was increased
+        const tmpB: Bucket = await new Bucket(
+          {},
+          stage.storageContext,
+        ).populateById(bucketForDeleteTests.id);
+
+        expect(tmpB.size).toBe(bucketForDeleteTests.size);
       });
     });
 

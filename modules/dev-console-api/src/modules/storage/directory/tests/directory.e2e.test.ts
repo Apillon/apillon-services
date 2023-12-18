@@ -405,5 +405,61 @@ describe('Storage directory tests', () => {
       expect(f.exists()).toBeTruthy();
       expect(await ipfsService.isCIDPinned(testDirectoryFile.CID)).toBeTruthy();
     });
+
+    test('User should be able to delete restore files and its parent directories', async () => {
+      //Dir with subdirs and files in it
+      const parentDirectory = await new Directory({}, stage.storageContext)
+        .fake()
+        .populate({
+          project_uuid: testProject.project_uuid,
+          bucket_id: testBucket.id,
+          name: 'Parent directory',
+          status: SqlModelStatus.ACTIVE,
+        })
+        .insert();
+
+      //Add files
+      const file = await createTestBucketFile(
+        stage.storageContext,
+        testBucket,
+        'deleteMe.txt',
+        'text/plain',
+        true,
+        parentDirectory.id,
+      );
+
+      //Execute delete
+      const deleteResponse = await request(stage.http)
+        .delete(`/directories/${parentDirectory.directory_uuid}`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(deleteResponse.status).toBe(200);
+
+      let tmpParentDirectory = await new Directory(
+        {},
+        stage.storageContext,
+      ).populateById(parentDirectory.id);
+      expect(tmpParentDirectory.exists()).toBeFalsy();
+
+      let tmpFile = await new File({}, stage.storageContext).populateById(
+        file.id,
+      );
+      expect(tmpFile.exists()).toBeFalsy();
+
+      //Restore file - this should restore file and its parent directories
+
+      const restoreResponse = await request(stage.http)
+        .patch(`/storage/${testBucket.bucket_uuid}/file/${file.id}/restore`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(restoreResponse.status).toBe(200);
+
+      tmpFile = await new File({}, stage.storageContext).populateById(file.id);
+      expect(tmpFile.exists()).toBeTruthy();
+
+      tmpParentDirectory = await new Directory(
+        {},
+        stage.storageContext,
+      ).populateById(parentDirectory.id);
+      expect(tmpParentDirectory.exists()).toBeTruthy();
+    });
   });
 });

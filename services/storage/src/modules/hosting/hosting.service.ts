@@ -333,20 +333,11 @@ export class HostingService {
     }
 
     //Check if enough storage available
-    //Check used storage
-    const storageInfo = await StorageService.getStorageInfo(
-      { project_uuid: sourceBucket.project_uuid },
+    await StorageService.checkStorageSpace(
       context,
+      sourceBucket.project_uuid,
+      sourceBucket.size,
     );
-    if (
-      storageInfo.usedStorage + sourceBucket.size >
-      storageInfo.availableStorage
-    ) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.NOT_ENOUGH_STORAGE_SPACE,
-        status: 400,
-      });
-    }
 
     //Create deployment record
     const deployment: Deployment = new Deployment({}, context).populate({
