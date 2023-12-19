@@ -137,7 +137,7 @@ export class Transaction extends AdvancedSQLModel {
       `
         SELECT *
         FROM \`${this.tableName}\`
-        WHERE contract_id IS NOT NULL AND transactionHash = @transactionHash;
+        WHERE transactionHash = @transactionHash;
       `,
       { transactionHash },
     );
