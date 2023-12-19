@@ -73,6 +73,7 @@ export class EvmService {
         referenceTable?: string;
         referenceId?: string;
         project_uuid?: string;
+        minimumGas?: number;
       };
     },
     context: ServiceContext,
@@ -182,9 +183,16 @@ export class EvmService {
       unsignedTx.nonce = wallet.nextNonce;
 
       const gas = await provider.estimateGas(unsignedTx);
+
       console.log(`Estimated gas=${gas}`);
       // Increasing gas limit by 10% of current gas price to be on the safe side
-      const gasLimit = Math.floor(gas.toNumber() * 1.1);
+      let gasLimit = Math.floor(gas.toNumber() * 1.1);
+      // Override gas limit in transaction with minimum.
+      // This is useful for transactions like minting before contract is deployed on chain where
+      // estimate gas would return a much to low limit since it would assume normal transfer.
+      if (params.minimumGas && params.minimumGas > gasLimit) {
+        gasLimit = params.minimumGas;
+      }
       unsignedTx.gasLimit = ethers.BigNumber.from(gasLimit);
 
       // sign transaction
