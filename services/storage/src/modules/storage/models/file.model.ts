@@ -325,24 +325,6 @@ export class File extends UuidSqlModel {
   })
   public directory_uuid: string;
 
-  /**
-   * Marks record in the database for deletion.
-   */
-  public async markForDeletion(conn?: PoolConnection): Promise<this> {
-    this.updateUser = this.getContext()?.user?.id;
-
-    this.status = SqlModelStatus.MARKED_FOR_DELETION;
-    this.markedForDeletionTime = new Date();
-
-    try {
-      await this.update(SerializeFor.UPDATE_DB, conn);
-    } catch (err) {
-      this.reset();
-      throw err;
-    }
-    return this;
-  }
-
   public async populateByNameAndDirectory(
     bucket_id: number,
     name: string,

@@ -255,24 +255,6 @@ export class Directory extends UuidSqlModel {
   })
   public parentDirectory_uuid: string;
 
-  /**
-   * Marks record in the database for deletion.
-   */
-  public async markForDeletion(conn?: PoolConnection): Promise<this> {
-    this.updateUser = this.getContext()?.user?.id;
-
-    this.status = SqlModelStatus.MARKED_FOR_DELETION;
-    this.markedForDeletionTime = new Date();
-
-    try {
-      await this.update(SerializeFor.UPDATE_DB, conn);
-    } catch (err) {
-      this.reset();
-      throw err;
-    }
-    return this;
-  }
-
   public override async populateByUUID(uuid: string): Promise<this> {
     if (!uuid) {
       throw new Error(`uuid should not be null: directory_uuid: ${uuid}`);
