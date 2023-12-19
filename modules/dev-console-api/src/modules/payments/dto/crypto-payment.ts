@@ -32,7 +32,7 @@ export interface CryptoPayment {
   };
 }
 
-export interface CryptoInvoicePayment {
+export interface CryptoPaymentInvoice {
   id: string;
   token_id: string;
   order_id: string;

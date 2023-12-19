@@ -31,6 +31,12 @@ export class PaymentSessionDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.RETURN_URL_NOT_PRESENT,
+      },
+    ],
   })
   public returnUrl: string;
 }
