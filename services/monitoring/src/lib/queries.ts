@@ -37,14 +37,12 @@ export async function generateMongoLogsQuery(
 
   if (query instanceof RequestLogsQueryFilter && !query.showSystemRequests) {
     // System routes, conditionally hide from results if showSystemRequests is false
-    const skipRoutes = [
-      '/hosting/domains',
-      '/auth/session-token',
-      '/discord-bot/user-list',
-    ];
     mongoQuery[property] = {
       ...(mongoQuery[property] || {}),
-      $nin: skipRoutes,
+      $not: {
+        $regex:
+          '/hosting/domains|/discord-bot/user-list|/storage/blacklist|/system',
+      },
     };
   }
 
