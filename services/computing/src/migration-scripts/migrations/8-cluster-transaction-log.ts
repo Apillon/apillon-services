@@ -10,7 +10,6 @@ export async function upgrade(
       \`blockId\` INT NOT NULL,
       \`status\` INT NOT NULL,
       \`project_uuid\` VARCHAR(36) NULL,
-      \`transactionExecutedSuccessfully\` BOOLEAN NULL,
       \`direction\` INT NOT NULL,
       \`action\` VARCHAR(20) NOT NULL,
       \`chain\` INT NOT NULL,
