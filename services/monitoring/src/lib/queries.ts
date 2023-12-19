@@ -35,15 +35,21 @@ export async function generateMongoLogsQuery(
       }),
   );
 
-  if (query instanceof RequestLogsQueryFilter && !query.showSystemRequests) {
-    // System routes, conditionally hide from results if showSystemRequests is false
-    mongoQuery[property] = {
-      ...(mongoQuery[property] || {}),
-      $not: {
-        $regex:
-          '/hosting/domains|/discord-bot/user-list|/storage/blacklist|/system',
-      },
-    };
+  if (query instanceof RequestLogsQueryFilter) {
+    if (!query.showSystemRequests) {
+      // System routes, conditionally hide from results if showSystemRequests is false
+      mongoQuery[property] = {
+        ...(mongoQuery[property] || {}),
+        $not: {
+          $regex:
+            '/hosting/domains|/discord-bot/user-list|/storage/blacklist|/system',
+        },
+      };
+    }
+
+    if (query.method) {
+      mongoQuery.method = { $eq: query.method.toUpperCase() };
+    }
   }
 
   if (query.dateFrom) {

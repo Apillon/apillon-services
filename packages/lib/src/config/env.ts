@@ -7,6 +7,7 @@ export interface IEnv {
    * runtime environment
    */
   APP_URL: string;
+  ADMIN_APP_URL: string;
   APP_ENV: string;
   LOG_TARGET: string;
   LOG_LEVEL: string;
@@ -518,8 +519,8 @@ export let env: IEnv = {
   AWS_BUCKET: process.env['AWS_BUCKET'],
   AWS_ENDPOINT: process.env['AWS_ENDPOINT'],
   APP_SECRET: process.env['APP_SECRET'] || 'Du7Rvyqt7u38naZ2',
-  CONSOLE_API_URL:
-    process.env['CONSOLE_API_URL'] || 'https://console-api-dev.apillon.io/',
+  CONSOLE_API_URL: process.env['CONSOLE_API_URL'],
+  ADMIN_APP_URL: process.env['ADMIN_APP_URL'],
 
   /** AMS */
   ACCESS_FUNCTION_NAME: process.env['ACCESS_FUNCTION_NAME'],

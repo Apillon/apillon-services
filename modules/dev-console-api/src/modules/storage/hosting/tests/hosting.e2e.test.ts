@@ -521,7 +521,7 @@ describe('Hosting tests', () => {
     });
   });
 
-  describe('Review website tests', () => {
+  describe.only('Review website tests', () => {
     let freemiumProject: Project;
     let testWebsite: Website;
     let deployment_uuid: string;
