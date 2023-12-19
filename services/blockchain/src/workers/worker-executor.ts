@@ -22,7 +22,6 @@ import { TransmitSubstrateTransactionWorker } from './transmit-substrate-transac
 
 import { EvmTransactionWorker } from './evm-transaction-worker';
 import { SubstrateTransactionWorker } from './substrate-transaction-worker';
-import { PhalaTransactionWorker } from './phala-transaction-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -153,10 +152,8 @@ export async function handleLambdaEvent(
     // SUBSTRATE TRANSACTION WORKER
     case WorkerName.VERIFY_CRUST_TRANSACTIONS:
     case WorkerName.VERIFY_KILT_TRANSACTIONS:
-      await new SubstrateTransactionWorker(workerDefinition, context).run();
-      break;
     case WorkerName.VERIFY_PHALA_TRANSACTIONS:
-      await new PhalaTransactionWorker(workerDefinition, context).run();
+      await new SubstrateTransactionWorker(workerDefinition, context).run();
       break;
     // --- EVM ---
     case WorkerName.VERIFY_MOONBEAM_TRANSACTIONS:
