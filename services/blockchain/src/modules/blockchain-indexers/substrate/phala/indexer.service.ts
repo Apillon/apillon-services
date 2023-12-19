@@ -73,46 +73,6 @@ export class PhalaBlockchainIndexer extends BaseBlockchainIndexer {
     };
   }
 
-  public async getContractInstantiatingTransactions(
-    account: string,
-    hashes: string[],
-  ) {
-    const data = await this.graphQlClient.request<{
-      phatContractsInstantiatings: PhatContractsInstantiatingTransaction[];
-    }>(
-      gql`
-        ${PhalaGqlQueries.INSTANTIATING_CONTRACTS_BY_HASH_QUERY}
-      `,
-      {
-        account,
-        hashes,
-      },
-    );
-
-    return data.phatContractsInstantiatings;
-  }
-
-  public async getContractsInstantiatedTransactions(
-    deployer: string,
-    fromBlock: number,
-    toBlock: number,
-  ) {
-    const data = await this.graphQlClient.request<{
-      phatContractsInstantiateds: PhatContractsInstantiatedTransaction[];
-    }>(
-      gql`
-        ${PhalaGqlQueries.INSTANTIATED_CONTRACTS_BY_DEPLOYER_AND_BLOCK}
-      `,
-      {
-        deployer,
-        fromBlock,
-        toBlock,
-      },
-    );
-
-    return data.phatContractsInstantiateds;
-  }
-
   public async getAccountBalanceTransfersForTxs(
     account: string,
     hashes: string[],
