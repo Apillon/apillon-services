@@ -16,6 +16,8 @@ import {
 import { ContractAbi } from '../computing/models/contractAbi.model';
 import { SubmittableExtrinsic } from '@polkadot/api-base/types';
 import { ApiPromise, Keyring } from '@polkadot/api';
+import randomBytes from 'randombytes';
+import { hexAddPrefix } from '@polkadot/util';
 
 export class PhalaClient {
   private context: Context;
@@ -24,6 +26,10 @@ export class PhalaClient {
 
   constructor(context: Context) {
     this.context = context;
+  }
+
+  static getRandomNonce() {
+    return hexAddPrefix(randomBytes(32).toString('hex'));
   }
 
   /**
@@ -49,6 +55,7 @@ export class PhalaClient {
   async createTransferOwnershipTransaction(
     contractAbi: { [key: string]: any },
     contractAddress: string,
+    nonce: `0x${string}`,
     newOwnerAddress: string,
   ): Promise<SubmittableExtrinsic<'promise'>> {
     await this.initializeProvider();
@@ -62,6 +69,7 @@ export class PhalaClient {
     const options = {
       gasLimit: gasRequired.refTime.toString(),
       storageDepositLimit: storageDeposit.asCharge,
+      nonce,
     };
     return contract.tx.setOwner(options, newOwnerAddress);
   }
@@ -69,6 +77,7 @@ export class PhalaClient {
   async createAssignCidToNftTransaction(
     contractAbi: { [key: string]: any },
     contractAddress: string,
+    nonce: `0x${string}`,
     cid: string,
     nftId: number,
   ): Promise<any> {
@@ -84,6 +93,7 @@ export class PhalaClient {
     const options = {
       gasLimit: gasRequired.refTime.toString(),
       storageDepositLimit: storageDeposit.asCharge,
+      nonce,
     };
     return contract.tx.setCid(options, nftId, cid);
   }
@@ -163,8 +173,9 @@ export class PhalaClient {
       [p: string]: any;
     },
   ) {
-    const contractKey =
-      await this.registry.getContractKeyOrFail(contractAddress);
+    const contractKey = await this.registry.getContractKeyOrFail(
+      contractAddress,
+    );
     return new PinkContractPromise(
       this.api,
       this.registry,

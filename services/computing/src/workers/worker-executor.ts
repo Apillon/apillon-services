@@ -15,12 +15,14 @@ import {
 } from '@apillon/workers-lib';
 import { Scheduler } from './scheduler';
 import { TransactionStatusWorker } from './transaction-status-worker';
+import { PhalaLogWorker } from './phala-log-worker';
 
 export enum WorkerName {
   TEST_WORKER = 'TestWorker',
   SCHEDULER = 'scheduler',
   TRANSACTION_STATUS = 'TransactionStatusWorker',
   UPDATE_PHALA_STATUS_WORKER = 'UpdatePhalaStatusWorker',
+  PHALA_LOG_WORKER = 'PhalaLogWorker',
 }
 
 export async function handler(event: any) {
@@ -106,6 +108,9 @@ export async function handleLambdaEvent(
     case WorkerName.SCHEDULER:
       const scheduler = new Scheduler(serviceDef, context);
       await scheduler.run();
+      break;
+    case WorkerName.PHALA_LOG_WORKER:
+      await new PhalaLogWorker(workerDefinition, context).run();
       break;
     default:
       console.log(

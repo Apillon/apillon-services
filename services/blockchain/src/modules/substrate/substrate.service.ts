@@ -7,6 +7,8 @@ import {
   IsolationLevel,
   Lmas,
   LogType,
+  PhalaClusterWalletDto,
+  PhalaLogFilterDto,
   SerializeFor,
   ServiceName,
   SubstrateChain,
@@ -19,11 +21,10 @@ import { Transaction } from '../../common/models/transaction';
 import { typesBundleForPolkadot as CrustTypesBundle } from '@crustio/type-definitions';
 import { typesBundle as KiltTypesBundle } from '@kiltprotocol/type-definitions';
 import { LogOutput, sendToWorkerQueue } from '@apillon/workers-lib';
-import { WorkerName } from '../../workers/worker-executor';
 import { ServiceContext } from '@apillon/service-lib';
 import { getWalletSeed } from '../../lib/seed';
 import { SubstrateRpcApi } from './rpc-api';
-import { types as PhalaTypesBundle } from '@phala/sdk';
+import { OnChainRegistry, types as PhalaTypesBundle } from '@phala/sdk';
 import { substrateChainToWorkerName } from '../../lib/helpers';
 
 export class SubstrateService {
@@ -230,6 +231,53 @@ export class SubstrateService {
     return transaction.serialize(SerializeFor.PROFILE);
   }
 
+  static async getPhalaLogRecordsAndGasPrice(
+    event: {
+      phalaLogFilter: PhalaLogFilterDto;
+    },
+    context: ServiceContext,
+  ) {
+    const endpoint = await new Endpoint({}, context).populateByChain(
+      SubstrateChain.PHALA,
+      ChainType.SUBSTRATE,
+    );
+    const api = new SubstrateRpcApi(endpoint.url, PhalaTypesBundle);
+    const phatRegistry = await OnChainRegistry.create(await api.getApi(), {
+      clusterId: event.phalaLogFilter.clusterId,
+    });
+    const gasPrice = phatRegistry.gasPrice.toNumber();
+    const { records } = await phatRegistry.loggerContract.tail(
+      100,
+      event.phalaLogFilter,
+    );
+
+    return { records, gasPrice };
+  }
+
+  static async getPhalaClusterWalletBalance(
+    event: {
+      phalaClusterWallet: PhalaClusterWalletDto;
+    },
+    context: ServiceContext,
+  ) {
+    const endpoint = await new Endpoint({}, context).populateByChain(
+      SubstrateChain.PHALA,
+      ChainType.SUBSTRATE,
+    );
+    const api = new SubstrateRpcApi(endpoint.url, PhalaTypesBundle);
+    const phatRegistry = await OnChainRegistry.create(await api.getApi(), {
+      clusterId: event.phalaClusterWallet.clusterId,
+    });
+    const balance = await phatRegistry.getClusterBalance(
+      event.phalaClusterWallet.walletAddress,
+    );
+
+    return {
+      total: balance.total.toNumber(),
+      free: balance.free.toNumber(),
+    };
+  }
+
   /**
    * @dev Ensure that only once instance of this method is running at the same time.
    * Should be called from worker
@@ -262,6 +310,10 @@ export class SubstrateService {
       }
       case SubstrateChain.CRUST: {
         typesBundle = CrustTypesBundle;
+        break;
+      }
+      case SubstrateChain.PHALA: {
+        typesBundle = PhalaTypesBundle;
         break;
       }
       default: {

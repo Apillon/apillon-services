@@ -2,6 +2,8 @@ export enum DbTables {
   TRANSACTION = 'transaction',
   CONTRACT = 'contract',
   CONTRACT_ABI = 'contract_abi',
+  CLUSTER_WALLET = 'cluster_wallet',
+  CLUSTER_TRANSACTION_LOG = 'cluster_transaction_log',
 }
 
 export enum ComputingErrorCode {
@@ -27,7 +29,8 @@ export enum ComputingErrorCode {
   CONTRACT_TYPE_NOT_PRESENT = 42212010,
   CONTRACT_TYPE_NOT_VALID = 42212011,
   CONTRACT_DATA_NOT_VALID_JSON = 42212012,
-  CONTRACT_REQUIRED_DATA_NOT_PRESENT = 42212013,
+  REQUIRED_DATA_NOT_PRESENT = 42212013,
+  DATA_TYPE_INVALID = 42212014,
 
   //500
   GENERAL_SERVER_ERROR = 50012000,
@@ -59,4 +62,26 @@ export enum ContractStatus {
   DEPLOYED = 3, //INSTANTIATED
   TRANSFERRED = 4,
   FAILED = 5,
+}
+
+export enum TxDirection {
+  UNKNOWN = 0,
+  INCOME = 1,
+  COST = 2,
+}
+
+export enum TxAction {
+  DEPOSIT = 'DEPOSIT',
+  WITHDRAWAL = 'WITHDRAWAL',
+  TRANSACTION = 'TRANSACTION',
+  UNKNOWN = 'UNKNOWN',
+}
+
+export enum ComputingTransactionStatus {
+  PENDING = 1,
+  CONFIRMED = 2,
+  FAILED = 3,
+  ERROR = 4,
+  WORKER_SUCCESS = 5,
+  WORKER_FAILED = 6,
 }

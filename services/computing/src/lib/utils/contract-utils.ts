@@ -4,9 +4,13 @@ import {
   PoolConnection,
   SerializeFor,
   SubstrateChain,
-  TransactionStatus,
 } from '@apillon/lib';
-import { ContractStatus, DbTables, TransactionType } from '../../config/types';
+import {
+  ComputingTransactionStatus,
+  ContractStatus,
+  DbTables,
+  TransactionType,
+} from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { Contract } from '../../modules/computing/models/contract.model';
 import { Transaction } from '../../modules/transaction/models/transaction.model';
@@ -46,7 +50,7 @@ export async function deployPhalaContract(
     transactionType: TransactionType.DEPLOY_CONTRACT,
     contractId: contract.id,
     transactionHash: response.data.transactionHash,
-    transactionStatus: TransactionStatus.PENDING,
+    transactionStatus: ComputingTransactionStatus.PENDING,
   });
 
   //Insert to DB
@@ -82,7 +86,7 @@ export async function depositToPhalaCluster(
     {
       transactionType: TransactionType.DEPOSIT_TO_CONTRACT_CLUSTER,
       transactionHash: response.data.transactionHash,
-      transactionStatus: TransactionStatus.PENDING,
+      transactionStatus: ComputingTransactionStatus.PENDING,
     },
     context,
   );
@@ -97,10 +101,13 @@ export async function transferContractOwnership(
   contractAddress: string,
   newOwnerAddress: string,
 ) {
-  const phalaClient = new PhalaClient(context);
-  const transaction = await phalaClient.createTransferOwnershipTransaction(
+  const nonce = PhalaClient.getRandomNonce();
+  const transaction = await new PhalaClient(
+    context,
+  ).createTransferOwnershipTransaction(
     contractAbi,
     contractAddress,
+    nonce,
     newOwnerAddress,
   );
   const blockchainServiceRequest = new CreateSubstrateTransactionDto(
@@ -121,7 +128,8 @@ export async function transferContractOwnership(
       transactionType: TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
       contractId,
       transactionHash: response.data.transactionHash,
-      transactionStatus: TransactionStatus.PENDING,
+      nonce,
+      transactionStatus: ComputingTransactionStatus.PENDING,
     },
     context,
   );
@@ -150,9 +158,16 @@ export async function assignCidToNft(
   cid: string,
   nftId: number,
 ) {
+  const nonce = PhalaClient.getRandomNonce();
   const transaction = await new PhalaClient(
     context,
-  ).createAssignCidToNftTransaction(contractAbi, contractAddress, cid, nftId);
+  ).createAssignCidToNftTransaction(
+    contractAbi,
+    contractAddress,
+    nonce,
+    cid,
+    nftId,
+  );
   const blockchainServiceRequest = new CreateSubstrateTransactionDto(
     {
       chain: SubstrateChain.PHALA,
@@ -171,7 +186,7 @@ export async function assignCidToNft(
       transactionType: TransactionType.ASSIGN_CID_TO_NFT,
       contractId,
       transactionHash: response.data.transactionHash,
-      transactionStatus: TransactionStatus.PENDING,
+      transactionStatus: ComputingTransactionStatus.PENDING,
     },
     context,
   );
