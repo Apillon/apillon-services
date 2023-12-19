@@ -10,7 +10,7 @@ import {
   ServiceName,
   SubstrateChain,
 } from '@apillon/lib';
-import { BaseSingleThreadWorker, LogOutput } from '@apillon/workers-lib';
+import { BaseQueueWorker, LogOutput } from '@apillon/workers-lib';
 import { Transaction } from '../modules/transaction/models/transaction.model';
 import {
   ComputingTransactionStatus,
@@ -30,7 +30,7 @@ import { ClusterWallet } from '../modules/computing/models/cluster-wallet.model'
  * "Instantiated" events from TX that we didn't emit (these transactions are emitted by Phala workers on successful
  * instantiation)
  */
-export class PhalaLogWorker extends BaseSingleThreadWorker {
+export class PhalaLogWorker extends BaseQueueWorker {
   private keyring = new Keyring({ type: 'sr25519' });
 
   async runPlanner(_data?: any) {
@@ -38,7 +38,6 @@ export class PhalaLogWorker extends BaseSingleThreadWorker {
       {},
       this.context,
     ).getClusterWalletIds();
-    console.log('clusterWalletIds', clusterWalletIds);
 
     return clusterWalletIds.map((w: { id: string }) => ({
       clusterWalletId: w.id,
