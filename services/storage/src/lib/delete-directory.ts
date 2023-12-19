@@ -54,15 +54,20 @@ export async function deleteDirectory(
     context,
   ).getIpfsCluster();
 
+  const unpinPromises = [];
+  const ipfsService = await new IPFSService(context, directory.project_uuid);
+
   for (const file of filesInDirectory) {
     if (file.CID) {
-      await new IPFSService(
-        context,
-        directory.project_uuid,
-      ).unpinCidFromCluster(file.CID, ipfsCluster);
+      unpinPromises.push(
+        ipfsService.unpinCidFromCluster(file.CID, ipfsCluster),
+      );
     }
     sizeOfDeletedFiles += file.size;
     deletedFiles.push(file);
+  }
+  if (unpinPromises.length) {
+    await Promise.all(unpinPromises);
   }
 
   await context.mysql.paramExecute(
