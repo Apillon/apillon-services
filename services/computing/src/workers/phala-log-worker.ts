@@ -38,6 +38,7 @@ export class PhalaLogWorker extends BaseSingleThreadWorker {
       {},
       this.context,
     ).getClusterWalletIds();
+    console.log('clusterWalletIds', clusterWalletIds);
 
     return clusterWalletIds.map((w: { id: string }) => ({
       clusterWalletId: w.id,
@@ -45,6 +46,7 @@ export class PhalaLogWorker extends BaseSingleThreadWorker {
   }
 
   public async runExecutor(data: { clusterWalletId: number }): Promise<any> {
+    console.log('runExecutor data', data);
     const clusterWallet = await new ClusterWallet(
       {},
       this.context,
