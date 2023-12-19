@@ -20,6 +20,7 @@ import {
 } from '../../lib/exceptions';
 import { ConfigErrorCode, DbTables } from '../../config/types';
 import { CreditService } from '../credit/credit.service';
+import { Invoice } from '../invoice/models/invoice.model';
 
 export class SubscriptionService {
   /**
@@ -255,6 +256,7 @@ export class SubscriptionService {
       }
 
       if (package_id !== subscription.package_id) {
+        // If package has been upgraded or downgraded, create a new one and set current to inactive
         const newSubscription = new Subscription(
           subscription.serialize(SerializeFor.INSERT_DB),
           context,
@@ -285,6 +287,46 @@ export class SubscriptionService {
           );
         } else {
           await newSubscription.insert(SerializeFor.INSERT_DB, conn);
+        }
+      } else if (
+        new Date(updateSubscriptionDto.expiresOn) >
+        new Date(subscription.expiresOn)
+      ) {
+        // If same subscription package has been renewed, create cloned invoice with new data
+        const existingInvoice = await new Invoice(
+          {},
+          context,
+        ).populateByProjectSubscription(subscription.project_uuid, conn);
+
+        if (existingInvoice.exists()) {
+          // Create clone of existing invoice with new ID and stripeId
+          existingInvoice.populate({
+            stripeId:
+              updateSubscriptionDto.invoiceStripeId || existingInvoice.stripeId,
+            totalAmount:
+              updateSubscriptionDto.amount || existingInvoice.totalAmount,
+            subtotalAmount:
+              updateSubscriptionDto.amount || existingInvoice.subtotalAmount,
+            referenceId: subscription.id,
+          });
+          await existingInvoice.insert(SerializeFor.INSERT_DB, conn);
+        } else {
+          // Existing invoice for existing subscription must always exist, send alert if that is not the case
+          await new Lmas().writeLog({
+            context,
+            logType: LogType.WARN,
+            message: `New invoice not created for subscription renewal`,
+            location: 'SCS/SubscriptionService/updateSubscription',
+            project_uuid: subscription.project_uuid,
+            service: ServiceName.CONFIG,
+            data: {
+              subcription: subscription.serialize(SerializeFor.SERVICE),
+              updateSubscriptionDto: new UpdateSubscriptionDto(
+                updateSubscriptionDto,
+              ).serialize(),
+            },
+            sendAdminAlert: true,
+          });
         }
       }
 

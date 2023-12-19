@@ -19,7 +19,7 @@ import { StripeService } from './stripe.service';
           env.APP_ENV === AppEnvironment.PROD
             ? env.STRIPE_SECRET
             : env.STRIPE_SECRET_TEST,
-          { apiVersion: '2023-08-16' },
+          { apiVersion: '2023-10-16' },
         );
       },
     },

@@ -9,6 +9,7 @@ import {
   SqlModelStatus,
   InvoicesQueryFilter,
   presenceValidator,
+  PoolConnection,
 } from '@apillon/lib';
 import { ConfigErrorCode, DbTables } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
@@ -216,5 +217,30 @@ export class Invoice extends AdvancedSQLModel {
     };
 
     return await selectAndCountQuery(context.mysql, sqlQuery, params, 'i.id');
+  }
+
+  public async populateByProjectSubscription(
+    project_uuid: string,
+    conn?: PoolConnection,
+  ) {
+    if (!project_uuid) {
+      throw new Error('project_uuid should not be null');
+    }
+    const data = await this.db().paramExecute(
+      `
+        SELECT ${this.generateSelectFields()} FROM \`${DbTables.INVOICE}\`
+        WHERE project_uuid = @project_uuid
+        AND referenceTable = '${DbTables.SUBSCRIPTION}'
+        AND status = ${SqlModelStatus.ACTIVE}
+        ORDER BY createTime DESC
+        LIMIT 1;
+      `,
+      { project_uuid },
+      conn,
+    );
+
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 }

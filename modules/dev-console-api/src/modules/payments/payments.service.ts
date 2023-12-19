@@ -134,6 +134,8 @@ export class PaymentsService {
             cancellationReason: payment.cancellation_details?.feedback,
             cancellationComment: payment.cancellation_details?.comment,
             stripePackageId: payment.plan.id,
+            invoiceStripeId: payment.latest_invoice,
+            amount: payment.plan?.amount / 100,
           }),
         );
         break;

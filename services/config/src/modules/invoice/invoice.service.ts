@@ -119,9 +119,9 @@ export class InvoiceService {
 
     const invoice = await InvoiceService.createInvoice(
       {
-        ...webhookData,
+        ...(webhookData as any),
         referenceTable: DbTables.CREDIT_PACKAGE,
-        referenceId: creditPackage.id,
+        referenceId: `${creditPackage.id}`,
       },
       context,
       conn,
@@ -169,13 +169,13 @@ export class InvoiceService {
 
   /**
    * Inserts a new invoice in the DB
-   * @param {(CreateInvoiceDto | any)} createInvoiceDto
+   * @param {(CreateInvoiceDto)} createInvoiceDto
    * @param {ServiceContext} context
    * @param {PoolConnection} conn
    * @returns {Promise<Invoice>}
    */
   static async createInvoice(
-    createInvoiceDto: CreateInvoiceDto | any,
+    createInvoiceDto: CreateInvoiceDto,
     context: ServiceContext,
     conn: PoolConnection,
   ): Promise<Invoice> {
