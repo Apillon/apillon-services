@@ -5,7 +5,6 @@ export async function upgrade(
 ): Promise<void> {
   await queryFn(`
     ALTER TABLE \`${DbTables.TRANSACTION}\`
-    ADD transactionExecutedSuccessfully BOOLEAN NULL AFTER transactionStatus,
     ADD nonce VARCHAR (255) NULL AFTER transactionHash,
     RENAME COLUMN contractId to contract_id;
   `);
