@@ -68,7 +68,9 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
 
       const conn = await this.context.mysql.start();
       try {
-        await this.setTransactionsState(transactions, conn);
+        if (transactions?.length) {
+          await this.setTransactionsState(transactions, wallet.address, conn);
+        }
 
         // If block height is the same and not updated for the past 5 minutes
         if (
@@ -203,25 +205,15 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     );
   }
 
-  private async setTransactionsState(
+  protected async setTransactionsState(
     transactions: any[],
+    _walletAddress: string,
     conn: PoolConnection,
   ) {
-    if (!transactions?.length) {
-      return;
-    }
-
+    // Update SUCCESSFUL transactions
     const successTransactions: any = transactions
       .filter((t: any) => t.status == TransactionIndexerStatus.SUCCESS)
       .map((t: any): string => t.extrinsicHash);
-
-    console.log('Success transactions ', successTransactions);
-
-    const failedTransactions: string[] = transactions
-      .filter((t: any) => t.status == TransactionIndexerStatus.FAIL)
-      .map((t: any): string => t.extrinsicHash);
-
-    // Update SUCCESSFUL transactions
     await this.updateTransactions(
       successTransactions,
       TransactionStatus.CONFIRMED,
@@ -229,6 +221,9 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     );
 
     // Update FAILED transactions
+    const failedTransactions: string[] = transactions
+      .filter((t: any) => t.status == TransactionIndexerStatus.FAIL)
+      .map((t: any): string => t.extrinsicHash);
     await this.updateTransactions(
       failedTransactions,
       TransactionStatus.FAILED,

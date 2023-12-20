@@ -110,7 +110,11 @@ export async function handleLambdaEvent(
       await scheduler.run();
       break;
     case WorkerName.PHALA_LOG_WORKER:
-      await new PhalaLogWorker(workerDefinition, context).run();
+      await new PhalaLogWorker(
+        workerDefinition,
+        context,
+        QueueWorkerType.PLANNER,
+      ).run();
       break;
     default:
       console.log(

@@ -58,6 +58,26 @@ export class PhalaGqlQueries extends BaseGQLQueries {
       fee
     }
   }`;
+  static INSTANTIATING_CONTRACTS_BY_HASH_QUERY = `query getContractInstantiatingTransactions(
+    $account: String!
+    $hashes: [String!]!
+   ) {
+    phatContractsInstantiatings(
+      where: {
+        AND: {
+          account_eq: $account,
+          extrinsicHash_in: $hashes
+        }
+      }
+    ) {
+      ${this.BASE_SUBSTRATE_FIELDS}
+      account
+      cluster
+      contract
+      deployer
+      fee
+    }
+  }`;
 
   static ACCOUNT_TRANSACTION_BY_HASH = `
     query getAccountTransactionsByHash(

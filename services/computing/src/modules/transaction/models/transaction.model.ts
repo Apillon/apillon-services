@@ -181,22 +181,30 @@ export class Transaction extends AdvancedSQLModel {
   public async getNonExecutedTransactions(clusterId: string) {
     return (await this.getContext().mysql.paramExecute(
       `
-        SELECT t.id AS transaction_id,
+        SELECT t.id              AS transaction_id,
                t.transactionType AS transactionType,
                t.transactionHash AS transactionHash,
-               t.nonce AS transactionNonce,
-               c.id               AS contract_id,
-               c.project_uuid     AS project_uuid,
-               c.contractAddress  AS contractAddress,
-               c.data             AS contractData
+               t.nonce           AS transactionNonce,
+               c.id              AS contract_id,
+               c.project_uuid    AS project_uuid,
+               c.contractAddress AS contractAddress,
+               c.data            AS contractData
         FROM \`${this.tableName}\` as t
                JOIN contract as c ON (c.id = t.contract_id)
         WHERE t.status <> ${SqlModelStatus.DELETED}
-          AND t.transactionExecutedSuccessfully IS NULL
           AND t.transactionStatus = @transactionStatus
           AND JSON_EXTRACT(c.data, "$.clusterId") = @clusterId
+          AND (
+          (t.transactionType = @transactionType AND
+           c.contractAddress IS NOT NULL)
+            OR t.transactionType
+          != @transactionType)
       `,
-      { clusterId, transactionStatus: ComputingTransactionStatus.CONFIRMED },
+      {
+        clusterId,
+        transactionType: TransactionType.DEPLOY_CONTRACT,
+        transactionStatus: ComputingTransactionStatus.CONFIRMED,
+      },
     )) as {
       project_uuid: string;
       transaction_id: number;

@@ -1,6 +1,8 @@
 import {
   BlockchainMicroservice,
   ChainType,
+  Context,
+  env,
   formatTokenWithDecimals,
   formatWalletAddress,
   getTokenPriceUsd,
@@ -10,7 +12,12 @@ import {
   ServiceName,
   SubstrateChain,
 } from '@apillon/lib';
-import { BaseQueueWorker, LogOutput } from '@apillon/workers-lib';
+import {
+  BaseQueueWorker,
+  LogOutput,
+  QueueWorkerType,
+  WorkerDefinition,
+} from '@apillon/workers-lib';
 import { Transaction } from '../modules/transaction/models/transaction.model';
 import {
   ComputingTransactionStatus,
@@ -32,6 +39,14 @@ import { ClusterWallet } from '../modules/computing/models/cluster-wallet.model'
  */
 export class PhalaLogWorker extends BaseQueueWorker {
   private keyring = new Keyring({ type: 'sr25519' });
+
+  public constructor(
+    workerDefinition: WorkerDefinition,
+    context: Context,
+    type: QueueWorkerType,
+  ) {
+    super(workerDefinition, context, type, env.BLOCKCHAIN_AWS_WORKER_SQS_URL);
+  }
 
   async runPlanner(_data?: any) {
     const clusterWalletIds = await new ClusterWallet(

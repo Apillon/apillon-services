@@ -8,7 +8,11 @@ import {
 import { releaseStage, setupTest, Stage } from '../../../test/setup';
 import { ClusterWallet } from '../../modules/computing/models/cluster-wallet.model';
 import { PhalaLogWorker } from '../phala-log-worker';
-import { ServiceDefinitionType, WorkerDefinition } from '@apillon/workers-lib';
+import {
+  QueueWorkerType,
+  ServiceDefinitionType,
+  WorkerDefinition,
+} from '@apillon/workers-lib';
 import { WorkerName } from '../worker-executor';
 import MockAdapter from 'axios-mock-adapter';
 import axios from 'axios';
@@ -140,9 +144,13 @@ describe('Log worker tests', () => {
         stage.context,
       ).insert();
 
-      const logWorker = new PhalaLogWorker(WORKER_DEFINITION, stage.context);
+      const logWorker = new PhalaLogWorker(
+        WORKER_DEFINITION,
+        stage.context,
+        QueueWorkerType.PLANNER,
+      );
       const plans = await logWorker.runPlanner();
-      await logWorker.execute(JSON.stringify(plans[0]));
+      await logWorker.runExecutor(plans[0]);
 
       expect(mockAxios.history.get.length).toBe(1);
       expect(mockAxios.history.get[0].url).toBe(
@@ -206,9 +214,13 @@ describe('Log worker tests', () => {
         stage.context,
       ).insert();
 
-      const logWorker = new PhalaLogWorker(WORKER_DEFINITION, stage.context);
+      const logWorker = new PhalaLogWorker(
+        WORKER_DEFINITION,
+        stage.context,
+        QueueWorkerType.PLANNER,
+      );
       const plans = await logWorker.runPlanner();
-      await logWorker.execute(JSON.stringify(plans[0]));
+      await logWorker.runExecutor(plans[0]);
 
       expect(mockAxios.history.get.length).toBe(1);
       expect(mockAxios.history.get[0].url).toBe(
@@ -275,9 +287,13 @@ describe('Log worker tests', () => {
         stage.context,
       ).insert();
 
-      const logWorker = new PhalaLogWorker(WORKER_DEFINITION, stage.context);
+      const logWorker = new PhalaLogWorker(
+        WORKER_DEFINITION,
+        stage.context,
+        QueueWorkerType.PLANNER,
+      );
       const plans = await logWorker.runPlanner();
-      await logWorker.execute(JSON.stringify(plans[0]));
+      await logWorker.runExecutor(plans[0]);
 
       expect(mockAxios.history.get.length).toBe(1);
       expect(mockAxios.history.get[0].url).toBe(
@@ -343,9 +359,13 @@ describe('Log worker tests', () => {
         stage.context,
       ).insert();
 
-      const logWorker = new PhalaLogWorker(WORKER_DEFINITION, stage.context);
+      const logWorker = new PhalaLogWorker(
+        WORKER_DEFINITION,
+        stage.context,
+        QueueWorkerType.PLANNER,
+      );
       const plans = await logWorker.runPlanner();
-      await logWorker.execute(JSON.stringify(plans[0]));
+      await logWorker.runExecutor(plans[0]);
 
       expect(mockAxios.history.get.length).toBe(1);
       expect(mockAxios.history.get[0].url).toBe(
