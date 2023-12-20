@@ -276,16 +276,6 @@ export class File extends UuidSqlModel {
   })
   public fileStatus: number;
 
-  /**
-   * Time when file status was set to 8 - MARKED_FOR_DELETION
-   */
-  @prop({
-    parser: { resolver: dateParser() },
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
-    populatable: [PopulateFrom.DB],
-  })
-  public markedForDeletionTime?: Date;
-
   /************************************************************************
   INFO PROPERTIES
   ********************************************************************************/
@@ -450,11 +440,6 @@ export class File extends UuidSqlModel {
       this.getContext(),
     ).getIpfsCluster();
 
-    const defaultOrderStr =
-      filter.status == SqlModelStatus.ACTIVE
-        ? 'f.createTime DESC'
-        : 'f.markedForDeletionTime DESC';
-
     const sqlQuery = {
       qSelect: `
         SELECT ${this.generateSelectFields('f')}
@@ -468,7 +453,7 @@ export class File extends UuidSqlModel {
         AND f.status = @status
         `,
       qFilter: `
-        ORDER BY ${filters.orderStr || defaultOrderStr}
+        ORDER BY ${filters.orderStr || 'f.createTime DESC'}
         LIMIT ${filters.limit} OFFSET ${filters.offset};
       `,
     };

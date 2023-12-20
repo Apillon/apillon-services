@@ -196,16 +196,6 @@ export class Directory extends UuidSqlModel {
   })
   public description: string;
 
-  /**
-   * Time when directory status was set to 8 - MARKED_FOR_DELETION
-   */
-  @prop({
-    parser: { resolver: dateParser() },
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
-    populatable: [PopulateFrom.DB],
-  })
-  public markedForDeletionTime?: Date;
-
   /*************************************************************
    * INFO Properties
    *************************************************************/
@@ -365,9 +355,7 @@ export class Directory extends UuidSqlModel {
         WHERE b.bucket_uuid = @bucket_uuid
         AND (IFNULL(@directory_uuid, '-1') = IFNULL(pd.directory_uuid, '-1'))
         AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))
-        AND ( d.status = ${SqlModelStatus.ACTIVE} OR
-          ( @markedForDeletion = 1 AND d.status = ${SqlModelStatus.MARKED_FOR_DELETION})
-        )
+        AND d.status = ${SqlModelStatus.ACTIVE}
       `,
       },
       {
@@ -383,9 +371,7 @@ export class Directory extends UuidSqlModel {
         WHERE b.bucket_uuid = @bucket_uuid
         AND (IFNULL(@directory_uuid, '-1') = IFNULL(pd.directory_uuid, '-1'))
         AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))
-        AND ( d.status = ${SqlModelStatus.ACTIVE} OR
-          ( @markedForDeletion = 1 AND d.status = ${SqlModelStatus.MARKED_FOR_DELETION})
-        )
+        AND d.status = ${SqlModelStatus.ACTIVE}
       `,
       },
     ];

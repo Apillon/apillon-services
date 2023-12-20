@@ -315,7 +315,7 @@ describe('Storage directory tests', () => {
           project_uuid: testProject.project_uuid,
           bucket_id: testBucket.id,
           name: 'dir with subdirs',
-          status: SqlModelStatus.MARKED_FOR_DELETION,
+          status: SqlModelStatus.ACTIVE,
         });
 
       await testDirectoryWithSubdirectories.insert();

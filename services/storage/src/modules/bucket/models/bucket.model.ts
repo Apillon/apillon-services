@@ -231,16 +231,6 @@ export class Bucket extends UuidSqlModel {
   })
   public IPNS: string;
 
-  /**
-   * Time when bucket was set to status 8 - MARKED_FOR_DELETION
-   */
-  @prop({
-    parser: { resolver: dateParser() },
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
-    populatable: [PopulateFrom.DB],
-  })
-  public markedForDeletionTime?: Date;
-
   public override async populateById(
     id: number | string,
     conn?: PoolConnection,
