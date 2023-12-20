@@ -41,8 +41,8 @@
       "path": "services/computing"
     },
     {
-      "name": "🌐@services/nfts [@apillon/nfts]",
-      "path": "services/nfts"
+      "name": "🌐@services/subsocial [@apillon/subsocial]",
+      "path": "services/subsocial"
     },
     {
       "name": "😎@modules/dev-console-api",
