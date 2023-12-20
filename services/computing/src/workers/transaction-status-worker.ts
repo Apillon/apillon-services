@@ -12,8 +12,13 @@ import {
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { ComputingTransactionStatus } from '../config/types';
+import {
+  ComputingTransactionStatus,
+  ContractStatus,
+  TransactionType,
+} from '../config/types';
 import { Transaction } from '../modules/transaction/models/transaction.model';
+import { Contract } from '../modules/computing/models/contract.model';
 
 function mapTransactionStatus(transactionStatus: TransactionStatus) {
   switch (transactionStatus) {
@@ -78,7 +83,56 @@ export class TransactionStatusWorker extends BaseQueueWorker {
           res.transactionStatus,
         );
         await computingTransaction.update();
+        if (
+          computingTransaction.transactionStatus ===
+            ComputingTransactionStatus.CONFIRMED &&
+          [
+            TransactionType.DEPLOY_CONTRACT,
+            TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
+          ].includes(computingTransaction.transactionType)
+        ) {
+          await this.updateContract(
+            computingTransaction.contract_id,
+            computingTransaction.transactionType,
+            computingTransaction.transactionHash,
+            res.data,
+          );
+        }
       },
     );
+  }
+
+  private async updateContract(
+    contract_id: number,
+    transactionType: TransactionType,
+    transactionHash: string,
+    contractAddress: string,
+  ) {
+    const contract = await new Contract({}, this.context).populateById(
+      contract_id,
+    );
+
+    if (transactionType === TransactionType.DEPLOY_CONTRACT) {
+      contract.contractStatus = ContractStatus.DEPLOYING;
+      contract.contractAddress = contractAddress;
+      contract.transactionHash = transactionHash;
+    } else if (
+      transactionType === TransactionType.TRANSFER_CONTRACT_OWNERSHIP
+    ) {
+      contract.contractStatus = ContractStatus.TRANSFERRED;
+    }
+    await contract.update();
+
+    await this.writeEventLog({
+      logType: LogType.INFO,
+      project_uuid: contract?.project_uuid,
+      message: `Contract ${contract.name} status updated`,
+      service: ServiceName.COMPUTING,
+      data: {
+        collection_uuid: contract.contract_uuid,
+        contractStatus: contract.contractStatus,
+        updateTime: contract.updateTime,
+      },
+    });
   }
 }
