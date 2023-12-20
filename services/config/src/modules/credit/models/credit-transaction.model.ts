@@ -265,6 +265,9 @@ export class CreditTransaction extends ProjectAccessModel {
         LEFT JOIN \`${DbTables.PRODUCT}\` p ON p.id = ct.product_id
         WHERE ct.project_uuid = @project_uuid
         AND (@search IS null OR ct.referenceTable LIKE CONCAT('%', @search, '%'))
+        AND (@direction IS NULL OR ct.direction = @direction)
+        AND (@service IS NULL OR p.service = @service)
+        AND (@category IS NULL OR UPPER(ct.referenceTable) = UPPER(@category))
         AND ct.status <> ${SqlModelStatus.DELETED}
       `,
       qFilter: `

@@ -34,12 +34,10 @@ export class InvoiceService {
    * Handle stripe purchases, either credit purchase or subscription
    * Creates new subscription/credit records and a new invoice
    * @async
-   * @param {{
-        data: Merge<
+   * @param - data: Merge<
           Partial<CreateSubscriptionDto> & Partial<AddCreditDto>,
           Partial<CreateInvoiceDto>
-        >;
-      }} event - Stripe webhook data
+        > event - Stripe webhook data
    * @param {ServiceContext} context
    * @returns {Promise<boolean>}
    */
