@@ -48,7 +48,7 @@ export async function deployPhalaContract(
   const dbTxRecord = new Transaction({}, context);
   dbTxRecord.populate({
     transactionType: TransactionType.DEPLOY_CONTRACT,
-    contractId: contract.id,
+    contract_id: contract.id,
     transactionHash: response.data.transactionHash,
     transactionStatus: ComputingTransactionStatus.PENDING,
   });
