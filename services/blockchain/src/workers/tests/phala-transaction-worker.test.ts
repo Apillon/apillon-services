@@ -14,7 +14,7 @@ import { releaseStage, setupTest, Stage } from '../../../test/setup';
 import { Transaction } from '../../common/models/transaction';
 import { Wallet } from '../../modules/wallet/wallet.model';
 import { WorkerName } from '../worker-executor';
-import { SubstrateTransactionWorker } from '../substrate-transaction-worker';
+import { PhalaTransactionWorker } from '../phala-transaction-worker';
 
 const CHAIN_TYPE = ChainType.SUBSTRATE;
 const CHAIN = SubstrateChain.PHALA;
@@ -84,7 +84,7 @@ describe('Phala tests', () => {
       },
     );
 
-    await new SubstrateTransactionWorker(
+    await new PhalaTransactionWorker(
       workerDefinition,
       stage.context,
     ).runExecutor();
