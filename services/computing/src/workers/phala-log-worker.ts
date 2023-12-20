@@ -45,7 +45,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
     context: Context,
     type: QueueWorkerType,
   ) {
-    super(workerDefinition, context, type, env.BLOCKCHAIN_AWS_WORKER_SQS_URL);
+    super(workerDefinition, context, type, env.COMPUTING_AWS_WORKER_SQS_URL);
   }
 
   async runPlanner(_data?: any) {
