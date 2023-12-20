@@ -229,16 +229,6 @@ export class File extends UuidSqlModel {
   })
   public fileStatus: number;
 
-  /**
-   * Time when file status was set to 8 - MARKED_FOR_DELETION
-   */
-  @prop({
-    parser: { resolver: dateParser() },
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
-    populatable: [PopulateFrom.DB],
-  })
-  public markedForDeletionTime?: Date;
-
   /************************************************************************
   INFO PROPERTIES
   ********************************************************************************/
@@ -265,24 +255,6 @@ export class File extends UuidSqlModel {
     validators: [],
   })
   public directory_uuid: string;
-
-  /**
-   * Marks record in the database for deletion.
-   */
-  public async markForDeletion(conn?: PoolConnection): Promise<this> {
-    this.updateUser = this.getContext()?.user?.id;
-
-    this.status = SqlModelStatus.MARKED_FOR_DELETION;
-    this.markedForDeletionTime = new Date();
-
-    try {
-      await this.update(SerializeFor.UPDATE_DB, conn);
-    } catch (err) {
-      this.reset();
-      throw err;
-    }
-    return this;
-  }
 
   public async populateByNameAndDirectory(
     bucket_id: number,
@@ -341,6 +313,33 @@ export class File extends UuidSqlModel {
     return this;
   }
 
+  /**
+   * Populate file which has status 8 or 9 (MARKED_FOR_DELETION or DELETED) and matches query
+   * @param id id, cid or uuid
+   * @returns
+   */
+  public async populateDeletedById(id: string | number): Promise<this> {
+    if (!id) {
+      throw new Error('id should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT f.*, d.directory_uuid
+      FROM \`${DbTables.FILE}\` f
+      LEFT JOIN \`${DbTables.DIRECTORY}\` d on d.id = f.directory_id
+      WHERE (f.id LIKE @id OR f.cid LIKE @id OR f.file_uuid LIKE @id)
+      AND f.status IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.MARKED_FOR_DELETION});
+      `,
+      { id },
+    );
+
+    data?.length ? this.populate(data[0], PopulateFrom.DB) : this.reset();
+    await this.populateLink();
+
+    return this;
+  }
+
   public override async populateByUUID(uuid: string): Promise<this> {
     return this.populateById(uuid);
   }
@@ -388,11 +387,6 @@ export class File extends UuidSqlModel {
       this.getContext(),
     ).getIpfsCluster();
 
-    const defaultOrderStr =
-      filter.status == SqlModelStatus.ACTIVE
-        ? 'f.createTime DESC'
-        : 'f.markedForDeletionTime DESC';
-
     const sqlQuery = {
       qSelect: `
         SELECT ${this.generateSelectFields('f')}
@@ -406,7 +400,7 @@ export class File extends UuidSqlModel {
         AND f.status = @status
         `,
       qFilter: `
-        ORDER BY ${filters.orderStr || defaultOrderStr}
+        ORDER BY ${filters.orderStr || 'f.createTime DESC'}
         LIMIT ${filters.limit} OFFSET ${filters.offset};
       `,
     };

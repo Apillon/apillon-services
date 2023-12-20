@@ -203,16 +203,6 @@ export class Bucket extends UuidSqlModel {
   })
   public IPNS: string;
 
-  /**
-   * Time when bucket was set to status 8 - MARKED_FOR_DELETION
-   */
-  @prop({
-    parser: { resolver: dateParser() },
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.UPDATE_DB],
-    populatable: [PopulateFrom.DB],
-  })
-  public markedForDeletionTime?: Date;
-
   public override async populateById(
     id: number | string,
     conn?: PoolConnection,
@@ -257,24 +247,6 @@ export class Bucket extends UuidSqlModel {
     }
     bucket.canAccess(this.getContext());
 
-    return this;
-  }
-
-  /**
-   * Marks bucket in the database for deletion.
-   */
-  public async markForDeletion(conn?: PoolConnection): Promise<this> {
-    this.updateUser = this.getContext()?.user?.id;
-
-    this.status = SqlModelStatus.MARKED_FOR_DELETION;
-    this.markedForDeletionTime = new Date();
-
-    try {
-      await this.update(SerializeFor.UPDATE_DB, conn);
-    } catch (err) {
-      this.reset();
-      throw err;
-    }
     return this;
   }
 

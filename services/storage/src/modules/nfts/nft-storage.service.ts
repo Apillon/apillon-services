@@ -42,12 +42,6 @@ export class NftStorageService {
       event.body.bucket_uuid,
     );
 
-    //Check if enough storage is available
-    const storageInfo = await StorageService.getStorageInfo(
-      { project_uuid: bucket.project_uuid },
-      context,
-    );
-
     //Size of images and metadata for collection.
     const imagesOnS3 = await getSessionFilesOnS3(
       bucket,
@@ -58,15 +52,12 @@ export class NftStorageService {
       event.body.metadataSession,
     );
 
-    if (
-      storageInfo.usedStorage + imagesOnS3.size + metadataOnS3.size >
-      storageInfo.availableStorage
-    ) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.NOT_ENOUGH_STORAGE_SPACE,
-        status: 400,
-      });
-    }
+    //Check if enough storage is available
+    await StorageService.checkStorageSpace(
+      context,
+      bucket.project_uuid,
+      imagesOnS3.size + metadataOnS3.size,
+    );
 
     const ipfsService = new IPFSService(context, bucket.project_uuid);
     let ipnsDbRecord: Ipns = null;

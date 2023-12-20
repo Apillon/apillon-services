@@ -167,12 +167,12 @@ export class StorageController {
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: FilesQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
-  async listFilesMarkedForDeletion(
+  async listDeletedFiles(
     @Ctx() context: DevConsoleApiContext,
     @Param('bucket_uuid') bucket_uuid: string,
     @Query() query: FilesQueryFilter,
   ) {
-    return await this.storageService.listFilesMarkedForDeletion(
+    return await this.storageService.listDeletedFiles(
       context,
       bucket_uuid,
       query,
@@ -193,18 +193,18 @@ export class StorageController {
     return await this.storageService.deleteFile(context, id);
   }
 
-  @Patch(':bucket_uuid/file/:id/cancel-deletion')
+  @Patch(':bucket_uuid/file/:id/restore')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
     { role: DefaultUserRole.PROJECT_USER },
   )
   @UseGuards(AuthGuard)
-  async cancelFileDeletion(
+  async restoreFile(
     @Ctx() context: DevConsoleApiContext,
     @Param('id') id: string,
   ) {
-    return await this.storageService.cancelFileDeletion(context, id);
+    return await this.storageService.restoreFile(context, id);
   }
 
   @Post('test-crust-provider')

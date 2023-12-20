@@ -12,7 +12,6 @@ import { Directory } from '@apillon/storage/src/modules/directory/models/directo
 import { IPFSService } from '@apillon/storage/src/modules/ipfs/ipfs.service';
 import { FileUploadRequest } from '@apillon/storage/src/modules/storage/models/file-upload-request.model';
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';
-import { executeDeleteBucketDirectoryFileWorker } from '@apillon/storage/src/scripts/serverless-workers/execute-delete-bucket-dir-file-worker';
 import {
   createTestBucket,
   createTestBucketFile,
@@ -571,7 +570,7 @@ describe('Storage tests', () => {
       });
     });
 
-    describe('Delete file tests', () => {
+    describe('Delete and restore file tests', () => {
       let bucketForDeleteTests: Bucket = undefined;
       let deleteBucketTestFile1: File = undefined;
       let testFile2: File = undefined;
@@ -599,7 +598,7 @@ describe('Storage tests', () => {
         );
       });
 
-      test('User should be able to mark file for deletion', async () => {
+      test('User should be able to delete file', async () => {
         const response = await request(stage.http)
           .delete(
             `/storage/${bucketForDeleteTests.bucket_uuid}/file/${deleteBucketTestFile1.id}`,
@@ -607,75 +606,11 @@ describe('Storage tests', () => {
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(200);
 
-        const f: File = await new File({}, stage.storageContext).populateById(
-          deleteBucketTestFile1.id,
-        );
-        expect(f.status).toBe(SqlModelStatus.MARKED_FOR_DELETION);
-      });
-
-      test('User should be able to list files, that are marked for deletion', async () => {
-        const response = await request(stage.http)
-          .get(`/storage/${bucketForDeleteTests.bucket_uuid}/trashed-files`)
-          .set('Authorization', `Bearer ${testUser.token}`);
-        expect(response.status).toBe(200);
-        expect(response.body.data.items.length).toBe(1);
-        expect(response.body.data.items[0].file_uuid).toBe(
-          deleteBucketTestFile1.file_uuid,
-        );
-      });
-
-      test('User should be able to unmark file for deletion', async () => {
-        const testFileToCancelDeletion = await createTestBucketFile(
+        let f: File = await new File(
+          {},
           stage.storageContext,
-          bucketForDeleteTests,
-          'delete file test.txt',
-          'text/plain',
-          true,
-          undefined,
-          SqlModelStatus.MARKED_FOR_DELETION,
-        );
-        const response = await request(stage.http)
-          .patch(
-            `/storage/${bucketForDeleteTests.bucket_uuid}/file/${testFileToCancelDeletion.id}/cancel-deletion`,
-          )
-          .set('Authorization', `Bearer ${testUser.token}`);
-        expect(response.status).toBe(200);
-
-        const f: File = await new File({}, stage.storageContext).populateById(
-          testFileToCancelDeletion.id,
-        );
-        expect(f.status).toBe(SqlModelStatus.ACTIVE);
-      });
-
-      test('Storage delete worker should NOT delete file if file is not long enough in status 8 (marked for delete)', async () => {
-        await executeDeleteBucketDirectoryFileWorker(stage.storageContext);
-        const f: File = await new File({}, stage.storageContext).populateById(
-          deleteBucketTestFile1.id,
-        );
-        expect(f.status).toBe(SqlModelStatus.MARKED_FOR_DELETION);
-      });
-
-      test('Storage delete worker should delete file if file is long enough in status 8 (marked for delete)', async () => {
-        let f: File = await new File({}, stage.storageContext).populateById(
-          deleteBucketTestFile1.id,
-        );
-        f.markedForDeletionTime = new Date();
-        f.markedForDeletionTime.setFullYear(
-          f.markedForDeletionTime.getFullYear() - 1,
-        );
-        await f.update();
-
-        await executeDeleteBucketDirectoryFileWorker(stage.storageContext);
-        f = await new File({}, stage.storageContext).populateById(
-          deleteBucketTestFile1.id,
-        );
-        expect(f.exists()).toBeFalsy();
-        expect(
-          await new IPFSService(
-            stage.storageContext,
-            deleteBucketTestFile1.project_uuid,
-          ).isCIDPinned(deleteBucketTestFile1.CID),
-        ).toBeFalsy();
+        ).populateDeletedById(deleteBucketTestFile1.id);
+        expect(f.status).toBe(SqlModelStatus.DELETED);
 
         //Check if bucket size was decreased
         const tmpB: Bucket = await new Bucket(
@@ -695,13 +630,46 @@ describe('Storage tests', () => {
           ).isCIDPinned(testFile2.CID),
         ).toBeTruthy();
       });
+
+      test('User should be able to list deleted files', async () => {
+        const response = await request(stage.http)
+          .get(`/storage/${bucketForDeleteTests.bucket_uuid}/trashed-files`)
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(200);
+        expect(response.body.data.items.length).toBe(1);
+        expect(response.body.data.items[0].file_uuid).toBe(
+          deleteBucketTestFile1.file_uuid,
+        );
+      });
+
+      test('User should be able to restore file', async () => {
+        const response = await request(stage.http)
+          .patch(
+            `/storage/${bucketForDeleteTests.bucket_uuid}/file/${deleteBucketTestFile1.id}/restore`,
+          )
+          .set('Authorization', `Bearer ${testUser.token}`);
+        expect(response.status).toBe(200);
+
+        const f: File = await new File({}, stage.storageContext).populateById(
+          deleteBucketTestFile1.id,
+        );
+        expect(f.exists()).toBeTruthy();
+
+        //Check if bucket size was increased
+        const tmpB: Bucket = await new Bucket(
+          {},
+          stage.storageContext,
+        ).populateById(bucketForDeleteTests.id);
+
+        expect(tmpB.size).toBe(bucketForDeleteTests.size);
+      });
     });
 
     describe('Storage access tests', () => {
-      let bucketForDeleteTests: Bucket = undefined;
+      let bucketForAccessTests: Bucket = undefined;
       let deleteBucketTestFile1: File = undefined;
       beforeAll(async () => {
-        bucketForDeleteTests = await createTestBucket(
+        bucketForAccessTests = await createTestBucket(
           testUser,
           stage.storageContext,
           testProject,
@@ -709,7 +677,7 @@ describe('Storage tests', () => {
 
         deleteBucketTestFile1 = await createTestBucketFile(
           stage.storageContext,
-          bucketForDeleteTests,
+          bucketForAccessTests,
           'delete file test.txt',
           'text/plain',
           true,
@@ -760,7 +728,7 @@ describe('Storage tests', () => {
 
       test('User should NOT be able to get list of ANOTHER USER file uploads', async () => {
         const response = await request(stage.http)
-          .get(`/storage/${bucketForDeleteTests.bucket_uuid}/file-uploads`)
+          .get(`/storage/${bucketForAccessTests.bucket_uuid}/file-uploads`)
           .set('Authorization', `Bearer ${testUser2.token}`);
         expect(response.status).toBe(403);
       });
@@ -768,7 +736,7 @@ describe('Storage tests', () => {
       test('User should NOT be able to delete ANOTHER USER file', async () => {
         const response = await request(stage.http)
           .delete(
-            `/storage/${bucketForDeleteTests.bucket_uuid}/file/${deleteBucketTestFile1.id}`,
+            `/storage/${bucketForAccessTests.bucket_uuid}/file/${deleteBucketTestFile1.id}`,
           )
           .set('Authorization', `Bearer ${testUser2.token}`);
         expect(response.status).toBe(403);
@@ -781,7 +749,7 @@ describe('Storage tests', () => {
 
       test('Admin User should be able to get list of file uploads', async () => {
         const response = await request(stage.http)
-          .get(`/storage/${bucketForDeleteTests.bucket_uuid}/file-uploads`)
+          .get(`/storage/${bucketForAccessTests.bucket_uuid}/file-uploads`)
           .set('Authorization', `Bearer ${adminTestUser.token}`);
         expect(response.status).toBe(200);
         expect(response.body.data.items.length).toBeGreaterThanOrEqual(0);
@@ -790,7 +758,7 @@ describe('Storage tests', () => {
       test('Admin User should NOT be able to delete a file', async () => {
         const response = await request(stage.http)
           .delete(
-            `/storage/${bucketForDeleteTests.bucket_uuid}/file/${deleteBucketTestFile1.id}`,
+            `/storage/${bucketForAccessTests.bucket_uuid}/file/${deleteBucketTestFile1.id}`,
           )
           .set('Authorization', `Bearer ${adminTestUser.token}`);
         expect(response.status).toBe(403);

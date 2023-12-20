@@ -7,6 +7,7 @@ export interface IEnv {
    * runtime environment
    */
   APP_URL: string;
+  ADMIN_APP_URL: string;
   APP_ENV: string;
   LOG_TARGET: string;
   LOG_LEVEL: string;
@@ -176,7 +177,6 @@ export interface IEnv {
   STORAGE_CRUST_SEED_PHRASE: string;
   STORAGE_CRUST_SEED_PHRASE_TEST: string;
   STORAGE_AWS_IPFS_QUEUE_BUCKET: string;
-  STORAGE_DELETE_AFTER_INTERVAL: number;
   URL_SCREENSHOT_FUNCTION_NAME: string;
   URL_SCREENSHOT_API_URL: string;
   SEND_WEBSITES_TO_REVIEW: number;
@@ -518,8 +518,8 @@ export let env: IEnv = {
   AWS_BUCKET: process.env['AWS_BUCKET'],
   AWS_ENDPOINT: process.env['AWS_ENDPOINT'],
   APP_SECRET: process.env['APP_SECRET'] || 'Du7Rvyqt7u38naZ2',
-  CONSOLE_API_URL:
-    process.env['CONSOLE_API_URL'] || 'https://console-api-dev.apillon.io/',
+  CONSOLE_API_URL: process.env['CONSOLE_API_URL'],
+  ADMIN_APP_URL: process.env['ADMIN_APP_URL'],
 
   /** AMS */
   ACCESS_FUNCTION_NAME: process.env['ACCESS_FUNCTION_NAME'],
@@ -615,8 +615,6 @@ export let env: IEnv = {
   STORAGE_CRUST_SEED_PHRASE: process.env['STORAGE_CRUST_SEED_PHRASE'],
   STORAGE_CRUST_SEED_PHRASE_TEST: process.env['STORAGE_CRUST_SEED_PHRASE_TEST'],
   STORAGE_AWS_IPFS_QUEUE_BUCKET: process.env['STORAGE_AWS_IPFS_QUEUE_BUCKET'],
-  STORAGE_DELETE_AFTER_INTERVAL:
-    parseInt(process.env['STORAGE_DELETE_AFTER_INTERVAL']) || 90,
   URL_SCREENSHOT_FUNCTION_NAME: process.env['URL_SCREENSHOT_FUNCTION_NAME'],
   URL_SCREENSHOT_API_URL: process.env['URL_SCREENSHOT_API_URL'],
   SEND_WEBSITES_TO_REVIEW:

@@ -18,11 +18,4 @@ export class FilesQueryFilter extends BaseQueryFilter {
     validators: [],
   })
   public fileStatus: number;
-
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [],
-  })
-  public status: number;
 }
