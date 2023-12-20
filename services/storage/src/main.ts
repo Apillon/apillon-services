@@ -27,9 +27,7 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.GET_BUCKET]: BucketService.getBucket,
     [StorageEventType.CREATE_BUCKET]: BucketService.createBucket,
     [StorageEventType.UPDATE_BUCKET]: BucketService.updateBucket,
-    [StorageEventType.DELETE_BUCKET]: BucketService.markBucketForDeletion,
-    [StorageEventType.CANCEL_DELETE_BUCKET]:
-      BucketService.unmarkBucketForDeletion,
+    [StorageEventType.DELETE_BUCKET]: BucketService.deleteBucket,
     [StorageEventType.MAX_BUCKETS_QUOTA_REACHED]:
       BucketService.maxBucketsQuotaReached,
     [StorageEventType.BUCKET_CLEAR_CONTENT]: BucketService.clearBucketContent,
@@ -37,13 +35,11 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.CREATE_DIRECTORY]: DirectoryService.createDirectory,
     [StorageEventType.UPDATE_DIRECTROY]: DirectoryService.updateDirectory,
     [StorageEventType.DELETE_DIRECTORY]: DirectoryService.deleteDirectory,
-    [StorageEventType.CANCEL_DELETE_DIRECTORY]:
-      DirectoryService.unmarkDirectoryForDeletion,
     [StorageEventType.LIST_DIRECTORY_CONTENT]:
       DirectoryService.listDirectoryContent,
     [StorageEventType.GET_FILE_DETAILS]: StorageService.getFileDetails,
     [StorageEventType.FILE_DELETE]: StorageService.deleteFile,
-    [StorageEventType.CANCEL_FILE_DELETE]: StorageService.unmarkFileForDeletion,
+    [StorageEventType.RESTORE_FILE]: StorageService.restoreFile,
     [StorageEventType.LIST_FILES]: StorageService.listFiles,
 
     [StorageEventType.BUCKET_WEBHOOK_GET]: BucketService.getBucketWebhook,

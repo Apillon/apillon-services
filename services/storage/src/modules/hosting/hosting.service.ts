@@ -2,12 +2,14 @@ import {
   Ams,
   ApillonHostingApiCreateS3UrlsForUploadDto,
   AWS_S3,
+  CacheKeyPrefix,
   CreateS3UrlsForUploadDto,
   CreateWebsiteDto,
   DeploymentQueryFilter,
   DeployWebsiteDto,
   DomainQueryFilter,
   env,
+  invalidateCacheMatch,
   Lmas,
   LogType,
   Mailing,
@@ -331,20 +333,11 @@ export class HostingService {
     }
 
     //Check if enough storage available
-    //Check used storage
-    const storageInfo = await StorageService.getStorageInfo(
-      { project_uuid: sourceBucket.project_uuid },
+    await StorageService.checkStorageSpace(
       context,
+      sourceBucket.project_uuid,
+      sourceBucket.size,
     );
-    if (
-      storageInfo.usedStorage + sourceBucket.size >
-      storageInfo.availableStorage
-    ) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.NOT_ENOUGH_STORAGE_SPACE,
-        status: 400,
-      });
-    }
 
     //Create deployment record
     const deployment: Deployment = new Deployment({}, context).populate({
@@ -571,6 +564,11 @@ export class HostingService {
       await context.mysql.commit(conn);
     } catch (err) {
       await context.mysql.rollback(conn);
+      throw new StorageCodeException({
+        code: StorageErrorCode.ERROR_DELETING_FILE,
+        status: 500,
+        sourceFunction: 'HostingService.deleteFile',
+      });
     }
 
     try {
@@ -591,48 +589,8 @@ export class HostingService {
         err,
       );
     }
+
     return event.file.serialize(SerializeFor.PROFILE);
-  }
-
-  static async deleteDirectory(
-    event: { directory: Directory },
-    context: ServiceContext,
-  ): Promise<any> {
-    const conn = await context.mysql.start();
-
-    try {
-      const deleteDirRes = await deleteDirectory(
-        context,
-        event.directory.id,
-        conn,
-      );
-      const s3Client: AWS_S3 = new AWS_S3();
-
-      if (deleteDirRes.deletedFiles.filter((x) => x.s3FileKey).length > 0) {
-        await s3Client.removeFiles(
-          env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-          deleteDirRes.deletedFiles
-            .filter((x) => x.s3FileKey)
-            .map((x) => {
-              return { Key: x.s3FileKey };
-            }),
-        );
-      }
-
-      await context.mysql.commit(conn);
-    } catch (err) {
-      await context.mysql.rollback(conn);
-      writeLog(
-        LogType.ERROR,
-        'Error deleting directory',
-        'hosting.service.ts',
-        'deleteDirectory',
-        err,
-      );
-      throw err;
-    }
-
-    return event.directory.serialize(SerializeFor.PROFILE);
   }
 
   static async clearBucketContent(

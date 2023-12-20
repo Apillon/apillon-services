@@ -1,20 +1,17 @@
-import { DefaultUserRole, QuotaCode, SqlModelStatus } from '@apillon/lib';
+import { DefaultUserRole, SqlModelStatus } from '@apillon/lib';
 import {
   BucketType,
   StorageErrorCode,
 } from '@apillon/storage/src/config/types';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
-import { IPFSService } from '@apillon/storage/src/modules/ipfs/ipfs.service';
-import { File } from '@apillon/storage/src/modules/storage/models/file.model';
-import { executeDeleteBucketDirectoryFileWorker } from '@apillon/storage/src/scripts/serverless-workers/execute-delete-bucket-dir-file-worker';
 import {
+  Stage,
+  TestUser,
   createTestBucket,
   createTestBucketFile,
   createTestProject,
   createTestUser,
   releaseStage,
-  Stage,
-  TestUser,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
 import { setupTest } from '../../../../../test/helpers/setup';
@@ -47,26 +44,13 @@ describe('Storage bucket tests', () => {
       testProject,
     );
 
-    await stage.configContext.mysql.paramExecute(`
-    INSERT INTO override (status, quota_id, project_uuid,  object_uuid, package_id, value)
-    VALUES 
-      (
-        5,
-        ${QuotaCode.MAX_FILE_BUCKETS},
-        '${testProject.project_uuid}',
-        null, 
-        null,
-        '5'
-      ),
-      (
-        5,
-        ${QuotaCode.MAX_HOSTING_BUCKETS},
-        '${testProject.project_uuid}',
-        null, 
-        null,
-        '5'
-      )
-    `);
+    await createTestBucketFile(
+      stage.storageContext,
+      testBucket,
+      'file.txt',
+      'text/plain',
+      true,
+    );
   });
 
   afterAll(async () => {
@@ -320,81 +304,21 @@ describe('Storage bucket tests', () => {
       expect(b.status).toBe(SqlModelStatus.ACTIVE);
     });
 
-    test('User should be able to mark bucket for deletion', async () => {
+    test('User should not be able to delete bucket which contains files', async () => {
       const response = await request(stage.http)
         .delete(`/buckets/${testBucket.bucket_uuid}`)
         .set('Authorization', `Bearer ${testUser.token}`);
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(400);
+      expect(response.body.code).toBe(40006021);
 
       const b: Bucket = await new Bucket(
         {},
         stage.storageContext,
       ).populateByUUID(testBucket.bucket_uuid);
-      expect(b.status).toBe(SqlModelStatus.MARKED_FOR_DELETION);
-    });
-
-    test('User should be able to get TRASHED bucket list', async () => {
-      const response = await request(stage.http)
-        .get(
-          `/buckets?project_uuid=${testProject.project_uuid}&status=${SqlModelStatus.MARKED_FOR_DELETION}`,
-        )
-        .set('Authorization', `Bearer ${testUser.token}`);
-      expect(response.status).toBe(200);
-      expect(response.body.data.items.length).toBe(1);
-      expect(response.body.data.items[0]?.bucket_uuid).toBe(
-        testBucket.bucket_uuid,
-      );
-    });
-
-    test('User should be able to unmark bucket for deletion', async () => {
-      const testBucketToCancelDeletion = await createTestBucket(
-        testUser,
-        stage.storageContext,
-        testProject,
-        BucketType.STORAGE,
-        SqlModelStatus.MARKED_FOR_DELETION,
-      );
-      const response = await request(stage.http)
-        .patch(
-          `/buckets/${testBucketToCancelDeletion.bucket_uuid}/cancel-deletion`,
-        )
-        .set('Authorization', `Bearer ${testUser.token}`);
-      expect(response.status).toBe(200);
-
-      const b: Bucket = await new Bucket(
-        {},
-        stage.storageContext,
-      ).populateByUUID(testBucketToCancelDeletion.bucket_uuid);
       expect(b.status).toBe(SqlModelStatus.ACTIVE);
     });
 
-    test('Storage delete worker should NOT delete bucket if bucket is not long enough in status 8 (marked for delete)', async () => {
-      await executeDeleteBucketDirectoryFileWorker(stage.storageContext);
-      const b: Bucket = await new Bucket(
-        {},
-        stage.storageContext,
-      ).populateByUUID(testBucket.bucket_uuid);
-      expect(b.status).toBe(SqlModelStatus.MARKED_FOR_DELETION);
-    });
-
-    test('Storage delete worker should delete bucket if bucket is long enough in status 8 (marked for delete)', async () => {
-      let b: Bucket = await new Bucket({}, stage.storageContext).populateByUUID(
-        testBucket.bucket_uuid,
-      );
-      b.markedForDeletionTime = new Date();
-      b.markedForDeletionTime.setFullYear(
-        b.markedForDeletionTime.getFullYear() - 1,
-      );
-      await b.update();
-
-      await executeDeleteBucketDirectoryFileWorker(stage.storageContext);
-      b = await new Bucket({}, stage.storageContext).populateByUUID(
-        testBucket.bucket_uuid,
-      );
-      expect(b.exists()).toBeFalsy();
-    });
-
-    test('Storage delete worker should delete bucket and all files in it', async () => {
+    test('User should be able to delete empty bucket', async () => {
       //Prepare new test bucket and add some files to it
       const deleteBucketTestBucket = await createTestBucket(
         testUser,
@@ -402,47 +326,16 @@ describe('Storage bucket tests', () => {
         testProject,
       );
 
-      const deleteBucketTestFile1 = await createTestBucketFile(
+      const response = await request(stage.http)
+        .delete(`/buckets/${deleteBucketTestBucket.bucket_uuid}`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+
+      const b: Bucket = await new Bucket(
+        {},
         stage.storageContext,
-        deleteBucketTestBucket,
-        'testingDelete.txt',
-        'text/plain',
-        true,
-      );
-
-      expect(
-        await new IPFSService(
-          stage.storageContext,
-          deleteBucketTestBucket.project_uuid,
-        ).isCIDPinned(deleteBucketTestFile1.CID),
-      ).toBeTruthy();
-
-      //Mark bucket for deletion
-      await deleteBucketTestBucket.markForDeletion();
-      deleteBucketTestBucket.markedForDeletionTime = new Date();
-      deleteBucketTestBucket.markedForDeletionTime.setFullYear(
-        deleteBucketTestBucket.markedForDeletionTime.getFullYear() - 1,
-      );
-      await deleteBucketTestBucket.update();
-
-      //Run worker and check if bucket was deleted
-      await executeDeleteBucketDirectoryFileWorker(stage.storageContext);
-      const b = await new Bucket({}, stage.storageContext).populateByUUID(
-        deleteBucketTestBucket.bucket_uuid,
-      );
+      ).populateByUUID(deleteBucketTestBucket.bucket_uuid);
       expect(b.exists()).toBeFalsy();
-
-      //Check if files were deleted and unpined
-      const f: File = await new File({}, stage.storageContext).populateById(
-        deleteBucketTestFile1.id,
-      );
-      expect(f.exists()).toBeFalsy();
-      expect(
-        await new IPFSService(
-          stage.storageContext,
-          deleteBucketTestBucket.project_uuid,
-        ).isCIDPinned(deleteBucketTestFile1.CID),
-      ).toBeFalsy();
     });
   });
 });
