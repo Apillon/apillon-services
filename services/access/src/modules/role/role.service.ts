@@ -2,6 +2,7 @@ import {
   ApiKeyRoleDto,
   CacheKeyPrefix,
   DefaultUserRole,
+  LogType,
   SerializeFor,
   invalidateCacheKey,
 } from '@apillon/lib';
@@ -36,6 +37,7 @@ export class RoleService {
         status: 400,
         code: AmsErrorCode.USER_DOES_NOT_EXISTS,
       }).writeToMonitor({
+        logType: LogType.WARN,
         context,
         project_uuid: event?.project_uuid,
         data: event,
@@ -169,7 +171,7 @@ export class RoleService {
   ) {
     const data = await context.mysql.paramExecute(
       `
-      SELECT au.* 
+      SELECT au.*
       FROM \`${DbTables.AUTH_USER_ROLE}\` aur
       JOIN \`${DbTables.AUTH_USER}\` au ON au.id = aur.authUser_id
       WHERE aur.project_uuid = @project_uuid
