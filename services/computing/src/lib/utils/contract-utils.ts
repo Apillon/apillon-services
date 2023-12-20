@@ -96,7 +96,7 @@ export async function depositToPhalaCluster(
 export async function transferContractOwnership(
   context: ServiceContext,
   projectUuid: string,
-  contractId: number,
+  contract_id: number,
   contractAbi: { [key: string]: any },
   contractAddress: string,
   newOwnerAddress: string,
@@ -115,7 +115,7 @@ export async function transferContractOwnership(
       chain: SubstrateChain.PHALA,
       transaction: transaction.toHex(),
       referenceTable: DbTables.CONTRACT,
-      referenceId: contractId,
+      referenceId: contract_id,
       project_uuid: projectUuid,
     },
     context,
@@ -126,7 +126,7 @@ export async function transferContractOwnership(
   const dbTxRecord = new Transaction(
     {
       transactionType: TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
-      contractId,
+      contract_id: contract_id,
       transactionHash: response.data.transactionHash,
       nonce,
       transactionStatus: ComputingTransactionStatus.PENDING,
@@ -152,7 +152,7 @@ export async function encryptContent(
 export async function assignCidToNft(
   context: ServiceContext,
   projectUuid: string,
-  contractId: number,
+  contract_id: number,
   contractAbi: { [key: string]: any },
   contractAddress: string,
   cid: string,
@@ -173,7 +173,7 @@ export async function assignCidToNft(
       chain: SubstrateChain.PHALA,
       transaction: transaction.toHex(),
       referenceTable: DbTables.CONTRACT,
-      referenceId: contractId,
+      referenceId: contract_id,
       project_uuid: projectUuid,
     },
     context,
@@ -184,7 +184,7 @@ export async function assignCidToNft(
   const dbTxRecord = new Transaction(
     {
       transactionType: TransactionType.ASSIGN_CID_TO_NFT,
-      contractId,
+      contract_id: contract_id,
       transactionHash: response.data.transactionHash,
       transactionStatus: ComputingTransactionStatus.PENDING,
     },
