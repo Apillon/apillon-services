@@ -133,7 +133,12 @@ export class AuthUserService {
       throw await new AmsCodeException({
         status: 401,
         code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
-      }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
+      }).writeToMonitor({
+        logType: LogType.WARN,
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
+      });
     }
 
     await authUser.loginUser();
@@ -198,6 +203,7 @@ export class AuthUserService {
         status: 401,
         code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
       }).writeToMonitor({
+        logType: LogType.WARN,
         context,
         user_uuid: event?.user_uuid,
         data: event,
@@ -298,6 +304,7 @@ export class AuthUserService {
         status: 400,
         code: AmsErrorCode.USER_DOES_NOT_EXISTS,
       }).writeToMonitor({
+        logType: LogType.WARN,
         context,
         user_uuid: event?.user_uuid,
         data: event,
@@ -318,6 +325,7 @@ export class AuthUserService {
         status: 401,
         code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
       }).writeToMonitor({
+        logType: LogType.WARN,
         context,
         user_uuid: event?.user_uuid,
         data: event,
@@ -344,6 +352,7 @@ export class AuthUserService {
         status: 400,
         code: AmsErrorCode.USER_DOES_NOT_EXISTS,
       }).writeToMonitor({
+        logType: LogType.WARN,
         context,
         user_uuid: event?.user_uuid,
         data: event,
@@ -409,7 +418,12 @@ export class AuthUserService {
       throw await new AmsCodeException({
         status: 400,
         code: AmsErrorCode.USER_DOES_NOT_EXISTS,
-      }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
+      }).writeToMonitor({
+        logType: LogType.WARN,
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
+      });
     }
 
     //Use authUser password to parse and verify token
@@ -508,6 +522,7 @@ export class AuthUserService {
         status: 401,
         code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
       }).writeToMonitor({
+        logType: LogType.WARN,
         context,
         user_uuid: event?.user_uuid,
         data: event,
@@ -522,7 +537,12 @@ export class AuthUserService {
       throw await new AmsCodeException({
         status: 401,
         code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
-      }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
+      }).writeToMonitor({
+        logType: LogType.WARN,
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
+      });
     }
 
     //If login token with greater timestamp exists, throw error - signature was already used for login
