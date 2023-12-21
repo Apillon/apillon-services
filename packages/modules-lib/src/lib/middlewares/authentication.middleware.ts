@@ -1,4 +1,5 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
+import { ApiName } from '@apillon/lib';
+import { Injectable, NestMiddleware, Type, mixin } from '@nestjs/common';
 
 const AUTHORIZATION_HEADER = 'Authorization';
 
@@ -9,15 +10,22 @@ const AUTHORIZATION_HEADER = 'Authorization';
  * @param res Express response
  * @param next Express next function
  */
-@Injectable()
-export class AuthenticateUserMiddleware implements NestMiddleware {
-  async use(req, res, next) {
-    const { context } = req;
-    const token = (req.get(AUTHORIZATION_HEADER) || '').split(' ').reverse()[0];
-    if (token) {
-      await context.authenticate(token);
+export function createAuthenticateUserMiddleware(
+  apiName: ApiName,
+): Type<NestMiddleware> {
+  @Injectable()
+  class AuthenticateUserMiddleware implements NestMiddleware {
+    async use(req, res, next) {
+      const { context } = req;
+      const token = (req.get(AUTHORIZATION_HEADER) || '')
+        .split(' ')
+        .reverse()[0];
+      if (token) {
+        await context.authenticate(token);
+      }
+      context.apiName = apiName;
+      next();
     }
-
-    next();
   }
+  return mixin(AuthenticateUserMiddleware);
 }

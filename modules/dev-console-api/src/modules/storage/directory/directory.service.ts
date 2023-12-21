@@ -35,17 +35,6 @@ export class DirectoryService {
     ).data;
   }
 
-  async cancelDirectoryDeletion(
-    context: DevConsoleApiContext,
-    directory_uuid: string,
-  ) {
-    return (
-      await new StorageMicroservice(context).cancelDirectoryDeletion({
-        directory_uuid,
-      })
-    ).data;
-  }
-
   async deleteDirectory(context: DevConsoleApiContext, directory_uuid: string) {
     return (
       await new StorageMicroservice(context).deleteDirectory({

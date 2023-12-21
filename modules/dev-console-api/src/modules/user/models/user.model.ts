@@ -212,7 +212,7 @@ export class User extends AdvancedSQLModel {
           OR u.email LIKE CONCAT('%', @search, '%')
           OR u.user_uuid = @search
         )
-        AND u.status <> ${SqlModelStatus.DELETED}
+        AND ((@status IS NULL AND u.status <> ${SqlModelStatus.DELETED}) OR @status = u.status)
         `,
       qFilter: `
           ORDER BY ${filters.orderStr || 'u.createTime DESC'}

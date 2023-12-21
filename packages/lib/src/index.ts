@@ -86,15 +86,19 @@ export * from './lib/at-services/computing/dtos/deposit-to-cluster.dto';
 export * from './lib/at-services/computing/dtos/transfer-ownership.dto';
 export * from './lib/at-services/computing/dtos/encrypt-content.dto';
 export * from './lib/at-services/computing/dtos/assign-cid-to-nft.dto';
+export * from './lib/at-services/computing/dtos/phala-log-filter.dto';
+export * from './lib/at-services/computing/dtos/phala-cluster-wallet.dto';
 
 //#REGION Blockchain
 export * from './lib/at-services/blockchain/blockchain';
+export * from './lib/at-services/blockchain/utils';
 export * from './lib/at-services/blockchain/dtos/create-substrate-transaction.dto';
 export * from './lib/at-services/blockchain/dtos/create-evm-transaction.dto';
 export * from './lib/at-services/blockchain/dtos/transaction.dto';
 export * from './lib/at-services/blockchain/dtos/transaction-webhook-data.dto';
 export * from './lib/at-services/blockchain/dtos/update-transaction.dto';
 export * from './lib/at-services/blockchain/dtos/wallet-transactions-query-filter';
+export * from './lib/at-services/blockchain/dtos/wallet-deposits-query-filter';
 
 //#REGION Mix
 export * from './lib/at-services/ams/dtos/create-oauth-link.dto';

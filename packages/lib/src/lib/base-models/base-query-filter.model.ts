@@ -52,6 +52,13 @@ export class BaseQueryFilter extends ModelBase {
   })
   public search?: string;
 
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [],
+  })
+  public status: number;
+
   /**
    * Returns default values of the query object.
    */

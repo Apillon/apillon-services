@@ -143,11 +143,16 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
   /**
    * Populates model fields by loading the document with the provided id from the database.
    * @param id Document's ID.
+   * @param conn Pool connections
+   * @param forUpdate Lock record for UPDATE
+   * @param allStatuses Ignore record status
+   *
    */
   public async populateById(
     id: number | string,
     conn?: PoolConnection,
     forUpdate = false,
+    allStatuses = false,
   ): Promise<this> {
     if (!id) {
       throw new Error('ID should not be null');
@@ -163,7 +168,8 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
       `
       SELECT *
       FROM \`${this.tableName}\`
-      WHERE id = @id AND status <> ${SqlModelStatus.DELETED}
+      WHERE id = @id 
+      ${allStatuses ? '' : ' AND status <> ' + SqlModelStatus.DELETED + ' '}
       ${conn && forUpdate ? 'FOR UPDATE' : ''};
       `,
       { id },

@@ -7,6 +7,8 @@ import {
   IsolationLevel,
   Lmas,
   LogType,
+  PhalaClusterWalletDto,
+  PhalaLogFilterDto,
   SerializeFor,
   ServiceName,
   SubstrateChain,
@@ -19,11 +21,10 @@ import { Transaction } from '../../common/models/transaction';
 import { typesBundleForPolkadot as CrustTypesBundle } from '@crustio/type-definitions';
 import { typesBundle as KiltTypesBundle } from '@kiltprotocol/type-definitions';
 import { LogOutput, sendToWorkerQueue } from '@apillon/workers-lib';
-import { WorkerName } from '../../workers/worker-executor';
 import { ServiceContext } from '@apillon/service-lib';
 import { getWalletSeed } from '../../lib/seed';
 import { SubstrateRpcApi } from './rpc-api';
-import { types as PhalaTypesBundle } from '@phala/sdk';
+import { OnChainRegistry, types as PhalaTypesBundle } from '@phala/sdk';
 import { substrateChainToWorkerName } from '../../lib/helpers';
 
 export class SubstrateService {
@@ -230,6 +231,94 @@ export class SubstrateService {
     return transaction.serialize(SerializeFor.PROFILE);
   }
 
+  static async getPhalaLogRecordsAndGasPrice(
+    event: {
+      phalaLogFilter: PhalaLogFilterDto;
+    },
+    context: ServiceContext,
+  ) {
+    const endpoint = await new Endpoint({}, context).populateByChain(
+      SubstrateChain.PHALA,
+      ChainType.SUBSTRATE,
+    );
+    const api = new SubstrateRpcApi(endpoint.url, PhalaTypesBundle);
+    try {
+      const phatRegistry = await OnChainRegistry.create(await api.getApi(), {
+        clusterId: event.phalaLogFilter.clusterId,
+      });
+      const gasPrice = phatRegistry.gasPrice.toNumber();
+      const { records } = await phatRegistry.loggerContract.tail(
+        100,
+        event.phalaLogFilter,
+      );
+      console.log(
+        `Retrieved ${records.length} log records and gas price ${gasPrice}`,
+      );
+      return { records, gasPrice };
+    } catch (e: unknown) {
+      await new Lmas().writeLog({
+        logType: LogType.ERROR,
+        message: `Error fetching phala logs or gas price.`,
+        location: 'SubstrateService.getPhalaClusterWalletBalance',
+        service: ServiceName.BLOCKCHAIN,
+        data: {
+          error: e,
+          clusterId: event.phalaLogFilter.clusterId,
+          contract: event.phalaLogFilter.contract,
+          nonce: event.phalaLogFilter.nonce,
+          type: event.phalaLogFilter.type,
+        },
+      });
+      throw e;
+    } finally {
+      await api.destroy();
+    }
+  }
+
+  static async getPhalaClusterWalletBalance(
+    event: {
+      phalaClusterWallet: PhalaClusterWalletDto;
+    },
+    context: ServiceContext,
+  ) {
+    const endpoint = await new Endpoint({}, context).populateByChain(
+      SubstrateChain.PHALA,
+      ChainType.SUBSTRATE,
+    );
+    const api = new SubstrateRpcApi(endpoint.url, PhalaTypesBundle);
+    try {
+      const phatRegistry = await OnChainRegistry.create(await api.getApi(), {
+        clusterId: event.phalaClusterWallet.clusterId,
+      });
+      const balance = await phatRegistry.getClusterBalance(
+        event.phalaClusterWallet.walletAddress,
+      );
+
+      console.log(
+        `Retrieved balance total ${balance.total} and free ${balance.free}`,
+      );
+      return {
+        total: balance.total.toNumber(),
+        free: balance.free.toNumber(),
+      };
+    } catch (e: unknown) {
+      await new Lmas().writeLog({
+        logType: LogType.ERROR,
+        message: `Error fetching cluster ${event.phalaClusterWallet.walletAddress} balance.`,
+        location: 'SubstrateService.getPhalaClusterWalletBalance',
+        service: ServiceName.BLOCKCHAIN,
+        data: {
+          error: e,
+          clusterId: event.phalaClusterWallet.clusterId,
+          walletAddress: event.phalaClusterWallet.walletAddress,
+        },
+      });
+      throw e;
+    } finally {
+      await api.destroy();
+    }
+  }
+
   /**
    * @dev Ensure that only once instance of this method is running at the same time.
    * Should be called from worker
@@ -262,6 +351,10 @@ export class SubstrateService {
       }
       case SubstrateChain.CRUST: {
         typesBundle = CrustTypesBundle;
+        break;
+      }
+      case SubstrateChain.PHALA: {
+        typesBundle = PhalaTypesBundle;
         break;
       }
       default: {

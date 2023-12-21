@@ -10,13 +10,16 @@ import { BaseQueryFilter } from '../../base-models/base-query-filter.model';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import {
-  UpdateTransactionDto,
   CreateEvmTransactionDto,
   CreateSubstrateTransactionDto,
+  PhalaClusterWalletDto,
   TransactionDto,
-  WalletTransactionsQueryFilter,
+  UpdateTransactionDto,
+  WalletDepositsQueryFilter,
   WalletIdentityDto,
+  WalletTransactionsQueryFilter,
 } from '../../..';
+import { PhalaLogFilterDto } from '../computing/dtos/phala-log-filter.dto';
 
 export class BlockchainMicroservice extends BaseService {
   lambdaFunctionName =
@@ -137,6 +140,13 @@ export class BlockchainMicroservice extends BaseService {
       data,
     });
   }
+
+  public async listWalletDeposits(query: WalletDepositsQueryFilter) {
+    return await this.callService({
+      eventName: BlockchainEventType.LIST_WALLET_DEPOSITS,
+      ...query,
+    });
+  }
   //#endregion
 
   //#region wallet-identity
@@ -145,6 +155,28 @@ export class BlockchainMicroservice extends BaseService {
       eventName: BlockchainEventType.GET_WALLET_IDENTITY,
       query,
     });
+  }
+  //#endregion
+
+  //#region computing on phala
+  public async getPhalaLogRecordsAndGasPrice(
+    phalaLogFilter: PhalaLogFilterDto,
+  ) {
+    const data = {
+      eventName: BlockchainEventType.GET_PHALA_LOG_RECORDS_AND_GAS_PRICE,
+      phalaLogFilter,
+    };
+    return await this.callService(data);
+  }
+
+  public async getPhalaClusterWalletBalance(
+    phalaClusterWallet: PhalaClusterWalletDto,
+  ) {
+    const data = {
+      eventName: BlockchainEventType.GET_PHALA_CLUSTER_WALLET_BALANCE,
+      phalaClusterWallet,
+    };
+    return await this.callService(data);
   }
   //#endregion
 }

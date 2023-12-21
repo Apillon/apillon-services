@@ -1,3 +1,4 @@
+import { ApiName } from '../config/types';
 import { MySql } from './database/mysql';
 import { v4 as uuid } from 'uuid';
 
@@ -6,6 +7,7 @@ export class Context {
   public user: any;
   public requestId: string;
   public apiKey: any;
+  public apiName: ApiName;
 
   constructor(reqId: string = null) {
     this.requestId = reqId || uuid();

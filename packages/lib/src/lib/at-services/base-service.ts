@@ -1,5 +1,5 @@
 import { getEnvSecrets } from '../../config/env';
-import { AppEnvironment } from '../../config/types';
+import { ApiName, AppEnvironment } from '../../config/types';
 import * as Net from 'net';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 import { safeJsonParse } from '../utils';
@@ -17,12 +17,14 @@ export abstract class BaseService {
   private requestId: string;
   private user: any;
   private apiKey: any;
+  private apiName: ApiName;
 
   constructor(context?: Context) {
     this.securityToken = this.generateSecurityToken();
     this.requestId = context?.requestId;
     this.user = context?.user;
     this.apiKey = context?.apiKey;
+    this.apiName = context?.apiName;
   }
 
   private generateSecurityToken() {
@@ -48,6 +50,7 @@ export abstract class BaseService {
       requestId: this.requestId,
       user: this.user,
       apiKey: this.apiKey,
+      apiName: this.apiName,
       ...payload,
     };
 

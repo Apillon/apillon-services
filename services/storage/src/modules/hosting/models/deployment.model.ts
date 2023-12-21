@@ -595,13 +595,22 @@ export class Deployment extends AdvancedSQLModel {
           text: { text: 'Reject', type: 'plain_text' },
           url: `${env.CONSOLE_API_URL}/storage/hosting/websites/${website.website_uuid}/deployments/${this.deployment_uuid}/reject?token=${jwt}`,
         },
+        {
+          type: 'button',
+          text: { text: 'Open dashboard', type: 'plain_text' },
+          url: `${env.ADMIN_APP_URL}/dashboard/users/${
+            this.getContext().user.user_uuid
+          }`,
+        },
       ],
     });
 
     const msgParams = {
       message: `
-      New website deployment for review.       
-      URL: ${ipfsCluster.generateLink(website.project_uuid, this.cid)}
+      New website deployment for review.\n   
+      URL: ${ipfsCluster.generateLink(website.project_uuid, this.cid)} \n
+      Project: ${website.project_uuid} \n
+      User: ${this.getContext().user.user_uuid}
       `,
       service: ServiceName.STORAGE,
       blocks,

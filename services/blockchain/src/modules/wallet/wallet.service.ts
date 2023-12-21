@@ -5,6 +5,7 @@ import {
   UpdateTransactionDto,
   WalletTransactionsQueryFilter,
   SqlModelStatus,
+  WalletDepositsQueryFilter,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import {
@@ -15,6 +16,7 @@ import { BlockchainErrorCode } from '../../config/types';
 import { TransactionLog } from '../accounting/transaction-log.model';
 import { WalletWithBalanceDto } from '../../common/dto/wallet-with-balance.dto';
 import { Wallet } from './wallet.model';
+import { WalletDeposit } from '../accounting/wallet-deposit.model';
 
 export class WalletService {
   static async listWallets(
@@ -82,7 +84,7 @@ export class WalletService {
     }
   }
 
-  static async getWalletTransactions(
+  static async listWalletTransactions(
     event: any,
     context: ServiceContext,
   ): Promise<any> {
@@ -91,7 +93,7 @@ export class WalletService {
     );
     WalletService.checkExists(wallet);
 
-    return await new Wallet({}, context).getTransactions(
+    return await new Wallet({}, context).listTransactions(
       wallet.address,
       new WalletTransactionsQueryFilter(event),
     );
@@ -139,5 +141,19 @@ export class WalletService {
         status: 404,
       });
     }
+  }
+
+  static async listWalletDeposits(
+    event: WalletDepositsQueryFilter,
+    context: ServiceContext,
+  ): Promise<any> {
+    const wallet = await new Wallet({}, context).populateById(
+      event.walletId as number,
+    );
+    WalletService.checkExists(wallet);
+
+    return await new WalletDeposit({}, context).listDeposits(
+      new WalletDepositsQueryFilter(event),
+    );
   }
 }

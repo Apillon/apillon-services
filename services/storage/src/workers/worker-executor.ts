@@ -13,7 +13,6 @@ import { SyncToIPFSWorker } from './s3-to-ipfs-sync-worker';
 import { TestWorker } from './test-worker';
 import { Scheduler } from './scheduler';
 import { DeployWebsiteWorker } from './deploy-website-worker';
-import { DeleteBucketDirectoryFileWorker } from './delete-bucket-directory-file-worker';
 import { UpdateCrustStatusWorker } from './update-crust-status-worker';
 import { PrepareMetadataForCollectionWorker } from './prepare-metada-for-collection-worker';
 import { PinToCrustWorker } from './pin-to-crust-worker';
@@ -28,7 +27,6 @@ export enum WorkerName {
   TEST_WORKER = 'TestWorker',
   SCHEDULER = 'scheduler',
   SYNC_TO_IPFS_WORKER = 'SyncToIpfsWorker',
-  DELETE_BUCKET_DIRECTORY_FILE_WORKER = 'DeleteBucketDirectoryFileWorker',
   DEPLOY_WEBSITE_WORKER = 'DeployWebsiteWorker',
   UPDATE_CRUST_STATUS_WORKER = 'UpdateCrustStatusWorker',
   PREPARE_METADATA_FOR_COLLECTION_WORKER = 'PrepareMetadataForCollectionWorker',
@@ -126,13 +124,6 @@ export async function handleLambdaEvent(
     case WorkerName.SCHEDULER:
       const scheduler = new Scheduler(serviceDef, context);
       await scheduler.run();
-      break;
-    case WorkerName.DELETE_BUCKET_DIRECTORY_FILE_WORKER:
-      const workerForDeletion = new DeleteBucketDirectoryFileWorker(
-        workerDefinition,
-        context,
-      );
-      await workerForDeletion.run();
       break;
     case WorkerName.PIN_TO_CRUST_WORKER:
       const pinToCrustWorker = new PinToCrustWorker(workerDefinition, context);

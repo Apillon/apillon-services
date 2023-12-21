@@ -620,9 +620,9 @@ export class Collection extends ProjectAccessModel {
         SELECT ${selectFields}
         `,
       qFrom: `
-        FROM \`${this.tableName}\` c
-        WHERE c.project_uuid = @project_uuid
-        AND (@search IS null OR c.name LIKE CONCAT('%', @search, '%'))
+        FROM \`${DbTables.COLLECTION}\` c
+        WHERE c.project_uuid = IFNULL(@project_uuid, c.project_uuid)
+        AND (@search IS null OR c.name LIKE CONCAT('%', @search, '%') OR c.collection_uuid = @search)
         AND (@collectionStatus IS null OR c.collectionStatus = @collectionStatus)
         AND
             (
@@ -670,7 +670,7 @@ export class Collection extends ProjectAccessModel {
     const data = await this.getContext().mysql.paramExecute(
       `
         SELECT *
-        FROM \`${this.tableName}\`
+        FROM \`${DbTables.COLLECTION}\`
         WHERE (id LIKE @id OR collection_uuid LIKE @id)
           AND status <> ${SqlModelStatus.DELETED};
       `,
