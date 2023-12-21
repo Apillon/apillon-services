@@ -11,13 +11,13 @@ import {
   ServiceName,
   SqlModelStatus,
   StorageMicroservice,
-  TransactionStatus,
   TransferOwnershipDto,
 } from '@apillon/lib';
 import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
 import {
   ComputingErrorCode,
+  ComputingTransactionStatus,
   ContractStatus,
   TransactionType,
 } from '../../config/types';
@@ -276,8 +276,8 @@ export class ComputingService {
     if (
       transactions.find(
         (x) =>
-          x.transactionStatus == TransactionStatus.PENDING ||
-          x.transactionStatus == TransactionStatus.CONFIRMED,
+          x.transactionStatus == ComputingTransactionStatus.PENDING ||
+          x.transactionStatus == ComputingTransactionStatus.CONFIRMED,
       )
     ) {
       throw new ComputingCodeException({

@@ -11,6 +11,7 @@ import {
   CodeException,
   Lmas,
   ServiceName,
+  getEnvSecrets,
 } from '@apillon/lib';
 import axios from 'axios';
 
@@ -60,6 +61,7 @@ export class Mailer {
     { field, value }: { field: string; value: any },
     context: ServiceContext,
   ) {
+    await getEnvSecrets();
     if (env.APP_ENV !== AppEnvironment.PROD) {
       return;
     }
@@ -75,16 +77,23 @@ export class Mailer {
         `mailerlite field ${field} set for email ${email}`,
       );
     } catch (err) {
-      await new Lmas().writeLog({
-        context,
-        logType: LogType.ERROR,
-        message: `Error setting mailerlite field ${field} for email ${email}: ${err.message}`,
-        user_uuid: context.user?.user_uuid,
-        location: 'Mailer/setMailerliteField',
-        service: ServiceName.MAIL,
-        data: { email, field, value },
-        sendAdminAlert: true,
-      });
+      if (err?.response?.status === 404) {
+        writeLog(
+          LogType.ERROR,
+          `Error setting mailerlite field ${field} for email ${email}: 404 Not Found`,
+        );
+      } else {
+        await new Lmas().writeLog({
+          context,
+          logType: LogType.ERROR,
+          message: `Error setting mailerlite field ${field} for email ${email}: ${err.message}`,
+          user_uuid: context.user?.user_uuid,
+          location: 'Mailer/setMailerliteField',
+          service: ServiceName.MAIL,
+          data: { email, field, value },
+          sendAdminAlert: true,
+        });
+      }
     }
   }
 }

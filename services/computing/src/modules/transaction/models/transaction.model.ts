@@ -6,17 +6,34 @@ import {
   prop,
   SerializeFor,
   SqlModelStatus,
-  TransactionStatus,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
   ComputingErrorCode,
+  ComputingTransactionStatus,
   DbTables,
   TransactionType,
 } from '../../../config/types';
 
 export class Transaction extends AdvancedSQLModel {
   public readonly tableName = DbTables.TRANSACTION;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public contract_id?: number;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -53,23 +70,6 @@ export class Transaction extends AdvancedSQLModel {
     ],
     serializable: [
       SerializeFor.INSERT_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
-  })
-  public contractId: number;
-
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
@@ -77,9 +77,9 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    defaultValue: TransactionStatus.PENDING,
+    defaultValue: ComputingTransactionStatus.PENDING,
   })
-  public transactionStatus: number;
+  public transactionStatus: ComputingTransactionStatus;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -101,6 +101,27 @@ export class Transaction extends AdvancedSQLModel {
     validators: [],
   })
   public transactionHash: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+  })
+  public nonce: string;
 
   public constructor(data: any, context: Context) {
     super(data, context);
@@ -130,14 +151,14 @@ export class Transaction extends AdvancedSQLModel {
 
   public async getContractTransactions(
     contract_uuid: string,
-    transactionStatus: TransactionStatus = null,
+    transactionStatus: ComputingTransactionStatus = null,
     transactionType: TransactionType = null,
   ): Promise<Transaction[]> {
     const data = await this.getContext().mysql.paramExecute(
       `
         SELECT t.*
         FROM \`${this.tableName}\` as t
-               JOIN contract as c ON (c.id = t.contractId)
+               JOIN contract as c ON (c.id = t.contract_id)
         WHERE t.status <> ${SqlModelStatus.DELETED}
           AND (@transactionStatus IS NULL OR
                t.transactionStatus = @transactionStatus)
@@ -155,5 +176,51 @@ export class Transaction extends AdvancedSQLModel {
     }
 
     return res;
+  }
+
+  /**
+   * Gets non executed contract transactions that are less than X hours old
+   * (we ignore X hours old so we don't keep processing them if we were not able to obtain them)
+   * @param clusterId
+   */
+  public async getNonExecutedTransactions(clusterId: string) {
+    return (await this.getContext().mysql.paramExecute(
+      `
+        SELECT t.id              AS transaction_id,
+               t.transactionType AS transactionType,
+               t.transactionHash AS transactionHash,
+               t.nonce           AS transactionNonce,
+               c.id              AS contract_id,
+               c.project_uuid    AS project_uuid,
+               c.contractAddress AS contractAddress,
+               c.data            AS contractData
+        FROM \`${this.tableName}\` as t
+               JOIN contract as c ON (c.id = t.contract_id)
+        WHERE t.status <> ${SqlModelStatus.DELETED}
+          AND t.transactionStatus = @transactionStatus
+          AND JSON_EXTRACT(c.data, "$.clusterId") = @clusterId
+          AND (
+          (t.transactionType = @transactionType AND
+           c.contractAddress IS NOT NULL)
+            OR t.transactionType
+          != @transactionType)
+          AND t.createTime
+            > NOW() - INTERVAL 2 HOUR
+      `,
+      {
+        clusterId,
+        transactionType: TransactionType.DEPLOY_CONTRACT,
+        transactionStatus: ComputingTransactionStatus.CONFIRMED,
+      },
+    )) as {
+      project_uuid: string;
+      transaction_id: number;
+      transactionType: TransactionType;
+      transactionHash: string;
+      transactionNonce: string;
+      contract_id: number;
+      contractAddress: string;
+      contractData: { clusterId: string };
+    }[];
   }
 }

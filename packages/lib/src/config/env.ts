@@ -7,6 +7,7 @@ export interface IEnv {
    * runtime environment
    */
   APP_URL: string;
+  ADMIN_APP_URL: string;
   APP_ENV: string;
   LOG_TARGET: string;
   LOG_LEVEL: string;
@@ -147,6 +148,11 @@ export interface IEnv {
   DEV_CONSOLE_API_HOST_TEST: string;
   DEV_CONSOLE_API_PORT_TEST: number;
 
+  /**
+   * Project, which is used for admin panel (access to ipfs, generation of tokens ...)
+   */
+  DEV_CONSOLE_API_DEFAULT_PROJECT_UUID: string;
+
   /************************************************************
    * ADMIN-CONSOLE-API - Apillon Admin Console API
    ************************************************************/
@@ -171,7 +177,6 @@ export interface IEnv {
   STORAGE_CRUST_SEED_PHRASE: string;
   STORAGE_CRUST_SEED_PHRASE_TEST: string;
   STORAGE_AWS_IPFS_QUEUE_BUCKET: string;
-  STORAGE_DELETE_AFTER_INTERVAL: number;
   URL_SCREENSHOT_FUNCTION_NAME: string;
   URL_SCREENSHOT_API_URL: string;
   SEND_WEBSITES_TO_REVIEW: number;
@@ -520,8 +525,8 @@ export let env: IEnv = {
   AWS_BUCKET: process.env['AWS_BUCKET'],
   AWS_ENDPOINT: process.env['AWS_ENDPOINT'],
   APP_SECRET: process.env['APP_SECRET'] || 'Du7Rvyqt7u38naZ2',
-  CONSOLE_API_URL:
-    process.env['CONSOLE_API_URL'] || 'https://console-api-dev.apillon.io/',
+  CONSOLE_API_URL: process.env['CONSOLE_API_URL'],
+  ADMIN_APP_URL: process.env['ADMIN_APP_URL'],
 
   /** AMS */
   ACCESS_FUNCTION_NAME: process.env['ACCESS_FUNCTION_NAME'],
@@ -593,6 +598,9 @@ export let env: IEnv = {
     process.env['DEV_CONSOLE_API_HOST_TEST'] || 'localhost',
   DEV_CONSOLE_API_PORT_TEST:
     parseInt(process.env['DEV_CONSOLE_API_PORT_TEST']) || 7001,
+  DEV_CONSOLE_API_DEFAULT_PROJECT_UUID:
+    process.env['DEV_CONSOLE_API_DEFAULT_PROJECT_UUID'] ||
+    '22a9788a-f043-4d4c-8f47-d07a0509c645',
 
   ADMIN_CONSOLE_API_HOST: process.env['ADMIN_CONSOLE_API_HOST'] || 'localhost',
   ADMIN_CONSOLE_API_PORT:
@@ -614,8 +622,6 @@ export let env: IEnv = {
   STORAGE_CRUST_SEED_PHRASE: process.env['STORAGE_CRUST_SEED_PHRASE'],
   STORAGE_CRUST_SEED_PHRASE_TEST: process.env['STORAGE_CRUST_SEED_PHRASE_TEST'],
   STORAGE_AWS_IPFS_QUEUE_BUCKET: process.env['STORAGE_AWS_IPFS_QUEUE_BUCKET'],
-  STORAGE_DELETE_AFTER_INTERVAL:
-    parseInt(process.env['STORAGE_DELETE_AFTER_INTERVAL']) || 90,
   URL_SCREENSHOT_FUNCTION_NAME: process.env['URL_SCREENSHOT_FUNCTION_NAME'],
   URL_SCREENSHOT_API_URL: process.env['URL_SCREENSHOT_API_URL'],
   SEND_WEBSITES_TO_REVIEW:
@@ -866,7 +872,7 @@ export let env: IEnv = {
   /** COMPUTING */
   COMPUTING_FUNCTION_NAME: process.env['COMPUTING_FUNCTION_NAME'],
   COMPUTING_FUNCTION_NAME_TEST: process.env['COMPUTING_FUNCTION_NAME_TEST'],
-  COMPUTING_SOCKET_PORT: parseInt(process.env['COMPUTING_SOCKET_PORT']) || 7001,
+  COMPUTING_SOCKET_PORT: parseInt(process.env['COMPUTING_SOCKET_PORT']) || 6901,
   COMPUTING_MYSQL_HOST: process.env['COMPUTING_MYSQL_HOST'],
   COMPUTING_MYSQL_PORT: parseInt(process.env['COMPUTING_MYSQL_PORT']) || 3306,
   COMPUTING_MYSQL_DATABASE: process.env['COMPUTING_MYSQL_DATABASE'],
@@ -877,7 +883,7 @@ export let env: IEnv = {
     process.env['COMPUTING_MYSQL_DEPLOY_PASSWORD'],
 
   COMPUTING_SOCKET_PORT_TEST:
-    parseInt(process.env['COMPUTING_SOCKET_PORT_TEST']) || 7701,
+    parseInt(process.env['COMPUTING_SOCKET_PORT_TEST']) || 7901,
   COMPUTING_MYSQL_HOST_TEST: process.env['COMPUTING_MYSQL_HOST_TEST'],
   COMPUTING_MYSQL_PORT_TEST:
     parseInt(process.env['COMPUTING_MYSQL_PORT_TEST']) || 3306,

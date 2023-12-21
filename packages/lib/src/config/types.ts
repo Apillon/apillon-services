@@ -85,6 +85,8 @@ export enum LmasEventType {
 export enum BlockchainEventType {
   SUBSTRATE_SIGN_TRANSACTION = 'substrate-sign-transaction',
   SUBSTRATE_GET_TRANSACTION = 'substrate-get-transaction',
+  GET_PHALA_LOG_RECORDS_AND_GAS_PRICE = 'get-phala-log-records-and-gas-price',
+  GET_PHALA_CLUSTER_WALLET_BALANCE = 'get-phala-cluster-wallet-balance',
   EVM_SIGN_TRANSACTION = 'evm-sign-transaction',
   EVM_GET_TRANSACTION = 'evm-get-transaction',
   GET_CHAIN_ENDPOINT = 'get-chain-endpoint',
@@ -93,6 +95,7 @@ export enum BlockchainEventType {
   UPDATE_WALLET = 'update-wallet',
   GET_WALLET_TRANSACTIONS = 'get-wallet-transactions',
   UPDATE_TRANSACTION = 'update-transaction',
+  LIST_WALLET_DEPOSITS = 'list-wallet-deposits',
   GET_WALLET_IDENTITY = 'get-wallet-identity',
 }
 
@@ -116,7 +119,7 @@ export enum StorageEventType {
   LIST_FILES = 'list-files',
   GET_FILE_DETAILS = 'get-file-details',
   FILE_DELETE = 'delete-file',
-  CANCEL_FILE_DELETE = 'cancel-delete-file',
+  RESTORE_FILE = 'restore-file',
   BUCKET_WEBHOOK_GET = 'get-bucket-webhook',
   BUCKET_WEBHOOK_CREATE = 'create-bucket-webhook',
   BUCKET_WEBHOOK_UPDATE = 'update-bucket-webhook',
@@ -198,6 +201,7 @@ export enum ScsEventType {
   LIST_INVOICES = 'list-invoices',
   GET_PRODUCT_PRICELIST = 'get-product-pricelist',
   GET_PRODUCT_PRICE = 'get-product-price',
+  GET_PROJECTS_WITH_ACTIVE_SUBSCRIPTION = 'get-projects-with-active-subscription',
 }
 
 export enum NftsEventType {
@@ -275,7 +279,8 @@ export enum ServiceCode {
   CONFIG = '10',
   REFERRAL = '11',
   NFTS = '12',
-  BLOCKCHAIN = '13',
+  BLOCKCHAIN = '16',
+  COMPUTING = '18',
 }
 
 export enum AppEnvironment {
@@ -347,6 +352,7 @@ export enum SerializeFor {
   INSERT_DB = 'insert_db',
   UPDATE_DB = 'update_db',
   SELECT_DB = 'select_db',
+  ADMIN_SELECT_DB = 'admin_select_db',
   ADMIN = 'admin',
   WORKER = 'worker',
   SERVICE = 'service',
@@ -732,6 +738,10 @@ export enum CacheKeyPrefix {
   ADMIN_USER_LIST = 'admin-user-list',
   ADMIN_PROJECT_LIST = 'admin-project-list',
   AUTH_USER_DATA = 'auth-user-data',
+  ADMIN_BUCKET_LIST = 'admin-bucket-list',
+  ADMIN_WEBSITE_LIST = 'admin-website-list',
+  ADMIN_NFTS_COLLECTION_LIST = 'admin-nfts-collection-list',
+  ADMIN_GENERAL_SEARCH = 'admin-general-search',
 }
 
 export enum CacheKeyTTL {

@@ -4,6 +4,9 @@ import {
   dateToSqlString,
   env,
   EvmChain,
+  formatTokenWithDecimals,
+  formatWalletAddress,
+  getTokenPriceUsd,
   LogType,
   PoolConnection,
   SerializeFor,
@@ -18,11 +21,6 @@ import {
 } from '@apillon/workers-lib';
 import { Wallet } from '../modules/wallet/wallet.model';
 import { DbTables, TxDirection } from '../config/types';
-import {
-  formatTokenWithDecimals,
-  formatWalletAddress,
-  getTokenPriceUsd,
-} from '../lib/utils';
 import { TransactionLog } from '../modules/accounting/transaction-log.model';
 import { EvmBlockchainIndexer } from '../modules/blockchain-indexers/evm/evm-indexer.service';
 import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/indexer.service';
@@ -309,6 +307,128 @@ export class TransactionLogWorker extends BaseQueueWorker {
     await this.context.mysql.paramExecute(sql);
   }
 
+  public async processWalletDepositAmounts(
+    wallet: Wallet,
+    transactions: TransactionLog[],
+  ) {
+    const tokenPriceUsd = await getTokenPriceUsd(wallet.token);
+    // Process wallet deposits
+    const deposits = transactions
+      .filter(
+        (t) =>
+          t.direction === TxDirection.INCOME &&
+          t.wallet.toLowerCase() === wallet.address.toLowerCase(),
+      )
+      .map((t) => new TransactionLog(t, this.context));
+
+    console.log(
+      `Found ${deposits.length} deposits for wallet ${wallet.seed}|${wallet.address}`,
+    );
+
+    for (const deposit of deposits) {
+      const conn = await this.context.mysql.start();
+      try {
+        const value = this.getTotalValue(
+          deposit.totalPrice,
+          wallet.decimals,
+          tokenPriceUsd,
+        );
+
+        await new WalletDeposit({}, this.context).createWalletDeposit(
+          wallet,
+          deposit,
+          tokenPriceUsd,
+          conn,
+          (walletDeposit) =>
+            this.sendErrorAlert(
+              `INVALID WALLET DEPOSIT! ${formatWalletAddress(
+                wallet.chainType,
+                wallet.chain,
+                wallet.address,
+              )}`,
+              {
+                walletDeposit,
+                error: walletDeposit.collectErrors().join(','),
+              },
+            ),
+        );
+        console.log(
+          `Created wallet deposit for wallet ${wallet.seed}|${wallet.address} ==> ${deposit.amount}`,
+        );
+        await deposit.updateValueByHash(value, conn);
+
+        console.log(
+          `Update transaction log for tx  ${deposit.id}|${deposit.hash}||${wallet.seed}|${wallet.address} ==> ${value}`,
+        );
+
+        await this.context.mysql.commit(conn);
+      } catch (err) {
+        await this.sendErrorAlert(
+          `Error creating deposit for ${formatWalletAddress(
+            wallet.chainType,
+            wallet.chain,
+            wallet.address,
+          )}`,
+          { ...deposit },
+          LogType.ERROR,
+          LogOutput.NOTIFY_ALERT,
+          err,
+        );
+        await this.context.mysql.rollback(conn);
+      }
+    }
+
+    // Process wallet token spends
+    const spends = transactions
+      .filter(
+        (t) =>
+          t.direction === TxDirection.COST &&
+          t.wallet.toLowerCase() === wallet.address.toLowerCase(),
+      )
+      .map((t) => new TransactionLog(t, this.context));
+
+    console.log(
+      `Found ${spends.length} spends for wallet ${wallet.seed}|${wallet.address}`,
+    );
+
+    for (const spend of spends) {
+      const conn = await this.context.mysql.start();
+      try {
+        const pricePerToken = await this.deductFromAvailableDeposit(
+          wallet,
+          spend.totalPrice,
+          conn,
+        );
+
+        const value = this.getTotalValue(
+          spend.totalPrice,
+          wallet.decimals,
+          pricePerToken,
+        );
+        await spend.updateValueByHash(value, conn);
+
+        console.log(
+          `Update transaction log for tx  ${spend.id}|${spend.hash}||${wallet.seed}|${wallet.address} ==> ${value}`,
+        );
+
+        await this.context.mysql.commit(conn);
+      } catch (err) {
+        await this.sendErrorAlert(
+          `Error processing tx spend for ${formatWalletAddress(
+            wallet.chainType,
+            wallet.chain,
+            wallet.address,
+          )}`,
+          { ...spend },
+          LogType.ERROR,
+          LogOutput.NOTIFY_ALERT,
+          err,
+        );
+        await this.context.mysql.rollback(conn);
+      }
+    }
+  }
+
   private async linkTransactions(
     transactions: TransactionLog[],
     wallet: Wallet,
@@ -355,7 +475,11 @@ export class TransactionLogWorker extends BaseQueueWorker {
       await this.sendErrorAlert(
         `${
           unlinked.length
-        } UNLINKED TRANSACTIONS DETECTED! ${formatWalletAddress(wallet)}`,
+        } UNLINKED TRANSACTIONS DETECTED! ${formatWalletAddress(
+          wallet.chainType,
+          wallet.chain,
+          wallet.address,
+        )}`,
         { wallet: wallet.address, hashes: unlinked.map((x) => x.hash) },
         LogType.WARN,
       );
@@ -368,7 +492,9 @@ export class TransactionLogWorker extends BaseQueueWorker {
     if (!balanceData.minBalance) {
       await this.sendErrorAlert(
         `MIN BALANCE IS NOT SET! ${formatWalletAddress(
-          wallet,
+          wallet.chainType,
+          wallet.chain,
+          wallet.address,
         )}  ==> balance: ${formatTokenWithDecimals(
           balanceData.balance,
           wallet.chainType,
@@ -383,7 +509,9 @@ export class TransactionLogWorker extends BaseQueueWorker {
     if (balanceData.isBelowThreshold) {
       await this.sendErrorAlert(
         `LOW WALLET BALANCE! ${formatWalletAddress(
-          wallet,
+          wallet.chainType,
+          wallet.chain,
+          wallet.address,
         )} ==> balance: ${formatTokenWithDecimals(
           balanceData.balance,
           wallet.chainType,
@@ -399,116 +527,6 @@ export class TransactionLogWorker extends BaseQueueWorker {
     }
   }
 
-  public async processWalletDepositAmounts(
-    wallet: Wallet,
-    transactions: TransactionLog[],
-  ) {
-    const tokenPriceUsd = await getTokenPriceUsd(wallet.token);
-    // Process wallet deposits
-    const deposits = transactions
-      .filter(
-        (t) =>
-          t.direction === TxDirection.INCOME &&
-          t.wallet.toLowerCase() === wallet.address.toLowerCase(),
-      )
-      .map((t) => new TransactionLog(t, this.context));
-
-    console.log(
-      `Found ${deposits.length} deposits for wallet ${wallet.seed}|${wallet.address}`,
-    );
-
-    for (const deposit of deposits) {
-      const conn = await this.context.mysql.start();
-      try {
-        const value = this.getTotalValue(
-          deposit.totalPrice,
-          wallet.decimals,
-          tokenPriceUsd,
-        );
-
-        await new WalletDeposit({}, this.context).createWalletDeposit(
-          wallet,
-          deposit,
-          tokenPriceUsd,
-          conn,
-          (walletDeposit) =>
-            this.sendErrorAlert(
-              `INVALID WALLET DEPOSIT! ${formatWalletAddress(wallet)}`,
-              {
-                walletDeposit,
-                error: walletDeposit.collectErrors().join(','),
-              },
-            ),
-        );
-        console.log(
-          `Created wallet deposit for wallet ${wallet.seed}|${wallet.address} ==> ${deposit.amount}`,
-        );
-        await deposit.updateValueByHash(value, conn);
-
-        console.log(
-          `Update transaction log for tx  ${deposit.id}|${deposit.hash}||${wallet.seed}|${wallet.address} ==> ${value}`,
-        );
-
-        await this.context.mysql.commit(conn);
-      } catch (err) {
-        await this.sendErrorAlert(
-          `Error creating deposit for ${formatWalletAddress(wallet)}`,
-          { ...deposit },
-          LogType.ERROR,
-          LogOutput.NOTIFY_ALERT,
-          err,
-        );
-        await this.context.mysql.rollback(conn);
-      }
-    }
-
-    // Process wallet token spends
-    const spends = transactions
-      .filter(
-        (t) =>
-          t.direction === TxDirection.COST &&
-          t.wallet.toLowerCase() === wallet.address.toLowerCase(),
-      )
-      .map((t) => new TransactionLog(t, this.context));
-
-    console.log(
-      `Found ${spends.length} spends for wallet ${wallet.seed}|${wallet.address}`,
-    );
-
-    for (const spend of spends) {
-      const conn = await this.context.mysql.start();
-      try {
-        const pricePerToken = await this.deductFromAvailableDeposit(
-          wallet,
-          spend.totalPrice,
-          conn,
-        );
-
-        const value = this.getTotalValue(
-          spend.totalPrice,
-          wallet.decimals,
-          pricePerToken,
-        );
-        await spend.updateValueByHash(value, conn);
-
-        console.log(
-          `Update transaction log for tx  ${spend.id}|${spend.hash}||${wallet.seed}|${wallet.address} ==> ${value}`,
-        );
-
-        await this.context.mysql.commit(conn);
-      } catch (err) {
-        await this.sendErrorAlert(
-          `Error processing tx spend for ${formatWalletAddress(wallet)}`,
-          { ...spend },
-          LogType.ERROR,
-          LogOutput.NOTIFY_ALERT,
-          err,
-        );
-        await this.context.mysql.rollback(conn);
-      }
-    }
-  }
-
   private async deductFromAvailableDeposit(
     wallet: Wallet,
     amount: string,
@@ -520,7 +538,11 @@ export class TransactionLogWorker extends BaseQueueWorker {
     ).getOldestWithBalance(wallet.id, conn);
     if (!availableDeposit.exists()) {
       await this.sendErrorAlert(
-        `NO AVAILABLE DEPOSIT! ${formatWalletAddress(wallet)}`,
+        `NO AVAILABLE DEPOSIT! ${formatWalletAddress(
+          wallet.chainType,
+          wallet.chain,
+          wallet.address,
+        )}`,
         { wallet: wallet.address },
       );
       return 0;

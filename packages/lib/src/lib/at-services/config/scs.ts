@@ -120,7 +120,7 @@ export class Scs extends BaseService {
   public async addCredit(addCreditDto: AddCreditDto): Promise<any> {
     const data = {
       eventName: ScsEventType.ADD_CREDIT,
-      body: addCreditDto,
+      body: addCreditDto.serialize(),
     };
 
     return await this.callService(data);
@@ -228,6 +228,15 @@ export class Scs extends BaseService {
     return await this.callService({
       eventName: ScsEventType.LIST_SUBSCRIPTIONS,
       query,
+    });
+  }
+
+  public async getProjectsWithActiveSubscription(
+    subscriptionPackageId?: number,
+  ) {
+    return await this.callService({
+      eventName: ScsEventType.GET_PROJECTS_WITH_ACTIVE_SUBSCRIPTION,
+      subscriptionPackageId,
     });
   }
 

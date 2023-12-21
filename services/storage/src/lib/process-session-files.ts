@@ -54,16 +54,11 @@ export async function processSessionFiles(
   const filesOnS3 = await getSessionFilesOnS3(bucket, session?.session_uuid);
 
   //Check used storage
-  const storageInfo = await StorageService.getStorageInfo(
-    { project_uuid: bucket.project_uuid },
+  await StorageService.checkStorageSpace(
     context,
+    bucket.project_uuid,
+    filesOnS3.size,
   );
-  if (storageInfo.usedStorage + filesOnS3.size > storageInfo.availableStorage) {
-    throw new StorageCodeException({
-      code: StorageErrorCode.NOT_ENOUGH_STORAGE_SPACE,
-      status: 400,
-    });
-  }
 
   //get directories in bucket
   const directories = await new Directory(

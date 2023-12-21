@@ -338,4 +338,26 @@ export class Subscription extends ProjectAccessModel {
       conn,
     );
   }
+
+  /**
+   * Get projects which have active subscription
+   * @param subscriptionPackageId optional subscriptionPackageId
+   * @returns array of objects with project_uuid and package_id property
+   */
+  public async getProjectsWithActiveSubscription(
+    subscriptionPackageId: number = null,
+  ): Promise<this[]> {
+    return await this.getContext().mysql.paramExecute(
+      `
+      SELECT project_uuid, package_id
+      FROM \`${DbTables.SUBSCRIPTION}\`
+      WHERE (@subscriptionPackageId IS NULL OR package_id = @subscriptionPackageId)
+      AND (expiresOn IS NULL OR expiresOn > NOW())
+      AND status = ${SqlModelStatus.ACTIVE}
+      `,
+      {
+        subscriptionPackageId,
+      },
+    );
+  }
 }

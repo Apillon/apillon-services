@@ -126,36 +126,3 @@ export async function processWebhooks(
 
   return transactionIds;
 }
-
-/**
- * Send instantiated transactions to sqs
- * @param transactions
- * @param sqsUrl
- * @param workerName
- * @returns
- */
-export async function processInstantiatedTransactionsWebhooks(
-  transactions: TransactionWebhookDataDto[],
-  sqsUrl: string,
-  workerName: string,
-) {
-  const processSize = 10;
-  for (let i = 0; i < transactions.length; i += processSize) {
-    const chunk = transactions.slice(i, i + processSize);
-
-    if (chunk.length > 0 && env.APP_ENV != AppEnvironment.TEST) {
-      await sendToWorkerQueue(
-        sqsUrl,
-        workerName,
-        [
-          {
-            data: chunk,
-          },
-        ],
-        null,
-        null,
-      );
-      console.info('Data sent to webhook', chunk, sqsUrl, workerName);
-    }
-  }
-}
