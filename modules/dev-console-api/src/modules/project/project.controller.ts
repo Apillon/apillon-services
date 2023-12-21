@@ -11,6 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
+  BaseQueryFilter,
   CreditTransactionQueryFilter,
   DefaultUserRole,
   RoleGroup,
@@ -23,7 +24,6 @@ import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { File } from '../file/models/file.model';
 import { ProjectUserInviteDto } from './dtos/project_user-invite.dto';
-import { ProjectUserFilter } from './dtos/project_user-query-filter.dto';
 import { ProjectUserUpdateRoleDto } from './dtos/project_user-update-role.dto';
 import { Project } from './models/project.model';
 import { ProjectService } from './project.service';
@@ -66,12 +66,12 @@ export class ProjectController {
 
   @Get(':uuid/users')
   @Permissions({ role: RoleGroup.ProjectAccess })
-  @Validation({ dto: ProjectUserFilter, validateFor: ValidateFor.QUERY })
+  @Validation({ dto: BaseQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(AuthGuard, ValidationGuard)
   async getProjectUsers(
     @Ctx() context: DevConsoleApiContext,
     @Param('uuid') uuid: string,
-    @Query() query: ProjectUserFilter,
+    @Query() query: BaseQueryFilter,
   ) {
     return await this.projectService.getProjectUsers(context, uuid, query);
   }

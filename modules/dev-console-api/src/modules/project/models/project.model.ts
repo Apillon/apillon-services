@@ -130,7 +130,11 @@ export class Project extends ProjectAccessModel {
    */
   @prop({
     parser: { resolver: dateParser() },
-    serializable: [SerializeFor.APILLON_API, SerializeFor.SELECT_DB],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.APILLON_API,
+      SerializeFor.SELECT_DB,
+    ],
     populatable: [PopulateFrom.DB],
   })
   public createTime?: Date;
@@ -140,7 +144,11 @@ export class Project extends ProjectAccessModel {
    */
   @prop({
     parser: { resolver: dateParser() },
-    serializable: [SerializeFor.APILLON_API, SerializeFor.SELECT_DB],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.APILLON_API,
+      SerializeFor.SELECT_DB,
+    ],
     populatable: [PopulateFrom.DB],
   })
   public updateTime?: Date;

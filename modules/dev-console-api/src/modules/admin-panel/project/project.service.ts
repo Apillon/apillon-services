@@ -3,6 +3,7 @@ import {
   AddCreditDto,
   Ams,
   ApiKeyQueryFilterDto,
+  BaseQueryFilter,
   CodeException,
   CreateQuotaOverrideDto,
   GetQuotaDto,
@@ -11,6 +12,7 @@ import {
   QuotaDto,
   QuotaOverrideDto,
   Scs,
+  SerializeFor,
   StorageMicroservice,
   ValidationException,
 } from '@apillon/lib';
@@ -24,6 +26,7 @@ import {
 import { DevConsoleApiContext } from '../../../context';
 import { Project } from '../../project/models/project.model';
 import { ProjectsQueryFilter } from './dtos/projects-query-filter.dto';
+import { ProjectUser } from '../../project/models/project-user.model';
 
 @Injectable()
 export class ProjectService {
@@ -49,14 +52,7 @@ export class ProjectService {
   async getProject(
     context: DevConsoleApiContext,
     project_uuid: UUID,
-  ): Promise<
-    Project & {
-      totalBucketSize: number;
-      numOfWebsites: number;
-      numOfBuckets: number;
-      numOfCollections: number;
-    }
-  > {
+  ): Promise<any> {
     const project: Project = await new Project({}, context).populateByUUID(
       project_uuid,
     );
@@ -67,6 +63,16 @@ export class ProjectService {
         errorCodes: ResourceNotFoundErrorCode,
       });
     }
+
+    const { items: projectUsers } = await new ProjectUser(
+      {},
+      context,
+    ).getProjectUsers(
+      context,
+      project_uuid,
+      new BaseQueryFilter({ limit: 1000 }),
+    );
+
     const { data: projectStorageDetails } = await new StorageMicroservice(
       context,
     ).getProjectStorageDetails(project_uuid);
@@ -80,7 +86,8 @@ export class ProjectService {
     );
 
     return {
-      ...project,
+      ...project.serialize(SerializeFor.ADMIN),
+      projectUsers,
       ...projectStorageDetails,
       ...projectCollectionDetails,
       creditBalance: projectCredit.balance,
