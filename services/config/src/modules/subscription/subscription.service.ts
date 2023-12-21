@@ -20,7 +20,7 @@ import {
 } from '../../lib/exceptions';
 import { ConfigErrorCode, DbTables } from '../../config/types';
 import { CreditService } from '../credit/credit.service';
-import { Invoice } from '../invoice/models/invoice.model';
+import { InvoiceService } from '../invoice/invoice.service';
 
 export class SubscriptionService {
   /**
@@ -271,20 +271,29 @@ export class SubscriptionService {
             context,
           ).populateById(subscription.package_id);
           // Subscription package upgraded, give additional credits from higher package
-          await SubscriptionService.giveCreditsForSubscription(
-            context,
-            {
-              package_id,
-              project_uuid: newSubscription.project_uuid,
-              subscriptionId: async () =>
-                (
-                  await newSubscription.insert(SerializeFor.INSERT_DB, conn)
-                ).id,
-              creditAmount:
-                subscriptionPackage.creditAmount - previousPackage.creditAmount,
-            },
-            conn,
-          );
+          await Promise.all([
+            SubscriptionService.giveCreditsForSubscription(
+              context,
+              {
+                package_id,
+                project_uuid: newSubscription.project_uuid,
+                subscriptionId: async () =>
+                  (
+                    await newSubscription.insert(SerializeFor.INSERT_DB, conn)
+                  ).id,
+                creditAmount:
+                  subscriptionPackage.creditAmount -
+                  previousPackage.creditAmount,
+              },
+              conn,
+            ),
+            await InvoiceService.createOnSubscriptionUpdate(
+              context,
+              subscription,
+              updateSubscriptionDto,
+              conn,
+            ),
+          ]);
         } else {
           await newSubscription.insert(SerializeFor.INSERT_DB, conn);
         }
@@ -292,42 +301,12 @@ export class SubscriptionService {
         new Date(updateSubscriptionDto.expiresOn) >
         new Date(subscription.expiresOn)
       ) {
-        // If same subscription package has been renewed, create cloned invoice with new data
-        const existingInvoice = await new Invoice(
-          {},
+        await InvoiceService.createOnSubscriptionUpdate(
           context,
-        ).populateByProjectSubscription(subscription.project_uuid, conn);
-
-        if (existingInvoice.exists()) {
-          // Create clone of existing invoice with new ID and stripeId
-          existingInvoice.populate({
-            stripeId:
-              updateSubscriptionDto.invoiceStripeId || existingInvoice.stripeId,
-            totalAmount:
-              updateSubscriptionDto.amount || existingInvoice.totalAmount,
-            subtotalAmount:
-              updateSubscriptionDto.amount || existingInvoice.subtotalAmount,
-            referenceId: subscription.id,
-          });
-          await existingInvoice.insert(SerializeFor.INSERT_DB, conn);
-        } else {
-          // Existing invoice for existing subscription must always exist, send alert if that is not the case
-          await new Lmas().writeLog({
-            context,
-            logType: LogType.WARN,
-            message: `New invoice not created for subscription renewal`,
-            location: 'SCS/SubscriptionService/updateSubscription',
-            project_uuid: subscription.project_uuid,
-            service: ServiceName.CONFIG,
-            data: {
-              subcription: subscription.serialize(SerializeFor.SERVICE),
-              updateSubscriptionDto: new UpdateSubscriptionDto(
-                updateSubscriptionDto,
-              ).serialize(),
-            },
-            sendAdminAlert: true,
-          });
-        }
+          subscription,
+          updateSubscriptionDto,
+          conn,
+        );
       }
 
       await subscription.update(SerializeFor.UPDATE_DB, conn);
