@@ -242,16 +242,35 @@ export class SubstrateService {
       ChainType.SUBSTRATE,
     );
     const api = new SubstrateRpcApi(endpoint.url, PhalaTypesBundle);
-    const phatRegistry = await OnChainRegistry.create(await api.getApi(), {
-      clusterId: event.phalaLogFilter.clusterId,
-    });
-    const gasPrice = phatRegistry.gasPrice.toNumber();
-    const { records } = await phatRegistry.loggerContract.tail(
-      100,
-      event.phalaLogFilter,
-    );
-
-    return { records, gasPrice };
+    try {
+      const phatRegistry = await OnChainRegistry.create(await api.getApi(), {
+        clusterId: event.phalaLogFilter.clusterId,
+      });
+      const gasPrice = phatRegistry.gasPrice.toNumber();
+      const { records } = await phatRegistry.loggerContract.tail(
+        100,
+        event.phalaLogFilter,
+      );
+      console.log(`Retrieved ${records} log records and gas price ${gasPrice}`);
+      return { records, gasPrice };
+    } catch (e: unknown) {
+      await new Lmas().writeLog({
+        logType: LogType.ERROR,
+        message: `Error fetching phala logs or gas price.`,
+        location: 'SubstrateService.getPhalaClusterWalletBalance',
+        service: ServiceName.BLOCKCHAIN,
+        data: {
+          error: e,
+          clusterId: event.phalaLogFilter.clusterId,
+          contract: event.phalaLogFilter.contract,
+          nonce: event.phalaLogFilter.nonce,
+          type: event.phalaLogFilter.type,
+        },
+      });
+      throw e;
+    } finally {
+      await api.destroy();
+    }
   }
 
   static async getPhalaClusterWalletBalance(
@@ -265,17 +284,37 @@ export class SubstrateService {
       ChainType.SUBSTRATE,
     );
     const api = new SubstrateRpcApi(endpoint.url, PhalaTypesBundle);
-    const phatRegistry = await OnChainRegistry.create(await api.getApi(), {
-      clusterId: event.phalaClusterWallet.clusterId,
-    });
-    const balance = await phatRegistry.getClusterBalance(
-      event.phalaClusterWallet.walletAddress,
-    );
+    try {
+      const phatRegistry = await OnChainRegistry.create(await api.getApi(), {
+        clusterId: event.phalaClusterWallet.clusterId,
+      });
+      const balance = await phatRegistry.getClusterBalance(
+        event.phalaClusterWallet.walletAddress,
+      );
 
-    return {
-      total: balance.total.toNumber(),
-      free: balance.free.toNumber(),
-    };
+      console.log(
+        `Retrieved balance total ${balance.total} and free ${balance.free}`,
+      );
+      return {
+        total: balance.total.toNumber(),
+        free: balance.free.toNumber(),
+      };
+    } catch (e: unknown) {
+      await new Lmas().writeLog({
+        logType: LogType.ERROR,
+        message: `Error fetching cluster ${event.phalaClusterWallet.walletAddress} balance.`,
+        location: 'SubstrateService.getPhalaClusterWalletBalance',
+        service: ServiceName.BLOCKCHAIN,
+        data: {
+          error: e,
+          clusterId: event.phalaClusterWallet.clusterId,
+          walletAddress: event.phalaClusterWallet.walletAddress,
+        },
+      });
+      throw e;
+    } finally {
+      await api.destroy();
+    }
   }
 
   /**

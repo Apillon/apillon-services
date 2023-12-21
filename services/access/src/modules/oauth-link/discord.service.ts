@@ -4,6 +4,7 @@ import {
   SqlModelStatus,
   OauthListFilterDto,
   OauthLinkType,
+  LogType,
 } from '@apillon/lib';
 import { AmsErrorCode, DbTables } from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
@@ -70,6 +71,7 @@ export class OauthLinkService {
           status: 400,
           code: AmsErrorCode.USER_DOES_NOT_EXISTS,
         }).writeToMonitor({
+          logType: LogType.WARN,
           context,
           user_uuid: context?.user?.user_uuid,
           data: event,
@@ -170,9 +172,9 @@ export class OauthLinkService {
   ) {
     const resp = await context.mysql.paramExecute(
       `
-      SELECT 
+      SELECT
         au.user_uuid,
-        au.email, 
+        au.email,
         ol.type,
         ol.externalUserId,
         ol.externalUsername,
@@ -180,7 +182,7 @@ export class OauthLinkService {
       FROM ${DbTables.OAUTH_LINK} ol
       JOIN ${DbTables.AUTH_USER} au
         ON au.id = ol.authUser_id
-      WHERE 
+      WHERE
         ol.status = ${SqlModelStatus.ACTIVE}
         AND (@type IS NULL OR ol.type = @type)
         AND (@dateFrom IS NULL OR ol.createTime >= @dateFrom)

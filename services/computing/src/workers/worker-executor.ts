@@ -18,10 +18,8 @@ import { TransactionStatusWorker } from './transaction-status-worker';
 import { PhalaLogWorker } from './phala-log-worker';
 
 export enum WorkerName {
-  TEST_WORKER = 'TestWorker',
   SCHEDULER = 'scheduler',
   TRANSACTION_STATUS = 'TransactionStatusWorker',
-  UPDATE_PHALA_STATUS_WORKER = 'UpdatePhalaStatusWorker',
   PHALA_LOG_WORKER = 'PhalaLogWorker',
 }
 
@@ -102,15 +100,17 @@ export async function handleLambdaEvent(
   } else {
     workerDefinition = new WorkerDefinition(serviceDef, WorkerName.SCHEDULER);
   }
-
-  // eslint-disable-next-line sonarjs/no-small-switch
   switch (workerDefinition.workerName) {
     case WorkerName.SCHEDULER:
       const scheduler = new Scheduler(serviceDef, context);
       await scheduler.run();
       break;
     case WorkerName.PHALA_LOG_WORKER:
-      await new PhalaLogWorker(workerDefinition, context).run();
+      await new PhalaLogWorker(
+        workerDefinition,
+        context,
+        QueueWorkerType.PLANNER,
+      ).run();
       break;
     default:
       console.log(
@@ -161,7 +161,6 @@ export async function handleSqsMessages(
         parameters,
       });
 
-      // eslint-disable-next-line sonarjs/no-small-switch
       switch (workerName) {
         case WorkerName.TRANSACTION_STATUS: {
           await new TransactionStatusWorker(
@@ -173,6 +172,15 @@ export async function handleSqsMessages(
           });
           break;
         }
+        case WorkerName.PHALA_LOG_WORKER:
+          await new PhalaLogWorker(
+            workerDefinition,
+            context,
+            QueueWorkerType.EXECUTOR,
+          ).run({
+            executeArg: message?.body,
+          });
+          break;
         default:
           console.log(
             `ERROR - INVALID WORKER NAME: ${message?.messageAttributes?.workerName}`,
