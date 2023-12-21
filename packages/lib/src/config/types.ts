@@ -249,7 +249,7 @@ export enum ReferralEventType {
   ADD_PROMO_CODE_CREDITS = 'add-promo-code-credits',
 }
 
-export enum SubsocialEventType {
+export enum SocialEventType {
   CREATE_SPACE = 'create-space',
   CREATE_POST = 'create-post',
 }
@@ -268,7 +268,7 @@ export enum ServiceName {
   BLOCKCHAIN = 'BLOCKCHAIN',
   CONFIG = 'CONFIG',
   COMPUTING = 'COMPUTING',
-  SUBSOCIAL = 'SUBSOCIAL',
+  SOCIAL = 'SOCIAL',
 }
 
 export enum ServiceCode {

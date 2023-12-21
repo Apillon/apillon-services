@@ -41,8 +41,8 @@
       "path": "services/computing"
     },
     {
-      "name": "🌐@services/subsocial [@apillon/subsocial]",
-      "path": "services/subsocial"
+      "name": "🌐@services/social [@apillon/social]",
+      "path": "services/social"
     },
     {
       "name": "😎@modules/dev-console-api",

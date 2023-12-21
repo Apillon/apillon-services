@@ -33,24 +33,24 @@ const getConnectionParams = () => {
   return {
     host:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.SUBSOCIAL_MYSQL_HOST_TEST
-        : env.SUBSOCIAL_MYSQL_HOST,
+        ? env.SOCIAL_MYSQL_HOST_TEST
+        : env.SOCIAL_MYSQL_HOST,
     port:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.SUBSOCIAL_MYSQL_PORT_TEST
-        : env.SUBSOCIAL_MYSQL_PORT,
+        ? env.SOCIAL_MYSQL_PORT_TEST
+        : env.SOCIAL_MYSQL_PORT,
     database:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.SUBSOCIAL_MYSQL_DATABASE_TEST
-        : env.SUBSOCIAL_MYSQL_DATABASE,
+        ? env.SOCIAL_MYSQL_DATABASE_TEST
+        : env.SOCIAL_MYSQL_DATABASE,
     user:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.SUBSOCIAL_MYSQL_USER_TEST
-        : env.SUBSOCIAL_MYSQL_USER,
+        ? env.SOCIAL_MYSQL_USER_TEST
+        : env.SOCIAL_MYSQL_USER,
     password:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.SUBSOCIAL_MYSQL_PASSWORD_TEST
-        : env.SUBSOCIAL_MYSQL_PASSWORD,
+        ? env.SOCIAL_MYSQL_PASSWORD_TEST
+        : env.SOCIAL_MYSQL_PASSWORD,
   };
 };
 

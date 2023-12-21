@@ -8,7 +8,7 @@ import type { Context } from 'aws-lambda/handler';
  */
 export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
-    //[SubsocialEventType.CREATE_SPACE]: NftsService.createCollection,
+    //[SocialEventType.CREATE_SPACE]: NftsService.createCollection,
   };
 
   return await processors[event.eventName](event, context);

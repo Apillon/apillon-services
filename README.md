@@ -34,7 +34,7 @@ In this repository you will find source and documentation for microservices, API
 | 16   | BCS      | Blockchain service                       | [@apillon/blockchain](/services/blockchain/)          | /services/blockchain/     |
 | 17   | SRV-LIB  | Service Code Library                     | [@apillon/service-lib](/packages/service-lib/)        | /packages/service-lib/    |
 | 18   | CS       | Computing service                        | [@apillon/computing](/services/computing/)            | /services/computing/      |
-| 19   | SUBS     | Subsocial service                        | [@apillon/subsocial](/services/subsocial/)            | /services/subsocial/      |
+| 19   | SUBS     | Social service                           | [@apillon/social](/services/social/)                  | /services/social/         |
 
 ## Documentation
 

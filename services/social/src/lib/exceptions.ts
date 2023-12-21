@@ -5,22 +5,22 @@ import {
   ServiceName,
   ValidationException,
 } from '@apillon/lib';
-import { SubsocialErrorCode } from '../config/types';
+import { SocialErrorCode } from '../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 
-export class SubsocialCodeException extends CodeException {
+export class SocialCodeException extends CodeException {
   constructor(options: ErrorOptions) {
     super({
       sourceModule: ServiceName.NFTS,
-      errorCodes: SubsocialErrorCode,
-      errorMessage: options.errorMessage || SubsocialErrorCode[options.code],
+      errorCodes: SocialErrorCode,
+      errorMessage: options.errorMessage || SocialErrorCode[options.code],
       ...options,
     });
   }
 }
 
-export class SubsocialValidationException extends ValidationException {
+export class SocialValidationException extends ValidationException {
   constructor(model: Model) {
-    super(model, SubsocialErrorCode);
+    super(model, SocialErrorCode);
   }
 }

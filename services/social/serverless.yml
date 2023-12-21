@@ -1,7 +1,7 @@
 # console: true
 # org: apillonadmin
 # app: apillon-v2
-service: apillon-subsocial-service-${opt:stage, 'dev'}
+service: apillon-social-service-${opt:stage, 'dev'}
 frameworkVersion: '3'
 
 custom:
@@ -36,7 +36,7 @@ provider:
 
   environment:
     ${file(../../bin/deploy/env/env.yml)}
-    # ACCESS_FUNCTION_NAME: 'apillon-subsocial-service-${self:provider.stage}'
+    # ACCESS_FUNCTION_NAME: 'apillon-social-service-${self:provider.stage}'
     # MONITORING_FUNCTION_NAME: 'apillon-monitoring-service-${self:provider.stage}'
 
 # you can add packaging information here
@@ -46,21 +46,21 @@ package:
   excludeDevDependencies: true
 
 functions:
-  subsocial-service:
+  social-service:
     handler: ./src/handler.handler
-    name: 'apillon-subsocial-service-${self:provider.stage}'
-    description: Apillon subsocial Service
+    name: 'apillon-social-service-${self:provider.stage}'
+    description: Apillon social Service
     memorySize: 512
     timeout: 30
-  subsocial-service-worker:
+  social-service-worker:
     handler: ./src/workers/worker-executor.handler
-    name: apillon-subsocial-service-worker-${self:provider.stage}
-    description: Serverless workers for Apillon subsocial microservice
+    name: apillon-social-service-worker-${self:provider.stage}
+    description: Serverless workers for Apillon social microservice
     memorySize: 512
     timeout: 900
     reservedConcurrency: 30
     environment:
-      AWS_WORKER_LAMBDA_NAME: ${self:functions.subsocial-service-worker.name}
+      AWS_WORKER_LAMBDA_NAME: ${self:functions.social-service-worker.name}
     events:
       - sqs:
           arn: ${env:WORKER_SQS_ARN}

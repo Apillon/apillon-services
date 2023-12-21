@@ -3,7 +3,7 @@ export enum DbTables {
   POST = 'post',
 }
 
-export enum SubsocialErrorCode {
+export enum SocialErrorCode {
   //400
   DEFAULT_BAD_REQUEST_ERROR = 40019000,
   //404
@@ -17,7 +17,7 @@ export enum SubsocialErrorCode {
 }
 
 export enum Chains {
-  SUBSOCIAL = 1,
+  SOCIAL = 1,
   X_SOCIAL = 2,
 }
 
