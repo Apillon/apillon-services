@@ -32,7 +32,7 @@ describe('Substrate service tests', () => {
       stage.context,
     );
 
-    expect(result).toBe({
+    expect(result).toEqual({
       gasPrice: 5,
       records: [],
     });

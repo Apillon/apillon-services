@@ -243,11 +243,9 @@ export class SubstrateService {
     );
     const api = new SubstrateRpcApi(endpoint.url, PhalaTypesBundle);
     try {
-      // TODO: add back cluster support
-      // const phatRegistry = await OnChainRegistry.create(api, {
-      //   clusterId: event.phalaLogFilter.clusterId,
-      // });
-      const phatRegistry = await OnChainRegistry.create(await api.getApi());
+      const phatRegistry = await OnChainRegistry.create(await api.getApi(), {
+        clusterId: event.phalaLogFilter.clusterId,
+      });
       const gasPrice = phatRegistry.gasPrice.toNumber();
       const { records } = await phatRegistry.loggerContract.tail(
         100,
@@ -287,11 +285,9 @@ export class SubstrateService {
     );
     const api = new SubstrateRpcApi(endpoint.url, PhalaTypesBundle);
     try {
-      // TODO: add back cluster support
-      // const phatRegistry = await OnChainRegistry.create(await api.getApi(), {
-      //   clusterId: event.phalaClusterWallet.clusterId,
-      // });
-      const phatRegistry = await OnChainRegistry.create(await api.getApi());
+      const phatRegistry = await OnChainRegistry.create(await api.getApi(), {
+        clusterId: event.phalaClusterWallet.clusterId,
+      });
       const balance = await phatRegistry.getClusterBalance(
         event.phalaClusterWallet.walletAddress,
       );
