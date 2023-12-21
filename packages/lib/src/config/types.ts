@@ -279,7 +279,8 @@ export enum ServiceCode {
   CONFIG = '10',
   REFERRAL = '11',
   NFTS = '12',
-  BLOCKCHAIN = '13',
+  BLOCKCHAIN = '16',
+  COMPUTING = '18',
 }
 
 export enum AppEnvironment {
