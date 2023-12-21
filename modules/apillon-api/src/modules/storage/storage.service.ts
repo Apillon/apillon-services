@@ -55,6 +55,10 @@ export class StorageService {
     return (await new StorageMicroservice(context).listBuckets(query)).data;
   }
 
+  async getBucket(context: ApillonApiContext, bucket_uuid: string) {
+    return (await new StorageMicroservice(context).getBucket(bucket_uuid)).data;
+  }
+
   async createBucket(context: ApillonApiContext, body: CreateBucketDto) {
     body.bucketType = 1;
     //Call Storage microservice, to create bucket
