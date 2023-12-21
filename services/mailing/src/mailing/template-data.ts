@@ -1,6 +1,8 @@
+import { EmailTemplate } from '@apillon/lib';
+
 export function generateTemplateData(key: string, data: any) {
   const templateData = {
-    welcome: {
+    [EmailTemplate.WELCOME]: {
       subject: 'Welcome to Apillon!',
       title: 'Welcome to Apillon!',
       text: `
@@ -19,7 +21,7 @@ export function generateTemplateData(key: string, data: any) {
       </p>
       `,
     },
-    'generate-identity': {
+    [EmailTemplate.GENERATE_IDENTITY]: {
       subject: 'Verify your identity!',
       title: 'Welcome to Apillon, please verify your identity!',
       text: `
@@ -40,7 +42,7 @@ export function generateTemplateData(key: string, data: any) {
       </p>
       `,
     },
-    'restore-credential': {
+    [EmailTemplate.RESTORE_CREDENTIAL]: {
       subject: 'Apillon credential restore!',
       title: 'Dear Apillon User',
       text: `
@@ -59,7 +61,7 @@ export function generateTemplateData(key: string, data: any) {
       </p>
       `,
     },
-    'revoke-did': {
+    [EmailTemplate.REVOKE_DID]: {
       subject: 'Apillon Identity Revoke!',
       title: 'Dear Apillon User',
       text: `
@@ -78,7 +80,7 @@ export function generateTemplateData(key: string, data: any) {
       </p>
       `,
     },
-    'download-identity': {
+    [EmailTemplate.DOWNLOAD_IDENTITY]: {
       subject: 'Apillon Identity Delivery!',
       title: 'Dear Apillon User',
       text: `
@@ -98,7 +100,7 @@ export function generateTemplateData(key: string, data: any) {
       </p>
       `,
     },
-    'reset-password': {
+    [EmailTemplate.RESET_PASSWORD]: {
       subject: 'Apillon password reset!',
       title: 'Dear Apillon User',
       text: `
@@ -117,7 +119,7 @@ export function generateTemplateData(key: string, data: any) {
       </p>
       `,
     },
-    'new-user-added-to-project': {
+    [EmailTemplate.NEW_USER_ADDED_TO_PROJECT]: {
       subject: 'You are invited to join the Apillon project!',
       title: 'Welcome to Apillon.io!',
       text: `
@@ -136,7 +138,7 @@ export function generateTemplateData(key: string, data: any) {
       </p>
       `,
     },
-    'user-added-to-project': {
+    [EmailTemplate.USER_ADDED_TO_PROJECT]: {
       subject: `Welcome aboard the ${data.projectName} project!`,
       title: 'Dear Apillon User',
       text: `
@@ -155,7 +157,7 @@ export function generateTemplateData(key: string, data: any) {
       </p>
       `,
     },
-    'contact-us-form': {
+    [EmailTemplate.CONTACT_US_FORM]: {
       subject: `Contact Form Entry by ${data.firstName} ${data.lastName}`,
       title: 'Contact Form Entry',
       text: `
@@ -182,7 +184,7 @@ export function generateTemplateData(key: string, data: any) {
       </p>
       `,
     },
-    'website-deployment-rejected': {
+    [EmailTemplate.WEBSITE_DEPLOYMENT_REJECTED]: {
       subject:
         'Urgent: Action Required Regarding Your Recent Apillon Deployment',
       title: 'Website deployment has been rejected',
@@ -214,7 +216,7 @@ export function generateTemplateData(key: string, data: any) {
       </p>
       `,
     },
-    'storage-quota-exceeded': {
+    [EmailTemplate.STORAGE_QUOTA_EXCEEDED]: {
       subject: `Important Notice: Your Account Quota is Exceeding Limit`,
       title: `Your Account Quota is Exceeding Limit`,
       text: `

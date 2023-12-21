@@ -1,7 +1,11 @@
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
-import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
+import {
+  EmailTemplate,
+  PopulateFrom,
+  ValidatorErrorCode,
+} from '../../../../config/types';
 import { JSONParser } from '../../../parsers';
 import { Captcha } from '../../../captcha';
 import { BaseIdentityDto } from './base-identity.dto';
@@ -17,7 +21,7 @@ export class VerificationEmailDto extends BaseIdentityDto {
       },
     ],
   })
-  public type: string;
+  public type: EmailTemplate;
 
   @prop({
     parser: { resolver: JSONParser() },

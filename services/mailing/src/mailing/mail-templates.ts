@@ -1,7 +1,6 @@
 import * as fs from 'fs';
-import * as path from 'path';
 import * as handlebars from 'handlebars';
-import { env } from '@apillon/lib';
+import { LogType, env, writeLog } from '@apillon/lib';
 
 export class MailTemplates {
   /**
@@ -31,8 +30,7 @@ export class MailTemplates {
         );
         this.templates[templateName] = handlebars.compile(html);
       } catch (err) {
-        console.log(path.resolve(`${templateDir}/${templateName}.html`));
-        console.log(err);
+        writeLog(LogType.ERROR, `Error reading template: ${err}`);
         return null;
       }
     }
