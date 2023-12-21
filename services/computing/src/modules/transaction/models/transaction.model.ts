@@ -178,6 +178,11 @@ export class Transaction extends AdvancedSQLModel {
     return res;
   }
 
+  /**
+   * Gets non executed contract transactions that are less than X hours old
+   * (we ignore X hours old so we don't keep processing them if we were not able to obtain them)
+   * @param clusterId
+   */
   public async getNonExecutedTransactions(clusterId: string) {
     return (await this.getContext().mysql.paramExecute(
       `
@@ -199,6 +204,8 @@ export class Transaction extends AdvancedSQLModel {
            c.contractAddress IS NOT NULL)
             OR t.transactionType
           != @transactionType)
+          AND t.createTime
+            > NOW() - INTERVAL 2 HOUR
       `,
       {
         clusterId,
