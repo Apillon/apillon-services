@@ -251,7 +251,9 @@ export class SubstrateService {
         100,
         event.phalaLogFilter,
       );
-      console.log(`Retrieved ${records} log records and gas price ${gasPrice}`);
+      console.log(
+        `Retrieved ${records.length} log records and gas price ${gasPrice}`,
+      );
       return { records, gasPrice };
     } catch (e: unknown) {
       await new Lmas().writeLog({
