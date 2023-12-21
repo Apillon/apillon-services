@@ -240,8 +240,6 @@ export class PhalaLogWorker extends BaseQueueWorker {
     await this.updateTransaction(transaction_id, transactionStatus);
 
     const gasFee = record.output.gasConsumed.refTime * gasPrice;
-    // TODO: remove ts-ignore when SDK is fixed
-    // @ts-ignore
     const storageFee = record.output.storageDeposit.charge;
     const totalFee = gasFee + storageFee;
 
