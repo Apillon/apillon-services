@@ -4,6 +4,7 @@ import { Module } from '@nestjs/common';
 import Stripe from 'stripe';
 import { AppEnvironment, env, getEnvSecrets } from '@apillon/lib';
 import { StripeService } from './stripe.service';
+import { CryptoPaymentsService } from './crypto-payments.service';
 
 @Module({
   imports: [],
@@ -11,6 +12,7 @@ import { StripeService } from './stripe.service';
   providers: [
     StripeService,
     PaymentsService,
+    CryptoPaymentsService,
     {
       provide: Stripe,
       useFactory: async (): Promise<Stripe> => {

@@ -98,7 +98,7 @@ export class PaymentsService {
             });
           const creditPurchase = sessionWithLineItems.line_items.data[0];
 
-          await new Scs().handleStripeWebhookData({
+          await new Scs().handlePaymentWebhookData({
             ...paymentData,
             currency: creditPurchase.currency,
             invoiceStripeId: creditPurchase.price.id,
@@ -109,7 +109,7 @@ export class PaymentsService {
             payment.subscription,
           );
 
-          await new Scs().handleStripeWebhookData({
+          await new Scs().handlePaymentWebhookData({
             ...paymentData,
             expiresOn: new Date(subscription.current_period_end * 1000),
             stripeId: subscription.id,
@@ -143,7 +143,7 @@ export class PaymentsService {
     }
   }
 
-  private async checkProjectExists(
+  async checkProjectExists(
     context: DevConsoleApiContext,
     project_uuid: string,
   ) {
@@ -189,7 +189,7 @@ export class PaymentsService {
     return await this.assignPrices(creditPackages);
   }
 
-  private async assignPrices(items: { stripeId: string; price: number }[]) {
+  private async assignPrices(items: any[]) {
     for (const item of items) {
       if (item.stripeId) {
         const price = await this.stripe.prices.retrieve(item.stripeId);
