@@ -21,6 +21,7 @@ import { DirectoryModule } from './modules/storage/directory/directory.module';
 import { IpnsModule } from './modules/storage/ipns/ipns.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { UserModule } from './modules/user/user.module';
+import { SocialModule } from './modules/social/social.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { UserModule } from './modules/user/user.module';
     ComputingModule,
     PaymentsModule,
     PublicModule,
+    SocialModule,
   ],
   controllers: [],
   providers: [],

@@ -18,6 +18,7 @@ export enum SubstrateChain {
   PHALA = 4,
   POLKADOT = 5,
   SUBSOCIAL = 6,
+  XSOCIAL = 7,
 }
 
 export enum EvmChain {
@@ -334,6 +335,7 @@ export enum AttachedServiceType {
   NFT = 3,
   HOSTING = 4,
   COMPUTING = 5,
+  SOCIAL = 6,
   SYSTEM = 999,
 }
 
@@ -419,6 +421,7 @@ export enum DefaultPermission {
   NFTS = 3,
   AUTHENTICATION = 4,
   COMPUTING = 5,
+  SOCIAL = 6,
 }
 
 //#endregion
@@ -581,6 +584,8 @@ export enum ValidatorErrorCode {
   QUOTA_CODE_NOT_VALID = 42200149,
   INVALID_FILES_LENGTH = 42200150,
   CID_NOT_PRESENT = 42200160,
+
+  SPACE_REQUIRED_DATA_NOT_PRESENT = 42200200,
 
   //#region Computing
   COMPUTING_PROJECT_UUID_NOT_PRESENT = 42200201,

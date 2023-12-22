@@ -8,9 +8,9 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "test-service": "jest --passWithNoTests",
-    "test-server": "cross-env APP_ENV=test nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60008",
+    "test-server": "cross-env APP_ENV=test nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60010",
     "build": "tsc",
-    "dev": "nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60008",
+    "dev": "nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60010",
     "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "deploy:prod": "serverless deploy --stage production",
     "deploy:staging": "serverless deploy --stage staging",
@@ -29,6 +29,8 @@
     "@apillon/service-lib": "*",
     "@apillon/workers-lib": "*",
     "@middy/core": "^2.5.7",
+    "@subsocial/api": "^0.8.14",
+    "@subsocial/types": "^0.6.8",
     "@types/uuid": "^8.3.4",
     "ethers": "^5.7.2",
     "node-fetch": "2.6.7"

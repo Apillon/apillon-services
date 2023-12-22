@@ -1,4 +1,6 @@
+import { SocialEventType } from '@apillon/lib';
 import type { Context } from 'aws-lambda/handler';
+import { SubsocialService } from './modules/subsocial/subsocial.service';
 
 /**
  * Processing lambda event with appropriate service function based on event name
@@ -8,7 +10,7 @@ import type { Context } from 'aws-lambda/handler';
  */
 export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
-    //[SocialEventType.CREATE_SPACE]: NftsService.createCollection,
+    [SocialEventType.CREATE_SPACE]: SubsocialService.createSpace,
   };
 
   return await processors[event.eventName](event, context);

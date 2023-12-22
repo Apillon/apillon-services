@@ -100,6 +100,10 @@ export * from './lib/at-services/blockchain/dtos/update-transaction.dto';
 export * from './lib/at-services/blockchain/dtos/wallet-transactions-query-filter';
 export * from './lib/at-services/blockchain/dtos/wallet-deposits-query-filter';
 
+//#REGION Social
+export * from './lib/at-services/social/social';
+export * from './lib/at-services/social/dtos/create-space.dto';
+
 //#REGION Mix
 export * from './lib/at-services/ams/dtos/create-oauth-link.dto';
 export * from './lib/at-services/ams/dtos/discord-user-list-filter.dto';
