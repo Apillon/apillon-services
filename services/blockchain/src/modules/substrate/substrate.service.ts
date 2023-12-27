@@ -26,6 +26,7 @@ import { getWalletSeed } from '../../lib/seed';
 import { SubstrateRpcApi } from './rpc-api';
 import { OnChainRegistry, types as PhalaTypesBundle } from '@phala/sdk';
 import { substrateChainToWorkerName } from '../../lib/helpers';
+import { typesBundle as SubsocialTypesBundle } from '@subsocial/types';
 
 export class SubstrateService {
   static async createTransaction(
@@ -73,6 +74,11 @@ export class SubstrateService {
       case SubstrateChain.PHALA: {
         keyring = new Keyring({ type: 'sr25519' });
         typesBundle = PhalaTypesBundle;
+        break;
+      }
+      case SubstrateChain.XSOCIAL: {
+        keyring = new Keyring({ type: 'sr25519' });
+        typesBundle = SubsocialTypesBundle;
         break;
       }
       default: {
@@ -333,6 +339,10 @@ export class SubstrateService {
       }
       case SubstrateChain.PHALA: {
         typesBundle = PhalaTypesBundle;
+        break;
+      }
+      case SubstrateChain.XSOCIAL: {
+        typesBundle = SubsocialTypesBundle;
         break;
       }
       default: {

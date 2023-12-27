@@ -1,18 +1,8 @@
-import {
-  CreateSpaceDto,
-  SqlModelStatus,
-  SubstrateChain,
-  env,
-} from '@apillon/lib';
+import { CreateSpaceDto, SqlModelStatus, SubstrateChain } from '@apillon/lib';
 import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
-import { Space } from './models/space.model';
-import {
-  SocialCodeException,
-  SocialValidationException,
-} from '../../lib/exceptions';
-import { Storage } from '@apillon/sdk';
 import { v4 as uuidV4 } from 'uuid';
-import { SocialErrorCode } from '../../config/types';
+import { SocialValidationException } from '../../lib/exceptions';
+import { Space } from './models/space.model';
 import { SubsocialProvider } from './subsocial.provider';
 
 export class SubsocialService {
@@ -37,10 +27,10 @@ export class SubsocialService {
 
     await space.insert();
 
-    const storageService = new Storage({
+    /*const storageService = new Storage({
       key: env.APILLON_API_INTEGRATION_API_KEY,
       secret: env.APILLON_API_INTEGRATION_API_SECRET,
-    });
+    });*/
 
     /*const spaceIpfsData = {
       about: space.about,
