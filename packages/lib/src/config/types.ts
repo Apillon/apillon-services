@@ -252,7 +252,11 @@ export enum ReferralEventType {
 
 export enum SocialEventType {
   CREATE_SPACE = 'create-space',
+  LIST_SPACES = 'list-spaces',
+  GET_SPACE = 'get-space',
   CREATE_POST = 'create-post',
+  LIST_POSTS = 'list-posts',
+  GET_POST = 'get-post',
 }
 
 export enum ServiceName {
@@ -586,6 +590,7 @@ export enum ValidatorErrorCode {
   CID_NOT_PRESENT = 42200160,
 
   SPACE_REQUIRED_DATA_NOT_PRESENT = 42200200,
+  POST_REQUIRED_DATA_NOT_PRESENT = 42200201,
 
   //#region Computing
   COMPUTING_PROJECT_UUID_NOT_PRESENT = 42200201,
@@ -753,6 +758,7 @@ export enum CacheKeyPrefix {
   ADMIN_WEBSITE_LIST = 'admin-website-list',
   ADMIN_NFTS_COLLECTION_LIST = 'admin-nfts-collection-list',
   ADMIN_GENERAL_SEARCH = 'admin-general-search',
+  SOCIAL_SPACE_LIST = 'social-space-list',
 }
 
 export enum CacheKeyTTL {

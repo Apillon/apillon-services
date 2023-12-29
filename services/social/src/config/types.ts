@@ -1,5 +1,3 @@
-import { SqlModelStatus } from '@apillon/lib';
-
 export enum DbTables {
   SPACE = 'space',
   POST = 'post',
@@ -9,15 +7,20 @@ export enum SocialErrorCode {
   //400
   DEFAULT_BAD_REQUEST_ERROR = 40019000,
   //404
+  SPACE_NOT_FOUND = 40419001,
+  POST_NOT_FOUND = 40419001,
   //405
   METHOD_NOT_ALLOWED = 40519001,
 
   //422
   SPACE_REQUIRED_DATA_NOT_PRESENT = 42219001,
+  POST_REQUIRED_DATA_NOT_PRESENT = 42219002,
 
   //500
   GENERAL_SERVER_ERROR = 50019000,
   CANNOT_INITIALIZE_SUBSTRATE_API_FOR_CHAIN = 50019001,
+  ERROR_CREATING_SPACE = 50019002,
+  ERROR_CREATING_POST = 50019003,
 }
 
 export enum Chains {
@@ -32,4 +35,10 @@ export enum TransactionType {
 
 export enum SpaceStatus {
   FAILED = 100,
+}
+
+export enum PostType {
+  REGULAR = 1,
+  SHARED = 2,
+  COMMENT = 3,
 }

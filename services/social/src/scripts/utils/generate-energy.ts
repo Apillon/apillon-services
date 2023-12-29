@@ -1,4 +1,4 @@
-import { SubsocialApi } from '@subsocial/api';
+/*import { SubsocialApi } from '@subsocial/api';
 import { convertToBalanceWithDecimal } from '@subsocial/utils';
 
 export const signAndSendTx = async (
@@ -77,3 +77,4 @@ run()
   .catch((err) => {
     console.error(err);
   });
+*/

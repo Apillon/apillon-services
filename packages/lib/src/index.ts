@@ -103,6 +103,7 @@ export * from './lib/at-services/blockchain/dtos/wallet-deposits-query-filter';
 //#REGION Social
 export * from './lib/at-services/social/social';
 export * from './lib/at-services/social/dtos/create-space.dto';
+export * from './lib/at-services/social/dtos/create-post.dto';
 
 //#REGION Mix
 export * from './lib/at-services/ams/dtos/create-oauth-link.dto';

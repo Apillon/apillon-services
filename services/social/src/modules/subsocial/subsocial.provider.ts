@@ -21,16 +21,6 @@ export class SubsocialProvider {
 
   async initializeApi() {
     if (!this.api) {
-      /*const rpcEndpoint = (
-        await new BlockchainMicroservice(this.context).getChainEndpoint(
-          this.chain,
-          ChainType.SUBSTRATE,
-        )
-      ).data.url;
-
-      this.provider = new ethers.providers.JsonRpcProvider(rpcEndpoint);
-      console.log(`RPC initialization ${rpcEndpoint}`);*/
-
       let config = {
         substrateNodeUrl: 'wss://xsocial.subsocial.network',
         ipfsNodeUrl: 'https://gw.crustfiles.app',
@@ -59,10 +49,10 @@ export class SubsocialProvider {
 
   async createSpace(context: Context, space: Space) {
     const spaceIpfsData = {
-      about: 'This is demo code',
+      about: space.about,
       image: 'Qmasp4JHhQWPkEpXLHFhMAQieAH1wtfVRNHWZ5snhfFeBe', // ipfsImageCid = await api.subsocial.ipfs.saveFile(file)
-      name: 'Test',
-      tags: ['Apillon'],
+      name: space.name,
+      tags: space.tags?.length ? space.tags.split(';') : [],
     };
 
     const cid = await this.api.ipfs.saveContent(spaceIpfsData);
@@ -82,6 +72,7 @@ export class SubsocialProvider {
       context,
     );
     console.info('createSubstrateTransaction...');
+
     return await new BlockchainMicroservice(context).createSubstrateTransaction(
       dto,
     );

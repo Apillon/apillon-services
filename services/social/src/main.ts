@@ -10,6 +10,8 @@ import { SubsocialService } from './modules/subsocial/subsocial.service';
  */
 export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
+    [SocialEventType.LIST_SPACES]: SubsocialService.listSpaces,
+    [SocialEventType.GET_SPACE]: SubsocialService.getSpace,
     [SocialEventType.CREATE_SPACE]: SubsocialService.createSpace,
   };
 

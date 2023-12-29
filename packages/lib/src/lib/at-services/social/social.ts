@@ -1,7 +1,9 @@
 import { env } from '../../../config/env';
 import { AppEnvironment, SocialEventType } from '../../../config/types';
+import { BaseProjectQueryFilter } from '../../base-models/base-project-query-filter.model';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
+import { CreatePostDto } from './dtos/create-post.dto';
 import { CreateSpaceDto } from './dtos/create-space.dto';
 
 export class SocialMicroservice extends BaseService {
@@ -20,9 +22,49 @@ export class SocialMicroservice extends BaseService {
     this.isDefaultAsync = false;
   }
 
+  public async listSpaces(params: BaseProjectQueryFilter) {
+    const data = {
+      eventName: SocialEventType.LIST_SPACES,
+      query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async getSpace(space_uuid: string) {
+    const data = {
+      eventName: SocialEventType.GET_SPACE,
+      space_uuid,
+    };
+    return await this.callService(data);
+  }
+
   public async createSpace(params: CreateSpaceDto) {
     const data = {
       eventName: SocialEventType.CREATE_SPACE,
+      body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async listPosts(params: BaseProjectQueryFilter) {
+    const data = {
+      eventName: SocialEventType.LIST_POSTS,
+      query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async getPost(post_uuid: string) {
+    const data = {
+      eventName: SocialEventType.GET_POST,
+      post_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async createPost(params: CreatePostDto) {
+    const data = {
+      eventName: SocialEventType.CREATE_POST,
       body: params.serialize(),
     };
     return await this.callService(data);

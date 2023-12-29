@@ -9,6 +9,7 @@ import { ApiPromise, WsProvider } from '@polkadot/api';
 import { SubsocialApi } from '@subsocial/api';
 import { IpfsContent } from '@subsocial/types/substrate/classes';
 import { convertToBalanceWithDecimal } from '@subsocial/utils';
+import { Transaction } from '../../common/models/transaction';
 
 describe('Substrate service unit test', () => {
   let stage: Stage;
@@ -117,7 +118,7 @@ describe('Substrate service unit test', () => {
   describe.only('Test create and transmit subsocial transaction', () => {
     let nonce, transaction, wallet;
 
-    test('Test create energy transaction', async () => {
+    /*test('Test create energy transaction', async () => {
       await new Endpoint(
         {
           url: 'wss://xsocial.subsocial.network',
@@ -144,16 +145,16 @@ describe('Substrate service unit test', () => {
       // or you can just multiply it manually
       // const parsedBurnAmount = burnAmount * 10 ** 10
 
-      const target = '5EqMze969gCJxWFAZ1P1pcSax1tD5YtKqPrzkVyPZSmiNVaB'; // change it to target account
+      const target = '3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6'; // change it to target account
       const tx = substrateApi.tx.energy.generateEnergy(target, 1);
 
       nonce = await substrateApi.rpc.system.accountNextIndex(
-        '5EqMze969gCJxWFAZ1P1pcSax1tD5YtKqPrzkVyPZSmiNVaB',
+        '3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6',
       );
 
       console.info(substrateApi.rpc.system.chain);
       const account = await substrateApi.query.system.account(
-        '5EqMze969gCJxWFAZ1P1pcSax1tD5YtKqPrzkVyPZSmiNVaB',
+        '3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6',
       );
       console.info(account.data.free.toString());
       wallet = await new Wallet(
@@ -161,85 +162,7 @@ describe('Substrate service unit test', () => {
           chain: SubstrateChain.XSOCIAL,
           chainType: ChainType.SUBSTRATE,
           seed: 'disorder reveal crumble deer axis slush unique answer catalog junk hazard damp',
-          address: '5EqMze969gCJxWFAZ1P1pcSax1tD5YtKqPrzkVyPZSmiNVaB',
-          nextNonce: nonce.toNumber(),
-        },
-        stage.context,
-      ).insert();
-
-      const serialize = tx.toHex();
-
-      const res = await SubstrateService.createTransaction(
-        { params: { transaction: serialize, chain: SubstrateChain.XSOCIAL } },
-        stage.context,
-      );
-      console.log('res: ', res);
-
-      transaction = await SubstrateService.getTransactionById(
-        { id: res.id },
-        stage.context,
-      );
-
-      console.log('transaction: ', transaction);
-
-      // const res2 = await SubstrateService.transmitTransactions(
-      //   { chain: SubstrateChain.CRUST },
-      //   stage.context,
-      // );
-      // console.log('res2: ', res2);
-    });
-
-    /*test('Test create substrate xsocial transaction', async () => {
-      await new Endpoint(
-        {
-          url: 'wss://xsocial.subsocial.network',
-          chain: SubstrateChain.XSOCIAL,
-          chainType: ChainType.SUBSTRATE,
-          status: 5,
-        },
-        stage.context,
-      ).insert();
-
-      const config = {
-        substrateNodeUrl: 'wss://xsocial.subsocial.network',
-        ipfsNodeUrl: 'https://gw.crustfiles.app',
-      };
-      const api: SubsocialApi = await SubsocialApi.create(config);
-
-      const authHeader =
-        'c3ViLTVGQTluUURWZzI2N0RFZDhtMVp5cFhMQm52TjdTRnhZd1Y3bmRxU1lHaU45VFRwdToweDEwMmQ3ZmJhYWQwZGUwNzFjNDFmM2NjYzQzYmQ0NzIxNzFkZGFiYWM0MzEzZTc5YTY3ZWExOWM0OWFlNjgyZjY0YWUxMmRlY2YyNzhjNTEwZGY4YzZjZTZhYzdlZTEwNzY2N2YzYTBjZjM5OGUxN2VhMzAyMmRkNmEyYjc1OTBi';
-      api.ipfs.setWriteHeaders({
-        authorization: 'Basic ' + authHeader,
-      });
-
-      const spaceIpfsData = {
-        about: 'Test space',
-        image: 'Qmasp4JHhQWPkEpXLHFhMAQieAH1wtfVRNHWZ5snhfFeBe', // ipfsImageCid = await api.subsocial.ipfs.saveFile(file)
-        name: 'Test',
-        tags: ['Apillon'],
-      };
-
-      const cid = await api.ipfs.saveContent(spaceIpfsData);
-
-      const substrateApi = await api.substrateApi;
-
-      const tx = substrateApi.tx.spaces.createSpace(IpfsContent(cid), null);
-
-      nonce = await substrateApi.rpc.system.accountNextIndex(
-        '5EqMze969gCJxWFAZ1P1pcSax1tD5YtKqPrzkVyPZSmiNVaB',
-      );
-
-      console.info(substrateApi.rpc.system.chain);
-      const account = await substrateApi.query.system.account(
-        '5EqMze969gCJxWFAZ1P1pcSax1tD5YtKqPrzkVyPZSmiNVaB',
-      );
-      console.info(account.data.free.toString());
-      wallet = await new Wallet(
-        {
-          chain: SubstrateChain.XSOCIAL,
-          chainType: ChainType.SUBSTRATE,
-          seed: 'disorder reveal crumble deer axis slush unique answer catalog junk hazard damp',
-          address: '5EqMze969gCJxWFAZ1P1pcSax1tD5YtKqPrzkVyPZSmiNVaB',
+          address: '3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6',
           nextNonce: nonce.toNumber(),
         },
         stage.context,
@@ -266,6 +189,84 @@ describe('Substrate service unit test', () => {
       // );
       // console.log('res2: ', res2);
     });*/
+
+    test('Test create substrate xsocial transaction', async () => {
+      await new Endpoint(
+        {
+          url: 'wss://xsocial.subsocial.network',
+          chain: SubstrateChain.XSOCIAL,
+          chainType: ChainType.SUBSTRATE,
+          status: 5,
+        },
+        stage.context,
+      ).insert();
+
+      const config = {
+        substrateNodeUrl: 'wss://xsocial.subsocial.network',
+        ipfsNodeUrl: 'https://gw.crustfiles.app',
+      };
+      const api: SubsocialApi = await SubsocialApi.create(config);
+
+      const authHeader =
+        'c3ViLTVGQTluUURWZzI2N0RFZDhtMVp5cFhMQm52TjdTRnhZd1Y3bmRxU1lHaU45VFRwdToweDEwMmQ3ZmJhYWQwZGUwNzFjNDFmM2NjYzQzYmQ0NzIxNzFkZGFiYWM0MzEzZTc5YTY3ZWExOWM0OWFlNjgyZjY0YWUxMmRlY2YyNzhjNTEwZGY4YzZjZTZhYzdlZTEwNzY2N2YzYTBjZjM5OGUxN2VhMzAyMmRkNmEyYjc1OTBi';
+      api.ipfs.setWriteHeaders({
+        authorization: 'Basic ' + authHeader,
+      });
+
+      const spaceIpfsData = {
+        about: 'My 3 Test space',
+        image: 'Qmasp4JHhQWPkEpXLHFhMAQieAH1wtfVRNHWZ5snhfFeBe', // ipfsImageCid = await api.subsocial.ipfs.saveFile(file)
+        name: 'Test 3',
+        tags: ['Apillon'],
+      };
+
+      const cid = await api.ipfs.saveContent(spaceIpfsData);
+
+      const substrateApi = await api.substrateApi;
+
+      const tx = substrateApi.tx.spaces.createSpace(IpfsContent(cid), null);
+
+      nonce = await substrateApi.rpc.system.accountNextIndex(
+        '3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6',
+      );
+
+      console.info(substrateApi.rpc.system.chain);
+      const account = await substrateApi.query.system.account(
+        '3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6',
+      );
+      console.info(account.data.free.toString());
+      wallet = await new Wallet(
+        {
+          chain: SubstrateChain.XSOCIAL,
+          chainType: ChainType.SUBSTRATE,
+          seed: 'disorder reveal crumble deer axis slush unique answer catalog junk hazard damp',
+          address: '3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6',
+          nextNonce: nonce.toNumber(),
+        },
+        stage.context,
+      ).insert();
+
+      const serialize = tx.toHex();
+
+      const res = await SubstrateService.createTransaction(
+        { params: { transaction: serialize, chain: SubstrateChain.XSOCIAL } },
+        stage.context,
+      );
+      console.log('res: ', res);
+
+      transaction = await new Transaction({}, stage.context).populateById(
+        res.id,
+      );
+      expect(transaction.exists()).toBeTruthy();
+
+      console.log('transaction: ', transaction);
+
+      // const res2 = await SubstrateService.transmitTransactions(
+      //   { chain: SubstrateChain.CRUST },
+      //   stage.context,
+      // );
+      // console.log('res2: ', res2);
+    });
 
     test('Test transmit substrate xSocial transaction', async () => {
       expect(transaction).toBeTruthy();

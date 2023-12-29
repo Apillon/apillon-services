@@ -1,6 +1,6 @@
 import {
   ApiName,
-  BaseProjectQueryFilter,
+  BaseQueryFilter,
   Context,
   PopulateFrom,
   SerializeFor,
@@ -13,11 +13,12 @@ import {
 } from '@apillon/lib';
 import { DbTables, SocialErrorCode } from '../../../config/types';
 
-import { stringParser } from '@rawmodel/parsers';
+import { stringParser, integerParser } from '@rawmodel/parsers';
+import { Space } from './space.model';
 import { SocialCodeException } from '../../../lib/exceptions';
 
-export class Space extends UuidSqlModel {
-  public readonly tableName = DbTables.SPACE;
+export class Post extends UuidSqlModel {
+  public readonly tableName = DbTables.POST;
 
   public constructor(data: any, context: Context) {
     super(data, context);
@@ -37,11 +38,31 @@ export class Space extends UuidSqlModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: SocialErrorCode.SPACE_REQUIRED_DATA_NOT_PRESENT,
+        code: SocialErrorCode.POST_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
-  public space_uuid: string;
+  public post_uuid: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.PROFILE,
+      SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: SocialErrorCode.POST_REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
+  })
+  public space_id: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -57,14 +78,14 @@ export class Space extends UuidSqlModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: SocialErrorCode.SPACE_REQUIRED_DATA_NOT_PRESENT,
+        code: SocialErrorCode.POST_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
   public project_uuid: string;
 
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.INSERT_DB,
@@ -77,17 +98,39 @@ export class Space extends UuidSqlModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: SocialErrorCode.SPACE_REQUIRED_DATA_NOT_PRESENT,
+        code: SocialErrorCode.POST_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
-  public name: string;
+  public postType: number;
 
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.PROFILE,
+      SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: SocialErrorCode.POST_REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
+  })
+  public title: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
@@ -95,13 +138,14 @@ export class Space extends UuidSqlModel {
       SerializeFor.SELECT_DB,
     ],
   })
-  public about: string;
+  public body: string;
 
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
@@ -116,6 +160,7 @@ export class Space extends UuidSqlModel {
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
@@ -125,12 +170,13 @@ export class Space extends UuidSqlModel {
   })
   public tags: string;
 
-  /**spaceId recieved when space is created on chain */
+  /**postId recieved when post is created on chain */
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
@@ -138,36 +184,38 @@ export class Space extends UuidSqlModel {
       SerializeFor.SELECT_DB,
     ],
   })
-  public spaceId: string;
+  public postId: string;
 
   public async populateByUuidAndCheckAccess(uuid: string): Promise<this> {
-    const space: Space = await this.populateByUUID(uuid);
+    const post: Post = await this.populateByUUID(uuid);
 
-    if (!space.exists()) {
+    if (!post.exists()) {
       throw new SocialCodeException({
-        code: SocialErrorCode.SPACE_NOT_FOUND,
+        code: SocialErrorCode.POST_NOT_FOUND,
         status: 404,
       });
     }
-    space.canAccess(this.getContext());
+    post.canAccess(this.getContext());
 
     return this;
   }
 
-  public async getList(filter: BaseProjectQueryFilter) {
-    this.canAccess(this.getContext());
+  public async getList(space_uuid: string, filter: BaseQueryFilter) {
+    await new Space({}, this.getContext()).populateByUuidAndCheckAccess(
+      space_uuid,
+    );
 
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
-      's',
+      'p',
       {
-        id: 's.id',
+        id: 'p.id',
       },
       filter.serialize(),
     );
 
     const selectFields = this.generateSelectFields(
-      's',
+      'p',
       '',
       this.getContext().apiName == ApiName.ADMIN_CONSOLE_API
         ? SerializeFor.ADMIN_SELECT_DB
@@ -178,10 +226,11 @@ export class Space extends UuidSqlModel {
         SELECT ${selectFields}
         `,
       qFrom: `
-        FROM \`${DbTables.SPACE}\` s
-        WHERE s.project_uuid = IFNULL(@project_uuid, s.project_uuid)
-        AND (@search IS null OR s.name LIKE CONCAT('%', @search, '%') OR s.space_uuid = @search)
-        AND ((@status IS null AND s.status <> ${SqlModelStatus.DELETED}) OR @status = s.status)
+        FROM \`${DbTables.POST}\` p
+        JOIN \`${DbTables.SPACE}\` s ON s.id = p.space_id
+        WHERE s.space_uuid = @space_uuid
+        AND (@search IS null OR p.title LIKE CONCAT('%', @search, '%') OR p.post_uuid = @search)
+        AND IFNULL(@status, ${SqlModelStatus.ACTIVE}) = status
       `,
       qFilter: `
         ORDER BY ${filters.orderStr}
@@ -192,8 +241,8 @@ export class Space extends UuidSqlModel {
     return await selectAndCountQuery(
       this.getContext().mysql,
       sqlQuery,
-      params,
-      's.id',
+      { ...params, space_uuid },
+      'p.id',
     );
   }
 }

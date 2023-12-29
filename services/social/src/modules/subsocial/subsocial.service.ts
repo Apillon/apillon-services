@@ -1,11 +1,45 @@
-import { CreateSpaceDto, SqlModelStatus, SubstrateChain } from '@apillon/lib';
+import {
+  BaseProjectQueryFilter,
+  BaseQueryFilter,
+  CreatePostDto,
+  CreateSpaceDto,
+  SerializeFor,
+  SqlModelStatus,
+  SubstrateChain,
+} from '@apillon/lib';
 import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
-import { SocialValidationException } from '../../lib/exceptions';
+import {
+  SocialCodeException,
+  SocialValidationException,
+} from '../../lib/exceptions';
 import { Space } from './models/space.model';
 import { SubsocialProvider } from './subsocial.provider';
+import { Post } from './models/post.model';
+import { SocialErrorCode } from '../../config/types';
 
 export class SubsocialService {
+  static async listSpaces(
+    event: { query: BaseProjectQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new Space(
+      { project_uuid: event.query.project_uuid },
+      context,
+    ).getList(new BaseProjectQueryFilter(event.query, context));
+  }
+
+  static async getSpace(
+    event: { space_uuid: string },
+    context: ServiceContext,
+  ) {
+    const space = await new Space({}, context).populateByUuidAndCheckAccess(
+      event.space_uuid,
+    );
+
+    return space.serialize(getSerializationStrategy(context));
+  }
+
   static async createSpace(
     params: { body: CreateSpaceDto },
     context: ServiceContext,
@@ -25,58 +59,76 @@ export class SubsocialService {
       }
     }
 
-    await space.insert();
+    const conn = await context.mysql.start();
+    try {
+      await space.insert(SerializeFor.INSERT_DB, conn);
 
-    /*const storageService = new Storage({
-      key: env.APILLON_API_INTEGRATION_API_KEY,
-      secret: env.APILLON_API_INTEGRATION_API_SECRET,
-    });*/
+      const provider = new SubsocialProvider(context, SubstrateChain.XSOCIAL);
+      await provider.initializeApi();
+      await provider.createSpace(context, space);
 
-    /*const spaceIpfsData = {
-      about: space.about,
-      image: space.image,
-      name: space.name,
-      tags: space.tags,
-    };*/
-    const spaceIpfsData = {
-      about: 'This is demo code',
-      image: 'Qmasp4JHhQWPkEpXLHFhMAQieAH1wtfVRNHWZ5snhfFeBe', // ipfsImageCid = await api.subsocial.ipfs.saveFile(file)
-      name: 'Test',
-      tags: ['Apillon'],
-    };
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
 
-    /*await storageService
-      .bucket('46a3f998-2137-4b12-87de-f5e850ed5424')
-      .uploadFiles([
-        {
-          fileName: space.space_uuid,
-          content: Buffer.from(JSON.stringify(spaceIpfsData)),
-        },
-      ]);
-
-    let file = await storageService
-      .bucket('46a3f998-2137-4b12-87de-f5e850ed5424')
-      .listFiles({ search: space.space_uuid });
-
-    if (!file.items) {
-      throw new SocialCodeException({
-        code: SocialErrorCode.GENERAL_SERVER_ERROR,
+      throw await new SocialCodeException({
+        code: SocialErrorCode.ERROR_CREATING_SPACE,
         status: 500,
-      });
+        sourceFunction: 'createSpace',
+        context,
+        details: {
+          err,
+          space: space.serialize(),
+        },
+      }).writeToMonitor({ sendAdminAlert: true });
     }
 
-    while (!file.items[0].CID) {
-      file = await storageService
-        .bucket('46a3f998-2137-4b12-87de-f5e850ed5424')
-        .listFiles({ search: space.space_uuid });
+    return space.serialize(getSerializationStrategy(context));
+  }
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }*/
+  static async listPosts(
+    event: { space_uuid: string; query: BaseQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new Post({}, context).getList(
+      event.space_uuid,
+      new BaseQueryFilter(event.query),
+    );
+  }
 
-    const provider = new SubsocialProvider(context, SubstrateChain.XSOCIAL);
+  static async getPost(event: { post_uuid: string }, context: ServiceContext) {
+    const post = await new Post({}, context).populateByUuidAndCheckAccess(
+      event.post_uuid,
+    );
+
+    return post.serialize(getSerializationStrategy(context));
+  }
+
+  static async createPost(
+    params: { body: CreatePostDto },
+    context: ServiceContext,
+  ) {
+    const post = new Post(
+      { ...params.body, post_uuid: uuidV4(), status: SqlModelStatus.DRAFT },
+      context,
+    );
+    //TODO spend credit action
+
+    try {
+      await post.validate();
+    } catch (err) {
+      await post.handle(err);
+      if (!post.isValid()) {
+        throw new SocialValidationException(post);
+      }
+    }
+
+    await post.insert();
+
+    /*const provider = new SubsocialProvider(context, SubstrateChain.XSOCIAL);
     await provider.initializeApi();
     await provider.createSpace(context, space);
 
-    return space.serialize(getSerializationStrategy(context));
+    return space.serialize(getSerializationStrategy(context));*/
   }
 }

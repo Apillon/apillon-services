@@ -1,5 +1,6 @@
 import {
   AttachedServiceType,
+  BaseProjectQueryFilter,
   CodeException,
   CreateSpaceDto,
   SocialMicroservice,
@@ -16,6 +17,17 @@ import { ServicesService } from '../services/services.service';
 @Injectable()
 export class SocialService {
   constructor(private readonly serviceService: ServicesService) {}
+
+  async listSpaces(
+    context: DevConsoleApiContext,
+    query: BaseProjectQueryFilter,
+  ) {
+    return (await new SocialMicroservice(context).listSpaces(query)).data;
+  }
+
+  async getSpace(context: DevConsoleApiContext, space_uuid: string) {
+    return (await new SocialMicroservice(context).getSpace(space_uuid)).data;
+  }
 
   async createSpace(context: DevConsoleApiContext, body: CreateSpaceDto) {
     //check project
