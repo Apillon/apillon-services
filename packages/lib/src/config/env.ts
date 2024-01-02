@@ -541,6 +541,12 @@ export interface IEnv {
    */
   SOCIAL_AWS_WORKER_SQS_URL: string;
   SOCIAL_AWS_WORKER_LAMBDA_NAME: string;
+  /**
+   * NOWPAYMENTS
+   */
+  NOWPAYMENTS_API_KEY: string;
+  IPN_CALLBACK_URL: string;
+  IPN_SECRET_KEY: string;
 }
 
 // dotenv.config();
@@ -972,6 +978,11 @@ export let env: IEnv = {
 
   /** MAILERLITE */
   MAILERLITE_API_KEY: process.env['MAILERLITE_API_KEY'],
+
+  /** NOWPAYMENTS */
+  NOWPAYMENTS_API_KEY: process.env['NOWPAYMENTS_API_KEY'],
+  IPN_CALLBACK_URL: process.env['IPN_CALLBACK_URL'],
+  IPN_SECRET_KEY: process.env['IPN_SECRET_KEY'],
 };
 
 export let isEnvReady = false;

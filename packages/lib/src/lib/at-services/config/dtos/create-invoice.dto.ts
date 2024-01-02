@@ -127,19 +127,6 @@ export class CreateInvoiceDto extends ModelBase {
   public invoiceStripeId: string;
 
   @prop({
-    parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.ADMIN, //
-      PopulateFrom.SERVICE,
-    ],
-    serializable: [
-      SerializeFor.ADMIN, //
-      SerializeFor.SERVICE,
-    ],
-  })
-  public quantity: number;
-
-  @prop({
     parser: { resolver: booleanParser() },
     populatable: [
       PopulateFrom.ADMIN, //

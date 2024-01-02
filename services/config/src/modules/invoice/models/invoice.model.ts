@@ -9,6 +9,7 @@ import {
   SqlModelStatus,
   InvoicesQueryFilter,
   presenceValidator,
+  PoolConnection,
 } from '@apillon/lib';
 import { ConfigErrorCode, DbTables } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
@@ -114,12 +115,6 @@ export class Invoice extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
     ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ConfigErrorCode.CLIENT_EMAIL_NOT_PRESENT,
-      },
-    ],
   })
   public clientEmail: string;
 
@@ -133,12 +128,6 @@ export class Invoice extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ConfigErrorCode.CLIENT_NAME_NOT_PRESENT,
-      },
     ],
   })
   public clientName: string;
@@ -166,12 +155,6 @@ export class Invoice extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ConfigErrorCode.STRIPE_ID_NOT_VALID,
-      },
     ],
   })
   public stripeId: string;
@@ -206,6 +189,7 @@ export class Invoice extends AdvancedSQLModel {
       qFrom: `
         FROM \`${DbTables.INVOICE}\` i
         WHERE i.project_uuid = @project_uuid
+        AND (@reference IS null OR i.referenceTable = @reference)
         AND (@search IS null OR i.clientEmail LIKE CONCAT('%', @search, '%'))
         AND i.status <> ${SqlModelStatus.DELETED}
       `,
@@ -216,5 +200,30 @@ export class Invoice extends AdvancedSQLModel {
     };
 
     return await selectAndCountQuery(context.mysql, sqlQuery, params, 'i.id');
+  }
+
+  public async populateByProjectSubscription(
+    project_uuid: string,
+    conn?: PoolConnection,
+  ) {
+    if (!project_uuid) {
+      throw new Error('project_uuid should not be null');
+    }
+    const data = await this.db().paramExecute(
+      `
+        SELECT ${this.generateSelectFields()} FROM \`${DbTables.INVOICE}\`
+        WHERE project_uuid = @project_uuid
+        AND referenceTable = '${DbTables.SUBSCRIPTION}'
+        AND status = ${SqlModelStatus.ACTIVE}
+        ORDER BY createTime DESC
+        LIMIT 1;
+      `,
+      { project_uuid },
+      conn,
+    );
+
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 }

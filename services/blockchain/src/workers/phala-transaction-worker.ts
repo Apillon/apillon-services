@@ -29,6 +29,9 @@ export class PhalaTransactionWorker extends SubstrateTransactionWorker {
         successTransactions,
       );
     // Update CONTRACT transactions
+    console.log(
+      `Updating ${contractTransactions.length} contract instantiated transactions`,
+    );
     for (const contractTransaction of contractTransactions) {
       await this.updateContractInstantiatedTransaction(
         contractTransaction.extrinsicHash,
@@ -41,6 +44,9 @@ export class PhalaTransactionWorker extends SubstrateTransactionWorker {
       ];
     }
     // Update SUCCESSFUL transactions
+    console.log(
+      `Updating ${successTransactions.length} other successful transactions`,
+    );
     await this.updateTransactions(
       successTransactions,
       TransactionStatus.CONFIRMED,
@@ -51,6 +57,9 @@ export class PhalaTransactionWorker extends SubstrateTransactionWorker {
     const failedTransactions: string[] = transactions
       .filter((t: any) => t.status == TransactionIndexerStatus.FAIL)
       .map((t: any): string => t.extrinsicHash);
+    console.log(
+      `Updating ${failedTransactions.length} other successful transactions`,
+    );
     await this.updateTransactions(
       failedTransactions,
       TransactionStatus.FAILED,

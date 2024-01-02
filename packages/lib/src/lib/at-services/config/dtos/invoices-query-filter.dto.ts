@@ -10,4 +10,11 @@ export class InvoicesQueryFilter extends BaseQueryFilter {
     serializable: [SerializeFor.ADMIN],
   })
   public project_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.ADMIN],
+  })
+  public reference: string;
 }

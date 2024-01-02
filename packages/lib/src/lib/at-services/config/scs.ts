@@ -185,14 +185,14 @@ export class Scs extends BaseService {
 
   //#region subscriptions
 
-  public async handleStripeWebhookData(
+  public async handlePaymentWebhookData(
     data: Merge<
       Partial<CreateSubscriptionDto> & Partial<AddCreditDto>,
       Partial<CreateInvoiceDto>
     >,
   ) {
     return await this.callService({
-      eventName: ScsEventType.HANDLE_STRIPE_WEBHOOK_DATA,
+      eventName: ScsEventType.HANDLE_PAYMENT_WEBHOOK_DATA,
       data,
     });
   }

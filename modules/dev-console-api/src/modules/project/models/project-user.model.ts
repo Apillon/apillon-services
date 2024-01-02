@@ -1,5 +1,6 @@
 import {
   AdvancedSQLModel,
+  BaseQueryFilter,
   getQueryParams,
   PopulateFrom,
   SerializeFor,
@@ -10,7 +11,6 @@ import { integerParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { DbTables, ValidatorErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
-import { ProjectUserFilter } from '../dtos/project_user-query-filter.dto';
 import { Project } from './project.model';
 
 export class ProjectUser extends AdvancedSQLModel {
@@ -121,7 +121,7 @@ export class ProjectUser extends AdvancedSQLModel {
   public async getProjectUsers(
     context: DevConsoleApiContext,
     project_uuid: string,
-    filter: ProjectUserFilter,
+    filter: BaseQueryFilter,
   ) {
     const project: Project = await new Project(
       {},
@@ -138,7 +138,7 @@ export class ProjectUser extends AdvancedSQLModel {
     const qSelects = [
       {
         qSelect: `
-        SELECT pu.id, pu.status, pu.user_id, pu.role_id, u.name, u.phone, u.email, false as pendingInvitation
+        SELECT pu.id, pu.status, pu.user_id, pu.role_id, u.user_uuid, u.name, u.phone, u.email, false as pendingInvitation
         `,
         qFrom: `
         FROM ${DbTables.PROJECT_USER} pu
@@ -148,7 +148,7 @@ export class ProjectUser extends AdvancedSQLModel {
       },
       {
         qSelect: `
-        SELECT pu.id as id, pu.status, null as user_id, pu.role_id, null as name, null as phone, pu.email, true as pendingInvitation
+        SELECT pu.id as id, pu.status, null as user_id, pu.role_id, null as user_uuid, null as name, null as phone, pu.email, true as pendingInvitation
         `,
         qFrom: `
         FROM ${DbTables.PROJECT_USER_PENDING_INVITATION} pu
