@@ -1,4 +1,12 @@
-export interface CryptoPayment {
+interface BaseCryptoPayment {
+  price_amount: string;
+  price_currency: string;
+  pay_currency: string;
+  order_description: null | string;
+  order_id: string;
+}
+
+export interface CryptoPayment extends BaseCryptoPayment {
   payment_id: number;
   parent_payment_id: number;
   invoice_id: null | string;
@@ -12,14 +20,9 @@ export interface CryptoPayment {
     | 'failed';
   pay_address: string;
   payin_extra_id: null | string;
-  price_amount: number;
-  price_currency: string;
   pay_amount: number;
   actually_paid: number;
   actually_paid_at_fiat: number;
-  pay_currency: string;
-  order_id: null | string;
-  order_description: null | string;
   purchase_id: string;
   outcome_amount: number;
   outcome_currency: string;
@@ -32,12 +35,9 @@ export interface CryptoPayment {
   };
 }
 
-export interface CryptoPaymentInvoice {
+export interface CryptoPaymentSession extends BaseCryptoPayment {
   id: string;
   token_id: string;
-  order_id: string;
-  order_description: string;
-  price_amount: string;
   price_currency: string;
   pay_currency: string;
   ipn_callback_url: string;

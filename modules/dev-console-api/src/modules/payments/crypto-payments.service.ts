@@ -15,7 +15,7 @@ import {
   ResourceNotFoundErrorCode,
 } from '../../config/types';
 import axios from 'axios';
-import { CryptoPaymentInvoice, CryptoPayment } from './dto/crypto-payment';
+import { CryptoPaymentSession, CryptoPayment } from './dto/crypto-payment';
 import { createHmac } from 'crypto';
 import { sortObject } from '@apillon/lib';
 
@@ -27,12 +27,12 @@ export class CryptoPaymentsService {
    * Creates a crypto payment session for purchasing a credit package
    * @param {DevConsoleApiContext} context
    * @param {PaymentSessionDto} paymentSessionDto - containing the credit package and project_uuid
-   * @returns {Promise<CryptoPaymentInvoice>}
+   * @returns {Promise<CryptoPaymentSession>}
    */
-  async createCryptoPayment(
+  async createCryptoPaymentSession(
     context: DevConsoleApiContext,
     paymentSessionDto: PaymentSessionDto,
-  ): Promise<CryptoPaymentInvoice> {
+  ): Promise<CryptoPaymentSession> {
     const project_uuid = paymentSessionDto.project_uuid;
     await this.paymentsService.checkProjectExists(context, project_uuid);
 
@@ -53,7 +53,7 @@ export class CryptoPaymentsService {
     }
 
     try {
-      const { data } = await axios.post<CryptoPaymentInvoice>(
+      const { data } = await axios.post<CryptoPaymentSession>(
         'https://api.nowpayments.io/v1/invoice',
         {
           price_amount: creditPackage.price,

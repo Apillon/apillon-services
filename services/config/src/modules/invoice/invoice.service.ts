@@ -7,6 +7,9 @@ import {
   SerializeFor,
   ServiceName,
   InvoicesQueryFilter,
+  UpdateSubscriptionDto,
+  Lmas,
+  LogType,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { Invoice } from './models/invoice.model';
@@ -15,6 +18,7 @@ import { ConfigErrorCode, DbTables } from '../../config/types';
 import { CreditService } from '../credit/credit.service';
 import { ScsCodeException, ScsValidationException } from '../../lib/exceptions';
 import { CreditPackage } from '../credit/models/credit-package.model';
+import { Subscription } from '../subscription/models/subscription.model';
 
 export class InvoiceService {
   /**
@@ -34,12 +38,10 @@ export class InvoiceService {
    * Handle stripe purchases, either credit purchase or subscription
    * Creates new subscription/credit records and a new invoice
    * @async
-   * @param {{
-        data: Merge<
+   * @param - data: Merge<
           Partial<CreateSubscriptionDto> & Partial<AddCreditDto>,
           Partial<CreateInvoiceDto>
-        >;
-      }} event - Stripe webhook data
+        > event - Stripe webhook data
    * @param {ServiceContext} context
    * @returns {Promise<boolean>}
    */
@@ -119,9 +121,9 @@ export class InvoiceService {
 
     const invoice = await InvoiceService.createInvoice(
       {
-        ...webhookData,
+        ...(webhookData as any),
         referenceTable: DbTables.CREDIT_PACKAGE,
-        referenceId: creditPackage.id,
+        referenceId: `${creditPackage.id}`,
       },
       context,
       conn,
@@ -169,13 +171,13 @@ export class InvoiceService {
 
   /**
    * Inserts a new invoice in the DB
-   * @param {(CreateInvoiceDto | any)} createInvoiceDto
+   * @param {(CreateInvoiceDto)} createInvoiceDto
    * @param {ServiceContext} context
    * @param {PoolConnection} conn
    * @returns {Promise<Invoice>}
    */
   static async createInvoice(
-    createInvoiceDto: CreateInvoiceDto | any,
+    createInvoiceDto: CreateInvoiceDto,
     context: ServiceContext,
     conn: PoolConnection,
   ): Promise<Invoice> {
@@ -196,5 +198,57 @@ export class InvoiceService {
     }
     await invoice.insert(SerializeFor.INSERT_DB, conn);
     return invoice.serialize(SerializeFor.SERVICE) as Invoice;
+  }
+
+  /**
+   * If same subscription package has been renewed or upgraded
+   * Create cloned invoice with new data
+   * @param {ServiceContext} context
+   * @param {Subscription} subscription - Existing subscription
+   * @param {UpdateSubscriptionDto} updateSubscriptionDto - DTO with updated data for subscription
+   * @param {?PoolConnection} [conn]
+   * @returns {*}
+   */
+  static async createOnSubscriptionUpdate(
+    context: ServiceContext,
+    subscription: Subscription,
+    updateSubscriptionDto: UpdateSubscriptionDto,
+    conn?: PoolConnection,
+  ) {
+    const existingInvoice = await new Invoice(
+      {},
+      context,
+    ).populateByProjectSubscription(subscription.project_uuid, conn);
+
+    if (existingInvoice.exists()) {
+      // Create clone of existing invoice with updated data
+      existingInvoice.populate({
+        stripeId:
+          updateSubscriptionDto.invoiceStripeId || existingInvoice.stripeId,
+        totalAmount:
+          updateSubscriptionDto.amount || existingInvoice.totalAmount,
+        subtotalAmount:
+          updateSubscriptionDto.amount || existingInvoice.subtotalAmount,
+        referenceId: subscription.id,
+      });
+      await existingInvoice.insert(SerializeFor.INSERT_DB, conn);
+    } else {
+      // Existing invoice for existing subscription must always exist, send alert if that is not the case
+      await new Lmas().writeLog({
+        context,
+        logType: LogType.WARN,
+        message: `New invoice not created for subscription renewal`,
+        location: 'SCS/SubscriptionService/updateSubscription',
+        project_uuid: subscription.project_uuid,
+        service: ServiceName.CONFIG,
+        data: {
+          subcription: subscription.serialize(SerializeFor.SERVICE),
+          updateSubscriptionDto: new UpdateSubscriptionDto(
+            updateSubscriptionDto,
+          ).serialize(),
+        },
+        sendAdminAlert: true,
+      });
+    }
   }
 }

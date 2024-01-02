@@ -116,11 +116,11 @@ export class PaymentsController {
   @Post('crypto/payment')
   @Validation({ dto: PaymentSessionDto, validateFor: ValidateFor.BODY })
   @UseGuards(AuthGuard, ValidationGuard)
-  async createCryptoPayment(
+  async createCryptoPaymentSession(
     @Body() paymentSessionDto: PaymentSessionDto,
     @Ctx() context: DevConsoleApiContext,
   ): Promise<any> {
-    return await this.cryptoPaymentsService.createCryptoPayment(
+    return await this.cryptoPaymentsService.createCryptoPaymentSession(
       context,
       paymentSessionDto,
     );
