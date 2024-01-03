@@ -141,7 +141,7 @@ export class Space extends UuidSqlModel {
   public spaceId: string;
 
   public async populateByUuidAndCheckAccess(uuid: string): Promise<this> {
-    const space: Space = await this.populateByUUID(uuid);
+    const space: Space = await this.populateByUUID(uuid, 'space_uuid');
 
     if (!space.exists()) {
       throw new SocialCodeException({
