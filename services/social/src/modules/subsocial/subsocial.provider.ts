@@ -6,8 +6,9 @@ import {
 } from '@apillon/lib';
 import { SubsocialApi } from '@subsocial/api';
 import { IpfsContent } from '@subsocial/types/substrate/classes';
-import { DbTables } from '../../config/types';
+import { DbTables, PostType } from '../../config/types';
 import { Space } from './models/space.model';
+import { Post } from './models/post.model';
 
 export class SubsocialProvider {
   private readonly chain: SubstrateChain;
@@ -68,6 +69,56 @@ export class SubsocialProvider {
         referenceTable: DbTables.SPACE,
         referenceId: space.space_uuid,
         project_uuid: space.project_uuid,
+      },
+      context,
+    );
+    console.info('createSubstrateTransaction...');
+
+    return await new BlockchainMicroservice(context).createSubstrateTransaction(
+      dto,
+    );
+  }
+
+  async createPost(context: Context, post: Post) {
+    const space = await new Space({}, context).populateById(post.space_id);
+
+    const postIpfsData = {
+      title: post.title,
+      image: 'QmcWWpR176oFao49jrLHUoH3R9MCziE5d77fdD8qdoiinx', // ipfsImageCid = await api.subsocial.ipfs.saveFile(file)
+      body: post.body,
+      tags: post.tags?.length ? post.tags.split(';') : [],
+    };
+
+    const cid = await this.api.ipfs.saveContent(postIpfsData);
+
+    const substrateApi = await this.api.substrateApi;
+
+    let extension;
+    switch (post.postType) {
+      case PostType.COMMENT:
+        extension = { Comment: null };
+        break;
+      case PostType.REGULAR:
+        extension = { RegularPost: null };
+        break;
+      case PostType.SHARED:
+        extension = { SharedPost: '1' };
+        break;
+    }
+
+    const tx = substrateApi.tx.posts.createPost(
+      space.spaceId,
+      extension,
+      IpfsContent(cid),
+    );
+
+    const dto = new CreateSubstrateTransactionDto(
+      {
+        chain: this.chain,
+        transaction: tx.toHex(),
+        referenceTable: DbTables.POST,
+        referenceId: post.post_uuid,
+        project_uuid: post.project_uuid,
       },
       context,
     );
