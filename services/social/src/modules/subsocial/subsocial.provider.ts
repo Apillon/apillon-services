@@ -24,19 +24,21 @@ export class SubsocialProvider {
     if (!this.api) {
       let config = {
         substrateNodeUrl: 'wss://xsocial.subsocial.network',
-        ipfsNodeUrl: 'https://gw.crustfiles.app',
+        ipfsNodeUrl: 'https://ipfs.subsocial.network',
+        offchainUrl: 'https://api.subsocial.network',
       };
 
       if (this.chain == SubstrateChain.SUBSOCIAL) {
         config = {
           substrateNodeUrl: 'wss://para.f3joule.space',
           ipfsNodeUrl: 'https://ipfs.subsocial.network',
+          offchainUrl: 'https://api.subsocial.network',
         };
       }
 
       this.api = await SubsocialApi.create(config);
 
-      if (this.chain == SubstrateChain.XSOCIAL) {
+      /*if (this.chain == SubstrateChain.XSOCIAL) {
         //https://docs.subsocial.network/docs/develop/sdk/connectToSubsocial
         //For testnet, we have to set authHeader
         const authHeader =
@@ -44,19 +46,21 @@ export class SubsocialProvider {
         this.api.ipfs.setWriteHeaders({
           authorization: 'Basic ' + authHeader,
         });
-      }
+      }*/
     }
   }
 
   async createSpace(context: Context, space: Space) {
     const spaceIpfsData = {
       about: space.about,
-      image: 'Qmasp4JHhQWPkEpXLHFhMAQieAH1wtfVRNHWZ5snhfFeBe', // ipfsImageCid = await api.subsocial.ipfs.saveFile(file)
+      image: null,
       name: space.name,
       tags: space.tags?.length ? space.tags.split(';') : [],
+      email: null,
+      links: [],
     };
 
-    const cid = await this.api.ipfs.saveContent(spaceIpfsData);
+    const cid = await this.api.ipfs.saveContentToOffchain(spaceIpfsData);
 
     const substrateApi = await this.api.substrateApi;
 
@@ -84,7 +88,7 @@ export class SubsocialProvider {
 
     const postIpfsData = {
       title: post.title,
-      image: 'QmcWWpR176oFao49jrLHUoH3R9MCziE5d77fdD8qdoiinx', // ipfsImageCid = await api.subsocial.ipfs.saveFile(file)
+      image: null, // ipfsImageCid = await api.subsocial.ipfs.saveFile(file)
       body: post.body,
       tags: post.tags?.length ? post.tags.split(';') : [],
     };

@@ -114,7 +114,7 @@ describe('Substrate service unit test', () => {
     // console.log('res2: ', res2);
   });
 
-  describe('Test create and transmit subsocial transactions (space)', () => {
+  describe.only('Test create and transmit subsocial transactions (space)', () => {
     let nonce, transaction, wallet;
 
     test('Test create substrate xsocial transaction (space)', async () => {
@@ -130,24 +130,21 @@ describe('Substrate service unit test', () => {
 
       const config = {
         substrateNodeUrl: 'wss://xsocial.subsocial.network',
-        ipfsNodeUrl: 'https://gw.crustfiles.app',
+        ipfsNodeUrl: 'https://ipfs.subsocial.network',
+        offchainUrl: 'https://api.subsocial.network',
       };
       const api: SubsocialApi = await SubsocialApi.create(config);
 
-      const authHeader =
-        'c3ViLTVGQTluUURWZzI2N0RFZDhtMVp5cFhMQm52TjdTRnhZd1Y3bmRxU1lHaU45VFRwdToweDEwMmQ3ZmJhYWQwZGUwNzFjNDFmM2NjYzQzYmQ0NzIxNzFkZGFiYWM0MzEzZTc5YTY3ZWExOWM0OWFlNjgyZjY0YWUxMmRlY2YyNzhjNTEwZGY4YzZjZTZhYzdlZTEwNzY2N2YzYTBjZjM5OGUxN2VhMzAyMmRkNmEyYjc1OTBi';
-      api.ipfs.setWriteHeaders({
-        authorization: 'Basic ' + authHeader,
-      });
-
       const spaceIpfsData = {
-        about: 'My xy Test space',
-        image: 'Qmasp4JHhQWPkEpXLHFhMAQieAH1wtfVRNHWZ5snhfFeBe', // ipfsImageCid = await api.subsocial.ipfs.saveFile(file)
-        name: 'Test xy',
-        tags: ['Apillon'],
+        about: 'My Test space created on ' + new Date().toString(),
+        image: null, // ipfsImageCid = await api.subsocial.ipfs.saveFile(file)
+        name: 'Test space',
+        tags: [],
+        email: null,
+        links: [],
       };
 
-      const cid = await api.ipfs.saveContent(spaceIpfsData);
+      const cid = await api.ipfs.saveContentToOffchain(spaceIpfsData);
 
       const substrateApi = await api.substrateApi;
 
@@ -209,7 +206,7 @@ describe('Substrate service unit test', () => {
       );
     });
   });
-  describe.only('Test create and transmit subsocial transactions (post)', () => {
+  describe('Test create and transmit subsocial transactions (post)', () => {
     let nonce, transaction, wallet;
     test('Test create substrate xsocial transaction (post)', async () => {
       await new Endpoint(
@@ -224,28 +221,27 @@ describe('Substrate service unit test', () => {
 
       const config = {
         substrateNodeUrl: 'wss://xsocial.subsocial.network',
-        ipfsNodeUrl: 'https://gw.crustfiles.app',
+        ipfsNodeUrl: 'https://ipfs.subsocial.network',
+        offchainUrl: 'https://api.subsocial.network',
       };
       const api: SubsocialApi = await SubsocialApi.create(config);
 
-      const authHeader =
+      /*const authHeader =
         'c3ViLTVGQTluUURWZzI2N0RFZDhtMVp5cFhMQm52TjdTRnhZd1Y3bmRxU1lHaU45VFRwdToweDEwMmQ3ZmJhYWQwZGUwNzFjNDFmM2NjYzQzYmQ0NzIxNzFkZGFiYWM0MzEzZTc5YTY3ZWExOWM0OWFlNjgyZjY0YWUxMmRlY2YyNzhjNTEwZGY4YzZjZTZhYzdlZTEwNzY2N2YzYTBjZjM5OGUxN2VhMzAyMmRkNmEyYjc1OTBi';
       api.ipfs.setWriteHeaders({
         authorization: 'Basic ' + authHeader,
-      });
+      });*/
 
       const postIpfsData = {
-        title: 'Test post with delay after ipfs upload',
+        title: 'Test post',
         //image: 'QmcWWpR176oFao49jrLHUoH3R9MCziE5d77fdD8qdoiinx',
         tags: [],
         body:
-          'Test create xSocial post. Current date: ' +
-          new Date().toDateString(),
+          'Test create xSocial post. Current date: ' + new Date().toString(),
       };
 
-      const cid = await api.ipfs.saveContent(postIpfsData);
-
-      await new Promise((resolve) => setTimeout(resolve, 10000));
+      //const cid = await api.ipfs.saveContent(postIpfsData);
+      const cid = await api.ipfs.saveContentToOffchain(postIpfsData);
 
       const substrateApi = await api.substrateApi;
 
