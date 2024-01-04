@@ -588,9 +588,7 @@ export enum ValidatorErrorCode {
   QUOTA_CODE_NOT_VALID = 42200149,
   INVALID_FILES_LENGTH = 42200150,
   CID_NOT_PRESENT = 42200160,
-
-  SPACE_REQUIRED_DATA_NOT_PRESENT = 42200200,
-  POST_REQUIRED_DATA_NOT_PRESENT = 42200201,
+  REQUIRED_DATA_NOT_PRESENT = 42200161,
 
   //#region Computing
   COMPUTING_PROJECT_UUID_NOT_PRESENT = 42200201,
@@ -759,6 +757,7 @@ export enum CacheKeyPrefix {
   ADMIN_NFTS_COLLECTION_LIST = 'admin-nfts-collection-list',
   ADMIN_GENERAL_SEARCH = 'admin-general-search',
   SOCIAL_SPACE_LIST = 'social-space-list',
+  SOCIAL_POST_LIST = 'social-post-list',
 }
 
 export enum CacheKeyTTL {

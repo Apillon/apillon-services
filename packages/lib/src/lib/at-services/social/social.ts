@@ -1,6 +1,7 @@
 import { env } from '../../../config/env';
 import { AppEnvironment, SocialEventType } from '../../../config/types';
 import { BaseProjectQueryFilter } from '../../base-models/base-project-query-filter.model';
+import { BaseQueryFilter } from '../../base-models/base-query-filter.model';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { CreatePostDto } from './dtos/create-post.dto';
@@ -46,9 +47,10 @@ export class SocialMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async listPosts(params: BaseProjectQueryFilter) {
+  public async listPosts(space_uuid: string, params: BaseQueryFilter) {
     const data = {
       eventName: SocialEventType.LIST_POSTS,
+      space_uuid,
       query: params.serialize(),
     };
     return await this.callService(data);

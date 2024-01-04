@@ -1,11 +1,12 @@
 import {
   BaseProjectQueryFilter,
+  BaseQueryFilter,
   CacheKeyPrefix,
   CacheKeyTTL,
+  CreatePostDto,
   CreateSpaceDto,
   DefaultPermission,
   DefaultUserRole,
-  PopulateFrom,
   RoleGroup,
   ValidateFor,
 } from '@apillon/lib';
@@ -72,5 +73,48 @@ export class SocialController {
     @Body() body: CreateSpaceDto,
   ) {
     return await this.socialService.createSpace(context, body);
+  }
+
+  @Get('spaces/:space_uuid/posts')
+  @Validation({ dto: BaseQueryFilter, validateFor: ValidateFor.QUERY })
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(ValidationGuard, AuthGuard)
+  @CacheByProject({
+    keyPrefix: CacheKeyPrefix.SOCIAL_POST_LIST,
+    ttl: CacheKeyTTL.EXTRA_LONG,
+  })
+  async listPosts(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('space_uuid') space_uuid: string,
+    @Query() query: BaseQueryFilter,
+  ) {
+    return await this.socialService.listPosts(context, space_uuid, query);
+  }
+
+  @Get('spaces/:space_uuid/posts/:post_uuid')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard)
+  async getPost(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('post_uuid') post_uuid: string,
+  ) {
+    return await this.socialService.getPost(context, post_uuid);
+  }
+
+  @Post('spaces/:space_uuid/post')
+  @Validation({ dto: CreatePostDto })
+  @UseGuards(ValidationGuard)
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async createPost(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('space_uuid') space_uuid: string,
+    @Body() body: CreatePostDto,
+  ) {
+    body.space_uuid = space_uuid;
+    return await this.socialService.createPost(context, body);
   }
 }

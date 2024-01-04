@@ -2,6 +2,7 @@ import {
   ApiName,
   BaseProjectQueryFilter,
   Context,
+  ErrorCode,
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
@@ -13,7 +14,7 @@ import {
 } from '@apillon/lib';
 import { DbTables, SocialErrorCode } from '../../../config/types';
 
-import { stringParser } from '@rawmodel/parsers';
+import { stringParser, integerParser } from '@rawmodel/parsers';
 import { SocialCodeException } from '../../../lib/exceptions';
 
 export class Space extends UuidSqlModel {
@@ -42,6 +43,31 @@ export class Space extends UuidSqlModel {
     ],
   })
   public space_uuid: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.LOGGER,
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ErrorCode.STATUS_NOT_PRESENT,
+      },
+    ],
+    defaultValue: SqlModelStatus.ACTIVE,
+    fakeValue() {
+      return SqlModelStatus.ACTIVE;
+    },
+  })
+  public status?: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -97,7 +123,7 @@ export class Space extends UuidSqlModel {
   })
   public about: string;
 
-  @prop({
+  /*@prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
     serializable: [
@@ -109,7 +135,7 @@ export class Space extends UuidSqlModel {
       SerializeFor.SELECT_DB,
     ],
   })
-  public image: string;
+  public image: string;*/
 
   @prop({
     parser: { resolver: stringParser() },
@@ -175,7 +201,12 @@ export class Space extends UuidSqlModel {
     );
     const sqlQuery = {
       qSelect: `
-        SELECT ${selectFields}
+        SELECT ${selectFields}, 
+        (
+          SELECT COUNT(*) 
+          FROM \`${DbTables.POST}\` p 
+          WHERE p.space_id = s.id
+        ) as numOfPosts
         `,
       qFrom: `
         FROM \`${DbTables.SPACE}\` s

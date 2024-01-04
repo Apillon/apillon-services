@@ -16,7 +16,7 @@ import {
 import { Space } from './models/space.model';
 import { SubsocialProvider } from './subsocial.provider';
 import { Post } from './models/post.model';
-import { SocialErrorCode } from '../../config/types';
+import { PostType, SocialErrorCode } from '../../config/types';
 
 export class SubsocialService {
   static async listSpaces(
@@ -65,7 +65,7 @@ export class SubsocialService {
 
       const provider = new SubsocialProvider(context, SubstrateChain.XSOCIAL);
       await provider.initializeApi();
-      await provider.createSpace(context, space);
+      await provider.createSpace(space);
 
       await context.mysql.commit(conn);
     } catch (err) {
@@ -108,8 +108,18 @@ export class SubsocialService {
     params: { body: CreatePostDto },
     context: ServiceContext,
   ) {
+    const space = await new Space({}, context).populateByUuidAndCheckAccess(
+      params.body.space_uuid,
+    );
     const post = new Post(
-      { ...params.body, post_uuid: uuidV4(), status: SqlModelStatus.DRAFT },
+      {
+        ...params.body,
+        postType: PostType.REGULAR,
+        post_uuid: uuidV4(),
+        space_id: space.id,
+        project_uuid: space.project_uuid,
+        status: SqlModelStatus.DRAFT,
+      },
       context,
     );
     //TODO spend credit action
@@ -123,12 +133,30 @@ export class SubsocialService {
       }
     }
 
-    await post.insert();
+    const conn = await context.mysql.start();
+    try {
+      await post.insert(SerializeFor.INSERT_DB, conn);
 
-    /*const provider = new SubsocialProvider(context, SubstrateChain.XSOCIAL);
-    await provider.initializeApi();
-    await provider.createSpace(context, space);
+      const provider = new SubsocialProvider(context, SubstrateChain.XSOCIAL);
+      await provider.initializeApi();
+      await provider.createPost(post);
 
-    return space.serialize(getSerializationStrategy(context));*/
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+
+      throw await new SocialCodeException({
+        code: SocialErrorCode.ERROR_CREATING_POST,
+        status: 500,
+        sourceFunction: 'createPost',
+        context,
+        details: {
+          err,
+          post: post.serialize(),
+        },
+      }).writeToMonitor({ sendAdminAlert: true });
+    }
+
+    return post.serialize(getSerializationStrategy(context));
   }
 }

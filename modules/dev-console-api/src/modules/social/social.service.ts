@@ -1,7 +1,9 @@
 import {
   AttachedServiceType,
   BaseProjectQueryFilter,
+  BaseQueryFilter,
   CodeException,
+  CreatePostDto,
   CreateSpaceDto,
   SocialMicroservice,
 } from '@apillon/lib';
@@ -69,5 +71,22 @@ export class SocialService {
     }
 
     return (await new SocialMicroservice(context).createSpace(body)).data;
+  }
+
+  async listPosts(
+    context: DevConsoleApiContext,
+    space_uuid: string,
+    query: BaseQueryFilter,
+  ) {
+    return (await new SocialMicroservice(context).listPosts(space_uuid, query))
+      .data;
+  }
+
+  async getPost(context: DevConsoleApiContext, post_uuid: string) {
+    return (await new SocialMicroservice(context).getPost(post_uuid)).data;
+  }
+
+  async createPost(context: DevConsoleApiContext, body: CreatePostDto) {
+    return (await new SocialMicroservice(context).createPost(body)).data;
   }
 }

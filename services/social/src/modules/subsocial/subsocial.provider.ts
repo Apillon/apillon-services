@@ -50,7 +50,7 @@ export class SubsocialProvider {
     }
   }
 
-  async createSpace(context: Context, space: Space) {
+  async createSpace(space: Space) {
     const spaceIpfsData = {
       about: space.about,
       image: null,
@@ -74,17 +74,17 @@ export class SubsocialProvider {
         referenceId: space.space_uuid,
         project_uuid: space.project_uuid,
       },
-      context,
+      this.context,
     );
     console.info('createSubstrateTransaction...');
 
-    return await new BlockchainMicroservice(context).createSubstrateTransaction(
-      dto,
-    );
+    return await new BlockchainMicroservice(
+      this.context,
+    ).createSubstrateTransaction(dto);
   }
 
-  async createPost(context: Context, post: Post) {
-    const space = await new Space({}, context).populateById(post.space_id);
+  async createPost(post: Post) {
+    const space = await new Space({}, this.context).populateById(post.space_id);
 
     const postIpfsData = {
       title: post.title,
@@ -93,7 +93,7 @@ export class SubsocialProvider {
       tags: post.tags?.length ? post.tags.split(';') : [],
     };
 
-    const cid = await this.api.ipfs.saveContent(postIpfsData);
+    const cid = await this.api.ipfs.saveContentToOffchain(postIpfsData);
 
     const substrateApi = await this.api.substrateApi;
 
@@ -124,12 +124,11 @@ export class SubsocialProvider {
         referenceId: post.post_uuid,
         project_uuid: post.project_uuid,
       },
-      context,
+      this.context,
     );
     console.info('createSubstrateTransaction...');
-
-    return await new BlockchainMicroservice(context).createSubstrateTransaction(
-      dto,
-    );
+    return await new BlockchainMicroservice(
+      this.context,
+    ).createSubstrateTransaction(dto);
   }
 }

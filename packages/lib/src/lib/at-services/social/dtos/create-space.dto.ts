@@ -15,7 +15,7 @@ export class CreateSpaceDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.SPACE_REQUIRED_DATA_NOT_PRESENT,
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -28,7 +28,7 @@ export class CreateSpaceDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.SPACE_REQUIRED_DATA_NOT_PRESENT,
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -42,13 +42,13 @@ export class CreateSpaceDto extends ModelBase {
   })
   public about: string;
 
-  @prop({
+  /*@prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [],
   })
-  public image: string;
+  public image: string;*/
 
   @prop({
     parser: { resolver: stringParser() },

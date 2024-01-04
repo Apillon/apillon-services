@@ -13,6 +13,9 @@ export async function processEvent(event, context: Context): Promise<any> {
     [SocialEventType.LIST_SPACES]: SubsocialService.listSpaces,
     [SocialEventType.GET_SPACE]: SubsocialService.getSpace,
     [SocialEventType.CREATE_SPACE]: SubsocialService.createSpace,
+    [SocialEventType.LIST_POSTS]: SubsocialService.listPosts,
+    [SocialEventType.GET_POST]: SubsocialService.getPost,
+    [SocialEventType.CREATE_POST]: SubsocialService.createPost,
   };
 
   return await processors[event.eventName](event, context);

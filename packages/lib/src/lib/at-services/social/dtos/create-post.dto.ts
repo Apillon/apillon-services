@@ -1,4 +1,4 @@
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   PopulateFrom,
@@ -12,27 +12,15 @@ export class CreatePostDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.POST_REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
   })
-  public post_uuid: string;
+  public space_uuid: string;
 
-  @prop({
+  /*@prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.POST_REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
   })
-  public space_id: number;
+  public postType: number;*/
 
   @prop({
     parser: { resolver: stringParser() },
@@ -41,33 +29,7 @@ export class CreatePostDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.POST_REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
-  })
-  public project_uuid: string;
-
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.POST_REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
-  })
-  public postType: number;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.POST_REQUIRED_DATA_NOT_PRESENT,
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -77,15 +39,21 @@ export class CreatePostDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
   })
   public body: string;
 
-  @prop({
+  /*@prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
   })
-  public image: string;
+  public image: string;*/
 
   @prop({
     parser: { resolver: stringParser() },

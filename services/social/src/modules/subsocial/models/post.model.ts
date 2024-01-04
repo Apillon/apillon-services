@@ -2,6 +2,7 @@ import {
   ApiName,
   BaseQueryFilter,
   Context,
+  ErrorCode,
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
@@ -50,10 +51,7 @@ export class Post extends UuidSqlModel {
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
-      SerializeFor.PROFILE,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -63,6 +61,31 @@ export class Post extends UuidSqlModel {
     ],
   })
   public space_id: number;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.LOGGER,
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ErrorCode.STATUS_NOT_PRESENT,
+      },
+    ],
+    defaultValue: SqlModelStatus.ACTIVE,
+    fakeValue() {
+      return SqlModelStatus.ACTIVE;
+    },
+  })
+  public status?: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -137,10 +160,16 @@ export class Post extends UuidSqlModel {
       SerializeFor.APILLON_API,
       SerializeFor.SELECT_DB,
     ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: SocialErrorCode.POST_REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
   })
   public body: string;
 
-  @prop({
+  /*@prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
     serializable: [
@@ -153,7 +182,7 @@ export class Post extends UuidSqlModel {
       SerializeFor.SELECT_DB,
     ],
   })
-  public image: string;
+  public image: string;*/
 
   @prop({
     parser: { resolver: stringParser() },
@@ -187,7 +216,7 @@ export class Post extends UuidSqlModel {
   public postId: string;
 
   public async populateByUuidAndCheckAccess(uuid: string): Promise<this> {
-    const post: Post = await this.populateByUUID(uuid);
+    const post: Post = await this.populateByUUID(uuid, 'post_uuid');
 
     if (!post.exists()) {
       throw new SocialCodeException({
@@ -230,7 +259,7 @@ export class Post extends UuidSqlModel {
         JOIN \`${DbTables.SPACE}\` s ON s.id = p.space_id
         WHERE s.space_uuid = @space_uuid
         AND (@search IS null OR p.title LIKE CONCAT('%', @search, '%') OR p.post_uuid = @search)
-        AND IFNULL(@status, ${SqlModelStatus.ACTIVE}) = status
+        AND ((@status IS null AND s.status <> ${SqlModelStatus.DELETED}) OR @status = p.status)
       `,
       qFilter: `
         ORDER BY ${filters.orderStr}
