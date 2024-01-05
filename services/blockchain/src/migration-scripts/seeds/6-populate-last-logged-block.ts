@@ -5,8 +5,13 @@ export async function upgrade(
 ): Promise<void> {
   // Note: Polkadot RPC URL is modified to a private one in the database
   await queryFn(`
-    UPDATE ${DbTables.WALLET}
-    SET lastLoggedBlock = lastParsedBlock;
+    UPDATE ${DbTables.WALLET} AS w
+    SET w.lastLoggedBlock = (SELECT MAX(tl.blockId)
+                             FROM ${DbTables.TRANSACTION_LOG} AS tl
+                             WHERE w.chain = tl.chain
+                               AND w.chainType = tl.chainType
+                               AND w.address = tl.wallet)
+    WHERE 1;
   `);
 }
 
