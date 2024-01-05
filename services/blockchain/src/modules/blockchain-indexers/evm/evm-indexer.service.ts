@@ -126,7 +126,7 @@ export class EvmBlockchainIndexer {
             AND: [
               { OR: [{ to_eq: $address }, { from_eq: $address }] }
               { blockNumber_gt: $fromBlock }
-              { blockNumber_lt: $toBlock }
+              { blockNumber_lte: $toBlock }
             ]
           }
           orderBy: blockNumber_ASC

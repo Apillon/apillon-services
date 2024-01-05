@@ -43,7 +43,7 @@ export class BaseGQLQueries {
     transfers(
       where: {
         AND: {
-          blockNumber_gte: $fromBlock,
+          blockNumber_gt: $fromBlock,
           blockNumber_lte: $toBlock,
           transactionType_eq: $transactionType,
           AND: {
@@ -71,7 +71,7 @@ export class BaseGQLQueries {
     transfers(
       where: {
         AND: {
-          blockNumber_gte: $fromBlock,
+          blockNumber_gt: $fromBlock,
           blockNumber_lte: $toBlock,
           AND: {
             OR: [{from_eq: $account}, {to_eq: $account}]
