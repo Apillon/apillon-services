@@ -1,5 +1,5 @@
-import { EvmChain, env } from '@apillon/lib';
-import { GraphQLClient, gql } from 'graphql-request';
+import { env, EvmChain } from '@apillon/lib';
+import { gql, GraphQLClient } from 'graphql-request';
 import { EvmTransfers } from './data-models/evm-transfer';
 import { BlockHeight } from '../block-height';
 
@@ -113,19 +113,23 @@ export class EvmBlockchainIndexer {
   public async getWalletTransactions(
     address: string,
     fromBlock: number,
-    limit: number = null,
+    toBlock: number,
   ): Promise<EvmTransfers> {
     const GRAPHQL_QUERY = gql`
-      query getIncomingTxs($address: String!, $fromBlock: Int!, $limit: Int) {
+      query getIncomingTxs(
+        $address: String!
+        $fromBlock: Int!
+        $toBlock: Int!
+      ) {
         transactions(
           where: {
             AND: [
               { OR: [{ to_eq: $address }, { from_eq: $address }] }
               { blockNumber_gt: $fromBlock }
+              { blockNumber_lt: $toBlock }
             ]
           }
           orderBy: blockNumber_ASC
-          limit: $limit
         ) {
           id
           transactionHash
@@ -144,13 +148,11 @@ export class EvmBlockchainIndexer {
       }
     `;
 
-    address = address.toLowerCase();
-    const data: EvmTransfers = await this.graphQlClient.request(GRAPHQL_QUERY, {
-      address,
+    return await this.graphQlClient.request(GRAPHQL_QUERY, {
+      address: address.toLowerCase(),
       fromBlock,
-      limit,
+      toBlock,
     });
-    return data;
   }
 
   public async getBlockHeight(): Promise<number> {
