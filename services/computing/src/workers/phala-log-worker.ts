@@ -156,19 +156,18 @@ export class PhalaLogWorker extends BaseQueueWorker {
       },
       this.context,
     );
-    const response = (await new BlockchainMicroservice(
+    const { data } = (await new BlockchainMicroservice(
       this.context,
     ).getPhalaLogRecordsAndGasPrice(blockchainServiceRequest)) as {
-      records: SerMessageLog[];
-      gasPrice: number;
+      data: {
+        records: SerMessageLog[];
+        gasPrice: number;
+      };
     };
-    console.log(
-      'Received response for getPhalaLogRecordsAndGasPrice:',
-      response,
-    );
+    console.log('Received response for getPhalaLogRecordsAndGasPrice:', data);
     const record = (await this.getRecordFromLogs(
       transactionHash,
-      response.records,
+      data.records,
     )) as SerMessageLog;
     if (!record) {
       return;
@@ -214,19 +213,18 @@ export class PhalaLogWorker extends BaseQueueWorker {
       type: 'MessageOutput',
       nonce: transactionNonce,
     });
-    const response = (await new BlockchainMicroservice(
+    const { data } = (await new BlockchainMicroservice(
       this.context,
     ).getPhalaLogRecordsAndGasPrice(blockchainServiceRequest)) as {
-      records: SerMessageMessageOutput[];
-      gasPrice: number;
+      data: {
+        records: SerMessageMessageOutput[];
+        gasPrice: number;
+      };
     };
-    console.log(
-      'Received response for getPhalaLogRecordsAndGasPrice:',
-      response,
-    );
+    console.log('Received response for getPhalaLogRecordsAndGasPrice:', data);
     const record = (await this.getRecordFromLogs(
       transactionHash,
-      response.records,
+      data.records,
     )) as SerMessageMessageOutput;
     if (!record) {
       return;
@@ -247,7 +245,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
     }
     await this.updateTransaction(transaction_id, transactionStatus);
 
-    const gasFee = record.output.gasConsumed.refTime * response.gasPrice;
+    const gasFee = record.output.gasConsumed.refTime * data.gasPrice;
     const storageFee = record.output.storageDeposit.charge;
     const totalFee = gasFee + storageFee;
 
@@ -348,12 +346,12 @@ export class PhalaLogWorker extends BaseQueueWorker {
       },
       this.context,
     );
-    const { total, free } = await new BlockchainMicroservice(
+    const { data } = await new BlockchainMicroservice(
       this.context,
     ).getPhalaClusterWalletBalance(blockchainServiceRequest);
 
-    clusterWallet.totalBalance = total;
-    clusterWallet.currentBalance = free;
+    clusterWallet.totalBalance = data.total;
+    clusterWallet.currentBalance = data.free;
     await clusterWallet.update();
 
     const formattedWalletAddress = formatWalletAddress(
