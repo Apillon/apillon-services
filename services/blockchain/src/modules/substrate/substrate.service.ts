@@ -237,23 +237,27 @@ export class SubstrateService {
     },
     context: ServiceContext,
   ) {
+    const phalaLogFilter = event.phalaLogFilter;
     const endpoint = await new Endpoint({}, context).populateByChain(
       SubstrateChain.PHALA,
       ChainType.SUBSTRATE,
     );
+    console.log('Fetching gas price and logs with filter: ', {
+      ...phalaLogFilter,
+      endpoint: endpoint.url,
+    });
     const api = new SubstrateRpcApi(endpoint.url, PhalaTypesBundle);
     try {
       const phatRegistry = await OnChainRegistry.create(await api.getApi(), {
-        clusterId: event.phalaLogFilter.clusterId,
+        clusterId: phalaLogFilter.clusterId,
       });
       const gasPrice = phatRegistry.gasPrice.toNumber();
+      console.log(`Retrieved gas price=${gasPrice}.`);
       const { records } = await phatRegistry.loggerContract.tail(
         100,
-        event.phalaLogFilter,
+        phalaLogFilter,
       );
-      console.log(
-        `Retrieved ${records.length} log records and gas price ${gasPrice}`,
-      );
+      console.log(`Retrieved ${records.length} log records.`);
       return { records, gasPrice };
     } catch (e: unknown) {
       await new Lmas().writeLog({
@@ -263,10 +267,10 @@ export class SubstrateService {
         service: ServiceName.BLOCKCHAIN,
         data: {
           error: e,
-          clusterId: event.phalaLogFilter.clusterId,
-          contract: event.phalaLogFilter.contract,
-          nonce: event.phalaLogFilter.nonce,
-          type: event.phalaLogFilter.type,
+          clusterId: phalaLogFilter.clusterId,
+          contract: phalaLogFilter.contract,
+          nonce: phalaLogFilter.nonce,
+          type: phalaLogFilter.type,
         },
       });
       throw e;
