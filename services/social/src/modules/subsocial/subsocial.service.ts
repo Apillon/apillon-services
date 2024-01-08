@@ -3,20 +3,17 @@ import {
   BaseQueryFilter,
   CreatePostDto,
   CreateSpaceDto,
-  SerializeFor,
+  ProductCode,
+  ServiceName,
+  SpendCreditDto,
   SqlModelStatus,
-  SubstrateChain,
+  spendCreditAction,
 } from '@apillon/lib';
 import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
-import {
-  SocialCodeException,
-  SocialValidationException,
-} from '../../lib/exceptions';
-import { Space } from './models/space.model';
-import { SubsocialProvider } from './subsocial.provider';
+import { DbTables, PostType } from '../../config/types';
 import { Post } from './models/post.model';
-import { PostType, SocialErrorCode } from '../../config/types';
+import { Space } from './models/space.model';
 
 export class SubsocialService {
   static async listSpaces(
@@ -48,40 +45,20 @@ export class SubsocialService {
       { ...params.body, space_uuid: uuidV4(), status: SqlModelStatus.DRAFT },
       context,
     );
-    //TODO spend credit action
 
-    try {
-      await space.validate();
-    } catch (err) {
-      await space.handle(err);
-      if (!space.isValid()) {
-        throw new SocialValidationException(space);
-      }
-    }
+    const spendCredit: SpendCreditDto = new SpendCreditDto(
+      {
+        project_uuid: space.project_uuid,
+        product_id: ProductCode.SOCIAL_SPACE,
+        referenceTable: DbTables.SPACE,
+        referenceId: space.space_uuid,
+        location: 'SubsocialService.createSpace',
+        service: ServiceName.SOCIAL,
+      },
+      context,
+    );
 
-    const conn = await context.mysql.start();
-    try {
-      await space.insert(SerializeFor.INSERT_DB, conn);
-
-      const provider = new SubsocialProvider(context, SubstrateChain.XSOCIAL);
-      await provider.initializeApi();
-      await provider.createSpace(space);
-
-      await context.mysql.commit(conn);
-    } catch (err) {
-      await context.mysql.rollback(conn);
-
-      throw await new SocialCodeException({
-        code: SocialErrorCode.ERROR_CREATING_SPACE,
-        status: 500,
-        sourceFunction: 'createSpace',
-        context,
-        details: {
-          err,
-          space: space.serialize(),
-        },
-      }).writeToMonitor({ sendAdminAlert: true });
-    }
+    await spendCreditAction(context, spendCredit, () => space.createSpace());
 
     return space.serialize(getSerializationStrategy(context));
   }
@@ -124,38 +101,19 @@ export class SubsocialService {
     );
     //TODO spend credit action
 
-    try {
-      await post.validate();
-    } catch (err) {
-      await post.handle(err);
-      if (!post.isValid()) {
-        throw new SocialValidationException(post);
-      }
-    }
+    const spendCredit: SpendCreditDto = new SpendCreditDto(
+      {
+        project_uuid: space.project_uuid,
+        product_id: ProductCode.SOCIAL_POST,
+        referenceTable: DbTables.POST,
+        referenceId: post.post_uuid,
+        location: 'SubsocialService.createPost',
+        service: ServiceName.SOCIAL,
+      },
+      context,
+    );
 
-    const conn = await context.mysql.start();
-    try {
-      await post.insert(SerializeFor.INSERT_DB, conn);
-
-      const provider = new SubsocialProvider(context, SubstrateChain.XSOCIAL);
-      await provider.initializeApi();
-      await provider.createPost(post);
-
-      await context.mysql.commit(conn);
-    } catch (err) {
-      await context.mysql.rollback(conn);
-
-      throw await new SocialCodeException({
-        code: SocialErrorCode.ERROR_CREATING_POST,
-        status: 500,
-        sourceFunction: 'createPost',
-        context,
-        details: {
-          err,
-          post: post.serialize(),
-        },
-      }).writeToMonitor({ sendAdminAlert: true });
-    }
+    await spendCreditAction(context, spendCredit, () => post.createPost());
 
     return post.serialize(getSerializationStrategy(context));
   }

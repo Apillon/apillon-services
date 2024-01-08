@@ -815,6 +815,9 @@ export enum ProductCode {
   NFT_ASTAR_SET_BASE_URI = 19,
 
   KILT_IDENTITY = 20,
+
+  SOCIAL_SPACE = 21,
+  SOCIAL_POST = 22,
 }
 
 export enum ProductService {

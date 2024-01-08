@@ -6,6 +6,7 @@ import {
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
+  SubstrateChain,
   UuidSqlModel,
   getQueryParams,
   presenceValidator,
@@ -15,7 +16,11 @@ import {
 import { DbTables, SocialErrorCode } from '../../../config/types';
 
 import { stringParser, integerParser } from '@rawmodel/parsers';
-import { SocialCodeException } from '../../../lib/exceptions';
+import {
+  SocialCodeException,
+  SocialValidationException,
+} from '../../../lib/exceptions';
+import { SubsocialProvider } from '../subsocial.provider';
 
 export class Space extends UuidSqlModel {
   public readonly tableName = DbTables.SPACE;
@@ -226,5 +231,41 @@ export class Space extends UuidSqlModel {
       params,
       's.id',
     );
+  }
+
+  public async createSpace() {
+    const context = this.getContext();
+    try {
+      await this.validate();
+    } catch (err) {
+      await this.handle(err);
+      if (!this.isValid()) {
+        throw new SocialValidationException(this);
+      }
+    }
+
+    const conn = await context.mysql.start();
+    try {
+      await this.insert(SerializeFor.INSERT_DB, conn);
+
+      const provider = new SubsocialProvider(context, SubstrateChain.XSOCIAL);
+      await provider.initializeApi();
+      await provider.createSpace(this);
+
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+
+      throw await new SocialCodeException({
+        code: SocialErrorCode.ERROR_CREATING_SPACE,
+        status: 500,
+        sourceFunction: 'createSpace',
+        context,
+        details: {
+          err,
+          space: this.serialize(),
+        },
+      }).writeToMonitor({ sendAdminAlert: true });
+    }
   }
 }
