@@ -258,6 +258,18 @@ export class PhalaLogWorker extends BaseQueueWorker {
       const contract = await new Contract({}, this.context).populateById(
         contract_id,
       );
+      if (!contract.exists()) {
+        await this.writeEventLog({
+          logType: LogType.ERROR,
+          message: `Computing contract with id ${contract_id} not found.`,
+          service: ServiceName.COMPUTING,
+          data: {
+            transaction_id: transaction_id,
+            contract_id: contract_id,
+          },
+        });
+        return;
+      }
       if (contract.contractStatus === ContractStatus.TRANSFERRING) {
         contract.contractStatus = workerSuccess
           ? ContractStatus.TRANSFERRED
